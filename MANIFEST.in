@@ -1,0 +1,6 @@
+include CONTRIBUTORS LICENSE versioneer.py
+graft _pasta_eln_buildsupport
+graft pasta_eln
+graft docs
+prune docs/build
+global-exclude *.py[cod]
