@@ -46,7 +46,7 @@ class BuildManPage(Command):
     def initialize_options(self):
         self.manpath = opj('build', 'man')
         self.rstpath = opj('docs', 'source', 'generated', 'man')
-        self.parser = 'datalad.cmdline.main:setup_parser'
+        self.parser = 'pasta_eln.cmdline.main:setup_parser'
         self.cmdsuite = None
 
     def finalize_options(self):
@@ -58,7 +58,6 @@ class BuildManPage(Command):
             raise DistutilsOptionError('\'parser\' option is required')
         mod_name, func_name = self.parser.split(':')
         fromlist = mod_name.split('.')
-        """
         try:
             mod = __import__(mod_name, fromlist=fromlist)
             self._parser = getattr(mod, func_name)(
@@ -77,7 +76,6 @@ class BuildManPage(Command):
             suite = getattr(mod, suite_name)
             self.cmdlist = [c[2] if len(c) > 2 else c[1].replace('_', '-').lower()
                             for c in suite[1]]
-        """
 
         self.announce('Writing man page(s) to %s' % self.manpath)
         self._today = datetime.date.today()
