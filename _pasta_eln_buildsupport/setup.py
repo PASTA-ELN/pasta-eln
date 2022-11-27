@@ -58,6 +58,7 @@ class BuildManPage(Command):
             raise DistutilsOptionError('\'parser\' option is required')
         mod_name, func_name = self.parser.split(':')
         fromlist = mod_name.split('.')
+        """
         try:
             mod = __import__(mod_name, fromlist=fromlist)
             self._parser = getattr(mod, func_name)(
@@ -70,6 +71,7 @@ class BuildManPage(Command):
 
         except ImportError as err:
             raise err
+        """
         if self.cmdsuite:
             mod_name, suite_name = self.cmdsuite.split(':')
             mod = __import__(mod_name, fromlist=mod_name.split('.'))
