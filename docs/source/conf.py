@@ -24,7 +24,7 @@ from os.path import (
 )
 from os import pardir
 
-import datalad_gooey
+import pasta_eln
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
