@@ -71,13 +71,13 @@ class BuildManPage(Command):
 
         except ImportError as err:
             raise err
-        """
         if self.cmdsuite:
             mod_name, suite_name = self.cmdsuite.split(':')
             mod = __import__(mod_name, fromlist=mod_name.split('.'))
             suite = getattr(mod, suite_name)
             self.cmdlist = [c[2] if len(c) > 2 else c[1].replace('_', '-').lower()
                             for c in suite[1]]
+        """
 
         self.announce('Writing man page(s) to %s' % self.manpath)
         self._today = datetime.date.today()
