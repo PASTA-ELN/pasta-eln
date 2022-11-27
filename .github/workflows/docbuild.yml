@@ -33,7 +33,7 @@ jobs:
         make -C docs html
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v1
-      path: build/html/
+      path: "build/html/"
 
       # Deployment job
   deploy:
