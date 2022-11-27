@@ -31,7 +31,8 @@ jobs:
     - name: Build docs
       run: |
         make -C docs html
-
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v1
   # Deployment job
   deploy:
     environment:
