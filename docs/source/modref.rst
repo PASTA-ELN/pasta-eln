@@ -7,11 +7,10 @@ Python module reference
 -----------------------
 
 This module reference extends the manual with an overview of the
-available functionality built into datalad gooey.
+available functionality built into PASTA-ELN.
 Please note that apart from the main command, the commands this module provides are internal helpers used within DataLad Gooey for fast annotations and file tree overviews.
-Unlike the DataLad core package or its extensions, the commands provided by DataLad Gooey are thus not intended to be used directly.
 
-.. currentmodule:: datalad.api
+.. currentmodule:: pasta_eln
 .. autosummary::
    :toctree: generated
 
