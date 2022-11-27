@@ -5,7 +5,7 @@
 
 
 [![Linting](https://github.com/PASTA-ELN/pasta-eln/actions/workflows/lint.yml/badge.svg)](https://github.com/PASTA-ELN/pasta-eln/actions/workflows/lint.yml)
-
+[![docs](https://github.com/PASTA-ELN/pasta-eln/actions/workflows/docbuild.yml/badge.svg)](https://github.com/PASTA-ELN/pasta-eln/actions/workflows/docbuild.yml)
 <!--
 [![Build status](https://ci.appveyor.com/api/projects/status/g9von5wtpoidcecy/branch/main?svg=true)](https://ci.appveyor.com/project/mih/datalad-gooey/branch/main)
 [![codecov.io](https://codecov.io/github/datalad/datalad-gooey/coverage.svg?branch=main)](https://codecov.io/github/datalad/datalad-gooey?branch=main)
