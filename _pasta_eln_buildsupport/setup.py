@@ -46,7 +46,7 @@ class BuildManPage(Command):
     def initialize_options(self):
         self.manpath = opj('build', 'man')
         self.rstpath = opj('docs', 'source', 'generated', 'man')
-        self.parser = 'pasta_eln.cmdline.main:setup_parser'
+        self.parser = 'pasta_eln:setup_parser'
         self.cmdsuite = None
 
     def finalize_options(self):
