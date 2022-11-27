@@ -17,8 +17,3 @@ Unlike the DataLad core package or its extensions, the commands provided by Data
 .. toctree::
    :maxdepth: 1
 
-   generated/man/datalad-gooey
-   generated/man/datalad-gooey-askpass
-   generated/man/datalad-gooey-lsdir
-   generated/man/datalad-gooey-status-light
-
