@@ -135,7 +135,7 @@ class BuildManPage(Command):
             'Authors': """{0} is developed by {1} <{2}>.""".format(
                 appname, cfg['author'], cfg['author_email']),
         }
-
+        """
         for cls, opath, ext in ((fmt.ManPageFormatter, self.manpath, '1'),
                                 (fmt.RSTManPageFormatter, self.rstpath, 'rst')):
             if not os.path.exists(opath):
@@ -157,6 +157,7 @@ class BuildManPage(Command):
                         ext)),
                         'w') as f:
                     f.write(formatted)
+        """
 
 
 class BuildConfigInfo(Command):
