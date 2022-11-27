@@ -11,10 +11,3 @@ available functionality built into PASTA-ELN.
 Please note that apart from the main command, the commands this module provides are internal helpers used within DataLad Gooey for fast annotations and file tree overviews.
 
 .. currentmodule:: pasta_eln
-.. autosummary::
-   :toctree: generated
-
-   gooey
-   gooey_askpass
-   gooey_lsdir
-   gooey_status_light
