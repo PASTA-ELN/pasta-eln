@@ -3,6 +3,7 @@
   - Working:
     - docu-build works
     - pypi
+    - linting
 
   - Todo:
     - versioneer
