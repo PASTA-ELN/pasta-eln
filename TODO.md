@@ -1,7 +1,13 @@
 # TODO list: priority sorted
 - test and develop the build scripts (if do not work, try gooey version)
-  - docu-build works
-  -
+  - Working:
+    - docu-build works
+    - pypi
+
+  - Todo:
+    - versioneer
+    - all contribs
+    - badges
   - FOCUS on important and less important
 
 # General hints
