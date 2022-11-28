@@ -1,5 +1,7 @@
 # TODO list: priority sorted
 - test and develop the build scripts (if do not work, try gooey version)
+  - docu-build works
+  -
   - FOCUS on important and less important
 
 # General hints
