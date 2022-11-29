@@ -4,9 +4,10 @@
     - docu-build works
     - pypi
     - linting
+    - versioneer tages git-tag and creates a more meaningful long version
+      - **routine should include tagging** not
 
   - Todo:
-    - versioneer
     - all contribs
     - badges
   - FOCUS on important and less important
