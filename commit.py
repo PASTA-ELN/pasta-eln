@@ -16,6 +16,7 @@ def newVersion(level=2, message=''):
   version = '.'.join([str(i) for i in version])
   os.system('git commit -a -m "'+message+'"')
   tag = repo.create_tag('v'+version, message='Version '+version)
+  print('======== Version '+version+' =======')
   remote = repo.remote('origin')
   remote.push(tag)
   return

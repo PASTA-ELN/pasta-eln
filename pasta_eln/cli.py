@@ -398,10 +398,8 @@ def main():
   argparser.add_argument('-d','--database',help='name of database configuration', default='') #required for be = Pasta(args.database)
   arguments = argparser.parse_args()
   result = commands(False, arguments)
-  if args.command=='help':
+  if arguments.command=='help':
     argparser.print_help()
-
-
   if result == '':
     print('**ERROR pma08: command in pastaELN.py does not exist |',arguments.command)
   elif result == '1' and arguments.command!='up':
