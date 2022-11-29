@@ -16,8 +16,19 @@ def newVersion(level=2, message=''):
   for i in range(level+1,3):
     version[i] = 0
   version = '.'.join([str(i) for i in version])
-  #use
   print('======== Version '+version+' =======')
+  #update __init__.py
+  with open('pasta_eln/__init__.py', encoding='utf-8') as fIn:
+    fileOld = fIn.readlines()
+  fileNew = []
+  for line in fileOld:
+    line = line[:-1]  #only remove last char, keeping front part
+    if line.startswith('__version__ = '):
+      line = '__version__ = "'+version[1:]+'"'
+    fileNew.append(line)
+  with open('pasta_eln/__init__.py','w', encoding='utf-8') as fOut:
+    fOut.write('\n'.join(fileNew)+'\n')
+  #execute git commands
   os.system('git commit -a -m "'+message+'"')
   os.system('git tag -a v'+version+' -m "Version '+version+'"')
   os.system('git push')
