@@ -11,11 +11,3 @@ release-pypi:
 	test ! -e dist
 	$(PYTHON) setup.py sdist bdist_wheel
 	twine upload dist/*
-
-update-buildsupport:
-	git subtree pull \
-		-m "Update PASTA-ELN build helper" \
-		--squash \
-		--prefix _pasta_eln_buildsupport \
-		https://github.com/pasta-eln/pasta_eln-buildsupport.git \
-		master
