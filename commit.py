@@ -5,7 +5,8 @@ def get_version():
   result = subprocess.run(['git','tag'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
   versionList= result.stdout.decode('utf-8').strip()
   versionList= [i[1:] for i in versionList.split('\n')]
-  print('versionList',versionList)
+  if versionList == ['']:  #default
+    return 'v0.0.1'
   versionList.sort(key=lambda s: list(map(int, s.split('.'))))
   return 'v'+versionList[-1]
 
