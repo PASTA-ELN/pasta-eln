@@ -3,16 +3,14 @@ import sys, os, subprocess
 
 def get_version():
   result = subprocess.run(['git','tag'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
-  version= result.stdout.decode('utf-8').strip()
-  version= version.split('\n')[-1]
-  return version
+  versionList= result.stdout.decode('utf-8').strip()
+  versionList= [i[1:] for i in versionList.split('\n')]
+  versionList.sort(key=lambda s: list(map(int, s.split('.'))))
+  return 'v'+versionList[-1]
 
 def newVersion(level=2, message=''):
   #get old version number
-  result = subprocess.run(['git','tag'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
-  version= result.stdout.decode('utf-8').strip()
-  version= version.split('\n')[-1]
-  version = [int(i) for i in version[1:].split('.')]
+  version = [int(i) for i in get_version()[1:].split('.')]
   #create new version number
   version[level] += 1
   for i in range(level+1,3):
