@@ -36,7 +36,6 @@ def commands(getDocu, args):
     doc += '    example: pastaELN.py help\n'
   elif args.command=='help':
     print("HELP:")
-    argparser.print_help()
     return '1'
 
   doc += '\n-- Configuration file commands --\n'
@@ -385,6 +384,9 @@ def commands(getDocu, args):
 ###################
 ## MAIN FUNCTION ##
 def main():
+  """
+  Main function
+  """
   usage = "pastaELN.py <command> [-i docID] [-c content] [-l labels] [-d database]\n\n"
   usage+= "Possible commands are:\n"
   usage+= commands(True, None)
@@ -396,6 +398,10 @@ def main():
   argparser.add_argument('-d','--database',help='name of database configuration', default='') #required for be = Pasta(args.database)
   arguments = argparser.parse_args()
   result = commands(False, arguments)
+  if args.command=='help':
+    argparser.print_help()
+
+
   if result == '':
     print('**ERROR pma08: command in pastaELN.py does not exist |',arguments.command)
   elif result == '1' and arguments.command!='up':

@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+""" TEST GUI """
 import traceback, json
 from pathlib import Path
 import urllib.request
@@ -154,6 +155,7 @@ class MainWindow(QMainWindow):
     return
 
 def main():
+  """MAIN FUNCTION"""
   app = QApplication([])
   window = MainWindow()
   apply_stylesheet(app, theme='dark_blue.xml')
