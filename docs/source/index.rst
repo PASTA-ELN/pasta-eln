@@ -19,7 +19,7 @@ All users will interact with the python backend via **graphical user interfaces 
 
 The development of the software started shortly before the Corona-pandemic hit Germany in 2020. The current state is given in :ref:`features <features>`.
 
-More questions are answered in the :ref:`FAQs <faqs>'.
+More questions are answered in the :ref:`FAQs <faqs>`.
 
 Overview
 ========
@@ -27,18 +27,13 @@ Overview
 .. toctree::
    :maxdepth: 1
 
-   installation
-   getting-started
-   credentials
-
-Commands and API
-================
-
-.. toctree::
-   :maxdepth: 2
-
-   cmdline
-   modref
+   faqs
+   extractors
+   couchDB
+   agileProjects
+   datalad
+   software
+   _notes_on_rst
 
 Main contributors
 =================
