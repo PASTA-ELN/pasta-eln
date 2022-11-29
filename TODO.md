@@ -8,12 +8,8 @@
       - **routine should include tagging** not
 
   - Todo:
-    - all contribs
-    - badges
-  - FOCUS on important and less important
 
 # General hints
 - search for word datalad
 - include requirements into setup.cfg
-- Re-check Makefile, it has some helpful build steps
 - setup.cfg: pytest
