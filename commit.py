@@ -24,7 +24,7 @@ def newVersion(level=2, message=''):
   for line in fileOld:
     line = line[:-1]  #only remove last char, keeping front part
     if line.startswith('__version__ = '):
-      line = '__version__ = "'+version[1:]+'"'
+      line = '__version__ = "'+version+'"'
     fileNew.append(line)
   with open('pasta_eln/__init__.py','w', encoding='utf-8') as fOut:
     fOut.write('\n'.join(fileNew)+'\n')
