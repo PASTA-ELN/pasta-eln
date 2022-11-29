@@ -24,6 +24,7 @@ class MainWindow(QMainWindow):
   def __init__(self):
     super().__init__()
     self.setWindowTitle('Test PASTA-ELN installation')
+    self.listLabels = {}
     #main widget
     layout = QVBoxLayout()
     mainWidget = QWidget()
@@ -71,7 +72,11 @@ class MainWindow(QMainWindow):
     def clickLink():
       webbrowser.open('https://pasta-eln.github.io/troubleshooting.html#'+anchor)
     #add one line
-    widget = QWidget()
+    if startLabel in self.listLabels:
+      widget = self.listLabels[startLabel]
+    else:
+      widget = QWidget()
+      self.listLabels.update({startLabel:widget})
     lytWidget = QHBoxLayout()
     if success:
       # img = QPixmap('assets/checkmark.png')
@@ -95,6 +100,7 @@ class MainWindow(QMainWindow):
       lytWidget.addWidget(btn3)
     widget.setLayout(lytWidget)
     self.lytGraphic.addWidget(widget)
+    return
 
 
   def runTest(self):
@@ -104,7 +110,7 @@ class MainWindow(QMainWindow):
     #PART 1 of test: precede with configuration test
     output = checkConfiguration(repair=False)  #verify configuration file .pastaELN.py TODO: Return bool
     self.infoText += output
-    self.addLine('ERROR' in output, 'Configuration file', 'problems-after-installation')
+    self.addLine('ERROR' not in output, 'Configuration file', 'problems-after-installation')
     # local and remote server test
     pathConfig = Path.home()/'.pastaELN.json'
     with open(pathConfig,'r', encoding='utf-8') as f:

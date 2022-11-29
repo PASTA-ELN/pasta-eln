@@ -1,32 +1,25 @@
-Welcome to DataLad Gooey's documentation!
-*****************************************
+PASTA electronic lab notebook (ELN) | The favorite ELN for experimental scientists
+**********************************************************************************
 
-DataLad Gooey is a Graphical User Interface (GUI) for using `DataLad`_,
-a free and open source distributed data management tool. DataLad Gooey
-is compatible with all major operating systems and allows access to 
-DataLad's operations via both a simplified and complete suite.
+Pasta-dishes are a mixture pasta and sauce, the latter adds flavors and richness to the otherwise boring pasta. This ELN combines raw-data with rich metadata to allow advanced data science. In the database, one can fully adapt and improvise the metadata definitions to generate something novel. `PASTA-ELN`_ uses a local-first approach: store all data and metadata locally (always accessible to user) and synchronize with a server upon user request.
 
-.. image:: _static/screenshots-gin/created.png
+Extractors are little python scripts that 'extract' metadata, thumbnails and user-metadata from the raw measurement files. These little programs can be written/adopted by scientists and can be shared. :ref:`To read more ... for advanced users <extractors>`.
 
-While using DataLad Gooey assumes at least some familiarity with DataLad concepts, the simplified command suite makes starting with DataLad easier via tailor-made command selections, condensed parameter specifications, and tool tips.
-The current core functionality supported via the simplified suite includes:
+In `PASTA-ELN`_, the meta-data is stored in a document database called **CouchDB**. This non-SQL database is very adaptive to the different raw data sources and corresponding different meta-data. :ref:`Read more on this CouchDB implementation ... for developers of PASTA <couchDB>`.
 
-* `cloning`_ a dataset
-* `creating`_ a dataset
-* creating a sibling (`GIN`_, `GitHub`_, `WebDAV`_)
-* `dropping`_/`getting`_ content
-* `pushing`_ data/updates to a sibling
-* `saving`_ the state of a dataset
-* `updating`_ from a sibling
+Adaptive software development (scrum) has revolutionized software projects. We believe that **agile project planning** is also highly beneficial for scientific research projects. :ref:`To read more ... for all useres <agileProjects>`.
 
-In addition, DataLad Gooey adds support for querying and setting :ref:`credentials <credentials>`, :ref:`git-annex metadata <annexmeta>`, and :ref:`general metadata <metadata>`.
+The raw data is the origin of scientific work and has to follow the FAIR principles to be trusted. PASTA uses **DataLad** for the raw data and simplifies it to the typical use of experimental material scientists. :ref:`To read more on the use of dataLad ... for developers <dataLad>`.
 
-What DataLad Gooey is not
-=========================
-DataLad Gooey has a number of cool features, but here are features that you will need to use other tools for:
+If CouchDB and DataLad are the two legs on which PASTA is built (and agile project planning is its heart), then the **python backend** is its torso, which links everything together. :ref:`Read more on the backend ... for developers <software>`.
 
-* An interface to visualize revision histories of DataLad datasets. Please refer to many of the available visual Git visualization tools
-* An interface for advanced Git operations such as branching, resetting, reverting, or otherwise interacting with commit history. Please refer to your favourite Git client or the command line for these operations. DataLad Gooey will detect such external operations, and will update its view accordingly.
+All users will interact with the python backend via **graphical user interfaces (GUI)** that use Qt and python for responsive work. :ref:`Read more on the GUI and React implementation ... for developers <software>`.
+
+.. image:: _static/pyside.png
+
+The development of the software started shortly before the Corona-pandemic hit Germany in 2020. The current state is given in :ref:`features <features>`.
+
+More questions are answered in the :ref:`FAQs <faqs>'.
 
 Overview
 ========
@@ -36,11 +29,7 @@ Overview
 
    installation
    getting-started
-   datalad-concepts
-   gin
    credentials
-   annexmetadata
-   metadata
 
 Commands and API
 ================
@@ -51,17 +40,15 @@ Commands and API
    cmdline
    modref
 
+Main contributors
+=================
+* Steffen Brinckmann: principal investigator, focuses on python backend
+* Thomas Düren: graphical user interfaces
+* Velislava Yonkova: first extensive user
+* Hanna Tsybenko: documentation improvements
+* multiple colleagues that help with their valuable discussions
+
+
 .. |---| unicode:: U+02014 .. em dash
 
-.. _DataLad: https://www.datalad.org/
-.. _cloning: http://docs.datalad.org/en/stable/generated/man/datalad-clone.html
-.. _creating: http://docs.datalad.org/en/stable/generated/man/datalad-create.html
-.. _GitLab: http://docs.datalad.org/en/stable/generated/man/datalad-create-sibling-gitlab.html
-.. _GIN: http://docs.datalad.org/en/stable/generated/man/datalad-create-sibling-gin.html
-.. _GitHub: http://docs.datalad.org/en/stable/generated/man/datalad-create-sibling-github.html
-.. _WebDAV: http://docs.datalad.org/projects/next/en/latest/generated/man/datalad-create-sibling-webdav.html
-.. _dropping: http://docs.datalad.org/en/stable/generated/man/datalad-drop.html
-.. _getting: http://docs.datalad.org/en/stable/generated/man/datalad-get.html
-.. _pushing: http://docs.datalad.org/en/stable/generated/man/datalad-push.html
-.. _saving: http://docs.datalad.org/en/stable/generated/man/datalad-save.html
-.. _updating: http://docs.datalad.org/en/stable/generated/man/datalad-update.html
+.. _PASTA-ELN: https://pasta-eln.github.io/pasta-eln/
