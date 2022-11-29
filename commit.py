@@ -31,7 +31,6 @@ def newVersion(level=2, message=''):
   #execute git commands
   os.system('git commit -a -m "'+message+'"')
   os.system('git tag -a v'+version+' -m "Version '+version+'"')
-  os.system('git push')
   os.system('git push origin v'+version)
   return
 
