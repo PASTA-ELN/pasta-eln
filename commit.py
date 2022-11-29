@@ -1,24 +1,29 @@
 #!/usr/bin/python3
-import sys, os
-from git import Repo
-
-repo = Repo()
-lastTag = repo.tags[-1].name
+import sys, os, subprocess
 
 def get_version():
-  return lastTag
+  result = subprocess.run(['git','tag'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
+  version= result.stdout.decode('utf-8').strip()
+  version= version.split('\n')[-1]
+  return version
 
 def newVersion(level=2, message=''):
-  version = [int(i) for i in lastTag[1:].split('.')]
+  #get old version number
+  result = subprocess.run(['git','tag'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
+  version= result.stdout.decode('utf-8').strip()
+  version= version.split('\n')[-1]
+  version = [int(i) for i in version[1:].split('.')]
+  #create new version number
   version[level] += 1
   for i in range(level+1,3):
     version[i] = 0
   version = '.'.join([str(i) for i in version])
-  os.system('git commit -a -m "'+message+'"')
-  tag = repo.create_tag('v'+version, message='Version '+version)
+  #use
   print('======== Version '+version+' =======')
-  remote = repo.remote('origin')
-  remote.push(tag)
+  os.system('git commit -a -m "'+message+'"')
+  os.system('git tag -a v'+version+' -m "Version '+version+'"')
+  os.system('git push')
+  os.system('git push origin v'+version)
   return
 
 if __name__=='__main__':
