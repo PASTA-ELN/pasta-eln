@@ -22,8 +22,10 @@ class MainWindow(QMainWindow):
     layout.setSpacing(0)
     widget.setLayout(layout)
     self.setCentralWidget(widget)      # Set the central widget of the Window
-    head = Head(layout, self.backend) #head with buttons
-    body = Body(layout)
+    body = Body(self.backend)  #body with information
+    head = Head(self.backend, body.cbChangeDoctype)  #head with buttons
+    layout.addWidget(head)
+    layout.addWidget(body)
     self.show()
 
 ## Main function

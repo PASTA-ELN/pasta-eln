@@ -24,6 +24,7 @@ class Pasta:
     from pathlib import Path
     from database import Database
     from miscTools import upIn, upOut
+    from commonTools import ontology2Labels
     ## CONFIGURATION FOR DATALAD and GIT: has to move to dictionary
     self.vanillaGit = ['*.md','*.rst','*.org','*.tex','*.py','.id_pastaELN.json'] #tracked but in git;
     #   .id_pastaELN.json has to be tracked by git (if ignored: they don't appear on git-status; they have to change by PASTA)
@@ -65,19 +66,18 @@ class Pasta:
     self.tableFormat = configuration['tableFormat']
     # start database
     self.db = Database(n,s,databaseName,confirm=self.confirm,softwarePath=self.softwarePath, **kwargs)
-    # TODO
-    # res = cT.ontology2Labels(self.db.ontology,self.tableFormat)
-    # self.dataLabels      = res['dataDict']
-    # self.hierarchyLabels = res['hierarchyDict']
-    # if kwargs.get('initViews', False):
-    #   labels = {}  #one line merging / update does not work
-    #   for i in res['dataDict']:
-    #     labels[i]=res['dataDict'][i]
-    #   for i in res['hierarchyDict']:
-    #     labels[i]=res['hierarchyDict'][i]
-    #   maxTabColumns = configuration['GUI']['maxTabColumns'] \
-    #     if 'GUI' in configuration and 'maxTabColumns' in configuration['GUI'] else 20
-    #   self.db.initViews(labels,self.magicTags, maxTabColumns)
+    res = ontology2Labels(self.db.ontology,self.tableFormat)
+    self.dataLabels      = res['dataDict']
+    self.hierarchyLabels = res['hierarchyDict']
+    if kwargs.get('initViews', False):
+      labels = {}  #one line merging / update does not work
+      for i in res['dataDict']:
+        labels[i]=res['dataDict'][i]
+      for i in res['hierarchyDict']:
+        labels[i]=res['hierarchyDict'][i]
+      maxTabColumns = configuration['GUI']['maxTabColumns'] \
+        if 'GUI' in configuration and 'maxTabColumns' in configuration['GUI'] else 20
+      self.db.initViews(labels,self.magicTags, maxTabColumns)
     # internal hierarchy structure
     self.hierStack = []
     self.currentID  = None
@@ -810,7 +810,7 @@ class Pasta:
           formatString = '{0: <'+str(abs(width))+'}'
           if isinstance(lineItem['value'][idx], str ):
             contentString = lineItem['value'][idx]
-          elif isinstance(lineItem['value'][idx], bool ) or lineItem['value'][idx] is None:
+          elif isinstance(lineItem['value'][idx], bool) or lineItem['value'][idx] is None or isinstance(lineItem['value'][idx], int):
             contentString = str(lineItem['value'][idx])
           else:
             contentString = ' '.join(lineItem['value'][idx])
