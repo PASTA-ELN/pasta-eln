@@ -1,6 +1,5 @@
 # TODO list: priority sorted
-- replace documentation
-- add one .png
+- replace documentation: github, pypi
 
 # General hints
 - search for word datalad
