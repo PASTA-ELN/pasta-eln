@@ -1,3 +1,5 @@
+import os
+
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QApplication
 from qt_material import apply_stylesheet  #of https://github.com/UN-GCPDS/qt-material
@@ -5,6 +7,7 @@ from qt_material import apply_stylesheet  #of https://github.com/UN-GCPDS/qt-mat
 from backend import Pasta
 from widgetHead import Head
 from widgetBody import Body
+os.environ['QT_API'] = 'pyside6'
 
 # Subclass QMainWindow to customize your application's main window
 class MainWindow(QMainWindow):

@@ -1,4 +1,6 @@
 #!/usr/bin/python3
+
+#TODO GET RID OF THIS FILE: and distribute it into better named
 """
 Misc methods and definitions for json, colors
 """
@@ -323,79 +325,3 @@ def printQRcodeSticker(codes={},
     print('**ERROR mpq01: Printing error')
     image.show()
   return
-
-
-
-def checkConfiguration(conf=None, repair=False):
-  """
-    Check configuration file .pastaELN.json for consistencies
-
-  Args:
-      conf   (dict): configuration to check
-      repair (bool): repair configuration
-
-  Returns:
-      string: output incl. \n
-  """
-  import json, os
-  from pathlib import Path
-  from cloudant.client import CouchDB
-  if conf is None:
-    with open(Path.home()/'.pastaELN.json','r', encoding='utf-8') as fConf:
-      conf = json.load(fConf)
-  output = ''
-
-  illegalNames = [key for key in conf if key.startswith('-')]
-  if not 'softwareDir' in conf:
-    output += '**ERROR mcc01a: No softwareDir in config file\n'
-    if repair:
-      conf['softwareDir'] = os.path.dirname(os.path.abspath(__file__))
-  if not 'userID' in conf:
-    output += '**ERROR mcc01b: No userID in config file\n'
-    if repair:
-      conf['userID'] = os.getlogin()
-  if not 'magicTags' in conf:
-    output += '**ERROR mcc01d: No magicTags in config file\n'
-    if repair:
-      conf['magicTags'] = []
-  if not 'qrPrinter' in conf:
-    output += '**ERROR mcc01e: No qrPrinter in config file\n'
-    if repair:
-      conf['qrPrinter'] = {}
-  if not 'tableFormat' in conf:
-    output += '**ERROR mcc01f: No tableFormat in config file\n'
-    if repair:
-      conf['tableFormat'] = {}
-  if not 'extractors' in conf:
-    output += '**ERROR mcc01g: No extractors in config file\n'
-    if repair:
-      conf['extractors'] = {}
-  if not "version" in conf or conf['version']!=1:
-    output += '**ERROR mcc01h: No or wrong version in config file\n'
-    if repair:
-      conf['version'] = 1
-  if not "links" in conf:
-    output += '**ERROR mcc01j: No links in config file; REPAIR MANUALLY\n'
-
-  if not "default" in conf:
-    output += '**ERROR mcc01k: No default links in config file\n'
-    if repair and len(illegalNames)==0:
-      conf['default'] = list(conf['links'].keys())[0]
-  else:
-    if not conf['default'] in conf['links']:
-      output += '**ERROR mcc01i: default entry '+conf['default']+' not in links\n'
-      if repair:
-        conf['default'] = list(conf['links'].keys())[0]
-  if len(illegalNames)>0:
-    output += '**ERROR mcc01l: - type entries '+str(illegalNames)+' in config file\n'
-    if repair:
-      for key in illegalNames:
-        del conf[key]
-  if repair:
-    with open(os.path.expanduser('~')+'/.pastaELN.json','w', encoding='utf-8') as f:
-      f.write(json.dumps(conf,indent=2))
-  if output=='':
-    output='Verify configuration\nSUCCESS\n'
-  else:
-    output='Verify configuration\n'+output+'FAILURE\n'
-  return output
