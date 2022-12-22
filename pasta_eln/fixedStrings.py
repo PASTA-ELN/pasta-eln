@@ -1,4 +1,4 @@
-ontology = """
+defaultOntology = """
 {
   "_id":"-ontology-",
 

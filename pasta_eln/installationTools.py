@@ -1,13 +1,13 @@
 #!/usr/bin/python3
 """  Methods that check, repair, the local PASTA-ELN installation """
-import os, platform, sys, json, shutil
+import os, platform, sys, json, shutil, random, string
 import importlib.util
 import urllib.request
 from pathlib import Path
 
-from globalDefinition import pasta
-from fixedStrings import ontology
 from backend import Pasta
+from fixedStrings import defaultOntology
+
 
 def getOS():
   """
@@ -16,12 +16,13 @@ def getOS():
   Returns:
     string: os + pythonEnvironment
   """
-  os = platform.system()
+  operatingSys = platform.system()
   # Get base/real prefix, or sys.prefix if there is none
   get_base_prefix_compat = getattr(sys, "base_prefix", None) or getattr(sys, "real_prefix", None) or sys.prefix
   in_virtualenv = get_base_prefix_compat != sys.prefix
   environment = sys.prefix if in_virtualenv else '_system_'
-  return os+' '+environment
+  return operatingSys+' '+environment
+
 
 
 def gitAnnex(command='test'):
@@ -29,7 +30,7 @@ def gitAnnex(command='test'):
   test git-annex installation or install it
 
   Args:
-    command: 'test' or 'install'
+    command (string): 'test' or 'install'
 
   Returns:
     string: '' for success, filled with errors
@@ -58,12 +59,13 @@ def gitAnnex(command='test'):
   return '**ERROR: Unknown command'
 
 
+
 def couchdb(command='test'):
   """
   test couchDB installation or install it
 
   Args:
-    command: 'test' or 'install'
+    command (string): 'test' or 'install'
 
   Returns:
     string: '' for success, filled with errors
@@ -93,14 +95,16 @@ def couchdb(command='test'):
       os.system('xterm -e "'+'; '.join(bashCommand)+'"')
       #create or adopt .pastaELN.json
       path = Path.home()/'.pastaELN.json'
+      pathPasta = Path.home()/'PASTA_ELN'
       if path.exists():
         with open(path,'r', encoding='utf-8') as fConf:
           conf = json.load(fConf)
       else:
         conf = {}
+
         conf['default']     = 'research'
         conf['links']       = {'research':{\
-                                'local':{'user':'admin', 'password':password, 'database':'research'},
+                                'local':{'user':'admin', 'password':password, 'database':'research', 'path':pathPasta},
                                 'remote':{}  }}
         conf['version']     = 1
         conf['userID']      = os.getlogin()
@@ -115,12 +119,13 @@ def couchdb(command='test'):
   return '**ERROR: Unknown command'
 
 
+
 def configuration(command='test'):
   """
   Check configuration file .pastaELN.json for consistencies
 
   Args:
-    command: 'test' or 'repair'
+    command (string): 'test' or 'repair'
 
   Returns:
     string: ''=success, else error messages
@@ -169,7 +174,7 @@ def configuration(command='test'):
     output += '**ERROR: No links in config file; REPAIR MANUALLY\n'
 
   if not "default" in conf:
-    if repair and len(illegalNames)==0:
+    if command == 'repair' and len(illegalNames)==0:
       conf['default'] = list(conf['links'].keys())[0]
     else:
       output += '**ERROR: No default links in config file\n'
@@ -192,20 +197,19 @@ def configuration(command='test'):
   return output
 
 
+
 def ontology(command='test'):
   """
   Check configuration file .pastaELN.json for consistencies
 
   Args:
-    command: 'test' or 'install'
+    command (string): 'test' or 'install'
 
   Returns:
     string: ''=success, else error messages
   """
-  global pasta
   output = ''
-  if pasta is None:
-    pasta = Pasta()
+  pasta = Pasta()
 
   if command == 'test':
     output += 'database name:'+pasta.db.db.database_name+'\n'
@@ -222,7 +226,7 @@ def ontology(command='test'):
     return output
 
   elif command == 'install':
-    doc = json.loads(ontology)
+    doc = json.loads(defaultOntology)
     print(doc)
     # _ = pasta.db.create_document(doc)
     return ''
@@ -230,6 +234,75 @@ def ontology(command='test'):
   return '**ERROR: Unknown command'
 
 
+
+def exampleData():
+  """
+  Create example data after installation
+  """
+  configName = 'research'
+  pasta = Pasta(configName, initViews=True, initConfig=False)
+  ### CREATE PROJECTS AND SHOW
+  print('*** CREATE EXAMPLE PROJECT AND SHOW ***')
+  pasta.addData('x0', {'-name': "PASTA's Example Project", 'objective': 'Test if everything is working as intended.', 'status': 'active', 'comment': '#tag Can be used as reference or deleted'})
+  print(pasta.output('x0'))
+
+  ### TEST PROJECT PLANING
+  print('*** TEST PROJECT PLANING ***')
+  viewProj = pasta.db.getView('viewDocType/x0')
+  projID1  = [i['id'] for i in viewProj if 'PASTA' in i['value'][0]][0]
+  pasta.changeHierarchy(projID1)
+  pasta.addData('x1',    {'comment': 'This is hard! #TODO', '-name': 'This is an example task'})
+  pasta.addData('x1',    {'comment': 'This will take a long time. #WAIT', '-name': 'This is another example task'})
+  pasta.changeHierarchy(pasta.currentID)
+  pasta.addData('x2',    {'-name': 'This is an example subtask',     'comment': 'Random comment 1'})
+  pasta.addData('x2',    {'-name': 'This is another example subtask','comment': 'Random comment 2'})
+  pasta.changeHierarchy(None)
+  pasta.addData('x1',    {'-name': 'Data files'})
+  semStepID = pasta.currentID
+  pasta.changeHierarchy(semStepID)
+  semDirName = pasta.basePath/pasta.cwd
+  pasta.changeHierarchy(None)
+  print(pasta.outputHierarchy())
+
+  ### TEST PROCEDURES
+  print('\n*** TEST PROCEDURES ***')
+  sopDir = pasta.basePath/'StandardOperatingProcedures'
+  os.makedirs(sopDir)
+  with open(sopDir/'Example_SOP.md','w', encoding='utf-8') as fOut:
+    fOut.write('# Put sample in instrument\n# Do something\nDo not forget to\n- not do anything wrong\n- **USE BOLD LETTERS**\n')
+  pasta.addData('procedure', {'-name': 'StandardOperatingProcedures/Example_SOP.md', 'comment': '#v1'})
+  print(pasta.output('procedure'))
+
+  ### TEST SAMPLES
+  print('*** TEST SAMPLES ***')
+  pasta.addData('sample',    {'-name': 'Example sample', 'chemistry': 'A2B2C3', 'qrCode': '13214124 99698708', 'comment': 'can be used as example or removed'})
+  print(pasta.output('sample'))
+  print(pasta.outputQR())
+
+  ###  TEST MEASUREMENTS AND SCANNING/CURATION
+  print('*** TEST MEASUREMENTS AND SCANNING/CURATION ***')
+  shutil.copy(pasta.softwarePath/'ExampleMeasurements/simple.png', semDirName)
+  shutil.copy(pasta.softwarePath/'ExampleMeasurements/simple.csv', semDirName)
+  pasta.scanTree()
+
+  ### USE GLOBAL FILES
+  print('*** USE GLOBAL FILES ***')
+  pasta.changeHierarchy(semStepID)
+  pasta.addData('measurement', {'-name': 'https://developers.google.com/search/mobile-sites/imgs/mobile-seo/separate-urls.png', \
+    'comment':'remote image from google. Used for testing and reference. Can be deleted.'})
+  print(pasta.output('measurement'))
+
+  ### VERIFY DATABASE INTEGRITY
+  print("\n*** VERIFY DATABASE INTEGRITY ***")
+  print(pasta.checkDB(verbose=True))
+  print('\n*** DONE WITH VERIFY ***')
+  return
+
+
+
+###
+# Main method for testing and installation without GUI
+###
 if __name__ == '__main__':
   print('---- Test PASTA-ELN installation----')
   print('getOS        :', getOS())
@@ -237,6 +310,7 @@ if __name__ == '__main__':
   print('chouchDB     :', couchdb())
   print('configuration:', configuration())
   print('ontology     :\n'+ontology())
+  print("Add any argument to install PASTA-ELN. Don't do it if PASTA-ELN is already installed.")
 
   if len(sys.argv)>1:
     print('---- Create PASTA-ELN installation----')
@@ -244,3 +318,4 @@ if __name__ == '__main__':
     print('install couchDB      :', couchdb('install'))
     print('repair  configuration:', configuration('repair'))
     print('install ontology     :', ontology('install'))
+    print('create example data  :', exampleData())
