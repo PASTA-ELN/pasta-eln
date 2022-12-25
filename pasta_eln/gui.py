@@ -1,11 +1,12 @@
 import os
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QApplication
+from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QApplication
 from qt_material import apply_stylesheet  #of https://github.com/UN-GCPDS/qt-material
 
 from backend import Pasta
-from widgetHead import Head
+from communicate import Communicate
+from widgetSidebar import Sidebar
 from widgetBody import Body
 os.environ['QT_API'] = 'pyside6'
 
@@ -17,17 +18,18 @@ class MainWindow(QMainWindow):
     self.setWindowTitle("PASTA-ELN")
     self.setWindowState(Qt.WindowMaximized)
     self.backend = Pasta()
+    comm = Communicate(self.backend)
 
     #WIDGETS
     widget = QWidget()
-    layout = QVBoxLayout()
+    layout = QHBoxLayout()
     layout.setContentsMargins(0,0,0,0)
     layout.setSpacing(0)
     widget.setLayout(layout)
     self.setCentralWidget(widget)      # Set the central widget of the Window
-    body = Body(self.backend)  #body with information
-    head = Head(self.backend, body.cbChangeDoctype)  #head with buttons
-    layout.addWidget(head)
+    body = Body(comm)  #body with information
+    sidebar = Sidebar(comm)  #head with buttons
+    layout.addWidget(sidebar)
     layout.addWidget(body)
     self.show()
 

@@ -24,7 +24,7 @@ class Pasta:
     from pathlib import Path
     from database import Database
     from miscTools import upIn, upOut
-    from commonTools import ontology2Labels
+    from reformatDictionaries import ontology2Labels
     ## CONFIGURATION FOR DATALAD and GIT: has to move to dictionary
     self.vanillaGit = ['*.md','*.rst','*.org','*.tex','*.py','.id_pastaELN.json'] #tracked but in git;
     #   .id_pastaELN.json has to be tracked by git (if ignored: they don't appear on git-status; they have to change by PASTA)
@@ -44,6 +44,9 @@ class Pasta:
     if linkDefault is None:
       linkDefault = configuration['default']
     links = configuration['links']
+    if not linkDefault in links:
+      self = None
+      return
     if 'user' in links[linkDefault]['local']:
       n,s = links[linkDefault]['local']['user'], links[linkDefault]['local']['password']
     else:

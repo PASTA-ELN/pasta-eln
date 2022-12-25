@@ -1,3 +1,5 @@
+"""Change the format of dictionaries"""
+
 
 def ontology2Labels(ontology, tableFormat):
   """

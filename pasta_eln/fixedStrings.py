@@ -48,3 +48,11 @@ defaultOntology = """
   ]
 }
 """
+
+configurationOverview = """
+## Overview
+###  Setup: Setup and troubleshoot PASTA-ELN installation
+### Project group: configure how project groups are saved
+### Ontology: configure the data structure for current project group
+### Miscellaneous: different things like look-and-feel
+"""

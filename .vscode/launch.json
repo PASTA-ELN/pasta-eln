@@ -8,7 +8,7 @@
       "name": "Python: Current File",
       "type": "python",
       "request": "launch",
-      "program": "/home/sbrinckm/FZJ/PASTA/pasta-eln/pasta_eln/app.py",
+      "program": "/home/sbrinckm/FZJ/PASTA/pasta-eln/pasta_eln/gui.py",
       "console": "integratedTerminal"
     }
   ]

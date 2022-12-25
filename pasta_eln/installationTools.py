@@ -44,13 +44,14 @@ def gitAnnex(command='test'):
     return ''
 
   elif command == 'install':
+    import webbrowser
     if platform.system()=='Linux':
       bashCommand = [
         'sudo wget -q http://neuro.debian.net/lists/focal.de-fzj.full -O /etc/apt/sources.list.d/neurodebian.sources.list',
         'sudo apt-key adv --recv-keys --keyserver hkps://keyserver.ubuntu.com 0xA5D32F012649A5A9',
         'sudo apt-get update',
         'sudo apt-get install -y git-annex-standalone',
-        'echo "DONE installing git-annex"',
+        'echo DONE',
         'sleep 10000']
       os.system('xterm -e "'+'; '.join(bashCommand)+'"')
       return ''
