@@ -1,5 +1,4 @@
 import os
-
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QApplication
 from qt_material import apply_stylesheet  #of https://github.com/UN-GCPDS/qt-material
@@ -21,16 +20,16 @@ class MainWindow(QMainWindow):
     comm = Communicate(self.backend)
 
     #WIDGETS
-    widget = QWidget()
-    layout = QHBoxLayout()
-    layout.setContentsMargins(0,0,0,0)
-    layout.setSpacing(0)
-    widget.setLayout(layout)
-    self.setCentralWidget(widget)      # Set the central widget of the Window
-    body = Body(comm)  #body with information
-    sidebar = Sidebar(comm)  #head with buttons
-    layout.addWidget(sidebar)
-    layout.addWidget(body)
+    mainWidget = QWidget()
+    mainLayout = QHBoxLayout()
+    mainLayout.setContentsMargins(0,0,0,0)
+    mainLayout.setSpacing(0)
+    mainWidget.setLayout(mainLayout)
+    self.setCentralWidget(mainWidget)      # Set the central widget of the Window
+    body = Body(comm)        #body with information
+    sidebar = Sidebar(comm)  #sidebar with buttons
+    mainLayout.addWidget(sidebar)
+    mainLayout.addWidget(body)
     self.show()
 
 ## Main function

@@ -1,10 +1,24 @@
-# TODO list: priority sorted
+# Minimum viable product
+details
+table
+project-view
+
+
+# Optimize installation
 - requirements: qt-material, qt-awesome
   -  QtPy-2.3.0 qta-browser
-- replace documentation
-scripts: installationTools.
-rename be. -> pasta. using global
-fixed version number gitannex and datalad
+- scripts: installationTools.
+- fixed version number gitannex and datalad
+
+# Cleaning
+- reduce self.
+- commenting, pylint
+- (HT) replace documentation
+- rename be. -> backend. or leave be.; don't call it pasta
+
+# Optimize everything
+- separate backend.py into CLI
+- edit
 
 # General hints
 - search for word datalad

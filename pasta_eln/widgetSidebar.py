@@ -1,8 +1,7 @@
-from PySide6.QtCore import QSize
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QGridLayout, QToolTip
-import qtawesome as qta
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QGridLayout
 
 from widgetConfig import Configuration
+from style import TextButton, LetterButton, IconButton
 
 class Sidebar(QWidget):
 
@@ -12,28 +11,22 @@ class Sidebar(QWidget):
     self.setMinimumWidth(200)
 
     # GUI stuff
-    layout = QVBoxLayout()
-    layout.setContentsMargins(0,0,0,0)
-    layout.setSpacing(20)
-    self.setLayout(layout)
+    mainLayout = QVBoxLayout()
+    mainLayout.setContentsMargins(0,0,0,0)
+    mainLayout.setSpacing(20)
+    self.setLayout(mainLayout)
 
     if hasattr(comm.backend, 'dataLabels'):
       # All projects
-      button = QPushButton("All projects")  #icon with no text
-      button.setAccessibleName('x0')
-      button.clicked.connect(self.buttonClicked)
-      layout.addWidget(button)
+      mainLayout.addWidget( TextButton('All projects', self.buttonDocTypeClicked, 'x0') )
       # Add other data types
       dTypeWidget = QWidget()
       dTypeLayout = QGridLayout()
       dTypeWidget.setLayout(dTypeLayout)
       for idx, doctype in enumerate(comm.backend.dataLabels):
-        button = QPushButton(comm.backend.dataLabels[doctype][0])
-        button.setAccessibleName(doctype)
-        button.setToolTip(comm.backend.dataLabels[doctype])
-        button.clicked.connect(self.buttonClicked)
+        button = LetterButton(comm.backend.dataLabels[doctype], self.buttonDocTypeClicked, doctype)
         dTypeLayout.addWidget(button, int(idx/3), idx%3)
-      layout.addWidget(dTypeWidget)
+      mainLayout.addWidget(dTypeWidget)
 
       view = comm.backend.db.getView('viewHierarchy/viewHierarchy')
       nativeView = {}
@@ -44,43 +37,34 @@ class Sidebar(QWidget):
       for item in nativeView:
         docType = nativeView[item][2][0]
         if docType=='x0':
-          button = QPushButton(nativeView[item][3])  #icon with no text
-          layout.addWidget(button)
+          button = TextButton(nativeView[item][3], None)  #icon with no text
+          mainLayout.addWidget(button)
           # Add other data types
           dTypeWidget = QWidget()
           dTypeLayout = QGridLayout()
           dTypeWidget.setLayout(dTypeLayout)
           for idx, doctype in enumerate(comm.backend.dataLabels):
-            button = QPushButton(comm.backend.dataLabels[doctype][0])
-            button.setToolTip(comm.backend.dataLabels[doctype])
+            button = LetterButton(comm.backend.dataLabels[doctype], self.buttonDocTypeClicked, doctype)
             dTypeLayout.addWidget(button, int(idx/3), idx%3)
-          layout.addWidget(dTypeWidget)
+          mainLayout.addWidget(dTypeWidget)
         if docType=='x1':
-          button = QPushButton(nativeView[item][3])  #icon with no text
-          layout.addWidget(button)
+          button = TextButton(nativeView[item][3], None)  #icon with no text
+          mainLayout.addWidget(button)
 
     # Other buttons
-    icon = qta.icon('fa.gear', color='blue', scale_factor=1.2)
-    button = QPushButton(icon, "")  #icon with no text
-    button.setAccessibleName('_configuration_')
-    button.clicked.connect(self.buttonClicked)
-    layout.addWidget(button)
+    mainLayout.addWidget(IconButton('fa.gear', self.buttonDocTypeClicked, '_configuration_'))
 
     if not hasattr(comm.backend, 'dataLabels'):  #if no backend
       configWindow = Configuration(comm.backend, 'setup')
       configWindow.exec()
 
 
-  def buttonClicked(self):
+  def buttonDocTypeClicked(self):
     if self.sender().accessibleName() == '_configuration_':
       print("SHOW CONFIGURATION WINDOW")
-      configWindow = Configuration(self.backend, None)
+      configWindow = Configuration(self.comm.backend, None)
       configWindow.exec()
     else:
-      self.cbChangeDoctype(self.sender().accessibleName())
+      self.comm.chooseDocType.emit(self.sender().accessibleName())
     return
-
-
-  def cbConfigWidget(self):
-    print('Callback pressed')
 
