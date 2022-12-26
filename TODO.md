@@ -1,6 +1,4 @@
 # Minimum viable product
-details
-table
 project-view
 
 
