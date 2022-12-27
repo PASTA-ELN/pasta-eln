@@ -34,3 +34,5 @@ class IconButton(QPushButton):
     if tooltip != '':
       self.setToolTip(tooltip)
 
+# from qt_material import get_theme
+# get_theme('dark_blue.xml')

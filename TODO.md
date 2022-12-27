@@ -1,11 +1,8 @@
 # Minimum viable product
-project-view
-
 
 # Optimize installation
-- requirements: qt-material, qt-awesome
-  -  QtPy-2.3.0 qta-browser
-- scripts: installationTools.
+-  QtPy-2.3.0 (should be installed in the dependency tree)
+-  qta-browser
 - fixed version number gitannex and datalad
 
 # Cleaning
