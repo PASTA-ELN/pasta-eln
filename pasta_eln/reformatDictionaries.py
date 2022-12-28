@@ -1,14 +1,14 @@
 """Change the format of dictionaries"""
 
-
 def ontology2Labels(ontology, tableFormat):
   """
   Extract labels and create lists of docType,docLabel pair
   - docLabel is the plural human-readable form of the docType
   - docType is the single-case noun
+
   Args:
-     ontology: ontology
-     tableFormat: tableFormat branch from .pastaELN.json
+     ontology (dict): ontology
+     tableFormat (dict): tableFormat branch from .pastaELN.json
 
   Returns:
      dictionary: dataDict, hierarchyDict
@@ -16,7 +16,7 @@ def ontology2Labels(ontology, tableFormat):
   dataDict = {}
   hierarchyDict = {}
   for key in ontology.keys():
-    if key=='_id' or key=='_rev':
+    if key in ['_id', '_rev']:
       continue
     label = None
     if key in tableFormat and '-label-' in tableFormat[key]:  #use label from tableFormat
@@ -30,4 +30,3 @@ def ontology2Labels(ontology, tableFormat):
     else:
       dataDict[key] = label
   return {'dataDict':dataDict, 'hierarchyDict':hierarchyDict}
-

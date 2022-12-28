@@ -1,10 +1,11 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QGridLayout
+""" Sidebar widget that includes the navigation items """
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QGridLayout    # pylint: disable=no-name-in-module
 
 from widgetConfig import Configuration
 from style import TextButton, LetterButton, IconButton
 
 class Sidebar(QWidget):
-
+  """ Sidebar widget that includes the navigation items """
   def __init__(self, comm):
     super().__init__()
     self.comm = comm
@@ -63,6 +64,9 @@ class Sidebar(QWidget):
 
 
   def buttonDocTypeClicked(self):
+    """
+    What happens when user clicks to change doc-type
+    """
     if self.sender().accessibleName() == '_configuration_':
       print("SHOW CONFIGURATION WINDOW")
       configWindow = Configuration(self.comm.backend, None)
@@ -70,4 +74,3 @@ class Sidebar(QWidget):
     else:
       self.comm.chooseDocType.emit(self.sender().accessibleName())
     return
-

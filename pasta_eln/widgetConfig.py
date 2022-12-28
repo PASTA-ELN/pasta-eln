@@ -1,6 +1,6 @@
-##Entire config dialog (dialog is blocking the main-window, as opposed to create a new widget-window)
-from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QDialog, QWidget, QHBoxLayout, QVBoxLayout, QPushButton, QTabWidget, QFormLayout, QLineEdit, QLabel, QTextEdit
+""" Entire config dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""
+from PySide6.QtWidgets import QDialog, QWidget, QHBoxLayout, QVBoxLayout, QPushButton, QTabWidget, \
+                              QFormLayout, QLineEdit, QLabel, QTextEdit   # pylint: disable=no-name-in-module
 
 from widgetConfigSetup import ConfigurationSetup
 from fixedStrings import configurationOverview
@@ -10,7 +10,7 @@ class Configuration(QDialog):
   Main class
   """
   def __init__(self, backend, startTap):
-    super(Configuration, self).__init__()
+    super().__init__()
     self.backend = backend
     self.setWindowTitle('PASTA-ELN configuration')
     self.mainLayout = QVBoxLayout()
@@ -41,5 +41,3 @@ class Configuration(QDialog):
     #1. define widget
     #2. define layout and assign to widget
     #3. define and add elements immediately
-
-

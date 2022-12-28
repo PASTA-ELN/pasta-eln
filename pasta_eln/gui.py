@@ -1,6 +1,7 @@
+""" Graphical user interface includes all widgets """
 import os
-from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QApplication
+from PySide6.QtCore import Qt   # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QApplication    # pylint: disable=no-name-in-module
 from qt_material import apply_stylesheet  #of https://github.com/UN-GCPDS/qt-material
 
 from backend import Pasta
@@ -11,6 +12,7 @@ os.environ['QT_API'] = 'pyside6'
 
 # Subclass QMainWindow to customize your application's main window
 class MainWindow(QMainWindow):
+  """ Graphical user interface includes all widgets """
   def __init__(self):
     #global setting
     super().__init__()

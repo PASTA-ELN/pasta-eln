@@ -1,6 +1,7 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, QPushButton
-import qtawesome as qta
+""" Widget: setup tab inside the configuration dialog window """
 import webbrowser
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, QPushButton    # pylint: disable=no-name-in-module
+import qtawesome as qta
 
 from installationTools import getOS, gitAnnex, couchdb, configuration, ontology, exampleData
 
@@ -9,7 +10,7 @@ class ConfigurationSetup(QWidget):
   Main class
   """
   def __init__(self, backend):
-    super(ConfigurationSetup, self).__init__()
+    super().__init__()
     self.tabLayout = QVBoxLayout()
     self.setLayout(self.tabLayout)
 
@@ -74,6 +75,12 @@ class ConfigurationSetup(QWidget):
 
 
   def gitAnnex(self, command):
+    """
+    Function to test and install git-annex
+
+    Args:
+      command (str): options=test, install
+    """
     if command == 'test':
       if gitAnnex('test') == '':
         icon = qta.icon('fa.check', scale_factor=1.2)
@@ -96,6 +103,12 @@ class ConfigurationSetup(QWidget):
 
 
   def couchdb(self, command):
+    """
+    Function to test and install couch-DB
+
+    Args:
+      command (str): options=test, install
+    """
     if command == 'test':
       if couchdb('test') == '':
         icon = qta.icon('fa.check', scale_factor=1.2)
@@ -118,6 +131,12 @@ class ConfigurationSetup(QWidget):
 
 
   def configuration(self, command):
+    """
+    Function to test and repair the .pastaELN.json file in the home directory
+
+    Args:
+      command (str): options=test, repair
+    """
     if command == 'test':
       if configuration('test') == '':
         icon = qta.icon('fa.check', scale_factor=1.2)
@@ -140,6 +159,12 @@ class ConfigurationSetup(QWidget):
 
 
   def ontology(self, command):
+    """
+    Function to test and create ontology
+
+    Args:
+      command (str): options=test, install
+    """
     if command == 'test':
       answer = ontology('test')
       if '**ERROR' not in answer:
@@ -163,8 +188,14 @@ class ConfigurationSetup(QWidget):
       self.tabLayoutBody.addWidget(button, 5, 1)
     return
 
+  @classmethod
+  def help(cls, topic):
+    """
+    Open browser with help information
 
-  def help(self, topic):
+    Args:
+      topic (str): topic that should be helped
+    """
     baseURL = 'https://pasta-eln.github.io/troubleshooting.html#'
     system = getOS().replace(' ','_')
     webbrowser.open(baseURL+system+'_'+topic)

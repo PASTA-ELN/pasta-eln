@@ -1,3 +1,5 @@
+""" Long strings that would obfuscate code """
+
 defaultOntology = """
 {
   "_id":"-ontology-",

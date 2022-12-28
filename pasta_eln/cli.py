@@ -9,7 +9,7 @@ from pathlib import Path
 from subprocess import run, PIPE, STDOUT
 import urllib.request
 from backend import Pasta
-from miscTools import upOut, upIn, getExtractorConfig, printQRcodeSticker, checkConfiguration
+from miscTools import upOut, upIn, getExtractorConfig, printQRcodeSticker
 from inputOutput import importELN, exportELN
 
 SOFTWARE_VERSION = "v1.2.5"
@@ -45,7 +45,7 @@ def commands(getDocu, args):
     doc += '    example: pastaELN.py verifyConfigurationDev (repair function)\n'
   elif args.command.startswith('verifyConfiguration'):
     repair = args.command=='verifyConfigurationDev'
-    output = checkConfiguration(repair=repair)
+    output = "" #checkConfiguration(repair=repair)
     print(output)
     return '-1' if '**ERROR' in output else '1'
 
@@ -139,7 +139,7 @@ def commands(getDocu, args):
       initViews, initConfig = True, True
       if args.command=='testDev':
         resetOntology = True
-      output = checkConfiguration(repair=False)  #verify configuration file .pastaELN.py
+      output = "" #checkConfiguration(repair=False)  #verify configuration file .pastaELN.py
       print(output)
       if 'ERROR' in output:
         return ''

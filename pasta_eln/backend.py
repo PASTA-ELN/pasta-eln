@@ -45,7 +45,6 @@ class Pasta:
       linkDefault = configuration['default']
     links = configuration['links']
     if not linkDefault in links:
-      self = None
       return
     if 'user' in links[linkDefault]['local']:
       n,s = links[linkDefault]['local']['user'], links[linkDefault]['local']['password']
@@ -813,7 +812,7 @@ class Pasta:
           formatString = '{0: <'+str(abs(width))+'}'
           if isinstance(lineItem['value'][idx], str ):
             contentString = lineItem['value'][idx]
-          elif isinstance(lineItem['value'][idx], bool) or lineItem['value'][idx] is None or isinstance(lineItem['value'][idx], int):
+          elif isinstance(lineItem['value'][idx], (bool,int)):
             contentString = str(lineItem['value'][idx])
           else:
             contentString = ' '.join(lineItem['value'][idx])
