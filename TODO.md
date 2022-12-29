@@ -15,8 +15,11 @@
 - separate backend.py into CLI
 - edit
 
+# How to create a new version
+1. normal commit to test the actions, then do ..
+1. create a new version: ./commit.py "Minimal viable product" 1
+
 # General hints
-- create a new version: ./commit.py "Minimal viable product" 1
 - search for word datalad
 - include requirements into setup.cfg
 - setup.cfg: pytest
