@@ -300,11 +300,10 @@ def exampleData():
   return
 
 
-
-###
+##############
 # Main method for testing and installation without GUI
-###
 def main():
+  """ Main method and entry point for commands """
   print('---- Test PASTA-ELN installation----')
   print('getOS        :', getOS())
   print('git-annex    :', gitAnnex())

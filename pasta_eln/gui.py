@@ -32,15 +32,17 @@ class MainWindow(QMainWindow):
     sidebar = Sidebar(comm)  #sidebar with buttons
     mainLayout.addWidget(sidebar)
     mainLayout.addWidget(body)
-    self.show()
 
+
+##############
 ## Main function
 def main():
+  """ Main method and entry point for commands """
   app = QApplication()
   apply_stylesheet(app, theme='dark_blue.xml')
   window = MainWindow()
+  window.show()
   app.exec()
-
 
 if __name__ == '__main__':
   main()
