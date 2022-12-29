@@ -35,8 +35,12 @@ class MainWindow(QMainWindow):
     self.show()
 
 ## Main function
-if __name__ == '__main__':
+def main():
   app = QApplication()
   apply_stylesheet(app, theme='dark_blue.xml')
   window = MainWindow()
   app.exec()
+
+
+if __name__ == '__main__':
+  main()

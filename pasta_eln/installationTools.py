@@ -304,7 +304,7 @@ def exampleData():
 ###
 # Main method for testing and installation without GUI
 ###
-if __name__ == '__main__':
+def main():
   print('---- Test PASTA-ELN installation----')
   print('getOS        :', getOS())
   print('git-annex    :', gitAnnex())
@@ -320,3 +320,6 @@ if __name__ == '__main__':
     print('repair  configuration:', configuration('repair'))
     print('install ontology     :', ontology('install'))
     print('create example data  :', exampleData())
+
+if __name__ == '__main__':
+  main()
