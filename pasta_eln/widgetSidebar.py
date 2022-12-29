@@ -38,7 +38,7 @@ class Sidebar(QWidget):
         if not item['id'].startswith('x-'):
           continue
         nativeView[item['id']] = [item['key']]+item['value']
-      for item in nativeView:
+      for item in nativeView.items():
         docType = nativeView[item][2][0]
         if docType=='x0':
           button = TextButton(nativeView[item][3], None)  #icon with no text

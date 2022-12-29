@@ -112,7 +112,7 @@ def couchdb(command='test'):
         conf['extractors']  = {}
         conf['qrPrinter']   = {}
         conf['magicTags']   = ['P1','P2','P3','TODO','WAIT','DONE']
-      with open(path,'w') as fConf:
+      with open(path,'w', encoding='utf-8') as fConf:
         fConf.write(json.dumps(conf, indent=2) )
       return 'Password: '+password
     return '**ERROR: Unknown operating system '+platform.system()
