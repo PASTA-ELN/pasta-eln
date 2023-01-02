@@ -17,6 +17,7 @@ This page / area is for developers and contains some helpful information for the
 
 - Run Pasta-ELN directly from commandline without installation
   -  python -m pasta_eln.installationTools
+  - pastaELN.py in home directory of repository
 
 - Hints for developers
   -  qta-browser

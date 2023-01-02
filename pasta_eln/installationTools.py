@@ -280,11 +280,20 @@ def ontology(command='test'):
 
 
 
-def exampleData():
+def exampleData(force=True):
   '''
   Create example data after installation
+
+  Args:
+    force (bool): force creation by removing content before creation
   '''
-  configName = 'research'
+  configName = 'pasta_tutorial'#'research'
+  if force:
+    pasta = Pasta(configName, initConfig=False)
+    dirName = pasta.basePath
+    pasta.exit(deleteDB=True)
+    shutil.rmtree(dirName)
+    os.makedirs(dirName)
   pasta = Pasta(configName, initViews=True, initConfig=False)
   ### CREATE PROJECTS AND SHOW
   print('*** CREATE EXAMPLE PROJECT AND SHOW ***')
@@ -326,8 +335,8 @@ def exampleData():
 
   ###  TEST MEASUREMENTS AND SCANNING/CURATION
   print('*** TEST MEASUREMENTS AND SCANNING/CURATION ***')
-  shutil.copy(pasta.softwarePath/'ExampleMeasurements/simple.png', semDirName)
-  shutil.copy(pasta.softwarePath/'ExampleMeasurements/simple.csv', semDirName)
+  shutil.copy(Path(__file__).parent/'Resources'/'ExampleMeasurements'/'simple.png', semDirName)
+  shutil.copy(Path(__file__).parent/'Resources'/'ExampleMeasurements'/'simple.csv', semDirName)
   pasta.scanTree()
 
   ### USE GLOBAL FILES

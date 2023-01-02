@@ -2,3 +2,5 @@ graft pasta_eln
 graft docs
 prune docs/build
 global-exclude *.py[cod]
+
+include pasta_eln/Resources/ExampleMeasurements/*

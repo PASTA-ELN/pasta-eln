@@ -46,7 +46,7 @@ defaultOntology = """
   "instrument": [
     {"name":"-name",       "query":"What is the name / path?"},
     {"name":"comment",    "query":"#tags comments :field:value: e.g. #SOP_v1"},
-    {"name":"vendor",     "query":"Who is the vendor?"},
+    {"name":"vendor",     "query":"Who is the vendor?"}
   ]
 }
 """

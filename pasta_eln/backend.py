@@ -34,7 +34,7 @@ class Pasta:
     #   .id_pastaELN.json has to be tracked by git (if ignored: they don't appear on git-status; they have to change by PASTA)
     self.gitIgnore = ['*.log','.vscode/','*.xcf','*.css'] #misc
     self.gitIgnore+= ['*.bcf','*.run.xml','*.synctex.gz','*.aux']#latex files
-    self.gitIgnore+= ['*.pdf','*.png','*.svg','*.jpg']           #result figures
+    self.gitIgnore+= ['*.pdf','*.svg','*.jpg']           #result figures
     self.gitIgnore+= ['*.hap','*.mss','*.mit','*.mst']   #extractors do not exist yet
 
     # open configuration file
@@ -60,9 +60,9 @@ class Pasta:
     # directories
     #    self.basePath (root of directory tree) is root of all projects
     #    self.cwd changes during program
-    self.softwarePath = Path(configuration['softwareDir'])
-    self.extractorPath = Path(configuration['extractorDir']) if 'extractorDir' in configuration else \
-                         self.softwarePath/'extractors'
+    # self.extractorPath = Path(configuration['extractorDir']) if 'extractorDir' in configuration else \
+    #                      Path(__file__)/'Extractors'
+    self.extractorPath = Path(__file__).parent/'Extractors'
     sys.path.append(str(self.extractorPath))  #allow extractors
     self.basePath     = Path(links[linkDefault]['local']['path'])
     self.cwd          = Path('.')
@@ -71,7 +71,7 @@ class Pasta:
     self.magicTags= configuration['magicTags'] #"P1","P2","P3","TODO","WAIT","DONE"
     self.tableFormat = configuration['tableFormat']
     # start database
-    self.db = Database(n,s,databaseName,confirm=self.confirm,softwarePath=self.softwarePath, **kwargs)
+    self.db = Database(n,s,databaseName,confirm=self.confirm,**kwargs)
     res = ontology2Labels(self.db.ontology,self.tableFormat)
     self.dataLabels      = res['dataDict']
     self.hierarchyLabels = res['hierarchyDict']
@@ -337,13 +337,13 @@ class Pasta:
       self.hierStack.pop()
       self.cwd = self.cwd.parent
     else:  # existing ID is given: open that
-      self.hierStack.append(docID)
-      if dirName is not None:
-        self.cwd = dirName.relative_to(self.basePath)
-      else:
+      if dirName is None:
         doc = self.db.getDoc(docID)
         self.cwd = Path(doc['-branch'][0]['path'])
         self.hierStack = doc['-branch'][0]['stack']+[docID]
+      else:
+        self.cwd = dirName.relative_to(self.basePath)
+        self.hierStack.append(docID)
     return
 
 
@@ -606,7 +606,7 @@ class Pasta:
     extension = filePath.suffix[1:]  #cut off initial . of .jpg
     if str(filePath).startswith('http'):
       absFilePath = Path(tempfile.gettempdir())/filePath.name
-      urllib.request.urlretrieve(str(filePath).replace(':/','://'), absFilePath)
+      request.urlretrieve(str(filePath).replace(':/','://'), absFilePath)
       projectDB = self.cwd.parts[0]
       dataset = datalad.Dataset(self.basePath/projectDB)
     else:

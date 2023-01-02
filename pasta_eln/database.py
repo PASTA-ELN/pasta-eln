@@ -1,21 +1,21 @@
 """ Class for interaction with couchDB """
 import traceback
 from pathlib import PosixPath
-# from serverActions import testUser
+
+from .fixedStrings import defaultOntology
 
 class Database:
   """
   Class for interaction with couchDB
   """
 
-  def __init__(self, user, password, databaseName, confirm, softwarePath='', **kwargs):
+  def __init__(self, user, password, databaseName, confirm, **kwargs):
     """
     Args:
         user (string): user name to local database
         password (string): password to local database
         databaseName (string): local database name
         confirm (function): confirm changes to database and file-tree
-        softwarePath (string): path to software and default dataDictionary.json
         kwargs (dict): additional parameter
     """
     import json
@@ -36,9 +36,7 @@ class Database:
       if '-ontology-' in self.db:
         print('Info: remove old ontology')
         self.db['-ontology-'].delete()
-      with open(softwarePath.joinpath('ontology.json'), 'r', encoding='utf-8') as fIn:
-        doc = json.load(fIn)
-      _ = self.db.create_document(doc)
+      _ = self.db.create_document(json.loads(defaultOntology))
     # check if default views exist and create them
     self.ontology    = self.db['-ontology-']
     return
@@ -361,7 +359,7 @@ class Database:
       print('**ERROR dsv01: something unexpected has happend. Log-file has traceback')
     return
 
-      
+
   def getHierarchy(self, start):
     """
     get hierarchy tree for projects, ...
@@ -431,7 +429,6 @@ class Database:
         client2 = CouchDB(dbInfo['user'], dbInfo['password'], url=dbInfo['url'], connect=True)
       except:
         print('**ERROR drp01: Could not connect to remote server. Abort replication.')
-        # testUser(dbInfo['url'], None, dbInfo['user'], dbInfo['password'] )
         return False
       try:
         listAllDataBases = client2.all_dbs()
@@ -521,7 +518,7 @@ class Database:
     """
     import os, re, base64, io
     from PIL import Image
-    from miscTools import bcolors
+    from .miscTools import bcolors
     if verbose:
       outstring = f'{bcolors.UNDERLINE}**** LEGEND ****{bcolors.ENDC}\n'
       outstring+= f'{bcolors.OKGREEN}Green: perfect and as intended{bcolors.ENDC}\n'
