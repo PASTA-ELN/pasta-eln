@@ -1,14 +1,12 @@
-#!/usr/bin/python3
-
-#TODO GET RID OF THIS FILE: and distribute it into better named
-"""
-Misc methods and definitions for json, colors
-"""
-import sys
+""" Misc methods and colors """
+import sys, uuid
+from re import sub
+#TODO Reduce all dictionary functions from here
 
 class bcolors:
   """
   Colors for Command-Line-Interface and output
+  #TODO move to cli functions
   """
   HEADER = '\033[95m'
   OKBLUE = '\033[94m'
@@ -18,6 +16,28 @@ class bcolors:
   ENDC = '\033[0m'
   BOLD = '\033[1m'
   UNDERLINE = '\033[4m'
+
+
+def uuidv4():
+  """ Create a new uuidv4 string
+  from: https://stackoverflow.com/questions/534839/how-to-create-a-guid-uuid-in-python
+  """
+  #MIGHT NOT BE NEEDED HERE SINCE EVERYWHERE CAN TAKE FUNCTION DIRECTLY
+  return uuid.uuid4().hex
+
+
+def camelCase(a_string):
+  """ Produce camelCase from normal string
+
+  Args:
+     a_string (str): string
+
+  Returns:
+    str: camel case of that string
+  """
+  a_string = sub(r"(_|-)+", " ", a_string).title().replace(" ", "").replace("*","")
+  return ''.join([a_string[0].lower(), a_string[1:]])
+  
 
 def createDirName(name,docType,thisChildNumber):
   """ create directory-name by using camelCase and a prefix
@@ -30,14 +50,12 @@ def createDirName(name,docType,thisChildNumber):
   Returns:
     string: directory name with leading number
   """
-  from commonTools import commonTools as cT  #not globally imported since confuses translation
   if docType == 'x0':
-    return cT.camelCase(name)
+    return camelCase(name)
   #steps, tasks
   if isinstance(thisChildNumber, str):
     thisChildNumber = int(thisChildNumber)
-  return f'{thisChildNumber:03d}'+'_'+cT.camelCase(name)
-
+  return f'{thisChildNumber:03d}'+'_'+camelCase(name)
 
 
 def generic_hash(path, forceFile=False):
@@ -94,6 +112,7 @@ def upOut(key):
       key_ = ':'.join(key_.split('bcA:Maw'))
     keys_.append(key_)
   return keys_
+
 
 def upIn(key):
   """

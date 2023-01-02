@@ -2,8 +2,8 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout   # pylint: disable=no-name-in-module
 from PySide6.QtCore import Slot   # pylint: disable=no-name-in-module
 
-from widgetDocTypes import DocTypes
-from widgetProject import Project
+from .widgetDocTypes import DocTypes
+from .widgetProject import Project
 
 class Body(QWidget):
   """ Central widget: everything that is not sidebar """

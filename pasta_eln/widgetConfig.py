@@ -2,8 +2,8 @@
 from PySide6.QtWidgets import QDialog, QWidget, QHBoxLayout, QVBoxLayout, QPushButton, QTabWidget, \
                               QFormLayout, QLineEdit, QLabel, QTextEdit   # pylint: disable=no-name-in-module
 
-from widgetConfigSetup import ConfigurationSetup
-from fixedStrings import configurationOverview
+from .widgetConfigSetup import ConfigurationSetup
+from .fixedStrings import configurationOverview
 
 class Configuration(QDialog):
   """

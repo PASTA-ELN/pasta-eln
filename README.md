@@ -6,7 +6,28 @@
 [![Documentation building](https://github.com/PASTA-ELN/pasta-eln/actions/workflows/docbuild.yml/badge.svg)](https://github.com/PASTA-ELN/pasta-eln/actions/workflows/docbuild.yml)
 [![Linting](https://github.com/PASTA-ELN/pasta-eln/actions/workflows/pylint.yml/badge.svg)](https://github.com/PASTA-ELN/pasta-eln/actions/workflows/pylint.yml)
 
-## Table of contents
+Users, all the documentation can be found at [Github-pages](https://pasta-eln.github.io/pasta-eln/)
+
+This page / area is for developers and contains some helpful information for them
+
+- Installation location windows:
+  - C:\Users\Steffen\AppData\Local\Programs\Python\Python311\Scripts
+  - C:\Users\Steffen\AppData\Local\Programs\Python\Python311\Lib\site-packages\pasta_eln
+  -
+
+- Run Pasta-ELN directly from commandline without installation
+  -  python -m pasta_eln.installationTools
+
+- Hints for developers
+  -  qta-browser
+## How to create a new version
+1. normal commit to test the actions, then do ..
+2. create a new version: ./commit.py "Minimal viable product" 1
+
+
+
+
+# Old stuff
 - Installation instructions
   - [Linux/Ubuntu](installLinux.md)
   - [Windows](installWindows.md)

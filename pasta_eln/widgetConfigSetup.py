@@ -3,7 +3,7 @@ import webbrowser
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, QPushButton    # pylint: disable=no-name-in-module
 import qtawesome as qta
 
-from installationTools import getOS, gitAnnex, couchdb, configuration, ontology, exampleData
+from .installationTools import getOS, gitAnnex, couchdb, configuration, ontology, exampleData
 
 class ConfigurationSetup(QWidget):
   """

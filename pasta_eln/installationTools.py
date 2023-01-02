@@ -1,32 +1,64 @@
 #!/usr/bin/python3
-"""  Methods that check, repair, the local PASTA-ELN installation """
+'''  Methods that check, repair, the local PASTA-ELN installation '''
 import os, platform, sys, json, shutil, random, string
 import importlib.util
 import urllib.request
 from pathlib import Path
 
-from backend import Pasta
-from fixedStrings import defaultOntology
+from .backend import Pasta
+from .fixedStrings import defaultOntology
 
 
 def getOS():
-  """
+  '''
   Get operating system and python environment
 
   Returns:
     string: os + pythonEnvironment
-  """
+  '''
   operatingSys = platform.system()
   # Get base/real prefix, or sys.prefix if there is none
-  get_base_prefix_compat = getattr(sys, "base_prefix", None) or getattr(sys, "real_prefix", None) or sys.prefix
+  get_base_prefix_compat = getattr(sys, 'base_prefix', None) or getattr(sys, 'real_prefix', None) or sys.prefix
   in_virtualenv = get_base_prefix_compat != sys.prefix
   environment = sys.prefix if in_virtualenv else '_system_'
   return operatingSys+' '+environment
 
 
+def createDefaultConfiguration(user, password):
+  '''
+  Check configuration file .pastaELN.json for consistencies
+
+  Args:
+    command (str): 'test' or 'repair'
+    user (str): user name (for windows)
+    password (password): password (for windows)
+
+  Returns:
+    dict: dictionary of configuration
+  '''
+  if user == '':
+    user = input('Enter user name: ')
+  if password == '':
+    password = input('Enter password: ')
+  if platform.system()=='Windows':
+    pathPasta = str(Path.home()/'Documents'/'PASTA_ELN')
+  else:
+    pathPasta = str(Path.home()/'PASTA_ELN')
+  conf = {}
+  conf['default']     = 'research'
+  conf['links']       = {'research':{\
+                          'local':{'user':user, 'password':password, 'database':'research', 'path':pathPasta},
+                          'remote':{}  }}
+  conf['version']     = 1
+  conf['userID']      = os.getlogin()
+  conf['extractors']  = {}
+  conf['qrPrinter']   = {}
+  conf['magicTags']   = ['P1','P2','P3','TODO','WAIT','DONE']
+  return conf
+
 
 def gitAnnex(command='test'):
-  """
+  '''
   test git-annex installation or install it
 
   Args:
@@ -34,7 +66,7 @@ def gitAnnex(command='test'):
 
   Returns:
     string: '' for success, filled with errors
-  """
+  '''
   if command == 'test':
     if shutil.which('git-annex') is None:
       return '**ERROR: git-annex not installed'
@@ -55,6 +87,12 @@ def gitAnnex(command='test'):
         'sleep 10000']
       os.system('xterm -e "'+'; '.join(bashCommand)+'"')
       return ''
+    if platform.system()=='Windows':
+      url = 'https://downloads.kitenet.net/git-annex/windows/7/current/git-annex-installer.exe'
+      path = Path.home()/'Downloads'/'git-annex-installer.exe'
+      resultFilePath, _ = urllib.request.urlretrieve(url, path)
+      os.system(str(resultFilePath))
+      return 'Installed git-annex using temporary file', resultFilePath
     return '**ERROR: Unknown operating system '+platform.system()
 
   return '**ERROR: Unknown command'
@@ -62,20 +100,25 @@ def gitAnnex(command='test'):
 
 
 def couchdb(command='test'):
-  """
+  '''
   test couchDB installation or install it
+  - Linux install also creates default configuration file .pastaELN.json
+  - Windows not since the password is unknown after installation
 
   Args:
     command (string): 'test' or 'install'
 
   Returns:
     string: '' for success, filled with errors
-  """
+  '''
   if command == 'test':
-    with urllib.request.urlopen('http://127.0.0.1:5984') as package:
-      contents = package.read()
-      if json.loads(contents)['couchdb'] == 'Welcome':
-        return ''
+    try:
+      with urllib.request.urlopen('http://127.0.0.1:5984') as package:
+        contents = package.read()
+        if json.loads(contents)['couchdb'] == 'Welcome':
+          return ''
+    except:
+      pass
     return '**ERROR**'
 
   elif command == 'install':
@@ -91,49 +134,51 @@ def couchdb(command='test'):
         'curl -X PUT http://admin:'+password+'@127.0.0.1:5984/_users',
         'curl -X PUT http://admin:'+password+'@127.0.0.1:5984/_replicator',
         'curl -X PUT http://admin:'+password+'@127.0.0.1:5984/_global_changes',
-        'echo "DONE installing couchDB"',
+        'echo DONE',
         'sleep 10000']
       os.system('xterm -e "'+'; '.join(bashCommand)+'"')
       #create or adopt .pastaELN.json
       path = Path.home()/'.pastaELN.json'
-      pathPasta = Path.home()/'PASTA_ELN'
       if path.exists():
         with open(path,'r', encoding='utf-8') as fConf:
           conf = json.load(fConf)
       else:
-        conf = {}
-
-        conf['default']     = 'research'
-        conf['links']       = {'research':{\
-                                'local':{'user':'admin', 'password':password, 'database':'research', 'path':pathPasta},
-                                'remote':{}  }}
-        conf['version']     = 1
-        conf['userID']      = os.getlogin()
-        conf['extractors']  = {}
-        conf['qrPrinter']   = {}
-        conf['magicTags']   = ['P1','P2','P3','TODO','WAIT','DONE']
+        conf = createDefaultConfiguration('admin', password)
       with open(path,'w', encoding='utf-8') as fConf:
         fConf.write(json.dumps(conf, indent=2) )
       return 'Password: '+password
+    if platform.system()=='Windows':
+      url = 'https://couchdb.neighbourhood.ie/downloads/3.1.1/win/apache-couchdb-3.1.1.msi'
+      path = Path.home()/'Downloads'/'apache-couchdb-3.1.1.msi'
+      resultFilePath, _ = urllib.request.urlretrieve(url, path)
+      os.system(str(resultFilePath))
+      return 'Installed couchDB'
     return '**ERROR: Unknown operating system '+platform.system()
 
   return '**ERROR: Unknown command'
 
 
-
-def configuration(command='test'):
-  """
+def configuration(command='test', user='', password=''):
+  '''
   Check configuration file .pastaELN.json for consistencies
 
   Args:
-    command (string): 'test' or 'repair'
+    command (str): 'test' or 'repair'
+    user (str): user name (for windows)
+    password (password): password (for windows)
 
   Returns:
     string: ''=success, else error messages
-  """
+  '''
   output = ''
-  with open(Path.home()/'.pastaELN.json','r', encoding='utf-8') as fConf:
-    conf = json.load(fConf)
+  try:
+    with open(Path.home()/'.pastaELN.json','r', encoding='utf-8') as fConf:
+      conf = json.load(fConf)
+  except:
+    output += '**ERROR configuration file does not exist\n'
+    conf = {}
+    if command == 'repair':
+      conf = createDefaultConfiguration(user, password)
 
   illegalNames = [key for key in conf if key.startswith('-')]
   if not 'softwareDir' in conf:
@@ -166,15 +211,15 @@ def configuration(command='test'):
       conf['extractors'] = {}
     else:
       output += '**ERROR: No extractors in config file\n'
-  if not "version" in conf or conf['version']!=1:
+  if not 'version' in conf or conf['version']!=1:
     if command == 'repair':
       conf['version'] = 1
     else:
       output += '**ERROR: No or wrong version in config file\n'
-  if not "links" in conf:
+  if not 'links' in conf:
     output += '**ERROR: No links in config file; REPAIR MANUALLY\n'
 
-  if not "default" in conf:
+  if not 'default' in conf:
     if command == 'repair' and len(illegalNames)==0:
       conf['default'] = list(conf['links'].keys())[0]
     else:
@@ -200,7 +245,7 @@ def configuration(command='test'):
 
 
 def ontology(command='test'):
-  """
+  '''
   Check configuration file .pastaELN.json for consistencies
 
   Args:
@@ -208,7 +253,7 @@ def ontology(command='test'):
 
   Returns:
     string: ''=success, else error messages
-  """
+  '''
   output = ''
   pasta = Pasta()
 
@@ -237,14 +282,14 @@ def ontology(command='test'):
 
 
 def exampleData():
-  """
+  '''
   Create example data after installation
-  """
+  '''
   configName = 'research'
   pasta = Pasta(configName, initViews=True, initConfig=False)
   ### CREATE PROJECTS AND SHOW
   print('*** CREATE EXAMPLE PROJECT AND SHOW ***')
-  pasta.addData('x0', {'-name': "PASTA's Example Project", 'objective': 'Test if everything is working as intended.', 'status': 'active', 'comment': '#tag Can be used as reference or deleted'})
+  pasta.addData('x0', {'-name': 'PASTAs Example Project', 'objective': 'Test if everything is working as intended.', 'status': 'active', 'comment': '#tag Can be used as reference or deleted'})
   print(pasta.output('x0'))
 
   ### TEST PROJECT PLANING
@@ -294,7 +339,7 @@ def exampleData():
   print(pasta.output('measurement'))
 
   ### VERIFY DATABASE INTEGRITY
-  print("\n*** VERIFY DATABASE INTEGRITY ***")
+  print('\n*** VERIFY DATABASE INTEGRITY ***')
   print(pasta.checkDB(verbose=True))
   print('\n*** DONE WITH VERIFY ***')
   return
@@ -303,21 +348,42 @@ def exampleData():
 ##############
 # Main method for testing and installation without GUI
 def main():
-  """ Main method and entry point for commands """
+  ''' Main method and entry point for commands '''
   print('---- Test PASTA-ELN installation----')
+  print('--   if nothing reported: it is ok.')
   print('getOS        :', getOS())
-  print('git-annex    :', gitAnnex())
-  print('chouchDB     :', couchdb())
-  print('configuration:', configuration())
-  print('ontology     :\n'+ontology())
-  print("Add any argument to install PASTA-ELN. Don't do it if PASTA-ELN is already installed.")
+  res = gitAnnex()
+  flagGitAnnex = 'ERROR' in res
+  print('git-annex    :', res)
+  res = couchdb()
+  flagCouchdb = 'ERROR' in res
+  print('chouchDB     :', res)
+  res = configuration()
+  flagConfiguration = 'ERROR' in res
+  print('configuration:', res)
+  try:
+    res = '\n'+ontology()
+  except:
+    res = ' **ERROR**'
+    raise
+  flagOntology = 'ERROR' in res
+  print('ontology     :'+res)
 
-  if len(sys.argv)>1:
+  print('Add "install" argument to install PASTA-ELN.')
+  if len(sys.argv)>1 and 'install' in sys.argv:
     print('---- Create PASTA-ELN installation----')
-    print('install git-annex    :', gitAnnex('install'))
-    print('install couchDB      :', couchdb('install'))
-    print('repair  configuration:', configuration('repair'))
-    print('install ontology     :', ontology('install'))
+    if flagGitAnnex:
+      print('install git-annex    :', gitAnnex('install'))
+    if flagCouchdb:
+      print('install couchDB      :', couchdb('install'))
+    if flagConfiguration:
+      print('repair  configuration:', configuration('repair'))
+    if flagOntology and not flagCouchdb:
+      print('install ontology     :', ontology('install'))
+
+  print('Add "example" argument to create example data.')
+  if len(sys.argv)>1 and 'example' in sys.argv:
+    print('---- Create Example data ----')
     print('create example data  :', exampleData())
 
 if __name__ == '__main__':

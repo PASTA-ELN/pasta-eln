@@ -1,8 +1,7 @@
-"""Class for interaction with couchDB
-"""
+""" Class for interaction with couchDB """
 import traceback
 from pathlib import PosixPath
-from serverActions import testUser
+# from serverActions import testUser
 
 class Database:
   """
@@ -25,8 +24,8 @@ class Database:
     try:
       self.client = CouchDB(user, password, url='http://127.0.0.1:5984', connect=True)
     except:
-      print('**ERROR dit01: Something unexpected has happend\n'+traceback.format_exc())
-      raise
+      print('**ERROR dit01: Something unexpected has happend')
+      return
     self.databaseName = databaseName
     if self.databaseName in self.client.all_dbs():
       self.db = self.client[self.databaseName]
@@ -362,6 +361,55 @@ class Database:
       print('**ERROR dsv01: something unexpected has happend. Log-file has traceback')
     return
 
+      
+  def getHierarchy(self, start):
+    """
+    get hierarchy tree for projects, ...
+
+    Args:
+      start (str): start of the hierarchy (most parent)
+    """
+    from anytree import Node, RenderTree, AsciiStyle
+    from anytree.search import find_by_attr
+    view = self.getView('viewHierarchy/viewHierarchy', startKey=start)
+    ##TODO perhaps improve algorithm to have less loops
+    #create nicer dictionary
+    idDict = {}
+    for item in view:
+      idDict[item['id']] = [item['key']]+item['value']
+    # arrange value items (hierarchy) into order that can be used for sorting
+    dataList = {}
+    for key in idDict:
+      value = idDict[key]
+      if value[0]==key: # project: simple hierarchy
+        hierString = key
+      else:             # else: complicated re-structuring
+        hierarchyIDs = value[0].split(' ')
+        hierString = hierarchyIDs[0]  # initialize string
+        for id in hierarchyIDs:
+          if id in idDict:
+            childNum = idDict[id][1]
+            if childNum>9999:
+              print('**ERROR** commonTools:ChildNUM>9999 **ERROR** '+key)
+          hierString += ' '+str(childNum).zfill(5)+' '+id #childNum-ID(padded with 0) ID
+      # add to data list
+      dataList[hierString]=value[2:]
+    # sorting
+    dataList = dict(sorted(dataList.items()))
+    # create an anytree
+    dataTree = None
+    for key in dataList:
+      value = dataList[key]
+      if dataTree == None:
+        dataTree = Node(id=key, docType=value[0], name=value[1])
+      else:
+        myID = key.split()[-1]
+        parentID = key.split()[-3]
+        parentNode = find_by_attr(dataTree, parentID, name='id')
+        _ = Node(id=myID, parent=parentNode, docType=value[0], name=value[1])
+    # print(RenderTree(dataTree, style=AsciiStyle()))
+    return dataTree
+
 
   def replicateDB(self, dbInfo, removeAtStart=False):
     """
@@ -383,7 +431,7 @@ class Database:
         client2 = CouchDB(dbInfo['user'], dbInfo['password'], url=dbInfo['url'], connect=True)
       except:
         print('**ERROR drp01: Could not connect to remote server. Abort replication.')
-        testUser(dbInfo['url'], None, dbInfo['user'], dbInfo['password'] )
+        # testUser(dbInfo['url'], None, dbInfo['user'], dbInfo['password'] )
         return False
       try:
         listAllDataBases = client2.all_dbs()

@@ -1,8 +1,8 @@
 """ Sidebar widget that includes the navigation items """
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QGridLayout    # pylint: disable=no-name-in-module
 
-from widgetConfig import Configuration
-from style import TextButton, LetterButton, IconButton
+from .widgetConfig import Configuration
+from .style import TextButton, LetterButton, IconButton
 
 class Sidebar(QWidget):
   """ Sidebar widget that includes the navigation items """
@@ -11,7 +11,7 @@ class Sidebar(QWidget):
     self.comm = comm
     self.setMinimumWidth(200)
     self.setMaximumWidth(200)
-    print(self.styleSheet.values)
+    # print(self.styleSheet.values)
     self.setStyleSheet("background-color: blue")
 
     # GUI stuff
@@ -39,6 +39,7 @@ class Sidebar(QWidget):
           continue
         nativeView[item['id']] = [item['key']]+item['value']
       for item in nativeView.items():
+        print(item)
         docType = nativeView[item][2][0]
         if docType=='x0':
           button = TextButton(nativeView[item][3], None)  #icon with no text

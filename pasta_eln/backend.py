@@ -1,8 +1,17 @@
-#!/usr/bin/python3
 """ Python Backend: all operations with the filesystem are here
 """
-
-# TODO_P1 reduce relative_to: self.cwd should be always small
+import json, sys, os, shutil, re, importlib, tempfile
+from pathlib import Path
+from urllib import request
+from datetime import datetime
+from zipfile import ZipFile, ZIP_DEFLATED
+if sys.platform=='win32':
+  import win32con, win32api
+import datalad.api as datalad
+from datalad.support import annexrepo
+from .database import Database
+from .miscTools import upIn, upOut, createDirName, generic_hash, bcolors
+from .handleDictionaries import ontology2Labels, fillDocBeforeCreate
 
 class Pasta:
   """
@@ -20,11 +29,6 @@ class Pasta:
           - initViews (bool): initialize views at startup
           - resetOntology (bool): reset ontology on database from one on file
     """
-    import json, sys
-    from pathlib import Path
-    from database import Database
-    from miscTools import upIn, upOut
-    from reformatDictionaries import ontology2Labels
     ## CONFIGURATION FOR DATALAD and GIT: has to move to dictionary
     self.vanillaGit = ['*.md','*.rst','*.org','*.tex','*.py','.id_pastaELN.json'] #tracked but in git;
     #   .id_pastaELN.json has to be tracked by git (if ignored: they don't appear on git-status; they have to change by PASTA)
@@ -95,8 +99,6 @@ class Pasta:
       deleteDB (bool): remove database
       kwargs (dict): additional parameter
     """
-    import os
-    from pathlib import Path
     if deleteDB:
       #uninit / delete everything of git-annex and datalad
       for root, dirs, files in os.walk(self.basePath):
@@ -133,15 +135,6 @@ class Pasta:
     Returns:
         bool: success
     """
-    import sys, json, os
-    from pathlib import Path
-    from urllib import request
-    import datalad.api as datalad
-    from commonTools import commonTools as cT
-    from miscTools import createDirName, generic_hash
-    if sys.platform=='win32':
-      import win32con, win32api
-
     if hierStack is None:
       hierStack=[]
     callback = kwargs.get('callback', None)
@@ -260,13 +253,13 @@ class Pasta:
     if edit:
       #update document
       keysNone = [key for key in doc if doc[key] is None]
-      doc = cT.fillDocBeforeCreate(doc, '--').to_dict()  #store None entries and save back since js2py gets equalizes undefined and null
+      doc = fillDocBeforeCreate(doc, '--')  #store None entries and save back since js2py gets equalizes undefined and null
       for key in keysNone:
         doc[key]=None
       doc = self.db.updateDoc(doc, doc['_id'])
     else:
       # add doc to database
-      doc = cT.fillDocBeforeCreate(doc, doc['-type']).to_dict()
+      doc = fillDocBeforeCreate(doc, doc['-type'])
       doc = self.db.saveDoc(doc)
 
     ## adaptation of directory tree, information on disk: documentID is required
@@ -293,12 +286,12 @@ class Pasta:
           with open(gitPath,'w', encoding='utf-8') as fOut:
             fOut.write(gitAttribute+'\n')
           if sys.platform=='win32':
-            win32api.SetFileAttributes(gitPath, win32con.FILE_ATTRIBUTE_HIDDEN)
+            win32api.SetFileAttributes(str(gitPath), win32con.FILE_ATTRIBUTE_HIDDEN)
           gitPath = self.basePath/path/'.gitignore'
           with open(gitPath,'w', encoding='utf-8') as fOut:
             fOut.write(gitIgnore+'\n')
           if sys.platform=='win32':
-            win32api.SetFileAttributes(gitPath,win32con.FILE_ATTRIBUTE_HIDDEN)
+            win32api.SetFileAttributes(str(gitPath),win32con.FILE_ATTRIBUTE_HIDDEN)
           dlDataset = datalad.Dataset(self.basePath/path)
           dlDataset.save(path='.',message='changed gitattributes')
         else:
@@ -307,17 +300,16 @@ class Pasta:
       dataset = datalad.Dataset(self.basePath/projectPath)
       if (self.basePath/path/'.id_pastaELN.json').exists():
         if sys.platform=='win32':
-          if win32api.GetFileAttributes(self.basePath/path/'.id_pastaELN.json')==\
-              win32con.FILE_ATTRIBUTE_HIDDEN:
-            win32api.SetFileAttributes(self.basePath/path/'.id_pastaELN.json',\
-              win32con.FILE_ATTRIBUTE_ARCHIVE)
+          aFile = str(self.basePath/path/'.id_pastaELN.json')
+          if win32api.GetFileAttributes(aFile) == win32con.FILE_ATTRIBUTE_HIDDEN:
+            win32api.SetFileAttributes(aFile, win32con.FILE_ATTRIBUTE_ARCHIVE)
         else:
           dataset.unlock(path=self.basePath/path/'.id_pastaELN.json')
       with open(self.basePath/path/'.id_pastaELN.json','w', encoding='utf-8') as f:  #local path, update in any case
         f.write(json.dumps(doc))
       if sys.platform=='win32':
-        win32api.SetFileAttributes(self.basePath/path/'.id_pastaELN.json',\
-          win32con.FILE_ATTRIBUTE_HIDDEN)
+        aFile = str(self.basePath/path/'.id_pastaELN.json')
+        win32api.SetFileAttributes(aFile, win32con.FILE_ATTRIBUTE_HIDDEN)
       # datalad api version
       dataset.save(path=self.basePath/path/'.id_pastaELN.json', message='Added folder & .id_pastaELN.json')
       ## shell command
@@ -341,7 +333,6 @@ class Pasta:
         dirName (string): change into this directory (absolute path given). For if data is moved
         kwargs (dict): additional parameter
     """
-    from pathlib import Path
     if docID is None or (docID[0]=='x' and docID[1]!='-'):  #cd ..: none. close 'project', 'task'
       self.hierStack.pop()
       self.cwd = self.cwd.parent
@@ -371,10 +362,6 @@ class Pasta:
     Raises:
       ValueError: could not add new measurement to database
     """
-    import shutil
-    import datalad.api as datalad
-    from datalad.support import annexrepo
-    from miscTools import bcolors, generic_hash
     if len(self.hierStack) == 0:
       print(f'{bcolors.FAIL}**Warning - scan directory: No project selected{bcolors.ENDC}')
       return
@@ -490,10 +477,6 @@ class Pasta:
     Returns:
         bool: success
     """
-    import json, os
-    from pathlib import Path
-    from datetime import datetime
-    from zipfile import ZipFile, ZIP_DEFLATED
     dirNameProject = 'backup'
     zipFileName = ''
     if self.cwd is None:
@@ -619,9 +602,6 @@ class Pasta:
           - maxSize of image
           - saveToFile: save data to files
     """
-    import importlib, shutil, urllib, tempfile
-    from pathlib import Path
-    import datalad.api as datalad
     exitAfterDataLad = kwargs.get('exitAfterDataLad',False)
     extension = filePath.suffix[1:]  #cut off initial . of .jpg
     if str(filePath).startswith('http'):
@@ -703,7 +683,6 @@ class Pasta:
     Returns:
         bool: replication success
     """
-    from miscTools import upOut
     remoteConf = dict(self.confLink['remote'])
     if not remoteConf: #empty entry: fails
       print("**ERROR brp01: You tried to replicate although, remote is not defined")
@@ -724,7 +703,6 @@ class Pasta:
     Returns:
         string: output incl. \n
     """
-    from datalad.support import annexrepo
     ### check database itself for consistency
     output = self.db.checkDB(verbose=verbose, **kwargs)
     ### check if datalad status is clean for all projects
@@ -814,7 +792,9 @@ class Pasta:
             contentString = lineItem['value'][idx]
           elif isinstance(lineItem['value'][idx], (bool,int)):
             contentString = str(lineItem['value'][idx])
-          else:
+          elif lineItem['value'][idx] is None:
+            contentString = '--'
+          else: #list
             contentString = ' '.join(lineItem['value'][idx])
           contentString = contentString.replace('\n',' ')
           if width<0:  #test if value as non-trivial length
@@ -881,28 +861,15 @@ class Pasta:
     Returns:
         string: output incl. \n
     """
-    import re
-    from commonTools import commonTools as cT
+    from anytree import PreOrderIter
     if len(self.hierStack) == 0:
       return 'Warning: pasta.outputHierarchy No project selected'
     hierString = ' '.join(self.hierStack)
-    view = self.db.getView('viewHierarchy/viewHierarchy', startKey=hierString)
-    nativeView = {}
-    for item in view:
-      if onlyHierarchy and not item['id'].startswith('x-'):
-        continue
-      nativeView[item['id']] = [item['key']]+item['value']
-    if addTags=='all':
-      outString = cT.hierarchy2String(nativeView, addID, self.getDoc, 'all', self.magicTags)
-    elif addTags=='tags':
-      outString = cT.hierarchy2String(nativeView, addID, self.getDoc, 'tags', self.magicTags)
-    else:
-      outString = cT.hierarchy2String(nativeView, addID, None, 'none', None)
-    #remove superficial * from head of all lines
-    minPrefix = len(re.findall(r'^\*+',outString)[0])
-    startLine = r'\n\*{'+str(minPrefix)+'}'
-    outString = re.sub(startLine,'\n',outString)[minPrefix+1:] #also remove from head of string
-    return outString
+    hierarchy = self.db.getHierarchy(hierString)
+    output = ""
+    for node in PreOrderIter(hierarchy):
+      output +='  '*node.depth+node.name+' | '+'/'.join(node.docType)+' | '+node.id+'\n'
+    return output
 
 
   def getEditString(self):
@@ -927,11 +894,6 @@ class Pasta:
     Returns:
        success of function: true/false
     """
-    import re
-    from pathlib import Path
-    import datalad.api as datalad
-    from commonTools import commonTools as cT
-    from miscTools import createDirName
     # write backup
     verbose = False #debugging only of this function
     if verbose:
@@ -1090,7 +1052,6 @@ class Pasta:
     Returns:
         list: list of names, list of document-ids
     """
-    from commonTools import commonTools as cT
     hierTree = self.outputHierarchy(True,True,False)
     if hierTree is None:
       print('**ERROR bgc01: No hierarchy tree')

@@ -4,10 +4,10 @@ from PySide6.QtCore import Qt   # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QApplication    # pylint: disable=no-name-in-module
 from qt_material import apply_stylesheet  #of https://github.com/UN-GCPDS/qt-material
 
-from backend import Pasta
-from communicate import Communicate
-from widgetSidebar import Sidebar
-from widgetBody import Body
+from .backend import Pasta
+from .communicate import Communicate
+from .widgetSidebar import Sidebar
+from .widgetBody import Body
 os.environ['QT_API'] = 'pyside6'
 
 # Subclass QMainWindow to customize your application's main window
