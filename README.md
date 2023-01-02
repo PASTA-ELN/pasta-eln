@@ -6,25 +6,29 @@
 [![Documentation building](https://github.com/PASTA-ELN/pasta-eln/actions/workflows/docbuild.yml/badge.svg)](https://github.com/PASTA-ELN/pasta-eln/actions/workflows/docbuild.yml)
 [![Linting](https://github.com/PASTA-ELN/pasta-eln/actions/workflows/pylint.yml/badge.svg)](https://github.com/PASTA-ELN/pasta-eln/actions/workflows/pylint.yml)
 
-Users, all the documentation can be found at [Github-pages](https://pasta-eln.github.io/pasta-eln/)
+**Users: all documentation can be found at [Github-pages](https://pasta-eln.github.io/pasta-eln/)**
 
-This page / area is for developers and contains some helpful information for them
+**This page / area is for developers and contains some helpful information for them**
 
+## Notes for developers
+
+### Notes on windows installation
 - Installation location windows:
   - C:\Users\Steffen\AppData\Local\Programs\Python\Python311\Scripts
   - C:\Users\Steffen\AppData\Local\Programs\Python\Python311\Lib\site-packages\pasta_eln
-  -
 
+### Notes on all systems
 - Run Pasta-ELN directly from commandline without installation
   -  python -m pasta_eln.installationTools
   - pastaELN.py in home directory of repository
+- find qt-awesome icons: qta-browser
 
-- Hints for developers
-  -  qta-browser
-## How to create a new version
-1. normal commit to test the actions, then do ..
-2. create a new version: ./commit.py "Minimal viable product" 1
+### How to create a new version
+1. normal commit to test the actions
+2. pylint pasta_eln
+3. create a new version: ./commit.py "Minimal viable product" 1
 
+### How to write small python programs that do things
 ``` Python
 from pasta_eln.backend import Pasta
 pasta = Pasta()
@@ -34,9 +38,7 @@ pasta.changeHierarchy(projID1)
 print(pasta.outputHierarchy())
 ```
 
-
-
-# Old stuff
+## Old stuff
 - Installation instructions
   - [Linux/Ubuntu](installLinux.md)
   - [Windows](installWindows.md)

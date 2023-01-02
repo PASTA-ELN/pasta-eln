@@ -3,20 +3,6 @@ import sys, uuid
 from re import sub
 #TODO Reduce all dictionary functions from here
 
-class bcolors:
-  """
-  Colors for Command-Line-Interface and output
-  #TODO move to cli functions
-  """
-  HEADER = '\033[95m'
-  OKBLUE = '\033[94m'
-  OKGREEN = '\033[92m'
-  WARNING = '\033[93m'
-  FAIL = '\033[91m'
-  ENDC = '\033[0m'
-  BOLD = '\033[1m'
-  UNDERLINE = '\033[4m'
-
 
 def uuidv4():
   """ Create a new uuidv4 string
@@ -175,28 +161,6 @@ def blob_hash(stream, size):
   if nRead != size:
     raise ValueError(f'{stream.name}: expected {size} bytes, found {nRead} bytes')
   return hasher.hexdigest()
-
-
-def stringToImage(aString, show=True):
-  """
-  *DEPRECATED*
-  convert a b64-string to png file
-  - not really used
-
-  Args:
-    aString (string): 64byte string of image
-    show (bool): show image
-
-  Returns:
-    Image: image of string
-  """
-  import base64, io
-  from PIL import Image
-  imgdata = base64.b64decode(aString)
-  image = Image.open(io.BytesIO(imgdata))
-  if show:
-    image.show()
-  return image
 
 
 def getExtractorConfig(directory):
