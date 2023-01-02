@@ -366,6 +366,9 @@ class Database:
 
     Args:
       start (str): start of the hierarchy (most parent)
+
+    Returns:
+      Node: hierarchy in an anytree
     """
     from anytree import Node, RenderTree, AsciiStyle
     from anytree.search import find_by_attr
@@ -384,12 +387,12 @@ class Database:
       else:             # else: complicated re-structuring
         hierarchyIDs = value[0].split(' ')
         hierString = hierarchyIDs[0]  # initialize string
-        for id in hierarchyIDs:
+        for thisId in hierarchyIDs:
           if id in idDict:
-            childNum = idDict[id][1]
+            childNum = idDict[thisId][1]
             if childNum>9999:
               print('**ERROR** commonTools:ChildNUM>9999 **ERROR** '+key)
-          hierString += ' '+str(childNum).zfill(5)+' '+id #childNum-ID(padded with 0) ID
+          hierString += ' '+str(childNum).zfill(5)+' '+thisId #childNum-ID(padded with 0) ID
       # add to data list
       dataList[hierString]=value[2:]
     # sorting
@@ -398,7 +401,7 @@ class Database:
     dataTree = None
     for key in dataList:
       value = dataList[key]
-      if dataTree == None:
+      if dataTree is None:
         dataTree = Node(id=key, docType=value[0], name=value[1])
       else:
         myID = key.split()[-1]

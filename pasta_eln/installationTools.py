@@ -28,7 +28,6 @@ def createDefaultConfiguration(user, password):
   Check configuration file .pastaELN.json for consistencies
 
   Args:
-    command (str): 'test' or 'repair'
     user (str): user name (for windows)
     password (password): password (for windows)
 

@@ -1,17 +1,16 @@
-""" Python Backend: all operations with the filesystem are here
-"""
+""" Python Backend: all operations with the filesystem are here """
 import json, sys, os, shutil, re, importlib, tempfile
 from pathlib import Path
 from urllib import request
 from datetime import datetime
 from zipfile import ZipFile, ZIP_DEFLATED
-if sys.platform=='win32':
-  import win32con, win32api
 import datalad.api as datalad
 from datalad.support import annexrepo
 from .database import Database
-from .miscTools import upIn, upOut, createDirName, generic_hash, bcolors
+from .miscTools import upIn, upOut, createDirName, generic_hash, bcolors, camelCase
 from .handleDictionaries import ontology2Labels, fillDocBeforeCreate
+if sys.platform=='win32':
+  import win32con, win32api
 
 class Pasta:
   """
@@ -196,9 +195,9 @@ class Pasta:
           if localCopy:
             baseName  = Path(doc['-name']).stem
             extension = Path(doc['-name']).suffix
-            path = self.cwd/(cT.camelCase(baseName)+extension)
+            path = self.cwd/(camelCase(baseName)+extension)
             request.urlretrieve(doc['-name'], self.basePath/path)
-            doc['-name'] = cT.camelCase(baseName)+extension
+            doc['-name'] = camelCase(baseName)+extension
           else:
             path = Path(doc['-name'])
             try:
@@ -912,7 +911,7 @@ class Pasta:
       else:                                  #other lines, incl. first
         newText += line+'\n'
     newText = prefix+' '+newText
-    docList = cT.editString2Docs(newText, self.magicTags)
+    docList = [] #TODO not required anymore cT.editString2Docs(newText, self.magicTags)
     del newText; del text
     # initialize iteration
     levelOld = None
@@ -1012,7 +1011,7 @@ class Pasta:
             for item in view:
               if item['value'][1][0][0]=='x':
                 continue  #skip since moved by itself
-              self.db.updateDoc( {'-branch':{'path':self.cwd..as_posix(), 'oldpath':path.as_posix(),\
+              self.db.updateDoc( {'-branch':{'path':self.cwd.as_posix(), 'oldpath':path.as_posix(),\
                                             'stack':self.hierStack,\
                                             'child':item['value'][2],\
                                             'op':'u'}},item['id'])
@@ -1053,12 +1052,16 @@ class Pasta:
     Returns:
         list: list of names, list of document-ids
     """
-    hierTree = self.outputHierarchy(True,True,False)
-    if hierTree is None:
-      print('**ERROR bgc01: No hierarchy tree')
-      return None, None
-    result = cT.getChildren(hierTree,docID)
-    return result['names'], result['ids']
+    ## CREATE NEW AS VERSION OF ANYTREE
+    print(self, docID)
+    # hierTree = self.outputHierarchy(True,True,False)
+    # if hierTree is None:
+    #   print('**ERROR bgc01: No hierarchy tree')
+    #   return None, None
+    # result = cT.getChildren(hierTree,docID)
+    # return result['names'], result['ids']
+    return []
+
 
   def outputQR(self):
     """

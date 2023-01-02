@@ -37,7 +37,7 @@ def camelCase(a_string):
   """
   a_string = sub(r"(_|-)+", " ", a_string).title().replace(" ", "").replace("*","")
   return ''.join([a_string[0].lower(), a_string[1:]])
-  
+
 
 def createDirName(name,docType,thisChildNumber):
   """ create directory-name by using camelCase and a prefix
@@ -305,7 +305,6 @@ def printQRcodeSticker(codes={},
   import qrcode, tempfile, os
   import numpy as np
   from PIL import Image, ImageDraw, ImageFont
-  from commonTools import commonTools as cT  # don't import globally since it disturbs translation
   fnt = ImageFont.truetype("arial.ttf", page['font'])
   offset    = int((page['size'][0]+page['margin'])/page['tiles'])
   qrCodeSize= min(offset-page['font']-page['margin'], page['size'][1])
@@ -319,7 +318,7 @@ def printQRcodeSticker(codes={},
     else:
       codeI, text =  '', ''
     if len(codeI)==0:
-      codeI = cT.uuidv4()
+      codeI = uuid.uuid4().hex
     # add text
     width, height = fnt.getsize(text)
     txtImage = Image.new('L', (width, height), color=255)

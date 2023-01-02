@@ -39,7 +39,7 @@ def fillDocBeforeCreate(data, docType):
   - type, project, childs
   - separate comment into tags, fields
   - create id if needed
-  
+
   used in backend.py and Store.js
 
   Args:
@@ -60,7 +60,7 @@ def fillDocBeforeCreate(data, docType):
     data['_id'] = prefix+'-'+uuid.uuid4().hex
   data['-date']   = datetime.now().isoformat()
   if '-branch' not in data:
-    data['-branch'] = [{'stack':[], 'path':null}]
+    data['-branch'] = [{'stack':[], 'path':None}]
   # separate comment into tags and fields
   # these tags are lost: '#d': too short; '#3tag': starts with number
   if 'comment' not in data:
