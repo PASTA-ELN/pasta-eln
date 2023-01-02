@@ -43,6 +43,3 @@ def main():
   window = MainWindow()
   window.show()
   app.exec()
-
-if __name__ == '__main__':
-  main()

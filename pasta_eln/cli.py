@@ -1,5 +1,4 @@
-#!/usr/bin/python3
-""" Main function when command-line commands used
+""" OLD Main function when command-line commands used
 
 Called by user or react-electron frontend. Keep it simple: only functions that
 are required by frontend. Otherwise, make only temporary changes
@@ -404,7 +403,3 @@ def main():
     print('**ERROR pma08: command in pastaELN.py does not exist |',arguments.command)
   elif result == '1' and arguments.command!='up':
     print('SUCCESS')
-
-
-if __name__=='__main__':
-  main()

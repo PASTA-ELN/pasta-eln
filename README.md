@@ -24,6 +24,14 @@ This page / area is for developers and contains some helpful information for the
 1. normal commit to test the actions, then do ..
 2. create a new version: ./commit.py "Minimal viable product" 1
 
+``` Python
+from pasta_eln.backend import Pasta
+pasta = Pasta()
+viewProj = pasta.db.getView('viewDocType/x0')
+projID1  = [i['id'] for i in viewProj if 'PASTA' in i['value'][0]][0]
+pasta.changeHierarchy(projID1)
+print(pasta.outputHierarchy())
+```
 
 
 

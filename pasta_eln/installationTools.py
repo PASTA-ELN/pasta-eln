@@ -1,4 +1,3 @@
-#!/usr/bin/python3
 '''  Methods that check, repair, the local PASTA-ELN installation '''
 import os, platform, sys, json, shutil, random, string
 import importlib.util
@@ -385,6 +384,3 @@ def main():
   if len(sys.argv)>1 and 'example' in sys.argv:
     print('---- Create Example data ----')
     print('create example data  :', exampleData())
-
-if __name__ == '__main__':
-  main()
