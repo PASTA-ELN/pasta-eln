@@ -287,7 +287,7 @@ def exampleData(force=True):
   Args:
     force (bool): force creation by removing content before creation
   '''
-  configName = 'pasta_tutorial'#'research'
+  configName = 'research'
   if force:
     pasta = Pasta(configName, initConfig=False)
     dirName = pasta.basePath

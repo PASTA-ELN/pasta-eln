@@ -60,9 +60,8 @@ class Pasta:
     # directories
     #    self.basePath (root of directory tree) is root of all projects
     #    self.cwd changes during program
-    # self.extractorPath = Path(configuration['extractorDir']) if 'extractorDir' in configuration else \
-    #                      Path(__file__)/'Extractors'
-    self.extractorPath = Path(__file__).parent/'Extractors'
+    self.extractorPath = Path(configuration['extractorDir']) if 'extractorDir' in configuration else \
+                         Path(__file__).parent/'Extractors'
     sys.path.append(str(self.extractorPath))  #allow extractors
     self.basePath     = Path(links[linkDefault]['local']['path'])
     self.cwd          = Path('.')
