@@ -24,8 +24,8 @@
 - find qt-awesome icons: qta-browser
 
 ### How to create a new version
-1. normal commit to test the actions
-2. pylint pasta_eln
+1. pylint pasta_eln
+2. normal commit to test all actions: pylint, documentation, ...
 3. create a new version: ./commit.py "Minimal viable product" 1
 
 ### How to write small python programs that do things
