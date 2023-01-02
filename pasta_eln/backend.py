@@ -247,7 +247,7 @@ class Pasta:
       childNum=9999
     if path is not None and path.is_absolute():
       path = path.relative_to(self.basePath)
-    path = None if path is None else str(path)
+    path = None if path is None else path.as_posix()
     doc['-branch'] = {'stack':hierStack,'child':childNum,'path':path, 'op':operation}
     if edit:
       #update document
@@ -417,9 +417,10 @@ class Pasta:
         parentID = None
         itemTarget = -1
         while parentID is None:
-          view = self.db.getView('viewHierarchy/viewPaths', startKey=str(targetDir.relative_to(self.basePath)))
+          view = self.db.getView('viewHierarchy/viewPaths', \
+            startKey=targetDir.relative_to(self.basePath).as_posix())
           for item in view:
-            if item['key']==str(targetDir.relative_to(self.basePath)):
+            if item['key']==targetDir.relative_to(self.basePath).as_posix():
               parentID = item['id']
               itemTarget = item
           targetDir = targetDir.parent
@@ -443,18 +444,19 @@ class Pasta:
           origin = origin.parent
         if target!='' and target.name == '.id_pastaELN.json':
           target = target.parent
-        view = self.db.getView('viewHierarchy/viewPaths', preciseKey=str((self.cwd/origin).relative_to(self.basePath)) )
+        view = self.db.getView('viewHierarchy/viewPaths',
+                                preciseKey=(self.cwd/origin).relative_to(self.basePath).as_posix())
         if len(view)==1:
           docID = view[0]['id']
           if target == '':       #delete
-            self.db.updateDoc( {'-branch':{'path':  str((self.cwd/origin).relative_to(self.basePath)),\
-                                          'oldpath':str((self.cwd/origin).relative_to(self.basePath)),\
+            self.db.updateDoc( {'-branch':{'path':  (self.cwd/origin).relative_to(self.basePath).as_posix(),\
+                                          'oldpath':(self.cwd/origin).relative_to(self.basePath).as_posix(),\
                                           'stack':[None],\
                                           'child':-1,\
                                           'op':'d'}}, docID)
           else:                  #update
-            self.db.updateDoc( {'-branch':{'path':  str((self.cwd/target).relative_to(self.basePath)),\
-                                          'oldpath':str((self.cwd/origin).relative_to(self.basePath)),\
+            self.db.updateDoc( {'-branch':{'path':  (self.cwd/target).relative_to(self.basePath).as_posix(),\
+                                          'oldpath':(self.cwd/origin).relative_to(self.basePath).as_posix(),\
                                           'stack':hierStack,\
                                           'child':itemTarget['value'][2],\
                                           'op':'u'}}, docID)
@@ -723,10 +725,10 @@ class Pasta:
         relPath = posixPath.relative_to(self.basePath)
         if relPath.name=='.id_pastaELN.json': #if project,step,task
           relPath = relPath.parent
-        if str(relPath) in listPaths:
-          listPaths.remove(str(relPath))
+        if relPath.as_posix() in listPaths:
+          listPaths.remove(relPath.as_posix())
           continue
-        if '_pasta.' in str(relPath) or '.datalad' in relPath.parts or \
+        if '_pasta.' in relPath.as_posix() or '.datalad' in relPath.parts or \
            relPath.name=='.gitattributes' or (self.basePath/relPath).is_dir() or \
            relPath.name=='.gitignore':
           continue
@@ -738,7 +740,7 @@ class Pasta:
     listPaths = [i for i in listPaths if not "://" in i ]
     listPaths = [i for i in listPaths if not (self.basePath/i).exists()]
     if len(listPaths)>0:
-      output += "These files of database not on filesystem: "+str(listPaths)+'\n'
+      output += "These files of database not on filesystem: "+listPaths.as_posix()+'\n'
     if clean:
       output += "** Datalad tree CLEAN **\n"
     else:
@@ -1006,11 +1008,11 @@ class Pasta:
           self.changeHierarchy(doc['_id'], dirName)   #'cd directory'
           if path is not None:
             #adopt measurements, samples, etc: change / update path by supplying old path
-            view = self.db.getView('viewHierarchy/viewPaths', startKey=str(path))
+            view = self.db.getView('viewHierarchy/viewPaths', startKey=path.as_posix())
             for item in view:
               if item['value'][1][0][0]=='x':
                 continue  #skip since moved by itself
-              self.db.updateDoc( {'-branch':{'path':str(self.cwd), 'oldpath':str(path),\
+              self.db.updateDoc( {'-branch':{'path':self.cwd..as_posix(), 'oldpath':path.as_posix(),\
                                             'stack':self.hierStack,\
                                             'child':item['value'][2],\
                                             'op':'u'}},item['id'])
