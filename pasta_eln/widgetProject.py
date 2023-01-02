@@ -1,6 +1,7 @@
 """ Widget that shows the content of project in a electronic labnotebook """
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel   # pylint: disable=no-name-in-module
 from PySide6.QtCore import Slot   # pylint: disable=no-name-in-module
+from anytree import PreOrderIter
 
 class Project(QWidget):
   """ Widget that shows the content of project in a electronic labnotebook """
@@ -20,9 +21,9 @@ class Project(QWidget):
     """
     table = self.comm.backend.db.getView('viewDocType/x0')
     # print(table[0]['id']) #TODO for now
-    hierarchy = self.comm.backend.db.getView('viewHierarchy/viewHierarchy', startKey=table[0]['id'])
+    hierarchy = self.comm.backend.db.getHierarchy(table[0]['id'])
     mainL = QVBoxLayout()
-    for item in hierarchy:
-      label = QLabel(str(item['value']))
+    for node in PreOrderIter(hierarchy):
+      label = QLabel('   - '*node.depth+node.name+' | '+'/'.join(node.docType)+' | '+node.id)
       mainL.addWidget(label)
     self.setLayout(mainL)

@@ -2,3 +2,6 @@
 
 Software
 ********
+
+
+.. image:: _static/pyside.png

@@ -388,7 +388,7 @@ class Database:
         hierarchyIDs = value[0].split(' ')
         hierString = hierarchyIDs[0]  # initialize string
         for thisId in hierarchyIDs:
-          if id in idDict:
+          if thisId in idDict:
             childNum = idDict[thisId][1]
             if childNum>9999:
               print('**ERROR** commonTools:ChildNUM>9999 **ERROR** '+key)

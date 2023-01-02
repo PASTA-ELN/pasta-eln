@@ -1,5 +1,6 @@
 """ widget that shows the table and the details of the items """
 import json
+from random import randint
 from PySide6.QtWidgets import QWidget, QSplitter, QVBoxLayout, QTableWidget, QTableWidgetItem, QLabel, \
                               QScrollArea     # pylint: disable=no-name-in-module
 from PySide6.QtCore import Slot               # pylint: disable=no-name-in-module
@@ -34,10 +35,10 @@ class DocTypes(QWidget):
     Args:
       docType (str): document type
     """
-    # table = self.backend.output(docType,True)
-    # docID = table.split('\n')[2].split('|')[-1].strip()
     #table
     table = self.backend.db.getView('viewDocType/'+docType)
+    if len(table)==0:
+      return
     nrows, ncols = len(table), len(table[0]['value'])
     self.table.setColumnCount(ncols)
     header = self.backend.db.ontology[docType]
@@ -51,7 +52,8 @@ class DocTypes(QWidget):
         self.table.setItem(i, j, item)
 
     #details
-    docID = table[0]['id']  #for now
+    nRow = randint(0, len(table)-1)
+    docID = table[nRow]['id']  #for now
     doc   = self.backend.db.getDoc(docID)
     imageW = QWidget()
     imageW.setMinimumHeight(400)
@@ -64,6 +66,10 @@ class DocTypes(QWidget):
     metaDetailsL  = QVBoxLayout(metaDetailsW)
     metaDatabaseW = QWidget()
     metaDatabaseL = QVBoxLayout(metaDatabaseW)
+    # empty old layout
+    for i in reversed(range(self.detailL.count())):
+      self.detailL.itemAt(i).widget().setParent(None)
+    # add new content
     self.detailL.addWidget(imageW)
     self.detailL.addWidget(metaDetailsW)
     self.detailL.addWidget(metaVendorW)
