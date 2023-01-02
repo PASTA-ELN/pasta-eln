@@ -380,8 +380,7 @@ class Database:
       idDict[item['id']] = [item['key']]+item['value']
     # arrange value items (hierarchy) into order that can be used for sorting
     dataList = {}
-    for key in idDict.items():
-      value = idDict[key]
+    for key,value in idDict.items():
       if value[0]==key: # project: simple hierarchy
         hierString = key
       else:             # else: complicated re-structuring

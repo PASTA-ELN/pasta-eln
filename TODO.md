@@ -1,5 +1,5 @@
 # Priority 1
-
+- So many GUI functions
 
 # Priority 2
 - (HT) replace documentation
@@ -8,6 +8,7 @@
 
 # Priority 3
 - Perhaps: fixed version number gitannex and datalad
+- move tests to new version
 - setup.cfg: pytest
 
 

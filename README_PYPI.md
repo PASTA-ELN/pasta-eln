@@ -7,7 +7,7 @@ More information, incl. detailed installation instructions, for users can be fou
 
 While people that are interested into the development are guided to [github](https://github.com/PASTA-ELN/pasta-eln/).
 
-## Installation instructions
+## Short installation instructions
 ``` bash
 pip install pasta-eln
 ```
@@ -18,4 +18,4 @@ pastaELN
 ```
 which will automatically open the graphical user interface (GUI) to finish the setup.
 
-More detail are found at the github-pages.
+More detail are found at the [install-page](https://pasta-eln.github.io/pasta-eln/install.html).

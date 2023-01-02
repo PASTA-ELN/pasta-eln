@@ -67,7 +67,7 @@ def generic_hash(path, forceFile=False):
   """
   from urllib import request
   if str(path).startswith('http'):                      #Remote file
-    with request.urlopen(str(path).replace(':/','://')) as site:
+    with request.urlopen(path.as_posix().replace(':/','://')) as site:
       meta = site.headers
       size = int(meta.get_all('Content-Length')[0])
       return blob_hash(site, size)
