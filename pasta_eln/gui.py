@@ -18,7 +18,7 @@ class MainWindow(QMainWindow):
     super().__init__()
     self.setWindowTitle("PASTA-ELN")
     self.setWindowState(Qt.WindowMaximized)
-    self.backend = Pasta()
+    self.backend = Pasta("Hans")
     comm = Communicate(self.backend)
 
     #WIDGETS
@@ -43,3 +43,7 @@ def main():
   window = MainWindow()
   window.show()
   app.exec()
+
+# called by python3 -m pasta_eln.gui
+if __name__ == '__main__':
+  main()

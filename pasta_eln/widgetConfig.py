@@ -1,9 +1,13 @@
 """ Entire config dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""
+import platform
 from PySide6.QtWidgets import QDialog, QWidget, QHBoxLayout, QVBoxLayout, QPushButton, QTabWidget, \
                               QFormLayout, QLineEdit, QLabel, QTextEdit   # pylint: disable=no-name-in-module
 
-from .widgetConfigSetup import ConfigurationSetup
 from .fixedStrings import configurationOverview
+if platform.system()!='Windows':
+  from .widgetConfigSetupWindows import ConfigurationSetup
+else:
+  from .widgetConfigSetupLinux import ConfigurationSetup
 
 class Configuration(QDialog):
   """
@@ -26,18 +30,27 @@ class Configuration(QDialog):
 
     # ---------------------
     # Setup / Troubeshoot Pasta: main widget
-    self.tabSetup = ConfigurationSetup(backend)
+    self.tabSetup = ConfigurationSetup(backend, self.finished)
     self.tabWidget.addTab(self.tabSetup, 'Setup')
-    if startTap=='setup':
-      self.tabWidget.setCurrentWidget(self.tabSetup)
 
     # ---------------------
     # Misc configuration: e.g. theming...
     self.tabConfig = QWidget()
     self.tabWidget.addTab(self.tabConfig, 'Miscellaneous')
+
+    if startTap=='setup':
+      self.tabWidget.setCurrentWidget(self.tabSetup)
+      self.tabWidget.setTabEnabled(0, False)
+      self.tabWidget.setTabEnabled(2, False)
     #...
     #magic order
     #Comment says what you do
     #1. define widget
     #2. define layout and assign to widget
     #3. define and add elements immediately
+
+  def finished(self):
+    """
+    callback function to close widget
+    """
+    self.close()

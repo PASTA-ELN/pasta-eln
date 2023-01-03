@@ -3,6 +3,7 @@ import os, platform, sys, json, shutil, random, string
 import importlib.util
 import urllib.request
 from pathlib import Path
+from cloudant.client import CouchDB
 
 from .backend import Pasta
 from .fixedStrings import defaultOntology
@@ -23,13 +24,14 @@ def getOS():
   return operatingSys+' '+environment
 
 
-def createDefaultConfiguration(user, password):
+def createDefaultConfiguration(user, password, pathPasta=None):
   '''
   Check configuration file .pastaELN.json for consistencies
 
   Args:
     user (str): user name (for windows)
-    password (password): password (for windows)
+    password (str): password (for windows)
+    pathPasta (str): place to store pasta data
 
   Returns:
     dict: dictionary of configuration
@@ -38,10 +40,11 @@ def createDefaultConfiguration(user, password):
     user = input('Enter user name: ')
   if password == '':
     password = input('Enter password: ')
-  if platform.system()=='Windows':
-    pathPasta = str(Path.home()/'Documents'/'PASTA_ELN')
-  else:
-    pathPasta = str(Path.home()/'PASTA_ELN')
+  if pathPasta is None:
+    if platform.system()=='Windows':
+      pathPasta = str(Path.home()/'Documents'/'PASTA_ELN')
+    else:
+      pathPasta = str(Path.home()/'PASTA_ELN')
   conf = {}
   conf['default']     = 'research'
   conf['links']       = {'research':{\
@@ -156,14 +159,33 @@ def couchdb(command='test'):
   return '**ERROR: Unknown command'
 
 
-def configuration(command='test', user='', password=''):
+def couchdbUserPassword(username, password):
+  '''
+  test if username and password are correct
+
+  Args:
+    username (string): user name
+    password (string): password
+
+  Returns:
+    bool: True if success, False if failure
+  '''
+  try:
+    _ = CouchDB(username, password, url='http://127.0.0.1:5984', connect=True)
+    return True
+  except:
+    return False
+
+
+def configuration(command='test', user='', password='', pathPasta=None):
   '''
   Check configuration file .pastaELN.json for consistencies
 
   Args:
     command (str): 'test' or 'repair'
     user (str): user name (for windows)
-    password (password): password (for windows)
+    password (str): password (for windows)
+    pathPasta (str): path to install pasta in (Windows and Linux)
 
   Returns:
     string: ''=success, else error messages
@@ -176,7 +198,7 @@ def configuration(command='test', user='', password=''):
     output += '**ERROR configuration file does not exist\n'
     conf = {}
     if command == 'repair':
-      conf = createDefaultConfiguration(user, password)
+      conf = createDefaultConfiguration(user, password, pathPasta)
 
   illegalNames = [key for key in conf if key.startswith('-')]
   if not 'softwareDir' in conf:
@@ -392,3 +414,7 @@ def main():
   if len(sys.argv)>1 and 'example' in sys.argv:
     print('---- Create Example data ----')
     print('create example data  :', exampleData())
+
+# called by python3 -m pasta_eln.installTools
+if __name__ == '__main__':
+  main()
