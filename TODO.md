@@ -1,5 +1,6 @@
 # Priority 1
 - So many GUI functions
+- restart backend does not work, or requires gui-restart
 
 # Priority 2
 - (HT) replace documentation

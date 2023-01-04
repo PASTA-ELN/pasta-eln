@@ -5,7 +5,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTextEdit, QPus
 import qtawesome as qta
 
 from .installationTools import getOS, git, gitAnnex, couchdb, couchdbUserPassword, configuration, ontology, exampleData, createShortcut
-from .fixedStrings import setupTextWindows, gitWindows, gitAnnexWindows, couchDBWindows
+from .fixedStrings import setupTextWindows, gitWindows, gitAnnexWindows, couchDBWindows, exampleDataWindows
 
 class ConfigurationSetup(QWidget):
   """
@@ -114,7 +114,7 @@ class ConfigurationSetup(QWidget):
                   flagUserPw = False  #This is the good and desired end
                   usernameVerified = username
                   passwordVerified = password
-          dirName = QFileDialog.getExistingDirectory(self,'Choose directory for scientific data',str(Path.home()/'Documents'))
+          dirName = QFileDialog.getExistingDirectory(self,'Create and select directory for scientific data',str(Path.home()/'Documents'))
           configuration('repair',usernameVerified, passwordVerified,dirName)
         else:
           self.mainText = self.mainText.replace('- Configuration of preferences','- Configuration: user chose to NOT install' )
@@ -136,7 +136,7 @@ class ConfigurationSetup(QWidget):
           self.text1.setMarkdown(self.mainText)
           flagContinue = False
 
-    #Ontology
+    #Shortcut
     if flagContinue:
       button = QMessageBox.question(self, "Create shortcut", "Do you want to create the shortcut for PASTA-ELN on desktop?")
       if button == QMessageBox.Yes:
@@ -148,7 +148,7 @@ class ConfigurationSetup(QWidget):
 
     #Example data
     if flagContinue:
-      button = QMessageBox.question(self, "Example data", )
+      button = QMessageBox.question(self, "Example data", exampleDataWindows)
       if button == QMessageBox.Yes:
         exampleData()
         self.mainText = self.mainText.replace('- Example data', '- Example data was added')

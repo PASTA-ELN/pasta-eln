@@ -1,5 +1,5 @@
 '''  Methods that check, repair, the local PASTA-ELN installation '''
-import os, platform, sys, json, shutil, random, string
+import os, platform, sys, json, shutil, random, string, subprocess
 import importlib.util
 import urllib.request
 from pathlib import Path
@@ -79,7 +79,7 @@ def git(command='test'):
     url = 'https://github.com/git-for-windows/git/releases/download/v2.39.0.windows.2/Git-2.39.0.2-64-bit.exe'
     path = Path.home()/'Downloads'/'git-installer.exe'
     resultFilePath, _ = urllib.request.urlretrieve(url, path)
-    os.system(str(resultFilePath))
+    _ = subprocess.Popen('cmd.exe /K '+str(resultFilePath))
     # Winget does not allow to set PATHs
     # os.system('winget install --id Git.Git -e --source winget')
     # Alternative approach: use winget and set environment at each pastaELN start for
@@ -121,7 +121,7 @@ def gitAnnex(command='test'):
       url = 'https://downloads.kitenet.net/git-annex/windows/7/current/git-annex-installer.exe'
       path = Path.home()/'Downloads'/'git-annex-installer.exe'
       resultFilePath, _ = urllib.request.urlretrieve(url, path)
-      os.system(str(resultFilePath))
+      _ = subprocess.Popen('cmd.exe /K '+str(resultFilePath))
       return 'Installed git-annex using temporary files in Downloads'
     return '**ERROR: Unknown operating system '+platform.system()
 
@@ -181,7 +181,7 @@ def couchdb(command='test'):
       url = 'https://couchdb.neighbourhood.ie/downloads/3.1.1/win/apache-couchdb-3.1.1.msi'
       path = Path.home()/'Downloads'/'apache-couchdb-3.1.1.msi'
       resultFilePath, _ = urllib.request.urlretrieve(url, path)
-      os.system(str(resultFilePath))
+      _ = subprocess.Popen('cmd.exe /K '+str(resultFilePath))
       return 'Installed couchDB'
     return '**ERROR: Unknown operating system '+platform.system()
 
@@ -415,7 +415,7 @@ def createShortcut():
     shortcut = shell.CreateShortCut( os.path.join(winshell.desktop(), "pastaELN.lnk") )
     shortcut.Targetpath = r"pastaELN"
     shortcut.WorkingDirectory = str(Path.home())
-    shortcut.IconLocation = str(Path(__file__)/'Resources'/'Icons'/'favicon32.ico')
+    shortcut.IconLocation = str(Path(__file__).parent/'Resources'/'Icons'/'favicon64.ico')
     shortcut.save()
   else:
     print("not implemented yet")

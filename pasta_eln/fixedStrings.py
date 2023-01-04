@@ -53,7 +53,7 @@ defaultOntology = """
 
 setupTextWindows = """
 ### Welcome to PASTA-ELN setup for Windows
-Four components are needed for proper function
+Seven components are needed for proper function
 - Git Windows
 - Git-Annex
 - CouchDB
@@ -63,6 +63,7 @@ Four components are needed for proper function
 - Example data
 
 Analyse and (possibly) correct these items.
+If an attempt fails, close PASTA-ELN and CMD.exe; Restart CMD.exe and start PASTA-ELN or use Desktop shortcut.
 
 Note: this text becomes an installation report
 """

@@ -14,8 +14,19 @@
 
 ### Notes on windows installation
 - Installation location windows:
-  - C:\Users\Steffen\AppData\Local\Programs\Python\Python311\Scripts
-  - C:\Users\Steffen\AppData\Local\Programs\Python\Python311\Lib\site-packages\pasta_eln
+  - C:\Users\...\AppData\Local\Programs\Python\Python311\Scripts
+  - C:\Users\...\AppData\Local\Programs\Python\Python311\Lib\site-packages\pasta_eln
+
+#### Restart windows
+- uninstall couchdb, git, pythonx2
+- remove directories
+  - C:\Program Files\Apache CouchDB
+  - C:\Program Files\Git
+  - C:\Users\....\AppData\Local\Programs\Python
+  - Pasta-Folder in Documents
+- remove Users\...\pastaELN.json
+- restart Windows
+
 
 ### Notes on all systems
 - Run Pasta-ELN directly from commandline without installation
