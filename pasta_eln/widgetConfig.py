@@ -4,7 +4,7 @@ from PySide6.QtWidgets import QDialog, QWidget, QHBoxLayout, QVBoxLayout, QPushB
                               QFormLayout, QLineEdit, QLabel, QTextEdit   # pylint: disable=no-name-in-module
 
 from .fixedStrings import configurationOverview
-if platform.system()!='Windows':
+if platform.system()=='Windows':
   from .widgetConfigSetupWindows import ConfigurationSetup
 else:
   from .widgetConfigSetupLinux import ConfigurationSetup

@@ -4,12 +4,15 @@ from pathlib import Path
 from urllib import request
 from datetime import datetime
 from zipfile import ZipFile, ZIP_DEFLATED
-import datalad.api as datalad
-from datalad.support import annexrepo
 from .mixin_cli import Bcolors, CLI_Mixin
 from .database import Database
 from .miscTools import upIn, upOut, createDirName, generic_hash, camelCase
 from .handleDictionaries import ontology2Labels, fillDocBeforeCreate
+try:
+  import datalad.api as datalad
+  from datalad.support import annexrepo
+except:
+  print('**ERROR: Could not start datalad')
 if sys.platform=='win32':
   import win32con, win32api
 
@@ -40,7 +43,10 @@ class Pasta(CLI_Mixin):
     # open configuration file
     self.debug = True
     self.confirm = confirm
-    with open(Path.home()/'.pastaELN.json','r', encoding='utf-8') as confFile:
+    configFileName = Path.home()/'.pastaELN.json'
+    if not configFileName.exists():
+      return
+    with open(configFileName,'r', encoding='utf-8') as confFile:
       configuration = json.load(confFile)
     if configuration['version']!=1:
       print('**ERROR Configuration version does not fit')

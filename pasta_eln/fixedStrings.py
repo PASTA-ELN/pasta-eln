@@ -51,10 +51,46 @@ defaultOntology = """
 }
 """
 
+setupTextWindows = """
+### Welcome to PASTA-ELN setup for Windows
+Four components are needed for proper function
+- Git-Annex
+- CouchDB
+- Configuration of preferences
+- Ontology of the datastructure
+- Shortcut creation
+- Example data
+
+Analyse and (possibly) correct these items.
+
+Note: this text becomes an installation report
+"""
+
 configurationOverview = """
 ## Overview
 ###  Setup: Setup and troubleshoot PASTA-ELN installation
 ### Project group: configure how project groups are saved
 ### Ontology: configure the data structure for current project group
 ### Miscellaneous: different things like look-and-feel
+"""
+
+gitAnnexWindows = """
+Do you want to install git-annex?
+If you choose yes, the installer will open and guide you through the installation. Please do the following:
+1. 'Next >'
+2. 'I Agree'
+3. 'Close'
+Be aware, downloading the installer requires some time, depending on the internet connection.
+"""
+
+couchDBWindows = """
+Do you want to install CouchDB?
+If you choose yes, the installer will open and guide you through the installation. Please do the following:
+1. click 'Next'
+2. Accept License & 'Next'
+3. 'Next'
+4. enter username (e.g. admin) and password and click 'Validate Credentials' and then 'Next'
+5. 'Install'
+6. 'Finish'
+Be aware, downloading the installer requires some time, depending on the internet connection.
 """

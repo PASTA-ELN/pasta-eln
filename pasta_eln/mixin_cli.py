@@ -1,8 +1,11 @@
 """ PYTHON MIXIN FOR BACKEND containing all the functions that output to CLI """
 import re, platform
 from pathlib import Path
-import datalad.api as datalad
 from .miscTools import createDirName
+try:
+  import datalad.api as datalad
+except:
+  print('**ERROR: Could not start datalad')
 
 class Bcolors:
   """

@@ -374,6 +374,25 @@ def exampleData(force=True):
   return
 
 
+def createShortcut():
+  """
+  Create shortcut icon depending on operating system
+  """
+  if platform.system()=='Windows':
+    import winshell
+    from win32com.client import Dispatch
+
+    shell = Dispatch('WScript.Shell')
+    shortcut = shell.CreateShortCut( os.path.join(winshell.desktop(), "pastaELN.lnk") )
+    shortcut.Targetpath = r"pastaELN"
+    shortcut.WorkingDirectory = str(Path.home())
+    shortcut.IconLocation = str(Path(__file__)/'Resources'/'Icons'/'pastaELN.ico')
+    shortcut.save()
+  else:
+    print("not implemented yet")
+
+
+
 ##############
 # Main method for testing and installation without GUI
 def main():

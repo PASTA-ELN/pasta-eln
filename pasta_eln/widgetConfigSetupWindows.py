@@ -4,7 +4,8 @@ from pathlib import Path
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTextEdit, QPushButton, QMessageBox, QInputDialog, QFileDialog    # pylint: disable=no-name-in-module
 import qtawesome as qta
 
-from .installationTools import getOS, gitAnnex, couchdb, couchdbUserPassword, configuration, ontology, exampleData
+from .installationTools import getOS, gitAnnex, couchdb, couchdbUserPassword, configuration, ontology, exampleData, createShortcut
+from .fixedStrings import setupTextWindows, gitAnnexWindows, couchDBWindows
 
 class ConfigurationSetup(QWidget):
   """
@@ -13,6 +14,7 @@ class ConfigurationSetup(QWidget):
   def __init__(self, backend, callbackFinished):
     super().__init__()
     self.mainL = QVBoxLayout()
+    self.setMinimumWidth(400)
     self.setLayout(self.mainL)
     self.callbackFinished = callbackFinished
 
@@ -21,16 +23,7 @@ class ConfigurationSetup(QWidget):
     self.mainL.addWidget(self.screen1W)
     screen1L = QVBoxLayout(self.screen1W)
     self.text1 = QTextEdit()
-    self.mainText = """
-### Welcome to PASTA-ELN Windows setup
-Four components are needed for proper function
-- Git-Annex
-- CouchDB
-- Configuration of preferences
-- Ontology of the datastructure
-
-Analyse and (possibly) correct these items.
-"""
+    self.mainText = setupTextWindows
     self.text1.setMarkdown(self.mainText)
     screen1L.addWidget(self.text1)
     footerW = QWidget()
@@ -52,7 +45,7 @@ Analyse and (possibly) correct these items.
       self.mainText = self.mainText.replace('- Git-Annex','- Git-Annex is installed' )
       self.text1.setMarkdown(self.mainText)
     else:
-      button = QMessageBox.question(self, "Git-Annex installation", "Do you want to install git-annex?\nIf you choose yes, the installer will open and guide you through the installation.")
+      button = QMessageBox.question(self, "Git-Annex installation", gitAnnexWindows)
       if button == QMessageBox.Yes:
         gitAnnex('install')
       else:
@@ -67,10 +60,7 @@ Analyse and (possibly) correct these items.
         self.mainText = self.mainText.replace('- CouchDB','- CouchDB is installed' )
         self.text1.setMarkdown(self.mainText)
       else:
-        tempString = "Do you want to install CouchDB?\nIf you choose yes, the installer will open and guide you through the installation. Please do the following:\n"
-        tempString+= "1. click 'Next'\n2. Accept License & 'Next'\n3. 'Next'\n4. enter username (e.g. admin) and password and click 'Validate Credentials' and then 'Next'\n"
-        tempString+= "5. 'Install'\n6. 'Finish'"
-        button = QMessageBox.question(self, "CouchDB installation", tempString)
+        button = QMessageBox.question(self, "CouchDB installation", couchDBWindows)
         if button == QMessageBox.Yes:
           couchdb('install')
         else:
@@ -108,7 +98,7 @@ Analyse and (possibly) correct these items.
                   flagUserPw = False  #This is the good and desired end
                   usernameVerified = username
                   passwordVerified = password
-          dirName = QFileDialog.getExistingDirectory(self,'Choose directory to save PASTA-ELN data',str(Path.home()))
+          dirName = QFileDialog.getExistingDirectory(self,'Choose directory for scientific data',str(Path.home()/'Documents'))
           configuration('repair',usernameVerified, passwordVerified,dirName)
         else:
           self.mainText = self.mainText.replace('- Configuration of preferences','- Configuration: user chose to NOT install' )
@@ -130,16 +120,25 @@ Analyse and (possibly) correct these items.
           self.text1.setMarkdown(self.mainText)
           flagContinue = False
 
+    #Ontology
+    if flagContinue:
+      button = QMessageBox.question(self, "Create shortcut", "Do you want to create the shortcut for PASTA-ELN on desktop?")
+      if button == QMessageBox.Yes:
+        createShortcut()
+        self.mainText = self.mainText.replace('- Shortcut creation', '- User selected to add a shortcut' )
+      else:
+        self.mainText = self.mainText.replace('- Shortcut creation', '- User selected to NOT add a shortcut' )
+      self.text1.setMarkdown(self.mainText)
+
     #Example data
     if flagContinue:
-      button = QMessageBox.warning(self, "Example data", "Do you want to install some example data? This helps to verify the installation and guide you.")
+      button = QMessageBox.question(self, "Example data", "Do you want to install the example data? This step helps to verify the installation and the data is an helpful example for new users.")
       if button == QMessageBox.Yes:
         exampleData()
-        self.mainText += '- Example data was added'
-        self.text1.setMarkdown(self.mainText)
+        self.mainText = self.mainText.replace('- Example data', '- Example data was added')
       else:
-        self.mainText += '- Example data was NOT added, per user choice'
-        self.text1.setMarkdown(self.mainText)
+        self.mainText = self.mainText.replace('- Example data', '- Example data was NOT added, per user choice')
+      self.text1.setMarkdown(self.mainText)
 
     #at end
     self.button1.setText('Finished')

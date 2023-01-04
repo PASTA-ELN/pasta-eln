@@ -18,7 +18,7 @@ class MainWindow(QMainWindow):
     super().__init__()
     self.setWindowTitle("PASTA-ELN")
     self.setWindowState(Qt.WindowMaximized)
-    self.backend = Pasta("Hans")
+    self.backend = Pasta()
     comm = Communicate(self.backend)
 
     #WIDGETS
