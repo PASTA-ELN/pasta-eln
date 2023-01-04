@@ -4,8 +4,8 @@ from pathlib import Path
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTextEdit, QPushButton, QMessageBox, QInputDialog, QFileDialog    # pylint: disable=no-name-in-module
 import qtawesome as qta
 
-from .installationTools import getOS, gitAnnex, couchdb, couchdbUserPassword, configuration, ontology, exampleData, createShortcut
-from .fixedStrings import setupTextWindows, gitAnnexWindows, couchDBWindows
+from .installationTools import getOS, git, gitAnnex, couchdb, couchdbUserPassword, configuration, ontology, exampleData, createShortcut
+from .fixedStrings import setupTextWindows, gitWindows, gitAnnexWindows, couchDBWindows
 
 class ConfigurationSetup(QWidget):
   """
@@ -15,6 +15,7 @@ class ConfigurationSetup(QWidget):
     super().__init__()
     self.mainL = QVBoxLayout()
     self.setMinimumWidth(400)
+    self.setMinimumHeight(500)
     self.setLayout(self.mainL)
     self.callbackFinished = callbackFinished
 
@@ -38,6 +39,21 @@ class ConfigurationSetup(QWidget):
     Main method that does all the analysis: open dialogs, ...
     """
     flagContinue = True
+
+    #Git
+    res = git('test')
+    if res =='':
+      self.mainText = self.mainText.replace('- Git Windows','- Git Windows is installed' )
+      self.text1.setMarkdown(self.mainText)
+    else:
+      button = QMessageBox.question(self, "Git installation", gitWindows)
+      if button == QMessageBox.Yes:
+        git('install')
+      else:
+        self.mainText = self.mainText.replace('- Git Windows','- Git Windows: user chose to NOT install' )
+        self.text1.setMarkdown(self.mainText)
+        flagContinue = False
+
 
     #Git annex
     res = gitAnnex('test')
@@ -132,7 +148,7 @@ class ConfigurationSetup(QWidget):
 
     #Example data
     if flagContinue:
-      button = QMessageBox.question(self, "Example data", "Do you want to install the example data? This step helps to verify the installation and the data is an helpful example for new users.")
+      button = QMessageBox.question(self, "Example data", )
       if button == QMessageBox.Yes:
         exampleData()
         self.mainText = self.mainText.replace('- Example data', '- Example data was added')

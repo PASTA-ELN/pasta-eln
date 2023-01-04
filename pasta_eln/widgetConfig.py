@@ -54,3 +54,4 @@ class Configuration(QDialog):
     callback function to close widget
     """
     self.close()
+    self.backend.initialize()  #restart backend

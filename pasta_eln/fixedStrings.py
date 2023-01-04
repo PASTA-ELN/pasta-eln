@@ -54,6 +54,7 @@ defaultOntology = """
 setupTextWindows = """
 ### Welcome to PASTA-ELN setup for Windows
 Four components are needed for proper function
+- Git Windows
 - Git-Annex
 - CouchDB
 - Configuration of preferences
@@ -72,6 +73,15 @@ configurationOverview = """
 ### Project group: configure how project groups are saved
 ### Ontology: configure the data structure for current project group
 ### Miscellaneous: different things like look-and-feel
+"""
+
+gitWindows = """
+Do you want to install git?
+If you choose yes, the installer will open and guide you through the installation. Please do the following:
+1.-14. 'Next'
+15. 'Install'
+16. 'Finish'
+Be aware, downloading the installer requires some time, depending on the internet connection.
 """
 
 gitAnnexWindows = """
@@ -93,4 +103,12 @@ If you choose yes, the installer will open and guide you through the installatio
 5. 'Install'
 6. 'Finish'
 Be aware, downloading the installer requires some time, depending on the internet connection.
+"""
+
+exampleDataWindows = """
+Do you want to install the example data?
+
+This step helps to verify the installation and the data is an helpful example for new users.
+
+This step usually takes up to 1min, so please be patient.
 """

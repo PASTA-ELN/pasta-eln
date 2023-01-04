@@ -39,8 +39,25 @@ class Pasta(CLI_Mixin):
     self.gitIgnore+= ['*.bcf','*.run.xml','*.synctex.gz','*.aux']#latex files
     self.gitIgnore+= ['*.pdf','*.svg','*.jpg']           #result figures
     self.gitIgnore+= ['*.hap','*.mss','*.mit','*.mst']   #extractors do not exist yet
+    #initialize basic values
+    self.hierStack = []
+    self.currentID = None
+    self.alive     = True
+    self.cwd       = Path('.')
+    self.initialize(linkDefault, confirm, **kwargs)
 
-    # open configuration file
+
+  def initialize(self, linkDefault=None, confirm=None, **kwargs):
+    """
+    initialize or reinitialize server and define database
+
+    Args:
+        linkDefault (string): name of configuration/link used; if not given, use the one defined by 'default' in config file
+        confirm (function): confirm changes to database and file-tree
+        kwargs (dict): additional parameters
+          - initViews (bool): initialize views at startup
+          - resetOntology (bool): reset ontology on database from one on file
+    """
     self.debug = True
     self.confirm = confirm
     configFileName = Path.home()/'.pastaELN.json'
@@ -77,6 +94,8 @@ class Pasta(CLI_Mixin):
     self.tableFormat = configuration['tableFormat']
     # start database
     self.db = Database(n,s,databaseName,confirm=self.confirm,**kwargs)
+    if not hasattr(self.db, 'databaseName'):  #not successful database creation
+      return
     res = ontology2Labels(self.db.ontology,self.tableFormat)
     self.dataLabels      = res['dataDict']
     self.hierarchyLabels = res['hierarchyDict']
@@ -613,7 +632,7 @@ class Pasta(CLI_Mixin):
     extension = filePath.suffix[1:]  #cut off initial . of .jpg
     if str(filePath).startswith('http'):
       absFilePath = Path(tempfile.gettempdir())/filePath.name
-      request.urlretrieve(str(filePath).replace(':/','://'), absFilePath)
+      request.urlretrieve(filePath.as_posix().replace(':/','://'), absFilePath)
       projectDB = self.cwd.parts[0]
       dataset = datalad.Dataset(self.basePath/projectDB)
     else:
@@ -746,7 +765,7 @@ class Pasta(CLI_Mixin):
     listPaths = [i for i in listPaths if not "://" in i ]
     listPaths = [i for i in listPaths if not (self.basePath/i).exists()]
     if len(listPaths)>0:
-      output += "These files of database not on filesystem: "+listPaths.as_posix()+'\n'
+      output += "These files of database not on filesystem: "+str(listPaths)+'\n'  #this is a list of paths, so str
     if clean:
       output += "** Datalad tree CLEAN **\n"
     else:

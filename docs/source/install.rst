@@ -9,20 +9,28 @@ Requirements
 Install python on windows
 -------------------------
 
-If you do not have Python installed, we recommend the default python installation without conda environments. Please go to
-https://www.python.org/downloads/windows/
-and download "Windows installer" for your architecture, likely 64-bit. In the installer, click "Add python.exe to PATH" at the bottom of the screen, and click "Install Now".
-Afterwards, we recommend that you install some nice-to-have packages by using the command line tool CMD.exe:
+If you do not have Python installed, we recommend the default python installation without conda environments.
+
+1. Go to https://www.python.org/downloads/windows/
+2. Download "Windows installer" for your architecture, likely 64-bit.
+3. In the installer, click "Add python.exe to PATH" at the bottom of the window.
+4. Click "Install Now" in the middle of the window
+5. Close
+
+Recommendation
+^^^^^^^^^^^^^^
+
+Afterwards, we recommend that you install some nice-to-have packages and test these installations by using the command line tool CMD.exe:
 
 .. code-block:: bash
 
     pip install matplotlib pandas spyder
-
-If you want to test the python installation, use the following line in the command line tool CMD.exe:
-
-.. code-block:: bash
-
     python.exe -c "import numpy as np;x = np.linspace(0,2*np.pi);y = np.sin(x);import matplotlib.pyplot as plt;plt.plot(x,y);plt.show()"
+
+|
+
+|
+
 
 Install PASTA-ELN on all operating systems
 ==========================================
@@ -31,7 +39,7 @@ Install PASTA-ELN on all operating systems
 
     pip install pasta-eln
 
-Afterwards, start PASTA-ELN with
+which typically can take some time. Afterwards, start PASTA-ELN with
 
 .. code-block:: bash
 
@@ -60,6 +68,24 @@ Afterwards, the normal 'pastaELN' command should work.
 Setup of PASTA-ELN on Windows
 -----------------------------
 
+Git for windows
+^^^^^^^^^^^^^^^
+To install git for windows, execute the following step in its setup-assistent:
+
+1.-14. Next
+
+15. Install
+
+16. Finish
+
+Git-annex for windows
+^^^^^^^^^^^^^^^^^^^^^
+To install git-annex for windows, execute the following step in its setup-assistent:
+
+1. Next >
+2. I Agree
+3. Close
+
 CouchDB installation
 ^^^^^^^^^^^^^^^^^^^^
 To install couchDB, execute the following step in its setup-assistent:
@@ -69,8 +95,4 @@ To install couchDB, execute the following step in its setup-assistent:
 3. -> Next
 4. enter UserName (e.g. admin) and password and click "Validate Credentials" -> Next
 5. -> Install
-6. ... wait ...
-7. -> Finish
-
-
-
+6. -> Finish

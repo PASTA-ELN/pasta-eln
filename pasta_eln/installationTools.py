@@ -58,6 +58,36 @@ def createDefaultConfiguration(user, password, pathPasta=None):
   return conf
 
 
+def git(command='test'):
+  '''
+  WINDOWS test git installation or install it
+
+  Args:
+    command (string): 'test' or 'install'
+
+  Returns:
+    string: '' for success, filled with errors
+  '''
+  if platform.system()!='Windows':
+    return '**ERROR: git can only be tested, etc. on Windows'
+  if command == 'test':
+    if shutil.which('git') is None:
+      return '**ERROR: git not installed'
+    return ''
+
+  elif command == 'install':
+    url = 'https://github.com/git-for-windows/git/releases/download/v2.39.0.windows.2/Git-2.39.0.2-64-bit.exe'
+    path = Path.home()/'Downloads'/'git-installer.exe'
+    resultFilePath, _ = urllib.request.urlretrieve(url, path)
+    os.system(str(resultFilePath))
+    # Winget does not allow to set PATHs
+    # os.system('winget install --id Git.Git -e --source winget')
+    # Alternative approach: use winget and set environment at each pastaELN start for
+    return 'Installed git using temporary files in Downloads'
+
+  return '**ERROR: Unknown command'
+
+
 def gitAnnex(command='test'):
   '''
   test git-annex installation or install it
@@ -77,7 +107,6 @@ def gitAnnex(command='test'):
     return ''
 
   elif command == 'install':
-    import webbrowser
     if platform.system()=='Linux':
       bashCommand = [
         'sudo wget -q http://neuro.debian.net/lists/focal.de-fzj.full -O /etc/apt/sources.list.d/neurodebian.sources.list',
@@ -93,7 +122,7 @@ def gitAnnex(command='test'):
       path = Path.home()/'Downloads'/'git-annex-installer.exe'
       resultFilePath, _ = urllib.request.urlretrieve(url, path)
       os.system(str(resultFilePath))
-      return 'Installed git-annex using temporary file', resultFilePath
+      return 'Installed git-annex using temporary files in Downloads'
     return '**ERROR: Unknown operating system '+platform.system()
 
   return '**ERROR: Unknown command'
@@ -386,7 +415,7 @@ def createShortcut():
     shortcut = shell.CreateShortCut( os.path.join(winshell.desktop(), "pastaELN.lnk") )
     shortcut.Targetpath = r"pastaELN"
     shortcut.WorkingDirectory = str(Path.home())
-    shortcut.IconLocation = str(Path(__file__)/'Resources'/'Icons'/'pastaELN.ico')
+    shortcut.IconLocation = str(Path(__file__)/'Resources'/'Icons'/'favicon32.ico')
     shortcut.save()
   else:
     print("not implemented yet")
