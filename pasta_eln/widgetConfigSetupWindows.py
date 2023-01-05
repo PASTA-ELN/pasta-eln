@@ -4,7 +4,7 @@ from pathlib import Path
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTextEdit, QPushButton, QMessageBox, QInputDialog, QFileDialog    # pylint: disable=no-name-in-module
 import qtawesome as qta
 
-from .installationTools import getOS, git, gitAnnex, couchdb, couchdbUserPassword, configuration, ontology, exampleData, createShortcut
+from .installationTools import git, gitAnnex, couchdb, couchdbUserPassword, configuration, ontology, exampleData, createShortcut
 from .fixedStrings import setupTextWindows, gitWindows, gitAnnexWindows, couchDBWindows, exampleDataWindows
 
 class ConfigurationSetup(QWidget):
@@ -56,18 +56,19 @@ class ConfigurationSetup(QWidget):
 
 
     #Git annex
-    res = gitAnnex('test')
-    if res =='':
-      self.mainText = self.mainText.replace('- Git-Annex','- Git-Annex is installed' )
-      self.text1.setMarkdown(self.mainText)
-    else:
-      button = QMessageBox.question(self, "Git-Annex installation", gitAnnexWindows)
-      if button == QMessageBox.Yes:
-        gitAnnex('install')
-      else:
-        self.mainText = self.mainText.replace('- Git-Annex','- Git-Annex: user chose to NOT install' )
+    if flagContinue:
+      res = gitAnnex('test')
+      if res =='':
+        self.mainText = self.mainText.replace('- Git-Annex','- Git-Annex is installed' )
         self.text1.setMarkdown(self.mainText)
-        flagContinue = False
+      else:
+        button = QMessageBox.question(self, "Git-Annex installation", gitAnnexWindows)
+        if button == QMessageBox.Yes:
+          gitAnnex('install')
+        else:
+          self.mainText = self.mainText.replace('- Git-Annex','- Git-Annex: user chose to NOT install' )
+          self.text1.setMarkdown(self.mainText)
+          flagContinue = False
 
     #Couchdb
     if flagContinue:

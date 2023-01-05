@@ -13,9 +13,13 @@
 ## Notes for developers
 
 ### Notes on windows installation
-- Installation location windows:
+#### Installation location windows:
+- Default installation
   - C:\Users\...\AppData\Local\Programs\Python\Python311\Scripts
   - C:\Users\...\AppData\Local\Programs\Python\Python311\Lib\site-packages\pasta_eln
+- Anaconda
+  - C:\Users\...\anaconda3\envs\...\Scripts>
+  - C:\Users\...\anaconda3\envs\...\Lib\site-packages\pasta_eln
 
 #### Restart windows
 - uninstall couchdb, git, pythonx2
@@ -25,8 +29,13 @@
   - C:\Users\....\AppData\Local\Programs\Python
   - Pasta-Folder in Documents
 - remove Users\...\pastaELN.json
+- remove shortcut on Windows desktop
 - restart Windows
 
+### Notes on linux installation
+#### Installation location:
+- Default
+  - /usr/local/lib/python3.10/dist-packages/pasta_eln
 
 ### Notes on all systems
 - Run Pasta-ELN directly from commandline without installation

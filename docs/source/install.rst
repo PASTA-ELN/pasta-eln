@@ -27,6 +27,15 @@ Afterwards, we recommend that you install some nice-to-have packages and test th
     pip install matplotlib pandas spyder
     python.exe -c "import numpy as np;x = np.linspace(0,2*np.pi);y = np.sin(x);import matplotlib.pyplot as plt;plt.plot(x,y);plt.show()"
 
+Install python on linux
+-----------------------
+
+Generally, Python3 is installed in all Linux distributions. Sometimes, the package installer is missing. Hence, install it:
+
+.. code-block:: bash
+
+    sudo apt install python3-pip
+
 |
 
 |

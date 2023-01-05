@@ -109,15 +109,7 @@ def gitAnnex(command='test'):
 
   elif command == 'install':
     if platform.system()=='Linux':
-      bashCommand = [
-        'sudo wget -q http://neuro.debian.net/lists/focal.de-fzj.full -O /etc/apt/sources.list.d/neurodebian.sources.list',
-        'sudo apt-key adv --recv-keys --keyserver hkps://keyserver.ubuntu.com 0xA5D32F012649A5A9',
-        'sudo apt-get update',
-        'sudo apt-get install -y git-annex-standalone',
-        'echo DONE',
-        'sleep 10000']
-      os.system('xterm -e "'+'; '.join(bashCommand)+'"')
-      return ''
+      return '**ERROR: should not be called'
     if platform.system()=='Windows':
       url = 'https://downloads.kitenet.net/git-annex/windows/7/current/git-annex-installer.exe'
       path = Path.home()/'Downloads'/'git-annex-installer.exe'
@@ -155,30 +147,7 @@ def couchdb(command='test'):
 
   elif command == 'install':
     if platform.system()=='Linux':
-      password = ''.join(random.choice(string.ascii_letters) for i in range(12))
-      bashCommand = [
-        'sudo snap install couchdb',
-        'sudo snap set couchdb admin='+password,
-        'sudo snap start couchdb',
-        'sudo snap connect couchdb:mount-observe',
-        'sudo snap connect couchdb:process-control',
-        'sleep 5',
-        'curl -X PUT http://admin:'+password+'@127.0.0.1:5984/_users',
-        'curl -X PUT http://admin:'+password+'@127.0.0.1:5984/_replicator',
-        'curl -X PUT http://admin:'+password+'@127.0.0.1:5984/_global_changes',
-        'echo DONE',
-        'sleep 10000']
-      os.system('xterm -e "'+'; '.join(bashCommand)+'"')
-      #create or adopt .pastaELN.json
-      path = Path.home()/'.pastaELN.json'
-      if path.exists():
-        with open(path,'r', encoding='utf-8') as fConf:
-          conf = json.load(fConf)
-      else:
-        conf = createDefaultConfiguration('admin', password)
-      with open(path,'w', encoding='utf-8') as fConf:
-        fConf.write(json.dumps(conf, indent=2) )
-      return 'Password: '+password
+      return '**ERROR should not be called'
     if platform.system()=='Windows':
       url = 'https://couchdb.neighbourhood.ie/downloads/3.1.1/win/apache-couchdb-3.1.1.msi'
       path = Path.home()/'Downloads'/'apache-couchdb-3.1.1.msi'
@@ -207,6 +176,53 @@ def couchdbUserPassword(username, password):
     return True
   except:
     return False
+
+
+def installLinuxRoot(gitAnnexExists, couchDBExists):
+  '''
+  Install all packages in linux using the root-password
+
+  Args:
+    gitAnnexExists (bool): does the git-annex installation exist
+    couchDBExists (bool): does the couchDB installation exist
+
+  Returns:
+    string: ''=success, else error messages
+  '''
+  bashCommand = []
+  if not gitAnnexExists:
+    bashCommand += [
+      'sudo wget -q http://neuro.debian.net/lists/focal.de-fzj.full -O /etc/apt/sources.list.d/neurodebian.sources.list',
+      'sudo apt-key adv --recv-keys --keyserver hkps://keyserver.ubuntu.com 0xA5D32F012649A5A9',
+      'sudo apt-get update',
+      'sudo apt-get install -y git-annex-standalone',
+      'echo DONE',
+      'sleep 10000']
+  if not couchdb:
+    password = ''.join(random.choice(string.ascii_letters) for i in range(12))
+    bashCommand = [
+      'sudo snap install couchdb',
+      'sudo snap set couchdb admin='+password,
+      'sudo snap start couchdb',
+      'sudo snap connect couchdb:mount-observe',
+      'sudo snap connect couchdb:process-control',
+      'sleep 5',
+      'curl -X PUT http://admin:'+password+'@127.0.0.1:5984/_users',
+      'curl -X PUT http://admin:'+password+'@127.0.0.1:5984/_replicator',
+      'curl -X PUT http://admin:'+password+'@127.0.0.1:5984/_global_changes',
+      'echo DONE',
+      'sleep 10000']
+  os.system('xterm -e "'+'; '.join(bashCommand)+'"')
+  #create or adopt .pastaELN.json
+  path = Path.home()/'.pastaELN.json'
+  if path.exists():
+    with open(path,'r', encoding='utf-8') as fConf:
+      conf = json.load(fConf)
+  else:
+    conf = createDefaultConfiguration('admin', password)
+  with open(path,'w', encoding='utf-8') as fConf:
+    fConf.write(json.dumps(conf, indent=2) )
+  return 'Password: '+password
 
 
 def configuration(command='test', user='', password='', pathPasta=None):
