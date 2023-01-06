@@ -1,5 +1,5 @@
 '''  Methods that check, repair, the local PASTA-ELN installation '''
-import os, platform, sys, json, shutil, random, string, subprocess
+import os, platform, sys, json, shutil, random, string, subprocess, logging
 import importlib.util
 import urllib.request
 from pathlib import Path
@@ -100,8 +100,12 @@ def gitAnnex(command='test'):
     string: '' for success, filled with errors
   '''
   if command == 'test':
-    if shutil.which('git-annex') is None:
-      return '**ERROR: git-annex not installed'
+    if platform.system()=='Linux':
+      if shutil.which('git-annex') is None:
+        return '**ERROR: git-annex not installed'
+    elif platform.system()=='Windows':
+      if shutil.which('git-annex') is None:
+        return '**ERROR: git-annex not installed'
     # found = importlib.util.find_spec('datalad')
     #Has information if global or local installed
     # ModuleSpec(name='datalad', origin='/usr/local/lib/python3.8/dist-packages/datalad/__init__.py')
@@ -178,18 +182,21 @@ def couchdbUserPassword(username, password):
     return False
 
 
-def installLinuxRoot(gitAnnexExists, couchDBExists):
+def installLinuxRoot(gitAnnexExists, couchDBExists, pathPasta=''):
   '''
   Install all packages in linux using the root-password
 
   Args:
     gitAnnexExists (bool): does the git-annex installation exist
     couchDBExists (bool): does the couchDB installation exist
+    pathPasta (str): path to install pasta in (Linux)
 
   Returns:
     string: ''=success, else error messages
   '''
   bashCommand = []
+  password = ''
+  print(gitAnnexExists, couchDBExists, '<<<<')
   if not gitAnnexExists:
     bashCommand += [
       'sudo wget -q http://neuro.debian.net/lists/focal.de-fzj.full -O /etc/apt/sources.list.d/neurodebian.sources.list',
@@ -197,10 +204,20 @@ def installLinuxRoot(gitAnnexExists, couchDBExists):
       'sudo apt-get update',
       'sudo apt-get install -y git-annex-standalone',
       'echo DONE',
-      'sleep 10000']
-  if not couchdb:
+      'sleep 10']
+  if not couchDBExists:
     password = ''.join(random.choice(string.ascii_letters) for i in range(12))
-    bashCommand = [
+    print('PASSWORD: '+password)
+    #create or adopt .pastaELN.json
+    path = Path.home()/'.pastaELN.json'
+    if path.exists():
+      with open(path,'r', encoding='utf-8') as fConf:
+        conf = json.load(fConf)
+    else:
+      conf = createDefaultConfiguration('admin', password, pathPasta)
+    with open(path,'w', encoding='utf-8') as fConf:
+      fConf.write(json.dumps(conf, indent=2) )
+    bashCommand += [
       'sudo snap install couchdb',
       'sudo snap set couchdb admin='+password,
       'sudo snap start couchdb',
@@ -210,22 +227,29 @@ def installLinuxRoot(gitAnnexExists, couchDBExists):
       'curl -X PUT http://admin:'+password+'@127.0.0.1:5984/_users',
       'curl -X PUT http://admin:'+password+'@127.0.0.1:5984/_replicator',
       'curl -X PUT http://admin:'+password+'@127.0.0.1:5984/_global_changes',
-      'echo DONE',
-      'sleep 10000']
-  os.system('xterm -e "'+'; '.join(bashCommand)+'"')
-  #create or adopt .pastaELN.json
-  path = Path.home()/'.pastaELN.json'
-  if path.exists():
-    with open(path,'r', encoding='utf-8') as fConf:
-      conf = json.load(fConf)
-  else:
-    conf = createDefaultConfiguration('admin', password)
-  with open(path,'w', encoding='utf-8') as fConf:
-    fConf.write(json.dumps(conf, indent=2) )
+      'sleep 10',
+      'echo DONE-Press-Key',
+      'read']
+  #Try all terminals
+  scriptFile = Path.home()/'pastaELN_Install.sh'
+  with open(scriptFile,'w', encoding='utf-8') as shell:
+    shell.write('\n'.join(bashCommand))
+  os.chmod(scriptFile, 0o0777)
+  terminals = ['xterm','qterminal','gnome-terminal']
+  logging.info('Command: '+str(bashCommand))
+  for term in terminals:
+    # _ = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)
+    res = os.system(term+' -e bash -c '+scriptFile.as_posix())
+    logging.info('Linux install terminal '+term+' '+str(res) )
+    if res == 0:
+      break
+    if terminals.index(term)==len(terminals)-1:        
+      logging.error('**ERROR: Last terminal failed')
+      return '**ERROR: Last terminal failed'
   return 'Password: '+password
 
 
-def configuration(command='test', user='', password='', pathPasta=None):
+def configuration(command='test', user='', password='', pathPasta=''):
   '''
   Check configuration file .pastaELN.json for consistencies
 
@@ -233,7 +257,7 @@ def configuration(command='test', user='', password='', pathPasta=None):
     command (str): 'test' or 'repair'
     user (str): user name (for windows)
     password (str): password (for windows)
-    pathPasta (str): path to install pasta in (Windows and Linux)
+    pathPasta (str): path to install pasta in (Windows)
 
   Returns:
     string: ''=success, else error messages
@@ -436,9 +460,23 @@ def createShortcut():
     shortcut.WorkingDirectory = str(Path.home())
     shortcut.IconLocation = str(Path(__file__).parent/'Resources'/'Icons'/'favicon64.ico')
     shortcut.save()
-  else:
-    print("not implemented yet")
-
+  elif platform.system()=='Linux':
+    content ='[Desktop Entry]\nName=PASTA ELN\nComment=PASTA electronic labnotebook\n'
+    content+='Exec=pastaELN\n'
+    content+='Icon='+ (Path(__file__).parent/'Resources'/'Icons'/'favicon64.png').as_posix() + '\n'
+    content+='Terminal=false\nType=Application\nCategories=Utility;Application;\n'
+    try:
+      with open(Path.home()/'Desktop'/'pastaELN.desktop','w') as fOut:
+        fOut.write(content)
+        os.chmod(Path.home()/'Desktop'/'pastaELN.desktop', 0o777)
+    except:
+      pass
+    try:
+      with open(Path.home()/'.local'/'share'/'applications'/'pastaELN.desktop','w') as fOut:
+        fOut.write(content)
+        os.chmod(Path.home()/'.local'/'share'/'applications'/'pastaELN.desktop', 0o777)
+    except:
+      pass
 
 
 ##############

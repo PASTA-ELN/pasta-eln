@@ -69,7 +69,8 @@ class ConfigurationSetup(QWidget):
       text = rootInstallLinux.replace('XX--XX', textGitAnnex+separator+textCouchDB)
       button = QMessageBox.question(self, "Root installations", text)
       if button == QMessageBox.Yes:
-        installLinuxRoot(existsGitAnnex, existsCouchDB)
+        dirName = QFileDialog.getExistingDirectory(self,'Create and select directory for scientific data',str(Path.home()))
+        installLinuxRoot(existsGitAnnex, existsCouchDB, dirName)
       else:
         self.mainText = self.mainText.replace('- Git-Annex','- Git-Annex: user chose to NOT install' )
         self.mainText = self.mainText.replace('- CouchDB','- CouchDB: user chose to NOT install' )
@@ -84,8 +85,7 @@ class ConfigurationSetup(QWidget):
       else:
         button = QMessageBox.question(self, "PASTA-ELN configuration", "Do you want to create/repain the configuration.")
         if button == QMessageBox.Yes:
-          dirName = QFileDialog.getExistingDirectory(self,'Create and select directory for scientific data',str(Path.home()/'Documents'))
-          configuration('repair', '','' , dirName)
+          configuration('repair')
         else:
           self.mainText = self.mainText.replace('- Configuration of preferences','- Configuration: user chose to NOT install' )
           self.text1.setMarkdown(self.mainText)

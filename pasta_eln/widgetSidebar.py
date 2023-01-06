@@ -13,7 +13,7 @@ class Sidebar(QWidget):
     self.setMinimumWidth(200)
     self.setMaximumWidth(200)
     # print(self.styleSheet.values)
-    self.setStyleSheet("background-color: blue")
+    self.setStyleSheet("background-color: red")
 
     # GUI stuff
     mainLayout = QVBoxLayout()

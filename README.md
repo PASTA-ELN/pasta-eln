@@ -37,6 +37,17 @@
 - Default
   - /usr/local/lib/python3.10/dist-packages/pasta_eln
 
+
+#### Restart Linux
+``` bash
+rm .pastaELN.json pastaELN.log
+rm -rf pastaELN/pastasExampleProject
+sudo apt remove git-annex
+sudo apt autoremove
+sudo snap stop couchdb
+sudo snap remove couchdb
+```
+
 ### Notes on all systems
 - Run Pasta-ELN directly from commandline without installation
   -  python -m pasta_eln.installationTools

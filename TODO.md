@@ -1,5 +1,4 @@
 # Priority 1
-- copy windows Setup to Linux
 - logging what is the problem in especially data-creation
 - So many GUI functions
 - restart backend does not work, or requires gui-restart

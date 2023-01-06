@@ -1,6 +1,5 @@
 """ Graphical user interface includes all widgets """
-import os, logging
-from pathlib import Path
+import os
 from PySide6.QtCore import Qt   # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QApplication    # pylint: disable=no-name-in-module
 from qt_material import apply_stylesheet  #of https://github.com/UN-GCPDS/qt-material
@@ -39,11 +38,8 @@ class MainWindow(QMainWindow):
 ## Main function
 def main():
   """ Main method and entry point for commands """
-  logPath = Path.home()/'pastaELN.log'
-  logging.basicConfig(filename=logPath, encoding='utf-8', level=logging.INFO)  #TODO this loggingWarning goes into configuration
-  logging.info('Start GUI')
   app = QApplication()
-  apply_stylesheet(app, theme='dark_blue.xml') #TODO this goes into configuration
+  apply_stylesheet(app, theme='dark_blue.xml')
   window = MainWindow()
   window.show()
   app.exec()
