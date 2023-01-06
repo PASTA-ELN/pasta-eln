@@ -243,7 +243,7 @@ def installLinuxRoot(gitAnnexExists, couchDBExists, pathPasta=''):
     logging.info('Linux install terminal '+term+' '+str(res) )
     if res == 0:
       break
-    if terminals.index(term)==len(terminals)-1:        
+    if terminals.index(term)==len(terminals)-1:
       logging.error('**ERROR: Last terminal failed')
       return '**ERROR: Last terminal failed'
   return 'Password: '+password
@@ -466,13 +466,13 @@ def createShortcut():
     content+='Icon='+ (Path(__file__).parent/'Resources'/'Icons'/'favicon64.png').as_posix() + '\n'
     content+='Terminal=false\nType=Application\nCategories=Utility;Application;\n'
     try:
-      with open(Path.home()/'Desktop'/'pastaELN.desktop','w') as fOut:
+      with open(Path.home()/'Desktop'/'pastaELN.desktop','w', encoding='utf-8') as fOut:
         fOut.write(content)
         os.chmod(Path.home()/'Desktop'/'pastaELN.desktop', 0o777)
     except:
       pass
     try:
-      with open(Path.home()/'.local'/'share'/'applications'/'pastaELN.desktop','w') as fOut:
+      with open(Path.home()/'.local'/'share'/'applications'/'pastaELN.desktop','w', encoding='utf-8') as fOut:
         fOut.write(content)
         os.chmod(Path.home()/'.local'/'share'/'applications'/'pastaELN.desktop', 0o777)
     except:
