@@ -236,7 +236,7 @@ def installLinuxRoot(gitAnnexExists, couchDBExists, pathPasta=''):
     shell.write('\n'.join(bashCommand))
   os.chmod(scriptFile, 0o0777)
   if not (Path.home()/'.gitconfig').exists():
-    with open(Path.home()/'.gitconfig','w') as gitConfig:
+    with open(Path.home()/'.gitconfig','w', encoding='utf-8') as gitConfig:
       gitConfig.write('[user]\n\temail = anonymous@aol.com\n\tname = anonymous\n')
   terminals = ['xterm -e bash -c ','qterminal -e bash -c ','gnome-terminal -- ']
   logging.info('Command: '+str(bashCommand))
