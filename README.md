@@ -40,19 +40,23 @@
 
 #### Restart Linux
 ``` bash
-rm .pastaELN.json pastaELN.log
+rm .pastaELN.json
 rm -rf pastaELN/pastasExampleProject
 sudo apt remove git-annex
 sudo apt autoremove
 sudo snap stop couchdb
 sudo snap remove couchdb
+
+
+rm pastaELN.log
 ```
 
 ### Notes on all systems
 - Run Pasta-ELN directly from commandline without installation
-  -  python -m pasta_eln.installationTools
+  - python -m pasta_eln.installationTools
   - pastaELN.py in home directory of repository
 - find qt-awesome icons: qta-browser
+- CouchDB at HTTP! [http://127.0.0.1:5984/_utils/#login](http://127.0.0.1:5984/_utils/#login)
 
 ### How to create a new version
 1. pylint pasta_eln

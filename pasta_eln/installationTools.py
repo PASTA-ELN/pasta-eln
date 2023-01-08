@@ -235,11 +235,15 @@ def installLinuxRoot(gitAnnexExists, couchDBExists, pathPasta=''):
   with open(scriptFile,'w', encoding='utf-8') as shell:
     shell.write('\n'.join(bashCommand))
   os.chmod(scriptFile, 0o0777)
-  terminals = ['xterm','qterminal','gnome-terminal']
+  if not (Path.home()/'.gitconfig').exists():
+    with open(Path.home()/'.gitconfig','w') as gitConfig:
+      gitConfig.write('[user]\n\temail = anonymous@aol.com\n\tname = anonymous\n')
+  terminals = ['xterm -e bash -c ','qterminal -e bash -c ','gnome-terminal -- ']
   logging.info('Command: '+str(bashCommand))
   for term in terminals:
     # _ = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)
-    res = os.system(term+' -e bash -c '+scriptFile.as_posix())
+    print(term+scriptFile.as_posix())
+    res = os.system(term+scriptFile.as_posix())
     logging.info('Linux install terminal '+term+' '+str(res) )
     if res == 0:
       break
@@ -483,14 +487,29 @@ def createShortcut():
 # Main method for testing and installation without GUI
 def main():
   ''' Main method and entry point for commands '''
+  logPath = Path.home()/'pastaELN.log'
+  logging.basicConfig(filename=logPath, encoding='utf-8', format='%(asctime)s|%(levelname)s:%(message)s',
+                      datefmt='%m-%d %H:%M:%S', level=logging.INFO)   #TODO this loggingWarning goes into configuration
+  logging.getLogger('urllib3').setLevel(logging.WARNING)
+  logging.getLogger('requests').setLevel(logging.WARNING)
+  logging.getLogger('asyncio').setLevel(logging.WARNING)
+  logging.getLogger('datalad').setLevel(logging.WARNING)
+  logging.getLogger('PIL').setLevel(logging.WARNING)
+  logging.getLogger('matplotlib.font_manager').setLevel(logging.WARNING)
+  logging.getLogger('datalad').setLevel(logging.WARNING)
+  logging.info('Start PASTA GUI')
   print('---- Test PASTA-ELN installation----')
   print('--   if nothing reported: it is ok.')
   print('getOS        :', getOS())
+  if platform.system()=='Windows':
+    res = git()
+    existsGit = res==''
+    print('git        :',res)
   res = gitAnnex()
-  flagGitAnnex = 'ERROR' in res
+  existsGitAnnex = res==''
   print('git-annex    :', res)
   res = couchdb()
-  flagCouchdb = 'ERROR' in res
+  existsCouchDB = res==''
   print('chouchDB     :', res)
   res = configuration()
   flagConfiguration = 'ERROR' in res
@@ -505,15 +524,29 @@ def main():
 
   print('Add "install" argument to install PASTA-ELN.')
   if len(sys.argv)>1 and 'install' in sys.argv:
-    print('---- Create PASTA-ELN installation----')
-    if flagGitAnnex:
-      print('install git-annex    :', gitAnnex('install'))
-    if flagCouchdb:
-      print('install couchDB      :', couchdb('install'))
-    if flagConfiguration:
-      print('repair  configuration:', configuration('repair'))
-    if flagOntology and not flagCouchdb:
-      print('install ontology     :', ontology('install'))
+    if platform.system()=='Linux':
+      print('---- Create PASTA-ELN installation Linux ----')
+      if (not existsGitAnnex) or (not existsCouchDB):
+        print('install with root credentials...')
+        dirName = Path.home()/'pastaELN'
+        installLinuxRoot(existsGitAnnex, existsCouchDB, dirName)
+      if flagConfiguration:
+        print('repair  configuration:', configuration('repair'))
+      if flagOntology and existsCouchDB:
+        print('install ontology     :', ontology('install'))
+
+    if platform.system()=='Windows':
+      print('---- Create PASTA-ELN installation Windows ----')
+      if not existsGit:
+        print('install git          :', git('install'))
+      if not existsGitAnnex:
+        print('install git-annex    :', gitAnnex('install'))
+      if not existsCouchDB:
+        print('install couchDB      :', couchdb('install'))
+      if flagConfiguration:
+        print('repair  configuration:', configuration('repair'))
+      if flagOntology and existsCouchDB:
+        print('install ontology     :', ontology('install'))
 
   print('Add "example" argument to create example data.')
   if len(sys.argv)>1 and 'example' in sys.argv:

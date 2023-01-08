@@ -40,8 +40,16 @@ class MainWindow(QMainWindow):
 def main():
   """ Main method and entry point for commands """
   logPath = Path.home()/'pastaELN.log'
-  logging.basicConfig(filename=logPath, encoding='utf-8', level=logging.INFO)  #TODO this loggingWarning goes into configuration
-  logging.info('Start GUI')
+  logging.basicConfig(filename=logPath, encoding='utf-8', format='%(asctime)s|%(levelname)s:%(message)s',
+                      datefmt='%m-%d %H:%M:%S', level=logging.INFO)   #TODO this loggingWarning goes into configuration
+  logging.getLogger('urllib3').setLevel(logging.WARNING)
+  logging.getLogger('requests').setLevel(logging.WARNING)
+  logging.getLogger('asyncio').setLevel(logging.WARNING)
+  logging.getLogger('datalad').setLevel(logging.WARNING)
+  logging.getLogger('PIL').setLevel(logging.WARNING)
+  logging.getLogger('matplotlib.font_manager').setLevel(logging.WARNING)
+  logging.getLogger('datalad').setLevel(logging.WARNING)
+  logging.info('Start PASTA GUI')
   app = QApplication()
   apply_stylesheet(app, theme='dark_blue.xml') #TODO this goes into configuration
   window = MainWindow()

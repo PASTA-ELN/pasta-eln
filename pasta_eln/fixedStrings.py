@@ -53,12 +53,11 @@ defaultOntology = """
 
 setupTextLinux = """
 ### Welcome to PASTA-ELN setup for Linux
-Six components are needed for proper function
+Five components are needed for proper function
 - Git-Annex
 - CouchDB
 - Configuration of preferences
 - Ontology of the datastructure
-- Shortcut creation
 - Example data
 
 Analyse and (possibly) correct these items.
@@ -134,7 +133,8 @@ Do you want to install the example data?
 
 This step helps to verify the installation and the data is an helpful example for new users.
 
-This step usually takes up to 20sec, so please be patient.
+This step usually takes up to 20sec, so please be patient. Sometimes, linux likes to mention that the program
+is hanging and asks if to close/wait. Please WAIT.
 """
 
 exampleDataWindows = """
