@@ -51,7 +51,10 @@ def createDefaultConfiguration(user, password, pathPasta=None):
                           'local':{'user':user, 'password':password, 'database':'research', 'path':pathPasta},
                           'remote':{}  }}
   conf['version']     = 1
-  conf['userID']      = os.getlogin()
+  try:
+    conf['userID']      = os.getlogin()
+  except:   #github action
+    conf['userID']      = 'github_user'
   conf['extractors']  = {}
   conf['qrPrinter']   = {}
   conf['magicTags']   = ['P1','P2','P3','TODO','WAIT','DONE']
