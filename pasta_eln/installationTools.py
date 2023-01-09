@@ -266,8 +266,8 @@ def installLinuxRoot(gitAnnexExists, couchDBExists, pathPasta=''):
       logging.info('Finished using straight Bash command result='+str(res))
       resultString = '**ERROR: Last terminal failed'
   success = 'CouchDB works' if couchdbUserPassword('admin',password) else 'CouchDB FAILED'
-  print('InstallLinuxRoot ending.'+success)
-  logging.info('InstallLinuxRoot ending.'+success)
+  print('InstallLinuxRoot ending. '+success)
+  logging.info('InstallLinuxRoot ending. '+success)
   return resultString
 
 
