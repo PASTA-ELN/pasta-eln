@@ -1,4 +1,4 @@
-name: Verify Linux installation (incl. artifact)
+name: Verify Linux install + artifact
 
 on: [push]
 
