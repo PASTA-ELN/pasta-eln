@@ -206,7 +206,6 @@ def installLinuxRoot(gitAnnexExists, couchDBExists, pathPasta=''):
   logging.info('InstallLinuxRoot starting ...')
   bashCommand = []
   password = ''
-  print(gitAnnexExists, couchDBExists, '<<<<')
   if not gitAnnexExists:
     bashCommand += [
       'sudo wget -q http://neuro.debian.net/lists/focal.de-fzj.full -O /etc/apt/sources.list.d/neurodebian.sources.list',
@@ -253,20 +252,16 @@ def installLinuxRoot(gitAnnexExists, couchDBExists, pathPasta=''):
   resultString = 'Password: '+password
   for term in terminals:
     # _ = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)
-    print(term+scriptFile.as_posix())
     res = os.system(term+scriptFile.as_posix())
     logging.info('Linux install terminal '+term+' '+str(res) )
     if res == 0:
       break
     if terminals.index(term)==len(terminals)-1:
-      print('**ERROR: Last terminal failed')
       logging.error('**ERROR: Last terminal failed')
       res = os.system('\n'.join(bashCommand[:-2]))
-      print('Finished using straight Bash command',res)
       logging.info('Finished using straight Bash command result='+str(res))
       resultString = '**ERROR: Last terminal failed'
   success = 'CouchDB works' if couchdbUserPassword('admin',password) else 'CouchDB FAILED'
-  print('InstallLinuxRoot ending. '+success)
   logging.info('InstallLinuxRoot ending. '+success)
   return resultString
 
