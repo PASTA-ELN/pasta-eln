@@ -40,8 +40,9 @@ class MainWindow(QMainWindow):
 def main():
   """ Main method and entry point for commands """
   logPath = Path.home()/'pastaELN.log'
-  logging.basicConfig(filename=logPath, encoding='utf-8', format='%(asctime)s|%(levelname)s:%(message)s',
-                      datefmt='%m-%d %H:%M:%S', level=logging.INFO)   #TODO this loggingWarning goes into configuration
+  #old versions of basicConfig do not know "encoding='utf-8'"
+  logging.basicConfig(filename=logPath, level=logging.INFO, format='%(asctime)s|%(levelname)s:%(message)s',
+                      datefmt='%m-%d %H:%M:%S')   #TODO this loggingWarning goes into configuration
   logging.getLogger('urllib3').setLevel(logging.WARNING)
   logging.getLogger('requests').setLevel(logging.WARNING)
   logging.getLogger('asyncio').setLevel(logging.WARNING)
@@ -55,6 +56,8 @@ def main():
   window = MainWindow()
   window.show()
   app.exec()
+  logging.info('End PASTA GUI')
+  return
 
 # called by python3 -m pasta_eln.gui
 if __name__ == '__main__':

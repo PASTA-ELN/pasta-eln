@@ -563,8 +563,9 @@ def createShortcut():
 def main():
   ''' Main method and entry point for commands '''
   logPath = Path.home()/'pastaELN.log'
-  logging.basicConfig(filename=logPath, encoding='utf-8', format='%(asctime)s|%(levelname)s:%(message)s',
-                      datefmt='%m-%d %H:%M:%S', level=logging.INFO)   #TODO this loggingWarning goes into configuration
+  #old versions of basicConfig do not know "encoding='utf-8'"
+  logging.basicConfig(filename=logPath, level=logging.INFO, format='%(asctime)s|%(levelname)s:%(message)s',
+                      datefmt='%m-%d %H:%M:%S')   #TODO this loggingWarning goes into configuration
   logging.getLogger('urllib3').setLevel(logging.WARNING)
   logging.getLogger('requests').setLevel(logging.WARNING)
   logging.getLogger('asyncio').setLevel(logging.WARNING)
@@ -572,7 +573,7 @@ def main():
   logging.getLogger('PIL').setLevel(logging.WARNING)
   logging.getLogger('matplotlib.font_manager').setLevel(logging.WARNING)
   logging.getLogger('datalad').setLevel(logging.WARNING)
-  logging.info('Start PASTA GUI')
+  logging.info('Start PASTA Install')
   print('---- Test PASTA-ELN installation----')
   print('--   if nothing reported: it is ok.')
   print('getOS        :', getOS())
@@ -627,6 +628,10 @@ def main():
   if len(sys.argv)>1 and 'example' in sys.argv:
     print('---- Create Example data ----')
     print('create example data  :', exampleData())
+
+  logging.info('End PASTA Install')
+  return
+
 
 # called by python3 -m pasta_eln.installTools
 if __name__ == '__main__':
