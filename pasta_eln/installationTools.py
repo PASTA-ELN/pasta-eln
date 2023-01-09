@@ -250,16 +250,23 @@ def installLinuxRoot(gitAnnexExists, couchDBExists, pathPasta=''):
       gitConfig.write('[user]\n\temail = anonymous@aol.com\n\tname = anonymous\n')
   terminals = ['xterm -e bash -c ','qterminal -e bash -c ','gnome-terminal -- ']
   logging.info('Command: '+str(bashCommand))
+  success = False
   for term in terminals:
     # _ = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)
     print(term+scriptFile.as_posix())
     res = os.system(term+scriptFile.as_posix())
     logging.info('Linux install terminal '+term+' '+str(res) )
     if res == 0:
+      success = True
       break
     if terminals.index(term)==len(terminals)-1:
+      print('**ERROR: Last terminal failed')
       logging.error('**ERROR: Last terminal failed')
       return '**ERROR: Last terminal failed'
+  if not success:
+    os.system('\n'.join(bashCommand[:-2]))
+    print('Finished using straight Bash command')
+    logging.info('Finished using straight Bash command')
   logging.info('InstallLinuxRoot ending')
   return 'Password: '+password
 
