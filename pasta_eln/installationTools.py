@@ -250,6 +250,7 @@ def installLinuxRoot(gitAnnexExists, couchDBExists, pathPasta=''):
       gitConfig.write('[user]\n\temail = anonymous@aol.com\n\tname = anonymous\n')
   terminals = ['xterm -e bash -c ','qterminal -e bash -c ','gnome-terminal -- ']
   logging.info('Command: '+str(bashCommand))
+  resultString = 'Password: '+password
   for term in terminals:
     # _ = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)
     print(term+scriptFile.as_posix())
@@ -263,11 +264,11 @@ def installLinuxRoot(gitAnnexExists, couchDBExists, pathPasta=''):
       res = os.system('\n'.join(bashCommand[:-2]))
       print('Finished using straight Bash command',res)
       logging.info('Finished using straight Bash command result='+str(res))
-      return '**ERROR: Last terminal failed'
+      resultString = '**ERROR: Last terminal failed'
   success = 'CouchDB works' if couchdbUserPassword('admin',password) else 'CouchDB FAILED'
   print('InstallLinuxRoot ending.'+success)
   logging.info('InstallLinuxRoot ending.'+success)
-  return 'Password: '+password
+  return resultString
 
 
 def configuration(command='test', user='', password='', pathPasta=''):
