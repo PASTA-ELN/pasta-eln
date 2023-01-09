@@ -116,7 +116,7 @@ def gitAnnex(command='test'):
   elif command == 'install':
     if platform.system()=='Linux':
       return '**ERROR: should not be called'
-    if platform.system()=='Windows':
+    elif platform.system()=='Windows':
       logging.info('gitannex starting ...')
       url = 'https://downloads.kitenet.net/git-annex/windows/7/current/git-annex-installer.exe'
       path = Path.home()/'Downloads'/'git-annex-installer.exe'
@@ -156,7 +156,7 @@ def couchdb(command='test'):
   elif command == 'install':
     if platform.system()=='Linux':
       return '**ERROR should not be called'
-    if platform.system()=='Windows':
+    elif platform.system()=='Windows':
       logging.info('CouchDB starting ...')
       url = 'https://couchdb.neighbourhood.ie/downloads/3.1.1/win/apache-couchdb-3.1.1.msi'
       path = Path.home()/'Downloads'/'apache-couchdb-3.1.1.msi'
@@ -236,7 +236,7 @@ def installLinuxRoot(gitAnnexExists, couchDBExists, pathPasta=''):
       'curl -X PUT http://admin:'+password+'@127.0.0.1:5984/_global_changes',
       'sleep 10',
       'echo DONE-Press-Key',
-      'read']
+      'read']  #TODO if successful in Aug2023: remove "echo....read"
   #Try all terminals
   scriptFile = Path.home()/'pastaELN_Install.sh'
   with open(scriptFile,'w', encoding='utf-8') as shell:
@@ -460,7 +460,7 @@ def exampleData(force=False, callbackPercent=None):
   ### TEST PROCEDURES
   print('\n*** TEST PROCEDURES ***')
   sopDir = pasta.basePath/'StandardOperatingProcedures'
-  os.makedirs(sopDir)
+  os.makedirs(sopDir, exist_ok=True)
   with open(sopDir/'Example_SOP.md','w', encoding='utf-8') as fOut:
     fOut.write('# Put sample in instrument\n# Do something\nDo not forget to\n- not do anything wrong\n- **USE BOLD LETTERS**\n')
   if callbackPercent is not None:
@@ -527,17 +527,7 @@ def createShortcut():
   Create shortcut icon depending on operating system
   """
   logging.info('Create shortcut starting')
-  if platform.system()=='Windows':
-    import winshell
-    from win32com.client import Dispatch
-
-    shell = Dispatch('WScript.Shell')
-    shortcut = shell.CreateShortCut( os.path.join(winshell.desktop(), "pastaELN.lnk") )
-    shortcut.Targetpath = r"pastaELN"
-    shortcut.WorkingDirectory = str(Path.home())
-    shortcut.IconLocation = str(Path(__file__).parent/'Resources'/'Icons'/'favicon64.ico')
-    shortcut.save()
-  elif platform.system()=='Linux':
+  if platform.system()=='Linux':
     content ='[Desktop Entry]\nName=PASTA ELN\nComment=PASTA electronic labnotebook\n'
     content+='Exec=pastaELN\n'
     content+='Icon='+ (Path(__file__).parent/'Resources'/'Icons'/'favicon64.png').as_posix() + '\n'
@@ -554,6 +544,16 @@ def createShortcut():
         os.chmod(Path.home()/'.local'/'share'/'applications'/'pastaELN.desktop', 0o777)
     except:
       pass
+  elif platform.system()=='Windows':
+    import winshell
+    from win32com.client import Dispatch
+
+    shell = Dispatch('WScript.Shell')
+    shortcut = shell.CreateShortCut( os.path.join(winshell.desktop(), "pastaELN.lnk") )
+    shortcut.Targetpath = r"pastaELN"
+    shortcut.WorkingDirectory = str(Path.home())
+    shortcut.IconLocation = str(Path(__file__).parent/'Resources'/'Icons'/'favicon64.ico')
+    shortcut.save()
   logging.info('Create shortcut end')
   return
 
@@ -566,13 +566,8 @@ def main():
   #old versions of basicConfig do not know "encoding='utf-8'"
   logging.basicConfig(filename=logPath, level=logging.INFO, format='%(asctime)s|%(levelname)s:%(message)s',
                       datefmt='%m-%d %H:%M:%S')   #TODO this loggingWarning goes into configuration
-  logging.getLogger('urllib3').setLevel(logging.WARNING)
-  logging.getLogger('requests').setLevel(logging.WARNING)
-  logging.getLogger('asyncio').setLevel(logging.WARNING)
-  logging.getLogger('datalad').setLevel(logging.WARNING)
-  logging.getLogger('PIL').setLevel(logging.WARNING)
-  logging.getLogger('matplotlib.font_manager').setLevel(logging.WARNING)
-  logging.getLogger('datalad').setLevel(logging.WARNING)
+  for package in ['urllib3', 'requests', 'asyncio', 'datalad', 'PIL', 'matplotlib.font_manager']:
+    logging.getLogger(package).setLevel(logging.WARNING)
   logging.info('Start PASTA Install')
   print('---- Test PASTA-ELN installation----')
   print('--   if nothing reported: it is ok.')
@@ -594,7 +589,7 @@ def main():
     res = '\n'+ontology()
   except:
     res = ' **ERROR**'
-    raise
+    #No new 'raise' so that it install-script continues its path
   flagOntology = 'ERROR' in res
   print('ontology     :'+res)
 
@@ -604,14 +599,14 @@ def main():
       print('---- Create PASTA-ELN installation Linux ----')
       if (not existsGitAnnex) or (not existsCouchDB):
         print('install with root credentials...')
-        dirName = Path.home()/'pastaELN'
+        dirName = (Path.home()/'pastaELN').as_posix()
         installLinuxRoot(existsGitAnnex, existsCouchDB, dirName)
       if flagConfiguration:
         print('repair  configuration:', configuration('repair'))
       if flagOntology and existsCouchDB:
         print('install ontology     :', ontology('install'))
 
-    if platform.system()=='Windows':
+    elif platform.system()=='Windows':
       print('---- Create PASTA-ELN installation Windows ----')
       if not existsGit:
         print('install git          :', git('install'))

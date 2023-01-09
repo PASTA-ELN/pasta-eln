@@ -62,6 +62,8 @@ Five components are needed for proper function
 
 Analyse and (possibly) correct these items.
 
+If the installation is successful, permanently remove the 'pastaELN.log' logfile that is in your home-directory.
+
 Note: this text becomes an installation report
 """
 
@@ -78,6 +80,8 @@ Seven components are needed for proper function
 - Example data
 
 Analyse and (possibly) correct these items.
+
+If the installation is successful, permanently remove the 'pastaELN.log' logfile that is in your home-directory (folder above "My Documents").
 
 If an attempt fails, close PASTA-ELN and CMD.exe. Restart CMD.exe and start PASTA-ELN or use Desktop shortcut.
 

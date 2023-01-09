@@ -43,13 +43,8 @@ def main():
   #old versions of basicConfig do not know "encoding='utf-8'"
   logging.basicConfig(filename=logPath, level=logging.INFO, format='%(asctime)s|%(levelname)s:%(message)s',
                       datefmt='%m-%d %H:%M:%S')   #TODO this loggingWarning goes into configuration
-  logging.getLogger('urllib3').setLevel(logging.WARNING)
-  logging.getLogger('requests').setLevel(logging.WARNING)
-  logging.getLogger('asyncio').setLevel(logging.WARNING)
-  logging.getLogger('datalad').setLevel(logging.WARNING)
-  logging.getLogger('PIL').setLevel(logging.WARNING)
-  logging.getLogger('matplotlib.font_manager').setLevel(logging.WARNING)
-  logging.getLogger('datalad').setLevel(logging.WARNING)
+  for package in ['urllib3', 'requests', 'asyncio', 'datalad', 'PIL', 'matplotlib.font_manager']:
+    logging.getLogger(package).setLevel(logging.WARNING)
   logging.info('Start PASTA GUI')
   app = QApplication()
   apply_stylesheet(app, theme='dark_blue.xml') #TODO this goes into configuration
