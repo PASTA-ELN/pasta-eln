@@ -76,11 +76,13 @@ def git(command='test'):
     return ''
 
   elif command == 'install':
+    logging.info('git starting ...')
     url = 'https://github.com/git-for-windows/git/releases/download/v2.39.0.windows.2/Git-2.39.0.2-64-bit.exe'
     path = Path.home()/'Downloads'/'git-installer.exe'
     resultFilePath, _ = urllib.request.urlretrieve(url, path)
     cmd = ['cmd.exe','/K ',str(resultFilePath)]
     _ = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)
+    logging.info('git ended')
     # Winget does not allow to set PATHs
     # os.system('winget install --id Git.Git -e --source winget')
     # Alternative approach: use winget and set environment at each pastaELN start for
@@ -115,11 +117,13 @@ def gitAnnex(command='test'):
     if platform.system()=='Linux':
       return '**ERROR: should not be called'
     if platform.system()=='Windows':
+      logging.info('gitannex starting ...')
       url = 'https://downloads.kitenet.net/git-annex/windows/7/current/git-annex-installer.exe'
       path = Path.home()/'Downloads'/'git-annex-installer.exe'
       resultFilePath, _ = urllib.request.urlretrieve(url, path)
       cmd = ['cmd.exe','/K ',str(resultFilePath)]
       _ = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)
+      logging.info('gitannex ended')
       return 'Installed git-annex using temporary files in Downloads'
     return '**ERROR: Unknown operating system '+platform.system()
 
@@ -153,11 +157,13 @@ def couchdb(command='test'):
     if platform.system()=='Linux':
       return '**ERROR should not be called'
     if platform.system()=='Windows':
+      logging.info('CouchDB starting ...')
       url = 'https://couchdb.neighbourhood.ie/downloads/3.1.1/win/apache-couchdb-3.1.1.msi'
       path = Path.home()/'Downloads'/'apache-couchdb-3.1.1.msi'
       resultFilePath, _ = urllib.request.urlretrieve(url, path)
       cmd = ['cmd.exe','/K ',str(resultFilePath)]
       _ = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)
+      logging.info('CouchDB ending')
       return 'Installed couchDB'
     return '**ERROR: Unknown operating system '+platform.system()
 
@@ -194,6 +200,7 @@ def installLinuxRoot(gitAnnexExists, couchDBExists, pathPasta=''):
   Returns:
     string: ''=success, else error messages
   '''
+  logging.info('InstallLinuxRoot starting ...')
   bashCommand = []
   password = ''
   print(gitAnnexExists, couchDBExists, '<<<<')
@@ -250,6 +257,7 @@ def installLinuxRoot(gitAnnexExists, couchDBExists, pathPasta=''):
     if terminals.index(term)==len(terminals)-1:
       logging.error('**ERROR: Last terminal failed')
       return '**ERROR: Last terminal failed'
+  logging.info('InstallLinuxRoot ending')
   return 'Password: '+password
 
 
@@ -266,6 +274,7 @@ def configuration(command='test', user='', password='', pathPasta=''):
   Returns:
     string: ''=success, else error messages
   '''
+  logging.info('Configuration starting ...')
   output = ''
   try:
     with open(Path.home()/'.pastaELN.json','r', encoding='utf-8') as fConf:
@@ -336,6 +345,7 @@ def configuration(command='test', user='', password='', pathPasta=''):
   if command == 'repair':
     with open(Path.home()/'.pastaELN.json','w', encoding='utf-8') as f:
       f.write(json.dumps(conf,indent=2))
+  logging.info('Configuration ending')
   return output
 
 
@@ -368,8 +378,10 @@ def ontology(command='test'):
     return output
 
   elif command == 'install':
+    logging.info('ontology starting ...')
     doc = json.loads(defaultOntology)
     print(doc)
+    logging.info('ontology ending ...')
     # _ = pasta.db.create_document(doc)
     return ''
 
@@ -377,13 +389,17 @@ def ontology(command='test'):
 
 
 
-def exampleData(force=True):
+def exampleData(force=False, callbackPercent=None):
   '''
   Create example data after installation
 
   Args:
     force (bool): force creation by removing content before creation
+    callbackPercent (function): callback function given to exampleData, such that exampleData can report progress back
   '''
+  logging.info('Start example data creation')
+  if callbackPercent is not None:
+    callbackPercent(0)
   configName = 'research'
   if force:
     pasta = Pasta(configName, initConfig=False)
@@ -391,29 +407,55 @@ def exampleData(force=True):
     pasta.exit(deleteDB=True)
     shutil.rmtree(dirName)
     os.makedirs(dirName)
+  if callbackPercent is not None:
+    callbackPercent(1)
   pasta = Pasta(configName, initViews=True, initConfig=False)
+  if callbackPercent is not None:
+    callbackPercent(2)
   ### CREATE PROJECTS AND SHOW
   print('*** CREATE EXAMPLE PROJECT AND SHOW ***')
   pasta.addData('x0', {'-name': 'PASTAs Example Project', 'objective': 'Test if everything is working as intended.', 'status': 'active', 'comment': '#tag Can be used as reference or deleted'})
+  if callbackPercent is not None:
+    callbackPercent(3)
   print(pasta.output('x0'))
+  if callbackPercent is not None:
+    callbackPercent(4)
+  logging.info('Finished creating example project')
 
   ### TEST PROJECT PLANING
   print('*** TEST PROJECT PLANING ***')
   viewProj = pasta.db.getView('viewDocType/x0')
   projID1  = [i['id'] for i in viewProj if 'PASTA' in i['value'][0]][0]
+  if callbackPercent is not None:
+    callbackPercent(5)
   pasta.changeHierarchy(projID1)
+  if callbackPercent is not None:
+    callbackPercent(6)
   pasta.addData('x1',    {'comment': 'This is hard! #TODO', '-name': 'This is an example task'})
+  if callbackPercent is not None:
+    callbackPercent(7)
   pasta.addData('x1',    {'comment': 'This will take a long time. #WAIT', '-name': 'This is another example task'})
+  if callbackPercent is not None:
+    callbackPercent(8)
   pasta.changeHierarchy(pasta.currentID)
   pasta.addData('x2',    {'-name': 'This is an example subtask',     'comment': 'Random comment 1'})
+  if callbackPercent is not None:
+    callbackPercent(9)
   pasta.addData('x2',    {'-name': 'This is another example subtask','comment': 'Random comment 2'})
+  if callbackPercent is not None:
+    callbackPercent(10)
   pasta.changeHierarchy(None)
   pasta.addData('x1',    {'-name': 'Data files'})
+  if callbackPercent is not None:
+    callbackPercent(11)
   semStepID = pasta.currentID
   pasta.changeHierarchy(semStepID)
   semDirName = pasta.basePath/pasta.cwd
   pasta.changeHierarchy(None)
   print(pasta.outputHierarchy())
+  if callbackPercent is not None:
+    callbackPercent(12)
+  logging.info('Finished project planning')
 
   ### TEST PROCEDURES
   print('\n*** TEST PROCEDURES ***')
@@ -421,32 +463,62 @@ def exampleData(force=True):
   os.makedirs(sopDir)
   with open(sopDir/'Example_SOP.md','w', encoding='utf-8') as fOut:
     fOut.write('# Put sample in instrument\n# Do something\nDo not forget to\n- not do anything wrong\n- **USE BOLD LETTERS**\n')
+  if callbackPercent is not None:
+    callbackPercent(13)
   pasta.addData('procedure', {'-name': 'StandardOperatingProcedures/Example_SOP.md', 'comment': '#v1'})
+  if callbackPercent is not None:
+    callbackPercent(14)
   print(pasta.output('procedure'))
+  if callbackPercent is not None:
+    callbackPercent(15)
+  logging.info('Finished procedures creating')
 
   ### TEST SAMPLES
   print('*** TEST SAMPLES ***')
   pasta.addData('sample',    {'-name': 'Example sample', 'chemistry': 'A2B2C3', 'qrCode': '13214124 99698708', 'comment': 'can be used as example or removed'})
+  if callbackPercent is not None:
+    callbackPercent(16)
   print(pasta.output('sample'))
+  if callbackPercent is not None:
+    callbackPercent(17)
   print(pasta.outputQR())
+  if callbackPercent is not None:
+    callbackPercent(18)
+  logging.info('Finished samples creating')
 
   ###  TEST MEASUREMENTS AND SCANNING/CURATION
   print('*** TEST MEASUREMENTS AND SCANNING/CURATION ***')
   shutil.copy(Path(__file__).parent/'Resources'/'ExampleMeasurements'/'simple.png', semDirName)
   shutil.copy(Path(__file__).parent/'Resources'/'ExampleMeasurements'/'simple.csv', semDirName)
+  if callbackPercent is not None:
+    callbackPercent(19)
+  logging.info('Finished copy files')
   pasta.scanTree()
+  logging.info('Finished scan tree')
+  if callbackPercent is not None:
+    callbackPercent(20)
 
   ### USE GLOBAL FILES
   print('*** USE GLOBAL FILES ***')
   pasta.changeHierarchy(semStepID)
+  if callbackPercent is not None:
+    callbackPercent(21)
   pasta.addData('measurement', {'-name': 'https://developers.google.com/search/mobile-sites/imgs/mobile-seo/separate-urls.png', \
     'comment':'remote image from google. Used for testing and reference. Can be deleted.'})
+  if callbackPercent is not None:
+    callbackPercent(22)
   print(pasta.output('measurement'))
+  if callbackPercent is not None:
+    callbackPercent(23)
+  logging.info('Finished global files additions')
 
   ### VERIFY DATABASE INTEGRITY
   print('\n*** VERIFY DATABASE INTEGRITY ***')
   print(pasta.checkDB(verbose=True))
   print('\n*** DONE WITH VERIFY ***')
+  if callbackPercent is not None:
+    callbackPercent(24)
+  logging.info('Finished checking database')
   return
 
 
@@ -454,6 +526,7 @@ def createShortcut():
   """
   Create shortcut icon depending on operating system
   """
+  logging.info('Create shortcut starting')
   if platform.system()=='Windows':
     import winshell
     from win32com.client import Dispatch
@@ -481,6 +554,8 @@ def createShortcut():
         os.chmod(Path.home()/'.local'/'share'/'applications'/'pastaELN.desktop', 0o777)
     except:
       pass
+  logging.info('Create shortcut end')
+  return
 
 
 ##############

@@ -1,7 +1,7 @@
 """ Widget: setup tab inside the configuration dialog window """
-import webbrowser
+import webbrowser, logging
 from pathlib import Path
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTextEdit, QPushButton, QMessageBox, QInputDialog, QFileDialog    # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTextEdit, QPushButton, QMessageBox, QInputDialog, QFileDialog, QProgressBar    # pylint: disable=no-name-in-module
 import qtawesome as qta
 
 from .installationTools import gitAnnex, couchdb, configuration, ontology, exampleData, createShortcut, installLinuxRoot
@@ -27,6 +27,11 @@ class ConfigurationSetup(QWidget):
     self.mainText = setupTextLinux
     self.text1.setMarkdown(self.mainText)
     screen1L.addWidget(self.text1)
+    self.progress1 = QProgressBar(self.screen1W)
+    self.progress1.setMaximum(24)
+    self.progress1.hide()
+    screen1L.addWidget(self.progress1)
+
     footerW = QWidget()
     screen1L.addWidget(footerW)
     footerL = QHBoxLayout(footerW)
@@ -34,11 +39,24 @@ class ConfigurationSetup(QWidget):
     self.button1.clicked.connect(self.analyse)
     footerL.addWidget(self.button1)
 
+
+  def callbackProgress(self, number):
+    """
+    Increse progressbar by moving to number
+
+    Args:
+      number (int): integer to move to
+    """
+    self.progress1.setValue(number)
+    return
+
+
   def analyse(self):
     """
     Main method that does all the analysis: open dialogs, ...
     """
     flagContinue = True
+    logging.info('Linux setup analyse start')
 
     #Git annex
     res = gitAnnex('test')
@@ -121,7 +139,8 @@ class ConfigurationSetup(QWidget):
     if flagContinue:
       button = QMessageBox.question(self, "Example data", exampleDataLinux)
       if button == QMessageBox.Yes:
-        exampleData()
+        self.progress1.show()
+        exampleData(False, self.callbackProgress)
         self.mainText = self.mainText.replace('- Example data', '- Example data was added')
       else:
         self.mainText = self.mainText.replace('- Example data', '- Example data was NOT added, per user choice')
@@ -131,6 +150,8 @@ class ConfigurationSetup(QWidget):
     self.button1.setText('Finished')
     self.button1.clicked.disconnect(self.analyse)
     self.button1.clicked.connect(self.finished)
+    logging.info('Linux setup analyse end')
+    return
 
 
   def finished(self):
