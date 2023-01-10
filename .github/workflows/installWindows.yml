@@ -15,6 +15,8 @@ jobs:
     - name: Set up CouchDB
       run: |
         echo ${{ runner.temp }}
+        msiexec /i apache-couchdb-3.3.0.msi /quiet APPLICATIONFOLDER=${{ runner.temp }}\CouchDB COOKIEVALUE=abcdefghijklmo INSTALLSERVICE=1 ADMINUSER=admin ADMINPASSWORD=hunter2 /norestart
+        echo first
         msiexec /i apache-couchdb-3.3.0.msi /quiet APPLICATIONFOLDER=${{ runner.temp }}\CouchDB COOKIEVALUE=abcdefghijklmo INSTALLSERVICE=1 ADMINUSER=admin ADMINPASSWORD=hunter2 /norestart /l* ${{ runner.temp }}\log.txt
         mkdir ${{ runner.temp }}\Testing
         more ${{ runner.temp }}\log.txt
