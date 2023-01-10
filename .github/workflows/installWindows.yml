@@ -20,7 +20,10 @@ jobs:
         dir "C:\Program Files"
         dir "D:\"
         dir "D:\a"
-        where /r "D:\a" couchdb.log
+        dir "D:\a\_actions"
+        dir "D:\a\_PipelineMapping"
+        dir "D:\a\_temp"
+        dir "D:\a\pasta-eln"
     - name: Test CouchDB
       run: |
         curl -f http://127.0.0.1:5984/
