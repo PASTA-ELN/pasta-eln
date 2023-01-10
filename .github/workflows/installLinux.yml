@@ -22,8 +22,6 @@ jobs:
         git config --global user.name "GitHub Almighty"
     - name: Checkout content
       uses: actions/checkout@v3
-      with:
-        submodules: 'true'
     - name: Set up Python 3.9
       uses: actions/setup-python@v3
       with:

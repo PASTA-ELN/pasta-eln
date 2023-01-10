@@ -120,13 +120,14 @@ def gitAnnex(command='test'):
     if platform.system()=='Linux':
       return '**ERROR: should not be called'
     elif platform.system()=='Windows':
-      logging.info('gitannex starting ...')
-      url = 'https://downloads.kitenet.net/git-annex/windows/7/current/git-annex-installer.exe'
-      path = Path.home()/'Downloads'/'git-annex-installer.exe'
-      resultFilePath, _ = urllib.request.urlretrieve(url, path)
-      cmd = ['cmd.exe','/K ',str(resultFilePath)]
+      logging.info('gitannex install starting ...')
+      # url = 'https://downloads.kitenet.net/git-annex/windows/7/current/git-annex-installer.exe'
+      # path = Path.home()/'Downloads'/'git-annex-installer.exe'
+      # resultFilePath, _ = urllib.request.urlretrieve(url, path)
+      # cmd = ['cmd.exe','/K ',str(resultFilePath)]
+      cmd = ['datalad-installer','git-annex','-m','datalad/git-annex:release']
       _ = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)
-      logging.info('gitannex ended')
+      logging.info('gitannex  install ended')
       return 'Installed git-annex using temporary files in Downloads'
     return '**ERROR: Unknown operating system '+platform.system()
 

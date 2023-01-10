@@ -74,3 +74,8 @@ projID1  = [i['id'] for i in viewProj if 'PASTA' in i['value'][0]][0]
 pasta.changeHierarchy(projID1)
 print(pasta.outputHierarchy())
 ```
+
+### Test couchDB running
+- curl -f http://127.0.0.1:5984/
+- curl -X POST -H "Content-Type: application/json; charset=utf-8" -d '{"name": "*+*", "password": "*+*"}' http://127.0.0.1:5984/_session
+
