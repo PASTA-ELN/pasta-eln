@@ -9,6 +9,15 @@ jobs:
   build:
     runs-on: windows-latest
     steps:
+    - name: Set up CouchDB
+      run: |
+        msiexec /i apache-couchdb-3.0.0.msi /quiet INSTALLSERVICE=1 ADMINUSER=admin ADMINPASSWORD=hunter2 /norestart
+    - name: Test CouchDB
+      run: |
+        curl -f http://127.0.0.1:5984/
+    - name: Test CouchDB authentication
+      run: |
+        curl -X POST -H "Content-Type: application/json; charset=utf-8" -d '{"name": "admin", "password": "hunter2"}' http://127.0.0.1:5984/_session
     - name: Set up git environment variables
       run: |
         git config --global user.email "test@github.land"
@@ -23,10 +32,6 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements-windows.txt
-    - name: Start CouchDB
-      uses: iamssen/couchdb-github-action@master
-      with:
-        couchdb-version: 3.0
     - name: Check installation - should fail
       run: |
         python3 -m pasta_eln.installationTools
