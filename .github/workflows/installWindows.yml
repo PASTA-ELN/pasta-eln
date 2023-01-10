@@ -20,6 +20,7 @@ jobs:
         dir "D:\a\_actions\actions\checkout\v3"
         dir "D:\a\_actions\actions\setup-python\v3"
         dir "D:\a\_actions\actions\upload-artifact\v3"
+        cd ..\..\..
         tree d:
     - name: Test CouchDB
       run: |
