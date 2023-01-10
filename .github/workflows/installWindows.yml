@@ -18,10 +18,8 @@ jobs:
     - name: Check CouchDB setup
       run: |
         dir "C:\Program Files"
-        dir "C:\Program Files\Apache CouchDB"
-        dir "C:\Program Files\Apache CouchDB\var"
-        dir "C:\Program Files\Apache CouchDB\var\log"
-        dir "C:\Program Files\Apache CouchDB\var\log\couchdb.log"
+        cd/
+        dir /s *couchdb.log*
     - name: Test CouchDB
       run: |
         curl -f http://127.0.0.1:5984/
