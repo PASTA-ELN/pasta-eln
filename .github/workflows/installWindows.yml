@@ -20,10 +20,17 @@ jobs:
         msiexec /i apache-couchdb-3.3.0.msi /quiet APPLICATIONFOLDER=${{ runner.temp }}\CouchDB COOKIEVALUE=abcdefghijklmo INSTALLSERVICE=1 ADMINUSER=admin ADMINPASSWORD=hunter2 /norestart /l* ${{ runner.temp }}\log.txt
         mkdir ${{ runner.temp }}\Testing
         more ${{ runner.temp }}\log.txt
+    # echo temp gives the location of the temp-directory
+    # then I add someText into the new log.txt file
+    # echo something to know I passed that step
+    # run msiexec with would use the tempDirectory's subfolder (CouchDB) and log the install into said file
+    # create a temporary testing folder
+    # nothing was added to the log-file
     - name: Check CouchDB setup
       run: |
         cd ..\..\..
         tree d:
+    # change to root folder and do a tree command. The CouchDB folder is not created, but the temporary testing folder is there
     - name: Test CouchDB
       run: |
         curl -f http://127.0.0.1:5984/
