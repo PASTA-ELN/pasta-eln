@@ -78,8 +78,8 @@ def runAsAdminWindows(cmdLine):
   procInfo = ShellExecuteEx(nShow=win32con.SW_SHOWNORMAL,
                             fMask=shellcon.SEE_MASK_NOCLOSEPROCESS,
                             lpVerb='runas',  # causes UAC elevation prompt.
-                            lpFile='"%s"' % (cmdLine[0],),
-                            lpParameters=" ".join(['%s' % (x,) for x in cmdLine[1:]]))
+                            lpFile= '"'+cmdLine[0]+'"',
+                            lpParameters=" ".join(cmdLine[1:])
   procHandle = procInfo['hProcess']
   _ = win32event.WaitForSingleObject(procHandle, win32event.INFINITE)
   _   = win32process.GetExitCodeProcess(procHandle)
@@ -190,7 +190,7 @@ def couchdb(command='test'):
       url = 'https://couchdb.neighbourhood.ie/downloads/3.1.1/win/apache-couchdb-3.1.1.msi'
       path = Path.home()/'Downloads'/'apache-couchdb-3.1.1.msi'
       logging.info('Start download of couchdb')
-      resultFilePath, _ = urllib.request.urlretrieve(url, path)
+      _, _ = urllib.request.urlretrieve(url, path)
       ## Old version with installer
       # cmd = ['cmd.exe','/K ',str(resultFilePath)]
       # _ = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)
