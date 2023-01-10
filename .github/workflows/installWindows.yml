@@ -17,11 +17,11 @@ jobs:
         msiexec /i apache-couchdb-3.3.0.msi /quiet INSTALLSERVICE=1 ADMINUSER=admin ADMINPASSWORD=hunter2 /norestart
     - name: Check CouchDB setup
       run: |
-        dir C:\Program Files
-        dir C:\Program Files\Apache CouchDB
-        dir C:\Program Files\Apache CouchDB\var
-        dir C:\Program Files\Apache CouchDB\var\log
-        dir C:\Program Files\Apache CouchDB\var\log\couchdb.log
+        dir "C:\Program Files"
+        dir "C:\Program Files\Apache CouchDB"
+        dir "C:\Program Files\Apache CouchDB\var"
+        dir "C:\Program Files\Apache CouchDB\var\log"
+        dir "C:\Program Files\Apache CouchDB\var\log\couchdb.log"
     - name: Test CouchDB
       run: |
         curl -f http://127.0.0.1:5984/
