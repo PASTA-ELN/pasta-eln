@@ -17,10 +17,10 @@ jobs:
         msiexec /i apache-couchdb-3.3.0.msi /quiet COOKIEVALUE=abcdefghijklmo INSTALLSERVICE=1 ADMINUSER=admin ADMINPASSWORD=hunter2 /norestart
     - name: Check CouchDB setup
       run: |
-        dir "D:\a\_actions\actions\checkout"
-        dir "D:\a\_actions\actions\setup-python"
-        dir "D:\a\_actions\actions\upload-artifact"
-        dir "D:\a\_PipelineMapping\PASTA-ELN\pasta-eln"
+        dir "D:\a\_actions\actions\checkout\v3"
+        dir "D:\a\_actions\actions\setup-python\v3"
+        dir "D:\a\_actions\actions\upload-artifact\v3"
+        tree d:
     - name: Test CouchDB
       run: |
         curl -f http://127.0.0.1:5984/
