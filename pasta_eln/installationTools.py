@@ -79,7 +79,7 @@ def runAsAdminWindows(cmdLine):
                             fMask=shellcon.SEE_MASK_NOCLOSEPROCESS,
                             lpVerb='runas',  # causes UAC elevation prompt.
                             lpFile= '"'+cmdLine[0]+'"',
-                            lpParameters=" ".join(cmdLine[1:])
+                            lpParameters=" ".join(cmdLine[1:]))
   procHandle = procInfo['hProcess']
   _ = win32event.WaitForSingleObject(procHandle, win32event.INFINITE)
   _   = win32process.GetExitCodeProcess(procHandle)
