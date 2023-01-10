@@ -41,9 +41,9 @@ jobs:
     - name: Installation
       run: |
         python3 -m pasta_eln.installationTools install
-    - name: Upload log
+    - name: Upload couchdb log
       uses: actions/upload-artifact@v3
       with:
-        name: pastaELN.log
-        path: ~/pastaELN.log
+        name: couchDB.log
+        path: C:/Program Files/Apache CouchDB/var/log/couchdb.log
       if: ${{ always() }}
