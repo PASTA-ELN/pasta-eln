@@ -15,6 +15,10 @@ jobs:
     - name: Set up CouchDB
       run: |
         msiexec /i apache-couchdb-3.3.0.msi /quiet COOKIEVALUE=abcdefghijklmo INSTALLSERVICE=1 ADMINUSER=admin ADMINPASSWORD=hunter2 /norestart
+    - name: Check CouchDB setup
+      run: |
+        dir "C:\Program Files"
+        where /r c: couchdb.log
     - name: Test CouchDB
       run: |
         curl -f http://127.0.0.1:5984/
