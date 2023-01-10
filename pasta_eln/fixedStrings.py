@@ -98,10 +98,7 @@ configurationOverview = """
 
 gitWindows = """
 Do you want to install git?
-If you choose yes, the installer will open and guide you through the installation. Please do the following:
-1.-14. 'Next'
-15. 'Install'
-16. 'Finish'
+
 Be aware, downloading the installer requires some time, depending on the internet connection.
 """
 
@@ -114,22 +111,13 @@ Be aware, downloading the installer requires some time, depending on the interne
 
 gitAnnexWindows = """
 Do you want to install git-annex?
-If you choose yes, the installer will open and guide you through the installation. Please do the following:
-1. 'Next >'
-2. 'I Agree'
-3. 'Close'
+
 Be aware, downloading the installer requires some time, depending on the internet connection.
 """
 
 couchDBWindows = """
 Do you want to install CouchDB?
-If you choose yes, the installer will open and guide you through the installation. Please do the following:
-1. click 'Next'
-2. Accept License & 'Next'
-3. 'Next'
-4. enter username (e.g. admin) and password and click 'Validate Credentials' and then 'Next'
-5. 'Install'
-6. 'Finish'
+
 Be aware, downloading the installer requires some time, depending on the internet connection.
 """
 

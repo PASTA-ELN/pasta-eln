@@ -18,6 +18,7 @@ class ConfigurationSetup(QWidget):
     self.setMinimumHeight(500)
     self.setLayout(self.mainL)
     self.callbackFinished = callbackFinished
+    self.backend = backend
 
     #widget 1 = screen 1
     self.screen1W = QWidget()
@@ -74,6 +75,7 @@ class ConfigurationSetup(QWidget):
 
 
     #Git annex
+    password = ''
     if flagContinue:
       res = gitAnnex('test')
       if res =='':
@@ -97,7 +99,11 @@ class ConfigurationSetup(QWidget):
       else:
         button = QMessageBox.question(self, "CouchDB installation", couchDBWindows)
         if button == QMessageBox.Yes:
-          couchdb('install')
+          res = couchdb('install')
+          if len(res.split('|'))==3:
+            password=res.split('|')[1]
+          else:
+            logging.error('Could not retrieve password :'+str(res))
         else:
           self.mainText = self.mainText.replace('- CouchDB','- CouchDB: user chose to NOT install' )
           self.text1.setMarkdown(self.mainText)
@@ -112,29 +118,8 @@ class ConfigurationSetup(QWidget):
       else:
         button = QMessageBox.question(self, "PASTA-ELN configuration", "Do you want to create/repain the configuration.")
         if button == QMessageBox.Yes:
-          flagUserPw = True #Continue running until false
-          usernameVerified, passwordVerified = '', ''
-          while flagUserPw:
-            username, ok = QInputDialog.getText(self, 'Username input','Please enter the user name you entered into couchDB.',text='admin')
-            if not ok:
-              self.mainText = '### User chose to stop during CouchDB installation\nIf you forgot username or password, please uninstall couchdb and execute PASTA-ELN again'
-              self.text1.setMarkdown(self.mainText)
-              flagContinue = False
-              flagUserPw  = False
-            elif username!='':
-              password, ok = QInputDialog.getText(self, 'Password input','Please enter the password you entered into couchDB.')
-              if not ok:
-                self.mainText = '### User chose to stop during CouchDB installation\nIf you forgot username or password, please uninstall couchdb and execute PASTA-ELN again'
-                self.text1.setMarkdown(self.mainText)
-                flagContinue = False
-                flagUserPw  = False
-              else:
-                if password!='' and couchdbUserPassword(username,password):
-                  flagUserPw = False  #This is the good and desired end
-                  usernameVerified = username
-                  passwordVerified = password
           dirName = QFileDialog.getExistingDirectory(self,'Create and select directory for scientific data',str(Path.home()/'Documents'))
-          configuration('repair',usernameVerified, passwordVerified,dirName)
+          configuration('repair','admin', password,dirName)
         else:
           self.mainText = self.mainText.replace('- Configuration of preferences','- Configuration: user chose to NOT install' )
           self.text1.setMarkdown(self.mainText)
@@ -170,8 +155,15 @@ class ConfigurationSetup(QWidget):
       button = QMessageBox.question(self, "Example data", exampleDataWindows)
       if button == QMessageBox.Yes:
         self.progress1.show()
-        exampleData(False, self.callbackProgress)
-        self.mainText = self.mainText.replace('- Example data', '- Example data was added')
+        if (self.backend.basePath/'pastasExampleProject').exists():
+          button1 = QMessageBox.question(self, "Example data", 'Data exists. Should I reset?')
+          if button1 == QMessageBox.Yes:
+            exampleData(True, self.callbackProgress)
+          else:
+            self.mainText = self.mainText.replace('- Example data', '- Example data exists and should not be deleted.')
+        else:
+          exampleData(False, self.callbackProgress)
+          self.mainText = self.mainText.replace('- Example data', '- Example data was added')
       else:
         self.mainText = self.mainText.replace('- Example data', '- Example data was NOT added, per user choice')
       self.text1.setMarkdown(self.mainText)

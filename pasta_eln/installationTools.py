@@ -61,6 +61,31 @@ def createDefaultConfiguration(user, password, pathPasta=None):
   return conf
 
 
+def runAsAdminWindows(cmdLine):
+  '''
+  Run a command as admin in windows
+  - (C) COPYRIGHT © Preston Landers 2010
+  - https://stackoverflow.com/questions/19672352/how-to-run-script-with-elevated-privilege-on-windows
+  - asks user for approval
+  - waits for commands to end
+
+  Args:
+    cmdLine (list): list of command line sections runAsAdmin(["c:\\Windows\\notepad.exe"])
+  '''
+  import win32con, win32event, win32process
+  from win32com.shell.shell import ShellExecuteEx
+  from win32com.shell import shellcon
+  procInfo = ShellExecuteEx(nShow=win32con.SW_SHOWNORMAL,
+                            fMask=shellcon.SEE_MASK_NOCLOSEPROCESS,
+                            lpVerb='runas',  # causes UAC elevation prompt.
+                            lpFile='"%s"' % (cmdLine[0],),
+                            lpParameters=" ".join(['%s' % (x,) for x in cmdLine[1:]]))
+  procHandle = procInfo['hProcess']
+  _ = win32event.WaitForSingleObject(procHandle, win32event.INFINITE)
+  _   = win32process.GetExitCodeProcess(procHandle)
+  return
+
+
 def git(command='test'):
   '''
   WINDOWS test git installation or install it
@@ -77,18 +102,18 @@ def git(command='test'):
     if shutil.which('git') is None:
       return '**ERROR: git not installed'
     return ''
-
   elif command == 'install':
     logging.info('git starting ...')
-    url = 'https://github.com/git-for-windows/git/releases/download/v2.39.0.windows.2/Git-2.39.0.2-64-bit.exe'
-    path = Path.home()/'Downloads'/'git-installer.exe'
-    resultFilePath, _ = urllib.request.urlretrieve(url, path)
-    cmd = ['cmd.exe','/K ',str(resultFilePath)]
-    _ = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)
+    ## Using installer that requires 14-next ;-(
+    # url = 'https://github.com/git-for-windows/git/releases/download/v2.39.0.windows.2/Git-2.39.0.2-64-bit.exe'
+    # path = Path.home()/'Downloads'/'git-installer.exe'
+    # resultFilePath, _ = urllib.request.urlretrieve(url, path)
+    # cmd = ['cmd.exe','/K ',str(resultFilePath)]
+    # _ = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)
+    ## Winget creates paths if run as admin
+    runAsAdminWindows(['winget','install','--id','Git.Git','-e','--source','winget'])
+    # os.system('winget install --id Git.Git -e --source winget')    #does not work since in user-mode
     logging.info('git ended')
-    # Winget does not allow to set PATHs
-    # os.system('winget install --id Git.Git -e --source winget')
-    # Alternative approach: use winget and set environment at each pastaELN start for
     return 'Installed git using temporary files in Downloads'
 
   return '**ERROR: Unknown command'
@@ -121,13 +146,15 @@ def gitAnnex(command='test'):
       return '**ERROR: should not be called'
     elif platform.system()=='Windows':
       logging.info('gitannex install starting ...')
+      ## Old version with installer
       # url = 'https://downloads.kitenet.net/git-annex/windows/7/current/git-annex-installer.exe'
       # path = Path.home()/'Downloads'/'git-annex-installer.exe'
       # resultFilePath, _ = urllib.request.urlretrieve(url, path)
       # cmd = ['cmd.exe','/K ',str(resultFilePath)]
+      ## New version with datalad-installer: Does not ask questions
       cmd = ['datalad-installer','git-annex','-m','datalad/git-annex:release']
       _ = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)
-      logging.info('gitannex  install ended')
+      logging.info('gitannex install ended')
       return 'Installed git-annex using temporary files in Downloads'
     return '**ERROR: Unknown operating system '+platform.system()
 
@@ -137,9 +164,7 @@ def gitAnnex(command='test'):
 
 def couchdb(command='test'):
   '''
-  test couchDB installation or install it
-  - Linux install also creates default configuration file .pastaELN.json
-  - Windows not since the password is unknown after installation
+  test couchDB installation or (install it on Windows-only)
 
   Args:
     command (string): 'test' or 'install'
@@ -164,13 +189,22 @@ def couchdb(command='test'):
       logging.info('CouchDB starting ...')
       url = 'https://couchdb.neighbourhood.ie/downloads/3.1.1/win/apache-couchdb-3.1.1.msi'
       path = Path.home()/'Downloads'/'apache-couchdb-3.1.1.msi'
+      logging.info('Start download of couchdb')
       resultFilePath, _ = urllib.request.urlretrieve(url, path)
-      cmd = ['cmd.exe','/K ',str(resultFilePath)]
-      _ = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)
+      ## Old version with installer
+      # cmd = ['cmd.exe','/K ',str(resultFilePath)]
+      # _ = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)
+      ## New version without questions
+      password = ''.join(random.choice(string.ascii_letters) for i in range(12))
+      logging.info('PASSWORD: '+password)
+      path = str(path).replace('\\','\\\\')
+      cmd = ['msiexec','/i',path,'/quiet','COOKIEVALUE=abcdefghijklmo','INSTALLSERVICE=1','ADMINUSER=admin',\
+             'ADMINPASSWORD='+password,'/norestart','/l*','log.txt']
+      logging.info('COMMAND: '+' '.join(cmd))
+      runAsAdminWindows(cmd)
       logging.info('CouchDB ending')
-      return 'Installed couchDB'
+      return 'Installed couchDB with password |'+password+'|'
     return '**ERROR: Unknown operating system '+platform.system()
-
   return '**ERROR: Unknown command'
 
 
@@ -217,7 +251,7 @@ def installLinuxRoot(gitAnnexExists, couchDBExists, pathPasta=''):
       'sleep 10']
   if not couchDBExists:
     password = ''.join(random.choice(string.ascii_letters) for i in range(12))
-    print('PASSWORD: '+password)
+    logging.info('PASSWORD: '+password)
     #create or adopt .pastaELN.json
     path = Path.home()/'.pastaELN.json'
     if path.exists():
@@ -292,11 +326,6 @@ def configuration(command='test', user='', password='', pathPasta=''):
       conf = createDefaultConfiguration(user, password, pathPasta)
 
   illegalNames = [key for key in conf if key.startswith('-')]
-  if not 'softwareDir' in conf:
-    if command == 'repair':
-      conf['softwareDir'] = os.path.dirname(os.path.abspath(__file__))
-    else:
-      output += '**ERROR: No softwareDir in config file\n'
   if not 'userID' in conf:
     if command == 'repair':
       conf['userID'] = os.getlogin()
@@ -312,11 +341,6 @@ def configuration(command='test', user='', password='', pathPasta=''):
       conf['qrPrinter'] = {}
     else:
       output += '**ERROR: No qrPrinter in config file\n'
-  if not 'tableFormat' in conf:
-    if command == 'repair':
-      conf['tableFormat'] = {}
-    else:
-      output += '**ERROR: No tableFormat in config file\n'
   if not 'extractors' in conf:
     if command == 'repair':
       conf['extractors'] = {}
