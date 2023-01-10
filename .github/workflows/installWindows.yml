@@ -18,7 +18,7 @@ jobs:
     - name: Check CouchDB setup
       run: |
         dir "C:\Program Files"
-        where /r c: couchdb.log
+        where /r c: *couchdb.log*
     - name: Test CouchDB
       run: |
         curl -f http://127.0.0.1:5984/
