@@ -1,4 +1,5 @@
 name: docs
+description: Create documentation on github pages
 
 on:
   push:
