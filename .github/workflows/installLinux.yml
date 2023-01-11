@@ -1,5 +1,4 @@
 name: Verify Linux install
-description: Check if linux install is working incl. artifact
 
 on:
   push:

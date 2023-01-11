@@ -1,5 +1,4 @@
 name: pypi
-description: Create a pypi package and upload to pypi.org
 
 on: [push, pull_request]
 

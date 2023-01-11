@@ -1,5 +1,4 @@
 name: Pylint
-description: Check if python is linted. Clean style
 
 on:
   push:
