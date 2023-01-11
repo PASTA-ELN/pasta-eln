@@ -341,6 +341,11 @@ def configuration(command='test', user='', password='', pathPasta=''):
       conf['qrPrinter'] = {}
     else:
       output += '**ERROR: No qrPrinter in config file\n'
+  if not 'tableFormat' in conf:
+    if command == 'repair':
+      conf['tableFormat'] = {}
+    else:
+      output += '**ERROR: No tableFormat in config file\n'
   if not 'extractors' in conf:
     if command == 'repair':
       conf['extractors'] = {}
