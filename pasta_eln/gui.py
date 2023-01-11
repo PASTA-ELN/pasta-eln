@@ -1,8 +1,9 @@
 """ Graphical user interface includes all widgets """
 import os, logging
 from pathlib import Path
-from PySide6.QtCore import Qt   # pylint: disable=no-name-in-module
+from PySide6.QtCore import Qt      # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QApplication    # pylint: disable=no-name-in-module
+from PySide6.QtGui import QIcon    # pylint: disable=no-name-in-module
 from qt_material import apply_stylesheet  #of https://github.com/UN-GCPDS/qt-material
 
 from .backend import Pasta
@@ -19,6 +20,7 @@ class MainWindow(QMainWindow):
     super().__init__()
     self.setWindowTitle("PASTA-ELN")
     self.setWindowState(Qt.WindowMaximized)
+    self.setWindowIcon(QIcon('./Resources/Icons/favicon64.png'))
     self.backend = Pasta()
     comm = Communicate(self.backend)
 
@@ -47,8 +49,10 @@ def main():
     logging.getLogger(package).setLevel(logging.WARNING)
   logging.info('Start PASTA GUI')
   app = QApplication()
-  apply_stylesheet(app, theme='dark_blue.xml') #TODO this goes into configuration
   window = MainWindow()
+  if 'GUI' in window.backend.configuration and 'theme' in window.backend.configuration['GUI']:
+    theme = window.backend.configuration['GUI']['theme']
+    apply_stylesheet(app, theme=theme+'.xml')
   window.show()
   app.exec()
   logging.info('End PASTA GUI')

@@ -5,7 +5,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTextEdit, QPus
 import qtawesome as qta
 
 from .installationTools import git, gitAnnex, couchdb, couchdbUserPassword, configuration, ontology, exampleData, createShortcut
-from .fixedStrings import setupTextWindows, gitWindows, gitAnnexWindows, couchDBWindows, exampleDataWindows
+from .fixedStrings import setupTextWindows, gitWindows, gitAnnexWindows, couchDBWindows, exampleDataWindows, restartPastaWindows
 
 class ConfigurationSetup(QWidget):
   """
@@ -57,6 +57,7 @@ class ConfigurationSetup(QWidget):
     Main method that does all the analysis: open dialogs, ...
     """
     flagContinue = True
+    flagInstalledSoftware = False
     logging.info('Windows setup analyse start')
 
     #Git
@@ -68,6 +69,7 @@ class ConfigurationSetup(QWidget):
       button = QMessageBox.question(self, "Git installation", gitWindows)
       if button == QMessageBox.Yes:
         git('install')
+        flagInstalledSoftware = True
       else:
         self.mainText = self.mainText.replace('- Git Windows','- Git Windows: user chose to NOT install' )
         self.text1.setMarkdown(self.mainText)
@@ -85,6 +87,7 @@ class ConfigurationSetup(QWidget):
         button = QMessageBox.question(self, "Git-Annex installation", gitAnnexWindows)
         if button == QMessageBox.Yes:
           gitAnnex('install')
+          flagInstalledSoftware = True
         else:
           self.mainText = self.mainText.replace('- Git-Annex','- Git-Annex: user chose to NOT install' )
           self.text1.setMarkdown(self.mainText)
@@ -100,6 +103,7 @@ class ConfigurationSetup(QWidget):
         button = QMessageBox.question(self, "CouchDB installation", couchDBWindows)
         if button == QMessageBox.Yes:
           res = couchdb('install')
+          flagInstalledSoftware = True
           if len(res.split('|'))==3:
             password=res.split('|')[1]
           else:
@@ -120,6 +124,7 @@ class ConfigurationSetup(QWidget):
         if button == QMessageBox.Yes:
           dirName = QFileDialog.getExistingDirectory(self,'Create and select directory for scientific data',str(Path.home()/'Documents'))
           configuration('repair','admin', password,dirName)
+          flagInstalledSoftware = True
         else:
           self.mainText = self.mainText.replace('- Configuration of preferences','- Configuration: user chose to NOT install' )
           self.text1.setMarkdown(self.mainText)
@@ -149,6 +154,11 @@ class ConfigurationSetup(QWidget):
       else:
         self.mainText = self.mainText.replace('- Shortcut creation', '- User selected to NOT add a shortcut' )
       self.text1.setMarkdown(self.mainText)
+
+    #If installed, restart
+    if flagInstalledSoftware:
+      button = QMessageBox.information(self,'PASTA-ELN restart required', restartPastaWindows)
+      #TODO execute restart here via comm to gui.py
 
     #Example data
     if flagContinue:

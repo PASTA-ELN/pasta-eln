@@ -4,9 +4,11 @@ import qtawesome as qta
 
 class TextButton(QPushButton):
   """ Button that has only text"""
-  def __init__(self, label, function, name='', tooltip=''):
+  def __init__(self, label, function, name='', tooltip='', checkable=False):
     super().__init__()
     self.setText(label)
+    self.setCheckable(checkable)
+    self.setChecked(checkable)
     self.clicked.connect(function)
     if name != '':
       self.setAccessibleName(name)

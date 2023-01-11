@@ -12,26 +12,25 @@ class Sidebar(QWidget):
     self.comm = comm
     self.setMinimumWidth(200)
     self.setMaximumWidth(200)
-    # print(self.styleSheet.values)
-    self.setStyleSheet("background-color: red")
 
     # GUI stuff
-    mainLayout = QVBoxLayout()
-    mainLayout.setContentsMargins(0,0,0,0)
-    mainLayout.setSpacing(20)
-    self.setLayout(mainLayout)
+    mainL = QVBoxLayout()
+    mainL.setContentsMargins(0,0,0,0)
+    mainL.setSpacing(7)
+    self.setLayout(mainL)
 
     if hasattr(comm.backend, 'dataLabels'):
       # All projects
-      mainLayout.addWidget( TextButton('All projects', self.buttonDocTypeClicked, 'x0') )
+      btn = TextButton('All projects', self.buttonDocTypeClicked, 'x0')
+      mainL.addWidget(btn)
       # Add other data types
-      dTypeWidget = QWidget()
-      dTypeLayout = QGridLayout()
-      dTypeWidget.setLayout(dTypeLayout)
+      dTypeW = QWidget()
+      dTypeL = QGridLayout(dTypeW)
+      dTypeL.setContentsMargins(0,0,0,0)
       for idx, doctype in enumerate(comm.backend.dataLabels):
         button = LetterButton(comm.backend.dataLabels[doctype], self.buttonDocTypeClicked, doctype)
-        dTypeLayout.addWidget(button, int(idx/3), idx%3)
-      mainLayout.addWidget(dTypeWidget)
+        dTypeL.addWidget(button, int(idx/3), idx%3)
+      mainL.addWidget(dTypeW)
 
       projectIDs = [i['id'] for i in comm.backend.db.getView('viewDocType/x0')]
       for projID in projectIDs:
@@ -41,21 +40,24 @@ class Sidebar(QWidget):
             continue
           if node.docType[0]=='x0':
             button = TextButton(node.name, None)  #icon with no text
-            mainLayout.addWidget(button)
+            button.setStyleSheet('margin-top: 30')
+            mainL.addWidget(button)
             # Add other data types
-            dTypeWidget = QWidget()
-            dTypeLayout = QGridLayout()
-            dTypeWidget.setLayout(dTypeLayout)
+            dTypeW = QWidget()
+            dTypeL = QGridLayout(dTypeW)
+            dTypeL.setContentsMargins(0,0,0,0)
             for idx, doctype in enumerate(comm.backend.dataLabels):
               button = LetterButton(comm.backend.dataLabels[doctype], self.buttonDocTypeClicked, doctype)
-              dTypeLayout.addWidget(button, int(idx/3), idx%3)
-            mainLayout.addWidget(dTypeWidget)
+              dTypeL.addWidget(button, int(idx/3), idx%3)
+            mainL.addWidget(dTypeW)
           if node.docType[0]=='x1':
             button = TextButton(node.name, None)  #icon with no text
-            mainLayout.addWidget(button)
+            button.setStyleSheet('margin-left: 20')
+            mainL.addWidget(button)
 
     # Other buttons
-    mainLayout.addWidget(IconButton('fa.gear', self.buttonDocTypeClicked, '_configuration_'))
+    mainL.addStretch(1)
+    mainL.addWidget(IconButton('fa.gear', self.buttonDocTypeClicked, '_configuration_'))
 
     if not hasattr(comm.backend, 'dataLabels'):  #if no backend
       configWindow = Configuration(comm.backend, 'setup')
@@ -71,5 +73,5 @@ class Sidebar(QWidget):
       configWindow = Configuration(self.comm.backend, None)
       configWindow.exec()
     else:
-      self.comm.chooseDocType.emit(self.sender().accessibleName())
+      self.comm.changeTable.emit(self.sender().accessibleName())
     return

@@ -8,5 +8,7 @@ class Communicate(QObject):
     self.backend = backend
 
   #Signals: specify emitter and receiver
-  chooseDocType = Signal(str) #send doctype from sidebar to main-table
+  # BE SPECIFIC ABOUT WHAT THIS ACTION DOES
+  changeTable = Signal(str) #send doctype from sidebar to main-table
+  changeDetails = Signal(str) #send docID from main-table to details
   # redrawSidebar = Signal()

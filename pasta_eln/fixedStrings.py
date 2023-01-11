@@ -121,6 +121,14 @@ Do you want to install CouchDB?
 Be aware, downloading the installer requires some time, depending on the internet connection.
 """
 
+restartPastaWindows = """
+Close software now (will be done automatically in the future)
+
+Please restart the software by
+- clicking on the shortcut OR
+- executing the command in a new cmd.exe window
+"""
+
 exampleDataLinux = """
 Do you want to install the example data?
 

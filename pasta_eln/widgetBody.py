@@ -1,4 +1,4 @@
-""" Central widget: everything that is not sidebar """
+""" Central widget: everything that is not sidebar: switches between project-view and table-details """
 from PySide6.QtWidgets import QWidget, QVBoxLayout   # pylint: disable=no-name-in-module
 from PySide6.QtCore import Slot   # pylint: disable=no-name-in-module
 
@@ -6,11 +6,11 @@ from .widgetDocTypes import DocTypes
 from .widgetProject import Project
 
 class Body(QWidget):
-  """ Central widget: everything that is not sidebar """
+  """ Central widget: everything that is not sidebar: switches between project-view and table-details """
   def __init__(self, comm):
     super().__init__()
     self.comm = comm
-    comm.chooseDocType.connect(self.changeDoctype)
+    comm.changeTable.connect(self.changeTable)
     self.docTypes = DocTypes(comm)
     self.project  = Project(comm)
     self.project.hide()
@@ -20,7 +20,7 @@ class Body(QWidget):
     self.setLayout(mainL)
 
   @Slot(str)
-  def changeDoctype(self, docType):
+  def changeTable(self, docType):
     """
     What happens when user clicks to change doc-type
 

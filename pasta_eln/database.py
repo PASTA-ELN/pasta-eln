@@ -1,8 +1,11 @@
 """ Class for interaction with couchDB """
 import traceback
 from pathlib import PosixPath
+try:
+  from .fixedStrings import defaultOntology
+except:
+  from fixedStrings import defaultOntology
 
-from .fixedStrings import defaultOntology
 
 class Database:
   """

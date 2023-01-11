@@ -8,11 +8,11 @@ class Project(QWidget):
   def __init__(self, comm):
     super().__init__()
     self.comm = comm
-    comm.chooseDocType.connect(self.changeDoctype)
+    comm.changeTable.connect(self.changeTable)
 
 
   @Slot(str)
-  def changeDoctype(self, docType):
+  def changeTable(self, docType):
     """
     What happens when user clicks to change doc-type
 

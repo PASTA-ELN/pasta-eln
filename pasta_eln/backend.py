@@ -4,17 +4,23 @@ from pathlib import Path
 from urllib import request
 from datetime import datetime
 from zipfile import ZipFile, ZIP_DEFLATED
-from .mixin_cli import Bcolors, CLI_Mixin
-from .database import Database
-from .miscTools import upIn, upOut, createDirName, generic_hash, camelCase
-from .handleDictionaries import ontology2Labels, fillDocBeforeCreate
+if sys.platform=='win32':
+  import win32con, win32api
 try:
   import datalad.api as datalad
   from datalad.support import annexrepo
 except:
   print('**ERROR: Could not start datalad')
-if sys.platform=='win32':
-  import win32con, win32api
+try:
+  from .mixin_cli import Bcolors, CLI_Mixin
+  from .database import Database
+  from .miscTools import upIn, upOut, createDirName, generic_hash, camelCase
+  from .handleDictionaries import ontology2Labels, fillDocBeforeCreate
+except:
+  from mixin_cli import Bcolors, CLI_Mixin
+  from database import Database
+  from miscTools import upIn, upOut, createDirName, generic_hash, camelCase
+  from handleDictionaries import ontology2Labels, fillDocBeforeCreate
 
 class Pasta(CLI_Mixin):
   """
@@ -64,13 +70,13 @@ class Pasta(CLI_Mixin):
     if not configFileName.exists():
       return
     with open(configFileName,'r', encoding='utf-8') as confFile:
-      configuration = json.load(confFile)
-    if configuration['version']!=1:
+      self.configuration = json.load(confFile)
+    if self.configuration['version']!=1:
       print('**ERROR Configuration version does not fit')
       raise NameError
     if linkDefault is None:
-      linkDefault = configuration['default']
-    links = configuration['links']
+      linkDefault = self.configuration['default']
+    links = self.configuration['links']
     if not linkDefault in links:
       return
     if 'user' in links[linkDefault]['local']:
@@ -83,15 +89,15 @@ class Pasta(CLI_Mixin):
     # directories
     #    self.basePath (root of directory tree) is root of all projects
     #    self.cwd changes during program
-    self.extractorPath = Path(configuration['extractorDir']) if 'extractorDir' in configuration else \
+    self.extractorPath = Path(self.configuration['extractorDir']) if 'extractorDir' in self.configuration else \
                          Path(__file__).parent/'Extractors'
     sys.path.append(str(self.extractorPath))  #allow extractors
     self.basePath     = Path(links[linkDefault]['local']['path'])
     self.cwd          = Path('.')
     # decipher configuration and store
-    self.userID   = configuration['userID']
-    self.magicTags= configuration['magicTags'] #"P1","P2","P3","TODO","WAIT","DONE"
-    self.tableFormat = configuration['tableFormat']
+    self.userID   = self.configuration['userID']
+    self.magicTags= self.configuration['magicTags'] #"P1","P2","P3","TODO","WAIT","DONE"
+    self.tableFormat = self.configuration['tableFormat']
     # start database
     self.db = Database(n,s,databaseName,confirm=self.confirm,**kwargs)
     if not hasattr(self.db, 'databaseName'):  #not successful database creation
@@ -105,8 +111,8 @@ class Pasta(CLI_Mixin):
         labels[i]=res['dataDict'][i]
       for i in res['hierarchyDict']:
         labels[i]=res['hierarchyDict'][i]
-      maxTabColumns = configuration['GUI']['maxTabColumns'] \
-        if 'GUI' in configuration and 'maxTabColumns' in configuration['GUI'] else 20
+      maxTabColumns = self.configuration['GUI']['maxTabColumns'] \
+        if 'GUI' in self.configuration and 'maxTabColumns' in self.configuration['GUI'] else 20
       self.db.initViews(labels,self.magicTags, maxTabColumns)
     # internal hierarchy structure
     self.hierStack = []
