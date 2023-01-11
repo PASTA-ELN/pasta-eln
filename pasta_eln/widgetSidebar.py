@@ -18,6 +18,11 @@ class Sidebar(QWidget):
     mainL.setContentsMargins(0,0,0,0)
     mainL.setSpacing(7)
     self.setLayout(mainL)
+    # storage of all projects
+    self.widgets = {}
+    self.layouts = {}
+    self.widgetsHidden = {}
+
 
     if hasattr(comm.backend, 'dataLabels'):
       # All projects
@@ -33,15 +38,20 @@ class Sidebar(QWidget):
       mainL.addWidget(dTypeW)
 
       projectIDs = [i['id'] for i in comm.backend.db.getView('viewDocType/x0')]
+      currentID  = None
       for projID in projectIDs:
         hierarchy = comm.backend.db.getHierarchy(projID)
         for node in PreOrderIter(hierarchy, maxlevel=2):
           if node.docType[0][0]!='x':
             continue
           if node.docType[0]=='x0':
-            button = TextButton(node.name, None)  #icon with no text
+            button = TextButton(node.name, self.buttonDocTypeClicked, node.id)
             button.setStyleSheet('margin-top: 30')
             mainL.addWidget(button)
+            projectW = QWidget()
+            projectW.hide()
+            projectL = QVBoxLayout(projectW)
+            projectL.setContentsMargins(0,0,0,0)
             # Add other data types
             dTypeW = QWidget()
             dTypeL = QGridLayout(dTypeW)
@@ -49,11 +59,17 @@ class Sidebar(QWidget):
             for idx, doctype in enumerate(comm.backend.dataLabels):
               button = LetterButton(comm.backend.dataLabels[doctype], self.buttonDocTypeClicked, doctype)
               dTypeL.addWidget(button, int(idx/3), idx%3)
-            mainL.addWidget(dTypeW)
+            # create widgets
+            projectL.addWidget(dTypeW)
+            currentID = node.id
+            self.widgets[currentID] = projectW
+            self.layouts[currentID] = projectL
+            self.widgetsHidden[currentID] = True
+            mainL.addWidget(projectW)
           if node.docType[0]=='x1':
             button = TextButton(node.name, None)  #icon with no text
             button.setStyleSheet('margin-left: 20')
-            mainL.addWidget(button)
+            self.layouts[currentID].addWidget(button)
 
     # Other buttons
     mainL.addStretch(1)
@@ -68,10 +84,22 @@ class Sidebar(QWidget):
     """
     What happens when user clicks to change doc-type
     """
-    if self.sender().accessibleName() == '_configuration_':
+    btnName = self.sender().accessibleName()
+    print('\nButton', btnName )
+    if btnName == '_configuration_':
       print("SHOW CONFIGURATION WINDOW")
       configWindow = Configuration(self.comm.backend, None)
       configWindow.exec()
+    elif btnName[1]=='-':
+      print("Show project", btnName)
+      self.comm.changeProject.emit(btnName)
+      if self.widgetsHidden[btnName]: #get button in question
+        self.widgets[btnName].show()
+        self.widgetsHidden[btnName]=False
+      else:
+        self.widgets[btnName].hide()
+        self.widgetsHidden[btnName]=True
     else:
-      self.comm.changeTable.emit(self.sender().accessibleName())
+      print("doctype",btnName)
+      self.comm.changeTable.emit(btnName)
     return

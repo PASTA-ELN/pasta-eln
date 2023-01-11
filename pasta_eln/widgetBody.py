@@ -11,6 +11,7 @@ class Body(QWidget):
     super().__init__()
     self.comm = comm
     comm.changeTable.connect(self.changeTable)
+    comm.changeProject.connect(self.changeProject)
     self.docTypes = DocTypes(comm)
     self.project  = Project(comm)
     self.project.hide()
@@ -19,17 +20,27 @@ class Body(QWidget):
     mainL.addWidget(self.project)
     self.setLayout(mainL)
 
+
   @Slot(str)
   def changeTable(self, docType):
     """
     What happens when user clicks to change doc-type
+    -> show table
 
     Args:
       docType (str): document type
     """
-    if docType=='x0':
-      self.docTypes.hide()
-      self.project.show()
-    else:
-      self.project.hide()
-      self.docTypes.show()
+    self.project.hide()
+    self.docTypes.show()
+
+
+  @Slot(str)
+  def changeProject(self, docID):
+    """
+    What happens when user clicks to change project
+
+    Args:
+      docID (str): document id
+    """
+    self.docTypes.hide()
+    self.project.show()

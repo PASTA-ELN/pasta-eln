@@ -11,4 +11,5 @@ class Communicate(QObject):
   # BE SPECIFIC ABOUT WHAT THIS ACTION DOES
   changeTable = Signal(str) #send doctype from sidebar to main-table
   changeDetails = Signal(str) #send docID from main-table to details
+  changeProject = Signal(str) #send docID from sidebar or main-table to projects
   # redrawSidebar = Signal()

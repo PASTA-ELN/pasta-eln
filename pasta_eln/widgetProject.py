@@ -8,22 +8,22 @@ class Project(QWidget):
   def __init__(self, comm):
     super().__init__()
     self.comm = comm
-    comm.changeTable.connect(self.changeTable)
+    comm.changeProject.connect(self.changeProject)
+    self.mainL = QVBoxLayout()
+    self.setLayout(self.mainL)
 
 
   @Slot(str)
-  def changeTable(self, docType):
+  def changeProject(self, projectID):
     """
     What happens when user clicks to change doc-type
 
     Args:
-      docType (str): document type
+      projectID (str): document id of project
     """
-    table = self.comm.backend.db.getView('viewDocType/x0')
-    # print(table[0]['id']) #TODO for now
-    hierarchy = self.comm.backend.db.getHierarchy(table[0]['id'])
-    mainL = QVBoxLayout()
+    for i in reversed(range(self.mainL.count())):
+      self.mainL.itemAt(i).widget().setParent(None)
+    hierarchy = self.comm.backend.db.getHierarchy(projectID)
     for node in PreOrderIter(hierarchy):
       label = QLabel('   - '*node.depth+node.name+' | '+'/'.join(node.docType)+' | '+node.id)
-      mainL.addWidget(label)
-    self.setLayout(mainL)
+      self.mainL.addWidget(label)
