@@ -1,9 +1,15 @@
 # Priority 1
-- logging what is the problem in especially data-creation
-- So many GUI functions
-- restart backend does not work, or requires gui-restart
+- Fast changes on GUI: Try
+  - implement refreshAll
+    - restart backend does not work, or requires gui-restart
+  - Technologies
+    - scroll-area
+    - tree-view with widgets leafs
+
+- Slow things that need more time
 
 # Priority 2
+- have discussion with Georg, KIT
 - (HT) replace documentation
 - reduce self.
 - rename into pasta: backend., be. into pasta.!!

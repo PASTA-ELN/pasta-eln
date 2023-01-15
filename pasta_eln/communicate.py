@@ -9,7 +9,7 @@ class Communicate(QObject):
 
   #Signals: specify emitter and receiver
   # BE SPECIFIC ABOUT WHAT THIS ACTION DOES
-  changeTable = Signal(str) #send doctype from sidebar to main-table
+  changeTable = Signal(str, str) #send doctype,projectID from sidebar to main-table
   changeDetails = Signal(str) #send docID from main-table to details
-  changeProject = Signal(str) #send docID from sidebar or main-table to projects
+  changeProject = Signal(str, str) #send docID,projectID from sidebar or main-table to projects
   # redrawSidebar = Signal()

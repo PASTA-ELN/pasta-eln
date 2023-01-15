@@ -1,5 +1,5 @@
 """ widget that shows the table of the items """
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QTableWidget, QTableWidgetItem   # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem, QLabel   # pylint: disable=no-name-in-module
 from PySide6.QtCore import Slot               # pylint: disable=no-name-in-module
 
 class Table(QWidget):
@@ -18,24 +18,37 @@ class Table(QWidget):
 
     # GUI stuff
     mainL = QVBoxLayout()
+    headerW = QWidget()
+    headerL = QHBoxLayout(headerW)
+    self.headline = QLabel()  #TODO could become style
+    self.headline.setStyleSheet('font-size: 14pt')
+    headerL.addWidget(self.headline)
+    mainL.addWidget(headerW)
     self.table = QTableWidget(self)
     self.table.cellClicked.connect(self.cellClicked)
+    self.table.setSortingEnabled(True)
+    self.table.setAlternatingRowColors(True)
     mainL.addWidget(self.table)
     self.setLayout(mainL)
 
 
   @Slot(str)
-  def changeTable(self, docType):
+  def changeTable(self, docType, projID):
     """
     What happens when the table should change should change
 
     Args:
       docType (str): document type
+      projID (str): id of project
     """
-    self.data = self.comm.backend.db.getView('viewDocType/'+docType)
+    if projID=='':
+      self.data = self.comm.backend.db.getView('viewDocType/'+docType)
+    else:
+      self.data = self.comm.backend.db.getView('viewDocType/'+docType, preciseKey=projID)
     if len(self.data)==0:
       self.table.hide()
       return
+    self.headline.setText(self.comm.backend.dataLabels[docType])
     nrows, ncols = len(self.data), len(self.data[0]['value'])
     self.table.setColumnCount(ncols)
     header = self.comm.backend.db.ontology[docType]
@@ -61,6 +74,6 @@ class Table(QWidget):
     """
     # print("Row, column", row, column)
     #change details
-    if column==0:
-      self.comm.changeDetails.emit(self.data[row]['id'])
+    # if column==0:
+    self.comm.changeDetails.emit(self.data[row]['id'])
     return

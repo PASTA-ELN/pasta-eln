@@ -14,16 +14,23 @@ class Project(QWidget):
 
 
   @Slot(str)
-  def changeProject(self, projectID):
+  def changeProject(self, projID, docID):
     """
     What happens when user clicks to change doc-type
 
     Args:
-      projectID (str): document id of project
+      projID (str): document id of project
+      docID (str): document id of focus item, if not given focus at project
     """
     for i in reversed(range(self.mainL.count())):
       self.mainL.itemAt(i).widget().setParent(None)
-    hierarchy = self.comm.backend.db.getHierarchy(projectID)
-    for node in PreOrderIter(hierarchy):
-      label = QLabel('   - '*node.depth+node.name+' | '+'/'.join(node.docType)+' | '+node.id)
+    hierarchy = self.comm.backend.db.getHierarchy(projID)
+    for idx, node in enumerate(PreOrderIter(hierarchy)):
+      if docID=='' and idx==0:
+        label = QLabel('>>> '+node.name+' | '+'/'.join(node.docType)+' | '+node.id)
+      elif docID==node.id:
+        label = QLabel('>>>   - '*node.depth+node.name+' | '+'/'.join(node.docType)+' | '+node.id)
+      else:
+        label = QLabel('   - '*node.depth+node.name+' | '+'/'.join(node.docType)+' | '+node.id)
       self.mainL.addWidget(label)
+    return

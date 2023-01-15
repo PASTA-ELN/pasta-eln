@@ -79,10 +79,12 @@ class Details(QWidget):
     doc   = self.backend.db.getDoc(docID)
     for key in doc:
       if key=='image':
-        if doc['image'].startswith('data:image/png;base64'): #png image
+        if doc['image'].startswith('data:image/'): #jpg or png image
           byteArr = QByteArray.fromBase64(bytearray(doc[key][22:], encoding='utf-8'))
           image = QImage()
-          image.loadFromData(byteArr, 'PNG')
+          imageType = doc[key][11:15].upper()
+          print(imageType)
+          image.loadFromData(byteArr, imageType)
           pixmap = QPixmap.fromImage(image)
           label = QLabel()
           label.setPixmap(pixmap)
@@ -95,6 +97,8 @@ class Details(QWidget):
           image.renderer().load(bytearray(doc[key], encoding='utf-8'))
           self.imageL.addWidget(image)
           self.imageW.show()
+        else:
+          print(doc['image'][:50])
       elif key.startswith('_') or key.startswith('-'):
         label = QLabel(key+': '+str(doc[key]))
         label.setWordWrap(True)

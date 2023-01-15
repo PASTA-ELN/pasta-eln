@@ -102,9 +102,7 @@ class Pasta(CLI_Mixin):
     self.db = Database(n,s,databaseName,confirm=self.confirm,**kwargs)
     if not hasattr(self.db, 'databaseName'):  #not successful database creation
       return
-    res = ontology2Labels(self.db.ontology,self.tableFormat)
-    self.dataLabels      = res['dataDict']
-    self.hierarchyLabels = res['hierarchyDict']
+    self.dataLabels = ontology2Labels(self.db.ontology,self.tableFormat)
     if kwargs.get('initViews', False):
       labels = {}  #one line merging / update does not work
       for i in res['dataDict']:

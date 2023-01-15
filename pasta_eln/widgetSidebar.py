@@ -26,15 +26,16 @@ class Sidebar(QWidget):
 
     if hasattr(comm.backend, 'dataLabels'):
       # All projects
-      btn = TextButton('All projects', self.buttonDocTypeClicked, 'x0')
+      btn = TextButton('All projects', self.btnDocType, 'x0/')
       mainL.addWidget(btn)
       # Add other data types
       dTypeW = QWidget()
       dTypeL = QGridLayout(dTypeW)
       dTypeL.setContentsMargins(0,0,0,0)
       for idx, doctype in enumerate(comm.backend.dataLabels):
-        button = LetterButton(comm.backend.dataLabels[doctype], self.buttonDocTypeClicked, doctype)
-        dTypeL.addWidget(button, int(idx/3), idx%3)
+        if doctype[0]!='x':
+          button = LetterButton(comm.backend.dataLabels[doctype], self.btnDocType, doctype+'/')
+          dTypeL.addWidget(button, int(idx/3), idx%3)
       mainL.addWidget(dTypeW)
 
       projectIDs = [i['id'] for i in comm.backend.db.getView('viewDocType/x0')]
@@ -45,61 +46,75 @@ class Sidebar(QWidget):
           if node.docType[0][0]!='x':
             continue
           if node.docType[0]=='x0':
-            button = TextButton(node.name, self.buttonDocTypeClicked, node.id)
+            button = TextButton(node.name, self.btnProject, node.id+'/')
             button.setStyleSheet('margin-top: 30')
             mainL.addWidget(button)
             projectW = QWidget()
             projectW.hide()
             projectL = QVBoxLayout(projectW)
             projectL.setContentsMargins(0,0,0,0)
+            currentID = node.id
             # Add other data types
             dTypeW = QWidget()
             dTypeL = QGridLayout(dTypeW)
             dTypeL.setContentsMargins(0,0,0,0)
             for idx, doctype in enumerate(comm.backend.dataLabels):
-              button = LetterButton(comm.backend.dataLabels[doctype], self.buttonDocTypeClicked, doctype)
-              dTypeL.addWidget(button, int(idx/3), idx%3)
+              if doctype[0]!='x':
+                button = LetterButton(comm.backend.dataLabels[doctype], self.btnDocType, doctype+'/'+currentID)
+                dTypeL.addWidget(button, int(idx/3), idx%3)
             # create widgets
             projectL.addWidget(dTypeW)
-            currentID = node.id
             self.widgets[currentID] = projectW
             self.layouts[currentID] = projectL
             self.widgetsHidden[currentID] = True
             mainL.addWidget(projectW)
           if node.docType[0]=='x1':
-            button = TextButton(node.name, None)  #icon with no text
+            button = TextButton(node.name, self.btnProject, currentID+'/'+node.id)  #icon with no text
             button.setStyleSheet('margin-left: 20')
             self.layouts[currentID].addWidget(button)
 
     # Other buttons
     mainL.addStretch(1)
-    mainL.addWidget(IconButton('fa.gear', self.buttonDocTypeClicked, '_configuration_'))
+    mainL.addWidget(IconButton('fa.gear', self.btnConfig))
 
     if not hasattr(comm.backend, 'dataLabels'):  #if no backend
       configWindow = Configuration(comm.backend, 'setup')
       configWindow.exec()
 
 
-  def buttonDocTypeClicked(self):
+  def btnConfig(self):
+    """
+    What happens when user clicks to use configuration
+    """
+    configWindow = Configuration(self.comm.backend, None)
+    configWindow.exec()
+    return
+
+
+  def btnDocType(self):
     """
     What happens when user clicks to change doc-type
     """
     btnName = self.sender().accessibleName()
-    print('\nButton', btnName )
-    if btnName == '_configuration_':
-      print("SHOW CONFIGURATION WINDOW")
-      configWindow = Configuration(self.comm.backend, None)
-      configWindow.exec()
-    elif btnName[1]=='-':
-      print("Show project", btnName)
-      self.comm.changeProject.emit(btnName)
-      if self.widgetsHidden[btnName]: #get button in question
-        self.widgets[btnName].show()
-        self.widgetsHidden[btnName]=False
+    item, projID = btnName.split('/')
+    self.comm.changeTable.emit(item, projID)
+    return
+
+
+  def btnProject(self):
+    """
+    What happens when user clicks to view project
+    """
+    btnName = self.sender().accessibleName()
+    projID, item = btnName.split('/')
+    if item=='':
+      if self.widgetsHidden[projID]: #get button in question
+        self.widgets[projID].show()
+        self.widgetsHidden[projID]=False
+        self.comm.changeProject.emit(projID, item)
       else:
-        self.widgets[btnName].hide()
-        self.widgetsHidden[btnName]=True
+        self.widgets[projID].hide()
+        self.widgetsHidden[projID]=True
     else:
-      print("doctype",btnName)
-      self.comm.changeTable.emit(btnName)
+      self.comm.changeProject.emit(projID, item)
     return

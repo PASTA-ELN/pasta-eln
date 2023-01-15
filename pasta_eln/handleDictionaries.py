@@ -8,12 +8,14 @@ def ontology2Labels(ontology, tableFormat):
   - docLabel is the plural human-readable form of the docType
   - docType is the single-case noun
 
+  Not sure if separation into datalabels and hierarchy labels is still needed. Join
+
   Args:
      ontology (dict): ontology
      tableFormat (dict): tableFormat branch from .pastaELN.json
 
   Returns:
-     dictionary: dataDict, hierarchyDict
+     dictionary
   """
   dataDict = {}
   hierarchyDict = {}
@@ -31,7 +33,8 @@ def ontology2Labels(ontology, tableFormat):
       hierarchyDict[key] = label
     else:
       dataDict[key] = label
-  return {'dataDict':dataDict, 'hierarchyDict':hierarchyDict}
+  dataDict.update(hierarchyDict)  #join hierarchy and datalabels because reason for separation unclear
+  return dataDict
 
 
 def fillDocBeforeCreate(data, docType):
