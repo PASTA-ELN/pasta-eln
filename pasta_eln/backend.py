@@ -104,14 +104,9 @@ class Pasta(CLI_Mixin):
       return
     self.dataLabels = ontology2Labels(self.db.ontology,self.tableFormat)
     if kwargs.get('initViews', False):
-      labels = {}  #one line merging / update does not work
-      for i in res['dataDict']:
-        labels[i]=res['dataDict'][i]
-      for i in res['hierarchyDict']:
-        labels[i]=res['hierarchyDict'][i]
       maxTabColumns = self.configuration['GUI']['maxTabColumns'] \
         if 'GUI' in self.configuration and 'maxTabColumns' in self.configuration['GUI'] else 20
-      self.db.initViews(labels,self.magicTags, maxTabColumns)
+      self.db.initViews(self.dataLabels,self.magicTags, maxTabColumns)
     # internal hierarchy structure
     self.hierStack = []
     self.currentID  = None

@@ -15,7 +15,7 @@ def ontology2Labels(ontology, tableFormat):
      tableFormat (dict): tableFormat branch from .pastaELN.json
 
   Returns:
-     dictionary
+     dict: dictionary
   """
   dataDict = {}
   hierarchyDict = {}
