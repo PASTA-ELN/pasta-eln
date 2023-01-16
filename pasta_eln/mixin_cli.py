@@ -5,10 +5,7 @@ try:
   import datalad.api as datalad
 except:
   print('**ERROR: Could not start datalad')
-try:
-  from .miscTools import createDirName
-except:
-  from miscTools import createDirName
+from .miscTools import createDirName
 
 class Bcolors:
   """

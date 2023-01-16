@@ -4,11 +4,7 @@ from PySide6.QtWidgets import QScrollArea, QWidget, QVBoxLayout, QLabel, QSizePo
 from PySide6.QtCore import Qt, Slot, QByteArray   # pylint: disable=no-name-in-module
 from PySide6.QtSvgWidgets import QSvgWidget       # pylint: disable=no-name-in-module
 from PySide6.QtGui import QPixmap, QImage         # pylint: disable=no-name-in-module
-
-try:
-  from .style import TextButton
-except:
-  from style import TextButton
+from .style import TextButton
 
 class Details(QScrollArea):
   """ widget that shows the details of the items """

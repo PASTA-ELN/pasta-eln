@@ -1,10 +1,7 @@
 """ Class for interaction with couchDB """
 import traceback
 from pathlib import PosixPath
-try:
-  from .fixedStrings import defaultOntology
-except:
-  from fixedStrings import defaultOntology
+from .fixedStrings import defaultOntology
 
 
 class Database:
@@ -376,40 +373,21 @@ class Database:
     from anytree import Node, RenderTree, AsciiStyle
     from anytree.search import find_by_attr
     view = self.getView('viewHierarchy/viewHierarchy', startKey=start)
-    ##TODO perhaps improve algorithm to have less loops
-    #create nicer dictionary
-    idDict = {}
-    for item in view:
-      idDict[item['id']] = [item['key']]+item['value']
-    # arrange value items (hierarchy) into order that can be used for sorting
-    dataList = {}
-    for key,value in idDict.items():
-      if value[0]==key: # project: simple hierarchy
-        hierString = key
-      else:             # else: complicated re-structuring
-        hierarchyIDs = value[0].split(' ')
-        hierString = hierarchyIDs[0]  # initialize string
-        for thisId in hierarchyIDs:
-          if thisId in idDict:
-            childNum = idDict[thisId][1]
-            if childNum>9999:
-              print('**ERROR** commonTools:ChildNUM>9999 **ERROR** '+key)
-          hierString += ' '+str(childNum).zfill(5)+' '+thisId #childNum-ID(padded with 0) ID
-      # add to data list
-      dataList[hierString]=value[2:]
-    # sorting
-    dataList = dict(sorted(dataList.items()))
-    # create an anytree
-    dataTree = None
-    for key in dataList:
-      value = dataList[key]
-      if dataTree is None:
-        dataTree = Node(id=key, docType=value[0], name=value[1])
+    levelNum = 1
+    while True:
+      level = [i for i in view if len(i['key'].split())==levelNum]
+      if levelNum==1:
+        dataTree = Node(id=level[0]['key'], docType=level[0]['value'][1], name=level[0]['value'][2])
       else:
-        myID = key.split()[-1]
-        parentID = key.split()[-3]
-        parentNode = find_by_attr(dataTree, parentID, name='id')
-        _ = Node(id=myID, parent=parentNode, docType=value[0], name=value[1])
+        tempDict = {i['value'][0]:i for i in level}   #temporary dictionary to allow sorting for child-number
+        for childNum in dict(sorted(tempDict.items())):
+          node = tempDict[childNum]
+          parentID = node['key'].split()[-2]
+          parentNode = find_by_attr(dataTree, parentID, name='id')
+          _ = Node(id=node['id'], parent=parentNode, docType=node['value'][1], name=node['value'][2])
+      if len(level)==0:
+        break
+      levelNum += 1
     # print(RenderTree(dataTree, style=AsciiStyle()))
     return dataTree
 

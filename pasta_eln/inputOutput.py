@@ -235,11 +235,12 @@ def exportELN(backend, docID):
     index = {}
     index['@context']= 'https://w3id.org/ro/crate/1.1/context'
     # master node ro-crate-metadata.json
+    graphMaster = []
     cwd = backend.cwd
     os.chdir(backend.softwarePath)
     cmd = ['git','tag']
     output = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)
-    os.chdir(backend.basePath+os.sep+cwd)
+    os.chdir(backend.basePath/cwd)
     masterNode  = {\
       '@id':'ro-crate-metadata.json',\
       '@type':'CreativeWork',\
@@ -253,10 +254,10 @@ def exportELN(backend, docID):
         'url': 'https://github.com/PASTA-ELN/',\
         'description':'Version '+output.stdout.decode('utf-8').split()[-1]},\
       'version': '1.0'}
-    graph.append(masterNode)
+    graphMaster.append(masterNode)
     masterNode  = {'@id':'./', '@type':['Dataset'], 'hasPart': masterChildren}
-    graph.append(masterNode)
+    graphMaster.append(masterNode)
     #finalize file
-    index['@graph'] = graph
+    index['@graph'] = graphMaster+graph
     zipFile.writestr(dirNameProject+os.sep+'ro-crate-metadata.json', json.dumps(index, indent=2))
   return True

@@ -113,6 +113,41 @@ app.exec()
   2. define layout and immediately assign widget
   3. define and add immediately subwidgets to layout
 
+
+#### HOW TO DIFF Version-1 and Version-2
+**COMPARE BOTH DIRECTIONS**
+at .. pasta-eln$ and remeber the changes required to Version2 in first change. If nothing to remember, do not execute 2nd command
+``` bash
+kdiff pasta_eln/miscTools.py ../Python/miscTools.py
+kdiff ../Python/miscTools.py pasta_eln/miscTools.py
+kdiff pasta_eln/inputOutput.py ../Python/inputOutput.py
+kdiff ../Python/inputOutput.py pasta_eln/inputOutput.py
+kdiff pasta_eln/database.py ../Python/database.py
+kdiff ../Python/database.py pasta_eln/database.py
+kdiff pasta_eln/backend.py ../Python/backend.py
+kdiff ../Python/backend.py pasta_eln/backend.py
+```
+Desired Differences:
+- miscTools:
+  - Version1 has colors at the beginning and few additional functions at the end
+- inputOutput:
+  - NO differences
+- database:
+  - imports are different
+  - __init__ arguments are different
+  - Version1 has testUser
+  - colorDefinition is small-case in one and upper-case in the other
+- backend:
+  - imports and base-class different
+
+
+Differences don't matter:
+- subdirectories
+- __init__.py
+-
+
+
+
 ---
 
 ## Test couchDB running

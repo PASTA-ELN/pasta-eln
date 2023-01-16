@@ -1,5 +1,5 @@
 """ Widget that shows the content of project in a electronic labnotebook """
-from PySide6.QtWidgets import QTreeWidget, QTreeWidgetItem   # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QTreeWidget, QTreeWidgetItem, QTreeWidgetItemIterator   # pylint: disable=no-name-in-module
 from PySide6.QtCore import Slot   # pylint: disable=no-name-in-module
 from anytree import PreOrderIter, PostOrderIter
 
@@ -22,6 +22,8 @@ class Project(QTreeWidget):
       projID (str): document id of project
       docID (str): document id of focus item, if not given focus at project
     """
+    #initialize
+    self.clear()
     selectedItem = None
 
     def iterateTree(nodeHier):
@@ -46,9 +48,19 @@ class Project(QTreeWidget):
         nodeTree.insertChildren(0,children)
       return nodeTree
 
+    #body
     nodeHier = self.comm.backend.db.getHierarchy(projID)
     self.insertTopLevelItem(0, iterateTree(nodeHier))
     self.expandAll()
     if selectedItem is not None:
       self.setCurrentItem(selectedItem)
+
+
+    # # do something fancy
+    # iterator = QTreeWidgetItemIterator(self)
+    # while iterator:
+    #   # print((iterator).text(0))
+    #   print(iterator)
+    #   iterator = iterator + 1
+
     return

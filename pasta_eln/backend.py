@@ -2,8 +2,12 @@
 import json, sys, os, shutil, re, importlib, tempfile
 from pathlib import Path
 from urllib import request
-from datetime import datetime
+from datetime import datetime, timezone
 from zipfile import ZipFile, ZIP_DEFLATED
+from .mixin_cli import Bcolors, CLI_Mixin
+from .database import Database
+from .miscTools import upIn, upOut, createDirName, generic_hash, camelCase
+from .handleDictionaries import ontology2Labels, fillDocBeforeCreate
 if sys.platform=='win32':
   import win32con, win32api
 try:
@@ -11,16 +15,6 @@ try:
   from datalad.support import annexrepo
 except:
   print('**ERROR: Could not start datalad')
-try:
-  from .mixin_cli import Bcolors, CLI_Mixin
-  from .database import Database
-  from .miscTools import upIn, upOut, createDirName, generic_hash, camelCase
-  from .handleDictionaries import ontology2Labels, fillDocBeforeCreate
-except:
-  from mixin_cli import Bcolors, CLI_Mixin
-  from database import Database
-  from miscTools import upIn, upOut, createDirName, generic_hash, camelCase
-  from handleDictionaries import ontology2Labels, fillDocBeforeCreate
 
 class Pasta(CLI_Mixin):
   """
@@ -244,8 +238,9 @@ class Pasta(CLI_Mixin):
           if len(view)==0 or forceNewImage:  #measurement not in database: create doc
             while True:
               self.useExtractors(path,shasum,doc)  #create image/content and add to datalad
-              if not 'image' in doc and not 'content' in doc and not 'otherELNName' in doc:  #did not get valuable data: extractor does not exit
-                return False
+              # All files should appear in database
+              # if not 'image' in doc and not 'content' in doc and not 'otherELNName' in doc:  #did not get valuable data: extractor does not exit
+              #   return False
               if callback is None or not callback(doc):
                 # if no more iterations of curation
                 if 'ignore' in doc:
@@ -400,26 +395,40 @@ class Pasta(CLI_Mixin):
     dlDataset = datalad.Dataset(self.basePath/self.cwd)
     #create dictionary that has shasum as key and [origin and target] as value
     shasumDict = {}   #clean ones are omitted
-    for posixPath in fileList:
-      #Stay absolute fileName = posixPath.relative_to(self.basePath/self.cwd)
-      # if fileList[posixPath]['state']=='clean': #for debugging
+    for path in fileList:
+      #Stay absolute fileName = path.relative_to(self.basePath/self.cwd)
+      # if fileList[path]['state']=='clean': #for debugging
       #   shasum = generic_hash(fileName)
-      #   print(shasum,fileList[posixPath]['prev_gitshasum'],fileList[posixPath]['gitshasum'],fileName)
-      if fileList[posixPath]['state']=='untracked':
-        shasum = generic_hash(posixPath)
-        if shasum in shasumDict:
-          shasumDict[shasum] = [shasumDict[shasum][0], posixPath]
+      #   print(shasum,fileList[path]['prev_gitshasum'],fileList[path]['gitshasum'],fileName)
+      if (not path.exists()) and path.is_symlink(): #broken = dead link, fix it
+        deadtarget = path.resolve()
+        locationGit = deadtarget.as_posix().split('/').index('.git')
+        pathFromGit = Path('/'.join( deadtarget.as_posix().split('/')[locationGit:] ))
+        newPath = self.basePath/self.cwd/pathFromGit
+        if newPath.exists():
+          fileName = path.as_posix() #save filename
+          path.unlink()              #delete
+          path = Path(fileName)      #create file and ...
+          path.symlink_to(newPath)   #link it
+          print('Repaired dead symlink')
         else:
-          shasumDict[shasum] = ['', posixPath]
-      if fileList[posixPath]['state']=='deleted':
-        shasum = fileList[posixPath]['prev_gitshasum']
+          print('**ERROR Could not repair dead symlink', deadtarget, newPath,' SKIP FILE')
+          continue
+      if fileList[path]['state']=='untracked':
+        shasum = generic_hash(path)
         if shasum in shasumDict:
-          shasumDict[shasum] = [posixPath, shasumDict[shasum][1]]
+          shasumDict[shasum] = [shasumDict[shasum][0], path]
         else:
-          shasumDict[shasum] = [posixPath, '']
-      if fileList[posixPath]['state']=='modified':
-        shasum = fileList[posixPath]['gitshasum']
-        shasumDict[shasum] = ['', posixPath] #new content is same place. No moving necessary, just "new file"
+          shasumDict[shasum] = ['', path]
+      if fileList[path]['state']=='deleted':
+        shasum = fileList[path]['prev_gitshasum']
+        if shasum in shasumDict:
+          shasumDict[shasum] = [path, shasumDict[shasum][1]]
+        else:
+          shasumDict[shasum] = [path, '']
+      if fileList[path]['state']=='modified':
+        shasum = fileList[path]['gitshasum']
+        shasumDict[shasum] = ['', path] #new content is same place. No moving necessary, just "new file"
 
     # loop all entries and separate into moved,new,deleted
     print("Number of changed files:",len(shasumDict))
@@ -507,10 +516,10 @@ class Pasta(CLI_Mixin):
     if self.cwd is None:
       print("**ERROR bbu01: Specify zip file name or database")
       return False
-    zipFileName = self.basePath+'../pasta_backup.zip'
+    zipFileName = self.basePath.parent/'pasta_backup.zip'
     if method=='backup':  mode = 'w'
     else:                 mode = 'r'
-    print('  '+method.capitalize()+' to file: '+zipFileName)
+    print('  '+method.capitalize()+' to file: '+zipFileName.as_posix())
     with ZipFile(zipFileName, mode, compression=ZIP_DEFLATED) as zipFile:
 
       # method backup, iterate through all database entries and save to file
@@ -524,13 +533,13 @@ class Pasta(CLI_Mixin):
             doc = self.db.getDoc(doc)
           fileName = '__database__/'+doc['_id']+'.json'
           listFileNames.append(fileName)
-          zipFile.writestr(Path(dirNameProject)/fileName, json.dumps(doc) )
+          zipFile.writestr((Path(dirNameProject)/fileName).as_posix(), json.dumps(doc) )
           # Attachments
           if '_attachments' in doc:
             numAttachments += len(doc['_attachments'])
             for i in range(len(doc['_attachments'])):
-              attachmentName = dirNameProject+'/__database__/'+doc['_id']+'/v'+str(i)+'.json'
-              zipFile.writestr(attachmentName, json.dumps(doc.get_attachment('v'+str(i)+'.json')))
+              attachmentName = Path(dirNameProject)/'__database__'/doc['_id']/('v'+str(i)+'.json')
+              zipFile.writestr(attachmentName.as_posix(), json.dumps(doc.get_attachment('v'+str(i)+'.json')))
         #write data-files
         for path, _, files in os.walk(self.basePath):
           if '/.git' in path or '/.datalad' in path:
@@ -541,7 +550,7 @@ class Pasta(CLI_Mixin):
               continue
             listFileNames.append(path/iFile)
             # print('in',Path().absolute(),': save', path/iFile,' as', Path(dirNameProject)/path/iFile)
-            zipFile.write(path/iFile, Path(dirNameProject)/path/iFile)
+            zipFile.write(self.basePath/path/iFile, Path(dirNameProject)/path/iFile)
         #create some fun output
         compressed, fileSize = 0,0
         for doc in zipFile.infolist():
@@ -552,7 +561,7 @@ class Pasta(CLI_Mixin):
         return True
 
       # method compare and restore
-      if zipFileName.endswith('.eln'):
+      if zipFileName.as_posix().endswith('.eln'):
         print('**ERROR: cannot compare/restore .eln files')
         return False
       # method compare
@@ -670,6 +679,11 @@ class Pasta(CLI_Mixin):
       del doc['recipe']
     else:
       print('  No extractor found',pyFile)
+      doc['-type'] = ['-']
+      doc['metaUser'] = {'filename':absFilePath.name, 'extension':absFilePath.suffix,
+        'filesize':absFilePath.stat().st_size,
+        'created at':datetime.fromtimestamp(absFilePath.stat().st_ctime, tz=timezone.utc).isoformat(),
+        'modified at':datetime.fromtimestamp(absFilePath.stat().st_mtime, tz=timezone.utc).isoformat()}
     # FOR EXTRACTOR DEBUGGING
     # import json
     # for item in doc:
@@ -741,12 +755,12 @@ class Pasta(CLI_Mixin):
       doc = self.db.getDoc(item['id'])
       dirName =doc['-branch'][0]['path']
       fileList = annexrepo.AnnexRepo(self.basePath/dirName).status()
-      for posixPath in fileList:
-        if fileList[posixPath]['state'] != 'clean':
-          output += fileList[posixPath]['state']+' '+fileList[posixPath]['type']+' '+str(posixPath)+'\n'
+      for path in fileList:
+        if fileList[path]['state'] != 'clean':
+          output += fileList[path]['state']+' '+fileList[path]['type']+' '+str(path)+'\n'
           clean = False
         #test if file exists
-        relPath = posixPath.relative_to(self.basePath)
+        relPath = path.relative_to(self.basePath)
         if relPath.name=='.id_pastaELN.json': #if project,step,task
           relPath = relPath.parent
         if relPath.as_posix() in listPaths:
