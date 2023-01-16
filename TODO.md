@@ -1,9 +1,8 @@
 # Priority 1
-- Fast changes on GUI: Try
-  - Technologies
-    - tree-view with widgets leafs
-
-- Slow things that need more time
+- Technologies
+  - tree-view with widgets leafs
+  - forms (edit, new)
+- Ask HT
 
 # Priority 2
 - have discussion with Georg, KIT
