@@ -2,9 +2,10 @@
 import platform, json
 from pathlib import Path
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QTabWidget, QFormLayout, QLabel, QTextEdit, QGroupBox,\
-                              QComboBox   # pylint: disable=no-name-in-module
+                              QComboBox, QPushButton   # pylint: disable=no-name-in-module
 
 from .fixedStrings import configurationOverview
+from .miscTools import restart
 if platform.system()=='Windows':
   from .widgetConfigSetupWindows import ConfigurationSetup
 else:
@@ -58,6 +59,9 @@ class Configuration(QDialog):
       themes.setCurrentText('none')
     themes.currentTextChanged.connect(self.changeTheme)
     layout.addRow(QLabel("Theme"), themes)
+    restartBtn = QPushButton('Now')
+    restartBtn.clicked.connect(restart)
+    layout.addRow(QLabel('Restart PASTA-ELN'), restartBtn)
     self.tabAppearanceW.setLayout(layout)
     self.tabWidget.addTab(self.tabAppearanceW, 'Appearance')
 

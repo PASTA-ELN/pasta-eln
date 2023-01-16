@@ -1,9 +1,6 @@
 # Priority 1
 - Fast changes on GUI: Try
-  - implement refreshAll
-    - restart backend does not work, or requires gui-restart
   - Technologies
-    - scroll-area
     - tree-view with widgets leafs
 
 - Slow things that need more time
@@ -13,6 +10,7 @@
 - (HT) replace documentation
 - reduce self.
 - rename into pasta: backend., be. into pasta.!!
+- more logging
 
 # Priority 3
 - Perhaps: fixed version number gitannex and datalad

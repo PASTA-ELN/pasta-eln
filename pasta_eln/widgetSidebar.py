@@ -75,7 +75,7 @@ class Sidebar(QWidget):
 
     # Other buttons
     mainL.addStretch(1)
-    mainL.addWidget(IconButton('fa.gear', self.btnConfig))
+    mainL.addWidget(IconButton('fa.gear', self.btnConfig, backend=self.comm.backend))
 
     if not hasattr(comm.backend, 'dataLabels'):  #if no backend
       configWindow = Configuration(comm.backend, 'setup')

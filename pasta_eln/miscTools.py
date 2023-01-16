@@ -1,5 +1,5 @@
-""" Misc methods and colors """
-import sys, uuid
+""" Misc functions that do not require instances"""
+import os, sys, uuid
 from re import sub
 #TODO Reduce all dictionary functions from here
 
@@ -124,7 +124,6 @@ def symlink_hash(path):
   Returns:
     string: shasum of link, aka short string
   """
-  import os
   from hashlib import sha1
   hasher = sha1()
   data = os.readlink(path).encode('utf8', 'surrogateescape')
@@ -178,7 +177,6 @@ def getExtractorConfig(directory):
   Returns:
     list: list of [doctype-list, description]
   """
-  import os
   configuration = {}
   for fileName in os.listdir(directory):
     if fileName.endswith('.py') and fileName not in ['testExtractor.py','tutorial.py'] :
@@ -210,6 +208,17 @@ def getExtractorConfig(directory):
               pass
         configuration[fileName] = {'plots':extractors, 'header':'\n'.join(header)}
   return configuration
+
+
+def restart():
+  """
+  Complete restart: cold restart
+  """
+  try:
+    os.execv('pastaELN',[])  #installed version
+  except:
+    os.execv(sys.executable, ['python','-m','pasta_eln.gui']) #started for programming or debugging
+  return
 
 
 def createQRcodeSheet(fileName="../qrCodes.pdf"):
@@ -266,7 +275,7 @@ def printQRcodeSticker(codes={},
      execute 'lsusb -v'; find printer
    - size: label size in mm
   """
-  import qrcode, tempfile, os
+  import qrcode, tempfile
   import numpy as np
   from PIL import Image, ImageDraw, ImageFont
   fnt = ImageFont.truetype("arial.ttf", page['font'])

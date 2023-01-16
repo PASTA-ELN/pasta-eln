@@ -61,6 +61,7 @@ class Table(QWidget):
         item = QTableWidgetItem(str(self.data[i]['value'][j]))
         self.table.setItem(i, j, item)
     self.table.show()
+    self.comm.changeDetails.emit('')
     return
 
 

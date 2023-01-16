@@ -19,6 +19,7 @@ class DocTypes(QWidget):
     splitter.setHandleWidth(10)
     splitter.addWidget(table)
     splitter.addWidget(details)
+    splitter.setSizes([1,1])
     mainLayout = QVBoxLayout()
     mainLayout.addWidget(splitter)
     self.setLayout(mainLayout)
