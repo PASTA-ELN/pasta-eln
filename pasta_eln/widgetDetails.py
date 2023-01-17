@@ -10,7 +10,7 @@ class Details(QScrollArea):
   """ widget that shows the details of the items """
   def __init__(self, comm):
     super().__init__()
-    self.backend = comm.backend
+    self.comm = comm
     comm.changeDetails.connect(self.changeDetails)
 
     # GUI stuff
@@ -21,6 +21,9 @@ class Details(QScrollArea):
     self.setWidgetResizable(True)
     self.setWidget(self.mainW)
 
+    self.editBtn = TextButton('Edit',self.callEdit)
+    self.editBtn.hide()
+    self.mainL.addWidget(self.editBtn)
     self.imageW = QWidget()
     self.imageW.setMinimumHeight(400)
     self.imageL = QVBoxLayout(self.imageW)
@@ -54,6 +57,7 @@ class Details(QScrollArea):
     self.mainL.addWidget(self.metaDatabaseW)
     self.mainL.addStretch(1)
 
+  #Textbutton initially unchecked: database details
 
   @Slot(str)
   def changeDetails(self, docID):
@@ -63,8 +67,9 @@ class Details(QScrollArea):
     Args:
       docID (str): document-id
     """
-    print("GUI details got id",docID)
     # show previously hidden buttons
+    if docID!='':
+      self.editBtn.show()
     self.btnDetails.show()
     self.btnVendor.show()
     self.btnUser.show()
@@ -88,50 +93,50 @@ class Details(QScrollArea):
     if docID=='':  #if given empty docID, return with empty content
       return
     # Create new
-    doc   = self.backend.db.getDoc(docID)
-    for key in doc:
+    self.doc   = self.comm.backend.db.getDoc(docID)
+    for key in self.doc:
       if key=='image':
         #similar in widgetProjectLeaf
-        if doc['image'].startswith('data:image/'): #jpg or png image
-          byteArr = QByteArray.fromBase64(bytearray(doc[key][22:], encoding='utf-8'))
+        if self.doc['image'].startswith('data:image/'): #jpg or png image
+          byteArr = QByteArray.fromBase64(bytearray(self.doc[key][22:], encoding='utf-8'))
           image = QImage()
-          imageType = doc[key][11:15].upper()
+          imageType = self.doc[key][11:15].upper()
           print(imageType)  #TODO not sure it is good for png and jpg: JPG;
           image.loadFromData(byteArr, imageType)
           pixmap = QPixmap.fromImage(image)
           label = QLabel()
           label.setPixmap(pixmap)
           self.imageL.addWidget(label)
-        elif doc['image'].startswith('<?xml'): #svg image
+        elif self.doc['image'].startswith('<?xml'): #svg image
           image = QSvgWidget()
           policy = image.sizePolicy()
           policy.setVerticalPolicy(QSizePolicy.Fixed)
           image.setSizePolicy(policy)
-          image.renderer().load(bytearray(doc[key], encoding='utf-8'))
+          image.renderer().load(bytearray(self.doc[key], encoding='utf-8'))
           self.imageL.addWidget(image)
           self.imageW.show()
         else:
-          print(doc['image'][:50])
+          print('widgetDetails:image?',self.doc['image'][:50])
         self.imageW.show()
       elif key.startswith('_') or key.startswith('-'):
-        label = QLabel(key+': '+str(doc[key]))
+        label = QLabel(key+': '+str(self.doc[key]))
         label.setWordWrap(True)
         self.metaDatabaseL.addWidget(label)
         self.metaDatabaseW.show()
       elif key=='metaVendor':
         label = QLabel()
         label.setWordWrap(True)
-        label.setText(json.dumps(doc[key], indent=2)[2:-2]) #remove initial+trailing defaults
+        label.setText(json.dumps(self.doc[key], indent=2)[2:-2]) #remove initial+trailing defaults
         self.metaVendorL.addWidget(label)
         self.metaVendorW.show()
       elif key=='metaUser':
         label = QLabel()
         label.setWordWrap(True)
-        label.setText(json.dumps(doc[key], indent=2)[2:-2]) #remove initial+trailing defaults
+        label.setText(json.dumps(self.doc[key], indent=2)[2:-2]) #remove initial+trailing defaults
         self.metaUserL.addWidget(label)
         self.metaUserW.show()
       else:
-        self.metaDetailsL.addWidget( QLabel(key+': '+str(doc[key])) )
+        self.metaDetailsL.addWidget( QLabel(key+': '+str(self.doc[key])) )
         self.metaDetailsW.show()
     return
 
@@ -146,3 +151,9 @@ class Details(QScrollArea):
     else:
       getattr(self, 'meta'+name+'W').hide()
     return
+
+  def callEdit(self):
+    """
+    Call edit dialoge
+    """
+    self.comm.formDoc.emit(self.doc)

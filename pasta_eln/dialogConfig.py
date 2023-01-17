@@ -7,14 +7,12 @@ from PySide6.QtWidgets import QDialog, QVBoxLayout, QTabWidget, QFormLayout, QLa
 from .fixedStrings import configurationOverview
 from .miscTools import restart
 if platform.system()=='Windows':
-  from .widgetConfigSetupWindows import ConfigurationSetup
+  from .dialogConfigSetupWindows import ConfigurationSetup
 else:
-  from .widgetConfigSetupLinux import ConfigurationSetup
+  from .dialogConfigSetupLinux import ConfigurationSetup
 
 class Configuration(QDialog):
-  """
-  Main class
-  """
+  """ Main class of entire config dialog """
   def __init__(self, backend, startTap):
     """
     Initialization

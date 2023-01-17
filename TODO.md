@@ -1,6 +1,6 @@
 # Priority 1
 - Technologies
-  - forms (edit, new)
+  - dialog: buttons at end
 - Ask HT
 
 # Priority 2

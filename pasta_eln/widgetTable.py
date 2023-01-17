@@ -1,6 +1,7 @@
 """ widget that shows the table of the items """
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem, QLabel   # pylint: disable=no-name-in-module
 from PySide6.QtCore import Slot               # pylint: disable=no-name-in-module
+from .style import TextButton
 
 class Table(QWidget):
   """ widget that shows the table of the items """
@@ -23,6 +24,9 @@ class Table(QWidget):
     self.headline = QLabel()  #TODO could become style
     self.headline.setStyleSheet('font-size: 14pt')
     headerL.addWidget(self.headline)
+    self.addBtn = TextButton('Add',self.addItem)  #TODO: initial button hide in constructor
+    self.addBtn.hide()
+    headerL.addWidget(self.addBtn)
     mainL.addWidget(headerW)
     self.table = QTableWidget(self)
     self.table.cellClicked.connect(self.cellClicked)
@@ -41,17 +45,19 @@ class Table(QWidget):
       docType (str): document type
       projID (str): id of project
     """
+    self.docType = docType
     if projID=='':
-      self.data = self.comm.backend.db.getView('viewDocType/'+docType)
+      self.data = self.comm.backend.db.getView('viewDocType/'+self.docType)
     else:
-      self.data = self.comm.backend.db.getView('viewDocType/'+docType, preciseKey=projID)
+      self.data = self.comm.backend.db.getView('viewDocType/'+self.docType, preciseKey=projID)
     if len(self.data)==0:
       self.table.hide()
       return
-    self.headline.setText(self.comm.backend.dataLabels[docType])
+    self.headline.setText(self.comm.backend.dataLabels[self.docType])
+    self.addBtn.show()
     nrows, ncols = len(self.data), len(self.data[0]['value'])
     self.table.setColumnCount(ncols)
-    header = self.comm.backend.db.ontology[docType]
+    header = self.comm.backend.db.ontology[self.docType]
     header = [i['name'][1:] if i['name'][0]=='-' else i['name'] for i in header]
     self.table.setHorizontalHeaderLabels(header)
     self.table.verticalHeader().hide()
@@ -77,4 +83,10 @@ class Table(QWidget):
     #change details
     # if column==0:
     self.comm.changeDetails.emit(self.data[row]['id'])
+    return
+
+
+  def addItem(self):
+    """ What happens when user clicks add-button """
+    self.comm.formDoc.emit({'-type':[self.docType]})
     return

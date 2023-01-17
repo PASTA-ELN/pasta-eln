@@ -2,7 +2,7 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QGridLayout    # pylint: disable=no-name-in-module
 from anytree import PreOrderIter
 
-from .widgetConfig import Configuration
+from .dialogConfig import Configuration
 from .style import TextButton, LetterButton, IconButton
 
 class Sidebar(QWidget):

@@ -1,7 +1,7 @@
 """ Graphical user interface includes all widgets """
 import os, logging
 from pathlib import Path
-from PySide6.QtCore import Qt      # pylint: disable=no-name-in-module
+from PySide6.QtCore import Qt, Slot      # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QApplication    # pylint: disable=no-name-in-module
 from PySide6.QtGui import QIcon    # pylint: disable=no-name-in-module
 from qt_material import apply_stylesheet  #of https://github.com/UN-GCPDS/qt-material
@@ -10,6 +10,7 @@ from .backend import Pasta
 from .communicate import Communicate
 from .widgetSidebar import Sidebar
 from .widgetBody import Body
+from .dialogForm import Form
 os.environ['QT_API'] = 'pyside6'
 
 # Subclass QMainWindow to customize your application's main window
@@ -22,7 +23,8 @@ class MainWindow(QMainWindow):
     self.setWindowState(Qt.WindowMaximized)
     self.setWindowIcon(QIcon('./Resources/Icons/favicon64.png'))
     self.backend = Pasta()
-    comm = Communicate(self.backend)
+    self.comm = Communicate(self.backend)
+    self.comm.formDoc.connect(self.formDoc)
 
     #WIDGETS
     mainWidget = QWidget()
@@ -31,10 +33,24 @@ class MainWindow(QMainWindow):
     mainLayout.setSpacing(0)
     mainWidget.setLayout(mainLayout)
     self.setCentralWidget(mainWidget)      # Set the central widget of the Window
-    body = Body(comm)        #body with information
-    sidebar = Sidebar(comm)  #sidebar with buttons
+    body = Body(self.comm)        #body with information
+    sidebar = Sidebar(self.comm)  #sidebar with buttons
     mainLayout.addWidget(sidebar)
     mainLayout.addWidget(body)
+
+
+  @Slot(str)
+  def formDoc(self, doc):
+    """
+    What happens when new/edit dialog is shown
+
+    Args:
+      doc (dict): document
+    """
+    formWindow = Form(self.comm.backend, doc)
+    formWindow.exec()
+    return
+
 
 
 ##############
