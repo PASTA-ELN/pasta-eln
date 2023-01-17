@@ -1,7 +1,7 @@
 """ Widget that shows the content of project in a electronic labnotebook """
 from PySide6.QtWidgets import QTreeWidget, QTreeWidgetItem, QTreeWidgetItemIterator   # pylint: disable=no-name-in-module
 from PySide6.QtCore import Slot   # pylint: disable=no-name-in-module
-from anytree import PreOrderIter, PostOrderIter
+from .widgetProjectLeaf import Leaf
 
 class Project(QTreeWidget):
   """ Widget that shows the content of project in a electronic labnotebook """
@@ -9,9 +9,6 @@ class Project(QTreeWidget):
     super().__init__()
     self.comm = comm
     comm.changeProject.connect(self.changeProject)
-    self.setColumnCount(1)
-    self.setHeaderLabels(["Name"])
-
 
   @Slot(str)
   def changeProject(self, projID, docID):
@@ -36,7 +33,10 @@ class Project(QTreeWidget):
       Returns:
         QtTreeWidgetItem: tree node
       """
-      nodeTree = QTreeWidgetItem([nodeHier.name+' | '+'/'.join(nodeHier.docType)+' | '+nodeHier.id])
+      #prefill with name, doctype, id
+      self.setColumnCount(1)
+      self.setHeaderLabels([''])
+      nodeTree = QTreeWidgetItem([nodeHier.id])  #nodeHier.name,'/'.join(nodeHier.docType),nodeHier.id])
       if docID==nodeHier.id:
         nonlocal selectedItem
         selectedItem = nodeTree
@@ -48,19 +48,20 @@ class Project(QTreeWidget):
         nodeTree.insertChildren(0,children)
       return nodeTree
 
-    #body
+    #body of change project: start recursion
     nodeHier = self.comm.backend.db.getHierarchy(projID)
     self.insertTopLevelItem(0, iterateTree(nodeHier))
     self.expandAll()
     if selectedItem is not None:
       self.setCurrentItem(selectedItem)
 
-
-    # # do something fancy
-    # iterator = QTreeWidgetItemIterator(self)
-    # while iterator:
-    #   # print((iterator).text(0))
-    #   print(iterator)
-    #   iterator = iterator + 1
+    # do something fancy
+    iterator = QTreeWidgetItemIterator(self)
+    while iterator.value():
+      item = iterator.value()
+      docID= item.text(0)
+      item.setText(0,'') #remove text
+      self.setItemWidget(item, 0, Leaf(self.comm, docID))
+      iterator += 1
 
     return

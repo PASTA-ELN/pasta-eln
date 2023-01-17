@@ -1,6 +1,5 @@
 # Priority 1
 - Technologies
-  - tree-view with widgets leafs
   - forms (edit, new)
 - Ask HT
 

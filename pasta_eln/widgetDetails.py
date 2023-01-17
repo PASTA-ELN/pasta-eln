@@ -91,6 +91,7 @@ class Details(QScrollArea):
     doc   = self.backend.db.getDoc(docID)
     for key in doc:
       if key=='image':
+        #similar in widgetProjectLeaf
         if doc['image'].startswith('data:image/'): #jpg or png image
           byteArr = QByteArray.fromBase64(bytearray(doc[key][22:], encoding='utf-8'))
           image = QImage()
