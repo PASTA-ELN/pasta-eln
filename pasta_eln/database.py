@@ -373,15 +373,17 @@ class Database:
     from anytree import Node, RenderTree, AsciiStyle
     from anytree.search import find_by_attr
     view = self.getView('viewHierarchy/viewHierarchy', startKey=start)
+    # for item in view:
+    #   print(item)
     levelNum = 1
     while True:
       level = [i for i in view if len(i['key'].split())==levelNum]
       if levelNum==1:
         dataTree = Node(id=level[0]['key'], docType=level[0]['value'][1], name=level[0]['value'][2])
       else:
-        tempDict = {i['value'][0]:i for i in level}   #temporary dictionary to allow sorting for child-number
-        for childNum in dict(sorted(tempDict.items())):
-          node = tempDict[childNum]
+        childList = [i['value'][0] for i in level]   #temporary list to allow sorting for child-number
+        # https://stackoverflow.com/questions/6618515/sorting-list-based-on-values-from-another-list
+        for node in [x for (_,x) in sorted(zip(childList, level), key=lambda pair: pair[0])]:
           parentID = node['key'].split()[-2]
           parentNode = find_by_attr(dataTree, parentID, name='id')
           _ = Node(id=node['id'], parent=parentNode, docType=node['value'][1], name=node['value'][2])
