@@ -12,6 +12,7 @@ class Details(QScrollArea):
     super().__init__()
     self.comm = comm
     comm.changeDetails.connect(self.changeDetails)
+    self.doc  = {}
 
     # GUI stuff
     self.mainW = QWidget()

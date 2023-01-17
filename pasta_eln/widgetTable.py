@@ -16,6 +16,7 @@ class Table(QWidget):
     self.comm = comm
     comm.changeTable.connect(self.changeTable)
     self.data = []
+    self.docType = ''
 
     # GUI stuff
     mainL = QVBoxLayout()

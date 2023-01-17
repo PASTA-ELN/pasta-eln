@@ -26,4 +26,3 @@ class Form(QDialog):
       if item['name'] in doc or item['name'][0] in ['_','-']:
         continue
       mainL.addRow(QLabel(item['name']),QLineEdit(''))
-

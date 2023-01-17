@@ -58,4 +58,3 @@ class Leaf(QWidget):
       if key in ['image','content','tags','qrCode','metaVendor','metaUser','shasum']:
         continue
       leftL.addRow(QLabel(key+':'),QLabel(str(value)))
-
