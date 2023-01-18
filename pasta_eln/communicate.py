@@ -7,10 +7,9 @@ class Communicate(QObject):
     super().__init__()
     self.backend = backend
 
-  #Signals: specify emitter and receiver
+  # Signals: specify emitter and receiver
   # BE SPECIFIC ABOUT WHAT THIS ACTION DOES
-  changeTable = Signal(str, str) #send doctype,projectID from sidebar to main-table
-  changeDetails = Signal(str) #send docID from main-table to details
+  changeTable = Signal(str, str)   #send doctype,projectID from sidebar to main-table
+  changeDetails = Signal(str)      #send docID from main-table to details
   changeProject = Signal(str, str) #send docID,projectID from sidebar or main-table to projects
-  formDoc = Signal(dict) #send doc from details to new/edit dialog: dialogForm
-  # redrawSidebar = Signal()
+  formDoc = Signal(dict)           #send doc from details to new/edit dialog: dialogForm

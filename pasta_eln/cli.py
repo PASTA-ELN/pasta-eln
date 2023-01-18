@@ -7,11 +7,12 @@ import json, sys, argparse, traceback
 from pathlib import Path
 from subprocess import run, PIPE, STDOUT
 import urllib.request
-from backend import Pasta
-from miscTools import upOut, upIn, getExtractorConfig, printQRcodeSticker
-from inputOutput import importELN, exportELN
 
-SOFTWARE_VERSION = "v1.2.5"
+from pasta_eln import __version__
+from .backend import Pasta
+from .miscTools import upOut, upIn, getExtractorConfig
+from .inputOutput import importELN, exportELN
+from .installationTools import configuration as checkConfiguration
 
 def commands(getDocu, args):
   """
@@ -41,26 +42,12 @@ def commands(getDocu, args):
   if getDocu:
     doc += '  verifyConfiguration: verify configuration file\n'
     doc += '    example: pastaELN.py verifyConfiguration\n'
-    doc += '    example: pastaELN.py verifyConfigurationDev (repair function)\n'
+    doc += '    example: pastaELN.py verifyConfigurationRepair (repair function)\n'
   elif args.command.startswith('verifyConfiguration'):
-    repair = args.command=='verifyConfigurationDev'
-    output = "" #checkConfiguration(repair=repair)
+    command = 'repair' if args.command=='verifyConfigurationRepair' else 'test'
+    output = checkConfiguration(command=command)
     print(output)
     return '-1' if '**ERROR' in output else '1'
-
-  if getDocu:
-    doc += '  newDB: add/update database configuration. item is e.g.\n'
-    doc += '    {"test":{"user":"Peter","password":"Parker",...}}\n'
-  elif args.command=='newDB':
-    #use new database configuration and store in local-config file
-    newDB = json.loads(args.item)
-    label = list(newDB.keys()).pop()
-    with open(pathConfig,'r', encoding='utf-8') as f:
-      configuration = json.load(f)
-    configuration[label] = newDB[label]
-    with open(pathConfig,'w', encoding='utf-8') as f:
-      f.write(json.dumps(configuration, indent=2))
-    return '1'
 
   if getDocu:
     doc += '  extractorScan: get list of all extractors and save into .pastaELN.json\n'
@@ -183,7 +170,7 @@ def commands(getDocu, args):
         print('**ERROR pma02: Ontology does NOT exist on server')
       print('local directory:',be.basePath)
       print('software directory:',be.softwarePath)
-      print('software version: '+SOFTWARE_VERSION)
+      print('software version: '+__version__)
       return '1'
 
     if getDocu:
@@ -213,19 +200,6 @@ def commands(getDocu, args):
       doc += "    example: pastaELN.py print -d instruments -l instrument\n"
     elif args.command=='print':
       print(be.output(args.label,True))
-      return '1'
-
-    if getDocu:
-      doc += '  printQRCodes: print qr-codes\n'
-      doc += "    content: list of qrCodes and text\n"
-      doc += "    note: requires set -qrPrinter in pasta.json\n"
-      doc += '    example: pastaELN.py printQRCodes -c \'[["my name","Sample 1"], ["","Oven 450C"]]\'\n'
-    elif args.command=='printQRCodes':
-      content = args.content.replace('\\n','\n')
-      if content[0]=='"' and content[-1]=='"':
-        content = content[1:-1]
-      content = json.loads(content)
-      printQRcodeSticker(content, config['-qrPrinter']['page'], config['-qrPrinter']['printer'])
       return '1'
 
     if getDocu:
@@ -303,7 +277,7 @@ def commands(getDocu, args):
       return '1'
 
     if getDocu:
-      doc += '  redo: recreate thumbnail\n'
+      doc += '  redo: recreate thumbnail / use-extractor\n'
       doc += '    example: pastaELN.py redo -i m-1234567890abcdefghijklmnopqrstuv -c type/test/subtest\n'
     elif args.command=='redo':
       data = dict(be.getDoc(args.docID))
@@ -315,29 +289,6 @@ def commands(getDocu, args):
       else:
         print('**ERROR pma06: error after redo-extraction')
         return '-1'
-
-    if getDocu:
-      doc += '  history: get history for docTypes\n'
-      doc += '    example: pastaELN.py history\n'
-    elif args.command=='history':
-      print(be.db.historyDB())
-      return '1'
-
-    if getDocu:
-      doc += '  updatePASTA: update software version\n'
-      doc += '    example: pastaELN.py updatePASTA\n'
-    elif args.command=='updatePASTA':
-      #update desktop incl. Python backend
-      softwarePath = Path(be.softwarePath)
-      run(['git','pull'], cwd=softwarePath.parent, stdout=PIPE, stderr=STDOUT, check=True)
-      # print(text.stdout.decode('utf-8')) #temporarily don't print
-      #ensure requirements are fulfilled
-      run(['git','pull'], cwd=softwarePath, stdout=PIPE, stderr=STDOUT, check=True)
-      # print(text.stdout.decode('utf-8')) #temporarily don't print
-      cmd = ['pip3','install','-r','requirements.txt','--disable-pip-version-check']
-      run(cmd, cwd=softwarePath, stdout=PIPE, stderr=STDOUT, check=True)
-      # print(text.stdout.decode('utf-8')) #temporarily don't print
-      return '1'
 
     ##################################################
     ## Commands that require open database and open project
@@ -351,19 +302,6 @@ def commands(getDocu, args):
     elif args.command=='scanHierarchy':
       be.scanTree()
       return '1'
-
-    if getDocu:
-      doc += '  saveHierarchy: save hierarchy to database\n'
-      doc += '    example: pastaELN.py saveHierarchy -c "{...}" -i x-1234567890abc'
-    elif args.command=='saveHierarchy':
-      content = args.content.replace('\\n','\n')
-      if content[0]=="'" and content[-1]=="'":
-        content = content[1:-1]
-      elif content[0]=="'" or content[-1]=="'":
-        print('**ERROR pma07: something strange occurs with content string')
-      ## FOR DEBUGGING OF CONTENT STRING: ensure beginning and end are correct
-      # print(content)
-      return '1' if be.setEditString(content) else '-1'
 
     if getDocu:
       doc += '  hierarchy: print document hierarchy\n'

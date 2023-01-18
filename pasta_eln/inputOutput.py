@@ -1,4 +1,8 @@
 """Input and output functions towards the .eln file-format"""
+import os, io, json, shutil, base64, subprocess
+from pathlib import Path
+from datetime import datetime
+from zipfile import ZipFile, ZIP_DEFLATED
 
 def importELN(backend, database, elnFileName):
   '''
@@ -12,8 +16,6 @@ def importELN(backend, database, elnFileName):
   Returns:
     bool: success of import
   '''
-  import os, json, shutil, base64
-  from zipfile import ZipFile, ZIP_DEFLATED
 
   def processPart(part):
     """
@@ -144,11 +146,6 @@ def exportELN(backend, docID):
   Returns:
     bool: success of this export
   """
-  import os, json, subprocess
-  import base64, io, shutil
-  from PIL import Image
-  from datetime import datetime
-  from zipfile import ZipFile, ZIP_DEFLATED
   docProject = backend.db.getDoc(docID)
   dirNameProject = docProject['-branch'][0]['path']
   zipFileName = dirNameProject+'.eln'
@@ -261,3 +258,129 @@ def exportELN(backend, docID):
     index['@graph'] = graphMaster+graph
     zipFile.writestr(dirNameProject+os.sep+'ro-crate-metadata.json', json.dumps(index, indent=2))
   return True
+
+
+def backup(backend, method='backup', **kwargs):
+  """
+  backup, verify, restore information from/to database
+  - all data is saved to one zip file (NOT ELN file)
+  - after restore-to-database, the database changed (new revision)
+
+  Args:
+    backend (Pasta): pasta-backend
+    method (string): backup, restore, compare
+    kwargs (dict): additional parameter, i.e. callback
+
+  Returns:
+      bool: success
+  """
+  dirNameProject = 'backup'
+  zipFileName = ''
+  if backend.cwd is None:
+    print("**ERROR bbu01: Specify zip file name or database")
+    return False
+  zipFileName = backend.basePath.parent/'pasta_backup.zip'
+  if method=='backup':  mode = 'w'
+  else:                 mode = 'r'
+  print('  '+method.capitalize()+' to file: '+zipFileName.as_posix())
+  with ZipFile(zipFileName, mode, compression=ZIP_DEFLATED) as zipFile:
+
+    # method backup, iterate through all database entries and save to file
+    if method=='backup':
+      numAttachments = 0
+      #write JSON files
+      listDocs = backend.db.db
+      listFileNames = []
+      for doc in listDocs:
+        if isinstance(doc, str):
+          doc = backend.db.getDoc(doc)
+        fileName = '__database__/'+doc['_id']+'.json'
+        listFileNames.append(fileName)
+        zipFile.writestr((Path(dirNameProject)/fileName).as_posix(), json.dumps(doc) )
+        # Attachments
+        if '_attachments' in doc:
+          numAttachments += len(doc['_attachments'])
+          for i in range(len(doc['_attachments'])):
+            attachmentName = Path(dirNameProject)/'__database__'/doc['_id']/('v'+str(i)+'.json')
+            zipFile.writestr(attachmentName.as_posix(), json.dumps(doc.get_attachment('v'+str(i)+'.json')))
+      #write data-files
+      for path, _, files in os.walk(backend.basePath):
+        if '/.git' in path or '/.datalad' in path:
+          continue
+        path = Path(path).relative_to(backend.basePath)
+        for iFile in files:
+          if iFile.startswith('.git'):
+            continue
+          listFileNames.append(path/iFile)
+          # print('in',Path().absolute(),': save', path/iFile,' as', Path(dirNameProject)/path/iFile)
+          zipFile.write(backend.basePath/path/iFile, Path(dirNameProject)/path/iFile)
+      #create some fun output
+      compressed, fileSize = 0,0
+      for doc in zipFile.infolist():
+        compressed += doc.compress_size
+        fileSize   += doc.file_size
+      print(f'  File size: {fileSize:,} byte   Compressed: {compressed:,} byte')
+      print(f'  Num. documents (incl. ontology and views): {len(backend.db.db):,}\n')#,    num. attachments: {numAttachments:,}\n')
+      return True
+
+    # method compare and restore
+    if zipFileName.as_posix().endswith('.eln'):
+      print('**ERROR: cannot compare/restore .eln files')
+      return False
+    # method compare
+    if  method=='compare':
+      filesInZip = zipFile.namelist()
+      print('  Number of documents (incl. ontology and views) in file:',len(filesInZip))
+      differenceFound, comparedFiles, comparedAttachments = False, 0, 0
+      for doc in backend.db.db:
+        fileName = doc['_id']+'.json'
+        if 'backup/__database__/'+fileName not in filesInZip:
+          print("**ERROR bbu02: document not in zip file |",doc['_id'])
+          differenceFound = True
+        else:
+          filesInZip.remove('backup/__database__/'+fileName)
+          zipData = json.loads( zipFile.read('backup/__database__/'+fileName) )
+          if doc!=zipData:
+            print('  Info: data disagrees database, zipfile ',doc['_id'])
+            differenceFound = True
+          comparedFiles += 1
+        if '_attachments' in doc:
+          for i in range(len(doc['_attachments'])):
+            attachmentName = doc['_id']+'/v'+str(i)+'.json'
+            if 'backup/__database__/'+attachmentName not in filesInZip:
+              print("**ERROR bbu03: revision not in zip file |",attachmentName)
+              differenceFound = True
+            else:
+              filesInZip.remove('backup/__database__/'+attachmentName)
+              zipData = json.loads(zipFile.read('backup/__database__/'+attachmentName) )
+              if doc.get_attachment('v'+str(i)+'.json')!=zipData:
+                print('  Info: data disagrees database, zipfile ',attachmentName)
+                differenceFound = True
+              comparedAttachments += 1
+      filesInZip = [i for i in filesInZip if i.startswith('backup/__database')] #filter out non-db items
+      if len(filesInZip)>0:
+        differenceFound = True
+        print('Files in zipfile not in database',filesInZip)
+      if differenceFound: print("  Difference exists between database and zipfile")
+      else:               print("  Database and zipfile are identical.",comparedFiles,'files &',comparedAttachments,'attachments were compared\n')
+      return not differenceFound
+
+    # method restore: loop through all files in zip and save to database
+    #  - skip design and dataDictionary
+    if method=='restore':
+      beforeLength, restoredFiles = len(backend.db.db), 0
+      for fileName in zipFile.namelist():
+        if fileName.startswith('backup/__database__') and (not \
+          (fileName.startswith('backup/__database__/_') or fileName.startswith('backup/__database__/-'))):  #do not restore design documents and ontology
+          restoredFiles += 1
+          zipData = json.loads( zipFile.read(fileName) )
+          fileName = fileName[len('backup/__database__/'):]
+          if '/' in fileName:  #attachment
+            doc = backend.db.getDoc(fileName.split('/')[0])
+            doc.put_attachment(fileName.split('/')[1], 'application/json', json.dumps(zipData))
+          else:                                                           #normal document
+            backend.db.saveDoc(zipData)
+      print('  Number of documents & revisions in file:',restoredFiles)
+      print('  Number of documents before and after restore:',beforeLength, len(backend.db.db),'\n')
+      return True
+  return False

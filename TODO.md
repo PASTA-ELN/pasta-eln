@@ -1,6 +1,7 @@
 # Priority 1
 - Ask HT
 - go through all files/todo and clear and make a plan
+- Tests
 
 # Priority 2
 - have discussion with Georg, KIT

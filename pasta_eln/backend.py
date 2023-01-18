@@ -78,8 +78,7 @@ class Pasta(CLI_Mixin):
     else:
       n,s = upOut(links[linkDefault]['local']['cred'])[0].split(':')
     databaseName = links[linkDefault]['local']['database']
-    self.confLinkName= linkDefault
-    self.confLink    = links[linkDefault]
+    self.confLink    = links[linkDefault]  #TODO do not save this subitems of configuration
     # directories
     #    self.basePath (root of directory tree) is root of all projects
     #    self.cwd changes during program
@@ -90,14 +89,14 @@ class Pasta(CLI_Mixin):
     self.cwd          = Path('.')
     # decipher configuration and store
     self.userID   = self.configuration['userID']
-    self.magicTags= self.configuration['magicTags'] #"P1","P2","P3","TODO","WAIT","DONE"
-    self.tableFormat = self.configuration['tableFormat']
+    self.magicTags= self.configuration['magicTags'] #"P1","P2","P3","TODO","WAIT","DONE"   #TODO do not save this subitems of configuration
+    self.tableFormat = self.configuration['tableFormat']   #TODO do not save this subitems of configuration
     # start database
     self.db = Database(n,s,databaseName,confirm=self.confirm,**kwargs)
     if not hasattr(self.db, 'databaseName'):  #not successful database creation
       return
     self.dataLabels = ontology2Labels(self.db.ontology,self.tableFormat)
-    if kwargs.get('initViews', False):
+    if kwargs.get('initViews', False):  #Still needed, change
       maxTabColumns = self.configuration['GUI']['maxTabColumns'] \
         if 'GUI' in self.configuration and 'maxTabColumns' in self.configuration['GUI'] else 20
       self.db.initViews(self.dataLabels,self.magicTags, maxTabColumns)
@@ -493,134 +492,7 @@ class Pasta(CLI_Mixin):
                                           'stack':hierStack,\
                                           'child':itemTarget['value'][2],\
                                           'op':'u'}}, docID)
-        else:
-          if '_pasta.' not in str(origin):  #TODO_P1 is this really needed
-            print("file not in database",self.cwd/origin)
     return
-
-  def backup(self, method='backup', **kwargs):
-    """
-    backup, verify, restore information from/to database
-    - all data is saved to one zip file (NOT ELN file)
-    - after restore-to-database, the database changed (new revision)
-
-    Args:
-      method (string): backup, restore, compare
-      kwargs (dict): additional parameter, i.e. callback
-
-    Returns:
-        bool: success
-    """
-    dirNameProject = 'backup'
-    zipFileName = ''
-    if self.cwd is None:
-      print("**ERROR bbu01: Specify zip file name or database")
-      return False
-    zipFileName = self.basePath.parent/'pasta_backup.zip'
-    if method=='backup':  mode = 'w'
-    else:                 mode = 'r'
-    print('  '+method.capitalize()+' to file: '+zipFileName.as_posix())
-    with ZipFile(zipFileName, mode, compression=ZIP_DEFLATED) as zipFile:
-
-      # method backup, iterate through all database entries and save to file
-      if method=='backup':
-        numAttachments = 0
-        #write JSON files
-        listDocs = self.db.db
-        listFileNames = []
-        for doc in listDocs:
-          if isinstance(doc, str):
-            doc = self.db.getDoc(doc)
-          fileName = '__database__/'+doc['_id']+'.json'
-          listFileNames.append(fileName)
-          zipFile.writestr((Path(dirNameProject)/fileName).as_posix(), json.dumps(doc) )
-          # Attachments
-          if '_attachments' in doc:
-            numAttachments += len(doc['_attachments'])
-            for i in range(len(doc['_attachments'])):
-              attachmentName = Path(dirNameProject)/'__database__'/doc['_id']/('v'+str(i)+'.json')
-              zipFile.writestr(attachmentName.as_posix(), json.dumps(doc.get_attachment('v'+str(i)+'.json')))
-        #write data-files
-        for path, _, files in os.walk(self.basePath):
-          if '/.git' in path or '/.datalad' in path:
-            continue
-          path = Path(path).relative_to(self.basePath)
-          for iFile in files:
-            if iFile.startswith('.git'):
-              continue
-            listFileNames.append(path/iFile)
-            # print('in',Path().absolute(),': save', path/iFile,' as', Path(dirNameProject)/path/iFile)
-            zipFile.write(self.basePath/path/iFile, Path(dirNameProject)/path/iFile)
-        #create some fun output
-        compressed, fileSize = 0,0
-        for doc in zipFile.infolist():
-          compressed += doc.compress_size
-          fileSize   += doc.file_size
-        print(f'  File size: {fileSize:,} byte   Compressed: {compressed:,} byte')
-        print(f'  Num. documents (incl. ontology and views): {len(self.db.db):,}\n')#,    num. attachments: {numAttachments:,}\n')
-        return True
-
-      # method compare and restore
-      if zipFileName.as_posix().endswith('.eln'):
-        print('**ERROR: cannot compare/restore .eln files')
-        return False
-      # method compare
-      if  method=='compare':
-        filesInZip = zipFile.namelist()
-        print('  Number of documents (incl. ontology and views) in file:',len(filesInZip))
-        differenceFound, comparedFiles, comparedAttachments = False, 0, 0
-        for doc in self.db.db:
-          fileName = doc['_id']+'.json'
-          if 'backup/__database__/'+fileName not in filesInZip:
-            print("**ERROR bbu02: document not in zip file |",doc['_id'])
-            differenceFound = True
-          else:
-            filesInZip.remove('backup/__database__/'+fileName)
-            zipData = json.loads( zipFile.read('backup/__database__/'+fileName) )
-            if doc!=zipData:
-              print('  Info: data disagrees database, zipfile ',doc['_id'])
-              differenceFound = True
-            comparedFiles += 1
-          if '_attachments' in doc:
-            for i in range(len(doc['_attachments'])):
-              attachmentName = doc['_id']+'/v'+str(i)+'.json'
-              if 'backup/__database__/'+attachmentName not in filesInZip:
-                print("**ERROR bbu03: revision not in zip file |",attachmentName)
-                differenceFound = True
-              else:
-                filesInZip.remove('backup/__database__/'+attachmentName)
-                zipData = json.loads(zipFile.read('backup/__database__/'+attachmentName) )
-                if doc.get_attachment('v'+str(i)+'.json')!=zipData:
-                  print('  Info: data disagrees database, zipfile ',attachmentName)
-                  differenceFound = True
-                comparedAttachments += 1
-        filesInZip = [i for i in filesInZip if i.startswith('backup/__database')] #filter out non-db items
-        if len(filesInZip)>0:
-          differenceFound = True
-          print('Files in zipfile not in database',filesInZip)
-        if differenceFound: print("  Difference exists between database and zipfile")
-        else:               print("  Database and zipfile are identical.",comparedFiles,'files &',comparedAttachments,'attachments were compared\n')
-        return not differenceFound
-
-      # method restore: loop through all files in zip and save to database
-      #  - skip design and dataDictionary
-      if method=='restore':
-        beforeLength, restoredFiles = len(self.db.db), 0
-        for fileName in zipFile.namelist():
-          if fileName.startswith('backup/__database__') and (not \
-            (fileName.startswith('backup/__database__/_') or fileName.startswith('backup/__database__/-'))):  #do not restore design documents and ontology
-            restoredFiles += 1
-            zipData = json.loads( zipFile.read(fileName) )
-            fileName = fileName[len('backup/__database__/'):]
-            if '/' in fileName:  #attachment
-              doc = self.db.getDoc(fileName.split('/')[0])
-              doc.put_attachment(fileName.split('/')[1], 'application/json', json.dumps(zipData))
-            else:                                                           #normal document
-              self.db.saveDoc(zipData)
-        print('  Number of documents & revisions in file:',restoredFiles)
-        print('  Number of documents before and after restore:',beforeLength, len(self.db.db),'\n')
-        return True
-    return False
 
 
   def useExtractors(self, filePath, shasum, doc, **kwargs):
@@ -698,19 +570,6 @@ class Pasta(CLI_Mixin):
   ######################################################
   ### Wrapper for database functions
   ######################################################
-  def getDoc(self, docID):
-    """
-    Wrapper for getting data from database
-
-    Args:
-        docID (string): document id
-
-    Returns:
-        dict: json of document
-    """
-    return self.db.getDoc(docID)
-
-
   def replicateDB(self, removeAtStart=False, **kwargs):
     """
     Replicate local database to remote database
