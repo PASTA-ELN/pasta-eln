@@ -1,5 +1,5 @@
 """ New/Edit dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""
-from PySide6.QtWidgets import QDialog, QFormLayout, QLabel, QTextEdit, QComboBox, QPushButton, QLineEdit   # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QDialog, QFormLayout, QLabel, QTextEdit, QComboBox, QPushButton, QLineEdit, QDialogButtonBox   # pylint: disable=no-name-in-module
 
 class Form(QDialog):
   """ New/Edit dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""
@@ -26,3 +26,13 @@ class Form(QDialog):
       if item['name'] in doc or item['name'][0] in ['_','-']:
         continue
       mainL.addRow(QLabel(item['name']),QLineEdit(''))
+    #final button box
+    buttonBox = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel) #TODO next button does not exist
+    buttonBox.clicked.connect(self.save)
+    mainL.addWidget(buttonBox)
+
+  def save(self, btn):
+    """
+    Action upon save / cancel
+    """
+    print('btn clicked',btn.text(),'to work on ',self)

@@ -1,7 +1,6 @@
 # Priority 1
-- Technologies
-  - dialog: buttons at end
 - Ask HT
+- go through all files/todo and clear and make a plan
 
 # Priority 2
 - have discussion with Georg, KIT
