@@ -195,7 +195,7 @@ class CLI_Mixin:
       else:                                  #other lines, incl. first
         newText += line+'\n'
     newText = prefix+' '+newText
-    docList = [] #TODO not required anymore cT.editString2Docs(newText, self.magicTags)
+    docList = [] #TODO_P1 not required anymore cT.editString2Docs(newText, self.magicTags)
     del newText; del text
     # initialize iteration
     levelOld = None

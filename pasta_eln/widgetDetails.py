@@ -14,7 +14,7 @@ class Details(QScrollArea):
     comm.changeDetails.connect(self.changeDetails)
     self.doc  = {}
 
-    # GUI stuff
+    # GUI elements
     self.mainW = QWidget()
     self.mainL = QVBoxLayout(self.mainW)
     self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
@@ -26,8 +26,11 @@ class Details(QScrollArea):
     self.editBtn.hide()
     self.mainL.addWidget(self.editBtn)
     self.imageW = QWidget()
-    self.imageW.setMinimumHeight(400)
+    self.imageW.setMinimumHeight(400)  #TODO_P1 change in configuration, dialog
     self.imageL = QVBoxLayout(self.imageW)
+
+    #TODO_P2 include extractor change
+
     self.mainL.addWidget(self.imageW)
     self.btnDetails = TextButton('Details', self.showArea, 'Details', 'Show / hide details', True)
     self.btnDetails.hide()
@@ -102,7 +105,7 @@ class Details(QScrollArea):
           byteArr = QByteArray.fromBase64(bytearray(self.doc[key][22:], encoding='utf-8'))
           image = QImage()
           imageType = self.doc[key][11:15].upper()
-          print(imageType)  #TODO not sure it is good for png and jpg: JPG;
+          print(imageType)  #TODO_P1 not sure it is good for png and jpg: JPG;
           image.loadFromData(byteArr, imageType)
           pixmap = QPixmap.fromImage(image)
           label = QLabel()

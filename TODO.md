@@ -1,18 +1,18 @@
 # Priority 1
 - Ask HT
-- go through all files/todo and clear and make a plan
 - Tests
+- small things: each meeting some
+- Server-Actions: GUI
 
 # Priority 2
 - have discussion with Georg, KIT
 - (HT) replace documentation
 - reduce self.
-- rename into pasta: backend., be. into pasta.!!
+- rename into backend; the whole thing together is pasta
 - more logging
 
 # Priority 3
 - Perhaps: fixed version number gitannex and datalad
-- move tests to new version
 - setup.cfg: pytest
 - Windows/Anaconda generally works, use Marble documentation if it fully works. Git/Git-annex/datalad do not work currently
   - Datalad documentation has the following suggestion for git-installation

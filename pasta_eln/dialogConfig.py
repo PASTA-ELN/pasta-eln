@@ -2,10 +2,11 @@
 import platform, json
 from pathlib import Path
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QTabWidget, QFormLayout, QLabel, QTextEdit, QGroupBox,\
-                              QComboBox, QPushButton   # pylint: disable=no-name-in-module
+                              QComboBox  # pylint: disable=no-name-in-module
 
 from .fixedStrings import configurationOverview
 from .miscTools import restart
+from .style import TextButton
 if platform.system()=='Windows':
   from .dialogConfigSetupWindows import ConfigurationSetup
 else:
@@ -25,25 +26,24 @@ class Configuration(QDialog):
     self.backend = backend
     self.setWindowTitle('PASTA-ELN configuration')
 
-    # GUI Stuff
-    self.mainLayout = QVBoxLayout()
-    self.setLayout(self.mainLayout)
-    self.tabWidget = QTabWidget(self)
-    self.mainLayout.addWidget(self.tabWidget)
+    # GUI elements
+    self.mainL = QVBoxLayout(self)
+    self.tabW = QTabWidget(self)
+    self.mainL.addWidget(self.tabW)
 
-    # ---------------------
     # Overview
+    # --------
     tabOverview = QTextEdit()
     tabOverview.setMarkdown(configurationOverview)
-    self.tabWidget.addTab(tabOverview, 'Overview')
+    self.tabW.addTab(tabOverview, 'Overview')
 
-    # ---------------------
     # Setup / Troubeshoot Pasta: main widget
+    # --------------------------------------
     self.tabSetup = ConfigurationSetup(backend, self.finished)
-    self.tabWidget.addTab(self.tabSetup, 'Setup')
+    self.tabW.addTab(self.tabSetup, 'Setup')
 
-    # ---------------------
     # Misc configuration: e.g. theming...
+    # -----------------------------------
     self.tabAppearanceW = QGroupBox('Change appearance')
     layout = QFormLayout()
     themes = QComboBox()
@@ -51,22 +51,21 @@ class Configuration(QDialog):
                      'dark_red','dark_teal','dark_yellow','light_amber','light_blue','light_cyan',\
                      'light_cyan_500','light_lightgreen','light_pink','light_purple','light_red','light_teal',\
                      'light_yellow','none'])
-    if 'GUI' in self.backend.configuration and 'theme' in self.backend.configuration['GUI']:
+    if 'GUI' in self.backend.configuration and 'theme' in self.backend.configuration['GUI']:  #TODO_P1 GUI2
       themes.setCurrentText(self.backend.configuration['GUI']['theme'])
     else:
       themes.setCurrentText('none')
     themes.currentTextChanged.connect(self.changeTheme)
     layout.addRow(QLabel("Theme"), themes)
-    restartBtn = QPushButton('Now')
-    restartBtn.clicked.connect(restart)
+    restartBtn = TextButton('Now', restart)
     layout.addRow(QLabel('Restart PASTA-ELN'), restartBtn)
     self.tabAppearanceW.setLayout(layout)
-    self.tabWidget.addTab(self.tabAppearanceW, 'Appearance')
+    self.tabW.addTab(self.tabAppearanceW, 'Appearance')
 
     if startTap=='setup':
-      self.tabWidget.setCurrentWidget(self.tabSetup)
-      self.tabWidget.setTabEnabled(0, False)
-      self.tabWidget.setTabEnabled(2, False)
+      self.tabW.setCurrentWidget(self.tabSetup)
+      self.tabW.setTabEnabled(0, False)
+      self.tabW.setTabEnabled(2, False)
 
 
   def finished(self):

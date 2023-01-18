@@ -63,5 +63,4 @@ class Project(QTreeWidget):
       item.setText(0,'') #remove text
       self.setItemWidget(item, 0, Leaf(self.comm, docID))
       iterator += 1
-
     return

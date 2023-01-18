@@ -1,9 +1,9 @@
 """ Widget: setup tab inside the configuration dialog window """
 import webbrowser, logging
 from pathlib import Path
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTextEdit, QPushButton, QMessageBox, QInputDialog, QFileDialog, QProgressBar    # pylint: disable=no-name-in-module
-import qtawesome as qta
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTextEdit, QMessageBox, QInputDialog, QFileDialog, QProgressBar    # pylint: disable=no-name-in-module
 
+from .style import TextButton
 from .installationTools import gitAnnex, couchdb, configuration, ontology, exampleData, createShortcut, installLinuxRoot
 from .fixedStrings import setupTextLinux, rootInstallLinux, exampleDataLinux
 
@@ -12,7 +12,16 @@ class ConfigurationSetup(QWidget):
   Main class
   """
   def __init__(self, backend, callbackFinished):
+    """
+    Initialization
+
+    Args:
+      backend (Pasta): backend, not communication
+      callbackFinished (function): callback function to call upon end
+    """
     super().__init__()
+
+    #GUI elements
     self.mainL = QVBoxLayout()
     self.setMinimumWidth(400)
     self.setMinimumHeight(500)
@@ -35,8 +44,7 @@ class ConfigurationSetup(QWidget):
     footerW = QWidget()
     screen1L.addWidget(footerW)
     footerL = QHBoxLayout(footerW)
-    self.button1 = QPushButton('Start analyse and repair')
-    self.button1.clicked.connect(self.analyse)
+    self.button1 = TextButton('Start analyse and repair', self.analyse)
     footerL.addWidget(self.button1)
 
 
@@ -123,6 +131,8 @@ class ConfigurationSetup(QWidget):
           self.mainText = self.mainText.replace('- Ontology of the datastructure','- Ontology: user chose to NOT install' )
           self.text1.setMarkdown(self.mainText)
           flagContinue = False
+
+    #TODO_P3 be sure that no restart is required
 
     ## Ubuntu autocreates the shortcut: if true in May2023: remove
     # #Shortcut

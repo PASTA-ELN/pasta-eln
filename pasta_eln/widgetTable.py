@@ -18,14 +18,14 @@ class Table(QWidget):
     self.data = []
     self.docType = ''
 
-    # GUI stuff
+    # GUI elements
     mainL = QVBoxLayout()
     headerW = QWidget()
     headerL = QHBoxLayout(headerW)
-    self.headline = QLabel()  #TODO could become style
+    self.headline = QLabel()  #TODO_P1 could become style
     self.headline.setStyleSheet('font-size: 14pt')
     headerL.addWidget(self.headline)
-    self.addBtn = TextButton('Add',self.addItem)  #TODO: initial button hide in constructor
+    self.addBtn = TextButton('Add',self.addItem)  #TODO_P1: initial button hide in constructor
     self.addBtn.hide()
     headerL.addWidget(self.addBtn)
     mainL.addWidget(headerW)

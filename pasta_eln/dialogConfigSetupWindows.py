@@ -1,9 +1,9 @@
 """ Widget: setup tab inside the configuration dialog window """
 import webbrowser, logging
 from pathlib import Path
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTextEdit, QPushButton, QMessageBox, QInputDialog, QFileDialog, QProgressBar   # pylint: disable=no-name-in-module
-import qtawesome as qta
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTextEdit, QMessageBox, QInputDialog, QFileDialog, QProgressBar   # pylint: disable=no-name-in-module
 
+from .style import TextButton
 from .installationTools import git, gitAnnex, couchdb, couchdbUserPassword, configuration, ontology, exampleData, createShortcut
 from .fixedStrings import setupTextWindows, gitWindows, gitAnnexWindows, couchDBWindows, exampleDataWindows, restartPastaWindows
 
@@ -12,6 +12,13 @@ class ConfigurationSetup(QWidget):
   Main class
   """
   def __init__(self, backend, callbackFinished):
+    """
+    Initialization
+
+    Args:
+      backend (Pasta): backend, not communication
+      callbackFinished (function): callback function to call upon end
+    """
     super().__init__()
     self.mainL = QVBoxLayout()
     self.setMinimumWidth(400)
@@ -36,8 +43,7 @@ class ConfigurationSetup(QWidget):
     footerW = QWidget()
     screen1L.addWidget(footerW)
     footerL = QHBoxLayout(footerW)
-    self.button1 = QPushButton('Start analyse and repair')
-    self.button1.clicked.connect(self.analyse)
+    self.button1 = TextButton('Start analyse and repair', self.analyse)
     footerL.addWidget(self.button1)
 
 
@@ -158,7 +164,7 @@ class ConfigurationSetup(QWidget):
     #If installed, restart
     if flagInstalledSoftware:
       button = QMessageBox.information(self,'PASTA-ELN restart required', restartPastaWindows)
-      #TODO execute restart here via comm to gui.py
+      #TODO_P3 execute restart here via comm to gui.py
 
     #Example data
     if flagContinue:

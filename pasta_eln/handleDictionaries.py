@@ -73,7 +73,7 @@ def fillDocBeforeCreate(data, docType):
   rating = re.findall(r'(^|\s)#\d\s', data['comment'])  # one number following up on #
   if rating is None:
     rating=[]
-  otherTags = re.findall(r'(^|\s)#{1}[a-zA-Z][\w]', data['comment']) #TODO just as one above
+  otherTags = re.findall(r'(^|\s)#{1}[a-zA-Z][\w]', data['comment']) #TODO_P3 just as one above
   if otherTags is None:
     otherTags=[]
   data['tags'] = data['tags'] + otherTags

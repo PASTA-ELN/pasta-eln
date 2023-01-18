@@ -1,5 +1,5 @@
 """ New/Edit dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""
-from PySide6.QtWidgets import QDialog, QFormLayout, QLabel, QTextEdit, QComboBox, QPushButton, QLineEdit, QDialogButtonBox   # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QDialog, QFormLayout, QLabel, QTextEdit, QComboBox, QLineEdit, QDialogButtonBox   # pylint: disable=no-name-in-module
 
 class Form(QDialog):
   """ New/Edit dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""
@@ -15,8 +15,10 @@ class Form(QDialog):
     self.backend = backend
     self.setWindowTitle('Edit content')
 
-    # GUI Stuff
+    # GUI elements
+    #TODO_P1: if image, show it; image is a separate qwidget
     mainL = QFormLayout(self)
+    mainL.addRow(QLabel('name'),QLineEdit(str(doc['-name'])))
     for key,value in doc.items():
       if key[0] in ['_','-'] or key in ['image','metaVendor','metaUser']:
         continue
@@ -27,7 +29,7 @@ class Form(QDialog):
         continue
       mainL.addRow(QLabel(item['name']),QLineEdit(''))
     #final button box
-    buttonBox = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel) #TODO next button does not exist
+    buttonBox = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel) #TODO_P3 next button does not exist
     buttonBox.clicked.connect(self.save)
     mainL.addWidget(buttonBox)
 
@@ -35,4 +37,5 @@ class Form(QDialog):
     """
     Action upon save / cancel
     """
+    #TODO_P3 rework the name->name and save the changes
     print('btn clicked',btn.text(),'to work on ',self)

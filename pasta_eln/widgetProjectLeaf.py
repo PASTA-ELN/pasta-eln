@@ -19,7 +19,7 @@ class Leaf(QWidget):
       leftL  = QFormLayout(leftW)
       mainL.addWidget(leftW)
       rightW = QWidget()
-      rightW.setMaximumSize(QSize(300,200))
+      rightW.setMaximumSize(QSize(300,200))  #TODO_P1 set size configuration, dialog
       rightL = QHBoxLayout(rightW)
       if 'image' in doc and doc['image']!='': #show image
         #similar in widgetDetails
@@ -90,7 +90,7 @@ class Leaf(QWidget):
       return
     drag = QDrag(self)
     mimeData = QMimeData()
-    mimeData.setData('pasta/task', b'data')  #TODO give data
+    mimeData.setData('pasta/task', b'data')  #TODO_P2 give data
     drag.setMimeData(mimeData)
     dropAction = drag.exec(Qt.CopyAction | Qt.MoveAction)
     print(dropAction)
@@ -119,6 +119,6 @@ class Leaf(QWidget):
     if event.mimeData().hasFormat('libfm/files'):
       print('dropped file',event.mimeData().urls()[0].toLocalFile())
     elif event.mimeData().hasFormat('pasta/task'):
-      print('received task for', self)  #TODO
+      print('received task for', self)  #TODO_P2
     event.acceptProposedAction()
     return

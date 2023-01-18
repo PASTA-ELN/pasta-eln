@@ -78,7 +78,7 @@ class Pasta(CLI_Mixin):
     else:
       n,s = upOut(links[linkDefault]['local']['cred'])[0].split(':')
     databaseName = links[linkDefault]['local']['database']
-    self.confLink    = links[linkDefault]  #TODO do not save this subitems of configuration
+    self.confLink    = links[linkDefault]  #TODO_P1 do not save this subitems of configuration
     # directories
     #    self.basePath (root of directory tree) is root of all projects
     #    self.cwd changes during program
@@ -89,8 +89,8 @@ class Pasta(CLI_Mixin):
     self.cwd          = Path('.')
     # decipher configuration and store
     self.userID   = self.configuration['userID']
-    self.magicTags= self.configuration['magicTags'] #"P1","P2","P3","TODO","WAIT","DONE"   #TODO do not save this subitems of configuration
-    self.tableFormat = self.configuration['tableFormat']   #TODO do not save this subitems of configuration
+    self.magicTags= self.configuration['magicTags'] #"P1","P2","P3","TODO","WAIT","DONE"   #TODO_P1 do not save this subitems of configuration
+    self.tableFormat = self.configuration['tableFormat']   #TODO_P1 do not save this subitems of configuration
     # start database
     self.db = Database(n,s,databaseName,confirm=self.confirm,**kwargs)
     if not hasattr(self.db, 'databaseName'):  #not successful database creation

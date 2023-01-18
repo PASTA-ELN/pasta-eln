@@ -26,7 +26,7 @@ class MainWindow(QMainWindow):
     self.comm = Communicate(self.backend)
     self.comm.formDoc.connect(self.formDoc)
 
-    #WIDGETS
+    #GUI elements
     mainWidget = QWidget()
     mainLayout = QHBoxLayout()
     mainLayout.setContentsMargins(0,0,0,0)
@@ -52,7 +52,6 @@ class MainWindow(QMainWindow):
     return
 
 
-
 ##############
 ## Main function
 def main():
@@ -60,13 +59,13 @@ def main():
   logPath = Path.home()/'pastaELN.log'
   #old versions of basicConfig do not know "encoding='utf-8'"
   logging.basicConfig(filename=logPath, level=logging.INFO, format='%(asctime)s|%(levelname)s:%(message)s',
-                      datefmt='%m-%d %H:%M:%S')   #TODO this loggingWarning goes into configuration
+                      datefmt='%m-%d %H:%M:%S')   #TODO_P1 this loggingWarning goes into configuration
   for package in ['urllib3', 'requests', 'asyncio', 'datalad', 'PIL', 'matplotlib.font_manager']:
     logging.getLogger(package).setLevel(logging.WARNING)
   logging.info('Start PASTA GUI')
   app = QApplication()
   window = MainWindow()
-  if 'GUI' in window.backend.configuration and 'theme' in window.backend.configuration['GUI']:
+  if 'GUI' in window.backend.configuration and 'theme' in window.backend.configuration['GUI']:  #GUI2 vs GUI prepare for both
     theme = window.backend.configuration['GUI']['theme']
     apply_stylesheet(app, theme=theme+'.xml')
   window.show()

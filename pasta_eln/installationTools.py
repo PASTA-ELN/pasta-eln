@@ -273,7 +273,7 @@ def installLinuxRoot(gitAnnexExists, couchDBExists, pathPasta=''):
       'curl -X PUT http://admin:'+password+'@127.0.0.1:5984/_global_changes',
       'sleep 10',
       'echo DONE-Press-Key',
-      'read']  #TODO if successful in Aug2023: remove "echo....read"
+      'read']  #TODO_P5 if successful in Aug2023: remove "echo....read"
   #Try all terminals
   scriptFile = Path.home()/'pastaELN_Install.sh'
   with open(scriptFile,'w', encoding='utf-8') as shell:
@@ -600,7 +600,7 @@ def main():
   logPath = Path.home()/'pastaELN.log'
   #old versions of basicConfig do not know "encoding='utf-8'"
   logging.basicConfig(filename=logPath, level=logging.INFO, format='%(asctime)s|%(levelname)s:%(message)s',
-                      datefmt='%m-%d %H:%M:%S')   #TODO this loggingWarning goes into configuration
+                      datefmt='%m-%d %H:%M:%S')   #TODO_P1 this loggingWarning goes into configuration
   for package in ['urllib3', 'requests', 'asyncio', 'datalad', 'PIL', 'matplotlib.font_manager']:
     logging.getLogger(package).setLevel(logging.WARNING)
   logging.info('Start PASTA Install')

@@ -29,6 +29,18 @@ def getColor(backend, color):
 class TextButton(QPushButton):
   """ Button that has only text"""
   def __init__(self, label, function, name='', tooltip='', checkable=False):
+    """
+    Initialization
+
+    Args:
+      label (str): label printed on button
+      function (function): function to be called upon button-click-event
+      name (str): name used for button identification in called-function
+      tooltip (str): tooltip shown when mouse hovers the button
+      checkable (bool): can the button change its background color
+
+    #TODO_P1 Add widgets
+    """
     super().__init__()
     self.setText(label)
     self.setCheckable(checkable)
@@ -43,6 +55,16 @@ class TextButton(QPushButton):
 class LetterButton(QPushButton):
   """ Button that has only a letter"""
   def __init__(self, label, function, name=''):
+    """
+    Initialization
+
+    Args:
+      label (str): label printed on button
+      function (function): function to be called upon button-click-event
+      name (str): name used for button identification in called-function
+
+    #TODO_P1 Add widgets
+    """
     super().__init__()
     self.setText(label[0])
     self.clicked.connect(function)
@@ -54,6 +76,18 @@ class LetterButton(QPushButton):
 class IconButton(QPushButton):
   """ Button that has only an icon"""
   def __init__(self, iconName, function, name='', tooltip='', backend=None):
+    """
+    Initialization
+
+    Args:
+      iconName (str): icon to show on button
+      function (function): function to be called upon button-click-event
+      name (str): name used for button identification in called-function
+      tooltip (str): tooltip shown when mouse hovers the button
+      backend (Pasta): pasta backend
+
+    #TODO_P1 Add widgets, ability to get theme
+    """
     super().__init__()
     color = 'black' if backend is None else getColor(backend, 'primary')
     icon = qta.icon(iconName, color=color, scale_factor=1.2)

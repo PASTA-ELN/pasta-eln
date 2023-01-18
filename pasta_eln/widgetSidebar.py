@@ -13,7 +13,7 @@ class Sidebar(QWidget):
     self.setMinimumWidth(200)
     self.setMaximumWidth(200)
 
-    # GUI stuff
+    # GUI elements
     mainL = QVBoxLayout()
     mainL.setContentsMargins(0,0,0,0)
     mainL.setSpacing(7)
@@ -22,7 +22,6 @@ class Sidebar(QWidget):
     self.widgets = {}
     self.layouts = {}
     self.widgetsHidden = {}
-
 
     if hasattr(comm.backend, 'dataLabels'):
       # All projects
@@ -76,7 +75,6 @@ class Sidebar(QWidget):
     # Other buttons
     mainL.addStretch(1)
     mainL.addWidget(IconButton('fa.gear', self.btnConfig, backend=self.comm.backend))
-
     if not hasattr(comm.backend, 'dataLabels'):  #if no backend
       configWindow = Configuration(comm.backend, 'setup')
       configWindow.exec()

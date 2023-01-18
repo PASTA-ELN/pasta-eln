@@ -12,7 +12,7 @@ class DocTypes(QWidget):
   def __init__(self, comm):
     super().__init__()
 
-    # GUI stuff
+    # GUI elements
     table = Table(comm)
     details = Details(comm)
     splitter = QSplitter()

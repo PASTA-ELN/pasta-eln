@@ -8,7 +8,6 @@ class Database:
   """
   Class for interaction with couchDB
   """
-
   def __init__(self, user, password, databaseName, confirm, **kwargs):
     """
     Args:
@@ -578,7 +577,6 @@ class Database:
         #   doc.save()
         #   # print("after ",doc.keys(),doc['_id'])
 
-
         #branch test
         if '-branch' not in doc:
           outstring+= f'{Bcolors.FAIL}**ERROR dch01: branch does not exist '+doc['_id']+f'{Bcolors.ENDC}\n'
@@ -641,7 +639,6 @@ class Database:
             doc['-name']=doc['name']
             del doc['name']
             doc.save()
-
 
         #doc-type specific tests
         if '-type' in doc and doc['-type'][0] == 'sample':
