@@ -54,18 +54,18 @@ class Table(QWidget):
     if len(self.data)==0:
       self.table.hide()
       return
-    self.headline.setText(self.comm.backend.dataLabels[self.docType])
+    self.headline.setText(self.comm.backend.db.dataLabels[self.docType])
     self.addBtn.show()
     nrows, ncols = len(self.data), len(self.data[0]['value'])
     self.table.setColumnCount(ncols)
-    header = self.comm.backend.db.ontology[self.docType]
+    header = self.comm.backend.db.ontology[self.docType]['prop']
     header = [i['name'][1:] if i['name'][0]=='-' else i['name'] for i in header]
     self.table.setHorizontalHeaderLabels(header)
     self.table.verticalHeader().hide()
     self.table.setRowCount(nrows)
     for i in range(nrows):
       for j in range(ncols):
-        item = QTableWidgetItem(str(self.data[i]['value'][j]))
+        item = QTableWidgetItem(str(self.data[i]['value'][j])) #TODO_P2 show icon in table if none, ...
         self.table.setItem(i, j, item)
     self.table.show()
     self.comm.changeDetails.emit('')

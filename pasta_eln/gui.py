@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QApplication   
 from PySide6.QtGui import QIcon    # pylint: disable=no-name-in-module
 from qt_material import apply_stylesheet  #of https://github.com/UN-GCPDS/qt-material
 
-from .backend import Pasta
+from .backend import Backend
 from .communicate import Communicate
 from .widgetSidebar import Sidebar
 from .widgetBody import Body
@@ -22,7 +22,7 @@ class MainWindow(QMainWindow):
     self.setWindowTitle("PASTA-ELN")
     self.setWindowState(Qt.WindowMaximized)
     self.setWindowIcon(QIcon('./Resources/Icons/favicon64.png'))
-    self.backend = Pasta()
+    self.backend = Backend()
     self.comm = Communicate(self.backend)
     self.comm.formDoc.connect(self.formDoc)
 

@@ -5,7 +5,7 @@ import urllib.request
 from pathlib import Path
 from cloudant.client import CouchDB
 
-from .backend import Pasta
+from .backend import Backend
 from .fixedStrings import defaultOntology
 
 
@@ -46,18 +46,15 @@ def createDefaultConfiguration(user, password, pathPasta=None):
     else:
       pathPasta = str(Path.home()/'PASTA_ELN')
   conf = {}
-  conf['default']     = 'research'
-  conf['links']       = {'research':{\
+  conf['defaultProjectGroup']     = 'research'
+  conf['projectGroups']       = {'research':{\
                           'local':{'user':user, 'password':password, 'database':'research', 'path':pathPasta},
                           'remote':{}  }}
-  conf['version']     = 1
+  conf['version']     = 2
   try:
     conf['userID']      = os.getlogin()
   except:   #github action
     conf['userID']      = 'github_user'
-  conf['extractors']  = {}
-  conf['qrPrinter']   = {}
-  conf['magicTags']   = ['P1','P2','P3','TODO','WAIT','DONE']
   return conf
 
 
@@ -325,57 +322,66 @@ def configuration(command='test', user='', password='', pathPasta=''):
     if command == 'repair':
       conf = createDefaultConfiguration(user, password, pathPasta)
 
-  illegalNames = [key for key in conf if key.startswith('-')]
-  if not 'userID' in conf:
+  if 'version' not in conf or conf['version']!=2:
+    if command == 'repair':
+      conf['version'] = 2
+    else:
+      output += '**ERROR: No or wrong version in config file\n'
+  if 'userID' not in conf:
     if command == 'repair':
       conf['userID'] = os.getlogin()
     else:
       output += '**ERROR: No userID in config file\n'
-  if not 'magicTags' in conf:
-    if command == 'repair':
-      conf['magicTags'] = []
-    else:
-      output += '**ERROR: No magicTags in config file\n'
-  if not 'qrPrinter' in conf:
+  if 'qrPrinter' not in conf:
     if command == 'repair':
       conf['qrPrinter'] = {}
     else:
       output += '**ERROR: No qrPrinter in config file\n'
-  if not 'tableFormat' in conf:
+  if 'extractorDir' not in conf:
     if command == 'repair':
-      conf['tableFormat'] = {}
+      conf['extractorsDir'] = Path(__file__).as_posix()
     else:
-      output += '**ERROR: No tableFormat in config file\n'
-  if not 'extractors' in conf:
+      output += '**ERROR: No extractorDir in config file\n'
+  if 'extractors' not in conf:
     if command == 'repair':
       conf['extractors'] = {}
     else:
       output += '**ERROR: No extractors in config file\n'
-  if not 'version' in conf or conf['version']!=1:
+  if 'projectGroups' not in conf:
+    output += '**ERROR: No project-groups in config file; REPAIR MANUALLY\n'
+  if 'defaultProjectGroup' not in conf:
     if command == 'repair':
-      conf['version'] = 1
-    else:
-      output += '**ERROR: No or wrong version in config file\n'
-  if not 'links' in conf:
-    output += '**ERROR: No links in config file; REPAIR MANUALLY\n'
-
-  if not 'default' in conf:
-    if command == 'repair' and len(illegalNames)==0:
-      conf['default'] = list(conf['links'].keys())[0]
+      conf['defaultProjectGroup'] = list(conf['projectGroups'].keys())[0]
     else:
       output += '**ERROR: No default links in config file\n'
   else:
-    if not conf['default'] in conf['links']:
+    if conf['defaultProjectGroup'] not in conf['projectGroups']:
       if command == 'repair':
-        conf['default'] = list(conf['links'].keys())[0]
+        conf['defaultProjectGroup'] = list(conf['projectGroups'].keys())[0]
       else:
-        output += '**ERROR: default entry '+conf['default']+' not in links\n'
-  if len(illegalNames)>0:
+        output += '**ERROR: default entry '+conf['defaultProjectGroup']+' not in links\n'
+  #GUI items
+  if 'GUI' not in conf:
     if command == 'repair':
-      for key in illegalNames:
-        del conf[key]
+      conf['GUI'] = {}
     else:
-      output += '**ERROR: - type entries '+str(illegalNames)+' in config file\n'
+      output += '**ERROR: No GUI in config file\n'
+  guiItems = {"theme": "none",
+    "imageWidthProject": 300,
+    "imageWidthDetails": 600,
+    "sidebarWidth": 200,
+    "magicTags": ["P1", "P2", "P3", "TODO", "DOING", "WAIT", "DONE"],
+    "defaultTags": ["Research","Administration"],
+    "verbosePrint": 1,
+    "loggingLevel": "INFO",
+    "tableColumns": {},
+    "tableColumnsMax": 16}
+  for key, value in guiItems.items():
+    if key not in conf['GUI']:
+      if command == 'repair':
+        conf['GUI'][key] = value
+      else:
+        output += '**ERROR: key: '+key+' not in GUI configuration\n'
 
   if command == 'repair':
     with open(Path.home()/'.pastaELN.json','w', encoding='utf-8') as f:
@@ -396,17 +402,17 @@ def ontology(command='test'):
     string: ''=success, else error messages
   '''
   output = ''
-  pasta = Pasta()
+  backend = Backend()
 
   if command == 'test':
-    output += 'database name:'+pasta.db.db.database_name+'\n'
-    designDocuments = pasta.db.db.design_documents()
+    output += 'database name:'+backend.db.db.database_name+'\n'
+    designDocuments = backend.db.db.design_documents()
     output += 'Design documents'+'\n'
     for item in designDocuments:
       numViews = len(item['doc']['views']) if 'views' in item['doc'] else 0
       output += '  '+item['id']+'   Num. of views:'+str(numViews)+'\n'
     try:
-      _ = pasta.db.getDoc('-ontology-')
+      _ = backend.db.getDoc('-ontology-')
       output += 'Ontology exists on server'+'\n'
     except:
       output += '**ERROR: Ontology does NOT exist on server'+'\n'
@@ -417,7 +423,7 @@ def ontology(command='test'):
     doc = json.loads(defaultOntology)
     print(doc)
     logging.info('ontology ending ...')
-    # _ = pasta.db.create_document(doc)
+    # _ = backend.db.create_document(doc)
     return ''
 
   return '**ERROR: Unknown command'
@@ -435,88 +441,87 @@ def exampleData(force=False, callbackPercent=None):
   logging.info('Start example data creation')
   if callbackPercent is not None:
     callbackPercent(0)
-  configName = 'research'
   if force:
-    pasta = Pasta(configName, initConfig=False)
-    dirName = pasta.basePath
-    pasta.exit(deleteDB=True)
+    backend = Backend(initConfig=False)
+    dirName = backend.basePath
+    backend.exit(deleteDB=True)
     shutil.rmtree(dirName)
     os.makedirs(dirName)
   if callbackPercent is not None:
     callbackPercent(1)
-  pasta = Pasta(configName, initViews=True, initConfig=False)
+  backend = Backend(initViews=True, initConfig=False)
   if callbackPercent is not None:
     callbackPercent(2)
   ### CREATE PROJECTS AND SHOW
   print('*** CREATE EXAMPLE PROJECT AND SHOW ***')
-  pasta.addData('x0', {'-name': 'PASTAs Example Project', 'objective': 'Test if everything is working as intended.', 'status': 'active', 'comment': '#tag Can be used as reference or deleted'})
+  backend.addData('x0', {'-name': 'PASTAs Example Project', 'objective': 'Test if everything is working as intended.', 'status': 'active', 'comment': '#tag Can be used as reference or deleted'})
   if callbackPercent is not None:
     callbackPercent(3)
-  print(pasta.output('x0'))
+  print(backend.output('x0'))
   if callbackPercent is not None:
     callbackPercent(4)
   logging.info('Finished creating example project')
 
   ### TEST PROJECT PLANING
   print('*** TEST PROJECT PLANING ***')
-  viewProj = pasta.db.getView('viewDocType/x0')
+  viewProj = backend.db.getView('viewDocType/x0')
   projID1  = [i['id'] for i in viewProj if 'PASTA' in i['value'][0]][0]
   if callbackPercent is not None:
     callbackPercent(5)
-  pasta.changeHierarchy(projID1)
+  backend.changeHierarchy(projID1)
   if callbackPercent is not None:
     callbackPercent(6)
-  pasta.addData('x1',    {'comment': 'This is hard! #TODO', '-name': 'This is an example task'})
+  backend.addData('x1',    {'comment': 'This is hard! #TODO', '-name': 'This is an example task'})
   if callbackPercent is not None:
     callbackPercent(7)
-  pasta.addData('x1',    {'comment': 'This will take a long time. #WAIT', '-name': 'This is another example task'})
+  backend.addData('x1',    {'comment': 'This will take a long time. #WAIT', '-name': 'This is another example task'})
   if callbackPercent is not None:
     callbackPercent(8)
-  pasta.changeHierarchy(pasta.currentID)
-  pasta.addData('x2',    {'-name': 'This is an example subtask',     'comment': 'Random comment 1'})
+  backend.changeHierarchy(backend.currentID)
+  backend.addData('x2',    {'-name': 'This is an example subtask',     'comment': 'Random comment 1'})
   if callbackPercent is not None:
     callbackPercent(9)
-  pasta.addData('x2',    {'-name': 'This is another example subtask','comment': 'Random comment 2'})
+  backend.addData('x2',    {'-name': 'This is another example subtask','comment': 'Random comment 2'})
   if callbackPercent is not None:
     callbackPercent(10)
-  pasta.changeHierarchy(None)
-  pasta.addData('x1',    {'-name': 'Data files'})
+  backend.changeHierarchy(None)
+  backend.addData('x1',    {'-name': 'Data files'})
   if callbackPercent is not None:
     callbackPercent(11)
-  semStepID = pasta.currentID
-  pasta.changeHierarchy(semStepID)
-  semDirName = pasta.basePath/pasta.cwd
-  pasta.changeHierarchy(None)
-  print(pasta.outputHierarchy())
+  semStepID = backend.currentID
+  backend.changeHierarchy(semStepID)
+  semDirName = backend.basePath/backend.cwd
+  backend.changeHierarchy(None)
+  print(backend.outputHierarchy())
   if callbackPercent is not None:
     callbackPercent(12)
   logging.info('Finished project planning')
 
   ### TEST PROCEDURES
   print('\n*** TEST PROCEDURES ***')
-  sopDir = pasta.basePath/'StandardOperatingProcedures'
+  sopDir = backend.basePath/'StandardOperatingProcedures'
   os.makedirs(sopDir, exist_ok=True)
   with open(sopDir/'Example_SOP.md','w', encoding='utf-8') as fOut:
     fOut.write('# Put sample in instrument\n# Do something\nDo not forget to\n- not do anything wrong\n- **USE BOLD LETTERS**\n')
   if callbackPercent is not None:
     callbackPercent(13)
-  pasta.addData('procedure', {'-name': 'StandardOperatingProcedures/Example_SOP.md', 'comment': '#v1'})
+  backend.addData('procedure', {'-name': 'StandardOperatingProcedures/Example_SOP.md', 'comment': '#v1'})
   if callbackPercent is not None:
     callbackPercent(14)
-  print(pasta.output('procedure'))
+  print(backend.output('procedure'))
   if callbackPercent is not None:
     callbackPercent(15)
   logging.info('Finished procedures creating')
 
   ### TEST SAMPLES
   print('*** TEST SAMPLES ***')
-  pasta.addData('sample',    {'-name': 'Example sample', 'chemistry': 'A2B2C3', 'qrCode': '13214124 99698708', 'comment': 'can be used as example or removed'})
+  backend.addData('sample',    {'-name': 'Example sample', 'chemistry': 'A2B2C3', 'qrCode': '13214124 99698708', 'comment': 'can be used as example or removed'})
   if callbackPercent is not None:
     callbackPercent(16)
-  print(pasta.output('sample'))
+  print(backend.output('sample'))
   if callbackPercent is not None:
     callbackPercent(17)
-  print(pasta.outputQR())
+  print(backend.outputQR())
   if callbackPercent is not None:
     callbackPercent(18)
   logging.info('Finished samples creating')
@@ -528,28 +533,28 @@ def exampleData(force=False, callbackPercent=None):
   if callbackPercent is not None:
     callbackPercent(19)
   logging.info('Finished copy files')
-  pasta.scanTree()
+  backend.scanTree()
   logging.info('Finished scan tree')
   if callbackPercent is not None:
     callbackPercent(20)
 
   ### USE GLOBAL FILES
   print('*** USE GLOBAL FILES ***')
-  pasta.changeHierarchy(semStepID)
+  backend.changeHierarchy(semStepID)
   if callbackPercent is not None:
     callbackPercent(21)
-  pasta.addData('measurement', {'-name': 'https://developers.google.com/search/mobile-sites/imgs/mobile-seo/separate-urls.png', \
+  backend.addData('measurement', {'-name': 'https://developers.google.com/search/mobile-sites/imgs/mobile-seo/separate-urls.png', \
     'comment':'remote image from google. Used for testing and reference. Can be deleted.'})
   if callbackPercent is not None:
     callbackPercent(22)
-  print(pasta.output('measurement'))
+  print(backend.output('measurement'))
   if callbackPercent is not None:
     callbackPercent(23)
   logging.info('Finished global files additions')
 
   ### VERIFY DATABASE INTEGRITY
   print('\n*** VERIFY DATABASE INTEGRITY ***')
-  print(pasta.checkDB(verbose=True))
+  print(backend.checkDB(verbose=True))
   print('\n*** DONE WITH VERIFY ***')
   if callbackPercent is not None:
     callbackPercent(24)

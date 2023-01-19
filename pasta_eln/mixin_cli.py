@@ -49,10 +49,8 @@ class CLI_Mixin:
     """
     outString = []
     widthArray = [25,25,25,25]
-    if docType in self.tableFormat and '-default-' in self.tableFormat[docType]:
-      widthArray = self.tableFormat[docType]['-default-']
-    for idx,item in enumerate(self.db.ontology[docType]):
-      if not '-name' in item:    #heading
+    for idx,item in enumerate(self.db.ontology[docType]['prop']):
+      if not 'name' in item:    #heading
         continue
       if idx<len(widthArray):
         width = widthArray[idx]
@@ -60,12 +58,12 @@ class CLI_Mixin:
         width = 0
       if width!=0:
         formatString = '{0: <'+str(abs(width))+'}'
-        outString.append(formatString.format(item['-name']) )
+        outString.append(formatString.format(item['name']) )
     outString = '|'.join(outString)+'\n'
     outString += '-'*104+'\n'
     for lineItem in self.db.getView('viewDocType/'+docType):
       rowString = []
-      for idx, item in enumerate(self.db.ontology[docType]):
+      for idx, item in enumerate(self.db.ontology[docType]['prop']):
         if idx<len(widthArray):
           width = widthArray[idx]
         else:

@@ -23,7 +23,7 @@ class Sidebar(QWidget):
     self.layouts = {}
     self.widgetsHidden = {}
 
-    if hasattr(comm.backend, 'dataLabels'):
+    if hasattr(comm.backend.db, 'dataLabels'):
       # All projects
       btn = TextButton('All projects', self.btnDocType, 'x0/')
       mainL.addWidget(btn)
@@ -31,9 +31,9 @@ class Sidebar(QWidget):
       dTypeW = QWidget()
       dTypeL = QGridLayout(dTypeW)
       dTypeL.setContentsMargins(0,0,0,0)
-      for idx, doctype in enumerate(comm.backend.dataLabels):
+      for idx, doctype in enumerate(comm.backend.db.dataLabels):
         if doctype[0]!='x':
-          button = LetterButton(comm.backend.dataLabels[doctype], self.btnDocType, doctype+'/')
+          button = LetterButton(comm.backend.db.dataLabels[doctype], self.btnDocType, doctype+'/')
           dTypeL.addWidget(button, int(idx/3), idx%3)
       mainL.addWidget(dTypeW)
 
@@ -57,9 +57,9 @@ class Sidebar(QWidget):
             dTypeW = QWidget()
             dTypeL = QGridLayout(dTypeW)
             dTypeL.setContentsMargins(0,0,0,0)
-            for idx, doctype in enumerate(comm.backend.dataLabels):
+            for idx, doctype in enumerate(comm.backend.db.dataLabels):
               if doctype[0]!='x':
-                button = LetterButton(comm.backend.dataLabels[doctype], self.btnDocType, doctype+'/'+currentID)
+                button = LetterButton(comm.backend.db.dataLabels[doctype], self.btnDocType, doctype+'/'+currentID)
                 dTypeL.addWidget(button, int(idx/3), idx%3)
             # create widgets
             projectL.addWidget(dTypeW)
@@ -75,7 +75,7 @@ class Sidebar(QWidget):
     # Other buttons
     mainL.addStretch(1)
     mainL.addWidget(IconButton('fa.gear', self.btnConfig, backend=self.comm.backend))
-    if not hasattr(comm.backend, 'dataLabels'):  #if no backend
+    if not hasattr(comm.backend.db, 'dataLabels'):  #if no backend
       configWindow = Configuration(comm.backend, 'setup')
       configWindow.exec()
 

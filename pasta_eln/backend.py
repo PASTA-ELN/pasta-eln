@@ -16,18 +16,17 @@ try:
 except:
   print('**ERROR: Could not start datalad')
 
-class Pasta(CLI_Mixin):
+class Backend(CLI_Mixin):
   """
   PYTHON BACKEND
   """
 
-  def __init__(self, linkDefault=None, confirm=None, **kwargs):
+  def __init__(self, defaultProjectGroup='', **kwargs):
     """
     open server and define database
 
     Args:
-        linkDefault (string): name of configuration/link used; if not given, use the one defined by 'default' in config file
-        confirm (function): confirm changes to database and file-tree
+        defaultProjectGroup (string): name of configuration / project-group used; if not given, use the one defined by 'defaultProjectGroup' in config file
         kwargs (dict): additional parameters
           - initViews (bool): initialize views at startup
           - resetOntology (bool): reset ontology on database from one on file
@@ -37,69 +36,59 @@ class Pasta(CLI_Mixin):
     #   .id_pastaELN.json has to be tracked by git (if ignored: they don't appear on git-status; they have to change by PASTA)
     self.gitIgnore = ['*.log','.vscode/','*.xcf','*.css'] #misc
     self.gitIgnore+= ['*.bcf','*.run.xml','*.synctex.gz','*.aux']#latex files
-    self.gitIgnore+= ['*.pdf','*.svg','*.jpg']           #result figures
-    self.gitIgnore+= ['*.hap','*.mss','*.mit','*.mst']   #extractors do not exist yet
     #initialize basic values
     self.hierStack = []
-    self.currentID = None
+    self.currentID = ""
     self.alive     = True
     self.cwd       = Path('.')
-    self.initialize(linkDefault, confirm, **kwargs)
+    self.initialize(defaultProjectGroup, **kwargs)
 
 
-  def initialize(self, linkDefault=None, confirm=None, **kwargs):
+  def initialize(self, defaultProjectGroup="", **kwargs):
     """
     initialize or reinitialize server and define database
 
     Args:
-        linkDefault (string): name of configuration/link used; if not given, use the one defined by 'default' in config file
-        confirm (function): confirm changes to database and file-tree
+        defaultProjectGroup (string): name of configuration / project-group used; if not given, use the one defined by 'defaultProjectGroup' in config file
         kwargs (dict): additional parameters
           - initViews (bool): initialize views at startup
           - resetOntology (bool): reset ontology on database from one on file
     """
-    self.debug = True
-    self.confirm = confirm
     configFileName = Path.home()/'.pastaELN.json'
     if not configFileName.exists():
+      print('**ERROR Configuration file does not exist')
       return
     with open(configFileName,'r', encoding='utf-8') as confFile:
       self.configuration = json.load(confFile)
-    if self.configuration['version']!=1:
+    if self.configuration['version']!=2:
       print('**ERROR Configuration version does not fit')
-      raise NameError
-    if linkDefault is None:
-      linkDefault = self.configuration['default']
-    links = self.configuration['links']
-    if not linkDefault in links:
+      raise Exception('VersionError')
+    if defaultProjectGroup =="":
+      defaultProjectGroup = self.configuration['defaultProjectGroup']
+    if not defaultProjectGroup in self.configuration['projectGroups']:
+      raise Exception('BadConfigurationFileError')
       return
-    if 'user' in links[linkDefault]['local']:
-      n,s = links[linkDefault]['local']['user'], links[linkDefault]['local']['password']
+    projectGroup = self.configuration['projectGroups'][defaultProjectGroup]
+    if 'user' in projectGroup['local']:
+      n,s = projectGroup['local']['user'], projectGroup['local']['password']
     else:
-      n,s = upOut(links[linkDefault]['local']['cred'])[0].split(':')
-    databaseName = links[linkDefault]['local']['database']
-    self.confLink    = links[linkDefault]  #TODO_P1 do not save this subitems of configuration
+      n,s = upOut(projectGroup['local']['cred'])[0].split(':')
+    databaseName = projectGroup['local']['database']
     # directories
     #    self.basePath (root of directory tree) is root of all projects
     #    self.cwd changes during program
-    self.extractorPath = Path(self.configuration['extractorDir']) if 'extractorDir' in self.configuration else \
-                         Path(__file__).parent/'Extractors'
+    self.extractorPath = Path(self.configuration['extractorDir'])
     sys.path.append(str(self.extractorPath))  #allow extractors
-    self.basePath     = Path(links[linkDefault]['local']['path'])
+    self.basePath     = Path(projectGroup['local']['path'])
     self.cwd          = Path('.')
-    # decipher configuration and store
+    # decipher miscellaneous configuration and store
     self.userID   = self.configuration['userID']
-    self.magicTags= self.configuration['magicTags'] #"P1","P2","P3","TODO","WAIT","DONE"   #TODO_P1 do not save this subitems of configuration
-    self.tableFormat = self.configuration['tableFormat']   #TODO_P1 do not save this subitems of configuration
     # start database
-    self.db = Database(n,s,databaseName,confirm=self.confirm,**kwargs)
+    self.db = Database(n,s,databaseName, self.configuration['GUI'], **kwargs)
     if not hasattr(self.db, 'databaseName'):  #not successful database creation
       return
-    self.dataLabels = ontology2Labels(self.db.ontology,self.tableFormat)
-    if kwargs.get('initViews', False):  #Still needed, change
-      maxTabColumns = self.configuration['GUI']['maxTabColumns'] \
-        if 'GUI' in self.configuration and 'maxTabColumns' in self.configuration['GUI'] else 20
-      self.db.initViews(self.dataLabels,self.magicTags, maxTabColumns)
+    if kwargs.get('initViews', False):
+      self.db.initViews(self.configuration['GUI'])
     # internal hierarchy structure
     self.hierStack = []
     self.currentID  = None

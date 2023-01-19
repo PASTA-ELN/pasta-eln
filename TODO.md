@@ -1,14 +1,15 @@
-# Priority 1
+# Priority 0: NOW
+
+# Priority 1: Next days
 - Ask HT
 - Tests
 - small things: each meeting some
-- Server-Actions: GUI
+- Server-Actions: GUI? CLI!
 
 # Priority 2
 - have discussion with Georg, KIT
 - (HT) replace documentation
 - reduce self.
-- rename into backend; the whole thing together is pasta
 - more logging
 
 # Priority 3

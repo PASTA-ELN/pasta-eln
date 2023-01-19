@@ -8,18 +8,17 @@ class Database:
   """
   Class for interaction with couchDB
   """
-  def __init__(self, user, password, databaseName, confirm, **kwargs):
+  def __init__(self, user, password, databaseName, configGUI, **kwargs):
     """
     Args:
-        user (string): user name to local database
-        password (string): password to local database
-        databaseName (string): local database name
-        confirm (function): confirm changes to database and file-tree
-        kwargs (dict): additional parameter
+      user (string): user name to local database
+      password (string): password to local database
+      databaseName (string): local database name
+      configGUI (dict): configuration of GUI elements
+      kwargs (dict): additional parameter
     """
     import json
     from cloudant.client import CouchDB
-    self.confirm = confirm
     try:
       self.client = CouchDB(user, password, url='http://127.0.0.1:5984', connect=True)
     except:
@@ -35,25 +34,28 @@ class Database:
       if '-ontology-' in self.db:
         print('Info: remove old ontology')
         self.db['-ontology-'].delete()
-      _ = self.db.create_document(json.loads(defaultOntology))
-    # check if default views exist and create them
-    self.ontology    = self.db['-ontology-']
+      self.ontology = json.loads(defaultOntology)
+      _ = self.db.create_document(self.ontology)
+      self.initViews(configGUI)
+    self.ontology = self.db['-ontology-']
+    if '-version' not in self.ontology or self.ontology['-version']!=2:
+      print("**ERROR wrong ontology version")
+      raise Exception("Wrong ontology version")
+    self.dataLabels = {i:self.ontology[i]['label'] for i in self.ontology if i[0] not in ['_','-']}
     return
 
 
-  def initViews(self, docTypesLabels, magicTags=['TODO','v1'], guiMaxColumns=16):
+  def initViews(self, configGUI):
     """
     initialize all views
 
     Args:
-      docTypesLabels (list): pair of (docType,docLabel) used to create views
-      magicTags (list): magic tags used for view creation
-      guiMaxColumns (int): max. colums in view
+      configGUI (dict): configuration of GUI elements
     """
     # for the individual docTypes
     jsDefault = "if ($docType$) {emit($key$, [$outputList$]);}"
     viewCode = {}
-    for docType in docTypesLabels:
+    for docType in [i for i in self.ontology if i[0] not in ['_','-']]:
       if docType=='x0':
         jsString = jsDefault.replace('$docType$', "doc['-type']=='x0'").replace('$key$','doc._id')
       elif docType[0]=='x':
@@ -61,8 +63,8 @@ class Database:
       else:     #show all doctypes that have the same starting ..
         jsString = jsDefault.replace('$docType$', "doc['-type'].join('/').substring(0, "+str(len(docType))+")=='"+docType+"'").replace('$key$','doc["-branch"][0].stack[0]')
       outputList = []
-      for idx,item in enumerate(self.ontology[docType]):
-        if idx>guiMaxColumns:
+      for idx,item in enumerate(self.ontology[docType]['prop']):
+        if idx>configGUI['tableColumnsMax']:
           break
         if 'name' not in item:
           continue
@@ -101,7 +103,8 @@ class Database:
     jsSHA= "if (doc['-type'][0]==='measurement'){emit(doc.shasum, doc['-name']);}"
     jsQR = "if (doc.qrCode.length > 0)"
     jsQR+= "{doc.qrCode.forEach(function(thisCode) {emit(thisCode, doc['-name']);});}"
-    jsTags=str(magicTags)+".forEach(function(tag){if(doc.tags.indexOf('#'+tag)>-1) emit('#'+tag, doc['-name']);});"
+    tags = configGUI['magicTags'] + configGUI['defaultTags']
+    jsTags=str(tags)+".forEach(function(tag){if(doc.tags.indexOf('#'+tag)>-1) emit('#'+tag, doc['-name']);});"
     views = {'viewQR':jsQR, 'viewSHAsum':jsSHA, 'viewTags':jsTags}
     self.saveView('viewIdentify', views)
     return
@@ -152,15 +155,12 @@ class Database:
     if '-branch' in doc and 'op' in doc['-branch']:
       del doc['-branch']['op']  #remove operation, saveDoc creates and therefore always the same
       doc['-branch'] = [doc['-branch']]
-    if self.confirm is None or self.confirm(doc,"Create this document?"):
-      try:
-        res = self.db.create_document(doc)
-      except:
-        print('**ERROR: database.py:saveDoc could not save, likely JSON issue')
-        print(doc)
-        res=None
-    else:
-      res = doc
+    try:
+      res = self.db.create_document(doc)
+    except:
+      print('**ERROR: database.py:saveDoc could not save, likely JSON issue')
+      print(doc)
+      res=None
     return res
 
 
@@ -265,18 +265,17 @@ class Database:
       if nothingChanged:
         return newDoc
     #For both cases: delete and update
-    if self.confirm is None or self.confirm({'new':newDoc,'old':oldDoc},"Update this document?"):
-      try:
-        newDoc.save()
-      except:
-        print('**ERROR: could not update document. Likely version conflict. Initial and current version:')
-        print(initialDocCopy)
-        print(newDoc)
-        return None
-      attachmentName = 'v0.json'
-      if '_attachments' in newDoc:
-        attachmentName = 'v'+str(len(newDoc['_attachments']))+'.json'
-      newDoc.put_attachment(attachmentName, 'application/json', json.dumps(oldDoc))
+    try:
+      newDoc.save()
+    except:
+      print('**ERROR: could not update document. Likely version conflict. Initial and current version:')
+      print(initialDocCopy)
+      print(newDoc)
+      return None
+    attachmentName = 'v0.json'
+    if '_attachments' in newDoc:
+      attachmentName = 'v'+str(len(newDoc['_attachments']))+'.json'
+    newDoc.put_attachment(attachmentName, 'application/json', json.dumps(oldDoc))
     return newDoc
 
 
@@ -588,7 +587,7 @@ class Database:
             if not item.startswith('x-'):
               outstring+= f'{Bcolors.FAIL}**ERROR dch03: non-text in stack '+doc['_id']+f'{Bcolors.ENDC}\n'
 
-          if len(branch['stack'])==0 and doc['-type']!=['x','project']: #if no inheritance
+          if len(branch['stack'])==0 and doc['-type']!=['x0']: #if no inheritance
             if doc['-type'][0] == 'measurement' or  doc['-type'][0][0] == 'x':
               if verbose:
                 outstring+= f'{Bcolors.WARNING}**warning branch stack length = 0: no parent '+doc['_id']+f'{Bcolors.ENDC}\n'

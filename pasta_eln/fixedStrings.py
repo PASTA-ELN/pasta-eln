@@ -3,24 +3,25 @@
 defaultOntology = """
 {
   "_id":"-ontology-",
+  "-version":2,
 
-  "x0": [
-    {"name":"-name",     "query":"What is the project's name?"},
+  "x0": {"link":"", "label":"Projects", "prop":[
+    {"name":"-name",    "query":"What is the project's name?"},
     {"name":"status",   "query":"What is the project status", "list":["active","paused","passive","finished"]},
     {"name":"objective","query":"What is the objective?"},
     {"name":"tags"},
     {"name":"comment",  "query":"#tags comments remarks :field:value:"}
-  ],
-  "x1": [
-    {"name":"-name",     "query":"What is the name of task?"},
+  ]},
+  "x1": {"link":"", "label":"Tasks", "prop":[
+    {"name":"-name",    "query":"What is the name of task?"},
     {"name":"comment",  "query":"#tags comments remarks :field:value:"}
-  ],
-  "x2": [
-    {"name":"-name",     "query":"What is the name of subtask?"},
+  ]},
+  "x2": {"link":"", "label":"Subtasks", "prop":[
+    {"name":"-name",    "query":"What is the name of subtask?"},
     {"name":"comment",  "query":"#tags comments remarks :field:value:"}
-  ],
+  ]},
 
-  "measurement": [
+  "measurement": {"link":"", "label":"Measurements", "prop":[
     {"name":"-name",       "query":"What is the file name?"},
     {"name":"tags"},
     {"name":"comment",    "query":"#tags comments remarks :field:value:"},
@@ -29,25 +30,25 @@ defaultOntology = """
     {"name":"-curated"},
     {"name":"sample",     "query":"Which sample was used?",     "list":"sample"},
     {"name":"procedure",  "query":"Which procedure was used?",  "list":"procedure"}
-  ],
-  "sample": [
+  ]},
+  "sample": {"link":"", "label":"Samples", "prop":[
     {"name":"-name",       "query":"What is the name / identifier of the sample?"},
     {"name":"chemistry",  "query":"What is its chemical composition?"},
     {"name":"tags"},
     {"name":"comment",    "query":"#tags comments remarks :field:value:"},
     {"name":"qrCode"}
-  ],
-  "procedure": [
+  ]},
+  "procedure": {"link":"", "label":"Procedures", "prop":[
     {"name":"-name",       "query":"What is the name / path?"},
     {"name":"tags"},
     {"name":"comment",    "query":"#tags comments :field:value: e.g. #SOP_v1"},
     {"name":"content",    "query":"What is procedure (Markdown possible; autofilled if file given)?"}
-  ],
-  "instrument": [
+  ]},
+  "instrument": {"link":"", "label":"Instruments", "prop":[
     {"name":"-name",       "query":"What is the name / path?"},
     {"name":"comment",    "query":"#tags comments :field:value: e.g. #SOP_v1"},
     {"name":"vendor",     "query":"Who is the vendor?"}
-  ]
+  ]}
 }
 """
 
