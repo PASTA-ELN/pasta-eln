@@ -56,18 +56,20 @@ class MainWindow(QMainWindow):
 ## Main function
 def main():
   """ Main method and entry point for commands """
+  app = QApplication()
+  window = MainWindow()
+  # logging
   logPath = Path.home()/'pastaELN.log'
-  #old versions of basicConfig do not know "encoding='utf-8'"
+  #  old versions of basicConfig do not know "encoding='utf-8'"
+  logLevel = getattr(logging, window.backend.configuration['GUI']['loggingLevel'])
   logging.basicConfig(filename=logPath, level=logging.INFO, format='%(asctime)s|%(levelname)s:%(message)s',
-                      datefmt='%m-%d %H:%M:%S')   #TODO_P1 this loggingWarning goes into configuration
+                      datefmt='%m-%d %H:%M:%S')
   for package in ['urllib3', 'requests', 'asyncio', 'datalad', 'PIL', 'matplotlib.font_manager']:
     logging.getLogger(package).setLevel(logging.WARNING)
   logging.info('Start PASTA GUI')
-  app = QApplication()
-  window = MainWindow()
-  if 'GUI' in window.backend.configuration and 'theme' in window.backend.configuration['GUI']:  #GUI2 vs GUI prepare for both
-    theme = window.backend.configuration['GUI']['theme']
-    apply_stylesheet(app, theme=theme+'.xml')
+  # remainder
+  theme = window.backend.configuration['GUI']['theme']
+  apply_stylesheet(app, theme=theme+'.xml')
   window.show()
   app.exec()
   logging.info('End PASTA GUI')

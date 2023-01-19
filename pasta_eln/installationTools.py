@@ -372,7 +372,6 @@ def configuration(command='test', user='', password='', pathPasta=''):
     "sidebarWidth": 200,
     "magicTags": ["P1", "P2", "P3", "TODO", "DOING", "WAIT", "DONE"],
     "defaultTags": ["Research","Administration"],
-    "verbosePrint": 1,
     "loggingLevel": "INFO",
     "tableColumns": {},
     "tableColumnsMax": 16}
@@ -605,7 +604,7 @@ def main():
   logPath = Path.home()/'pastaELN.log'
   #old versions of basicConfig do not know "encoding='utf-8'"
   logging.basicConfig(filename=logPath, level=logging.INFO, format='%(asctime)s|%(levelname)s:%(message)s',
-                      datefmt='%m-%d %H:%M:%S')   #TODO_P1 this loggingWarning goes into configuration
+                      datefmt='%m-%d %H:%M:%S')   #This logging is always info, since for installation only
   for package in ['urllib3', 'requests', 'asyncio', 'datalad', 'PIL', 'matplotlib.font_manager']:
     logging.getLogger(package).setLevel(logging.WARNING)
   logging.info('Start PASTA Install')

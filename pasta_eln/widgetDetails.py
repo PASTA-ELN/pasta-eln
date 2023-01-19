@@ -104,8 +104,7 @@ class Details(QScrollArea):
         if self.doc['image'].startswith('data:image/'): #jpg or png image
           byteArr = QByteArray.fromBase64(bytearray(self.doc[key][22:], encoding='utf-8'))
           image = QImage()
-          imageType = self.doc[key][11:15].upper()
-          print(imageType)  #TODO_P1 not sure it is good for png and jpg: JPG;
+          imageType = self.doc[key][11:14].upper()
           image.loadFromData(byteArr, imageType)
           pixmap = QPixmap.fromImage(image)
           label = QLabel()
