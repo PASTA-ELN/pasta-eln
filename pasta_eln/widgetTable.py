@@ -1,7 +1,7 @@
 """ widget that shows the table of the items """
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem, QLabel   # pylint: disable=no-name-in-module
 from PySide6.QtCore import Slot               # pylint: disable=no-name-in-module
-from .style import TextButton
+from .style import TextButton, Label
 
 class Table(QWidget):
   """ widget that shows the table of the items """
@@ -22,12 +22,8 @@ class Table(QWidget):
     mainL = QVBoxLayout()
     headerW = QWidget()
     headerL = QHBoxLayout(headerW)
-    self.headline = QLabel()  #TODO_P1 could become style
-    self.headline.setStyleSheet('font-size: 14pt')
-    headerL.addWidget(self.headline)
-    self.addBtn = TextButton('Add',self.addItem)  #TODO_P1: initial button hide in constructor
-    self.addBtn.hide()
-    headerL.addWidget(self.addBtn)
+    self.headline = Label('','h1', headerL)
+    self.addBtn = TextButton('Add',self.addItem, headerL, hide=True)
     mainL.addWidget(headerW)
     self.table = QTableWidget(self)
     self.table.cellClicked.connect(self.cellClicked)

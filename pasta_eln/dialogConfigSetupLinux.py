@@ -44,8 +44,7 @@ class ConfigurationSetup(QWidget):
     footerW = QWidget()
     screen1L.addWidget(footerW)
     footerL = QHBoxLayout(footerW)
-    self.button1 = TextButton('Start analyse and repair', self.analyse)
-    footerL.addWidget(self.button1)
+    self.button1 = TextButton('Start analyse and repair', self.analyse, footerL)
 
 
   def callbackProgress(self, number):

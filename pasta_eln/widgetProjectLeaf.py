@@ -1,8 +1,9 @@
 """ Widget that shows a leaf in the project tree """
-from PySide6.QtWidgets import QWidget, QHBoxLayout, QFormLayout, QLabel, QSizePolicy, QApplication  # pylint: disable=no-name-in-module
-from PySide6.QtCore import Qt, Slot, QByteArray, QSize, QMimeData # pylint: disable=no-name-in-module
-from PySide6.QtSvgWidgets import QSvgWidget       # pylint: disable=no-name-in-module
-from PySide6.QtGui import QPixmap, QImage, QDrag         # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QWidget, QHBoxLayout, QFormLayout, QLabel, QApplication  # pylint: disable=no-name-in-module
+from PySide6.QtCore import Qt, Slot, QSize, QMimeData # pylint: disable=no-name-in-module
+from PySide6.QtGui import QDrag         # pylint: disable=no-name-in-module
+
+from .style import Image
 
 class Leaf(QWidget):
   """ Widget that shows a leaf in the project tree """
@@ -19,28 +20,11 @@ class Leaf(QWidget):
       leftL  = QFormLayout(leftW)
       mainL.addWidget(leftW)
       rightW = QWidget()
-      rightW.setMaximumSize(QSize(300,200))  #TODO_P1 set size configuration, dialog
+      rightW.setMaximumWidth(comm.backend.configuration['GUI']['imageWidthProject'])
+      rightW.setMaximumHeight(int(comm.backend.configuration['GUI']['imageWidthProject']/3*2))
       rightL = QHBoxLayout(rightW)
       if 'image' in doc and doc['image']!='': #show image
-        #similar in widgetDetails
-        if doc['image'].startswith('data:image/'): #jpg or png image
-          byteArr = QByteArray.fromBase64(bytearray(doc['image'][22:], encoding='utf-8'))
-          imageW = QImage()
-          imageType = doc['image'][11:15].upper()
-          imageW.loadFromData(byteArr, imageType)
-          pixmap = QPixmap.fromImage(imageW)
-          label = QLabel()
-          label.setPixmap(pixmap)
-          rightL.addWidget(label)
-        elif doc['image'].startswith('<?xml'): #svg image
-          imageW = QSvgWidget()
-          policy = imageW.sizePolicy()
-          policy.setVerticalPolicy(QSizePolicy.Fixed)
-          imageW.setSizePolicy(policy)
-          imageW.renderer().load(bytearray(doc['image'], encoding='utf-8'))
-          rightL.addWidget(imageW)
-        else:
-          print('WidgetProjectLeaf:What is this image |'+doc['image'][:50]+'|')
+        Image(doc['image'], rightL)
       else: #show content
         rightL.addWidget(QLabel(doc['content']))
       mainL.addWidget(rightW)

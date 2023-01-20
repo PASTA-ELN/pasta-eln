@@ -10,8 +10,9 @@ class Sidebar(QWidget):
   def __init__(self, comm):
     super().__init__()
     self.comm = comm
-    self.setMinimumWidth(200)
-    self.setMaximumWidth(200)
+    width = self.comm.backend.configuration['GUI']['sidebarWidth']
+    self.setMinimumWidth(width)
+    self.setMaximumWidth(width)
 
     # GUI elements
     mainL = QVBoxLayout()
@@ -25,15 +26,14 @@ class Sidebar(QWidget):
 
     if hasattr(comm.backend.db, 'dataLabels'):
       # All projects
-      btn = TextButton('All projects', self.btnDocType, 'x0/')
-      mainL.addWidget(btn)
+      btn = TextButton('All projects', self.btnDocType, mainL, 'x0/')
       # Add other data types
       dTypeW = QWidget()
       dTypeL = QGridLayout(dTypeW)
       dTypeL.setContentsMargins(0,0,0,0)
       for idx, doctype in enumerate(comm.backend.db.dataLabels):
         if doctype[0]!='x':
-          button = LetterButton(comm.backend.db.dataLabels[doctype], self.btnDocType, doctype+'/')
+          button = LetterButton(comm.backend.db.dataLabels[doctype], self.btnDocType, None, doctype+'/')
           dTypeL.addWidget(button, int(idx/3), idx%3)
       mainL.addWidget(dTypeW)
 
@@ -45,9 +45,7 @@ class Sidebar(QWidget):
           if node.docType[0][0]!='x':
             continue
           if node.docType[0]=='x0':
-            button = TextButton(node.name, self.btnProject, node.id+'/')
-            button.setStyleSheet('margin-top: 30')
-            mainL.addWidget(button)
+            button = TextButton(node.name, self.btnProject, mainL, node.id+'/', style='margin-top: 30')
             projectW = QWidget()
             projectW.hide()
             projectL = QVBoxLayout(projectW)
@@ -59,7 +57,7 @@ class Sidebar(QWidget):
             dTypeL.setContentsMargins(0,0,0,0)
             for idx, doctype in enumerate(comm.backend.db.dataLabels):
               if doctype[0]!='x':
-                button = LetterButton(comm.backend.db.dataLabels[doctype], self.btnDocType, doctype+'/'+currentID)
+                button = LetterButton(comm.backend.db.dataLabels[doctype], self.btnDocType, None, doctype+'/'+currentID)
                 dTypeL.addWidget(button, int(idx/3), idx%3)
             # create widgets
             projectL.addWidget(dTypeW)
@@ -68,13 +66,12 @@ class Sidebar(QWidget):
             self.widgetsHidden[currentID] = True
             mainL.addWidget(projectW)
           if node.docType[0]=='x1':
-            button = TextButton(node.name, self.btnProject, currentID+'/'+node.id)  #icon with no text
-            button.setStyleSheet('margin-left: 20')
-            self.layouts[currentID].addWidget(button)
+            button = TextButton(node.name, self.btnProject, self.layouts[currentID], currentID+'/'+node.id, \
+                                style='margin-left: 20')
 
     # Other buttons
     mainL.addStretch(1)
-    mainL.addWidget(IconButton('fa.gear', self.btnConfig, backend=self.comm.backend))
+    IconButton('fa.gear', self.btnConfig, mainL, backend=self.comm.backend)
     if not hasattr(comm.backend.db, 'dataLabels'):  #if no backend
       configWindow = Configuration(comm.backend, 'setup')
       configWindow.exec()

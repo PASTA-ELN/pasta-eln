@@ -1,10 +1,10 @@
 """ widget that shows the details of the items """
 import json
-from PySide6.QtWidgets import QScrollArea, QWidget, QVBoxLayout, QLabel, QSizePolicy   # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QScrollArea, QWidget, QVBoxLayout, QLabel   # pylint: disable=no-name-in-module
 from PySide6.QtCore import Qt, Slot, QByteArray   # pylint: disable=no-name-in-module
 from PySide6.QtSvgWidgets import QSvgWidget       # pylint: disable=no-name-in-module
 from PySide6.QtGui import QPixmap, QImage         # pylint: disable=no-name-in-module
-from .style import TextButton
+from .style import TextButton, Image
 
 class Details(QScrollArea):
   """ widget that shows the details of the items """
@@ -22,46 +22,36 @@ class Details(QScrollArea):
     self.setWidgetResizable(True)
     self.setWidget(self.mainW)
 
-    self.editBtn = TextButton('Edit',self.callEdit)
-    self.editBtn.hide()
-    self.mainL.addWidget(self.editBtn)
+    self.editBtn = TextButton('Edit',self.callEdit, self.mainL, hide=True)
     self.imageW = QWidget()
-    self.imageW.setMinimumHeight(400)  #TODO_P1 change in configuration, dialog
+    self.imageW.setMinimumWidth(self.comm.backend.configuration['GUI']['imageWidthDetails'])
     self.imageL = QVBoxLayout(self.imageW)
 
     #TODO_P2 include extractor change
 
     self.mainL.addWidget(self.imageW)
-    self.btnDetails = TextButton('Details', self.showArea, 'Details', 'Show / hide details', True)
-    self.btnDetails.hide()
-    self.mainL.addWidget(self.btnDetails)
+    self.btnDetails = TextButton('Details', self.showArea, self.mainL, 'Details', 'Show / hide details', \
+                                  checkable=True, hide=True)
     self.metaDetailsW  = QWidget()
     self.metaDetailsL = QVBoxLayout(self.metaDetailsW)
     self.mainL.addWidget(self.metaDetailsW)
-    self.btnVendor = TextButton('Vendor metadata', self.showArea, 'Vendor', 'Show / hide vendor metadata', True)
-    self.btnVendor.setStyleSheet("margin-top: 15px")
-    self.btnVendor.hide()
-    self.mainL.addWidget(self.btnVendor)
+    self.btnVendor = TextButton('Vendor metadata', self.showArea, self.mainL, 'Vendor', \
+      'Show / hide vendor metadata', checkable=True, hide=True, style="margin-top: 15px")
     self.metaVendorW   = QWidget()
     self.metaVendorL = QVBoxLayout(self.metaVendorW)
     self.mainL.addWidget(self.metaVendorW)
-    self.btnUser = TextButton('User metadata', self.showArea, 'User', 'Show / hide user metadata', True)
-    self.btnUser.setStyleSheet("margin-top: 15px")
-    self.btnUser.hide()
-    self.mainL.addWidget(self.btnUser)
+    self.btnUser = TextButton('User metadata', self.showArea, self.mainL, 'User', 'Show / hide user metadata',\
+      checkable=True, hide=True, style="margin-top: 15px")
     self.metaUserW     = QWidget()
     self.metaUserL = QVBoxLayout(self.metaUserW)
     self.mainL.addWidget(self.metaUserW)
-    self.btnDatabase = TextButton('Database details', self.showArea, 'Database', 'Show / hide database details', True)
-    self.btnDatabase.setStyleSheet("margin-top: 15px")
-    self.btnDatabase.hide()
-    self.mainL.addWidget(self.btnDatabase)
+    self.btnDatabase = TextButton('Database details', self.showArea, self.mainL, 'Database', \
+      'Show / hide database details', checkable= True, hide=True, style="margin-top: 15px")
     self.metaDatabaseW = QWidget()
     self.metaDatabaseL = QVBoxLayout(self.metaDatabaseW)
     self.mainL.addWidget(self.metaDatabaseW)
     self.mainL.addStretch(1)
 
-  #Textbutton initially unchecked: database details
 
   @Slot(str)
   def changeDetails(self, docID):
@@ -74,10 +64,10 @@ class Details(QScrollArea):
     # show previously hidden buttons
     if docID!='':
       self.editBtn.show()
-    self.btnDetails.show()
-    self.btnVendor.show()
-    self.btnUser.show()
-    self.btnDatabase.show()
+      self.btnDetails.show()
+      self.btnVendor.show()
+      self.btnUser.show()
+      self.btnDatabase.show()
     # Delete old widgets from layout
     if self.metaDetailsL.itemAt(0) is not None:
       self.metaDetailsL.itemAt(0).widget().setParent(None)
@@ -100,32 +90,13 @@ class Details(QScrollArea):
     self.doc   = self.comm.backend.db.getDoc(docID)
     for key in self.doc:
       if key=='image':
-        #similar in widgetProjectLeaf
-        if self.doc['image'].startswith('data:image/'): #jpg or png image
-          byteArr = QByteArray.fromBase64(bytearray(self.doc[key][22:], encoding='utf-8'))
-          image = QImage()
-          imageType = self.doc[key][11:14].upper()
-          image.loadFromData(byteArr, imageType)
-          pixmap = QPixmap.fromImage(image)
-          label = QLabel()
-          label.setPixmap(pixmap)
-          self.imageL.addWidget(label)
-        elif self.doc['image'].startswith('<?xml'): #svg image
-          image = QSvgWidget()
-          policy = image.sizePolicy()
-          policy.setVerticalPolicy(QSizePolicy.Fixed)
-          image.setSizePolicy(policy)
-          image.renderer().load(bytearray(self.doc[key], encoding='utf-8'))
-          self.imageL.addWidget(image)
-          self.imageW.show()
-        else:
-          print('widgetDetails:image?',self.doc['image'][:50])
+        Image(self.doc['image'], self.imageL)
         self.imageW.show()
       elif key.startswith('_') or key.startswith('-'):
         label = QLabel(key+': '+str(self.doc[key]))
         label.setWordWrap(True)
         self.metaDatabaseL.addWidget(label)
-        self.metaDatabaseW.show()
+        self.btnDatabase.setChecked(False)
       elif key=='metaVendor':
         label = QLabel()
         label.setWordWrap(True)
