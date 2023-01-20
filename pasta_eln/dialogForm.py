@@ -38,6 +38,17 @@ class Form(QDialog):
     buttonBox.clicked.connect(self.save)
     mainL.addWidget(buttonBox)
 
+  #TODO_P5 what to do if unidentified datatype '--aoeuaoeu' is edited: create questionare with these
+  # ontologyNode = [{"name": "-name","query": "What is the name of task?"},
+  #               {"name": "comment","query": "#tags comments remarks :field:value:"},
+  #               {"name": "type", "query": "What should be the type","list":["sample","measurement","procedure","instrument"] }]
+  # if (docRaw['-type'][0]=='-' && docRaw['type']) { //undefined doctype was redefined
+  #   docRaw['-type']=docRaw['type'].split('/');
+  #   if (docRaw['type']=='measurement')
+  #     docRaw['image']='';
+  #   delete docRaw['type'];
+  # }
+
   def save(self, btn):
     """
     Action upon save / cancel

@@ -1,5 +1,6 @@
 """extract data from .csv file
 """
+import re
 from io import StringIO
 import numpy as np
 import matplotlib.pyplot as plt
@@ -16,7 +17,14 @@ def use(filePath, recipe='', saveFileName=None):
     dict: containing image, metaVendor, metaUser, recipe
   """
   # Extractor for fancy instrument
-  data = np.loadtxt(filePath, delimiter=',')
+  with open(filePath, encoding='utf-8') as fIn:
+    startRow = 0
+    while True:
+      if len(re.findall('[a-zA-Z]', fIn.readline()))==0:
+        break
+      startRow+=1
+  data = np.loadtxt(filePath, delimiter=',', skiprows=startRow)
+
   if recipe.endswith('red'):              #: Draw with red curve
     plt.plot(data[:,0], data[:,1],'r')
   else:                                   #: Default | blueish curve

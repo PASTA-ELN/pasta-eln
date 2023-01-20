@@ -32,10 +32,15 @@ class Backend(CLI_Mixin):
           - resetOntology (bool): reset ontology on database from one on file
     """
     ## CONFIGURATION FOR DATALAD and GIT: has to move to dictionary
-    self.vanillaGit = ['*.md','*.rst','*.org','*.tex','*.py','.id_pastaELN.json'] #tracked but in git;
+    self.vanillaGit = ['*'] #tracked but in git;
     #   .id_pastaELN.json has to be tracked by git (if ignored: they don't appear on git-status; they have to change by PASTA)
-    self.gitIgnore = ['*.log','.vscode/','*.xcf','*.css'] #misc
-    self.gitIgnore+= ['*.bcf','*.run.xml','*.synctex.gz','*.aux']#latex files
+    self.gitIgnore = ['.*'] #misc
+    #TODO_P3 save version, to change in .pastaELN.json
+    # self.vanillaGit = ['*.md','*.rst','*.org','*.tex','*.py','.id_pastaELN.json'] #tracked but in git;
+    # #   .id_pastaELN.json has to be tracked by git (if ignored: they don't appear on git-status; they have to change by PASTA)
+    # self.gitIgnore = ['*.log','.vscode/','*.xcf','*.css'] #misc
+    # self.gitIgnore+= ['*.bcf','*.run.xml','*.synctex.gz','*.aux']#latex files
+    ##End save version
     #initialize basic values
     self.hierStack = []
     self.currentID = ""
@@ -381,7 +386,7 @@ class Backend(CLI_Mixin):
     #   git-annex output is nice to parse
     fileList = annexrepo.AnnexRepo(self.basePath/self.cwd).status()
     dlDataset = datalad.Dataset(self.basePath/self.cwd)
-    #create dictionary that has shasum as key and [origin and target] as value
+    #create dictionary that has shasum as key and [[origins],[target]] as value
     shasumDict = {}   #clean ones are omitted
     for path in fileList:
       #Stay absolute fileName = path.relative_to(self.basePath/self.cwd)
@@ -402,85 +407,90 @@ class Backend(CLI_Mixin):
         else:
           print('**ERROR Could not repair dead symlink', deadtarget, newPath,' SKIP FILE')
           continue
-      if fileList[path]['state']=='untracked':
+      if fileList[path]['state']=='untracked':  #new file
         shasum = generic_hash(path)
         if shasum in shasumDict:
-          shasumDict[shasum] = [shasumDict[shasum][0], path]
+          shasumDict[shasum][1] += [path]
         else:
-          shasumDict[shasum] = ['', path]
+          shasumDict[shasum] = [[], [path]]
       if fileList[path]['state']=='deleted':
         shasum = fileList[path]['prev_gitshasum']
-        if shasum in shasumDict:
-          shasumDict[shasum] = [path, shasumDict[shasum][1]]
+        if shasum in shasumDict:  #moved file: 'new' file is scanned first, deleted file scanned second
+          shasumDict[shasum][0] += [path]
         else:
-          shasumDict[shasum] = [path, '']
+          shasumDict[shasum] = [[path], []]
       if fileList[path]['state']=='modified':
         shasum = fileList[path]['gitshasum']
-        shasumDict[shasum] = ['', path] #new content is same place. No moving necessary, just "new file"
+        shasumDict[shasum][1] = [path] #new content is same place. No moving necessary, just "new file"
 
     # loop all entries and separate into moved,new,deleted
-    print("Number of changed files:",len(shasumDict))
-    for _, (origin, target) in shasumDict.items():
-      print("  File changed:",origin,'->',target)
-      # originDir, _ = o..s.path.split(self.cwd+origin)
-      # find hierStack and parentID of new TARGET location: for new and move
-      if target != '':
-        targetDir = target.parent
-        if not target.exists(): #if dead link
-          linkTarget = target.resolve()
-          for dirI in self.basePath.glob('*'):
-            if (self.basePath/dirI).is_dir():
-              path = self.basePath/dirI/linkTarget
-              if path.exists():
-                target.unlock()
-                shutil.copy(path,target)
-                break
-        parentID = None
-        itemTarget = -1
-        while parentID is None:
-          view = self.db.getView('viewHierarchy/viewPaths', \
-            startKey=targetDir.relative_to(self.basePath).as_posix())
-          for item in view:
-            if item['key']==targetDir.relative_to(self.basePath).as_posix():
-              parentID = item['id']
-              itemTarget = item
-          targetDir = targetDir.parent
-        parentDoc = self.db.getDoc(parentID)
-        hierStack = parentDoc['-branch'][0]['stack']+[parentID]
-      ### separate into two cases
-      # newly created file
-      if origin == '':
-        newDoc    = {'-name':str(target)}
-        _ = self.addData('measurement', newDoc, hierStack, callback=callback)  #saved to datalad in here
-      # move or delete file
-      else:
-        #update to datalad
-        if target == '':
-          dlDataset.save(path=origin, message='Removed file')
+    for _, (origins, targets) in shasumDict.items():
+      for idx in range( max(len(origins),len(targets)) ):
+        origin = origins[idx] if idx<len(origins) else ''
+        target = targets[idx] if idx<len(targets) else ''
+        print("  File changed:",origin,'->',target)
+        # originDir, _ = o..s.path.split(self.cwd+origin)
+        # find hierStack and parentID of new TARGET location: for new and move
+        if target != '':
+          targetDir = target.parent
+          if not target.exists(): #if dead link
+            linkTarget = target.resolve()
+            for dirI in self.basePath.glob('*'):
+              if (self.basePath/dirI).is_dir():
+                path = self.basePath/dirI/linkTarget
+                if path.exists():
+                  target.unlock()
+                  shutil.copy(path,target)
+                  break
+          parentID = None
+          itemTarget = -1
+          while parentID is None:
+            view = self.db.getView('viewHierarchy/viewPaths', \
+              startKey=targetDir.relative_to(self.basePath).as_posix())
+            for item in view:
+              if item['key']==targetDir.relative_to(self.basePath).as_posix():
+                parentID = item['id']
+                itemTarget = item
+            targetDir = targetDir.parent
+          parentDoc = self.db.getDoc(parentID)
+          hierStack = parentDoc['-branch'][0]['stack']+[parentID]
+        ### separate into two cases
+        # newly created file
+        if origin == '':
+          newDoc    = {'-name':str(target)}
+          _ = self.addData('measurement', newDoc, hierStack, callback=callback)  #saved to datalad in here
+        # move or delete file
         else:
-          dlDataset.save(path=origin, message='Moved file from here to '+str(self.cwd/target)   )
-          dlDataset.save(path=target, message='Moved file from '+str(self.cwd/origin)+' to here')
-        #get docID
-        if origin!='' and origin.name == '.id_pastaELN.json':  #if origin has .id_pastaELN.json: parent directory has moved
-          origin = origin.parent
-        if target!='' and target.name == '.id_pastaELN.json':
-          target = target.parent
-        view = self.db.getView('viewHierarchy/viewPaths',
-                                preciseKey=(self.cwd/origin).relative_to(self.basePath).as_posix())
-        if len(view)==1:
-          docID = view[0]['id']
-          if target == '':       #delete
-            self.db.updateDoc( {'-branch':{'path':  (self.cwd/origin).relative_to(self.basePath).as_posix(),\
-                                          'oldpath':(self.cwd/origin).relative_to(self.basePath).as_posix(),\
-                                          'stack':[None],\
-                                          'child':-1,\
-                                          'op':'d'}}, docID)
-          else:                  #update
-            self.db.updateDoc( {'-branch':{'path':  (self.cwd/target).relative_to(self.basePath).as_posix(),\
-                                          'oldpath':(self.cwd/origin).relative_to(self.basePath).as_posix(),\
-                                          'stack':hierStack,\
-                                          'child':itemTarget['value'][2],\
-                                          'op':'u'}}, docID)
+          #update to datalad
+          if target == '':
+            dlDataset.save(path=origin, message='Removed file')
+          else:
+            dlDataset.save(path=origin, message='Moved file from here to '+str(self.cwd/target)   )
+            dlDataset.save(path=target, message='Moved file from '+str(self.cwd/origin)+' to here')
+          #get docID
+          if origin!='' and origin.name == '.id_pastaELN.json':  #if origin has .id_pastaELN.json: parent directory has moved
+            origin = origin.parent
+          if target!='' and target.name == '.id_pastaELN.json':
+            target = target.parent
+          view = self.db.getView('viewHierarchy/viewPaths',
+                                  preciseKey=(self.cwd/origin).relative_to(self.basePath).as_posix())
+          if len(view)==1:
+            docID = view[0]['id']
+            if target == '':       #delete
+              self.db.updateDoc( {'-branch':{'path':  (self.cwd/origin).relative_to(self.basePath).as_posix(),\
+                                            'oldpath':(self.cwd/origin).relative_to(self.basePath).as_posix(),\
+                                            'stack':[None],\
+                                            'child':-1,\
+                                            'op':'d'}}, docID)
+            else:                  #update
+              self.db.updateDoc( {'-branch':{'path':  (self.cwd/target).relative_to(self.basePath).as_posix(),\
+                                            'oldpath':(self.cwd/origin).relative_to(self.basePath).as_posix(),\
+                                            'stack':hierStack,\
+                                            'child':itemTarget['value'][2],\
+                                            'op':'u'}}, docID)
+          else:
+            if '_pasta.' not in str(origin):  #TODO_P1 is this really needed
+              print("file not in database",self.cwd/origin)
     return
 
 
@@ -514,7 +524,7 @@ class Backend(CLI_Mixin):
       if exitAfterDataLad:
         return
       absFilePath = self.basePath/filePath
-    pyFile = 'extractor_'+extension+'.py'
+    pyFile = 'extractor_'+extension.lower()+'.py'
     pyPath = self.extractorPath/pyFile
     if len(doc['-type'])==1:
       doc['-type'] += [extension]
