@@ -306,28 +306,27 @@ def configuration(command='test', user='', password='', pathPasta=''):
       else:
         output += '**ERROR: default entry '+conf['defaultProjectGroup']+' not in links\n'
   #GUI items
-  if 'GUI' in conf:
-    guiItems = {"theme": "none",
-      "imageWidthProject": 300,
-      "imageWidthDetails": 600,
-      "sidebarWidth": 200,
-      "magicTags": ["P1", "P2", "P3", "TODO", "DOING", "WAIT", "DONE"],
-      "defaultTags": ["Research","Administration"],
-      "loggingLevel": "INFO",
-      "tableColumns": {},
-      "tableColumnsMax": 16}
-    for key, value in guiItems.items():
-      if key not in conf['GUI']:
-        if command == 'repair':
-          conf['GUI'][key] = value
-        else:
-          output += '**ERROR: key: '+key+' not in GUI configuration\n'
-  else:
+  if 'GUI' not in conf:
     if command == 'repair':
       conf['GUI'] = {}
     else:
       output += '**ERROR: No GUI in config file\n'
-  #final writing of config file
+  guiItems = {"theme": "none",
+    "imageWidthProject": 300,
+    "imageWidthDetails": 600,
+    "sidebarWidth": 200,
+    "magicTags": ["P1", "P2", "P3", "TODO", "DOING", "WAIT", "DONE"],
+    "defaultTags": ["Research","Administration"],
+    "loggingLevel": "INFO",
+    "tableColumns": {},
+    "tableColumnsMax": 16}
+  for key, value in guiItems.items():
+    if 'GUI' in conf and key not in conf['GUI']:
+      if command == 'repair':
+        conf['GUI'][key] = value
+      else:
+        output += '**ERROR: key: '+key+' not in GUI configuration\n'
+
   if command == 'repair':
     with open(Path.home()/'.pastaELN.json','w', encoding='utf-8') as f:
       f.write(json.dumps(conf,indent=2))
