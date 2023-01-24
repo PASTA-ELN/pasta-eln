@@ -67,14 +67,13 @@ class ConfigurationSetup(QWidget):
 
     #Couchdb
     existsCouchDB = None
-    if flagContinue:
-      res = couchdb('test')
-      if res =='':
-        self.mainText = self.mainText.replace('- CouchDB','- CouchDB is installed' )
-        self.text1.setMarkdown(self.mainText)
-        existsCouchDB = True
-      else:
-        existsCouchDB = False
+    res = couchdb('test')
+    if res =='':
+      self.mainText = self.mainText.replace('- CouchDB','- CouchDB is installed' )
+      self.text1.setMarkdown(self.mainText)
+      existsCouchDB = True
+    else:
+      existsCouchDB = False
 
     #Install couchdb
     if not existsCouchDB:
@@ -84,6 +83,7 @@ class ConfigurationSetup(QWidget):
       if button == QMessageBox.Yes:
         dirName = QFileDialog.getExistingDirectory(self,'Create and select directory for scientific data',str(Path.home()))
         installLinuxRoot(existsCouchDB, dirName)
+        print('Install linux root finished')
       else:
         self.mainText = self.mainText.replace('- CouchDB','- CouchDB: user chose to NOT install' )
         self.text1.setMarkdown(self.mainText)
