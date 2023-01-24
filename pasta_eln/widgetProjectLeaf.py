@@ -81,7 +81,7 @@ class Leaf(QWidget):
     return
 
 
-  def dragEnterEvent(self, event):   # pylint: disable=no-self-use
+  def dragEnterEvent(self, event):  #will not cause an issue with github's pylint
     """
     Drop of Drag&Drop 1: re-implementation of drag enter event
     - which types of data do I except in which leaf

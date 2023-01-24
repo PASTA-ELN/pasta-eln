@@ -59,7 +59,7 @@ def commands(getDocu, args):
         if 'extractorDir' not in configuration \
         else configuration['extractorDir']
     extractors = getExtractorConfig(pathToExtractors)
-    extractors = [extractors[i]['plots'] for i in extractors if len(extractors[i]['plots'])>0 ] #remove empty entries
+    extractors = [value['plots'] for _,value in extractors.items() if len(value['plots'])>0 ] #remove empty entries
     extractors = [i for sublist in extractors for i in sublist]   #flatten list
     extractors = {'/'.join(i):j for (i,j) in extractors}
     print('Found extractors',extractors)
