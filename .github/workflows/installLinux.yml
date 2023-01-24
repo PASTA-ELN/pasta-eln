@@ -36,7 +36,9 @@ jobs:
     - name: Installation
       run: |
         python3 -m pasta_eln.installationTools install
-        more .pastaELN.json
+    - name: Check installation - should NOT fail
+      run: |
+        python3 -m pasta_eln.installationTools
     - name: Create example data
       run: |
         python3 -m pasta_eln.installationTools example

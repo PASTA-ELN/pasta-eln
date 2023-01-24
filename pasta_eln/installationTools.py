@@ -267,6 +267,8 @@ def configuration(command='test', user='', password='', pathPasta=''):
     if command == 'repair':
       conf = createDefaultConfiguration(user, password, pathPasta)
 
+  print(json.dumps(conf, indent=2))
+
   if 'version' not in conf or conf['version']!=2:
     if command == 'repair':
       conf['version'] = 2
