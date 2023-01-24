@@ -284,7 +284,7 @@ def configuration(command='test', user='', password='', pathPasta=''):
       output += '**ERROR: No qrPrinter in config file\n'
   if 'extractorDir' not in conf:
     if command == 'repair':
-      conf['extractorsDir'] = Path(__file__).as_posix()
+      conf['extractorsDir'] = (Path(__file__).parent/'Extractors').as_posix()
     else:
       output += '**ERROR: No extractorDir in config file\n'
   if 'extractors' not in conf:
@@ -298,13 +298,13 @@ def configuration(command='test', user='', password='', pathPasta=''):
     if command == 'repair':
       conf['defaultProjectGroup'] = list(conf['projectGroups'].keys())[0]
     else:
-      output += '**ERROR: No default links in config file\n'
+      output += '**ERROR: No default projectGroups in config file\n'
   else:
     if conf['defaultProjectGroup'] not in conf['projectGroups']:
       if command == 'repair':
         conf['defaultProjectGroup'] = list(conf['projectGroups'].keys())[0]
       else:
-        output += '**ERROR: default entry '+conf['defaultProjectGroup']+' not in links\n'
+        output += '**ERROR: default entry '+conf['defaultProjectGroup']+' not in projectGroup\n'
   #GUI items
   if 'GUI' not in conf:
     if command == 'repair':

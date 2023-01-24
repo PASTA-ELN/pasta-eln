@@ -3,7 +3,6 @@ pyside6
 qt-material
 QtAwesome
 cloudant
-datalad
 pandas
 numpy
 keyring

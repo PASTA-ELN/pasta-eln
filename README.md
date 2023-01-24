@@ -45,9 +45,7 @@
 ### Restart Linux
 ``` bash
 rm .pastaELN.json
-sudo rm -rf pastaELN/pastasExampleProject
-sudo rm -rf pastaELN/StandardOperatingProcedures
-sudo apt remove git-annex
+rm -rf pastaELN/pastasExampleProject pastaELN/StandardOperatingProcedures
 sudo apt autoremove
 sudo snap stop couchdb
 sudo snap remove couchdb
