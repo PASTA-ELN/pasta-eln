@@ -284,7 +284,7 @@ def configuration(command='test', user='', password='', pathPasta=''):
       output += '**ERROR: No qrPrinter in config file\n'
   if 'extractorDir' not in conf:
     if command == 'repair':
-      conf['extractorsDir'] = (Path(__file__).parent/'Extractors').as_posix()
+      conf['extractorDir'] = (Path(__file__).parent/'Extractors').as_posix()
     else:
       output += '**ERROR: No extractorDir in config file\n'
   if 'extractors' not in conf:
