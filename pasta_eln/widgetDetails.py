@@ -24,7 +24,8 @@ class Details(QScrollArea):
 
     self.editBtn = TextButton('Edit',self.callEdit, self.mainL, hide=True)
     self.imageW = QWidget()
-    self.imageW.setMinimumWidth(self.comm.backend.configuration['GUI']['imageWidthDetails'])
+    if hasattr(self.comm.backend, 'configuration'):
+      self.imageW.setMinimumWidth(self.comm.backend.configuration['GUI']['imageWidthDetails'])
     self.imageL = QVBoxLayout(self.imageW)
 
     #TODO_P2 include extractor change

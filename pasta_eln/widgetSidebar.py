@@ -10,9 +10,10 @@ class Sidebar(QWidget):
   def __init__(self, comm):
     super().__init__()
     self.comm = comm
-    width = self.comm.backend.configuration['GUI']['sidebarWidth']
-    self.setMinimumWidth(width)
-    self.setMaximumWidth(width)
+    if hasattr(self.comm.backend, 'configuration'):
+      width = self.comm.backend.configuration['GUI']['sidebarWidth']
+      self.setMinimumWidth(width)
+      self.setMaximumWidth(width)
 
     # GUI elements
     mainL = QVBoxLayout()
@@ -24,7 +25,7 @@ class Sidebar(QWidget):
     self.layouts = {}
     self.widgetsHidden = {}
 
-    if hasattr(comm.backend.db, 'dataLabels'):
+    if hasattr(comm.backend, 'db'):
       # All projects
       TextButton('All projects', self.btnDocType, mainL, 'x0/')
       # Add other data types
@@ -72,7 +73,7 @@ class Sidebar(QWidget):
     # Other buttons
     mainL.addStretch(1)
     IconButton('fa.gear', self.btnConfig, mainL, backend=self.comm.backend)
-    if not hasattr(comm.backend.db, 'dataLabels'):  #if no backend
+    if not hasattr(comm.backend, 'db'):  #if no backend
       configWindow = Configuration(comm.backend, 'setup')
       configWindow.exec()
 

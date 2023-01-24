@@ -18,7 +18,10 @@ def getColor(backend, color):
   Returns:
     str: #123456 color code
   """
-  themeName = backend.configuration['GUI']['theme']
+  if hasattr(backend, 'configuration'):
+    themeName = backend.configuration['GUI']['theme']
+  else:
+    themeName = 'none'
   # theme = get_theme(themeName)
   # print(theme)
   ## For dark-blue:

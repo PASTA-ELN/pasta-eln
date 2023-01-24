@@ -86,38 +86,6 @@ def runAsAdminWindows(cmdLine):
   return
 
 
-def git(command='test'):
-  '''
-  WINDOWS test git installation or install it
-
-  Args:
-    command (string): 'test' or 'install'
-
-  Returns:
-    string: '' for success, filled with errors
-  '''
-  if platform.system()!='Windows':
-    return '**ERROR: git can only be tested, etc. on Windows'
-  if command == 'test':
-    if shutil.which('git') is None:
-      return '**ERROR: git not installed'
-    return ''
-  elif command == 'install':
-    logging.info('git starting ...')
-    ## Using installer that requires 14-next ;-(
-    # url = 'https://github.com/git-for-windows/git/releases/download/v2.39.0.windows.2/Git-2.39.0.2-64-bit.exe'
-    # path = Path.home()/'Downloads'/'git-installer.exe'
-    # resultFilePath, _ = urllib.request.urlretrieve(url, path)
-    # cmd = ['cmd.exe','/K ',str(resultFilePath)]
-    # _ = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)
-    ## Winget creates paths if run as admin
-    runAsAdminWindows(['winget','install','--id','Git.Git','-e','--source','winget'])
-    # os.system('winget install --id Git.Git -e --source winget')    #does not work since in user-mode
-    logging.info('git ended')
-    return 'Installed git using temporary files in Downloads'
-  return '**ERROR: Unknown command'
-
-
 def couchdb(command='test'):
   '''
   test couchDB installation or (install it on Windows-only)
@@ -560,10 +528,6 @@ def main():
   print('---- Test PASTA-ELN installation----')
   print('--   if nothing reported: it is ok.')
   print('getOS        :', getOS())
-  if platform.system()=='Windows':
-    res = git()
-    existsGit = res==''
-    print('git        :',res)
   res = couchdb()
   existsCouchDB = res==''
   print('chouchDB     :', res)
@@ -593,8 +557,6 @@ def main():
 
     elif platform.system()=='Windows':
       print('---- Create PASTA-ELN installation Windows ----')
-      if not existsGit:
-        print('install git          :', git('install'))
       if not existsCouchDB:
         print('install couchDB      :', couchdb('install'))
       if flagConfiguration:

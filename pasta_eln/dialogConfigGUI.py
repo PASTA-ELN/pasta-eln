@@ -20,20 +20,21 @@ class ConfigurationGUI(QWidget):
     self.backend = backend
 
     #GUI elements
-    self.tabAppearanceL = QFormLayout(self)
-    self.theme = self.addRowList('theme','Theme',
-      ['dark_amber','dark_blue','dark_cyan','dark_lightgreen','dark_pink','dark_purple', 'dark_red',\
-       'dark_teal','dark_yellow','light_amber','light_blue','light_cyan','light_cyan_500','light_lightgreen',\
-       'light_pink','light_purple','light_red','light_teal','light_yellow','none'])
-    self.wP = self.addRowList('imageWidthProject','Image width in project view', ['300','400','500','600'])
-    self.wD = self.addRowList('imageWidthDetails','Image width in details view', ['500','600','700','800'])
-    self.wS = self.addRowList('sidebarWidth','Sidebar width', ['200','300','400'])
-    self.log = self.addRowList('loggingLevel','Logging level (more->less)', ['DEBUG','INFO','WARNING','ERROR'])
-    self.nTC = self.addRowList('tableColumnsMax','Maximum number of table columns', ['8','16','32'])
-    self.tM = self.addRowText('magicTags','Tags that have special importance')
-    self.tD = self.addRowText('defaultTags','Tags that should be there too')
-    self.tabAppearanceL.addRow(TextButton('Save changes', self.saveData, None),
-                               TextButton('Restart PASTA-ELN', restart, None))
+    if hasattr(self.backend, 'configuration'):
+      self.tabAppearanceL = QFormLayout(self)
+      self.theme = self.addRowList('theme','Theme',
+        ['dark_amber','dark_blue','dark_cyan','dark_lightgreen','dark_pink','dark_purple', 'dark_red',\
+        'dark_teal','dark_yellow','light_amber','light_blue','light_cyan','light_cyan_500','light_lightgreen',\
+        'light_pink','light_purple','light_red','light_teal','light_yellow','none'])
+      self.wP = self.addRowList('imageWidthProject','Image width in project view', ['300','400','500','600'])
+      self.wD = self.addRowList('imageWidthDetails','Image width in details view', ['500','600','700','800'])
+      self.wS = self.addRowList('sidebarWidth','Sidebar width', ['200','300','400'])
+      self.log = self.addRowList('loggingLevel','Logging level (more->less)', ['DEBUG','INFO','WARNING','ERROR'])
+      self.nTC = self.addRowList('tableColumnsMax','Maximum number of table columns', ['8','16','32'])
+      self.tM = self.addRowText('magicTags','Tags that have special importance')
+      self.tD = self.addRowText('defaultTags','Tags that should be there too')
+      self.tabAppearanceL.addRow(TextButton('Save changes', self.saveData, None),
+                                TextButton('Restart PASTA-ELN', restart, None))
 
 
   def addRowList(self, item, label, itemList):

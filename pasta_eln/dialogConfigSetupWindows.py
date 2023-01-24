@@ -4,8 +4,8 @@ from pathlib import Path
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTextEdit, QMessageBox, QInputDialog, QFileDialog, QProgressBar   # pylint: disable=no-name-in-module
 
 from .style import TextButton
-from .installationTools import git, couchdb, couchdbUserPassword, configuration, ontology, exampleData, createShortcut
-from .fixedStrings import setupTextWindows, gitWindows, couchDBWindows, exampleDataWindows, restartPastaWindows
+from .installationTools import couchdb, couchdbUserPassword, configuration, ontology, exampleData, createShortcut
+from .fixedStrings import setupTextWindows, couchDBWindows, exampleDataWindows, restartPastaWindows
 
 class ConfigurationSetup(QWidget):
   """
@@ -64,22 +64,6 @@ class ConfigurationSetup(QWidget):
     flagContinue = True
     flagInstalledSoftware = False
     logging.info('Windows setup analyse start')
-
-    #Git
-    res = git('test')
-    if res =='':
-      self.mainText = self.mainText.replace('- Git Windows','- Git Windows is installed' )
-      self.text1.setMarkdown(self.mainText)
-    else:
-      button = QMessageBox.question(self, "Git installation", gitWindows)
-      if button == QMessageBox.Yes:
-        git('install')
-        flagInstalledSoftware = True
-      else:
-        self.mainText = self.mainText.replace('- Git Windows','- Git Windows: user chose to NOT install' )
-        self.text1.setMarkdown(self.mainText)
-        flagContinue = False
-
 
     #Couchdb
     if flagContinue:

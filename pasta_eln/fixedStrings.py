@@ -55,7 +55,6 @@ defaultOntology = """
 setupTextLinux = """
 ### Welcome to PASTA-ELN setup for Linux
 Five components are needed for proper function
-- Git-Annex
 - CouchDB
 - Configuration of preferences
 - Ontology of the datastructure
@@ -72,8 +71,6 @@ Note: this text becomes an installation report
 setupTextWindows = """
 ### Welcome to PASTA-ELN setup for Windows
 Seven components are needed for proper function
-- Git Windows
-- Git-Annex
 - CouchDB
 - Configuration of preferences
 - Ontology of the datastructure
@@ -106,12 +103,6 @@ Be aware, downloading the installer requires some time, depending on the interne
 rootInstallLinux = """
 Do you want to install XX--XX?
 If you choose yes, a terminal will open and ask you for the super-user password.
-
-Be aware, downloading the installer requires some time, depending on the internet connection.
-"""
-
-gitAnnexWindows = """
-Do you want to install git-annex?
 
 Be aware, downloading the installer requires some time, depending on the internet connection.
 """
