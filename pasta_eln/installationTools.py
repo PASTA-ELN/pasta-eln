@@ -321,6 +321,8 @@ def ontology(command='test'):
   backend = Backend()
 
   if command == 'test':
+    if not hasattr(backend.db, 'db'):
+      return '**ERROR: couchDB not initialized'
     output += 'database name:'+backend.db.db.database_name+'\n'
     designDocuments = backend.db.db.design_documents()
     output += 'Design documents'+'\n'
