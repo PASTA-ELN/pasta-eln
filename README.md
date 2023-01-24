@@ -41,7 +41,6 @@
 - Default
   - /usr/local/lib/python3.10/dist-packages/pasta_eln
 
-
 ### Restart Linux
 ``` bash
 rm .pastaELN.json
@@ -49,7 +48,6 @@ rm -rf pastaELN/pastasExampleProject pastaELN/StandardOperatingProcedures
 sudo apt autoremove
 sudo snap stop couchdb
 sudo snap remove couchdb
-
 
 rm pastaELN.log
 ```
