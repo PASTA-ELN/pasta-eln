@@ -55,6 +55,9 @@ def createDefaultConfiguration(user, password, pathPasta=None):
     conf['userID']      = os.getlogin()
   except:   #github action
     conf['userID']      = 'github_user'
+  #create pastaDir if it does not exist
+  if not Path(pathPasta).exists():
+    Path(pathPasta).mkdir()
   return conf
 
 
@@ -112,7 +115,6 @@ def git(command='test'):
     # os.system('winget install --id Git.Git -e --source winget')    #does not work since in user-mode
     logging.info('git ended')
     return 'Installed git using temporary files in Downloads'
-
   return '**ERROR: Unknown command'
 
 
