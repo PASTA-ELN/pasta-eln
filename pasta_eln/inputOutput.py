@@ -218,7 +218,7 @@ def exportELN(backend, docID):
     #2 ------------------ write data-files --------------------------
     masterChildren = [{'@id':masterID}]
     for path, _, files in os.walk(dirNameProject):
-      if '/.git' in path or '/.datalad' in path:
+      if '/.git' in path:
         continue
       path = os.path.relpath(path, backend.basePath)
       for iFile in files:
@@ -305,12 +305,8 @@ def backup(backend, method='backup', **kwargs):
             zipFile.writestr(attachmentName.as_posix(), json.dumps(doc.get_attachment('v'+str(i)+'.json')))
       #write data-files
       for path, _, files in os.walk(backend.basePath):
-        if '/.git' in path or '/.datalad' in path:
-          continue
         path = Path(path).relative_to(backend.basePath)
         for iFile in files:
-          if iFile.startswith('.git'):
-            continue
           listFileNames.append(path/iFile)
           # print('in',Path().absolute(),': save', path/iFile,' as', Path(dirNameProject)/path/iFile)
           zipFile.write(backend.basePath/path/iFile, Path(dirNameProject)/path/iFile)

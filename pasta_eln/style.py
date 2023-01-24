@@ -42,6 +42,8 @@ class TextButton(QPushButton):
       name (str): name used for button identification in called-function
       tooltip (str): tooltip shown when mouse hovers the button
       checkable (bool): can the button change its background color
+      style (str): css style
+      hide (bool): hidden or shown initially
     """
     super().__init__()
     self.setText(label)
@@ -71,6 +73,8 @@ class LetterButton(QPushButton):
       function (function): function to be called upon button-click-event
       layout (QLayout): button to be added to this layout
       name (str): name used for button identification in called-function
+      style (str): css style
+      hide (bool): hidden or shown initially
     """
     super().__init__()
     self.setText(label[0])
@@ -99,6 +103,8 @@ class IconButton(QPushButton):
       name (str): name used for button identification in called-function
       tooltip (str): tooltip shown when mouse hovers the button
       backend (Pasta): pasta backend
+      style (str): css style
+      hide (bool): hidden or shown initially
     """
     super().__init__()
     color = 'black' if backend is None else getColor(backend, 'primary')

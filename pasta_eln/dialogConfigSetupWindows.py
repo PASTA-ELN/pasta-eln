@@ -4,8 +4,8 @@ from pathlib import Path
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTextEdit, QMessageBox, QInputDialog, QFileDialog, QProgressBar   # pylint: disable=no-name-in-module
 
 from .style import TextButton
-from .installationTools import git, gitAnnex, couchdb, couchdbUserPassword, configuration, ontology, exampleData, createShortcut
-from .fixedStrings import setupTextWindows, gitWindows, gitAnnexWindows, couchDBWindows, exampleDataWindows, restartPastaWindows
+from .installationTools import git, couchdb, couchdbUserPassword, configuration, ontology, exampleData, createShortcut
+from .fixedStrings import setupTextWindows, gitWindows, couchDBWindows, exampleDataWindows, restartPastaWindows
 
 class ConfigurationSetup(QWidget):
   """
@@ -43,8 +43,7 @@ class ConfigurationSetup(QWidget):
     footerW = QWidget()
     screen1L.addWidget(footerW)
     footerL = QHBoxLayout(footerW)
-    self.button1 = TextButton('Start analyse and repair', self.analyse)
-    footerL.addWidget(self.button1)
+    self.button1 = TextButton('Start analyse and repair', self.analyse, footerL)
 
 
   def callbackProgress(self, number):
@@ -81,23 +80,6 @@ class ConfigurationSetup(QWidget):
         self.text1.setMarkdown(self.mainText)
         flagContinue = False
 
-
-    #Git annex
-    password = ''
-    if flagContinue:
-      res = gitAnnex('test')
-      if res =='':
-        self.mainText = self.mainText.replace('- Git-Annex','- Git-Annex is installed' )
-        self.text1.setMarkdown(self.mainText)
-      else:
-        button = QMessageBox.question(self, "Git-Annex installation", gitAnnexWindows)
-        if button == QMessageBox.Yes:
-          gitAnnex('install')
-          flagInstalledSoftware = True
-        else:
-          self.mainText = self.mainText.replace('- Git-Annex','- Git-Annex: user chose to NOT install' )
-          self.text1.setMarkdown(self.mainText)
-          flagContinue = False
 
     #Couchdb
     if flagContinue:

@@ -4,7 +4,7 @@ from pathlib import Path
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTextEdit, QMessageBox, QInputDialog, QFileDialog, QProgressBar    # pylint: disable=no-name-in-module
 
 from .style import TextButton
-from .installationTools import gitAnnex, couchdb, configuration, ontology, exampleData, createShortcut, installLinuxRoot
+from .installationTools import couchdb, configuration, ontology, exampleData, createShortcut, installLinuxRoot
 from .fixedStrings import setupTextLinux, rootInstallLinux, exampleDataLinux
 
 class ConfigurationSetup(QWidget):
@@ -65,16 +65,6 @@ class ConfigurationSetup(QWidget):
     flagContinue = True
     logging.info('Linux setup analyse start')
 
-    #Git annex
-    res = gitAnnex('test')
-    existsGitAnnex = None
-    if res =='':
-      self.mainText = self.mainText.replace('- Git-Annex','- Git-Annex is installed' )
-      self.text1.setMarkdown(self.mainText)
-      existsGitAnnex = True
-    else:
-      existsGitAnnex = False
-
     #Couchdb
     existsCouchDB = None
     if flagContinue:
@@ -86,18 +76,15 @@ class ConfigurationSetup(QWidget):
       else:
         existsCouchDB = False
 
-    #Install git-annex und couchdb
-    if (not existsGitAnnex) or (not existsCouchDB):
-      textGitAnnex = '' if existsGitAnnex else 'git-annex'
+    #Install couchdb
+    if not existsCouchDB:
       textCouchDB  = '' if existsCouchDB else 'couch-DB'
-      separator    = '' if existsGitAnnex or existsCouchDB else ', '
-      text = rootInstallLinux.replace('XX--XX', textGitAnnex+separator+textCouchDB)
+      text = rootInstallLinux.replace('XX--XX', textCouchDB)
       button = QMessageBox.question(self, "Root installations", text)
       if button == QMessageBox.Yes:
         dirName = QFileDialog.getExistingDirectory(self,'Create and select directory for scientific data',str(Path.home()))
-        installLinuxRoot(existsGitAnnex, existsCouchDB, dirName)
+        installLinuxRoot(existsCouchDB, dirName)
       else:
-        self.mainText = self.mainText.replace('- Git-Annex','- Git-Annex: user chose to NOT install' )
         self.mainText = self.mainText.replace('- CouchDB','- CouchDB: user chose to NOT install' )
         self.text1.setMarkdown(self.mainText)
 

@@ -13,7 +13,6 @@
 - more logging
 
 # Priority 3
-- Perhaps: fixed version number gitannex and datalad
 - setup.cfg: pytest
 - Windows/Anaconda generally works, use Marble documentation if it fully works. Git/Git-annex/datalad do not work currently
   - Datalad documentation has the following suggestion for git-installation
@@ -23,3 +22,6 @@
     - Enable symbolic links (page 12)
 
 
+# Notes
+- curate, stars become #_curate, #_3 ... all start with _
+- allow to change docType of undefined types

@@ -116,49 +116,6 @@ def git(command='test'):
   return '**ERROR: Unknown command'
 
 
-def gitAnnex(command='test'):
-  '''
-  test git-annex installation or install it
-
-  Args:
-    command (string): 'test' or 'install'
-
-  Returns:
-    string: '' for success, filled with errors
-  '''
-  if command == 'test':
-    if platform.system()=='Linux':
-      if shutil.which('git-annex') is None:
-        return '**ERROR: git-annex not installed'
-    elif platform.system()=='Windows':
-      if shutil.which('git-annex') is None:
-        return '**ERROR: git-annex not installed'
-    # found = importlib.util.find_spec('datalad')
-    #Has information if global or local installed
-    # ModuleSpec(name='datalad', origin='/usr/local/lib/python3.8/dist-packages/datalad/__init__.py')
-    return ''
-
-  elif command == 'install':
-    if platform.system()=='Linux':
-      return '**ERROR: should not be called'
-    elif platform.system()=='Windows':
-      logging.info('gitannex install starting ...')
-      ## Old version with installer
-      # url = 'https://downloads.kitenet.net/git-annex/windows/7/current/git-annex-installer.exe'
-      # path = Path.home()/'Downloads'/'git-annex-installer.exe'
-      # resultFilePath, _ = urllib.request.urlretrieve(url, path)
-      # cmd = ['cmd.exe','/K ',str(resultFilePath)]
-      ## New version with datalad-installer: Does not ask questions
-      cmd = ['datalad-installer','git-annex','-m','datalad/git-annex:release']
-      _ = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)
-      logging.info('gitannex install ended')
-      return 'Installed git-annex using temporary files in Downloads'
-    return '**ERROR: Unknown operating system '+platform.system()
-
-  return '**ERROR: Unknown command'
-
-
-
 def couchdb(command='test'):
   '''
   test couchDB installation or (install it on Windows-only)
@@ -223,12 +180,11 @@ def couchdbUserPassword(username, password):
     return False
 
 
-def installLinuxRoot(gitAnnexExists, couchDBExists, pathPasta=''):
+def installLinuxRoot(couchDBExists, pathPasta=''):
   '''
   Install all packages in linux using the root-password
 
   Args:
-    gitAnnexExists (bool): does the git-annex installation exist
     couchDBExists (bool): does the couchDB installation exist
     pathPasta (str): path to install pasta in (Linux)
 
@@ -238,14 +194,6 @@ def installLinuxRoot(gitAnnexExists, couchDBExists, pathPasta=''):
   logging.info('InstallLinuxRoot starting ...')
   bashCommand = []
   password = ''
-  if not gitAnnexExists:
-    bashCommand += [
-      'sudo wget -q http://neuro.debian.net/lists/focal.de-fzj.full -O /etc/apt/sources.list.d/neurodebian.sources.list',
-      'sudo apt-key adv --recv-keys --keyserver hkps://keyserver.ubuntu.com 0xA5D32F012649A5A9',
-      'sudo apt-get update',
-      'sudo apt-get install -y git-annex-standalone',
-      'echo DONE',
-      'sleep 10']
   if not couchDBExists:
     password = ''.join(random.choice(string.ascii_letters) for i in range(12))
     logging.info('PASSWORD: '+password)
@@ -276,9 +224,6 @@ def installLinuxRoot(gitAnnexExists, couchDBExists, pathPasta=''):
   with open(scriptFile,'w', encoding='utf-8') as shell:
     shell.write('\n'.join(bashCommand))
   os.chmod(scriptFile, 0o0777)
-  if not (Path.home()/'.gitconfig').exists():
-    with open(Path.home()/'.gitconfig','w', encoding='utf-8') as gitConfig:
-      gitConfig.write('[user]\n\temail = anonymous@aol.com\n\tname = anonymous\n')
   terminals = ['xterm -e bash -c ','qterminal -e bash -c ','gnome-terminal -- ']
   logging.info('Command: '+str(bashCommand))
   resultString = 'Password: '+password
@@ -605,7 +550,7 @@ def main():
   #old versions of basicConfig do not know "encoding='utf-8'"
   logging.basicConfig(filename=logPath, level=logging.INFO, format='%(asctime)s|%(levelname)s:%(message)s',
                       datefmt='%m-%d %H:%M:%S')   #This logging is always info, since for installation only
-  for package in ['urllib3', 'requests', 'asyncio', 'datalad', 'PIL', 'matplotlib.font_manager']:
+  for package in ['urllib3', 'requests', 'asyncio', 'PIL', 'matplotlib.font_manager']:
     logging.getLogger(package).setLevel(logging.WARNING)
   logging.info('Start PASTA Install')
   print('---- Test PASTA-ELN installation----')
@@ -615,9 +560,6 @@ def main():
     res = git()
     existsGit = res==''
     print('git        :',res)
-  res = gitAnnex()
-  existsGitAnnex = res==''
-  print('git-annex    :', res)
   res = couchdb()
   existsCouchDB = res==''
   print('chouchDB     :', res)
@@ -636,10 +578,10 @@ def main():
   if len(sys.argv)>1 and 'install' in sys.argv:
     if platform.system()=='Linux':
       print('---- Create PASTA-ELN installation Linux ----')
-      if (not existsGitAnnex) or (not existsCouchDB):
+      if not existsCouchDB:
         print('install with root credentials...')
         dirName = (Path.home()/'pastaELN').as_posix()
-        installLinuxRoot(existsGitAnnex, existsCouchDB, dirName)
+        installLinuxRoot(existsCouchDB, dirName)
       if flagConfiguration:
         print('repair  configuration:', configuration('repair'))
       if flagOntology and existsCouchDB:
@@ -649,8 +591,6 @@ def main():
       print('---- Create PASTA-ELN installation Windows ----')
       if not existsGit:
         print('install git          :', git('install'))
-      if not existsGitAnnex:
-        print('install git-annex    :', gitAnnex('install'))
       if not existsCouchDB:
         print('install couchDB      :', couchdb('install'))
       if flagConfiguration:

@@ -62,9 +62,9 @@ def main():
   logPath = Path.home()/'pastaELN.log'
   #  old versions of basicConfig do not know "encoding='utf-8'"
   logLevel = getattr(logging, window.backend.configuration['GUI']['loggingLevel'])
-  logging.basicConfig(filename=logPath, level=logging.INFO, format='%(asctime)s|%(levelname)s:%(message)s',
+  logging.basicConfig(filename=logPath, level=logLevel, format='%(asctime)s|%(levelname)s:%(message)s',
                       datefmt='%m-%d %H:%M:%S')
-  for package in ['urllib3', 'requests', 'asyncio', 'datalad', 'PIL', 'matplotlib.font_manager']:
+  for package in ['urllib3', 'requests', 'asyncio', 'PIL', 'matplotlib.font_manager']:
     logging.getLogger(package).setLevel(logging.WARNING)
   logging.info('Start PASTA GUI')
   # remainder

@@ -69,7 +69,7 @@ class Database:
         if 'name' not in item:
           continue
         if item['name'] == 'image':
-          outputList.append('(doc.image.length>3).toString()')
+          outputList.append('doc.image.length>3')  #Not as .toString() because that leads to inconsistencies
         elif item['name'] == 'tags':
           outputList.append('doc.tags.join(" ")')
         elif item['name'] == '-type':

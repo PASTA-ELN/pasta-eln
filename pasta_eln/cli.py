@@ -9,7 +9,7 @@ from subprocess import run, PIPE, STDOUT
 import urllib.request
 
 from pasta_eln import __version__
-from .backend import Pasta
+from .backend import Backend
 from .miscTools import upOut, upIn, getExtractorConfig
 from .inputOutput import importELN, exportELN
 from .installationTools import configuration as checkConfiguration
@@ -147,7 +147,7 @@ def commands(getDocu, args):
     #open backend
     if not getDocu:
       try:
-        be = Pasta(linkDefault=args.database, initViews=initViews, initConfig=initConfig,
+        be = Backend(linkDefault=args.database, initViews=initViews, initConfig=initConfig,
                   resetOntology=resetOntology)
       except:
         print('**ERROR pma20: backend could not be started.\n'+traceback.format_exc()+'\n\n')

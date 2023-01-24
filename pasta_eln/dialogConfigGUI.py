@@ -1,3 +1,4 @@
+""" Main class of config tab on GUI elements """
 import json
 from pathlib import Path
 from PySide6.QtWidgets import QWidget, QFormLayout, QLabel, QComboBox, QTextEdit  # pylint: disable=no-name-in-module
@@ -31,7 +32,8 @@ class ConfigurationGUI(QWidget):
     self.nTC = self.addRowList('tableColumnsMax','Maximum number of table columns', ['8','16','32'])
     self.tM = self.addRowText('magicTags','Tags that have special importance')
     self.tD = self.addRowText('defaultTags','Tags that should be there too')
-    self.tabAppearanceL.addRow(TextButton('Save changes', self.saveData), TextButton('Restart PASTA-ELN', restart))
+    self.tabAppearanceL.addRow(TextButton('Save changes', self.saveData, None),
+                               TextButton('Restart PASTA-ELN', restart, None))
 
 
   def addRowList(self, item, label, itemList):
@@ -42,6 +44,9 @@ class ConfigurationGUI(QWidget):
       item (str): property name in configuration file
       label (str): label used in form
       itemList (list(str)): items to choose from
+
+    Returns:
+      QCombobox: filled combobox
     """
     rightW = QComboBox()
     rightW.addItems(itemList)
@@ -57,6 +62,9 @@ class ConfigurationGUI(QWidget):
     Args:
       item (str): property name in configuration file
       label (str): label used in form
+
+    Returns:
+      QTextEdit: text-edit widget with content
     """
     rightW = QTextEdit()
     rightW.setFixedHeight(QFontMetrics(rightW.font()).lineSpacing()*5)

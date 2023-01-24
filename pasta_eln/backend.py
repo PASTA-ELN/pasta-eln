@@ -3,18 +3,10 @@ import json, sys, os, shutil, re, importlib, tempfile
 from pathlib import Path
 from urllib import request
 from datetime import datetime, timezone
-from zipfile import ZipFile, ZIP_DEFLATED
 from .mixin_cli import Bcolors, CLI_Mixin
 from .database import Database
 from .miscTools import upIn, upOut, createDirName, generic_hash, camelCase
 from .handleDictionaries import ontology2Labels, fillDocBeforeCreate
-if sys.platform=='win32':
-  import win32con, win32api
-try:
-  import datalad.api as datalad
-  from datalad.support import annexrepo
-except:
-  print('**ERROR: Could not start datalad')
 
 class Backend(CLI_Mixin):
   """
@@ -31,16 +23,6 @@ class Backend(CLI_Mixin):
           - initViews (bool): initialize views at startup
           - resetOntology (bool): reset ontology on database from one on file
     """
-    ## CONFIGURATION FOR DATALAD and GIT: has to move to dictionary
-    self.vanillaGit = ['*'] #tracked but in git;
-    #   .id_pastaELN.json has to be tracked by git (if ignored: they don't appear on git-status; they have to change by PASTA)
-    self.gitIgnore = ['.*'] #misc
-    #TODO_P3 save version, to change in .pastaELN.json
-    # self.vanillaGit = ['*.md','*.rst','*.org','*.tex','*.py','.id_pastaELN.json'] #tracked but in git;
-    # #   .id_pastaELN.json has to be tracked by git (if ignored: they don't appear on git-status; they have to change by PASTA)
-    # self.gitIgnore = ['*.log','.vscode/','*.xcf','*.css'] #misc
-    # self.gitIgnore+= ['*.bcf','*.run.xml','*.synctex.gz','*.aux']#latex files
-    ##End save version
     #initialize basic values
     self.hierStack = []
     self.currentID = ""
@@ -72,7 +54,6 @@ class Backend(CLI_Mixin):
       defaultProjectGroup = self.configuration['defaultProjectGroup']
     if not defaultProjectGroup in self.configuration['projectGroups']:
       raise Exception('BadConfigurationFileError')
-      return
     projectGroup = self.configuration['projectGroups'][defaultProjectGroup]
     if 'user' in projectGroup['local']:
       n,s = projectGroup['local']['user'], projectGroup['local']['password']
@@ -81,11 +62,11 @@ class Backend(CLI_Mixin):
     databaseName = projectGroup['local']['database']
     # directories
     #    self.basePath (root of directory tree) is root of all projects
-    #    self.cwd changes during program
+    #    self.cwd changes during program but is similarly the full path from root
+    self.basePath     = Path(projectGroup['local']['path'])
+    self.cwd          = Path(projectGroup['local']['path'])
     self.extractorPath = Path(self.configuration['extractorDir'])
     sys.path.append(str(self.extractorPath))  #allow extractors
-    self.basePath     = Path(projectGroup['local']['path'])
-    self.cwd          = Path('.')
     # decipher miscellaneous configuration and store
     self.userID   = self.configuration['userID']
     # start database
@@ -109,19 +90,6 @@ class Backend(CLI_Mixin):
       deleteDB (bool): remove database
       kwargs (dict): additional parameter
     """
-    if deleteDB:
-      #uninit / delete everything of git-annex and datalad
-      for root, dirs, files in os.walk(self.basePath):
-        for momo in dirs:
-          try:
-            (Path(root)/momo).chmod(0o755)
-          except FileNotFoundError:
-            print('Could not change-mod',Path(root)/momo)
-        for momo in files:
-          try:
-            (Path(root)/momo).chmod(0o755)
-          except FileNotFoundError:
-            print('Could not change-mod',Path(root)/momo)
     self.db.exit(deleteDB)
     self.alive     = False
     return
@@ -147,7 +115,6 @@ class Backend(CLI_Mixin):
     """
     if hierStack is None:
       hierStack=[]
-    callback = kwargs.get('callback', None)
     forceNewImage=kwargs.get('forceNewImage',False)
     doc['-user']  = self.userID
     childNum     = doc.pop('childNum',None)
@@ -208,7 +175,7 @@ class Backend(CLI_Mixin):
             baseName  = Path(doc['-name']).stem
             extension = Path(doc['-name']).suffix
             path = self.cwd/(camelCase(baseName)+extension)
-            request.urlretrieve(doc['-name'], self.basePath/path)
+            request.urlretrieve(doc['-name'], path)
             doc['-name'] = camelCase(baseName)+extension
           else:
             path = Path(doc['-name'])
@@ -218,37 +185,21 @@ class Backend(CLI_Mixin):
               print('**ERROR bad01: fetch remote content failed. Data not added')
               return False
         elif doc['-name']!='' and (self.basePath/doc['-name']).exists():          #file exists
-          path = Path(doc['-name'])
+          path = self.basePath/doc['-name']
           doc['-name'] = Path(doc['-name']).name
-        elif doc['-name']!='' and (self.basePath/self.cwd/doc['-name']).exists(): #file exists
+        elif doc['-name']!='' and (self.cwd/doc['-name']).exists():               #file exists
           path = self.cwd/doc['-name']
         else:                                                     #make up name
           shasum  = None
         if shasum is not None: # and doc['-type'][0]=='measurement':         #samples, procedures not added to shasum database, getMeasurement not sensible
           if shasum == '':
-            shasum = generic_hash(self.basePath/path, forceFile=True)
+            shasum = generic_hash(path, forceFile=True)
           view = self.db.getView('viewIdentify/viewSHAsum',shasum)
           if len(view)==0 or forceNewImage:  #measurement not in database: create doc
-            while True:
-              self.useExtractors(path,shasum,doc)  #create image/content and add to datalad
-              # All files should appear in database
-              # if not 'image' in doc and not 'content' in doc and not 'otherELNName' in doc:  #did not get valuable data: extractor does not exit
-              #   return False
-              if callback is None or not callback(doc):
-                # if no more iterations of curation
-                if 'ignore' in doc:
-                  ignore = doc['ignore']; del doc['ignore']
-                  if ignore=='dir':
-                    projPath = self.basePath.parts[0]
-                    dirPath =  path.relative_to(projPath)
-                    with open(Path(projPath)/'.gitignore','a', encoding='utf-8') as fOut:
-                      fOut.write(dirPath+'/\n')
-                    if sys.platform=='win32':
-                      win32api.SetFileAttributes(Path(projPath)/'.gitignore',\
-                        win32con.FILE_ATTRIBUTE_HIDDEN)
-                  if ignore!='none':  #ignored images are added to datalad but not to database
-                    return False
-                break
+            self.useExtractors(path,shasum,doc)  #create image/content
+            # All files should appear in database
+            # if not 'image' in doc and not 'content' in doc and not 'otherELNName' in doc:  #did not get valuable data: extractor does not exit
+            #   return False
           if len(view)==1:  #measurement is already in database
             self.useExtractors(path,shasum,doc,exitAfterDataLad=True)
             doc['_id'] = view[0]['id']
@@ -278,55 +229,9 @@ class Backend(CLI_Mixin):
       #project, step, task
       path = Path(doc['-branch'][0]['path'])
       if not edit:
-        if doc['-type'][0]=='x0':
-          ## shell command
-          # cmd = ['datalad','create','--description','"'+doc['objective']+'"','-c','text2git',path]
-          # _ = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)
-          # datalad api version: produces undesired output
-          try:
-            description = doc['objective'] if 'objective' in doc else '_'
-            datalad.create(self.basePath/path,description=description)
-          except:
-            print('**ERROR bad02: Tried to create new datalad folder which did already exist')
-            raise
-          gitAttribute = '\n* annex.backend=SHA1\n**/.git* annex.largefiles=nothing\n'
-          for fileI in self.vanillaGit:
-            gitAttribute += fileI+' annex.largefiles=nothing\n'
-          gitIgnore = '\n'.join(self.gitIgnore)
-          gitPath = self.basePath/path/'.gitattributes'
-          with open(gitPath,'w', encoding='utf-8') as fOut:
-            fOut.write(gitAttribute+'\n')
-          if sys.platform=='win32':
-            win32api.SetFileAttributes(str(gitPath), win32con.FILE_ATTRIBUTE_HIDDEN)
-          gitPath = self.basePath/path/'.gitignore'
-          with open(gitPath,'w', encoding='utf-8') as fOut:
-            fOut.write(gitIgnore+'\n')
-          if sys.platform=='win32':
-            win32api.SetFileAttributes(str(gitPath),win32con.FILE_ATTRIBUTE_HIDDEN)
-          dlDataset = datalad.Dataset(self.basePath/path)
-          dlDataset.save(path='.',message='changed gitattributes')
-        else:
-          (self.basePath/path).mkdir(exist_ok=True)   #if exist, create again; moving not necessary since directory moved in changeHierarchy
-      projectPath = path.parts[0]
-      dataset = datalad.Dataset(self.basePath/projectPath)
-      if (self.basePath/path/'.id_pastaELN.json').exists():
-        if sys.platform=='win32':
-          aFile = str(self.basePath/path/'.id_pastaELN.json')
-          if win32api.GetFileAttributes(aFile) == win32con.FILE_ATTRIBUTE_HIDDEN:
-            win32api.SetFileAttributes(aFile, win32con.FILE_ATTRIBUTE_ARCHIVE)
-        else:
-          dataset.unlock(path=self.basePath/path/'.id_pastaELN.json')
+        (self.basePath/path).mkdir(exist_ok=True)   #if exist, create again; moving not necessary since directory moved in changeHierarchy
       with open(self.basePath/path/'.id_pastaELN.json','w', encoding='utf-8') as f:  #local path, update in any case
         f.write(json.dumps(doc))
-      if sys.platform=='win32':
-        aFile = str(self.basePath/path/'.id_pastaELN.json')
-        win32api.SetFileAttributes(aFile, win32con.FILE_ATTRIBUTE_HIDDEN)
-      # datalad api version
-      dataset.save(path=self.basePath/path/'.id_pastaELN.json', message='Added folder & .id_pastaELN.json')
-      ## shell command
-      # cmd = ['datalad','save','-m','Added new subfolder with .id_pastaELN.json', '-d', self.basePath+projectPath ,self.basePath+path+/+'.id_pastaELN.json']
-      # output = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-      # print("datalad save",output.stdout.decode('utf-8'))
     self.currentID = doc['_id']
     return True
 
@@ -350,10 +255,10 @@ class Backend(CLI_Mixin):
     else:  # existing ID is given: open that
       if dirName is None:
         doc = self.db.getDoc(docID)
-        self.cwd = Path(doc['-branch'][0]['path'])
+        self.cwd = self.basePath/doc['-branch'][0]['path']
         self.hierStack = doc['-branch'][0]['stack']+[docID]
       else:
-        self.cwd = dirName.relative_to(self.basePath)
+        self.cwd = dirName
         self.hierStack.append(docID)
     return
 
@@ -380,117 +285,35 @@ class Backend(CLI_Mixin):
     while len(self.hierStack)>1:
       self.changeHierarchy(None)
 
-    #git-annex lists all the files at once
-    #   datalad and git give the directories, if untracked/random; and datalad status produces output
-    #   also, git-annex status is empty if nothing has to be done
-    #   git-annex output is nice to parse
-    fileList = annexrepo.AnnexRepo(self.basePath/self.cwd).status()
-    dlDataset = datalad.Dataset(self.basePath/self.cwd)
-    #create dictionary that has shasum as key and [[origins],[target]] as value
-    shasumDict = {}   #clean ones are omitted
-    for path in fileList:
-      #Stay absolute fileName = path.relative_to(self.basePath/self.cwd)
-      # if fileList[path]['state']=='clean': #for debugging
-      #   shasum = generic_hash(fileName)
-      #   print(shasum,fileList[path]['prev_gitshasum'],fileList[path]['gitshasum'],fileName)
-      if (not path.exists()) and path.is_symlink(): #broken = dead link, fix it
-        deadtarget = path.resolve()
-        locationGit = deadtarget.as_posix().split('/').index('.git')
-        pathFromGit = Path('/'.join( deadtarget.as_posix().split('/')[locationGit:] ))
-        newPath = self.basePath/self.cwd/pathFromGit
-        if newPath.exists():
-          fileName = path.as_posix() #save filename
-          path.unlink()              #delete
-          path = Path(fileName)      #create file and ...
-          path.symlink_to(newPath)   #link it
-          print('Repaired dead symlink')
-        else:
-          print('**ERROR Could not repair dead symlink', deadtarget, newPath,' SKIP FILE')
+    inDB_all = self.db.getView('viewHierarchy/viewPaths')
+    pathsInDB_all =  [i['key'] for i in inDB_all]
+    pathsInDB_data = [i['key'] for i in inDB_all if i['value'][1][0][0]!='x']  #TODO possibly filter all measurements
+    for root, _, files in os.walk(self.basePath):
+      for fileName in files:
+        if fileName.startswith('.'):
           continue
-      if fileList[path]['state']=='untracked':  #new file
-        shasum = generic_hash(path)
-        if shasum in shasumDict:
-          shasumDict[shasum][1] += [path]
+        path = (Path(root).relative_to(self.basePath) /fileName).as_posix()
+        if path in pathsInDB_data:
+          print("File already in DB:",path)
+          pathsInDB_data.remove(path)
         else:
-          shasumDict[shasum] = [[], [path]]
-      if fileList[path]['state']=='deleted':
-        shasum = fileList[path]['prev_gitshasum']
-        if shasum in shasumDict:  #moved file: 'new' file is scanned first, deleted file scanned second
-          shasumDict[shasum][0] += [path]
-        else:
-          shasumDict[shasum] = [[path], []]
-      if fileList[path]['state']=='modified':
-        shasum = fileList[path]['gitshasum']
-        shasumDict[shasum][1] = [path] #new content is same place. No moving necessary, just "new file"
-
-    # loop all entries and separate into moved,new,deleted
-    for _, (origins, targets) in shasumDict.items():
-      for idx in range( max(len(origins),len(targets)) ):
-        origin = origins[idx] if idx<len(origins) else ''
-        target = targets[idx] if idx<len(targets) else ''
-        print("  File changed:",origin,'->',target)
-        # originDir, _ = o..s.path.split(self.cwd+origin)
-        # find hierStack and parentID of new TARGET location: for new and move
-        if target != '':
-          targetDir = target.parent
-          if not target.exists(): #if dead link
-            linkTarget = target.resolve()
-            for dirI in self.basePath.glob('*'):
-              if (self.basePath/dirI).is_dir():
-                path = self.basePath/dirI/linkTarget
-                if path.exists():
-                  target.unlock()
-                  shutil.copy(path,target)
-                  break
+          print("Add file to DB:",path)
+          #find parent-document
+          parent = Path(root).relative_to(self.basePath)
           parentID = None
           itemTarget = -1
           while parentID is None:
-            view = self.db.getView('viewHierarchy/viewPaths', \
-              startKey=targetDir.relative_to(self.basePath).as_posix())
-            for item in view:
-              if item['key']==targetDir.relative_to(self.basePath).as_posix():
-                parentID = item['id']
-                itemTarget = item
-            targetDir = targetDir.parent
+            if parent.as_posix() in pathsInDB_all:
+              idx = pathsInDB_all.index(parent.as_posix())
+              itemTarget = inDB_all[idx]
+              parentID = itemTarget['id']
+              break
+            parent = parent.parent
           parentDoc = self.db.getDoc(parentID)
           hierStack = parentDoc['-branch'][0]['stack']+[parentID]
-        ### separate into two cases
-        # newly created file
-        if origin == '':
-          newDoc    = {'-name':str(target)}
-          _ = self.addData('measurement', newDoc, hierStack, callback=callback)  #saved to datalad in here
-        # move or delete file
-        else:
-          #update to datalad
-          if target == '':
-            dlDataset.save(path=origin, message='Removed file')
-          else:
-            dlDataset.save(path=origin, message='Moved file from here to '+str(self.cwd/target)   )
-            dlDataset.save(path=target, message='Moved file from '+str(self.cwd/origin)+' to here')
-          #get docID
-          if origin!='' and origin.name == '.id_pastaELN.json':  #if origin has .id_pastaELN.json: parent directory has moved
-            origin = origin.parent
-          if target!='' and target.name == '.id_pastaELN.json':
-            target = target.parent
-          view = self.db.getView('viewHierarchy/viewPaths',
-                                  preciseKey=(self.cwd/origin).relative_to(self.basePath).as_posix())
-          if len(view)==1:
-            docID = view[0]['id']
-            if target == '':       #delete
-              self.db.updateDoc( {'-branch':{'path':  (self.cwd/origin).relative_to(self.basePath).as_posix(),\
-                                            'oldpath':(self.cwd/origin).relative_to(self.basePath).as_posix(),\
-                                            'stack':[None],\
-                                            'child':-1,\
-                                            'op':'d'}}, docID)
-            else:                  #update
-              self.db.updateDoc( {'-branch':{'path':  (self.cwd/target).relative_to(self.basePath).as_posix(),\
-                                            'oldpath':(self.cwd/origin).relative_to(self.basePath).as_posix(),\
-                                            'stack':hierStack,\
-                                            'child':itemTarget['value'][2],\
-                                            'op':'u'}}, docID)
-          else:
-            if '_pasta.' not in str(origin):  #TODO_P1 is this really needed
-              print("file not in database",self.cwd/origin)
+          _ = self.addData('measurement', {'-name':path}, hierStack, callback=callback)
+    orphanFiles = [i for i in pathsInDB_data if i.startswith(self.cwd.as_posix())]
+    print('These files are on DB but not harddisk',pathsInDB_data, '\n', orphanFiles )
     return
 
 
@@ -507,22 +330,13 @@ class Backend(CLI_Mixin):
           - maxSize of image
           - saveToFile: save data to files
     """
-    exitAfterDataLad = kwargs.get('exitAfterDataLad',False)
     extension = filePath.suffix[1:]  #cut off initial . of .jpg
     if str(filePath).startswith('http'):
       absFilePath = Path(tempfile.gettempdir())/filePath.name
       request.urlretrieve(filePath.as_posix().replace(':/','://'), absFilePath)
-      projectDB = self.cwd.parts[0]
-      dataset = datalad.Dataset(self.basePath/projectDB)
     else:
       if filePath.is_absolute():
         filePath = filePath.relative_to(self.basePath)
-      parentPath = filePath.parts[0]
-      dataset = datalad.Dataset(self.basePath/parentPath)
-      if dataset.id:
-        dataset.save(path=self.basePath/filePath, message='Added locked document')
-      if exitAfterDataLad:
-        return
       absFilePath = self.basePath/filePath
     pyFile = 'extractor_'+extension.lower()+'.py'
     pyPath = self.extractorPath/pyFile
@@ -602,43 +416,28 @@ class Backend(CLI_Mixin):
     """
     ### check database itself for consistency
     output = self.db.checkDB(verbose=verbose, **kwargs)
-    ### check if datalad status is clean for all projects
     if verbose:
-      output += "--- DataLad status ---\n"
+      output += "--- File status ---\n"
     viewProjects   = self.db.getView('viewDocType/x0')
-    viewPaths      = self.db.getView('viewHierarchy/viewPaths')
-    listPaths = [item['key'] for item in viewPaths]
-    clean, count = True, 0
-    for item in viewProjects:
-      doc = self.db.getDoc(item['id'])
-      dirName =doc['-branch'][0]['path']
-      fileList = annexrepo.AnnexRepo(self.basePath/dirName).status()
-      for path in fileList:
-        if fileList[path]['state'] != 'clean':
-          output += fileList[path]['state']+' '+fileList[path]['type']+' '+str(path)+'\n'
-          clean = False
-        #test if file exists
-        relPath = path.relative_to(self.basePath)
-        if relPath.name=='.id_pastaELN.json': #if project,step,task
-          relPath = relPath.parent
-        if relPath.as_posix() in listPaths:
-          listPaths.remove(relPath.as_posix())
-          continue
-        if '_pasta.' in relPath.as_posix() or '.datalad' in relPath.parts or \
-           relPath.name=='.gitattributes' or (self.basePath/relPath).is_dir() or \
-           relPath.name=='.gitignore':
-          continue
-        extension = '*'+relPath.suffix.lower()
-        if extension in self.vanillaGit:
-          continue
-        count += 1
-    output += 'Number of files on disk that are not in database '+str(count)+' (see log for details)\n'
-    listPaths = [i for i in listPaths if not "://" in i ]
-    listPaths = [i for i in listPaths if not (self.basePath/i).exists()]
-    if len(listPaths)>0:
-      output += "These files of database not on filesystem: "+str(listPaths)+'\n'  #this is a list of paths, so str
-    if clean:
-      output += "** Datalad tree CLEAN **\n"
+    inDB_all = self.db.getView('viewHierarchy/viewPaths')
+    pathsInDB_data = [i['key'] for i in inDB_all if i['value'][1][0][0]!='x']  #TODO possibly filter all measurements
+    count = 0
+    for projI in viewProjects:
+      projDoc = self.db.getDoc(projI['id'])
+      for root, _, files in os.walk(self.basePath/projDoc['-branch'][0]['path']):
+        for fileName in files:
+          if fileName.startswith('.'):
+            continue
+          path = (Path(root).relative_to(self.basePath) /fileName).as_posix()
+          if path not in pathsInDB_data:
+            print("**ERROR File on harddisk but not DB:",path)
+            count += 1
+    output += 'Number of files on disk that are not in database '+str(count)+'\n'
+    orphanFiles = [i for i in pathsInDB_data if i.startswith(self.cwd.as_posix()) and "://" not in i]
+    if len(orphanFiles)>0:
+      output += "These files of database not on filesystem: "+str(orphanFiles)+'\n'  #this is a list of paths, so str
+    if count==0:
+      output += "** File tree CLEAN **\n"
     else:
-      output += "** Datalad tree NOT clean **\n"
+      output += "** File tree NOT clean **\n"
     return output

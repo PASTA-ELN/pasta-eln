@@ -26,7 +26,7 @@ class Sidebar(QWidget):
 
     if hasattr(comm.backend.db, 'dataLabels'):
       # All projects
-      btn = TextButton('All projects', self.btnDocType, mainL, 'x0/')
+      TextButton('All projects', self.btnDocType, mainL, 'x0/')
       # Add other data types
       dTypeW = QWidget()
       dTypeL = QGridLayout(dTypeW)
