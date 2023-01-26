@@ -174,8 +174,6 @@ class Database:
 
     Args:
         change (dict): item to update
-                'path' = list: new path list is appended to existing list
-                'path' = str : remove this path from path list
         docID (string):  id of document to change
 
     Returns:

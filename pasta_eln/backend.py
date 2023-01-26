@@ -201,7 +201,6 @@ class Backend(CLI_Mixin):
             # if not 'image' in doc and not 'content' in doc and not 'otherELNName' in doc:  #did not get valuable data: extractor does not exit
             #   return False
           if len(view)==1:  #measurement is already in database
-            self.useExtractors(path,shasum,doc,exitAfterDataLad=True)
             doc['_id'] = view[0]['id']
             doc['shasum'] = shasum
             edit = True
@@ -290,7 +289,7 @@ class Backend(CLI_Mixin):
     pathsInDB_data = [i['key'] for i in inDB_all if i['value'][1][0][0]!='x']  #TODO possibly filter all measurements
     for root, _, files in os.walk(self.basePath):
       for fileName in files:
-        if fileName.startswith('.'):
+        if fileName.startswith('.') or fileName.startswith('trash_'):
           continue
         path = (Path(root).relative_to(self.basePath) /fileName).as_posix()
         if path in pathsInDB_data:
@@ -312,8 +311,18 @@ class Backend(CLI_Mixin):
           parentDoc = self.db.getDoc(parentID)
           hierStack = parentDoc['-branch'][0]['stack']+[parentID]
           _ = self.addData('measurement', {'-name':path}, hierStack, callback=callback)
-    orphanFiles = [i for i in pathsInDB_data if i.startswith(self.cwd.as_posix())]
-    print('These files are on DB but not harddisk',pathsInDB_data, '\n', orphanFiles )
+    orphans = [i for i in pathsInDB_data if i.startswith(self.cwd.relative_to(self.basePath).as_posix())]
+    print('These files are on DB but not harddisk\n', orphans )
+    for orphan in orphans:
+      docID = [i for i in inDB_all if i['key']==orphan][0]['id']
+      doc   = dict(self.db.getDoc(docID))
+      change = None
+      for branch in doc['-branch']:
+        if branch['path']==orphan:
+          change = {'-branch': {'op':'d', 'oldpath':branch['path'], 'path':branch['path'], \
+                                'stack':branch['stack'] }}
+          break
+      self.db.updateDoc(change, docID)
     return
 
 
@@ -342,7 +351,9 @@ class Backend(CLI_Mixin):
     pyPath = self.extractorPath/pyFile
     if len(doc['-type'])==1:
       doc['-type'] += [extension]
-    if pyPath.exists():
+    try:
+      if not pyPath.exists():
+        raise ValueError('Extractor does not exist')
       # import module and use to get data
       module  = importlib.import_module(pyFile[:-3])
       content = module.use(absFilePath, '/'.join(doc['-type']) )
@@ -362,8 +373,8 @@ class Backend(CLI_Mixin):
       else:
         doc['-type']     += doc['recipe'].split('/')
       del doc['recipe']
-    else:
-      print('  No extractor found',pyFile)
+    except:
+      print('  **Error with extractor',pyFile)
       doc['-type'] = ['-']
       doc['metaUser'] = {'filename':absFilePath.name, 'extension':absFilePath.suffix,
         'filesize':absFilePath.stat().st_size,
@@ -426,7 +437,7 @@ class Backend(CLI_Mixin):
       projDoc = self.db.getDoc(projI['id'])
       for root, _, files in os.walk(self.basePath/projDoc['-branch'][0]['path']):
         for fileName in files:
-          if fileName.startswith('.'):
+          if fileName.startswith('.') or fileName.startswith('trash_'):
             continue
           path = (Path(root).relative_to(self.basePath) /fileName).as_posix()
           if path not in pathsInDB_data:
