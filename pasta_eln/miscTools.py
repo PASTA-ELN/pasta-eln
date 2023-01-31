@@ -207,5 +207,5 @@ def restart():
   try:
     os.execv('pastaELN',[])  #installed version
   except:
-    os.execv(sys.executable, ['python','-m','pasta_eln.gui']) #started for programming or debugging
+    os.execv(sys.executable, ['python3','-m','pasta_eln.gui']) #started for programming or debugging
   return
