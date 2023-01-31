@@ -35,7 +35,7 @@ class MainWindow(QMainWindow):
     menu = self.menuBar()
     fileMenu = menu.addMenu("&File")
     fileMenu.addAction(exportA)
-    viewMenu = menu.addMenu("&View")
+    _ = menu.addMenu("&View")
     menu.addAction(exportA2)
 
     #GUI elements
@@ -64,7 +64,10 @@ class MainWindow(QMainWindow):
     return
 
   def export(self):
-    print('EXPORT')
+    """
+    Test
+    """
+    print('EXPORT',self)
 
 
 ##############
