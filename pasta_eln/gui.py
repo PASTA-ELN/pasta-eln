@@ -69,7 +69,8 @@ def main():
   logging.info('Start PASTA GUI')
   # remainder
   theme = window.backend.configuration['GUI']['theme']
-  apply_stylesheet(app, theme=theme+'.xml')
+  if theme!='none':
+    apply_stylesheet(app, theme=theme+'.xml')
   window.show()
   app.exec()
   logging.info('End PASTA GUI')
