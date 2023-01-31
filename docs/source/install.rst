@@ -57,16 +57,21 @@ which typically can take some time. Afterwards, start PASTA-ELN with
 which starts automatically the **setup** if no valid PASTA-ELN configuration is found.
 
 If, for whatever reason, the graphical interface does not open, one can also execute
+
 .. code-block:: bash
 
     pastaELN_Install
 
 to determine the status. To start the setup of the requirements, execute
+
 .. code-block:: bash
 
     pastaELN_Install install
 
-**ONLY DO THE NEXT STEP WHEN YOU SETUP PASTA-ELN.** Finally, to create the example dataset, execute
+**ONLY DO THE NEXT STEP WHEN YOU SETUP PASTA-ELN FOR THE FIRST TIME.**
+
+Finally, to create the example dataset, execute
+
 .. code-block:: bash
 
     pastaELN_Install example
