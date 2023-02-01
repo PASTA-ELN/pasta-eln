@@ -145,7 +145,7 @@ class Backend(CLI_Mixin):
       view = self.db.getView('viewHierarchy/viewHierarchy', startKey=thisStack) #not faster with cT.getChildren
       childNum = 0
       for item in view:
-        if item['value'][1][0]=='x0':
+        if item['value'][1][0]=='x0' or item['value'][1][0][0]!='x':
           continue
         if thisStack == ' '.join(item['key'].split(' ')[:-1]): #remove last item from string
           childNum += 1
@@ -283,11 +283,37 @@ class Backend(CLI_Mixin):
     callback = kwargs.get('callback', None)
     while len(self.hierStack)>1:
       self.changeHierarchy(None)
-
+    rerunScanTree = False
+    startPath = Path(self.cwd)
+    #prepare lists and start iterating
     inDB_all = self.db.getView('viewHierarchy/viewPaths')
-    pathsInDB_all =  [i['key'] for i in inDB_all]
+    pathsInDB_x    = [i['key'] for i in inDB_all if i['value'][1][0][0]=='x']  #all structure elements: task, subtasts
     pathsInDB_data = [i['key'] for i in inDB_all if i['value'][1][0][0]!='x']  #TODO possibly filter all measurements
-    for root, _, files in os.walk(self.basePath):
+    for root, dirs, files in os.walk(self.cwd, topdown=True):
+      #find parent-document
+      self.cwd = Path(root).relative_to(self.basePath)
+      if self.cwd.name.startswith('trash_'):
+        del dirs
+        del files
+        continue
+      parentID = [i for i in inDB_all if i['key']==self.cwd.as_posix()][0]['id']
+      parentDoc = self.db.getDoc(parentID)
+      hierStack = parentDoc['-branch'][0]['stack']+[parentID]
+      # handle directories
+      for dirName in dirs[::-1]: #sorted forward in Linux
+        if dirName.startswith('.') or dirName.startswith('trash_'):
+          continue
+        path = (Path(root)/dirName).relative_to(self.basePath).as_posix()
+        if path in pathsInDB_x: #path already in database
+          pathsInDB_x.remove(path)
+          continue
+        _ = self.addData('x'+str(len(hierStack)), {'-name':dirName}, hierStack)
+        newDir = Path(self.basePath)/self.db.getDoc(self.currentID)['-branch'][0]['path']
+        (newDir/'.id_pastaELN.json').rename(Path(self.basePath)/root/dirName/'.id_pastaELN.json') #move index file into old folder
+        newDir.rmdir()                     #remove created path
+        (Path(self.basePath)/root/dirName).rename(newDir) #move old to new path
+        rerunScanTree = True
+      # handle files
       for fileName in files:
         if fileName.startswith('.') or fileName.startswith('trash_'):
           continue
@@ -297,23 +323,14 @@ class Backend(CLI_Mixin):
           pathsInDB_data.remove(path)
         else:
           print("Add file to DB:",path)
-          #find parent-document
-          parent = Path(root).relative_to(self.basePath)
-          parentID = None
-          itemTarget = -1
-          while parentID is None:
-            if parent.as_posix() in pathsInDB_all:
-              idx = pathsInDB_all.index(parent.as_posix())
-              itemTarget = inDB_all[idx]
-              parentID = itemTarget['id']
-              break
-            parent = parent.parent
-          parentDoc = self.db.getDoc(parentID)
-          hierStack = parentDoc['-branch'][0]['stack']+[parentID]
           _ = self.addData('measurement', {'-name':path}, hierStack, callback=callback)
+    #finish method
+    self.cwd = startPath
     orphans = [i for i in pathsInDB_data if i.startswith(self.cwd.relative_to(self.basePath).as_posix())]
     print('These files are on DB but not harddisk\n', orphans )
-    for orphan in orphans:
+    orphanDirs = [i for i in pathsInDB_x if i!=self.cwd.relative_to(self.basePath).as_posix()]
+    print('These directories are on DB but not harddisk\n', orphanDirs )
+    for orphan in orphans+orphanDirs:
       docID = [i for i in inDB_all if i['key']==orphan][0]['id']
       doc   = dict(self.db.getDoc(docID))
       change = None
@@ -323,6 +340,8 @@ class Backend(CLI_Mixin):
                                 'stack':branch['stack'] }}
           break
       self.db.updateDoc(change, docID)
+    if rerunScanTree:
+      self.scanTree()
     return
 
 

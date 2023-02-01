@@ -593,7 +593,7 @@ class Database:
               if verbose:
                 outstring+= f'{Bcolors.OKBLUE}**ok-ish branch stack length = 0: no parent for procedure/sample '+doc['_id']+'|'+doc['-name']+f'{Bcolors.ENDC}\n'
           if not '-type' in doc or len(doc['-type'])==0:
-            outstring+= f'{Bcolors.FAIL}**ERROR dch04: no type in '+doc['_id']+f'{Bcolors.ENDC}\n'
+            outstring+= f'{bcolors.HEADER}**Unsure dch04: no type in (removed data?)'+doc['_id']+f'{bcolors.ENDC}\n'
             continue
           if doc['-type'][0][0]=='x':
             try:
@@ -627,11 +627,11 @@ class Database:
                   if parentBranch['path'] is not None and parentBranch['path'] in branch['path']:
                     onePathFound = True
                 if not onePathFound:
-                  outstring+= f'{Bcolors.FAIL}**ERROR dch08: parent does not have corresponding path '+doc['_id']+'| parentID '+parentID+f'{Bcolors.ENDC}\n'
+                  outstring+= f'{bcolors.HEADER}**Unsure dch08: parent does not have corresponding path (remote content) '+doc['_id']+'| parentID '+parentID+f'{bcolors.ENDC}\n'
 
         #every doc should have a name
         if not '-name' in doc:
-          outstring+= f'{Bcolors.FAIL}**ERROR dch17: -name not in '+doc['_id']+f'{Bcolors.ENDC}\n'
+          outstring+= f'{bcolors.HEADER}**Unsure dch17: -name not in (deleted doc?)'+doc['_id']+f'{bcolors.ENDC}\n'
           if repair and 'name' in doc:  #repair from v0.9.9->1.0.0
             doc['-name']=doc['name']
             del doc['name']
