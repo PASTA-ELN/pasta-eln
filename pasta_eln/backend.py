@@ -49,11 +49,11 @@ class Backend(CLI_Mixin):
       self.configuration = json.load(confFile)
     if self.configuration['version']!=2:
       print('**ERROR Configuration version does not fit')
-      raise Exception('VersionError')
+      raise ValueError('VersionError')
     if defaultProjectGroup =="":
       defaultProjectGroup = self.configuration['defaultProjectGroup']
     if not defaultProjectGroup in self.configuration['projectGroups']:
-      raise Exception('BadConfigurationFileError')
+      raise ValueError('BadConfigurationFileError')
     projectGroup = self.configuration['projectGroups'][defaultProjectGroup]
     if 'user' in projectGroup['local']:
       n,s = projectGroup['local']['user'], projectGroup['local']['password']
