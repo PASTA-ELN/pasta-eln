@@ -27,16 +27,19 @@ class MainWindow(QMainWindow):
     self.comm.formDoc.connect(self.formDoc)
 
     #Menubar
-    exportA = QAction("&Export data", self)
-    exportA.triggered.connect(self.export)
-    exportA2 = QAction("e&Xport data", self)
-    #exportA.setObjectName()
-    exportA2.triggered.connect(self.export)
     menu = self.menuBar()
     fileMenu = menu.addMenu("&File")
-    fileMenu.addAction(exportA)
-    _ = menu.addMenu("&View")
-    menu.addAction(exportA2)
+    viewMenu = menu.addMenu("&View list")
+    systemMenu = menu.addMenu("&System")
+    helpMenu = menu.addMenu("&Help")
+
+    for docType, docLabel in self.comm.backend.db.dataLabels.items():
+      if docType[0]=='x' and docType[1]!='0':
+        continue
+      action = QAction(docLabel, self)
+      action.setData(docType)
+      action.triggered.connect(self.viewMenu)
+      viewMenu.addAction(action)
 
     #GUI elements
     mainWidget = QWidget()
@@ -63,11 +66,14 @@ class MainWindow(QMainWindow):
     formWindow.exec()
     return
 
-  def export(self):
+
+  def viewMenu(self):
     """
-    Test
+    act on user pressing an item in view
     """
-    print('EXPORT',self)
+    docType = self.sender().data()
+    self.comm.changeTable.emit(docType, '')
+    return
 
 
 ##############

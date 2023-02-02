@@ -33,7 +33,7 @@ class Table(QWidget):
     self.setLayout(mainL)
 
 
-  @Slot(str)
+  @Slot(str, str)
   def changeTable(self, docType, projID):
     """
     What happens when the table should change should change

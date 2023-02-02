@@ -70,14 +70,14 @@ class Details(QScrollArea):
       self.btnUser.show()
       self.btnDatabase.show()
     # Delete old widgets from layout
-    if self.metaDetailsL.itemAt(0) is not None:
-      self.metaDetailsL.itemAt(0).widget().setParent(None)
+    for i in reversed(range(self.metaDetailsL.count())):
+      self.metaDetailsL.itemAt(i).widget().setParent(None)
     if self.metaVendorL.itemAt(0) is not None:
       self.metaVendorL.itemAt(0).widget().setParent(None)
     if self.metaUserL.itemAt(0) is not None:
       self.metaUserL.itemAt(0).widget().setParent(None)
-    if self.metaDatabaseL.itemAt(0) is not None:
-      self.metaDatabaseL.itemAt(0).widget().setParent(None)
+    for i in reversed(range(self.metaDatabaseL.count())):
+      self.metaDatabaseL.itemAt(i).widget().setParent(None)
     if self.imageL.itemAt(0) is not None:
       self.imageL.itemAt(0).widget().setParent(None)
     self.imageW.hide()
