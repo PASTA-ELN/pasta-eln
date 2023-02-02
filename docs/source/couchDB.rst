@@ -1,4 +1,0 @@
-.. _couchDB:
-
-couchDB
-*******

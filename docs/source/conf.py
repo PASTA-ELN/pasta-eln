@@ -46,6 +46,7 @@ for setup_py_path in (opj(pardir, 'setup.py'),  # travis
 extensions = [
     'sphinx.ext.autodoc',
     #'sphinx.ext.autosummary',
+    'sphinx.ext.autosectionlabel',
     'sphinx.ext.doctest',
     'sphinx.ext.intersphinx',
     'sphinx.ext.todo',

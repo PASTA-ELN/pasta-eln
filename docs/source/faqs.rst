@@ -3,8 +3,8 @@
 Frequently Asked Questions (FAQ)
 ********************************
 
-Motivation
-==========
+Motivation for PASTA-ELN
+========================
 
 *What is the goal of the software?*
     Data has two origins
