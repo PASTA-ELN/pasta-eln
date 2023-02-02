@@ -3,7 +3,7 @@ import os, logging
 from pathlib import Path
 from PySide6.QtCore import Qt, Slot      # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QApplication    # pylint: disable=no-name-in-module
-from PySide6.QtGui import QIcon    # pylint: disable=no-name-in-module
+from PySide6.QtGui import QIcon, QAction    # pylint: disable=no-name-in-module
 from qt_material import apply_stylesheet  #of https://github.com/UN-GCPDS/qt-material
 
 from .backend import Backend
@@ -25,6 +25,18 @@ class MainWindow(QMainWindow):
     self.backend = Backend()
     self.comm = Communicate(self.backend)
     self.comm.formDoc.connect(self.formDoc)
+
+    #Menubar
+    exportA = QAction("&Export data", self)
+    exportA.triggered.connect(self.export)
+    exportA2 = QAction("e&Xport data", self)
+    #exportA.setObjectName()
+    exportA2.triggered.connect(self.export)
+    menu = self.menuBar()
+    fileMenu = menu.addMenu("&File")
+    fileMenu.addAction(exportA)
+    _ = menu.addMenu("&View")
+    menu.addAction(exportA2)
 
     #GUI elements
     mainWidget = QWidget()
@@ -50,6 +62,12 @@ class MainWindow(QMainWindow):
     formWindow = Form(self.comm.backend, doc)
     formWindow.exec()
     return
+
+  def export(self):
+    """
+    Test
+    """
+    print('EXPORT',self)
 
 
 ##############

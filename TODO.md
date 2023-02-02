@@ -25,3 +25,20 @@
 # Notes
 - curate, stars become #_curate, #_3 ... all start with _
 - allow to change docType of undefined types
+
+# Implement in future
+- sidebar
+  - hover over project, task, ...: on right side folder icon appears: if click: open filemanager in that folder
+- table
+  - export table as xls
+  - rows can be selected individually (shift) or select all: What to do with that
+    - one can hide things, change tags, ...
+  - search in table
+  - change table collumns
+- details
+  - show tags in boxes, different style
+    - if click on tag: show all items with the same tag
+- progressbar for scanning tree
+- add attachements / issues
+- removed items
+- Help

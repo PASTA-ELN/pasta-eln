@@ -56,7 +56,8 @@ rm pastaELN.log
 
 ## Notes on all systems
 ### Run Pasta-ELN directly from commandline without installation
-- python -m pasta_eln.installationTools
+- python3 -m pasta_eln.gui
+- python3 -m pasta_eln.installationTools
 - pastaELN.py in home directory of repository
 
 ---
@@ -66,6 +67,7 @@ rm pastaELN.log
 1. pylint pasta_eln
 2. normal commit to test all actions: pylint, documentation, ...
 3. create a new version: ./commit.py "Minimal viable product" 1
+   **THIS STEP IS NECESSARY FOR ALL GITHUB-Actions TO WORK**
 
 ### How to write small python programs that do things
 #### Backend

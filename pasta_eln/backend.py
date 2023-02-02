@@ -49,11 +49,11 @@ class Backend(CLI_Mixin):
       self.configuration = json.load(confFile)
     if self.configuration['version']!=2:
       print('**ERROR Configuration version does not fit')
-      raise Exception('VersionError')
+      raise ValueError('VersionError')
     if defaultProjectGroup =="":
       defaultProjectGroup = self.configuration['defaultProjectGroup']
     if not defaultProjectGroup in self.configuration['projectGroups']:
-      raise Exception('BadConfigurationFileError')
+      raise ValueError('BadConfigurationFileError')
     projectGroup = self.configuration['projectGroups'][defaultProjectGroup]
     if 'user' in projectGroup['local']:
       n,s = projectGroup['local']['user'], projectGroup['local']['password']
@@ -145,7 +145,7 @@ class Backend(CLI_Mixin):
       view = self.db.getView('viewHierarchy/viewHierarchy', startKey=thisStack) #not faster with cT.getChildren
       childNum = 0
       for item in view:
-        if item['value'][1][0]=='x0':
+        if item['value'][1][0]=='x0' or item['value'][1][0][0]!='x':
           continue
         if thisStack == ' '.join(item['key'].split(' ')[:-1]): #remove last item from string
           childNum += 1
@@ -201,7 +201,6 @@ class Backend(CLI_Mixin):
             # if not 'image' in doc and not 'content' in doc and not 'otherELNName' in doc:  #did not get valuable data: extractor does not exit
             #   return False
           if len(view)==1:  #measurement is already in database
-            self.useExtractors(path,shasum,doc,exitAfterDataLad=True)
             doc['_id'] = view[0]['id']
             doc['shasum'] = shasum
             edit = True
@@ -284,13 +283,39 @@ class Backend(CLI_Mixin):
     callback = kwargs.get('callback', None)
     while len(self.hierStack)>1:
       self.changeHierarchy(None)
-
+    rerunScanTree = False
+    startPath = Path(self.cwd)
+    #prepare lists and start iterating
     inDB_all = self.db.getView('viewHierarchy/viewPaths')
-    pathsInDB_all =  [i['key'] for i in inDB_all]
+    pathsInDB_x    = [i['key'] for i in inDB_all if i['value'][1][0][0]=='x']  #all structure elements: task, subtasts
     pathsInDB_data = [i['key'] for i in inDB_all if i['value'][1][0][0]!='x']  #TODO possibly filter all measurements
-    for root, _, files in os.walk(self.basePath):
+    for root, dirs, files in os.walk(self.cwd, topdown=True):
+      #find parent-document
+      self.cwd = Path(root).relative_to(self.basePath)
+      if self.cwd.name.startswith('trash_'):
+        del dirs
+        del files
+        continue
+      parentID = [i for i in inDB_all if i['key']==self.cwd.as_posix()][0]['id']
+      parentDoc = self.db.getDoc(parentID)
+      hierStack = parentDoc['-branch'][0]['stack']+[parentID]
+      # handle directories
+      for dirName in dirs[::-1]: #sorted forward in Linux
+        if dirName.startswith('.') or dirName.startswith('trash_'):
+          continue
+        path = (Path(root)/dirName).relative_to(self.basePath).as_posix()
+        if path in pathsInDB_x: #path already in database
+          pathsInDB_x.remove(path)
+          continue
+        _ = self.addData('x'+str(len(hierStack)), {'-name':dirName}, hierStack)
+        newDir = Path(self.basePath)/self.db.getDoc(self.currentID)['-branch'][0]['path']
+        (newDir/'.id_pastaELN.json').rename(Path(self.basePath)/root/dirName/'.id_pastaELN.json') #move index file into old folder
+        newDir.rmdir()                     #remove created path
+        (Path(self.basePath)/root/dirName).rename(newDir) #move old to new path
+        rerunScanTree = True
+      # handle files
       for fileName in files:
-        if fileName.startswith('.'):
+        if fileName.startswith('.') or fileName.startswith('trash_'):
           continue
         path = (Path(root).relative_to(self.basePath) /fileName).as_posix()
         if path in pathsInDB_data:
@@ -298,22 +323,25 @@ class Backend(CLI_Mixin):
           pathsInDB_data.remove(path)
         else:
           print("Add file to DB:",path)
-          #find parent-document
-          parent = Path(root).relative_to(self.basePath)
-          parentID = None
-          itemTarget = -1
-          while parentID is None:
-            if parent.as_posix() in pathsInDB_all:
-              idx = pathsInDB_all.index(parent.as_posix())
-              itemTarget = inDB_all[idx]
-              parentID = itemTarget['id']
-              break
-            parent = parent.parent
-          parentDoc = self.db.getDoc(parentID)
-          hierStack = parentDoc['-branch'][0]['stack']+[parentID]
           _ = self.addData('measurement', {'-name':path}, hierStack, callback=callback)
-    orphanFiles = [i for i in pathsInDB_data if i.startswith(self.cwd.as_posix())]
-    print('These files are on DB but not harddisk',pathsInDB_data, '\n', orphanFiles )
+    #finish method
+    self.cwd = startPath
+    orphans = [i for i in pathsInDB_data if i.startswith(self.cwd.relative_to(self.basePath).as_posix())]
+    print('These files are on DB but not harddisk\n', orphans )
+    orphanDirs = [i for i in pathsInDB_x if i!=self.cwd.relative_to(self.basePath).as_posix()]
+    print('These directories are on DB but not harddisk\n', orphanDirs )
+    for orphan in orphans+orphanDirs:
+      docID = [i for i in inDB_all if i['key']==orphan][0]['id']
+      doc   = dict(self.db.getDoc(docID))
+      change = None
+      for branch in doc['-branch']:
+        if branch['path']==orphan:
+          change = {'-branch': {'op':'d', 'oldpath':branch['path'], 'path':branch['path'], \
+                                'stack':branch['stack'] }}
+          break
+      self.db.updateDoc(change, docID)
+    if rerunScanTree:
+      self.scanTree()
     return
 
 
@@ -342,7 +370,9 @@ class Backend(CLI_Mixin):
     pyPath = self.extractorPath/pyFile
     if len(doc['-type'])==1:
       doc['-type'] += [extension]
-    if pyPath.exists():
+    try:
+      if not pyPath.exists():
+        raise ValueError('Extractor does not exist')
       # import module and use to get data
       module  = importlib.import_module(pyFile[:-3])
       content = module.use(absFilePath, '/'.join(doc['-type']) )
@@ -362,8 +392,8 @@ class Backend(CLI_Mixin):
       else:
         doc['-type']     += doc['recipe'].split('/')
       del doc['recipe']
-    else:
-      print('  No extractor found',pyFile)
+    except:
+      print('  **Error with extractor',pyFile)
       doc['-type'] = ['-']
       doc['metaUser'] = {'filename':absFilePath.name, 'extension':absFilePath.suffix,
         'filesize':absFilePath.stat().st_size,
@@ -426,7 +456,7 @@ class Backend(CLI_Mixin):
       projDoc = self.db.getDoc(projI['id'])
       for root, _, files in os.walk(self.basePath/projDoc['-branch'][0]['path']):
         for fileName in files:
-          if fileName.startswith('.'):
+          if fileName.startswith('.') or fileName.startswith('trash_'):
             continue
           path = (Path(root).relative_to(self.basePath) /fileName).as_posix()
           if path not in pathsInDB_data:

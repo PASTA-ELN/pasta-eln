@@ -236,8 +236,7 @@ def configuration(command='test', user='', password='', pathPasta=''):
     conf = {}
     if command == 'repair':
       conf = createDefaultConfiguration(user, password, pathPasta)
-
-  print(json.dumps(conf, indent=2))
+  logging.info(json.dumps(conf, indent=2))
 
   if 'version' not in conf or conf['version']!=2:
     if command == 'repair':
@@ -339,7 +338,7 @@ def ontology(command='test'):
   elif command == 'install':
     logging.info('ontology starting ...')
     doc = json.loads(defaultOntology)
-    print(doc)
+    logging.info(str(doc))
     logging.info('ontology ending ...')
     # _ = backend.db.create_document(doc)
     return ''
