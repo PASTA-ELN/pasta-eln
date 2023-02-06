@@ -40,7 +40,7 @@ class Sidebar(QWidget):
           name     = [i for i in hierarchy if i['id']==projID][0]['value'][0]
         except:
           name     = 'ERROR OCCURRED'
-        btnProject = TextButton(name, self.btnProject, projectL, projID+'/')
+        TextButton(name, self.btnProject, projectL, projID+'/')
 
         # actions: scan, curate, ...
         actionW = QWidget()
@@ -63,22 +63,23 @@ class Sidebar(QWidget):
         self.widgetsList[projID] = listW
 
         # show folders as hierarchy
-        def iterateTree(nodeHier):
+        def iterateTree(nodeHier, projectID):
           """
           Recursive function to translate the hierarchical node into a tree-node
 
           Args:
             nodeHier (Anytree.Node): anytree node
+            projectID (str): project id of this tree
 
           Returns:
             QtTreeWidgetItem: tree node
           """
           #prefill with name, doctype, id
-          nodeTree = QTreeWidgetItem([nodeHier.name, projID+'/'+nodeHier.id ])
+          nodeTree = QTreeWidgetItem([nodeHier.name, projectID+'/'+nodeHier.id ])
           children = []
           for childHier in nodeHier.children:
             if childHier.docType[0][0]=='x':
-              childTree = iterateTree(childHier)
+              childTree = iterateTree(childHier, projectID)
               children.append(childTree)
           if len(children)>0:
             nodeTree.insertChildren(0,children)
@@ -89,7 +90,7 @@ class Sidebar(QWidget):
         treeW.setColumnCount(1)
         treeW.itemClicked.connect(self.btnTree)
         hierarchy = comm.backend.db.getHierarchy(projID)
-        treeW.insertTopLevelItem(0, iterateTree(hierarchy))
+        treeW.insertTopLevelItem(0, iterateTree(hierarchy, projID))
         projectL.addWidget(treeW)
 
         # finalize layout
@@ -128,10 +129,12 @@ class Sidebar(QWidget):
 
   def btnScan(self):
     """
+    What happens if user clicks button "Scan"
     """
     return
   def btnCurate(self):
     """
+    What happens if user clicks button "Curate"
     """
     return
   def btnTree(self, item):

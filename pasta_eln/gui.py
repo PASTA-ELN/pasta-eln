@@ -28,10 +28,10 @@ class MainWindow(QMainWindow):
 
     #Menubar
     menu = self.menuBar()
-    fileMenu = menu.addMenu("&File")
+    _ = menu.addMenu("&File")
     viewMenu = menu.addMenu("&View list")
-    systemMenu = menu.addMenu("&System")
-    helpMenu = menu.addMenu("&Help")
+    _ = menu.addMenu("&System")
+    _ = menu.addMenu("&Help")
 
     for docType, docLabel in self.comm.backend.db.dataLabels.items():
       if docType[0]=='x' and docType[1]!='0':
