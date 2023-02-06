@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 import sys, os, subprocess
+import configparser
 
 
 def get_version():
@@ -59,7 +60,6 @@ def createRequirementsFile():
   """
   Create a requirements.txt file from the setup.cfg information
   """
-  import configparser
   config = configparser.ConfigParser()
   config.read('setup.cfg')
   requirements = config['options']['install_requires'].split('\n')

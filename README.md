@@ -58,6 +58,7 @@ rm pastaELN.log
 ### Run Pasta-ELN directly from commandline without installation
 - python3 -m pasta_eln.gui
 - python3 -m pasta_eln.installationTools
+- python3 -m pasta_eln.Tests.3Projects
 - pastaELN.py in home directory of repository
 
 ---

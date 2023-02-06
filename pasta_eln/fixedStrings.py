@@ -6,7 +6,7 @@ defaultOntology = """
   "-version":2,
 
   "x0": {"link":"", "label":"Projects", "prop":[
-    {"name":"-name",    "query":"What is the project's name?"},
+    {"name":"-name",    "query":"What is the name of the project?"},
     {"name":"status",   "query":"What is the project status", "list":["active","paused","passive","finished"]},
     {"name":"objective","query":"What is the objective?"},
     {"name":"tags"},

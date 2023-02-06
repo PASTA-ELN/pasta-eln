@@ -286,8 +286,7 @@ def configuration(command='test', user='', password='', pathPasta=''):
     "imageWidthProject": 300,
     "imageWidthDetails": 600,
     "sidebarWidth": 200,
-    "magicTags": ["P1", "P2", "P3", "TODO", "DOING", "WAIT", "DONE"],
-    "defaultTags": ["Research","Administration"],
+    "defaultTags": ["P1", "P2", "P3", "TODO", "DOING", "WAIT", "DONE"],
     "loggingLevel": "INFO",
     "tableColumns": {},
     "tableColumnsMax": 16}

@@ -103,7 +103,7 @@ class Database:
     jsSHA= "if (doc['-type'][0]==='measurement'){emit(doc.shasum, doc['-name']);}"
     jsQR = "if (doc.qrCode.length > 0)"
     jsQR+= "{doc.qrCode.forEach(function(thisCode) {emit(thisCode, doc['-name']);});}"
-    tags = configGUI['magicTags'] + configGUI['defaultTags']
+    tags = configGUI['defaultTags']
     jsTags=str(tags)+".forEach(function(tag){if(doc.tags.indexOf('#'+tag)>-1) emit('#'+tag, doc['-name']);});"
     views = {'viewQR':jsQR, 'viewSHAsum':jsSHA, 'viewTags':jsTags}
     self.saveView('viewIdentify', views)
