@@ -33,6 +33,8 @@ class Sidebar(QWidget):
       for project in hierarchy:
         projID = project['id']
         projName = project['value'][0]
+        if self.openProjectId == '':
+          self.openProjectId = projID
         #head: show project name as button
         projectW = QWidget()
         projectL = QVBoxLayout(projectW)
@@ -41,6 +43,8 @@ class Sidebar(QWidget):
 
         # actions: scan, curate, ...
         actionW = QWidget()
+        if self.openProjectId != projID:
+          actionW.hide()
         actionL = QGridLayout(actionW)
         btnScan = TextButton('Scan', self.btnScan, None, projID)
         actionL.addWidget(btnScan, 0,0)
@@ -51,6 +55,8 @@ class Sidebar(QWidget):
 
         # lists: view list of measurements, ... of this project
         listW = QWidget()
+        if self.openProjectId != projID:
+          listW.hide()
         listL = QGridLayout(listW)
         for idx, doctype in enumerate(comm.backend.db.dataLabels):
           if doctype[0]!='x':
@@ -112,16 +118,19 @@ class Sidebar(QWidget):
     """
     btnName = self.sender().accessibleName()
     projID, item = btnName.split('/')
-    if item=='':
-      if self.widgetsHidden[projID]: #get button in question
-        self.widgets[projID].show()
-        self.widgetsHidden[projID]=False
-        self.comm.changeProject.emit(projID, item)
-      else:
-        self.widgets[projID].hide()
-        self.widgetsHidden[projID]=True
-    else:
-      self.comm.changeProject.emit(projID, item)
+    if item=='': #clicked on project-button, not tree view
+      self.openProjectId = projID
+      for docID, widget in self.widgetsAction.items():
+        if docID == projID:
+          widget.show()
+        else:
+          widget.hide()
+      for docID, widget in self.widgetsList.items():
+        if docID == projID:
+          widget.show()
+        else:
+          widget.hide()
+    self.comm.changeProject.emit(projID, item)
     return
 
   def btnScan(self):

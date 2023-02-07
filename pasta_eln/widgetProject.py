@@ -24,6 +24,8 @@ class Project(QWidget):
       docID (str): document id of focus item, if not given focus at project
     """
     #initialize
+    for i in reversed(range(self.mainL.count())):
+      self.mainL.itemAt(i).widget().setParent(None)
     treeW = QTreeWidget()
     treeW.setColumnCount(1)
     treeW.setHeaderHidden(True)
