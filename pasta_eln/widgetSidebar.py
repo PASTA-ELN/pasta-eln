@@ -17,7 +17,7 @@ class Sidebar(QWidget):
 
     # GUI elements
     mainL = QVBoxLayout()
-    mainL.setContentsMargins(0,0,0,0)
+    mainL.setContentsMargins(7,77,7,7)
     mainL.setSpacing(7)
     self.setLayout(mainL)
     # storage of all projects
@@ -27,48 +27,57 @@ class Sidebar(QWidget):
 
     if hasattr(comm.backend, 'db'):
       # All projects
-      TextButton('All projects', self.btnDocType, mainL, 'x0/')
+      textButton = TextButton('All projects', self.btnDocType, mainL, 'x0/') #TODO weird formatting
+      textButton.setMaximumWidth(50)
+      textButton.setMinimumWidth(50)
+      textButton.setMaximumHeight(50)
+      textButton.setMinimumHeight(50)
+      #Storage of Icons for Buttons
+      iconTable = {"Measurements":"ei.graph","Samples":"fa5s.flask","Procedures":"ei.file-edit","Instruments":"mdi.instrument-triangle"}
       # Add other data types
       dTypeW = QWidget()
-      dTypeL = QGridLayout(dTypeW)
-      dTypeL.setContentsMargins(0,0,0,0)
+      dTypeL = QVBoxLayout(dTypeW)
       for idx, doctype in enumerate(comm.backend.db.dataLabels):
         if doctype[0]!='x':
-          button = LetterButton(comm.backend.db.dataLabels[doctype], self.btnDocType, None, doctype+'/')
-          dTypeL.addWidget(button, int(idx/3), idx%3)
+          button = IconButton(iconTable[comm.backend.db.dataLabels[doctype]], self.btnDocType, None, doctype+'/') #TODO Icon-color
+          button.setMaximumWidth(50)
+          button.setMinimumWidth(50)
+          button.setMaximumHeight(50)
+          button.setMinimumHeight(50)
+          dTypeL.addWidget(button)
       mainL.addWidget(dTypeW)
 
-      projectIDs = [i['id'] for i in comm.backend.db.getView('viewDocType/x0')]
-      currentID  = None
-      for projID in projectIDs:
-        hierarchy = comm.backend.db.getHierarchy(projID)
-        for node in PreOrderIter(hierarchy, maxlevel=2):
-          if node.docType[0][0]!='x':
-            continue
-          if node.docType[0]=='x0':
-            button = TextButton(node.name, self.btnProject, mainL, node.id+'/', style='margin-top: 30')
-            projectW = QWidget()
-            projectW.hide()
-            projectL = QVBoxLayout(projectW)
-            projectL.setContentsMargins(0,0,0,0)
-            currentID = node.id
-            # Add other data types
-            dTypeW = QWidget()
-            dTypeL = QGridLayout(dTypeW)
-            dTypeL.setContentsMargins(0,0,0,0)
-            for idx, doctype in enumerate(comm.backend.db.dataLabels):
-              if doctype[0]!='x':
-                button = LetterButton(comm.backend.db.dataLabels[doctype], self.btnDocType, None, doctype+'/'+currentID)
-                dTypeL.addWidget(button, int(idx/3), idx%3)
-            # create widgets
-            projectL.addWidget(dTypeW)
-            self.widgets[currentID] = projectW
-            self.layouts[currentID] = projectL
-            self.widgetsHidden[currentID] = True
-            mainL.addWidget(projectW)
-          if node.docType[0]=='x1':
-            button = TextButton(node.name, self.btnProject, self.layouts[currentID], currentID+'/'+node.id, \
-                                style='margin-left: 20')
+      # projectIDs = [i['id'] for i in comm.backend.db.getView('viewDocType/x0')]
+      # currentID  = None
+      # for projID in projectIDs:
+      #   hierarchy = comm.backend.db.getHierarchy(projID)
+      #   for node in PreOrderIter(hierarchy, maxlevel=2):
+      #     if node.docType[0][0]!='x':
+      #       continue
+      #     if node.docType[0]=='x0':
+      #       button = TextButton(node.name, self.btnProject, mainL, node.id+'/', style='margin-top: 30')
+      #       projectW = QWidget()
+      #       projectW.hide()
+      #       projectL = QVBoxLayout(projectW)
+      #       projectL.setContentsMargins(0,0,0,0)
+      #       currentID = node.id
+      #       # Add other data types
+      #       dTypeW = QWidget()
+      #       dTypeL = QVBoxLayout(dTypeW)
+      #       dTypeL.setContentsMargins(0,0,0,0)
+      #       for idx, doctype in enumerate(comm.backend.db.dataLabels):
+      #         if doctype[0]!='x':
+      #           button = LetterButton(comm.backend.db.dataLabels[doctype], self.btnDocType, None, doctype+'/'+currentID)
+      #           dTypeL.addWidget(button)
+      #       # create widgets
+      #       projectL.addWidget(dTypeW)
+      #       self.widgets[currentID] = projectW
+      #       self.layouts[currentID] = projectL
+      #       self.widgetsHidden[currentID] = True
+      #       mainL.addWidget(projectW)
+      #     if node.docType[0]=='x1':
+      #       button = TextButton(node.name, self.btnProject, self.layouts[currentID], currentID+'/'+node.id, \
+      #                           style='margin-left: 20')
 
     # Other buttons
     mainL.addStretch(1)
