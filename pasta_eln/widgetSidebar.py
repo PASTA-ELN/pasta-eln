@@ -66,40 +66,41 @@ class Sidebar(QWidget):
         self.widgetsList[projID] = listW
 
         # show folders as hierarchy
-        def iterateTree(nodeHier, projectID):
-          """
-          Recursive function to translate the hierarchical node into a tree-node
-
-          Args:
-            nodeHier (Anytree.Node): anytree node
-            projectID (str): project id of this tree
-
-          Returns:
-            QtTreeWidgetItem: tree node
-          """
-          #prefill with name, doctype, id
-          nodeTree = QTreeWidgetItem([nodeHier.name, projectID+'/'+nodeHier.id ])
-          children = []
-          for childHier in nodeHier.children:
-            if childHier.docType[0][0]=='x':
-              childTree = iterateTree(childHier, projectID)
-              children.append(childTree)
-          if len(children)>0:
-            nodeTree.insertChildren(0,children)
-          return nodeTree
-
         treeW = QTreeWidget()
         treeW.setHeaderHidden(True)
         treeW.setColumnCount(1)
         treeW.itemClicked.connect(self.btnTree)
         hierarchy = comm.backend.db.getHierarchy(projID)
-        treeW.insertTopLevelItem(0, iterateTree(hierarchy, projID))
+        treeW.insertTopLevelItem(0, self.iterateTree(hierarchy, projID))
         projectL.addWidget(treeW)
 
         # finalize layout
         mainL.addWidget(projectW)
     # Other buttons
     mainL.addStretch(1)
+
+
+  def iterateTree(self, nodeHier, projectID):
+    """
+    Recursive function to translate the hierarchical node into a tree-node
+
+    Args:
+      nodeHier (Anytree.Node): anytree node
+      projectID (str): project id of this tree
+
+    Returns:
+      QtTreeWidgetItem: tree node
+    """
+    #prefill with name, doctype, id
+    nodeTree = QTreeWidgetItem([nodeHier.name, projectID+'/'+nodeHier.id ])
+    children = []
+    for childHier in nodeHier.children:
+      if childHier.docType[0][0]=='x':
+        childTree = self.iterateTree(childHier, projectID)
+        children.append(childTree)
+    if len(children)>0:
+      nodeTree.insertChildren(0,children)
+    return nodeTree
 
 
   def btnDocType(self):
