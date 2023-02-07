@@ -1,4 +1,5 @@
 .. _dodonts:
+
 Dos and Do-nots
 ***************
 
@@ -26,6 +27,3 @@ Exported data from instrument software is only the second best option
   Software that is connected to the instrument often allows you to export data to the csv-format. Sometimes, there is no other option and the scientist should use that exported data that is better than the diagram-image.
 
   Even better, reading the binary raw data because that data contains the full accuracy of data, it contains calibration and other metadata settings which can help you to identify outliers, trends...
-
-
-
