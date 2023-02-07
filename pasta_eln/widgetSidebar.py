@@ -30,17 +30,14 @@ class Sidebar(QWidget):
 
     if hasattr(comm.backend, 'db'):
       hierarchy = comm.backend.db.getView('viewDocType/x0')
-      projectIDs = [i['id'] for i in hierarchy]
-      for projID in projectIDs:
+      for project in hierarchy:
+        projID = project['id']
+        projName = project['value'][0]
         #head: show project name as button
         projectW = QWidget()
         projectL = QVBoxLayout(projectW)
         projectL.setContentsMargins(0,0,0,0)
-        try:
-          name     = [i for i in hierarchy if i['id']==projID][0]['value'][0]
-        except:
-          name     = 'ERROR OCCURRED'
-        TextButton(name, self.btnProject, projectL, projID+'/')
+        TextButton(projName, self.btnProject, projectL, projID+'/')
 
         # actions: scan, curate, ...
         actionW = QWidget()
