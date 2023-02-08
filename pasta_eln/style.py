@@ -111,8 +111,10 @@ class IconButton(QPushButton):
     """
     super().__init__()
     color = 'black' if backend is None else getColor(backend, 'primary')
-    icon = qta.icon(iconName, color=color, scale_factor=1.2)
+    icon = qta.icon(iconName, color=color, scale_factor=1)
     self.setIcon(icon)
+    self.setStyleSheet("border-width:0")
+    self.setCheckable(True)
     self.setText('')
     self.clicked.connect(function)
     if name != '':

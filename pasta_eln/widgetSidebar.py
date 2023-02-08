@@ -1,6 +1,7 @@
 """ Sidebar widget that includes the navigation items """
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QGridLayout    # pylint: disable=no-name-in-module
 from anytree import PreOrderIter
+from PySide6.QtCore import QSize
 
 from .dialogConfig import Configuration
 from .style import TextButton, LetterButton, IconButton
@@ -12,12 +13,11 @@ class Sidebar(QWidget):
     self.comm = comm
     if hasattr(self.comm.backend, 'configuration'):
       width = self.comm.backend.configuration['GUI']['sidebarWidth']
-      self.setMinimumWidth(width)
-      self.setMaximumWidth(width)
+      self.setFixedWidth(64)
 
     # GUI elements
     mainL = QVBoxLayout()
-    mainL.setContentsMargins(7,77,7,7)
+    mainL.setContentsMargins(7,77,7,27)
     mainL.setSpacing(7)
     self.setLayout(mainL)
     # storage of all projects
@@ -27,23 +27,20 @@ class Sidebar(QWidget):
 
     if hasattr(comm.backend, 'db'):
       # All projects
-      textButton = TextButton('All projects', self.btnDocType, mainL, 'x0/') #TODO weird formatting
-      textButton.setMaximumWidth(50)
-      textButton.setMinimumWidth(50)
-      textButton.setMaximumHeight(50)
-      textButton.setMinimumHeight(50)
+      textButton = IconButton('ei.book', self.btnDocType, mainL, 'x0/', 'All Projects', backend=self.comm.backend) #TODO weird formatting on Right side
+      textButton.setFixedSize(50,50)
+      textButton.setIconSize(QSize(30,30))
       #Storage of Icons for Buttons
-      iconTable = {"Measurements":"ei.graph","Samples":"fa5s.flask","Procedures":"ei.file-edit","Instruments":"mdi.instrument-triangle"}
+      iconTable = {"Measurements":"fa.thermometer-3","Samples":"fa5s.vial","Procedures":"fa.list-ol","Instruments":"ri.scales-2-line"}
       # Add other data types
       dTypeW = QWidget()
       dTypeL = QVBoxLayout(dTypeW)
+      dTypeL.setContentsMargins(0,10,0,0)
       for idx, doctype in enumerate(comm.backend.db.dataLabels):
         if doctype[0]!='x':
-          button = IconButton(iconTable[comm.backend.db.dataLabels[doctype]], self.btnDocType, None, doctype+'/') #TODO Icon-color
-          button.setMaximumWidth(50)
-          button.setMinimumWidth(50)
-          button.setMaximumHeight(50)
-          button.setMinimumHeight(50)
+          button = IconButton(iconTable[comm.backend.db.dataLabels[doctype]], self.btnDocType, mainL, doctype+'/', comm.backend.db.dataLabels[doctype], backend=self.comm.backend)
+          button.setFixedSize(50,50)
+          button.setIconSize(QSize(30, 30))
           dTypeL.addWidget(button)
       mainL.addWidget(dTypeW)
 
@@ -81,7 +78,9 @@ class Sidebar(QWidget):
 
     # Other buttons
     mainL.addStretch(1)
-    IconButton('fa.gear', self.btnConfig, mainL, backend=self.comm.backend)
+    settingButton = IconButton('fa.gear', self.btnConfig, mainL, backend=self.comm.backend)
+    settingButton.setFixedSize(50,50)
+    settingButton.setIconSize(QSize(20, 20))
     if not hasattr(comm.backend, 'db'):  #if no backend
       configWindow = Configuration(comm.backend, 'setup')
       configWindow.exec()
