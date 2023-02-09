@@ -4,7 +4,7 @@ from anytree import PreOrderIter
 from PySide6.QtCore import QSize
 
 from .dialogConfig import Configuration
-from .style import TextButton, LetterButton, IconButton
+from .style import RadioIconButton, TextButton, LetterButton, IconButton
 
 class Sidebar(QWidget):
   """ Sidebar widget that includes the navigation items """
@@ -13,11 +13,11 @@ class Sidebar(QWidget):
     self.comm = comm
     if hasattr(self.comm.backend, 'configuration'):
       width = self.comm.backend.configuration['GUI']['sidebarWidth']
-      self.setFixedWidth(64)
+      self.setFixedWidth(width)#64
 
     # GUI elements
     mainL = QVBoxLayout()
-    mainL.setContentsMargins(7,77,7,27)
+    mainL.setContentsMargins(7,77,7,7)
     mainL.setSpacing(7)
     self.setLayout(mainL)
     # storage of all projects
@@ -27,8 +27,8 @@ class Sidebar(QWidget):
 
     if hasattr(comm.backend, 'db'):
       # All projects
-      textButton = IconButton('ei.book', self.btnDocType, mainL, 'x0/', 'All Projects', backend=self.comm.backend) #TODO weird formatting on Right side
-      textButton.setFixedSize(50,50)
+      textButton = RadioIconButton('ei.book', self.btnDocType, mainL, 'x0/', 'All Projects', backend=self.comm.backend) #TODO weird formatting on Right side
+      textButton.setFixedSize(width,50)
       textButton.setIconSize(QSize(30,30))
       #Storage of Icons for Buttons
       iconTable = {"Measurements":"fa.thermometer-3","Samples":"fa5s.vial","Procedures":"fa.list-ol","Instruments":"ri.scales-2-line"}
@@ -38,8 +38,8 @@ class Sidebar(QWidget):
       dTypeL.setContentsMargins(0,10,0,0)
       for idx, doctype in enumerate(comm.backend.db.dataLabels):
         if doctype[0]!='x':
-          button = IconButton(iconTable[comm.backend.db.dataLabels[doctype]], self.btnDocType, mainL, doctype+'/', comm.backend.db.dataLabels[doctype], backend=self.comm.backend)
-          button.setFixedSize(50,50)
+          button = RadioIconButton(iconTable[comm.backend.db.dataLabels[doctype]], self.btnDocType, mainL, doctype+'/', comm.backend.db.dataLabels[doctype], backend=self.comm.backend)
+          button.setFixedSize(width,50)
           button.setIconSize(QSize(30, 30))
           dTypeL.addWidget(button)
       mainL.addWidget(dTypeW)
@@ -79,8 +79,9 @@ class Sidebar(QWidget):
     # Other buttons
     mainL.addStretch(1)
     settingButton = IconButton('fa.gear', self.btnConfig, mainL, backend=self.comm.backend)
-    settingButton.setFixedSize(50,50)
-    settingButton.setIconSize(QSize(20, 20))
+    settingButton.setFixedSize(width,50)
+    settingButton.setIconSize(QSize(30, 30))
+    settingButton.setStyleSheet("border-width:2")
     if not hasattr(comm.backend, 'db'):  #if no backend
       configWindow = Configuration(comm.backend, 'setup')
       configWindow.exec()
