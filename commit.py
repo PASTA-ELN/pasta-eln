@@ -55,6 +55,7 @@ def newVersion(level=2, message=''):
   os.system('git push')
   os.system('git push origin v'+version)
   os.system('git mv Tests pasta_eln/Tests')
+  os.system('git commit -a -m "Added Tests back into distribution"')
   return
 
 
