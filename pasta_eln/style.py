@@ -1,7 +1,7 @@
 """ all styling of buttons and other general widgets, some defined colors... """
 from PySide6.QtWidgets import QPushButton, QLabel, QSizePolicy  # pylint: disable=no-name-in-module
 from PySide6.QtGui import QImage, QPixmap           # pylint: disable=no-name-in-module
-from PySide6.QtCore import QByteArray               # pylint: disable=no-name-in-module
+from PySide6.QtCore import QByteArray, Qt           # pylint: disable=no-name-in-module
 from PySide6.QtSvgWidgets import QSvgWidget         # pylint: disable=no-name-in-module
 import qtawesome as qta
 from qt_material import get_theme
@@ -129,14 +129,15 @@ class IconButton(QPushButton):
 
 class Image():
   """ Image widget depending on type of data """
-  def __init__(self, data, layout, width=-1):
+  def __init__(self, data, layout, width=-1, height=-1):
     """
     Initialization
 
     Args:
       data (str): image data in byte64-encoding or svg-encoding
       layout (QLayout): to be added to this layout
-      width (int): width of image
+      width (int): width of image, dominant if both are given
+      height (int): height of image
     """
     if data.startswith('data:image/'): #jpg or png image
       byteArr = QByteArray.fromBase64(bytearray(data[22:], encoding='utf-8'))
@@ -144,16 +145,23 @@ class Image():
       imageType = data[11:15].upper()
       imageW.loadFromData(byteArr, imageType)
       pixmap = QPixmap.fromImage(imageW)
+      if height>0:
+        pixmap = pixmap.scaledToHeight(height)
+      if width>0:
+        pixmap = pixmap.scaledToWidth(width)
       label = QLabel()
       label.setPixmap(pixmap)
+      label.setAlignment(Qt.AlignCenter)
       layout.addWidget(label)
     elif data.startswith('<?xml'): #svg image
       imageW = QSvgWidget()
       policy = imageW.sizePolicy()
+      policy.setHorizontalPolicy(QSizePolicy.Fixed)
       policy.setVerticalPolicy(QSizePolicy.Fixed)
       imageW.setSizePolicy(policy)
       imageW.renderer().load(bytearray(data, encoding='utf-8'))
       layout.addWidget(imageW)
+      layout.setAlignment(Qt.AlignCenter)
     else:
       print('WidgetProjectLeaf:What is this image |'+data[:50]+'|')
     return
@@ -174,5 +182,6 @@ class Label(QLabel):
     self.setText(text)
     if size == 'h1' :
       self.setStyleSheet('font-size: 14pt')
-    layout.addWidget(self)
+    if layout is not None:
+      layout.addWidget(self)
     return

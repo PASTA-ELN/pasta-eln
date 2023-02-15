@@ -3,7 +3,7 @@ import os, logging
 from pathlib import Path
 from PySide6.QtCore import Qt, Slot      # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QApplication    # pylint: disable=no-name-in-module
-from PySide6.QtGui import QIcon, QAction    # pylint: disable=no-name-in-module
+from PySide6.QtGui import QIcon, QAction, QKeySequence    # pylint: disable=no-name-in-module
 from qt_material import apply_stylesheet  #of https://github.com/UN-GCPDS/qt-material
 
 from .backend import Backend
@@ -33,10 +33,13 @@ class MainWindow(QMainWindow):
     _ = menu.addMenu("&System")
     _ = menu.addMenu("&Help")
 
+    shortCuts = {'measurement':'m', 'sample':'s'}
     for docType, docLabel in self.comm.backend.db.dataLabels.items():
       if docType[0]=='x' and docType[1]!='0':
         continue
       action = QAction(docLabel, self)
+      if docType in shortCuts:
+        action.setShortcut(QKeySequence("Ctrl+"+shortCuts[docType]))
       action.setData(docType)
       action.triggered.connect(self.viewMenu)
       viewMenu.addAction(action)

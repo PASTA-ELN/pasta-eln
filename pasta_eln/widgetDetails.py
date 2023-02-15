@@ -1,10 +1,10 @@
 """ widget that shows the details of the items """
 import json
-from PySide6.QtWidgets import QScrollArea, QWidget, QVBoxLayout, QLabel   # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QScrollArea, QWidget, QVBoxLayout, QHBoxLayout, QLabel   # pylint: disable=no-name-in-module
 from PySide6.QtCore import Qt, Slot, QByteArray   # pylint: disable=no-name-in-module
 from PySide6.QtSvgWidgets import QSvgWidget       # pylint: disable=no-name-in-module
 from PySide6.QtGui import QPixmap, QImage         # pylint: disable=no-name-in-module
-from .style import TextButton, Image
+from .style import TextButton, Image, Label
 
 class Details(QScrollArea):
   """ widget that shows the details of the items """
@@ -22,14 +22,12 @@ class Details(QScrollArea):
     self.setWidgetResizable(True)
     self.setWidget(self.mainW)
 
-    self.editBtn = TextButton('Edit',self.callEdit, self.mainL, hide=True)
+    headerW = QWidget()
+    self.headerL = QHBoxLayout(headerW)
+    self.mainL.addWidget(headerW)
     self.imageW = QWidget()
-    if hasattr(self.comm.backend, 'configuration'):
-      self.imageW.setMinimumWidth(self.comm.backend.configuration['GUI']['imageWidthDetails'])
     self.imageL = QVBoxLayout(self.imageW)
-
     #TODO_P2 include extractor change
-
     self.mainL.addWidget(self.imageW)
     self.btnDetails = TextButton('Details', self.showArea, self.mainL, 'Details', 'Show / hide details', \
                                   checkable=True, hide=True)
@@ -64,12 +62,13 @@ class Details(QScrollArea):
     """
     # show previously hidden buttons
     if docID!='':
-      self.editBtn.show()
       self.btnDetails.show()
       self.btnVendor.show()
       self.btnUser.show()
       self.btnDatabase.show()
     # Delete old widgets from layout
+    for i in reversed(range(self.headerL.count())):
+      self.headerL.itemAt(i).widget().setParent(None)
     for i in reversed(range(self.metaDetailsL.count())):
       self.metaDetailsL.itemAt(i).widget().setParent(None)
     if self.metaVendorL.itemAt(0) is not None:
@@ -89,9 +88,13 @@ class Details(QScrollArea):
       return
     # Create new
     self.doc   = self.comm.backend.db.getDoc(docID)
+    Label(self.doc['-name'],'h1', self.headerL)
+    self.editBtn = TextButton('Edit',self.callEdit, self.headerL)
     for key in self.doc:
       if key=='image':
-        Image(self.doc['image'], self.imageL)
+        width = self.comm.backend.configuration['GUI']['imageWidthDetails'] \
+                if hasattr(self.comm.backend, 'configuration') else 300
+        Image(self.doc['image'], self.imageL, width=width)
         self.imageW.show()
       elif key.startswith('_') or key.startswith('-'):
         label = QLabel(key+': '+str(self.doc[key]))
@@ -101,13 +104,13 @@ class Details(QScrollArea):
       elif key=='metaVendor':
         label = QLabel()
         label.setWordWrap(True)
-        label.setText(json.dumps(self.doc[key], indent=2)[2:-2]) #remove initial+trailing defaults
+        label.setText(json.dumps(self.doc[key], indent=2)[2:-2].replace('"','')) #remove initial+trailing defaults
         self.metaVendorL.addWidget(label)
         self.metaVendorW.show()
       elif key=='metaUser':
         label = QLabel()
         label.setWordWrap(True)
-        label.setText(json.dumps(self.doc[key], indent=2)[2:-2]) #remove initial+trailing defaults
+        label.setText(json.dumps(self.doc[key], indent=2)[2:-2].replace('"','')) #remove initial+trailing defaults
         self.metaUserL.addWidget(label)
         self.metaUserW.show()
       else:
