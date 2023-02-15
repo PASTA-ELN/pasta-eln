@@ -1,5 +1,5 @@
 """ New/Edit dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""
-from PySide6.QtWidgets import QDialog, QWidget, QFormLayout, QVBoxLayout, QLabel, QTextEdit, QPlainTextEdit, QComboBox, QLineEdit, QDialogButtonBox, QSplitter   # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QDialog, QWidget, QFormLayout, QVBoxLayout, QLabel, QTextEdit, QPlainTextEdit, QComboBox, QLineEdit, QDialogButtonBox, QSplitter, QSizePolicy   # pylint: disable=no-name-in-module
 from PySide6.QtCore import QSize
 from .style import Image, TextButton
 
@@ -41,16 +41,17 @@ class Form(QDialog):
         labelL = QVBoxLayout(labelW)
         labelL.addWidget(QLabel(key))
         TextButton('Show', self.btnAdvanced, labelL, key, checkable=True)
-
-        self.textEdit = QPlainTextEdit(value)
-        self.textShow = QTextEdit(value)
-        self.textShow.setReadOnly(True)
-        self.textEdit.textChanged.connect(self.textChanged)
-        self.splitter = QSplitter()
-        self.splitter.addWidget(self.textEdit)
-        self.splitter.addWidget(self.textShow)
-
-        formL.addRow(labelW, self.splitter)
+        setattr(self, 'textEdit_'+key, QPlainTextEdit(value))
+        getattr(self, 'textEdit_'+key).setAccessibleName(key)
+        getattr(self, 'textEdit_'+key).textChanged.connect(self.textChanged)
+        setattr(self, 'textShow_'+key, QTextEdit(value))
+        getattr(self, 'textShow_'+key).setReadOnly(True)
+        getattr(self, 'textShow_'+key).hide()
+        setattr(self, 'splitter_'+key, QSplitter())
+        getattr(self, 'splitter_'+key).setSizePolicy(QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding))
+        getattr(self, 'splitter_'+key).addWidget(getattr(self, 'textEdit_'+key))
+        getattr(self, 'splitter_'+key).addWidget(getattr(self, 'textShow_'+key))
+        formL.addRow(labelW, getattr(self,'splitter_'+key))
       elif isinstance(value, list):
         formL.addRow(QLabel(key),QLineEdit(' '.join(value)))
       elif isinstance(value, str):
@@ -87,27 +88,19 @@ class Form(QDialog):
     #TODO_P3 rework the name->name and save the changes
     print('btn clicked',btn.text(),'to work on ',self)
 
+
   def btnAdvanced(self, status):
     """
     Action if advanced button is clicked
     """
     key = self.sender().accessibleName()
     if status:
-      textEdit = QTextEdit(text) #one block
-      setattr(self, '_textEdit'+key, QTextEdit(value))
+      getattr(self, 'textShow_'+key).hide()
     else:
-      text = getattr(self, '_textEdit'+key).toPlainText()
-      editor = QTextEdit()
-      viewer = QTextEdit()
-      viewer.setBaseSize(QSize)
-      editor.textChanged.connect(viewer.setMarkdown)
-      splitter = QSplitter()
-      splitter.addWidget(editor)
-      splitter.addWidget(viewer)
-      setattr(self, '_textEdit'+key, splitter)
-
-    print("btn clickeeeed", key, text, status)
+      getattr(self, 'textShow_'+key).show()
+    return
 
   def textChanged(self):
-    # self.textShow.setMarkdown
-    self.textShow.setMarkdown(self.textEdit.toPlainText())
+    key = self.sender().accessibleName()
+    getattr(self, 'textShow_'+key).setMarkdown( getattr(self, 'textEdit_'+key).toPlainText())
+    return
