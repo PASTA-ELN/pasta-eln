@@ -1,23 +1,17 @@
 PASTA electronic lab notebook (ELN) | The favorite ELN for experimental scientists
 **********************************************************************************
 
-Pasta-dishes are a mixture pasta and sauce, the latter adds flavors and richness to the otherwise boring pasta. This ELN combines raw-data with rich metadata to allow advanced data science. In the database, one can fully adapt and improvise the metadata definitions to generate something novel. `PASTA-ELN`_ uses a local-first approach: store all data and metadata locally (always accessible to user) and synchronize with a server upon user request.
+PASTA-ELN makes it easy and convenient for experimental scientist to organize raw-data with metadata. Extractors automatically enter metadata and images into the database. Every researcher can fully adapt the metadata definitions to the personal taste and create an arbitrary folder structure. PASTA-ELN uses a local-first approach store all data and metadata locally (always accessible to user by the conventional software) and synchronize with a server upon user request.
 
-Extractors are little python scripts that 'extract' metadata, thumbnails and user-metadata from the raw measurement files. These little programs can be written/adopted by scientists and can be shared. :ref:`To read more ... for advanced users <extractors>`.
+Three (fictitious) user stories highlight different methods of using PASTA-ELN:
 
-In `PASTA-ELN`_, the meta-data is stored in a document database called **CouchDB**. This non-SQL database is very adaptive to the different raw data sources and corresponding different meta-data. :ref:`Read more on this CouchDB implementation ... for developers of PASTA <couchDB>`.
+- Andrew plans his research first and then executes the tasks. :ref:`Read on how you can follow this path.. <Planning based research>`.
+- Brenda has lots of data from her previous research in different folders and wants to integrate that data conveniently. :ref:`Read on how you can follow this path.. <Importing previous data>`.
+- Claire goes to many conferences and meetings and wants to structure her notes. :ref:`Read on how you can follow this path.. <Recording meeting notes>`.
 
-Adaptive software development (scrum) has revolutionized software projects. We believe that **agile project planning** is also highly beneficial for scientific research projects. :ref:`To read more ... for all useres <agileProjects>`.
+Additionally, PASTA-ELN supports the user in following good research data guidelines, :ref:`which are given ... <dodonts>`.
 
-The raw data is the origin of scientific work and has to follow the FAIR principles to be trusted. PASTA uses **DataLad** for the raw data and simplifies it to the typical use of experimental material scientists. :ref:`To read more on the use of dataLad ... for developers <dataLad>`.
-
-If CouchDB and DataLad are the two legs on which PASTA is built (and agile project planning is its heart), then the **python backend** is its torso, which links everything together. :ref:`Read more on the backend ... for developers <software>`.
-
-All users will interact with the python backend via **graphical user interfaces (GUI)** that use Qt and python for responsive work. :ref:`Read more on the GUI and React implementation ... for developers <software>`.
-
-The development of the software started shortly before the Corona-pandemic hit Germany in 2020. The current state is given in :ref:`features <features>`.
-
-More questions are answered in the :ref:`FAQs <faqs>`.
+If you want to know more about the motivation for creating PASTA, :ref:`an overview is given <motivation>`. Questions are answered in the :ref:`FAQs <faqs>`. If you want to contribute to the development, please visit us on `github.com <https://github.com/PASTA-ELN/pasta-eln>`_.
 
 Overview
 ========
@@ -26,23 +20,22 @@ Overview
    :maxdepth: 1
 
    install
+   userstory
+   dodonts
    faqs
    extractors
-   couchDB
-   agileProjects
-   datalad
-   software
-   _notes_on_rst
+   motivation
+
 
 Main contributors
 =================
 * Steffen Brinckmann: principal investigator, focuses on python backend
 * Thomas Düren: graphical user interfaces
+* Raphael Röske: graphical user interfaces
 * Velislava Yonkova: first extensive user
-* Hanna Tsybenko: documentation improvements
+* Hanna Tsybenko: testing
 * multiple colleagues that help with their valuable discussions
 
 
 .. |---| unicode:: U+02014 .. em dash
 
-.. _PASTA-ELN: https://pasta-eln.github.io/pasta-eln/

@@ -76,37 +76,4 @@ Finally, to create the example dataset, execute
 
     pastaELN_Install example
 
-Afterwards, the normal 'pastaELN' command should work.
-
-
-Setup of PASTA-ELN on Windows
------------------------------
-
-Git for windows
-^^^^^^^^^^^^^^^
-To install git for windows, execute the following step in its setup-assistent:
-
-1.-14. Next
-
-15. Install
-
-16. Finish
-
-Git-annex for windows
-^^^^^^^^^^^^^^^^^^^^^
-To install git-annex for windows, execute the following step in its setup-assistent:
-
-1. Next >
-2. I Agree
-3. Close
-
-CouchDB installation
-^^^^^^^^^^^^^^^^^^^^
-To install couchDB, execute the following step in its setup-assistent:
-
-1. -> Next
-2. Accept License -> Next
-3. -> Next
-4. enter UserName (e.g. admin) and password and click "Validate Credentials" -> Next
-5. -> Install
-6. -> Finish
+Afterwards, the normal 'pastaELN' command should work and a desktop icon should be present.

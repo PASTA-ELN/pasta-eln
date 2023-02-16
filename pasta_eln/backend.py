@@ -288,7 +288,7 @@ class Backend(CLI_Mixin):
     #prepare lists and start iterating
     inDB_all = self.db.getView('viewHierarchy/viewPaths')
     pathsInDB_x    = [i['key'] for i in inDB_all if i['value'][1][0][0]=='x']  #all structure elements: task, subtasts
-    pathsInDB_data = [i['key'] for i in inDB_all if i['value'][1][0][0]!='x']  #TODO possibly filter all measurements
+    pathsInDB_data = [i['key'] for i in inDB_all if i['value'][1][0][0]!='x']
     for root, dirs, files in os.walk(self.cwd, topdown=True):
       #find parent-document
       self.cwd = Path(root).relative_to(self.basePath)
@@ -450,7 +450,7 @@ class Backend(CLI_Mixin):
       output += "--- File status ---\n"
     viewProjects   = self.db.getView('viewDocType/x0')
     inDB_all = self.db.getView('viewHierarchy/viewPaths')
-    pathsInDB_data = [i['key'] for i in inDB_all if i['value'][1][0][0]!='x']  #TODO possibly filter all measurements
+    pathsInDB_data = [i['key'] for i in inDB_all if i['value'][1][0][0]!='x']
     count = 0
     for projI in viewProjects:
       projDoc = self.db.getDoc(projI['id'])

@@ -74,7 +74,7 @@ class Leaf(QWidget):
       return
     drag = QDrag(self)
     mimeData = QMimeData()
-    mimeData.setData('pasta/task', b'data')  #TODO_P2 give data
+    mimeData.setData('pasta/task', b'data')  #TODO_P3 drag-drop in project tree give data
     drag.setMimeData(mimeData)
     dropAction = drag.exec(Qt.CopyAction | Qt.MoveAction)
     print(dropAction)
@@ -103,6 +103,6 @@ class Leaf(QWidget):
     if event.mimeData().hasFormat('libfm/files'):
       print('dropped file',event.mimeData().urls()[0].toLocalFile())
     elif event.mimeData().hasFormat('pasta/task'):
-      print('received task for', self)  #TODO_P2
+      print('received task for', self)  #TODO_P3 drag drop receive
     event.acceptProposedAction()
     return

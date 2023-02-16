@@ -111,10 +111,13 @@ def fillDocBeforeCreate(data, docType):
     if 'shasum' not in data:
       data['shasum']=''
   # cleaning at end of all changes
+  toDelete = []
   for key in data:
     if isinstance(data[key], str):
       if data[key]=='' and key not in protectedKeys:
-        del data[key]
+        toDelete.append(key)
       else:
         data[key] = data[key].strip()
+  for key in toDelete:
+    del data[key]
   return data

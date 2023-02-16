@@ -1,4 +1,0 @@
-.. _agileprojects:
-
-Agile projects
-**************

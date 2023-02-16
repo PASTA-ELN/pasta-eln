@@ -44,8 +44,7 @@
 ### Restart Linux
 ``` bash
 rm .pastaELN.json
-rm -rf pastaELN/pastasExampleProject pastaELN/StandardOperatingProcedures
-sudo apt autoremove
+rm -rf pastaELN/exampleProject pastaELN/StandardOperatingProcedures
 sudo snap stop couchdb
 sudo snap remove couchdb
 
@@ -58,6 +57,7 @@ rm pastaELN.log
 ### Run Pasta-ELN directly from commandline without installation
 - python3 -m pasta_eln.gui
 - python3 -m pasta_eln.installationTools
+- python3 -m pasta_eln.Tests.3Projects
 - pastaELN.py in home directory of repository
 
 ---
@@ -81,17 +81,17 @@ print(pasta.outputHierarchy())
 ```
 
 #### Frontend
-For testing:
+For testing widgets put this code into "pasta_eln/test.py":
 ``` Python
-from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton
-from backend import Pasta
-from communicate import Communicate
-from widgetDetails import Details
+from PySide6.QtWidgets import QApplication, QMainWindow
+from .backend import Backend
+from .communicate import Communicate
+from .widgetDetails import Details
 
 class MainWindow(QMainWindow):
   def __init__(self):
     super().__init__()
-    self.backend = Pasta()
+    self.backend = Backend()
     comm = Communicate(self.backend)
     widget = Details(comm)
     self.setCentralWidget(widget)
@@ -102,6 +102,24 @@ window = MainWindow()
 window.show()
 app.exec()
 ```
+and execute "python -m pasta_eln.test"
+
+For testing dialogs put this code into "pasta_eln/test.py":
+``` Python
+import sys
+from PySide6.QtWidgets import QApplication
+from .dialogForm import Form
+from .backend import Backend
+from .communicate import Communicate
+
+app = QApplication(sys.argv)
+backend = Backend()
+doc = {'_id': 's-4cf85492d9684601b70e057c278e4ab5', '_rev': '1-3fbe417334a18b29e9f3180847dbae2b'}
+dialog = Form(backend, doc)
+dialog.show()
+sys.exit(app.exec())
+```
+and execute "python -m pasta_eln.test"
 
 #### General notes
 - Find qt-awesome icons: qta-browser

@@ -1,5 +1,5 @@
 """ Sidebar widget that includes the navigation items """
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QGridLayout    # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QGridLayout, QTreeWidget, QTreeWidgetItem  # pylint: disable=no-name-in-module
 from anytree import PreOrderIter
 from PySide6.QtCore import QSize
 
@@ -14,86 +14,93 @@ class Sidebar(QWidget):
     if hasattr(self.comm.backend, 'configuration'):
       width = self.comm.backend.configuration['GUI']['sidebarWidth']
       self.setFixedWidth(width)#64
+    if not hasattr(comm.backend, 'db'):  #if no backend
+      configWindow = Configuration(comm.backend, 'setup')
+      configWindow.exec()
 
     # GUI elements
     mainL = QVBoxLayout()
     mainL.setContentsMargins(7,77,7,7)
     mainL.setSpacing(7)
     self.setLayout(mainL)
-    # storage of all projects
-    self.widgets = {}
-    self.layouts = {}
-    self.widgetsHidden = {}
+    # storage of all project widgets and layouts
+    self.openProjectId = ''
+    self.widgetsAction = {}
+    self.widgetsList = {}
 
     if hasattr(comm.backend, 'db'):
-      # All projects
-      textButton = RadioIconButton('ei.book', self.btnDocType, mainL, 'x0/', 'All Projects', backend=self.comm.backend) #TODO weird formatting on Right side
-      textButton.setFixedSize(width,50)
-      textButton.setIconSize(QSize(30,30))
-      #Storage of Icons for Buttons
-      iconTable = {"Measurements":"fa.thermometer-3","Samples":"fa5s.vial","Procedures":"fa.list-ol","Instruments":"ri.scales-2-line"}
-      # Add other data types
-      dTypeW = QWidget()
-      dTypeL = QVBoxLayout(dTypeW)
-      dTypeL.setContentsMargins(0,10,0,0)
-      for idx, doctype in enumerate(comm.backend.db.dataLabels):
-        if doctype[0]!='x':
-          button = RadioIconButton(iconTable[comm.backend.db.dataLabels[doctype]], self.btnDocType, mainL, doctype+'/', comm.backend.db.dataLabels[doctype], backend=self.comm.backend)
-          button.setFixedSize(width,50)
-          button.setIconSize(QSize(30, 30))
-          dTypeL.addWidget(button)
-      mainL.addWidget(dTypeW)
+      hierarchy = comm.backend.db.getView('viewDocType/x0')
+      for project in hierarchy:
+        projID = project['id']
+        projName = project['value'][0]
+        if self.openProjectId == '':
+          self.openProjectId = projID
+        #head: show project name as button
+        projectW = QWidget()
+        projectL = QVBoxLayout(projectW)
+        projectL.setContentsMargins(0,0,0,0)
+        TextButton(projName, self.btnProject, projectL, projID+'/')
 
-      # projectIDs = [i['id'] for i in comm.backend.db.getView('viewDocType/x0')]
-      # currentID  = None
-      # for projID in projectIDs:
-      #   hierarchy = comm.backend.db.getHierarchy(projID)
-      #   for node in PreOrderIter(hierarchy, maxlevel=2):
-      #     if node.docType[0][0]!='x':
-      #       continue
-      #     if node.docType[0]=='x0':
-      #       button = TextButton(node.name, self.btnProject, mainL, node.id+'/', style='margin-top: 30')
-      #       projectW = QWidget()
-      #       projectW.hide()
-      #       projectL = QVBoxLayout(projectW)
-      #       projectL.setContentsMargins(0,0,0,0)
-      #       currentID = node.id
-      #       # Add other data types
-      #       dTypeW = QWidget()
-      #       dTypeL = QVBoxLayout(dTypeW)
-      #       dTypeL.setContentsMargins(0,0,0,0)
-      #       for idx, doctype in enumerate(comm.backend.db.dataLabels):
-      #         if doctype[0]!='x':
-      #           button = LetterButton(comm.backend.db.dataLabels[doctype], self.btnDocType, None, doctype+'/'+currentID)
-      #           dTypeL.addWidget(button)
-      #       # create widgets
-      #       projectL.addWidget(dTypeW)
-      #       self.widgets[currentID] = projectW
-      #       self.layouts[currentID] = projectL
-      #       self.widgetsHidden[currentID] = True
-      #       mainL.addWidget(projectW)
-      #     if node.docType[0]=='x1':
-      #       button = TextButton(node.name, self.btnProject, self.layouts[currentID], currentID+'/'+node.id, \
-      #                           style='margin-left: 20')
+        # actions: scan, curate, ...
+        actionW = QWidget()
+        if self.openProjectId != projID:
+          actionW.hide()
+        actionL = QGridLayout(actionW)
+        btnScan = TextButton('Scan', self.btnScan, None, projID)
+        actionL.addWidget(btnScan, 0,0)
+        btnCurate = TextButton('Curate', self.btnCurate, None, projID)
+        actionL.addWidget(btnCurate, 0,1)
+        projectL.addWidget(actionW)
+        self.widgetsAction[projID] = actionW
 
+        # lists: view list of measurements, ... of this project
+        listW = QWidget()
+        if self.openProjectId != projID:
+          listW.hide()
+        listL = QGridLayout(listW)
+        for idx, doctype in enumerate(comm.backend.db.dataLabels):
+          if doctype[0]!='x':
+            button = LetterButton(comm.backend.db.dataLabels[doctype], self.btnDocType, None, doctype+'/'+projID, style='color: red')
+            listL.addWidget(button, int(idx/3), idx%3)
+        projectL.addWidget(listW)
+        self.widgetsList[projID] = listW
+
+        # show folders as hierarchy
+        treeW = QTreeWidget()
+        treeW.setHeaderHidden(True)
+        treeW.setColumnCount(1)
+        treeW.itemClicked.connect(self.btnTree)
+        hierarchy = comm.backend.db.getHierarchy(projID)
+        treeW.insertTopLevelItem(0, self.iterateTree(hierarchy, projID))
+        projectL.addWidget(treeW)
+
+        # finalize layout
+        mainL.addWidget(projectW)
     # Other buttons
     mainL.addStretch(1)
-    settingButton = IconButton('fa.gear', self.btnConfig, mainL, backend=self.comm.backend)
-    settingButton.setFixedSize(width,50)
-    settingButton.setIconSize(QSize(30, 30))
-    settingButton.setStyleSheet("border-width:2")
-    if not hasattr(comm.backend, 'db'):  #if no backend
-      configWindow = Configuration(comm.backend, 'setup')
-      configWindow.exec()
 
 
-  def btnConfig(self):
+  def iterateTree(self, nodeHier, projectID):
     """
-    What happens when user clicks to use configuration
+    Recursive function to translate the hierarchical node into a tree-node
+
+    Args:
+      nodeHier (Anytree.Node): anytree node
+      projectID (str): project id of this tree
+
+    Returns:
+      QtTreeWidgetItem: tree node
     """
-    configWindow = Configuration(self.comm.backend, None)
-    configWindow.exec()
-    return
+    #prefill with name, doctype, id
+    nodeTree = QTreeWidgetItem([nodeHier.name, projectID+'/'+nodeHier.id ])
+    children = []
+    for childHier in nodeHier.children:
+      if childHier.docType[0][0]=='x':
+        childTree = self.iterateTree(childHier, projectID)
+        children.append(childTree)
+    if len(children)>0:
+      nodeTree.insertChildren(0,children)
+    return nodeTree
 
 
   def btnDocType(self):
@@ -112,14 +119,35 @@ class Sidebar(QWidget):
     """
     btnName = self.sender().accessibleName()
     projID, item = btnName.split('/')
-    if item=='':
-      if self.widgetsHidden[projID]: #get button in question
-        self.widgets[projID].show()
-        self.widgetsHidden[projID]=False
-        self.comm.changeProject.emit(projID, item)
-      else:
-        self.widgets[projID].hide()
-        self.widgetsHidden[projID]=True
-    else:
-      self.comm.changeProject.emit(projID, item)
+    if item=='': #clicked on project-button, not tree view
+      self.openProjectId = projID
+      for docID, widget in self.widgetsAction.items():
+        if docID == projID:
+          widget.show()
+        else:
+          widget.hide()
+      for docID, widget in self.widgetsList.items():
+        if docID == projID:
+          widget.show()
+        else:
+          widget.hide()
+    self.comm.changeProject.emit(projID, item)
+    return
+
+  def btnScan(self):
+    """
+    What happens if user clicks button "Scan"
+    """
+    return
+  def btnCurate(self):
+    """
+    What happens if user clicks button "Curate"
+    """
+    return
+  def btnTree(self, item):
+    """
+    What happpens if user clicks on branch in tree
+    """
+    projId, docId = item.text(1).split('/')
+    self.comm.changeProject.emit(projId, docId)
     return

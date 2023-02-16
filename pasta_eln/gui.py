@@ -3,7 +3,7 @@ import os, logging
 from pathlib import Path
 from PySide6.QtCore import Qt, Slot      # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QApplication    # pylint: disable=no-name-in-module
-from PySide6.QtGui import QIcon, QAction    # pylint: disable=no-name-in-module
+from PySide6.QtGui import QIcon, QAction, QKeySequence    # pylint: disable=no-name-in-module
 from qt_material import apply_stylesheet  #of https://github.com/UN-GCPDS/qt-material
 
 from .backend import Backend
@@ -27,16 +27,22 @@ class MainWindow(QMainWindow):
     self.comm.formDoc.connect(self.formDoc)
 
     #Menubar
-    exportA = QAction("&Export data", self)
-    exportA.triggered.connect(self.export)
-    exportA2 = QAction("e&Xport data", self)
-    #exportA.setObjectName()
-    exportA2.triggered.connect(self.export)
     menu = self.menuBar()
-    fileMenu = menu.addMenu("&File")
-    fileMenu.addAction(exportA)
-    _ = menu.addMenu("&View")
-    menu.addAction(exportA2)
+    _ = menu.addMenu("&File")
+    viewMenu = menu.addMenu("&View list")
+    _ = menu.addMenu("&System")
+    _ = menu.addMenu("&Help")
+
+    shortCuts = {'measurement':'m', 'sample':'s'}
+    for docType, docLabel in self.comm.backend.db.dataLabels.items():
+      if docType[0]=='x' and docType[1]!='0':
+        continue
+      action = QAction(docLabel, self)
+      if docType in shortCuts:
+        action.setShortcut(QKeySequence("Ctrl+"+shortCuts[docType]))
+      action.setData(docType)
+      action.triggered.connect(self.viewMenu)
+      viewMenu.addAction(action)
 
     #GUI elements
     mainWidget = QWidget()
@@ -63,11 +69,14 @@ class MainWindow(QMainWindow):
     formWindow.exec()
     return
 
-  def export(self):
+
+  def viewMenu(self):
     """
-    Test
+    act on user pressing an item in view
     """
-    print('EXPORT',self)
+    docType = self.sender().data()
+    self.comm.changeTable.emit(docType, '')
+    return
 
 
 ##############

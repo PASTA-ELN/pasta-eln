@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 import sys, os, subprocess
+import configparser
 
 
 def get_version():
@@ -47,11 +48,14 @@ def newVersion(level=2, message=''):
       fileNew.append(line)
     with open(path,'w', encoding='utf-8') as fOut:
       fOut.write('\n'.join(fileNew)+'\n')
-  #execute git commands
+  #execute git commands: move tests away and back
+  os.system('git mv pasta_eln/Tests Tests')
   os.system('git commit -a -m "'+message+'"')
   os.system('git tag -a v'+version+' -m "Version '+version+'"')
   os.system('git push')
   os.system('git push origin v'+version)
+  os.system('git mv Tests pasta_eln/Tests')
+  os.system('git commit -a -m "Added Tests back into distribution"')
   return
 
 
@@ -59,7 +63,6 @@ def createRequirementsFile():
   """
   Create a requirements.txt file from the setup.cfg information
   """
-  import configparser
   config = configparser.ConfigParser()
   config.read('setup.cfg')
   requirements = config['options']['install_requires'].split('\n')
