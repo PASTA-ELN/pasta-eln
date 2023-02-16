@@ -1,8 +1,8 @@
 """ New/Edit dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""
+#pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QDialog, QWidget, QFormLayout, QVBoxLayout, QHBoxLayout, QLabel, QTextEdit, \
-                              QPlainTextEdit, QComboBox, QLineEdit, QDialogButtonBox, QSplitter, QSizePolicy,\
-                              QComboBox   # pylint: disable=no-name-in-module
-from PySide6.QtCore import QSize
+                              QPlainTextEdit, QComboBox, QLineEdit, QDialogButtonBox, QSplitter, QSizePolicy
+#pylint: enable=no-name-in-module
 from .style import Image, TextButton, IconButton
 
 class Form(QDialog):
@@ -153,7 +153,7 @@ class Form(QDialog):
         print("**WARNING: I ALSO SHOULD CHANGE DOCID") #TODO_P5
         #remove old, create new
       else:
-        savedDoc = self.backend.db.updateDoc(self.doc, self.doc['_id'])
+        self.backend.db.updateDoc(self.doc, self.doc['_id'])
       self.accept()  #close
     return
 

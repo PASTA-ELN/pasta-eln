@@ -1,7 +1,9 @@
 """ widget that shows the table of the items """
+import re
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem, QLabel   # pylint: disable=no-name-in-module
 from PySide6.QtCore import Slot               # pylint: disable=no-name-in-module
-from .style import TextButton, Label
+import qtawesome as qta
+from .style import TextButton, Label, getColor
 
 class Table(QWidget):
   """ widget that shows the table of the items """
@@ -59,9 +61,17 @@ class Table(QWidget):
     self.table.setHorizontalHeaderLabels(header)
     self.table.verticalHeader().hide()
     self.table.setRowCount(nrows)
+    fgColor = getColor(self.comm.backend,'secondaryText')
     for i in range(nrows):
       for j in range(ncols):
-        item = QTableWidgetItem(str(self.data[i]['value'][j])) #TODO_P1 show icon in table if none, ...
+        if self.data[i]['value'][j] is None or not self.data[i]['value'][j]:
+          item = QTableWidgetItem(qta.icon('fa5s.times', color=fgColor),'')
+        elif isinstance(self.data[i]['value'][j], bool) and self.data[i]['value'][j]:
+          item = QTableWidgetItem(qta.icon('fa5s.check', color=fgColor),'')
+        elif re.match(r'^[a-z]-[a-z0-9]{32}$',self.data[i]['value'][j]):
+          item = QTableWidgetItem(qta.icon('fa5s.link', color=fgColor),'')
+        else:
+          item = QTableWidgetItem(self.data[i]['value'][j])
         self.table.setItem(i, j, item)
     self.table.show()
     self.comm.changeDetails.emit('')

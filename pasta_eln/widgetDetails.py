@@ -89,7 +89,7 @@ class Details(QScrollArea):
     # Create new
     self.doc   = self.comm.backend.db.getDoc(docID)
     Label(self.doc['-name'],'h1', self.headerL)
-    self.editBtn = TextButton('Edit',self.callEdit, self.headerL)
+    TextButton('Edit',self.callEdit, self.headerL)
     for key in self.doc:
       if key=='image':
         width = self.comm.backend.configuration['GUI']['imageWidthDetails'] \
