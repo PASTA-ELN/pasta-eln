@@ -1,5 +1,5 @@
 """ Python Backend: all operations with the filesystem are here """
-import json, sys, os, shutil, re, importlib, tempfile
+import json, sys, os, shutil, re, importlib, tempfile, logging, traceback
 from pathlib import Path
 from urllib import request
 from datetime import datetime, timezone
@@ -70,11 +70,11 @@ class Backend(CLI_Mixin):
     # decipher miscellaneous configuration and store
     self.userID   = self.configuration['userID']
     # start database
-    self.db = Database(n,s,databaseName, self.configuration['GUI'], **kwargs)
+    self.db = Database(n,s,databaseName, self.configuration, **kwargs)
     if not hasattr(self.db, 'databaseName'):  #not successful database creation
       return
     if kwargs.get('initViews', False):
-      self.db.initViews(self.configuration['GUI'])
+      self.db.initViews(self.configuration)
     # internal hierarchy structure
     self.hierStack = []
     self.currentID  = None
@@ -394,6 +394,7 @@ class Backend(CLI_Mixin):
       del doc['recipe']
     except:
       print('  **Error with extractor',pyFile)
+      logging.error('ERROR with extractor '+pyFile+'\n'+traceback.format_exc())
       doc['-type'] = ['-']
       doc['metaUser'] = {'filename':absFilePath.name, 'extension':absFilePath.suffix,
         'filesize':absFilePath.stat().st_size,

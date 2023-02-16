@@ -31,8 +31,6 @@ class ConfigurationGUI(QWidget):
       self.wS = self.addRowList('sidebarWidth','Sidebar width', ['200','300','400'])
       self.log = self.addRowList('loggingLevel','Logging level (more->less)', ['DEBUG','INFO','WARNING','ERROR'])
       self.nTC = self.addRowList('tableColumnsMax','Maximum number of table columns', ['8','16','32'])
-      self.tM = self.addRowText('magicTags','Tags that have special importance')
-      self.tD = self.addRowText('defaultTags','Tags that should be there too')
       self.tabAppearanceL.addRow(TextButton('Save changes', self.saveData, None),
                                 TextButton('Restart PASTA-ELN', restart, None))
 
@@ -85,8 +83,6 @@ class ConfigurationGUI(QWidget):
     self.backend.configuration['GUI']['sidebarWidth'] =  int(self.wS.currentText())
     self.backend.configuration['GUI']['loggingLevel'] = self.log.currentText()
     self.backend.configuration['GUI']['tableColumnsMax'] = int(self.nTC.currentText())
-    self.backend.configuration['GUI']['magicTags'] = self.tM.toPlainText().strip().split()
-    self.backend.configuration['GUI']['defaultTags'] = self.tD.toPlainText().strip().split()
     with open(Path.home()/'.pastaELN.json', 'w', encoding='utf-8') as fConf:
       fConf.write(json.dumps(self.backend.configuration,indent=2))
     restart()

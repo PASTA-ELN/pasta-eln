@@ -8,13 +8,13 @@ class Database:
   """
   Class for interaction with couchDB
   """
-  def __init__(self, user, password, databaseName, configGUI, **kwargs):
+  def __init__(self, user, password, databaseName, configuration, **kwargs):
     """
     Args:
       user (string): user name to local database
       password (string): password to local database
       databaseName (string): local database name
-      configGUI (dict): configuration of GUI elements
+      configuration (dict): configuration of GUI elements
       kwargs (dict): additional parameter
     """
     import json
@@ -35,8 +35,8 @@ class Database:
         print('Info: remove old ontology')
         self.db['-ontology-'].delete()
       self.ontology = json.loads(defaultOntology)
-      _ = self.db.create_document(self.ontology)
-      self.initViews(configGUI)
+      self.db.create_document(self.ontology)
+      self.initViews(configuration)
     self.ontology = self.db['-ontology-']
     if '-version' not in self.ontology or self.ontology['-version']!=2:
       print("**ERROR wrong ontology version")
@@ -45,12 +45,12 @@ class Database:
     return
 
 
-  def initViews(self, configGUI):
+  def initViews(self, configuration):
     """
     initialize all views
 
     Args:
-      configGUI (dict): configuration of GUI elements
+      configuration (dict): configuration of all elements
     """
     # for the individual docTypes
     jsDefault = "if ($docType$) {emit($key$, [$outputList$]);}"
@@ -64,7 +64,7 @@ class Database:
         jsString = jsDefault.replace('$docType$', "doc['-type'].join('/').substring(0, "+str(len(docType))+")=='"+docType+"'").replace('$key$','doc["-branch"][0].stack[0]')
       outputList = []
       for idx,item in enumerate(self.ontology[docType]['prop']):
-        if idx>configGUI['tableColumnsMax']:
+        if idx>configuration['tableColumnsMax']:
           break
         if 'name' not in item:
           continue
@@ -103,7 +103,7 @@ class Database:
     jsSHA= "if (doc['-type'][0]==='measurement'){emit(doc.shasum, doc['-name']);}"
     jsQR = "if (doc.qrCode.length > 0)"
     jsQR+= "{doc.qrCode.forEach(function(thisCode) {emit(thisCode, doc['-name']);});}"
-    tags = configGUI['defaultTags']
+    tags = configuration['defaultTags']
     jsTags=str(tags)+".forEach(function(tag){if(doc.tags.indexOf('#'+tag)>-1) emit('#'+tag, doc['-name']);});"
     views = {'viewQR':jsQR, 'viewSHAsum':jsSHA, 'viewTags':jsTags}
     self.saveView('viewIdentify', views)

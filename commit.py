@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 import sys, os, subprocess
+from unittest import main
 import configparser
 
 
@@ -80,7 +81,21 @@ def createRequirementsFile():
   return
 
 
+def runTests():
+  """
+  run unit-tests: can only work if all extractors and dependencies are fulfilled
+  """
+  try:
+    for test in os.listdir('pasta_eln/Tests'):
+      if test.endswith('.py'):
+        result = main(module='pasta_eln.Tests.'+test[:-3], exit=False)
+  except:
+    print('**ERROR test could not run')
+  return
+
+
 if __name__=='__main__':
+  runTests()
   createRequirementsFile()
   if len(sys.argv)==1:
     print("**Require more arguments for creating new version 'message' 'level (optionally)' ")

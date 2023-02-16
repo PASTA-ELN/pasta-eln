@@ -248,6 +248,16 @@ def configuration(command='test', user='', password='', pathPasta=''):
       conf['userID'] = os.getlogin()
     else:
       output += '**ERROR: No userID in config file\n'
+  if 'defaultTags' not in conf:
+    if command == 'repair':
+      conf['defaultTags'] = ["P1", "P2", "P3", "TODO", "DOING", "WAIT", "DONE"]
+    else:
+      output += '**ERROR: No defaultTags in config file\n'
+  if 'tableColumnsMax' not in conf:
+    if command == 'repair':
+      conf['tableColumnsMax'] = 16
+    else:
+      output += '**ERROR: No tableColumnsMax in config file\n'
   if 'qrPrinter' not in conf:
     if command == 'repair':
       conf['qrPrinter'] = {}
@@ -286,10 +296,8 @@ def configuration(command='test', user='', password='', pathPasta=''):
     "imageWidthProject": 300,
     "imageWidthDetails": 600,
     "sidebarWidth": 200,
-    "defaultTags": ["P1", "P2", "P3", "TODO", "DOING", "WAIT", "DONE"],
     "loggingLevel": "INFO",
-    "tableColumns": {},
-    "tableColumnsMax": 16}
+    "tableColumns": {}}
   for key, value in guiItems.items():
     if 'GUI' in conf and key not in conf['GUI']:
       if command == 'repair':
