@@ -33,7 +33,9 @@ class Form(QDialog):
     # GUI elements
     mainL = QVBoxLayout(self)
     if 'image' in self.doc:
-      Image(self.doc['image'], mainL, height=200)  #TODO_P3 allow user to change
+      width = self.backend.configuration['GUI']['imageWidthDetails'] \
+                if hasattr(self.backend, 'configuration') else 300
+      Image(self.doc['image'], mainL, width=width)
     formW = QWidget()
     mainL.addWidget(formW)
     formL = QFormLayout(formW)
@@ -77,6 +79,11 @@ class Form(QDialog):
         splitter.addWidget(getattr(self, 'textShow_'+key))
         rightSideL.addWidget(splitter)
         formL.addRow(labelW, rightSideW)
+      elif key == '-tags':  #remove - to make work
+        # TODO_P3: tags get selected via a editable QCombobox and get shown as qlabels, that can be deleted
+        # RR: can you already implement tags as list of qlabels with a '-' button on the right to delete
+        # the qcombox comes later once the database knows what tags are and how to generate the list
+        print('')
       elif isinstance(value, list):       #list of items
         setattr(self, 'key_'+key, QLineEdit(' '.join(value)))
         formL.addRow(QLabel(key.capitalize()), getattr(self, 'key_'+key))
@@ -91,6 +98,8 @@ class Form(QDialog):
             getattr(self, 'key_'+key).addItem('- no link -', userData='')
             for line in self.backend.db.getView('viewDocType/'+listDocType):
               getattr(self, 'key_'+key).addItem(line['value'][0], userData=line['id'])
+              if line['id'] == value: #TODO_P5 what if names are identical
+                getattr(self, 'key_'+key).setCurrentText(line['value'][0])
         else:                                         #text area
           setattr(self, 'key_'+key, QLineEdit(value))
         formL.addRow(QLabel(key.capitalize()), getattr(self, 'key_'+key))
@@ -108,7 +117,7 @@ class Form(QDialog):
         self.docTypeComboBox.addItem(value, userData=key)
     formL.addRow(QLabel('Data type'), self.docTypeComboBox)
     #final button box
-    buttonBox = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel) #TODO_P3 next button does not exist
+    buttonBox = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel) #TODO_P5 next button does not exist; a list has to exist
     buttonBox.clicked.connect(self.save)
     mainL.addWidget(buttonBox)
 

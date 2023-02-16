@@ -130,7 +130,7 @@ class ConfigurationSetup(QWidget):
     #If installed, restart
     if flagInstalledSoftware:
       button = QMessageBox.information(self,'PASTA-ELN restart required', restartPastaWindows)
-      #TODO_P3 execute restart here via comm to gui.py
+      #TODO_P2 execute restart here via comm to gui.py
 
     #Example data
     if flagContinue:

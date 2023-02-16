@@ -61,7 +61,7 @@ class Table(QWidget):
     self.table.setRowCount(nrows)
     for i in range(nrows):
       for j in range(ncols):
-        item = QTableWidgetItem(str(self.data[i]['value'][j])) #TODO_P2 show icon in table if none, ...
+        item = QTableWidgetItem(str(self.data[i]['value'][j])) #TODO_P1 show icon in table if none, ...
         self.table.setItem(i, j, item)
     self.table.show()
     self.comm.changeDetails.emit('')
