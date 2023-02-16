@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 import sys, os, subprocess
-from unittest import main
+from unittest import main as mainTest
 import configparser
 
 
@@ -90,7 +90,7 @@ def runTests():
   try:
     for test in os.listdir('pasta_eln/Tests'):
       if test.endswith('.py'):
-        result = main(module='pasta_eln.Tests.'+test[:-3], exit=False)
+        result = mainTest(module='pasta_eln.Tests.'+test[:-3], exit=False)
   except:
     print('**ERROR test could not run')
   return
