@@ -90,7 +90,7 @@ def runTests():
   try:
     for test in os.listdir('pasta_eln/Tests'):
       if test.endswith('.py'):
-        result = mainTest(module='pasta_eln.Tests.'+test[:-3], exit=False)
+        result = mainTest(module='pasta_eln.Tests.'+test[:-3], exit=False, argv='')
   except:
     print('**ERROR test could not run')
   return
