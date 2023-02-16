@@ -84,6 +84,8 @@ def createRequirementsFile():
 def runTests():
   """
   run unit-tests: can only work if all extractors and dependencies are fulfilled
+
+  Cannot be an action, since dependencies are partly private
   """
   try:
     for test in os.listdir('pasta_eln/Tests'):
