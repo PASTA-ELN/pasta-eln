@@ -87,12 +87,19 @@ def runTests():
 
   Cannot be an action, since dependencies are partly private
   """
-  try:
-    for test in os.listdir('pasta_eln/Tests'):
-      if test.endswith('.py'):
-        result = mainTest(module='pasta_eln.Tests.'+test[:-3], exit=False, argv=[test])
-  except:
-    print('**ERROR test could not run')
+  for fileI in os.listdir('pasta_eln/Tests'):
+    if not fileI.startswith('.py'):
+      continue
+    result = subprocess.run(['python3','-m','pasta_eln.Tests.'+fileI], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
+    success = result.stdout.decode('utf-8').count('*** DONE WITH VERIFY ***')
+    if success==1:
+      success += result.stdout.decode('utf-8').count('**ERROR')
+    if success==1:
+      print("  success: Python unit test "+fileI)
+    else:
+      successAll = False
+      print("  FAILED: Python unit test "+fileI)
+      print("    run: 'python3 Tests/"+fileI+"' and check logFile")
   return
 
 
