@@ -239,7 +239,8 @@ class Database:
           continue
         if item=='image' and change['image']=='':          #skip if non-change in image
           continue
-        if change[item] is None or item not in newDoc:      #skip empty entries
+        if change[item] is None or (isinstance(change[item], str) and change[item].strip()=='') or \
+           (isinstance(change[item], list) and len(change[item])==0):      #skip empty entries
           continue
         ## Discussion: What if content only differs by whitespace changes?
         # These changes should occur in the database, the user wanted it so
@@ -252,12 +253,12 @@ class Database:
         #    (isinstance(change[item], list) and change[item]!=newDoc[item] ):
         # Add to testBasic to test for it:
         #       myString = myString.replace('A long comment','A long   comment')
-        if change[item]!=newDoc[item]:
+        if item not in newDoc or change[item]!=newDoc[item]:
           if item not in ['-date','-client','-user']:      #if only date/client change, no significant change
             nothingChanged = False
           if item == 'image':
             oldDoc[item] = 'image changed'       #don't backup images: makes database big and are only thumbnails anyhow
-          else:
+          elif item in newDoc:
             oldDoc[item] = newDoc[item]
           newDoc[item] = change[item]
       if nothingChanged:

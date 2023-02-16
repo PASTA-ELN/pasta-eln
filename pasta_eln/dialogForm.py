@@ -17,33 +17,35 @@ class Form(QDialog):
     """
     super().__init__()
     self.backend = backend
-    self.doc = doc
+    self.doc = dict(doc)
+    if '_attachments' in self.doc:
+      del self.doc['_attachments']
     flagNewDoc = True
-    if '_id' in doc:
+    if '_id' in self.doc:
       flagNewDoc = False
     if flagNewDoc:
       self.setWindowTitle('Create new entry')
-      doc['-name'] = ''
+      self.doc['-name'] = ''
     else:
       self.setWindowTitle('Edit content')
     self.setMinimumWidth(600)
 
     # GUI elements
     mainL = QVBoxLayout(self)
-    if 'image' in doc:
-      Image(doc['image'], mainL, height=200)
+    if 'image' in self.doc:
+      Image(self.doc['image'], mainL, height=200)  #TODO_P3 allow user to change
     formW = QWidget()
     mainL.addWidget(formW)
     formL = QFormLayout(formW)
-    setattr(self, 'key_-name', QLineEdit(doc['-name']))
+    setattr(self, 'key_-name', QLineEdit(self.doc['-name']))
     formL.addRow('Name', getattr(self, 'key_-name'))
     #Add things that are in ontology
 
-    ontologyNode = self.backend.db.ontology[doc['-type'][0]]['prop']
+    ontologyNode = self.backend.db.ontology[self.doc['-type'][0]]['prop']
     for item in ontologyNode:
-      if item['name'] not in doc and  item['name'][0] not in ['_','-']:
-        doc[item['name']] = ''
-    for key,value in doc.items():
+      if item['name'] not in self.doc and  item['name'][0] not in ['_','-']:
+        self.doc[item['name']] = ''
+    for key,value in self.doc.items():
       if key[0] in ['_','-'] or key in ['image','metaVendor','metaUser','shasum']:
         continue
       if key in ['comment','content']:
@@ -143,11 +145,6 @@ class Form(QDialog):
         #remove old, create new
       else:
         savedDoc = self.backend.db.updateDoc(self.doc, self.doc['_id'])
-        #temp
-        teeem = dict(savedDoc)
-        del teeem['image']
-        del teeem['metaVendor']
-        print(teeem)
       self.accept()  #close
     return
 
