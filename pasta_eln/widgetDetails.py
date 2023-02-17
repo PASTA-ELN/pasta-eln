@@ -53,6 +53,12 @@ class Details(QScrollArea):
     self.mainL.addStretch(1)
 
   def contextMenu(self, pos):
+    """
+    Create a context menu
+
+    Args:
+      pos (position): Position to create context menu at
+    """
     context = QMenu(self)
     mask   = '/'.join(self.doc['-type'][:3])
     choices= {key:value for key,value in self.comm.backend.configuration['extractors'].items() if key.startswith(mask)}
@@ -65,6 +71,9 @@ class Details(QScrollArea):
     return
 
   def changeExtractor(self):
+    """
+    What happens when user changes extractor
+    """
     extractor = self.sender().data()
     print(extractor)
     return
