@@ -58,10 +58,11 @@ class Sidebar(QWidget):
         if self.openProjectId != projID:
           listW.hide()
         listL = QGridLayout(listW)
+        iconTable = {"Measurements":"fa.thermometer-3","Samples":"fa5s.vial","Procedures":"fa.list-ol","Instruments":"ri.scales-2-line"}
         for idx, doctype in enumerate(comm.backend.db.dataLabels):
           if doctype[0]!='x':
-            button = LetterButton(comm.backend.db.dataLabels[doctype], self.btnDocType, None, doctype+'/'+projID, style='color: red')
-            listL.addWidget(button, int(idx/3), idx%3)
+            button = IconButton(iconTable[comm.backend.db.dataLabels[doctype]], self.btnDocType, None, doctype+'/'+projID, comm.backend.db.dataLabels[doctype])
+            listL.addWidget(button, int((idx)%2),int((idx+1)/2))
         projectL.addWidget(listW)
         self.widgetsList[projID] = listW
 
