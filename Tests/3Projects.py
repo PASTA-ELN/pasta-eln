@@ -26,6 +26,12 @@ class TestStringMethods(unittest.TestCase):
     warnings.filterwarnings('ignore', category=ResourceWarning, module='PIL')
     warnings.filterwarnings('ignore', category=ImportWarning)
     warnings.filterwarnings('ignore', module='js2py')
+    logPath = Path.home()/'pastaELN.log'
+    logging.basicConfig(filename=logPath, level=logging.INFO, format='%(asctime)s|%(levelname)s:%(message)s',
+                        datefmt='%m-%d %H:%M:%S')   #This logging is always info, since for installation only
+    for package in ['urllib3', 'requests', 'asyncio', 'PIL', 'matplotlib.font_manager']:
+      logging.getLogger(package).setLevel(logging.WARNING)
+    logging.info('Start 3Projects test')
 
     projectGroup = 'research'
     self.be = Backend(projectGroup, initConfig=False)
@@ -114,13 +120,13 @@ class TestStringMethods(unittest.TestCase):
       print(self.be.checkDB(verbose=True))
 
       print('\n*** DONE WITH VERIFY ***')
-
     except:
       print('ERROR OCCURRED IN VERIFY TESTING\n'+ traceback.format_exc() )
       raise
     return
 
   def tearDown(self):
+    logging.info('End 3Projects test')
     return
 
 if __name__ == '__main__':

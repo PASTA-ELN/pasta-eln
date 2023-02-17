@@ -49,26 +49,26 @@ class Table(QWidget):
       self.data = self.comm.backend.db.getView('viewDocType/'+self.docType)
     else:
       self.data = self.comm.backend.db.getView('viewDocType/'+self.docType, preciseKey=projID)
-    if len(self.data)==0:
-      self.table.hide()
-      return
     self.headline.setText(self.comm.backend.db.dataLabels[self.docType])
     self.addBtn.show()
-    nrows, ncols = len(self.data), len(self.data[0]['value'])
-    self.table.setColumnCount(ncols)
     header = self.comm.backend.db.ontology[self.docType]['prop']
     header = [i['name'][1:] if i['name'][0]=='-' else i['name'] for i in header]
+    nrows, ncols = len(self.data), len(header)
+    self.table.setColumnCount(ncols)
     self.table.setHorizontalHeaderLabels(header)
     self.table.verticalHeader().hide()
     self.table.setRowCount(nrows)
     fgColor = getColor(self.comm.backend,'secondaryText')
     for i in range(nrows):
       for j in range(ncols):
-        if self.data[i]['value'][j] is None or not self.data[i]['value'][j]:
+        # print(i,j, self.data[i]['value'][j], type(self.data[i]['value'][j]))
+        if self.data[i]['value'][j] is None or not self.data[i]['value'][j]:  #None, False
           item = QTableWidgetItem(qta.icon('fa5s.times', color=fgColor),'')
-        elif isinstance(self.data[i]['value'][j], bool) and self.data[i]['value'][j]:
+        elif isinstance(self.data[i]['value'][j], bool) and self.data[i]['value'][j]: #True
           item = QTableWidgetItem(qta.icon('fa5s.check', color=fgColor),'')
-        elif re.match(r'^[a-z]-[a-z0-9]{32}$',self.data[i]['value'][j]):
+        elif isinstance(self.data[i]['value'][j], list):                      #list
+          item =  QTableWidgetItem(', '.join(self.data[i]['value'][j]))
+        elif re.match(r'^[a-z]-[a-z0-9]{32}$',self.data[i]['value'][j]):      #Link
           item = QTableWidgetItem(qta.icon('fa5s.link', color=fgColor),'')
         else:
           item = QTableWidgetItem(self.data[i]['value'][j])
