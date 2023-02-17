@@ -1,9 +1,9 @@
 """ widget that shows the details of the items """
 import json
-from PySide6.QtWidgets import QScrollArea, QWidget, QVBoxLayout, QHBoxLayout, QLabel   # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QScrollArea, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QMenu  # pylint: disable=no-name-in-module
 from PySide6.QtCore import Qt, Slot, QByteArray   # pylint: disable=no-name-in-module
 from PySide6.QtSvgWidgets import QSvgWidget       # pylint: disable=no-name-in-module
-from PySide6.QtGui import QPixmap, QImage         # pylint: disable=no-name-in-module
+from PySide6.QtGui import QPixmap, QImage, QAction# pylint: disable=no-name-in-module
 from .style import TextButton, Image, Label
 
 class Details(QScrollArea):
@@ -26,8 +26,9 @@ class Details(QScrollArea):
     self.headerL = QHBoxLayout(headerW)
     self.mainL.addWidget(headerW)
     self.imageW = QWidget()
+    self.imageW.setContextMenuPolicy(Qt.CustomContextMenu)
+    self.imageW.customContextMenuRequested.connect(self.contextMenu)
     self.imageL = QVBoxLayout(self.imageW)
-    #TODO_P2 include extractor change
     self.mainL.addWidget(self.imageW)
     self.btnDetails = TextButton('Details', self.showArea, self.mainL, 'Details', 'Show / hide details', \
                                   checkable=True, hide=True)
@@ -51,6 +52,22 @@ class Details(QScrollArea):
     self.mainL.addWidget(self.metaDatabaseW)
     self.mainL.addStretch(1)
 
+  def contextMenu(self, pos):
+    context = QMenu(self)
+    mask   = '/'.join(self.doc['-type'][:3])
+    choices= {key:value for key,value in self.comm.backend.configuration['extractors'].items() if key.startswith(mask)}
+    for key,value in choices.items():
+      thisAction = QAction(value, self)
+      thisAction.setData(key)
+      thisAction.triggered.connect(self.changeExtractor)
+      context.addAction(thisAction)
+    context.exec(self.mapToGlobal(pos))
+    return
+
+  def changeExtractor(self):
+    extractor = self.sender().data()
+    print(extractor)
+    return
 
   @Slot(str)
   def changeDetails(self, docID):
