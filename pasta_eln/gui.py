@@ -11,6 +11,7 @@ from .communicate import Communicate
 from .widgetSidebar import Sidebar
 from .widgetBody import Body
 from .dialogForm import Form
+from .dialogConfig import Configuration
 os.environ['QT_API'] = 'pyside6'
 
 # Subclass QMainWindow to customize your application's main window
@@ -28,10 +29,13 @@ class MainWindow(QMainWindow):
 
     #Menubar
     menu = self.menuBar()
-    _ = menu.addMenu("&File")
+    menu.addMenu("&File")
     viewMenu = menu.addMenu("&View list")
-    _ = menu.addMenu("&System")
-    _ = menu.addMenu("&Help")
+    systemMenu = menu.addMenu("&System")
+    action = QAction('&Configuration',self)
+    action.triggered.connect(self.openConfigDialog)
+    systemMenu.addAction(action)
+    menu.addMenu("&Help")
 
     shortCuts = {'measurement':'m', 'sample':'s'}
     for docType, docLabel in self.comm.backend.db.dataLabels.items():
@@ -76,6 +80,14 @@ class MainWindow(QMainWindow):
     """
     docType = self.sender().data()
     self.comm.changeTable.emit(docType, '')
+    return
+
+  def openConfigDialog(self):
+    """
+    open configuration dialog
+    """
+    configWindow = Configuration(self.comm.backend)
+    configWindow.exec()
     return
 
 
