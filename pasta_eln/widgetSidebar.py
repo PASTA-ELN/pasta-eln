@@ -4,7 +4,7 @@ from anytree import PreOrderIter
 from PySide6.QtCore import QSize
 
 from .dialogConfig import Configuration
-from .style import RadioIconButton, TextButton, LetterButton, IconButton
+from .style import TextButton, LetterButton, IconButton, getColor
 
 class Sidebar(QWidget):
   """ Sidebar widget that includes the navigation items """
@@ -27,6 +27,7 @@ class Sidebar(QWidget):
     self.openProjectId = ''
     self.widgetsAction = {}
     self.widgetsList = {}
+    self.widgetsProject = {}
 
     if hasattr(comm.backend, 'db'):
       hierarchy = comm.backend.db.getView('viewDocType/x0')
@@ -39,18 +40,20 @@ class Sidebar(QWidget):
         projectW = QWidget()
         projectL = QVBoxLayout(projectW)
         projectL.setContentsMargins(0,0,0,0)
-        TextButton(projName, self.btnProject, projectL, projID+'/')
+        btnProj = TextButton(projName, self.btnProject, projectL, projID+'/')
+        self.widgetsProject[projID] = btnProj
 
         # actions: scan, curate, ...
         actionW = QWidget()
         if self.openProjectId != projID:
           actionW.hide()
         actionL = QGridLayout(actionW)
-        btnScan = TextButton('Scan', self.btnScan, None, projID)
+        btnScan = IconButton('mdi.clipboard-search-outline', self.btnScan, None, projID, 'Scan')
         actionL.addWidget(btnScan, 0,0)
-        btnCurate = TextButton('Curate', self.btnCurate, None, projID)
+        btnCurate = IconButton('mdi.filter-plus-outline', self.btnCurate, None, projID, 'Curate')
         actionL.addWidget(btnCurate, 0,1)
         projectL.addWidget(actionW)
+        # projectL.setContentsMargins(0,40,0,0)
         self.widgetsAction[projID] = actionW
 
         # lists: view list of measurements, ... of this project
@@ -61,10 +64,10 @@ class Sidebar(QWidget):
         iconTable = {"Measurements":"fa.thermometer-3","Samples":"fa5s.vial","Procedures":"fa.list-ol","Instruments":"ri.scales-2-line"}
         for idx, doctype in enumerate(comm.backend.db.dataLabels):
           if doctype[0]!='x':
-            button = IconButton(iconTable[comm.backend.db.dataLabels[doctype]], self.btnDocType, None, doctype+'/'+projID, comm.backend.db.dataLabels[doctype])
+            button = IconButton(iconTable[comm.backend.db.dataLabels[doctype]], self.btnDocType, None, doctype+'/'+projID, comm.backend.db.dataLabels[doctype],comm.backend, 'color:green')
             listL.addWidget(button, int((idx)%2),int((idx+1)/2))
         projectL.addWidget(listW)
-        self.widgetsList[projID] = listW
+        self.widgetsList[projID] = listW  
 
         # show folders as hierarchy
         treeW = QTreeWidget()
@@ -125,13 +128,16 @@ class Sidebar(QWidget):
       for docID, widget in self.widgetsAction.items():
         if docID == projID:
           widget.show()
+          self.widgetsProject[projID].setStyleSheet("color:red")
         else:
           widget.hide()
       for docID, widget in self.widgetsList.items():
         if docID == projID:
           widget.show()
+          self.widgetsProject[projID].setStyleSheet("color:red")
         else:
           widget.hide()
+    self.widgetsProject[projID].setStyleSheet("color:red")
     self.comm.changeProject.emit(projID, item)
     return
 
