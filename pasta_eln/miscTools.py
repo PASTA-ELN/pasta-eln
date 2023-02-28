@@ -169,7 +169,7 @@ def updateExtractorList(directory):
   """
   import json
   from pathlib import Path
-  extractorDict = {}
+  extractorsAll = {}
   for fileName in os.listdir(directory):
     if fileName.endswith('.py') and fileName not in ['testExtractor.py','tutorial.py','commit.py'] :
       #start with file
@@ -198,15 +198,13 @@ def updateExtractorList(directory):
               extractors.append([ baseType+[specialType], '' ])
             except:
               pass
-        extractorDict[fileName] = {'plots':extractors, 'header':'\n'.join(header)}
-  #header not fused for now
+        if len(extractors)>0:
+          extractorsAll.update({'/'.join(docType):label for docType, label in extractors})
+          #header not fused for now
   #update configuration file
-  extractorDict = [extractorDict[i]['plots'] for i in extractorDict if len(extractorDict[i]['plots'])>0 ] #remove empty entries
-  extractorDict = [i for sublist in extractorDict for i in sublist]   #flatten list
-  extractorDict = {'/'.join(i):j for (i,j) in extractorDict}
   print('Found extractors:')
-  for key, value in extractorDict.items():
-    print('  ',key, value)
+  for key, value in extractorsAll.items():
+    print('  ',key, ":", value)
   with open(Path.home()/'.pastaELN.json','r', encoding='utf-8') as f:
     configuration = json.load(f)
   configuration['extractors'] = extractorDict
