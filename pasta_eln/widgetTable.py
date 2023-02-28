@@ -19,6 +19,7 @@ class Table(QWidget):
     comm.changeTable.connect(self.changeTable)
     self.data = []
     self.docType = ''
+    self.projID = ''
 
     # GUI elements
     mainL = QVBoxLayout()
@@ -35,20 +36,23 @@ class Table(QWidget):
     self.setLayout(mainL)
 
 
-  @Slot(str, str)
-  def changeTable(self, docType, projID):
+  @Slot(str, str, bool)
+  def changeTable(self, docType, projID, redraw):
     """
     What happens when the table should change should change
 
     Args:
       docType (str): document type
       projID (str): id of project
+      redraw (bool): redraw. if true, leave other arguments as empty strings
     """
-    self.docType = docType
-    if projID=='':
+    if not redraw:
+      self.docType = docType
+      self.projID  = projID
+    if self.projID=='':
       self.data = self.comm.backend.db.getView('viewDocType/'+self.docType)
     else:
-      self.data = self.comm.backend.db.getView('viewDocType/'+self.docType, preciseKey=projID)
+      self.data = self.comm.backend.db.getView('viewDocType/'+self.docType, preciseKey=self.projID)
     self.headline.setText(self.comm.backend.db.dataLabels[self.docType])
     self.addBtn.show()
     header = self.comm.backend.db.ontology[self.docType]['prop']

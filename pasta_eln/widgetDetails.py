@@ -1,5 +1,6 @@
 """ widget that shows the details of the items """
 import json
+from pathlib import Path
 from PySide6.QtWidgets import QScrollArea, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QMenu  # pylint: disable=no-name-in-module
 from PySide6.QtCore import Qt, Slot, QByteArray   # pylint: disable=no-name-in-module
 from PySide6.QtSvgWidgets import QSvgWidget       # pylint: disable=no-name-in-module
@@ -61,7 +62,8 @@ class Details(QScrollArea):
     """
     context = QMenu(self)
     mask   = '/'.join(self.doc['-type'][:3])
-    choices= {key:value for key,value in self.comm.backend.configuration['extractors'].items() if key.startswith(mask)}
+    choices= {key:value for key,value in self.comm.backend.configuration['extractors'].items() \
+                if key.startswith(mask)}
     for key,value in choices.items():
       thisAction = QAction(value, self)
       thisAction.setData(key)
@@ -70,13 +72,20 @@ class Details(QScrollArea):
     context.exec(self.mapToGlobal(pos))
     return
 
+
   def changeExtractor(self):
     """
     What happens when user changes extractor
     """
-    extractor = self.sender().data()
-    print(extractor)
+    self.doc['-type'] = self.sender().data().split('/')
+    self.comm.backend.useExtractors(Path(self.doc['-branch'][0]['path']), self.doc['shasum'], self.doc, \
+      extractorRedo=True)  #any path is good since the file is the same everywhere; data-changed by reference
+    if len(self.doc['-type'])>1 and len(self.doc['image'])>1:
+      self.doc = self.comm.backend.db.updateDoc({'image':self.doc['image'], '-type':self.doc['-type']}, self.doc['_id'])
+      self.comm.changeTable.emit('','',True)
+      self.comm.changeDetails.emit(self.doc['_id'])
     return
+
 
   @Slot(str)
   def changeDetails(self, docID):

@@ -396,8 +396,10 @@ class Backend(CLI_Mixin):
       if not pyPath.exists():
         raise ValueError('Extractor does not exist')
       # import module and use to get data
+      os.environ['QT_API'] = 'pyside2'
       module  = importlib.import_module(pyFile[:-3])
       content = module.use(absFilePath, '/'.join(doc['-type']) )
+      os.environ['QT_API'] = 'pyside6'
       #combine into document
       doc.update(content)
       for meta in ['metaVendor','metaUser']:

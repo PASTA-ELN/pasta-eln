@@ -152,7 +152,7 @@ def blob_hash(stream, size):
   return hasher.hexdigest()
 
 
-def getExtractorConfig(directory):
+def updateExtractorList(directory):
   """
   Rules:
   - each data-type in its own try-except
@@ -165,13 +165,15 @@ def getExtractorConfig(directory):
     directory (string): relative directory to scan
 
   Returns:
-    list: list of [doctype-list, description]
+    bool: success
   """
-  configuration = {}
+  import json
+  from pathlib import Path
+  extractorDict = {}
   for fileName in os.listdir(directory):
-    if fileName.endswith('.py') and fileName not in ['testExtractor.py','tutorial.py'] :
+    if fileName.endswith('.py') and fileName not in ['testExtractor.py','tutorial.py','commit.py'] :
       #start with file
-      with open(directory+os.sep+fileName,'r', encoding='utf-8') as fIn:
+      with open(directory/fileName,'r', encoding='utf-8') as fIn:
         lines = fIn.readlines()
         extractors = []
         baseType = ['measurement', fileName.split('_')[1].split('.')[0]]
@@ -196,8 +198,21 @@ def getExtractorConfig(directory):
               extractors.append([ baseType+[specialType], '' ])
             except:
               pass
-        configuration[fileName] = {'plots':extractors, 'header':'\n'.join(header)}
-  return configuration
+        extractorDict[fileName] = {'plots':extractors, 'header':'\n'.join(header)}
+  #header not fused for now
+  #update configuration file
+  extractorDict = [extractorDict[i]['plots'] for i in extractorDict if len(extractorDict[i]['plots'])>0 ] #remove empty entries
+  extractorDict = [i for sublist in extractorDict for i in sublist]   #flatten list
+  extractorDict = {'/'.join(i):j for (i,j) in extractorDict}
+  print('Found extractors:')
+  for key, value in extractorDict.items():
+    print('  ',key, value)
+  with open(Path.home()/'.pastaELN.json','r', encoding='utf-8') as f:
+    configuration = json.load(f)
+  configuration['extractors'] = extractorDict
+  with open(Path.home()/'.pastaELN.json','w', encoding='utf-8') as f:
+    f.write(json.dumps(configuration, indent=2))
+  return True
 
 
 def restart():

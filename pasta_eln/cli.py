@@ -10,7 +10,7 @@ import urllib.request
 
 from pasta_eln import __version__
 from .backend import Backend
-from .miscTools import upOut, upIn, getExtractorConfig
+from .miscTools import upOut, upIn, updateExtractorList
 from .inputOutput import importELN, exportELN
 from .installationTools import configuration as checkConfiguration
 
@@ -58,16 +58,7 @@ def commands(getDocu, args):
       pathToExtractors = Path(__file__).parent / 'extractors' \
         if 'extractorDir' not in configuration \
         else configuration['extractorDir']
-    extractors = getExtractorConfig(pathToExtractors)
-    extractors = [value['plots'] for _,value in extractors.items() if len(value['plots'])>0 ] #remove empty entries
-    extractors = [i for sublist in extractors for i in sublist]   #flatten list
-    extractors = {'/'.join(i):j for (i,j) in extractors}
-    print('Found extractors',extractors)
-    with open(pathConfig,'r', encoding='utf-8') as f:
-      configuration = json.load(f)
-    configuration['extractors'] = extractors
-    with open(pathConfig,'w', encoding='utf-8') as f:
-      f.write(json.dumps(configuration, indent=2))
+    updateExtractorList(pathToExtractors)
     return '1'
 
   if not getDocu and args.command=='up':

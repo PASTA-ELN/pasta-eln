@@ -133,9 +133,9 @@ class Database:
         docID (dict): document id
 
     Returns:
-        string: json representation of document
+        dict: json representation of document
     """
-    return self.db[docID]
+    return dict(self.db[docID])
 
 
   def saveDoc(self, doc):
@@ -619,7 +619,7 @@ class Database:
             if branch['child'] != 9999:
               for parentID in branch['stack']:                              #check if all parents in doc have a corresponding path
                 parentDoc = self.getDoc(parentID)
-                if not '-branch' in parentDoc:
+                if '-branch' not in parentDoc:
                   outstring+= f'{Bcolors.FAIL}**ERROR dch07: branch not in parent with id '+parentID+f'{Bcolors.ENDC}\n'
                   continue
                 parentDocBranches = parentDoc['-branch']

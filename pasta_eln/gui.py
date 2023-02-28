@@ -12,6 +12,7 @@ from .widgetSidebar import Sidebar
 from .widgetBody import Body
 from .dialogForm import Form
 from .dialogConfig import Configuration
+from .miscTools import updateExtractorList
 os.environ['QT_API'] = 'pyside6'
 
 # Subclass QMainWindow to customize your application's main window
@@ -34,6 +35,9 @@ class MainWindow(QMainWindow):
     systemMenu = menu.addMenu("&System")
     action = QAction('&Configuration',self)
     action.triggered.connect(self.openConfigDialog)
+    systemMenu.addAction(action)
+    action = QAction('Update &Extractor list',self)
+    action.triggered.connect(self.updateExtractorList)
     systemMenu.addAction(action)
     menu.addMenu("&Help")
 
@@ -79,7 +83,7 @@ class MainWindow(QMainWindow):
     act on user pressing an item in view
     """
     docType = self.sender().data()
-    self.comm.changeTable.emit(docType, '')
+    self.comm.changeTable.emit(docType, '', False)
     return
 
   def openConfigDialog(self):
@@ -89,6 +93,14 @@ class MainWindow(QMainWindow):
     configWindow = Configuration(self.comm.backend)
     configWindow.exec()
     return
+
+  def updateExtractorList(self):
+    """
+    update the extractor list and write update to config-file .pastaELN.json
+    """
+    updateExtractorList(self.backend.extractorPath)
+    return
+
 
 
 ##############
