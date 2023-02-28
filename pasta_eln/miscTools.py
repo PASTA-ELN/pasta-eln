@@ -207,7 +207,7 @@ def updateExtractorList(directory):
     print('  ',key, ":", value)
   with open(Path.home()/'.pastaELN.json','r', encoding='utf-8') as f:
     configuration = json.load(f)
-  configuration['extractors'] = extractorDict
+  configuration['extractors'] = extractorsAll
   with open(Path.home()/'.pastaELN.json','w', encoding='utf-8') as f:
     f.write(json.dumps(configuration, indent=2))
   return True
