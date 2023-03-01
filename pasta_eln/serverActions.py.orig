@@ -59,7 +59,7 @@ def createUserDatabase(url, auth, userName):
   userDB = userName.replace('.','_')
 
   # create database
-  resp = requests.put(url+'/'+userDB, headers=headers, auth=auth, timeout=10)
+  resp = requests.put(url+'/'+userDB, headers=headers, auth=auth)
   if not resp.ok:
     print("**ERROR 1: put not successful",resp.reason)
     return
@@ -68,7 +68,7 @@ def createUserDatabase(url, auth, userName):
   data = {"docs":[{"_id":"org.couchdb.user:"+userName,"name": userName,"password":userPW,
     "roles":[userDB+"-W"], "type": "user", "orcid": ""}]}
   data = json.dumps(data)
-  resp = requests.post(url+'/_users/_bulk_docs', headers=headers, auth=auth, data=data, timeout=10)
+  resp = requests.post(url+'/_users/_bulk_docs', headers=headers, auth=auth, data=data)
   if not resp.ok:
     print("**ERROR 2: post not successful",resp.reason)
     return
@@ -77,7 +77,7 @@ def createUserDatabase(url, auth, userName):
   data = {"admins": {"names":[],"roles":[userDB+"-W"]},
           "members":{"names":[],"roles":[userDB+"-R"]}}
   data = json.dumps(data)
-  resp = requests.put(url+'/'+userDB+'/_security', headers=headers, auth=auth, data=data, timeout=10)
+  resp = requests.put(url+'/'+userDB+'/_security', headers=headers, auth=auth, data=data)
   if not resp.ok:
     print("**ERROR 3: post not successful",resp.reason)
     return
@@ -87,7 +87,7 @@ def createUserDatabase(url, auth, userName):
     "if (userCtx.roles.indexOf('"+userDB+"-W')!==-1){return;} "+\
     "else {throw({unauthorized:'Only Writers (W) may edit the database'});}}"}
   data = json.dumps(data)
-  resp = requests.put(url+'/'+userDB+'/_design/authentication',headers=headers,auth=auth,data=data,timeout=10)
+  resp = requests.put(url+'/'+userDB+'/_design/authentication', headers=headers, auth=auth, data=data)
   if not resp.ok:
     print("**ERROR 4: post not successful",resp.reason)
     return
@@ -125,7 +125,7 @@ def listUsers(url, auth, verbose=True):
   Returns:
     dict: user information
   '''
-  resp = requests.get(url+'/_users/_all_docs', headers=headers, auth=auth, timeout=10)
+  resp = requests.get(url+'/_users/_all_docs', headers=headers, auth=auth)
   if not resp.ok:
     print("**ERROR: get not successful",resp.reason)
     return {}
@@ -137,7 +137,7 @@ def listUsers(url, auth, verbose=True):
       continue
     if verbose:
       print(i['id'][17:]+'       key:'+i['key'][17:])
-    respI = requests.get(url+'/_users/'+i['id'], headers=headers, auth=auth, timeout=10)
+    respI = requests.get(url+'/_users/'+i['id'], headers=headers, auth=auth)
     respI = json.loads(respI.text)
     results[respI['name']] = respI['roles']
     if verbose:
@@ -169,7 +169,7 @@ def listDB(url, auth, verbose):
   Returns:
     dict: database information
   '''
-  resp = requests.get(url+'/_all_dbs', headers=headers, auth=auth, timeout=10)
+  resp = requests.get(url+'/_all_dbs', headers=headers, auth=auth)
   if not resp.ok:
     print("**ERROR: get not successful",resp.reason)
     return {}
@@ -182,7 +182,7 @@ def listDB(url, auth, verbose):
     if verbose:
       print(i)
     # test security
-    respI = requests.get(url+'/'+i+'/_security', headers=headers, auth=auth, timeout=10)
+    respI = requests.get(url+'/'+i+'/_security', headers=headers, auth=auth)
     respI = json.loads(respI.text)
     security = [respI['admins']['roles'], respI['members']['roles']]
     if verbose:
@@ -195,7 +195,7 @@ def listDB(url, auth, verbose):
       else:
         print('  -> **ERROR** security')
     # test authentication
-    respI = requests.get(url+'/'+i+'/_design/authentication', headers=headers, auth=auth, timeout=10)
+    respI = requests.get(url+'/'+i+'/_design/authentication', headers=headers, auth=auth)
     respI = json.loads(respI.text)['validate_doc_update']
     respI = respI.split('indexOf')[1].split('!==')[0].strip()[2:-2]
     results[i] = security+[respI]
@@ -214,7 +214,7 @@ def testUser(url, auth, userName, userPassword):
   test if configuration for this user is correct
   '''
   # Test if server exists
-  resp = requests.get(url, headers=headers, timeout=10)
+  resp = requests.get(url, headers=headers)
   if resp.ok:
     print("-> Server exists")
   else:
@@ -240,14 +240,14 @@ def testUser(url, auth, userName, userPassword):
         print("**ERROR: ",write,read,authen,iDB)
         break
     #test server with user credentials 1
-    resp = requests.get(url+'/'+iDB, headers=headers, auth=authUser, timeout=10)
+    resp = requests.get(url+'/'+iDB, headers=headers, auth=authUser)
     if resp.ok:
       print("-> Database can be read")
     else:
       print("**ERROR: Database cannot be read")
       break
     #test server with user credentials 2
-    resp = requests.get(url+'/'+iDB+'/_design/authentication', headers=headers, auth=authUser, timeout=10)
+    resp = requests.get(url+'/'+iDB+'/_design/authentication', headers=headers, auth=authUser)
     if resp.ok:
       print("-> Authentication can be read")
     else:

@@ -70,8 +70,8 @@ class Database:
           continue
         if item['name'] == 'image':
           outputList.append('doc.image.length>3')  #Not as .toString() because that leads to inconsistencies
-        elif item['name'] == 'tags':
-          outputList.append('doc.tags.join(" ")')
+        elif item['name'] == '-tags':
+          outputList.append("doc['-tags'].join(' ')")
         elif item['name'] == '-type':
           outputList.append('doc["-type"].slice(1).join("/")')
         elif item['name'] == 'content':
@@ -103,11 +103,11 @@ class Database:
     jsSHA= "if (doc['-type'][0]==='measurement'){emit(doc.shasum, doc['-name']);}"
     jsQR = "if (doc.qrCode.length > 0)"
     jsQR+= "{doc.qrCode.forEach(function(thisCode) {emit(thisCode, doc['-name']);});}"
-    tags = configuration['defaultTags']
-    jsTags=str(tags)+".forEach(function(tag){if(doc.tags.indexOf('#'+tag)>-1) emit('#'+tag, doc['-name']);});"
+    jsTags="if ('-tags' in doc){doc['-tags'].forEach(function(tag){emit(tag,[doc['-name']]);});}"
     views = {'viewQR':jsQR, 'viewSHAsum':jsSHA, 'viewTags':jsTags}
     self.saveView('viewIdentify', views)
     return
+
 
 
   def exit(self, deleteDB=False):

@@ -1,18 +1,21 @@
-# Priority 0: NOW
+# Do not work on; since RR
+- widgetSidebar
+- dialogForm
+- widgetDetails
 
 # Priority 1: Next days
-- Ask HT
-- Tests
-- small things: each meeting some
-- Server-Actions: GUI? CLI!
+- Table:
+  - filter
+  - group and sequential change after select
+  - Change table headings
+  - export csv
+- Hide: show if sum(branch(hide))==0
 
 # Priority 2
-- have discussion with Georg, KIT
-- (HT) replace documentation
-- reduce self.
-- more logging
 
 # Priority 3
+- Tests
+- have discussion with Georg, KIT
 - setup.cfg: pytest
 - Windows/Anaconda generally works, use Marble documentation if it fully works. Git/Git-annex/datalad do not work currently
   - Datalad documentation has the following suggestion for git-installation
@@ -23,7 +26,6 @@
 
 
 # Notes
-- curate, stars become #_curate, #_3 ... all start with _
 - allow to change docType of undefined types
 
 # Implement in future

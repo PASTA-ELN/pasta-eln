@@ -3,7 +3,7 @@ import os, logging
 from pathlib import Path
 from PySide6.QtCore import Qt, Slot      # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QApplication    # pylint: disable=no-name-in-module
-from PySide6.QtGui import QIcon, QAction, QKeySequence    # pylint: disable=no-name-in-module
+from PySide6.QtGui import QIcon, QPixmap, QAction, QKeySequence    # pylint: disable=no-name-in-module
 from qt_material import apply_stylesheet  #of https://github.com/UN-GCPDS/qt-material
 
 from .backend import Backend
@@ -23,7 +23,8 @@ class MainWindow(QMainWindow):
     super().__init__()
     self.setWindowTitle("PASTA-ELN")
     self.setWindowState(Qt.WindowMaximized)
-    self.setWindowIcon(QIcon('./Resources/Icons/favicon64.png'))
+    resourcesDir = Path(__file__).parent/'Resources'
+    self.setWindowIcon(QIcon(QPixmap(resourcesDir/'Icons'/'favicon64.png')))
     self.backend = Backend()
     self.comm = Communicate(self.backend)
     self.comm.formDoc.connect(self.formDoc)
@@ -41,7 +42,7 @@ class MainWindow(QMainWindow):
     systemMenu.addAction(action)
     menu.addMenu("&Help")
 
-    shortCuts = {'measurement':'m', 'sample':'s'}
+    shortCuts = {'measurement':'m', 'sample':'s'} #TODO_P5 to config
     for docType, docLabel in self.comm.backend.db.dataLabels.items():
       if docType[0]=='x' and docType[1]!='0':
         continue
@@ -51,6 +52,12 @@ class MainWindow(QMainWindow):
       action.setData(docType)
       action.triggered.connect(self.viewMenu)
       viewMenu.addAction(action)
+    viewMenu.addSeparator()
+    action = QAction('&Tags', self)
+    action.setShortcut(QKeySequence("Ctrl+T"))
+    action.setData('_tags_')
+    action.triggered.connect(self.viewMenu)
+    viewMenu.addAction(action)
 
     #GUI elements
     mainWidget = QWidget()

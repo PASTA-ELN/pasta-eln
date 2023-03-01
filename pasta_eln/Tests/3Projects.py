@@ -66,11 +66,11 @@ class TestStringMethods(unittest.TestCase):
       self.be.changeHierarchy(None)
 
       self.be.changeHierarchy(projID1)
-      self.be.addData('x1',    {'comment': 'This is hard! #TODO', '-name': 'Get steel and Al-powder'})
-      self.be.addData('x1',    {'comment': 'This will take a long time. #WAIT', '-name': 'Get spray machine'})
+      self.be.addData('x1',    {'comment': 'This is hard! #TODO ', '-name': 'Get steel and Al-powder'})
+      self.be.addData('x1',    {'comment': 'This will take a long time. #WAIT #_curated', '-name': 'Get spray machine'})
       self.be.changeHierarchy(self.be.currentID)
-      self.be.addData('x2',    {'-name': 'Get quotes', 'comment': 'Dont forget company-A', 'procedure': 'Guidelines of procurement'})
-      self.be.addData('x2',    {'-name': 'Buy machine','comment': 'Delivery time will be 6month'})
+      self.be.addData('x2',    {'-name': 'Get quotes', 'comment': 'Dont forget company-A #_1 ', 'procedure': 'Guidelines of procurement'})
+      self.be.addData('x2',    {'-name': 'Buy machine','comment': 'Delivery time will be 6month #_3 '})
       self.be.changeHierarchy(None)
       self.be.addData('x1',    {'-name': 'SEM images'})
       semStepID = self.be.currentID

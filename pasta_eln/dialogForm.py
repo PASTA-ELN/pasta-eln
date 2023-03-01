@@ -161,6 +161,7 @@ class Form(QDialog):
   def btnAdvanced(self, status):
     """
     Action if advanced button is clicked
+    TODO_P5 Think if all other form-elements should become hidden: show/hide form and hide/show text-boxes
     """
     key = self.sender().accessibleName()
     if status:

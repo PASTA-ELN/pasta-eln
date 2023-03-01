@@ -131,6 +131,10 @@ class Details(QScrollArea):
                 if hasattr(self.comm.backend, 'configuration') else 300
         Image(self.doc['image'], self.imageL, width=width)
         self.imageW.show()
+      elif key=='-tags':
+        tags = ['cur\u2605ted' if i=='_curated' else '#'+i for i in self.doc[key]]
+        tags = ['\u2605'*int(i[2]) if i[:2]=='#_' else i for i in tags]
+        self.metaDetailsL.addWidget( QLabel('Tags: '+' '.join(tags)))
       elif key.startswith('_') or key.startswith('-'):
         label = QLabel(key+': '+str(self.doc[key]))
         label.setWordWrap(True)
@@ -149,7 +153,7 @@ class Details(QScrollArea):
         self.metaUserL.addWidget(label)
         self.metaUserW.show()
       else:
-        self.metaDetailsL.addWidget( QLabel(key+': '+str(self.doc[key])) )
+        self.metaDetailsL.addWidget( QLabel(key.capitalize()+': '+str(self.doc[key])) )
         self.metaDetailsW.show()
     return
 
