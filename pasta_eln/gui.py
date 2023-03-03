@@ -42,7 +42,7 @@ class MainWindow(QMainWindow):
     systemMenu.addAction(action)
     menu.addMenu("&Help")
 
-    shortCuts = {'measurement':'m', 'sample':'s'} #TODO_P5 to config
+    shortCuts = {'measurement':'m', 'sample':'s', 'x0':'p'} #TODO_P5 to config
     for docType, docLabel in self.comm.backend.db.dataLabels.items():
       if docType[0]=='x' and docType[1]!='0':
         continue
@@ -52,6 +52,8 @@ class MainWindow(QMainWindow):
       action.setData(docType)
       action.triggered.connect(self.viewMenu)
       viewMenu.addAction(action)
+      if docType=='x0':
+        viewMenu.addSeparator()
     viewMenu.addSeparator()
     action = QAction('&Tags', self)
     action.setShortcut(QKeySequence("Ctrl+T"))
