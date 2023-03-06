@@ -1,11 +1,12 @@
 """ widget that shows the table of the items """
 import re
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTableView, QLabel,  \
+from pathlib import Path
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTableView, QLabel, QMenu, QFileDialog, \
                               QHeaderView, QAbstractItemView, QGridLayout, QLineEdit, QComboBox # pylint: disable=no-name-in-module
-from PySide6.QtCore import Qt, Slot, QSortFilterProxyModel           # pylint: disable=no-name-in-module
-from PySide6.QtGui import QBrush, QStandardItemModel, QStandardItem  # pylint: disable=no-name-in-module
+from PySide6.QtCore import Qt, Slot, QSortFilterProxyModel, QModelIndex       # pylint: disable=no-name-in-module
+from PySide6.QtGui import QBrush, QStandardItemModel, QStandardItem, QAction  # pylint: disable=no-name-in-module
 import qtawesome as qta
-from .style import TextButton, Label, getColor, LetterButton
+from .style import TextButton, Label, getColor, LetterButton, PAction
 
 class Table(QWidget):
   """ widget that shows the table of the items """
@@ -34,6 +35,11 @@ class Table(QWidget):
     TextButton('Group Edit', self.groupEdit, headerL)
     TextButton('Add Filter', self.addFilter, headerL)
     TextButton('Add',self.addItem, headerL)
+    more = TextButton('More',None, headerL)
+    moreMenu = QMenu(self)
+    PAction('Sequential', self.sequentialEdit, moreMenu, self)
+    PAction('Export',     self.export,     moreMenu, self)
+    more.setMenu(moreMenu)
     mainL.addWidget(self.headerW)
     # filter
     filterW = QWidget()
@@ -82,13 +88,13 @@ class Table(QWidget):
       else:
         self.data = self.comm.backend.db.getView('viewDocType/'+self.docType, preciseKey=self.projID)
       self.headline.setText(self.comm.backend.db.dataLabels[self.docType])
-      header = self.comm.backend.db.ontology[self.docType]['prop']
-      header = [i['name'][1:] if i['name'][0]=='-' else i['name'] for i in header]  #change -something to something
-      header = [i[2:] if i[0:2]=='#_' else i for i in header] #change #_something to somehing
+      self.filterHeader = [i['name'] for i in self.comm.backend.db.ontology[self.docType]['prop']]
+      self.filterHeader = [i[1:] if i[0]=='-'   else i for i in self.filterHeader]  #change -something to something
+      self.filterHeader = [i[2:] if i[:2]=='#_' else i for i in self.filterHeader]  #change #_something to somehing
     self.headerW.show()
-    nrows, ncols = len(self.data), len(header)
+    nrows, ncols = len(self.data), len(self.filterHeader)
     model = QStandardItemModel(nrows, ncols)
-    model.setHorizontalHeaderLabels(header)
+    model.setHorizontalHeaderLabels(self.filterHeader)
     fgColor = getColor(self.comm.backend,'secondaryText')
     for i in range(nrows):
       for j in range(ncols):
@@ -105,9 +111,9 @@ class Table(QWidget):
         else:                 #list for normal doctypes
           # print(i,j, self.data[i]['value'][j], type(self.data[i]['value'][j]))
           if self.data[i]['value'][j] is None or not self.data[i]['value'][j]:  #None, False
-            item = QStandardItem(qta.icon('fa5s.times', color=fgColor),'')
+            item = QStandardItem(qta.icon('fa5s.times', color=fgColor),'no')
           elif isinstance(self.data[i]['value'][j], bool) and self.data[i]['value'][j]: #True
-            item = QStandardItem(qta.icon('fa5s.check', color=fgColor),'')
+            item = QStandardItem(qta.icon('fa5s.check', color=fgColor),'yes')
           elif isinstance(self.data[i]['value'][j], list):                      #list
             item =  QStandardItem(', '.join(self.data[i]['value'][j]))
           elif re.match(r'^[a-z]-[a-z0-9]{32}$',self.data[i]['value'][j]):      #Link
@@ -157,9 +163,6 @@ class Table(QWidget):
     text = QLineEdit('')
     rowL.addWidget(text)
     select = QComboBox()
-    self.filterHeader = [i['name'] for i in self.comm.backend.db.ontology[self.docType]['prop']]
-    self.filterHeader = [i[1:] if i[0]=='-'   else i for i in self.filterHeader]
-    self.filterHeader = [i[2:] if i[:2]=='#_' else i for i in self.filterHeader]
     select.addItems(self.filterHeader)
     select.currentIndexChanged.connect(self.filterChoice)
     select.setAccessibleName(str(len(self.models)))
@@ -204,4 +207,27 @@ class Table(QWidget):
       if self.table.item(row,0).checkState() == Qt.CheckState.Checked:
         docIDs.append(self.data[row]['id'])
     print("I want to group-edit ", docIDs) #TODO_P3 Continue here
+    return
+
+
+  def export(self):
+    """ Export table to csv file """
+    fileName = QFileDialog.getSaveFileName(self,'Export to ..',str(Path.home()),'*.csv')[0]
+    with open(fileName,'w', encoding='utf-8') as fOut:
+      header = ['"'+i+'"' for i in self.filterHeader]
+      fOut.write(','.join(header)+'\n')
+      for row in range(self.models[-1].rowCount()):
+        rowContent = []
+        for col in range(self.models[-1].columnCount()):
+          value = self.models[-1].index( row, col, QModelIndex() ).data( Qt.DisplayRole )
+          rowContent.append('"'+value+'"')
+        fOut.write(','.join(rowContent)+'\n')
+    return
+
+
+  def sequentialEdit(self):
+    """ Sequentially edit the documents """
+    for row in range(self.models[-1].rowCount()):
+      if self.models[-1].item(row,0).checkState() == Qt.CheckState.Checked:
+        self.comm.formDoc.emit(self.comm.backend.db.getDoc( self.data[row]['id'] ))
     return

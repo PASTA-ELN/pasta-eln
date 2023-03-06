@@ -3,6 +3,7 @@ import json, sys, os, shutil, re, importlib, tempfile, logging, traceback
 from pathlib import Path
 from urllib import request
 from datetime import datetime, timezone
+import matplotlib.pyplot as plt
 from .mixin_cli import Bcolors, CLI_Mixin
 from .database import Database
 from .miscTools import upIn, upOut, createDirName, generic_hash, camelCase

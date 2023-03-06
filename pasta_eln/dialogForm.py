@@ -85,8 +85,9 @@ class Form(QDialog):
         # the qcombox comes later once the database knows what tags are and how to generate the list
         print('')
       elif isinstance(value, list):       #list of items
-        setattr(self, 'key_'+key, QLineEdit(' '.join(value)))
-        formL.addRow(QLabel(key.capitalize()), getattr(self, 'key_'+key))
+        if isinstance(value[0], str):
+          setattr(self, 'key_'+key, QLineEdit(' '.join(value)))
+          formL.addRow(QLabel(key.capitalize()), getattr(self, 'key_'+key))
       elif isinstance(value, str):        #string
         ontologyItem = [i for i in ontologyNode if i['name']==key]
         if len(ontologyItem)==1 and 'list' in ontologyItem[0]:  #choice dropdown

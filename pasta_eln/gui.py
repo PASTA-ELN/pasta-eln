@@ -3,7 +3,7 @@ import os, logging
 from pathlib import Path
 from PySide6.QtCore import Qt, Slot      # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QApplication    # pylint: disable=no-name-in-module
-from PySide6.QtGui import QIcon, QPixmap, QAction, QKeySequence    # pylint: disable=no-name-in-module
+from PySide6.QtGui import QIcon, QPixmap, QAction    # pylint: disable=no-name-in-module
 from qt_material import apply_stylesheet  #of https://github.com/UN-GCPDS/qt-material
 
 from .backend import Backend
@@ -13,6 +13,7 @@ from .widgetBody import Body
 from .dialogForm import Form
 from .dialogConfig import Configuration
 from .miscTools import updateExtractorList
+from .style import PAction
 os.environ['QT_API'] = 'pyside6'
 
 # Subclass QMainWindow to customize your application's main window
@@ -34,32 +35,20 @@ class MainWindow(QMainWindow):
     menu.addMenu("&File")
     viewMenu = menu.addMenu("&View list")
     systemMenu = menu.addMenu("&System")
-    action = QAction('&Configuration',self)
-    action.triggered.connect(self.openConfigDialog)
-    systemMenu.addAction(action)
-    action = QAction('Update &Extractor list',self)
-    action.triggered.connect(self.updateExtractorList)
-    systemMenu.addAction(action)
+    PAction('&Configuration',         self.openConfigDialog,    systemMenu, self)
+    PAction('Update &Extractor list', self.updateExtractorList, systemMenu, self)
     menu.addMenu("&Help")
 
     shortCuts = {'measurement':'m', 'sample':'s', 'x0':'p'} #TODO_P5 to config
     for docType, docLabel in self.comm.backend.db.dataLabels.items():
       if docType[0]=='x' and docType[1]!='0':
         continue
-      action = QAction(docLabel, self)
-      if docType in shortCuts:
-        action.setShortcut(QKeySequence("Ctrl+"+shortCuts[docType]))
-      action.setData(docType)
-      action.triggered.connect(self.viewMenu)
-      viewMenu.addAction(action)
+      PAction(docLabel, self.viewMenu, viewMenu, self, \
+        "Ctrl+"+shortCuts[docType] if docType in shortCuts else None, docType)
       if docType=='x0':
         viewMenu.addSeparator()
     viewMenu.addSeparator()
-    action = QAction('&Tags', self)
-    action.setShortcut(QKeySequence("Ctrl+T"))
-    action.setData('_tags_')
-    action.triggered.connect(self.viewMenu)
-    viewMenu.addAction(action)
+    PAction('&Tags', self.viewMenu, viewMenu, self, 'Ctrl+T', docType)
 
     #GUI elements
     mainWidget = QWidget()

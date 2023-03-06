@@ -5,10 +5,8 @@
 
 # Priority 1: Next days
 - Table:
-  - filter
   - group and sequential change after select
   - Change table headings
-  - export csv
 - Hide: show if sum(branch(hide))==0
 
 # Priority 2
