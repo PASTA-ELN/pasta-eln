@@ -3,7 +3,6 @@ import json, sys, os, shutil, re, importlib, tempfile, logging, traceback
 from pathlib import Path
 from urllib import request
 from datetime import datetime, timezone
-import matplotlib.pyplot as plt
 from .mixin_cli import Bcolors, CLI_Mixin
 from .database import Database
 from .miscTools import upIn, upOut, createDirName, generic_hash, camelCase
@@ -398,6 +397,8 @@ class Backend(CLI_Mixin):
         raise ValueError('Extractor does not exist')
       # import module and use to get data
       os.environ['QT_API'] = 'pyside2'
+      import matplotlib.pyplot as plt  #IMPORTANT: NO PYPLOT OUTSIDE THIS QT_API BLOCK
+      plt.clf()
       module  = importlib.import_module(pyFile[:-3])
       content = module.use(absFilePath, '/'.join(doc['-type']) )
       os.environ['QT_API'] = 'pyside6'
