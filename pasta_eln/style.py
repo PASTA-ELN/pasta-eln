@@ -129,7 +129,7 @@ class IconButton(QPushButton):
 
 class PAction(QAction):
   """ QAction and assign function to menu"""
-  def __init__(self, label, function, menu, parent, shortCut=None, data=None):
+  def __init__(self, label, function, menu, parent, shortcut=None, data=None):
     """
     Initialization
 
@@ -147,8 +147,8 @@ class PAction(QAction):
     self.triggered.connect(function)
     if menu is not None:
       menu.addAction(self)
-    if shortCut is not None:
-      self.setShortcut(QKeySequence(shortCut))
+    if shortcut is not None:
+      self.setShortcut(QKeySequence(shortcut))
     if data is not None:
       self.setData(data)
 

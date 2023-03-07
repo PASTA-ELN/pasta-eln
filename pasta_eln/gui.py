@@ -48,7 +48,7 @@ class MainWindow(QMainWindow):
       if docType=='x0':
         viewMenu.addSeparator()
     viewMenu.addSeparator()
-    PAction('&Tags', self.viewMenu, viewMenu, self, 'Ctrl+T', docType)
+    PAction('&Tags', self.viewMenu, viewMenu, self, 'Ctrl+T', '_tags_')
 
     #GUI elements
     mainWidget = QWidget()
@@ -71,7 +71,7 @@ class MainWindow(QMainWindow):
     Args:
       doc (dict): document
     """
-    formWindow = Form(self.comm.backend, doc)
+    formWindow = Form(self.comm, doc)
     formWindow.exec()
     return
 
@@ -120,6 +120,12 @@ def main():
   theme = window.backend.configuration['GUI']['theme']
   if theme!='none':
     apply_stylesheet(app, theme=theme+'.xml')
+  # test if qtawesome and matplot can coexist
+  import qtawesome as qta
+  if not isinstance(qta.icon('fa5s.times'), QIcon):
+    logging.error('qtawesome: could not load. Likely matplotlib is included and can not coexist.')
+    print('qtawesome: could not load. Likely matplotlib is included and can not coexist.')
+  # end test coexistance
   window.show()
   app.exec()
   logging.info('End PASTA GUI')

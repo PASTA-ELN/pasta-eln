@@ -37,7 +37,7 @@ class Table(QWidget):
     TextButton('Add',self.addItem, headerL)
     more = TextButton('More',None, headerL)
     moreMenu = QMenu(self)
-    PAction('Sequential', self.sequentialEdit, moreMenu, self)
+    PAction('Sequential edit', self.sequentialEdit, moreMenu, self)
     PAction('Export',     self.export,     moreMenu, self)
     more.setMenu(moreMenu)
     mainL.addWidget(self.headerW)
@@ -76,7 +76,7 @@ class Table(QWidget):
     """
     if docType=='_tags_':
       self.data = self.comm.backend.db.getView('viewIdentify/viewTags')
-      header = ['tag','name']
+      self.filterHeader = ['tag','name']
       self.headline.setText('TAGS')
       #TODO_P5 tags should not have add button
     else:
@@ -202,11 +202,22 @@ class Table(QWidget):
 
   def groupEdit(self):
     """ What happens after the user has selected multiple rows and wants to edit """
+    intersection = None
     docIDs = []
-    for row in range(self.table.rowCount()):
-      if self.table.item(row,0).checkState() == Qt.CheckState.Checked:
-        docIDs.append(self.data[row]['id'])
-    print("I want to group-edit ", docIDs) #TODO_P3 Continue here
+    for row in range(self.models[-1].rowCount()):
+      if self.models[-1].item(row,0).checkState() == Qt.CheckState.Checked:
+        docIDs.append( self.data[row]['id'] )
+        thisKeys = set(self.comm.backend.db.getDoc(self.data[row]['id']))
+        if intersection is None:
+          intersection = thisKeys
+        else:
+          intersection = intersection.intersection(thisKeys)
+    #remove keys that should not be group edited and build dict
+    intersection = intersection.difference({'-type', '-branch', '-user', '-client', 'metaVendor', 'shasum', \
+      '_id', 'metaUser', '_rev', '-name', '-date', 'image', '_attachments','links'})
+    intersection = {i:'' for i in intersection}
+    intersection.update({'_ids':docIDs})
+    self.comm.formDoc.emit(intersection)
     return
 
 

@@ -1,5 +1,5 @@
 """ Class for interaction with couchDB """
-import traceback
+import traceback, logging
 from pathlib import PosixPath
 from .fixedStrings import defaultOntology
 
@@ -229,6 +229,7 @@ class Database:
             if originalLength!=len(newDoc['-branch']):
               nothingChanged = False
           else:
+            logging.info('database.update.1: unknown branch op: '+newDoc['_id']+' '+newDoc['-name'])
             return newDoc
       #handle other items
       # change has to be dict, not Document
@@ -262,11 +263,13 @@ class Database:
             oldDoc[item] = newDoc[item]
           newDoc[item] = change[item]
       if nothingChanged:
+        logging.info('database.update.2: doc not updated-nothing changed: '+newDoc['_id']+' '+newDoc['-name'])
         return newDoc
     #For both cases: delete and update
     try:
       newDoc.save()
     except:
+      logging.error('database.update: update unsuccessful: '+newDoc['_id']+' '+newDoc['-name'])
       print('**ERROR: could not update document. Likely version conflict. Initial and current version:')
       print(initialDocCopy)
       print(newDoc)
@@ -275,6 +278,7 @@ class Database:
     if '_attachments' in newDoc:
       attachmentName = 'v'+str(len(newDoc['_attachments']))+'.json'
     newDoc.put_attachment(attachmentName, 'application/json', json.dumps(oldDoc))
+    logging.info('database.update.3: doc update success: '+newDoc['_id']+' '+newDoc['-name'])
     return newDoc
 
 
