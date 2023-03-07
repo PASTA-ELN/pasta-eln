@@ -20,7 +20,7 @@ class Sidebar(QWidget):
 
     # GUI elements
     mainL = QVBoxLayout()
-    mainL.setContentsMargins(7,77,7,7)
+    mainL.setContentsMargins(7,15,0,7)
     mainL.setSpacing(7)
     self.setLayout(mainL)
     # storage of all project widgets and layouts
@@ -48,26 +48,34 @@ class Sidebar(QWidget):
         if self.openProjectId != projID:
           actionW.hide()
         actionL = QGridLayout(actionW)
-        btnScan = IconButton('mdi.clipboard-search-outline', self.btnScan, None, projID, 'Scan')
+        actionL.setContentsMargins(0,0,0,0)
+        btnScan = IconButton('mdi.clipboard-search-outline', self.btnScan, None, projID, 'Scan', self.comm.backend, '', False, 'Scan')
         actionL.addWidget(btnScan, 0,0)
-        btnCurate = IconButton('mdi.filter-plus-outline', self.btnCurate, None, projID, 'Curate')
+        btnCurate = IconButton('mdi.filter-plus-outline', self.btnCurate, None, projID, 'Curate', self.comm.backend, '', False, 'Curate')
         actionL.addWidget(btnCurate, 0,1)
         projectL.addWidget(actionW)
-        # projectL.setContentsMargins(0,40,0,0)
         self.widgetsAction[projID] = actionW
 
         # lists: view list of measurements, ... of this project
         listW = QWidget()
+        listW.setContentsMargins(0,0,0,0)
         if self.openProjectId != projID:
           listW.hide()
         listL = QGridLayout(listW)
         iconTable = {"Measurements":"fa.thermometer-3","Samples":"fa5s.vial","Procedures":"fa.list-ol","Instruments":"ri.scales-2-line"}
         for idx, doctype in enumerate(comm.backend.db.dataLabels):
           if doctype[0]!='x':
-            button = IconButton(iconTable[comm.backend.db.dataLabels[doctype]], self.btnDocType, None, doctype+'/'+projID, comm.backend.db.dataLabels[doctype],comm.backend, 'color:green')
-            listL.addWidget(button, int((idx)%2),int((idx+1)/2))
+            button = IconButton(iconTable[comm.backend.db.dataLabels[doctype]], self.btnDocType, None, doctype+'/'+projID, comm.backend.db.dataLabels[doctype],self.comm.backend, '', False, comm.backend.db.dataLabels[doctype])
+            listL.addWidget(button, idx, 0)
+            button.setStyleSheet("border-width:0")
+
         projectL.addWidget(listW)
         self.widgetsList[projID] = listW  
+
+        #collapse button
+        collapseBtn=TextButton('^', self.btnCollapse, projectL)
+        collapseBtn.setFixedHeight(20)
+
 
         # show folders as hierarchy
         treeW = QTreeWidget()
@@ -128,16 +136,13 @@ class Sidebar(QWidget):
       for docID, widget in self.widgetsAction.items():
         if docID == projID:
           widget.show()
-          self.widgetsProject[projID].setStyleSheet("color:red")
         else:
           widget.hide()
       for docID, widget in self.widgetsList.items():
         if docID == projID:
           widget.show()
-          self.widgetsProject[projID].setStyleSheet("color:red")
         else:
           widget.hide()
-    self.widgetsProject[projID].setStyleSheet("color:red")
     self.comm.changeProject.emit(projID, item)
     return
 
@@ -157,4 +162,9 @@ class Sidebar(QWidget):
     """
     projId, docId = item.text(1).split('/')
     self.comm.changeProject.emit(projId, docId)
+    return
+  def btnCollapse(self):
+    """
+    What happens if user clicks on collapse button
+    """
     return

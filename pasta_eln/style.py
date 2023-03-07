@@ -95,7 +95,7 @@ class LetterButton(QPushButton):
 
 class IconButton(QPushButton):
   """ Button that has only an icon"""
-  def __init__(self, iconName, function, layout, name='', tooltip='', backend=None, style='', hide=False):
+  def __init__(self, iconName, function, layout, name='', tooltip='', backend=None, style='', hide=False, text=''):
     """
     Initialization
 
@@ -113,9 +113,9 @@ class IconButton(QPushButton):
     color = 'black' if backend is None else getColor(backend, 'primary')
     icon = qta.icon(iconName, color=color, scale_factor=1)
     self.setIcon(icon)
-    self.setStyleSheet("border-width:0")
-    self.setText('')
+    self.setText(text)
     self.clicked.connect(function)
+    self.setFixedHeight(30)
     if name != '':
       self.setAccessibleName(name)
     if tooltip != '':
