@@ -1,5 +1,5 @@
 """ Class for interaction with couchDB """
-import traceback
+import traceback, logging
 from pathlib import PosixPath
 from .fixedStrings import defaultOntology
 
@@ -70,8 +70,8 @@ class Database:
           continue
         if item['name'] == 'image':
           outputList.append('doc.image.length>3')  #Not as .toString() because that leads to inconsistencies
-        elif item['name'] == 'tags':
-          outputList.append('doc.tags.join(" ")')
+        elif item['name'] == '-tags':
+          outputList.append("doc['-tags'].join(' ')")
         elif item['name'] == '-type':
           outputList.append('doc["-type"].slice(1).join("/")')
         elif item['name'] == 'content':
@@ -103,11 +103,11 @@ class Database:
     jsSHA= "if (doc['-type'][0]==='measurement'){emit(doc.shasum, doc['-name']);}"
     jsQR = "if (doc.qrCode.length > 0)"
     jsQR+= "{doc.qrCode.forEach(function(thisCode) {emit(thisCode, doc['-name']);});}"
-    tags = configuration['defaultTags']
-    jsTags=str(tags)+".forEach(function(tag){if(doc.tags.indexOf('#'+tag)>-1) emit('#'+tag, doc['-name']);});"
+    jsTags="if ('-tags' in doc){doc['-tags'].forEach(function(tag){emit(tag,[doc['-name']]);});}"
     views = {'viewQR':jsQR, 'viewSHAsum':jsSHA, 'viewTags':jsTags}
     self.saveView('viewIdentify', views)
     return
+
 
 
   def exit(self, deleteDB=False):
@@ -133,9 +133,9 @@ class Database:
         docID (dict): document id
 
     Returns:
-        string: json representation of document
+        dict: json representation of document
     """
-    return self.db[docID]
+    return dict(self.db[docID])
 
 
   def saveDoc(self, doc):
@@ -229,6 +229,7 @@ class Database:
             if originalLength!=len(newDoc['-branch']):
               nothingChanged = False
           else:
+            logging.info('database.update.1: unknown branch op: '+newDoc['_id']+' '+newDoc['-name'])
             return newDoc
       #handle other items
       # change has to be dict, not Document
@@ -262,11 +263,13 @@ class Database:
             oldDoc[item] = newDoc[item]
           newDoc[item] = change[item]
       if nothingChanged:
+        logging.info('database.update.2: doc not updated-nothing changed: '+newDoc['_id']+' '+newDoc['-name'])
         return newDoc
     #For both cases: delete and update
     try:
       newDoc.save()
     except:
+      logging.error('database.update: update unsuccessful: '+newDoc['_id']+' '+newDoc['-name'])
       print('**ERROR: could not update document. Likely version conflict. Initial and current version:')
       print(initialDocCopy)
       print(newDoc)
@@ -275,6 +278,7 @@ class Database:
     if '_attachments' in newDoc:
       attachmentName = 'v'+str(len(newDoc['_attachments']))+'.json'
     newDoc.put_attachment(attachmentName, 'application/json', json.dumps(oldDoc))
+    logging.info('database.update.3: doc update success: '+newDoc['_id']+' '+newDoc['-name'])
     return newDoc
 
 
@@ -619,7 +623,7 @@ class Database:
             if branch['child'] != 9999:
               for parentID in branch['stack']:                              #check if all parents in doc have a corresponding path
                 parentDoc = self.getDoc(parentID)
-                if not '-branch' in parentDoc:
+                if '-branch' not in parentDoc:
                   outstring+= f'{Bcolors.FAIL}**ERROR dch07: branch not in parent with id '+parentID+f'{Bcolors.ENDC}\n'
                   continue
                 parentDocBranches = parentDoc['-branch']

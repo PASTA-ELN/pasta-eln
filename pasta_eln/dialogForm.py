@@ -7,16 +7,16 @@ from .style import Image, TextButton, IconButton
 
 class Form(QDialog):
   """ New/Edit dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""
-  def __init__(self, backend, doc):
+  def __init__(self, comm, doc):
     """
     Initialization
 
     Args:
-      backend (Pasta): backend, not communication
+      comm (Communicate): communication channel
       doc (dict):  document to change / create
     """
     super().__init__()
-    self.backend = backend
+    self.comm = comm
     self.doc = dict(doc)
     if '_attachments' in self.doc:
       del self.doc['_attachments']
@@ -33,20 +33,21 @@ class Form(QDialog):
     # GUI elements
     mainL = QVBoxLayout(self)
     if 'image' in self.doc:
-      width = self.backend.configuration['GUI']['imageWidthDetails'] \
-                if hasattr(self.backend, 'configuration') else 300
+      width = self.comm.backend.configuration['GUI']['imageWidthDetails'] \
+                if hasattr(self.comm.backend, 'configuration') else 300
       Image(self.doc['image'], mainL, width=width)
     formW = QWidget()
     mainL.addWidget(formW)
     formL = QFormLayout(formW)
-    setattr(self, 'key_-name', QLineEdit(self.doc['-name']))
-    formL.addRow('Name', getattr(self, 'key_-name'))
-    #Add things that are in ontology
 
-    ontologyNode = self.backend.db.ontology[self.doc['-type'][0]]['prop']
-    for item in ontologyNode:
-      if item['name'] not in self.doc and  item['name'][0] not in ['_','-']:
-        self.doc[item['name']] = ''
+    #Add things that are in ontology
+    if '-type' in self.doc:
+      setattr(self, 'key_-name', QLineEdit(self.doc['-name']))
+      formL.addRow('Name', getattr(self, 'key_-name'))
+      ontologyNode = self.comm.backend.db.ontology[self.doc['-type'][0]]['prop']
+      for item in ontologyNode:
+        if item['name'] not in self.doc and  item['name'][0] not in ['_','-']:
+          self.doc[item['name']] = ''
     for key,value in self.doc.items():
       if key[0] in ['_','-'] or key in ['image','metaVendor','metaUser','shasum']:
         continue
@@ -85,8 +86,9 @@ class Form(QDialog):
         # the qcombox comes later once the database knows what tags are and how to generate the list
         print('')
       elif isinstance(value, list):       #list of items
-        setattr(self, 'key_'+key, QLineEdit(' '.join(value)))
-        formL.addRow(QLabel(key.capitalize()), getattr(self, 'key_'+key))
+        if isinstance(value[0], str):
+          setattr(self, 'key_'+key, QLineEdit(' '.join(value)))
+          formL.addRow(QLabel(key.capitalize()), getattr(self, 'key_'+key))
       elif isinstance(value, str):        #string
         ontologyItem = [i for i in ontologyNode if i['name']==key]
         if len(ontologyItem)==1 and 'list' in ontologyItem[0]:  #choice dropdown
@@ -96,7 +98,7 @@ class Form(QDialog):
           else:                                                 #docType
             listDocType = ontologyItem[0]['list']
             getattr(self, 'key_'+key).addItem('- no link -', userData='')
-            for line in self.backend.db.getView('viewDocType/'+listDocType):
+            for line in self.comm.backend.db.getView('viewDocType/'+listDocType):
               getattr(self, 'key_'+key).addItem(line['value'][0], userData=line['id'])
               if line['id'] == value: #TODO_P5 what if names are identical
                 getattr(self, 'key_'+key).setCurrentText(line['value'][0])
@@ -107,12 +109,12 @@ class Form(QDialog):
         print("**ERROR unknown value type",key, value)
     self.projectComboBox = QComboBox()
     self.projectComboBox.addItem('- no change -', userData='')
-    for line in self.backend.db.getView('viewDocType/x0'):
+    for line in self.comm.backend.db.getView('viewDocType/x0'):
       self.projectComboBox.addItem(line['value'][0], userData=line['id'])
     formL.addRow(QLabel('Project'), self.projectComboBox)
     self.docTypeComboBox = QComboBox()
     self.docTypeComboBox.addItem('- no change -', userData='')
-    for key, value in self.backend.db.dataLabels.items():
+    for key, value in self.comm.backend.db.dataLabels.items():
       if key[0]!='x':
         self.docTypeComboBox.addItem(value, userData=key)
     formL.addRow(QLabel('Data type'), self.docTypeComboBox)
@@ -128,9 +130,11 @@ class Form(QDialog):
     if btn.text()=='Cancel':
       self.reject()
     elif btn.text()=='Save':
-      self.doc['-name'] = getattr(self, 'key_-name').text().strip()
+      if hasattr(self, 'key_-name'):
+        self.doc['-name'] = getattr(self, 'key_-name').text().strip()
       for key, value in self.doc.items():
-        if key[0] in ['_','-'] or key in ['image','metaVendor','metaUser'] or not hasattr(self, 'key_'+key):
+        if key[0] in ['_','-'] or key in ['image','metaVendor','metaUser'] or \
+            (not hasattr(self, 'key_'+key) and not hasattr(self, 'textEdit_'+key)):
           continue
         if key in ['comment','content']:
           self.doc[key] = getattr(self, 'textEdit_'+key).toPlainText().strip()
@@ -143,9 +147,10 @@ class Form(QDialog):
             self.doc[key] = getattr(self, 'key_'+key).text().strip()
         else:
           print("**ERROR dialogeForm unknown value type",key, value)
-      del self.doc['-branch']
+      if '-branch' in self.doc:
+        del self.doc['-branch']
       if self.projectComboBox.currentData() != '':
-        parentPath = self.backend.db.getDoc(self.projectComboBox.currentData())['-branch'][0]['path']
+        parentPath = self.comm.backend.db.getDoc(self.projectComboBox.currentData())['-branch'][0]['path']
         self.doc['-branch'] = {'op':'u', 'stack':[self.projectComboBox.currentData()], 'childNum':9999, \
                                'path':parentPath}
       if self.docTypeComboBox.currentData() != '':
@@ -153,7 +158,15 @@ class Form(QDialog):
         print("**WARNING: I ALSO SHOULD CHANGE DOCID") #TODO_P5
         #remove old, create new
       else:
-        self.backend.db.updateDoc(self.doc, self.doc['_id'])
+        if '_ids' in self.doc:
+          del self.doc['-name']
+          ids = self.doc.pop('_ids')
+          self.doc = {i:j for i,j in self.doc.items() if j!=''}
+          for docID in ids:
+            self.comm.backend.db.updateDoc(self.doc, docID)
+        else: #default update
+          self.comm.backend.db.updateDoc(self.doc, self.doc['_id'])
+      #TODO_P5 execute redraw of table and details using self.comm
       self.accept()  #close
     return
 
@@ -161,6 +174,7 @@ class Form(QDialog):
   def btnAdvanced(self, status):
     """
     Action if advanced button is clicked
+    TODO_P5 Think if all other form-elements should become hidden: show/hide form and hide/show text-boxes
     """
     key = self.sender().accessibleName()
     if status:

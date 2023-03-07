@@ -1,6 +1,6 @@
 """ all styling of buttons and other general widgets, some defined colors... """
 from PySide6.QtWidgets import QPushButton, QLabel, QSizePolicy  # pylint: disable=no-name-in-module
-from PySide6.QtGui import QImage, QPixmap           # pylint: disable=no-name-in-module
+from PySide6.QtGui import QImage, QPixmap, QAction, QKeySequence  # pylint: disable=no-name-in-module
 from PySide6.QtCore import QByteArray, Qt           # pylint: disable=no-name-in-module
 from PySide6.QtSvgWidgets import QSvgWidget         # pylint: disable=no-name-in-module
 import qtawesome as qta
@@ -127,6 +127,33 @@ class IconButton(QPushButton):
     if layout is not None:
       layout.addWidget(self)
 
+
+class PAction(QAction):
+  """ QAction and assign function to menu"""
+  def __init__(self, label, function, menu, parent, shortcut=None, data=None):
+    """
+    Initialization
+
+    Args:
+      label (str): label printed on submenu
+      function (function): function to be called
+      menu (QMenu): button to be added to this menu
+      parent (QWidget): parent widget
+      shortcut (str): shortcut ctrl+k
+      data (str): additional data to transport
+    """
+    super().__init__()
+    self.setParent(parent)
+    self.setText(label)
+    self.triggered.connect(function)
+    if menu is not None:
+      menu.addAction(self)
+    if shortcut is not None:
+      self.setShortcut(QKeySequence(shortcut))
+    if data is not None:
+      self.setData(data)
+
+
 class Image():
   """ Image widget depending on type of data """
   def __init__(self, data, layout, width=-1, height=-1):
@@ -142,7 +169,7 @@ class Image():
     if data.startswith('data:image/'): #jpg or png image
       byteArr = QByteArray.fromBase64(bytearray(data[22:], encoding='utf-8'))
       imageW = QImage()
-      imageType = data[11:15].upper()
+      imageType = data[11:15].upper()  #TODO_P5 not always perfect: use regex
       imageW.loadFromData(byteArr, imageType)
       pixmap = QPixmap.fromImage(imageW)
       if height>0:
