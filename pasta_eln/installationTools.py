@@ -258,6 +258,11 @@ def configuration(command='test', user='', password='', pathPasta=''):
       conf['tableColumnsMax'] = 16
     else:
       output += '**ERROR: No tableColumnsMax in config file\n'
+  if 'tableHeaders' not in conf:
+    if command == 'repair':
+      conf['tableHeaders'] = {}
+    else:
+      output += '**ERROR: No tableHeaders in config file\n'
   if 'qrPrinter' not in conf:
     if command == 'repair':
       conf['qrPrinter'] = {}

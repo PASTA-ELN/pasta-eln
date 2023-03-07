@@ -4,8 +4,6 @@
 - widgetDetails
 
 # Priority 1: Next days
-- Table:
-  - Change table headings
 - Hide: show if sum(branch(hide))==0
 
 # Priority 2

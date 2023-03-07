@@ -79,7 +79,8 @@ disable=raw-checker-failed,
         unused-import,
         dangerous-default-value,
         missing-raises-doc,
-        no-else-return
+        no-else-return,
+        no-self-use
 
 #Reasons:
 # looks better: len-as-condition, multiple-statements, bad-whitespace, multiple-imports
