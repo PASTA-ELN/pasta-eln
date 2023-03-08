@@ -7,18 +7,6 @@ from .widgetProjectLeaf import Leaf
 from .style import TextButton
 
 
-class CustomItemDelegate(QStyledItemDelegate):
-  def paint(self, painter, option, index):
-    super().paint(painter, option, index)    # Call the base implementation to draw the item background and focus rectangle
-    docID = index.data(Qt.DisplayRole)
-    print('>>', docID, index)
-    # icon_rect = option.rect.adjusted(5, 0, -option.rect.width(), 0)
-    # painter.drawPixmap(icon_rect, icon)
-    text_rect = option.rect.adjusted(25, 0, 0, 0)
-    painter.drawText(text_rect, docID)
-    return
-
-
 class Project(QWidget):
   """ Widget that shows the content of project in a electronic labnotebook """
   def __init__(self, comm):
@@ -46,7 +34,6 @@ class Project(QWidget):
     self.model = QStandardItemModel()
     self.tree.setModel(self.model)
     self.tree.setDragDropMode(QAbstractItemView.InternalMove)
-    # self.tree.setItemDelegate(CustomItemDelegate())
     rootItem = self.model.invisibleRootItem()
 
     def iterateTree(nodeHier):
@@ -64,8 +51,9 @@ class Project(QWidget):
       nodeTree.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled)
       #New version
       print(self.comm, nodeHier.id)
-      # leaf = Leaf(self.comm, nodeHier.id)  #TODO_P1 BUG
-      leaf = nodeHier.name
+      # leaf = Leaf(self.comm, nodeHier.id)  #TODO_P1 INCOMPLETE
+      leaf = str(self.comm.backend.db.getDoc(nodeHier.id))  #nodeHier.name
+      # https://stackoverflow.com/questions/40452400/qt-python-qtreeview-custom-widget-setdata-lose-reference-after-drag-and-dr
       nodeTree.setData(leaf, Qt.DisplayRole)
       nodeTree.setData(nodeHier.name, Qt.ToolTipRole)
       if docID==nodeHier.id:
