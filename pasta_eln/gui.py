@@ -12,6 +12,8 @@ from .widgetSidebar import Sidebar
 from .widgetBody import Body
 from .dialogForm import Form
 from .dialogConfig import Configuration
+from .dialogProjectGroup import ProjectGroup
+from .dialogOntology import Ontology
 from .miscTools import updateExtractorList
 from .style import PAction
 os.environ['QT_API'] = 'pyside6'
@@ -35,8 +37,10 @@ class MainWindow(QMainWindow):
     menu.addMenu("&File")
     viewMenu = menu.addMenu("&View list")
     systemMenu = menu.addMenu("&System")
-    PAction('&Configuration',         self.openConfigDialog,    systemMenu, self)
-    PAction('Update &Extractor list', self.updateExtractorList, systemMenu, self)
+    PAction('&Configuration',         self.executeAction, systemMenu, self, data='configuration')
+    PAction('&Project groups',        self.executeAction, systemMenu, self, data='projectGroups')
+    PAction('&Ontology',              self.executeAction, systemMenu, self, data='ontology')
+    PAction('Update &Extractor list', self.executeAction, systemMenu, self, data='updateExtractors')
     menu.addMenu("&Help")
 
     shortCuts = {'measurement':'m', 'sample':'s', 'x0':'p'} #TODO_P5 to config
@@ -84,21 +88,26 @@ class MainWindow(QMainWindow):
     self.comm.changeTable.emit(docType, '', False)
     return
 
-  def openConfigDialog(self):
-    """
-    open configuration dialog
-    """
-    configWindow = Configuration(self.comm.backend)
-    configWindow.exec()
-    return
 
-  def updateExtractorList(self):
+  def executeAction(self):
     """
-    update the extractor list and write update to config-file .pastaELN.json
+    action after clicking menu item
     """
-    updateExtractorList(self.backend.extractorPath)
+    menuName = self.sender().data()
+    if menuName=='configuration':
+      dialog = Configuration(self.comm.backend)
+      dialog.exec()
+    elif menuName=='projectGroups':
+      dialog = ProjectGroup(self.comm.backend)
+      dialog.exec()
+    elif menuName=='ontology':
+      dialog = Ontology(self.comm.backend)
+      dialog.exec()
+    elif menuName=='updateExtractors':
+      updateExtractorList(self.backend.extractorPath)
+    else:
+      print('**ERROR do not have menu '+menuName)
     return
-
 
 
 ##############
