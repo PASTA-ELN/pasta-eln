@@ -5,6 +5,8 @@
 
 # Priority 1: Next days
 - Hide: show if sum(branch(hide))==0
+- System: gui and install directly into system
+- fill filemenu with dummies
 
 # Priority 2
 
