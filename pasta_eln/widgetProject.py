@@ -3,7 +3,7 @@ from PySide6.QtWidgets import QLabel, QVBoxLayout, QHBoxLayout, QWidget, QTreeVi
 from PySide6.QtGui import QStandardItemModel, QStandardItem
 from PySide6.QtCore import Slot, Qt  # pylint: disable=no-name-in-module
 from anytree import PreOrderIter
-from .widgetProjectLeaf import Leaf
+from .widgetProjectLeafRenderer import ProjectLeafRenderer
 from .style import TextButton
 
 
@@ -33,6 +33,9 @@ class Project(QWidget):
     self.tree.setStyleSheet('QTreeView::branch {border-image: none;}')
     self.model = QStandardItemModel()
     self.tree.setModel(self.model)
+    renderer = ProjectLeafRenderer()
+    renderer.setCommunication(self.comm)
+    self.tree.setItemDelegate(renderer)
     self.tree.setDragDropMode(QAbstractItemView.InternalMove)
     rootItem = self.model.invisibleRootItem()
 
@@ -46,16 +49,9 @@ class Project(QWidget):
       Returns:
         QtTreeWidgetItem: tree node
       """
-      #prefill with name, doctype, id
+      #prefill docID
       nodeTree = QStandardItem(nodeHier.id)  #nodeHier.name,'/'.join(nodeHier.docType),nodeHier.id])
       nodeTree.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled)
-      #New version
-      print(self.comm, nodeHier.id)
-      # leaf = Leaf(self.comm, nodeHier.id)  #TODO_P1 INCOMPLETE
-      leaf = str(self.comm.backend.db.getDoc(nodeHier.id))  #nodeHier.name
-      # https://stackoverflow.com/questions/40452400/qt-python-qtreeview-custom-widget-setdata-lose-reference-after-drag-and-dr
-      nodeTree.setData(leaf, Qt.DisplayRole)
-      nodeTree.setData(nodeHier.name, Qt.ToolTipRole)
       if docID==nodeHier.id:
         nonlocal selectedItem
         selectedItem = nodeTree
@@ -77,7 +73,6 @@ class Project(QWidget):
     self.tree.expandAll()
     if selectedItem is not None:
       self.tree.setCurrentItem(selectedItem)
-    iterator = QTreeView
     self.mainL.addWidget(self.tree)
     return
 
