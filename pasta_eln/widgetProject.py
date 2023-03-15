@@ -1,9 +1,10 @@
 """ Widget that shows the content of project in a electronic labnotebook """
-from PySide6.QtWidgets import QLabel, QVBoxLayout, QHBoxLayout, QWidget, QTreeView, QStyledItemDelegate, QAbstractItemView  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QLabel, QVBoxLayout, QHBoxLayout, QWidget, QStyledItemDelegate, QAbstractItemView  # pylint: disable=no-name-in-module
 from PySide6.QtGui import QStandardItemModel, QStandardItem    # pylint: disable=no-name-in-module
 from PySide6.QtCore import Slot, Qt                            # pylint: disable=no-name-in-module
 from anytree import PreOrderIter
 from .widgetProjectLeafRenderer import ProjectLeafRenderer
+from .widgetTreeView import TreeView
 from .style import TextButton
 
 
@@ -19,6 +20,15 @@ class Project(QWidget):
     self.model= None
     self.bodyW= None
 
+  def modelChanged(self):
+    print('model changed: save to disk')
+
+  def treeDoubleClicked(self):
+    print('tree double clicked, edit leaf')
+
+  def contextMenu(self):
+    print('tree double clicked, edit leaf')
+
 
   @Slot(str)
   def changeProject(self, projID, docID):
@@ -31,16 +41,15 @@ class Project(QWidget):
     """
     #initialize
     selectedItem = None
-    self.tree  = QTreeView(self)
-    self.tree.setHeaderHidden(True)
-    self.tree.setStyleSheet('QTreeView::branch {border-image: none;}')
+    self.tree = TreeView(self)
     self.model = QStandardItemModel()
     self.tree.setModel(self.model)
-    renderer = ProjectLeafRenderer()
-    renderer.setCommunication(self.comm)
-    self.tree.setItemDelegate(renderer)
-    self.tree.setDragDropMode(QAbstractItemView.InternalMove)
+    self.tree.renderer.setCommunication(self.comm)
+    # self.tree.contextMenuEvent().connect(self.contextMenu)  #changeEvent
+    self.tree.doubleClicked.connect(self.treeDoubleClicked)
+    self.model.itemChanged.connect(self.modelChanged)
     rootItem = self.model.invisibleRootItem()
+
 
     def iterateTree(nodeHier):
       """
