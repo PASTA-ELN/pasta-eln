@@ -1,12 +1,21 @@
+""" renders each leaf of project tree using QPaint """
 import base64
-from PySide6.QtCore import Qt, QSize, QPoint, QMargins, QRectF
-from PySide6.QtGui import QStaticText, QPixmap, QBrush
-from PySide6.QtWidgets import QStyledItemDelegate
-from PySide6.QtSvg import QSvgRenderer
+from PySide6.QtCore import Qt, QSize, QPoint, QMargins, QRectF# pylint: disable=no-name-in-module
+from PySide6.QtGui import QStaticText, QPixmap, QTextDocument # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QStyledItemDelegate             # pylint: disable=no-name-in-module
+from PySide6.QtSvg import QSvgRenderer                        # pylint: disable=no-name-in-module
 
 _DO_NOT_RENDER_ = ['image','content','metaVendor','metaUser','shasum']
 
 class ProjectLeafRenderer(QStyledItemDelegate):
+  """ renders each leaf of project tree using QPaint """
+  def __init__(self):
+    super().__init__()
+    self.lineSep = 20
+    self.comm = None
+    self.width = -1
+
+
   def setCommunication(self, comm):
     """
     Set communication path
@@ -15,9 +24,9 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       comm (Communicate): communication path
     """
     self.comm = comm
-    self.lineSep = 20
     self.width = self.comm.backend.configuration['GUI']['imageWidthProject']
     return
+
 
   def paint(self, painter, option, index):
     """
@@ -32,6 +41,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     """
     xOffset, yOffset = option.rect.topLeft().toTuple()
     topLeft2nd = option.rect.topRight()-QPoint(self.width,0)
+    bottomRight = option.rect.bottomRight()+QPoint(self.width,0)
     docID   = index.data(Qt.DisplayRole)
     doc     = self.comm.backend.db.getDoc(docID)
     painter.fillRect(option.rect.marginsRemoved(QMargins(0,2,0,2)), Qt.lightGray)
@@ -43,9 +53,13 @@ class ProjectLeafRenderer(QStyledItemDelegate):
         painter.drawPixmap(topLeft2nd, pixmap)
       elif doc['image'].startswith('<?xml'):
         image = QSvgRenderer(bytearray(doc['image'], encoding='utf-8'))
-        image.render(painter, QRectF(topLeft2nd, option.rect.bottomRight()))
+        image.render(painter,    QRectF(topLeft2nd, option.rect.bottomRight()))
     elif 'content' in doc:
-      print('Implement content')
+      text = QTextDocument()
+      text.setMarkdown(doc['content'])
+      painter.translate(topLeft2nd)
+      text.drawContents(painter)
+      painter.translate(-topLeft2nd)
     yOffset += self.lineSep/2
     painter.drawStaticText(xOffset, yOffset, QStaticText(doc['-name']))
     if '-tags' in doc and len(doc['-tags'])>0:
@@ -60,7 +74,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       if isinstance(doc[key], str):
         painter.drawStaticText(xOffset, yOffset, QStaticText(key+': '+doc[key]))
       else:
-        print("cannot paint ",docID, key)
+        print("cannot paint ",docID, key) #TODO_P4 make sure these make sense
 
 
   def sizeHint(self, option, index):
@@ -74,5 +88,9 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       height  = (height+3) * self.lineSep
       if 'image' in docKeys:
         height = int(self.width*3/4)
+      if 'content' in docKeys:
+        text = QTextDocument()
+        text.setMarkdown(self.comm.backend.db.getDoc(docID)['content'])
+        height = text.size().toTuple()[1]
       return QSize(400, height)
-
+    return QSize()

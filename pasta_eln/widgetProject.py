@@ -1,7 +1,7 @@
 """ Widget that shows the content of project in a electronic labnotebook """
 from PySide6.QtWidgets import QLabel, QVBoxLayout, QHBoxLayout, QWidget, QTreeView, QStyledItemDelegate, QAbstractItemView  # pylint: disable=no-name-in-module
-from PySide6.QtGui import QStandardItemModel, QStandardItem
-from PySide6.QtCore import Slot, Qt  # pylint: disable=no-name-in-module
+from PySide6.QtGui import QStandardItemModel, QStandardItem    # pylint: disable=no-name-in-module
+from PySide6.QtCore import Slot, Qt                            # pylint: disable=no-name-in-module
 from anytree import PreOrderIter
 from .widgetProjectLeafRenderer import ProjectLeafRenderer
 from .style import TextButton
@@ -15,6 +15,9 @@ class Project(QWidget):
     comm.changeProject.connect(self.changeProject)
     self.mainL = QVBoxLayout()
     self.setLayout(self.mainL)
+    self.tree = None
+    self.model= None
+    self.bodyW= None
 
 
   @Slot(str)
@@ -65,9 +68,9 @@ class Project(QWidget):
 
     #Populate model body of change project: start recursion
     nodeHier = self.comm.backend.db.getHierarchy(projID)
-    for idx, node in enumerate(PreOrderIter(nodeHier, maxlevel=2)):
+    for node in PreOrderIter(nodeHier, maxlevel=2):
       if node.is_root:         #Project header
-        headerW = self.projHeader(projID)
+        self.projHeader(projID)
       else:
         rootItem.appendRow(iterateTree(node))
     self.tree.expandAll()
@@ -87,6 +90,9 @@ class Project(QWidget):
         self.bodyW.hide()
     return
 
+
+#TODO_P1 save drag-drop; add node at end; context-menu or click each leaf
+# hide
 
   def projHeader(self, projID):
     """
@@ -114,4 +120,4 @@ class Project(QWidget):
       bodyL.addWidget(QLabel(key+': '+str(value)))
     headerL.addWidget(self.bodyW)
     self.mainL.addWidget(headerW)
-    return headerW
+    return
