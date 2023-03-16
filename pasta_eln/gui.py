@@ -15,7 +15,7 @@ from .dialogConfig import Configuration
 from .dialogProjectGroup import ProjectGroup
 from .dialogOntology import Ontology
 from .miscTools import updateExtractorList
-from .style import PAction
+from .style import Action
 os.environ['QT_API'] = 'pyside6'
 
 # Subclass QMainWindow to customize your application's main window
@@ -37,22 +37,22 @@ class MainWindow(QMainWindow):
     menu.addMenu("&File")
     viewMenu = menu.addMenu("&View list")
     systemMenu = menu.addMenu("&System")
-    PAction('&Configuration',         self.executeAction, systemMenu, self, data='configuration')
-    PAction('&Project groups',        self.executeAction, systemMenu, self, data='projectGroups')
-    PAction('&Ontology',              self.executeAction, systemMenu, self, data='ontology')
-    PAction('Update &Extractor list', self.executeAction, systemMenu, self, data='updateExtractors')
+    Action('&Configuration',         self.executeAction, systemMenu, self, data='configuration')
+    Action('&Project groups',        self.executeAction, systemMenu, self, data='projectGroups')
+    Action('&Ontology',              self.executeAction, systemMenu, self, data='ontology')
+    Action('Update &Extractor list', self.executeAction, systemMenu, self, data='updateExtractors')
     menu.addMenu("&Help")
 
     shortCuts = {'measurement':'m', 'sample':'s', 'x0':'p'} #TODO_P5 to config
     for docType, docLabel in self.comm.backend.db.dataLabels.items():
       if docType[0]=='x' and docType[1]!='0':
         continue
-      PAction(docLabel, self.viewMenu, viewMenu, self, \
+      Action(docLabel, self.viewMenu, viewMenu, self, \
         "Ctrl+"+shortCuts[docType] if docType in shortCuts else None, docType)
       if docType=='x0':
         viewMenu.addSeparator()
     viewMenu.addSeparator()
-    PAction('&Tags', self.viewMenu, viewMenu, self, 'Ctrl+T', '_tags_')
+    Action('&Tags', self.viewMenu, viewMenu, self, 'Ctrl+T', '_tags_')
 
     #GUI elements
     mainWidget = QWidget()

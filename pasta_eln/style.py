@@ -127,7 +127,7 @@ class IconButton(QPushButton):
       layout.addWidget(self)
 
 
-class PAction(QAction):
+class Action(QAction):
   """ QAction and assign function to menu"""
   def __init__(self, label, function, menu, parent, shortcut=None, data=None):
     """

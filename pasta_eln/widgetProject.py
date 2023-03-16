@@ -1,5 +1,5 @@
 """ Widget that shows the content of project in a electronic labnotebook """
-from PySide6.QtWidgets import QLabel, QVBoxLayout, QHBoxLayout, QWidget, QStyledItemDelegate, QAbstractItemView  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QLabel, QVBoxLayout, QHBoxLayout, QWidget, QStyledItemDelegate  # pylint: disable=no-name-in-module
 from PySide6.QtGui import QStandardItemModel, QStandardItem    # pylint: disable=no-name-in-module
 from PySide6.QtCore import Slot, Qt                            # pylint: disable=no-name-in-module
 from anytree import PreOrderIter
@@ -16,18 +16,48 @@ class Project(QWidget):
     comm.changeProject.connect(self.changeProject)
     self.mainL = QVBoxLayout()
     self.setLayout(self.mainL)
-    self.tree = None
-    self.model= None
-    self.bodyW= None
+    self.tree   = None
+    self.model  = None
+    self.bodyW  = None
+    self.projID = ''
+
 
   def modelChanged(self):
-    print('model changed: save to disk')
+    """ after drag-drop, record changes """
+    def iterItems(root):
+      if root is not None:
+        stack = [root]
+        while stack:
+          parent = stack.pop(0)
+          for row in range(parent.rowCount()):
+            child = parent.child(row, 0)
+            yield child
+            if child.hasChildren():
+              stack.append(child)
+    #find new version
+    listDB   = self.comm.backend.db.getView('viewHierarchy/viewHierarchy', startKey=self.projID)
+    listDBKeys= [i['key'] for i in listDB]
+    listChanged = []
+    rootItem = self.model.invisibleRootItem()
+    for item in iterItems(rootItem):
+      hierStack = [item.text()]  #create reversed
+      currentItem = item
+      while currentItem.parent() is not None:
+        currentItem = currentItem.parent()
+        hierStack.append(currentItem.text())
+      hierStack = [self.projID] + hierStack[::-1]  #add project id and reverse
+      if ' '.join(hierStack) not in listDBKeys:
+        docID = hierStack[-1]
+        doc = self.comm.backend.db.getDoc(docID)
+        childNew = item.row()
+        stackNew = hierStack[:-1]
 
-  def treeDoubleClicked(self):
-    print('tree double clicked, edit leaf')
-
-  def contextMenu(self):
-    print('tree double clicked, edit leaf')
+        print('changed ',stackNew, childNew, item.text()) #TODO_P1
+        print(item.flags(), item.isDragEnabled() )
+      elif hierStack[-1]=='x-5ec061a4a9b4475fa19f1025beea9105':
+        print('hhe',hierStack,item.text())
+        print(item.flags(), item.index().row(), item.row() )
+    return
 
 
   @Slot(str)
@@ -40,13 +70,10 @@ class Project(QWidget):
       docID (str): document id of focus item, if not given focus at project
     """
     #initialize
+    self.projID = projID
     selectedItem = None
-    self.tree = TreeView(self)
     self.model = QStandardItemModel()
-    self.tree.setModel(self.model)
-    self.tree.renderer.setCommunication(self.comm)
-    # self.tree.contextMenuEvent().connect(self.contextMenu)  #changeEvent
-    self.tree.doubleClicked.connect(self.treeDoubleClicked)
+    self.tree = TreeView(self, self.comm, self.model)
     self.model.itemChanged.connect(self.modelChanged)
     rootItem = self.model.invisibleRootItem()
 
@@ -63,7 +90,10 @@ class Project(QWidget):
       """
       #prefill docID
       nodeTree = QStandardItem(nodeHier.id)  #nodeHier.name,'/'.join(nodeHier.docType),nodeHier.id])
-      nodeTree.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled)
+      if nodeHier.id[0]=='x':
+        nodeTree.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled)
+      else:
+        nodeTree.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled)
       if docID==nodeHier.id:
         nonlocal selectedItem
         selectedItem = nodeTree
@@ -76,10 +106,10 @@ class Project(QWidget):
       return nodeTree
 
     #Populate model body of change project: start recursion
-    nodeHier = self.comm.backend.db.getHierarchy(projID)
+    nodeHier = self.comm.backend.db.getHierarchy(self.projID)
     for node in PreOrderIter(nodeHier, maxlevel=2):
       if node.is_root:         #Project header
-        self.projHeader(projID)
+        self.projHeader()
       else:
         rootItem.appendRow(iterateTree(node))
     self.tree.expandAll()
@@ -103,14 +133,11 @@ class Project(QWidget):
 #TODO_P1 save drag-drop; add node at end; context-menu or click each leaf
 # hide
 
-  def projHeader(self, projID):
+  def projHeader(self):
     """
     Create header of page
-
-    Args:
-      projID (str): docID of project
     """
-    doc = self.comm.backend.db.getDoc(projID)
+    doc = self.comm.backend.db.getDoc(self.projID)
     headerW = QWidget()  # Leaf(self.comm, node.id)
     headerL = QVBoxLayout(headerW)
     topbarW = QWidget()

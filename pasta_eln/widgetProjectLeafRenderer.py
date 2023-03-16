@@ -11,7 +11,8 @@ class ProjectLeafRenderer(QStyledItemDelegate):
   """ renders each leaf of project tree using QPaint """
   def __init__(self):
     super().__init__()
-    self.lineSep = 20
+    self.lineSep = 20 #TODO_P5 into config file
+    self.debugMode = True
     self.comm = None
     self.width = -1
 
@@ -41,7 +42,6 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     """
     xOffset, yOffset = option.rect.topLeft().toTuple()
     topLeft2nd = option.rect.topRight()-QPoint(self.width,0)
-    bottomRight = option.rect.bottomRight()+QPoint(self.width,0)
     docID   = index.data(Qt.DisplayRole)
     doc     = self.comm.backend.db.getDoc(docID)
     painter.fillRect(option.rect.marginsRemoved(QMargins(0,2,0,2)), Qt.lightGray)
@@ -62,6 +62,8 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       painter.translate(-topLeft2nd)
     yOffset += self.lineSep/2
     painter.drawStaticText(xOffset, yOffset, QStaticText(doc['-name']))
+    if self.debugMode:
+      painter.drawStaticText(xOffset+500, yOffset, QStaticText(doc['_id']))
     if '-tags' in doc and len(doc['-tags'])>0:
       yOffset += self.lineSep
       tags = ['cur\u2605ted' if i=='_curated' else '#'+i for i in doc['-tags']]
@@ -74,7 +76,8 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       if isinstance(doc[key], str):
         painter.drawStaticText(xOffset, yOffset, QStaticText(key+': '+doc[key]))
       else:
-        print("cannot paint ",docID, key) #TODO_P4 make sure these make sense
+        pass
+        #print("cannot paint ",docID, key) #TODO_P4 make sure these make sense
 
 
   def sizeHint(self, option, index):

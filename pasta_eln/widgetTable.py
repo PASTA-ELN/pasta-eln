@@ -7,7 +7,7 @@ from PySide6.QtCore import Qt, Slot, QSortFilterProxyModel, QModelIndex       # 
 from PySide6.QtGui import QBrush, QStandardItemModel, QStandardItem, QAction  # pylint: disable=no-name-in-module
 import qtawesome as qta
 from .dialogTableHeader import TableHeader
-from .style import TextButton, Label, getColor, LetterButton, PAction
+from .style import TextButton, Label, getColor, LetterButton, Action
 
 class Table(QWidget):
   """ widget that shows the table of the items """
@@ -38,9 +38,9 @@ class Table(QWidget):
     TextButton('Add',self.addItem, headerL)
     more = TextButton('More',None, headerL)
     moreMenu = QMenu(self)
-    PAction('Sequential edit', self.sequentialEdit, moreMenu, self)
-    PAction('Export',     self.export,     moreMenu, self)
-    PAction('Change table headers', self.changeTableHeader, moreMenu, self)
+    Action('Sequential edit', self.sequentialEdit, moreMenu, self)
+    Action('Export',     self.export,     moreMenu, self)
+    Action('Change table headers', self.changeTableHeader, moreMenu, self)
     more.setMenu(moreMenu)
     mainL.addWidget(self.headerW)
     # filter
