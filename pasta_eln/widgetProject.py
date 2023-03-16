@@ -1,4 +1,5 @@
 """ Widget that shows the content of project in a electronic labnotebook """
+from pathlib import Path
 from PySide6.QtWidgets import QLabel, QVBoxLayout, QHBoxLayout, QWidget, QStyledItemDelegate  # pylint: disable=no-name-in-module
 from PySide6.QtGui import QStandardItemModel, QStandardItem    # pylint: disable=no-name-in-module
 from PySide6.QtCore import Slot, Qt                            # pylint: disable=no-name-in-module
@@ -6,6 +7,7 @@ from anytree import PreOrderIter
 from .widgetProjectLeafRenderer import ProjectLeafRenderer
 from .widgetTreeView import TreeView
 from .style import TextButton
+from .miscTools import createDirName
 
 
 class Project(QWidget):
@@ -22,41 +24,50 @@ class Project(QWidget):
     self.projID = ''
 
 
-  def modelChanged(self):
-    """ after drag-drop, record changes """
-    def iterItems(root):
-      if root is not None:
-        stack = [root]
-        while stack:
-          parent = stack.pop(0)
-          for row in range(parent.rowCount()):
-            child = parent.child(row, 0)
-            yield child
-            if child.hasChildren():
-              stack.append(child)
-    #find new version
-    listDB   = self.comm.backend.db.getView('viewHierarchy/viewHierarchy', startKey=self.projID)
-    listDBKeys= [i['key'] for i in listDB]
-    listChanged = []
-    rootItem = self.model.invisibleRootItem()
-    for item in iterItems(rootItem):
-      hierStack = [item.text()]  #create reversed
-      currentItem = item
-      while currentItem.parent() is not None:
-        currentItem = currentItem.parent()
-        hierStack.append(currentItem.text())
-      hierStack = [self.projID] + hierStack[::-1]  #add project id and reverse
-      if ' '.join(hierStack) not in listDBKeys:
-        docID = hierStack[-1]
-        doc = self.comm.backend.db.getDoc(docID)
-        childNew = item.row()
-        stackNew = hierStack[:-1]
+  def modelChanged(self, item):
+    """
+    After drag-drop, record changes to backend and database directly
 
-        print('changed ',stackNew, childNew, item.text()) #TODO_P1
-        print(item.flags(), item.isDragEnabled() )
-      elif hierStack[-1]=='x-5ec061a4a9b4475fa19f1025beea9105':
-        print('hhe',hierStack,item.text())
-        print(item.flags(), item.index().row(), item.row() )
+    Args:
+      item (QStandardItem): item changed, new location
+    """
+    print('\n')
+    #old information
+    stackOld = item.text().split('/')[:-1]
+    docID    = item.text().split('/')[-1]
+    doc      = self.comm.backend.db.getDoc(docID)
+    branchOld= [i for i in doc['-branch'] if i['stack']==stackOld][0]
+    branchIdx= doc['-branch'].index(branchOld)
+    siblingsOld = self.comm.backend.db.getView('viewHierarchy/viewHierarchy', startKey=' '.join(stackOld))
+    siblingsOld = [i for i in siblingsOld if len(i['key'].split(' '))==len(stackOld)+1 and \
+                                            i['value'][0]>branchOld['child']]
+    print('OLD INFORMATION', docID, stackOld, branchIdx)
+    print(siblingsOld)
+    #new information
+    stackNew = []  #create reversed
+    currentItem = item
+    while currentItem.parent() is not None:
+      currentItem = currentItem.parent()
+      stackNew.append(currentItem.text().split('/')[-1])
+    stackNew = [self.projID] + stackNew[::-1]  #add project id and reverse
+    childNew = item.row()
+    dirNameNew= createDirName(doc['-name'],doc['-type'][0],childNew)
+    parentDir = self.comm.backend.db.getDoc(stackNew[-1])['-branch'][0]['path']
+    pathNew  = parentDir+'/'+dirNameNew
+    siblingsNew = self.comm.backend.db.getView('viewHierarchy/viewHierarchy', startKey=' '.join(stackNew))
+    siblingsNew = [i for i in siblingsNew if len(i['key'].split(' '))==len(stackNew)+1 and \
+                                             i['value'][0]>=childNew]
+    print('\nNEW INFORMATION', docID,stackNew,childNew, pathNew)
+    print(siblingsNew)
+    #change
+    # pathOld = Path(self.comm.backend.basePath)/branchOld['path']
+    # if pathOld.exists():
+    #   pathOld.rename(Path(self.comm.backend.basePath)/pathNew)
+
+    #change sibling childNum: don't if already 9999
+    #fast change using new databasefunction
+
+    #update item.text() to new stack
     return
 
 
@@ -70,6 +81,8 @@ class Project(QWidget):
       docID (str): document id of focus item, if not given focus at project
     """
     #initialize
+    for i in reversed(range(self.mainL.count())): #remove old
+      self.mainL.itemAt(i).widget().setParent(None)
     self.projID = projID
     selectedItem = None
     self.model = QStandardItemModel()
@@ -89,7 +102,8 @@ class Project(QWidget):
         QtTreeWidgetItem: tree node
       """
       #prefill docID
-      nodeTree = QStandardItem(nodeHier.id)  #nodeHier.name,'/'.join(nodeHier.docType),nodeHier.id])
+      label = '/'.join([i.id for i in nodeHier.ancestors]+[nodeHier.id])
+      nodeTree = QStandardItem(label)  #nodeHier.name,'/'.join(nodeHier.docType),nodeHier.id])
       if nodeHier.id[0]=='x':
         nodeTree.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled)
       else:

@@ -1,6 +1,7 @@
 """ Custom tree view on data model """
+import uuid
 from PySide6.QtWidgets import QTreeView, QAbstractItemView, QMenu # pylint: disable=no-name-in-module
-from PySide6.QtGui import QAction                                 # pylint: disable=no-name-in-module
+from PySide6.QtGui import QAction, QStandardItem                  # pylint: disable=no-name-in-module
 from .widgetProjectLeafRenderer import ProjectLeafRenderer
 from .style import Action
 
@@ -12,11 +13,13 @@ class TreeView(QTreeView):
     self.setModel(model)
     self.setHeaderHidden(True)
     self.setStyleSheet('QTreeView::branch {border-image: none;}')
+    self.setIndentation(50)
     self.renderer = ProjectLeafRenderer()
     self.renderer.setCommunication(self.comm)
     self.setItemDelegate(self.renderer)
     self.setDragDropMode(QAbstractItemView.InternalMove)
     self.doubleClicked.connect(self.treeDoubleClicked)
+
 
   def contextMenuEvent(self, e):
     """
@@ -34,31 +37,44 @@ class TreeView(QTreeView):
     Action("Hide", self.hide, context, self)
     context.exec(e.globalPos())
 
+
   def treeDoubleClicked(self):
     """ after double-click on tree leaf: open form """
     docID = self.currentIndex().data()
     self.comm.formDoc.emit(self.comm.backend.db.getDoc(docID))
     return
 
+
   def addChild(self):
     """ after selecting add child from context menu """
-    docID = self.currentIndex().data()
-    print('clicked context menu addChild', docID )
+    hierStack = self.currentIndex().data().split('/')
+    docType= 'x'+str(len(hierStack))
+    self.comm.backend.addData(docType, {'-name':'folder '+str(self.currentIndex().row()+1)}, hierStack)
+    #TODO_P1 refresh project
+    return
+
 
   def addSibling(self):
     """ after selecting add sibling from context menu """
     docID = self.currentIndex().data()
     print('clicked context menu addSibling', docID)
 
+
   def remove(self):
     """ after selecting remove from context menu """
     docID = self.currentIndex().data()
     print('clicked context menu remove', docID)
 
+
   def fold(self):
     """ after selecting fold from context menu """
-    docID = self.currentIndex().data()
-    print('clicked context menu fold', docID)
+    item = self.model().itemFromIndex(self.currentIndex())
+    if item.text().endswith(' -'):
+      item.setText(item.text()[:-2])
+    else:
+      item.setText(item.text()+' -')
+    return
+
 
   def hide(self):
     """ after selecting hide from context menu """

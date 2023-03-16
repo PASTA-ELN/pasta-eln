@@ -90,13 +90,13 @@ class Database:
     # general views: Hierarchy, Identify
     jsHierarchy  = '''
       if ('-type' in doc) {
-        doc['-branch'].forEach(function(branch) {emit(branch.stack.concat([doc._id]).join(' '),[branch.child,doc['-type'],doc['-name']]);});
+        doc['-branch'].forEach(function(branch, idx) {emit(branch.stack.concat([doc._id]).join(' '),[branch.child,doc['-type'],doc['-name'],idx]);});
       }
     '''
     jsPath = '''
       if ('-type' in doc && '-branch' in doc){
-        if ('shasum' in doc){doc['-branch'].forEach(function(branch){if(branch.path){emit(branch.path,[branch.stack,doc['-type'],branch.child,doc.shasum]);}});}
-        else                {doc['-branch'].forEach(function(branch){if(branch.path){emit(branch.path,[branch.stack,doc['-type'],branch.child,''        ]);}});}
+        if ('shasum' in doc){doc['-branch'].forEach(function(branch,idx){if(branch.path){emit(branch.path,[branch.stack,doc['-type'],branch.child,doc.shasum,idx]);}});}
+        else                {doc['-branch'].forEach(function(branch,idx){if(branch.path){emit(branch.path,[branch.stack,doc['-type'],branch.child,''        ,idx]);}});}
       }
     '''
     self.saveView('viewHierarchy',{'viewHierarchy':jsHierarchy,'viewPaths':jsPath})

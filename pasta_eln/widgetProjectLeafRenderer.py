@@ -42,10 +42,15 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     """
     xOffset, yOffset = option.rect.topLeft().toTuple()
     topLeft2nd = option.rect.topRight()-QPoint(self.width,0)
-    docID   = index.data(Qt.DisplayRole)
+    docID   = index.data(Qt.DisplayRole).split('/')[-1]
+    if docID.endswith(' -'):
+      docID = docID[:-2]
+      folded = True
+    else:
+      folded = False
     doc     = self.comm.backend.db.getDoc(docID)
     painter.fillRect(option.rect.marginsRemoved(QMargins(0,2,0,2)), Qt.lightGray)
-    if 'image' in doc and doc['image']!='':
+    if 'image' in doc and doc['image']!='' and not folded:
       if doc['image'].startswith('data:image/'):
         pixmap = QPixmap()
         pixmap.loadFromData(base64.b64decode(doc['image'][22:]))
@@ -54,7 +59,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       elif doc['image'].startswith('<?xml'):
         image = QSvgRenderer(bytearray(doc['image'], encoding='utf-8'))
         image.render(painter,    QRectF(topLeft2nd, option.rect.bottomRight()))
-    elif 'content' in doc:
+    elif 'content' in doc and not folded:
       text = QTextDocument()
       text.setMarkdown(doc['content'])
       painter.translate(topLeft2nd)
@@ -85,13 +90,18 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     determine size of this leaf
     """
     if index:
-      docID   = index.data(Qt.DisplayRole)
+      docID   = index.data(Qt.DisplayRole).split('/')[-1]
+      if docID.endswith(' -'):
+        docID = docID[:-2]
+        folded = True
+      else:
+        folded = False
       docKeys = self.comm.backend.db.getDoc(docID).keys()
       height  = len([i for i in docKeys if not i in _DO_NOT_RENDER_ and i[0] not in ['-','_'] ])  #height in text lines
       height  = (height+3) * self.lineSep
-      if 'image' in docKeys:
+      if 'image' in docKeys and not folded:
         height = int(self.width*3/4)
-      if 'content' in docKeys:
+      if 'content' in docKeys and not folded:
         text = QTextDocument()
         text.setMarkdown(self.comm.backend.db.getDoc(docID)['content'])
         height = text.size().toTuple()[1]
