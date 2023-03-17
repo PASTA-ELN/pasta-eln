@@ -23,3 +23,5 @@ class DocTypes(QWidget):
     mainLayout = QVBoxLayout()
     mainLayout.addWidget(splitter)
     self.setLayout(mainLayout)
+
+  #TODO_P4 widen table if x0 is shown: change setSizes

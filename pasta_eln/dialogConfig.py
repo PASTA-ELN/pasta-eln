@@ -11,7 +11,7 @@ else:
 
 class Configuration(QDialog):
   """ Main class of entire config dialog """
-  def __init__(self, backend, startTap):
+  def __init__(self, backend, startTap=''):
     """
     Initialization
 

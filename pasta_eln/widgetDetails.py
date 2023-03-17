@@ -1,9 +1,10 @@
 """ widget that shows the details of the items """
 import json
-from PySide6.QtWidgets import QScrollArea, QWidget, QVBoxLayout, QHBoxLayout, QLabel   # pylint: disable=no-name-in-module
+from pathlib import Path
+from PySide6.QtWidgets import QScrollArea, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QMenu  # pylint: disable=no-name-in-module
 from PySide6.QtCore import Qt, Slot, QByteArray   # pylint: disable=no-name-in-module
 from PySide6.QtSvgWidgets import QSvgWidget       # pylint: disable=no-name-in-module
-from PySide6.QtGui import QPixmap, QImage         # pylint: disable=no-name-in-module
+from PySide6.QtGui import QPixmap, QImage, QAction# pylint: disable=no-name-in-module
 from .style import TextButton, Image, Label
 
 class Details(QScrollArea):
@@ -26,8 +27,9 @@ class Details(QScrollArea):
     self.headerL = QHBoxLayout(headerW)
     self.mainL.addWidget(headerW)
     self.imageW = QWidget()
+    self.imageW.setContextMenuPolicy(Qt.CustomContextMenu)
+    self.imageW.customContextMenuRequested.connect(self.contextMenu)
     self.imageL = QVBoxLayout(self.imageW)
-    #TODO_P2 include extractor change
     self.mainL.addWidget(self.imageW)
     self.btnDetails = TextButton('Details', self.showArea, self.mainL, 'Details', 'Show / hide details', \
                                   checkable=True, hide=True)
@@ -50,6 +52,39 @@ class Details(QScrollArea):
     self.metaDatabaseL = QVBoxLayout(self.metaDatabaseW)
     self.mainL.addWidget(self.metaDatabaseW)
     self.mainL.addStretch(1)
+
+  def contextMenu(self, pos):
+    """
+    Create a context menu
+
+    Args:
+      pos (position): Position to create context menu at
+    """
+    context = QMenu(self)
+    mask   = '/'.join(self.doc['-type'][:3])
+    choices= {key:value for key,value in self.comm.backend.configuration['extractors'].items() \
+                if key.startswith(mask)}
+    for key,value in choices.items():
+      thisAction = QAction(value, self)
+      thisAction.setData(key)
+      thisAction.triggered.connect(self.changeExtractor)
+      context.addAction(thisAction)
+    context.exec(self.mapToGlobal(pos))
+    return
+
+
+  def changeExtractor(self):
+    """
+    What happens when user changes extractor
+    """
+    self.doc['-type'] = self.sender().data().split('/')
+    self.comm.backend.useExtractors(Path(self.doc['-branch'][0]['path']), self.doc['shasum'], self.doc, \
+      extractorRedo=True)  #any path is good since the file is the same everywhere; data-changed by reference
+    if len(self.doc['-type'])>1 and len(self.doc['image'])>1:
+      self.doc = self.comm.backend.db.updateDoc({'image':self.doc['image'], '-type':self.doc['-type']}, self.doc['_id'])
+      self.comm.changeTable.emit('','',True)
+      self.comm.changeDetails.emit(self.doc['_id'])
+    return
 
 
   @Slot(str)
@@ -96,6 +131,10 @@ class Details(QScrollArea):
                 if hasattr(self.comm.backend, 'configuration') else 300
         Image(self.doc['image'], self.imageL, width=width)
         self.imageW.show()
+      elif key=='-tags':
+        tags = ['cur\u2605ted' if i=='_curated' else '#'+i for i in self.doc[key]]
+        tags = ['\u2605'*int(i[2]) if i[:2]=='#_' else i for i in tags]
+        self.metaDetailsL.addWidget( QLabel('Tags: '+' '.join(tags)))
       elif key.startswith('_') or key.startswith('-'):
         label = QLabel(key+': '+str(self.doc[key]))
         label.setWordWrap(True)
@@ -114,7 +153,7 @@ class Details(QScrollArea):
         self.metaUserL.addWidget(label)
         self.metaUserW.show()
       else:
-        self.metaDetailsL.addWidget( QLabel(key+': '+str(self.doc[key])) )
+        self.metaDetailsL.addWidget( QLabel(key.capitalize()+': '+str(self.doc[key])) )
         self.metaDetailsW.show()
     return
 

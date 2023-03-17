@@ -3,7 +3,7 @@ import os, logging
 from pathlib import Path
 from PySide6.QtCore import Qt, Slot      # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QApplication    # pylint: disable=no-name-in-module
-from PySide6.QtGui import QIcon, QAction, QKeySequence    # pylint: disable=no-name-in-module
+from PySide6.QtGui import QIcon, QPixmap, QAction    # pylint: disable=no-name-in-module
 from qt_material import apply_stylesheet  #of https://github.com/UN-GCPDS/qt-material
 
 from .backend import Backend
@@ -11,6 +11,11 @@ from .communicate import Communicate
 from .widgetSidebar import Sidebar
 from .widgetBody import Body
 from .dialogForm import Form
+from .dialogConfig import Configuration
+from .dialogProjectGroup import ProjectGroup
+from .dialogOntology import Ontology
+from .miscTools import updateExtractorList
+from .style import PAction
 os.environ['QT_API'] = 'pyside6'
 
 # Subclass QMainWindow to customize your application's main window
@@ -21,28 +26,33 @@ class MainWindow(QMainWindow):
     super().__init__()
     self.setWindowTitle("PASTA-ELN")
     self.setWindowState(Qt.WindowMaximized)
-    self.setWindowIcon(QIcon('./Resources/Icons/favicon64.png'))
+    resourcesDir = Path(__file__).parent/'Resources'
+    self.setWindowIcon(QIcon(QPixmap(resourcesDir/'Icons'/'favicon64.png')))
     self.backend = Backend()
     self.comm = Communicate(self.backend)
     self.comm.formDoc.connect(self.formDoc)
 
     #Menubar
     menu = self.menuBar()
-    _ = menu.addMenu("&File")
+    menu.addMenu("&File")
     viewMenu = menu.addMenu("&View list")
-    _ = menu.addMenu("&System")
-    _ = menu.addMenu("&Help")
+    systemMenu = menu.addMenu("&System")
+    PAction('&Configuration',         self.executeAction, systemMenu, self, data='configuration')
+    PAction('&Project groups',        self.executeAction, systemMenu, self, data='projectGroups')
+    PAction('&Ontology',              self.executeAction, systemMenu, self, data='ontology')
+    PAction('Update &Extractor list', self.executeAction, systemMenu, self, data='updateExtractors')
+    menu.addMenu("&Help")
 
-    shortCuts = {'measurement':'m', 'sample':'s'}
+    shortCuts = {'measurement':'m', 'sample':'s', 'x0':'p'} #TODO_P5 to config
     for docType, docLabel in self.comm.backend.db.dataLabels.items():
       if docType[0]=='x' and docType[1]!='0':
         continue
-      action = QAction(docLabel, self)
-      if docType in shortCuts:
-        action.setShortcut(QKeySequence("Ctrl+"+shortCuts[docType]))
-      action.setData(docType)
-      action.triggered.connect(self.viewMenu)
-      viewMenu.addAction(action)
+      PAction(docLabel, self.viewMenu, viewMenu, self, \
+        "Ctrl+"+shortCuts[docType] if docType in shortCuts else None, docType)
+      if docType=='x0':
+        viewMenu.addSeparator()
+    viewMenu.addSeparator()
+    PAction('&Tags', self.viewMenu, viewMenu, self, 'Ctrl+T', '_tags_')
 
     #GUI elements
     mainWidget = QWidget()
@@ -65,7 +75,7 @@ class MainWindow(QMainWindow):
     Args:
       doc (dict): document
     """
-    formWindow = Form(self.comm.backend, doc)
+    formWindow = Form(self.comm, doc)
     formWindow.exec()
     return
 
@@ -75,7 +85,28 @@ class MainWindow(QMainWindow):
     act on user pressing an item in view
     """
     docType = self.sender().data()
-    self.comm.changeTable.emit(docType, '')
+    self.comm.changeTable.emit(docType, '', False)
+    return
+
+
+  def executeAction(self):
+    """
+    action after clicking menu item
+    """
+    menuName = self.sender().data()
+    if menuName=='configuration':
+      dialog = Configuration(self.comm.backend)
+      dialog.exec()
+    elif menuName=='projectGroups':
+      dialog = ProjectGroup(self.comm.backend)
+      dialog.exec()
+    elif menuName=='ontology':
+      dialog = Ontology(self.comm.backend)
+      dialog.exec()
+    elif menuName=='updateExtractors':
+      updateExtractorList(self.backend.extractorPath)
+    else:
+      print('**ERROR do not have menu '+menuName)
     return
 
 
@@ -98,6 +129,12 @@ def main():
   theme = window.backend.configuration['GUI']['theme']
   if theme!='none':
     apply_stylesheet(app, theme=theme+'.xml')
+  # test if qtawesome and matplot can coexist
+  import qtawesome as qta
+  if not isinstance(qta.icon('fa5s.times'), QIcon):
+    logging.error('qtawesome: could not load. Likely matplotlib is included and can not coexist.')
+    print('qtawesome: could not load. Likely matplotlib is included and can not coexist.')
+  # end test coexistance
   window.show()
   app.exec()
   logging.info('End PASTA GUI')

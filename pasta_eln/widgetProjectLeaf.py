@@ -59,6 +59,8 @@ class Leaf(QWidget):
     if event.button() == Qt.LeftButton:
       self.dragStartPosition = event.pos()
     return
+
+
   def mouseMoveEvent(self, event):
     """
     Drag of Drag&Drop 2: re-implementation of mouse move event
@@ -74,7 +76,7 @@ class Leaf(QWidget):
       return
     drag = QDrag(self)
     mimeData = QMimeData()
-    mimeData.setData('pasta/task', b'data')  #TODO_P3 drag-drop in project tree give data
+    mimeData.setData('pasta/item', b'data')  #TODO_P3 drag-drop in project tree give data
     drag.setMimeData(mimeData)
     dropAction = drag.exec(Qt.CopyAction | Qt.MoveAction)
     print(dropAction)
@@ -89,9 +91,11 @@ class Leaf(QWidget):
     Args:
       event (Event): mouse move event
     """
-    if event.mimeData().hasFormat('libfm/files') or event.mimeData().hasFormat('pasta/task'):
+    if event.mimeData().hasFormat('libfm/files') or event.mimeData().hasFormat('pasta/item'):
       event.acceptProposedAction()
     return
+
+
   def dropEvent(self, event):
     """
     Drag of Drag&Drop 2: re-implementation of successful drop event
@@ -102,7 +106,7 @@ class Leaf(QWidget):
     """
     if event.mimeData().hasFormat('libfm/files'):
       print('dropped file',event.mimeData().urls()[0].toLocalFile())
-    elif event.mimeData().hasFormat('pasta/task'):
+    elif event.mimeData().hasFormat('pasta/item'):
       print('received task for', self)  #TODO_P3 drag drop receive
     event.acceptProposedAction()
     return

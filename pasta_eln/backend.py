@@ -8,6 +8,10 @@ from .database import Database
 from .miscTools import upIn, upOut, createDirName, generic_hash, camelCase
 from .handleDictionaries import ontology2Labels, fillDocBeforeCreate
 
+#TODO_P5 App freezes on loadKey
+#TODO_P5 unprocessed files should be have separate docType
+#TODO_P5 rerun extractors as batch
+
 class Backend(CLI_Mixin):
   """
   PYTHON BACKEND
@@ -287,6 +291,21 @@ class Backend(CLI_Mixin):
     startPath = Path(self.cwd)
     #prepare lists and start iterating
     inDB_all = self.db.getView('viewHierarchy/viewPaths')
+    #update content between DB and harddisk
+    for line in inDB_all:
+      if line['value'][1][0][0]=='x':
+        continue
+      doc = self.db.getDoc(line['id'])
+      if 'content' in doc:
+        path = self.basePath/line['key']
+        doc= {'-type':['procedure']}
+        self.useExtractors(path, '', doc)
+        self.db.updateDoc(doc, line['id'])
+    #TODO_P5: Basic functionality for V1
+    #V1: GUI content write-protected; assume one link and no conflicts
+    #V2: What happens if you change a file (procedure) on disk / database -> conflicts
+    #    Copy of procedure exists on harddisk: one entry in db and links; then change one, but not other, -branch should separate; can they reunite?
+
     pathsInDB_x    = [i['key'] for i in inDB_all if i['value'][1][0][0]=='x']  #all structure elements: task, subtasts
     pathsInDB_data = [i['key'] for i in inDB_all if i['value'][1][0][0]!='x']
     for root, dirs, files in os.walk(self.cwd, topdown=True):
@@ -307,7 +326,7 @@ class Backend(CLI_Mixin):
         if path in pathsInDB_x: #path already in database
           pathsInDB_x.remove(path)
           continue
-        _ = self.addData('x'+str(len(hierStack)), {'-name':dirName}, hierStack)
+        self.addData('x'+str(len(hierStack)), {'-name':dirName}, hierStack)
         newDir = Path(self.basePath)/self.db.getDoc(self.currentID)['-branch'][0]['path']
         (newDir/'.id_pastaELN.json').rename(Path(self.basePath)/root/dirName/'.id_pastaELN.json') #move index file into old folder
         newDir.rmdir()                     #remove created path
@@ -339,7 +358,10 @@ class Backend(CLI_Mixin):
           change = {'-branch': {'op':'d', 'oldpath':branch['path'], 'path':branch['path'], \
                                 'stack':branch['stack'] }}
           break
-      self.db.updateDoc(change, docID)
+      if change is None:
+        print('**ERROR Tried to remove orphan in database but could not', orphan)
+      else:
+        self.db.updateDoc(change, docID)
     if rerunScanTree:
       self.scanTree()
     return
@@ -374,8 +396,12 @@ class Backend(CLI_Mixin):
       if not pyPath.exists():
         raise ValueError('Extractor does not exist')
       # import module and use to get data
+      os.environ['QT_API'] = 'pyside2'
+      import matplotlib.pyplot as plt  #IMPORTANT: NO PYPLOT OUTSIDE THIS QT_API BLOCK
+      plt.clf()
       module  = importlib.import_module(pyFile[:-3])
       content = module.use(absFilePath, '/'.join(doc['-type']) )
+      os.environ['QT_API'] = 'pyside6'
       #combine into document
       doc.update(content)
       for meta in ['metaVendor','metaUser']:

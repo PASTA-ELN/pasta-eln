@@ -95,9 +95,8 @@ def upIn(key):
   key (bool): key
   """
   import keyring as cred
-  from commonTools import commonTools as cT  # don't import globally since it disturbs translation
   key = 'bcA:Maw'.join(key.split(':'))
-  id_  = cT.uuidv4()
+  id_  = uuid.uuid4().hex
   cred.set_password('pastaDB',id_,key)
   return id_
 
@@ -152,7 +151,7 @@ def blob_hash(stream, size):
   return hasher.hexdigest()
 
 
-def getExtractorConfig(directory):
+def updateExtractorList(directory):
   """
   Rules:
   - each data-type in its own try-except
@@ -165,13 +164,15 @@ def getExtractorConfig(directory):
     directory (string): relative directory to scan
 
   Returns:
-    list: list of [doctype-list, description]
+    bool: success
   """
-  configuration = {}
+  import json
+  from pathlib import Path
+  extractorsAll = {}
   for fileName in os.listdir(directory):
-    if fileName.endswith('.py') and fileName not in ['testExtractor.py','tutorial.py'] :
+    if fileName.endswith('.py') and fileName not in ['testExtractor.py','tutorial.py','commit.py'] :
       #start with file
-      with open(directory+os.sep+fileName,'r', encoding='utf-8') as fIn:
+      with open(directory/fileName,'r', encoding='utf-8') as fIn:
         lines = fIn.readlines()
         extractors = []
         baseType = ['measurement', fileName.split('_')[1].split('.')[0]]
@@ -196,8 +197,19 @@ def getExtractorConfig(directory):
               extractors.append([ baseType+[specialType], '' ])
             except:
               pass
-        configuration[fileName] = {'plots':extractors, 'header':'\n'.join(header)}
-  return configuration
+        if len(extractors)>0:
+          extractorsAll.update({'/'.join(docType):label for docType, label in extractors})
+          #header not fused for now
+  #update configuration file
+  print('Found extractors:')
+  for key, value in extractorsAll.items():
+    print('  ',key, ":", value)
+  with open(Path.home()/'.pastaELN.json','r', encoding='utf-8') as f:
+    configuration = json.load(f)
+  configuration['extractors'] = extractorsAll
+  with open(Path.home()/'.pastaELN.json','w', encoding='utf-8') as f:
+    f.write(json.dumps(configuration, indent=2))
+  return True
 
 
 def restart():

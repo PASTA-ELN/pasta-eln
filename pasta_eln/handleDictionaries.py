@@ -52,7 +52,7 @@ def fillDocBeforeCreate(data, docType):
   Returns:
     str: document
   """
-  protectedKeys = ['comment','tags','image']
+  protectedKeys = ['comment','-tags','image']
   # Handle the important entries: -type, _id, -date, -branch
   if '-type' not in data:
     data['-type'] = [docType]
@@ -68,16 +68,18 @@ def fillDocBeforeCreate(data, docType):
   # these tags are lost: '#d': too short; '#3tag': starts with number
   if 'comment' not in data:
     data['comment'] =''
-  if 'tags' not in data:
-    data['tags'] = []
-  rating = re.findall(r'(^|\s)#\d\s', data['comment'])  # one number following up on #
+  if '-tags' not in data:
+    data['-tags'] = []
+  #always do regex expressions twice: if #lala at beginnig or in middle of comment
+  curated = re.findall(r'(?:^|\s)#_curated(?:\s|$)', data['comment']) # #_curated
+  rating  = re.findall(r'(?:^|\s)#_\d(?:\s|$)',      data['comment']) # #_number
   if rating is None:
     rating=[]
-  otherTags = re.findall(r'(^|\s)#{1}[a-zA-Z][\w]', data['comment']) #TODO_P3 just as one above
+  otherTags = re.findall(r'(?:^|\s)#[a-zA-Z]\w+(?:\s|$)', data['comment'])
   if otherTags is None:
     otherTags=[]
-  data['tags'] = data['tags'] + otherTags
-  data['comment'] = data['comment'].replace(r'(^|\s)#{1}[\w]',' ')
+  data['-tags'] = rating + data['-tags'] + otherTags + curated
+  data['comment'] = re.sub(r'(?:\s|$)#\w+(?:\s|$)', '', data['comment']).strip()
   fields = re.findall(r':[\S]+:[\S]+:', data['comment'])
   if fields is not None:
     for item in fields:
@@ -85,20 +87,10 @@ def fillDocBeforeCreate(data, docType):
       if aList[1] in data: #do not add if item already exists
         continue
       data[aList[1]] = aList[2]
-  # clean the comments
-  data['comment'] = data['comment'].replace(r':[\S]+:[\S]+:','')  #remove :field:data: information
-  ## Remove - until it becomes important again - some prefix space cleaning
-  # text = data['comment'].split('\n');
-  # data['comment'] = '';
-  # for line in text:
-  #   initSpaces = line.search(/\S|$/)
-  #   for (var prefixJ = '';prefixJ.length<Math.round(initSpaces/2)*2; prefixJ+=' ');//str.repeat(int) does not work for some reason
-  #   data['comment'] += prefixJ+line.trim()+'\n';  //do not replace spaces inside the line
-  # }
-  # data['comment'] = data['comment'].substring(0, data['comment'].length-1);
-  if isinstance(data['tags'], str):
-    data['tags'] = data['tags'].split(' ')
-  data['tags']= [i.strip() for i in data['tags']]
+  data['comment'] = re.sub(r':[\S]+:[\S]+:','',data['comment'])  #remove :field:data: information
+  if isinstance(data['-tags'], str):
+    data['-tags'] = data['-tags'].split(' ')
+  data['-tags']= [i.strip()[1:] for i in data['-tags']]
   #individual verification of documents
   if data['-type'][0]=='sample':
     if 'qrCode' not in data:
