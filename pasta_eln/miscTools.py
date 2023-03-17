@@ -95,9 +95,8 @@ def upIn(key):
   key (bool): key
   """
   import keyring as cred
-  from commonTools import commonTools as cT  # don't import globally since it disturbs translation
   key = 'bcA:Maw'.join(key.split(':'))
-  id_  = cT.uuidv4()
+  id_  = uuid.uuid4().hex
   cred.set_password('pastaDB',id_,key)
   return id_
 

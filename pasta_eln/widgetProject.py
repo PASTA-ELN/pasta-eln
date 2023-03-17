@@ -1,8 +1,11 @@
 """ Widget that shows the content of project in a electronic labnotebook """
-from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget, QTreeWidget, QTreeWidgetItem, QTreeWidgetItemIterator   # pylint: disable=no-name-in-module
-from PySide6.QtCore import Slot   # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QLabel, QVBoxLayout, QHBoxLayout, QWidget, QTreeView, QStyledItemDelegate, QAbstractItemView  # pylint: disable=no-name-in-module
+from PySide6.QtGui import QStandardItemModel, QStandardItem    # pylint: disable=no-name-in-module
+from PySide6.QtCore import Slot, Qt                            # pylint: disable=no-name-in-module
 from anytree import PreOrderIter
-from .widgetProjectLeaf import Leaf
+from .widgetProjectLeafRenderer import ProjectLeafRenderer
+from .style import TextButton
+
 
 class Project(QWidget):
   """ Widget that shows the content of project in a electronic labnotebook """
@@ -12,6 +15,9 @@ class Project(QWidget):
     comm.changeProject.connect(self.changeProject)
     self.mainL = QVBoxLayout()
     self.setLayout(self.mainL)
+    self.tree = None
+    self.model= None
+    self.bodyW= None
 
 
   @Slot(str)
@@ -24,12 +30,17 @@ class Project(QWidget):
       docID (str): document id of focus item, if not given focus at project
     """
     #initialize
-    for i in reversed(range(self.mainL.count())):
-      self.mainL.itemAt(i).widget().setParent(None)
-    treeW = QTreeWidget()
-    treeW.setColumnCount(1)
-    treeW.setHeaderHidden(True)
     selectedItem = None
+    self.tree  = QTreeView(self)
+    self.tree.setHeaderHidden(True)
+    self.tree.setStyleSheet('QTreeView::branch {border-image: none;}')
+    self.model = QStandardItemModel()
+    self.tree.setModel(self.model)
+    renderer = ProjectLeafRenderer()
+    renderer.setCommunication(self.comm)
+    self.tree.setItemDelegate(renderer)
+    self.tree.setDragDropMode(QAbstractItemView.InternalMove)
+    rootItem = self.model.invisibleRootItem()
 
     def iterateTree(nodeHier):
       """
@@ -41,8 +52,9 @@ class Project(QWidget):
       Returns:
         QtTreeWidgetItem: tree node
       """
-      #prefill with name, doctype, id
-      nodeTree = QTreeWidgetItem([nodeHier.id])  #nodeHier.name,'/'.join(nodeHier.docType),nodeHier.id])
+      #prefill docID
+      nodeTree = QStandardItem(nodeHier.id)  #nodeHier.name,'/'.join(nodeHier.docType),nodeHier.id])
+      nodeTree.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled)
       if docID==nodeHier.id:
         nonlocal selectedItem
         selectedItem = nodeTree
@@ -51,29 +63,61 @@ class Project(QWidget):
         childTree = iterateTree(childHier)
         children.append(childTree)
       if len(children)>0:
-        nodeTree.insertChildren(0,children)
+        nodeTree.appendRows(children)
       return nodeTree
 
-    #body of change project: start recursion
+    #Populate model body of change project: start recursion
     nodeHier = self.comm.backend.db.getHierarchy(projID)
-    for idx, node in enumerate(PreOrderIter(nodeHier, maxlevel=2)):
-      if node.is_root:
-        header = Leaf(self.comm, node.id)
-        self.mainL.addWidget(header)
+    for node in PreOrderIter(nodeHier, maxlevel=2):
+      if node.is_root:         #Project header
+        self.projHeader(projID)
       else:
-        treeW.insertTopLevelItem(idx-1, iterateTree(node))
-    treeW.expandAll()
+        rootItem.appendRow(iterateTree(node))
+    self.tree.expandAll()
     if selectedItem is not None:
-      treeW.setCurrentItem(selectedItem)
+      self.tree.setCurrentItem(selectedItem)
+    self.mainL.addWidget(self.tree)
+    return
 
-    # add custom styled leafs
-    iterator = QTreeWidgetItemIterator(treeW)
-    while iterator.value():
-      item = iterator.value()
-      docID= item.text(0)
-      item.setText(0,'') #remove text
-      treeW.setItemWidget(item, 0, Leaf(self.comm, docID))
-      iterator += 1
 
-    self.mainL.addWidget(treeW)
+  def btnEvent(self):
+    """ Click button on top of project page """
+    btnName = self.sender().accessibleName()
+    if btnName == 'projHide':
+      if self.bodyW.isHidden():
+        self.bodyW.show()
+      else:
+        self.bodyW.hide()
+    return
+
+
+#TODO_P1 save drag-drop; add node at end; context-menu or click each leaf
+# hide
+
+  def projHeader(self, projID):
+    """
+    Create header of page
+
+    Args:
+      projID (str): docID of project
+    """
+    doc = self.comm.backend.db.getDoc(projID)
+    headerW = QWidget()  # Leaf(self.comm, node.id)
+    headerL = QVBoxLayout(headerW)
+    topbarW = QWidget()
+    topbarL = QHBoxLayout(topbarW)
+    topbarL.addWidget(QLabel(doc['-name']))
+    TextButton('Hide', self.btnEvent, topbarL, 'projHide', checkable=True)
+    TextButton('Add child',None, topbarL)
+    headerL.addWidget(topbarW)
+    self.bodyW   = QWidget()
+    bodyL   = QVBoxLayout(self.bodyW)
+    tags = ', '.join(doc['tags']) if 'tags' in doc else ''
+    bodyL.addWidget(QLabel('Tags: '+tags))
+    for key,value in doc.items():
+      if key[0] in ['_','-']:
+        continue
+      bodyL.addWidget(QLabel(key+': '+str(value)))
+    headerL.addWidget(self.bodyW)
+    self.mainL.addWidget(headerW)
     return

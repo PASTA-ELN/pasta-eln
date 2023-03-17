@@ -6,6 +6,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTableView, QLa
 from PySide6.QtCore import Qt, Slot, QSortFilterProxyModel, QModelIndex       # pylint: disable=no-name-in-module
 from PySide6.QtGui import QBrush, QStandardItemModel, QStandardItem, QAction  # pylint: disable=no-name-in-module
 import qtawesome as qta
+from .dialogTableHeader import TableHeader
 from .style import TextButton, Label, getColor, LetterButton, PAction
 
 class Table(QWidget):
@@ -39,6 +40,7 @@ class Table(QWidget):
     moreMenu = QMenu(self)
     PAction('Sequential edit', self.sequentialEdit, moreMenu, self)
     PAction('Export',     self.export,     moreMenu, self)
+    PAction('Change table headers', self.changeTableHeader, moreMenu, self)
     more.setMenu(moreMenu)
     mainL.addWidget(self.headerW)
     # filter
@@ -88,7 +90,10 @@ class Table(QWidget):
       else:
         self.data = self.comm.backend.db.getView('viewDocType/'+self.docType, preciseKey=self.projID)
       self.headline.setText(self.comm.backend.db.dataLabels[self.docType])
-      self.filterHeader = [i['name'] for i in self.comm.backend.db.ontology[self.docType]['prop']]
+      if docType in self.comm.backend.configuration['tableHeaders']:
+        self.filterHeader = self.comm.backend.configuration['tableHeaders'][docType]
+      else:
+        self.filterHeader = [i['name'] for i in self.comm.backend.db.ontology[self.docType]['prop']]
       self.filterHeader = [i[1:] if i[0]=='-'   else i for i in self.filterHeader]  #change -something to something
       self.filterHeader = [i[2:] if i[:2]=='#_' else i for i in self.filterHeader]  #change #_something to somehing
     self.headerW.show()
@@ -197,7 +202,7 @@ class Table(QWidget):
       del self.models[int(row)]
       self.filterL.itemAt(int(row)-1).widget().setParent(None)
     else:
-      print('Bug: try to remove from list something that does not exist as accessible name did not change') #TODO_P5
+      print('Bug: try to remove from list something that does not exist as accessible name did not change') #TODO_P3
     return
 
   def groupEdit(self):
@@ -241,4 +246,11 @@ class Table(QWidget):
     for row in range(self.models[-1].rowCount()):
       if self.models[-1].item(row,0).checkState() == Qt.CheckState.Checked:
         self.comm.formDoc.emit(self.comm.backend.db.getDoc( self.data[row]['id'] ))
+    return
+
+
+  def changeTableHeader(self):
+    """ Show dialog to change the headers for this docType """
+    dialog = TableHeader(self.comm, self.docType)
+    dialog.exec()
     return

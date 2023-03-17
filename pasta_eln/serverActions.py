@@ -256,6 +256,66 @@ def testUser(url, auth, userName, userPassword):
   return
 
 
+def testLocal(userName, password, database=''):
+  """
+  test local server
+
+  Args:
+    userName (str): user name at local server
+    password (str): password at local server
+    database (str): couchdb database
+
+  Returns:
+    str: success and errors in '\n'-string
+  """
+  answer = ''
+  resp = requests.get('http://127.0.0.1:5984', headers=headers, timeout=10)
+  if resp.ok:
+    answer += 'success: Local server exists\n'
+  else:
+    answer += 'ERROR: Local server is not working\n'
+  authUser = requests.auth.HTTPBasicAuth(userName, password)
+  resp = requests.get('http://127.0.0.1:5984/_all_dbs', headers=headers, auth=authUser, timeout=10)
+  if resp.ok:
+    answer += 'success: Local username and password ok\n'
+  else:
+    answer += 'ERROR: Local username or password incorrect\n'
+  if database!='':
+    resp = requests.get('http://127.0.0.1:5984/'+database, headers=headers, auth=authUser, timeout=10)
+    if resp.ok:
+      answer += 'success: Local database exists\n'
+    else:
+      answer += 'Warning: Local database does not exist\n'
+  return answer
+
+
+def testRemote(url, userName, password, database):
+  """
+  test remote server
+
+  Args:
+    url (str): url of remote server
+    userName (str): user name at remote server
+    password (str): password at remote server
+    database (str): couchdb database
+
+  Returns:
+    str: success and errors in '\n'-string
+  """
+  answer = ''
+  resp = requests.get(url, headers=headers, timeout=10)
+  if resp.ok:
+    answer += 'success: Remote server exists\n'
+  else:
+    answer += 'ERROR: Remote server is not working\n'
+  authUser = requests.auth.HTTPBasicAuth(userName, password)
+  resp = requests.get(url+'/'+database, headers=headers, auth=authUser, timeout=10)
+  if resp.ok:
+    answer += 'success: Remote database exists\n'
+  else:
+    answer += 'ERROR: Remote username, password, database incorrect\n'
+  return answer
+
 
 def main():
   '''
