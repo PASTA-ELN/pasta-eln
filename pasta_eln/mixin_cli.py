@@ -27,6 +27,30 @@ class Bcolors:
     UNDERLINE = '\033[4m'
 
 
+def text2html(text):
+  text = text.split('\n')
+  for i in range(len(text)):
+    if '\033[95m' in text[i]:
+      text[i] = text[i].replace('\033[95m','<font color="orange">').replace('\033[0m','</font>')
+    if '\033[94m' in text[i]:
+      text[i] = text[i].replace('\033[94m','<font color="blue">').replace('\033[0m','</font>')
+    if '\033[92m' in text[i]:
+      text[i] = text[i].replace('\033[92m','<font color="green">').replace('\033[0m','</font>')
+    if '\033[93m' in text[i]:
+      text[i] = text[i].replace('\033[93m','<font color="magenta">').replace('\033[0m','</font>')
+    if '\033[91m' in text[i]:
+      text[i] = text[i].replace('\033[91m','<font color="red">').replace('\033[0m','</font>')
+    if '\033[4m' in text[i]:
+      text[i] = text[i].replace('\033[4m','<br><b>').replace('\033[0m','</b>')
+    text[i] = text[i]+'<br>'
+    if 'Pink: unsure if bug' in text[i]:
+      text[i] = text[i].replace('Pink: unsure if bug','Orange: unsure if bug')
+    if 'Yellow: WARNING should' in text[i]:
+      text[i] = text[i].replace('Yellow: WARNING should','Magenta: WARNING should')
+    text[i] = text[i].replace('****','').strip()
+  return '\n'.join(text)
+
+
 class CLI_Mixin:
   """ Python Mixin for backend containing all the functions that output to CLI """
 

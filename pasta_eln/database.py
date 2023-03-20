@@ -282,6 +282,34 @@ class Database:
     return newDoc
 
 
+  def updateBranch(self, docID, branch, child, stack=None, path=None):
+    """
+    Update document by updating the branch
+
+    Args:
+        docID (string):  id of document to change
+        branch (int):  index of branch to change
+        child (int):  new number of child
+        stack (list):  new list of ids
+        path (str): new path
+
+    Returns:
+        str, str: old path, new path
+    """
+    doc = self.db[docID]
+    doc['-client'] = 'updateBrach'
+    oldPath = doc['-branch'][branch]['path']
+    if path is None:
+      name = f'{child:03d}'+'_'+'_'.join(oldPath.split('/')[-1].split('_')[1:])
+      path = '/'.join(oldPath.split('/')[:-1]+[name])
+    doc['-branch'][branch]['path']=path
+    doc['-branch'][branch]['child']=child
+    if stack is not None:
+      doc['-branch'][branch]['stack']=stack
+    doc.save()
+    return oldPath, path
+
+
   def addAttachment(self, docID, name, content):
     """
     Update document by adding attachment (no new revision)
@@ -619,7 +647,7 @@ class Database:
           else:                                                            #if sensible path
             if len(branch['stack'])+1 != len(branch['path'].split(os.sep)):#check if length of path and stack coincide
               if verbose:
-                outstring+= f'{Bcolors.OKBLUE}**ok-ish branch stack and path lengths not equal: '+doc['_id']+'|'+branch['path']+f'{Bcolors.ENDC}\n'
+                outstring+= f'{Bcolors.OKBLUE}**ok-ish branch stack and path lengths not equal: '+doc['_id']+'|'+branch['path'][:30]+f'{Bcolors.ENDC}\n'
             if branch['child'] != 9999:
               for parentID in branch['stack']:                              #check if all parents in doc have a corresponding path
                 parentDoc = self.getDoc(parentID)

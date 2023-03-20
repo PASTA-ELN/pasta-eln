@@ -137,3 +137,11 @@ This step helps to verify the installation and the data is an helpful example fo
 
 This step usually takes up to 1min, so please be patient.
 """
+
+shortcuts = """
+Ctrl+P: List projects
+Ctrl+M: List measurements
+Ctrl+S: List samples
+Ctrl+T: List tags
+Ctrl+?: Verify database integrity
+"""

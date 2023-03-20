@@ -1,5 +1,6 @@
 """ Custom tree view on data model """
 import uuid
+from pathlib import Path
 from PySide6.QtWidgets import QTreeView, QAbstractItemView, QMenu # pylint: disable=no-name-in-module
 from PySide6.QtGui import QAction, QStandardItem                  # pylint: disable=no-name-in-module
 from .widgetProjectLeafRenderer import ProjectLeafRenderer
@@ -49,15 +50,24 @@ class TreeView(QTreeView):
     """ after selecting add child from context menu """
     hierStack = self.currentIndex().data().split('/')
     docType= 'x'+str(len(hierStack))
-    self.comm.backend.addData(docType, {'-name':'folder '+str(self.currentIndex().row()+1)}, hierStack)
-    #TODO_P1 refresh project
+    print('addChild.cwd: ',self.comm.backend.cwd)
+    self.comm.backend.cwd = Path(self.comm.backend.db.getDoc(hierStack[-1])['-branch'][0]['path'])
+    self.comm.backend.addData(docType, {'-name':'folder 1', 'childNum':0}, hierStack)
+    self.comm.changeProject.emit('','') #refresh project
     return
 
 
+  #TODO_P2 fix numpy, scipy, lmfit, ... versions
   def addSibling(self):
     """ after selecting add sibling from context menu """
-    docID = self.currentIndex().data()
-    print('clicked context menu addSibling', docID)
+    childNum = self.currentIndex().row()+1
+    hierStack= self.currentIndex().parent().data().split('/')
+    docType= 'x'+str(len(hierStack))
+    print('addSibling.cwd: ',self.comm.backend.cwd)
+    self.comm.backend.cwd = Path(self.comm.backend.db.getDoc(hierStack[-1])['-branch'][0]['path'])
+    self.comm.backend.addData(docType, {'-name':'folder '+str(childNum+1), 'childNum':childNum}, hierStack)
+    self.comm.changeProject.emit('','') #refresh project
+    return
 
 
   def remove(self):

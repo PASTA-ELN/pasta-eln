@@ -138,7 +138,7 @@ class Action(QAction):
       function (function): function to be called
       menu (QMenu): button to be added to this menu
       parent (QWidget): parent widget
-      shortcut (str): shortcut ctrl+k
+      shortcut (str): shortcut (e.g. Ctrl+K)
       data (str): additional data to transport
     """
     super().__init__()

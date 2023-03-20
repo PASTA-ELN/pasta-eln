@@ -24,72 +24,26 @@ class Project(QWidget):
     self.projID = ''
 
 
-  def modelChanged(self, item):
-    """
-    After drag-drop, record changes to backend and database directly
-
-    Args:
-      item (QStandardItem): item changed, new location
-    """
-    print('\n')
-    #old information
-    stackOld = item.text().split('/')[:-1]
-    docID    = item.text().split('/')[-1]
-    doc      = self.comm.backend.db.getDoc(docID)
-    branchOld= [i for i in doc['-branch'] if i['stack']==stackOld][0]
-    branchIdx= doc['-branch'].index(branchOld)
-    siblingsOld = self.comm.backend.db.getView('viewHierarchy/viewHierarchy', startKey=' '.join(stackOld))
-    siblingsOld = [i for i in siblingsOld if len(i['key'].split(' '))==len(stackOld)+1 and \
-                                            i['value'][0]>branchOld['child']]
-    print('OLD INFORMATION', docID, stackOld, branchIdx)
-    print(siblingsOld)
-    #new information
-    stackNew = []  #create reversed
-    currentItem = item
-    while currentItem.parent() is not None:
-      currentItem = currentItem.parent()
-      stackNew.append(currentItem.text().split('/')[-1])
-    stackNew = [self.projID] + stackNew[::-1]  #add project id and reverse
-    childNew = item.row()
-    dirNameNew= createDirName(doc['-name'],doc['-type'][0],childNew)
-    parentDir = self.comm.backend.db.getDoc(stackNew[-1])['-branch'][0]['path']
-    pathNew  = parentDir+'/'+dirNameNew
-    siblingsNew = self.comm.backend.db.getView('viewHierarchy/viewHierarchy', startKey=' '.join(stackNew))
-    siblingsNew = [i for i in siblingsNew if len(i['key'].split(' '))==len(stackNew)+1 and \
-                                             i['value'][0]>=childNew]
-    print('\nNEW INFORMATION', docID,stackNew,childNew, pathNew)
-    print(siblingsNew)
-    #change
-    # pathOld = Path(self.comm.backend.basePath)/branchOld['path']
-    # if pathOld.exists():
-    #   pathOld.rename(Path(self.comm.backend.basePath)/pathNew)
-
-    #change sibling childNum: don't if already 9999
-    #fast change using new databasefunction
-
-    #update item.text() to new stack
-    return
-
-
   @Slot(str)
   def changeProject(self, projID, docID):
     """
     What happens when user clicks to change doc-type
 
     Args:
-      projID (str): document id of project
+      projID (str): document id of project; if empty, just refresh
       docID (str): document id of focus item, if not given focus at project
     """
     #initialize
     for i in reversed(range(self.mainL.count())): #remove old
       self.mainL.itemAt(i).widget().setParent(None)
-    self.projID = projID
+    if projID!='':
+      self.projID = projID
+      self.taskID = docID
     selectedItem = None
     self.model = QStandardItemModel()
     self.tree = TreeView(self, self.comm, self.model)
     self.model.itemChanged.connect(self.modelChanged)
     rootItem = self.model.invisibleRootItem()
-
 
     def iterateTree(nodeHier):
       """
@@ -108,7 +62,7 @@ class Project(QWidget):
         nodeTree.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled)
       else:
         nodeTree.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled)
-      if docID==nodeHier.id:
+      if self.taskID==nodeHier.id:
         nonlocal selectedItem
         selectedItem = nodeTree
       children = []
@@ -130,6 +84,60 @@ class Project(QWidget):
     if selectedItem is not None:
       self.tree.setCurrentItem(selectedItem)
     self.mainL.addWidget(self.tree)
+    return
+
+
+  def modelChanged(self, item):
+    """
+    After drag-drop, record changes to backend and database directly
+
+    Args:
+      item (QStandardItem): item changed, new location
+    """
+    print('\n')
+    #gather old information
+    db       = self.comm.backend.db
+    stackOld = item.text().split('/')[:-1]
+    docID    = item.text().split('/')[-1]
+    doc      = db.getDoc(docID)
+    branchOld= [i for i in doc['-branch'] if i['stack']==stackOld][0]
+    branchIdx= doc['-branch'].index(branchOld)
+    siblingsOld = db.getView('viewHierarchy/viewHierarchy', startKey=' '.join(stackOld))
+    siblingsOld = [i for i in siblingsOld if len(i['key'].split(' '))==len(stackOld)+1 and \
+                                            i['value'][0]>branchOld['child']]
+    print('OLD INFORMATION', docID, stackOld, branchIdx)
+    #gather new information
+    stackNew = []  #create reversed
+    currentItem = item
+    while currentItem.parent() is not None:
+      currentItem = currentItem.parent()
+      stackNew.append(currentItem.text().split('/')[-1])
+    stackNew = [self.projID] + stackNew[::-1]  #add project id and reverse
+    childNew = item.row()
+    dirNameNew= createDirName(doc['-name'],doc['-type'][0],childNew)
+    parentDir = db.getDoc(stackNew[-1])['-branch'][0]['path']
+    pathNew  = parentDir+'/'+dirNameNew
+    siblingsNew = db.getView('viewHierarchy/viewHierarchy', startKey=' '.join(stackNew))
+    siblingsNew = [i for i in siblingsNew if len(i['key'].split(' '))==len(stackNew)+1 and \
+                                             i['value'][0]>=childNew]
+    print('\nNEW INFORMATION', docID,stackNew,childNew, pathNew)
+    if stackOld==stackNew:  #nothing changed, just redraw
+      return
+    # change siblings
+    for line in siblingsOld:
+      if line['value'][0]<9999:
+        pathOld, pathNew = db.updateBranch(docID=line['id'], branch=line['value'][3], child=line['value'][0]-1)
+        (Path(self.comm.backend.basePath)/pathOld).rename(Path(self.comm.backend.basePath)/pathNew)
+    for line in siblingsNew:
+      if line['value'][0]<9999:
+        pathOld, pathNew = db.updateBranch(docID=line['id'], branch=line['value'][3], child=line['value'][0]+1)
+        (Path(self.comm.backend.basePath)/pathOld).rename(Path(self.comm.backend.basePath)/pathNew)
+    #change item in question
+    pathOld = Path(self.comm.backend.basePath)/branchOld['path']
+    if pathOld.exists():
+      pathOld.rename(Path(self.comm.backend.basePath)/pathNew)
+    db.updateBranch(docID=docID, branch=branchIdx, stack=stackNew, path=pathNew, child=childNew)
+    item.setText('/'.join(stackNew+[docID]))     #update item.text() to new stack
     return
 
 

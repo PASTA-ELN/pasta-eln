@@ -1,8 +1,8 @@
 """ Graphical user interface includes all widgets """
-import os, logging
+import os, logging, webbrowser
 from pathlib import Path
 from PySide6.QtCore import Qt, Slot      # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QApplication    # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QApplication, QMessageBox # pylint: disable=no-name-in-module
 from PySide6.QtGui import QIcon, QPixmap, QAction    # pylint: disable=no-name-in-module
 from qt_material import apply_stylesheet  #of https://github.com/UN-GCPDS/qt-material
 
@@ -15,7 +15,9 @@ from .dialogConfig import Configuration
 from .dialogProjectGroup import ProjectGroup
 from .dialogOntology import Ontology
 from .miscTools import updateExtractorList
+from .mixin_cli import text2html
 from .style import Action
+from .fixedStrings import shortcuts
 os.environ['QT_API'] = 'pyside6'
 
 # Subclass QMainWindow to customize your application's main window
@@ -34,14 +36,23 @@ class MainWindow(QMainWindow):
 
     #Menubar
     menu = self.menuBar()
-    menu.addMenu("&File")
-    viewMenu = menu.addMenu("&View list")
+    projectMenu = menu.addMenu("&Project")
+    Action('&Export .eln',          self.executeAction, projectMenu, self, data='export')
+    Action('&Import .eln',          self.executeAction, projectMenu, self, data='import')
+    projectMenu.addSeparator()
+    Action('&Exit',                 self.executeAction, projectMenu, self, data='exit')
+    viewMenu = menu.addMenu("&Lists")
     systemMenu = menu.addMenu("&System")
-    Action('&Configuration',         self.executeAction, systemMenu, self, data='configuration')
-    Action('&Project groups',        self.executeAction, systemMenu, self, data='projectGroups')
     Action('&Ontology',              self.executeAction, systemMenu, self, data='ontology')
+    Action('&Project groups',        self.executeAction, systemMenu, self, data='projectGroups')
+    systemMenu.addSeparator()
     Action('Update &Extractor list', self.executeAction, systemMenu, self, data='updateExtractors')
-    menu.addMenu("&Help")
+    Action('&Verify database',       self.executeAction, systemMenu, self, data='verifyDB', shortcut='Ctrl+?')
+    systemMenu.addSeparator()
+    Action('&Configuration',         self.executeAction, systemMenu, self, data='configuration')
+    helpMenu = menu.addMenu("&Help")
+    Action('&Website',               self.executeAction, helpMenu, self, data='website')
+    Action('&Shortcuts',             self.executeAction, helpMenu, self, data='shortcuts')
 
     shortCuts = {'measurement':'m', 'sample':'s', 'x0':'p'} #TODO_P5 to config
     for docType, docLabel in self.comm.backend.db.dataLabels.items():
@@ -105,8 +116,27 @@ class MainWindow(QMainWindow):
       dialog.exec()
     elif menuName=='updateExtractors':
       updateExtractorList(self.backend.extractorPath)
+    elif menuName=='verifyDB':
+      report = self.comm.backend.checkDB(True)
+      dialog = QMessageBox(self)
+      dialog.setWindowTitle('Report of database verification')
+      dialog.setText(text2html(report))
+      dialog.setStyleSheet('QLabel {min-width: 800px}')
+      dialog.exec()
+    elif menuName=='website':
+      webbrowser.open('https://pasta-eln.github.io/pasta-eln/')
+    elif menuName=='exit':
+      self.close()
+    elif menuName=='shortcuts':
+      dialog = QMessageBox(self)
+      dialog.setWindowTitle('Keyboard shortcuts')
+      dialog.setText(shortcuts)
+      dialog.exec()
     else:
-      print('**ERROR do not have menu '+menuName)
+      dialog = QMessageBox(self)
+      dialog.setWindowTitle('ERROR')
+      dialog.setText('menu not implemented yet: '+menuName)
+      dialog.exec()
     return
 
 
