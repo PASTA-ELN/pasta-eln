@@ -7,8 +7,9 @@ from .mixin_cli import Bcolors, CLI_Mixin
 from .database import Database
 from .miscTools import upIn, upOut, createDirName, generic_hash, camelCase
 from .handleDictionaries import ontology2Labels, fillDocBeforeCreate
+from .mixin_cli import Bcolors
 
-#TODO_P5 App freezes on loadKey
+#TODO_P5 App freezes on loadKey: check these
 #TODO_P5 unprocessed files should be have separate docType
 #TODO_P5 rerun extractors as batch
 
@@ -473,27 +474,42 @@ class Backend(CLI_Mixin):
     """
     ### check database itself for consistency
     output = self.db.checkDB(verbose=verbose, **kwargs)
+    ### compare with file system
     if verbose:
       output += "--- File status ---\n"
     viewProjects   = self.db.getView('viewDocType/x0')
     inDB_all = self.db.getView('viewHierarchy/viewPaths')
     pathsInDB_data = [i['key'] for i in inDB_all if i['value'][1][0][0]!='x']
+    pathsInDB_folder = [i['key'] for i in inDB_all if i['value'][1][0][0]=='x']
     count = 0
     for projI in viewProjects:
       projDoc = self.db.getDoc(projI['id'])
-      for root, _, files in os.walk(self.basePath/projDoc['-branch'][0]['path']):
+      for root, dirs, files in os.walk(self.basePath/projDoc['-branch'][0]['path']):
         for fileName in files:
           if fileName.startswith('.') or fileName.startswith('trash_'):
             continue
           path = (Path(root).relative_to(self.basePath) /fileName).as_posix()
           if path not in pathsInDB_data:
-            print("**ERROR File on harddisk but not DB:",path)
+            output += '**ERROR File on harddisk but not DB: '+path+'\n'
             count += 1
+          else:
+            pathsInDB_data.remove(path)
+        for dirName in dirs:
+          if dirName.startswith('.') or dirName.startswith('trash_'):
+            continue
+          path = (Path(root).relative_to(self.basePath) /dirName).as_posix()
+          if path not in pathsInDB_folder:
+            output += '**ERROR Directory on harddisk but not DB:'+path+'\n'
+            count += 1
+          else:
+            pathsInDB_folder.remove(path)
     output += 'Number of files on disk that are not in database '+str(count)+'\n'
-    orphanFiles = [i for i in pathsInDB_data if i.startswith(self.cwd.as_posix()) and "://" not in i]
-    if len(orphanFiles)>0:
-      output += "These files of database not on filesystem: "+str(orphanFiles)+'\n'  #this is a list of paths, so str
-    if count==0:
+    orphans = [i for i in pathsInDB_data   if not (self.basePath/i).exists() and ":/" not in i]
+    orphans+= [i for i in pathsInDB_folder if not (self.basePath/i).exists() ]
+    if len(orphans)>0:
+      output += f'{Bcolors.FAIL}**ERROR bch01: These files of database not on filesystem: '+',\t'.join(orphans)\
+               +f'{Bcolors.ENDC}\n'
+    if len(orphans)==0 and count==0:
       output += "** File tree CLEAN **\n"
     else:
       output += "** File tree NOT clean **\n"

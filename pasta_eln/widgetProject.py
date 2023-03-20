@@ -1,4 +1,5 @@
 """ Widget that shows the content of project in a electronic labnotebook """
+import logging
 from pathlib import Path
 from PySide6.QtWidgets import QLabel, QVBoxLayout, QHBoxLayout, QWidget, QStyledItemDelegate  # pylint: disable=no-name-in-module
 from PySide6.QtGui import QStandardItemModel, QStandardItem    # pylint: disable=no-name-in-module
@@ -22,6 +23,7 @@ class Project(QWidget):
     self.model  = None
     self.bodyW  = None
     self.projID = ''
+    self.docProj= {}
 
 
   @Slot(str)
@@ -94,7 +96,6 @@ class Project(QWidget):
     Args:
       item (QStandardItem): item changed, new location
     """
-    print('\n')
     #gather old information
     db       = self.comm.backend.db
     stackOld = item.text().split('/')[:-1]
@@ -105,7 +106,7 @@ class Project(QWidget):
     siblingsOld = db.getView('viewHierarchy/viewHierarchy', startKey=' '.join(stackOld))
     siblingsOld = [i for i in siblingsOld if len(i['key'].split(' '))==len(stackOld)+1 and \
                                             i['value'][0]>branchOld['child']]
-    print('OLD INFORMATION', docID, stackOld, branchIdx)
+    logging.debug('OLD INFORMATION '+docID+' '+str(stackOld)+'  '+branchIdx)
     #gather new information
     stackNew = []  #create reversed
     currentItem = item
@@ -120,7 +121,7 @@ class Project(QWidget):
     siblingsNew = db.getView('viewHierarchy/viewHierarchy', startKey=' '.join(stackNew))
     siblingsNew = [i for i in siblingsNew if len(i['key'].split(' '))==len(stackNew)+1 and \
                                              i['value'][0]>=childNew]
-    print('\nNEW INFORMATION', docID,stackNew,childNew, pathNew)
+    logging.debug('NEW INFORMATION '+docID+' '+str(stackNew)+'  '+childNew+' '+pathNew)
     if stackOld==stackNew:  #nothing changed, just redraw
       return
     # change siblings
@@ -149,30 +150,31 @@ class Project(QWidget):
         self.bodyW.show()
       else:
         self.bodyW.hide()
+    elif btnName == 'addChild':
+      self.comm.backend.cwd = Path(self.comm.backend.basePath)/self.docProj['-branch'][0]['path']
+      self.comm.backend.addData('x1', {'-name':'folder 1', 'childNum':0}, [self.projID])
+      self.comm.changeProject.emit('','') #refresh project
     return
 
-
-#TODO_P1 save drag-drop; add node at end; context-menu or click each leaf
-# hide
 
   def projHeader(self):
     """
     Create header of page
     """
-    doc = self.comm.backend.db.getDoc(self.projID)
+    self.docProj = self.comm.backend.db.getDoc(self.projID)
     headerW = QWidget()  # Leaf(self.comm, node.id)
     headerL = QVBoxLayout(headerW)
     topbarW = QWidget()
     topbarL = QHBoxLayout(topbarW)
-    topbarL.addWidget(QLabel(doc['-name']))
+    topbarL.addWidget(QLabel(self.docProj['-name']))
     TextButton('Hide', self.btnEvent, topbarL, 'projHide', checkable=True)
-    TextButton('Add child',None, topbarL)
+    TextButton('Add child',self.btnEvent, topbarL, 'addChild')
     headerL.addWidget(topbarW)
     self.bodyW   = QWidget()
     bodyL   = QVBoxLayout(self.bodyW)
-    tags = ', '.join(doc['tags']) if 'tags' in doc else ''
+    tags = ', '.join(self.docProj['tags']) if 'tags' in self.docProj else ''
     bodyL.addWidget(QLabel('Tags: '+tags))
-    for key,value in doc.items():
+    for key,value in self.docProj.items():
       if key[0] in ['_','-']:
         continue
       bodyL.addWidget(QLabel(key+': '+str(value)))
