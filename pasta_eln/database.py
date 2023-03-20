@@ -287,14 +287,14 @@ class Database:
     Update document by updating the branch
 
     Args:
-        docID (string):  id of document to change
-        branch (int):  index of branch to change
-        child (int):  new number of child
-        stack (list):  new list of ids
-        path (str): new path
+      docID (string):  id of document to change
+      branch (int):  index of branch to change
+      child (int):  new number of child
+      stack (list):  new list of ids
+      path (str): new path
 
     Returns:
-        str, str: old path, new path
+      str, str: old path, new path
     """
     doc = self.db[docID]
     doc['-client'] = 'updateBrach'
@@ -308,6 +308,22 @@ class Database:
       doc['-branch'][branch]['stack']=stack
     doc.save()
     return oldPath, path
+
+
+  def remove(self, docID):
+    """
+    remove doc from database: temporary for development and testing
+
+    Args:
+      docID (string): id of document to remove
+
+    Returns:
+      dict: document that was removed
+    """
+    doc = self.db[docID]
+    res = dict(doc)
+    doc.delete()
+    return res
 
 
   def addAttachment(self, docID, name, content):

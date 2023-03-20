@@ -476,7 +476,7 @@ class Backend(CLI_Mixin):
     output = self.db.checkDB(verbose=verbose, **kwargs)
     ### compare with file system
     if verbose:
-      output += "--- File status ---\n"
+      output += f'{Bcolors.UNDERLINE}**** File status ****{Bcolors.ENDC}\n'
     viewProjects   = self.db.getView('viewDocType/x0')
     inDB_all = self.db.getView('viewHierarchy/viewPaths')
     pathsInDB_data = [i['key'] for i in inDB_all if i['value'][1][0][0]!='x']

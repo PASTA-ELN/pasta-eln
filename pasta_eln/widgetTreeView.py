@@ -41,6 +41,7 @@ class TreeView(QTreeView):
     context.exec(e.globalPos())
 
   #TODO_P2 fix numpy, scipy, lmfit, ... versions
+  #TODO_P3 drag drop external files
 
   def executeAction(self):
     """ after selecting a item from context menu """
@@ -59,8 +60,13 @@ class TreeView(QTreeView):
       self.comm.backend.addData(docType, {'-name':'folder '+str(childNum+1), 'childNum':childNum}, hierStack)
       self.comm.changeProject.emit('','') #refresh project
     elif menuName=='del':
-      docID = self.currentIndex().data().split('/')[-1] #TODO_P1
-      print('clicked context menu remove', docID)
+      docID = self.currentIndex().data().split('/')[-1]
+      doc = self.comm.backend.db.remove(docID)
+      for branch in doc['-branch']:
+        oldPath = Path(self.comm.backend.basePath)/branch['path']
+        if oldPath.exists():
+          oldPath.rename( oldPath.parent/('trash_'+oldPath.name) )
+      self.comm.changeProject.emit('','') #refresh project
     elif menuName=='fold':
       item = self.model().itemFromIndex(self.currentIndex())
       if item.text().endswith(' -'):
@@ -70,6 +76,8 @@ class TreeView(QTreeView):
     elif menuName=='hide':
       docID = self.currentIndex().data().split('/')[-1]
       print('clicked context menu hide', docID) #TODO_P1
+      #branch: "show":[true,false]
+      #&& (doc["-branch"][0].show.every(function(i) {return i;}))
     elif menuName=='openExternal':
       docID = self.currentIndex().data().split('/')[-1]
       doc   = self.comm.backend.db.getDoc(docID)
