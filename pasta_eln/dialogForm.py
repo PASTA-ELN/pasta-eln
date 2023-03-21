@@ -123,6 +123,7 @@ class Form(QDialog):
     buttonBox.clicked.connect(self.save)
     mainL.addWidget(buttonBox)
 
+  # TODO_P5 add button to add key-values
   def save(self, btn):
     """
     Action upon save / cancel

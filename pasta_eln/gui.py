@@ -37,22 +37,22 @@ class MainWindow(QMainWindow):
     #Menubar
     menu = self.menuBar()
     projectMenu = menu.addMenu("&Project")
-    Action('&Export .eln',          self.executeAction, projectMenu, self, data='export')
-    Action('&Import .eln',          self.executeAction, projectMenu, self, data='import')
+    Action('&Export .eln',          self.executeAction, projectMenu, self, name='export')
+    Action('&Import .eln',          self.executeAction, projectMenu, self, name='import')
     projectMenu.addSeparator()
-    Action('&Exit',                 self.executeAction, projectMenu, self, data='exit')
+    Action('&Exit',                 self.executeAction, projectMenu, self, name='exit')
     viewMenu = menu.addMenu("&Lists")
     systemMenu = menu.addMenu("&System")
-    Action('&Ontology',              self.executeAction, systemMenu, self, data='ontology')
-    Action('&Project groups',        self.executeAction, systemMenu, self, data='projectGroups')
+    Action('&Ontology',              self.executeAction, systemMenu, self, name='ontology')
+    Action('&Project groups',        self.executeAction, systemMenu, self, name='projectGroups')
     systemMenu.addSeparator()
-    Action('Update &Extractor list', self.executeAction, systemMenu, self, data='updateExtractors')
-    Action('&Verify database',       self.executeAction, systemMenu, self, data='verifyDB', shortcut='Ctrl+?')
+    Action('Update &Extractor list', self.executeAction, systemMenu, self, name='updateExtractors')
+    Action('&Verify database',       self.executeAction, systemMenu, self, name='verifyDB', shortcut='Ctrl+?')
     systemMenu.addSeparator()
-    Action('&Configuration',         self.executeAction, systemMenu, self, data='configuration')
+    Action('&Configuration',         self.executeAction, systemMenu, self, name='configuration')
     helpMenu = menu.addMenu("&Help")
-    Action('&Website',               self.executeAction, helpMenu, self, data='website')
-    Action('&Shortcuts',             self.executeAction, helpMenu, self, data='shortcuts')
+    Action('&Website',               self.executeAction, helpMenu, self, name='website')
+    Action('&Shortcuts',             self.executeAction, helpMenu, self, name='shortcuts')
 
     shortCuts = {'measurement':'m', 'sample':'s', 'x0':'p'} #TODO_P5 to config
     for docType, docLabel in self.comm.backend.db.dataLabels.items():
@@ -77,6 +77,8 @@ class MainWindow(QMainWindow):
     mainLayout.addWidget(sidebar)
     mainLayout.addWidget(body)
 
+
+  #TODO_P3 initial view should be there
 
   @Slot(str)
   def formDoc(self, doc):

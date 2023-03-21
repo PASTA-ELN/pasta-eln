@@ -63,7 +63,7 @@ def fillDocBeforeCreate(data, docType):
     data['_id'] = prefix+'-'+uuid.uuid4().hex
   data['-date']   = datetime.now().isoformat()
   if '-branch' not in data:
-    data['-branch'] = [{'stack':[], 'path':None}]
+    data['-branch'] = [{'stack':[], 'path':None, 'child':-1, 'show':[]}]
   # separate comment into tags and fields
   # these tags are lost: '#d': too short; '#3tag': starts with number
   if 'comment' not in data:

@@ -30,14 +30,14 @@ class TreeView(QTreeView):
       e (QEvent): event
     """
     context = QMenu(self)
-    Action('Add child folder',   self.executeAction, context, self, data='addChild')
-    Action('Add sibling folder', self.executeAction, context, self, data='addSibling')
-    Action('Remove this',        self.executeAction, context, self, data='del')
+    Action('Add child folder',   self.executeAction, context, self, name='addChild')
+    Action('Add sibling folder', self.executeAction, context, self, name='addSibling')
+    Action('Remove this',        self.executeAction, context, self, name='del')
     context.addSeparator()
-    Action('Minimize/Maximize',  self.executeAction, context, self, data='fold')
-    Action('Hide',               self.executeAction, context, self, data='hide')
+    Action('Minimize/Maximize',  self.executeAction, context, self, name='fold')
+    Action('Hide',               self.executeAction, context, self, name='hide')
     context.addSeparator()
-    Action('Open external program', self.executeAction, context, self, data='openExternal')
+    Action('Open external program', self.executeAction, context, self, name='openExternal')
     context.exec(e.globalPos())
 
   #TODO_P2 fix numpy, scipy, lmfit, ... versions
@@ -74,10 +74,8 @@ class TreeView(QTreeView):
       else:
         item.setText(item.text()+' -')
     elif menuName=='hide':
-      docID = self.currentIndex().data().split('/')[-1]
-      print('clicked context menu hide', docID) #TODO_P1
-      #branch: "show":[true,false]
-      #&& (doc["-branch"][0].show.every(function(i) {return i;}))
+      stack = self.currentIndex().data().split('/')
+      self.comm.backend.db.hideShow(stack)
     elif menuName=='openExternal':
       docID = self.currentIndex().data().split('/')[-1]
       doc   = self.comm.backend.db.getDoc(docID)

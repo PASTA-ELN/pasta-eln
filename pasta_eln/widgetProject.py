@@ -24,6 +24,7 @@ class Project(QWidget):
     self.bodyW  = None
     self.projID = ''
     self.docProj= {}
+    self.showAll= False
 
 
   @Slot(str)
@@ -76,7 +77,7 @@ class Project(QWidget):
       return nodeTree
 
     #Populate model body of change project: start recursion
-    nodeHier = self.comm.backend.db.getHierarchy(self.projID)
+    nodeHier = self.comm.backend.db.getHierarchy(self.projID, all=self.showAll)
     for node in PreOrderIter(nodeHier, maxlevel=2):
       if node.is_root:         #Project header
         self.projHeader()
@@ -150,6 +151,9 @@ class Project(QWidget):
         self.bodyW.show()
       else:
         self.bodyW.hide()
+    elif btnName == 'hideShow':
+      self.showAll = not self.showAll
+      self.changeProject('','')
     elif btnName == 'addChild':
       self.comm.backend.cwd = Path(self.comm.backend.basePath)/self.docProj['-branch'][0]['path']
       self.comm.backend.addData('x1', {'-name':'folder 1', 'childNum':0}, [self.projID])
@@ -167,8 +171,9 @@ class Project(QWidget):
     topbarW = QWidget()
     topbarL = QHBoxLayout(topbarW)
     topbarL.addWidget(QLabel(self.docProj['-name']))
-    TextButton('Hide', self.btnEvent, topbarL, 'projHide', checkable=True)
-    TextButton('Add child',self.btnEvent, topbarL, 'addChild')
+    TextButton('Reduce',    self.btnEvent, topbarL, 'projHide', checkable=True)
+    TextButton('Hide/Show', self.btnEvent, topbarL, 'hideShow')
+    TextButton('Add child', self.btnEvent, topbarL, 'addChild')
     headerL.addWidget(topbarW)
     self.bodyW   = QWidget()
     bodyL   = QVBoxLayout(self.bodyW)

@@ -129,7 +129,7 @@ class IconButton(QPushButton):
 
 class Action(QAction):
   """ QAction and assign function to menu"""
-  def __init__(self, label, function, menu, parent, shortcut=None, data=None):
+  def __init__(self, label, function, menu, parent, shortcut=None, name=None):
     """
     Initialization
 
@@ -139,7 +139,7 @@ class Action(QAction):
       menu (QMenu): button to be added to this menu
       parent (QWidget): parent widget
       shortcut (str): shortcut (e.g. Ctrl+K)
-      data (str): additional data to transport
+      name (str): additional data to transport
     """
     super().__init__()
     self.setParent(parent)
@@ -149,8 +149,8 @@ class Action(QAction):
       menu.addAction(self)
     if shortcut is not None:
       self.setShortcut(QKeySequence(shortcut))
-    if data is not None:
-      self.setData(data)
+    if name is not None:
+      self.setData(name)
 
 
 class Image():

@@ -57,11 +57,17 @@ class Database:
     viewCode = {}
     for docType in [i for i in self.ontology if i[0] not in ['_','-']]:
       if docType=='x0':
-        jsString = jsDefault.replace('$docType$', "doc['-type']=='x0'").replace('$key$','doc._id')
+        js    = jsDefault.replace('$docType$', "doc['-type']=='x0' && (doc['-branch'][0].show.every(\
+                function(i) {return i;}))").replace('$key$','doc._id')
+        jsAll = jsDefault.replace('$docType$', "doc['-type']=='x0'").replace('$key$','doc._id')
       elif docType[0]=='x':
         continue
       else:     #show all doctypes that have the same starting ..
-        jsString = jsDefault.replace('$docType$', "doc['-type'].join('/').substring(0, "+str(len(docType))+")=='"+docType+"'").replace('$key$','doc["-branch"][0].stack[0]')
+        js    = jsDefault.replace('$docType$', "doc['-type'].join('/').substring(0, "+str(len(docType))+")=='"\
+                +docType+"' && (doc['-branch'][0].show.every(function(i) {return i;}))")\
+                .replace('$key$','doc["-branch"][0].stack[0]')
+        jsAll = jsDefault.replace('$docType$', "doc['-type'].join('/').substring(0, "+str(len(docType))+")=='"\
+                +docType+"'").replace('$key$','doc["-branch"][0].stack[0]')
       outputList = []
       for idx,item in enumerate(self.ontology[docType]['prop']):
         if idx>configuration['tableColumnsMax']:
@@ -84,27 +90,41 @@ class Database:
         else:
           outputList.append('doc["'+item['name']+'"]')
       outputList = ','.join(outputList)
-      jsString = jsString.replace('$outputList$', outputList)
-      viewCode[docType.replace('/','__')]=jsString
+      viewCode[docType.replace('/','__')]       = js.replace('$outputList$', outputList)
+      viewCode[docType.replace('/','__')+'All'] = jsAll.replace('$outputList$', outputList)
     self.saveView('viewDocType', viewCode)
     # general views: Hierarchy, Identify
     jsHierarchy  = '''
+      if ('-type' in doc && (doc["-branch"][0].show.every(function(i) {return i;}))) {
+        doc['-branch'].forEach(function(branch, idx) {emit(branch.stack.concat([doc._id]).join(' '),[branch.child,doc['-type'],doc['-name'],idx]);});
+      }
+    '''
+    jsHierarchyAll  = '''
       if ('-type' in doc) {
         doc['-branch'].forEach(function(branch, idx) {emit(branch.stack.concat([doc._id]).join(' '),[branch.child,doc['-type'],doc['-name'],idx]);});
       }
     '''
     jsPath = '''
+      if ('-type' in doc && '-branch' in doc && (doc["-branch"][0].show.every(function(i) {return i;}))){
+        if ('shasum' in doc){doc['-branch'].forEach(function(branch,idx){if(branch.path){emit(branch.path,[branch.stack,doc['-type'],branch.child,doc.shasum,idx]);}});}
+        else                {doc['-branch'].forEach(function(branch,idx){if(branch.path){emit(branch.path,[branch.stack,doc['-type'],branch.child,''        ,idx]);}});}
+      }
+    '''
+    jsPathAll = '''
       if ('-type' in doc && '-branch' in doc){
         if ('shasum' in doc){doc['-branch'].forEach(function(branch,idx){if(branch.path){emit(branch.path,[branch.stack,doc['-type'],branch.child,doc.shasum,idx]);}});}
         else                {doc['-branch'].forEach(function(branch,idx){if(branch.path){emit(branch.path,[branch.stack,doc['-type'],branch.child,''        ,idx]);}});}
       }
     '''
-    self.saveView('viewHierarchy',{'viewHierarchy':jsHierarchy,'viewPaths':jsPath})
+    self.saveView('viewHierarchy',{'viewHierarchy':jsHierarchy,'viewPaths':jsPath,\
+                                   'viewHierarchyAll':jsHierarchyAll,'viewPathsAll':jsPathAll})
     jsSHA= "if (doc['-type'][0]==='measurement'){emit(doc.shasum, doc['-name']);}"
     jsQR = "if (doc.qrCode.length > 0)"
     jsQR+= "{doc.qrCode.forEach(function(thisCode) {emit(thisCode, doc['-name']);});}"
-    jsTags="if ('-tags' in doc){doc['-tags'].forEach(function(tag){emit(tag,[doc['-name']]);});}"
-    views = {'viewQR':jsQR, 'viewSHAsum':jsSHA, 'viewTags':jsTags}
+    jsTags="if ('-tags' in doc && (doc['-branch'][0].show.every(function(i) {return i;})))"+\
+              "{doc['-tags'].forEach(function(tag){emit(tag,[doc['-name']]);});}"
+    jsTagsAll="if ('-tags' in doc){doc['-tags'].forEach(function(tag){emit(tag,[doc['-name']]);});}"
+    views = {'viewQR':jsQR, 'viewSHAsum':jsSHA, 'viewTags':jsTags, 'viewTagsAll':jsTagsAll}
     self.saveView('viewIdentify', views)
     return
 
@@ -154,6 +174,7 @@ class Database:
     doc['-client'] = tracebackString
     if '-branch' in doc and 'op' in doc['-branch']:
       del doc['-branch']['op']  #remove operation, saveDoc creates and therefore always the same
+      doc['-branch']['show'] = self.createShowFromStack(doc['-branch']['stack'])
       doc['-branch'] = [doc['-branch']]
     try:
       res = self.db.create_document(doc)
@@ -208,6 +229,7 @@ class Database:
             if op=='c' and branch['path']==change['-branch']['path']:
               op='u'
           if op=='c':    #create, append
+            change['-branch']['show'] = self.createShowFromStack(change['-branch']['stack'])
             newDoc['-branch'] += [change['-branch']]
             nothingChanged = False
           elif op=='u':  #update
@@ -219,6 +241,7 @@ class Database:
                     newDoc['-name'] = os.path.basename(change['-branch']['path'])
                   branch['path'] = branch['path'].replace(oldpath ,change['-branch']['path'])
                   branch['stack']= change['-branch']['stack']
+                  branch['show'] = self.createShowFromStack(change['-branch']['stack'])
                   break
             else:
               newDoc['-branch'][0] = change['-branch'] #change the initial one
@@ -306,8 +329,28 @@ class Database:
     doc['-branch'][branch]['child']=child
     if stack is not None:
       doc['-branch'][branch]['stack']=stack
+    doc['-branch'][branch]['show'] = self.createShowFromStack(stack)
     doc.save()
     return oldPath, path
+
+
+  def createShowFromStack(self, stack):
+    """
+    For branches: create show from stack
+    - should be 1 longer than stack
+    - check parents if hidden
+
+    Args:
+      stack (list): list of ancestor docIDs
+
+    Returns:
+      list: list of show = list of bool
+    """
+    show = (len(stack)+1)*[True]
+    for idx, docID in enumerate(stack):
+      if not self.db[docID]['-branch'][0]['show'][-1]:
+        show[idx] = False
+    return show
 
 
   def remove(self, docID):
@@ -405,19 +448,23 @@ class Database:
     return
 
 
-  def getHierarchy(self, start):
+  def getHierarchy(self, start, all=False):
     """
     get hierarchy tree for projects, ...
 
     Args:
       start (str): start of the hierarchy (most parent)
+      all (bool):  true=show all, false=only non-hidden
 
     Returns:
       Node: hierarchy in an anytree
     """
     from anytree import Node, RenderTree, AsciiStyle
     from anytree.search import find_by_attr
-    view = self.getView('viewHierarchy/viewHierarchy', startKey=start)
+    if all:
+      view = self.getView('viewHierarchy/viewHierarchyAll', startKey=start)
+    else:
+      view = self.getView('viewHierarchy/viewHierarchy',    startKey=start)
     # for item in view:
     #   print(item)
     levelNum = 1
@@ -437,6 +484,33 @@ class Database:
       levelNum += 1
     # print(RenderTree(dataTree, style=AsciiStyle()))
     return dataTree
+
+
+  def hideShow(self, stack):
+    """
+    Toggle hide/show indicator of branch
+
+    Args:
+      stack (list, str): stack of docID or docID
+    """
+    flippedOnce = False
+    if isinstance(stack, str):
+      doc = self.db[stack]
+      for idx, _ in enumerate(doc['-branch']):
+        doc['-branch'][idx]['show'][-1] = not doc['-branch'][idx]['show'][-1]
+      doc.save()
+      if stack[0]=='x':
+        stack = doc['-branch'][0]['stack']
+      flippedOnce = True
+    if isinstance(stack, list):
+      iFlip = len(stack)-1
+      for item in self.getView('viewHierarchy/viewHierarchy', startKey=' '.join(stack)):
+        doc = self.db[item['id']]
+        for idx, branch in enumerate(doc['-branch']):
+          print(stack, flippedOnce, iFlip, len(branch['stack'])) #TODO_P1 try project-list, hierarchy, measurement-list
+          doc['-branch'][idx]['show'][iFlip] = not doc['-branch'][idx]['show'][iFlip]
+        doc.save()
+    return
 
 
   def replicateDB(self, dbInfo, removeAtStart=False):
@@ -677,6 +751,11 @@ class Database:
                     onePathFound = True
                 if not onePathFound:
                   outstring+= f'{Bcolors.HEADER}**Unsure dch08: parent does not have corresponding path (remote content) '+doc['_id']+'| parentID '+parentID+f'{Bcolors.ENDC}\n'
+          if 'show' not in branch:
+            outstring+= f'{Bcolors.FAIL}**ERROR dch08a: branch does not have show: '+doc['_id']+f'{Bcolors.ENDC}\n'
+          elif len(branch['show']) != len(branch['stack'])+1:
+            outstring+= f'{Bcolors.FAIL}**ERROR dch08b: branch-show not same length as branch-stack: '+doc['_id']+f'{Bcolors.ENDC}\n'
+          #TODO_P5 possible test that parent has corresponding show
 
         #every doc should have a name
         if not '-name' in doc:

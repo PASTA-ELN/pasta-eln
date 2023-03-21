@@ -25,6 +25,7 @@ class Table(QWidget):
     self.docType = ''
     self.projID = ''
     self.filterHeader = []
+    self.showAll= False
 
     ### GUI elements
     mainL = QVBoxLayout()
@@ -33,14 +34,16 @@ class Table(QWidget):
     self.headerW.hide()
     headerL = QHBoxLayout(self.headerW)
     self.headline = Label('','h1', headerL)
-    TextButton('Group Edit', self.groupEdit, headerL)
-    TextButton('Add Filter', self.addFilter, headerL)
-    TextButton('Add',self.addItem, headerL)
+    TextButton('Add',        self.executeAction, headerL, name='addItem')
+    TextButton('Add Filter', self.executeAction, headerL, name='addFilter')
+    TextButton('Group Edit', self.executeAction, headerL, name='groupEdit')
     more = TextButton('More',None, headerL)
     moreMenu = QMenu(self)
-    Action('Sequential edit', self.sequentialEdit, moreMenu, self)
-    Action('Export',     self.export,     moreMenu, self)
-    Action('Change table headers', self.changeTableHeader, moreMenu, self)
+    Action('Sequential edit', self.executeAction, moreMenu, self, name='sequentialEdit')
+    Action('Toggle hidden',   self.executeAction, moreMenu, self, name='toggleHide')
+    Action('Hide / Show all', self.executeAction, moreMenu, self, name='showAll')
+    Action('Change headers',  self.executeAction, moreMenu, self, name='changeTableHeader')
+    Action('Export',          self.executeAction, moreMenu, self, name='export')
     more.setMenu(moreMenu)
     mainL.addWidget(self.headerW)
     # filter
@@ -67,28 +70,31 @@ class Table(QWidget):
 
 
   @Slot(str, str, bool)
-  def changeTable(self, docType, projID, redraw):
+  def changeTable(self, docType, projID):
     """
     What happens when the table changes its raw information
 
     Args:
-      docType (str): document type
+      docType (str): document type; leave empty for redraw
       projID (str): id of project
-      redraw (bool): redraw. if true, leave other arguments as empty strings
     """
+    if docType!='':
+      self.docType = docType
+      self.projID  = projID
     if docType=='_tags_':
-      self.data = self.comm.backend.db.getView('viewIdentify/viewTags')
+      if self.showAll:
+        self.data = self.comm.backend.db.getView('viewIdentify/viewTagsAll')
+      else:
+        self.data = self.comm.backend.db.getView('viewIdentify/viewTags')
       self.filterHeader = ['tag','name']
       self.headline.setText('TAGS')
       #TODO_P5 tags should not have add button
     else:
-      if not redraw:
-        self.docType = docType
-        self.projID  = projID
+      path = 'viewDocType/'+self.docType+'All' if self.showAll else 'viewDocType/'+self.docType
       if self.projID=='':
-        self.data = self.comm.backend.db.getView('viewDocType/'+self.docType)
+        self.data = self.comm.backend.db.getView(path)
       else:
-        self.data = self.comm.backend.db.getView('viewDocType/'+self.docType, preciseKey=self.projID)
+        self.data = self.comm.backend.db.getView(path, preciseKey=self.projID)
       self.headline.setText(self.comm.backend.db.dataLabels[self.docType])
       if docType in self.comm.backend.configuration['tableHeaders']:
         self.filterHeader = self.comm.backend.configuration['tableHeaders'][docType]
@@ -154,34 +160,81 @@ class Table(QWidget):
     return
 
 
-  def addItem(self):
-    """ What happens when user clicks add-button """
-    self.comm.formDoc.emit({'-type':[self.docType]})
-    return
-
-
-  def addFilter(self):
-    """ What happens when user clicks add-filter """
-    # gui
-    rowW = QWidget()
-    rowL = QHBoxLayout(rowW)
-    text = QLineEdit('')
-    rowL.addWidget(text)
-    select = QComboBox()
-    select.addItems(self.filterHeader)
-    select.currentIndexChanged.connect(self.filterChoice)
-    select.setAccessibleName(str(len(self.models)))
-    rowL.addWidget(select)
-    LetterButton('-', self.delFilter, rowL, str(len(self.models)))
-    self.filterL.addWidget(rowW)
-    # data
-    filterModel = QSortFilterProxyModel()
-    text.textChanged.connect(filterModel.setFilterRegularExpression)
-    filterModel.setSourceModel(self.models[-1])
-    filterModel.setFilterCaseSensitivity(Qt.CaseInsensitive)
-    filterModel.setFilterKeyColumn(0)
-    self.models.append(filterModel)
-    self.table.setModel(self.models[-1])
+  def executeAction(self):
+    """ Any action by the buttons and menu at the top of the page """
+    #TODO_P3 after change: update table and details
+    if hasattr(self.sender(), 'data'):  #action
+      menuName = self.sender().data()
+    else:                               #button
+      menuName = self.sender().accessibleName()
+    if menuName == 'addItem':
+      self.comm.formDoc.emit({'-type':[self.docType]})
+    elif menuName == 'addFilter':
+      # gui
+      rowW = QWidget()
+      rowL = QHBoxLayout(rowW)
+      text = QLineEdit('')
+      rowL.addWidget(text)
+      select = QComboBox()
+      select.addItems(self.filterHeader)
+      select.currentIndexChanged.connect(self.filterChoice)
+      select.setAccessibleName(str(len(self.models)))
+      rowL.addWidget(select)
+      LetterButton('-', self.delFilter, rowL, str(len(self.models)))
+      self.filterL.addWidget(rowW)
+      # data
+      filterModel = QSortFilterProxyModel()
+      text.textChanged.connect(filterModel.setFilterRegularExpression)
+      filterModel.setSourceModel(self.models[-1])
+      filterModel.setFilterCaseSensitivity(Qt.CaseInsensitive)
+      filterModel.setFilterKeyColumn(0)
+      self.models.append(filterModel)
+      self.table.setModel(self.models[-1])
+    elif menuName == 'groupEdit':
+      intersection = None
+      docIDs = []
+      for row in range(self.models[-1].rowCount()):
+        if self.models[-1].item(row,0).checkState() == Qt.CheckState.Checked:
+          docIDs.append( self.data[row]['id'] )
+          thisKeys = set(self.comm.backend.db.getDoc(self.data[row]['id']))
+          if intersection is None:
+            intersection = thisKeys
+          else:
+            intersection = intersection.intersection(thisKeys)
+      #remove keys that should not be group edited and build dict
+      intersection = intersection.difference({'-type', '-branch', '-user', '-client', 'metaVendor', 'shasum', \
+        '_id', 'metaUser', '_rev', '-name', '-date', 'image', '_attachments','links'})
+      intersection = {i:'' for i in intersection}
+      intersection.update({'_ids':docIDs})
+      self.comm.formDoc.emit(intersection)
+    elif menuName == 'sequentialEdit':
+      for row in range(self.models[-1].rowCount()):
+        if self.models[-1].item(row,0).checkState() == Qt.CheckState.Checked:
+          self.comm.formDoc.emit(self.comm.backend.db.getDoc( self.data[row]['id'] ))
+    elif menuName == 'changeTableHeader':
+      dialog = TableHeader(self.comm, self.docType)
+      dialog.exec()
+    elif menuName == 'export':
+      fileName = QFileDialog.getSaveFileName(self,'Export to ..',str(Path.home()),'*.csv')[0]
+      with open(fileName,'w', encoding='utf-8') as fOut:
+        header = ['"'+i+'"' for i in self.filterHeader]
+        fOut.write(','.join(header)+'\n')
+        for row in range(self.models[-1].rowCount()):
+          rowContent = []
+          for col in range(self.models[-1].columnCount()):
+            value = self.models[-1].index( row, col, QModelIndex() ).data( Qt.DisplayRole )
+            rowContent.append('"'+value+'"')
+          fOut.write(','.join(rowContent)+'\n')
+    elif menuName == 'toggleHide':
+      for row in range(self.models[-1].rowCount()):
+        if self.models[-1].item(row,0).checkState() == Qt.CheckState.Checked:
+          self.comm.backend.db.hideShow( self.data[row]['id'] )
+      self.changeTable('','')  # redraw table
+    elif menuName == 'showAll':
+      self.showAll = not self.showAll
+      self.changeTable('','')  # redraw table
+    else:
+      print(">>>>",menuName)
     return
 
   def filterChoice(self, item):
@@ -203,54 +256,4 @@ class Table(QWidget):
       self.filterL.itemAt(int(row)-1).widget().setParent(None)
     else:
       print('Bug: try to remove from list something that does not exist as accessible name did not change') #TODO_P3
-    return
-
-  def groupEdit(self):
-    """ What happens after the user has selected multiple rows and wants to edit """
-    intersection = None
-    docIDs = []
-    for row in range(self.models[-1].rowCount()):
-      if self.models[-1].item(row,0).checkState() == Qt.CheckState.Checked:
-        docIDs.append( self.data[row]['id'] )
-        thisKeys = set(self.comm.backend.db.getDoc(self.data[row]['id']))
-        if intersection is None:
-          intersection = thisKeys
-        else:
-          intersection = intersection.intersection(thisKeys)
-    #remove keys that should not be group edited and build dict
-    intersection = intersection.difference({'-type', '-branch', '-user', '-client', 'metaVendor', 'shasum', \
-      '_id', 'metaUser', '_rev', '-name', '-date', 'image', '_attachments','links'})
-    intersection = {i:'' for i in intersection}
-    intersection.update({'_ids':docIDs})
-    self.comm.formDoc.emit(intersection)
-    return
-
-
-  def export(self):
-    """ Export table to csv file """
-    fileName = QFileDialog.getSaveFileName(self,'Export to ..',str(Path.home()),'*.csv')[0]
-    with open(fileName,'w', encoding='utf-8') as fOut:
-      header = ['"'+i+'"' for i in self.filterHeader]
-      fOut.write(','.join(header)+'\n')
-      for row in range(self.models[-1].rowCount()):
-        rowContent = []
-        for col in range(self.models[-1].columnCount()):
-          value = self.models[-1].index( row, col, QModelIndex() ).data( Qt.DisplayRole )
-          rowContent.append('"'+value+'"')
-        fOut.write(','.join(rowContent)+'\n')
-    return
-
-
-  def sequentialEdit(self):
-    """ Sequentially edit the documents """
-    for row in range(self.models[-1].rowCount()):
-      if self.models[-1].item(row,0).checkState() == Qt.CheckState.Checked:
-        self.comm.formDoc.emit(self.comm.backend.db.getDoc( self.data[row]['id'] ))
-    return
-
-
-  def changeTableHeader(self):
-    """ Show dialog to change the headers for this docType """
-    dialog = TableHeader(self.comm, self.docType)
-    dialog.exec()
     return
