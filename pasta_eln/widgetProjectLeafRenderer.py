@@ -12,7 +12,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
   """ renders each leaf of project tree using QPaint """
   def __init__(self):
     super().__init__()
-    self.lineSep = 20 #TODO_P5 into config file
+    self.lineSep = 20 #TODO_P4 into config file
     self.debugMode = True
     self.comm = None
     self.width = -1
@@ -67,7 +67,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       text.drawContents(painter)
       painter.translate(-topLeft2nd)
     yOffset += self.lineSep/2
-    hiddenText = '     \u2601' if len([b for b in doc['-branch'] if not np.all(b['show'])])>0 else ''
+    hiddenText = '     \u26A0' if len([b for b in doc['-branch'] if not np.all(b['show'])])>0 else ''
     painter.drawStaticText(xOffset, yOffset, QStaticText(doc['-name']+hiddenText))
     if self.debugMode:
       painter.drawStaticText(xOffset+500, yOffset, QStaticText(index.data(Qt.DisplayRole))) #doc['_id']

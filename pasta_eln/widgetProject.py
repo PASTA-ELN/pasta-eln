@@ -160,6 +160,7 @@ class Project(QWidget):
       self.comm.changeProject.emit('','') #refresh project
     return
 
+  #TODO_P1 debug hide/show
 
   def projHeader(self):
     """

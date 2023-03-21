@@ -118,7 +118,7 @@ class ConfigurationSetup(QWidget):
           self.text1.setMarkdown(self.mainText)
           flagContinue = False
 
-    #TODO_P5 be sure that no restart is required
+    #TODO_P2 be sure that no restart is required
 
     ## Ubuntu autocreates the shortcut: if true in May2023: remove
     # #Shortcut

@@ -100,7 +100,7 @@ class Form(QDialog):
             getattr(self, 'key_'+key).addItem('- no link -', userData='')
             for line in self.comm.backend.db.getView('viewDocType/'+listDocType):
               getattr(self, 'key_'+key).addItem(line['value'][0], userData=line['id'])
-              if line['id'] == value: #TODO_P5 what if names are identical
+              if line['id'] == value: #TODO_P4 what if names are identical
                 getattr(self, 'key_'+key).setCurrentText(line['value'][0])
         else:                                         #text area
           setattr(self, 'key_'+key, QLineEdit(value))
@@ -119,11 +119,11 @@ class Form(QDialog):
         self.docTypeComboBox.addItem(value, userData=key)
     formL.addRow(QLabel('Data type'), self.docTypeComboBox)
     #final button box
-    buttonBox = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel) #TODO_P5 next button does not exist; a list has to exist
+    buttonBox = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
     buttonBox.clicked.connect(self.save)
     mainL.addWidget(buttonBox)
 
-  # TODO_P5 add button to add key-values
+  # TODO_P4 add button to add key-values
   def save(self, btn):
     """
     Action upon save / cancel
@@ -156,7 +156,7 @@ class Form(QDialog):
                                'path':parentPath}
       if self.docTypeComboBox.currentData() != '':
         self.doc['-type'] = [self.projectComboBox.currentData()]
-        print("**WARNING: I ALSO SHOULD CHANGE DOCID") #TODO_P5
+        print("**WARNING: I ALSO SHOULD CHANGE DOCID") #TODO_P4 change docID after docType change
         #remove old, create new
       else:
         if '_ids' in self.doc:
@@ -167,7 +167,7 @@ class Form(QDialog):
             self.comm.backend.db.updateDoc(self.doc, docID)
         else: #default update
           self.comm.backend.db.updateDoc(self.doc, self.doc['_id'])
-      #TODO_P5 execute redraw of table and details using self.comm
+      #TODO_P1 execute redraw of table and details using self.comm
       self.accept()  #close
     return
 
@@ -175,7 +175,7 @@ class Form(QDialog):
   def btnAdvanced(self, status):
     """
     Action if advanced button is clicked
-    TODO_P5 Think if all other form-elements should become hidden: show/hide form and hide/show text-boxes
+    TODO_P1 Think if all other form-elements should become hidden: show/hide form and hide/show text-boxes
     """
     key = self.sender().accessibleName()
     if status:

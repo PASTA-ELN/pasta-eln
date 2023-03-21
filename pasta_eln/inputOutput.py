@@ -131,7 +131,7 @@ def importELN(backend, database, elnFileName):
     mainNode    = [i for i in graph if i["@id"]=="./"][0]
     #iteratively go through list
     for part in mainNode['hasPart']:
-      processPart(part) #TODO_P5 first child should get elnName and version
+      processPart(part)
   return True
 
 

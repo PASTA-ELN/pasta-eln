@@ -507,7 +507,7 @@ class Database:
       for item in self.getView('viewHierarchy/viewHierarchy', startKey=' '.join(stack)):
         doc = self.db[item['id']]
         for idx, branch in enumerate(doc['-branch']):
-          print(stack, flippedOnce, iFlip, len(branch['stack'])) #TODO_P1 try project-list, hierarchy, measurement-list
+          print(stack, flippedOnce, iFlip, len(branch['stack']))
           doc['-branch'][idx]['show'][iFlip] = not doc['-branch'][idx]['show'][iFlip]
         doc.save()
     return

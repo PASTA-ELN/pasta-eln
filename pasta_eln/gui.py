@@ -54,7 +54,7 @@ class MainWindow(QMainWindow):
     Action('&Website',               self.executeAction, helpMenu, self, name='website')
     Action('&Shortcuts',             self.executeAction, helpMenu, self, name='shortcuts')
 
-    shortCuts = {'measurement':'m', 'sample':'s', 'x0':'p'} #TODO_P5 to config
+    shortCuts = {'measurement':'m', 'sample':'s', 'x0':'p'} #TODO_P4 to config
     for docType, docLabel in self.comm.backend.db.dataLabels.items():
       if docType[0]=='x' and docType[1]!='0':
         continue
@@ -78,7 +78,7 @@ class MainWindow(QMainWindow):
     mainLayout.addWidget(body)
 
 
-  #TODO_P3 initial view should be there
+  #TODO_P1 initial view should be there
 
   @Slot(str)
   def formDoc(self, doc):

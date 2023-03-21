@@ -44,6 +44,7 @@ class Table(QWidget):
     Action('Hide / Show all', self.executeAction, moreMenu, self, name='showAll')
     Action('Change headers',  self.executeAction, moreMenu, self, name='changeTableHeader')
     Action('Export',          self.executeAction, moreMenu, self, name='export')
+    #TODO_P5 rerun extractors as batch
     more.setMenu(moreMenu)
     mainL.addWidget(self.headerW)
     # filter
@@ -88,7 +89,7 @@ class Table(QWidget):
         self.data = self.comm.backend.db.getView('viewIdentify/viewTags')
       self.filterHeader = ['tag','name']
       self.headline.setText('TAGS')
-      #TODO_P5 tags should not have add button
+      #TODO_P3 tags should not have add button
     else:
       path = 'viewDocType/'+self.docType+'All' if self.showAll else 'viewDocType/'+self.docType
       if self.projID=='':
@@ -162,7 +163,7 @@ class Table(QWidget):
 
   def executeAction(self):
     """ Any action by the buttons and menu at the top of the page """
-    #TODO_P3 after change: update table and details
+    #TODO_P1 after change: update table and details
     if hasattr(self.sender(), 'data'):  #action
       menuName = self.sender().data()
     else:                               #button
@@ -255,5 +256,5 @@ class Table(QWidget):
       del self.models[int(row)]
       self.filterL.itemAt(int(row)-1).widget().setParent(None)
     else:
-      print('Bug: try to remove from list something that does not exist as accessible name did not change') #TODO_P3
+      print('Bug: try to remove from list something that does not exist as accessible name did not change') #TODO_P1 filter deletion bug
     return

@@ -3,14 +3,24 @@
 - dialogForm
 - widgetDetails
 
-# Priority 1: Next days
-- Hide: show if sum(branch(hide))==0
-- System: gui and install directly into system
-- fill filemenu with dummies
+# Priority 1: Next days before talking to HT
+- use yourself for fun
+- minor functional and beauty improvements
 
-# Priority 2
+# Priority 2: Install across systems
 
-# Priority 3
+# Priority 3: Helpful next items
+- transition own content
+- use on own research topic
+- drag-drop
+- tags
+
+# Priority 4: bigger features
+- more items to change in config
+- show links to other docs and use
+- table: rerun extractors on group
+
+# Priority 5: Don't forget might become useful
 - Tests
 - have discussion with Georg, KIT
 - setup.cfg: pytest

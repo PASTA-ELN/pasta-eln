@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QDialog, QWidget, QVBoxLayout, QHBoxLayout, QListW
 #pylint: enable=no-name-in-module
 from .style import IconButton
 
-#TODO_P5 this information should be integrated into ontology; and then the views have to be rebuild
+#TODO_P4 after save: information should be integrated into ontology; and then the views have to be rebuild
 
 class TableHeader(QDialog):
   """ Table Header dialog: change which colums are shown and in which order """
@@ -111,6 +111,6 @@ class TableHeader(QDialog):
       self.comm.backend.configuration['tableHeaders'][self.docType] = self.selectedList
       with open(Path.home()/'.pastaELN.json', 'w', encoding='utf-8') as fConf:
         fConf.write(json.dumps(self.comm.backend.configuration,indent=2))
-      #TODO_P5 execute redraw of table and details using self.comm, or restart (slow)
+      #TODO_P1 execute redraw of table and details using self.comm, or restart (slow)
       self.accept()  #close
     return
