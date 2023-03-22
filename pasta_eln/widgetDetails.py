@@ -14,6 +14,7 @@ class Details(QScrollArea):
     self.comm = comm
     comm.changeDetails.connect(self.changeDetails)
     self.doc  = {}
+    self.docID= ''
 
     # GUI elements
     self.mainW = QWidget()
@@ -93,10 +94,15 @@ class Details(QScrollArea):
     What happens when details should change
 
     Args:
-      docID (str): document-id
+      docID (str): document-id; 'empty' string=draw nothing; 'redraw' implies redraw
     """
     # show previously hidden buttons
-    if docID!='':
+    if docID=='empty':
+      self.btnDetails.show()
+      self.btnVendor.show()
+      self.btnUser.show()
+      self.btnDatabase.show()
+    else:
       self.btnDetails.show()
       self.btnVendor.show()
       self.btnUser.show()
@@ -119,10 +125,12 @@ class Details(QScrollArea):
     self.metaVendorW.hide()
     self.metaUserW.hide()
     self.metaDatabaseW.hide()
-    if docID=='':  #if given empty docID, return with empty content
+    if docID=='empty':  #if given empty docID, return with empty content
       return
     # Create new
-    self.doc   = self.comm.backend.db.getDoc(docID)
+    if docID!='redraw':
+      self.docID = docID
+    self.doc   = self.comm.backend.db.getDoc(self.docID)
     Label(self.doc['-name'],'h1', self.headerL)
     TextButton('Edit',self.callEdit, self.headerL)
     for key in self.doc:

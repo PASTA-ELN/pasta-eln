@@ -134,6 +134,7 @@ class Sidebar(QWidget):
     self.comm.changeProject.emit(projID, item)
     return
 
+
   def btnScan(self):
     """
     What happens if user clicks button "Scan"

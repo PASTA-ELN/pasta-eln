@@ -98,7 +98,7 @@ class MainWindow(QMainWindow):
     act on user pressing an item in view
     """
     docType = self.sender().data()
-    self.comm.changeTable.emit(docType, '', False)
+    self.comm.changeTable.emit(docType, '')
     return
 
 

@@ -111,6 +111,7 @@ class TableHeader(QDialog):
       self.comm.backend.configuration['tableHeaders'][self.docType] = self.selectedList
       with open(Path.home()/'.pastaELN.json', 'w', encoding='utf-8') as fConf:
         fConf.write(json.dumps(self.comm.backend.configuration,indent=2))
-      #TODO_P1 execute redraw of table and details using self.comm, or restart (slow)
+      self.comm.changeTable('','')
+      self.comm.changeDetails('redraw')
       self.accept()  #close
     return

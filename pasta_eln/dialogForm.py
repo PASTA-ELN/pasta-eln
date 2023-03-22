@@ -38,12 +38,12 @@ class Form(QDialog):
       Image(self.doc['image'], mainL, width=width)
     formW = QWidget()
     mainL.addWidget(formW)
-    formL = QFormLayout(formW)
+    self.formL = QFormLayout(formW)
 
     #Add things that are in ontology
     if '-type' in self.doc:
       setattr(self, 'key_-name', QLineEdit(self.doc['-name']))
-      formL.addRow('Name', getattr(self, 'key_-name'))
+      self.formL.addRow('Name', getattr(self, 'key_-name'))
       ontologyNode = self.comm.backend.db.ontology[self.doc['-type'][0]]['prop']
       for item in ontologyNode:
         if item['name'] not in self.doc and  item['name'][0] not in ['_','-']:
@@ -79,16 +79,18 @@ class Form(QDialog):
         splitter.addWidget(getattr(self, 'textEdit_'+key))
         splitter.addWidget(getattr(self, 'textShow_'+key))
         rightSideL.addWidget(splitter)
-        formL.addRow(labelW, rightSideW)
+        self.formL.addRow(labelW, rightSideW)
       elif key == '-tags':  #remove - to make work
         # TODO_P3: tags get selected via a editable QCombobox and get shown as qlabels, that can be deleted
         # RR: can you already implement tags as list of qlabels with a '-' button on the right to delete
         # the qcombox comes later once the database knows what tags are and how to generate the list
         print('')
       elif isinstance(value, list):       #list of items
-        if isinstance(value[0], str):
+        if len(value)>0 and isinstance(value[0], str):
           setattr(self, 'key_'+key, QLineEdit(' '.join(value)))
-          formL.addRow(QLabel(key.capitalize()), getattr(self, 'key_'+key))
+        else:
+          setattr(self, 'key_'+key, QLineEdit('-- strange content --'))
+        self.formL.addRow(QLabel(key.capitalize()), getattr(self, 'key_'+key))
       elif isinstance(value, str):        #string
         ontologyItem = [i for i in ontologyNode if i['name']==key]
         if len(ontologyItem)==1 and 'list' in ontologyItem[0]:  #choice dropdown
@@ -104,20 +106,20 @@ class Form(QDialog):
                 getattr(self, 'key_'+key).setCurrentText(line['value'][0])
         else:                                         #text area
           setattr(self, 'key_'+key, QLineEdit(value))
-        formL.addRow(QLabel(key.capitalize()), getattr(self, 'key_'+key))
+        self.formL.addRow(QLabel(key.capitalize()), getattr(self, 'key_'+key))
       else:
         print("**ERROR unknown value type",key, value)
     self.projectComboBox = QComboBox()
     self.projectComboBox.addItem('- no change -', userData='')
     for line in self.comm.backend.db.getView('viewDocType/x0'):
       self.projectComboBox.addItem(line['value'][0], userData=line['id'])
-    formL.addRow(QLabel('Project'), self.projectComboBox)
+    self.formL.addRow(QLabel('Project'), self.projectComboBox)
     self.docTypeComboBox = QComboBox()
     self.docTypeComboBox.addItem('- no change -', userData='')
     for key, value in self.comm.backend.db.dataLabels.items():
       if key[0]!='x':
         self.docTypeComboBox.addItem(value, userData=key)
-    formL.addRow(QLabel('Data type'), self.docTypeComboBox)
+    self.formL.addRow(QLabel('Data type'), self.docTypeComboBox)
     #final button box
     buttonBox = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
     buttonBox.clicked.connect(self.save)
@@ -167,7 +169,8 @@ class Form(QDialog):
             self.comm.backend.db.updateDoc(self.doc, docID)
         else: #default update
           self.comm.backend.db.updateDoc(self.doc, self.doc['_id'])
-      #TODO_P1 execute redraw of table and details using self.comm
+      self.comm.changeTable.emit('','')
+      self.comm.changeDetails.emit('redraw')
       self.accept()  #close
     return
 
@@ -175,15 +178,22 @@ class Form(QDialog):
   def btnAdvanced(self, status):
     """
     Action if advanced button is clicked
-    TODO_P1 Think if all other form-elements should become hidden: show/hide form and hide/show text-boxes
     """
     key = self.sender().accessibleName()
     if status:
       getattr(self, 'textShow_'+key).hide()
       getattr(self, 'buttonBarW_'+key).hide()
+      for i in range(self.formL.count()):
+        widget = self.formL.itemAt(i).widget()
+        if isinstance(widget, QLabel) or isinstance(widget, QComboBox) or isinstance(widget, QLineEdit):
+          widget.show()
     else:
       getattr(self, 'textShow_'+key).show()
       getattr(self, 'buttonBarW_'+key).show()
+      for i in range(self.formL.count()):
+        widget = self.formL.itemAt(i).widget()
+        if isinstance(widget, QLabel) or isinstance(widget, QComboBox) or isinstance(widget, QLineEdit):
+          widget.hide()
     return
 
 

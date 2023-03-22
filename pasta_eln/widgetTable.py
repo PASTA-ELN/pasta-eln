@@ -70,7 +70,7 @@ class Table(QWidget):
     self.setLayout(mainL)
 
 
-  @Slot(str, str, bool)
+  @Slot(str, str)
   def changeTable(self, docType, projID):
     """
     What happens when the table changes its raw information
@@ -141,7 +141,7 @@ class Table(QWidget):
     self.models.append(model)
     self.table.setModel(self.models[-1])
     self.table.show()
-    self.comm.changeDetails.emit('')
+    self.comm.changeDetails.emit('empty')
     return
 
 
@@ -163,7 +163,6 @@ class Table(QWidget):
 
   def executeAction(self):
     """ Any action by the buttons and menu at the top of the page """
-    #TODO_P1 after change: update table and details
     if hasattr(self.sender(), 'data'):  #action
       menuName = self.sender().data()
     else:                               #button
@@ -235,7 +234,7 @@ class Table(QWidget):
       self.showAll = not self.showAll
       self.changeTable('','')  # redraw table
     else:
-      print(">>>>",menuName)
+      print("**ERROR widgetTable menu unknown:",menuName)
     return
 
   def filterChoice(self, item):

@@ -67,7 +67,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       text.drawContents(painter)
       painter.translate(-topLeft2nd)
     yOffset += self.lineSep/2
-    hiddenText = '     \u26A0' if len([b for b in doc['-branch'] if not np.all(b['show'])])>0 else ''
+    hiddenText = '     \U0001F441' if len([b for b in doc['-branch'] if not np.all(b['show'])])>0 else ''
     painter.drawStaticText(xOffset, yOffset, QStaticText(doc['-name']+hiddenText))
     if self.debugMode:
       painter.drawStaticText(xOffset+500, yOffset, QStaticText(index.data(Qt.DisplayRole))) #doc['_id']
