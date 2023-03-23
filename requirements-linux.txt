@@ -7,5 +7,6 @@ pandas
 numpy
 keyring
 anytree
+qrcode
 Pillow
 matplotlib
