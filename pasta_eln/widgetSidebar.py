@@ -42,8 +42,8 @@ class Sidebar(QWidget):
         projectL.setContentsMargins(3,3,3,3)
         btnProj = TextButton(projName, self.btnProject, projectL, projID+'/')
         self.widgetsProject[projID] = btnProj
-        btnProj.setStyleSheet("border-width:1.5")
-        #projectW.setStyleSheet("background-color:"+ getColor(self.comm.backend, 'secondary'))
+        btnProj.setStyleSheet("border-width:0")
+        projectW.setStyleSheet("background-color:"+ getColor(self.comm.backend, 'secondary'))
 
         # actions: scan, curate, ...
         actionW = QWidget()
@@ -57,8 +57,8 @@ class Sidebar(QWidget):
         actionL.addWidget(btnCurate, 0,1)
         projectL.addWidget(actionW)
         self.widgetsAction[projID] = actionW
-        btnScan.setStyleSheet("border-width:1")
-        btnCurate.setStyleSheet("border-width:1")
+        btnScan.setStyleSheet("border-width:0")
+        btnCurate.setStyleSheet("border-width:0")
 
         # lists: view list of measurements, ... of this project
         listW = QWidget()
