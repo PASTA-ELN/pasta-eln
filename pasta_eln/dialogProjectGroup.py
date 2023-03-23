@@ -145,12 +145,12 @@ class ProjectGroup(QDialog):
       self.serverR.setText('')
     elif btnName=='fill':
       content = QFileDialog.getOpenFileName(self, "Load remote credentials", str(Path.home()), '*.key')[0]
-      content = open(content, encoding='utf-8').read()
-      content = json.loads( passwordDecrypt(content) )
-      self.userNameR.setText(content['user-name'])
-      self.passwordR.setText(content['password'])
-      self.databaseR.setText(content['database'])
-      self.serverR.setText(content['Server'])
+      with open(content, encoding='utf-8') as fIn:
+        content = json.loads( passwordDecrypt(fIn.read()) )
+        self.userNameR.setText(content['user-name'])
+        self.passwordR.setText(content['password'])
+        self.databaseR.setText(content['database'])
+        self.serverR.setText(content['Server'])
     elif btnName=='createQR':
       if self.projectGroupName.isHidden():
         configname = self.selectGroup.currentText()
