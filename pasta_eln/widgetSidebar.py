@@ -1,9 +1,10 @@
 """ Sidebar widget that includes the navigation items """
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QGridLayout, QTreeWidget, QTreeWidgetItem  # pylint: disable=no-name-in-module
 from anytree import PreOrderIter
+from PySide6.QtCore import QSize
 
 from .dialogConfig import Configuration
-from .style import TextButton, LetterButton, IconButton
+from .style import RadioIconButton, TextButton, LetterButton, IconButton
 
 class Sidebar(QWidget):
   """ Sidebar widget that includes the navigation items """
@@ -12,15 +13,14 @@ class Sidebar(QWidget):
     self.comm = comm
     if hasattr(self.comm.backend, 'configuration'):
       width = self.comm.backend.configuration['GUI']['sidebarWidth']
-      self.setMinimumWidth(width)
-      self.setMaximumWidth(width)
+      self.setFixedWidth(width)#64
     if not hasattr(comm.backend, 'db'):  #if no backend
       configWindow = Configuration(comm.backend, 'setup')
       configWindow.exec()
 
     # GUI elements
     mainL = QVBoxLayout()
-    mainL.setContentsMargins(0,0,0,0)
+    mainL.setContentsMargins(7,77,7,7)
     mainL.setSpacing(7)
     self.setLayout(mainL)
     # storage of all project widgets and layouts
@@ -58,10 +58,11 @@ class Sidebar(QWidget):
         if self.openProjectId != projID:
           listW.hide()
         listL = QGridLayout(listW)
+        iconTable = {"Measurements":"fa.thermometer-3","Samples":"fa5s.vial","Procedures":"fa.list-ol","Instruments":"ri.scales-2-line"}
         for idx, doctype in enumerate(comm.backend.db.dataLabels):
           if doctype[0]!='x':
-            button = LetterButton(comm.backend.db.dataLabels[doctype], self.btnDocType, None, doctype+'/'+projID, style='color: red')
-            listL.addWidget(button, int(idx/3), idx%3)
+            button = IconButton(iconTable[comm.backend.db.dataLabels[doctype]], self.btnDocType, None, doctype+'/'+projID, comm.backend.db.dataLabels[doctype])
+            listL.addWidget(button, int((idx)%2),int((idx+1)/2))
         projectL.addWidget(listW)
         self.widgetsList[projID] = listW
 

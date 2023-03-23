@@ -111,8 +111,44 @@ class IconButton(QPushButton):
     """
     super().__init__()
     color = 'black' if backend is None else getColor(backend, 'primary')
-    icon = qta.icon(iconName, color=color, scale_factor=1.2)
+    icon = qta.icon(iconName, color=color, scale_factor=1)
     self.setIcon(icon)
+    self.setStyleSheet("border-width:0")
+    self.setText('')
+    self.clicked.connect(function)
+    if name != '':
+      self.setAccessibleName(name)
+    if tooltip != '':
+      self.setToolTip(tooltip)
+    if style != '':
+      self.setStyleSheet(style)
+    if hide:
+      self.hide()
+    if layout is not None:
+      layout.addWidget(self)
+
+class RadioIconButton(QRadioButton):
+  """ Button that has only an icon"""
+  def __init__(self, iconName, function, layout, name='', tooltip='', backend=None, style='', hide=False):
+    """
+    Initialization
+
+    Args:
+      iconName (str): icon to show on button
+      function (function): function to be called upon button-click-event
+      layout (QLayout): button to be added to this layout
+      name (str): name used for button identification in called-function
+      tooltip (str): tooltip shown when mouse hovers the button
+      backend (Pasta): pasta backend
+      style (str): css style
+      hide (bool): hidden or shown initially
+    """
+    super().__init__()
+    color = 'black' if backend is None else getColor(backend, 'primary')
+    icon = qta.icon(iconName, color=color, scale_factor=1)
+    self.setIcon(icon)
+    self.setStyleSheet("border-width:0")
+    self.setCheckable(True)
     self.setText('')
     self.clicked.connect(function)
     if name != '':

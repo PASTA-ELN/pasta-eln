@@ -33,7 +33,7 @@ class TestStringMethods(unittest.TestCase):
       logging.getLogger(package).setLevel(logging.WARNING)
     logging.info('Start 3Projects test')
 
-    projectGroup = 'pasta_tutorial'
+    projectGroup = 'research'
     self.be = Backend(projectGroup, initConfig=False)
     self.dirName = self.be.basePath
     self.be.exit(deleteDB=True)
