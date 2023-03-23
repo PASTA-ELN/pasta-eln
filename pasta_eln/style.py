@@ -1,5 +1,5 @@
 """ all styling of buttons and other general widgets, some defined colors... """
-from PySide6.QtWidgets import QPushButton, QLabel, QSizePolicy  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QPushButton, QLabel, QSizePolicy, QRadioButton  # pylint: disable=no-name-in-module
 from PySide6.QtGui import QImage, QPixmap, QAction, QKeySequence  # pylint: disable=no-name-in-module
 from PySide6.QtCore import QByteArray, Qt           # pylint: disable=no-name-in-module
 from PySide6.QtSvgWidgets import QSvgWidget         # pylint: disable=no-name-in-module
