@@ -1,10 +1,10 @@
 """ Sidebar widget that includes the navigation items """
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QGridLayout, QTreeWidget, QTreeWidgetItem  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QGridLayout, QTreeWidget, QTreeWidgetItem, QFrame  # pylint: disable=no-name-in-module
 from anytree import PreOrderIter
 from PySide6.QtCore import QSize
 
 from .dialogConfig import Configuration
-from .style import RadioIconButton, TextButton, LetterButton, IconButton
+from .style import TextButton, LetterButton, IconButton, getColor
 
 class Sidebar(QWidget):
   """ Sidebar widget that includes the navigation items """
@@ -20,13 +20,14 @@ class Sidebar(QWidget):
 
     # GUI elements
     mainL = QVBoxLayout()
-    mainL.setContentsMargins(7,77,7,7)
+    mainL.setContentsMargins(7,15,0,7)
     mainL.setSpacing(7)
     self.setLayout(mainL)
     # storage of all project widgets and layouts
     self.openProjectId = ''
     self.widgetsAction = {}
     self.widgetsList = {}
+    self.widgetsProject = {}
 
     if hasattr(comm.backend, 'db'):
       hierarchy = comm.backend.db.getView('viewDocType/x0')
@@ -36,35 +37,44 @@ class Sidebar(QWidget):
         if self.openProjectId == '':
           self.openProjectId = projID
         #head: show project name as button
-        projectW = QWidget()
+        projectW = QFrame()
         projectL = QVBoxLayout(projectW)
-        projectL.setContentsMargins(0,0,0,0)
-        TextButton(projName, self.btnProject, projectL, projID+'/')
+        projectL.setContentsMargins(3,3,3,3)
+        btnProj = TextButton(projName, self.btnProject, projectL, projID+'/')
+        self.widgetsProject[projID] = btnProj
+        btnProj.setStyleSheet("border-width:0")
+        projectW.setStyleSheet("background-color:"+ getColor(self.comm.backend, 'secondary'))
 
         # actions: scan, curate, ...
         actionW = QWidget()
         if self.openProjectId != projID:
           actionW.hide()
         actionL = QGridLayout(actionW)
-        btnScan = TextButton('Scan', self.btnScan, None, projID)
+        actionL.setContentsMargins(0,0,0,0)
+        btnScan = IconButton('mdi.clipboard-search-outline', self.btnScan, None, projID, 'Scan', self.comm.backend, '', False, 'Scan')
         actionL.addWidget(btnScan, 0,0)
-        btnCurate = TextButton('Curate', self.btnCurate, None, projID)
+        btnCurate = IconButton('mdi.filter-plus-outline', self.btnCurate, None, projID, 'Curate', self.comm.backend, '', False, 'Curate')
         actionL.addWidget(btnCurate, 0,1)
         projectL.addWidget(actionW)
         self.widgetsAction[projID] = actionW
+        btnScan.setStyleSheet("border-width:0")
+        btnCurate.setStyleSheet("border-width:0")
 
         # lists: view list of measurements, ... of this project
         listW = QWidget()
+        listW.setContentsMargins(0,0,0,0)
         if self.openProjectId != projID:
           listW.hide()
         listL = QGridLayout(listW)
         iconTable = {"Measurements":"fa.thermometer-3","Samples":"fa5s.vial","Procedures":"fa.list-ol","Instruments":"ri.scales-2-line"}
         for idx, doctype in enumerate(comm.backend.db.dataLabels):
           if doctype[0]!='x':
-            button = IconButton(iconTable[comm.backend.db.dataLabels[doctype]], self.btnDocType, None, doctype+'/'+projID, comm.backend.db.dataLabels[doctype])
-            listL.addWidget(button, int((idx)%2),int((idx+1)/2))
+            button = IconButton(iconTable[comm.backend.db.dataLabels[doctype]], self.btnDocType, None, doctype+'/'+projID, comm.backend.db.dataLabels[doctype],self.comm.backend)
+            listL.addWidget(button, 0, idx)
+            button.setStyleSheet("border-width:0")
+
         projectL.addWidget(listW)
-        self.widgetsList[projID] = listW
+        self.widgetsList[projID] = listW  
 
         # show folders as hierarchy
         treeW = QTreeWidget()
@@ -152,4 +162,9 @@ class Sidebar(QWidget):
     """
     projId, docId = item.text(1).split('/')
     self.comm.changeProject.emit(projId, docId)
+    return
+  def btnCollapse(self):
+    """
+    What happens if user clicks on collapse button
+    """
     return
