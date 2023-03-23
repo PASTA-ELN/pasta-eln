@@ -165,6 +165,7 @@ class Details(QScrollArea):
         self.metaDetailsW.show()
     return
 
+  #TODO_P1: render content better
 
   def showArea(self):
     """

@@ -289,6 +289,7 @@ class Database:
         logging.info('database.update.2: doc not updated-nothing changed: '+newDoc['_id']+' '+newDoc['-name'])
         return newDoc
     #For both cases: delete and update
+    #TODO_P1: curated change here
     try:
       newDoc.save()
     except:
@@ -504,10 +505,12 @@ class Database:
       flippedOnce = True
     if isinstance(stack, list):
       iFlip = len(stack)-1
-      for item in self.getView('viewHierarchy/viewHierarchy', startKey=' '.join(stack)):
+      print('  database list',stack, iFlip)
+      for item in self.getView('viewHierarchy/viewHierarchyAll', startKey=' '.join(stack)):
+        print('  docID',item['id'])
         doc = self.db[item['id']]
         for idx, branch in enumerate(doc['-branch']):
-          print(stack, flippedOnce, iFlip, len(branch['stack']))
+          print('  flippedOnce', flippedOnce, iFlip, len(branch['stack']))
           doc['-branch'][idx]['show'][iFlip] = not doc['-branch'][idx]['show'][iFlip]
         doc.save()
     return

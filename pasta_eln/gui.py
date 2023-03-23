@@ -76,9 +76,8 @@ class MainWindow(QMainWindow):
     sidebar = Sidebar(self.comm)  #sidebar with buttons
     mainLayout.addWidget(sidebar)
     mainLayout.addWidget(body)
+    self.comm.changeTable.emit('x0','')
 
-
-  #TODO_P1 initial view should be there
 
   @Slot(str)
   def formDoc(self, doc):

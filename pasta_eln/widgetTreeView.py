@@ -75,7 +75,9 @@ class TreeView(QTreeView):
         item.setText(item.text()+' -')
     elif menuName=='hide':
       stack = self.currentIndex().data().split('/')
+      print('hide stack', stack)
       self.comm.backend.db.hideShow(stack)
+      self.comm.changeProject.emit('','') #refresh project
     elif menuName=='openExternal':
       docID = self.currentIndex().data().split('/')[-1]
       doc   = self.comm.backend.db.getDoc(docID)

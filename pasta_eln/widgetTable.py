@@ -56,6 +56,7 @@ class Table(QWidget):
     self.table = QTableView(self)
     self.table.verticalHeader().hide()
     self.table.clicked.connect(self.cellClicked)
+    self.table.doubleClicked.connect(self.cell2Clicked)
     self.table.setSortingEnabled(True)
     self.table.setAlternatingRowColors(True)
     self.table.setSelectionMode(QAbstractItemView.MultiSelection)
@@ -147,19 +148,31 @@ class Table(QWidget):
 
   def cellClicked(self, item):
     """
-    What happens when user clicks cell in table
+    What happens when user clicks cell in table of tags, projects, samples, ...
+    -> show details
 
     Args:
       item (QStandardItem): cell clicked
     """
     row = item.row()
     # column = item.column()
-    if self.data[row]['id'][0]=='x':
-      self.comm.changeProject.emit(self.data[row]['id'], '')
-    else:
+    if self.data[row]['id'][0]!='x': #only show items for non-folders
       self.comm.changeDetails.emit(self.data[row]['id'])
     return
+  def cell2Clicked(self, item):
+    """
+    What happens when user double clicks cell in table of projects
 
+    Args:
+      item (QStandardItem): cell clicked
+    """
+    if self.docType=='x0':
+      row = item.row()
+      self.comm.changeProject.emit(self.data[row]['id'], '')
+    return
+  #TODO_P1 project hide in table: bug
+  #TODO_P1 table header != table content
+  #TODO_P1 table content: icon+text -> text checkmark
 
   def executeAction(self):
     """ Any action by the buttons and menu at the top of the page """
@@ -237,6 +250,7 @@ class Table(QWidget):
       print("**ERROR widgetTable menu unknown:",menuName)
     return
 
+  #TODO_P3 invert filter: not t in name
   def filterChoice(self, item):
     """
     Change the column which is used for filtering
@@ -247,13 +261,15 @@ class Table(QWidget):
     row = self.sender().accessibleName()
     self.models[int(row)].setFilterKeyColumn(item)
     return
-
   def delFilter(self):
     """ Remove filter from list of filters """
     row = int(self.sender().accessibleName())
-    if row<len(self.models):
-      del self.models[int(row)]
-      self.filterL.itemAt(int(row)-1).widget().setParent(None)
-    else:
-      print('Bug: try to remove from list something that does not exist as accessible name did not change') #TODO_P1 filter deletion bug
+    for i in range(row, self.filterL.count()):        #e.g. model 1 is in row=0, so start in 1 for renumbering
+      minusBtnW = self.filterL.itemAt(i).widget().layout().itemAt(2).widget()
+      minusBtnW.setAccessibleName( str(int(minusBtnW.accessibleName())-1) )  #rename: -1 from accessibleName
+    del self.models[row]
+    self.filterL.itemAt(row-1).widget().setParent(None) #e.g. model 1 is in row=0 for deletion
+    for i in range(1, len(self.models)):
+      self.models[i].setSourceModel(self.models[i-1])
+    self.table.setModel(self.models[-1])
     return
