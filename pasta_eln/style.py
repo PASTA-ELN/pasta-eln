@@ -95,9 +95,13 @@ class LetterButton(QPushButton):
 
 class IconButton(QPushButton):
   """ Button that has only an icon"""
-  def __init__(self, iconName, function, layout, name='', tooltip='', backend=None, style='', hide=False, text=''):
+  def __init__(self, iconName, function, layout, name='', tooltip='', backend=None, style='', **kwargs):
     """
     Initialization
+
+    Additional parameter:
+    - hide (bool): hidden or shown initially
+    - text (str): text shown on button additionally  #TODO_P4 what is the difference to TextButton?
 
     Args:
       iconName (str): icon to show on button
@@ -107,8 +111,10 @@ class IconButton(QPushButton):
       tooltip (str): tooltip shown when mouse hovers the button
       backend (Pasta): pasta backend
       style (str): css style
-      hide (bool): hidden or shown initially
+      kwargs (dict): additional parameter
     """
+    hide = kwargs.get('hide', False)
+    text = kwargs.get('text', '')
     super().__init__()
     color = 'black' if backend is None else getColor(backend, 'primary')
     icon = qta.icon(iconName, color=color, scale_factor=1)

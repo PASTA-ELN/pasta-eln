@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 """TEST using the FULL set of python-requirements: create 3 projects; simplified form of testTutorialComplex """
-import os, sys, shutil, traceback, logging, subprocess
+import os, sys, shutil, traceback, logging, subprocess, socket
 import warnings, json
 import unittest
 from pathlib import Path
@@ -33,7 +33,10 @@ class TestStringMethods(unittest.TestCase):
       logging.getLogger(package).setLevel(logging.WARNING)
     logging.info('Start 3Projects test')
 
-    projectGroup = 'research'
+    if socket.gethostname()=='dena':  #SB's computer
+      projectGroup = 'pasta_tutorial'
+    else:
+      projectGroup = 'research'
     self.be = Backend(projectGroup, initConfig=False)
     self.dirName = self.be.basePath
     self.be.exit(deleteDB=True)

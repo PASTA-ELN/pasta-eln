@@ -449,20 +449,20 @@ class Database:
     return
 
 
-  def getHierarchy(self, start, all=False):
+  def getHierarchy(self, start, allItems=False):
     """
     get hierarchy tree for projects, ...
 
     Args:
       start (str): start of the hierarchy (most parent)
-      all (bool):  true=show all, false=only non-hidden
+      allItems (bool):  true=show all items, false=only non-hidden
 
     Returns:
       Node: hierarchy in an anytree
     """
     from anytree import Node, RenderTree, AsciiStyle
     from anytree.search import find_by_attr
-    if all:
+    if allItems:
       view = self.getView('viewHierarchy/viewHierarchyAll', startKey=start)
     else:
       view = self.getView('viewHierarchy/viewHierarchy',    startKey=start)

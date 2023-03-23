@@ -23,6 +23,7 @@ class Project(QWidget):
     self.model  = None
     self.bodyW  = None
     self.projID = ''
+    self.taskID = ''
     self.docProj= {}
     self.showAll= False
 

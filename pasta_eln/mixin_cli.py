@@ -28,8 +28,18 @@ class Bcolors:
 
 
 def text2html(text):
+  """
+  convert text output of checkDatabase into html string
+  - https://doc.qt.io/qtforpython/overviews/richtext-html-subset.html#supported-html-subset
+
+  Args:
+    text (str): text to be converted
+
+  Returns:
+     str: html strings for qt's rich text support
+  """
   text = text.split('\n')
-  for i in range(len(text)):
+  for i, _ in enumerate(text):
     if '\033[95m' in text[i]:
       text[i] = text[i].replace('\033[95m','<font color="orange">').replace('\033[0m','</font>')
     if '\033[94m' in text[i]:

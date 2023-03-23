@@ -7,7 +7,6 @@ from .mixin_cli import Bcolors, CLI_Mixin
 from .database import Database
 from .miscTools import upIn, upOut, createDirName, generic_hash, camelCase
 from .handleDictionaries import ontology2Labels, fillDocBeforeCreate
-from .mixin_cli import Bcolors
 
 #TODO_P4 unprocessed files should be have separate docType
 
@@ -55,6 +54,7 @@ class Backend(CLI_Mixin):
       raise ValueError('VersionError')
     if defaultProjectGroup =="":
       defaultProjectGroup = self.configuration['defaultProjectGroup']
+    print(defaultProjectGroup, self.configuration['projectGroups'])
     if not defaultProjectGroup in self.configuration['projectGroups']:
       raise ValueError('BadConfigurationFileError')
     projectGroup = self.configuration['projectGroups'][defaultProjectGroup]

@@ -1,7 +1,7 @@
 """ Sidebar widget that includes the navigation items """
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QGridLayout, QTreeWidget, QTreeWidgetItem, QFrame  # pylint: disable=no-name-in-module
+from PySide6.QtCore import QSize                                         # pylint: disable=no-name-in-module
 from anytree import PreOrderIter
-from PySide6.QtCore import QSize
 
 from .dialogConfig import Configuration
 from .style import TextButton, LetterButton, IconButton, getColor
@@ -51,9 +51,9 @@ class Sidebar(QWidget):
           actionW.hide()
         actionL = QGridLayout(actionW)
         actionL.setContentsMargins(0,0,0,0)
-        btnScan = IconButton('mdi.clipboard-search-outline', self.btnScan, None, projID, 'Scan', self.comm.backend, '', False, 'Scan')
+        btnScan = IconButton('mdi.clipboard-search-outline', self.btnScan, None, projID, 'Scan', self.comm.backend, text='Scan')
         actionL.addWidget(btnScan, 0,0)
-        btnCurate = IconButton('mdi.filter-plus-outline', self.btnCurate, None, projID, 'Curate', self.comm.backend, '', False, 'Curate')
+        btnCurate = IconButton('mdi.filter-plus-outline', self.btnCurate, None, projID, 'Curate', self.comm.backend, text='Curate')
         actionL.addWidget(btnCurate, 0,1)
         projectL.addWidget(actionW)
         self.widgetsAction[projID] = actionW
@@ -74,7 +74,7 @@ class Sidebar(QWidget):
             button.setStyleSheet("border-width:0")
 
         projectL.addWidget(listW)
-        self.widgetsList[projID] = listW  
+        self.widgetsList[projID] = listW
 
         # show folders as hierarchy
         treeW = QTreeWidget()

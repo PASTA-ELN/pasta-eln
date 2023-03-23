@@ -185,14 +185,14 @@ class Form(QDialog):
       getattr(self, 'buttonBarW_'+key).hide()
       for i in range(self.formL.count()):
         widget = self.formL.itemAt(i).widget()
-        if isinstance(widget, QLabel) or isinstance(widget, QComboBox) or isinstance(widget, QLineEdit):
+        if isinstance(widget, (QLabel, QComboBox, QLineEdit)):
           widget.show()
     else:
       getattr(self, 'textShow_'+key).show()
       getattr(self, 'buttonBarW_'+key).show()
       for i in range(self.formL.count()):
         widget = self.formL.itemAt(i).widget()
-        if isinstance(widget, QLabel) or isinstance(widget, QComboBox) or isinstance(widget, QLineEdit):
+        if isinstance(widget, (QLabel, QComboBox, QLineEdit)):
           widget.hide()
     return
 
