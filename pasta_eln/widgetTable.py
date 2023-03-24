@@ -108,7 +108,6 @@ class Table(QWidget):
     nrows, ncols = len(self.data), len(self.filterHeader)
     model = QStandardItemModel(nrows, ncols)
     model.setHorizontalHeaderLabels(self.filterHeader)
-    fgColor = getColor(self.comm.backend,'secondaryText')
     for i in range(nrows):
       for j in range(ncols):
         if docType=='_tags_':  #tags list

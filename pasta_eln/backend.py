@@ -250,6 +250,7 @@ class Backend(CLI_Mixin):
         dirName (string): change into this directory (absolute path given). For if data is moved
         kwargs (dict): additional parameter
     """
+    logging.warning('Use depricated function changeHierarchy')
     if docID is None or (docID[0]=='x' and docID[1]!='-'):  #cd ..: none. close 'project', 'task'
       self.hierStack.pop()
       self.cwd = self.cwd.parent
@@ -375,8 +376,6 @@ class Backend(CLI_Mixin):
         shasum (string): shasum (git-style hash) to store in database (not used here)
         doc (dict): pass known data/measurement type, can be used to create image; This doc is altered
         kwargs (dict): additional parameter
-          - maxSize of image
-          - saveToFile: save data to files
     """
     extension = filePath.suffix[1:]  #cut off initial . of .jpg
     if str(filePath).startswith('http'):
@@ -433,6 +432,112 @@ class Backend(CLI_Mixin):
     #     print('**ERROR json dumping', item, doc[item])
     # #also make sure that no int64 but normal int
     return
+
+
+  def testExtractor(self, filePath, extractorPath=None, recipe='', interactive=True):
+    """
+    Args:
+      filePath (Path, str): path to the file to be tested
+      extractorPath (Path, None): path to the directory with extractors
+      recipe (str): recipe in / separated
+      interactive (bool): show image and print report; else only give summary
+
+    Returns:
+      str: short summary
+    """
+    import base64
+    from io import BytesIO
+    from PIL import Image
+    import matplotlib.pyplot as plt
+    import matplotlib.axes as mpaxes
+    import cairosvg
+
+    success = 'ExtractorSuccess'
+    if isinstance(filePath, str):
+      filePath = Path(filePath)
+    extension = filePath.suffix[1:]
+    pyFile = 'extractor_'+extension+'.py'
+    if extractorPath is None:
+      extractorPath = self.extractorPath
+    if (extractorPath/pyFile).exists():
+      module  = importlib.import_module(pyFile[:-3])
+      content = module.use(filePath, recipe)
+      try:
+        _ = json.dumps(content)
+      except:
+        if interactive:
+          print("**ERROR: extractor reply not json dumpable.")
+        success = "ExtractorERROR json dumpable"
+        try:
+          _ = json.dumps(content['metaVendor'])
+        except:
+          if interactive:
+            print("  DETAIL metaVendor incorrect")
+          success = "ExtractorERROR metaVendor"
+          for key in content['metaVendor']:
+            try:
+              _ = json.dumps(content['metaVendor'][key])
+            except:
+              print('    FAIL',key, content['metaVendor'][key], type(content['metaVendor'][key]))
+        try:
+          _ = json.dumps(content['metaUser'])
+        except:
+          if interactive:
+            print("  DETAIL metaUser incorrect")
+          success = "ExtractorERROR metaUser"
+          for key in content['metaUser']:
+            try:
+              _ = json.dumps(content['metaUser'][key])
+            except:
+              print('    FAIL',key, content['metaUser'][key], type(content['metaUser'][key]))
+      #verify image is of correct type
+      if 'image' not in content:
+        if interactive:
+          print('**Error: image not produced by extractor')
+        return "ExtractorERROR image not exsits"
+      if isinstance(content['image'],Image.Image):
+        if interactive:
+          content['image'].show()
+          print('**Warning: image is a PIL image: not a base64 string')
+          print('Encode image via the following: pay attention to jpg/png which is encoded twice\n```')
+          print('from io import BytesIO')
+          print('figfile = BytesIO()')
+          print('image.save(figfile, format="PNG")')
+          print('imageData = base64.b64encode(figfile.getvalue()).decode()')
+          print('image = "data:image/jpg;base64," + imageData')
+          print('```')
+        return "ExtractorERROR PIL image"
+      elif isinstance(content['image'], mpaxes._subplots.Axes): # pylint: disable=protected-access
+        if interactive:
+          plt.show()
+          print('**Warning: image is a matplotlib axis: not a svg string')
+          print('  figfile = StringIO()')
+          print('plt.savefig(figfile, format="svg")')
+          print('image = figfile.getvalue()')
+        return "ExtractorERROR Matplot image"
+      #verify image visually
+      elif isinstance(content['image'], str):
+        if content['image'].startswith('data:image/'):
+          #png or jpg encoded base64
+          extension = content['image'][11:14]
+          i = base64.b64decode(content['image'][22:])
+        else:
+          #svg data
+          i = cairosvg.svg2png(bytestring=content['image'].encode())
+        i = BytesIO(i)
+        i = Image.open(i)
+        if interactive:
+          i.show()
+        del content['image']
+      else:
+        if interactive:
+          print("**ERROR, UNKNOWN IMAGE TYPE RETURNED", type(content['image']))
+        return "ExtractorERROR bad image type"
+      if interactive:
+        print('Identified metadata',content)
+    else:
+      return "NoExtractor"
+    return success
 
 
   ######################################################

@@ -105,7 +105,7 @@ def commands(getDocu, args):
       with open(pathConfig,'r', encoding='utf-8') as f:
         config = json.load(f)
       if args.database=='':
-        args.database = config['default']
+        args.database = config['defaultProjectGroup']
 
     initViews, initConfig, resetOntology = False, True, False
     if getDocu:
@@ -122,8 +122,8 @@ def commands(getDocu, args):
         return ''
       # local and remote server test
       urls = ['http://127.0.0.1:5984']
-      if config['links'][args.database]['remote']!={}:
-        urls.append(config['links'][args.database]['remote']['url'])
+      if config['projectGroups'][args.database]['remote']!={}:
+        urls.append(config['projectGroups'][args.database]['remote']['url'])
       for url in urls:
         try:
           with urllib.request.urlopen(url) as package:
@@ -138,7 +138,7 @@ def commands(getDocu, args):
     #open backend
     if not getDocu:
       try:
-        be = Backend(linkDefault=args.database, initViews=initViews, initConfig=initConfig,
+        be = Backend(defaultProjectGroup=args.database, initViews=initViews, initConfig=initConfig,
                   resetOntology=resetOntology)
       except:
         print('**ERROR pma20: backend could not be started.\n'+traceback.format_exc()+'\n\n')
@@ -147,7 +147,7 @@ def commands(getDocu, args):
     if not getDocu and args.command.startswith('test') and be:
       #PART 2 of test: main test
       print('database server:',be.db.db.client.server_url)
-      print('default link:',be.confLinkName)
+      print('default project group:',be.configuration['defaultProjectGroup'])
       print('database name:',be.db.db.database_name)
       designDocuments = be.db.db.design_documents()
       print('Design documents')
@@ -160,7 +160,6 @@ def commands(getDocu, args):
       except:
         print('**ERROR pma02: Ontology does NOT exist on server')
       print('local directory:',be.basePath)
-      print('software directory:',be.softwarePath)
       print('software version: '+__version__)
       return '1'
 
@@ -207,6 +206,13 @@ def commands(getDocu, args):
 
     elif args.command=='loadBackup':   #load from backup file.zip
       be.backup('restore')
+      return '1'
+
+    if getDocu:
+      doc += '  extractorTest: test extractor on individual datafile\n'
+      doc += '    example: pastaELN.py extractorTest -i ~/[long-path]/Zeiss.tif\n'
+    elif args.command=='extractorTest':
+      be.testExtractor(args.docID)
       return '1'
 
     if getDocu:
@@ -315,7 +321,7 @@ def main():
   """
   Main function
   """
-  usage = "pastaELN.py <command> [-i docID] [-c content] [-l labels] [-d database]\n\n"
+  usage = "./pastaELN_CLI.py <command> [-i docID] [-c content] [-l labels] [-d database]\n\n"
   usage+= "Possible commands are:\n"
   usage+= commands(True, None)
   argparser = argparse.ArgumentParser(usage=usage)
