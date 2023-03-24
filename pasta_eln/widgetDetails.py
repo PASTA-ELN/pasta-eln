@@ -1,7 +1,7 @@
 """ widget that shows the details of the items """
 import json
 from pathlib import Path
-from PySide6.QtWidgets import QScrollArea, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QMenu  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QScrollArea, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QMenu, QTextEdit  # pylint: disable=no-name-in-module
 from PySide6.QtCore import Qt, Slot, QByteArray   # pylint: disable=no-name-in-module
 from PySide6.QtSvgWidgets import QSvgWidget       # pylint: disable=no-name-in-module
 from PySide6.QtGui import QPixmap, QImage, QAction# pylint: disable=no-name-in-module
@@ -27,11 +27,11 @@ class Details(QScrollArea):
     headerW = QWidget()
     self.headerL = QHBoxLayout(headerW)
     self.mainL.addWidget(headerW)
-    self.imageW = QWidget()
-    self.imageW.setContextMenuPolicy(Qt.CustomContextMenu)
-    self.imageW.customContextMenuRequested.connect(self.contextMenu)
-    self.imageL = QVBoxLayout(self.imageW)
-    self.mainL.addWidget(self.imageW)
+    self.specialW = QWidget()
+    self.specialW.setContextMenuPolicy(Qt.CustomContextMenu)
+    self.specialW.customContextMenuRequested.connect(self.contextMenu)
+    self.specialL = QVBoxLayout(self.specialW)
+    self.mainL.addWidget(self.specialW)
     self.btnDetails = TextButton('Details', self.showArea, self.mainL, 'Details', 'Show / hide details', \
                                   checkable=True, hide=True)
     self.metaDetailsW  = QWidget()
@@ -118,9 +118,9 @@ class Details(QScrollArea):
       self.metaUserL.itemAt(0).widget().setParent(None)
     for i in reversed(range(self.metaDatabaseL.count())):
       self.metaDatabaseL.itemAt(i).widget().setParent(None)
-    if self.imageL.itemAt(0) is not None:
-      self.imageL.itemAt(0).widget().setParent(None)
-    self.imageW.hide()
+    if self.specialL.itemAt(0) is not None:
+      self.specialL.itemAt(0).widget().setParent(None)
+    self.specialW.hide()
     self.metaDetailsW.hide()
     self.metaVendorW.hide()
     self.metaUserW.hide()
@@ -137,8 +137,14 @@ class Details(QScrollArea):
       if key=='image':
         width = self.comm.backend.configuration['GUI']['imageWidthDetails'] \
                 if hasattr(self.comm.backend, 'configuration') else 300
-        Image(self.doc['image'], self.imageL, width=width)
-        self.imageW.show()
+        Image(self.doc['image'], self.specialL, width=width)
+        self.specialW.show()
+      elif key=='content':
+        text = QTextEdit()
+        text.setMarkdown(self.doc['content'])
+        text.setReadOnly(True)
+        self.specialL.addWidget(text)
+        self.specialW.show()
       elif key=='-tags':
         tags = ['cur\u2605ted' if i=='_curated' else '#'+i for i in self.doc[key]]
         tags = ['\u2605'*int(i[2]) if i[:2]=='#_' else i for i in tags]
@@ -165,7 +171,7 @@ class Details(QScrollArea):
         self.metaDetailsW.show()
     return
 
-  #TODO_P1: render content better
+  #TODO_P1: how to easily check image if not shown: extractorTest: documentation
 
   def showArea(self):
     """

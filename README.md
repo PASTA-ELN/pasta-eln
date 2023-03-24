@@ -65,9 +65,10 @@ rm pastaELN.log
 ## How to write code
 ### How to create a new version
 1. pylint pasta_eln
-2. run test "python -m pasta_eln.Tests.3Projects"
-3. normal commit to test all actions: pylint, documentation, ...
-4. create a new version: ./commit.py "Minimal viable product" 1
+2. make -C docs html; firefox docs/build/html/index.html
+3. run test "python -m pasta_eln.Tests.3Projects"
+4. normal commit to test all actions: pylint, documentation, ...
+5. create a new version: ./commit.py "Minimal viable product" 1
    **THIS STEP IS NECESSARY FOR ALL GITHUB-Actions TO WORK**
 
 ### How to write small python programs that do things

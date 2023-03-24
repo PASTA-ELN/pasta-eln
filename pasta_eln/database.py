@@ -78,6 +78,8 @@ class Database:
           outputList.append('doc.image.length>3')  #Not as .toString() because that leads to inconsistencies
         elif item['name'] == '-tags':
           outputList.append("doc['-tags'].join(' ')")
+        elif '#_' in item['name']:
+          outputList.append('doc["-tags"].indexOf("'+item['name'][1:]+'")>-1')
         elif item['name'] == '-type':
           outputList.append('doc["-type"].slice(1).join("/")')
         elif item['name'] == 'content':

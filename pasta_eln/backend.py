@@ -54,7 +54,6 @@ class Backend(CLI_Mixin):
       raise ValueError('VersionError')
     if defaultProjectGroup =="":
       defaultProjectGroup = self.configuration['defaultProjectGroup']
-    print(defaultProjectGroup, self.configuration['projectGroups'])
     if not defaultProjectGroup in self.configuration['projectGroups']:
       raise ValueError('BadConfigurationFileError')
     projectGroup = self.configuration['projectGroups'][defaultProjectGroup]

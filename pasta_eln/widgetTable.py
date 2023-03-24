@@ -4,7 +4,7 @@ from pathlib import Path
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTableView, QLabel, QMenu, QFileDialog, \
                               QHeaderView, QAbstractItemView, QGridLayout, QLineEdit, QComboBox # pylint: disable=no-name-in-module
 from PySide6.QtCore import Qt, Slot, QSortFilterProxyModel, QModelIndex       # pylint: disable=no-name-in-module
-from PySide6.QtGui import QBrush, QStandardItemModel, QStandardItem, QAction  # pylint: disable=no-name-in-module
+from PySide6.QtGui import QBrush, QStandardItemModel, QStandardItem, QAction, QFont # pylint: disable=no-name-in-module
 import qtawesome as qta
 from .dialogTableHeader import TableHeader
 from .style import TextButton, Label, getColor, LetterButton, Action
@@ -124,13 +124,16 @@ class Table(QWidget):
         else:                 #list for normal doctypes
           # print(i,j, self.data[i]['value'][j], type(self.data[i]['value'][j]))
           if self.data[i]['value'][j] is None or not self.data[i]['value'][j]:  #None, False
-            item = QStandardItem(qta.icon('fa5s.times', color=fgColor),'no')
+            item = QStandardItem('\u00D7')
+            item.setFont(QFont("Helvetica [Cronyx]", 16))
           elif isinstance(self.data[i]['value'][j], bool) and self.data[i]['value'][j]: #True
-            item = QStandardItem(qta.icon('fa5s.check', color=fgColor),'yes')
+            item = QStandardItem('\u2713')
+            item.setFont(QFont("Helvetica [Cronyx]", 16))
           elif isinstance(self.data[i]['value'][j], list):                      #list
             item =  QStandardItem(', '.join(self.data[i]['value'][j]))
           elif re.match(r'^[a-z]-[a-z0-9]{32}$',self.data[i]['value'][j]):      #Link
-            item = QStandardItem(qta.icon('fa5s.link', color=fgColor),'')
+            item = QStandardItem('\u260D')
+            item.setFont(QFont("Helvetica [Cronyx]", 16))
           else:
             item = QStandardItem(self.data[i]['value'][j])
         if j==0:
@@ -171,8 +174,6 @@ class Table(QWidget):
       self.comm.changeProject.emit(self.data[row]['id'], '')
     return
   #TODO_P1 project hide in table: bug
-  #TODO_P1 table header != table content
-  #TODO_P1 table content: icon+text -> text checkmark
 
   def executeAction(self):
     """ Any action by the buttons and menu at the top of the page """

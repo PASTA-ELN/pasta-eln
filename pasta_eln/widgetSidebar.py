@@ -54,6 +54,7 @@ class Sidebar(QWidget):
         btnScan = IconButton('mdi.clipboard-search-outline', self.btnScan, None, projID, 'Scan', self.comm.backend, text='Scan')
         actionL.addWidget(btnScan, 0,0)
         btnCurate = IconButton('mdi.filter-plus-outline', self.btnCurate, None, projID, 'Curate', self.comm.backend, text='Curate')
+        #TODO_P5 do we still need curate, what is the replacement?
         actionL.addWidget(btnCurate, 0,1)
         projectL.addWidget(actionW)
         self.widgetsAction[projID] = actionW
@@ -82,9 +83,13 @@ class Sidebar(QWidget):
         treeW.setColumnCount(1)
         treeW.itemClicked.connect(self.btnTree)
         hierarchy = comm.backend.db.getHierarchy(projID)
-        treeW.insertTopLevelItem(0, self.iterateTree(hierarchy, projID))
+        rootItem = treeW.invisibleRootItem()
+        count = 0
+        for node in PreOrderIter(hierarchy, maxlevel=2):
+          if not node.is_root:
+            rootItem.insertChild(count, self.iterateTree(node, projID))
+            count += 1
         projectL.addWidget(treeW)
-
         # finalize layout
         mainL.addWidget(projectW)
     # Other buttons
@@ -150,11 +155,17 @@ class Sidebar(QWidget):
     """
     What happens if user clicks button "Scan"
     """
+    branch = self.comm.backend.db.getDoc(self.openProjectId)['-branch'][0]
+    self.comm.backend.cwd = self.comm.backend.basePath/branch['path']
+    self.comm.backend.hierStack = [self.openProjectId]
+    self.comm.backend.scanTree()
+    print("done scanning")
     return
   def btnCurate(self):
     """
     What happens if user clicks button "Curate"
     """
+    print("SB is unsure if we still need it? Perhaps to focus the user")
     return
   def btnTree(self, item):
     """
@@ -162,9 +173,4 @@ class Sidebar(QWidget):
     """
     projId, docId = item.text(1).split('/')
     self.comm.changeProject.emit(projId, docId)
-    return
-  def btnCollapse(self):
-    """
-    What happens if user clicks on collapse button
-    """
     return
