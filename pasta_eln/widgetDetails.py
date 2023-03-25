@@ -5,7 +5,7 @@ from PySide6.QtWidgets import QScrollArea, QWidget, QVBoxLayout, QHBoxLayout, QL
 from PySide6.QtCore import Qt, Slot, QByteArray   # pylint: disable=no-name-in-module
 from PySide6.QtSvgWidgets import QSvgWidget       # pylint: disable=no-name-in-module
 from PySide6.QtGui import QPixmap, QImage, QAction# pylint: disable=no-name-in-module
-from .style import TextButton, Image, Label
+from .style import TextButton, Image, Label, Action
 
 class Details(QScrollArea):
   """ widget that shows the details of the items """
@@ -15,6 +15,7 @@ class Details(QScrollArea):
     comm.changeDetails.connect(self.changeDetails)
     self.doc  = {}
     self.docID= ''
+    #TODO_P5 add keyboard shortcut to test this extractor
 
     # GUI elements
     self.mainW = QWidget()
@@ -189,3 +190,4 @@ class Details(QScrollArea):
     Call edit dialoge
     """
     self.comm.formDoc.emit(self.doc)
+    return

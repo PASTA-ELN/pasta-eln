@@ -2,7 +2,7 @@
 import os, logging, webbrowser
 from pathlib import Path
 from PySide6.QtCore import Qt, Slot      # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QApplication, QMessageBox # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QApplication, QMessageBox, QFileDialog # pylint: disable=no-name-in-module
 from PySide6.QtGui import QIcon, QPixmap, QAction    # pylint: disable=no-name-in-module
 from qt_material import apply_stylesheet  #of https://github.com/UN-GCPDS/qt-material
 
@@ -52,6 +52,7 @@ class MainWindow(QMainWindow):
     Action('&Configuration',         self.executeAction, systemMenu, self, name='configuration')
     helpMenu = menu.addMenu("&Help")
     Action('&Website',               self.executeAction, helpMenu, self, name='website')
+    Action('&Test file extraction',  self.executeAction, helpMenu, self, name='extractorTest')
     Action('&Shortcuts',             self.executeAction, helpMenu, self, name='shortcuts')
 
     shortCuts = {'measurement':'m', 'sample':'s', 'x0':'p'} #TODO_P4 to config
@@ -124,10 +125,17 @@ class MainWindow(QMainWindow):
       dialog.setText(text2html(report))
       dialog.setStyleSheet('QLabel {min-width: 800px}')
       dialog.exec()
-    elif menuName=='website':
-      webbrowser.open('https://pasta-eln.github.io/pasta-eln/')
     elif menuName=='exit':
       self.close()
+    elif menuName=='website':
+      webbrowser.open('https://pasta-eln.github.io/pasta-eln/')
+    elif menuName=='extractorTest':
+      fileName = QFileDialog.getOpenFileName(self,'Open file for extractor test',str(Path.home()),'*.*')[0]
+      report = self.comm.backend.testExtractor(fileName, reportHTML=True)
+      dialog = QMessageBox(self)
+      dialog.setWindowTitle('Report of extractor test')
+      dialog.setText(report)
+      dialog.exec()
     elif menuName=='shortcuts':
       dialog = QMessageBox(self)
       dialog.setWindowTitle('Keyboard shortcuts')

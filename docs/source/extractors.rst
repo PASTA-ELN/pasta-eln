@@ -68,3 +68,41 @@ General information on file formats can be found:
 - [https://en.wikipedia.org/wiki/List_of_file_formats]
 
 Unidentified files can be viewed within the project, assigned to a particular type, and a scientist can add additional metadata via the GUI.
+
+Help if extractors do cause errors
+==================================
+
+Python errors
+-------------
+
+Lala
+
+Metadata error
+-------------
+
+Lala
+
+Matplotlib
+----------
+
+Please use the following code block to convert to matplotlib axis to svg image::
+
+  from io import StringIO
+  # all other lines of code ...
+  figfile = StringIO()
+  plt.savefig(figfile, format="svg")
+  image = figfile.getvalue()
+
+Pillow image
+------------
+
+Please use the following code block to convert to matplotlib axis to a base64 encoded image::
+
+  from io import BytesIO
+  # all other lines of code ...
+  figfile = BytesIO()
+  image.save(figfile, format="PNG")
+  imageData = base64.b64encode(figfile.getvalue()).decode()
+  image = "data:image/png;base64," + imageData
+
+Please pay special attention when to use png and when jpg.
