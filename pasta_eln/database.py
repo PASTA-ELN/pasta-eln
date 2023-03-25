@@ -291,7 +291,8 @@ class Database:
         logging.info('database.update.2: doc not updated-nothing changed: '+newDoc['_id']+' '+newDoc['-name'])
         return newDoc
     #For both cases: delete and update
-    #TODO_P1: curated change here
+    if '_curated' not in newDoc['-tags']:
+      newDoc['-tags'].append('_curated')
     try:
       newDoc.save()
     except:

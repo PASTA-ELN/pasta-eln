@@ -294,9 +294,10 @@ def commands(getDocu, args):
       be.changeHierarchy(args.docID)
 
     if getDocu:
-      doc += '  scanHierarchy: scan project with docID\n'
-      doc += '    example: pastaELN.py scanHierarchy -i ....\n'
-    elif args.command=='scanHierarchy':
+      doc += '  scanTree: scan project with docID\n'
+      doc += '    example: pastaELN.py scanTree -i ....\n'
+    elif args.command=='scanTree':
+      print(be.cwd, be.hierStack)
       be.scanTree()
       return '1'
 
@@ -323,6 +324,7 @@ def main():
   """
   usage = "./pastaELN_CLI.py <command> [-i docID] [-c content] [-l labels] [-d database]\n\n"
   usage+= "Possible commands are:\n"
+  #TODO_P3 go to positional arguments only: no -i ....
   usage+= commands(True, None)
   argparser = argparse.ArgumentParser(usage=usage)
   argparser.add_argument('command', help='see above...')

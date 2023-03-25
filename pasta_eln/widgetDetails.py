@@ -172,7 +172,6 @@ class Details(QScrollArea):
         self.metaDetailsW.show()
     return
 
-  #TODO_P1: how to easily check image if not shown: extractorTest: documentation
 
   def showArea(self):
     """

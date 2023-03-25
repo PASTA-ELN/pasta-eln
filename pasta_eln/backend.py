@@ -250,7 +250,7 @@ class Backend(CLI_Mixin):
         dirName (string): change into this directory (absolute path given). For if data is moved
         kwargs (dict): additional parameter
     """
-    logging.warning('Use depricated function changeHierarchy')
+    logging.info('changeHierarchy should only be used in CLI mode')
     if docID is None or (docID[0]=='x' and docID[1]!='-'):  #cd ..: none. close 'project', 'task'
       self.hierStack.pop()
       self.cwd = self.cwd.parent
@@ -346,8 +346,9 @@ class Backend(CLI_Mixin):
     self.cwd = startPath
     orphans = [i for i in pathsInDB_data if i.startswith(self.cwd.relative_to(self.basePath).as_posix())]
     print('These files are on DB but not harddisk\n', orphans )
-    orphanDirs = [i for i in pathsInDB_x if i!=self.cwd.relative_to(self.basePath).as_posix()]
-    print('These directories are on DB but not harddisk\n', orphanDirs )
+    orphanDirs = [i for i in pathsInDB_x if i==self.cwd.relative_to(self.basePath).as_posix() and \
+                                            i!=startPath.relative_to(self.basePath).as_posix()]
+    print('These directories are on DB but not harddisk\n', orphanDirs)
     for orphan in orphans+orphanDirs:
       docID = [i for i in inDB_all if i['key']==orphan][0]['id']
       doc   = dict(self.db.getDoc(docID))

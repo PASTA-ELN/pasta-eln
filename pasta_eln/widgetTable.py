@@ -1,6 +1,7 @@
 """ widget that shows the table of the items """
 import re
 from pathlib import Path
+import numpy as np
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTableView, QLabel, QMenu, QFileDialog, \
                               QHeaderView, QAbstractItemView, QGridLayout, QLineEdit, QComboBox # pylint: disable=no-name-in-module
 from PySide6.QtCore import Qt, Slot, QSortFilterProxyModel, QModelIndex       # pylint: disable=no-name-in-module
@@ -136,6 +137,9 @@ class Table(QWidget):
           else:
             item = QStandardItem(self.data[i]['value'][j])
         if j==0:
+          doc = self.comm.backend.db.getDoc(self.data[i]['id'])
+          if len([b for b in doc['-branch'] if not np.all(b['show'])])>0:
+            item.setText( item.text()+'  \U0001F441' )
           item.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)
           item.setCheckState(Qt.CheckState.Unchecked)
         else:
