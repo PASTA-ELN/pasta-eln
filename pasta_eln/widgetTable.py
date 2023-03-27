@@ -1,7 +1,6 @@
 """ widget that shows the table of the items """
 import re
 from pathlib import Path
-import numpy as np
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTableView, QLabel, QMenu, QFileDialog, \
                               QHeaderView, QAbstractItemView, QGridLayout, QLineEdit, QComboBox # pylint: disable=no-name-in-module
 from PySide6.QtCore import Qt, Slot, QSortFilterProxyModel, QModelIndex       # pylint: disable=no-name-in-module
@@ -138,8 +137,9 @@ class Table(QWidget):
             item = QStandardItem(self.data[i]['value'][j])
         if j==0:
           doc = self.comm.backend.db.getDoc(self.data[i]['id'])
-          if len([b for b in doc['-branch'] if not np.all(b['show'])])>0:
+          if len([b for b in doc['-branch'] if False in b['show']])>0:
             item.setText( item.text()+'  \U0001F441' )
+          item.setAccessibleText(doc['_id'])
           item.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)
           item.setCheckState(Qt.CheckState.Unchecked)
         else:
@@ -161,9 +161,10 @@ class Table(QWidget):
       item (QStandardItem): cell clicked
     """
     row = item.row()
+    docID = self.models[-1].item(row,0).accessibleText()
     # column = item.column()
-    if self.data[row]['id'][0]!='x': #only show items for non-folders
-      self.comm.changeDetails.emit(self.data[row]['id'])
+    if docID!='x0': #only show items for non-folders
+      self.comm.changeDetails.emit(docID)
     return
   def cell2Clicked(self, item):
     """
@@ -174,7 +175,8 @@ class Table(QWidget):
     """
     if self.docType=='x0':
       row = item.row()
-      self.comm.changeProject.emit(self.data[row]['id'], '')
+      docID = self.models[-1].item(row,0).accessibleText()
+      self.comm.changeProject.emit(docID, '')
     return
 
 

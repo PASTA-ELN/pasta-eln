@@ -171,7 +171,8 @@ class Project(QWidget):
     headerL = QVBoxLayout(headerW)
     topbarW = QWidget()
     topbarL = QHBoxLayout(topbarW)
-    topbarL.addWidget(QLabel(self.docProj['-name']))
+    hidden = '     \U0001F441' if len([b for b in self.docProj['-branch'] if False in b['show']])>0 else ''
+    topbarL.addWidget(QLabel(self.docProj['-name']+hidden))
     TextButton('Reduce',    self.btnEvent, topbarL, 'projHide', checkable=True)
     TextButton('Hide/Show', self.btnEvent, topbarL, 'hideShow')
     TextButton('Add child', self.btnEvent, topbarL, 'addChild')

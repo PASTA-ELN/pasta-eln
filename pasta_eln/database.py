@@ -465,10 +465,10 @@ class Database:
     """
     from anytree import Node, RenderTree, AsciiStyle
     from anytree.search import find_by_attr
-    if allItems:
-      view = self.getView('viewHierarchy/viewHierarchyAll', startKey=start)
-    else:
+    if not allItems:
       view = self.getView('viewHierarchy/viewHierarchy',    startKey=start)
+    if allItems or len(view)==0:
+      view = self.getView('viewHierarchy/viewHierarchyAll', startKey=start)
     # for item in view:
     #   print(item)
     levelNum = 1

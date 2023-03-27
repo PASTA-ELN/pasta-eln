@@ -1,6 +1,5 @@
 """ renders each leaf of project tree using QPaint """
 import base64
-import numpy as np
 from PySide6.QtCore import Qt, QSize, QPoint, QMargins, QRectF# pylint: disable=no-name-in-module
 from PySide6.QtGui import QStaticText, QPixmap, QTextDocument # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QStyledItemDelegate             # pylint: disable=no-name-in-module
@@ -67,7 +66,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       text.drawContents(painter)
       painter.translate(-topLeft2nd)
     yOffset += self.lineSep/2
-    hiddenText = '     \U0001F441' if len([b for b in doc['-branch'] if not np.all(b['show'])])>0 else ''
+    hiddenText = '     \U0001F441' if len([b for b in doc['-branch'] if False in b['show']])>0 else ''
     painter.drawStaticText(xOffset, yOffset, QStaticText(doc['-name']+hiddenText))
     if self.debugMode:
       painter.drawStaticText(xOffset+500, yOffset, QStaticText(index.data(Qt.DisplayRole))) #doc['_id']
