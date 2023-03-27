@@ -495,16 +495,17 @@ class Database:
     Toggle hide/show indicator of branch
 
     Args:
-      stack (list, str): stack of docID or docID
+      stack (list, str): stack of docID; docID (str)
     """
     flippedOnce = False
     if isinstance(stack, str):
       doc = self.db[stack]
       for idx, _ in enumerate(doc['-branch']):
         doc['-branch'][idx]['show'][-1] = not doc['-branch'][idx]['show'][-1]
+        print('flipped str', stack)
       doc.save()
       if stack[0]=='x':
-        stack = doc['-branch'][0]['stack']
+        stack = doc['-branch'][0]['stack']+[stack]
       flippedOnce = True
     if isinstance(stack, list):
       iFlip = len(stack)-1
@@ -513,8 +514,8 @@ class Database:
         print('  docID',item['id'])
         doc = self.db[item['id']]
         for idx, branch in enumerate(doc['-branch']):
-          print('  flippedOnce', flippedOnce, iFlip, len(branch['stack']))
-          doc['-branch'][idx]['show'][iFlip] = not doc['-branch'][idx]['show'][iFlip]
+          if not flippedOnce or iFlip!=len(branch['stack']):
+            doc['-branch'][idx]['show'][iFlip] = not doc['-branch'][idx]['show'][iFlip]
         doc.save()
     return
 

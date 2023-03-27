@@ -6,7 +6,7 @@ from PySide6.QtGui import QStandardItemModel, QStandardItem    # pylint: disable
 from PySide6.QtCore import Slot, Qt                            # pylint: disable=no-name-in-module
 from anytree import PreOrderIter
 from .widgetProjectLeafRenderer import ProjectLeafRenderer
-from .widgetTreeView import TreeView
+from .widgetProjectTreeView import TreeView
 from .style import TextButton
 from .miscTools import createDirName
 

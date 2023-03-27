@@ -1,6 +1,6 @@
 """ Sidebar widget that includes the navigation items """
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QGridLayout, QTreeWidget, QTreeWidgetItem, QFrame  # pylint: disable=no-name-in-module
-from PySide6.QtCore import QSize                                         # pylint: disable=no-name-in-module
+from PySide6.QtCore import QSize, Slot                                      # pylint: disable=no-name-in-module
 from anytree import PreOrderIter
 
 from .dialogConfig import Configuration
@@ -11,6 +11,7 @@ class Sidebar(QWidget):
   def __init__(self, comm):
     super().__init__()
     self.comm = comm
+    comm.changeSidebar.connect(self.redraw)
     if hasattr(self.comm.backend, 'configuration'):
       width = self.comm.backend.configuration['GUI']['sidebarWidth']
       self.setFixedWidth(width)#64
@@ -19,18 +20,28 @@ class Sidebar(QWidget):
       configWindow.exec()
 
     # GUI elements
-    mainL = QVBoxLayout()
-    mainL.setContentsMargins(7,15,0,7)
-    mainL.setSpacing(7)
-    self.setLayout(mainL)
-    # storage of all project widgets and layouts
+    self.mainL = QVBoxLayout()
+    self.mainL.setContentsMargins(7,15,0,7)
+    self.mainL.setSpacing(7)
+    self.setLayout(self.mainL)
+    self.redraw()
+
+
+  @Slot()
+  def redraw(self):
+    """
+    Redraw sidebar: e.g. after change of project visibility in table
+    """
+    # Delete old widgets from layout and create storage
+    for i in reversed(range(self.mainL.count())):
+      self.mainL.itemAt(i).widget().setParent(None)
     self.openProjectId = ''
     self.widgetsAction = {}
     self.widgetsList = {}
     self.widgetsProject = {}
 
-    if hasattr(comm.backend, 'db'):
-      hierarchy = comm.backend.db.getView('viewDocType/x0')
+    if hasattr(self.comm.backend, 'db'):
+      hierarchy = self.comm.backend.db.getView('viewDocType/x0')
       for project in hierarchy:
         projID = project['id']
         projName = project['value'][0]
@@ -68,9 +79,10 @@ class Sidebar(QWidget):
           listW.hide()
         listL = QGridLayout(listW)
         iconTable = {"Measurements":"fa.thermometer-3","Samples":"fa5s.vial","Procedures":"fa.list-ol","Instruments":"ri.scales-2-line"}
-        for idx, doctype in enumerate(comm.backend.db.dataLabels):
+        for idx, doctype in enumerate(self.comm.backend.db.dataLabels):
           if doctype[0]!='x':
-            button = IconButton(iconTable[comm.backend.db.dataLabels[doctype]], self.btnDocType, None, doctype+'/'+projID, comm.backend.db.dataLabels[doctype],self.comm.backend)
+            button = IconButton(iconTable[self.comm.backend.db.dataLabels[doctype]], self.btnDocType, None, \
+                     doctype+'/'+projID, self.comm.backend.db.dataLabels[doctype],self.comm.backend)
             listL.addWidget(button, 0, idx)
             button.setStyleSheet("border-width:0")
 
@@ -82,7 +94,7 @@ class Sidebar(QWidget):
         treeW.setHeaderHidden(True)
         treeW.setColumnCount(1)
         treeW.itemClicked.connect(self.btnTree)
-        hierarchy = comm.backend.db.getHierarchy(projID)
+        hierarchy = self.comm.backend.db.getHierarchy(projID)
         rootItem = treeW.invisibleRootItem()
         count = 0
         for node in PreOrderIter(hierarchy, maxlevel=2):
@@ -91,9 +103,9 @@ class Sidebar(QWidget):
             count += 1
         projectL.addWidget(treeW)
         # finalize layout
-        mainL.addWidget(projectW)
+        self.mainL.addWidget(projectW)
     # Other buttons
-    mainL.addStretch(1)
+    return
 
 
   def iterateTree(self, nodeHier, projectID):

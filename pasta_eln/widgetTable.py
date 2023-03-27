@@ -64,7 +64,7 @@ class Table(QWidget):
     header = self.table.horizontalHeader()
     header.setSectionsMovable(True)
     header.setSortIndicatorShown(True)
-    header.setMaximumSectionSize(200)
+    header.setMaximumSectionSize(400) #TODO_P5 config
     header.resizeSections(QHeaderView.ResizeToContents)
     header.setStretchLastSection(True)
     # ---
@@ -176,7 +176,7 @@ class Table(QWidget):
       row = item.row()
       self.comm.changeProject.emit(self.data[row]['id'], '')
     return
-  #TODO_P1 project hide in table: bug
+
 
   def executeAction(self):
     """ Any action by the buttons and menu at the top of the page """
@@ -246,6 +246,8 @@ class Table(QWidget):
       for row in range(self.models[-1].rowCount()):
         if self.models[-1].item(row,0).checkState() == Qt.CheckState.Checked:
           self.comm.backend.db.hideShow( self.data[row]['id'] )
+      if self.docType=='x0':
+        self.comm.changeSidebar.emit()
       self.changeTable('','')  # redraw table
     elif menuName == 'showAll':
       self.showAll = not self.showAll
