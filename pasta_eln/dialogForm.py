@@ -203,15 +203,15 @@ class Form(QDialog):
     """
     command, key = self.sender().accessibleName().split('_')
     if command=='bold':
-      getattr(self, 'textEdit_'+key).appendPlainText('**TEXT**')
+      getattr(self, 'textEdit_'+key).insertPlainText('**TEXT**')
     elif command=='italic':
-      getattr(self, 'textEdit_'+key).appendPlainText('*TEXT*')
+      getattr(self, 'textEdit_'+key).insertPlainText('*TEXT*')
     elif command=='list-ul':
-      getattr(self, 'textEdit_'+key).appendPlainText('\n- item 1\n- item 2')
+      getattr(self, 'textEdit_'+key).insertPlainText('\n- item 1\n- item 2')
     elif command=='list-ol':
-      getattr(self, 'textEdit_'+key).appendPlainText('\n1. item 1\n1. item 2')
+      getattr(self, 'textEdit_'+key).insertPlainText('\n1. item 1\n1. item 2')
     elif command.startswith('heading'):
-      getattr(self, 'textEdit_'+key).appendPlainText('\n\n'+'#'*int(command[-1])+' Heading')
+      getattr(self, 'textEdit_'+key).insertPlainText('#'*int(command[-1])+' Heading\n')
     else:
       print('**ERROR dialogForm: unknowCommand',command)
     return

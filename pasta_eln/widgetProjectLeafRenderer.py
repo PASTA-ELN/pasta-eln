@@ -5,7 +5,7 @@ from PySide6.QtGui import QStaticText, QPixmap, QTextDocument # pylint: disable=
 from PySide6.QtWidgets import QStyledItemDelegate             # pylint: disable=no-name-in-module
 from PySide6.QtSvg import QSvgRenderer                        # pylint: disable=no-name-in-module
 
-_DO_NOT_RENDER_ = ['image','content','metaVendor','metaUser','shasum']
+_DO_NOT_RENDER_ = ['image','content','metaVendor','metaUser','shasum','comment']
 
 class ProjectLeafRenderer(QStyledItemDelegate):
   """ renders each leaf of project tree using QPaint """
@@ -84,6 +84,12 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       else:
         pass
         #print("cannot paint ",docID, key) #TODO_P4 make sure these make sense
+    if 'comment' in doc and not folded:
+      text = QTextDocument()
+      text.setMarkdown(doc['comment'])
+      painter.translate(QPoint(xOffset-3, yOffset+15))
+      text.drawContents(painter)
+      painter.translate(-QPoint(xOffset-3, yOffset+15))
 
 
   def sizeHint(self, option, index):
@@ -97,9 +103,14 @@ class ProjectLeafRenderer(QStyledItemDelegate):
         folded = True
       else:
         folded = False
-      docKeys = self.comm.backend.db.getDoc(docID).keys()
+      doc = self.comm.backend.db.getDoc(docID)
+      docKeys = doc.keys()
       height  = len([i for i in docKeys if not i in _DO_NOT_RENDER_ and i[0] not in ['-','_'] ])  #height in text lines
       height  = (height+3) * self.lineSep
+      if 'comment' in doc.keys() and not folded:
+        text = QTextDocument()
+        text.setMarkdown(self.comm.backend.db.getDoc(docID)['comment'])
+        height += text.size().toTuple()[1]-30
       if 'image' in docKeys and not folded:
         height = int(self.width*3/4)
       if 'content' in docKeys and not folded:

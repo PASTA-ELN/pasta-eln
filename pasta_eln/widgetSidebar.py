@@ -25,6 +25,7 @@ class Sidebar(QWidget):
     self.mainL.setSpacing(7)
     self.setLayout(self.mainL)
     self.redraw()
+    #TODO_P1 allow scroll in sidebar
 
 
   @Slot()
@@ -55,6 +56,7 @@ class Sidebar(QWidget):
         self.widgetsProject[projID] = btnProj
         btnProj.setStyleSheet("border-width:0")
         projectW.setStyleSheet("background-color:"+ getColor(self.comm.backend, 'secondary'))
+        projectW.setMinimumHeight(300)
 
         # actions: scan, curate, ...
         actionW = QWidget()

@@ -16,6 +16,7 @@ class Details(QScrollArea):
     self.doc  = {}
     self.docID= ''
     #TODO_P5 add keyboard shortcut to test this extractor
+    #TODO_P1 allow scroll in sidebar
 
     # GUI elements
     self.mainW = QWidget()

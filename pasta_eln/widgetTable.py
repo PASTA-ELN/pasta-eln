@@ -129,12 +129,23 @@ class Table(QWidget):
             item = QStandardItem('\u2713')
             item.setFont(QFont("Helvetica [Cronyx]", 16))
           elif isinstance(self.data[i]['value'][j], list):                      #list
+            print('**WARTING: LIST IN TABLE, not sure where occurs')
             item =  QStandardItem(', '.join(self.data[i]['value'][j]))
           elif re.match(r'^[a-z]-[a-z0-9]{32}$',self.data[i]['value'][j]):      #Link
             item = QStandardItem('\u260D')
             item.setFont(QFont("Helvetica [Cronyx]", 16))
           else:
-            item = QStandardItem(self.data[i]['value'][j])
+            if self.filterHeader[j]=='tags':
+              tags = self.data[i]['value'][j].split(' ')
+              if '_curated' in tags:
+                tags[tags.index('_curated')] = 'cur\u2605ted'
+              for iStar in range(1,6):
+                if '_'+str(iStar) in tags:
+                  tags[tags.index('_'+str(iStar))] = '\u2605'*iStar
+              text = ' '.join(tags)
+            else:
+              text = self.data[i]['value'][j]
+            item = QStandardItem(text)
         if j==0:
           doc = self.comm.backend.db.getDoc(self.data[i]['id'])
           if len([b for b in doc['-branch'] if False in b['show']])>0:
