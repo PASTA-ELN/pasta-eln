@@ -52,6 +52,14 @@ defaultOntology = """
 }
 """
 
+defaultOntologyNode = """
+  [{"name": "-name", "query": "What is the file name?"},
+   {"name": "-tags"},
+   {"name": "comment", "query": "#tags comments remarks :field:value:"},
+   {"name": "-type"}]
+"""
+
+
 setupTextLinux = """
 ### Welcome to PASTA-ELN setup for Linux
 Five components are needed for proper function

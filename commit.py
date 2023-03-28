@@ -131,7 +131,7 @@ def createTodoList():
     res += '<li>'+item[2:]+'\n'
   res += '</ul>\n"""'
   with open('pasta_eln/tempStrings.py', 'w', encoding='utf-8') as fOut:
-    fOut.write('##Automatically created file: do not update manually\n')
+    fOut.write('""" ##Automatically created file: do not update manually """\n')
     fOut.write(res)
   return
 

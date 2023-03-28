@@ -1,9 +1,11 @@
 """ New/Edit dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""
+import json
 #pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QDialog, QWidget, QFormLayout, QVBoxLayout, QHBoxLayout, QLabel, QTextEdit, \
                               QPlainTextEdit, QComboBox, QLineEdit, QDialogButtonBox, QSplitter, QSizePolicy
 #pylint: enable=no-name-in-module
 from .style import Image, TextButton, IconButton
+from .fixedStrings import defaultOntologyNode
 
 class Form(QDialog):
   """ New/Edit dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""
@@ -35,7 +37,7 @@ class Form(QDialog):
     if 'image' in self.doc:
       width = self.comm.backend.configuration['GUI']['imageWidthDetails'] \
                 if hasattr(self.comm.backend, 'configuration') else 300
-      Image(self.doc['image'], mainL, width=width)
+      Image(self.doc['image'], mainL, height=width)
     formW = QWidget()
     mainL.addWidget(formW)
     self.formL = QFormLayout(formW)
@@ -44,12 +46,15 @@ class Form(QDialog):
     if '-type' in self.doc:
       setattr(self, 'key_-name', QLineEdit(self.doc['-name']))
       self.formL.addRow('Name', getattr(self, 'key_-name'))
-      ontologyNode = self.comm.backend.db.ontology[self.doc['-type'][0]]['prop']
+      if self.doc['-type'][0] in self.comm.backend.db.ontology:
+        ontologyNode = self.comm.backend.db.ontology[self.doc['-type'][0]]['prop']
+      else:
+        ontologyNode = json.loads(defaultOntologyNode)
       for item in ontologyNode:
         if item['name'] not in self.doc and  item['name'][0] not in ['_','-']:
           self.doc[item['name']] = ''
     for key,value in self.doc.items():
-      if key[0] in ['_','-'] or key in ['image','metaVendor','metaUser','shasum']:
+      if key[0] in ['_','-', '#'] or key in ['image','metaVendor','metaUser','shasum']:
         continue
       if key in ['comment','content']:
         labelW = QWidget()
@@ -161,17 +166,17 @@ class Form(QDialog):
         print("**WARNING: I ALSO SHOULD CHANGE DOCID") #TODO_P4 change docID after docType change
         #remove old, create new
       else:
-        if '_ids' in self.doc:
+        if '_ids' in self.doc: #group update
           del self.doc['-name']
           ids = self.doc.pop('_ids')
           self.doc = {i:j for i,j in self.doc.items() if j!=''}
           for docID in ids:
             self.comm.backend.db.updateDoc(self.doc, docID)
-        else: #default update
+        else: #default update on item
           self.comm.backend.db.updateDoc(self.doc, self.doc['_id'])
       self.accept()  #close
     return
-
+  #TODO_P1 updateDoc does not work on '-' element
 
   def btnAdvanced(self, status):
     """
