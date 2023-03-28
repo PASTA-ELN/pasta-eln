@@ -291,7 +291,7 @@ class Database:
         logging.info('database.update.2: doc not updated-nothing changed: '+newDoc['_id']+' '+newDoc['-name'])
         return newDoc
     #For both cases: delete and update
-    if '_curated' not in newDoc['-tags']:
+    if '_curated' not in newDoc['-tags'] and newDoc['-type'][0][0]!='x':
       newDoc['-tags'].append('_curated')
     try:
       newDoc.save()
@@ -666,8 +666,28 @@ class Database:
         #only normal documents after this line
 
         ###custom temporary changes: keep few as examples;
-        # BE CAREFUL: PRINT FIRST, delete second run
-        # if 'revisions' in doc:
+        # BE CAREFUL: PRINT FIRST, delete second run ; RUN ONLY ONCE
+        # Version1->Version2 changes
+        # if '-branch' in doc:
+        #   for b in doc['-branch']:
+        #     b['show']=[True]*(len(b['stack'])+1)
+        # if '-tags' not in doc:
+        #   tags = doc['tags']
+        #   del doc['tags']
+        #   tags = [i[1:] if i[0]=='#' else i for i in tags]
+        #   tags = ['_1' if i=='1' else i for i in tags]
+        #   tags = ['_2' if i=='2' else i for i in tags]
+        #   tags = ['_3' if i=='3' else i for i in tags]
+        #   tags = ['_4' if i=='4' else i for i in tags]
+        #   tags = ['_5' if i=='5' else i for i in tags]
+        #   if '-curated' in doc:
+        #     if doc['-type'][0][0]!='x':
+        #       tags.append('_curated')
+        #     del doc['-curated']
+        #   doc['-tags'] = tags
+        #   print(doc['_id'], 'tags' in doc, doc['-tags'], '-curated' in doc)
+        #### doc.save()
+        # END VERSION 1 -> 2 changes
         #   del doc['revisions']
         #   doc.save()
         # if len(doc['_id'].split('-'))==3:
@@ -771,6 +791,9 @@ class Database:
             doc['-name']=doc['name']
             del doc['name']
             doc.save()
+
+        if not '-tags' in doc:
+          outstring+= f'{Bcolors.FAIL}**ERROR dch17b: -tags not in doc'+doc['_id']+f'{Bcolors.ENDC}\n'
 
         #doc-type specific tests
         if '-type' in doc and doc['-type'][0] == 'sample':

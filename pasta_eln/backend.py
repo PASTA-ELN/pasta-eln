@@ -300,7 +300,7 @@ class Backend(CLI_Mixin):
         doc= {'-type':['procedure']}
         self.useExtractors(path, '', doc)
         self.db.updateDoc(doc, line['id'])
-    #TODO_P4: Basic functionality for V1
+    #TODO_P4 Basic functionality for V1
     #V1: GUI content write-protected; assume one link and no conflicts
     #V2: What happens if you change a file (procedure) on disk / database -> conflicts
     #    Copy of procedure exists on harddisk: one entry in db and links; then change one, but not other, -branch should separate; can they reunite?
