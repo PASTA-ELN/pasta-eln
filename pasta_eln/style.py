@@ -173,10 +173,10 @@ class Image():
       height (int): height of image
     """
     if data.startswith('data:image/'): #jpg or png image
-      byteArr = QByteArray.fromBase64(bytearray(data[22:], encoding='utf-8'))
+      byteArr = QByteArray.fromBase64(bytearray(data[22:] if data[21]==',' else data[23:], encoding='utf-8'))
       imageW = QImage()
-      imageType = data[11:15].upper()  #TODO_P5 not always perfect: use regex
-      imageW.loadFromData(byteArr, imageType)
+      imageType = data[11:15].upper()
+      imageW.loadFromData(byteArr, imageType[:-1] if imageType.endswith(';') else imageType)
       pixmap = QPixmap.fromImage(imageW)
       if height>0:
         pixmap = pixmap.scaledToHeight(height)

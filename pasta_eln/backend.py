@@ -486,6 +486,7 @@ class Backend(CLI_Mixin):
         if reportHTML:
           report += '<font color="red">Python error in extractor</font><br>'
           report += htmlStr+'python-error">website</a><br>'
+          report += '\n'+traceback.format_exc()+'\n'
     if success:
       try:
         _ = json.dumps(content)
@@ -515,7 +516,7 @@ class Backend(CLI_Mixin):
             _ = json.dumps(content['metaVendor'][key])
           except:
             if reportHTML:
-              report += '<font color="red">FAIL '+key+' : '+content['metaVendor'][key]+' type:'+\
+              report += '<font color="red">FAIL '+key+' : '+str(content['metaVendor'][key])+' type:'+\
                         str(type(content['metaVendor'][key]))+'</font><br>'
             else:
               print('    FAIL',key, content['metaVendor'][key], type(content['metaVendor'][key]))
@@ -598,7 +599,6 @@ class Backend(CLI_Mixin):
     if interactive and not reportHTML:
       print('Identified metadata',content)
     os.environ['QT_API'] = 'pyside6'
-    report += htmlStr+'matplotlib">website</a><br>'
     return report
 
 

@@ -40,7 +40,6 @@ class TreeView(QTreeView):
     Action('Open external program', self.executeAction, context, self, name='openExternal')
     context.exec(e.globalPos())
 
-  #TODO_P2 fix numpy, scipy, lmfit, ... versions
   #TODO_P3 drag drop external files
 
   def executeAction(self):

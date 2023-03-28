@@ -86,7 +86,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
         #print("cannot paint ",docID, key) #TODO_P4 make sure these make sense
     if 'comment' in doc and not folded:
       text = QTextDocument()
-      text.setMarkdown(doc['comment'])
+      text.setMarkdown(doc['comment'].strip())
       painter.translate(QPoint(xOffset-3, yOffset+15))
       text.drawContents(painter)
       painter.translate(-QPoint(xOffset-3, yOffset+15))
@@ -109,10 +109,17 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       height  = (height+3) * self.lineSep
       if 'comment' in doc.keys() and not folded:
         text = QTextDocument()
-        text.setMarkdown(self.comm.backend.db.getDoc(docID)['comment'])
-        height += text.size().toTuple()[1]-30
+        text.setMarkdown(self.comm.backend.db.getDoc(docID)['comment'].strip())
+        cutOff = 30 if text.size().toTuple()[1]>30 else 10
+        height += text.size().toTuple()[1]-cutOff
       if 'image' in docKeys and not folded:
-        height = int(self.width*3/4)
+        try:
+          pixmap = QPixmap()
+          pixmap.loadFromData(base64.b64decode(doc['image'][22:]))
+          pixmap = pixmap.scaledToWidth(self.width)
+          height = pixmap.height()
+        except:
+          height = int(self.width*3/4)
       if 'content' in docKeys and not folded:
         text = QTextDocument()
         text.setMarkdown(self.comm.backend.db.getDoc(docID)['content'])

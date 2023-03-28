@@ -16,7 +16,6 @@ class Details(QScrollArea):
     self.doc  = {}
     self.docID= ''
     #TODO_P5 add keyboard shortcut to test this extractor
-    #TODO_P1 allow scroll in sidebar
 
     # GUI elements
     self.mainW = QWidget()
@@ -174,6 +173,7 @@ class Details(QScrollArea):
     return
 
 
+
   def showArea(self):
     """
     Hide / show the widget underneath the button
@@ -190,4 +190,6 @@ class Details(QScrollArea):
     Call edit dialoge
     """
     self.comm.formDoc.emit(self.doc)
+    self.comm.changeTable.emit('','')
+    self.comm.changeDetails.emit('redraw')
     return

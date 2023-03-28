@@ -169,8 +169,6 @@ class Form(QDialog):
             self.comm.backend.db.updateDoc(self.doc, docID)
         else: #default update
           self.comm.backend.db.updateDoc(self.doc, self.doc['_id'])
-      self.comm.changeTable.emit('','')
-      self.comm.changeDetails.emit('redraw')
       self.accept()  #close
     return
 

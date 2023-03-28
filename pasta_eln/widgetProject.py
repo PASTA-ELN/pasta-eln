@@ -95,8 +95,6 @@ class Project(QWidget):
     return
 
 
-  #TODO_P1 after folder edit: go back to details view
-
   def modelChanged(self, item):
     """
     After drag-drop, record changes to backend and database directly

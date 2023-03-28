@@ -25,7 +25,7 @@ class Sidebar(QWidget):
     self.mainL.setSpacing(7)
     self.setLayout(self.mainL)
     self.redraw()
-    #TODO_P1 allow scroll in sidebar
+    #TODO_P1 allow scroll in sidebar or fold
 
 
   @Slot()

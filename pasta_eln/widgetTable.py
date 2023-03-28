@@ -128,8 +128,7 @@ class Table(QWidget):
           elif isinstance(self.data[i]['value'][j], bool) and self.data[i]['value'][j]: #True
             item = QStandardItem('\u2713')
             item.setFont(QFont("Helvetica [Cronyx]", 16))
-          elif isinstance(self.data[i]['value'][j], list):                      #list
-            print('**WARTING: LIST IN TABLE, not sure where occurs')
+          elif isinstance(self.data[i]['value'][j], list):                      #list, e.g. qrCodes
             item =  QStandardItem(', '.join(self.data[i]['value'][j]))
           elif re.match(r'^[a-z]-[a-z0-9]{32}$',self.data[i]['value'][j]):      #Link
             item = QStandardItem('\u260D')
