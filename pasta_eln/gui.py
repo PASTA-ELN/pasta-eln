@@ -54,6 +54,7 @@ class MainWindow(QMainWindow):
     Action('&Website',               self.executeAction, helpMenu, self, name='website')
     Action('&Test file extraction',  self.executeAction, helpMenu, self, name='extractorTest')
     Action('&Shortcuts',             self.executeAction, helpMenu, self, name='shortcuts')
+    Action('&Todo list',             self.executeAction, helpMenu, self, name='todo')
 
     shortCuts = {'measurement':'m', 'sample':'s', 'x0':'p'} #TODO_P4 to config
     for docType, docLabel in self.comm.backend.db.dataLabels.items():
@@ -141,6 +142,15 @@ class MainWindow(QMainWindow):
       dialog.setWindowTitle('Keyboard shortcuts')
       dialog.setText(shortcuts)
       dialog.exec()
+    elif menuName=='todo':
+      try:
+        from .tempStrings import todoString
+        dialog = QMessageBox(self)
+        dialog.setWindowTitle('List of items on todo list')
+        dialog.setText(todoString)
+        dialog.exec()
+      except:
+        pass
     else:
       dialog = QMessageBox(self)
       dialog.setWindowTitle('ERROR')
