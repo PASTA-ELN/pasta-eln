@@ -10,3 +10,4 @@ anytree
 qrcode
 Pillow
 matplotlib
+cairosvg

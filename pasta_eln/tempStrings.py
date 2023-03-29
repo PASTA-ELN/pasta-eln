@@ -3,48 +3,38 @@ todoString = """
 
 <h3>Very important show stopper</h3>
 <ul>
-<li> move own research
-<li> selection does not scroll; one cannot select a row
+<li> convenience: allow scroll in sidebar
 </ul>
 
 <h3>To be verified</h3>
 <ul>
-<li> be sure that no restart is required
-<li> execute restart here via comm to gui.py
-<li> fix numpy, scipy, lmfit, ... versions
+<li> convenience: change project group via menus
+<li> convenience: selection does not scroll; one cannot select a row
+<li> install: be sure that no restart is required
+<li> install: execute restart here via comm to gui.py
 </ul>
 
 <h3>Small things implemented next</h3>
 <ul>
-<li> drag drop external files
-<li> go to positional arguments only: no -i ....
+<li> drag&drop: external files
 <li> invert filter: not t in name
-<li> tags should not have add button
 </ul>
 
 <h3>Bigger things implemented soon</h3>
 <ul>
-<li> Basic functionality for V1
-<li> after save: information should be integrated into ontology; and then the views have to be rebuild
-<li> change docID after docType change
-<li> into config file
-<li> make sure these make sense
-<li> requires view to change to
-<li> to config
-<li> unprocessed files should be have separate docType
-<li> what if names are identical
-<li> what is the difference to TextButton?
+<li> change procedure: on disk / database -> conflicts
+<li> question? what is the difference to TextButton?
+<li> tableHeaderChange: requires view to change to views, not ontology
 </ul>
 
 <h3>Things worthwile remembering</h3>
 <ul>
-<li> add keyboard shortcut to test this extractor
-<li> config
-<li> do we still need curate, what is the replacement?
+<li> addToConfig
+<li> addToConfig
+<li> addToConfig
 <li> if successful in Aug2023: remove "echo....read"
-<li> not always perfect: use regex
-<li> possible test that parent has corresponding show
-<li> rerun extractors as batch
-<li> this should become a GUI and CLI and separate into three-files: functions, CLI, GUI
+<li> moreChecksDB: if parent has corresponding show
+<li> rerunExtractors: as batch
+<li> serverConfiguration: this should become a GUI and CLI and separate into three-files: functions, CLI, GUI
 </ul>
 """
