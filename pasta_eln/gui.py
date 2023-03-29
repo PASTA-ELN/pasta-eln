@@ -1,5 +1,5 @@
 """ Graphical user interface includes all widgets """
-import os, logging, webbrowser
+import os, logging, webbrowser, json
 from pathlib import Path
 from PySide6.QtCore import Qt, Slot      # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QApplication, QFileDialog # pylint: disable=no-name-in-module
@@ -14,7 +14,7 @@ from .dialogForm import Form
 from .dialogConfig import Configuration
 from .dialogProjectGroup import ProjectGroup
 from .dialogOntology import Ontology
-from .miscTools import updateExtractorList
+from .miscTools import updateExtractorList, restart
 from .mixin_cli import text2html
 from .style import Action, showMessage
 from .fixedStrings import shortcuts
@@ -45,7 +45,9 @@ class MainWindow(QMainWindow):
     systemMenu = menu.addMenu("&System")
     Action('&Ontology',              self.executeAction, systemMenu, self, name='ontology')
     Action('&Project groups',        self.executeAction, systemMenu, self, name='projectGroups')
-    #TODO_P3 convenience: change project group via menus
+    changeProjectGroups = systemMenu.addMenu("&Change project group")
+    for name in self.backend.configuration['projectGroups'].keys():
+      Action(name, self.changeProjectGroup, changeProjectGroups, self, name=name)
     systemMenu.addSeparator()
     Action('Update &Extractor list', self.executeAction, systemMenu, self, name='updateExtractors')
     Action('&Verify database',       self.executeAction, systemMenu, self, name='verifyDB', shortcut='Ctrl+?')
@@ -145,6 +147,17 @@ class MainWindow(QMainWindow):
         pass
     else:
       showMessage(self, 'ERROR','menu not implemented yet: '+menuName, icon='Warning')
+    return
+
+
+  def changeProjectGroup(self):
+    """
+    change default project group in configuration file and restart
+    """
+    self.backend.configuration['defaultProjectGroup'] = self.sender().data()
+    with open(Path.home()/'.pastaELN.json', 'w', encoding='utf-8') as fConf:
+      fConf.write(json.dumps(self.backend.configuration,indent=2))
+    restart()
     return
 
 

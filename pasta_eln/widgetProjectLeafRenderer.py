@@ -86,10 +86,10 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     if 'comment' in doc and not folded:
       text = QTextDocument()
       text.setMarkdown(doc['comment'].strip())
-      text.setBaselineOffset(30)  #TODO_P1 test
       painter.translate(QPoint(xOffset-3, yOffset+15))
       text.drawContents(painter)
       painter.translate(-QPoint(xOffset-3, yOffset+15))
+    return
 
 
   def sizeHint(self, option, index):
