@@ -7,8 +7,6 @@ from PySide6.QtWidgets import QDialog, QWidget, QVBoxLayout, QHBoxLayout, QListW
 #pylint: enable=no-name-in-module
 from .style import IconButton
 
-#TODO_P4 after save: information should be integrated into ontology; and then the views have to be rebuild
-
 class TableHeader(QDialog):
   """ Table Header dialog: change which colums are shown and in which order """
   def __init__(self, comm, docType):
@@ -113,7 +111,7 @@ class TableHeader(QDialog):
       #   fConf.write(json.dumps(self.comm.backend.configuration,indent=2))
       # self.comm.changeTable('','')
       # self.comm.changeDetails('redraw')
-      #TODO_P4 requires view to change to
+      #TODO_P4 tableHeaderChange: requires view to change to views, not ontology
       print('DOES NOT WORK YES')
       self.accept()  #close
     return

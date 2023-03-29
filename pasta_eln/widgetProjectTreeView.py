@@ -40,7 +40,7 @@ class TreeView(QTreeView):
     Action('Open external program', self.executeAction, context, self, name='openExternal')
     context.exec(e.globalPos())
 
-  #TODO_P3 drag drop external files
+  #TODO_P3 drag&drop: external files
 
   def executeAction(self):
     """ after selecting a item from context menu """
@@ -95,4 +95,5 @@ class TreeView(QTreeView):
     """ after double-click on tree leaf: open form """
     docID = self.currentIndex().data().split('/')[-1]
     self.comm.formDoc.emit(self.comm.backend.db.getDoc(docID))
+    self.comm.changeProject.emit('','')
     return

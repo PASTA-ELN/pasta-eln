@@ -47,7 +47,7 @@ def fillDocBeforeCreate(data, docType):
 
   Args:
     data (dict): document to save
-    docType (str): type of document, e.g. project
+    docType (list): type of document, e.g. project=['x0']
 
   Returns:
     str: document
@@ -59,10 +59,10 @@ def fillDocBeforeCreate(data, docType):
   if isinstance(data['-type'], str):
     data['-type'] = data['-type'].split('/')
   if '_id' not in data:  # if new (if not update): create new id
-    prefix = 'x' if docType[0]=='x' else docType[0][0]
-    data['_id'] = prefix+'-'+uuid.uuid4().hex
+    data['_id'] = docType[0][0]+'-'+uuid.uuid4().hex
   data['-date']   = datetime.now().isoformat()
   if '-branch' not in data:
+    print('here?')
     data['-branch'] = [{'stack':[], 'path':None, 'child':-1, 'show':[]}]
   # separate comment into tags and fields
   # these tags are lost: '#d': too short; '#3tag': starts with number

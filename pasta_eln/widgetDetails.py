@@ -15,7 +15,7 @@ class Details(QScrollArea):
     comm.changeDetails.connect(self.changeDetails)
     self.doc  = {}
     self.docID= ''
-    #TODO_P5 add keyboard shortcut to test this extractor
+    #TODO_P1 add keyboard shortcut to test this extractor
 
     # GUI elements
     self.mainW = QWidget()

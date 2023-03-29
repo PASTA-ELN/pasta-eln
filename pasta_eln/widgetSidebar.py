@@ -1,10 +1,10 @@
 """ Sidebar widget that includes the navigation items """
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QGridLayout, QTreeWidget, QTreeWidgetItem, QFrame  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QGridLayout, QTreeWidget, QTreeWidgetItem, QFrame # pylint: disable=no-name-in-module
 from PySide6.QtCore import QSize, Slot                                      # pylint: disable=no-name-in-module
 from anytree import PreOrderIter
 
 from .dialogConfig import Configuration
-from .style import TextButton, LetterButton, IconButton, getColor
+from .style import TextButton, LetterButton, IconButton, getColor, showMessage
 
 class Sidebar(QWidget):
   """ Sidebar widget that includes the navigation items """
@@ -18,6 +18,7 @@ class Sidebar(QWidget):
     if not hasattr(comm.backend, 'db'):  #if no backend
       configWindow = Configuration(comm.backend, 'setup')
       configWindow.exec()
+    self.openProjectId = ''
 
     # GUI elements
     self.mainL = QVBoxLayout()
@@ -25,8 +26,8 @@ class Sidebar(QWidget):
     self.mainL.setSpacing(7)
     self.setLayout(self.mainL)
     self.redraw()
-    self.openProjectId = ''
-    #TODO_P1 allow scroll in sidebar or fold
+    #TODO_P2 convenience: allow scroll in sidebar
+    #   more below and other files
 
 
   @Slot()
@@ -51,13 +52,13 @@ class Sidebar(QWidget):
           self.openProjectId = projID
         #head: show project name as button
         projectW = QFrame()
+        # projectW.setMinimumHeight(300) #convenience: allow scroll in sidebar
         projectL = QVBoxLayout(projectW)
         projectL.setContentsMargins(3,3,3,3)
         btnProj = TextButton(projName, self.btnProject, projectL, projID+'/')
         self.widgetsProject[projID] = btnProj
         btnProj.setStyleSheet("border-width:0")
         projectW.setStyleSheet("background-color:"+ getColor(self.comm.backend, 'secondary'))
-        projectW.setMinimumHeight(300)
 
         # actions: scan, curate, ...
         actionW = QWidget()
@@ -67,8 +68,7 @@ class Sidebar(QWidget):
         actionL.setContentsMargins(0,0,0,0)
         btnScan = IconButton('mdi.clipboard-search-outline', self.btnScan, None, projID, 'Scan', self.comm.backend, text='Scan')
         actionL.addWidget(btnScan, 0,0)
-        btnCurate = IconButton('mdi.filter-plus-outline', self.btnCurate, None, projID, 'Curate', self.comm.backend, text='Curate')
-        #TODO_P5 do we still need curate, what is the replacement?
+        btnCurate = IconButton('mdi.filter-plus-outline', self.btnCurate, None, projID, 'Special', self.comm.backend, text='Special')
         actionL.addWidget(btnCurate, 0,1)
         projectL.addWidget(actionW)
         self.widgetsAction[projID] = actionW
@@ -94,6 +94,7 @@ class Sidebar(QWidget):
 
         # show folders as hierarchy
         treeW = QTreeWidget()
+        treeW.hide()  #convenience: allow scroll in sidebar
         treeW.setHeaderHidden(True)
         treeW.setColumnCount(1)
         treeW.itemClicked.connect(self.btnTree)
@@ -108,6 +109,9 @@ class Sidebar(QWidget):
         # finalize layout
         self.mainL.addWidget(projectW)
     # Other buttons
+    stretch = QWidget()
+
+    self.mainL.addWidget(stretch, stretch=2)
     return
 
 
@@ -174,8 +178,10 @@ class Sidebar(QWidget):
     self.comm.backend.cwd = self.comm.backend.basePath/branch['path']
     self.comm.backend.hierStack = [self.openProjectId]
     self.comm.backend.scanTree()
-    print("done scanning")
+    self.comm.changeProject.emit(self.openProjectId,'')
+    showMessage(self, 'Information','Scanning finished')
     return
+
   def btnCurate(self):
     """
     What happens if user clicks button "Curate"

@@ -1,7 +1,7 @@
 """ Class for interaction with couchDB """
 import traceback, logging
 from pathlib import PosixPath
-from .fixedStrings import defaultOntology
+from .fixedStrings import defaultOntology, defaultOntologyNode
 
 
 class Database:
@@ -34,7 +34,7 @@ class Database:
       if '-ontology-' in self.db:
         print('Info: remove old ontology')
         self.db['-ontology-'].delete()
-      self.ontology = json.loads(defaultOntology)
+      self.ontology = defaultOntology
       self.db.create_document(self.ontology)
       self.initViews(configuration)
     self.ontology = self.db['-ontology-']
@@ -55,7 +55,7 @@ class Database:
     # for the individual docTypes
     jsDefault = "if ($docType$) {emit($key$, [$outputList$]);}"
     viewCode = {}
-    for docType in [i for i in self.ontology if i[0] not in ['_','-']]:
+    for docType in [i for i in self.ontology if i[0] not in ['_','-']]+['-']:
       if docType=='x0':
         js    = jsDefault.replace('$docType$', "doc['-type']=='x0' && (doc['-branch'][0].show.every(\
                 function(i) {return i;}))").replace('$key$','doc._id')
@@ -69,7 +69,11 @@ class Database:
         jsAll = jsDefault.replace('$docType$', "doc['-type'].join('/').substring(0, "+str(len(docType))+")=='"\
                 +docType+"'").replace('$key$','doc["-branch"][0].stack[0]')
       outputList = []
-      for idx,item in enumerate(self.ontology[docType]['prop']):
+      if docType == '-':
+        enumeration = enumerate(defaultOntologyNode)
+      else:
+        enumeration = enumerate(self.ontology[docType]['prop'])
+      for idx,item in enumeration:
         if idx>configuration['tableColumnsMax']:
           break
         if 'name' not in item:
@@ -782,7 +786,7 @@ class Database:
             outstring+= f'{Bcolors.FAIL}**ERROR dch08a: branch does not have show: '+doc['_id']+f'{Bcolors.ENDC}\n'
           elif len(branch['show']) != len(branch['stack'])+1:
             outstring+= f'{Bcolors.FAIL}**ERROR dch08b: branch-show not same length as branch-stack: '+doc['_id']+f'{Bcolors.ENDC}\n'
-          #TODO_P5 possible test that parent has corresponding show
+          #TODO_P5 moreChecksDB: if parent has corresponding show
 
         #every doc should have a name
         if not '-name' in doc:

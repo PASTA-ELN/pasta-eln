@@ -1,5 +1,5 @@
 """ all styling of buttons and other general widgets, some defined colors... """
-from PySide6.QtWidgets import QPushButton, QLabel, QSizePolicy, QRadioButton  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QPushButton, QLabel, QSizePolicy, QRadioButton, QMessageBox  # pylint: disable=no-name-in-module
 from PySide6.QtGui import QImage, QPixmap, QAction, QKeySequence  # pylint: disable=no-name-in-module
 from PySide6.QtCore import QByteArray, Qt           # pylint: disable=no-name-in-module
 from PySide6.QtSvgWidgets import QSvgWidget         # pylint: disable=no-name-in-module
@@ -101,7 +101,7 @@ class IconButton(QPushButton):
 
     Additional parameter:
     - hide (bool): hidden or shown initially
-    - text (str): text shown on button additionally  #TODO_P4 what is the difference to TextButton?
+    - text (str): text shown on button additionally  #TODO_P4 question? what is the difference to TextButton?
 
     Args:
       iconName (str): icon to show on button
@@ -218,3 +218,26 @@ class Label(QLabel):
     if layout is not None:
       layout.addWidget(self)
     return
+
+
+def showMessage(parent, title, text, icon='', style=''):
+  """
+  Show a message box
+
+  Args:
+    parent (QWidget): parent widget (self)
+    title (str): title of box
+    text (str): text in box
+    icon (str): icon: 'Information','Warning','Critical'
+    style (str): css style
+  """
+  dialog = QMessageBox(parent)
+  dialog.setWindowTitle(title)
+  dialog.setText(text)
+  if icon in ['Information','Warning','Critical']:
+    dialog.setIcon(getattr(QMessageBox, icon))
+  if style!='':
+    dialog.setStyleSheet(style)
+  dialog.exec()
+  return
+

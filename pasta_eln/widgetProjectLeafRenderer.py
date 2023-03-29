@@ -11,7 +11,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
   """ renders each leaf of project tree using QPaint """
   def __init__(self):
     super().__init__()
-    self.lineSep = 20 #TODO_P4 into config file
+    self.lineSep = 20 #TODO_P5 addToConfig
     self.debugMode = True
     self.comm = None
     self.width = -1
@@ -82,8 +82,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       if isinstance(doc[key], str):
         painter.drawStaticText(xOffset, yOffset, QStaticText(key+': '+doc[key]))
       else:
-        pass
-        #print("cannot paint ",docID, key) #TODO_P4 make sure these make sense
+        logging.info('Do not know how to paint',docID, key)
     if 'comment' in doc and not folded:
       text = QTextDocument()
       text.setMarkdown(doc['comment'].strip())

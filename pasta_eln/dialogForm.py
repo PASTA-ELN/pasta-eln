@@ -6,6 +6,7 @@ from PySide6.QtWidgets import QDialog, QWidget, QFormLayout, QVBoxLayout, QHBoxL
 #pylint: enable=no-name-in-module
 from .style import Image, TextButton, IconButton
 from .fixedStrings import defaultOntologyNode
+from .handleDictionaries import fillDocBeforeCreate
 
 class Form(QDialog):
   """ New/Edit dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""
@@ -49,7 +50,7 @@ class Form(QDialog):
       if self.doc['-type'][0] in self.comm.backend.db.ontology:
         ontologyNode = self.comm.backend.db.ontology[self.doc['-type'][0]]['prop']
       else:
-        ontologyNode = json.loads(defaultOntologyNode)
+        ontologyNode = defaultOntologyNode
       for item in ontologyNode:
         if item['name'] not in self.doc and  item['name'][0] not in ['_','-']:
           self.doc[item['name']] = ''
@@ -86,7 +87,7 @@ class Form(QDialog):
         rightSideL.addWidget(splitter)
         self.formL.addRow(labelW, rightSideW)
       elif key == '-tags':  #remove - to make work
-        # TODO_P3: tags get selected via a editable QCombobox and get shown as qlabels, that can be deleted
+        # TODO_P3 tags: get selected via a editable QCombobox and get shown as qlabels, that can be deleted
         # RR: can you already implement tags as list of qlabels with a '-' button on the right to delete
         # the qcombox comes later once the database knows what tags are and how to generate the list
         print('')
@@ -107,7 +108,7 @@ class Form(QDialog):
             getattr(self, 'key_'+key).addItem('- no link -', userData='')
             for line in self.comm.backend.db.getView('viewDocType/'+listDocType):
               getattr(self, 'key_'+key).addItem(line['value'][0], userData=line['id'])
-              if line['id'] == value: #TODO_P4 what if names are identical
+              if line['id'] == value:
                 getattr(self, 'key_'+key).setCurrentText(line['value'][0])
         else:                                         #text area
           setattr(self, 'key_'+key, QLineEdit(value))
@@ -130,7 +131,8 @@ class Form(QDialog):
     buttonBox.clicked.connect(self.save)
     mainL.addWidget(buttonBox)
 
-  # TODO_P4 add button to add key-values
+  # TODO_P4 ontologyCheck: all names must be different
+  # TODO_P4 form: add button to add key-values
   def save(self, btn):
     """
     Action upon save / cancel
@@ -155,16 +157,20 @@ class Form(QDialog):
             self.doc[key] = getattr(self, 'key_'+key).text().strip()
         else:
           print("**ERROR dialogeForm unknown value type",key, value)
-      if '-branch' in self.doc:
-        del self.doc['-branch']
+      if '-branch' in self.doc:  #don't keep -branch in since update requries different type of -branch
+        oldBranch = self.doc.pop('-branch')
       if self.projectComboBox.currentData() != '':
         parentPath = self.comm.backend.db.getDoc(self.projectComboBox.currentData())['-branch'][0]['path']
         self.doc['-branch'] = {'op':'u', 'stack':[self.projectComboBox.currentData()], 'childNum':9999, \
                                'path':parentPath}
       if self.docTypeComboBox.currentData() != '':
-        self.doc['-type'] = [self.projectComboBox.currentData()]
-        print("**WARNING: I ALSO SHOULD CHANGE DOCID") #TODO_P4 change docID after docType change
-        #remove old, create new
+        self.doc['-type'] = [self.docTypeComboBox.currentData()]
+        self.comm.backend.db.remove(self.doc['_id'])
+        del self.doc['_id']
+        del self.doc['_rev']
+        self.doc['-branch'] = oldBranch
+        self.doc = fillDocBeforeCreate(self.doc, [self.docTypeComboBox.currentData()] )
+        self.comm.backend.db.saveDoc(self.doc)
       else:
         if '_ids' in self.doc: #group update
           del self.doc['-name']
@@ -176,7 +182,6 @@ class Form(QDialog):
           self.comm.backend.db.updateDoc(self.doc, self.doc['_id'])
       self.accept()  #close
     return
-  #TODO_P1 updateDoc does not work on '-' element
 
   def btnAdvanced(self, status):
     """

@@ -89,7 +89,7 @@ class Project(QWidget):
     self.tree.expandAll()
     if selectedIndex is not None:
       self.tree.selectionModel().select(selectedIndex, QItemSelectionModel.Select)
-      #TODO_P1 selection does not scroll; one cannot select a row
+      #TODO_P2 convenience: selection does not scroll; one cannot select a row
       self.tree.setCurrentIndex(selectedIndex)# Item(selectedItem)
     self.mainL.addWidget(self.tree)
     return

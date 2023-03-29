@@ -2,7 +2,7 @@
 import os, logging, webbrowser
 from pathlib import Path
 from PySide6.QtCore import Qt, Slot      # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QApplication, QMessageBox, QFileDialog # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QApplication, QFileDialog # pylint: disable=no-name-in-module
 from PySide6.QtGui import QIcon, QPixmap, QAction    # pylint: disable=no-name-in-module
 from qt_material import apply_stylesheet  #of https://github.com/UN-GCPDS/qt-material
 
@@ -16,7 +16,7 @@ from .dialogProjectGroup import ProjectGroup
 from .dialogOntology import Ontology
 from .miscTools import updateExtractorList
 from .mixin_cli import text2html
-from .style import Action
+from .style import Action, showMessage
 from .fixedStrings import shortcuts
 os.environ['QT_API'] = 'pyside6'
 
@@ -45,6 +45,7 @@ class MainWindow(QMainWindow):
     systemMenu = menu.addMenu("&System")
     Action('&Ontology',              self.executeAction, systemMenu, self, name='ontology')
     Action('&Project groups',        self.executeAction, systemMenu, self, name='projectGroups')
+    #TODO_P2 convenience: change project group via menus
     systemMenu.addSeparator()
     Action('Update &Extractor list', self.executeAction, systemMenu, self, name='updateExtractors')
     Action('&Verify database',       self.executeAction, systemMenu, self, name='verifyDB', shortcut='Ctrl+?')
@@ -56,7 +57,7 @@ class MainWindow(QMainWindow):
     Action('&Shortcuts',             self.executeAction, helpMenu, self, name='shortcuts')
     Action('&Todo list',             self.executeAction, helpMenu, self, name='todo')
 
-    shortCuts = {'measurement':'m', 'sample':'s', 'x0':'p'} #TODO_P4 to config
+    shortCuts = {'measurement':'m', 'sample':'s', 'x0':'p'} #TODO_P5 addToConfig
     for docType, docLabel in self.comm.backend.db.dataLabels.items():
       if docType[0]=='x' and docType[1]!='0':
         continue
@@ -65,7 +66,8 @@ class MainWindow(QMainWindow):
       if docType=='x0':
         viewMenu.addSeparator()
     viewMenu.addSeparator()
-    Action('&Tags', self.viewMenu, viewMenu, self, 'Ctrl+T', '_tags_')
+    Action('&Tags',         self.viewMenu, viewMenu, self, 'Ctrl+T', '_tags_')
+    Action('&Unidentified', self.viewMenu, viewMenu, self, name='-')
 
     #GUI elements
     mainWidget = QWidget()
@@ -121,11 +123,7 @@ class MainWindow(QMainWindow):
       updateExtractorList(self.backend.extractorPath)
     elif menuName=='verifyDB':
       report = self.comm.backend.checkDB(True)
-      dialog = QMessageBox(self)
-      dialog.setWindowTitle('Report of database verification')
-      dialog.setText(text2html(report))
-      dialog.setStyleSheet('QLabel {min-width: 800px}')
-      dialog.exec()
+      showMessage(self, 'Report of database verification', text2html(report), style='QLabel {min-width: 800px}')
     elif menuName=='exit':
       self.close()
     elif menuName=='website':
@@ -133,29 +131,17 @@ class MainWindow(QMainWindow):
     elif menuName=='extractorTest':
       fileName = QFileDialog.getOpenFileName(self,'Open file for extractor test',str(Path.home()),'*.*')[0]
       report = self.comm.backend.testExtractor(fileName, reportHTML=True)
-      dialog = QMessageBox(self)
-      dialog.setWindowTitle('Report of extractor test')
-      dialog.setText(report)
-      dialog.exec()
+      showMessage(self, 'Report of extractor test', report)
     elif menuName=='shortcuts':
-      dialog = QMessageBox(self)
-      dialog.setWindowTitle('Keyboard shortcuts')
-      dialog.setText(shortcuts)
-      dialog.exec()
+      showMessage(self, 'Keyboard shortcuts', shortcuts)
     elif menuName=='todo':
       try:
         from .tempStrings import todoString
-        dialog = QMessageBox(self)
-        dialog.setWindowTitle('List of items on todo list')
-        dialog.setText(todoString)
-        dialog.exec()
+        showMessage(self, 'List of items on todo list',todoString)
       except:
         pass
     else:
-      dialog = QMessageBox(self)
-      dialog.setWindowTitle('ERROR')
-      dialog.setText('menu not implemented yet: '+menuName)
-      dialog.exec()
+      showMessage(self, 'ERROR','menu not implemented yet: '+menuName, icon='Warning')
     return
 
 

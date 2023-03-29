@@ -349,7 +349,7 @@ def ontology(command='test'):
 
   elif command == 'install':
     logging.info('ontology starting ...')
-    doc = json.loads(defaultOntology)
+    doc = defaultOntology
     logging.info(str(doc))
     logging.info('ontology ending ...')
     # _ = backend.db.create_document(doc)

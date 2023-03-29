@@ -1,5 +1,5 @@
 """ widget that shows the table of the items """
-import re
+import re, json
 from pathlib import Path
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTableView, QLabel, QMenu, QFileDialog, \
                               QHeaderView, QAbstractItemView, QGridLayout, QLineEdit, QComboBox # pylint: disable=no-name-in-module
@@ -8,6 +8,7 @@ from PySide6.QtGui import QBrush, QStandardItemModel, QStandardItem, QAction, QF
 import qtawesome as qta
 from .dialogTableHeader import TableHeader
 from .style import TextButton, Label, getColor, LetterButton, Action
+from .fixedStrings import defaultOntologyNode
 
 class Table(QWidget):
   """ widget that shows the table of the items """
@@ -34,7 +35,7 @@ class Table(QWidget):
     self.headerW.hide()
     headerL = QHBoxLayout(self.headerW)
     self.headline = Label('','h1', headerL)
-    TextButton('Add',        self.executeAction, headerL, name='addItem')
+    self.addBtn = TextButton('Add',        self.executeAction, headerL, name='addItem')
     TextButton('Add Filter', self.executeAction, headerL, name='addFilter')
     TextButton('Group Edit', self.executeAction, headerL, name='groupEdit')
     more = TextButton('More',None, headerL)
@@ -44,7 +45,7 @@ class Table(QWidget):
     Action('Hide / Show all', self.executeAction, moreMenu, self, name='showAll')
     Action('Change headers',  self.executeAction, moreMenu, self, name='changeTableHeader')
     Action('Export',          self.executeAction, moreMenu, self, name='export')
-    #TODO_P5 rerun extractors as batch
+    #TODO_P5 rerunExtractors: as batch
     more.setMenu(moreMenu)
     mainL.addWidget(self.headerW)
     # filter
@@ -63,7 +64,7 @@ class Table(QWidget):
     header = self.table.horizontalHeader()
     header.setSectionsMovable(True)
     header.setSortIndicatorShown(True)
-    header.setMaximumSectionSize(400) #TODO_P5 config
+    header.setMaximumSectionSize(400) #TODO_P5 addToConfig
     header.resizeSections(QHeaderView.ResizeToContents)
     header.setStretchLastSection(True)
     # ---
@@ -84,22 +85,28 @@ class Table(QWidget):
       self.docType = docType
       self.projID  = projID
     if docType=='_tags_':
+      self.addBtn.hide()
       if self.showAll:
         self.data = self.comm.backend.db.getView('viewIdentify/viewTagsAll')
       else:
         self.data = self.comm.backend.db.getView('viewIdentify/viewTags')
       self.filterHeader = ['tag','name']
       self.headline.setText('TAGS')
-      #TODO_P3 tags should not have add button
     else:
+      self.addBtn.show()
       path = 'viewDocType/'+self.docType+'All' if self.showAll else 'viewDocType/'+self.docType
       if self.projID=='':
         self.data = self.comm.backend.db.getView(path)
       else:
         self.data = self.comm.backend.db.getView(path, preciseKey=self.projID)
-      self.headline.setText(self.comm.backend.db.dataLabels[self.docType])
+      if self.docType=='-':
+        self.headline.setText('Unidentified')
+      else:
+        self.headline.setText(self.comm.backend.db.dataLabels[self.docType])
       if docType in self.comm.backend.configuration['tableHeaders']:
         self.filterHeader = self.comm.backend.configuration['tableHeaders'][docType]
+      elif self.docType=='-':
+        self.filterHeader = [i['name'] for i in defaultOntologyNode]
       else:
         self.filterHeader = [i['name'] for i in self.comm.backend.db.ontology[self.docType]['prop']]
       self.filterHeader = [i[1:] if i[0]=='-'   else i for i in self.filterHeader]  #change -something to something
