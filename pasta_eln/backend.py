@@ -579,7 +579,7 @@ class Backend(CLI_Mixin):
       else:
         report = "ExtractorERROR Matplot image"
     if success and isinstance(content['image'], str):  #show content
-      report += '<b>Additional window shows the image</b><br>'
+      report += '<br><b>Additional window shows the image</b><br>'
       if content['image'].startswith('data:image/'):
         #png or jpg encoded base64
         extension = content['image'][11:14]

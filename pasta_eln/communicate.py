@@ -14,3 +14,4 @@ class Communicate(QObject):
   changeDetails = Signal(str)            #send docID from main-table to details
   changeProject = Signal(str, str)       #send docID,projectID from sidebar or main-table to projects
   formDoc = Signal(dict)                 #send doc from details to new/edit dialog: dialogForm
+  testExtractor = Signal()               #execute extractorTest in widgetDetails

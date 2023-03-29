@@ -1,5 +1,5 @@
 """ renders each leaf of project tree using QPaint """
-import base64
+import base64, logging
 from PySide6.QtCore import Qt, QSize, QPoint, QMargins, QRectF# pylint: disable=no-name-in-module
 from PySide6.QtGui import QStaticText, QPixmap, QTextDocument # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QStyledItemDelegate             # pylint: disable=no-name-in-module
@@ -82,7 +82,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       if isinstance(doc[key], str):
         painter.drawStaticText(xOffset, yOffset, QStaticText(key+': '+doc[key]))
       else:
-        logging.info('Do not know how to paint',docID, key)
+        logging.info('Do not know how to paint: '+docID+': '+str(key))
     if 'comment' in doc and not folded:
       text = QTextDocument()
       text.setMarkdown(doc['comment'].strip())

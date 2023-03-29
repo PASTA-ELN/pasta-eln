@@ -54,6 +54,7 @@ class MainWindow(QMainWindow):
     helpMenu = menu.addMenu("&Help")
     Action('&Website',               self.executeAction, helpMenu, self, name='website')
     Action('&Test file extraction',  self.executeAction, helpMenu, self, name='extractorTest')
+    Action('&Test selected item extraction', self.executeAction, helpMenu, self, name='extractorTest2', shortcut='F2')
     Action('&Shortcuts',             self.executeAction, helpMenu, self, name='shortcuts')
     Action('&Todo list',             self.executeAction, helpMenu, self, name='todo')
 
@@ -132,6 +133,8 @@ class MainWindow(QMainWindow):
       fileName = QFileDialog.getOpenFileName(self,'Open file for extractor test',str(Path.home()),'*.*')[0]
       report = self.comm.backend.testExtractor(fileName, reportHTML=True)
       showMessage(self, 'Report of extractor test', report)
+    elif menuName=='extractorTest2':
+      self.comm.testExtractor.emit()
     elif menuName=='shortcuts':
       showMessage(self, 'Keyboard shortcuts', shortcuts)
     elif menuName=='todo':

@@ -5,7 +5,7 @@ from PySide6.QtWidgets import QScrollArea, QWidget, QVBoxLayout, QHBoxLayout, QL
 from PySide6.QtCore import Qt, Slot, QByteArray   # pylint: disable=no-name-in-module
 from PySide6.QtSvgWidgets import QSvgWidget       # pylint: disable=no-name-in-module
 from PySide6.QtGui import QPixmap, QImage, QAction# pylint: disable=no-name-in-module
-from .style import TextButton, Image, Label, Action
+from .style import TextButton, Image, Label, Action, showMessage
 
 class Details(QScrollArea):
   """ widget that shows the details of the items """
@@ -13,9 +13,9 @@ class Details(QScrollArea):
     super().__init__()
     self.comm = comm
     comm.changeDetails.connect(self.changeDetails)
+    comm.testExtractor.connect(self.testExtractor)
     self.doc  = {}
     self.docID= ''
-    #TODO_P1 add keyboard shortcut to test this extractor
 
     # GUI elements
     self.mainW = QWidget()
@@ -55,6 +55,7 @@ class Details(QScrollArea):
     self.mainL.addWidget(self.metaDatabaseW)
     self.mainL.addStretch(1)
 
+
   def contextMenu(self, pos):
     """
     Create a context menu
@@ -67,10 +68,7 @@ class Details(QScrollArea):
     choices= {key:value for key,value in self.comm.backend.configuration['extractors'].items() \
                 if key.startswith(mask)}
     for key,value in choices.items():
-      thisAction = QAction(value, self)
-      thisAction.setData(key)
-      thisAction.triggered.connect(self.changeExtractor)
-      context.addAction(thisAction)
+      Action(value, self.changeExtractor, context, self, name=key)
     context.exec(self.mapToGlobal(pos))
     return
 
@@ -84,8 +82,15 @@ class Details(QScrollArea):
       extractorRedo=True)  #any path is good since the file is the same everywhere; data-changed by reference
     if len(self.doc['-type'])>1 and len(self.doc['image'])>1:
       self.doc = self.comm.backend.db.updateDoc({'image':self.doc['image'], '-type':self.doc['-type']}, self.doc['_id'])
-      self.comm.changeTable.emit('','',True)
+      self.comm.changeTable.emit('','')
       self.comm.changeDetails.emit(self.doc['_id'])
+    return
+
+  @Slot()
+  def testExtractor(self):
+    if len(self.doc)>1:
+      report = self.comm.backend.testExtractor(self.comm.backend.basePath/self.doc['-branch'][0]['path'], reportHTML=True)
+      showMessage(self, 'Report of extractor test', report, style='QLabel {min-width: 800px}')
     return
 
 
