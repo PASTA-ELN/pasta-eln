@@ -45,7 +45,7 @@ class MainWindow(QMainWindow):
     systemMenu = menu.addMenu("&System")
     Action('&Ontology',              self.executeAction, systemMenu, self, name='ontology')
     Action('&Project groups',        self.executeAction, systemMenu, self, name='projectGroups')
-    #TODO_P2 convenience: change project group via menus
+    #TODO_P3 convenience: change project group via menus
     systemMenu.addSeparator()
     Action('Update &Extractor list', self.executeAction, systemMenu, self, name='updateExtractors')
     Action('&Verify database',       self.executeAction, systemMenu, self, name='verifyDB', shortcut='Ctrl+?')

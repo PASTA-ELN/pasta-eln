@@ -26,7 +26,7 @@ class Sidebar(QWidget):
     self.mainL.setSpacing(7)
     self.setLayout(self.mainL)
     self.redraw()
-    #TODO_P2 convenience: allow scroll in sidebar
+    #TODO_P3 convenience: allow scroll in sidebar
     #   more below and other files
 
 
@@ -94,7 +94,7 @@ class Sidebar(QWidget):
 
         # show folders as hierarchy
         treeW = QTreeWidget()
-        treeW.hide()  #convenience: allow scroll in sidebar
+        #treeW.hide()  #convenience: allow scroll in sidebar
         treeW.setHeaderHidden(True)
         treeW.setColumnCount(1)
         treeW.itemClicked.connect(self.btnTree)

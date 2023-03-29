@@ -118,11 +118,11 @@ def createTodoList():
           listAll.append(line.strip().split('#TODO_')[1])
   listAll.sort()
   currentLevel = 0
-  labels = {1:'Very important show stopper', 2:'To be verified', 3:'Small things implemented next', \
-            4:'Bigger things implemented soon', 5:'Things worthwile remembering'}
+  labels = {1:'Very important show stopper', 2:'To be verified/identified', 3:'Improvement to convenience', \
+            4:'Bigger things implemented soon', 5:'Things worthwile remembering/uncritical'}
   res = 'todoString = """\n'
   for item in listAll:
-    if int(item[1])>currentLevel:
+    while int(item[1])>currentLevel:
       currentLevel += 1
       if currentLevel>1:
         res += '</ul>\n'
