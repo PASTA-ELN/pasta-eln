@@ -14,7 +14,6 @@ todoString = """
 <h3>Improvement to convenience</h3>
 <ul>
 <li> convenience: allow scroll in sidebar
-<li> convenience: change project group via menus
 <li> convenience: selection does not scroll; one cannot select a row
 <li> drag&drop: external files
 <li> invert filter: not t in name
@@ -33,6 +32,7 @@ todoString = """
 <li> addToConfig
 <li> addToConfig
 <li> addToConfig
+<li> if successful in Aug2023: remove
 <li> if successful in Aug2023: remove "echo....read"
 <li> moreChecksDB: if parent has corresponding show
 <li> serverConfiguration: this should become a GUI and CLI and separate into three-files: functions, CLI, GUI
