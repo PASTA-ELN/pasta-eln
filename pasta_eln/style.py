@@ -240,4 +240,3 @@ def showMessage(parent, title, text, icon='', style=''):
     dialog.setStyleSheet(style)
   dialog.exec()
   return
-
