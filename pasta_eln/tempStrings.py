@@ -7,7 +7,6 @@ todoString = """
 
 <h3>To be verified/identified</h3>
 <ul>
-<li> install: be sure that no restart is required
 </ul>
 
 <h3>Improvement to convenience</h3>

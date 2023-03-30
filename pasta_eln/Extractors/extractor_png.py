@@ -25,7 +25,7 @@ def use(filePath, recipe='', saveFileName=None):
     if not isinstance(value, (str, int, float, list)):
       toDelete.append(key)
   for key in toDelete:
-      del metaVendor[key]
+    del metaVendor[key]
   imgArr = np.array(image)
   if len(imgArr.shape)==3:
     imgArr = imgArr[:,:,0]

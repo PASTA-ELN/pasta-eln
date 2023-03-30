@@ -113,18 +113,15 @@ class ConfigurationSetup(QWidget):
       else:
         ontology('install')
 
-    #TODO_P2 install: be sure that no restart is required
-
-    ## Ubuntu autocreates the shortcut: if true in May2023: remove
-    # #Shortcut
-    # if flagContinue:
-    #   button = QMessageBox.question(self, "Create shortcut", "Do you want to create the shortcut for PASTA-ELN on desktop?")
-    #   if button == QMessageBox.Yes:
-    #     createShortcut()
-    #     self.mainText = self.mainText.replace('- Shortcut creation', '- User selected to add a shortcut' )
-    #   else:
-    #     self.mainText = self.mainText.replace('- Shortcut creation', '- User selected to NOT add a shortcut' )
-    #   self.text1.setMarkdown(self.mainText)
+    #Shortcut
+    if flagContinue:
+      button = QMessageBox.question(self, "Create shortcut", "Do you want to create the shortcut for PASTA-ELN on desktop?")
+      if button == QMessageBox.Yes:
+        createShortcut()
+        self.mainText = self.mainText.replace('- Shortcut creation', '- User selected to add a shortcut' )
+      else:
+        self.mainText = self.mainText.replace('- Shortcut creation', '- User selected to NOT add a shortcut' )
+      self.text1.setMarkdown(self.mainText)
 
     #Example data
     if flagContinue:
