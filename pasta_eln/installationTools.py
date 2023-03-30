@@ -472,8 +472,8 @@ def exampleData(force=False, callbackPercent=None):
   backend.changeHierarchy(semStepID)
   if callbackPercent is not None:
     callbackPercent(21)
-  backend.addData('measurement', {'-name': 'https://developers.google.com/search/mobile-sites/imgs/mobile-seo/separate-urls.png', \
-    'comment':'remote image from google. Used for testing and reference. Can be deleted.'})
+  backend.addData('measurement', {'-name': 'https://upload.wikimedia.org/wikipedia/commons/a/a4/Misc_pollen.jpg', \
+    'comment':'remote image from wikipedia. Used for testing and reference. Can be deleted.'})
   if callbackPercent is not None:
     callbackPercent(22)
   print(backend.output('measurement'))

@@ -108,6 +108,8 @@ If you want to create a new extractor for a datafile.abc then we suggest that yo
       dict: containing image, metaVendor, metaUser, recipe
     """
     # HERE MAIN PART OF EXTRACTOR
+    metaVendor = {}
+    metaUser   = {}
 
     #save to file; this is particular helpful for testing the extractor
     if saveFileName is not None:
@@ -122,7 +124,7 @@ If you want to create a new extractor for a datafile.abc then we suggest that yo
 
   if __name__=='__main__':
     reply = use('datafile.abc',saveFileName='datafile.png')
-    del reply[image]
+    del reply['image']
     print(reply)
 
 Then you can change and optimize the code by running 'python3 extractor_abc.py'. Of course you have to replace filenames and define imageData, metaVendor, .... After you have finished the extractor, you can remove the last four lines.

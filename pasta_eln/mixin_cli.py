@@ -88,7 +88,7 @@ class CLI_Mixin:
         width = 0
       if width!=0:
         formatString = '{0: <'+str(abs(width))+'}'
-        outString.append(formatString.format(item['name']) )
+        outString.append(formatString.format(item['name'].replace('-','')) )
     outString = '|'.join(outString)+'\n'
     outString += '-'*104+'\n'
     for lineItem in self.db.getView('viewDocType/'+docType):

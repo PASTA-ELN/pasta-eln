@@ -6,6 +6,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTextEdit, QMes
 from .style import TextButton
 from .installationTools import couchdb, configuration, ontology, exampleData, createShortcut, installLinuxRoot
 from .fixedStrings import setupTextLinux, rootInstallLinux, exampleDataLinux
+from .miscTools import restart
 
 class ConfigurationSetup(QWidget):
   """
@@ -110,13 +111,7 @@ class ConfigurationSetup(QWidget):
         self.mainText = self.mainText.replace('- Ontology of the datastructure','- Ontology of the datastructure is acceptable\n'+res )
         self.text1.setMarkdown(self.mainText)
       else:
-        button = QMessageBox.question(self, "PASTA-ELN ontology", "Do you want to create the default ontology?")
-        if button == QMessageBox.Yes:
-          ontology('install')
-        else:
-          self.mainText = self.mainText.replace('- Ontology of the datastructure','- Ontology: user chose to NOT install' )
-          self.text1.setMarkdown(self.mainText)
-          flagContinue = False
+        ontology('install')
 
     #TODO_P2 install: be sure that no restart is required
 
@@ -154,4 +149,6 @@ class ConfigurationSetup(QWidget):
     """
     What do do when setup is finished: success or unsuccessfully
     """
-    self.callbackFinished()
+    restart()
+    # self.callbackFinished()
+    return

@@ -24,13 +24,12 @@
   - C:\Users\...\anaconda3\envs\...\Lib\site-packages\pasta_eln
 
 ### Restart windows
-- uninstall couchdb, git, pythonx2
+- uninstall couchdb, python x2
 - remove directories
   - C:\Program Files\Apache CouchDB
-  - C:\Program Files\Git
   - C:\Users\....\AppData\Local\Programs\Python
   - Pasta-Folder in Documents
-- remove Users\...\pastaELN.json
+- remove Users\...\.pastaELN.json
 - remove shortcut on Windows desktop
 - restart Windows
 
@@ -67,8 +66,9 @@ rm pastaELN.log
 1. pylint pasta_eln
 2. make -C docs html; firefox docs/build/html/index.html
 3. run test "python -m pasta_eln.Tests.3Projects"
-4. normal commit to test all actions: pylint, documentation, ...
-5. create a new version: ./commit.py "Minimal viable product" 1
+4. ensure extractors identical and extractor_csv is updated
+5. normal commit to test all actions: pylint, documentation, ...
+6. create a new version: ./commit.py "Minimal viable product" 1
    **THIS STEP IS NECESSARY FOR ALL GITHUB-Actions TO WORK**
 
 ### How to write small python programs that do things

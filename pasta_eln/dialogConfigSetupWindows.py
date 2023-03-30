@@ -6,6 +6,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTextEdit, QMes
 from .style import TextButton
 from .installationTools import couchdb, couchdbUserPassword, configuration, ontology, exampleData, createShortcut
 from .fixedStrings import setupTextWindows, couchDBWindows, exampleDataWindows, restartPastaWindows
+from .miscTools import restart
 
 class ConfigurationSetup(QWidget):
   """
@@ -109,13 +110,13 @@ class ConfigurationSetup(QWidget):
         self.mainText = self.mainText.replace('- Ontology of the datastructure','- Ontology of the datastructure is acceptable\n'+res )
         self.text1.setMarkdown(self.mainText)
       else:
-        button = QMessageBox.question(self, "PASTA-ELN ontology", "Do you want to create the default ontology?")
-        if button == QMessageBox.Yes:
-          ontology('install')
-        else:
-          self.mainText = self.mainText.replace('- Ontology of the datastructure','- Ontology: user chose to NOT install' )
-          self.text1.setMarkdown(self.mainText)
-          flagContinue = False
+        # button = QMessageBox.question(self, "PASTA-ELN ontology", "Do you want to create the default ontology?")
+        # if button == QMessageBox.Yes:
+        ontology('install')
+        # else:
+        #   self.mainText = self.mainText.replace('- Ontology of the datastructure','- Ontology: user chose to NOT install' )
+        #   self.text1.setMarkdown(self.mainText)
+        #   flagContinue = False
 
     #Shortcut
     if flagContinue:
@@ -130,7 +131,7 @@ class ConfigurationSetup(QWidget):
     #If installed, restart
     if flagInstalledSoftware:
       button = QMessageBox.information(self,'PASTA-ELN restart required', restartPastaWindows)
-      #TODO_P2 install: execute restart here via comm to gui.py
+      restart()
 
     #Example data
     if flagContinue:

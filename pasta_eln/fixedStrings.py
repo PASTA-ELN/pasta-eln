@@ -63,10 +63,9 @@ defaultOntologyNode = json.loads("""
 
 setupTextLinux = """
 ### Welcome to PASTA-ELN setup for Linux
-Five components are needed for proper function
+Three components are needed for proper function
 - CouchDB
-- Configuration of preferences
-- Ontology of the datastructure
+- Configuration of preferences / default ontology
 - Example data
 
 Analyse and (possibly) correct these items.
@@ -79,10 +78,9 @@ Note: this text becomes an installation report
 
 setupTextWindows = """
 ### Welcome to PASTA-ELN setup for Windows
-Seven components are needed for proper function
+Four components are needed for proper function
 - CouchDB
-- Configuration of preferences
-- Ontology of the datastructure
+- Configuration of preferences / default ontology
 - Shortcut creation
 - Example data
 
@@ -90,7 +88,8 @@ Analyse and (possibly) correct these items.
 
 If the installation is successful, permanently remove the 'pastaELN.log' logfile that is in your home-directory (folder above "My Documents").
 
-If an attempt fails, close PASTA-ELN and CMD.exe. Restart CMD.exe and start PASTA-ELN or use Desktop shortcut.
+If an attempt fails: please follow to this [website](https://pasta-eln.github.io/pasta-eln/install.html).
+
 
 Note: this text becomes an installation report
 """

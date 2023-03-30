@@ -1,4 +1,5 @@
-"""extract data from a .jpeg file
+"""extract data from vendor
+- default jpeg image
 """
 import base64, json
 from io import BytesIO

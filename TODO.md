@@ -1,22 +1,4 @@
-# Do not work on; since RR
-- widgetSidebar
-- dialogForm
-- widgetDetails
-
-# Priority 1: Next days before talking to HT
-- use yourself for fun
-- minor functional and beauty improvements
-
-# Priority 2: Install across systems
-
-# Priority 3: Helpful next items
-- transition own content
-- use on own research topic
-- drag-drop
-- tags
-
 # Priority 4: bigger features
-- more items to change in config
 - show links to other docs and use
 - table: rerun extractors on group
 
