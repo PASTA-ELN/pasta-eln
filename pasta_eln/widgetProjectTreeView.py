@@ -4,7 +4,7 @@ from pathlib import Path
 from PySide6.QtWidgets import QTreeView, QAbstractItemView, QMenu # pylint: disable=no-name-in-module
 from PySide6.QtGui import QAction, QStandardItem                  # pylint: disable=no-name-in-module
 from .widgetProjectLeafRenderer import ProjectLeafRenderer
-from .style import Action
+from .style import Action, showMessage
 
 class TreeView(QTreeView):
   """ Custom tree view on data model """
@@ -40,18 +40,20 @@ class TreeView(QTreeView):
     Action('Open external program', self.executeAction, context, self, name='openExternal')
     context.exec(e.globalPos())
 
-  #TODO_P2 fix numpy, scipy, lmfit, ... versions
-  #TODO_P3 drag drop external files
+  #TODO_P3 drag&drop: external files
 
   def executeAction(self):
     """ after selecting a item from context menu """
     menuName = self.sender().data()
     if menuName=='addChild':
       hierStack = self.currentIndex().data().split('/')
-      docType= 'x'+str(len(hierStack))
-      self.comm.backend.cwd = Path(self.comm.backend.db.getDoc(hierStack[-1])['-branch'][0]['path'])
-      self.comm.backend.addData(docType, {'-name':'folder 1', 'childNum':0}, hierStack)
-      self.comm.changeProject.emit('','') #refresh project
+      if hierStack[-1][0]=='x':
+        docType= 'x'+str(len(hierStack))
+        self.comm.backend.cwd = Path(self.comm.backend.db.getDoc(hierStack[-1])['-branch'][0]['path'])
+        self.comm.backend.addData(docType, {'-name':'folder 1', 'childNum':0}, hierStack)
+        self.comm.changeProject.emit('','') #refresh project
+      else:
+        showMessage(self, 'Error', 'You cannot create a child of a non-folder!')
     elif menuName=='addSibling':
       childNum = self.currentIndex().row()+1
       hierStack= self.currentIndex().parent().data().split('/')
@@ -94,6 +96,7 @@ class TreeView(QTreeView):
 
   def treeDoubleClicked(self):
     """ after double-click on tree leaf: open form """
-    docID = self.currentIndex().data()
+    docID = self.currentIndex().data().split('/')[-1]
     self.comm.formDoc.emit(self.comm.backend.db.getDoc(docID))
+    self.comm.changeProject.emit('','')
     return

@@ -1,12 +1,12 @@
 """ Widget that shows the content of project in a electronic labnotebook """
 import logging
 from pathlib import Path
-from PySide6.QtWidgets import QLabel, QVBoxLayout, QHBoxLayout, QWidget, QStyledItemDelegate  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QLabel, QVBoxLayout, QHBoxLayout, QWidget, QStyledItemDelegate, QAbstractItemView  # pylint: disable=no-name-in-module
 from PySide6.QtGui import QStandardItemModel, QStandardItem    # pylint: disable=no-name-in-module
-from PySide6.QtCore import Slot, Qt                            # pylint: disable=no-name-in-module
+from PySide6.QtCore import Slot, Qt, QItemSelectionModel      # pylint: disable=no-name-in-module
 from anytree import PreOrderIter
 from .widgetProjectLeafRenderer import ProjectLeafRenderer
-from .widgetTreeView import TreeView
+from .widgetProjectTreeView import TreeView
 from .style import TextButton
 from .miscTools import createDirName
 
@@ -43,9 +43,11 @@ class Project(QWidget):
     if projID!='':
       self.projID = projID
       self.taskID = docID
-    selectedItem = None
+    selectedIndex = None
     self.model = QStandardItemModel()
     self.tree = TreeView(self, self.comm, self.model)
+    # self.tree.setSelectionBehavior(QAbstractItemView.SelectRows)
+    # self.tree.setSelectionMode(QAbstractItemView.SingleSelection)
     self.model.itemChanged.connect(self.modelChanged)
     rootItem = self.model.invisibleRootItem()
 
@@ -67,8 +69,8 @@ class Project(QWidget):
       else:
         nodeTree.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled)
       if self.taskID==nodeHier.id:
-        nonlocal selectedItem
-        selectedItem = nodeTree
+        nonlocal selectedIndex
+        selectedIndex = nodeTree.index()
       children = []
       for childHier in nodeHier.children:
         childTree = iterateTree(childHier)
@@ -85,8 +87,10 @@ class Project(QWidget):
       else:
         rootItem.appendRow(iterateTree(node))
     self.tree.expandAll()
-    if selectedItem is not None:
-      self.tree.setCurrentItem(selectedItem)
+    if selectedIndex is not None:
+      self.tree.selectionModel().select(selectedIndex, QItemSelectionModel.Select)
+      #TODO_P3 convenience: selection does not scroll; one cannot select a row
+      self.tree.setCurrentIndex(selectedIndex)# Item(selectedItem)
     self.mainL.addWidget(self.tree)
     return
 
@@ -102,13 +106,15 @@ class Project(QWidget):
     db       = self.comm.backend.db
     stackOld = item.text().split('/')[:-1]
     docID    = item.text().split('/')[-1]
+    if docID.endswith(' -'):
+      docID = docID[:-2]
     doc      = db.getDoc(docID)
     branchOld= [i for i in doc['-branch'] if i['stack']==stackOld][0]
     branchIdx= doc['-branch'].index(branchOld)
     siblingsOld = db.getView('viewHierarchy/viewHierarchy', startKey=' '.join(stackOld))
     siblingsOld = [i for i in siblingsOld if len(i['key'].split(' '))==len(stackOld)+1 and \
                                             i['value'][0]>branchOld['child']]
-    logging.debug('OLD INFORMATION '+docID+' '+str(stackOld)+'  '+branchIdx)
+    logging.debug('OLD INFORMATION '+docID+' '+str(stackOld)+'  '+str(branchIdx))
     #gather new information
     stackNew = []  #create reversed
     currentItem = item
@@ -123,7 +129,7 @@ class Project(QWidget):
     siblingsNew = db.getView('viewHierarchy/viewHierarchy', startKey=' '.join(stackNew))
     siblingsNew = [i for i in siblingsNew if len(i['key'].split(' '))==len(stackNew)+1 and \
                                              i['value'][0]>=childNew]
-    logging.debug('NEW INFORMATION '+docID+' '+str(stackNew)+'  '+childNew+' '+pathNew)
+    logging.debug('NEW INFORMATION '+docID+' '+str(stackNew)+'  '+str(childNew)+' '+pathNew)
     if stackOld==stackNew:  #nothing changed, just redraw
       return
     # change siblings
@@ -171,7 +177,8 @@ class Project(QWidget):
     headerL = QVBoxLayout(headerW)
     topbarW = QWidget()
     topbarL = QHBoxLayout(topbarW)
-    topbarL.addWidget(QLabel(self.docProj['-name']))
+    hidden = '     \U0001F441' if len([b for b in self.docProj['-branch'] if False in b['show']])>0 else ''
+    topbarL.addWidget(QLabel(self.docProj['-name']+hidden))
     TextButton('Reduce',    self.btnEvent, topbarL, 'projHide', checkable=True)
     TextButton('Hide/Show', self.btnEvent, topbarL, 'hideShow')
     TextButton('Add child', self.btnEvent, topbarL, 'addChild')

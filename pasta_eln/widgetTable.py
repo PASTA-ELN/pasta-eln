@@ -1,13 +1,14 @@
 """ widget that shows the table of the items """
-import re
+import re, json
 from pathlib import Path
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTableView, QLabel, QMenu, QFileDialog, \
                               QHeaderView, QAbstractItemView, QGridLayout, QLineEdit, QComboBox # pylint: disable=no-name-in-module
 from PySide6.QtCore import Qt, Slot, QSortFilterProxyModel, QModelIndex       # pylint: disable=no-name-in-module
-from PySide6.QtGui import QBrush, QStandardItemModel, QStandardItem, QAction  # pylint: disable=no-name-in-module
+from PySide6.QtGui import QBrush, QStandardItemModel, QStandardItem, QAction, QFont # pylint: disable=no-name-in-module
 import qtawesome as qta
 from .dialogTableHeader import TableHeader
 from .style import TextButton, Label, getColor, LetterButton, Action
+from .fixedStrings import defaultOntologyNode
 
 class Table(QWidget):
   """ widget that shows the table of the items """
@@ -34,7 +35,7 @@ class Table(QWidget):
     self.headerW.hide()
     headerL = QHBoxLayout(self.headerW)
     self.headline = Label('','h1', headerL)
-    TextButton('Add',        self.executeAction, headerL, name='addItem')
+    self.addBtn = TextButton('Add',        self.executeAction, headerL, name='addItem')
     TextButton('Add Filter', self.executeAction, headerL, name='addFilter')
     TextButton('Group Edit', self.executeAction, headerL, name='groupEdit')
     more = TextButton('More',None, headerL)
@@ -44,7 +45,7 @@ class Table(QWidget):
     Action('Hide / Show all', self.executeAction, moreMenu, self, name='showAll')
     Action('Change headers',  self.executeAction, moreMenu, self, name='changeTableHeader')
     Action('Export',          self.executeAction, moreMenu, self, name='export')
-    #TODO_P5 rerun extractors as batch
+    #TODO_P3 rerunExtractors: as batch
     more.setMenu(moreMenu)
     mainL.addWidget(self.headerW)
     # filter
@@ -63,7 +64,7 @@ class Table(QWidget):
     header = self.table.horizontalHeader()
     header.setSectionsMovable(True)
     header.setSortIndicatorShown(True)
-    header.setMaximumSectionSize(200)
+    header.setMaximumSectionSize(400) #TODO_P5 addToConfig
     header.resizeSections(QHeaderView.ResizeToContents)
     header.setStretchLastSection(True)
     # ---
@@ -84,22 +85,28 @@ class Table(QWidget):
       self.docType = docType
       self.projID  = projID
     if docType=='_tags_':
+      self.addBtn.hide()
       if self.showAll:
         self.data = self.comm.backend.db.getView('viewIdentify/viewTagsAll')
       else:
         self.data = self.comm.backend.db.getView('viewIdentify/viewTags')
       self.filterHeader = ['tag','name']
       self.headline.setText('TAGS')
-      #TODO_P3 tags should not have add button
     else:
+      self.addBtn.show()
       path = 'viewDocType/'+self.docType+'All' if self.showAll else 'viewDocType/'+self.docType
       if self.projID=='':
         self.data = self.comm.backend.db.getView(path)
       else:
         self.data = self.comm.backend.db.getView(path, preciseKey=self.projID)
-      self.headline.setText(self.comm.backend.db.dataLabels[self.docType])
+      if self.docType=='-':
+        self.headline.setText('Unidentified')
+      else:
+        self.headline.setText(self.comm.backend.db.dataLabels[self.docType])
       if docType in self.comm.backend.configuration['tableHeaders']:
         self.filterHeader = self.comm.backend.configuration['tableHeaders'][docType]
+      elif self.docType=='-':
+        self.filterHeader = [i['name'] for i in defaultOntologyNode]
       else:
         self.filterHeader = [i['name'] for i in self.comm.backend.db.ontology[self.docType]['prop']]
       self.filterHeader = [i[1:] if i[0]=='-'   else i for i in self.filterHeader]  #change -something to something
@@ -108,7 +115,6 @@ class Table(QWidget):
     nrows, ncols = len(self.data), len(self.filterHeader)
     model = QStandardItemModel(nrows, ncols)
     model.setHorizontalHeaderLabels(self.filterHeader)
-    fgColor = getColor(self.comm.backend,'secondaryText')
     for i in range(nrows):
       for j in range(ncols):
         if docType=='_tags_':  #tags list
@@ -124,16 +130,33 @@ class Table(QWidget):
         else:                 #list for normal doctypes
           # print(i,j, self.data[i]['value'][j], type(self.data[i]['value'][j]))
           if self.data[i]['value'][j] is None or not self.data[i]['value'][j]:  #None, False
-            item = QStandardItem(qta.icon('fa5s.times', color=fgColor),'no')
+            item = QStandardItem('\u00D7')
+            item.setFont(QFont("Helvetica [Cronyx]", 16))
           elif isinstance(self.data[i]['value'][j], bool) and self.data[i]['value'][j]: #True
-            item = QStandardItem(qta.icon('fa5s.check', color=fgColor),'yes')
-          elif isinstance(self.data[i]['value'][j], list):                      #list
+            item = QStandardItem('\u2713')
+            item.setFont(QFont("Helvetica [Cronyx]", 16))
+          elif isinstance(self.data[i]['value'][j], list):                      #list, e.g. qrCodes
             item =  QStandardItem(', '.join(self.data[i]['value'][j]))
           elif re.match(r'^[a-z]-[a-z0-9]{32}$',self.data[i]['value'][j]):      #Link
-            item = QStandardItem(qta.icon('fa5s.link', color=fgColor),'')
+            item = QStandardItem('\u260D')
+            item.setFont(QFont("Helvetica [Cronyx]", 16))
           else:
-            item = QStandardItem(self.data[i]['value'][j])
+            if self.filterHeader[j]=='tags':
+              tags = self.data[i]['value'][j].split(' ')
+              if '_curated' in tags:
+                tags[tags.index('_curated')] = 'cur\u2605ted'
+              for iStar in range(1,6):
+                if '_'+str(iStar) in tags:
+                  tags[tags.index('_'+str(iStar))] = '\u2605'*iStar
+              text = ' '.join(tags)
+            else:
+              text = self.data[i]['value'][j]
+            item = QStandardItem(text)
         if j==0:
+          doc = self.comm.backend.db.getDoc(self.data[i]['id'])
+          if len([b for b in doc['-branch'] if False in b['show']])>0:
+            item.setText( item.text()+'  \U0001F441' )
+          item.setAccessibleText(doc['_id'])
           item.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)
           item.setCheckState(Qt.CheckState.Unchecked)
         else:
@@ -155,9 +178,10 @@ class Table(QWidget):
       item (QStandardItem): cell clicked
     """
     row = item.row()
+    docID = self.models[-1].item(row,0).accessibleText()
     # column = item.column()
-    if self.data[row]['id'][0]!='x': #only show items for non-folders
-      self.comm.changeDetails.emit(self.data[row]['id'])
+    if docID!='x0': #only show items for non-folders
+      self.comm.changeDetails.emit(docID)
     return
   def cell2Clicked(self, item):
     """
@@ -168,11 +192,10 @@ class Table(QWidget):
     """
     if self.docType=='x0':
       row = item.row()
-      self.comm.changeProject.emit(self.data[row]['id'], '')
+      docID = self.models[-1].item(row,0).accessibleText()
+      self.comm.changeProject.emit(docID, '')
     return
-  #TODO_P1 project hide in table: bug
-  #TODO_P1 table header != table content
-  #TODO_P1 table content: icon+text -> text checkmark
+
 
   def executeAction(self):
     """ Any action by the buttons and menu at the top of the page """
@@ -242,6 +265,8 @@ class Table(QWidget):
       for row in range(self.models[-1].rowCount()):
         if self.models[-1].item(row,0).checkState() == Qt.CheckState.Checked:
           self.comm.backend.db.hideShow( self.data[row]['id'] )
+      if self.docType=='x0':
+        self.comm.changeSidebar.emit()
       self.changeTable('','')  # redraw table
     elif menuName == 'showAll':
       self.showAll = not self.showAll

@@ -1,7 +1,7 @@
 """ Class for interaction with couchDB """
 import traceback, logging
 from pathlib import PosixPath
-from .fixedStrings import defaultOntology
+from .fixedStrings import defaultOntology, defaultOntologyNode
 
 
 class Database:
@@ -34,7 +34,7 @@ class Database:
       if '-ontology-' in self.db:
         print('Info: remove old ontology')
         self.db['-ontology-'].delete()
-      self.ontology = json.loads(defaultOntology)
+      self.ontology = defaultOntology
       self.db.create_document(self.ontology)
       self.initViews(configuration)
     self.ontology = self.db['-ontology-']
@@ -55,7 +55,7 @@ class Database:
     # for the individual docTypes
     jsDefault = "if ($docType$) {emit($key$, [$outputList$]);}"
     viewCode = {}
-    for docType in [i for i in self.ontology if i[0] not in ['_','-']]:
+    for docType in [i for i in self.ontology if i[0] not in ['_','-']]+['-']:
       if docType=='x0':
         js    = jsDefault.replace('$docType$', "doc['-type']=='x0' && (doc['-branch'][0].show.every(\
                 function(i) {return i;}))").replace('$key$','doc._id')
@@ -69,7 +69,11 @@ class Database:
         jsAll = jsDefault.replace('$docType$', "doc['-type'].join('/').substring(0, "+str(len(docType))+")=='"\
                 +docType+"'").replace('$key$','doc["-branch"][0].stack[0]')
       outputList = []
-      for idx,item in enumerate(self.ontology[docType]['prop']):
+      if docType == '-':
+        enumeration = enumerate(defaultOntologyNode)
+      else:
+        enumeration = enumerate(self.ontology[docType]['prop'])
+      for idx,item in enumeration:
         if idx>configuration['tableColumnsMax']:
           break
         if 'name' not in item:
@@ -78,6 +82,8 @@ class Database:
           outputList.append('doc.image.length>3')  #Not as .toString() because that leads to inconsistencies
         elif item['name'] == '-tags':
           outputList.append("doc['-tags'].join(' ')")
+        elif '#_' in item['name']:
+          outputList.append('doc["-tags"].indexOf("'+item['name'][1:]+'")>-1')
         elif item['name'] == '-type':
           outputList.append('doc["-type"].slice(1).join("/")')
         elif item['name'] == 'content':
@@ -289,7 +295,8 @@ class Database:
         logging.info('database.update.2: doc not updated-nothing changed: '+newDoc['_id']+' '+newDoc['-name'])
         return newDoc
     #For both cases: delete and update
-    #TODO_P1: curated change here
+    if '_curated' not in newDoc['-tags'] and newDoc['-type'][0][0]!='x':
+      newDoc['-tags'].append('_curated')
     try:
       newDoc.save()
     except:
@@ -462,10 +469,10 @@ class Database:
     """
     from anytree import Node, RenderTree, AsciiStyle
     from anytree.search import find_by_attr
-    if allItems:
-      view = self.getView('viewHierarchy/viewHierarchyAll', startKey=start)
-    else:
+    if not allItems:
       view = self.getView('viewHierarchy/viewHierarchy',    startKey=start)
+    if allItems or len(view)==0:
+      view = self.getView('viewHierarchy/viewHierarchyAll', startKey=start)
     # for item in view:
     #   print(item)
     levelNum = 1
@@ -492,16 +499,17 @@ class Database:
     Toggle hide/show indicator of branch
 
     Args:
-      stack (list, str): stack of docID or docID
+      stack (list, str): stack of docID; docID (str)
     """
     flippedOnce = False
     if isinstance(stack, str):
       doc = self.db[stack]
       for idx, _ in enumerate(doc['-branch']):
         doc['-branch'][idx]['show'][-1] = not doc['-branch'][idx]['show'][-1]
+        print('flipped str', stack)
       doc.save()
       if stack[0]=='x':
-        stack = doc['-branch'][0]['stack']
+        stack = doc['-branch'][0]['stack']+[stack]
       flippedOnce = True
     if isinstance(stack, list):
       iFlip = len(stack)-1
@@ -510,8 +518,8 @@ class Database:
         print('  docID',item['id'])
         doc = self.db[item['id']]
         for idx, branch in enumerate(doc['-branch']):
-          print('  flippedOnce', flippedOnce, iFlip, len(branch['stack']))
-          doc['-branch'][idx]['show'][iFlip] = not doc['-branch'][idx]['show'][iFlip]
+          if not flippedOnce or iFlip!=len(branch['stack']):
+            doc['-branch'][idx]['show'][iFlip] = not doc['-branch'][idx]['show'][iFlip]
         doc.save()
     return
 
@@ -662,8 +670,28 @@ class Database:
         #only normal documents after this line
 
         ###custom temporary changes: keep few as examples;
-        # BE CAREFUL: PRINT FIRST, delete second run
-        # if 'revisions' in doc:
+        # BE CAREFUL: PRINT FIRST, delete second run ; RUN ONLY ONCE
+        # Version1->Version2 changes
+        # if '-branch' in doc:
+        #   for b in doc['-branch']:
+        #     b['show']=[True]*(len(b['stack'])+1)
+        # if '-tags' not in doc:
+        #   tags = doc['tags']
+        #   del doc['tags']
+        #   tags = [i[1:] if i[0]=='#' else i for i in tags]
+        #   tags = ['_1' if i=='1' else i for i in tags]
+        #   tags = ['_2' if i=='2' else i for i in tags]
+        #   tags = ['_3' if i=='3' else i for i in tags]
+        #   tags = ['_4' if i=='4' else i for i in tags]
+        #   tags = ['_5' if i=='5' else i for i in tags]
+        #   if '-curated' in doc:
+        #     if doc['-type'][0][0]!='x':
+        #       tags.append('_curated')
+        #     del doc['-curated']
+        #   doc['-tags'] = tags
+        #   print(doc['_id'], 'tags' in doc, doc['-tags'], '-curated' in doc)
+        #### doc.save()
+        # END VERSION 1 -> 2 changes
         #   del doc['revisions']
         #   doc.save()
         # if len(doc['_id'].split('-'))==3:
@@ -758,7 +786,7 @@ class Database:
             outstring+= f'{Bcolors.FAIL}**ERROR dch08a: branch does not have show: '+doc['_id']+f'{Bcolors.ENDC}\n'
           elif len(branch['show']) != len(branch['stack'])+1:
             outstring+= f'{Bcolors.FAIL}**ERROR dch08b: branch-show not same length as branch-stack: '+doc['_id']+f'{Bcolors.ENDC}\n'
-          #TODO_P5 possible test that parent has corresponding show
+          #TODO_P5 moreChecksDB: if parent has corresponding show
 
         #every doc should have a name
         if not '-name' in doc:
@@ -767,6 +795,9 @@ class Database:
             doc['-name']=doc['name']
             del doc['name']
             doc.save()
+
+        if not '-tags' in doc:
+          outstring+= f'{Bcolors.FAIL}**ERROR dch17b: -tags not in doc'+doc['_id']+f'{Bcolors.ENDC}\n'
 
         #doc-type specific tests
         if '-type' in doc and doc['-type'][0] == 'sample':

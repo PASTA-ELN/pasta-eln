@@ -1,8 +1,8 @@
 """ Graphical user interface includes all widgets """
-import os, logging, webbrowser
+import os, logging, webbrowser, json
 from pathlib import Path
 from PySide6.QtCore import Qt, Slot      # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QApplication, QMessageBox # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QApplication, QFileDialog # pylint: disable=no-name-in-module
 from PySide6.QtGui import QIcon, QPixmap, QAction    # pylint: disable=no-name-in-module
 from qt_material import apply_stylesheet  #of https://github.com/UN-GCPDS/qt-material
 
@@ -14,9 +14,9 @@ from .dialogForm import Form
 from .dialogConfig import Configuration
 from .dialogProjectGroup import ProjectGroup
 from .dialogOntology import Ontology
-from .miscTools import updateExtractorList
+from .miscTools import updateExtractorList, restart
 from .mixin_cli import text2html
-from .style import Action
+from .style import Action, showMessage
 from .fixedStrings import shortcuts
 os.environ['QT_API'] = 'pyside6'
 
@@ -45,6 +45,9 @@ class MainWindow(QMainWindow):
     systemMenu = menu.addMenu("&System")
     Action('&Ontology',              self.executeAction, systemMenu, self, name='ontology')
     Action('&Project groups',        self.executeAction, systemMenu, self, name='projectGroups')
+    changeProjectGroups = systemMenu.addMenu("&Change project group")
+    for name in self.backend.configuration['projectGroups'].keys():
+      Action(name, self.changeProjectGroup, changeProjectGroups, self, name=name)
     systemMenu.addSeparator()
     Action('Update &Extractor list', self.executeAction, systemMenu, self, name='updateExtractors')
     Action('&Verify database',       self.executeAction, systemMenu, self, name='verifyDB', shortcut='Ctrl+?')
@@ -52,9 +55,12 @@ class MainWindow(QMainWindow):
     Action('&Configuration',         self.executeAction, systemMenu, self, name='configuration')
     helpMenu = menu.addMenu("&Help")
     Action('&Website',               self.executeAction, helpMenu, self, name='website')
+    Action('&Test file extraction',  self.executeAction, helpMenu, self, name='extractorTest')
+    Action('&Test selected item extraction', self.executeAction, helpMenu, self, name='extractorTest2', shortcut='F2')
     Action('&Shortcuts',             self.executeAction, helpMenu, self, name='shortcuts')
+    Action('&Todo list',             self.executeAction, helpMenu, self, name='todo')
 
-    shortCuts = {'measurement':'m', 'sample':'s', 'x0':'p'} #TODO_P4 to config
+    shortCuts = {'measurement':'m', 'sample':'s', 'x0':'p'} #TODO_P5 addToConfig
     for docType, docLabel in self.comm.backend.db.dataLabels.items():
       if docType[0]=='x' and docType[1]!='0':
         continue
@@ -63,7 +69,8 @@ class MainWindow(QMainWindow):
       if docType=='x0':
         viewMenu.addSeparator()
     viewMenu.addSeparator()
-    Action('&Tags', self.viewMenu, viewMenu, self, 'Ctrl+T', '_tags_')
+    Action('&Tags',         self.viewMenu, viewMenu, self, 'Ctrl+T', '_tags_')
+    Action('&Unidentified', self.viewMenu, viewMenu, self, name='-')
 
     #GUI elements
     mainWidget = QWidget()
@@ -119,25 +126,38 @@ class MainWindow(QMainWindow):
       updateExtractorList(self.backend.extractorPath)
     elif menuName=='verifyDB':
       report = self.comm.backend.checkDB(True)
-      dialog = QMessageBox(self)
-      dialog.setWindowTitle('Report of database verification')
-      dialog.setText(text2html(report))
-      dialog.setStyleSheet('QLabel {min-width: 800px}')
-      dialog.exec()
-    elif menuName=='website':
-      webbrowser.open('https://pasta-eln.github.io/pasta-eln/')
+      showMessage(self, 'Report of database verification', text2html(report), style='QLabel {min-width: 800px}')
     elif menuName=='exit':
       self.close()
+    elif menuName=='website':
+      webbrowser.open('https://pasta-eln.github.io/pasta-eln/')
+    elif menuName=='extractorTest':
+      fileName = QFileDialog.getOpenFileName(self,'Open file for extractor test',str(Path.home()),'*.*')[0]
+      report = self.comm.backend.testExtractor(fileName, reportHTML=True)
+      showMessage(self, 'Report of extractor test', report)
+    elif menuName=='extractorTest2':
+      self.comm.testExtractor.emit()
     elif menuName=='shortcuts':
-      dialog = QMessageBox(self)
-      dialog.setWindowTitle('Keyboard shortcuts')
-      dialog.setText(shortcuts)
-      dialog.exec()
+      showMessage(self, 'Keyboard shortcuts', shortcuts)
+    elif menuName=='todo':
+      try:
+        from .tempStrings import todoString
+        showMessage(self, 'List of items on todo list',todoString)
+      except:
+        pass
     else:
-      dialog = QMessageBox(self)
-      dialog.setWindowTitle('ERROR')
-      dialog.setText('menu not implemented yet: '+menuName)
-      dialog.exec()
+      showMessage(self, 'ERROR','menu not implemented yet: '+menuName, icon='Warning')
+    return
+
+
+  def changeProjectGroup(self):
+    """
+    change default project group in configuration file and restart
+    """
+    self.backend.configuration['defaultProjectGroup'] = self.sender().data()
+    with open(Path.home()/'.pastaELN.json', 'w', encoding='utf-8') as fConf:
+      fConf.write(json.dumps(self.backend.configuration,indent=2))
+    restart()
     return
 
 

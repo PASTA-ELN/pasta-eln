@@ -7,8 +7,6 @@ from PySide6.QtWidgets import QDialog, QWidget, QVBoxLayout, QHBoxLayout, QListW
 #pylint: enable=no-name-in-module
 from .style import IconButton
 
-#TODO_P4 after save: information should be integrated into ontology; and then the views have to be rebuild
-
 class TableHeader(QDialog):
   """ Table Header dialog: change which colums are shown and in which order """
   def __init__(self, comm, docType):
@@ -106,12 +104,14 @@ class TableHeader(QDialog):
     if btn.text()=='Cancel':
       self.reject()
     elif btn.text()=='Save':
-      self.selectedList = ['#_curated' if i=='cur\u2605ted' else i  for i in self.selectedList]  #change #_something to somehing
-      self.selectedList = ['-'+i[1:-1] if i[0]=='\u2605' and i[-1]=='\u2605'else i  for i in self.selectedList] #change -something to something
-      self.comm.backend.configuration['tableHeaders'][self.docType] = self.selectedList
-      with open(Path.home()/'.pastaELN.json', 'w', encoding='utf-8') as fConf:
-        fConf.write(json.dumps(self.comm.backend.configuration,indent=2))
-      self.comm.changeTable('','')
-      self.comm.changeDetails('redraw')
+      # self.selectedList = ['#_curated' if i=='cur\u2605ted' else i  for i in self.selectedList]  #change #_something to somehing
+      # self.selectedList = ['-'+i[1:-1] if i[0]=='\u2605' and i[-1]=='\u2605'else i  for i in self.selectedList] #change -something to something
+      # self.comm.backend.configuration['tableHeaders'][self.docType] = self.selectedList
+      # with open(Path.home()/'.pastaELN.json', 'w', encoding='utf-8') as fConf:
+      #   fConf.write(json.dumps(self.comm.backend.configuration,indent=2))
+      # self.comm.changeTable('','')
+      # self.comm.changeDetails('redraw')
+      #TODO_P4 tableHeaderChange: requires view to change to views, not ontology
+      print('DOES NOT WORK YES')
       self.accept()  #close
     return

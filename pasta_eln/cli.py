@@ -33,7 +33,7 @@ def commands(getDocu, args):
   ## general things that do not require open database / change configuration file
   if getDocu:
     doc += '  help: help information\n'
-    doc += '    example: pastaELN.py help\n'
+    doc += '    example: pastaELN_CLI.py help\n'
   elif args.command=='help':
     print("HELP:")
     return '1'
@@ -41,8 +41,8 @@ def commands(getDocu, args):
   doc += '\n-- Configuration file commands --\n'
   if getDocu:
     doc += '  verifyConfiguration: verify configuration file\n'
-    doc += '    example: pastaELN.py verifyConfiguration\n'
-    doc += '    example: pastaELN.py verifyConfigurationRepair (repair function)\n'
+    doc += '    example: pastaELN_CLI.py verifyConfiguration\n'
+    doc += '    example: pastaELN_CLI.py verifyConfigurationRepair (repair function)\n'
   elif args.command.startswith('verifyConfiguration'):
     command = 'repair' if args.command=='verifyConfigurationRepair' else 'test'
     output = checkConfiguration(command=command)
@@ -51,7 +51,7 @@ def commands(getDocu, args):
 
   if getDocu:
     doc += '  extractorScan: get list of all extractors and save into .pastaELN.json\n'
-    doc += '    example: pastaELN.py extractorScan\n'
+    doc += '    example: pastaELN_CLI.py extractorScan\n'
   elif args.command=='extractorScan':
     with open(pathConfig,'r', encoding='utf-8') as f:
       configuration = json.load(f)
@@ -67,7 +67,7 @@ def commands(getDocu, args):
 
   if getDocu:
     doc += '  scramble: scramble the password and user name in configuration file\n'
-    doc += '    example: pastaELN.py scramble\n'
+    doc += '    example: pastaELN_CLI.py scramble\n'
   elif args.command=='scramble':
     with open(pathConfig,'r', encoding='utf-8') as f:
       configuration = json.load(f)
@@ -105,25 +105,25 @@ def commands(getDocu, args):
       with open(pathConfig,'r', encoding='utf-8') as f:
         config = json.load(f)
       if args.database=='':
-        args.database = config['default']
+        args.database = config['defaultProjectGroup']
 
     initViews, initConfig, resetOntology = False, True, False
     if getDocu:
       doc += '  test: test PASTA setup\n'
-      doc += '    example: pastaELN.py test -d instruments\n'
+      doc += '    example: pastaELN_CLI.py test -d instruments\n'
     elif args.command.startswith('test'):
       #PART 1 of test: precede with configuration test
       initViews, initConfig = True, True
       if args.command=='testDev':
         resetOntology = True
-      output = "" #checkConfiguration(repair=False)  #verify configuration file .pastaELN.py
+      output = "" #checkConfiguration(repair=False)  #verify configuration file .pastaELN_CLI.py
       print(output)
       if 'ERROR' in output:
         return ''
       # local and remote server test
       urls = ['http://127.0.0.1:5984']
-      if config['links'][args.database]['remote']!={}:
-        urls.append(config['links'][args.database]['remote']['url'])
+      if config['projectGroups'][args.database]['remote']!={}:
+        urls.append(config['projectGroups'][args.database]['remote']['url'])
       for url in urls:
         try:
           with urllib.request.urlopen(url) as package:
@@ -138,7 +138,7 @@ def commands(getDocu, args):
     #open backend
     if not getDocu:
       try:
-        be = Backend(linkDefault=args.database, initViews=initViews, initConfig=initConfig,
+        be = Backend(defaultProjectGroup=args.database, initViews=initViews, initConfig=initConfig,
                   resetOntology=resetOntology)
       except:
         print('**ERROR pma20: backend could not be started.\n'+traceback.format_exc()+'\n\n')
@@ -147,7 +147,7 @@ def commands(getDocu, args):
     if not getDocu and args.command.startswith('test') and be:
       #PART 2 of test: main test
       print('database server:',be.db.db.client.server_url)
-      print('default link:',be.confLinkName)
+      print('default project group:',be.configuration['defaultProjectGroup'])
       print('database name:',be.db.db.database_name)
       designDocuments = be.db.db.design_documents()
       print('Design documents')
@@ -160,14 +160,13 @@ def commands(getDocu, args):
       except:
         print('**ERROR pma02: Ontology does NOT exist on server')
       print('local directory:',be.basePath)
-      print('software directory:',be.softwarePath)
       print('software version: '+__version__)
       return '1'
 
     if getDocu:
       doc += '  verifyDB: test PASTA database\n'
-      doc += '    example: pastaELN.py verifyDB\n'
-      doc += '    example: pastaELN.py verifyDBdev (repair function)\n'
+      doc += '    example: pastaELN_CLI.py verifyDB\n'
+      doc += '    example: pastaELN_CLI.py verifyDBdev (repair function)\n'
     elif args.command.startswith('verifyDB'):
       repair = args.command=='verifyDBdev'
       output = be.checkDB(verbose=False, repair=repair)
@@ -176,7 +175,7 @@ def commands(getDocu, args):
 
     if getDocu:
       doc += '  syncLR / syncRL: synchronize with / from remote server\n'
-      doc += '    example: pastaELN.py syncLR\n'
+      doc += '    example: pastaELN_CLI.py syncLR\n'
     elif args.command=='syncLR':
       success = be.replicateDB()
       return '1' if success else '-1'
@@ -188,7 +187,7 @@ def commands(getDocu, args):
     if getDocu:
       doc += '  print: print overview\n'
       doc += "    label: possible docLabels 'Projects', 'Samples', 'Measurements', 'Procedures'\n"
-      doc += "    example: pastaELN.py print -d instruments -l instrument\n"
+      doc += "    example: pastaELN_CLI.py print -d instruments -l instrument\n"
     elif args.command=='print':
       print(be.output(args.label,True))
       return '1'
@@ -197,8 +196,8 @@ def commands(getDocu, args):
       doc += '  saveBackup,loadBackup: save to file.zip / load from file.zip\n'
       doc += '    - docId is optional as it reduces the scope of the backup\n'
       doc += '    - database is optional as otherwise the default is used\n'
-      doc += '    example: pastaELN.py saveBackup -d instruments\n'
-      doc += '    example: pastaELN.py saveBackup -i x-76b0995cf655bcd487ccbdd8f9c68e1b\n'
+      doc += '    example: pastaELN_CLI.py saveBackup -d instruments\n'
+      doc += '    example: pastaELN_CLI.py saveBackup -i x-76b0995cf655bcd487ccbdd8f9c68e1b\n'
     elif args.command=='saveBackup':   #save to backup file.zip
       if args.docID!='':
         exportELN(be, args.docID)
@@ -210,9 +209,16 @@ def commands(getDocu, args):
       return '1'
 
     if getDocu:
+      doc += '  extractorTest: test extractor on individual datafile\n'
+      doc += '    example: pastaELN_CLI.py extractorTest -i ~/[long-path]/Zeiss.tif\n'
+    elif args.command=='extractorTest':
+      be.testExtractor(args.docID)
+      return '1'
+
+    if getDocu:
       doc += '  importXLS: import first sheet of excel file into database\n'
       doc += '    before: ensure database configuration and project exist\n'
-      doc += '    example: pastaELN.py importXLS -d instruments -i x-123456 -c "~/path/to.xls" -l instrument\n'
+      doc += '    example: pastaELN_CLI.py importXLS -d instruments -i x-123456 -c "~/path/to.xls" -l instrument\n'
       doc += '    -l is the document type\n'
       doc += '    afterwards: adopt ontology (views are automatically generated)\n'
     elif args.command=='importXLS':
@@ -253,27 +259,13 @@ def commands(getDocu, args):
       return '1'
 
     if getDocu:
-      doc += '  createDoc: add document to database\n'
-      doc += '    content is required as json-string\n'
-      doc += "    example: pastaELN.py createDoc --content \"{'-name':'Instruments','docType':'project'}\"\n"
-    elif args.command=='createDoc':
-      from urllib import parse
-      content = parse.unquote(args.content)
-      data = json.loads(content)
-      docType = data['docType']
-      del data['docType']
-      if len(args.docID)>1 and args.docID!='none':
-        be.changeHierarchy(args.docID)
-      be.addData(docType,data)
-      return '1'
-
-    if getDocu:
       doc += '  redo: recreate thumbnail / use-extractor\n'
-      doc += '    example: pastaELN.py redo -i m-1234567890abcdefghijklmnopqrstuv -c type/test/subtest\n'
+      doc += '    example: pastaELN_CLI.py redo -i m-1234567890abcdefghijklmnopqrstuv -c type/test/subtest\n'
     elif args.command=='redo':
-      data = dict(be.getDoc(args.docID))
-      data['-type'] = args.content.split('/')
-      be.useExtractors(data['-branch'][0]['path'], data['shasum'], data, extractorRedo=True)  #any path is good since the file is the same everywhere; data-changed by reference
+      data = dict(be.db.getDoc(args.docID))
+      if args.content is not None:
+        data['-type'] = args.content.split('/')
+      be.useExtractors(be.basePath/data['-branch'][0]['path'], data['shasum'], data, extractorRedo=True)  #any path is good since the file is the same everywhere; data-changed by reference
       if len(data['-type'])>1 and len(data['image'])>1:
         be.db.updateDoc({'image':data['image'], '-type':data['-type']},args.docID)
         return '1'
@@ -288,21 +280,22 @@ def commands(getDocu, args):
       be.changeHierarchy(args.docID)
 
     if getDocu:
-      doc += '  scanHierarchy: scan project with docID\n'
-      doc += '    example: pastaELN.py scanHierarchy -i ....\n'
-    elif args.command=='scanHierarchy':
+      doc += '  scanTree: scan project with docID\n'
+      doc += '    example: pastaELN_CLI.py scanTree -i ....\n'
+    elif args.command=='scanTree':
+      print(be.cwd, be.hierStack)
       be.scanTree()
       return '1'
 
     if getDocu:
       doc += '  hierarchy: print document hierarchy\n'
-      doc += '    example: pastaELN.py hierarchy -i x-1234567890abc'
+      doc += '    example: pastaELN_CLI.py hierarchy -i x-1234567890abc'
     elif args.command=='hierarchy':
       print(be.outputHierarchy(True,True))
       return '1'
 
   except:
-    print("**ERROR pma10: exception thrown during pastaELN.py"+traceback.format_exc()+"\n")
+    print("**ERROR pma10: exception thrown during pastaELN_CLI.py"+traceback.format_exc()+"\n")
     raise
 
   if not getDocu and be is not None:
@@ -315,7 +308,7 @@ def main():
   """
   Main function
   """
-  usage = "pastaELN.py <command> [-i docID] [-c content] [-l labels] [-d database]\n\n"
+  usage = "./pastaELN_CLI.py <command> [-i docID] [-c content] [-l labels] [-d database]\n\n"
   usage+= "Possible commands are:\n"
   usage+= commands(True, None)
   argparser = argparse.ArgumentParser(usage=usage)
@@ -329,6 +322,6 @@ def main():
   if arguments.command=='help':
     argparser.print_help()
   if result == '':
-    print('**ERROR pma08: command in pastaELN.py does not exist |',arguments.command)
+    print('**ERROR pma08: command in pastaELN_CLI.py does not exist |',arguments.command)
   elif result == '1' and arguments.command!='up':
     print('SUCCESS')

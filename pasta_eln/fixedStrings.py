@@ -1,6 +1,7 @@
 """ Long strings that would obfuscate code """
+import json
 
-defaultOntology = """
+defaultOntology = json.loads("""
 {
   "_id":"-ontology-",
   "-version":2,
@@ -50,7 +51,15 @@ defaultOntology = """
     {"name":"vendor",     "query":"Who is the vendor?"}
   ]}
 }
-"""
+""")
+
+defaultOntologyNode = json.loads("""
+  [{"name": "-name", "query": "What is the file name?"},
+   {"name": "-tags"},
+   {"name": "comment", "query": "#tags comments remarks :field:value:"},
+   {"name": "-type"}]
+""")
+
 
 setupTextLinux = """
 ### Welcome to PASTA-ELN setup for Linux

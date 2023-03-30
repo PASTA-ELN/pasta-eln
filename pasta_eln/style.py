@@ -1,5 +1,5 @@
 """ all styling of buttons and other general widgets, some defined colors... """
-from PySide6.QtWidgets import QPushButton, QLabel, QSizePolicy, QRadioButton  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QPushButton, QLabel, QSizePolicy, QRadioButton, QMessageBox  # pylint: disable=no-name-in-module
 from PySide6.QtGui import QImage, QPixmap, QAction, QKeySequence  # pylint: disable=no-name-in-module
 from PySide6.QtCore import QByteArray, Qt           # pylint: disable=no-name-in-module
 from PySide6.QtSvgWidgets import QSvgWidget         # pylint: disable=no-name-in-module
@@ -101,7 +101,7 @@ class IconButton(QPushButton):
 
     Additional parameter:
     - hide (bool): hidden or shown initially
-    - text (str): text shown on button additionally  #TODO_P4 what is the difference to TextButton?
+    - text (str): text shown on button additionally  #TODO_P4 question? what is the difference to TextButton?
 
     Args:
       iconName (str): icon to show on button
@@ -173,10 +173,10 @@ class Image():
       height (int): height of image
     """
     if data.startswith('data:image/'): #jpg or png image
-      byteArr = QByteArray.fromBase64(bytearray(data[22:], encoding='utf-8'))
+      byteArr = QByteArray.fromBase64(bytearray(data[22:] if data[21]==',' else data[23:], encoding='utf-8'))
       imageW = QImage()
-      imageType = data[11:15].upper()  #TODO_P5 not always perfect: use regex
-      imageW.loadFromData(byteArr, imageType)
+      imageType = data[11:15].upper()
+      imageW.loadFromData(byteArr, imageType[:-1] if imageType.endswith(';') else imageType)
       pixmap = QPixmap.fromImage(imageW)
       if height>0:
         pixmap = pixmap.scaledToHeight(height)
@@ -218,3 +218,25 @@ class Label(QLabel):
     if layout is not None:
       layout.addWidget(self)
     return
+
+
+def showMessage(parent, title, text, icon='', style=''):
+  """
+  Show a message box
+
+  Args:
+    parent (QWidget): parent widget (self)
+    title (str): title of box
+    text (str): text in box
+    icon (str): icon: 'Information','Warning','Critical'
+    style (str): css style
+  """
+  dialog = QMessageBox(parent)
+  dialog.setWindowTitle(title)
+  dialog.setText(text)
+  if icon in ['Information','Warning','Critical']:
+    dialog.setIcon(getattr(QMessageBox, icon))
+  if style!='':
+    dialog.setStyleSheet(style)
+  dialog.exec()
+  return

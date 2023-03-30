@@ -8,8 +8,6 @@ from .database import Database
 from .miscTools import upIn, upOut, createDirName, generic_hash, camelCase
 from .handleDictionaries import ontology2Labels, fillDocBeforeCreate
 
-#TODO_P4 unprocessed files should be have separate docType
-
 class Backend(CLI_Mixin):
   """
   PYTHON BACKEND
@@ -250,6 +248,7 @@ class Backend(CLI_Mixin):
         dirName (string): change into this directory (absolute path given). For if data is moved
         kwargs (dict): additional parameter
     """
+    logging.info('changeHierarchy should only be used in CLI mode')
     if docID is None or (docID[0]=='x' and docID[1]!='-'):  #cd ..: none. close 'project', 'task'
       self.hierStack.pop()
       self.cwd = self.cwd.parent
@@ -299,9 +298,7 @@ class Backend(CLI_Mixin):
         doc= {'-type':['procedure']}
         self.useExtractors(path, '', doc)
         self.db.updateDoc(doc, line['id'])
-    #TODO_P4: Basic functionality for V1
-    #V1: GUI content write-protected; assume one link and no conflicts
-    #V2: What happens if you change a file (procedure) on disk / database -> conflicts
+    #TODO_P4 change procedure: on disk / database -> conflicts
     #    Copy of procedure exists on harddisk: one entry in db and links; then change one, but not other, -branch should separate; can they reunite?
 
     pathsInDB_x    = [i['key'] for i in inDB_all if i['value'][1][0][0]=='x']  #all structure elements: task, subtasts
@@ -345,8 +342,9 @@ class Backend(CLI_Mixin):
     self.cwd = startPath
     orphans = [i for i in pathsInDB_data if i.startswith(self.cwd.relative_to(self.basePath).as_posix())]
     print('These files are on DB but not harddisk\n', orphans )
-    orphanDirs = [i for i in pathsInDB_x if i!=self.cwd.relative_to(self.basePath).as_posix()]
-    print('These directories are on DB but not harddisk\n', orphanDirs )
+    orphanDirs = [i for i in pathsInDB_x if i==self.cwd.relative_to(self.basePath).as_posix() and \
+                                            i!=startPath.relative_to(self.basePath).as_posix()]
+    print('These directories are on DB but not harddisk\n', orphanDirs)
     for orphan in orphans+orphanDirs:
       docID = [i for i in inDB_all if i['key']==orphan][0]['id']
       doc   = dict(self.db.getDoc(docID))
@@ -375,8 +373,6 @@ class Backend(CLI_Mixin):
         shasum (string): shasum (git-style hash) to store in database (not used here)
         doc (dict): pass known data/measurement type, can be used to create image; This doc is altered
         kwargs (dict): additional parameter
-          - maxSize of image
-          - saveToFile: save data to files
     """
     extension = filePath.suffix[1:]  #cut off initial . of .jpg
     if str(filePath).startswith('http'):
@@ -433,6 +429,173 @@ class Backend(CLI_Mixin):
     #     print('**ERROR json dumping', item, doc[item])
     # #also make sure that no int64 but normal int
     return
+
+
+  def testExtractor(self, filePath, extractorPath=None, recipe='', interactive=True, reportHTML=False):
+    """
+    Args:
+      filePath (Path, str): path to the file to be tested
+      extractorPath (Path, None): path to the directory with extractors
+      recipe (str): recipe in / separated
+      interactive (bool): show image and print report; else only give summary
+      reportHTML (bool): return report in qside html style
+
+    Returns:
+      str: short summary or long report
+    """
+    import base64
+    from io import BytesIO
+    from PIL import Image
+    import cairosvg
+    os.environ['QT_API'] = 'pyside2'
+    import matplotlib.pyplot as plt
+    import matplotlib.axes as mpaxes
+
+    report = 'ExtractorSuccess'
+    htmlStr= 'Please visit <a href="https://pasta-eln.github.io/pasta-eln/extractors.html#'
+    success = True
+    if isinstance(filePath, str):
+      filePath = Path(filePath)
+    if reportHTML:
+      report = '<h3>Report on extractor test</h3>'
+      report +='check file: '+str(filePath)+'<br>'
+    extension = filePath.suffix[1:]
+    pyFile = 'extractor_'+extension+'.py'
+    if extractorPath is None:
+      extractorPath = self.extractorPath
+    #start testing
+    if (extractorPath/pyFile).exists():
+      if reportHTML:
+        report += 'use extractor: '+str(extractorPath/pyFile)+'<br>'
+    else:
+      success = False
+      if reportHTML:
+        report += '<font color="red">No fitting extractor found:'+pyFile+'</font><br>'
+      else:
+        report = 'NoExtractor'
+    if success:
+      try:
+        module  = importlib.import_module(pyFile[:-3])
+        content = module.use(filePath, recipe)
+      except:
+        success = False
+        if reportHTML:
+          report += '<font color="red">Python error in extractor</font><br>'
+          report += htmlStr+'python-error">website</a><br>'
+          report += '\n'+traceback.format_exc()+'\n'
+    if success:
+      try:
+        _ = json.dumps(content)
+      except:
+        if interactive:
+          print("**ERROR: extractor reply not json dumpable.")
+        if reportHTML:
+          report += '<font color="red">Some json format does not fit</font><br>'
+        else:
+          report = "ExtractorERROR json dumpable"
+    if success:
+      try:
+        _ = json.dumps(content['metaVendor'])
+        report += 'Number of vendor entries: '+str(len(content['metaVendor']))+'<br>'
+      except:
+        success = False
+        if interactive:
+          print("  DETAIL metaVendor incorrect")
+        if reportHTML:
+          report += '<font color="red">Some json format does not fit in metaVendor</font><br>'
+          report += htmlStr+'metadata-error">website</a><br>'
+        else:
+          report = "ExtractorERROR metaVendor"
+        #iterate keys
+        for key in content['metaVendor']:
+          try:
+            _ = json.dumps(content['metaVendor'][key])
+          except:
+            if reportHTML:
+              report += '<font color="red">FAIL '+key+' : '+str(content['metaVendor'][key])+' type:'+\
+                        str(type(content['metaVendor'][key]))+'</font><br>'
+            else:
+              print('    FAIL',key, content['metaVendor'][key], type(content['metaVendor'][key]))
+
+    if success:
+      try:
+        _ = json.dumps(content['metaUser'])
+        report += 'Number of user entries: '+str(len(content['metaUser']))+'<br>'
+      except:
+        if interactive:
+          print("  DETAIL metaUser incorrect")
+        if reportHTML:
+          report += '<font color="red">Some json format does not fit in metaUser</font><br>'
+          report += htmlStr+'metadata-error">website</a><br>'
+        else:
+          report = "ExtractorERROR metaUser"
+        #iterate keys
+        for key in content['metaUser']:
+          try:
+            _ = json.dumps(content['metaUser'][key])
+          except:
+            if reportHTML:
+              report += '<font color="red">FAIL '+key+' : '+content['metaUser'][key]+' type:'+\
+                        str(type(content['metaVendor'][key]))+'</font><br>'
+            else:
+              print('    FAIL',key, content['metaUser'][key], type(content['metaUser'][key]))
+      #verify image is of correct type
+    if success and 'image' not in content:
+      success = False
+      if interactive:
+        print('**Error: image not produced by extractor')
+      if reportHTML:
+        report += '<font color="red">Image does not exist</font><br>'
+      else:
+        report = "ExtractorERROR image not exsits"
+    if success and isinstance(content['image'],Image.Image):
+      success = False
+      if interactive:
+        content['image'].show()
+        print('**Warning: image is a PIL image: not a base64 string')
+        print('Encode image via the following: pay attention to jpg/png which is encoded twice\n```')
+        print('from io import BytesIO')
+        print('figfile = BytesIO()')
+        print('image.save(figfile, format="PNG")')
+        print('imageData = base64.b64encode(figfile.getvalue()).decode()')
+        print('image = "data:image/jpg;base64," + imageData')
+        print('```')
+      if reportHTML:
+        report += '<font color="red">Image is PIL image</font><br>'
+        report += htmlStr+'pillow-image">website</a><br>'
+      else:
+        report = "ExtractorERROR PIL image"
+    if success and isinstance(content['image'], mpaxes._subplots.Axes): # pylint: disable=protected-access
+      success = False
+      if interactive:
+        plt.show()
+        print('**Warning: image is a matplotlib axis: not a svg string')
+        print('  figfile = StringIO()')
+        print('plt.savefig(figfile, format="svg")')
+        print('image = figfile.getvalue()')
+      if reportHTML:
+        report += '<font color="red">Image are matplot axis</font><br>'
+        report += htmlStr+'matplotlib">website</a><br>'
+      else:
+        report = "ExtractorERROR Matplot image"
+    if success and isinstance(content['image'], str):  #show content
+      report += '<br><b>Additional window shows the image</b><br>'
+      if content['image'].startswith('data:image/'):
+        #png or jpg encoded base64
+        extension = content['image'][11:14]
+        i = base64.b64decode(content['image'][22:])
+      else:
+        #svg data
+        i = cairosvg.svg2png(bytestring=content['image'].encode())
+      i = BytesIO(i)
+      i = Image.open(i)
+      if interactive:
+        i.show()
+      del content['image']
+    if interactive and not reportHTML:
+      print('Identified metadata',content)
+    os.environ['QT_API'] = 'pyside6'
+    return report
 
 
   ######################################################

@@ -1,9 +1,12 @@
 """ New/Edit dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""
+import json
 #pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QDialog, QWidget, QFormLayout, QVBoxLayout, QHBoxLayout, QLabel, QTextEdit, \
                               QPlainTextEdit, QComboBox, QLineEdit, QDialogButtonBox, QSplitter, QSizePolicy
 #pylint: enable=no-name-in-module
 from .style import Image, TextButton, IconButton
+from .fixedStrings import defaultOntologyNode
+from .handleDictionaries import fillDocBeforeCreate
 
 class Form(QDialog):
   """ New/Edit dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""
@@ -35,7 +38,7 @@ class Form(QDialog):
     if 'image' in self.doc:
       width = self.comm.backend.configuration['GUI']['imageWidthDetails'] \
                 if hasattr(self.comm.backend, 'configuration') else 300
-      Image(self.doc['image'], mainL, width=width)
+      Image(self.doc['image'], mainL, height=width)
     formW = QWidget()
     mainL.addWidget(formW)
     self.formL = QFormLayout(formW)
@@ -44,12 +47,15 @@ class Form(QDialog):
     if '-type' in self.doc:
       setattr(self, 'key_-name', QLineEdit(self.doc['-name']))
       self.formL.addRow('Name', getattr(self, 'key_-name'))
-      ontologyNode = self.comm.backend.db.ontology[self.doc['-type'][0]]['prop']
+      if self.doc['-type'][0] in self.comm.backend.db.ontology:
+        ontologyNode = self.comm.backend.db.ontology[self.doc['-type'][0]]['prop']
+      else:
+        ontologyNode = defaultOntologyNode
       for item in ontologyNode:
         if item['name'] not in self.doc and  item['name'][0] not in ['_','-']:
           self.doc[item['name']] = ''
     for key,value in self.doc.items():
-      if key[0] in ['_','-'] or key in ['image','metaVendor','metaUser','shasum']:
+      if key[0] in ['_','-', '#'] or key in ['image','metaVendor','metaUser','shasum']:
         continue
       if key in ['comment','content']:
         labelW = QWidget()
@@ -81,7 +87,7 @@ class Form(QDialog):
         rightSideL.addWidget(splitter)
         self.formL.addRow(labelW, rightSideW)
       elif key == '-tags':  #remove - to make work
-        # TODO_P3: tags get selected via a editable QCombobox and get shown as qlabels, that can be deleted
+        # TODO_P3 tags: get selected via a editable QCombobox and get shown as qlabels, that can be deleted
         # RR: can you already implement tags as list of qlabels with a '-' button on the right to delete
         # the qcombox comes later once the database knows what tags are and how to generate the list
         print('')
@@ -102,7 +108,7 @@ class Form(QDialog):
             getattr(self, 'key_'+key).addItem('- no link -', userData='')
             for line in self.comm.backend.db.getView('viewDocType/'+listDocType):
               getattr(self, 'key_'+key).addItem(line['value'][0], userData=line['id'])
-              if line['id'] == value: #TODO_P4 what if names are identical
+              if line['id'] == value:
                 getattr(self, 'key_'+key).setCurrentText(line['value'][0])
         else:                                         #text area
           setattr(self, 'key_'+key, QLineEdit(value))
@@ -125,7 +131,8 @@ class Form(QDialog):
     buttonBox.clicked.connect(self.save)
     mainL.addWidget(buttonBox)
 
-  # TODO_P4 add button to add key-values
+  # TODO_P4 ontologyCheck: all names must be different
+  # TODO_P4 form: add button to add key-values
   def save(self, btn):
     """
     Action upon save / cancel
@@ -150,30 +157,31 @@ class Form(QDialog):
             self.doc[key] = getattr(self, 'key_'+key).text().strip()
         else:
           print("**ERROR dialogeForm unknown value type",key, value)
-      if '-branch' in self.doc:
-        del self.doc['-branch']
+      if '-branch' in self.doc:  #don't keep -branch in since update requries different type of -branch
+        oldBranch = self.doc.pop('-branch')
       if self.projectComboBox.currentData() != '':
         parentPath = self.comm.backend.db.getDoc(self.projectComboBox.currentData())['-branch'][0]['path']
         self.doc['-branch'] = {'op':'u', 'stack':[self.projectComboBox.currentData()], 'childNum':9999, \
                                'path':parentPath}
       if self.docTypeComboBox.currentData() != '':
-        self.doc['-type'] = [self.projectComboBox.currentData()]
-        print("**WARNING: I ALSO SHOULD CHANGE DOCID") #TODO_P4 change docID after docType change
-        #remove old, create new
+        self.doc['-type'] = [self.docTypeComboBox.currentData()]
+        self.comm.backend.db.remove(self.doc['_id'])
+        del self.doc['_id']
+        del self.doc['_rev']
+        self.doc['-branch'] = oldBranch
+        self.doc = fillDocBeforeCreate(self.doc, [self.docTypeComboBox.currentData()] )
+        self.comm.backend.db.saveDoc(self.doc)
       else:
-        if '_ids' in self.doc:
+        if '_ids' in self.doc: #group update
           del self.doc['-name']
           ids = self.doc.pop('_ids')
           self.doc = {i:j for i,j in self.doc.items() if j!=''}
           for docID in ids:
             self.comm.backend.db.updateDoc(self.doc, docID)
-        else: #default update
+        else: #default update on item
           self.comm.backend.db.updateDoc(self.doc, self.doc['_id'])
-      self.comm.changeTable.emit('','')
-      self.comm.changeDetails.emit('redraw')
       self.accept()  #close
     return
-
 
   def btnAdvanced(self, status):
     """
@@ -203,15 +211,15 @@ class Form(QDialog):
     """
     command, key = self.sender().accessibleName().split('_')
     if command=='bold':
-      getattr(self, 'textEdit_'+key).appendPlainText('**TEXT**')
+      getattr(self, 'textEdit_'+key).insertPlainText('**TEXT**')
     elif command=='italic':
-      getattr(self, 'textEdit_'+key).appendPlainText('*TEXT*')
+      getattr(self, 'textEdit_'+key).insertPlainText('*TEXT*')
     elif command=='list-ul':
-      getattr(self, 'textEdit_'+key).appendPlainText('\n- item 1\n- item 2')
+      getattr(self, 'textEdit_'+key).insertPlainText('\n- item 1\n- item 2')
     elif command=='list-ol':
-      getattr(self, 'textEdit_'+key).appendPlainText('\n1. item 1\n1. item 2')
+      getattr(self, 'textEdit_'+key).insertPlainText('\n1. item 1\n1. item 2')
     elif command.startswith('heading'):
-      getattr(self, 'textEdit_'+key).appendPlainText('\n\n'+'#'*int(command[-1])+' Heading')
+      getattr(self, 'textEdit_'+key).insertPlainText('#'*int(command[-1])+' Heading\n')
     else:
       print('**ERROR dialogForm: unknowCommand',command)
     return

@@ -103,9 +103,44 @@ def runTests():
   return
 
 
+def createTodoList():
+  """
+  Loop through all files and search for TODO and create a nice list which is shown in help menu
+  """
+  listAll = []
+  for fileI in os.listdir('pasta_eln'):
+    if not fileI.endswith('.py'):
+      continue
+    with open('pasta_eln/'+fileI, encoding='utf-8') as fIn:
+      content = fIn.readlines()
+      for line in content:
+        if '#TODO_' in line:
+          listAll.append(line.strip().split('#TODO_')[1])
+  listAll.sort()
+  currentLevel = 0
+  labels = {1:'Very important show stopper', 2:'To be verified/identified', 3:'Improvement to convenience', \
+            4:'Bigger things implemented soon', 5:'Things worthwile remembering/uncritical'}
+  res = 'todoString = """\n'
+  for item in listAll:
+    while int(item[1])>currentLevel:
+      currentLevel += 1
+      if currentLevel>1:
+        res += '</ul>\n'
+      res += '\n<h3>'+labels[currentLevel]+'</h3>\n'
+      res += '<ul>\n'
+    res += '<li>'+item[2:]+'\n'
+  res += '</ul>\n"""'
+  with open('pasta_eln/tempStrings.py', 'w', encoding='utf-8') as fOut:
+    fOut.write('""" ##Automatically created file: do not update manually """\n')
+    fOut.write(res)
+  return
+
 if __name__=='__main__':
+  #test and prepare everything
   runTests()
+  createTodoList()
   createRequirementsFile()
+  #do update
   if len(sys.argv)==1:
     print("**Require more arguments for creating new version 'message' 'level (optionally)' ")
     level = None

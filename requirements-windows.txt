@@ -10,5 +10,6 @@ anytree
 qrcode
 Pillow
 matplotlib
+cairosvg
 win-unicode-console
 winshell

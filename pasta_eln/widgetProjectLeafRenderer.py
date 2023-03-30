@@ -1,18 +1,17 @@
 """ renders each leaf of project tree using QPaint """
-import base64
-import numpy as np
+import base64, logging
 from PySide6.QtCore import Qt, QSize, QPoint, QMargins, QRectF# pylint: disable=no-name-in-module
 from PySide6.QtGui import QStaticText, QPixmap, QTextDocument # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QStyledItemDelegate             # pylint: disable=no-name-in-module
 from PySide6.QtSvg import QSvgRenderer                        # pylint: disable=no-name-in-module
 
-_DO_NOT_RENDER_ = ['image','content','metaVendor','metaUser','shasum']
+_DO_NOT_RENDER_ = ['image','content','metaVendor','metaUser','shasum','comment']
 
 class ProjectLeafRenderer(QStyledItemDelegate):
   """ renders each leaf of project tree using QPaint """
   def __init__(self):
     super().__init__()
-    self.lineSep = 20 #TODO_P4 into config file
+    self.lineSep = 20 #TODO_P5 addToConfig
     self.debugMode = True
     self.comm = None
     self.width = -1
@@ -67,7 +66,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       text.drawContents(painter)
       painter.translate(-topLeft2nd)
     yOffset += self.lineSep/2
-    hiddenText = '     \U0001F441' if len([b for b in doc['-branch'] if not np.all(b['show'])])>0 else ''
+    hiddenText = '     \U0001F441' if len([b for b in doc['-branch'] if False in b['show']])>0 else ''
     painter.drawStaticText(xOffset, yOffset, QStaticText(doc['-name']+hiddenText))
     if self.debugMode:
       painter.drawStaticText(xOffset+500, yOffset, QStaticText(index.data(Qt.DisplayRole))) #doc['_id']
@@ -83,8 +82,14 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       if isinstance(doc[key], str):
         painter.drawStaticText(xOffset, yOffset, QStaticText(key+': '+doc[key]))
       else:
-        pass
-        #print("cannot paint ",docID, key) #TODO_P4 make sure these make sense
+        logging.info('Do not know how to paint: '+docID+': '+str(key))
+    if 'comment' in doc and not folded:
+      text = QTextDocument()
+      text.setMarkdown(doc['comment'].strip())
+      painter.translate(QPoint(xOffset-3, yOffset+15))
+      text.drawContents(painter)
+      painter.translate(-QPoint(xOffset-3, yOffset+15))
+    return
 
 
   def sizeHint(self, option, index):
@@ -98,11 +103,26 @@ class ProjectLeafRenderer(QStyledItemDelegate):
         folded = True
       else:
         folded = False
-      docKeys = self.comm.backend.db.getDoc(docID).keys()
+      doc = self.comm.backend.db.getDoc(docID)
+      docKeys = doc.keys()
       height  = len([i for i in docKeys if not i in _DO_NOT_RENDER_ and i[0] not in ['-','_'] ])  #height in text lines
       height  = (height+3) * self.lineSep
+      if 'comment' in doc.keys() and not folded:
+        text = QTextDocument()
+        text.setMarkdown(self.comm.backend.db.getDoc(docID)['comment'].strip())
+        cutOff = 30 if text.size().toTuple()[1]>30 else 10
+        height += text.size().toTuple()[1]-cutOff
       if 'image' in docKeys and not folded:
-        height = int(self.width*3/4)
+        if doc['image'].startswith('data:image/'):
+          try:
+            pixmap = QPixmap()
+            pixmap.loadFromData(base64.b64decode(doc['image'][22:]))
+            pixmap = pixmap.scaledToWidth(self.width)
+            height = pixmap.height()
+          except:
+            print("**Exception in Renderer.sizeHint") #TODO_P5 if successful in Aug2023: remove
+        else:
+          height = int(self.width*3/4)
       if 'content' in docKeys and not folded:
         text = QTextDocument()
         text.setMarkdown(self.comm.backend.db.getDoc(docID)['content'])
