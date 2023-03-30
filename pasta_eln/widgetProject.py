@@ -78,7 +78,7 @@ class Project(QWidget):
       return nodeTree
 
     #Populate model body of change project: start recursion
-    nodeHier = self.comm.backend.db.getHierarchy(self.projID, all=self.showAll)
+    nodeHier = self.comm.backend.db.getHierarchy(self.projID, allItems=self.showAll)
     for node in PreOrderIter(nodeHier, maxlevel=2):
       if node.is_root:         #Project header
         self.projHeader()
