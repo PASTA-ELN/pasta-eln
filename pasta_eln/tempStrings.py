@@ -8,7 +8,6 @@ todoString = """
 <h3>To be verified/identified</h3>
 <ul>
 <li> install: be sure that no restart is required
-<li> install: execute restart here via comm to gui.py
 </ul>
 
 <h3>Improvement to convenience</h3>

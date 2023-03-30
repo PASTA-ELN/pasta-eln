@@ -11,5 +11,7 @@ qrcode
 Pillow
 matplotlib
 cairosvg
+cryptography
 win-unicode-console
 winshell
+pypiwin32
