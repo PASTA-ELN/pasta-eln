@@ -29,6 +29,7 @@ class Details(QScrollArea):
     self.headerL = QHBoxLayout(headerW)
     self.mainL.addWidget(headerW)
     self.specialW = QWidget()
+    self.specialW.setMaximumWidth(self.width())
     self.specialW.setContextMenuPolicy(Qt.CustomContextMenu)
     self.specialW.customContextMenuRequested.connect(self.contextMenu)
     self.specialL = QVBoxLayout(self.specialW)
@@ -36,21 +37,25 @@ class Details(QScrollArea):
     self.btnDetails = TextButton('Details', self.showArea, self.mainL, 'Details', 'Show / hide details', \
                                   checkable=True, hide=True)
     self.metaDetailsW  = QWidget()
+    self.metaDetailsW.setMaximumWidth(self.width())
     self.metaDetailsL = QVBoxLayout(self.metaDetailsW)
     self.mainL.addWidget(self.metaDetailsW)
     self.btnVendor = TextButton('Vendor metadata', self.showArea, self.mainL, 'Vendor', \
       'Show / hide vendor metadata', checkable=True, hide=True, style="margin-top: 15px")
     self.metaVendorW   = QWidget()
+    self.metaVendorW.setMaximumWidth(self.width())
     self.metaVendorL = QVBoxLayout(self.metaVendorW)
     self.mainL.addWidget(self.metaVendorW)
     self.btnUser = TextButton('User metadata', self.showArea, self.mainL, 'User', 'Show / hide user metadata',\
       checkable=True, hide=True, style="margin-top: 15px")
     self.metaUserW     = QWidget()
+    self.metaUserW.setMaximumWidth(self.width())
     self.metaUserL = QVBoxLayout(self.metaUserW)
     self.mainL.addWidget(self.metaUserW)
     self.btnDatabase = TextButton('Database details', self.showArea, self.mainL, 'Database', \
       'Show / hide database details', checkable= True, hide=True, style="margin-top: 15px")
     self.metaDatabaseW = QWidget()
+    self.metaDatabaseW.setMaximumWidth(self.width())
     self.metaDatabaseL = QVBoxLayout(self.metaDatabaseW)
     self.mainL.addWidget(self.metaDatabaseW)
     self.mainL.addStretch(1)
