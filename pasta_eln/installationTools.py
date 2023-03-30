@@ -297,7 +297,7 @@ def configuration(command='test', user='', password='', pathPasta=''):
       conf['GUI'] = {}
     else:
       output += '**ERROR: No GUI in config file\n'
-  guiItems = {"theme": "none",
+  guiItems = {"theme": "light_blue",
     "imageWidthProject": 300,
     "imageWidthDetails": 600,
     "sidebarWidth": 200,

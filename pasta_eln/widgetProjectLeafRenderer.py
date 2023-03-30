@@ -12,7 +12,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
   def __init__(self):
     super().__init__()
     self.lineSep = 20 #TODO_P5 addToConfig
-    self.debugMode = True
+    self.debugMode = False
     self.comm = None
     self.width = -1
 

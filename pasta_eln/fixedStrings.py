@@ -112,6 +112,8 @@ rootInstallLinux = """
 Do you want to install XX--XX?
 If you choose yes, a terminal will open and ask you for the super-user password.
 
+DO FINISH THE TERMINAL BEFORE CONTINUEING WITH YES/NO QUESTIONS.
+
 Be aware, downloading the installer requires some time, depending on the internet connection.
 """
 

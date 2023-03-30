@@ -113,15 +113,15 @@ class ConfigurationSetup(QWidget):
       else:
         ontology('install')
 
-    #Shortcut
-    if flagContinue:
-      button = QMessageBox.question(self, "Create shortcut", "Do you want to create the shortcut for PASTA-ELN on desktop?")
-      if button == QMessageBox.Yes:
-        createShortcut()
-        self.mainText = self.mainText.replace('- Shortcut creation', '- User selected to add a shortcut' )
-      else:
-        self.mainText = self.mainText.replace('- Shortcut creation', '- User selected to NOT add a shortcut' )
-      self.text1.setMarkdown(self.mainText)
+    # #Shortcut: created automatically #TODO_P5 Aug 2023: remove
+    # if flagContinue:
+    #   button = QMessageBox.question(self, "Create shortcut", "Do you want to create the shortcut for PASTA-ELN on desktop?")
+    #   if button == QMessageBox.Yes:
+    #     createShortcut()
+    #     self.mainText = self.mainText.replace('- Shortcut creation', '- User selected to add a shortcut' )
+    #   else:
+    #     self.mainText = self.mainText.replace('- Shortcut creation', '- User selected to NOT add a shortcut' )
+    #   self.text1.setMarkdown(self.mainText)
 
     #Example data
     if flagContinue:
