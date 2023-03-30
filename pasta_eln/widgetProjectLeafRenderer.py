@@ -1,9 +1,10 @@
 """ renders each leaf of project tree using QPaint """
 import base64, logging
 from PySide6.QtCore import Qt, QSize, QPoint, QMargins, QRectF# pylint: disable=no-name-in-module
-from PySide6.QtGui import QStaticText, QPixmap, QTextDocument # pylint: disable=no-name-in-module
+from PySide6.QtGui import QStaticText, QPixmap, QTextDocument, QColor # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QStyledItemDelegate             # pylint: disable=no-name-in-module
-from PySide6.QtSvg import QSvgRenderer                        # pylint: disable=no-name-in-module
+from PySide6.QtSvg import QSvgRenderer
+from pasta_eln.style import getColor                        # pylint: disable=no-name-in-module
 
 _DO_NOT_RENDER_ = ['image','content','metaVendor','metaUser','shasum','comment']
 
@@ -41,7 +42,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       index (QModelIndex): index
     """
     xOffset, yOffset = option.rect.topLeft().toTuple()
-    topLeft2nd = option.rect.topRight()-QPoint(self.width,0)
+    topLeft2nd = option.rect.topRight()-QPoint(self.width,-2)
     docID   = index.data(Qt.DisplayRole).split('/')[-1]
     if docID.endswith(' -'):
       docID = docID[:-2]
@@ -49,12 +50,13 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     else:
       folded = False
     doc     = self.comm.backend.db.getDoc(docID)
-    painter.fillRect(option.rect.marginsRemoved(QMargins(0,2,0,2)), Qt.lightGray)
+    painter.fillRect(option.rect.marginsRemoved(QMargins(2,6,4,0)),QColor.fromString(getColor(self.comm.backend, 'secondaryLight')).darker(350))
+    painter.fillRect(option.rect.marginsRemoved(QMargins(-2,3,8,5)), QColor.fromString(getColor(self.comm.backend, 'secondaryLight')))
     if 'image' in doc and doc['image']!='' and not folded:
       if doc['image'].startswith('data:image/'):
         pixmap = QPixmap()
         pixmap.loadFromData(base64.b64decode(doc['image'][22:]))
-        pixmap = pixmap.scaledToWidth(self.width)
+        pixmap = pixmap.scaledToWidth(self.width-8)
         painter.drawPixmap(topLeft2nd, pixmap)
       elif doc['image'].startswith('<?xml'):
         image = QSvgRenderer(bytearray(doc['image'], encoding='utf-8'))
