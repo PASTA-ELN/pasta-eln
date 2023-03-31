@@ -27,6 +27,7 @@ todoString = """
 
 <h3>Things worthwile remembering/uncritical</h3>
 <ul>
+<li> Aug 2023: remove
 <li> addToConfig
 <li> addToConfig
 <li> addToConfig

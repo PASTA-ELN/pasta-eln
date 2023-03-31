@@ -141,7 +141,7 @@ def copyExtractors():
   Copy extractors from main location to distribution
   """
   basePath = 'pasta_eln/Extractors'
-  skipFiles= 'extractor_csv.py'
+  skipFiles= ['extractor_csv.py', 'extractor_jpg.py']
   for fileI in os.listdir(basePath):
     if fileI in skipFiles or not fileI.startswith('extractor_') or not fileI.endswith('.py'):
       continue
