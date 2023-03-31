@@ -9,10 +9,10 @@ def camelCase(a_string):
      a_string (str): string
 
   Returns:
-    str: camel case of that string
+    str: camel case of that string: CamelCaseString
   """
   a_string = sub(r"(_|-)+", " ", a_string).title().replace(" ", "").replace("*","")
-  return ''.join([a_string[0].lower(), a_string[1:]])
+  return ''.join(a_string)
 
 
 def createDirName(name,docType,thisChildNumber):

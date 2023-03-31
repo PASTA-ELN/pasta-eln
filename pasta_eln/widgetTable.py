@@ -45,8 +45,8 @@ class Table(QWidget):
     Action('Hide / Show all', self.executeAction, moreMenu, self, name='showAll')
     Action('Change headers',  self.executeAction, moreMenu, self, name='changeTableHeader')
     Action('Export',          self.executeAction, moreMenu, self, name='export')
-    #TODO_P3 rerunExtractors: as batch
     more.setMenu(moreMenu)
+    #TODO_P3 rerunExtractors: as batch
     mainL.addWidget(self.headerW)
     # filter
     filterW = QWidget()

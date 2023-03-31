@@ -25,14 +25,15 @@ class DocTypes(QWidget):
     self.setLayout(mainLayout)
 
 
-  @Slot(str)
-  def changeTable(self, docType):
+  @Slot(str, str)
+  def changeTable(self, docType, projID):
     """
     What happens when user clicks to change doc-type
     -> show table
 
     Args:
       docType (str): document type
+      projID (str): project ID for filtering
     """
     if docType=='x0':
       self.details.hide()
