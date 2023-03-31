@@ -161,8 +161,6 @@ class Form(QDialog):
             self.doc[key] = getattr(self, 'key_'+key).text().strip()
         else:
           print("**ERROR dialogForm unknown value type",key, value)
-      if '-branch' in self.doc:  #don't keep -branch in since update requires different type of -branch
-        oldBranch = self.doc.pop('-branch')
       if hasattr(self, 'projectComboBox') and self.projectComboBox.currentData() != '':
         parentPath = self.comm.backend.db.getDoc(self.projectComboBox.currentData())['-branch'][0]['path']
         self.doc['-branch'] = {'op':'u', 'stack':[self.projectComboBox.currentData()], 'childNum':9999, \
@@ -172,24 +170,24 @@ class Form(QDialog):
         self.comm.backend.db.remove(self.doc['_id'])
         del self.doc['_id']
         del self.doc['_rev']
-        self.doc['-branch'] = oldBranch
-        self.doc = fillDocBeforeCreate(self.doc, [self.docTypeComboBox.currentData()] )
-        self.comm.backend.db.saveDoc(self.doc)
+        self.comm.backend.editData(self.doc)
       else:
         if '_ids' in self.doc: #group update
           del self.doc['-name']
           ids = self.doc.pop('_ids')
           self.doc = {i:j for i,j in self.doc.items() if j!=''}
           for docID in ids:
-            self.comm.backend.db.updateDoc(self.doc, docID)
+            doc = self.comm.backend.db.getDoc(docID)
+            doc.update( self.doc )
+            self.comm.backend.editData(doc)
         elif '_id' in self.doc:                                   #default update on item
-          self.comm.backend.db.updateDoc(self.doc, self.doc['_id'])
+          self.comm.backend.editData(self.doc)
         else:                                                     #create new dataset
-          print('Create new:', self.doc)
           self.comm.backend.addData(self.doc['-type'][0], self.doc)
-      self.comm.changeTable.emit('/'.join(self.doc['-type']),'')
-      if self.doc['-type'][0]=='x0':
-        self.comm.changeSidebar.emit()
+      #NO updates / redraw here since one does not know from where form came
+      # self.comm.changeTable.emit('/'.join(self.doc['-type']),'')
+      # if self.doc['-type'][0]=='x0':
+      #   self.comm.changeSidebar.emit()
       self.accept()  #close
     return
 

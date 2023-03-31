@@ -111,6 +111,7 @@ class Project(QWidget):
       docID = docID[:-2]
     doc      = db.getDoc(docID)
     branchOld= [i for i in doc['-branch'] if i['stack']==stackOld][0]
+    childOld = branchOld['child']
     branchIdx= doc['-branch'].index(branchOld)
     siblingsOld = db.getView('viewHierarchy/viewHierarchy', startKey=' '.join(stackOld))
     siblingsOld = [i for i in siblingsOld if len(i['key'].split(' '))==len(stackOld)+1 and \
@@ -131,17 +132,17 @@ class Project(QWidget):
     siblingsNew = [i for i in siblingsNew if len(i['key'].split(' '))==len(stackNew)+1 and \
                                              i['value'][0]>=childNew]
     logging.debug('NEW INFORMATION '+docID+' '+str(stackNew)+'  '+str(childNew)+' '+pathNew)
-    if stackOld==stackNew:  #nothing changed, just redraw
+    if stackOld==stackNew and childOld==childNew:  #nothing changed, just redraw
       return
     # change siblings
     for line in siblingsOld:
       if line['value'][0]<9999:
-        pathOld, pathNew = db.updateBranch(docID=line['id'], branch=line['value'][3], child=line['value'][0]-1)
-        (Path(self.comm.backend.basePath)/pathOld).rename(Path(self.comm.backend.basePath)/pathNew)
+        pathOldSib, pathNewSib = db.updateBranch(docID=line['id'], branch=line['value'][3], child=line['value'][0]-1)
+        (Path(self.comm.backend.basePath)/pathOldSib).rename(Path(self.comm.backend.basePath)/pathNewSib)
     for line in siblingsNew:
       if line['value'][0]<9999:
-        pathOld, pathNew = db.updateBranch(docID=line['id'], branch=line['value'][3], child=line['value'][0]+1)
-        (Path(self.comm.backend.basePath)/pathOld).rename(Path(self.comm.backend.basePath)/pathNew)
+        pathOldSib, pathNewSib = db.updateBranch(docID=line['id'], branch=line['value'][3], child=line['value'][0]+1)
+        (Path(self.comm.backend.basePath)/pathOldSib).rename(Path(self.comm.backend.basePath)/pathNewSib)
     #change item in question
     pathOld = Path(self.comm.backend.basePath)/branchOld['path']
     if pathOld.exists():

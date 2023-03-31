@@ -23,6 +23,7 @@ class Table(QWidget):
     self.comm = comm
     comm.changeTable.connect(self.changeTable)
     self.data = []
+    self.models = []
     self.docType = ''
     self.projID = ''
     self.filterHeader = []
@@ -53,7 +54,6 @@ class Table(QWidget):
     self.filterL = QGridLayout(filterW)
     mainL.addWidget(filterW)
     # table
-    self.models = []
     self.table = QTableView(self)
     self.table.verticalHeader().hide()
     self.table.clicked.connect(self.cellClicked)
@@ -81,6 +81,7 @@ class Table(QWidget):
       docType (str): document type; leave empty for redraw
       projID (str): id of project
     """
+    self.models = []
     if docType!='':
       self.docType = docType
       self.projID  = projID
@@ -102,7 +103,8 @@ class Table(QWidget):
       if self.docType=='-':
         self.headline.setText('Unidentified')
       else:
-        self.headline.setText(self.comm.backend.db.dataLabels[self.docType])
+        if self.docType in self.comm.backend.db.dataLabels:
+          self.headline.setText(self.comm.backend.db.dataLabels[self.docType])
       if docType in self.comm.backend.configuration['tableHeaders']:
         self.filterHeader = self.comm.backend.configuration['tableHeaders'][docType]
       elif self.docType=='-':
@@ -205,6 +207,7 @@ class Table(QWidget):
       menuName = self.sender().accessibleName()
     if menuName == 'addItem':
       self.comm.formDoc.emit({'-type':[self.docType]})
+      self.comm.changeTable.emit(self.docType, '')
     elif menuName == 'addFilter':
       # gui
       rowW = QWidget()
@@ -214,6 +217,7 @@ class Table(QWidget):
       select = QComboBox()
       select.addItems(self.filterHeader)
       select.currentIndexChanged.connect(self.filterChoice)
+      # print('create filter row',str(len(self.models)) )
       select.setAccessibleName(str(len(self.models)))
       rowL.addWidget(select)
       LetterButton('-', self.delFilter, rowL, str(len(self.models)))
@@ -247,6 +251,7 @@ class Table(QWidget):
       for row in range(self.models[-1].rowCount()):
         if self.models[-1].item(row,0).checkState() == Qt.CheckState.Checked:
           self.comm.formDoc.emit(self.comm.backend.db.getDoc( self.data[row]['id'] ))
+      self.comm.changeTable.emit(self.docType, '')
     elif menuName == 'changeTableHeader':
       dialog = TableHeader(self.comm, self.docType)
       dialog.exec()
@@ -289,6 +294,7 @@ class Table(QWidget):
   def delFilter(self):
     """ Remove filter from list of filters """
     row = int(self.sender().accessibleName())
+    #print('Delete filter row', row)
     for i in range(row, self.filterL.count()):        #e.g. model 1 is in row=0, so start in 1 for renumbering
       minusBtnW = self.filterL.itemAt(i).widget().layout().itemAt(2).widget()
       minusBtnW.setAccessibleName( str(int(minusBtnW.accessibleName())-1) )  #rename: -1 from accessibleName

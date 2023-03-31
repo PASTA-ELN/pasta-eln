@@ -97,6 +97,8 @@ class TreeView(QTreeView):
   def treeDoubleClicked(self):
     """ after double-click on tree leaf: open form """
     docID = self.currentIndex().data().split('/')[-1]
-    self.comm.formDoc.emit(self.comm.backend.db.getDoc(docID))
+    doc   = self.comm.backend.db.getDoc(docID)
+    self.comm.formDoc.emit(doc)
     self.comm.changeProject.emit('','')
+
     return
