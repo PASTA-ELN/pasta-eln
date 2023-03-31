@@ -16,6 +16,7 @@ todoString = """
 <li> drag&drop: external files
 <li> invert filter: not t in name
 <li> rerunExtractors: as batch
+<li> try to get rid of cryptography: too much requirements
 </ul>
 
 <h3>Bigger things implemented soon</h3>
