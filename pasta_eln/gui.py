@@ -43,12 +43,12 @@ class MainWindow(QMainWindow):
     Action('&Exit',                 self.executeAction, projectMenu, self, name='exit')
     viewMenu = menu.addMenu("&Lists")
     systemMenu = menu.addMenu("&System")
-    Action('&Ontology',              self.executeAction, systemMenu, self, name='ontology')
     Action('&Project groups',        self.executeAction, systemMenu, self, name='projectGroups')
     changeProjectGroups = systemMenu.addMenu("&Change project group")
     if hasattr(self.backend, 'configuration'):                       #not case in fresh install
       for name in self.backend.configuration['projectGroups'].keys():
         Action(name, self.changeProjectGroup, changeProjectGroups, self, name=name)
+    Action('&Questionaires',         self.executeAction, systemMenu, self, name='ontology')
     systemMenu.addSeparator()
     Action('Update &Extractor list', self.executeAction, systemMenu, self, name='updateExtractors')
     Action('&Verify database',       self.executeAction, systemMenu, self, name='verifyDB', shortcut='Ctrl+?')
@@ -122,8 +122,9 @@ class MainWindow(QMainWindow):
       dialog = ProjectGroup(self.comm.backend)
       dialog.exec()
     elif menuName=='ontology':
-      dialog = Ontology(self.comm.backend)
-      dialog.exec()
+      showMessage(self, 'To be implemented','A possibility to change the questionaires / change the ontology is missing.')
+      # dialog = Ontology(self.comm.backend)
+      # dialog.exec()
     elif menuName=='updateExtractors':
       updateExtractorList(self.backend.extractorPath)
     elif menuName=='verifyDB':

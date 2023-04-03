@@ -5,7 +5,7 @@ from pathlib import Path
 from PySide6.QtWidgets import QDialog, QWidget, QVBoxLayout, QHBoxLayout, QListWidget, QListWidgetItem, \
                               QLineEdit, QDialogButtonBox
 #pylint: enable=no-name-in-module
-from .style import IconButton
+from .style import IconButton, showMessage
 
 class TableHeader(QDialog):
   """ Table Header dialog: change which colums are shown and in which order """
@@ -112,6 +112,6 @@ class TableHeader(QDialog):
       # self.comm.changeTable('','')
       # self.comm.changeDetails('redraw')
       #TODO_P4 tableHeaderChange: requires view to change to views, not ontology
-      print('DOES NOT WORK YES')
+      showMessage(self, 'To be implemented','The changing of the table headers has to be fully implemented, yet.') #TODO_P3
       self.accept()  #close
     return

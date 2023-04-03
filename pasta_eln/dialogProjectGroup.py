@@ -8,7 +8,7 @@ from PySide6.QtWidgets import QDialog, QWidget, QVBoxLayout, QHBoxLayout, QListW
                               QLineEdit, QDialogButtonBox, QFormLayout, QLabel, QGroupBox, QComboBox, QTextEdit, QFileDialog
 from PySide6.QtGui import QPixmap, QImage, QRegularExpressionValidator
 #pylint: enable=no-name-in-module
-from .style import Label, TextButton
+from .style import Label, TextButton, showMessage
 from .miscTools import upOut, restart, upIn
 from .serverActions import testLocal, testRemote, passwordDecrypt
 
@@ -35,17 +35,12 @@ class ProjectGroup(QDialog):
     self.selectGroup = QComboBox()
     self.selectGroup.addItems(self.backend.configuration['projectGroups'].keys())
     self.selectGroup.currentTextChanged.connect(self.changeProjectGroup)
-    self.selectGroup.setCurrentText(self.backend.configuration['defaultProjectGroup'])
     topbarL.addWidget(self.selectGroup)
     TextButton('New', self.btnEvent, topbarL, 'new')
     TextButton('Fill remote', self.btnEvent, topbarL, 'fill')
     TextButton('Create QR', self.btnEvent, topbarL, 'createQR')
     TextButton('Check All', self.btnEvent, topbarL, 'check')
     mainL.addWidget(topbarW)
-    self.messageW = QTextEdit()
-    self.messageW.hide()
-    self.messageW.setReadOnly(True)
-    mainL.addWidget(self.messageW)
     self.projectGroupName = QLineEdit('')
     self.projectGroupName.hide()
     mainL.addWidget(self.projectGroupName)
@@ -185,12 +180,11 @@ class ProjectGroup(QDialog):
       remoteTest = testRemote(self.serverR.text(), self.userNameR.text(), self.passwordR.text(), \
         self.databaseR.text())
     # give output
-    self.messageW.show()
     if 'ERROR' in localTest or 'ERROR' in remoteTest:
-      self.messageW.setText(localTest+remoteTest)
+      showMessage(self, 'ERROR occurred', localTest+remoteTest, 'Critical')
       return False
     #success
-    self.messageW.setText('SUCCESS\n'+localTest+remoteTest)
+    showMessage(self, 'Successful test', localTest+remoteTest, 'Information')
     return True
 
 

@@ -56,7 +56,7 @@ class TreeView(QTreeView):
         showMessage(self, 'Error', 'You cannot create a child of a non-folder!')
     elif menuName=='addSibling':
       childNum = self.currentIndex().row()+1
-      hierStack= self.currentIndex().parent().data().split('/')
+      hierStack= self.currentIndex().data().split('/')[:-1]
       docType= 'x'+str(len(hierStack))
       self.comm.backend.cwd = Path(self.comm.backend.db.getDoc(hierStack[-1])['-branch'][0]['path'])
       self.comm.backend.addData(docType, {'-name':'folder '+str(childNum+1), 'childNum':childNum}, hierStack)
