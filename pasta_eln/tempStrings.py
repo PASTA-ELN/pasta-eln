@@ -11,6 +11,7 @@ todoString = """
 
 <h3>Improvement to convenience</h3>
 <ul>
+<li>
 <li> convenience: allow scroll in sidebar
 <li> convenience: selection does not scroll; one cannot select a row
 <li> drag&drop: external files
