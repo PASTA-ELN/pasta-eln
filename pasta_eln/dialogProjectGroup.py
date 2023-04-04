@@ -100,16 +100,17 @@ class ProjectGroup(QDialog):
     Args:
       btn (QButton): save or cancel button
     """
-    if btn.text()=='Cancel':
+    print('project group press',btn.text() )
+    if btn.text().endswith('Cancel'):
       self.reject()
-    elif btn.text().startswith('Save') and self.checkEntries():
+    elif 'Save' in btn.text() and self.checkEntries():
       name = self.projectGroupName.text() if self.selectGroup.isHidden() else self.selectGroup.currentText()
-      if btn.text()=='Save':
+      if btn.text().endswith('Save'):
         local = {'user':self.userNameL.text(), 'password':self.passwordL.text(), \
                 'database':self.databaseL.text(), 'path':self.pathL.text()}
         remote = {'user':self.userNameR.text(), 'password':self.passwordR.text(), \
                 'database':self.databaseR.text(), 'url':self.serverR.text()}
-      elif btn.text()=='Save encrypted':
+      elif btn.text().endswith('Save encrypted'):
         credL = upIn(self.userNameL.text()+':'+self.passwordL.text())
         credR = upIn(self.userNameR.text()+':'+self.passwordR.text())
         local = {'cred':credL, 'database':self.databaseL.text(), 'path':self.pathL.text()}
@@ -120,6 +121,8 @@ class ProjectGroup(QDialog):
       with open(Path.home()/'.pastaELN.json', 'w', encoding='utf-8') as fConf:
         fConf.write(json.dumps(self.backend.configuration,indent=2))
       restart()
+    else:
+      print('dialogProjectGroup: did not get a fitting btn ',btn.text())
     return
 
 

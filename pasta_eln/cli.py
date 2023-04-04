@@ -13,6 +13,7 @@ from .backend import Backend
 from .miscTools import upOut, upIn, updateExtractorList
 from .inputOutput import importELN, exportELN
 from .installationTools import configuration as checkConfiguration
+from .installationTools import exampleData
 
 def commands(getDocu, args):
   """
@@ -171,6 +172,15 @@ def commands(getDocu, args):
       repair = args.command=='verifyDBdev'
       output = be.checkDB(verbose=False, repair=repair)
       print(output)
+      return '1'
+
+    if getDocu:
+      doc += '  exampleData: create example data by DELETING ALL DATA\n'
+      doc += '  BE CERTAIN THAT YOU WANT TO DO THIS!!\n'
+      doc += '    example: pastaELN_CLI.py exampleData\n'
+    elif args.command.startswith('exampleData'):
+      #prints directly to screen
+      exampleData(True)
       return '1'
 
     if getDocu:

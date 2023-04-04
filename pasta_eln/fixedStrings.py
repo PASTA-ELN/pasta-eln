@@ -110,9 +110,10 @@ Be aware, downloading the installer requires some time, depending on the interne
 
 rootInstallLinux = """
 Do you want to install XX--XX?
-If you choose yes, a terminal will open and ask you for the super-user password.
+If you choose yes, you will be first asked to
 
-DO FINISH THE TERMINAL BEFORE CONTINUEING WITH YES/NO QUESTIONS.
+- choose a location to store the data
+- a terminal will open and ask you for the super-user password.
 
 Be aware, downloading the installer requires some time, depending on the internet connection.
 """
@@ -132,9 +133,11 @@ Please restart the software by
 """
 
 exampleDataLinux = """
-Do you want to install the example data?
+Do you want to install example data?
 
 This step helps to verify the installation and the data is an helpful example for new users.
+
+Create the this data only once, as otherwise you result in a confused state (Manually deleting the project solves it.)
 
 This step usually takes up to 20sec, so please be patient. Sometimes, linux likes to mention that the program
 is hanging and asks if to close/wait. Please WAIT.

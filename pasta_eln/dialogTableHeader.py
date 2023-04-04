@@ -101,9 +101,9 @@ class TableHeader(QDialog):
 
   def save(self, btn):
     """ save selectedList to configuration and exit """
-    if btn.text()=='Cancel':
+    if btn.text().endswith('Cancel'):
       self.reject()
-    elif btn.text()=='Save':
+    elif btn.text().endswith('Save'):
       # self.selectedList = ['#_curated' if i=='cur\u2605ted' else i  for i in self.selectedList]  #change #_something to somehing
       # self.selectedList = ['-'+i[1:-1] if i[0]=='\u2605' and i[-1]=='\u2605'else i  for i in self.selectedList] #change -something to something
       # self.comm.backend.configuration['tableHeaders'][self.docType] = self.selectedList
@@ -112,6 +112,8 @@ class TableHeader(QDialog):
       # self.comm.changeTable('','')
       # self.comm.changeDetails('redraw')
       #TODO_P4 tableHeaderChange: requires view to change to views, not ontology
-      showMessage(self, 'To be implemented','The changing of the table headers has to be fully implemented, yet.') #TODO_P3
+      showMessage(self, 'To be implemented','The changing of the table headers has to be fully implemented, yet.')
       self.accept()  #close
+    else:
+      print('dialogTableHeader: did not get a fitting btn ',btn.text())
     return

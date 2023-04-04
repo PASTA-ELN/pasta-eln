@@ -141,9 +141,9 @@ class Form(QDialog):
     """
     Action upon save / cancel
     """
-    if btn.text()=='Cancel':
+    if btn.text().endswith('Cancel'):
       self.reject()
-    elif btn.text()=='Save':
+    elif btn.text().endswith('Save'):
       if hasattr(self, 'key_-name'):
         self.doc['-name'] = getattr(self, 'key_-name').text().strip()
       for key, value in self.doc.items():
@@ -189,6 +189,8 @@ class Form(QDialog):
       # if self.doc['-type'][0]=='x0':
       #   self.comm.changeSidebar.emit()
       self.accept()  #close
+    else:
+      print('dialogForm: did not get a fitting btn ',btn.text())
     return
 
   def btnAdvanced(self, status):

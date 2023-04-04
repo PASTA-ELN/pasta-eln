@@ -3,6 +3,7 @@ todoString = """
 
 <h3>Very important show stopper</h3>
 <ul>
+<li> create project within project
 </ul>
 
 <h3>To be verified/identified</h3>
@@ -11,13 +12,12 @@ todoString = """
 
 <h3>Improvement to convenience</h3>
 <ul>
-<li>
 <li> convenience: allow scroll in sidebar
 <li> convenience: selection does not scroll; one cannot select a row
 <li> drag&drop: external files
+<li> finish ontology dialog
 <li> invert filter: not t in name
 <li> rerunExtractors: as batch
-<li> try to get rid of cryptography: too much requirements
 </ul>
 
 <h3>Bigger things implemented soon</h3>

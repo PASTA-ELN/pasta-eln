@@ -97,7 +97,10 @@ class Details(QScrollArea):
     User selects to test extractor on this dataset
     """
     if len(self.doc)>1:
-      report = self.comm.backend.testExtractor(self.comm.backend.basePath/self.doc['-branch'][0]['path'], reportHTML=True)
+      path = Path(self.doc['-branch'][0]['path'])
+      if not path.as_posix().startswith('http'):
+        path = self.comm.backend.basePath/path
+      report = self.comm.backend.testExtractor(path, reportHTML=True)
       showMessage(self, 'Report of extractor test', report, style='QLabel {min-width: 800px}')
     return
 

@@ -383,7 +383,7 @@ def exampleData(force=False, callbackPercent=None):
     callbackPercent(2)
   ### CREATE PROJECTS AND SHOW
   print('*** CREATE EXAMPLE PROJECT AND SHOW ***')
-  backend.addData('x0', {'-name': 'PASTAs Example Project', 'objective': 'Test if everything is working as intended.', 'status': 'active', 'comment': '#tag Can be used as reference or deleted'})
+  backend.addData('x0', {'-name': 'PASTAs Example Project', 'objective': 'Test if everything is working as intended.', 'status': 'active', 'comment': '#Important Can be used as reference or deleted'})
   if callbackPercent is not None:
     callbackPercent(3)
   print(backend.output('x0'))

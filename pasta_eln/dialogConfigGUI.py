@@ -30,8 +30,7 @@ class ConfigurationGUI(QWidget):
       self.wD = self.addRowList('imageWidthDetails','Image width in details view', ['500','600','700','800'])
       self.wS = self.addRowList('sidebarWidth','Sidebar width', ['200','300','400'])
       self.log = self.addRowList('loggingLevel','Logging level (more->less)', ['DEBUG','INFO','WARNING','ERROR'])
-      self.tabAppearanceL.addRow(TextButton('Save changes', self.saveData, None),
-                                TextButton('Restart PASTA-ELN', restart, None))
+      self.tabAppearanceL.addRow('Save changes', TextButton('Save changes', self.saveData, None))
 
 
   def addRowList(self, item, label, itemList):

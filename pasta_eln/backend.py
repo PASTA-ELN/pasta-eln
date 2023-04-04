@@ -157,6 +157,8 @@ class Backend(CLI_Mixin):
       doc['-type'] = docType.split('/')
       if len(hierStack) == 0:
         hierStack = self.hierStack
+    logging.info('Add/edit data in cwd:'+self.cwd.as_posix()+' with stack:'+str(hierStack)+' and name'\
+                 +doc['-name']+' and type:'+str(doc['-type']))
 
     # collect structure-doc and prepare
     if doc['-type'][0][0]=='x' and doc['-type'][0]!='x0' and childNum is None:
@@ -477,6 +479,10 @@ class Backend(CLI_Mixin):
     success = True
     if isinstance(filePath, str):
       filePath = Path(filePath)
+    if filePath.as_posix().startswith('http'):
+      tempFilePath = Path(tempfile.gettempdir())/filePath.name
+      request.urlretrieve(filePath.as_posix().replace(':/','://'), tempFilePath)
+      filePath = tempFilePath
     if reportHTML:
       report = '<h3>Report on extractor test</h3>'
       report +='check file: '+str(filePath)+'<br>'

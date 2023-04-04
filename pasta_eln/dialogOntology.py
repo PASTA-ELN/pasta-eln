@@ -33,9 +33,11 @@ class Ontology(QDialog):
 
   def save(self, btn):
     """ save selectedList to configuration and exit """
-    if btn.text()=='Cancel':
+    if btn.text().endswith('Cancel'):
       self.reject()
-    elif btn.text()=='Save':
-      #TODO
+    elif btn.text().endswith('Save'):
+      #TODO_P3 finish ontology dialog
       self.accept()  #close
+    else:
+      print('dialogOntology: did not get a fitting btn ',btn.text())
     return

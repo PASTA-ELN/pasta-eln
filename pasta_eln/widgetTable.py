@@ -199,6 +199,8 @@ class Table(QWidget):
     return
 
 
+  #TODO_P1 create project within project
+
   def executeAction(self):
     """ Any action by the buttons and menu at the top of the page """
     if hasattr(self.sender(), 'data'):  #action
@@ -208,6 +210,8 @@ class Table(QWidget):
     if menuName == 'addItem':
       self.comm.formDoc.emit({'-type':[self.docType]})
       self.comm.changeTable.emit(self.docType, '')
+      if self.docType=='x0':
+        self.comm.changeSidebar.emit()
     elif menuName == 'addFilter':
       # gui
       rowW = QWidget()

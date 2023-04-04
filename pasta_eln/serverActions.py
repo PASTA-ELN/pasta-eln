@@ -1,45 +1,23 @@
 #!/usr/bin/python3
 """Commandline utility to admin the remote server"""
-import sys, json, secrets
-from base64 import urlsafe_b64encode as b64e, urlsafe_b64decode as b64d
+import sys, json, secrets, base64
 import requests
 import keyring as cred
 from PIL import Image, ImageDraw, ImageFont
 
-from cryptography.fernet import Fernet
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-#TODO_P3 try to get rid of cryptography: too much requirements
 #TODO_P5 serverConfiguration: this should become a GUI and CLI and separate into three-files: functions, CLI, GUI
 # add: delete all documents, backup database, backup server (incl. all small things)
 
-#encrypt data
-#https://stackoverflow.com/questions/2490334/simple-way-to-encode-a-string-according-to-a-password
-backend = default_backend()
-iterationsGlobal = 100_000
-def _derive_key(password: bytes, salt: bytes, iterations: int = iterationsGlobal) -> bytes:
+def passwordEncrypt(message):
   """
-  derive key helper fuction
+  obfuscate message
   """
-  kdf = PBKDF2HMAC(algorithm=hashes.SHA256(), length=32, salt=salt, iterations=iterations, backend=backend)
-  return b64e(kdf.derive(password))
-def passwordEncrypt(message: bytes, iterations: int = iterationsGlobal) -> bytes:
+  return base64.b64encode(bytearray(message, encoding='utf-8'))
+def passwordDecrypt(message):
   """
-  encrypt with password
+  de-obfuscate message
   """
-  salt = secrets.token_bytes(16)
-  key = _derive_key('pastaDB_2022'.encode(), salt, iterations)
-  return b64e(b'%b%b%b' % (salt, iterations.to_bytes(4, 'big'), b64d(Fernet(key).encrypt(message))))
-def passwordDecrypt(token: bytes) -> bytes:
-  """
-  decrypt with pasword
-  """
-  decoded = b64d(token)
-  salt, iterNum, token = decoded[:16], decoded[16:20], b64e(decoded[20:])
-  iterations = int.from_bytes(iterNum, 'big')
-  key = _derive_key('pastaDB_2022'.encode(), salt, iterations)
-  return Fernet(key).decrypt(token)
+  return base64.b64decode(message).decode('utf-8')
 
 #global variables
 headers = requests.structures.CaseInsensitiveDict()

@@ -67,6 +67,7 @@ def createRequirementsFile():
   config = configparser.ConfigParser()
   config.read('setup.cfg')
   requirements = config['options']['install_requires'].split('\n')
+  requirements = [i.replace(' ==','==') if '==' in i else i for i in requirements]
   # Linux
   requirementsLinux = [i for i in requirements if i!='' and 'Windows' not in i]
   with open('requirements-linux.txt','w', encoding='utf-8') as req:
