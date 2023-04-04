@@ -199,7 +199,7 @@ class Table(QWidget):
     return
 
 
-  #TODO_P1 create project within project
+  #TODO_P2 create project within project (unable to recreate)
 
   def executeAction(self):
     """ Any action by the buttons and menu at the top of the page """
@@ -284,7 +284,7 @@ class Table(QWidget):
       print("**ERROR widgetTable menu unknown:",menuName)
     return
 
-  #TODO_P3 invert filter: not t in name
+  #TODO_P3 invert filter: not 'Sur' in name => '^((?!Sur).)*$' in name
   def filterChoice(self, item):
     """
     Change the column which is used for filtering
