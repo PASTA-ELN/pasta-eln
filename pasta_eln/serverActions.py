@@ -1,8 +1,10 @@
 #!/usr/bin/python3
 """Commandline utility to admin the remote server"""
-import sys, json, secrets, base64
+import sys, json, secrets, base64, os
 import requests
+from datetime import datetime
 import keyring as cred
+from zipfile import ZipFile, ZIP_DEFLATED
 from PIL import Image, ImageDraw, ImageFont
 
 #TODO_P5 serverConfiguration: this should become a GUI and CLI and separate into three-files: functions, CLI, GUI
@@ -295,6 +297,165 @@ def testRemote(url, userName, password, database):
   return answer
 
 
+def backupCouchDB(location='', userName='', password=''):
+  """
+  Backup everything of the CouchDB installation accross all databases and all configurations
+  - remote location uses username/password combo in local keystore
+  - local location requires username and password
+
+  Args:
+    location (str): 'local', 'remote', else: ask user via CLI
+    userName (str): username
+    password (str): password
+  """
+  # get username and password
+  if location=='':
+    location = 'remote' if input('Enter location: [r] remote; else local: ')=='r' else 'local'
+  if location=='local':
+    location = '127.0.0.1'
+    if userName=='':
+      userName = input('Enter username: ').strip()
+    if password=='':
+      password = input('Enter password: ').strip()
+  elif location=='remote':
+    try:
+      myString = cred.get_password('pastaDB','admin')
+      location, userName, password = myString.split(':')
+      print("URL and credentials successfully read from keyring")
+    except:
+      print("**ERROR Could not get credentials from keyring. Please create manually.")
+      return
+  else:
+    print('**ERROR: wrong location given.')
+    return
+  # use information
+  authUser = requests.auth.HTTPBasicAuth(userName, password)
+  kwargs   = {'headers':headers, 'auth':authUser, 'timeout':10}
+  resp = requests.get('http://'+location+':5984/_all_dbs', **kwargs)
+  if resp.status_code != 200:
+    print('**ERROR response for _all_dbs wrong', resp.text)
+    print('Username and password', userName, password)
+    return
+  timestamp = datetime.now().isoformat().split('.')[0].replace('-','').replace(':','')
+  zipFileName = 'couchDB_backup_'+location.replace('.','')+'_'+timestamp
+  print('Create zip-file '+zipFileName+'.zip')
+  databases = resp.json()
+  with ZipFile(zipFileName+'.zip', 'w', compression=ZIP_DEFLATED) as zipFile:
+    for database in databases:
+      if database.startswith('_'):
+        print('Special database', database, ': Nothing to do')
+      else:
+        print('Backup normal database ',database)
+        resp = requests.get('http://'+location+':5984/'+database+'/_all_docs', **kwargs)
+        for item in resp.json()['rows']:
+          docID = item['id']
+          doc   = requests.get('http://'+location+':5984/'+database+'/'+docID, **kwargs).json()
+          zipFile.writestr(zipFileName+'/'+database+'/'+docID, json.dumps(doc))
+          if '_attachments' in doc:
+            for att in doc['_attachments']:
+              docAttach = requests.get('http://'+location+':5984/'+database+'/'+docID+'/'+att,**kwargs).json()
+              zipFile.writestr(zipFileName+'/'+database+'/'+docID+'_attach/'+att, json.dumps(docAttach))
+        #_design/authentication is automatically included
+        #_security
+        doc   = requests.get('http://'+location+':5984/'+database+'/_security', **kwargs).json()
+        zipFile.writestr(zipFileName+'/'+database+'/_security', json.dumps(doc))
+    return
+
+
+def restoreCouchDB(location='', userName='', password='', fileName=''):
+  """
+  restore everything to the CouchDB installation accross all databases and all configurations
+  - remote location uses username/password combo in local keystore
+  - local location requires username and password
+
+  Args:
+    location (str): 'local', 'remote', else: ask user via CLI
+    userName (str): username
+    password (str): password
+    fileName (str): file used for restoration
+  """
+  # get username and password
+  if location=='':
+    location = 'remote' if input('Enter location: [r]emote; else local: ')=='r' else 'local'
+  if location=='local':
+    location = '127.0.0.1'
+    if userName=='':
+      userName = input('Enter username: ').strip()
+    if password=='':
+      password = input('Enter password: ').strip()
+  elif location=='remote':
+    try:
+      myString = cred.get_password('pastaDB','admin')
+      location, userName, password = myString.split(':')
+      print("URL and credentials successfully read from keyring")
+    except:
+      print("**ERROR Could not get credentials from keyring. Please create manually.")
+      return
+  else:
+    print('**ERROR: wrong location given.')
+    return
+  if fileName=='':
+    possFiles = [i for i in os.listdir('.') if i.startswith('couchDB') and i.endswith('.zip')]
+    for idx, i in enumerate(possFiles):
+      print('['+str(idx+1)+'] '+i)
+    fileName = input('Which file to use for restored? (1-'+str(len(possFiles))+') ')
+    fileName = possFiles[int(fileName)-1]
+  # use information
+  authUser = requests.auth.HTTPBasicAuth(userName, password)
+  kwargs   = {'headers':headers, 'auth':authUser, 'timeout':10}
+  with ZipFile(fileName, 'r', compression=ZIP_DEFLATED) as zipFile:
+    files = zipFile.namelist()
+    #first run through: create documents and design documents
+    for fileI in files:
+      fileParts = fileI.split('/')[1:]
+      database = fileParts[0]
+      docID = fileParts[1]
+      if docID.endswith('_attach'):
+        continue #Do in second loop
+      #test if database is exists: create otherwise
+      resp = requests.get('http://'+location+':5984/'+database+'/_all_docs', **kwargs)
+      if resp.status_code != 200 and resp.json()['reason']=='Database does not exist.':
+        resp = requests.put('http://'+location+':5984/'+database, **kwargs)
+        if not resp.ok:
+          print("**ERROR: could not create database",resp.reason)
+          return
+      #test if document is exists: create otherwise
+      if docID=='_design':
+        docID = '/'.join(fileParts[1:])
+      resp = requests.get('http://'+location+':5984/'+database+'/'+docID, **kwargs)
+      if resp.status_code != 200 and resp.json()['reason']=='missing':
+        doc = json.loads( zipFile.open(fileI).read() )  #need doc conversion since deleted from it
+        del doc['_rev']
+        if '_attachments' in doc:
+          del doc['_attachments']
+        resp = requests.put('http://'+location+':5984/'+database+'/'+docID, **kwargs,data=json.dumps(doc) )
+        if resp.ok:
+          print('Saved document:', database, docID)
+        else:
+          print("**ERROR: could not save document:",resp.reason, database, docID, '\n', doc)
+    #second run through: create attachments
+    for fileI in files:
+      fileParts = fileI.split('/')[1:]
+      database = fileParts[0]
+      docID = fileParts[1]
+      if not docID.endswith('_attach'):
+        continue #Did already in the first loop
+      #test if attachement exists: create otherwise
+      attachPath =docID[:-7]+'/'+fileParts[-1]
+      resp = requests.get('http://'+location+':5984/'+database+'/'+attachPath, **kwargs)
+      if resp.status_code == 404 and 'missing' in resp.json()['reason']:
+        attachDoc = zipFile.open(fileI).read()
+        resp = requests.get('http://'+location+':5984/'+database+'/'+docID[:-7],**kwargs)
+        headers['If-Match'] = resp.json()['_rev'] #will be overwritten each time
+        kwargs   = {'headers':headers, 'auth':authUser, 'timeout':10}
+        resp = requests.put('http://'+location+':5984/'+database+'/'+attachPath,**kwargs, data=attachDoc)
+        if resp.ok:
+          print('Saved attachment:', database, attachPath)
+        else:
+          print('\n**ERROR: could not save attachment:',resp.reason, database, attachPath,'\n', doc)
+  return
+
+
 def main():
   '''
   Main function
@@ -322,7 +483,8 @@ def main():
   auth = requests.auth.HTTPBasicAuth(administrator, password)
 
   while True:
-    print('\nCommands: [q]uit; [n]ew user; list [u]ser; list [d]atabases; [t]est user')
+    print('\nAdopt a server to PASTA-ELN\nCommands: [q]uit; [n]ew user; list [u]ser; list [d]atabases; '+\
+          '[t]est user; [b]ackup data; [r]estore data')
     command = input('> ')
     userName, userPassword = '', ''
     if command == 'q':
@@ -339,6 +501,10 @@ def main():
       listUsers(url, auth)
     elif command == 'd':
       listDB(url, auth, True)
+    elif command == 'b':
+      backupCouchDB()
+    elif command == 'r':
+      restoreCouchDB()
     elif command == 't' and userName and userPassword and len(userName)>2 and len(userPassword)>2:
       testUser(url, auth, userName, userPassword)
     else:
