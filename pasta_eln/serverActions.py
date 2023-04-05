@@ -1,10 +1,10 @@
 #!/usr/bin/python3
 """Commandline utility to admin the remote server"""
 import sys, json, secrets, base64, os
-import requests
 from datetime import datetime
-import keyring as cred
 from zipfile import ZipFile, ZIP_DEFLATED
+import keyring as cred
+import requests
 from PIL import Image, ImageDraw, ImageFont
 
 #TODO_P5 serverConfiguration: this should become a GUI and CLI and separate into three-files: functions, CLI, GUI
@@ -424,15 +424,16 @@ def restoreCouchDB(location='', userName='', password='', fileName=''):
         docID = '/'.join(fileParts[1:])
       resp = requests.get('http://'+location+':5984/'+database+'/'+docID, **kwargs)
       if resp.status_code != 200 and resp.json()['reason']=='missing':
-        doc = json.loads( zipFile.open(fileI).read() )  #need doc conversion since deleted from it
-        del doc['_rev']
-        if '_attachments' in doc:
-          del doc['_attachments']
-        resp = requests.put('http://'+location+':5984/'+database+'/'+docID, **kwargs,data=json.dumps(doc) )
-        if resp.ok:
-          print('Saved document:', database, docID)
-        else:
-          print("**ERROR: could not save document:",resp.reason, database, docID, '\n', doc)
+        with zipFile.open(fileI) as dataIn:
+          doc = json.loads( dataIn.read() )  #need doc conversion since deleted from it
+          del doc['_rev']
+          if '_attachments' in doc:
+            del doc['_attachments']
+          resp = requests.put('http://'+location+':5984/'+database+'/'+docID, **kwargs,data=json.dumps(doc) )
+          if resp.ok:
+            print('Saved document:', database, docID)
+          else:
+            print("**ERROR: could not save document:",resp.reason, database, docID, '\n', doc)
     #second run through: create attachments
     for fileI in files:
       fileParts = fileI.split('/')[1:]
@@ -444,15 +445,16 @@ def restoreCouchDB(location='', userName='', password='', fileName=''):
       attachPath =docID[:-7]+'/'+fileParts[-1]
       resp = requests.get('http://'+location+':5984/'+database+'/'+attachPath, **kwargs)
       if resp.status_code == 404 and 'missing' in resp.json()['reason']:
-        attachDoc = zipFile.open(fileI).read()
-        resp = requests.get('http://'+location+':5984/'+database+'/'+docID[:-7],**kwargs)
-        headers['If-Match'] = resp.json()['_rev'] #will be overwritten each time
-        kwargs   = {'headers':headers, 'auth':authUser, 'timeout':10}
-        resp = requests.put('http://'+location+':5984/'+database+'/'+attachPath,**kwargs, data=attachDoc)
-        if resp.ok:
-          print('Saved attachment:', database, attachPath)
-        else:
-          print('\n**ERROR: could not save attachment:',resp.reason, database, attachPath,'\n', doc)
+        with zipFile.open(fileI) as dataIn:
+          attachDoc = dataIn.read()
+          resp = requests.get('http://'+location+':5984/'+database+'/'+docID[:-7],**kwargs)
+          headers['If-Match'] = resp.json()['_rev'] #will be overwritten each time
+          kwargs   = {'headers':headers, 'auth':authUser, 'timeout':10}
+          resp = requests.put('http://'+location+':5984/'+database+'/'+attachPath,**kwargs, data=attachDoc)
+          if resp.ok:
+            print('Saved attachment:', database, attachPath)
+          else:
+            print('\n**ERROR: could not save attachment:',resp.reason, database, attachPath,'\n', doc)
   return
 
 
