@@ -3,11 +3,11 @@ todoString = """
 
 <h3>Very important show stopper</h3>
 <ul>
-<li> create project within project
 </ul>
 
 <h3>To be verified/identified</h3>
 <ul>
+<li> create project within project (unable to recreate)
 </ul>
 
 <h3>Improvement to convenience</h3>
@@ -15,14 +15,15 @@ todoString = """
 <li> convenience: allow scroll in sidebar
 <li> convenience: selection does not scroll; one cannot select a row
 <li> drag&drop: external files
-<li> finish ontology dialog
-<li> invert filter: not t in name
+<li> invert filter: not 'Sur' in name => '^((?!Sur).)*$' in name
 <li> rerunExtractors: as batch
 </ul>
 
 <h3>Bigger things implemented soon</h3>
 <ul>
 <li> change procedure: on disk / database -> conflicts
+<li> create list of unaccessible files: linked with accessible files
+<li> finish ontology dialog
 <li> question? what is the difference to TextButton?
 <li> tableHeaderChange: requires view to change to views, not ontology
 </ul>
