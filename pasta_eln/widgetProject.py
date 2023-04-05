@@ -186,6 +186,7 @@ class Project(QWidget):
     TextButton('Add child', self.btnEvent, topbarL, 'addChild')
     more = TextButton('More',None, topbarL)
     moreMenu = QMenu(self)
+    Action('Scan',   self.executeAction, moreMenu, self, name='scanProject')
     Action('Edit',   self.executeAction, moreMenu, self, name='editProject')
     Action('Delete', self.executeAction, moreMenu, self, name='deleteProject')
     more.setMenu(moreMenu)
@@ -228,6 +229,13 @@ class Project(QWidget):
         #update sidebar, show projects
         self.comm.changeSidebar.emit()
         self.comm.changeTable.emit('x0','')
+    elif menuName == 'scanProject':
+      branch = self.docProj['-branch'][0]
+      self.comm.backend.cwd = self.comm.backend.basePath/branch['path']
+      self.comm.backend.hierStack = [self.projID]
+      self.comm.backend.scanTree()
+      self.comm.changeProject.emit(self.projID,'')
+      showMessage(self, 'Information','Scanning finished')
     else:
       print("undefined menu / action",menuName)
     return

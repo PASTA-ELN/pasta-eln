@@ -128,7 +128,7 @@ class ConfigurationSetup(QWidget):
       button = QMessageBox.question(self, "Example data", exampleDataLinux)
       if button == QMessageBox.Yes:
         self.progress1.show()
-        exampleData(False, self.callbackProgress)
+        exampleData(True, self.callbackProgress)
         self.mainText = self.mainText.replace('- Example data', '- Example data was added')
       else:
         self.mainText = self.mainText.replace('- Example data', '- Example data was NOT added, per user choice')

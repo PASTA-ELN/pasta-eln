@@ -137,7 +137,7 @@ Do you want to install example data?
 
 This step helps to verify the installation and the data is an helpful example for new users.
 
-Create the this data only once, as otherwise you result in a confused state (Manually deleting the project solves it.)
+!WARNING! This will RESET everything and thereby DELETE EVERYTHING since you installed pastaELN.
 
 This step usually takes up to 20sec, so please be patient. Sometimes, linux likes to mention that the program
 is hanging and asks if to close/wait. Please WAIT.

@@ -1,5 +1,4 @@
 # TO DISCUSS WITH HT:
-- recreate example data: overwrite / not ; warning
 
 # Priority 4: bigger features
 - show links to other docs and use

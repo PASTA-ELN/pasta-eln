@@ -10,6 +10,7 @@ from .dialogTableHeader import TableHeader
 from .style import TextButton, Label, getColor, LetterButton, Action
 from .fixedStrings import defaultOntologyNode
 
+#Scan button to more button
 class Table(QWidget):
   """ widget that shows the table of the items """
   def __init__(self, comm):
