@@ -179,12 +179,7 @@ class Sidebar(QWidget):
     """
     What happens if user clicks button "Scan"
     """
-    branch = self.comm.backend.db.getDoc(self.openProjectId)['-branch'][0]
-    self.comm.backend.cwd = self.comm.backend.basePath/branch['path']
-    self.comm.backend.hierStack = [self.openProjectId]
-    self.comm.backend.scanTree()
-    self.comm.backend.hierStack = []
-    self.comm.backend.cwd = Path(self.comm.backend.basePath)
+    self.comm.backend.scanProject(self.openProjectId)
     self.comm.changeProject.emit(self.openProjectId,'')
     showMessage(self, 'Information','Scanning finished')
     return

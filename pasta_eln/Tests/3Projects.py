@@ -110,7 +110,7 @@ class TestStringMethods(unittest.TestCase):
       shutil.copy(examplePath/'Zeiss.tif', semDirName)
       shutil.copy(examplePath/'RobinSteel0000LC.txt', indentDirName)
       shutil.copy(examplePath/'1500nmXX 5 7074 -4594.txt', indentDirName)
-      self.be.scanTree()
+      self.be.scanProject(projID1)
 
       ### USE GLOBAL FILES
       print('*** USE GLOBAL FILES ***')

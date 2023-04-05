@@ -286,7 +286,7 @@ class Backend(CLI_Mixin):
     return
 
 
-  def scanTree(self, **kwargs):
+  def scanProject(self, projID, projPath=''):
     """ Scan directory tree recursively from project/...
     - find changes on file system and move those changes to DB
     - use .id_pastaELN.json to track changes of directories, aka projects/steps/tasks
@@ -296,19 +296,17 @@ class Backend(CLI_Mixin):
       doc['path'] is adopted once changes are observed
 
     Args:
-      kwargs (dict): additional parameter, i.e. callback
+      projID (str): project's docID
+      projPath (str): project's path from basePath; if not given, will be determined
 
     Raises:
       ValueError: could not add new measurement to database
     """
-    if len(self.hierStack) == 0:
-      print(f'{Bcolors.FAIL}**Warning - scan directory: No project selected{Bcolors.ENDC}')
-      return
-    callback = kwargs.get('callback', None)
-    while len(self.hierStack)>1:
-      self.changeHierarchy(None)
+    self.hierStack = [projID]
+    if projPath=='':
+      projPath = self.db.getDoc(projID)['-branch'][0]['path']
+    self.cwd = self.basePath/projPath
     rerunScanTree = False
-    startPath = Path(self.cwd)
     #prepare lists and start iterating
     inDB_all = self.db.getView('viewHierarchy/viewPaths')
     #update content between DB and harddisk
@@ -360,13 +358,12 @@ class Backend(CLI_Mixin):
           pathsInDB_data.remove(path)
         else:
           print("Add file to DB:",path)
-          _ = self.addData('measurement', {'-name':path}, hierStack, callback=callback)
+          _ = self.addData('measurement', {'-name':path}, hierStack)
     #finish method
-    self.cwd = startPath
+    self.cwd = self.basePath/projPath
     orphans = [i for i in pathsInDB_data if i.startswith(self.cwd.relative_to(self.basePath).as_posix())]
     print('These files are on DB but not harddisk\n', orphans )
-    orphanDirs = [i for i in pathsInDB_x if i==self.cwd.relative_to(self.basePath).as_posix() and \
-                                            i!=startPath.relative_to(self.basePath).as_posix()]
+    orphanDirs = [i for i in pathsInDB_x if i==self.cwd.relative_to(self.basePath).as_posix() and i!=projPath]
     print('These directories are on DB but not harddisk\n', orphanDirs)
     for orphan in orphans+orphanDirs:
       docID = [i for i in inDB_all if i['key']==orphan][0]['id']
@@ -381,8 +378,11 @@ class Backend(CLI_Mixin):
         print('**ERROR Tried to remove orphan in database but could not', orphan)
       else:
         self.db.updateDoc(change, docID)
+    #reset to initial values
+    self.hierStack = []
+    self.cwd = Path(self.basePath)
     if rerunScanTree:
-      self.scanTree()
+      self.scanProject(projID, projPath)
     return
 
 

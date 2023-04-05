@@ -462,7 +462,7 @@ def exampleData(force=False, callbackPercent=None):
   if callbackPercent is not None:
     callbackPercent(19)
   logging.info('Finished copy files')
-  backend.scanTree()
+  backend.scanProject(projID1)
   logging.info('Finished scan tree')
   if callbackPercent is not None:
     callbackPercent(20)

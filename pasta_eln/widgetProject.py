@@ -230,12 +230,7 @@ class Project(QWidget):
         self.comm.changeSidebar.emit()
         self.comm.changeTable.emit('x0','')
     elif menuName == 'scanProject':
-      branch = self.docProj['-branch'][0]
-      self.comm.backend.cwd = self.comm.backend.basePath/branch['path']
-      self.comm.backend.hierStack = [self.projID]
-      self.comm.backend.scanTree()
-      self.comm.backend.hierStack = []
-      self.comm.backend.cwd = Path(self.comm.backend.basePath)
+      self.comm.backend.scanProject(self.projID, self.docProj['-branch'][0]['path'])
       self.comm.changeProject.emit(self.projID,'')
       showMessage(self, 'Information','Scanning finished')
     else:
