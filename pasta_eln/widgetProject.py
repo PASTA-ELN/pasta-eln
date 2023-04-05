@@ -8,7 +8,7 @@ from PySide6.QtCore import Slot, Qt, QItemSelectionModel      # pylint: disable=
 from anytree import PreOrderIter
 from .widgetProjectLeafRenderer import ProjectLeafRenderer
 from .widgetProjectTreeView import TreeView
-from .style import TextButton, Action
+from .style import TextButton, Action, showMessage
 from .miscTools import createDirName
 
 
@@ -234,6 +234,8 @@ class Project(QWidget):
       self.comm.backend.cwd = self.comm.backend.basePath/branch['path']
       self.comm.backend.hierStack = [self.projID]
       self.comm.backend.scanTree()
+      self.comm.backend.hierStack = []
+      self.comm.backend.cwd = Path(self.comm.backend.basePath)
       self.comm.changeProject.emit(self.projID,'')
       showMessage(self, 'Information','Scanning finished')
     else:

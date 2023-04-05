@@ -183,6 +183,8 @@ class Sidebar(QWidget):
     self.comm.backend.cwd = self.comm.backend.basePath/branch['path']
     self.comm.backend.hierStack = [self.openProjectId]
     self.comm.backend.scanTree()
+    self.comm.backend.hierStack = []
+    self.comm.backend.cwd = Path(self.comm.backend.basePath)
     self.comm.changeProject.emit(self.openProjectId,'')
     showMessage(self, 'Information','Scanning finished')
     return
