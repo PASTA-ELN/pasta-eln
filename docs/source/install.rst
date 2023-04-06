@@ -54,6 +54,12 @@ which typically can take some time. Afterwards, start PASTA-ELN with
 
     pastaELN
 
+or
+
+.. code-block:: bash
+
+    python -m pasta_eln.gui
+
 which starts automatically the **setup** if no valid PASTA-ELN configuration is found.
 
 If, for whatever reason, the graphical interface does not open, one can also execute

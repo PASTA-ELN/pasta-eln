@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-import sys, os, subprocess
+import sys, os, subprocess, shutil
 from unittest import main as mainTest
 import configparser
 
@@ -67,6 +67,7 @@ def createRequirementsFile():
   config = configparser.ConfigParser()
   config.read('setup.cfg')
   requirements = config['options']['install_requires'].split('\n')
+  requirements = [i.replace(' ==','==') if '==' in i else i for i in requirements]
   # Linux
   requirementsLinux = [i for i in requirements if i!='' and 'Windows' not in i]
   with open('requirements-linux.txt','w', encoding='utf-8') as req:
@@ -135,10 +136,25 @@ def createTodoList():
     fOut.write(res)
   return
 
+
+def copyExtractors():
+  """
+  Copy extractors from main location to distribution
+  """
+  basePath = 'pasta_eln/Extractors'
+  skipFiles= ['extractor_csv.py', 'extractor_jpg.py']
+  for fileI in os.listdir(basePath):
+    if fileI in skipFiles or not fileI.startswith('extractor_') or not fileI.endswith('.py'):
+      continue
+    shutil.copy('../Extractors'+os.sep+fileI, basePath+os.sep+fileI)
+  return
+
+
 if __name__=='__main__':
   #test and prepare everything
   runTests()
   createTodoList()
+  copyExtractors()
   createRequirementsFile()
   #do update
   if len(sys.argv)==1:

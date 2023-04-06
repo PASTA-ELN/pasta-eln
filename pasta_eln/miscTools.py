@@ -1,5 +1,5 @@
 """ Misc functions that do not require instances """
-import os, sys, uuid
+import os, sys, uuid, logging, traceback
 from re import sub
 
 def camelCase(a_string):
@@ -9,10 +9,10 @@ def camelCase(a_string):
      a_string (str): string
 
   Returns:
-    str: camel case of that string
+    str: camel case of that string: CamelCaseString
   """
   a_string = sub(r"(_|-)+", " ", a_string).title().replace(" ", "").replace("*","")
-  return ''.join([a_string[0].lower(), a_string[1:]])
+  return ''.join(a_string)
 
 
 def createDirName(name,docType,thisChildNumber):
@@ -57,10 +57,15 @@ def generic_hash(path, forceFile=False):
   """
   from urllib import request
   if str(path).startswith('http'):                      #Remote file
-    with request.urlopen(path.as_posix().replace(':/','://')) as site:
-      meta = site.headers
-      size = int(meta.get_all('Content-Length')[0])
-      return blob_hash(site, size)
+    try:
+      with request.urlopen(path.as_posix().replace(':/','://')) as site:
+        meta = site.headers
+        size = int(meta.get_all('Content-Length')[0])
+        return blob_hash(site, size)
+    except:
+      logging.error('Could not download content / hashing issue '+path.as_posix().replace(':/','://')+'\n'+\
+        traceback.format_exc())
+      return ''
   if path.is_dir():
     raise ValueError('This seems to be a directory '+path)
   if forceFile and path.is_symlink():

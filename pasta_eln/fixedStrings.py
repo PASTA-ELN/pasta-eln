@@ -63,10 +63,9 @@ defaultOntologyNode = json.loads("""
 
 setupTextLinux = """
 ### Welcome to PASTA-ELN setup for Linux
-Five components are needed for proper function
+Three components are needed for proper function
 - CouchDB
-- Configuration of preferences
-- Ontology of the datastructure
+- Configuration of preferences / default ontology
 - Example data
 
 Analyse and (possibly) correct these items.
@@ -79,10 +78,9 @@ Note: this text becomes an installation report
 
 setupTextWindows = """
 ### Welcome to PASTA-ELN setup for Windows
-Seven components are needed for proper function
+Four components are needed for proper function
 - CouchDB
-- Configuration of preferences
-- Ontology of the datastructure
+- Configuration of preferences / default ontology
 - Shortcut creation
 - Example data
 
@@ -90,7 +88,8 @@ Analyse and (possibly) correct these items.
 
 If the installation is successful, permanently remove the 'pastaELN.log' logfile that is in your home-directory (folder above "My Documents").
 
-If an attempt fails, close PASTA-ELN and CMD.exe. Restart CMD.exe and start PASTA-ELN or use Desktop shortcut.
+If an attempt fails: please follow to this [website](https://pasta-eln.github.io/pasta-eln/install.html).
+
 
 Note: this text becomes an installation report
 """
@@ -111,7 +110,10 @@ Be aware, downloading the installer requires some time, depending on the interne
 
 rootInstallLinux = """
 Do you want to install XX--XX?
-If you choose yes, a terminal will open and ask you for the super-user password.
+If you choose yes, you will be first asked to
+
+- choose a location to store the data
+- a terminal will open and ask you for the super-user password.
 
 Be aware, downloading the installer requires some time, depending on the internet connection.
 """
@@ -131,9 +133,11 @@ Please restart the software by
 """
 
 exampleDataLinux = """
-Do you want to install the example data?
+Do you want to install example data?
 
 This step helps to verify the installation and the data is an helpful example for new users.
+
+!WARNING! This will RESET everything and thereby DELETE EVERYTHING since you installed pastaELN.
 
 This step usually takes up to 20sec, so please be patient. Sometimes, linux likes to mention that the program
 is hanging and asks if to close/wait. Please WAIT.

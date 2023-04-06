@@ -13,6 +13,7 @@ from .backend import Backend
 from .miscTools import upOut, upIn, updateExtractorList
 from .inputOutput import importELN, exportELN
 from .installationTools import configuration as checkConfiguration
+from .installationTools import exampleData
 
 def commands(getDocu, args):
   """
@@ -174,6 +175,15 @@ def commands(getDocu, args):
       return '1'
 
     if getDocu:
+      doc += '  exampleData: create example data by DELETING ALL DATA\n'
+      doc += '  BE CERTAIN THAT YOU WANT TO DO THIS!!\n'
+      doc += '    example: pastaELN_CLI.py exampleData\n'
+    elif args.command.startswith('exampleData'):
+      #prints directly to screen
+      exampleData(True)
+      return '1'
+
+    if getDocu:
       doc += '  syncLR / syncRL: synchronize with / from remote server\n'
       doc += '    example: pastaELN_CLI.py syncLR\n'
     elif args.command=='syncLR':
@@ -273,19 +283,18 @@ def commands(getDocu, args):
         print('**ERROR pma06: error after redo-extraction')
         return '-1'
 
+    if getDocu:
+      doc += '  scanProject: scan project with docID\n'
+      doc += '    example: pastaELN_CLI.py scanProject -i ....\n'
+    elif args.command=='scanProject':
+      be.scanProject(args.docID)
+      return '1'
+
     ##################################################
     ## Commands that require open database and open project
     doc += '\n-- Commands that interact with a special project --\n'
     if not getDocu and args.docID!='':
       be.changeHierarchy(args.docID)
-
-    if getDocu:
-      doc += '  scanTree: scan project with docID\n'
-      doc += '    example: pastaELN_CLI.py scanTree -i ....\n'
-    elif args.command=='scanTree':
-      print(be.cwd, be.hierStack)
-      be.scanTree()
-      return '1'
 
     if getDocu:
       doc += '  hierarchy: print document hierarchy\n'

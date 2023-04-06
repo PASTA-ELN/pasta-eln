@@ -98,12 +98,30 @@ class Backend(CLI_Mixin):
   ######################################################
   ### Change in database
   ######################################################
+  def editData(self, doc):
+    """
+    Edit data from version 2 information flow by wrapping addData
+
+    Args:
+      doc (dict): dict to save
+    """
+    doc = dict(doc)
+    if doc['-branch'][0]['path'] is None:
+      self.cwd     = None
+    else:
+      self.cwd     = self.basePath/doc['-branch'][0]['path']
+    self.hierStack = doc['-branch'][0]['stack']+[doc['_id']]
+    doc['childNum']= doc['-branch'][0]['child']
+    self.addData('-edit-', doc)
+    return
+
+
   def addData(self, docType, doc, hierStack=None, localCopy=False, **kwargs):
     """
     Save doc to database, also after edit
 
     Args:
-        docType (string): docType to be stored, subtypes are / separated
+        docType (string): docType to be stored, subtypes are / separated; or '-edit-'
         doc (dict): to be stored
         hierStack (list): hierStack from external functions
         localCopy (bool): copy a remote file to local version
@@ -119,6 +137,7 @@ class Backend(CLI_Mixin):
     doc['-user']  = self.userID
     childNum     = doc.pop('childNum',None)
     path         = None
+    oldPath      = None
     operation    = 'c'  #operation of branch/path
     if docType == '-edit-':
       edit = True
@@ -129,7 +148,8 @@ class Backend(CLI_Mixin):
       if '_id' not in doc:
         doc['_id'] = hierStack[-1]
       if len(hierStack)>0 and doc['-type'][0][0]=='x':
-        hierStack   = hierStack[:-1]
+        hierStack  = hierStack[:-1]
+        oldPath    =  doc['-branch'][0]['path']
       elif '-branch' in doc:
         hierStack   = doc['-branch'][0]['stack']
     else:  #new doc
@@ -137,6 +157,8 @@ class Backend(CLI_Mixin):
       doc['-type'] = docType.split('/')
       if len(hierStack) == 0:
         hierStack = self.hierStack
+    logging.info('Add/edit data in cwd:'+self.cwd.as_posix()+' with stack:'+str(hierStack)+' and name'\
+                 +doc['-name']+' and type:'+str(doc['-type']))
 
     # collect structure-doc and prepare
     if doc['-type'][0][0]=='x' and doc['-type'][0]!='x0' and childNum is None:
@@ -152,11 +174,6 @@ class Backend(CLI_Mixin):
 
     # find path name on local file system; name can be anything
     if self.cwd is not None and '-name' in doc:
-      if (doc['-name'].endswith('_pasta.jpg') or
-          doc['-name'].endswith('_pasta.svg') or
-          doc['-name'].endswith('.id_pastaELN.json') ):
-        print("**Warning DO NOT ADD _pasta. files to database")
-        return False
       if doc['-type'][0][0]=='x':
         #project, step, task
         if doc['-type'][0]=='x0':
@@ -210,7 +227,8 @@ class Backend(CLI_Mixin):
     if path is not None and path.is_absolute():
       path = path.relative_to(self.basePath)
     path = None if path is None else path.as_posix()
-    doc['-branch'] = {'stack':hierStack,'child':childNum,'path':path, 'op':operation}
+    doc['-branch'] = {'stack':hierStack,'child':childNum,'path':path, 'show':[True]*(len(hierStack)+1),\
+                      'op':operation}
     if edit:
       #update document
       keysNone = [key for key in doc if doc[key] is None]
@@ -227,7 +245,12 @@ class Backend(CLI_Mixin):
     if self.cwd is not None and doc['-type'][0][0]=='x':
       #project, step, task
       path = Path(doc['-branch'][0]['path'])
-      if not edit:
+      if edit:
+        if not (self.basePath/oldPath).exists():
+          print('**ERROR: addData edit of folder should have oldPath and that should exist', oldPath)
+          return False
+        (self.basePath/oldPath).rename(self.basePath/path)
+      else:
         (self.basePath/path).mkdir(exist_ok=True)   #if exist, create again; moving not necessary since directory moved in changeHierarchy
       with open(self.basePath/path/'.id_pastaELN.json','w', encoding='utf-8') as f:  #local path, update in any case
         f.write(json.dumps(doc))
@@ -263,7 +286,7 @@ class Backend(CLI_Mixin):
     return
 
 
-  def scanTree(self, **kwargs):
+  def scanProject(self, projID, projPath=''):
     """ Scan directory tree recursively from project/...
     - find changes on file system and move those changes to DB
     - use .id_pastaELN.json to track changes of directories, aka projects/steps/tasks
@@ -273,19 +296,17 @@ class Backend(CLI_Mixin):
       doc['path'] is adopted once changes are observed
 
     Args:
-      kwargs (dict): additional parameter, i.e. callback
+      projID (str): project's docID
+      projPath (str): project's path from basePath; if not given, will be determined
 
     Raises:
       ValueError: could not add new measurement to database
     """
-    if len(self.hierStack) == 0:
-      print(f'{Bcolors.FAIL}**Warning - scan directory: No project selected{Bcolors.ENDC}')
-      return
-    callback = kwargs.get('callback', None)
-    while len(self.hierStack)>1:
-      self.changeHierarchy(None)
+    self.hierStack = [projID]
+    if projPath=='':
+      projPath = self.db.getDoc(projID)['-branch'][0]['path']
+    self.cwd = self.basePath/projPath
     rerunScanTree = False
-    startPath = Path(self.cwd)
     #prepare lists and start iterating
     inDB_all = self.db.getView('viewHierarchy/viewPaths')
     #update content between DB and harddisk
@@ -337,13 +358,12 @@ class Backend(CLI_Mixin):
           pathsInDB_data.remove(path)
         else:
           print("Add file to DB:",path)
-          _ = self.addData('measurement', {'-name':path}, hierStack, callback=callback)
+          _ = self.addData('measurement', {'-name':path}, hierStack)
     #finish method
-    self.cwd = startPath
+    self.cwd = self.basePath/projPath
     orphans = [i for i in pathsInDB_data if i.startswith(self.cwd.relative_to(self.basePath).as_posix())]
     print('These files are on DB but not harddisk\n', orphans )
-    orphanDirs = [i for i in pathsInDB_x if i==self.cwd.relative_to(self.basePath).as_posix() and \
-                                            i!=startPath.relative_to(self.basePath).as_posix()]
+    orphanDirs = [i for i in pathsInDB_x if i==self.cwd.relative_to(self.basePath).as_posix() and i!=projPath]
     print('These directories are on DB but not harddisk\n', orphanDirs)
     for orphan in orphans+orphanDirs:
       docID = [i for i in inDB_all if i['key']==orphan][0]['id']
@@ -358,8 +378,11 @@ class Backend(CLI_Mixin):
         print('**ERROR Tried to remove orphan in database but could not', orphan)
       else:
         self.db.updateDoc(change, docID)
+    #reset to initial values
+    self.hierStack = []
+    self.cwd = Path(self.basePath)
     if rerunScanTree:
-      self.scanTree()
+      self.scanProject(projID, projPath)
     return
 
 
@@ -456,6 +479,10 @@ class Backend(CLI_Mixin):
     success = True
     if isinstance(filePath, str):
       filePath = Path(filePath)
+    if filePath.as_posix().startswith('http'):
+      tempFilePath = Path(tempfile.gettempdir())/filePath.name
+      request.urlretrieve(filePath.as_posix().replace(':/','://'), tempFilePath)
+      filePath = tempFilePath
     if reportHTML:
       report = '<h3>Report on extractor test</h3>'
       report +='check file: '+str(filePath)+'<br>'

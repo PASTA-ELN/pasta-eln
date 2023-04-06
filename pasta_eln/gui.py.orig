@@ -43,12 +43,11 @@ class MainWindow(QMainWindow):
     Action('&Exit',                 self.executeAction, projectMenu, self, name='exit')
     viewMenu = menu.addMenu("&Lists")
     systemMenu = menu.addMenu("&System")
+    Action('&Ontology',              self.executeAction, systemMenu, self, name='ontology')
     Action('&Project groups',        self.executeAction, systemMenu, self, name='projectGroups')
     changeProjectGroups = systemMenu.addMenu("&Change project group")
-    if hasattr(self.backend, 'configuration'):                       #not case in fresh install
-      for name in self.backend.configuration['projectGroups'].keys():
-        Action(name, self.changeProjectGroup, changeProjectGroups, self, name=name)
-    Action('&Questionaires',         self.executeAction, systemMenu, self, name='ontology')
+    for name in self.backend.configuration['projectGroups'].keys():
+      Action(name, self.changeProjectGroup, changeProjectGroups, self, name=name)
     systemMenu.addSeparator()
     Action('Update &Extractor list', self.executeAction, systemMenu, self, name='updateExtractors')
     Action('&Verify database',       self.executeAction, systemMenu, self, name='verifyDB', shortcut='Ctrl+?')
@@ -61,19 +60,17 @@ class MainWindow(QMainWindow):
     Action('&Shortcuts',             self.executeAction, helpMenu, self, name='shortcuts')
     Action('&Todo list',             self.executeAction, helpMenu, self, name='todo')
 
-    if hasattr(self.backend, 'db'):
-      shortCuts = {'measurement':'m', 'sample':'s', 'x0':'p'} #TODO_P5 addToConfig
-      for docType, docLabel in self.comm.backend.db.dataLabels.items():
-        if docType[0]=='x' and docType[1]!='0':
-          continue
-        Action(docLabel, self.viewMenu, viewMenu, self, \
-          "Ctrl+"+shortCuts[docType] if docType in shortCuts else None, docType)
-        if docType=='x0':
-          viewMenu.addSeparator()
-      viewMenu.addSeparator()
-      Action('&Tags',         self.viewMenu, viewMenu, self, 'Ctrl+T', '_tags_')
-      Action('&Unidentified', self.viewMenu, viewMenu, self, name='-')
-      #TODO_P4 create list of unaccessible files: linked with accessible files
+    shortCuts = {'measurement':'m', 'sample':'s', 'x0':'p'} #TODO_P5 addToConfig
+    for docType, docLabel in self.comm.backend.db.dataLabels.items():
+      if docType[0]=='x' and docType[1]!='0':
+        continue
+      Action(docLabel, self.viewMenu, viewMenu, self, \
+        "Ctrl+"+shortCuts[docType] if docType in shortCuts else None, docType)
+      if docType=='x0':
+        viewMenu.addSeparator()
+    viewMenu.addSeparator()
+    Action('&Tags',         self.viewMenu, viewMenu, self, 'Ctrl+T', '_tags_')
+    Action('&Unidentified', self.viewMenu, viewMenu, self, name='-')
 
     #GUI elements
     mainWidget = QWidget()
@@ -123,9 +120,8 @@ class MainWindow(QMainWindow):
       dialog = ProjectGroup(self.comm.backend)
       dialog.exec()
     elif menuName=='ontology':
-      showMessage(self, 'To be implemented','A possibility to change the questionaires / change the ontology is missing.')
-      # dialog = Ontology(self.comm.backend)
-      # dialog.exec()
+      dialog = Ontology(self.comm.backend)
+      dialog.exec()
     elif menuName=='updateExtractors':
       updateExtractorList(self.backend.extractorPath)
     elif menuName=='verifyDB':

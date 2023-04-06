@@ -62,8 +62,10 @@ def fillDocBeforeCreate(data, docType):
     data['_id'] = docType[0][0]+'-'+uuid.uuid4().hex
   data['-date']   = datetime.now().isoformat()
   if '-branch' not in data:
-    print('here?')
+    print('Empty branch in data')
     data['-branch'] = [{'stack':[], 'path':None, 'child':-1, 'show':[]}]
+  if 'show' not in data['-branch']:
+    data['-branch']['show'] = [True]*(len(data['-branch']['stack'])+1)
   # separate comment into tags and fields
   # these tags are lost: '#d': too short; '#3tag': starts with number
   if 'comment' not in data:
@@ -91,6 +93,10 @@ def fillDocBeforeCreate(data, docType):
   if isinstance(data['-tags'], str):
     data['-tags'] = data['-tags'].split(' ')
   data['-tags']= [i.strip()[1:] for i in data['-tags']]
+  #other cleaning
+  if 'links' in data and isinstance(data['links'], list):
+    if len(data['links'])==0 or (len(data['links'])==1 and data['links'][0]==''):
+      del data['links']
   #individual verification of documents
   if data['-type'][0]=='sample':
     if 'qrCode' not in data:

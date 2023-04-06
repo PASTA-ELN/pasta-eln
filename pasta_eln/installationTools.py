@@ -297,7 +297,7 @@ def configuration(command='test', user='', password='', pathPasta=''):
       conf['GUI'] = {}
     else:
       output += '**ERROR: No GUI in config file\n'
-  guiItems = {"theme": "none",
+  guiItems = {"theme": "light_blue",
     "imageWidthProject": 300,
     "imageWidthDetails": 600,
     "sidebarWidth": 200,
@@ -383,7 +383,7 @@ def exampleData(force=False, callbackPercent=None):
     callbackPercent(2)
   ### CREATE PROJECTS AND SHOW
   print('*** CREATE EXAMPLE PROJECT AND SHOW ***')
-  backend.addData('x0', {'-name': 'PASTAs Example Project', 'objective': 'Test if everything is working as intended.', 'status': 'active', 'comment': '#tag Can be used as reference or deleted'})
+  backend.addData('x0', {'-name': 'PASTAs Example Project', 'objective': 'Test if everything is working as intended.', 'status': 'active', 'comment': '#Important Can be used as reference or deleted'})
   if callbackPercent is not None:
     callbackPercent(3)
   print(backend.output('x0'))
@@ -462,7 +462,7 @@ def exampleData(force=False, callbackPercent=None):
   if callbackPercent is not None:
     callbackPercent(19)
   logging.info('Finished copy files')
-  backend.scanTree()
+  backend.scanProject(projID1)
   logging.info('Finished scan tree')
   if callbackPercent is not None:
     callbackPercent(20)
@@ -472,8 +472,8 @@ def exampleData(force=False, callbackPercent=None):
   backend.changeHierarchy(semStepID)
   if callbackPercent is not None:
     callbackPercent(21)
-  backend.addData('measurement', {'-name': 'https://developers.google.com/search/mobile-sites/imgs/mobile-seo/separate-urls.png', \
-    'comment':'remote image from google. Used for testing and reference. Can be deleted.'})
+  backend.addData('measurement', {'-name': 'https://upload.wikimedia.org/wikipedia/commons/a/a4/Misc_pollen.jpg', \
+    'comment':'remote image from wikipedia. Used for testing and reference. Can be deleted.'})
   if callbackPercent is not None:
     callbackPercent(22)
   print(backend.output('measurement'))

@@ -41,7 +41,7 @@ class Sidebar(QWidget):
     self.openProjectId = ''
     self.widgetsAction = {}
     self.widgetsList = {}
-    self.widgetsProject = {}
+    self.widgetsProject = {} #title bar and widget that contains all of project
 
     if hasattr(self.comm.backend, 'db'):
       hierarchy = self.comm.backend.db.getView('viewDocType/x0')
@@ -56,9 +56,9 @@ class Sidebar(QWidget):
         projectL = QVBoxLayout(projectW)
         projectL.setContentsMargins(3,3,3,3)
         btnProj = TextButton(projName, self.btnProject, projectL, projID+'/')
-        self.widgetsProject[projID] = btnProj
         btnProj.setStyleSheet("border-width:0")
-        projectW.setStyleSheet("background-color:"+ getColor(self.comm.backend, 'secondary'))
+        projectW.setStyleSheet("background-color:"+ getColor(self.comm.backend, 'secondaryDark'))
+        self.widgetsProject[projID] = [btnProj, projectW]
 
         # actions: scan, curate, ...
         actionW = QWidget()
@@ -166,6 +166,11 @@ class Sidebar(QWidget):
           widget.show()
         else:
           widget.hide()
+      for docID, [_, projWidget] in self.widgetsProject.items():
+        if docID == projID:
+          projWidget.setStyleSheet("background-color:"+ getColor(self.comm.backend, 'secondaryLight'))
+        else:
+          projWidget.setStyleSheet("background-color:"+ getColor(self.comm.backend, 'secondaryDark'))
     self.comm.changeProject.emit(projID, item)
     return
 
@@ -174,10 +179,7 @@ class Sidebar(QWidget):
     """
     What happens if user clicks button "Scan"
     """
-    branch = self.comm.backend.db.getDoc(self.openProjectId)['-branch'][0]
-    self.comm.backend.cwd = self.comm.backend.basePath/branch['path']
-    self.comm.backend.hierStack = [self.openProjectId]
-    self.comm.backend.scanTree()
+    self.comm.backend.scanProject(self.openProjectId)
     self.comm.changeProject.emit(self.openProjectId,'')
     showMessage(self, 'Information','Scanning finished')
     return

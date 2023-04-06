@@ -1,4 +1,5 @@
-"""extract data from a .png file
+"""extract data from vendor
+- default png file
 """
 import base64
 from io import BytesIO
@@ -19,6 +20,12 @@ def use(filePath, recipe='', saveFileName=None):
   # Extractor
   image = Image.open(filePath)
   metaVendor = image.info
+  toDelete = []
+  for key,value in metaVendor.items():
+    if not isinstance(value, (str, int, float, list)):
+      toDelete.append(key)
+  for key in toDelete:
+    del metaVendor[key]
   imgArr = np.array(image)
   if len(imgArr.shape)==3:
     imgArr = imgArr[:,:,0]

@@ -54,9 +54,11 @@ class Form(QDialog):
       for item in ontologyNode:
         if item['name'] not in self.doc and  item['name'][0] not in ['_','-']:
           self.doc[item['name']] = ''
+    # Create form
     for key,value in self.doc.items():
       if key[0] in ['_','-', '#'] or key in ['image','metaVendor','metaUser','shasum']:
         continue
+      # print("Key:value in form | "+key+':'+str(value))
       if key in ['comment','content']:
         labelW = QWidget()
         labelL = QVBoxLayout(labelW)
@@ -101,8 +103,8 @@ class Form(QDialog):
         ontologyItem = [i for i in ontologyNode if i['name']==key]
         if len(ontologyItem)==1 and 'list' in ontologyItem[0]:  #choice dropdown
           setattr(self, 'key_'+key, QComboBox())
-          if ',' in ontologyItem[0]['list']:                    #defined choices
-            getattr(self, 'key_'+key).addItems([i.strip() for i in ontologyItem[0]['list'].split(',')])
+          if isinstance(ontologyItem[0]['list'], list):                    #defined choices
+            getattr(self, 'key_'+key).addItems(ontologyItem[0]['list'])
           else:                                                 #docType
             listDocType = ontologyItem[0]['list']
             getattr(self, 'key_'+key).addItem('- no link -', userData='')
@@ -114,18 +116,20 @@ class Form(QDialog):
           setattr(self, 'key_'+key, QLineEdit(value))
         self.formL.addRow(QLabel(key.capitalize()), getattr(self, 'key_'+key))
       else:
-        print("**ERROR unknown value type",key, value)
-    self.projectComboBox = QComboBox()
-    self.projectComboBox.addItem('- no change -', userData='')
-    for line in self.comm.backend.db.getView('viewDocType/x0'):
-      self.projectComboBox.addItem(line['value'][0], userData=line['id'])
-    self.formL.addRow(QLabel('Project'), self.projectComboBox)
-    self.docTypeComboBox = QComboBox()
-    self.docTypeComboBox.addItem('- no change -', userData='')
-    for key, value in self.comm.backend.db.dataLabels.items():
-      if key[0]!='x':
-        self.docTypeComboBox.addItem(value, userData=key)
-    self.formL.addRow(QLabel('Data type'), self.docTypeComboBox)
+        print("**ERROR dialogForm: unknown value type",key, value)
+    #add extra questions at bottom of form
+    if '_id' in self.doc and self.doc['-type'][0][0]!='x': #if not-new and non-folder
+      self.projectComboBox = QComboBox()
+      self.projectComboBox.addItem('- no change -', userData='')
+      for line in self.comm.backend.db.getView('viewDocType/x0'):
+        self.projectComboBox.addItem(line['value'][0], userData=line['id'])
+      self.formL.addRow(QLabel('Project'), self.projectComboBox)
+      self.docTypeComboBox = QComboBox()
+      self.docTypeComboBox.addItem('- no change -', userData='')
+      for key, value in self.comm.backend.db.dataLabels.items():
+        if key[0]!='x':
+          self.docTypeComboBox.addItem(value, userData=key)
+      self.formL.addRow(QLabel('Data type'), self.docTypeComboBox)
     #final button box
     buttonBox = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
     buttonBox.clicked.connect(self.save)
@@ -137,9 +141,9 @@ class Form(QDialog):
     """
     Action upon save / cancel
     """
-    if btn.text()=='Cancel':
+    if btn.text().endswith('Cancel'):
       self.reject()
-    elif btn.text()=='Save':
+    elif btn.text().endswith('Save'):
       if hasattr(self, 'key_-name'):
         self.doc['-name'] = getattr(self, 'key_-name').text().strip()
       for key, value in self.doc.items():
@@ -152,35 +156,41 @@ class Form(QDialog):
           self.doc[key] = getattr(self, 'key_'+key).text().strip().split(' ')
         elif isinstance(value, str):
           if isinstance(getattr(self, 'key_'+key), QComboBox):
-            self.doc[key] = getattr(self, 'key_'+key).currentData()
+            self.doc[key] = getattr(self, 'key_'+key).currentText()
           else:   #normal text field
             self.doc[key] = getattr(self, 'key_'+key).text().strip()
         else:
-          print("**ERROR dialogeForm unknown value type",key, value)
-      if '-branch' in self.doc:  #don't keep -branch in since update requries different type of -branch
-        oldBranch = self.doc.pop('-branch')
-      if self.projectComboBox.currentData() != '':
+          print("**ERROR dialogForm unknown value type",key, value)
+      if hasattr(self, 'projectComboBox') and self.projectComboBox.currentData() != '':
         parentPath = self.comm.backend.db.getDoc(self.projectComboBox.currentData())['-branch'][0]['path']
         self.doc['-branch'] = {'op':'u', 'stack':[self.projectComboBox.currentData()], 'childNum':9999, \
                                'path':parentPath}
-      if self.docTypeComboBox.currentData() != '':
+      if hasattr(self, 'docTypeComboBox') and self.docTypeComboBox.currentData() != '':
         self.doc['-type'] = [self.docTypeComboBox.currentData()]
         self.comm.backend.db.remove(self.doc['_id'])
         del self.doc['_id']
         del self.doc['_rev']
-        self.doc['-branch'] = oldBranch
-        self.doc = fillDocBeforeCreate(self.doc, [self.docTypeComboBox.currentData()] )
-        self.comm.backend.db.saveDoc(self.doc)
+        self.comm.backend.editData(self.doc)
       else:
         if '_ids' in self.doc: #group update
           del self.doc['-name']
           ids = self.doc.pop('_ids')
           self.doc = {i:j for i,j in self.doc.items() if j!=''}
           for docID in ids:
-            self.comm.backend.db.updateDoc(self.doc, docID)
-        else: #default update on item
-          self.comm.backend.db.updateDoc(self.doc, self.doc['_id'])
+            doc = self.comm.backend.db.getDoc(docID)
+            doc.update( self.doc )
+            self.comm.backend.editData(doc)
+        elif '_id' in self.doc:                                   #default update on item
+          self.comm.backend.editData(self.doc)
+        else:                                                     #create new dataset
+          self.comm.backend.addData(self.doc['-type'][0], self.doc)
+      #NO updates / redraw here since one does not know from where form came
+      # self.comm.changeTable.emit('/'.join(self.doc['-type']),'')
+      # if self.doc['-type'][0]=='x0':
+      #   self.comm.changeSidebar.emit()
       self.accept()  #close
+    else:
+      print('dialogForm: did not get a fitting btn ',btn.text())
     return
 
   def btnAdvanced(self, status):

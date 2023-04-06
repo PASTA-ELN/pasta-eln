@@ -346,7 +346,7 @@ class Database:
     """
     For branches: create show from stack
     - should be 1 longer than stack
-    - check parents if hidden
+    - check parents if hidden, then this child is hidden too
 
     Args:
       stack (list): list of ancestor docIDs
@@ -354,10 +354,13 @@ class Database:
     Returns:
       list: list of show = list of bool
     """
-    show = (len(stack)+1)*[True]
-    for idx, docID in enumerate(stack):
-      if not self.db[docID]['-branch'][0]['show'][-1]:
-        show[idx] = False
+    if stack is None:
+      show = [True]
+    else:
+      show = (len(stack)+1)*[True]
+      for idx, docID in enumerate(stack):
+        if not self.db[docID]['-branch'][0]['show'][-1]:
+          show[idx] = False
     return show
 
 
@@ -428,7 +431,7 @@ class Database:
       else:
         res = list(v.result)
     except:
-      print('**ERROR dgv01: Database / Network problem for path |',thePath[1])
+      print('**ERROR dgv01: Database / Network problem for path |',thePath[0],thePath[1])
       res = []
     return res
 

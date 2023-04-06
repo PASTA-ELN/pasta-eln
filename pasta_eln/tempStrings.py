@@ -7,8 +7,7 @@ todoString = """
 
 <h3>To be verified/identified</h3>
 <ul>
-<li> install: be sure that no restart is required
-<li> install: execute restart here via comm to gui.py
+<li> create project within project (unable to recreate)
 </ul>
 
 <h3>Improvement to convenience</h3>
@@ -16,19 +15,22 @@ todoString = """
 <li> convenience: allow scroll in sidebar
 <li> convenience: selection does not scroll; one cannot select a row
 <li> drag&drop: external files
-<li> invert filter: not t in name
+<li> invert filter: not 'Sur' in name => '^((?!Sur).)*$' in name
 <li> rerunExtractors: as batch
 </ul>
 
 <h3>Bigger things implemented soon</h3>
 <ul>
 <li> change procedure: on disk / database -> conflicts
+<li> create list of unaccessible files: linked with accessible files
+<li> finish ontology dialog
 <li> question? what is the difference to TextButton?
 <li> tableHeaderChange: requires view to change to views, not ontology
 </ul>
 
 <h3>Things worthwile remembering/uncritical</h3>
 <ul>
+<li> Aug 2023: remove
 <li> addToConfig
 <li> addToConfig
 <li> addToConfig

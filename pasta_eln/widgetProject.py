@@ -1,13 +1,14 @@
 """ Widget that shows the content of project in a electronic labnotebook """
 import logging
 from pathlib import Path
-from PySide6.QtWidgets import QLabel, QVBoxLayout, QHBoxLayout, QWidget, QStyledItemDelegate, QAbstractItemView  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QLabel, QVBoxLayout, QHBoxLayout, QWidget, QStyledItemDelegate, QAbstractItemView, \
+                              QMenu, QMessageBox # pylint: disable=no-name-in-module
 from PySide6.QtGui import QStandardItemModel, QStandardItem    # pylint: disable=no-name-in-module
 from PySide6.QtCore import Slot, Qt, QItemSelectionModel      # pylint: disable=no-name-in-module
 from anytree import PreOrderIter
 from .widgetProjectLeafRenderer import ProjectLeafRenderer
 from .widgetProjectTreeView import TreeView
-from .style import TextButton
+from .style import TextButton, Action, showMessage
 from .miscTools import createDirName
 
 
@@ -110,6 +111,7 @@ class Project(QWidget):
       docID = docID[:-2]
     doc      = db.getDoc(docID)
     branchOld= [i for i in doc['-branch'] if i['stack']==stackOld][0]
+    childOld = branchOld['child']
     branchIdx= doc['-branch'].index(branchOld)
     siblingsOld = db.getView('viewHierarchy/viewHierarchy', startKey=' '.join(stackOld))
     siblingsOld = [i for i in siblingsOld if len(i['key'].split(' '))==len(stackOld)+1 and \
@@ -130,17 +132,17 @@ class Project(QWidget):
     siblingsNew = [i for i in siblingsNew if len(i['key'].split(' '))==len(stackNew)+1 and \
                                              i['value'][0]>=childNew]
     logging.debug('NEW INFORMATION '+docID+' '+str(stackNew)+'  '+str(childNew)+' '+pathNew)
-    if stackOld==stackNew:  #nothing changed, just redraw
+    if stackOld==stackNew and childOld==childNew:  #nothing changed, just redraw
       return
     # change siblings
     for line in siblingsOld:
       if line['value'][0]<9999:
-        pathOld, pathNew = db.updateBranch(docID=line['id'], branch=line['value'][3], child=line['value'][0]-1)
-        (Path(self.comm.backend.basePath)/pathOld).rename(Path(self.comm.backend.basePath)/pathNew)
+        pathOldSib, pathNewSib = db.updateBranch(docID=line['id'], branch=line['value'][3], child=line['value'][0]-1)
+        (Path(self.comm.backend.basePath)/pathOldSib).rename(Path(self.comm.backend.basePath)/pathNewSib)
     for line in siblingsNew:
       if line['value'][0]<9999:
-        pathOld, pathNew = db.updateBranch(docID=line['id'], branch=line['value'][3], child=line['value'][0]+1)
-        (Path(self.comm.backend.basePath)/pathOld).rename(Path(self.comm.backend.basePath)/pathNew)
+        pathOldSib, pathNewSib = db.updateBranch(docID=line['id'], branch=line['value'][3], child=line['value'][0]+1)
+        (Path(self.comm.backend.basePath)/pathOldSib).rename(Path(self.comm.backend.basePath)/pathNewSib)
     #change item in question
     pathOld = Path(self.comm.backend.basePath)/branchOld['path']
     if pathOld.exists():
@@ -182,6 +184,13 @@ class Project(QWidget):
     TextButton('Reduce',    self.btnEvent, topbarL, 'projHide', checkable=True)
     TextButton('Hide/Show', self.btnEvent, topbarL, 'hideShow')
     TextButton('Add child', self.btnEvent, topbarL, 'addChild')
+    more = TextButton('More',None, topbarL)
+    moreMenu = QMenu(self)
+    Action('Scan',   self.executeAction, moreMenu, self, name='scanProject')
+    Action('Edit',   self.executeAction, moreMenu, self, name='editProject')
+    Action('Delete', self.executeAction, moreMenu, self, name='deleteProject')
+    more.setMenu(moreMenu)
+
     headerL.addWidget(topbarW)
     self.bodyW   = QWidget()
     bodyL   = QVBoxLayout(self.bodyW)
@@ -193,4 +202,37 @@ class Project(QWidget):
       bodyL.addWidget(QLabel(key+': '+str(value)))
     headerL.addWidget(self.bodyW)
     self.mainL.addWidget(headerW)
+    return
+
+
+  def executeAction(self):
+    """ Any action by the buttons at the top of the page """
+    menuName = self.sender().data()
+    if menuName=='editProject':
+      self.comm.formDoc.emit(self.docProj)
+      self.comm.changeProject.emit(self.projID,'')
+      #collect information and then change
+      oldPath = self.comm.backend.basePath/self.docProj['-branch'][0]['path']
+      if oldPath.exists():
+        newPath = self.comm.backend.basePath/createDirName(self.docProj['-name'],'x0',0)
+        oldPath.rename(newPath)
+    elif menuName=='deleteProject':
+      ret = QMessageBox.critical(self, 'Warning', 'Are you sure you want to delete project?',\
+                                 QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.No)
+      if ret==QMessageBox.StandardButton.Yes:
+        #delete database and rename folder
+        doc = self.comm.backend.db.remove(self.projID)
+        if '-branch' in doc and len(doc['-branch'])>0 and 'path' in doc['-branch'][0]:
+          oldPath = self.comm.backend.basePath/doc['-branch'][0]['path']
+          newPath = self.comm.backend.basePath/('trash_'+doc['-branch'][0]['path'])
+          oldPath.rename(newPath)
+        #update sidebar, show projects
+        self.comm.changeSidebar.emit()
+        self.comm.changeTable.emit('x0','')
+    elif menuName == 'scanProject':
+      self.comm.backend.scanProject(self.projID, self.docProj['-branch'][0]['path'])
+      self.comm.changeProject.emit(self.projID,'')
+      showMessage(self, 'Information','Scanning finished')
+    else:
+      print("undefined menu / action",menuName)
     return

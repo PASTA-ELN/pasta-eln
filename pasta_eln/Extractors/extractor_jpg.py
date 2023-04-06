@@ -1,5 +1,5 @@
 """extract data from vendor
-- default jpeg image
+- default jpg image
 """
 import base64, json
 from io import BytesIO
@@ -21,7 +21,7 @@ def use(filePath, recipe='', saveFileName=None):
   image = Image.open(filePath)
   metaVendor = image.info
   imgArr = np.array(image)
-  recipe = 'image/jpeg'
+  recipe = 'image/jpg'
   metaUser   = {'number pixel': imgArr.size,
                 'dimension': imgArr.shape}
 
@@ -34,7 +34,7 @@ def use(filePath, recipe='', saveFileName=None):
   figfile = BytesIO()
   imageData.save(figfile, format="JPEG")
   imageData = base64.b64encode(figfile.getvalue()).decode()
-  imageData = "data:image/jpeg;base64," + imageData
+  imageData = "data:image/jpg;base64," + imageData
 
   # return everything
   return {'image':imageData, 'recipe':recipe, 'metaVendor':metaVendor, 'metaUser':metaUser}

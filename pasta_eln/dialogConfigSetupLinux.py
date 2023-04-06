@@ -6,6 +6,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTextEdit, QMes
 from .style import TextButton
 from .installationTools import couchdb, configuration, ontology, exampleData, createShortcut, installLinuxRoot
 from .fixedStrings import setupTextLinux, rootInstallLinux, exampleDataLinux
+from .miscTools import restart
 
 class ConfigurationSetup(QWidget):
   """
@@ -110,18 +111,9 @@ class ConfigurationSetup(QWidget):
         self.mainText = self.mainText.replace('- Ontology of the datastructure','- Ontology of the datastructure is acceptable\n'+res )
         self.text1.setMarkdown(self.mainText)
       else:
-        button = QMessageBox.question(self, "PASTA-ELN ontology", "Do you want to create the default ontology?")
-        if button == QMessageBox.Yes:
-          ontology('install')
-        else:
-          self.mainText = self.mainText.replace('- Ontology of the datastructure','- Ontology: user chose to NOT install' )
-          self.text1.setMarkdown(self.mainText)
-          flagContinue = False
+        ontology('install')
 
-    #TODO_P2 install: be sure that no restart is required
-
-    ## Ubuntu autocreates the shortcut: if true in May2023: remove
-    # #Shortcut
+    # #Shortcut: created automatically #TODO_P5 Aug 2023: remove
     # if flagContinue:
     #   button = QMessageBox.question(self, "Create shortcut", "Do you want to create the shortcut for PASTA-ELN on desktop?")
     #   if button == QMessageBox.Yes:
@@ -136,7 +128,7 @@ class ConfigurationSetup(QWidget):
       button = QMessageBox.question(self, "Example data", exampleDataLinux)
       if button == QMessageBox.Yes:
         self.progress1.show()
-        exampleData(False, self.callbackProgress)
+        exampleData(True, self.callbackProgress)
         self.mainText = self.mainText.replace('- Example data', '- Example data was added')
       else:
         self.mainText = self.mainText.replace('- Example data', '- Example data was NOT added, per user choice')
@@ -154,4 +146,6 @@ class ConfigurationSetup(QWidget):
     """
     What do do when setup is finished: success or unsuccessfully
     """
-    self.callbackFinished()
+    restart()
+    # self.callbackFinished()
+    return
