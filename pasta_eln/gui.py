@@ -6,6 +6,7 @@ from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QApplication, Q
 from PySide6.QtGui import QIcon, QPixmap, QAction    # pylint: disable=no-name-in-module
 from qt_material import apply_stylesheet  #of https://github.com/UN-GCPDS/qt-material
 
+from pasta_eln import __version__
 from .backend import Backend
 from .communicate import Communicate
 from .widgetSidebar import Sidebar
@@ -19,7 +20,6 @@ from .mixin_cli import text2html
 from .style import Action, showMessage
 from .fixedStrings import shortcuts
 os.environ['QT_API'] = 'pyside6'
-from pasta_eln import __version__
 
 # Subclass QMainWindow to customize your application's main window
 class MainWindow(QMainWindow):

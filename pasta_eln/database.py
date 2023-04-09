@@ -491,7 +491,7 @@ class Database:
           dataTree = Node(id=level[0]['key'], docType=level[0]['value'][1], name=level[0]['value'][2])
         else:
           print('**ERROR getHierarchy Did not find corresponding '+str(levelNum) )
-          dataTree = Node(id=None)
+          dataTree = Node(id=None, name='')
       else:
         childList = [i['value'][0] for i in level]   #temporary list to allow sorting for child-number
         # https://stackoverflow.com/questions/6618515/sorting-list-based-on-values-from-another-list
