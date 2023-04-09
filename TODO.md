@@ -1,4 +1,4 @@
-# TO DISCUSS WITH HT:
+# Priority 1:
 
 # Priority 4: bigger features
 - show links to other docs and use

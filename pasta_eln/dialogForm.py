@@ -44,7 +44,7 @@ class Form(QDialog):
     self.formL = QFormLayout(formW)
 
     #Add things that are in ontology
-    if '-type' in self.doc:
+    if '-type' in self.doc and '_ids' not in self.doc:  #normal form
       setattr(self, 'key_-name', QLineEdit(self.doc['-name']))
       self.formL.addRow('Name', getattr(self, 'key_-name'))
       if self.doc['-type'][0] in self.comm.backend.db.ontology:
@@ -54,6 +54,9 @@ class Form(QDialog):
       for item in ontologyNode:
         if item['name'] not in self.doc and  item['name'][0] not in ['_','-']:
           self.doc[item['name']] = ''
+    if '-type' not in self.doc and '_ids' in self.doc:  #group edit form
+      ontologyNode = defaultOntologyNode
+      ontologyNode = [i for i in ontologyNode if i['name']!='-name']
     # Create form
     for key,value in self.doc.items():
       if key[0] in ['_','-', '#'] or key in ['image','metaVendor','metaUser','shasum']:
@@ -118,7 +121,13 @@ class Form(QDialog):
       else:
         print("**ERROR dialogForm: unknown value type",key, value)
     #add extra questions at bottom of form
-    if '_id' in self.doc and self.doc['-type'][0][0]!='x': #if not-new and non-folder
+    allowProjectAndDocTypeChange = '_id' in self.doc and self.doc['-type'][0][0]!='x'
+    if '_ids' in self.doc: #if group edit
+      allowProjectAndDocTypeChange = True
+      for docID in self.doc['_ids']:
+        if docID[0]=='x':
+          allowProjectAndDocTypeChange = False
+    if allowProjectAndDocTypeChange: #if not-new and non-folder
       self.projectComboBox = QComboBox()
       self.projectComboBox.addItem('- no change -', userData='')
       for line in self.comm.backend.db.getView('viewDocType/x0'):
@@ -144,6 +153,7 @@ class Form(QDialog):
     if btn.text().endswith('Cancel'):
       self.reject()
     elif btn.text().endswith('Save'):
+      # create the data that has to be saved
       if hasattr(self, 'key_-name'):
         self.doc['-name'] = getattr(self, 'key_-name').text().strip()
       for key, value in self.doc.items():
@@ -161,6 +171,7 @@ class Form(QDialog):
             self.doc[key] = getattr(self, 'key_'+key).text().strip()
         else:
           print("**ERROR dialogForm unknown value type",key, value)
+      # save data to database according to special cases
       if hasattr(self, 'projectComboBox') and self.projectComboBox.currentData() != '':
         parentPath = self.comm.backend.db.getDoc(self.projectComboBox.currentData())['-branch'][0]['path']
         self.doc['-branch'] = {'op':'u', 'stack':[self.projectComboBox.currentData()], 'childNum':9999, \

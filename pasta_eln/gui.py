@@ -19,6 +19,7 @@ from .mixin_cli import text2html
 from .style import Action, showMessage
 from .fixedStrings import shortcuts
 os.environ['QT_API'] = 'pyside6'
+from pasta_eln import __version__
 
 # Subclass QMainWindow to customize your application's main window
 class MainWindow(QMainWindow):
@@ -26,7 +27,7 @@ class MainWindow(QMainWindow):
   def __init__(self):
     #global setting
     super().__init__()
-    self.setWindowTitle("PASTA-ELN")
+    self.setWindowTitle("PASTA-ELN "+__version__)
     self.setWindowState(Qt.WindowMaximized)
     resourcesDir = Path(__file__).parent/'Resources'
     self.setWindowIcon(QIcon(QPixmap(resourcesDir/'Icons'/'favicon64.png')))

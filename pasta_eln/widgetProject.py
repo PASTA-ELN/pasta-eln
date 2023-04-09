@@ -181,6 +181,7 @@ class Project(QWidget):
     topbarL = QHBoxLayout(topbarW)
     hidden = '     \U0001F441' if len([b for b in self.docProj['-branch'] if False in b['show']])>0 else ''
     topbarL.addWidget(QLabel(self.docProj['-name']+hidden))
+    topbarL.addStretch(1)
     TextButton('Reduce',    self.btnEvent, topbarL, 'projHide', checkable=True)
     TextButton('Hide/Show', self.btnEvent, topbarL, 'hideShow')
     TextButton('Add child', self.btnEvent, topbarL, 'addChild')
@@ -204,6 +205,7 @@ class Project(QWidget):
     self.mainL.addWidget(headerW)
     return
 
+  #TODO_P3 select multiple items in project view to edit...
 
   def executeAction(self):
     """ Any action by the buttons at the top of the page """

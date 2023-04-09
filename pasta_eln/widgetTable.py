@@ -7,7 +7,7 @@ from PySide6.QtCore import Qt, Slot, QSortFilterProxyModel, QModelIndex       # 
 from PySide6.QtGui import QBrush, QStandardItemModel, QStandardItem, QAction, QFont # pylint: disable=no-name-in-module
 import qtawesome as qta
 from .dialogTableHeader import TableHeader
-from .style import TextButton, Label, getColor, LetterButton, Action
+from .style import TextButton, Label, getColor, LetterButton, Action, showMessage
 from .fixedStrings import defaultOntologyNode
 
 #Scan button to more button
@@ -37,18 +37,26 @@ class Table(QWidget):
     self.headerW.hide()
     headerL = QHBoxLayout(self.headerW)
     self.headline = Label('','h1', headerL)
+    headerL.addStretch(1)
     self.addBtn = TextButton('Add',        self.executeAction, headerL, name='addItem')
     TextButton('Add Filter', self.executeAction, headerL, name='addFilter')
-    TextButton('Group Edit', self.executeAction, headerL, name='groupEdit')
+
+    selection = TextButton('Selection',None, headerL)
+    selectionMenu = QMenu(self)
+    Action('Toggle selection',self.executeAction, selectionMenu, self, name='toggleSelection')
+    selectionMenu.addSeparator()
+    Action('Group Edit',      self.executeAction, selectionMenu, self, name='groupEdit')
+    Action('Sequential edit', self.executeAction, selectionMenu, self, name='sequentialEdit')
+    Action('Toggle hidden',   self.executeAction, selectionMenu, self, name='toggleHide')
+    Action('Rerun extractors',self.executeAction, selectionMenu, self, name='rerunExtractors')
+    selection.setMenu(selectionMenu)
+
     more = TextButton('More',None, headerL)
     moreMenu = QMenu(self)
-    Action('Sequential edit', self.executeAction, moreMenu, self, name='sequentialEdit')
-    Action('Toggle hidden',   self.executeAction, moreMenu, self, name='toggleHide')
-    Action('Hide / Show all', self.executeAction, moreMenu, self, name='showAll')
+    Action('Show / Hide hidden items', self.executeAction, moreMenu, self, name='showAll')
     Action('Change headers',  self.executeAction, moreMenu, self, name='changeTableHeader')
     Action('Export',          self.executeAction, moreMenu, self, name='export')
     more.setMenu(moreMenu)
-    #TODO_P3 rerunExtractors: as batch
     mainL.addWidget(self.headerW)
     # filter
     filterW = QWidget()
@@ -61,7 +69,6 @@ class Table(QWidget):
     self.table.doubleClicked.connect(self.cell2Clicked)
     self.table.setSortingEnabled(True)
     self.table.setAlternatingRowColors(True)
-    self.table.setSelectionMode(QAbstractItemView.MultiSelection)
     header = self.table.horizontalHeader()
     header.setSectionsMovable(True)
     header.setSortIndicatorShown(True)
@@ -200,8 +207,6 @@ class Table(QWidget):
     return
 
 
-  #TODO_P2 create project within project (unable to recreate)
-
   def executeAction(self):
     """ Any action by the buttons and menu at the top of the page """
     if hasattr(self.sender(), 'data'):  #action
@@ -278,9 +283,17 @@ class Table(QWidget):
       if self.docType=='x0':
         self.comm.changeSidebar.emit()
       self.changeTable('','')  # redraw table
+    elif menuName == 'toggleSelection':
+      for row in range(self.models[-1].rowCount()):
+        if self.models[-1].item(row,0).checkState() == Qt.CheckState.Checked:
+          self.models[-1].item(row,0).setCheckState(Qt.CheckState.Unchecked)
+        else:
+          self.models[-1].item(row,0).setCheckState(Qt.CheckState.Checked)
     elif menuName == 'showAll':
       self.showAll = not self.showAll
       self.changeTable('','')  # redraw table
+    elif menuName == 'rerunExtractors':
+      showMessage(self, 'Future feature','In the future one can rerun extractors') #TODO_P3 rerun extractors
     else:
       print("**ERROR widgetTable menu unknown:",menuName)
     return

@@ -113,6 +113,15 @@ class Backend(CLI_Mixin):
     self.hierStack = doc['-branch'][0]['stack']+[doc['_id']]
     doc['childNum']= doc['-branch'][0]['child']
     self.addData('-edit-', doc)
+    # change folder-name in database of all children
+    items = self.db.getView('viewHierarchy/viewPaths', startKey=self.cwd.relative_to(self.basePath).as_posix())
+    for item in items:
+      oldPathparts = item['key'].split('/')
+      newPathParts = doc['-branch']['path'].split('/')
+      newPath = '/'.join(newPathParts+oldPathparts[len(newPathParts):]  )
+      # print(item['id']+'  old='+item['key']+'  branch='+str(item['value'][-1])+\
+      #      '  child='+str(item['value'][-3])+'  new='+newPath)
+      self.db.updateBranch(item['id'], item['value'][-1], item['value'][-3], path=newPath)
     return
 
 
@@ -271,7 +280,7 @@ class Backend(CLI_Mixin):
         dirName (string): change into this directory (absolute path given). For if data is moved
         kwargs (dict): additional parameter
     """
-    logging.info('changeHierarchy should only be used in CLI mode')
+    logging.info('changeHierarchy should only be used in CLI mode') #TODO_P4 remove this warning
     if docID is None or (docID[0]=='x' and docID[1]!='-'):  #cd ..: none. close 'project', 'task'
       self.hierStack.pop()
       self.cwd = self.cwd.parent
