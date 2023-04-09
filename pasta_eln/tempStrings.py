@@ -7,16 +7,17 @@ todoString = """
 
 <h3>To be verified/identified</h3>
 <ul>
-<li> create project within project (unable to recreate)
 </ul>
 
 <h3>Improvement to convenience</h3>
 <ul>
-<li> convenience: allow scroll in sidebar
+<li> convenience: allow scroll in sidebar, size changegable, drag-and-drop to move
 <li> convenience: selection does not scroll; one cannot select a row
 <li> drag&drop: external files
 <li> invert filter: not 'Sur' in name => '^((?!Sur).)*$' in name
-<li> rerunExtractors: as batch
+<li> rerun extractors
+<li> select multiple items in project view to edit...
+<li> sort by -date
 </ul>
 
 <h3>Bigger things implemented soon</h3>
@@ -25,6 +26,7 @@ todoString = """
 <li> create list of unaccessible files: linked with accessible files
 <li> finish ontology dialog
 <li> question? what is the difference to TextButton?
+<li> remove this warning
 <li> tableHeaderChange: requires view to change to views, not ontology
 </ul>
 
