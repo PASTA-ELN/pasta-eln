@@ -8,6 +8,8 @@ from .style import Image, TextButton, IconButton
 from .fixedStrings import defaultOntologyNode
 from .handleDictionaries import fillDocBeforeCreate
 
+#TODO_P1: names for file acceptable
+
 class Form(QDialog):
   """ New/Edit dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""
   def __init__(self, comm, doc):
@@ -203,6 +205,12 @@ class Form(QDialog):
     else:
       print('dialogForm: did not get a fitting btn ',btn.text())
     return
+
+  #TODO_P1 curAted, et al. -> _curated_
+  #TODO_P1 after scanning: sidebar update
+  #TODO_P1 HTTP error after long time (10min) not using it: one not authorized to access database
+  #TODO_P1 curated: only once in tags
+
 
   def btnAdvanced(self, status):
     """

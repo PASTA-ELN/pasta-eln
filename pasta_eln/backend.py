@@ -452,6 +452,8 @@ class Backend(CLI_Mixin):
         'filesize':absFilePath.stat().st_size,
         'created at':datetime.fromtimestamp(absFilePath.stat().st_ctime, tz=timezone.utc).isoformat(),
         'modified at':datetime.fromtimestamp(absFilePath.stat().st_mtime, tz=timezone.utc).isoformat()}
+    #TODO_P1 remove/sanitize links from jpeg
+
     # FOR EXTRACTOR DEBUGGING
     # import json
     # for item in doc:

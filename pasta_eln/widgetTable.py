@@ -46,6 +46,11 @@ class Table(QWidget):
     Action('Toggle selection',self.executeAction, selectionMenu, self, name='toggleSelection')
     selectionMenu.addSeparator()
     Action('Group Edit',      self.executeAction, selectionMenu, self, name='groupEdit')
+    #TODO_P1 changing docType -> key-error _id
+    #TODO_P1 EDIT causes bugs: changing project -> branch error
+    #TODO_P1 group edit: update right side
+    #TODO_P1 HeaderEdit of unidentified will crash: yes
+    #TODO_P1 filters should be reset after change of docType: NOOO
     Action('Sequential edit', self.executeAction, selectionMenu, self, name='sequentialEdit')
     Action('Toggle hidden',   self.executeAction, selectionMenu, self, name='toggleHide')
     Action('Rerun extractors',self.executeAction, selectionMenu, self, name='rerunExtractors')
@@ -244,6 +249,7 @@ class Table(QWidget):
       intersection = None
       docIDs = []
       for row in range(self.models[-1].rowCount()):
+        #TODO_P1 check if qsortFilterProxyModel has attribute item
         if self.models[-1].item(row,0).checkState() == Qt.CheckState.Checked:
           docIDs.append( self.data[row]['id'] )
           thisKeys = set(self.comm.backend.db.getDoc(self.data[row]['id']))

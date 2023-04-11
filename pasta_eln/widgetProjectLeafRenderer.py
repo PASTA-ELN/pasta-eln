@@ -28,6 +28,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     self.width = self.comm.backend.configuration['GUI']['imageWidthProject']
     return
 
+  #TODO_P3 project view: show database details as copy-paste labels in dialogForm?
 
   def paint(self, painter, option, index):
     """

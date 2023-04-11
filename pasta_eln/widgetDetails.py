@@ -60,6 +60,7 @@ class Details(QScrollArea):
     self.mainL.addWidget(self.metaDatabaseW)
     self.mainL.addStretch(1)
 
+  #TODO_P1 group edit if multiple selected, or display group edit button if multiple selected
 
   def contextMenu(self, pos):
     """
