@@ -112,6 +112,7 @@ class Backend(CLI_Mixin):
       self.cwd     = self.basePath/doc['-branch'][0]['path']
     self.hierStack = doc['-branch'][0]['stack']+[doc['_id']]
     doc['childNum']= doc['-branch'][0]['child']
+    # change content
     self.addData('-edit-', doc)
     # change folder-name in database of all children
     items = self.db.getView('viewHierarchy/viewPaths', startKey=self.cwd.relative_to(self.basePath).as_posix())

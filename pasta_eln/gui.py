@@ -171,7 +171,6 @@ class MainWindow(QMainWindow):
 #           - copy of raw data into one that will changed, to clean
 #         - link of copies:
 #         - in project view: copies/original sometimes are not displayed #TODO_P1
-# TODO_P1 if measurement move to different project: also move on harddisk
 
 ##############
 ## Main function

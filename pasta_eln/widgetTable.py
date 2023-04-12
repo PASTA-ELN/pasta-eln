@@ -46,8 +46,6 @@ class Table(QWidget):
     Action('Toggle selection',self.executeAction, selectionMenu, self, name='toggleSelection')
     selectionMenu.addSeparator()
     Action('Group Edit',      self.executeAction, selectionMenu, self, name='groupEdit')
-    #TODO_P1 changing docType -> key-error _id
-    #TODO_P1 EDIT causes bugs: changing project -> branch error
     Action('Sequential edit', self.executeAction, selectionMenu, self, name='sequentialEdit')
     Action('Toggle hidden',   self.executeAction, selectionMenu, self, name='toggleHide')
     Action('Rerun extractors',self.executeAction, selectionMenu, self, name='rerunExtractors')

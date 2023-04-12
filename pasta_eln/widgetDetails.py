@@ -149,6 +149,8 @@ class Details(QScrollArea):
     if docID!='redraw':
       self.docID = docID
     self.doc   = self.comm.backend.db.getDoc(self.docID)
+    if '-name' not in self.doc:  #keep empty details and wait for user to click
+      return
     Label(self.doc['-name'],'h1', self.headerL)
     TextButton('Edit',self.callEdit, self.headerL)
     for key in self.doc:

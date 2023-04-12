@@ -1,5 +1,6 @@
 """ New/Edit dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""
 import json
+from pathlib import Path
 from PySide6.QtWidgets import QDialog, QWidget, QFormLayout, QVBoxLayout, QHBoxLayout, QLabel, QTextEdit, \
                               QPlainTextEdit, QComboBox, QLineEdit, QDialogButtonBox, QSplitter, QSizePolicy # pylint: disable=no-name-in-module
 from PySide6.QtGui import QPixmap, QImage, QRegularExpressionValidator # pylint: disable=no-name-in-module
@@ -177,15 +178,20 @@ class Form(QDialog):
           print("**ERROR dialogForm unknown value type",key, value)
       # save data to database according to special cases
       if hasattr(self, 'projectComboBox') and self.projectComboBox.currentData() != '':
-        parentPath = self.comm.backend.db.getDoc(self.projectComboBox.currentData())['-branch'][0]['path']
-        self.doc['-branch'] = {'op':'u', 'stack':[self.projectComboBox.currentData()], 'childNum':9999, \
-                               'path':parentPath}
+        if self.doc['-branch'][0]['stack']!=self.projectComboBox.currentData(): #only if project changed
+          parentPath = self.comm.backend.db.getDoc(self.projectComboBox.currentData())['-branch'][0]['path']
+          oldPath    = self.comm.backend.basePath/self.doc['-branch'][0]['path']
+          oldPath.rename(self.comm.backend.basePath/parentPath/oldPath.name)
+        print('se',self.doc['-branch'], parentPath, self.projectComboBox.currentData())
+        self.doc['-branch'] = [{'stack':[self.projectComboBox.currentData()], 'child':9999, \
+                               'path':parentPath+'/'+oldPath.name}]
+        print('  ', self.doc['-branch'])
       if hasattr(self, 'docTypeComboBox') and self.docTypeComboBox.currentData() != '':
         self.doc['-type'] = [self.docTypeComboBox.currentData()]
         self.comm.backend.db.remove(self.doc['_id'])
         del self.doc['_id']
         del self.doc['_rev']
-        self.comm.backend.editData(self.doc)
+        self.comm.backend.addData(self.docTypeComboBox.currentData(), self.doc, self.doc['-branch'][0]['stack'])
       else:
         if '_ids' in self.doc: #group update
           del self.doc['-name']
