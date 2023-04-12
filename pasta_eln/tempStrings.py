@@ -7,23 +7,27 @@ todoString = """
 
 <h3>To be verified/identified</h3>
 <ul>
+<li> HTTP error after long time (10min) not using it: one not authorized to access database:
 </ul>
 
 <h3>Improvement to convenience</h3>
 <ul>
 <li> convenience: allow scroll in sidebar, size changegable, drag-and-drop to move
 <li> convenience: selection does not scroll; one cannot select a row
-<li> drag&drop: external files
+<li> extractor: creates links to sample/instrument
+<li> extractors: rerun happens on scan now
 <li> invert filter: not 'Sur' in name => '^((?!Sur).)*$' in name
-<li> rerun extractors
-<li> select multiple items in project view to edit...
-<li> sort by -date
+<li> procedure: can be changed in GUI->save harddrive
+<li> projectTree: drag&drop of external files
+<li> projectTree: select multiple items to edit... What is use case
+<li> projectTree: show database details as copy-paste labels in dialogForm?
+<li> sidebar: sort by -date
 </ul>
 
 <h3>Bigger things implemented soon</h3>
 <ul>
-<li> change procedure: on disk / database -> conflicts
 <li> create list of unaccessible files: linked with accessible files
+<li> debugging: when does this occur
 <li> finish ontology dialog
 <li> question? what is the difference to TextButton?
 <li> remove this warning
