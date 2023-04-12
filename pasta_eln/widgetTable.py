@@ -48,7 +48,8 @@ class Table(QWidget):
     Action('Group Edit',      self.executeAction, selectionMenu, self, name='groupEdit')
     Action('Sequential edit', self.executeAction, selectionMenu, self, name='sequentialEdit')
     Action('Toggle hidden',   self.executeAction, selectionMenu, self, name='toggleHide')
-    Action('Rerun extractors',self.executeAction, selectionMenu, self, name='rerunExtractors')
+    #TODO_P3 extractors: rerun happens on scan now
+    #Action('Rerun extractors',self.executeAction, selectionMenu, self, name='rerunExtractors')
     selection.setMenu(selectionMenu)
 
     more = TextButton('More',None, headerL)
@@ -263,7 +264,7 @@ class Table(QWidget):
           logging.error('widgetTable model has no item '+str(self.models[-1])+' '+str(row)+' '+str(thisKeys))
           showMessage(self, 'Send information to Steffen','widgetTable model has no item '+\
                             str(self.models[-1])+' '+str(row)+' '+str(thisKeys))
-          #TODO_P3 when does this occur
+          #TODO_P4 debugging: when does this occur
       #remove keys that should not be group edited and build dict
       intersection = intersection.difference({'-type', '-branch', '-user', '-client', 'metaVendor', 'shasum', \
         '_id', 'metaUser', '_rev', '-name', '-date', 'image', '_attachments','links'})
@@ -310,7 +311,7 @@ class Table(QWidget):
       self.showAll = not self.showAll
       self.changeTable('','')  # redraw table
     elif menuName == 'rerunExtractors':
-      showMessage(self, 'Future feature','In the future one can rerun extractors') #TODO_P3 rerun extractors
+      showMessage(self, 'Future feature','In the future one can rerun extractors')
     else:
       print("**ERROR widgetTable menu unknown:",menuName)
     return

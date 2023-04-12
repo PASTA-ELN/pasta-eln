@@ -324,13 +324,13 @@ class Backend(CLI_Mixin):
       if line['value'][1][0][0]=='x':
         continue
       doc = self.db.getDoc(line['id'])
-      if 'content' in doc:
+      if line['key'].startswith('http'):
+        path = Path(line['key'])
+      else:
         path = self.basePath/line['key']
-        doc= {'-type':['procedure']}
-        self.useExtractors(path, '', doc)
-        self.db.updateDoc(doc, line['id'])
-    #TODO_P4 change procedure: on disk / database -> conflicts
-    #    Copy of procedure exists on harddisk: one entry in db and links; then change one, but not other, -branch should separate; can they reunite?
+      self.useExtractors(path, '', doc)
+      del doc['-branch']  #don't update / change it here
+      self.db.updateDoc(doc, line['id'])
 
     pathsInDB_x    = [i['key'] for i in inDB_all if i['value'][1][0][0]=='x']  #all structure elements: task, subtasts
     pathsInDB_data = [i['key'] for i in inDB_all if i['value'][1][0][0]!='x']
@@ -446,7 +446,7 @@ class Backend(CLI_Mixin):
         doc['-type']     += doc['recipe'].split('/')
       del doc['recipe']
       if 'links' in doc:
-        #TODO_P3 create links from information
+        #TODO_P3 extractor: creates links to sample/instrument
         if len(doc['links'])==0:
           del doc['links']
     except:

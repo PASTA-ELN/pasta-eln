@@ -44,7 +44,7 @@ class Sidebar(QWidget):
     self.widgetsProject = {} #title bar and widget that contains all of project
 
     if hasattr(self.comm.backend, 'db'):
-      hierarchy = self.comm.backend.db.getView('viewDocType/x0') #TODO_P3 sort by -date
+      hierarchy = self.comm.backend.db.getView('viewDocType/x0') #TODO_P3 sidebar: sort by -date
       for project in hierarchy:
         projID = project['id']
         projName = project['value'][0]

@@ -205,7 +205,7 @@ class Project(QWidget):
     self.mainL.addWidget(headerW)
     return
 
-  #TODO_P3 select multiple items in project view to edit...
+  #TODO_P3 projectTree: select multiple items to edit... What is use case
 
   def executeAction(self):
     """ Any action by the buttons at the top of the page """

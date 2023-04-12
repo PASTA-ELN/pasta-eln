@@ -94,7 +94,7 @@ class Form(QDialog):
         self.formL.addRow(labelW, rightSideW)
       elif key == 'content':
         contentW = QPlainTextEdit(value)
-        contentW.setReadOnly(True) #TODO_P3 for now until both-side update is clear
+        contentW.setReadOnly(True) #TODO_P3 procedure: can be changed in GUI->save harddrive
         self.formL.addRow(QLabel('Content'), contentW)
       elif key == '-tags':  #remove - to make work
         # TODO_P3 tags: get selected via a editable QCombobox and get shown as qlabels, that can be deleted

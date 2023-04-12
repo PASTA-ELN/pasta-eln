@@ -60,8 +60,6 @@ class Details(QScrollArea):
     self.mainL.addWidget(self.metaDatabaseW)
     self.mainL.addStretch(1)
 
-  #TODO_P3 group edit if multiple selected, or display group edit button if multiple selected
-
   def contextMenu(self, pos):
     """
     Create a context menu
@@ -152,7 +150,7 @@ class Details(QScrollArea):
     if '-name' not in self.doc:  #keep empty details and wait for user to click
       return
     Label(self.doc['-name'],'h1', self.headerL)
-    TextButton('Edit',self.callEdit, self.headerL)
+    TextButton('Edit this one',self.callEdit, self.headerL)
     for key in self.doc:
       if key=='image':
         width = self.comm.backend.configuration['GUI']['imageWidthDetails'] \
