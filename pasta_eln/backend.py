@@ -444,6 +444,10 @@ class Backend(CLI_Mixin):
       else:
         doc['-type']     += doc['recipe'].split('/')
       del doc['recipe']
+      if 'links' in doc:
+        #TODO_P3 create links from information
+        if len(doc['links'])==0:
+          del doc['links']
     except:
       print('  **Error with extractor',pyFile)
       logging.error('ERROR with extractor '+pyFile+'\n'+traceback.format_exc())
@@ -452,16 +456,6 @@ class Backend(CLI_Mixin):
         'filesize':absFilePath.stat().st_size,
         'created at':datetime.fromtimestamp(absFilePath.stat().st_ctime, tz=timezone.utc).isoformat(),
         'modified at':datetime.fromtimestamp(absFilePath.stat().st_mtime, tz=timezone.utc).isoformat()}
-    #TODO_P1 remove/sanitize links from jpeg
-
-    # FOR EXTRACTOR DEBUGGING
-    # import json
-    # for item in doc:
-    #   try:
-    #     _ = json.dumps(doc[item])
-    #   except:
-    #     print('**ERROR json dumping', item, doc[item])
-    # #also make sure that no int64 but normal int
     return
 
 
@@ -536,6 +530,7 @@ class Backend(CLI_Mixin):
         _ = json.dumps(content['metaVendor'])
         report += 'Number of vendor entries: '+str(len(content['metaVendor']))+'<br>'
       except:
+        # possible cause of failure: make sure that no int64 but normal int
         success = False
         if interactive:
           print("  DETAIL metaVendor incorrect")

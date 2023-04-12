@@ -1,5 +1,5 @@
 """ widget that shows the table of the items """
-import re, json
+import re, json, logging
 from pathlib import Path
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTableView, QLabel, QMenu, QFileDialog, \
                               QHeaderView, QAbstractItemView, QGridLayout, QLineEdit, QComboBox # pylint: disable=no-name-in-module
@@ -48,20 +48,16 @@ class Table(QWidget):
     Action('Group Edit',      self.executeAction, selectionMenu, self, name='groupEdit')
     #TODO_P1 changing docType -> key-error _id
     #TODO_P1 EDIT causes bugs: changing project -> branch error
-    #TODO_P1 group edit: update right side
-    #TODO_P1 HeaderEdit of unidentified will crash: yes
-    #TODO_P1 filters should be reset after change of docType: NOOO
     Action('Sequential edit', self.executeAction, selectionMenu, self, name='sequentialEdit')
     Action('Toggle hidden',   self.executeAction, selectionMenu, self, name='toggleHide')
     Action('Rerun extractors',self.executeAction, selectionMenu, self, name='rerunExtractors')
     selection.setMenu(selectionMenu)
 
     more = TextButton('More',None, headerL)
-    moreMenu = QMenu(self)
-    Action('Show / Hide hidden items', self.executeAction, moreMenu, self, name='showAll')
-    Action('Change headers',  self.executeAction, moreMenu, self, name='changeTableHeader')
-    Action('Export',          self.executeAction, moreMenu, self, name='export')
-    more.setMenu(moreMenu)
+    self.moreMenu = QMenu(self)
+    Action('Show / Hide hidden items', self.executeAction, self.moreMenu, self, name='showAll')
+    Action('Export',                   self.executeAction, self.moreMenu, self, name='export')
+    more.setMenu(self.moreMenu)
     mainL.addWidget(self.headerW)
     # filter
     filterW = QWidget()
@@ -95,6 +91,8 @@ class Table(QWidget):
       projID (str): id of project
     """
     self.models = []
+    for i in reversed(range(self.filterL.count())):
+      self.filterL.itemAt(i).widget().setParent(None)
     if docType!='':
       self.docType = docType
       self.projID  = projID
@@ -106,6 +104,8 @@ class Table(QWidget):
         self.data = self.comm.backend.db.getView('viewIdentify/viewTags')
       self.filterHeader = ['tag','name']
       self.headline.setText('TAGS')
+      if self.moreMenu.actions()[-1].text()!='Export':
+        self.moreMenu.removeAction(self.moreMenu.actions()[-1])  #remove last action
     else:
       self.addBtn.show()
       path = 'viewDocType/'+self.docType+'All' if self.showAll else 'viewDocType/'+self.docType
@@ -115,7 +115,11 @@ class Table(QWidget):
         self.data = self.comm.backend.db.getView(path, preciseKey=self.projID)
       if self.docType=='-':
         self.headline.setText('Unidentified')
+        if self.moreMenu.actions()[-1].text()!='Export':
+          self.moreMenu.removeAction(self.moreMenu.actions()[-1])  #remove last action
       else:
+        if self.moreMenu.actions()[-1].text()=='Export':
+          Action('Change headers',  self.executeAction, self.moreMenu, self, name='changeTableHeader')  #add action at end
         if self.docType in self.comm.backend.db.dataLabels:
           self.headline.setText(self.comm.backend.db.dataLabels[self.docType])
       if docType in self.comm.backend.configuration['tableHeaders']:
@@ -135,7 +139,7 @@ class Table(QWidget):
         if docType=='_tags_':  #tags list
           if j==0:
             if self.data[i]['key']=='_curated':
-              item = QStandardItem('cur\u2605ted')
+              item = QStandardItem('_curated_')
             elif re.match(r'_\d', self.data[i]['key']):
               item = QStandardItem('\u2605'*int(self.data[i]['key'][1]))
             else:
@@ -159,7 +163,7 @@ class Table(QWidget):
             if self.filterHeader[j]=='tags':
               tags = self.data[i]['value'][j].split(' ')
               if '_curated' in tags:
-                tags[tags.index('_curated')] = 'cur\u2605ted'
+                tags[tags.index('_curated')] = '_curated_'
               for iStar in range(1,6):
                 if '_'+str(iStar) in tags:
                   tags[tags.index('_'+str(iStar))] = '\u2605'*iStar
@@ -249,28 +253,37 @@ class Table(QWidget):
       intersection = None
       docIDs = []
       for row in range(self.models[-1].rowCount()):
-        #TODO_P1 check if qsortFilterProxyModel has attribute item
-        if self.models[-1].item(row,0).checkState() == Qt.CheckState.Checked:
-          docIDs.append( self.data[row]['id'] )
-          thisKeys = set(self.comm.backend.db.getDoc(self.data[row]['id']))
-          if intersection is None:
-            intersection = thisKeys
-          else:
-            intersection = intersection.intersection(thisKeys)
+        if hasattr(self.models[-1], 'item'):
+          if self.models[-1].item(row,0).checkState() == Qt.CheckState.Checked:
+            docIDs.append( self.data[row]['id'] )
+            thisKeys = set(self.comm.backend.db.getDoc(self.data[row]['id']))
+            if intersection is None:
+              intersection = thisKeys
+            else:
+              intersection = intersection.intersection(thisKeys)
+        else:
+          logging.error('widgetTable model has no item '+str(self.models[-1])+' '+str(row)+' '+str(thisKeys))
+          showMessage(self, 'Send information to Steffen','widgetTable model has no item '+\
+                            str(self.models[-1])+' '+str(row)+' '+str(thisKeys))
+          #TODO_P3 when does this occur
       #remove keys that should not be group edited and build dict
       intersection = intersection.difference({'-type', '-branch', '-user', '-client', 'metaVendor', 'shasum', \
         '_id', 'metaUser', '_rev', '-name', '-date', 'image', '_attachments','links'})
       intersection = {i:'' for i in intersection}
       intersection.update({'_ids':docIDs})
       self.comm.formDoc.emit(intersection)
+      self.comm.changeDetails.emit('redraw')
     elif menuName == 'sequentialEdit':
       for row in range(self.models[-1].rowCount()):
         if self.models[-1].item(row,0).checkState() == Qt.CheckState.Checked:
           self.comm.formDoc.emit(self.comm.backend.db.getDoc( self.data[row]['id'] ))
       self.comm.changeTable.emit(self.docType, '')
     elif menuName == 'changeTableHeader':
-      dialog = TableHeader(self.comm, self.docType)
-      dialog.exec()
+      if self.docType in ['-','_tags_'] :
+        logging.error('widgetTable: cannot show changeTableHeader for '+self.docType)
+      else:
+        dialog = TableHeader(self.comm, self.docType)
+        dialog.exec()
     elif menuName == 'export':
       fileName = QFileDialog.getSaveFileName(self,'Export to ..',str(Path.home()),'*.csv')[0]
       with open(fileName,'w', encoding='utf-8') as fOut:

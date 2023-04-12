@@ -60,7 +60,7 @@ class Details(QScrollArea):
     self.mainL.addWidget(self.metaDatabaseW)
     self.mainL.addStretch(1)
 
-  #TODO_P1 group edit if multiple selected, or display group edit button if multiple selected
+  #TODO_P3 group edit if multiple selected, or display group edit button if multiple selected
 
   def contextMenu(self, pos):
     """
@@ -164,7 +164,7 @@ class Details(QScrollArea):
         self.specialL.addWidget(text)
         self.specialW.show()
       elif key=='-tags':
-        tags = ['cur\u2605ted' if i=='_curated' else '#'+i for i in self.doc[key]]
+        tags = ['_curated_' if i=='_curated' else '#'+i for i in self.doc[key]]
         tags = ['\u2605'*int(i[2]) if i[:2]=='#_' else i for i in tags]
         self.metaDetailsL.addWidget( QLabel('Tags: '+' '.join(tags)))
       elif key.startswith('_') or key.startswith('-'):

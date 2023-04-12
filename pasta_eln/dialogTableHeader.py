@@ -29,10 +29,10 @@ class TableHeader(QDialog):
     self.allSet = self.allSet.union({i['name'] for i in self.comm.backend.db.ontology[docType]['prop']})
     self.allSet = self.allSet.union({'date','#_curated', '-type', '-name', 'comment', '-tags', 'image'})
     #clean it
-    self.allSet = {'\u2605'+i[1:]+'\u2605' if i[0] in ['-','_'] else i for i in self.allSet}  #change -something to something
-    self.allSet = {'cur\u2605ted'          if i=='#_curated'    else i for i in self.allSet}  #change #_something to somehing
-    self.selectedList = ['\u2605'+i[1:]+'\u2605' if i[0] in ['-','_'] else i for i in self.selectedList]  #change -something to something
-    self.selectedList = ['cur\u2605ted'          if i=='#_curated'    else i for i in self.selectedList]  #change #_something to somehing
+    self.allSet = {'_'+i[1:]+'_' if i[0] in ['-','_'] else i for i in self.allSet}  #change -something to something
+    self.allSet = {'_curated_'   if i=='#_curated'    else i for i in self.allSet}  #change #_something to somehing
+    self.selectedList = ['_'+i[1:]+'_' if i[0] in ['-','_'] else i for i in self.selectedList]  #change -something to something
+    self.selectedList = ['_curated_'   if i=='#_curated'    else i for i in self.selectedList]  #change #_something to somehing
 
     # GUI elements
     self.setWindowTitle('Select table headers')
@@ -104,8 +104,8 @@ class TableHeader(QDialog):
     if btn.text().endswith('Cancel'):
       self.reject()
     elif btn.text().endswith('Save'):
-      # self.selectedList = ['#_curated' if i=='cur\u2605ted' else i  for i in self.selectedList]  #change #_something to somehing
-      # self.selectedList = ['-'+i[1:-1] if i[0]=='\u2605' and i[-1]=='\u2605'else i  for i in self.selectedList] #change -something to something
+      # self.selectedList = ['#_curated' if i=='_curated_' else i  for i in self.selectedList]  #change #_something to somehing
+      # self.selectedList = ['-'+i[1:-1] if i[0]=='\u2605' and i[-1]=='\u2605' else i  for i in self.selectedList] #change -something to something
       # self.comm.backend.configuration['tableHeaders'][self.docType] = self.selectedList
       # with open(Path.home()/'.pastaELN.json', 'w', encoding='utf-8') as fConf:
       #   fConf.write(json.dumps(self.comm.backend.configuration,indent=2))

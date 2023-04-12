@@ -1,14 +1,11 @@
 """ New/Edit dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""
 import json
-#pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QDialog, QWidget, QFormLayout, QVBoxLayout, QHBoxLayout, QLabel, QTextEdit, \
-                              QPlainTextEdit, QComboBox, QLineEdit, QDialogButtonBox, QSplitter, QSizePolicy
-#pylint: enable=no-name-in-module
+                              QPlainTextEdit, QComboBox, QLineEdit, QDialogButtonBox, QSplitter, QSizePolicy # pylint: disable=no-name-in-module
+from PySide6.QtGui import QPixmap, QImage, QRegularExpressionValidator # pylint: disable=no-name-in-module
 from .style import Image, TextButton, IconButton
 from .fixedStrings import defaultOntologyNode
 from .handleDictionaries import fillDocBeforeCreate
-
-#TODO_P1: names for file acceptable
 
 class Form(QDialog):
   """ New/Edit dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""
@@ -48,6 +45,7 @@ class Form(QDialog):
     #Add things that are in ontology
     if '-type' in self.doc and '_ids' not in self.doc:  #normal form
       setattr(self, 'key_-name', QLineEdit(self.doc['-name']))
+      getattr(self, 'key_-name').setValidator(QRegularExpressionValidator("[\\w\\ .]+"))
       self.formL.addRow('Name', getattr(self, 'key_-name'))
       if self.doc['-type'][0] in self.comm.backend.db.ontology:
         ontologyNode = self.comm.backend.db.ontology[self.doc['-type'][0]]['prop']
@@ -206,10 +204,9 @@ class Form(QDialog):
       print('dialogForm: did not get a fitting btn ',btn.text())
     return
 
-  #TODO_P1 curAted, et al. -> _curated_
-  #TODO_P1 after scanning: sidebar update
-  #TODO_P1 HTTP error after long time (10min) not using it: one not authorized to access database
-  #TODO_P1 curated: only once in tags
+  #TODO_P1 clean tags, incl. curated
+  #TODO_P2 HTTP error after long time (10min) not using it: one not authorized to access database:
+  #   cannot reproduce investigate it
 
 
   def btnAdvanced(self, status):

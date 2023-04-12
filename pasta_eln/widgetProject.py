@@ -234,6 +234,7 @@ class Project(QWidget):
     elif menuName == 'scanProject':
       self.comm.backend.scanProject(self.projID, self.docProj['-branch'][0]['path'])
       self.comm.changeProject.emit(self.projID,'')
+      self.comm.changeSidebar.emit()
       showMessage(self, 'Information','Scanning finished')
     else:
       print("undefined menu / action",menuName)

@@ -73,7 +73,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       painter.drawStaticText(xOffset+500, yOffset, QStaticText(index.data(Qt.DisplayRole))) #doc['_id']
     if '-tags' in doc and len(doc['-tags'])>0:
       yOffset += self.lineSep
-      tags = ['cur\u2605ted' if i=='_curated' else '#'+i for i in doc['-tags']]
+      tags = ['_curated_' if i=='_curated' else '#'+i for i in doc['-tags']]
       tags = ['\u2605'*int(i[2]) if i[:2]=='#_' else i for i in tags]
       painter.drawStaticText(xOffset, yOffset, QStaticText('Tags: '+' '.join(tags)))
     for key in doc:

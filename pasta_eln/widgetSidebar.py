@@ -181,6 +181,7 @@ class Sidebar(QWidget):
     """
     self.comm.backend.scanProject(self.openProjectId)
     self.comm.changeProject.emit(self.openProjectId,'')
+    self.comm.changeSidebar.emit()
     showMessage(self, 'Information','Scanning finished')
     return
 
