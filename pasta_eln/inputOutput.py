@@ -135,17 +135,19 @@ def importELN(backend, database, elnFileName):
   return True
 
 
-def exportELN(backend, docID):
+def exportELN(backend, docID, pathII):
   """
   export eln to file
 
   Args:
     backend (backend): PASTA backend instance
     docID (string): docId of project
+    pathII (str): path
 
   Returns:
     bool: success of this export
   """
+  print(pathII)
   docProject = backend.db.getDoc(docID)
   dirNameProject = docProject['-branch'][0]['path']
   zipFileName = dirNameProject+'.eln'

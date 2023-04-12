@@ -3,10 +3,9 @@ import json
 from pathlib import Path
 import qrcode
 from PIL.ImageQt import ImageQt
-from PySide6.QtWidgets import QDialog, QWidget, QVBoxLayout, QHBoxLayout, QListWidget, QListWidgetItem, \
-                              QLineEdit, QDialogButtonBox, QFormLayout, QLabel, QGroupBox, QComboBox, \
-                              QTextEdit, QFileDialog  # pylint: disable=no-name-in-module
-from PySide6.QtGui import QRegularExpressionValidator # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QDialog, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QGroupBox, \
+                              QLineEdit, QDialogButtonBox, QFormLayout, QComboBox, QFileDialog  # pylint: disable=no-name-in-module
+from PySide6.QtGui import QPixmap, QRegularExpressionValidator # pylint: disable=no-name-in-module
 from .style import Label, TextButton, showMessage
 from .miscTools import upOut, restart, upIn
 from .serverActions import testLocal, testRemote, passwordDecrypt

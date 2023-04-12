@@ -210,7 +210,7 @@ def commands(getDocu, args):
       doc += '    example: pastaELN_CLI.py saveBackup -i x-76b0995cf655bcd487ccbdd8f9c68e1b\n'
     elif args.command=='saveBackup':   #save to backup file.zip
       if args.docID!='':
-        exportELN(be, args.docID)
+        exportELN(be, args.docID, 'test.eln')
       else:
         be.backup('backup')
 
