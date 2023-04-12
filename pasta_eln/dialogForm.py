@@ -62,7 +62,7 @@ class Form(QDialog):
       if key[0] in ['_','-', '#'] or key in ['image','metaVendor','metaUser','shasum']:
         continue
       # print("Key:value in form | "+key+':'+str(value))
-      if key in ['comment','content']:
+      if key in ['comment']:
         labelW = QWidget()
         labelL = QVBoxLayout(labelW)
         labelL.addWidget(QLabel(key.capitalize()))
@@ -91,6 +91,10 @@ class Form(QDialog):
         splitter.addWidget(getattr(self, 'textShow_'+key))
         rightSideL.addWidget(splitter)
         self.formL.addRow(labelW, rightSideW)
+      elif key == 'content':
+        contentW = QPlainTextEdit(value)
+        contentW.setReadOnly(True) #TODO_P3 for now until both-side update is clear
+        self.formL.addRow(QLabel('Content'), contentW)
       elif key == '-tags':  #remove - to make work
         # TODO_P3 tags: get selected via a editable QCombobox and get shown as qlabels, that can be deleted
         # RR: can you already implement tags as list of qlabels with a '-' button on the right to delete
@@ -204,7 +208,6 @@ class Form(QDialog):
       print('dialogForm: did not get a fitting btn ',btn.text())
     return
 
-  #TODO_P1 clean tags, incl. curated
   #TODO_P2 HTTP error after long time (10min) not using it: one not authorized to access database:
   #   cannot reproduce investigate it
 

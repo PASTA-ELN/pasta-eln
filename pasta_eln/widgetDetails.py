@@ -206,7 +206,10 @@ class Details(QScrollArea):
     """
     Call edit dialoge
     """
-    self.comm.formDoc.emit(self.doc)
-    self.comm.changeTable.emit('','')
-    self.comm.changeDetails.emit('redraw')
+    if self.doc['-type'][0][0]=='x':
+      showMessage(self, 'Information','Cannot change project hierarchy here.')
+    else:
+      self.comm.formDoc.emit(self.doc)
+      self.comm.changeTable.emit('','')
+      self.comm.changeDetails.emit('redraw')
     return

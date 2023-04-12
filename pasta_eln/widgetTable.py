@@ -96,7 +96,7 @@ class Table(QWidget):
     if docType!='':
       self.docType = docType
       self.projID  = projID
-    if docType=='_tags_':
+    if self.docType=='_tags_':
       self.addBtn.hide()
       if self.showAll:
         self.data = self.comm.backend.db.getView('viewIdentify/viewTagsAll')
@@ -122,7 +122,7 @@ class Table(QWidget):
           Action('Change headers',  self.executeAction, self.moreMenu, self, name='changeTableHeader')  #add action at end
         if self.docType in self.comm.backend.db.dataLabels:
           self.headline.setText(self.comm.backend.db.dataLabels[self.docType])
-      if docType in self.comm.backend.configuration['tableHeaders']:
+      if self.docType in self.comm.backend.configuration['tableHeaders']:
         self.filterHeader = self.comm.backend.configuration['tableHeaders'][docType]
       elif self.docType=='-':
         self.filterHeader = [i['name'] for i in defaultOntologyNode]
@@ -136,7 +136,7 @@ class Table(QWidget):
     model.setHorizontalHeaderLabels(self.filterHeader)
     for i in range(nrows):
       for j in range(ncols):
-        if docType=='_tags_':  #tags list
+        if self.docType=='_tags_':  #tags list
           if j==0:
             if self.data[i]['key']=='_curated':
               item = QStandardItem('_curated_')
