@@ -112,7 +112,17 @@ class Backend(CLI_Mixin):
       self.cwd     = self.basePath/doc['-branch'][0]['path']
     self.hierStack = doc['-branch'][0]['stack']+[doc['_id']]
     doc['childNum']= doc['-branch'][0]['child']
+    # change content
     self.addData('-edit-', doc)
+    # change folder-name in database of all children
+    items = self.db.getView('viewHierarchy/viewPaths', startKey=self.cwd.relative_to(self.basePath).as_posix())
+    for item in items:
+      oldPathparts = item['key'].split('/')
+      newPathParts = doc['-branch']['path'].split('/')
+      newPath = '/'.join(newPathParts+oldPathparts[len(newPathParts):]  )
+      # print(item['id']+'  old='+item['key']+'  branch='+str(item['value'][-1])+\
+      #      '  child='+str(item['value'][-3])+'  new='+newPath)
+      self.db.updateBranch(item['id'], item['value'][-1], item['value'][-3], path=newPath)
     return
 
 
@@ -271,7 +281,7 @@ class Backend(CLI_Mixin):
         dirName (string): change into this directory (absolute path given). For if data is moved
         kwargs (dict): additional parameter
     """
-    logging.info('changeHierarchy should only be used in CLI mode')
+    logging.info('changeHierarchy should only be used in CLI mode') #TODO_P4 remove this warning
     if docID is None or (docID[0]=='x' and docID[1]!='-'):  #cd ..: none. close 'project', 'task'
       self.hierStack.pop()
       self.cwd = self.cwd.parent
@@ -314,13 +324,13 @@ class Backend(CLI_Mixin):
       if line['value'][1][0][0]=='x':
         continue
       doc = self.db.getDoc(line['id'])
-      if 'content' in doc:
+      if line['key'].startswith('http'):
+        path = Path(line['key'])
+      else:
         path = self.basePath/line['key']
-        doc= {'-type':['procedure']}
-        self.useExtractors(path, '', doc)
-        self.db.updateDoc(doc, line['id'])
-    #TODO_P4 change procedure: on disk / database -> conflicts
-    #    Copy of procedure exists on harddisk: one entry in db and links; then change one, but not other, -branch should separate; can they reunite?
+      self.useExtractors(path, '', doc)
+      del doc['-branch']  #don't update / change it here
+      self.db.updateDoc(doc, line['id'])
 
     pathsInDB_x    = [i['key'] for i in inDB_all if i['value'][1][0][0]=='x']  #all structure elements: task, subtasts
     pathsInDB_data = [i['key'] for i in inDB_all if i['value'][1][0][0]!='x']
@@ -435,6 +445,10 @@ class Backend(CLI_Mixin):
       else:
         doc['-type']     += doc['recipe'].split('/')
       del doc['recipe']
+      if 'links' in doc:
+        #TODO_P3 extractor: creates links to sample/instrument
+        if len(doc['links'])==0:
+          del doc['links']
     except:
       print('  **Error with extractor',pyFile)
       logging.error('ERROR with extractor '+pyFile+'\n'+traceback.format_exc())
@@ -443,14 +457,6 @@ class Backend(CLI_Mixin):
         'filesize':absFilePath.stat().st_size,
         'created at':datetime.fromtimestamp(absFilePath.stat().st_ctime, tz=timezone.utc).isoformat(),
         'modified at':datetime.fromtimestamp(absFilePath.stat().st_mtime, tz=timezone.utc).isoformat()}
-    # FOR EXTRACTOR DEBUGGING
-    # import json
-    # for item in doc:
-    #   try:
-    #     _ = json.dumps(doc[item])
-    #   except:
-    #     print('**ERROR json dumping', item, doc[item])
-    # #also make sure that no int64 but normal int
     return
 
 
@@ -525,6 +531,7 @@ class Backend(CLI_Mixin):
         _ = json.dumps(content['metaVendor'])
         report += 'Number of vendor entries: '+str(len(content['metaVendor']))+'<br>'
       except:
+        # possible cause of failure: make sure that no int64 but normal int
         success = False
         if interactive:
           print("  DETAIL metaVendor incorrect")

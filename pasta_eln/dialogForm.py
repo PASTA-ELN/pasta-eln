@@ -1,9 +1,9 @@
 """ New/Edit dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""
 import json
-#pylint: disable=no-name-in-module
+from pathlib import Path
 from PySide6.QtWidgets import QDialog, QWidget, QFormLayout, QVBoxLayout, QHBoxLayout, QLabel, QTextEdit, \
-                              QPlainTextEdit, QComboBox, QLineEdit, QDialogButtonBox, QSplitter, QSizePolicy
-#pylint: enable=no-name-in-module
+                              QPlainTextEdit, QComboBox, QLineEdit, QDialogButtonBox, QSplitter, QSizePolicy # pylint: disable=no-name-in-module
+from PySide6.QtGui import QPixmap, QImage, QRegularExpressionValidator # pylint: disable=no-name-in-module
 from .style import Image, TextButton, IconButton
 from .fixedStrings import defaultOntologyNode
 from .handleDictionaries import fillDocBeforeCreate
@@ -44,8 +44,9 @@ class Form(QDialog):
     self.formL = QFormLayout(formW)
 
     #Add things that are in ontology
-    if '-type' in self.doc:
+    if '-type' in self.doc and '_ids' not in self.doc:  #normal form
       setattr(self, 'key_-name', QLineEdit(self.doc['-name']))
+      getattr(self, 'key_-name').setValidator(QRegularExpressionValidator("[\\w\\ .]+"))
       self.formL.addRow('Name', getattr(self, 'key_-name'))
       if self.doc['-type'][0] in self.comm.backend.db.ontology:
         ontologyNode = self.comm.backend.db.ontology[self.doc['-type'][0]]['prop']
@@ -54,12 +55,15 @@ class Form(QDialog):
       for item in ontologyNode:
         if item['name'] not in self.doc and  item['name'][0] not in ['_','-']:
           self.doc[item['name']] = ''
+    if '-type' not in self.doc and '_ids' in self.doc:  #group edit form
+      ontologyNode = defaultOntologyNode
+      ontologyNode = [i for i in ontologyNode if i['name']!='-name']
     # Create form
     for key,value in self.doc.items():
       if key[0] in ['_','-', '#'] or key in ['image','metaVendor','metaUser','shasum']:
         continue
       # print("Key:value in form | "+key+':'+str(value))
-      if key in ['comment','content']:
+      if key in ['comment']:
         labelW = QWidget()
         labelL = QVBoxLayout(labelW)
         labelL.addWidget(QLabel(key.capitalize()))
@@ -88,6 +92,10 @@ class Form(QDialog):
         splitter.addWidget(getattr(self, 'textShow_'+key))
         rightSideL.addWidget(splitter)
         self.formL.addRow(labelW, rightSideW)
+      elif key == 'content':
+        contentW = QPlainTextEdit(value)
+        contentW.setReadOnly(True) #TODO_P3 procedure: can be changed in GUI->save harddrive
+        self.formL.addRow(QLabel('Content'), contentW)
       elif key == '-tags':  #remove - to make work
         # TODO_P3 tags: get selected via a editable QCombobox and get shown as qlabels, that can be deleted
         # RR: can you already implement tags as list of qlabels with a '-' button on the right to delete
@@ -118,7 +126,13 @@ class Form(QDialog):
       else:
         print("**ERROR dialogForm: unknown value type",key, value)
     #add extra questions at bottom of form
-    if '_id' in self.doc and self.doc['-type'][0][0]!='x': #if not-new and non-folder
+    allowProjectAndDocTypeChange = '_id' in self.doc and self.doc['-type'][0][0]!='x'
+    if '_ids' in self.doc: #if group edit
+      allowProjectAndDocTypeChange = True
+      for docID in self.doc['_ids']:
+        if docID[0]=='x':
+          allowProjectAndDocTypeChange = False
+    if allowProjectAndDocTypeChange: #if not-new and non-folder
       self.projectComboBox = QComboBox()
       self.projectComboBox.addItem('- no change -', userData='')
       for line in self.comm.backend.db.getView('viewDocType/x0'):
@@ -144,6 +158,7 @@ class Form(QDialog):
     if btn.text().endswith('Cancel'):
       self.reject()
     elif btn.text().endswith('Save'):
+      # create the data that has to be saved
       if hasattr(self, 'key_-name'):
         self.doc['-name'] = getattr(self, 'key_-name').text().strip()
       for key, value in self.doc.items():
@@ -161,16 +176,22 @@ class Form(QDialog):
             self.doc[key] = getattr(self, 'key_'+key).text().strip()
         else:
           print("**ERROR dialogForm unknown value type",key, value)
+      # save data to database according to special cases
       if hasattr(self, 'projectComboBox') and self.projectComboBox.currentData() != '':
-        parentPath = self.comm.backend.db.getDoc(self.projectComboBox.currentData())['-branch'][0]['path']
-        self.doc['-branch'] = {'op':'u', 'stack':[self.projectComboBox.currentData()], 'childNum':9999, \
-                               'path':parentPath}
+        if self.doc['-branch'][0]['stack']!=self.projectComboBox.currentData(): #only if project changed
+          parentPath = self.comm.backend.db.getDoc(self.projectComboBox.currentData())['-branch'][0]['path']
+          oldPath    = self.comm.backend.basePath/self.doc['-branch'][0]['path']
+          oldPath.rename(self.comm.backend.basePath/parentPath/oldPath.name)
+        print('se',self.doc['-branch'], parentPath, self.projectComboBox.currentData())
+        self.doc['-branch'] = [{'stack':[self.projectComboBox.currentData()], 'child':9999, \
+                               'path':parentPath+'/'+oldPath.name}]
+        print('  ', self.doc['-branch'])
       if hasattr(self, 'docTypeComboBox') and self.docTypeComboBox.currentData() != '':
         self.doc['-type'] = [self.docTypeComboBox.currentData()]
         self.comm.backend.db.remove(self.doc['_id'])
         del self.doc['_id']
         del self.doc['_rev']
-        self.comm.backend.editData(self.doc)
+        self.comm.backend.addData(self.docTypeComboBox.currentData(), self.doc, self.doc['-branch'][0]['stack'])
       else:
         if '_ids' in self.doc: #group update
           del self.doc['-name']
@@ -192,6 +213,10 @@ class Form(QDialog):
     else:
       print('dialogForm: did not get a fitting btn ',btn.text())
     return
+
+  #TODO_P2 HTTP error after long time (10min) not using it: one not authorized to access database:
+  #   cannot reproduce investigate it
+
 
   def btnAdvanced(self, status):
     """

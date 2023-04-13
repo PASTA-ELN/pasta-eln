@@ -168,6 +168,13 @@ class Database:
     """
     Wrapper for save to database function
 
+    Discussion on -branch['path']:
+    - full path (from basePath) allows to easily create a view of all paths and search through them
+      during each scan, which happens rather often
+    - just the incremental path (file-name, folder-name) allows to easily change that if the user wants
+      and not change all the children paths, too. However, the renaming of the folder is likely occuring
+      less often.
+
     Args:
         doc (dict): document to save
 
@@ -224,7 +231,7 @@ class Database:
       oldDoc = {}            #this is an older revision of the document
       nothingChanged = True
       # handle branch
-      if '-branch' in change and len(change['-branch']['stack'])>0:
+      if '-branch' in change:# and len(change['-branch']['stack'])>0:
         op = change['-branch'].pop('op')
         oldpath = change['-branch'].pop('oldpath',None)
         if change['-branch']['path'] is None:
@@ -337,14 +344,14 @@ class Database:
     doc['-branch'][branch]['child']=child
     if stack is not None:
       doc['-branch'][branch]['stack']=stack
-    doc['-branch'][branch]['show'] = self.createShowFromStack(stack)
+    doc['-branch'][branch]['show'] = self.createShowFromStack( doc['-branch'][branch]['stack'] )
     doc.save()
     return oldPath, path
 
 
   def createShowFromStack(self, stack):
     """
-    For branches: create show from stack
+    For branches: create show entry in the branches by using the stack
     - should be 1 longer than stack
     - check parents if hidden, then this child is hidden too
 
@@ -354,13 +361,10 @@ class Database:
     Returns:
       list: list of show = list of bool
     """
-    if stack is None:
-      show = [True]
-    else:
-      show = (len(stack)+1)*[True]
-      for idx, docID in enumerate(stack):
-        if not self.db[docID]['-branch'][0]['show'][-1]:
-          show[idx] = False
+    show = (len(stack)+1)*[True]
+    for idx, docID in enumerate(stack):
+      if not self.db[docID]['-branch'][0]['show'][-1]:
+        show[idx] = False
     return show
 
 
@@ -432,6 +436,7 @@ class Database:
         res = list(v.result)
     except:
       print('**ERROR dgv01: Database / Network problem for path |',thePath[0],thePath[1])
+      print(traceback.format_exc())
       res = []
     return res
 
@@ -482,7 +487,11 @@ class Database:
     while True:
       level = [i for i in view if len(i['key'].split())==levelNum]
       if levelNum==1:
-        dataTree = Node(id=level[0]['key'], docType=level[0]['value'][1], name=level[0]['value'][2])
+        if len(level)==1:
+          dataTree = Node(id=level[0]['key'], docType=level[0]['value'][1], name=level[0]['value'][2])
+        else:
+          print('**ERROR getHierarchy Did not find corresponding '+str(levelNum) )
+          dataTree = Node(id=None, name='')
       else:
         childList = [i['value'][0] for i in level]   #temporary list to allow sorting for child-number
         # https://stackoverflow.com/questions/6618515/sorting-list-based-on-values-from-another-list

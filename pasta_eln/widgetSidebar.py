@@ -26,7 +26,7 @@ class Sidebar(QWidget):
     self.mainL.setSpacing(7)
     self.setLayout(self.mainL)
     self.redraw()
-    #TODO_P3 convenience: allow scroll in sidebar
+    #TODO_P3 convenience: allow scroll in sidebar, size changegable, drag-and-drop to move
     #   more below and other files
 
 
@@ -44,7 +44,7 @@ class Sidebar(QWidget):
     self.widgetsProject = {} #title bar and widget that contains all of project
 
     if hasattr(self.comm.backend, 'db'):
-      hierarchy = self.comm.backend.db.getView('viewDocType/x0')
+      hierarchy = self.comm.backend.db.getView('viewDocType/x0') #TODO_P3 sidebar: sort by -date
       for project in hierarchy:
         projID = project['id']
         projName = project['value'][0]
@@ -181,6 +181,7 @@ class Sidebar(QWidget):
     """
     self.comm.backend.scanProject(self.openProjectId)
     self.comm.changeProject.emit(self.openProjectId,'')
+    self.comm.changeSidebar.emit()
     showMessage(self, 'Information','Scanning finished')
     return
 

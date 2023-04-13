@@ -77,11 +77,15 @@ def fillDocBeforeCreate(data, docType):
   rating  = re.findall(r'(?:^|\s)#_\d(?:\s|$)',      data['comment']) # #_number
   if rating is None:
     rating=[]
-  otherTags = re.findall(r'(?:^|\s)#[a-zA-Z]\w+(?:\s|$)', data['comment'])
+  if len(rating)>1:  #prevent multiple new ratings
+    rating=rating[:1]
+  if len(rating)==1: #remove ratings that exist already
+    data['-tags'] = [i for i in data['-tags'] if not re.compile(r'^_\d$').match(i)]
+  otherTags = re.findall(r'(?:^|\s)#[a-zA-Z]\w+(?=\s|$)', data['comment'])
   if otherTags is None:
     otherTags=[]
   data['-tags'] = rating + data['-tags'] + otherTags + curated
-  data['comment'] = re.sub(r'(?:\s|$)#\w+(?:\s|$)', '', data['comment']).strip()
+  data['comment'] = re.sub(r'(?:^|\s)#\w+(?=\s|$)', '', data['comment']).strip()
   fields = re.findall(r':[\S]+:[\S]+:', data['comment'])
   if fields is not None:
     for item in fields:
@@ -92,7 +96,8 @@ def fillDocBeforeCreate(data, docType):
   data['comment'] = re.sub(r':[\S]+:[\S]+:','',data['comment'])  #remove :field:data: information
   if isinstance(data['-tags'], str):
     data['-tags'] = data['-tags'].split(' ')
-  data['-tags']= [i.strip()[1:] for i in data['-tags']]
+  data['-tags'] = [i.strip()[1:] if i.strip()[0]=='#' else i.strip() for i in data['-tags']]
+  data['-tags'] = list(set(data['-tags']))  #ensure only one is inside
   #other cleaning
   if 'links' in data and isinstance(data['links'], list):
     if len(data['links'])==0 or (len(data['links'])==1 and data['links'][0]==''):

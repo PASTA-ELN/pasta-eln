@@ -6,6 +6,7 @@ from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QApplication, Q
 from PySide6.QtGui import QIcon, QPixmap, QAction    # pylint: disable=no-name-in-module
 from qt_material import apply_stylesheet  #of https://github.com/UN-GCPDS/qt-material
 
+from pasta_eln import __version__
 from .backend import Backend
 from .communicate import Communicate
 from .widgetSidebar import Sidebar
@@ -26,7 +27,7 @@ class MainWindow(QMainWindow):
   def __init__(self):
     #global setting
     super().__init__()
-    self.setWindowTitle("PASTA-ELN")
+    self.setWindowTitle("PASTA-ELN "+__version__)
     self.setWindowState(Qt.WindowMaximized)
     resourcesDir = Path(__file__).parent/'Resources'
     self.setWindowIcon(QIcon(QPixmap(resourcesDir/'Icons'/'favicon64.png')))
@@ -164,6 +165,11 @@ class MainWindow(QMainWindow):
     restart()
     return
 
+# TODO_P2 copy of file: should it the be the same in database or should it be two separate entities??
+#         - what happens if you want to change one but don't want to change the other?
+#           - copy of raw data into one that will changed, to clean
+#         - link of copies:
+# TODO_P2 project view: copies/original sometimes are not displayed: can you give more details: I tried .tif and .odp
 
 ##############
 ## Main function

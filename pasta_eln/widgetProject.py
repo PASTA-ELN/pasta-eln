@@ -181,6 +181,7 @@ class Project(QWidget):
     topbarL = QHBoxLayout(topbarW)
     hidden = '     \U0001F441' if len([b for b in self.docProj['-branch'] if False in b['show']])>0 else ''
     topbarL.addWidget(QLabel(self.docProj['-name']+hidden))
+    topbarL.addStretch(1)
     TextButton('Reduce',    self.btnEvent, topbarL, 'projHide', checkable=True)
     TextButton('Hide/Show', self.btnEvent, topbarL, 'hideShow')
     TextButton('Add child', self.btnEvent, topbarL, 'addChild')
@@ -204,6 +205,7 @@ class Project(QWidget):
     self.mainL.addWidget(headerW)
     return
 
+  #TODO_P3 projectTree: select multiple items to edit... What is use case
 
   def executeAction(self):
     """ Any action by the buttons at the top of the page """
@@ -232,6 +234,7 @@ class Project(QWidget):
     elif menuName == 'scanProject':
       self.comm.backend.scanProject(self.projID, self.docProj['-branch'][0]['path'])
       self.comm.changeProject.emit(self.projID,'')
+      self.comm.changeSidebar.emit()
       showMessage(self, 'Information','Scanning finished')
     else:
       print("undefined menu / action",menuName)

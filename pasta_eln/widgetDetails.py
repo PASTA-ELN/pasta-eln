@@ -60,7 +60,6 @@ class Details(QScrollArea):
     self.mainL.addWidget(self.metaDatabaseW)
     self.mainL.addStretch(1)
 
-
   def contextMenu(self, pos):
     """
     Create a context menu
@@ -148,8 +147,10 @@ class Details(QScrollArea):
     if docID!='redraw':
       self.docID = docID
     self.doc   = self.comm.backend.db.getDoc(self.docID)
+    if '-name' not in self.doc:  #keep empty details and wait for user to click
+      return
     Label(self.doc['-name'],'h1', self.headerL)
-    TextButton('Edit',self.callEdit, self.headerL)
+    TextButton('Edit this one',self.callEdit, self.headerL)
     for key in self.doc:
       if key=='image':
         width = self.comm.backend.configuration['GUI']['imageWidthDetails'] \
@@ -163,7 +164,7 @@ class Details(QScrollArea):
         self.specialL.addWidget(text)
         self.specialW.show()
       elif key=='-tags':
-        tags = ['cur\u2605ted' if i=='_curated' else '#'+i for i in self.doc[key]]
+        tags = ['_curated_' if i=='_curated' else '#'+i for i in self.doc[key]]
         tags = ['\u2605'*int(i[2]) if i[:2]=='#_' else i for i in tags]
         self.metaDetailsL.addWidget( QLabel('Tags: '+' '.join(tags)))
       elif key.startswith('_') or key.startswith('-'):
@@ -205,7 +206,10 @@ class Details(QScrollArea):
     """
     Call edit dialoge
     """
-    self.comm.formDoc.emit(self.doc)
-    self.comm.changeTable.emit('','')
-    self.comm.changeDetails.emit('redraw')
+    if self.doc['-type'][0][0]=='x':
+      showMessage(self, 'Information','Cannot change project hierarchy here.')
+    else:
+      self.comm.formDoc.emit(self.doc)
+      self.comm.changeTable.emit('','')
+      self.comm.changeDetails.emit('redraw')
     return
