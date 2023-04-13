@@ -170,7 +170,7 @@ class Sidebar(QWidget):
         if docID == projID:
           projWidget.setStyleSheet("background-color:"+ getColor(self.comm.backend, 'secondaryLight'))
         else:
-          projWidget.setStyleSheet("background-color:"+ getColor(self.comm.backend, 'secondaryDark'))
+          projWidget.setStyleSheet("background-color:"+ getColor(self.comm.backend, 'secondary'))
     self.comm.changeProject.emit(projID, item)
     return
 

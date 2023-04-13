@@ -50,7 +50,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     else:
       folded = False
     doc     = self.comm.backend.db.getDoc(docID)
-    painter.fillRect(option.rect.marginsRemoved(QMargins(2,6,4,0)),QColor.fromString(getColor(self.comm.backend, 'secondaryLight')).darker(350))
+    painter.fillRect(option.rect.marginsRemoved(QMargins(2,6,4,0)),QColor.fromString(getColor(self.comm.backend, 'secondary')).darker(150))
     painter.fillRect(option.rect.marginsRemoved(QMargins(-2,3,8,5)), QColor.fromString(getColor(self.comm.backend, 'secondaryLight')))
     if 'image' in doc and doc['image']!='' and not folded:
       if doc['image'].startswith('data:image/'):
