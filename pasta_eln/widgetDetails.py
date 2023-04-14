@@ -1,5 +1,5 @@
 """ widget that shows the details of the items """
-import json
+import json, platform, subprocess, os, base64
 from pathlib import Path
 from PySide6.QtWidgets import QScrollArea, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QMenu, QTextEdit  # pylint: disable=no-name-in-module
 from PySide6.QtCore import Qt, Slot, QByteArray   # pylint: disable=no-name-in-module
@@ -60,6 +60,7 @@ class Details(QScrollArea):
     self.mainL.addWidget(self.metaDatabaseW)
     self.mainL.addStretch(1)
 
+
   def contextMenu(self, pos):
     """
     Create a context menu
@@ -67,27 +68,55 @@ class Details(QScrollArea):
     Args:
       pos (position): Position to create context menu at
     """
+    extractors = self.comm.backend.configuration['extractors']
+    extension = Path(self.doc['-branch'][0]['path']).suffix[1:]
+    extractors = extractors[extension]
+    baseDocType= self.doc['-type'][0]
+    choices= {key:value for key,value in extractors.items() \
+                if key.startswith(baseDocType)}
     context = QMenu(self)
-    mask   = '/'.join(self.doc['-type'][:3])
-    choices= {key:value for key,value in self.comm.backend.configuration['extractors'].items() \
-                if key.startswith(mask)}
     for key,value in choices.items():
       Action(value, self.changeExtractor, context, self, name=key)
+    context.addSeparator()
+    Action('Open folder in file browser', self.changeExtractor, context, self, name='_openInFileBrowser_')
+    Action('Save as image',               self.changeExtractor, context, self, name='_saveAsImage_')
     context.exec(self.mapToGlobal(pos))
     return
-
 
   def changeExtractor(self):
     """
     What happens when user changes extractor
     """
-    self.doc['-type'] = self.sender().data().split('/')
-    self.comm.backend.useExtractors(Path(self.doc['-branch'][0]['path']), self.doc['shasum'], self.doc, \
-      extractorRedo=True)  #any path is good since the file is the same everywhere; data-changed by reference
-    if len(self.doc['-type'])>1 and len(self.doc['image'])>1:
-      self.doc = self.comm.backend.db.updateDoc({'image':self.doc['image'], '-type':self.doc['-type']}, self.doc['_id'])
-      self.comm.changeTable.emit('','')
-      self.comm.changeDetails.emit(self.doc['_id'])
+    filePath = Path(self.doc['-branch'][0]['path'])
+    if self.sender().data()=='_openInFileBrowser_':
+      filePath = self.comm.backend.basePath/filePath
+      if platform.system() == 'Darwin':       # macOS
+        subprocess.call(('open', filePath.parent))
+      elif platform.system() == 'Windows':    # Windows
+        os.startfile(filePath.parent)
+      else:                                   # linux variants
+        subprocess.call(('xdg-open', filePath.parent))
+    elif self.sender().data()=='_saveAsImage_':
+      image = self.doc['image']
+      if image.startswith('data:image/'):
+        imageType = image[11:14] if image[14]==';' else image[11:15]
+        image = image[22:] if image[21]==',' else image[23:]
+      else:
+        imageType = 'svg'
+      saveFilePath = filePath.parent/(filePath.stem+'_PastaExport.'+imageType.lower())
+      if imageType == 'svg':
+        with open(self.comm.backend.basePath/saveFilePath,'w', encoding='utf-8') as fOut:
+          fOut.write(image)
+      else:
+        with open(self.comm.backend.basePath/saveFilePath, "wb") as fOut:
+          fOut.write(base64.decodebytes(image.encode('utf-8')))
+    else:
+      self.doc['-type'] = self.sender().data().split('/')
+      self.comm.backend.useExtractors(filePath, self.doc['shasum'], self.doc, extractorRedo=True)  #any path is good since the file is the same everywhere; data-changed by reference
+      if len(self.doc['-type'])>1 and len(self.doc['image'])>1:
+        self.doc = self.comm.backend.db.updateDoc({'image':self.doc['image'], '-type':self.doc['-type']}, self.doc['_id'])
+        self.comm.changeTable.emit('','')
+        self.comm.changeDetails.emit(self.doc['_id'])
     return
 
   @Slot()

@@ -171,16 +171,17 @@ def updateExtractorList(directory):
   Returns:
     bool: success
   """
-  import json
+  verboseDebug = False
+  import json, yaml
   from pathlib import Path
   extractorsAll = {}
   for fileName in os.listdir(directory):
     if fileName.endswith('.py') and fileName not in ['testExtractor.py','tutorial.py','commit.py'] :
       #start with file
       with open(directory/fileName,'r', encoding='utf-8') as fIn:
+        if verboseDebug: print('\n'+fileName)
         lines = fIn.readlines()
-        extractors = []
-        baseType = ['measurement', fileName.split('_')[1].split('.')[0]]
+        extractorsThis = {}
         ifInFile, headerState, header = False, True, []
         for idx,line in enumerate(lines):
           line = line.rstrip()
@@ -191,31 +192,40 @@ def updateExtractorList(directory):
             header.append(line)
             continue
           if "if" in line and "#:" in line:
-            specialType = line.split("endswith('")[1].split("')")[0]
-            extractors.append([ baseType+specialType.split('/'), line.split('#:')[1].strip() ])
+            if verboseDebug: print('line', line)
+            specialType = line.split("==")[1].split(":")[0].strip(" '"+'"')
+            if verboseDebug: print('  special',specialType)
+            extractorsThis[specialType] = line.split('#:')[1].strip()
             ifInFile = True
           elif "else:" in line and "#:" in line:
-            extractors.append([ baseType, line.split('#:')[1].strip() ])
-          elif "return" in line and not ifInFile:
-            try:
-              specialType = line.split("+['")[1].split("']")[0]
-              extractors.append([ baseType+[specialType], '' ])
-            except:
-              pass
-        if len(extractors)>0:
-          extractorsAll.update({'/'.join(docType):label for docType, label in extractors})
-          #header not fused for now
+            print('**ERROR there should not be an else in the code')
+          elif "return" in line and 'recipe' in line and not ifInFile:
+            if verboseDebug: print('line', line)
+            if line.count('recipe')==1:
+              linePart = line.split('recipe')[1].strip()
+              linePart = linePart.split(':')[1].split(',')[0].strip(" '"+'"')
+            elif line.count('recipe')==2:
+              possLines = [i.strip() for i in lines if ('recipe' in i and '=' in i and 'def' not in i)]
+              if len(possLines)==1:
+                linePart=possLines[0].split('=')[1].strip(" '"+'"')
+              else:
+                print('**ERROR Could not decipher '+fileName)
+            extractorsThis[linePart]='Default'
+            if verboseDebug: print('  return', linePart)
+        if verboseDebug: print('Extractors', extractorsThis)
+        ending = fileName.split('_')[1].split('.')[0]
+        extractorsAll[ending]=extractorsThis
+        #header not used for now
   #update configuration file
-  print('Found extractors:')
-  for key, value in extractorsAll.items():
-    print('  ',key, ":", value)
+  print('\n\nFound extractors:')
+  print(yaml.dump(extractorsAll))
   with open(Path.home()/'.pastaELN.json','r', encoding='utf-8') as f:
     configuration = json.load(f)
   configuration['extractors'] = extractorsAll
   with open(Path.home()/'.pastaELN.json','w', encoding='utf-8') as f:
     f.write(json.dumps(configuration, indent=2))
   return True
-
+  #TODO_P1 allow for 'recipe':recipe in return
 
 def restart():
   """

@@ -64,7 +64,7 @@ sudo snap remove couchdb
 1. pylint pasta_eln
 2. make -C docs html; firefox docs/build/html/index.html
 3. run test "python -m pasta_eln.Tests.3Projects"
-4. ensure extractors identical except CSV, JPG: "diff -q pasta_eln/Extractors/ ../Extractors/ |grep differ"
+4. ensure extractors identical: "diff -q pasta_eln/Extractors/ ../Extractors/ |grep differ"
 5. normal commit to test all actions: pylint, documentation, ...
 6. create a new version: ./commit.py "Minimal viable product" 1
    **THIS STEP IS NECESSARY FOR ALL GITHUB-Actions TO WORK**

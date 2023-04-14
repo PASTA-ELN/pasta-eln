@@ -347,21 +347,21 @@ class Backend(CLI_Mixin):
         rerunScanTree = True
       # handle files
       for fileName in files:
-        if fileName.startswith('.') or fileName.startswith('trash_'):
+        if fileName.startswith('.') or fileName.startswith('trash_') or '_PastaExport' in fileName:
           continue
         path = (Path(root).relative_to(self.basePath) /fileName).as_posix()
         if path in pathsInDB_data:
-          print("File already in DB:",path)
+          logging.info("Scan: file already in DB: "+path)
           pathsInDB_data.remove(path)
         else:
-          print("Add file to DB:",path)
-          _ = self.addData('measurement', {'-name':path}, hierStack)
+          logging.info("Scan: add file to DB: "+path)
+          _ = self.addData('-', {'-name':path}, hierStack)
     #finish method
     self.cwd = self.basePath/projPath
     orphans = [i for i in pathsInDB_data if i.startswith(self.cwd.relative_to(self.basePath).as_posix())]
-    print('These files are on DB but not harddisk\n', orphans )
+    logging.info('Scan: these files are on DB but not harddisk\n'+'\n  '.join(orphans))
     orphanDirs = [i for i in pathsInDB_x if i==self.cwd.relative_to(self.basePath).as_posix() and i!=projPath]
-    print('These directories are on DB but not harddisk\n', orphanDirs)
+    logging.info('Scan: these directories are on DB but not harddisk\n'+'\n  '.join(orphanDirs))
     for orphan in orphans+orphanDirs:
       docID = [i for i in inDB_all if i['key']==orphan][0]['id']
       doc   = dict(self.db.getDoc(docID))
@@ -404,8 +404,6 @@ class Backend(CLI_Mixin):
       absFilePath = self.basePath/filePath
     pyFile = 'extractor_'+extension.lower()+'.py'
     pyPath = self.extractorPath/pyFile
-    if len(doc['-type'])==1:
-      doc['-type'] += [extension]
     success = False
     if pyPath.exists():
       success = True
@@ -431,18 +429,21 @@ class Backend(CLI_Mixin):
             print(' -> simplify ',meta,item, doc[meta][item])
             doc[meta][item] = str(doc[meta][item])
       doc['shasum']    = shasum
-      if doc['recipe'].startswith('/'.join(doc['-type'])):
-        doc['-type']      = doc['recipe'].split('/')
+      if doc['-type'][0]==doc['recipe'].split('/')[0] or doc['-type'][0]=='-':
+        doc['-type']     = doc['recipe'].split('/')
       else:
-        doc['-type']     += doc['recipe'].split('/')
+        #user has strange wish: trust him/her
+        logging.info('user has strange wish: trust him/her: '+'/'.join(doc['-type'])+'  '+doc['recipe'])
       del doc['recipe']
+      if 'fileExtension' not in doc['metaVendor']:
+        doc['metaVendor']['fileExtension'] = pyFile[:-3]
       if 'links' in doc:
         #TODO_P3 extractor: creates links to sample/instrument
         if len(doc['links'])==0:
           del doc['links']
     if not success:
-      print('  **Error with extractor',pyFile)
-      doc['-type'] = ['-']
+      print('  **Warning, issue with extractor',pyFile)
+      logging.warning('Issue with extractor '+pyFile)
       doc['metaUser'] = {'filename':absFilePath.name, 'extension':absFilePath.suffix,
         'filesize':absFilePath.stat().st_size,
         'created at':datetime.fromtimestamp(absFilePath.stat().st_ctime, tz=timezone.utc).isoformat(),
@@ -506,6 +507,24 @@ class Backend(CLI_Mixin):
           report += '<font color="red">Python error in extractor</font><br>'
           report += htmlStr+'python-error">website</a><br>'
           report += '\n'+traceback.format_exc()+'\n'
+    if success:
+      if 'recipe' in content:
+        possibleDocTypes = [i for i in self.db.dataLabels.keys() if i[0]!='x']
+        matches = [i for i in possibleDocTypes if content['recipe'].startswith(i)]
+        if len(matches)==0 and content['recipe']!='' and content['recipe']!='-':
+          if interactive:
+            print("**ERROR: recipe does not follow doctype in ontology.")
+          if reportHTML:
+            report += '<font color="red">Recipe does not follow doctype in ontology</font><br>'
+          else:
+            report = "ExtractorERROR recipe does not follow doctype in ontology"
+      else:
+        if interactive:
+          print("**ERROR: recipe not included in extractor.")
+        if reportHTML:
+          report += '<font color="red">Recipe not included in extractor</font><br>'
+        else:
+          report = "ExtractorERROR recipe not included in extractor"
     if success:
       try:
         _ = json.dumps(content)
@@ -670,7 +689,7 @@ class Backend(CLI_Mixin):
       projDoc = self.db.getDoc(projI['id'])
       for root, dirs, files in os.walk(self.basePath/projDoc['-branch'][0]['path']):
         for fileName in files:
-          if fileName.startswith('.') or fileName.startswith('trash_'):
+          if fileName.startswith('.') or fileName.startswith('trash_') or '_PastaExport' in fileName:
             continue
           path = (Path(root).relative_to(self.basePath) /fileName).as_posix()
           if path not in pathsInDB_data:
