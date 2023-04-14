@@ -13,7 +13,7 @@ def use(filePath, recipe='', saveFileName=None):
     dict: containing image, metaVendor, metaUser, recipe
   """
   with open(filePath,'r', encoding='utf-8') as fIn:
-    return {'content':fIn.read(), 'recipe': recipe+'/markdown', 'metaVendor':{}, 'metaUser':{}}
+    return {'content':fIn.read(), 'recipe': 'procedure/markdown', 'metaVendor':{}, 'metaUser':{}}
 
   #other datatypes follow here
   #...

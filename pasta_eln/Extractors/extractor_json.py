@@ -18,8 +18,8 @@ def use(filePath, recipe='', saveFileName=None):
   metaVendor = ''
   with open(filePath,'r', encoding='utf-8') as jsonFile:
     metaVendor = json.load(jsonFile)
-  recipe = 'json'
   image = ''
+  recipe = '-'
 
   # return everything
   return {'image':image, 'recipe':recipe, 'metaVendor':metaVendor, 'metaUser':{}}

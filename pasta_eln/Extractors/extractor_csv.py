@@ -25,12 +25,11 @@ def use(filePath, recipe='', saveFileName=None):
       startRow+=1
   data = np.loadtxt(filePath, delimiter=',', skiprows=startRow)
 
-  if recipe.endswith('red'):              #: Draw with red curve
+  if recipe == 'measurement/table/red':           #: Draw with red curve
     plt.plot(data[:,0], data[:,1],'r')
-  else:                                   #: Default | blueish curve
+  elif True or recipe == 'measurement/table/blue': #: Default | blueish curve
     plt.plot(data[:,0], data[:,1])
   metaUser = {'max':data[:,1].max(), 'min':data[:,1].min()}
-  recipe = 'csv'
 
   #save to file
   if saveFileName is not None:
