@@ -110,6 +110,8 @@ class TestStringMethods(unittest.TestCase):
       shutil.copy(examplePath/'Zeiss.tif', semDirName)
       shutil.copy(examplePath/'RobinSteel0000LC.txt', indentDirName)
       shutil.copy(examplePath/'1500nmXX 5 7074 -4594.txt', indentDirName)
+      shutil.copy(examplePath/'test.odt', semDirName)
+      shutil.copy(examplePath/'story.odt', semDirName)
       self.be.scanProject(projID1)
 
       ### USE GLOBAL FILES

@@ -188,10 +188,19 @@ class Form(QDialog):
         print('  ', self.doc['-branch'])
       if hasattr(self, 'docTypeComboBox') and self.docTypeComboBox.currentData() != '':
         self.doc['-type'] = [self.docTypeComboBox.currentData()]
-        self.comm.backend.db.remove(self.doc['_id'])
-        del self.doc['_id']
-        del self.doc['_rev']
-        self.comm.backend.addData(self.docTypeComboBox.currentData(), self.doc, self.doc['-branch'][0]['stack'])
+        if '_ids' in self.doc: #group update
+          for docID in self.doc.pop('_ids'):
+            doc = self.comm.backend.db.getDoc(docID)
+            self.comm.backend.db.remove(doc['_id'])
+            del doc['_id']
+            del doc['_rev']
+            doc['-name'] = doc['-branch'][0]['path']
+            self.comm.backend.addData(self.docTypeComboBox.currentData(), doc, doc['-branch'][0]['stack'])
+        else:                  #single or sequential update
+          self.comm.backend.db.remove(self.doc['_id'])
+          del self.doc['_id']
+          del self.doc['_rev']
+          self.comm.backend.addData(self.docTypeComboBox.currentData(), self.doc, self.doc['-branch'][0]['stack'])
       else:
         if '_ids' in self.doc: #group update
           del self.doc['-name']
@@ -209,6 +218,7 @@ class Form(QDialog):
       # self.comm.changeTable.emit('/'.join(self.doc['-type']),'')
       # if self.doc['-type'][0]=='x0':
       #   self.comm.changeSidebar.emit()
+      self.comm.changeTable.emit('','')
       self.accept()  #close
     else:
       print('dialogForm: did not get a fitting btn ',btn.text())

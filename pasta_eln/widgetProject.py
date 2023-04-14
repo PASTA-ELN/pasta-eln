@@ -144,8 +144,8 @@ class Project(QWidget):
         pathOldSib, pathNewSib = db.updateBranch(docID=line['id'], branch=line['value'][3], child=line['value'][0]+1)
         (Path(self.comm.backend.basePath)/pathOldSib).rename(Path(self.comm.backend.basePath)/pathNewSib)
     #change item in question
-    pathOld = Path(self.comm.backend.basePath)/branchOld['path']
-    if pathOld.exists():
+    if isinstance(branchOld['path'], str) and (Path(self.comm.backend.basePath)/branchOld['path']).exists():
+      pathOld = Path(self.comm.backend.basePath)/branchOld['path']
       pathOld.rename(Path(self.comm.backend.basePath)/pathNew)
     db.updateBranch(docID=docID, branch=branchIdx, stack=stackNew, path=pathNew, child=childNew)
     item.setText('/'.join(stackNew+[docID]))     #update item.text() to new stack

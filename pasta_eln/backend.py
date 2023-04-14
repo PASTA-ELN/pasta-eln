@@ -135,7 +135,7 @@ class Backend(CLI_Mixin):
         doc (dict): to be stored
         hierStack (list): hierStack from external functions
         localCopy (bool): copy a remote file to local version
-        kwargs (dict): additional parameter, i.e. callback for curation
+        kwargs (dict): additional parameters
             forceNewImage (bool): create new image in any case
 
     Returns:
@@ -319,19 +319,6 @@ class Backend(CLI_Mixin):
     rerunScanTree = False
     #prepare lists and start iterating
     inDB_all = self.db.getView('viewHierarchy/viewPaths')
-    #update content between DB and harddisk
-    for line in inDB_all:
-      if line['value'][1][0][0]=='x':
-        continue
-      doc = self.db.getDoc(line['id'])
-      if line['key'].startswith('http'):
-        path = Path(line['key'])
-      else:
-        path = self.basePath/line['key']
-      self.useExtractors(path, '', doc)
-      del doc['-branch']  #don't update / change it here
-      self.db.updateDoc(doc, line['id'])
-
     pathsInDB_x    = [i['key'] for i in inDB_all if i['value'][1][0][0]=='x']  #all structure elements: task, subtasts
     pathsInDB_data = [i['key'] for i in inDB_all if i['value'][1][0][0]!='x']
     for root, dirs, files in os.walk(self.cwd, topdown=True):
@@ -419,15 +406,19 @@ class Backend(CLI_Mixin):
     pyPath = self.extractorPath/pyFile
     if len(doc['-type'])==1:
       doc['-type'] += [extension]
-    try:
-      if not pyPath.exists():
-        raise ValueError('Extractor does not exist')
+    success = False
+    if pyPath.exists():
+      success = True
       # import module and use to get data
       os.environ['QT_API'] = 'pyside2'
       import matplotlib.pyplot as plt  #IMPORTANT: NO PYPLOT OUTSIDE THIS QT_API BLOCK
       plt.clf()
-      module  = importlib.import_module(pyFile[:-3])
-      content = module.use(absFilePath, '/'.join(doc['-type']) )
+      try:
+        module  = importlib.import_module(pyFile[:-3])
+        content = module.use(absFilePath, '/'.join(doc['-type']) )
+      except:
+        logging.error('ERROR with extractor '+pyFile+'\n'+traceback.format_exc())
+        success = False
       os.environ['QT_API'] = 'pyside6'
       #combine into document
       doc.update(content)
@@ -449,9 +440,8 @@ class Backend(CLI_Mixin):
         #TODO_P3 extractor: creates links to sample/instrument
         if len(doc['links'])==0:
           del doc['links']
-    except:
+    if not success:
       print('  **Error with extractor',pyFile)
-      logging.error('ERROR with extractor '+pyFile+'\n'+traceback.format_exc())
       doc['-type'] = ['-']
       doc['metaUser'] = {'filename':absFilePath.name, 'extension':absFilePath.suffix,
         'filesize':absFilePath.stat().st_size,

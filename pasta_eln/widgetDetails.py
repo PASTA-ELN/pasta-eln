@@ -149,8 +149,9 @@ class Details(QScrollArea):
     self.doc   = self.comm.backend.db.getDoc(self.docID)
     if '-name' not in self.doc:  #keep empty details and wait for user to click
       return
-    Label(self.doc['-name'],'h1', self.headerL)
-    TextButton('Edit this one',self.callEdit, self.headerL)
+    label = self.doc['-name'] if len(self.doc['-name'])<80 else self.doc['-name'][:77]+'...'
+    Label(label,'h1', self.headerL)
+    # TextButton('Edit',self.callEdit, self.headerL)
     for key in self.doc:
       if key=='image':
         width = self.comm.backend.configuration['GUI']['imageWidthDetails'] \

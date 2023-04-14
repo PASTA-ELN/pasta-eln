@@ -96,7 +96,7 @@ class ConfigurationSetup(QWidget):
         self.mainText = self.mainText.replace('- Configuration of preferences','- Configuration of preferences is acceptable' )
         self.text1.setMarkdown(self.mainText)
       else:
-        button = QMessageBox.question(self, "PASTA-ELN configuration", "Do you want to create/repain the configuration.")
+        button = QMessageBox.question(self, "PASTA-ELN configuration", "Do you want to create/repair the configuration.")
         if button == QMessageBox.Yes:
           configuration('repair')
         else:

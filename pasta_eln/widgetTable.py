@@ -201,6 +201,8 @@ class Table(QWidget):
     if docID!='x0': #only show items for non-folders
       self.comm.changeDetails.emit(docID)
     return
+
+
   def cell2Clicked(self, item):
     """
     What happens when user double clicks cell in table of projects
@@ -208,10 +210,15 @@ class Table(QWidget):
     Args:
       item (QStandardItem): cell clicked
     """
+    row = item.row()
+    docID = self.models[-1].item(row,0).accessibleText()
     if self.docType=='x0':
-      row = item.row()
-      docID = self.models[-1].item(row,0).accessibleText()
       self.comm.changeProject.emit(docID, '')
+    else:
+      doc = self.comm.backend.db.getDoc(docID)
+      self.comm.formDoc.emit(doc)
+      self.comm.changeTable.emit('','')
+      self.comm.changeDetails.emit('redraw')
     return
 
 
@@ -311,7 +318,18 @@ class Table(QWidget):
       self.showAll = not self.showAll
       self.changeTable('','')  # redraw table
     elif menuName == 'rerunExtractors':
-      showMessage(self, 'Future feature','In the future one can rerun extractors')
+      for row in range(self.models[-1].rowCount()):
+        if self.models[-1].item(row,0).checkState() == Qt.CheckState.Checked:
+          doc = self.comm.backend.db.getDoc( self.data[row]['id'] )
+          if doc['-branch'][0]['path'].startswith('http'):
+            path = Path(doc['-branch'][0]['path'])
+          else:
+            path = self.comm.backend.basePath/doc['-branch'][0]['path']
+          self.useExtractors(path, '', doc)
+          del doc['-branch']  #don't update
+          self.db.updateDoc(doc, self.data[row]['id'])
+      self.changeTable('','')  # redraw table
+      self.comm.changeDetails.emit('redraw') # redraw details
     else:
       print("**ERROR widgetTable menu unknown:",menuName)
     return

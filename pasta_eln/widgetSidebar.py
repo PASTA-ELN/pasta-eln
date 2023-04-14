@@ -13,8 +13,8 @@ class Sidebar(QWidget):
     self.comm = comm
     comm.changeSidebar.connect(self.redraw)
     if hasattr(self.comm.backend, 'configuration'):
-      width = self.comm.backend.configuration['GUI']['sidebarWidth']
-      self.setFixedWidth(width)#64
+      self.sideBarWidth = self.comm.backend.configuration['GUI']['sidebarWidth']
+      self.setFixedWidth(self.sideBarWidth)
     if not hasattr(comm.backend, 'db'):  #if no backend
       configWindow = Configuration(comm.backend, 'setup')
       configWindow.exec()
@@ -55,7 +55,9 @@ class Sidebar(QWidget):
         # projectW.setMinimumHeight(300) #convenience: allow scroll in sidebar
         projectL = QVBoxLayout(projectW)
         projectL.setContentsMargins(3,3,3,3)
-        btnProj = TextButton(projName, self.btnProject, projectL, projID+'/')
+        maxLabelCharacters = int((self.sideBarWidth-50)/7.1)
+        label = projName if len(projName)<maxLabelCharacters else projName[:maxLabelCharacters-3]+'...'
+        btnProj = TextButton(label, self.btnProject, projectL, projID+'/')
         btnProj.setStyleSheet("border-width:0")
         projectW.setStyleSheet("background-color:"+ getColor(self.comm.backend, 'secondaryDark'))
         self.widgetsProject[projID] = [btnProj, projectW]
@@ -94,7 +96,7 @@ class Sidebar(QWidget):
 
         # show folders as hierarchy
         treeW = QTreeWidget()
-        #treeW.hide()  #convenience: allow scroll in sidebar
+        treeW.hide()  #convenience: allow scroll in sidebar
         treeW.setHeaderHidden(True)
         treeW.setColumnCount(1)
         treeW.itemClicked.connect(self.btnTree)
