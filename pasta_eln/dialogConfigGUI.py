@@ -28,7 +28,7 @@ class ConfigurationGUI(QWidget):
         'light_pink','light_purple','light_red','light_teal','light_yellow','none'])
       self.wP = self.addRowList('imageWidthProject','Image width in project view', ['300','400','500','600'])
       self.wD = self.addRowList('imageWidthDetails','Image width in details view', ['500','600','700','800'])
-      self.wS = self.addRowList('sidebarWidth','Sidebar width', ['200','300','400'])
+      self.wS = self.addRowList('sidebarWidth','Sidebar width', ['220','280','340'])
       self.log = self.addRowList('loggingLevel','Logging level (more->less)', ['DEBUG','INFO','WARNING','ERROR'])
       self.tabAppearanceL.addRow('Save changes', TextButton('Save changes', self.saveData, None))
 
