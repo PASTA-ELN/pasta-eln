@@ -3,6 +3,7 @@ todoString = """
 
 <h3>Very important show stopper</h3>
 <ul>
+<li> allow for 'recipe':recipe in return
 </ul>
 
 <h3>To be verified/identified</h3>
