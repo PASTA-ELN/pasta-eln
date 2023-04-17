@@ -320,7 +320,7 @@ class Database:
     return newDoc
 
 
-  def updateBranch(self, docID, branch, child, stack=None, path=None):
+  def updateBranch(self, docID, branch, child, stack=None, path=''):
     """
     Update document by updating the branch
 
@@ -329,7 +329,7 @@ class Database:
       branch (int):  index of branch to change
       child (int):  new number of child
       stack (list):  new list of ids
-      path (str): new path
+      path (str): new path; None is acceptable
 
     Returns:
       str, str: old path, new path
@@ -337,7 +337,7 @@ class Database:
     doc = self.db[docID]
     doc['-client'] = 'updateBrach'
     oldPath = doc['-branch'][branch]['path']
-    if path is None:
+    if path=='':
       name = f'{child:03d}'+'_'+'_'.join(oldPath.split('/')[-1].split('_')[1:])
       path = '/'.join(oldPath.split('/')[:-1]+[name])
     doc['-branch'][branch]['path']=path

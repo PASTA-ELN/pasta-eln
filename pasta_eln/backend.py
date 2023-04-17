@@ -115,14 +115,15 @@ class Backend(CLI_Mixin):
     # change content
     self.addData('-edit-', doc)
     # change folder-name in database of all children
-    items = self.db.getView('viewHierarchy/viewPaths', startKey=self.cwd.relative_to(self.basePath).as_posix())
-    for item in items:
-      oldPathparts = item['key'].split('/')
-      newPathParts = doc['-branch']['path'].split('/')
-      newPath = '/'.join(newPathParts+oldPathparts[len(newPathParts):]  )
-      # print(item['id']+'  old='+item['key']+'  branch='+str(item['value'][-1])+\
-      #      '  child='+str(item['value'][-3])+'  new='+newPath)
-      self.db.updateBranch(item['id'], item['value'][-1], item['value'][-3], path=newPath)
+    if doc['-type'][0][0]=='x':
+      items = self.db.getView('viewHierarchy/viewPaths', startKey=self.cwd.relative_to(self.basePath).as_posix())
+      for item in items:
+        oldPathparts = item['key'].split('/')
+        newPathParts = doc['-branch']['path'].split('/')
+        newPath = '/'.join(newPathParts+oldPathparts[len(newPathParts):]  )
+        # print(item['id']+'  old='+item['key']+'  branch='+str(item['value'][-1])+\
+        #      '  child='+str(item['value'][-3])+'  new='+newPath)
+        self.db.updateBranch(item['id'], item['value'][-1], item['value'][-3], path=newPath)
     return
 
 
@@ -167,7 +168,7 @@ class Backend(CLI_Mixin):
       doc['-type'] = docType.split('/')
       if len(hierStack) == 0:
         hierStack = self.hierStack
-    logging.info('Add/edit data in cwd:'+self.cwd.as_posix()+' with stack:'+str(hierStack)+' and name'\
+    logging.info('Add/edit data in cwd:'+str(self.cwd)+' with stack:'+str(hierStack)+' and name'\
                  +doc['-name']+' and type:'+str(doc['-type']))
 
     # collect structure-doc and prepare

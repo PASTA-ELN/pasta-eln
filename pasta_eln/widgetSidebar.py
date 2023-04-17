@@ -71,6 +71,7 @@ class Sidebar(QWidget):
         btnScan = IconButton('mdi.clipboard-search-outline', self.btnScan, None, projID, 'Scan', self.comm.backend, text='Scan')
         actionL.addWidget(btnScan, 0,0)
         btnCurate = IconButton('mdi.filter-plus-outline', self.btnCurate, None, projID, 'Special', self.comm.backend, text='Special')
+        btnCurate.hide()
         actionL.addWidget(btnCurate, 0,1)
         projectL.addWidget(actionW)
         self.widgetsAction[projID] = actionW
@@ -189,9 +190,9 @@ class Sidebar(QWidget):
 
   def btnCurate(self):
     """
-    What happens if user clicks button "Curate"
+    What happens if user clicks button "Special"
+    -> pull data from server and include
     """
-    print("SB is unsure if we still need it? Perhaps to focus the user")
     return
   def btnTree(self, item):
     """

@@ -11,10 +11,10 @@ class ProjectLeafRenderer(QStyledItemDelegate):
   """ renders each leaf of project tree using QPaint """
   def __init__(self):
     super().__init__()
-    self.lineSep = 20 #TODO_P5 addToConfig
-    self.debugMode = True
     self.comm = None
     self.width = -1
+    self.debugMode = logging.DEBUG
+    self.lineSep = 20
 
 
   def setCommunication(self, comm):
@@ -26,6 +26,8 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     """
     self.comm = comm
     self.width = self.comm.backend.configuration['GUI']['imageWidthProject']
+    self.debugMode = logging.root.level<logging.INFO
+    self.lineSep = 20 #TODO_P5 addToConfig
     return
 
   #TODO_P3 projectTree: show database details as copy-paste labels in dialogForm?

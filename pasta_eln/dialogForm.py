@@ -20,7 +20,8 @@ class Form(QDialog):
     """
     super().__init__()
     self.comm = comm
-    self.doc = dict(doc)
+    self.db   = self.comm.backend.db
+    self.doc  = dict(doc)
     if '_attachments' in self.doc:
       del self.doc['_attachments']
     flagNewDoc = True
@@ -48,8 +49,8 @@ class Form(QDialog):
       setattr(self, 'key_-name', QLineEdit(self.doc['-name']))
       getattr(self, 'key_-name').setValidator(QRegularExpressionValidator("[\\w\\ .]+"))
       self.formL.addRow('Name', getattr(self, 'key_-name'))
-      if self.doc['-type'][0] in self.comm.backend.db.ontology:
-        ontologyNode = self.comm.backend.db.ontology[self.doc['-type'][0]]['prop']
+      if self.doc['-type'][0] in self.db.ontology:
+        ontologyNode = self.db.ontology[self.doc['-type'][0]]['prop']
       else:
         ontologyNode = defaultOntologyNode
       for item in ontologyNode:
@@ -116,7 +117,7 @@ class Form(QDialog):
           else:                                                 #docType
             listDocType = ontologyItem[0]['list']
             getattr(self, 'key_'+key).addItem('- no link -', userData='')
-            for line in self.comm.backend.db.getView('viewDocType/'+listDocType):
+            for line in self.db.getView('viewDocType/'+listDocType):
               getattr(self, 'key_'+key).addItem(line['value'][0], userData=line['id'])
               if line['id'] == value:
                 getattr(self, 'key_'+key).setCurrentText(line['value'][0])
@@ -135,12 +136,12 @@ class Form(QDialog):
     if allowProjectAndDocTypeChange: #if not-new and non-folder
       self.projectComboBox = QComboBox()
       self.projectComboBox.addItem('- no change -', userData='')
-      for line in self.comm.backend.db.getView('viewDocType/x0'):
+      for line in self.db.getView('viewDocType/x0'):
         self.projectComboBox.addItem(line['value'][0], userData=line['id'])
       self.formL.addRow(QLabel('Project'), self.projectComboBox)
       self.docTypeComboBox = QComboBox()
       self.docTypeComboBox.addItem('- no change -', userData='')
-      for key, value in self.comm.backend.db.dataLabels.items():
+      for key, value in self.db.dataLabels.items():
         if key[0]!='x':
           self.docTypeComboBox.addItem(value, userData=key)
       self.formL.addRow(QLabel('Data type'), self.docTypeComboBox)
@@ -176,28 +177,42 @@ class Form(QDialog):
             self.doc[key] = getattr(self, 'key_'+key).text().strip()
         else:
           print("**ERROR dialogForm unknown value type",key, value)
-      # save data to database according to special cases
+      # ---- if project changed: only branch save; remaining data still needs saving
       if hasattr(self, 'projectComboBox') and self.projectComboBox.currentData() != '':
-        if self.doc['-branch'][0]['stack']!=self.projectComboBox.currentData(): #only if project changed
-          parentPath = self.comm.backend.db.getDoc(self.projectComboBox.currentData())['-branch'][0]['path']
-          oldPath    = self.comm.backend.basePath/self.doc['-branch'][0]['path']
-          oldPath.rename(self.comm.backend.basePath/parentPath/oldPath.name)
-        print('se',self.doc['-branch'], parentPath, self.projectComboBox.currentData())
-        self.doc['-branch'] = [{'stack':[self.projectComboBox.currentData()], 'child':9999, \
-                               'path':parentPath+'/'+oldPath.name}]
-        print('  ', self.doc['-branch'])
+        parentPath = self.db.getDoc(self.projectComboBox.currentData())['-branch'][0]['path']
+        if '_ids' in self.doc:  # group update
+          for docID in self.doc['_ids']:
+            doc = self.db.getDoc(docID)
+            if doc['-branch'][0]['stack']!=self.projectComboBox.currentData(): #only if project changed
+              if doc['-branch'][0]['path'] is None:
+                newPath    = None
+              else:
+                oldPath    = self.comm.backend.basePath/doc['-branch'][0]['path']
+                newPath    = parentPath+'/'+oldPath.name
+                oldPath.rename(self.comm.backend.basePath/newPath)
+              self.db.updateBranch( doc['_id'], 0, 9999, [self.projectComboBox.currentData()], newPath)
+        else:                   # sequential or single update
+          if self.doc['-branch'][0]['stack']!=self.projectComboBox.currentData(): #only if project changed
+            if self.doc['-branch'][0]['path'] is None:
+              newPath    = None
+            else:
+              oldPath    = self.comm.backend.basePath/self.doc['-branch'][0]['path']
+              newPath    = parentPath+'/'+oldPath.name
+              oldPath.rename(self.comm.backend.basePath/newPath)
+            self.db.updateBranch( self.doc['_id'], 0, 9999, [self.projectComboBox.currentData()], newPath)
+      # ---- if docType changed: save; no further save to db required ----
       if hasattr(self, 'docTypeComboBox') and self.docTypeComboBox.currentData() != '':
         self.doc['-type'] = [self.docTypeComboBox.currentData()]
         if '_ids' in self.doc: #group update
           for docID in self.doc.pop('_ids'):
-            doc = self.comm.backend.db.getDoc(docID)
-            self.comm.backend.db.remove(doc['_id'])
+            doc = self.db.getDoc(docID)
+            self.db.remove(doc['_id'])
             del doc['_id']
             del doc['_rev']
             doc['-name'] = doc['-branch'][0]['path']
             self.comm.backend.addData(self.docTypeComboBox.currentData(), doc, doc['-branch'][0]['stack'])
         else:                  #single or sequential update
-          self.comm.backend.db.remove(self.doc['_id'])
+          self.db.remove(self.doc['_id'])
           del self.doc['_id']
           del self.doc['_rev']
           self.comm.backend.addData(self.docTypeComboBox.currentData(), self.doc, self.doc['-branch'][0]['stack'])
@@ -207,25 +222,20 @@ class Form(QDialog):
           ids = self.doc.pop('_ids')
           self.doc = {i:j for i,j in self.doc.items() if j!=''}
           for docID in ids:
-            doc = self.comm.backend.db.getDoc(docID)
+            doc = self.db.getDoc(docID)
             doc.update( self.doc )
             self.comm.backend.editData(doc)
         elif '_id' in self.doc:                                   #default update on item
           self.comm.backend.editData(self.doc)
+          #TODO_P1 why loose link?
         else:                                                     #create new dataset
           self.comm.backend.addData(self.doc['-type'][0], self.doc)
-      #NO updates / redraw here since one does not know from where form came
-      # self.comm.changeTable.emit('/'.join(self.doc['-type']),'')
-      # if self.doc['-type'][0]=='x0':
-      #   self.comm.changeSidebar.emit()
-      self.comm.changeTable.emit('','')
+      #!!! NO updates / redraw here since one does not know from where form came
+      # e.g. sequential edit cannot have redraw here
       self.accept()  #close
     else:
       print('dialogForm: did not get a fitting btn ',btn.text())
     return
-
-  #TODO_P2 HTTP error after long time (10min) not using it: one not authorized to access database:
-  #   cannot reproduce investigate it
 
 
   def btnAdvanced(self, status):

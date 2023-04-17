@@ -334,6 +334,7 @@ class Table(QWidget):
       print("**ERROR widgetTable menu unknown:",menuName)
     return
 
+  #TODO_P1 details hide
   #TODO_P3 invert filter: not 'Sur' in name => '^((?!Sur).)*$' in name
   def filterChoice(self, item):
     """
