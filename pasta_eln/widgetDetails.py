@@ -178,6 +178,7 @@ class Details(QScrollArea):
     if docID!='redraw':
       self.docID = docID
     self.doc   = self.comm.backend.db.getDoc(self.docID)
+    ontologyNode = self.comm.backend.db.ontology[self.doc['-type'][0]]['prop']
     if '-name' not in self.doc:  #keep empty details and wait for user to click
       return
     label = self.doc['-name'] if len(self.doc['-name'])<80 else self.doc['-name'][:77]+'...'
@@ -217,10 +218,18 @@ class Details(QScrollArea):
         self.metaUserL.addWidget(label)
         self.metaUserW.show()
       else:
-        self.metaDetailsL.addWidget( QLabel(key.capitalize()+': '+str(self.doc[key])) )
+        value = str(self.doc[key])
+        ontologyItem = [i for i in ontologyNode if i['name']==key]
+        if len(ontologyItem)==1 and 'list' in ontologyItem[0]:
+          if not isinstance(ontologyItem[0]['list'], list):                #choice among docType
+            table  = self.comm.backend.db.getView('viewDocType/'+ontologyItem[0]['list'])
+            choices= [i for i in table if i['id']==self.doc[key]]
+            if len(choices)==1:
+              value = '\u260D '+choices[0]['value'][0]
+        self.metaDetailsL.addWidget( QLabel(key.capitalize()+': '+value) )
         self.metaDetailsW.show()
     return
-
+    #TODO_P3 convenience: make link clickable
 
 
   def showArea(self):
