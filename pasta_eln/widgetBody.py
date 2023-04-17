@@ -1,4 +1,5 @@
 """ Central widget: everything that is not sidebar: switches between project-view and table-details """
+import logging
 from PySide6.QtWidgets import QWidget, QVBoxLayout   # pylint: disable=no-name-in-module
 from PySide6.QtCore import Slot   # pylint: disable=no-name-in-module
 

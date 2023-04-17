@@ -1,4 +1,5 @@
 """ Sidebar widget that includes the navigation items """
+import logging
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QGridLayout, QTreeWidget, QTreeWidgetItem, QFrame # pylint: disable=no-name-in-module
 from PySide6.QtCore import QSize, Slot                                      # pylint: disable=no-name-in-module
 from anytree import PreOrderIter

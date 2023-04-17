@@ -1,5 +1,5 @@
 """ New/Edit dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""
-import json
+import json, logging
 from pathlib import Path
 from PySide6.QtWidgets import QDialog, QWidget, QFormLayout, QVBoxLayout, QHBoxLayout, QLabel, QTextEdit, \
                               QPlainTextEdit, QComboBox, QLineEdit, QDialogButtonBox, QSplitter, QSizePolicy # pylint: disable=no-name-in-module
@@ -64,11 +64,11 @@ class Form(QDialog):
       if key[0] in ['_','-', '#'] or key in ['image','metaVendor','metaUser','shasum']:
         continue
       # print("Key:value in form | "+key+':'+str(value))
-      if key in ['comment']:
+      if key in ['comment','content']:
         labelW = QWidget()
         labelL = QVBoxLayout(labelW)
         labelL.addWidget(QLabel(key.capitalize()))
-        TextButton('Show', self.btnAdvanced, labelL, key, checkable=True)
+        TextButton('Focus', self.btnFocus, labelL, key, checkable=True)
         rightSideW = QWidget()
         rightSideL = QVBoxLayout(rightSideW)
         setattr(self, 'buttonBarW_'+key, QWidget())
@@ -93,10 +93,6 @@ class Form(QDialog):
         splitter.addWidget(getattr(self, 'textShow_'+key))
         rightSideL.addWidget(splitter)
         self.formL.addRow(labelW, rightSideW)
-      elif key == 'content':
-        contentW = QPlainTextEdit(value)
-        contentW.setReadOnly(True) #TODO_P1 procedure: can be changed in GUI->save harddrive
-        self.formL.addRow(QLabel('Content'), contentW)
       elif key == '-tags':  #remove - to make work
         # TODO_P3 tags: get selected via a editable QCombobox and get shown as qlabels, that can be deleted
         # RR: can you already implement tags as list of qlabels with a '-' button on the right to delete
@@ -150,6 +146,7 @@ class Form(QDialog):
     buttonBox.clicked.connect(self.save)
     mainL.addWidget(buttonBox)
 
+
   # TODO_P4 ontologyCheck: all names must be different
   # TODO_P4 form: add button to add key-values
   def save(self, btn):
@@ -168,6 +165,12 @@ class Form(QDialog):
           continue
         if key in ['comment','content']:
           self.doc[key] = getattr(self, 'textEdit_'+key).toPlainText().strip()
+          if key == 'content':
+            for branch in self.doc['-branch']:
+              if branch['path'] is not None:
+                with open(self.comm.backend.basePath/branch['path'], 'w', encoding='utf-8') as fOut:
+                  fOut.write(self.doc['content'])
+                logging.debug('Wrote new content to '+branch['path'])
         elif isinstance(value, list):
           self.doc[key] = getattr(self, 'key_'+key).text().strip().split(' ')
         elif isinstance(value, str):
@@ -237,16 +240,16 @@ class Form(QDialog):
       print('dialogForm: did not get a fitting btn ',btn.text())
     return
 
-  #TODO_P1 Content of procedures change immediately on save
   #TODO_P1 form dialog: show links to project that are already selected
   #TODO_P3 create new entry: save + save&close
 
 
-  def btnAdvanced(self, status):
+  def btnFocus(self, status):
     """
     Action if advanced button is clicked
     """
-    key = self.sender().accessibleName()
+    key = self.sender().accessibleName()  #comment or content
+    unknownWidget = []
     if status:
       getattr(self, 'textShow_'+key).hide()
       getattr(self, 'buttonBarW_'+key).hide()
@@ -254,6 +257,14 @@ class Form(QDialog):
         widget = self.formL.itemAt(i).widget()
         if isinstance(widget, (QLabel, QComboBox, QLineEdit)):
           widget.show()
+        else:
+          unknownWidget.append(i)
+      if key=='content' and len(unknownWidget)==4:  #show / hide label and right-side of non-content and non-comment
+        self.formL.itemAt(unknownWidget[0]).widget().show()
+        self.formL.itemAt(unknownWidget[1]).widget().show()
+      if key=='comment' and len(unknownWidget)==4:
+        self.formL.itemAt(unknownWidget[2]).widget().show()
+        self.formL.itemAt(unknownWidget[3]).widget().show()
     else:
       getattr(self, 'textShow_'+key).show()
       getattr(self, 'buttonBarW_'+key).show()
@@ -261,6 +272,14 @@ class Form(QDialog):
         widget = self.formL.itemAt(i).widget()
         if isinstance(widget, (QLabel, QComboBox, QLineEdit)):
           widget.hide()
+        else:
+          unknownWidget.append(i)
+      if key=='content' and len(unknownWidget)==4:
+        self.formL.itemAt(unknownWidget[0]).widget().hide()
+        self.formL.itemAt(unknownWidget[1]).widget().hide()
+      if key=='comment' and len(unknownWidget)==4:
+        self.formL.itemAt(unknownWidget[2]).widget().hide()
+        self.formL.itemAt(unknownWidget[3]).widget().hide()
     return
 
 

@@ -1,5 +1,5 @@
 """ widget that shows the table and the details of the items """
-
+import logging
 from random import randint
 from PySide6.QtCore import Slot                                                     # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QWidget, QSplitter, QVBoxLayout, QLabel, QScrollArea  # pylint: disable=no-name-in-module

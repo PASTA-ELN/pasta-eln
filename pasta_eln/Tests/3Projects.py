@@ -90,8 +90,8 @@ class TestStringMethods(unittest.TestCase):
       print('\n*** TEST PROCEDURES ***')
       sopDir = self.dirName/'StandardOperatingProcedures'
       os.makedirs(sopDir)
-      with open(sopDir/'Nanoindentation.org','w', encoding='utf-8') as fOut:
-        fOut.write('* Put sample in nanoindenter\n* Do indentation\nDo not forget to\n- calibrate tip\n- *calibrate stiffness*\n')
+      with open(sopDir/'Nanoindentation.md','w', encoding='utf-8') as fOut:
+        fOut.write('# Put sample in nanoindenter\n# Do indentation\nDo not forget to\n- calibrate tip\n- *calibrate stiffness*\n')
       with open(sopDir/'SEM.md','w', encoding='utf-8') as fOut:
         fOut.write('# Put sample in SEM\n# Do scanning\nDo not forget to\n- contact the pole-piece\n- **USE GLOVES**\n')
       self.be.addData('procedure', {'-name': 'StandardOperatingProcedures/SEM.md', 'comment': '#v1'})
