@@ -46,6 +46,13 @@ class DocTypes(QWidget):
 
   @Slot(str)
   def changeDetails(self, docID):
+    """
+    What happens when user clicks to change details
+    -> show show details
+
+    Args:
+      docID (str): document ID
+    """
     logging.debug('docType:changeDetails |'+docID+'|')
     if docID!='':
       self.details.show()
