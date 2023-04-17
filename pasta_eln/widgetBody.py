@@ -31,8 +31,10 @@ class Body(QWidget):
       docType (str): document type
       projID (str): project ID for filtering
     """
+    logging.debug('body:changeTable |'+docType+'|'+projID+'|')
     self.project.hide()
     self.docTypes.show()
+    return
 
 
   @Slot(str)
@@ -43,5 +45,7 @@ class Body(QWidget):
     Args:
       docID (str): document id
     """
+    logging.debug('body:changeProject |'+docID+'|')
     self.docTypes.hide()
     self.project.show()
+    return

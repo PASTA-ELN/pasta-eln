@@ -89,6 +89,7 @@ class Table(QWidget):
       docType (str): document type; leave empty for redraw
       projID (str): id of project
     """
+    logging.debug('table:changeTable |'+docType+'|'+projID+'|')
     self.models = []
     for i in reversed(range(self.filterL.count())):
       self.filterL.itemAt(i).widget().setParent(None)
@@ -183,7 +184,6 @@ class Table(QWidget):
     self.models.append(model)
     self.table.setModel(self.models[-1])
     self.table.show()
-    self.comm.changeDetails.emit('empty')
     return
 
 
@@ -334,7 +334,6 @@ class Table(QWidget):
       print("**ERROR widgetTable menu unknown:",menuName)
     return
 
-  #TODO_P1 details hide
   #TODO_P3 invert filter: not 'Sur' in name => '^((?!Sur).)*$' in name
   def filterChoice(self, item):
     """

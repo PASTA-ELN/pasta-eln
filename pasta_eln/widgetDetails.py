@@ -124,6 +124,7 @@ class Details(QScrollArea):
     """
     User selects to test extractor on this dataset
     """
+    logging.debug('details:testExtractor')
     if len(self.doc)>1:
       path = Path(self.doc['-branch'][0]['path'])
       if not path.as_posix().startswith('http'):
@@ -139,10 +140,11 @@ class Details(QScrollArea):
     What happens when details should change
 
     Args:
-      docID (str): document-id; 'empty' string=draw nothing; 'redraw' implies redraw
+      docID (str): document-id; '' string=draw nothing; 'redraw' implies redraw
     """
+    logging.debug('details:changeDetails |'+docID+'|')
     # show previously hidden buttons
-    if docID=='empty':
+    if docID=='':
       self.btnDetails.show()
       self.btnVendor.show()
       self.btnUser.show()
@@ -170,7 +172,7 @@ class Details(QScrollArea):
     self.metaVendorW.hide()
     self.metaUserW.hide()
     self.metaDatabaseW.hide()
-    if docID=='empty':  #if given empty docID, return with empty content
+    if docID=='':  #if given '' docID, return
       return
     # Create new
     if docID!='redraw':

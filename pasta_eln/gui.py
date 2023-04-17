@@ -98,6 +98,7 @@ class MainWindow(QMainWindow):
     Args:
       doc (dict): document
     """
+    logging.debug('gui:formdoc ')
     formWindow = Form(self.comm, doc)
     formWindow.exec()
     return
@@ -165,11 +166,9 @@ class MainWindow(QMainWindow):
     restart()
     return
 
-# TODO_P2 copy of file: should it the be the same in database or should it be two separate entities??
-#         - what happens if you want to change one but don't want to change the other?
+# TODO_P5 copy of file: should it the be the same in database or should it be two separate entities??
+#         - what happens if you want to change metadata of one but don't want to change the other?
 #           - copy of raw data into one that will changed, to clean
-#         - link of copies:
-# TODO_P2 project view: copies/original sometimes are not displayed: can you give more details: I tried .tif and .odp
 
 ##############
 ## Main function

@@ -35,6 +35,7 @@ class Sidebar(QWidget):
     """
     Redraw sidebar: e.g. after change of project visibility in table
     """
+    logging.debug('sidebar:redraw |')
     # Delete old widgets from layout and create storage
     for i in reversed(range(self.mainL.count())):
       self.mainL.itemAt(i).widget().setParent(None)

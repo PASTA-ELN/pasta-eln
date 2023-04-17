@@ -225,7 +225,7 @@ def updateExtractorList(directory):
   with open(Path.home()/'.pastaELN.json','w', encoding='utf-8') as f:
     f.write(json.dumps(configuration, indent=2))
   return True
-  #TODO_P1 allow for 'recipe':recipe in return
+
 
 def restart():
   """

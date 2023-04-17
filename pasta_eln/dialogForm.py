@@ -95,7 +95,7 @@ class Form(QDialog):
         self.formL.addRow(labelW, rightSideW)
       elif key == 'content':
         contentW = QPlainTextEdit(value)
-        contentW.setReadOnly(True) #TODO_P3 procedure: can be changed in GUI->save harddrive
+        contentW.setReadOnly(True) #TODO_P1 procedure: can be changed in GUI->save harddrive
         self.formL.addRow(QLabel('Content'), contentW)
       elif key == '-tags':  #remove - to make work
         # TODO_P3 tags: get selected via a editable QCombobox and get shown as qlabels, that can be deleted
@@ -236,6 +236,10 @@ class Form(QDialog):
     else:
       print('dialogForm: did not get a fitting btn ',btn.text())
     return
+
+  #TODO_P1 Content of procedures change immediately on save
+  #TODO_P1 form dialog: show links to project that are already selected
+  #TODO_P3 create new entry: save + save&close
 
 
   def btnAdvanced(self, status):

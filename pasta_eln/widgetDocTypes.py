@@ -11,6 +11,7 @@ class DocTypes(QWidget):
   def __init__(self, comm):
     super().__init__()
     comm.changeTable.connect(self.changeTable)
+    comm.changeDetails.connect(self.changeDetails)
 
     # GUI elements
     table = Table(comm)
@@ -35,7 +36,17 @@ class DocTypes(QWidget):
       docType (str): document type
       projID (str): project ID for filtering
     """
-    if docType=='x0':
-      self.details.hide()
-    else:
+    logging.debug('docType:changeTable |'+docType+'|'+projID+'|')
+    self.details.hide()
+    # if docType=='x0':
+    # else:
+    #   self.details.show()
+    return
+
+
+  @Slot(str)
+  def changeDetails(self, docID):
+    logging.debug('docType:changeDetails |'+docID+'|')
+    if docID!='':
       self.details.show()
+    return
