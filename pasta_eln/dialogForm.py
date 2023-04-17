@@ -94,11 +94,12 @@ class Form(QDialog):
         rightSideL.addWidget(splitter)
         self.formL.addRow(labelW, rightSideW)
       elif key == '-tags':  #remove - to make work
+        #does not reach this part as there is an if-statement on the top
         # TODO_P3 tags: get selected via a editable QCombobox and get shown as qlabels, that can be deleted
         # RR: can you already implement tags as list of qlabels with a '-' button on the right to delete
         # the qcombox comes later once the database knows what tags are and how to generate the list
         print('')
-      elif isinstance(value, list):       #list of items
+      elif isinstance(value, list):       #list of items, qrCodes in sample
         if len(value)>0 and isinstance(value[0], str):
           setattr(self, 'key_'+key, QLineEdit(' '.join(value)))
         else:
@@ -106,16 +107,16 @@ class Form(QDialog):
         self.formL.addRow(QLabel(key.capitalize()), getattr(self, 'key_'+key))
       elif isinstance(value, str):        #string
         ontologyItem = [i for i in ontologyNode if i['name']==key]
-        if len(ontologyItem)==1 and 'list' in ontologyItem[0]:  #choice dropdown
+        if len(ontologyItem)==1 and 'list' in ontologyItem[0]:             #choice dropdown
           setattr(self, 'key_'+key, QComboBox())
-          if isinstance(ontologyItem[0]['list'], list):                    #defined choices
+          if isinstance(ontologyItem[0]['list'], list):                    #ontology-defined choices
             getattr(self, 'key_'+key).addItems(ontologyItem[0]['list'])
-          else:                                                 #docType
+          else:                                                            #choice among docType
             listDocType = ontologyItem[0]['list']
             getattr(self, 'key_'+key).addItem('- no link -', userData='')
             for line in self.db.getView('viewDocType/'+listDocType):
               getattr(self, 'key_'+key).addItem(line['value'][0], userData=line['id'])
-              if line['id'] == value:
+              if line['value'][0] == value:
                 getattr(self, 'key_'+key).setCurrentText(line['value'][0])
         else:                                         #text area
           setattr(self, 'key_'+key, QLineEdit(value))
@@ -130,6 +131,7 @@ class Form(QDialog):
         if docID[0]=='x':
           allowProjectAndDocTypeChange = False
     if allowProjectAndDocTypeChange: #if not-new and non-folder
+      self.formL.addRow(QLabel('Special properties:'), QLabel('') )
       self.projectComboBox = QComboBox()
       self.projectComboBox.addItem('- no change -', userData='')
       for line in self.db.getView('viewDocType/x0'):
@@ -143,11 +145,11 @@ class Form(QDialog):
       self.formL.addRow(QLabel('Data type'), self.docTypeComboBox)
     #final button box
     buttonBox = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
+    #TODO_P3 create new entry: save + save&close
     buttonBox.clicked.connect(self.save)
     mainL.addWidget(buttonBox)
 
-
-  # TODO_P4 ontologyCheck: all names must be different
+  # TODO_P4 add splitter to increase / decrease image
   # TODO_P4 form: add button to add key-values
   def save(self, btn):
     """
@@ -175,7 +177,9 @@ class Form(QDialog):
           self.doc[key] = getattr(self, 'key_'+key).text().strip().split(' ')
         elif isinstance(value, str):
           if isinstance(getattr(self, 'key_'+key), QComboBox):
-            self.doc[key] = getattr(self, 'key_'+key).currentText()
+            value         = getattr(self, 'key_'+key).currentText()
+            if value!='- no link -':
+              self.doc[key] = getattr(self, 'key_'+key).currentData()
           else:   #normal text field
             self.doc[key] = getattr(self, 'key_'+key).text().strip()
         else:
@@ -230,7 +234,6 @@ class Form(QDialog):
             self.comm.backend.editData(doc)
         elif '_id' in self.doc:                                   #default update on item
           self.comm.backend.editData(self.doc)
-          #TODO_P1 why loose link?
         else:                                                     #create new dataset
           self.comm.backend.addData(self.doc['-type'][0], self.doc)
       #!!! NO updates / redraw here since one does not know from where form came
@@ -240,8 +243,6 @@ class Form(QDialog):
       print('dialogForm: did not get a fitting btn ',btn.text())
     return
 
-  #TODO_P1 form dialog: show links to project that are already selected
-  #TODO_P3 create new entry: save + save&close
 
 
   def btnFocus(self, status):
