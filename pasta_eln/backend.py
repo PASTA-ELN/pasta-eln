@@ -217,7 +217,13 @@ class Backend(CLI_Mixin):
           doc['-name'] = Path(doc['-name']).name
         elif doc['-name']!='' and (self.cwd/doc['-name']).exists():               #file exists
           path = self.cwd/doc['-name']
-        else:                                                     #make up name
+        elif '-branch' in doc:
+          if len(doc['-branch'])==1:
+            if doc['-branch'][0]['path'] is not None and (self.basePath/doc['-branch'][0]['path']).exists():
+              path = self.basePath/doc['-branch'][0]['path']
+          else:
+            logging.warning('backend: add document with multiple branches'+str(doc['-branch']) )
+        else:                                                                     #make up name
           shasum  = None
         if shasum is not None: # and doc['-type'][0]=='measurement':         #samples, procedures not added to shasum database, getMeasurement not sensible
           if shasum == '':
@@ -713,8 +719,9 @@ class Backend(CLI_Mixin):
     if len(orphans)>0:
       output += f'{Bcolors.FAIL}**ERROR bch01: These files of database not on filesystem: '+',\t'.join(orphans)\
                +f'{Bcolors.ENDC}\n'
+    output += f'{Bcolors.UNDERLINE}**** File summary ****{Bcolors.ENDC}\n'
     if len(orphans)==0 and count==0:
-      output += "** File tree CLEAN **\n"
+      output += "Success\n"
     else:
-      output += "** File tree NOT clean **\n"
+      output += "Failure\n"
     return output

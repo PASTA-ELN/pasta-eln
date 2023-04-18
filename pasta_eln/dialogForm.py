@@ -169,7 +169,7 @@ class Form(QDialog):
           self.doc[key] = getattr(self, 'textEdit_'+key).toPlainText().strip()
           if key == 'content':
             for branch in self.doc['-branch']:
-              if branch['path'] is not None:
+              if branch['path'] is not None and branch['path'].endswith('.md'):  #TODO_P5 only write markdown files for now
                 with open(self.comm.backend.basePath/branch['path'], 'w', encoding='utf-8') as fOut:
                   fOut.write(self.doc['content'])
                 logging.debug('Wrote new content to '+branch['path'])

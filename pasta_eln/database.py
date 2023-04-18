@@ -654,7 +654,7 @@ class Database:
       outstring+= f'{Bcolors.WARNING}Yellow: WARNING should not happen (e.g. procedures without project){Bcolors.ENDC}\n'
       outstring+= f'{Bcolors.FAIL}Red: FAILURE and ERROR: NOT ALLOWED AT ANY TIME{Bcolors.ENDC}\n'
       outstring+= 'Normal text: not understood, did not appear initially\n'
-      outstring+= f'{Bcolors.UNDERLINE}**** List all DOCUMENTS ****{Bcolors.ENDC}\n'
+      outstring+= f'{Bcolors.UNDERLINE}**** List all database entries ****{Bcolors.ENDC}\n'
     else:
       outstring = ''
     repair = kwargs.get('repair', False)
@@ -844,7 +844,7 @@ class Database:
 
     ##TEST views
     if verbose:
-      outstring+= f'{Bcolors.UNDERLINE}**** List problematic VIEWS ****{Bcolors.ENDC}\n'
+      outstring+= f'{Bcolors.UNDERLINE}**** List problematic database tables ****{Bcolors.ENDC}\n'
     view = self.getView('viewIdentify/viewSHAsum')
     shasumKeys = []
     for item in view:

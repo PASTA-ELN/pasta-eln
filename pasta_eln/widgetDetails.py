@@ -6,6 +6,7 @@ from PySide6.QtCore import Qt, Slot, QByteArray   # pylint: disable=no-name-in-m
 from PySide6.QtSvgWidgets import QSvgWidget       # pylint: disable=no-name-in-module
 from PySide6.QtGui import QPixmap, QImage, QAction# pylint: disable=no-name-in-module
 from .style import TextButton, Image, Label, Action, showMessage
+from .fixedStrings import defaultOntologyNode
 
 class Details(QScrollArea):
   """ widget that shows the details of the items """
@@ -178,9 +179,13 @@ class Details(QScrollArea):
     if docID!='redraw':
       self.docID = docID
     self.doc   = self.comm.backend.db.getDoc(self.docID)
-    ontologyNode = self.comm.backend.db.ontology[self.doc['-type'][0]]['prop']
     if '-name' not in self.doc:  #keep empty details and wait for user to click
+      self.comm.changeTable.emit('','')
       return
+    if self.doc['-type'][0]=='-':
+      ontologyNode = defaultOntologyNode
+    else:
+      ontologyNode = self.comm.backend.db.ontology[self.doc['-type'][0]]['prop']
     label = self.doc['-name'] if len(self.doc['-name'])<80 else self.doc['-name'][:77]+'...'
     Label(label,'h1', self.headerL)
     # TextButton('Edit',self.callEdit, self.headerL)

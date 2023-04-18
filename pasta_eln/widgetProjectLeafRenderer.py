@@ -121,14 +121,14 @@ class ProjectLeafRenderer(QStyledItemDelegate):
             pixmap = QPixmap()
             pixmap.loadFromData(base64.b64decode(doc['image'][22:]))
             pixmap = pixmap.scaledToWidth(self.width)
-            height = pixmap.height()
+            height = max(height, pixmap.height())
           except:
             print("**Exception in Renderer.sizeHint") #TODO_P5 if successful in Aug2023: remove
         else:
-          height = int(self.width*3/4)
+          height = max(height, int(self.width*3/4))
       if 'content' in docKeys and not folded:
         text = QTextDocument()
         text.setMarkdown(self.comm.backend.db.getDoc(docID)['content'])
-        height = text.size().toTuple()[1]
+        height = max(height, text.size().toTuple()[1])
       return QSize(400, height)
     return QSize()

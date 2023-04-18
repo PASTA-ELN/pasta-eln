@@ -59,8 +59,8 @@ def text2html(text):
       text[i] = text[i].replace('Yellow: WARNING should','Magenta: WARNING should')
     text[i] = text[i].replace('****','').strip()
   text = '<div align="right">'+'\n'.join(text)
-  text = text.replace('<br><b> List all DOCUMENTS </b><br>',\
-                      '</div><div align="left">\n<br><b> List all DOCUMENTS </b><br>')
+  text = text.replace('<br><b> List all database entries </b><br>',\
+                      '</div><div align="left">\n<br><b> List all database entries </b><br>')
   text += '</div>'
   return text
 

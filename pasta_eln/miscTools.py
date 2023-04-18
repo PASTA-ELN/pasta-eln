@@ -1,9 +1,11 @@
 """ Misc functions that do not require instances """
 import os, sys, uuid, logging, traceback
-from re import sub
+from re import sub, match
 
 def camelCase(a_string):
-  """ Produce camelCase from normal string
+  """
+  Produce camelCase from normal string
+  - file names abcdefg.hij are only replaced spaces
 
   Args:
      a_string (str): string
@@ -11,8 +13,9 @@ def camelCase(a_string):
   Returns:
     str: camel case of that string: CamelCaseString
   """
-  a_string = sub(r"(_|-)+", " ", a_string).title().replace(" ", "").replace("*","")
-  return ''.join(a_string)
+  if match(r"^[\w-]+\.[\w]+$", a_string):
+    return a_string.replace(' ','_')
+  return sub(r"(_|-)+", ' ', a_string).title().replace(' ','').replace('*','')
 
 
 def createDirName(name,docType,thisChildNumber):
