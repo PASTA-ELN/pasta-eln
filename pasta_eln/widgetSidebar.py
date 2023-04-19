@@ -97,7 +97,7 @@ class Sidebar(QWidget):
             listL.addWidget(button, 0, idx)
         button = IconButton('fa.file-o', self.btnDocType, None, '-/'+projID, 'Unidentified', self.comm.backend)
         button.setStyleSheet("border-width:0")
-        listL.addWidget(button, 0, idx+1)
+        listL.addWidget(button, 0, len(self.comm.backend.db.dataLabels)+1)
         projectL.addWidget(listW)
         self.widgetsList[projID] = listW
 
