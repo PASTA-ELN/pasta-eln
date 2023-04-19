@@ -46,8 +46,10 @@ class Sidebar(QWidget):
     self.widgetsProject = {} #title bar and widget that contains all of project
 
     if hasattr(self.comm.backend, 'db'):
-      hierarchy = self.comm.backend.db.getView('viewDocType/x0') #TODO_P2 sidebar: sort by -date
-      for project in hierarchy:
+      hierarchy = self.comm.backend.db.getView('viewDocType/x0')
+      #TODO_P5 for now, sorted by last change of project itself: future create a view that does that automatically
+      lastChangeDate = [self.comm.backend.db.getDoc(project['id'])['-date'] for project in hierarchy]
+      for project in [x for _, x in sorted(zip(lastChangeDate, hierarchy))]:
         projID = project['id']
         projName = project['value'][0]
         if self.openProjectId == '':
@@ -81,7 +83,6 @@ class Sidebar(QWidget):
         btnCurate.setStyleSheet("border-width:0")
 
         # lists: view list of measurements, ... of this project
-        #TODO_P2 convenience: add button for unidentified
         listW = QWidget()
         listW.setContentsMargins(0,0,0,0)
         if self.openProjectId != projID:
@@ -92,9 +93,11 @@ class Sidebar(QWidget):
           if doctype[0]!='x':
             button = IconButton(iconTable[self.comm.backend.db.dataLabels[doctype]], self.btnDocType, None, \
                      doctype+'/'+projID, self.comm.backend.db.dataLabels[doctype],self.comm.backend)
-            listL.addWidget(button, 0, idx)
             button.setStyleSheet("border-width:0")
-
+            listL.addWidget(button, 0, idx)
+        button = IconButton('fa.file-o', self.btnDocType, None, '-/'+projID, 'Unidentified', self.comm.backend)
+        button.setStyleSheet("border-width:0")
+        listL.addWidget(button, 0, idx+1)
         projectL.addWidget(listW)
         self.widgetsList[projID] = listW
 
