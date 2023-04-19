@@ -1,6 +1,7 @@
 """ widget that shows the details of the items """
 from pathlib import Path
-import json, platform, subprocess, os, base64, logging, yaml
+import platform, subprocess, os, base64, logging
+import json, yaml
 from PySide6.QtWidgets import QScrollArea, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QMenu, QTextEdit  # pylint: disable=no-name-in-module
 from PySide6.QtCore import Qt, Slot, QByteArray   # pylint: disable=no-name-in-module
 from PySide6.QtSvgWidgets import QSvgWidget       # pylint: disable=no-name-in-module
