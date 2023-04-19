@@ -70,9 +70,10 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       painter.translate(-topLeft2nd)
     yOffset += self.lineSep/2
     hiddenText = '     \U0001F441' if len([b for b in doc['-branch'] if False in b['show']])>0 else ''
-    painter.drawStaticText(xOffset, yOffset, QStaticText(doc['-name']+hiddenText))
+    docTypeText= 'folder' if doc['-type'][0][0]=='x' else '/'.join(doc['-type'])
+    painter.drawStaticText(xOffset, yOffset, QStaticText(doc['-name']+hiddenText+'\t\t'+docTypeText))
     if self.debugMode:
-      painter.drawStaticText(xOffset+500, yOffset, QStaticText(index.data(Qt.DisplayRole))) #doc['_id']
+      painter.drawStaticText(xOffset+700, yOffset, QStaticText(index.data(Qt.DisplayRole))) #doc['_id']
     if '-tags' in doc and len(doc['-tags'])>0:
       yOffset += self.lineSep
       tags = ['_curated_' if i=='_curated' else '#'+i for i in doc['-tags']]

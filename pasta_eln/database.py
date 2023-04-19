@@ -192,8 +192,11 @@ class Database:
     try:
       res = self.db.create_document(doc)
     except:
-      print('**ERROR: database.py:saveDoc could not save, likely JSON issue')
-      print(doc)
+      logging.error('could not save, likely JSON issue')
+      if 'image' in doc:
+        del doc['image']
+      logging.error(str(doc))
+      logging.error(traceback.format_exc())
       res=None
     return res
 

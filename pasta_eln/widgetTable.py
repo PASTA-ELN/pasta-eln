@@ -49,7 +49,7 @@ class Table(QWidget):
     Action('Sequential edit', self.executeAction, selectionMenu, self, name='sequentialEdit')
     Action('Toggle hidden',   self.executeAction, selectionMenu, self, name='toggleHide')
     #TODO_P3 extractors: rerun happens on scan now
-    #Action('Rerun extractors',self.executeAction, selectionMenu, self, name='rerunExtractors')
+    Action('Rerun extractors',self.executeAction, selectionMenu, self, name='rerunExtractors')
     selection.setMenu(selectionMenu)
 
     more = TextButton('More',None, headerL)
@@ -119,7 +119,7 @@ class Table(QWidget):
           self.moreMenu.removeAction(self.moreMenu.actions()[-1])  #remove last action
       else:
         if self.moreMenu.actions()[-1].text()=='Export':
-          Action('Change headers',  self.executeAction, self.moreMenu, self, name='changeTableHeader')  #add action at end
+          Action('Change columns',  self.executeAction, self.moreMenu, self, name='changeTableHeader')  #add action at end
         if self.docType in self.comm.backend.db.dataLabels:
           self.headline.setText(self.comm.backend.db.dataLabels[self.docType])
       if self.docType in self.comm.backend.configuration['tableHeaders']:
@@ -196,9 +196,9 @@ class Table(QWidget):
       item (QStandardItem): cell clicked
     """
     row = item.row()
-    docID = self.models[-1].item(row,0).accessibleText()
+    docID = self.itemFromRow(row).accessibleText()
     # column = item.column()
-    if docID!='x0': #only show items for non-folders
+    if docID[0]!='x': #only show items for non-folders
       self.comm.changeDetails.emit(docID)
     return
 
@@ -211,7 +211,7 @@ class Table(QWidget):
       item (QStandardItem): cell clicked
     """
     row = item.row()
-    docID = self.models[-1].item(row,0).accessibleText()
+    docID = self.itemFromRow(row).accessibleText()
     if self.docType=='x0':
       self.comm.changeProject.emit(docID, '')
     else:
@@ -260,7 +260,7 @@ class Table(QWidget):
       docIDs = []
       for row in range(self.models[-1].rowCount()):
         if hasattr(self.models[-1], 'item'):
-          if self.models[-1].item(row,0).checkState() == Qt.CheckState.Checked:
+          if self.itemFromRow(row).checkState() == Qt.CheckState.Checked:
             docIDs.append( self.data[row]['id'] )
             thisKeys = set(self.comm.backend.db.getDoc(self.data[row]['id']))
             if intersection is None:
@@ -281,7 +281,7 @@ class Table(QWidget):
       self.comm.changeDetails.emit('redraw')
     elif menuName == 'sequentialEdit':
       for row in range(self.models[-1].rowCount()):
-        if self.models[-1].item(row,0).checkState() == Qt.CheckState.Checked:
+        if self.itemFromRow(row).checkState() == Qt.CheckState.Checked:
           self.comm.formDoc.emit(self.comm.backend.db.getDoc( self.data[row]['id'] ))
       self.comm.changeTable.emit(self.docType, '')
     elif menuName == 'changeTableHeader':
@@ -303,36 +303,53 @@ class Table(QWidget):
           fOut.write(','.join(rowContent)+'\n')
     elif menuName == 'toggleHide':
       for row in range(self.models[-1].rowCount()):
-        if self.models[-1].item(row,0).checkState() == Qt.CheckState.Checked:
+        if self.itemFromRow(row).checkState() == Qt.CheckState.Checked:
           self.comm.backend.db.hideShow( self.data[row]['id'] )
       if self.docType=='x0':
         self.comm.changeSidebar.emit()
       self.changeTable('','')  # redraw table
     elif menuName == 'toggleSelection':
       for row in range(self.models[-1].rowCount()):
-        if self.models[-1].item(row,0).checkState() == Qt.CheckState.Checked:
-          self.models[-1].item(row,0).setCheckState(Qt.CheckState.Unchecked)
+        item = self.itemFromRow(row)
+        if item.checkState() == Qt.CheckState.Checked:
+          item.setCheckState(Qt.CheckState.Unchecked)
         else:
-          self.models[-1].item(row,0).setCheckState(Qt.CheckState.Checked)
+          item.setCheckState(Qt.CheckState.Checked)
     elif menuName == 'showAll':
       self.showAll = not self.showAll
       self.changeTable('','')  # redraw table
     elif menuName == 'rerunExtractors':
       for row in range(self.models[-1].rowCount()):
-        if self.models[-1].item(row,0).checkState() == Qt.CheckState.Checked:
+        if self.itemFromRow(row).checkState() == Qt.CheckState.Checked:
           doc = self.comm.backend.db.getDoc( self.data[row]['id'] )
           if doc['-branch'][0]['path'].startswith('http'):
             path = Path(doc['-branch'][0]['path'])
           else:
             path = self.comm.backend.basePath/doc['-branch'][0]['path']
-          self.useExtractors(path, '', doc)
+          self.comm.backend.useExtractors(path, '', doc)
           del doc['-branch']  #don't update
-          self.db.updateDoc(doc, self.data[row]['id'])
+          self.comm.backend.db.updateDoc(doc, self.data[row]['id'])
       self.changeTable('','')  # redraw table
-      self.comm.changeDetails.emit('redraw') # redraw details
     else:
       print("**ERROR widgetTable menu unknown:",menuName)
     return
+
+
+  def itemFromRow(self, row):
+    """
+    get item from row by iterating through the proxyModels
+
+    Args:
+      row (int): row number
+
+    Returns:
+      QItem: the item
+    """
+    index = self.models[-1].index(row,0)
+    for idxModel in range(len(self.models)-1,0,-1):
+      index = self.models[idxModel].mapToSource(index)
+    return self.models[0].itemFromIndex(index)
+
 
   #TODO_P3 invert filter: not 'Sur' in name => '^((?!Sur).)*$' in name
   def filterChoice(self, item):

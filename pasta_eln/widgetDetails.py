@@ -1,5 +1,5 @@
 """ widget that shows the details of the items """
-import json, platform, subprocess, os, base64, logging
+import json, platform, subprocess, os, base64, logging, yaml
 from pathlib import Path
 from PySide6.QtWidgets import QScrollArea, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QMenu, QTextEdit  # pylint: disable=no-name-in-module
 from PySide6.QtCore import Qt, Slot, QByteArray   # pylint: disable=no-name-in-module
@@ -204,26 +204,30 @@ class Details(QScrollArea):
       elif key=='-tags':
         tags = ['_curated_' if i=='_curated' else '#'+i for i in self.doc[key]]
         tags = ['\u2605'*int(i[2]) if i[:2]=='#_' else i for i in tags]
-        self.metaDetailsL.addWidget( QLabel('Tags: '+' '.join(tags)))
-      elif key.startswith('_') or key.startswith('-'):
+        label = QLabel('Tags: '+' '.join(tags))
+        label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        self.metaDetailsL.addWidget(label)
+      elif key[0] in ['_','-'] or key in ['shasum']:
         label = QLabel(key+': '+str(self.doc[key]))
         label.setWordWrap(True)
+        label.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.metaDatabaseL.addWidget(label)
         self.btnDatabase.setChecked(False)
       elif key=='metaVendor':
         label = QLabel()
         label.setWordWrap(True)
-        label.setText(json.dumps(self.doc[key], indent=2)[2:-2].replace('"','')) #remove initial+trailing defaults
+        label.setText(yaml.dump(self.doc[key], indent=4))
+        label.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.metaVendorL.addWidget(label)
         self.metaVendorW.show()
       elif key=='metaUser':
         label = QLabel()
         label.setWordWrap(True)
-        label.setText(json.dumps(self.doc[key], indent=2)[2:-2].replace('"','')) #remove initial+trailing defaults
+        label.setText(yaml.dump(self.doc[key], indent=4))
+        label.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.metaUserL.addWidget(label)
         self.metaUserW.show()
       else:
-        value = str(self.doc[key])
         ontologyItem = [i for i in ontologyNode if i['name']==key]
         if len(ontologyItem)==1 and 'list' in ontologyItem[0]:
           if not isinstance(ontologyItem[0]['list'], list):                #choice among docType
@@ -231,7 +235,15 @@ class Details(QScrollArea):
             choices= [i for i in table if i['id']==self.doc[key]]
             if len(choices)==1:
               value = '\u260D '+choices[0]['value'][0]
-        self.metaDetailsL.addWidget( QLabel(key.capitalize()+': '+value) )
+        elif isinstance(self.doc[key], list):
+          value = ', '.join(self.doc[key])
+        elif '\n' in self.doc[key]:     #if returns in value
+          value = '\n    '+self.doc[key].replace('\n','\n    ')
+        else:
+          value = self.doc[key]
+        label = QLabel(key.capitalize()+': '+value)
+        label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        self.metaDetailsL.addWidget(label)
         self.metaDetailsW.show()
     return
     #TODO_P3 convenience: make link clickable

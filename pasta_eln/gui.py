@@ -174,22 +174,22 @@ class MainWindow(QMainWindow):
 ## Main function
 def main():
   """ Main method and entry point for commands """
-  app = QApplication()
-  window = MainWindow()
-  # logging
+  # logging has to be started first
   logPath = Path.home()/'pastaELN.log'
   #  old versions of basicConfig do not know "encoding='utf-8'"
-  logLevel = getattr(logging, window.backend.configuration['GUI']['loggingLevel'])
-  logging.basicConfig(filename=logPath, level=logLevel, format='%(asctime)s|%(levelname)s:%(message)s',
+  logging.basicConfig(filename=logPath, level=logging.INFO, format='%(asctime)s|%(levelname)s:%(message)s',
                       datefmt='%m-%d %H:%M:%S')
   for package in ['urllib3', 'requests', 'asyncio', 'PIL', 'matplotlib.font_manager']:
     logging.getLogger(package).setLevel(logging.WARNING)
   logging.info('Start PASTA GUI')
   # remainder
+  app = QApplication()
+  window = MainWindow()
+  logging.getLogger().setLevel(getattr(logging, window.backend.configuration['GUI']['loggingLevel']))
   theme = window.backend.configuration['GUI']['theme']
   if theme!='none':
     apply_stylesheet(app, theme=theme+'.xml')
-  # test if qtawesome and matplot can coexist
+  # qtawesome and matplot cannot coexist
   import qtawesome as qta
   if not isinstance(qta.icon('fa5s.times'), QIcon):
     logging.error('qtawesome: could not load. Likely matplotlib is included and can not coexist.')

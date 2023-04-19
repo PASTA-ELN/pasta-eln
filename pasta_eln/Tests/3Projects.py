@@ -95,7 +95,7 @@ class TestStringMethods(unittest.TestCase):
       with open(sopDir/'SEM.md','w', encoding='utf-8') as fOut:
         fOut.write('# Put sample in SEM\n# Do scanning\nDo not forget to\n- contact the pole-piece\n- **USE GLOVES**\n')
       self.be.addData('procedure', {'-name': 'StandardOperatingProcedures/SEM.md', 'comment': '#v1'})
-      self.be.addData('procedure', {'-name': 'StandardOperatingProcedures/Nanoindentation.org', 'comment': '#v1'})
+      self.be.addData('procedure', {'-name': 'StandardOperatingProcedures/Nanoindentation.md', 'comment': '#v1'})
       print(self.be.output('procedure'))
 
       ### TEST SAMPLES

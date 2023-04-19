@@ -426,28 +426,29 @@ class Backend(CLI_Mixin):
         success = False
       os.environ['QT_API'] = 'pyside6'
       #combine into document
-      doc.update(content)
-      for meta in ['metaVendor','metaUser']:
-        for item in doc[meta]:
-          if isinstance(doc[meta][item], tuple):
-            doc[meta][item] = list(doc[meta][item])
-          if not isinstance(doc[meta][item], (str, int, float, list)) and \
-            doc[meta][item] is not None:
-            print(' -> simplify ',meta,item, doc[meta][item])
-            doc[meta][item] = str(doc[meta][item])
-      doc['shasum']    = shasum
-      if doc['-type'][0]==doc['recipe'].split('/')[0] or doc['-type'][0]=='-':
-        doc['-type']     = doc['recipe'].split('/')
-      else:
-        #user has strange wish: trust him/her
-        logging.info('user has strange wish: trust him/her: '+'/'.join(doc['-type'])+'  '+doc['recipe'])
-      del doc['recipe']
-      if 'fileExtension' not in doc['metaVendor']:
-        doc['metaVendor']['fileExtension'] = pyFile[:-3]
-      if 'links' in doc:
-        #TODO_P3 extractor: creates links to sample/instrument
-        if len(doc['links'])==0:
-          del doc['links']
+      if success:
+        doc.update(content)
+        for meta in ['metaVendor','metaUser']:
+          for item in doc[meta]:
+            if isinstance(doc[meta][item], tuple):
+              doc[meta][item] = list(doc[meta][item])
+            if not isinstance(doc[meta][item], (str, int, float, list)) and \
+              doc[meta][item] is not None:
+              print(' -> simplify ',meta,item, doc[meta][item])
+              doc[meta][item] = str(doc[meta][item])
+        doc['shasum']    = shasum
+        if doc['-type'][0]==doc['recipe'].split('/')[0] or doc['-type'][0]=='-':
+          doc['-type']     = doc['recipe'].split('/')
+        else:
+          #user has strange wish: trust him/her
+          logging.info('user has strange wish: trust him/her: '+'/'.join(doc['-type'])+'  '+doc['recipe'])
+        del doc['recipe']
+        if 'fileExtension' not in doc['metaVendor']:
+          doc['metaVendor']['fileExtension'] = extension.lower()
+        if 'links' in doc:
+          #TODO_P3 extractor: creates links to sample/instrument
+          if len(doc['links'])==0:
+            del doc['links']
     if not success:
       print('  **Warning, issue with extractor',pyFile)
       logging.warning('Issue with extractor '+pyFile)
@@ -513,7 +514,7 @@ class Backend(CLI_Mixin):
         if reportHTML:
           report += '<font color="red">Python error in extractor</font><br>'
           report += htmlStr+'python-error">website</a><br>'
-          report += '\n'+traceback.format_exc()+'\n'
+          report += '<br>'+traceback.format_exc(limit=3).replace('\n','<br>')+'<br>'
     if success:
       if 'recipe' in content:
         possibleDocTypes = [i for i in self.db.dataLabels.keys() if i[0]!='x']
@@ -525,6 +526,13 @@ class Backend(CLI_Mixin):
             report += '<font color="red">Recipe does not follow doctype in ontology</font><br>'
           else:
             report = "ExtractorERROR recipe does not follow doctype in ontology"
+        else:
+          if interactive:
+            print("**Info: recipe is good: "+content['recipe'])
+          if reportHTML:
+            report += 'Info: recipe is good: '+content['recipe']+'<br>'
+          else:
+            report = 'ExtractorInfo: recipe is good: '+content['recipe']+'<br>'
       else:
         if interactive:
           print("**ERROR: recipe not included in extractor.")
