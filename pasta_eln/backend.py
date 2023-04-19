@@ -527,10 +527,16 @@ class Backend(CLI_Mixin):
           else:
             report = "ExtractorERROR recipe does not follow doctype in ontology"
         else:
-          if interactive:
+          if interactive and not reportHTML:
             print("**Info: recipe is good: "+content['recipe'])
           if reportHTML:
-            report += 'Info: recipe is good: '+content['recipe']+'<br>'
+            report += '<br>Entire extracted size '
+            size = len(str(content))
+            if size > 1024:
+              report += str(int(size/1024))+'kB'
+            else:
+              report += str(size)+'B'
+            report += '<br>Info: recipe is good: '+content['recipe']+'<br>'
           else:
             report = 'ExtractorInfo: recipe is good: '+content['recipe']+'<br>'
       else:
@@ -597,7 +603,7 @@ class Backend(CLI_Mixin):
                         str(type(content['metaVendor'][key]))+'</font><br>'
             else:
               print('    FAIL',key, content['metaUser'][key], type(content['metaUser'][key]))
-      #verify image is of correct type
+    #verify image is of correct type
     if success and 'image' not in content:
       success = False
       if interactive:
@@ -637,7 +643,14 @@ class Backend(CLI_Mixin):
       else:
         report = "ExtractorERROR Matplot image"
     if success and isinstance(content['image'], str):  #show content
-      report += '<br><b>Additional window shows the image</b><br>'
+      if reportHTML:
+        report += '<br>Image size '
+        size = len(content['image'])
+        if size > 1024:
+          report += str(int(size/1024))+'kB'
+        else:
+          report += str(size)+'B'
+        report += '<br><b>Additional window shows the image</b><br>'
       if content['image'].startswith('data:image/'):
         #png or jpg encoded base64
         extension = content['image'][11:14]

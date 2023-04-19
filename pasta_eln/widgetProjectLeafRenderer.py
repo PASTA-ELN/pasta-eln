@@ -30,8 +30,8 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     self.lineSep = 20 #TODO_P5 addToConfig
     return
 
-  #TODO_P3 projectTree: show database details as copy-paste labels in dialogForm?
-
+  #TODO_P4 design projectTree: If folders and other items have boxes of slightly different brightness
+  # (darker gray for the former and lighter for the latter), the project structure might be easier to understand. 
   def paint(self, painter, option, index):
     """
     Paint this item
@@ -93,8 +93,20 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       painter.translate(QPoint(xOffset-3, yOffset+15))
       text.drawContents(painter)
       painter.translate(-QPoint(xOffset-3, yOffset+15))
+      #TODO_P4 design ProjectView: Currently, the comment is more highlighted than the title of an item due
+      # to a larger and bolder font. It would make more sense though if the titles were bolder, larger and
+      # thus more readable, while tags and comments are less highlighted.
     return
 
+    #TODO_P4 design projectLeaves: 3 columns?
+    # Maybe the comment can be moved to the central part of the box, to save some space.
+
+    #TODO_P4 design projectLeaves:
+    # The graphical output of the extractors and text output from .md files is placed a bit too close to the
+    # right edge of the window. Maybe these thumbnails could be reduced in size slightly to gain some space
+    # between them and the boxes edges.
+    # The same can be said about the text within the boxes- item names nearly overlap with the boxes edge on
+    # the right side.
 
   def sizeHint(self, option, index):
     """

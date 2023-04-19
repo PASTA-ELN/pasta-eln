@@ -19,8 +19,9 @@ def use(filePath, recipe='', saveFileName=None):
   """
   # Extractor
   image = Image.open(filePath)
-  if max(image.size)>600:
-    scale = max(image.size)/600
+  maxSize = 400
+  if max(image.size)>maxSize:
+    scale = max(image.size)/maxSize
     image = image.resize( (np.array(image.size)/scale).astype(int) )
   metaVendor = image.info
   imgArr = np.array(image)

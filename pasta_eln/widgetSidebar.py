@@ -81,6 +81,7 @@ class Sidebar(QWidget):
         btnCurate.setStyleSheet("border-width:0")
 
         # lists: view list of measurements, ... of this project
+        #TODO_P3 convenience: add button for unidentified
         listW = QWidget()
         listW.setContentsMargins(0,0,0,0)
         if self.openProjectId != projID:
@@ -98,6 +99,7 @@ class Sidebar(QWidget):
         self.widgetsList[projID] = listW
 
         # show folders as hierarchy
+        #TODO_P5 allow to adjust height
         treeW = QTreeWidget()
         treeW.hide()  #convenience: allow scroll in sidebar
         treeW.setHeaderHidden(True)
@@ -107,7 +109,7 @@ class Sidebar(QWidget):
         rootItem = treeW.invisibleRootItem()
         count = 0
         for node in PreOrderIter(hierarchy, maxlevel=2):
-          if not node.is_root:
+          if not node.is_root and node.id[0]=='x':
             rootItem.insertChild(count, self.iterateTree(node, projID))
             count += 1
         projectL.addWidget(treeW)

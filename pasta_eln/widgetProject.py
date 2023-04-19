@@ -27,6 +27,7 @@ class Project(QWidget):
     self.taskID = ''
     self.docProj= {}
     self.showAll= False
+    self.actionAddSubfolder = None
 
 
   @Slot(str, str)
@@ -94,6 +95,8 @@ class Project(QWidget):
       #TODO_P3 convenience: selection does not scroll; one cannot select a row
       self.tree.setCurrentIndex(selectedIndex)# Item(selectedItem)
     self.mainL.addWidget(self.tree)
+    if len(nodeHier.children)>0:
+      self.actionAddSubfolder.setVisible(False)
     return
 
 
@@ -176,21 +179,21 @@ class Project(QWidget):
     Create header of page
     """
     self.docProj = self.comm.backend.db.getDoc(self.projID)
-    headerW = QWidget()  # Leaf(self.comm, node.id)
+    headerW = QWidget()
     headerL = QVBoxLayout(headerW)
     topbarW = QWidget()
     topbarL = QHBoxLayout(topbarW)
     hidden = '     \U0001F441' if len([b for b in self.docProj['-branch'] if False in b['show']])>0 else ''
     topbarL.addWidget(QLabel(self.docProj['-name']+hidden))
     topbarL.addStretch(1)
-    TextButton('Reduce',    self.btnEvent, topbarL, 'projHide', checkable=True)
-    TextButton('Hide/Show', self.btnEvent, topbarL, 'hideShow')
-    TextButton('Add child', self.btnEvent, topbarL, 'addChild')
+    TextButton('Hide/Show',    self.btnEvent,      topbarL, name='hideShow')
+    TextButton('Edit project', self.executeAction, topbarL, name='editProject')
     more = TextButton('More',None, topbarL)
     moreMenu = QMenu(self)
-    Action('Scan',   self.executeAction, moreMenu, self, name='scanProject')
-    Action('Edit',   self.executeAction, moreMenu, self, name='editProject')
-    Action('Delete', self.executeAction, moreMenu, self, name='deleteProject')
+    Action('Reduce/increase width', self.btnEvent,      moreMenu, self, name='projHide')
+    Action('Scan',                  self.executeAction, moreMenu, self, name='scanProject')
+    self.actionAddSubfolder = Action('Add subfolder', self.btnEvent, moreMenu, self, name='addChild')
+    Action('Delete',                self.executeAction, moreMenu, self, name='deleteProject')
     more.setMenu(moreMenu)
 
     headerL.addWidget(topbarW)

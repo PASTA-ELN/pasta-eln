@@ -78,9 +78,7 @@ class ConfigurationSetup(QWidget):
 
     #Install couchdb
     if not existsCouchDB:
-      textCouchDB  = '' if existsCouchDB else 'couch-DB'
-      text = rootInstallLinux.replace('XX--XX', textCouchDB)
-      button = QMessageBox.question(self, "Root installations", text)
+      button = QMessageBox.question(self, "Root installations", rootInstallLinux)
       if button == QMessageBox.Yes:
         dirName = QFileDialog.getExistingDirectory(self,'Create and select directory for scientific data',str(Path.home()))
         installLinuxRoot(existsCouchDB, dirName)

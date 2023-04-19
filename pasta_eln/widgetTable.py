@@ -55,7 +55,9 @@ class Table(QWidget):
     more = TextButton('More',None, headerL)
     self.moreMenu = QMenu(self)
     Action('Show / Hide hidden items', self.executeAction, self.moreMenu, self, name='showAll')
-    Action('Export',                   self.executeAction, self.moreMenu, self, name='export')
+    Action('Export to csv',            self.executeAction, self.moreMenu, self, name='export')
+    self.actionChangeColums = Action('Change columns',  self.executeAction, self.moreMenu, self, name='changeColumns')  #add action at end
+
     more.setMenu(self.moreMenu)
     mainL.addWidget(self.headerW)
     # filter
@@ -104,8 +106,7 @@ class Table(QWidget):
         self.data = self.comm.backend.db.getView('viewIdentify/viewTags')
       self.filterHeader = ['tag','name']
       self.headline.setText('TAGS')
-      if self.moreMenu.actions()[-1].text()!='Export':
-        self.moreMenu.removeAction(self.moreMenu.actions()[-1])  #remove last action
+      self.actionChangeColums.setVisible(False)
     else:
       self.addBtn.show()
       path = 'viewDocType/'+self.docType+'All' if self.showAll else 'viewDocType/'+self.docType
@@ -115,11 +116,9 @@ class Table(QWidget):
         self.data = self.comm.backend.db.getView(path, preciseKey=self.projID)
       if self.docType=='-':
         self.headline.setText('Unidentified')
-        if self.moreMenu.actions()[-1].text()!='Export':
-          self.moreMenu.removeAction(self.moreMenu.actions()[-1])  #remove last action
+        self.actionChangeColums.setVisible(False)
       else:
-        if self.moreMenu.actions()[-1].text()=='Export':
-          Action('Change columns',  self.executeAction, self.moreMenu, self, name='changeTableHeader')  #add action at end
+        self.actionChangeColums.setVisible(True)
         if self.docType in self.comm.backend.db.dataLabels:
           self.headline.setText(self.comm.backend.db.dataLabels[self.docType])
       if self.docType in self.comm.backend.configuration['tableHeaders']:
@@ -284,12 +283,9 @@ class Table(QWidget):
         if self.itemFromRow(row).checkState() == Qt.CheckState.Checked:
           self.comm.formDoc.emit(self.comm.backend.db.getDoc( self.data[row]['id'] ))
       self.comm.changeTable.emit(self.docType, '')
-    elif menuName == 'changeTableHeader':
-      if self.docType in ['-','_tags_'] :
-        logging.error('widgetTable: cannot show changeTableHeader for '+self.docType)
-      else:
-        dialog = TableHeader(self.comm, self.docType)
-        dialog.exec()
+    elif menuName == 'changeColumns':
+      dialog = TableHeader(self.comm, self.docType)
+      dialog.exec()
     elif menuName == 'export':
       fileName = QFileDialog.getSaveFileName(self,'Export to ..',str(Path.home()),'*.csv')[0]
       with open(fileName,'w', encoding='utf-8') as fOut:

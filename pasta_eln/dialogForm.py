@@ -151,6 +151,7 @@ class Form(QDialog):
 
   # TODO_P4 add splitter to increase / decrease image
   # TODO_P4 form: add button to add key-values
+  # TODO_P5 other items as non-edible things that can be copy-pasted
   def save(self, btn):
     """
     Action upon save / cancel

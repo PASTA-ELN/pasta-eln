@@ -20,6 +20,10 @@ class TreeView(QTreeView):
     self.setItemDelegate(self.renderer)
     self.setDragDropMode(QAbstractItemView.InternalMove)
     self.doubleClicked.connect(self.treeDoubleClicked)
+    #TODO_P4 design of project tree
+    # The gray boxes that represent folders/tasks, files or other items are too dark and have too little contrast
+    # with black text on them (especially with small font). The boxes are also placed slightly too tight together,
+    # I would increase the spacing between them by 1.5-2 times.
 
 
   def contextMenuEvent(self, e):
@@ -37,7 +41,7 @@ class TreeView(QTreeView):
     Action('Minimize/Maximize',  self.executeAction, context, self, name='fold')
     Action('Hide',               self.executeAction, context, self, name='hide')
     context.addSeparator()
-    Action('Open external program', self.executeAction, context, self, name='openExternal')
+    Action('Open with another application', self.executeAction, context, self, name='openExternal')
     context.exec(e.globalPos())
 
   #TODO_P3 projectTree: drag&drop of external files
