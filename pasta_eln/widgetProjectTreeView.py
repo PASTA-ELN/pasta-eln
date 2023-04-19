@@ -44,7 +44,7 @@ class TreeView(QTreeView):
     Action('Open with another application', self.executeAction, context, self, name='openExternal')
     context.exec(e.globalPos())
 
-  #TODO_P3 projectTree: drag&drop of external files
+  #TODO_P4 projectTree: drag&drop of external files
 
   def executeAction(self):
     """ after selecting a item from context menu """

@@ -201,7 +201,7 @@ class Details(QScrollArea):
         text.setReadOnly(True)
         self.specialL.addWidget(text)
         self.specialW.show()
-        #TODO_P4 design: make full width
+        #TODO_P3 design: make full width
       elif key=='-tags':
         tags = ['_curated_' if i=='_curated' else '#'+i for i in self.doc[key]]
         tags = ['\u2605'*int(i[2]) if i[:2]=='#_' else i for i in tags]
@@ -229,6 +229,7 @@ class Details(QScrollArea):
         self.metaUserL.addWidget(label)
         self.metaUserW.show()
       else:
+        link = False
         ontologyItem = [i for i in ontologyNode if i['name']==key]
         if len(ontologyItem)==1 and 'list' in ontologyItem[0]:
           if not isinstance(ontologyItem[0]['list'], list):                #choice among docType
@@ -236,18 +237,18 @@ class Details(QScrollArea):
             choices= [i for i in table if i['id']==self.doc[key]]
             if len(choices)==1:
               value = '\u260D '+choices[0]['value'][0]
+              link = True
         elif isinstance(self.doc[key], list):
           value = ', '.join(self.doc[key])
         elif '\n' in self.doc[key]:     #if returns in value
           value = '\n    '+self.doc[key].replace('\n','\n    ')
         else:
           value = self.doc[key]
-        label = QLabel(key.capitalize()+': '+value)
+        label = Label(key.capitalize()+': '+value, function=self.clickLink if link else None, docID=self.doc[key])
         label.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.metaDetailsL.addWidget(label)
         self.metaDetailsW.show()
     return
-    #TODO_P3 convenience: make link clickable
 
 
   def showArea(self):
@@ -261,6 +262,7 @@ class Details(QScrollArea):
       getattr(self, 'meta'+name+'W').hide()
     return
 
+
   def callEdit(self):
     """
     Call edit dialoge
@@ -271,4 +273,17 @@ class Details(QScrollArea):
       self.comm.formDoc.emit(self.doc)
       self.comm.changeTable.emit('','')
       self.comm.changeDetails.emit('redraw')
+    return
+
+
+  def clickLink(self, label, docID):
+    """
+    Click link in details
+
+    Args:
+      label (str): label on link
+      docID (str): docID to which to link
+    """
+    logging.debug('used link on '+label+'|'+docID)
+    self.comm.changeDetails.emit(docID)
     return

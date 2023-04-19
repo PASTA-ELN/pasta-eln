@@ -288,7 +288,7 @@ class Backend(CLI_Mixin):
         dirName (string): change into this directory (absolute path given). For if data is moved
         kwargs (dict): additional parameter
     """
-    logging.info('changeHierarchy should only be used in CLI mode') #TODO_P4 remove this warning
+    logging.info('changeHierarchy should only be used in CLI mode') #TODO_P5 remove this warning
     if docID is None or (docID[0]=='x' and docID[1]!='-'):  #cd ..: none. close 'project', 'task'
       self.hierStack.pop()
       self.cwd = self.cwd.parent
@@ -446,7 +446,7 @@ class Backend(CLI_Mixin):
         if 'fileExtension' not in doc['metaVendor']:
           doc['metaVendor']['fileExtension'] = extension.lower()
         if 'links' in doc:
-          #TODO_P3 extractor: creates links to sample/instrument
+          #TODO_P5 extractor: creates links to sample/instrument
           if len(doc['links'])==0:
             del doc['links']
     if not success:

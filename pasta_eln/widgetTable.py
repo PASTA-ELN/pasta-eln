@@ -48,7 +48,6 @@ class Table(QWidget):
     Action('Group Edit',      self.executeAction, selectionMenu, self, name='groupEdit')
     Action('Sequential edit', self.executeAction, selectionMenu, self, name='sequentialEdit')
     Action('Toggle hidden',   self.executeAction, selectionMenu, self, name='toggleHide')
-    #TODO_P3 extractors: rerun happens on scan now
     Action('Rerun extractors',self.executeAction, selectionMenu, self, name='rerunExtractors')
     selection.setMenu(selectionMenu)
 
@@ -270,7 +269,6 @@ class Table(QWidget):
           logging.error('widgetTable model has no item '+str(self.models[-1])+' '+str(row)+' '+str(thisKeys))
           showMessage(self, 'Send information to Steffen','widgetTable model has no item '+\
                             str(self.models[-1])+' '+str(row)+' '+str(thisKeys))
-          #TODO_P4 debugging: when does this occur
       #remove keys that should not be group edited and build dict
       intersection = intersection.difference({'-type', '-branch', '-user', '-client', 'metaVendor', 'shasum', \
         '_id', 'metaUser', '_rev', '-name', '-date', 'image', '_attachments','links'})
@@ -347,7 +345,7 @@ class Table(QWidget):
     return self.models[0].itemFromIndex(index)
 
 
-  #TODO_P3 invert filter: not 'Sur' in name => '^((?!Sur).)*$' in name
+  #TODO_P5 invert filter: not 'Sur' in name => '^((?!Sur).)*$' in name
   def filterChoice(self, item):
     """
     Change the column which is used for filtering

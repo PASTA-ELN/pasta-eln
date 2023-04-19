@@ -2,7 +2,7 @@
 import json, logging
 from pathlib import Path
 from PySide6.QtWidgets import QDialog, QWidget, QFormLayout, QVBoxLayout, QHBoxLayout, QLabel, QTextEdit, \
-                              QPlainTextEdit, QComboBox, QLineEdit, QDialogButtonBox, QSplitter, QSizePolicy # pylint: disable=no-name-in-module
+                              QPlainTextEdit, QComboBox, QLineEdit, QDialogButtonBox, QSplitter, QSizePolicy, QPushButton # pylint: disable=no-name-in-module
 from PySide6.QtGui import QPixmap, QImage, QRegularExpressionValidator # pylint: disable=no-name-in-module
 from .style import Image, TextButton, IconButton
 from .fixedStrings import defaultOntologyNode
@@ -95,7 +95,7 @@ class Form(QDialog):
         self.formL.addRow(labelW, rightSideW)
       elif key == '-tags':  #remove - to make work
         #does not reach this part as there is an if-statement on the top
-        # TODO_P3 tags: get selected via a editable QCombobox and get shown as qlabels, that can be deleted
+        # TODO_P2 tags: get selected via a editable QCombobox and get shown as qlabels, that can be deleted
         # RR: can you already implement tags as list of qlabels with a '-' button on the right to delete
         # the qcombox comes later once the database knows what tags are and how to generate the list
         print('')
@@ -144,21 +144,22 @@ class Form(QDialog):
           self.docTypeComboBox.addItem(value, userData=key)
       self.formL.addRow(QLabel('Data type'), self.docTypeComboBox)
     #final button box
-    buttonBox = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
-    #TODO_P3 create new entry: save + save&close
+    buttonBox = QDialogButtonBox(QDialogButtonBox.Cancel | QDialogButtonBox.Save)
+    if self.doc['-name']=='': #new dataset
+      buttonBox.addButton('Save && Next', QDialogButtonBox.ApplyRole)
     buttonBox.clicked.connect(self.save)
     mainL.addWidget(buttonBox)
 
-  # TODO_P4 add splitter to increase / decrease image
-  # TODO_P4 form: add button to add key-values
-  # TODO_P5 other items as non-edible things that can be copy-pasted
+  # TODO_P3 add splitter to increase / decrease image
+  # TODO_P3 form: add button to add key-values
+  # TODO_P3 other items as non-edible things that can be copy-pasted
   def save(self, btn):
     """
     Action upon save / cancel
     """
     if btn.text().endswith('Cancel'):
       self.reject()
-    elif btn.text().endswith('Save'):
+    elif 'Save' in btn.text():
       # create the data that has to be saved
       if hasattr(self, 'key_-name'):
         self.doc['-name'] = getattr(self, 'key_-name').text().strip()
@@ -239,7 +240,11 @@ class Form(QDialog):
           self.comm.backend.addData(self.doc['-type'][0], self.doc)
       #!!! NO updates / redraw here since one does not know from where form came
       # e.g. sequential edit cannot have redraw here
-      self.accept()  #close
+      if btn.text().endswith('Next'):
+        for delKey in [i for i in self.doc.keys() if i[0] in ['-','_'] and i not in ['-name','-type']]:
+          del self.doc[delKey]
+      else:
+        self.accept()  #close
     else:
       print('dialogForm: did not get a fitting btn ',btn.text())
     return

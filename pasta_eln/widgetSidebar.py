@@ -27,7 +27,7 @@ class Sidebar(QWidget):
     self.mainL.setSpacing(7)
     self.setLayout(self.mainL)
     self.redraw()
-    #TODO_P3 convenience: allow scroll in sidebar, size changegable, drag-and-drop to move
+    #TODO_P4 projectView: allow scroll in sidebar, size changegable, drag-and-drop to move
     #   more below and other files
 
 
@@ -46,7 +46,7 @@ class Sidebar(QWidget):
     self.widgetsProject = {} #title bar and widget that contains all of project
 
     if hasattr(self.comm.backend, 'db'):
-      hierarchy = self.comm.backend.db.getView('viewDocType/x0') #TODO_P3 sidebar: sort by -date
+      hierarchy = self.comm.backend.db.getView('viewDocType/x0') #TODO_P2 sidebar: sort by -date
       for project in hierarchy:
         projID = project['id']
         projName = project['value'][0]
@@ -81,7 +81,7 @@ class Sidebar(QWidget):
         btnCurate.setStyleSheet("border-width:0")
 
         # lists: view list of measurements, ... of this project
-        #TODO_P3 convenience: add button for unidentified
+        #TODO_P2 convenience: add button for unidentified
         listW = QWidget()
         listW.setContentsMargins(0,0,0,0)
         if self.openProjectId != projID:
@@ -99,7 +99,7 @@ class Sidebar(QWidget):
         self.widgetsList[projID] = listW
 
         # show folders as hierarchy
-        #TODO_P5 allow to adjust height
+        #TODO_P4 allow to adjust height
         treeW = QTreeWidget()
         treeW.hide()  #convenience: allow scroll in sidebar
         treeW.setHeaderHidden(True)

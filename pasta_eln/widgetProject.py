@@ -92,7 +92,7 @@ class Project(QWidget):
     self.tree.expandAll()
     if selectedIndex is not None:
       self.tree.selectionModel().select(selectedIndex, QItemSelectionModel.Select)
-      #TODO_P3 convenience: selection does not scroll; one cannot select a row
+      #TODO_P4 projectView: selection does not scroll; one cannot select a row
       self.tree.setCurrentIndex(selectedIndex)# Item(selectedItem)
     self.mainL.addWidget(self.tree)
     if len(nodeHier.children)>0:
@@ -209,7 +209,7 @@ class Project(QWidget):
     self.mainL.addWidget(headerW)
     return
 
-  #TODO_P3 projectTree: select multiple items to edit... What is use case
+  #TODO_P4 projectTree: select multiple items to edit... What is use case
 
   def executeAction(self):
     """ Any action by the buttons at the top of the page """

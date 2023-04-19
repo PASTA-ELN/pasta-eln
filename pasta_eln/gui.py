@@ -74,7 +74,7 @@ class MainWindow(QMainWindow):
       viewMenu.addSeparator()
       Action('&Tags',         self.viewMenu, viewMenu, self, 'Ctrl+T', '_tags_')
       Action('&Unidentified', self.viewMenu, viewMenu, self, name='-')
-      #TODO_P4 create list of unaccessible files: linked with accessible files
+      #TODO_P5 create list of unaccessible files: linked with accessible files
 
     #GUI elements
     mainWidget = QWidget()
