@@ -190,6 +190,7 @@ class Sidebar(QWidget):
     What happens if user clicks button "Scan"
     """
     self.comm.backend.scanProject(self.openProjectId)
+    #TODO_P3 scanning for progress bar
     self.comm.changeProject.emit(self.openProjectId,'')
     self.comm.changeSidebar.emit()
     showMessage(self, 'Information','Scanning finished')

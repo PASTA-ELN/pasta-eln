@@ -156,24 +156,6 @@ class Project(QWidget):
     return
 
 
-  def btnEvent(self):
-    """ Click button on top of project page """
-    btnName = self.sender().accessibleName()
-    if btnName == 'projHide':
-      if self.bodyW.isHidden():
-        self.bodyW.show()
-      else:
-        self.bodyW.hide()
-    elif btnName == 'hideShow':
-      self.showAll = not self.showAll
-      self.changeProject('','')
-    elif btnName == 'addChild':
-      self.comm.backend.cwd = Path(self.comm.backend.basePath)/self.docProj['-branch'][0]['path']
-      self.comm.backend.addData('x1', {'-name':'folder 1', 'childNum':0}, [self.projID])
-      self.comm.changeProject.emit('','') #refresh project
-    return
-
-
   def projHeader(self):
     """
     Create header of page
@@ -186,16 +168,15 @@ class Project(QWidget):
     hidden = '     \U0001F441' if len([b for b in self.docProj['-branch'] if False in b['show']])>0 else ''
     topbarL.addWidget(QLabel(self.docProj['-name']+hidden))
     topbarL.addStretch(1)
-    TextButton('Hide/Show',    self.btnEvent,      topbarL, name='hideShow')
-    TextButton('Edit project', self.executeAction, topbarL, name='editProject')
+    TextButton('Hide/Show',         self.executeAction, topbarL, name='hideShow')
+    TextButton('Edit project',      self.executeAction, topbarL, name='editProject')
     more = TextButton('More',None, topbarL)
     moreMenu = QMenu(self)
-    Action('Reduce/increase width', self.btnEvent,      moreMenu, self, name='projHide')
+    Action('Reduce/increase width', self.executeAction, moreMenu, self, name='projHide')
     Action('Scan',                  self.executeAction, moreMenu, self, name='scanProject')
-    self.actionAddSubfolder = Action('Add subfolder', self.btnEvent, moreMenu, self, name='addChild')
+    self.actionAddSubfolder = Action('Add subfolder', self.executeAction, moreMenu, self, name='addChild')
     Action('Delete',                self.executeAction, moreMenu, self, name='deleteProject')
     more.setMenu(moreMenu)
-
     headerL.addWidget(topbarW)
     self.bodyW   = QWidget()
     bodyL   = QVBoxLayout(self.bodyW)
@@ -213,7 +194,10 @@ class Project(QWidget):
 
   def executeAction(self):
     """ Any action by the buttons at the top of the page """
-    menuName = self.sender().data()
+    if hasattr(self.sender(), 'data'):  #action
+      menuName = self.sender().data()
+    else:                               #button
+      menuName = self.sender().accessibleName()
     if menuName=='editProject':
       self.comm.formDoc.emit(self.docProj)
       self.comm.changeProject.emit(self.projID,'')
@@ -240,6 +224,18 @@ class Project(QWidget):
       self.comm.changeProject.emit(self.projID,'')
       self.comm.changeSidebar.emit()
       showMessage(self, 'Information','Scanning finished')
+    elif menuName == 'projHide':
+      if self.bodyW.isHidden():
+        self.bodyW.show()
+      else:
+        self.bodyW.hide()
+    elif menuName == 'hideShow':
+      self.showAll = not self.showAll
+      self.changeProject('','')
+    elif menuName == 'addChild':
+      self.comm.backend.cwd = Path(self.comm.backend.basePath)/self.docProj['-branch'][0]['path']
+      self.comm.backend.addData('x1', {'-name':'folder 1', 'childNum':0}, [self.projID])
+      self.comm.changeProject.emit('','') #refresh project
     else:
       print("undefined menu / action",menuName)
     return

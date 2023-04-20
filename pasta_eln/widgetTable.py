@@ -76,6 +76,7 @@ class Table(QWidget):
     header.setMaximumSectionSize(400) #TODO_P5 addToConfig
     header.resizeSections(QHeaderView.ResizeToContents)
     header.setStretchLastSection(True)
+    #TODO_P3 table: shift-select
     # ---
     mainL.addWidget(self.table)
     self.setLayout(mainL)
@@ -246,6 +247,7 @@ class Table(QWidget):
       LetterButton('-', self.delFilter, rowL, str(len(self.models)))
       self.filterL.addWidget(rowW)
       # data
+      #TODO_P5 can you sort for true false in tables too?
       filterModel = QSortFilterProxyModel()
       text.textChanged.connect(filterModel.setFilterRegularExpression)
       filterModel.setSourceModel(self.models[-1])
@@ -324,6 +326,7 @@ class Table(QWidget):
           del doc['-branch']  #don't update
           self.comm.backend.db.updateDoc(doc, self.data[row]['id'])
       self.changeTable('','')  # redraw table
+      self.comm.changeDetails.emit('redraw')
     else:
       print("**ERROR widgetTable menu unknown:",menuName)
     return

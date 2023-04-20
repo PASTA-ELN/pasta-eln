@@ -3,36 +3,34 @@ todoString = """
 
 <h3>Very important show stopper</h3>
 <ul>
-<li> allow for 'recipe':recipe in return
 </ul>
 
 <h3>To be verified/identified</h3>
 <ul>
-<li> HTTP error after long time (10min) not using it: one not authorized to access database:
 </ul>
 
 <h3>Improvement to convenience</h3>
 <ul>
-<li> convenience: allow scroll in sidebar, size changegable, drag-and-drop to move
-<li> convenience: selection does not scroll; one cannot select a row
-<li> extractor: creates links to sample/instrument
-<li> extractors: rerun happens on scan now
-<li> invert filter: not 'Sur' in name => '^((?!Sur).)*$' in name
-<li> procedure: can be changed in GUI->save harddrive
-<li> projectTree: drag&drop of external files
-<li> projectTree: select multiple items to edit... What is use case
-<li> projectTree: show database details as copy-paste labels in dialogForm?
-<li> sidebar: sort by -date
+<li> design ProjectView: Currently, the comment is more highlighted than the title of an item due
+<li> design projectLeaves:
+<li> design projectLeaves: 3 columns?
+<li> design: make full width
+<li> design: what is the difference to TextButton?
+<li> finish ontology dialog
+<li> scanning for progress bar
+<li> table: shift-select
+<li> tableHeaderChange: requires view to change to views, not ontology
 </ul>
 
 <h3>Bigger things implemented soon</h3>
 <ul>
-<li> create list of unaccessible files: linked with accessible files
-<li> debugging: when does this occur
-<li> finish ontology dialog
-<li> question? what is the difference to TextButton?
-<li> remove this warning
-<li> tableHeaderChange: requires view to change to views, not ontology
+<li> allow to adjust height
+<li> design of project tree
+<li> projectTree design: If folders and other items have boxes of slightly different brightness
+<li> projectTree: drag&drop of external files
+<li> projectTree: select multiple items to edit... What is use case
+<li> projectView: allow scroll in sidebar, size changegable, drag-and-drop to move
+<li> projectView: selection does not scroll; one cannot select a row
 </ul>
 
 <h3>Things worthwile remembering/uncritical</h3>
@@ -41,9 +39,16 @@ todoString = """
 <li> addToConfig
 <li> addToConfig
 <li> addToConfig
+<li> can you sort for true false in tables too?
+<li> create list of unaccessible files: linked with accessible files
+<li> extractor: creates links to sample/instrument
+<li> for now, sorted by last change of project itself: future create a view that does that automatically
 <li> if successful in Aug2023: remove
 <li> if successful in Aug2023: remove "echo....read"
+<li> invert filter: not 'Sur' in name => '^((?!Sur).)*$' in name
 <li> moreChecksDB: if parent has corresponding show
+<li> only write markdown files for now
+<li> remove this warning
 <li> serverConfiguration: this should become a GUI and CLI and separate into three-files: functions, CLI, GUI
 </ul>
 """
