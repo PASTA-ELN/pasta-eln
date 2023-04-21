@@ -78,9 +78,7 @@ class ConfigurationSetup(QWidget):
 
     #Install couchdb
     if not existsCouchDB:
-      textCouchDB  = '' if existsCouchDB else 'couch-DB'
-      text = rootInstallLinux.replace('XX--XX', textCouchDB)
-      button = QMessageBox.question(self, "Root installations", text)
+      button = QMessageBox.question(self, "Root installations", rootInstallLinux)
       if button == QMessageBox.Yes:
         dirName = QFileDialog.getExistingDirectory(self,'Create and select directory for scientific data',str(Path.home()))
         installLinuxRoot(existsCouchDB, dirName)
@@ -96,7 +94,7 @@ class ConfigurationSetup(QWidget):
         self.mainText = self.mainText.replace('- Configuration of preferences','- Configuration of preferences is acceptable' )
         self.text1.setMarkdown(self.mainText)
       else:
-        button = QMessageBox.question(self, "PASTA-ELN configuration", "Do you want to create/repain the configuration.")
+        button = QMessageBox.question(self, "PASTA-ELN configuration", "Do you want to create/repair the configuration.")
         if button == QMessageBox.Yes:
           configuration('repair')
         else:

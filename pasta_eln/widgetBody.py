@@ -1,4 +1,5 @@
 """ Central widget: everything that is not sidebar: switches between project-view and table-details """
+import logging
 from PySide6.QtWidgets import QWidget, QVBoxLayout   # pylint: disable=no-name-in-module
 from PySide6.QtCore import Slot   # pylint: disable=no-name-in-module
 
@@ -31,8 +32,10 @@ class Body(QWidget):
       docType (str): document type
       projID (str): project ID for filtering
     """
+    logging.debug('body:changeTable |'+docType+'|'+projID+'|')
     self.project.hide()
     self.docTypes.show()
+    return
 
 
   @Slot(str)
@@ -43,5 +46,7 @@ class Body(QWidget):
     Args:
       docID (str): document id
     """
+    logging.debug('body:changeProject |'+docID+'|')
     self.docTypes.hide()
     self.project.show()
+    return

@@ -101,7 +101,7 @@ class IconButton(QPushButton):
 
     Additional parameter:
     - hide (bool): hidden or shown initially
-    - text (str): text shown on button additionally  #TODO_P4 question? what is the difference to TextButton?
+    - text (str): text shown on button additionally  #TODO_P3 design: what is the difference to TextButton?
 
     Args:
       iconName (str): icon to show on button
@@ -202,7 +202,7 @@ class Image():
 
 class Label(QLabel):
   """ Label widget: headline, ... """
-  def __init__(self, text='', size='', layout=None):
+  def __init__(self, text='', size='', layout=None, function=None, docID=''):
     """
     Initialization
 
@@ -210,6 +210,8 @@ class Label(QLabel):
       text (str): text on label
       size (str): size ['h1']
       layout (QLayout): layout to which to add the label
+      function (function): function to call on mouse click
+      docID (str): docID on other string to connect to this label
     """
     super().__init__()
     self.setText(text)
@@ -217,7 +219,18 @@ class Label(QLabel):
       self.setStyleSheet('font-size: 14pt')
     if layout is not None:
       layout.addWidget(self)
+    self.mouseFunction = function
+    self.identifier = docID
     return
+
+  def mousePressEvent(self, _):
+    """
+    Event after mouse press: only use internal members, not the event itself
+    """
+    if self.mouseFunction is not None:
+      self.mouseFunction(self.text(), self.identifier)
+    return
+
 
 
 def showMessage(parent, title, text, icon='', style=''):

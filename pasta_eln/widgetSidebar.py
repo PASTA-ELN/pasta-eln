@@ -1,4 +1,5 @@
 """ Sidebar widget that includes the navigation items """
+import logging
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QGridLayout, QTreeWidget, QTreeWidgetItem, QFrame # pylint: disable=no-name-in-module
 from PySide6.QtCore import QSize, Slot                                      # pylint: disable=no-name-in-module
 from anytree import PreOrderIter
@@ -13,8 +14,8 @@ class Sidebar(QWidget):
     self.comm = comm
     comm.changeSidebar.connect(self.redraw)
     if hasattr(self.comm.backend, 'configuration'):
-      width = self.comm.backend.configuration['GUI']['sidebarWidth']
-      self.setFixedWidth(width)#64
+      self.sideBarWidth = self.comm.backend.configuration['GUI']['sidebarWidth']
+      self.setFixedWidth(self.sideBarWidth)
     if not hasattr(comm.backend, 'db'):  #if no backend
       configWindow = Configuration(comm.backend, 'setup')
       configWindow.exec()
@@ -26,7 +27,7 @@ class Sidebar(QWidget):
     self.mainL.setSpacing(7)
     self.setLayout(self.mainL)
     self.redraw()
-    #TODO_P3 convenience: allow scroll in sidebar, size changegable, drag-and-drop to move
+    #TODO_P4 projectView: allow scroll in sidebar, size changegable, drag-and-drop to move
     #   more below and other files
 
 
@@ -35,6 +36,7 @@ class Sidebar(QWidget):
     """
     Redraw sidebar: e.g. after change of project visibility in table
     """
+    logging.debug('sidebar:redraw |')
     # Delete old widgets from layout and create storage
     for i in reversed(range(self.mainL.count())):
       self.mainL.itemAt(i).widget().setParent(None)
@@ -44,8 +46,10 @@ class Sidebar(QWidget):
     self.widgetsProject = {} #title bar and widget that contains all of project
 
     if hasattr(self.comm.backend, 'db'):
-      hierarchy = self.comm.backend.db.getView('viewDocType/x0') #TODO_P3 sidebar: sort by -date
-      for project in hierarchy:
+      hierarchy = self.comm.backend.db.getView('viewDocType/x0')
+      #TODO_P5 for now, sorted by last change of project itself: future create a view that does that automatically
+      lastChangeDate = [self.comm.backend.db.getDoc(project['id'])['-date'] for project in hierarchy]
+      for project in [x for _, x in sorted(zip(lastChangeDate, hierarchy))]:
         projID = project['id']
         projName = project['value'][0]
         if self.openProjectId == '':
@@ -55,7 +59,9 @@ class Sidebar(QWidget):
         # projectW.setMinimumHeight(300) #convenience: allow scroll in sidebar
         projectL = QVBoxLayout(projectW)
         projectL.setContentsMargins(3,3,3,3)
-        btnProj = TextButton(projName, self.btnProject, projectL, projID+'/')
+        maxLabelCharacters = int((self.sideBarWidth-50)/7.1)
+        label = projName if len(projName)<maxLabelCharacters else projName[:maxLabelCharacters-3]+'...'
+        btnProj = TextButton(label, self.btnProject, projectL, projID+'/')
         btnProj.setStyleSheet("border-width:0")
         projectW.setStyleSheet("background-color:"+ getColor(self.comm.backend, 'secondaryDark'))
         self.widgetsProject[projID] = [btnProj, projectW]
@@ -69,6 +75,7 @@ class Sidebar(QWidget):
         btnScan = IconButton('mdi.clipboard-search-outline', self.btnScan, None, projID, 'Scan', self.comm.backend, text='Scan')
         actionL.addWidget(btnScan, 0,0)
         btnCurate = IconButton('mdi.filter-plus-outline', self.btnCurate, None, projID, 'Special', self.comm.backend, text='Special')
+        btnCurate.hide()
         actionL.addWidget(btnCurate, 0,1)
         projectL.addWidget(actionW)
         self.widgetsAction[projID] = actionW
@@ -86,15 +93,18 @@ class Sidebar(QWidget):
           if doctype[0]!='x':
             button = IconButton(iconTable[self.comm.backend.db.dataLabels[doctype]], self.btnDocType, None, \
                      doctype+'/'+projID, self.comm.backend.db.dataLabels[doctype],self.comm.backend)
-            listL.addWidget(button, 0, idx)
             button.setStyleSheet("border-width:0")
-
+            listL.addWidget(button, 0, idx)
+        button = IconButton('fa.file-o', self.btnDocType, None, '-/'+projID, 'Unidentified', self.comm.backend)
+        button.setStyleSheet("border-width:0")
+        listL.addWidget(button, 0, len(self.comm.backend.db.dataLabels)+1)
         projectL.addWidget(listW)
         self.widgetsList[projID] = listW
 
         # show folders as hierarchy
+        #TODO_P4 allow to adjust height
         treeW = QTreeWidget()
-        #treeW.hide()  #convenience: allow scroll in sidebar
+        treeW.hide()  #convenience: allow scroll in sidebar
         treeW.setHeaderHidden(True)
         treeW.setColumnCount(1)
         treeW.itemClicked.connect(self.btnTree)
@@ -102,7 +112,7 @@ class Sidebar(QWidget):
         rootItem = treeW.invisibleRootItem()
         count = 0
         for node in PreOrderIter(hierarchy, maxlevel=2):
-          if not node.is_root:
+          if not node.is_root and node.id[0]=='x':
             rootItem.insertChild(count, self.iterateTree(node, projID))
             count += 1
         projectL.addWidget(treeW)
@@ -180,6 +190,7 @@ class Sidebar(QWidget):
     What happens if user clicks button "Scan"
     """
     self.comm.backend.scanProject(self.openProjectId)
+    #TODO_P3 scanning for progress bar
     self.comm.changeProject.emit(self.openProjectId,'')
     self.comm.changeSidebar.emit()
     showMessage(self, 'Information','Scanning finished')
@@ -187,9 +198,9 @@ class Sidebar(QWidget):
 
   def btnCurate(self):
     """
-    What happens if user clicks button "Curate"
+    What happens if user clicks button "Special"
+    -> pull data from server and include
     """
-    print("SB is unsure if we still need it? Perhaps to focus the user")
     return
   def btnTree(self, item):
     """

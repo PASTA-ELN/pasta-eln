@@ -115,14 +115,15 @@ class Backend(CLI_Mixin):
     # change content
     self.addData('-edit-', doc)
     # change folder-name in database of all children
-    items = self.db.getView('viewHierarchy/viewPaths', startKey=self.cwd.relative_to(self.basePath).as_posix())
-    for item in items:
-      oldPathparts = item['key'].split('/')
-      newPathParts = doc['-branch']['path'].split('/')
-      newPath = '/'.join(newPathParts+oldPathparts[len(newPathParts):]  )
-      # print(item['id']+'  old='+item['key']+'  branch='+str(item['value'][-1])+\
-      #      '  child='+str(item['value'][-3])+'  new='+newPath)
-      self.db.updateBranch(item['id'], item['value'][-1], item['value'][-3], path=newPath)
+    if doc['-type'][0][0]=='x':
+      items = self.db.getView('viewHierarchy/viewPaths', startKey=self.cwd.relative_to(self.basePath).as_posix())
+      for item in items:
+        oldPathparts = item['key'].split('/')
+        newPathParts = doc['-branch']['path'].split('/')
+        newPath = '/'.join(newPathParts+oldPathparts[len(newPathParts):]  )
+        # print(item['id']+'  old='+item['key']+'  branch='+str(item['value'][-1])+\
+        #      '  child='+str(item['value'][-3])+'  new='+newPath)
+        self.db.updateBranch(item['id'], item['value'][-1], item['value'][-3], path=newPath)
     return
 
 
@@ -135,7 +136,7 @@ class Backend(CLI_Mixin):
         doc (dict): to be stored
         hierStack (list): hierStack from external functions
         localCopy (bool): copy a remote file to local version
-        kwargs (dict): additional parameter, i.e. callback for curation
+        kwargs (dict): additional parameters
             forceNewImage (bool): create new image in any case
 
     Returns:
@@ -167,7 +168,7 @@ class Backend(CLI_Mixin):
       doc['-type'] = docType.split('/')
       if len(hierStack) == 0:
         hierStack = self.hierStack
-    logging.info('Add/edit data in cwd:'+self.cwd.as_posix()+' with stack:'+str(hierStack)+' and name'\
+    logging.info('Add/edit data in cwd:'+str(self.cwd)+' with stack:'+str(hierStack)+' and name'\
                  +doc['-name']+' and type:'+str(doc['-type']))
 
     # collect structure-doc and prepare
@@ -216,7 +217,13 @@ class Backend(CLI_Mixin):
           doc['-name'] = Path(doc['-name']).name
         elif doc['-name']!='' and (self.cwd/doc['-name']).exists():               #file exists
           path = self.cwd/doc['-name']
-        else:                                                     #make up name
+        elif '-branch' in doc:
+          if len(doc['-branch'])==1:
+            if doc['-branch'][0]['path'] is not None and (self.basePath/doc['-branch'][0]['path']).exists():
+              path = self.basePath/doc['-branch'][0]['path']
+          else:
+            logging.warning('backend: add document with multiple branches'+str(doc['-branch']) )
+        else:                                                                     #make up name
           shasum  = None
         if shasum is not None: # and doc['-type'][0]=='measurement':         #samples, procedures not added to shasum database, getMeasurement not sensible
           if shasum == '':
@@ -281,7 +288,7 @@ class Backend(CLI_Mixin):
         dirName (string): change into this directory (absolute path given). For if data is moved
         kwargs (dict): additional parameter
     """
-    logging.info('changeHierarchy should only be used in CLI mode') #TODO_P4 remove this warning
+    logging.info('changeHierarchy should only be used in CLI mode') #TODO_P5 remove this warning
     if docID is None or (docID[0]=='x' and docID[1]!='-'):  #cd ..: none. close 'project', 'task'
       self.hierStack.pop()
       self.cwd = self.cwd.parent
@@ -319,19 +326,6 @@ class Backend(CLI_Mixin):
     rerunScanTree = False
     #prepare lists and start iterating
     inDB_all = self.db.getView('viewHierarchy/viewPaths')
-    #update content between DB and harddisk
-    for line in inDB_all:
-      if line['value'][1][0][0]=='x':
-        continue
-      doc = self.db.getDoc(line['id'])
-      if line['key'].startswith('http'):
-        path = Path(line['key'])
-      else:
-        path = self.basePath/line['key']
-      self.useExtractors(path, '', doc)
-      del doc['-branch']  #don't update / change it here
-      self.db.updateDoc(doc, line['id'])
-
     pathsInDB_x    = [i['key'] for i in inDB_all if i['value'][1][0][0]=='x']  #all structure elements: task, subtasts
     pathsInDB_data = [i['key'] for i in inDB_all if i['value'][1][0][0]!='x']
     for root, dirs, files in os.walk(self.cwd, topdown=True):
@@ -360,21 +354,21 @@ class Backend(CLI_Mixin):
         rerunScanTree = True
       # handle files
       for fileName in files:
-        if fileName.startswith('.') or fileName.startswith('trash_'):
+        if fileName.startswith('.') or fileName.startswith('trash_') or '_PastaExport' in fileName:
           continue
         path = (Path(root).relative_to(self.basePath) /fileName).as_posix()
         if path in pathsInDB_data:
-          print("File already in DB:",path)
+          logging.info("Scan: file already in DB: "+path)
           pathsInDB_data.remove(path)
         else:
-          print("Add file to DB:",path)
-          _ = self.addData('measurement', {'-name':path}, hierStack)
+          logging.info("Scan: add file to DB: "+path)
+          _ = self.addData('-', {'-name':path}, hierStack)
     #finish method
     self.cwd = self.basePath/projPath
     orphans = [i for i in pathsInDB_data if i.startswith(self.cwd.relative_to(self.basePath).as_posix())]
-    print('These files are on DB but not harddisk\n', orphans )
+    logging.info('Scan: these files are on DB but not harddisk\n'+'\n  '.join(orphans))
     orphanDirs = [i for i in pathsInDB_x if i==self.cwd.relative_to(self.basePath).as_posix() and i!=projPath]
-    print('These directories are on DB but not harddisk\n', orphanDirs)
+    logging.info('Scan: these directories are on DB but not harddisk\n'+'\n  '.join(orphanDirs))
     for orphan in orphans+orphanDirs:
       docID = [i for i in inDB_all if i['key']==orphan][0]['id']
       doc   = dict(self.db.getDoc(docID))
@@ -417,42 +411,47 @@ class Backend(CLI_Mixin):
       absFilePath = self.basePath/filePath
     pyFile = 'extractor_'+extension.lower()+'.py'
     pyPath = self.extractorPath/pyFile
-    if len(doc['-type'])==1:
-      doc['-type'] += [extension]
-    try:
-      if not pyPath.exists():
-        raise ValueError('Extractor does not exist')
+    success = False
+    if pyPath.exists():
+      success = True
       # import module and use to get data
       os.environ['QT_API'] = 'pyside2'
       import matplotlib.pyplot as plt  #IMPORTANT: NO PYPLOT OUTSIDE THIS QT_API BLOCK
       plt.clf()
-      module  = importlib.import_module(pyFile[:-3])
-      content = module.use(absFilePath, '/'.join(doc['-type']) )
+      try:
+        module  = importlib.import_module(pyFile[:-3])
+        content = module.use(absFilePath, '/'.join(doc['-type']) )
+      except:
+        logging.error('ERROR with extractor '+pyFile+'\n'+traceback.format_exc())
+        success = False
       os.environ['QT_API'] = 'pyside6'
       #combine into document
-      doc.update(content)
-      for meta in ['metaVendor','metaUser']:
-        for item in doc[meta]:
-          if isinstance(doc[meta][item], tuple):
-            doc[meta][item] = list(doc[meta][item])
-          if not isinstance(doc[meta][item], (str, int, float, list)) and \
-            doc[meta][item] is not None:
-            print(' -> simplify ',meta,item, doc[meta][item])
-            doc[meta][item] = str(doc[meta][item])
-      doc['shasum']    = shasum
-      if doc['recipe'].startswith('/'.join(doc['-type'])):
-        doc['-type']      = doc['recipe'].split('/')
-      else:
-        doc['-type']     += doc['recipe'].split('/')
-      del doc['recipe']
-      if 'links' in doc:
-        #TODO_P3 extractor: creates links to sample/instrument
-        if len(doc['links'])==0:
-          del doc['links']
-    except:
-      print('  **Error with extractor',pyFile)
-      logging.error('ERROR with extractor '+pyFile+'\n'+traceback.format_exc())
-      doc['-type'] = ['-']
+      if success:
+        doc.update(content)
+        for meta in ['metaVendor','metaUser']:
+          for item in doc[meta]:
+            if isinstance(doc[meta][item], tuple):
+              doc[meta][item] = list(doc[meta][item])
+            if not isinstance(doc[meta][item], (str, int, float, list)) and \
+              doc[meta][item] is not None:
+              print(' -> simplify ',meta,item, doc[meta][item])
+              doc[meta][item] = str(doc[meta][item])
+        doc['shasum']    = shasum
+        if doc['-type'][0]==doc['recipe'].split('/')[0] or doc['-type'][0]=='-':
+          doc['-type']     = doc['recipe'].split('/')
+        else:
+          #user has strange wish: trust him/her
+          logging.info('user has strange wish: trust him/her: '+'/'.join(doc['-type'])+'  '+doc['recipe'])
+        del doc['recipe']
+        if 'fileExtension' not in doc['metaVendor']:
+          doc['metaVendor']['fileExtension'] = extension.lower()
+        if 'links' in doc:
+          #TODO_P5 extractor: creates links to sample/instrument
+          if len(doc['links'])==0:
+            del doc['links']
+    if not success:
+      print('  **Warning, issue with extractor',pyFile)
+      logging.warning('Issue with extractor '+pyFile)
       doc['metaUser'] = {'filename':absFilePath.name, 'extension':absFilePath.suffix,
         'filesize':absFilePath.stat().st_size,
         'created at':datetime.fromtimestamp(absFilePath.stat().st_ctime, tz=timezone.utc).isoformat(),
@@ -515,7 +514,38 @@ class Backend(CLI_Mixin):
         if reportHTML:
           report += '<font color="red">Python error in extractor</font><br>'
           report += htmlStr+'python-error">website</a><br>'
-          report += '\n'+traceback.format_exc()+'\n'
+          report += '<br>'+traceback.format_exc(limit=3).replace('\n','<br>')+'<br>'
+    if success:
+      if 'recipe' in content:
+        possibleDocTypes = [i for i in self.db.dataLabels.keys() if i[0]!='x']
+        matches = [i for i in possibleDocTypes if content['recipe'].startswith(i)]
+        if len(matches)==0 and content['recipe']!='' and content['recipe']!='-':
+          if interactive:
+            print("**ERROR: recipe does not follow doctype in ontology.")
+          if reportHTML:
+            report += '<font color="red">Recipe does not follow doctype in ontology</font><br>'
+          else:
+            report = "ExtractorERROR recipe does not follow doctype in ontology"
+        else:
+          if interactive and not reportHTML:
+            print("**Info: recipe is good: "+content['recipe'])
+          if reportHTML:
+            report += '<br>Entire extracted size '
+            size = len(str(content))
+            if size > 1024:
+              report += str(int(size/1024))+'kB'
+            else:
+              report += str(size)+'B'
+            report += '<br>Info: recipe is good: '+content['recipe']+'<br>'
+          else:
+            report = 'ExtractorInfo: recipe is good: '+content['recipe']+'<br>'
+      else:
+        if interactive:
+          print("**ERROR: recipe not included in extractor.")
+        if reportHTML:
+          report += '<font color="red">Recipe not included in extractor</font><br>'
+        else:
+          report = "ExtractorERROR recipe not included in extractor"
     if success:
       try:
         _ = json.dumps(content)
@@ -573,7 +603,7 @@ class Backend(CLI_Mixin):
                         str(type(content['metaVendor'][key]))+'</font><br>'
             else:
               print('    FAIL',key, content['metaUser'][key], type(content['metaUser'][key]))
-      #verify image is of correct type
+    #verify image is of correct type
     if success and 'image' not in content:
       success = False
       if interactive:
@@ -613,7 +643,14 @@ class Backend(CLI_Mixin):
       else:
         report = "ExtractorERROR Matplot image"
     if success and isinstance(content['image'], str):  #show content
-      report += '<br><b>Additional window shows the image</b><br>'
+      if reportHTML:
+        report += '<br>Image size '
+        size = len(content['image'])
+        if size > 1024:
+          report += str(int(size/1024))+'kB'
+        else:
+          report += str(size)+'B'
+        report += '<br><b>Additional window shows the image</b><br>'
       if content['image'].startswith('data:image/'):
         #png or jpg encoded base64
         extension = content['image'][11:14]
@@ -680,7 +717,7 @@ class Backend(CLI_Mixin):
       projDoc = self.db.getDoc(projI['id'])
       for root, dirs, files in os.walk(self.basePath/projDoc['-branch'][0]['path']):
         for fileName in files:
-          if fileName.startswith('.') or fileName.startswith('trash_'):
+          if fileName.startswith('.') or fileName.startswith('trash_') or '_PastaExport' in fileName:
             continue
           path = (Path(root).relative_to(self.basePath) /fileName).as_posix()
           if path not in pathsInDB_data:
@@ -703,8 +740,9 @@ class Backend(CLI_Mixin):
     if len(orphans)>0:
       output += f'{Bcolors.FAIL}**ERROR bch01: These files of database not on filesystem: '+',\t'.join(orphans)\
                +f'{Bcolors.ENDC}\n'
+    output += f'{Bcolors.UNDERLINE}**** File summary ****{Bcolors.ENDC}\n'
     if len(orphans)==0 and count==0:
-      output += "** File tree CLEAN **\n"
+      output += "Success\n"
     else:
-      output += "** File tree NOT clean **\n"
+      output += "Failure\n"
     return output

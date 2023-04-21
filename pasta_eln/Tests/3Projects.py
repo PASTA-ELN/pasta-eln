@@ -90,12 +90,12 @@ class TestStringMethods(unittest.TestCase):
       print('\n*** TEST PROCEDURES ***')
       sopDir = self.dirName/'StandardOperatingProcedures'
       os.makedirs(sopDir)
-      with open(sopDir/'Nanoindentation.org','w', encoding='utf-8') as fOut:
-        fOut.write('* Put sample in nanoindenter\n* Do indentation\nDo not forget to\n- calibrate tip\n- *calibrate stiffness*\n')
+      with open(sopDir/'Nanoindentation.md','w', encoding='utf-8') as fOut:
+        fOut.write('# Put sample in nanoindenter\n# Do indentation\nDo not forget to\n- calibrate tip\n- *calibrate stiffness*\n')
       with open(sopDir/'SEM.md','w', encoding='utf-8') as fOut:
         fOut.write('# Put sample in SEM\n# Do scanning\nDo not forget to\n- contact the pole-piece\n- **USE GLOVES**\n')
       self.be.addData('procedure', {'-name': 'StandardOperatingProcedures/SEM.md', 'comment': '#v1'})
-      self.be.addData('procedure', {'-name': 'StandardOperatingProcedures/Nanoindentation.org', 'comment': '#v1'})
+      self.be.addData('procedure', {'-name': 'StandardOperatingProcedures/Nanoindentation.md', 'comment': '#v1'})
       print(self.be.output('procedure'))
 
       ### TEST SAMPLES
@@ -110,7 +110,9 @@ class TestStringMethods(unittest.TestCase):
       shutil.copy(examplePath/'Zeiss.tif', semDirName)
       shutil.copy(examplePath/'RobinSteel0000LC.txt', indentDirName)
       shutil.copy(examplePath/'1500nmXX 5 7074 -4594.txt', indentDirName)
-      self.be.scanTree()
+      shutil.copy(examplePath/'test.odt', semDirName)
+      shutil.copy(examplePath/'story.odt', semDirName)
+      self.be.scanProject(projID1)
 
       ### USE GLOBAL FILES
       print('*** USE GLOBAL FILES ***')

@@ -61,12 +61,22 @@ sudo snap remove couchdb
 
 ## How to write code
 ### How to create a new version
-1. pylint pasta_eln
-2. make -C docs html; firefox docs/build/html/index.html
-3. run test "python -m pasta_eln.Tests.3Projects"
-4. ensure extractors identical except CSV, JPG: "diff -q pasta_eln/Extractors/ ../Extractors/ |grep differ"
-5. normal commit to test all actions: pylint, documentation, ...
-6. create a new version: ./commit.py "Minimal viable product" 1
+1. Lint
+2. test documentation building. The documentation can be viewed with "firefox docs/build/html/index.html"
+3. run test
+4. ensure extractors updated
+5. do normal commit
+6. create a new version:
+``` bash
+pylint pasta_eln
+make -C docs html
+python -m pasta_eln.Tests.3Projects
+diff -q ../Extractors/ pasta_eln/Extractors/ |grep differ
+
+git commit -a -m 'linting and testing'
+
+./commit.py "Minimal viable product" 1
+```
    **THIS STEP IS NECESSARY FOR ALL GITHUB-Actions TO WORK**
 
 ### How to write small python programs that do things

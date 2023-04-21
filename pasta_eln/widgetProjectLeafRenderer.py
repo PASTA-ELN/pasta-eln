@@ -12,10 +12,10 @@ class ProjectLeafRenderer(QStyledItemDelegate):
   """ renders each leaf of project tree using QPaint """
   def __init__(self):
     super().__init__()
-    self.lineSep = 20 #TODO_P5 addToConfig
-    self.debugMode = True
     self.comm = None
     self.width = -1
+    self.debugMode = logging.DEBUG
+    self.lineSep = 20
 
 
   def setCommunication(self, comm):
@@ -27,10 +27,12 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     """
     self.comm = comm
     self.width = self.comm.backend.configuration['GUI']['imageWidthProject']
+    self.debugMode = logging.root.level<logging.INFO
+    self.lineSep = 20 #TODO_P5 addToConfig
     return
 
-  #TODO_P3 projectTree: show database details as copy-paste labels in dialogForm?
-
+  #TODO_P4 projectTree design: If folders and other items have boxes of slightly different brightness
+  # (darker gray for the former and lighter for the latter), the project structure might be easier to understand. 
   def paint(self, painter, option, index):
     """
     Paint this item
@@ -70,9 +72,10 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       painter.translate(-topLeft2nd)
     yOffset += self.lineSep/2
     hiddenText = '     \U0001F441' if len([b for b in doc['-branch'] if False in b['show']])>0 else ''
-    painter.drawStaticText(xOffset, yOffset, QStaticText(doc['-name']+hiddenText))
+    docTypeText= 'folder' if doc['-type'][0][0]=='x' else '/'.join(doc['-type'])
+    painter.drawStaticText(xOffset, yOffset, QStaticText(doc['-name']+hiddenText+'\t\t'+docTypeText))
     if self.debugMode:
-      painter.drawStaticText(xOffset+500, yOffset, QStaticText(index.data(Qt.DisplayRole))) #doc['_id']
+      painter.drawStaticText(xOffset+700, yOffset, QStaticText(index.data(Qt.DisplayRole))) #doc['_id']
     if '-tags' in doc and len(doc['-tags'])>0:
       yOffset += self.lineSep
       tags = ['_curated_' if i=='_curated' else '#'+i for i in doc['-tags']]
@@ -92,8 +95,20 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       painter.translate(QPoint(xOffset-3, yOffset+15))
       text.drawContents(painter)
       painter.translate(-QPoint(xOffset-3, yOffset+15))
+      #TODO_P3 design ProjectView: Currently, the comment is more highlighted than the title of an item due
+      # to a larger and bolder font. It would make more sense though if the titles were bolder, larger and
+      # thus more readable, while tags and comments are less highlighted.
     return
 
+    #TODO_P3 design projectLeaves: 3 columns?
+    # Maybe the comment can be moved to the central part of the box, to save some space.
+
+    #TODO_P3 design projectLeaves:
+    # The graphical output of the extractors and text output from .md files is placed a bit too close to the
+    # right edge of the window. Maybe these thumbnails could be reduced in size slightly to gain some space
+    # between them and the boxes edges.
+    # The same can be said about the text within the boxes- item names nearly overlap with the boxes edge on
+    # the right side.
 
   def sizeHint(self, option, index):
     """
@@ -121,14 +136,14 @@ class ProjectLeafRenderer(QStyledItemDelegate):
             pixmap = QPixmap()
             pixmap.loadFromData(base64.b64decode(doc['image'][22:]))
             pixmap = pixmap.scaledToWidth(self.width)
-            height = pixmap.height()
+            height = max(height, pixmap.height())
           except:
             print("**Exception in Renderer.sizeHint") #TODO_P5 if successful in Aug2023: remove
         else:
-          height = int(self.width*3/4)
+          height = max(height, int(self.width*3/4))
       if 'content' in docKeys and not folded:
         text = QTextDocument()
         text.setMarkdown(self.comm.backend.db.getDoc(docID)['content'])
-        height = text.size().toTuple()[1]
+        height = max(height, text.size().toTuple()[1])
       return QSize(400, height)
     return QSize()

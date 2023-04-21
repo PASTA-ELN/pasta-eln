@@ -58,7 +58,11 @@ def text2html(text):
     if 'Yellow: WARNING should' in text[i]:
       text[i] = text[i].replace('Yellow: WARNING should','Magenta: WARNING should')
     text[i] = text[i].replace('****','').strip()
-  return '\n'.join(text)
+  text = '<div align="right">'+'\n'.join(text)
+  text = text.replace('<br><b> List all database entries </b><br>',\
+                      '</div><div align="left">\n<br><b> List all database entries </b><br>')
+  text += '</div>'
+  return text
 
 
 class CLI_Mixin:

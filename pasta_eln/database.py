@@ -192,8 +192,11 @@ class Database:
     try:
       res = self.db.create_document(doc)
     except:
-      print('**ERROR: database.py:saveDoc could not save, likely JSON issue')
-      print(doc)
+      logging.error('could not save, likely JSON issue')
+      if 'image' in doc:
+        del doc['image']
+      logging.error(str(doc))
+      logging.error(traceback.format_exc())
       res=None
     return res
 
@@ -320,7 +323,7 @@ class Database:
     return newDoc
 
 
-  def updateBranch(self, docID, branch, child, stack=None, path=None):
+  def updateBranch(self, docID, branch, child, stack=None, path=''):
     """
     Update document by updating the branch
 
@@ -329,7 +332,7 @@ class Database:
       branch (int):  index of branch to change
       child (int):  new number of child
       stack (list):  new list of ids
-      path (str): new path
+      path (str): new path; None is acceptable
 
     Returns:
       str, str: old path, new path
@@ -337,7 +340,7 @@ class Database:
     doc = self.db[docID]
     doc['-client'] = 'updateBrach'
     oldPath = doc['-branch'][branch]['path']
-    if path is None:
+    if path=='':
       name = f'{child:03d}'+'_'+'_'.join(oldPath.split('/')[-1].split('_')[1:])
       path = '/'.join(oldPath.split('/')[:-1]+[name])
     doc['-branch'][branch]['path']=path
@@ -654,7 +657,7 @@ class Database:
       outstring+= f'{Bcolors.WARNING}Yellow: WARNING should not happen (e.g. procedures without project){Bcolors.ENDC}\n'
       outstring+= f'{Bcolors.FAIL}Red: FAILURE and ERROR: NOT ALLOWED AT ANY TIME{Bcolors.ENDC}\n'
       outstring+= 'Normal text: not understood, did not appear initially\n'
-      outstring+= f'{Bcolors.UNDERLINE}**** List all DOCUMENTS ****{Bcolors.ENDC}\n'
+      outstring+= f'{Bcolors.UNDERLINE}**** List all database entries ****{Bcolors.ENDC}\n'
     else:
       outstring = ''
     repair = kwargs.get('repair', False)
@@ -844,7 +847,7 @@ class Database:
 
     ##TEST views
     if verbose:
-      outstring+= f'{Bcolors.UNDERLINE}**** List problematic VIEWS ****{Bcolors.ENDC}\n'
+      outstring+= f'{Bcolors.UNDERLINE}**** List problematic database tables ****{Bcolors.ENDC}\n'
     view = self.getView('viewIdentify/viewSHAsum')
     shasumKeys = []
     for item in view:

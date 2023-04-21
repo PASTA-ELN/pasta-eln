@@ -301,7 +301,7 @@ def configuration(command='test', user='', password='', pathPasta=''):
   guiItems = {"theme": "light_blue",
     "imageWidthProject": 300,
     "imageWidthDetails": 600,
-    "sidebarWidth": 200,
+    "sidebarWidth": 280,
     "loggingLevel": "INFO",
     "tableColumns": {}}
   for key, value in guiItems.items():

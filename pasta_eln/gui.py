@@ -74,7 +74,7 @@ class MainWindow(QMainWindow):
       viewMenu.addSeparator()
       Action('&Tags',         self.viewMenu, viewMenu, self, 'Ctrl+T', '_tags_')
       Action('&Unidentified', self.viewMenu, viewMenu, self, name='-')
-      #TODO_P4 create list of unaccessible files: linked with accessible files
+      #TODO_P5 create list of unaccessible files: linked with accessible files
 
     #GUI elements
     mainWidget = QWidget()
@@ -98,6 +98,7 @@ class MainWindow(QMainWindow):
     Args:
       doc (dict): document
     """
+    logging.debug('gui:formdoc ')
     formWindow = Form(self.comm, doc)
     formWindow.exec()
     return
@@ -165,32 +166,30 @@ class MainWindow(QMainWindow):
     restart()
     return
 
-# TODO_P2 copy of file: should it the be the same in database or should it be two separate entities??
-#         - what happens if you want to change one but don't want to change the other?
+# TODO_P5 copy of file: should it the be the same in database or should it be two separate entities??
+#         - what happens if you want to change metadata of one but don't want to change the other?
 #           - copy of raw data into one that will changed, to clean
-#         - link of copies:
-# TODO_P2 project view: copies/original sometimes are not displayed: can you give more details: I tried .tif and .odp
 
 ##############
 ## Main function
 def main():
   """ Main method and entry point for commands """
-  app = QApplication()
-  window = MainWindow()
-  # logging
+  # logging has to be started first
   logPath = Path.home()/'pastaELN.log'
   #  old versions of basicConfig do not know "encoding='utf-8'"
-  logLevel = getattr(logging, window.backend.configuration['GUI']['loggingLevel'])
-  logging.basicConfig(filename=logPath, level=logLevel, format='%(asctime)s|%(levelname)s:%(message)s',
+  logging.basicConfig(filename=logPath, level=logging.INFO, format='%(asctime)s|%(levelname)s:%(message)s',
                       datefmt='%m-%d %H:%M:%S')
   for package in ['urllib3', 'requests', 'asyncio', 'PIL', 'matplotlib.font_manager']:
     logging.getLogger(package).setLevel(logging.WARNING)
   logging.info('Start PASTA GUI')
   # remainder
+  app = QApplication()
+  window = MainWindow()
+  logging.getLogger().setLevel(getattr(logging, window.backend.configuration['GUI']['loggingLevel']))
   theme = window.backend.configuration['GUI']['theme']
   if theme!='none':
     apply_stylesheet(app, theme=theme+'.xml')
-  # test if qtawesome and matplot can coexist
+  # qtawesome and matplot cannot coexist
   import qtawesome as qta
   if not isinstance(qta.icon('fa5s.times'), QIcon):
     logging.error('qtawesome: could not load. Likely matplotlib is included and can not coexist.')

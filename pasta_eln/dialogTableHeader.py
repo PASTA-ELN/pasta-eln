@@ -111,7 +111,7 @@ class TableHeader(QDialog):
       #   fConf.write(json.dumps(self.comm.backend.configuration,indent=2))
       # self.comm.changeTable('','')
       # self.comm.changeDetails('redraw')
-      #TODO_P4 tableHeaderChange: requires view to change to views, not ontology
+      #TODO_P3 tableHeaderChange: requires view to change to views, not ontology
       showMessage(self, 'To be implemented','The changing of the table headers has to be fully implemented, yet.')
       self.accept()  #close
     else:

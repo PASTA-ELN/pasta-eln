@@ -19,9 +19,12 @@ def use(filePath, recipe='', saveFileName=None):
   """
   # Extractor
   image = Image.open(filePath)
+  maxSize = 400
+  if max(image.size)>maxSize:
+    scale = max(image.size)/maxSize
+    image = image.resize( (np.array(image.size)/scale).astype(int) )
   metaVendor = image.info
   imgArr = np.array(image)
-  recipe = 'image/jpg'
   metaUser   = {'number pixel': imgArr.size,
                 'dimension': imgArr.shape}
 
@@ -37,7 +40,7 @@ def use(filePath, recipe='', saveFileName=None):
   imageData = "data:image/jpg;base64," + imageData
 
   # return everything
-  return {'image':imageData, 'recipe':recipe, 'metaVendor':metaVendor, 'metaUser':metaUser}
+  return {'image':imageData, 'recipe':'measurement/image', 'metaVendor':metaVendor, 'metaUser':metaUser}
 
   #other datatypes could follow here if statements are used
   #...

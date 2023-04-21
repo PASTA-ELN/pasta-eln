@@ -27,9 +27,10 @@ class Project(QWidget):
     self.taskID = ''
     self.docProj= {}
     self.showAll= False
+    self.actionAddSubfolder = None
 
 
-  @Slot(str)
+  @Slot(str, str)
   def changeProject(self, projID, docID):
     """
     What happens when user clicks to change doc-type
@@ -38,6 +39,7 @@ class Project(QWidget):
       projID (str): document id of project; if empty, just refresh
       docID (str): document id of focus item, if not given focus at project
     """
+    logging.debug('project:changeProject |'+projID+'|'+docID+'|')
     #initialize
     for i in reversed(range(self.mainL.count())): #remove old
       self.mainL.itemAt(i).widget().setParent(None)
@@ -90,9 +92,11 @@ class Project(QWidget):
     self.tree.expandAll()
     if selectedIndex is not None:
       self.tree.selectionModel().select(selectedIndex, QItemSelectionModel.Select)
-      #TODO_P3 convenience: selection does not scroll; one cannot select a row
+      #TODO_P4 projectView: selection does not scroll; one cannot select a row
       self.tree.setCurrentIndex(selectedIndex)# Item(selectedItem)
     self.mainL.addWidget(self.tree)
+    if len(nodeHier.children)>0:
+      self.actionAddSubfolder.setVisible(False)
     return
 
 
@@ -144,29 +148,11 @@ class Project(QWidget):
         pathOldSib, pathNewSib = db.updateBranch(docID=line['id'], branch=line['value'][3], child=line['value'][0]+1)
         (Path(self.comm.backend.basePath)/pathOldSib).rename(Path(self.comm.backend.basePath)/pathNewSib)
     #change item in question
-    pathOld = Path(self.comm.backend.basePath)/branchOld['path']
-    if pathOld.exists():
+    if isinstance(branchOld['path'], str) and (Path(self.comm.backend.basePath)/branchOld['path']).exists():
+      pathOld = Path(self.comm.backend.basePath)/branchOld['path']
       pathOld.rename(Path(self.comm.backend.basePath)/pathNew)
     db.updateBranch(docID=docID, branch=branchIdx, stack=stackNew, path=pathNew, child=childNew)
     item.setText('/'.join(stackNew+[docID]))     #update item.text() to new stack
-    return
-
-
-  def btnEvent(self):
-    """ Click button on top of project page """
-    btnName = self.sender().accessibleName()
-    if btnName == 'projHide':
-      if self.bodyW.isHidden():
-        self.bodyW.show()
-      else:
-        self.bodyW.hide()
-    elif btnName == 'hideShow':
-      self.showAll = not self.showAll
-      self.changeProject('','')
-    elif btnName == 'addChild':
-      self.comm.backend.cwd = Path(self.comm.backend.basePath)/self.docProj['-branch'][0]['path']
-      self.comm.backend.addData('x1', {'-name':'folder 1', 'childNum':0}, [self.projID])
-      self.comm.changeProject.emit('','') #refresh project
     return
 
 
@@ -175,23 +161,22 @@ class Project(QWidget):
     Create header of page
     """
     self.docProj = self.comm.backend.db.getDoc(self.projID)
-    headerW = QWidget()  # Leaf(self.comm, node.id)
+    headerW = QWidget()
     headerL = QVBoxLayout(headerW)
     topbarW = QWidget()
     topbarL = QHBoxLayout(topbarW)
     hidden = '     \U0001F441' if len([b for b in self.docProj['-branch'] if False in b['show']])>0 else ''
     topbarL.addWidget(QLabel(self.docProj['-name']+hidden))
     topbarL.addStretch(1)
-    TextButton('Reduce',    self.btnEvent, topbarL, 'projHide', checkable=True)
-    TextButton('Hide/Show', self.btnEvent, topbarL, 'hideShow')
-    TextButton('Add child', self.btnEvent, topbarL, 'addChild')
+    TextButton('Hide/Show',         self.executeAction, topbarL, name='hideShow')
+    TextButton('Edit project',      self.executeAction, topbarL, name='editProject')
     more = TextButton('More',None, topbarL)
     moreMenu = QMenu(self)
-    Action('Scan',   self.executeAction, moreMenu, self, name='scanProject')
-    Action('Edit',   self.executeAction, moreMenu, self, name='editProject')
-    Action('Delete', self.executeAction, moreMenu, self, name='deleteProject')
+    Action('Reduce/increase width', self.executeAction, moreMenu, self, name='projHide')
+    Action('Scan',                  self.executeAction, moreMenu, self, name='scanProject')
+    self.actionAddSubfolder = Action('Add subfolder', self.executeAction, moreMenu, self, name='addChild')
+    Action('Delete',                self.executeAction, moreMenu, self, name='deleteProject')
     more.setMenu(moreMenu)
-
     headerL.addWidget(topbarW)
     self.bodyW   = QWidget()
     bodyL   = QVBoxLayout(self.bodyW)
@@ -205,11 +190,14 @@ class Project(QWidget):
     self.mainL.addWidget(headerW)
     return
 
-  #TODO_P3 projectTree: select multiple items to edit... What is use case
+  #TODO_P4 projectTree: select multiple items to edit... What is use case
 
   def executeAction(self):
     """ Any action by the buttons at the top of the page """
-    menuName = self.sender().data()
+    if hasattr(self.sender(), 'data'):  #action
+      menuName = self.sender().data()
+    else:                               #button
+      menuName = self.sender().accessibleName()
     if menuName=='editProject':
       self.comm.formDoc.emit(self.docProj)
       self.comm.changeProject.emit(self.projID,'')
@@ -236,6 +224,18 @@ class Project(QWidget):
       self.comm.changeProject.emit(self.projID,'')
       self.comm.changeSidebar.emit()
       showMessage(self, 'Information','Scanning finished')
+    elif menuName == 'projHide':
+      if self.bodyW.isHidden():
+        self.bodyW.show()
+      else:
+        self.bodyW.hide()
+    elif menuName == 'hideShow':
+      self.showAll = not self.showAll
+      self.changeProject('','')
+    elif menuName == 'addChild':
+      self.comm.backend.cwd = Path(self.comm.backend.basePath)/self.docProj['-branch'][0]['path']
+      self.comm.backend.addData('x1', {'-name':'folder 1', 'childNum':0}, [self.projID])
+      self.comm.changeProject.emit('','') #refresh project
     else:
       print("undefined menu / action",menuName)
     return

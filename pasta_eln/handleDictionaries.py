@@ -56,10 +56,12 @@ def fillDocBeforeCreate(data, docType):
   # Handle the important entries: -type, _id, -date, -branch
   if '-type' not in data:
     data['-type'] = [docType]
+  if data['-type']==['']:
+    data['-type']=['-']
   if isinstance(data['-type'], str):
     data['-type'] = data['-type'].split('/')
   if '_id' not in data:  # if new (if not update): create new id
-    data['_id'] = docType[0][0]+'-'+uuid.uuid4().hex
+    data['_id'] = data['-type'][0][0]+'-'+uuid.uuid4().hex
   data['-date']   = datetime.now().isoformat()
   if '-branch' not in data:
     print('Empty branch in data')

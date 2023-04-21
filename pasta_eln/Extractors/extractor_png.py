@@ -29,13 +29,12 @@ def use(filePath, recipe='', saveFileName=None):
   imgArr = np.array(image)
   if len(imgArr.shape)==3:
     imgArr = imgArr[:,:,0]
-  if recipe.endswith('crop'):                   #: Crop 3/4 of the image
+  if recipe == 'measurement/image/crop':    #: Crop 3/4 of the image
     newHeight = int(imgArr.shape[0]/2)
     newWidth  = int(imgArr.shape[1]/2)
     imgArr = imgArr[:newHeight, :newWidth]
-    recipe = 'image/png/crop'
-  else:                                         #: Default | uncropped
-    recipe = 'image/png'
+  elif True or recipe == 'measurement/image': #: Default | uncropped
+    recipe = 'measurement/image'
   maskBlackPixel = imgArr<128
   metaUser   = {'number black pixel': len(maskBlackPixel[maskBlackPixel]),
                 'number all pixel': int(np.prod(image.size)) }
