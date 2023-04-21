@@ -61,7 +61,6 @@ class MainWindow(QMainWindow):
     Action('&Test selected item extraction', self.executeAction, helpMenu, self, name='extractorTest2', shortcut='F2')
     Action('&Shortcuts',             self.executeAction, helpMenu, self, name='shortcuts')
     Action('&Todo list',             self.executeAction, helpMenu, self, name='todo')
-
     if hasattr(self.backend, 'db'):
       shortCuts = {'measurement':'m', 'sample':'s', 'x0':'p'} #TODO_P5 addToConfig
       for docType, docLabel in self.comm.backend.db.dataLabels.items():
@@ -88,6 +87,10 @@ class MainWindow(QMainWindow):
     mainLayout.addWidget(sidebar)
     mainLayout.addWidget(body)
     self.comm.changeTable.emit('x0','')
+
+    #other things that might be slower
+    tags = self.comm.backend.db.getView('viewIdentify/viewTagsAll')
+    self.comm.dbInfo['tags'] = list(set([i['key'] for i in tags]))
 
 
   @Slot(str)

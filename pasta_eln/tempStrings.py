@@ -5,18 +5,23 @@ todoString = """
 <ul>
 </ul>
 
-<h3>To be verified/identified</h3>
+<h3>Things currently working on</h3>
 <ul>
+<li> tags: get selected via a editable QCombobox and get shown as qlabels, that can be deleted
 </ul>
 
 <h3>Improvement to convenience</h3>
 <ul>
+<li> add splitter to increase / decrease image
 <li> design ProjectView: Currently, the comment is more highlighted than the title of an item due
 <li> design projectLeaves:
 <li> design projectLeaves: 3 columns?
 <li> design: make full width
 <li> design: what is the difference to TextButton?
 <li> finish ontology dialog
+<li> form: add button to add key-values
+<li> ontologyCheck: all names must be different
+<li> other items as non-edible things that can be copy-pasted
 <li> scanning for progress bar
 <li> table: shift-select
 <li> tableHeaderChange: requires view to change to views, not ontology
@@ -40,6 +45,7 @@ todoString = """
 <li> addToConfig
 <li> addToConfig
 <li> can you sort for true false in tables too?
+<li> copy of file: should it the be the same in database or should it be two separate entities??
 <li> create list of unaccessible files: linked with accessible files
 <li> extractor: creates links to sample/instrument
 <li> for now, sorted by last change of project itself: future create a view that does that automatically

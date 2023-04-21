@@ -61,7 +61,7 @@ class Form(QDialog):
       ontologyNode = [i for i in ontologyNode if i['name']!='-name']
     # Create form
     for key,value in self.doc.items():
-      if key[0] in ['_','-', '#'] or key in ['image','metaVendor','metaUser','shasum']:
+      if (key[0] in ['_','-', '#'] and key!='-tags') or key in ['image','metaVendor','metaUser','shasum']:
         continue
       # print("Key:value in form | "+key+':'+str(value))
       if key in ['comment','content']:
@@ -93,12 +93,11 @@ class Form(QDialog):
         splitter.addWidget(getattr(self, 'textShow_'+key))
         rightSideL.addWidget(splitter)
         self.formL.addRow(labelW, rightSideW)
-      elif key == '-tags':  #remove - to make work
-        #does not reach this part as there is an if-statement on the top
-        # TODO_P2 tags: get selected via a editable QCombobox and get shown as qlabels, that can be deleted
+      elif key == '-tags':
+        print('tagggs', self.comm.dbInfo['tags'])
+        #TODO_P2 tags: get selected via a editable QCombobox and get shown as qlabels, that can be deleted
         # RR: can you already implement tags as list of qlabels with a '-' button on the right to delete
         # the qcombox comes later once the database knows what tags are and how to generate the list
-        print('')
       elif isinstance(value, list):       #list of items, qrCodes in sample
         if len(value)>0 and isinstance(value[0], str):
           setattr(self, 'key_'+key, QLineEdit(' '.join(value)))
