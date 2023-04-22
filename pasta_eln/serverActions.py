@@ -7,6 +7,7 @@ import keyring as cred
 import requests
 from PIL import Image, ImageDraw, ImageFont
 
+#TODO_P2 move .pastaELN.json into zip and decypher all credentials
 #TODO_P5 serverConfiguration: this should become a GUI and CLI and separate into three-files: functions, CLI, GUI
 # add: delete all documents, backup database, backup server (incl. all small things)
 

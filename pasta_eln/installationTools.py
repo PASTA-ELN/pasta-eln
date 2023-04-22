@@ -176,6 +176,7 @@ def installLinuxRoot(couchDBExists, pathPasta=''):
       conf = createDefaultConfiguration('admin', password, pathPasta)
     with open(path,'w', encoding='utf-8') as fConf:
       fConf.write(json.dumps(conf, indent=2) )
+    #TODO_P1 move entire cochdb install into separate function with argument password
     bashCommand += [
       'sudo snap install couchdb',
       'sudo snap set couchdb admin='+password,
