@@ -2,12 +2,12 @@
 """Commandline utility to admin the remote server"""
 import sys, json, secrets, base64, os
 from datetime import datetime
+from pathlib import Path
 from zipfile import ZipFile, ZIP_DEFLATED
 import keyring as cred
 import requests
 from PIL import Image, ImageDraw, ImageFont
 
-#TODO_P2 move .pastaELN.json into zip and decypher all credentials
 #TODO_P5 serverConfiguration: this should become a GUI and CLI and separate into three-files: functions, CLI, GUI
 # add: delete all documents, backup database, backup server (incl. all small things)
 
@@ -360,7 +360,16 @@ def backupCouchDB(location='', userName='', password=''):
         #_security
         doc   = requests.get('http://'+location+':5984/'+database+'/_security', **kwargs).json()
         zipFile.writestr(zipFileName+'/'+database+'/_security', json.dumps(doc))
-    return
+    with open(Path.home()/'.pastaELN.json', encoding='utf-8') as fIn:
+      configuration = json.loads(fIn.read())
+      for projectG in configuration['projectGroups']:
+        for site in ['local','remote']:
+          subsection = configuration['projectGroups'][projectG][site]
+          if 'cred' in subsection and ('user' not in subsection or 'password' not in subsection):
+            key = cred.get_password('pastaDB', subsection['cred'])
+            subsection['user'], subsection['password'] = ['',''] if key is None else key.split('bcA:Maw')
+      zipFile.writestr(zipFileName+'/pastaELN.json', json.dumps(configuration))
+  return
 
 
 def restoreCouchDB(location='', userName='', password='', fileName=''):

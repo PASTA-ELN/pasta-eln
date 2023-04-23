@@ -150,13 +150,14 @@ def couchdbUserPassword(username, password):
     return False
 
 
-def installLinuxRoot(couchDBExists, pathPasta=''):
+def installLinuxRoot(couchDBExists, pathPasta='', password=''):
   '''
   Install all packages in linux using the root-password
 
   Args:
     couchDBExists (bool): does the couchDB installation exist
     pathPasta (str): path to install pasta in (Linux)
+    password (str): password for couchDB installation
 
   Returns:
     string: ''=success, else error messages
@@ -165,18 +166,19 @@ def installLinuxRoot(couchDBExists, pathPasta=''):
   bashCommand = []
   password = ''
   if not couchDBExists:
-    password = ''.join(random.choice(string.ascii_letters) for i in range(12))
-    logging.info('PASSWORD: '+password)
+    if password=='':
+      password = ''.join(random.choice(string.ascii_letters) for i in range(12))
+      logging.info('PASSWORD: '+password)
     #create or adopt .pastaELN.json
     path = Path.home()/'.pastaELN.json'
     if path.exists():
       with open(path,'r', encoding='utf-8') as fConf:
         conf = json.load(fConf)
+      logging.info('.pastaELN.json exists, do not change it')
     else:
       conf = createDefaultConfiguration('admin', password, pathPasta)
-    with open(path,'w', encoding='utf-8') as fConf:
-      fConf.write(json.dumps(conf, indent=2) )
-    #TODO_P1 move entire cochdb install into separate function with argument password
+      with open(path,'w', encoding='utf-8') as fConf:
+        fConf.write(json.dumps(conf, indent=2) )
     bashCommand += [
       'sudo snap install couchdb',
       'sudo snap set couchdb admin='+password,
