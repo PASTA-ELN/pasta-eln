@@ -407,10 +407,10 @@ def exampleData(force=False, callbackPercent=None):
   backend.addData('x1',    {'comment': 'This is hard! #TODO', '-name': 'This is an example task'})
   if callbackPercent is not None:
     callbackPercent(7)
-  backend.addData('x1',    {'comment': 'This will take a long time. #WAIT', '-name': 'This is another example task'})
+  currentID = backend.addData('x1',    {'comment': 'This will take a long time. #WAIT', '-name': 'This is another example task'})
   if callbackPercent is not None:
     callbackPercent(8)
-  backend.changeHierarchy(backend.currentID)
+  backend.changeHierarchy(currentID)
   backend.addData('x2',    {'-name': 'This is an example subtask',     'comment': 'Random comment 1'})
   if callbackPercent is not None:
     callbackPercent(9)
@@ -418,10 +418,9 @@ def exampleData(force=False, callbackPercent=None):
   if callbackPercent is not None:
     callbackPercent(10)
   backend.changeHierarchy(None)
-  backend.addData('x1',    {'-name': 'Data files'})
+  semStepID = backend.addData('x1',    {'-name': 'Data files'})
   if callbackPercent is not None:
     callbackPercent(11)
-  semStepID = backend.currentID
   backend.changeHierarchy(semStepID)
   semDirName = backend.basePath/backend.cwd
   backend.changeHierarchy(None)
