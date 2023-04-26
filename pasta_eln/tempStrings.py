@@ -7,6 +7,7 @@ todoString = """
 
 <h3>Things currently working on</h3>
 <ul>
+<li> tags: add docType to allow for user to see why cannot click in table
 <li> tags: get selected via a editable QCombobox and get shown as qlabels, that can be deleted
 </ul>
 
@@ -16,7 +17,7 @@ todoString = """
 <li> design ProjectView: Currently, the comment is more highlighted than the title of an item due
 <li> design projectLeaves:
 <li> design projectLeaves: 3 columns?
-<li> design: make full width
+<li> design: make full width; scale fonts appropriately
 <li> design: what is the difference to TextButton?
 <li> finish ontology dialog
 <li> form: add button to add key-values
@@ -35,6 +36,7 @@ todoString = """
 <li> projectTree: drag&drop of external files
 <li> projectTree: select multiple items to edit... What is use case
 <li> projectView: allow scroll in sidebar, size changegable, drag-and-drop to move
+<li> projectView: if table-row click, move to view it project
 <li> projectView: selection does not scroll; one cannot select a row
 </ul>
 
@@ -56,5 +58,6 @@ todoString = """
 <li> only write markdown files for now
 <li> remove this warning
 <li> serverConfiguration: this should become a GUI and CLI and separate into three-files: functions, CLI, GUI
+<li> this will rerun useExtractor: ok for now
 </ul>
 """
