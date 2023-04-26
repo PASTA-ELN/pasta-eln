@@ -629,7 +629,7 @@ class Backend(CLI_Mixin):
         report += htmlStr+'pillow-image">website</a><br>'
       else:
         report = "ExtractorERROR PIL image"
-    if success and isinstance(content['image'], mpaxes._subplots.Axes): # pylint: disable=protected-access
+    if success and isinstance(content['image'], mpaxes._axes.Axes): # pylint: disable=protected-access
       success = False
       if interactive:
         plt.show()

@@ -1,9 +1,8 @@
 """ New/Edit dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""
-import json, logging
-from pathlib import Path
+import logging
 from PySide6.QtWidgets import QDialog, QWidget, QFormLayout, QVBoxLayout, QHBoxLayout, QLabel, QTextEdit, \
-                              QPlainTextEdit, QComboBox, QLineEdit, QDialogButtonBox, QSplitter, QSizePolicy, QPushButton # pylint: disable=no-name-in-module
-from PySide6.QtGui import QPixmap, QImage, QRegularExpressionValidator # pylint: disable=no-name-in-module
+                              QPlainTextEdit, QComboBox, QLineEdit, QDialogButtonBox, QSplitter, QSizePolicy # pylint: disable=no-name-in-module
+from PySide6.QtGui import QRegularExpressionValidator # pylint: disable=no-name-in-module
 from .style import Image, TextButton, IconButton
 from .fixedStrings import defaultOntologyNode
 from .handleDictionaries import fillDocBeforeCreate
@@ -47,7 +46,7 @@ class Form(QDialog):
     #Add things that are in ontology
     if '-type' in self.doc and '_ids' not in self.doc:  #normal form
       setattr(self, 'key_-name', QLineEdit(self.doc['-name']))
-      getattr(self, 'key_-name').setValidator(QRegularExpressionValidator("[\\w\\ .]+"))
+      getattr(self, 'key_-name').setValidator(QRegularExpressionValidator("[\\w\\ .-]+"))
       self.formL.addRow('Name', getattr(self, 'key_-name'))
       if self.doc['-type'][0] in self.db.ontology:
         ontologyNode = self.db.ontology[self.doc['-type'][0]]['prop']

@@ -100,6 +100,8 @@ class Table(QWidget):
       self.projID  = projID
     if self.docType=='_tags_':
       self.addBtn.hide()
+      #TODO_P2 tags: add docType to allow for user to see why cannot click in table
+      #TODO_P4 projectView: if table-row click, move to view it project
       if self.showAll:
         self.data = self.comm.backend.db.getView('viewIdentify/viewTagsAll')
       else:
@@ -318,13 +320,21 @@ class Table(QWidget):
       for row in range(self.models[-1].rowCount()):
         if self.itemFromRow(row).checkState() == Qt.CheckState.Checked:
           doc = self.comm.backend.db.getDoc( self.data[row]['id'] )
+          oldDocType = doc['-type']
           if doc['-branch'][0]['path'].startswith('http'):
             path = Path(doc['-branch'][0]['path'])
           else:
             path = self.comm.backend.basePath/doc['-branch'][0]['path']
           self.comm.backend.useExtractors(path, '', doc)
-          del doc['-branch']  #don't update
-          self.comm.backend.db.updateDoc(doc, self.data[row]['id'])
+          if doc['-type'][0] == oldDocType[0]:
+            del doc['-branch']  #don't update
+            self.comm.backend.db.updateDoc(doc, self.data[row]['id'])
+          else:  #TODO_P5 this will rerun useExtractor: ok for now
+            self.comm.backend.db.remove( self.data[row]['id'] )
+            del doc['_id']
+            del doc['_rev']
+            doc['-name'] = doc['-branch'][0]['path']
+            self.comm.backend.addData('/'.join(doc['-type']), doc, doc['-branch'][0]['stack'])
       self.changeTable('','')  # redraw table
       self.comm.changeDetails.emit('redraw')
     else:
