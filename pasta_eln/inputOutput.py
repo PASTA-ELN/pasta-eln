@@ -271,7 +271,7 @@ def backup(backend, method='backup', **kwargs):
   Args:
     backend (Pasta): pasta-backend
     method (string): backup, restore, compare
-    kwargs (dict): additional parameter, i.e. callback
+    **kwargs (dict): additional parameter, i.e. callback
 
   Returns:
       bool: success

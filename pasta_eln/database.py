@@ -641,7 +641,7 @@ class Database:
 
     Args:
         verbose (bool): print more or only issues
-        kwargs (dict): additional parameter
+        **kwargs (dict): additional parameter
 
     Returns:
         bool: success of check

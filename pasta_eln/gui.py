@@ -90,7 +90,7 @@ class MainWindow(QMainWindow):
 
     #other things that might be slower
     tags = self.comm.backend.db.getView('viewIdentify/viewTagsAll')
-    self.comm.dbInfo['tags'] = list(set([i['key'] for i in tags]))
+    self.comm.dbInfo['tags'] = list({i['key'] for i in tags})
 
 
   @Slot(str)

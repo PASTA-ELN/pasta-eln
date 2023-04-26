@@ -70,18 +70,17 @@ class TestStringMethods(unittest.TestCase):
 
       self.be.changeHierarchy(projID1)
       self.be.addData('x1',    {'comment': 'This is hard! #TODO ', '-name': 'Get steel and Al-powder'})
-      self.be.addData('x1',    {'comment': 'This will take a long time. #WAIT #_curated', '-name': 'Get spray machine'})
-      self.be.changeHierarchy(self.be.currentID)
+      currentID = self.be.addData('x1',    {'comment': 'This will take a long time. #WAIT #_curated', '-name': 'Get spray machine'})
+      self.be.changeHierarchy(currentID)
       self.be.addData('x2',    {'-name': 'Get quotes', 'comment': 'Dont forget company-A #_1 ', 'procedure': 'Guidelines of procurement'})
       self.be.addData('x2',    {'-name': 'Buy machine','comment': 'Delivery time will be 6month #_3 '})
       self.be.changeHierarchy(None)
-      self.be.addData('x1',    {'-name': 'SEM images'})
-      semStepID = self.be.currentID
+      semStepID = self.be.addData('x1',    {'-name': 'SEM images'})
       self.be.changeHierarchy(semStepID)
       semDirName = self.be.basePath/self.be.cwd
       self.be.changeHierarchy(None)
-      self.be.addData('x1',    {'-name': 'Nanoindentation'})
-      self.be.changeHierarchy(self.be.currentID)
+      currentID = self.be.addData('x1',    {'-name': 'Nanoindentation'})
+      self.be.changeHierarchy(currentID)
       indentDirName = self.be.basePath/self.be.cwd
       self.be.changeHierarchy(None)
       print(self.be.outputHierarchy())

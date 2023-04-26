@@ -101,7 +101,7 @@ pygments_style = 'sphinx'
 todo_include_todos = True
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'https://docs.python.org/': None}
+intersphinx_mapping = {'<name>': ('https://docs.python.org/', None)}
 
 # -- Options for HTML output ----------------------------------------------
 
