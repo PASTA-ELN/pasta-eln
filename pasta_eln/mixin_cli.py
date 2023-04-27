@@ -76,7 +76,7 @@ class CLI_Mixin:
     Args:
       docType (string): document type to output
       printID (bool):  include docID in output string
-      kwargs (dict): additional parameter
+      **kwargs (dict): additional parameter
 
     Returns:
         string: output incl. \n
@@ -137,7 +137,7 @@ class CLI_Mixin:
 
     Args:
       tag (string): tag to be listed, if empty: print all
-      kwargs (dict): additional parameter
+      **kwargs (dict): additional parameter
 
     Returns:
         string: output incl. \n
@@ -172,7 +172,7 @@ class CLI_Mixin:
        onlyHierarchy (bool): only print project,steps,tasks or print all (incl. measurements...)[default print all]
        addID (bool): add docID to output
        addTags (string): add tags, comments, objective to output ['all','tags',None]
-       kwargs (dict): additional parameter, i.e. callback
+       **kwargs (dict): additional parameter, i.e. callback
 
     Returns:
         string: output incl. \n

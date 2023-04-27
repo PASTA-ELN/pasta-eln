@@ -1,7 +1,7 @@
 """extract data from vendor
 - default jpg image
 """
-import base64, json
+import base64, json, re
 from io import BytesIO
 import numpy as np
 from PIL import Image
@@ -24,6 +24,8 @@ def use(filePath, recipe='', saveFileName=None):
     scale = max(image.size)/maxSize
     image = image.resize( (np.array(image.size)/scale).astype(int) )
   metaVendor = image.info
+  if 'exif' in metaVendor:
+    metaVendor['exif'] = re.sub(r'[^\x20-\x7F]','', metaVendor['exif'].decode('utf-8', errors='ignore'))
   imgArr = np.array(image)
   metaUser   = {'number pixel': imgArr.size,
                 'dimension': imgArr.shape}

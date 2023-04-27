@@ -69,16 +69,17 @@ def importELN(backend, database, elnFileName):
       if elnVersion is not None:
         newNode['importedFrom'] = elnName+' '+elnVersion
         elnVersion = None
+      currentID = '--'  #will trigger error if not found in the next lines
       if elnName=='PASTA ELN' and newNode['-type'][0]!='x0':
         backend.db.saveDoc(newNode)
         if newNode['-type'][0][0]=='x':
           os.makedirs(backend.basePath+newNode['-branch'][0]['path'])
-        backend.currentID = newNode['_id']
+        currentID = newNode['_id']
       else:
         backend.addData(docType,newNode)
       #recursive part
       if len(subparts)>0:  #don't do if no subparts: measurements, ...
-        backend.changeHierarchy(backend.currentID)
+        backend.changeHierarchy(currentID)
         for subpart in subparts:
           processPart(subpart)
         backend.changeHierarchy(None)
@@ -271,7 +272,7 @@ def backup(backend, method='backup', **kwargs):
   Args:
     backend (Pasta): pasta-backend
     method (string): backup, restore, compare
-    kwargs (dict): additional parameter, i.e. callback
+    **kwargs (dict): additional parameter, i.e. callback
 
   Returns:
       bool: success

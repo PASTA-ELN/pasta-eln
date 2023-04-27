@@ -73,7 +73,7 @@ def commands(getDocu, args):
     with open(pathConfig,'r', encoding='utf-8') as f:
       configuration = json.load(f)
     configBackup  = dict(configuration)
-    links = configuration['links']
+    links = configuration['projectGroups']
     changed = False
     for link,site in [(i,j) for i in links.keys() for j in ['local','remote']]:
       if 'user' in links[link][site] and 'password' in links[link][site]:

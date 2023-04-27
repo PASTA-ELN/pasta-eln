@@ -6,6 +6,7 @@ class Communicate(QObject):
   def __init__(self, backend):
     super().__init__()
     self.backend = backend
+    self.dbInfo  = {}
 
   # Signals: specify emitter and receiver
   # BE SPECIFIC ABOUT WHAT THIS ACTION DOES

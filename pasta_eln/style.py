@@ -195,7 +195,7 @@ class Image():
       imageW.renderer().load(bytearray(data, encoding='utf-8'))
       layout.addWidget(imageW)
       layout.setAlignment(Qt.AlignCenter)
-    else:
+    elif len(data)>2:
       print('WidgetProjectLeaf:What is this image |'+data[:50]+'|')
     return
 

@@ -150,13 +150,14 @@ def couchdbUserPassword(username, password):
     return False
 
 
-def installLinuxRoot(couchDBExists, pathPasta=''):
+def installLinuxRoot(couchDBExists, pathPasta='', password=''):
   '''
   Install all packages in linux using the root-password
 
   Args:
     couchDBExists (bool): does the couchDB installation exist
     pathPasta (str): path to install pasta in (Linux)
+    password (str): password for couchDB installation
 
   Returns:
     string: ''=success, else error messages
@@ -165,17 +166,19 @@ def installLinuxRoot(couchDBExists, pathPasta=''):
   bashCommand = []
   password = ''
   if not couchDBExists:
-    password = ''.join(random.choice(string.ascii_letters) for i in range(12))
-    logging.info('PASSWORD: '+password)
+    if password=='':
+      password = ''.join(random.choice(string.ascii_letters) for i in range(12))
+      logging.info('PASSWORD: '+password)
     #create or adopt .pastaELN.json
     path = Path.home()/'.pastaELN.json'
     if path.exists():
       with open(path,'r', encoding='utf-8') as fConf:
         conf = json.load(fConf)
+      logging.info('.pastaELN.json exists, do not change it')
     else:
       conf = createDefaultConfiguration('admin', password, pathPasta)
-    with open(path,'w', encoding='utf-8') as fConf:
-      fConf.write(json.dumps(conf, indent=2) )
+      with open(path,'w', encoding='utf-8') as fConf:
+        fConf.write(json.dumps(conf, indent=2) )
     bashCommand += [
       'sudo snap install couchdb',
       'sudo snap set couchdb admin='+password,
@@ -404,10 +407,10 @@ def exampleData(force=False, callbackPercent=None):
   backend.addData('x1',    {'comment': 'This is hard! #TODO', '-name': 'This is an example task'})
   if callbackPercent is not None:
     callbackPercent(7)
-  backend.addData('x1',    {'comment': 'This will take a long time. #WAIT', '-name': 'This is another example task'})
+  currentID = backend.addData('x1',    {'comment': 'This will take a long time. #WAIT', '-name': 'This is another example task'})
   if callbackPercent is not None:
     callbackPercent(8)
-  backend.changeHierarchy(backend.currentID)
+  backend.changeHierarchy(currentID)
   backend.addData('x2',    {'-name': 'This is an example subtask',     'comment': 'Random comment 1'})
   if callbackPercent is not None:
     callbackPercent(9)
@@ -415,10 +418,9 @@ def exampleData(force=False, callbackPercent=None):
   if callbackPercent is not None:
     callbackPercent(10)
   backend.changeHierarchy(None)
-  backend.addData('x1',    {'-name': 'Data files'})
+  semStepID = backend.addData('x1',    {'-name': 'Data files'})
   if callbackPercent is not None:
     callbackPercent(11)
-  semStepID = backend.currentID
   backend.changeHierarchy(semStepID)
   semDirName = backend.basePath/backend.cwd
   backend.changeHierarchy(None)

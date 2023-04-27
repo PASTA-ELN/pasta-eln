@@ -117,9 +117,11 @@ def createTodoList():
       for line in content:
         if '#TODO_' in line:
           listAll.append(line.strip().split('#TODO_')[1])
+        if '# TODO_' in line:
+          listAll.append(line.strip().split('# TODO_')[1])
   listAll.sort()
   currentLevel = 0
-  labels = {1:'Very important show stopper', 2:'To be verified/identified', 3:'Improvement to convenience', \
+  labels = {1:'Very important show stopper', 2:'Things currently working on', 3:'Improvement to convenience', \
             4:'Bigger things implemented soon', 5:'Things worthwile remembering/uncritical'}
   res = 'todoString = """\n'
   for item in listAll:

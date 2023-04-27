@@ -1,13 +1,12 @@
 """ widget that shows the table of the items """
 import re, json, logging
 from pathlib import Path
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTableView, QLabel, QMenu, QFileDialog, \
-                              QHeaderView, QAbstractItemView, QGridLayout, QLineEdit, QComboBox # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTableView, QMenu, QFileDialog, QMessageBox,\
+                              QHeaderView, QGridLayout, QLineEdit, QComboBox # pylint: disable=no-name-in-module
 from PySide6.QtCore import Qt, Slot, QSortFilterProxyModel, QModelIndex       # pylint: disable=no-name-in-module
-from PySide6.QtGui import QBrush, QStandardItemModel, QStandardItem, QAction, QFont # pylint: disable=no-name-in-module
-import qtawesome as qta
+from PySide6.QtGui import QStandardItemModel, QStandardItem, QFont # pylint: disable=no-name-in-module
 from .dialogTableHeader import TableHeader
-from .style import TextButton, Label, getColor, LetterButton, Action, showMessage
+from .style import TextButton, Label, LetterButton, Action, showMessage
 from .fixedStrings import defaultOntologyNode
 
 #Scan button to more button
@@ -49,6 +48,7 @@ class Table(QWidget):
     Action('Sequential edit', self.executeAction, selectionMenu, self, name='sequentialEdit')
     Action('Toggle hidden',   self.executeAction, selectionMenu, self, name='toggleHide')
     Action('Rerun extractors',self.executeAction, selectionMenu, self, name='rerunExtractors')
+    Action('Delete',          self.executeAction, selectionMenu, self, name='delete')
     selection.setMenu(selectionMenu)
 
     more = TextButton('More',None, headerL)
@@ -100,6 +100,8 @@ class Table(QWidget):
       self.projID  = projID
     if self.docType=='_tags_':
       self.addBtn.hide()
+      #TODO_P2 tags: add docType to allow for user to see why cannot click in table
+      #TODO_P4 projectView: if table-row click, move to view it project
       if self.showAll:
         self.data = self.comm.backend.db.getView('viewIdentify/viewTagsAll')
       else:
@@ -283,6 +285,14 @@ class Table(QWidget):
         if self.itemFromRow(row).checkState() == Qt.CheckState.Checked:
           self.comm.formDoc.emit(self.comm.backend.db.getDoc( self.data[row]['id'] ))
       self.comm.changeTable.emit(self.docType, '')
+    elif menuName == 'delete':
+      for row in range(self.models[-1].rowCount()):
+        if self.itemFromRow(row).checkState() == Qt.CheckState.Checked:
+          ret = QMessageBox.critical(self, 'Warning', 'Are you sure you want to delete this data: '+self.itemFromRow(row).text()+'?',\
+                                    QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.No)
+          if ret==QMessageBox.StandardButton.Yes:
+            self.comm.backend.db.remove(self.data[row]['id'] )
+      self.comm.changeTable.emit(self.docType, '')
     elif menuName == 'changeColumns':
       dialog = TableHeader(self.comm, self.docType)
       dialog.exec()
@@ -318,13 +328,21 @@ class Table(QWidget):
       for row in range(self.models[-1].rowCount()):
         if self.itemFromRow(row).checkState() == Qt.CheckState.Checked:
           doc = self.comm.backend.db.getDoc( self.data[row]['id'] )
+          oldDocType = doc['-type']
           if doc['-branch'][0]['path'].startswith('http'):
             path = Path(doc['-branch'][0]['path'])
           else:
             path = self.comm.backend.basePath/doc['-branch'][0]['path']
           self.comm.backend.useExtractors(path, '', doc)
-          del doc['-branch']  #don't update
-          self.comm.backend.db.updateDoc(doc, self.data[row]['id'])
+          if doc['-type'][0] == oldDocType[0]:
+            del doc['-branch']  #don't update
+            self.comm.backend.db.updateDoc(doc, self.data[row]['id'])
+          else:  #TODO_P5 this will rerun useExtractor: ok for now
+            self.comm.backend.db.remove( self.data[row]['id'] )
+            del doc['_id']
+            del doc['_rev']
+            doc['-name'] = doc['-branch'][0]['path']
+            self.comm.backend.addData('/'.join(doc['-type']), doc, doc['-branch'][0]['stack'])
       self.changeTable('','')  # redraw table
       self.comm.changeDetails.emit('redraw')
     else:

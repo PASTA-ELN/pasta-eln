@@ -19,13 +19,12 @@ class Backend(CLI_Mixin):
 
     Args:
         defaultProjectGroup (string): name of configuration / project-group used; if not given, use the one defined by 'defaultProjectGroup' in config file
-        kwargs (dict): additional parameters
+        **kwargs (dict): additional parameters
           - initViews (bool): initialize views at startup
           - resetOntology (bool): reset ontology on database from one on file
     """
     #initialize basic values
     self.hierStack = []
-    self.currentID = ""
     self.alive     = True
     self.cwd       = Path('.')
     self.initialize(defaultProjectGroup, **kwargs)
@@ -37,7 +36,7 @@ class Backend(CLI_Mixin):
 
     Args:
         defaultProjectGroup (string): name of configuration / project-group used; if not given, use the one defined by 'defaultProjectGroup' in config file
-        kwargs (dict): additional parameters
+        **kwargs (dict): additional parameters
           - initViews (bool): initialize views at startup
           - resetOntology (bool): reset ontology on database from one on file
     """
@@ -77,7 +76,6 @@ class Backend(CLI_Mixin):
       self.db.initViews(self.configuration)
     # internal hierarchy structure
     self.hierStack = []
-    self.currentID  = None
     self.alive     = True
     return
 
@@ -88,7 +86,7 @@ class Backend(CLI_Mixin):
 
     Args:
       deleteDB (bool): remove database
-      kwargs (dict): additional parameter
+      **kwargs (dict): additional parameter
     """
     self.db.exit(deleteDB)
     self.alive     = False
@@ -136,11 +134,11 @@ class Backend(CLI_Mixin):
         doc (dict): to be stored
         hierStack (list): hierStack from external functions
         localCopy (bool): copy a remote file to local version
-        kwargs (dict): additional parameters
+        **kwargs (dict): additional parameters
             forceNewImage (bool): create new image in any case
 
     Returns:
-        bool: success
+        str: docID, empty string if failure
     """
     if hierStack is None:
       hierStack=[]
@@ -211,7 +209,7 @@ class Backend(CLI_Mixin):
               shasum  = generic_hash(path)
             except:
               print('**ERROR bad01: fetch remote content failed. Data not added')
-              return False
+              return ''
         elif doc['-name']!='' and (self.basePath/doc['-name']).exists():          #file exists
           path = self.basePath/doc['-name']
           doc['-name'] = Path(doc['-name']).name
@@ -225,7 +223,7 @@ class Backend(CLI_Mixin):
             logging.warning('backend: add document with multiple branches'+str(doc['-branch']) )
         else:                                                                     #make up name
           shasum  = None
-        if shasum is not None: # and doc['-type'][0]=='measurement':         #samples, procedures not added to shasum database, getMeasurement not sensible
+        if shasum is not None and path is not None:
           if shasum == '':
             shasum = generic_hash(path, forceFile=True)
           view = self.db.getView('viewIdentify/viewSHAsum',shasum)
@@ -233,7 +231,7 @@ class Backend(CLI_Mixin):
             self.useExtractors(path,shasum,doc)  #create image/content
             # All files should appear in database
             # if not 'image' in doc and not 'content' in doc and not 'otherELNName' in doc:  #did not get valuable data: extractor does not exit
-            #   return False
+            #   return ''
           if len(view)==1:  #measurement is already in database
             doc['_id'] = view[0]['id']
             doc['shasum'] = shasum
@@ -265,14 +263,13 @@ class Backend(CLI_Mixin):
       if edit:
         if not (self.basePath/oldPath).exists():
           print('**ERROR: addData edit of folder should have oldPath and that should exist', oldPath)
-          return False
+          return ''
         (self.basePath/oldPath).rename(self.basePath/path)
       else:
         (self.basePath/path).mkdir(exist_ok=True)   #if exist, create again; moving not necessary since directory moved in changeHierarchy
       with open(self.basePath/path/'.id_pastaELN.json','w', encoding='utf-8') as f:  #local path, update in any case
         f.write(json.dumps(doc))
-    self.currentID = doc['_id']
-    return True
+    return doc['_id']
 
 
   ######################################################
@@ -286,7 +283,7 @@ class Backend(CLI_Mixin):
     Args:
         docID (string): information on how to change
         dirName (string): change into this directory (absolute path given). For if data is moved
-        kwargs (dict): additional parameter
+        **kwargs (dict): additional parameter
     """
     logging.info('changeHierarchy should only be used in CLI mode') #TODO_P5 remove this warning
     if docID is None or (docID[0]=='x' and docID[1]!='-'):  #cd ..: none. close 'project', 'task'
@@ -346,8 +343,8 @@ class Backend(CLI_Mixin):
         if path in pathsInDB_x: #path already in database
           pathsInDB_x.remove(path)
           continue
-        self.addData('x'+str(len(hierStack)), {'-name':dirName}, hierStack)
-        newDir = Path(self.basePath)/self.db.getDoc(self.currentID)['-branch'][0]['path']
+        currentID = self.addData('x'+str(len(hierStack)), {'-name':dirName}, hierStack)
+        newDir = Path(self.basePath)/self.db.getDoc(currentID)['-branch'][0]['path']
         (newDir/'.id_pastaELN.json').rename(Path(self.basePath)/root/dirName/'.id_pastaELN.json') #move index file into old folder
         newDir.rmdir()                     #remove created path
         (Path(self.basePath)/root/dirName).rename(newDir) #move old to new path
@@ -362,7 +359,7 @@ class Backend(CLI_Mixin):
           pathsInDB_data.remove(path)
         else:
           logging.info("Scan: add file to DB: "+path)
-          _ = self.addData('-', {'-name':path}, hierStack)
+          self.addData('-', {'-name':path}, hierStack)
     #finish method
     self.cwd = self.basePath/projPath
     orphans = [i for i in pathsInDB_data if i.startswith(self.cwd.relative_to(self.basePath).as_posix())]
@@ -399,7 +396,7 @@ class Backend(CLI_Mixin):
         filePath (string): path to file
         shasum (string): shasum (git-style hash) to store in database (not used here)
         doc (dict): pass known data/measurement type, can be used to create image; This doc is altered
-        kwargs (dict): additional parameter
+        **kwargs (dict): additional parameter
     """
     extension = filePath.suffix[1:]  #cut off initial . of .jpg
     if str(filePath).startswith('http'):
@@ -629,7 +626,7 @@ class Backend(CLI_Mixin):
         report += htmlStr+'pillow-image">website</a><br>'
       else:
         report = "ExtractorERROR PIL image"
-    if success and isinstance(content['image'], mpaxes._subplots.Axes): # pylint: disable=protected-access
+    if success and isinstance(content['image'], mpaxes._axes.Axes): # pylint: disable=protected-access
       success = False
       if interactive:
         plt.show()
@@ -678,7 +675,7 @@ class Backend(CLI_Mixin):
 
     Args:
         removeAtStart (bool): remove remote DB before starting new
-        kwargs (dict): additional parameter
+        **kwargs (dict): additional parameter
 
     Returns:
         bool: replication success
@@ -698,7 +695,7 @@ class Backend(CLI_Mixin):
 
     Args:
         verbose (bool): print more or only issues
-        kwargs (dict): additional parameter, i.e. callback
+        **kwargs (dict): additional parameter, i.e. callback
 
     Returns:
         string: output incl. \n
