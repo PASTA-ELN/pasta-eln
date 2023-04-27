@@ -3,6 +3,7 @@ todoString = """
 
 <h3>Very important show stopper</h3>
 <ul>
+<li> sometimes sample is created in project hierarchy: not sure when it occurs
 </ul>
 
 <h3>Things currently working on</h3>
@@ -14,6 +15,7 @@ todoString = """
 <h3>Improvement to convenience</h3>
 <ul>
 <li> add splitter to increase / decrease image
+<li> allow to unassign previously assigned data
 <li> design ProjectView: Currently, the comment is more highlighted than the title of an item due
 <li> design projectLeaves:
 <li> design projectLeaves: 3 columns?
@@ -33,11 +35,13 @@ todoString = """
 <li> allow to adjust height
 <li> design of project tree
 <li> projectTree design: If folders and other items have boxes of slightly different brightness
+<li> projectTree: allow right click on measurement to change recipe
 <li> projectTree: drag&drop of external files
 <li> projectTree: select multiple items to edit... What is use case
 <li> projectView: allow scroll in sidebar, size changegable, drag-and-drop to move
 <li> projectView: if table-row click, move to view it project
 <li> projectView: selection does not scroll; one cannot select a row
+<li>: projectTree technology: image does not allow for easy context aware clicks: like click on links, right-click image
 </ul>
 
 <h3>Things worthwile remembering/uncritical</h3>
