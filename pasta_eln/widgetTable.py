@@ -91,7 +91,7 @@ class Table(QWidget):
       docType (str): document type; leave empty for redraw
       projID (str): id of project
     """
-    logging.debug('table:changeTable |'+docType+'|'+projID+'|')
+    logging.info('table:changeTable |'+docType+'|'+projID+'|')
     self.models = []
     for i in reversed(range(self.filterL.count())):
       self.filterL.itemAt(i).widget().setParent(None)
@@ -231,7 +231,7 @@ class Table(QWidget):
       menuName = self.sender().accessibleName()
     if menuName == 'addItem':
       self.comm.formDoc.emit({'-type':[self.docType]})
-      self.comm.changeTable.emit(self.docType, '')
+      self.comm.changeTable.emit(self.docType, self.projID)
       if self.docType=='x0':
         self.comm.changeSidebar.emit()
     elif menuName == 'addFilter':

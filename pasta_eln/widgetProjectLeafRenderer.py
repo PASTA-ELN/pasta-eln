@@ -95,8 +95,8 @@ class ProjectLeafRenderer(QStyledItemDelegate):
           else:
             value = 'ERROR WITH LINK'
         painter.drawStaticText(xOffset, yOffset, QStaticText(key+': '+value))
-      else:
-        logging.info('Do not know how to paint: '+docID+': '+str(key))
+      elif isinstance(doc[key], list):                         #list of qrCodes
+        painter.drawStaticText(xOffset, yOffset, QStaticText(key+': '+', '.join(doc[key])))
     if 'comment' in doc and not folded:
       text = QTextDocument()
       text.setMarkdown(doc['comment'].strip())

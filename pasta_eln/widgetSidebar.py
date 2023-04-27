@@ -35,7 +35,7 @@ class Sidebar(QWidget):
   def redraw(self, reset=False):
     """
     Redraw sidebar: e.g. after change of project visibility in table
-    
+
     Args:
       reset (bool): reset which project is open
     """
