@@ -210,6 +210,8 @@ class Details(QScrollArea):
         label.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.metaDetailsL.addWidget(label)
       elif key[0] in ['_','-'] or key in ['shasum']:
+        if key in ['_attachments']:
+          continue
         label = QLabel(key+': '+str(self.doc[key]))
         label.setWordWrap(True)
         label.setTextInteractionFlags(Qt.TextSelectableByMouse)

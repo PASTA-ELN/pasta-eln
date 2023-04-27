@@ -291,6 +291,12 @@ class Table(QWidget):
           ret = QMessageBox.critical(self, 'Warning', 'Are you sure you want to delete this data: '+self.itemFromRow(row).text()+'?',\
                                     QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.No)
           if ret==QMessageBox.StandardButton.Yes:
+            doc = self.comm.backend.db.getDoc( self.data[row]['id'] )
+            for branch in doc['-branch']:
+              oldPath = self.comm.backend.basePath/branch['path']
+              if oldPath.exists():
+                newPath    = oldPath.parent/('trash_'+oldPath.name)
+                oldPath.rename(newPath)
             self.comm.backend.db.remove(self.data[row]['id'] )
       self.comm.changeTable.emit(self.docType, '')
     elif menuName == 'changeColumns':
