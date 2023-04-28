@@ -6,4 +6,4 @@ TODO*.md
 docs/build/
 __pycache__
 .vscode/
-
+venv/

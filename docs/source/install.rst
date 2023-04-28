@@ -34,7 +34,12 @@ Generally, Python3 is installed in all Linux distributions. Sometimes, the packa
 
 .. code-block:: bash
 
-    sudo apt install python3-pip
+    sudo apt install python3-pip python3.10-venv
+    python3 -m venv venvPasta
+    . venvPasta/bin/activate
+    pip3 install pasta-eln
+    pip3 install PyYAML
+    python3 -m pasta_eln.gui
 
 |
 
