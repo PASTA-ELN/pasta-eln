@@ -35,11 +35,6 @@ Generally, Python3 is installed in all Linux distributions. Sometimes, the packa
 .. code-block:: bash
 
     sudo apt install python3-pip python3.10-venv
-    python3 -m venv venvPasta
-    . venvPasta/bin/activate
-    pip3 install pasta-eln
-    pip3 install PyYAML
-    python3 -m pasta_eln.gui
 
 |
 
@@ -49,9 +44,12 @@ Generally, Python3 is installed in all Linux distributions. Sometimes, the packa
 Install PASTA-ELN on all operating systems
 ==========================================
 
+Starting in a folder of your choice but we suggest the home-folder, create a virtual environment, for instance with the name .venvPasta. The . will ensure that it is mostly hidden.
 .. code-block:: bash
 
-    pip install pasta-eln
+    python3 -m venv .venvPasta
+    . .venvPasta/bin/activate
+    pip3 install pasta-eln
 
 which typically can take some time. Afterwards, start PASTA-ELN with
 

@@ -6,4 +6,8 @@ TODO*.md
 docs/build/
 __pycache__
 .vscode/
-venv/
+
+.venvPasta/
+pastaELN.py
+pastaELN_CLI.py
+pastaELN_Install.py
