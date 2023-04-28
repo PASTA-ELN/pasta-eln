@@ -166,8 +166,9 @@ class Backend(CLI_Mixin):
       doc['-type'] = docType.split('/')
       if len(hierStack) == 0:
         hierStack = self.hierStack
-    logging.info('Add/edit data in cwd:'+str(self.cwd)+' with stack:'+str(hierStack)+' and name'\
-                 +doc['-name']+' and type:'+str(doc['-type']))
+    logging.info('Add/edit data in cwd:'+str(self.cwd)+' with stack:'+str(hierStack)+' and name: '\
+                 +doc['-name']+' type:'+str(doc['-type'])+' and edit: '+str(edit))
+    #TODO_P1 sometimes sample is created in project hierarchy: not sure when it occurs
 
     # collect structure-doc and prepare
     if doc['-type'][0][0]=='x' and doc['-type'][0]!='x0' and childNum is None:
@@ -705,8 +706,8 @@ class Backend(CLI_Mixin):
     ### compare with file system
     if verbose:
       output += f'{Bcolors.UNDERLINE}**** File status ****{Bcolors.ENDC}\n'
-    viewProjects   = self.db.getView('viewDocType/x0')
-    inDB_all = self.db.getView('viewHierarchy/viewPaths')
+    viewProjects   = self.db.getView('viewDocType/x0All')
+    inDB_all = self.db.getView('viewHierarchy/viewPathsAll')
     pathsInDB_data = [i['key'] for i in inDB_all if i['value'][1][0][0]!='x']
     pathsInDB_folder = [i['key'] for i in inDB_all if i['value'][1][0][0]=='x']
     count = 0

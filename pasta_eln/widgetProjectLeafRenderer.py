@@ -1,5 +1,5 @@
 """ renders each leaf of project tree using QPaint """
-import base64, logging
+import base64, logging, re
 from PySide6.QtCore import Qt, QSize, QPoint, QMargins, QRectF# pylint: disable=no-name-in-module
 from PySide6.QtGui import QStaticText, QPixmap, QTextDocument, QColor # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QStyledItemDelegate             # pylint: disable=no-name-in-module
@@ -86,9 +86,19 @@ class ProjectLeafRenderer(QStyledItemDelegate):
         continue
       yOffset += self.lineSep
       if isinstance(doc[key], str):
-        painter.drawStaticText(xOffset, yOffset, QStaticText(key+': '+doc[key]))
-      else:
-        logging.info('Do not know how to paint: '+docID+': '+str(key))
+        #TODO_P4: projectTree technology: image does not allow for easy context aware clicks: like click on links, right-click image
+        if re.match(r'^[\w-]-[\w\d]{32}$',doc[key]) is None:  #normal text
+          value = doc[key]
+        else:                                                 #link
+          table  = self.comm.backend.db.getView('viewDocType/'+key+'All')
+          choices= [i for i in table if i['id']==doc[key]]
+          if len(choices)==1:
+            value = '\u260D '+choices[0]['value'][0]
+          else:
+            value = 'ERROR WITH LINK'
+        painter.drawStaticText(xOffset, yOffset, QStaticText(key+': '+value))
+      elif isinstance(doc[key], list):                         #list of qrCodes
+        painter.drawStaticText(xOffset, yOffset, QStaticText(key+': '+', '.join(doc[key])))
     if 'comment' in doc and not folded:
       text = QTextDocument()
       text.setMarkdown(doc['comment'].strip())

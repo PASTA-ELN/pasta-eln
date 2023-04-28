@@ -191,7 +191,7 @@ class Project(QWidget):
     return
 
   #TODO_P4 projectTree: select multiple items to edit... What is use case
-
+  #TODO_P4 projectTree: allow right click on measurement to change recipe
   def executeAction(self):
     """ Any action by the buttons at the top of the page """
     if hasattr(self.sender(), 'data'):  #action

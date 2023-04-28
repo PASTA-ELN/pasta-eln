@@ -32,15 +32,19 @@ class Sidebar(QWidget):
 
 
   @Slot()
-  def redraw(self):
+  def redraw(self, reset=False):
     """
     Redraw sidebar: e.g. after change of project visibility in table
+
+    Args:
+      reset (bool): reset which project is open
     """
     logging.debug('sidebar:redraw |')
     # Delete old widgets from layout and create storage
     for i in reversed(range(self.mainL.count())):
       self.mainL.itemAt(i).widget().setParent(None)
-    self.openProjectId = ''
+    if reset:
+      self.openProjectId = ''
     self.widgetsAction = {}
     self.widgetsList = {}
     self.widgetsProject = {} #title bar and widget that contains all of project
@@ -63,13 +67,15 @@ class Sidebar(QWidget):
         label = projName if len(projName)<maxLabelCharacters else projName[:maxLabelCharacters-3]+'...'
         btnProj = TextButton(label, self.btnProject, projectL, projID+'/')
         btnProj.setStyleSheet("border-width:0")
-        projectW.setStyleSheet("background-color:"+ getColor(self.comm.backend, 'secondaryDark'))
         self.widgetsProject[projID] = [btnProj, projectW]
 
         # actions: scan, curate, ...
         actionW = QWidget()
-        if self.openProjectId != projID:
+        if self.openProjectId != projID: #depending which project is open
           actionW.hide()
+          projectW.setStyleSheet("background-color:"+ getColor(self.comm.backend, 'secondaryDark'))
+        else:
+          projectW.setStyleSheet("background-color:"+ getColor(self.comm.backend, 'secondaryLight'))
         actionL = QGridLayout(actionW)
         actionL.setContentsMargins(0,0,0,0)
         btnScan = IconButton('mdi.clipboard-search-outline', self.btnScan, None, projID, 'Scan', self.comm.backend, text='Scan')

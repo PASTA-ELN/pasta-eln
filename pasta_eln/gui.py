@@ -57,7 +57,7 @@ class MainWindow(QMainWindow):
     Action('&Configuration',         self.executeAction, systemMenu, self, name='configuration')
     helpMenu = menu.addMenu("&Help")
     Action('&Website',               self.executeAction, helpMenu, self, name='website')
-    Action('&Test file extraction',  self.executeAction, helpMenu, self, name='extractorTest')
+    Action('&Test extraction from a file',   self.executeAction, helpMenu, self, name='extractorTest')
     Action('&Test selected item extraction', self.executeAction, helpMenu, self, name='extractorTest2', shortcut='F2')
     Action('&Shortcuts',             self.executeAction, helpMenu, self, name='shortcuts')
     Action('&Todo list',             self.executeAction, helpMenu, self, name='todo')
