@@ -5,6 +5,7 @@ QtAwesome
 cloudant
 pandas
 numpy
+PyYAML
 keyring
 anytree
 qrcode

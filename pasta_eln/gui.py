@@ -1,5 +1,5 @@
 """ Graphical user interface includes all widgets """
-import os, logging, webbrowser, json
+import os, logging, webbrowser, json, sys
 from pathlib import Path
 from PySide6.QtCore import Qt, Slot      # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QApplication, QFileDialog # pylint: disable=no-name-in-module
@@ -27,7 +27,8 @@ class MainWindow(QMainWindow):
   def __init__(self):
     #global setting
     super().__init__()
-    self.setWindowTitle("PASTA-ELN "+__version__)
+    venv = ' without venv' if sys.prefix == sys.base_prefix else ' in venv'
+    self.setWindowTitle("PASTA-ELN "+__version__+venv)
     self.setWindowState(Qt.WindowMaximized)
     resourcesDir = Path(__file__).parent/'Resources'
     self.setWindowIcon(QIcon(QPixmap(resourcesDir/'Icons'/'favicon64.png')))
