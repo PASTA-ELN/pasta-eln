@@ -1,8 +1,6 @@
 """ Class for interaction with couchDB """
 import traceback, logging
-from pathlib import PosixPath
 from .fixedStrings import defaultOntology, defaultOntologyNode
-
 
 class Database:
   """
@@ -528,9 +526,9 @@ class Database:
       flippedOnce = True
     if isinstance(stack, list):
       iFlip = len(stack)-1
-      print('  database list',stack, iFlip)
+      logging.debug('  database list '+str(stack)+' '+str(iFlip) )
       for item in self.getView('viewHierarchy/viewHierarchyAll', startKey=' '.join(stack)):
-        print('  docID',item['id'])
+        logging.debug('  docID: '+str(item['id']))
         doc = self.db[item['id']]
         for idx, branch in enumerate(doc['-branch']):
           if not flippedOnce or iFlip!=len(branch['stack']):

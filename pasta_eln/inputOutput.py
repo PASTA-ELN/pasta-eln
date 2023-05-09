@@ -4,6 +4,10 @@ from pathlib import Path
 from datetime import datetime
 from zipfile import ZipFile, ZIP_DEFLATED
 
+#TODO_P3 Add read info from ror and orcid
+# curl https://api.ror.org/organizations/02nv7yv05
+# curl -s -H "Accept: application/json" https://pub.orcid.org/v3.0/0000-0001-7691-2856
+
 def importELN(backend, database, elnFileName):
   '''
   import .eln file from other ELN or from PASTA

@@ -1,8 +1,7 @@
 """ Custom tree view on data model """
-import uuid, subprocess, os, platform
+import subprocess, os, platform, logging
 from pathlib import Path
 from PySide6.QtWidgets import QTreeView, QAbstractItemView, QMenu # pylint: disable=no-name-in-module
-from PySide6.QtGui import QAction, QStandardItem                  # pylint: disable=no-name-in-module
 from .widgetProjectLeafRenderer import ProjectLeafRenderer
 from .style import Action, showMessage
 
@@ -81,7 +80,7 @@ class TreeView(QTreeView):
         item.setText(item.text()+' -')
     elif menuName=='hide':
       stack = self.currentIndex().data().split('/')
-      print('hide stack', stack)
+      logging.debug('hide stack '+str(stack))
       self.comm.backend.db.hideShow(stack)
       self.comm.changeProject.emit('','') #refresh project
     elif menuName=='openExternal':

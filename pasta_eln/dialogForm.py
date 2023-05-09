@@ -3,7 +3,7 @@ import logging
 from PySide6.QtWidgets import QDialog, QWidget, QFormLayout, QVBoxLayout, QHBoxLayout, QLabel, QTextEdit, \
                               QPlainTextEdit, QComboBox, QLineEdit, QDialogButtonBox, QSplitter, QSizePolicy # pylint: disable=no-name-in-module
 from PySide6.QtGui import QRegularExpressionValidator # pylint: disable=no-name-in-module
-from .style import Image, TextButton, IconButton
+from .style import Image, TextButton, IconButton, showMessage
 from .fixedStrings import defaultOntologyNode
 from .handleDictionaries import fillDocBeforeCreate
 
@@ -93,10 +93,22 @@ class Form(QDialog):
         rightSideL.addWidget(splitter)
         self.formL.addRow(labelW, rightSideW)
       elif key == '-tags':
-        print('tagggs', self.comm.dbInfo['tags'])
-        #TODO_P2 tags: get selected via a editable QCombobox and get shown as qlabels, that can be deleted
-        # RR: can you already implement tags as list of qlabels with a '-' button on the right to delete
-        # the qcombox comes later once the database knows what tags are and how to generate the list
+        tagsBarMainW = QWidget()
+        tagsBarMainL = QHBoxLayout(tagsBarMainW)
+        tagsBarSubW  = QWidget()          #part which shows all the tags
+        tagsBarMainL.addWidget(tagsBarSubW)
+        self.otherChoices = QComboBox()   #part/combobox that allow user to select
+        self.otherChoices.setEditable(True)
+        self.otherChoices.setInsertPolicy(QComboBox.InsertAtBottom)
+        tagsBarMainL.addWidget(self.otherChoices)
+        self.gradeChoices = QComboBox()   #part/combobox that shows grades
+        self.gradeChoices.addItems(['','\u2605','\u2605'*2,'\u2605'*3,'\u2605'*4,'\u2605'*5])
+        self.gradeChoices.currentTextChanged.connect(self.addTag)
+        tagsBarMainL.addWidget(self.gradeChoices)
+        self.tagsBarSubL = QHBoxLayout(tagsBarSubW)
+        self.formL.addRow(QLabel('Tags:'), tagsBarMainW)
+        self.updateTagsBar()
+        self.otherChoices.currentIndexChanged.connect(self.addTag) #connect to slot only after all painting is done
       elif isinstance(value, list):       #list of items, qrCodes in sample
         if len(value)>0 and isinstance(value[0], str):
           setattr(self, 'key_'+key, QLineEdit(' '.join(value)))
@@ -159,6 +171,8 @@ class Form(QDialog):
     """
     Action upon save / cancel
     """
+    if self.otherChoices.hasFocus():
+      return
     if btn.text().endswith('Cancel'):
       self.reject()
     elif 'Save' in btn.text():
@@ -173,10 +187,13 @@ class Form(QDialog):
           self.doc[key] = getattr(self, 'textEdit_'+key).toPlainText().strip()
           if key == 'content' and '-branch' in self.doc:
             for branch in self.doc['-branch']:
-              if branch['path'] is not None and branch['path'].endswith('.md'):  #TODO_P5 only write markdown files for now
-                with open(self.comm.backend.basePath/branch['path'], 'w', encoding='utf-8') as fOut:
-                  fOut.write(self.doc['content'])
-                logging.debug('Wrote new content to '+branch['path'])
+              if branch['path'] is not None:
+                if branch['path'].endswith('.md'):  #TODO_P5 only write markdown files for now
+                  with open(self.comm.backend.basePath/branch['path'], 'w', encoding='utf-8') as fOut:
+                    fOut.write(self.doc['content'])
+                  logging.debug('Wrote new content to '+branch['path'])
+                else:
+                  showMessage(self, 'Information', 'Did not update file on harddisk, since PASTA-ELN cannot write this format')
         elif isinstance(value, list):
           self.doc[key] = getattr(self, 'key_'+key).text().strip().split(' ')
         elif isinstance(value, str):
@@ -323,4 +340,58 @@ class Form(QDialog):
     """
     key = self.sender().accessibleName()
     getattr(self, 'textShow_'+key).setMarkdown( getattr(self, 'textEdit_'+key).toPlainText())
+    return
+
+
+  def delTag(self):
+    """
+    Clicked button to delete tag
+    """
+    tag = self.sender().accessibleName()
+    print('del',tag)
+    self.doc['-tags'].remove(tag)
+    self.updateTagsBar()
+    return
+
+
+  def addTag(self, tag):
+    """
+    Clicked to add tag. Since one needs to use indexChanged to allow the user to enter text, that delivers a int. To allow to differentiate
+    between both comboboxes, they cannot be the same (both int), hence grades has to be textChanged
+
+    Args:
+      tag (str, int): index (otherTags) or text (grades)
+    """
+    if isinstance(tag, str):  #text from grades
+      if tag!='':
+        self.doc['-tags'] = [i for i in self.doc['-tags'] if i[0]!='_']
+        self.doc['-tags']+= ['_'+str(len(tag))]
+        self.gradeChoices.setCurrentText('')
+    elif tag<1:               #zero index from other-tags
+      return
+    else:
+      tag = self.otherChoices.currentText()
+      if tag not in self.doc['-tags']:
+        self.doc['-tags'] += [tag]
+      self.otherChoices.setCurrentText('')
+    self.updateTagsBar()
+    return
+
+
+  def updateTagsBar(self):
+    """
+    After creation, tag removal, tag addition: update the information on screen
+    """
+    #update tags
+    for i in reversed(range(self.tagsBarSubL.count())):
+      self.tagsBarSubL.itemAt(i).widget().setParent(None)
+    for tag in self.doc['-tags']:
+      if tag[0]=='_':
+        TextButton('\u2605'*int(tag[1]), self.delTag, self.tagsBarSubL, tag, 'click to remove')
+      else:
+        TextButton(tag, self.delTag, self.tagsBarSubL, tag, 'click to remove')
+    #update choices in combobox
+    newChoicesList = ['']+list(self.comm.dbInfo['tags'].difference([i for i in self.doc['-tags'] if i[0]!='_']))
+    self.otherChoices.clear()
+    self.otherChoices.addItems(newChoicesList)
     return
