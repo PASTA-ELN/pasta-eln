@@ -284,7 +284,6 @@ class Form(QDialog):
     else:
       print('dialogForm: did not get a fitting btn ',btn.text())
     return
-  #TODO_P1 Items that were "toggle hidden" in one list (unidentified) and then are moved to the other list, are not hidden anymore.
 
 
 

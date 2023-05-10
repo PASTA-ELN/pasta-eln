@@ -242,8 +242,10 @@ class Backend(CLI_Mixin):
     if path is not None and path.is_absolute():
       path = path.relative_to(self.basePath)
     path = None if path is None else path.as_posix()
-    doc['-branch'] = {'stack':hierStack,'child':childNum,'path':path, 'show':[True]*(len(hierStack)+1),\
-                      'op':operation}
+    show = [True]*(len(hierStack)+1)
+    if '-branch' in doc and len(hierStack)+1==len(doc['-branch'][0]['show']):
+      show = doc['-branch'][0]['show']
+    doc['-branch'] = {'stack':hierStack,'child':childNum,'path':path, 'show':show, 'op':operation}
     if edit:
       #update document
       keysNone = [key for key in doc if doc[key] is None]

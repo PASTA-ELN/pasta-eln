@@ -185,7 +185,8 @@ class Database:
     doc['-client'] = tracebackString
     if '-branch' in doc and 'op' in doc['-branch']:
       del doc['-branch']['op']  #remove operation, saveDoc creates and therefore always the same
-      doc['-branch']['show'] = self.createShowFromStack(doc['-branch']['stack'])
+      if 'show' not in doc['-branch']:
+        doc['-branch']['show'] = self.createShowFromStack(doc['-branch']['stack'])
       doc['-branch'] = [doc['-branch']]
     try:
       res = self.db.create_document(doc)
