@@ -168,7 +168,6 @@ class Backend(CLI_Mixin):
         hierStack = self.hierStack
     logging.info('Add/edit data in cwd:'+str(self.cwd)+' with stack:'+str(hierStack)+' and name: '\
                  +doc['-name']+' type:'+str(doc['-type'])+' and edit: '+str(edit))
-    #TODO_P1 sometimes sample is created in project hierarchy: not sure when it occurs
 
     # collect structure-doc and prepare
     if doc['-type'][0][0]=='x' and doc['-type'][0]!='x0' and childNum is None:
@@ -272,6 +271,7 @@ class Backend(CLI_Mixin):
         f.write(json.dumps(doc))
     return doc['_id']
 
+  #TODO_P1 - When a folder is moved somewhere in the folder tree or deleted (not through GUI, but through the file explorer), upon scanning that folder is added as a new folder (which is expected), but the old one does not disappear from the project view. Further interaction with it (deletion, subfolder creation) causes errors and the database integrity is lost.
 
   ######################################################
   ### Disk directory/folder methods

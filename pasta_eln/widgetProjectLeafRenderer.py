@@ -106,6 +106,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       #TODO_P3 design ProjectView: Currently, the comment is more highlighted than the title of an item due
       # to a larger and bolder font. It would make more sense though if the titles were bolder, larger and
       # thus more readable, while tags and comments are less highlighted.
+      #TODO_P3 design ProjectView: if comments are too long they cover the right area
     return
 
     #TODO_P3 design projectLeaves: 3 columns?

@@ -6,6 +6,7 @@ from PySide6.QtGui import QRegularExpressionValidator # pylint: disable=no-name-
 from .style import Image, TextButton, IconButton, showMessage
 from .fixedStrings import defaultOntologyNode
 from .handleDictionaries import fillDocBeforeCreate
+from .miscTools import createDirName
 
 class Form(QDialog):
   """ New/Edit dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""
@@ -59,6 +60,8 @@ class Form(QDialog):
       ontologyNode = defaultOntologyNode
       ontologyNode = [i for i in ontologyNode if i['name']!='-name']
     # Create form
+    if '-tags' not in self.doc:
+      self.doc['-tags'] = []
     for key,value in self.doc.items():
       if (key[0] in ['_','-', '#'] and key!='-tags') or key in ['image','metaVendor','metaUser','shasum']:
         continue
@@ -144,7 +147,7 @@ class Form(QDialog):
       self.formL.addRow(QLabel('Special properties:'), QLabel('') )
     label = '- unassigned -' if self.flagNewDoc else '- no change -'
     #TODO_P3 allow to unassign previously assigned data
-    if allowProjectAndDocTypeChange or '_id' not in self.doc: #if non-folder
+    if allowProjectAndDocTypeChange or ('_id' not in self.doc and self.doc['-type'][0][0]!='x'): #if new and non-folder
       self.projectComboBox = QComboBox()
       self.projectComboBox.addItem(label, userData='')
       for line in self.db.getView('viewDocType/x0'):
@@ -179,6 +182,14 @@ class Form(QDialog):
       # create the data that has to be saved
       if hasattr(self, 'key_-name'):
         self.doc['-name'] = getattr(self, 'key_-name').text().strip()
+        if self.doc['-type'][0]=='x0':  #prevent project-directory names that are identical
+          others = [i['value'][0] for i in self.comm.backend.db.getView('viewDocType/x0All')]
+          others = [createDirName(i,'x0', 0) for i in others]
+          while createDirName(self.doc['-name'],'x0', 0) in others:
+            if not self.doc['-name'].endswith('_1'):
+              self.doc['-name'] += '_1'
+            else:
+              self.doc['-name'] = '_'.join(self.doc['-name'].split('_')[:-1])+'_'+str(int(self.doc['-name'].split('_')[-1])+1)
       for key, value in self.doc.items():
         if key[0] in ['_','-'] or key in ['image','metaVendor','metaUser'] or \
             (not hasattr(self, 'key_'+key) and not hasattr(self, 'textEdit_'+key)):
@@ -267,11 +278,13 @@ class Form(QDialog):
       if btn.text().endswith('Next'):
         for delKey in [i for i in self.doc.keys() if i[0] in ['-','_'] and i not in ['-name','-type']]:
           del self.doc[delKey]
+        self.comm.changeTable('', '')
       else:
         self.accept()  #close
     else:
       print('dialogForm: did not get a fitting btn ',btn.text())
     return
+  #TODO_P1 Items that were "toggle hidden" in one list (unidentified) and then are moved to the other list, are not hidden anymore.
 
 
 
@@ -386,7 +399,9 @@ class Form(QDialog):
     for i in reversed(range(self.tagsBarSubL.count())):
       self.tagsBarSubL.itemAt(i).widget().setParent(None)
     for tag in self.doc['-tags']:
-      if tag[0]=='_':
+      if tag in ['_curated']:
+        continue
+      elif tag[0]=='_':
         TextButton('\u2605'*int(tag[1]), self.delTag, self.tagsBarSubL, tag, 'click to remove')
       else:
         TextButton(tag, self.delTag, self.tagsBarSubL, tag, 'click to remove')

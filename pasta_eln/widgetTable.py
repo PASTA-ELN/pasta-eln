@@ -100,13 +100,12 @@ class Table(QWidget):
       self.projID  = projID
     if self.docType=='_tags_':
       self.addBtn.hide()
-      #TODO_P2 tags: add docType to allow for user to see why cannot click in table
       #TODO_P4 projectView: if table-row click, move to view it project
       if self.showAll:
         self.data = self.comm.backend.db.getView('viewIdentify/viewTagsAll')
       else:
         self.data = self.comm.backend.db.getView('viewIdentify/viewTags')
-      self.filterHeader = ['tag','name']
+      self.filterHeader = ['tag','name','type']
       self.headline.setText('TAGS')
       self.actionChangeColums.setVisible(False)
     else:
@@ -146,7 +145,7 @@ class Table(QWidget):
             else:
               item = QStandardItem(self.data[i]['key'])
           else:
-            item = QStandardItem(self.data[i]['value'][0])
+            item = QStandardItem(self.data[i]['value'][j-1])
         else:                 #list for normal doctypes
           # print(i,j, self.data[i]['value'][j], type(self.data[i]['value'][j]))
           if self.data[i]['value'][j] is None or not self.data[i]['value'][j]:  #None, False
@@ -270,9 +269,10 @@ class Table(QWidget):
             else:
               intersection = intersection.intersection(thisKeys)
         else:
-          logging.error('widgetTable model has no item '+str(self.models[-1])+' '+str(row)+' '+str(thisKeys))
+          logging.error('widgetTable model has no item '+str(self.models[-1])+' '+str(row))
           showMessage(self, 'Send information to Steffen','widgetTable model has no item '+\
-                            str(self.models[-1])+' '+str(row)+' '+str(thisKeys))
+                            str(self.models[-1])+' '+str(row))
+      #TODO_P1 When filter is used and filtered items are selected, upon "group edit", such error occurs. DOES NOT WORK?
       #remove keys that should not be group edited and build dict
       intersection = intersection.difference({'-type', '-branch', '-user', '-client', 'metaVendor', 'shasum', \
         '_id', 'metaUser', '_rev', '-name', '-date', 'image', '_attachments','links'})

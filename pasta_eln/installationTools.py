@@ -1,6 +1,5 @@
 '''  Methods that check, repair, the local PASTA-ELN installation '''
-import os, platform, sys, json, shutil, random, string, subprocess, logging
-import importlib.util
+import os, platform, sys, json, shutil, random, string, logging
 import urllib.request
 from pathlib import Path
 from cloudant.client import CouchDB
@@ -496,12 +495,20 @@ def exampleData(force=False, callbackPercent=None):
 
 def createShortcut():
   """
-  Create shortcut icon depending on operating system
+  Create alias and shortcut icon depending on operating system
   """
   logging.info('Create shortcut starting')
   if platform.system()=='Linux':
     content ='[Desktop Entry]\nName=PASTA ELN\nComment=PASTA electronic labnotebook\n'
-    content+='Exec=pastaELN\n'
+    if sys.prefix==sys.base_prefix:   #normal installation into user-space
+      content+='Exec=pastaELN\n'
+    else:                             #installation in a virtual environment
+      logging.info('In virtual environment, create an alias')
+      with open(Path.home()/'.bashrc','a', encoding='utf-8') as fOut:
+        alias = "alias pastaELN='"+sys.prefix+"bin/python3 -m pasta_eln.gui'"
+        logging.info(alias)
+        fOut.write(alias+'\n')
+      content+='Exec='+sys.prefix+'bin/python3 -m pasta_eln.gui\n'
     content+='Icon='+ (Path(__file__).parent/'Resources'/'Icons'/'favicon64.png').as_posix() + '\n'
     content+='Terminal=false\nType=Application\nCategories=Utility;Application;\n'
     try:

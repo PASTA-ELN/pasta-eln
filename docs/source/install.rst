@@ -3,11 +3,11 @@
 Installation and Troubleshoot Instructions
 ******************************************
 
-Requirements
-============
+WINDOWS
+=======
 
-Install python on windows
--------------------------
+Requirement: install python
+---------------------------
 
 If you do not have Python installed, we recommend the default python installation without conda environments.
 
@@ -27,31 +27,53 @@ Afterwards, we recommend that you install some nice-to-have packages and test th
     pip install matplotlib pandas spyder
     python.exe -c "import numpy as np;x = np.linspace(0,2*np.pi);y = np.sin(x);import matplotlib.pyplot as plt;plt.plot(x,y);plt.show()"
 
-Install python on linux
------------------------
 
-Generally, Python3 is installed in all Linux distributions. Sometimes, the package installer is missing. Hence, install it:
+
+LINUX
+=====
+
+Requirement: add python packages
+--------------------------------
+
+Generally, Python3 is installed in all Linux distributions. Sometimes, the package installer is missing. Hence, install it along with venv:
 
 .. code-block:: bash
 
     sudo apt install python3-pip python3.10-venv
 
-|
+Install PASTA-ELN
+-----------------
 
-|
+You can install PASTA-ELN in your normal user-space, which is the easier path, or inside an environment, which is the safer path. If PASTA-ELN does not work in the normal user-space, install in in an environment.
 
-
-Install PASTA-ELN on all operating systems
-==========================================
-
-Starting in a folder of your choice but we suggest the home-folder, create a virtual environment, for instance with the name .venvPasta. The . will ensure that it is mostly hidden.
+Install in user-space
+^^^^^^^^^^^^^^^^^^^^^
+In any folder,
 .. code-block:: bash
 
-    python3 -m venv .venvPasta
-    . .venvPasta/bin/activate
     pip3 install pasta-eln
 
 which typically can take some time. Afterwards, start PASTA-ELN with
+
+.. code-block:: bash
+
+    pastaELN
+
+which starts automatically the **setup** if no valid PASTA-ELN configuration is found.
+
+Install in environment
+^^^^^^^^^^^^^^^^^^^^^^
+
+Starting in a folder of your choice but we suggest the home-folder, create a virtual environment, for instance with the name .venvPasta. (The . will ensure that it is mostly hidden.)
+.. code-block:: bash
+
+    python3 -m venv .venvPastaELN
+    . .venvPastaELN/bin/activate
+    pip3 install pasta-eln
+    pastaELN
+    deactivate
+
+which typically can take some time and includes the **setup**. Afterwards, you can start pasta with
 
 .. code-block:: bash
 
@@ -63,7 +85,8 @@ or
 
     python -m pasta_eln.gui
 
-which starts automatically the **setup** if no valid PASTA-ELN configuration is found.
+Advanced notes if the normal setup did not succeed
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If, for whatever reason, the graphical interface does not open, one can also execute
 

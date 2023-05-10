@@ -126,8 +126,8 @@ class Database:
     jsQR = "if (doc.qrCode.length > 0)"
     jsQR+= "{doc.qrCode.forEach(function(thisCode) {emit(thisCode, doc['-name']);});}"
     jsTags="if ('-tags' in doc && (doc['-branch'][0].show.every(function(i) {return i;})))"+\
-              "{doc['-tags'].forEach(function(tag){emit(tag,[doc['-name']]);});}"
-    jsTagsAll="if ('-tags' in doc){doc['-tags'].forEach(function(tag){emit(tag,[doc['-name']]);});}"
+              "{doc['-tags'].forEach(function(tag){emit(tag,[doc['-name'], doc['-type'].join('/')]);});}"
+    jsTagsAll="if ('-tags' in doc){doc['-tags'].forEach(function(tag){emit(tag,[doc['-name'], doc['-type'].join('/')]);});}"
     views = {'viewQR':jsQR, 'viewSHAsum':jsSHA, 'viewTags':jsTags, 'viewTagsAll':jsTagsAll}
     self.saveView('viewIdentify', views)
     return
