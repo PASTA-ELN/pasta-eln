@@ -1,8 +1,9 @@
 """Change the format of dictionaries"""
 import re, uuid
+from typing import Any
 from datetime import datetime
 
-def ontology2Labels(ontology, tableFormat):
+def ontology2Labels(ontology:dict[str,Any], tableFormat:dict[str,Any]) -> dict[str,Any]:
   """
   Extract labels and create lists of docType,docLabel pair
   - docLabel is the plural human-readable form of the docType
@@ -37,7 +38,7 @@ def ontology2Labels(ontology, tableFormat):
   return dataDict
 
 
-def fillDocBeforeCreate(data, docType):
+def fillDocBeforeCreate(data:dict[str,Any], docType:list[str]) -> dict[str,Any]:
   """ Fill the data before submission to database with common data
   - type, project, childs
   - separate comment into tags, fields

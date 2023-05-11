@@ -5,10 +5,11 @@ from PySide6.QtCore import Slot   # pylint: disable=no-name-in-module
 
 from .widgetDocTypes import DocTypes
 from .widgetProject import Project
+from .communicate import Communicate
 
 class Body(QWidget):
   """ Central widget: everything that is not sidebar: switches between project-view and table-details """
-  def __init__(self, comm):
+  def __init__(self, comm:Communicate):
     super().__init__()
     self.comm = comm
     comm.changeTable.connect(self.changeTable)
@@ -23,7 +24,7 @@ class Body(QWidget):
 
 
   @Slot(str)
-  def changeTable(self, docType, projID):
+  def changeTable(self, docType:str, projID:str) -> None:
     """
     What happens when user clicks to change doc-type
     -> show table
@@ -39,7 +40,7 @@ class Body(QWidget):
 
 
   @Slot(str)
-  def changeProject(self, docID):
+  def changeProject(self, docID:str) -> None:
     """
     What happens when user clicks to change project
 

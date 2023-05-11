@@ -272,7 +272,8 @@ class Table(QWidget):
           logging.error('widgetTable model has no item '+str(self.models[-1])+' '+str(row))
           showMessage(self, 'Send information to Steffen','widgetTable model has no item '+\
                             str(self.models[-1])+' '+str(row))
-      #TODO_P1 When filter is used and filtered items are selected, upon "group edit", such error occurs. DOES NOT WORK?
+      #TODO_P1 When filter is used and filtered items are selected, upon "group edit", such error occurs.
+      #   DOES NOT WORK?
       #remove keys that should not be group edited and build dict
       intersection = intersection.difference({'-type', '-branch', '-user', '-client', 'metaVendor', 'shasum', \
         '_id', 'metaUser', '_rev', '-name', '-date', 'image', '_attachments','links'})

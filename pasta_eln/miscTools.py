@@ -1,24 +1,26 @@
 """ Misc functions that do not require instances """
 import os, sys, uuid, logging, traceback
+from io import BufferedReader
+from pathlib import Path
 from re import sub, match
 
-def camelCase(a_string):
+def camelCase(text:str) -> str:
   """
   Produce camelCase from normal string
   - file names abcdefg.hij are only replaced spaces
 
   Args:
-     a_string (str): string
+     text (str): string
 
   Returns:
     str: camel case of that string: CamelCaseString
   """
-  if match(r"^[\w-]+\.[\w]+$", a_string):
-    return a_string.replace(' ','_')
-  return sub(r"(_|-)+", ' ', a_string).title().replace(' ','').replace('*','')
+  if match(r"^[\w-]+\.[\w]+$", text):
+    return text.replace(' ','_')
+  return sub(r"(_|-)+", ' ', text).title().replace(' ','').replace('*','')
 
 
-def createDirName(name,docType,thisChildNumber):
+def createDirName(name:str, docType:str, thisChildNumber:int) -> str:
   """ create directory-name by using camelCase and a prefix
 
   Args:
@@ -37,7 +39,7 @@ def createDirName(name,docType,thisChildNumber):
   return f'{thisChildNumber:03d}'+'_'+camelCase(name)
 
 
-def generic_hash(path, forceFile=False):
+def generic_hash(path:Path, forceFile:bool=False) -> str:
   """
   Hash an object based on its mode.
 
@@ -49,7 +51,7 @@ def generic_hash(path, forceFile=False):
       print('%s: hash = %s' % (sys.argv[1], result))
 
   Args:
-    path (string): path
+    path (Path): path
     forceFile (bool): force to get shasum of file and not of link (False for gitshasum)
 
   Returns:
@@ -59,7 +61,7 @@ def generic_hash(path, forceFile=False):
     ValueError: shasum of directory not supported
   """
   from urllib import request
-  if str(path).startswith('http'):                      #Remote file
+  if str(path).startswith('http'):                      #Remote file:
     try:
       with request.urlopen(path.as_posix().replace(':/','://')) as site:
         meta = site.headers
@@ -70,7 +72,7 @@ def generic_hash(path, forceFile=False):
         traceback.format_exc())
       return ''
   if path.is_dir():
-    raise ValueError('This seems to be a directory '+path)
+    raise ValueError('This seems to be a directory '+path.as_posix())
   if forceFile and path.is_symlink():
     path = path.resolve()
   if path.is_symlink():    #if link, hash the link
@@ -81,9 +83,9 @@ def generic_hash(path, forceFile=False):
   return shasum
 
 
-def upOut(key):
+def upOut(key:str) -> list[str]:
   """
-  key (bool): key
+  key (str): key
   """
   import keyring as cred
   keys = key.split() if ' ' in key else [key]
@@ -98,9 +100,9 @@ def upOut(key):
   return keys_
 
 
-def upIn(key):
+def upIn(key:str) -> str:
   """
-  key (bool): key
+  key (str): key
   """
   import keyring as cred
   key = 'bcA:Maw'.join(key.split(':'))
@@ -109,7 +111,7 @@ def upIn(key):
   return id_
 
 
-def symlink_hash(path):
+def symlink_hash(path:Path) -> str:
   """
   Return (as hash instance) the hash of a symlink.
   Caller must use hexdigest() or digest() as needed on
@@ -129,7 +131,7 @@ def symlink_hash(path):
   return hasher.hexdigest()
 
 
-def blob_hash(stream, size):
+def blob_hash(stream:BufferedReader, size:int) -> str:
   """
   Return (as hash instance) the hash of a blob,
   as read from the given stream.
@@ -159,7 +161,7 @@ def blob_hash(stream, size):
   return hasher.hexdigest()
 
 
-def updateExtractorList(directory):
+def updateExtractorList(directory:Path) -> bool:
   """
   Rules:
   - each data-type in its own try-except
@@ -230,12 +232,12 @@ def updateExtractorList(directory):
   return True
 
 
-def restart():
+def restart() -> None:
   """
   Complete restart: cold restart
   """
   try:
-    os.execv('pastaELN',[])  #installed version
+    os.execv('pastaELN',[''])  #installed version
   except:
     os.execv(sys.executable, ['python3','-m','pasta_eln.gui']) #started for programming or debugging
   return

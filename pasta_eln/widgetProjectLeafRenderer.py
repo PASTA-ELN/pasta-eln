@@ -1,23 +1,25 @@
 """ renders each leaf of project tree using QPaint """
 import base64, logging, re
-from PySide6.QtCore import Qt, QSize, QPoint, QMargins, QRectF# pylint: disable=no-name-in-module
-from PySide6.QtGui import QStaticText, QPixmap, QTextDocument # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QStyledItemDelegate             # pylint: disable=no-name-in-module
+from typing import Optional
+from PySide6.QtCore import Qt, QSize, QPoint, QMargins, QRectF, QModelIndex# pylint: disable=no-name-in-module
+from PySide6.QtGui import QStaticText, QPixmap, QTextDocument, QPainter # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QStyledItemDelegate, QStyleOptionViewItem # pylint: disable=no-name-in-module
 from PySide6.QtSvg import QSvgRenderer                        # pylint: disable=no-name-in-module
+from .communicate import Communicate
 
 _DO_NOT_RENDER_ = ['image','content','metaVendor','metaUser','shasum','comment']
 
 class ProjectLeafRenderer(QStyledItemDelegate):
   """ renders each leaf of project tree using QPaint """
-  def __init__(self):
+  def __init__(self) -> None:
     super().__init__()
-    self.comm = None
+    self.comm:Optional[Communicate] = None
     self.width = -1
     self.debugMode = logging.DEBUG
     self.lineSep = 20
 
 
-  def setCommunication(self, comm):
+  def setCommunication(self, comm:Communicate) -> None:
     """
     Set communication path
 
@@ -32,7 +34,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
 
   #TODO_P4 projectTree design: If folders and other items have boxes of slightly different brightness
   # (darker gray for the former and lighter for the latter), the project structure might be easier to understand. 
-  def paint(self, painter, option, index):
+  def paint(self, painter:QPainter, option:QStyleOptionViewItem, index:QModelIndex) -> None:
     """
     Paint this item
     - coordinates: left, top
@@ -45,13 +47,14 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     """
     xOffset, yOffset = option.rect.topLeft().toTuple()
     topLeft2nd = option.rect.topRight()-QPoint(self.width,0)
-    docID   = index.data(Qt.DisplayRole).split('/')[-1]
+    docID   = index.data(Qt.DisplayRole).split('/')[-1]  # type: ignore
     if docID.endswith(' -'):
       docID = docID[:-2]
       folded = True
     else:
       folded = False
-    doc     = self.comm.backend.db.getDoc(docID)
+    if self.comm is not None:
+      doc     = self.comm.backend.db.getDoc(docID)
     painter.fillRect(option.rect.marginsRemoved(QMargins(0,2,0,2)), Qt.lightGray)
     if 'image' in doc and doc['image']!='' and not folded:
       if doc['image'].startswith('data:image/'):
@@ -73,7 +76,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     docTypeText= 'folder' if doc['-type'][0][0]=='x' else '/'.join(doc['-type'])
     painter.drawStaticText(xOffset, yOffset, QStaticText(doc['-name']+hiddenText+'\t\t'+docTypeText))
     if self.debugMode:
-      painter.drawStaticText(xOffset+700, yOffset, QStaticText(index.data(Qt.DisplayRole))) #doc['_id']
+      painter.drawStaticText(xOffset+700, yOffset, QStaticText(index.data(Qt.DisplayRole)))  # type: ignore
     if '-tags' in doc and len(doc['-tags'])>0:
       yOffset += self.lineSep
       tags = ['_curated_' if i=='_curated' else '#'+i for i in doc['-tags']]
@@ -87,7 +90,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
         #TODO_P4: projectTree technology: image does not allow for easy context aware clicks: like click on links, right-click image
         if re.match(r'^[\w-]-[\w\d]{32}$',doc[key]) is None:  #normal text
           value = doc[key]
-        else:                                                 #link
+        elif self.comm is not None:                           #link
           table  = self.comm.backend.db.getView('viewDocType/'+key+'All')
           choices= [i for i in table if i['id']==doc[key]]
           if len(choices)==1:
@@ -119,17 +122,19 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     # The same can be said about the text within the boxes- item names nearly overlap with the boxes edge on
     # the right side.
 
-  def sizeHint(self, option, index):
+  def sizeHint(self, option:QStyleOptionViewItem, index:QModelIndex) -> QSize:
     """
     determine size of this leaf
     """
     if index:
-      docID   = index.data(Qt.DisplayRole).split('/')[-1]
+      docID   = index.data(Qt.DisplayRole).split('/')[-1]  # type: ignore
       if docID.endswith(' -'):
         docID = docID[:-2]
         folded = True
       else:
         folded = False
+      if self.comm is None:
+        return QSize()
       doc = self.comm.backend.db.getDoc(docID)
       docKeys = doc.keys()
       height  = len([i for i in docKeys if not i in _DO_NOT_RENDER_ and i[0] not in ['-','_'] ])  #height in text lines
@@ -137,8 +142,8 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       if 'comment' in doc.keys() and not folded:
         text = QTextDocument()
         text.setMarkdown(self.comm.backend.db.getDoc(docID)['comment'].strip())
-        cutOff = 30 if text.size().toTuple()[1]>30 else 10
-        height += text.size().toTuple()[1]-cutOff
+        cutOff = 30 if text.size().toTuple()[1]>30 else 10 # type: ignore
+        height += text.size().toTuple()[1]-cutOff # type: ignore
       if 'image' in docKeys and not folded:
         if doc['image'].startswith('data:image/'):
           try:
@@ -153,6 +158,6 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       if 'content' in docKeys and not folded:
         text = QTextDocument()
         text.setMarkdown(self.comm.backend.db.getDoc(docID)['content'])
-        height = max(height, text.size().toTuple()[1])
+        height = max(height, text.size().toTuple()[1])  # type: ignore
       return QSize(400, height)
     return QSize()

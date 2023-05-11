@@ -1,5 +1,6 @@
 '''  Methods that check, repair, the local PASTA-ELN installation '''
 import os, platform, sys, json, shutil, random, string, logging
+from typing import Optional, Any, Callable
 import urllib.request
 from pathlib import Path
 from cloudant.client import CouchDB
@@ -8,7 +9,7 @@ from .backend import Backend
 from .fixedStrings import defaultOntology
 
 
-def getOS():
+def getOS() -> str:
   '''
   Get operating system and python environment
 
@@ -23,7 +24,7 @@ def getOS():
   return operatingSys+' '+environment
 
 
-def createDefaultConfiguration(user, password, pathPasta=None):
+def createDefaultConfiguration(user:str, password:str, pathPasta:Optional[str]=None) -> dict[str,Any]:
   '''
   Check configuration file .pastaELN.json for consistencies
 
@@ -44,7 +45,7 @@ def createDefaultConfiguration(user, password, pathPasta=None):
       pathPasta = str(Path.home()/'Documents'/'PASTA_ELN')
     else:
       pathPasta = str(Path.home()/'PASTA_ELN')
-  conf = {}
+  conf:dict[str,Any] = {}
   conf['defaultProjectGroup']     = 'research'
   conf['projectGroups']       = {'research':{\
                           'local':{'user':user, 'password':password, 'database':'research', 'path':pathPasta},
@@ -60,7 +61,7 @@ def createDefaultConfiguration(user, password, pathPasta=None):
   return conf
 
 
-def runAsAdminWindows(cmdLine):
+def runAsAdminWindows(cmdLine:list[str]) -> None:
   '''
   Run a command as admin in windows
   - (C) COPYRIGHT © Preston Landers 2010
@@ -85,7 +86,7 @@ def runAsAdminWindows(cmdLine):
   return
 
 
-def couchdb(command='test'):
+def couchdb(command:str='test') -> str:
   '''
   test couchDB installation or (install it on Windows-only)
 
@@ -120,8 +121,8 @@ def couchdb(command='test'):
       ## New version without questions
       password = ''.join(random.choice(string.ascii_letters) for i in range(12))
       logging.info('PASSWORD: '+password)
-      path = str(path).replace('\\','\\\\')
-      cmd = ['msiexec','/i',path,'/quiet','COOKIEVALUE=abcdefghijklmo','INSTALLSERVICE=1','ADMINUSER=admin',\
+      pathS = str(path).replace('\\','\\\\')
+      cmd = ['msiexec','/i',pathS,'/quiet','COOKIEVALUE=abcdefghijklmo','INSTALLSERVICE=1','ADMINUSER=admin',\
              'ADMINPASSWORD='+password,'/norestart','/l*','log.txt']
       logging.info('COMMAND: '+' '.join(cmd))
       runAsAdminWindows(cmd)
@@ -131,7 +132,7 @@ def couchdb(command='test'):
   return '**ERROR: Unknown command'
 
 
-def couchdbUserPassword(username, password):
+def couchdbUserPassword(username:str, password:str) -> bool:
   '''
   test if username and password are correct
 
@@ -149,7 +150,7 @@ def couchdbUserPassword(username, password):
     return False
 
 
-def installLinuxRoot(couchDBExists, pathPasta='', password=''):
+def installLinuxRoot(couchDBExists:bool, pathPasta:str='', password:str='') -> str:
   '''
   Install all packages in linux using the root-password
 
@@ -216,7 +217,7 @@ def installLinuxRoot(couchDBExists, pathPasta='', password=''):
   return resultString
 
 
-def configuration(command='test', user='', password='', pathPasta=''):
+def configuration(command:str='test', user:str='', password:str='', pathPasta:str='') -> str:
   '''
   Check configuration file .pastaELN.json for consistencies
 
@@ -321,7 +322,7 @@ def configuration(command='test', user='', password='', pathPasta=''):
 
 
 
-def ontology(command='test'):
+def ontology(command:str='test') -> str:
   '''
   Check configuration file .pastaELN.json for consistencies
 
@@ -362,7 +363,7 @@ def ontology(command='test'):
 
 
 
-def exampleData(force=False, callbackPercent=None):
+def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]=None) -> str:
   '''
   Create example data after installation
 
@@ -490,10 +491,10 @@ def exampleData(force=False, callbackPercent=None):
   if callbackPercent is not None:
     callbackPercent(24)
   logging.info('Finished checking database')
-  return
+  return 'Finished checking database'
 
 
-def createShortcut():
+def createShortcut() -> None:
   """
   Create alias and shortcut icon depending on operating system
   """
@@ -539,7 +540,7 @@ def createShortcut():
 
 ##############
 # Main method for testing and installation without GUI
-def main():
+def main() -> None:
   ''' Main method and entry point for commands '''
   logPath = Path.home()/'pastaELN.log'
   #old versions of basicConfig do not know "encoding='utf-8'"

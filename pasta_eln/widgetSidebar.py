@@ -1,15 +1,16 @@
 """ Sidebar widget that includes the navigation items """
 import logging
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QGridLayout, QTreeWidget, QTreeWidgetItem, QFrame # pylint: disable=no-name-in-module
-from PySide6.QtCore import QSize, Slot                                      # pylint: disable=no-name-in-module
-from anytree import PreOrderIter
+from PySide6.QtCore import Slot                                      # pylint: disable=no-name-in-module
+from anytree import PreOrderIter, Node
 
 from .dialogConfig import Configuration
-from .style import TextButton, LetterButton, IconButton, getColor, showMessage
+from .style import TextButton, IconButton, getColor, showMessage
+from .communicate import Communicate
 
 class Sidebar(QWidget):
   """ Sidebar widget that includes the navigation items """
-  def __init__(self, comm):
+  def __init__(self, comm:Communicate):
     super().__init__()
     self.comm = comm
     comm.changeSidebar.connect(self.redraw)
@@ -32,7 +33,7 @@ class Sidebar(QWidget):
 
 
   @Slot()
-  def redraw(self, reset=False):
+  def redraw(self, reset:bool=False) -> None:
     """
     Redraw sidebar: e.g. after change of project visibility in table
 
@@ -42,7 +43,7 @@ class Sidebar(QWidget):
     logging.debug('sidebar:redraw |')
     # Delete old widgets from layout and create storage
     for i in reversed(range(self.mainL.count())):
-      self.mainL.itemAt(i).widget().setParent(None)
+      self.mainL.itemAt(i).widget().setParent(None) # type: ignore
     if reset:
       self.openProjectId = ''
     self.widgetsAction = {}
@@ -131,7 +132,7 @@ class Sidebar(QWidget):
     return
 
 
-  def iterateTree(self, nodeHier, projectID):
+  def iterateTree(self, nodeHier:Node, projectID:str) -> QTreeWidgetItem:
     """
     Recursive function to translate the hierarchical node into a tree-node
 
@@ -154,7 +155,7 @@ class Sidebar(QWidget):
     return nodeTree
 
 
-  def btnDocType(self):
+  def btnDocType(self) -> None:
     """
     What happens when user clicks to change doc-type
     """
@@ -164,7 +165,7 @@ class Sidebar(QWidget):
     return
 
 
-  def btnProject(self):
+  def btnProject(self) -> None:
     """
     What happens when user clicks to view project
     """
@@ -191,7 +192,7 @@ class Sidebar(QWidget):
     return
 
 
-  def btnScan(self):
+  def btnScan(self) -> None:
     """
     What happens if user clicks button "Scan"
     """
@@ -202,13 +203,13 @@ class Sidebar(QWidget):
     showMessage(self, 'Information','Scanning finished')
     return
 
-  def btnCurate(self):
+  def btnCurate(self) -> None:
     """
     What happens if user clicks button "Special"
     -> pull data from server and include
     """
     return
-  def btnTree(self, item):
+  def btnTree(self, item:QTreeWidgetItem) -> None:
     """
     What happpens if user clicks on branch in tree
     """

@@ -1,13 +1,14 @@
 """ all styling of buttons and other general widgets, some defined colors... """
-from PySide6.QtWidgets import QPushButton, QLabel, QSizePolicy, QRadioButton, QMessageBox  # pylint: disable=no-name-in-module
-from PySide6.QtGui import QImage, QPixmap, QAction, QKeySequence  # pylint: disable=no-name-in-module
+from typing import Callable, Optional
+from PySide6.QtWidgets import QPushButton, QLabel, QSizePolicy, QMessageBox, QLayout, QWidget, QMenu # pylint: disable=no-name-in-module
+from PySide6.QtGui import QImage, QPixmap, QAction, QKeySequence, QMouseEvent  # pylint: disable=no-name-in-module
 from PySide6.QtCore import QByteArray, Qt           # pylint: disable=no-name-in-module
 from PySide6.QtSvgWidgets import QSvgWidget         # pylint: disable=no-name-in-module
 import qtawesome as qta
 from qt_material import get_theme
+from .backend import Backend
 
-
-def getColor(backend, color):
+def getColor(backend:Backend, color:str) -> str:
   """
   get color from theme
 
@@ -34,10 +35,9 @@ def getColor(backend, color):
 
 class TextButton(QPushButton):
   """ Button that has only text"""
-  def __init__(self, label, function, layout, name='', tooltip='', checkable=False, style='', hide=False):
+  def __init__(self, label:str, function:Optional[Callable[[],None]], layout:QLayout, name:str='',
+               tooltip:str='', checkable:bool=False, style:str='', hide:bool=False):
     """
-    Initialization
-
     Args:
       label (str): label printed on button
       function (function): function to be called upon button-click-event
@@ -67,10 +67,9 @@ class TextButton(QPushButton):
 
 class LetterButton(QPushButton):
   """ Button that has only a letter"""
-  def __init__(self, label, function, layout, name='', style='', hide=False):
+  def __init__(self, label:str, function:Callable[[],None], layout:QLayout, name:str='',
+               style:str='', hide:bool=False):
     """
-    Initialization
-
     Args:
       label (str): label printed on button
       function (function): function to be called upon button-click-event
@@ -95,14 +94,9 @@ class LetterButton(QPushButton):
 
 class IconButton(QPushButton):
   """ Button that has only an icon"""
-  def __init__(self, iconName, function, layout, name='', tooltip='', backend=None, style='', **kwargs):
+  def __init__(self, iconName:str, function:Callable[[],None], layout:Optional[QLayout], name:str='',
+               tooltip:str='', backend:Optional[Backend]=None, style:str='', hide:bool=False, text:str=''):
     """
-    Initialization
-
-    Additional parameter:
-    - hide (bool): hidden or shown initially
-    - text (str): text shown on button additionally  #TODO_P3 design: what is the difference to TextButton?
-
     Args:
       iconName (str): icon to show on button
       function (function): function to be called upon button-click-event
@@ -111,10 +105,11 @@ class IconButton(QPushButton):
       tooltip (str): tooltip shown when mouse hovers the button
       backend (Pasta): pasta backend
       style (str): css style
-      kwargs (dict): additional parameter
+      hide (bool): hidden or shown initially
+      text (str): text shown on button additionally  #TODO_P3 design: what is the difference to TextButton?
     """
     hide = kwargs.get('hide', False)
-    text = kwargs.get('text', '')
+    text = str(kwargs.get('text', ''))
     super().__init__()
     color = 'black' if backend is None else getColor(backend, 'primary')
     icon = qta.icon(iconName, color=color, scale_factor=1)
@@ -136,10 +131,9 @@ class IconButton(QPushButton):
 
 class Action(QAction):
   """ QAction and assign function to menu"""
-  def __init__(self, label, function, menu, parent, shortcut=None, name=None):
+  def __init__(self, label:str, function:Callable[[],None], menu:QMenu, parent:QWidget,
+               shortcut:Optional[str]=None, name:Optional[str]=None):
     """
-    Initialization
-
     Args:
       label (str): label printed on submenu
       function (function): function to be called
@@ -162,10 +156,8 @@ class Action(QAction):
 
 class Image():
   """ Image widget depending on type of data """
-  def __init__(self, data, layout, width=-1, height=-1):
+  def __init__(self, data:str, layout:QLayout, width:int=-1, height:int=-1):
     """
-    Initialization
-
     Args:
       data (str): image data in byte64-encoding or svg-encoding
       layout (QLayout): to be added to this layout
@@ -176,7 +168,7 @@ class Image():
       byteArr = QByteArray.fromBase64(bytearray(data[22:] if data[21]==',' else data[23:], encoding='utf-8'))
       imageW = QImage()
       imageType = data[11:15].upper()
-      imageW.loadFromData(byteArr, imageType[:-1] if imageType.endswith(';') else imageType)
+      imageW.loadFromData(byteArr, format=imageType[:-1] if imageType.endswith(';') else imageType)   # type: ignore
       pixmap = QPixmap.fromImage(imageW)
       if height>0:
         pixmap = pixmap.scaledToHeight(height)
@@ -184,7 +176,7 @@ class Image():
         pixmap = pixmap.scaledToWidth(width)
       label = QLabel()
       label.setPixmap(pixmap)
-      label.setAlignment(Qt.AlignCenter)
+      label.setAlignment(Qt.AlignCenter) # type: ignore
       layout.addWidget(label)
     elif data.startswith('<?xml'): #svg image
       imageW = QSvgWidget()
@@ -194,7 +186,7 @@ class Image():
       imageW.setSizePolicy(policy)
       imageW.renderer().load(bytearray(data, encoding='utf-8'))
       layout.addWidget(imageW)
-      layout.setAlignment(Qt.AlignCenter)
+      layout.setAlignment(Qt.AlignCenter)  # type: ignore
     elif len(data)>2:
       print('WidgetProjectLeaf:What is this image |'+data[:50]+'|')
     return
@@ -202,10 +194,9 @@ class Image():
 
 class Label(QLabel):
   """ Label widget: headline, ... """
-  def __init__(self, text='', size='', layout=None, function=None, docID=''):
+  def __init__(self, text:str='', size:str='', layout:Optional[QLayout]=None,
+               function:Optional[Callable[[str, str],None]]=None, docID:str=''):
     """
-    Initialization
-
     Args:
       text (str): text on label
       size (str): size ['h1']
@@ -223,7 +214,7 @@ class Label(QLabel):
     self.identifier = docID
     return
 
-  def mousePressEvent(self, _):
+  def mousePressEvent(self, e:QMouseEvent) -> None:
     """
     Event after mouse press: only use internal members, not the event itself
     """
@@ -233,7 +224,7 @@ class Label(QLabel):
 
 
 
-def showMessage(parent, title, text, icon='', style=''):
+def showMessage(parent:QWidget, title:str, text:str, icon:str='', style:str='') -> None:
   """
   Show a message box
 

@@ -1,37 +1,36 @@
 """ Widget that shows the content of project in a electronic labnotebook """
 import logging
 from pathlib import Path
-from PySide6.QtWidgets import QLabel, QVBoxLayout, QHBoxLayout, QWidget, QStyledItemDelegate, QAbstractItemView, \
-                              QMenu, QMessageBox # pylint: disable=no-name-in-module
+from typing import Optional, Any
+from PySide6.QtWidgets import QLabel, QVBoxLayout, QHBoxLayout, QWidget, QMenu, QMessageBox # pylint: disable=no-name-in-module
 from PySide6.QtGui import QStandardItemModel, QStandardItem    # pylint: disable=no-name-in-module
 from PySide6.QtCore import Slot, Qt, QItemSelectionModel      # pylint: disable=no-name-in-module
-from anytree import PreOrderIter
-from .widgetProjectLeafRenderer import ProjectLeafRenderer
+from anytree import PreOrderIter, Node
 from .widgetProjectTreeView import TreeView
 from .style import TextButton, Action, showMessage
 from .miscTools import createDirName
-
+from .communicate import Communicate
 
 class Project(QWidget):
   """ Widget that shows the content of project in a electronic labnotebook """
-  def __init__(self, comm):
+  def __init__(self, comm:Communicate):
     super().__init__()
     self.comm = comm
     comm.changeProject.connect(self.changeProject)
     self.mainL = QVBoxLayout()
     self.setLayout(self.mainL)
-    self.tree   = None
-    self.model  = None
-    self.bodyW  = None
+    self.tree:Optional[TreeView]             = None
+    self.model:Optional[QStandardItemModel]  = None
+    self.bodyW:Optional[QWidget]             = None
     self.projID = ''
     self.taskID = ''
-    self.docProj= {}
+    self.docProj:dict[str,Any]= {}
     self.showAll= False
-    self.actionAddSubfolder = None
+    self.actionAddSubfolder:Optional[Action] = None
 
 
   @Slot(str, str)
-  def changeProject(self, projID, docID):
+  def changeProject(self, projID:str, docID:str) -> None:
     """
     What happens when user clicks to change doc-type
 
@@ -42,7 +41,7 @@ class Project(QWidget):
     logging.debug('project:changeProject |'+projID+'|'+docID+'|')
     #initialize
     for i in reversed(range(self.mainL.count())): #remove old
-      self.mainL.itemAt(i).widget().setParent(None)
+      self.mainL.itemAt(i).widget().setParent(None)  # type: ignore
     if projID!='':
       self.projID = projID
       self.taskID = docID
@@ -54,7 +53,7 @@ class Project(QWidget):
     self.model.itemChanged.connect(self.modelChanged)
     rootItem = self.model.invisibleRootItem()
 
-    def iterateTree(nodeHier):
+    def iterateTree(nodeHier:Node) -> QStandardItem:
       """
       Recursive function to translate the hierarchical node into a tree-node
 
@@ -68,9 +67,9 @@ class Project(QWidget):
       label = '/'.join([i.id for i in nodeHier.ancestors]+[nodeHier.id])
       nodeTree = QStandardItem(label)  #nodeHier.name,'/'.join(nodeHier.docType),nodeHier.id])
       if nodeHier.id[0]=='x':
-        nodeTree.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled)
+        nodeTree.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled) # type: ignore
       else:
-        nodeTree.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled)
+        nodeTree.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled) # type: ignore
       if self.taskID==nodeHier.id:
         nonlocal selectedIndex
         selectedIndex = nodeTree.index()
@@ -95,12 +94,12 @@ class Project(QWidget):
       #TODO_P4 projectView: selection does not scroll; one cannot select a row
       self.tree.setCurrentIndex(selectedIndex)# Item(selectedItem)
     self.mainL.addWidget(self.tree)
-    if len(nodeHier.children)>0:
+    if len(nodeHier.children)>0 and self.actionAddSubfolder is not None:
       self.actionAddSubfolder.setVisible(False)
     return
 
 
-  def modelChanged(self, item):
+  def modelChanged(self, item:QStandardItem) -> None:
     """
     After drag-drop, record changes to backend and database directly
 
@@ -156,7 +155,7 @@ class Project(QWidget):
     return
 
 
-  def projHeader(self):
+  def projHeader(self) -> None:
     """
     Create header of page
     """
@@ -192,7 +191,7 @@ class Project(QWidget):
 
   #TODO_P4 projectTree: select multiple items to edit... What is use case
   #TODO_P4 projectTree: allow right click on measurement to change recipe
-  def executeAction(self):
+  def executeAction(self) -> None:
     """ Any action by the buttons at the top of the page """
     if hasattr(self.sender(), 'data'):  #action
       menuName = self.sender().data()
@@ -225,9 +224,9 @@ class Project(QWidget):
       self.comm.changeSidebar.emit()
       showMessage(self, 'Information','Scanning finished')
     elif menuName == 'projHide':
-      if self.bodyW.isHidden():
+      if self.bodyW is not None and self.bodyW.isHidden():
         self.bodyW.show()
-      else:
+      elif self.bodyW is not None:
         self.bodyW.hide()
     elif menuName == 'hideShow':
       self.showAll = not self.showAll

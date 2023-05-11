@@ -1,5 +1,6 @@
 """ Graphical user interface includes all widgets """
 import os, logging, webbrowser, json, sys
+from typing import Any
 from pathlib import Path
 from PySide6.QtCore import Qt, Slot      # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QApplication, QFileDialog # pylint: disable=no-name-in-module
@@ -24,12 +25,12 @@ os.environ['QT_API'] = 'pyside6'
 # Subclass QMainWindow to customize your application's main window
 class MainWindow(QMainWindow):
   """ Graphical user interface includes all widgets """
-  def __init__(self):
+  def __init__(self) -> None:
     #global setting
     super().__init__()
     venv = ' without venv' if sys.prefix == sys.base_prefix else ' in venv'
     self.setWindowTitle("PASTA-ELN "+__version__+venv)
-    self.setWindowState(Qt.WindowMaximized)
+    self.setWindowState(Qt.WindowMaximized) # type: ignore
     resourcesDir = Path(__file__).parent/'Resources'
     self.setWindowIcon(QIcon(QPixmap(resourcesDir/'Icons'/'favicon64.png')))
     self.backend = Backend()
@@ -95,7 +96,7 @@ class MainWindow(QMainWindow):
 
 
   @Slot(str)
-  def formDoc(self, doc):
+  def formDoc(self, doc:dict[str,Any]) -> None:
     """
     What happens when new/edit dialog is shown
 
@@ -108,7 +109,7 @@ class MainWindow(QMainWindow):
     return
 
 
-  def viewMenu(self):
+  def viewMenu(self) -> None:
     """
     act on user pressing an item in view
     """
@@ -117,7 +118,7 @@ class MainWindow(QMainWindow):
     return
 
 
-  def executeAction(self):
+  def executeAction(self) -> None:
     """
     action after clicking menu item
     """
@@ -160,7 +161,7 @@ class MainWindow(QMainWindow):
     return
 
 
-  def changeProjectGroup(self):
+  def changeProjectGroup(self) -> None:
     """
     change default project group in configuration file and restart
     """
@@ -176,7 +177,7 @@ class MainWindow(QMainWindow):
 
 ##############
 ## Main function
-def main():
+def main() -> None:
   """ Main method and entry point for commands """
   # logging has to be started first
   logPath = Path.home()/'pastaELN.log'

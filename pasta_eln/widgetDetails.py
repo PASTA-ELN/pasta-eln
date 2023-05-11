@@ -1,22 +1,22 @@
 """ widget that shows the details of the items """
 from pathlib import Path
 import platform, subprocess, os, base64, logging
-import json, yaml
+import yaml
+from typing import Any
 from PySide6.QtWidgets import QScrollArea, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QMenu, QTextEdit  # pylint: disable=no-name-in-module
-from PySide6.QtCore import Qt, Slot, QByteArray   # pylint: disable=no-name-in-module
-from PySide6.QtSvgWidgets import QSvgWidget       # pylint: disable=no-name-in-module
-from PySide6.QtGui import QPixmap, QImage, QAction# pylint: disable=no-name-in-module
+from PySide6.QtCore import Qt, Slot, QPoint  # pylint: disable=no-name-in-module
 from .style import TextButton, Image, Label, Action, showMessage
 from .fixedStrings import defaultOntologyNode
+from .communicate import Communicate
 
 class Details(QScrollArea):
   """ widget that shows the details of the items """
-  def __init__(self, comm):
+  def __init__(self, comm:Communicate):
     super().__init__()
     self.comm = comm
     comm.changeDetails.connect(self.changeDetails)
     comm.testExtractor.connect(self.testExtractor)
-    self.doc  = {}
+    self.doc:dict[str,Any]  = {}
     self.docID= ''
 
     # GUI elements
@@ -63,7 +63,7 @@ class Details(QScrollArea):
     self.mainL.addStretch(1)
 
 
-  def contextMenu(self, pos):
+  def contextMenu(self, pos:QPoint) -> None:
     """
     Create a context menu
 
@@ -85,7 +85,7 @@ class Details(QScrollArea):
     context.exec(self.mapToGlobal(pos))
     return
 
-  def changeExtractor(self):
+  def changeExtractor(self) -> None:
     """
     What happens when user changes extractor
     """
@@ -95,7 +95,7 @@ class Details(QScrollArea):
       if platform.system() == 'Darwin':       # macOS
         subprocess.call(('open', filePath.parent))
       elif platform.system() == 'Windows':    # Windows
-        os.startfile(filePath.parent)
+        os.startfile(filePath.parent) # type: ignore[attr-defined]
       else:                                   # linux variants
         subprocess.call(('xdg-open', filePath.parent))
     elif self.sender().data()=='_saveAsImage_':
@@ -122,7 +122,7 @@ class Details(QScrollArea):
     return
 
   @Slot()
-  def testExtractor(self):
+  def testExtractor(self) -> None:
     """
     User selects to test extractor on this dataset
     """
@@ -137,7 +137,7 @@ class Details(QScrollArea):
 
 
   @Slot(str)
-  def changeDetails(self, docID):
+  def changeDetails(self, docID:str) -> None:
     """
     What happens when details should change
 
@@ -158,17 +158,17 @@ class Details(QScrollArea):
       self.btnDatabase.show()
     # Delete old widgets from layout
     for i in reversed(range(self.headerL.count())):
-      self.headerL.itemAt(i).widget().setParent(None)
+      self.headerL.itemAt(i).widget().setParent(None)       # type: ignore
     for i in reversed(range(self.metaDetailsL.count())):
-      self.metaDetailsL.itemAt(i).widget().setParent(None)
+      self.metaDetailsL.itemAt(i).widget().setParent(None)  # type: ignore
     if self.metaVendorL.itemAt(0) is not None:
-      self.metaVendorL.itemAt(0).widget().setParent(None)
+      self.metaVendorL.itemAt(0).widget().setParent(None)   # type: ignore
     if self.metaUserL.itemAt(0) is not None:
-      self.metaUserL.itemAt(0).widget().setParent(None)
+      self.metaUserL.itemAt(0).widget().setParent(None)     # type: ignore
     for i in reversed(range(self.metaDatabaseL.count())):
-      self.metaDatabaseL.itemAt(i).widget().setParent(None)
+      self.metaDatabaseL.itemAt(i).widget().setParent(None) # type: ignore
     if self.specialL.itemAt(0) is not None:
-      self.specialL.itemAt(0).widget().setParent(None)
+      self.specialL.itemAt(0).widget().setParent(None)      # type: ignore
     self.specialW.hide()
     self.metaDetailsW.hide()
     self.metaVendorW.hide()
@@ -254,7 +254,7 @@ class Details(QScrollArea):
     return
 
 
-  def showArea(self):
+  def showArea(self) -> None:
     """
     Hide / show the widget underneath the button
     """
@@ -266,7 +266,7 @@ class Details(QScrollArea):
     return
 
 
-  def callEdit(self):
+  def callEdit(self) -> None:
     """
     Call edit dialoge
     """
@@ -279,7 +279,7 @@ class Details(QScrollArea):
     return
 
 
-  def clickLink(self, label, docID):
+  def clickLink(self, label:str, docID:str) -> None:
     """
     Click link in details
 

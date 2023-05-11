@@ -5,10 +5,11 @@ from PySide6.QtCore import Slot                                                 
 from PySide6.QtWidgets import QWidget, QSplitter, QVBoxLayout, QLabel, QScrollArea  # pylint: disable=no-name-in-module
 from .widgetTable import Table
 from .widgetDetails import Details
+from .communicate import Communicate
 
 class DocTypes(QWidget):
   """ widget that shows the table and the details of the items """
-  def __init__(self, comm):
+  def __init__(self, comm:Communicate):
     super().__init__()
     comm.changeTable.connect(self.changeTable)
     comm.changeDetails.connect(self.changeDetails)
@@ -27,7 +28,7 @@ class DocTypes(QWidget):
 
 
   @Slot(str, str)
-  def changeTable(self, docType, projID):
+  def changeTable(self, docType:str, projID:str) -> None:
     """
     What happens when user clicks to change doc-type
     -> show table
@@ -45,7 +46,7 @@ class DocTypes(QWidget):
 
 
   @Slot(str)
-  def changeDetails(self, docID):
+  def changeDetails(self, docID:str) -> None:
     """
     What happens when user clicks to change details
     -> show show details

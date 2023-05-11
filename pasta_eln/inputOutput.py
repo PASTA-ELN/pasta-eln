@@ -1,14 +1,15 @@
 """Input and output functions towards the .eln file-format"""
+from typing import Optional
 import os, io, json, shutil, base64, subprocess
 from pathlib import Path
 from datetime import datetime
 from zipfile import ZipFile, ZIP_DEFLATED
-
+from .backend import Backend
 #TODO_P3 Add read info from ror and orcid
 # curl https://api.ror.org/organizations/02nv7yv05
 # curl -s -H "Accept: application/json" https://pub.orcid.org/v3.0/0000-0001-7691-2856
 
-def importELN(backend, database, elnFileName):
+def importELN(backend:Backend, database:str, elnFileName:str) -> bool:
   '''
   import .eln file from other ELN or from PASTA
 
@@ -21,7 +22,7 @@ def importELN(backend, database, elnFileName):
     bool: success of import
   '''
 
-  def processPart(part):
+  def processPart(part:dict[str,str]) -> bool:
     """
     recursive function call to process this node
 
@@ -140,7 +141,7 @@ def importELN(backend, database, elnFileName):
   return True
 
 
-def exportELN(backend, docID, pathII):
+def exportELN(backend:Backend, docID:str, pathII:str) -> bool:
   """
   export eln to file
 
@@ -166,7 +167,7 @@ def exportELN(backend, docID, pathII):
     #create tree of hierarchical data
     treedata = {}
 
-    def listChildren(idString, level):
+    def listChildren(idString:Optional[str], level:int) -> list[str]:
       """
       List all children
 
@@ -267,7 +268,7 @@ def exportELN(backend, docID, pathII):
   return True
 
 
-def backup(backend, method='backup', **kwargs):
+def backup(backend:Backend, method:str='backup', **kwargs:int) -> bool:
   """
   backup, verify, restore information from/to database
   - all data is saved to one zip file (NOT ELN file)
