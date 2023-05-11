@@ -264,7 +264,7 @@ class Backend(CLI_Mixin):
       path = Path(doc['-branch'][0]['path'])
       if edit:
         if not (self.basePath/oldPath).exists():
-          print('**ERROR: addData edit of folder should have oldPath and that should exist', oldPath)
+          print('**WARNING: addData edit of folder should have oldPath and that should exist:'+oldPath+'\n This can be triggered if user moved the folder.')
           return ''
         (self.basePath/oldPath).rename(self.basePath/path)
       else:
@@ -273,7 +273,6 @@ class Backend(CLI_Mixin):
         f.write(json.dumps(doc))
     return doc['_id']
 
-  #TODO_P1 - When a folder is moved somewhere in the folder tree or deleted (not through GUI, but through the file explorer), upon scanning that folder is added as a new folder (which is expected), but the old one does not disappear from the project view. Further interaction with it (deletion, subfolder creation) causes errors and the database integrity is lost.
 
   ######################################################
   ### Disk directory/folder methods
@@ -335,7 +334,10 @@ class Backend(CLI_Mixin):
         del dirs
         del files
         continue
-      parentID = [i for i in inDB_all if i['key']==self.cwd.as_posix()][0]['id']
+      parentID = [i for i in inDB_all if i['key']==self.cwd.as_posix()]
+      if len(parentID)==0: #skip newly moved folder, will be scanned upon rescanning
+        continue
+      parentID = parentID[0]['id']
       parentDoc = self.db.getDoc(parentID)
       hierStack = parentDoc['-branch'][0]['stack']+[parentID]
       # handle directories
@@ -346,11 +348,26 @@ class Backend(CLI_Mixin):
         if path in pathsInDB_x: #path already in database
           pathsInDB_x.remove(path)
           continue
-        currentID = self.addData('x'+str(len(hierStack)), {'-name':dirName}, hierStack)
-        newDir = Path(self.basePath)/self.db.getDoc(currentID)['-branch'][0]['path']
-        (newDir/'.id_pastaELN.json').rename(Path(self.basePath)/root/dirName/'.id_pastaELN.json') #move index file into old folder
-        newDir.rmdir()                     #remove created path
-        (Path(self.basePath)/root/dirName).rename(newDir) #move old to new path
+        if (self.basePath/path/'.id_pastaELN.json').exists(): # update branch: path and stack
+          with open(self.basePath/path/'.id_pastaELN.json', 'r', encoding='utf-8') as fIn:
+            doc = json.loads(fIn.read())
+          thisStack = ' '.join(hierStack)  #this childNumSearch could become new function
+          view = self.db.getView('viewHierarchy/viewHierarchy', startKey=thisStack)
+          childNum = 0
+          for item in view:
+            if item['value'][1][0]=='x0' or item['value'][1][0][0]!='x':
+              continue
+            if thisStack == ' '.join(item['key'].split(' ')[:-1]): #remove last item from string
+              childNum += 1
+          newPath = '/'.join(path.split('/')[:-1])+'/'+createDirName(doc['-name'],doc['-type'][0],childNum) #update,or create (if new doc, update ignored anyhow)
+          self.db.updateBranch(doc['_id'], 0, childNum, hierStack, newPath)
+          (self.basePath/path).rename(self.basePath/newPath)
+        else:
+          currentID = self.addData('x'+str(len(hierStack)), {'-name':dirName}, hierStack)
+          newDir = Path(self.basePath)/self.db.getDoc(currentID)['-branch'][0]['path']
+          (newDir/'.id_pastaELN.json').rename(Path(self.basePath)/root/dirName/'.id_pastaELN.json') #move index file into old folder
+          newDir.rmdir()                     #remove created path
+          (Path(self.basePath)/root/dirName).rename(newDir) #move old to new path
         rerunScanTree = True
       # handle files
       for fileName in files:
@@ -367,7 +384,7 @@ class Backend(CLI_Mixin):
     self.cwd = self.basePath/projPath
     orphans = [i for i in pathsInDB_data if i.startswith(self.cwd.relative_to(self.basePath).as_posix())]
     logging.info('Scan: these files are on DB but not harddisk\n'+'\n  '.join(orphans))
-    orphanDirs = [i for i in pathsInDB_x if i==self.cwd.relative_to(self.basePath).as_posix() and i!=projPath]
+    orphanDirs = [i for i in pathsInDB_x if i.startswith(self.cwd.relative_to(self.basePath).as_posix()) and i!=projPath]
     logging.info('Scan: these directories are on DB but not harddisk\n'+'\n  '.join(orphanDirs))
     for orphan in orphans+orphanDirs:
       docID = [i for i in inDB_all if i['key']==orphan][0]['id']
