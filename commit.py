@@ -50,13 +50,9 @@ def newVersion(level=2, message=''):
     with open(path,'w', encoding='utf-8') as fOut:
       fOut.write('\n'.join(fileNew)+'\n')
   #execute git commands: move tests away and back
-  os.system('git mv pasta_eln/Tests Tests')
-  os.system('git commit -a -m "'+message+'"')
   os.system('git tag -a v'+version+' -m "Version '+version+'"')
   os.system('git push')
   os.system('git push origin v'+version)
-  os.system('git mv Tests pasta_eln/Tests')
-  os.system('git commit -a -m "Added Tests back into distribution"')
   return
 
 

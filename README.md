@@ -72,7 +72,7 @@ sudo snap remove couchdb
 pylint pasta_eln
 mypy pasta_eln/*.py
 make -C docs html
-python -m pasta_eln.Tests.3Projects
+pytest -s Tests
 diff -q ../Extractors/ pasta_eln/Extractors/ |grep differ
 
 git commit -a -m 'linting and testing'

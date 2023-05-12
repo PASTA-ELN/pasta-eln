@@ -5,7 +5,7 @@ import warnings, json
 import unittest
 from pathlib import Path
 
-from ..backend import Backend             # pylint: disable=relative-beyond-top-level
+from pasta_eln.backend import Backend             # pylint: disable=relative-beyond-top-level
 
 class TestStringMethods(unittest.TestCase):
   """
