@@ -31,7 +31,7 @@ def createDefaultConfiguration(user:str, password:str, pathPasta:Optional[Path]=
   Args:
     user (str): user name (for windows)
     password (str): password (for windows)
-    pathPasta (str): place to store pasta data
+    pathPasta (Path): place to store pasta data
 
   Returns:
     dict: dictionary of configuration
@@ -48,7 +48,8 @@ def createDefaultConfiguration(user:str, password:str, pathPasta:Optional[Path]=
   conf:dict[str,Any] = {}
   conf['defaultProjectGroup']     = 'research'
   conf['projectGroups']       = {'research':{\
-                          'local':{'user':user, 'password':password, 'database':'research', 'path':pathPasta},
+                          'local':{'user':user, 'password':password, 'database':'research',
+                                   'path':str(pathPasta)},
                           'remote':{}  }}
   conf['version']     = 2
   try:
