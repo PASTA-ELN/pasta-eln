@@ -1,15 +1,15 @@
 """ Table Header dialog: change which colums are shown and in which order """
-import json
 from pathlib import Path
 #pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QDialog, QWidget, QVBoxLayout, QHBoxLayout, QListWidget, QListWidgetItem, \
                               QLineEdit, QDialogButtonBox
 #pylint: enable=no-name-in-module
 from .style import IconButton, showMessage
+from .communicate import Communicate
 
 class TableHeader(QDialog):
   """ Table Header dialog: change which colums are shown and in which order """
-  def __init__(self, comm, docType):
+  def __init__(self, comm:Communicate, docType:str):
     """
     Initialization
 
@@ -44,7 +44,7 @@ class TableHeader(QDialog):
     leftW = QWidget()
     leftL = QVBoxLayout(leftW)
     self.choicesW = QListWidget()
-    self.choicesW.addItems(self.allSet.difference(self.selectedList))
+    self.choicesW.addItems(list(self.allSet.difference(self.selectedList)))
     leftL.addWidget(self.choicesW)
     self.inputLine = QLineEdit()
     leftL.addWidget(self.inputLine)
@@ -66,7 +66,7 @@ class TableHeader(QDialog):
     mainL.addWidget(buttonBox)
 
 
-  def moveKey(self):
+  def moveKey(self) -> None:
     """ Event if user clicks button in the center """
     btn = self.sender().accessibleName()
     selectedLeft   = [i.text() for i in self.choicesW.selectedItems()]
@@ -91,7 +91,7 @@ class TableHeader(QDialog):
     if oldIndex>-1 and newIndex>-1:
       self.selectedList.insert(newIndex, self.selectedList.pop(oldIndex))
     self.choicesW.clear()
-    self.choicesW.addItems(self.allSet.difference(self.selectedList))
+    self.choicesW.addItems(list(self.allSet.difference(self.selectedList)))
     self.selectW.clear()
     self.selectW.addItems(self.selectedList)
     if oldIndex>-1 and newIndex>-1:
@@ -99,7 +99,7 @@ class TableHeader(QDialog):
     return
 
 
-  def save(self, btn):
+  def save(self, btn:IconButton) -> None:
     """ save selectedList to configuration and exit """
     if btn.text().endswith('Cancel'):
       self.reject()

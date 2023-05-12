@@ -9,11 +9,11 @@ from PySide6.QtGui import QPixmap, QRegularExpressionValidator # pylint: disable
 from .style import Label, TextButton, showMessage
 from .miscTools import upOut, restart, upIn
 from .serverActions import testLocal, testRemote, passwordDecrypt
-
+from .backend import Backend
 
 class ProjectGroup(QDialog):
   """ Table Header dialog: change which colums are shown and in which order """
-  def __init__(self, backend):
+  def __init__(self, backend:Backend):
     """
     Initialization
 
@@ -86,12 +86,12 @@ class ProjectGroup(QDialog):
     #final button box
     buttonBox = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
     buttonBox.addButton('Save encrypted', QDialogButtonBox.AcceptRole)
-    buttonBox.clicked.connect(self.close)
+    buttonBox.clicked.connect(self.closeDialog)
     mainL.addWidget(buttonBox)
     self.selectGroup.currentTextChanged.emit(self.backend.configuration['defaultProjectGroup']) #emit to fill initially
 
 
-  def close(self, btn):
+  def closeDialog(self, btn:TextButton) -> None:
     """
     cancel or save entered data
 
@@ -124,7 +124,7 @@ class ProjectGroup(QDialog):
     return
 
 
-  def btnEvent(self):
+  def btnEvent(self) -> None:
     """ events that occur when top-bar buttons are pressed """
     btnName = self.sender().accessibleName()
     if btnName=='new':
@@ -142,7 +142,7 @@ class ProjectGroup(QDialog):
     elif btnName=='fill':
       content = QFileDialog.getOpenFileName(self, "Load remote credentials", str(Path.home()), '*.key')[0]
       with open(content, encoding='utf-8') as fIn:
-        content = json.loads( passwordDecrypt(fIn.read()) )
+        content = json.loads( passwordDecrypt(bytes(fIn.read(), 'UTF-8')) )
         self.userNameR.setText(content['user-name'])
         self.passwordR.setText(content['password'])
         self.databaseR.setText(content['database'])
@@ -162,7 +162,7 @@ class ProjectGroup(QDialog):
     return
 
 
-  def checkEntries(self):
+  def checkEntries(self) -> bool:
     """
     Check if entries are ok
 
@@ -189,7 +189,7 @@ class ProjectGroup(QDialog):
     return True
 
 
-  def changeProjectGroup(self, item):
+  def changeProjectGroup(self, item:str) -> None:
     """
     change the project group to this; do not save to file
 

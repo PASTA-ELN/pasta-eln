@@ -1,4 +1,5 @@
 """Input and output functions towards the .eln file-format"""
+# mypy: ignore-errors
 from typing import Optional
 import os, io, json, shutil, base64, subprocess
 from pathlib import Path

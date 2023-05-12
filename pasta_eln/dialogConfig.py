@@ -8,16 +8,17 @@ if platform.system()=='Windows':
   from .dialogConfigSetupWindows import ConfigurationSetup
 else:
   from .dialogConfigSetupLinux import ConfigurationSetup
+from .backend import Backend
 
 class Configuration(QDialog):
   """ Main class of entire config dialog """
-  def __init__(self, backend, startTap=''):
+  def __init__(self, backend:Backend, startTab:str=''):
     """
     Initialization
 
     Args:
       backend (Pasta): backend, not communication
-      startTap (str): tab to show initially
+      startTab (str): tab to show initially
     """
     super().__init__()
     self.backend = backend
@@ -42,13 +43,13 @@ class Configuration(QDialog):
     tabGUI = ConfigurationGUI(backend, self.finished)
     tabW.addTab(tabGUI, 'Appearance')
 
-    if startTap=='setup':
+    if startTab=='setup':
       tabW.setCurrentWidget(tabSetup)
       tabW.setTabEnabled(0, False)
       tabW.setTabEnabled(2, False)
 
 
-  def finished(self):
+  def finished(self) -> None:
     """
     callback function to close widget
     """

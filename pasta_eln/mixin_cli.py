@@ -1,6 +1,6 @@
 """ PYTHON MIXIN FOR BACKEND containing all the functions that output to CLI """
-import re, platform
-from pathlib import Path
+# mypy: ignore-errors
+import platform
 from .miscTools import createDirName
 
 class Bcolors:

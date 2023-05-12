@@ -1,22 +1,24 @@
 """ Class for interaction with couchDB """
 import traceback, logging
+from typing import Any, Optional, Union
+from anytree import Node
+from anytree.search import find_by_attr
+from cloudant.client import CouchDB
 from .fixedStrings import defaultOntology, defaultOntologyNode
 
 class Database:
   """
   Class for interaction with couchDB
   """
-  def __init__(self, user, password, databaseName, configuration, **kwargs):
+  def __init__(self, user:str, password:str, databaseName:str, configuration:dict[str,Any], resetOntology:bool=False):
     """
     Args:
       user (string): user name to local database
       password (string): password to local database
       databaseName (string): local database name
       configuration (dict): configuration of GUI elements
-      kwargs (dict): additional parameter
+      resetOntology (bool): reset ontology
     """
-    import json
-    from cloudant.client import CouchDB
     try:
       self.client = CouchDB(user, password, url='http://127.0.0.1:5984', connect=True)
     except:
@@ -28,7 +30,7 @@ class Database:
     else:
       self.db = self.client.create_database(self.databaseName)
     # check if default documents exist and create
-    if '-ontology-' not in self.db or kwargs.get('resetOntology', False):
+    if '-ontology-' not in self.db or resetOntology:
       if '-ontology-' in self.db:
         print('Info: remove old ontology')
         self.db['-ontology-'].delete()
@@ -43,7 +45,7 @@ class Database:
     return
 
 
-  def initViews(self, configuration):
+  def initViews(self, configuration:dict[str,Any]) -> None:
     """
     initialize all views
 
@@ -93,9 +95,9 @@ class Database:
           outputList.append(newString)
         else:
           outputList.append('doc["'+item['name']+'"]')
-      outputList = ','.join(outputList)
-      viewCode[docType.replace('/','__')]       = js.replace('$outputList$', outputList)
-      viewCode[docType.replace('/','__')+'All'] = jsAll.replace('$outputList$', outputList)
+      outputStr = ','.join(outputList)
+      viewCode[docType.replace('/','__')]       = js.replace('$outputList$', outputStr)
+      viewCode[docType.replace('/','__')+'All'] = jsAll.replace('$outputList$', outputStr)
     self.saveView('viewDocType', viewCode)
     # general views: Hierarchy, Identify
     jsHierarchy  = '''
@@ -134,7 +136,7 @@ class Database:
 
 
 
-  def exit(self, deleteDB=False):
+  def exit(self, deleteDB:bool=False) -> None:
     """
     Shutting down things
 
@@ -149,7 +151,7 @@ class Database:
     return
 
 
-  def getDoc(self, docID):
+  def getDoc(self, docID:str) -> dict[str,Any]:
     """
     Wrapper for get from database function
 
@@ -162,7 +164,7 @@ class Database:
     return dict(self.db[docID])
 
 
-  def saveDoc(self, doc):
+  def saveDoc(self, doc:dict[str,Any]) ->dict[str,Any]:
     """
     Wrapper for save to database function
 
@@ -179,9 +181,9 @@ class Database:
     Returns:
         dict: json representation of submitted document
     """
-    tracebackString = traceback.format_stack()
-    tracebackString = [item for item in tracebackString if 'backend.py' in item or 'database.py' in item or 'Tests' in item or 'pasta' in item]
-    tracebackString = '|'.join([item.split('\n')[1].strip() for item in tracebackString])  #| separated list of stack excluding last
+    tracebackList = traceback.format_stack()
+    tracebackList = [item for item in tracebackList if 'backend.py' in item or 'database.py' in item or 'Tests' in item or 'pasta' in item]
+    tracebackString = '|'.join([item.split('\n')[1].strip() for item in tracebackList])  #| separated list of stack excluding last
     doc['-client'] = tracebackString
     if '-branch' in doc and 'op' in doc['-branch']:
       del doc['-branch']['op']  #remove operation, saveDoc creates and therefore always the same
@@ -200,7 +202,7 @@ class Database:
     return res
 
 
-  def updateDoc(self, change, docID):
+  def updateDoc(self, change:dict[str,Any], docID:str) -> dict[str,Any]:
     """
     Update document by
     - saving changes to oldDoc (revision document)
@@ -216,9 +218,9 @@ class Database:
         dict: json representation of updated document
     """
     import json, os
-    tracebackString = traceback.format_stack()
-    tracebackString = [item for item in tracebackString if 'backend.py' in item or 'database.py' in item or 'Tests' in item or 'pasta' in item]
-    tracebackString = '|'.join([item.split('\n')[1].strip() for item in tracebackString])  #| separated list of stack excluding last
+    tracebackList = traceback.format_stack()
+    tracebackList = [item for item in tracebackList if 'backend.py' in item or 'database.py' in item or 'Tests' in item or 'pasta' in item]
+    tracebackString = '|'.join([item.split('\n')[1].strip() for item in tracebackList])  #| separated list of stack excluding last
     change['-client'] = tracebackString
     newDoc = self.db[docID]  #this is the document that stays live
     initialDocCopy = dict(newDoc)
@@ -322,7 +324,7 @@ class Database:
     return newDoc
 
 
-  def updateBranch(self, docID, branch, child, stack=None, path=''):
+  def updateBranch(self, docID:str, branch:int, child:int, stack:Optional[list[str]]=None, path:str='') -> list[str]:
     """
     Update document by updating the branch
 
@@ -348,10 +350,10 @@ class Database:
       doc['-branch'][branch]['stack']=stack
     doc['-branch'][branch]['show'] = self.createShowFromStack( doc['-branch'][branch]['stack'] )
     doc.save()
-    return oldPath, path
+    return [oldPath, path]
 
 
-  def createShowFromStack(self, stack):
+  def createShowFromStack(self, stack:list[str]) -> list[bool]:
     """
     For branches: create show entry in the branches by using the stack
     - should be 1 longer than stack
@@ -370,7 +372,7 @@ class Database:
     return show
 
 
-  def remove(self, docID):
+  def remove(self, docID:str) -> dict[str,Any]:
     """
     remove doc from database: temporary for development and testing
 
@@ -386,7 +388,7 @@ class Database:
     return res
 
 
-  def addAttachment(self, docID, name, content):
+  def addAttachment(self, docID:str, name:str, content:dict[str,Any]) -> bool:
     """
     Update document by adding attachment (no new revision)
 
@@ -413,7 +415,7 @@ class Database:
 
 
 
-  def getView(self, thePath, startKey=None, preciseKey=None):
+  def getView(self, thePath:str, startKey:Optional[str]=None, preciseKey:Optional[str]=None) -> list[dict[str,Any]]:
     """
     Wrapper for getting view function
 
@@ -426,9 +428,8 @@ class Database:
         list: list of documents in this view
     """
     from cloudant.view import View
-    thePath = thePath.split('/')
-    designDoc = self.db.get_design_document(thePath[0])
-    v = View(designDoc, thePath[1])
+    designDoc = self.db.get_design_document(thePath.split('/')[0])
+    v = View(designDoc, thePath.split('/')[1])
     try:
       if startKey is not None:
         res = v(startkey=startKey, endkey=startKey+'zzz')['rows']
@@ -443,7 +444,7 @@ class Database:
     return res
 
 
-  def saveView(self, designName, viewCode):
+  def saveView(self, designName:str, viewCode:dict[str,str]) -> None:
     """
     Adopt the view by defining a new jsCode
 
@@ -466,7 +467,7 @@ class Database:
     return
 
 
-  def getHierarchy(self, start, allItems=False):
+  def getHierarchy(self, start:str, allItems:bool=False) -> Node:
     """
     get hierarchy tree for projects, ...
 
@@ -477,8 +478,6 @@ class Database:
     Returns:
       Node: hierarchy in an anytree
     """
-    from anytree import Node, RenderTree, AsciiStyle
-    from anytree.search import find_by_attr
     if not allItems:
       view = self.getView('viewHierarchy/viewHierarchy',    startKey=start)
     if allItems or len(view)==0:
@@ -508,7 +507,7 @@ class Database:
     return dataTree
 
 
-  def hideShow(self, stack):
+  def hideShow(self, stack:Union[str,list[str]]) -> None:
     """
     Toggle hide/show indicator of branch
 
@@ -538,7 +537,7 @@ class Database:
     return
 
 
-  def replicateDB(self, dbInfo, removeAtStart=False):
+  def replicateDB(self, dbInfo:dict[str,Any], removeAtStart:bool=False) -> bool:
     """
     Replication to another instance
 
@@ -547,7 +546,7 @@ class Database:
         removeAtStart (bool): remove remote DB before starting new
 
     Returns:
-        dict: json of document
+        bool: success
     """
     import time
     from cloudant.client import CouchDB
@@ -587,13 +586,13 @@ class Database:
     return False  #should not reach here
 
 
-  def historyDB(self):
+  def historyDB(self) -> dict[str,Any]:
     """
     Collect last modification days of documents
     """
     from datetime import datetime
     import numpy as np
-    collection = {}
+    collection:dict[str,Any] = {}
     for doc in self.db:
       if doc['_id'][1]=='-' and len(doc['_id'])==34:
         if '-type' in doc and '-date' in doc:
@@ -608,20 +607,20 @@ class Database:
             collection[docType] = [date]
     #determine bins for histogram
     firstSubmit = datetime.now().timestamp()
-    for key in collection.items():
+    for key in collection.keys():
       if np.min(collection[key]) < firstSubmit:
         firstSubmit = np.min(collection[key])
     bins = np.linspace(firstSubmit, datetime.now().timestamp(), 100 )
     #calculate histgram and save it
     collectionCopy = dict(collection)
-    for key in collection.items():
+    for key in collection.keys():
       hist, _ = np.histogram(collection[key], bins)
       collectionCopy[key] = hist
     collectionCopy['-bins-'] = (bins[:-1]+bins[1:])/2
     #calculate score
     bias = np.exp(( collectionCopy['-bins-']-collectionCopy['-bins-'][-1] ) / 1.e7)
     score = {}
-    for key in collectionCopy.items():
+    for key in collectionCopy.keys():
       score[key] = np.sum(collectionCopy[key]*bias)
     #reformat dates into string
     collectionCopy['-bins-'] = [datetime.fromtimestamp(i).isoformat() for i in collectionCopy['-bins-']]
@@ -629,7 +628,7 @@ class Database:
     return collectionCopy
 
 
-  def checkDB(self, verbose=True, **kwargs):
+  def checkDB(self, verbose:bool=True, repair:bool=False) -> str:
     """
     Check database for consistencies by iterating through all documents
     - slow since no views used
@@ -640,10 +639,10 @@ class Database:
 
     Args:
         verbose (bool): print more or only issues
-        **kwargs (dict): additional parameter
+        repair (bool): repair database
 
     Returns:
-        bool: success of check
+        str: output
     """
     import os, re, base64, io
     from PIL import Image
@@ -659,7 +658,6 @@ class Database:
       outstring+= f'{Bcolors.UNDERLINE}**** List all database entries ****{Bcolors.ENDC}\n'
     else:
       outstring = ''
-    repair = kwargs.get('repair', False)
     if repair:
       print('REPAIR MODE IS ON: afterwards, full-reload and create views')
     ## loop all documents

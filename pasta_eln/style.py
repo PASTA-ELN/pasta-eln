@@ -35,7 +35,7 @@ def getColor(backend:Backend, color:str) -> str:
 
 class TextButton(QPushButton):
   """ Button that has only text"""
-  def __init__(self, label:str, function:Optional[Callable[[],None]], layout:QLayout, name:str='',
+  def __init__(self, label:str, function:Optional[Callable[[],None]], layout:Optional[QLayout], name:str='',
                tooltip:str='', checkable:bool=False, style:str='', hide:bool=False):
     """
     Args:
@@ -108,8 +108,6 @@ class IconButton(QPushButton):
       hide (bool): hidden or shown initially
       text (str): text shown on button additionally  #TODO_P3 design: what is the difference to TextButton?
     """
-    hide = kwargs.get('hide', False)
-    text = str(kwargs.get('text', ''))
     super().__init__()
     color = 'black' if backend is None else getColor(backend, 'primary')
     icon = qta.icon(iconName, color=color, scale_factor=1)

@@ -1,18 +1,20 @@
 """ Widget: setup tab inside the configuration dialog window """
-import webbrowser, logging
+import logging
 from pathlib import Path
+from typing import Callable
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTextEdit, QMessageBox, QInputDialog, QFileDialog, QProgressBar   # pylint: disable=no-name-in-module
 
 from .style import TextButton
 from .installationTools import couchdb, couchdbUserPassword, configuration, ontology, exampleData, createShortcut
 from .fixedStrings import setupTextWindows, couchDBWindows, exampleDataWindows, restartPastaWindows
 from .miscTools import restart
+from .backend import Backend
 
 class ConfigurationSetup(QWidget):
   """
   Main class
   """
-  def __init__(self, backend, callbackFinished):
+  def __init__(self, backend:Backend, callbackFinished:Callable[[],None]):
     """
     Initialization
 
@@ -47,7 +49,7 @@ class ConfigurationSetup(QWidget):
     self.button1 = TextButton('Start analyse and repair', self.analyse, footerL)
 
 
-  def callbackProgress(self, number):
+  def callbackProgress(self, number:int) -> None:
     """
     Increse progressbar by moving to number
 
@@ -58,7 +60,7 @@ class ConfigurationSetup(QWidget):
     return
 
 
-  def analyse(self):
+  def analyse(self) -> None:
     """
     Main method that does all the analysis: open dialogs, ...
     """
@@ -159,7 +161,7 @@ class ConfigurationSetup(QWidget):
     return
 
 
-  def finished(self):
+  def finished(self) -> None:
     """
     What do do when setup is finished: success or unsuccessfully
     """

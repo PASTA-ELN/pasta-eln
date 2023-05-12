@@ -1,6 +1,7 @@
 """ Python Backend: all operations with the filesystem are here """
-import json, sys, os, shutil, re, importlib, tempfile, logging, traceback
+import json, sys, os, importlib, tempfile, logging, traceback
 from pathlib import Path
+from typing import Any, Optional, Union
 from urllib import request
 from datetime import datetime, timezone
 from .mixin_cli import Bcolors, CLI_Mixin
@@ -13,7 +14,7 @@ class Backend(CLI_Mixin):
   PYTHON BACKEND
   """
 
-  def __init__(self, defaultProjectGroup='', **kwargs):
+  def __init__(self, defaultProjectGroup:str='', **kwargs:int):
     """
     open server and define database
 
@@ -24,13 +25,13 @@ class Backend(CLI_Mixin):
           - resetOntology (bool): reset ontology on database from one on file
     """
     #initialize basic values
-    self.hierStack = []
-    self.alive     = True
-    self.cwd       = Path('.')
+    self.hierStack:list[str] = []
+    self.alive               = True
+    self.cwd:Optional[Path]  = Path('.')
     self.initialize(defaultProjectGroup, **kwargs)
 
 
-  def initialize(self, defaultProjectGroup="", **kwargs):
+  def initialize(self, defaultProjectGroup:str="", **kwargs:int) -> None:
     """
     initialize or reinitialize server and define database
 
@@ -69,7 +70,7 @@ class Backend(CLI_Mixin):
     # decipher miscellaneous configuration and store
     self.userID   = self.configuration['userID']
     # start database
-    self.db = Database(n,s,databaseName, self.configuration, **kwargs)
+    self.db = Database(n,s,databaseName, self.configuration)
     if not hasattr(self.db, 'databaseName'):  #not successful database creation
       return
     if kwargs.get('initViews', False):
@@ -80,13 +81,12 @@ class Backend(CLI_Mixin):
     return
 
 
-  def exit(self, deleteDB=False, **kwargs):
+  def exit(self, deleteDB:bool=False) -> None:
     """
     Shutting down things
 
     Args:
       deleteDB (bool): remove database
-      **kwargs (dict): additional parameter
     """
     self.db.exit(deleteDB)
     self.alive     = False
@@ -96,7 +96,7 @@ class Backend(CLI_Mixin):
   ######################################################
   ### Change in database
   ######################################################
-  def editData(self, doc):
+  def editData(self, doc:dict[str,Any]) -> None:
     """
     Edit data from version 2 information flow by wrapping addData
 
@@ -113,7 +113,7 @@ class Backend(CLI_Mixin):
     # change content
     self.addData('-edit-', doc)
     # change folder-name in database of all children
-    if doc['-type'][0][0]=='x':
+    if doc['-type'][0][0]=='x' and self.cwd is not None:
       items = self.db.getView('viewHierarchy/viewPaths', startKey=self.cwd.relative_to(self.basePath).as_posix())
       for item in items:
         oldPathparts = item['key'].split('/')
@@ -125,7 +125,8 @@ class Backend(CLI_Mixin):
     return
 
 
-  def addData(self, docType, doc, hierStack=None, localCopy=False, **kwargs):
+  def addData(self, docType:str, doc:dict[str,Any], hierStack:list[str]=[], localCopy:bool=False,
+              forceNewImage:bool=False) -> str:
     """
     Save doc to database, also after edit
 
@@ -134,15 +135,11 @@ class Backend(CLI_Mixin):
         doc (dict): to be stored
         hierStack (list): hierStack from external functions
         localCopy (bool): copy a remote file to local version
-        **kwargs (dict): additional parameters
-            forceNewImage (bool): create new image in any case
+        forceNewImage (bool): create new image in any case
 
     Returns:
         str: docID, empty string if failure
     """
-    if hierStack is None:
-      hierStack=[]
-    forceNewImage=kwargs.get('forceNewImage',False)
     doc['-user']  = self.userID
     childNum     = doc.pop('childNum',None)
     path         = None
@@ -222,8 +219,8 @@ class Backend(CLI_Mixin):
           else:
             logging.warning('backend: add document with multiple branches'+str(doc['-branch']) )
         else:                                                                     #make up name
-          shasum  = None
-        if shasum is not None and path is not None:
+          shasum  = '-'
+        if shasum!='-' and path is not None:
           if shasum == '':
             shasum = generic_hash(path, forceFile=True)
           view = self.db.getView('viewIdentify/viewSHAsum',shasum)
@@ -241,15 +238,15 @@ class Backend(CLI_Mixin):
       childNum=9999
     if path is not None and path.is_absolute():
       path = path.relative_to(self.basePath)
-    path = None if path is None else path.as_posix()
+    pathStr = None if path is None else path.as_posix()
     show = [True]*(len(hierStack)+1)
     if '-branch' in doc and len(hierStack)+1==len(doc['-branch'][0]['show']):
       show = doc['-branch'][0]['show']
-    doc['-branch'] = {'stack':hierStack,'child':childNum,'path':path, 'show':show, 'op':operation}
+    doc['-branch'] = {'stack':hierStack,'child':childNum,'path':pathStr, 'show':show, 'op':operation}
     if edit:
       #update document
       keysNone = [key for key in doc if doc[key] is None]
-      doc = fillDocBeforeCreate(doc, '--')  #store None entries and save back since js2py gets equalizes undefined and null
+      doc = fillDocBeforeCreate(doc, ['--'])  #store None entries and save back since js2py gets equalizes undefined and null
       for key in keysNone:
         doc[key]=None
       doc = self.db.updateDoc(doc, doc['_id'])
@@ -262,12 +259,12 @@ class Backend(CLI_Mixin):
     if self.cwd is not None and doc['-type'][0][0]=='x':
       #project, step, task
       path = Path(doc['-branch'][0]['path'])
-      if edit:
+      if edit and oldPath is not None:
         if not (self.basePath/oldPath).exists():
           print('**WARNING: addData edit of folder should have oldPath and that should exist:'+oldPath+'\n This can be triggered if user moved the folder.')
           return ''
         (self.basePath/oldPath).rename(self.basePath/path)
-      else:
+      elif edit:
         (self.basePath/path).mkdir(exist_ok=True)   #if exist, create again; moving not necessary since directory moved in changeHierarchy
       with open(self.basePath/path/'.id_pastaELN.json','w', encoding='utf-8') as f:  #local path, update in any case
         f.write(json.dumps(doc))
@@ -277,7 +274,7 @@ class Backend(CLI_Mixin):
   ######################################################
   ### Disk directory/folder methods
   ######################################################
-  def changeHierarchy(self, docID, dirName=None, **kwargs):
+  def changeHierarchy(self, docID:str, dirName:Optional[Path]=None) -> None:
     """
     Change through text hierarchy structure
     change hierarchyStack, change directory, change stored cwd
@@ -285,9 +282,10 @@ class Backend(CLI_Mixin):
     Args:
         docID (string): information on how to change
         dirName (string): change into this directory (absolute path given). For if data is moved
-        **kwargs (dict): additional parameter
     """
     logging.info('changeHierarchy should only be used in CLI mode') #TODO_P5 remove this warning
+    if self.cwd is None:
+      return
     if docID is None or (docID[0]=='x' and docID[1]!='-'):  #cd ..: none. close 'project', 'task'
       self.hierStack.pop()
       self.cwd = self.cwd.parent
@@ -302,7 +300,7 @@ class Backend(CLI_Mixin):
     return
 
 
-  def scanProject(self, projID, projPath=''):
+  def scanProject(self, projID:str, projPath:str='') -> None:
     """ Scan directory tree recursively from project/...
     - find changes on file system and move those changes to DB
     - use .id_pastaELN.json to track changes of directories, aka projects/steps/tasks
@@ -334,10 +332,10 @@ class Backend(CLI_Mixin):
         del dirs
         del files
         continue
-      parentID = [i for i in inDB_all if i['key']==self.cwd.as_posix()]
-      if len(parentID)==0: #skip newly moved folder, will be scanned upon rescanning
+      parentIDs = [i for i in inDB_all if i['key']==self.cwd.as_posix()]
+      if len(parentIDs)==0: #skip newly moved folder, will be scanned upon rescanning
         continue
-      parentID = parentID[0]['id']
+      parentID = parentIDs[0]['id']
       parentDoc = self.db.getDoc(parentID)
       hierStack = parentDoc['-branch'][0]['stack']+[parentID]
       # handle directories
@@ -407,16 +405,15 @@ class Backend(CLI_Mixin):
     return
 
 
-  def useExtractors(self, filePath, shasum, doc, **kwargs):
+  def useExtractors(self, filePath:Path, shasum:str, doc:dict[str,Any]) -> None:
     """
     get measurements from datafile: central distribution point
     - max image size defined here
 
     Args:
-        filePath (string): path to file
+        filePath (Path): path to file
         shasum (string): shasum (git-style hash) to store in database (not used here)
         doc (dict): pass known data/measurement type, can be used to create image; This doc is altered
-        **kwargs (dict): additional parameter
     """
     extension = filePath.suffix[1:]  #cut off initial . of .jpg
     if str(filePath).startswith('http'):
@@ -476,7 +473,8 @@ class Backend(CLI_Mixin):
     return
 
 
-  def testExtractor(self, filePath, extractorPath=None, recipe='', interactive=True, reportHTML=False):
+  def testExtractor(self, filePath:Union[Path,str], extractorPath:Optional[Path]=None, recipe:str='',
+                    interactive:bool=True, reportHTML:bool=False) -> str:
     """
     Args:
       filePath (Path, str): path to the file to be tested
@@ -671,14 +669,14 @@ class Backend(CLI_Mixin):
       if content['image'].startswith('data:image/'):
         #png or jpg encoded base64
         extension = content['image'][11:14]
-        i = base64.b64decode(content['image'][22:])
+        img = base64.b64decode(content['image'][22:])
       else:
         #svg data
-        i = cairosvg.svg2png(bytestring=content['image'].encode())
-      i = BytesIO(i)
-      i = Image.open(i)
+        img = cairosvg.svg2png(bytestring=content['image'].encode())
+      i = BytesIO(img)
+      image = Image.open(i)
       if interactive:
-        i.show()
+        image.show()
       del content['image']
     if interactive and not reportHTML:
       print('Identified metadata',content)
@@ -689,39 +687,40 @@ class Backend(CLI_Mixin):
   ######################################################
   ### Wrapper for database functions
   ######################################################
-  def replicateDB(self, removeAtStart=False, **kwargs):
+  def replicateDB(self, removeAtStart:bool=False) -> bool:
     """
     Replicate local database to remote database
 
     Args:
         removeAtStart (bool): remove remote DB before starting new
-        **kwargs (dict): additional parameter
 
     Returns:
         bool: replication success
     """
-    remoteConf = dict(self.confLink['remote'])
-    if not remoteConf: #empty entry: fails
-      print("**ERROR brp01: You tried to replicate although, remote is not defined")
-      return False
-    remoteConf['user'], remoteConf['password'] = upOut(remoteConf['cred'])[0].split(':')
-    success = self.db.replicateDB(remoteConf, removeAtStart)
+    #TODO_P2 allow replication
+    # remoteConf = dict(self.confLink['remote'])
+    # if not remoteConf: #empty entry: fails
+    #   print("**ERROR brp01: You tried to replicate although, remote is not defined")
+    #   return False
+    # remoteConf['user'], remoteConf['password'] = upOut(remoteConf['cred'])[0].split(':')
+    # success = self.db.replicateDB(remoteConf, removeAtStart)
+    success = True
     return success
 
 
-  def checkDB(self, verbose=True, **kwargs):
+  def checkDB(self, verbose:bool=True, repair:bool=False) -> str:
     """
     Wrapper of check database for consistencies by iterating through all documents
 
     Args:
         verbose (bool): print more or only issues
-        **kwargs (dict): additional parameter, i.e. callback
+        repair (bool): repair database
 
     Returns:
         string: output incl. \n
     """
     ### check database itself for consistency
-    output = self.db.checkDB(verbose=verbose, **kwargs)
+    output = self.db.checkDB(verbose=verbose, repair=repair)
     ### compare with file system
     if verbose:
       output += f'{Bcolors.UNDERLINE}**** File status ****{Bcolors.ENDC}\n'

@@ -1,6 +1,7 @@
 """ widget that shows the table of the items """
-import re, json, logging
+import re, logging
 from pathlib import Path
+from typing import Any
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTableView, QMenu, QFileDialog, QMessageBox,\
                               QHeaderView, QGridLayout, QLineEdit, QComboBox # pylint: disable=no-name-in-module
 from PySide6.QtCore import Qt, Slot, QSortFilterProxyModel, QModelIndex       # pylint: disable=no-name-in-module
@@ -8,11 +9,12 @@ from PySide6.QtGui import QStandardItemModel, QStandardItem, QFont # pylint: dis
 from .dialogTableHeader import TableHeader
 from .style import TextButton, Label, LetterButton, Action, showMessage
 from .fixedStrings import defaultOntologyNode
+from .communicate import Communicate
 
 #Scan button to more button
 class Table(QWidget):
   """ widget that shows the table of the items """
-  def __init__(self, comm):
+  def __init__(self, comm:Communicate):
     """
     Initialization
 
@@ -22,11 +24,11 @@ class Table(QWidget):
     super().__init__()
     self.comm = comm
     comm.changeTable.connect(self.changeTable)
-    self.data = []
-    self.models = []
+    self.data:list[dict[str,Any]] = []
+    self.models:list[QStandardItemModel] = [] #TODO_P1 find parent
     self.docType = ''
     self.projID = ''
-    self.filterHeader = []
+    self.filterHeader:list[str] = []
     self.showAll= False
 
     ### GUI elements
@@ -83,7 +85,7 @@ class Table(QWidget):
 
 
   @Slot(str, str)
-  def changeTable(self, docType, projID):
+  def changeTable(self, docType:str, projID:str) -> None:
     """
     What happens when the table changes its raw information
 
@@ -94,7 +96,7 @@ class Table(QWidget):
     logging.info('table:changeTable |'+docType+'|'+projID+'|')
     self.models = []
     for i in reversed(range(self.filterL.count())):
-      self.filterL.itemAt(i).widget().setParent(None)
+      self.filterL.itemAt(i).widget().setParent(None)   # type: ignore
     if docType!='':
       self.docType = docType
       self.projID  = projID
@@ -176,10 +178,10 @@ class Table(QWidget):
           if len([b for b in doc['-branch'] if False in b['show']])>0:
             item.setText( item.text()+'  \U0001F441' )
           item.setAccessibleText(doc['_id'])
-          item.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)
+          item.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)   # type: ignore[operator]
           item.setCheckState(Qt.CheckState.Unchecked)
         else:
-          item.setFlags(Qt.ItemIsEnabled)
+          item.setFlags(Qt.ItemIsEnabled) # type: ignore[arg-type]
         model.setItem(i, j, item)
     self.models.append(model)
     self.table.setModel(self.models[-1])
@@ -187,7 +189,7 @@ class Table(QWidget):
     return
 
 
-  def cellClicked(self, item):
+  def cellClicked(self, item:QStandardItem) -> None:
     """
     What happens when user clicks cell in table of tags, projects, samples, ...
     -> show details
@@ -203,7 +205,7 @@ class Table(QWidget):
     return
 
 
-  def cell2Clicked(self, item):
+  def cell2Clicked(self, item:QStandardItem) -> None:
     """
     What happens when user double clicks cell in table of projects
 
@@ -222,7 +224,7 @@ class Table(QWidget):
     return
 
 
-  def executeAction(self):
+  def executeAction(self) -> None:
     """ Any action by the buttons and menu at the top of the page """
     if hasattr(self.sender(), 'data'):  #action
       menuName = self.sender().data()
@@ -275,12 +277,13 @@ class Table(QWidget):
       #TODO_P1 When filter is used and filtered items are selected, upon "group edit", such error occurs.
       #   DOES NOT WORK?
       #remove keys that should not be group edited and build dict
-      intersection = intersection.difference({'-type', '-branch', '-user', '-client', 'metaVendor', 'shasum', \
-        '_id', 'metaUser', '_rev', '-name', '-date', 'image', '_attachments','links'})
-      intersection = {i:'' for i in intersection}
-      intersection.update({'_ids':docIDs})
-      self.comm.formDoc.emit(intersection)
-      self.comm.changeDetails.emit('redraw')
+      if intersection is not None:
+        intersection = intersection.difference({'-type', '-branch', '-user', '-client', 'metaVendor', 'shasum', \
+          '_id', 'metaUser', '_rev', '-name', '-date', 'image', '_attachments','links'})
+        intersectionDict:dict[str,Any] = {i:'' for i in intersection}
+        intersectionDict.update({'_ids':docIDs})
+        self.comm.formDoc.emit(intersectionDict)
+        self.comm.changeDetails.emit('redraw')
     elif menuName == 'sequentialEdit':
       for row in range(self.models[-1].rowCount()):
         if self.itemFromRow(row).checkState() == Qt.CheckState.Checked:
@@ -312,7 +315,7 @@ class Table(QWidget):
         for row in range(self.models[-1].rowCount()):
           rowContent = []
           for col in range(self.models[-1].columnCount()):
-            value = self.models[-1].index( row, col, QModelIndex() ).data( Qt.DisplayRole )
+            value = self.models[-1].index( row, col, QModelIndex() ).data( Qt.DisplayRole )  # type: ignore[arg-type]
             rowContent.append('"'+value+'"')
           fOut.write(','.join(rowContent)+'\n')
     elif menuName == 'toggleHide':
@@ -358,7 +361,7 @@ class Table(QWidget):
     return
 
 
-  def itemFromRow(self, row):
+  def itemFromRow(self, row:int) -> QStandardItem:
     """
     get item from row by iterating through the proxyModels
 
@@ -375,7 +378,7 @@ class Table(QWidget):
 
 
   #TODO_P5 invert filter: not 'Sur' in name => '^((?!Sur).)*$' in name
-  def filterChoice(self, item):
+  def filterChoice(self, item:QStandardItem) -> None:
     """
     Change the column which is used for filtering
 
@@ -385,7 +388,8 @@ class Table(QWidget):
     row = self.sender().accessibleName()
     self.models[int(row)].setFilterKeyColumn(item)
     return
-  def delFilter(self):
+
+  def delFilter(self) -> None:
     """ Remove filter from list of filters """
     row = int(self.sender().accessibleName())
     #print('Delete filter row', row)
@@ -393,7 +397,7 @@ class Table(QWidget):
       minusBtnW = self.filterL.itemAt(i).widget().layout().itemAt(2).widget()
       minusBtnW.setAccessibleName( str(int(minusBtnW.accessibleName())-1) )  #rename: -1 from accessibleName
     del self.models[row]
-    self.filterL.itemAt(row-1).widget().setParent(None) #e.g. model 1 is in row=0 for deletion
+    self.filterL.itemAt(row-1).widget().setParent(None) # type: ignore # e.g. model 1 is in row=0 for deletion
     for i in range(1, len(self.models)):
       self.models[i].setSourceModel(self.models[i-1])
     self.table.setModel(self.models[-1])

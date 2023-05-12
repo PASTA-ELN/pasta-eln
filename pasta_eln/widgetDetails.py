@@ -114,7 +114,7 @@ class Details(QScrollArea):
           fOut.write(base64.decodebytes(image.encode('utf-8')))
     else:
       self.doc['-type'] = self.sender().data().split('/')
-      self.comm.backend.useExtractors(filePath, self.doc['shasum'], self.doc, extractorRedo=True)  #any path is good since the file is the same everywhere; data-changed by reference
+      self.comm.backend.useExtractors(filePath, self.doc['shasum'], self.doc)  #any path is good since the file is the same everywhere; data-changed by reference
       if len(self.doc['-type'])>1 and len(self.doc['image'])>1:
         self.doc = self.comm.backend.db.updateDoc({'image':self.doc['image'], '-type':self.doc['-type']}, self.doc['_id'])
         self.comm.changeTable.emit('','')

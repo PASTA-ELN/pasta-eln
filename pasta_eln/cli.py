@@ -3,7 +3,7 @@
 Called by user or react-electron frontend. Keep it simple: only functions that
 are required by frontend. Otherwise, make only temporary changes
 """
-import json, sys, argparse, traceback
+import json, argparse, traceback
 from pathlib import Path
 from subprocess import run, PIPE, STDOUT
 import urllib.request
@@ -15,7 +15,7 @@ from .inputOutput import importELN, exportELN
 from .installationTools import configuration as checkConfiguration
 from .installationTools import exampleData
 
-def commands(getDocu, args):
+def commands(getDocu:bool, args:argparse.Namespace) -> str:
   """
   Main function
 
@@ -202,21 +202,21 @@ def commands(getDocu, args):
       print(be.output(args.label,True))
       return '1'
 
-    if getDocu:
-      doc += '  saveBackup,loadBackup: save to file.zip / load from file.zip\n'
-      doc += '    - docId is optional as it reduces the scope of the backup\n'
-      doc += '    - database is optional as otherwise the default is used\n'
-      doc += '    example: pastaELN_CLI.py saveBackup -d instruments\n'
-      doc += '    example: pastaELN_CLI.py saveBackup -i x-76b0995cf655bcd487ccbdd8f9c68e1b\n'
-    elif args.command=='saveBackup':   #save to backup file.zip
-      if args.docID!='':
-        exportELN(be, args.docID, 'test.eln')
-      else:
-        be.backup('backup')
+    # if getDocu:
+    #   doc += '  saveBackup,loadBackup: save to file.zip / load from file.zip\n'
+    #   doc += '    - docId is optional as it reduces the scope of the backup\n'
+    #   doc += '    - database is optional as otherwise the default is used\n'
+    #   doc += '    example: pastaELN_CLI.py saveBackup -d instruments\n'
+    #   doc += '    example: pastaELN_CLI.py saveBackup -i x-76b0995cf655bcd487ccbdd8f9c68e1b\n'
+    # elif args.command=='saveBackup':   #save to backup file.zip
+    #   if args.docID!='':
+    #     exportELN(be, args.docID, 'test.eln')
+    #   else:
+    #     be.backup('backup')
 
-    elif args.command=='loadBackup':   #load from backup file.zip
-      be.backup('restore')
-      return '1'
+    # elif args.command=='loadBackup':   #load from backup file.zip
+    #   be.backup('restore')
+    #   return '1'
 
     if getDocu:
       doc += '  extractorTest: test extractor on individual datafile\n'
@@ -237,33 +237,33 @@ def commands(getDocu, args):
       if args.docID!='':
         be.changeHierarchy(args.docID)
       #change for matwerks examples
-      data = pd.read_excel(args.content, sheet_name=0)
-      if data.shape[0]>40 and data.iloc[38].isnull().sum() < data.iloc[36].isnull().sum():
-        data = pd.read_excel(args.content, sheet_name=0, skiprows=39, usecols=range(11))
-        data=data.drop(data.index[[0,1]])
-        data=data.drop(data.index[[-1,-2,-3]])
+      df = pd.read_excel(args.content, sheet_name=0)
+      if df.shape[0]>40 and df.iloc[38].isnull().sum() < df.iloc[36].isnull().sum():
+        df = pd.read_excel(args.content, sheet_name=0, skiprows=39, usecols=range(11))
+        df=df.drop(df.index[[0,1]])
+        df=df.drop(df.index[[-1,-2,-3]])
         #add metadata
         meta = pd.read_excel(args.content, sheet_name=0, skiprows=4, nrows=13, usecols=[0,2])
         for i in range(meta.shape[0]):
           key, value = meta.iloc[i,0], meta.iloc[i,1]
-          data[key] = value
+          df[key] = value
         #add more metadata
         meta = pd.read_excel(args.content, sheet_name=0, skiprows=19, nrows=8, usecols=[2,8])
         for i in range(meta.shape[0]):
           if meta.iloc[i,:].isnull().sum()==2:
             continue
           key, value = meta.iloc[i,0], meta.iloc[i,1]
-          data[key] = value
+          df[key] = value
         meta = pd.read_excel(args.content, sheet_name=0)
-        data['batch'] = meta.iloc[1,0].split(' - ')[1].split(' ')[1]
-        data['test']  = meta.iloc[1,0].split(' - ')[0][1:-1]
-        data = data.rename(columns={"AMTwin label": "-name"})
+        df['batch'] = meta.iloc[1,0].split(' - ')[1].split(' ')[1]
+        df['test']  = meta.iloc[1,0].split(' - ')[0][1:-1]
+        df = df.rename(columns={"AMTwin label": "-name"})
       else:
         #default file
-        data = pd.read_excel(args.content, sheet_name=0).fillna('')
-      print(data.columns)
-      print(data)
-      for _, row in data.iterrows():
+        df = pd.read_excel(args.content, sheet_name=0).fillna('')
+      print(df.columns)
+      print(df)
+      for _, row in df.iterrows():
         data = dict((k.lower(), v) for k, v in row.items())
         be.addData(args.label, data )
       return '1'
@@ -275,7 +275,7 @@ def commands(getDocu, args):
       data = dict(be.db.getDoc(args.docID))
       if args.content is not None:
         data['-type'] = args.content.split('/')
-      be.useExtractors(be.basePath/data['-branch'][0]['path'], data['shasum'], data, extractorRedo=True)  #any path is good since the file is the same everywhere; data-changed by reference
+      be.useExtractors(be.basePath/data['-branch'][0]['path'], data['shasum'], data)  #any path is good since the file is the same everywhere; data-changed by reference
       if len(data['-type'])>1 and len(data['image'])>1:
         be.db.updateDoc({'image':data['image'], '-type':data['-type']},args.docID)
         return '1'
@@ -313,13 +313,13 @@ def commands(getDocu, args):
 
 ###################
 ## MAIN FUNCTION ##
-def main():
+def main() -> None:
   """
   Main function
   """
   usage = "./pastaELN_CLI.py <command> [-i docID] [-c content] [-l labels] [-d database]\n\n"
   usage+= "Possible commands are:\n"
-  usage+= commands(True, None)
+  usage+= commands(True, argparse.Namespace())
   argparser = argparse.ArgumentParser(usage=usage)
   argparser.add_argument('command', help='see above...')
   argparser.add_argument('-i','--docID',   help='docID of project; a long alpha-numeric code', default='')
@@ -334,3 +334,4 @@ def main():
     print('**ERROR pma08: command in pastaELN_CLI.py does not exist |',arguments.command)
   elif result == '1' and arguments.command!='up':
     print('SUCCESS')
+  return

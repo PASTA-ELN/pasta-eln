@@ -1,16 +1,18 @@
 """ New/Edit dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""
 import logging
-from PySide6.QtWidgets import QDialog, QWidget, QFormLayout, QVBoxLayout, QHBoxLayout, QLabel, QTextEdit, \
+from typing import Any, Union
+from PySide6.QtWidgets import QDialog, QWidget, QFormLayout, QVBoxLayout, QHBoxLayout, QLabel, QTextEdit, QPushButton,\
                               QPlainTextEdit, QComboBox, QLineEdit, QDialogButtonBox, QSplitter, QSizePolicy # pylint: disable=no-name-in-module
 from PySide6.QtGui import QRegularExpressionValidator # pylint: disable=no-name-in-module
 from .style import Image, TextButton, IconButton, showMessage
 from .fixedStrings import defaultOntologyNode
 from .handleDictionaries import fillDocBeforeCreate
 from .miscTools import createDirName
+from .communicate import Communicate
 
 class Form(QDialog):
   """ New/Edit dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""
-  def __init__(self, comm, doc):
+  def __init__(self, comm:Communicate, doc:dict[str,Any]):
     """
     Initialization
 
@@ -70,7 +72,7 @@ class Form(QDialog):
         labelW = QWidget()
         labelL = QVBoxLayout(labelW)
         labelL.addWidget(QLabel(key.capitalize()))
-        TextButton('Focus', self.btnFocus, labelL, key, checkable=True)
+        TextButton('Focus', self.btnFocus, labelL, key, checkable=True)  # type: ignore # btnFocus req. bool, cannot get it to work
         rightSideW = QWidget()
         rightSideL = QVBoxLayout(rightSideW)
         setattr(self, 'buttonBarW_'+key, QWidget())
@@ -170,7 +172,7 @@ class Form(QDialog):
   # TODO_P3 add splitter to increase / decrease image
   # TODO_P3 form: add button to add key-values
   # TODO_P3 other items as non-edible things that can be copy-pasted
-  def save(self, btn):
+  def save(self, btn:QPushButton) -> None:
     """
     Action upon save / cancel
     """
@@ -278,7 +280,7 @@ class Form(QDialog):
       if btn.text().endswith('Next'):
         for delKey in [i for i in self.doc.keys() if i[0] in ['-','_'] and i not in ['-name','-type']]:
           del self.doc[delKey]
-        self.comm.changeTable('', '')
+        self.comm.changeTable.emit('', '')
       else:
         self.accept()  #close
     else:
@@ -287,7 +289,7 @@ class Form(QDialog):
 
 
 
-  def btnFocus(self, status):
+  def btnFocus(self, status:bool) -> None:
     """
     Action if advanced button is clicked
     """
@@ -326,7 +328,7 @@ class Form(QDialog):
     return
 
 
-  def btnText(self):
+  def btnText(self) -> None:
     """
     Add help to text area
     """
@@ -345,8 +347,7 @@ class Form(QDialog):
       print('**ERROR dialogForm: unknowCommand',command)
     return
 
-
-  def textChanged(self):
+  def textChanged(self) -> None:
     """
     Text changed in editor -> update the display on the right
     """
@@ -354,8 +355,7 @@ class Form(QDialog):
     getattr(self, 'textShow_'+key).setMarkdown( getattr(self, 'textEdit_'+key).toPlainText())
     return
 
-
-  def delTag(self):
+  def delTag(self) -> None:
     """
     Clicked button to delete tag
     """
@@ -365,8 +365,7 @@ class Form(QDialog):
     self.updateTagsBar()
     return
 
-
-  def addTag(self, tag):
+  def addTag(self, tag:Union[str,int]) -> None:
     """
     Clicked to add tag. Since one needs to use indexChanged to allow the user to enter text, that delivers a int. To allow to differentiate
     between both comboboxes, they cannot be the same (both int), hence grades has to be textChanged
@@ -390,13 +389,13 @@ class Form(QDialog):
     return
 
 
-  def updateTagsBar(self):
+  def updateTagsBar(self) -> None:
     """
     After creation, tag removal, tag addition: update the information on screen
     """
     #update tags
     for i in reversed(range(self.tagsBarSubL.count())):
-      self.tagsBarSubL.itemAt(i).widget().setParent(None)
+      self.tagsBarSubL.itemAt(i).widget().setParent(None)  # type: ignore
     for tag in self.doc['-tags']:
       if tag in ['_curated']:
         continue
