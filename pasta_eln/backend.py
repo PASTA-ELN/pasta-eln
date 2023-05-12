@@ -264,7 +264,7 @@ class Backend(CLI_Mixin):
           print('**WARNING: addData edit of folder should have oldPath and that should exist:'+oldPath+'\n This can be triggered if user moved the folder.')
           return ''
         (self.basePath/oldPath).rename(self.basePath/path)
-      elif edit:
+      else:
         (self.basePath/path).mkdir(exist_ok=True)   #if exist, create again; moving not necessary since directory moved in changeHierarchy
       with open(self.basePath/path/'.id_pastaELN.json','w', encoding='utf-8') as f:  #local path, update in any case
         f.write(json.dumps(doc))

@@ -1,8 +1,9 @@
 """ Misc functions that do not require instances """
-import os, sys, uuid, logging, traceback
+import os, sys, uuid, logging, traceback, json
 from io import BufferedReader
 from pathlib import Path
 from re import sub, match
+import yaml
 
 def camelCase(text:str) -> str:
   """
@@ -177,8 +178,6 @@ def updateExtractorList(directory:Path) -> bool:
     bool: success
   """
   verboseDebug = False
-  import json, yaml
-  from pathlib import Path
   extractorsAll = {}
   for fileName in os.listdir(directory):
     if fileName.endswith('.py') and fileName not in ['testExtractor.py','tutorial.py','commit.py'] :

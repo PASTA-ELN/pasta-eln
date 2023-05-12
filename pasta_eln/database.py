@@ -1,9 +1,10 @@
 """ Class for interaction with couchDB """
-import traceback, logging
+import traceback, logging, time
 from typing import Any, Optional, Union
 from anytree import Node
 from anytree.search import find_by_attr
 from cloudant.client import CouchDB
+from cloudant.replicator import Replicator
 from .fixedStrings import defaultOntology, defaultOntologyNode
 
 class Database:
@@ -548,9 +549,6 @@ class Database:
     Returns:
         bool: success
     """
-    import time
-    from cloudant.client import CouchDB
-    from cloudant.replicator import Replicator
     try:
       rep = Replicator(self.client)
       try:
@@ -607,21 +605,21 @@ class Database:
             collection[docType] = [date]
     #determine bins for histogram
     firstSubmit = datetime.now().timestamp()
-    for key in collection.keys():
-      if np.min(collection[key]) < firstSubmit:
-        firstSubmit = np.min(collection[key])
+    for key,value in collection.items():
+      if np.min(value) < firstSubmit:
+        firstSubmit = np.min(value)
     bins = np.linspace(firstSubmit, datetime.now().timestamp(), 100 )
     #calculate histgram and save it
     collectionCopy = dict(collection)
-    for key in collection.keys():
-      hist, _ = np.histogram(collection[key], bins)
+    for key,value in collection.items():
+      hist, _ = np.histogram(value, bins)
       collectionCopy[key] = hist
     collectionCopy['-bins-'] = (bins[:-1]+bins[1:])/2
     #calculate score
     bias = np.exp(( collectionCopy['-bins-']-collectionCopy['-bins-'][-1] ) / 1.e7)
     score = {}
-    for key in collectionCopy.keys():
-      score[key] = np.sum(collectionCopy[key]*bias)
+    for key,value in collectionCopy.items():
+      score[key] = np.sum(value*bias)
     #reformat dates into string
     collectionCopy['-bins-'] = [datetime.fromtimestamp(i).isoformat() for i in collectionCopy['-bins-']]
     collectionCopy['-score-']= score

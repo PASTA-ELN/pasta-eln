@@ -572,8 +572,7 @@ def main() -> None:
       print('---- Create PASTA-ELN installation Linux ----')
       if not existsCouchDB:
         print('install with root credentials...')
-        dirName = (Path.home()/'pastaELN').as_posix()
-        installLinuxRoot(existsCouchDB, dirName)
+        installLinuxRoot(existsCouchDB, Path.home()/'pastaELN')
       if flagConfiguration:
         print('repair  configuration:', configuration('repair'))
       if flagOntology and existsCouchDB:

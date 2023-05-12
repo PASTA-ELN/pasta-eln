@@ -62,6 +62,7 @@ sudo snap remove couchdb
 ## How to write code
 ### How to create a new version
 1. Lint
+1. Type checking: ignore extractors to keep them simple, some mistake might still remain
 2. test documentation building. The documentation can be viewed with "firefox docs/build/html/index.html"
 3. run test
 4. ensure extractors updated
@@ -69,6 +70,7 @@ sudo snap remove couchdb
 6. create a new version:
 ``` bash
 pylint pasta_eln
+mypy pasta_eln/*.py
 make -C docs html
 python -m pasta_eln.Tests.3Projects
 diff -q ../Extractors/ pasta_eln/Extractors/ |grep differ

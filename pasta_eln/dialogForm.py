@@ -399,7 +399,7 @@ class Form(QDialog):
     for tag in self.doc['-tags']:
       if tag in ['_curated']:
         continue
-      elif tag[0]=='_':
+      if tag[0]=='_':
         TextButton('\u2605'*int(tag[1]), self.delTag, self.tagsBarSubL, tag, 'click to remove')
       else:
         TextButton(tag, self.delTag, self.tagsBarSubL, tag, 'click to remove')

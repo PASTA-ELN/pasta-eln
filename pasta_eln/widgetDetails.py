@@ -1,8 +1,8 @@
 """ widget that shows the details of the items """
 from pathlib import Path
 import platform, subprocess, os, base64, logging
-import yaml
 from typing import Any
+import yaml
 from PySide6.QtWidgets import QScrollArea, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QMenu, QTextEdit  # pylint: disable=no-name-in-module
 from PySide6.QtCore import Qt, Slot, QPoint  # pylint: disable=no-name-in-module
 from .style import TextButton, Image, Label, Action, showMessage
