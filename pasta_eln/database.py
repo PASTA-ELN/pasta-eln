@@ -334,7 +334,7 @@ class Database:
       branch (int):  index of branch to change
       child (int):  new number of child
       stack (list):  new list of ids
-      path (str): new path; None is acceptable #TODO_P2 all path in backend are Path (no as-posix...) here converted to str.
+      path (str): new path; None is acceptable
 
     Returns:
       str, str: old path, new path

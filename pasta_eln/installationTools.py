@@ -24,7 +24,7 @@ def getOS() -> str:
   return operatingSys+' '+environment
 
 
-def createDefaultConfiguration(user:str, password:str, pathPasta:Optional[str]=None) -> dict[str,Any]:
+def createDefaultConfiguration(user:str, password:str, pathPasta:Optional[Path]=None) -> dict[str,Any]:
   '''
   Check configuration file .pastaELN.json for consistencies
 
@@ -42,9 +42,9 @@ def createDefaultConfiguration(user:str, password:str, pathPasta:Optional[str]=N
     password = input('Enter password: ')
   if pathPasta is None:
     if platform.system()=='Windows':
-      pathPasta = str(Path.home()/'Documents'/'PASTA_ELN')
+      pathPasta = Path.home()/'Documents'/'PASTA_ELN'
     else:
-      pathPasta = str(Path.home()/'PASTA_ELN')
+      pathPasta = Path.home()/'PASTA_ELN'
   conf:dict[str,Any] = {}
   conf['defaultProjectGroup']     = 'research'
   conf['projectGroups']       = {'research':{\
@@ -56,8 +56,8 @@ def createDefaultConfiguration(user:str, password:str, pathPasta:Optional[str]=N
   except:   #github action
     conf['userID']      = 'github_user'
   #create pastaDir if it does not exist
-  if not Path(pathPasta).exists():
-    Path(pathPasta).mkdir()
+  if not pathPasta.exists():
+    pathPasta.mkdir()
   return conf
 
 
@@ -150,13 +150,13 @@ def couchdbUserPassword(username:str, password:str) -> bool:
     return False
 
 
-def installLinuxRoot(couchDBExists:bool, pathPasta:str='', password:str='') -> str:
+def installLinuxRoot(couchDBExists:bool, pathPasta:Path='', password:str='') -> str:
   '''
   Install all packages in linux using the root-password
 
   Args:
     couchDBExists (bool): does the couchDB installation exist
-    pathPasta (str): path to install pasta in (Linux)
+    pathPasta (Path): path to install pasta in (Linux)
     password (str): password for couchDB installation
 
   Returns:
@@ -217,7 +217,7 @@ def installLinuxRoot(couchDBExists:bool, pathPasta:str='', password:str='') -> s
   return resultString
 
 
-def configuration(command:str='test', user:str='', password:str='', pathPasta:str='') -> str:
+def configuration(command:str='test', user:str='', password:str='', pathPasta:Path='') -> str:
   '''
   Check configuration file .pastaELN.json for consistencies
 
@@ -225,7 +225,7 @@ def configuration(command:str='test', user:str='', password:str='', pathPasta:st
     command (str): 'test' or 'repair'
     user (str): user name (for windows)
     password (str): password (for windows)
-    pathPasta (str): path to install pasta in (Windows)
+    pathPasta (Path): path to install pasta in (Windows)
 
   Returns:
     string: ''=success, else error messages

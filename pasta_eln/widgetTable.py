@@ -25,7 +25,7 @@ class Table(QWidget):
     self.comm = comm
     comm.changeTable.connect(self.changeTable)
     self.data:list[dict[str,Any]] = []
-    self.models:list[QStandardItemModel] = [] #TODO_P1 find parent
+    self.models:list[QStandardItemModel] = []
     self.docType = ''
     self.projID = ''
     self.filterHeader:list[str] = []
