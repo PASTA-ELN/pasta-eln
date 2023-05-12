@@ -262,25 +262,19 @@ class Table(QWidget):
       intersection = None
       docIDs = []
       for row in range(self.models[-1].rowCount()):
-        if hasattr(self.models[-1], 'item'):
-          if self.itemFromRow(row).checkState() == Qt.CheckState.Checked:
-            docIDs.append( self.data[row]['id'] )
-            thisKeys = set(self.comm.backend.db.getDoc(self.data[row]['id']))
-            if intersection is None:
-              intersection = thisKeys
-            else:
-              intersection = intersection.intersection(thisKeys)
-        else:
-          logging.error('widgetTable model has no item '+str(self.models[-1])+' '+str(row))
-          showMessage(self, 'Send information to Steffen','widgetTable model has no item '+\
-                            str(self.models[-1])+' '+str(row))
-      #TODO_P1 When filter is used and filtered items are selected, upon "group edit", such error occurs.
-      #   DOES NOT WORK?
+        if self.itemFromRow(row).checkState() == Qt.CheckState.Checked:
+          docIDs.append( self.data[row]['id'] )
+          thisKeys = set(self.comm.backend.db.getDoc(self.data[row]['id']))
+          if intersection is None:
+            intersection = thisKeys
+          else:
+            intersection = intersection.intersection(thisKeys)
       #remove keys that should not be group edited and build dict
       if intersection is not None:
         intersection = intersection.difference({'-type', '-branch', '-user', '-client', 'metaVendor', 'shasum', \
           '_id', 'metaUser', '_rev', '-name', '-date', 'image', '_attachments','links'})
         intersectionDict:dict[str,Any] = {i:'' for i in intersection}
+        intersectionDict['-tags'] = []
         intersectionDict.update({'_ids':docIDs})
         self.comm.formDoc.emit(intersectionDict)
         self.comm.changeDetails.emit('redraw')

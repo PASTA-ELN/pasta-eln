@@ -538,7 +538,7 @@ class Database:
     return
 
 
-  def replicateDB(self, dbInfo:dict[str,Any], removeAtStart:bool=False) -> bool:
+  def replicateDB(self, dbInfo:dict[str,Any], removeAtStart:bool=False) -> str:
     """
     Replication to another instance
 
@@ -547,15 +547,15 @@ class Database:
         removeAtStart (bool): remove remote DB before starting new
 
     Returns:
-        bool: success
+        str: report
     """
     try:
       rep = Replicator(self.client)
       try:
         client2 = CouchDB(dbInfo['user'], dbInfo['password'], url=dbInfo['url'], connect=True)
       except:
-        print('**ERROR drp01: Could not connect to remote server. Abort replication.')
-        return False
+        return '<b>ERROR drp01: Could not connect to remote server. Abort replication.</b><br>'+\
+               'user:'+dbInfo['user']+'<br>password:'+dbInfo['password']+'<br>url:'+dbInfo['url']
       try:
         listAllDataBases = client2.all_dbs()
         if dbInfo['database'] in listAllDataBases and removeAtStart:
@@ -571,17 +571,14 @@ class Database:
       startTime = time.time()
       while True:
         if (time.time()-startTime)/60.>5.:
-          print("Waited for 5min. No replication success in that time")
-          return True
+          return "Waited for 5min. No replication success in that time"
         replResult.fetch()        # get updated, latest version from the server
         if '_replication_state' in replResult:
-          print("Replication success state: "+replResult['_replication_state'])
-          return True
+          return "Replication success state: "+replResult['_replication_state']
         time.sleep(10)
     except:
-      print("**ERROR drp02: replicate error |\n",traceback.format_exc())
-      return False
-    return False  #should not reach here
+      return "**ERROR drp02: replicate error |\n"+traceback.format_exc()
+    return 'FAILURE: Something went wrong'  #should not reach here
 
 
   def historyDB(self) -> dict[str,Any]:

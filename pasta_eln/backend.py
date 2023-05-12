@@ -687,7 +687,7 @@ class Backend(CLI_Mixin):
   ######################################################
   ### Wrapper for database functions
   ######################################################
-  def replicateDB(self, removeAtStart:bool=False) -> bool:
+  def replicateDB(self, removeAtStart:bool=False) -> str:
     """
     Replicate local database to remote database
 
@@ -695,17 +695,17 @@ class Backend(CLI_Mixin):
         removeAtStart (bool): remove remote DB before starting new
 
     Returns:
-        bool: replication success
+        str: replication report
     """
-    #TODO_P2 allow replication
-    # remoteConf = dict(self.confLink['remote'])
-    # if not remoteConf: #empty entry: fails
-    #   print("**ERROR brp01: You tried to replicate although, remote is not defined")
-    #   return False
-    # remoteConf['user'], remoteConf['password'] = upOut(remoteConf['cred'])[0].split(':')
-    # success = self.db.replicateDB(remoteConf, removeAtStart)
-    success = True
-    return success
+    defaultProjectGroup = self.configuration['defaultProjectGroup']
+    remoteConf = self.configuration['projectGroups'][defaultProjectGroup]['remote']
+    if not remoteConf: #empty entry: fails
+      print("**ERROR brp01: You tried to replicate although, remote is not defined")
+      return False
+    if 'cred' in remoteConf:
+      remoteConf['user'], remoteConf['password'] = upOut(remoteConf['cred'])[0].split(':')
+    report = self.db.replicateDB(remoteConf, removeAtStart)
+    return report
 
 
   def checkDB(self, verbose:bool=True, repair:bool=False) -> str:

@@ -43,6 +43,8 @@ class MainWindow(QMainWindow):
     Action('&Export .eln',          self.executeAction, projectMenu, self, name='export')
     Action('&Import .eln',          self.executeAction, projectMenu, self, name='import')
     projectMenu.addSeparator()
+    Action('&Syncronize',           self.executeAction, projectMenu, self, name='sync', shortcut='F5')
+    projectMenu.addSeparator()
     Action('&Exit',                 self.executeAction, projectMenu, self, name='exit')
     viewMenu = menu.addMenu("&Lists")
     systemMenu = menu.addMenu("&System")
@@ -60,7 +62,8 @@ class MainWindow(QMainWindow):
     helpMenu = menu.addMenu("&Help")
     Action('&Website',               self.executeAction, helpMenu, self, name='website')
     Action('&Test extraction from a file',   self.executeAction, helpMenu, self, name='extractorTest')
-    Action('&Test selected item extraction', self.executeAction, helpMenu, self, name='extractorTest2', shortcut='F2')
+    Action('&Test selected item extraction', self.executeAction, helpMenu, self, name='extractorTest2',
+           shortcut='F2')
     Action('&Shortcuts',             self.executeAction, helpMenu, self, name='shortcuts')
     Action('&Todo list',             self.executeAction, helpMenu, self, name='todo')
     if hasattr(self.backend, 'db'):
@@ -138,6 +141,9 @@ class MainWindow(QMainWindow):
     elif menuName=='verifyDB':
       report = self.comm.backend.checkDB(True)
       showMessage(self, 'Report of database verification', text2html(report), style='QLabel {min-width: 800px}')
+    elif menuName=='sync':
+      report = self.comm.backend.replicateDB()
+      showMessage(self, 'Report of syncronization', report, style='QLabel {min-width: 450px}')
     elif menuName=='exit':
       self.close()
     elif menuName=='website':
