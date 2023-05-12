@@ -3,20 +3,19 @@ todoString = """
 
 <h3>Very important show stopper</h3>
 <ul>
-<li> sometimes sample is created in project hierarchy: not sure when it occurs
 </ul>
 
 <h3>Things currently working on</h3>
 <ul>
-<li> tags: add docType to allow for user to see why cannot click in table
-<li> tags: get selected via a editable QCombobox and get shown as qlabels, that can be deleted
 </ul>
 
 <h3>Improvement to convenience</h3>
 <ul>
+<li> Add read info from ror and orcid
 <li> add splitter to increase / decrease image
 <li> allow to unassign previously assigned data
 <li> design ProjectView: Currently, the comment is more highlighted than the title of an item due
+<li> design ProjectView: if comments are too long they cover the right area
 <li> design projectLeaves:
 <li> design projectLeaves: 3 columns?
 <li> design: make full width; scale fonts appropriately
@@ -34,6 +33,7 @@ todoString = """
 <ul>
 <li> allow to adjust height
 <li> design of project tree
+<li> export: export via extractor in high resolution: change order: first save, then rescale
 <li> projectTree design: If folders and other items have boxes of slightly different brightness
 <li> projectTree: allow right click on measurement to change recipe
 <li> projectTree: drag&drop of external files
