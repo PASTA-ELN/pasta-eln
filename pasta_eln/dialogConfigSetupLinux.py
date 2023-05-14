@@ -83,7 +83,7 @@ class ConfigurationSetup(QWidget):
       button = QMessageBox.question(self, "Root installations", rootInstallLinux)
       if button == QMessageBox.Yes:
         dirName = QFileDialog.getExistingDirectory(self,'Create and select directory for scientific data',str(Path.home()))
-        installLinuxRoot(existsCouchDB, dirName)
+        installLinuxRoot(existsCouchDB, Path(dirName))
         logging.info('Install linux root finished')
       else:
         self.mainText = self.mainText.replace('- CouchDB','- CouchDB: user chose to NOT install' )

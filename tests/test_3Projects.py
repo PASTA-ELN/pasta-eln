@@ -1,11 +1,10 @@
 #!/usr/bin/python3
 """TEST using the FULL set of python-requirements: create 3 projects; simplified form of testTutorialComplex """
-import os, sys, shutil, traceback, logging, subprocess, socket
-import warnings, json
+import os, shutil, traceback, logging, socket
+import warnings
 import unittest
 from pathlib import Path
-
-from pasta_eln.backend import Backend             # pylint: disable=relative-beyond-top-level
+from pasta_eln.backend import Backend
 
 class TestStringMethods(unittest.TestCase):
   """

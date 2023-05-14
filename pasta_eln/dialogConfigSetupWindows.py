@@ -98,7 +98,7 @@ class ConfigurationSetup(QWidget):
         button = QMessageBox.question(self, "PASTA-ELN configuration", "Do you want to create/repain the configuration.")
         if button == QMessageBox.Yes:
           dirName = QFileDialog.getExistingDirectory(self,'Create and select directory for scientific data',str(Path.home()/'Documents'))
-          configuration('repair','admin', password,dirName)
+          configuration('repair','admin', password, Path(dirName))
           flagInstalledSoftware = True
         else:
           self.mainText = self.mainText.replace('- Configuration of preferences','- Configuration: user chose to NOT install' )

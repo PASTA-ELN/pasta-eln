@@ -81,6 +81,28 @@ git commit -a -m 'linting and testing'
 ```
    **THIS STEP IS NECESSARY FOR ALL GITHUB-Actions TO WORK**
 
+### Create git-commit-hook
+To automatically run many tests, create a file '.git/hooks/pre-commit' and make it executable
+``` bash
+#!/bin/sh
+#
+# Test if extractors updated
+if [ "$(diff -q ../Extractors/ pasta_eln/Extractors/ |grep differ |grep extractor)" ]; then
+  echo "Differences in EXTRACTOR EXIST"
+  exit 1
+else
+  echo "All is correct: extractors match"
+fi
+# Run pylint
+exec pylint pasta_eln
+# Test document creation
+exec make -C docs html
+# Run pytest
+exec pytest -s tests
+#
+echo 'Pre-commit-tests are finished'
+```
+
 ### How to write small python programs that do things
 #### Backend
 ``` Python

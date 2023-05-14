@@ -88,8 +88,8 @@ class MainWindow(QMainWindow):
     mainWidget.setLayout(mainLayout)
     self.setCentralWidget(mainWidget)      # Set the central widget of the Window
     body = Body(self.comm)        #body with information
-    sidebar = Sidebar(self.comm)  #sidebar with buttons
-    mainLayout.addWidget(sidebar)
+    self.sidebar = Sidebar(self.comm)  #sidebar with buttons
+    mainLayout.addWidget(self.sidebar)
     mainLayout.addWidget(body)
     self.comm.changeTable.emit('x0','')
 

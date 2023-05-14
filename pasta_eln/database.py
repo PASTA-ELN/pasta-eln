@@ -255,8 +255,8 @@ class Database:
               for branch in newDoc['-branch']:
                 if branch['path'].startswith(oldpath):
                   if os.path.basename(branch['path']) == newDoc['-name'] and \
-                     os.path.basename(change['-branch']['path'])!='':
-                    newDoc['-name'] = os.path.basename(change['-branch']['path'])
+                     os.path.basename(str(change['-branch']['path']))!='':
+                    newDoc['-name'] = os.path.basename(str(change['-branch']['path']))
                   branch['path'] = branch['path'].replace(oldpath ,change['-branch']['path'])
                   branch['stack']= change['-branch']['stack']
                   branch['show'] = self.createShowFromStack(change['-branch']['stack'])
@@ -316,7 +316,7 @@ class Database:
       print('**ERROR: could not update document. Likely version conflict. Initial and current version:')
       print(initialDocCopy)
       print(newDoc)
-      return None
+      return {}
     attachmentName = 'v0.json'
     if '_attachments' in newDoc:
       attachmentName = 'v'+str(len(newDoc['_attachments']))+'.json'
@@ -325,7 +325,8 @@ class Database:
     return newDoc
 
 
-  def updateBranch(self, docID:str, branch:int, child:int, stack:Optional[list[str]]=None, path:str='') -> list[str]:
+  def updateBranch(self, docID:str, branch:int, child:int, stack:Optional[list[str]]=None,
+                   path:Optional[str]='') -> list[Optional[str]]:
     """
     Update document by updating the branch
 

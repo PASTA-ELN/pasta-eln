@@ -87,7 +87,7 @@ def runTests():
   for fileI in os.listdir('Tests'):
     if not fileI.endswith('.py'):
       continue
-    result = subprocess.run(['pytest','-s','Tests/'+fileI], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
+    result = subprocess.run(['pytest','-s','tests/'+fileI], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
     success = result.stdout.decode('utf-8').count('*** DONE WITH VERIFY ***')
     if success==1:
       success += result.stdout.decode('utf-8').count('**ERROR')
@@ -96,7 +96,7 @@ def runTests():
     else:
       successAll = False
       print("  FAILED: Python unit test "+fileI)
-      print("    run: 'pytest -s Tests/"+fileI+"' and check logFile")
+      print("    run: 'pytest -s tests/"+fileI+"' and check logFile")
   return
 
 

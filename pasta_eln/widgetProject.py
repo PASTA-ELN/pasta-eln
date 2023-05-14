@@ -141,11 +141,13 @@ class Project(QWidget):
     for line in siblingsOld:
       if line['value'][0]<9999:
         pathOldSib, pathNewSib = db.updateBranch(docID=line['id'], branch=line['value'][3], child=line['value'][0]-1)
-        (Path(self.comm.backend.basePath)/pathOldSib).rename(Path(self.comm.backend.basePath)/pathNewSib)
+        if pathOldSib is not None and pathNewSib is not None:
+          (Path(self.comm.backend.basePath)/pathOldSib).rename(Path(self.comm.backend.basePath)/pathNewSib)
     for line in siblingsNew:
       if line['value'][0]<9999:
         pathOldSib, pathNewSib = db.updateBranch(docID=line['id'], branch=line['value'][3], child=line['value'][0]+1)
-        (Path(self.comm.backend.basePath)/pathOldSib).rename(Path(self.comm.backend.basePath)/pathNewSib)
+        if pathOldSib is not None and pathNewSib is not None:
+          (Path(self.comm.backend.basePath)/pathOldSib).rename(Path(self.comm.backend.basePath)/pathNewSib)
     #change item in question
     if isinstance(branchOld['path'], str) and (Path(self.comm.backend.basePath)/branchOld['path']).exists():
       pathOld = Path(self.comm.backend.basePath)/branchOld['path']

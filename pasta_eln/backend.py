@@ -274,7 +274,7 @@ class Backend(CLI_Mixin):
   ######################################################
   ### Disk directory/folder methods
   ######################################################
-  def changeHierarchy(self, docID:str, dirName:Optional[Path]=None) -> None:
+  def changeHierarchy(self, docID:Optional[str], dirName:Optional[Path]=None) -> None:
     """
     Change through text hierarchy structure
     change hierarchyStack, change directory, change stored cwd
@@ -701,7 +701,7 @@ class Backend(CLI_Mixin):
     remoteConf = self.configuration['projectGroups'][defaultProjectGroup]['remote']
     if not remoteConf: #empty entry: fails
       print("**ERROR brp01: You tried to replicate although, remote is not defined")
-      return False
+      return 'ERROR'
     if 'cred' in remoteConf:
       remoteConf['user'], remoteConf['password'] = upOut(remoteConf['cred'])[0].split(':')
     report = self.db.replicateDB(remoteConf, removeAtStart)

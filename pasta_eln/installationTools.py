@@ -151,7 +151,7 @@ def couchdbUserPassword(username:str, password:str) -> bool:
     return False
 
 
-def installLinuxRoot(couchDBExists:bool, pathPasta:Path='', password:str='') -> str:
+def installLinuxRoot(couchDBExists:bool, pathPasta:Path=Path(''), password:str='') -> str:
   '''
   Install all packages in linux using the root-password
 
@@ -218,7 +218,7 @@ def installLinuxRoot(couchDBExists:bool, pathPasta:Path='', password:str='') -> 
   return resultString
 
 
-def configuration(command:str='test', user:str='', password:str='', pathPasta:Path='') -> str:
+def configuration(command:str='test', user:str='', password:str='', pathPasta:Path=Path('')) -> str:
   '''
   Check configuration file .pastaELN.json for consistencies
 
@@ -423,7 +423,8 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
   if callbackPercent is not None:
     callbackPercent(11)
   backend.changeHierarchy(semStepID)
-  semDirName = backend.basePath/backend.cwd
+  if backend.cwd is not None:
+    semDirName = backend.basePath/backend.cwd
   backend.changeHierarchy(None)
   print(backend.outputHierarchy())
   if callbackPercent is not None:

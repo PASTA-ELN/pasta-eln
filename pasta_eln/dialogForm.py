@@ -219,7 +219,7 @@ class Form(QDialog):
         else:
           print("**ERROR dialogForm unknown value type",key, value)
       # ---- if project changed: only branch save; remaining data still needs saving
-      newProjID = None
+      newProjID = []
       if hasattr(self, 'projectComboBox') and self.projectComboBox.currentData() != '':
         parentPath = self.db.getDoc(self.projectComboBox.currentData())['-branch'][0]['path']
         if '_ids' in self.doc:  # group update
