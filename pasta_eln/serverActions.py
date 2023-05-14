@@ -324,10 +324,13 @@ def backupCouchDB(location:str='', userName:str='', password:str='') -> None:
   elif location=='remote':
     try:
       myString = cred.get_password('pastaDB','admin')
+      if myString is None:
+        print("**ERROR Could not get credentials from keyring 2. Please create manually.")
+        return
       location, userName, password = myString.split(':')
       print("URL and credentials successfully read from keyring")
     except:
-      print("**ERROR Could not get credentials from keyring. Please create manually.")
+      print("**ERROR Could not get credentials from keyring 2b. Please create manually.")
       return
   else:
     print('**ERROR: wrong location given.')
@@ -403,10 +406,13 @@ def restoreCouchDB(location:str='', userName:str='', password:str='', fileName:s
   elif location=='remote':
     try:
       myString = cred.get_password('pastaDB','admin')
+      if myString is None:
+        print("**ERROR Could not get credentials from keyring 3. Please create manually.")
+        return
       location, userName, password = myString.split(':')
       print("URL and credentials successfully read from keyring")
     except:
-      print("**ERROR Could not get credentials from keyring. Please create manually.")
+      print("**ERROR Could not get credentials from keyring 3b. Please create manually.")
       return
   else:
     print('**ERROR: wrong location given.')
@@ -490,6 +496,9 @@ def main() -> None:
   #  cred.set_password('pastaDB','admin',myString)
   try:
     myString = cred.get_password('pastaDB','admin')
+    if myString is None:
+      print("**ERROR Could not get credentials from keyring 1. Please create manually.")
+      sys.exit(1)
     url, administrator, password = myString.split(':')
     print("URL and credentials successfully read from keyring")
   except:

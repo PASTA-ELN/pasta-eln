@@ -18,4 +18,4 @@ jobs:
         pip install -r requirements-linux.txt
     - name: Analysing the code with mypy
       run: |
-        mypy $(git ls-files 'pasta_eln/*.py')
+        mypy pasta_eln/*.py
