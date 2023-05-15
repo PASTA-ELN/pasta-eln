@@ -666,17 +666,18 @@ class Backend(CLI_Mixin):
         else:
           report += str(size)+'B'
         report += '<br><b>Additional window shows the image</b><br>'
-      if content['image'].startswith('data:image/'):
-        #png or jpg encoded base64
-        extension = content['image'][11:14]
-        img = base64.b64decode(content['image'][22:])
-      else:
-        #svg data
-        img = cairosvg.svg2png(bytestring=content['image'].encode())
-      i = BytesIO(img)
-      image = Image.open(i)
-      if interactive:
-        image.show()
+      if len(content['image'])>20:
+        if content['image'].startswith('data:image/'):
+          #png or jpg encoded base64
+          extension = content['image'][11:14]
+          img = base64.b64decode(content['image'][22:])
+        else:
+          #svg data
+          img = cairosvg.svg2png(bytestring=content['image'].encode())
+        i = BytesIO(img)
+        image = Image.open(i)
+        if interactive:
+          image.show()
       del content['image']
     if interactive and not reportHTML:
       print('Identified metadata',content)
