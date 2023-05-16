@@ -49,6 +49,7 @@ You can install PASTA-ELN in your normal user-space, which is the easier path, o
 Install in user-space
 ^^^^^^^^^^^^^^^^^^^^^
 In any folder,
+
 .. code-block:: bash
 
     pip3 install pasta-eln
@@ -65,6 +66,7 @@ Install in environment
 ^^^^^^^^^^^^^^^^^^^^^^
 
 Starting in a folder of your choice but we suggest the home-folder, create a virtual environment, for instance with the name .venvPasta. (The . will ensure that it is mostly hidden.)
+
 .. code-block:: bash
 
     python3 -m venv .venvPastaELN

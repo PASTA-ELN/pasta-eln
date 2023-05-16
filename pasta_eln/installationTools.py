@@ -221,6 +221,7 @@ def installLinuxRoot(couchDBExists:bool, pathPasta:Path=Path(''), password:str='
 
 def configuration(command:str='test', user:str='', password:str='', pathPasta:Path=Path('')) -> str:
   '''
+  #TODO_P2 change to string-output
   Check configuration file .pastaELN.json for consistencies
 
   Args:
@@ -510,10 +511,10 @@ def createShortcut() -> None:
     else:                             #installation in a virtual environment
       logging.info('In virtual environment, create an alias')
       with open(Path.home()/'.bashrc','a', encoding='utf-8') as fOut:
-        alias = "alias pastaELN='"+sys.prefix+"bin/python3 -m pasta_eln.gui'"
+        alias = "alias pastaELN='"+sys.prefix+"/bin/python3 -m pasta_eln.gui'"
         logging.info(alias)
         fOut.write(alias+'\n')
-      content+='Exec='+sys.prefix+'bin/python3 -m pasta_eln.gui\n'
+      content+='Exec='+sys.prefix+'/bin/python3 -m pasta_eln.gui\n'
     content+='Icon='+ (Path(__file__).parent/'Resources'/'Icons'/'favicon64.png').as_posix() + '\n'
     content+='Terminal=false\nType=Application\nCategories=Utility;Application;\n'
     try:

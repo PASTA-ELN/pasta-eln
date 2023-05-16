@@ -44,7 +44,7 @@
 ### Restart Linux
 ``` bash
 rm .pastaELN.json pastaELN.log
-rm -rf pastaELN/pastasExampleProject pastaELN/StandardOperatingProcedures
+rm -rf pastaELN/PastasExampleProject pastaELN/StandardOperatingProcedures
 sudo snap stop couchdb
 sudo snap remove couchdb
 ```
