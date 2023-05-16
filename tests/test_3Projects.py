@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 """TEST using the FULL set of python-requirements: create 3 projects; simplified form of testTutorialComplex """
 import os, shutil, traceback, logging, socket
+from datetime import datetime
 import warnings
 import unittest
 from pathlib import Path
@@ -119,6 +120,24 @@ class TestStringMethods(unittest.TestCase):
       self.be.changeHierarchy(semStepID)
       self.be.addData('measurement', {'-name': 'https://upload.wikimedia.org/wikipedia/commons/a/a4/Misc_pollen.jpg'})
       outputString(outputFormat,'info',self.be.output('measurement'))
+
+      ### ADD INSTRUMENTS AND THEIR ATTACHMENTS
+      outputString(outputFormat,'h2','ADD INSTRUMENTS AND ATTACHMENTS')
+      self.be.addData('instrument', {'-name': 'G200X', 'vendor':'KLA', 'model':'KLA G200X'})
+      self.be.addData('instrument', {'-name': 'B1', 'vendor':'Synthon', 'model':'Berkovich tip'})
+      output = self.be.output('instrument',True)
+      idKLA, idSynthon = None, None
+      for line in output.split('\n'):
+        if 'KLA' in line:
+          idKLA = line.split('|')[-1].strip()
+        if 'Synthon'  in line:
+          idSynthon = line.split('|')[-1].strip()
+      self.be.db.addAttachment(idKLA, "Right side of instrument",
+        {'date':datetime.now().isoformat(),'remark':'Worked well','docID':idSynthon,'user':'nobody'})
+      self.be.db.addAttachment(idKLA, "Right side of instrument",
+        {'date':datetime.now().isoformat(),'remark':'Service','docID':'','user':'nobody'})
+      outputString(outputFormat,'info',self.be.output('instrument'))
+
 
       ### VERIFY DATABASE INTEGRITY
       outputString(outputFormat,'h2','VERIFY DATABASE INTEGRITY')

@@ -518,9 +518,11 @@ def createShortcut() -> None:
     content+='Icon='+ (Path(__file__).parent/'Resources'/'Icons'/'favicon64.png').as_posix() + '\n'
     content+='Terminal=false\nType=Application\nCategories=Utility;Application;\n'
     try:
-      with open(Path.home()/'Desktop'/'pastaELN.desktop','w', encoding='utf-8') as fOut:
+      linkString = (Path.home()/'Desktop'/'pastaELN.desktop').as_posix()
+      with open(linkString,'w', encoding='utf-8') as fOut:
         fOut.write(content)
-        os.chmod(Path.home()/'Desktop'/'pastaELN.desktop', 0o777)
+        os.system('gio set '+linkString+' metadata::trusted true') #for ubuntu systems
+        os.chmod(Path.home()/'Desktop'/'pastaELN.desktop', 0o775)
     except:
       pass
     try:

@@ -550,6 +550,7 @@ class Database:
     Returns:
         str: report
     """
+    #TODO_P2 callback that shows progress
     try:
       rep = Replicator(self.client)
       try:
@@ -567,19 +568,20 @@ class Database:
         pass
       db2 = client2[dbInfo['database']]
       replResult = rep.create_replication(self.db, db2, create_target=False, continuous=False)
-      print('Start replication '+replResult['_id']+'.')
-      #try every 10sec whether replicaton success. Do that for max. of 5min
+      logging.info('Start replication '+replResult['_id']+'.')
+      #try every 10sec whether replication success. Do that for max. of 5min
       startTime = time.time()
       while True:
         if (time.time()-startTime)/60.>5.:
+          logging.info('Stop waiting for replication '+replResult['_id']+'.')
           return "Waited for 5min. No replication success in that time"
         replResult.fetch()        # get updated, latest version from the server
         if '_replication_state' in replResult:
+          logging.info('Success replication '+replResult['_id']+'.')
           return "Replication success state: "+replResult['_replication_state']
         time.sleep(10)
     except:
       return "**ERROR drp02: replicate error |\n"+traceback.format_exc()
-    return 'FAILURE: Something went wrong'  #should not reach here
 
 
   def historyDB(self) -> dict[str,Any]:
