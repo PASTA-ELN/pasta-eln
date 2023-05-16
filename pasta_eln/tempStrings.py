@@ -13,7 +13,7 @@ todoString = """
 <ul>
 <li> Add read info from ror and orcid
 <li> add splitter to increase / decrease image
-<li> allow to unassign previously assigned data
+<li> allow to unassign previously assigned data: not sure
 <li> design ProjectView: Currently, the comment is more highlighted than the title of an item due
 <li> design ProjectView: if comments are too long they cover the right area
 <li> design projectLeaves:

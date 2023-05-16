@@ -148,7 +148,7 @@ class Form(QDialog):
     if allowProjectAndDocTypeChange: #if not-new and non-folder
       self.formL.addRow(QLabel('Special properties:'), QLabel('') )
     label = '- unassigned -' if self.flagNewDoc else '- no change -'
-    #TODO_P3 allow to unassign previously assigned data
+    #TODO_P3 allow to unassign previously assigned data: not sure
     if allowProjectAndDocTypeChange or ('_id' not in self.doc and self.doc['-type'][0][0]!='x'): #if new and non-folder
       self.projectComboBox = QComboBox()
       self.projectComboBox.addItem(label, userData='')
