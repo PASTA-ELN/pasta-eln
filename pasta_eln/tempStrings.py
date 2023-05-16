@@ -7,6 +7,7 @@ todoString = """
 
 <h3>Things currently working on</h3>
 <ul>
+<li> change to string-output
 </ul>
 
 <h3>Improvement to convenience</h3>
@@ -46,7 +47,6 @@ todoString = """
 
 <h3>Things worthwile remembering/uncritical</h3>
 <ul>
-<li> Aug 2023: remove
 <li> addToConfig
 <li> addToConfig
 <li> addToConfig
