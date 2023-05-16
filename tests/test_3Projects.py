@@ -5,6 +5,7 @@ import warnings
 import unittest
 from pathlib import Path
 from pasta_eln.backend import Backend
+from pasta_eln.miscTools import outputString
 
 class TestStringMethods(unittest.TestCase):
   """
@@ -19,6 +20,7 @@ class TestStringMethods(unittest.TestCase):
     """
     main function
     """
+    outputFormat = 'print'
     # initialization: create database, destroy on filesystem and database and then create new one
     warnings.filterwarnings('ignore', message='numpy.ufunc size changed')
     warnings.filterwarnings('ignore', message='invalid escape sequence')
@@ -45,7 +47,7 @@ class TestStringMethods(unittest.TestCase):
 
     try:
       ### CREATE PROJECTS AND SHOW
-      print('*** CREATE PROJECTS AND SHOW ***')
+      outputString(outputFormat,'h2','CREATE PROJECTS AND SHOW')
       self.be.addData('x0', {'-name': 'Intermetals at interfaces', \
         'objective': 'Does spray coating lead to intermetalic phase?', 'status': 'active', \
         'comment': '#intermetal #Fe #Al This is a test project'})
@@ -54,10 +56,10 @@ class TestStringMethods(unittest.TestCase):
         'comment': '#tribology The answer is obvious'})
       self.be.addData('x0', {'-name': 'Steel', 'objective': 'Test strength of steel', 'status': 'paused', \
         'comment': '#Fe Obvious example without answer'})
-      print(self.be.output('x0'))
+      outputString(outputFormat, 'info', self.be.output('x0'))
 
       ### TEST PROJECT PLANING
-      print('*** TEST PROJECT PLANING ***')
+      outputString(outputFormat,'h2','TEST PROJECT PLANING')
       viewProj = self.be.db.getView('viewDocType/x0')
       projID1  = [i['id'] for i in viewProj if i['value'][0]=='Intermetals at interfaces'][0]
       projID2  = [i['id'] for i in viewProj if i['value'][0]=='Steel'][0]
@@ -82,10 +84,10 @@ class TestStringMethods(unittest.TestCase):
       self.be.changeHierarchy(currentID)
       indentDirName = self.be.basePath/self.be.cwd
       self.be.changeHierarchy(None)
-      print(self.be.outputHierarchy())
+      outputString(outputFormat,'info',self.be.outputHierarchy())
 
       ### TEST PROCEDURES
-      print('\n*** TEST PROCEDURES ***')
+      outputString(outputFormat,'h2','TEST PROCEDURES')
       sopDir = self.dirName/'StandardOperatingProcedures'
       os.makedirs(sopDir)
       with open(sopDir/'Nanoindentation.md','w', encoding='utf-8') as fOut:
@@ -94,16 +96,16 @@ class TestStringMethods(unittest.TestCase):
         fOut.write('# Put sample in SEM\n# Do scanning\nDo not forget to\n- contact the pole-piece\n- **USE GLOVES**\n')
       self.be.addData('procedure', {'-name': 'StandardOperatingProcedures/SEM.md', 'comment': '#v1'})
       self.be.addData('procedure', {'-name': 'StandardOperatingProcedures/Nanoindentation.md', 'comment': '#v1'})
-      print(self.be.output('procedure'))
+      outputString(outputFormat,'info',self.be.output('procedure'))
 
       ### TEST SAMPLES
-      print('*** TEST SAMPLES ***')
+      outputString(outputFormat,'h2','TEST SAMPLES')
       self.be.addData('sample',    {'-name': 'AlFe cross-section', 'chemistry': 'Al99.9; FeMnCr ', 'qrCode': '13214124 99698708', 'comment': 'after OPS polishing'})
-      print(self.be.output('sample'))
-      print(self.be.outputQR())
+      outputString(outputFormat,'info',self.be.output('sample'))
+      outputString(outputFormat,'info',self.be.outputQR())
 
-      ###  TEST MEASUREMENTS AND SCANNING/CURATION
-      print('*** TEST MEASUREMENTS AND SCANNING/CURATION ***')
+      ###  TEST MEASUREMENTS AND SCANNING
+      outputString(outputFormat,'h2','TEST MEASUREMENTS AND SCANNING')
       examplePath = Path(__file__).parent/'ExampleMeasurements'
       shutil.copy(examplePath/'Zeiss.tif', semDirName)
       shutil.copy(examplePath/'RobinSteel0000LC.txt', indentDirName)
@@ -113,18 +115,17 @@ class TestStringMethods(unittest.TestCase):
       self.be.scanProject(projID1)
 
       ### USE GLOBAL FILES
-      print('*** USE GLOBAL FILES ***')
+      outputString(outputFormat,'h2','USE GLOBAL FILES')
       self.be.changeHierarchy(semStepID)
       self.be.addData('measurement', {'-name': 'https://upload.wikimedia.org/wikipedia/commons/a/a4/Misc_pollen.jpg'})
-      print(self.be.output('measurement'))
+      outputString(outputFormat,'info',self.be.output('measurement'))
 
       ### VERIFY DATABASE INTEGRITY
-      print("\n*** VERIFY DATABASE INTEGRITY ***")
-      print(self.be.checkDB(verbose=True))
-
-      print('\n*** DONE WITH VERIFY ***')
+      outputString(outputFormat,'h2','VERIFY DATABASE INTEGRITY')
+      outputString(outputFormat,'info', self.be.checkDB(outputStyle='text'))
+      outputString(outputFormat,'h2','DONE WITH VERIFY')
     except:
-      print('ERROR OCCURRED IN VERIFY TESTING\n'+ traceback.format_exc() )
+      outputString(outputFormat,'h2','ERROR OCCURRED IN VERIFY TESTING\n'+ traceback.format_exc() )
       raise
     return
 

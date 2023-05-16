@@ -624,7 +624,7 @@ class Database:
     return collectionCopy
 
 
-  def checkDB(self, verbose:bool=True, repair:bool=False) -> str:
+  def checkDB(self, outputStyle:str='text', repair:bool=False) -> str:
     """
     Check database for consistencies by iterating through all documents
     - slow since no views used
@@ -634,7 +634,7 @@ class Database:
     - no interaction with harddisk
 
     Args:
-        verbose (bool): print more or only issues
+        outputStyle (str): output using a given style: see outputString
         repair (bool): repair database
 
     Returns:
@@ -642,26 +642,21 @@ class Database:
     """
     import os, re, base64, io
     from PIL import Image
-    from .mixin_cli import Bcolors
-    if verbose:
-      outstring = f'{Bcolors.UNDERLINE}**** LEGEND ****{Bcolors.ENDC}\n'
-      outstring+= f'{Bcolors.OKGREEN}Green: perfect and as intended{Bcolors.ENDC}\n'
-      outstring+= f'{Bcolors.OKBLUE}Blue: ok-ish, can happen: empty files for testing, strange path for measurements{Bcolors.ENDC}\n'
-      outstring+= f'{Bcolors.HEADER}Pink: unsure if bug or desired (e.g. move step to random path-name){Bcolors.ENDC}\n'
-      outstring+= f'{Bcolors.WARNING}Yellow: WARNING should not happen (e.g. procedures without project){Bcolors.ENDC}\n'
-      outstring+= f'{Bcolors.FAIL}Red: FAILURE and ERROR: NOT ALLOWED AT ANY TIME{Bcolors.ENDC}\n'
-      outstring+= 'Normal text: not understood, did not appear initially\n'
-      outstring+= f'{Bcolors.UNDERLINE}**** List all database entries ****{Bcolors.ENDC}\n'
-    else:
-      outstring = ''
+    from .miscTools import outputString
+    outstring = outputString(outputStyle,'h2','LEGEND')
+    outstring+= outputString(outputStyle,'ok','Green: perfect and as intended')
+    outstring+= outputString(outputStyle,'okish', 'Blue: ok-ish, can happen: empty files for testing, strange path for measurements')
+    outstring+= outputString(outputStyle,'unsure','Pink: unsure if bug or desired (e.g. move step to random path-name)')
+    outstring+= outputString(outputStyle,'warning','Yellow: WARNING should not happen (e.g. procedures without project)')
+    outstring+= outputString(outputStyle,'error',  'Red: FAILURE and ERROR: NOT ALLOWED AT ANY TIME')
+    outstring+= outputString(outputStyle,'h2','List all database entries')
     if repair:
       print('REPAIR MODE IS ON: afterwards, full-reload and create views')
     ## loop all documents
     for doc in self.db:
       try:
         if '_design' in doc['_id']:
-          if verbose:
-            outstring+= f'{Bcolors.OKGREEN}..info: Design document '+doc['_id']+f'{Bcolors.ENDC}\n'
+          outstring+= outputString(outputStyle,'ok','..info: Design document '+doc['_id'])
           continue
         if doc['_id'] == '-ontology-':
           if repair:
@@ -672,8 +667,7 @@ class Database:
                 doc[new] = doc[old].copy()
                 del doc[old]
             doc.save()
-          if verbose:
-            outstring+= f'{Bcolors.OKGREEN}..info: ontology exists{Bcolors.ENDC}\n'
+          outstring+= outputString(outputStyle,'ok','..info: ontology exists')
           continue
         #only normal documents after this line
 
@@ -738,50 +732,45 @@ class Database:
 
         #branch test
         if '-branch' not in doc:
-          outstring+= f'{Bcolors.FAIL}**ERROR dch01: branch does not exist '+doc['_id']+f'{Bcolors.ENDC}\n'
+          outstring+= outputString(outputStyle,'error','dch01: branch does not exist '+doc['_id'])
           continue
         if len(doc['-branch'])>1 and doc['-type'] =='x':                 #text elements only one branch
-          outstring+= f'{Bcolors.FAIL}**ERROR dch02: branch length >1 for text'+doc['_id']+' '+str(doc['-type'])+f'{Bcolors.ENDC}\n'
+          outstring+= outputString(outputStyle,'error','dch02: branch length >1 for text'+doc['_id']+' '+str(doc['-type']))
         for branch in doc['-branch']:
           for item in branch['stack']:
             if not item.startswith('x-'):
-              outstring+= f'{Bcolors.FAIL}**ERROR dch03: non-text in stack '+doc['_id']+f'{Bcolors.ENDC}\n'
+              outstring+= outputString(outputStyle,'error','dch03: non-text in stack '+doc['_id'])
 
           if len(branch['stack'])==0 and doc['-type']!=['x0']: #if no inheritance
             if doc['-type'][0] == 'measurement' or  doc['-type'][0][0] == 'x':
-              if verbose:
-                outstring+= f'{Bcolors.WARNING}**warning branch stack length = 0: no parent '+doc['_id']+f'{Bcolors.ENDC}\n'
+              outstring+= outputString(outputStyle,'warning','branch stack length = 0: no parent '+doc['_id'])
             else:
-              if verbose:
-                outstring+= f'{Bcolors.OKBLUE}**ok-ish branch stack length = 0: no parent for procedure/sample '+doc['_id']+'|'+doc['-name']+f'{Bcolors.ENDC}\n'
+              outstring+= outputString(outputStyle,'okish','branch stack length = 0: no parent for procedure/sample '+doc['_id']+'|'+doc['-name'])
           if not '-type' in doc or len(doc['-type'])==0:
-            outstring+= f'{Bcolors.HEADER}**Unsure dch04: no type in (removed data?)'+doc['_id']+f'{Bcolors.ENDC}\n'
+            outstring+= outputString(outputStyle,'unsure','dch04: no type in (removed data?)'+doc['_id'])
             continue
           if doc['-type'][0][0]=='x':
             try:
               dirNamePrefix = branch['path'].split(os.sep)[-1].split('_')[0]
               if dirNamePrefix.isdigit() and branch['child']!=int(dirNamePrefix): #compare child-number to start of directory name
-                outstring+= f'{Bcolors.FAIL}**ERROR dch05: child-number and dirName dont match '+doc['_id']+f'{Bcolors.ENDC}\n'
+                outstring+= outputString(outputStyle,'error','dch05: child-number and dirName dont match '+doc['_id'])
             except:
               pass  #handled next lines
           if branch['path'] is None:
             if doc['-type'][0][0] == 'x':
-              outstring+= f'{Bcolors.FAIL}**ERROR dch06: branch path is None '+doc['_id']+f'{Bcolors.ENDC}\n'
+              outstring+= outputString(outputStyle,'error','dch06: branch path is None '+doc['_id'])
             elif doc['-type'][0] == 'measurement':
-              if verbose:
-                outstring+= f'{Bcolors.OKBLUE}**warning measurement branch path is None=no data '+doc['_id']+' '+doc['-name']+f'{Bcolors.ENDC}\n'
+              outstring+= outputString(outputStyle,'okish','measurement branch path is None=no data '+doc['_id']+' '+doc['-name'])
             else:
-              if verbose:
-                outstring+= f'{Bcolors.OKGREEN}..info: procedure/sample with empty path '+doc['_id']+f'{Bcolors.ENDC}\n'
+              outstring+= outputString(outputStyle,'ok','procedure/sample with empty path '+doc['_id'])
           else:                                                            #if sensible path
             if len(branch['stack'])+1 != len(branch['path'].split(os.sep)):#check if length of path and stack coincide
-              if verbose:
-                outstring+= f'{Bcolors.OKBLUE}**ok-ish branch stack and path lengths not equal: '+doc['_id']+'|'+branch['path'][:30]+f'{Bcolors.ENDC}\n'
+              outstring+= outputString(outputStyle,'okish','branch stack and path lengths not equal: '+doc['_id']+'|'+branch['path'][:30])
             if branch['child'] != 9999:
               for parentID in branch['stack']:                              #check if all parents in doc have a corresponding path
                 parentDoc = self.getDoc(parentID)
                 if '-branch' not in parentDoc:
-                  outstring+= f'{Bcolors.FAIL}**ERROR dch07: branch not in parent with id '+parentID+f'{Bcolors.ENDC}\n'
+                  outstring+= outputString(outputStyle,'error','dch07: branch not in parent with id '+parentID)
                   continue
                 parentDocBranches = parentDoc['-branch']
                 onePathFound = False
@@ -789,67 +778,64 @@ class Database:
                   if parentBranch['path'] is not None and parentBranch['path'] in branch['path']:
                     onePathFound = True
                 if not onePathFound:
-                  outstring+= f'{Bcolors.HEADER}**Unsure dch08: parent does not have corresponding path (remote content) '+doc['_id']+'| parentID '+parentID+f'{Bcolors.ENDC}\n'
+                  outstring+= outputString(outputStyle,'unsure','dch08: parent does not have corresponding path (remote content) '+doc['_id']+'| parentID '+parentID)
           if 'show' not in branch:
-            outstring+= f'{Bcolors.FAIL}**ERROR dch08a: branch does not have show: '+doc['_id']+f'{Bcolors.ENDC}\n'
+            outstring+= outputString(outputStyle,'error','dch08a: branch does not have show: '+doc['_id'])
           elif len(branch['show']) != len(branch['stack'])+1:
-            outstring+= f'{Bcolors.FAIL}**ERROR dch08b: branch-show not same length as branch-stack: '+doc['_id']+f'{Bcolors.ENDC}\n'
+            outstring+= outputString(outputStyle,'error','dch08b: branch-show not same length as branch-stack: '+doc['_id'])
           #TODO_P5 moreChecksDB: if parent has corresponding show
 
         #every doc should have a name
         if not '-name' in doc:
-          outstring+= f'{Bcolors.HEADER}**Unsure dch17: -name not in (deleted doc?)'+doc['_id']+f'{Bcolors.ENDC}\n'
+          outstring+= outputString(outputStyle,'unsure','dch17: -name not in (deleted doc?)'+doc['_id'])
           if repair and 'name' in doc:  #repair from v0.9.9->1.0.0
             doc['-name']=doc['name']
             del doc['name']
             doc.save()
 
         if not '-tags' in doc:
-          outstring+= f'{Bcolors.FAIL}**ERROR dch17b: -tags not in doc'+doc['_id']+f'{Bcolors.ENDC}\n'
+          outstring+= outputString(outputStyle,'error','dch17b: -tags not in doc'+doc['_id'])
 
         #doc-type specific tests
         if '-type' in doc and doc['-type'][0] == 'sample':
           if 'qrCode' not in doc:
-            outstring+= f'{Bcolors.FAIL}**ERROR dch09: qrCode not in sample '+doc['_id']+f'{Bcolors.ENDC}\n'
+            outstring+= outputString(outputStyle,'error','dch09: qrCode not in sample '+doc['_id'])
         elif '-type' in doc and doc['-type'][0] == 'measurement':
           if 'shasum' not in doc:
-            outstring+= f'{Bcolors.FAIL}**ERROR dch10: shasum not in measurement '+doc['_id']+f'{Bcolors.ENDC}\n'
+            outstring+= outputString(outputStyle,'error','dch10: shasum not in measurement '+doc['_id'])
           if 'image' not in doc:
-            outstring+= f'{Bcolors.FAIL}**ERROR dch11: image not in measurement '+doc['_id']+f'{Bcolors.ENDC}\n'
+            outstring+= outputString(outputStyle,'error','dch11: image not in measurement '+doc['_id'])
           else:
             if doc['image'].startswith('data:image'):  #for jpg and png
               try:
                 imgdata = base64.b64decode(doc['image'][22:])
                 Image.open(io.BytesIO(imgdata))  #can convert, that is all that needs to be tested
               except:
-                outstring+= f'{Bcolors.FAIL}**ERROR dch12: jpg-image not valid '+doc['_id']+f'{Bcolors.ENDC}\n'
+                outstring+= outputString(outputStyle,'error','dch12: jpg-image not valid '+doc['_id'])
             elif doc['image'].startswith('<?xml'):
               #from https://stackoverflow.com/questions/63419010/check-if-an-image-file-is-a-valid-svg-file-in-python
               SVG_R = r'(?:<\?xml\b[^>]*>[^<]*)?(?:<!--.*?-->[^<]*)*(?:<svg|<!DOCTYPE svg)\b'
               SVG_RE = re.compile(SVG_R, re.DOTALL)
               if SVG_RE.match(doc['image']) is None:
-                outstring+= f'{Bcolors.FAIL}**ERROR dch13: svg-image not valid '+doc['_id']+f'{Bcolors.ENDC}\n'
+                outstring+= outputString(outputStyle,'error','dch13: svg-image not valid '+doc['_id'])
             elif doc['image']=='':
-              outstring+= f'{Bcolors.OKBLUE}**warning: image not valid '+doc['_id']+' '+doc['image']+f'{Bcolors.ENDC}\nRecreate it\n'
+              outstring+= outputString(outputStyle,'warning','warning: image not valid '+doc['_id']+' '+doc['image'])
             else:
-              outstring+= f'{Bcolors.FAIL}**ERROR dch14: image not valid '+doc['_id']+' '+doc['image']+f'{Bcolors.ENDC}\n'
+              outstring+= outputString(outputStyle,'error','dch14: image not valid '+doc['_id']+' '+doc['image'])
 
       except: #if test of document fails
-        outstring+= f'{Bcolors.FAIL}**ERROR dch15: critical error in '+doc['_id']+f'{Bcolors.ENDC}\n'
-        outstring+= traceback.format_exc()
+        outstring+= outputString(outputStyle,'error','dch15: critical error in '+doc['_id']+'\n'+traceback.format_exc())
 
     ##TEST views
-    if verbose:
-      outstring+= f'{Bcolors.UNDERLINE}**** List problematic database tables ****{Bcolors.ENDC}\n'
+    outstring+= outputString(outputStyle,'h2','List problematic database tables')
     view = self.getView('viewIdentify/viewSHAsum')
     shasumKeys = []
     for item in view:
       if item['key']=='':
-        if verbose:
-          outstring+= f'{Bcolors.OKBLUE}**warning: measurement without shasum: '+item['id']+' '+item['value']+f'{Bcolors.ENDC}\n'
+        outstring+= outputString(outputStyle,'warning','measurement without shasum: '+item['id']+' '+item['value'])
       else:
         if item['key'] in shasumKeys:
           key = item['key'] if item['key'] else '-empty-'
-          outstring+= f'{Bcolors.FAIL}**ERROR dch16: shasum twice in view: '+key+' '+item['id']+' '+item['value']+f'{Bcolors.ENDC}\n'
+          outstring+= outputString(outputStyle,'error','dch16: shasum twice in view: '+key+' '+item['id']+' '+item['value'])
         shasumKeys.append(item['key'])
     return outstring

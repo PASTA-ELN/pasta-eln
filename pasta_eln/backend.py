@@ -4,10 +4,11 @@ from pathlib import Path
 from typing import Any, Optional, Union
 from urllib import request
 from datetime import datetime, timezone
-from .mixin_cli import Bcolors, CLI_Mixin
+from .mixin_cli import CLI_Mixin
 from .database import Database
-from .miscTools import upIn, upOut, createDirName, generic_hash, camelCase
-from .handleDictionaries import ontology2Labels, fillDocBeforeCreate
+from .miscTools import upOut, createDirName, generic_hash, camelCase
+from .handleDictionaries import fillDocBeforeCreate
+from .miscTools import outputString
 
 class Backend(CLI_Mixin):
   """
@@ -474,14 +475,13 @@ class Backend(CLI_Mixin):
 
 
   def testExtractor(self, filePath:Union[Path,str], extractorPath:Optional[Path]=None, recipe:str='',
-                    interactive:bool=True, reportHTML:bool=False) -> str:
+                    outputStyle:str='text') -> str:
     """
     Args:
       filePath (Path, str): path to the file to be tested
       extractorPath (Path, None): path to the directory with extractors
       recipe (str): recipe in / separated
-      interactive (bool): show image and print report; else only give summary
-      reportHTML (bool): return report in qside html style
+      outputStyle (str): report in ['print','text','html'] including show images
 
     Returns:
       str: short summary or long report
@@ -494,7 +494,6 @@ class Backend(CLI_Mixin):
     import matplotlib.pyplot as plt
     import matplotlib.axes as mpaxes
 
-    report = 'ExtractorSuccess'
     htmlStr= 'Please visit <a href="https://pasta-eln.github.io/pasta-eln/extractors.html#'
     success = True
     if isinstance(filePath, str):
@@ -503,169 +502,102 @@ class Backend(CLI_Mixin):
       tempFilePath = Path(tempfile.gettempdir())/filePath.name
       request.urlretrieve(filePath.as_posix().replace(':/','://'), tempFilePath)
       filePath = tempFilePath
-    if reportHTML:
-      report = '<h3>Report on extractor test</h3>'
-      report +='check file: '+str(filePath)+'<br>'
+    report = outputString(outputStyle, 'h3', 'Report on extractor test')
+    report += outputString(outputStyle, 'info', 'check file: '+str(filePath))
     extension = filePath.suffix[1:]
     pyFile = 'extractor_'+extension+'.py'
     if extractorPath is None:
       extractorPath = self.extractorPath
     #start testing
     if (extractorPath/pyFile).exists():
-      if reportHTML:
-        report += 'use extractor: '+str(extractorPath/pyFile)+'<br>'
+      report += outputString(outputStyle, 'info', 'use extractor: '+str(extractorPath/pyFile))
     else:
       success = False
-      if reportHTML:
-        report += '<font color="red">No fitting extractor found:'+pyFile+'</font><br>'
-      else:
-        report = 'NoExtractor'
+      report += outputString(outputStyle, 'error', 'No fitting extractor found:'+pyFile)
     if success:
       try:
         module  = importlib.import_module(pyFile[:-3])
         content = module.use(filePath, recipe)
       except:
         success = False
-        if reportHTML:
-          report += '<font color="red">Python error in extractor</font><br>'
-          report += htmlStr+'python-error">website</a><br>'
-          report += '<br>'+traceback.format_exc(limit=3).replace('\n','<br>')+'<br>'
+        report += outputString(outputStyle, 'error', 'Python error in extractor')
+        report += outputString(outputStyle, 'error', htmlStr+'python-error">website</a>')
+        report += outputString(outputStyle, 'error', traceback.format_exc(limit=3))
     if success:
       if 'recipe' in content:
         possibleDocTypes = [i for i in self.db.dataLabels.keys() if i[0]!='x']
         matches = [i for i in possibleDocTypes if content['recipe'].startswith(i)]
         if len(matches)==0 and content['recipe']!='' and content['recipe']!='-':
-          if interactive:
-            print("**ERROR: recipe does not follow doctype in ontology.")
-          if reportHTML:
-            report += '<font color="red">Recipe does not follow doctype in ontology</font><br>'
-          else:
-            report = "ExtractorERROR recipe does not follow doctype in ontology"
+          report += outputString(outputStyle, 'error', 'Recipe does not follow doctype in ontology.')
         else:
-          if interactive and not reportHTML:
-            print("**Info: recipe is good: "+content['recipe'])
-          if reportHTML:
-            report += '<br>Entire extracted size '
-            size = len(str(content))
-            if size > 1024:
-              report += str(int(size/1024))+'kB'
-            else:
-              report += str(size)+'B'
-            report += '<br>Info: recipe is good: '+content['recipe']+'<br>'
-          else:
-            report = 'ExtractorInfo: recipe is good: '+content['recipe']+'<br>'
+          report += outputString(outputStyle, 'info', 'Recipe is good: '+content['recipe'])
+          size = len(str(content))
+          report += outputString(outputStyle, 'info', 'Entire extracted size: '+str(int(size/1024))+'kB')
       else:
-        if interactive:
-          print("**ERROR: recipe not included in extractor.")
-        if reportHTML:
-          report += '<font color="red">Recipe not included in extractor</font><br>'
-        else:
-          report = "ExtractorERROR recipe not included in extractor"
+        report += outputString(outputStyle,'error','Recipe not included in extractor.')
     if success:
       try:
         _ = json.dumps(content)
       except:
-        if interactive:
-          print("**ERROR: extractor reply not json dumpable.")
-        if reportHTML:
-          report += '<font color="red">Some json format does not fit</font><br>'
-        else:
-          report = "ExtractorERROR json dumpable"
+        report += outputString(outputStyle,'error','Extractor reply not json dumpable.')
     if success:
       try:
         _ = json.dumps(content['metaVendor'])
-        report += 'Number of vendor entries: '+str(len(content['metaVendor']))+'<br>'
+        report += outputString(outputStyle,'info','Number of vendor entries: '+str(len(content['metaVendor'])))
       except:
         # possible cause of failure: make sure that no int64 but normal int
         success = False
-        if interactive:
-          print("  DETAIL metaVendor incorrect")
-        if reportHTML:
-          report += '<font color="red">Some json format does not fit in metaVendor</font><br>'
-          report += htmlStr+'metadata-error">website</a><br>'
-        else:
-          report = "ExtractorERROR metaVendor"
+        report += outputString(outputStyle,'error','Some json format does not fit in metaVendor')
+        report += outputString(outputStyle,'error',htmlStr+'metadata-error">website</a>')
         #iterate keys
         for key in content['metaVendor']:
           try:
             _ = json.dumps(content['metaVendor'][key])
           except:
-            if reportHTML:
-              report += '<font color="red">FAIL '+key+' : '+str(content['metaVendor'][key])+' type:'+\
-                        str(type(content['metaVendor'][key]))+'</font><br>'
-            else:
-              print('    FAIL',key, content['metaVendor'][key], type(content['metaVendor'][key]))
+            report += outputString(outputStyle,'error','FAIL '+key+' : '+str(content['metaVendor'][key])+\
+                                   ' type:'+str(type(content['metaVendor'][key])))
 
     if success:
       try:
         _ = json.dumps(content['metaUser'])
         report += 'Number of user entries: '+str(len(content['metaUser']))+'<br>'
       except:
-        if interactive:
-          print("  DETAIL metaUser incorrect")
-        if reportHTML:
-          report += '<font color="red">Some json format does not fit in metaUser</font><br>'
-          report += htmlStr+'metadata-error">website</a><br>'
-        else:
-          report = "ExtractorERROR metaUser"
+        report += outputString(outputStyle,'error','Some json format does not fit in metaUser')
+        report += outputString(outputStyle,'error',htmlStr+'metadata-error">website</a>')
         #iterate keys
         for key in content['metaUser']:
           try:
             _ = json.dumps(content['metaUser'][key])
           except:
-            if reportHTML:
-              report += '<font color="red">FAIL '+key+' : '+content['metaUser'][key]+' type:'+\
-                        str(type(content['metaVendor'][key]))+'</font><br>'
-            else:
-              print('    FAIL',key, content['metaUser'][key], type(content['metaUser'][key]))
+            report += outputString(outputStyle,'error','FAIL '+key+' : '+str(content['metaUser'][key])+\
+                                   ' type:'+str(type(content['metaUser'][key])))
     #verify image is of correct type
     if success and 'image' not in content:
       success = False
-      if interactive:
-        print('**Error: image not produced by extractor')
-      if reportHTML:
-        report += '<font color="red">Image does not exist</font><br>'
-      else:
-        report = "ExtractorERROR image not exsits"
+      report += outputString(outputStyle,'error','Image does not exist')
     if success and isinstance(content['image'],Image.Image):
       success = False
-      if interactive:
-        content['image'].show()
-        print('**Warning: image is a PIL image: not a base64 string')
-        print('Encode image via the following: pay attention to jpg/png which is encoded twice\n```')
-        print('from io import BytesIO')
-        print('figfile = BytesIO()')
-        print('image.save(figfile, format="PNG")')
-        print('imageData = base64.b64encode(figfile.getvalue()).decode()')
-        print('image = "data:image/jpg;base64," + imageData')
-        print('```')
-      if reportHTML:
-        report += '<font color="red">Image is PIL image</font><br>'
-        report += htmlStr+'pillow-image">website</a><br>'
-      else:
-        report = "ExtractorERROR PIL image"
+      report += outputString(outputStyle,'error','Image is a PIL image: not a base64 string')
+      report += outputString(outputStyle,'error', htmlStr+'pillow-image">website</a>')
+      # print('Encode image via the following: pay attention to jpg/png which is encoded twice\n```')
+      # print('from io import BytesIO')
+      # print('figfile = BytesIO()')
+      # print('image.save(figfile, format="PNG")')
+      # print('imageData = base64.b64encode(figfile.getvalue()).decode()')
+      # print('image = "data:image/jpg;base64," + imageData')
     if success and isinstance(content['image'], mpaxes._axes.Axes): # pylint: disable=protected-access
       success = False
-      if interactive:
-        plt.show()
-        print('**Warning: image is a matplotlib axis: not a svg string')
-        print('  figfile = StringIO()')
-        print('plt.savefig(figfile, format="svg")')
-        print('image = figfile.getvalue()')
-      if reportHTML:
-        report += '<font color="red">Image are matplot axis</font><br>'
-        report += htmlStr+'matplotlib">website</a><br>'
-      else:
-        report = "ExtractorERROR Matplot image"
+      report += outputString(outputStyle,'error','Image is a matplotlib axis: not a base64 string')
+      report += outputString(outputStyle,'error', htmlStr+'matplotlib">website</a>')
+      # print('**Warning: image is a matplotlib axis: not a svg string')
+      # print('  figfile = StringIO()')
+      # print('plt.savefig(figfile, format="svg")')
+      # print('image = figfile.getvalue()')
     if success and isinstance(content['image'], str):  #show content
-      if reportHTML:
-        report += '<br>Image size '
-        size = len(content['image'])
-        if size > 1024:
-          report += str(int(size/1024))+'kB'
-        else:
-          report += str(size)+'B'
-        report += '<br><b>Additional window shows the image</b><br>'
+      size = len(content['image'])
+      report += outputString(outputStyle,'info','Image size '+str(int(size/1024))+'kB')
+      if outputStyle!='text':
+        report += outputString(outputStyle,'h4','Additional window shows the image')
       if len(content['image'])>20:
         if content['image'].startswith('data:image/'):
           #png or jpg encoded base64
@@ -676,10 +608,10 @@ class Backend(CLI_Mixin):
           img = cairosvg.svg2png(bytestring=content['image'].encode())
         i = BytesIO(img)
         image = Image.open(i)
-        if interactive:
+        if outputStyle!='text':
           image.show()
       del content['image']
-    if interactive and not reportHTML:
+    if outputStyle=='print':
       print('Identified metadata',content)
     os.environ['QT_API'] = 'pyside6'
     return report
@@ -709,22 +641,21 @@ class Backend(CLI_Mixin):
     return report
 
 
-  def checkDB(self, verbose:bool=True, repair:bool=False) -> str:
+  def checkDB(self, outputStyle:str='text', repair:bool=False) -> str:
     """
     Wrapper of check database for consistencies by iterating through all documents
 
     Args:
-        verbose (bool): print more or only issues
+        outputStyle (str): output using a given style: see outputString
         repair (bool): repair database
 
     Returns:
         string: output incl. \n
     """
     ### check database itself for consistency
-    output = self.db.checkDB(verbose=verbose, repair=repair)
+    output = self.db.checkDB(outputStyle=outputStyle, repair=repair)
     ### compare with file system
-    if verbose:
-      output += f'{Bcolors.UNDERLINE}**** File status ****{Bcolors.ENDC}\n'
+    output += outputString(outputStyle,'h2','File status')
     viewProjects   = self.db.getView('viewDocType/x0All')
     inDB_all = self.db.getView('viewHierarchy/viewPathsAll')
     pathsInDB_data = [i['key'] for i in inDB_all if i['value'][1][0][0]!='x']
@@ -738,7 +669,7 @@ class Backend(CLI_Mixin):
             continue
           path = (Path(root).relative_to(self.basePath) /fileName).as_posix()
           if path not in pathsInDB_data:
-            output += '**ERROR File on harddisk but not DB: '+path+'\n'
+            output += outputString(outputStyle,'error','File on harddisk but not DB: '+path)
             count += 1
           else:
             pathsInDB_data.remove(path)
@@ -747,19 +678,19 @@ class Backend(CLI_Mixin):
             continue
           path = (Path(root).relative_to(self.basePath) /dirName).as_posix()
           if path not in pathsInDB_folder:
-            output += '**ERROR Directory on harddisk but not DB:'+path+'\n'
+            output += outputString(outputStyle,'error','Directory on harddisk but not DB:'+path)
             count += 1
           else:
             pathsInDB_folder.remove(path)
-    output += 'Number of files on disk that are not in database '+str(count)+'\n'
+    output += outputString(outputStyle,'info','Number of files on disk that are not in database '+str(count))
     orphans = [i for i in pathsInDB_data   if not (self.basePath/i).exists() and ":/" not in i]
     orphans+= [i for i in pathsInDB_folder if not (self.basePath/i).exists() ]
     if len(orphans)>0:
-      output += f'{Bcolors.FAIL}**ERROR bch01: These files of database not on filesystem: '+',\t'.join(orphans)\
-               +f'{Bcolors.ENDC}\n'
-    output += f'{Bcolors.UNDERLINE}**** File summary ****{Bcolors.ENDC}\n'
-    if len(orphans)==0 and count==0:
-      output += "Success\n"
-    else:
-      output += "Failure\n"
+      output += outputString(outputStyle,'error','bch01: These files of database not on filesystem:\n- '+'\n- '.join(orphans))
+    output += outputString(outputStyle,'h2','File summary')
+    if outputStyle == 'text':
+      if len(orphans)==0 and count==0:
+        output += "Success\n"
+      else:
+        output += "Failure\n"
     return output

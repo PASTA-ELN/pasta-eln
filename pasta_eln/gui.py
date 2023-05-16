@@ -4,7 +4,7 @@ from typing import Any
 from pathlib import Path
 from PySide6.QtCore import Qt, Slot      # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QApplication, QFileDialog # pylint: disable=no-name-in-module
-from PySide6.QtGui import QIcon, QPixmap, QAction    # pylint: disable=no-name-in-module
+from PySide6.QtGui import QIcon, QPixmap  # pylint: disable=no-name-in-module
 from qt_material import apply_stylesheet  #of https://github.com/UN-GCPDS/qt-material
 
 from pasta_eln import __version__
@@ -17,7 +17,6 @@ from .dialogConfig import Configuration
 from .dialogProjectGroup import ProjectGroup
 from .dialogOntology import Ontology
 from .miscTools import updateExtractorList, restart
-from .mixin_cli import text2html
 from .style import Action, showMessage
 from .fixedStrings import shortcuts
 os.environ['QT_API'] = 'pyside6'
@@ -139,8 +138,8 @@ class MainWindow(QMainWindow):
     elif menuName=='updateExtractors':
       updateExtractorList(self.backend.extractorPath)
     elif menuName=='verifyDB':
-      report = self.comm.backend.checkDB(True)
-      showMessage(self, 'Report of database verification', text2html(report), style='QLabel {min-width: 800px}')
+      report = self.comm.backend.checkDB(outputStyle='html')
+      showMessage(self, 'Report of database verification', report, style='QLabel {min-width: 800px}')
     elif menuName=='sync':
       report = self.comm.backend.replicateDB()
       showMessage(self, 'Report of syncronization', report, style='QLabel {min-width: 450px}')
@@ -150,7 +149,7 @@ class MainWindow(QMainWindow):
       webbrowser.open('https://pasta-eln.github.io/pasta-eln/')
     elif menuName=='extractorTest':
       fileName = QFileDialog.getOpenFileName(self,'Open file for extractor test',str(Path.home()),'*.*')[0]
-      report = self.comm.backend.testExtractor(fileName, reportHTML=True)
+      report = self.comm.backend.testExtractor(fileName, outputStyle='html')
       showMessage(self, 'Report of extractor test', report)
     elif menuName=='extractorTest2':
       self.comm.testExtractor.emit()

@@ -131,7 +131,7 @@ class Details(QScrollArea):
       path = Path(self.doc['-branch'][0]['path'])
       if not path.as_posix().startswith('http'):
         path = self.comm.backend.basePath/path
-      report = self.comm.backend.testExtractor(path, reportHTML=True)
+      report = self.comm.backend.testExtractor(path, outputStyle='html')
       showMessage(self, 'Report of extractor test', report, style='QLabel {min-width: 800px}')
     return
 

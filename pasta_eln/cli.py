@@ -170,7 +170,7 @@ def commands(getDocu:bool, args:argparse.Namespace) -> str:
       doc += '    example: pastaELN_CLI.py verifyDBdev (repair function)\n'
     elif args.command.startswith('verifyDB'):
       repair = args.command=='verifyDBdev'
-      output = be.checkDB(verbose=False, repair=repair)
+      output = be.checkDB(outputStyle='', repair=repair)
       print(output)
       return '1'
 

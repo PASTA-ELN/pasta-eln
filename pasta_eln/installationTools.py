@@ -7,6 +7,7 @@ from cloudant.client import CouchDB
 
 from .backend import Backend
 from .fixedStrings import defaultOntology
+from .miscTools import outputString
 
 
 def getOS() -> str:
@@ -373,6 +374,7 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
     callbackPercent (function): callback function given to exampleData, such that exampleData can report progress back
   '''
   logging.info('Start example data creation')
+  outputFormat = 'print'
   if callbackPercent is not None:
     callbackPercent(0)
   if force:
@@ -387,17 +389,17 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
   if callbackPercent is not None:
     callbackPercent(2)
   ### CREATE PROJECTS AND SHOW
-  print('*** CREATE EXAMPLE PROJECT AND SHOW ***')
+  outputString(outputFormat,'h2','CREATE EXAMPLE PROJECT AND SHOW')
   backend.addData('x0', {'-name': 'PASTAs Example Project', 'objective': 'Test if everything is working as intended.', 'status': 'active', 'comment': '#Important Can be used as reference or deleted'})
   if callbackPercent is not None:
     callbackPercent(3)
-  print(backend.output('x0'))
+  outputString(outputFormat,'info', backend.output('x0'))
   if callbackPercent is not None:
     callbackPercent(4)
   logging.info('Finished creating example project')
 
   ### TEST PROJECT PLANING
-  print('*** TEST PROJECT PLANING ***')
+  outputString(outputFormat,'h2','TEST PROJECT PLANING')
   viewProj = backend.db.getView('viewDocType/x0')
   projID1  = [i['id'] for i in viewProj if 'PASTA' in i['value'][0]][0]
   if callbackPercent is not None:
@@ -426,13 +428,13 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
   if backend.cwd is not None:
     semDirName = backend.basePath/backend.cwd
   backend.changeHierarchy(None)
-  print(backend.outputHierarchy())
+  outputString(outputFormat,'info',backend.outputHierarchy())
   if callbackPercent is not None:
     callbackPercent(12)
   logging.info('Finished project planning')
 
   ### TEST PROCEDURES
-  print('\n*** TEST PROCEDURES ***')
+  outputString(outputFormat,'h2','TEST PROCEDURES')
   sopDir = backend.basePath/'StandardOperatingProcedures'
   os.makedirs(sopDir, exist_ok=True)
   with open(sopDir/'Example_SOP.md','w', encoding='utf-8') as fOut:
@@ -442,26 +444,26 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
   backend.addData('procedure', {'-name': 'StandardOperatingProcedures/Example_SOP.md', 'comment': '#v1'})
   if callbackPercent is not None:
     callbackPercent(14)
-  print(backend.output('procedure'))
+  outputString(outputFormat,'info',backend.output('procedure'))
   if callbackPercent is not None:
     callbackPercent(15)
   logging.info('Finished procedures creating')
 
   ### TEST SAMPLES
-  print('*** TEST SAMPLES ***')
+  outputString(outputFormat,'h2','TEST SAMPLES')
   backend.addData('sample',    {'-name': 'Example sample', 'chemistry': 'A2B2C3', 'qrCode': '13214124 99698708', 'comment': 'can be used as example or removed'})
   if callbackPercent is not None:
     callbackPercent(16)
-  print(backend.output('sample'))
+  outputString(outputFormat,'info',backend.output('sample'))
   if callbackPercent is not None:
     callbackPercent(17)
-  print(backend.outputQR())
+  outputString(outputFormat,'info',backend.outputQR())
   if callbackPercent is not None:
     callbackPercent(18)
   logging.info('Finished samples creating')
 
   ###  TEST MEASUREMENTS AND SCANNING/CURATION
-  print('*** TEST MEASUREMENTS AND SCANNING/CURATION ***')
+  outputString(outputFormat,'h2','TEST MEASUREMENTS AND SCANNING')
   shutil.copy(Path(__file__).parent/'Resources'/'ExampleMeasurements'/'simple.png', semDirName)
   shutil.copy(Path(__file__).parent/'Resources'/'ExampleMeasurements'/'simple.csv', semDirName)
   if callbackPercent is not None:
@@ -473,7 +475,7 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
     callbackPercent(20)
 
   ### USE GLOBAL FILES
-  print('*** USE GLOBAL FILES ***')
+  outputString(outputFormat,'h2','USE GLOBAL FILES')
   backend.changeHierarchy(semStepID)
   if callbackPercent is not None:
     callbackPercent(21)
@@ -481,15 +483,15 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
     'comment':'remote image from wikipedia. Used for testing and reference. Can be deleted.'})
   if callbackPercent is not None:
     callbackPercent(22)
-  print(backend.output('measurement'))
+  outputString(outputFormat,'info',backend.output('measurement'))
   if callbackPercent is not None:
     callbackPercent(23)
   logging.info('Finished global files additions')
 
   ### VERIFY DATABASE INTEGRITY
-  print('\n*** VERIFY DATABASE INTEGRITY ***')
-  print(backend.checkDB(verbose=True))
-  print('\n*** DONE WITH VERIFY ***')
+  outputString(outputFormat,'h2','VERIFY DATABASE INTEGRITY')
+  outputString(outputFormat,'info',backend.checkDB(outputStyle='text'))
+  outputString(outputFormat,'h2','DONE WITH VERIFY')
   if callbackPercent is not None:
     callbackPercent(24)
   logging.info('Finished checking database')

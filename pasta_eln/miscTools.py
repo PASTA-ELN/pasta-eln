@@ -3,7 +3,71 @@ import os, sys, uuid, logging, traceback, json
 from io import BufferedReader
 from pathlib import Path
 from re import sub, match
+import platform
 import yaml
+
+class Bcolors:
+  """
+  Colors for Command-Line-Interface and output
+  """
+  if platform.system()=='Windows':
+    HEADER = ''
+    OKBLUE = ''
+    OKGREEN = ''
+    WARNING = ''
+    FAIL = ''
+    ENDC = ''
+    BOLD = ''
+    UNDERLINE = ''
+  else:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+def outputString(fmt:str='print', level:str='info', message:str='') ->str:
+  """ Output a message into different formats:
+    - print: print to stdout
+    - logging; log to file
+    - text: return text string (superseeds html)
+    - html: return html string https://doc.qt.io/qtforpython/overviews/richtext-html-subset.html#supported-html-subset
+    - else: no output
+    - formats can be union ('print,text')
+  """
+  if '\n' in message:
+    message = '\n'+message
+  prefixes = {'h2':f'{Bcolors.UNDERLINE}\n*** ','bold':f'{Bcolors.BOLD}\n*** ', \
+              'ok':f'{Bcolors.OKGREEN}', 'okish':f'{Bcolors.OKBLUE}', 'unsure':f'{Bcolors.HEADER}',\
+              'warning':f'{Bcolors.WARNING}','error':f'{Bcolors.FAIL}'}
+  if level=='info':
+    txtOutput = message.strip()+'\n'
+  elif level in prefixes:
+    txtOutput = prefixes[level]+message
+    txtOutput+= ' ***' if '***' in prefixes[level] else ''
+    txtOutput+= f'{Bcolors.ENDC}\n'
+  else:
+    print('ERROR level not in prefixes ',level)
+  # depend on format
+  if 'print' in fmt:
+    print(txtOutput)
+  if 'logging' in fmt and level in ['info','warning','error']:
+    getattr(logging,level)(message)
+  if 'text' in fmt:
+    return txtOutput
+  if fmt=='html':
+    colors = {'info':'black','error':'red','warning':'orange','ok':'green','okish':'blue','unsure':'magenta'}
+    if level[0]=='h':
+      return '<'+level+'>'+message+'</'+level+'>'
+    if level not in colors:
+      print('**ERROR: wrong level '+level)
+      return ''
+    return '<font color="'+colors[level]+'">'+message.replace('\n','<br>')+'</font><br>'
+  return ''
+
 
 def camelCase(text:str) -> str:
   """
