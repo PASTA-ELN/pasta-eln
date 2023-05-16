@@ -216,6 +216,7 @@ class Table(QWidget):
     docID = self.itemFromRow(row).accessibleText()
     if self.docType=='x0':
       self.comm.changeProject.emit(docID, '')
+      self.comm.changeSidebar.emit(docID)
     else:
       doc = self.comm.backend.db.getDoc(docID)
       self.comm.formDoc.emit(doc)
@@ -234,7 +235,7 @@ class Table(QWidget):
       self.comm.formDoc.emit({'-type':[self.docType]})
       self.comm.changeTable.emit(self.docType, self.projID)
       if self.docType=='x0':
-        self.comm.changeSidebar.emit()
+        self.comm.changeSidebar.emit('redraw')
     elif menuName == 'addFilter':
       # gui
       rowW = QWidget()
@@ -317,7 +318,7 @@ class Table(QWidget):
         if self.itemFromRow(row).checkState() == Qt.CheckState.Checked:
           self.comm.backend.db.hideShow( self.data[row]['id'] )
       if self.docType=='x0':
-        self.comm.changeSidebar.emit()
+        self.comm.changeSidebar.emit('redraw')
       self.changeTable('','')  # redraw table
     elif menuName == 'toggleSelection':
       for row in range(self.models[-1].rowCount()):

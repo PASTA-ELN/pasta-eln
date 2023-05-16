@@ -12,7 +12,7 @@ class Communicate(QObject):
 
   # Signals: specify emitter and receiver
   # BE SPECIFIC ABOUT WHAT THIS ACTION DOES
-  changeSidebar = Signal()               # redraw sidebar after hide/show of project in table
+  changeSidebar = Signal(str)            # redraw sidebar after hide/show of project in table, focus on this projectID
   changeTable   = Signal(str, str)       # send doctype,projectID from sidebar to main-table
                                          #      can also be used for hiding the details on right side if nothing to show
   changeDetails = Signal(str)            # send docID from main-table to details

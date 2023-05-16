@@ -32,20 +32,20 @@ class Sidebar(QWidget):
     #   more below and other files
 
 
-  @Slot()
-  def redraw(self, reset:bool=False) -> None:
+  @Slot(str)
+  def redraw(self, projectID:str='') -> None:
     """
     Redraw sidebar: e.g. after change of project visibility in table
 
     Args:
-      reset (bool): reset which project is open
+      projectID (str): projectID on which to focus: '' string=draw default; 'redraw' implies redraw; id implies id
     """
     logging.debug('sidebar:redraw |')
     # Delete old widgets from layout and create storage
     for i in reversed(range(self.mainL.count())):
       self.mainL.itemAt(i).widget().setParent(None) # type: ignore
-    if reset:
-      self.openProjectId = ''
+    if projectID != 'redraw':
+      self.openProjectId = projectID
     self.widgetsAction = {}
     self.widgetsList = {}
     self.widgetsProject = {} #title bar and widget that contains all of project
@@ -95,14 +95,15 @@ class Sidebar(QWidget):
         if self.openProjectId != projID:
           listW.hide()
         listL = QGridLayout(listW)
-        iconTable = {"Measurements":"fa.thermometer-3","Samples":"fa5s.vial","Procedures":"fa.list-ol","Instruments":"ri.scales-2-line"}
+        iconTable = {"Measurements":"fa5s.thermometer-half","Samples":"fa5s.vial",
+                     "Procedures":"fa5s.list-ol","Instruments":"ri.scales-2-line"}
         for idx, doctype in enumerate(self.comm.backend.db.dataLabels):
           if doctype[0]!='x':
             button = IconButton(iconTable[self.comm.backend.db.dataLabels[doctype]], self.btnDocType, None, \
                      doctype+'/'+projID, self.comm.backend.db.dataLabels[doctype],self.comm.backend)
             button.setStyleSheet("border-width:0")
             listL.addWidget(button, 0, idx)
-        button = IconButton('fa.file-o', self.btnDocType, None, '-/'+projID, 'Unidentified', self.comm.backend)
+        button = IconButton('fa5.file', self.btnDocType, None, '-/'+projID, 'Unidentified', self.comm.backend)
         button.setStyleSheet("border-width:0")
         listL.addWidget(button, 0, len(self.comm.backend.db.dataLabels)+1)
         projectL.addWidget(listW)
@@ -199,7 +200,7 @@ class Sidebar(QWidget):
     self.comm.backend.scanProject(self.openProjectId)
     #TODO_P3 scanning for progress bar
     self.comm.changeProject.emit(self.openProjectId,'')
-    self.comm.changeSidebar.emit()
+    self.changeSidebar('redraw')
     showMessage(self, 'Information','Scanning finished')
     return
 

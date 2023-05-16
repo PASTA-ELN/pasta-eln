@@ -218,12 +218,12 @@ class Project(QWidget):
           newPath = self.comm.backend.basePath/('trash_'+doc['-branch'][0]['path'])
           oldPath.rename(newPath)
         #update sidebar, show projects
-        self.comm.changeSidebar.emit()
+        self.comm.changeSidebar.emit('redraw')
         self.comm.changeTable.emit('x0','')
     elif menuName == 'scanProject':
       self.comm.backend.scanProject(self.projID, self.docProj['-branch'][0]['path'])
       self.comm.changeProject.emit(self.projID,'')
-      self.comm.changeSidebar.emit()
+      self.comm.changeSidebar.emit('redraw')
       showMessage(self, 'Information','Scanning finished')
     elif menuName == 'projHide':
       if self.bodyW is not None and self.bodyW.isHidden():
