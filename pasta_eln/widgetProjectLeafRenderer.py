@@ -88,7 +88,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       yOffset += self.lineSep
       if isinstance(doc[key], str):
         #TODO_P4: projectTree technology: image does not allow for easy context aware clicks: like click on links, right-click image
-        if re.match(r'^[\w-]-[\w\d]{32}$',doc[key]) is None:  #normal text
+        if re.match(r'^[a-z\-]-[a-z0-9]{32}$',doc[key]) is None:  #normal text
           value = doc[key]
         elif self.comm is not None:                           #link
           table  = self.comm.backend.db.getView('viewDocType/'+key+'All')

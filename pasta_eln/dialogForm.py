@@ -1,5 +1,5 @@
 """ New/Edit dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""
-import logging
+import logging, re
 from typing import Any, Union
 from PySide6.QtWidgets import QDialog, QWidget, QFormLayout, QVBoxLayout, QHBoxLayout, QLabel, QTextEdit, QPushButton,\
                               QPlainTextEdit, QComboBox, QLineEdit, QDialogButtonBox, QSplitter, QSizePolicy # pylint: disable=no-name-in-module
@@ -41,7 +41,7 @@ class Form(QDialog):
     if 'image' in self.doc:
       width = self.comm.backend.configuration['GUI']['imageWidthDetails'] \
                 if hasattr(self.comm.backend, 'configuration') else 300
-      Image(self.doc['image'], mainL, height=width)
+      Image(self.doc['image'], mainL, anyDimension=width)
     formW = QWidget()
     mainL.addWidget(formW)
     self.formL = QFormLayout(formW)
@@ -188,11 +188,11 @@ class Form(QDialog):
           others = [i['value'][0] for i in self.comm.backend.db.getView('viewDocType/x0All')]
           others = [createDirName(i,'x0', 0) for i in others]
           while createDirName(self.doc['-name'],'x0', 0) in others:
-            if not self.doc['-name'].endswith('_1'):
+            if re.search(r"_\d+$", self.doc['-name']) is None:
               self.doc['-name'] += '_1'
             else:
               self.doc['-name'] = '_'.join(self.doc['-name'].split('_')[:-1])+'_'+str(int(self.doc['-name'].split('_')[-1])+1)
-      for key, value in self.doc.items():
+      for key, valueOld in self.doc.items():
         if key[0] in ['_','-'] or key in ['image','metaVendor','metaUser'] or \
             (not hasattr(self, 'key_'+key) and not hasattr(self, 'textEdit_'+key)):
           continue
@@ -207,17 +207,23 @@ class Form(QDialog):
                   logging.debug('Wrote new content to '+branch['path'])
                 else:
                   showMessage(self, 'Information', 'Did not update file on harddisk, since PASTA-ELN cannot write this format')
-        elif isinstance(value, list):
+        elif isinstance(valueOld, list):  #items that are comma separated in the text-field
           self.doc[key] = getattr(self, 'key_'+key).text().strip().split(' ')
-        elif isinstance(value, str):
+        elif isinstance(valueOld, str):
           if isinstance(getattr(self, 'key_'+key), QComboBox):
-            value         = getattr(self, 'key_'+key).currentText()
-            if value!='- no link -':
+            valueNew         = getattr(self, 'key_'+key).currentText()
+            if valueNew!='- no link -' and getattr(self, 'key_'+key).currentData() is not None and \
+              re.search(r"^[a-z\-]-[a-z0-9]{32}$",getattr(self, 'key_'+key).currentData()) is not None:
+              #if docID is stored in currentData
               self.doc[key] = getattr(self, 'key_'+key).currentData()
-          else:   #normal text field
+            else:
+              self.doc[key] = valueNew
+          else:                                  #normal text field
             self.doc[key] = getattr(self, 'key_'+key).text().strip()
+        elif valueOld is None and key in self.doc:  #important entry, set to empty string
+          self.doc[key]=''
         else:
-          print("**ERROR dialogForm unknown value type",key, value)
+          print("**ERROR dialogForm unknown value type",key, valueOld)
       # ---- if project changed: only branch save; remaining data still needs saving
       newProjID = []
       if hasattr(self, 'projectComboBox') and self.projectComboBox.currentData() != '':

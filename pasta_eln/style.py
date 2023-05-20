@@ -154,13 +154,14 @@ class Action(QAction):
 
 class Image():
   """ Image widget depending on type of data """
-  def __init__(self, data:str, layout:QLayout, width:int=-1, height:int=-1):
+  def __init__(self, data:str, layout:QLayout, width:int=-1, height:int=-1, anyDimension:int=-1):
     """
     Args:
       data (str): image data in byte64-encoding or svg-encoding
       layout (QLayout): to be added to this layout
       width (int): width of image, dominant if both are given
       height (int): height of image
+      anyDimension (int): maximum size in any direction
     """
     if data.startswith('data:image/'): #jpg or png image
       byteArr = QByteArray.fromBase64(bytearray(data[22:] if data[21]==',' else data[23:], encoding='utf-8'))
@@ -172,6 +173,11 @@ class Image():
         pixmap = pixmap.scaledToHeight(height)
       if width>0:
         pixmap = pixmap.scaledToWidth(width)
+      if anyDimension>0:
+        if pixmap.size().height()>pixmap.size().width():
+          pixmap = pixmap.scaledToHeight(anyDimension)
+        else:
+          pixmap = pixmap.scaledToWidth(anyDimension)
       label = QLabel()
       label.setPixmap(pixmap)
       label.setAlignment(Qt.AlignCenter) # type: ignore
@@ -183,6 +189,15 @@ class Image():
       policy.setVerticalPolicy(QSizePolicy.Fixed)
       imageW.setSizePolicy(policy)
       imageW.renderer().load(bytearray(data, encoding='utf-8'))
+      if height>0:
+        imageW.setMaximumSize(int(float(imageW.width())/float(imageW.height())*height) ,height)
+      if width>0:
+        imageW.setMaximumSize(width, int(float(imageW.height())/float(imageW.width())*width))
+      if anyDimension>0:
+        if imageW.height()>imageW.width():
+          imageW.setMaximumSize(int(float(imageW.width())/float(imageW.height())*anyDimension) ,anyDimension)
+        else:
+          imageW.setMaximumSize(anyDimension, int(float(imageW.height())/float(imageW.width())*anyDimension))
       layout.addWidget(imageW)
       layout.setAlignment(Qt.AlignCenter)  # type: ignore
     elif len(data)>2:

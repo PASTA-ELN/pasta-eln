@@ -170,7 +170,7 @@ class Backend(CLI_Mixin):
     # collect structure-doc and prepare
     if doc['-type'][0][0]=='x' and doc['-type'][0]!='x0' and childNum is None:
       #should not have childnumber in other cases
-      thisStack = ' '.join(self.hierStack)
+      thisStack = ' '.join(hierStack)
       view = self.db.getView('viewHierarchy/viewHierarchy', startKey=thisStack) #not faster with cT.getChildren
       childNum = 0
       for item in view:
@@ -381,9 +381,9 @@ class Backend(CLI_Mixin):
           self.addData('-', {'-name':path}, hierStack)
     #finish method
     self.cwd = self.basePath/projPath
-    orphans = [i for i in pathsInDB_data if i.startswith(self.cwd.relative_to(self.basePath).as_posix())]
+    orphans = [i for i in pathsInDB_data if i.startswith(self.cwd.relative_to(self.basePath).as_posix()+'/')]
     logging.info('Scan: these files are on DB but not harddisk\n'+'\n  '.join(orphans))
-    orphanDirs = [i for i in pathsInDB_x if i.startswith(self.cwd.relative_to(self.basePath).as_posix()) and i!=projPath]
+    orphanDirs = [i for i in pathsInDB_x if i.startswith(self.cwd.relative_to(self.basePath).as_posix()+'/') and i!=projPath]
     logging.info('Scan: these directories are on DB but not harddisk\n'+'\n  '.join(orphanDirs))
     for orphan in orphans+orphanDirs:
       docID = [i for i in inDB_all if i['key']==orphan][0]['id']
@@ -663,6 +663,9 @@ class Backend(CLI_Mixin):
     count = 0
     for projI in viewProjects:
       projDoc = self.db.getDoc(projI['id'])
+      if len(projDoc['-branch'])==0:
+        output += outputString(outputStyle,'error','project view got screwed up')
+        continue
       for root, dirs, files in os.walk(self.basePath/projDoc['-branch'][0]['path']):
         for fileName in files:
           if fileName.startswith('.') or fileName.startswith('trash_') or '_PastaExport' in fileName:

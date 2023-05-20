@@ -26,7 +26,8 @@ class Project(QWidget):
     self.taskID = ''
     self.docProj:dict[str,Any]= {}
     self.showAll= False
-    self.actionAddSubfolder:Optional[Action] = None
+    self.btnAddSubfolder:Optional[TextButton] = None
+    self.btnHideShow:Optional[TextButton]     = None
 
 
   @Slot(str, str)
@@ -94,8 +95,10 @@ class Project(QWidget):
       #TODO_P4 projectView: selection does not scroll; one cannot select a row
       self.tree.setCurrentIndex(selectedIndex)# Item(selectedItem)
     self.mainL.addWidget(self.tree)
-    if len(nodeHier.children)>0 and self.actionAddSubfolder is not None:
-      self.actionAddSubfolder.setVisible(False)
+    if len(nodeHier.children)>0 and self.btnAddSubfolder is not None:
+      self.btnAddSubfolder.setVisible(False)
+    elif self.btnHideShow is not None:
+      self.btnHideShow.setVisible(False)
     return
 
 
@@ -169,13 +172,13 @@ class Project(QWidget):
     hidden = '     \U0001F441' if len([b for b in self.docProj['-branch'] if False in b['show']])>0 else ''
     topbarL.addWidget(QLabel(self.docProj['-name']+hidden))
     topbarL.addStretch(1)
-    TextButton('Hide/Show',         self.executeAction, topbarL, name='hideShow')
+    self.btnHideShow     = TextButton('Hide/Show',     self.executeAction, topbarL, name='hideShow')
+    self.btnAddSubfolder = TextButton('Add subfolder', self.executeAction, topbarL, name='addChild')
     TextButton('Edit project',      self.executeAction, topbarL, name='editProject')
     more = TextButton('More',None, topbarL)
     moreMenu = QMenu(self)
     Action('Reduce/increase width', self.executeAction, moreMenu, self, name='projHide')
     Action('Scan',                  self.executeAction, moreMenu, self, name='scanProject')
-    self.actionAddSubfolder = Action('Add subfolder', self.executeAction, moreMenu, self, name='addChild')
     Action('Delete',                self.executeAction, moreMenu, self, name='deleteProject')
     more.setMenu(moreMenu)
     headerL.addWidget(topbarW)
@@ -235,7 +238,7 @@ class Project(QWidget):
       self.changeProject('','')
     elif menuName == 'addChild':
       self.comm.backend.cwd = Path(self.comm.backend.basePath)/self.docProj['-branch'][0]['path']
-      self.comm.backend.addData('x1', {'-name':'folder 1', 'childNum':0}, [self.projID])
+      self.comm.backend.addData('x1', {'-name':'new folder'}, [self.projID])
       self.comm.changeProject.emit('','') #refresh project
     else:
       print("undefined menu / action",menuName)

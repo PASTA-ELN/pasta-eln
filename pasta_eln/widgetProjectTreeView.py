@@ -48,7 +48,6 @@ class TreeView(QTreeView):
     return
 
   #TODO_P4 projectTree: drag&drop of external files
-
   def executeAction(self) -> None:
     """ after selecting a item from context menu """
     menuName = self.sender().data()
@@ -57,16 +56,15 @@ class TreeView(QTreeView):
       if hierStack[-1][0]=='x':
         docType= 'x'+str(len(hierStack))
         self.comm.backend.cwd = Path(self.comm.backend.db.getDoc(hierStack[-1])['-branch'][0]['path'])
-        self.comm.backend.addData(docType, {'-name':'folder 1', 'childNum':0}, hierStack)
+        self.comm.backend.addData(docType, {'-name':'new folder'}, hierStack)
         self.comm.changeProject.emit('','') #refresh project
       else:
         showMessage(self, 'Error', 'You cannot create a child of a non-folder!')
     elif menuName=='addSibling':
-      childNum = self.currentIndex().row()+1
       hierStack= self.currentIndex().data().split('/')[:-1]
       docType= 'x'+str(len(hierStack))
       self.comm.backend.cwd = Path(self.comm.backend.db.getDoc(hierStack[-1])['-branch'][0]['path'])
-      self.comm.backend.addData(docType, {'-name':'folder '+str(childNum+1), 'childNum':childNum}, hierStack)
+      self.comm.backend.addData(docType, {'-name':'new folder'}, hierStack)
       self.comm.changeProject.emit('','') #refresh project
     elif menuName=='del':
       docID = self.currentIndex().data().split('/')[-1]

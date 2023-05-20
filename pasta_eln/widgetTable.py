@@ -158,7 +158,7 @@ class Table(QWidget):
             item.setFont(QFont("Helvetica [Cronyx]", 16))
           elif isinstance(self.data[i]['value'][j], list):                      #list, e.g. qrCodes
             item =  QStandardItem(', '.join(self.data[i]['value'][j]))
-          elif re.match(r'^[a-z]-[a-z0-9]{32}$',self.data[i]['value'][j]):      #Link
+          elif re.match(r'^[a-z\-]-[a-z0-9]{32}$',self.data[i]['value'][j]):      #Link
             item = QStandardItem('\u260D')
             item.setFont(QFont("Helvetica [Cronyx]", 16))
           else:
@@ -198,7 +198,7 @@ class Table(QWidget):
       item (QStandardItem): cell clicked
     """
     row = item.row()
-    docID = self.itemFromRow(row).accessibleText()
+    _, docID = self.itemFromRow(row)
     # column = item.column()
     if docID[0]!='x': #only show items for non-folders
       self.comm.changeDetails.emit(docID)
@@ -213,7 +213,7 @@ class Table(QWidget):
       item (QStandardItem): cell clicked
     """
     row = item.row()
-    docID = self.itemFromRow(row).accessibleText()
+    _, docID = self.itemFromRow(row)
     if self.docType=='x0':
       self.comm.changeProject.emit(docID, '')
       self.comm.changeSidebar.emit(docID)
@@ -263,9 +263,10 @@ class Table(QWidget):
       intersection = None
       docIDs = []
       for row in range(self.models[-1].rowCount()):
-        if self.itemFromRow(row).checkState() == Qt.CheckState.Checked:
-          docIDs.append( self.data[row]['id'] )
-          thisKeys = set(self.comm.backend.db.getDoc(self.data[row]['id']))
+        item, docID = self.itemFromRow(row)
+        if item.checkState() == Qt.CheckState.Checked:
+          docIDs.append(docID)
+          thisKeys = set(self.comm.backend.db.getDoc(docID))
           if intersection is None:
             intersection = thisKeys
           else:
@@ -281,22 +282,24 @@ class Table(QWidget):
         self.comm.changeDetails.emit('redraw')
     elif menuName == 'sequentialEdit':
       for row in range(self.models[-1].rowCount()):
-        if self.itemFromRow(row).checkState() == Qt.CheckState.Checked:
-          self.comm.formDoc.emit(self.comm.backend.db.getDoc( self.data[row]['id'] ))
+        item, docID = self.itemFromRow(row)
+        if item.checkState() == Qt.CheckState.Checked:
+          self.comm.formDoc.emit(self.comm.backend.db.getDoc(docID))
       self.comm.changeTable.emit(self.docType, '')
     elif menuName == 'delete':
       for row in range(self.models[-1].rowCount()):
-        if self.itemFromRow(row).checkState() == Qt.CheckState.Checked:
-          ret = QMessageBox.critical(self, 'Warning', 'Are you sure you want to delete this data: '+self.itemFromRow(row).text()+'?',\
+        item, docID = self.itemFromRow(row)
+        if item.checkState() == Qt.CheckState.Checked:
+          ret = QMessageBox.critical(self, 'Warning', 'Are you sure you want to delete this data: '+item.text()+'?',\
                                     QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.No)
           if ret==QMessageBox.StandardButton.Yes:
-            doc = self.comm.backend.db.getDoc( self.data[row]['id'] )
+            doc = self.comm.backend.db.getDoc(docID)
             for branch in doc['-branch']:
               oldPath = self.comm.backend.basePath/branch['path']
               if oldPath.exists():
                 newPath    = oldPath.parent/('trash_'+oldPath.name)
                 oldPath.rename(newPath)
-            self.comm.backend.db.remove(self.data[row]['id'] )
+            self.comm.backend.db.remove(docID)
       self.comm.changeTable.emit(self.docType, '')
     elif menuName == 'changeColumns':
       dialog = TableHeader(self.comm, self.docType)
@@ -315,14 +318,15 @@ class Table(QWidget):
           fOut.write(','.join(rowContent)+'\n')
     elif menuName == 'toggleHide':
       for row in range(self.models[-1].rowCount()):
-        if self.itemFromRow(row).checkState() == Qt.CheckState.Checked:
-          self.comm.backend.db.hideShow( self.data[row]['id'] )
+        item, docID = self.itemFromRow(row)
+        if item.checkState() == Qt.CheckState.Checked:
+          self.comm.backend.db.hideShow(docID)
       if self.docType=='x0':
         self.comm.changeSidebar.emit('redraw')
       self.changeTable('','')  # redraw table
     elif menuName == 'toggleSelection':
       for row in range(self.models[-1].rowCount()):
-        item = self.itemFromRow(row)
+        item,_ = self.itemFromRow(row)
         if item.checkState() == Qt.CheckState.Checked:
           item.setCheckState(Qt.CheckState.Unchecked)
         else:
@@ -332,8 +336,9 @@ class Table(QWidget):
       self.changeTable('','')  # redraw table
     elif menuName == 'rerunExtractors':
       for row in range(self.models[-1].rowCount()):
-        if self.itemFromRow(row).checkState() == Qt.CheckState.Checked:
-          doc = self.comm.backend.db.getDoc( self.data[row]['id'] )
+        item, docID = self.itemFromRow(row)
+        if item.checkState() == Qt.CheckState.Checked:
+          doc = self.comm.backend.db.getDoc(docID)
           oldDocType = doc['-type']
           if doc['-branch'][0]['path'].startswith('http'):
             path = Path(doc['-branch'][0]['path'])
@@ -356,7 +361,7 @@ class Table(QWidget):
     return
 
 
-  def itemFromRow(self, row:int) -> QStandardItem:
+  def itemFromRow(self, row:int) -> tuple[QStandardItem, str]:
     """
     get item from row by iterating through the proxyModels
 
@@ -364,12 +369,13 @@ class Table(QWidget):
       row (int): row number
 
     Returns:
-      QItem: the item
+      QItem, str: the item and docID
     """
     index = self.models[-1].index(row,0)
     for idxModel in range(len(self.models)-1,0,-1):
       index = self.models[idxModel].mapToSource(index)
-    return self.models[0].itemFromIndex(index)
+    item = self.models[0].itemFromIndex(index)
+    return item, item.accessibleText()
 
 
   #TODO_P5 invert filter: not 'Sur' in name => '^((?!Sur).)*$' in name

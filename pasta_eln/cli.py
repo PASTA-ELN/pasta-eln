@@ -225,48 +225,48 @@ def commands(getDocu:bool, args:argparse.Namespace) -> str:
       be.testExtractor(args.docID)
       return '1'
 
-    if getDocu:
-      doc += '  importXLS: import first sheet of excel file into database\n'
-      doc += '    before: ensure database configuration and project exist\n'
-      doc += '    example: pastaELN_CLI.py importXLS -d instruments -i x-123456 -c "~/path/to.xls" -l instrument\n'
-      doc += '    -l is the document type\n'
-      doc += '    afterwards: adopt ontology (views are automatically generated)\n'
-    elif args.command=='importXLS':
-      import pandas as pd
-      from commonTools import commonTools as cT  #not globally imported since confuses translation
-      if args.docID!='':
-        be.changeHierarchy(args.docID)
-      #change for matwerks examples
-      df = pd.read_excel(args.content, sheet_name=0)
-      if df.shape[0]>40 and df.iloc[38].isnull().sum() < df.iloc[36].isnull().sum():
-        df = pd.read_excel(args.content, sheet_name=0, skiprows=39, usecols=range(11))
-        df=df.drop(df.index[[0,1]])
-        df=df.drop(df.index[[-1,-2,-3]])
-        #add metadata
-        meta = pd.read_excel(args.content, sheet_name=0, skiprows=4, nrows=13, usecols=[0,2])
-        for i in range(meta.shape[0]):
-          key, value = meta.iloc[i,0], meta.iloc[i,1]
-          df[key] = value
-        #add more metadata
-        meta = pd.read_excel(args.content, sheet_name=0, skiprows=19, nrows=8, usecols=[2,8])
-        for i in range(meta.shape[0]):
-          if meta.iloc[i,:].isnull().sum()==2:
-            continue
-          key, value = meta.iloc[i,0], meta.iloc[i,1]
-          df[key] = value
-        meta = pd.read_excel(args.content, sheet_name=0)
-        df['batch'] = meta.iloc[1,0].split(' - ')[1].split(' ')[1]
-        df['test']  = meta.iloc[1,0].split(' - ')[0][1:-1]
-        df = df.rename(columns={"AMTwin label": "-name"})
-      else:
-        #default file
-        df = pd.read_excel(args.content, sheet_name=0).fillna('')
-      print(df.columns)
-      print(df)
-      for _, row in df.iterrows():
-        data = dict((k.lower(), v) for k, v in row.items())
-        be.addData(args.label, data )
-      return '1'
+    # if getDocu:
+    #   doc += '  importXLS: import first sheet of excel file into database\n'
+    #   doc += '    before: ensure database configuration and project exist\n'
+    #   doc += '    example: pastaELN_CLI.py importXLS -d instruments -i x-123456 -c "~/path/to.xls" -l instrument\n'
+    #   doc += '    -l is the document type\n'
+    #   doc += '    afterwards: adopt ontology (views are automatically generated)\n'
+    # elif args.command=='importXLS':
+    #   import pandas as pd
+    #   from commonTools import commonTools as cT  #not globally imported since confuses translation
+    #   if args.docID!='':
+    #     be.changeHierarchy(args.docID)
+    #   #change for matwerks examples
+    #   df = pd.read_excel(args.content, sheet_name=0)
+    #   if df.shape[0]>40 and df.iloc[38].isnull().sum() < df.iloc[36].isnull().sum():
+    #     df = pd.read_excel(args.content, sheet_name=0, skiprows=39, usecols=range(11))
+    #     df=df.drop(df.index[[0,1]])
+    #     df=df.drop(df.index[[-1,-2,-3]])
+    #     #add metadata
+    #     meta = pd.read_excel(args.content, sheet_name=0, skiprows=4, nrows=13, usecols=[0,2])
+    #     for i in range(meta.shape[0]):
+    #       key, value = meta.iloc[i,0], meta.iloc[i,1]
+    #       df[key] = value
+    #     #add more metadata
+    #     meta = pd.read_excel(args.content, sheet_name=0, skiprows=19, nrows=8, usecols=[2,8])
+    #     for i in range(meta.shape[0]):
+    #       if meta.iloc[i,:].isnull().sum()==2:
+    #         continue
+    #       key, value = meta.iloc[i,0], meta.iloc[i,1]
+    #       df[key] = value
+    #     meta = pd.read_excel(args.content, sheet_name=0)
+    #     df['batch'] = meta.iloc[1,0].split(' - ')[1].split(' ')[1]
+    #     df['test']  = meta.iloc[1,0].split(' - ')[0][1:-1]
+    #     df = df.rename(columns={"AMTwin label": "-name"})
+    #   else:
+    #     #default file
+    #     df = pd.read_excel(args.content, sheet_name=0).fillna('')
+    #   print(df.columns)
+    #   print(df)
+    #   for _, row in df.iterrows():
+    #     data = dict((k.lower(), v) for k, v in row.items())
+    #     be.addData(args.label, data )
+    #   return '1'
 
     if getDocu:
       doc += '  redo: recreate thumbnail / use-extractor\n'

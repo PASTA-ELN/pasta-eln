@@ -200,7 +200,7 @@ class Sidebar(QWidget):
     self.comm.backend.scanProject(self.openProjectId)
     #TODO_P3 scanning for progress bar
     self.comm.changeProject.emit(self.openProjectId,'')
-    self.changeSidebar('redraw')
+    self.redraw()
     showMessage(self, 'Information','Scanning finished')
     return
 
