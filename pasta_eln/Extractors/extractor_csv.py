@@ -4,6 +4,7 @@ import re
 from io import StringIO
 import numpy as np
 import pandas as pd
+from pandas.errors import EmptyDataError
 import matplotlib.pyplot as plt
 
 def use(filePath, recipe='', saveFileName=None):
@@ -35,7 +36,10 @@ def use(filePath, recipe='', saveFileName=None):
       if len(re.findall('[a-zA-Z]', fIn.readline()))==0:
         break
       startRow+=1
-  data = pd.read_csv(filePath, delimiter=delimiter, skiprows=startRow)
+  try:
+    data = pd.read_csv(filePath, delimiter=delimiter, skiprows=startRow)
+  except EmptyDataError:  #if no data left, import everything
+    data = pd.read_csv(filePath, delimiter=delimiter)
   data = np.array(data)
 
   if recipe == 'measurement/table/red':           #: Draw with red curve
