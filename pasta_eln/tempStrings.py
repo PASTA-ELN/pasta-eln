@@ -7,6 +7,7 @@ todoString = """
 
 <h3>Things currently working on</h3>
 <ul>
+<li> callback that shows progress
 <li> change to string-output
 </ul>
 
