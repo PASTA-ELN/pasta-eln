@@ -200,9 +200,9 @@ class Sidebar(QWidget):
     self.comm.backend.scanProject(self.openProjectId)
     #TODO_P3 scanning for progress bar
     self.comm.changeProject.emit(self.openProjectId,'')
-    self.redraw()
     showMessage(self, 'Information','Scanning finished')
     return
+
 
   def btnCurate(self) -> None:
     """
@@ -210,6 +210,8 @@ class Sidebar(QWidget):
     -> pull data from server and include
     """
     return
+
+
   def btnTree(self, item:QTreeWidgetItem) -> None:
     """
     What happpens if user clicks on branch in tree

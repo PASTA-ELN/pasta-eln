@@ -200,7 +200,14 @@ class Table(QWidget):
     row = item.row()
     _, docID = self.itemFromRow(row)
     # column = item.column()
-    if docID[0]!='x': #only show items for non-folders
+    if docID[0]=='x': #only show items for non-folders
+      doc = self.comm.backend.db.getDoc(docID)
+      if doc['-type'][0]=='x0':
+        self.comm.changeProject.emit(docID,'')
+      else:
+        projID = doc['-branch'][0]['stack'][0]
+        self.comm.changeProject.emit(projID, docID)
+    else:
       self.comm.changeDetails.emit(docID)
     return
 

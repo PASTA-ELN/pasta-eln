@@ -136,7 +136,8 @@ class MainWindow(QMainWindow):
       # dialog = Ontology(self.comm.backend)
       # dialog.exec()
     elif menuName=='updateExtractors':
-      updateExtractorList(self.backend.extractorPath)
+      report = updateExtractorList(self.backend.extractorPath)
+      showMessage(self, 'Extractor list updated', report)
     elif menuName=='verifyDB':
       report = self.comm.backend.checkDB(outputStyle='html')
       showMessage(self, 'Report of database verification', report, style='QLabel {min-width: 800px}')

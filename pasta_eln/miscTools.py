@@ -226,7 +226,7 @@ def blob_hash(stream:BufferedReader, size:int) -> str:
   return hasher.hexdigest()
 
 
-def updateExtractorList(directory:Path) -> bool:
+def updateExtractorList(directory:Path) -> str:
   """
   Rules:
   - each data-type in its own try-except
@@ -279,8 +279,10 @@ def updateExtractorList(directory:Path) -> bool:
               else:
                 print('**ERROR Could not decipher '+fileName)
             extractorsThis[linePart]='Default'
-            if verboseDebug: print('  return', linePart)
-        if verboseDebug: print('Extractors', extractorsThis)
+            if verboseDebug:
+              print('  return', linePart)
+        if verboseDebug:
+          print('Extractors', extractorsThis)
         ending = fileName.split('_')[1].split('.')[0]
         extractorsAll[ending]=extractorsThis
         #header not used for now
@@ -292,7 +294,7 @@ def updateExtractorList(directory:Path) -> bool:
   configuration['extractors'] = extractorsAll
   with open(Path.home()/'.pastaELN.json','w', encoding='utf-8') as f:
     f.write(json.dumps(configuration, indent=2))
-  return True
+  return yaml.dump(extractorsAll)
 
 
 def restart() -> None:
