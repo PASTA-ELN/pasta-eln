@@ -1,29 +1,73 @@
 """Input and output functions towards the .eln file-format"""
-# mypy: ignore-errors
-from typing import Optional
-import os, io, json, shutil, base64, subprocess
+import os, json, shutil, logging, hashlib
+from typing import Any
 from pathlib import Path
 from datetime import datetime
 from zipfile import ZipFile, ZIP_DEFLATED
+from pasta_eln import __version__
 from .backend import Backend
 #TODO_P3 Add read info from ror and orcid
 # curl https://api.ror.org/organizations/02nv7yv05
 # curl -s -H "Accept: application/json" https://pub.orcid.org/v3.0/0000-0001-7691-2856
 
-def importELN(backend:Backend, database:str, elnFileName:str) -> bool:
+
+#GENERAL TERMS IN ro-crate-metadata.json (None implies not saved)
+pasta2json = {
+  '_id'    : 'identifier',
+  '_rev'   : None,
+  '_attachments': None,
+  '-name'  : 'name',
+  '-tags'  : 'keywords',
+  '-date'  : 'dateModified',
+  '-user'  : None,
+  '-client': None,
+  'comment': 'comment',
+  'content': 'text',
+  'links'  : 'mentions',
+}
+# Possible extensions
+#  'image'  : 'image'
+#
+# # keys not in this dict and require json name
+# 'metaUser', 'status', 'procedure', 'metaVendor', 'chemistry', '-branch', '-type', 'qrCode', 'shasum', 'objective'
+requiredKeys = ['_id', '-name', '-tags', '-date', '-user', '-client']
+
+# Special terms in other elns
+elabFTW = {
+  'elabid':'_id',
+  'title':'-name',
+  'tags':'-tags',
+  'lastchange':'-date',
+  'userid':'-user',
+  'metadata':'metaUser',
+  'id':'_id',
+  'category': '-type'
+}
+# tags: "abc|efg" vs ['abc','efg']
+# internal identifier (elabFTW:id) vs global identifier (elabFTW: identifier)
+
+
+
+# TODO_P1 if others eln: write new addDoc to add hierStack and branch based on path
+# - Don't create folders then
+# use internal id for now
+# create a dictonary of old id and new id
+# tags see if list: else split at |
+
+def importELN(backend:Backend, elnFileName:str) -> str:
   '''
   import .eln file from other ELN or from PASTA
 
   Args:
     backend (backend): backend
-    database (string): name of database
-    elnFileName (string): name of file
+    elnFileName (str): name of file
 
   Returns:
-    bool: success of import
+    str: success message
   '''
+  keysNotInDict:set[str] = set()
 
-  def processPart(part:dict[str,str]) -> bool:
+  def processPart(part:dict[str,str]) -> int:
     """
     recursive function call to process this node
 
@@ -33,99 +77,73 @@ def importELN(backend:Backend, database:str, elnFileName:str) -> bool:
     Returns:
       bool: success of this function
     """
-    if not isinstance(part, dict):
+    addedDocs = 0
+    if not isinstance(part, dict): #leave these tests in since other .elns might do funky stuff
       print("**ERROR in part",part)
       return False
-    print('\nProcess:',part['@id'])
+    logging.info('Process: '+part['@id'])
+    print('Process: '+part['@id'])
     # find next node to process
-    newNode = [i for i in graph if '@id' in i and i['@id']==part['@id']]
-    if len(newNode)>1:
-      print('**ERROR multiple nodes with same id')
+    newNodes = [i for i in graph if '@id' in i and i['@id']==part['@id']]
+    if len(newNodes)>1:
+      print('**ERROR multiple nodes with same id', newNodes)
       return False
     # if node with more subnodes
-    if len(newNode)==1:
-      newNode = newNode[0]
+    if len(newNodes)==1:
+      newNode = newNodes[0]
       subparts = newNode.pop('hasPart') if 'hasPart' in newNode else []
-      print('subparts:\n'+'\n'.join(['  '+i['@id'] for i in subparts]))
-      #depending on ELN
-      if elnName=='Kadi4Mat':
-        docType = 'x'+str(len(newNode['@id'].split('/'))-2)
-        newNode['pathOnKadi4Mat'] = newNode.pop('@id')
-        newNode['-name'] = newNode.pop('name')
-        if 'description' in newNode:
-          newNode['comment']=newNode.pop('description')
-      elif elnName=='PASTA ELN':
-        docType = newNode['-type'][0]
-        newNode['_id'] = newNode.pop('@id')
-        if len(subparts)==1 and subparts[0]['@id'].startswith('__thumbnails__'):
-          with elnFile.open(dirName+os.sep+subparts[0]['@id']) as elnFilePointer:
-            imgdata = elnFilePointer.read()
-            if subparts[0]['@id'].endswith('.png'):
-              newNode['image'] = "data:image/png;base64," + base64.b64encode(imgdata).decode()
-            elif subparts[0]['@id'].endswith('.svg'):
-              newNode['image'] = imgdata.decode("utf-8")
-            else:
-              print("**ERROR cannot read this thumbnail")
-          subparts = []
-      else:
-        print('**ERROR undefined ELN-Name', elnName)
-      #for all ELN
-      if '@type' in newNode:
-        del newNode['@type']
-      if elnVersion is not None:
-        newNode['importedFrom'] = elnName+' '+elnVersion
-        elnVersion = None
-      currentID = '--'  #will trigger error if not found in the next lines
-      if elnName=='PASTA ELN' and newNode['-type'][0]!='x0':
-        backend.db.saveDoc(newNode)
-        if newNode['-type'][0][0]=='x':
-          os.makedirs(backend.basePath+newNode['-branch'][0]['path'])
-        currentID = newNode['_id']
-      else:
-        backend.addData(docType,newNode)
+      if len(subparts)>0:
+        logging.info('subparts:'+', '.join(['  '+i['@id'] for i in subparts]))
+        print('subparts:'+', '.join(['  '+i['@id'] for i in subparts]))
+      fullPath = backend.basePath/newNode['@id']
+      if newNode['@id'].endswith('.json'):                    #read json content into DB
+        with elnFile.open( (Path(dirName)/newNode['@id']).as_posix() ) as fIn:
+          jsonContent = fIn.read()
+          for dataJson in json.loads(jsonContent):
+            #Transcribe content
+            dataPasta = {}
+            for key, value in dataJson.items():
+              if key in json2pasta:
+                dataPasta[json2pasta[key]] = value
+              else:
+                dataPasta[key] = value
+                keysNotInDict.add(key)
+            dataPasta['-client'] = 'Imported from '+elnName+' '+elnVersion
+            addedDocs += 1
+            for reqKey in requiredKeys:
+              if reqKey not in dataPasta:
+                print('**ERROR key not in doc', reqKey)
+            backend.db.saveDoc(dataPasta)
+      elif newNode['@type']=='Dataset':                     #create folder
+        fullPath.mkdir(exist_ok=True)
+      else:                                                 #copy file
+        # print('copy file', dirName+'/'+part['@id'], fullPath)
+        target = open(fullPath, "wb")
+        source = elnFile.open( (Path(dirName)/part['@id']).as_posix())
+        with source, target:  #extract one file to its target directly
+          shutil.copyfileobj(source, target)
       #recursive part
       if len(subparts)>0:  #don't do if no subparts: measurements, ...
-        backend.changeHierarchy(currentID)
+        # backend.changeHierarchy(backend.currentID)
         for subpart in subparts:
-          processPart(subpart)
-        backend.changeHierarchy(None)
-    # ---
-    # if final leaf node described in hasPart
-    if len(part)>1:
-      #save to file
-      source = elnFile.open(dirName+os.sep+part['@id'])
-      #do database entry
-      if elnName=='Kadi4Mat':
-        docType = 'measurement'
-        part['otherELNName'] = part.pop('@id')
-        part['-name'] = os.path.basename(part['otherELNName'])
-        if 'description' in part:
-          part['comment']=part.pop('description')
-        del part['@type']
-        targetFileName = os.path.basename(part['otherELNName'])
-      elif elnName=='PASTA ELN':
-        targetFileName = part['@id']
-      else:
-        print('**ERROR undefined ELN-Name', elnName)
-      target = open(targetFileName, "wb")
-      with source, target:  #extract one file to its target directly
-        shutil.copyfileobj(source, target)
-      if elnName!='PASTA ELN':
-        backend.addData(docType,part)
-    return True
+          addedDocs += processPart(subpart)
+        # backend.changeHierarchy(None)
+    return addedDocs
 
   ######################
   #main function
-  elnName = None
-  elnVersion = None
+  json2pasta = {v:k for k,v in pasta2json.items() if v is not None}
+  elnName = ''
+  elnVersion = ''
   with ZipFile(elnFileName, 'r', compression=ZIP_DEFLATED) as elnFile:
     files = elnFile.namelist()
-    dirName=files[0].split(os.sep)[0]
+    logging.info('All files '+', '.join(files))
+    print('All files '+', '.join(files))
+    dirName=Path(files[0]).parts[0]
     if dirName+'/ro-crate-metadata.json' not in files:
       print('**ERROR: ro-crate does not exist in folder. EXIT')
-      return False
+      return '**ERROR: ro-crate does not exist in folder. EXIT'
     graph = json.loads(elnFile.read(dirName+'/ro-crate-metadata.json'))["@graph"]
-    # print(json.dumps(graph,indent=2))
     #find information from master node
     rocrateNode = [i for i in graph if i["@id"]=="ro-crate-metadata.json"][0]
     if 'sdPublisher' in rocrateNode:
@@ -134,120 +152,96 @@ def importELN(backend:Backend, database:str, elnFileName:str) -> bool:
       elnVersion  = rocrateNode['version']
     else:
       elnVersion  = ''
-    print('Import',elnName,elnVersion)
+    logging.info('Import '+elnName+' '+elnVersion)
+    print('Import '+elnName+' '+elnVersion)
+    if elnName=='eLabFTW':
+      json2pasta.update(elabFTW)
     mainNode    = [i for i in graph if i["@id"]=="./"][0]
     #iteratively go through list
+    addedDocuments = 0
     for part in mainNode['hasPart']:
-      processPart(part)
-  return True
+      if not part['@id'].endswith('ro-crate-metadata.json'):
+        addedDocuments += processPart(part)
+  return 'Success: imported '+str(addedDocuments)+' documents from file '+elnFileName+\
+         ' from ELN '+elnName+' '+elnVersion+'\n'+' '.join(keysNotInDict)
 
 
-def exportELN(backend:Backend, docID:str, pathII:str) -> bool:
+##########################################
+###               EXPORT               ###
+##########################################
+def exportELN(backend:Backend, docID:str, fileName:str='') -> str:
   """
   export eln to file
 
   Args:
     backend (backend): PASTA backend instance
-    docID (string): docId of project
-    pathII (str): path
+    docID (str): docId of project
+    fileName (str): fileName which to use for saving; default='' saves in local folder
 
   Returns:
-    bool: success of this export
+    str: report of exportation
   """
-  print(pathII)
   docProject = backend.db.getDoc(docID)
   dirNameProject = docProject['-branch'][0]['path']
-  zipFileName = dirNameProject+'.eln'
-  print('Create eln file '+zipFileName)
-  with ZipFile(zipFileName, 'w', compression=ZIP_DEFLATED) as zipFile:
+  fileName = dirNameProject+'.eln' if fileName=='' else fileName
+  logging.info('Create eln file '+fileName)
+  with ZipFile(fileName, 'w', compression=ZIP_DEFLATED) as elnFile:
     # numAttachments = 0
-    graph = []
+    graph:list[dict[str,Any]] = []
 
-    #1 ------- write JSON files -------------------
-    listDocs = backend.db.getView('viewHierarchy/viewHierarchy', startKey=docID)
-    #create tree of hierarchical data
-    treedata = {}
+    # ------- Prepare local pathTree -------------------
+    listDocs = backend.db.getView('viewHierarchy/viewPaths', startKey=dirNameProject)
+    #create tree of path hierarchy: key=docID; value is a list of children
+    pathTree = {}
 
-    def listChildren(idString:Optional[str], level:int) -> list[str]:
+    def listChildren(parentPath:Path, level:int) -> list[str]:
       """
       List all children
 
       Args:
-        idString (string): id of this part
+        parentPath (Path): path to this document
         level (int): hierarchical level starting from 0
 
       Returns:
         list: list of children ids
       """
-      items = [i for i in listDocs if len(i['key'].split(' '))==level]
-      if idString is not None:
-        items = [i for i in items if i['key'].startswith(idString)]
-      #sort by child
-      keys = [i['key'] for i in items]
-      childNums = [i['value'][0] for i in items]
-      items = [x for _, x in sorted(zip(childNums, keys))]
+      items = [i for i in listDocs if Path(i['key']).parent==parentPath ]
       #create sub-children
       for item in items:
-        children = listChildren(item,level+1)
-        treedata[item.split(' ')[-1]] = children
-        if level == 1:
-          treedata['__masterID__'] = item
-      return [i.split(' ')[-1] for i in items]
+        children = listChildren(Path(item['key']), level+1)
+        pathTree[item['key']] = children
+      return [i['key'] for i in items]
 
-    listChildren(idString=None, level=1)
-    masterID = treedata.pop('__masterID__')
-    # print(treedata)
-    for doc in treedata:
-      doc = backend.db.getDoc(doc)
-      doc['@id']   = doc.pop('_id')
-      doc['@type'] = "DigitalDocument"
-      if len(treedata[doc['@id']])>0:
-        doc['hasPart'] = [{'@id':i} for i in treedata[doc['@id']]]
-      if 'image' in doc:
-        fileName = '__thumbnails__'+os.sep+doc['@id']
-        if doc['image'].startswith('data:image/png'):
-          fileName += '.png'
-          imgdata = doc['image'][22:]
-          imgdata = base64.b64decode(imgdata)
-          imgdata = io.BytesIO(imgdata)
-          target = zipFile.open(dirNameProject+os.sep+fileName,'w')
-          with imgdata, target:  #extract one file to its target directly
-            shutil.copyfileobj(imgdata, target)
-        elif doc['image'].startswith('<?xml'):
-          fileName += '.svg'
-          zipFile.writestr(dirNameProject+os.sep+fileName, doc['image'])
-        else:
-          print('image type not implemented')
-        del doc['image']
-        doc['hasPart'] = [{'@id':fileName}]
-        graph.append({'@id':fileName, '@type':'File'})
-      graph.append(doc)
+    children = listChildren(parentPath=Path(dirNameProject), level=1)  #tree data is filled after this command
+    pathTree[dirNameProject] = children
+
+    # ------- Create graph incl. children ----------------
+    # incl. information that is in pasta2json into the graph
+    for me, children in pathTree.items():
+      node = {}
+      node['@id']   = me      
+      myLineInListDocs = [i for i in listDocs if i['key'] == me][0]
+      doc = backend.db.getDoc(myLineInListDocs['id'])
+      for keyPasta, keyELN in pasta2json.items():
+        if keyPasta in doc and keyELN is not None:
+          node[keyELN] = doc[keyPasta]
+      if myLineInListDocs['id'][0] == 'x':       #folders
+        node['@type'] = 'Dataset'
+        graph.append({'@id':me+'/metadata.json', '@type':'File'})
+        children.append(me+'/metadata.json')
+      else:                                      #all others: i.e. measurements
+        node['@type'] = 'File'
+      if len(children)>0:
+        node['hasPart'] = [{'@id':i} for i in children]
+      graph.append(node)
       # Attachments are not saved
 
-    #2 ------------------ write data-files --------------------------
-    masterChildren = [{'@id':masterID}]
-    for path, _, files in os.walk(dirNameProject):
-      if '/.git' in path:
-        continue
-      path = os.path.relpath(path, backend.basePath)
-      for iFile in files:
-        if iFile.startswith('.git') or iFile=='.id_pastaELN.json':
-          continue
-        masterChildren.append({'@id':path+os.sep+iFile})
-        graph.append({'@id':path+os.sep+iFile, '@type':'File'})
-        zipFile.write(path+os.sep+iFile, dirNameProject+os.sep+path+os.sep+iFile)
-
-    #3 ------------------- write index.json ---------------------------
-    index = {}
+    # ------------------- create ro-crate-metadata.json header -----------------------
+    index:dict[str,Any] = {}
     index['@context']= 'https://w3id.org/ro/crate/1.1/context'
     # master node ro-crate-metadata.json
-    graphMaster = []
-    cwd = backend.cwd
-    os.chdir(backend.softwarePath)
-    cmd = ['git','tag']
-    output = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)
-    os.chdir(backend.basePath/cwd)
-    masterNode  = {\
+    graphMaster:list[dict[str,Any]] = []
+    masterNodeInfo  = {\
       '@id':'ro-crate-metadata.json',\
       '@type':'CreativeWork',\
       'about': {'@id': './'},\
@@ -258,134 +252,82 @@ def exportELN(backend:Backend, docID:str, pathII:str) -> bool:
         'logo': 'https://raw.githubusercontent.com/PASTA-ELN/desktop/main/pasta.png',\
         'slogan': 'The favorite ELN for experimental scientists',\
         'url': 'https://github.com/PASTA-ELN/',\
-        'description':'Version '+output.stdout.decode('utf-8').split()[-1]},\
+        'description':'Version '+__version__},\
       'version': '1.0'}
-    graphMaster.append(masterNode)
-    masterNode  = {'@id':'./', '@type':['Dataset'], 'hasPart': masterChildren}
-    graphMaster.append(masterNode)
+    graphMaster.append(masterNodeInfo)
+    masterNodeRoot  = {'@id':'./', '@type':['Dataset'], 'hasPart': [{'@id':dirNameProject}, {'@id':dirNameProject+'/ro-crate-metadata.json'}]}
+    graphMaster.append(masterNodeRoot)
+
+    # ------------------ copy data-files --------------------------
+    # datafiles are already in the graph-graph: only copy and no addition to graph
+    for path, _, files in os.walk(backend.basePath/dirNameProject):
+      if '/.git' in path:  #if use datalad
+        continue
+      relPath = os.path.relpath(path, backend.basePath) #path of the folder
+      for iFile in files:                            #iterate through all files in folder
+        if iFile.startswith('.git') or iFile=='.id_pastaELN.json':
+          continue
+        # print('copy file', path+'/'+iFile, dirNameProject+'/'+relPath+'/'+iFile )
+        elnFile.write(path+'/'+iFile, dirNameProject+'/'+relPath+'/'+iFile)   #zip file
+
+    # ------------------ metadata.json files --------------------------
+    # create metadata.json files in zip-file: no addition to graph
+    #TODO_P1 get rid of this part
+
+    keysNotInDict = set()
+    for path, children in pathTree.items():
+      metaDataJsonPaths = [i for i in children if 'metadata.json' in i]
+      if len(metaDataJsonPaths)==0:
+        continue
+      metaDataJsonPath = metaDataJsonPaths[0] #want to write into this name
+      #get content
+      pastaContent =[]
+      folderInListDocs = [i for i in listDocs if i['key'] == path][0]
+      stack = folderInListDocs['value'][0]+[folderInListDocs['id']]
+      listHierarchy = backend.db.getView('viewHierarchy/viewHierarchy', startKey=' '.join(stack))
+      for item in listHierarchy:
+        if len(stack)+1 == len(item['key'].split(' ')):
+          doc = backend.db.getDoc(item['id'])
+          pastaContent.append(doc)
+      pastaContent.append( backend.db.getDoc(stack[-1]) )
+      #Iterate through content and transcribe
+      jsonContent = []
+      for dataPasta in pastaContent:
+        dataJson = {}
+        for key,value in dataPasta.items():
+          if key not in pasta2json:                          #keep as is
+            keysNotInDict.add(key)
+            dataJson[key] = value
+          # if key in pasta2json and pasta2json[key] is not None:  #DO NOT TRANSCRIBE
+          #   #  dataJson[pasta2json[key]] = value
+        jsonContent.append(dataJson)
+      elnFile.writestr(dirNameProject+'/'+metaDataJsonPath, json.dumps(jsonContent, indent=2))
+    print('Keys not in dictionary', keysNotInDict)
+
+
+    # ------------------ go through graph and add information ----
+    #TODO_P1 get rid of this part
+
+    for node in graph:
+      if node['@type']=='File':                    #metadata.json and data file
+        node['name'] = node['@id'].split('/')[-1]
+        with elnFile.open( dirNameProject+'/'+node['@id'] ) as fIn:
+          content = fIn.read()
+          node['contentSize'] = str(len(content))
+          node['sha256'] = hashlib.sha256(content).hexdigest()
+        if node['@id'].endswith('/metadata.json'):    #metadata.json
+          node['description'] = 'JSON export'
+          node['contentType'] = 'application/json'
+        else:                                         #data file
+          #one could pull information from the database here
+          pass
+      else:                                        #dataset = folder
+        #one could pull information from the database here
+        pass
+
     #finalize file
     index['@graph'] = graphMaster+graph
-    zipFile.writestr(dirNameProject+os.sep+'ro-crate-metadata.json', json.dumps(index, indent=2))
-  return True
-
-
-def backup(backend:Backend, method:str='backup', **kwargs:int) -> bool:
-  """
-  backup, verify, restore information from/to database
-  - all data is saved to one zip file (NOT ELN file)
-  - after restore-to-database, the database changed (new revision)
-
-  Args:
-    backend (Pasta): pasta-backend
-    method (string): backup, restore, compare
-    **kwargs (dict): additional parameter, i.e. callback
-
-  Returns:
-      bool: success
-  """
-  dirNameProject = 'backup'
-  zipFileName = ''
-  if backend.cwd is None:
-    print("**ERROR bbu01: Specify zip file name or database")
-    return False
-  zipFileName = backend.basePath.parent/'pasta_backup.zip'
-  if method=='backup':  mode = 'w'
-  else:                 mode = 'r'
-  print('  '+method.capitalize()+' to file: '+zipFileName.as_posix())
-  with ZipFile(zipFileName, mode, compression=ZIP_DEFLATED) as zipFile:
-
-    # method backup, iterate through all database entries and save to file
-    if method=='backup':
-      numAttachments = 0
-      #write JSON files
-      listDocs = backend.db.db
-      listFileNames = []
-      for doc in listDocs:
-        if isinstance(doc, str):
-          doc = backend.db.getDoc(doc)
-        fileName = '__database__/'+doc['_id']+'.json'
-        listFileNames.append(fileName)
-        zipFile.writestr((Path(dirNameProject)/fileName).as_posix(), json.dumps(doc) )
-        # Attachments
-        if '_attachments' in doc:
-          numAttachments += len(doc['_attachments'])
-          for i in range(len(doc['_attachments'])):
-            attachmentName = Path(dirNameProject)/'__database__'/doc['_id']/('v'+str(i)+'.json')
-            zipFile.writestr(attachmentName.as_posix(), json.dumps(doc.get_attachment('v'+str(i)+'.json')))
-      #write data-files
-      for path, _, files in os.walk(backend.basePath):
-        path = Path(path).relative_to(backend.basePath)
-        for iFile in files:
-          listFileNames.append(path/iFile)
-          # print('in',Path().absolute(),': save', path/iFile,' as', Path(dirNameProject)/path/iFile)
-          zipFile.write(backend.basePath/path/iFile, Path(dirNameProject)/path/iFile)
-      #create some fun output
-      compressed, fileSize = 0,0
-      for doc in zipFile.infolist():
-        compressed += doc.compress_size
-        fileSize   += doc.file_size
-      print(f'  File size: {fileSize:,} byte   Compressed: {compressed:,} byte')
-      print(f'  Num. documents (incl. ontology and views): {len(backend.db.db):,}\n')#,    num. attachments: {numAttachments:,}\n')
-      return True
-
-    # method compare and restore
-    if zipFileName.as_posix().endswith('.eln'):
-      print('**ERROR: cannot compare/restore .eln files')
-      return False
-    # method compare
-    if  method=='compare':
-      filesInZip = zipFile.namelist()
-      print('  Number of documents (incl. ontology and views) in file:',len(filesInZip))
-      differenceFound, comparedFiles, comparedAttachments = False, 0, 0
-      for doc in backend.db.db:
-        fileName = doc['_id']+'.json'
-        if 'backup/__database__/'+fileName not in filesInZip:
-          print("**ERROR bbu02: document not in zip file |",doc['_id'])
-          differenceFound = True
-        else:
-          filesInZip.remove('backup/__database__/'+fileName)
-          zipData = json.loads( zipFile.read('backup/__database__/'+fileName) )
-          if doc!=zipData:
-            print('  Info: data disagrees database, zipfile ',doc['_id'])
-            differenceFound = True
-          comparedFiles += 1
-        if '_attachments' in doc:
-          for i in range(len(doc['_attachments'])):
-            attachmentName = doc['_id']+'/v'+str(i)+'.json'
-            if 'backup/__database__/'+attachmentName not in filesInZip:
-              print("**ERROR bbu03: revision not in zip file |",attachmentName)
-              differenceFound = True
-            else:
-              filesInZip.remove('backup/__database__/'+attachmentName)
-              zipData = json.loads(zipFile.read('backup/__database__/'+attachmentName) )
-              if doc.get_attachment('v'+str(i)+'.json')!=zipData:
-                print('  Info: data disagrees database, zipfile ',attachmentName)
-                differenceFound = True
-              comparedAttachments += 1
-      filesInZip = [i for i in filesInZip if i.startswith('backup/__database')] #filter out non-db items
-      if len(filesInZip)>0:
-        differenceFound = True
-        print('Files in zipfile not in database',filesInZip)
-      if differenceFound: print("  Difference exists between database and zipfile")
-      else:               print("  Database and zipfile are identical.",comparedFiles,'files &',comparedAttachments,'attachments were compared\n')
-      return not differenceFound
-
-    # method restore: loop through all files in zip and save to database
-    #  - skip design and dataDictionary
-    if method=='restore':
-      beforeLength, restoredFiles = len(backend.db.db), 0
-      for fileName in zipFile.namelist():
-        if fileName.startswith('backup/__database__') and (not \
-          (fileName.startswith('backup/__database__/_') or fileName.startswith('backup/__database__/-'))):  #do not restore design documents and ontology
-          restoredFiles += 1
-          zipData = json.loads( zipFile.read(fileName) )
-          fileName = fileName[len('backup/__database__/'):]
-          if '/' in fileName:  #attachment
-            doc = backend.db.getDoc(fileName.split('/')[0])
-            doc.put_attachment(fileName.split('/')[1], 'application/json', json.dumps(zipData))
-          else:                                                           #normal document
-            backend.db.saveDoc(zipData)
-      print('  Number of documents & revisions in file:',restoredFiles)
-      print('  Number of documents before and after restore:',beforeLength, len(backend.db.db),'\n')
-      return True
-  return False
+    elnFile.writestr(dirNameProject+'/'+'ro-crate-metadata.json', json.dumps(index, indent=2))
+    with open(fileName[:-3]+'json','w', encoding='utf-8') as fOut:
+      fOut.write( json.dumps(index, indent=2) )
+  return 'Success: exported '+str(len(graph))+' documents into file '+fileName

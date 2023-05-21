@@ -176,7 +176,7 @@ def commands(getDocu:bool, args:argparse.Namespace) -> str:
 
     if getDocu:
       doc += '  exampleData: create example data by DELETING ALL DATA\n'
-      doc += '  BE CERTAIN THAT YOU WANT TO DO THIS!!\n'
+      doc += '    !! BE CERTAIN THAT YOU WANT TO DO THIS !!\n'
       doc += '    example: pastaELN_CLI.py exampleData\n'
     elif args.command.startswith('exampleData'):
       #prints directly to screen
@@ -317,7 +317,7 @@ def main() -> None:
   """
   Main function
   """
-  usage = "./pastaELN_CLI.py <command> [-i docID] [-c content] [-l labels] [-d database]\n\n"
+  usage = "python -m pasta_eln.cli <command> [-i docID] [-c content] [-l labels] [-d database]\n\n"
   usage+= "Possible commands are:\n"
   usage+= commands(True, argparse.Namespace())
   argparser = argparse.ArgumentParser(usage=usage)
@@ -335,3 +335,7 @@ def main() -> None:
   elif result == '1' and arguments.command!='up':
     print('SUCCESS')
   return
+
+# start main function
+if __name__ == '__main__':
+  main()
