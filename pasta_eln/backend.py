@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from .mixin_cli import CLI_Mixin
 from .database import Database
 from .miscTools import upOut, createDirName, generic_hash, camelCase
-from .handleDictionaries import fillDocBeforeCreate
+from .handleDictionaries import fillDocBeforeCreate, diffDicts
 from .miscTools import outputString
 
 class Backend(CLI_Mixin):
@@ -71,7 +71,7 @@ class Backend(CLI_Mixin):
     # decipher miscellaneous configuration and store
     self.userID   = self.configuration['userID']
     # start database
-    self.db = Database(n,s,databaseName, self.configuration)
+    self.db = Database(n,s,databaseName, self.configuration, basePath=self.basePath)
     if not hasattr(self.db, 'databaseName'):  #not successful database creation
       return
     if kwargs.get('initViews', False):
@@ -334,7 +334,7 @@ class Backend(CLI_Mixin):
         del files
         continue
       parentIDs = [i for i in inDB_all if i['key']==self.cwd.as_posix()]
-      if len(parentIDs)==0: #skip newly moved folder, will be scanned upon rescanning
+      if len(parentIDs)==0: #skip newly moved folder, will be scanned upon re-scanning
         continue
       parentID = parentIDs[0]['id']
       parentDoc = self.db.getDoc(parentID)
@@ -350,23 +350,33 @@ class Backend(CLI_Mixin):
         if (self.basePath/path/'.id_pastaELN.json').exists(): # update branch: path and stack
           with open(self.basePath/path/'.id_pastaELN.json', 'r', encoding='utf-8') as fIn:
             doc = json.loads(fIn.read())
-          thisStack = ' '.join(hierStack)  #this childNumSearch could become new function
-          view = self.db.getView('viewHierarchy/viewHierarchy', startKey=thisStack)
-          childNum = 0
-          for item in view:
-            if item['value'][1][0]=='x0' or item['value'][1][0][0]!='x':
-              continue
-            if thisStack == ' '.join(item['key'].split(' ')[:-1]): #remove last item from string
-              childNum += 1
-          newPath = '/'.join(path.split('/')[:-1])+'/'+createDirName(doc['-name'],doc['-type'][0],childNum) #update,or create (if new doc, update ignored anyhow)
+          if (self.basePath/doc['-branch'][0]['path']).parent.as_posix()  == root and \
+             doc['-branch'][0]['stack']==hierStack:
+            # special case: user wants to have a different directory name in same folder: then the child-number should not change
+            childNum = doc['-branch'][0]['child']
+            newPath = path
+          else:
+            #determine childNumber
+            thisStack = ' '.join(hierStack)  #TODO_P5 this childNumSearch could become new function
+            view = self.db.getView('viewHierarchy/viewHierarchy', startKey=thisStack)
+            childNum = 0
+            for item in view:
+              if item['value'][1][0]=='x0' or item['value'][1][0][0]!='x':
+                continue
+              if thisStack == ' '.join(item['key'].split(' ')[:-1]): #remove last item from string
+                childNum += 1
+            newPath = '/'.join(path.split('/')[:-1])+'/'+createDirName(doc['-name'],doc['-type'][0],childNum) #update,or create (if new doc, update ignored anyhow)
+            if (self.basePath/newPath).exists():
+              print("**ERROR new path should not exist",newPath)
+            else:
+              (self.basePath/path).rename(self.basePath/newPath)
           self.db.updateBranch(doc['_id'], 0, childNum, hierStack, newPath)
-          (self.basePath/path).rename(self.basePath/newPath)
         else:
           currentID = self.addData('x'+str(len(hierStack)), {'-name':dirName}, hierStack)
-          newDir = Path(self.basePath)/self.db.getDoc(currentID)['-branch'][0]['path']
-          (newDir/'.id_pastaELN.json').rename(Path(self.basePath)/root/dirName/'.id_pastaELN.json') #move index file into old folder
+          newDir = self.basePath/self.db.getDoc(currentID)['-branch'][0]['path']
+          (newDir/'.id_pastaELN.json').rename(self.basePath/root/dirName/'.id_pastaELN.json') #move index file into old folder
           newDir.rmdir()                     #remove created path
-          (Path(self.basePath)/root/dirName).rename(newDir) #move old to new path
+          (self.basePath/root/dirName).rename(newDir) #move old to new path
         rerunScanTree = True
       # handle files
       for fileName in files:
@@ -395,7 +405,7 @@ class Backend(CLI_Mixin):
                                 'stack':branch['stack'] }}
           break
       if change is None:
-        print('**ERROR Tried to remove orphan in database but could not', orphan)
+        logging.warning('Tried to remove orphan in database but could not; that can happen if user renames folder:', orphan)
       else:
         self.db.updateDoc(change, docID)
     #reset to initial values
@@ -685,6 +695,16 @@ class Backend(CLI_Mixin):
             count += 1
           else:
             pathsInDB_folder.remove(path)
+            if (self.basePath/root/dirName/'.id_pastaELN.json').exists():
+              with open(self.basePath/root/dirName/'.id_pastaELN.json','r',encoding='utf-8') as fIn:
+                docDisk = json.loads(fIn.read())
+                docDB   = self.db.getDoc( docDisk['_id'] )
+                if docDisk != docDB:
+                  output += outputString(outputStyle,'error','disk(1) and db(2) content do not match:'+docDisk['_id'])
+                  output += outputString(outputStyle,'error',diffDicts(docDisk,docDB))
+            else:
+              output += outputString(outputStyle,'error','Folder has no .id_pastaELN.json:'+path)
+              count += 1
     output += outputString(outputStyle,'info','Number of files on disk that are not in database '+str(count))
     orphans = [i for i in pathsInDB_data   if not (self.basePath/i).exists() and ":/" not in i]
     orphans+= [i for i in pathsInDB_folder if not (self.basePath/i).exists() ]

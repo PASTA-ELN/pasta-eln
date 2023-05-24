@@ -204,9 +204,11 @@ class Table(QWidget):
       doc = self.comm.backend.db.getDoc(docID)
       if doc['-type'][0]=='x0':
         self.comm.changeProject.emit(docID,'')
+        self.comm.changeSidebar.emit(docID)
       else:
         projID = doc['-branch'][0]['stack'][0]
         self.comm.changeProject.emit(projID, docID)
+        self.comm.changeSidebar.emit(projID)
     else:
       self.comm.changeDetails.emit(docID)
     return

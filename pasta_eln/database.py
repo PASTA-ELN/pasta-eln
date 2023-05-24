@@ -1,6 +1,7 @@
 """ Class for interaction with couchDB """
-import traceback, logging, time
+import traceback, logging, time, json
 from typing import Any, Optional, Union
+from pathlib import Path
 from anytree import Node
 from anytree.search import find_by_attr
 from cloudant.client import CouchDB
@@ -11,7 +12,8 @@ class Database:
   """
   Class for interaction with couchDB
   """
-  def __init__(self, user:str, password:str, databaseName:str, configuration:dict[str,Any], resetOntology:bool=False):
+  def __init__(self, user:str, password:str, databaseName:str, configuration:dict[str,Any], 
+               resetOntology:bool=False, basePath:Path=Path()):
     """
     Args:
       user (string): user name to local database
@@ -43,6 +45,7 @@ class Database:
       print("**ERROR wrong ontology version")
       raise ValueError("Wrong ontology version")
     self.dataLabels = {i:self.ontology[i]['label'] for i in self.ontology if i[0] not in ['_','-']}
+    self.basePath   = basePath
     return
 
 
@@ -326,7 +329,7 @@ class Database:
 
 
   def updateBranch(self, docID:str, branch:int, child:int, stack:Optional[list[str]]=None,
-                   path:Optional[str]='') -> list[Optional[str]]:
+                   path:Optional[str]='') -> tuple[str, Optional[str]]:
     """
     Update document by updating the branch
 
@@ -342,6 +345,9 @@ class Database:
     """
     doc = self.db[docID]
     doc['-client'] = 'updateBrach'
+    if len(doc['-branch'])<=branch:
+      print('**ERROR Cannot delete branch that does not exist '+str(branch)+'in doc '+docID)
+      logging.error('**ERROR Cannot delete branch that does not exist '+str(branch)+'in doc '+docID)
     oldPath = doc['-branch'][branch]['path']
     if path=='':
       name = f'{child:03d}'+'_'+'_'.join(oldPath.split('/')[-1].split('_')[1:])
@@ -352,6 +358,10 @@ class Database:
       doc['-branch'][branch]['stack']=stack
     doc['-branch'][branch]['show'] = self.createShowFromStack( doc['-branch'][branch]['stack'] )
     doc.save()
+    #update .json on disk
+    if doc['-type'][0][0]=='x':
+      with open(self.basePath/path/'.id_pastaELN.json', 'w', encoding='utf-8') as fOut:
+        fOut.write(json.dumps(doc))
     return [oldPath, path]
 
 
@@ -645,12 +655,17 @@ class Database:
     import os, re, base64, io
     from PIL import Image
     from .miscTools import outputString
-    outstring = outputString(outputStyle,'h2','LEGEND')
+    outstring = ''
+    if outputStyle=='html':
+      outstring += '<div align="right">' 
+    outstring+= outputString(outputStyle,'h2','LEGEND')
     outstring+= outputString(outputStyle,'ok','Green: perfect and as intended')
     outstring+= outputString(outputStyle,'okish', 'Blue: ok-ish, can happen: empty files for testing, strange path for measurements')
     outstring+= outputString(outputStyle,'unsure','Pink: unsure if bug or desired (e.g. move step to random path-name)')
     outstring+= outputString(outputStyle,'warning','Yellow: WARNING should not happen (e.g. procedures without project)')
     outstring+= outputString(outputStyle,'error',  'Red: FAILURE and ERROR: NOT ALLOWED AT ANY TIME')
+    if outputStyle=='html':
+      outstring += '</div>' 
     outstring+= outputString(outputStyle,'h2','List all database entries')
     if repair:
       print('REPAIR MODE IS ON: afterwards, full-reload and create views')

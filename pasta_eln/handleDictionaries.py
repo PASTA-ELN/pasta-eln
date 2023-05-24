@@ -127,3 +127,23 @@ def fillDocBeforeCreate(data:dict[str,Any], docType:list[str]) -> dict[str,Any]:
   for key in toDelete:
     del data[key]
   return data
+
+
+def diffDicts(dict1:dict[str,Any], dict2:dict[str,Any]) -> str:
+  ignoreKeys = ['-client','_rev']
+  outString = ''
+  dict2Copy = dict(dict2)
+  for key,value in dict1.items():
+    if key in ignoreKeys:
+      continue
+    if key not in dict2Copy:
+      outString += 'key not in dictionary 2: '+key+'\n'
+      continue
+    if value != dict2Copy[key]:
+      outString += 'values differ for key: '+key+'\n   '+str(value)+'\n   '+str(dict2Copy[key])+'\n'
+    del dict2Copy[key]
+  for key in dict2Copy.keys():
+    if key in ignoreKeys:
+      continue
+    outString += 'key not in dictionary 1: '+key+'\n'
+  return outString

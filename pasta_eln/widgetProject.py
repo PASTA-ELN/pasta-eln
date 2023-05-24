@@ -145,16 +145,16 @@ class Project(QWidget):
       if line['value'][0]<9999:
         pathOldSib, pathNewSib = db.updateBranch(docID=line['id'], branch=line['value'][3], child=line['value'][0]-1)
         if pathOldSib is not None and pathNewSib is not None:
-          (Path(self.comm.backend.basePath)/pathOldSib).rename(Path(self.comm.backend.basePath)/pathNewSib)
+          (self.comm.backend.basePath/pathOldSib).rename(self.comm.backend.basePath/pathNewSib)
     for line in siblingsNew:
       if line['value'][0]<9999:
         pathOldSib, pathNewSib = db.updateBranch(docID=line['id'], branch=line['value'][3], child=line['value'][0]+1)
         if pathOldSib is not None and pathNewSib is not None:
-          (Path(self.comm.backend.basePath)/pathOldSib).rename(Path(self.comm.backend.basePath)/pathNewSib)
+          (self.comm.backend.basePath/pathOldSib).rename(self.comm.backend.basePath/pathNewSib)
     #change item in question
-    if isinstance(branchOld['path'], str) and (Path(self.comm.backend.basePath)/branchOld['path']).exists():
-      pathOld = Path(self.comm.backend.basePath)/branchOld['path']
-      pathOld.rename(Path(self.comm.backend.basePath)/pathNew)
+    if isinstance(branchOld['path'], str) and (self.comm.backend.basePath/branchOld['path']).exists():
+      pathOld = self.comm.backend.basePath/branchOld['path']
+      pathOld.rename(self.comm.backend.basePath/pathNew)
     db.updateBranch(docID=docID, branch=branchIdx, stack=stackNew, path=pathNew, child=childNew)
     item.setText('/'.join(stackNew+[docID]))     #update item.text() to new stack
     return
@@ -237,7 +237,7 @@ class Project(QWidget):
       self.showAll = not self.showAll
       self.changeProject('','')
     elif menuName == 'addChild':
-      self.comm.backend.cwd = Path(self.comm.backend.basePath)/self.docProj['-branch'][0]['path']
+      self.comm.backend.cwd = self.comm.backend.basePath/self.docProj['-branch'][0]['path']
       self.comm.backend.addData('x1', {'-name':'new folder'}, [self.projID])
       self.comm.changeProject.emit('','') #refresh project
     else:
