@@ -1,5 +1,5 @@
 """ Class for interaction with couchDB """
-import traceback, logging, time, json
+import traceback, logging, time, json, os
 from typing import Any, Optional, Union
 from pathlib import Path
 from anytree import Node
@@ -12,7 +12,7 @@ class Database:
   """
   Class for interaction with couchDB
   """
-  def __init__(self, user:str, password:str, databaseName:str, configuration:dict[str,Any], 
+  def __init__(self, user:str, password:str, databaseName:str, configuration:dict[str,Any],
                resetOntology:bool=False, basePath:Path=Path()):
     """
     Args:
@@ -221,7 +221,6 @@ class Database:
     Returns:
         dict: json representation of updated document
     """
-    import json, os
     tracebackList = traceback.format_stack()
     tracebackList = [item for item in tracebackList if 'backend.py' in item or 'database.py' in item or 'Tests' in item or 'pasta' in item]
     tracebackString = '|'.join([item.split('\n')[1].strip() for item in tracebackList])  #| separated list of stack excluding last
@@ -329,7 +328,7 @@ class Database:
 
 
   def updateBranch(self, docID:str, branch:int, child:int, stack:Optional[list[str]]=None,
-                   path:Optional[str]='') -> tuple[str, Optional[str]]:
+                   path:str='') -> tuple[str, str]:
     """
     Update document by updating the branch
 
@@ -362,7 +361,7 @@ class Database:
     if doc['-type'][0][0]=='x':
       with open(self.basePath/path/'.id_pastaELN.json', 'w', encoding='utf-8') as fOut:
         fOut.write(json.dumps(doc))
-    return [oldPath, path]
+    return oldPath, path
 
 
   def createShowFromStack(self, stack:list[str]) -> list[bool]:
@@ -652,12 +651,12 @@ class Database:
     Returns:
         str: output
     """
-    import os, re, base64, io
+    import re, base64, io
     from PIL import Image
     from .miscTools import outputString
     outstring = ''
     if outputStyle=='html':
-      outstring += '<div align="right">' 
+      outstring += '<div align="right">'
     outstring+= outputString(outputStyle,'h2','LEGEND')
     outstring+= outputString(outputStyle,'ok','Green: perfect and as intended')
     outstring+= outputString(outputStyle,'okish', 'Blue: ok-ish, can happen: empty files for testing, strange path for measurements')
@@ -665,7 +664,7 @@ class Database:
     outstring+= outputString(outputStyle,'warning','Yellow: WARNING should not happen (e.g. procedures without project)')
     outstring+= outputString(outputStyle,'error',  'Red: FAILURE and ERROR: NOT ALLOWED AT ANY TIME')
     if outputStyle=='html':
-      outstring += '</div>' 
+      outstring += '</div>'
     outstring+= outputString(outputStyle,'h2','List all database entries')
     if repair:
       print('REPAIR MODE IS ON: afterwards, full-reload and create views')

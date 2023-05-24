@@ -130,6 +130,15 @@ def fillDocBeforeCreate(data:dict[str,Any], docType:list[str]) -> dict[str,Any]:
 
 
 def diffDicts(dict1:dict[str,Any], dict2:dict[str,Any]) -> str:
+  """ Check if two dictionaries differ. Just compare the lowest level keys/values and output string
+
+  Args:
+    dict1 (dict): dictionary 1
+    dict2 (dict): dictionary 2
+
+  Returns:
+    str: output with \\n
+  """
   ignoreKeys = ['-client','_rev']
   outString = ''
   dict2Copy = dict(dict2)

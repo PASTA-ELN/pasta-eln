@@ -233,7 +233,7 @@ class Form(QDialog):
             doc = self.db.getDoc(docID)
             if doc['-branch'][0]['stack']!=self.projectComboBox.currentData(): #only if project changed
               if doc['-branch'][0]['path'] is None:
-                newPath    = None
+                newPath    = ''
               else:
                 oldPath    = self.comm.backend.basePath/doc['-branch'][0]['path']
                 newPath    = parentPath+'/'+oldPath.name
@@ -242,7 +242,7 @@ class Form(QDialog):
         elif '-branch' in self.doc:                   # sequential or single update
           if self.doc['-branch'][0]['stack']!=self.projectComboBox.currentData(): #only if project changed
             if self.doc['-branch'][0]['path'] is None:
-              newPath    = None
+              newPath    = ''
             else:
               oldPath    = self.comm.backend.basePath/self.doc['-branch'][0]['path']
               newPath    = parentPath+'/'+oldPath.name

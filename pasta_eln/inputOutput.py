@@ -219,7 +219,7 @@ def exportELN(backend:Backend, docID:str, fileName:str='') -> str:
     # incl. information that is in pasta2json into the graph
     for me, children in pathTree.items():
       node = {}
-      node['@id']   = me      
+      node['@id']   = me
       myLineInListDocs = [i for i in listDocs if i['key'] == me][0]
       doc = backend.db.getDoc(myLineInListDocs['id'])
       for keyPasta, keyELN in pasta2json.items():

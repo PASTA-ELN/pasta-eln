@@ -405,7 +405,7 @@ class Backend(CLI_Mixin):
                                 'stack':branch['stack'] }}
           break
       if change is None:
-        logging.warning('Tried to remove orphan in database but could not; that can happen if user renames folder:', orphan)
+        logging.warning('Tried to remove orphan in database but could not; that can happen if user renames folder:'+orphan)
       else:
         self.db.updateDoc(change, docID)
     #reset to initial values
