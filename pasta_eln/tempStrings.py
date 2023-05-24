@@ -3,6 +3,9 @@ todoString = """
 
 <h3>Very important show stopper</h3>
 <ul>
+<li> get rid of this part
+<li> get rid of this part
+<li> if others eln: write new addDoc to add hierStack and branch based on path
 </ul>
 
 <h3>Things currently working on</h3>
@@ -21,6 +24,7 @@ todoString = """
 <li> design projectLeaves:
 <li> design projectLeaves: 3 columns?
 <li> design: make full width; scale fonts appropriately
+<li> design: make the checkboxes larger!
 <li> design: what is the difference to TextButton?
 <li> finish ontology dialog
 <li> form: add button to add key-values
@@ -63,6 +67,7 @@ todoString = """
 <li> only write markdown files for now
 <li> remove this warning
 <li> serverConfiguration: this should become a GUI and CLI and separate into three-files: functions, CLI, GUI
+<li> this childNumSearch could become new function
 <li> this will rerun useExtractor: ok for now
 </ul>
 """
