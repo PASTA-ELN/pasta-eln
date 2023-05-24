@@ -257,6 +257,7 @@ class Form(QDialog):
         if '_ids' in self.doc: #group update
           for docID in self.doc.pop('_ids'):
             doc = self.db.getDoc(docID)
+            doc.update( self.doc )
             self.db.remove(doc['_id'])
             del doc['_id']
             del doc['_rev']
@@ -267,6 +268,7 @@ class Form(QDialog):
           del self.doc['_id']
           del self.doc['_rev']
           self.comm.backend.addData(self.docTypeComboBox.currentData(), self.doc, self.doc['-branch'][0]['stack'])
+      # ---- all other changes ----
       else:
         if '_ids' in self.doc: #group update
           if '-name' in self.doc:

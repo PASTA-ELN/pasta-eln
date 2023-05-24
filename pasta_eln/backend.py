@@ -233,6 +233,8 @@ class Backend(CLI_Mixin):
           if len(view)==1:  #measurement is already in database
             doc['_id'] = view[0]['id']
             doc['shasum'] = shasum
+            if doc['-type'] == ['-']:  #don't overwrite identified type, without going through extractor
+              del doc['-type']
             edit = True
     # assemble branch information
     if childNum is None:
@@ -461,7 +463,6 @@ class Backend(CLI_Mixin):
               doc[meta][item] is not None:
               print(' -> simplify ',meta,item, doc[meta][item])
               doc[meta][item] = str(doc[meta][item])
-        doc['shasum']    = shasum
         if doc['-type'][0]==doc['recipe'].split('/')[0] or doc['-type'][0]=='-':
           doc['-type']     = doc['recipe'].split('/')
         else:
@@ -481,6 +482,7 @@ class Backend(CLI_Mixin):
         'filesize':absFilePath.stat().st_size,
         'created at':datetime.fromtimestamp(absFilePath.stat().st_ctime, tz=timezone.utc).isoformat(),
         'modified at':datetime.fromtimestamp(absFilePath.stat().st_mtime, tz=timezone.utc).isoformat()}
+    doc['shasum']=shasum  #essential for logic, always save, unlike image
     return
 
 
@@ -512,7 +514,7 @@ class Backend(CLI_Mixin):
       tempFilePath = Path(tempfile.gettempdir())/filePath.name
       request.urlretrieve(filePath.as_posix().replace(':/','://'), tempFilePath)
       filePath = tempFilePath
-    report = outputString(outputStyle, 'h3', 'Report on extractor test')
+    report = outputString(outputStyle, 'h2', 'Report on extractor test')
     report += outputString(outputStyle, 'info', 'check file: '+str(filePath))
     extension = filePath.suffix[1:]
     pyFile = 'extractor_'+extension+'.py'
@@ -607,7 +609,7 @@ class Backend(CLI_Mixin):
       size = len(content['image'])
       report += outputString(outputStyle,'info','Image size '+str(int(size/1024))+'kB')
       if outputStyle!='text':
-        report += outputString(outputStyle,'h4','Additional window shows the image')
+        report += outputString(outputStyle,'h2','Additional window shows the image')
       if len(content['image'])>20:
         if content['image'].startswith('data:image/'):
           #png or jpg encoded base64

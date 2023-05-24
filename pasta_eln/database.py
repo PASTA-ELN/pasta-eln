@@ -196,6 +196,7 @@ class Database:
       doc['-branch'] = [doc['-branch']]
     try:
       res = self.db.create_document(doc)
+      logging.debug('successfully saved doc with type and branch '+doc['_id']+' '+'/'.join(doc['-type'])+'  |  '+str(doc['-branch']))
     except:
       logging.error('could not save, likely JSON issue')
       if 'image' in doc:
@@ -279,7 +280,7 @@ class Database:
       for item in change:
         if item in ['_id','_rev','-branch']:                #skip items cannot do not result in change
           continue
-        if item=='-type' and change['-type']=='--':          #skip non-set type
+        if item=='-type' and change['-type']==['--']:          #skip non-set type
           continue
         if item=='image' and change['image']=='':          #skip if non-change in image
           continue
@@ -835,7 +836,7 @@ class Database:
               if SVG_RE.match(doc['image']) is None:
                 outstring+= outputString(outputStyle,'error','dch13: svg-image not valid '+doc['_id'])
             elif doc['image']=='':
-              outstring+= outputString(outputStyle,'warning','warning: image not valid '+doc['_id']+' '+doc['image'])
+              outstring+= outputString(outputStyle,'unsure','image not valid '+doc['_id']+' '+doc['image'])
             else:
               outstring+= outputString(outputStyle,'error','dch14: image not valid '+doc['_id']+' '+doc['image'])
 
@@ -848,10 +849,10 @@ class Database:
     shasumKeys = []
     for item in view:
       if item['key']=='':
-        outstring+= outputString(outputStyle,'warning','measurement without shasum: '+item['id']+' '+item['value'])
+        outstring+= outputString(outputStyle,'error','measurement without shasum: '+item['id']+' '+item['value'])
       else:
         if item['key'] in shasumKeys:
-          key = item['key'] if item['key'] else '-empty-'
+          key = item['key'] if item['key'] else '- empty string -'
           outstring+= outputString(outputStyle,'error','dch16: shasum twice in view: '+key+' '+item['id']+' '+item['value'])
         shasumKeys.append(item['key'])
     return outstring

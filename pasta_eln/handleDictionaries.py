@@ -56,7 +56,7 @@ def fillDocBeforeCreate(data:dict[str,Any], docType:list[str]) -> dict[str,Any]:
   protectedKeys = ['comment','-tags','image']
   # Handle the important entries: -type, _id, -date, -branch
   if '-type' not in data:
-    data['-type'] = [docType]
+    data['-type'] = docType
   if data['-type']==['']:
     data['-type']=['-']
   if isinstance(data['-type'], str):

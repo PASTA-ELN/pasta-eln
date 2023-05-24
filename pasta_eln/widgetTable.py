@@ -42,7 +42,7 @@ class Table(QWidget):
     self.addBtn = TextButton('Add',        self.executeAction, headerL, name='addItem')
     TextButton('Add Filter', self.executeAction, headerL, name='addFilter')
 
-    selection = TextButton('Selection',None, headerL)
+    self.selectionBtn = TextButton('Selection',None, headerL)
     selectionMenu = QMenu(self)
     Action('Toggle selection',self.executeAction, selectionMenu, self, name='toggleSelection')
     selectionMenu.addSeparator()
@@ -51,7 +51,7 @@ class Table(QWidget):
     Action('Toggle hidden',   self.executeAction, selectionMenu, self, name='toggleHide')
     Action('Rerun extractors',self.executeAction, selectionMenu, self, name='rerunExtractors')
     Action('Delete',          self.executeAction, selectionMenu, self, name='delete')
-    selection.setMenu(selectionMenu)
+    self.selectionBtn.setMenu(selectionMenu)
 
     more = TextButton('More',None, headerL)
     self.moreMenu = QMenu(self)
@@ -112,6 +112,10 @@ class Table(QWidget):
       self.actionChangeColums.setVisible(False)
     else:
       self.addBtn.show()
+      if docType=='x0':
+        self.selectionBtn.hide()
+      else:
+        self.selectionBtn.show()
       path = 'viewDocType/'+self.docType+'All' if self.showAll else 'viewDocType/'+self.docType
       if self.projID=='':
         self.data = self.comm.backend.db.getView(path)
@@ -178,8 +182,10 @@ class Table(QWidget):
           if len([b for b in doc['-branch'] if False in b['show']])>0:
             item.setText( item.text()+'  \U0001F441' )
           item.setAccessibleText(doc['_id'])
-          item.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)   # type: ignore[operator]
-          item.setCheckState(Qt.CheckState.Unchecked)
+          if docType!='x0':
+            item.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)   # type: ignore[operator]
+            item.setCheckState(Qt.CheckState.Unchecked)
+            #TODO_P3 design: make the checkboxes larger!
         else:
           item.setFlags(Qt.ItemIsEnabled) # type: ignore[arg-type]
         model.setItem(i, j, item)
