@@ -93,7 +93,8 @@ class Table(QWidget):
       docType (str): document type; leave empty for redraw
       projID (str): id of project
     """
-    logging.info('table:changeTable |'+docType+'|'+projID+'|')
+    if docType!=self.docType or projID!=self.projID:
+      logging.debug('table:changeTable |'+docType+'|'+projID+'|')
     self.models = []
     for i in reversed(range(self.filterL.count())):
       self.filterL.itemAt(i).widget().setParent(None)   # type: ignore

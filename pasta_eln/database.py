@@ -7,6 +7,7 @@ from anytree.search import find_by_attr
 from cloudant.client import CouchDB
 from cloudant.replicator import Replicator
 from .fixedStrings import defaultOntology, defaultOntologyNode
+from .miscTools import tracebackString
 
 class Database:
   """
@@ -56,6 +57,7 @@ class Database:
     Args:
       configuration (dict): configuration of all elements
     """
+    tracebackString(True)
     # for the individual docTypes
     jsDefault = "if ($docType$) {emit($key$, [$outputList$]);}"
     viewCode = {}
@@ -185,10 +187,7 @@ class Database:
     Returns:
         dict: json representation of submitted document
     """
-    tracebackList = traceback.format_stack()
-    tracebackList = [item for item in tracebackList if 'backend.py' in item or 'database.py' in item or 'Tests' in item or 'pasta' in item]
-    tracebackString = '|'.join([item.split('\n')[1].strip() for item in tracebackList])  #| separated list of stack excluding last
-    doc['-client'] = tracebackString
+    doc['-client'] = tracebackString(True)
     if '-branch' in doc and 'op' in doc['-branch']:
       del doc['-branch']['op']  #remove operation, saveDoc creates and therefore always the same
       if 'show' not in doc['-branch']:
@@ -222,10 +221,7 @@ class Database:
     Returns:
         dict: json representation of updated document
     """
-    tracebackList = traceback.format_stack()
-    tracebackList = [item for item in tracebackList if 'backend.py' in item or 'database.py' in item or 'Tests' in item or 'pasta' in item]
-    tracebackString = '|'.join([item.split('\n')[1].strip() for item in tracebackList])  #| separated list of stack excluding last
-    change['-client'] = tracebackString
+    change['-client'] = tracebackString(True)
     newDoc = self.db[docID]  #this is the document that stays live
     initialDocCopy = dict(newDoc)
     if 'edit' in change:     #if delete
@@ -273,7 +269,7 @@ class Database:
             if originalLength!=len(newDoc['-branch']):
               nothingChanged = False
           else:
-            logging.info('database.update.1: unknown branch op: '+newDoc['_id']+' '+newDoc['-name'])
+            logging.warning('database.update.1: unknown branch op: '+newDoc['_id']+' '+newDoc['-name'])
             return newDoc
       #handle other items
       # change has to be dict, not Document
@@ -307,7 +303,7 @@ class Database:
             oldDoc[item] = newDoc[item]
           newDoc[item] = change[item]
       if nothingChanged:
-        logging.info('database.update.2: doc not updated-nothing changed: '+newDoc['_id']+' '+newDoc['-name'])
+        logging.debug('database.update.2: doc not updated-nothing changed: '+newDoc['_id']+' '+newDoc['-name'])
         return newDoc
     #For both cases: delete and update
     if '_curated' not in newDoc['-tags'] and newDoc['-type'][0][0]!='x':
@@ -324,12 +320,12 @@ class Database:
     if '_attachments' in newDoc:
       attachmentName = 'v'+str(len(newDoc['_attachments']))+'.json'
     newDoc.put_attachment(attachmentName, 'application/json', json.dumps(oldDoc))
-    logging.info('database.update.3: doc update success: '+newDoc['_id']+' '+newDoc['-name'])
+    logging.debug('database.update.3: doc update success: '+newDoc['_id']+' '+newDoc['-name'])
     return newDoc
 
 
   def updateBranch(self, docID:str, branch:int, child:int, stack:Optional[list[str]]=None,
-                   path:str='') -> tuple[str, str]:
+                   path:Optional[str]='') -> tuple[str, Optional[str]]:
     """
     Update document by updating the branch
 
@@ -344,14 +340,17 @@ class Database:
       str, str: old path, new path
     """
     doc = self.db[docID]
-    doc['-client'] = 'updateBrach'
+    doc['-client'] = tracebackString(True)
     if len(doc['-branch'])<=branch:
       print('**ERROR Cannot delete branch that does not exist '+str(branch)+'in doc '+docID)
       logging.error('**ERROR Cannot delete branch that does not exist '+str(branch)+'in doc '+docID)
     oldPath = doc['-branch'][branch]['path']
     if path=='':
-      name = f'{child:03d}'+'_'+'_'.join(oldPath.split('/')[-1].split('_')[1:])
-      path = '/'.join(oldPath.split('/')[:-1]+[name])
+      if oldPath is None:
+        path = None
+      else:
+        name = f'{child:03d}'+'_'+'_'.join(oldPath.split('/')[-1].split('_')[1:])
+        path = '/'.join(oldPath.split('/')[:-1]+[name])
     doc['-branch'][branch]['path']=path
     doc['-branch'][branch]['child']=child
     if stack is not None:
@@ -359,7 +358,7 @@ class Database:
     doc['-branch'][branch]['show'] = self.createShowFromStack( doc['-branch'][branch]['stack'] )
     doc.save()
     #update .json on disk
-    if doc['-type'][0][0]=='x':
+    if doc['-type'][0][0]=='x' and path is not None:
       with open(self.basePath/path/'.id_pastaELN.json', 'w', encoding='utf-8') as fOut:
         fOut.write(json.dumps(doc))
     return oldPath, path
@@ -394,6 +393,7 @@ class Database:
     Returns:
       dict: document that was removed
     """
+    tracebackString(True)
     doc = self.db[docID]
     res = dict(doc)
     doc.delete()

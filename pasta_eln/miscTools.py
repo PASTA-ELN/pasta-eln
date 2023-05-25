@@ -69,6 +69,23 @@ def outputString(fmt:str='print', level:str='info', message:str='') ->str:
   return ''
 
 
+def tracebackString(log:bool=False) -> str:
+    """ Create a formatted string of traceback
+
+    Args:
+      log (bool): write to logging
+
+    Returns:
+      str: | separated string of call functions
+    """
+    tracebackList = traceback.format_stack()[:-2]
+    tracebackString = '|'.join([item.split('\n')[1].strip() for item in tracebackList])  #| separated list of stack excluding last
+    if log:
+      logging.info(' traceback: '+ tracebackString)
+    return tracebackString
+
+
+
 def camelCase(text:str) -> str:
   """
   Produce camelCase from normal string

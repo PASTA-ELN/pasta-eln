@@ -184,6 +184,9 @@ class Form(QDialog):
       # create the data that has to be saved
       if hasattr(self, 'key_-name'):
         self.doc['-name'] = getattr(self, 'key_-name').text().strip()
+        if self.doc['-name'] == '':
+          showMessage(self, 'Error', 'A created item has to have a valid name')
+          return
         if self.doc['-type'][0]=='x0':  #prevent project-directory names that are identical
           others = [i['value'][0] for i in self.comm.backend.db.getView('viewDocType/x0All')]
           others = [createDirName(i,'x0', 0) for i in others]
@@ -197,16 +200,18 @@ class Form(QDialog):
             (not hasattr(self, 'key_'+key) and not hasattr(self, 'textEdit_'+key)):
           continue
         if key in ['comment','content']:
-          self.doc[key] = getattr(self, 'textEdit_'+key).toPlainText().strip()
-          if key == 'content' and '-branch' in self.doc:
-            for branch in self.doc['-branch']:
-              if branch['path'] is not None:
-                if branch['path'].endswith('.md'):  #TODO_P5 only write markdown files for now
-                  with open(self.comm.backend.basePath/branch['path'], 'w', encoding='utf-8') as fOut:
-                    fOut.write(self.doc['content'])
-                  logging.debug('Wrote new content to '+branch['path'])
-                else:
-                  showMessage(self, 'Information', 'Did not update file on harddisk, since PASTA-ELN cannot write this format')
+          text = getattr(self, 'textEdit_'+key).toPlainText().strip()
+          if text!='':
+            self.doc[key] = text
+            if key == 'content' and '-branch' in self.doc:
+              for branch in self.doc['-branch']:
+                if branch['path'] is not None:
+                  if branch['path'].endswith('.md'):  #TODO_P5 only write markdown files for now
+                    with open(self.comm.backend.basePath/branch['path'], 'w', encoding='utf-8') as fOut:
+                      fOut.write(self.doc['content'])
+                    logging.debug('Wrote new content to '+branch['path'])
+                  else:
+                    showMessage(self, 'Information', 'Did not update file on harddisk, since PASTA-ELN cannot write this format')
         elif isinstance(valueOld, list):  #items that are comma separated in the text-field
           self.doc[key] = getattr(self, 'key_'+key).text().strip().split(' ')
         elif isinstance(valueOld, str):
@@ -250,7 +255,6 @@ class Form(QDialog):
             self.db.updateBranch( self.doc['_id'], 0, 9999, [self.projectComboBox.currentData()], newPath)
         else:
           newProjID = [self.projectComboBox.currentData()]
-          print('New document in proj', newProjID)
       # ---- if docType changed: save; no further save to db required ----
       if hasattr(self, 'docTypeComboBox') and self.docTypeComboBox.currentData() != '':
         self.doc['-type'] = [self.docTypeComboBox.currentData()]
@@ -286,7 +290,7 @@ class Form(QDialog):
       #!!! NO updates / redraw here since one does not know from where form came
       # e.g. sequential edit cannot have redraw here
       if btn.text().endswith('Next'):
-        for delKey in [i for i in self.doc.keys() if i[0] in ['-','_'] and i not in ['-name','-type']]:
+        for delKey in [i for i in self.doc.keys() if i[0] in ['-','_'] and i not in ['-name','-type','-tags']]:
           del self.doc[delKey]
         self.comm.changeTable.emit('', '')
       else:

@@ -164,7 +164,7 @@ class Backend(CLI_Mixin):
       doc['-type'] = docType.split('/')
       if len(hierStack) == 0:
         hierStack = self.hierStack
-    logging.info('Add/edit data in cwd:'+str(self.cwd)+' with stack:'+str(hierStack)+' and name: '\
+    logging.debug('Add/edit data in cwd:'+str(self.cwd)+' with stack:'+str(hierStack)+' and name: '\
                  +doc['-name']+' type:'+str(doc['-type'])+' and edit: '+str(edit))
 
     # collect structure-doc and prepare
@@ -286,7 +286,7 @@ class Backend(CLI_Mixin):
         docID (string): information on how to change
         dirName (string): change into this directory (absolute path given). For if data is moved
     """
-    logging.info('changeHierarchy should only be used in CLI mode') #TODO_P5 remove this warning
+    logging.debug('changeHierarchy should only be used in CLI mode') #TODO_P5 remove this warning
     if self.cwd is None:
       return
     if docID is None or (docID[0]=='x' and docID[1]!='-'):  #cd ..: none. close 'project', 'task'

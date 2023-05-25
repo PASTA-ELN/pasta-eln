@@ -37,11 +37,7 @@ class DocTypes(QWidget):
       docType (str): document type
       projID (str): project ID for filtering
     """
-    logging.debug('docType:changeTable |'+docType+'|'+projID+'|')
     self.details.hide()
-    # if docType=='x0':
-    # else:
-    #   self.details.show()
     return
 
 
@@ -54,7 +50,6 @@ class DocTypes(QWidget):
     Args:
       docID (str): document ID
     """
-    logging.debug('docType:changeDetails |'+docID+'|')
     if docID!='':
       self.details.show()
     return
