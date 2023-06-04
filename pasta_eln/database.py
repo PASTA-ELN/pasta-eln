@@ -351,7 +351,7 @@ class Database:
         name = f'{child:03d}'+'_'+'_'.join(oldPath.split('/')[-1].split('_')[1:])
         path = '/'.join(oldPath.split('/')[:-1]+[name])
     # test if path already exists
-    if docID[0]=='x':
+    if docID[0]=='x' and path is not None:
       if not (self.basePath/path/'.id_pastaELN.json').exists():
         print('**ERROR** Target folder\'s json does not exist: '+path)
         logging.error('Target folder\'s json does not exist: '+path)
