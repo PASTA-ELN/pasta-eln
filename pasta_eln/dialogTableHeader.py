@@ -113,6 +113,7 @@ class TableHeader(QDialog):
       # self.comm.changeDetails('redraw')
       #TODO_P3 tableHeaderChange: requires view to change to views, not ontology
       showMessage(self, 'To be implemented','The changing of the table headers has to be fully implemented, yet.')
+      self.comm.backend.db.initViews(self.comm.backend.configuration)
       self.accept()  #close
     else:
       print('dialogTableHeader: did not get a fitting btn ',btn.text())

@@ -161,6 +161,7 @@ class Form(QDialog):
       for key, value in self.db.dataLabels.items():
         if key[0]!='x':
           self.docTypeComboBox.addItem(value, userData=key)
+      self.docTypeComboBox.addItem('_UNIDENTIFIED_', userData='-')
       self.formL.addRow(QLabel('Data type'), self.docTypeComboBox)
     #final button box
     buttonBox = QDialogButtonBox(QDialogButtonBox.Cancel | QDialogButtonBox.Save)
@@ -266,12 +267,14 @@ class Form(QDialog):
             del doc['_id']
             del doc['_rev']
             doc['-name'] = doc['-name'] if doc['-branch'][0]['path'] is None else doc['-branch'][0]['path']
-            self.comm.backend.addData(self.docTypeComboBox.currentData(), doc, doc['-branch'][0]['stack'])
+            doc = fillDocBeforeCreate(doc, self.docTypeComboBox.currentData())
+            self.db.saveDoc(doc)
         else:                  #single or sequential update
           self.db.remove(self.doc['_id'])
           del self.doc['_id']
           del self.doc['_rev']
-          self.comm.backend.addData(self.docTypeComboBox.currentData(), self.doc, self.doc['-branch'][0]['stack'])
+          self.doc = fillDocBeforeCreate(self.doc, self.docTypeComboBox.currentData())
+          self.db.saveDoc(self.doc)
       # ---- all other changes ----
       else:
         if '_ids' in self.doc: #group update

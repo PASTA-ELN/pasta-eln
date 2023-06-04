@@ -67,7 +67,7 @@ def fillDocBeforeCreate(data:dict[str,Any], docType:list[str]) -> dict[str,Any]:
   if '-branch' not in data:
     print('Empty branch in data')
     data['-branch'] = [{'stack':[], 'path':None, 'child':-1, 'show':[]}]
-  if 'show' not in data['-branch']:
+  if 'show' not in data['-branch'] and isinstance(data['-branch'], dict):
     data['-branch']['show'] = [True]*(len(data['-branch']['stack'])+1)
   # separate comment into tags and fields
   # these tags are lost: '#d': too short; '#3tag': starts with number

@@ -187,7 +187,7 @@ class Database:
     Returns:
         dict: json representation of submitted document
     """
-    doc['-client'] = tracebackString(True, doc['_id'])
+    doc['-client'] = tracebackString(False, 'save:'+doc['_id'])
     if '-branch' in doc and 'op' in doc['-branch']:
       del doc['-branch']['op']  #remove operation, saveDoc creates and therefore always the same
       if 'show' not in doc['-branch']:
@@ -221,7 +221,7 @@ class Database:
     Returns:
         dict: json representation of updated document
     """
-    change['-client'] = tracebackString(True, docID)
+    change['-client'] = tracebackString(False, 'updateDoc:'+docID)
     newDoc = self.db[docID]  #this is the document that stays live
     initialDocCopy = dict(newDoc)
     if 'edit' in change:     #if delete
@@ -319,7 +319,7 @@ class Database:
     if '_attachments' in newDoc:
       attachmentName = 'v'+str(len(newDoc['_attachments']))+'.json'
     newDoc.put_attachment(attachmentName, 'application/json', json.dumps(oldDoc))
-    logging.debug('database.update.3: doc update success: '+newDoc['_id']+' '+newDoc['-name'])
+    logging.debug('database.update.3: doc update success: '+newDoc['_id']+' '+newDoc['-name']+'\n')
     return newDoc
 
 
@@ -339,7 +339,7 @@ class Database:
       str, str: old path, new path
     """
     doc = self.db[docID]
-    doc['-client'] = tracebackString(True, docID)
+    doc['-client'] = tracebackString(False, 'updateBranch:'+docID)
     if len(doc['-branch'])<=branch:
       print('**ERROR Cannot delete branch that does not exist '+str(branch)+'in doc '+docID)
       logging.error('**ERROR Cannot delete branch that does not exist '+str(branch)+'in doc '+docID)
@@ -351,14 +351,21 @@ class Database:
         name = f'{child:03d}'+'_'+'_'.join(oldPath.split('/')[-1].split('_')[1:])
         path = '/'.join(oldPath.split('/')[:-1]+[name])
     # test if path already exists
-    if path is not None and (self.basePath/path).exists():  #TODO_P5 temporary to ensure that code works: this should not be triggered
-      print('**ERROR** Target folder already exist: '+path+'. Try to create a new path name')
-      logging.error('Target folder already exist: '+path+'. Try to create a new path name')
-    while path is not None and (self.basePath/path).exists():
-      if re.search(r"_\d+$", path) is None:
-        path += '_1'
-      else:
-        path = '_'.join(path.split('_')[:-1])+'_'+str(int(path.split('_')[-1])+1)
+    if docID[0]=='x':
+      if not (self.basePath/path/'.id_pastaELN.json').exists():
+        print('**ERROR** Target folder\'s json does not exist: '+path)
+        logging.error('Target folder\'s json does not exist: '+path)
+      with open(self.basePath/path/'.id_pastaELN.json', 'r', encoding='utf-8') as fIn:
+        oldJsonContent = json.load(fIn)
+        oldDocID = oldJsonContent['_id']
+      if path is not None and (self.basePath/path).exists() and docID!=oldDocID:  #TODO_P5 temporary to ensure that code works: this should not be triggered
+        print('**ERROR** Target folder already exist: '+path+'. Try to create a new path name')
+        logging.error('Target folder already exist: '+path+'. Try to create a new path name')
+      while path is not None and (self.basePath/path).exists() and docID!=oldDocID:
+        if re.search(r"_\d+$", path) is None:
+          path += '_1'
+        else:
+          path = '_'.join(path.split('_')[:-1])+'_'+str(int(path.split('_')[-1])+1)
     # assemble data
     doc['-branch'][branch]['path']=path
     doc['-branch'][branch]['child']=child
@@ -403,7 +410,7 @@ class Database:
     Returns:
       dict: document that was removed
     """
-    tracebackString(True, docID)
+    tracebackString(True, 'remove:'+docID)
     doc = self.db[docID]
     res = dict(doc)
     doc.delete()

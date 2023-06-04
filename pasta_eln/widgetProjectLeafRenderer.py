@@ -142,8 +142,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       if 'comment' in doc.keys() and not folded:
         text = QTextDocument()
         text.setMarkdown(self.comm.backend.db.getDoc(docID)['comment'].strip())
-        cutOff = 30 if text.size().toTuple()[1]>30 else 10 # type: ignore
-        height += text.size().toTuple()[1]-cutOff # type: ignore
+        height += text.size().toTuple()[1] # type: ignore
       if 'image' in docKeys and not folded:
         if doc['image'].startswith('data:image/'):
           try:

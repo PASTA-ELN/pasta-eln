@@ -40,7 +40,6 @@ class Sidebar(QWidget):
     Args:
       projectID (str): projectID on which to focus: '' string=draw default; 'redraw' implies redraw; id implies id
     """
-    logging.debug('sidebar:redraw |')
     # Delete old widgets from layout and create storage
     for i in reversed(range(self.mainL.count())):
       self.mainL.itemAt(i).widget().setParent(None) # type: ignore
