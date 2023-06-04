@@ -10,6 +10,9 @@ from .backend import Backend
 # curl https://api.ror.org/organizations/02nv7yv05
 # curl -s -H "Accept: application/json" https://pub.orcid.org/v3.0/0000-0001-7691-2856
 
+# include into ./
+# https://gitlab.mpcdf.mpg.de/smenon/elastic-constant-demo/-/blob/main/metadata_data.yml
+# use project metadata to fill as much as possible
 
 #GENERAL TERMS IN ro-crate-metadata.json (None implies not saved)
 pasta2json = {

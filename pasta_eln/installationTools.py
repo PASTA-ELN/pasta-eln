@@ -305,8 +305,8 @@ def configuration(command:str='test', user:str='', password:str='', pathPasta:Pa
     else:
       output += '**ERROR: No GUI in config file\n'
   guiItems = {"theme": "light_blue",
+    "imageSizeDetails": 600,
     "imageWidthProject": 300,
-    "imageWidthDetails": 600,
     "sidebarWidth": 280,
     "loggingLevel": "INFO",
     "tableColumns": {}}

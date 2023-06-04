@@ -192,9 +192,9 @@ class Details(QScrollArea):
     # TextButton('Edit',self.callEdit, self.headerL)
     for key in self.doc:
       if key=='image':
-        width = self.comm.backend.configuration['GUI']['imageWidthDetails'] \
+        size = self.comm.backend.configuration['GUI']['imageSizeDetails'] \
                 if hasattr(self.comm.backend, 'configuration') else 300
-        Image(self.doc['image'], self.specialL, width=width)
+        Image(self.doc['image'], self.specialL, anyDimension=size)
         self.specialW.show()
       elif key=='content':
         text = QTextEdit()

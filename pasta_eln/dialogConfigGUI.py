@@ -28,8 +28,8 @@ class ConfigurationGUI(QWidget):
         ['dark_amber','dark_blue','dark_cyan','dark_lightgreen','dark_pink','dark_purple', 'dark_red',\
         'dark_teal','dark_yellow','light_amber','light_blue','light_cyan','light_cyan_500','light_lightgreen',\
         'light_pink','light_purple','light_red','light_teal','light_yellow','none'])
-      self.wP = self.addRowList('imageWidthProject','Image width in project view', ['300','400','500','600'])
-      self.wD = self.addRowList('imageWidthDetails','Image width in details view', ['500','600','700','800'])
+      self.wD = self.addRowList('imageSizeDetails','Image size in details view', ['500','600','700','800'])
+      self.wP = self.addRowList('imageWidthProject','Image size in project view', ['300','400','500','600'])
       self.wS = self.addRowList('sidebarWidth','Sidebar width', ['220','280','340'])
       self.log = self.addRowList('loggingLevel','Logging level (more->less)', ['DEBUG','INFO','WARNING','ERROR'])
       self.tabAppearanceL.addRow('Save changes', TextButton('Save changes', self.saveData, None))
@@ -78,8 +78,8 @@ class ConfigurationGUI(QWidget):
     Save changes to hard-disk
     """
     self.backend.configuration['GUI']['theme'] = self.theme.currentText()
+    self.backend.configuration['GUI']['imageSizeDetails'] = int(self.wD.currentText())
     self.backend.configuration['GUI']['imageWidthProject'] = int(self.wP.currentText())
-    self.backend.configuration['GUI']['imageWidthDetails'] = int(self.wD.currentText())
     self.backend.configuration['GUI']['sidebarWidth'] =  int(self.wS.currentText())
     self.backend.configuration['GUI']['loggingLevel'] = self.log.currentText()
     with open(Path.home()/'.pastaELN.json', 'w', encoding='utf-8') as fConf:

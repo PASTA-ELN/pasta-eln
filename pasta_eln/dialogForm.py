@@ -39,7 +39,7 @@ class Form(QDialog):
     # GUI elements
     mainL = QVBoxLayout(self)
     if 'image' in self.doc:
-      width = self.comm.backend.configuration['GUI']['imageWidthDetails'] \
+      width = self.comm.backend.configuration['GUI']['imageSizeDetails'] \
                 if hasattr(self.comm.backend, 'configuration') else 300
       Image(self.doc['image'], mainL, anyDimension=width)
     formW = QWidget()

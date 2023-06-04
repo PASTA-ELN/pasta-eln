@@ -296,6 +296,7 @@ class Table(QWidget):
         intersectionDict.update({'_ids':docIDs})
         self.comm.formDoc.emit(intersectionDict)
         self.comm.changeDetails.emit('redraw')
+        self.comm.changeTable.emit(self.docType, '')
     elif menuName == 'sequentialEdit':
       for row in range(self.models[-1].rowCount()):
         item, docID = self.itemFromRow(row)

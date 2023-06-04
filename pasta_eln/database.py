@@ -1,5 +1,5 @@
 """ Class for interaction with couchDB """
-import traceback, logging, time, json, os
+import traceback, logging, time, json, os, re
 from typing import Any, Optional, Union
 from pathlib import Path
 from anytree import Node
@@ -57,9 +57,9 @@ class Database:
     Args:
       configuration (dict): configuration of all elements
     """
-    tracebackString(True)
+    tracebackString(True, 'initView')
     # for the individual docTypes
-    jsDefault = "if ($docType$) {emit($key$, [$outputList$]);}"
+    jsDefault = 'if ($docType$) {doc["-branch"].forEach(function(branch){emit($key$, [$outputList$]);});}'
     viewCode = {}
     for docType in [i for i in self.ontology if i[0] not in ['_','-']]+['-']:
       if docType=='x0':
@@ -71,9 +71,9 @@ class Database:
       else:     #show all doctypes that have the same starting ..
         js    = jsDefault.replace('$docType$', "doc['-type'].join('/').substring(0, "+str(len(docType))+")=='"\
                 +docType+"' && (doc['-branch'][0].show.every(function(i) {return i;}))")\
-                .replace('$key$','doc["-branch"][0].stack[0]')
+                .replace('$key$','branch.stack[0]')
         jsAll = jsDefault.replace('$docType$', "doc['-type'].join('/').substring(0, "+str(len(docType))+")=='"\
-                +docType+"'").replace('$key$','doc["-branch"][0].stack[0]')
+                +docType+"'").replace('$key$','branch.stack[0]')
       outputList = []
       if docType == '-':
         enumeration = enumerate(defaultOntologyNode)
@@ -187,7 +187,7 @@ class Database:
     Returns:
         dict: json representation of submitted document
     """
-    doc['-client'] = tracebackString(True)
+    doc['-client'] = tracebackString(True, doc['_id'])
     if '-branch' in doc and 'op' in doc['-branch']:
       del doc['-branch']['op']  #remove operation, saveDoc creates and therefore always the same
       if 'show' not in doc['-branch']:
@@ -195,7 +195,7 @@ class Database:
       doc['-branch'] = [doc['-branch']]
     try:
       res = self.db.create_document(doc)
-      logging.debug('successfully saved doc with type and branch '+doc['_id']+' '+'/'.join(doc['-type'])+'  |  '+str(doc['-branch']))
+      logging.debug('successfully saved doc with type and branch '+doc['_id']+' '+'/'.join(doc['-type'])+'  |  '+str(doc['-branch'])+'\n')
     except:
       logging.error('could not save, likely JSON issue')
       if 'image' in doc:
@@ -221,7 +221,7 @@ class Database:
     Returns:
         dict: json representation of updated document
     """
-    change['-client'] = tracebackString(True)
+    change['-client'] = tracebackString(True, docID)
     newDoc = self.db[docID]  #this is the document that stays live
     initialDocCopy = dict(newDoc)
     if 'edit' in change:     #if delete
@@ -229,7 +229,6 @@ class Database:
       for item in oldDoc:
         if item not in ('_id', '_rev', '-branch'):
           del newDoc[item]
-      newDoc['-client'] = tracebackString
       newDoc['-user']   = change['-user']
     else:                    #if update
       oldDoc = {}            #this is an older revision of the document
@@ -340,7 +339,7 @@ class Database:
       str, str: old path, new path
     """
     doc = self.db[docID]
-    doc['-client'] = tracebackString(True)
+    doc['-client'] = tracebackString(True, docID)
     if len(doc['-branch'])<=branch:
       print('**ERROR Cannot delete branch that does not exist '+str(branch)+'in doc '+docID)
       logging.error('**ERROR Cannot delete branch that does not exist '+str(branch)+'in doc '+docID)
@@ -351,12 +350,23 @@ class Database:
       else:
         name = f'{child:03d}'+'_'+'_'.join(oldPath.split('/')[-1].split('_')[1:])
         path = '/'.join(oldPath.split('/')[:-1]+[name])
+    # test if path already exists
+    if path is not None and (self.basePath/path).exists():  #TODO_P5 temporary to ensure that code works: this should not be triggered
+      print('**ERROR** Target folder already exist: '+path+'. Try to create a new path name')
+      logging.error('Target folder already exist: '+path+'. Try to create a new path name')
+    while path is not None and (self.basePath/path).exists():
+      if re.search(r"_\d+$", path) is None:
+        path += '_1'
+      else:
+        path = '_'.join(path.split('_')[:-1])+'_'+str(int(path.split('_')[-1])+1)
+    # assemble data
     doc['-branch'][branch]['path']=path
     doc['-branch'][branch]['child']=child
     if stack is not None:
       doc['-branch'][branch]['stack']=stack
     doc['-branch'][branch]['show'] = self.createShowFromStack( doc['-branch'][branch]['stack'] )
     doc.save()
+    logging.debug('success BRANCH updated with type and branch '+doc['_id']+' '+'/'.join(doc['-type'])+'  |  '+str(doc['-branch'])+'\n')
     #update .json on disk
     if doc['-type'][0][0]=='x' and path is not None:
       with open(self.basePath/path/'.id_pastaELN.json', 'w', encoding='utf-8') as fOut:
@@ -393,7 +403,7 @@ class Database:
     Returns:
       dict: document that was removed
     """
-    tracebackString(True)
+    tracebackString(True, docID)
     doc = self.db[docID]
     res = dict(doc)
     doc.delete()
@@ -652,7 +662,7 @@ class Database:
     Returns:
         str: output
     """
-    import re, base64, io
+    import base64, io
     from PIL import Image
     from .miscTools import outputString
     outstring = ''

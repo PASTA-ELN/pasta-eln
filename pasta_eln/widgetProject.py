@@ -122,7 +122,6 @@ class Project(QWidget):
     siblingsOld = db.getView('viewHierarchy/viewHierarchy', startKey=' '.join(stackOld))
     siblingsOld = [i for i in siblingsOld if len(i['key'].split(' '))==len(stackOld)+1 and \
                                             i['value'][0]>branchOld['child']]
-    logging.debug('OLD INFORMATION '+docID+' '+str(stackOld)+'  '+str(branchIdx))
     #gather new information
     stackNew = []  #create reversed
     currentItem = item
@@ -137,7 +136,7 @@ class Project(QWidget):
     siblingsNew = db.getView('viewHierarchy/viewHierarchy', startKey=' '.join(stackNew))
     siblingsNew = [i for i in siblingsNew if len(i['key'].split(' '))==len(stackNew)+1 and \
                                              i['value'][0]>=childNew]
-    logging.debug('NEW INFORMATION '+docID+' '+str(stackNew)+'  '+str(childNew)+' '+pathNew)
+    logging.debug('Change project: docID -old- -new- '+docID+' | '+str(stackOld)+'  '+str(branchIdx)+' | '+str(stackNew)+' '+str(childNew)+' '+pathNew)
     if stackOld==stackNew and childOld==childNew:  #nothing changed, just redraw
       return
     # change siblings

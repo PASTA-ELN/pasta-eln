@@ -69,11 +69,12 @@ def outputString(fmt:str='print', level:str='info', message:str='') ->str:
   return ''
 
 
-def tracebackString(log:bool=False) -> str:
+def tracebackString(log:bool=False, docID:str='') -> str:
   """ Create a formatted string of traceback
 
   Args:
     log (bool): write to logging
+    docID (str): docID used in comment
 
   Returns:
     str: | separated string of call functions
@@ -81,9 +82,8 @@ def tracebackString(log:bool=False) -> str:
   tracebackList = traceback.format_stack()[:-2]
   reply = '|'.join([item.split('\n')[1].strip() for item in tracebackList])  #| separated list of stack excluding last
   if log:
-    logging.info(' traceback: '+ reply)
+    logging.info(' traceback '+docID+': '+ reply)
   return reply
-
 
 
 def camelCase(text:str) -> str:
