@@ -353,11 +353,12 @@ class Database:
     # test if path already exists
     if docID[0]=='x' and path is not None:
       if not (self.basePath/path/'.id_pastaELN.json').exists():
-        print('**ERROR** Target folder\'s json does not exist: '+path)
-        logging.error('Target folder\'s json does not exist: '+path)
-      with open(self.basePath/path/'.id_pastaELN.json', 'r', encoding='utf-8') as fIn:
-        oldJsonContent = json.load(fIn)
-        oldDocID = oldJsonContent['_id']
+        logging.debug('Target folder\'s json does not exist: '+path)
+        oldDocID = ''
+      else:
+        with open(self.basePath/path/'.id_pastaELN.json', 'r', encoding='utf-8') as fIn:
+          oldJsonContent = json.load(fIn)
+          oldDocID = oldJsonContent['_id']
       if path is not None and (self.basePath/path).exists() and docID!=oldDocID:
         print('**ERROR** Target folder already exist: '+path+'. Try to create a new path name')
         logging.error('Target folder already exist: '+path+'. Try to create a new path name')
@@ -375,7 +376,7 @@ class Database:
     doc.save()
     logging.debug('success BRANCH updated with type and branch '+doc['_id']+' '+'/'.join(doc['-type'])+'  |  '+str(doc['-branch'])+'\n')
     #update .json on disk
-    if doc['-type'][0][0]=='x' and path is not None:
+    if doc['-type'][0][0]=='x' and path is not None and (self.basePath/path).exists():
       with open(self.basePath/path/'.id_pastaELN.json', 'w', encoding='utf-8') as fOut:
         fOut.write(json.dumps(doc))
     return oldPath, path
