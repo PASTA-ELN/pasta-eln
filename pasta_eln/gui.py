@@ -195,7 +195,7 @@ def main() -> None:
   #  old versions of basicConfig do not know "encoding='utf-8'"
   logging.basicConfig(filename=logPath, level=logging.INFO, format='%(asctime)s|%(levelname)s:%(message)s',
                       datefmt='%m-%d %H:%M:%S')
-  for package in ['urllib3', 'requests', 'asyncio', 'PIL', 'matplotlib.font_manager']:
+  for package in ['urllib3', 'requests', 'asyncio', 'PIL', 'matplotlib']:
     logging.getLogger(package).setLevel(logging.WARNING)
   logging.info('Start PASTA GUI')
   # remainder

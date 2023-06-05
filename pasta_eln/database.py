@@ -358,7 +358,7 @@ class Database:
       with open(self.basePath/path/'.id_pastaELN.json', 'r', encoding='utf-8') as fIn:
         oldJsonContent = json.load(fIn)
         oldDocID = oldJsonContent['_id']
-      if path is not None and (self.basePath/path).exists() and docID!=oldDocID:  #TODO_P5 temporary to ensure that code works: this should not be triggered
+      if path is not None and (self.basePath/path).exists() and docID!=oldDocID:
         print('**ERROR** Target folder already exist: '+path+'. Try to create a new path name')
         logging.error('Target folder already exist: '+path+'. Try to create a new path name')
       while path is not None and (self.basePath/path).exists() and docID!=oldDocID:
