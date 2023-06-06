@@ -140,10 +140,10 @@ class Project(QWidget):
       return
     # change siblings
     for line in siblingsOld:
-      pathOldSib, pathNewSib = db.updateBranch(docID=line['id'], branch=line['value'][3], child=line['value'][0]-1)
+      db.updateBranch(docID=line['id'], branch=line['value'][3], child=line['value'][0]-1)
     for line in siblingsNew:
       if line['id']!=docID:
-        pathOldSib, pathNewSib = db.updateBranch(docID=line['id'], branch=line['value'][3], child=line['value'][0]+1)
+        db.updateBranch(docID=line['id'], branch=line['value'][3], child=line['value'][0]+1)
     # change item in question
     db.updateBranch(docID=docID, branch=branchIdx, stack=stackNew, path=pathNew, child=childNew)
     item.setText('/'.join(stackNew+[docID]))     #update item.text() to new stack

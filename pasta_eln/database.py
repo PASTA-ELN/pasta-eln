@@ -324,7 +324,7 @@ class Database:
 
 
   def updateBranch(self, docID:str, branch:int, child:int, stack:Optional[list[str]]=None,
-                   path:str='') -> tuple[str, Optional[str]]:
+                   path:Optional[str]='') -> tuple[str, Optional[str]]:
     """
     Update document by updating the branch
 
