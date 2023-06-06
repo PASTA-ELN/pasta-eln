@@ -1,6 +1,5 @@
 """ Widget that shows the content of project in a electronic labnotebook """
-import logging
-from pathlib import Path
+import logging, json
 from typing import Optional, Any
 from PySide6.QtWidgets import QLabel, QVBoxLayout, QHBoxLayout, QWidget, QMenu, QMessageBox # pylint: disable=no-name-in-module
 from PySide6.QtGui import QStandardItemModel, QStandardItem    # pylint: disable=no-name-in-module
@@ -121,7 +120,7 @@ class Project(QWidget):
     branchIdx= doc['-branch'].index(branchOld)
     siblingsOld = db.getView('viewHierarchy/viewHierarchy', startKey=' '.join(stackOld))
     siblingsOld = [i for i in siblingsOld if len(i['key'].split(' '))==len(stackOld)+1 and \
-                                            i['value'][0]>branchOld['child']]
+                                            i['value'][0]>branchOld['child'] and i['value'][0]<9999]
     #gather new information
     stackNew = []  #create reversed
     currentItem = item
@@ -135,25 +134,17 @@ class Project(QWidget):
     pathNew  = parentDir+'/'+dirNameNew
     siblingsNew = db.getView('viewHierarchy/viewHierarchy', startKey=' '.join(stackNew))
     siblingsNew = [i for i in siblingsNew if len(i['key'].split(' '))==len(stackNew)+1 and \
-                                             i['value'][0]>=childNew]
+                                             i['value'][0]>=childNew and i['value'][0]<9999]
     logging.debug('Change project: docID -old- -new- '+docID+' | '+str(stackOld)+'  '+str(branchIdx)+' | '+str(stackNew)+' '+str(childNew)+' '+pathNew)
     if stackOld==stackNew and childOld==childNew:  #nothing changed, just redraw
       return
     # change siblings
     for line in siblingsOld:
-      if line['value'][0]<9999:
-        pathOldSib, pathNewSib = db.updateBranch(docID=line['id'], branch=line['value'][3], child=line['value'][0]-1)
-        if pathOldSib is not None and pathNewSib is not None:
-          (self.comm.backend.basePath/pathOldSib).rename(self.comm.backend.basePath/pathNewSib)
+      pathOldSib, pathNewSib = db.updateBranch(docID=line['id'], branch=line['value'][3], child=line['value'][0]-1)
     for line in siblingsNew:
-      if line['value'][0]<9999:
+      if line['id']!=docID:
         pathOldSib, pathNewSib = db.updateBranch(docID=line['id'], branch=line['value'][3], child=line['value'][0]+1)
-        if pathOldSib is not None and pathNewSib is not None:
-          (self.comm.backend.basePath/pathOldSib).rename(self.comm.backend.basePath/pathNewSib)
-    #change item in question
-    if isinstance(branchOld['path'], str) and (self.comm.backend.basePath/branchOld['path']).exists():
-      pathOld = self.comm.backend.basePath/branchOld['path']
-      pathOld.rename(self.comm.backend.basePath/pathNew)
+    # change item in question
     db.updateBranch(docID=docID, branch=branchIdx, stack=stackNew, path=pathNew, child=childNew)
     item.setText('/'.join(stackNew+[docID]))     #update item.text() to new stack
     return

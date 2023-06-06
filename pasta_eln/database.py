@@ -324,7 +324,7 @@ class Database:
 
 
   def updateBranch(self, docID:str, branch:int, child:int, stack:Optional[list[str]]=None,
-                   path:Optional[str]='') -> tuple[str, Optional[str]]:
+                   path:str='') -> tuple[str, Optional[str]]:
     """
     Update document by updating the branch
 
@@ -375,10 +375,28 @@ class Database:
     doc['-branch'][branch]['show'] = self.createShowFromStack( doc['-branch'][branch]['stack'] )
     doc.save()
     logging.debug('success BRANCH updated with type and branch '+doc['_id']+' '+'/'.join(doc['-type'])+'  |  '+str(doc['-branch'])+'\n')
-    #update .json on disk
-    if doc['-type'][0][0]=='x' and path is not None and (self.basePath/path).exists():
+    # move content: folder and data and write .json to disk
+    if oldPath is not None and path is not None:
+      (self.basePath/oldPath).rename(self.basePath/path)
       with open(self.basePath/path/'.id_pastaELN.json', 'w', encoding='utf-8') as fOut:
-        fOut.write(json.dumps(doc))
+        fOut.write(json.dumps(self.getDoc(docID)))
+    # update children's paths
+    children = self.getView('viewHierarchy/viewHierarchy', startKey=' '.join(doc['-branch'][branch]['stack']+[docID,'']))
+    for line in children:
+      docLine = self.db[line['id']]
+      flagNotChanged = True
+      for branchLine in docLine['-branch']:
+        if branchLine['path'] is not None and branchLine['path'].startswith(oldPath):
+          branchLine['path'] = path+branchLine['path'][len(oldPath):]
+          flagNotChanged = False
+      if flagNotChanged:
+        print("**ERROR** Not updaded")
+      docLine.save()
+      # update .json on disk
+      for branchLine in docLine['-branch']:
+        if line['id'][0]=='x'  and (self.basePath/branchLine['path']).exists():
+          with open(self.basePath/branchLine['path']/'.id_pastaELN.json', 'w', encoding='utf-8') as fOut:
+            fOut.write(json.dumps(docLine))
     return oldPath, path
 
 

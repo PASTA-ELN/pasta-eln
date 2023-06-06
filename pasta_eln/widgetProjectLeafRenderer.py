@@ -17,6 +17,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     self.width = -1
     self.debugMode = logging.DEBUG
     self.lineSep = 20
+    self.frameSize = 6
 
 
   def setCommunication(self, comm:Communicate) -> None:
@@ -46,7 +47,8 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       index (QModelIndex): index
     """
     xOffset, yOffset = option.rect.topLeft().toTuple()
-    topLeft2nd = option.rect.topRight()-QPoint(self.width,0)
+    topLeft2nd     = option.rect.topRight()   - QPoint(self.width+self.frameSize-2,-self.frameSize)
+    bottomRight2nd = option.rect.bottomRight()- QPoint(self.frameSize-2,self.frameSize)
     docID   = index.data(Qt.DisplayRole).split('/')[-1]  # type: ignore
     if docID.endswith(' -'):
       docID = docID[:-2]
@@ -64,7 +66,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
         painter.drawPixmap(topLeft2nd, pixmap)
       elif doc['image'].startswith('<?xml'):
         image = QSvgRenderer(bytearray(doc['image'], encoding='utf-8'))
-        image.render(painter,    QRectF(topLeft2nd, option.rect.bottomRight()))
+        image.render(painter,    QRectF(topLeft2nd, bottomRight2nd))
     elif 'content' in doc and not folded:
       text = QTextDocument()
       text.setMarkdown(doc['content'])
@@ -149,14 +151,14 @@ class ProjectLeafRenderer(QStyledItemDelegate):
             pixmap = QPixmap()
             pixmap.loadFromData(base64.b64decode(doc['image'][22:]))
             pixmap = pixmap.scaledToWidth(self.width)
-            height = max(height, pixmap.height())
+            height = max(height, pixmap.height())+2*self.frameSize
           except:
             print("**Exception in Renderer.sizeHint") #TODO_P5 if successful in Aug2023: remove
         else:
-          height = max(height, int(self.width*3/4))
+          height = max(height, int(self.width*3/4))+2*self.frameSize
       if 'content' in docKeys and not folded:
         text = QTextDocument()
         text.setMarkdown(self.comm.backend.db.getDoc(docID)['content'])
-        height = max(height, text.size().toTuple()[1])  # type: ignore
+        height = max(height, text.size().toTuple()[1]) +2*self.frameSize # type: ignore
       return QSize(400, height)
     return QSize()
