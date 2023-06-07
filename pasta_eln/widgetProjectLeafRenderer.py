@@ -47,6 +47,8 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       option (QStyleOptionViewItem): option incl. current coordinates
       index (QModelIndex): index
     """
+    if self.comm is None:
+      return
     xOffset, yOffset = option.rect.topLeft().toTuple()
     topLeft2nd     = option.rect.topRight()   - QPoint(self.width+self.frameSize+1,-self.frameSize)
     bottomRight2nd = option.rect.bottomRight()- QPoint(self.frameSize+1,self.frameSize)
@@ -56,8 +58,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       folded = True
     else:
       folded = False
-    if self.comm is not None:
-      doc     = self.comm.backend.db.getDoc(docID)
+    doc     = self.comm.backend.db.getDoc(docID)
     painter.fillRect(option.rect.marginsRemoved(QMargins(2,6,4,0)),  QColor(getColor(self.comm.backend, 'secondary')).darker(110))
     painter.fillRect(option.rect.marginsRemoved(QMargins(-2,3,8,5)), QColor(getColor(self.comm.backend, 'secondaryLight')))
     if 'image' in doc and doc['image']!='' and not folded:
@@ -72,9 +73,9 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     elif 'content' in doc and not folded:
       text = QTextDocument()
       text.setMarkdown(doc['content'])
-      if text.size().toTuple()[0] > self.width*3:
+      if text.size().toTuple()[0] > self.width*3:  # type: ignore
         text.setTextWidth(self.width*3)
-      topLeftContent = option.rect.topRight() - QPoint(max(self.width,text.size().toTuple()[0])+self.frameSize-2,-self.frameSize)
+      topLeftContent = option.rect.topRight() - QPoint(max(self.width,text.size().toTuple()[0])+self.frameSize-2,-self.frameSize) # type: ignore
       painter.translate(topLeftContent)
       text.drawContents(painter)
       painter.translate(-topLeftContent)

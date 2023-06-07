@@ -3,7 +3,7 @@ import logging, json
 from typing import Optional, Any
 from PySide6.QtWidgets import QLabel, QVBoxLayout, QHBoxLayout, QWidget, QMenu, QMessageBox # pylint: disable=no-name-in-module
 from PySide6.QtGui import QStandardItemModel, QStandardItem    # pylint: disable=no-name-in-module
-from PySide6.QtCore import Slot, Qt, QItemSelectionModel      # pylint: disable=no-name-in-module
+from PySide6.QtCore import Slot, Qt, QItemSelectionModel, QModelIndex # pylint: disable=no-name-in-module
 from anytree import PreOrderIter, Node
 from .widgetProjectTreeView import TreeView
 from .style import TextButton, Action, showMessage
@@ -226,17 +226,18 @@ class Project(QWidget):
         self.bodyW.show()
       elif self.bodyW is not None:
         self.bodyW.hide()
-    elif menuName == 'allFold':
+    elif menuName == 'allFold' and self.tree is not None:
       self.foldedAll = not self.foldedAll
-      def recursiveRowIteration(index:int) -> None:
-        for subRow in range(self.tree.model().rowCount(index)):
-          subIndex = self.tree.model().index(subRow,0, index)
-          subItem  = self.tree.model().itemFromIndex(subIndex)
-          if self.foldedAll:
-            subItem.setText(subItem.text()+' -')
-          elif subItem.text().endswith(' -'):
-            subItem.setText(subItem.text()[:-2])
-          recursiveRowIteration(subIndex)
+      def recursiveRowIteration(index:QModelIndex) -> None:
+        if self.tree is not None:
+          for subRow in range(self.tree.model().rowCount(index)):
+            subIndex = self.tree.model().index(subRow,0, index)
+            subItem  = self.tree.model().itemFromIndex(subIndex)
+            if self.foldedAll:
+              subItem.setText(subItem.text()+' -')
+            elif subItem.text().endswith(' -'):
+              subItem.setText(subItem.text()[:-2])
+            recursiveRowIteration(subIndex)
         return
       recursiveRowIteration(self.tree.model().index(-1,0))
     elif menuName == 'hideShow':
