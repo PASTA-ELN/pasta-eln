@@ -2,10 +2,11 @@
 import base64, logging, re
 from typing import Optional
 from PySide6.QtCore import Qt, QSize, QPoint, QMargins, QRectF, QModelIndex# pylint: disable=no-name-in-module
-from PySide6.QtGui import QStaticText, QPixmap, QTextDocument, QPainter # pylint: disable=no-name-in-module
+from PySide6.QtGui import QStaticText, QPixmap, QTextDocument, QPainter, QColor # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QStyledItemDelegate, QStyleOptionViewItem # pylint: disable=no-name-in-module
 from PySide6.QtSvg import QSvgRenderer                        # pylint: disable=no-name-in-module
 from .communicate import Communicate
+from .style import getColor
 
 _DO_NOT_RENDER_ = ['image','content','metaVendor','metaUser','shasum','comment']
 
@@ -47,8 +48,8 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       index (QModelIndex): index
     """
     xOffset, yOffset = option.rect.topLeft().toTuple()
-    topLeft2nd     = option.rect.topRight()   - QPoint(self.width+self.frameSize-2,-self.frameSize)
-    bottomRight2nd = option.rect.bottomRight()- QPoint(self.frameSize-2,self.frameSize)
+    topLeft2nd     = option.rect.topRight()   - QPoint(self.width+self.frameSize+1,-self.frameSize)
+    bottomRight2nd = option.rect.bottomRight()- QPoint(self.frameSize+1,self.frameSize)
     docID   = index.data(Qt.DisplayRole).split('/')[-1]  # type: ignore
     if docID.endswith(' -'):
       docID = docID[:-2]
@@ -57,7 +58,8 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       folded = False
     if self.comm is not None:
       doc     = self.comm.backend.db.getDoc(docID)
-    painter.fillRect(option.rect.marginsRemoved(QMargins(0,2,0,2)), Qt.lightGray)
+    painter.fillRect(option.rect.marginsRemoved(QMargins(2,6,4,0)),  QColor(getColor(self.comm.backend, 'secondary')).darker(110))
+    painter.fillRect(option.rect.marginsRemoved(QMargins(-2,3,8,5)), QColor(getColor(self.comm.backend, 'secondaryLight')))
     if 'image' in doc and doc['image']!='' and not folded:
       if doc['image'].startswith('data:image/'):
         pixmap = QPixmap()
