@@ -252,7 +252,6 @@ class Form(QDialog):
             else:
               oldPath    = self.comm.backend.basePath/self.doc['-branch'][0]['path']
               newPath    = parentPath+'/'+oldPath.name
-              oldPath.rename(self.comm.backend.basePath/newPath)
             self.db.updateBranch( self.doc['_id'], 0, 9999, [self.projectComboBox.currentData()], newPath)
         else:
           newProjID = [self.projectComboBox.currentData()]

@@ -344,12 +344,11 @@ class Database:
       print('**ERROR Cannot delete branch that does not exist '+str(branch)+'in doc '+docID)
       logging.error('**ERROR Cannot delete branch that does not exist '+str(branch)+'in doc '+docID)
     oldPath = doc['-branch'][branch]['path']
+    if oldPath is None:
+      path = None
     if path=='':
-      if oldPath is None:
-        path = None
-      else:
-        name = f'{child:03d}'+'_'+'_'.join(oldPath.split('/')[-1].split('_')[1:])
-        path = '/'.join(oldPath.split('/')[:-1]+[name])
+      name = f'{child:03d}'+'_'+'_'.join(oldPath.split('/')[-1].split('_')[1:])
+      path = '/'.join(oldPath.split('/')[:-1]+[name])
     # test if path already exists
     if docID[0]=='x' and path is not None:
       if not (self.basePath/path/'.id_pastaELN.json').exists():
@@ -377,7 +376,7 @@ class Database:
     doc.save()
     logging.debug('success BRANCH updated with type and branch '+doc['_id']+' '+'/'.join(doc['-type'])+'  |  '+str(doc['-branch'])+'\n')
     # move content: folder and data and write .json to disk
-    if oldPath is not None and path is not None:
+    if oldPath is not None and path is not None and ':/' not in oldPath:
       (self.basePath/oldPath).rename(self.basePath/path)
     if docID[0]=='x' and path is not None:
       with open(self.basePath/path/'.id_pastaELN.json', 'w', encoding='utf-8') as fOut:
@@ -392,7 +391,7 @@ class Database:
             branchLine['path'] = path+branchLine['path'][len(oldPath):]
             flagNotChanged = False
         if flagNotChanged:
-          print("**ERROR** Not updaded")
+          print("**Unsure** Not updated"+str(line))
         docLine.save()
         # update .json on disk
         for branchLine in docLine['-branch']:

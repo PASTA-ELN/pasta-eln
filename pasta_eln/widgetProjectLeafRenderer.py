@@ -70,48 +70,52 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     elif 'content' in doc and not folded:
       text = QTextDocument()
       text.setMarkdown(doc['content'])
-      painter.translate(topLeft2nd)
+      if text.size().toTuple()[0] > self.width*3:
+        text.setTextWidth(self.width*3)
+      topLeftContent = option.rect.topRight() - QPoint(max(self.width,text.size().toTuple()[0])+self.frameSize-2,-self.frameSize)
+      painter.translate(topLeftContent)
       text.drawContents(painter)
-      painter.translate(-topLeft2nd)
+      painter.translate(-topLeftContent)
     yOffset += self.lineSep/2
     hiddenText = '     \U0001F441' if len([b for b in doc['-branch'] if False in b['show']])>0 else ''
     docTypeText= 'folder' if doc['-type'][0][0]=='x' else '/'.join(doc['-type'])
     painter.drawStaticText(xOffset, yOffset, QStaticText(doc['-name']+hiddenText+'\t\t'+docTypeText))
     if self.debugMode:
       painter.drawStaticText(xOffset+700, yOffset, QStaticText(index.data(Qt.DisplayRole)))  # type: ignore
-    if '-tags' in doc and len(doc['-tags'])>0:
-      yOffset += self.lineSep
-      tags = ['_curated_' if i=='_curated' else '#'+i for i in doc['-tags']]
-      tags = ['\u2605'*int(i[2]) if i[:2]=='#_' else i for i in tags]
-      painter.drawStaticText(xOffset, yOffset, QStaticText('Tags: '+' '.join(tags)))
-    for key in doc:
-      if key in _DO_NOT_RENDER_ or key[0] in ['-','_']:
-        continue
-      yOffset += self.lineSep
-      if isinstance(doc[key], str):
-        #TODO_P4: projectTree technology: image does not allow for easy context aware clicks: like click on links, right-click image
-        if re.match(r'^[a-z\-]-[a-z0-9]{32}$',doc[key]) is None:  #normal text
-          value = doc[key]
-        elif self.comm is not None:                           #link
-          table  = self.comm.backend.db.getView('viewDocType/'+key+'All')
-          choices= [i for i in table if i['id']==doc[key]]
-          if len(choices)==1:
-            value = '\u260D '+choices[0]['value'][0]
-          else:
-            value = 'ERROR WITH LINK'
-        painter.drawStaticText(xOffset, yOffset, QStaticText(key+': '+value))
-      elif isinstance(doc[key], list):                         #list of qrCodes
-        painter.drawStaticText(xOffset, yOffset, QStaticText(key+': '+', '.join(doc[key])))
-    if 'comment' in doc and not folded:
-      text = QTextDocument()
-      text.setMarkdown(doc['comment'].strip())
-      painter.translate(QPoint(xOffset-3, yOffset+15))
-      text.drawContents(painter)
-      painter.translate(-QPoint(xOffset-3, yOffset+15))
-      #TODO_P3 design ProjectView: Currently, the comment is more highlighted than the title of an item due
-      # to a larger and bolder font. It would make more sense though if the titles were bolder, larger and
-      # thus more readable, while tags and comments are less highlighted.
-      #TODO_P3 design ProjectView: if comments are too long they cover the right area
+    if not folded:
+      if '-tags' in doc and len(doc['-tags'])>0:
+        yOffset += self.lineSep
+        tags = ['_curated_' if i=='_curated' else '#'+i for i in doc['-tags']]
+        tags = ['\u2605'*int(i[2]) if i[:2]=='#_' else i for i in tags]
+        painter.drawStaticText(xOffset, yOffset, QStaticText('Tags: '+' '.join(tags)))
+      for key in doc:
+        if key in _DO_NOT_RENDER_ or key[0] in ['-','_']:
+          continue
+        yOffset += self.lineSep
+        if isinstance(doc[key], str):
+          #TODO_P4: projectTree technology: image does not allow for easy context aware clicks: like click on links, right-click image
+          if re.match(r'^[a-z\-]-[a-z0-9]{32}$',doc[key]) is None:  #normal text
+            value = doc[key]
+          elif self.comm is not None:                           #link
+            table  = self.comm.backend.db.getView('viewDocType/'+key+'All')
+            choices= [i for i in table if i['id']==doc[key]]
+            if len(choices)==1:
+              value = '\u260D '+choices[0]['value'][0]
+            else:
+              value = 'ERROR WITH LINK'
+          painter.drawStaticText(xOffset, yOffset, QStaticText(key+': '+value))
+        elif isinstance(doc[key], list):                         #list of qrCodes
+          painter.drawStaticText(xOffset, yOffset, QStaticText(key+': '+', '.join(doc[key])))
+      if 'comment' in doc:
+        text = QTextDocument()
+        text.setMarkdown(doc['comment'].strip())
+        painter.translate(QPoint(xOffset-3, yOffset+15))
+        text.drawContents(painter)
+        painter.translate(-QPoint(xOffset-3, yOffset+15))
+        #TODO_P3 design ProjectView: Currently, the comment is more highlighted than the title of an item due
+        # to a larger and bolder font. It would make more sense though if the titles were bolder, larger and
+        # thus more readable, while tags and comments are less highlighted.
+        #TODO_P3 design ProjectView: if comments are too long they cover the right area
     return
 
     #TODO_P3 design projectLeaves: 3 columns?
@@ -141,11 +145,11 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       docKeys = doc.keys()
       height  = len([i for i in docKeys if not i in _DO_NOT_RENDER_ and i[0] not in ['-','_'] ])  #height in text lines
       height  = (height+3) * self.lineSep
-      if 'comment' in doc.keys() and not folded:
+      if 'content' in docKeys and not folded:
         text = QTextDocument()
-        text.setMarkdown(self.comm.backend.db.getDoc(docID)['comment'].strip())
-        height += text.size().toTuple()[1] # type: ignore
-      if 'image' in docKeys and not folded:
+        text.setMarkdown(self.comm.backend.db.getDoc(docID)['content'])
+        height = max(height, text.size().toTuple()[1]) +2*self.frameSize # type: ignore
+      elif 'image' in docKeys and not folded:
         if doc['image'].startswith('data:image/'):
           try:
             pixmap = QPixmap()
@@ -156,9 +160,11 @@ class ProjectLeafRenderer(QStyledItemDelegate):
             print("**Exception in Renderer.sizeHint") #TODO_P5 if successful in Aug2023: remove
         else:
           height = max(height, int(self.width*3/4))+2*self.frameSize
-      if 'content' in docKeys and not folded:
+      elif 'comment' in doc.keys() and not folded:
         text = QTextDocument()
-        text.setMarkdown(self.comm.backend.db.getDoc(docID)['content'])
-        height = max(height, text.size().toTuple()[1]) +2*self.frameSize # type: ignore
+        text.setMarkdown(self.comm.backend.db.getDoc(docID)['comment'].strip())
+        height += text.size().toTuple()[1]-25 # type: ignore
+      else:
+        height -= 25
       return QSize(400, height)
     return QSize()

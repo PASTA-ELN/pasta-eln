@@ -25,6 +25,7 @@ class Project(QWidget):
     self.taskID = ''
     self.docProj:dict[str,Any]= {}
     self.showAll= False
+    self.foldedAll = False
     self.btnAddSubfolder:Optional[TextButton] = None
     self.btnHideShow:Optional[TextButton]     = None
 
@@ -126,7 +127,8 @@ class Project(QWidget):
     currentItem = item
     while currentItem.parent() is not None:
       currentItem = currentItem.parent()
-      stackNew.append(currentItem.text().split('/')[-1])
+      docIDj = currentItem.text().split('/')[-1]
+      stackNew.append(docIDj[:-2] if docIDj.endswith(' -') else docIDj)
     stackNew = [self.projID] + stackNew[::-1]  #add project id and reverse
     childNew = item.row()
     dirNameNew= createDirName(doc['-name'],doc['-type'][0],childNew)
@@ -168,6 +170,7 @@ class Project(QWidget):
     more = TextButton('More',None, topbarL)
     moreMenu = QMenu(self)
     Action('Reduce/increase width', self.executeAction, moreMenu, self, name='projHide')
+    Action('Minimize/Maximize all', self.executeAction, moreMenu, self, name='allFold')
     Action('Scan',                  self.executeAction, moreMenu, self, name='scanProject')
     Action('Delete',                self.executeAction, moreMenu, self, name='deleteProject')
     more.setMenu(moreMenu)
@@ -223,6 +226,19 @@ class Project(QWidget):
         self.bodyW.show()
       elif self.bodyW is not None:
         self.bodyW.hide()
+    elif menuName == 'allFold':
+      self.foldedAll = not self.foldedAll
+      def recursiveRowIteration(index:int) -> None:
+        for subRow in range(self.tree.model().rowCount(index)):
+          subIndex = self.tree.model().index(subRow,0, index)
+          subItem  = self.tree.model().itemFromIndex(subIndex)
+          if self.foldedAll:
+            subItem.setText(subItem.text()+' -')
+          elif subItem.text().endswith(' -'):
+            subItem.setText(subItem.text()[:-2])
+          recursiveRowIteration(subIndex)
+        return
+      recursiveRowIteration(self.tree.model().index(-1,0))
     elif menuName == 'hideShow':
       self.showAll = not self.showAll
       self.changeProject('','')

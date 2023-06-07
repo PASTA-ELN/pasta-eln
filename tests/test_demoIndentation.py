@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 """TEST using the FULL set of python-requirements: create 3 projects; simplified form of testTutorialComplex """
 import os, shutil, traceback, logging, socket
-from datetime import datetime
 import warnings
 import unittest
 from pathlib import Path
@@ -100,6 +99,7 @@ class TestStringMethods(unittest.TestCase):
         shutil.copy(examplePath/('Al_'+str(i)+'mN_1and6.gwy'), pathConfocal)
         shutil.copy(examplePath/('Al_'+str(i)+'mN_2and5.gwy'), pathConfocal)
         shutil.copy(examplePath/('Al_'+str(i)+'mN_3and4.gwy'), pathConfocal)
+      shutil.copy(examplePath/'elastic_constants.ipynb', pathDFT)
       self.be.scanProject(idProj)
 
       ### ADD INSTRUMENTS AND THEIR ATTACHMENTS
