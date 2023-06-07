@@ -86,7 +86,7 @@ def runTests():
   Cannot be an action, since dependencies are partly private
   """
   for fileI in os.listdir('tests'):
-    if not fileI.endswith('.py'):
+    if not fileI.endswith('.py') or not fileI.startswith('test_'):
       continue
     result = subprocess.run(['pytest','-s','tests/'+fileI], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
     success = result.stdout.decode('utf-8').count('*** DONE WITH VERIFY ***')

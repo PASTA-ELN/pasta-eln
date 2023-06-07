@@ -87,14 +87,17 @@ class TreeView(QTreeView):
       self.comm.changeProject.emit('','') #refresh project
     elif menuName=='openExternal':
       docID = self.currentIndex().data().split('/')[-1]
-      doc   = self.comm.backend.db.getDoc(docID)
-      path  = Path(self.comm.backend.basePath)/doc['-branch'][0]['path']
-      if platform.system() == 'Darwin':       # macOS
-        subprocess.call(('open', path))
-      elif platform.system() == 'Windows':    # Windows
-        os.startfile(path) # type: ignore[attr-defined]
-      else:                                   # linux variants
-        subprocess.call(('xdg-open', path))
+      doc   = self.comm.backend.db.getDoc(docID[:-2] if docID.endswith(' -') else docID)
+      if doc['-branch'][0]['path'] is None:
+        showMessage(self, 'ERROR', 'Cannot open file that is only in the database','Warning')
+      else:
+        path  = Path(self.comm.backend.basePath)/doc['-branch'][0]['path']
+        if platform.system() == 'Darwin':       # macOS
+          subprocess.call(('open', path))
+        elif platform.system() == 'Windows':    # Windows
+          os.startfile(path) # type: ignore[attr-defined]
+        else:                                   # linux variants
+          subprocess.call(('xdg-open', path))
     else:
       print('**ERROR**: unknown context menu', menuName)
     return

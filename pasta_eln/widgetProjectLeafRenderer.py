@@ -82,7 +82,8 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     yOffset += self.lineSep/2
     hiddenText = '     \U0001F441' if len([b for b in doc['-branch'] if False in b['show']])>0 else ''
     docTypeText= 'folder' if doc['-type'][0][0]=='x' else '/'.join(doc['-type'])
-    painter.drawStaticText(xOffset, yOffset, QStaticText(doc['-name']+hiddenText+'\t\t'+docTypeText))
+    painter.drawStaticText(xOffset, yOffset, QStaticText(doc['-name']+hiddenText))
+    painter.drawStaticText(xOffset+400, yOffset, QStaticText(docTypeText))
     if self.debugMode:
       painter.drawStaticText(xOffset+700, yOffset, QStaticText(index.data(Qt.DisplayRole)))  # type: ignore
     if not folded:
@@ -138,32 +139,26 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     if index:
       docID   = index.data(Qt.DisplayRole).split('/')[-1]  # type: ignore
       if docID.endswith(' -'):
-        docID = docID[:-2]
-        folded = True
-      else:
-        folded = False
+        return QSize(400, self.lineSep*2)
       if self.comm is None:
         return QSize()
       doc = self.comm.backend.db.getDoc(docID)
       docKeys = doc.keys()
       height  = len([i for i in docKeys if not i in _DO_NOT_RENDER_ and i[0] not in ['-','_'] ])  #height in text lines
       height  = (height+3) * self.lineSep
-      if 'content' in docKeys and not folded:
+      if 'content' in docKeys:
         text = QTextDocument()
         text.setMarkdown(self.comm.backend.db.getDoc(docID)['content'])
         height = max(height, text.size().toTuple()[1]) +2*self.frameSize # type: ignore
-      elif 'image' in docKeys and not folded:
+      elif 'image' in docKeys:
         if doc['image'].startswith('data:image/'):
-          try:
-            pixmap = QPixmap()
-            pixmap.loadFromData(base64.b64decode(doc['image'][22:]))
-            pixmap = pixmap.scaledToWidth(self.width)
-            height = max(height, pixmap.height())+2*self.frameSize
-          except:
-            print("**Exception in Renderer.sizeHint") #TODO_P5 if successful in Aug2023: remove
+          pixmap = QPixmap()
+          pixmap.loadFromData(base64.b64decode(doc['image'][22:]))
+          pixmap = pixmap.scaledToWidth(self.width)
+          height = max(height, pixmap.height())+2*self.frameSize
         else:
           height = max(height, int(self.width*3/4))+2*self.frameSize
-      elif 'comment' in doc.keys() and not folded:
+      elif 'comment' in doc.keys():
         text = QTextDocument()
         text.setMarkdown(self.comm.backend.db.getDoc(docID)['comment'].strip())
         height += text.size().toTuple()[1]-25 # type: ignore

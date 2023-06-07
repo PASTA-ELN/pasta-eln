@@ -221,7 +221,7 @@ def installLinuxRoot(couchDBExists:bool, pathPasta:Path=Path(''), password:str='
 
 def configuration(command:str='test', user:str='', password:str='', pathPasta:Path=Path('')) -> str:
   '''
-  #TODO_P2 change to string-output
+  #TODO_P4 change to string-output
   Check configuration file .pastaELN.json for consistencies
 
   Args:
