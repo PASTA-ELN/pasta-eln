@@ -140,15 +140,15 @@ class Project(QWidget):
     logging.debug('Change project: docID -old- -new- '+docID+' | '+str(stackOld)+'  '+str(branchIdx)+' | '+str(stackNew)+' '+str(childNew)+' '+pathNew)
     if stackOld==stackNew and childOld==childNew:  #nothing changed, just redraw
       return
+    # change item in question
+    db.updateBranch(docID=docID, branch=branchIdx, stack=stackNew, path=pathNew, child=childNew)
+    item.setText('/'.join(stackNew+[docID]))     #update item.text() to new stack
     # change siblings
     for line in siblingsOld:
       db.updateBranch(docID=line['id'], branch=line['value'][3], child=line['value'][0]-1)
     for line in siblingsNew:
       if line['id']!=docID:
         db.updateBranch(docID=line['id'], branch=line['value'][3], child=line['value'][0]+1)
-    # change item in question
-    db.updateBranch(docID=docID, branch=branchIdx, stack=stackNew, path=pathNew, child=childNew)
-    item.setText('/'.join(stackNew+[docID]))     #update item.text() to new stack
     return
 
 
@@ -158,32 +158,37 @@ class Project(QWidget):
     """
     self.docProj = self.comm.backend.db.getDoc(self.projID)
     headerW = QWidget()
-    headerL = QVBoxLayout(headerW)
-    topbarW = QWidget()
-    topbarL = QHBoxLayout(topbarW)
-    hidden = '     \U0001F441' if len([b for b in self.docProj['-branch'] if False in b['show']])>0 else ''
-    topbarL.addWidget(QLabel(self.docProj['-name']+hidden))
-    topbarL.addStretch(1)
-    self.btnHideShow     = TextButton('Hide/Show',     self.executeAction, topbarL, name='hideShow')
-    self.btnAddSubfolder = TextButton('Add subfolder', self.executeAction, topbarL, name='addChild')
-    TextButton('Edit project',      self.executeAction, topbarL, name='editProject')
-    more = TextButton('More',None, topbarL)
+    headerL = QHBoxLayout(headerW)
+    infoW = QWidget()
+    infoL = QVBoxLayout(infoW)
+    buttonW = QWidget()
+    buttonL = QHBoxLayout(buttonW)
+    headerL.addWidget(infoW)
+    headerL.addStretch(1)
+    headerL.addWidget(buttonW)
+
+    self.btnHideShow     = TextButton('Hide/Show',     self.executeAction, buttonL, name='hideShow')
+    self.btnAddSubfolder = TextButton('Add subfolder', self.executeAction, buttonL, name='addChild')
+    TextButton('Edit project',      self.executeAction, buttonL, name='editProject')
+    more = TextButton('More',None, buttonL)
     moreMenu = QMenu(self)
     Action('Reduce/increase width', self.executeAction, moreMenu, self, name='projHide')
     Action('Minimize/Maximize all', self.executeAction, moreMenu, self, name='allFold')
     Action('Scan',                  self.executeAction, moreMenu, self, name='scanProject')
     Action('Delete',                self.executeAction, moreMenu, self, name='deleteProject')
     more.setMenu(moreMenu)
-    headerL.addWidget(topbarW)
     self.bodyW   = QWidget()
     bodyL   = QVBoxLayout(self.bodyW)
+
+    hidden = '     \U0001F441' if len([b for b in self.docProj['-branch'] if False in b['show']])>0 else ''
+    infoL.addWidget(QLabel(self.docProj['-name']+hidden))
     tags = ', '.join(self.docProj['tags']) if 'tags' in self.docProj else ''
     bodyL.addWidget(QLabel('Tags: '+tags))
     for key,value in self.docProj.items():
       if key[0] in ['_','-']:
         continue
       bodyL.addWidget(QLabel(key+': '+str(value)))
-    headerL.addWidget(self.bodyW)
+    infoL.addWidget(self.bodyW)
     self.mainL.addWidget(headerW)
     return
 

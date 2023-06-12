@@ -297,6 +297,7 @@ class Form(QDialog):
         self.comm.changeTable.emit('', '')
       else:
         self.accept()  #close
+        self.close()
     else:
       print('dialogForm: did not get a fitting btn ',btn.text())
     return

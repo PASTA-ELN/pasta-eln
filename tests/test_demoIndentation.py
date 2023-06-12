@@ -41,7 +41,7 @@ class TestStringMethods(unittest.TestCase):
     try:
       ### CREATE PROJECTS AND SHOW
       outputString(outputFormat,'h2','CREATE PROJECTS AND SHOW')
-      self.be.addData('x0', {'-name': 'Demonstrator: Indentation', \
+      self.be.addData('x0', {'-name': 'Demonstrator indentation', \
         'objective': 'Can we show interaction of the 3 TA-WSD members', 'status': 'active', \
         'comment': '#NFDI I am a comment for the project'})  #HT
       outputString(outputFormat, 'info', self.be.output('x0'))

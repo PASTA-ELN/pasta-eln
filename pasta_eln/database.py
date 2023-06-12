@@ -377,7 +377,10 @@ class Database:
     logging.debug('success BRANCH updated with type and branch '+doc['_id']+' '+'/'.join(doc['-type'])+'  |  '+str(doc['-branch'])+'\n')
     # move content: folder and data and write .json to disk
     if oldPath is not None and path is not None and ':/' not in oldPath:
-      (self.basePath/oldPath).rename(self.basePath/path)
+      if not (self.basePath/oldPath).exists() and (self.basePath/path).exists():
+        logging.debug('database:updateBranch: dont move since already good')
+      else:
+        (self.basePath/oldPath).rename(self.basePath/path)
     if docID[0]=='x' and path is not None:
       with open(self.basePath/path/'.id_pastaELN.json', 'w', encoding='utf-8') as fOut:
         fOut.write(json.dumps(self.getDoc(docID)))

@@ -115,7 +115,7 @@ class Backend(CLI_Mixin):
     self.addData('-edit-', doc)
     # change folder-name in database of all children
     if doc['-type'][0][0]=='x' and self.cwd is not None:
-      items = self.db.getView('viewHierarchy/viewPaths', startKey=self.cwd.relative_to(self.basePath).as_posix())
+      items = self.db.getView('viewHierarchy/viewPaths', startKey=self.cwd.relative_to(self.basePath).as_posix()+'/')
       for item in items:
         oldPathparts = item['key'].split('/')
         newPathParts = doc['-branch']['path'].split('/')

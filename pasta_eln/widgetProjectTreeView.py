@@ -102,6 +102,7 @@ class TreeView(QTreeView):
       print('**ERROR**: unknown context menu', menuName)
     return
 
+
   def treeDoubleClicked(self) -> None:
     """ after double-click on tree leaf: open form """
     docID = self.currentIndex().data().split('/')[-1]
