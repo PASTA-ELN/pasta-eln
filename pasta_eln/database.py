@@ -393,6 +393,10 @@ class Database:
           if branchLine['path'] is not None and branchLine['path'].startswith(oldPath):
             branchLine['path'] = path+branchLine['path'][len(oldPath):]
             flagNotChanged = False
+          if stack is not None and '/'.join(branchLine['stack']).startswith('/'.join(stackOld)):
+            branchLine['stack'] = stack+branchLine['stack'][len(stackOld):]
+            branchLine['show']  = self.createShowFromStack( branchLine['stack'] )
+            flagNotChanged = False
         if flagNotChanged:
           print("**Unsure** Not updated"+str(line))
         docLine.save()

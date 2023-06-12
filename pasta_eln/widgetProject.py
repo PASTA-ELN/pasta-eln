@@ -30,6 +30,7 @@ class Project(QWidget):
     self.btnHideShow:Optional[TextButton]     = None
 
 
+  #TODO_P3 real change of project: iterate current tree and tree from DB and compare differences: only update those
   @Slot(str, str)
   def changeProject(self, projID:str, docID:str) -> None:
     """
