@@ -6,6 +6,7 @@ import unittest
 from pathlib import Path
 from pasta_eln.backend import Backend
 from pasta_eln.miscTools import outputString
+from misc import DummyProgressBar
 
 class TestStringMethods(unittest.TestCase):
   """
@@ -20,6 +21,7 @@ class TestStringMethods(unittest.TestCase):
     """
     main function
     """
+    dummyProgressBar = DummyProgressBar()
     outputFormat = 'print'
     # initialization: create database, destroy on filesystem and database and then create new one
     warnings.filterwarnings('ignore', message='numpy.ufunc size changed')
@@ -41,28 +43,28 @@ class TestStringMethods(unittest.TestCase):
     try:
       ### CREATE PROJECTS AND SHOW
       outputString(outputFormat,'h2','CREATE PROJECTS AND SHOW')
-      self.be.addData('x0', {'-name': 'Demonstrator indentation', \
-        'objective': 'Can we show interaction of the 3 TA-WSD members', 'status': 'active', \
-        'comment': '#NFDI I am a comment for the project'})  #HT
+      self.be.addData('x0', {'-name': 'Demonstrator: Youngs modulus of EN AW 1050A', \
+        'objective': 'To follow a journey of real materials scientists that study elastic modulus using RDM tools and solutions developed by the NFDI-MatWerk community', 'status': 'active', \
+        'comment': '#NFDI This project includes indentation and confocal microscopy data.'})
       outputString(outputFormat, 'info', self.be.output('x0'))
 
       ### TEST PROJECT PLANING
       outputString(outputFormat,'h2','TEST PROJECT PLANING')
       idProj = self.be.db.getView('viewDocType/x0')[0]['id']
       self.be.changeHierarchy(idProj)
-      idIndent   = self.be.addData('x1',    {'-name': 'Nanoindentation','comment': 'executed at FZJ'})  #HT
+      idIndent   = self.be.addData('x1',    {'-name': 'Nanoindentation','comment': 'executed at FZJ'})
       self.be.changeHierarchy(idIndent)
       pathIndent = self.be.basePath/self.be.cwd
       self.be.changeHierarchy(None)
-      idConfocal = self.be.addData('x1',    {'-name': 'Confocal microscopy','comment': 'executed at FZJ'}) #HT
+      idConfocal = self.be.addData('x1',    {'-name': 'Confocal microscopy','comment': 'executed at FZJ'})
       self.be.changeHierarchy(idConfocal)
       pathConfocal = self.be.basePath/self.be.cwd
       self.be.changeHierarchy(None)
-      idArea     = self.be.addData('x1',    {'-name': 'Area identification','comment': 'executed at DZKI'})#HT
+      idArea     = self.be.addData('x1',    {'-name': 'Area identification via image analysis','comment': 'executed at DFKI'})
       self.be.changeHierarchy(idArea)
       pathArea = self.be.basePath/self.be.cwd
       self.be.changeHierarchy(None)
-      idDFT      = self.be.addData('x1',    {'-name': 'DFT simulations','comment': 'executed at MPIE'})#HT
+      idDFT      = self.be.addData('x1',    {'-name': 'Molecular statics simulations','comment': 'executed at MPIE'})
       self.be.changeHierarchy(idDFT)
       pathDFT = self.be.basePath/self.be.cwd
       self.be.changeHierarchy(None)
@@ -73,16 +75,16 @@ class TestStringMethods(unittest.TestCase):
       sopDir = self.dirName/'StandardOperatingProcedures'
       os.makedirs(sopDir)
       with open(sopDir/'Nanoindentation.md','w', encoding='utf-8') as fOut:
-        fOut.write('### Put sample in nanoindenter\n### Do indentation\nDo not forget to\n- calibrate tip\n- *calibrate stiffness*\n') #HT
+        fOut.write('### Nanoindentation instructions\n1. Insert sample into the glovebox (Siemens SIMATIC HMI)\n   * Vacuum box has to be refilled 3 times with Ar gas\n   * Open the vacuum box from the inside and place the sample under the microscope\n\n2. Setting up the experiment (Vickers nanoindentation)\n   * Find the area of interest using an appropriate microscope magnification setting (default- 40x)\n   * Define measurement parameters: normal force, time until maximum load, hold time at maximum load\n   * Select the positions for the required number of indents (define correct spacing)\n   * Start the experiment\n\n3. After the experiment:\n   * Save the nanoindentation curves to the local storage\n   * Download the data\n   * Remove the sample from the instrument and glovebox",\n')
       with open(sopDir/'Confocal.md','w', encoding='utf-8') as fOut:
-        fOut.write('### Put sample in Confocal\n### Do scanning\nDo not forget to\n- focus\n- adjust contrast\n') #HT
+        fOut.write('### Confocal microscopy instructions\n1. Place the sample on the platform below the lens\n   * The lens should be at its smallest setting 5x\n\n2. Measurement procedure\n   * Adjust the height of the specimen manually by moving the platform up or down until the surface will be in focus\n   * Search for the area of interest\n   * Select stronger lenses and adjust the focus  each time when the lens is changed\n   * Repeat until desired magnification is reached (5x, 10x, 20x, 50x, 100x)\n   * Adjust the brightness settings so that the surface does not appear too bright (red areas in the image)\n   * Scan the area\n   * Save the image\n   * To move to a different area, select a lens with smaller magnification if needed (esp. for measurement with 100x lens)\n\n3. Finishing the measurement:\n   *  Select the 5x lens\n   * Remove the sample from the platform\n   * Save the files on the local storage device\n')
       self.be.addData('procedure', {'-name': 'StandardOperatingProcedures/Confocal.md', 'comment': '#v1'})
       self.be.addData('procedure', {'-name': 'StandardOperatingProcedures/Nanoindentation.md', 'comment': '#v1'})
       outputString(outputFormat,'info',self.be.output('procedure'))
 
       ### TEST SAMPLES
       outputString(outputFormat,'h2','TEST SAMPLES')
-      self.be.addData('sample',    {'-name': 'Al', 'chemistry': 'Al99.9', 'qrCode': '13214124 99698708', 'comment': 'from RWTH S. Pruente'}) #HT
+      self.be.addData('sample',    {'-name': 'EN AW 1050A', 'chemistry': 'Al 99.5, Si 0.25, Fe 0.25', 'qrCode': '13214124 99698708', 'comment': ' received from RWTH S. Pruente'})
       outputString(outputFormat,'info',self.be.output('sample'))
       outputString(outputFormat,'info',self.be.outputQR())
 
@@ -100,12 +102,12 @@ class TestStringMethods(unittest.TestCase):
         shutil.copy(examplePath/('Al_'+str(i)+'mN_2and5.gwy'), pathConfocal)
         shutil.copy(examplePath/('Al_'+str(i)+'mN_3and4.gwy'), pathConfocal)
       shutil.copy(examplePath/'elastic_constants.ipynb', pathDFT)
-      self.be.scanProject(idProj)
+      self.be.scanProject(dummyProgressBar ,idProj)
 
       ### ADD INSTRUMENTS AND THEIR ATTACHMENTS
       outputString(outputFormat,'h2','ADD INSTRUMENTS AND ATTACHMENTS')
-      self.be.addData('instrument', {'-name': 'FischerScope', 'vendor':'Fischer', 'model':'100'})#HT
-      self.be.addData('instrument', {'-name': 'Confocal', 'vendor':'XXX', 'model':'YYY'})#HT
+      self.be.addData('instrument', {'-name': 'Fischerscope', 'vendor':'Fischer', 'model':'H100C'})
+      self.be.addData('instrument', {'-name': 'Confocal', 'vendor':'LEXT', 'model':'OLS4000'})
       outputString(outputFormat,'info',self.be.output('instrument'))
 
 
