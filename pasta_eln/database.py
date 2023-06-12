@@ -6,6 +6,7 @@ from anytree import Node
 from anytree.search import find_by_attr
 from cloudant.client import CouchDB
 from cloudant.replicator import Replicator
+from PySide6.QtWidgets import QProgressBar  # pylint: disable=no-name-in-module
 from .fixedStrings import defaultOntology, defaultOntologyNode
 from .miscTools import tracebackString
 
@@ -593,18 +594,19 @@ class Database:
     return
 
 
-  def replicateDB(self, dbInfo:dict[str,Any], removeAtStart:bool=False) -> str:
+  def replicateDB(self, dbInfo:dict[str,Any], progressBar:QProgressBar, removeAtStart:bool=False) -> str:
     """
     Replication to another instance
 
     Args:
         dbInfo (dict): info on the remote database
+        progressBar (): gui - qt progress bar
         removeAtStart (bool): remove remote DB before starting new
 
     Returns:
         str: report
     """
-    #TODO_P2 callback that shows progress
+    progressBar.show()
     try:
       rep = Replicator(self.client)
       try:
@@ -623,19 +625,25 @@ class Database:
       db2 = client2[dbInfo['database']]
       replResult = rep.create_replication(self.db, db2, create_target=False, continuous=False)
       logging.info('Start replication '+replResult['_id']+'.')
+      progressBar.setValue(10)
       #try every 10sec whether replication success. Do that for max. of 5min
       startTime = time.time()
       while True:
+        progressBar.setValue(10+ int((time.time()-startTime)/60./5.*90) )
         if (time.time()-startTime)/60.>5.:
           logging.info('Stop waiting for replication '+replResult['_id']+'.')
+          progressBar.hide()
           return "Waited for 5min. No replication success in that time"
         replResult.fetch()        # get updated, latest version from the server
         if '_replication_state' in replResult:
           logging.info('Success replication '+replResult['_id']+'.')
+          progressBar.hide()
           return "Replication success state: "+replResult['_replication_state']
         time.sleep(10)
     except:
+      progressBar.hide()
       return "**ERROR drp02: replicate error |\n"+traceback.format_exc()
+
 
 
   def historyDB(self) -> dict[str,Any]:

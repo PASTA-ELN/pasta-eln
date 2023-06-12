@@ -2,8 +2,8 @@
 import os, logging, webbrowser, json, sys
 from typing import Any
 from pathlib import Path
-from PySide6.QtCore import Qt, Slot      # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QApplication, QFileDialog # pylint: disable=no-name-in-module
+from PySide6.QtCore import Qt, Slot      # pylint: disable=no-name-in-module
 from PySide6.QtGui import QIcon, QPixmap  # pylint: disable=no-name-in-module
 from qt_material import apply_stylesheet  #of https://github.com/UN-GCPDS/qt-material
 
@@ -147,7 +147,7 @@ class MainWindow(QMainWindow):
       report = self.comm.backend.checkDB(outputStyle='html')
       showMessage(self, 'Report of database verification', report, style='QLabel {min-width: 800px}')
     elif menuName=='sync':
-      report = self.comm.backend.replicateDB()
+      report = self.comm.backend.replicateDB(progressBar=self.sidebar.progress)
       showMessage(self, 'Report of syncronization', report, style='QLabel {min-width: 450px}')
     elif menuName=='exit':
       self.close()

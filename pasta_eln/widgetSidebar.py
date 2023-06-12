@@ -1,7 +1,6 @@
 """ Sidebar widget that includes the navigation items """
-import logging
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QGridLayout, QTreeWidget, QTreeWidgetItem, QFrame # pylint: disable=no-name-in-module
-from PySide6.QtCore import Slot                                      # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QGridLayout, QTreeWidget, QTreeWidgetItem, QFrame, QProgressDialog, QProgressBar # pylint: disable=no-name-in-module
+from PySide6.QtCore import Slot, Qt                                    # pylint: disable=no-name-in-module
 from anytree import PreOrderIter, Node
 
 from .dialogConfig import Configuration
@@ -23,10 +22,18 @@ class Sidebar(QWidget):
     self.openProjectId = ''
 
     # GUI elements
-    self.mainL = QVBoxLayout()
-    self.mainL.setContentsMargins(7,15,0,7)
-    self.mainL.setSpacing(7)
-    self.setLayout(self.mainL)
+    mainL = QVBoxLayout()
+    projectW = QWidget()
+    self.projectL = QVBoxLayout(projectW)
+    self.projectL.setContentsMargins(7,15,0,7)
+    self.projectL.setSpacing(7)
+    mainL.addWidget(projectW)
+    self.progress = QProgressBar(self)
+    self.progress.hide()
+    self.comm.progressBar = self.progress
+    mainL.addWidget(self.progress)
+
+    self.setLayout(mainL)
     self.redraw()
     #TODO_P4 projectView: allow scroll in sidebar, size changegable, drag-and-drop to move
     #   more below and other files
@@ -41,8 +48,8 @@ class Sidebar(QWidget):
       projectID (str): projectID on which to focus: '' string=draw default; 'redraw' implies redraw; id implies id
     """
     # Delete old widgets from layout and create storage
-    for i in reversed(range(self.mainL.count())):
-      self.mainL.itemAt(i).widget().setParent(None) # type: ignore
+    for i in reversed(range(self.projectL.count())):
+      self.projectL.itemAt(i).widget().setParent(None) # type: ignore
     if projectID != 'redraw':
       self.openProjectId = projectID
     self.widgetsAction = {}
@@ -124,11 +131,11 @@ class Sidebar(QWidget):
             count += 1
         projectL.addWidget(treeW)
         # finalize layout
-        self.mainL.addWidget(projectW)
+        self.projectL.addWidget(projectW)
     # Other buttons
     stretch = QWidget()
 
-    self.mainL.addWidget(stretch, stretch=2)
+    self.projectL.addWidget(stretch, stretch=2)
     return
 
 
@@ -196,8 +203,7 @@ class Sidebar(QWidget):
     """
     What happens if user clicks button "Scan"
     """
-    self.comm.backend.scanProject(self.openProjectId)
-    #TODO_P3 scanning for progress bar
+    self.comm.backend.scanProject(self.progress, self.openProjectId, '')
     self.comm.changeProject.emit(self.openProjectId,'')
     showMessage(self, 'Information','Scanning finished')
     return

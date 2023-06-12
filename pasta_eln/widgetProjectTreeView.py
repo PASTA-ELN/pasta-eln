@@ -73,6 +73,10 @@ class TreeView(QTreeView):
         oldPath = Path(self.comm.backend.basePath)/branch['path']
         if oldPath.exists():
           oldPath.rename( oldPath.parent/('trash_'+oldPath.name) )
+      # go through children
+      children = self.comm.backend.db.getView('viewHierarchy/viewHierarchy', startKey=' '.join(doc['-branch'][0]['stack']+[docID,'']))
+      for line in children:
+        self.comm.backend.db.remove(line['id'])
       self.comm.changeProject.emit('','') #refresh project
     elif menuName=='fold':
       item = self.model().itemFromIndex(self.currentIndex())

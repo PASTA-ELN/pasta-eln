@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any, Optional, Union
 from urllib import request
 from datetime import datetime, timezone
+from PySide6.QtWidgets import QProgressBar  # pylint: disable=no-name-in-module
 from .mixin_cli import CLI_Mixin
 from .database import Database
 from .miscTools import upOut, createDirName, generic_hash, camelCase
@@ -303,7 +304,7 @@ class Backend(CLI_Mixin):
     return
 
 
-  def scanProject(self, projID:str, projPath:str='') -> None:
+  def scanProject(self, progressBar:QProgressBar, projID:str, projPath:str='') -> None:
     """ Scan directory tree recursively from project/...
     - find changes on file system and move those changes to DB
     - use .id_pastaELN.json to track changes of directories, aka projects/steps/tasks
@@ -315,10 +316,12 @@ class Backend(CLI_Mixin):
     Args:
       projID (str): project's docID
       projPath (str): project's path from basePath; if not given, will be determined
+      progressBar (): gui - qt progress bar
 
     Raises:
       ValueError: could not add new measurement to database
     """
+    progressBar.show()
     self.hierStack = [projID]
     if projPath=='':
       projPath = self.db.getDoc(projID)['-branch'][0]['path']
@@ -328,6 +331,8 @@ class Backend(CLI_Mixin):
     inDB_all = self.db.getView('viewHierarchy/viewPaths')
     pathsInDB_x    = [i['key'] for i in inDB_all if i['value'][1][0][0]=='x']  #all structure elements: task, subtasts
     pathsInDB_data = [i['key'] for i in inDB_all if i['value'][1][0][0]!='x']
+    filesCountSum = sum([len(files) for r, d, files in os.walk(self.cwd)])
+    filesCount = 0
     for root, dirs, files in os.walk(self.cwd, topdown=True):
       #find parent-document
       self.cwd = Path(root).relative_to(self.basePath)
@@ -382,6 +387,8 @@ class Backend(CLI_Mixin):
         rerunScanTree = True
       # handle files
       for fileName in files:
+        filesCount += 1
+        progressBar.setValue(int(100*filesCount/filesCountSum))
         if fileName.startswith('.') or fileName.startswith('trash_') or '_PastaExport' in fileName:
           continue
         path = (Path(root).relative_to(self.basePath) /fileName).as_posix()
@@ -415,6 +422,7 @@ class Backend(CLI_Mixin):
     self.cwd = Path(self.basePath)
     if rerunScanTree:
       self.scanProject(projID, projPath)
+    progressBar.hide()
     return
 
 
@@ -634,12 +642,13 @@ class Backend(CLI_Mixin):
   ######################################################
   ### Wrapper for database functions
   ######################################################
-  def replicateDB(self, removeAtStart:bool=False) -> str:
+  def replicateDB(self, progressBar:QProgressBar, removeAtStart:bool=False) -> str:
     """
     Replicate local database to remote database
 
     Args:
         removeAtStart (bool): remove remote DB before starting new
+        progressBar (): gui - qt progress bar
 
     Returns:
         str: replication report
@@ -651,7 +660,7 @@ class Backend(CLI_Mixin):
       return 'ERROR'
     if 'cred' in remoteConf:
       remoteConf['user'], remoteConf['password'] = upOut(remoteConf['cred'])[0].split(':')
-    report = self.db.replicateDB(remoteConf, removeAtStart)
+    report = self.db.replicateDB(remoteConf, progressBar, removeAtStart)
     return report
 
 
@@ -681,6 +690,9 @@ class Backend(CLI_Mixin):
         output += outputString(outputStyle,'error','project view got screwed up')
         continue
       for root, dirs, files in os.walk(self.basePath/projDoc['-branch'][0]['path']):
+        if Path(root).name[0]=='.' or Path(root).name.startswith('trash_'):
+            del dirs
+            continue
         for fileName in files:
           if fileName.startswith('.') or fileName.startswith('trash_') or '_PastaExport' in fileName:
             continue
