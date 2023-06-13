@@ -8,6 +8,15 @@ import qtawesome as qta
 from qt_material import get_theme
 from .backend import Backend
 
+spacesMap = {'0':0, 's':5, 'm':10, 'l':20, 'xl':200} #spaces: padding and margin
+
+iconsDocTypes = {'Measurements':'fa5s.thermometer-half',
+                 'Samples':     'fa5s.vial',
+                 'Procedures':  'fa5s.list-ol',
+                 'Instruments': 'ri.scales-2-line',
+                 '-':           'fa5.file'}
+
+
 def getColor(backend:Backend, color:str) -> str:
   """
   get color from theme
@@ -67,33 +76,6 @@ class TextButton(QPushButton):
         primaryColor = getColor(backend, 'primary')
         secTextColor = getColor(backend, 'secondaryText')
       self.setStyleSheet('border-width: 0px; background-color: '+primaryColor+'; color: '+secTextColor)
-    if hide:
-      self.hide()
-    if layout is not None:
-      layout.addWidget(self)
-
-
-class LetterButton(QPushButton):
-  """ Button that has only a letter"""
-  def __init__(self, label:str, function:Callable[[],None], layout:QLayout, name:str='',
-               style:str='', hide:bool=False):
-    """
-    Args:
-      label (str): label printed on button
-      function (function): function to be called upon button-click-event
-      layout (QLayout): button to be added to this layout
-      name (str): name used for button identification in called-function
-      style (str): css style
-      hide (bool): hidden or shown initially
-    """
-    super().__init__()
-    self.setText(label[0])
-    self.clicked.connect(function)
-    self.setToolTip(label)
-    if name != '':
-      self.setAccessibleName(name)
-    if style != '':
-      self.setStyleSheet(style)
     if hide:
       self.hide()
     if layout is not None:
@@ -271,8 +253,6 @@ def showMessage(parent:QWidget, title:str, text:str, icon:str='', style:str='') 
   return
 
 
-translator = {'0':0, 's':5, 'm':10, 'l':20, 'xl':200}
-
 def widgetAndLayout(direction:str='V', parentLayout:Optional[QLayout]=None, spacing:str='0', left:str='0', top:str='0', right:str='0', bottom:str='0') -> tuple[QWidget, QLayout]:
   """
   Convenient function for widget and a boxLayout
@@ -307,8 +287,8 @@ def widgetAndLayout(direction:str='V', parentLayout:Optional[QLayout]=None, spac
     layout = QFormLayout(widget)
   else:
     layout = QGridLayout(widget)
-  layout.setSpacing(translator[spacing])
-  layout.setContentsMargins(translator[left], translator[top], translator[right], translator[bottom])
+  layout.setSpacing(spacesMap[spacing])
+  layout.setContentsMargins(spacesMap[left], spacesMap[top], spacesMap[right], spacesMap[bottom])
   if parentLayout is not None:
     parentLayout.addWidget(widget)
   return widget, layout

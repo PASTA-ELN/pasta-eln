@@ -32,19 +32,19 @@ class Details(QScrollArea):
     self.specialW.setContextMenuPolicy(Qt.CustomContextMenu)
     self.specialW.customContextMenuRequested.connect(self.contextMenu)
     self.btnDetails = TextButton('Details', self.showArea, self.mainL, 'Details', 'Show / hide details', \
-                                  checkable=True, hide=True, style='margin-top: 3px')
+                                  checkable=True, style='margin-top: 3px')
     self.metaDetailsW, self.metaDetailsL  = widgetAndLayout('V', self.mainL)
     self.metaDetailsW.setMaximumWidth(self.width())
     self.btnVendor = TextButton('Vendor metadata', self.showArea, self.mainL, 'Vendor', \
-      'Show / hide vendor metadata', checkable=True, hide=True, style="margin-top: 15px")
+      'Show / hide vendor metadata', checkable=True, style="margin-top: 15px")
     self.metaVendorW, self.metaVendorL = widgetAndLayout('V', self.mainL)
     self.metaVendorW.setMaximumWidth(self.width())
     self.btnUser = TextButton('User metadata', self.showArea, self.mainL, 'User', 'Show / hide user metadata',\
-      checkable=True, hide=True, style="margin-top: 15px")
+      checkable=True, style="margin-top: 15px")
     self.metaUserW, self.metaUserL     = widgetAndLayout('V', self.mainL)
     self.metaUserW.setMaximumWidth(self.width())
     self.btnDatabase = TextButton('Database details', self.showArea, self.mainL, 'Database', \
-      'Show / hide database details', checkable= True, hide=True, style="margin-top: 15px")
+      'Show / hide database details', checkable= True, style="margin-top: 15px")
     self.metaDatabaseW, self.metaDatabaseL = widgetAndLayout('V', self.mainL)
     self.metaDatabaseW.setMaximumWidth(self.width())
     self.mainL.addStretch(1)
@@ -132,17 +132,6 @@ class Details(QScrollArea):
       docID (str): document-id; '' string=draw nothing; 'redraw' implies redraw
     """
     logging.debug('details:changeDetails |'+docID+'|')
-    # show previously hidden buttons
-    if docID=='':
-      self.btnDetails.show()
-      self.btnVendor.show()
-      self.btnUser.show()
-      self.btnDatabase.show()
-    else:
-      self.btnDetails.show()
-      self.btnVendor.show()
-      self.btnUser.show()
-      self.btnDatabase.show()
     # Delete old widgets from layout
     for i in reversed(range(self.headerL.count())):
       self.headerL.itemAt(i).widget().setParent(None)       # type: ignore
@@ -176,7 +165,10 @@ class Details(QScrollArea):
       ontologyNode = self.comm.backend.db.ontology[self.doc['-type'][0]]['prop']
     label = self.doc['-name'] if len(self.doc['-name'])<80 else self.doc['-name'][:77]+'...'
     Label(label,'h1', self.headerL)
-    # TextButton('Edit',self.callEdit, self.headerL)
+    if 'metaVendor' not in self.doc:
+      self.btnVendor.hide()
+    if 'metUser' not in self.doc:
+      self.btnUser.hide()
     for key in self.doc:
       if key=='image':
         size = self.comm.backend.configuration['GUI']['imageSizeDetails'] \
@@ -205,6 +197,7 @@ class Details(QScrollArea):
         self.metaDatabaseL.addWidget(label)
         self.btnDatabase.setChecked(False)
       elif key=='metaVendor':
+        self.btnVendor.show()
         label = QLabel()
         label.setWordWrap(True)
         label.setText(yaml.dump(self.doc[key], indent=4))
@@ -212,6 +205,7 @@ class Details(QScrollArea):
         self.metaVendorL.addWidget(label)
         self.metaVendorW.show()
       elif key=='metaUser':
+        self.btnUser.show()
         label = QLabel()
         label.setWordWrap(True)
         label.setText(yaml.dump(self.doc[key], indent=4))

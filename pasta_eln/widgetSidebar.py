@@ -1,10 +1,10 @@
 """ Sidebar widget that includes the navigation items """
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QGridLayout, QTreeWidget, QTreeWidgetItem, QFrame, QProgressBar # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QTreeWidget, QTreeWidgetItem, QFrame, QProgressBar # pylint: disable=no-name-in-module
 from PySide6.QtCore import Slot, Qt                                    # pylint: disable=no-name-in-module
 from anytree import PreOrderIter, Node
 
 from .dialogConfig import Configuration
-from .style import TextButton, IconButton, getColor, showMessage, widgetAndLayout, translator
+from .style import TextButton, IconButton, getColor, showMessage, widgetAndLayout, spacesMap, iconsDocTypes
 from .communicate import Communicate
 
 class Sidebar(QWidget):
@@ -24,7 +24,7 @@ class Sidebar(QWidget):
     # GUI elements
     mainL = QVBoxLayout()
     mainL.setSpacing(0)
-    mainL.setContentsMargins(translator['s'],translator['s'],translator['0'],translator['s'])
+    mainL.setContentsMargins(spacesMap['s'],spacesMap['s'],spacesMap['0'],spacesMap['s'])
     _, self.projectL = widgetAndLayout('V', mainL)
     self.progress = QProgressBar(self)
     self.progress.hide()
@@ -94,14 +94,12 @@ class Sidebar(QWidget):
         listW, listL = widgetAndLayout('Grid', projectL)
         if self.openProjectId != projID:
           listW.hide()
-        iconTable = {"Measurements":"fa5s.thermometer-half","Samples":"fa5s.vial",
-                     "Procedures":"fa5s.list-ol","Instruments":"ri.scales-2-line"}
         for idx, doctype in enumerate(self.comm.backend.db.dataLabels):
           if doctype[0]!='x':
-            button = IconButton(iconTable[self.comm.backend.db.dataLabels[doctype]], self.btnDocType, None, \
+            button = IconButton(iconsDocTypes[self.comm.backend.db.dataLabels[doctype]], self.btnDocType, None, \
                      doctype+'/'+projID, self.comm.backend.db.dataLabels[doctype],self.comm.backend)
             listL.addWidget(button, 0, idx)    # type: ignore
-        button = IconButton('fa5.file', self.btnDocType, None, '-/'+projID, 'Unidentified', self.comm.backend)
+        button = IconButton(iconsDocTypes['-'], self.btnDocType, None, '-/'+projID, 'Unidentified', self.comm.backend)
         listL.addWidget(button, 0, len(self.comm.backend.db.dataLabels)+1)  # type: ignore
         self.widgetsList[projID] = listW
 

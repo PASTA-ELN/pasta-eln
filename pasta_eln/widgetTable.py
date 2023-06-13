@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QTableView, QMenu, QFileDial
 from PySide6.QtCore import Qt, Slot, QSortFilterProxyModel, QModelIndex       # pylint: disable=no-name-in-module
 from PySide6.QtGui import QStandardItemModel, QStandardItem, QFont # pylint: disable=no-name-in-module
 from .dialogTableHeader import TableHeader
-from .style import TextButton, Label, LetterButton, Action, widgetAndLayout, translator
+from .style import TextButton, IconButton, Label, Action, widgetAndLayout, spacesMap
 from .fixedStrings import defaultOntologyNode
 from .communicate import Communicate
 
@@ -33,7 +33,7 @@ class Table(QWidget):
     ### GUI elements
     mainL = QVBoxLayout()
     mainL.setSpacing(0)
-    mainL.setContentsMargins(translator['s'], translator['s'], translator['s'], translator['s'])
+    mainL.setContentsMargins(spacesMap['s'], spacesMap['s'], spacesMap['s'], spacesMap['s'])
     # header
     self.headerW, headerL = widgetAndLayout('H', mainL, 'm')
     self.headerW.hide()
@@ -260,7 +260,7 @@ class Table(QWidget):
       # print('create filter row',str(len(self.models)) )
       select.setAccessibleName(str(len(self.models)))
       rowL.addWidget(select)
-      LetterButton('-', self.delFilter, rowL, str(len(self.models)))
+      IconButton('fa5s.minus-square', self.delFilter, rowL, str(len(self.models)), backend=self.comm.backend)
       # data
       #TODO_P5 can you sort for true false in tables too?
       filterModel = QSortFilterProxyModel()
