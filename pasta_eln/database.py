@@ -302,9 +302,10 @@ class Database:
           elif item in newDoc:
             oldDoc[item] = newDoc[item]
           newDoc[item] = change[item]
-      if nothingChanged:
-        logging.debug('database.update.2: doc not updated-nothing changed: '+newDoc['_id']+' '+newDoc['-name'])
-        return newDoc
+      # Always update, for some reason single tags are not recongnized
+      # if nothingChanged:
+      #   logging.debug('database.update.2: doc not updated-nothing changed: '+newDoc['_id']+' '+newDoc['-name'])
+      #   return newDoc
     #For both cases: delete and update
     if '_curated' not in newDoc['-tags'] and newDoc['-type'][0][0]!='x':
       newDoc['-tags'].append('_curated')

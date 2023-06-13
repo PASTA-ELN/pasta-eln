@@ -23,6 +23,7 @@ class Table(QWidget):
     super().__init__()
     self.comm = comm
     comm.changeTable.connect(self.changeTable)
+    comm.stopSequentialEdit.connect(self.stopSequentialEditFunction)
     self.data:list[dict[str,Any]] = []
     self.models:list[QStandardItemModel] = []
     self.docType = ''
@@ -284,19 +285,23 @@ class Table(QWidget):
             intersection = intersection.intersection(thisKeys)
       #remove keys that should not be group edited and build dict
       if intersection is not None:
-        intersection = intersection.difference({'-type', '-branch', '-user', '-client', 'metaVendor', 'shasum', \
+        intersection = intersection.difference({'-branch', '-user', '-client', 'metaVendor', 'shasum', \
           '_id', 'metaUser', '_rev', '-name', '-date', 'image', '_attachments','links'})
         intersectionDict:dict[str,Any] = {i:'' for i in intersection}
         intersectionDict['-tags'] = []
+        intersectionDict['-type'] = [self.docType]
         intersectionDict.update({'_ids':docIDs})
         self.comm.formDoc.emit(intersectionDict)
         self.comm.changeDetails.emit('redraw')
         self.comm.changeTable.emit(self.docType, '')
     elif menuName == 'sequentialEdit':
+      self.stopSequentialEdit = False
       for row in range(self.models[-1].rowCount()):
         item, docID = self.itemFromRow(row)
         if item.checkState() == Qt.CheckState.Checked:
           self.comm.formDoc.emit(self.comm.backend.db.getDoc(docID))
+        if self.stopSequentialEdit:
+          break
       self.comm.changeTable.emit(self.docType, '')
     elif menuName == 'delete':
       for row in range(self.models[-1].rowCount()):
@@ -372,6 +377,11 @@ class Table(QWidget):
       print("**ERROR widgetTable menu unknown:",menuName)
     return
 
+
+  @Slot()
+  def stopSequentialEditFunction(self) -> None:
+    self.stopSequentialEdit=True
+    return
 
   def itemFromRow(self, row:int) -> tuple[QStandardItem, str]:
     """

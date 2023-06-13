@@ -200,14 +200,15 @@ class Image():
 class Label(QLabel):
   """ Label widget: headline, ... """
   def __init__(self, text:str='', size:str='', layout:Optional[QLayout]=None,
-               function:Optional[Callable[[str, str],None]]=None, docID:str=''):
+               function:Optional[Callable[[str, str],None]]=None, docID:str='', tooltip:str=''):
     """
     Args:
       text (str): text on label
-      size (str): size ['h1','h2']
+      size (str): size ['h1','h2','h3']
       layout (QLayout): layout to which to add the label
       function (function): function to call on mouse click
       docID (str): docID on other string to connect to this label
+      tooltip (str): tooltip shown when mouse hovers the button
     """
     super().__init__()
     self.setText(text)
@@ -215,10 +216,14 @@ class Label(QLabel):
       self.setStyleSheet('font-size: 14pt')
     if size == 'h2' :
       self.setStyleSheet('font-size: 12pt')
+    if size == 'h3' :
+      self.setStyleSheet('font-size: 10pt')
     if layout is not None:
       layout.addWidget(self)
     self.mouseFunction = function
     self.identifier = docID
+    if tooltip != '':
+      self.setToolTip(tooltip)
     return
 
   def mousePressEvent(self, e:QMouseEvent) -> None:

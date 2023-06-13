@@ -20,3 +20,4 @@ class Communicate(QObject):
   changeProject = Signal(str, str)       # send docID,projectID from sidebar or main-table to projects
   formDoc       = Signal(dict)           # send doc from details to new/edit dialog: dialogForm
   testExtractor = Signal()               # execute extractorTest in widgetDetails
+  stopSequentialEdit = Signal()          # in sequential edit, stop if there is a cancel

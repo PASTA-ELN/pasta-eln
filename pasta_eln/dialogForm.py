@@ -5,7 +5,7 @@ from PySide6.QtWidgets import QDialog, QWidget, QVBoxLayout, QHBoxLayout, QLabel
                               QPlainTextEdit, QComboBox, QLineEdit, QDialogButtonBox, QSplitter, QSizePolicy # pylint: disable=no-name-in-module
 from PySide6.QtGui import QRegularExpressionValidator # pylint: disable=no-name-in-module
 from PySide6.QtCore import QSize
-from .style import Image, TextButton, IconButton, showMessage, widgetAndLayout
+from .style import Image, TextButton, IconButton, Label, showMessage, widgetAndLayout
 from .fixedStrings import defaultOntologyNode
 from .handleDictionaries import fillDocBeforeCreate
 from .miscTools import createDirName
@@ -46,20 +46,17 @@ class Form(QDialog):
     _, self.formL = widgetAndLayout('Form', mainL, 's')
 
     #Add things that are in ontology
-    if '-type' in self.doc and '_ids' not in self.doc:  #normal form
+    if '_ids' not in self.doc:  #normal form
       setattr(self, 'key_-name', QLineEdit(self.doc['-name']))
       getattr(self, 'key_-name').setValidator(QRegularExpressionValidator("[\\w\\ .-]+"))
       self.formL.addRow('Name', getattr(self, 'key_-name'))
-      if self.doc['-type'][0] in self.db.ontology:
-        ontologyNode = self.db.ontology[self.doc['-type'][0]]['prop']
-      else:
-        ontologyNode = defaultOntologyNode
-      for item in ontologyNode:
-        if item['name'] not in self.doc and  item['name'][0] not in ['_','-']:
-          self.doc[item['name']] = ''
-    if '-type' not in self.doc and '_ids' in self.doc:  #group edit form
+    if self.doc['-type'][0] in self.db.ontology:
+      ontologyNode = self.db.ontology[self.doc['-type'][0]]['prop']
+    else:
       ontologyNode = defaultOntologyNode
-      ontologyNode = [i for i in ontologyNode if i['name']!='-name']
+    for item in ontologyNode:
+      if item['name'] not in self.doc and  item['name'][0] not in ['_','-']:
+        self.doc[item['name']] = ''
     # Create form
     if '-tags' not in self.doc:
       self.doc['-tags'] = []
@@ -100,6 +97,7 @@ class Form(QDialog):
         self.otherChoices = QComboBox()   #part/combobox that allow user to select
         self.otherChoices.setEditable(True)
         self.otherChoices.setMaximumWidth(100)
+        self.otherChoices.setValidator(QRegularExpressionValidator("[a-z]\\w+"))
         self.otherChoices.setIconSize(QSize(0,0))
         self.otherChoices.setInsertPolicy(QComboBox.InsertAtBottom)
         tagsBarMainL.addWidget(self.otherChoices)
@@ -219,7 +217,7 @@ class Form(QDialog):
               re.search(r"^[a-z\-]-[a-z0-9]{32}$",getattr(self, 'key_'+key).currentData()) is not None:
               #if docID is stored in currentData
               self.doc[key] = getattr(self, 'key_'+key).currentData()
-            else:
+            elif valueNew!='- no link -' :
               self.doc[key] = valueNew
           else:                                  #normal text field
             self.doc[key] = getattr(self, 'key_'+key).text().strip()
@@ -367,12 +365,10 @@ class Form(QDialog):
     getattr(self, 'textShow_'+key).setMarkdown( getattr(self, 'textEdit_'+key).toPlainText())
     return
 
-  def delTag(self) -> None:
+  def delTag(self, _, tag) -> None:
     """
     Clicked button to delete tag
     """
-    tag = self.sender().accessibleName()
-    print('del',tag)
     self.doc['-tags'].remove(tag)
     self.updateTagsBar()
     return
@@ -412,11 +408,14 @@ class Form(QDialog):
       if tag in ['_curated']:
         continue
       if tag[0]=='_':
-        TextButton('\u2605'*int(tag[1]), self.delTag, self.tagsBarSubL, tag, 'click to remove')
+        Label('\u2605'*int(tag[1]), 'h3', self.tagsBarSubL, self.delTag, tag, 'click to remove')
       else:
-        TextButton(tag, self.delTag, self.tagsBarSubL, tag, 'click to remove')
+        Label(tag, 'h3', self.tagsBarSubL, self.delTag, tag, 'click to remove')
+    self.tagsBarSubL.addWidget(QWidget(), stretch=2)  # type: ignore
     #update choices in combobox
-    newChoicesList = ['']+list(self.comm.dbInfo['tags'].difference([i for i in self.doc['-tags'] if i[0]!='_']))
+    tagsAllList = self.comm.backend.db.getView('viewIdentify/viewTagsAll')
+    tagsSet = {i['key'] for i in tagsAllList if i['key'][0]!='_'}
+    newChoicesList = ['']+list(tagsSet.difference([i for i in self.doc['-tags'] if i[0]!='_']))
     self.otherChoices.clear()
     self.otherChoices.addItems(newChoicesList)
     return

@@ -88,10 +88,6 @@ class MainWindow(QMainWindow):
     mainLayout.addWidget(body)
     self.comm.changeTable.emit('x0','')
 
-    #other things that might be slower
-    tags = self.comm.backend.db.getView('viewIdentify/viewTagsAll')
-    self.comm.dbInfo['tags'] = {i['key'] for i in tags if i['key'][0]!='_'}
-
 
   @Slot(str)
   def formDoc(self, doc:dict[str,Any]) -> None:
@@ -108,7 +104,9 @@ class MainWindow(QMainWindow):
     else:
       logging.debug('gui:formdoc of type '+str(doc['-type']))
     formWindow = Form(self.comm, doc)
-    formWindow.exec()
+    ret = formWindow.exec()
+    if ret==0:
+      self.comm.stopSequentialEdit.emit()
     return
 
 
