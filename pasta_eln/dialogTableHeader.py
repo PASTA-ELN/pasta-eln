@@ -1,10 +1,6 @@
 """ Table Header dialog: change which colums are shown and in which order """
-from pathlib import Path
-#pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QDialog, QWidget, QVBoxLayout, QHBoxLayout, QListWidget, QListWidgetItem, \
-                              QLineEdit, QDialogButtonBox
-#pylint: enable=no-name-in-module
-from .style import IconButton, showMessage
+from PySide6.QtWidgets import QDialog, QVBoxLayout, QListWidget, QLineEdit, QDialogButtonBox  # pylint: disable=no-name-in-module
+from .style import IconButton, showMessage, widgetAndLayout
 from .communicate import Communicate
 
 class TableHeader(QDialog):
@@ -38,25 +34,19 @@ class TableHeader(QDialog):
     self.setWindowTitle('Select table headers')
     self.setMinimumWidth(600)
     mainL = QVBoxLayout(self)
-    bodyW = QWidget()
-    bodyL = QHBoxLayout(bodyW)
-    mainL.addWidget(bodyW)
-    leftW = QWidget()
-    leftL = QVBoxLayout(leftW)
+    _, bodyL = widgetAndLayout('H', mainL)
+    _, leftL = widgetAndLayout('V', bodyL)
     self.choicesW = QListWidget()
     self.choicesW.addItems(list(self.allSet.difference(self.selectedList)))
     leftL.addWidget(self.choicesW)
     self.inputLine = QLineEdit()
     leftL.addWidget(self.inputLine)
-    bodyL.addWidget(leftW)
-    centerW = QWidget()
-    centerL = QVBoxLayout(centerW)
+    _, centerL = widgetAndLayout('V', bodyL)
     IconButton('fa5s.angle-right', self.moveKey, centerL, 'add', 'add right')
     IconButton('fa5s.angle-left', self.moveKey, centerL, 'del', 'remove right')
     IconButton('fa5s.angle-up', self.moveKey, centerL, 'up', 'move up')
     IconButton('fa5s.angle-down', self.moveKey, centerL, 'down', 'move down')
     IconButton('fa5s.angle-double-right', self.moveKey, centerL, 'text', 'use text')
-    bodyL.addWidget(centerW)
     self.selectW = QListWidget()
     self.selectW.addItems(self.selectedList)
     bodyL.addWidget(self.selectW)

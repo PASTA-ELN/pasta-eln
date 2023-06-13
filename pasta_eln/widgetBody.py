@@ -18,6 +18,8 @@ class Body(QWidget):
     self.project  = Project(comm)
     self.project.hide()
     mainL = QVBoxLayout()
+    mainL.setSpacing(0)
+    mainL.setContentsMargins(0, 0, 0, 0)
     mainL.addWidget(self.docTypes)
     mainL.addWidget(self.project)
     self.setLayout(mainL)

@@ -3,9 +3,10 @@ from pathlib import Path
 import platform, subprocess, os, base64, logging
 from typing import Any
 import yaml
-from PySide6.QtWidgets import QScrollArea, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QMenu, QTextEdit  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QScrollArea, QLabel, QMenu, QTextEdit  # pylint: disable=no-name-in-module
 from PySide6.QtCore import Qt, Slot, QPoint  # pylint: disable=no-name-in-module
-from .style import TextButton, Image, Label, Action, showMessage
+from PySide6.QtGui import QTextDocument  # pylint: disable=no-name-in-module
+from .style import TextButton, Image, Label, Action, showMessage, widgetAndLayout
 from .fixedStrings import defaultOntologyNode
 from .communicate import Communicate
 
@@ -20,46 +21,32 @@ class Details(QScrollArea):
     self.docID= ''
 
     # GUI elements
-    self.mainW = QWidget()
-    self.mainL = QVBoxLayout(self.mainW)
+    self.mainW, self.mainL = widgetAndLayout('V', None)
     self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
     self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
     self.setWidgetResizable(True)
     self.setWidget(self.mainW)
 
-    headerW = QWidget()
-    self.headerL = QHBoxLayout(headerW)
-    self.mainL.addWidget(headerW)
-    self.specialW = QWidget()
-    self.specialW.setMaximumWidth(self.width())
+    _, self.headerL = widgetAndLayout('H', self.mainL)
+    self.specialW, self.specialL = widgetAndLayout('V', self.mainL)
     self.specialW.setContextMenuPolicy(Qt.CustomContextMenu)
     self.specialW.customContextMenuRequested.connect(self.contextMenu)
-    self.specialL = QVBoxLayout(self.specialW)
-    self.mainL.addWidget(self.specialW)
     self.btnDetails = TextButton('Details', self.showArea, self.mainL, 'Details', 'Show / hide details', \
-                                  checkable=True, hide=True)
-    self.metaDetailsW  = QWidget()
+                                  checkable=True, hide=True, style='margin-top: 3px')
+    self.metaDetailsW, self.metaDetailsL  = widgetAndLayout('V', self.mainL)
     self.metaDetailsW.setMaximumWidth(self.width())
-    self.metaDetailsL = QVBoxLayout(self.metaDetailsW)
-    self.mainL.addWidget(self.metaDetailsW)
     self.btnVendor = TextButton('Vendor metadata', self.showArea, self.mainL, 'Vendor', \
       'Show / hide vendor metadata', checkable=True, hide=True, style="margin-top: 15px")
-    self.metaVendorW   = QWidget()
+    self.metaVendorW, self.metaVendorL = widgetAndLayout('V', self.mainL)
     self.metaVendorW.setMaximumWidth(self.width())
-    self.metaVendorL = QVBoxLayout(self.metaVendorW)
-    self.mainL.addWidget(self.metaVendorW)
     self.btnUser = TextButton('User metadata', self.showArea, self.mainL, 'User', 'Show / hide user metadata',\
       checkable=True, hide=True, style="margin-top: 15px")
-    self.metaUserW     = QWidget()
+    self.metaUserW, self.metaUserL     = widgetAndLayout('V', self.mainL)
     self.metaUserW.setMaximumWidth(self.width())
-    self.metaUserL = QVBoxLayout(self.metaUserW)
-    self.mainL.addWidget(self.metaUserW)
     self.btnDatabase = TextButton('Database details', self.showArea, self.mainL, 'Database', \
       'Show / hide database details', checkable= True, hide=True, style="margin-top: 15px")
-    self.metaDatabaseW = QWidget()
+    self.metaDatabaseW, self.metaDatabaseL = widgetAndLayout('V', self.mainL)
     self.metaDatabaseW.setMaximumWidth(self.width())
-    self.metaDatabaseL = QVBoxLayout(self.metaDatabaseW)
-    self.mainL.addWidget(self.metaDatabaseW)
     self.mainL.addStretch(1)
 
 
@@ -202,7 +189,7 @@ class Details(QScrollArea):
         text.setReadOnly(True)
         self.specialL.addWidget(text)
         self.specialW.show()
-        #TODO_P3 design: make full width; scale fonts appropriately
+        #TODO_P3 scale fonts appropriately
       elif key=='-tags':
         tags = ['_curated_' if i=='_curated' else '#'+i for i in self.doc[key]]
         tags = ['\u2605'*int(i[2]) if i[:2]=='#_' else i for i in tags]

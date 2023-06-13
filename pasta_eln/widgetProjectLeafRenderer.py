@@ -160,8 +160,11 @@ class ProjectLeafRenderer(QStyledItemDelegate):
           height = max(height, int(self.width*3/4))+2*self.frameSize
       elif 'comment' in doc.keys():
         text = QTextDocument()
-        text.setMarkdown(self.comm.backend.db.getDoc(docID)['comment'].strip())
-        height += text.size().toTuple()[1]-25 # type: ignore
+        comment = self.comm.backend.db.getDoc(docID)['comment']
+        text.setMarkdown(comment.strip())
+        height += text.size().toTuple()[1] # type: ignore
+        if docID[0]!='x' or len(comment)==0:
+          height -= 25
       else:
         height -= 25
       return QSize(400, height)

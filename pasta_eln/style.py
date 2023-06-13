@@ -1,6 +1,6 @@
 """ all styling of buttons and other general widgets, some defined colors... """
 from typing import Callable, Optional
-from PySide6.QtWidgets import QPushButton, QLabel, QSizePolicy, QMessageBox, QLayout, QWidget, QMenu # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QPushButton, QLabel, QSizePolicy, QMessageBox, QLayout, QWidget, QMenu, QVBoxLayout, QHBoxLayout, QGridLayout, QFormLayout # pylint: disable=no-name-in-module
 from PySide6.QtGui import QImage, QPixmap, QAction, QKeySequence, QMouseEvent  # pylint: disable=no-name-in-module
 from PySide6.QtCore import QByteArray, Qt           # pylint: disable=no-name-in-module
 from PySide6.QtSvgWidgets import QSvgWidget         # pylint: disable=no-name-in-module
@@ -36,7 +36,7 @@ def getColor(backend:Backend, color:str) -> str:
 class TextButton(QPushButton):
   """ Button that has only text"""
   def __init__(self, label:str, function:Optional[Callable[[],None]], layout:Optional[QLayout], name:str='',
-               tooltip:str='', checkable:bool=False, style:str='', hide:bool=False):
+               tooltip:str='', checkable:bool=False, style:str='', hide:bool=False, backend:Optional[Backend]=None):
     """
     Args:
       label (str): label printed on button
@@ -59,6 +59,14 @@ class TextButton(QPushButton):
       self.setToolTip(tooltip)
     if style != '':
       self.setStyleSheet(style)
+    else:
+      if backend is None:
+        primaryColor = '#448aff'
+        secTextColor = '#eeeeee'
+      else:
+        primaryColor = getColor(backend, 'primary')
+        secTextColor = getColor(backend, 'secondaryText')
+      self.setStyleSheet('border-width: 0px; margin-left: 10px; background-color: '+primaryColor+'; color: '+secTextColor)
     if hide:
       self.hide()
     if layout is not None:
@@ -119,7 +127,9 @@ class IconButton(QPushButton):
       self.setAccessibleName(name)
     if tooltip != '':
       self.setToolTip(tooltip)
-    if style != '':
+    if style == '':
+      self.setStyleSheet("border-width:0")
+    else:
       self.setStyleSheet(style)
     if hide:
       self.hide()
@@ -257,3 +267,40 @@ def showMessage(parent:QWidget, title:str, text:str, icon:str='', style:str='') 
     dialog.setStyleSheet(style)
   dialog.exec()
   return
+
+
+def widgetAndLayout(direction:str='V', parentLayout:Optional[QLayout]=None, spacing:str='0', left:str='0', top:str='0', right:str='0', bottom:str='0') -> tuple[QWidget, QLayout]:
+  """
+  Convenient function for widget and a boxLayout
+
+  Spacings and margins:
+  - different than in css/html
+  - spacing is the space between elements in the orientation of the BoxLayout
+  - is the padding that surrounds the content in the layout
+
+  Distances are given in '', 's', 'm', 'l'
+
+  Args:
+    direction (str): type of layout [H,V,Grid,Form]
+    parentLayout (QLayout): to which layout should the widget be added. If none, no adding
+    spacing (str): spacing
+    left (str): padding on left
+    top (str): padding on top
+    right (str): padding on right
+    bottom (str): padding on bottom
+  """
+  translator = {'0':0, 's':3, 'm':6, 'l':12}
+  widget = QWidget()
+  if direction=='V':
+    layout = QVBoxLayout(widget)
+  elif direction=='H':
+    layout = QHBoxLayout(widget)
+  elif direction=='Form':
+    layout = QFormLayout(widget)
+  else:
+    layout = QGridLayout(widget)
+  layout.setSpacing(translator[spacing])
+  layout.setContentsMargins(translator[left], translator[top], translator[right], translator[bottom])
+  if parentLayout is not None:
+    parentLayout.addWidget(widget)
+  return widget, layout

@@ -3,10 +3,9 @@ import json
 from pathlib import Path
 import qrcode
 from PIL.ImageQt import ImageQt
-from PySide6.QtWidgets import QDialog, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QGroupBox, \
-                              QLineEdit, QDialogButtonBox, QFormLayout, QComboBox, QFileDialog  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QDialog, QVBoxLayout, QLabel, QGroupBox, QLineEdit, QDialogButtonBox, QFormLayout, QComboBox, QFileDialog  # pylint: disable=no-name-in-module
 from PySide6.QtGui import QPixmap, QRegularExpressionValidator # pylint: disable=no-name-in-module
-from .style import Label, TextButton, showMessage
+from .style import Label, TextButton, showMessage, widgetAndLayout
 from .miscTools import upOut, restart, upIn
 from .serverActions import testLocal, testRemote, passwordDecrypt
 from .backend import Backend
@@ -28,8 +27,7 @@ class ProjectGroup(QDialog):
     self.setMinimumWidth(1000)
     mainL = QVBoxLayout(self)
     Label('Project group', 'h1', mainL)
-    topbarW = QWidget()
-    topbarL = QHBoxLayout(topbarW)
+    _, topbarL = widgetAndLayout('H', mainL)
     self.selectGroup = QComboBox()
     self.selectGroup.addItems(self.backend.configuration['projectGroups'].keys())
     self.selectGroup.currentTextChanged.connect(self.changeProjectGroup)
@@ -38,12 +36,10 @@ class ProjectGroup(QDialog):
     TextButton('Fill remote', self.btnEvent, topbarL, 'fill')
     TextButton('Create QR', self.btnEvent, topbarL, 'createQR')
     TextButton('Check All', self.btnEvent, topbarL, 'check')
-    mainL.addWidget(topbarW)
     self.projectGroupName = QLineEdit('')
     self.projectGroupName.hide()
     mainL.addWidget(self.projectGroupName)
-    bodyW = QWidget()
-    bodyL = QHBoxLayout(bodyW)
+    _, bodyL = widgetAndLayout('H', mainL)
     #local
     localW = QGroupBox('Local credentials')
     localL = QFormLayout(localW)
@@ -81,7 +77,6 @@ class ProjectGroup(QDialog):
     #image
     self.image = QLabel()
     bodyL.addWidget(self.image)
-    mainL.addWidget(bodyW)
 
     #final button box
     buttonBox = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)

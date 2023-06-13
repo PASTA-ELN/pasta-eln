@@ -10,7 +10,7 @@ import urllib.request
 
 from pasta_eln import __version__
 from .backend import Backend
-from .miscTools import upOut, upIn, updateExtractorList
+from .miscTools import upOut, upIn, updateExtractorList, DummyProgressBar
 from .inputOutput import importELN, exportELN
 from .installationTools import configuration as checkConfiguration
 from .installationTools import exampleData
@@ -187,7 +187,8 @@ def commands(getDocu:bool, args:argparse.Namespace) -> str:
       doc += '  syncLR / syncRL: synchronize with / from remote server\n'
       doc += '    example: pastaELN_CLI.py syncLR\n'
     elif args.command=='syncLR':
-      success = be.replicateDB()
+      progressBar = DummyProgressBar()
+      success = be.replicateDB(progressBar)
       return '1' if success else '-1'
     elif args.command=='syncRL':
       be.exit()
@@ -287,7 +288,8 @@ def commands(getDocu:bool, args:argparse.Namespace) -> str:
       doc += '  scanProject: scan project with docID\n'
       doc += '    example: pastaELN_CLI.py scanProject -i ....\n'
     elif args.command=='scanProject':
-      be.scanProject(args.docID)
+      progressBar = DummyProgressBar()
+      be.scanProject(progressBar, args.docID)
       return '1'
 
     ##################################################

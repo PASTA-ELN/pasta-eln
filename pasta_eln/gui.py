@@ -17,7 +17,7 @@ from .dialogConfig import Configuration
 from .dialogProjectGroup import ProjectGroup
 from .dialogOntology import Ontology
 from .miscTools import updateExtractorList, restart
-from .style import Action, showMessage
+from .style import Action, showMessage, widgetAndLayout
 from .fixedStrings import shortcuts
 os.environ['QT_API'] = 'pyside6'
 
@@ -80,11 +80,7 @@ class MainWindow(QMainWindow):
       #TODO_P5 create list of unaccessible files: linked with accessible files
 
     #GUI elements
-    mainWidget = QWidget()
-    mainLayout = QHBoxLayout()
-    mainLayout.setContentsMargins(0,0,0,0)
-    mainLayout.setSpacing(0)
-    mainWidget.setLayout(mainLayout)
+    mainWidget, mainLayout = widgetAndLayout('H')
     self.setCentralWidget(mainWidget)      # Set the central widget of the Window
     body = Body(self.comm)        #body with information
     self.sidebar = Sidebar(self.comm)  #sidebar with buttons

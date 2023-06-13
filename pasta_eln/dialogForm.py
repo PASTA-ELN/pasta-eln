@@ -1,10 +1,10 @@
 """ New/Edit dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""
 import logging, re
 from typing import Any, Union
-from PySide6.QtWidgets import QDialog, QWidget, QFormLayout, QVBoxLayout, QHBoxLayout, QLabel, QTextEdit, QPushButton,\
+from PySide6.QtWidgets import QDialog, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QTextEdit, QPushButton,\
                               QPlainTextEdit, QComboBox, QLineEdit, QDialogButtonBox, QSplitter, QSizePolicy # pylint: disable=no-name-in-module
 from PySide6.QtGui import QRegularExpressionValidator # pylint: disable=no-name-in-module
-from .style import Image, TextButton, IconButton, showMessage
+from .style import Image, TextButton, IconButton, showMessage, widgetAndLayout
 from .fixedStrings import defaultOntologyNode
 from .handleDictionaries import fillDocBeforeCreate
 from .miscTools import createDirName
@@ -42,9 +42,7 @@ class Form(QDialog):
       width = self.comm.backend.configuration['GUI']['imageSizeDetails'] \
                 if hasattr(self.comm.backend, 'configuration') else 300
       Image(self.doc['image'], mainL, anyDimension=width)
-    formW = QWidget()
-    mainL.addWidget(formW)
-    self.formL = QFormLayout(formW)
+    _, self.formL = widgetAndLayout('Form', mainL)
 
     #Add things that are in ontology
     if '-type' in self.doc and '_ids' not in self.doc:  #normal form
@@ -69,12 +67,10 @@ class Form(QDialog):
         continue
       # print("Key:value in form | "+key+':'+str(value))
       if key in ['comment','content']:
-        labelW = QWidget()
-        labelL = QVBoxLayout(labelW)
+        labelW, labelL = widgetAndLayout('V')
         labelL.addWidget(QLabel(key.capitalize()))
         TextButton('Focus', self.btnFocus, labelL, key, checkable=True)  # type: ignore # btnFocus req. bool, cannot get it to work
-        rightSideW = QWidget()
-        rightSideL = QVBoxLayout(rightSideW)
+        rightSideW, rightSideL = widgetAndLayout('V')
         setattr(self, 'buttonBarW_'+key, QWidget())
         getattr(self, 'buttonBarW_'+key).hide()
         buttonBarL = QHBoxLayout(getattr(self, 'buttonBarW_'+key))
@@ -98,10 +94,8 @@ class Form(QDialog):
         rightSideL.addWidget(splitter)
         self.formL.addRow(labelW, rightSideW)
       elif key == '-tags':
-        tagsBarMainW = QWidget()
-        tagsBarMainL = QHBoxLayout(tagsBarMainW)
-        tagsBarSubW  = QWidget()          #part which shows all the tags
-        tagsBarMainL.addWidget(tagsBarSubW)
+        tagsBarMainW, tagsBarMainL = widgetAndLayout('H')
+        _, self.tagsBarSubL = widgetAndLayout('H', tagsBarMainL) #part which shows all the tags
         self.otherChoices = QComboBox()   #part/combobox that allow user to select
         self.otherChoices.setEditable(True)
         self.otherChoices.setInsertPolicy(QComboBox.InsertAtBottom)
@@ -110,7 +104,6 @@ class Form(QDialog):
         self.gradeChoices.addItems(['','\u2605','\u2605'*2,'\u2605'*3,'\u2605'*4,'\u2605'*5])
         self.gradeChoices.currentTextChanged.connect(self.addTag)
         tagsBarMainL.addWidget(self.gradeChoices)
-        self.tagsBarSubL = QHBoxLayout(tagsBarSubW)
         self.formL.addRow(QLabel('Tags:'), tagsBarMainW)
         self.updateTagsBar()
         self.otherChoices.currentIndexChanged.connect(self.addTag) #connect to slot only after all painting is done

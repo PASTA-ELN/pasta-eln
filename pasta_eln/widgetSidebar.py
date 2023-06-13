@@ -1,10 +1,10 @@
 """ Sidebar widget that includes the navigation items """
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QGridLayout, QTreeWidget, QTreeWidgetItem, QFrame, QProgressDialog, QProgressBar # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QGridLayout, QTreeWidget, QTreeWidgetItem, QFrame, QProgressBar # pylint: disable=no-name-in-module
 from PySide6.QtCore import Slot, Qt                                    # pylint: disable=no-name-in-module
 from anytree import PreOrderIter, Node
 
 from .dialogConfig import Configuration
-from .style import TextButton, IconButton, getColor, showMessage
+from .style import TextButton, IconButton, getColor, showMessage, widgetAndLayout
 from .communicate import Communicate
 
 class Sidebar(QWidget):
@@ -23,11 +23,9 @@ class Sidebar(QWidget):
 
     # GUI elements
     mainL = QVBoxLayout()
-    projectW = QWidget()
-    self.projectL = QVBoxLayout(projectW)
-    self.projectL.setContentsMargins(7,15,0,7)
-    self.projectL.setSpacing(7)
-    mainL.addWidget(projectW)
+    mainL.setSpacing(0)
+    mainL.setContentsMargins(0, 0, 0, 0)
+    _, self.projectL = widgetAndLayout('V', mainL)
     self.progress = QProgressBar(self)
     self.progress.hide()
     self.comm.progressBar = self.progress
@@ -77,42 +75,34 @@ class Sidebar(QWidget):
         self.widgetsProject[projID] = [btnProj, projectW]
 
         # actions: scan, curate, ...
-        actionW = QWidget()
+        actionW, actionL = widgetAndLayout('Grid', projectL)
         if self.openProjectId != projID: #depending which project is open
           actionW.hide()
           projectW.setStyleSheet("background-color:"+ getColor(self.comm.backend, 'secondaryDark'))
         else:
           projectW.setStyleSheet("background-color:"+ getColor(self.comm.backend, 'secondaryLight'))
-        actionL = QGridLayout(actionW)
-        actionL.setContentsMargins(0,0,0,0)
         btnScan = IconButton('mdi.clipboard-search-outline', self.btnScan, None, projID, 'Scan', self.comm.backend, text='Scan')
-        actionL.addWidget(btnScan, 0,0)
+        actionL.addWidget(btnScan, 0,0)  # type: ignore
         btnCurate = IconButton('mdi.filter-plus-outline', self.btnCurate, None, projID, 'Special', self.comm.backend, text='Special')
         btnCurate.hide()
-        actionL.addWidget(btnCurate, 0,1)
-        projectL.addWidget(actionW)
+        actionL.addWidget(btnCurate, 0,1)         # type: ignore
         self.widgetsAction[projID] = actionW
         btnScan.setStyleSheet("border-width:0")
         btnCurate.setStyleSheet("border-width:0")
 
         # lists: view list of measurements, ... of this project
-        listW = QWidget()
-        listW.setContentsMargins(0,0,0,0)
+        listW, listL = widgetAndLayout('Grid', projectL)
         if self.openProjectId != projID:
           listW.hide()
-        listL = QGridLayout(listW)
         iconTable = {"Measurements":"fa5s.thermometer-half","Samples":"fa5s.vial",
                      "Procedures":"fa5s.list-ol","Instruments":"ri.scales-2-line"}
         for idx, doctype in enumerate(self.comm.backend.db.dataLabels):
           if doctype[0]!='x':
             button = IconButton(iconTable[self.comm.backend.db.dataLabels[doctype]], self.btnDocType, None, \
                      doctype+'/'+projID, self.comm.backend.db.dataLabels[doctype],self.comm.backend)
-            button.setStyleSheet("border-width:0")
-            listL.addWidget(button, 0, idx)
+            listL.addWidget(button, 0, idx)    # type: ignore
         button = IconButton('fa5.file', self.btnDocType, None, '-/'+projID, 'Unidentified', self.comm.backend)
-        button.setStyleSheet("border-width:0")
-        listL.addWidget(button, 0, len(self.comm.backend.db.dataLabels)+1)
-        projectL.addWidget(listW)
+        listL.addWidget(button, 0, len(self.comm.backend.db.dataLabels)+1)  # type: ignore
         self.widgetsList[projID] = listW
 
         # show folders as hierarchy
@@ -135,7 +125,7 @@ class Sidebar(QWidget):
     # Other buttons
     stretch = QWidget()
 
-    self.projectL.addWidget(stretch, stretch=2)
+    self.projectL.addWidget(stretch, stretch=2)  # type: ignore
     return
 
 

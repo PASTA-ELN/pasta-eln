@@ -2,10 +2,10 @@
 import logging
 from pathlib import Path
 from typing import Callable
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTextEdit, QMessageBox, QInputDialog, QFileDialog, QProgressBar   # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QMessageBox, QFileDialog, QProgressBar   # pylint: disable=no-name-in-module
 
-from .style import TextButton
-from .installationTools import couchdb, couchdbUserPassword, configuration, ontology, exampleData, createShortcut
+from .style import TextButton, widgetAndLayout
+from .installationTools import couchdb, configuration, ontology, exampleData, createShortcut
 from .fixedStrings import setupTextWindows, couchDBWindows, exampleDataWindows, restartPastaWindows
 from .miscTools import restart
 from .backend import Backend
@@ -31,9 +31,7 @@ class ConfigurationSetup(QWidget):
     self.backend = backend
 
     #widget 1 = screen 1
-    self.screen1W = QWidget()
-    self.mainL.addWidget(self.screen1W)
-    screen1L = QVBoxLayout(self.screen1W)
+    self.screen1W, screen1L = widgetAndLayout('V', self.mainL)
     self.text1 = QTextEdit()
     self.mainText = setupTextWindows
     self.text1.setMarkdown(self.mainText)
@@ -43,9 +41,7 @@ class ConfigurationSetup(QWidget):
     self.progress1.hide()
     screen1L.addWidget(self.progress1)
 
-    footerW = QWidget()
-    screen1L.addWidget(footerW)
-    footerL = QHBoxLayout(footerW)
+    _, footerL = widgetAndLayout('H', screen1L)
     self.button1 = TextButton('Start analyse and repair', self.analyse, footerL)
 
 

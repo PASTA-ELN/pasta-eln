@@ -1,12 +1,12 @@
 """ Widget that shows the content of project in a electronic labnotebook """
-import logging, json
+import logging
 from typing import Optional, Any
-from PySide6.QtWidgets import QLabel, QVBoxLayout, QHBoxLayout, QWidget, QMenu, QMessageBox # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget, QMenu, QMessageBox # pylint: disable=no-name-in-module
 from PySide6.QtGui import QStandardItemModel, QStandardItem    # pylint: disable=no-name-in-module
 from PySide6.QtCore import Slot, Qt, QItemSelectionModel, QModelIndex # pylint: disable=no-name-in-module
 from anytree import PreOrderIter, Node
 from .widgetProjectTreeView import TreeView
-from .style import TextButton, Action, showMessage
+from .style import TextButton, Action, showMessage, widgetAndLayout
 from .miscTools import createDirName
 from .communicate import Communicate
 
@@ -158,15 +158,11 @@ class Project(QWidget):
     Create header of page
     """
     self.docProj = self.comm.backend.db.getDoc(self.projID)
-    headerW = QWidget()
-    headerL = QHBoxLayout(headerW)
-    infoW = QWidget()
-    infoL = QVBoxLayout(infoW)
-    buttonW = QWidget()
-    buttonL = QHBoxLayout(buttonW)
-    headerL.addWidget(infoW)
+    _, headerL       = widgetAndLayout('H',self.mainL)
+    _, infoL         = widgetAndLayout('V', headerL)
+    buttonW, buttonL = widgetAndLayout('H')
     headerL.addStretch(1)
-    headerL.addWidget(buttonW)
+    headerL.addWidget(buttonW, alignment=Qt.AlignTop)  # type: ignore
 
     self.btnHideShow     = TextButton('Hide/Show',     self.executeAction, buttonL, name='hideShow')
     self.btnAddSubfolder = TextButton('Add subfolder', self.executeAction, buttonL, name='addChild')
@@ -178,9 +174,8 @@ class Project(QWidget):
     Action('Scan',                  self.executeAction, moreMenu, self, name='scanProject')
     Action('Delete',                self.executeAction, moreMenu, self, name='deleteProject')
     more.setMenu(moreMenu)
-    self.bodyW   = QWidget()
-    bodyL   = QVBoxLayout(self.bodyW)
 
+    self.bodyW, bodyL =  widgetAndLayout('V')
     hidden = '     \U0001F441' if len([b for b in self.docProj['-branch'] if False in b['show']])>0 else ''
     infoL.addWidget(QLabel(self.docProj['-name']+hidden))
     tags = ', '.join(self.docProj['tags']) if 'tags' in self.docProj else ''
@@ -190,8 +185,8 @@ class Project(QWidget):
         continue
       bodyL.addWidget(QLabel(key+': '+str(value)))
     infoL.addWidget(self.bodyW)
-    self.mainL.addWidget(headerW)
     return
+
 
   #TODO_P4 projectTree: select multiple items to edit... What is use case
   #TODO_P4 projectTree: allow right click on measurement to change recipe

@@ -21,10 +21,13 @@ class DocTypes(QWidget):
     splitter.setHandleWidth(10)
     splitter.addWidget(table)
     splitter.addWidget(self.details)
+    splitter.setContentsMargins(0,0,0,0)
     splitter.setSizes([1,1])
-    mainLayout = QVBoxLayout()
-    mainLayout.addWidget(splitter)
-    self.setLayout(mainLayout)
+    mainL = QVBoxLayout()
+    mainL.setSpacing(0)
+    mainL.setContentsMargins(0, 0, 0, 0)
+    mainL.addWidget(splitter)
+    self.setLayout(mainL)
 
 
   @Slot(str, str)

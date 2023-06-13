@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from PySide6.QtWidgets import QProgressBar  # pylint: disable=no-name-in-module
 from .mixin_cli import CLI_Mixin
 from .database import Database
-from .miscTools import upOut, createDirName, generic_hash, camelCase
+from .miscTools import upOut, createDirName, generic_hash, camelCase, DummyProgressBar
 from .handleDictionaries import fillDocBeforeCreate, diffDicts
 from .miscTools import outputString
 
@@ -304,7 +304,7 @@ class Backend(CLI_Mixin):
     return
 
 
-  def scanProject(self, progressBar:QProgressBar, projID:str, projPath:str='') -> None:
+  def scanProject(self, progressBar:Union[QProgressBar,DummyProgressBar] , projID:str, projPath:str='') -> None:
     """ Scan directory tree recursively from project/...
     - find changes on file system and move those changes to DB
     - use .id_pastaELN.json to track changes of directories, aka projects/steps/tasks
@@ -314,9 +314,9 @@ class Backend(CLI_Mixin):
       doc['path'] is adopted once changes are observed
 
     Args:
+      progressBar (QProgressBar): gui - qt progress bar
       projID (str): project's docID
       projPath (str): project's path from basePath; if not given, will be determined
-      progressBar (): gui - qt progress bar
 
     Raises:
       ValueError: could not add new measurement to database
@@ -421,7 +421,7 @@ class Backend(CLI_Mixin):
     self.hierStack = []
     self.cwd = Path(self.basePath)
     if rerunScanTree:
-      self.scanProject(projID, projPath)
+      self.scanProject(progressBar, projID, projPath)
     progressBar.hide()
     return
 
@@ -642,13 +642,13 @@ class Backend(CLI_Mixin):
   ######################################################
   ### Wrapper for database functions
   ######################################################
-  def replicateDB(self, progressBar:QProgressBar, removeAtStart:bool=False) -> str:
+  def replicateDB(self, progressBar:Union[QProgressBar,DummyProgressBar], removeAtStart:bool=False) -> str:
     """
     Replicate local database to remote database
 
     Args:
         removeAtStart (bool): remove remote DB before starting new
-        progressBar (): gui - qt progress bar
+        progressBar (QProgressBar): gui - qt progress bar
 
     Returns:
         str: replication report
@@ -691,8 +691,8 @@ class Backend(CLI_Mixin):
         continue
       for root, dirs, files in os.walk(self.basePath/projDoc['-branch'][0]['path']):
         if Path(root).name[0]=='.' or Path(root).name.startswith('trash_'):
-            del dirs
-            continue
+          del dirs
+          continue
         for fileName in files:
           if fileName.startswith('.') or fileName.startswith('trash_') or '_PastaExport' in fileName:
             continue

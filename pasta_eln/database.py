@@ -8,7 +8,7 @@ from cloudant.client import CouchDB
 from cloudant.replicator import Replicator
 from PySide6.QtWidgets import QProgressBar  # pylint: disable=no-name-in-module
 from .fixedStrings import defaultOntology, defaultOntologyNode
-from .miscTools import tracebackString
+from .miscTools import tracebackString, DummyProgressBar
 
 class Database:
   """
@@ -594,13 +594,13 @@ class Database:
     return
 
 
-  def replicateDB(self, dbInfo:dict[str,Any], progressBar:QProgressBar, removeAtStart:bool=False) -> str:
+  def replicateDB(self, dbInfo:dict[str,Any], progressBar:Union[QProgressBar,DummyProgressBar], removeAtStart:bool=False) -> str:
     """
     Replication to another instance
 
     Args:
         dbInfo (dict): info on the remote database
-        progressBar (): gui - qt progress bar
+        progressBar (QProgressBar): gui - qt progress bar
         removeAtStart (bool): remove remote DB before starting new
 
     Returns:

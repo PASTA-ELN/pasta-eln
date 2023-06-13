@@ -323,3 +323,22 @@ def restart() -> None:
   except:
     os.execv(sys.executable, ['python3','-m','pasta_eln.gui']) #started for programming or debugging
   return
+
+
+class DummyProgressBar():
+  """ Class representing a progressbar that does not do anything
+  """
+  def setValue(self, value:int) -> None:
+    """
+    Set value
+
+    Args:
+      value (int): value to be set
+    """
+    return
+  def show(self) -> None:
+    """ show progress bar """
+    return
+  def hide(self) -> None:
+    """ hide progress bar """
+    return

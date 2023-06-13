@@ -2,12 +2,11 @@
 import re, logging
 from pathlib import Path
 from typing import Any
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTableView, QMenu, QFileDialog, QMessageBox,\
-                              QHeaderView, QGridLayout, QLineEdit, QComboBox # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QTableView, QMenu, QFileDialog, QMessageBox, QHeaderView, QLineEdit, QComboBox # pylint: disable=no-name-in-module
 from PySide6.QtCore import Qt, Slot, QSortFilterProxyModel, QModelIndex       # pylint: disable=no-name-in-module
 from PySide6.QtGui import QStandardItemModel, QStandardItem, QFont # pylint: disable=no-name-in-module
 from .dialogTableHeader import TableHeader
-from .style import TextButton, Label, LetterButton, Action, showMessage
+from .style import TextButton, Label, LetterButton, Action, widgetAndLayout
 from .fixedStrings import defaultOntologyNode
 from .communicate import Communicate
 
@@ -33,10 +32,11 @@ class Table(QWidget):
 
     ### GUI elements
     mainL = QVBoxLayout()
+    mainL.setSpacing(0)
+    mainL.setContentsMargins(0, 0, 0, 0)
     # header
-    self.headerW = QWidget()
+    self.headerW, headerL = widgetAndLayout('H', mainL)
     self.headerW.hide()
-    headerL = QHBoxLayout(self.headerW)
     self.headline = Label('','h1', headerL)
     headerL.addStretch(1)
     self.addBtn = TextButton('Add',        self.executeAction, headerL, name='addItem')
@@ -60,11 +60,8 @@ class Table(QWidget):
     self.actionChangeColums = Action('Change columns',  self.executeAction, self.moreMenu, self, name='changeColumns')  #add action at end
 
     more.setMenu(self.moreMenu)
-    mainL.addWidget(self.headerW)
     # filter
-    filterW = QWidget()
-    self.filterL = QGridLayout(filterW)
-    mainL.addWidget(filterW)
+    _, self.filterL = widgetAndLayout('Grid', mainL)
     # table
     self.table = QTableView(self)
     self.table.verticalHeader().hide()
@@ -254,8 +251,7 @@ class Table(QWidget):
         self.comm.changeSidebar.emit('redraw')
     elif menuName == 'addFilter':
       # gui
-      rowW = QWidget()
-      rowL = QHBoxLayout(rowW)
+      _, rowL = widgetAndLayout('H', self.filterL, 'm', 'l')
       text = QLineEdit('')
       rowL.addWidget(text)
       select = QComboBox()
@@ -265,7 +261,6 @@ class Table(QWidget):
       select.setAccessibleName(str(len(self.models)))
       rowL.addWidget(select)
       LetterButton('-', self.delFilter, rowL, str(len(self.models)))
-      self.filterL.addWidget(rowW)
       # data
       #TODO_P5 can you sort for true false in tables too?
       filterModel = QSortFilterProxyModel()

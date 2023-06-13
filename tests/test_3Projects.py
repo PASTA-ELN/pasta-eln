@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 from pasta_eln.backend import Backend
 from pasta_eln.miscTools import outputString
-from misc import DummyProgressBar
+from pasta_eln.miscTools import DummyProgressBar
 
 class TestStringMethods(unittest.TestCase):
   """
@@ -115,7 +115,8 @@ class TestStringMethods(unittest.TestCase):
       shutil.copy(examplePath/'1500nmXX 5 7074 -4594.txt', indentDirName)
       shutil.copy(examplePath/'test.odt', semDirName)
       shutil.copy(examplePath/'story.odt', semDirName)
-      self.be.scanProject(projID1)
+      progressBar = DummyProgressBar()
+      self.be.scanProject(progressBar, projID1)
 
       ### USE GLOBAL FILES
       outputString(outputFormat,'h2','USE GLOBAL FILES')

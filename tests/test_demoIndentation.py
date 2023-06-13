@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 from pasta_eln.backend import Backend
 from pasta_eln.miscTools import outputString
-from misc import DummyProgressBar
+from pasta_eln.miscTools import DummyProgressBar
 
 class TestStringMethods(unittest.TestCase):
   """
@@ -43,7 +43,7 @@ class TestStringMethods(unittest.TestCase):
     try:
       ### CREATE PROJECTS AND SHOW
       outputString(outputFormat,'h2','CREATE PROJECTS AND SHOW')
-      self.be.addData('x0', {'-name': 'Demonstrator: Youngs modulus of EN AW 1050A', \
+      self.be.addData('x0', {'-name': 'Demonstrator - Youngs modulus of EN AW 1050A', \
         'objective': 'To follow a journey of real materials scientists that study elastic modulus using RDM tools and solutions developed by the NFDI-MatWerk community', 'status': 'active', \
         'comment': '#NFDI This project includes indentation and confocal microscopy data.'})
       outputString(outputFormat, 'info', self.be.output('x0'))

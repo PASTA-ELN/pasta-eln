@@ -7,7 +7,7 @@ from cloudant.client import CouchDB
 
 from .backend import Backend
 from .fixedStrings import defaultOntology
-from .miscTools import outputString
+from .miscTools import outputString, DummyProgressBar
 
 
 def getOS() -> str:
@@ -470,7 +470,8 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
   if callbackPercent is not None:
     callbackPercent(19)
   logging.info('Finished copy files')
-  backend.scanProject(projID1)
+  progressBar = DummyProgressBar()
+  backend.scanProject(progressBar, projID1)
   logging.info('Finished scan tree')
   if callbackPercent is not None:
     callbackPercent(20)
