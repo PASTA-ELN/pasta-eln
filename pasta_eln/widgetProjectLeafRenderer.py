@@ -125,13 +125,6 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     #TODO_P3 design projectLeaves: 3 columns?
     # Maybe the comment can be moved to the central part of the box, to save some space.
 
-    #TODO_P3 design projectLeaves:
-    # The graphical output of the extractors and text output from .md files is placed a bit too close to the
-    # right edge of the window. Maybe these thumbnails could be reduced in size slightly to gain some space
-    # between them and the boxes edges.
-    # The same can be said about the text within the boxes- item names nearly overlap with the boxes edge on
-    # the right side.
-
   def sizeHint(self, option:QStyleOptionViewItem, index:QModelIndex) -> QSize:
     """
     determine size of this leaf

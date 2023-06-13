@@ -96,7 +96,7 @@ class IconButton(QPushButton):
       backend (Pasta): pasta backend
       style (str): css style
       hide (bool): hidden or shown initially
-      text (str): text shown on button additionally  #TODO_P3 design: what is the difference to TextButton?
+      text (str): text shown on button additionally
     """
     super().__init__()
     color = 'black' if backend is None else getColor(backend, 'primary')

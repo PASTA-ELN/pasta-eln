@@ -4,6 +4,7 @@ from typing import Any, Union
 from PySide6.QtWidgets import QDialog, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QTextEdit, QPushButton,\
                               QPlainTextEdit, QComboBox, QLineEdit, QDialogButtonBox, QSplitter, QSizePolicy # pylint: disable=no-name-in-module
 from PySide6.QtGui import QRegularExpressionValidator # pylint: disable=no-name-in-module
+from PySide6.QtCore import QSize
 from .style import Image, TextButton, IconButton, showMessage, widgetAndLayout
 from .fixedStrings import defaultOntologyNode
 from .handleDictionaries import fillDocBeforeCreate
@@ -94,13 +95,17 @@ class Form(QDialog):
         rightSideL.addWidget(splitter)
         self.formL.addRow(labelW, rightSideW)
       elif key == '-tags':
-        tagsBarMainW, tagsBarMainL = widgetAndLayout('H')
-        _, self.tagsBarSubL = widgetAndLayout('H', tagsBarMainL) #part which shows all the tags
+        tagsBarMainW, tagsBarMainL = widgetAndLayout('H', spacing='s')
+        _, self.tagsBarSubL = widgetAndLayout('H', tagsBarMainL, spacing='s', right='m') #part which shows all the tags
         self.otherChoices = QComboBox()   #part/combobox that allow user to select
         self.otherChoices.setEditable(True)
+        self.otherChoices.setMaximumWidth(100)
+        self.otherChoices.setIconSize(QSize(0,0))
         self.otherChoices.setInsertPolicy(QComboBox.InsertAtBottom)
         tagsBarMainL.addWidget(self.otherChoices)
         self.gradeChoices = QComboBox()   #part/combobox that shows grades
+        self.gradeChoices.setMaximumWidth(80)
+        self.gradeChoices.setIconSize(QSize(0,0))
         self.gradeChoices.addItems(['','\u2605','\u2605'*2,'\u2605'*3,'\u2605'*4,'\u2605'*5])
         self.gradeChoices.currentTextChanged.connect(self.addTag)
         tagsBarMainL.addWidget(self.gradeChoices)
@@ -141,7 +146,6 @@ class Form(QDialog):
     if allowProjectAndDocTypeChange: #if not-new and non-folder
       self.formL.addRow(QLabel('Special properties:'), QLabel('') )
     label = '- unassigned -' if self.flagNewDoc else '- no change -'
-    #TODO_P3 allow to unassign previously assigned data: not sure
     if allowProjectAndDocTypeChange or ('_id' not in self.doc and self.doc['-type'][0][0]!='x'): #if new and non-folder
       self.projectComboBox = QComboBox()
       self.projectComboBox.addItem(label, userData='')
