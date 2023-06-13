@@ -6,7 +6,7 @@ from PySide6.QtGui import QStandardItemModel, QStandardItem    # pylint: disable
 from PySide6.QtCore import Slot, Qt, QItemSelectionModel, QModelIndex # pylint: disable=no-name-in-module
 from anytree import PreOrderIter, Node
 from .widgetProjectTreeView import TreeView
-from .style import TextButton, Action, showMessage, widgetAndLayout
+from .style import TextButton, Action, Label, showMessage, widgetAndLayout
 from .miscTools import createDirName
 from .communicate import Communicate
 
@@ -160,7 +160,7 @@ class Project(QWidget):
     self.docProj = self.comm.backend.db.getDoc(self.projID)
     _, headerL       = widgetAndLayout('H',self.mainL)
     _, infoL         = widgetAndLayout('V', headerL)
-    buttonW, buttonL = widgetAndLayout('H')
+    buttonW, buttonL = widgetAndLayout('H', spacing='m')
     headerL.addStretch(1)
     headerL.addWidget(buttonW, alignment=Qt.AlignTop)  # type: ignore
 
@@ -177,7 +177,7 @@ class Project(QWidget):
 
     self.bodyW, bodyL =  widgetAndLayout('V')
     hidden = '     \U0001F441' if len([b for b in self.docProj['-branch'] if False in b['show']])>0 else ''
-    infoL.addWidget(QLabel(self.docProj['-name']+hidden))
+    infoL.addWidget(Label(self.docProj['-name']+hidden, 'h2'))
     tags = ', '.join(self.docProj['tags']) if 'tags' in self.docProj else ''
     bodyL.addWidget(QLabel('Tags: '+tags))
     for key,value in self.docProj.items():

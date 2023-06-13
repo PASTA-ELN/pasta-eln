@@ -27,7 +27,7 @@ class ProjectGroup(QDialog):
     self.setMinimumWidth(1000)
     mainL = QVBoxLayout(self)
     Label('Project group', 'h1', mainL)
-    _, topbarL = widgetAndLayout('H', mainL)
+    _, topbarL = widgetAndLayout('H', mainL, spacing='m')
     self.selectGroup = QComboBox()
     self.selectGroup.addItems(self.backend.configuration['projectGroups'].keys())
     self.selectGroup.currentTextChanged.connect(self.changeProjectGroup)

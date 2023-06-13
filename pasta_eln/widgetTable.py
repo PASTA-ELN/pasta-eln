@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QTableView, QMenu, QFileDial
 from PySide6.QtCore import Qt, Slot, QSortFilterProxyModel, QModelIndex       # pylint: disable=no-name-in-module
 from PySide6.QtGui import QStandardItemModel, QStandardItem, QFont # pylint: disable=no-name-in-module
 from .dialogTableHeader import TableHeader
-from .style import TextButton, Label, LetterButton, Action, widgetAndLayout
+from .style import TextButton, Label, LetterButton, Action, widgetAndLayout, translator
 from .fixedStrings import defaultOntologyNode
 from .communicate import Communicate
 
@@ -33,16 +33,16 @@ class Table(QWidget):
     ### GUI elements
     mainL = QVBoxLayout()
     mainL.setSpacing(0)
-    mainL.setContentsMargins(0, 0, 0, 0)
+    mainL.setContentsMargins(translator['s'], translator['s'], translator['s'], translator['s'])
     # header
-    self.headerW, headerL = widgetAndLayout('H', mainL)
+    self.headerW, headerL = widgetAndLayout('H', mainL, 'm')
     self.headerW.hide()
     self.headline = Label('','h1', headerL)
     headerL.addStretch(1)
     self.addBtn = TextButton('Add',        self.executeAction, headerL, name='addItem')
     TextButton('Add Filter', self.executeAction, headerL, name='addFilter')
 
-    self.selectionBtn = TextButton('Selection',None, headerL)
+    self.selectionBtn = TextButton('Selection', None, headerL)
     selectionMenu = QMenu(self)
     Action('Toggle selection',self.executeAction, selectionMenu, self, name='toggleSelection')
     selectionMenu.addSeparator()
@@ -61,7 +61,7 @@ class Table(QWidget):
 
     more.setMenu(self.moreMenu)
     # filter
-    _, self.filterL = widgetAndLayout('Grid', mainL)
+    _, self.filterL = widgetAndLayout('Grid', mainL, top='s', bottom='s')
     # table
     self.table = QTableView(self)
     self.table.verticalHeader().hide()
@@ -251,7 +251,7 @@ class Table(QWidget):
         self.comm.changeSidebar.emit('redraw')
     elif menuName == 'addFilter':
       # gui
-      _, rowL = widgetAndLayout('H', self.filterL, 'm', 'l')
+      _, rowL = widgetAndLayout('H', self.filterL, 'm', 'xl', '0', 'xl')
       text = QLineEdit('')
       rowL.addWidget(text)
       select = QComboBox()

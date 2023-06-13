@@ -66,7 +66,7 @@ class TextButton(QPushButton):
       else:
         primaryColor = getColor(backend, 'primary')
         secTextColor = getColor(backend, 'secondaryText')
-      self.setStyleSheet('border-width: 0px; margin-left: 10px; background-color: '+primaryColor+'; color: '+secTextColor)
+      self.setStyleSheet('border-width: 0px; background-color: '+primaryColor+'; color: '+secTextColor)
     if hide:
       self.hide()
     if layout is not None:
@@ -222,7 +222,7 @@ class Label(QLabel):
     """
     Args:
       text (str): text on label
-      size (str): size ['h1']
+      size (str): size ['h1','h2']
       layout (QLayout): layout to which to add the label
       function (function): function to call on mouse click
       docID (str): docID on other string to connect to this label
@@ -231,6 +231,8 @@ class Label(QLabel):
     self.setText(text)
     if size == 'h1' :
       self.setStyleSheet('font-size: 14pt')
+    if size == 'h2' :
+      self.setStyleSheet('font-size: 12pt')
     if layout is not None:
       layout.addWidget(self)
     self.mouseFunction = function
@@ -269,6 +271,8 @@ def showMessage(parent:QWidget, title:str, text:str, icon:str='', style:str='') 
   return
 
 
+translator = {'0':0, 's':5, 'm':10, 'l':20, 'xl':200}
+
 def widgetAndLayout(direction:str='V', parentLayout:Optional[QLayout]=None, spacing:str='0', left:str='0', top:str='0', right:str='0', bottom:str='0') -> tuple[QWidget, QLayout]:
   """
   Convenient function for widget and a boxLayout
@@ -278,7 +282,12 @@ def widgetAndLayout(direction:str='V', parentLayout:Optional[QLayout]=None, spac
   - spacing is the space between elements in the orientation of the BoxLayout
   - is the padding that surrounds the content in the layout
 
-  Distances are given in '', 's', 'm', 'l'
+  Distances are given in
+  - '0': zero distance
+  - 's': small distance used as padding round elements, or vertical spacings
+  - 'm': medium used as space between horizontal elements
+  - 'l': large used when things need to be separated
+  - 'xl': extra large indentations, frames
 
   Args:
     direction (str): type of layout [H,V,Grid,Form]
@@ -289,7 +298,6 @@ def widgetAndLayout(direction:str='V', parentLayout:Optional[QLayout]=None, spac
     right (str): padding on right
     bottom (str): padding on bottom
   """
-  translator = {'0':0, 's':3, 'm':6, 'l':12}
   widget = QWidget()
   if direction=='V':
     layout = QVBoxLayout(widget)

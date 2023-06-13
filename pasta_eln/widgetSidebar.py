@@ -4,7 +4,7 @@ from PySide6.QtCore import Slot, Qt                                    # pylint:
 from anytree import PreOrderIter, Node
 
 from .dialogConfig import Configuration
-from .style import TextButton, IconButton, getColor, showMessage, widgetAndLayout
+from .style import TextButton, IconButton, getColor, showMessage, widgetAndLayout, translator
 from .communicate import Communicate
 
 class Sidebar(QWidget):
@@ -24,7 +24,7 @@ class Sidebar(QWidget):
     # GUI elements
     mainL = QVBoxLayout()
     mainL.setSpacing(0)
-    mainL.setContentsMargins(0, 0, 0, 0)
+    mainL.setContentsMargins(translator['s'],translator['s'],translator['0'],translator['s'])
     _, self.projectL = widgetAndLayout('V', mainL)
     self.progress = QProgressBar(self)
     self.progress.hide()
