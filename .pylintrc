@@ -80,7 +80,6 @@ disable=raw-checker-failed,
         dangerous-default-value,
         missing-raises-doc,
         no-else-return,
-        no-self-use,
         condition-evals-to-constant
 
 #Reasons:

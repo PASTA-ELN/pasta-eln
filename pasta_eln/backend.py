@@ -331,7 +331,7 @@ class Backend(CLI_Mixin):
     inDB_all = self.db.getView('viewHierarchy/viewPaths')
     pathsInDB_x    = [i['key'] for i in inDB_all if i['value'][1][0][0]=='x']  #all structure elements: task, subtasts
     pathsInDB_data = [i['key'] for i in inDB_all if i['value'][1][0][0]!='x']
-    filesCountSum = sum([len(files) for r, d, files in os.walk(self.cwd)])
+    filesCountSum = sum(len(files) for (r, d, files) in os.walk(self.cwd))
     filesCount = 0
     for root, dirs, files in os.walk(self.cwd, topdown=True):
       #find parent-document

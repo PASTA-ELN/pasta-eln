@@ -3,7 +3,7 @@
 import re
 from io import StringIO
 import numpy as np
-import scipy.stats as stats
+from scipy import stats
 import pandas as pd
 from pandas.errors import EmptyDataError
 import matplotlib.pyplot as plt
@@ -69,7 +69,7 @@ def use(filePath, recipe='', saveFileName=None):
     data = np.array(data)
     plt.plot(data[:,0], data[:,1],'o')
     plt.xlabel('force [mN]')
-    plt.ylabel('area [$\mu m^2$]')
+    plt.ylabel(r'area [$\mu m^2$]')
     metaUser = {'num files':data.shape[0]}
     if recipe == 'measurement/dkfi/fit':            #: With fitting line
       fit = np.polyfit(data[:,0], data[:,1], 1)
