@@ -102,6 +102,10 @@ class TestStringMethods(unittest.TestCase):
         shutil.copy(examplePath/('Al_'+str(i)+'mN_2and5.gwy'), pathConfocal)
         shutil.copy(examplePath/('Al_'+str(i)+'mN_3and4.gwy'), pathConfocal)
       shutil.copy(examplePath/'elastic_constants.ipynb', pathDFT)
+      shutil.copy(examplePath/'final_data.csv', pathDFT)
+      shutil.copy(examplePath/'ImprintEstimation.ipynb', pathArea)
+      shutil.copy(examplePath/'imprint_size.csv', pathArea)
+      shutil.copy(examplePath/'El_modulus_analysis_results.csv', pathArea.parent)
       self.be.scanProject(dummyProgressBar ,idProj)
 
       ### ADD INSTRUMENTS AND THEIR ATTACHMENTS

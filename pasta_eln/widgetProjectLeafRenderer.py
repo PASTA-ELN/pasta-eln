@@ -78,6 +78,16 @@ class ProjectLeafRenderer(QStyledItemDelegate):
         text.setTextWidth(self.width*3)
       topLeftContent = option.rect.topRight() - QPoint(max(self.width,text.size().toTuple()[0])+self.frameSize-2,-self.frameSize) # type: ignore
       painter.translate(topLeftContent)
+      if text.size().toTuple()[1] > self.maxHeight-2*self.frameSize:
+        pen = painter.pen()
+        colorOld = QColor(pen.color())
+        pen.setColor(QColor(getColor(self.comm.backend, 'primary')))
+        pen.setWidth(2)
+        painter.setPen(pen)
+        painter.drawLine(0, self.maxHeight-2*self.frameSize, text.size().toTuple()[0]-self.frameSize, self.maxHeight-2*self.frameSize)
+        pen.setColor(colorOld)
+        pen.setWidth(1)
+        painter.setPen(pen)
       text.drawContents(painter, QRectF(0, 0, text.size().toTuple()[0], self.maxHeight-2*self.frameSize))
       painter.translate(-topLeftContent)
     yOffset += self.lineSep/2
