@@ -19,6 +19,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     self.debugMode = logging.DEBUG
     self.lineSep = 20
     self.frameSize = 6
+    self.maxHeight = 500
 
 
   def setCommunication(self, comm:Communicate) -> None:
@@ -77,7 +78,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
         text.setTextWidth(self.width*3)
       topLeftContent = option.rect.topRight() - QPoint(max(self.width,text.size().toTuple()[0])+self.frameSize-2,-self.frameSize) # type: ignore
       painter.translate(topLeftContent)
-      text.drawContents(painter)
+      text.drawContents(painter, QRectF(0, 0, text.size().toTuple()[0], self.maxHeight-2*self.frameSize))
       painter.translate(-topLeftContent)
     yOffset += self.lineSep/2
     hiddenText = '     \U0001F441' if len([b for b in doc['-branch'] if False in b['show']])>0 else ''
@@ -138,6 +139,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       doc = self.comm.backend.db.getDoc(docID)
       docKeys = doc.keys()
       height  = len([i for i in docKeys if not i in _DO_NOT_RENDER_ and i[0] not in ['-','_'] ])  #height in text lines
+      height += 1 if '-tags' in docKeys else 0
       height  = (height+3) * self.lineSep
       if 'content' in docKeys:
         text = QTextDocument()
@@ -160,5 +162,5 @@ class ProjectLeafRenderer(QStyledItemDelegate):
           height -= 25
       else:
         height -= 25
-      return QSize(400, height)
+      return QSize(400, min(height, self.maxHeight))
     return QSize()

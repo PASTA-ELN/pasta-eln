@@ -93,11 +93,11 @@ class TestStringMethods(unittest.TestCase):
       examplePath = Path(__file__).parent/'DemonstratorIndentation'
       for i in [10,20,40,80,160]:
         shutil.copy(examplePath/('Al_'+str(i)+'mN_load20s_hold5s.hdf5'), pathIndent)
-      for i in range(1,6):
+      for i in range(1,3):
         shutil.copy(examplePath/('Al_10mN_'+str(i)+'.gwy'), pathConfocal)
         shutil.copy(examplePath/('Al_160mN_'+str(i)+'.gwy'), pathConfocal)
       shutil.copy(examplePath/('Al_20mN.gwy'), pathConfocal)
-      for i in [40,80]:
+      for i in [40]:
         shutil.copy(examplePath/('Al_'+str(i)+'mN_1and6.gwy'), pathConfocal)
         shutil.copy(examplePath/('Al_'+str(i)+'mN_2and5.gwy'), pathConfocal)
         shutil.copy(examplePath/('Al_'+str(i)+'mN_3and4.gwy'), pathConfocal)

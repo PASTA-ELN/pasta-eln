@@ -57,7 +57,7 @@ class TreeView(QTreeView):
         docType= 'x'+str(len(hierStack))
         self.comm.backend.cwd = Path(self.comm.backend.db.getDoc(hierStack[-1])['-branch'][0]['path'])
         self.comm.backend.addData(docType, {'-name':'new folder'}, hierStack)
-        self.comm.changeProject.emit('','') #refresh project
+        self.comm.redrawProject.emit() #refresh project
       else:
         showMessage(self, 'Error', 'You cannot create a child of a non-folder!')
     elif menuName=='addSibling':
@@ -65,7 +65,7 @@ class TreeView(QTreeView):
       docType= 'x'+str(len(hierStack))
       self.comm.backend.cwd = Path(self.comm.backend.db.getDoc(hierStack[-1])['-branch'][0]['path'])
       self.comm.backend.addData(docType, {'-name':'new folder'}, hierStack)
-      self.comm.changeProject.emit('','') #refresh project
+      self.comm.redrawProject.emit() #refresh project
     elif menuName=='del':
       docID = self.currentIndex().data().split('/')[-1]
       doc = self.comm.backend.db.remove(docID)
@@ -77,7 +77,7 @@ class TreeView(QTreeView):
       children = self.comm.backend.db.getView('viewHierarchy/viewHierarchy', startKey=' '.join(doc['-branch'][0]['stack']+[docID,'']))
       for line in children:
         self.comm.backend.db.remove(line['id'])
-      self.comm.changeProject.emit('','') #refresh project
+      self.comm.redrawProject.emit() #refresh project
     elif menuName=='fold':
       item = self.model().itemFromIndex(self.currentIndex())
       if item.text().endswith(' -'):

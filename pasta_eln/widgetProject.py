@@ -5,6 +5,7 @@ from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget, QMenu, QMessageBox #
 from PySide6.QtGui import QStandardItemModel, QStandardItem    # pylint: disable=no-name-in-module
 from PySide6.QtCore import Slot, Qt, QItemSelectionModel, QModelIndex # pylint: disable=no-name-in-module
 from anytree import PreOrderIter, Node
+from anytree.search import find_by_attr
 from .widgetProjectTreeView import TreeView
 from .style import TextButton, Action, Label, showMessage, widgetAndLayout
 from .miscTools import createDirName
@@ -16,6 +17,7 @@ class Project(QWidget):
     super().__init__()
     self.comm = comm
     comm.changeProject.connect(self.changeProject)
+    comm.redrawProject.connect(self.redraw)
     self.mainL = QVBoxLayout()
     self.setLayout(self.mainL)
     self.tree:Optional[TreeView]             = None
@@ -54,43 +56,14 @@ class Project(QWidget):
     # self.tree.setSelectionMode(QAbstractItemView.SingleSelection)
     self.model.itemChanged.connect(self.modelChanged)
     rootItem = self.model.invisibleRootItem()
-
-    def iterateTree(nodeHier:Node) -> QStandardItem:
-      """
-      Recursive function to translate the hierarchical node into a tree-node
-
-      Args:
-        nodeHier (Anytree.Node): anytree node
-
-      Returns:
-        QtTreeWidgetItem: tree node
-      """
-      #prefill docID
-      label = '/'.join([i.id for i in nodeHier.ancestors]+[nodeHier.id])
-      nodeTree = QStandardItem(label)  #nodeHier.name,'/'.join(nodeHier.docType),nodeHier.id])
-      if nodeHier.id[0]=='x':
-        nodeTree.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled) # type: ignore
-      else:
-        nodeTree.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled) # type: ignore
-      if self.taskID==nodeHier.id:
-        nonlocal selectedIndex
-        selectedIndex = nodeTree.index()
-      children = []
-      for childHier in nodeHier.children:
-        childTree = iterateTree(childHier)
-        children.append(childTree)
-      if len(children)>0:
-        nodeTree.appendRows(children)
-      return nodeTree
-
     #Populate model body of change project: start recursion
     nodeHier = self.comm.backend.db.getHierarchy(self.projID, allItems=self.showAll)
     for node in PreOrderIter(nodeHier, maxlevel=2):
       if node.is_root:         #Project header
         self.projHeader()
       else:
-        rootItem.appendRow(iterateTree(node))
-    self.tree.expandAll()
+        rootItem.appendRow(self.iterateTree(node))
+    # self.tree.expandAll()
     if selectedIndex is not None:
       self.tree.selectionModel().select(selectedIndex, QItemSelectionModel.Select)
       #TODO_P4 projectView: selection does not scroll; one cannot select a row
@@ -100,6 +73,121 @@ class Project(QWidget):
       self.btnAddSubfolder.setVisible(False)
     elif self.btnHideShow is not None:
       self.btnHideShow.setVisible(False)
+    return
+
+
+  @Slot()
+  def redraw(self) -> None:
+    """ redraw tree by comparing GUI version to the one in the database (DB)
+    """
+    #TODO_P1 for now
+    self.changeProject(self.projID,'')
+    return
+
+    somethingChanged = False
+    modelDB = self.comm.backend.db.getHierarchy(self.projID, allItems=self.showAll)
+    modelGUI= self.model
+    # ---------------------
+    # subfunction
+    def iterateModel(itemGUI:QStandardItem, level:int) -> bool:
+      """ iterate the model in the GUI; recursively called
+
+      Args:
+        itemGUI (QStandardItem): item to inspect
+        level (int): level for printing and debugging
+      """
+      somethingChanged = False
+      docID_GUI = itemGUI.text().split('/')[-1]
+      itemDB = find_by_attr(modelDB, docID_GUI, name='id')
+      if itemDB is None:
+        print('DB : Information deleted from DB')
+        return False
+      if itemGUI.rowCount() != len(itemDB.children):
+        print("different length")
+      # ---------------------------------------
+      rowsGUI_toDelete = []
+      for index in range( max(itemGUI.rowCount(), len(itemDB.children)) ):
+        subitemGUI = itemGUI.child(index)
+        if subitemGUI is None:
+          print("  insert/append a child at ", index, somethingChanged)
+          if not somethingChanged:
+            somethingChanged = True
+            itemGUI.appendRow(self.iterateTree(itemDB.children[index]))
+          #expand tree view here
+          break
+        docID_GUI = subitemGUI.text().split('/')[-1]
+        if index>=len(itemDB.children):
+          if not somethingChanged:
+            somethingChanged = True
+            rowsGUI_toDelete.append(index)
+          break
+        subitemDB = itemDB.children[index]
+        docID_DB = subitemDB.id
+        if docID_GUI!=docID_DB:
+          print('=== Something has changed. Level=', level)
+          if docID_GUI in self.comm.backend.db.db:
+            doc = self.comm.backend.db.getDoc(docID_GUI)
+            if '_rev' in doc:
+              print('  : insert into GUI', index, somethingChanged)
+              if not somethingChanged:
+                somethingChanged = True
+                subitemGUI.insertRow(index, self.iterateTree(subitemDB))
+            else:
+              print('  : delete from GUI', index, somethingChanged)
+              if not somethingChanged:
+                somethingChanged = True
+                rowsGUI_toDelete.append(index)
+        if not iterateModel(itemGUI.child(index), level+1):
+          print('  : delete2 from GUI', index, somethingChanged)
+          if not somethingChanged:
+            somethingChanged = True
+            rowsGUI_toDelete.append(index)
+      if len(rowsGUI_toDelete)>1:
+        print("ERROR: LENGTH OF ROWS", len(rowsGUI_toDelete))   #also remove in Sep 2023
+      for index in rowsGUI_toDelete:
+        itemGUI.removeRow(index)
+      return True
+    # subfunction
+
+    rowsGUI_toDelete = []
+    for index in range( max(modelGUI.rowCount(), len(modelDB.children)) ):
+      itemGUI = modelGUI.item(index)
+      if itemGUI is None:
+        print("**IS THIS SENSE?")
+        break
+      docID_GUI = itemGUI.text().split('/')[-1]
+      if index>=len(modelDB.children):
+        if not somethingChanged:
+          somethingChanged = True
+          rowsGUI_toDelete.append(index)
+        continue
+      itemDB = modelDB.children[index]
+      docID_DB = itemDB.id
+      if docID_GUI!=docID_DB:
+        print('-- Something has changed', 1)
+        if docID_GUI in self.comm.backend.db.db:
+          doc = self.comm.backend.db.getDoc(docID_GUI)
+          if '_rev' in doc:
+            print('  : insert into GUI', index, somethingChanged)
+            if not somethingChanged:
+              somethingChanged = True
+            modelGUI.insertRow(index, self.iterateTree(itemDB))
+          else:
+            print('  : delete from GUI', index, somethingChanged)
+            if not somethingChanged:
+              somethingChanged = True
+              rowsGUI_toDelete.append(index)
+      # go to next level
+      if not iterateModel(itemGUI, level=1):
+        print('  : delete2 from GUI', index, somethingChanged)
+        if not somethingChanged:
+          somethingChanged = True
+          rowsGUI_toDelete.append(index)
+    # remove item
+    if len(rowsGUI_toDelete)>1:
+      print("1 LENGTH OF ROWS", len(rowsGUI_toDelete)) #also remove in Sep 2023
+    for index in rowsGUI_toDelete:
+      modelGUI.removeRow(index)
     return
 
 
@@ -219,7 +307,7 @@ class Project(QWidget):
         self.comm.changeTable.emit('x0','')
     elif menuName == 'scanProject':
       self.comm.backend.scanProject(self.comm.progressBar, self.projID, self.docProj['-branch'][0]['path'])
-      self.comm.changeProject.emit(self.projID,'')
+      self.redraw()
       self.comm.changeSidebar.emit('redraw')
       showMessage(self, 'Information','Scanning finished')
     elif menuName == 'projHide':
@@ -251,3 +339,31 @@ class Project(QWidget):
     else:
       print("undefined menu / action",menuName)
     return
+
+
+  def iterateTree(self, nodeHier:Node) -> QStandardItem:
+    """
+    Recursive function to translate the hierarchical node into a tree-node
+
+    Args:
+      nodeHier (Anytree.Node): anytree node
+
+    Returns:
+      QtTreeWidgetItem: tree node
+    """
+    #prefill docID
+    label = '/'.join([i.id for i in nodeHier.ancestors]+[nodeHier.id])
+    nodeTree = QStandardItem(label)  #nodeHier.name,'/'.join(nodeHier.docType),nodeHier.id])
+    if nodeHier.id[0]=='x':
+      nodeTree.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled) # type: ignore
+    else:
+      nodeTree.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled) # type: ignore
+    children = []
+    for childHier in nodeHier.children:
+      childTree = self.iterateTree(childHier)
+      children.append(childTree)
+    if len(children)>0:
+      nodeTree.appendRows(children)
+    return nodeTree
+
+
