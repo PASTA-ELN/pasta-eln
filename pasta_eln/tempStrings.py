@@ -3,6 +3,7 @@ todoString = """
 
 <h3>Very important show stopper</h3>
 <ul>
+<li> for now
 <li> get rid of this part
 <li> get rid of this part
 <li> if others eln: write new addDoc to add hierStack and branch based on path
@@ -10,27 +11,22 @@ todoString = """
 
 <h3>Things currently working on</h3>
 <ul>
-<li> callback that shows progress
-<li> change to string-output
 </ul>
 
 <h3>Improvement to convenience</h3>
 <ul>
 <li> Add read info from ror and orcid
 <li> add splitter to increase / decrease image
-<li> allow to unassign previously assigned data: not sure
 <li> design ProjectView: Currently, the comment is more highlighted than the title of an item due
 <li> design ProjectView: if comments are too long they cover the right area
-<li> design projectLeaves:
 <li> design projectLeaves: 3 columns?
-<li> design: make full width; scale fonts appropriately
 <li> design: make the checkboxes larger!
-<li> design: what is the difference to TextButton?
 <li> finish ontology dialog
 <li> form: add button to add key-values
 <li> ontologyCheck: all names must be different
 <li> other items as non-edible things that can be copy-pasted
-<li> scanning for progress bar
+<li> real change of project: iterate current tree and tree from DB and compare differences: only update those
+<li> scale fonts appropriately in dialogForm: if # ... replace by ... automatically during creation
 <li> table: shift-select
 <li> tableHeaderChange: requires view to change to views, not ontology
 </ul>
@@ -38,6 +34,7 @@ todoString = """
 <h3>Bigger things implemented soon</h3>
 <ul>
 <li> allow to adjust height
+<li> change to string-output
 <li> design of project tree
 <li> export: export via extractor in high resolution: change order: first save, then rescale
 <li> projectTree design: If folders and other items have boxes of slightly different brightness
@@ -60,7 +57,6 @@ todoString = """
 <li> create list of unaccessible files: linked with accessible files
 <li> extractor: creates links to sample/instrument
 <li> for now, sorted by last change of project itself: future create a view that does that automatically
-<li> if successful in Aug2023: remove
 <li> if successful in Aug2023: remove "echo....read"
 <li> invert filter: not 'Sur' in name => '^((?!Sur).)*$' in name
 <li> moreChecksDB: if parent has corresponding show
