@@ -84,111 +84,111 @@ class Project(QWidget):
     self.changeProject(self.projID,'')
     return
 
-    somethingChanged = False
-    modelDB = self.comm.backend.db.getHierarchy(self.projID, allItems=self.showAll)
-    modelGUI= self.model
-    # ---------------------
-    # subfunction
-    def iterateModel(itemGUI:QStandardItem, level:int) -> bool:
-      """ iterate the model in the GUI; recursively called
+    # somethingChanged = False
+    # modelDB = self.comm.backend.db.getHierarchy(self.projID, allItems=self.showAll)
+    # modelGUI= self.model
+    # # ---------------------
+    # # subfunction
+    # def iterateModel(itemGUI:QStandardItem, level:int) -> bool:
+    #   """ iterate the model in the GUI; recursively called
 
-      Args:
-        itemGUI (QStandardItem): item to inspect
-        level (int): level for printing and debugging
-      """
-      somethingChanged = False
-      docID_GUI = itemGUI.text().split('/')[-1]
-      itemDB = find_by_attr(modelDB, docID_GUI, name='id')
-      if itemDB is None:
-        print('DB : Information deleted from DB')
-        return False
-      if itemGUI.rowCount() != len(itemDB.children):
-        print("different length")
-      # ---------------------------------------
-      rowsGUI_toDelete = []
-      for index in range( max(itemGUI.rowCount(), len(itemDB.children)) ):
-        subitemGUI = itemGUI.child(index)
-        if subitemGUI is None:
-          print("  insert/append a child at ", index, somethingChanged)
-          if not somethingChanged:
-            somethingChanged = True
-            itemGUI.appendRow(self.iterateTree(itemDB.children[index]))
-          #expand tree view here
-          break
-        docID_GUI = subitemGUI.text().split('/')[-1]
-        if index>=len(itemDB.children):
-          if not somethingChanged:
-            somethingChanged = True
-            rowsGUI_toDelete.append(index)
-          break
-        subitemDB = itemDB.children[index]
-        docID_DB = subitemDB.id
-        if docID_GUI!=docID_DB:
-          print('=== Something has changed. Level=', level)
-          if docID_GUI in self.comm.backend.db.db:
-            doc = self.comm.backend.db.getDoc(docID_GUI)
-            if '_rev' in doc:
-              print('  : insert into GUI', index, somethingChanged)
-              if not somethingChanged:
-                somethingChanged = True
-                subitemGUI.insertRow(index, self.iterateTree(subitemDB))
-            else:
-              print('  : delete from GUI', index, somethingChanged)
-              if not somethingChanged:
-                somethingChanged = True
-                rowsGUI_toDelete.append(index)
-        if not iterateModel(itemGUI.child(index), level+1):
-          print('  : delete2 from GUI', index, somethingChanged)
-          if not somethingChanged:
-            somethingChanged = True
-            rowsGUI_toDelete.append(index)
-      if len(rowsGUI_toDelete)>1:
-        print("ERROR: LENGTH OF ROWS", len(rowsGUI_toDelete))   #also remove in Sep 2023
-      for index in rowsGUI_toDelete:
-        itemGUI.removeRow(index)
-      return True
-    # subfunction
+    #   Args:
+    #     itemGUI (QStandardItem): item to inspect
+    #     level (int): level for printing and debugging
+    #   """
+    #   somethingChanged = False
+    #   docID_GUI = itemGUI.text().split('/')[-1]
+    #   itemDB = find_by_attr(modelDB, docID_GUI, name='id')
+    #   if itemDB is None:
+    #     print('DB : Information deleted from DB')
+    #     return False
+    #   if itemGUI.rowCount() != len(itemDB.children):
+    #     print("different length")
+    #   # ---------------------------------------
+    #   rowsGUI_toDelete = []
+    #   for index in range( max(itemGUI.rowCount(), len(itemDB.children)) ):
+    #     subitemGUI = itemGUI.child(index)
+    #     if subitemGUI is None:
+    #       print("  insert/append a child at ", index, somethingChanged)
+    #       if not somethingChanged:
+    #         somethingChanged = True
+    #         itemGUI.appendRow(self.iterateTree(itemDB.children[index]))
+    #       #expand tree view here
+    #       break
+    #     docID_GUI = subitemGUI.text().split('/')[-1]
+    #     if index>=len(itemDB.children):
+    #       if not somethingChanged:
+    #         somethingChanged = True
+    #         rowsGUI_toDelete.append(index)
+    #       break
+    #     subitemDB = itemDB.children[index]
+    #     docID_DB = subitemDB.id
+    #     if docID_GUI!=docID_DB:
+    #       print('=== Something has changed. Level=', level)
+    #       if docID_GUI in self.comm.backend.db.db:
+    #         doc = self.comm.backend.db.getDoc(docID_GUI)
+    #         if '_rev' in doc:
+    #           print('  : insert into GUI', index, somethingChanged)
+    #           if not somethingChanged:
+    #             somethingChanged = True
+    #             subitemGUI.insertRow(index, self.iterateTree(subitemDB))
+    #         else:
+    #           print('  : delete from GUI', index, somethingChanged)
+    #           if not somethingChanged:
+    #             somethingChanged = True
+    #             rowsGUI_toDelete.append(index)
+    #     if not iterateModel(itemGUI.child(index), level+1):
+    #       print('  : delete2 from GUI', index, somethingChanged)
+    #       if not somethingChanged:
+    #         somethingChanged = True
+    #         rowsGUI_toDelete.append(index)
+    #   if len(rowsGUI_toDelete)>1:
+    #     print("ERROR: LENGTH OF ROWS", len(rowsGUI_toDelete))   #also remove in Sep 2023
+    #   for index in rowsGUI_toDelete:
+    #     itemGUI.removeRow(index)
+    #   return True
+    # # subfunction
 
-    rowsGUI_toDelete = []
-    for index in range( max(modelGUI.rowCount(), len(modelDB.children)) ):
-      itemGUI = modelGUI.item(index)
-      if itemGUI is None:
-        print("**IS THIS SENSE?")
-        break
-      docID_GUI = itemGUI.text().split('/')[-1]
-      if index>=len(modelDB.children):
-        if not somethingChanged:
-          somethingChanged = True
-          rowsGUI_toDelete.append(index)
-        continue
-      itemDB = modelDB.children[index]
-      docID_DB = itemDB.id
-      if docID_GUI!=docID_DB:
-        print('-- Something has changed', 1)
-        if docID_GUI in self.comm.backend.db.db:
-          doc = self.comm.backend.db.getDoc(docID_GUI)
-          if '_rev' in doc:
-            print('  : insert into GUI', index, somethingChanged)
-            if not somethingChanged:
-              somethingChanged = True
-            modelGUI.insertRow(index, self.iterateTree(itemDB))
-          else:
-            print('  : delete from GUI', index, somethingChanged)
-            if not somethingChanged:
-              somethingChanged = True
-              rowsGUI_toDelete.append(index)
-      # go to next level
-      if not iterateModel(itemGUI, level=1):
-        print('  : delete2 from GUI', index, somethingChanged)
-        if not somethingChanged:
-          somethingChanged = True
-          rowsGUI_toDelete.append(index)
-    # remove item
-    if len(rowsGUI_toDelete)>1:
-      print("1 LENGTH OF ROWS", len(rowsGUI_toDelete)) #also remove in Sep 2023
-    for index in rowsGUI_toDelete:
-      modelGUI.removeRow(index)
-    return
+    # rowsGUI_toDelete = []
+    # for index in range( max(modelGUI.rowCount(), len(modelDB.children)) ):
+    #   itemGUI = modelGUI.item(index)
+    #   if itemGUI is None:
+    #     print("**IS THIS SENSE?")
+    #     break
+    #   docID_GUI = itemGUI.text().split('/')[-1]
+    #   if index>=len(modelDB.children):
+    #     if not somethingChanged:
+    #       somethingChanged = True
+    #       rowsGUI_toDelete.append(index)
+    #     continue
+    #   itemDB = modelDB.children[index]
+    #   docID_DB = itemDB.id
+    #   if docID_GUI!=docID_DB:
+    #     print('-- Something has changed', 1)
+    #     if docID_GUI in self.comm.backend.db.db:
+    #       doc = self.comm.backend.db.getDoc(docID_GUI)
+    #       if '_rev' in doc:
+    #         print('  : insert into GUI', index, somethingChanged)
+    #         if not somethingChanged:
+    #           somethingChanged = True
+    #         modelGUI.insertRow(index, self.iterateTree(itemDB))
+    #       else:
+    #         print('  : delete from GUI', index, somethingChanged)
+    #         if not somethingChanged:
+    #           somethingChanged = True
+    #           rowsGUI_toDelete.append(index)
+    #   # go to next level
+    #   if not iterateModel(itemGUI, level=1):
+    #     print('  : delete2 from GUI', index, somethingChanged)
+    #     if not somethingChanged:
+    #       somethingChanged = True
+    #       rowsGUI_toDelete.append(index)
+    # # remove item
+    # if len(rowsGUI_toDelete)>1:
+    #   print("1 LENGTH OF ROWS", len(rowsGUI_toDelete)) #also remove in Sep 2023
+    # for index in rowsGUI_toDelete:
+    #   modelGUI.removeRow(index)
+    # return
 
 
   def modelChanged(self, item:QStandardItem) -> None:
@@ -365,5 +365,3 @@ class Project(QWidget):
     if len(children)>0:
       nodeTree.appendRows(children)
     return nodeTree
-
-

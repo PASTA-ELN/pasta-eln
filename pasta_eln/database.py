@@ -233,7 +233,7 @@ class Database:
       newDoc['-user']   = change['-user']
     else:                    #if update
       oldDoc = {}            #this is an older revision of the document
-      nothingChanged = True
+      # nothingChanged = True
       # handle branch
       if '-branch' in change:# and len(change['-branch']['stack'])>0:
         op = change['-branch'].pop('op')
@@ -248,7 +248,7 @@ class Database:
           if op=='c':    #create, append
             change['-branch']['show'] = self.createShowFromStack(change['-branch']['stack'])
             newDoc['-branch'] += [change['-branch']]
-            nothingChanged = False
+            # nothingChanged = False
           elif op=='u':  #update
             if oldpath is not None:
               for branch in newDoc['-branch']:
@@ -262,12 +262,12 @@ class Database:
                   break
             else:
               newDoc['-branch'][0] = change['-branch'] #change the initial one
-            nothingChanged = False
+            # nothingChanged = False
           elif op=='d':  #delete
-            originalLength = len(newDoc['-branch'])
             newDoc['-branch'] = [branch for branch in newDoc['-branch'] if branch['path']!=change['-branch']['path']]
-            if originalLength!=len(newDoc['-branch']):
-              nothingChanged = False
+            # originalLength = len(newDoc['-branch'])
+            # if originalLength!=len(newDoc['-branch']):
+            #   nothingChanged = False
           else:
             logging.warning('database.update.1: unknown branch op: '+newDoc['_id']+' '+newDoc['-name'])
             return newDoc
@@ -295,8 +295,8 @@ class Database:
         # Add to testBasic to test for it:
         #       myString = myString.replace('A long comment','A long   comment')
         if item not in newDoc or change[item]!=newDoc[item]:
-          if item not in ['-date','-client','-user']:      #if only date/client change, no significant change
-            nothingChanged = False
+          # if item not in ['-date','-client','-user']:      #if only date/client change, no significant change
+          #   nothingChanged = False
           if item == 'image':
             oldDoc[item] = 'image changed'       #don't backup images: makes database big and are only thumbnails anyhow
           elif item in newDoc:

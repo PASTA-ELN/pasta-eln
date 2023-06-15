@@ -24,6 +24,7 @@ class Table(QWidget):
     self.comm = comm
     comm.changeTable.connect(self.changeTable)
     comm.stopSequentialEdit.connect(self.stopSequentialEditFunction)
+    self.stopSequentialEdit = False
     self.data:list[dict[str,Any]] = []
     self.models:list[QStandardItemModel] = []
     self.docType = ''
@@ -380,6 +381,7 @@ class Table(QWidget):
 
   @Slot()
   def stopSequentialEditFunction(self) -> None:
+    """ Stop the sequential edit of a number of items """
     self.stopSequentialEdit=True
     return
 

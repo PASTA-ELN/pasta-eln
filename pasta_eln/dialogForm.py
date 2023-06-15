@@ -4,7 +4,7 @@ from typing import Any, Union
 from PySide6.QtWidgets import QDialog, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QTextEdit, QPushButton,\
                               QPlainTextEdit, QComboBox, QLineEdit, QDialogButtonBox, QSplitter, QSizePolicy # pylint: disable=no-name-in-module
 from PySide6.QtGui import QRegularExpressionValidator # pylint: disable=no-name-in-module
-from PySide6.QtCore import QSize
+from PySide6.QtCore import QSize                      # pylint: disable=no-name-in-module
 from .style import Image, TextButton, IconButton, Label, showMessage, widgetAndLayout
 from .fixedStrings import defaultOntologyNode
 from .handleDictionaries import fillDocBeforeCreate
@@ -365,7 +365,7 @@ class Form(QDialog):
     getattr(self, 'textShow_'+key).setMarkdown( getattr(self, 'textEdit_'+key).toPlainText())
     return
 
-  def delTag(self, _, tag) -> None:
+  def delTag(self, _:str, tag:str) -> None:
     """
     Clicked button to delete tag
     """
