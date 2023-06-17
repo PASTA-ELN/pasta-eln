@@ -7,6 +7,7 @@ todoString = """
 <li> get rid of this part
 <li> get rid of this part
 <li> if others eln: write new addDoc to add hierStack and branch based on path
+<li>: make sure images are not elongated
 </ul>
 
 <h3>Things currently working on</h3>
@@ -17,12 +18,15 @@ todoString = """
 <ul>
 <li> Add read info from ror and orcid
 <li> add splitter to increase / decrease image
+<li> appendRow is not 100% correct: insertRow before the first non-folder, depending on the child number
+<li> appendRow is not 100% correct: see above
 <li> design ProjectView: Currently, the comment is more highlighted than the title of an item due
 <li> design ProjectView: if comments are too long they cover the right area
 <li> design projectLeaves: 3 columns?
 <li> design: make the checkboxes larger!
 <li> finish ontology dialog
 <li> form: add button to add key-values
+<li> from config file
 <li> ontologyCheck: all names must be different
 <li> other items as non-edible things that can be copy-pasted
 <li> real change of project: iterate current tree and tree from DB and compare differences: only update those

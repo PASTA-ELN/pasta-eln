@@ -54,10 +54,10 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     xOffset, yOffset = option.rect.topLeft().toTuple()
     topLeft2nd     = option.rect.topRight()   - QPoint(self.width+self.frameSize+1,-self.frameSize)
     bottomRight2nd = option.rect.bottomRight()- QPoint(self.frameSize+1,self.frameSize)
-    hierStack = index.data(Qt.DisplayRole)
+    hierStack = index.data(Qt.DisplayRole) # type: ignore
     if hierStack is None:
       return
-    docID   = hierStack.split('/')[-1]  # type: ignore
+    docID   = hierStack.split('/')[-1]
     if docID.endswith(' -'):
       docID = docID[:-2]
       folded = True
@@ -146,10 +146,10 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     determine size of this leaf
     """
     if index:
-      hierStack = index.data(Qt.DisplayRole)
+      hierStack = index.data(Qt.DisplayRole)  # type: ignore
       if hierStack is None:
         return QSize()
-      docID   = hierStack.split('/')[-1]  # type: ignore
+      docID   = hierStack.split('/')[-1]
       if docID.endswith(' -'):
         return QSize(400, self.lineSep*2)
       if self.comm is None:
