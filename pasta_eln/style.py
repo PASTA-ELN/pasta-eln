@@ -186,6 +186,7 @@ class Image():
       if width>0:
         imageW.setMaximumSize(width, int(float(imageW.height())/float(imageW.width())*width))
       if anyDimension>0:
+        #TODO_P1: make sure images are not elongated
         if imageW.height()>imageW.width():
           imageW.setMaximumSize(int(float(imageW.width())/float(imageW.height())*anyDimension) ,anyDimension)
         else:

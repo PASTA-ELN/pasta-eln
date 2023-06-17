@@ -537,7 +537,6 @@ class Backend(CLI_Mixin):
     if success:
       try:
         module  = importlib.import_module(pyFile[:-3])
-        module = importlib.reload(module)
         plt.clf()
         content = module.use(filePath, recipe)
       except:

@@ -16,6 +16,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     super().__init__()
     self.comm:Optional[Communicate] = None
     self.width = -1
+    self.widthContent = 600   #TODO_P3 from config file
     self.debugMode = logging.DEBUG
     self.lineSep = 20
     self.frameSize = 6
@@ -74,21 +75,22 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     elif 'content' in doc and not folded:
       text = QTextDocument()
       text.setMarkdown(doc['content'])
-      if text.size().toTuple()[0] > self.width*3:  # type: ignore
-        text.setTextWidth(self.width*3)
-      topLeftContent = option.rect.topRight() - QPoint(max(self.width,text.size().toTuple()[0])+self.frameSize-2,-self.frameSize) # type: ignore
+      text.setTextWidth(self.widthContent)
+      width, height = -1, -1
+      width, height = text.size().toTuple()  # type: ignore
+      topLeftContent = option.rect.topRight() - QPoint(max(self.width,width)+self.frameSize-2,-self.frameSize)
       painter.translate(topLeftContent)
-      if text.size().toTuple()[1] > self.maxHeight-2*self.frameSize: # type: ignore
+      if height > self.maxHeight-2*self.frameSize:
         pen = painter.pen()
         colorOld = QColor(pen.color())
         pen.setColor(QColor(getColor(self.comm.backend, 'primary')))
         pen.setWidth(2)
         painter.setPen(pen)
-        painter.drawLine(0, self.maxHeight-2*self.frameSize, text.size().toTuple()[0]-self.frameSize, self.maxHeight-2*self.frameSize) # type: ignore
+        painter.drawLine(0, self.maxHeight-2*self.frameSize, width-self.frameSize, self.maxHeight-2*self.frameSize)
         pen.setColor(colorOld)
         pen.setWidth(1)
         painter.setPen(pen)
-      text.drawContents(painter, QRectF(0, 0, text.size().toTuple()[0], self.maxHeight-2*self.frameSize)) # type: ignore
+      text.drawContents(painter, QRectF(0, 0, width, self.maxHeight-2*self.frameSize))
       painter.translate(-topLeftContent)
     yOffset += self.lineSep/2
     hiddenText = '     \U0001F441' if len([b for b in doc['-branch'] if False in b['show']])>0 else ''
@@ -154,6 +156,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       if 'content' in docKeys:
         text = QTextDocument()
         text.setMarkdown(self.comm.backend.db.getDoc(docID)['content'])
+        text.setTextWidth(self.widthContent)
         height = max(height, text.size().toTuple()[1]) +2*self.frameSize # type: ignore
       elif 'image' in docKeys:
         if doc['image'].startswith('data:image/'):
