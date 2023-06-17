@@ -18,7 +18,6 @@ class Communicate(QObject):
   changeDetails = Signal(str)            # send docID from main-table to details
                                          #      docID (str): document-id; ''=draw nothing; 'redraw' implies redraw
   changeProject = Signal(str, str)       # send docID,projectID from sidebar or main-table to projects
-  redrawProject = Signal()               # sent signal from projectTreeView to redraw itself
   formDoc       = Signal(dict)           # send doc from details to new/edit dialog: dialogForm
   testExtractor = Signal()               # execute extractorTest in widgetDetails
   stopSequentialEdit = Signal()          # in sequential edit, stop if there is a cancel
