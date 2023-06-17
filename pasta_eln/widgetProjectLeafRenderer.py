@@ -157,11 +157,11 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       doc = self.comm.backend.db.getDoc(docID)
       docKeys = doc.keys()
       height  = len([i for i in docKeys if not i in _DO_NOT_RENDER_ and i[0] not in ['-','_'] ])  #height in text lines
-      height += 1 if '-tags' in docKeys else 0
+      height += 1 if '-tags' in docKeys and len(doc['-tags'])>0 else 0
       height  = (height+3) * self.lineSep
       if 'content' in docKeys:
         text = QTextDocument()
-        text.setMarkdown(self.comm.backend.db.getDoc(docID)['content'])
+        text.setMarkdown(doc['content'])
         text.setTextWidth(self.widthContent)
         height = max(height, text.size().toTuple()[1]) +2*self.frameSize # type: ignore
       elif 'image' in docKeys:
@@ -172,13 +172,13 @@ class ProjectLeafRenderer(QStyledItemDelegate):
           height = max(height, pixmap.height())+2*self.frameSize
         else:
           height = max(height, int(self.width*3/4))+2*self.frameSize
-      elif 'comment' in doc.keys():
+        print('image')
+      elif 'comment' in doc.keys() and len(doc['comment'])>0:
         text = QTextDocument()
-        comment = self.comm.backend.db.getDoc(docID)['comment']
+        comment = doc['comment']
         text.setMarkdown(comment.strip())
         height += text.size().toTuple()[1] # type: ignore
-        if docID[0]!='x' or len(comment)==0:
-          height -= 25
+        height -= 25
       else:
         height -= 25
       return QSize(400, min(height, self.maxHeight))
