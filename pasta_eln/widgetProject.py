@@ -79,9 +79,10 @@ class Project(QWidget):
   @Slot()
   def redraw(self) -> None:
     """ redraw tree by comparing GUI version to the one in the database (DB)
+    - needed after scanning, hiding of elements
     """
     #TODO_P1 for now
-    self.changeProject(self.projID,'')
+    # self.changeProject(self.projID,'')
     return
 
     # somethingChanged = False

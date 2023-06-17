@@ -1,9 +1,9 @@
 """ Custom tree view on data model """
-import subprocess, os, platform, logging
+import subprocess, os, platform, logging, shutil
 from pathlib import Path
 from PySide6.QtWidgets import QWidget, QTreeView, QAbstractItemView, QMenu # pylint: disable=no-name-in-module
-from PySide6.QtGui import QStandardItemModel  # pylint: disable=no-name-in-module
-from PySide6.QtCore import QPoint  # pylint: disable=no-name-in-module
+from PySide6.QtGui import QStandardItemModel, QStandardItem  # pylint: disable=no-name-in-module
+from PySide6.QtCore import QPoint, Qt  # pylint: disable=no-name-in-module
 from .widgetProjectLeafRenderer import ProjectLeafRenderer
 from .style import Action, showMessage
 from .communicate import Communicate
@@ -56,28 +56,50 @@ class TreeView(QTreeView):
       if hierStack[-1][0]=='x':
         docType= 'x'+str(len(hierStack))
         self.comm.backend.cwd = Path(self.comm.backend.db.getDoc(hierStack[-1])['-branch'][0]['path'])
-        self.comm.backend.addData(docType, {'-name':'new folder'}, hierStack)
-        self.comm.redrawProject.emit() #refresh project
+        docID = self.comm.backend.addData(docType, {'-name':'new folder'}, hierStack)
+        # append item to the GUI
+        item  = self.model().itemFromIndex(self.currentIndex())
+        child = QStandardItem('/'.join(hierStack+[docID]))
+        child.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled) # type: ignore
+        item.appendRow(child)
+        #TODO_P3 appendRow is not 100% correct: insertRow before the first non-folder, depending on the child number
+        #    get highest non 9999 childNumber
       else:
         showMessage(self, 'Error', 'You cannot create a child of a non-folder!')
     elif menuName=='addSibling':
       hierStack= self.currentIndex().data().split('/')[:-1]
       docType= 'x'+str(len(hierStack))
       self.comm.backend.cwd = Path(self.comm.backend.db.getDoc(hierStack[-1])['-branch'][0]['path'])
-      self.comm.backend.addData(docType, {'-name':'new folder'}, hierStack)
-      self.comm.redrawProject.emit() #refresh project
+      docID = self.comm.backend.addData(docType, {'-name':'new folder'}, hierStack)
+      # append item to the GUI
+      item  = self.model().itemFromIndex(self.currentIndex())
+      parent = item.parent() if item.parent() is not None else self.model().invisibleRootItem()
+      child = QStandardItem('/'.join(hierStack+[docID]))
+      child.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled) # type: ignore
+      parent.appendRow(child)
+      #TODO_P3 appendRow is not 100% correct: see above
     elif menuName=='del':
       docID = self.currentIndex().data().split('/')[-1]
       doc = self.comm.backend.db.remove(docID)
       for branch in doc['-branch']:
         oldPath = Path(self.comm.backend.basePath)/branch['path']
         if oldPath.exists():
+          if (oldPath.parent/('trash_'+oldPath.name)).exists():  #ensure target does not exist
+            endText = ' was marked for deletion. Save it or its content now to some place on harddisk. It will be deleted now!!!'
+            showMessage(self, 'Warning', 'Warning! \nThe folder '+str(oldPath.parent/('trash_'+oldPath.name))+endText)
+            if (oldPath.parent/('trash_'+oldPath.name)).exists():
+              shutil.rmtree(oldPath.parent/('trash_'+oldPath.name))
           oldPath.rename( oldPath.parent/('trash_'+oldPath.name) )
       # go through children
       children = self.comm.backend.db.getView('viewHierarchy/viewHierarchy', startKey=' '.join(doc['-branch'][0]['stack']+[docID,'']))
       for line in children:
         self.comm.backend.db.remove(line['id'])
-      self.comm.redrawProject.emit() #refresh project
+      # remove leaf from GUI
+      item  = self.model().itemFromIndex(self.currentIndex())
+      parent = item.parent()
+      if parent is None: #top level
+        parent = self.model().invisibleRootItem()
+      parent.removeRow(item.row())
     elif menuName=='fold':
       item = self.model().itemFromIndex(self.currentIndex())
       if item.text().endswith(' -'):
@@ -108,9 +130,11 @@ class TreeView(QTreeView):
 
 
   def treeDoubleClicked(self) -> None:
-    """ after double-click on tree leaf: open form """
+    """
+    after double-click on tree leaf: open form
+    - no redraw required since renderer asks automatically for update
+    """
     docID = self.currentIndex().data().split('/')[-1]
     doc   = self.comm.backend.db.getDoc(docID[:-2] if docID.endswith(' -') else docID)
     self.comm.formDoc.emit(doc)
-    self.comm.changeProject.emit('','')
     return
