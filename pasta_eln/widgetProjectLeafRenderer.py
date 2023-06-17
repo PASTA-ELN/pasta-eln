@@ -77,7 +77,9 @@ class ProjectLeafRenderer(QStyledItemDelegate):
         image.render(painter,    QRectF(topLeft2nd, bottomRight2nd))
     elif 'content' in doc and not folded:
       text = QTextDocument()
-      text.setMarkdown(doc['content'])
+      content = doc['content'].replace('\n# ','\n### ').replace('\n## ','\n### ')
+      content = '##'+content if content.startswith('# ') else content
+      text.setMarkdown(content)
       text.setTextWidth(self.widthContent)
       width, height = -1, -1
       width, height = text.size().toTuple()  # type: ignore
@@ -172,7 +174,6 @@ class ProjectLeafRenderer(QStyledItemDelegate):
           height = max(height, pixmap.height())+2*self.frameSize
         else:
           height = max(height, int(self.width*3/4))+2*self.frameSize
-        print('image')
       elif 'comment' in doc.keys() and len(doc['comment'])>0:
         text = QTextDocument()
         comment = doc['comment']
