@@ -16,6 +16,9 @@ iconsDocTypes = {'Measurements':'fa5s.thermometer-half',
                  'Instruments': 'ri.scales-2-line',
                  '-':           'fa5.file'}
 
+shortCuts = {'measurement':'m', 'sample':'s', 'procedure':'p', 'instrument':'i', 'x0':'space'}
+
+
 
 def getColor(backend:Backend, color:str) -> str:
   """

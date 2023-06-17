@@ -17,7 +17,7 @@ from .dialogConfig import Configuration
 from .dialogProjectGroup import ProjectGroup
 from .dialogOntology import Ontology
 from .miscTools import updateExtractorList, restart
-from .style import Action, showMessage, widgetAndLayout
+from .style import Action, showMessage, widgetAndLayout, shortCuts
 from .fixedStrings import shortcuts
 os.environ['QT_API'] = 'pyside6'
 
@@ -66,7 +66,6 @@ class MainWindow(QMainWindow):
     Action('&Shortcuts',             self.executeAction, helpMenu, self, name='shortcuts')
     Action('&Todo list',             self.executeAction, helpMenu, self, name='todo')
     if hasattr(self.backend, 'db'):
-      shortCuts = {'measurement':'m', 'sample':'s', 'x0':'p'} #TODO_P5 addToConfig
       for docType, docLabel in self.comm.backend.db.dataLabels.items():
         if docType[0]=='x' and docType[1]!='0':
           continue
@@ -76,7 +75,7 @@ class MainWindow(QMainWindow):
           viewMenu.addSeparator()
       viewMenu.addSeparator()
       Action('&Tags',         self.viewMenu, viewMenu, self, 'Ctrl+T', '_tags_')
-      Action('&Unidentified', self.viewMenu, viewMenu, self, name='-')
+      Action('&Unidentified', self.viewMenu, viewMenu, self, 'Ctrl+U', name='-')
       #TODO_P5 create list of unaccessible files: linked with accessible files
 
     #GUI elements
