@@ -42,7 +42,7 @@ class Form(QDialog):
     if 'image' in self.doc:
       width = self.comm.backend.configuration['GUI']['imageSizeDetails'] \
                 if hasattr(self.comm.backend, 'configuration') else 300
-      imageW = Image(self.doc['image'], mainL, anyDimension=width)
+      Image(self.doc['image'], mainL, anyDimension=width)
     _, self.formL = widgetAndLayout('Form', mainL, 's')
 
     #Add things that are in ontology

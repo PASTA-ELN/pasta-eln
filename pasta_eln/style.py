@@ -176,7 +176,8 @@ class Image():
       label = QLabel()
       label.setPixmap(pixmap)
       label.setAlignment(Qt.AlignCenter) # type: ignore
-      layout.addWidget(label, alignment=Qt.AlignHCenter)
+      if layout is not None:
+        layout.addWidget(label, alignment=Qt.AlignHCenter)  # type: ignore
     elif data.startswith('<?xml'): #svg image
       imageW = QSvgWidget()
       policy = imageW.sizePolicy()
@@ -194,7 +195,8 @@ class Image():
           imageW.setMaximumSize(int(float(imageW.width())/float(imageW.height())*anyDimension) ,anyDimension)
         else:
           imageW.setMaximumSize(anyDimension, int(float(imageW.height())/float(imageW.width())*anyDimension))
-      layout.addWidget(imageW, alignment=Qt.AlignHCenter)
+      if layout is not None:
+        layout.addWidget(imageW, alignment=Qt.AlignHCenter) # type: ignore
     elif len(data)>2:
       print('WidgetProjectLeaf:What is this image |'+data[:50]+'|')
     return
