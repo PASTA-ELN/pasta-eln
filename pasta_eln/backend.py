@@ -480,7 +480,7 @@ class Backend(CLI_Mixin):
         if 'fileExtension' not in doc['metaVendor']:
           doc['metaVendor']['fileExtension'] = extension.lower()
         if 'links' in doc:
-          #TODO_P5 extractor: creates links to sample/instrument
+          #TODO_P3 extractor: creates links to sample/instrument
           if len(doc['links'])==0:
             del doc['links']
     if not success:

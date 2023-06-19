@@ -74,7 +74,7 @@ class Table(QWidget):
     header = self.table.horizontalHeader()
     header.setSectionsMovable(True)
     header.setSortIndicatorShown(True)
-    header.setMaximumSectionSize(400) #TODO_P5 addToConfig
+    header.setMaximumSectionSize(400) #TODO_P4 addToConfig
     header.resizeSections(QHeaderView.ResizeToContents)
     header.setStretchLastSection(True)
     #TODO_P3 table: shift-select
@@ -102,7 +102,7 @@ class Table(QWidget):
       self.projID  = projID
     if self.docType=='_tags_':
       self.addBtn.hide()
-      #TODO_P4 projectView: if table-row click, move to view it project
+      #TODO_P3 projectView: if table-row click, move to view it project
       if self.showAll:
         self.data = self.comm.backend.db.getView('viewIdentify/viewTagsAll')
       else:
@@ -264,7 +264,7 @@ class Table(QWidget):
       rowL.addWidget(select)
       IconButton('fa5s.minus-square', self.delFilter, rowL, str(len(self.models)), backend=self.comm.backend)
       # data
-      #TODO_P5 can you sort for true false in tables too?
+      #TODO_P4 can you sort for true false in tables too?
       filterModel = QSortFilterProxyModel()
       text.textChanged.connect(filterModel.setFilterRegularExpression)
       filterModel.setSourceModel(self.models[-1])
@@ -323,7 +323,7 @@ class Table(QWidget):
       dialog = TableHeader(self.comm, self.docType)
       dialog.exec()
     elif menuName == 'export':
-      #TODO_P4 export: export via extractor in high resolution: change order: first save, then rescale
+      #TODO_P3 export: export via extractor in high resolution: change order: first save, then rescale
       fileName = QFileDialog.getSaveFileName(self,'Export to ..',str(Path.home()),'*.csv')[0]
       with open(fileName,'w', encoding='utf-8') as fOut:
         header = ['"'+i+'"' for i in self.filterHeader]
@@ -366,7 +366,7 @@ class Table(QWidget):
           if doc['-type'][0] == oldDocType[0]:
             del doc['-branch']  #don't update
             self.comm.backend.db.updateDoc(doc, self.data[row]['id'])
-          else:  #TODO_P5 this will rerun useExtractor: ok for now
+          else:
             self.comm.backend.db.remove( self.data[row]['id'] )
             del doc['_id']
             del doc['_rev']

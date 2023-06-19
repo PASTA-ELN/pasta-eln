@@ -149,7 +149,7 @@ class Action(QAction):
 
 class Image():
   """ Image widget depending on type of data """
-  def __init__(self, data:str, layout:QLayout, width:int=-1, height:int=-1, anyDimension:int=-1):
+  def __init__(self, data:str, layout:Optional[QLayout], width:int=-1, height:int=-1, anyDimension:int=-1):
     """
     Args:
       data (str): image data in byte64-encoding or svg-encoding
@@ -176,7 +176,7 @@ class Image():
       label = QLabel()
       label.setPixmap(pixmap)
       label.setAlignment(Qt.AlignCenter) # type: ignore
-      layout.addWidget(label)
+      layout.addWidget(label, alignment=Qt.AlignHCenter)
     elif data.startswith('<?xml'): #svg image
       imageW = QSvgWidget()
       policy = imageW.sizePolicy()
@@ -194,8 +194,7 @@ class Image():
           imageW.setMaximumSize(int(float(imageW.width())/float(imageW.height())*anyDimension) ,anyDimension)
         else:
           imageW.setMaximumSize(anyDimension, int(float(imageW.height())/float(imageW.width())*anyDimension))
-      layout.addWidget(imageW)
-      layout.setAlignment(Qt.AlignCenter)  # type: ignore
+      layout.addWidget(imageW, alignment=Qt.AlignHCenter)
     elif len(data)>2:
       print('WidgetProjectLeaf:What is this image |'+data[:50]+'|')
     return

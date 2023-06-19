@@ -29,7 +29,7 @@ class Ontology(QDialog):
     mainL.addWidget(buttonBox)
 
 
-  # TODO_P3 ontologyCheck: all names must be different
+  #++ TODO ontologyCheck: all names must be different
   def save(self, btn:QPushButton) -> None:
     """ save selectedList to configuration and exit """
     if btn.text().endswith('Cancel'):

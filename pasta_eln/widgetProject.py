@@ -30,7 +30,6 @@ class Project(QWidget):
     self.btnHideShow:Optional[TextButton]     = None
 
 
-  #TODO_P3 real change of project: iterate current tree and tree from DB and compare differences: only update those
   @Slot(str, str)
   def changeProject(self, projID:str, docID:str) -> None:
     """
@@ -64,7 +63,7 @@ class Project(QWidget):
     # self.tree.expandAll()
     if selectedIndex is not None:
       self.tree.selectionModel().select(selectedIndex, QItemSelectionModel.Select)
-      #TODO_P4 projectView: selection does not scroll; one cannot select a row
+      #TODO_P3 projectView: selection does not scroll; one cannot select a row
       self.tree.setCurrentIndex(selectedIndex)# Item(selectedItem)
     self.mainL.addWidget(self.tree)
     if len(nodeHier.children)>0 and self.btnAddSubfolder is not None:

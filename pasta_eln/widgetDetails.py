@@ -183,7 +183,6 @@ class Details(QScrollArea):
         text.setReadOnly(True)
         self.specialL.addWidget(text)
         self.specialW.show()
-        #TODO_P3 scale fonts appropriately in dialogForm: if # ... replace by ... automatically during creation
       elif key=='-tags':
         tags = ['_curated_' if i=='_curated' else '#'+i for i in self.doc[key]]
         tags = ['\u2605'*int(i[2]) if i[:2]=='#_' else i for i in tags]

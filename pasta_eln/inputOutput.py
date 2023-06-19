@@ -6,7 +6,7 @@ from datetime import datetime
 from zipfile import ZipFile, ZIP_DEFLATED
 from pasta_eln import __version__
 from .backend import Backend
-#TODO_P3 Add read info from ror and orcid
+#TODO_P5 Add read info from ror and orcid into personal details section -> config.json
 # curl https://api.ror.org/organizations/02nv7yv05
 # curl -s -H "Accept: application/json" https://pub.orcid.org/v3.0/0000-0001-7691-2856
 
@@ -51,7 +51,7 @@ elabFTW = {
 
 
 
-# TODO_P1 if others eln: write new addDoc to add hierStack and branch based on path
+# if others eln: write new addDoc to add hierStack and branch based on path
 # - Don't create folders then
 # use internal id for now
 # create a dictonary of old id and new id
@@ -172,6 +172,7 @@ def importELN(backend:Backend, elnFileName:str) -> str:
 ##########################################
 ###               EXPORT               ###
 ##########################################
+#TODO_P2 export and import of .eln
 def exportELN(backend:Backend, docID:str, fileName:str='') -> str:
   """
   export eln to file
@@ -275,7 +276,7 @@ def exportELN(backend:Backend, docID:str, fileName:str='') -> str:
 
     # ------------------ metadata.json files --------------------------
     # create metadata.json files in zip-file: no addition to graph
-    #TODO_P1 get rid of this part
+    #++ TODO  get rid of this part
 
     keysNotInDict = set()
     for path, children in pathTree.items():
@@ -309,7 +310,7 @@ def exportELN(backend:Backend, docID:str, fileName:str='') -> str:
 
 
     # ------------------ go through graph and add information ----
-    #TODO_P1 get rid of this part
+    #++ TODO get rid of this part
 
     for node in graph:
       if node['@type']=='File':                    #metadata.json and data file

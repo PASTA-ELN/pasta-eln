@@ -42,7 +42,7 @@ class Form(QDialog):
     if 'image' in self.doc:
       width = self.comm.backend.configuration['GUI']['imageSizeDetails'] \
                 if hasattr(self.comm.backend, 'configuration') else 300
-      Image(self.doc['image'], mainL, anyDimension=width)
+      imageW = Image(self.doc['image'], mainL, anyDimension=width)
     _, self.formL = widgetAndLayout('Form', mainL, 's')
 
     #Add things that are in ontology
@@ -165,7 +165,8 @@ class Form(QDialog):
     buttonBox.clicked.connect(self.save)
     mainL.addWidget(buttonBox)
 
-  # TODO_P3 add splitter to increase / decrease image
+  # TODO_P4 add splitter to increase / decrease image
+  # TODO_P3 image does not allow for easy context aware clicks
   # TODO_P3 form: add button to add key-values
   # TODO_P3 other items as non-edible things that can be copy-pasted
   def save(self, btn:QPushButton) -> None:

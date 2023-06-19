@@ -16,7 +16,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     super().__init__()
     self.comm:Optional[Communicate] = None
     self.width = -1
-    self.widthContent = 600   #TODO_P3 from config file
+    self.widthContent = 600   #TODO_P4 from config file
     self.debugMode = logging.DEBUG
     self.lineSep = 20
     self.frameSize = 6
@@ -33,10 +33,10 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     self.comm = comm
     self.width = self.comm.backend.configuration['GUI']['imageWidthProject']
     self.debugMode = logging.root.level<logging.INFO
-    self.lineSep = 20 #TODO_P5 addToConfig
+    self.lineSep = 20 #TODO_P4 addToConfig
     return
 
-  #TODO_P4 projectTree design: If folders and other items have boxes of slightly different brightness
+  #TODO_P3 projectTree design: If folders and other items have boxes of slightly different brightness
   # (darker gray for the former and lighter for the latter), the project structure might be easier to understand. 
   def paint(self, painter:QPainter, option:QStyleOptionViewItem, index:QModelIndex) -> None:
     """
@@ -115,7 +115,6 @@ class ProjectLeafRenderer(QStyledItemDelegate):
           continue
         yOffset += self.lineSep
         if isinstance(doc[key], str):
-          #TODO_P4: projectTree technology: image does not allow for easy context aware clicks: like click on links, right-click image
           if re.match(r'^[a-z\-]-[a-z0-9]{32}$',doc[key]) is None:  #normal text
             value = doc[key]
           elif self.comm is not None:                           #link
@@ -131,17 +130,15 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       if 'comment' in doc:
         text = QTextDocument()
         text.setMarkdown(doc['comment'].strip())
+        text.setTextWidth(self.width-self.widthContent)
         painter.translate(QPoint(xOffset-3, yOffset+15))
         text.drawContents(painter)
         painter.translate(-QPoint(xOffset-3, yOffset+15))
         #TODO_P3 design ProjectView: Currently, the comment is more highlighted than the title of an item due
         # to a larger and bolder font. It would make more sense though if the titles were bolder, larger and
         # thus more readable, while tags and comments are less highlighted.
-        #TODO_P3 design ProjectView: if comments are too long they cover the right area
     return
 
-    #TODO_P3 design projectLeaves: 3 columns?
-    # Maybe the comment can be moved to the central part of the box, to save some space.
 
   def sizeHint(self, option:QStyleOptionViewItem, index:QModelIndex) -> QSize:
     """

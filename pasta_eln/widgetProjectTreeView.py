@@ -22,10 +22,6 @@ class TreeView(QTreeView):
     self.setItemDelegate(self.renderer)
     self.setDragDropMode(QAbstractItemView.InternalMove)
     self.doubleClicked.connect(self.treeDoubleClicked)
-    #TODO_P4 design of project tree
-    # The gray boxes that represent folders/tasks, files or other items are too dark and have too little contrast
-    # with black text on them (especially with small font). The boxes are also placed slightly too tight together,
-    # I would increase the spacing between them by 1.5-2 times.
 
 
   def contextMenuEvent(self, p:QPoint) -> None:
@@ -63,8 +59,11 @@ class TreeView(QTreeView):
         child = QStandardItem('/'.join(hierStack+[docID]))
         child.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled) # type: ignore
         item.appendRow(child)
-        #TODO_P3 appendRow is not 100% correct: insertRow before the first non-folder, depending on the child number
-        #    get highest non 9999 childNumber
+        #appendRow is not 100% correct:
+        # - better: insertRow before the first non-folder, depending on the child number
+        #   -> get highest non 9999 childNumber
+        # turns out, one can easily move it to correct position with drag&drop
+        # TODO_P4 not sure this will be important
       else:
         showMessage(self, 'Error', 'You cannot create a child of a non-folder!')
     elif menuName=='addSibling':
@@ -79,7 +78,7 @@ class TreeView(QTreeView):
       child = QStandardItem('/'.join(hierStack+[docID]))
       child.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled) # type: ignore
       parent.appendRow(child)
-      #TODO_P3 appendRow is not 100% correct: see above
+      #++ TODO appendRow is not 100% correct: see above
     elif menuName=='del':
       ret = QMessageBox.critical(self, 'Warning', 'Are you sure you want to delete this data?',\
                                 QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.No)

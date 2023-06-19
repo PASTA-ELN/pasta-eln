@@ -136,6 +136,7 @@ class MainWindow(QMainWindow):
     elif menuName=='updateExtractors':
       report = updateExtractorList(self.backend.extractorPath)
       showMessage(self, 'Extractor list updated', report)
+      restart()
     elif menuName=='verifyDB':
       report = self.comm.backend.checkDB(outputStyle='html')
       showMessage(self, 'Report of database verification', report, style='QLabel {min-width: 800px}')

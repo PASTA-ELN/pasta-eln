@@ -33,7 +33,7 @@ class Sidebar(QWidget):
 
     self.setLayout(mainL)
     self.redraw()
-    #TODO_P4 projectView: allow scroll in sidebar, size changegable, drag-and-drop to move
+    #++ TODO projectView: allow scroll in sidebar, size changegable, drag-and-drop to move
     #   more below and other files
 
 
@@ -104,7 +104,6 @@ class Sidebar(QWidget):
         self.widgetsList[projID] = listW
 
         # show folders as hierarchy
-        #TODO_P4 allow to adjust height
         treeW = QTreeWidget()
         treeW.hide()  #convenience: allow scroll in sidebar
         treeW.setHeaderHidden(True)
