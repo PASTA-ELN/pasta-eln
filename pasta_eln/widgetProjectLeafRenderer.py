@@ -132,7 +132,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
         text = QTextDocument()
         text.setMarkdown(doc['comment'].strip())
         text.setTextWidth(self.widthContent)
-        width, height = text.size().toTuple()
+        width, height = text.size().toTuple() # type: ignore
         painter.translate(QPoint(xOffset-3, yOffset+15))
         yMax = self.maxHeight-2*self.frameSize-yOffset-10
         text.drawContents(painter, QRectF(0, 0, self.widthContent, yMax))
