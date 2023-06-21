@@ -34,7 +34,7 @@ class TreeView(QTreeView):
     context = QMenu(self)
     Action('Add child folder',   self.executeAction, context, self, name='addChild')
     Action('Add sibling folder', self.executeAction, context, self, name='addSibling')
-    Action('Remove this',        self.executeAction, context, self, name='del')
+    Action('Remove item',        self.executeAction, context, self, name='del')
     context.addSeparator()
     Action('Minimize/Maximize',  self.executeAction, context, self, name='fold')
     Action('Hide',               self.executeAction, context, self, name='hide')

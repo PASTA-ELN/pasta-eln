@@ -124,6 +124,8 @@ class Backend(CLI_Mixin):
         # print(item['id']+'  old='+item['key']+'  branch='+str(item['value'][-1])+\
         #      '  child='+str(item['value'][-3])+'  new='+newPath)
         self.db.updateBranch(item['id'], item['value'][-1], item['value'][-3], path=newPath)
+    self.cwd = self.basePath #reset to sensible before continuing
+    self.hierStack = []
     return
 
 

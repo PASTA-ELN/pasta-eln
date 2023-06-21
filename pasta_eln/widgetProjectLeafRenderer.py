@@ -20,7 +20,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     self.debugMode = logging.DEBUG
     self.lineSep = 20
     self.frameSize = 6
-    self.maxHeight = 500
+    self.maxHeight = 400
 
 
   def setCommunication(self, comm:Communicate) -> None:
@@ -100,7 +100,8 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     yOffset += self.lineSep/2
     hiddenText = '     \U0001F441' if len([b for b in doc['-branch'] if False in b['show']])>0 else ''
     docTypeText= 'folder' if doc['-type'][0][0]=='x' else '/'.join(doc['-type'])
-    painter.drawStaticText(xOffset, yOffset, QStaticText(doc['-name']+hiddenText))
+    nameText = doc['-name'] if len(doc['-name'])<55 else '...'+doc['-name'][-50:]
+    painter.drawStaticText(xOffset, yOffset, QStaticText(nameText+hiddenText))
     painter.drawStaticText(xOffset+400, yOffset, QStaticText(docTypeText))
     if self.debugMode:
       painter.drawStaticText(xOffset+700, yOffset, QStaticText(index.data(Qt.DisplayRole)))  # type: ignore
@@ -130,13 +131,17 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       if 'comment' in doc:
         text = QTextDocument()
         text.setMarkdown(doc['comment'].strip())
-        text.setTextWidth(self.width-self.widthContent)
+        text.setTextWidth(self.widthContent)
+        width, height = text.size().toTuple()
         painter.translate(QPoint(xOffset-3, yOffset+15))
-        text.drawContents(painter)
+        yMax = self.maxHeight-2*self.frameSize-yOffset-10
+        text.drawContents(painter, QRectF(0, 0, self.widthContent, yMax))
         painter.translate(-QPoint(xOffset-3, yOffset+15))
         #TODO_P3 design ProjectView: Currently, the comment is more highlighted than the title of an item due
         # to a larger and bolder font. It would make more sense though if the titles were bolder, larger and
         # thus more readable, while tags and comments are less highlighted.
+        # !! Comments are not rendered perfectly: the end sucks, and I cannot blue a consistent blue line at end
+        #  - rendering might not be the best option
     return
 
 
@@ -175,6 +180,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
         text = QTextDocument()
         comment = doc['comment']
         text.setMarkdown(comment.strip())
+        text.setTextWidth(self.widthContent)
         height += text.size().toTuple()[1] # type: ignore
         height -= 25
       else:

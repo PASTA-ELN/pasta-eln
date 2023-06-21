@@ -67,7 +67,7 @@ class Form(QDialog):
       if key in ['comment','content']:
         labelW, labelL = widgetAndLayout('V')
         labelL.addWidget(QLabel(key.capitalize()))
-        TextButton('Focus', self.btnFocus, labelL, key, checkable=True)  # type: ignore # btnFocus req. bool, cannot get it to work
+        TextButton('More', self.btnFocus, labelL, key, checkable=True)  # type: ignore # btnFocus req. bool, cannot get it to work
         rightSideW, rightSideL = widgetAndLayout('V')
         setattr(self, 'buttonBarW_'+key, QWidget())
         getattr(self, 'buttonBarW_'+key).hide()

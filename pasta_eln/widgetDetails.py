@@ -27,8 +27,8 @@ class Details(QScrollArea):
     self.setWidgetResizable(True)
     self.setWidget(self.mainW)
 
-    _, self.headerL = widgetAndLayout('H', self.mainL)
-    self.specialW, self.specialL = widgetAndLayout('V', self.mainL)
+    _, self.headerL = widgetAndLayout('H', self.mainL, top='s')
+    self.specialW, self.specialL = widgetAndLayout('V', self.mainL, top='s')
     self.specialW.setContextMenuPolicy(Qt.CustomContextMenu)
     self.specialW.customContextMenuRequested.connect(self.contextMenu)
     self.btnDetails = TextButton('Details', self.showArea, self.mainL, 'Details', 'Show / hide details', \
