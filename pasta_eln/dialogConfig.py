@@ -2,7 +2,6 @@
 import platform
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QTabWidget,  QTextEdit  # pylint: disable=no-name-in-module
 from .backend import Backend
-from .fixedStrings import configurationOverview
 from .dialogConfigGUI import ConfigurationGUI
 if platform.system()=='Windows':
   from .dialogConfigSetupWindows import ConfigurationSetup
@@ -28,19 +27,13 @@ class Configuration(QDialog):
     tabW = QTabWidget(self)
     mainL.addWidget(tabW)
 
-    # Overview
-    # --------
-    tabOverview = QTextEdit()
-    tabOverview.setMarkdown(configurationOverview)
-    tabW.addTab(tabOverview, 'Overview')
+    # Misc configuration: e.g. theming...
+    tabGUI = ConfigurationGUI(backend, self.finished)
+    tabW.addTab(tabGUI, 'Appearance')
 
     # Setup / Troubeshoot Pasta: main widget
     tabSetup = ConfigurationSetup(backend, self.finished)
     tabW.addTab(tabSetup, 'Setup')
-
-    # Misc configuration: e.g. theming...
-    tabGUI = ConfigurationGUI(backend, self.finished)
-    tabW.addTab(tabGUI, 'Appearance')
 
     if startTab=='setup':
       tabW.setCurrentWidget(tabSetup)

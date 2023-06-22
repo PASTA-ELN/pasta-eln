@@ -60,11 +60,13 @@ class MainWindow(QMainWindow):
     Action('&Configuration',         self.executeAction, systemMenu, self, name='configuration')
     helpMenu = menu.addMenu("&Help")
     Action('&Website',               self.executeAction, helpMenu, self, name='website')
+    Action('Shortcuts',              self.executeAction, helpMenu, self, name='shortcuts')
+    Action('Todo list',              self.executeAction, helpMenu, self, name='todo')
+    helpMenu.addSeparator()
     Action('&Test extraction from a file',   self.executeAction, helpMenu, self, name='extractorTest')
-    Action('&Test selected item extraction', self.executeAction, helpMenu, self, name='extractorTest2',
+    Action('Test &selected item extraction', self.executeAction, helpMenu, self, name='extractorTest2',
            shortcut='F2')
-    Action('&Shortcuts',             self.executeAction, helpMenu, self, name='shortcuts')
-    Action('&Todo list',             self.executeAction, helpMenu, self, name='todo')
+    Action('&Restart',              self.executeAction, helpMenu, self, name='restart', shortcut='F9')
     if hasattr(self.backend, 'db'):
       for docType, docLabel in self.comm.backend.db.dataLabels.items():
         if docType[0]=='x' and docType[1]!='0':
@@ -155,6 +157,8 @@ class MainWindow(QMainWindow):
       self.comm.testExtractor.emit()
     elif menuName=='shortcuts':
       showMessage(self, 'Keyboard shortcuts', shortcuts)
+    elif menuName=='restart':
+      restart()
     elif menuName=='todo':
       try:
         from .tempStrings import todoString

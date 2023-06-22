@@ -89,14 +89,6 @@ If the installation is successful, manually and permanently remove the 'pastaELN
 If an attempt fails: please follow to this [website](https://pasta-eln.github.io/pasta-eln/install.html).
 """
 
-configurationOverview = """
-## Overview
-###  Setup: Setup and troubleshoot PASTA-ELN installation
-### Project group: configure how project groups are saved
-### Ontology: configure the data structure for current project group
-### Miscellaneous: different things like look-and-feel
-"""
-
 gitWindows = """
 Do you want to install git?
 

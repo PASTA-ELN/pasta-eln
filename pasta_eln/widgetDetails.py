@@ -172,14 +172,15 @@ class Details(QScrollArea):
     if 'metUser' not in self.doc:
       self.btnUser.hide()
     for key in self.doc:
+      size = self.comm.backend.configuration['GUI']['imageSizeDetails'] \
+              if hasattr(self.comm.backend, 'configuration') else 300
       if key=='image':
-        size = self.comm.backend.configuration['GUI']['imageSizeDetails'] \
-                if hasattr(self.comm.backend, 'configuration') else 300
         Image(self.doc['image'], self.specialL, anyDimension=size)
         self.specialW.show()
       elif key=='content':
         text = QTextEdit()
         text.setMarkdown(self.doc['content'])
+        text.setFixedHeight(int(size/3*2))
         text.setReadOnly(True)
         self.specialL.addWidget(text)
         self.specialW.show()
