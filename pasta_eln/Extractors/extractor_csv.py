@@ -82,8 +82,8 @@ def use(filePath, recipe='', saveFileName=None):
       recipe = 'measurement/dkfi'
   elif dataType=='FZJ':
     data = pd.read_csv(filePath, delimiter=delimiter, skiprows=startRow, decimal=',')
-    plt.plot(data['pMax_mN'], data['E_GPa']  ,'o',label='Oliver-Pharr')
-    plt.plot(data['pMax_mN'], data['E_GPa.1'],'o',label='Image analysis')
+    plt.plot(np.array(data['pMax_mN']), np.array(data['E_GPa'])  ,'o',label='Oliver-Pharr')
+    plt.plot(np.array(data['pMax_mN']), np.array(data['E_GPa.1']),'o',label='Image analysis')
     plt.legend()
     plt.xlabel('force [$mN$]')
     plt.ylabel("Young's modulus [$GPa$]")
