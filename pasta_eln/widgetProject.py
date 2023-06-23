@@ -139,7 +139,8 @@ class Project(QWidget):
     TextButton('Edit project',      self.executeAction, buttonL, name='editProject')
     more = TextButton('More',None, buttonL)
     moreMenu = QMenu(self)
-    Action('Reduce/increase width', self.executeAction, moreMenu, self, name='projHide')
+    Action('Reduce/increase width', self.executeAction, moreMenu, self, name='projReduceWidth')
+    Action('Hide/show project',     self.executeAction, moreMenu, self, name='projHideShow')
     Action('Minimize/Maximize all', self.executeAction, moreMenu, self, name='allFold')
     Action('Scan',                  self.executeAction, moreMenu, self, name='scanProject')
     Action('Delete',                self.executeAction, moreMenu, self, name='deleteProject')
@@ -189,14 +190,16 @@ class Project(QWidget):
         self.comm.changeTable.emit('x0','')
     elif menuName == 'scanProject':
       self.comm.backend.scanProject(self.comm.progressBar, self.projID, self.docProj['-branch'][0]['path'])
-      self.redraw()
       self.comm.changeSidebar.emit('redraw')
       showMessage(self, 'Information','Scanning finished')
-    elif menuName == 'projHide':
+    elif menuName == 'projReduceWidth':
       if self.bodyW is not None and self.bodyW.isHidden():
         self.bodyW.show()
       elif self.bodyW is not None:
         self.bodyW.hide()
+    elif menuName == 'projHideShow':
+      self.comm.backend.db.hideShow(self.projID)
+      self.comm.changeProject.emit('','') #refresh project
     elif menuName == 'allFold' and self.tree is not None:
       self.foldedAll = not self.foldedAll
       def recursiveRowIteration(index:QModelIndex) -> None:

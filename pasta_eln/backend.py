@@ -665,19 +665,20 @@ class Backend(CLI_Mixin):
     return report
 
 
-  def checkDB(self, outputStyle:str='text', repair:bool=False) -> str:
+  def checkDB(self, outputStyle:str='text', repair:bool=False, minimal:bool=False) -> str:
     """
     Wrapper of check database for consistencies by iterating through all documents
 
     Args:
         outputStyle (str): output using a given style: see outputString
         repair (bool): repair database
+        minimal (bool): true=only show warnings and errors; else=also show information
 
     Returns:
         string: output incl. \n
     """
     ### check database itself for consistency
-    output = self.db.checkDB(outputStyle=outputStyle, repair=repair)
+    output = self.db.checkDB(outputStyle=outputStyle, repair=repair, minimal=minimal)
     ### compare with file system
     output += outputString(outputStyle,'h2','File status')
     viewProjects   = self.db.getView('viewDocType/x0All')
@@ -717,8 +718,14 @@ class Backend(CLI_Mixin):
                 docDisk = json.loads(fIn.read())
                 docDB   = self.db.getDoc( docDisk['_id'] )
                 if docDisk != docDB:
-                  output += outputString(outputStyle,'error','disk(1) and db(2) content do not match:'+docDisk['_id'])
-                  output += outputString(outputStyle,'error',diffDicts(docDisk,docDB))
+                  difference = diffDicts(docDisk,docDB)
+                  if len(difference)>1:
+                    output += outputString(outputStyle,'error','disk(1) and db(2) content do not match:'+docDisk['_id'])
+                    output += outputString(outputStyle,'error',difference)
+              # if False:  #use only for resetting the content in the .id_pastaELN.json
+              #   with open(self.basePath/root/dirName/'.id_pastaELN.json','w',encoding='utf-8') as fOut:
+              #     docDB   = self.db.getDoc( docDisk['_id'] )
+              #     docDisk = json.dump(docDB, fOut)
             else:
               output += outputString(outputStyle,'error','Folder has no .id_pastaELN.json:'+path)
               count += 1

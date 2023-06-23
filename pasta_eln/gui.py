@@ -140,7 +140,7 @@ class MainWindow(QMainWindow):
       showMessage(self, 'Extractor list updated', report)
       restart()
     elif menuName=='verifyDB':
-      report = self.comm.backend.checkDB(outputStyle='html')
+      report = self.comm.backend.checkDB(outputStyle='html', minimal=True)
       showMessage(self, 'Report of database verification', report, style='QLabel {min-width: 800px}')
     elif menuName=='sync':
       report = self.comm.backend.replicateDB(progressBar=self.sidebar.progress)

@@ -592,6 +592,9 @@ class Database:
           if not flippedOnce or iFlip!=len(branch['stack']):
             doc['-branch'][idx]['show'][iFlip] = not doc['-branch'][idx]['show'][iFlip]
         doc.save()
+    if doc['-type'][0][0]=='x':
+      with open(self.basePath/doc['-branch'][0]['path']/'.id_pastaELN.json','w', encoding='utf-8') as fOut:
+        fOut.write(json.dumps(doc))
     return
 
 
@@ -689,7 +692,7 @@ class Database:
     return collectionCopy
 
 
-  def checkDB(self, outputStyle:str='text', repair:bool=False) -> str:
+  def checkDB(self, outputStyle:str='text', repair:bool=False, minimal:bool=False) -> str:
     """
     Check database for consistencies by iterating through all documents
     - slow since no views used
@@ -701,6 +704,7 @@ class Database:
     Args:
         outputStyle (str): output using a given style: see outputString
         repair (bool): repair database
+        minimal (bool): true=only show warnings and errors; else=also show information
 
     Returns:
         str: output
@@ -712,8 +716,9 @@ class Database:
     if outputStyle=='html':
       outstring += '<div align="right">'
     outstring+= outputString(outputStyle,'h2','LEGEND')
-    outstring+= outputString(outputStyle,'ok','Green: perfect and as intended')
-    outstring+= outputString(outputStyle,'okish', 'Blue: ok-ish, can happen: empty files for testing, strange path for measurements')
+    if not minimal:
+      outstring+= outputString(outputStyle,'ok','Green: perfect and as intended')
+      outstring+= outputString(outputStyle,'okish', 'Blue: ok-ish, can happen: empty files for testing, strange path for measurements')
     outstring+= outputString(outputStyle,'unsure','Pink: unsure if bug or desired (e.g. move step to random path-name)')
     outstring+= outputString(outputStyle,'warning','Yellow: WARNING should not happen (e.g. procedures without project)')
     outstring+= outputString(outputStyle,'error',  'Red: FAILURE and ERROR: NOT ALLOWED AT ANY TIME')
@@ -726,7 +731,8 @@ class Database:
     for doc in self.db:
       try:
         if '_design' in doc['_id']:
-          outstring+= outputString(outputStyle,'ok','..info: Design document '+doc['_id'])
+          if not minimal:
+            outstring+= outputString(outputStyle,'ok','..info: Design document '+doc['_id'])
           continue
         if doc['_id'] == '-ontology-':
           if repair:
@@ -737,7 +743,8 @@ class Database:
                 doc[new] = doc[old].copy()
                 del doc[old]
             doc.save()
-          outstring+= outputString(outputStyle,'ok','..info: ontology exists')
+          if not minimal:
+            outstring+= outputString(outputStyle,'ok','..info: ontology exists')
           continue
         #only normal documents after this line
 
@@ -815,7 +822,8 @@ class Database:
             if doc['-type'][0] == 'measurement' or  doc['-type'][0][0] == 'x':
               outstring+= outputString(outputStyle,'warning','branch stack length = 0: no parent '+doc['_id'])
             else:
-              outstring+= outputString(outputStyle,'okish','branch stack length = 0: no parent for procedure/sample '+doc['_id']+'|'+doc['-name'])
+              if not minimal:
+                outstring+= outputString(outputStyle,'okish','branch stack length = 0: no parent for procedure/sample '+doc['_id']+'|'+doc['-name'])
           if not '-type' in doc or len(doc['-type'])==0:
             outstring+= outputString(outputStyle,'unsure','dch04: no type in (removed data?)'+doc['_id'])
             continue
@@ -830,12 +838,18 @@ class Database:
             if doc['-type'][0][0] == 'x':
               outstring+= outputString(outputStyle,'error','dch06: branch path is None '+doc['_id'])
             elif doc['-type'][0] == 'measurement':
-              outstring+= outputString(outputStyle,'okish','measurement branch path is None=no data '+doc['_id']+' '+doc['-name'])
+              if not minimal:
+                outstring+= outputString(outputStyle,'okish','measurement branch path is None=no data '+doc['_id']+' '+doc['-name'])
             else:
-              outstring+= outputString(outputStyle,'ok','procedure/sample with empty path '+doc['_id'])
+              if not minimal:
+                outstring+= outputString(outputStyle,'ok','procedure/sample with empty path '+doc['_id'])
           else:                                                            #if sensible path
             if len(branch['stack'])+1 != len(branch['path'].split(os.sep)):#check if length of path and stack coincide
-              outstring+= outputString(outputStyle,'okish','branch stack and path lengths not equal: '+doc['_id']+'|'+branch['path'][:30])
+              if doc['-type'][0] == 'procedure':
+                if not minimal:
+                  outstring+= outputString(outputStyle,'ok','procedure: branch stack and path lengths not equal: '+doc['_id']+'|'+branch['path'][:30])
+              else:
+                outstring+= outputString(outputStyle,'unsure','branch stack and path lengths not equal: '+doc['_id']+'|'+branch['path'][:30])
             if branch['child'] != 9999:
               for parentID in branch['stack']:                              #check if all parents in doc have a corresponding path
                 parentDoc = self.getDoc(parentID)

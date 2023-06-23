@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QTableView, QMenu, QFileDialog, QMessageBox, QHeaderView, QLineEdit, QComboBox # pylint: disable=no-name-in-module
 from PySide6.QtCore import Qt, Slot, QSortFilterProxyModel, QModelIndex       # pylint: disable=no-name-in-module
-from PySide6.QtGui import QStandardItemModel, QStandardItem, QFont # pylint: disable=no-name-in-module
+from PySide6.QtGui import QStandardItemModel, QStandardItem, QFont            # pylint: disable=no-name-in-module
 from .dialogTableHeader import TableHeader
 from .style import TextButton, IconButton, Label, Action, widgetAndLayout, spacesMap
 from .fixedStrings import defaultOntologyNode
@@ -112,7 +112,7 @@ class Table(QWidget):
       self.actionChangeColums.setVisible(False)
     else:
       self.addBtn.show()
-      if docType=='x0':
+      if docType[:2]=='x0':
         self.selectionBtn.hide()
       else:
         self.selectionBtn.show()
