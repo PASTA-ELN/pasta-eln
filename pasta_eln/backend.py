@@ -714,6 +714,7 @@ class Backend(CLI_Mixin):
           else:
             pathsInDB_folder.remove(path)
             if (self.basePath/root/dirName/'.id_pastaELN.json').exists():
+              # flagDifference = False
               with open(self.basePath/root/dirName/'.id_pastaELN.json','r',encoding='utf-8') as fIn:
                 docDisk = json.loads(fIn.read())
                 docDB   = self.db.getDoc( docDisk['_id'] )
@@ -722,13 +723,18 @@ class Backend(CLI_Mixin):
                   if len(difference)>1:
                     output += outputString(outputStyle,'error','disk(1) and db(2) content do not match:'+docDisk['_id'])
                     output += outputString(outputStyle,'error',difference)
-              # if False:  #use only for resetting the content in the .id_pastaELN.json
+                    # flagDifference = True
+              # if flagDifference:  #use only for resetting the content in the .id_pastaELN.json
               #   with open(self.basePath/root/dirName/'.id_pastaELN.json','w',encoding='utf-8') as fOut:
               #     docDB   = self.db.getDoc( docDisk['_id'] )
-              #     docDisk = json.dump(docDB, fOut)
+              #     json.dump(docDB, fOut)
             else:
               output += outputString(outputStyle,'error','Folder has no .id_pastaELN.json:'+path)
               count += 1
+              # if True:  #use only for resetting the content in the .id_pastaELN.json
+              #   with open(self.basePath/root/dirName/'.id_pastaELN.json','w',encoding='utf-8') as fOut:
+              #     docDB   = self.db.getDoc( docDisk['_id'] )
+              #     json.dump(docDB, fOut)
     output += outputString(outputStyle,'info','Number of files on disk that are not in database '+str(count))
     orphans = [i for i in pathsInDB_data   if not (self.basePath/i).exists() and ":/" not in i]
     orphans+= [i for i in pathsInDB_folder if not (self.basePath/i).exists() ]

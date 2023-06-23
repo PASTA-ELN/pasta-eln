@@ -38,8 +38,6 @@ def outputString(fmt:str='print', level:str='info', message:str='') ->str:
     - else: no output
     - formats can be union ('print,text')
   """
-  if '\n' in message:
-    message = '\n'+message
   prefixes = {'h2':f'{Bcolors.UNDERLINE}\n*** ','bold':f'{Bcolors.BOLD}\n*** ', \
               'ok':f'{Bcolors.OKGREEN}', 'okish':f'{Bcolors.OKBLUE}', 'unsure':f'{Bcolors.HEADER}',\
               'warning':f'{Bcolors.WARNING}','error':f'{Bcolors.FAIL}'}

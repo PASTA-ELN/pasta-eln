@@ -577,7 +577,7 @@ class Database:
       doc = self.db[stack]
       for idx, _ in enumerate(doc['-branch']):
         doc['-branch'][idx]['show'][-1] = not doc['-branch'][idx]['show'][-1]
-        print('flipped str', stack)
+        logging.debug('flipped str: '+str(stack))
       doc.save()
       if stack[0]=='x':
         stack = doc['-branch'][0]['stack']+[stack]
