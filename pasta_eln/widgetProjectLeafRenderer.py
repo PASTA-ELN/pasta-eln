@@ -20,7 +20,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     self.debugMode = logging.DEBUG
     self.lineSep = 20
     self.frameSize = 6
-    self.maxHeight = 400
+    self.maxHeight = 300
 
 
   def setCommunication(self, comm:Communicate) -> None:
@@ -51,7 +51,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     """
     if self.comm is None:
       return
-    xOffset, yOffset = option.rect.topLeft().toTuple()
+    x0, y0 = option.rect.topLeft().toTuple()
     topLeft2nd     = option.rect.topRight()   - QPoint(self.width+self.frameSize+1,-self.frameSize)
     bottomRight2nd = option.rect.bottomRight()- QPoint(self.frameSize+1,self.frameSize)
     hierStack = index.data(Qt.DisplayRole) # type: ignore
@@ -97,24 +97,24 @@ class ProjectLeafRenderer(QStyledItemDelegate):
         painter.setPen(pen)
       text.drawContents(painter, QRectF(0, 0, width, self.maxHeight-2*self.frameSize))
       painter.translate(-topLeftContent)
-    yOffset += self.lineSep/2
+    y = self.lineSep/2
     hiddenText = '     \U0001F441' if len([b for b in doc['-branch'] if False in b['show']])>0 else ''
     docTypeText= 'folder' if doc['-type'][0][0]=='x' else '/'.join(doc['-type'])
     nameText = doc['-name'] if len(doc['-name'])<55 else '...'+doc['-name'][-50:]
-    painter.drawStaticText(xOffset, yOffset, QStaticText(nameText+hiddenText))
-    painter.drawStaticText(xOffset+400, yOffset, QStaticText(docTypeText))
+    painter.drawStaticText(x0, y0+y, QStaticText(nameText+hiddenText))
+    painter.drawStaticText(x0+400, y0+y, QStaticText(docTypeText))
     if self.debugMode:
-      painter.drawStaticText(xOffset+700, yOffset, QStaticText(index.data(Qt.DisplayRole)))  # type: ignore
+      painter.drawStaticText(x0+700, y0+y, QStaticText(index.data(Qt.DisplayRole)))  # type: ignore
     if not folded:
       if '-tags' in doc and len(doc['-tags'])>0:
-        yOffset += self.lineSep
+        y += self.lineSep
         tags = ['_curated_' if i=='_curated' else '#'+i for i in doc['-tags']]
         tags = ['\u2605'*int(i[2]) if i[:2]=='#_' else i for i in tags]
-        painter.drawStaticText(xOffset, yOffset, QStaticText('Tags: '+' '.join(tags)))
+        painter.drawStaticText(x0, y0+y, QStaticText('Tags: '+' '.join(tags)))
       for key in doc:
         if key in _DO_NOT_RENDER_ or key[0] in ['-','_']:
           continue
-        yOffset += self.lineSep
+        y += self.lineSep
         if isinstance(doc[key], str):
           if re.match(r'^[a-z\-]-[a-z0-9]{32}$',doc[key]) is None:  #normal text
             value = doc[key]
@@ -125,23 +125,28 @@ class ProjectLeafRenderer(QStyledItemDelegate):
               value = '\u260D '+choices[0]['value'][0]
             else:
               value = 'ERROR WITH LINK'
-          painter.drawStaticText(xOffset, yOffset, QStaticText(key+': '+value))
+          painter.drawStaticText(x0, y0+y, QStaticText(key+': '+value))
         elif isinstance(doc[key], list):                         #list of qrCodes
-          painter.drawStaticText(xOffset, yOffset, QStaticText(key+': '+', '.join(doc[key])))
+          painter.drawStaticText(x0, y0+y, QStaticText(key+': '+', '.join(doc[key])))
       if 'comment' in doc:
         text = QTextDocument()
         text.setMarkdown(doc['comment'].strip())
         text.setTextWidth(self.widthContent)
         width, height = text.size().toTuple() # type: ignore
-        painter.translate(QPoint(xOffset-3, yOffset+15))
-        yMax = self.maxHeight-2*self.frameSize-yOffset-10
+        painter.translate(QPoint(x0-3, y0+y+15))
+        yMax = self.maxHeight-2*self.frameSize-y-15
         text.drawContents(painter, QRectF(0, 0, self.widthContent, yMax))
-        painter.translate(-QPoint(xOffset-3, yOffset+15))
-        #TODO_P3 design ProjectView: Currently, the comment is more highlighted than the title of an item due
-        # to a larger and bolder font. It would make more sense though if the titles were bolder, larger and
-        # thus more readable, while tags and comments are less highlighted.
-        # !! Comments are not rendered perfectly: the end sucks, and I cannot blue a consistent blue line at end
-        #  - rendering might not be the best option
+        if y+height > self.maxHeight-2*self.frameSize:
+          pen = painter.pen()
+          colorOld = QColor(pen.color())
+          pen.setColor(QColor(getColor(self.comm.backend, 'primary')))
+          pen.setWidth(2)
+          painter.setPen(pen)
+          painter.drawLine(self.frameSize, yMax+self.frameSize, width-self.frameSize, yMax+self.frameSize)
+          pen.setColor(colorOld)
+          pen.setWidth(1)
+          painter.setPen(pen)
+        painter.translate(-QPoint(x0-3, y0+y+15))
     return
 
 
@@ -187,3 +192,9 @@ class ProjectLeafRenderer(QStyledItemDelegate):
         height -= 25
       return QSize(400, min(height, self.maxHeight))
     return QSize()
+
+    #TODO_P3 design ProjectView: Currently, the comment is more highlighted than the title of an item due
+    # to a larger and bolder font. It would make more sense though if the titles were bolder, larger and
+    # thus more readable, while tags and comments are less highlighted.
+    # !! Comments are not rendered perfectly: the end sucks, and I cannot blue a consistent blue line at end
+    #  - rendering might not be the best option

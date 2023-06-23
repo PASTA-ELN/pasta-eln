@@ -23,14 +23,13 @@ class Sidebar(QWidget):
 
     # GUI elements
     mainL = QVBoxLayout()
-    mainL.setSpacing(0)
     mainL.setContentsMargins(spacesMap['s'],spacesMap['s'],spacesMap['0'],spacesMap['s'])
-    _, self.projectL = widgetAndLayout('V', mainL)
+    mainL.setSpacing(0)
+    _, self.projectL = widgetAndLayout('V', mainL, spacing='s')
     self.progress = QProgressBar(self)
     self.progress.hide()
     self.comm.progressBar = self.progress
     mainL.addWidget(self.progress)
-
     self.setLayout(mainL)
     self.redraw()
     #++ TODO projectView: allow scroll in sidebar, size changegable, drag-and-drop to move

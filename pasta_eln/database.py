@@ -801,10 +801,15 @@ class Database:
         #     doc['-type'] = ["x2"]
 
         #   # #due to steffen's fuck up
-        #   # if doc['-type'] == [] and doc['-branch'][0]['path']:
+        # if doc['-type'][0][0]=='x' and
+        # if doc['-branch'][0]['path'].startswith('Jam'):
+        #   oldPath = doc['-branch'][0]['path']
+        #   newPath = oldPath.replace('JamDB', 'PastaEln')
+        #   print(oldPath, '->', newPath)
+        # doc['-branch'][0]['path'] = newPath
+        # doc.save()
         #   #   if len(doc['-branch'][0]['stack']) == len(doc['-branch'][0]['path'].split('/'))-1 :
         #   #     doc['-type'] = ["x"+str(len(doc['-branch'][0]['stack'])) ]
-        #   doc.save()
         #   # print("after ",doc.keys(),doc['_id'])
 
         #branch test
