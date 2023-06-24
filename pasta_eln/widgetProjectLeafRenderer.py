@@ -72,6 +72,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     if folded:  #stop drawing after first line
       return
     # body
+    width, height = -1, -1
     if '-tags' in doc and len(doc['-tags'])>0:
       y += self.lineSep
       tags = ['_curated_' if i=='_curated' else '#'+i for i in doc['-tags']]
@@ -104,13 +105,13 @@ class ProjectLeafRenderer(QStyledItemDelegate):
           textDoc.setTextWidth(bottomRight2nd.toTuple()[0]-x0-self.widthContent-2*self.frameSize)
           width, height = textDoc.size().toTuple() # type: ignore
           painter.translate(QPoint(x0-3, y0+y+15))
-          yMax = self.maxHeight-2*self.frameSize-y-15
+          yMax = int(self.maxHeight-2*self.frameSize-y-15)
         else:
           textDoc.setTextWidth(self.widthContent)
           width, height = textDoc.size().toTuple() # type: ignore
           topLeftContent = option.rect.topRight() - QPoint(width+self.frameSize-2,-self.frameSize)
           painter.translate(topLeftContent)
-          yMax = self.maxHeight-3*self.frameSize
+          yMax = int(self.maxHeight-3*self.frameSize)
           y = 0
         textDoc.drawContents(painter, QRectF(0, 0, width, yMax))
         if y+height > self.maxHeight-2*self.frameSize:
