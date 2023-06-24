@@ -32,7 +32,6 @@ todoString = """
 <ul>
 <li> add splitter to increase / decrease image
 <li> addToConfig
-<li> addToConfig
 <li> can you sort for true false in tables too?
 <li> change to string-output
 <li> from config file
