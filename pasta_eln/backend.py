@@ -714,20 +714,19 @@ class Backend(CLI_Mixin):
           else:
             pathsInDB_folder.remove(path)
             if (self.basePath/root/dirName/'.id_pastaELN.json').exists():
-              # flagDifference = False
               with open(self.basePath/root/dirName/'.id_pastaELN.json','r',encoding='utf-8') as fIn:
                 docDisk = json.loads(fIn.read())
-                docDB   = self.db.getDoc( docDisk['_id'] )
-                if docDisk != docDB:
-                  difference = diffDicts(docDisk,docDB)
-                  if len(difference)>1:
-                    output += outputString(outputStyle,'error','disk(1) and db(2) content do not match:'+docDisk['_id'])
-                    output += outputString(outputStyle,'error',difference)
-                    # flagDifference = True
-              # if flagDifference:  #use only for resetting the content in the .id_pastaELN.json
-              #   with open(self.basePath/root/dirName/'.id_pastaELN.json','w',encoding='utf-8') as fOut:
-              #     docDB   = self.db.getDoc( docDisk['_id'] )
-              #     json.dump(docDB, fOut)
+                listDocs = self.db.getView('viewHierarchy/viewPathsAll', preciseKey=(path))
+                if len(listDocs)!=1:
+                  output += outputString(outputStyle,'error','Path of folder is non-unique: '+path)
+                docDB   = self.db.getDoc(listDocs[0]['id'])
+                difference = diffDicts(docDisk,docDB)
+                if len(difference)>1:
+                  output += outputString(outputStyle,'error','disk(1) and db(2) content do not match:'+docDisk['_id'])
+                  output += outputString(outputStyle,'error',difference)
+                  # #use only for resetting the content in the .id_pastaELN.json
+                  # with open(self.basePath/root/dirName/'.id_pastaELN.json','w',encoding='utf-8') as fOut:
+                  #   json.dump(docDB, fOut)
             else:
               output += outputString(outputStyle,'error','Folder has no .id_pastaELN.json:'+path)
               count += 1

@@ -800,14 +800,14 @@ class Database:
         #   if doc['-type'] == ["text","task"]:
         #     doc['-type'] = ["x2"]
 
-        #   # #due to steffen's fuck up
-        # if doc['-type'][0][0]=='x' and
-        # if doc['-branch'][0]['path'].startswith('Jam'):
+        #   Project renaming bug 1)
+        # if doc['-branch'][0]['path'].startswith('PastaEln'):
         #   oldPath = doc['-branch'][0]['path']
-        #   newPath = oldPath.replace('JamDB', 'PastaEln')
+        #   newPath = oldPath.replace('PastaEln', 'Pasta')
         #   print(oldPath, '->', newPath)
-        # doc['-branch'][0]['path'] = newPath
-        # doc.save()
+        #   doc['-branch'][0]['path'] = newPath
+        #   doc.save()
+        #
         #   #   if len(doc['-branch'][0]['stack']) == len(doc['-branch'][0]['path'].split('/'))-1 :
         #   #     doc['-type'] = ["x"+str(len(doc['-branch'][0]['stack'])) ]
         #   # print("after ",doc.keys(),doc['_id'])
