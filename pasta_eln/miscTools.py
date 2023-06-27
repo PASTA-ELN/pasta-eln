@@ -291,8 +291,12 @@ def updateExtractorList(directory:Path) -> str:
               possLines = [i.strip() for i in lines if ('recipe' in i and '=' in i and 'def' not in i)]
               if len(possLines)==1:
                 linePart=possLines[0].split('=')[1].strip(" '"+'"')
+              elif len(possLines)>1:
+                print('**Warning: Could not decipher '+fileName,' Take shortest!')
+                linePart=sorted(possLines)[0].split('=')[1].strip(" '"+'"')
               else:
-                print('**ERROR Could not decipher '+fileName)
+                print('**ERROR: Could not decipher '+fileName,' File does not work!')
+                linePart=''
             extractorsThis[linePart]='Default'
             if verboseDebug:
               print('  return', linePart)
