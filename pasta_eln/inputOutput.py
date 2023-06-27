@@ -4,6 +4,7 @@ from typing import Any
 from pathlib import Path
 from datetime import datetime
 from zipfile import ZipFile, ZIP_DEFLATED
+from anytree import PreOrderIter, Node
 from pasta_eln import __version__
 from .backend import Backend
 #TODO_P5 Add read info from ror and orcid into personal details section -> config.json
@@ -172,34 +173,71 @@ def importELN(backend:Backend, elnFileName:str) -> str:
 ##########################################
 ###               EXPORT               ###
 ##########################################
+
+
 #TODO_P2 export and import of .eln
-def exportELN(backend:Backend, docID:str, fileName:str='') -> str:
+def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
   """
   export eln to file
 
   Args:
     backend (backend): PASTA backend instance
-    docID (str): docId of project
+    projectID (str): docId of project
     fileName (str): fileName which to use for saving; default='' saves in local folder
 
   Returns:
     str: report of exportation
   """
-  docProject = backend.db.getDoc(docID)
+  print('-> proj id',  projectID,'\n======================')
+
+  def iterateTree(nodeHier:Node, graph:list[dict[str,Any]]):
+    """
+    Recursive function to translate the hierarchical node into a tree-node
+
+    Args:
+      nodeHier (Anytree.Node): anytree node
+
+    Returns:
+      QtTreeWidgetItem: tree node
+    """
+    #nodeJson = {'identifier':nodeHier.id, 'id':nodeHier.name}  #nodeHier.name,'/'.join(nodeHier.docType),nodeHier.id])
+    doc = backend.db.getDoc(nodeHier.id)
+    docMain= {}
+    docSub = {}
+    for key, value in doc.items():
+      if key in pasta2json and pasta2json[key] is not None:
+        docMain[pasta2json[key]] = value
+      else:
+        docSub[key] = value
+    if nodeHier.id[0]=='x':
+      hasPart = []
+      for child in nodeHier.children:
+        res = iterateTree(child, graph)
+        if res is not None:
+          hasPart.append( res )
+      if len(hasPart)>0:
+        docMain['hasPart'] = hasPart
+    else:
+      pass # 'non-folder'
+    graph.append(docMain)
+    return
+
+  #function
+  docProject = backend.db.getDoc(projectID)
   dirNameProject = docProject['-branch'][0]['path']
   fileName = dirNameProject+'.eln' if fileName=='' else fileName
   logging.info('Create eln file '+fileName)
   with ZipFile(fileName, 'w', compression=ZIP_DEFLATED) as elnFile:
-    # numAttachments = 0
-    graph:list[dict[str,Any]] = []
-
     # ------- Prepare local pathTree -------------------
-    listDocs = backend.db.getView('viewHierarchy/viewPaths', startKey=dirNameProject)
-    #create tree of path hierarchy: key=docID; value is a list of children
-    pathTree = {}
+    listFiles =backend.db.getView('viewHierarchy/viewPaths', startKey=dirNameProject)
+    listHier = backend.db.getHierarchy(projectID, allItems=False)
+    graph:list[dict[str,Any]] = []
+    iterateTree(listHier, graph)  # create json object from anytree
+    print(graph)
+  return
 
+"""
     def listChildren(parentPath:Path, level:int) -> list[str]:
-      """
       List all children
 
       Args:
@@ -208,7 +246,6 @@ def exportELN(backend:Backend, docID:str, fileName:str='') -> str:
 
       Returns:
         list: list of children ids
-      """
       items = [i for i in listDocs if Path(i['key']).parent==parentPath ]
       #create sub-children
       for item in items:
@@ -332,6 +369,8 @@ def exportELN(backend:Backend, docID:str, fileName:str='') -> str:
     #finalize file
     index['@graph'] = graphMaster+graph
     elnFile.writestr(dirNameProject+'/'+'ro-crate-metadata.json', json.dumps(index, indent=2))
+    # temporary json output
     with open(fileName[:-3]+'json','w', encoding='utf-8') as fOut:
       fOut.write( json.dumps(index, indent=2) )
   return 'Success: exported '+str(len(graph))+' documents into file '+fileName
+"""
