@@ -19,6 +19,7 @@ from .dialogOntology import Ontology
 from .miscTools import updateExtractorList, restart
 from .style import Action, showMessage, widgetAndLayout, shortCuts
 from .fixedStrings import shortcuts
+from .inputOutput import exportELN
 os.environ['QT_API'] = 'pyside6'
 
 # Subclass QMainWindow to customize your application's main window
@@ -165,6 +166,12 @@ class MainWindow(QMainWindow):
         showMessage(self, 'List of items on todo list',todoString)
       except:
         pass
+    elif menuName=='export':
+      if self.comm.projectID == '':
+        showMessage(self, 'Error', 'You have to open a project to export', 'Warning')
+        return
+      fileName = '/home/steffen/save.eln' #QFileDialog.getSaveFileName(self,'Save data into .eln file',str(Path.home()),'*.eln')[0]
+      exportELN(self.comm.backend, self.comm.projectID, fileName)
     else:
       showMessage(self, 'ERROR','menu not implemented yet: '+menuName, icon='Warning')
     return

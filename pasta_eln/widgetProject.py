@@ -44,8 +44,9 @@ class Project(QWidget):
     for i in reversed(range(self.mainL.count())): #remove old
       self.mainL.itemAt(i).widget().setParent(None)  # type: ignore
     if projID!='':
-      self.projID = projID
-      self.taskID = docID
+      self.projID         = projID
+      self.taskID         = docID
+      self.comm.projectID = projID
     selectedIndex = None
     self.model = QStandardItemModel()
     self.tree = TreeView(self, self.comm, self.model)

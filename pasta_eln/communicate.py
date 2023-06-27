@@ -9,6 +9,7 @@ class Communicate(QObject):
     super().__init__()
     self.backend = backend
     self.dbInfo:dict[str,Any]  = {}
+    self.projectID = ''
 
   # Signals: specify emitter and receiver
   # BE SPECIFIC ABOUT WHAT THIS ACTION DOES
