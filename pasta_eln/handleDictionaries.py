@@ -149,7 +149,19 @@ def diffDicts(dict1:dict[str,Any], dict2:dict[str,Any]) -> str:
       outString += 'key not in dictionary 2: '+key+'\n'
       continue
     if value != dict2Copy[key]:
-      outString += 'values differ for key: '+key+'\n   '+str(value)+'\n   '+str(dict2Copy[key])+'\n'
+      if key=='-branch':
+        if len(value) != len(dict2Copy[key]):
+          outString += 'branches have different lengths\n   '+str(value)+'\n   '+str(dict2Copy[key])+'\n'
+        else:
+          for idx,_ in enumerate(value):
+            branch1 = value[idx]
+            branch2 = dict2Copy['-branch'][idx]
+            del branch1['show']
+            del branch2['show']
+            if branch1!=branch2:
+              outString += 'branches differ\n   '+str(value)+'\n   '+str(dict2Copy[key])+'\n'
+      else:
+        outString += 'values differ for key: '+key+'\n   '+str(value)+'\n   '+str(dict2Copy[key])+'\n'
     del dict2Copy[key]
   for key in dict2Copy.keys():
     if key in ignoreKeys:
