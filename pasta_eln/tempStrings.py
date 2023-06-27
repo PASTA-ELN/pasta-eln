@@ -3,7 +3,6 @@ todoString = """
 
 <h3>Very important show stopper</h3>
 <ul>
-<li>: make sure images are not elongated
 </ul>
 
 <h3>Things currently working on</h3>
