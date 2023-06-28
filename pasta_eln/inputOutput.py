@@ -16,7 +16,7 @@ from .backend import Backend
 # use project metadata to fill as much as possible
 
 #GENERAL TERMS IN ro-crate-metadata.json (None implies definitely should not be saved)
-pasta2json = {
+pasta2json:dict[str,Any] = {
   '_id'         : 'identifier',
   '_rev'        : None,
   '_attachments': None,
@@ -96,12 +96,24 @@ def importELN(backend:Backend, elnFileName:str) -> str:
     ################
     # subfunctions #
     ################
-    def json2pastaFunction(input):
+    def json2pastaFunction(inputData:dict[str,Any]) -> tuple[dict[str,Any], str, list[Any], str]:
+      """
+      convert json data to pastaStyle
+
+      Args:
+        inputData (dict): input data in document
+
+      Returns:
+        dict: output data as document
+        str: id in eln=path in zip file
+        list: list of children
+        str: data or dataset
+      """
       output = {}
-      elnID = input['@id']
-      children = input.pop('hasPart') if 'hasPart' in input else []
-      dataType = input['@type']
-      for key, value in input.items():
+      elnID = inputData['@id']
+      children = inputData.pop('hasPart') if 'hasPart' in inputData else []
+      dataType = inputData['@type']
+      for key, value in inputData.items():
         if key in ['@id','@type','hasPart','author','contentSize', 'sha256']:
           continue
         if key in json2pasta:
@@ -234,20 +246,21 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
   """
   print('>>', projectID)
   # define initial information
-  keysInSupplemental = set()
+  keysInSupplemental:set[str] = set()
   docProject = backend.db.getDoc(projectID)
   dirNameProject = docProject['-branch'][0]['path']
   fileName = dirNameProject+'.eln' if fileName=='' else fileName
 
-  def iterateTree(nodeHier:Node, graph:list[dict[str,Any]]):
+  def iterateTree(nodeHier:Node, graph:list[dict[str,Any]]) -> str:
     """
     Recursive function to translate the hierarchical node into a tree-node
 
     Args:
       nodeHier (Anytree.Node): anytree node
+      graph    (list): list of nodes
 
     Returns:
-      QtTreeWidgetItem: tree node
+      str: tree node
     """
     # separate into main and supplemental information
     doc = backend.db.getDoc(nodeHier.id)
@@ -364,9 +377,8 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
     # temporary json output
     with open(fileName[:-3]+'json','w', encoding='utf-8') as fOut:
       fOut.write( json.dumps(index, indent=2) )
-  keysInSupplemental = [i for i in keysInSupplemental if i not in pasta2json]
+  keysInSupplemental = set([i for i in keysInSupplemental if i not in pasta2json])
   print('Keys in supplemental information', keysInSupplemental)
   return 'Success: exported '+str(len(graph))+' documents into file '+fileName
-
 
 # SimStack (matsci.org/c/simstack), PMD Meeting september KIT
