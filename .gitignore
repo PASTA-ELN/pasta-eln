@@ -4,6 +4,7 @@ docs/build/
 __pycache__
 TODO/
 tests/DemonstratorIndentation/
+tests/DataForDemonstration/
 
 pasta_eln/test.py
 pasta_eln/temp.py
