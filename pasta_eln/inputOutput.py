@@ -377,7 +377,7 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
     # temporary json output
     with open(fileName[:-3]+'json','w', encoding='utf-8') as fOut:
       fOut.write( json.dumps(index, indent=2) )
-  keysInSupplemental = set([i for i in keysInSupplemental if i not in pasta2json])
+  keysInSupplemental = {i for i in keysInSupplemental if i not in pasta2json}
   print('Keys in supplemental information', keysInSupplemental)
   return 'Success: exported '+str(len(graph))+' documents into file '+fileName
 
