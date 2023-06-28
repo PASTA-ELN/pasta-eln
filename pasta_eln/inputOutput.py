@@ -37,7 +37,7 @@ json2pasta = {v:k for k,v in pasta2json.items() if v is not None}
 
 
 requiredKeys = ['_id', '-name', '-tags', '-date', '-user', '-client']
-# Special terms in other elns
+# Special terms in other ELNs: only add the ones that are required for function for PASTA
 elabFTW = {
   'elabid':'_id',
   'title':'-name',
@@ -46,31 +46,18 @@ elabFTW = {
   'userid':'-user',
   'metadata':'metaUser',
   'id':'_id',
-  'category': '-type'
+  'category': '-type',
+  'dateCreated': '-date'
+
 }
 # tags: "abc|efg" vs ['abc','efg']
 # internal identifier (elabFTW:id) vs global identifier (elabFTW: identifier)
-
-
 
 # if others eln: write new addDoc to add hierStack and branch based on path
 # - Don't create folders then
 # use internal id for now
 # create a dictonary of old id and new id
 # tags see if list: else split at |
-
-def json2pastaFunction(input):
-  output = {}
-  elnID = input['@id']
-  children = input.pop('hasPart') if 'hasPart' in input else []
-  dataType = input['@type']
-  for key, value in input.items():
-    if key in ['@id','@type','hasPart','author','contentSize', 'sha256']:
-      continue
-    output[json2pasta[key]] = value
-  return output, elnID, children, dataType
-
-
 def importELN(backend:Backend, elnFileName:str) -> str:
   '''
   import .eln file from other ELN or from PASTA
@@ -103,10 +90,27 @@ def importELN(backend:Backend, elnFileName:str) -> str:
     logging.info('Import '+elnName+' '+elnVersion)
     if elnName=='eLabFTW':
       json2pasta.update(elabFTW)
+    print(elnName, json2pasta)
     mainNode    = [i for i in graph if i["@id"]=="./"][0]
 
-    #############
-    # subfunction
+    ################
+    # subfunctions #
+    ################
+    def json2pastaFunction(input):
+      output = {}
+      elnID = input['@id']
+      children = input.pop('hasPart') if 'hasPart' in input else []
+      dataType = input['@type']
+      for key, value in input.items():
+        if key in ['@id','@type','hasPart','author','contentSize', 'sha256']:
+          continue
+        if key in json2pasta:
+          output[json2pasta[key]] = value
+        else:
+          print('**Warning: could not translate: '+key+'   from eln:'+elnName)
+          output['imported_'+key] = value
+      return output, elnID, children, dataType
+
     def processPart(part:dict[str,str]) -> int:
       """
       recursive function call to process this node
@@ -129,15 +133,30 @@ def importELN(backend:Backend, elnFileName:str) -> str:
         print('**ERROR zero or multiple nodes with same id', docS)
         return -1
       doc, elnID, children, dataType = json2pastaFunction(docS[0])
-      if dataType=='dataset':
-        with elnFile.open((Path(dirName)/elnID/'metadata.json').as_posix()) as fIn:
-          doc.update( json.loads( fIn.read() ) )
+      print(doc, dataType)
+      if dataType.lower()=='dataset':
+        if elnName == 'PASTA ELN':
+          supplementalInfo = Path(dirName)/elnID/'metadata.json'
+        elif elnName == 'eLabFTW':
+          supplementalInfo = Path(dirName)/elnID/'export-elabftw.json'
+        else:
+          print('**ERROR could not identify elnName', elnName)
+          return -1
+        with elnFile.open(supplementalInfo.as_posix()) as fIn:
+          jsonContent = json.loads( fIn.read() )
+          if isinstance(jsonContent, list):
+            jsonContent = jsonContent[0]
+          print('========================')
+          print(type(jsonContent))
+          print('========================')
+          doc.update( jsonContent )
       elif re.match(r'^metadata_.-\w{32}\.json$', elnID.split('/')[-1]) is None:
         metadataPath = Path(dirName)/(elnID.replace('.','_')+'_metadata.json')
         with elnFile.open(metadataPath.as_posix()) as fIn:
           doc.update( json.loads( fIn.read() ) )
       else:
         metadataPath = Path(dirName)/elnID
+        print('=====',metadataPath, dirName, elnID)
         with elnFile.open(metadataPath.as_posix()) as fIn:
           doc.update( json.loads( fIn.read() ) )
       # save

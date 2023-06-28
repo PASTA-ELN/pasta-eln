@@ -527,7 +527,7 @@ class Backend(CLI_Mixin):
     report = outputString(outputStyle, 'h2', 'Report on extractor test')
     report += outputString(outputStyle, 'info', 'check file: '+str(filePath))
     extension = filePath.suffix[1:]
-    pyFile = 'extractor_'+extension+'.py'
+    pyFile = 'extractor_'+extension.lower()+'.py'
     if extractorPath is None:
       extractorPath = self.extractorPath
     #start testing

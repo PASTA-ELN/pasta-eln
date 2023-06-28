@@ -59,7 +59,7 @@ class Details(QScrollArea):
     """
     extractors = self.comm.backend.configuration['extractors']
     extension = Path(self.doc['-branch'][0]['path']).suffix[1:]
-    extractors = extractors[extension]
+    extractors = extractors[extension.lower()]
     baseDocType= self.doc['-type'][0]
     choices= {key:value for key,value in extractors.items() \
                 if key.startswith(baseDocType)}
