@@ -7,7 +7,6 @@ todoString = """
 
 <h3>Things currently working on</h3>
 <ul>
-<li> export and import of .eln
 </ul>
 
 <h3>Improvement to convenience</h3>
