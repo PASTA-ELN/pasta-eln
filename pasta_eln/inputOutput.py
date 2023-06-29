@@ -90,7 +90,7 @@ def importELN(backend:Backend, elnFileName:str) -> str:
     logging.info('Import '+elnName+' '+elnVersion)
     if elnName=='eLabFTW':
       json2pasta.update(elabFTW)
-    print(elnName, json2pasta)
+    print('ELN and translator:', elnName, json2pasta,'\n---------------------------')
     mainNode    = [i for i in graph if i["@id"]=="./"][0]
 
     ################
@@ -110,7 +110,7 @@ def importELN(backend:Backend, elnFileName:str) -> str:
         str: data or dataset
       """
       output = {}
-      elnID = inputData['@id']
+      elnID = inputData['@id'][2:] if inputData['@id'][:2]=='./' else inputData['@id']
       children = inputData.pop('hasPart') if 'hasPart' in inputData else []
       dataType = inputData['@type']
       for key, value in inputData.items():
@@ -145,7 +145,8 @@ def importELN(backend:Backend, elnFileName:str) -> str:
         print('**ERROR zero or multiple nodes with same id', docS)
         return -1
       doc, elnID, children, dataType = json2pastaFunction(docS[0])
-      print(doc, dataType)
+      print('translated doc: ', dataType)
+      print('\n  '.join([k+': '+str(v) for k,v in doc.items()]))
       if dataType.lower()=='dataset':
         if elnName == 'PASTA ELN':
           supplementalInfo = Path(dirName)/elnID/'metadata.json'
@@ -158,10 +159,13 @@ def importELN(backend:Backend, elnFileName:str) -> str:
           jsonContent = json.loads( fIn.read() )
           if isinstance(jsonContent, list):
             jsonContent = jsonContent[0]
-          print('========================')
-          print(type(jsonContent))
-          print('========================')
-          doc.update( jsonContent )
+          if elnName == 'PASTA ELN':
+            doc.update( jsonContent )
+          else:
+            doc['from '+elnName] = jsonContent
+          print('======== With supplemental material ================')
+          print('\n  '.join([k+': '+str(v) for k,v in doc.items()]))
+          print('====================================================')
       elif re.match(r'^metadata_.-\w{32}\.json$', elnID.split('/')[-1]) is None:
         metadataPath = Path(dirName)/(elnID.replace('.','_')+'_metadata.json')
         with elnFile.open(metadataPath.as_posix()) as fIn:
@@ -173,29 +177,45 @@ def importELN(backend:Backend, elnFileName:str) -> str:
           doc.update( json.loads( fIn.read() ) )
       # save
       fullPath = backend.basePath/elnID
-      backend.db.saveDoc(doc)
-      if dataType=='dataset':
-        fullPath.mkdir(exist_ok=True)
-        with open(fullPath/'.id_pastaELN.json', 'w', encoding='utf-8') as fOut:
-          fOut.write(json.dumps(doc))
-      elif re.match(r'^metadata_.-\w{32}\.json$', elnID.split('/')[-1]) is None:
-        if not fullPath.parent.exists():
-          fullPath.parent.mkdir()
-        target = open(fullPath, "wb")
-        try:
-          source = elnFile.open(dirName+'/'+part['@id'])
-          with source, target:  #extract one file to its target directly
-            shutil.copyfileobj(source, target)
-        except:
-          print('--------- could not read file from zip', dirName+'/'+part['@id'])
-        # print('\nIn eln\n  '+'\n  '.join([k+': '+str(v) for k,v in doc.items()]))
-        # print('   ',fullPath)
+      if elnName == 'PASTA ELN':
+        backend.db.saveDoc(doc)
+        if dataType=='dataset':
+          fullPath.mkdir(exist_ok=True)
+          with open(fullPath/'.id_pastaELN.json', 'w', encoding='utf-8') as fOut:
+            fOut.write(json.dumps(doc))
+        elif re.match(r'^metadata_.-\w{32}\.json$', elnID.split('/')[-1]) is None:
+          if not fullPath.parent.exists():
+            fullPath.parent.mkdir()
+          target = open(fullPath, "wb")
+          try:
+            source = elnFile.open(dirName+'/'+part['@id'])
+            with source, target:  #extract one file to its target directly
+              shutil.copyfileobj(source, target)
+          except:
+            print('--------- could not read file from zip', dirName+'/'+part['@id'])
+          # print('\nIn eln\n  '+'\n  '.join([k+': '+str(v) for k,v in doc.items()]))
+          # print('   ',fullPath)
+      else:  # OTHER VENDORS
+        print(dataType, elnID)
+        if dataType.lower()=='dataset':
+          docType = 'x'+str(len(elnID.split('/')) - 1)
+        else:
+          docType = '-'
+        backend.cwd = Path(elnID).parent
+        if docType=='x0':
+          backend.hierStack = []
+        else:
+          print(backend.hierStack, docType)
+        doc['externalID'] = doc.pop('_id')
+        backend.addData(docType, doc)
+
       # children, aka recursive part
       logging.info('subparts:'+', '.join(['  '+i['@id'] for i in children]))
       for child in children:
         if child['@id'].endswith('/metadata.json') or child['@id'].endswith('_metadata.json'):  #skip own metadata
           continue
         addedDocs += processPart(child)
+
         # backend.changeHierarchy(backend.currentID)
         # backend.changeHierarchy(None)
         # if newNode['@id'].endswith('.json'):                    #read json content into DB
