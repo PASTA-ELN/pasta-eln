@@ -28,6 +28,8 @@ class Project(QWidget):
     self.foldedAll = False
     self.btnAddSubfolder:Optional[TextButton] = None
     self.btnHideShow:Optional[TextButton]     = None
+    self.maxHeight = 300  #TODO_P4 configuration
+    self.maxWidth  = 1024
 
 
   @Slot(str, str)
@@ -130,7 +132,9 @@ class Project(QWidget):
     """
     self.docProj = self.comm.backend.db.getDoc(self.projID)
     _, headerL       = widgetAndLayout('H',self.mainL)
-    _, infoL         = widgetAndLayout('V', headerL)
+    infoW, infoL         = widgetAndLayout('V', headerL)
+    infoW.setMaximumWidth(self.maxWidth)
+    infoW.setMaximumHeight(self.maxHeight)
     buttonW, buttonL = widgetAndLayout('H', spacing='m')
     headerL.addStretch(1)
     headerL.addWidget(buttonW, alignment=Qt.AlignTop)  # type: ignore

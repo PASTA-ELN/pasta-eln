@@ -171,10 +171,12 @@ class MainWindow(QMainWindow):
         showMessage(self, 'Error', 'You have to open a project to export', 'Warning')
         return
       fileName = QFileDialog.getSaveFileName(self,'Save data into .eln file',str(Path.home()),'*.eln')[0]
-      exportELN(self.comm.backend, self.comm.projectID, fileName)
+      status = exportELN(self.comm.backend, self.comm.projectID, fileName)
+      showMessage(self, 'Finished', status, 'Information')
     elif menuName=='import':
       fileName = QFileDialog.getOpenFileName(self,'Load data from .eln file',str(Path.home()),'*.eln')[0]
-      importELN(self.comm.backend, fileName)
+      status = importELN(self.comm.backend, fileName)
+      showMessage(self, 'Finished', status, 'Information')
     else:
       showMessage(self, 'ERROR','menu not implemented yet: '+menuName, icon='Warning')
     return

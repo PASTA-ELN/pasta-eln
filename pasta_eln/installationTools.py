@@ -316,7 +316,12 @@ def configuration(command:str='test', user:str='', password:str='', pathPasta:Pa
         conf['GUI'][key] = value
       else:
         output += '**ERROR: key: '+key+' not in GUI configuration\n'
-
+  # Authors
+  if 'authors' not in conf:
+    if command == 'repair':
+      conf['authors'] = [    {"first":"", "last":"", "title":"", "email":"", "orcid":"","organizations":[{"organization":"", "rorid":""}]}]
+    else:
+      output += '**ERROR: No authors in config file\n'
   if command == 'repair':
     with open(Path.home()/'.pastaELN.json','w', encoding='utf-8') as f:
       f.write(json.dumps(conf,indent=2))

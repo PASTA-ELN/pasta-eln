@@ -7,13 +7,6 @@ from zipfile import ZipFile, ZIP_DEFLATED
 from anytree import PreOrderIter, Node
 from pasta_eln import __version__
 from .backend import Backend
-#TODO_P5 Add read info from ror and orcid into personal details section -> config.json
-# curl https://api.ror.org/organizations/02nv7yv05
-# curl -s -H "Accept: application/json" https://pub.orcid.org/v3.0/0000-0001-7691-2856
-
-# include into ./
-# https://gitlab.mpcdf.mpg.de/smenon/elastic-constant-demo/-/blob/main/metadata_data.yml
-# use project metadata to fill as much as possible
 
 #GENERAL TERMS IN ro-crate-metadata.json (None implies definitely should not be saved)
 pasta2json:dict[str,Any] = {
@@ -24,19 +17,16 @@ pasta2json:dict[str,Any] = {
   '-branch'     : None,
   '-client'     : None,
   '-date'       : 'dateModified',
-  '-name'       : 'name',
+  '-name'       : 'title',
   '-tags'       : 'keywords',
   'image'       : None,
-  'comment'     : 'comment',
+  'comment'     : 'description',
   'content'     : 'text',
   'links'       : 'mentions',
   'shasum'      : None,
 }
 json2pasta = {v:k for k,v in pasta2json.items() if v is not None}
 
-
-
-requiredKeys = ['_id', '-name', '-tags', '-date', '-user', '-client']
 # Special terms in other ELNs: only add the ones that are required for function for PASTA
 elabFTW = {
   'elabid':'_id',
@@ -48,16 +38,9 @@ elabFTW = {
   'id':'_id',
   'category': '-type',
   'dateCreated': '-date'
-
 }
-# tags: "abc|efg" vs ['abc','efg']
-# internal identifier (elabFTW:id) vs global identifier (elabFTW: identifier)
 
-# if others eln: write new addDoc to add hierStack and branch based on path
-# - Don't create folders then
-# use internal id for now
-# create a dictonary of old id and new id
-# tags see if list: else split at |
+
 def importELN(backend:Backend, elnFileName:str) -> str:
   '''
   import .eln file from other ELN or from PASTA
@@ -145,8 +128,10 @@ def importELN(backend:Backend, elnFileName:str) -> str:
         print('**ERROR zero or multiple nodes with same id', docS)
         return -1
       doc, elnID, children, dataType = json2pastaFunction(docS[0])
-      print('translated doc: ', dataType)
-      print('\n  '.join([k+': '+str(v) for k,v in doc.items()]))
+      if elnName == 'PASTA ELN':
+        fullPath = backend.basePath/elnID
+      else:
+        fullPath = backend.basePath/backend.cwd/elnID.split('/')[-1]
       if dataType.lower()=='dataset':
         if elnName == 'PASTA ELN':
           supplementalInfo = Path(dirName)/elnID/'metadata.json'
@@ -163,20 +148,24 @@ def importELN(backend:Backend, elnFileName:str) -> str:
             doc.update( jsonContent )
           else:
             doc['from '+elnName] = jsonContent
-          print('======== With supplemental material ================')
-          print('\n  '.join([k+': '+str(v) for k,v in doc.items()]))
-          print('====================================================')
       elif re.match(r'^metadata_.-\w{32}\.json$', elnID.split('/')[-1]) is None:
-        metadataPath = Path(dirName)/(elnID.replace('.','_')+'_metadata.json')
-        with elnFile.open(metadataPath.as_posix()) as fIn:
-          doc.update( json.loads( fIn.read() ) )
+        if elnName == 'PASTA ELN':
+          metadataPath = Path(dirName)/(elnID.replace('.','_')+'_metadata.json')
+          with elnFile.open(metadataPath.as_posix()) as fIn:
+            doc.update( json.loads( fIn.read() ) )
+        elif elnName == 'eLabFTW' and elnID.endswith('export-elabftw.json'):
+          return 0
+        else:
+          print('**ERROR got a file which I do not understand ',elnID)
+          target = open(fullPath, "wb")
+          source = elnFile.open(dirName+'/'+elnID)
+          with source, target:  #extract one file to its target directly
+            shutil.copyfileobj(source, target)
       else:
         metadataPath = Path(dirName)/elnID
-        print('=====',metadataPath, dirName, elnID)
         with elnFile.open(metadataPath.as_posix()) as fIn:
           doc.update( json.loads( fIn.read() ) )
       # save
-      fullPath = backend.basePath/elnID
       if elnName == 'PASTA ELN':
         backend.db.saveDoc(doc)
         if dataType=='dataset':
@@ -196,18 +185,19 @@ def importELN(backend:Backend, elnFileName:str) -> str:
           # print('\nIn eln\n  '+'\n  '.join([k+': '+str(v) for k,v in doc.items()]))
           # print('   ',fullPath)
       else:  # OTHER VENDORS
-        print(dataType, elnID)
         if dataType.lower()=='dataset':
           docType = 'x'+str(len(elnID.split('/')) - 1)
+          backend.cwd = backend.basePath / Path(elnID).parent
         else:
           docType = '-'
-        backend.cwd = Path(elnID).parent
         if docType=='x0':
           backend.hierStack = []
-        else:
-          print(backend.hierStack, docType)
-        doc['externalID'] = doc.pop('_id')
-        backend.addData(docType, doc)
+        if '_id' in doc:
+          doc['externalID'] = doc.pop('_id')
+        docID = backend.addData(docType, doc)
+        if elnName != 'PASTA ELN' and docID[0]=='x':
+          backend.hierStack += [docID]
+          backend.cwd        = backend.basePath/ backend.db.getDoc(docID)['-branch'][0]['path']
 
       # children, aka recursive part
       logging.info('subparts:'+', '.join(['  '+i['@id'] for i in children]))
@@ -377,7 +367,27 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
         'description':'Version '+__version__},\
       'version': '1.0'}
     graphMaster.append(masterNodeInfo)
-    masterNodeRoot  = {'@id':'./', '@type':['Dataset'], 'hasPart': [{'@id':dirNameProject}, {'@id':dirNameProject+'/ro-crate-metadata.json'}]}
+    authors = backend.configuration['authors']
+    masterNodeRoot  = {'@id':'./', '@type':['Dataset'],
+                       'hasPart': [{'@id':dirNameProject},
+                                   {'@id':dirNameProject+'/ro-crate-metadata.json'},
+                                   {'@id':dirNameProject+'/'+dirNameProject+'/datastructure.json'}],
+                        # default items mwo-ontology
+                       'context': [{'mwo': 'http://purls.helmholtz-metadaten.de/mwo'},{'nfdicore': 'https://nfdi.fiz-karlsruhe.de/ontology'}],
+                       'type': 'mwo:ExperimentalWorkflow',
+                       'license': 'CC BY 4.0',
+                       'format':  [{'fileExtension': '.json'}],
+                        # publisher information
+                       'authors': [
+                         {'firstName':authors[0]['first'], 'surname':authors[0]['last'], 'title':authors[0]['title'],
+                          'emailAddress':authors[0]['email'], 'ORCID': authors[0]['orcid'],
+                          'affiliation': [{'organization': authors[0]['organizations'][0]['organization'],
+                                           'RORID':        authors[0]['organizations'][0]['rorid']}] }
+                       ],
+                       'datePublished': datetime.now().isoformat()
+                      }
+    elnFile.writestr(dirNameProject+'/'+dirNameProject+'/datastructure.json',
+                     json.dumps(backend.db.getDoc('-ontology-')))
     graphMaster.append(masterNodeRoot)
 
     # ------------------ copy data-files --------------------------

@@ -3,6 +3,7 @@ import platform
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QTabWidget,  QTextEdit  # pylint: disable=no-name-in-module
 from .backend import Backend
 from .dialogConfigGUI import ConfigurationGUI
+from .dialogConfigAuthors import ConfigurationAuthors
 if platform.system()=='Windows':
   from .dialogConfigSetupWindows import ConfigurationSetup
 else:
@@ -30,6 +31,8 @@ class Configuration(QDialog):
     # Misc configuration: e.g. theming...
     tabGUI = ConfigurationGUI(backend, self.finished)
     tabW.addTab(tabGUI, 'Appearance')
+    tabGUI = ConfigurationAuthors(backend, self.finished)
+    tabW.addTab(tabGUI, 'Authors')
 
     # Setup / Troubeshoot Pasta: main widget
     tabSetup = ConfigurationSetup(backend, self.finished)
