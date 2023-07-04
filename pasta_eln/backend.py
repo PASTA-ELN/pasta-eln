@@ -716,7 +716,7 @@ class Backend(CLI_Mixin):
             if (self.basePath/root/dirName/'.id_pastaELN.json').exists():
               with open(self.basePath/root/dirName/'.id_pastaELN.json','r',encoding='utf-8') as fIn:
                 docDisk = json.loads(fIn.read())
-                listDocs = self.db.getView('viewHierarchy/viewPathsAll', preciseKey=(path))
+                listDocs = self.db.getView('viewHierarchy/viewPathsAll', preciseKey=path)
                 if len(listDocs)!=1:
                   output += outputString(outputStyle,'error','Path of folder is non-unique: '+path)
                 docDB   = self.db.getDoc(listDocs[0]['id'])
