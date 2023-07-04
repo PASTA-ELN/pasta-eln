@@ -32,6 +32,7 @@ todoString = """
 <li> addToConfig
 <li> can you sort for true false in tables too?
 <li> change to string-output
+<li> configuration
 <li> from config file
 <li> not sure this will be important
 <li> projectTree: allow right click on measurement to change recipe
@@ -41,7 +42,7 @@ todoString = """
 
 <h3>Things worthwile remembering/uncritical</h3>
 <ul>
-<li> Add read info from ror and orcid into personal details section -> config.json
+<li> allow to add more users and each user can have multiple organizations
 <li> copy of file: should it the be the same in database or should it be two separate entities??
 <li> create list of unaccessible files: linked with accessible files
 <li> for now, sorted by last change of project itself: future create a view that does that automatically
