@@ -124,8 +124,8 @@ def importELN(backend:Backend, elnFileName:str) -> str:
       print('Process: '+part['@id'])
       # find next node to process
       docS = [i for i in graph if '@id' in i and i['@id']==part['@id']]
-      if len(docS)!=1:
-        print('**ERROR zero or multiple nodes with same id', docS)
+      if len(docS)!=1 or backend.cwd is None:
+        print('**ERROR zero or multiple nodes with same id', docS,' or cwd is None')
         return -1
       doc, elnID, children, dataType = json2pastaFunction(docS[0])
       if elnName == 'PASTA ELN':

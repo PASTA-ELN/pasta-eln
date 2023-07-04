@@ -1,9 +1,9 @@
 """ Main class of config tab on authors """
-import json, requests, re
+import json, re
 from pathlib import Path
 from typing import Callable
+import requests
 from PySide6.QtWidgets import QWidget, QFormLayout, QLabel, QLineEdit  # pylint: disable=no-name-in-module
-from PySide6.QtGui import QFontMetrics # pylint: disable=no-name-in-module
 from .miscTools import restart
 from .style import TextButton
 from .backend import Backend
