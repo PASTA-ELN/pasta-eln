@@ -41,7 +41,8 @@ class Database:
         self.db['-ontology-'].delete()
       self.ontology = defaultOntology
       self.db.create_document(self.ontology)
-      self.initViews(configuration)
+      self.initDocTypeViews( configuration['tableColumnsMax'] )
+      self.initGeneralViews()
     self.ontology = self.db['-ontology-']
     if '-version' not in self.ontology or self.ontology['-version']!=2:
       print("**ERROR wrong ontology version")
@@ -51,21 +52,24 @@ class Database:
     return
 
 
-  def initViews(self, configuration:dict[str,Any]) -> None:
+  def initDocTypeViews(self, tableColumnsMax:int, docTypeChange:str='', columnsChange:list[str]=[]) -> None:
     """
-    initialize all views
+    for the individual docTypes
 
     Args:
-      configuration (dict): configuration of all elements
+      tableColumnsMax (int): max. number of columns in the docType tables
+      docTypeChange (str): if change columns for docType: give docType
+      columnsChange (list): change table / view columns to these
     """
-    tracebackString(True, 'initView')
-    # for the individual docTypes
+    tracebackString(True, 'initDocTypeView')
+    # print('SB: initDocViews newColumns',newColumns)
+    oldColumnNames = self.getColumnNames()
     jsDefault = 'if ($docType$) {doc["-branch"].forEach(function(branch){emit($key$, [$outputList$]);});}'
     viewCode = {}
     for docType in [i for i in self.ontology if i[0] not in ['_','-']]+['-']:
       if docType=='x0':
-        js    = jsDefault.replace('$docType$', "doc['-type']=='x0' && (doc['-branch'][0].show.every(\
-                function(i) {return i;}))").replace('$key$','doc._id')
+        newString = "doc['-type']=='x0' && (doc['-branch'][0].show.every(function(i) {return i;}))"
+        js    = jsDefault.replace('$docType$', newString).replace('$key$','doc._id')
         jsAll = jsDefault.replace('$docType$', "doc['-type']=='x0'").replace('$key$','doc._id')
       elif docType[0]=='x':
         continue
@@ -76,37 +80,64 @@ class Database:
         jsAll = jsDefault.replace('$docType$', "doc['-type'].join('/').substring(0, "+str(len(docType))+")=='"\
                 +docType+"'").replace('$key$','branch.stack[0]')
       outputList = []
-      if docType == '-':
-        enumeration = enumerate(defaultOntologyNode)
+      baseDocType = docType[:-3] if docType.endswith('All') else docType
+      if docTypeChange==docType:
+        columnNames = columnsChange
+      elif baseDocType in oldColumnNames:
+        columnNames = oldColumnNames[baseDocType].split(',')
+      elif docType == '-':
+        columnNames = [i['name'] for i in defaultOntologyNode if 'name' in i]
       else:
-        enumeration = enumerate(self.ontology[docType]['prop'])
-      for idx,item in enumeration:
-        if idx>configuration['tableColumnsMax']:
-          break
-        if 'name' not in item:
-          continue
-        if item['name'] == 'image':
+        columnNames = [i['name'] for i in self.ontology[docType]['prop'] if 'name' in i]
+      columnNames = columnNames[:tableColumnsMax]
+      commentString = '// '+docType+' : '+','.join(columnNames)+'\n'
+      # print('STEFFEN verify comment string',commentString)
+      for name in columnNames:
+        if name == 'image':
           outputList.append('doc.image.length>3')  #Not as .toString() because that leads to inconsistencies
-        elif item['name'] == '-tags':
+        elif name == '-tags':
           outputList.append("doc['-tags'].join(' ')")
-        elif '#_' in item['name']:
-          outputList.append('doc["-tags"].indexOf("'+item['name'][1:]+'")>-1')
-        elif item['name'] == '-type':
+        elif '#_' in name:
+          outputList.append('doc["-tags"].indexOf("'+name[1:]+'")>-1')
+        elif name == '-type':
           outputList.append('doc["-type"].slice(1).join("/")')
-        elif item['name'] == 'content':
+        elif name == 'content':
           outputList.append('doc.content?doc.content.slice(0, 100):""')
-        elif '/' in item['name']:  #stacked requests i.e. metaVendor/date
-          parentString = 'doc'+''.join(['["'+i+'"]' for i in item['name'].split('/')[:-1]])
-          newString = 'doc'+''.join(['["'+i+'"]' for i in item['name'].split('/')])
+        elif '/' in name:  #stacked requests i.e. metaVendor/date
+          parentString = 'doc'+''.join(['["'+i+'"]' for i in name.split('/')[:-1]])
+          newString = 'doc'+''.join(['["'+i+'"]' for i in name.split('/')])
           newString = parentString +' ? '+ newString + ': ""'
           outputList.append(newString)
         else:
-          outputList.append('doc["'+item['name']+'"]')
+          outputList.append('doc["'+name+'"]')
       outputStr = ','.join(outputList)
-      viewCode[docType.replace('/','__')]       = js.replace('$outputList$', outputStr)
-      viewCode[docType.replace('/','__')+'All'] = jsAll.replace('$outputList$', outputStr)
+      viewCode[docType.replace('/','__')]       = commentString+js.replace('$outputList$', outputStr)
+      viewCode[docType.replace('/','__')+'All'] = commentString+jsAll.replace('$outputList$', outputStr)
     self.saveView('viewDocType', viewCode)
-    # general views: Hierarchy, Identify
+    # print('SB result of columnNames',oldColumnNames)
+    return
+
+
+  def getColumnNames(self) -> dict[str,str]:
+    """ get names of table columns from design documents
+
+    Returns:
+      dict: docType and ,-separated list of names as string
+    """
+    if '_design/viewDocType' not in self.db:
+      return {}
+    try:
+      comments = [v['map'].split('\n// ')[1].split('\n')[0] for v in self.db['_design/viewDocType']['views'].values()]
+      return {i.split(' : ')[0]:i.split(' : ')[1] for i in comments}
+    except: #old views that do not have comment
+      return {}
+
+
+  def initGeneralViews(self) -> None:
+    """
+    general views: Hierarchy, Identify
+    """
+    tracebackString(True, 'initGeneralView')
     jsHierarchy  = '''
       if ('-type' in doc && (doc["-branch"][0].show.every(function(i) {return i;}))) {
         doc['-branch'].forEach(function(branch, idx) {emit(branch.stack.concat([doc._id]).join(' '),[branch.child,doc['-type'],doc['-name'],idx]);});
@@ -516,7 +547,7 @@ class Database:
       designDoc.delete()
     designDoc = DesignDocument(self.db, designName)
     for view in viewCode:
-      thisJsCode = 'function (doc) {' + viewCode[view] + '}'
+      thisJsCode = 'function (doc) {\n' + viewCode[view] + '\n}'
       designDoc.add_view(view, thisJsCode)
     try:
       designDoc.save()

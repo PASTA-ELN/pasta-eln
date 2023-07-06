@@ -76,7 +76,7 @@ class Backend(CLI_Mixin):
     if not hasattr(self.db, 'databaseName'):  #not successful database creation
       return
     if kwargs.get('initViews', False):
-      self.db.initViews(self.configuration)
+      self.db.initDocTypeViews(self.configuration['tableColumnsMax'])
     # internal hierarchy structure
     self.hierStack = []
     self.alive     = True

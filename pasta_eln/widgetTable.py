@@ -128,12 +128,7 @@ class Table(QWidget):
         self.actionChangeColums.setVisible(True)
         if self.docType in self.comm.backend.db.dataLabels:
           self.headline.setText(self.comm.backend.db.dataLabels[self.docType])
-      if self.docType in self.comm.backend.configuration['tableHeaders']:
-        self.filterHeader = self.comm.backend.configuration['tableHeaders'][docType]
-      elif self.docType=='-':
-        self.filterHeader = [i['name'] for i in defaultOntologyNode]
-      else:
-        self.filterHeader = [i['name'] for i in self.comm.backend.db.ontology[self.docType]['prop']]
+      self.filterHeader = self.comm.backend.db.getColumnNames()[self.docType].split(',')
       self.filterHeader = [i[1:] if i[0]=='-'   else i for i in self.filterHeader]  #change -something to something
       self.filterHeader = [i[2:] if i[:2]=='#_' else i for i in self.filterHeader]  #change #_something to somehing
     self.headerW.show()

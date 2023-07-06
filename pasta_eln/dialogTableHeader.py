@@ -1,6 +1,7 @@
 """ Table Header dialog: change which colums are shown and in which order """
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QListWidget, QLineEdit, QDialogButtonBox  # pylint: disable=no-name-in-module
-from .style import IconButton, showMessage, widgetAndLayout
+from .style import IconButton, widgetAndLayout
+from .miscTools import restart
 from .communicate import Communicate
 
 class TableHeader(QDialog):
@@ -94,17 +95,13 @@ class TableHeader(QDialog):
     if btn.text().endswith('Cancel'):
       self.reject()
     elif btn.text().endswith('Save'):
-      # self.selectedList = ['#_curated' if i=='_curated_' else i  for i in self.selectedList]  #change #_something to somehing
-      # self.selectedList = ['-'+i[1:-1] if i[0]=='\u2605' and i[-1]=='\u2605' else i  for i in self.selectedList] #change -something to something
-      # self.comm.backend.configuration['tableHeaders'][self.docType] = self.selectedList
-      # with open(Path.home()/'.pastaELN.json', 'w', encoding='utf-8') as fConf:
-      #   fConf.write(json.dumps(self.comm.backend.configuration,indent=2))
-      # self.comm.changeTable('','')
-      # self.comm.changeDetails('redraw')
-      #TODO_P3 tableHeaderChange: requires view to change to views, not ontology
-      showMessage(self, 'To be implemented','The changing of the table headers has to be fully implemented, yet.')
-      self.comm.backend.db.initViews(self.comm.backend.configuration)
-      self.accept()  #close
+      self.selectedList = ['#_curated' if i=='_curated_' else i  for i in self.selectedList]  #change #_something to somehing
+      self.selectedList = ['-'+i[1:-1] if i[0]=='_' and i[-1]=='_' else i  for i in self.selectedList] #change -something to something
+      self.comm.backend.db.initDocTypeViews(self.comm.backend.configuration['tableColumnsMax'],
+                                            docTypeChange=self.docType, columnsChange=self.selectedList)
+      restart()
+      # self.comm.changeTable.emit('','')
+      # self.accept()  #close
     else:
       print('dialogTableHeader: did not get a fitting btn ',btn.text())
     return
