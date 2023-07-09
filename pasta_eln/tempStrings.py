@@ -23,7 +23,6 @@ todoString = """
 <li> projectView: if table-row click, move to view it project
 <li> projectView: selection does not scroll; one cannot select a row
 <li> table: shift-select
-<li> tableHeaderChange: requires view to change to views, not ontology
 </ul>
 
 <h3>Bigger things implemented soon</h3>
