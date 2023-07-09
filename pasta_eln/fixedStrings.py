@@ -141,9 +141,27 @@ This step usually takes up to 1min, so please be patient.
 """
 
 shortcuts = """
-Ctrl+P: List projects
+Ctrl+Space: List projects
 Ctrl+M: List measurements
 Ctrl+S: List samples
+Ctrl+P: List procedures
+Ctrl+I: List instruments
 Ctrl+T: List tags
+Ctrl+U: List unidentified
+F2: Test file extraction
+F5: Synchronize
+F9: Restart
 Ctrl+?: Verify database integrity
+"""
+
+tableHeaderHelp = """
+<h4>You can add custom rows via bottom text area.</h4>
+
+If you want to add a column:
+<ul>
+<li> for a normal data-field (comment, content, name, type, tags, user, date), enter this field : 'comment'
+<li> to check the existence of an image: enter 'image'
+<li> to check if a tag is present: "#tag", in which you replace "tag" by the tag you want to look for. "_curated" is a special tag for measurements.
+<li> for information inside the metadata, use a "/": e.g. "metaVendor/fileExtension", "metaUser/stress". Capitalization is important.
+</ul>
 """

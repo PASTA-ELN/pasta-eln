@@ -1,8 +1,9 @@
 """ Table Header dialog: change which colums are shown and in which order """
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QListWidget, QLineEdit, QDialogButtonBox  # pylint: disable=no-name-in-module
-from .style import IconButton, widgetAndLayout
+from .style import IconButton, widgetAndLayout, showMessage
 from .miscTools import restart
 from .communicate import Communicate
+from .fixedStrings import tableHeaderHelp
 
 class TableHeader(QDialog):
   """ Table Header dialog: change which colums are shown and in which order """
@@ -17,47 +18,40 @@ class TableHeader(QDialog):
     super().__init__()
     self.comm = comm
     self.docType = docType
-    if docType in self.comm.backend.configuration['tableHeaders']:
-      self.selectedList = self.comm.backend.configuration['tableHeaders'][docType]
-      self.allSet = set(i['name'] for i in self.comm.backend.db.ontology[docType]['prop'])
-    else:   #default if not defined
-      self.selectedList = [i['name'] for i in self.comm.backend.db.ontology[docType]['prop']]
-      self.allSet = set()
-    self.allSet = self.allSet.union({i['name'] for i in self.comm.backend.db.ontology[docType]['prop']})
-    self.allSet = self.allSet.union({'date','#_curated', '-type', '-name', 'comment', '-tags', 'image'})
+    self.selectedList = self.comm.backend.db.getColumnNames()[docType].split(',')
+    self.allSet = {i['name'] for i in self.comm.backend.db.ontology[docType]['prop']}
+    self.allSet = self.allSet.union({'date','#_curated', 'type', 'name', 'comment', 'tags', 'image'})
     #clean it
-    self.allSet = {'_'+i[1:]+'_' if i[0] in ['-','_'] else i for i in self.allSet}  #change -something to something
-    self.allSet = {'_curated_'   if i=='#_curated'    else i for i in self.allSet}  #change #_something to somehing
-    self.selectedList = ['_'+i[1:]+'_' if i[0] in ['-','_'] else i for i in self.selectedList]  #change -something to something
-    self.selectedList = ['_curated_'   if i=='#_curated'    else i for i in self.selectedList]  #change #_something to somehing
+    self.allSet       = {i[1:] if i[0] in ['-','_'] else i for i in self.allSet}  #change -something to something
+    self.selectedList = [i[1:] if i[0] in ['-','_'] else i for i in self.selectedList]  #change -something to something
 
     # GUI elements
     self.setWindowTitle('Select table headers')
     self.setMinimumWidth(600)
     mainL = QVBoxLayout(self)
     _, bodyL = widgetAndLayout('H', mainL)
-    _, leftL = widgetAndLayout('V', bodyL)
+    _, leftL = widgetAndLayout('V', bodyL, spacing='m')
     self.choicesW = QListWidget()
     self.choicesW.addItems(list(self.allSet.difference(self.selectedList)))
     leftL.addWidget(self.choicesW)
     self.inputLine = QLineEdit()
     leftL.addWidget(self.inputLine)
     _, centerL = widgetAndLayout('V', bodyL)
-    IconButton('fa5s.angle-right', self.moveKey, centerL, 'add', 'add right')
-    IconButton('fa5s.angle-left', self.moveKey, centerL, 'del', 'remove right')
-    IconButton('fa5s.angle-up', self.moveKey, centerL, 'up', 'move up')
-    IconButton('fa5s.angle-down', self.moveKey, centerL, 'down', 'move down')
-    IconButton('fa5s.angle-double-right', self.moveKey, centerL, 'text', 'use text')
+    IconButton('fa5s.angle-right',        self.executeAction, centerL, 'add',  'add right')
+    IconButton('fa5s.angle-left',         self.executeAction, centerL, 'del',  'remove right')
+    IconButton('fa5s.angle-up',           self.executeAction, centerL, 'up',   'move up')
+    IconButton('fa5s.angle-down',         self.executeAction, centerL, 'down', 'move down')
+    IconButton('fa5s.angle-double-right', self.executeAction, centerL, 'text', 'use text')
     self.selectW = QListWidget()
     self.selectW.addItems(self.selectedList)
     bodyL.addWidget(self.selectW)
     #final button box
-    buttonBox = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
+    buttonBox = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel | QDialogButtonBox.Help)
     buttonBox.clicked.connect(self.save)
     mainL.addWidget(buttonBox)
 
 
-  def moveKey(self) -> None:
+  def executeAction(self) -> None:
     """ Event if user clicks button in the center """
     btn = self.sender().accessibleName()
     selectedLeft   = [i.text() for i in self.choicesW.selectedItems()]
@@ -95,13 +89,15 @@ class TableHeader(QDialog):
     if btn.text().endswith('Cancel'):
       self.reject()
     elif btn.text().endswith('Save'):
-      self.selectedList = ['#_curated' if i=='_curated_' else i  for i in self.selectedList]  #change #_something to somehing
-      self.selectedList = ['-'+i[1:-1] if i[0]=='_' and i[-1]=='_' else i  for i in self.selectedList] #change -something to something
+      specialFields = ['name', 'type', 'tags', 'user', 'date']
+      self.selectedList = ['-'+i if i in specialFields else i  for i in self.selectedList]
       self.comm.backend.db.initDocTypeViews(self.comm.backend.configuration['tableColumnsMax'],
                                             docTypeChange=self.docType, columnsChange=self.selectedList)
       restart()
       # self.comm.changeTable.emit('','')
       # self.accept()  #close
+    elif btn.text().endswith('Help'):
+      showMessage(self, 'Help on individual entry', tableHeaderHelp)
     else:
       print('dialogTableHeader: did not get a fitting btn ',btn.text())
     return
