@@ -140,6 +140,7 @@ This step helps to verify the installation and provides an helpful example for n
 This step usually takes up to 1min, so please be patient.
 """
 
+
 shortcuts = """
 Ctrl+Space: List projects
 Ctrl+M: List measurements
@@ -153,6 +154,7 @@ F5: Synchronize
 F9: Restart
 Ctrl+?: Verify database integrity
 """
+
 
 tableHeaderHelp = """
 <h4>You can add custom rows via bottom text area.</h4>
