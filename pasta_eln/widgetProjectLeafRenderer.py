@@ -141,14 +141,15 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     """
     if index:
       hierStack = index.data(Qt.DisplayRole)  # type: ignore
-      if hierStack is None:
+      if hierStack is None or self.comm is None:
         return QSize()
       docID   = hierStack.split('/')[-1]
       if docID.endswith(' -'):
         return QSize(400, self.lineSep*2)
-      if self.comm is None:
-        return QSize()
       doc = self.comm.backend.db.getDoc(docID)
+      if len(doc)<2:
+        self.comm.changeProject.emit('','')  #TODO_P4 redraw/reread only part of the tree
+        return QSize()
       docKeys = doc.keys()
       height  = len([i for i in docKeys if not i in _DO_NOT_RENDER_ and i[0] not in ['-','_'] ])  #height in text lines
       height += 1 if '-tags' in docKeys and len(doc['-tags'])>0 else 0

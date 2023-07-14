@@ -177,6 +177,8 @@ class MainWindow(QMainWindow):
       fileName = QFileDialog.getOpenFileName(self,'Load data from .eln file',str(Path.home()),'*.eln')[0]
       status = importELN(self.comm.backend, fileName)
       showMessage(self, 'Finished', status, 'Information')
+      self.comm.changeSidebar.emit('redraw')
+      self.comm.changeTable.emit('x0','')
     else:
       showMessage(self, 'ERROR','menu not implemented yet: '+menuName, icon='Warning')
     return

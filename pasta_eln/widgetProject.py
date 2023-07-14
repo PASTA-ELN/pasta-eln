@@ -90,7 +90,13 @@ class Project(QWidget):
     if docID.endswith(' -'):
       docID = docID[:-2]
     doc      = db.getDoc(docID)
-    branchOld= [i for i in doc['-branch'] if i['stack']==stackOld][0]
+    if '-branch' not in doc:
+      return
+    branchOldList= [i for i in doc['-branch'] if i['stack']==stackOld]
+    if len(branchOldList)!=1:
+      self.changeProject('','')
+      return
+    branchOld = branchOldList[0]
     childOld = branchOld['child']
     branchIdx= doc['-branch'].index(branchOld)
     siblingsOld = db.getView('viewHierarchy/viewHierarchy', startKey=' '.join(stackOld))

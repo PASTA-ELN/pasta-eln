@@ -73,7 +73,7 @@ def importELN(backend:Backend, elnFileName:str) -> str:
     logging.info('Import '+elnName+' '+elnVersion)
     if elnName=='eLabFTW':
       json2pasta.update(elabFTW)
-    print('ELN and translator:', elnName, json2pasta,'\n---------------------------')
+    logging.info('ELN and translator:'+elnName+' '+str(json2pasta))
     mainNode    = [i for i in graph if i["@id"]=="./"][0]
 
     ################
@@ -121,11 +121,10 @@ def importELN(backend:Backend, elnFileName:str) -> str:
         print("**ERROR in part",part)
         return False
       logging.info('Process: '+part['@id'])
-      print('Process: '+part['@id'])
       # find next node to process
       docS = [i for i in graph if '@id' in i and i['@id']==part['@id']]
       if len(docS)!=1 or backend.cwd is None:
-        print('**ERROR zero or multiple nodes with same id', docS,' or cwd is None')
+        print('**ERROR zero or multiple nodes with same id', docS,' or cwd is None in '+part['@id'])
         return -1
       doc, elnID, children, dataType = json2pastaFunction(docS[0])
       if elnName == 'PASTA ELN':
@@ -150,6 +149,8 @@ def importELN(backend:Backend, elnFileName:str) -> str:
             doc['from '+elnName] = jsonContent
       elif re.match(r'^metadata_.-\w{32}\.json$', elnID.split('/')[-1]) is None:
         if elnName == 'PASTA ELN':
+          if elnID.endswith('datastructure.json'):
+            return 0
           metadataPath = Path(dirName)/(elnID.replace('.','_')+'_metadata.json')
           with elnFile.open(metadataPath.as_posix()) as fIn:
             doc.update( json.loads( fIn.read() ) )
@@ -181,9 +182,7 @@ def importELN(backend:Backend, elnFileName:str) -> str:
             with source, target:  #extract one file to its target directly
               shutil.copyfileobj(source, target)
           except:
-            print('--------- could not read file from zip', dirName+'/'+part['@id'])
-          # print('\nIn eln\n  '+'\n  '.join([k+': '+str(v) for k,v in doc.items()]))
-          # print('   ',fullPath)
+            logging.warning('--------- could not read file from zip: '+dirName+'/'+part['@id'])
       else:  # OTHER VENDORS
         if dataType.lower()=='dataset':
           docType = 'x'+str(len(elnID.split('/')) - 1)
@@ -254,7 +253,6 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
   Returns:
     str: report of exportation
   """
-  print('>>', projectID)
   # define initial information
   keysInSupplemental:set[str] = set()
   docProject = backend.db.getDoc(projectID)
@@ -367,6 +365,10 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
         'description':'Version '+__version__},\
       'version': '1.0'}
     graphMaster.append(masterNodeInfo)
+    dataStructureInfo  = {\
+      '@id':dirNameProject+'/'+dirNameProject+'/datastructure.json',\
+      '@type':'DigitalDocument'}
+    graphMaster.append(dataStructureInfo)
     authors = backend.configuration['authors']
     masterNodeRoot  = {'@id':'./', '@type':['Dataset'],
                        'hasPart': [{'@id':dirNameProject},
@@ -408,7 +410,7 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
     with open(fileName[:-3]+'json','w', encoding='utf-8') as fOut:
       fOut.write( json.dumps(index, indent=2) )
   keysInSupplemental = {i for i in keysInSupplemental if i not in pasta2json}
-  print('Keys in supplemental information', keysInSupplemental)
-  return 'Success: exported '+str(len(graph))+' documents into file '+fileName
+  logging.info('Keys in supplemental information'+', '.join(keysInSupplemental))
+  return 'Success: exported '+str(len(graph))+' graph-nodes into file '+fileName
 
 # SimStack (matsci.org/c/simstack), PMD Meeting september KIT

@@ -1,5 +1,5 @@
 """ New/Edit dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""
-import logging, re
+import logging, re, copy
 from typing import Any, Union
 from PySide6.QtWidgets import QDialog, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QTextEdit, QPushButton,\
                               QPlainTextEdit, QComboBox, QLineEdit, QDialogButtonBox, QSplitter, QSizePolicy # pylint: disable=no-name-in-module
@@ -192,13 +192,14 @@ class Form(QDialog):
               self.doc['-name'] += '_1'
             else:
               self.doc['-name'] = '_'.join(self.doc['-name'].split('_')[:-1])+'_'+str(int(self.doc['-name'].split('_')[-1])+1)
+      # loop through all the subitems
       for key, valueOld in self.doc.items():
         if key[0] in ['_','-'] or key in ['image','metaVendor','metaUser'] or \
             (not hasattr(self, 'key_'+key) and not hasattr(self, 'textEdit_'+key)):
           continue
         if key in ['comment','content']:
           text = getattr(self, 'textEdit_'+key).toPlainText().strip()
-          if text!='':
+          if '_ids' in self.doc and text!='':  #if group edit, text has to have text
             self.doc[key] = text
             if key == 'content' and '-branch' in self.doc:
               for branch in self.doc['-branch']:
@@ -284,7 +285,7 @@ class Form(QDialog):
         elif '_id' in self.doc:                                   #default update on item
           self.comm.backend.editData(self.doc)
         else:                                                     #create new dataset
-          self.comm.backend.addData(self.doc['-type'][0], self.doc, newProjID)
+          self.comm.backend.addData(self.doc['-type'][0], copy.deepcopy(self.doc), newProjID)
       #!!! NO updates / redraw here since one does not know from where form came
       # e.g. sequential edit cannot have redraw here
       if btn.text().endswith('Next'):
