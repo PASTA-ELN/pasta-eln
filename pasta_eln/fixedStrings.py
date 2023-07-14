@@ -153,6 +153,7 @@ F2: Test file extraction
 F5: Synchronize
 F9: Restart
 Ctrl+?: Verify database integrity
+Ctrl+.: Configuration
 """
 
 

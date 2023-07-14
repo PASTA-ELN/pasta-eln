@@ -43,31 +43,9 @@ class MainWindow(QMainWindow):
     Action('&Export .eln',          self.executeAction, projectMenu, self, name='export')
     Action('&Import .eln',          self.executeAction, projectMenu, self, name='import')
     projectMenu.addSeparator()
-    Action('&Syncronize',           self.executeAction, projectMenu, self, name='sync', shortcut='F5')
-    projectMenu.addSeparator()
     Action('&Exit',                 self.executeAction, projectMenu, self, name='exit')
+
     viewMenu = menu.addMenu("&Lists")
-    systemMenu = menu.addMenu("&System")
-    Action('&Project groups',        self.executeAction, systemMenu, self, name='projectGroups')
-    changeProjectGroups = systemMenu.addMenu("&Change project group")
-    if hasattr(self.backend, 'configuration'):                       #not case in fresh install
-      for name in self.backend.configuration['projectGroups'].keys():
-        Action(name, self.changeProjectGroup, changeProjectGroups, self, name=name)
-    Action('&Questionaires',         self.executeAction, systemMenu, self, name='ontology')
-    systemMenu.addSeparator()
-    Action('Update &Extractor list', self.executeAction, systemMenu, self, name='updateExtractors')
-    Action('&Verify database',       self.executeAction, systemMenu, self, name='verifyDB', shortcut='Ctrl+?')
-    systemMenu.addSeparator()
-    Action('&Configuration',         self.executeAction, systemMenu, self, name='configuration')
-    helpMenu = menu.addMenu("&Help")
-    Action('&Website',               self.executeAction, helpMenu, self, name='website')
-    Action('Shortcuts',              self.executeAction, helpMenu, self, name='shortcuts')
-    Action('Todo list',              self.executeAction, helpMenu, self, name='todo')
-    helpMenu.addSeparator()
-    Action('&Test extraction from a file',   self.executeAction, helpMenu, self, name='extractorTest')
-    Action('Test &selected item extraction', self.executeAction, helpMenu, self, name='extractorTest2',
-           shortcut='F2')
-    Action('&Restart',              self.executeAction, helpMenu, self, name='restart', shortcut='F9')
     if hasattr(self.backend, 'db'):
       for docType, docLabel in self.comm.backend.db.dataLabels.items():
         if docType[0]=='x' and docType[1]!='0':
@@ -80,6 +58,30 @@ class MainWindow(QMainWindow):
       Action('&Tags',         self.viewMenu, viewMenu, self, 'Ctrl+T', '_tags_')
       Action('&Unidentified', self.viewMenu, viewMenu, self, 'Ctrl+U', name='-')
       #TODO_P5 create list of unaccessible files: linked with accessible files
+
+    systemMenu = menu.addMenu("&System")
+    Action('&Project groups',        self.executeAction, systemMenu, self, name='projectGroups')
+    changeProjectGroups = systemMenu.addMenu("&Change project group")
+    if hasattr(self.backend, 'configuration'):                       #not case in fresh install
+      for name in self.backend.configuration['projectGroups'].keys():
+        Action(name, self.changeProjectGroup, changeProjectGroups, self, name=name)
+    Action('&Syncronize',            self.executeAction, systemMenu, self, name='sync', shortcut='F5')
+    Action('&Questionaires',         self.executeAction, systemMenu, self, name='ontology')
+    systemMenu.addSeparator()
+    Action('&Test extraction from a file',   self.executeAction, systemMenu, self, name='extractorTest')
+    Action('Test &selected item extraction', self.executeAction, systemMenu, self, name='extractorTest2',
+           shortcut='F2')
+    Action('Update &Extractor list',         self.executeAction, systemMenu, self, name='updateExtractors')
+    systemMenu.addSeparator()
+    Action('&Verify database',       self.executeAction, systemMenu, self, name='verifyDB', shortcut='Ctrl+?')
+    Action('&Restart',               self.executeAction, systemMenu, self, name='restart', shortcut='F9')
+    Action('&Configuration',         self.executeAction, systemMenu, self, name='configuration', shortcut='Ctrl+.')
+
+    helpMenu = menu.addMenu("&Help")
+    Action('&Website',               self.executeAction, helpMenu, self, name='website')
+    Action('Shortcuts',              self.executeAction, helpMenu, self, name='shortcuts')
+    Action('Todo list',              self.executeAction, helpMenu, self, name='todo')
+    helpMenu.addSeparator()
 
     #GUI elements
     mainWidget, mainLayout = widgetAndLayout('H')
