@@ -166,9 +166,9 @@ class Form(QDialog):
     mainL.addWidget(buttonBox)
 
   # TODO_P4 add splitter to increase / decrease image
-  # TODO_P3 image does not allow for easy context aware clicks
+  # TODO_P3 form: image does not allow for easy context aware clicks
   # TODO_P3 form: add button to add key-values
-  # TODO_P3 other items as non-edible things that can be copy-pasted
+  # TODO_P3 form: other items as non-edible things that can be copy-pasted
   def save(self, btn:QPushButton) -> None:
     """
     Action upon save / cancel

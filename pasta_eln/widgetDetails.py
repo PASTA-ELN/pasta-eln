@@ -27,7 +27,9 @@ class Details(QScrollArea):
     self.setWidgetResizable(True)
     self.setWidget(self.mainW)
 
-    _, self.headerL = widgetAndLayout('H', self.mainL, top='s')
+    headerW, self.headerL = widgetAndLayout('H', self.mainL, top='s')
+    headerW.setContextMenuPolicy(Qt.CustomContextMenu)
+    headerW.customContextMenuRequested.connect(self.contextMenu)
     self.specialW, self.specialL = widgetAndLayout('V', self.mainL, top='s')
     self.specialW.setContextMenuPolicy(Qt.CustomContextMenu)
     self.specialW.customContextMenuRequested.connect(self.contextMenu)
@@ -57,18 +59,20 @@ class Details(QScrollArea):
     Args:
       pos (position): Position to create context menu at
     """
+    context = QMenu(self)
+    # for extractors
     extractors = self.comm.backend.configuration['extractors']
     extension = Path(self.doc['-branch'][0]['path']).suffix[1:]
-    extractors = extractors[extension.lower()]
-    baseDocType= self.doc['-type'][0]
-    choices= {key:value for key,value in extractors.items() \
-                if key.startswith(baseDocType)}
-    context = QMenu(self)
-    for key,value in choices.items():
-      Action(value, self.changeExtractor, context, self, name=key)
-    context.addSeparator()
+    if extension.lower() in extractors:
+      extractors = extractors[extension.lower()]
+      baseDocType= self.doc['-type'][0]
+      choices= {key:value for key,value in extractors.items() \
+                  if key.startswith(baseDocType)}
+      for key,value in choices.items():
+        Action(value, self.changeExtractor, context, self, name=key)
+      context.addSeparator()
+      Action('Save image',                self.changeExtractor, context, self, name='_saveAsImage_')
     Action('Open folder in file browser', self.changeExtractor, context, self, name='_openInFileBrowser_')
-    Action('Save as image',               self.changeExtractor, context, self, name='_saveAsImage_')
     context.exec(self.mapToGlobal(pos))
     return
 

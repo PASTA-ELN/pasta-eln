@@ -102,7 +102,7 @@ class Table(QWidget):
       self.projID  = projID
     if self.docType=='_tags_':
       self.addBtn.hide()
-      #TODO_P3 projectView: if table-row click, move to view it project
+      #TODO_P4 projectTree can select sub-folders: if table-row click, move to view it project
       if self.showAll:
         self.data = self.comm.backend.db.getView('viewIdentify/viewTagsAll')
       else:

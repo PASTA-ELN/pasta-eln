@@ -28,8 +28,6 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     self.colorMargin2 = QColor(getColor(self.comm.backend, 'secondaryLight'))
 
 
-  #TODO_P3 projectTree design: If folders and other items have boxes of slightly different brightness
-  # (darker gray for the former and lighter for the latter), the project structure might be easier to understand. 
   def paint(self, painter:QPainter, option:QStyleOptionViewItem, index:QModelIndex) -> None:
     """
     Paint this item
@@ -43,13 +41,6 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     """
     if self.comm is None:
       return
-    if self.penDefault is None:
-      self.penDefault = QPen(painter.pen())
-    x0, y0 = option.rect.topLeft().toTuple()
-    topLeft2nd     = option.rect.topRight()   - QPoint(self.widthImage+self.frameSize+1,-self.frameSize)
-    bottomRight2nd = option.rect.bottomRight()- QPoint(self.frameSize+1,self.frameSize)
-    painter.fillRect(option.rect.marginsRemoved(QMargins(2,6,4,0)),  self.colorMargin1)
-    painter.fillRect(option.rect.marginsRemoved(QMargins(-2,3,8,5)), self.colorMargin2)
     hierStack = index.data(Qt.DisplayRole) # type: ignore
     if hierStack is None:
       return
@@ -60,6 +51,17 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     else:
       folded = False
     doc     = self.comm.backend.db.getDoc(docID)
+    # GUI
+    if self.penDefault is None:
+      self.penDefault = QPen(painter.pen())
+    x0, y0 = option.rect.topLeft().toTuple()
+    topLeft2nd     = option.rect.topRight()   - QPoint(self.widthImage+self.frameSize+1,-self.frameSize)
+    bottomRight2nd = option.rect.bottomRight()- QPoint(self.frameSize+1,self.frameSize)
+    painter.fillRect(option.rect.marginsRemoved(QMargins(2,6,4,0)),  self.colorMargin1)
+    if doc['-type'][0][0]=='x':
+      painter.fillRect(option.rect.marginsRemoved(QMargins(-2,3,8,5)), self.colorMargin2.darker(105))
+    else:
+      painter.fillRect(option.rect.marginsRemoved(QMargins(-2,3,8,5)), self.colorMargin2.lighter(105))
     # header
     y = self.lineSep/2
     hiddenText = '     \U0001F441' if len([b for b in doc['-branch'] if False in b['show']])>0 else ''

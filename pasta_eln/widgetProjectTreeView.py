@@ -16,7 +16,7 @@ class TreeView(QTreeView):
     self.setModel(model)
     self.setHeaderHidden(True)
     self.setStyleSheet('QTreeView::branch {border-image: none;}')
-    self.setIndentation(50)
+    self.setIndentation(40)
     self.renderer = ProjectLeafRenderer(self.comm)
     self.setItemDelegate(self.renderer)
     self.setDragDropMode(QAbstractItemView.InternalMove)

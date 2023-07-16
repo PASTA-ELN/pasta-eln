@@ -130,7 +130,12 @@ class Database:
       comments = [v['map'].split('\n// ')[1].split('\n')[0] for v in self.db['_design/viewDocType']['views'].values()]
       return {i.split(' : ')[0]:i.split(' : ')[1] for i in comments}
     except: #old views that do not have comment
-      return {}
+      defaultColumnNames = {'-':','.join([i['name'] for i in defaultOntologyNode if 'name' in i])}
+      for docType in self.ontology:
+        if docType[0] in ['_','-']:
+          continue
+        defaultColumnNames[docType] = ','.join([i['name'] for i in self.ontology[docType]['prop'] if 'name' in i])
+      return defaultColumnNames
 
 
   def initGeneralViews(self) -> None:
