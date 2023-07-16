@@ -27,6 +27,7 @@ todoString = """
 
 <h3>Bigger things implemented soon</h3>
 <ul>
+<li> add nice glyphs later, see also below \u00D7')
 <li> add splitter to increase / decrease image
 <li> addToConfig
 <li> can you sort for true false in tables too?
@@ -37,6 +38,8 @@ todoString = """
 <li> projectTree: allow right click on measurement to change recipe
 <li> projectTree: drag&drop of external files
 <li> projectTree: select multiple items to edit... What is use case
+<li> redraw/reread only part of the tree
+<li> sidebar-scroll cannot figure out issue
 </ul>
 
 <h3>Things worthwile remembering/uncritical</h3>
@@ -44,7 +47,7 @@ todoString = """
 <li> allow to add more users and each user can have multiple organizations
 <li> copy of file: should it the be the same in database or should it be two separate entities??
 <li> create list of unaccessible files: linked with accessible files
-<li> for now, sorted by last change of project itself: future create a view that does that automatically
+<li> for now, sorted by last change of project itself. future create a view that does that automatically(if docType x0: emit changeDate)
 <li> if successful in Aug2023: remove "echo....read"
 <li> invert filter: not 'Sur' in name => '^((?!Sur).)*$' in name
 <li> moreChecksDB: if parent has corresponding show
