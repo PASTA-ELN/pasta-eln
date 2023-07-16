@@ -143,8 +143,8 @@ class Details(QScrollArea):
       self.metaUserL.itemAt(0).widget().setParent(None)     # type: ignore
     for i in reversed(range(self.metaDatabaseL.count())):
       self.metaDatabaseL.itemAt(i).widget().setParent(None) # type: ignore
-    if self.specialL.itemAt(0) is not None:
-      self.specialL.itemAt(0).widget().setParent(None)      # type: ignore
+    for i in reversed(range(self.specialL.count())):
+      self.specialL.itemAt(i).widget().setParent(None) # type: ignore
     self.specialW.hide()
     self.metaDetailsW.hide()
     self.metaVendorW.hide()

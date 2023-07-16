@@ -2,7 +2,7 @@
 import os, logging, webbrowser, json, sys
 from typing import Any
 from pathlib import Path
-from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QApplication, QFileDialog # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QMainWindow, QApplication, QFileDialog, QScrollArea # pylint: disable=no-name-in-module
 from PySide6.QtCore import Qt, Slot      # pylint: disable=no-name-in-module
 from PySide6.QtGui import QIcon, QPixmap  # pylint: disable=no-name-in-module
 from qt_material import apply_stylesheet  #of https://github.com/UN-GCPDS/qt-material
@@ -88,6 +88,11 @@ class MainWindow(QMainWindow):
     self.setCentralWidget(mainWidget)      # Set the central widget of the Window
     body = Body(self.comm)        #body with information
     self.sidebar = Sidebar(self.comm)  #sidebar with buttons
+    # sidebarScroll = QScrollArea()
+    # sidebarScroll.setWidget(self.sidebar)
+    # if hasattr(self.comm.backend, 'configuration'):
+    #   sidebarScroll.setFixedWidth(self.comm.backend.configuration['GUI']['sidebarWidth']+10)
+    # mainLayout.addWidget(sidebarScroll)
     mainLayout.addWidget(self.sidebar)
     mainLayout.addWidget(body)
     self.comm.changeTable.emit('x0','')

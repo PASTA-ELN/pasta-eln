@@ -1,10 +1,11 @@
 """ Sidebar widget that includes the navigation items """
+from PySide6.QtGui import QResizeEvent                                                                 # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QTreeWidget, QTreeWidgetItem, QFrame, QProgressBar # pylint: disable=no-name-in-module
-from PySide6.QtCore import Slot, Qt                                    # pylint: disable=no-name-in-module
+from PySide6.QtCore import Slot                                                                        # pylint: disable=no-name-in-module
 from anytree import PreOrderIter, Node
 
 from .dialogConfig import Configuration
-from .style import TextButton, IconButton, getColor, showMessage, widgetAndLayout, spacesMap, iconsDocTypes
+from .style import TextButton, IconButton, getColor, showMessage, widgetAndLayout, space, iconsDocTypes
 from .communicate import Communicate
 
 class Sidebar(QWidget):
@@ -23,16 +24,24 @@ class Sidebar(QWidget):
 
     # GUI elements
     mainL = QVBoxLayout()
-    mainL.setContentsMargins(spacesMap['s'],spacesMap['s'],spacesMap['0'],spacesMap['s'])
+    mainL.setContentsMargins(space['s'],space['s'],space['0'],space['s'])
     mainL.setSpacing(0)
-    _, self.projectL = widgetAndLayout('V', mainL, spacing='s')
+    _, self.projectsListL = widgetAndLayout('V', mainL, spacing='s')
+    #TODO_P4 sidebar-scroll cannot figure out issue
+    # current solution shows as many projects as fit in the sidebar
+    #  - Scrollarea seems to need fixed size, which is assigned by giving its main widget a height
+    #  - if I add a qlabel then I can qlabel afterwards, but the sizes of the projectW are too small
+    # projectListW, self.projectsListL = widgetAndLayout('V', None, spacing='s')
+    # scrollSection = QScrollArea()
+    # scrollSection.setWidget(projectListW)
+    # mainL.addWidget(scrollSection)
     self.progress = QProgressBar(self)
     self.progress.hide()
     self.comm.progressBar = self.progress
     mainL.addWidget(self.progress)
     self.setLayout(mainL)
     self.redraw()
-    #++ TODO projectView: allow scroll in sidebar, size changegable, drag-and-drop to move
+    #++ TODO projectView: allow size changegable, drag-and-drop to move
     #   more below and other files
 
 
@@ -45,8 +54,8 @@ class Sidebar(QWidget):
       projectID (str): projectID on which to focus: '' string=draw default; 'redraw' implies redraw; id implies id
     """
     # Delete old widgets from layout and create storage
-    for i in reversed(range(self.projectL.count())):
-      self.projectL.itemAt(i).widget().setParent(None) # type: ignore
+    for i in reversed(range(self.projectsListL.count())):
+      self.projectsListL.itemAt(i).widget().setParent(None) # type: ignore
     if projectID != 'redraw':
       self.openProjectId = projectID
     self.widgetsAction = {}
@@ -55,9 +64,12 @@ class Sidebar(QWidget):
 
     if hasattr(self.comm.backend, 'db'):
       hierarchy = self.comm.backend.db.getView('viewDocType/x0')
-      #TODO_P5 for now, sorted by last change of project itself: future create a view that does that automatically
+      #TODO_P5 for now, sorted by last change of project itself. future create a view that does that automatically(if docType x0: emit changeDate)
       lastChangeDate = [self.comm.backend.db.getDoc(project['id'])['-date'] for project in hierarchy]
-      for project in [x for _, x in sorted(zip(lastChangeDate, hierarchy))]:
+      maxProjects = int((self.height()-120)/50)-1
+      for index, project in enumerate([x for _, x in sorted(zip(lastChangeDate, hierarchy))]):
+        if index>maxProjects:
+          break
         projID = project['id']
         projName = project['value'][0]
         if self.openProjectId == '':
@@ -117,11 +129,10 @@ class Sidebar(QWidget):
             count += 1
         projectL.addWidget(treeW)
         # finalize layout
-        self.projectL.addWidget(projectW)
+        self.projectsListL.addWidget(projectW)
     # Other buttons
     stretch = QWidget()
-
-    self.projectL.addWidget(stretch, stretch=2)  # type: ignore
+    self.projectsListL.addWidget(stretch, stretch=2)  # type: ignore
     return
 
 
@@ -210,3 +221,14 @@ class Sidebar(QWidget):
     projId, docId = item.text(1).split('/')
     self.comm.changeProject.emit(projId, docId)
     return
+
+
+  def resizeEvent(self, event: QResizeEvent) -> None:
+    """
+    executed upon resize
+
+    Args:
+      event (QResizeEvent): event
+    """
+    self.redraw()
+    return super().resizeEvent(event)

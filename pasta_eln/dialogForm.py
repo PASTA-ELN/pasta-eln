@@ -199,7 +199,7 @@ class Form(QDialog):
           continue
         if key in ['comment','content']:
           text = getattr(self, 'textEdit_'+key).toPlainText().strip()
-          if '_ids' in self.doc and text!='':  #if group edit, text has to have text
+          if ('_ids' in self.doc and text!='') or '_id' in self.doc:  #if group edit, text has to have text
             self.doc[key] = text
             if key == 'content' and '-branch' in self.doc:
               for branch in self.doc['-branch']:
@@ -209,7 +209,7 @@ class Form(QDialog):
                       fOut.write(self.doc['content'])
                     logging.debug('Wrote new content to '+branch['path'])
                   else:
-                    showMessage(self, 'Information', 'Did not update file on harddisk, since PASTA-ELN cannot write this format')
+                    showMessage(self, 'Information', 'Did update the database but not the file on harddisk, since PASTA-ELN cannot write this format')
         elif isinstance(valueOld, list):  #items that are comma separated in the text-field
           self.doc[key] = getattr(self, 'key_'+key).text().strip().split(' ')
         elif isinstance(valueOld, str):

@@ -8,7 +8,7 @@ import qtawesome as qta
 from qt_material import get_theme
 from .backend import Backend
 
-spacesMap = {'0':0, 's':5, 'm':10, 'l':20, 'xl':200} #spaces: padding and margin
+space = {'0':0, 's':5, 'm':10, 'l':20, 'xl':200} #spaces: padding and margin
 
 iconsDocTypes = {'Measurements':'fa5s.thermometer-half',
                  'Samples':     'fa5s.vial',
@@ -296,8 +296,8 @@ def widgetAndLayout(direction:str='V', parentLayout:Optional[QLayout]=None, spac
     layout = QFormLayout(widget)
   else:
     layout = QGridLayout(widget)
-  layout.setSpacing(spacesMap[spacing])
-  layout.setContentsMargins(spacesMap[left], spacesMap[top], spacesMap[right], spacesMap[bottom])
+  layout.setSpacing(space[spacing])
+  layout.setContentsMargins(space[left], space[top], space[right], space[bottom])
   if parentLayout is not None:
     parentLayout.addWidget(widget)
   return widget, layout

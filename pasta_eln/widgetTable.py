@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QTableView, QMenu, QFileDial
 from PySide6.QtCore import Qt, Slot, QSortFilterProxyModel, QModelIndex       # pylint: disable=no-name-in-module
 from PySide6.QtGui import QStandardItemModel, QStandardItem, QFont            # pylint: disable=no-name-in-module
 from .dialogTableHeader import TableHeader
-from .style import TextButton, IconButton, Label, Action, widgetAndLayout, spacesMap
+from .style import TextButton, IconButton, Label, Action, widgetAndLayout, space
 from .fixedStrings import defaultOntologyNode
 from .communicate import Communicate
 
@@ -35,7 +35,7 @@ class Table(QWidget):
     ### GUI elements
     mainL = QVBoxLayout()
     mainL.setSpacing(0)
-    mainL.setContentsMargins(spacesMap['s'], spacesMap['s'], spacesMap['s'], spacesMap['s'])
+    mainL.setContentsMargins(space['s'], space['s'], space['s'], space['s'])
     # header
     self.headerW, headerL = widgetAndLayout('H', mainL, 'm')
     self.headerW.hide()
@@ -150,19 +150,19 @@ class Table(QWidget):
         else:                 #list for normal doctypes
           # print(i,j, self.data[i]['value'][j], type(self.data[i]['value'][j]))
           if self.data[i]['value'][j] is None or not self.data[i]['value'][j]:  #None, False
-            item = QStandardItem('\u00D7')
-            item.setFont(QFont("Helvetica [Cronyx]", 16))
+            item = QStandardItem('-') # TODO_P4 add nice glyphs later, see also below \u00D7')
+            # item.setFont(QFont("Helvetica [Cronyx]", 16))
           elif isinstance(self.data[i]['value'][j], bool) and self.data[i]['value'][j]: #True
-            item = QStandardItem('\u2713')
-            item.setFont(QFont("Helvetica [Cronyx]", 16))
+            item = QStandardItem('Y') # \u2713')
+            # item.setFont(QFont("Helvetica [Cronyx]", 16))
           elif isinstance(self.data[i]['value'][j], list):                      #list, e.g. qrCodes
             if isinstance( self.data[i]['value'][j][0], str):
               item =  QStandardItem(', '.join(self.data[i]['value'][j]))
             else:
               item =  QStandardItem(', '.join(  [str(i) for i in self.data[i]['value'][j]]  ))
           elif re.match(r'^[a-z\-]-[a-z0-9]{32}$',self.data[i]['value'][j]):      #Link
-            item = QStandardItem('\u260D')
-            item.setFont(QFont("Helvetica [Cronyx]", 16))
+            item = QStandardItem('oo') # \u260D')
+            # item.setFont(QFont("Helvetica [Cronyx]", 16))
           else:
             if self.filterHeader[j]=='tags':
               tags = self.data[i]['value'][j].split(' ')
@@ -170,7 +170,7 @@ class Table(QWidget):
                 tags[tags.index('_curated')] = '_curated_'
               for iStar in range(1,6):
                 if '_'+str(iStar) in tags:
-                  tags[tags.index('_'+str(iStar))] = '\u2605'*iStar
+                  tags[tags.index('_'+str(iStar))] = '*'*iStar # '\u2605'*iStar
               text = ' '.join(tags)
             else:
               text = self.data[i]['value'][j]
