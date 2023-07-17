@@ -100,12 +100,12 @@ class ProjectGroup(QDialog):
       name = self.projectGroupName.text() if self.selectGroup.isHidden() else self.selectGroup.currentText()
       if btn.text().endswith('Save'):
         local = {'user':self.userNameL.text(), 'password':self.passwordL.text(), \
-                'database':self.databaseL.text(), 'path':self.pathL.text()}
+                  'database':self.databaseL.text(), 'path':self.pathL.text()}
         remote = {'user':self.userNameR.text(), 'password':self.passwordR.text(), \
-                'database':self.databaseR.text(), 'url':self.serverR.text()}
+                  'database':self.databaseR.text(), 'url':self.serverR.text()}
       elif btn.text().endswith('Save encrypted'):
-        credL = upIn(self.userNameL.text()+':'+self.passwordL.text())
-        credR = upIn(self.userNameR.text()+':'+self.passwordR.text())
+        credL = upIn(f'{self.userNameL.text()}:{self.passwordL.text()}')
+        credR = upIn(f'{self.userNameR.text()}:{self.passwordR.text()}')
         local = {'cred':credL, 'database':self.databaseL.text(), 'path':self.pathL.text()}
         remote = {'cred':credR, 'database':self.databaseR.text(), 'url':self.serverR.text()}
       newGroup = {'local':local, 'remote':remote}

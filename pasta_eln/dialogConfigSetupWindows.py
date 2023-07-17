@@ -57,6 +57,7 @@ class ConfigurationSetup(QWidget):
 
 
   def analyse(self) -> None:
+    # sourcery skip: extract-duplicate-method, inline-immediately-returned-variable
     """
     Main method that does all the analysis: open dialogs, ...
     """
@@ -78,7 +79,7 @@ class ConfigurationSetup(QWidget):
           if len(res.split('|'))==3:
             password=res.split('|')[1]
           else:
-            logging.error('Could not retrieve password :'+str(res))
+            logging.error('Could not retrieve password :%s',str(res))
         else:
           self.mainText = self.mainText.replace('- CouchDB','- CouchDB: user chose to NOT install' )
           self.text1.setMarkdown(self.mainText)

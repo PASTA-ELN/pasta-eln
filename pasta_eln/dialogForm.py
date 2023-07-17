@@ -41,7 +41,7 @@ class Form(QDialog):
     mainL = QVBoxLayout(self)
     if 'image' in self.doc:
       width = self.comm.backend.configuration['GUI']['imageSizeDetails'] \
-                if hasattr(self.comm.backend, 'configuration') else 300
+                  if hasattr(self.comm.backend, 'configuration') else 300
       Image(self.doc['image'], mainL, anyDimension=width)
     _, self.formL = widgetAndLayout('Form', mainL, 's')
 
@@ -69,26 +69,31 @@ class Form(QDialog):
         labelL.addWidget(QLabel(key.capitalize()))
         TextButton('More', self.btnFocus, labelL, key, checkable=True)  # type: ignore # btnFocus req. bool, cannot get it to work
         rightSideW, rightSideL = widgetAndLayout('V')
-        setattr(self, 'buttonBarW_'+key, QWidget())
-        getattr(self, 'buttonBarW_'+key).hide()
-        buttonBarL = QHBoxLayout(getattr(self, 'buttonBarW_'+key))
+        setattr(self, f'buttonBarW_{key}', QWidget())
+        getattr(self, f'buttonBarW_{key}').hide()
+        buttonBarL = QHBoxLayout(getattr(self, f'buttonBarW_{key}'))
         for name, tooltip in [['bold','Bold text'],['italic','Italic text'],['list-ul','Bullet list'],\
-                              ['list-ol','Numbered list']]:
-          IconButton('fa5s.'+name, self.btnText, buttonBarL, name+'_'+key, tooltip)
+                                ['list-ol','Numbered list']]:
+          IconButton(f'fa5s.{name}', self.btnText, buttonBarL, f'{name}_{key}', tooltip)
         for i in range(1,4):
-          IconButton('mdi.format-header-'+str(i), self.btnText, buttonBarL, 'heading'+str(i)+'_'+key, \
-                     'Heading '+str(i))
-        rightSideL.addWidget(getattr(self, 'buttonBarW_'+key))
-        setattr(self, 'textEdit_'+key, QPlainTextEdit(value))
-        getattr(self, 'textEdit_'+key).setAccessibleName(key)
-        getattr(self, 'textEdit_'+key).textChanged.connect(self.textChanged)
-        setattr(self, 'textShow_'+key, QTextEdit(value))
-        getattr(self, 'textShow_'+key).setReadOnly(True)
-        getattr(self, 'textShow_'+key).hide()
+          IconButton(
+              f'mdi.format-header-{str(i)}',
+              self.btnText,
+              buttonBarL,
+              f'heading{str(i)}_{key}',
+              f'Heading {str(i)}',
+          )
+        rightSideL.addWidget(getattr(self, f'buttonBarW_{key}'))
+        setattr(self, f'textEdit_{key}', QPlainTextEdit(value))
+        getattr(self, f'textEdit_{key}').setAccessibleName(key)
+        getattr(self, f'textEdit_{key}').textChanged.connect(self.textChanged)
+        setattr(self, f'textShow_{key}', QTextEdit(value))
+        getattr(self, f'textShow_{key}').setReadOnly(True)
+        getattr(self, f'textShow_{key}').hide()
         splitter= QSplitter()
         splitter.setSizePolicy(QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding))
-        splitter.addWidget(getattr(self, 'textEdit_'+key))
-        splitter.addWidget(getattr(self, 'textShow_'+key))
+        splitter.addWidget(getattr(self, f'textEdit_{key}'))
+        splitter.addWidget(getattr(self, f'textShow_{key}'))
         rightSideL.addWidget(splitter)
         self.formL.addRow(labelW, rightSideW)
       elif key == '-tags':
@@ -110,37 +115,34 @@ class Form(QDialog):
         self.formL.addRow(QLabel('Tags:'), tagsBarMainW)
         self.updateTagsBar()
         self.otherChoices.currentIndexChanged.connect(self.addTag) #connect to slot only after all painting is done
-      elif isinstance(value, list):       #list of items, qrCodes in sample
+      elif isinstance(value, list):   #list of items, qrCodes in sample
         if len(value)>0 and isinstance(value[0], str):
-          setattr(self, 'key_'+key, QLineEdit(' '.join(value)))
+          setattr(self, f'key_{key}', QLineEdit(' '.join(value)))
         else:
-          setattr(self, 'key_'+key, QLineEdit('-- strange content --'))
-        self.formL.addRow(QLabel(key.capitalize()), getattr(self, 'key_'+key))
-      elif isinstance(value, str):        #string
+          setattr(self, f'key_{key}', QLineEdit('-- strange content --'))
+        self.formL.addRow(QLabel(key.capitalize()), getattr(self, f'key_{key}'))
+      elif isinstance(value, str):    #string
         ontologyItem = [i for i in ontologyNode if i['name']==key]
-        if len(ontologyItem)==1 and 'list' in ontologyItem[0]:             #choice dropdown
-          setattr(self, 'key_'+key, QComboBox())
-          if isinstance(ontologyItem[0]['list'], list):                    #ontology-defined choices
-            getattr(self, 'key_'+key).addItems(ontologyItem[0]['list'])
-          else:                                                            #choice among docType
+        if len(ontologyItem)==1 and 'list' in ontologyItem[0]:       #choice dropdown
+          setattr(self, f'key_{key}', QComboBox())
+          if isinstance(ontologyItem[0]['list'], list):            #ontology-defined choices
+            getattr(self, f'key_{key}').addItems(ontologyItem[0]['list'])
+          else:                                                    #choice among docType
             listDocType = ontologyItem[0]['list']
-            getattr(self, 'key_'+key).addItem('- no link -', userData='')
-            for line in self.db.getView('viewDocType/'+listDocType):
-              getattr(self, 'key_'+key).addItem(line['value'][0], userData=line['id'])
+            getattr(self, f'key_{key}').addItem('- no link -', userData='')
+            for line in self.db.getView(f'viewDocType/{listDocType}'):
+              getattr(self, f'key_{key}').addItem(line['value'][0], userData=line['id'])
               if line['value'][0] == value:
-                getattr(self, 'key_'+key).setCurrentText(line['value'][0])
-        else:                                         #text area
-          setattr(self, 'key_'+key, QLineEdit(value))
-        self.formL.addRow(QLabel(key.capitalize()), getattr(self, 'key_'+key))
+                getattr(self, f'key_{key}').setCurrentText(line['value'][0])
+        else:                                   #text area
+          setattr(self, f'key_{key}', QLineEdit(value))
+        self.formL.addRow(QLabel(key.capitalize()), getattr(self, f'key_{key}'))
       else:
         print("**ERROR dialogForm: unknown value type",key, value)
     #add extra questions at bottom of form
     allowProjectAndDocTypeChange = '_id' in self.doc and self.doc['-type'][0][0]!='x'
     if '_ids' in self.doc: #if group edit
-      allowProjectAndDocTypeChange = True
-      for docID in self.doc['_ids']:
-        if docID[0]=='x':
-          allowProjectAndDocTypeChange = False
+      allowProjectAndDocTypeChange = all(docID[0]=='x' for docID in self.doc['_ids'])
     if allowProjectAndDocTypeChange: #if not-new and non-folder
       self.formL.addRow(QLabel('Special properties:'), QLabel('') )
     label = '- unassigned -' if self.flagNewDoc else '- no change -'
@@ -170,6 +172,7 @@ class Form(QDialog):
   # TODO_P3 form: add button to add key-values
   # TODO_P3 form: other items as non-edible things that can be copy-pasted
   def save(self, btn:QPushButton) -> None:
+    # sourcery skip: merge-else-if-into-elif
     """
     Action upon save / cancel
     """
@@ -194,11 +197,12 @@ class Form(QDialog):
               self.doc['-name'] = '_'.join(self.doc['-name'].split('_')[:-1])+'_'+str(int(self.doc['-name'].split('_')[-1])+1)
       # loop through all the subitems
       for key, valueOld in self.doc.items():
-        if key[0] in ['_','-'] or key in ['image','metaVendor','metaUser'] or \
-            (not hasattr(self, 'key_'+key) and not hasattr(self, 'textEdit_'+key)):
+        if (key[0] in ['_', '-'] or key in ['image', 'metaVendor', 'metaUser']
+            or not hasattr(self, f'key_{key}')
+            and not hasattr(self, f'textEdit_{key}')):
           continue
         if key in ['comment','content']:
-          text = getattr(self, 'textEdit_'+key).toPlainText().strip()
+          text = getattr(self, f'textEdit_{key}').toPlainText().strip()
           if ('_ids' in self.doc and text!='') or '_id' in self.doc:  #if group edit, text has to have text
             self.doc[key] = text
             if key == 'content' and '-branch' in self.doc:
@@ -211,18 +215,22 @@ class Form(QDialog):
                   else:
                     showMessage(self, 'Information', 'Did update the database but not the file on harddisk, since PASTA-ELN cannot write this format')
         elif isinstance(valueOld, list):  #items that are comma separated in the text-field
-          self.doc[key] = getattr(self, 'key_'+key).text().strip().split(' ')
+          self.doc[key] = getattr(self, f'key_{key}').text().strip().split(' ')
         elif isinstance(valueOld, str):
-          if isinstance(getattr(self, 'key_'+key), QComboBox):
-            valueNew         = getattr(self, 'key_'+key).currentText()
-            if valueNew!='- no link -' and getattr(self, 'key_'+key).currentData() is not None and \
-              re.search(r"^[a-z\-]-[a-z0-9]{32}$",getattr(self, 'key_'+key).currentData()) is not None:
+          if isinstance(getattr(self, f'key_{key}'), QComboBox):
+            valueNew = getattr(self, f'key_{key}').currentText()
+            if (valueNew != '- no link -'
+                and getattr(self, f'key_{key}').currentData() is not None
+                and re.search(
+                    r"^[a-z\-]-[a-z0-9]{32}$",
+                    getattr(self, f'key_{key}').currentData(),
+                ) is not None):
               #if docID is stored in currentData
-              self.doc[key] = getattr(self, 'key_'+key).currentData()
+              self.doc[key] = getattr(self, f'key_{key}').currentData()
             elif valueNew!='- no link -' :
               self.doc[key] = valueNew
-          else:                                  #normal text field
-            self.doc[key] = getattr(self, 'key_'+key).text().strip()
+          else:                          #normal text field
+            self.doc[key] = getattr(self, f'key_{key}').text().strip()
         elif valueOld is None and key in self.doc:  #important entry, set to empty string
           self.doc[key]=''
         else:
@@ -239,16 +247,16 @@ class Form(QDialog):
                 newPath    = ''
               else:
                 oldPath    = self.comm.backend.basePath/doc['-branch'][0]['path']
-                newPath    = parentPath+'/'+oldPath.name
+                newPath = f'{parentPath}/{oldPath.name}'
                 oldPath.rename(self.comm.backend.basePath/newPath)
               self.db.updateBranch( doc['_id'], 0, 9999, [self.projectComboBox.currentData()], newPath)
-        elif '-branch' in self.doc:                   # sequential or single update
+        elif '-branch' in self.doc:             # sequential or single update
           if self.doc['-branch'][0]['stack']!=self.projectComboBox.currentData(): #only if project changed
             if self.doc['-branch'][0]['path'] is None:
               newPath    = ''
             else:
               oldPath    = self.comm.backend.basePath/self.doc['-branch'][0]['path']
-              newPath    = parentPath+'/'+oldPath.name
+              newPath = f'{parentPath}/{oldPath.name}'
             self.db.updateBranch( self.doc['_id'], 0, 9999, [self.projectComboBox.currentData()], newPath)
         else:
           newProjID = [self.projectComboBox.currentData()]
@@ -308,8 +316,8 @@ class Form(QDialog):
     key = self.sender().accessibleName()  #comment or content
     unknownWidget = []
     if status:
-      getattr(self, 'textShow_'+key).hide()
-      getattr(self, 'buttonBarW_'+key).hide()
+      getattr(self, f'textShow_{key}').hide()
+      getattr(self, f'buttonBarW_{key}').hide()
       for i in range(self.formL.count()):
         widget = self.formL.itemAt(i).widget()
         if isinstance(widget, (QLabel, QComboBox, QLineEdit)):
@@ -323,8 +331,8 @@ class Form(QDialog):
         self.formL.itemAt(unknownWidget[2]).widget().show()
         self.formL.itemAt(unknownWidget[3]).widget().show()
     else:
-      getattr(self, 'textShow_'+key).show()
-      getattr(self, 'buttonBarW_'+key).show()
+      getattr(self, f'textShow_{key}').show()
+      getattr(self, f'buttonBarW_{key}').show()
       for i in range(self.formL.count()):
         widget = self.formL.itemAt(i).widget()
         if isinstance(widget, (QLabel, QComboBox, QLineEdit)):
@@ -346,15 +354,16 @@ class Form(QDialog):
     """
     command, key = self.sender().accessibleName().split('_')
     if command=='bold':
-      getattr(self, 'textEdit_'+key).insertPlainText('**TEXT**')
+      getattr(self, f'textEdit_{key}').insertPlainText('**TEXT**')
     elif command=='italic':
-      getattr(self, 'textEdit_'+key).insertPlainText('*TEXT*')
+      getattr(self, f'textEdit_{key}').insertPlainText('*TEXT*')
     elif command=='list-ul':
-      getattr(self, 'textEdit_'+key).insertPlainText('\n- item 1\n- item 2')
+      getattr(self, f'textEdit_{key}').insertPlainText('\n- item 1\n- item 2')
     elif command=='list-ol':
-      getattr(self, 'textEdit_'+key).insertPlainText('\n1. item 1\n1. item 2')
+      getattr(self, f'textEdit_{key}').insertPlainText('\n1. item 1\n1. item 2')
     elif command.startswith('heading'):
-      getattr(self, 'textEdit_'+key).insertPlainText('#'*int(command[-1])+' Heading\n')
+      getattr(self, f'textEdit_{key}').insertPlainText('#' * int(command[-1]) +
+                                                       ' Heading\n')
     else:
       print('**ERROR dialogForm: unknowCommand',command)
     return
@@ -364,7 +373,8 @@ class Form(QDialog):
     Text changed in editor -> update the display on the right
     """
     key = self.sender().accessibleName()
-    getattr(self, 'textShow_'+key).setMarkdown( getattr(self, 'textEdit_'+key).toPlainText())
+    getattr(self, f'textShow_{key}').setMarkdown(
+        getattr(self, f'textEdit_{key}').toPlainText())
     return
 
   def delTag(self, _:str, tag:str) -> None:
@@ -383,10 +393,10 @@ class Form(QDialog):
     Args:
       tag (str, int): index (otherTags) or text (grades)
     """
-    if isinstance(tag, str):  #text from grades
+    if isinstance(tag, str):#text from grades
       if tag!='':
         self.doc['-tags'] = [i for i in self.doc['-tags'] if i[0]!='_']
-        self.doc['-tags']+= ['_'+str(len(tag))]
+        self.doc['-tags'] += [f'_{len(tag)}']
         self.gradeChoices.setCurrentText('')
     elif tag<1:               #zero index from other-tags
       return

@@ -131,7 +131,7 @@ def commands(getDocu:bool, args:argparse.Namespace) -> str:
             contents = package.read()
             if json.loads(contents)['couchdb'] == 'Welcome':
               print('CouchDB server',url,'is working: username and password test upcoming')
-        except:
+        except Exception:
           print('**ERROR pma01: CouchDB server not working |',url)
           if url=='http://127.0.0.1:5984':
             raise NameError('**ERROR pma01a: Wrong local server.') from None
@@ -141,7 +141,7 @@ def commands(getDocu:bool, args:argparse.Namespace) -> str:
       try:
         be = Backend(defaultProjectGroup=args.database, initViews=initViews, initConfig=initConfig,
                   resetOntology=resetOntology)
-      except:
+      except Exception:
         print('**ERROR pma20: backend could not be started.\n'+traceback.format_exc()+'\n\n')
         return ''
 
@@ -158,10 +158,10 @@ def commands(getDocu:bool, args:argparse.Namespace) -> str:
       try:
         data = be.db.getDoc('-ontology-')
         print('Ontology exists on server')
-      except:
+      except Exception:
         print('**ERROR pma02: Ontology does NOT exist on server')
       print('local directory:',be.basePath)
-      print('software version: '+__version__)
+      print(f'software version: {__version__}')
       return '1'
 
     if getDocu:
@@ -306,7 +306,9 @@ def commands(getDocu:bool, args:argparse.Namespace) -> str:
       return '1'
 
   except:
-    print("**ERROR pma10: exception thrown during pastaELN_CLI.py"+traceback.format_exc()+"\n")
+    print(
+        f"**ERROR pma10: exception thrown during pastaELN_CLI.py{traceback.format_exc()}"
+        + "\n")
     raise
 
   if not getDocu and be is not None:
@@ -319,8 +321,7 @@ def main() -> None:
   """
   Main function
   """
-  usage = "python -m pasta_eln.cli <command> [-i docID] [-c content] [-l labels] [-d database]\n\n"
-  usage+= "Possible commands are:\n"
+  usage = "python -m pasta_eln.cli <command> [-i docID] [-c content] [-l labels] [-d database]\n\nPossible commands are:\n"
   usage+= commands(True, argparse.Namespace())
   argparser = argparse.ArgumentParser(usage=usage)
   argparser.add_argument('command', help='see above...')

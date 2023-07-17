@@ -97,7 +97,7 @@ class Details(QScrollArea):
         image = image[22:] if image[21]==',' else image[23:]
       else:
         imageType = 'svg'
-      saveFilePath = (filePath.parent / f'{filePath.stem}_PastaExport.{imageType.lower()}')
+      saveFilePath = filePath.parent / f'{filePath.stem}_PastaExport.{imageType.lower()}'
       if imageType == 'svg':
         with open(self.comm.backend.basePath/saveFilePath,'w', encoding='utf-8') as fOut:
           fOut.write(image)

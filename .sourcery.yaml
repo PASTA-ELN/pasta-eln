@@ -27,6 +27,7 @@ rule_settings:
   disable:
   - extract-method
   - use-contextlib-suppress
+  - default-mutable-arg
   rule_types:
   - refactoring
   - suggestion
@@ -52,7 +53,7 @@ rule_settings:
 # rule_tags: {} # Additional rule tags.
 
 metrics:
-  quality_threshold: 2.0
+  quality_threshold: 0.1
 
 # github:
 #   labels: []

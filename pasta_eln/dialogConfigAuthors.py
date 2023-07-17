@@ -49,12 +49,12 @@ class ConfigurationAuthors(QWidget):
       QTextEdit: text-edit widget with content
     """
     rightW = QLineEdit()
-    if item in ['organization','rorid']:
+    if item in {'organization','rorid'}:
       rightW.setText(self.backend.configuration['authors'][0]['organizations'][0][item])
     else:
       rightW.setText(self.backend.configuration['authors'][0][item])
     rightW.setAccessibleName(item)
-    if item in ['rorid','orcid']:
+    if item in {'rorid','orcid'}:
       rightW.editingFinished.connect(self.changedID)
     self.tabAppearanceL.addRow(QLabel(label), rightW)
     return rightW
@@ -67,11 +67,13 @@ class ConfigurationAuthors(QWidget):
     sender = self.sender().accessibleName()
     if sender == 'rorid':
       if re.match(r'^\w{9}$', self.userRorid.text().strip() ) is not None:
-        reply = requests.get('https://api.ror.org/organizations/'+self.userRorid.text().strip())
+        reply = requests.get(
+            f'https://api.ror.org/organizations/{self.userRorid.text().strip()}')
         self.userOrganization.setText(reply.json()['name'])
     elif sender == 'orcid':
       if re.match(r'^\w{4}-\w{4}-\w{4}-\w{4}$', self.userOrcid.text().strip() ) is not None:
-        reply = requests.get('https://pub.orcid.org/v3.0/'+self.userOrcid.text().strip())
+        reply = requests.get(
+            f'https://pub.orcid.org/v3.0/{self.userOrcid.text().strip()}')
         text = reply.content.decode()
         first = text.split('<personal-details:given-names>')[1].split('</personal-details:given-names>')[0]
         last = text.split('<personal-details:family-name>')[1].split('</personal-details:family-name>')[0]

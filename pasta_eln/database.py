@@ -26,7 +26,7 @@ class Database:
     """
     try:
       self.client = CouchDB(user, password, url='http://127.0.0.1:5984', connect=True)
-    except:
+    except Exception:
       print('**ERROR dit01: Could not connect with username+password to local server')
       return
     self.databaseName = databaseName
@@ -73,12 +73,14 @@ class Database:
         jsAll = jsDefault.replace('$docType$', "doc['-type']=='x0'").replace('$key$','doc._id')
       elif docType[0]=='x':
         continue
-      else:     #show all doctypes that have the same starting ..
-        js    = jsDefault.replace('$docType$', "doc['-type'].join('/').substring(0, "+str(len(docType))+")=='"\
-                +docType+"' && (doc['-branch'][0].show.every(function(i) {return i;}))")\
-                .replace('$key$','branch.stack[0]')
-        jsAll = jsDefault.replace('$docType$', "doc['-type'].join('/').substring(0, "+str(len(docType))+")=='"\
-                +docType+"'").replace('$key$','branch.stack[0]')
+      else: #show all doctypes that have the same starting ..
+        js = jsDefault.replace('$docType$',
+            f"doc['-type'].join('/').substring(0,{len(docType)})=='{docType}"+"' && (doc['-branch'][0].show.every(function(i) {return i;}))",
+            ).replace('$key$', 'branch.stack[0]')
+        jsAll = jsDefault.replace(
+            '$docType$',
+            f"doc['-type'].join('/').substring(0, {len(docType)})=='{docType}'",
+            ).replace('$key$', 'branch.stack[0]')
       outputList = []
       baseDocType = docType[:-3] if docType.endswith('All') else docType
       if docTypeChange==docType:
@@ -90,7 +92,7 @@ class Database:
       else:
         columnNames = [i['name'] for i in self.ontology[docType]['prop'] if 'name' in i]
       columnNames = columnNames[:tableColumnsMax]
-      commentString = '// '+docType+' : '+','.join(columnNames)+'\n'
+      commentString = f'// {docType} : ' + ','.join(columnNames) + '\n'
       # print('STEFFEN verify comment string',commentString)
       for name in columnNames:
         if name == 'image':
@@ -98,18 +100,18 @@ class Database:
         elif name == '-tags':
           outputList.append("doc['-tags'].join(' ')")
         elif '#_' in name:
-          outputList.append('doc["-tags"].indexOf("'+name[1:]+'")>-1')
+          outputList.append(f'doc["-tags"].indexOf("{name[1:]}")>-1')
         elif name == '-type':
           outputList.append('doc["-type"].slice(1).join("/")')
         elif name == 'content':
           outputList.append('doc.content?doc.content.slice(0, 100):""')
         elif '/' in name:  #stacked requests i.e. metaVendor/date
-          parentString = 'doc'+''.join(['["'+i+'"]' for i in name.split('/')[:-1]])
-          newString = 'doc'+''.join(['["'+i+'"]' for i in name.split('/')])
-          newString = parentString +' ? '+ newString + ': ""'
+          parentString = 'doc' + ''.join([f'["{i}"]' for i in name.split('/')[:-1]])
+          newString = 'doc' + ''.join([f'["{i}"]' for i in name.split('/')])
+          newString = f'{parentString} ? {newString}: ""'
           outputList.append(newString)
         else:
-          outputList.append('doc["'+name+'"]')
+          outputList.append(f'doc["{name}"]')
       outputStr = ','.join(outputList)
       viewCode[docType.replace('/','__')]       = commentString+js.replace('$outputList$', outputStr)
       viewCode[docType.replace('/','__')+'All'] = commentString+jsAll.replace('$outputList$', outputStr)
@@ -129,7 +131,7 @@ class Database:
     try:
       comments = [v['map'].split('\n// ')[1].split('\n')[0] for v in self.db['_design/viewDocType']['views'].values()]
       return {i.split(' : ')[0]:i.split(' : ')[1] for i in comments}
-    except: #old views that do not have comment
+    except Exception:
       defaultColumnNames = {'-':','.join([i['name'] for i in defaultOntologyNode if 'name' in i])}
       for docType in self.ontology:
         if docType[0] in ['_','-']:
@@ -168,8 +170,7 @@ class Database:
     self.saveView('viewHierarchy',{'viewHierarchy':jsHierarchy,'viewPaths':jsPath,\
                                    'viewHierarchyAll':jsHierarchyAll,'viewPathsAll':jsPathAll})
     jsSHA= "if (doc['-type'][0]==='measurement'){emit(doc.shasum, doc['-name']);}"
-    jsQR = "if (doc.qrCode.length > 0)"
-    jsQR+= "{doc.qrCode.forEach(function(thisCode) {emit(thisCode, doc['-name']);});}"
+    jsQR = "if (doc.qrCode.length > 0) {doc.qrCode.forEach(function(thisCode) {emit(thisCode, doc['-name']);});}"
     jsTags="if ('-tags' in doc && (doc['-branch'][0].show.every(function(i) {return i;})))"+\
               "{doc['-tags'].forEach(function(tag){emit(tag,[doc['-name'], doc['-type'].join('/')]);});}"
     jsTagsAll="if ('-tags' in doc){doc['-tags'].forEach(function(tag){emit(tag,[doc['-name'], doc['-type'].join('/')]);});}"
@@ -207,7 +208,7 @@ class Database:
     return dict(self.db[docID])
 
 
-  def saveDoc(self, doc:dict[str,Any]) ->dict[str,Any]:
+  def saveDoc(self, doc:dict[str,Any]) -> dict[str,Any]:
     """
     Wrapper for save to database function
 
@@ -233,7 +234,7 @@ class Database:
     try:
       res = self.db.create_document(doc)
       logging.debug('successfully saved doc with type and branch '+doc['_id']+' '+'/'.join(doc['-type'])+'  |  '+str(doc['-branch'])+'\n')
-    except:
+    except Exception:
       logging.error('could not save, likely JSON issue')
       if 'image' in doc:
         del doc['image']
@@ -258,7 +259,7 @@ class Database:
     Returns:
         dict: json representation of updated document
     """
-    change['-client'] = tracebackString(False, 'updateDoc:'+docID)
+    change['-client'] = tracebackString(False, f'updateDoc:{docID}')
     newDoc = self.db[docID]  #this is the document that stays live
     initialDocCopy = dict(newDoc)
     if 'edit' in change:     #if delete
@@ -276,7 +277,7 @@ class Database:
         oldpath = change['-branch'].pop('oldpath',None)
         if change['-branch']['path'] is None:
           change['-branch']['path']=newDoc['-branch'][0]['path']
-        if not change['-branch'] in newDoc['-branch']:       #skip if new branch is already in branch
+        if change['-branch'] not in newDoc['-branch']:       #skip if new branch is already in branch
           oldDoc['-branch'] = newDoc['-branch'].copy()
           for branch in newDoc['-branch']:
             if op=='c' and branch['path']==change['-branch']['path']:
@@ -290,7 +291,7 @@ class Database:
               for branch in newDoc['-branch']:
                 if branch['path'].startswith(oldpath):
                   if os.path.basename(branch['path']) == newDoc['-name'] and \
-                     os.path.basename(str(change['-branch']['path']))!='':
+                         os.path.basename(str(change['-branch']['path']))!='':
                     newDoc['-name'] = os.path.basename(str(change['-branch']['path']))
                   branch['path'] = branch['path'].replace(oldpath ,change['-branch']['path'])
                   branch['stack']= change['-branch']['stack']
@@ -317,7 +318,7 @@ class Database:
         if item=='image' and change['image']=='':          #skip if non-change in image
           continue
         if change[item] is None or (isinstance(change[item], str) and change[item].strip()=='') or \
-           (isinstance(change[item], list) and len(change[item])==0):      #skip empty entries
+               (isinstance(change[item], list) and len(change[item])==0):      #skip empty entries
           continue
         ## Discussion: What if content only differs by whitespace changes?
         # These changes should occur in the database, the user wanted it so
@@ -347,7 +348,7 @@ class Database:
       newDoc['-tags'].append('_curated')
     try:
       newDoc.save()
-    except:
+    except Exception:
       logging.error('database.update: update unsuccessful: '+newDoc['_id']+' '+newDoc['-name'])
       print('**ERROR: could not update document. Likely version conflict. Initial and current version:')
       print(initialDocCopy)
@@ -377,15 +378,15 @@ class Database:
       str, str: old path, new path
     """
     doc = self.db[docID]
-    doc['-client'] = tracebackString(False, 'updateBranch:'+docID)
+    doc['-client'] = tracebackString(False, f'updateBranch:{docID}')
     if len(doc['-branch'])<=branch:
-      print('**ERROR Cannot delete branch that does not exist '+str(branch)+'in doc '+docID)
-      logging.error('**ERROR Cannot delete branch that does not exist '+str(branch)+'in doc '+docID)
+      print(f'**ERROR Cannot delete branch that does not exist {branch}in doc {docID}')
+      logging.error('**ERROR Cannot delete branch that does not exist %s in doc %s', branch, docID)
     oldPath = doc['-branch'][branch]['path']
     if oldPath is None:
       path = None
     if path=='':
-      name = f'{child:03d}'+'_'+'_'.join(oldPath.split('/')[-1].split('_')[1:])
+      name = f'{child:03d}_' + '_'.join(oldPath.split('/')[-1].split('_')[1:])
       path = '/'.join(oldPath.split('/')[:-1]+[name])
     # test if path already exists
     if docID[0]=='x' and path is not None:
@@ -397,8 +398,8 @@ class Database:
           oldJsonContent = json.load(fIn)
           oldDocID = oldJsonContent['_id']
       if path is not None and (self.basePath/path).exists() and docID!=oldDocID:
-        print('**ERROR** Target folder already exist: '+path+'. Try to create a new path name')
-        logging.error('Target folder already exist: '+path+'. Try to create a new path name')
+        print(f'**ERROR** Target folder already exist: {path}. Try to create a new path name')
+        logging.error('Target folder already exist: %s. Try to create a new path name', path)
       while path is not None and (self.basePath/path).exists() and docID!=oldDocID:
         if re.search(r"_\d+$", path) is None:
           path += '_1'
@@ -436,7 +437,7 @@ class Database:
             branchLine['show']  = self.createShowFromStack( branchLine['stack'] )
             flagNotChanged = False
         if flagNotChanged:
-          print("**Unsure** Not updated"+str(line))
+          print(f"**Unsure** Not updated{str(line)}")
         docLine.save()
         # update .json on disk
         for branchLine in docLine['-branch']:
@@ -475,7 +476,7 @@ class Database:
     Returns:
       dict: document that was removed
     """
-    tracebackString(True, 'remove:'+docID)
+    tracebackString(True, f'remove:{docID}')
     doc = self.db[docID]
     res = dict(doc)
     doc.delete()
@@ -496,7 +497,7 @@ class Database:
     """
     try:
       doc = self.db[docID]
-      if not '-attachment' in doc:
+      if '-attachment' not in doc:
         doc['-attachment'] = {}
       if name in doc['-attachment']:
         doc['-attachment'][name] += [content]
@@ -504,7 +505,7 @@ class Database:
         doc['-attachment'][name] = [content]
       doc.save()
       return True
-    except:
+    except Exception:
       return False
 
 
@@ -526,12 +527,12 @@ class Database:
     v = View(designDoc, thePath.split('/')[1])
     try:
       if startKey is not None:
-        res = v(startkey=startKey, endkey=startKey+'zzz')['rows']
+        res = v(startkey=startKey, endkey=f'{startKey}zzz')['rows']
       elif preciseKey is not None:
         res = v(key=preciseKey)['rows']
       else:
         res = list(v.result)
-    except:
+    except Exception:
       print('**ERROR dgv01: Database / Network problem for path |',thePath[0],thePath[1])
       print(traceback.format_exc())
       res = []
@@ -547,8 +548,8 @@ class Database:
         viewCode (dict): viewName: js-code
     """
     from cloudant.design_document import DesignDocument
-    if '_design/'+designName in self.db:
-      designDoc = self.db['_design/'+designName]
+    if f'_design/{designName}' in self.db:
+      designDoc = self.db[f'_design/{designName}']
       designDoc.delete()
     designDoc = DesignDocument(self.db, designName)
     for view in viewCode:
@@ -556,7 +557,7 @@ class Database:
       designDoc.add_view(view, thisJsCode)
     try:
       designDoc.save()
-    except:
+    except Exception:
       print('**ERROR dsv01: something unexpected has happend. Log-file has traceback')
     return
 
@@ -585,7 +586,7 @@ class Database:
         if len(level)==1:
           dataTree = Node(id=level[0]['key'], docType=level[0]['value'][1], name=level[0]['value'][2])
         else:
-          print('**ERROR getHierarchy Did not find corresponding '+str(levelNum) )
+          print(f'**ERROR getHierarchy Did not find corresponding {str(levelNum)}')
           dataTree = Node(id=None, name='')
       else:
         childList = [i['value'][0] for i in level]   #temporary list to allow sorting for child-number
@@ -594,7 +595,7 @@ class Database:
           parentID = node['key'].split()[-2]
           parentNode = find_by_attr(dataTree, parentID, name='id')
           _ = Node(id=node['id'], parent=parentNode, docType=node['value'][1], name=node['value'][2])
-      if len(level)==0:
+      if not level: #if len(level)==0
         break
       levelNum += 1
     # print(RenderTree(dataTree, style=AsciiStyle()))
@@ -613,16 +614,16 @@ class Database:
       doc = self.db[stack]
       for idx, _ in enumerate(doc['-branch']):
         doc['-branch'][idx]['show'][-1] = not doc['-branch'][idx]['show'][-1]
-        logging.debug('flipped str: '+str(stack))
+        logging.debug('flipped str: %s',str(stack))
       doc.save()
       if stack[0]=='x':
         stack = doc['-branch'][0]['stack']+[stack]
       flippedOnce = True
     if isinstance(stack, list):
       iFlip = len(stack)-1
-      logging.debug('  database list '+str(stack)+' '+str(iFlip) )
+      logging.debug('  database list %s %s',str(stack),str(iFlip))
       for item in self.getView('viewHierarchy/viewHierarchyAll', startKey=' '.join(stack)):
-        logging.debug('  docID: '+str(item['id']))
+        logging.debug('  docID: %s',item['id'])
         doc = self.db[item['id']]
         for idx, branch in enumerate(doc['-branch']):
           if not flippedOnce or iFlip!=len(branch['stack']):
@@ -651,16 +652,16 @@ class Database:
       rep = Replicator(self.client)
       try:
         client2 = CouchDB(dbInfo['user'], dbInfo['password'], url=dbInfo['url'], connect=True)
-      except:
+      except Exception:
         return '<b>ERROR drp01: Could not connect to remote server. Abort replication.</b><br>'+\
-               'user:'+dbInfo['user']+'<br>password:'+dbInfo['password']+'<br>url:'+dbInfo['url']
+                 'user:'+dbInfo['user']+'<br>password:'+dbInfo['password']+'<br>url:'+dbInfo['url']
       try:
         listAllDataBases = client2.all_dbs()
         if dbInfo['database'] in listAllDataBases and removeAtStart:
           client2.delete_database(dbInfo['database'])
-        if not dbInfo['database'] in listAllDataBases:
+        if dbInfo['database'] not in listAllDataBases:
           db2 = client2.create_database(dbInfo['database'])
-      except:
+      except Exception:
         pass
       db2 = client2[dbInfo['database']]
       replResult = rep.create_replication(self.db, db2, create_target=False, continuous=False)
@@ -680,7 +681,7 @@ class Database:
           progressBar.hide()
           return "Replication success state: "+replResult['_replication_state']
         time.sleep(10)
-    except:
+    except Exception:
       progressBar.hide()
       return "**ERROR drp02: replicate error |\n"+traceback.format_exc()
 
@@ -694,20 +695,19 @@ class Database:
     import numpy as np
     collection:dict[str,Any] = {}
     for doc in self.db:
-      if doc['_id'][1]=='-' and len(doc['_id'])==34:
-        if '-type' in doc and '-date' in doc:
-          docType = doc['-type'][0]
-          date = doc['-date'][:-1]
-          if len(date)==22:
-            date += '0'
-          date    = datetime.fromisoformat( date ).timestamp()
-          if docType in collection:
-            collection[docType] = collection[docType] + [date]
-          else:
-            collection[docType] = [date]
+      if doc['_id'][1]=='-' and len(doc['_id'])==34 and '-type' in doc and '-date' in doc:
+        docType = doc['-type'][0]
+        date = doc['-date'][:-1]
+        if len(date)==22:
+          date += '0'
+        date    = datetime.fromisoformat( date ).timestamp()
+        if docType in collection:
+          collection[docType] = collection[docType] + [date]
+        else:
+          collection[docType] = [date]
     #determine bins for histogram
     firstSubmit = datetime.now().timestamp()
-    for key,value in collection.items():
+    for value in collection.values():
       if np.min(value) < firstSubmit:
         firstSubmit = np.min(value)
     bins = np.linspace(firstSubmit, datetime.now().timestamp(), 100 )
@@ -719,9 +719,7 @@ class Database:
     collectionCopy['-bins-'] = (bins[:-1]+bins[1:])/2
     #calculate score
     bias = np.exp(( collectionCopy['-bins-']-collectionCopy['-bins-'][-1] ) / 1.e7)
-    score = {}
-    for key,value in collectionCopy.items():
-      score[key] = np.sum(value*bias)
+    score = {key: np.sum(value*bias) for key, value in collectionCopy.items()}
     #reformat dates into string
     collectionCopy['-bins-'] = [datetime.fromtimestamp(i).isoformat() for i in collectionCopy['-bins-']]
     collectionCopy['-score-']= score
@@ -729,6 +727,7 @@ class Database:
 
 
   def checkDB(self, outputStyle:str='text', repair:bool=False, minimal:bool=False) -> str:
+    # sourcery skip: lift-duplicated-conditional, merge-else-if-into-elif
     """
     Check database for consistencies by iterating through all documents
     - slow since no views used
@@ -850,106 +849,101 @@ class Database:
 
         #branch test
         if '-branch' not in doc:
-          outstring+= outputString(outputStyle,'error','dch01: branch does not exist '+doc['_id'])
+          outstring+= outputString(outputStyle,'error',f"dch01: branch does not exist {doc['_id']}")
           continue
         if len(doc['-branch'])>1 and doc['-type'] =='x':                 #text elements only one branch
-          outstring+= outputString(outputStyle,'error','dch02: branch length >1 for text'+doc['_id']+' '+str(doc['-type']))
+          outstring+= outputString(outputStyle,'error',f"dch02: branch length >1 for text {doc['_id']} {str(doc['-type'])}")
         for branch in doc['-branch']:
           for item in branch['stack']:
             if not item.startswith('x-'):
-              outstring+= outputString(outputStyle,'error','dch03: non-text in stack '+doc['_id'])
+              outstring+= outputString(outputStyle,'error',f"dch03: non-text in stack {doc['_id']}")
 
           if len(branch['stack'])==0 and doc['-type']!=['x0']: #if no inheritance
             if doc['-type'][0] == 'measurement' or  doc['-type'][0][0] == 'x':
-              outstring+= outputString(outputStyle,'warning','branch stack length = 0: no parent '+doc['_id'])
-            else:
-              if not minimal:
-                outstring+= outputString(outputStyle,'okish','branch stack length = 0: no parent for procedure/sample '+doc['_id']+'|'+doc['-name'])
-          if not '-type' in doc or len(doc['-type'])==0:
-            outstring+= outputString(outputStyle,'unsure','dch04: no type in (removed data?)'+doc['_id'])
+              outstring+= outputString(outputStyle,'warning',f"branch stack length = 0: no parent {doc['_id']}")
+            elif not minimal:
+              outstring+= outputString(outputStyle,'okish',f"branch stack length = 0: no parent for procedure/sample {doc['_id']} | {doc['-name']}")
+          if '-type' not in doc or len(doc['-type'])==0:
+            outstring+= outputString(outputStyle,'unsure',f"dch04: no type in (removed data?) {doc['_id']}")
             continue
           if doc['-type'][0][0]=='x':
             try:
               dirNamePrefix = branch['path'].split(os.sep)[-1].split('_')[0]
               if dirNamePrefix.isdigit() and branch['child']!=int(dirNamePrefix): #compare child-number to start of directory name
-                outstring+= outputString(outputStyle,'error','dch05: child-number and dirName dont match '+doc['_id'])
-            except:
+                outstring+= outputString(outputStyle,'error',f"dch05: child-number and dirName dont match {doc['_id']}")
+            except Exception:
               pass  #handled next lines
           if branch['path'] is None:
             if doc['-type'][0][0] == 'x':
-              outstring+= outputString(outputStyle,'error','dch06: branch path is None '+doc['_id'])
+              outstring+= outputString(outputStyle,'error',f"dch06: branch path is None {doc['_id']}")
             elif doc['-type'][0] == 'measurement':
               if not minimal:
                 outstring+= outputString(outputStyle,'okish','measurement branch path is None=no data '+doc['_id']+' '+doc['-name'])
-            else:
-              if not minimal:
-                outstring+= outputString(outputStyle,'ok','procedure/sample with empty path '+doc['_id'])
-          else:                                                            #if sensible path
+            elif not minimal:
+              outstring+= outputString(outputStyle,'ok',f"procedure/sample with empty path {doc['_id']}")
+          else:                                                    #if sensible path
             if len(branch['stack'])+1 != len(branch['path'].split(os.sep)):#check if length of path and stack coincide
               if doc['-type'][0] == 'procedure':
                 if not minimal:
-                  outstring+= outputString(outputStyle,'ok','procedure: branch stack and path lengths not equal: '+doc['_id']+'|'+branch['path'][:30])
+                  outstring+= outputString(outputStyle,'ok',f"procedure: branch stack and path lengths not equal: {doc['_id']} | {branch['path'][:30]}")
               else:
-                outstring+= outputString(outputStyle,'unsure','branch stack and path lengths not equal: '+doc['_id']+'|'+branch['path'][:30])
+                outstring+= outputString(outputStyle,'unsure',f"branch stack and path lengths not equal: {doc['_id']} | {branch['path'][:30]}")
             if branch['child'] != 9999:
-              for parentID in branch['stack']:                              #check if all parents in doc have a corresponding path
+              for parentID in branch['stack']:                  #check if all parents in doc have a corresponding path
                 parentDoc = self.getDoc(parentID)
                 if '-branch' not in parentDoc:
-                  outstring+= outputString(outputStyle,'error','dch07: branch not in parent with id '+parentID)
+                  outstring += outputString(outputStyle, 'error', f'dch07: branch not in parent with id {parentID}')
                   continue
                 parentDocBranches = parentDoc['-branch']
-                onePathFound = False
-                for parentBranch in parentDocBranches:
-                  if parentBranch['path'] is not None and parentBranch['path'] in branch['path']:
-                    onePathFound = True
+                onePathFound = any(parentBranch['path'] is not None and parentBranch['path'] in branch['path'] for parentBranch in parentDocBranches)
                 if not onePathFound:
-                  outstring+= outputString(outputStyle,'unsure','dch08: parent does not have corresponding path (remote content) '+doc['_id']+'| parentID '+parentID)
+                  outstring+= outputString(outputStyle,'unsure',f"dch08: parent does not have corresponding path (remote content) {doc['_id']} | parentID {parentID}")
           if 'show' not in branch:
-            outstring+= outputString(outputStyle,'error','dch08a: branch does not have show: '+doc['_id'])
+            outstring+= outputString(outputStyle,'error',f"dch08a: branch does not have show: {doc['_id']}")
           elif len(branch['show']) != len(branch['stack'])+1:
-            outstring+= outputString(outputStyle,'error','dch08b: branch-show not same length as branch-stack: '+doc['_id'])
-          #TODO_P5 moreChecksDB: if parent has corresponding show
+            outstring+= outputString(outputStyle,'error',f"dch08b: branch-show not same length as branch-stack: {doc['_id']}")
+                #TODO_P5 moreChecksDB: if parent has corresponding show
 
         #every doc should have a name
-        if not '-name' in doc:
-          outstring+= outputString(outputStyle,'unsure','dch17: -name not in (deleted doc?)'+doc['_id'])
+        if '-name' not in doc:
+          outstring+= outputString(outputStyle,'unsure',f"dch17: -name not in (deleted doc?){doc['_id']}")
           if repair and 'name' in doc:  #repair from v0.9.9->1.0.0
             doc['-name']=doc['name']
             del doc['name']
             doc.save()
 
-        if not '-tags' in doc:
-          outstring+= outputString(outputStyle,'error','dch17b: -tags not in doc'+doc['_id'])
+        if '-tags' not in doc:
+          outstring+= outputString(outputStyle,'error',f"dch17b: -tags not in doc{doc['_id']}")
 
         #doc-type specific tests
         if '-type' in doc and doc['-type'][0] == 'sample':
           if 'qrCode' not in doc:
-            outstring+= outputString(outputStyle,'error','dch09: qrCode not in sample '+doc['_id'])
+            outstring+= outputString(outputStyle,'error',f"dch09: qrCode not in sample {doc['_id']}")
         elif '-type' in doc and doc['-type'][0] == 'measurement':
           if 'shasum' not in doc:
-            outstring+= outputString(outputStyle,'error','dch10: shasum not in measurement '+doc['_id'])
+            outstring+= outputString(outputStyle,'error',f"dch10: shasum not in measurement {doc['_id']}")
           if 'image' not in doc:
-            outstring+= outputString(outputStyle,'error','dch11: image not in measurement '+doc['_id'])
+            outstring+= outputString(outputStyle,'error',f"dch11: image not in measurement {doc['_id']}")
           else:
             if doc['image'].startswith('data:image'):  #for jpg and png
               try:
                 imgdata = base64.b64decode(doc['image'][22:])
                 Image.open(io.BytesIO(imgdata))  #can convert, that is all that needs to be tested
-              except:
-                outstring+= outputString(outputStyle,'error','dch12: jpg-image not valid '+doc['_id'])
+              except Exception:
+                outstring+= outputString(outputStyle,'error',f"dch12: jpg-image not valid {doc['_id']}")
             elif doc['image'].startswith('<?xml'):
               #from https://stackoverflow.com/questions/63419010/check-if-an-image-file-is-a-valid-svg-file-in-python
               SVG_R = r'(?:<\?xml\b[^>]*>[^<]*)?(?:<!--.*?-->[^<]*)*(?:<svg|<!DOCTYPE svg)\b'
               SVG_RE = re.compile(SVG_R, re.DOTALL)
               if SVG_RE.match(doc['image']) is None:
-                outstring+= outputString(outputStyle,'error','dch13: svg-image not valid '+doc['_id'])
+                outstring+= outputString(outputStyle,'error',f"dch13: svg-image not valid {doc['_id']}")
             elif doc['image']=='':
-              outstring+= outputString(outputStyle,'unsure','image not valid '+doc['_id']+' '+doc['image'])
+              outstring+= outputString(outputStyle,'unsure',f"image not valid {doc['_id']} {doc['image']}")
             else:
-              outstring+= outputString(outputStyle,'error','dch14: image not valid '+doc['_id']+' '+doc['image'])
+              outstring+= outputString(outputStyle,'error',f"dch14: image not valid {doc['_id']} {doc['image']}")
 
-      except: #if test of document fails
-        outstring+= outputString(outputStyle,'error','dch15: critical error in '+doc['_id']+'\n'+traceback.format_exc())
+      except Exception:
+        outstring+= outputString(outputStyle,'error', f"dch15: critical error in {doc['_id']}\n {traceback.format_exc()}")
 
     ##TEST views
     outstring+= outputString(outputStyle,'h2','List problematic database tables')
@@ -957,10 +951,10 @@ class Database:
     shasumKeys = []
     for item in view:
       if item['key']=='':
-        outstring+= outputString(outputStyle,'error','measurement without shasum: '+item['id']+' '+item['value'])
+        outstring+= outputString(outputStyle,'error', f"measurement without shasum: {item['id']} {item['value']}")
       else:
         if item['key'] in shasumKeys:
-          key = item['key'] if item['key'] else '- empty string -'
-          outstring+= outputString(outputStyle,'error','dch16: shasum twice in view: '+key+' '+item['id']+' '+item['value'])
+          key = item['key'] or '- empty string -'
+          outstring += outputString(outputStyle, 'error', f"dch16: shasum twice in view: {key} {item['id']} {item['value']}")
         shasumKeys.append(item['key'])
     return outstring

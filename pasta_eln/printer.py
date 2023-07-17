@@ -64,13 +64,9 @@ def printQRcodeSticker(codes:list[list[str]]=[],
   qrCodeSize= min(offset-page['font']-page['margin'], page['size'][1])
   print("Effective label size",page['size'], "offset",offset, 'qrCodeSize',qrCodeSize)
   cropQRCode  = 40         #created by qrcode library
-  numCodes = 0
   image = Image.new('RGBA', page['size'], color=(255,255,255,255) )
-  for idx in range(page['tiles']):
-    if idx<len(codes):
-      codeI, text = codes[idx]
-    else:
-      codeI, text =  '', ''
+  for numCodes, idx in enumerate(range(page['tiles'])):
+    codeI, text = codes[idx] if idx<len(codes) else ('', '')
     if len(codeI)==0:
       codeI = uuid.uuid4().hex
     # add text
@@ -87,7 +83,6 @@ def printQRcodeSticker(codes:list[list[str]]=[],
     qrCode = qrCode.crop((cropQRCode, cropQRCode, qrCode.size[0]-cropQRCode, qrCode.size[0]-cropQRCode))
     qrCode = qrCode.resize((qrCodeSize, qrCodeSize))
     image.paste(qrCode, (numCodes*offset, int((page['size'][1]-qrCodeSize)/2)))
-    numCodes += 1
   tmpFileName = tempfile.gettempdir()+os.sep+'tmpQRcode.png'
   print('Create temp-file',tmpFileName)
   image.save(tmpFileName)

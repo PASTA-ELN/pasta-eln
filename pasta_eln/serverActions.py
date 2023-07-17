@@ -327,7 +327,7 @@ def backupCouchDB(location:str='', userName:str='', password:str='') -> None:
         return
       location, userName, password = myString.split(':')
       print("URL and credentials successfully read from keyring")
-    except:
+    except Exception:
       print("**ERROR Could not get credentials from keyring 2b. Please create manually.")
       return
   else:
@@ -406,7 +406,7 @@ def restoreCouchDB(location:str='', userName:str='', password:str='', fileName:s
         return
       location, userName, password = myString.split(':')
       print("URL and credentials successfully read from keyring")
-    except:
+    except Exception:
       print("**ERROR Could not get credentials from keyring 3b. Please create manually.")
       return
   else:
@@ -415,8 +415,8 @@ def restoreCouchDB(location:str='', userName:str='', password:str='', fileName:s
   if not fileName:
     possFiles = [i for i in os.listdir('.') if i.startswith('couchDB') and i.endswith('.zip')]
     for idx, i in enumerate(possFiles):
-      print('['+str(idx+1)+'] '+i)
-    fileName = input('Which file to use for restored? (1-'+str(len(possFiles))+') ')
+      print(f'[{str(idx + 1)}] {i}')
+    fileName = input(f'Which file to use for restored? (1-{len(possFiles)}) ')
     fileName = possFiles[int(fileName)-1]
   # use information
   authUser = requests.auth.HTTPBasicAuth(userName, password)
@@ -430,27 +430,23 @@ def restoreCouchDB(location:str='', userName:str='', password:str='', fileName:s
       if docID.endswith('_attach'):
         continue #Do in second loop
       #test if database is exists: create otherwise
-      resp = requests.get('http://'+location+':5984/'+database+'/_all_docs',
-                              headers=headers, auth=authUser, timeout=10)
+      resp = requests.get(f'http://{location}:5984/{database}/_all_docs', headers=headers, auth=authUser, timeout=10)
       if resp.status_code != 200 and resp.json()['reason']=='Database does not exist.':
-        resp = requests.put('http://'+location+':5984/'+database,
-                            headers=headers, auth=authUser, timeout=10)
+        resp = requests.put(f'http://{location}:5984/{database}', headers=headers, auth=authUser, timeout=10)
         if not resp.ok:
           print("**ERROR: could not create database",resp.reason)
           return
       #test if document is exists: create otherwise
       if docID=='_design':
         docID = '/'.join(fileParts[1:])
-      resp = requests.get('http://'+location+':5984/'+database+'/'+docID,
-                          headers=headers, auth=authUser, timeout=10)
+      resp = requests.get(f'http://{location}:5984/{database}/{docID}', headers=headers, auth=authUser, timeout=10)
       if resp.status_code != 200 and resp.json()['reason']=='missing':
         with zipFile.open(fileI) as dataIn:
           doc = json.loads( dataIn.read() )  #need doc conversion since deleted from it
           del doc['_rev']
           if '_attachments' in doc:
             del doc['_attachments']
-          resp = requests.put('http://'+location+':5984/'+database+'/'+docID, data=json.dumps(doc),
-                              headers=headers, auth=authUser, timeout=10)
+          resp = requests.put(f'http://{location}:5984/{database}/{docID}', data=json.dumps(doc), headers=headers, auth=authUser, timeout=10)
           if resp.ok:
             print('Saved document:', database, docID)
           else:
@@ -463,17 +459,14 @@ def restoreCouchDB(location:str='', userName:str='', password:str='', fileName:s
       if not docID.endswith('_attach'):
         continue #Did already in the first loop
       #test if attachement exists: create otherwise
-      attachPath =docID[:-7]+'/'+fileParts[-1]
-      resp = requests.get('http://'+location+':5984/'+database+'/'+attachPath,
-                              headers=headers, auth=authUser, timeout=10)
+      attachPath = f'{docID[:-7]}/{fileParts[-1]}'
+      resp = requests.get(f'http://{location}:5984/{database}/{attachPath}', headers=headers, auth=authUser, timeout=10)
       if resp.status_code == 404 and 'missing' in resp.json()['reason']:
         with zipFile.open(fileI) as dataIn:
           attachDoc = dataIn.read()
-          resp = requests.get('http://'+location+':5984/'+database+'/'+docID[:-7],
-                              headers=headers, auth=authUser, timeout=10)
+          resp = requests.get(f'http://{location}:5984/{database}/{docID[:-7]}', headers=headers, auth=authUser, timeout=10)
           headers['If-Match'] = resp.json()['_rev'] #will be overwritten each time
-          resp = requests.put('http://'+location+':5984/'+database+'/'+attachPath, data=attachDoc,
-                              headers=headers, auth=authUser, timeout=10)
+          resp = requests.put(f'http://{location}:5984/{database}/{attachPath}', data=attachDoc, headers=headers, auth=authUser, timeout=10)
           if resp.ok:
             print('Saved attachment:', database, attachPath)
           else:
@@ -496,7 +489,7 @@ def main() -> None:
       sys.exit(1)
     url, administrator, password = myString.split(':')
     print("URL and credentials successfully read from keyring")
-  except:
+  except Exception:
     print("Could not get credentials from keyring.")
     ## URL
     url = input('Enter the URL without http and without port: ')

@@ -21,24 +21,18 @@ class CLI_Mixin:
     outString = []
     widthArray = [25,25,25,25]
     for idx,item in enumerate(self.db.ontology[docType]['prop']):
-      if not 'name' in item:    #heading
+      if 'name' not in item:    #heading
         continue
-      if idx<len(widthArray):
-        width = widthArray[idx]
-      else:
-        width = 0
+      width = widthArray[idx] if idx<len(widthArray) else 0
       if width!=0:
         formatString = '{0: <'+str(abs(width))+'}'
         outString.append(formatString.format(item['name'].replace('-','')) )
     outString = '|'.join(outString)+'\n'
     outString += '-'*104+'\n'
-    for lineItem in self.db.getView('viewDocType/'+docType):
+    for lineItem in self.db.getView(f'viewDocType/{docType}'):
       rowString = []
       for idx, item in enumerate(self.db.ontology[docType]['prop']):
-        if idx<len(widthArray):
-          width = widthArray[idx]
-        else:
-          width = 0
+        width = widthArray[idx] if idx<len(widthArray) else 0
         if width!=0:
           formatString = '{0: <'+str(abs(width))+'}'
           if isinstance(lineItem['value'][idx], str ):
@@ -51,7 +45,7 @@ class CLI_Mixin:
             contentString = ' '.join(lineItem['value'][idx])
           contentString = contentString.replace('\n',' ')
           if width<0:  #test if value as non-trivial length
-            if lineItem['value'][idx]=='true' or lineItem['value'][idx]=='false':
+            if lineItem['value'][idx] in ['true', 'false']:
               contentString = lineItem['value'][idx]
             elif isinstance(lineItem['value'][idx], bool ) or lineItem['value'][idx] is None:
               contentString = str(lineItem['value'][idx])
@@ -59,7 +53,7 @@ class CLI_Mixin:
               contentString = 'true'
             else:
               contentString = 'false'
-            # contentString = True if contentString=='true' else False
+                    # contentString = True if contentString=='true' else False
           rowString.append(formatString.format(contentString)[:abs(width)] )
       if printID:
         rowString.append(' '+lineItem['id'])
@@ -79,27 +73,22 @@ class CLI_Mixin:
     Returns:
         string: output incl. \n
     """
-    outString = []
-    outString.append(f'{0: <10}'.format('Tags') )
-    outString.append(f'{0: <60}'.format('Name') )
-    outString.append(f'{0: <10}'.format('ID') )
+    outString = [f'{0: <10}'.format('Tags'), f'{0: <60}'.format('Name'), f'{0: <10}'.format('ID')]
     outString = '|'.join(outString)+'\n'
     outString += '-'*106+'\n'
     view = None
     if tag=='':
       view = self.db.getView('viewIdentify/viewTags')
     else:
-      view = self.db.getView('viewIdentify/viewTags',preciseKey='#'+tag)
+      view = self.db.getView('viewIdentify/viewTags', preciseKey=f'#{tag}')
     for lineItem in view:
-      rowString = []
-      rowString.append(f'{0: <10}'.format(lineItem['key']))
-      rowString.append(f'{0: <60}'.format(lineItem['value']))
-      rowString.append(f'{0: <10}'.format(lineItem['id']))
+      rowString = [f'{0: <10}'.format(lineItem['key']), f'{0: <60}'.format(lineItem['value']), f'{0: <10}'.format(lineItem['id'])]
       outString += '|'.join(rowString)+'\n'
     return outString
 
 
   def outputHierarchy(self, onlyHierarchy=True, addID=False, addTags=None, **kwargs):
+    # sourcery skip: inline-immediately-returned-variable, use-join
     """
     output hierarchical structure in database
     - convert view into native dictionary
@@ -160,6 +149,6 @@ class CLI_Mixin:
     outString = f"{'SHAsum': <32}|{'Name': <40}|{'ID': <25}\n"
     outString += '-'*110+'\n'
     for item in self.db.getView('viewIdentify/viewSHAsum'):
-      key = item['key'] if item['key'] else '-empty-'
+      key = item['key'] or '-empty-'
       outString += f"{key[:32]: <32}|{item['value'][:40]: <40}|{item['id']: <25}\n"
     return outString

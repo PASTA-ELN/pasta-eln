@@ -29,7 +29,7 @@ class MainWindow(QMainWindow):
     #global setting
     super().__init__()
     venv = ' without venv' if sys.prefix == sys.base_prefix else ' in venv'
-    self.setWindowTitle("PASTA-ELN "+__version__+venv)
+    self.setWindowTitle(f"PASTA-ELN {__version__}{venv}")
     self.setWindowState(Qt.WindowMaximized) # type: ignore
     resourcesDir = Path(__file__).parent/'Resources'
     self.setWindowIcon(QIcon(QPixmap(resourcesDir/'Icons'/'favicon64.png')))
@@ -50,14 +50,20 @@ class MainWindow(QMainWindow):
       for docType, docLabel in self.comm.backend.db.dataLabels.items():
         if docType[0]=='x' and docType[1]!='0':
           continue
-        Action(docLabel, self.viewMenu, viewMenu, self, \
-          "Ctrl+"+shortCuts[docType] if docType in shortCuts else None, docType)
+        Action(
+            docLabel,
+            self.viewMenu,
+            viewMenu,
+            self,
+            f"Ctrl+{shortCuts[docType]}" if docType in shortCuts else None,
+            docType,
+        )
         if docType=='x0':
           viewMenu.addSeparator()
       viewMenu.addSeparator()
       Action('&Tags',         self.viewMenu, viewMenu, self, 'Ctrl+T', '_tags_')
       Action('&Unidentified', self.viewMenu, viewMenu, self, 'Ctrl+U', name='-')
-      #TODO_P5 create list of unaccessible files: linked with accessible files
+        #TODO_P5 create list of unaccessible files: linked with accessible files
 
     systemMenu = menu.addMenu("&System")
     Action('&Project groups',        self.executeAction, systemMenu, self, name='projectGroups')
@@ -171,7 +177,7 @@ class MainWindow(QMainWindow):
       try:
         from .tempStrings import todoString
         showMessage(self, 'List of items on todo list',todoString)
-      except:
+      except Exception:
         pass
     elif menuName=='export':
       if self.comm.projectID == '':
@@ -187,7 +193,10 @@ class MainWindow(QMainWindow):
       self.comm.changeSidebar.emit('redraw')
       self.comm.changeTable.emit('x0','')
     else:
-      showMessage(self, 'ERROR','menu not implemented yet: '+menuName, icon='Warning')
+      showMessage(self,
+                  'ERROR',
+                  f'menu not implemented yet: {menuName}',
+                  icon='Warning')
     return
 
 
@@ -223,7 +232,7 @@ def main() -> None:
   logging.getLogger().setLevel(getattr(logging, window.backend.configuration['GUI']['loggingLevel']))
   theme = window.backend.configuration['GUI']['theme']
   if theme!='none':
-    apply_stylesheet(app, theme=theme+'.xml')
+    apply_stylesheet(app, theme=f'{theme}.xml')
   # qtawesome and matplot cannot coexist
   import qtawesome as qta
   if not isinstance(qta.icon('fa5s.times'), QIcon):

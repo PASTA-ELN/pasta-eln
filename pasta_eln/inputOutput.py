@@ -58,22 +58,19 @@ def importELN(backend:Backend, elnFileName:str) -> str:
     files = elnFile.namelist()
     logging.info('All files '+', '.join(files))
     dirName=Path(files[0]).parts[0]
-    if dirName+'/ro-crate-metadata.json' not in files:
+    if f'{dirName}/ro-crate-metadata.json' not in files:
       print('**ERROR: ro-crate does not exist in folder. EXIT')
       return '**ERROR: ro-crate does not exist in folder. EXIT'
-    graph = json.loads(elnFile.read(dirName+'/ro-crate-metadata.json'))["@graph"] #list
+    graph = json.loads(elnFile.read(f'{dirName}/ro-crate-metadata.json'))["@graph"]
     #find information from master node
     rocrateNode = [i for i in graph if i["@id"]=="ro-crate-metadata.json"][0]
     if 'sdPublisher' in rocrateNode:
       elnName     = rocrateNode['sdPublisher']['name']
-    if 'version' in rocrateNode:
-      elnVersion  = rocrateNode['version']
-    else:
-      elnVersion  = ''
-    logging.info('Import '+elnName+' '+elnVersion)
+    elnVersion = rocrateNode['version'] if 'version' in rocrateNode else ''
+    logging.info('Import %s %s', elnName, elnVersion)
     if elnName=='eLabFTW':
       json2pasta.update(elabFTW)
-    logging.info('ELN and translator:'+elnName+' '+str(json2pasta))
+    logging.info('ELN and translator: %s %s', elnName, str(json2pasta))
     mainNode    = [i for i in graph if i["@id"]=="./"][0]
 
     ################
@@ -102,8 +99,8 @@ def importELN(backend:Backend, elnFileName:str) -> str:
         if key in json2pasta:
           output[json2pasta[key]] = value
         else:
-          print('**Warning: could not translate: '+key+'   from eln:'+elnName)
-          output['imported_'+key] = value
+          print(f'**Warning: could not translate: {key}   from eln:{elnName}')
+          output[f'imported_{key}'] = value
       return output, elnID, children, dataType
 
     def processPart(part:dict[str,str]) -> int:
@@ -146,7 +143,7 @@ def importELN(backend:Backend, elnFileName:str) -> str:
           if elnName == 'PASTA ELN':
             doc.update( jsonContent )
           else:
-            doc['from '+elnName] = jsonContent
+            doc[f'from {elnName}'] = jsonContent
       elif re.match(r'^metadata_.-\w{32}\.json$', elnID.split('/')[-1]) is None:
         if elnName == 'PASTA ELN':
           if elnID.endswith('datastructure.json'):
@@ -159,7 +156,7 @@ def importELN(backend:Backend, elnFileName:str) -> str:
         else:
           print('**ERROR got a file which I do not understand ',elnID)
           target = open(fullPath, "wb")
-          source = elnFile.open(dirName+'/'+elnID)
+          source = elnFile.open(f'{dirName}/{elnID}')
           with source, target:  #extract one file to its target directly
             shutil.copyfileobj(source, target)
       else:
@@ -178,11 +175,13 @@ def importELN(backend:Backend, elnFileName:str) -> str:
             fullPath.parent.mkdir()
           target = open(fullPath, "wb")
           try:
-            source = elnFile.open(dirName+'/'+part['@id'])
+            source = elnFile.open(f'{dirName}/' + part['@id'])
             with source, target:  #extract one file to its target directly
               shutil.copyfileobj(source, target)
-          except:
-            logging.warning('--------- could not read file from zip: '+dirName+'/'+part['@id'])
+          except Exception:
+            logging.warning(
+                f'--------- could not read file from zip: {dirName}/' +
+                part['@id'])
       else:  # OTHER VENDORS
         if dataType.lower()=='dataset':
           docType = 'x'+str(len(elnID.split('/')) - 1)
@@ -234,7 +233,7 @@ def importELN(backend:Backend, elnFileName:str) -> str:
     for part in mainNode['hasPart']:
       if not part['@id'].endswith('ro-crate-metadata.json'):
         addedDocuments += processPart(part)
-  return 'Success: imported '+str(addedDocuments)+' documents from file '+elnFileName+' from ELN '+elnName+' '+elnVersion
+  return f'Success: imported {str(addedDocuments)} documents from file {elnFileName} from ELN {elnName} {elnVersion}'
 
 
 
@@ -257,7 +256,7 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
   keysInSupplemental:set[str] = set()
   docProject = backend.db.getDoc(projectID)
   dirNameProject = docProject['-branch'][0]['path']
-  fileName = dirNameProject+'.eln' if fileName=='' else fileName
+  fileName = fileName or f'{dirNameProject}.eln'
 
   def iterateTree(nodeHier:Node, graph:list[dict[str,Any]]) -> str:
     """
@@ -277,7 +276,7 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
     if path is None or path.startswith('https:'):
       parentID = doc['-branch'][0]['stack'][-1]
       path = backend.db.getDoc(parentID)['-branch'][0]['path']
-      path += '/metadata_'+nodeHier.id+'.json'
+      path += f'/metadata_{nodeHier.id}.json'
       fileAttached = False
     docMain= {'@id': path}
     docSupp = {}
@@ -292,7 +291,7 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
     # get path to metadata file
     if fileAttached:
       if nodeHier.id[0]=='x':
-        pathMetadata = path+'/metadata.json'
+        pathMetadata = f'{path}/metadata.json'
       else:
         pathArray = list(Path(path).as_posix().split('/'))
         pathArray[-1] = pathArray[-1].replace('.','_')+'_metadata.json'
@@ -305,7 +304,7 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
         if res is not None:
           hasPart.append( res )
       docMain['hasPart'] = [{'@id':pathMetadata}]
-      if len(hasPart)>0:
+      if hasPart:
         docMain['hasPart'] += [{'@id':i} for i in hasPart]
       docMain['@type'] = 'dataset'
     else:
@@ -322,7 +321,7 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
                          '@id':pathMetadata,
                          docMain['@type']:'data'}
       graph.append(roCrateMetadata)
-      elnFile.writestr(dirNameProject+'/'+pathMetadata, zipContent)
+      elnFile.writestr(f'{dirNameProject}/{pathMetadata}', zipContent)
     else:
       if (backend.basePath/path).exists():
         with open(backend.basePath/path, 'rb') as fIn:
@@ -332,14 +331,15 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
       else:
         docMain['contentSize'] = str(len(zipContent))
         docMain['sha256']      = hashlib.sha256(zipContent.encode()).hexdigest()
-      elnFile.writestr(dirNameProject+'/'+path, zipContent)
+      elnFile.writestr(f'{dirNameProject}/{path}', zipContent)
     # write data file
     graph.append(docMain)
     return docMain['@id']
+
   #
   #
   # == MAIN FUNCTION ==
-  logging.info('Create eln file '+fileName)
+  logging.info('Create eln file %s',fileName)
   with ZipFile(fileName, 'w', compression=ZIP_DEFLATED) as elnFile:
     # ------- Create main graph -------------------
     listHier = backend.db.getHierarchy(projectID, allItems=False)
@@ -351,45 +351,65 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
     index['@context']= 'https://w3id.org/ro/crate/1.1/context'
     # master node ro-crate-metadata.json
     graphMaster:list[dict[str,Any]] = []
-    masterNodeInfo  = {\
-      '@id':'ro-crate-metadata.json',\
-      '@type':'CreativeWork',\
-      'about': {'@id': './'},\
-      'conformsTo': {'@id': 'https://w3id.org/ro/crate/1.1'},\
-      'schemaVersion': 'v1.0',\
-      'dateCreated': datetime.now().isoformat(),\
-      'sdPublisher': {'@type':'Organization', 'name': 'PASTA ELN',\
-        'logo': 'https://raw.githubusercontent.com/PASTA-ELN/desktop/main/pasta.png',\
-        'slogan': 'The favorite ELN for experimental scientists',\
-        'url': 'https://github.com/PASTA-ELN/',\
-        'description':'Version '+__version__},\
-      'version': '1.0'}
+    masterNodeInfo = {
+        '@id': 'ro-crate-metadata.json',
+        '@type': 'CreativeWork',
+        'about': {
+            '@id': './'
+        },
+        'conformsTo': {
+            '@id': 'https://w3id.org/ro/crate/1.1'
+        },
+        'schemaVersion': 'v1.0',
+        'dateCreated': datetime.now().isoformat(),
+        'sdPublisher': {
+            '@type': 'Organization',
+            'name': 'PASTA ELN',
+            'logo':
+            'https://raw.githubusercontent.com/PASTA-ELN/desktop/main/pasta.png',
+            'slogan': 'The favorite ELN for experimental scientists',
+            'url': 'https://github.com/PASTA-ELN/',
+            'description': f'Version {__version__}',
+        },
+        'version': '1.0',
+    }
     graphMaster.append(masterNodeInfo)
-    dataStructureInfo  = {\
-      '@id':dirNameProject+'/'+dirNameProject+'/datastructure.json',\
-      '@type':'DigitalDocument'}
+    dataStructureInfo = {
+        '@id': f'{dirNameProject}/{dirNameProject}/datastructure.json',
+        '@type': 'DigitalDocument',
+    }
     graphMaster.append(dataStructureInfo)
     authors = backend.configuration['authors']
-    masterNodeRoot  = {'@id':'./', '@type':['Dataset'],
-                       'hasPart': [{'@id':dirNameProject},
-                                   {'@id':dirNameProject+'/ro-crate-metadata.json'},
-                                   {'@id':dirNameProject+'/'+dirNameProject+'/datastructure.json'}],
-                        # default items mwo-ontology
-                       'context': [{'mwo': 'http://purls.helmholtz-metadaten.de/mwo'},{'nfdicore': 'https://nfdi.fiz-karlsruhe.de/ontology'}],
-                       'type': 'mwo:ExperimentalWorkflow',
-                       'license': 'CC BY 4.0',
-                       'format':  [{'fileExtension': '.json'}],
-                        # publisher information
-                       'authors': [
-                         {'firstName':authors[0]['first'], 'surname':authors[0]['last'], 'title':authors[0]['title'],
-                          'emailAddress':authors[0]['email'], 'ORCID': authors[0]['orcid'],
-                          'affiliation': [{'organization': authors[0]['organizations'][0]['organization'],
-                                           'RORID':        authors[0]['organizations'][0]['rorid']}] }
-                       ],
-                       'datePublished': datetime.now().isoformat()
-                      }
-    elnFile.writestr(dirNameProject+'/'+dirNameProject+'/datastructure.json',
-                     json.dumps(backend.db.getDoc('-ontology-')))
+    masterNodeRoot = {
+        '@id':
+        './',
+        '@type': ['Dataset'],
+        'hasPart': [
+            {'@id': dirNameProject},
+            {'@id': f'{dirNameProject}/ro-crate-metadata.json'},
+            {'@id': f'{dirNameProject}/{dirNameProject}/datastructure.json'}
+        ],
+        'context': [
+            {'mwo': 'http://purls.helmholtz-metadaten.de/mwo'},
+            {'nfdicore': 'https://nfdi.fiz-karlsruhe.de/ontology'},
+        ],
+        'type':'mwo:ExperimentalWorkflow',
+        'license':'CC BY 4.0',
+        'format': [{'fileExtension': '.json'}],
+        'authors': [{
+            'firstName': authors[0]['first'],
+            'surname': authors[0]['last'],
+            'title': authors[0]['title'],
+            'emailAddress': authors[0]['email'],
+            'ORCID': authors[0]['orcid'],
+            'affiliation': [{
+                'organization': authors[0]['organizations'][0]['organization'],
+                'RORID': authors[0]['organizations'][0]['rorid'],
+            }],
+        }],
+        'datePublished':datetime.now().isoformat(),
+    }
+    elnFile.writestr(f'{dirNameProject}/{dirNameProject}/datastructure.json', json.dumps(backend.db.getDoc('-ontology-')))
     graphMaster.append(masterNodeRoot)
 
     # ------------------ copy data-files --------------------------
@@ -398,19 +418,20 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
       if '/.git' in path:  #if use datalad
         continue
       relPath = os.path.relpath(path, backend.basePath) #path of the folder
-      for iFile in files:                               #iterate through all files in folder
+      for iFile in files:                         #iterate through all files in folder
         if iFile.startswith('.git') or iFile=='.id_pastaELN.json':
           continue
-        elnFile.write(path+'/'+iFile, dirNameProject+'/'+relPath+'/'+iFile)   #zip file
+        elnFile.write(f'{path}/{iFile}', f'{dirNameProject}/{relPath}/{iFile}')
 
     #finalize file
     index['@graph'] = graphMaster+graph
-    elnFile.writestr(dirNameProject+'/'+'ro-crate-metadata.json', json.dumps(index, indent=2))
-    # # temporary json output
-    # with open(fileName[:-3]+'json','w', encoding='utf-8') as fOut:
-    #   fOut.write( json.dumps(index, indent=2) )
+    elnFile.writestr(f'{dirNameProject}/ro-crate-metadata.json',
+                     json.dumps(index, indent=2))
+      # # temporary json output
+      # with open(fileName[:-3]+'json','w', encoding='utf-8') as fOut:
+      #   fOut.write( json.dumps(index, indent=2) )
   keysInSupplemental = {i for i in keysInSupplemental if i not in pasta2json}
   logging.info('Keys in supplemental information'+', '.join(keysInSupplemental))
-  return 'Success: exported '+str(len(graph))+' graph-nodes into file '+fileName
+  return f'Success: exported {len(graph)} graph-nodes into file {fileName}'
 
 # SimStack (matsci.org/c/simstack), PMD Meeting september KIT

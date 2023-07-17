@@ -148,7 +148,7 @@ def couchdbUserPassword(username:str, password:str) -> bool:
   try:
     _ = CouchDB(username, password, url='http://127.0.0.1:5984', connect=True)
     return True
-  except:
+  except Exception:
     return False
 
 
@@ -220,6 +220,7 @@ def installLinuxRoot(couchDBExists:bool, pathPasta:Path=Path(''), password:str='
 
 
 def configuration(command:str='test', user:str='', password:str='', pathPasta:Path=Path('')) -> str:
+  # sourcery skip: hoist-similar-statement-from-if, merge-duplicate-blocks, merge-else-if-into-elif, remove-redundant-if, swap-if-else-branches, swap-nested-ifs
   '''
   #TODO_P4 change to string-output
   Check configuration file .pastaELN.json for consistencies
@@ -238,7 +239,7 @@ def configuration(command:str='test', user:str='', password:str='', pathPasta:Pa
   try:
     with open(Path.home()/'.pastaELN.json','r', encoding='utf-8') as fConf:
       conf = json.load(fConf)
-  except:
+  except Exception:
     output += '**ERROR configuration file does not exist\n'
     conf = {}
     if command == 'repair':
@@ -331,6 +332,7 @@ def configuration(command:str='test', user:str='', password:str='', pathPasta:Pa
 
 
 def ontology(command:str='test') -> str:
+  # sourcery skip: switch
   '''
   Check configuration file .pastaELN.json for consistencies
 

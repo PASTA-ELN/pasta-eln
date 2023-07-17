@@ -90,12 +90,14 @@ class TableHeader(QDialog):
       self.reject()
     elif btn.text().endswith('Save'):
       specialFields = ['name', 'type', 'tags', 'user', 'date']
-      self.selectedList = ['-'+i if i in specialFields else i  for i in self.selectedList]
+      self.selectedList = [
+          f'-{i}' if i in specialFields else i for i in self.selectedList
+      ]
       self.comm.backend.db.initDocTypeViews(self.comm.backend.configuration['tableColumnsMax'],
                                             docTypeChange=self.docType, columnsChange=self.selectedList)
       restart()
-      # self.comm.changeTable.emit('','')
-      # self.accept()  #close
+        # self.comm.changeTable.emit('','')
+        # self.accept()  #close
     elif btn.text().endswith('Help'):
       showMessage(self, 'Help on individual entry', tableHeaderHelp)
     else:

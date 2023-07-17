@@ -48,7 +48,7 @@ def use(filePath, recipe='', saveFileName=None):
   figfile = BytesIO()
   imageData.save(figfile, format="PNG")
   imageData = base64.b64encode(figfile.getvalue()).decode()
-  imageData = "data:image/png;base64," + imageData
+  imageData = f"data:image/png;base64,{imageData}"
 
   # return everything
   return {'image':imageData, 'recipe':recipe, 'metaVendor':metaVendor, 'metaUser':metaUser}

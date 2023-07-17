@@ -282,11 +282,11 @@ class Table(QWidget):
       #remove keys that should not be group edited and build dict
       if intersection is not None:
         intersection = intersection.difference({'-branch', '-user', '-client', 'metaVendor', 'shasum', \
-          '_id', 'metaUser', '_rev', '-name', '-date', 'image', '_attachments','links'})
+            '_id', 'metaUser', '_rev', '-name', '-date', 'image', '_attachments','links'})
         intersectionDict:dict[str,Any] = {i:'' for i in intersection}
         intersectionDict['-tags'] = []
         intersectionDict['-type'] = [self.docType]
-        intersectionDict.update({'_ids':docIDs})
+        intersectionDict['_ids'] = docIDs
         self.comm.formDoc.emit(intersectionDict)
         self.comm.changeDetails.emit('redraw')
         self.comm.changeTable.emit(self.docType, '')
@@ -303,14 +303,19 @@ class Table(QWidget):
       for row in range(self.models[-1].rowCount()):
         item, docID = self.itemFromRow(row)
         if item.checkState() == Qt.CheckState.Checked:
-          ret = QMessageBox.critical(self, 'Warning', 'Are you sure you want to delete this data: '+item.text()+'?',\
-                                    QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.No)
+          ret = QMessageBox.critical(
+              self,
+              'Warning',
+              f'Are you sure you want to delete this data: {item.text()}?',
+              QMessageBox.StandardButton.Yes,
+              QMessageBox.StandardButton.No,
+          )
           if ret==QMessageBox.StandardButton.Yes:
             doc = self.comm.backend.db.getDoc(docID)
             for branch in doc['-branch']:
               oldPath = self.comm.backend.basePath/branch['path']
               if oldPath.exists():
-                newPath    = oldPath.parent/('trash_'+oldPath.name)
+                newPath = oldPath.parent / f'trash_{oldPath.name}'
                 oldPath.rename(newPath)
             self.comm.backend.db.remove(docID)
       self.comm.changeTable.emit(self.docType, '')
@@ -321,13 +326,13 @@ class Table(QWidget):
       #TODO_P3 export: export via extractor in high resolution: change order: first save, then rescale
       fileName = QFileDialog.getSaveFileName(self,'Export to ..',str(Path.home()),'*.csv')[0]
       with open(fileName,'w', encoding='utf-8') as fOut:
-        header = ['"'+i+'"' for i in self.filterHeader]
+        header = [f'"{i}"' for i in self.filterHeader]
         fOut.write(','.join(header)+'\n')
         for row in range(self.models[-1].rowCount()):
           rowContent = []
           for col in range(self.models[-1].columnCount()):
             value = self.models[-1].index( row, col, QModelIndex() ).data( Qt.DisplayRole )  # type: ignore[arg-type]
-            rowContent.append('"'+value+'"')
+            rowContent.append(f'"{value}"')
           fOut.write(','.join(rowContent)+'\n')
     elif menuName == 'toggleHide':
       for row in range(self.models[-1].rowCount()):
