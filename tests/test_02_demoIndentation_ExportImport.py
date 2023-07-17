@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 """TEST using the FULL set of python-requirements: create 3 projects; simplified form of testTutorialComplex """
-import os, shutil, traceback, logging, socket
+import os, shutil, logging, socket
 import warnings
 import unittest
 from pathlib import Path
@@ -38,8 +38,8 @@ class TestStringMethods(unittest.TestCase):
 
     #export
     idProj = self.be.db.getView('viewDocType/x0')[0]['id']
-    fileName = str(Path.home()/'temporary_pastaTest.eln')
-    status = exportELN(self.be, idProj, fileName)
+    self.fileName = str(Path.home()/'temporary_pastaTest.eln')
+    status = exportELN(self.be, idProj, self.fileName)
     print('\n'+status)
     self.assertEqual(status[:7],'Success','Export unsuccessful')
 
@@ -52,7 +52,7 @@ class TestStringMethods(unittest.TestCase):
       self.be.db.remove(doc['id'])
 
     #import
-    status = importELN(self.be, fileName)
+    status = importELN(self.be, self.fileName)
     print(status)
     self.assertEqual(status[:7],'Success','Import unsuccessful')
 
@@ -70,6 +70,7 @@ class TestStringMethods(unittest.TestCase):
 
   def tearDown(self):
     logging.info('End 3Projects test')
+    Path(self.fileName).unlink()  #remove file
     return
 
 if __name__ == '__main__':

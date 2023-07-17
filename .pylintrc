@@ -81,7 +81,8 @@ disable=raw-checker-failed,
         missing-raises-doc,
         no-else-return,
         no-self-use,
-        condition-evals-to-constant
+        condition-evals-to-constant,
+        broad-except
 
 #Reasons:
 # looks better: len-as-condition, multiple-statements, bad-whitespace, multiple-imports

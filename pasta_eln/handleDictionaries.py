@@ -20,7 +20,7 @@ def ontology2Labels(ontology:dict[str,Any], tableFormat:dict[str,Any]) -> dict[s
   """
   dataDict = {}
   hierarchyDict = {}
-  for key in ontology.keys():
+  for key in ontology:
     if key in ['_id', '_rev']:
       continue
     label = None
@@ -34,7 +34,7 @@ def ontology2Labels(ontology:dict[str,Any], tableFormat:dict[str,Any]) -> dict[s
       hierarchyDict[key] = label
     else:
       dataDict[key] = label
-  dataDict.update(hierarchyDict)  #join hierarchy and datalabels because reason for separation unclear
+  dataDict |= hierarchyDict
   return dataDict
 
 
@@ -102,9 +102,9 @@ def fillDocBeforeCreate(data:dict[str,Any], docType:list[str]) -> dict[str,Any]:
   data['-tags'] = [i.strip()[1:] if i.strip()[0]=='#' else i.strip() for i in data['-tags']]
   data['-tags'] = list(set(data['-tags']))  #ensure only one is inside
   #other cleaning
-  if 'links' in data and isinstance(data['links'], list):
-    if len(data['links'])==0 or (len(data['links'])==1 and data['links'][0]==''):
-      del data['links']
+  if ('links' in data and isinstance(data['links'], list)) and \
+     (len(data['links'])==0 or (len(data['links'])==1 and data['links'][0]=='')):
+    del data['links']
   #individual verification of documents
   if data['-type'][0]=='sample':
     if 'qrCode' not in data:
@@ -146,7 +146,7 @@ def diffDicts(dict1:dict[str,Any], dict2:dict[str,Any]) -> str:
     if key in ignoreKeys:
       continue
     if key not in dict2Copy:
-      outString += 'key not in dictionary 2: '+key+'\n'
+      outString += f'key not in dictionary 2: {key}' + '\n'
       continue
     if value != dict2Copy[key]:
       if key=='-branch':
@@ -161,10 +161,10 @@ def diffDicts(dict1:dict[str,Any], dict2:dict[str,Any]) -> str:
             if branch1!=branch2:
               outString += 'branches differ\n   '+str(value)+'\n   '+str(dict2Copy[key])+'\n'
       else:
-        outString += 'values differ for key: '+key+'\n   '+str(value)+'\n   '+str(dict2Copy[key])+'\n'
+        outString += (f'values differ for key: {key}\n   {str(value)}\n   {str(dict2Copy[key])}\n')
     del dict2Copy[key]
-  for key in dict2Copy.keys():
+  for key in dict2Copy:
     if key in ignoreKeys:
       continue
-    outString += 'key not in dictionary 1: '+key+'\n'
+    outString += f'key not in dictionary 1: {key}\n'
   return outString

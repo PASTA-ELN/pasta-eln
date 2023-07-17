@@ -1,8 +1,6 @@
 """ widget that shows the table and the details of the items """
-import logging
-from random import randint
-from PySide6.QtCore import Slot                                                     # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QWidget, QSplitter, QVBoxLayout, QLabel, QScrollArea  # pylint: disable=no-name-in-module
+from PySide6.QtCore import Slot                                # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QWidget, QSplitter, QVBoxLayout  # pylint: disable=no-name-in-module
 from .widgetTable import Table
 from .widgetDetails import Details
 from .communicate import Communicate
@@ -13,7 +11,6 @@ class DocTypes(QWidget):
     super().__init__()
     comm.changeTable.connect(self.changeTable)
     comm.changeDetails.connect(self.changeDetails)
-
     # GUI elements
     table = Table(comm)
     self.details = Details(comm)

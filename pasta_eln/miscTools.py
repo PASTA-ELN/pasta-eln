@@ -29,7 +29,7 @@ class Bcolors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
-def outputString(fmt:str='print', level:str='info', message:str='') ->str:
+def outputString(fmt:str='print', level:str='info', message:str='') -> str:
   """ Output a message into different formats:
     - print: print to stdout
     - logging; log to file
@@ -52,18 +52,18 @@ def outputString(fmt:str='print', level:str='info', message:str='') ->str:
   # depend on format
   if 'print' in fmt:
     print(txtOutput)
-  if 'logging' in fmt and level in ['info','warning','error']:
+  if 'logging' in fmt and level in {'info', 'warning', 'error'}:
     getattr(logging,level)(message)
   if 'text' in fmt:
     return txtOutput
   if fmt=='html':
     colors = {'info':'black','error':'red','warning':'orange','ok':'green','okish':'blue','unsure':'magenta'}
     if level[0]=='h':
-      return '<'+level+'>'+message+'</'+level+'>'
+      return f'<{level}>{message}</{level}>'
     if level not in colors:
-      print('**ERROR: wrong level '+level)
+      print(f'**ERROR: wrong level {level}')
       return ''
-    return '<font color="'+colors[level]+'">'+message.replace('\n','<br>')+'</font><br>'
+    return f'<font color="{colors[level]}">' + message.replace('\n', '<br>') + '</font><br>'
   return ''
 
 
@@ -80,7 +80,7 @@ def tracebackString(log:bool=False, docID:str='') -> str:
   tracebackList = traceback.format_stack()[2:-2]
   reply = '|'.join([item.split('\n')[1].strip() for item in tracebackList])  #| separated list of stack excluding last
   if log:
-    logging.info(' traceback '+docID+': '+ reply)
+    logging.info(' traceback %s %s', docID, reply)
   return reply
 
 
@@ -114,9 +114,7 @@ def createDirName(name:str, docType:str, thisChildNumber:int) -> str:
   if docType == 'x0':
     return camelCase(name)
   #steps, tasks
-  if isinstance(thisChildNumber, str):
-    thisChildNumber = int(thisChildNumber)
-  return f'{thisChildNumber:03d}'+'_'+camelCase(name)
+  return f'{thisChildNumber:03d}_{camelCase(name)}'
 
 
 def generic_hash(path:Path, forceFile:bool=False) -> str:
@@ -147,12 +145,12 @@ def generic_hash(path:Path, forceFile:bool=False) -> str:
         meta = site.headers
         size = int(meta.get_all('Content-Length')[0])
         return blob_hash(site, size)
-    except:
+    except Exception:
       logging.error('Could not download content / hashing issue '+path.as_posix().replace(':/','://')+'\n'+\
         traceback.format_exc())
       return ''
   if path.is_dir():
-    raise ValueError('This seems to be a directory '+path.as_posix())
+    raise ValueError(f'This seems to be a directory {path.as_posix()}')
   if forceFile and path.is_symlink():
     path = path.resolve()
   if path.is_symlink():    #if link, hash the link
@@ -172,10 +170,7 @@ def upOut(key:str) -> list[str]:
   keys_ = []
   for keyI in keys:
     key_ = cred.get_password('pastaDB',keyI)
-    if key_ is None:
-      key_ = ':'
-    else:
-      key_ = ':'.join(key_.split('bcA:Maw'))
+    key_ = ':' if key_ is None else ':'.join(key_.split('bcA:Maw'))
     keys_.append(key_)
   return keys_
 
@@ -259,7 +254,7 @@ def updateExtractorList(directory:Path) -> str:
   verboseDebug = False
   extractorsAll = {}
   for fileName in os.listdir(directory):
-    if fileName.endswith('.py') and fileName not in ['testExtractor.py','tutorial.py','commit.py'] :
+    if fileName.endswith('.py') and fileName not in {'testExtractor.py','tutorial.py','commit.py'}:
       #start with file
       with open(directory/fileName,'r', encoding='utf-8') as fIn:
         if verboseDebug: print('\n'+fileName)
@@ -292,10 +287,10 @@ def updateExtractorList(directory:Path) -> str:
               if len(possLines)==1:
                 linePart=possLines[0].split('=')[1].strip(" '"+'"')
               elif len(possLines)>1:
-                print('**Warning: Could not decipher '+fileName,' Take shortest!')
+                print(f'**Warning: Could not decipher {fileName} Take shortest!')
                 linePart=sorted(possLines)[0].split('=')[1].strip(" '"+'"')
               else:
-                print('**ERROR: Could not decipher '+fileName,' File does not work!')
+                print(f'**ERROR: Could not decipher {fileName} File does not work!')
                 linePart=''
             extractorsThis[linePart]='Default'
             if verboseDebug:
@@ -304,7 +299,7 @@ def updateExtractorList(directory:Path) -> str:
           print('Extractors', extractorsThis)
         ending = fileName.split('_')[1].split('.')[0]
         extractorsAll[ending]=extractorsThis
-        #header not used for now
+                    #header not used for now
   #update configuration file
   print('\n\nFound extractors:')
   print(yaml.dump(extractorsAll))
@@ -322,7 +317,7 @@ def restart() -> None:
   """
   try:
     os.execv('pastaELN',[''])  #installed version
-  except:
+  except Exception:
     os.execv(sys.executable, ['python3','-m','pasta_eln.gui']) #started for programming or debugging
   return
 

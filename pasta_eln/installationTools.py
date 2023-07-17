@@ -22,7 +22,7 @@ def getOS() -> str:
   get_base_prefix_compat = getattr(sys, 'base_prefix', None) or getattr(sys, 'real_prefix', None) or sys.prefix
   in_virtualenv = get_base_prefix_compat != sys.prefix
   environment = sys.prefix if in_virtualenv else '_system_'
-  return operatingSys+' '+environment
+  return f'{operatingSys} {environment}'
 
 
 def createDefaultConfiguration(user:str, password:str, pathPasta:Optional[Path]=None) -> dict[str,Any]:
@@ -37,25 +37,25 @@ def createDefaultConfiguration(user:str, password:str, pathPasta:Optional[Path]=
   Returns:
     dict: dictionary of configuration
   '''
-  if user == '':
+  if not user:
     user = input('Enter user name: ')
-  if password == '':
+  if not password:
     password = input('Enter password: ')
   if pathPasta is None:
     if platform.system()=='Windows':
       pathPasta = Path.home()/'Documents'/'PASTA_ELN'
     else:
       pathPasta = Path.home()/'PASTA_ELN'
-  conf:dict[str,Any] = {}
-  conf['defaultProjectGroup']     = 'research'
-  conf['projectGroups']       = {'research':{\
-                          'local':{'user':user, 'password':password, 'database':'research',
-                                   'path':str(pathPasta)},
-                          'remote':{}  }}
-  conf['version']     = 2
+  conf: dict[str, Any] = {
+      'defaultProjectGroup': 'research',
+      'projectGroups': {
+          'research': {
+              'local': {'user': user, 'password': password, 'database': 'research', 'path': str(pathPasta)},
+              'remote': {},
+          }}, 'version': 2}
   try:
     conf['userID']      = os.getlogin()
-  except:   #github action
+  except Exception:   #github action
     conf['userID']      = 'github_user'
   #create pastaDir if it does not exist
   if not pathPasta.exists():
@@ -80,7 +80,7 @@ def runAsAdminWindows(cmdLine:list[str]) -> None:
   procInfo = ShellExecuteEx(nShow=win32con.SW_SHOWNORMAL,
                             fMask=shellcon.SEE_MASK_NOCLOSEPROCESS,
                             lpVerb='runas',  # causes UAC elevation prompt.
-                            lpFile= '"'+cmdLine[0]+'"',
+                            lpFile= f'"{cmdLine[0]}"',
                             lpParameters=" ".join(cmdLine[1:]))
   procHandle = procInfo['hProcess']
   _ = win32event.WaitForSingleObject(procHandle, win32event.INFINITE)
@@ -104,7 +104,7 @@ def couchdb(command:str='test') -> str:
         contents = package.read()
         if json.loads(contents)['couchdb'] == 'Welcome':
           return ''
-    except:
+    except Exception:
       pass
     return '**ERROR**'
 
@@ -121,16 +121,16 @@ def couchdb(command:str='test') -> str:
       # cmd = ['cmd.exe','/K ',str(resultFilePath)]
       # _ = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)
       ## New version without questions
-      password = ''.join(random.choice(string.ascii_letters) for i in range(12))
-      logging.info('PASSWORD: '+password)
+      password = ''.join(random.choice(string.ascii_letters) for _ in range(12))
+      logging.info('PASSWORD: %s',password)
       pathS = str(path).replace('\\','\\\\')
       cmd = ['msiexec','/i',pathS,'/quiet','COOKIEVALUE=abcdefghijklmo','INSTALLSERVICE=1','ADMINUSER=admin',\
-             'ADMINPASSWORD='+password,'/norestart','/l*','log.txt']
+             f'ADMINPASSWORD={password}','/norestart','/l*','log.txt']
       logging.info('COMMAND: '+' '.join(cmd))
       runAsAdminWindows(cmd)
       logging.info('CouchDB ending')
-      return 'Installed couchDB with password |'+password+'|'
-    return '**ERROR: Unknown operating system '+platform.system()
+      return f'Installed couchDB with password |{password}|'
+    return f'**ERROR: Unknown operating system {platform.system()}'
   return '**ERROR: Unknown command'
 
 
@@ -168,9 +168,9 @@ def installLinuxRoot(couchDBExists:bool, pathPasta:Path=Path(''), password:str='
   bashCommand = []
   password = ''
   if not couchDBExists:
-    if password=='':
-      password = ''.join(random.choice(string.ascii_letters) for i in range(12))
-      logging.info('PASSWORD: '+password)
+    if not password:
+      password = ''.join(random.choice(string.ascii_letters) for _ in range(12))
+      logging.info('PASSWORD: %s',password)
     #create or adopt .pastaELN.json
     path = Path.home()/'.pastaELN.json'
     if path.exists():
@@ -181,17 +181,17 @@ def installLinuxRoot(couchDBExists:bool, pathPasta:Path=Path(''), password:str='
       conf = createDefaultConfiguration('admin', password, pathPasta)
       with open(path,'w', encoding='utf-8') as fConf:
         fConf.write(json.dumps(conf, indent=2) )
-    bashCommand += [
+    bashCommand = [
       'sudo snap install couchdb',
-      'sudo snap set couchdb admin='+password,
+      f'sudo snap set couchdb admin={password}',
       'sudo snap start couchdb',
       'sudo snap connect couchdb:mount-observe',
       'sudo snap connect couchdb:process-control',
       'sleep 5',
-      'curl -X PUT http://admin:'+password+'@127.0.0.1:5984/_users',
-      'curl -X PUT http://admin:'+password+'@127.0.0.1:5984/_replicator',
-      'curl -X PUT http://admin:'+password+'@127.0.0.1:5984/_global_changes',
-      'curl -X PUT http://admin:'+password+'@127.0.0.1:5984/_node/_local/_config/couch_httpd_auth/timeout/ -d \'"60000"\'',
+      f'curl -X PUT http://admin:{password}@127.0.0.1:5984/_users',
+      f'curl -X PUT http://admin:{password}@127.0.0.1:5984/_replicator',
+      f'curl -X PUT http://admin:{password}@127.0.0.1:5984/_global_changes',
+      f'curl -X PUT http://admin:{password}@127.0.0.1:5984/_node/_local/_config/couch_httpd_auth/timeout/ -d \'"60000"\'',
       'sleep 10',
       'echo DONE-Press-Key',
       'read']  #TODO_P5 if successful in Aug2023: remove "echo....read"
@@ -201,21 +201,21 @@ def installLinuxRoot(couchDBExists:bool, pathPasta:Path=Path(''), password:str='
     shell.write('\n'.join(bashCommand))
   os.chmod(scriptFile, 0o0777)
   terminals = ['xterm -e bash -c ','qterminal -e bash -c ','gnome-terminal -- ']
-  logging.info('Command: '+str(bashCommand))
-  resultString = 'Password: '+password
+  logging.info('Command: %s',str(bashCommand))
+  resultString = f'Password: {password}'
   for term in terminals:
     # _ = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)
     res = os.system(term+scriptFile.as_posix())
-    logging.info('Linux install terminal '+term+' '+str(res) )
+    logging.info('Linux install terminal %s  %s',term,str(res))
     if res == 0:
       break
     if terminals.index(term)==len(terminals)-1:
       logging.error('**ERROR: Last terminal failed')
       res = os.system('\n'.join(bashCommand[:-2]))
-      logging.info('Finished using straight Bash command result='+str(res))
+      logging.info('Finished using straight Bash command result=%s',str(res))
       resultString = '**ERROR: Last terminal failed'
   success = 'CouchDB works' if couchdbUserPassword('admin',password) else 'CouchDB FAILED'
-  logging.info('InstallLinuxRoot ending. '+success)
+  logging.info('InstallLinuxRoot ending. %s',success)
   return resultString
 
 
@@ -315,7 +315,7 @@ def configuration(command:str='test', user:str='', password:str='', pathPasta:Pa
       if command == 'repair':
         conf['GUI'][key] = value
       else:
-        output += '**ERROR: key: '+key+' not in GUI configuration\n'
+        output += f'**ERROR: key: {key} not in GUI configuration\n'
   # Authors
   if 'authors' not in conf:
     if command == 'repair':
@@ -340,25 +340,20 @@ def ontology(command:str='test') -> str:
   Returns:
     string: ''=success, else error messages
   '''
-  output = ''
   backend = Backend()
-
   if command == 'test':
     if not hasattr(backend.db, 'db'):
       return '**ERROR: couchDB not initialized'
-    output += 'database name:'+backend.db.db.database_name+'\n'
-    designDocuments = backend.db.db.design_documents()
-    output += 'Design documents'+'\n'
-    for item in designDocuments:
+    output = 'database name: {backend.db.db.database_name}\nDesign documents\n'
+    for item in backend.db.db.design_documents():
       numViews = len(item['doc']['views']) if 'views' in item['doc'] else 0
       output += '  '+item['id']+'   Num. of views:'+str(numViews)+'\n'
     try:
       _ = backend.db.getDoc('-ontology-')
       output += 'Ontology exists on server'+'\n'
-    except:
+    except Exception:
       output += '**ERROR: Ontology does NOT exist on server'+'\n'
     return output
-
   elif command == 'install':
     logging.info('ontology starting ...')
     doc = defaultOntology
@@ -517,30 +512,29 @@ def createShortcut() -> None:
     else:                             #installation in a virtual environment
       logging.info('In virtual environment, create an alias')
       with open(Path.home()/'.bashrc','a', encoding='utf-8') as fOut:
-        alias = "alias pastaELN='"+sys.prefix+"/bin/python3 -m pasta_eln.gui'"
+        alias = f"alias pastaELN='{sys.prefix}/bin/python3 -m pasta_eln.gui'"
         logging.info(alias)
-        fOut.write(alias+'\n')
-      content+='Exec='+sys.prefix+'/bin/python3 -m pasta_eln.gui\n'
+        fOut.write(f'{alias}\n')
+      content += f'Exec={sys.prefix}/bin/python3 -m pasta_eln.gui\n'
     content+='Icon='+ (Path(__file__).parent/'Resources'/'Icons'/'favicon64.png').as_posix() + '\n'
     content+='Terminal=false\nType=Application\nCategories=Utility;Application;\n'
     try:
       linkString = (Path.home()/'Desktop'/'pastaELN.desktop').as_posix()
       with open(linkString,'w', encoding='utf-8') as fOut:
         fOut.write(content)
-        os.system('gio set '+linkString+' metadata::trusted true') #for ubuntu systems
+        os.system(f'gio set {linkString} metadata::trusted true') #for ubuntu systems
         os.chmod(Path.home()/'Desktop'/'pastaELN.desktop', 0o775)
-    except:
+    except Exception:
       pass
     try:
       with open(Path.home()/'.local'/'share'/'applications'/'pastaELN.desktop','w', encoding='utf-8') as fOut:
         fOut.write(content)
         os.chmod(Path.home()/'.local'/'share'/'applications'/'pastaELN.desktop', 0o777)
-    except:
+    except Exception:
       pass
   elif platform.system()=='Windows':
     import winshell
     from win32com.client import Dispatch
-
     shell = Dispatch('WScript.Shell')
     shortcut = shell.CreateShortCut( os.path.join(winshell.desktop(), "pastaELN.lnk") )
     shortcut.Targetpath = r"pastaELN"
@@ -573,11 +567,11 @@ def main() -> None:
   print('configuration:', res)
   try:
     res = '\n'+ontology()
-  except:
+  except Exception:
     res = ' **ERROR**'
     #No new 'raise' so that it install-script continues its path
   flagOntology = 'ERROR' in res
-  print('ontology     :'+res)
+  print(f'ontology     :{res}')
 
   print('Add "install" argument to install PASTA-ELN.')
   if len(sys.argv)>1 and 'install' in sys.argv:

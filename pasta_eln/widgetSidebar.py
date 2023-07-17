@@ -61,13 +61,15 @@ class Sidebar(QWidget):
     self.widgetsAction = {}
     self.widgetsList = {}
     self.widgetsProject = {} #title bar and widget that contains all of project
+    backend = self.comm.backend
 
-    if hasattr(self.comm.backend, 'db'):
-      hierarchy = self.comm.backend.db.getView('viewDocType/x0')
+    if hasattr(backend, 'db'):
+      db = self.comm.backend.db
+      hierarchy = db.getView('viewDocType/x0')
       #TODO_P5 for now, sorted by last change of project itself. future create a view that does that automatically(if docType x0: emit changeDate)
-      lastChangeDate = [self.comm.backend.db.getDoc(project['id'])['-date'] for project in hierarchy]
+      lastChangeDate = [db.getDoc(project['id'])['-date'] for project in hierarchy]
       maxProjects = int((self.height()-120)/50)-1
-      for index, project in enumerate([x for _, x in sorted(zip(lastChangeDate, hierarchy))]):
+      for index, project in enumerate(x for _, x in sorted(zip(lastChangeDate, hierarchy))):
         if index>maxProjects:
           break
         projID = project['id']
@@ -80,8 +82,8 @@ class Sidebar(QWidget):
         projectL = QVBoxLayout(projectW)
         projectL.setContentsMargins(3,3,3,3)
         maxLabelCharacters = int((self.sideBarWidth-50)/7.1)
-        label = projName if len(projName)<maxLabelCharacters else projName[:maxLabelCharacters-3]+'...'
-        btnProj = TextButton(label, self.btnProject, projectL, projID+'/')
+        label = (projName if len(projName) < maxLabelCharacters else f'{projName[:maxLabelCharacters - 3]}...')
+        btnProj = TextButton(label, self.btnProject, projectL, f'{projID}/')
         btnProj.setStyleSheet("border-width:0")
         self.widgetsProject[projID] = [btnProj, projectW]
 
@@ -89,12 +91,12 @@ class Sidebar(QWidget):
         actionW, actionL = widgetAndLayout('Grid', projectL)
         if self.openProjectId != projID: #depending which project is open
           actionW.hide()
-          projectW.setStyleSheet("background-color:"+ getColor(self.comm.backend, 'secondaryDark'))
+          projectW.setStyleSheet("background-color:"+ getColor(backend, 'secondaryDark'))
         else:
-          projectW.setStyleSheet("background-color:"+ getColor(self.comm.backend, 'secondaryLight'))
-        btnScan = IconButton('mdi.clipboard-search-outline', self.btnScan, None, projID, 'Scan', self.comm.backend, text='Scan')
+          projectW.setStyleSheet("background-color:"+ getColor(backend, 'secondaryLight'))
+        btnScan = IconButton('mdi.clipboard-search-outline', self.btnScan, None, projID, 'Scan', backend, text='Scan')
         actionL.addWidget(btnScan, 0,0)  # type: ignore
-        btnCurate = IconButton('mdi.filter-plus-outline', self.btnCurate, None, projID, 'Special', self.comm.backend, text='Special')
+        btnCurate = IconButton('mdi.filter-plus-outline', self.btnCurate, None, projID, 'Special', backend, text='Special')
         btnCurate.hide()
         actionL.addWidget(btnCurate, 0,1)         # type: ignore
         self.widgetsAction[projID] = actionW
@@ -105,13 +107,13 @@ class Sidebar(QWidget):
         listW, listL = widgetAndLayout('Grid', projectL)
         if self.openProjectId != projID:
           listW.hide()
-        for idx, doctype in enumerate(self.comm.backend.db.dataLabels):
+        for idx, doctype in enumerate(db.dataLabels):
           if doctype[0]!='x':
-            button = IconButton(iconsDocTypes[self.comm.backend.db.dataLabels[doctype]], self.btnDocType, None, \
-                     doctype+'/'+projID, self.comm.backend.db.dataLabels[doctype],self.comm.backend)
+            icon = iconsDocTypes[db.dataLabels[doctype]]
+            button = IconButton(icon, self.btnDocType, None, f'{doctype}/{projID}', db.dataLabels[doctype], backend)
             listL.addWidget(button, 0, idx)    # type: ignore
-        button = IconButton(iconsDocTypes['-'], self.btnDocType, None, '-/'+projID, 'Unidentified', self.comm.backend)
-        listL.addWidget(button, 0, len(self.comm.backend.db.dataLabels)+1)  # type: ignore
+        button = IconButton(iconsDocTypes['-'], self.btnDocType, None, f'-/{projID}', 'Unidentified', backend)
+        listL.addWidget(button, 0, len(db.dataLabels)+1)  # type: ignore
         self.widgetsList[projID] = listW
 
         # show folders as hierarchy
@@ -120,7 +122,7 @@ class Sidebar(QWidget):
         treeW.setHeaderHidden(True)
         treeW.setColumnCount(1)
         treeW.itemClicked.connect(self.btnTree)
-        hierarchy = self.comm.backend.db.getHierarchy(projID)
+        hierarchy = db.getHierarchy(projID)
         rootItem = treeW.invisibleRootItem()
         count = 0
         for node in PreOrderIter(hierarchy, maxlevel=2):
@@ -148,13 +150,13 @@ class Sidebar(QWidget):
       QtTreeWidgetItem: tree node
     """
     #prefill with name, doctype, id
-    nodeTree = QTreeWidgetItem([nodeHier.name, projectID+'/'+nodeHier.id ])
+    nodeTree = QTreeWidgetItem([nodeHier.name, f'{projectID}/{nodeHier.id}'])
     children = []
     for childHier in nodeHier.children:
       if childHier.docType[0][0]=='x':
         childTree = self.iterateTree(childHier, projectID)
         children.append(childTree)
-    if len(children)>0:
+    if children:
       nodeTree.insertChildren(0,children)
     return nodeTree
 

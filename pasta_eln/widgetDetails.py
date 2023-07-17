@@ -53,6 +53,7 @@ class Details(QScrollArea):
 
 
   def contextMenu(self, pos:QPoint) -> None:
+    # sourcery skip: extract-method
     """
     Create a context menu
 
@@ -96,7 +97,7 @@ class Details(QScrollArea):
         image = image[22:] if image[21]==',' else image[23:]
       else:
         imageType = 'svg'
-      saveFilePath = filePath.parent/(filePath.stem+'_PastaExport.'+imageType.lower())
+      saveFilePath = (filePath.parent / f'{filePath.stem}_PastaExport.{imageType.lower()}')
       if imageType == 'svg':
         with open(self.comm.backend.basePath/saveFilePath,'w', encoding='utf-8') as fOut:
           fOut.write(image)
@@ -135,7 +136,7 @@ class Details(QScrollArea):
     Args:
       docID (str): document-id; '' string=draw nothing; 'redraw' implies redraw
     """
-    logging.debug('details:changeDetails |'+docID+'|')
+    logging.debug('details:changeDetails |%s|',docID)
     # Delete old widgets from layout
     for i in reversed(range(self.headerL.count())):
       self.headerL.itemAt(i).widget().setParent(None)       # type: ignore
@@ -154,7 +155,7 @@ class Details(QScrollArea):
     self.metaVendorW.hide()
     self.metaUserW.hide()
     self.metaDatabaseW.hide()
-    if docID=='':  #if given '' docID, return
+    if not docID:  #if given '' docID, return
       return
     # Create new
     if docID!='redraw':
@@ -177,7 +178,7 @@ class Details(QScrollArea):
       self.btnUser.hide()
     for key in self.doc:
       size = self.comm.backend.configuration['GUI']['imageSizeDetails'] \
-              if hasattr(self.comm.backend, 'configuration') else 300
+                        if hasattr(self.comm.backend, 'configuration') else 300
       if key=='image':
         Image(self.doc['image'], self.specialL, anyDimension=size)
         self.specialW.show()
@@ -189,7 +190,7 @@ class Details(QScrollArea):
         self.specialL.addWidget(text)
         self.specialW.show()
       elif key=='-tags':
-        tags = ['_curated_' if i=='_curated' else '#'+i for i in self.doc[key]]
+        tags = ['_curated_' if i=='_curated' else f'#{i}' for i in self.doc[key]]
         tags = ['\u2605'*int(i[2]) if i[:2]=='#_' else i for i in tags]
         label = QLabel('Tags: '+' '.join(tags))
         label.setTextInteractionFlags(Qt.TextSelectableByMouse)
@@ -197,7 +198,7 @@ class Details(QScrollArea):
       elif key[0] in ['_','-'] or key in ['shasum']:
         if key in ['_attachments']:
           continue
-        label = QLabel(key+': '+str(self.doc[key]))
+        label = QLabel(f'{key}: {str(self.doc[key])}')
         label.setWordWrap(True)
         label.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.metaDatabaseL.addWidget(label)
@@ -234,7 +235,7 @@ class Details(QScrollArea):
           value = '\n    '+self.doc[key].replace('\n','\n    ')
         else:
           value = self.doc[key]
-        label = Label(key.capitalize()+': '+value, function=self.clickLink if link else None, docID=self.doc[key])
+        label = Label(f'{key.capitalize()}: {value}', function=self.clickLink if link else None, docID=self.doc[key])
         label.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.metaDetailsL.addWidget(label)
         self.metaDetailsW.show()
@@ -246,10 +247,10 @@ class Details(QScrollArea):
     Hide / show the widget underneath the button
     """
     name = self.sender().accessibleName()
-    if getattr(self, 'btn'+name).isChecked(): #get button in question
-      getattr(self, 'meta'+name+'W').show()
+    if getattr(self, f'btn{name}').isChecked(): #get button in question
+      getattr(self, f'meta{name}W').show()
     else:
-      getattr(self, 'meta'+name+'W').hide()
+      getattr(self, f'meta{name}W').hide()
     return
 
 
@@ -274,6 +275,6 @@ class Details(QScrollArea):
       label (str): label on link
       docID (str): docID to which to link
     """
-    logging.debug('used link on '+label+'|'+docID)
+    logging.debug('used link on %s|%s',label,docID)
     self.comm.changeDetails.emit(docID)
     return

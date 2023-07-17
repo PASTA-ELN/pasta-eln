@@ -1,4 +1,6 @@
 """ widget that shows the table of the items """
+
+import itertools
 import re, logging
 from pathlib import Path
 from typing import Any
@@ -93,7 +95,7 @@ class Table(QWidget):
       projID (str): id of project
     """
     if docType!=self.docType or projID!=self.projID:
-      logging.debug('table:changeTable |'+docType+'|'+projID+'|')
+      logging.debug('table:changeTable |%s|%s|',docType, projID)
     self.models = []
     for i in reversed(range(self.filterL.count())):
       self.filterL.itemAt(i).widget().setParent(None)   # type: ignore
@@ -112,11 +114,11 @@ class Table(QWidget):
       self.actionChangeColums.setVisible(False)
     else:
       self.addBtn.show()
-      if docType[:2]=='x0':
+      if docType.startswith('x0'):
         self.selectionBtn.hide()
       else:
         self.selectionBtn.show()
-      path = 'viewDocType/'+self.docType+'All' if self.showAll else 'viewDocType/'+self.docType
+      path = (f'viewDocType/{self.docType}All' if self.showAll else f'viewDocType/{self.docType}')
       if self.projID=='':
         self.data = self.comm.backend.db.getView(path)
       else:
@@ -135,58 +137,54 @@ class Table(QWidget):
     nrows, ncols = len(self.data), len(self.filterHeader)
     model = QStandardItemModel(nrows, ncols)
     model.setHorizontalHeaderLabels(self.filterHeader)
-    for i in range(nrows):
-      for j in range(ncols):
-        if self.docType=='_tags_':  #tags list
-          if j==0:
-            if self.data[i]['key']=='_curated':
-              item = QStandardItem('_curated_')
-            elif re.match(r'_\d', self.data[i]['key']):
-              item = QStandardItem('\u2605'*int(self.data[i]['key'][1]))
-            else:
-              item = QStandardItem(self.data[i]['key'])
-          else:
-            item = QStandardItem(self.data[i]['value'][j-1])
-        else:                 #list for normal doctypes
-          # print(i,j, self.data[i]['value'][j], type(self.data[i]['value'][j]))
-          if self.data[i]['value'][j] is None or not self.data[i]['value'][j]:  #None, False
-            item = QStandardItem('-') # TODO_P4 add nice glyphs later, see also below \u00D7')
-            # item.setFont(QFont("Helvetica [Cronyx]", 16))
-          elif isinstance(self.data[i]['value'][j], bool) and self.data[i]['value'][j]: #True
-            item = QStandardItem('Y') # \u2713')
-            # item.setFont(QFont("Helvetica [Cronyx]", 16))
-          elif isinstance(self.data[i]['value'][j], list):                      #list, e.g. qrCodes
-            if isinstance( self.data[i]['value'][j][0], str):
-              item =  QStandardItem(', '.join(self.data[i]['value'][j]))
-            else:
-              item =  QStandardItem(', '.join(  [str(i) for i in self.data[i]['value'][j]]  ))
-          elif re.match(r'^[a-z\-]-[a-z0-9]{32}$',self.data[i]['value'][j]):      #Link
-            item = QStandardItem('oo') # \u260D')
-            # item.setFont(QFont("Helvetica [Cronyx]", 16))
-          else:
-            if self.filterHeader[j]=='tags':
-              tags = self.data[i]['value'][j].split(' ')
-              if '_curated' in tags:
-                tags[tags.index('_curated')] = '_curated_'
-              for iStar in range(1,6):
-                if '_'+str(iStar) in tags:
-                  tags[tags.index('_'+str(iStar))] = '*'*iStar # '\u2605'*iStar
-              text = ' '.join(tags)
-            else:
-              text = self.data[i]['value'][j]
-            item = QStandardItem(text)
+    for i, j in itertools.product(range(nrows), range(ncols)):
+      if self.docType=='_tags_':  #tags list
         if j==0:
-          doc = self.comm.backend.db.getDoc(self.data[i]['id'])
-          if len([b for b in doc['-branch'] if False in b['show']])>0:
-            item.setText( item.text()+'  \U0001F441' )
-          item.setAccessibleText(doc['_id'])
-          if docType!='x0':
-            item.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)   # type: ignore[operator]
-            item.setCheckState(Qt.CheckState.Unchecked)
-            #TODO_P3 design: make the checkboxes larger!
+          if self.data[i]['key']=='_curated':
+            item = QStandardItem('_curated_')
+          elif re.match(r'_\d', self.data[i]['key']):
+            item = QStandardItem('\u2605'*int(self.data[i]['key'][1]))
+          else:
+            item = QStandardItem(self.data[i]['key'])
         else:
-          item.setFlags(Qt.ItemIsEnabled) # type: ignore[arg-type]
-        model.setItem(i, j, item)
+          item = QStandardItem(self.data[i]['value'][j-1])
+      elif self.data[i]['value'][j] is None or not self.data[i]['value'][j]:  #None, False
+        item = QStandardItem('-') # TODO_P4 add nice glyphs later, see also below \u00D7')
+        # item.setFont(QFont("Helvetica [Cronyx]", 16))
+      elif isinstance(self.data[i]['value'][j], bool): #True
+        item = QStandardItem('Y') # \u2713')
+        # item.setFont(QFont("Helvetica [Cronyx]", 16))
+      elif isinstance(self.data[i]['value'][j], list):                  #list, e.g. qrCodes
+        item = (QStandardItem(', '.join(self.data[i]['value'][j])) if isinstance(
+            self.data[i]['value'][j][0], str) else QStandardItem(', '.join(
+                [str(i) for i in self.data[i]['value'][j]])))
+      elif re.match(r'^[a-z\-]-[a-z0-9]{32}$',self.data[i]['value'][j]):      #Link
+        item = QStandardItem('oo') # \u260D')
+        # item.setFont(QFont("Helvetica [Cronyx]", 16))
+      else:
+        if self.filterHeader[j]=='tags':
+          tags = self.data[i]['value'][j].split(' ')
+          if '_curated' in tags:
+            tags[tags.index('_curated')] = '_curated_'
+          for iStar in range(1,6):
+            if f'_{str(iStar)}' in tags:
+              tags[tags.index(f'_{str(iStar)}')] = '*'*iStar
+          text = ' '.join(tags)
+        else:
+          text = self.data[i]['value'][j]
+        item = QStandardItem(text)
+      if j==0:
+        doc = self.comm.backend.db.getDoc(self.data[i]['id'])
+        if [b for b in doc['-branch'] if False in b['show']]:
+          item.setText( item.text()+'  \U0001F441' )
+        item.setAccessibleText(doc['_id'])
+        if docType!='x0':
+          item.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)   # type: ignore[operator]
+          item.setCheckState(Qt.CheckState.Unchecked)
+          #TODO_P3 design: make the checkboxes larger!
+      else:
+        item.setFlags(Qt.ItemIsEnabled) # type: ignore[arg-type]
+      model.setItem(i, j, item)
     self.models.append(model)
     self.table.setModel(self.models[-1])
     self.table.show()
@@ -236,7 +234,6 @@ class Table(QWidget):
       self.comm.changeTable.emit('','')
       self.comm.changeDetails.emit('redraw')
     return
-
 
   def executeAction(self) -> None:
     """ Any action by the buttons and menu at the top of the page """

@@ -41,7 +41,7 @@ class Project(QWidget):
       projID (str): document id of project; if empty, just refresh
       docID (str): document id of focus item, if not given focus at project
     """
-    logging.debug('project:changeProject |'+projID+'|'+docID+'|')
+    logging.debug('project:changeProject |%s|%s|',projID,docID)
     #initialize
     for i in reversed(range(self.mainL.count())): #remove old
       self.mainL.itemAt(i).widget().setParent(None)  # type: ignore
@@ -101,7 +101,7 @@ class Project(QWidget):
     branchIdx= doc['-branch'].index(branchOld)
     siblingsOld = db.getView('viewHierarchy/viewHierarchy', startKey=' '.join(stackOld))
     siblingsOld = [i for i in siblingsOld if len(i['key'].split(' '))==len(stackOld)+1 and \
-                                            i['value'][0]>branchOld['child'] and i['value'][0]<9999]
+                                                  i['value'][0]>branchOld['child'] and i['value'][0]<9999]
     #gather new information
     stackNew = []  #create reversed
     currentItem = item
@@ -113,11 +113,11 @@ class Project(QWidget):
     childNew = item.row()
     dirNameNew= createDirName(doc['-name'],doc['-type'][0],childNew)
     parentDir = db.getDoc(stackNew[-1])['-branch'][0]['path']
-    pathNew  = parentDir+'/'+dirNameNew
+    pathNew = f'{parentDir}/{dirNameNew}'
     siblingsNew = db.getView('viewHierarchy/viewHierarchy', startKey=' '.join(stackNew))
     siblingsNew = [i for i in siblingsNew if len(i['key'].split(' '))==len(stackNew)+1 and \
-                                             i['value'][0]>=childNew and i['value'][0]<9999]
-    logging.debug('Change project: docID -old- -new- '+docID+' | '+str(stackOld)+'  '+str(branchIdx)+' | '+str(stackNew)+' '+str(childNew)+' '+pathNew)
+                                                   i['value'][0]>=childNew and i['value'][0]<9999]
+    logging.debug('Change project: docID -old- -new- %s|%s  %i|%s %i %s', docID, str(stackOld), branchIdx, str(stackNew), childNew, pathNew)
     if stackOld==stackNew and childOld==childNew:  #nothing changed, just redraw
       return
     # change item in question
@@ -158,14 +158,14 @@ class Project(QWidget):
     more.setMenu(moreMenu)
 
     self.bodyW, bodyL =  widgetAndLayout('V')
-    hidden = '     \U0001F441' if len([b for b in self.docProj['-branch'] if False in b['show']])>0 else ''
+    hidden = '     \U0001F441' if [b for b in self.docProj['-branch'] if False in b['show']] else ''
     infoL.addWidget(Label(self.docProj['-name']+hidden, 'h2'))
     tags = ', '.join(self.docProj['tags']) if 'tags' in self.docProj else ''
-    bodyL.addWidget(QLabel('Tags: '+tags))
+    bodyL.addWidget(QLabel(f'Tags: {tags}'))
     for key,value in self.docProj.items():
       if key[0] in ['_','-']:
         continue
-      bodyL.addWidget(QLabel(key+': '+str(value)))
+      bodyL.addWidget(QLabel(f'{key}: {str(value)}'))
     infoL.addWidget(self.bodyW)
     return
 
@@ -188,7 +188,7 @@ class Project(QWidget):
         oldPath.rename(newPath)
     elif menuName=='deleteProject':
       ret = QMessageBox.critical(self, 'Warning', 'Are you sure you want to delete project?',\
-                                 QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.No)
+                                   QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.No)
       if ret==QMessageBox.StandardButton.Yes:
         #delete database and rename folder
         doc = self.comm.backend.db.remove(self.projID)
@@ -219,11 +219,12 @@ class Project(QWidget):
             subIndex = self.tree.model().index(subRow,0, index)
             subItem  = self.tree.model().itemFromIndex(subIndex)
             if self.foldedAll:
-              subItem.setText(subItem.text()+' -')
+              subItem.setText(f'{subItem.text()} -')
             elif subItem.text().endswith(' -'):
               subItem.setText(subItem.text()[:-2])
             recursiveRowIteration(subIndex)
         return
+
       recursiveRowIteration(self.tree.model().index(-1,0))
     elif menuName == 'hideShow':
       self.showAll = not self.showAll
@@ -258,6 +259,6 @@ class Project(QWidget):
     for childHier in nodeHier.children:
       childTree = self.iterateTree(childHier)
       children.append(childTree)
-    if len(children)>0:
+    if children:
       nodeTree.appendRows(children)
     return nodeTree

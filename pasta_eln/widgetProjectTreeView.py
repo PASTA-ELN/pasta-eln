@@ -44,12 +44,13 @@ class TreeView(QTreeView):
 
   #TODO_P4 projectTree: drag&drop of external files
   def executeAction(self) -> None:
+    # sourcery skip: extract-duplicate-method, extract-method
     """ after selecting a item from context menu """
     menuName = self.sender().data()
     if menuName=='addChild':
       hierStack = self.currentIndex().data().split('/')
       if hierStack[-1][0]=='x':
-        docType= 'x'+str(len(hierStack))
+        docType= f'x{len(hierStack)}'
         docID = hierStack[-1][:-2] if hierStack[-1].endswith(' -') else hierStack[-1]
         self.comm.backend.cwd = Path(self.comm.backend.db.getDoc(docID)['-branch'][0]['path'])
         docID = self.comm.backend.addData(docType, {'-name':'new folder'}, hierStack)
@@ -67,7 +68,7 @@ class TreeView(QTreeView):
         showMessage(self, 'Error', 'You cannot create a child of a non-folder!')
     elif menuName=='addSibling':
       hierStack= self.currentIndex().data().split('/')[:-1]
-      docType= 'x'+str(len(hierStack))
+      docType= f'x{len(hierStack)}'
       docID = hierStack[-1][:-2] if hierStack[-1].endswith(' -') else hierStack[-1]
       self.comm.backend.cwd = Path(self.comm.backend.db.getDoc(docID)['-branch'][0]['path'])
       docID = self.comm.backend.addData(docType, {'-name':'new folder'}, hierStack)
@@ -80,19 +81,20 @@ class TreeView(QTreeView):
       #++ TODO appendRow is not 100% correct: see above
     elif menuName=='del':
       ret = QMessageBox.critical(self, 'Warning', 'Are you sure you want to delete this data?',\
-                                QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.No)
+                                 QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.No)
       if ret==QMessageBox.StandardButton.Yes:
         docID = self.currentIndex().data().split('/')[-1]
         doc = self.comm.backend.db.remove(docID)
         for branch in doc['-branch']:
           oldPath = Path(self.comm.backend.basePath)/branch['path']
           if oldPath.exists():
-            if (oldPath.parent/('trash_'+oldPath.name)).exists():  #ensure target does not exist
+            if (oldPath.parent/(f'trash_{oldPath.name}')).exists():  #ensure target does not exist
               endText = ' was marked for deletion. Save it or its content now to some place on harddisk. It will be deleted now!!!'
-              showMessage(self, 'Warning', 'Warning! \nThe folder '+str(oldPath.parent/('trash_'+oldPath.name))+endText)
-              if (oldPath.parent/('trash_'+oldPath.name)).exists():
-                shutil.rmtree(oldPath.parent/('trash_'+oldPath.name))
-            oldPath.rename( oldPath.parent/('trash_'+oldPath.name) )
+              newFileName = f'trash_{oldPath.name}'
+              showMessage(self, 'Warning', f'Warning! \nThe folder {oldPath.parent/newFileName}{endText}')
+              if (oldPath.parent/newFileName).exists():
+                shutil.rmtree(oldPath.parent/newFileName)
+            oldPath.rename( oldPath.parent/newFileName)
         # go through children
         children = self.comm.backend.db.getView('viewHierarchy/viewHierarchy', startKey=' '.join(doc['-branch'][0]['stack']+[docID,'']))
         for line in children:
@@ -108,10 +110,10 @@ class TreeView(QTreeView):
       if item.text().endswith(' -'):
         item.setText(item.text()[:-2])
       else:
-        item.setText(item.text()+' -')
+        item.setText(f'{item.text()} -')
     elif menuName=='hide':
       stack = self.currentIndex().data().split('/')
-      logging.debug('hide stack '+str(stack))
+      logging.debug('hide stack %s',str(stack))
       self.comm.backend.db.hideShow(stack)
       self.comm.changeProject.emit('','') #refresh project
     elif menuName=='openExternal':

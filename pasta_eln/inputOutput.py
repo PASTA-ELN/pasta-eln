@@ -406,9 +406,9 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
     #finalize file
     index['@graph'] = graphMaster+graph
     elnFile.writestr(dirNameProject+'/'+'ro-crate-metadata.json', json.dumps(index, indent=2))
-    # temporary json output
-    with open(fileName[:-3]+'json','w', encoding='utf-8') as fOut:
-      fOut.write( json.dumps(index, indent=2) )
+    # # temporary json output
+    # with open(fileName[:-3]+'json','w', encoding='utf-8') as fOut:
+    #   fOut.write( json.dumps(index, indent=2) )
   keysInSupplemental = {i for i in keysInSupplemental if i not in pasta2json}
   logging.info('Keys in supplemental information'+', '.join(keysInSupplemental))
   return 'Success: exported '+str(len(graph))+' graph-nodes into file '+fileName

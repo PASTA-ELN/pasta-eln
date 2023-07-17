@@ -42,7 +42,7 @@ def getColor(backend:Backend, color:str) -> str:
   ##  'secondaryDarkColor': '#31363b', 'primaryTextColor': '#000000', 'secondaryTextColor': '#ffffff'}
   if themeName == 'none':
     return '#000000'
-  return get_theme(themeName+'.xml')[color+'Color']
+  return get_theme(f'{themeName}.xml')[f'{color}Color']
 
 
 class TextButton(QPushButton):
@@ -78,7 +78,7 @@ class TextButton(QPushButton):
       else:
         primaryColor = getColor(backend, 'primary')
         secTextColor = getColor(backend, 'secondaryText')
-      self.setStyleSheet('border-width: 0px; background-color: '+primaryColor+'; color: '+secTextColor)
+      self.setStyleSheet(f'border-width: 0px; background-color: {primaryColor}; color: {secTextColor}')
     if hide:
       self.hide()
     if layout is not None:
@@ -112,7 +112,7 @@ class IconButton(QPushButton):
       self.setAccessibleName(name)
     if tooltip != '':
       self.setToolTip(tooltip)
-    if style == '':
+    if not style:
       self.setStyleSheet("border-width:0")
     else:
       self.setStyleSheet(style)
@@ -197,7 +197,7 @@ class Image():
       if layout is not None:
         layout.addWidget(imageW, alignment=Qt.AlignHCenter) # type: ignore
     elif len(data)>2:
-      print('WidgetProjectLeaf:What is this image |'+data[:50]+'|')
+      print(f'WidgetProjectLeaf:What is this image |{data[:50]}|')
     return
 
 
@@ -216,11 +216,11 @@ class Label(QLabel):
     """
     super().__init__()
     self.setText(text)
-    if size == 'h1' :
+    if size == 'h1':
       self.setStyleSheet('font-size: 14pt')
-    if size == 'h2' :
+    elif size == 'h2':
       self.setStyleSheet('font-size: 12pt')
-    if size == 'h3' :
+    elif size == 'h3':
       self.setStyleSheet('font-size: 10pt')
     if layout is not None:
       layout.addWidget(self)
@@ -254,7 +254,7 @@ def showMessage(parent:QWidget, title:str, text:str, icon:str='', style:str='') 
   dialog = QMessageBox(parent)
   dialog.setWindowTitle(title)
   dialog.setText(text)
-  if icon in ['Information','Warning','Critical']:
+  if icon in {'Information', 'Warning', 'Critical'}:
     dialog.setIcon(getattr(QMessageBox, icon))
   if style!='':
     dialog.setStyleSheet(style)
