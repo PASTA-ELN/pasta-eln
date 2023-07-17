@@ -71,11 +71,11 @@ def use(filePath, recipe='', saveFileName=None):
     plt.xlabel('force [mN]')
     plt.ylabel(r'area [$\mu m^2$]')
     metaUser = {'num files':data.shape[0]}
-    if recipe == 'measurement/dkfi/fit':        #: With fitting line
+    if recipe == 'measurement/dkfi/fit':            #: With fitting line
       fit = np.polyfit(data[:,0], data[:,1], 1)
       x_ = np.array([0,np.max(data[:,0])])
       plt.plot(x_, np.polyval(fit, x_))
-      metaUser['fitFunction'] = f'{str(fit[0])}x+{str(fit[1])}'
+      metaUser['fitFunction'] = str(fit[0])+'x+'+str(fit[1])
       slope, intercept, r_value, p_value, std_err = stats.linregress(data[:,0], data[:,1])
       metaUser.update({'slope':slope, 'intercept':intercept, 'r_value':r_value, 'p_value':p_value, 'std_err':std_err})
     elif True or recipe == 'measurement/dkfi':      #: Default | raw data
