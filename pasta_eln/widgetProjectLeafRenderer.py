@@ -60,9 +60,9 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     bottomRight2nd = option.rect.bottomRight()- QPoint(self.frameSize+1,self.frameSize)
     painter.fillRect(option.rect.marginsRemoved(QMargins(2,6,4,0)),  self.colorMargin1)
     if doc['-type'][0][0]=='x':
-      painter.fillRect(option.rect.marginsRemoved(QMargins(-2,3,8,5)), self.colorMargin2.darker(105))
+      painter.fillRect(option.rect.marginsRemoved(QMargins(-2,3,8,5)), self.colorMargin2.darker(102))
     else:
-      painter.fillRect(option.rect.marginsRemoved(QMargins(-2,3,8,5)), self.colorMargin2.lighter(105))
+      painter.fillRect(option.rect.marginsRemoved(QMargins(-2,3,8,5)), self.colorMargin2.lighter(210))
     # header
     y = self.lineSep/2
     hiddenText = ('     \U0001F441' if [b for b in doc['-branch'] if False in b['show']] else '')
@@ -195,9 +195,3 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     result.loadFromData(base64.b64decode(doc['image'][22:]))
     result = result.scaledToWidth(self.widthImage)
     return result
-
-    #TODO_P3 design ProjectView: Currently, the comment is more highlighted than the title of an item due
-    # to a larger and bolder font. It would make more sense though if the titles were bolder, larger and
-    # thus more readable, while tags and comments are less highlighted.
-    # !! Comments are not rendered perfectly: the end sucks, and I cannot blue a consistent blue line at end
-    #  - rendering might not be the best option

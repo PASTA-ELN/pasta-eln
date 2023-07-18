@@ -323,7 +323,6 @@ class Table(QWidget):
       dialog = TableHeader(self.comm, self.docType)
       dialog.exec()
     elif menuName == 'export':
-      #TODO_P3 export: export via extractor in high resolution: change order: first save, then rescale
       fileName = QFileDialog.getSaveFileName(self,'Export to ..',str(Path.home()),'*.csv')[0]
       with open(fileName,'w', encoding='utf-8') as fOut:
         header = [f'"{i}"' for i in self.filterHeader]

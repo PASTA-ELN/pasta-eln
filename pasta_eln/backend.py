@@ -508,13 +508,15 @@ class Backend(CLI_Mixin):
     return
 
 
-  def testExtractor(self, filePath:Union[Path,str], extractorPath:Optional[Path]=None, recipe:str='', outputStyle:str='text') -> str:
+  def testExtractor(self, filePath:Union[Path,str], extractorPath:Optional[Path]=None, recipe:str='',
+                    outputStyle:str='text', saveFig:str='') -> str:
     """
     Args:
       filePath (Path, str): path to the file to be tested
       extractorPath (Path, None): path to the directory with extractors
       recipe (str): recipe in / separated
       outputStyle (str): report in ['print','text','html'] including show images
+      saveFig (str): save figure to...; if given stop testing after generating image
 
     Returns:
       str: short summary or long report
@@ -551,7 +553,9 @@ class Backend(CLI_Mixin):
       try:
         module  = importlib.import_module(pyFile[:-3])
         plt.clf()
-        content = module.use(filePath, recipe)
+        content = module.use(filePath, recipe, saveFig or None)
+        if saveFig:
+          return report
       except Exception:
         success = False
         report += outputString(outputStyle, 'error', 'Python error in extractor')

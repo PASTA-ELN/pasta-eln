@@ -94,16 +94,13 @@ class Details(QScrollArea):
       image = self.doc['image']
       if image.startswith('data:image/'):
         imageType = image[11:14] if image[14]==';' else image[11:15]
-        image = image[22:] if image[21]==',' else image[23:]
       else:
         imageType = 'svg'
-      saveFilePath = filePath.parent / f'{filePath.stem}_PastaExport.{imageType.lower()}'
-      if imageType == 'svg':
-        with open(self.comm.backend.basePath/saveFilePath,'w', encoding='utf-8') as fOut:
-          fOut.write(image)
-      else:
-        with open(self.comm.backend.basePath/saveFilePath, "wb") as fOut:
-          fOut.write(base64.decodebytes(image.encode('utf-8')))
+      saveFilePath = self.comm.backend.basePath/filePath.parent/f'{filePath.stem}_PastaExport.{imageType.lower()}'
+      path = Path(self.doc['-branch'][0]['path'])
+      if not path.as_posix().startswith('http'):
+        path = self.comm.backend.basePath/path
+      self.comm.backend.testExtractor(path, recipe='/'.join(self.doc['-type']), saveFig=saveFilePath)
     else:
       self.doc['-type'] = self.sender().data().split('/')
       self.comm.backend.useExtractors(filePath, self.doc['shasum'], self.doc)  #any path is good since the file is the same everywhere; data-changed by reference
