@@ -26,7 +26,7 @@ def passwordDecrypt(message:bytes) -> str:
   return base64.b64decode(message).decode('utf-8')
 
 #global variables
-headers:CaseInsensitiveDict[str]= requests.structures.CaseInsensitiveDict()
+headers:CaseInsensitiveDict[str]= CaseInsensitiveDict()
 headers["Content-Type"] = "application/json"
 
 
@@ -180,14 +180,18 @@ def listDB(url:str, auth:AuthBase, verbose:bool) -> dict[str,Any]:
         print('  -> **ERROR** security')
     # test authentication
     respI = requests.get(f'{url}/{i}/_design/authentication', headers=headers, auth=auth, timeout=10)
-    respI = json.loads(respI.text)['validate_doc_update']
-    respI = respI.split('indexOf')[1].split('!==')[0].strip()[2:-2]
-    results[i] = security+[respI]
-    if verbose:
-      if respI == f'{i}-W':
-        print('  -> everything ok')
-      else:
-        print('  -> **ERROR** authentication',respI)
+    respI = json.loads(respI.text)
+    if 'validate_doc_update' in respI:
+      respI = respI['validate_doc_update']
+      respI = respI.split('indexOf')[1].split('!==')[0].strip()[2:-2]
+      results[i] = security+[respI]
+      if verbose:
+        if respI == f'{i}-W':
+          print('  -> everything ok')
+        else:
+          print('  -> **ERROR** authentication',respI)
+    else:
+      print("**ERROR <url>/<userDB>/_design/authentication' does not exist. Everybody can access!")
   return {} if verbose else results
 
 
@@ -297,6 +301,32 @@ def testRemote(url:str, userName:str, password:str, database:str) -> str:
   else:
     answer += 'ERROR: Remote username, password, database incorrect\n'
   return answer
+
+
+def listDocuments(url:str, userName:str, password:str, database:str, full:bool=True) -> str:
+  """
+  list documents in database
+
+  Args:
+    url (str): url of remote server
+    userName (str): user name at remote server
+    password (str): password at remote server
+    database (str): couchdb database
+    full (bool): full list or just number
+
+  Returns:
+    str: success and errors in '\n'-string
+  """
+  authUser = requests.auth.HTTPBasicAuth(userName, password)
+  resp = requests.get(f'{url}/{database}/_all_docs', headers=headers, auth=authUser, timeout=10)
+  if resp.status_code != 200:
+    print('**ERROR response for _all_dbs wrong', resp.text)
+    print('Username and password', userName, password)
+    return 'ERROR!'
+  print(f"\nNumber of docs: {resp.json()['total_rows']}")
+  if full:
+    print(', '.join([doc['id'] for doc in resp.json()['rows']]))
+  return 'Success'
 
 
 def backupCouchDB(location:str='', userName:str='', password:str='') -> None:
@@ -486,6 +516,7 @@ def main() -> None:
     myString = cred.get_password('pastaDB','admin')
     if myString is None:
       print("**ERROR Could not get credentials from keyring 1. Please create manually.")
+      print("import keyring as cred\nmyString = url+':'+adminUserName+':'+adminPassword\n#  url without http and port\ncred.set_password('pastaDB','admin',myString)")
       sys.exit(1)
     url, administrator, password = myString.split(':')
     print("URL and credentials successfully read from keyring")
@@ -503,18 +534,21 @@ def main() -> None:
   url = f'http://{url}:5984'
   auth = requests.auth.HTTPBasicAuth(administrator, password)
 
+  print('\n-------------------------------------------------------------------------')
+  print(  'Manage users and databases for PASTA-ELN on a remote couchDB installation')
+  print(  '-------------------------------------------------------------------------')
   while True:
-    print('\nAdopt a server to PASTA-ELN\nCommands: [q]uit; [n]ew user; list [u]ser; list [d]atabases; '+\
-          '[t]est user; [b]ackup data; [r]estore data')
+    print('\nCommands: [q]uit; [n]ew user; list [u]ser; list [d]atabases; '+\
+          '[t]est username and password; [b]ackup data; [r]estore data; [c]redentials; [l]ist documents in database')
     command = input('> ')
     userName, userPassword = '', ''
     if command == 'q':
       break
     # ask questions for parameters
-    if command in ['n', 't']:
+    if command in ['n', 't', 'l']:
       userName =      input('Enter the user-name, e.g. m.miller: ')
-    if command in ['t']:
-      userPassword =      input('Enter the user-password: ')
+    if command in ['t', 'l']:
+      userPassword =  input('Enter the user-password: ')
     # execute command
     if command == 'n' and userName and len(userName)>2:
       createUserDatabase(url, auth, userName)
@@ -526,6 +560,21 @@ def main() -> None:
       backupCouchDB()
     elif command == 'r':
       restoreCouchDB()
+    elif command == 'c':
+      print('``` python')
+      print('import json, requests')
+      print('from requests.structures import CaseInsensitiveDict')
+      print('headers:CaseInsensitiveDict[str]= CaseInsensitiveDict()')
+      print('headers["Content-Type"] = "application/json"\n')
+      print(f'url = "{url}"')
+      print(f'administrator = "{administrator}"')
+      print(f'password = "{password}"\n')
+      print('auth = requests.auth.HTTPBasicAuth(administrator, password)')
+      print('```')
+    elif command == 'l':
+      database = input('Enter the database: ')
+      full     = True if input('Full output [yN] ')=='y' else False
+      listDocuments(url, userName, userPassword, database, full)
     elif command == 't' and userName and userPassword and len(userName)>2 and len(userPassword)>2:
       testUser(url, auth, userName, userPassword)
     else:

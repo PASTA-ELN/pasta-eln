@@ -655,14 +655,6 @@ class Database:
       except Exception:
         return '<b>ERROR drp01: Could not connect to remote server. Abort replication.</b><br>'+\
                  'user:'+dbInfo['user']+'<br>password:'+dbInfo['password']+'<br>url:'+dbInfo['url']
-      try:
-        listAllDataBases = client2.all_dbs()
-        if dbInfo['database'] in listAllDataBases and removeAtStart:
-          client2.delete_database(dbInfo['database'])
-        if dbInfo['database'] not in listAllDataBases:
-          db2 = client2.create_database(dbInfo['database'])
-      except Exception:
-        pass
       db2 = client2[dbInfo['database']]
       replResult = rep.create_replication(self.db, db2, create_target=False, continuous=False)
       logging.info('Start replication '+replResult['_id']+'.')

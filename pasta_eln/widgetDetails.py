@@ -72,24 +72,27 @@ class Details(QScrollArea):
       for key,value in choices.items():
         Action(value, self.changeExtractor, context, self, name=key)
       context.addSeparator()
-      Action('Save image',                self.changeExtractor, context, self, name='_saveAsImage_')
-    Action('Open folder in file browser', self.changeExtractor, context, self, name='_openInFileBrowser_')
+      Action('Save image',                       self.changeExtractor, context, self, name='_saveAsImage_')
+    Action('Open file with another application', self.changeExtractor, context, self, name='_openExternal_')
+    Action('Open folder in file browser',        self.changeExtractor, context, self, name='_openInFileBrowser_')
     context.exec(self.mapToGlobal(pos))
     return
+
 
   def changeExtractor(self) -> None:
     """
     What happens when user changes extractor
     """
     filePath = Path(self.doc['-branch'][0]['path'])
-    if self.sender().data()=='_openInFileBrowser_':
+    if self.sender().data() in ['_openInFileBrowser_','_openExternal_']:
       filePath = self.comm.backend.basePath/filePath
+      filePath = filePath if self.sender().data()=='_openExternal_' else filePath.parent
       if platform.system() == 'Darwin':       # macOS
-        subprocess.call(('open', filePath.parent))
+        subprocess.call(('open', filePath))
       elif platform.system() == 'Windows':    # Windows
-        os.startfile(filePath.parent) # type: ignore[attr-defined]
+        os.startfile(filePath) # type: ignore[attr-defined]
       else:                                   # linux variants
-        subprocess.call(('xdg-open', filePath.parent))
+        subprocess.call(('xdg-open', filePath))
     elif self.sender().data()=='_saveAsImage_':
       image = self.doc['image']
       if image.startswith('data:image/'):

@@ -97,6 +97,8 @@ class Table(QWidget):
     if docType!=self.docType or projID!=self.projID:
       logging.debug('table:changeTable |%s|%s|',docType, projID)
     self.models = []
+    #if not docType:  #only remove old filters, when docType changes
+    #   make sure internal updates are accounted for: i.e. comment
     for i in reversed(range(self.filterL.count())):
       self.filterL.itemAt(i).widget().setParent(None)   # type: ignore
     if docType!='':
@@ -123,6 +125,8 @@ class Table(QWidget):
         self.data = self.comm.backend.db.getView(path)
       else:
         self.data = self.comm.backend.db.getView(path, preciseKey=self.projID)
+      # filter multiple lines of the same item: #https://stackoverflow.com/questions/11092511/list-of-unique-dictionaries
+      self.data = list({v['id']:v for v in self.data}.values())
       if self.docType=='-':
         self.headline.setText('Unidentified')
         self.actionChangeColums.setVisible(False)
@@ -254,7 +258,7 @@ class Table(QWidget):
       select = QComboBox()
       select.addItems(self.filterHeader)
       select.currentIndexChanged.connect(self.filterChoice)
-      # print('create filter row',str(len(self.models)) )
+      select.setMinimumWidth(max([len(i) for i in self.filterHeader])*14)
       select.setAccessibleName(str(len(self.models)))
       rowL.addWidget(select)
       IconButton('fa5s.minus-square', self.delFilter, rowL, str(len(self.models)), backend=self.comm.backend)

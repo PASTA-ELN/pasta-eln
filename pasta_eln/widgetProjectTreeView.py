@@ -30,44 +30,47 @@ class TreeView(QTreeView):
     Args:
       p (QPoint): point of clicking
     """
+    folder = self.currentIndex().data().split('/')[-1][0]=='x'
+    print(folder)
     context = QMenu(self)
-    Action('Add child folder',   self.executeAction, context, self, name='addChild')
+    if folder:
+      Action('Add child folder',   self.executeAction, context, self, name='addChild')
     Action('Add sibling folder', self.executeAction, context, self, name='addSibling')
-    Action('Remove item',        self.executeAction, context, self, name='del')
+    Action('Delete item',        self.executeAction, context, self, name='del')
     context.addSeparator()
     Action('Minimize/Maximize',  self.executeAction, context, self, name='fold')
     Action('Hide',               self.executeAction, context, self, name='hide')
     context.addSeparator()
-    Action('Open with another application', self.executeAction, context, self, name='openExternal')
+    if not folder:
+      Action('Open file with another application', self.executeAction, context, self, name='openExternal')
+    Action('Open folder in file browser', self.executeAction, context, self, name='openFileBrowser')
     context.exec(p.globalPos())
     return
+
 
   #TODO_P4 projectTree: drag&drop of external files
   def executeAction(self) -> None:
     # sourcery skip: extract-duplicate-method, extract-method
     """ after selecting a item from context menu """
     menuName = self.sender().data()
+    hierStack = self.currentIndex().data().split('/')
     if menuName=='addChild':
-      hierStack = self.currentIndex().data().split('/')
-      if hierStack[-1][0]=='x':
-        docType= f'x{len(hierStack)}'
-        docID = hierStack[-1][:-2] if hierStack[-1].endswith(' -') else hierStack[-1]
-        self.comm.backend.cwd = Path(self.comm.backend.db.getDoc(docID)['-branch'][0]['path'])
-        docID = self.comm.backend.addData(docType, {'-name':'new folder'}, hierStack)
-        # append item to the GUI
-        item  = self.model().itemFromIndex(self.currentIndex())
-        child = QStandardItem('/'.join(hierStack+[docID]))
-        child.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled) # type: ignore
-        item.appendRow(child)
-        #appendRow is not 100% correct:
-        # - better: insertRow before the first non-folder, depending on the child number
-        #   -> get highest non 9999 childNumber
-        # turns out, one can easily move it to correct position with drag&drop
-        # TODO_P4 not sure this will be important
-      else:
-        showMessage(self, 'Error', 'You cannot create a child of a non-folder!')
+      docType= f'x{len(hierStack)}'
+      docID = hierStack[-1][:-2] if hierStack[-1].endswith(' -') else hierStack[-1]
+      self.comm.backend.cwd = Path(self.comm.backend.db.getDoc(docID)['-branch'][0]['path'])
+      docID = self.comm.backend.addData(docType, {'-name':'new folder'}, hierStack)
+      # append item to the GUI
+      item  = self.model().itemFromIndex(self.currentIndex())
+      child = QStandardItem('/'.join(hierStack+[docID]))
+      child.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled) # type: ignore
+      item.appendRow(child)
+      #appendRow is not 100% correct:
+      # - better: insertRow before the first non-folder, depending on the child number
+      #   -> get highest non 9999 childNumber
+      # turns out, one can easily move it to correct position with drag&drop
+      # TODO_P4 not sure this will be important
     elif menuName=='addSibling':
-      hierStack= self.currentIndex().data().split('/')[:-1]
+      hierStack= hierStack[:-1]
       docType= f'x{len(hierStack)}'
       docID = hierStack[-1][:-2] if hierStack[-1].endswith(' -') else hierStack[-1]
       self.comm.backend.cwd = Path(self.comm.backend.db.getDoc(docID)['-branch'][0]['path'])
@@ -83,7 +86,7 @@ class TreeView(QTreeView):
       ret = QMessageBox.critical(self, 'Warning', 'Are you sure you want to delete this data?',\
                                  QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.No)
       if ret==QMessageBox.StandardButton.Yes:
-        docID = self.currentIndex().data().split('/')[-1]
+        docID = hierStack[-1]
         doc = self.comm.backend.db.remove(docID)
         for branch in doc['-branch']:
           oldPath = Path(self.comm.backend.basePath)/branch['path']
@@ -112,12 +115,12 @@ class TreeView(QTreeView):
       else:
         item.setText(f'{item.text()} -')
     elif menuName=='hide':
-      stack = self.currentIndex().data().split('/')
-      logging.debug('hide stack %s',str(stack))
-      self.comm.backend.db.hideShow(stack)
+      logging.debug('hide stack %s',str(hierStack))
+      self.comm.backend.db.hideShow(hierStack)
       self.comm.changeProject.emit('','') #refresh project
-    elif menuName=='openExternal':
-      docID = self.currentIndex().data().split('/')[-1]
+    elif menuName in ['openExternal', 'openFileBrowser']:
+      # depending if non-folder / folder; address different item in hierstack
+      docID = hierStack[-2] if menuName=='openFileBrowser' and hierStack[-1][0]!='x' else hierStack[-1]
       doc   = self.comm.backend.db.getDoc(docID[:-2] if docID.endswith(' -') else docID)
       if doc['-branch'][0]['path'] is None:
         showMessage(self, 'ERROR', 'Cannot open file that is only in the database','Warning')
