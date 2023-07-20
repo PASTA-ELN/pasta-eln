@@ -75,6 +75,7 @@ class Details(QScrollArea):
       Action('Save image',                       self.changeExtractor, context, self, name='_saveAsImage_')
     Action('Open file with another application', self.changeExtractor, context, self, name='_openExternal_')
     Action('Open folder in file browser',        self.changeExtractor, context, self, name='_openInFileBrowser_')
+    Action('Hide',                               self.changeExtractor, context, self, name='_hide_')
     context.exec(self.mapToGlobal(pos))
     return
 
@@ -83,17 +84,18 @@ class Details(QScrollArea):
     """
     What happens when user changes extractor
     """
+    menuName = self.sender().data()
     filePath = Path(self.doc['-branch'][0]['path'])
-    if self.sender().data() in ['_openInFileBrowser_','_openExternal_']:
+    if menuName in ['_openInFileBrowser_','_openExternal_']:
       filePath = self.comm.backend.basePath/filePath
-      filePath = filePath if self.sender().data()=='_openExternal_' else filePath.parent
+      filePath = filePath if menuName=='_openExternal_' else filePath.parent
       if platform.system() == 'Darwin':       # macOS
         subprocess.call(('open', filePath))
       elif platform.system() == 'Windows':    # Windows
         os.startfile(filePath) # type: ignore[attr-defined]
       else:                                   # linux variants
         subprocess.call(('xdg-open', filePath))
-    elif self.sender().data()=='_saveAsImage_':
+    elif menuName =='_saveAsImage_':
       image = self.doc['image']
       if image.startswith('data:image/'):
         imageType = image[11:14] if image[14]==';' else image[11:15]
@@ -104,8 +106,12 @@ class Details(QScrollArea):
       if not path.as_posix().startswith('http'):
         path = self.comm.backend.basePath/path
       self.comm.backend.testExtractor(path, recipe='/'.join(self.doc['-type']), saveFig=saveFilePath)
+    elif menuName == '_hide_':
+      self.comm.backend.db.hideShow(self.docID)
+      self.comm.changeTable.emit('','')
+      self.comm.changeDetails.emit(self.doc['_id'])
     else:
-      self.doc['-type'] = self.sender().data().split('/')
+      self.doc['-type'] = menuName.split('/')
       self.comm.backend.useExtractors(filePath, self.doc['shasum'], self.doc)  #any path is good since the file is the same everywhere; data-changed by reference
       if len(self.doc['-type'])>1 and len(self.doc['image'])>1:
         self.doc = self.comm.backend.db.updateDoc({'image':self.doc['image'], '-type':self.doc['-type']}, self.doc['_id'])
@@ -155,6 +161,10 @@ class Details(QScrollArea):
     self.metaVendorW.hide()
     self.metaUserW.hide()
     self.metaDatabaseW.hide()
+    self.btnDetails.setChecked(True)
+    self.btnVendor.setChecked(True)
+    self.btnUser.setChecked(True)
+    self.btnDatabase.setChecked(False)
     if not docID:  #if given '' docID, return
       return
     # Create new
@@ -222,22 +232,28 @@ class Details(QScrollArea):
       else:
         link = False
         ontologyItem = [i for i in ontologyNode if i['name']==key]
-        if len(ontologyItem)==1 and 'list' in ontologyItem[0]:
-          if not isinstance(ontologyItem[0]['list'], list):                #choice among docType
-            table  = self.comm.backend.db.getView('viewDocType/'+ontologyItem[0]['list'])
-            choices= [i for i in table if i['id']==self.doc[key]]
-            if len(choices)==1:
-              value = '\u260D '+choices[0]['value'][0]
-              link = True
-        elif isinstance(self.doc[key], list):
-          value = ', '.join(self.doc[key])
-        elif '\n' in self.doc[key]:     #if returns in value
-          value = '\n    '+self.doc[key].replace('\n','\n    ')
+        if '\n' in self.doc[key]:     #if returns in value: format nicely
+          _, labelL = widgetAndLayout('H', self.metaDetailsL, top='s', bottom='s')
+          labelL.addWidget(QLabel(f'{key}: '), alignment=Qt.AlignTop)
+          text = QTextEdit()
+          text.setMarkdown(self.doc[key])
+          text.setReadOnly(True)
+          labelL.addWidget(text)
         else:
-          value = self.doc[key]
-        label = Label(f'{key.capitalize()}: {value}', function=self.clickLink if link else None, docID=self.doc[key])
-        label.setTextInteractionFlags(Qt.TextSelectableByMouse)
-        self.metaDetailsL.addWidget(label)
+          if len(ontologyItem)==1 and 'list' in ontologyItem[0]:
+            if not isinstance(ontologyItem[0]['list'], list):                #choice among docType
+              table  = self.comm.backend.db.getView('viewDocType/'+ontologyItem[0]['list'])
+              choices= [i for i in table if i['id']==self.doc[key]]
+              if len(choices)==1:
+                value = '\u260D '+choices[0]['value'][0]
+                link = True
+          elif isinstance(self.doc[key], list):
+            value = ', '.join(self.doc[key])
+          else:
+            value = self.doc[key]
+          label = Label(f'{key.capitalize()}: {value}', function=self.clickLink if link else None, docID=self.doc[key])
+          label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+          self.metaDetailsL.addWidget(label)
         self.metaDetailsW.show()
     return
 

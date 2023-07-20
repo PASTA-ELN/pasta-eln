@@ -69,7 +69,7 @@ class Sidebar(QWidget):
       #TODO_P5 for now, sorted by last change of project itself. future create a view that does that automatically(if docType x0: emit changeDate)
       lastChangeDate = [db.getDoc(project['id'])['-date'] for project in hierarchy]
       maxProjects = int((self.height()-120)/50)-1
-      for index, project in enumerate(x for _, x in sorted(zip(lastChangeDate, hierarchy))):
+      for index, project in enumerate(x for _, x in sorted(zip(lastChangeDate, hierarchy), reverse=True)):
         if index>maxProjects:
           break
         projID = project['id']

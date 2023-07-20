@@ -1,8 +1,8 @@
 """ Widget that shows the content of project in a electronic labnotebook """
 import logging
 from typing import Optional, Any
-from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget, QMenu, QMessageBox # pylint: disable=no-name-in-module
-from PySide6.QtGui import QStandardItemModel, QStandardItem    # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget, QMenu, QMessageBox, QTextEdit # pylint: disable=no-name-in-module
+from PySide6.QtGui import QStandardItemModel, QStandardItem   # pylint: disable=no-name-in-module
 from PySide6.QtCore import Slot, Qt, QItemSelectionModel, QModelIndex # pylint: disable=no-name-in-module
 from anytree import PreOrderIter, Node
 from .widgetProjectTreeView import TreeView
@@ -20,7 +20,7 @@ class Project(QWidget):
     self.setLayout(self.mainL)
     self.tree:Optional[TreeView]             = None
     self.model:Optional[QStandardItemModel]  = None
-    self.bodyW:Optional[QWidget]             = None
+    self.infoW:Optional[QWidget]             = None
     self.projID = ''
     self.taskID = ''
     self.docProj:dict[str,Any]= {}
@@ -137,36 +137,40 @@ class Project(QWidget):
     Create header of page
     """
     self.docProj = self.comm.backend.db.getDoc(self.projID)
-    _, headerL       = widgetAndLayout('H',self.mainL)
-    infoW, infoL         = widgetAndLayout('V', headerL)
-    infoW.setMaximumWidth(self.maxWidth)
-    infoW.setMaximumHeight(self.maxHeight)
-    buttonW, buttonL = widgetAndLayout('H', spacing='m')
-    headerL.addStretch(1)
-    headerL.addWidget(buttonW, alignment=Qt.AlignTop)  # type: ignore
+    _, topLineL       = widgetAndLayout('H',self.mainL)  #topLine includes name on left, buttons on right
+    hidden = '     \U0001F441' if [b for b in self.docProj['-branch'] if False in b['show']] else ''
+    topLineL.addWidget(Label(self.docProj['-name']+hidden, 'h2'))
+    topLineL.addStretch(1)
 
+    buttonW, buttonL = widgetAndLayout('H', spacing='m')
+    topLineL.addWidget(buttonW, alignment=Qt.AlignTop)  # type: ignore
     self.btnHideShow     = TextButton('Hide/Show',     self.executeAction, buttonL, name='hideShow')
     self.btnAddSubfolder = TextButton('Add subfolder', self.executeAction, buttonL, name='addChild')
     TextButton('Edit project',      self.executeAction, buttonL, name='editProject')
     more = TextButton('More',None, buttonL)
     moreMenu = QMenu(self)
-    Action('Reduce/increase width', self.executeAction, moreMenu, self, name='projReduceWidth')
+    Action('Hide/show details',     self.executeAction, moreMenu, self, name='projReduceWidth')
     Action('Hide/show project',     self.executeAction, moreMenu, self, name='projHideShow')
     Action('Minimize/Maximize all', self.executeAction, moreMenu, self, name='allFold')
     Action('Scan',                  self.executeAction, moreMenu, self, name='scanProject')
     Action('Delete',                self.executeAction, moreMenu, self, name='deleteProject')
     more.setMenu(moreMenu)
 
-    self.bodyW, bodyL =  widgetAndLayout('V')
-    hidden = '     \U0001F441' if [b for b in self.docProj['-branch'] if False in b['show']] else ''
-    infoL.addWidget(Label(self.docProj['-name']+hidden, 'h2'))
+    self.infoW, infoL         = widgetAndLayout('V', self.mainL)
     tags = ', '.join(self.docProj['tags']) if 'tags' in self.docProj else ''
-    bodyL.addWidget(QLabel(f'Tags: {tags}'))
+    infoL.addWidget(QLabel(f'Tags: {tags}'))
     for key,value in self.docProj.items():
-      if key[0] in ['_','-']:
+      if key[0] in ['_','-'] or (key=='comment' and '\n' in value):
         continue
-      bodyL.addWidget(QLabel(f'{key}: {str(value)}'))
-    infoL.addWidget(self.bodyW)
+      else:
+        infoL.addWidget(QLabel(f'{key}: {str(value)}'))
+    if 'comment' in self.docProj and '\n' in self.docProj['comment']:     #format nicely
+      # comment = QTextEdit()  #TODO_P3 render comment nicely without screwing up the rest
+      # comment.setMarkdown(self.docProj['comment'])
+      # comment.setReadOnly(True)
+      # comment.setFixedHeight(200)
+      # infoL.addWidget(comment)
+      infoL.addWidget(QLabel(self.docProj['comment']))
     return
 
 
@@ -204,10 +208,10 @@ class Project(QWidget):
       self.comm.changeSidebar.emit('redraw')
       showMessage(self, 'Information','Scanning finished')
     elif menuName == 'projReduceWidth':
-      if self.bodyW is not None and self.bodyW.isHidden():
-        self.bodyW.show()
-      elif self.bodyW is not None:
-        self.bodyW.hide()
+      if self.infoW is not None and self.infoW.isHidden():
+        self.infoW.show()
+      elif self.infoW is not None:
+        self.infoW.hide()
     elif menuName == 'projHideShow':
       self.comm.backend.db.hideShow(self.projID)
       self.comm.changeProject.emit('','') #refresh project
