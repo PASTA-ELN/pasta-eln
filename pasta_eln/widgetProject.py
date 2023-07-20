@@ -6,7 +6,7 @@ from PySide6.QtGui import QStandardItemModel, QStandardItem   # pylint: disable=
 from PySide6.QtCore import Slot, Qt, QItemSelectionModel, QModelIndex # pylint: disable=no-name-in-module
 from anytree import PreOrderIter, Node
 from .widgetProjectTreeView import TreeView
-from .style import TextButton, Action, Label, showMessage, widgetAndLayout
+from .style import TextButton, IconButton, Action, Label, showMessage, widgetAndLayout, iconsDocTypes
 from .miscTools import createDirName
 from .communicate import Communicate
 
@@ -152,7 +152,14 @@ class Project(QWidget):
     Action('Hide/show details',     self.executeAction, moreMenu, self, name='projReduceWidth')
     Action('Hide/show project',     self.executeAction, moreMenu, self, name='projHideShow')
     Action('Minimize/Maximize all', self.executeAction, moreMenu, self, name='allFold')
+    moreMenu.addSeparator()
     Action('Scan',                  self.executeAction, moreMenu, self, name='scanProject')
+    for doctype in self.comm.backend.db.dataLabels:
+      if doctype[0]!='x':
+        icon = iconsDocTypes[self.comm.backend.db.dataLabels[doctype]]
+        Action(f'table of {doctype}', self.executeAction, moreMenu, self, name=f'_doctype_{doctype}', icon=icon)
+    Action('table of unidentified', self.executeAction, moreMenu, self, name=f'_doctype_-', icon=iconsDocTypes['-'])
+    moreMenu.addSeparator()
     Action('Delete',                self.executeAction, moreMenu, self, name='deleteProject')
     more.setMenu(moreMenu)
 
@@ -228,7 +235,6 @@ class Project(QWidget):
               subItem.setText(subItem.text()[:-2])
             recursiveRowIteration(subIndex)
         return
-
       recursiveRowIteration(self.tree.model().index(-1,0))
     elif menuName == 'hideShow':
       self.showAll = not self.showAll
@@ -237,8 +243,10 @@ class Project(QWidget):
       self.comm.backend.cwd = self.comm.backend.basePath/self.docProj['-branch'][0]['path']
       self.comm.backend.addData('x1', {'-name':'new folder'}, [self.projID])
       self.comm.changeProject.emit('','') #refresh project
+    elif menuName.startswith('_doctype_'):
+      self.comm.changeTable.emit(menuName[9:], self.projID)
     else:
-      print("undefined menu / action",menuName)
+      print(f"undefined menu / action |{menuName}|")
     return
 
 

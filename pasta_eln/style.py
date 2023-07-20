@@ -125,7 +125,7 @@ class IconButton(QPushButton):
 class Action(QAction):
   """ QAction and assign function to menu"""
   def __init__(self, label:str, function:Callable[[],None], menu:QMenu, parent:QWidget,
-               shortcut:Optional[str]=None, name:Optional[str]=None):
+               shortcut:Optional[str]=None, name:Optional[str]=None, icon:str=''):
     """
     Args:
       label (str): label printed on submenu
@@ -134,11 +134,14 @@ class Action(QAction):
       parent (QWidget): parent widget
       shortcut (str): shortcut (e.g. Ctrl+K)
       name (str): additional data to transport
+      icon (str): icon name
     """
     super().__init__()
     self.setParent(parent)
     self.setText(label)
     self.triggered.connect(function)
+    if icon:
+      self.setIcon(qta.icon(icon, scale_factor=1))
     if menu is not None:
       menu.addAction(self)
     if shortcut is not None:
