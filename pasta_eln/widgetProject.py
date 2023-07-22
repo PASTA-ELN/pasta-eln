@@ -27,7 +27,6 @@ class Project(QWidget):
     self.showAll= False
     self.foldedAll = False
     self.btnAddSubfolder:Optional[TextButton] = None
-    self.btnHideShow:Optional[TextButton]     = None
     self.maxHeight = 300  #TODO_P4 configuration
     self.maxWidth  = 1024
 
@@ -71,8 +70,6 @@ class Project(QWidget):
     self.mainL.addWidget(self.tree)
     if len(nodeHier.children)>0 and self.btnAddSubfolder is not None:
       self.btnAddSubfolder.setVisible(False)
-    elif self.btnHideShow is not None:
-      self.btnHideShow.setVisible(False)
     return
 
 
@@ -144,15 +141,17 @@ class Project(QWidget):
 
     buttonW, buttonL = widgetAndLayout('H', spacing='m')
     topLineL.addWidget(buttonW, alignment=Qt.AlignTop)  # type: ignore
-    self.btnHideShow     = TextButton('Hide/Show',     self.executeAction, buttonL, name='hideShow')
     self.btnAddSubfolder = TextButton('Add subfolder', self.executeAction, buttonL, name='addChild')
     TextButton('Edit project',      self.executeAction, buttonL, name='editProject')
+    visibility = TextButton('Visibility',None, buttonL)
+    visibilityMenu = QMenu(self)
+    Action('Hide/show project details', self.executeAction, visibilityMenu, self, name='projReduceWidth')
+    Action('Hide/show hidden subitems', self.executeAction, visibilityMenu, self, name='hideShow')
+    Action('Hide/show entire project',  self.executeAction, visibilityMenu, self, name='projHideShow')
+    Action('Minimize/Maximize subitems',self.executeAction, visibilityMenu, self, name='allFold')
+    visibility.setMenu(visibilityMenu)
     more = TextButton('More',None, buttonL)
     moreMenu = QMenu(self)
-    Action('Hide/show details',     self.executeAction, moreMenu, self, name='projReduceWidth')
-    Action('Hide/show project',     self.executeAction, moreMenu, self, name='projHideShow')
-    Action('Minimize/Maximize all', self.executeAction, moreMenu, self, name='allFold')
-    moreMenu.addSeparator()
     Action('Scan',                  self.executeAction, moreMenu, self, name='scanProject')
     for doctype in self.comm.backend.db.dataLabels:
       if doctype[0]!='x':

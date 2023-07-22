@@ -671,7 +671,11 @@ class Database:
         if '_replication_state' in replResult:
           logging.info('Success replication '+replResult['_id']+'.')
           progressBar.hide()
-          return "Replication success state: "+replResult['_replication_state']
+          reply = f"Replication success state: {replResult['_replication_state']}\n" + \
+                  f"  time of reporting: {replResult['_replication_state_time']}\n"
+          stats = dict(replResult['_replication_stats'])
+          del stats['checkpointed_source_seq']
+          return reply+'\n  '.join([f"{k.replace('_',' ')}:{v}" for k,v in stats.items()])
         time.sleep(10)
     except Exception:
       progressBar.hide()

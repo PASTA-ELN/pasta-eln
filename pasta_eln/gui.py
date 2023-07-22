@@ -4,7 +4,7 @@ from typing import Any
 from pathlib import Path
 from PySide6.QtWidgets import QMainWindow, QApplication, QFileDialog, QScrollArea # pylint: disable=no-name-in-module
 from PySide6.QtCore import Qt, Slot      # pylint: disable=no-name-in-module
-from PySide6.QtGui import QIcon, QPixmap  # pylint: disable=no-name-in-module
+from PySide6.QtGui import QIcon, QPixmap, QShortcut  # pylint: disable=no-name-in-module
 from qt_material import apply_stylesheet  #of https://github.com/UN-GCPDS/qt-material
 
 from pasta_eln import __version__
@@ -79,15 +79,17 @@ class MainWindow(QMainWindow):
            shortcut='F2')
     Action('Update &Extractor list',         self.executeAction, systemMenu, self, name='updateExtractors')
     systemMenu.addSeparator()
-    Action('&Verify database',       self.executeAction, systemMenu, self, name='verifyDB', shortcut='Ctrl+?')
-    Action('&Restart',               self.executeAction, systemMenu, self, name='restart', shortcut='F9')
     Action('&Configuration',         self.executeAction, systemMenu, self, name='configuration', shortcut='Ctrl+.')
 
     helpMenu = menu.addMenu("&Help")
     Action('&Website',               self.executeAction, helpMenu, self, name='website')
+    Action('&Verify database',       self.executeAction, helpMenu, self, name='verifyDB', shortcut='Ctrl+?')
     Action('Shortcuts',              self.executeAction, helpMenu, self, name='shortcuts')
     Action('Todo list',              self.executeAction, helpMenu, self, name='todo')
+    Action('&Restart',               self.executeAction, helpMenu, self, name='restart', shortcut='F9')
     helpMenu.addSeparator()
+
+    # sc = QShortcut('F9', self, self.executeAction)
 
     #GUI elements
     mainWidget, mainLayout = widgetAndLayout('H')

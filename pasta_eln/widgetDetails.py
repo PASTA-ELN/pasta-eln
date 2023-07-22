@@ -1,11 +1,10 @@
 """ widget that shows the details of the items """
 from pathlib import Path
-import platform, subprocess, os, base64, logging
+import platform, subprocess, os, logging
 from typing import Any
 import yaml
 from PySide6.QtWidgets import QScrollArea, QLabel, QMenu, QTextEdit  # pylint: disable=no-name-in-module
 from PySide6.QtCore import Qt, Slot, QPoint  # pylint: disable=no-name-in-module
-from PySide6.QtGui import QTextDocument  # pylint: disable=no-name-in-module
 from .style import TextButton, Image, Label, Action, showMessage, widgetAndLayout
 from .fixedStrings import defaultOntologyNode
 from .communicate import Communicate
@@ -52,7 +51,7 @@ class Details(QScrollArea):
     self.mainL.addStretch(1)
 
 
-  def contextMenu(self, pos:QPoint) -> None:
+  def contextMenu(self, pos:QPoint) -> None: #TODO_P3 move all context menu of this type to separate function
     # sourcery skip: extract-method
     """
     Create a context menu
@@ -80,7 +79,7 @@ class Details(QScrollArea):
     return
 
 
-  def changeExtractor(self) -> None:
+  def changeExtractor(self) -> None:  #TODO_P3 move all changeExtractor of this type to separate function
     """
     What happens when user changes extractor
     """

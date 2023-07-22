@@ -1,11 +1,13 @@
 """ New/Edit dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""
-import logging, re, copy
+import logging, re, copy, subprocess, platform
 from typing import Any, Union
+from pathlib import Path
 from PySide6.QtWidgets import QDialog, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QTextEdit, QPushButton,\
-                              QPlainTextEdit, QComboBox, QLineEdit, QDialogButtonBox, QSplitter, QSizePolicy # pylint: disable=no-name-in-module
+                              QPlainTextEdit, QComboBox, QLineEdit, QDialogButtonBox, QSplitter, QSizePolicy,\
+                              QMenu # pylint: disable=no-name-in-module
 from PySide6.QtGui import QRegularExpressionValidator # pylint: disable=no-name-in-module
-from PySide6.QtCore import QSize                      # pylint: disable=no-name-in-module
-from .style import Image, TextButton, IconButton, Label, showMessage, widgetAndLayout
+from PySide6.QtCore import QSize, Qt, QPoint                  # pylint: disable=no-name-in-module
+from .style import Image, TextButton, IconButton, Label, Action, showMessage, widgetAndLayout
 from .fixedStrings import defaultOntologyNode
 from .handleDictionaries import fillDocBeforeCreate
 from .miscTools import createDirName
@@ -24,7 +26,7 @@ class Form(QDialog):
     super().__init__()
     self.comm = comm
     self.db   = self.comm.backend.db
-    self.doc  = dict(doc)
+    self.doc  = copy.deepcopy(doc)
     if '_attachments' in self.doc:
       del self.doc['_attachments']
     self.flagNewDoc = True
@@ -42,9 +44,12 @@ class Form(QDialog):
     if 'image' in self.doc:
       width = self.comm.backend.configuration['GUI']['imageSizeDetails'] \
                   if hasattr(self.comm.backend, 'configuration') else 300
-      Image(self.doc['image'], mainL, anyDimension=width)
-    _, self.formL = widgetAndLayout('Form', mainL, 's')
+      imageW, imageL = widgetAndLayout('V', mainL)
+      Image(self.doc['image'], imageL, anyDimension=width)
+      imageW.setContextMenuPolicy(Qt.CustomContextMenu)
+      imageW.customContextMenuRequested.connect(self.contextMenu)
 
+    _, self.formL = widgetAndLayout('Form', mainL, 's')
     #Add things that are in ontology
     if '_ids' not in self.doc:  #normal form
       setattr(self, 'key_-name', QLineEdit(self.doc['-name']))
@@ -142,7 +147,7 @@ class Form(QDialog):
     #add extra questions at bottom of form
     allowProjectAndDocTypeChange = '_id' in self.doc and self.doc['-type'][0][0]!='x'
     if '_ids' in self.doc: #if group edit
-      allowProjectAndDocTypeChange = all(docID[0]=='x' for docID in self.doc['_ids'])
+      allowProjectAndDocTypeChange = not any(docID[0]=='x' for docID in self.doc['_ids'])
     if allowProjectAndDocTypeChange: #if not-new and non-folder
       self.formL.addRow(QLabel('Special properties:'), QLabel('') )
     label = '- unassigned -' if self.flagNewDoc else '- no change -'
@@ -150,7 +155,8 @@ class Form(QDialog):
       self.projectComboBox = QComboBox()
       self.projectComboBox.addItem(label, userData='')
       for line in self.db.getView('viewDocType/x0'):
-        self.projectComboBox.addItem(line['value'][0], userData=line['id'])
+        if not '-branch' in self.doc or not any([line['id']==branch['stack'][0] for branch in self.doc['-branch']]):
+          self.projectComboBox.addItem(line['value'][0], userData=line['id'])
       self.formL.addRow(QLabel('Project'), self.projectComboBox)
     if allowProjectAndDocTypeChange: #if not-new and non-folder
       self.docTypeComboBox = QComboBox()
@@ -166,6 +172,7 @@ class Form(QDialog):
       buttonBox.addButton('Save && Next', QDialogButtonBox.ApplyRole)
     buttonBox.clicked.connect(self.save)
     mainL.addWidget(buttonBox)
+
 
   # TODO_P4 add splitter to increase / decrease image
   # TODO_P3 form: image does not allow for easy context aware clicks
@@ -188,8 +195,9 @@ class Form(QDialog):
           showMessage(self, 'Error', 'A created item has to have a valid name')
           return
         if self.doc['-type'][0]=='x0':  #prevent project-directory names that are identical
-          others = [i['value'][0] for i in self.comm.backend.db.getView('viewDocType/x0All')]
-          others = [createDirName(i,'x0', 0) for i in others]
+          others = self.comm.backend.db.getView('viewDocType/x0All')
+          others = [i['value'][0] for i in others if i['id']!=self.doc['_id']] # create list of names but filter own name
+          others = [createDirName(i,'x0', 0) for i in others] #create names
           while createDirName(self.doc['-name'],'x0', 0) in others:
             if re.search(r"_\d+$", self.doc['-name']) is None:
               self.doc['-name'] += '_1'
@@ -203,7 +211,7 @@ class Form(QDialog):
           continue
         if key in ['comment','content']:
           text = getattr(self, f'textEdit_{key}').toPlainText().strip()
-          if ('_ids' in self.doc and text!='') or '_id' in self.doc:  #if group edit, text has to have text
+          if not ('_ids' in self.doc and not text):  #if group edit, text has to have text
             self.doc[key] = text
             if key == 'content' and '-branch' in self.doc:
               for branch in self.doc['-branch']:
@@ -270,7 +278,6 @@ class Form(QDialog):
             self.db.remove(doc['_id'])
             del doc['_id']
             del doc['_rev']
-            doc['-name'] = doc['-name'] if doc['-branch'][0]['path'] is None else doc['-branch'][0]['path']
             doc = fillDocBeforeCreate(doc, self.docTypeComboBox.currentData())
             self.db.saveDoc(doc)
         else:                  #single or sequential update
@@ -307,6 +314,68 @@ class Form(QDialog):
       print('dialogForm: did not get a fitting btn ',btn.text())
     return
 
+
+  def contextMenu(self, pos:QPoint) -> None:
+    # sourcery skip: extract-method
+    """
+    Create a context menu
+
+    Args:
+      pos (position): Position to create context menu at
+    """
+    context = QMenu(self)
+    # for extractors
+    extractors = self.comm.backend.configuration['extractors']
+    extension = Path(self.doc['-branch'][0]['path']).suffix[1:]
+    if extension.lower() in extractors:
+      extractors = extractors[extension.lower()]
+      baseDocType= self.doc['-type'][0]
+      choices= {key:value for key,value in extractors.items() \
+                  if key.startswith(baseDocType)}
+      for key,value in choices.items():
+        Action(value, self.changeExtractor, context, self, name=key)
+      context.addSeparator()
+      Action('Save image',                       self.changeExtractor, context, self, name='_saveAsImage_')
+    Action('Open file with another application', self.changeExtractor, context, self, name='_openExternal_')
+    Action('Open folder in file browser',        self.changeExtractor, context, self, name='_openInFileBrowser_')
+    context.exec(self.mapToGlobal(pos))
+    return
+
+
+  def changeExtractor(self) -> None:
+    """
+    What happens when user changes extractor
+    """
+    menuName = self.sender().data()
+    filePath = Path(self.doc['-branch'][0]['path'])
+    if menuName in ['_openInFileBrowser_','_openExternal_']:
+      filePath = self.comm.backend.basePath/filePath
+      filePath = filePath if menuName=='_openExternal_' else filePath.parent
+      if platform.system() == 'Darwin':       # macOS
+        subprocess.call(('open', filePath))
+      elif platform.system() == 'Windows':    # Windows
+        os.startfile(filePath) # type: ignore[attr-defined]
+      else:                                   # linux variants
+        subprocess.call(('xdg-open', filePath))
+    elif menuName =='_saveAsImage_':
+      image = self.doc['image']
+      if image.startswith('data:image/'):
+        imageType = image[11:14] if image[14]==';' else image[11:15]
+      else:
+        imageType = 'svg'
+      saveFilePath = self.comm.backend.basePath/filePath.parent/f'{filePath.stem}_PastaExport.{imageType.lower()}'
+      path = Path(self.doc['-branch'][0]['path'])
+      if not path.as_posix().startswith('http'):
+        path = self.comm.backend.basePath/path
+      self.comm.backend.testExtractor(path, recipe='/'.join(self.doc['-type']), saveFig=saveFilePath)
+    else:
+      self.doc['-type'] = menuName.split('/')
+      self.comm.backend.useExtractors(filePath, self.doc['shasum'], self.doc)  #any path is good since the file is the same everywhere; data-changed by reference
+      if len(self.doc['-type'])>1 and len(self.doc['image'])>1:
+        self.doc = self.comm.backend.db.updateDoc({'image':self.doc['image'], '-type':self.doc['-type']}, self.doc['_id'])
+        self.comm.changeTable.emit('','')
+        self.comm.changeDetails.emit(self.doc['_id'])
+    return
 
 
   def btnFocus(self, status:bool) -> None:
