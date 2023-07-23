@@ -171,7 +171,7 @@ class Project(QWidget):
       else:
         infoL.addWidget(QLabel(f'{key}: {str(value)}'))
     if 'comment' in self.docProj and '\n' in self.docProj['comment']:     #format nicely
-      # comment = QTextEdit()  #TODO_P3 render comment nicely without screwing up the rest
+      # comment = QTextEdit()  #TODO_P2 render comment nicely without screwing up the rest
       # comment.setMarkdown(self.docProj['comment'])
       # comment.setReadOnly(True)
       # comment.setFixedHeight(200)

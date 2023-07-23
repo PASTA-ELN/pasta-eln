@@ -317,8 +317,10 @@ class Database:
           continue
         if item=='image' and change['image']=='':          #skip if non-change in image
           continue
-        if change[item] is None or (isinstance(change[item], str) and change[item].strip()=='') or \
-               (isinstance(change[item], list) and len(change[item])==0):      #skip empty entries
+        if change[item] is None:
+          # DO CHANGE TO EMPTY: if user wants it
+          # or (isinstance(change[item], str) and change[item].strip()=='') or \
+          #    (isinstance(change[item], list) and len(change[item])==0):      #skip empty entries
           continue
         ## Discussion: What if content only differs by whitespace changes?
         # These changes should occur in the database, the user wanted it so

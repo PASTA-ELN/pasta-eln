@@ -31,7 +31,6 @@ class TreeView(QTreeView):
       p (QPoint): point of clicking
     """
     folder = self.currentIndex().data().split('/')[-1][0]=='x'
-    print(folder)
     context = QMenu(self)
     if folder:
       Action('Add child folder',   self.executeAction, context, self, name='addChild')

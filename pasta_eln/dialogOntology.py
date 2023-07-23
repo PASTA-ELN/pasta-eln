@@ -35,7 +35,7 @@ class Ontology(QDialog):
     if btn.text().endswith('Cancel'):
       self.reject()
     elif btn.text().endswith('Save'):
-      #TODO_P3 finish ontology dialog
+      #TODO_P2 finish ontology dialog
       self.accept()  #close
     else:
       print('dialogOntology: did not get a fitting btn ',btn.text())

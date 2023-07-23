@@ -79,7 +79,7 @@ class Table(QWidget):
     header.setMaximumSectionSize(400) #TODO_P4 addToConfig
     header.resizeSections(QHeaderView.ResizeToContents)
     header.setStretchLastSection(True)
-    #TODO_P3 table: shift-select
+    #TODO_P2 table: shift-select
     # ---
     mainL.addWidget(self.table)
     self.setLayout(mainL)
@@ -185,7 +185,7 @@ class Table(QWidget):
         if docType!='x0':
           item.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)   # type: ignore[operator]
           item.setCheckState(Qt.CheckState.Unchecked)
-          #TODO_P3 design: make the checkboxes larger!
+          #TODO_P2 design: make the checkboxes larger!
       else:
         item.setFlags(Qt.ItemIsEnabled) # type: ignore[arg-type]
       model.setItem(i, j, item)

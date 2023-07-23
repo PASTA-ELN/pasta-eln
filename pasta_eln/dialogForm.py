@@ -173,9 +173,7 @@ class Form(QDialog):
     buttonBox.clicked.connect(self.save)
     mainL.addWidget(buttonBox)
 
-
   # TODO_P4 add splitter to increase / decrease image
-  # TODO_P3 form: image does not allow for easy context aware clicks
   # TODO_P3 form: add button to add key-values
   # TODO_P3 form: other items as non-edible things that can be copy-pasted
   def save(self, btn:QPushButton) -> None:
@@ -196,7 +194,9 @@ class Form(QDialog):
           return
         if self.doc['-type'][0]=='x0':  #prevent project-directory names that are identical
           others = self.comm.backend.db.getView('viewDocType/x0All')
-          others = [i['value'][0] for i in others if i['id']!=self.doc['_id']] # create list of names but filter own name
+          if '_id' in self.doc:
+            others = [i for i in others if i['id']!=self.doc['_id']] # create list of names but filter own name
+          others = [i['value'][0] for i in others]
           others = [createDirName(i,'x0', 0) for i in others] #create names
           while createDirName(self.doc['-name'],'x0', 0) in others:
             if re.search(r"_\d+$", self.doc['-name']) is None:
@@ -206,8 +206,7 @@ class Form(QDialog):
       # loop through all the subitems
       for key, valueOld in self.doc.items():
         if (key[0] in ['_', '-'] or key in ['image', 'metaVendor', 'metaUser']
-            or not hasattr(self, f'key_{key}')
-            and not hasattr(self, f'textEdit_{key}')):
+            or not hasattr(self, f'key_{key}') and not hasattr(self, f'textEdit_{key}')):
           continue
         if key in ['comment','content']:
           text = getattr(self, f'textEdit_{key}').toPlainText().strip()

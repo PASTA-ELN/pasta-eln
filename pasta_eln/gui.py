@@ -86,10 +86,13 @@ class MainWindow(QMainWindow):
     Action('&Verify database',       self.executeAction, helpMenu, self, name='verifyDB', shortcut='Ctrl+?')
     Action('Shortcuts',              self.executeAction, helpMenu, self, name='shortcuts')
     Action('Todo list',              self.executeAction, helpMenu, self, name='todo')
-    Action('&Restart',               self.executeAction, helpMenu, self, name='restart', shortcut='F9')
     helpMenu.addSeparator()
-
-    # sc = QShortcut('F9', self, self.executeAction)
+    #shortcuts for advanced usage (user should not need)
+    QShortcut('F9', self, lambda : self.executeAction('restart'))
+    #TODO_P3 -> lambda and change buttons/actions: cleaner code
+    #  Action    ('Todo list',  self,  'todo',     helpMenu, 'Ctrl+H')
+    #  Action    ('&Tags',      self,  '_tags_', viewMenu, 'Ctrl+T', call=self.viewMenu)
+    #  TextButton('Add Filter', self,  'addFilter', headerL)
 
     #GUI elements
     mainWidget, mainLayout = widgetAndLayout('H')
@@ -136,11 +139,12 @@ class MainWindow(QMainWindow):
     return
 
 
-  def executeAction(self) -> None:
+  def executeAction(self, menuName=None) -> None:
     """
     action after clicking menu item
     """
-    menuName = self.sender().data()
+    if menuName is None:
+      menuName = self.sender().data()
     if menuName=='configuration':
       dialog = Configuration(self.comm.backend)
       dialog.exec()
