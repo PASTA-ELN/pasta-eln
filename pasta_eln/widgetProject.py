@@ -84,8 +84,10 @@ class Project(QWidget):
     db       = self.comm.backend.db
     stackOld = item.text().split('/')[:-1]
     docID    = item.text().split('/')[-1]
+    maximized = True
     if docID.endswith(' -'):
       docID = docID[:-2]
+      maximized = False
     doc      = db.getDoc(docID)
     if '-branch' not in doc:
       return
@@ -108,9 +110,12 @@ class Project(QWidget):
       stackNew.append(docIDj[:-2] if docIDj.endswith(' -') else docIDj)
     stackNew = [self.projID] + stackNew[::-1]  #add project id and reverse
     childNew = item.row()
-    dirNameNew= createDirName(doc['-name'],doc['-type'][0],childNew)
-    parentDir = db.getDoc(stackNew[-1])['-branch'][0]['path']
-    pathNew = f'{parentDir}/{dirNameNew}'
+    if not branchOld['path'].startswith('http'):
+      dirNameNew= createDirName(doc['-name'],doc['-type'][0],childNew)
+      parentDir = db.getDoc(stackNew[-1])['-branch'][0]['path']
+      pathNew = f'{parentDir}/{dirNameNew}'
+    else:
+      pathNew = branchOld['path']
     siblingsNew = db.getView('viewHierarchy/viewHierarchy', startKey=' '.join(stackNew))
     siblingsNew = [i for i in siblingsNew if len(i['key'].split(' '))==len(stackNew)+1 and \
                                                    i['value'][0]>=childNew and i['value'][0]<9999]
@@ -119,7 +124,7 @@ class Project(QWidget):
       return
     # change item in question
     db.updateBranch(docID=docID, branch=branchIdx, stack=stackNew, path=pathNew, child=childNew)
-    item.setText('/'.join(stackNew+[docID]))     #update item.text() to new stack
+    item.setText('/'.join(stackNew+[docID]) if maximized else '/'.join(stackNew+[docID+' -']) )     #update item.text() to new stack
     # change siblings
     for line in siblingsOld:
       db.updateBranch(docID=line['id'], branch=line['value'][3], child=line['value'][0]-1)

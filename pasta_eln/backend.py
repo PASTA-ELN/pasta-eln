@@ -451,7 +451,6 @@ class Backend(CLI_Mixin):
         shasum (string): shasum (git-style hash) to store in database (not used here)
         doc (dict): pass known data/measurement type, can be used to create image; This doc is altered
     """
-    #TODO_P1 external files: path bug
     extension = filePath.suffix[1:]  #cut off initial . of .jpg
     if str(filePath).startswith('http'):
       absFilePath = Path(tempfile.gettempdir())/filePath.name
