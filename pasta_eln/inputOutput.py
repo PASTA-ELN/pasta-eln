@@ -17,7 +17,7 @@ pasta2json:dict[str,Any] = {
   '-branch'     : None,
   '-client'     : None,
   '-date'       : 'dateModified',
-  '-name'       : 'title',
+  '-name'       : 'name',
   '-tags'       : 'keywords',
   'image'       : None,
   'comment'     : 'description',
@@ -26,6 +26,8 @@ pasta2json:dict[str,Any] = {
   'shasum'      : None,
 }
 json2pasta = {v:k for k,v in pasta2json.items() if v is not None}
+
+# discuss: Always RO-crate names
 
 # Special terms in other ELNs: only add the ones that are required for function for PASTA
 elabFTW = {
@@ -166,7 +168,7 @@ def importELN(backend:Backend, elnFileName:str) -> str:
       # save
       if elnName == 'PASTA ELN':
         backend.db.saveDoc(doc)
-        if dataType=='dataset':
+        if dataType.lower()=='dataset':
           fullPath.mkdir(exist_ok=True)
           with open(fullPath/'.id_pastaELN.json', 'w', encoding='utf-8') as fOut:
             fOut.write(json.dumps(doc))
@@ -235,7 +237,9 @@ def importELN(backend:Backend, elnFileName:str) -> str:
         addedDocuments += processPart(part)
   return f'Success: imported {str(addedDocuments)} documents from file {elnFileName} from ELN {elnName} {elnVersion}'
 
-
+# move metadata-s-aoeuaoe.json to ??
+# create pip-line for exporting, testing, Import
+# send pasta email
 
 ##########################################
 ###               EXPORT               ###
@@ -253,10 +257,11 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
     str: report of exportation
   """
   # define initial information
-  keysInSupplemental:set[str] = set()
   docProject = backend.db.getDoc(projectID)
   dirNameProject = docProject['-branch'][0]['path']
-  fileName = fileName or f'{dirNameProject}.eln'
+  fileName = fileName or dirNameProject
+  fileName = fileName if fileName.endswith('.eln') else f'{fileName}.eln'
+  keysInSupplemental:set[str] = set()
 
   def iterateTree(nodeHier:Node, graph:list[dict[str,Any]]) -> str:
     """
@@ -271,13 +276,9 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
     """
     # separate into main and supplemental information
     doc = backend.db.getDoc(nodeHier.id)
-    path = doc['-branch'][0]['path']
-    fileAttached = True
-    if path is None or path.startswith('https:'):
-      parentID = doc['-branch'][0]['stack'][-1]
-      path = backend.db.getDoc(parentID)['-branch'][0]['path']
-      path += f'/metadata_{nodeHier.id}.json'
-      fileAttached = False
+    path =  f"{doc['-branch'][0]['path']}/" if doc['-type'][0][0]=='x' else doc['-branch'][0]['path']
+    if path is None:
+      return None
     docMain= {'@id': path}
     docSupp = {}
     for key, value in doc.items():
@@ -288,16 +289,14 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
     # remove personal data
     docMain['author'] = '_'
     del docSupp['-user']
-    # get path to metadata file
-    if fileAttached:
-      if nodeHier.id[0]=='x':
-        pathMetadata = f'{path}/metadata.json'
-      else:
-        pathArray = list(Path(path).as_posix().split('/'))
-        pathArray[-1] = pathArray[-1].replace('.','_')+'_metadata.json'
-        pathMetadata = '/'.join(pathArray)
-    # add structural information: dataset, hasPart
+    if 'image' in docSupp:
+      del docSupp['image']
+    docSupp['_id'] = docMain['identifier']
+    nonlocal keysInSupplemental
+    keysInSupplemental = keysInSupplemental.union(docSupp)
+    # For folders
     if nodeHier.id[0]=='x':
+      pathMetadata = f'{path}metadata.json'
       hasPart = []
       for child in nodeHier.children:
         res = iterateTree(child, graph)
@@ -306,34 +305,36 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
       docMain['hasPart'] = [{'@id':pathMetadata}]
       if hasPart:
         docMain['hasPart'] += [{'@id':i} for i in hasPart]
-      docMain['@type'] = 'dataset'
-    else:
-      docMain['@type'] = 'data'
-    # prepare the supplemental
-    nonlocal keysInSupplemental
-    keysInSupplemental = keysInSupplemental.union(docSupp)
-    zipContent = json.dumps(docSupp, indent=2)
-    if fileAttached:
-      roCrateMetadata = {'description':'JSON export',
-                         'contentType':'application/json',
+      docSupp['__children__'] = {}
+      hierStack = docSupp['-branch'][0]['stack']+[docSupp['_id']]
+      view = backend.db.getView('viewHierarchy/viewHierarchyAll', startKey=' '.join(hierStack))
+      view = [i['id'] for i in view if len(i['key'].split())==len(hierStack)+1 and i['value'][1][0][0]!='x']
+      for childID in view:
+        docChild = backend.db.getDoc(childID)
+        docChild = {k:v for k,v in docChild.items() if not (k in pasta2json and pasta2json[k] is not None)}
+        docSupp['__children__'][childID] = docChild
+      zipContent = json.dumps(docSupp, indent=2)
+      roCrateMetadata = {'@id':pathMetadata,
+                         '@type':'Dataset',
+                         'name':'export_metadata.json',
+                         'description':'JSON export',
+                         'encodingFormat':'application/json',
                          'contentSize':str(len(zipContent)),
-                         'sha256':hashlib.sha256(zipContent.encode()).hexdigest(),
-                         '@id':pathMetadata,
-                         docMain['@type']:'data'}
-      graph.append(roCrateMetadata)
+                         'sha256':hashlib.sha256(zipContent.encode()).hexdigest()}
       elnFile.writestr(f'{dirNameProject}/{pathMetadata}', zipContent)
+      docMain['@type'] = 'Dataset'
+      graph.append(docMain)
+      graph.append(roCrateMetadata)
     else:
-      if (backend.basePath/path).exists():
+      if path is not None and (backend.basePath/path).exists():
         with open(backend.basePath/path, 'rb') as fIn:
           fileContent = fIn.read()
           docMain['contentSize'] = str(len(fileContent))
           docMain['sha256']      = hashlib.sha256(fileContent).hexdigest()
       else:
-        docMain['contentSize'] = str(len(zipContent))
-        docMain['sha256']      = hashlib.sha256(zipContent.encode()).hexdigest()
-      elnFile.writestr(f'{dirNameProject}/{path}', zipContent)
-    # write data file
-    graph.append(docMain)
+        print('>>', docMain, '\n',docSupp)
+      docMain['@type'] = 'File'
+      graph.append(docMain)
     return docMain['@id']
 
   #
@@ -343,14 +344,16 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
   with ZipFile(fileName, 'w', compression=ZIP_DEFLATED) as elnFile:
     # ------- Create main graph -------------------
     listHier = backend.db.getHierarchy(projectID, allItems=False)
-    graph:list[dict[str,Any]] = []
+    graph: list[dict[str,Any]] = []
     iterateTree(listHier, graph)  # create json object from anytree
+    # {'@id': f'{dirNameProject}/{dirNameProject}/datastructure.json'}
 
     # ------------------- create ro-crate-metadata.json header -----------------------
     index:dict[str,Any] = {}
     index['@context']= 'https://w3id.org/ro/crate/1.1/context'
     # master node ro-crate-metadata.json
     graphMaster:list[dict[str,Any]] = []
+    graphMisc:list[dict[str,Any]] = []
     masterNodeInfo = {
         '@id': 'ro-crate-metadata.json',
         '@type': 'CreativeWork',
@@ -374,29 +377,17 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
         'version': '1.0',
     }
     graphMaster.append(masterNodeInfo)
-    dataStructureInfo = {
-        '@id': f'{dirNameProject}/{dirNameProject}/datastructure.json',
-        '@type': 'DigitalDocument',
-    }
-    graphMaster.append(dataStructureInfo)
     authors = backend.configuration['authors']
     masterNodeRoot = {
-        '@id':
-        './',
+        '@id': './',
         '@type': ['Dataset'],
         'hasPart': [
-            {'@id': dirNameProject},
-            {'@id': f'{dirNameProject}/ro-crate-metadata.json'},
-            {'@id': f'{dirNameProject}/{dirNameProject}/datastructure.json'}
+            {'@id': f'{dirNameProject}/'}
         ],
-        'context': [
-            {'mwo': 'http://purls.helmholtz-metadaten.de/mwo'},
-            {'nfdicore': 'https://nfdi.fiz-karlsruhe.de/ontology'},
-        ],
-        'type':'mwo:ExperimentalWorkflow',
+        'name': 'Exported from PASTA ELN',
+        'description': 'Exported content from PASTA ELN',
         'license':'CC BY 4.0',
-        'format': [{'fileExtension': '.json'}],
-        'authors': [{
+        'author': [{
             'firstName': authors[0]['first'],
             'surname': authors[0]['last'],
             'title': authors[0]['title'],
@@ -409,8 +400,19 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
         }],
         'datePublished':datetime.now().isoformat(),
     }
-    elnFile.writestr(f'{dirNameProject}/{dirNameProject}/datastructure.json', json.dumps(backend.db.getDoc('-ontology-')))
     graphMaster.append(masterNodeRoot)
+    zipContent = json.dumps(backend.db.getDoc('-ontology-'))
+    dataStructureInfo = {
+        '@id':  f'{dirNameProject}/{dirNameProject}/datastructure.json',
+        '@type': 'File',
+        'name':  'data structure',
+        'description': 'data structure / schema of the stored data',
+        'contentSize':str(len(zipContent)),
+        'sha256':hashlib.sha256(zipContent.encode()).hexdigest()
+    }
+    graphMisc.append(dataStructureInfo)
+    graph[-2]['hasPart'] += [{'@id': f'{dirNameProject}/{dirNameProject}/datastructure.json'}]
+    elnFile.writestr(f'{dirNameProject}/{dirNameProject}/datastructure.json', zipContent)
 
     # ------------------ copy data-files --------------------------
     # datafiles are already in the graph-graph: only copy and no addition to graph
@@ -424,12 +426,12 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
         elnFile.write(f'{path}/{iFile}', f'{dirNameProject}/{relPath}/{iFile}')
 
     #finalize file
-    index['@graph'] = graphMaster+graph
-    elnFile.writestr(f'{dirNameProject}/ro-crate-metadata.json',
-                     json.dumps(index, indent=2))
-      # # temporary json output
-      # with open(fileName[:-3]+'json','w', encoding='utf-8') as fOut:
-      #   fOut.write( json.dumps(index, indent=2) )
+    index['@graph'] = graphMaster+graph+graphMisc
+    elnFile.writestr(f'{dirNameProject}/ro-crate-metadata.json', json.dumps(index, indent=2))
+  # end writing zip file
+  # temporary json output
+  with open(fileName[:-3]+'json','w', encoding='utf-8') as fOut:
+    fOut.write( json.dumps(index, indent=2) )
   keysInSupplemental = {i for i in keysInSupplemental if i not in pasta2json}
   logging.info('Keys in supplemental information'+', '.join(keysInSupplemental))
   return f'Success: exported {len(graph)} graph-nodes into file {fileName}'
