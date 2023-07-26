@@ -1,12 +1,13 @@
 """Input and output functions towards the .eln file-format"""
 import os, json, shutil, logging, hashlib, re, requests
-from typing import Any
+from typing import Any, Optional
 from pathlib import Path
 from datetime import datetime
 from zipfile import ZipFile, ZIP_DEFLATED
 from anytree import PreOrderIter, Node
 from pasta_eln import __version__
 from .backend import Backend
+from .miscTools import createDirName
 
 #GENERAL TERMS IN ro-crate-metadata.json (None implies definitely should not be saved)
 pasta2json:dict[str,Any] = {
@@ -264,28 +265,17 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
   keysInSupplemental:set[str] = set()
   filesNotInProject = []
 
-  #TODO_P2 Progress bar: , progressBar:Optional[QProgressBar]=None
-  # SimStack (matsci.org/c/simstack), PMD Meeting september KIT
-  def iterateTree(nodeHier:Node, graph:list[dict[str,Any]]) -> str:
-    """
-    Recursive function to translate the hierarchical node into a tree-node
-
-    Args:
-      nodeHier (Anytree.Node): anytree node
-      graph    (list): list of nodes
-
-    Returns:
-      str: tree node
-    """
-    # separate into main and supplemental information
-    doc = backend.db.getDoc(nodeHier.id)
+  def separate(doc):
     path =  f"{doc['-branch'][0]['path']}/" if doc['-type'][0][0]=='x' else doc['-branch'][0]['path']
+    pathUsed = True
     if path is None:
-      return None
-    if not path.startswith(dirNameProject) and not path.startswith('http'):
+      pathUsed = False
+      path = doc['-type'][0]+createDirName(doc['-name'], 'x0', 0)
+    if not path.startswith(dirNameProject) and not path.startswith('http') and pathUsed:
       filesNotInProject.append(path)
-    if not path.startswith('http'):
+    if not path.startswith('http') and pathUsed:
       path = f'./{path}'
+    continue here
     docMain= {'@id': path}
     docSupp = {}
     for key, value in doc.items():
@@ -301,6 +291,28 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
     docSupp['_id'] = docMain['identifier'] #ensure id is present in main and supplementary information
     nonlocal keysInSupplemental
     keysInSupplemental = keysInSupplemental.union(docSupp)
+    return path, docMain, docSupp
+
+
+  #TODO_P2 Progress bar: , progressBar:Optional[QProgressBar]=None
+  # SimStack (matsci.org/c/simstack), PMD Meeting september KIT
+  def iterateTree(nodeHier:Node, graph:list[dict[str,Any]]) -> Optional[str]:
+    """
+    Recursive function to translate the hierarchical node into a tree-node
+
+    Args:
+      nodeHier (Anytree.Node): anytree node
+      graph    (list): list of nodes
+
+    Returns:
+      str: tree node
+    """
+    # separate into main and supplemental information
+    doc = backend.db.getDoc(nodeHier.id)
+    path, docMain, docSupp = separate(doc)
+    if path is None and docMain is None and docSupp is None:
+      return None
+
     # For folders
     if nodeHier.id[0]=='x':
       pathMetadata = f'{path}metadata.json'
@@ -317,9 +329,14 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
       view = backend.db.getView('viewHierarchy/viewHierarchyAll', startKey=' '.join(hierStack))
       view = [i['id'] for i in view if len(i['key'].split())==len(hierStack)+1 and i['value'][1][0][0]!='x']
       for childID in view:
-        docChild = backend.db.getDoc(childID)
-        docChild = {k:v for k,v in docChild.items() if not (k in pasta2json and pasta2json[k] is not None)}
-        docSupp['__children__'][childID] = docChild
+        pathChild, docChildMain, docChildSupp = separate(backend.db.getDoc(childID))
+        if pathChild is None and docChildMain is None and docChildSupp is None:
+          continue
+        if all([branch['path']==None for branch in docChildSupp['-branch']]):  #doc not saved any other way
+          print(docChildMain)
+          graph.append(docChildMain)
+          docMain['hasPart'] += [{'@id':pathChild}]
+        docSupp['__children__'][childID] = docChildSupp
       zipContent = json.dumps(docSupp, indent=2)
       roCrateMetadata = {'@id':pathMetadata,
                          '@type':'File',
