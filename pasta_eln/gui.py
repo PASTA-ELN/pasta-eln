@@ -94,6 +94,7 @@ class MainWindow(QMainWindow):
     #  Action    ('&Tags',      self,  '_tags_', viewMenu, 'Ctrl+T', call=self.viewMenu)
     #  TextButton('Add Filter', self,  'addFilter', headerL)
 
+    #TODO_P3 export to dataverse
     #GUI elements
     mainWidget, mainLayout = widgetAndLayout('H')
     self.setCentralWidget(mainWidget)      # Set the central widget of the Window
@@ -143,7 +144,7 @@ class MainWindow(QMainWindow):
     """
     action after clicking menu item
     """
-    if menuName is None:
+    if menuName is None or not menuName :
       menuName = self.sender().data()
     if menuName=='configuration':
       dialog = Configuration(self.comm.backend)

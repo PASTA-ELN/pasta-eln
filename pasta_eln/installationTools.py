@@ -519,7 +519,7 @@ def createShortcut() -> None:
         fOut.write(f'{alias}\n')
       content += f'Exec={sys.prefix}/bin/python3 -m pasta_eln.gui\n'
     content+='Icon='+ (Path(__file__).parent/'Resources'/'Icons'/'favicon64.png').as_posix() + '\n'
-    content+='Terminal=false\nType=Application\nCategories=Utility;Application;\n'
+    content+='Terminal=false\nType=Application\nCategories=Science;Application;\n'
     try:
       linkString = (Path.home()/'Desktop'/'pastaELN.desktop').as_posix()
       with open(linkString,'w', encoding='utf-8') as fOut:

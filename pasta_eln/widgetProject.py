@@ -163,7 +163,7 @@ class Project(QWidget):
     more.setMenu(moreMenu)
 
     self.infoW, infoL         = widgetAndLayout('V', self.mainL)
-    tags = ', '.join(self.docProj['tags']) if 'tags' in self.docProj else ''
+    tags = ', '.join([f'#{i}' for i in self.docProj['-tags']]) if '-tags' in self.docProj else ''
     infoL.addWidget(QLabel(f'Tags: {tags}'))
     for key,value in self.docProj.items():
       if key[0] in ['_','-'] or (key=='comment' and '\n' in value):
