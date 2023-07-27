@@ -270,13 +270,14 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
     pathUsed = True
     if path is None:
       pathUsed = False
-      path = doc['-type'][0]+createDirName(doc['-name'], 'x0', 0)
+      path = './'+dirNameProject+'/'+doc['-type'][0]+createDirName(doc['-name'], 'x0', 0)
     if not path.startswith(dirNameProject) and not path.startswith('http') and pathUsed:
       filesNotInProject.append(path)
     if not path.startswith('http') and pathUsed:
       path = f'./{path}'
-    continue here
     docMain= {'@id': path}
+    if not pathUsed:
+      docMain['@type'] = '_metadata_' #TODO_P1 real type
     docSupp = {}
     for key, value in doc.items():
       if key in pasta2json and pasta2json[key] is not None:
@@ -292,6 +293,14 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
     nonlocal keysInSupplemental
     keysInSupplemental = keysInSupplemental.union(docSupp)
     return path, docMain, docSupp
+
+
+  def append(graph, doc):
+    idsInGraph = [i['@id'] for i in graph]
+    if doc['@id'] not in idsInGraph:
+      graph.append(doc)
+    return
+
 
 
   #TODO_P2 Progress bar: , progressBar:Optional[QProgressBar]=None
@@ -310,8 +319,6 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
     # separate into main and supplemental information
     doc = backend.db.getDoc(nodeHier.id)
     path, docMain, docSupp = separate(doc)
-    if path is None and docMain is None and docSupp is None:
-      return None
 
     # For folders
     if nodeHier.id[0]=='x':
@@ -330,11 +337,8 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
       view = [i['id'] for i in view if len(i['key'].split())==len(hierStack)+1 and i['value'][1][0][0]!='x']
       for childID in view:
         pathChild, docChildMain, docChildSupp = separate(backend.db.getDoc(childID))
-        if pathChild is None and docChildMain is None and docChildSupp is None:
-          continue
         if all([branch['path']==None for branch in docChildSupp['-branch']]):  #doc not saved any other way
-          print(docChildMain)
-          graph.append(docChildMain)
+          append(graph, docChildMain)
           docMain['hasPart'] += [{'@id':pathChild}]
         docSupp['__children__'][childID] = docChildSupp
       zipContent = json.dumps(docSupp, indent=2)
@@ -349,14 +353,15 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
                          }
       elnFile.writestr(f'{dirNameProject}/{pathMetadata}', zipContent)
       docMain['@type'] = 'Dataset'
-      graph.append(docMain)
-      graph.append(roCrateMetadata)
+      append(graph, docMain)
+      append(graph, roCrateMetadata)
     else:
       if path is not None and (backend.basePath/path).exists():
         with open(backend.basePath/path, 'rb') as fIn:
           fileContent = fIn.read()
           docMain['contentSize'] = str(len(fileContent))
           docMain['sha256']      = hashlib.sha256(fileContent).hexdigest()
+        docMain['@type'] = 'File'
       elif path.startswith('http'):
         res = requests.get(path.replace(':/','://'))
         if res.ok:
@@ -364,10 +369,10 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
           docMain['sha256']      = hashlib.sha256(res.content).hexdigest()
         else:
           print(f'Info: could not get file {path}')
+        docMain['@type'] = 'File'
       else:
-        print(f'**ERROR: did not add contentSize and sha256 for path {path}')
-      docMain['@type'] = 'File'
-      graph.append(docMain)
+        print(f'info: did not add contentSize and sha256 for path {path}')
+      append(graph, docMain)
     return docMain['@id']
 
   # == MAIN FUNCTION ==
@@ -456,7 +461,7 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
         if iFile.startswith('.git') or iFile=='.id_pastaELN.json':
           continue
         elnFile.write(f'{path}/{iFile}', f'{dirNameProject}/{relPath}/{iFile}')
-    for path in filesNotInProject:
+    for path in set(filesNotInProject):  #set ensures that only added once
       elnFile.write(str(backend.basePath/path), f'{dirNameProject}/{path}')
 
     #finalize file
