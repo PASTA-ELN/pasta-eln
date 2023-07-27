@@ -90,9 +90,9 @@ class TreeView(QTreeView):
         for branch in doc['-branch']:
           oldPath = Path(self.comm.backend.basePath)/branch['path']
           if oldPath.exists():
-            if (oldPath.parent/(f'trash_{oldPath.name}')).exists():  #ensure target does not exist
+            newFileName = f'trash_{oldPath.name}'
+            if (oldPath.parent/newFileName).exists():  #ensure target does not exist
               endText = ' was marked for deletion. Save it or its content now to some place on harddisk. It will be deleted now!!!'
-              newFileName = f'trash_{oldPath.name}'
               showMessage(self, 'Warning', f'Warning! \nThe folder {oldPath.parent/newFileName}{endText}')
               if (oldPath.parent/newFileName).exists():
                 shutil.rmtree(oldPath.parent/newFileName)

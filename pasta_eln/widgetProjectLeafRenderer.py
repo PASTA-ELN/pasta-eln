@@ -40,10 +40,8 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       option (QStyleOptionViewItem): option incl. current coordinates
       index (QModelIndex): index
     """
-    if self.comm is None:
-      return
     hierStack = index.data(Qt.DisplayRole) # type: ignore
-    if hierStack is None:
+    if hierStack is None or self.comm is None:
       return
     docID   = hierStack.split('/')[-1]
     if docID.endswith(' -'):
@@ -52,6 +50,10 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     else:
       folded = False
     doc     = self.comm.backend.db.getDoc(docID)
+    if len(doc)<2:
+      print(f'**ERROR cannot read docID: {docID}')
+      logging.error('LeafRenderer: Cannot read docID %s',docID)
+      return
     # GUI
     if self.penDefault is None:
       self.penDefault = QPen(painter.pen())
