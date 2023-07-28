@@ -55,7 +55,7 @@ class ConfigurationSetup(QWidget):
     self.progress1.setValue(number)
     return
 
-
+  # create windows package: Packaging Pyside6 applications for Windows with PyInstaller & InstallForge
   def analyse(self) -> None:
     # sourcery skip: extract-duplicate-method, inline-immediately-returned-variable
     """

@@ -173,6 +173,8 @@ class Form(QDialog):
     buttonBox.clicked.connect(self.save)
     mainL.addWidget(buttonBox)
 
+  # TODO_P2 make markdown format correctly immediately
+  # TODO_P2 move folder to different folder: use unidentified for notes
   # TODO_P4 add splitter to increase / decrease image
   # TODO_P3 form: add button to add key-values
   # TODO_P3 form: other items as non-edible things that can be copy-pasted
@@ -335,7 +337,8 @@ class Form(QDialog):
         Action(value, self.changeExtractor, context, self, name=key)
       context.addSeparator()
       Action('Save image',                       self.changeExtractor, context, self, name='_saveAsImage_')
-    Action('Open file with another application', self.changeExtractor, context, self, name='_openExternal_')
+    #TODO_P2 not save now: when opening text files, system can crash
+    # Action('Open file with another application', self.changeExtractor, context, self, name='_openExternal_')
     Action('Open folder in file browser',        self.changeExtractor, context, self, name='_openInFileBrowser_')
     context.exec(self.mapToGlobal(pos))
     return

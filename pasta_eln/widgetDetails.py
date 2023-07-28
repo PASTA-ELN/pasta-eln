@@ -72,7 +72,8 @@ class Details(QScrollArea):
         Action(value, self.changeExtractor, context, self, name=key)
       context.addSeparator()
       Action('Save image',                       self.changeExtractor, context, self, name='_saveAsImage_')
-    Action('Open file with another application', self.changeExtractor, context, self, name='_openExternal_')
+    #TODO_P2 not save now: when opening text files, system can crash
+    # Action('Open file with another application', self.changeExtractor, context, self, name='_openExternal_')
     Action('Open folder in file browser',        self.changeExtractor, context, self, name='_openInFileBrowser_')
     Action('Hide',                               self.changeExtractor, context, self, name='_hide_')
     context.exec(self.mapToGlobal(pos))

@@ -20,7 +20,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     self.widthContent = 600   #TODO_P4 from config file
     self.lineSep = 20
     self.frameSize = 6
-    self.maxHeight = 300
+    self.maxHeight = 250
     self.docTypeOffset = 500
     self.penDefault:Optional[QPen] = None
     self.penHighlight              = QPen(QColor(getColor(self.comm.backend, 'primary')))
