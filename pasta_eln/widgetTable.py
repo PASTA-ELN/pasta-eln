@@ -258,7 +258,7 @@ class Table(QWidget):
       select = QComboBox()
       select.addItems(self.filterHeader)
       select.currentIndexChanged.connect(self.filterChoice)
-      select.setMinimumWidth(max([len(i) for i in self.filterHeader])*14)
+      select.setMinimumWidth(max(len(i) for i in self.filterHeader)*14)
       select.setAccessibleName(str(len(self.models)))
       rowL.addWidget(select)
       IconButton('fa5s.minus-square', self.delFilter, rowL, str(len(self.models)), backend=self.comm.backend)
