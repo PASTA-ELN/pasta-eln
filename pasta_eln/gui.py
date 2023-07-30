@@ -1,6 +1,6 @@
 """ Graphical user interface includes all widgets """
 import os, logging, webbrowser, json, sys
-from typing import Any
+from typing import Any, Optional
 from pathlib import Path
 from PySide6.QtWidgets import QMainWindow, QApplication, QFileDialog, QScrollArea # pylint: disable=no-name-in-module
 from PySide6.QtCore import Qt, Slot      # pylint: disable=no-name-in-module
@@ -28,7 +28,7 @@ class MainWindow(QMainWindow):
   def __init__(self) -> None:
     #global setting
     super().__init__()
-    venv = ' without venv' if sys.prefix == sys.base_prefix else ' in venv'
+    venv = ' without venv' if sys.prefix == sys.base_prefix and 'CONDA_PREFIX' not in os.environ else ' in venv'
     self.setWindowTitle(f"PASTA-ELN {__version__}{venv}")
     self.setWindowState(Qt.WindowMaximized) # type: ignore
     resourcesDir = Path(__file__).parent/'Resources'
@@ -140,7 +140,7 @@ class MainWindow(QMainWindow):
     return
 
 
-  def executeAction(self, menuName=None) -> None:
+  def executeAction(self, menuName:Optional[str]=None) -> None:
     """
     action after clicking menu item
     """

@@ -162,7 +162,7 @@ class Project(QWidget):
       if doctype[0]!='x':
         icon = iconsDocTypes[self.comm.backend.db.dataLabels[doctype]]
         Action(f'table of {doctype}', self.executeAction, moreMenu, self, name=f'_doctype_{doctype}', icon=icon)
-    Action('table of unidentified', self.executeAction, moreMenu, self, name=f'_doctype_-', icon=iconsDocTypes['-'])
+    Action('table of unidentified', self.executeAction, moreMenu, self, name='_doctype_-', icon=iconsDocTypes['-'])
     moreMenu.addSeparator()
     Action('Delete',                self.executeAction, moreMenu, self, name='deleteProject')
     more.setMenu(moreMenu)
@@ -173,8 +173,7 @@ class Project(QWidget):
     for key,value in self.docProj.items():
       if key[0] in ['_','-'] or (key=='comment' and '\n' in value):
         continue
-      else:
-        infoL.addWidget(QLabel(f'{key}: {str(value)}'))
+      infoL.addWidget(QLabel(f'{key}: {str(value)}'))
     if 'comment' in self.docProj and '\n' in self.docProj['comment']:     #format nicely
       # comment = QTextEdit()  #TODO_P2 render comment nicely without screwing up the rest
       # comment.setMarkdown(self.docProj['comment'])

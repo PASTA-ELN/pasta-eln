@@ -1,10 +1,9 @@
 """ New/Edit dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""
-import logging, re, copy, subprocess, platform
+import logging, re, copy, subprocess, platform, os
 from typing import Any, Union
 from pathlib import Path
-from PySide6.QtWidgets import QDialog, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QTextEdit, QPushButton,\
-                              QPlainTextEdit, QComboBox, QLineEdit, QDialogButtonBox, QSplitter, QSizePolicy,\
-                              QMenu # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QDialog, QWidget, QVBoxLayout, QHBoxLayout, QDialogButtonBox, QSplitter, QSizePolicy, QMenu # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QLabel, QTextEdit, QPushButton, QPlainTextEdit, QComboBox, QLineEdit # pylint: disable=no-name-in-module
 from PySide6.QtGui import QRegularExpressionValidator # pylint: disable=no-name-in-module
 from PySide6.QtCore import QSize, Qt, QPoint                  # pylint: disable=no-name-in-module
 from .style import Image, TextButton, IconButton, Label, Action, showMessage, widgetAndLayout
@@ -155,7 +154,7 @@ class Form(QDialog):
       self.projectComboBox = QComboBox()
       self.projectComboBox.addItem(label, userData='')
       for line in self.db.getView('viewDocType/x0'):
-        if not '-branch' in self.doc or not any([line['id']==branch['stack'][0] for branch in self.doc['-branch']]):
+        if not '-branch' in self.doc or not any(line['id']==branch['stack'][0] for branch in self.doc['-branch']):
           self.projectComboBox.addItem(line['value'][0], userData=line['id'])
       self.formL.addRow(QLabel('Project'), self.projectComboBox)
     if allowProjectAndDocTypeChange: #if not-new and non-folder
@@ -199,8 +198,8 @@ class Form(QDialog):
           if '_id' in self.doc:
             others = [i for i in others if i['id']!=self.doc['_id']] # create list of names but filter own name
           others = [i['value'][0] for i in others]
-          others = [createDirName(i,'x0', 0) for i in others] #create names
-          while createDirName(self.doc['-name'],'x0', 0) in others:
+          othersList = [createDirName(str(i),'x0', 0) for i in others] #create names
+          while createDirName(self.doc['-name'],'x0', 0) in othersList:
             if re.search(r"_\d+$", self.doc['-name']) is None:
               self.doc['-name'] += '_1'
             else:
@@ -369,7 +368,7 @@ class Form(QDialog):
       path = Path(self.doc['-branch'][0]['path'])
       if not path.as_posix().startswith('http'):
         path = self.comm.backend.basePath/path
-      self.comm.backend.testExtractor(path, recipe='/'.join(self.doc['-type']), saveFig=saveFilePath)
+      self.comm.backend.testExtractor(path, recipe='/'.join(self.doc['-type']), saveFig=str(saveFilePath))
     else:
       self.doc['-type'] = menuName.split('/')
       self.comm.backend.useExtractors(filePath, self.doc['shasum'], self.doc)  #any path is good since the file is the same everywhere; data-changed by reference

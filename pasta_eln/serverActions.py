@@ -573,7 +573,7 @@ def main() -> None:
       print('```')
     elif command == 'l':
       database = input('Enter the database: ')
-      full     = True if input('Full output [yN] ')=='y' else False
+      full     = input('Full output [yN] ')=='y'
       listDocuments(url, userName, userPassword, database, full)
     elif command == 't' and userName and userPassword and len(userName)>2 and len(userPassword)>2:
       testUser(url, auth, userName, userPassword)

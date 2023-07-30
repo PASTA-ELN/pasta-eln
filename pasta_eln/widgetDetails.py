@@ -102,10 +102,10 @@ class Details(QScrollArea):
       else:
         imageType = 'svg'
       saveFilePath = self.comm.backend.basePath/filePath.parent/f'{filePath.stem}_PastaExport.{imageType.lower()}'
-      path = Path(self.doc['-branch'][0]['path'])
-      if not path.as_posix().startswith('http'):
-        path = self.comm.backend.basePath/path
-      self.comm.backend.testExtractor(path, recipe='/'.join(self.doc['-type']), saveFig=saveFilePath)
+      path = self.doc['-branch'][0]['path']
+      if not path.startswith('http'):
+        path = (self.comm.backend.basePath/path).as_posix()
+      self.comm.backend.testExtractor(path, recipe='/'.join(self.doc['-type']), saveFig=str(saveFilePath))
     elif menuName == '_hide_':
       self.comm.backend.db.hideShow(self.docID)
       self.comm.changeTable.emit('','')
@@ -234,7 +234,7 @@ class Details(QScrollArea):
         ontologyItem = [i for i in ontologyNode if i['name']==key]
         if '\n' in self.doc[key]:     #if returns in value: format nicely
           _, labelL = widgetAndLayout('H', self.metaDetailsL, top='s', bottom='s')
-          labelL.addWidget(QLabel(f'{key}: '), alignment=Qt.AlignTop)
+          labelL.addWidget(QLabel(f'{key}: '), alignment=Qt.AlignTop) # type: ignore
           text = QTextEdit()
           text.setMarkdown(self.doc[key])
           text.setReadOnly(True)
