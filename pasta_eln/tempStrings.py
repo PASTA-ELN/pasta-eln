@@ -7,22 +7,25 @@ todoString = """
 
 <h3>Things currently working on</h3>
 <ul>
+<li> design: make the checkboxes larger!
+<li> finish ontology dialog
+<li> make markdown format correctly immediately
+<li> move folder to different folder: use unidentified for notes
+<li> not save now: when opening text files, system can crash
+<li> not save now: when opening text files, system can crash
+<li> render comment nicely without screwing up the rest
+<li> table: shift-select
 </ul>
 
 <h3>Improvement to convenience</h3>
 <ul>
-<li> design ProjectView: Currently, the comment is more highlighted than the title of an item due
-<li> design: make the checkboxes larger!
-<li> export: export via extractor in high resolution: change order: first save, then rescale
+<li> -> lambda and change buttons/actions: cleaner code
+<li> export to dataverse
 <li> extractor: creates links to sample/instrument
-<li> finish ontology dialog
 <li> form: add button to add key-values
-<li> image does not allow for easy context aware clicks
-<li> other items as non-edible things that can be copy-pasted
-<li> projectTree design: If folders and other items have boxes of slightly different brightness
-<li> projectView: if table-row click, move to view it project
-<li> projectView: selection does not scroll; one cannot select a row
-<li> table: shift-select
+<li> form: other items as non-edible things that can be copy-pasted
+<li> move all changeExtractor of this type to separate function
+<li> move all context menu of this type to separate function
 </ul>
 
 <h3>Bigger things implemented soon</h3>
@@ -35,9 +38,11 @@ todoString = """
 <li> configuration
 <li> from config file
 <li> not sure this will be important
+<li> projectTree can select sub-folders: if table-row click, move to view it project
 <li> projectTree: allow right click on measurement to change recipe
 <li> projectTree: drag&drop of external files
 <li> projectTree: select multiple items to edit... What is use case
+<li> projectTree: selection does not scroll; one cannot select a row
 <li> redraw/reread only part of the tree
 <li> sidebar-scroll cannot figure out issue
 </ul>
