@@ -271,7 +271,7 @@ def testLocal(userName:str, password:str, database:str='') -> str:
     if resp.ok:
       answer += 'success: Local database exists\n'
     else:
-      answer += 'Warning: Local database does not exist\n'
+      answer += 'Error: Local database does not exist\n'
   return answer
 
 

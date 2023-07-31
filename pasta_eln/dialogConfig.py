@@ -41,7 +41,7 @@ class Configuration(QDialog):
     if startTab=='setup':
       tabW.setCurrentWidget(tabSetup)
       tabW.setTabEnabled(0, False)
-      tabW.setTabEnabled(2, False)
+      tabW.setTabEnabled(1, False)
 
 
   def finished(self) -> None:
