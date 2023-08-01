@@ -6,7 +6,7 @@ from pathlib import Path
 from cloudant.client import CouchDB
 
 from .backend import Backend
-from .fixedStrings import defaultOntology
+from .fixedStringsJson import defaultOntology, defaultConfiguration, configurationGUI
 from .miscTools import outputString, DummyProgressBar
 
 
@@ -27,7 +27,10 @@ def getOS() -> str:
 
 def createDefaultConfiguration(user:str, password:str, pathPasta:Optional[Path]=None) -> dict[str,Any]:
   '''
-  Check configuration file .pastaELN.json for consistencies
+  Create base of configuration file .pastaELN.json
+  - basic project group
+  - defaultProjectGroup
+  - userID
 
   Args:
     user (str): user name (for windows)
@@ -246,83 +249,28 @@ def configuration(command:str='test', user:str='', password:str='', pathPasta:Pa
       conf = createDefaultConfiguration(user, password, pathPasta)
   logging.info(json.dumps(conf, indent=2))
 
-  if 'version' not in conf or conf['version']!=2:
-    if command == 'repair':
-      conf['version'] = 2
-    else:
-      output += '**ERROR: No or wrong version in config file\n'
-  if 'userID' not in conf:
-    if command == 'repair':
-      conf['userID'] = os.getlogin()
-    else:
-      output += '**ERROR: No userID in config file\n'
-  if 'defaultTags' not in conf:
-    if command == 'repair':
-      conf['defaultTags'] = ["P1", "P2", "P3", "TODO", "DOING", "WAIT", "DONE"]
-    else:
-      output += '**ERROR: No defaultTags in config file\n'
-  if 'tableColumnsMax' not in conf:
-    if command == 'repair':
-      conf['tableColumnsMax'] = 16
-    else:
-      output += '**ERROR: No tableColumnsMax in config file\n'
-  if 'tableHeaders' not in conf:
-    if command == 'repair':
-      conf['tableHeaders'] = {}
-    else:
-      output += '**ERROR: No tableHeaders in config file\n'
-  if 'qrPrinter' not in conf:
-    if command == 'repair':
-      conf['qrPrinter'] = {}
-    else:
-      output += '**ERROR: No qrPrinter in config file\n'
-  if 'extractorDir' not in conf:
-    if command == 'repair':
-      conf['extractorDir'] = (Path(__file__).parent/'Extractors').as_posix()
-    else:
-      output += '**ERROR: No extractorDir in config file\n'
-  if 'extractors' not in conf:
-    if command == 'repair':
-      conf['extractors'] = {}
-    else:
-      output += '**ERROR: No extractors in config file\n'
-  if 'projectGroups' not in conf:
-    output += '**ERROR: No project-groups in config file; REPAIR MANUALLY\n'
-  if 'defaultProjectGroup' not in conf:
-    if command == 'repair':
-      conf['defaultProjectGroup'] = list(conf['projectGroups'].keys())[0]
-    else:
-      output += '**ERROR: No default projectGroups in config file\n'
-  else:
-    if conf['defaultProjectGroup'] not in conf['projectGroups']:
+  #check normal items
+  for k,v in defaultConfiguration.items():
+    if k not in conf:
       if command == 'repair':
-        conf['defaultProjectGroup'] = list(conf['projectGroups'].keys())[0]
+        if v.startswith('$') and v.startswith('$'):
+          v = eval(v[1:-1])
+        conf[k] = v
       else:
-        output += '**ERROR: default entry '+conf['defaultProjectGroup']+' not in projectGroup\n'
+        output += outputString('text','error', f'No {k} in config file')
   #GUI items
   if 'GUI' not in conf:
     if command == 'repair':
       conf['GUI'] = {}
     else:
-      output += '**ERROR: No GUI in config file\n'
-  guiItems = {"theme": "light_blue",
-    "imageSizeDetails": 600,
-    "imageWidthProject": 300,
-    "sidebarWidth": 280,
-    "loggingLevel": "INFO",
-    "tableColumns": {}}
-  for key, value in guiItems.items():
-    if 'GUI' in conf and key not in conf['GUI']:
-      if command == 'repair':
-        conf['GUI'][key] = value
-      else:
-        output += f'**ERROR: key: {key} not in GUI configuration\n'
-  # Authors
-  if 'authors' not in conf:
-    if command == 'repair':
-      conf['authors'] = [    {"first":"", "last":"", "title":"", "email":"", "orcid":"","organizations":[{"organization":"", "rorid":""}]}]
-    else:
-      output += '**ERROR: No authors in config file\n'
+      output += outputString('text','error', f'No GUI in config file')
+  for _, items in configurationGUI.items():
+    for k,v in items.items():
+      if k not in conf['GUI']:
+        if command == 'repair':
+          conf['GUI'][k] = v[1]
+        else:
+          output += outputString('text','error', f'No {k} in GUI part of config file')
   if command == 'repair':
     with open(Path.home()/'.pastaELN.json','w', encoding='utf-8') as f:
       f.write(json.dumps(conf,indent=2))

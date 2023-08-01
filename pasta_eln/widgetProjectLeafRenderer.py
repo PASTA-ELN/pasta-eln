@@ -17,11 +17,11 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     self.comm = comm
     self.debugMode = logging.root.level<logging.INFO
     self.widthImage = self.comm.backend.configuration['GUI']['imageWidthProject']
-    self.widthContent = 600   #TODO_P4 from config file
+    self.widthContent = self.comm.backend.configuration['GUI']['widthContent']
+    self.docTypeOffset = self.comm.backend.configuration['GUI']['docTypeOffset']
+    self.frameSize = self.comm.backend.configuration['GUI']['frameSize']
+    self.maxHeight = self.comm.backend.configuration['GUI']['maxProjectLeafHeight']
     self.lineSep = 20
-    self.frameSize = 6
-    self.maxHeight = 250
-    self.docTypeOffset = 500
     self.penDefault:Optional[QPen] = None
     self.penHighlight              = QPen(QColor(getColor(self.comm.backend, 'primary')))
     self.penHighlight.setWidth(2)

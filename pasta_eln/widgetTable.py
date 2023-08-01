@@ -9,7 +9,7 @@ from PySide6.QtCore import Qt, Slot, QSortFilterProxyModel, QModelIndex       # 
 from PySide6.QtGui import QStandardItemModel, QStandardItem, QFont            # pylint: disable=no-name-in-module
 from .dialogTableHeader import TableHeader
 from .style import TextButton, IconButton, Label, Action, widgetAndLayout, space
-from .fixedStrings import defaultOntologyNode
+from .fixedStringsJson import defaultOntologyNode
 from .communicate import Communicate
 
 #Scan button to more button
@@ -76,7 +76,7 @@ class Table(QWidget):
     header = self.table.horizontalHeader()
     header.setSectionsMovable(True)
     header.setSortIndicatorShown(True)
-    header.setMaximumSectionSize(400) #TODO_P4 addToConfig
+    header.setMaximumSectionSize(self.comm.backend.configuration['GUI']['maxTableColumnWidth'])
     header.resizeSections(QHeaderView.ResizeToContents)
     header.setStretchLastSection(True)
     #TODO_P2 table: shift-select

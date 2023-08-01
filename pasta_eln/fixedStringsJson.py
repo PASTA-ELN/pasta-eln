@@ -1,8 +1,6 @@
-""" Long strings that would obfuscate code """
-import json
+""" Long strings and dictionaries/JSON that would obfuscate code """
 
-defaultOntology = json.loads("""
-{
+defaultOntology = {
   "_id":"-ontology-",
   "-version":2,
 
@@ -51,14 +49,52 @@ defaultOntology = json.loads("""
     {"name":"vendor",     "query":"Who is the vendor?"}
   ]}
 }
-""")
 
-defaultOntologyNode = json.loads("""
-  [{"name": "-name", "query": "What is the file name?"},
-   {"name": "-tags"},
-   {"name": "comment", "query": "#tags comments remarks :field:value:"},
-   {"name": "-type"}]
-""")
+
+defaultOntologyNode = [
+  {"name": "-name", "query": "What is the file name?"},
+  {"name": "-tags"},
+  {"name": "comment", "query": "#tags comments remarks :field:value:"},
+  {"name": "-type"}
+  ]
+
+
+defaultConfiguration = {
+  "defaultProjectGroup": "research",
+  "userID2": "$os.getlogin()$",
+  "version": 2,
+  "defaultTags": ["P1", "P2", "P3", "TODO", "DOING", "WAIT", "DONE"],
+  "tableColumnsMax": 16,
+  "tableHeaders": {},
+  "qrPrinter": {},
+  "extractorDir": "$(Path(__file__).parent/'Extractors').as_posix()$",
+  "extractors": {},
+  "authors": [{"first":"", "last":"", "title":"", "email":"", "orcid":"","organizations":[{"organization":"", "rorid":""}]}]
+  }
+
+
+# level 1: type of property
+#   within each: array of 3: description, default, all_choices
+configurationGUI = {
+  "general": {
+    "theme": ["Theme",
+              "light_blue",
+              ["dark_amber","dark_blue","dark_cyan","dark_lightgreen","dark_pink","dark_purple", "dark_red",\
+               "dark_teal","dark_yellow","light_amber","light_blue","light_cyan","light_cyan_500","light_lightgreen",\
+               "light_pink","light_purple","light_red","light_teal","light_yellow","none"]],
+    "loggingLevel": ["Logging level (more->less)","INFO",["DEBUG","INFO","WARNING","ERROR"]],
+  },
+  "dimensions":{
+    "sidebarWidth": ["Sidebar width", 280, [220, 280, 340]],
+    "maxTableColumnWidth": ["Maximum column width in tables", 400, [300, 400, 500, 600]],
+    "imageSizeDetails": ["Image size in details view and form", 600, [300, 400, 500, 600]],
+    "imageWidthProject": ["Image width in project view", 300, [200, 250, 300, 350, 400]],
+    "maxProjectLeafHeight": ["Maximum height of item in project view", 250, [200, 250, 300, 400]],
+    "widthContent": ["Width of procedures in project view", 600, [400, 500, 600, 700]],
+    "docTypeOffset": ["Offset of document type in project view", 500, [400, 500, 600, 700]],
+    "frameSize": ["Frame width around items in project view", 6, [4, 6, 8, 10]],
+  }
+}
 
 
 setupTextLinux = """

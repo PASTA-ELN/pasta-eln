@@ -40,7 +40,7 @@ def outputString(fmt:str='print', level:str='info', message:str='') -> str:
   """
   prefixes = {'h2':f'{Bcolors.UNDERLINE}\n*** ','bold':f'{Bcolors.BOLD}\n*** ', \
               'ok':f'{Bcolors.OKGREEN}', 'okish':f'{Bcolors.OKBLUE}', 'unsure':f'{Bcolors.HEADER}',\
-              'warning':f'{Bcolors.WARNING}','error':f'{Bcolors.FAIL}'}
+              'warning':f'{Bcolors.WARNING}**Warning','error':f'{Bcolors.FAIL}**ERROR '}
   if level=='info':
     txtOutput = message.strip()+'\n'
   elif level in prefixes:

@@ -3,7 +3,7 @@ from PySide6.QtWidgets import QDialog, QVBoxLayout, QListWidget, QLineEdit, QDia
 from .style import IconButton, widgetAndLayout, showMessage
 from .miscTools import restart
 from .communicate import Communicate
-from .fixedStrings import tableHeaderHelp
+from .fixedStringsJson import tableHeaderHelp
 
 class TableHeader(QDialog):
   """ Table Header dialog: change which colums are shown and in which order """

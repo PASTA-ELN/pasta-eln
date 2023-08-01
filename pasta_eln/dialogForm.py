@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QLabel, QTextEdit, QPushButton, QPlainTextEdit, QC
 from PySide6.QtGui import QRegularExpressionValidator # pylint: disable=no-name-in-module
 from PySide6.QtCore import QSize, Qt, QPoint                  # pylint: disable=no-name-in-module
 from .style import Image, TextButton, IconButton, Label, Action, showMessage, widgetAndLayout
-from .fixedStrings import defaultOntologyNode
+from .fixedStringsJson import defaultOntologyNode
 from .handleDictionaries import fillDocBeforeCreate
 from .miscTools import createDirName
 from .communicate import Communicate

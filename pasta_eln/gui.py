@@ -18,7 +18,7 @@ from .dialogProjectGroup import ProjectGroup
 from .dialogOntology import Ontology
 from .miscTools import updateExtractorList, restart
 from .style import Action, showMessage, widgetAndLayout, shortCuts
-from .fixedStrings import shortcuts
+from .fixedStringsJson import shortcuts
 from .inputOutput import exportELN, importELN
 os.environ['QT_API'] = 'pyside6'
 

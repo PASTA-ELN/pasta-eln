@@ -6,7 +6,7 @@ import yaml
 from PySide6.QtWidgets import QScrollArea, QLabel, QMenu, QTextEdit  # pylint: disable=no-name-in-module
 from PySide6.QtCore import Qt, Slot, QPoint  # pylint: disable=no-name-in-module
 from .style import TextButton, Image, Label, Action, showMessage, widgetAndLayout
-from .fixedStrings import defaultOntologyNode
+from .fixedStringsJson import defaultOntologyNode
 from .communicate import Communicate
 
 class Details(QScrollArea):

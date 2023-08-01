@@ -10,6 +10,7 @@ from .database import Database
 from .miscTools import upOut, createDirName, generic_hash, camelCase, DummyProgressBar
 from .handleDictionaries import fillDocBeforeCreate, diffDicts
 from .miscTools import outputString
+from .fixedStringsJson import defaultConfiguration, configurationGUI
 
 class Backend(CLI_Mixin):
   """
@@ -47,8 +48,13 @@ class Backend(CLI_Mixin):
     if not configFileName.exists():
       print('**ERROR Configuration file does not exist')
       return
+    self.configuration = defaultConfiguration
     with open(configFileName,'r', encoding='utf-8') as confFile:
-      self.configuration = json.load(confFile)
+      self.configuration |= json.load(confFile)
+    for _, items in configurationGUI.items():
+      for k,v in items.items():
+        if k not in self.configuration['GUI']:
+          self.configuration['GUI'][k] = v[1]
     if self.configuration['version']!=2:
       print('**ERROR Configuration version does not fit')
       raise ValueError('VersionError')

@@ -27,8 +27,6 @@ class Project(QWidget):
     self.showAll= False
     self.foldedAll = False
     self.btnAddSubfolder:Optional[TextButton] = None
-    self.maxHeight = 300  #TODO_P4 configuration
-    self.maxWidth  = 1024
 
 
   @Slot(str, str)

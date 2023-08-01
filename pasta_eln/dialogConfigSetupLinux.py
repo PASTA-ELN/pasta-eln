@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QMessageBox, QFil
 
 from .style import TextButton, widgetAndLayout
 from .installationTools import couchdb, configuration, ontology, exampleData, createShortcut, installLinuxRoot
-from .fixedStrings import setupTextLinux, rootInstallLinux, exampleDataLinux
+from .fixedStringsJson import setupTextLinux, rootInstallLinux, exampleDataLinux
 from .miscTools import restart
 from .backend import Backend
 

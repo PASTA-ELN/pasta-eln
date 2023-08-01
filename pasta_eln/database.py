@@ -7,7 +7,7 @@ from anytree.search import find_by_attr
 from cloudant.client import CouchDB
 from cloudant.replicator import Replicator
 from PySide6.QtWidgets import QProgressBar  # pylint: disable=no-name-in-module
-from .fixedStrings import defaultOntology, defaultOntologyNode
+from .fixedStringsJson import defaultOntology, defaultOntologyNode
 from .miscTools import tracebackString, DummyProgressBar
 
 class Database:

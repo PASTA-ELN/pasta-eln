@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QMessageBox, QFil
 
 from .style import TextButton, widgetAndLayout
 from .installationTools import couchdb, configuration, ontology, exampleData, createShortcut
-from .fixedStrings import setupTextWindows, couchDBWindows, exampleDataWindows, restartPastaWindows
+from .fixedStringsJson import setupTextWindows, couchDBWindows, exampleDataWindows, restartPastaWindows
 from .miscTools import restart
 from .backend import Backend
 
