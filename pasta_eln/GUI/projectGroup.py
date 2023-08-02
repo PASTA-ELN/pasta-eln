@@ -6,10 +6,10 @@ from PIL.ImageQt import ImageQt
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QLabel, QGroupBox, QLineEdit, QDialogButtonBox, QFormLayout, QComboBox, QFileDialog, QMessageBox  # pylint: disable=no-name-in-module
 from PySide6.QtGui import QPixmap, QRegularExpressionValidator # pylint: disable=no-name-in-module
 from cloudant.client import CouchDB
-from .style import Label, TextButton, IconButton, showMessage, widgetAndLayout
-from .miscTools import upOut, restart, upIn
-from .serverActions import testLocal, testRemote, passwordDecrypt
-from .backend import Backend
+from ..guiStyle import Label, TextButton, IconButton, showMessage, widgetAndLayout
+from ..miscTools import upOut, restart, upIn
+from ..serverActions import testLocal, testRemote, passwordDecrypt
+from ..backend import Backend
 
 class ProjectGroup(QDialog):
   """ Table Header dialog: change which colums are shown and in which order """

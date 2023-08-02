@@ -7,10 +7,10 @@ from typing import Any
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QTableView, QMenu, QFileDialog, QMessageBox, QHeaderView, QLineEdit, QComboBox # pylint: disable=no-name-in-module
 from PySide6.QtCore import Qt, Slot, QSortFilterProxyModel, QModelIndex       # pylint: disable=no-name-in-module
 from PySide6.QtGui import QStandardItemModel, QStandardItem, QFont            # pylint: disable=no-name-in-module
-from .dialogTableHeader import TableHeader
-from .style import TextButton, IconButton, Label, Action, widgetAndLayout, space
-from .fixedStringsJson import defaultOntologyNode
-from .communicate import Communicate
+from .tableHeader import TableHeader
+from ..guiStyle import TextButton, IconButton, Label, Action, widgetAndLayout, space
+from ..fixedStringsJson import defaultOntologyNode
+from ..guiCommunicate import Communicate
 
 #Scan button to more button
 class Table(QWidget):

@@ -4,9 +4,9 @@ from pathlib import Path
 from PySide6.QtWidgets import QWidget, QTreeView, QAbstractItemView, QMenu, QMessageBox # pylint: disable=no-name-in-module
 from PySide6.QtGui import QStandardItemModel, QStandardItem  # pylint: disable=no-name-in-module
 from PySide6.QtCore import QPoint, Qt  # pylint: disable=no-name-in-module
-from .widgetProjectLeafRenderer import ProjectLeafRenderer
-from .style import Action, showMessage
-from .communicate import Communicate
+from .projectLeafRenderer import ProjectLeafRenderer
+from ..guiStyle import Action, showMessage
+from ..guiCommunicate import Communicate
 
 class TreeView(QTreeView):
   """ Custom tree view on data model """

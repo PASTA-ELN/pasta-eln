@@ -4,10 +4,10 @@ from pathlib import Path
 from typing import Callable
 from PySide6.QtWidgets import QWidget, QFormLayout, QLabel, QComboBox, QTextEdit  # pylint: disable=no-name-in-module
 from PySide6.QtGui import QFontMetrics # pylint: disable=no-name-in-module
-from .miscTools import restart
-from .style import TextButton
-from .backend import Backend
-from .fixedStringsJson import configurationGUI
+from ..miscTools import restart
+from ..guiStyle import TextButton
+from ..backend import Backend
+from ..fixedStringsJson import configurationGUI
 
 class ConfigurationGUI(QWidget):
   """ Main class of config tab on GUI elements """

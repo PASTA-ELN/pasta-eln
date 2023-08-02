@@ -4,7 +4,7 @@ from pathlib import Path
 #pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QDialogButtonBox, QPushButton
 #pylint: enable=no-name-in-module
-from .backend import Backend
+from ..backend import Backend
 
 class Ontology(QDialog):
   """ Table Header dialog: change which colums are shown and in which order """

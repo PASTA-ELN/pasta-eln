@@ -2,13 +2,13 @@
 import logging
 from pathlib import Path
 from typing import Callable
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QMessageBox, QFileDialog, QProgressBar    # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QMessageBox, QFileDialog, QProgressBar   # pylint: disable=no-name-in-module
 
-from .style import TextButton, widgetAndLayout
-from .installationTools import couchdb, configuration, ontology, exampleData, createShortcut, installLinuxRoot
-from .fixedStringsJson import setupTextLinux, rootInstallLinux, exampleDataLinux
-from .miscTools import restart
-from .backend import Backend
+from ..guiStyle import TextButton, widgetAndLayout
+from ..installationTools import couchdb, configuration, ontology, exampleData, createShortcut
+from ..fixedStringsJson import setupTextWindows, couchDBWindows, exampleDataWindows, restartPastaWindows
+from ..miscTools import restart
+from ..backend import Backend
 
 class ConfigurationSetup(QWidget):
   """
@@ -23,18 +23,17 @@ class ConfigurationSetup(QWidget):
       callbackFinished (function): callback function to call upon end
     """
     super().__init__()
-
-    #GUI elements
     self.mainL = QVBoxLayout()
     self.setMinimumWidth(400)
     self.setMinimumHeight(500)
     self.setLayout(self.mainL)
     self.callbackFinished = callbackFinished
+    self.backend = backend
 
     #widget 1 = screen 1
     self.screen1W, screen1L = widgetAndLayout('V', self.mainL)
     self.text1 = QTextEdit()
-    self.mainText = setupTextLinux
+    self.mainText = setupTextWindows
     self.text1.setMarkdown(self.mainText)
     screen1L.addWidget(self.text1)
     self.progress1 = QProgressBar(self.screen1W)
@@ -56,34 +55,35 @@ class ConfigurationSetup(QWidget):
     self.progress1.setValue(number)
     return
 
-
+  # create windows package: Packaging Pyside6 applications for Windows with PyInstaller & InstallForge
   def analyse(self) -> None:
+    # sourcery skip: extract-duplicate-method, inline-immediately-returned-variable
     """
     Main method that does all the analysis: open dialogs, ...
     """
     flagContinue = True
-    logging.info('Linux setup analyse start')
+    flagInstalledSoftware = False
+    logging.info('Windows setup analyse start')
 
     #Couchdb
-    existsCouchDB = None
-    res = couchdb('test')
-    if res =='':
-      self.mainText = self.mainText.replace('- CouchDB','- CouchDB is installed' )
-      self.text1.setMarkdown(self.mainText)
-      existsCouchDB = True
-    else:
-      existsCouchDB = False
-
-    #Install couchdb
-    if not existsCouchDB:
-      button = QMessageBox.question(self, "Root installations", rootInstallLinux)
-      if button == QMessageBox.Yes:
-        dirName = QFileDialog.getExistingDirectory(self,'Create and select directory for scientific data',str(Path.home()))
-        installLinuxRoot(existsCouchDB, Path(dirName))
-        logging.info('Install linux root finished')
-      else:
-        self.mainText = self.mainText.replace('- CouchDB','- CouchDB: user chose to NOT install' )
+    if flagContinue:
+      res = couchdb('test')
+      if res =='':
+        self.mainText = self.mainText.replace('- CouchDB','- CouchDB is installed' )
         self.text1.setMarkdown(self.mainText)
+      else:
+        button = QMessageBox.question(self, "CouchDB installation", couchDBWindows)
+        if button == QMessageBox.Yes:
+          res = couchdb('install')
+          flagInstalledSoftware = True
+          if len(res.split('|'))==3:
+            password=res.split('|')[1]
+          else:
+            logging.error('Could not retrieve password :%s',str(res))
+        else:
+          self.mainText = self.mainText.replace('- CouchDB','- CouchDB: user chose to NOT install' )
+          self.text1.setMarkdown(self.mainText)
+          flagContinue = False
 
     #Configuration
     if flagContinue:
@@ -92,9 +92,11 @@ class ConfigurationSetup(QWidget):
         self.mainText = self.mainText.replace('- Configuration of preferences','- Configuration of preferences is acceptable' )
         self.text1.setMarkdown(self.mainText)
       else:
-        button = QMessageBox.question(self, "PASTA-ELN configuration", "Do you want to create/repair the configuration.")
+        button = QMessageBox.question(self, "PASTA-ELN configuration", "Do you want to create/repain the configuration.")
         if button == QMessageBox.Yes:
-          configuration('repair')
+          dirName = QFileDialog.getExistingDirectory(self,'Create and select directory for scientific data',str(Path.home()/'Documents'))
+          configuration('repair','admin', password, Path(dirName))
+          flagInstalledSoftware = True
         else:
           self.mainText = self.mainText.replace('- Configuration of preferences','- Configuration: user chose to NOT install' )
           self.text1.setMarkdown(self.mainText)
@@ -107,7 +109,13 @@ class ConfigurationSetup(QWidget):
         self.mainText = self.mainText.replace('- Ontology of the datastructure','- Ontology of the datastructure is acceptable\n'+res )
         self.text1.setMarkdown(self.mainText)
       else:
+        # button = QMessageBox.question(self, "PASTA-ELN ontology", "Do you want to create the default ontology?")
+        # if button == QMessageBox.Yes:
         ontology('install')
+        # else:
+        #   self.mainText = self.mainText.replace('- Ontology of the datastructure','- Ontology: user chose to NOT install' )
+        #   self.text1.setMarkdown(self.mainText)
+        #   flagContinue = False
 
     #Shortcut
     if flagContinue:
@@ -119,13 +127,25 @@ class ConfigurationSetup(QWidget):
         self.mainText = self.mainText.replace('- Shortcut creation', '- User selected to NOT add a shortcut' )
       self.text1.setMarkdown(self.mainText)
 
+    #If installed, restart
+    if flagInstalledSoftware:
+      button = QMessageBox.information(self,'PASTA-ELN restart required', restartPastaWindows)
+      restart()
+
     #Example data
     if flagContinue:
-      button = QMessageBox.question(self, "Example data", exampleDataLinux)
+      button = QMessageBox.question(self, "Example data", exampleDataWindows)
       if button == QMessageBox.Yes:
         self.progress1.show()
-        exampleData(True, self.callbackProgress)
-        self.mainText = self.mainText.replace('- Example data', '- Example data was added')
+        if (self.backend.basePath/'pastasExampleProject').exists():
+          button1 = QMessageBox.question(self, "Example data", 'Data exists. Should I reset?')
+          if button1 == QMessageBox.Yes:
+            exampleData(True, self.callbackProgress)
+          else:
+            self.mainText = self.mainText.replace('- Example data', '- Example data exists and should not be deleted.')
+        else:
+          exampleData(False, self.callbackProgress)
+          self.mainText = self.mainText.replace('- Example data', '- Example data was added')
       else:
         self.mainText = self.mainText.replace('- Example data', '- Example data was NOT added, per user choice')
       self.text1.setMarkdown(self.mainText)
@@ -134,7 +154,7 @@ class ConfigurationSetup(QWidget):
     self.button1.setText('Finished')
     self.button1.clicked.disconnect(self.analyse)
     self.button1.clicked.connect(self.finished)
-    logging.info('Linux setup analyse end')
+    logging.info('Windows setup analyse end')
     return
 
 
@@ -142,6 +162,4 @@ class ConfigurationSetup(QWidget):
     """
     What do do when setup is finished: success or unsuccessfully
     """
-    restart()
-    # self.callbackFinished()
-    return
+    self.callbackFinished()

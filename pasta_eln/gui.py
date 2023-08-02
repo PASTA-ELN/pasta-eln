@@ -9,15 +9,15 @@ from qt_material import apply_stylesheet  #of https://github.com/UN-GCPDS/qt-mat
 
 from pasta_eln import __version__
 from .backend import Backend
-from .communicate import Communicate
-from .widgetSidebar import Sidebar
-from .widgetBody import Body
-from .dialogForm import Form
-from .dialogConfig import Configuration
-from .dialogProjectGroup import ProjectGroup
-from .dialogOntology import Ontology
+from .guiCommunicate import Communicate
+from .GUI.sidebar import Sidebar
+from .GUI.body import Body
+from .GUI.form import Form
+from .GUI.config import Configuration
+from .GUI.projectGroup import ProjectGroup
+from .GUI.ontology import Ontology
 from .miscTools import updateExtractorList, restart
-from .style import Action, showMessage, widgetAndLayout, shortCuts
+from .guiStyle import Action, showMessage, widgetAndLayout, shortCuts
 from .fixedStringsJson import shortcuts
 from .inputOutput import exportELN, importELN
 os.environ['QT_API'] = 'pyside6'

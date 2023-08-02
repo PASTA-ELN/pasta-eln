@@ -5,10 +5,10 @@ from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget, QMenu, QMessageBox, 
 from PySide6.QtGui import QStandardItemModel, QStandardItem   # pylint: disable=no-name-in-module
 from PySide6.QtCore import Slot, Qt, QItemSelectionModel, QModelIndex # pylint: disable=no-name-in-module
 from anytree import PreOrderIter, Node
-from .widgetProjectTreeView import TreeView
-from .style import TextButton, IconButton, Action, Label, showMessage, widgetAndLayout, iconsDocTypes
-from .miscTools import createDirName
-from .communicate import Communicate
+from .projectTreeView import TreeView
+from ..guiStyle import TextButton, IconButton, Action, Label, showMessage, widgetAndLayout, iconsDocTypes
+from ..miscTools import createDirName
+from ..guiCommunicate import Communicate
 
 class Project(QWidget):
   """ Widget that shows the content of project in a electronic labnotebook """

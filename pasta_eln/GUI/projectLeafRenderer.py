@@ -5,8 +5,8 @@ from PySide6.QtCore import Qt, QSize, QPoint, QMargins, QRectF, QModelIndex# pyl
 from PySide6.QtGui import QStaticText, QPixmap, QTextDocument, QPainter, QColor, QPen # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QStyledItemDelegate, QStyleOptionViewItem # pylint: disable=no-name-in-module
 from PySide6.QtSvg import QSvgRenderer                        # pylint: disable=no-name-in-module
-from .communicate import Communicate
-from .style import getColor
+from ..guiCommunicate import Communicate
+from ..guiStyle import getColor
 
 _DO_NOT_RENDER_ = ['image','content','metaVendor','metaUser','shasum','comment']
 

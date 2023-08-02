@@ -4,9 +4,9 @@ from pathlib import Path
 from typing import Callable
 import requests
 from PySide6.QtWidgets import QWidget, QFormLayout, QLabel, QLineEdit  # pylint: disable=no-name-in-module
-from .miscTools import restart
-from .style import TextButton
-from .backend import Backend
+from ..miscTools import restart
+from ..guiStyle import TextButton
+from ..backend import Backend
 
 #TODO_P5 allow to add more users and each user can have multiple organizations
 

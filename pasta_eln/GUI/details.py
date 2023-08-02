@@ -5,9 +5,9 @@ from typing import Any
 import yaml
 from PySide6.QtWidgets import QScrollArea, QLabel, QMenu, QTextEdit  # pylint: disable=no-name-in-module
 from PySide6.QtCore import Qt, Slot, QPoint  # pylint: disable=no-name-in-module
-from .style import TextButton, Image, Label, Action, showMessage, widgetAndLayout
-from .fixedStringsJson import defaultOntologyNode
-from .communicate import Communicate
+from ..guiStyle import TextButton, Image, Label, Action, showMessage, widgetAndLayout
+from ..fixedStringsJson import defaultOntologyNode
+from ..guiCommunicate import Communicate
 
 class Details(QScrollArea):
   """ widget that shows the details of the items """

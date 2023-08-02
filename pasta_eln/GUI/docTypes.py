@@ -1,9 +1,9 @@
 """ widget that shows the table and the details of the items """
 from PySide6.QtCore import Slot                                # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QWidget, QSplitter, QVBoxLayout  # pylint: disable=no-name-in-module
-from .widgetTable import Table
-from .widgetDetails import Details
-from .communicate import Communicate
+from .table import Table
+from .details import Details
+from ..guiCommunicate import Communicate
 
 class DocTypes(QWidget):
   """ widget that shows the table and the details of the items """

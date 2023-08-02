@@ -11,7 +11,7 @@ fi
 exec pylint pasta_eln
 exec pylint tests
 # Run mypy
-exec mypy pasta_eln/*.py
+exec mypy pasta_eln
 # Test document creation
 exec make -C docs html
 # Run pytest

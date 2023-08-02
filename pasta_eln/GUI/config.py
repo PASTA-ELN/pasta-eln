@@ -1,13 +1,13 @@
 """ Entire config dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""
 import platform
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QTabWidget,  QTextEdit  # pylint: disable=no-name-in-module
-from .backend import Backend
-from .dialogConfigGUI import ConfigurationGUI
-from .dialogConfigAuthors import ConfigurationAuthors
+from ..backend import Backend
+from .configGUI import ConfigurationGUI
+from .configAuthors import ConfigurationAuthors
 if platform.system()=='Windows':
-  from .dialogConfigSetupWindows import ConfigurationSetup
+  from .configSetupWindows import ConfigurationSetup
 else:
-  from .dialogConfigSetupLinux import ConfigurationSetup
+  from .configSetupLinux import ConfigurationSetup
 
 class Configuration(QDialog):
   """ Main class of entire config dialog """

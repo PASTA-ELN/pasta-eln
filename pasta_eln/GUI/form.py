@@ -6,11 +6,11 @@ from PySide6.QtWidgets import QDialog, QWidget, QVBoxLayout, QHBoxLayout, QDialo
 from PySide6.QtWidgets import QLabel, QTextEdit, QPushButton, QPlainTextEdit, QComboBox, QLineEdit # pylint: disable=no-name-in-module
 from PySide6.QtGui import QRegularExpressionValidator # pylint: disable=no-name-in-module
 from PySide6.QtCore import QSize, Qt, QPoint                  # pylint: disable=no-name-in-module
-from .style import Image, TextButton, IconButton, Label, Action, showMessage, widgetAndLayout
-from .fixedStringsJson import defaultOntologyNode
-from .handleDictionaries import fillDocBeforeCreate
-from .miscTools import createDirName
-from .communicate import Communicate
+from ..guiStyle import Image, TextButton, IconButton, Label, Action, showMessage, widgetAndLayout
+from ..fixedStringsJson import defaultOntologyNode
+from ..handleDictionaries import fillDocBeforeCreate
+from ..miscTools import createDirName
+from ..guiCommunicate import Communicate
 
 class Form(QDialog):
   """ New/Edit dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""

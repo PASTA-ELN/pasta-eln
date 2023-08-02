@@ -3,9 +3,9 @@ from PySide6.QtGui import QResizeEvent                                          
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QTreeWidget, QTreeWidgetItem, QFrame, QProgressBar # pylint: disable=no-name-in-module
 from PySide6.QtCore import Slot                                                                        # pylint: disable=no-name-in-module
 from anytree import PreOrderIter, Node
-from .dialogConfig import Configuration
-from .style import TextButton, IconButton, getColor, showMessage, widgetAndLayout, space, iconsDocTypes
-from .communicate import Communicate
+from .config import Configuration
+from ..guiStyle import TextButton, IconButton, getColor, showMessage, widgetAndLayout, space, iconsDocTypes
+from ..guiCommunicate import Communicate
 
 class Sidebar(QWidget):
   """ Sidebar widget that includes the navigation items """
