@@ -62,7 +62,7 @@ defaultOntologyNode:list[dict[str,str]] = [
 
 defaultConfiguration:dict[str,Any] = {
   "defaultProjectGroup": "research",
-  "userID2": "$os.getlogin()$",
+  "userID": "$os.getlogin()$",
   "version": 2,
   "defaultTags": ["P1", "P2", "P3", "TODO", "DOING", "WAIT", "DONE"],
   "tableColumnsMax": 16,

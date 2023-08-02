@@ -254,7 +254,15 @@ def configuration(command:str='test', user:str='', password:str='', pathPasta:Pa
     if k not in conf:
       if command == 'repair':
         if v.startswith('$') and v.startswith('$'):
-          v = eval(v[1:-1]) # pylint: disable=eval-used
+          try:
+            v = eval(v[1:-1]) # pylint: disable=eval-used
+          except:
+            if k=="userID":
+              v = "scientist"
+            elif k=="extractorDir":
+              v = (Path(__file__).parent/'Extractors').as_posix()
+            else:
+              print(k,v)
         conf[k] = v
       else:
         output += outputString('text','error', f'No {k} in config file')
