@@ -70,7 +70,8 @@ defaultConfiguration:dict[str,Any] = {
   "qrPrinter": {},
   "extractorDir": "$(Path(__file__).parent/'Extractors').as_posix()$",
   "extractors": {},
-  "authors": [{"first":"", "last":"", "title":"", "email":"", "orcid":"","organizations":[{"organization":"", "rorid":""}]}]
+  "authors": [{"first":"", "last":"", "title":"", "email":"", "orcid":"","organizations":[{"organization":"", "rorid":""}]}],
+  "GUI": {}
   }
 
 
