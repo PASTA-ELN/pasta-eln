@@ -1,11 +1,12 @@
 """ Table Header dialog: change which colums are shown and in which order """
-import json
+import json, platform
 from pathlib import Path
 import qrcode
 from PIL.ImageQt import ImageQt
-from PySide6.QtWidgets import QDialog, QVBoxLayout, QLabel, QGroupBox, QLineEdit, QDialogButtonBox, QFormLayout, QComboBox, QFileDialog  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QDialog, QVBoxLayout, QLabel, QGroupBox, QLineEdit, QDialogButtonBox, QFormLayout, QComboBox, QFileDialog, QMessageBox  # pylint: disable=no-name-in-module
 from PySide6.QtGui import QPixmap, QRegularExpressionValidator # pylint: disable=no-name-in-module
-from .style import Label, TextButton, showMessage, widgetAndLayout
+from cloudant.client import CouchDB
+from .style import Label, TextButton, IconButton, showMessage, widgetAndLayout
 from .miscTools import upOut, restart, upIn
 from .serverActions import testLocal, testRemote, passwordDecrypt
 from .backend import Backend
@@ -53,9 +54,15 @@ class ProjectGroup(QDialog):
     self.databaseL = QLineEdit('')
     self.databaseL.setValidator(QRegularExpressionValidator("\\w{5,}"))
     localL.addRow('Database', self.databaseL)
+    pathW, pathL = widgetAndLayout('H', spacing='s')
     self.pathL = QLineEdit('')
-    self.pathL.setValidator(QRegularExpressionValidator("[\\w\\\\\\/:]{5,}"))
-    localL.addRow('Path', self.pathL)
+    pathL.addWidget(self.pathL, stretch=5)
+    if platform.system()=='Windows':
+      self.pathL.setValidator(QRegularExpressionValidator("[\\/~][\\w\\\\\\/:\.~]{5,}"))
+    else:
+      self.pathL.setValidator(QRegularExpressionValidator("[\\/~][\\w\\/]{5,}"))
+    IconButton('fa5.folder-open', self.btnEvent, pathL, 'openDir', 'Folder to save data in')
+    localL.addRow('Path', pathW)
     bodyL.addWidget(localW)
     #remote
     remoteW = QGroupBox('Remote credentials')
@@ -93,14 +100,16 @@ class ProjectGroup(QDialog):
     Args:
       btn (QButton): save or cancel button
     """
-    print('project group press',btn.text() )
     if btn.text().endswith('Cancel'):
       self.reject()
     elif 'Save' in btn.text() and self.checkEntries():
       name = self.projectGroupName.text() if self.selectGroup.isHidden() else self.selectGroup.currentText()
       if btn.text().endswith('Save'):
+        localPath = self.pathL.text()
+        if localPath.startswith('~'):
+          localPath = (Path.home()/localPath[1:]).as_posix()
         local = {'user':self.userNameL.text(), 'password':self.passwordL.text(), \
-                  'database':self.databaseL.text(), 'path':self.pathL.text()}
+                  'database':self.databaseL.text(), 'path':localPath}
         remote = {'user':self.userNameR.text(), 'password':self.passwordR.text(), \
                   'database':self.databaseR.text(), 'url':self.serverR.text()}
       elif btn.text().endswith('Save encrypted'):
@@ -126,9 +135,15 @@ class ProjectGroup(QDialog):
       self.selectGroup.hide()
       self.projectGroupName.show()
       self.projectGroupName.setText('my_project_group_name')
-      self.userNameL.setText('')
+      defaultProjectGroup = self.backend.configuration['defaultProjectGroup']
+      config = self.backend.configuration['projectGroups'][defaultProjectGroup]
+      if 'cred' in config['local']:
+        u,p = upOut(config['local']['cred'])[0].split(':')
+      else:
+        u,p = config['local']['user'], config['local']['password']
+      self.userNameL.setText(u)
       self.userNameR.setText('')
-      self.passwordL.setText('')
+      self.passwordL.setText(p)
       self.passwordR.setText('')
       self.databaseL.setText('')
       self.databaseR.setText('')
@@ -154,6 +169,10 @@ class ProjectGroup(QDialog):
       self.image.setPixmap(pixmap)
     elif btnName=='check':
       self.checkEntries()
+    elif btnName=='openDir':
+      dirName = QFileDialog.getExistingDirectory(self, 'Choose directory to save data', str(Path.home()))
+      if dirName:
+        self.pathL.setText(dirName)
     return
 
 
@@ -166,11 +185,29 @@ class ProjectGroup(QDialog):
     """
     # local
     localTest = testLocal(self.userNameL.text(), self.passwordL.text(), self.databaseL.text())
-    if Path(self.pathL.text() ).exists():
-      localTest += 'success: Local path exists\n'
+    if 'Error: Local database does not exist' in localTest and \
+       'success: Local username and password ok' in localTest and self.databaseL.text():
+      button = QMessageBox.question(self, "Question", "Local database does not exist. Should I create it?")
+      if button == QMessageBox.Yes:
+        localTest += '  Local data was created\n'
+        client = CouchDB(self.userNameL.text(), self.passwordL.text(), url='http://127.0.0.1:5984', connect=True)
+        client.create_database(self.databaseL.text())
+      else:
+        localTest += '  Local data was NOT created\n'
+    if not self.pathL.text():
+      localTest += 'ERROR: Local path not given\n'
     else:
-      localTest += 'ERROR: Local path does not exist\n'
+      fullLocalPath = self.backend.basePath/self.pathL.text()
+      if fullLocalPath.exists():
+        localTest += 'success: Local path exists\n'
+      else:
+        button = QMessageBox.question(self, "Question", "Local folder does not exist. Should I create it?")
+        if button == QMessageBox.Yes:
+          fullLocalPath.mkdir()
+        else:
+          localTest += 'ERROR: Local path does not exist\n'
     # remote
+    remoteTest = ''
     if self.userNameR.text()!='' and self.passwordR.text()!='' and self.databaseR.text()!='' and \
         self.serverR.text()!='':
       remoteTest = testRemote(self.serverR.text(), self.userNameR.text(), self.passwordR.text(), \

@@ -30,10 +30,10 @@ class Database:
       print('**ERROR dit01: Could not connect with username+password to local server')
       return
     self.databaseName = databaseName
-    if self.databaseName in self.client.all_dbs():
-      self.db = self.client[self.databaseName]
-    else:
-      self.db = self.client.create_database(self.databaseName)
+    self.db = self.client[self.databaseName]
+    # Keep for reference on how to check for DBs and create new
+    #if self.databaseName in self.client.all_dbs():
+    # self.db = self.client.create_database(self.databaseName)
     # check if default documents exist and create
     if '-ontology-' not in self.db or resetOntology:
       if '-ontology-' in self.db:
