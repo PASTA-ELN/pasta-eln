@@ -253,6 +253,7 @@ def configuration(command:str='test', user:str='', password:str='', pathPasta:Pa
   for k,v in defaultConfiguration.items():
     if k not in conf:
       if command == 'repair':
+        print(k,v)
         if v.startswith('$') and v.startswith('$'):
           try:
             v = eval(v[1:-1]) # pylint: disable=eval-used
