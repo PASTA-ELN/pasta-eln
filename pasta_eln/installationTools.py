@@ -264,6 +264,7 @@ def configuration(command:str='test', user:str='', password:str='', pathPasta:Pa
       conf['GUI'] = {}
     else:
       output += outputString('text','error', 'No GUI in config file')
+  print(conf)
   for _, items in configurationGUI.items():
     for k,v in items.items():
       if k not in conf['GUI']:
