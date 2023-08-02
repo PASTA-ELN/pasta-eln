@@ -56,11 +56,11 @@ class ProjectGroup(QDialog):
     localL.addRow('Database', self.databaseL)
     pathW, pathL = widgetAndLayout('H', spacing='s')
     self.pathL = QLineEdit('')
-    pathL.addWidget(self.pathL, stretch=5)
+    pathL.addWidget(self.pathL, stretch=5) # type: ignore[call-arg]
     if platform.system()=='Windows':
-      self.pathL.setValidator(QRegularExpressionValidator("[\\/~][\\w\\\\\\/:\.~]{5,}"))
+      self.pathL.setValidator(QRegularExpressionValidator(r"[\\/~][\\w\\\\\\/:\.~]{5,}"))
     else:
-      self.pathL.setValidator(QRegularExpressionValidator("[\\/~][\\w\\/]{5,}"))
+      self.pathL.setValidator(QRegularExpressionValidator(r"[\\/~][\\w\\/]{5,}"))
     IconButton('fa5.folder-open', self.btnEvent, pathL, 'openDir', 'Folder to save data in')
     localL.addRow('Path', pathW)
     bodyL.addWidget(localW)

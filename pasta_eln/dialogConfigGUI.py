@@ -25,7 +25,7 @@ class ConfigurationGUI(QWidget):
     #GUI elements
     if hasattr(self.backend, 'configuration'):
       self.tabAppearanceL = QFormLayout(self)
-      for domain, items  in configurationGUI.items():
+      for items  in configurationGUI.values():
         for k,v in items.items():
           setattr(self, k, self.addRowList(v[0], str(v[1]), [str(i) for i in v[2]]))
       self.tabAppearanceL.addRow('Save changes', TextButton('Save changes', self.saveData, None))
@@ -36,8 +36,8 @@ class ConfigurationGUI(QWidget):
     Add a row with a combo-box to the form
 
     Args:
-      item (str): property name in configuration file
       label (str): label used in form
+      default (str): default value
       itemList (list(str)): items to choose from
 
     Returns:
@@ -73,8 +73,8 @@ class ConfigurationGUI(QWidget):
     """
     Save changes to hard-disk
     """
-    for domain, items  in configurationGUI.items():
-      for k,v in items.items():
+    for items in configurationGUI.values():
+      for k in items.keys():
         try:
           self.backend.configuration['GUI'][k] = int(getattr(self, k).currentText())
         except:

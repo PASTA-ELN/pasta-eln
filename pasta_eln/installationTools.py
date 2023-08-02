@@ -254,7 +254,7 @@ def configuration(command:str='test', user:str='', password:str='', pathPasta:Pa
     if k not in conf:
       if command == 'repair':
         if v.startswith('$') and v.startswith('$'):
-          v = eval(v[1:-1])
+          v = eval(v[1:-1]) # pylint: disable=eval-used
         conf[k] = v
       else:
         output += outputString('text','error', f'No {k} in config file')
@@ -263,7 +263,7 @@ def configuration(command:str='test', user:str='', password:str='', pathPasta:Pa
     if command == 'repair':
       conf['GUI'] = {}
     else:
-      output += outputString('text','error', f'No GUI in config file')
+      output += outputString('text','error', 'No GUI in config file')
   for _, items in configurationGUI.items():
     for k,v in items.items():
       if k not in conf['GUI']:

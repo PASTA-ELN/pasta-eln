@@ -1,6 +1,7 @@
 """ Long strings and dictionaries/JSON that would obfuscate code """
+from typing import Any
 
-defaultOntology = {
+defaultOntology:dict[str,Any] = {
   "_id":"-ontology-",
   "-version":2,
 
@@ -51,7 +52,7 @@ defaultOntology = {
 }
 
 
-defaultOntologyNode = [
+defaultOntologyNode:list[dict[str,str]] = [
   {"name": "-name", "query": "What is the file name?"},
   {"name": "-tags"},
   {"name": "comment", "query": "#tags comments remarks :field:value:"},
@@ -59,7 +60,7 @@ defaultOntologyNode = [
   ]
 
 
-defaultConfiguration = {
+defaultConfiguration:dict[str,Any] = {
   "defaultProjectGroup": "research",
   "userID2": "$os.getlogin()$",
   "version": 2,
@@ -75,7 +76,7 @@ defaultConfiguration = {
 
 # level 1: type of property
 #   within each: array of 3: description, default, all_choices
-configurationGUI = {
+configurationGUI:dict[str,Any] = {
   "general": {
     "theme": ["Theme",
               "light_blue",
