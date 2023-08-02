@@ -253,7 +253,6 @@ def configuration(command:str='test', user:str='', password:str='', pathPasta:Pa
   for k,v in defaultConfiguration.items():
     if k not in conf:
       if command == 'repair':
-        print(k,v)
         if isinstance(v,str) and v.startswith('$') and v.startswith('$'):
           try:
             v = eval(v[1:-1]) # pylint: disable=eval-used
@@ -263,7 +262,7 @@ def configuration(command:str='test', user:str='', password:str='', pathPasta:Pa
             elif k=="extractorDir":
               v = (Path(__file__).parent/'Extractors').as_posix()
             else:
-              print(k,v)
+              print('Repair configuration: cannot know',k,v)
         conf[k] = v
       else:
         output += outputString('text','error', f'No {k} in config file')
