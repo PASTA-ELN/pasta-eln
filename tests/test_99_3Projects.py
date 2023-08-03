@@ -29,7 +29,6 @@ class TestStringMethods(unittest.TestCase):
     warnings.filterwarnings('ignore', message='invalid escape sequence')
     warnings.filterwarnings('ignore', category=ResourceWarning, module='PIL')
     warnings.filterwarnings('ignore', category=ImportWarning)
-    warnings.filterwarnings('ignore', module='js2py')
     logPath = Path.home()/'pastaELN.log'
     logging.basicConfig(filename=logPath, level=logging.INFO, format='%(asctime)s|%(levelname)s:%(message)s',
                         datefmt='%m-%d %H:%M:%S')   #This logging is always info, since for installation only

@@ -1,5 +1,5 @@
 """Input and output functions towards the .eln file-format"""
-import os, json, shutil, logging, hashlib, re, requests
+import os, json, shutil, logging, hashlib, re, requests, copy
 from typing import Any, Optional
 from pathlib import Path
 from datetime import datetime
@@ -66,7 +66,7 @@ def importELN(backend:Backend, elnFileName:str) -> str:
       return '**ERROR: ro-crate does not exist in folder. EXIT'
     graph = json.loads(elnFile.read(f'{dirName}/ro-crate-metadata.json'))["@graph"]
     #find information from master node
-    rocrateNode = [i for i in graph if i["@id"]=="ro-crate-metadata.json"][0]
+    rocrateNode = [i for i in graph if i["@id"].endswith("ro-crate-metadata.json")][0]
     if 'sdPublisher' in rocrateNode:
       elnName     = rocrateNode['sdPublisher']['name']
     elnVersion = rocrateNode['version'] if 'version' in rocrateNode else ''
@@ -106,6 +106,7 @@ def importELN(backend:Backend, elnFileName:str) -> str:
           output[f'imported_{key}'] = value
       return output, elnID, children, dataType
 
+
     def processPart(part:dict[str,str]) -> int:
       """
       recursive function call to process this node
@@ -121,17 +122,19 @@ def importELN(backend:Backend, elnFileName:str) -> str:
         print("**ERROR in part",part)
         return False
       logging.info('Process: '+part['@id'])
+      print('Process: '+part['@id'])
       # find next node to process
       docS = [i for i in graph if '@id' in i and i['@id']==part['@id']]
       if len(docS)!=1 or backend.cwd is None:
         print('**ERROR zero or multiple nodes with same id', docS,' or cwd is None in '+part['@id'])
         return -1
-      doc, elnID, children, dataType = json2pastaFunction(docS[0])
+      doc, elnID, children, dataType = json2pastaFunction(copy.deepcopy(docS[0]))
       if elnName == 'PASTA ELN':
         fullPath = backend.basePath/elnID
       else:
         fullPath = backend.basePath/backend.cwd/elnID.split('/')[-1]
       if dataType.lower()=='dataset':
+        #print('  Dataset',elnID,dataType)
         if elnName == 'PASTA ELN':
           supplementalInfo = Path(dirName)/elnID/'metadata.json'
         elif elnName == 'eLabFTW':
@@ -144,16 +147,20 @@ def importELN(backend:Backend, elnFileName:str) -> str:
           if isinstance(jsonContent, list):
             jsonContent = jsonContent[0]
           if elnName == 'PASTA ELN':
-            doc.update( jsonContent )
+            doc.update( jsonContent['__main__'] )
           else:
             doc[f'from {elnName}'] = jsonContent
-      elif re.match(r'^metadata_.-\w{32}\.json$', elnID.split('/')[-1]) is None:
+      else:
+        #print('  ELSE ',elnID,dataType)
         if elnName == 'PASTA ELN':
           if elnID.endswith('datastructure.json'):
             return 0
-          metadataPath = Path(dirName)/(elnID.replace('.','_')+'_metadata.json')
+          parentIDList = [i['@id'] for i in graph if 'hasPart' in i and {'@id':'./'+elnID} in i['hasPart']]
+          if len(parentIDList)==1:
+            metadataPath = Path(dirName)/parentIDList[0]/'metadata.json'
           with elnFile.open(metadataPath.as_posix()) as fIn:
-            doc.update( json.loads( fIn.read() ) )
+            metadataContent = json.loads( fIn.read() )
+            doc.update( metadataContent[doc['_id']] )
         elif elnName == 'eLabFTW' and elnID.endswith('export-elabftw.json'):
           return 0
         else:
@@ -162,10 +169,6 @@ def importELN(backend:Backend, elnFileName:str) -> str:
           source = elnFile.open(f'{dirName}/{elnID}')
           with source, target:  #extract one file to its target directly
             shutil.copyfileobj(source, target)
-      else:
-        metadataPath = Path(dirName)/elnID
-        with elnFile.open(metadataPath.as_posix()) as fIn:
-          doc.update( json.loads( fIn.read() ) )
       # save
       if elnName == 'PASTA ELN':
         backend.db.saveDoc(doc)
@@ -173,18 +176,16 @@ def importELN(backend:Backend, elnFileName:str) -> str:
           fullPath.mkdir(exist_ok=True)
           with open(fullPath/'.id_pastaELN.json', 'w', encoding='utf-8') as fOut:
             fOut.write(json.dumps(doc))
-        elif re.match(r'^metadata_.-\w{32}\.json$', elnID.split('/')[-1]) is None:
+        else:
           if not fullPath.parent.exists():
             fullPath.parent.mkdir()
           target = open(fullPath, "wb")
-          try:
-            source = elnFile.open(f'{dirName}/' + part['@id'])
+          if f'{dirName}/' + part['@id'][2:] in files:  #if a file is saved
+            source = elnFile.open(f'{dirName}/' + part['@id'][2:])
             with source, target:  #extract one file to its target directly
               shutil.copyfileobj(source, target)
-          except Exception:
-            logging.warning(
-                f'--------- could not read file from zip: {dirName}/' +
-                part['@id'])
+          else:
+            logging.warning('  could not read file from zip: %s',part['@id'])
       else:  # OTHER VENDORS
         if dataType.lower()=='dataset':
           docType = 'x'+str(len(elnID.split('/')) - 1)
@@ -348,7 +349,7 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
                          'sha256':hashlib.sha256(zipContent.encode()).hexdigest(),
                          'dateModified': docMain['dateModified']
                          }
-      elnFile.writestr(f'{dirNameProject}/{pathMetadata}', zipContent)
+      elnFile.writestr(f'{dirNameProject}/{pathMetadata[2:]}', zipContent)
       docMain['@type'] = 'Dataset'
       append(graph, roCrateMetadata)
 

@@ -9,8 +9,6 @@ tests/DataForDemonstration/
 pasta_eln/test.py
 pasta_eln/temp.py
 TODO*.md
-pastaELN.py
-pastaELN_CLI.py
-pastaELN_Install.py
+pastaELN*.py
 
 .coverage

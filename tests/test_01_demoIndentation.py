@@ -28,7 +28,6 @@ class TestStringMethods(unittest.TestCase):
     warnings.filterwarnings('ignore', message='invalid escape sequence')
     warnings.filterwarnings('ignore', category=ResourceWarning, module='PIL')
     warnings.filterwarnings('ignore', category=ImportWarning)
-    warnings.filterwarnings('ignore', module='js2py')
     if socket.gethostname()=='dena':  #SB's computer
       projectGroup = 'pasta_tutorial'
     else:

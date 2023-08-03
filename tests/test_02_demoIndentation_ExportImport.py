@@ -8,6 +8,12 @@ from pasta_eln.backend import Backend
 from pasta_eln.inputOutput import exportELN, importELN
 from pasta_eln.miscTools import outputString
 from pasta_eln.miscTools import DummyProgressBar
+try:
+  from eln_validator import checkFile
+  elnValidation = True
+except:
+  elnValidation = False
+
 
 class TestStringMethods(unittest.TestCase):
   """
@@ -29,21 +35,24 @@ class TestStringMethods(unittest.TestCase):
     warnings.filterwarnings('ignore', message='invalid escape sequence')
     warnings.filterwarnings('ignore', category=ResourceWarning, module='PIL')
     warnings.filterwarnings('ignore', category=ImportWarning)
-    warnings.filterwarnings('ignore', module='js2py')
     if socket.gethostname()=='dena':  #SB's computer
       projectGroup = 'pasta_tutorial'
     else:
       projectGroup = 'research'
     self.be = Backend(projectGroup, initConfig=False)
 
-    #export
+    # export
     idProj = self.be.db.getView('viewDocType/x0')[0]['id']
     self.fileName = str(Path.home()/'temporary_pastaTest.eln')
     status = exportELN(self.be, idProj, self.fileName)
     print('\n'+status)
-    self.assertEqual(status[:7],'Success','Export unsuccessful')
+    self.assertEqual(status[:21],'Success: exported 31 ','Export unsuccessful')
 
-    #remove old
+    # verify eln
+    if elnValidation:
+      checkFile(Path(self.fileName), verbose=True)
+
+    # remove old
     docProj = self.be.db.getDoc(idProj)
     oldPath = self.be.basePath/docProj['-branch'][0]['path']
     shutil.rmtree(oldPath)
@@ -51,7 +60,7 @@ class TestStringMethods(unittest.TestCase):
     for doc in allDocs:
       self.be.db.remove(doc['id'])
 
-    #import
+    # import
     status = importELN(self.be, self.fileName)
     print(status)
     self.assertEqual(status[:7],'Success','Import unsuccessful')
@@ -64,12 +73,12 @@ class TestStringMethods(unittest.TestCase):
     fileCount = 0
     for _, _, files in os.walk(self.be.basePath):
       fileCount+=len(files)
-    print('Number of files 25=', fileCount)
-    self.assertEqual(fileCount, 25, 'Not 25 files exist')
+    print('Number of files 26=', fileCount)
+    self.assertEqual(fileCount, 26, 'Not 26 files exist')
     return
 
   def tearDown(self):
-    logging.info('End 3Projects test')
+    logging.info('End Export-import test')
     Path(self.fileName).unlink()  #remove file
     return
 
