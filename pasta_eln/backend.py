@@ -45,19 +45,17 @@ class Backend(CLI_Mixin):
           - resetOntology (bool): reset ontology on database from one on file
     """
     configFileName = Path.home()/'.pastaELN.json'
-    if not configFileName.exists():
-      print('**ERROR Configuration file does not exist')
-      return
     self.configuration = defaultConfiguration
-    with open(configFileName,'r', encoding='utf-8') as confFile:
-      self.configuration |= json.load(confFile)
+    if configFileName.exists():
+      with open(configFileName,'r', encoding='utf-8') as confFile:
+        self.configuration |= json.load(confFile)
     for _, items in configurationGUI.items():
       for k,v in items.items():
         if k not in self.configuration['GUI']:
           self.configuration['GUI'][k] = v[1]
     if self.configuration['version']!=2:
-      print('**ERROR Configuration version does not fit')
-      raise ValueError('VersionError')
+      print('**ERROR Configuration file does not exist or version is not 2')
+      return
     if not defaultProjectGroup:
       defaultProjectGroup = self.configuration['defaultProjectGroup']
     if defaultProjectGroup not in self.configuration['projectGroups']:
@@ -71,8 +69,8 @@ class Backend(CLI_Mixin):
     # directories
     #    self.basePath (root of directory tree) is root of all projects
     #    self.cwd changes during program but is similarly the full path from root
-    self.basePath     = Path(projectGroup['local']['path'])
-    self.cwd          = Path(projectGroup['local']['path'])
+    self.basePath      = Path(projectGroup['local']['path'])
+    self.cwd           = Path(projectGroup['local']['path'])
     self.extractorPath = Path(self.configuration['extractorDir'])
     sys.path.append(str(self.extractorPath))  #allow extractors
     # decipher miscellaneous configuration and store

@@ -63,15 +63,14 @@ defaultOntologyNode:list[dict[str,str]] = [
 defaultConfiguration:dict[str,Any] = {
   "defaultProjectGroup": "research",
   "userID": "$os.getlogin()$",
-  "version": 2,
-  "defaultTags": ["P1", "P2", "P3", "TODO", "DOING", "WAIT", "DONE"],
+  "version": 0,
   "tableColumnsMax": 16,
-  "tableHeaders": {},
   "qrPrinter": {},
   "extractorDir": "$(Path(__file__).parent/'Extractors').as_posix()$",
   "extractors": {},
   "authors": [{"first":"", "last":"", "title":"", "email":"", "orcid":"","organizations":[{"organization":"", "rorid":""}]}],
-  "GUI": {}
+  "GUI": {},
+  "projectGroups": {}
   }
 
 
