@@ -58,7 +58,6 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     if self.penDefault is None:
       self.penDefault = QPen(painter.pen())
     x0, y0 = option.rect.topLeft().toTuple()
-    topLeft2nd     = option.rect.topRight()   - QPoint(self.widthImage+self.frameSize+1,-self.frameSize)
     bottomRight2nd = option.rect.bottomRight()- QPoint(self.frameSize+1,self.frameSize)
     painter.fillRect(option.rect.marginsRemoved(QMargins(2,6,4,0)),  self.colorMargin1)
     if doc['-type'][0][0]=='x':
@@ -133,8 +132,11 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     if 'image' in doc and doc['image']!='':
       if doc['image'].startswith('data:image/'):
         pixmap = self.imageFromDoc(doc)
+        width2nd = min(self.widthImage,pixmap.width()+self.frameSize)
+        topLeft2nd     = option.rect.topRight()   - QPoint(width2nd+self.frameSize+1,-self.frameSize)
         painter.drawPixmap(topLeft2nd, pixmap)
       elif doc['image'].startswith('<?xml'):
+        topLeft2nd     = option.rect.topRight()   - QPoint(self.widthImage+self.frameSize+1,-self.frameSize)
         image = QSvgRenderer(bytearray(doc['image'], encoding='utf-8'))
         image.render(painter,    QRectF(topLeft2nd, bottomRight2nd))
     return
@@ -196,4 +198,6 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     result = QPixmap()
     result.loadFromData(base64.b64decode(doc['image'][22:]))
     result = result.scaledToWidth(self.widthImage)
+    if result.height()>self.maxHeight:
+      result = result.scaledToHeight(self.maxHeight-self.frameSize*2)
     return result

@@ -171,6 +171,7 @@ class Database:
                                    'viewHierarchyAll':jsHierarchyAll,'viewPathsAll':jsPathAll})
     jsSHA= "if (doc['-type'][0]==='measurement'){emit(doc.shasum, doc['-name']);}"
     jsQR = "if (doc.qrCode.length > 0) {doc.qrCode.forEach(function(thisCode) {emit(thisCode, doc['-name']);});}"
+    #TODO_P5 SampleID = QR? helps uniqueness ease. Counter example printing might be more difficult: print for this sample VS. print and assign to sample
     jsTags="if ('-tags' in doc && (doc['-branch'][0].show.every(function(i) {return i;})))"+\
               "{doc['-tags'].forEach(function(tag){emit(tag,[doc['-name'], doc['-type'].join('/')]);});}"
     jsTagsAll="if ('-tags' in doc){doc['-tags'].forEach(function(tag){emit(tag,[doc['-name'], doc['-type'].join('/')]);});}"

@@ -77,6 +77,7 @@ def tracebackString(log:bool=False, docID:str='') -> str:
   Returns:
     str: | separated string of call functions
   """
+  #TODO_P1 SHORTEN reply
   tracebackList = traceback.format_stack()[2:-2]
   reply = '|'.join([item.split('\n')[1].strip() for item in tracebackList])  #| separated list of stack excluding last
   if log:
