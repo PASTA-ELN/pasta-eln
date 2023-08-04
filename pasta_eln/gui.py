@@ -79,7 +79,7 @@ class MainWindow(QMainWindow):
            shortcut='F2')
     Action('Update &Extractor list',         self.executeAction, systemMenu, self, name='updateExtractors')
     systemMenu.addSeparator()
-    Action('&Configuration',         self.executeAction, systemMenu, self, name='configuration', shortcut='Ctrl+.')
+    Action('&Configuration',         self.executeAction, systemMenu, self, name='configuration', shortcut='Ctrl+0')
 
     helpMenu = menu.addMenu("&Help")
     Action('&Website',               self.executeAction, helpMenu, self, name='website')
