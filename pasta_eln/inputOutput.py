@@ -171,7 +171,6 @@ def importELN(backend:Backend, elnFileName:str) -> str:
             shutil.copyfileobj(source, target)
       # save
       if elnName == 'PASTA ELN':
-        backend.db.saveDoc(doc)
         if dataType.lower()=='dataset':
           fullPath.mkdir(exist_ok=True)
           with open(fullPath/'.id_pastaELN.json', 'w', encoding='utf-8') as fOut:
@@ -184,8 +183,10 @@ def importELN(backend:Backend, elnFileName:str) -> str:
             source = elnFile.open(f'{dirName}/' + part['@id'][2:])
             with source, target:  #extract one file to its target directly
               shutil.copyfileobj(source, target)
+            backend.useExtractors(fullPath, doc['shasum'], doc)
           else:
             logging.warning('  could not read file from zip: %s',part['@id'])
+        backend.db.saveDoc(doc)
       else:  # OTHER VENDORS
         if dataType.lower()=='dataset':
           docType = 'x'+str(len(elnID.split('/')) - 1)

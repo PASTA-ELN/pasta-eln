@@ -50,7 +50,7 @@ class TestStringMethods(unittest.TestCase):
 
     # verify eln
     if elnValidation:
-      checkFile(Path(self.fileName), verbose=True)
+      checkFile(Path(self.fileName), verbose=True, plot=False)
 
     # remove old
     docProj = self.be.db.getDoc(idProj)
