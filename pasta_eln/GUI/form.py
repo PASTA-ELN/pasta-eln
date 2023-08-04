@@ -263,9 +263,10 @@ class Form(QDialog):
             if self.doc['-branch'][0]['path'] is None:
               newPath    = ''
             else:
-              oldPath    = self.comm.backend.basePath/self.doc['-branch'][0]['path']
+              oldPath = self.comm.backend.basePath/self.doc['-branch'][0]['path']
               newPath = f'{parentPath}/{oldPath.name}'
             self.db.updateBranch( self.doc['_id'], 0, 9999, [self.projectComboBox.currentData()], newPath)
+            self.doc['-branch'][0] = {'stack':[self.projectComboBox.currentData()], 'path':newPath or None, 'child':9999, 'show':[True,True]}
         else:
           newProjID = [self.projectComboBox.currentData()]
       # ---- if docType changed: save; no further save to db required ----
