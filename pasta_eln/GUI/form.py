@@ -42,7 +42,7 @@ class Form(QDialog):
     mainL = QVBoxLayout(self)
     if 'image' in self.doc:
       width = self.comm.backend.configuration['GUI']['imageSizeDetails'] \
-                  if hasattr(self.comm.backend, 'configuration') else 300
+                      if hasattr(self.comm.backend, 'configuration') else 300
       imageW, imageL = widgetAndLayout('V', mainL)
       Image(self.doc['image'], imageL, anyDimension=width)
       imageW.setContextMenuPolicy(Qt.CustomContextMenu)
@@ -77,7 +77,7 @@ class Form(QDialog):
         getattr(self, f'buttonBarW_{key}').hide()
         buttonBarL = QHBoxLayout(getattr(self, f'buttonBarW_{key}'))
         for name, tooltip in [['bold','Bold text'],['italic','Italic text'],['list-ul','Bullet list'],\
-                                ['list-ol','Numbered list']]:
+                                    ['list-ol','Numbered list']]:
           IconButton(f'fa5s.{name}', self.btnText, buttonBarL, f'{name}_{key}', tooltip)
         for i in range(1,4):
           IconButton(
@@ -146,7 +146,7 @@ class Form(QDialog):
     #add extra questions at bottom of form
     allowProjectAndDocTypeChange = '_id' in self.doc and self.doc['-type'][0][0]!='x'
     if '_ids' in self.doc: #if group edit
-      allowProjectAndDocTypeChange = not any(docID[0]=='x' for docID in self.doc['_ids'])
+      allowProjectAndDocTypeChange = all(docID[0] != 'x' for docID in self.doc['_ids'])
     if allowProjectAndDocTypeChange: #if not-new and non-folder
       self.formL.addRow(QLabel('Special properties:'), QLabel('') )
     label = '- unassigned -' if self.flagNewDoc else '- no change -'
@@ -154,7 +154,7 @@ class Form(QDialog):
       self.projectComboBox = QComboBox()
       self.projectComboBox.addItem(label, userData='')
       for line in self.db.getView('viewDocType/x0'):
-        if not '-branch' in self.doc or not any(line['id']==branch['stack'][0] for branch in self.doc['-branch']):
+        if '-branch' not in self.doc or all(line['id']!=branch['stack'][0] for branch in self.doc['-branch']):
           self.projectComboBox.addItem(line['value'][0], userData=line['id'])
       self.formL.addRow(QLabel('Project'), self.projectComboBox)
     if allowProjectAndDocTypeChange: #if not-new and non-folder
@@ -211,7 +211,7 @@ class Form(QDialog):
           continue
         if key in ['comment','content']:
           text = getattr(self, f'textEdit_{key}').toPlainText().strip()
-          if not ('_ids' in self.doc and not text):  #if group edit, text has to have text
+          if '_ids' not in self.doc or text:  #if group edit, text has to have text
             self.doc[key] = text
             if key == 'content' and '-branch' in self.doc:
               for branch in self.doc['-branch']:

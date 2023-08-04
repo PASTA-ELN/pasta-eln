@@ -163,15 +163,14 @@ class ProjectGroup(QDialog):
       else:
         configname = self.projectGroupName.text()
       qrCode = {"configname": configname, "credentials":{"server":self.serverR.text(), \
-        "username":self.userNameR.text(), "password":self.passwordR.text(), "database":self.databaseR.text()}}
+          "username":self.userNameR.text(), "password":self.passwordR.text(), "database":self.databaseR.text()}}
       img = qrcode.make(json.dumps(qrCode), error_correction=qrcode.constants.ERROR_CORRECT_M)
       pixmap = QPixmap.fromImage(ImageQt(img).scaledToWidth(200))
       self.image.setPixmap(pixmap)
     elif btnName=='check':
       self.checkEntries()
     elif btnName=='openDir':
-      dirName = QFileDialog.getExistingDirectory(self, 'Choose directory to save data', str(Path.home()))
-      if dirName:
+      if dirName := QFileDialog.getExistingDirectory(self, 'Choose directory to save data', str(Path.home())):
         self.pathL.setText(dirName)
     return
 

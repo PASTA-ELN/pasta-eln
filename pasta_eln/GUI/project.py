@@ -122,7 +122,7 @@ class Project(QWidget):
       return
     # change item in question
     db.updateBranch(docID=docID, branch=branchIdx, stack=stackNew, path=pathNew, child=childNew)
-    item.setText('/'.join(stackNew+[docID]) if maximized else '/'.join(stackNew+[docID+' -']) )     #update item.text() to new stack
+    item.setText('/'.join(stackNew+[docID]) if maximized else '/'.join(stackNew+[f'{docID} -']) )     #update item.text() to new stack
     # change siblings
     for line in siblingsOld:
       db.updateBranch(docID=line['id'], branch=line['value'][3], child=line['value'][0]-1)

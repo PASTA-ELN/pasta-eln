@@ -254,15 +254,7 @@ def configuration(command:str='test', user:str='', password:str='', pathPasta:Pa
     if k not in conf:
       if command == 'repair':
         if isinstance(v,str) and v.startswith('$') and v.startswith('$'):
-          # try:
           v = eval(v[1:-1]) # pylint: disable=eval-used
-          # except:
-          #   if k=="userID":
-          #     v = "scientist"
-          #   elif k=="extractorDir":
-          #     v = (Path(__file__).parent/'Extractors').as_posix()
-          #   else:
-          #     print('Repair configuration: cannot know',k,v)
         conf[k] = v
       else:
         output += outputString('text','error', f'No {k} in config file')
