@@ -222,7 +222,8 @@ class Project(QWidget):
         self.infoW.hide()
     elif menuName == 'projHideShow':
       self.comm.backend.db.hideShow(self.projID)
-      self.comm.changeProject.emit('','') #refresh project
+      self.comm.changeSidebar.emit('')
+      self.comm.changeTable.emit('x0','') # go back to project table
     elif menuName == 'allFold' and self.tree is not None:
       self.foldedAll = not self.foldedAll
       def recursiveRowIteration(index:QModelIndex) -> None:
