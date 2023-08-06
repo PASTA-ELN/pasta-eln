@@ -45,7 +45,6 @@ class TestStringMethods(unittest.TestCase):
           continue
 
         #TODO_P5 for now and to increase reproducibility
-        #TODO_P1 what if project-comment too long?
         if file!='multiple-database-items.eln':
           continue
 

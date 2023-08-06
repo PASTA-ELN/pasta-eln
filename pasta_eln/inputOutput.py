@@ -257,8 +257,6 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
     if not path.startswith('http') and pathUsed:
       path = f'./{path}'
     docMain= {'@id': path}
-    if not pathUsed:
-      docMain['@type'] = '_metadata_' #TODO_P1 real type
     docSupp = {}
     for key, value in doc.items():
       if key in pasta2json and pasta2json[key] is not None:

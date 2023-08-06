@@ -171,6 +171,8 @@ class Project(QWidget):
     for key,value in self.docProj.items():
       if key[0] in ['_','-'] or (key=='comment' and '\n' in value):
         continue
+      if 'from ' in key:  #TODO_P5 for now until the content of other ELNs is perfectly included
+        continue
       infoL.addWidget(QLabel(f'{key}: {str(value)}'))
     if 'comment' in self.docProj and '\n' in self.docProj['comment']:     #format nicely
       # comment = QTextEdit()  #TODO_P2 render comment nicely without screwing up the rest
