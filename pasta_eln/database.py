@@ -902,16 +902,10 @@ class Database:
             outstring+= outputString(outputStyle,'error',f"dch08b: branch-show not same length as branch-stack: {doc['_id']}")
                 #TODO_P5 moreChecksDB: if parent has corresponding show
 
-        #every doc should have a name
-        if '-name' not in doc:
-          outstring+= outputString(outputStyle,'unsure',f"dch17: -name not in (deleted doc?){doc['_id']}")
-          if repair and 'name' in doc:  #repair from v0.9.9->1.0.0
-            doc['-name']=doc['name']
-            del doc['name']
-            doc.save()
-
-        if '-tags' not in doc:
-          outstring+= outputString(outputStyle,'error',f"dch17b: -tags not in doc{doc['_id']}")
+        #every doc should have these:
+        for key in ['-name','-tags','-client','-user','-date']:
+          if key not in doc:
+            outstring+= outputString(outputStyle,'error',f"dch17: {key} not in (deleted doc?){doc['_id']}")
 
         #doc-type specific tests
         if '-type' in doc and doc['-type'][0] == 'sample':

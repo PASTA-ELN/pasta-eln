@@ -171,6 +171,7 @@ def importELN(backend:Backend, elnFileName:str) -> str:
             shutil.copyfileobj(source, target)
       # save
       if elnName == 'PASTA ELN':
+        doc['-user'] = '_'
         if dataType.lower()=='dataset':
           fullPath.mkdir(exist_ok=True)
           with open(fullPath/'.id_pastaELN.json', 'w', encoding='utf-8') as fOut:
@@ -178,8 +179,8 @@ def importELN(backend:Backend, elnFileName:str) -> str:
         else:
           if not fullPath.parent.exists():
             fullPath.parent.mkdir()
-          target = open(fullPath, "wb")
           if f'{dirName}/' + part['@id'][2:] in files:  #if a file is saved
+            target = open(fullPath, "wb")
             source = elnFile.open(f'{dirName}/' + part['@id'][2:])
             with source, target:  #extract one file to its target directly
               shutil.copyfileobj(source, target)

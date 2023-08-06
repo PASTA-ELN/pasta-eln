@@ -73,8 +73,8 @@ class TestStringMethods(unittest.TestCase):
     fileCount = 0
     for _, _, files in os.walk(self.be.basePath):
       fileCount+=len(files)
-    print('Number of files 26=', fileCount)
-    self.assertEqual(fileCount, 26, 'Not 26 files exist')
+    print('Number of files 25=', fileCount)
+    self.assertEqual(fileCount, 25, 'Not 25 files exist')
     return
 
   def tearDown(self):
