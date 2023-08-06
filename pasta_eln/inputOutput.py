@@ -1,15 +1,17 @@
 """Input and output functions towards the .eln file-format"""
-import os, json, shutil, logging, hashlib, re, requests, copy
+import os, json, shutil, logging, hashlib, copy
 from typing import Any, Optional
 from pathlib import Path
 from datetime import datetime
 from zipfile import ZipFile, ZIP_DEFLATED
-from anytree import PreOrderIter, Node
+import requests
+from anytree import Node
 from pasta_eln import __version__
 from .backend import Backend
 from .miscTools import createDirName
 
-#GENERAL TERMS IN ro-crate-metadata.json (None implies definitely should not be saved)
+# Always use RO-crate names
+# GENERAL TERMS IN ro-crate-metadata.json (None implies definitely should not be saved)
 pasta2json:dict[str,Any] = {
   '_id'         : 'identifier',
   '_rev'        : None,
@@ -28,7 +30,6 @@ pasta2json:dict[str,Any] = {
 }
 json2pasta = {v:k for k,v in pasta2json.items() if v is not None}
 
-# discuss: Always RO-crate names
 
 # Special terms in other ELNs: only add the ones that are required for function for PASTA
 elabFTW = {
@@ -210,26 +211,6 @@ def importELN(backend:Backend, elnFileName:str) -> str:
           continue
         addedDocs += processPart(child)
 
-        # backend.changeHierarchy(backend.currentID)
-        # backend.changeHierarchy(None)
-        # if newNode['@id'].endswith('.json'):                    #read json content into DB
-        #   with elnFile.open( (Path(dirName)/newNode['@id']).as_posix() ) as fIn:
-        #     jsonContent = fIn.read()
-        #     for dataJson in json.loads(jsonContent):
-        #       #Transcribe and save content
-        #       dataPasta = {}
-        #       for key, value in dataJson.items():
-        #         if key in json2pasta:
-        #           dataPasta[json2pasta[key]] = value
-        #         else:
-        #           dataPasta[key] = value
-        #           keysNotInDict.add(key)
-        #       dataPasta['-client'] = 'Imported from '+elnName+' '+elnVersion
-        #       addedDocs += 1
-        #       for reqKey in requiredKeys:
-        #         if reqKey not in dataPasta:
-        #           print('**ERROR key not in doc', reqKey)
-        #       backend.db.saveDoc(dataPasta)
       return addedDocs
 
     ######################
@@ -241,9 +222,6 @@ def importELN(backend:Backend, elnFileName:str) -> str:
         addedDocuments += processPart(part)
   return f'Success: imported {str(addedDocuments)} documents from file {elnFileName} from ELN {elnName} {elnVersion}'
 
-# move metadata-s-aoeuaoe.json to ??
-# create pip-line for exporting, testing, Import
-# send pasta email
 
 ##########################################
 ###               EXPORT               ###
@@ -268,7 +246,7 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
   keysInSupplemental:set[str] = set()
   filesNotInProject = []
 
-  def separate(doc):
+  def separate(doc: dict[str,Any]) -> tuple[str, dict[str,Any], dict[str,Any]]:
     path =  f"{doc['-branch'][0]['path']}/" if doc['-type'][0][0]=='x' else doc['-branch'][0]['path']
     pathUsed = True
     if path is None:
@@ -298,12 +276,11 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
     return path, docMain, docSupp
 
 
-  def append(graph, doc):
+  def append(graph: list[dict[str,Any]], doc: dict[str,Any]) -> None:
     idsInGraph = [i['@id'] for i in graph]
     if doc['@id'] not in idsInGraph:
       graph.append(doc)
     return
-
 
 
   #TODO_P2 Progress bar: , progressBar:Optional[QProgressBar]=None
@@ -336,9 +313,9 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
 
       metadata = {'__main__':docSupp}
       hierStack = docSupp['-branch'][0]['stack']+[docSupp['_id']]
-      view = backend.db.getView('viewHierarchy/viewHierarchyAll', startKey=' '.join(hierStack))
-      view = [i['id'] for i in view if len(i['key'].split())==len(hierStack)+1 and i['value'][1][0][0]!='x']
-      for childID in view:
+      viewFull = backend.db.getView('viewHierarchy/viewHierarchyAll', startKey=' '.join(hierStack))
+      viewIDs = [i['id'] for i in viewFull if len(i['key'].split())==len(hierStack)+1 and i['value'][1][0][0]!='x']
+      for childID in viewIDs:
         _, _, docChildSupp = separate(backend.db.getDoc(childID))
         metadata[childID] = docChildSupp
       zipContent = json.dumps(metadata)
@@ -363,10 +340,10 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
         docMain['sha256']      = hashlib.sha256(fileContent).hexdigest()
       docMain['@type'] = 'File'
     elif path.startswith('http'):
-      res = requests.get(path.replace(':/','://'))
-      if res.ok:
-        docMain['contentSize'] = str(res.headers['content-length'])
-        docMain['sha256']      = hashlib.sha256(res.content).hexdigest()
+      response = requests.get(path.replace(':/','://'))
+      if response.ok:
+        docMain['contentSize'] = str(response.headers['content-length'])
+        docMain['sha256']      = hashlib.sha256(response.content).hexdigest()
       else:
         print(f'Info: could not get file {path}')
       docMain['@type'] = 'File'
