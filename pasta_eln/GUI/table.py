@@ -43,27 +43,29 @@ class Table(QWidget):
     self.headerW.hide()
     self.headline = Label('','h1', headerL)
     headerL.addStretch(1)
-    self.addBtn = TextButton('Add',        self.executeAction, headerL, name='addItem')
-    TextButton('Add Filter', self.executeAction, headerL, name='addFilter')
+    #TODO_P1 TEMPORARY
+    # self.addBtn = TextButton('Add',        self.executeAction, headerL, name='addItem')
+    # TextButton('Add Filter', self.executeAction, headerL, name='addFilter')
 
-    self.selectionBtn = TextButton('Selection', None, headerL)
-    selectionMenu = QMenu(self)
-    Action('Toggle selection',self.executeAction, selectionMenu, self, name='toggleSelection')
-    selectionMenu.addSeparator()
-    Action('Group Edit',      self.executeAction, selectionMenu, self, name='groupEdit')
-    Action('Sequential edit', self.executeAction, selectionMenu, self, name='sequentialEdit')
-    Action('Toggle hidden',   self.executeAction, selectionMenu, self, name='toggleHide')
-    Action('Rerun extractors',self.executeAction, selectionMenu, self, name='rerunExtractors')
-    Action('Delete',          self.executeAction, selectionMenu, self, name='delete')
-    self.selectionBtn.setMenu(selectionMenu)
+    # self.selectionBtn = TextButton('Selection', None, headerL)
+    # selectionMenu = QMenu(self)
+    # Action('Toggle selection',self.executeAction, selectionMenu, self, name='toggleSelection')
+    # selectionMenu.addSeparator()
+    # Action('Group Edit',      self.executeAction, selectionMenu, self, name='groupEdit')
+    # Action('Sequential edit', self.executeAction, selectionMenu, self, name='sequentialEdit')
+    # Action('Toggle hidden',   self.executeAction, selectionMenu, self, name='toggleHide')
+    # Action('Rerun extractors',self.executeAction, selectionMenu, self, name='rerunExtractors')
+    # Action('Delete',          self.executeAction, selectionMenu, self, name='delete')
+    # self.selectionBtn.setMenu(selectionMenu)
 
-    more = TextButton('More',None, headerL)
-    self.moreMenu = QMenu(self)
-    Action('Show / Hide hidden items', self.executeAction, self.moreMenu, self, name='showAll')
-    Action('Export to csv',            self.executeAction, self.moreMenu, self, name='export')
-    self.actionChangeColums = Action('Change columns',  self.executeAction, self.moreMenu, self, name='changeColumns')  #add action at end
+    # more = TextButton('More',None, headerL)
+    # self.moreMenu = QMenu(self)
+    # Action('Show / Hide hidden items', self.executeAction, self.moreMenu, self, name='showAll')
+    # Action('Export to csv',            self.executeAction, self.moreMenu, self, name='export')
+    # self.actionChangeColums = Action('Change columns',  self.executeAction, self.moreMenu, self, name='changeColumns')  #add action at end
+    # more.setMenu(self.moreMenu)
+    # END TEMPORARY
 
-    more.setMenu(self.moreMenu)
     # filter
     _, self.filterL = widgetAndLayout('Grid', mainL, top='s', bottom='s')
     # table
@@ -115,11 +117,12 @@ class Table(QWidget):
       self.headline.setText('TAGS')
       self.actionChangeColums.setVisible(False)
     else:
-      self.addBtn.show()
-      if docType.startswith('x0'):
-        self.selectionBtn.hide()
-      else:
-        self.selectionBtn.show()
+      #TODO_P1 TEMPORARY
+      # self.addBtn.show()
+      # if docType.startswith('x0'):
+      #   self.selectionBtn.hide()
+      # else:
+      #   self.selectionBtn.show()
       path = (f'viewDocType/{self.docType}All' if self.showAll else f'viewDocType/{self.docType}')
       if self.projID=='':
         self.data = self.comm.backend.db.getView(path)
@@ -127,13 +130,14 @@ class Table(QWidget):
         self.data = self.comm.backend.db.getView(path, preciseKey=self.projID)
       # filter multiple lines of the same item: #https://stackoverflow.com/questions/11092511/list-of-unique-dictionaries
       self.data = list({v['id']:v for v in self.data}.values())
-      if self.docType=='-':
-        self.headline.setText('Unidentified')
-        self.actionChangeColums.setVisible(False)
-      else:
-        self.actionChangeColums.setVisible(True)
-        if self.docType in self.comm.backend.db.dataLabels:
-          self.headline.setText(self.comm.backend.db.dataLabels[self.docType])
+      #TODO_P1 TEMPORARY
+      # if self.docType=='-':
+      #   self.headline.setText('Unidentified')
+      #   self.actionChangeColums.setVisible(False)
+      # else:
+      #   self.actionChangeColums.setVisible(True)
+      #   if self.docType in self.comm.backend.db.dataLabels:
+      #     self.headline.setText(self.comm.backend.db.dataLabels[self.docType])
       self.filterHeader = self.comm.backend.db.getColumnNames()[self.docType].split(',')
       self.filterHeader = [i[1:] if i[0]=='-'   else i for i in self.filterHeader]  #change -something to something
       self.filterHeader = [i[2:] if i[:2]=='#_' else i for i in self.filterHeader]  #change #_something to somehing

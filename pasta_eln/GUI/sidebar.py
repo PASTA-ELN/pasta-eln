@@ -39,7 +39,7 @@ class Sidebar(QWidget):
     self.comm.progressBar = self.progress
     mainL.addWidget(self.progress)
     self.setLayout(mainL)
-    self.redraw()
+    #TODO_P1 TEMPORARY self.redraw()
     #++ TODO projectView: allow size changegable, drag-and-drop to move
     #   more below and other files
 
@@ -52,6 +52,9 @@ class Sidebar(QWidget):
     Args:
       projectID (str): projectID on which to focus: '' string=draw default; 'redraw' implies redraw; id implies id
     """
+    #TODO_P1 TEMPORARY
+    return
+
     # Delete old widgets from layout and create storage
     for i in reversed(range(self.projectsListL.count())):
       self.projectsListL.itemAt(i).widget().setParent(None) # type: ignore
@@ -231,5 +234,5 @@ class Sidebar(QWidget):
     Args:
       event (QResizeEvent): event
     """
-    self.redraw()
+    #TODO_P1 TEMPORARRY self.redraw()
     return super().resizeEvent(event)

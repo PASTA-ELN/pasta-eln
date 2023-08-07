@@ -1,12 +1,13 @@
 """ Widget that shows the content of project in a electronic labnotebook """
 import logging
+from enum import Enum, auto
 from typing import Optional, Any
 from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget, QMenu, QMessageBox, QTextEdit # pylint: disable=no-name-in-module
 from PySide6.QtGui import QStandardItemModel, QStandardItem   # pylint: disable=no-name-in-module
 from PySide6.QtCore import Slot, Qt, QItemSelectionModel, QModelIndex # pylint: disable=no-name-in-module
 from anytree import PreOrderIter, Node
 from .projectTreeView import TreeView
-from ..guiStyle import TextButton, IconButton, Action, Label, showMessage, widgetAndLayout, iconsDocTypes
+from ..guiStyle import TextButton, Action, Label, showMessage, widgetAndLayout, iconsDocTypes
 from ..miscTools import createDirName
 from ..guiCommunicate import Communicate
 
@@ -144,25 +145,25 @@ class Project(QWidget):
 
     buttonW, buttonL = widgetAndLayout('H', spacing='m')
     topLineL.addWidget(buttonW, alignment=Qt.AlignTop)  # type: ignore
-    self.btnAddSubfolder = TextButton('Add subfolder', self.executeAction, buttonL, name='addChild')
-    TextButton('Edit project',      self.executeAction, buttonL, name='editProject')
-    visibility = TextButton('Visibility',None, buttonL)
+    self.btnAddSubfolder = TextButton('Add subfolder', self, [Command.ADD_CHILD], buttonL)
+    TextButton('Edit project',                         self, [Command.EDIT],      buttonL)
+    visibility = TextButton(          'Visibility',    self, None,              buttonL)
     visibilityMenu = QMenu(self)
-    Action('Hide/show project details', self.executeAction, visibilityMenu, self, name='projReduceWidth')
-    Action('Hide/show hidden subitems', self.executeAction, visibilityMenu, self, name='hideShow')
-    Action('Hide/show entire project',  self.executeAction, visibilityMenu, self, name='projHideShow')
-    Action('Minimize/Maximize subitems',self.executeAction, visibilityMenu, self, name='allFold')
+    Action('Hide/show project details', self, [Command.REDUCE], visibilityMenu)
+    Action('Hide/show hidden subitems', self, [Command.HIDE],   visibilityMenu)
+    Action('Hide/show entire project',  self, [Command.TOGGLE], visibilityMenu)
+    Action('Minimize/Maximize subitems',self, [Command.FOLD],   visibilityMenu)
     visibility.setMenu(visibilityMenu)
-    more = TextButton('More',None, buttonL)
+    more = TextButton('More',           self, None, buttonL)
     moreMenu = QMenu(self)
-    Action('Scan',                  self.executeAction, moreMenu, self, name='scanProject')
+    Action('Scan',                      self, [Command.SCAN], moreMenu)
     for doctype in self.comm.backend.db.dataLabels:
       if doctype[0]!='x':
         icon = iconsDocTypes[self.comm.backend.db.dataLabels[doctype]]
-        Action(f'table of {doctype}', self.executeAction, moreMenu, self, name=f'_doctype_{doctype}', icon=icon)
-    Action('table of unidentified', self.executeAction, moreMenu, self, name='_doctype_-', icon=iconsDocTypes['-'])
+        Action(f'table of {doctype}',   self, [Command.TABLE, doctype], moreMenu, icon=icon)
+    Action('table of unidentified',     self, [Command.TABLE, '-'],     moreMenu, icon=iconsDocTypes['-'])
     moreMenu.addSeparator()
-    Action('Delete',                self.executeAction, moreMenu, self, name='deleteProject')
+    Action('Delete',                    self, [Command.DELETE], moreMenu)
     more.setMenu(moreMenu)
 
     self.infoW, infoL         = widgetAndLayout('V', self.mainL)
@@ -186,13 +187,9 @@ class Project(QWidget):
 
   #TODO_P4 projectTree: select multiple items to edit... What is use case
   #TODO_P4 projectTree: allow right click on measurement to change recipe
-  def executeAction(self) -> None:
-    """ Any action by the buttons at the top of the page """
-    if hasattr(self.sender(), 'data'):  #action
-      menuName = self.sender().data()
-    else:                               #button
-      menuName = self.sender().accessibleName()
-    if menuName=='editProject':
+  def execute(self, identifier:list[Any]) -> None:
+    """ any action by the buttons at the top of the page """
+    if identifier[0] is Command.EDIT:
       self.comm.formDoc.emit(self.docProj)
       self.comm.changeProject.emit(self.projID,'')
       #collect information and then change
@@ -200,7 +197,7 @@ class Project(QWidget):
       if oldPath.exists():
         newPath = self.comm.backend.basePath/createDirName(self.docProj['-name'],'x0',0)
         oldPath.rename(newPath)
-    elif menuName=='deleteProject':
+    elif identifier[0] is Command.DELETE:
       ret = QMessageBox.critical(self, 'Warning', 'Are you sure you want to delete project?',\
                                    QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.No)
       if ret==QMessageBox.StandardButton.Yes:
@@ -213,20 +210,20 @@ class Project(QWidget):
         #update sidebar, show projects
         self.comm.changeSidebar.emit('redraw')
         self.comm.changeTable.emit('x0','')
-    elif menuName == 'scanProject':
+    elif identifier[0] is Command.SCAN:
       self.comm.backend.scanProject(self.comm.progressBar, self.projID, self.docProj['-branch'][0]['path'])
       self.comm.changeSidebar.emit('redraw')
       showMessage(self, 'Information','Scanning finished')
-    elif menuName == 'projReduceWidth':
+    elif identifier[0] is Command.REDUCE:
       if self.infoW is not None and self.infoW.isHidden():
         self.infoW.show()
       elif self.infoW is not None:
         self.infoW.hide()
-    elif menuName == 'projHideShow':
+    elif identifier[0] is Command.HIDE:
       self.comm.backend.db.hideShow(self.projID)
       self.comm.changeSidebar.emit('')
       self.comm.changeTable.emit('x0','') # go back to project table
-    elif menuName == 'allFold' and self.tree is not None:
+    elif identifier[0] is Command.FOLD and self.tree is not None:
       self.foldedAll = not self.foldedAll
       def recursiveRowIteration(index:QModelIndex) -> None:
         if self.tree is not None:
@@ -240,17 +237,17 @@ class Project(QWidget):
             recursiveRowIteration(subIndex)
         return
       recursiveRowIteration(self.tree.model().index(-1,0))
-    elif menuName == 'hideShow':
+    elif identifier[0] is Command.TOGGLE:
       self.showAll = not self.showAll
       self.changeProject('','')
-    elif menuName == 'addChild':
+    elif identifier[0] is Command.ADD_CHILD:
       self.comm.backend.cwd = self.comm.backend.basePath/self.docProj['-branch'][0]['path']
       self.comm.backend.addData('x1', {'-name':'new folder'}, [self.projID])
       self.comm.changeProject.emit('','') #refresh project
-    elif menuName.startswith('_doctype_'):
-      self.comm.changeTable.emit(menuName[9:], self.projID)
+    elif identifier[0] is Command.TABLE:
+      self.comm.changeTable.emit(identifier[1], self.projID)
     else:
-      print(f"undefined menu / action |{menuName}|")
+      print(f"undefined menu / action |{identifier[1]}|")
     return
 
 
@@ -278,3 +275,15 @@ class Project(QWidget):
     if children:
       nodeTree.appendRows(children)
     return nodeTree
+
+
+class Command(Enum):
+  EDIT   = 1
+  DELETE = 2
+  SCAN   = 3
+  REDUCE = 4
+  HIDE   = 5
+  FOLD   = 6
+  TOGGLE = 7
+  ADD_CHILD = 8
+  TABLE  = 9
