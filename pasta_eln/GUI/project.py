@@ -16,7 +16,7 @@ class Project(QWidget):
   def __init__(self, comm:Communicate):
     super().__init__()
     self.comm = comm
-    comm.changeProject.connect(self.changeProject)
+    comm.changeProject.connect(self.change)
     self.mainL = QVBoxLayout()
     self.setLayout(self.mainL)
     self.tree:Optional[TreeView]             = None
@@ -30,8 +30,60 @@ class Project(QWidget):
     self.btnAddSubfolder:Optional[TextButton] = None
 
 
+  def projHeader(self) -> None:
+    """
+    Initialize / Create header of page
+    """
+    self.docProj = self.comm.backend.db.getDoc(self.projID)
+    _, topLineL       = widgetAndLayout('H',self.mainL)  #topLine includes name on left, buttons on right
+    hidden = '     \U0001F441' if [b for b in self.docProj['-branch'] if False in b['show']] else ''
+    topLineL.addWidget(Label(self.docProj['-name']+hidden, 'h2'))
+    topLineL.addStretch(1)
+
+    buttonW, buttonL = widgetAndLayout('H', spacing='m')
+    topLineL.addWidget(buttonW, alignment=Qt.AlignTop)  # type: ignore
+    self.btnAddSubfolder = TextButton('Add subfolder', self, [Command.ADD_CHILD], buttonL)
+    TextButton('Edit project',                         self, [Command.EDIT],      buttonL)
+    visibility = TextButton(          'Visibility',    self, [],                  buttonL)
+    visibilityMenu = QMenu(self)
+    Action('Hide/show project details', self, [Command.REDUCE_HEIGHT_HEAD], visibilityMenu)
+    Action('Hide/show hidden subitems', self, [Command.HIDE_SHOW_ITEMS],    visibilityMenu)
+    Action('Hide/show entire project',  self, [Command.HIDE],               visibilityMenu)
+    Action('Minimize/Maximize subitems',self, [Command.FOLD_ALL_ITEMS],     visibilityMenu)
+    visibility.setMenu(visibilityMenu)
+    more = TextButton('More',           self, [], buttonL)
+    moreMenu = QMenu(self)
+    Action('Scan',                      self, [Command.SCAN], moreMenu)
+    for doctype in self.comm.backend.db.dataLabels:
+      if doctype[0]!='x':
+        icon = iconsDocTypes[self.comm.backend.db.dataLabels[doctype]]
+        Action(f'table of {doctype}',   self, [Command.SHOW_TABLE, doctype], moreMenu, icon=icon)
+    Action('table of unidentified',     self, [Command.SHOW_TABLE, '-'],     moreMenu, icon=iconsDocTypes['-'])
+    moreMenu.addSeparator()
+    Action('Delete',                    self, [Command.DELETE], moreMenu)
+    more.setMenu(moreMenu)
+
+    self.infoW, infoL         = widgetAndLayout('V', self.mainL)
+    tags = ', '.join([f'#{i}' for i in self.docProj['-tags']]) if '-tags' in self.docProj else ''
+    infoL.addWidget(QLabel(f'Tags: {tags}'))
+    for key,value in self.docProj.items():
+      if key[0] in ['_','-'] or (key=='comment' and '\n' in value):
+        continue
+      if 'from ' in key:  #TODO_P5 for now until the content of other ELNs is perfectly included
+        continue
+      infoL.addWidget(QLabel(f'{key}: {str(value)}'))
+    if 'comment' in self.docProj and '\n' in self.docProj['comment']:     #format nicely
+      # comment = QTextEdit()  #TODO_P2 render comment nicely without screwing up the rest
+      # comment.setMarkdown(self.docProj['comment'])
+      # comment.setReadOnly(True)
+      # comment.setFixedHeight(200)
+      # infoL.addWidget(comment)
+      infoL.addWidget(QLabel(self.docProj['comment']))
+    return
+
+
   @Slot(str, str)
-  def changeProject(self, projID:str, docID:str) -> None:
+  def change(self, projID:str, docID:str) -> None:
     """
     What happens when user clicks to change doc-type
 
@@ -69,6 +121,77 @@ class Project(QWidget):
     self.mainL.addWidget(self.tree)
     if len(nodeHier.children)>0 and self.btnAddSubfolder is not None:
       self.btnAddSubfolder.setVisible(False)
+    return
+
+
+  #TODO_P4 projectTree: select multiple items to edit... What is use case
+  #TODO_P4 projectTree: allow right click on measurement to change recipe
+  def execute(self, command:list[Any]) -> None:
+    """
+    Event if user clicks button in the center
+
+    Args:
+      command (list): list of commands
+    """
+    if command[0] is Command.EDIT:
+      self.comm.formDoc.emit(self.docProj)
+      self.comm.changeProject.emit(self.projID,'')
+      #collect information and then change
+      oldPath = self.comm.backend.basePath/self.docProj['-branch'][0]['path']
+      if oldPath.exists():
+        newPath = self.comm.backend.basePath/createDirName(self.docProj['-name'],'x0',0)
+        oldPath.rename(newPath)
+    elif command[0] is Command.DELETE:
+      ret = QMessageBox.critical(self, 'Warning', 'Are you sure you want to delete project?',\
+                                   QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.No)
+      if ret==QMessageBox.StandardButton.Yes:
+        #delete database and rename folder
+        doc = self.comm.backend.db.remove(self.projID)
+        if '-branch' in doc and len(doc['-branch'])>0 and 'path' in doc['-branch'][0]:
+          oldPath = self.comm.backend.basePath/doc['-branch'][0]['path']
+          newPath = self.comm.backend.basePath/('trash_'+doc['-branch'][0]['path'])
+          oldPath.rename(newPath)
+        #update sidebar, show projects
+        self.comm.changeSidebar.emit('redraw')
+        self.comm.changeTable.emit('x0','')
+    elif command[0] is Command.SCAN:
+      self.comm.backend.scanProject(self.comm.progressBar, self.projID, self.docProj['-branch'][0]['path'])
+      self.comm.changeSidebar.emit('redraw')
+      showMessage(self, 'Information','Scanning finished')
+    elif command[0] is Command.REDUCE_HEIGHT_HEAD:
+      if self.infoW is not None and self.infoW.isHidden():
+        self.infoW.show()
+      elif self.infoW is not None:
+        self.infoW.hide()
+    elif command[0] is Command.HIDE_SHOW_ITEMS:
+      self.comm.backend.db.hideShow(self.projID)
+      self.comm.changeSidebar.emit('')
+      self.comm.changeTable.emit('x0','') # go back to project table
+    elif command[0] is Command.FOLD_ALL_ITEMS and self.tree is not None:
+      self.foldedAll = not self.foldedAll
+      def recursiveRowIteration(index:QModelIndex) -> None:
+        if self.tree is not None:
+          for subRow in range(self.tree.model().rowCount(index)):
+            subIndex = self.tree.model().index(subRow,0, index)
+            subItem  = self.tree.model().itemFromIndex(subIndex)
+            if self.foldedAll:
+              subItem.setText(f'{subItem.text()} -')
+            elif subItem.text().endswith(' -'):
+              subItem.setText(subItem.text()[:-2])
+            recursiveRowIteration(subIndex)
+        return
+      recursiveRowIteration(self.tree.model().index(-1,0))
+    elif command[0] is Command.HIDE:
+      self.showAll = not self.showAll
+      self.changeProject('','')
+    elif command[0] is Command.ADD_CHILD:
+      self.comm.backend.cwd = self.comm.backend.basePath/self.docProj['-branch'][0]['path']
+      self.comm.backend.addData('x1', {'-name':'new folder'}, [self.projID])
+      self.comm.changeProject.emit('','') #refresh project
+    elif command[0] is Command.SHOW_TABLE:
+      self.comm.changeTable.emit(command[1], self.projID)
+    else:
+      print(f"undefined menu / action |{command[1]}|")
     return
 
 
@@ -133,124 +256,6 @@ class Project(QWidget):
     return
 
 
-  def projHeader(self) -> None:
-    """
-    Create header of page
-    """
-    self.docProj = self.comm.backend.db.getDoc(self.projID)
-    _, topLineL       = widgetAndLayout('H',self.mainL)  #topLine includes name on left, buttons on right
-    hidden = '     \U0001F441' if [b for b in self.docProj['-branch'] if False in b['show']] else ''
-    topLineL.addWidget(Label(self.docProj['-name']+hidden, 'h2'))
-    topLineL.addStretch(1)
-
-    buttonW, buttonL = widgetAndLayout('H', spacing='m')
-    topLineL.addWidget(buttonW, alignment=Qt.AlignTop)  # type: ignore
-    self.btnAddSubfolder = TextButton('Add subfolder', self, [Command.ADD_CHILD], buttonL)
-    TextButton('Edit project',                         self, [Command.EDIT],      buttonL)
-    visibility = TextButton(          'Visibility',    self, None,              buttonL)
-    visibilityMenu = QMenu(self)
-    Action('Hide/show project details', self, [Command.REDUCE], visibilityMenu)
-    Action('Hide/show hidden subitems', self, [Command.HIDE],   visibilityMenu)
-    Action('Hide/show entire project',  self, [Command.TOGGLE], visibilityMenu)
-    Action('Minimize/Maximize subitems',self, [Command.FOLD],   visibilityMenu)
-    visibility.setMenu(visibilityMenu)
-    more = TextButton('More',           self, None, buttonL)
-    moreMenu = QMenu(self)
-    Action('Scan',                      self, [Command.SCAN], moreMenu)
-    for doctype in self.comm.backend.db.dataLabels:
-      if doctype[0]!='x':
-        icon = iconsDocTypes[self.comm.backend.db.dataLabels[doctype]]
-        Action(f'table of {doctype}',   self, [Command.TABLE, doctype], moreMenu, icon=icon)
-    Action('table of unidentified',     self, [Command.TABLE, '-'],     moreMenu, icon=iconsDocTypes['-'])
-    moreMenu.addSeparator()
-    Action('Delete',                    self, [Command.DELETE], moreMenu)
-    more.setMenu(moreMenu)
-
-    self.infoW, infoL         = widgetAndLayout('V', self.mainL)
-    tags = ', '.join([f'#{i}' for i in self.docProj['-tags']]) if '-tags' in self.docProj else ''
-    infoL.addWidget(QLabel(f'Tags: {tags}'))
-    for key,value in self.docProj.items():
-      if key[0] in ['_','-'] or (key=='comment' and '\n' in value):
-        continue
-      if 'from ' in key:  #TODO_P5 for now until the content of other ELNs is perfectly included
-        continue
-      infoL.addWidget(QLabel(f'{key}: {str(value)}'))
-    if 'comment' in self.docProj and '\n' in self.docProj['comment']:     #format nicely
-      # comment = QTextEdit()  #TODO_P2 render comment nicely without screwing up the rest
-      # comment.setMarkdown(self.docProj['comment'])
-      # comment.setReadOnly(True)
-      # comment.setFixedHeight(200)
-      # infoL.addWidget(comment)
-      infoL.addWidget(QLabel(self.docProj['comment']))
-    return
-
-
-  #TODO_P4 projectTree: select multiple items to edit... What is use case
-  #TODO_P4 projectTree: allow right click on measurement to change recipe
-  def execute(self, identifier:list[Any]) -> None:
-    """ any action by the buttons at the top of the page """
-    if identifier[0] is Command.EDIT:
-      self.comm.formDoc.emit(self.docProj)
-      self.comm.changeProject.emit(self.projID,'')
-      #collect information and then change
-      oldPath = self.comm.backend.basePath/self.docProj['-branch'][0]['path']
-      if oldPath.exists():
-        newPath = self.comm.backend.basePath/createDirName(self.docProj['-name'],'x0',0)
-        oldPath.rename(newPath)
-    elif identifier[0] is Command.DELETE:
-      ret = QMessageBox.critical(self, 'Warning', 'Are you sure you want to delete project?',\
-                                   QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.No)
-      if ret==QMessageBox.StandardButton.Yes:
-        #delete database and rename folder
-        doc = self.comm.backend.db.remove(self.projID)
-        if '-branch' in doc and len(doc['-branch'])>0 and 'path' in doc['-branch'][0]:
-          oldPath = self.comm.backend.basePath/doc['-branch'][0]['path']
-          newPath = self.comm.backend.basePath/('trash_'+doc['-branch'][0]['path'])
-          oldPath.rename(newPath)
-        #update sidebar, show projects
-        self.comm.changeSidebar.emit('redraw')
-        self.comm.changeTable.emit('x0','')
-    elif identifier[0] is Command.SCAN:
-      self.comm.backend.scanProject(self.comm.progressBar, self.projID, self.docProj['-branch'][0]['path'])
-      self.comm.changeSidebar.emit('redraw')
-      showMessage(self, 'Information','Scanning finished')
-    elif identifier[0] is Command.REDUCE:
-      if self.infoW is not None and self.infoW.isHidden():
-        self.infoW.show()
-      elif self.infoW is not None:
-        self.infoW.hide()
-    elif identifier[0] is Command.HIDE:
-      self.comm.backend.db.hideShow(self.projID)
-      self.comm.changeSidebar.emit('')
-      self.comm.changeTable.emit('x0','') # go back to project table
-    elif identifier[0] is Command.FOLD and self.tree is not None:
-      self.foldedAll = not self.foldedAll
-      def recursiveRowIteration(index:QModelIndex) -> None:
-        if self.tree is not None:
-          for subRow in range(self.tree.model().rowCount(index)):
-            subIndex = self.tree.model().index(subRow,0, index)
-            subItem  = self.tree.model().itemFromIndex(subIndex)
-            if self.foldedAll:
-              subItem.setText(f'{subItem.text()} -')
-            elif subItem.text().endswith(' -'):
-              subItem.setText(subItem.text()[:-2])
-            recursiveRowIteration(subIndex)
-        return
-      recursiveRowIteration(self.tree.model().index(-1,0))
-    elif identifier[0] is Command.TOGGLE:
-      self.showAll = not self.showAll
-      self.changeProject('','')
-    elif identifier[0] is Command.ADD_CHILD:
-      self.comm.backend.cwd = self.comm.backend.basePath/self.docProj['-branch'][0]['path']
-      self.comm.backend.addData('x1', {'-name':'new folder'}, [self.projID])
-      self.comm.changeProject.emit('','') #refresh project
-    elif identifier[0] is Command.TABLE:
-      self.comm.changeTable.emit(identifier[1], self.projID)
-    else:
-      print(f"undefined menu / action |{identifier[1]}|")
-    return
-
-
   def iterateTree(self, nodeHier:Node) -> QStandardItem:
     """
     Recursive function to translate the hierarchical node into a tree-node
@@ -278,12 +283,13 @@ class Project(QWidget):
 
 
 class Command(Enum):
+  """ Commands used in this file """
   EDIT   = 1
   DELETE = 2
   SCAN   = 3
-  REDUCE = 4
-  HIDE   = 5
-  FOLD   = 6
-  TOGGLE = 7
-  ADD_CHILD = 8
-  TABLE  = 9
+  HIDE   = 4
+  REDUCE_HEIGHT_HEAD = 5
+  HIDE_SHOW_ITEMS    = 6
+  FOLD_ALL_ITEMS     = 7
+  ADD_CHILD          = 8
+  SHOW_TABLE         = 9

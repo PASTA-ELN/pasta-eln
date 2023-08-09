@@ -1,4 +1,6 @@
 """ Sidebar widget that includes the navigation items """
+from typing import Any
+from enum import Enum
 from PySide6.QtGui import QResizeEvent                                                                 # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QTreeWidget, QTreeWidgetItem, QFrame, QProgressBar # pylint: disable=no-name-in-module
 from PySide6.QtCore import Slot                                                                        # pylint: disable=no-name-in-module
@@ -39,7 +41,11 @@ class Sidebar(QWidget):
     self.comm.progressBar = self.progress
     mainL.addWidget(self.progress)
     self.setLayout(mainL)
-    #TODO_P1 TEMPORARY self.redraw()
+
+    self.widgetsAction:dict[str,QWidget] = {}
+    self.widgetsList:dict[str,QWidget]   = {}
+    self.widgetsProject:dict[str,Any]    = {} #title bar and widget that contains all of project
+    self.redraw()
     #++ TODO projectView: allow size changegable, drag-and-drop to move
     #   more below and other files
 
@@ -52,9 +58,6 @@ class Sidebar(QWidget):
     Args:
       projectID (str): projectID on which to focus: '' string=draw default; 'redraw' implies redraw; id implies id
     """
-    #TODO_P1 TEMPORARY
-    return
-
     # Delete old widgets from layout and create storage
     for i in reversed(range(self.projectsListL.count())):
       self.projectsListL.itemAt(i).widget().setParent(None) # type: ignore
@@ -85,7 +88,7 @@ class Sidebar(QWidget):
         projectL.setContentsMargins(3,3,3,3)
         maxLabelCharacters = int((self.sideBarWidth-50)/7.1)
         label = (projName if len(projName) < maxLabelCharacters else f'{projName[:maxLabelCharacters - 3]}...')
-        btnProj = TextButton(label, self.btnProject, projectL, f'{projID}/')
+        btnProj = TextButton(label, self, [Command.SHOW_PROJECT, projID, ''], projectL)
         btnProj.setStyleSheet("border-width:0")
         self.widgetsProject[projID] = [btnProj, projectW]
 
@@ -96,9 +99,10 @@ class Sidebar(QWidget):
           projectW.setStyleSheet("background-color:"+ getColor(backend, 'secondaryDark'))
         else:
           projectW.setStyleSheet("background-color:"+ getColor(backend, 'secondaryLight'))
-        btnScan = IconButton('mdi.clipboard-search-outline', self.btnScan, None, projID, 'Scan', backend, text='Scan')
+        btnScan = TextButton('Scan', self, [Command.SCAN_PROJECT, projID], None, 'Scan', \
+                             iconName='mdi.clipboard-search-outline')
         actionL.addWidget(btnScan, 0,0)  # type: ignore
-        btnCurate = IconButton('mdi.filter-plus-outline', self.btnCurate, None, projID, 'Special', backend, text='Special')
+        btnCurate = TextButton('Special', self, [projID], None)
         btnCurate.hide()
         actionL.addWidget(btnCurate, 0,1)         # type: ignore
         self.widgetsAction[projID] = actionW
@@ -112,10 +116,10 @@ class Sidebar(QWidget):
         for idx, doctype in enumerate(db.dataLabels):
           if doctype[0]!='x':
             icon = iconsDocTypes[db.dataLabels[doctype]]
-            button = IconButton(icon, self.btnDocType, None, f'{doctype}/{projID}', db.dataLabels[doctype], backend)
-            listL.addWidget(button, 0, idx)    # type: ignore
-        button = IconButton(iconsDocTypes['-'], self.btnDocType, None, f'-/{projID}', 'Unidentified', backend)
-        listL.addWidget(button, 0, len(db.dataLabels)+1)  # type: ignore
+            btn = IconButton(icon, self, [Command.LIST_DOCTYPE,doctype,projectID], None,db.dataLabels[doctype])
+            listL.addWidget(btn, 0, idx)    # type: ignore
+        btn = IconButton(iconsDocTypes['-'], self, [Command.LIST_DOCTYPE,'-',projectID], None, 'Unidentified')
+        listL.addWidget(btn, 0, len(db.dataLabels)+1)  # type: ignore
         self.widgetsList[projID] = listW
 
         # show folders as hierarchy
@@ -123,7 +127,7 @@ class Sidebar(QWidget):
         treeW.hide()  #convenience: allow scroll in sidebar
         treeW.setHeaderHidden(True)
         treeW.setColumnCount(1)
-        treeW.itemClicked.connect(self.btnTree)
+        treeW.itemClicked.connect(lambda : self.execute([Command.SHOW_FOLDER,projID,'something'])) #TODO_P1
         hierarchy = db.getHierarchy(projID)
         rootItem = treeW.invisibleRootItem()
         count = 0
@@ -137,6 +141,45 @@ class Sidebar(QWidget):
     # Other buttons
     stretch = QWidget()
     self.projectsListL.addWidget(stretch, stretch=2)  # type: ignore
+    return
+
+
+  def execute(self, command:list[Any]) -> None:
+    """
+    Event if user clicks a button
+
+    Args:
+      command (list): list of commands
+    """
+    if command[0] is Command.LIST_DOCTYPE:
+      self.comm.changeTable.emit(command[1], command[2])
+    elif command[0] is Command.SHOW_PROJECT:
+      projID = command[1]
+      item   = command[2]
+      if item=='': #clicked on project-button, not tree view
+        self.openProjectId = projID
+        for docID, widget in self.widgetsAction.items():
+          if docID == projID:
+            widget.show()
+          else:
+            widget.hide()
+        for docID, widget in self.widgetsList.items():
+          if docID == projID:
+            widget.show()
+          else:
+            widget.hide()
+        for docID, [_, projWidget] in self.widgetsProject.items():
+          if docID == projID:
+            projWidget.setStyleSheet("background-color:"+ getColor(self.comm.backend, 'secondaryLight'))
+          else:
+            projWidget.setStyleSheet("background-color:"+ getColor(self.comm.backend, 'secondaryDark'))
+      self.comm.changeProject.emit(projID, item)
+    elif command[0] is Command.SCAN_PROJECT:
+      self.comm.backend.scanProject(self.progress, self.openProjectId, '')
+      self.comm.changeProject.emit(self.openProjectId,'')
+      showMessage(self, 'Information','Scanning finished')
+    elif command[0] is Command.SHOW_FOLDER:
+      self.comm.changeProject.emit(command[1], command[2])
     return
 
 
@@ -163,70 +206,6 @@ class Sidebar(QWidget):
     return nodeTree
 
 
-  def btnDocType(self) -> None:
-    """
-    What happens when user clicks to change doc-type
-    """
-    btnName = self.sender().accessibleName()
-    item, projID = btnName.split('/')
-    self.comm.changeTable.emit(item, projID)
-    return
-
-
-  def btnProject(self) -> None:
-    """
-    What happens when user clicks to view project
-    """
-    btnName = self.sender().accessibleName()
-    projID, item = btnName.split('/')
-    if item=='': #clicked on project-button, not tree view
-      self.openProjectId = projID
-      for docID, widget in self.widgetsAction.items():
-        if docID == projID:
-          widget.show()
-        else:
-          widget.hide()
-      for docID, widget in self.widgetsList.items():
-        if docID == projID:
-          widget.show()
-        else:
-          widget.hide()
-      for docID, [_, projWidget] in self.widgetsProject.items():
-        if docID == projID:
-          projWidget.setStyleSheet("background-color:"+ getColor(self.comm.backend, 'secondaryLight'))
-        else:
-          projWidget.setStyleSheet("background-color:"+ getColor(self.comm.backend, 'secondaryDark'))
-    self.comm.changeProject.emit(projID, item)
-    return
-
-
-  def btnScan(self) -> None:
-    """
-    What happens if user clicks button "Scan"
-    """
-    self.comm.backend.scanProject(self.progress, self.openProjectId, '')
-    self.comm.changeProject.emit(self.openProjectId,'')
-    showMessage(self, 'Information','Scanning finished')
-    return
-
-
-  def btnCurate(self) -> None:
-    """
-    What happens if user clicks button "Special"
-    -> pull data from server and include
-    """
-    return
-
-
-  def btnTree(self, item:QTreeWidgetItem) -> None:
-    """
-    What happpens if user clicks on branch in tree
-    """
-    projId, docId = item.text(1).split('/')
-    self.comm.changeProject.emit(projId, docId)
-    return
-
-
   def resizeEvent(self, event: QResizeEvent) -> None:
     """
     executed upon resize
@@ -234,5 +213,13 @@ class Sidebar(QWidget):
     Args:
       event (QResizeEvent): event
     """
-    #TODO_P1 TEMPORARRY self.redraw()
+    self.redraw()
     return super().resizeEvent(event)
+
+
+class Command(Enum):
+  """ Commands used in this file """
+  LIST_DOCTYPE = 1
+  SHOW_PROJECT = 2
+  SCAN_PROJECT = 3
+  SHOW_FOLDER  = 4

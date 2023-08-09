@@ -1,7 +1,7 @@
 """ Main class of config tab on GUI elements """
 import json
 from pathlib import Path
-from typing import Callable
+from typing import Callable, Any
 from PySide6.QtWidgets import QWidget, QFormLayout, QLabel, QComboBox, QTextEdit  # pylint: disable=no-name-in-module
 from PySide6.QtGui import QFontMetrics # pylint: disable=no-name-in-module
 from ..miscTools import restart
@@ -28,7 +28,7 @@ class ConfigurationGUI(QWidget):
       for items  in configurationGUI.values():
         for k,v in items.items():
           setattr(self, k, self.addRowList(v[0], str(v[1]), [str(i) for i in v[2]]))
-      self.tabAppearanceL.addRow('Save changes', TextButton('Save changes', self.saveData, None))
+      self.tabAppearanceL.addRow('Save changes', TextButton('Save changes', self, [], None))
 
 
   def addRowList(self, label:str, default:str, itemList:list[str]) -> QComboBox:
@@ -69,7 +69,7 @@ class ConfigurationGUI(QWidget):
     return widget
 
 
-  def saveData(self) -> None:
+  def execute(self, _:list[Any]) -> None:
     """
     Save changes to hard-disk
     """

@@ -82,7 +82,7 @@ class MainWindow(QMainWindow):
     Action('Todo list',              self, [Command.TODO],           helpMenu)
     helpMenu.addSeparator()
     #shortcuts for advanced usage (user should not need)
-    QShortcut('F9', self, lambda : self.execute('restart'))
+    QShortcut('F9', self, lambda : self.execute([Command.RESTART]))
 
     #TODO_P3 export to dataverse
     #GUI elements
@@ -236,11 +236,9 @@ def main() -> None:
   logging.info('End PASTA GUI')
   return
 
-# called by python3 -m pasta_eln.gui
-if __name__ == '__main__':
-  main()
 
 class Command(Enum):
+  """ Commands used in this file """
   EXPORT = 1
   IMPORT = 2
   EXIT   = 3
@@ -258,3 +256,8 @@ class Command(Enum):
   SHORTCUTS     = 15
   TODO          = 16
   RESTART       = 17
+
+
+# called by python3 -m pasta_eln.gui
+if __name__ == '__main__':
+  main()

@@ -1,6 +1,7 @@
 """ widget that shows the details of the items """
 from pathlib import Path
 import platform, subprocess, os, logging
+from enum import Enum
 from typing import Any
 import yaml
 from PySide6.QtWidgets import QScrollArea, QLabel, QMenu, QTextEdit  # pylint: disable=no-name-in-module
@@ -14,7 +15,7 @@ class Details(QScrollArea):
   def __init__(self, comm:Communicate):
     super().__init__()
     self.comm = comm
-    comm.changeDetails.connect(self.changeDetails)
+    comm.changeDetails.connect(self.change)
     comm.testExtractor.connect(self.testExtractor)
     self.doc:dict[str,Any]  = {}
     self.docID= ''
@@ -26,31 +27,29 @@ class Details(QScrollArea):
     self.setWidgetResizable(True)
     self.setWidget(self.mainW)
 
-    # TODO_P1 TEMPORARY
-    # headerW, self.headerL = widgetAndLayout('H', self.mainL, top='s')
-    # headerW.setContextMenuPolicy(Qt.CustomContextMenu)
-    # headerW.customContextMenuRequested.connect(self.contextMenu)
-    # self.specialW, self.specialL = widgetAndLayout('V', self.mainL, top='s')
-    # self.specialW.setContextMenuPolicy(Qt.CustomContextMenu)
-    # self.specialW.customContextMenuRequested.connect(self.contextMenu)
-    # self.btnDetails = TextButton('Details', self.showArea, self.mainL, 'Details', 'Show / hide details', \
-    #                               checkable=True, style='margin-top: 3px')
-    # self.metaDetailsW, self.metaDetailsL  = widgetAndLayout('V', self.mainL)
-    # self.metaDetailsW.setMaximumWidth(self.width())
-    # self.btnVendor = TextButton('Vendor metadata', self.showArea, self.mainL, 'Vendor', \
-    #   'Show / hide vendor metadata', checkable=True, style="margin-top: 15px")
-    # self.metaVendorW, self.metaVendorL = widgetAndLayout('V', self.mainL)
-    # self.metaVendorW.setMaximumWidth(self.width())
-    # self.btnUser = TextButton('User metadata', self.showArea, self.mainL, 'User', 'Show / hide user metadata',\
-    #   checkable=True, style="margin-top: 15px")
-    # self.metaUserW, self.metaUserL     = widgetAndLayout('V', self.mainL)
-    # self.metaUserW.setMaximumWidth(self.width())
-    # self.btnDatabase = TextButton('Database details', self.showArea, self.mainL, 'Database', \
-    #   'Show / hide database details', checkable= True, style="margin-top: 15px")
-    # self.metaDatabaseW, self.metaDatabaseL = widgetAndLayout('V', self.mainL)
-    # self.metaDatabaseW.setMaximumWidth(self.width())
-    # self.mainL.addStretch(1)
-    # END TEMPORARY
+    headerW, self.headerL = widgetAndLayout('H', self.mainL, top='s')
+    headerW.setContextMenuPolicy(Qt.CustomContextMenu)
+    headerW.customContextMenuRequested.connect(self.contextMenu)
+    self.specialW, self.specialL = widgetAndLayout('V', self.mainL, top='s')
+    self.specialW.setContextMenuPolicy(Qt.CustomContextMenu)
+    self.specialW.customContextMenuRequested.connect(self.contextMenu)
+    self.btnDetails = TextButton('Details', self, [Command.SHOW, 'Details'], self.mainL, \
+                                 'Show / hide details', checkable=True, style='margin-top: 3px')
+    self.metaDetailsW, self.metaDetailsL  = widgetAndLayout('V', self.mainL)
+    self.metaDetailsW.setMaximumWidth(self.width())
+    self.btnVendor = TextButton('Vendor metadata', self, [Command.SHOW, 'Vendor'], self.mainL, \
+                                'Show / hide vendor metadata', checkable=True, style="margin-top: 15px")
+    self.metaVendorW, self.metaVendorL = widgetAndLayout('V', self.mainL)
+    self.metaVendorW.setMaximumWidth(self.width())
+    self.btnUser = TextButton('User metadata', self, [Command.SHOW, 'User'], self.mainL, \
+                              'Show / hide user metadata', checkable=True, style="margin-top: 15px")
+    self.metaUserW, self.metaUserL     = widgetAndLayout('V', self.mainL)
+    self.metaUserW.setMaximumWidth(self.width())
+    self.btnDatabase = TextButton('Database details', self, [Command.SHOW,'Database'], self.mainL, \
+                                  'Show / hide database details', checkable= True, style="margin-top: 15px")
+    self.metaDatabaseW, self.metaDatabaseL = widgetAndLayout('V', self.mainL)
+    self.metaDatabaseW.setMaximumWidth(self.width())
+    self.mainL.addStretch(1)
 
 
   def contextMenu(self, pos:QPoint) -> None: #TODO_P3 move all context menu of this type to separate function
@@ -71,73 +70,19 @@ class Details(QScrollArea):
       choices= {key:value for key,value in extractors.items() \
                   if key.startswith(baseDocType)}
       for key,value in choices.items():
-        Action(value, self.changeExtractor, context, self, name=key)
+        Action(value,                     self, [Command.CHANGE_EXTRACTOR, key], context)
       context.addSeparator()
-      Action('Save image',                       self.changeExtractor, context, self, name='_saveAsImage_')
+      Action('Save image',                self, [Command.SAVE_IMAGE],            context)
     #TODO_P2 not save now: when opening text files, system can crash
     # Action('Open file with another application', self.changeExtractor, context, self, name='_openExternal_')
-    Action('Open folder in file browser',        self.changeExtractor, context, self, name='_openInFileBrowser_')
-    Action('Hide',                               self.changeExtractor, context, self, name='_hide_')
+    Action('Open folder in file browser', self, [Command.OPEN_FILEBROWSER],      context)
+    Action('Hide',                        self, [Command.HIDE],                  context)
     context.exec(self.mapToGlobal(pos))
     return
 
 
-  def changeExtractor(self) -> None:  #TODO_P3 move all changeExtractor of this type to separate function
-    """
-    What happens when user changes extractor
-    """
-    menuName = self.sender().data()
-    filePath = Path(self.doc['-branch'][0]['path'])
-    if menuName in ['_openInFileBrowser_','_openExternal_']:
-      filePath = self.comm.backend.basePath/filePath
-      filePath = filePath if menuName=='_openExternal_' else filePath.parent
-      if platform.system() == 'Darwin':       # macOS
-        subprocess.call(('open', filePath))
-      elif platform.system() == 'Windows':    # Windows
-        os.startfile(filePath) # type: ignore[attr-defined]
-      else:                                   # linux variants
-        subprocess.call(('xdg-open', filePath))
-    elif menuName =='_saveAsImage_':
-      image = self.doc['image']
-      if image.startswith('data:image/'):
-        imageType = image[11:14] if image[14]==';' else image[11:15]
-      else:
-        imageType = 'svg'
-      saveFilePath = self.comm.backend.basePath/filePath.parent/f'{filePath.stem}_PastaExport.{imageType.lower()}'
-      path = self.doc['-branch'][0]['path']
-      if not path.startswith('http'):
-        path = (self.comm.backend.basePath/path).as_posix()
-      self.comm.backend.testExtractor(path, recipe='/'.join(self.doc['-type']), saveFig=str(saveFilePath))
-    elif menuName == '_hide_':
-      self.comm.backend.db.hideShow(self.docID)
-      self.comm.changeTable.emit('','')
-      self.comm.changeDetails.emit(self.doc['_id'])
-    else:
-      self.doc['-type'] = menuName.split('/')
-      self.comm.backend.useExtractors(filePath, self.doc['shasum'], self.doc)  #any path is good since the file is the same everywhere; data-changed by reference
-      if len(self.doc['-type'])>1 and len(self.doc['image'])>1:
-        self.doc = self.comm.backend.db.updateDoc({'image':self.doc['image'], '-type':self.doc['-type']}, self.doc['_id'])
-        self.comm.changeTable.emit('','')
-        self.comm.changeDetails.emit(self.doc['_id'])
-    return
-
-  @Slot()
-  def testExtractor(self) -> None:
-    """
-    User selects to test extractor on this dataset
-    """
-    logging.debug('details:testExtractor')
-    if len(self.doc)>1:
-      path = Path(self.doc['-branch'][0]['path'])
-      if not path.as_posix().startswith('http'):
-        path = self.comm.backend.basePath/path
-      report = self.comm.backend.testExtractor(path, outputStyle='html', recipe='/'.join(self.doc['-type']))
-      showMessage(self, 'Report of extractor test', report, style='QLabel {min-width: 800px}')
-    return
-
-
   @Slot(str)
-  def changeDetails(self, docID:str) -> None:
+  def change(self, docID:str) -> None:
     """
     What happens when details should change
 
@@ -260,28 +205,65 @@ class Details(QScrollArea):
     return
 
 
-  def showArea(self) -> None:
+  def execute(self, command:list[Any]) -> None:
     """
     Hide / show the widget underneath the button
+
+    Args:
+      command (list): area to show/hide
     """
-    name = self.sender().accessibleName()
-    if getattr(self, f'btn{name}').isChecked(): #get button in question
-      getattr(self, f'meta{name}W').show()
-    else:
-      getattr(self, f'meta{name}W').hide()
+    filePath = Path(self.doc['-branch'][0]['path'])
+    if command[0] is Command.SHOW:
+      if getattr(self, f'btn{command[1]}').isChecked(): #get button in question
+        getattr(self, f'meta{command[1]}W').show()
+      else:
+        getattr(self, f'meta{command[1]}W').hide()
+    elif command[0] is Command.OPEN_FILEBROWSER or command[0] is Command.OPEN_EXTERNAL:
+      filePath = self.comm.backend.basePath/filePath
+      filePath = filePath if command[0] is Command.OPEN_EXTERNAL else filePath.parent
+      if platform.system() == 'Darwin':       # macOS
+        subprocess.call(('open', filePath))
+      elif platform.system() == 'Windows':    # Windows
+        os.startfile(filePath) # type: ignore[attr-defined]
+      else:                                   # linux variants
+        subprocess.call(('xdg-open', filePath))
+    elif command[0] is Command.SAVE_IMAGE:
+      image = self.doc['image']
+      if image.startswith('data:image/'):
+        imageType = image[11:14] if image[14]==';' else image[11:15]
+      else:
+        imageType = 'svg'
+      saveFilePath = self.comm.backend.basePath/filePath.parent/f'{filePath.stem}_PastaExport.{imageType.lower()}'
+      path = self.doc['-branch'][0]['path']
+      if not path.startswith('http'):
+        path = (self.comm.backend.basePath/path).as_posix()
+      self.comm.backend.testExtractor(path, recipe='/'.join(self.doc['-type']), saveFig=str(saveFilePath))
+    elif command[0] is Command.HIDE:
+      self.comm.backend.db.hideShow(self.docID)
+      self.comm.changeTable.emit('','')
+      self.comm.changeDetails.emit(self.doc['_id'])
+    elif command[0] is Command.CHANGE_EXTRACTOR:
+      self.doc['-type'] = command[1]
+      self.comm.backend.useExtractors(filePath, self.doc['shasum'], self.doc)  #any path is good since the file is the same everywhere; data-changed by reference
+      if len(self.doc['-type'])>1 and len(self.doc['image'])>1:
+        self.doc = self.comm.backend.db.updateDoc({'image':self.doc['image'], '-type':self.doc['-type']}, self.doc['_id'])
+        self.comm.changeTable.emit('','')
+        self.comm.changeDetails.emit(self.doc['_id'])
     return
 
 
-  def callEdit(self) -> None:
+  @Slot()
+  def testExtractor(self) -> None:
     """
-    Call edit dialoge
+    User selects to test extractor on this dataset
     """
-    if self.doc['-type'][0][0]=='x':
-      showMessage(self, 'Information','Cannot change project hierarchy here.')
-    else:
-      self.comm.formDoc.emit(self.doc)
-      self.comm.changeTable.emit('','')
-      self.comm.changeDetails.emit('redraw')
+    logging.debug('details:testExtractor')
+    if len(self.doc)>1:
+      path = Path(self.doc['-branch'][0]['path'])
+      if not path.as_posix().startswith('http'):
+        path = self.comm.backend.basePath/path
+      report = self.comm.backend.testExtractor(path, outputStyle='html', recipe='/'.join(self.doc['-type']))
+      showMessage(self, 'Report of extractor test', report, style='QLabel {min-width: 800px}')
     return
 
 
@@ -296,3 +278,13 @@ class Details(QScrollArea):
     logging.debug('used link on %s|%s',label,docID)
     self.comm.changeDetails.emit(docID)
     return
+
+
+class Command(Enum):
+  """ Commands used in this file """
+  SHOW             = 1
+  CHANGE_EXTRACTOR = 2
+  SAVE_IMAGE       = 3
+  OPEN_FILEBROWSER = 4
+  OPEN_EXTERNAL    = 5
+  HIDE             = 6

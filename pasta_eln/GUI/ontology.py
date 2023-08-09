@@ -25,12 +25,12 @@ class Ontology(QDialog):
 
     #final button box
     buttonBox = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
-    buttonBox.clicked.connect(self.save)
+    buttonBox.clicked.connect(self.closeDialog)
     mainL.addWidget(buttonBox)
 
 
   #++ TODO ontologyCheck: all names must be different
-  def save(self, btn:QPushButton) -> None:
+  def closeDialog(self, btn:QPushButton) -> None:
     """ save selectedList to configuration and exit """
     if btn.text().endswith('Cancel'):
       self.reject()

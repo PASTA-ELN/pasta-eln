@@ -1,7 +1,7 @@
 """ Main class of config tab on authors """
 import json, re
 from pathlib import Path
-from typing import Callable
+from typing import Callable, Any
 import requests
 from PySide6.QtWidgets import QWidget, QFormLayout, QLabel, QLineEdit  # pylint: disable=no-name-in-module
 from ..miscTools import restart
@@ -26,7 +26,6 @@ class ConfigurationAuthors(QWidget):
     #GUI elements
     if hasattr(self.backend, 'configuration'):
       self.tabAppearanceL = QFormLayout(self)
-
       self.userOrcid = self.addRowText('orcid','ORCID')
       self.userTitle = self.addRowText('title','title')
       self.userFirst = self.addRowText('first','first name')
@@ -34,7 +33,7 @@ class ConfigurationAuthors(QWidget):
       self.userEmail = self.addRowText('email','email address')
       self.userRorid = self.addRowText('rorid','RORID')
       self.userOrganization = self.addRowText('organization','organization')
-      self.tabAppearanceL.addRow('Save changes', TextButton('Save changes', self.saveData, None))
+      self.tabAppearanceL.addRow('Save changes', TextButton('Save changes', self, [], None))
 
 
   def addRowText(self, item:str, label:str) -> QLineEdit:
@@ -84,7 +83,7 @@ class ConfigurationAuthors(QWidget):
     return
 
 
-  def saveData(self) -> None:
+  def execute(self, _:list[Any]) -> None:
     """
     Save changes to hard-disk
     """

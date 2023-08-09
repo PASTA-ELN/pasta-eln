@@ -47,9 +47,8 @@ def getColor(backend:Backend, color:str) -> str:
 
 class TextButton(QPushButton):
   """ Button that has only text"""
-  def __init__(self, label:str, widget:QWidget, identifier:list[Any]=[],
-               layout:Optional[QLayout]=None, tooltip:str='', checkable:bool=False, style:str='',
-               hide:bool=False, iconName:str=''):
+  def __init__(self, label:str, widget:QWidget, identifier:list[Any]=[], layout:Optional[QLayout]=None,
+               tooltip:str='', checkable:bool=False, style:str='', hide:bool=False, iconName:str=''):
     """
     Args:
       label (str): label printed on button
@@ -86,8 +85,8 @@ class TextButton(QPushButton):
 
 class IconButton(QPushButton):
   """ Button that has only an icon"""
-  def __init__(self, iconName:str, widget:QWidget, identifier:list[Any]=[],
-               layout:Optional[QLayout]=None, name:str='', tooltip:str='', style:str='', hide:bool=False):
+  def __init__(self, iconName:str, widget:QWidget, identifier:list[Any]=[], layout:Optional[QLayout]=None,
+               tooltip:str='', style:str='', hide:bool=False):
     """
     Args:
       iconName (str): icon to show on button

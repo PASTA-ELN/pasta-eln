@@ -1,6 +1,8 @@
 """ Table Header dialog: change which colums are shown and in which order """
 import json, platform
 from pathlib import Path
+from enum import Enum
+from typing import Any
 import qrcode
 from PIL.ImageQt import ImageQt
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QLabel, QGroupBox, QLineEdit, QDialogButtonBox, QFormLayout, QComboBox, QFileDialog, QMessageBox  # pylint: disable=no-name-in-module
@@ -33,10 +35,10 @@ class ProjectGroup(QDialog):
     self.selectGroup.addItems(self.backend.configuration['projectGroups'].keys())
     self.selectGroup.currentTextChanged.connect(self.changeProjectGroup)
     topbarL.addWidget(self.selectGroup)
-    TextButton('New', self.btnEvent, topbarL, 'new')
-    TextButton('Fill remote', self.btnEvent, topbarL, 'fill')
-    TextButton('Create QR', self.btnEvent, topbarL, 'createQR')
-    TextButton('Check All', self.btnEvent, topbarL, 'check')
+    TextButton('New',         self, [Command.NEW],       topbarL)
+    TextButton('Fill remote', self, [Command.FILL],      topbarL)
+    TextButton('Create QR',   self, [Command.CREATE_QR], topbarL)
+    TextButton('Check All',   self, [Command.CHECK],     topbarL)
     self.projectGroupName = QLineEdit('')
     self.projectGroupName.hide()
     mainL.addWidget(self.projectGroupName)
@@ -61,7 +63,7 @@ class ProjectGroup(QDialog):
       self.pathL.setValidator(QRegularExpressionValidator(r"[\\/~][\\w\\\\\\/:\.~]{5,}"))
     else:
       self.pathL.setValidator(QRegularExpressionValidator(r"[\\/~][\\w\\/]{5,}"))
-    IconButton('fa5.folder-open', self.btnEvent, pathL, 'openDir', 'Folder to save data in')
+    IconButton('fa5.folder-open', self, [Command.OPEN_DIR], pathL, 'Folder to save data in')
     localL.addRow('Path', pathW)
     bodyL.addWidget(localW)
     #remote
@@ -128,10 +130,14 @@ class ProjectGroup(QDialog):
     return
 
 
-  def btnEvent(self) -> None:
-    """ events that occur when top-bar buttons are pressed """
-    btnName = self.sender().accessibleName()
-    if btnName=='new':
+  def execute(self, command:list[Any]) -> None:
+    """
+    Event if user clicks button in the center
+
+    Args:
+      command (list): list of commands
+    """
+    if command[0] is Command.NEW:
       self.selectGroup.hide()
       self.projectGroupName.show()
       self.projectGroupName.setText('my_project_group_name')
@@ -149,7 +155,7 @@ class ProjectGroup(QDialog):
       self.databaseR.setText('')
       self.pathL.setText('')
       self.serverR.setText('')
-    elif btnName=='fill':
+    elif command[0] is Command.FILL:
       content = QFileDialog.getOpenFileName(self, "Load remote credentials", str(Path.home()), '*.key')[0]
       with open(content, encoding='utf-8') as fIn:
         content = json.loads( passwordDecrypt(bytes(fIn.read(), 'UTF-8')) )
@@ -157,7 +163,7 @@ class ProjectGroup(QDialog):
         self.passwordR.setText(content['password'])
         self.databaseR.setText(content['database'])
         self.serverR.setText(content['Server'])
-    elif btnName=='createQR':
+    elif command[0] is Command.CREATE_QR:
       if self.projectGroupName.isHidden():
         configname = self.selectGroup.currentText()
       else:
@@ -167,9 +173,9 @@ class ProjectGroup(QDialog):
       img = qrcode.make(json.dumps(qrCode), error_correction=qrcode.constants.ERROR_CORRECT_M)
       pixmap = QPixmap.fromImage(ImageQt(img).scaledToWidth(200))
       self.image.setPixmap(pixmap)
-    elif btnName=='check':
+    elif command[0] is Command.CHECK:
       self.checkEntries()
-    elif btnName=='openDir':
+    elif command[0] is Command.OPEN_DIR:
       if dirName := QFileDialog.getExistingDirectory(self, 'Choose directory to save data', str(Path.home())):
         self.pathL.setText(dirName)
     return
@@ -246,3 +252,12 @@ class ProjectGroup(QDialog):
       self.databaseR.setText(config['remote']['database'])
       self.serverR.setText(config['remote']['url'])
     return
+
+
+class Command(Enum):
+  """ Commands used in this file """
+  NEW       = 1
+  FILL      = 2
+  CREATE_QR = 3
+  CHECK     = 4
+  OPEN_DIR  = 5

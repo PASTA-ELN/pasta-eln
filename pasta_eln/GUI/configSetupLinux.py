@@ -1,7 +1,7 @@
 """ Widget: setup tab inside the configuration dialog window """
 import logging
 from pathlib import Path
-from typing import Callable
+from typing import Callable, Any
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QMessageBox, QFileDialog, QProgressBar    # pylint: disable=no-name-in-module
 
 from ..guiStyle import TextButton, widgetAndLayout
@@ -43,7 +43,7 @@ class ConfigurationSetup(QWidget):
     screen1L.addWidget(self.progress1)
 
     _, footerL = widgetAndLayout('H', screen1L)
-    self.button1 = TextButton('Start analyse and repair', self.analyse, footerL)
+    self.button1 = TextButton('Start analyse and repair', self, [], footerL)
 
 
   def callbackProgress(self, number:int) -> None:
@@ -57,7 +57,7 @@ class ConfigurationSetup(QWidget):
     return
 
 
-  def analyse(self) -> None:
+  def execute(self, _:list[Any]) -> None:
     """
     Main method that does all the analysis: open dialogs, ...
     """
