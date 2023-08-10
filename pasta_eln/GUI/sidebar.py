@@ -127,7 +127,7 @@ class Sidebar(QWidget):
         treeW.hide()  #convenience: allow scroll in sidebar
         treeW.setHeaderHidden(True)
         treeW.setColumnCount(1)
-        treeW.itemClicked.connect(lambda pID=projID: self.execute([Command.SHOW_FOLDER,pID,'something'])) #TODO_P1
+        treeW.itemClicked.connect(lambda item: self.execute([Command.SHOW_FOLDER, *item.text(1).split('/')]))
         hierarchy = db.getHierarchy(projID)
         rootItem = treeW.invisibleRootItem()
         count = 0

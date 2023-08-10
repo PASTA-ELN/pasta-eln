@@ -61,7 +61,7 @@ class TreeView(QTreeView):
     hierStack = self.currentIndex().data().split('/')
     if command[0] is Command.ADD_CHILD:
       docType= f'x{len(hierStack)}'
-      docID = hierStack[-1][:-2] if hierStack[-1].endswith(' -') else hierStack[-1]
+      docID = hierStack[-1][:34] if hierStack[-1].endswith(' -') else hierStack[-1]
       self.comm.backend.cwd = Path(self.comm.backend.db.getDoc(docID)['-branch'][0]['path'])
       docID = self.comm.backend.addData(docType, {'-name':'new folder'}, hierStack)
       # append item to the GUI
@@ -77,7 +77,7 @@ class TreeView(QTreeView):
     elif command[0] is Command.ADD_SIBLING:
       hierStack= hierStack[:-1]
       docType= f'x{len(hierStack)}'
-      docID = hierStack[-1][:-2] if hierStack[-1].endswith(' -') else hierStack[-1]
+      docID = hierStack[-1][:34] if hierStack[-1].endswith(' -') else hierStack[-1]
       self.comm.backend.cwd = Path(self.comm.backend.db.getDoc(docID)['-branch'][0]['path'])
       docID = self.comm.backend.addData(docType, {'-name':'new folder'}, hierStack)
       # append item to the GUI
@@ -116,7 +116,7 @@ class TreeView(QTreeView):
     elif command[0] is Command.MAX_MIN_HEIGHT:
       item = self.model().itemFromIndex(self.currentIndex())
       if item.text().endswith(' -'):
-        item.setText(item.text()[:-2])
+        item.setText(item.text()[:34])
       else:
         item.setText(f'{item.text()} -')
     elif command[0] is Command.HIDE:
@@ -128,7 +128,7 @@ class TreeView(QTreeView):
       docID = hierStack[-2] \
         if command[0] is Command.OPEN_FILEBROWSER and hierStack[-1][0]!='x' \
         else hierStack[-1]
-      doc   = self.comm.backend.db.getDoc(docID[:-2] if docID.endswith(' -') else docID)
+      doc   = self.comm.backend.db.getDoc(docID[:34] if docID.endswith(' -') else docID)
       if doc['-branch'][0]['path'] is None:
         showMessage(self, 'ERROR', 'Cannot open file that is only in the database','Warning')
       else:
@@ -150,7 +150,7 @@ class TreeView(QTreeView):
     - no redraw required since renderer asks automatically for update
     """
     docID = self.currentIndex().data().split('/')[-1]
-    doc   = self.comm.backend.db.getDoc(docID[:-2] if docID.endswith(' -') else docID)
+    doc   = self.comm.backend.db.getDoc(docID[:34] if docID.endswith(' -') else docID)
     self.comm.formDoc.emit(doc)
     item  = self.model().itemFromIndex(self.currentIndex())
     item.emitDataChanged()  #force redraw (resizing and repainting) of this item only

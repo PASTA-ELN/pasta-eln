@@ -45,7 +45,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       return
     docID   = hierStack.split('/')[-1]
     if docID.endswith(' -'):
-      docID = docID[:-2]
+      docID = docID[:34]
       folded = True
     else:
       folded = False

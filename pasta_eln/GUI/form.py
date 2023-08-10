@@ -72,7 +72,7 @@ class Form(QDialog):
       if key in ['comment','content']:
         labelW, labelL = widgetAndLayout('V')
         labelL.addWidget(QLabel(key.capitalize()))
-        TextButton('More', self, [Command.FOCUS_AREA, key], checkable=True)
+        TextButton('More', self, [Command.FOCUS_AREA, key], labelL, checkable=True)
         rightSideW, rightSideL = widgetAndLayout('V')
         setattr(self, f'buttonBarW_{key}', QWidget())
         getattr(self, f'buttonBarW_{key}').hide()
@@ -335,23 +335,7 @@ class Form(QDialog):
         getattr(self, f'textEdit_{command[2]}').insertPlainText('#' * int(command[-1]) +' Heading\n')
     elif command[0] is Command.FOCUS_AREA:
       unknownWidget = []
-      status = True #TODO_P1 for now
-      if status:
-        getattr(self, f'textShow_{command[1]}').hide()
-        getattr(self, f'buttonBarW_{command[1]}').hide()
-        for i in range(self.formL.count()):
-          widget = self.formL.itemAt(i).widget()
-          if isinstance(widget, (QLabel, QComboBox, QLineEdit)):
-            widget.show()
-          else:
-            unknownWidget.append(i)
-        if command[1]=='content' and len(unknownWidget)==4:  #show / hide label and right-side of non-content and non-comment
-          self.formL.itemAt(unknownWidget[0]).widget().show()
-          self.formL.itemAt(unknownWidget[1]).widget().show()
-        if command[1]=='comment' and len(unknownWidget)==4:
-          self.formL.itemAt(unknownWidget[2]).widget().show()
-          self.formL.itemAt(unknownWidget[3]).widget().show()
-      else:
+      if getattr(self, f'buttonBarW_{command[1]}').isHidden(): #current status hidden
         getattr(self, f'textShow_{command[1]}').show()
         getattr(self, f'buttonBarW_{command[1]}').show()
         for i in range(self.formL.count()):
@@ -360,12 +344,27 @@ class Form(QDialog):
             widget.hide()
           else:
             unknownWidget.append(i)
-        if command[1]=='content' and len(unknownWidget)==4:
+        if command[1]=='content' and len(unknownWidget)==5:
           self.formL.itemAt(unknownWidget[0]).widget().hide()
           self.formL.itemAt(unknownWidget[1]).widget().hide()
-        if command[1]=='comment' and len(unknownWidget)==4:
+        if command[1]=='comment' and len(unknownWidget)==5:
           self.formL.itemAt(unknownWidget[2]).widget().hide()
           self.formL.itemAt(unknownWidget[3]).widget().hide()
+      else:
+        getattr(self, f'textShow_{command[1]}').hide()
+        getattr(self, f'buttonBarW_{command[1]}').hide()
+        for i in range(self.formL.count()):
+          widget = self.formL.itemAt(i).widget()
+          if isinstance(widget, (QLabel, QComboBox, QLineEdit)):
+            widget.show()
+          else:
+            unknownWidget.append(i)
+        if command[1]=='content' and len(unknownWidget)==5:  #show / hide label and right-side of non-content and non-comment
+          self.formL.itemAt(unknownWidget[0]).widget().show()
+          self.formL.itemAt(unknownWidget[1]).widget().show()
+        if command[1]=='comment' and len(unknownWidget)==5:
+          self.formL.itemAt(unknownWidget[2]).widget().show()
+          self.formL.itemAt(unknownWidget[3]).widget().show()
     else:
       print('**ERROR dialogForm: unknowCommand',command)
     return

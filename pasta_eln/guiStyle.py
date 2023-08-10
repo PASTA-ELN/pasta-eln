@@ -48,13 +48,13 @@ def getColor(backend:Backend, color:str) -> str:
 
 class TextButton(QPushButton):
   """ Button that has only text"""
-  def __init__(self, label:str, widget:QWidget, identifier:list[Any]=[], layout:Optional[QLayout]=None,
+  def __init__(self, label:str, widget:QWidget, command:list[Any]=[], layout:Optional[QLayout]=None,
                tooltip:str='', checkable:bool=False, style:str='', hide:bool=False, iconName:str=''):
     """
     Args:
       label (str): label printed on button
       widget (QWidget): widget / dialog that host the button and that has the execute function
-      identifier (enum): identifier that is used in called-function: possibly a
+      command (enum): command that is used in called-function: possibly a list of multiple terms
       layout (QLayout): button to be added to this layout
       tooltip (str): tooltip shown when mouse hovers the button
       checkable (bool): can the button change its background color
@@ -65,7 +65,7 @@ class TextButton(QPushButton):
     self.setText(label)
     self.setCheckable(checkable)
     self.setChecked(checkable)
-    self.clicked.connect(lambda: widget.execute(identifier))
+    self.clicked.connect(lambda: widget.execute(command))
     if tooltip:
       self.setToolTip(tooltip)
     if style:
@@ -86,13 +86,13 @@ class TextButton(QPushButton):
 
 class IconButton(QPushButton):
   """ Button that has only an icon"""
-  def __init__(self, iconName:str, widget:QWidget, identifier:list[Any]=[], layout:Optional[QLayout]=None,
+  def __init__(self, iconName:str, widget:QWidget, command:list[Any]=[], layout:Optional[QLayout]=None,
                tooltip:str='', style:str='', hide:bool=False):
     """
     Args:
       iconName (str): icon to show on button
       widget (QWidget): widget / dialog that host the button and that has the execute function
-      identifier (enum): identifier that is used in called-function: possibly a
+      command (enum): command that is used in called-function: possibly a list of multiple terms
       layout (QLayout): button to be added to this layout
       tooltip (str): tooltip shown when mouse hovers the button
       style (str): css style
@@ -102,7 +102,7 @@ class IconButton(QPushButton):
     color = 'black' if widget is None else getColor(widget.comm.backend, 'primary')
     icon = qta.icon(iconName, color=color, scale_factor=1)
     self.setIcon(icon)
-    self.clicked.connect(lambda: widget.execute(identifier))
+    self.clicked.connect(lambda: widget.execute(command))
     self.setFixedHeight(30)
     if tooltip:
       self.setToolTip(tooltip)
@@ -118,13 +118,13 @@ class IconButton(QPushButton):
 
 class Action(QAction):
   """ QAction and assign function to menu"""
-  def __init__(self, label:str, widget:QWidget, identifier:list[Any],
+  def __init__(self, label:str, widget:QWidget, command:list[Any],
                menu:QMenu, shortcut:Optional[str]=None, icon:str=''):
     """
     Args:
       label (str): label printed on submenu
       widget (QWidget): widget / dialog that host the button and that has the execute function
-      identifier (enum): identifier that is used in called-function: possibly a
+      command (enum): command that is used in called-function: possibly a list of multiple terms
       menu (QMenu): button to be added to this menu
       shortcut (str): shortcut (e.g. Ctrl+K)
       icon (str): icon name
@@ -132,7 +132,7 @@ class Action(QAction):
     super().__init__()
     self.setParent(widget)
     self.setText(label)
-    self.triggered.connect(lambda : widget.execute(identifier))
+    self.triggered.connect(lambda : widget.execute(command))
     if icon:
       self.setIcon(qta.icon(icon, scale_factor=1))
     if shortcut is not None:

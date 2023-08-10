@@ -174,10 +174,8 @@ class Project(QWidget):
           for subRow in range(self.tree.model().rowCount(index)):
             subIndex = self.tree.model().index(subRow,0, index)
             subItem  = self.tree.model().itemFromIndex(subIndex)
-            if self.foldedAll:
+            if self.foldedAll and not subItem.text().endswith(' -'):
               subItem.setText(f'{subItem.text()} -')
-            elif subItem.text().endswith(' -'):
-              subItem.setText(subItem.text()[:-2])
             recursiveRowIteration(subIndex)
         return
       recursiveRowIteration(self.tree.model().index(-1,0))
@@ -208,9 +206,9 @@ class Project(QWidget):
     docID    = item.text().split('/')[-1]
     maximized = True
     if docID.endswith(' -'):
-      docID = docID[:-2]
+      docID = docID[:34]
       maximized = False
-    doc      = db.getDoc(docID) #TODO_P1 this is still reached with -: minimize one, then minimize all
+    doc      = db.getDoc(docID)
     if '-branch' not in doc:
       return
     branchOldList= [i for i in doc['-branch'] if i['stack']==stackOld]
@@ -229,10 +227,10 @@ class Project(QWidget):
     while currentItem.parent() is not None:
       currentItem = currentItem.parent()
       docIDj = currentItem.text().split('/')[-1]
-      stackNew.append(docIDj[:-2] if docIDj.endswith(' -') else docIDj)
+      stackNew.append(docIDj[:34] if docIDj.endswith(' -') else docIDj)
     stackNew = [self.projID] + stackNew[::-1]  #add project id and reverse
     childNew = item.row()
-    if not branchOld['path'].startswith('http'):
+    if branchOld['path'] is not None and not branchOld['path'].startswith('http'):
       dirNameNew= createDirName(doc['-name'],doc['-type'][0],childNew)
       parentDir = db.getDoc(stackNew[-1])['-branch'][0]['path']
       pathNew = f'{parentDir}/{dirNameNew}'
