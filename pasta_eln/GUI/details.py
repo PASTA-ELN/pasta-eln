@@ -1,12 +1,13 @@
 """ widget that shows the details of the items """
 from pathlib import Path
-import platform, subprocess, os, logging
+import logging
 from enum import Enum
 from typing import Any
 import yaml
-from PySide6.QtWidgets import QScrollArea, QLabel, QMenu, QTextEdit  # pylint: disable=no-name-in-module
-from PySide6.QtCore import Qt, Slot, QPoint  # pylint: disable=no-name-in-module
-from ..guiStyle import TextButton, Image, Label, Action, showMessage, widgetAndLayout
+from PySide6.QtWidgets import QScrollArea, QLabel, QTextEdit  # pylint: disable=no-name-in-module
+from PySide6.QtCore import Qt, Slot # pylint: disable=no-name-in-module
+from ..guiStyle import TextButton, Image, Label, showMessage, widgetAndLayout
+from ._contextMenu import initContextMenu, executeContextMenu, CommandMenu
 from ..fixedStringsJson import defaultOntologyNode
 from ..guiCommunicate import Communicate
 
@@ -29,10 +30,10 @@ class Details(QScrollArea):
 
     headerW, self.headerL = widgetAndLayout('H', self.mainL, top='s')
     headerW.setContextMenuPolicy(Qt.CustomContextMenu)
-    headerW.customContextMenuRequested.connect(self.contextMenu)
+    headerW.customContextMenuRequested.connect(lambda pos: initContextMenu(self, pos))
     self.specialW, self.specialL = widgetAndLayout('V', self.mainL, top='s')
     self.specialW.setContextMenuPolicy(Qt.CustomContextMenu)
-    self.specialW.customContextMenuRequested.connect(self.contextMenu)
+    self.specialW.customContextMenuRequested.connect(lambda pos: initContextMenu(self, pos))
     self.btnDetails = TextButton('Details', self, [Command.SHOW, 'Details'], self.mainL, \
                                  'Show / hide details', checkable=True, style='margin-top: 3px')
     self.metaDetailsW, self.metaDetailsL  = widgetAndLayout('V', self.mainL)
@@ -50,35 +51,6 @@ class Details(QScrollArea):
     self.metaDatabaseW, self.metaDatabaseL = widgetAndLayout('V', self.mainL)
     self.metaDatabaseW.setMaximumWidth(self.width())
     self.mainL.addStretch(1)
-
-
-  def contextMenu(self, pos:QPoint) -> None: #TODO_P3 move all context menu of this type to separate function
-    # sourcery skip: extract-method
-    """
-    Create a context menu
-
-    Args:
-      pos (position): Position to create context menu at
-    """
-    context = QMenu(self)
-    # for extractors
-    extractors = self.comm.backend.configuration['extractors']
-    extension = Path(self.doc['-branch'][0]['path']).suffix[1:]
-    if extension.lower() in extractors:
-      extractors = extractors[extension.lower()]
-      baseDocType= self.doc['-type'][0]
-      choices= {key:value for key,value in extractors.items() \
-                  if key.startswith(baseDocType)}
-      for key,value in choices.items():
-        Action(value,                     self, [Command.CHANGE_EXTRACTOR, key], context)
-      context.addSeparator()
-      Action('Save image',                self, [Command.SAVE_IMAGE],            context)
-    #TODO_P2 not save now: when opening text files, system can crash
-    # Action('Open file with another application', self.changeExtractor, context, self, name='_openExternal_')
-    Action('Open folder in file browser', self, [Command.OPEN_FILEBROWSER],      context)
-    Action('Hide',                        self, [Command.HIDE],                  context)
-    context.exec(self.mapToGlobal(pos))
-    return
 
 
   @Slot(str)
@@ -212,43 +184,15 @@ class Details(QScrollArea):
     Args:
       command (list): area to show/hide
     """
-    filePath = Path(self.doc['-branch'][0]['path'])
     if command[0] is Command.SHOW:
       if getattr(self, f'btn{command[1]}').isChecked(): #get button in question
         getattr(self, f'meta{command[1]}W').show()
       else:
         getattr(self, f'meta{command[1]}W').hide()
-    elif command[0] is Command.OPEN_FILEBROWSER or command[0] is Command.OPEN_EXTERNAL:
-      filePath = self.comm.backend.basePath/filePath
-      filePath = filePath if command[0] is Command.OPEN_EXTERNAL else filePath.parent
-      if platform.system() == 'Darwin':       # macOS
-        subprocess.call(('open', filePath))
-      elif platform.system() == 'Windows':    # Windows
-        os.startfile(filePath) # type: ignore[attr-defined]
-      else:                                   # linux variants
-        subprocess.call(('xdg-open', filePath))
-    elif command[0] is Command.SAVE_IMAGE:
-      image = self.doc['image']
-      if image.startswith('data:image/'):
-        imageType = image[11:14] if image[14]==';' else image[11:15]
-      else:
-        imageType = 'svg'
-      saveFilePath = self.comm.backend.basePath/filePath.parent/f'{filePath.stem}_PastaExport.{imageType.lower()}'
-      path = self.doc['-branch'][0]['path']
-      if not path.startswith('http'):
-        path = (self.comm.backend.basePath/path).as_posix()
-      self.comm.backend.testExtractor(path, recipe='/'.join(self.doc['-type']), saveFig=str(saveFilePath))
-    elif command[0] is Command.HIDE:
-      self.comm.backend.db.hideShow(self.docID)
-      self.comm.changeTable.emit('','')
-      self.comm.changeDetails.emit(self.doc['_id'])
-    elif command[0] is Command.CHANGE_EXTRACTOR:
-      self.doc['-type'] = command[1]
-      self.comm.backend.useExtractors(filePath, self.doc['shasum'], self.doc)  #any path is good since the file is the same everywhere; data-changed by reference
-      if len(self.doc['-type'])>1 and len(self.doc['image'])>1:
-        self.doc = self.comm.backend.db.updateDoc({'image':self.doc['image'], '-type':self.doc['-type']}, self.doc['_id'])
-        self.comm.changeTable.emit('','')
-        self.comm.changeDetails.emit(self.doc['_id'])
+    elif isinstance(command[0], CommandMenu):
+      executeContextMenu(self, command)
+    else:
+      print("**ERROR details command unknown:",command)
     return
 
 
@@ -283,8 +227,3 @@ class Details(QScrollArea):
 class Command(Enum):
   """ Commands used in this file """
   SHOW             = 1
-  CHANGE_EXTRACTOR = 2
-  SAVE_IMAGE       = 3
-  OPEN_FILEBROWSER = 4
-  OPEN_EXTERNAL    = 5
-  HIDE             = 6

@@ -121,74 +121,72 @@ class MainWindow(QMainWindow):
     return
 
 
-  def viewMenu(self) -> None:
-    """
-    act on user pressing an item in view
-    """
-    docType = self.sender().data()
-    self.comm.changeTable.emit(docType, '')
-    return
-
-
-  def execute(self,  identifier:list[Any]) -> None:
+  def execute(self,  command:list[Any]) -> None:
     """
     action after clicking menu item
     """
-    if identifier[0] is Command.CONFIG:
-      dialog = Configuration(self.comm.backend)
-      dialog.exec()
-    elif identifier[0] is Command.PROJECT_GROUP:
-      dialog = ProjectGroup(self.comm.backend)
-      dialog.exec()
-    elif identifier[0] is Command.ONTOLOGY:
-      showMessage(self, 'To be implemented','A possibility to change the questionaires / change the ontology is missing.')
-      # dialog = Ontology(self.comm.backend)
-      # dialog.exec()
-    elif identifier[0] is Command.UPDATE:
-      report = updateExtractorList(self.backend.extractorPath)
-      showMessage(self, 'Extractor list updated', report)
-      restart()
-    elif identifier[0] is Command.VERIFY_DB:
-      report = self.comm.backend.checkDB(outputStyle='html', minimal=True)
-      showMessage(self, 'Report of database verification', report, style='QLabel {min-width: 800px}')
-    elif identifier[0] is Command.SYNC:
-      report = self.comm.backend.replicateDB(progressBar=self.sidebar.progress)
-      showMessage(self, 'Report of syncronization', report, style='QLabel {min-width: 450px}')
-    elif identifier[0] is Command.EXIT:
-      self.close()
-    elif identifier[0] is Command.WEBSITE:
-      webbrowser.open('https://pasta-eln.github.io/pasta-eln/')
-    elif identifier[0] is Command.TEST1:
-      fileName = QFileDialog.getOpenFileName(self,'Open file for extractor test',str(Path.home()),'*.*')[0]
-      report = self.comm.backend.testExtractor(fileName, outputStyle='html')
-      showMessage(self, 'Report of extractor test', report)
-    elif identifier[0] is Command.TEST2:
-      self.comm.testExtractor.emit()
-    elif identifier[0] is Command.SHORTCUTS:
-      showMessage(self, 'Keyboard shortcuts', shortcuts)
-    elif identifier[0] is Command.RESTART:
-      restart()
-    elif identifier[0] is Command.TODO:
-      try:
-        from .tempStrings import todoString
-        showMessage(self, 'List of items on todo list',todoString)
-      except Exception:
-        pass
-    elif identifier[0] is Command.EXPORT:
+    # file menu
+    if command[0] is Command.EXPORT:
       if self.comm.projectID == '':
         showMessage(self, 'Error', 'You have to open a project to export', 'Warning')
         return
       fileName = QFileDialog.getSaveFileName(self,'Save data into .eln file',str(Path.home()),'*.eln')[0]
       status = exportELN(self.comm.backend, self.comm.projectID, fileName)
       showMessage(self, 'Finished', status, 'Information')
-    elif identifier[0] is Command.IMPORT:
+    elif command[0] is Command.IMPORT:
       fileName = QFileDialog.getOpenFileName(self,'Load data from .eln file',str(Path.home()),'*.eln')[0]
       status = importELN(self.comm.backend, fileName)
       showMessage(self, 'Finished', status, 'Information')
       self.comm.changeSidebar.emit('redraw')
       self.comm.changeTable.emit('x0','')
+    elif command[0] is Command.EXIT:
+      self.close()
+    #view menu
+    elif command[0] is Command.VIEW:
+      self.comm.changeTable.emit(command[1], '')
+    #system menu
+    elif command[0] is Command.PROJECT_GROUP:
+      dialog = ProjectGroup(self.comm)
+      dialog.exec()
+    elif command[0] is Command.SYNC:
+      report = self.comm.backend.replicateDB(progressBar=self.sidebar.progress)
+      showMessage(self, 'Report of syncronization', report, style='QLabel {min-width: 450px}')
+    elif command[0] is Command.ONTOLOGY:
+      showMessage(self, 'To be implemented','A possibility to change the questionaires / change the ontology is missing.')
+      # dialog = Ontology(self.comm.backend)
+      # dialog.exec()
+    elif command[0] is Command.TEST1:
+      fileName = QFileDialog.getOpenFileName(self,'Open file for extractor test',str(Path.home()),'*.*')[0]
+      report = self.comm.backend.testExtractor(fileName, outputStyle='html')
+      showMessage(self, 'Report of extractor test', report)
+    elif command[0] is Command.TEST2:
+      self.comm.testExtractor.emit()
+    elif command[0] is Command.UPDATE:
+      report = updateExtractorList(self.backend.extractorPath)
+      showMessage(self, 'Extractor list updated', report)
+      restart()
+    elif command[0] is Command.CONFIG:
+      dialog = Configuration(self.comm)
+      dialog.exec()
+    #remainder
+    elif command[0] is Command.WEBSITE:
+      webbrowser.open('https://pasta-eln.github.io/pasta-eln/')
+    elif command[0] is Command.VERIFY_DB:
+      report = self.comm.backend.checkDB(outputStyle='html', minimal=True)
+      showMessage(self, 'Report of database verification', report, style='QLabel {min-width: 800px}')
+    elif command[0] is Command.SHORTCUTS:
+      showMessage(self, 'Keyboard shortcuts', shortcuts)
+    elif command[0] is Command.TODO:
+      try:
+        from .tempStrings import todoString
+        showMessage(self, 'List of items on todo list',todoString)
+      except Exception:
+        pass
+
+    elif command[0] is Command.RESTART:
+      restart()
     else:
-      showMessage(self, 'ERROR', f'unknown action {identifier[0]}', icon='Warning')
+      print("**ERROR gui menu unknown:",command)
     return
 
 

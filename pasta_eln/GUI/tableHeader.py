@@ -78,6 +78,8 @@ class TableHeader(QDialog):
     elif command[0] is Command.USE_TEXT and self.inputLine.text()!='':
       self.selectedList += [self.inputLine.text()]
       self.allSet.add(self.inputLine.text())
+    else:
+      print("**ERROR tableHeader menu unknown:",command)
     #change content
     if oldIndex>-1 and newIndex>-1:
       self.selectedList.insert(newIndex, self.selectedList.pop(oldIndex))

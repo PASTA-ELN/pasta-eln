@@ -1,7 +1,7 @@
 """ Entire config dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""
 import platform
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QTabWidget,  QTextEdit  # pylint: disable=no-name-in-module
-from ..backend import Backend
+from ..guiCommunicate import Communicate
 from .configGUI import ConfigurationGUI
 from .configAuthors import ConfigurationAuthors
 if platform.system()=='Windows':
@@ -11,7 +11,7 @@ else:
 
 class Configuration(QDialog):
   """ Main class of entire config dialog """
-  def __init__(self, backend:Backend, startTab:str=''):
+  def __init__(self, comm:Communicate, startTab:str=''):
     """
     Initialization
 
@@ -20,7 +20,7 @@ class Configuration(QDialog):
       startTab (str): tab to show initially
     """
     super().__init__()
-    self.backend = backend
+    self.comm = comm
     self.setWindowTitle('PASTA-ELN configuration')
 
     # GUI elements
@@ -29,13 +29,13 @@ class Configuration(QDialog):
     mainL.addWidget(tabW)
 
     # Misc configuration: e.g. theming...
-    tabGUI = ConfigurationGUI(backend, self.finished)
+    tabGUI = ConfigurationGUI(self.comm, self.finished)
     tabW.addTab(tabGUI, 'Appearance')
-    tabGUI = ConfigurationAuthors(backend, self.finished)
+    tabGUI = ConfigurationAuthors(self.comm, self.finished)
     tabW.addTab(tabGUI, 'Authors')
 
     # Setup / Troubeshoot Pasta: main widget
-    tabSetup = ConfigurationSetup(backend, self.finished)
+    tabSetup = ConfigurationSetup(self.comm, self.finished)
     tabW.addTab(tabSetup, 'Setup')
 
     if startTab=='setup':
@@ -49,5 +49,5 @@ class Configuration(QDialog):
     callback function to close widget
     """
     self.close()
-    self.backend.initialize()  #restart backend
+    self.comm.backend.initialize()  #restart backend
     return

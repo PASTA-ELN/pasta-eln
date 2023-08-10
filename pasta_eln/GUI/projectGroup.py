@@ -11,11 +11,11 @@ from cloudant.client import CouchDB
 from ..guiStyle import Label, TextButton, IconButton, showMessage, widgetAndLayout
 from ..miscTools import upOut, restart, upIn
 from ..serverActions import testLocal, testRemote, passwordDecrypt
-from ..backend import Backend
+from ..guiCommunicate import Communicate
 
 class ProjectGroup(QDialog):
   """ Table Header dialog: change which colums are shown and in which order """
-  def __init__(self, backend:Backend):
+  def __init__(self, comm:Communicate):
     """
     Initialization
 
@@ -23,7 +23,8 @@ class ProjectGroup(QDialog):
       backend (Backend): PASTA-ELN backend
     """
     super().__init__()
-    self.backend = backend
+    self.comm    = comm
+    self.configuration = self.comm.backend.configuration
 
     # GUI elements
     self.setWindowTitle('Define and use project groups')
@@ -32,7 +33,7 @@ class ProjectGroup(QDialog):
     Label('Project group', 'h1', mainL)
     _, topbarL = widgetAndLayout('H', mainL, spacing='m')
     self.selectGroup = QComboBox()
-    self.selectGroup.addItems(self.backend.configuration['projectGroups'].keys())
+    self.selectGroup.addItems(self.configuration['projectGroups'].keys())
     self.selectGroup.currentTextChanged.connect(self.changeProjectGroup)
     topbarL.addWidget(self.selectGroup)
     TextButton('New',         self, [Command.NEW],       topbarL)
@@ -92,7 +93,7 @@ class ProjectGroup(QDialog):
     buttonBox.addButton('Save encrypted', QDialogButtonBox.AcceptRole)
     buttonBox.clicked.connect(self.closeDialog)
     mainL.addWidget(buttonBox)
-    self.selectGroup.currentTextChanged.emit(self.backend.configuration['defaultProjectGroup']) #emit to fill initially
+    self.selectGroup.currentTextChanged.emit(self.configuration['defaultProjectGroup']) #emit to fill initially
 
 
   def closeDialog(self, btn:TextButton) -> None:
@@ -120,10 +121,10 @@ class ProjectGroup(QDialog):
         local = {'cred':credL, 'database':self.databaseL.text(), 'path':self.pathL.text()}
         remote = {'cred':credR, 'database':self.databaseR.text(), 'url':self.serverR.text()}
       newGroup = {'local':local, 'remote':remote}
-      self.backend.configuration['projectGroups'][name] = newGroup
-      self.backend.configuration['defaultProjectGroup'] = name
+      self.configuration['projectGroups'][name] = newGroup
+      self.configuration['defaultProjectGroup'] = name
       with open(Path.home()/'.pastaELN.json', 'w', encoding='utf-8') as fConf:
-        fConf.write(json.dumps(self.backend.configuration,indent=2))
+        fConf.write(json.dumps(self.configuration,indent=2))
       restart()
     else:
       print('dialogProjectGroup: did not get a fitting btn ',btn.text())
@@ -141,8 +142,8 @@ class ProjectGroup(QDialog):
       self.selectGroup.hide()
       self.projectGroupName.show()
       self.projectGroupName.setText('my_project_group_name')
-      defaultProjectGroup = self.backend.configuration['defaultProjectGroup']
-      config = self.backend.configuration['projectGroups'][defaultProjectGroup]
+      defaultProjectGroup = self.configuration['defaultProjectGroup']
+      config = self.configuration['projectGroups'][defaultProjectGroup]
       if 'cred' in config['local']:
         u,p = upOut(config['local']['cred'])[0].split(':')
       else:
@@ -178,6 +179,8 @@ class ProjectGroup(QDialog):
     elif command[0] is Command.OPEN_DIR:
       if dirName := QFileDialog.getExistingDirectory(self, 'Choose directory to save data', str(Path.home())):
         self.pathL.setText(dirName)
+    else:
+      print("**ERROR projectGroup unknown:",command)
     return
 
 
@@ -202,7 +205,7 @@ class ProjectGroup(QDialog):
     if not self.pathL.text():
       localTest += 'ERROR: Local path not given\n'
     else:
-      fullLocalPath = self.backend.basePath/self.pathL.text()
+      fullLocalPath = self.comm.backend.basePath/self.pathL.text()
       if fullLocalPath.exists():
         localTest += 'success: Local path exists\n'
       else:
@@ -233,7 +236,7 @@ class ProjectGroup(QDialog):
     Args:
       item (str): name of project group
     """
-    config = self.backend.configuration['projectGroups'][item]
+    config = self.configuration['projectGroups'][item]
     if 'cred' in config['local']:
       u,p = upOut(config['local']['cred'])[0].split(':')
     else:

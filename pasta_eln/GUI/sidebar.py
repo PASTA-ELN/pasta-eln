@@ -14,12 +14,12 @@ class Sidebar(QWidget):
   def __init__(self, comm:Communicate):
     super().__init__()
     self.comm = comm
-    comm.changeSidebar.connect(self.redraw)
+    comm.changeSidebar.connect(self.change)
     if hasattr(self.comm.backend, 'configuration'):
       self.sideBarWidth = self.comm.backend.configuration['GUI']['sidebarWidth']
       self.setFixedWidth(self.sideBarWidth)
     if not hasattr(comm.backend, 'db'):  #if no backend
-      configWindow = Configuration(comm.backend, 'setup')
+      configWindow = Configuration(comm, 'setup')
       configWindow.exec()
     self.openProjectId = ''
 
@@ -45,24 +45,24 @@ class Sidebar(QWidget):
     self.widgetsAction:dict[str,QWidget] = {}
     self.widgetsList:dict[str,QWidget]   = {}
     self.widgetsProject:dict[str,Any]    = {} #title bar and widget that contains all of project
-    self.redraw()
+    self.change()
     #++ TODO projectView: allow size changegable, drag-and-drop to move
     #   more below and other files
 
 
   @Slot(str)
-  def redraw(self, projectID:str='') -> None:
+  def change(self, projectChoice:str='') -> None:
     """
     Redraw sidebar: e.g. after change of project visibility in table
 
     Args:
-      projectID (str): projectID on which to focus: '' string=draw default; 'redraw' implies redraw; id implies id
+      projectChoice (str): projectID on which to focus: '' string=draw default; 'redraw' implies redraw; id implies id
     """
     # Delete old widgets from layout and create storage
     for i in reversed(range(self.projectsListL.count())):
       self.projectsListL.itemAt(i).widget().setParent(None) # type: ignore
-    if projectID != 'redraw':
-      self.openProjectId = projectID
+    if projectChoice != 'redraw':
+      self.openProjectId = projectChoice
     self.widgetsAction = {}
     self.widgetsList = {}
     self.widgetsProject = {} #title bar and widget that contains all of project
@@ -116,9 +116,9 @@ class Sidebar(QWidget):
         for idx, doctype in enumerate(db.dataLabels):
           if doctype[0]!='x':
             icon = iconsDocTypes[db.dataLabels[doctype]]
-            btn = IconButton(icon, self, [Command.LIST_DOCTYPE,doctype,projectID], None,db.dataLabels[doctype])
+            btn = IconButton(icon, self, [Command.LIST_DOCTYPE,doctype,projID], None,db.dataLabels[doctype])
             listL.addWidget(btn, 0, idx)    # type: ignore
-        btn = IconButton(iconsDocTypes['-'], self, [Command.LIST_DOCTYPE,'-',projectID], None, 'Unidentified')
+        btn = IconButton(iconsDocTypes['-'], self, [Command.LIST_DOCTYPE,'-',projID], None, 'Unidentified')
         listL.addWidget(btn, 0, len(db.dataLabels)+1)  # type: ignore
         self.widgetsList[projID] = listW
 
@@ -127,7 +127,7 @@ class Sidebar(QWidget):
         treeW.hide()  #convenience: allow scroll in sidebar
         treeW.setHeaderHidden(True)
         treeW.setColumnCount(1)
-        treeW.itemClicked.connect(lambda : self.execute([Command.SHOW_FOLDER,projID,'something'])) #TODO_P1
+        treeW.itemClicked.connect(lambda pID=projID: self.execute([Command.SHOW_FOLDER,pID,'something'])) #TODO_P1
         hierarchy = db.getHierarchy(projID)
         rootItem = treeW.invisibleRootItem()
         count = 0
@@ -180,6 +180,8 @@ class Sidebar(QWidget):
       showMessage(self, 'Information','Scanning finished')
     elif command[0] is Command.SHOW_FOLDER:
       self.comm.changeProject.emit(command[1], command[2])
+    else:
+      print("**ERROR sidebar menu unknown:",command)
     return
 
 
@@ -213,7 +215,7 @@ class Sidebar(QWidget):
     Args:
       event (QResizeEvent): event
     """
-    self.redraw()
+    self.change()
     return super().resizeEvent(event)
 
 

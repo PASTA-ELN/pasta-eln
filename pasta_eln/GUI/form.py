@@ -1,13 +1,13 @@
 """ New/Edit dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""
-import logging, re, copy, subprocess, platform, os
+import logging, re, copy
 from enum import Enum
 from typing import Any, Union
-from pathlib import Path
 from PySide6.QtWidgets import QDialog, QWidget, QVBoxLayout, QHBoxLayout, QDialogButtonBox, QSplitter, QSizePolicy, QMenu # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QLabel, QTextEdit, QPushButton, QPlainTextEdit, QComboBox, QLineEdit # pylint: disable=no-name-in-module
 from PySide6.QtGui import QRegularExpressionValidator # pylint: disable=no-name-in-module
-from PySide6.QtCore import QSize, Qt, QPoint                  # pylint: disable=no-name-in-module
-from ..guiStyle import Image, TextButton, IconButton, Label, Action, showMessage, widgetAndLayout
+from PySide6.QtCore import QSize, Qt                  # pylint: disable=no-name-in-module
+from ..guiStyle import Image, TextButton, IconButton, Label, showMessage, widgetAndLayout
+from ._contextMenu import initContextMenu, executeContextMenu, CommandMenu
 from ..fixedStringsJson import defaultOntologyNode
 from ..handleDictionaries import fillDocBeforeCreate
 from ..miscTools import createDirName
@@ -47,7 +47,7 @@ class Form(QDialog):
       imageW, imageL = widgetAndLayout('V', mainL)
       Image(self.doc['image'], imageL, anyDimension=width)
       imageW.setContextMenuPolicy(Qt.CustomContextMenu)
-      imageW.customContextMenuRequested.connect(self.contextMenu)
+      imageW.customContextMenuRequested.connect(lambda pos: initContextMenu(self, pos))
 
     _, self.formL = widgetAndLayout('Form', mainL, 's')
     #Add things that are in ontology
@@ -167,34 +167,6 @@ class Form(QDialog):
       buttonBox.addButton('Save && Next', QDialogButtonBox.ApplyRole)
     buttonBox.clicked.connect(self.closeDialog)
     mainL.addWidget(buttonBox)
-
-
-  def contextMenu(self, pos:QPoint) -> None:
-    # sourcery skip: extract-method
-    """
-    Create a context menu
-
-    Args:
-      pos (position): Position to create context menu at
-    """
-    context = QMenu(self)
-    # for extractors
-    extractors = self.comm.backend.configuration['extractors']
-    extension = Path(self.doc['-branch'][0]['path']).suffix[1:]
-    if extension.lower() in extractors:
-      extractors = extractors[extension.lower()]
-      baseDocType= self.doc['-type'][0]
-      choices= {key:value for key,value in extractors.items() \
-                  if key.startswith(baseDocType)}
-      for key,value in choices.items():
-        Action(value,                      self, [Command.CHANGE_EXTRACTOR, key], context)
-      context.addSeparator()
-      Action('Save image',                 self, [Command.SAVE_IMAGE],            context)
-    #TODO_P2 not save now: when opening text files, system can crash
-    # Action('Open file with another application', self.changeExtractor, context, self, name='_openExternal_')
-    Action('Open folder in file browser',  self, [Command.OPEN_FILEBROWSER],      context)
-    context.exec(self.mapToGlobal(pos))
-    return
 
 
   # TODO_P2 make markdown format correctly immediately
@@ -348,34 +320,8 @@ class Form(QDialog):
     Args:
       command (list): list of commands
     """
-    filePath = Path(self.doc['-branch'][0]['path'])
-    if command[0] is Command.OPEN_FILEBROWSER or command[0] is Command.OPEN_EXTERNAL:
-      filePath = self.comm.backend.basePath/filePath
-      filePath = filePath if command[0] is Command.OPEN_EXTERNAL else filePath.parent
-      if platform.system() == 'Darwin':       # macOS
-        subprocess.call(('open', filePath))
-      elif platform.system() == 'Windows':    # Windows
-        os.startfile(filePath) # type: ignore[attr-defined]
-      else:                                   # linux variants
-        subprocess.call(('xdg-open', filePath))
-    elif command[0] is Command.SAVE_IMAGE:
-      image = self.doc['image']
-      if image.startswith('data:image/'):
-        imageType = image[11:14] if image[14]==';' else image[11:15]
-      else:
-        imageType = 'svg'
-      saveFilePath = self.comm.backend.basePath/filePath.parent/f'{filePath.stem}_PastaExport.{imageType.lower()}'
-      path = Path(self.doc['-branch'][0]['path'])
-      if not path.as_posix().startswith('http'):
-        path = self.comm.backend.basePath/path
-      self.comm.backend.testExtractor(path, recipe='/'.join(self.doc['-type']), saveFig=str(saveFilePath))
-    elif command[0] is Command.CHANGE_EXTRACTOR:
-      self.doc['-type'] = command[1].split('/')
-      self.comm.backend.useExtractors(filePath, self.doc['shasum'], self.doc)  #any path is good since the file is the same everywhere; data-changed by reference
-      if len(self.doc['-type'])>1 and len(self.doc['image'])>1:
-        self.doc = self.comm.backend.db.updateDoc({'image':self.doc['image'], '-type':self.doc['-type']}, self.doc['_id'])
-        self.comm.changeTable.emit('','')
-        self.comm.changeDetails.emit(self.doc['_id'])
+    if isinstance(command[0], CommandMenu):
+      executeContextMenu(self, command)
     elif command[0] is Command.BUTTON_BAR:
       if command[1]=='bold':
         getattr(self, f'textEdit_{command[2]}').insertPlainText('**TEXT**')

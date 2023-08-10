@@ -6,25 +6,26 @@ import requests
 from PySide6.QtWidgets import QWidget, QFormLayout, QLabel, QLineEdit  # pylint: disable=no-name-in-module
 from ..miscTools import restart
 from ..guiStyle import TextButton
-from ..backend import Backend
+from ..guiCommunicate import Communicate
 
 #TODO_P5 allow to add more users and each user can have multiple organizations
 
 class ConfigurationAuthors(QWidget):
   """ Main class of config tab on authors """
-  def __init__(self, backend:Backend, callbackFinished:Callable[[],None]):
+  def __init__(self, comm:Communicate, callbackFinished:Callable[[],None]):
     """
     Initialization
 
     Args:
-      backend (Pasta): backend, not communication
+      comm (Communicate): communication
       callbackFinished (function): callback function to call upon end
     """
     super().__init__()
-    self.backend = backend
+    self.comm = comm
 
     #GUI elements
-    if hasattr(self.backend, 'configuration'):
+    if hasattr(self.comm.backend, 'configuration'):
+      self.configuration = self.comm.backend.configuration
       self.tabAppearanceL = QFormLayout(self)
       self.userOrcid = self.addRowText('orcid','ORCID')
       self.userTitle = self.addRowText('title','title')
@@ -49,9 +50,9 @@ class ConfigurationAuthors(QWidget):
     """
     rightW = QLineEdit()
     if item in {'organization','rorid'}:
-      rightW.setText(self.backend.configuration['authors'][0]['organizations'][0][item])
+      rightW.setText(self.configuration['authors'][0]['organizations'][0][item])
     else:
-      rightW.setText(self.backend.configuration['authors'][0][item])
+      rightW.setText(self.configuration['authors'][0][item])
     rightW.setAccessibleName(item)
     if item in {'rorid','orcid'}:
       rightW.editingFinished.connect(self.changedID)
@@ -87,14 +88,14 @@ class ConfigurationAuthors(QWidget):
     """
     Save changes to hard-disk
     """
-    self.backend.configuration['authors'][0]['first'] = self.userFirst.text().strip()
-    self.backend.configuration['authors'][0]['last']  = self.userLast.text().strip()
-    self.backend.configuration['authors'][0]['title'] = self.userTitle.text().strip()
-    self.backend.configuration['authors'][0]['email'] = self.userEmail.text().strip()
-    self.backend.configuration['authors'][0]['orcid'] = self.userOrcid.text().strip()
-    self.backend.configuration['authors'][0]['organizations'][0]['organization'] = self.userOrganization.text().strip()
-    self.backend.configuration['authors'][0]['organizations'][0]['rorid']        = self.userRorid.text().strip()
+    self.configuration['authors'][0]['first'] = self.userFirst.text().strip()
+    self.configuration['authors'][0]['last']  = self.userLast.text().strip()
+    self.configuration['authors'][0]['title'] = self.userTitle.text().strip()
+    self.configuration['authors'][0]['email'] = self.userEmail.text().strip()
+    self.configuration['authors'][0]['orcid'] = self.userOrcid.text().strip()
+    self.configuration['authors'][0]['organizations'][0]['organization'] = self.userOrganization.text().strip()
+    self.configuration['authors'][0]['organizations'][0]['rorid']        = self.userRorid.text().strip()
     with open(Path.home()/'.pastaELN.json', 'w', encoding='utf-8') as fConf:
-      fConf.write(json.dumps(self.backend.configuration,indent=2))
+      fConf.write(json.dumps(self.configuration,indent=2))
     restart()
     return

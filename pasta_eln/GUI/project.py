@@ -191,7 +191,7 @@ class Project(QWidget):
     elif command[0] is Command.SHOW_TABLE:
       self.comm.changeTable.emit(command[1], self.projID)
     else:
-      print(f"undefined menu / action |{command[1]}|")
+      print("**ERROR project menu unknown:",command)
     return
 
 
@@ -210,7 +210,7 @@ class Project(QWidget):
     if docID.endswith(' -'):
       docID = docID[:-2]
       maximized = False
-    doc      = db.getDoc(docID)
+    doc      = db.getDoc(docID) #TODO_P1 this is still reached with -: minimize one, then minimize all
     if '-branch' not in doc:
       return
     branchOldList= [i for i in doc['-branch'] if i['stack']==stackOld]

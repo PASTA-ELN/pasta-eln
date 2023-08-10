@@ -8,18 +8,18 @@ from ..guiStyle import TextButton, widgetAndLayout
 from ..installationTools import couchdb, configuration, ontology, exampleData, createShortcut
 from ..fixedStringsJson import setupTextWindows, couchDBWindows, exampleDataWindows, restartPastaWindows
 from ..miscTools import restart
-from ..backend import Backend
+from ..guiCommunicate import Communicate
 
 class ConfigurationSetup(QWidget):
   """
   Main class
   """
-  def __init__(self, backend:Backend, callbackFinished:Callable[[],None]):
+  def __init__(self, comm:Communicate, callbackFinished:Callable[[],None]):
     """
     Initialization
 
     Args:
-      backend (Pasta): backend, not communication
+      comm (Communicate): communication
       callbackFinished (function): callback function to call upon end
     """
     super().__init__()
@@ -28,7 +28,7 @@ class ConfigurationSetup(QWidget):
     self.setMinimumHeight(500)
     self.setLayout(self.mainL)
     self.callbackFinished = callbackFinished
-    self.backend = backend
+    self.comm = comm
 
     #widget 1 = screen 1
     self.screen1W, screen1L = widgetAndLayout('V', self.mainL)
@@ -138,7 +138,7 @@ class ConfigurationSetup(QWidget):
       button = QMessageBox.question(self, "Example data", exampleDataWindows)
       if button == QMessageBox.Yes:
         self.progress1.show()
-        if (self.backend.basePath/'pastasExampleProject').exists():
+        if (self.comm.backend.basePath/'pastasExampleProject').exists():
           button1 = QMessageBox.question(self, "Example data", 'Data exists. Should I reset?')
           if button1 == QMessageBox.Yes:
             exampleData(True, self.callbackProgress)
