@@ -1,6 +1,6 @@
 """ Table Header dialog: change which colums are shown and in which order """
-from typing import Any
 from enum import Enum
+from typing import Any
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QListWidget, QLineEdit, QDialogButtonBox  # pylint: disable=no-name-in-module
 from ..guiStyle import IconButton, widgetAndLayout, showMessage
 from ..miscTools import restart

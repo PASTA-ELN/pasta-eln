@@ -1,7 +1,7 @@
 """ widget that shows the details of the items """
-from pathlib import Path
 import logging
 from enum import Enum
+from pathlib import Path
 from typing import Any
 import yaml
 from PySide6.QtWidgets import QScrollArea, QLabel, QTextEdit  # pylint: disable=no-name-in-module

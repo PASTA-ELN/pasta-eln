@@ -3,7 +3,6 @@ import logging
 from pathlib import Path
 from typing import Callable, Any
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QMessageBox, QFileDialog, QProgressBar    # pylint: disable=no-name-in-module
-
 from ..guiStyle import TextButton, widgetAndLayout
 from ..installationTools import couchdb, configuration, ontology, exampleData, createShortcut, installLinuxRoot
 from ..fixedStringsJson import setupTextLinux, rootInstallLinux, exampleDataLinux

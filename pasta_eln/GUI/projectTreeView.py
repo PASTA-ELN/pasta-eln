@@ -1,7 +1,7 @@
 """ Custom tree view on data model """
 import subprocess, os, platform, logging, shutil
-from pathlib import Path
 from enum import Enum
+from pathlib import Path
 from typing import Any
 from PySide6.QtWidgets import QWidget, QTreeView, QAbstractItemView, QMenu, QMessageBox # pylint: disable=no-name-in-module
 from PySide6.QtGui import QStandardItemModel, QStandardItem  # pylint: disable=no-name-in-module

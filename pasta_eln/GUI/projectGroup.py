@@ -1,7 +1,7 @@
 """ Table Header dialog: change which colums are shown and in which order """
 import json, platform
-from pathlib import Path
 from enum import Enum
+from pathlib import Path
 from typing import Any
 import qrcode
 from PIL.ImageQt import ImageQt

@@ -1,10 +1,9 @@
 """ widget that shows the table of the items """
-
 import itertools
 import re, logging
+from enum import Enum
 from pathlib import Path
 from typing import Any
-from enum import Enum
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QTableView, QFileDialog, QMessageBox, QHeaderView, QLineEdit, QComboBox, QMenu # pylint: disable=no-name-in-module
 from PySide6.QtCore import Qt, Slot, QSortFilterProxyModel, QModelIndex       # pylint: disable=no-name-in-module
 from PySide6.QtGui import QStandardItemModel, QStandardItem            # pylint: disable=no-name-in-module

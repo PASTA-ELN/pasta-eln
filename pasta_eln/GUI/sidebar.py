@@ -1,6 +1,6 @@
 """ Sidebar widget that includes the navigation items """
-from typing import Any
 from enum import Enum
+from typing import Any
 from PySide6.QtGui import QResizeEvent                                                                 # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QTreeWidget, QTreeWidgetItem, QFrame, QProgressBar # pylint: disable=no-name-in-module
 from PySide6.QtCore import Slot                                                                        # pylint: disable=no-name-in-module
