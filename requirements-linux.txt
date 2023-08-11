@@ -13,6 +13,3 @@ qrcode
 Pillow
 matplotlib
 cairosvg
-pytest
-pytest-qt
-pytest-qt-app
