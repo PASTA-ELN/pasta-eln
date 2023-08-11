@@ -25,7 +25,12 @@ def gui(request):
     return app, image_viewer, qtbot
 
 
-def test_app_launch(gui):
+def test_app_launch(gui: object) -> object:
+    """
+    Testing the application launch
+    @type gui: object
+    @param gui: Gui fixture passed during the test
+    """
     print("Running test_app_launch....")
     app, imageViewer, qtbot = gui
     assert imageViewer.sidebar is not None, "Sidebar not loaded!"
