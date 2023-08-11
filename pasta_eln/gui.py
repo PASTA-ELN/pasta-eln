@@ -1,6 +1,6 @@
 """ Graphical user interface includes all widgets """
 import os, logging, webbrowser, json, sys
-from typing import Any, Optional
+from typing import Any, Optional, Tuple
 from pathlib import Path
 from PySide6.QtWidgets import QMainWindow, QApplication, QFileDialog, QScrollArea # pylint: disable=no-name-in-module
 from PySide6.QtCore import Qt, Slot      # pylint: disable=no-name-in-module
@@ -223,7 +223,7 @@ class MainWindow(QMainWindow):
 
 ##############
 ## Main function
-def main() -> None:
+def main_gui() -> tuple[QApplication | QApplication, MainWindow]:
   """ Main method and entry point for commands """
   # logging has to be started first
   logPath = Path.home()/'pastaELN.log'
@@ -246,11 +246,11 @@ def main() -> None:
     logging.error('qtawesome: could not load. Likely matplotlib is included and can not coexist.')
     print('qtawesome: could not load. Likely matplotlib is included and can not coexist.')
   # end test coexistance
-  window.show()
-  app.exec()
   logging.info('End PASTA GUI')
-  return
+  return app, window
 
 # called by python3 -m pasta_eln.gui
 if __name__ == '__main__':
-  main()
+  app, window = main_gui()
+  window.show()
+  app.exec()
