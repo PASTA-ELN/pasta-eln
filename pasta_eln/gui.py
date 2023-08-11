@@ -234,7 +234,10 @@ def main_gui() -> tuple[QApplication | QApplication, MainWindow]:
     logging.getLogger(package).setLevel(logging.WARNING)
   logging.info('Start PASTA GUI')
   # remainder
-  app = QApplication()
+  if not QApplication.instance():
+    app = QApplication()
+  else:
+    app = QApplication.instance()
   window = MainWindow()
   logging.getLogger().setLevel(getattr(logging, window.backend.configuration['GUI']['loggingLevel']))
   theme = window.backend.configuration['GUI']['theme']

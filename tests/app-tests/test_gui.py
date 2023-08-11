@@ -17,7 +17,6 @@ def qtbot_session(qapp, request):
 @pytest.fixture(scope="module")
 def gui(request):
     print("Setting up GUI...")
-
     app, image_viewer = main_gui()
     qtbot = QtBot(app)
     # QTest.qWait(0.5 * 1000)
@@ -32,7 +31,8 @@ def test_app_launch(gui: object) -> object:
     @param gui: Gui fixture passed during the test
     """
     print("Running test_app_launch....")
-    app, imageViewer, qtbot = gui
-    assert imageViewer.sidebar is not None, "Sidebar not loaded!"
-    assert imageViewer.sidebar.widgetsList is not None, "Widgets not loaded!"
-    assert len(imageViewer.sidebar.widgetsList) == 1, "Widgets count does not match"
+    app, image_viewer, qtbot = gui
+    assert image_viewer.sidebar is not None, "Sidebar not loaded!"
+    assert image_viewer.sidebar.widgetsList is not None, "Widgets not loaded!"
+    assert len(image_viewer.sidebar.widgetsList) == 3, "Widgets count does not match"
+
