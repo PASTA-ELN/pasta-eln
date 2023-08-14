@@ -1,3 +1,12 @@
+#  PASTA-ELN and all its sub-parts are covered by the MIT license.
+#
+#  Copyright (c) 2023
+#
+#  Author: Jithu Murugan
+#  Filename: test_gui.py
+#
+#  You should have received a copy of the license with this file. Please refer the license file for more information.
+
 import pytest
 from pytestqt.exceptions import capture_exceptions
 from pytestqt.qtbot import QtBot
