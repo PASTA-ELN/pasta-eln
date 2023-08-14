@@ -1,2 +1,2 @@
 #!/bin/sh
-coverage run -m pytest tests/app-tests/ && coverage html -i
+coverage run -m pytest . && coverage html -i
