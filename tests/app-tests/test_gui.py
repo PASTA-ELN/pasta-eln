@@ -15,9 +15,9 @@ from pasta_eln.gui import main_gui
 
 
 @pytest.fixture(scope="module")
-def qtbot_session(qapp, request):
+def qtbot_session(qt_app, request):
     print("Setting up QTBOT.....")
-    result = QtBot(qapp)
+    result = QtBot(qt_app)
     with capture_exceptions():
         yield result
     print("Tearing down QTBOT.....")
@@ -33,7 +33,7 @@ def gui(request):
     return app, image_viewer, qtbot
 
 
-def test_app_launch(gui: object) -> object:
+def test_app_launch(gui: object):
     """
     Testing the application launch
     @type gui: object
