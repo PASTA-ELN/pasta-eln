@@ -13,6 +13,9 @@
   <property name="windowTitle">
    <string>Ontology Editor</string>
   </property>
+  <property name="toolTip">
+   <string/>
+  </property>
   <layout class="QGridLayout" name="gridLayout">
    <property name="leftMargin">
     <number>10</number>
@@ -65,7 +68,16 @@
            <number>5</number>
           </property>
           <item>
-           <widget class="QPushButton" name="addRowPushButton">
+           <widget class="QPushButton" name="addPropsRowPushButton">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="toolTip">
+             <string>Add a new property row to the above table with empty values</string>
+            </property>
             <property name="text">
              <string>+ Add</string>
             </property>
@@ -104,7 +116,10 @@
          </layout>
         </item>
         <item row="2" column="0">
-         <widget class="QTableView" name="structuralPropsTableView">
+         <widget class="QTableView" name="typePropsTableView">
+          <property name="toolTip">
+           <string>Table which lists and allows editing of all the properties assosciated with the above selected type</string>
+          </property>
           <property name="sortingEnabled">
            <bool>true</bool>
           </property>
@@ -143,29 +158,74 @@
            <number>5</number>
           </property>
           <item>
-           <widget class="QLabel" name="dataTypeLabel">
+           <widget class="QLabel" name="typeLabel">
             <property name="text">
              <string>Data Type</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QComboBox" name="typeComboBox"/>
-          </item>
-          <item>
-           <widget class="QLineEdit" name="structureNameLineEdit"/>
-          </item>
-          <item>
-           <widget class="QPushButton" name="typeDeletePushButton">
-            <property name="text">
-             <string>Delete</string>
+           <widget class="QComboBox" name="typeComboBox">
+            <property name="toolTip">
+             <string>Select the type from the loaded ontology</string>
+            </property>
+            <property name="sizeAdjustPolicy">
+             <enum>QComboBox::AdjustToContents</enum>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="structureAddPushButton">
+           <widget class="QLineEdit" name="typeLabelLineEdit">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="toolTip">
+             <string>Modify the label property of the type</string>
+            </property>
             <property name="text">
-             <string>+ Structure Level</string>
+             <string/>
+            </property>
+            <property name="placeholderText">
+             <string>Modify the type label here</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="addTypePushButton">
+            <property name="toolTip">
+             <string>Add a new type other than a structure</string>
+            </property>
+            <property name="text">
+             <string>+ Add Generic Type</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="structureTypeAddPushButton">
+            <property name="toolTip">
+             <string>Add new structure level to the ontology (x0, x1, x2 ...)</string>
+            </property>
+            <property name="text">
+             <string>+ Add Structure Type</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="typeDeletePushButton">
+            <property name="toolTip">
+             <string>Delete the type with the full properties completely</string>
+            </property>
+            <property name="text">
+             <string>Delete</string>
             </property>
            </widget>
           </item>
@@ -209,14 +269,20 @@
            </spacer>
           </item>
           <item>
-           <widget class="QPushButton" name="loadPushButton">
+           <widget class="QPushButton" name="loadOntologyPushButton">
+            <property name="toolTip">
+             <string>Load ontology from local database</string>
+            </property>
             <property name="text">
              <string>Load</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="savePushButton">
+           <widget class="QPushButton" name="saveOntologyPushButton">
+            <property name="toolTip">
+             <string>Save loaded ontology in local database</string>
+            </property>
             <property name="text">
              <string>Save</string>
             </property>
@@ -224,6 +290,9 @@
           </item>
           <item>
            <widget class="QPushButton" name="helpPushButton">
+            <property name="toolTip">
+             <string>Navigate to the help page</string>
+            </property>
             <property name="text">
              <string>Help</string>
             </property>
@@ -231,6 +300,9 @@
           </item>
           <item>
            <widget class="QPushButton" name="cancelPushButton">
+            <property name="toolTip">
+             <string>Close the editor</string>
+            </property>
             <property name="text">
              <string>Cancel</string>
             </property>

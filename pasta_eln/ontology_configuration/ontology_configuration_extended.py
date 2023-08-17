@@ -7,34 +7,20 @@
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import sys
-from typing import Union
+from typing import Union, Any
 
 import PySide6.QtCore
 import PySide6.QtGui
 import PySide6.QtWidgets
 
 from PySide6 import QtWidgets
-from PySide6.QtWidgets import QApplication, QStyledItemDelegate, QLineEdit
+from PySide6.QtWidgets import QApplication, QStyledItemDelegate, QLineEdit, QRadioButton
 
+from pasta_eln.ontology_configuration.delete_column_delegate import DeleteColumnDelegate
 from pasta_eln.ontology_configuration.ontology_configuration import Ui_OntologyConfigurationBaseForm
 from pasta_eln.ontology_configuration.ontology_tableview_datamodel import OntologyTableViewModel
-
-
-class ExampleDelegate(QStyledItemDelegate):
-
-  def paint(self, painter: PySide6.QtGui.QPainter, option: PySide6.QtWidgets.QStyleOptionViewItem,
-            index: Union[PySide6.QtCore.QModelIndex, PySide6.QtCore.QPersistentModelIndex]) -> None:
-    super().paint(painter, option, index)
-
-  def createEditor(self, parent: PySide6.QtWidgets.QWidget, option: PySide6.QtWidgets.QStyleOptionViewItem,
-                   index: Union[
-                     PySide6.QtCore.QModelIndex, PySide6.QtCore.QPersistentModelIndex]) -> PySide6.QtWidgets.QWidget:
-    return super().createEditor(parent, option, index)
-
-  # def createEditor(self, parent, option, index):
-  #   line_edit = QLineEdit(parent)
-  #   line_edit.setMaxLength(3)
-  #   return line_edit
+from pasta_eln.ontology_configuration.reorder_column_delegate import ReorderColumnDelegate
+from pasta_eln.ontology_configuration.required_column_delegate import RequiredColumnDelegate
 
 
 class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
@@ -47,7 +33,9 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     self.data_model = OntologyTableViewModel()
     self.structures = None
     self.table_model = PySide6.QtGui.QStandardItemModel(6, 6)
-    self.delegate = ExampleDelegate()
+    self.required_column_delegate = RequiredColumnDelegate()
+    self.delete_column_delegate = DeleteColumnDelegate()
+    self.reorder_column_delegate = ReorderColumnDelegate()
     self.db = db_instance
     self.logger = logger
 
@@ -55,10 +43,13 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
 
   def structure_combo_box_changed(self, value):
     print("value: " + value)
-    self.data_model.update(self.structures.get(value).get('prop'))
+    if value:
+      self.data_model.update(self.structures.get(value).get('prop'))
+      self.typePropsTableView.reset()
+      self.typeLabelLineEdit.setText(self.structures.get(value).get('label'))
 
   def setup_slots(self):
-    self.loadPushButton.clicked.connect(self.load_ontology_data)
+    self.loadOntologyPushButton.clicked.connect(self.load_ontology_data)
     self.typeComboBox.currentTextChanged.connect(self.structure_combo_box_changed)
 
   def load_ontology_data(self):
@@ -69,7 +60,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     Returns:
 
     """
-    header = self.structuralPropsTableView.horizontalHeader()
+    header = self.typePropsTableView.horizontalHeader()
     header.setSectionResizeMode(QtWidgets.QHeaderView.ResizeToContents)
     ontology_data = self.db['-ontology-']
     self.structures = dict([(data, ontology_data[data])
@@ -78,15 +69,18 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     self.typeComboBox.clear()
     self.typeComboBox.addItems(self.structures.keys())
     self.typeComboBox.setCurrentIndex(0)
+    self.typeComboBox.adjustSize()
     self.data_model.update(self.structures.get(self.typeComboBox.currentText()).get('prop'))
-    # self.structuralPropsTableView.setItemDelegateForColumn(0, self.delegate)
-    # self.structuralPropsTableView.setItemDelegate(self.delegate)
-    self.structuralPropsTableView.setModel(self.data_model)
-    # self.structuralPropsTableView.setModel(self.table_model)
+    self.typePropsTableView.setItemDelegateForColumn(4, self.required_column_delegate)
+    self.typePropsTableView.setItemDelegateForColumn(6, self.delete_column_delegate)
+    self.typePropsTableView.setItemDelegateForColumn(7, self.reorder_column_delegate)
+    # self.typePropsTableView.setItemDelegate(self.delegate)
+    self.typePropsTableView.setModel(self.data_model)
+    # self.typePropsTableView.setModel(self.table_model)
 
     # for structure_key in structures:
     #   self.headerLabel.setText(str(ontology_data[structure_key]['label']))
-    #   self.structuralPropsTableView.setModel(data_model)
+    #   self.typePropsTableView.setModel(data_model)
     #   data_model.update(ontology_data)
 
     print("Clicked!!")
