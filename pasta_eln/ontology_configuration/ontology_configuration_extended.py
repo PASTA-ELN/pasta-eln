@@ -52,6 +52,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
   def setup_slots(self):
     self.loadOntologyPushButton.clicked.connect(self.load_ontology_data)
     self.typeComboBox.currentTextChanged.connect(self.structure_combo_box_changed)
+    self.addPropsRowPushButton.clicked.connect(self.data_model.add_data_row)
 
   def load_ontology_data(self):
     """

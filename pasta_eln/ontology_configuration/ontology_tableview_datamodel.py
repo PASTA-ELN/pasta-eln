@@ -119,3 +119,7 @@ class OntologyTableViewModel(QAbstractTableModel):
       self.db.insert(shift_position, data_to_be_pushed)
       print(f"Reorder (row: {row}, newPos: {shift_position}, data: {data_to_be_pushed})")
       self.layoutChanged.emit()
+
+  def add_data_row(self):
+    self.db.insert(len(self.db), {})
+    self.layoutChanged.emit()
