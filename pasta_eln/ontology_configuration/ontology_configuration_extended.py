@@ -35,7 +35,9 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     self.table_model = PySide6.QtGui.QStandardItemModel(6, 6)
     self.required_column_delegate = RequiredColumnDelegate()
     self.delete_column_delegate = DeleteColumnDelegate()
+    self.delete_column_delegate.delete_clicked_signal.connect(self.data_model.delete_data)
     self.reorder_column_delegate = ReorderColumnDelegate()
+    self.reorder_column_delegate.re_order_signal.connect(self.data_model.re_order_data)
     self.db = db_instance
     self.logger = logger
 
@@ -45,7 +47,6 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     print("value: " + value)
     if value:
       self.data_model.update(self.structures.get(value).get('prop'))
-      self.typePropsTableView.reset()
       self.typeLabelLineEdit.setText(self.structures.get(value).get('label'))
 
   def setup_slots(self):

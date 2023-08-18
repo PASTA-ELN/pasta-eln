@@ -9,7 +9,7 @@
 from typing import Union, Any
 
 import PySide6.QtCore
-from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt, QPersistentModelIndex, QObject
+from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt, QPersistentModelIndex, Slot
 
 
 class OntologyTableViewModel(QAbstractTableModel):
@@ -55,6 +55,7 @@ class OntologyTableViewModel(QAbstractTableModel):
     """
     print('Updating Model')
     self.db = ontology_structure_prop
+    self.layoutChanged.emit()
     print('Database : {0}'.format(self.db))
 
   def rowCount(self, parent=QModelIndex()):
@@ -87,3 +88,34 @@ class OntologyTableViewModel(QAbstractTableModel):
     return (Qt.ItemIsEditable
             | Qt.ItemIsSelectable
             | Qt.ItemIsEnabled)
+
+  @Slot(int, int)
+  def delete_data(self, row, column):
+      """
+
+      Args:
+
+
+      Returns:
+
+      """
+      data_deleted = self.db[row]
+      self.db.pop(row)
+      print(f"Deleted (row: {row}, data: {data_deleted})")
+      self.layoutChanged.emit()
+
+  @Slot(int)
+  def re_order_data(self, row):
+      """
+
+      Args:
+
+
+      Returns:
+
+      """
+      data_to_be_pushed = self.db.pop(row)
+      shift_position = row - 1 if row - 1 >= 0 else 0;
+      self.db.insert(shift_position, data_to_be_pushed)
+      print(f"Reorder (row: {row}, newPos: {shift_position}, data: {data_to_be_pushed})")
+      self.layoutChanged.emit()
