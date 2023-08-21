@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1109</width>
-    <height>635</height>
+    <width>1131</width>
+    <height>782</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -30,324 +30,428 @@
     <number>10</number>
    </property>
    <item row="0" column="0">
-    <widget class="QScrollArea" name="scrollArea">
-     <property name="widgetResizable">
-      <bool>true</bool>
+    <widget class="QWidget" name="mainWidget" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
      </property>
-     <widget class="QWidget" name="scrollAreaWidgetContents">
+     <widget class="QWidget" name="verticalLayoutWidget_2">
       <property name="geometry">
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>1087</width>
-        <height>613</height>
+        <width>1111</width>
+        <height>761</height>
        </rect>
       </property>
-      <widget class="QWidget" name="verticalLayoutWidget">
-       <property name="geometry">
-        <rect>
-         <x>9</x>
-         <y>10</y>
-         <width>1031</width>
-         <height>571</height>
-        </rect>
+      <layout class="QGridLayout" name="mainGridLayout" rowstretch="0,0,0,0,0,0,0,0,0,0,0">
+       <property name="leftMargin">
+        <number>30</number>
        </property>
-       <layout class="QGridLayout" name="gridLayout_2">
-        <item row="3" column="0">
-         <layout class="QHBoxLayout" name="attachmentsHeaderHorizontalLayout">
-          <property name="leftMargin">
-           <number>40</number>
-          </property>
-          <property name="topMargin">
-           <number>5</number>
-          </property>
-          <property name="rightMargin">
-           <number>40</number>
-          </property>
-          <property name="bottomMargin">
-           <number>5</number>
-          </property>
-          <item>
-           <widget class="QLabel" name="attachmentsHeaderLabel">
-            <property name="text">
-             <string>Attachments</string>
-            </property>
-            <property name="margin">
-             <number>0</number>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item row="6" column="0">
-         <layout class="QHBoxLayout" name="structureTablehorizontalLayout">
-          <property name="leftMargin">
-           <number>40</number>
-          </property>
-          <property name="topMargin">
-           <number>5</number>
-          </property>
-          <property name="rightMargin">
-           <number>40</number>
-          </property>
-          <property name="bottomMargin">
-           <number>5</number>
-          </property>
-          <item>
-           <widget class="QPushButton" name="addPropsRowPushButton">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="toolTip">
-             <string>Add a new property row to the above table with empty values</string>
-            </property>
-            <property name="text">
-             <string>+ Add</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="headingAddpushButton">
-            <property name="text">
-             <string>+ Heading</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="addAtachmentPushButton">
-            <property name="text">
-             <string>+ Attachment</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <spacer name="horizontalSpacer">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeType">
-             <enum>QSizePolicy::Minimum</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-         </layout>
-        </item>
-        <item row="5" column="0">
-         <widget class="QTableView" name="attachmentsTableView">
-          <property name="toolTip">
-           <string>Table which displays the attchment for the above selected data type</string>
-          </property>
-          <attribute name="horizontalHeaderStretchLastSection">
-           <bool>true</bool>
-          </attribute>
-         </widget>
-        </item>
-        <item row="0" column="0">
-         <layout class="QHBoxLayout" name="headerHorizontalLayout">
-          <property name="leftMargin">
-           <number>40</number>
-          </property>
-          <property name="topMargin">
-           <number>20</number>
-          </property>
-          <property name="rightMargin">
-           <number>40</number>
-          </property>
-          <property name="bottomMargin">
-           <number>20</number>
-          </property>
-          <item>
-           <widget class="QLabel" name="headerLabel">
-            <property name="text">
-             <string>Edit Questionnares</string>
-            </property>
-            <property name="margin">
-             <number>0</number>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <spacer name="headerHorizontalSpacer">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item>
-           <widget class="QPushButton" name="loadOntologyPushButton">
-            <property name="toolTip">
-             <string>Load ontology from local database</string>
-            </property>
-            <property name="text">
-             <string>Load</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="saveOntologyPushButton">
-            <property name="toolTip">
-             <string>Save loaded ontology in local database</string>
-            </property>
-            <property name="text">
-             <string>Save</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="helpPushButton">
-            <property name="toolTip">
-             <string>Navigate to the help page</string>
-            </property>
-            <property name="text">
-             <string>Help</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="cancelPushButton">
-            <property name="toolTip">
-             <string>Close the editor</string>
-            </property>
-            <property name="text">
-             <string>Cancel</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item row="1" column="0">
-         <layout class="QHBoxLayout" name="datatypeHorizontalLayout">
-          <property name="leftMargin">
-           <number>40</number>
-          </property>
-          <property name="topMargin">
-           <number>5</number>
-          </property>
-          <property name="rightMargin">
-           <number>40</number>
-          </property>
-          <property name="bottomMargin">
-           <number>5</number>
-          </property>
-          <item>
-           <widget class="QLabel" name="typeLabel">
-            <property name="text">
-             <string>Data Type</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QComboBox" name="typeComboBox">
-            <property name="toolTip">
-             <string>Select the type from the loaded ontology</string>
-            </property>
-            <property name="sizeAdjustPolicy">
-             <enum>QComboBox::AdjustToContents</enum>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLineEdit" name="typeLabelLineEdit">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>0</height>
-             </size>
-            </property>
-            <property name="toolTip">
-             <string>Modify the label property of the type</string>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-            <property name="placeholderText">
-             <string>Modify the type label here</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="addTypePushButton">
-            <property name="toolTip">
-             <string>Add a new type other than a structure</string>
-            </property>
-            <property name="text">
-             <string>+ Add Generic Type</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="structureTypeAddPushButton">
-            <property name="toolTip">
-             <string>Add new structure level to the ontology (x0, x1, x2 ...)</string>
-            </property>
-            <property name="text">
-             <string>+ Add Structure Type</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="typeDeletePushButton">
-            <property name="toolTip">
-             <string>Delete the type with the full properties completely</string>
-            </property>
-            <property name="text">
-             <string>Delete</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item row="2" column="0">
-         <widget class="QTableView" name="typePropsTableView">
-          <property name="toolTip">
-           <string>Table which lists and allows editing of all the properties assosciated with the above selected type</string>
-          </property>
-          <property name="sortingEnabled">
-           <bool>true</bool>
-          </property>
-          <attribute name="horizontalHeaderCascadingSectionResizes">
-           <bool>true</bool>
-          </attribute>
-          <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
-           <bool>true</bool>
-          </attribute>
-          <attribute name="horizontalHeaderStretchLastSection">
-           <bool>true</bool>
-          </attribute>
-          <attribute name="verticalHeaderCascadingSectionResizes">
-           <bool>true</bool>
-          </attribute>
-          <attribute name="verticalHeaderShowSortIndicator" stdset="0">
-           <bool>true</bool>
-          </attribute>
-          <attribute name="verticalHeaderStretchLastSection">
-           <bool>false</bool>
-          </attribute>
-         </widget>
-        </item>
-       </layout>
-      </widget>
+       <property name="rightMargin">
+        <number>30</number>
+       </property>
+       <item row="5" column="0">
+        <layout class="QHBoxLayout" name="propsTableButtonHorizontalLayout">
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>5</number>
+         </property>
+         <property name="rightMargin">
+          <number>40</number>
+         </property>
+         <property name="bottomMargin">
+          <number>5</number>
+         </property>
+         <item>
+          <widget class="QPushButton" name="addPropsRowPushButton">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>200</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="toolTip">
+            <string>Add a new property row to the above table with empty values</string>
+           </property>
+           <property name="text">
+            <string>+ Add</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="propsButtonLayoutHorizontalSpacer">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Expanding</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+       <item row="7" column="0">
+        <layout class="QHBoxLayout" name="attachmentsHeaderHorizontalLayout">
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>5</number>
+         </property>
+         <property name="rightMargin">
+          <number>40</number>
+         </property>
+         <property name="bottomMargin">
+          <number>5</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="attachmentsHeaderLabel">
+           <property name="text">
+            <string>Attachments</string>
+           </property>
+           <property name="margin">
+            <number>0</number>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="10" column="0">
+        <layout class="QHBoxLayout" name="structureTablehorizontalLayout">
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>5</number>
+         </property>
+         <property name="rightMargin">
+          <number>40</number>
+         </property>
+         <property name="bottomMargin">
+          <number>5</number>
+         </property>
+         <item>
+          <widget class="QPushButton" name="addAtachmentPushButton">
+           <property name="minimumSize">
+            <size>
+             <width>200</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>+ Attachment</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Expanding</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+       <item row="3" column="0">
+        <widget class="QTableView" name="typePropsTableView">
+         <property name="toolTip">
+          <string>Table which lists and allows editing of all the properties assosciated with the above selected type</string>
+         </property>
+         <property name="sortingEnabled">
+          <bool>true</bool>
+         </property>
+         <attribute name="horizontalHeaderCascadingSectionResizes">
+          <bool>true</bool>
+         </attribute>
+         <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
+          <bool>true</bool>
+         </attribute>
+         <attribute name="horizontalHeaderStretchLastSection">
+          <bool>true</bool>
+         </attribute>
+         <attribute name="verticalHeaderCascadingSectionResizes">
+          <bool>true</bool>
+         </attribute>
+         <attribute name="verticalHeaderShowSortIndicator" stdset="0">
+          <bool>true</bool>
+         </attribute>
+         <attribute name="verticalHeaderStretchLastSection">
+          <bool>false</bool>
+         </attribute>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <layout class="QHBoxLayout" name="headerHorizontalLayout">
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>20</number>
+         </property>
+         <property name="rightMargin">
+          <number>40</number>
+         </property>
+         <property name="bottomMargin">
+          <number>20</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="headerLabel">
+           <property name="text">
+            <string>Edit Questionnares</string>
+           </property>
+           <property name="margin">
+            <number>0</number>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="headerHorizontalSpacer">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QPushButton" name="loadOntologyPushButton">
+           <property name="toolTip">
+            <string>Load ontology from local database</string>
+           </property>
+           <property name="text">
+            <string>Load</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="saveOntologyPushButton">
+           <property name="toolTip">
+            <string>Save loaded ontology in local database</string>
+           </property>
+           <property name="text">
+            <string>Save</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="helpPushButton">
+           <property name="toolTip">
+            <string>Navigate to the help page</string>
+           </property>
+           <property name="text">
+            <string>Help</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="cancelPushButton">
+           <property name="toolTip">
+            <string>Close the editor</string>
+           </property>
+           <property name="text">
+            <string>Cancel</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="2" column="0">
+        <layout class="QHBoxLayout" name="propsCategoryHorizontalLayout">
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>5</number>
+         </property>
+         <property name="rightMargin">
+          <number>40</number>
+         </property>
+         <property name="bottomMargin">
+          <number>5</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="propsCategoryLabel">
+           <property name="text">
+            <string>Type Category</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="propsCategoryComboBox">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="toolTip">
+            <string>Select the category of properties to be listed below in the table</string>
+           </property>
+           <property name="sizeAdjustPolicy">
+            <enum>QComboBox::AdjustToContents</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="addPropsCategoryLineEdit">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="toolTip">
+            <string>Enter the new category to be added to the data type</string>
+           </property>
+           <property name="placeholderText">
+            <string>Enter the new category to be added</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="addPropsCategoryPushButton">
+           <property name="toolTip">
+            <string>Add a new category of props to the data type, table below will be reset to empty list!</string>
+           </property>
+           <property name="statusTip">
+            <string/>
+           </property>
+           <property name="text">
+            <string>+ Add Category</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="9" column="0">
+        <widget class="QTableView" name="attachmentsTableView">
+         <property name="toolTip">
+          <string>Table which displays the attchment for the above selected data type</string>
+         </property>
+         <attribute name="horizontalHeaderStretchLastSection">
+          <bool>true</bool>
+         </attribute>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <layout class="QHBoxLayout" name="datatypeHorizontalLayout">
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>5</number>
+         </property>
+         <property name="rightMargin">
+          <number>40</number>
+         </property>
+         <property name="bottomMargin">
+          <number>5</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="typeLabel">
+           <property name="text">
+            <string>Data Type</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="typeComboBox">
+           <property name="toolTip">
+            <string>Select the type from the loaded ontology</string>
+           </property>
+           <property name="sizeAdjustPolicy">
+            <enum>QComboBox::AdjustToContents</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="typeLabelLineEdit">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="toolTip">
+            <string>Modify the label property of the type</string>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="placeholderText">
+            <string>Modify the type label here</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="addTypePushButton">
+           <property name="toolTip">
+            <string>Add a new type other than a structure</string>
+           </property>
+           <property name="text">
+            <string>+ Add Generic Type</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="structureTypeAddPushButton">
+           <property name="toolTip">
+            <string>Add new structure level to the ontology (x0, x1, x2 ...)</string>
+           </property>
+           <property name="text">
+            <string>+ Add Structure Type</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="typeDeletePushButton">
+           <property name="toolTip">
+            <string>Delete the type with the full properties completely</string>
+           </property>
+           <property name="text">
+            <string>Delete</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
      </widget>
     </widget>
    </item>
