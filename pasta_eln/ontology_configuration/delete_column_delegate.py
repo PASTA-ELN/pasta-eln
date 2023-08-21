@@ -39,7 +39,7 @@ class DeleteColumnDelegate(QStyledItemDelegate):
     QApplication.style().drawControl(QStyle.CE_PushButton, opt, painter, button)
 
   def createEditor(self, parent: QWidget, option: QStyleOptionViewItem,
-                   index: Union[QModelIndex, QPersistentModelIndex]) -> QWidget:
+                   index: Union[QModelIndex, QPersistentModelIndex]) -> None:
     return None
 
   def editorEvent(self, event: QEvent, model: QAbstractItemModel,

@@ -7,14 +7,11 @@
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import sys
-from typing import Union, Any
-
-import PySide6.QtCore
-import PySide6.QtGui
-import PySide6.QtWidgets
 
 from PySide6 import QtWidgets
-from PySide6.QtWidgets import QApplication, QStyledItemDelegate, QLineEdit, QRadioButton
+from PySide6.QtWidgets import QApplication
+from cloudant.database import CouchDatabase
+from cloudant.document import Document
 
 from pasta_eln.ontology_configuration.delete_column_delegate import DeleteColumnDelegate
 from pasta_eln.ontology_configuration.ontology_configuration import Ui_OntologyConfigurationBaseForm
@@ -24,35 +21,36 @@ from pasta_eln.ontology_configuration.required_column_delegate import RequiredCo
 
 
 class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
-  def __init__(self, logger, db_instance):
+  def __init__(self, logger, db_instance: CouchDatabase):
     """
 
     Args:
-      db_instance: Couch DB Instance passed by the parent
+      db_instance (CouchDatabase): Couch DB Instance passed by the parent
     """
     self.data_model = OntologyTableViewModel()
     self.structures = None
-    self.table_model = PySide6.QtGui.QStandardItemModel(6, 6)
     self.required_column_delegate = RequiredColumnDelegate()
     self.delete_column_delegate = DeleteColumnDelegate()
-    self.delete_column_delegate.delete_clicked_signal.connect(self.data_model.delete_data)
     self.reorder_column_delegate = ReorderColumnDelegate()
-    self.reorder_column_delegate.re_order_signal.connect(self.data_model.re_order_data)
-    self.db = db_instance
+    self.db: CouchDatabase = db_instance
+    self.ontology_data: Document = self.db['-ontology-']
     self.logger = logger
 
-    print("")
-
   def structure_combo_box_changed(self, value):
-    print("value: " + value)
     if value:
       self.data_model.update(self.structures.get(value).get('prop'))
       self.typeLabelLineEdit.setText(self.structures.get(value).get('label'))
 
   def setup_slots(self):
+    # Slots for the buttons
     self.loadOntologyPushButton.clicked.connect(self.load_ontology_data)
     self.typeComboBox.currentTextChanged.connect(self.structure_combo_box_changed)
     self.addPropsRowPushButton.clicked.connect(self.data_model.add_data_row)
+    self.saveOntologyPushButton.clicked.connect(self.save_ontology)
+
+    # Slots for the delegates
+    self.delete_column_delegate.delete_clicked_signal.connect(self.data_model.delete_data)
+    self.reorder_column_delegate.re_order_signal.connect(self.data_model.re_order_data)
 
   def load_ontology_data(self):
     """
@@ -64,10 +62,9 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     """
     header = self.typePropsTableView.horizontalHeader()
     header.setSectionResizeMode(QtWidgets.QHeaderView.ResizeToContents)
-    ontology_data = self.db['-ontology-']
-    self.structures = dict([(data, ontology_data[data])
-                            for data in ontology_data
-                            if type(ontology_data[data]) is dict])
+    self.structures = dict([(data, self.ontology_data[data])
+                            for data in self.ontology_data
+                            if type(self.ontology_data[data]) is dict])
     self.typeComboBox.clear()
     self.typeComboBox.addItems(self.structures.keys())
     self.typeComboBox.setCurrentIndex(0)
@@ -87,8 +84,14 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
 
     print("Clicked!!")
 
+  def save_ontology(self):
+    """
+    Save the modified ontology data in database
+    """
+    self.ontology_data.save()
 
-def get_db(db_name: str):
+
+def get_db(db_name: str) -> CouchDatabase:
   """Gets the database instance
 
   Args:

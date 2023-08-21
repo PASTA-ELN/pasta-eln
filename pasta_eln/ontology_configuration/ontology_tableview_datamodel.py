@@ -66,7 +66,7 @@ class OntologyTableViewModel(QAbstractTableModel):
 
   def setData(self, index: Union[PySide6.QtCore.QModelIndex, PySide6.QtCore.QPersistentModelIndex], value: Any,
               role: int = ...) -> bool:
-    if role == Qt.EditRole:
+    if role == Qt.EditRole or role == PySide6.QtCore.Qt.UserRole:
       prop_row_index = index.row()
       prop = self.data_name_map.get(index.column())
       self.db[prop_row_index][prop] = value
@@ -76,7 +76,10 @@ class OntologyTableViewModel(QAbstractTableModel):
 
   def data(self, index: Union[QModelIndex, QPersistentModelIndex],
            role: int = ...) -> Any:
-    if  index.isValid() and (role == Qt.DisplayRole or role == Qt.EditRole):
+    if (index.isValid()
+        and (role == Qt.DisplayRole
+             or role == Qt.EditRole
+             or role == PySide6.QtCore.Qt.UserRole)):
       row = index.row()
       column = index.column()
       value = self.db[row].get(self.data_name_map.get(column))
@@ -91,34 +94,34 @@ class OntologyTableViewModel(QAbstractTableModel):
 
   @Slot(int, int)
   def delete_data(self, row, column):
-      """
+    """
 
-      Args:
+    Args:
 
 
-      Returns:
+    Returns:
 
-      """
-      data_deleted = self.db[row]
-      self.db.pop(row)
-      print(f"Deleted (row: {row}, data: {data_deleted})")
-      self.layoutChanged.emit()
+    """
+    data_deleted = self.db[row]
+    self.db.pop(row)
+    print(f"Deleted (row: {row}, data: {data_deleted})")
+    self.layoutChanged.emit()
 
   @Slot(int)
   def re_order_data(self, row):
-      """
+    """
 
-      Args:
+    Args:
 
 
-      Returns:
+    Returns:
 
-      """
-      data_to_be_pushed = self.db.pop(row)
-      shift_position = row - 1 if row - 1 >= 0 else 0;
-      self.db.insert(shift_position, data_to_be_pushed)
-      print(f"Reorder (row: {row}, newPos: {shift_position}, data: {data_to_be_pushed})")
-      self.layoutChanged.emit()
+    """
+    data_to_be_pushed = self.db.pop(row)
+    shift_position = row - 1 if row - 1 >= 0 else 0;
+    self.db.insert(shift_position, data_to_be_pushed)
+    print(f"Reorder (row: {row}, newPos: {shift_position}, data: {data_to_be_pushed})")
+    self.layoutChanged.emit()
 
   def add_data_row(self):
     self.db.insert(len(self.db), {})
