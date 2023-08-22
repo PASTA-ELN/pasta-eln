@@ -206,6 +206,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     Save the modified ontology data in database
     """
     self.ontology_data.save()
+    show_message("Ontology data saved successfully..")
 
   def clear_inputs(self):
     self.addPropsCategoryLineEdit.clear()
