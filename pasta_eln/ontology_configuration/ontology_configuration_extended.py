@@ -7,9 +7,10 @@
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import sys
+from typing import Any
 
 from PySide6 import QtWidgets
-from PySide6.QtWidgets import QApplication, QMessageBox
+from PySide6.QtWidgets import QApplication
 from cloudant.database import CouchDatabase
 from cloudant.document import Document
 
@@ -123,9 +124,6 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
   def create_type_accepted_callback(self):
     """Callback for the OK button of CreateTypeDialog
 
-    Args:
-        data
-
     Returns:
 
     """
@@ -137,19 +135,13 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
   def create_type_rejected_callback(self):
     """Callback for the cancel button of CreateTypeDialog
 
-    Args:
-        data
-
     Returns:
         None
     """
     self.create_type_dialog.clear_ui()
 
-  def show_create_type_dialog(self, next_structure_title: str):
+  def show_create_type_dialog(self):
     """Opens a dialog which allows the user to enter the details to create a new type
-
-    Args:
-        next_structure_title: str
 
     Returns:
         None
@@ -251,7 +243,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
       show_message(f"Type (title: {title} label: {label}) has been added....")
 
 
-def get_db(db_name: str) -> CouchDatabase:
+def get_db(db_name: str) -> Any | None:
   """Gets the database instance
 
   Args:
