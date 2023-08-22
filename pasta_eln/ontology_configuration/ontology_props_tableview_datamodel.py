@@ -3,7 +3,7 @@
 #  Copyright (c) 2023
 #
 #  Author: Jithu Murugan
-#  Filename: ontology_tableview_datamodel.py
+#  Filename: ontology_props_tableview_datamodel.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 from typing import Union, Any
@@ -25,7 +25,7 @@ class OntologyTableViewModel(QAbstractTableModel):
       *args:
     """
     super().__init__(parent)
-    self.db = None
+    self.props_data_set = None
     self.data_name_map = {
       0: "name",
       1: "query",
@@ -37,29 +37,29 @@ class OntologyTableViewModel(QAbstractTableModel):
       7: "re-order"
     }
     self.header_values = list(self.data_name_map.values())
-    self.columns_count = 8
+    self.columns_count = len(self.header_values)
 
   def headerData(self, section: int, orientation: PySide6.QtCore.Qt.Orientation, role: int = ...) -> Any:
     if orientation == Qt.Horizontal and role == Qt.DisplayRole:
       return self.header_values[section]
     return super().headerData(section, orientation, role)
 
-  def update(self, ontology_structure_prop):
+  def update(self, ontology_props):
     """
 
     Args:
-        ontology_structure_prop:
+        ontology_props:
 
     Returns:
 
     """
     print('Updating Model')
-    self.db = ontology_structure_prop
+    self.props_data_set = ontology_props
     self.layoutChanged.emit()
-    print('Database : {0}'.format(self.db))
+    print('Database : {0}'.format(self.props_data_set))
 
   def rowCount(self, parent=QModelIndex()):
-    return len(self.db)
+    return len(self.props_data_set)
 
   def columnCount(self, parent=QModelIndex()):
     return self.columns_count
@@ -69,8 +69,8 @@ class OntologyTableViewModel(QAbstractTableModel):
     if role == Qt.EditRole or role == PySide6.QtCore.Qt.UserRole:
       prop_row_index = index.row()
       prop = self.data_name_map.get(index.column())
-      self.db[prop_row_index][prop] = value
-      self.dataChanged.emit(index, index, [Qt.EditRole])
+      self.props_data_set[prop_row_index][prop] = value
+      self.dataChanged.emit(index, index, role)
       return True
     return False
 
@@ -82,7 +82,7 @@ class OntologyTableViewModel(QAbstractTableModel):
              or role == PySide6.QtCore.Qt.UserRole)):
       row = index.row()
       column = index.column()
-      value = self.db[row].get(self.data_name_map.get(column))
+      value = self.props_data_set[row].get(self.data_name_map.get(column))
       return str(value if value else '')
     else:
       return None
@@ -102,8 +102,8 @@ class OntologyTableViewModel(QAbstractTableModel):
     Returns:
 
     """
-    data_deleted = self.db[row]
-    self.db.pop(row)
+    data_deleted = self.props_data_set[row]
+    self.props_data_set.pop(row)
     print(f"Deleted (row: {row}, data: {data_deleted})")
     self.layoutChanged.emit()
 
@@ -117,12 +117,13 @@ class OntologyTableViewModel(QAbstractTableModel):
     Returns:
 
     """
-    data_to_be_pushed = self.db.pop(row)
-    shift_position = row - 1 if row - 1 >= 0 else 0;
-    self.db.insert(shift_position, data_to_be_pushed)
+    data_to_be_pushed = self.props_data_set.pop(row)
+    shift_position = row - 1
+    shift_position = shift_position if shift_position > 0 else 0
+    self.props_data_set.insert(shift_position, data_to_be_pushed)
     print(f"Reorder (row: {row}, newPos: {shift_position}, data: {data_to_be_pushed})")
     self.layoutChanged.emit()
 
   def add_data_row(self):
-    self.db.insert(len(self.db), {})
+    self.props_data_set.insert(len(self.props_data_set), {})
     self.layoutChanged.emit()

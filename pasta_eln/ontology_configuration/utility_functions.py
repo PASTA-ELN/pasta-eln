@@ -8,7 +8,8 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 from PySide6.QtCore import QEvent
 from PySide6.QtGui import QMouseEvent
-from PySide6.QtWidgets import QStyleOptionViewItem
+from PySide6.QtWidgets import QStyleOptionViewItem, QMessageBox
+from cloudant.document import Document
 
 
 def is_click_within_bounds(event: QEvent, option: QStyleOptionViewItem) -> bool:
@@ -30,3 +31,37 @@ def is_click_within_bounds(event: QEvent, option: QStyleOptionViewItem) -> bool:
       if r.top() < click_y < r.top() + r.height():
         return True
   return False
+
+
+def adjust_ontology_data_to_v3(ontology_doc: Document) -> None:
+  """Correct the ontology data and add missing information if the loaded data is of version < 3.0
+
+  Args:
+      ontology_doc: Ontology document loaded from the database
+
+  Returns:
+      None
+  """
+  type_structures = dict([(data, ontology_doc[data])
+                          for data in ontology_doc
+                          if type(ontology_doc[data]) is dict])
+  if type_structures:
+    for _, type_structure in type_structures.items():
+      type_structure.setdefault("attachments", [])
+      props = type_structure.get("prop")
+      if type(props) is not dict:
+        type_structure["prop"] = {"default": props}
+
+
+def show_message(message: str):
+  """
+  Displays a message to the user using QMessageBox
+  Args:
+    message (str): Message to be displayed
+
+  Returns:
+
+  """
+  msg_box = QMessageBox()
+  msg_box.setText(message)
+  msg_box.exec()

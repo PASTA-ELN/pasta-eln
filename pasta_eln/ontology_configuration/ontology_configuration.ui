@@ -347,7 +347,17 @@
             <string/>
            </property>
            <property name="text">
-            <string>+ Add Category</string>
+            <string>+ Add</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="deletePropsCategoryPushButton">
+           <property name="toolTip">
+            <string>Delete the selected category in the category combobox</string>
+           </property>
+           <property name="text">
+            <string>- Delete</string>
            </property>
           </widget>
          </item>
@@ -422,20 +432,10 @@
          <item>
           <widget class="QPushButton" name="addTypePushButton">
            <property name="toolTip">
-            <string>Add a new type other than a structure</string>
+            <string>Add a new type (structural or normal type) to the ontology data set.</string>
            </property>
            <property name="text">
-            <string>+ Add Generic Type</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="structureTypeAddPushButton">
-           <property name="toolTip">
-            <string>Add new structure level to the ontology (x0, x1, x2 ...)</string>
-           </property>
-           <property name="text">
-            <string>+ Add Structure Type</string>
+            <string>+ Add</string>
            </property>
           </widget>
          </item>
@@ -445,7 +445,7 @@
             <string>Delete the type with the full properties completely</string>
            </property>
            <property name="text">
-            <string>Delete</string>
+            <string>- Delete</string>
            </property>
           </widget>
          </item>
