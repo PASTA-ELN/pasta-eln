@@ -6,18 +6,20 @@
 #  Filename: reorder_column_delegate.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
+import logging
 from typing import Union
 
-from PySide6.QtGui import QPainter
 from PySide6.QtCore import QModelIndex, QPersistentModelIndex, Signal, QEvent, QAbstractItemModel
-from PySide6.QtWidgets import QStyledItemDelegate, QPushButton, QWidget, QStyleOptionViewItem, QStyleOptionButton, QStyle, QApplication
+from PySide6.QtGui import QPainter
+from PySide6.QtWidgets import QStyledItemDelegate, QPushButton, QWidget, QStyleOptionViewItem, QStyleOptionButton, \
+  QStyle, QApplication
 
 from pasta_eln.ontology_configuration.utility_functions import is_click_within_bounds
 
 
 class ReorderColumnDelegate(QStyledItemDelegate):
   """
-  Delegate for creating the icons for the re-order column in property table
+  Delegate for creating the icons for the re-order column in the ontology editor tables
   """
   re_order_signal = Signal(int)
 
@@ -26,9 +28,22 @@ class ReorderColumnDelegate(QStyledItemDelegate):
       Constructor
     """
     super().__init__()
+    self.logger = logging.getLogger(__name__ + "." + self.__class__.__name__)
 
-  def paint(self, painter: QPainter, option: QStyleOptionViewItem,
+  def paint(self,
+            painter: QPainter,
+            option: QStyleOptionViewItem,
             index: Union[QModelIndex, QPersistentModelIndex]) -> None:
+    """
+    Draws the required re-order button within the cell represented by index
+    Args:
+      painter (QPainter): Painter instance for painting the button.
+      option (QStyleOptionViewItem): Style option for the cell represented by index.
+      index (Union[QModelIndex, QPersistentModelIndex]): Table cell index
+
+    Returns: None
+
+    """
     button = QPushButton()
     opt = QStyleOptionButton()
     opt.state = QStyle.State_Active | QStyle.State_Enabled
@@ -36,15 +51,41 @@ class ReorderColumnDelegate(QStyledItemDelegate):
     opt.text = "^"
     QApplication.style().drawControl(QStyle.CE_PushButton, opt, painter, button)
 
-  def createEditor(self, parent: QWidget, option: QStyleOptionViewItem,
+  def createEditor(self,
+                   parent: QWidget,
+                   option: QStyleOptionViewItem,
                    index: Union[QModelIndex, QPersistentModelIndex]) -> None:
+    """
+    Disable the editor for the whole re-order column by simply returning None
+    Args:
+      parent (QWidget): Parent table view.
+      option (QStyleOptionViewItem): Style option for the cell represented by index.
+      index (Union[QModelIndex, QPersistentModelIndex]): Cell index.
+
+    Returns: None
+
+    """
     return None
-  def editorEvent(self, event: QEvent, model: QAbstractItemModel,
+
+  def editorEvent(self,
+                  event: QEvent,
+                  model: QAbstractItemModel,
                   option: QStyleOptionViewItem,
                   index: Union[QModelIndex, QPersistentModelIndex]) -> bool:
+    """
+    In case of mouse click event, the re_order_signal is emitted for the respective table cell position
+    Args:
+      event (QEvent): The editor event information.
+      model (QAbstractItemModel): Model data representing the table view.
+      option (QStyleOptionViewItem): QStyleOption for the table cell.
+      index (Union[QModelIndex, QPersistentModelIndex]): Table cell index.
+
+    Returns (bool): True/False
+
+    """
     if is_click_within_bounds(event, option):
-      self.re_order_signal.emit(index.row())
-    return True
-
-
-
+      row = index.row()
+      self.logger.info(f"Re-order signal emitted for the position: {row} in the table..")
+      self.re_order_signal.emit(row)
+      return True
+    return False

@@ -6,20 +6,18 @@
 #  Filename: required_column_delegate.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
+import logging
 from typing import Union
 
-import PySide6.QtCore
-import PySide6.QtWidgets
-
+from PySide6.QtCore import QModelIndex, QPersistentModelIndex, QEvent, QAbstractItemModel, QRect, Qt
 from PySide6.QtGui import QPainter
-from PySide6.QtCore import QModelIndex, QPersistentModelIndex, QEvent, QAbstractItemModel, QRect
-from PySide6.QtWidgets import QStyledItemDelegate, QRadioButton, QWidget, QStyleOptionViewItem, QStyleOptionButton, \
+from PySide6.QtWidgets import QStyledItemDelegate, QWidget, QStyleOptionViewItem, QStyleOptionButton, \
   QStyle, QApplication
 
 
 class RequiredColumnDelegate(QStyledItemDelegate):
   """
-  Delegate for creating the radio buttons for the required column in property table
+  Delegate for creating the radio buttons for the required column in ontology editor tables
   """
 
   def __init__(self):
@@ -27,9 +25,22 @@ class RequiredColumnDelegate(QStyledItemDelegate):
       Constructor
     """
     super().__init__()
+    self.logger = logging.getLogger(__name__ + "." + self.__class__.__name__)
 
-  def paint(self, painter: QPainter, option: QStyleOptionViewItem,
+  def paint(self,
+            painter: QPainter,
+            option: QStyleOptionViewItem,
             index: Union[QModelIndex, QPersistentModelIndex]) -> None:
+    """
+    Draws the required radio button within the cell represented by index
+    Args:
+      painter (QPainter): Painter instance for painting the button.
+      option (QStyleOptionViewItem): Style option for the cell represented by index.
+      index (Union[QModelIndex, QPersistentModelIndex]): Table cell index.
+
+    Returns: None
+
+    """
     widget = option.widget
     style = widget.style() if widget else QApplication.style()
     opt = QStyleOptionButton()
@@ -37,20 +48,43 @@ class RequiredColumnDelegate(QStyledItemDelegate):
                      option.rect.top(),
                      option.rect.width(),
                      option.rect.height())
-    opt.state |= QStyle.State_On if bool(index.data(PySide6.QtCore.Qt.UserRole)) else QStyle.State_Off
+    opt.state |= QStyle.State_On \
+      if bool(index.data(Qt.UserRole)) \
+      else QStyle.State_Off
     style.drawControl(QStyle.CE_RadioButton, opt, painter, widget)
 
-  def editorEvent(self, event: QEvent, model: QAbstractItemModel,
+  def editorEvent(self,
+                  event: QEvent,
+                  model: QAbstractItemModel,
                   option: QStyleOptionViewItem,
                   index: Union[QModelIndex, QPersistentModelIndex]) -> bool:
+    """
+    In case of mouse click event, the model data is toggled for the respective table cell index
+    Args:
+      event (QEvent): The editor event information.
+      model (QAbstractItemModel): Model data representing the table view.
+      option (QStyleOptionViewItem): QStyleOption for the table cell.
+      index (Union[QModelIndex, QPersistentModelIndex]): Table cell index.
+
+    Returns (bool): True/False
+
+    """
     if event.type() == QEvent.MouseButtonRelease:
-      model.setData(index, not bool(index.data(PySide6.QtCore.Qt.UserRole)), PySide6.QtCore.Qt.UserRole)
+      model.setData(index, not bool(index.data(Qt.UserRole)), Qt.UserRole)
     return super().editorEvent(event, model, option, index)
 
-  def createEditor(self, parent: QWidget, option: QStyleOptionViewItem,
+  def createEditor(self,
+                   parent: QWidget,
+                   option: QStyleOptionViewItem,
                    index: Union[QModelIndex, QPersistentModelIndex]) -> None:
-    return None
+    """
+    Disable the editor for the whole required column by simply returning None
+    Args:
+      parent (QWidget): Parent table view.
+      option (QStyleOptionViewItem): Style option for the cell represented by index.
+      index (Union[QModelIndex, QPersistentModelIndex]): Cell index.
 
-  def updateEditorGeometry(self, editor: QWidget, option: QStyleOptionViewItem,
-                           index: Union[QModelIndex, QPersistentModelIndex]) -> None:
-    editor.setGeometry(option.rect)
+    Returns: None
+
+    """
+    return None

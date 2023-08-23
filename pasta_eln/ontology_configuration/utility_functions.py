@@ -6,20 +6,24 @@
 #  Filename: utility_functions.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
+from typing import Any
+
 from PySide6.QtCore import QEvent
 from PySide6.QtGui import QMouseEvent
 from PySide6.QtWidgets import QStyleOptionViewItem, QMessageBox
+from cloudant import CouchDB
 from cloudant.document import Document
 
 
-def is_click_within_bounds(event: QEvent, option: QStyleOptionViewItem) -> bool:
+def is_click_within_bounds(event: QEvent,
+                           option: QStyleOptionViewItem) -> bool:
   """
   Check if the click event happened within the rect area of the QStyleOptionViewItem
   Args:
     event (QEvent): Mouse event captured from the view
     option (QStyleOptionViewItem): Option send during the edit event
 
-  Returns: True/False
+  Returns (bool): True/False
 
   """
   if event.type() == QEvent.MouseButtonRelease:
@@ -37,10 +41,9 @@ def adjust_ontology_data_to_v3(ontology_doc: Document) -> None:
   """Correct the ontology data and add missing information if the loaded data is of version < 3.0
 
   Args:
-      ontology_doc: Ontology document loaded from the database
+      ontology_doc (Document): Ontology document loaded from the database
 
-  Returns:
-      None
+  Returns: None
   """
   type_structures = dict([(data, ontology_doc[data])
                           for data in ontology_doc
@@ -59,9 +62,60 @@ def show_message(message: str):
   Args:
     message (str): Message to be displayed
 
-  Returns:
+  Returns: None
 
   """
   msg_box = QMessageBox()
   msg_box.setText(message)
   msg_box.exec()
+
+
+def get_next_possible_structural_level_label(existing_type_labels: Any) -> str | None:
+  """
+  Get the title for the next possible structural type level
+  Args:
+    existing_type_labels (Any):
+
+  Returns (str|None):
+    The next possible name is returned with the decimal part greater than the existing largest one
+  """
+  if existing_type_labels:
+    from re import compile
+    regexp = compile(r'^[Xx][0-9]+$')
+    labels = [label for label in existing_type_labels if regexp.match(label)]
+    new_level = max([int(label
+                         .replace('x', '')
+                         .replace('X', '')) for label in labels])
+    return f"x{new_level + 1}"
+  return None
+
+
+def get_db(db_name: str,
+           db_user: str,
+           db_pass: str,
+           db_url: str) -> CouchDB | None:
+  """
+  Get the db instance for the test purpose
+  Args:
+    db_name (str): Database instance name in CouchDB
+    db_user (str): Database user-name used for CouchDB access.
+    db_pass (str): Database password used for CouchDB access.
+    db_url (str): Database connection URL.
+
+  Returns (CouchDB | None):
+    Connected DB instance
+
+  """
+  try:
+    client = CouchDB(user=db_user,
+                     auth_token=db_pass,
+                     url=db_url,
+                     connect=True)
+  except Exception:
+    print('**ERROR dit01: Could not connect with username+password to local server')
+    return
+  if db_name in client.all_dbs():
+    db_instance = client[db_name]
+  else:
+    db_instance = client.create_database(db_name)
+  return db_instance
