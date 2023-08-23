@@ -3,7 +3,7 @@
 #  Copyright (c) 2023
 #
 #  Author: Jithu Murugan
-#  Filename: ontology_props_tableview_datamodel.py
+#  Filename: ontology_props_tableview_data_model.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 from typing import Union, Any
@@ -12,7 +12,7 @@ import PySide6.QtCore
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt, QPersistentModelIndex, Slot
 
 
-class OntologyTableViewModel(QAbstractTableModel):
+class OntologyPropsTableViewModel(QAbstractTableModel):
   """
   Data-model for the ontology table view
   """

@@ -16,8 +16,9 @@ from cloudant.document import Document
 
 from pasta_eln.ontology_configuration.create_type_dialog.create_type_dialog_extended import CreateTypeDialog
 from pasta_eln.ontology_configuration.delete_column_delegate import DeleteColumnDelegate
+from pasta_eln.ontology_configuration.ontology_attachments_tableview_data_model import OntologyAttachmentsTableViewModel
 from pasta_eln.ontology_configuration.ontology_configuration import Ui_OntologyConfigurationBaseForm
-from pasta_eln.ontology_configuration.ontology_props_tableview_datamodel import OntologyTableViewModel
+from pasta_eln.ontology_configuration.ontology_props_tableview_data_model import OntologyPropsTableViewModel
 from pasta_eln.ontology_configuration.reorder_column_delegate import ReorderColumnDelegate
 from pasta_eln.ontology_configuration.required_column_delegate import RequiredColumnDelegate
 from pasta_eln.ontology_configuration.utility_functions import adjust_ontology_data_to_v3, show_message
@@ -34,11 +35,14 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     ui = super()
     ui.setupUi(self.instance)
     self.selected_struct_properties = None
-    self.data_model = OntologyTableViewModel()
+    self.props_table_data_model = OntologyPropsTableViewModel()
+    self.attachments_table_data_model = OntologyAttachmentsTableViewModel()
     self.structures = None
-    self.required_column_delegate = RequiredColumnDelegate()
-    self.delete_column_delegate = DeleteColumnDelegate()
-    self.reorder_column_delegate = ReorderColumnDelegate()
+    self.required_column_delegate_props_table = RequiredColumnDelegate()
+    self.delete_column_delegate_props_table = DeleteColumnDelegate()
+    self.reorder_column_delegate_props_table = ReorderColumnDelegate()
+    self.delete_column_delegate_attach_table = DeleteColumnDelegate()
+    self.reorder_column_delegate_attach_table = ReorderColumnDelegate()
     self.db: CouchDatabase = db_instance
     self.ontology_data: Document = self.db['-ontology-']
     adjust_ontology_data_to_v3(self.ontology_data)
@@ -50,6 +54,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     self.clear_inputs()
     if value and self.structures:
       self.selected_struct_properties = self.structures.get(value).get('prop')
+      self.attachments_table_data_model.update(self.structures.get(value).get('attachments'))
       self.typeLabelLineEdit.setText(self.structures.get(value).get('label'))
       self.linkLineEdit.setText(self.structures.get(value).get('link'))
       self.propsCategoryComboBox.clear()
@@ -58,7 +63,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
 
   def category_combo_box_changed(self, value):
     if value and self.selected_struct_properties:
-      self.data_model.update(self.selected_struct_properties.get(value))
+      self.props_table_data_model.update(self.selected_struct_properties.get(value))
 
   def add_new_prop_category(self):
     """
@@ -176,7 +181,8 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     self.loadOntologyPushButton.clicked.connect(self.load_ontology_data)
     self.typeComboBox.currentTextChanged.connect(self.structure_combo_box_changed)
     self.propsCategoryComboBox.currentTextChanged.connect(self.category_combo_box_changed)
-    self.addPropsRowPushButton.clicked.connect(self.data_model.add_data_row)
+    self.addPropsRowPushButton.clicked.connect(self.props_table_data_model.add_data_row)
+    self.addAtachmentPushButton.clicked.connect(self.attachments_table_data_model.add_data_row)
     self.saveOntologyPushButton.clicked.connect(self.save_ontology)
     self.addPropsCategoryPushButton.clicked.connect(self.add_new_prop_category)
     self.deletePropsCategoryPushButton.clicked.connect(self.delete_selected_prop_category)
@@ -189,8 +195,10 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     self.linkLineEdit.textChanged[str].connect(self.update_type_link)
 
     # Slots for the delegates
-    self.delete_column_delegate.delete_clicked_signal.connect(self.data_model.delete_data)
-    self.reorder_column_delegate.re_order_signal.connect(self.data_model.re_order_data)
+    self.delete_column_delegate_props_table.delete_clicked_signal.connect(self.props_table_data_model.delete_data)
+    self.delete_column_delegate_attach_table.delete_clicked_signal.connect(self.attachments_table_data_model.delete_data)
+    self.reorder_column_delegate_props_table.re_order_signal.connect(self.props_table_data_model.re_order_data)
+    self.reorder_column_delegate_attach_table.re_order_signal.connect(self.attachments_table_data_model.re_order_data)
 
   def load_ontology_data(self):
     """
@@ -210,10 +218,14 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     self.typeComboBox.addItems(self.structures.keys())
     self.typeComboBox.setCurrentIndex(0)
 
-    self.typePropsTableView.setItemDelegateForColumn(4, self.required_column_delegate)
-    self.typePropsTableView.setItemDelegateForColumn(6, self.delete_column_delegate)
-    self.typePropsTableView.setItemDelegateForColumn(7, self.reorder_column_delegate)
-    self.typePropsTableView.setModel(self.data_model)
+    self.typePropsTableView.setItemDelegateForColumn(4, self.required_column_delegate_props_table)
+    self.typePropsTableView.setItemDelegateForColumn(6, self.delete_column_delegate_props_table)
+    self.typePropsTableView.setItemDelegateForColumn(7, self.reorder_column_delegate_props_table)
+    self.typePropsTableView.setModel(self.props_table_data_model)
+
+    self.attachmentsTableView.setItemDelegateForColumn(2, self.delete_column_delegate_attach_table)
+    self.attachmentsTableView.setItemDelegateForColumn(3, self.reorder_column_delegate_attach_table)
+    self.attachmentsTableView.setModel(self.attachments_table_data_model)
 
   def save_ontology(self):
     """

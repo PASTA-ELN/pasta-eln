@@ -46,14 +46,14 @@
         <height>821</height>
        </rect>
       </property>
-      <layout class="QGridLayout" name="mainGridLayout" rowstretch="0,0,0,0,0,0,0,0,0,0,0,0">
+      <layout class="QGridLayout" name="mainGridLayout" rowstretch="0,0,0,0,0,0,0,0,0,0,0,0,0,0">
        <property name="leftMargin">
         <number>30</number>
        </property>
        <property name="rightMargin">
         <number>30</number>
        </property>
-       <item row="4" column="0">
+       <item row="6" column="0">
         <widget class="QTableView" name="typePropsTableView">
          <property name="toolTip">
           <string>Table which lists and allows editing of all the properties assosciated with the above selected type</string>
@@ -80,6 +80,32 @@
           <bool>false</bool>
          </attribute>
         </widget>
+       </item>
+       <item row="10" column="0">
+        <layout class="QHBoxLayout" name="attachmentsHeaderHorizontalLayout">
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>5</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>5</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="attachmentsHeaderLabel">
+           <property name="text">
+            <string>Attachments</string>
+           </property>
+           <property name="margin">
+            <number>0</number>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
        <item row="3" column="0">
         <layout class="QHBoxLayout" name="propsCategoryHorizontalLayout">
@@ -296,32 +322,6 @@
         </layout>
        </item>
        <item row="8" column="0">
-        <layout class="QHBoxLayout" name="attachmentsHeaderHorizontalLayout">
-         <property name="leftMargin">
-          <number>0</number>
-         </property>
-         <property name="topMargin">
-          <number>5</number>
-         </property>
-         <property name="rightMargin">
-          <number>40</number>
-         </property>
-         <property name="bottomMargin">
-          <number>5</number>
-         </property>
-         <item>
-          <widget class="QLabel" name="attachmentsHeaderLabel">
-           <property name="text">
-            <string>Attachments</string>
-           </property>
-           <property name="margin">
-            <number>0</number>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item row="6" column="0">
         <layout class="QHBoxLayout" name="propsTableButtonHorizontalLayout">
          <property name="leftMargin">
           <number>0</number>
@@ -330,7 +330,7 @@
           <number>5</number>
          </property>
          <property name="rightMargin">
-          <number>40</number>
+          <number>0</number>
          </property>
          <property name="bottomMargin">
           <number>5</number>
@@ -353,7 +353,7 @@
             <string>Add a new property row to the above table with empty values</string>
            </property>
            <property name="text">
-            <string>+ Add</string>
+            <string>+ Add Property</string>
            </property>
           </widget>
          </item>
@@ -375,7 +375,7 @@
          </item>
         </layout>
        </item>
-       <item row="11" column="0">
+       <item row="13" column="0">
         <layout class="QHBoxLayout" name="structureTablehorizontalLayout">
          <property name="leftMargin">
           <number>0</number>
@@ -384,7 +384,7 @@
           <number>5</number>
          </property>
          <property name="rightMargin">
-          <number>40</number>
+          <number>0</number>
          </property>
          <property name="bottomMargin">
           <number>5</number>
@@ -398,7 +398,7 @@
             </size>
            </property>
            <property name="text">
-            <string>+ Attachment</string>
+            <string>+ Add Attachment</string>
            </property>
           </widget>
          </item>
@@ -420,7 +420,24 @@
          </item>
         </layout>
        </item>
-       <item row="10" column="0">
+       <item row="4" column="0">
+        <layout class="QHBoxLayout" name="propertiesTableHeaderHorizontalLayout">
+         <property name="topMargin">
+          <number>5</number>
+         </property>
+         <property name="bottomMargin">
+          <number>5</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="propertiesTableHeaderlabel">
+           <property name="text">
+            <string>Properties</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="12" column="0">
         <widget class="QTableView" name="attachmentsTableView">
          <property name="toolTip">
           <string>Table which displays the attchment for the above selected data type</string>
