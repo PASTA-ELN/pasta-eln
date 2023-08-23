@@ -51,6 +51,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     if value and self.structures:
       self.selected_struct_properties = self.structures.get(value).get('prop')
       self.typeLabelLineEdit.setText(self.structures.get(value).get('label'))
+      self.linkLineEdit.setText(self.structures.get(value).get('link'))
       self.propsCategoryComboBox.clear()
       self.propsCategoryComboBox.addItems(self.selected_struct_properties.keys())
       self.propsCategoryComboBox.setCurrentIndex(0)
@@ -69,11 +70,16 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
 
     """
     new_category = self.addPropsCategoryLineEdit.text()
-    if new_category is not None:
+    if not self.structures:
+      show_message("Load the ontology data first....")
+      return
+    if new_category:
       self.selected_struct_properties[new_category] = []
       self.propsCategoryComboBox.clear()
       self.propsCategoryComboBox.addItems(self.selected_struct_properties.keys())
       self.propsCategoryComboBox.setCurrentIndex(len(self.selected_struct_properties.keys()) - 1)
+    else:
+      show_message("Enter non-null/valid category name!!.....")
 
   def delete_selected_prop_category(self):
     """Delete the selected property category
@@ -102,6 +108,18 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     """
     if modified_type_label:
       self.structures.get(self.typeComboBox.currentText())["label"] = modified_type_label
+
+  def update_type_link(self, modified_link: str):
+    """Value changed callback for the link line edit
+
+    Args:
+        modified_link (str): Modified text value
+
+    Returns:
+        None
+    """
+    if modified_link:
+      self.structures.get(self.typeComboBox.currentText())["link"] = modified_link
 
   def delete_selected_type(self):
     """Delete the selected structure type
@@ -162,9 +180,13 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     self.saveOntologyPushButton.clicked.connect(self.save_ontology)
     self.addPropsCategoryPushButton.clicked.connect(self.add_new_prop_category)
     self.deletePropsCategoryPushButton.clicked.connect(self.delete_selected_prop_category)
-    self.typeLabelLineEdit.textChanged[str].connect(self.update_structure_label)
+
     self.typeDeletePushButton.clicked.connect(self.delete_selected_type)
     self.addTypePushButton.clicked.connect(self.show_create_type_dialog)
+
+    # Slots for line edits
+    self.typeLabelLineEdit.textChanged[str].connect(self.update_structure_label)
+    self.linkLineEdit.textChanged[str].connect(self.update_type_link)
 
     # Slots for the delegates
     self.delete_column_delegate.delete_clicked_signal.connect(self.data_model.delete_data)

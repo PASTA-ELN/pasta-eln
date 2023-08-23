@@ -6,7 +6,8 @@
 #  Filename: create_type_dialog_extended.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
-from PySide6 import QtWidgets
+from PySide6 import QtCore
+from PySide6.QtWidgets import QDialog
 
 from pasta_eln.ontology_configuration.create_type_dialog.create_type_dialog import Ui_CreateTypeDialog
 
@@ -18,7 +19,7 @@ class CreateTypeDialog(Ui_CreateTypeDialog):
       Instantiates the create type dialog
       """
       self.next_struct_level = None
-      self.instance = QtWidgets.QDialog()
+      self.instance = QDialog()
       ui = super()
       ui.setupUi(self.instance)
       self.buttonBox.accepted.connect(accepted_callback)
@@ -46,8 +47,8 @@ class CreateTypeDialog(Ui_CreateTypeDialog):
         Returns:
             None
         """
+        self.instance.setWindowModality(QtCore.Qt.ApplicationModal)
         self.instance.show()
-        self.instance.exec_()
 
     def clear_ui(self):
       self.labelLineEdit.clear()
