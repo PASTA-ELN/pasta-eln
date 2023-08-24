@@ -6,14 +6,27 @@
 #  Filename: test_ontology_configuration_extended.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
+
+#  PASTA-ELN and all its sub-parts are covered by the MIT license.
+#
+#
+#  Author: Jithu Murugan
+#  Filename: test_ontology_configuration_extended.py
+#
+#  You should have received a copy of the license with this file. Please refer the license file for more information.
+import json
+import os
+
 import pytest
 from PySide6 import QtWidgets
 from PySide6.QtWidgets import QApplication
 from pytestqt.exceptions import capture_exceptions
 from pytestqt.qtbot import QtBot
 
+import tests
 from pasta_eln.ontology_configuration.ontology_configuration_extended import get_gui, OntologyConfigurationForm
 from pasta_eln.ontology_configuration.utility_functions import get_db
+from tests.app_tests.common.test_utils import dump_object_as_json
 
 
 @pytest.fixture(scope="module")
@@ -29,6 +42,7 @@ def qtbot_session(qt_app, request):
 def gui(request) -> tuple[QApplication | QApplication, QtWidgets.QDialog, OntologyConfigurationForm, QtBot]:
   print("Setting up GUI...")
   db = get_db("research", "admin", "SbFUXgmHaGpN", 'http://127.0.0.1:5984')
+  dump_object_as_json(db['-ontology-'], 'ontology_document.json')
   app, ui_dialog, ui_form_extended = get_gui(db)
   qtbot: QtBot = QtBot(app)
   return app, ui_dialog, ui_form_extended, qtbot
