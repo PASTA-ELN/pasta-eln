@@ -12,11 +12,12 @@ from typing import Any
 
 from PySide6 import QtWidgets
 from PySide6.QtWidgets import QApplication
-from cloudant.database import CouchDatabase
 from cloudant.document import Document
 
+from pasta_eln.ontology_configuration import ontology_configuration_constants
 from pasta_eln.ontology_configuration.create_type_dialog.create_type_dialog_extended import CreateTypeDialog
 from pasta_eln.ontology_configuration.delete_column_delegate import DeleteColumnDelegate
+from pasta_eln.ontology_configuration.exceptions.ontology_document_null_exception import OntologyDocumentNullException
 from pasta_eln.ontology_configuration.ontology_attachments_tableview_data_model import OntologyAttachmentsTableViewModel
 from pasta_eln.ontology_configuration.ontology_configuration import Ui_OntologyConfigurationBaseForm
 from pasta_eln.ontology_configuration.ontology_props_tableview_data_model import OntologyPropsTableViewModel
@@ -28,15 +29,17 @@ from pasta_eln.ontology_configuration.utility_functions import adjust_ontology_d
 
 class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
   def __init__(self,
-               db_instance: CouchDatabase):
+               ontology_document: Document):
     """
     Constructs the ontology data editor
 
     Args:
-      db_instance (CouchDatabase): Couch DB Instance passed by the parent
+      ontology_document (Document): Ontology data document from couch DB instance passed by the parent.
+
+    Raises:
+      OntologyDocumentNullException: Raised when passed in argument @ontology_document is null.
     """
     self.logger = logging.getLogger(__name__ + "." + self.__class__.__name__)
-    self.db: CouchDatabase = db_instance
 
     self.ontology_types = None
     self.selected_type_properties = None
@@ -47,8 +50,11 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     ui.setupUi(self.instance)
 
     # Gets the ontology data from db and adjust the data to the latest version
-    self.ontology_data: Document = self.db['-ontology-']
-    adjust_ontology_data_to_v3(self.ontology_data)
+    if not ontology_document:
+      raise OntologyDocumentNullException("Null document passed for ontology data", {})
+
+    self.ontology_document: Document = ontology_document
+    adjust_ontology_data_to_v3(self.ontology_document)
 
     # Instantiates property & attachment table models along with the column delegates
     self.props_table_data_model = OntologyPropsTableViewModel()
@@ -60,13 +66,20 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     self.delete_column_delegate_attach_table = DeleteColumnDelegate()
     self.reorder_column_delegate_attach_table = ReorderColumnDelegate()
 
-    self.typePropsTableView.setItemDelegateForColumn(4, self.required_column_delegate_props_table)
-    self.typePropsTableView.setItemDelegateForColumn(6, self.delete_column_delegate_props_table)
-    self.typePropsTableView.setItemDelegateForColumn(7, self.reorder_column_delegate_props_table)
+    self.typePropsTableView.setItemDelegateForColumn(ontology_configuration_constants.PROPS_TABLE_REQUIRED_COLUMN_INDEX,
+                                                     self.required_column_delegate_props_table)
+    self.typePropsTableView.setItemDelegateForColumn(ontology_configuration_constants.PROPS_TABLE_DELETE_COLUMN_INDEX,
+                                                     self.delete_column_delegate_props_table)
+    self.typePropsTableView.setItemDelegateForColumn(ontology_configuration_constants.PROPS_TABLE_REORDER_COLUMN_INDEX,
+                                                     self.reorder_column_delegate_props_table)
     self.typePropsTableView.setModel(self.props_table_data_model)
 
-    self.typeAttachmentsTableView.setItemDelegateForColumn(2, self.delete_column_delegate_attach_table)
-    self.typeAttachmentsTableView.setItemDelegateForColumn(3, self.reorder_column_delegate_attach_table)
+    self.typeAttachmentsTableView.setItemDelegateForColumn(
+      ontology_configuration_constants.ATTACHMENT_TABLE_DELETE_COLUMN_INDEX,
+      self.delete_column_delegate_attach_table)
+    self.typeAttachmentsTableView.setItemDelegateForColumn(
+      ontology_configuration_constants.ATTACHMENT_TABLE_REORDER_COLUMN_INDEX,
+      self.reorder_column_delegate_attach_table)
     self.typeAttachmentsTableView.setModel(self.attachments_table_data_model)
 
     # Create the dialog for new type creation
@@ -190,10 +203,10 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     """
     selected_type = self.typeComboBox.currentText()
     if (selected_type and selected_type in self.ontology_types
-        and selected_type in self.ontology_data):
+        and selected_type in self.ontology_document):
       self.logger.info(f"User deleted the selected type: {selected_type}")
       self.ontology_types.pop(selected_type)
-      self.ontology_data.pop(selected_type)
+      self.ontology_document.pop(selected_type)
       self.typeComboBox.clear()
       self.typeComboBox.addItems(self.ontology_types.keys())
       self.typeComboBox.setCurrentIndex(0)
@@ -273,9 +286,9 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     """
     self.logger.info("User loaded the ontology data in UI")
     # Load the ontology types from the db document
-    self.ontology_types = dict([(data, self.ontology_data[data])
-                                for data in self.ontology_data
-                                if type(self.ontology_data[data]) is dict])
+    self.ontology_types = dict([(data, self.ontology_document[data])
+                                for data in self.ontology_document
+                                if type(self.ontology_document[data]) is dict])
 
     # Set the types in the type selector combo-box
     self.typeComboBox.clear()
@@ -287,7 +300,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     Save the modified ontology document data in database
     """
     self.logger.info("User saved the ontology data document!!")
-    self.ontology_data.save()
+    self.ontology_document.save()
     show_message("Ontology data saved successfully..")
 
   def create_new_type(self,
@@ -302,7 +315,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     Returns:
 
     """
-    if title in self.ontology_data:
+    if title in self.ontology_document:
       show_message(f"Type (title: {title} label: {label}) cannot be added since it exists in DB already....")
     else:
       self.logger.info(f"User created a new type and added "
@@ -315,7 +328,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
         },
         "attachments": []
       }
-      self.ontology_data[title] = empty_type
+      self.ontology_document[title] = empty_type
       self.ontology_types[title] = empty_type
       self.typeComboBox.clear()
       self.typeComboBox.addItems(self.ontology_types.keys())
@@ -336,7 +349,7 @@ def get_gui(db_instance):
     application = QApplication(sys.argv)
   else:
     application = QApplication.instance()
-  ontology_form: OntologyConfigurationForm = OntologyConfigurationForm(db_instance)
+  ontology_form: OntologyConfigurationForm = OntologyConfigurationForm(db_instance['-ontology-'])
   return application, ontology_form.instance, ontology_form
 
 
