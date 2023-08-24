@@ -49,7 +49,7 @@ class RequiredColumnDelegate(QStyledItemDelegate):
                      option.rect.width(),
                      option.rect.height())
     opt.state |= QStyle.State_On \
-      if bool(index.data(Qt.UserRole)) \
+      if index.data(Qt.UserRole) == 'True' \
       else QStyle.State_Off
     style.drawControl(QStyle.CE_RadioButton, opt, painter, widget)
 
@@ -70,7 +70,7 @@ class RequiredColumnDelegate(QStyledItemDelegate):
 
     """
     if event.type() == QEvent.MouseButtonRelease:
-      model.setData(index, not bool(index.data(Qt.UserRole)), Qt.UserRole)
+      model.setData(index, str(not (index.data(Qt.UserRole) == 'True')), Qt.UserRole)
     return super().editorEvent(event, model, option, index)
 
   def createEditor(self,

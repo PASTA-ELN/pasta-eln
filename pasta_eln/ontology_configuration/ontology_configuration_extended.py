@@ -355,7 +355,7 @@ def get_gui(db_instance) -> tuple[QApplication | QApplication, QtWidgets.QDialog
 
 
 if __name__ == "__main__":
-  db = get_db("research", "admin", "SbFUXgmHaGpN", 'http://127.0.0.1:5984')
+  db = get_db("research", "admin", "DxiBfYvdMOZF", 'http://127.0.0.1:5984')
   app, ui_form_dialog, ui_form = get_gui(db)
   ui_form_dialog.show()
   sys.exit(app.exec())
