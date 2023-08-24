@@ -7,10 +7,13 @@
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import pytest
+from PySide6 import QtWidgets
+from PySide6.QtWidgets import QApplication
 from pytestqt.exceptions import capture_exceptions
 from pytestqt.qtbot import QtBot
 
-from pasta_eln.ontology_configuration.ontology_configuration_extended import get_gui
+from pasta_eln.ontology_configuration.ontology_configuration_extended import get_gui, OntologyConfigurationForm
+from pasta_eln.ontology_configuration.utility_functions import get_db
 
 
 @pytest.fixture(scope="module")
@@ -23,51 +26,33 @@ def qtbot_session(qt_app, request):
 
 
 @pytest.fixture(scope="module")
-def gui(request):
+def gui(request) -> tuple[QApplication | QApplication, QtWidgets.QDialog, OntologyConfigurationForm, QtBot]:
   print("Setting up GUI...")
-  app, _, ui = get_gui()
+  db = get_db("research", "admin", "SbFUXgmHaGpN", 'http://127.0.0.1:5984')
+  app, ui_dialog, ui_form_extended = get_gui(db)
   qtbot: QtBot = QtBot(app)
-  return app, ui, qtbot
+  return app, ui_dialog, ui_form_extended, qtbot
 
 
-def test_form_launch(gui: object):
+def test_form_launch(gui: tuple[QApplication | QApplication, QtWidgets.QDialog, OntologyConfigurationForm, QtBot]):
   """
       Args:
   """
-  app, ui, qtbot = gui
-  assert ui.headerLabel is not None, "Header not loaded!"
-  assert ui.dataTypeLabel is not None, "Data type label not loaded!"
-  assert ui.loadPushButton is not None, "Bush button not loaded!"
-  assert ui.savePushButton is not None, "Save button not loaded!"
-  assert ui.helpPushButton is not None, "Help button not loaded!"
-  assert ui.cancelPushButton is not None, "Cancel button not loaded!"
-  assert ui.structuralPropsTableView is not None, "Table view not loaded!"
-  assert ui.addRowPushButton is not None, "Add row button not loaded!"
-  assert ui.headingAddpushButton is not None, "Heading Add button not loaded!"
-  assert ui.dataTypeLabel is not None, "Data type label not loaded!"
-  assert ui.typeComboBox is not None, "Data type combo box not loaded!"
-  assert ui.structureNameLineEdit is not None, "Data type name edit not loaded!"
-  assert ui.typeDeletePushButton is not None, "Delete button not loaded!"
-  assert ui.structureAddPushButton is not None, "Structure add button not loaded!"
-  assert ui.structureAddPushButton is not None, "Structure add button not loaded!"
-
-def test_form_launch2(gui: object):
-  """
-      Args:
-  """
-  app, ui, qtbot = gui
-  assert ui.headerLabel is not None, "Header not loaded!"
-  assert ui.dataTypeLabel is not None, "Data type label not loaded!"
-  assert ui.loadPushButton is not None, "Bush button not loaded!"
-  assert ui.savePushButton is not None, "Save button not loaded!"
-  assert ui.helpPushButton is not None, "Help button not loaded!"
-  assert ui.cancelPushButton is not None, "Cancel button not loaded!"
-  assert ui.structuralPropsTableView is not None, "Table view not loaded!"
-  assert ui.addRowPushButton is not None, "Add row button not loaded!"
-  assert ui.headingAddpushButton is not None, "Heading Add button not loaded!"
-  assert ui.dataTypeLabel is not None, "Data type label not loaded!"
-  assert ui.typeComboBox is not None, "Data type combo box not loaded!"
-  assert ui.structureNameLineEdit is not None, "Data type name edit not loaded!"
-  assert ui.typeDeletePushButton is not None, "Delete button not loaded!"
-  assert ui.structureAddPushButton is not None, "Structure add button not loaded!"
-  assert ui.structureAddPushButton is not None, "Structure add button not loaded!"
+  app, ui_dialog, ui_form, qtbot = gui
+  assert ui_form.headerLabel is not None, "Header not loaded!"
+  assert ui_form.typeLabel is not None, "Data type label not loaded!"
+  assert ui_form.loadOntologyPushButton is not None, "Bush button not loaded!"
+  assert ui_form.saveOntologyPushButton is not None, "Save button not loaded!"
+  assert ui_form.helpPushButton is not None, "Help button not loaded!"
+  assert ui_form.cancelPushButton is not None, "Cancel button not loaded!"
+  assert ui_form.typePropsTableView is not None, "Properties table view not loaded!"
+  assert ui_form.typeAttachmentsTableView is not None, "Type table view not loaded!"
+  assert ui_form.addAttachmentPushButton is not None, "Add attachment button not loaded!"
+  assert ui_form.addTypePushButton is not None, "Add type button not loaded!"
+  assert ui_form.addPropsRowPushButton is not None, "Add property row button not loaded!"
+  assert ui_form.addPropsCategoryPushButton is not None, "Add property category button not loaded!"
+  assert ui_form.typeLabelLineEdit is not None, "Data type line edit not loaded!"
+  assert ui_form.typeLinkLineEdit is not None, "Data type link line edit not loaded!"
+  assert ui_form.addPropsCategoryLineEdit is not None, "Property category line edit not loaded!"
+  assert ui_form.typeComboBox is not None, "Data type combo box not loaded!"
+  assert ui_form.propsCategoryComboBox is not None, "Property category combo box not loaded!"

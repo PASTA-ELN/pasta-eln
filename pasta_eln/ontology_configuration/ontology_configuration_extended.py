@@ -336,7 +336,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
       show_message(f"Type (title: {title} label: {label}) has been added....")
 
 
-def get_gui(db_instance):
+def get_gui(db_instance) -> tuple[ QApplication | QApplication, QtWidgets.QDialog, OntologyConfigurationForm]:
   """
   Creates the editor UI and return it
   Args:
@@ -355,6 +355,6 @@ def get_gui(db_instance):
 
 if __name__ == "__main__":
   db = get_db("research", "admin", "SbFUXgmHaGpN", 'http://127.0.0.1:5984')
-  app, base_form, ui_form = get_gui(db)
-  base_form.show()
+  app, ui_form_dialog, ui_form = get_gui(db)
+  ui_form_dialog.show()
   sys.exit(app.exec())
