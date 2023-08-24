@@ -58,9 +58,10 @@ class Form(QDialog):
       ontologyNode = self.db.ontology[self.doc['-type'][0]]['prop']
     else:
       ontologyNode = defaultOntologyNode
-    for item in ontologyNode:
-      if item['name'] not in self.doc and  item['name'][0] not in ['_','-']:
-        self.doc[item['name']] = ''
+    for key, category in ontologyNode.items():
+      for item in category:
+        if item['name'] not in self.doc and  item['name'][0] not in ['_','-']:
+          self.doc[item['name']] = ''
     # Create form
     if '-tags' not in self.doc:
       self.doc['-tags'] = []

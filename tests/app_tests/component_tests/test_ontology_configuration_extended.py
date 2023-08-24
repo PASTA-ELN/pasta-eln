@@ -43,7 +43,7 @@ def gui(request) -> tuple[QApplication | QApplication, QtWidgets.QDialog, Ontolo
   print("Setting up GUI...")
   db = get_db("research", "admin", "DxiBfYvdMOZF", 'http://127.0.0.1:5984')
   dump_object_as_json(db['-ontology-'], 'ontology_document.json')
-  app, ui_dialog, ui_form_extended = get_gui(db)
+  app, ui_dialog, ui_form_extended = get_gui(db['-ontology-'])
   qtbot: QtBot = QtBot(app)
   return app, ui_dialog, ui_form_extended, qtbot
 

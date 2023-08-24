@@ -13,7 +13,7 @@ import os
 import sys
 import webbrowser
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 from PySide6.QtCore import Qt, Slot, QCoreApplication  # pylint: disable=no-name-in-module
 from PySide6.QtGui import QIcon, QPixmap, QShortcut  # pylint: disable=no-name-in-module
@@ -247,7 +247,7 @@ class MainWindow(QMainWindow):
 #           - copy of raw data into one that will changed, to clean
 
 
-def main_gui() -> tuple[QApplication | QCoreApplication | None, MainWindow]:
+def main_gui() -> tuple[Union[QApplication, QCoreApplication, None], MainWindow]:
   """
     Main method and entry point for commands
   Returns:
@@ -285,4 +285,5 @@ def main_gui() -> tuple[QApplication | QCoreApplication | None, MainWindow]:
 if __name__ == '__main__':
   app, window = main_gui()
   window.show()
-  app.exec()
+  if app:
+    app.exec()

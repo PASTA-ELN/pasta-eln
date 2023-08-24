@@ -34,3 +34,18 @@ def dump_object_as_json(json_object: object,
     os.makedirs(test_data_folder)
   test_data_path = os.path.join(test_data_folder, dump_file)
   json.dump(dump, open(test_data_path, 'w'))
+
+def get_mocked_ontology_document(document_json_file: str):
+  """
+  Constructs a mocked ontology document from the json file
+  Args:
+      document_json_file (str): File name representing document data in test_data folder
+
+  Returns:
+      Json representation of ontology document
+  """
+  test_data_path = os.path.join(os.getcwd(), "..//test_data", document_json_file)
+  if not os.path.exists(test_data_path):
+    return None
+  with open(test_data_path) as f:
+    return json.load(f)
