@@ -148,6 +148,11 @@ class MainWindow(QMainWindow):
     elif command[0] is Command.PROJECT_GROUP:
       dialog = ProjectGroup(self.comm)
       dialog.exec()
+    elif command[0] is Command.CHANGE_PG:
+      self.backend.configuration['defaultProjectGroup'] = command[1]
+      with open(Path.home()/'.pastaELN.json', 'w', encoding='utf-8') as fConf:
+        fConf.write(json.dumps(self.backend.configuration,indent=2))
+      restart()
     elif command[0] is Command.SYNC:
       report = self.comm.backend.replicateDB(progressBar=self.sidebar.progress)
       showMessage(self, 'Report of syncronization', report, style='QLabel {min-width: 450px}')
@@ -189,16 +194,6 @@ class MainWindow(QMainWindow):
       print("**ERROR gui menu unknown:",command)
     return
 
-
-  def changeProjectGroup(self) -> None:
-    """
-    change default project group in configuration file and restart
-    """
-    self.backend.configuration['defaultProjectGroup'] = self.sender().data()
-    with open(Path.home()/'.pastaELN.json', 'w', encoding='utf-8') as fConf:
-      fConf.write(json.dumps(self.backend.configuration,indent=2))
-    restart()
-    return
 
 # TODO_P5 copy of file: should it the be the same in database or should it be two separate entities??
 #         - what happens if you want to change metadata of one but don't want to change the other?
