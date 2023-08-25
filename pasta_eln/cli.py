@@ -3,19 +3,19 @@
 Called by user or react-electron frontend. Keep it simple: only functions that
 are required by frontend. Otherwise, make only temporary changes
 """
-import json, sys, argparse, traceback
+import json, argparse, traceback
 from pathlib import Path
 from subprocess import run, PIPE, STDOUT
 import urllib.request
 
 from pasta_eln import __version__
 from .backend import Backend
-from .miscTools import upOut, upIn, updateExtractorList
+from .miscTools import upOut, upIn, updateExtractorList, DummyProgressBar
 from .inputOutput import importELN, exportELN
 from .installationTools import configuration as checkConfiguration
 from .installationTools import exampleData
 
-def commands(getDocu, args):
+def commands(getDocu:bool, args:argparse.Namespace) -> str:
   """
   Main function
 
@@ -131,7 +131,7 @@ def commands(getDocu, args):
             contents = package.read()
             if json.loads(contents)['couchdb'] == 'Welcome':
               print('CouchDB server',url,'is working: username and password test upcoming')
-        except:
+        except Exception:
           print('**ERROR pma01: CouchDB server not working |',url)
           if url=='http://127.0.0.1:5984':
             raise NameError('**ERROR pma01a: Wrong local server.') from None
@@ -141,7 +141,7 @@ def commands(getDocu, args):
       try:
         be = Backend(defaultProjectGroup=args.database, initViews=initViews, initConfig=initConfig,
                   resetOntology=resetOntology)
-      except:
+      except Exception:
         print('**ERROR pma20: backend could not be started.\n'+traceback.format_exc()+'\n\n')
         return ''
 
@@ -158,10 +158,10 @@ def commands(getDocu, args):
       try:
         data = be.db.getDoc('-ontology-')
         print('Ontology exists on server')
-      except:
+      except Exception:
         print('**ERROR pma02: Ontology does NOT exist on server')
       print('local directory:',be.basePath)
-      print('software version: '+__version__)
+      print(f'software version: {__version__}')
       return '1'
 
     if getDocu:
@@ -170,13 +170,13 @@ def commands(getDocu, args):
       doc += '    example: pastaELN_CLI.py verifyDBdev (repair function)\n'
     elif args.command.startswith('verifyDB'):
       repair = args.command=='verifyDBdev'
-      output = be.checkDB(verbose=False, repair=repair)
+      output = be.checkDB(outputStyle='', repair=repair)
       print(output)
       return '1'
 
     if getDocu:
       doc += '  exampleData: create example data by DELETING ALL DATA\n'
-      doc += '  BE CERTAIN THAT YOU WANT TO DO THIS!!\n'
+      doc += '    !! BE CERTAIN THAT YOU WANT TO DO THIS !!\n'
       doc += '    example: pastaELN_CLI.py exampleData\n'
     elif args.command.startswith('exampleData'):
       #prints directly to screen
@@ -187,7 +187,8 @@ def commands(getDocu, args):
       doc += '  syncLR / syncRL: synchronize with / from remote server\n'
       doc += '    example: pastaELN_CLI.py syncLR\n'
     elif args.command=='syncLR':
-      success = be.replicateDB()
+      progressBar = DummyProgressBar()
+      success = be.replicateDB(progressBar)
       return '1' if success else '-1'
     elif args.command=='syncRL':
       be.exit()
@@ -202,21 +203,21 @@ def commands(getDocu, args):
       print(be.output(args.label,True))
       return '1'
 
-    if getDocu:
-      doc += '  saveBackup,loadBackup: save to file.zip / load from file.zip\n'
-      doc += '    - docId is optional as it reduces the scope of the backup\n'
-      doc += '    - database is optional as otherwise the default is used\n'
-      doc += '    example: pastaELN_CLI.py saveBackup -d instruments\n'
-      doc += '    example: pastaELN_CLI.py saveBackup -i x-76b0995cf655bcd487ccbdd8f9c68e1b\n'
-    elif args.command=='saveBackup':   #save to backup file.zip
-      if args.docID!='':
-        exportELN(be, args.docID, 'test.eln')
-      else:
-        be.backup('backup')
+    # if getDocu:
+    #   doc += '  saveBackup,loadBackup: save to file.zip / load from file.zip\n'
+    #   doc += '    - docId is optional as it reduces the scope of the backup\n'
+    #   doc += '    - database is optional as otherwise the default is used\n'
+    #   doc += '    example: pastaELN_CLI.py saveBackup -d instruments\n'
+    #   doc += '    example: pastaELN_CLI.py saveBackup -i x-76b0995cf655bcd487ccbdd8f9c68e1b\n'
+    # elif args.command=='saveBackup':   #save to backup file.zip
+    #   if args.docID!='':
+    #     exportELN(be, args.docID, 'test.eln')
+    #   else:
+    #     be.backup('backup')
 
-    elif args.command=='loadBackup':   #load from backup file.zip
-      be.backup('restore')
-      return '1'
+    # elif args.command=='loadBackup':   #load from backup file.zip
+    #   be.backup('restore')
+    #   return '1'
 
     if getDocu:
       doc += '  extractorTest: test extractor on individual datafile\n'
@@ -225,48 +226,48 @@ def commands(getDocu, args):
       be.testExtractor(args.docID)
       return '1'
 
-    if getDocu:
-      doc += '  importXLS: import first sheet of excel file into database\n'
-      doc += '    before: ensure database configuration and project exist\n'
-      doc += '    example: pastaELN_CLI.py importXLS -d instruments -i x-123456 -c "~/path/to.xls" -l instrument\n'
-      doc += '    -l is the document type\n'
-      doc += '    afterwards: adopt ontology (views are automatically generated)\n'
-    elif args.command=='importXLS':
-      import pandas as pd
-      from commonTools import commonTools as cT  #not globally imported since confuses translation
-      if args.docID!='':
-        be.changeHierarchy(args.docID)
-      #change for matwerks examples
-      data = pd.read_excel(args.content, sheet_name=0)
-      if data.shape[0]>40 and data.iloc[38].isnull().sum() < data.iloc[36].isnull().sum():
-        data = pd.read_excel(args.content, sheet_name=0, skiprows=39, usecols=range(11))
-        data=data.drop(data.index[[0,1]])
-        data=data.drop(data.index[[-1,-2,-3]])
-        #add metadata
-        meta = pd.read_excel(args.content, sheet_name=0, skiprows=4, nrows=13, usecols=[0,2])
-        for i in range(meta.shape[0]):
-          key, value = meta.iloc[i,0], meta.iloc[i,1]
-          data[key] = value
-        #add more metadata
-        meta = pd.read_excel(args.content, sheet_name=0, skiprows=19, nrows=8, usecols=[2,8])
-        for i in range(meta.shape[0]):
-          if meta.iloc[i,:].isnull().sum()==2:
-            continue
-          key, value = meta.iloc[i,0], meta.iloc[i,1]
-          data[key] = value
-        meta = pd.read_excel(args.content, sheet_name=0)
-        data['batch'] = meta.iloc[1,0].split(' - ')[1].split(' ')[1]
-        data['test']  = meta.iloc[1,0].split(' - ')[0][1:-1]
-        data = data.rename(columns={"AMTwin label": "-name"})
-      else:
-        #default file
-        data = pd.read_excel(args.content, sheet_name=0).fillna('')
-      print(data.columns)
-      print(data)
-      for _, row in data.iterrows():
-        data = dict((k.lower(), v) for k, v in row.items())
-        be.addData(args.label, data )
-      return '1'
+    # if getDocu:
+    #   doc += '  importXLS: import first sheet of excel file into database\n'
+    #   doc += '    before: ensure database configuration and project exist\n'
+    #   doc += '    example: pastaELN_CLI.py importXLS -d instruments -i x-123456 -c "~/path/to.xls" -l instrument\n'
+    #   doc += '    -l is the document type\n'
+    #   doc += '    afterwards: adopt ontology (views are automatically generated)\n'
+    # elif args.command=='importXLS':
+    #   import pandas as pd
+    #   from commonTools import commonTools as cT  #not globally imported since confuses translation
+    #   if args.docID!='':
+    #     be.changeHierarchy(args.docID)
+    #   #change for matwerks examples
+    #   df = pd.read_excel(args.content, sheet_name=0)
+    #   if df.shape[0]>40 and df.iloc[38].isnull().sum() < df.iloc[36].isnull().sum():
+    #     df = pd.read_excel(args.content, sheet_name=0, skiprows=39, usecols=range(11))
+    #     df=df.drop(df.index[[0,1]])
+    #     df=df.drop(df.index[[-1,-2,-3]])
+    #     #add metadata
+    #     meta = pd.read_excel(args.content, sheet_name=0, skiprows=4, nrows=13, usecols=[0,2])
+    #     for i in range(meta.shape[0]):
+    #       key, value = meta.iloc[i,0], meta.iloc[i,1]
+    #       df[key] = value
+    #     #add more metadata
+    #     meta = pd.read_excel(args.content, sheet_name=0, skiprows=19, nrows=8, usecols=[2,8])
+    #     for i in range(meta.shape[0]):
+    #       if meta.iloc[i,:].isnull().sum()==2:
+    #         continue
+    #       key, value = meta.iloc[i,0], meta.iloc[i,1]
+    #       df[key] = value
+    #     meta = pd.read_excel(args.content, sheet_name=0)
+    #     df['batch'] = meta.iloc[1,0].split(' - ')[1].split(' ')[1]
+    #     df['test']  = meta.iloc[1,0].split(' - ')[0][1:-1]
+    #     df = df.rename(columns={"AMTwin label": "-name"})
+    #   else:
+    #     #default file
+    #     df = pd.read_excel(args.content, sheet_name=0).fillna('')
+    #   print(df.columns)
+    #   print(df)
+    #   for _, row in df.iterrows():
+    #     data = dict((k.lower(), v) for k, v in row.items())
+    #     be.addData(args.label, data )
+    #   return '1'
 
     if getDocu:
       doc += '  redo: recreate thumbnail / use-extractor\n'
@@ -275,7 +276,7 @@ def commands(getDocu, args):
       data = dict(be.db.getDoc(args.docID))
       if args.content is not None:
         data['-type'] = args.content.split('/')
-      be.useExtractors(be.basePath/data['-branch'][0]['path'], data['shasum'], data, extractorRedo=True)  #any path is good since the file is the same everywhere; data-changed by reference
+      be.useExtractors(be.basePath/data['-branch'][0]['path'], data['shasum'], data)  #any path is good since the file is the same everywhere; data-changed by reference
       if len(data['-type'])>1 and len(data['image'])>1:
         be.db.updateDoc({'image':data['image'], '-type':data['-type']},args.docID)
         return '1'
@@ -287,7 +288,8 @@ def commands(getDocu, args):
       doc += '  scanProject: scan project with docID\n'
       doc += '    example: pastaELN_CLI.py scanProject -i ....\n'
     elif args.command=='scanProject':
-      be.scanProject(args.docID)
+      progressBar = DummyProgressBar()
+      be.scanProject(progressBar, args.docID)
       return '1'
 
     ##################################################
@@ -304,7 +306,9 @@ def commands(getDocu, args):
       return '1'
 
   except:
-    print("**ERROR pma10: exception thrown during pastaELN_CLI.py"+traceback.format_exc()+"\n")
+    print(
+        f"**ERROR pma10: exception thrown during pastaELN_CLI.py{traceback.format_exc()}"
+        + "\n")
     raise
 
   if not getDocu and be is not None:
@@ -313,13 +317,12 @@ def commands(getDocu, args):
 
 ###################
 ## MAIN FUNCTION ##
-def main():
+def main() -> None:
   """
   Main function
   """
-  usage = "./pastaELN_CLI.py <command> [-i docID] [-c content] [-l labels] [-d database]\n\n"
-  usage+= "Possible commands are:\n"
-  usage+= commands(True, None)
+  usage = "python -m pasta_eln.cli <command> [-i docID] [-c content] [-l labels] [-d database]\n\nPossible commands are:\n"
+  usage+= commands(True, argparse.Namespace())
   argparser = argparse.ArgumentParser(usage=usage)
   argparser.add_argument('command', help='see above...')
   argparser.add_argument('-i','--docID',   help='docID of project; a long alpha-numeric code', default='')
@@ -334,3 +337,8 @@ def main():
     print('**ERROR pma08: command in pastaELN_CLI.py does not exist |',arguments.command)
   elif result == '1' and arguments.command!='up':
     print('SUCCESS')
+  return
+
+# start main function
+if __name__ == '__main__':
+  main()

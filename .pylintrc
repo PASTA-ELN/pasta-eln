@@ -81,7 +81,8 @@ disable=raw-checker-failed,
         missing-raises-doc,
         no-else-return,
         no-self-use,
-        condition-evals-to-constant
+        condition-evals-to-constant,
+        broad-except
 
 #Reasons:
 # looks better: len-as-condition, multiple-statements, bad-whitespace, multiple-imports
@@ -422,7 +423,7 @@ valid-metaclass-classmethod-first-arg=mcs
 [DESIGN]
 
 # Maximum number of arguments for function / method
-max-args=9  #Steffen's change
+max-args=10  #Steffen's change
 
 # Maximum number of attributes for a class (see R0902).
 max-attributes=25

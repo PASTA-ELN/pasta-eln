@@ -1,8 +1,9 @@
 """Change the format of dictionaries"""
 import re, uuid
+from typing import Any
 from datetime import datetime
 
-def ontology2Labels(ontology, tableFormat):
+def ontology2Labels(ontology:dict[str,Any], tableFormat:dict[str,Any]) -> dict[str,Any]:
   """
   Extract labels and create lists of docType,docLabel pair
   - docLabel is the plural human-readable form of the docType
@@ -19,7 +20,7 @@ def ontology2Labels(ontology, tableFormat):
   """
   dataDict = {}
   hierarchyDict = {}
-  for key in ontology.keys():
+  for key in ontology:
     if key in ['_id', '_rev']:
       continue
     label = None
@@ -33,11 +34,11 @@ def ontology2Labels(ontology, tableFormat):
       hierarchyDict[key] = label
     else:
       dataDict[key] = label
-  dataDict.update(hierarchyDict)  #join hierarchy and datalabels because reason for separation unclear
+  dataDict |= hierarchyDict
   return dataDict
 
 
-def fillDocBeforeCreate(data, docType):
+def fillDocBeforeCreate(data:dict[str,Any], docType:list[str]) -> dict[str,Any]:
   """ Fill the data before submission to database with common data
   - type, project, childs
   - separate comment into tags, fields
@@ -55,7 +56,7 @@ def fillDocBeforeCreate(data, docType):
   protectedKeys = ['comment','-tags','image']
   # Handle the important entries: -type, _id, -date, -branch
   if '-type' not in data:
-    data['-type'] = [docType]
+    data['-type'] = docType
   if data['-type']==['']:
     data['-type']=['-']
   if isinstance(data['-type'], str):
@@ -66,7 +67,7 @@ def fillDocBeforeCreate(data, docType):
   if '-branch' not in data:
     print('Empty branch in data')
     data['-branch'] = [{'stack':[], 'path':None, 'child':-1, 'show':[]}]
-  if 'show' not in data['-branch']:
+  if 'show' not in data['-branch'] and isinstance(data['-branch'], dict):
     data['-branch']['show'] = [True]*(len(data['-branch']['stack'])+1)
   # separate comment into tags and fields
   # these tags are lost: '#d': too short; '#3tag': starts with number
@@ -101,9 +102,9 @@ def fillDocBeforeCreate(data, docType):
   data['-tags'] = [i.strip()[1:] if i.strip()[0]=='#' else i.strip() for i in data['-tags']]
   data['-tags'] = list(set(data['-tags']))  #ensure only one is inside
   #other cleaning
-  if 'links' in data and isinstance(data['links'], list):
-    if len(data['links'])==0 or (len(data['links'])==1 and data['links'][0]==''):
-      del data['links']
+  if ('links' in data and isinstance(data['links'], list)) and \
+     (len(data['links'])==0 or (len(data['links'])==1 and data['links'][0]=='')):
+    del data['links']
   #individual verification of documents
   if data['-type'][0]=='sample':
     if 'qrCode' not in data:
@@ -126,3 +127,44 @@ def fillDocBeforeCreate(data, docType):
   for key in toDelete:
     del data[key]
   return data
+
+
+def diffDicts(dict1:dict[str,Any], dict2:dict[str,Any]) -> str:
+  """ Check if two dictionaries differ. Just compare the lowest level keys/values and output string
+
+  Args:
+    dict1 (dict): dictionary 1
+    dict2 (dict): dictionary 2
+
+  Returns:
+    str: output with \\n
+  """
+  ignoreKeys = ['-client','_rev']
+  outString = ''
+  dict2Copy = dict(dict2)
+  for key,value in dict1.items():
+    if key in ignoreKeys:
+      continue
+    if key not in dict2Copy:
+      outString += f'key not in dictionary 2: {key}' + '\n'
+      continue
+    if value != dict2Copy[key]:
+      if key=='-branch':
+        if len(value) != len(dict2Copy[key]):
+          outString += 'branches have different lengths\n   '+str(value)+'\n   '+str(dict2Copy[key])+'\n'
+        else:
+          for idx,_ in enumerate(value):
+            branch1 = value[idx]
+            branch2 = dict2Copy['-branch'][idx]
+            del branch1['show']
+            del branch2['show']
+            if branch1!=branch2:
+              outString += 'branches differ\n   '+str(value)+'\n   '+str(dict2Copy[key])+'\n'
+      else:
+        outString += (f'values differ for key: {key}\n   {str(value)}\n   {str(dict2Copy[key])}\n')
+    del dict2Copy[key]
+  for key in dict2Copy:
+    if key in ignoreKeys:
+      continue
+    outString += f'key not in dictionary 1: {key}\n'
+  return outString

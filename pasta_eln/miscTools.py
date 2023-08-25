@@ -1,24 +1,107 @@
 """ Misc functions that do not require instances """
-import os, sys, uuid, logging, traceback
+import os, sys, uuid, logging, traceback, json
+from io import BufferedReader
+from pathlib import Path
 from re import sub, match
+import platform
+import yaml
 
-def camelCase(a_string):
+class Bcolors:
+  """
+  Colors for Command-Line-Interface and output
+  """
+  if platform.system()=='Windows':
+    HEADER = ''
+    OKBLUE = ''
+    OKGREEN = ''
+    WARNING = ''
+    FAIL = ''
+    ENDC = ''
+    BOLD = ''
+    UNDERLINE = ''
+  else:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+def outputString(fmt:str='print', level:str='info', message:str='') -> str:
+  """ Output a message into different formats:
+    - print: print to stdout
+    - logging; log to file
+    - text: return text string (superseeds html)
+    - html: return html string https://doc.qt.io/qtforpython/overviews/richtext-html-subset.html#supported-html-subset
+    - else: no output
+    - formats can be union ('print,text')
+  """
+  prefixes = {'h2':f'{Bcolors.UNDERLINE}\n*** ','bold':f'{Bcolors.BOLD}\n*** ', \
+              'ok':f'{Bcolors.OKGREEN}', 'okish':f'{Bcolors.OKBLUE}', 'unsure':f'{Bcolors.HEADER}',\
+              'warning':f'{Bcolors.WARNING}**Warning','error':f'{Bcolors.FAIL}**ERROR '}
+  if level=='info':
+    txtOutput = message.strip()+'\n'
+  elif level in prefixes:
+    txtOutput = prefixes[level]+message
+    txtOutput+= ' ***' if '***' in prefixes[level] else ''
+    txtOutput+= f'{Bcolors.ENDC}\n'
+  else:
+    print('ERROR level not in prefixes ',level)
+  # depend on format
+  if 'print' in fmt:
+    print(txtOutput)
+  if 'logging' in fmt and level in {'info', 'warning', 'error'}:
+    getattr(logging,level)(message)
+  if 'text' in fmt:
+    return txtOutput
+  if fmt=='html':
+    colors = {'info':'black','error':'red','warning':'orange','ok':'green','okish':'blue','unsure':'magenta'}
+    if level[0]=='h':
+      return f'<{level}>{message}</{level}>'
+    if level not in colors:
+      print(f'**ERROR: wrong level {level}')
+      return ''
+    return f'<font color="{colors[level]}">' + message.replace('\n', '<br>') + '</font><br>'
+  return ''
+
+
+def tracebackString(log:bool=False, docID:str='') -> str:
+  """ Create a formatted string of traceback
+
+  Args:
+    log (bool): write to logging
+    docID (str): docID used in comment
+
+  Returns:
+    str: | separated string of call functions
+  """
+  #TODO_P1 SHORTEN reply
+  tracebackList = traceback.format_stack()[2:-2]
+  reply = '|'.join([item.split('\n')[1].strip() for item in tracebackList])  #| separated list of stack excluding last
+  if log:
+    logging.info(' traceback %s %s', docID, reply)
+  return reply
+
+
+def camelCase(text:str) -> str:
   """
   Produce camelCase from normal string
   - file names abcdefg.hij are only replaced spaces
 
   Args:
-     a_string (str): string
+     text (str): string
 
   Returns:
     str: camel case of that string: CamelCaseString
   """
-  if match(r"^[\w-]+\.[\w]+$", a_string):
-    return a_string.replace(' ','_')
-  return sub(r"(_|-)+", ' ', a_string).title().replace(' ','').replace('*','')
+  if match(r"^[\w-]+\.[\w]+$", text):
+    return text.replace(' ','_')
+  return sub(r"(_|-)+", ' ', text).title().replace(' ','').replace('*','')
 
 
-def createDirName(name,docType,thisChildNumber):
+def createDirName(name:str, docType:str, thisChildNumber:int) -> str:
   """ create directory-name by using camelCase and a prefix
 
   Args:
@@ -32,12 +115,10 @@ def createDirName(name,docType,thisChildNumber):
   if docType == 'x0':
     return camelCase(name)
   #steps, tasks
-  if isinstance(thisChildNumber, str):
-    thisChildNumber = int(thisChildNumber)
-  return f'{thisChildNumber:03d}'+'_'+camelCase(name)
+  return f'{thisChildNumber:03d}_{camelCase(name)}'
 
 
-def generic_hash(path, forceFile=False):
+def generic_hash(path:Path, forceFile:bool=False) -> str:
   """
   Hash an object based on its mode.
 
@@ -49,7 +130,7 @@ def generic_hash(path, forceFile=False):
       print('%s: hash = %s' % (sys.argv[1], result))
 
   Args:
-    path (string): path
+    path (Path): path
     forceFile (bool): force to get shasum of file and not of link (False for gitshasum)
 
   Returns:
@@ -59,18 +140,18 @@ def generic_hash(path, forceFile=False):
     ValueError: shasum of directory not supported
   """
   from urllib import request
-  if str(path).startswith('http'):                      #Remote file
+  if str(path).startswith('http'):                      #Remote file:
     try:
       with request.urlopen(path.as_posix().replace(':/','://')) as site:
         meta = site.headers
         size = int(meta.get_all('Content-Length')[0])
         return blob_hash(site, size)
-    except:
+    except Exception:
       logging.error('Could not download content / hashing issue '+path.as_posix().replace(':/','://')+'\n'+\
         traceback.format_exc())
       return ''
   if path.is_dir():
-    raise ValueError('This seems to be a directory '+path)
+    raise ValueError(f'This seems to be a directory {path.as_posix()}')
   if forceFile and path.is_symlink():
     path = path.resolve()
   if path.is_symlink():    #if link, hash the link
@@ -81,26 +162,23 @@ def generic_hash(path, forceFile=False):
   return shasum
 
 
-def upOut(key):
+def upOut(key:str) -> list[str]:
   """
-  key (bool): key
+  key (str): key
   """
   import keyring as cred
   keys = key.split() if ' ' in key else [key]
   keys_ = []
   for keyI in keys:
     key_ = cred.get_password('pastaDB',keyI)
-    if key_ is None:
-      key_ = ':'
-    else:
-      key_ = ':'.join(key_.split('bcA:Maw'))
+    key_ = ':' if key_ is None else ':'.join(key_.split('bcA:Maw'))
     keys_.append(key_)
   return keys_
 
 
-def upIn(key):
+def upIn(key:str) -> str:
   """
-  key (bool): key
+  key (str): key
   """
   import keyring as cred
   key = 'bcA:Maw'.join(key.split(':'))
@@ -109,7 +187,7 @@ def upIn(key):
   return id_
 
 
-def symlink_hash(path):
+def symlink_hash(path:Path) -> str:
   """
   Return (as hash instance) the hash of a symlink.
   Caller must use hexdigest() or digest() as needed on
@@ -129,7 +207,7 @@ def symlink_hash(path):
   return hasher.hexdigest()
 
 
-def blob_hash(stream, size):
+def blob_hash(stream:BufferedReader, size:int) -> str:
   """
   Return (as hash instance) the hash of a blob,
   as read from the given stream.
@@ -159,7 +237,7 @@ def blob_hash(stream, size):
   return hasher.hexdigest()
 
 
-def updateExtractorList(directory):
+def updateExtractorList(directory:Path) -> str:
   """
   Rules:
   - each data-type in its own try-except
@@ -175,11 +253,9 @@ def updateExtractorList(directory):
     bool: success
   """
   verboseDebug = False
-  import json, yaml
-  from pathlib import Path
   extractorsAll = {}
   for fileName in os.listdir(directory):
-    if fileName.endswith('.py') and fileName not in ['testExtractor.py','tutorial.py','commit.py'] :
+    if fileName.endswith('.py') and fileName not in {'testExtractor.py','tutorial.py','commit.py'}:
       #start with file
       with open(directory/fileName,'r', encoding='utf-8') as fIn:
         if verboseDebug: print('\n'+fileName)
@@ -211,14 +287,20 @@ def updateExtractorList(directory):
               possLines = [i.strip() for i in lines if ('recipe' in i and '=' in i and 'def' not in i)]
               if len(possLines)==1:
                 linePart=possLines[0].split('=')[1].strip(" '"+'"')
+              elif len(possLines)>1:
+                print(f'**Warning: Could not decipher {fileName} Take shortest!')
+                linePart=sorted(possLines)[0].split('=')[1].strip(" '"+'"')
               else:
-                print('**ERROR Could not decipher '+fileName)
+                print(f'**ERROR: Could not decipher {fileName} File does not work!')
+                linePart=''
             extractorsThis[linePart]='Default'
-            if verboseDebug: print('  return', linePart)
-        if verboseDebug: print('Extractors', extractorsThis)
+            if verboseDebug:
+              print('  return', linePart)
+        if verboseDebug:
+          print('Extractors', extractorsThis)
         ending = fileName.split('_')[1].split('.')[0]
         extractorsAll[ending]=extractorsThis
-        #header not used for now
+                    #header not used for now
   #update configuration file
   print('\n\nFound extractors:')
   print(yaml.dump(extractorsAll))
@@ -227,15 +309,34 @@ def updateExtractorList(directory):
   configuration['extractors'] = extractorsAll
   with open(Path.home()/'.pastaELN.json','w', encoding='utf-8') as f:
     f.write(json.dumps(configuration, indent=2))
-  return True
+  return yaml.dump(extractorsAll)
 
 
-def restart():
+def restart() -> None:
   """
   Complete restart: cold restart
   """
   try:
-    os.execv('pastaELN',[])  #installed version
-  except:
+    os.execv('pastaELN',[''])  #installed version
+  except Exception:
     os.execv(sys.executable, ['python3','-m','pasta_eln.gui']) #started for programming or debugging
   return
+
+
+class DummyProgressBar():
+  """ Class representing a progressbar that does not do anything
+  """
+  def setValue(self, value:int) -> None:
+    """
+    Set value
+
+    Args:
+      value (int): value to be set
+    """
+    return
+  def show(self) -> None:
+    """ show progress bar """
+    return
+  def hide(self) -> None:
+    """ hide progress bar """
+    return

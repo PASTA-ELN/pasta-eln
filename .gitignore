@@ -1,13 +1,14 @@
-pasta_eln/__pycache__
+.vscode/
+.venvPasta/
+docs/build/
+__pycache__
+TODO/
+tests/DemonstratorIndentation/
+tests/DataForDemonstration/
+
 pasta_eln/test.py
 pasta_eln/temp.py
 TODO*.md
+pastaELN*.py
 
-docs/build/
-__pycache__
-.vscode/
-
-.venvPasta/
-pastaELN.py
-pastaELN_CLI.py
-pastaELN_Install.py
+.coverage

@@ -1,19 +1,19 @@
 """ Table Header dialog: change which colums are shown and in which order """
-import json
+import json, platform
 from pathlib import Path
 import qrcode
 from PIL.ImageQt import ImageQt
-from PySide6.QtWidgets import QDialog, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QGroupBox, \
-                              QLineEdit, QDialogButtonBox, QFormLayout, QComboBox, QFileDialog  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QDialog, QVBoxLayout, QLabel, QGroupBox, QLineEdit, QDialogButtonBox, QFormLayout, QComboBox, QFileDialog, QMessageBox  # pylint: disable=no-name-in-module
 from PySide6.QtGui import QPixmap, QRegularExpressionValidator # pylint: disable=no-name-in-module
-from .style import Label, TextButton, showMessage
-from .miscTools import upOut, restart, upIn
-from .serverActions import testLocal, testRemote, passwordDecrypt
-
+from cloudant.client import CouchDB
+from ..guiStyle import Label, TextButton, IconButton, showMessage, widgetAndLayout
+from ..miscTools import upOut, restart, upIn
+from ..serverActions import testLocal, testRemote, passwordDecrypt
+from ..backend import Backend
 
 class ProjectGroup(QDialog):
   """ Table Header dialog: change which colums are shown and in which order """
-  def __init__(self, backend):
+  def __init__(self, backend:Backend):
     """
     Initialization
 
@@ -28,8 +28,7 @@ class ProjectGroup(QDialog):
     self.setMinimumWidth(1000)
     mainL = QVBoxLayout(self)
     Label('Project group', 'h1', mainL)
-    topbarW = QWidget()
-    topbarL = QHBoxLayout(topbarW)
+    _, topbarL = widgetAndLayout('H', mainL, spacing='m')
     self.selectGroup = QComboBox()
     self.selectGroup.addItems(self.backend.configuration['projectGroups'].keys())
     self.selectGroup.currentTextChanged.connect(self.changeProjectGroup)
@@ -38,12 +37,10 @@ class ProjectGroup(QDialog):
     TextButton('Fill remote', self.btnEvent, topbarL, 'fill')
     TextButton('Create QR', self.btnEvent, topbarL, 'createQR')
     TextButton('Check All', self.btnEvent, topbarL, 'check')
-    mainL.addWidget(topbarW)
     self.projectGroupName = QLineEdit('')
     self.projectGroupName.hide()
     mainL.addWidget(self.projectGroupName)
-    bodyW = QWidget()
-    bodyL = QHBoxLayout(bodyW)
+    _, bodyL = widgetAndLayout('H', mainL)
     #local
     localW = QGroupBox('Local credentials')
     localL = QFormLayout(localW)
@@ -57,9 +54,15 @@ class ProjectGroup(QDialog):
     self.databaseL = QLineEdit('')
     self.databaseL.setValidator(QRegularExpressionValidator("\\w{5,}"))
     localL.addRow('Database', self.databaseL)
+    pathW, pathL = widgetAndLayout('H', spacing='s')
     self.pathL = QLineEdit('')
-    self.pathL.setValidator(QRegularExpressionValidator("[\\w\\\\\\/:]{5,}"))
-    localL.addRow('Path', self.pathL)
+    pathL.addWidget(self.pathL, stretch=5) # type: ignore[call-arg]
+    if platform.system()=='Windows':
+      self.pathL.setValidator(QRegularExpressionValidator(r"[\\/~][\\w\\\\\\/:\.~]{5,}"))
+    else:
+      self.pathL.setValidator(QRegularExpressionValidator(r"[\\/~][\\w\\/]{5,}"))
+    IconButton('fa5.folder-open', self.btnEvent, pathL, 'openDir', 'Folder to save data in')
+    localL.addRow('Path', pathW)
     bodyL.addWidget(localW)
     #remote
     remoteW = QGroupBox('Remote credentials')
@@ -81,36 +84,37 @@ class ProjectGroup(QDialog):
     #image
     self.image = QLabel()
     bodyL.addWidget(self.image)
-    mainL.addWidget(bodyW)
 
     #final button box
     buttonBox = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
     buttonBox.addButton('Save encrypted', QDialogButtonBox.AcceptRole)
-    buttonBox.clicked.connect(self.close)
+    buttonBox.clicked.connect(self.closeDialog)
     mainL.addWidget(buttonBox)
     self.selectGroup.currentTextChanged.emit(self.backend.configuration['defaultProjectGroup']) #emit to fill initially
 
 
-  def close(self, btn):
+  def closeDialog(self, btn:TextButton) -> None:
     """
     cancel or save entered data
 
     Args:
       btn (QButton): save or cancel button
     """
-    print('project group press',btn.text() )
     if btn.text().endswith('Cancel'):
       self.reject()
     elif 'Save' in btn.text() and self.checkEntries():
       name = self.projectGroupName.text() if self.selectGroup.isHidden() else self.selectGroup.currentText()
       if btn.text().endswith('Save'):
+        localPath = self.pathL.text()
+        if localPath.startswith('~'):
+          localPath = (Path.home()/localPath[1:]).as_posix()
         local = {'user':self.userNameL.text(), 'password':self.passwordL.text(), \
-                'database':self.databaseL.text(), 'path':self.pathL.text()}
+                  'database':self.databaseL.text(), 'path':localPath}
         remote = {'user':self.userNameR.text(), 'password':self.passwordR.text(), \
-                'database':self.databaseR.text(), 'url':self.serverR.text()}
+                  'database':self.databaseR.text(), 'url':self.serverR.text()}
       elif btn.text().endswith('Save encrypted'):
-        credL = upIn(self.userNameL.text()+':'+self.passwordL.text())
-        credR = upIn(self.userNameR.text()+':'+self.passwordR.text())
+        credL = upIn(f'{self.userNameL.text()}:{self.passwordL.text()}')
+        credR = upIn(f'{self.userNameR.text()}:{self.passwordR.text()}')
         local = {'cred':credL, 'database':self.databaseL.text(), 'path':self.pathL.text()}
         remote = {'cred':credR, 'database':self.databaseR.text(), 'url':self.serverR.text()}
       newGroup = {'local':local, 'remote':remote}
@@ -124,16 +128,22 @@ class ProjectGroup(QDialog):
     return
 
 
-  def btnEvent(self):
+  def btnEvent(self) -> None:
     """ events that occur when top-bar buttons are pressed """
     btnName = self.sender().accessibleName()
     if btnName=='new':
       self.selectGroup.hide()
       self.projectGroupName.show()
       self.projectGroupName.setText('my_project_group_name')
-      self.userNameL.setText('')
+      defaultProjectGroup = self.backend.configuration['defaultProjectGroup']
+      config = self.backend.configuration['projectGroups'][defaultProjectGroup]
+      if 'cred' in config['local']:
+        u,p = upOut(config['local']['cred'])[0].split(':')
+      else:
+        u,p = config['local']['user'], config['local']['password']
+      self.userNameL.setText(u)
       self.userNameR.setText('')
-      self.passwordL.setText('')
+      self.passwordL.setText(p)
       self.passwordR.setText('')
       self.databaseL.setText('')
       self.databaseR.setText('')
@@ -142,7 +152,7 @@ class ProjectGroup(QDialog):
     elif btnName=='fill':
       content = QFileDialog.getOpenFileName(self, "Load remote credentials", str(Path.home()), '*.key')[0]
       with open(content, encoding='utf-8') as fIn:
-        content = json.loads( passwordDecrypt(fIn.read()) )
+        content = json.loads( passwordDecrypt(bytes(fIn.read(), 'UTF-8')) )
         self.userNameR.setText(content['user-name'])
         self.passwordR.setText(content['password'])
         self.databaseR.setText(content['database'])
@@ -153,16 +163,19 @@ class ProjectGroup(QDialog):
       else:
         configname = self.projectGroupName.text()
       qrCode = {"configname": configname, "credentials":{"server":self.serverR.text(), \
-        "username":self.userNameR.text(), "password":self.passwordR.text(), "database":self.databaseR.text()}}
+          "username":self.userNameR.text(), "password":self.passwordR.text(), "database":self.databaseR.text()}}
       img = qrcode.make(json.dumps(qrCode), error_correction=qrcode.constants.ERROR_CORRECT_M)
       pixmap = QPixmap.fromImage(ImageQt(img).scaledToWidth(200))
       self.image.setPixmap(pixmap)
     elif btnName=='check':
       self.checkEntries()
+    elif btnName=='openDir':
+      if dirName := QFileDialog.getExistingDirectory(self, 'Choose directory to save data', str(Path.home())):
+        self.pathL.setText(dirName)
     return
 
 
-  def checkEntries(self):
+  def checkEntries(self) -> bool:
     """
     Check if entries are ok
 
@@ -171,11 +184,29 @@ class ProjectGroup(QDialog):
     """
     # local
     localTest = testLocal(self.userNameL.text(), self.passwordL.text(), self.databaseL.text())
-    if Path(self.pathL.text() ).exists():
-      localTest += 'success: Local path exists\n'
+    if 'Error: Local database does not exist' in localTest and \
+       'success: Local username and password ok' in localTest and self.databaseL.text():
+      button = QMessageBox.question(self, "Question", "Local database does not exist. Should I create it?")
+      if button == QMessageBox.Yes:
+        localTest += '  Local data was created\n'
+        client = CouchDB(self.userNameL.text(), self.passwordL.text(), url='http://127.0.0.1:5984', connect=True)
+        client.create_database(self.databaseL.text())
+      else:
+        localTest += '  Local data was NOT created\n'
+    if not self.pathL.text():
+      localTest += 'ERROR: Local path not given\n'
     else:
-      localTest += 'ERROR: Local path does not exist\n'
+      fullLocalPath = self.backend.basePath/self.pathL.text()
+      if fullLocalPath.exists():
+        localTest += 'success: Local path exists\n'
+      else:
+        button = QMessageBox.question(self, "Question", "Local folder does not exist. Should I create it?")
+        if button == QMessageBox.Yes:
+          fullLocalPath.mkdir()
+        else:
+          localTest += 'ERROR: Local path does not exist\n'
     # remote
+    remoteTest = ''
     if self.userNameR.text()!='' and self.passwordR.text()!='' and self.databaseR.text()!='' and \
         self.serverR.text()!='':
       remoteTest = testRemote(self.serverR.text(), self.userNameR.text(), self.passwordR.text(), \
@@ -189,7 +220,7 @@ class ProjectGroup(QDialog):
     return True
 
 
-  def changeProjectGroup(self, item):
+  def changeProjectGroup(self, item:str) -> None:
     """
     change the project group to this; do not save to file
 

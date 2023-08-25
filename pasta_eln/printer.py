@@ -1,7 +1,8 @@
 """ Misc PRINTER functions that do not require instances """
 import os, uuid
+from typing import Any
 
-def createQRcodeSheet(fileName="../qrCodes.pdf"):
+def createQRcodeSheet(fileName:str="../qrCodes.pdf") -> None:
   """
   Documentation QR-codes
   - img = qrcode.make("testString",error_correction=qrcode.constants.ERROR_CORRECT_M)
@@ -36,9 +37,9 @@ def createQRcodeSheet(fileName="../qrCodes.pdf"):
   return
 
 
-def printQRcodeSticker(codes={},
-                       page={'size':[991,306], 'tiles':2, 'margin': 60, 'font':40},
-                       printer={'model':'QL-700', 'dev':'0x04f9:0x2042/3', 'size':'29x90'}):
+def printQRcodeSticker(codes:list[list[str]]=[],
+                       page:dict[str,Any]={'size':[991,306], 'tiles':2, 'margin': 60, 'font':40},
+                       printer:dict[str,str]={'model':'QL-700', 'dev':'0x04f9:0x2042/3', 'size':'29x90'}) -> None:
   """
   Codes: key-value pairs of qr-code and label
    - filled to achieve tiles
@@ -63,13 +64,9 @@ def printQRcodeSticker(codes={},
   qrCodeSize= min(offset-page['font']-page['margin'], page['size'][1])
   print("Effective label size",page['size'], "offset",offset, 'qrCodeSize',qrCodeSize)
   cropQRCode  = 40         #created by qrcode library
-  numCodes = 0
   image = Image.new('RGBA', page['size'], color=(255,255,255,255) )
-  for idx in range(page['tiles']):
-    if idx<len(codes):
-      codeI, text = codes[idx]
-    else:
-      codeI, text =  '', ''
+  for numCodes, idx in enumerate(range(page['tiles'])):
+    codeI, text = codes[idx] if idx<len(codes) else ('', '')
     if len(codeI)==0:
       codeI = uuid.uuid4().hex
     # add text
@@ -86,7 +83,6 @@ def printQRcodeSticker(codes={},
     qrCode = qrCode.crop((cropQRCode, cropQRCode, qrCode.size[0]-cropQRCode, qrCode.size[0]-cropQRCode))
     qrCode = qrCode.resize((qrCodeSize, qrCodeSize))
     image.paste(qrCode, (numCodes*offset, int((page['size'][1]-qrCodeSize)/2)))
-    numCodes += 1
   tmpFileName = tempfile.gettempdir()+os.sep+'tmpQRcode.png'
   print('Create temp-file',tmpFileName)
   image.save(tmpFileName)

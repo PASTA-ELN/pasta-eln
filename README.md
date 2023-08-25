@@ -5,6 +5,7 @@
 [![Verify Linux install](https://github.com/PASTA-ELN/pasta-eln/actions/workflows/installLinux.yml/badge.svg)](https://github.com/PASTA-ELN/pasta-eln/actions/workflows/installLinux.yml)
 [![Documentation building](https://github.com/PASTA-ELN/pasta-eln/actions/workflows/docbuild.yml/badge.svg)](https://github.com/PASTA-ELN/pasta-eln/actions/workflows/docbuild.yml)
 [![Linting](https://github.com/PASTA-ELN/pasta-eln/actions/workflows/pylint.yml/badge.svg)](https://github.com/PASTA-ELN/pasta-eln/actions/workflows/pylint.yml)
+[![MyPy](https://github.com/PASTA-ELN/pasta-eln/actions/workflows/mypy.yml/badge.svg)](https://github.com/PASTA-ELN/pasta-eln/actions/workflows/mypy.yml)
 
 # PASTA-ELN | The favorite ELN for experimental scientists
 
@@ -43,7 +44,7 @@
 ### Restart Linux
 ``` bash
 rm .pastaELN.json pastaELN.log
-rm -rf pastaELN/pastasExampleProject pastaELN/StandardOperatingProcedures
+rm -rf pastaELN/PastasExampleProject pastaELN/StandardOperatingProcedures
 sudo snap stop couchdb
 sudo snap remove couchdb
 ```
@@ -62,6 +63,7 @@ sudo snap remove couchdb
 ## How to write code
 ### How to create a new version
 1. Lint
+1. Type checking: ignore extractors to keep them simple, some mistake might still remain
 2. test documentation building. The documentation can be viewed with "firefox docs/build/html/index.html"
 3. run test
 4. ensure extractors updated
@@ -69,8 +71,9 @@ sudo snap remove couchdb
 6. create a new version:
 ``` bash
 pylint pasta_eln
+mypy pasta_eln/*.py
 make -C docs html
-python -m pasta_eln.Tests.3Projects
+pytest -s Tests
 diff -q ../Extractors/ pasta_eln/Extractors/ |grep differ
 
 git commit -a -m 'linting and testing'
@@ -78,6 +81,30 @@ git commit -a -m 'linting and testing'
 ./commit.py "Minimal viable product" 1
 ```
    **THIS STEP IS NECESSARY FOR ALL GITHUB-Actions TO WORK**
+
+### Create git-commit-hook
+To automatically run many tests, create a file '.git/hooks/pre-commit' and make it executable
+``` bash
+#!/bin/sh
+#
+# Test if extractors updated
+if [ "$(diff -q ../Extractors/ pasta_eln/Extractors/ |grep differ |grep extractor)" ]; then
+  echo "Differences in EXTRACTOR EXIST"
+  exit 1
+else
+  echo "All is correct: extractors match"
+fi
+# Run pylint
+exec pylint pasta_eln
+# Run mypy
+exec mypy pasta_eln/*.py
+# Test document creation
+exec make -C docs html
+# Run pytest
+exec pytest -s tests
+#
+echo 'Pre-commit-tests are finished'
+```
 
 ### How to write small python programs that do things
 #### Backend

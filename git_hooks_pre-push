@@ -1,0 +1,20 @@
+#!/bin/sh
+#
+# Test if extractors updated
+if [ "$(diff -q ../Extractors/ pasta_eln/Extractors/ |grep differ |grep extractor)" ]; then
+  echo "Differences in EXTRACTOR EXIST"
+  exit 1
+else
+  echo "All is correct: extractors match"
+fi
+# Run pylint
+exec pylint pasta_eln
+exec pylint tests
+# Run mypy
+exec mypy pasta_eln
+# Test document creation
+exec make -C docs html
+# Run pytest
+exec pytest -s tests
+#
+echo 'Pre-push-tests are finished'

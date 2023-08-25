@@ -1,8 +1,7 @@
-""" Long strings that would obfuscate code """
-import json
+""" Long strings and dictionaries/JSON that would obfuscate code """
+from typing import Any
 
-defaultOntology = json.loads("""
-{
+defaultOntology:dict[str,Any] = {
   "_id":"-ontology-",
   "-version":2,
 
@@ -51,14 +50,52 @@ defaultOntology = json.loads("""
     {"name":"vendor",     "query":"Who is the vendor?"}
   ]}
 }
-""")
 
-defaultOntologyNode = json.loads("""
-  [{"name": "-name", "query": "What is the file name?"},
-   {"name": "-tags"},
-   {"name": "comment", "query": "#tags comments remarks :field:value:"},
-   {"name": "-type"}]
-""")
+
+defaultOntologyNode:list[dict[str,str]] = [
+  {"name": "-name", "query": "What is the file name?"},
+  {"name": "-tags"},
+  {"name": "comment", "query": "#tags comments remarks :field:value:"},
+  {"name": "-type"}
+  ]
+
+
+defaultConfiguration:dict[str,Any] = {
+  "defaultProjectGroup": "research",
+  "userID": "$os.getlogin()$",
+  "version": 0,
+  "tableColumnsMax": 16,
+  "qrPrinter": {},
+  "extractorDir": "$(Path(__file__).parent/'Extractors').as_posix()$",
+  "extractors": {},
+  "authors": [{"first":"", "last":"", "title":"", "email":"", "orcid":"","organizations":[{"organization":"", "rorid":""}]}],
+  "GUI": {},
+  "projectGroups": {}
+  }
+
+
+# level 1: type of property
+#   within each: array of 3: description, default, all_choices
+configurationGUI:dict[str,Any] = {
+  "general": {
+    "theme": ["Theme",
+              "light_blue",
+              ["dark_amber","dark_blue","dark_cyan","dark_lightgreen","dark_pink","dark_purple", "dark_red",\
+               "dark_teal","dark_yellow","light_amber","light_blue","light_cyan","light_cyan_500","light_lightgreen",\
+               "light_pink","light_purple","light_red","light_teal","light_yellow","none"]],
+    "loggingLevel": ["Logging level (more->less)","INFO",["DEBUG","INFO","WARNING","ERROR"]],
+  },
+  "dimensions":{
+    "sidebarWidth": ["Sidebar width", 280, [220, 280, 340]],
+    "maxTableColumnWidth": ["Maximum column width in tables", 400, [300, 400, 500, 600]],
+    "imageSizeDetails": ["Image size in details view and form", 600, [300, 400, 500, 600]],
+    "imageWidthProject": ["Image width in project view", 300, [200, 250, 300, 350, 400]],
+    "maxProjectLeafHeight": ["Maximum height of item in project view", 250, [200, 250, 300, 400]],
+    "widthContent": ["Width of procedures in project view", 600, [400, 500, 600, 700]],
+    "docTypeOffset": ["Offset of document type in project view", 500, [400, 500, 600, 700]],
+    "frameSize": ["Frame width around items in project view", 6, [4, 6, 8, 10]],
+  }
+}
 
 
 setupTextLinux = """
@@ -87,14 +124,6 @@ This setup will analyse and (possibly) correct these items.
 If the installation is successful, manually and permanently remove the 'pastaELN.log' logfile that is in your home-directory (folder above "My Documents").
 
 If an attempt fails: please follow to this [website](https://pasta-eln.github.io/pasta-eln/install.html).
-"""
-
-configurationOverview = """
-## Overview
-###  Setup: Setup and troubleshoot PASTA-ELN installation
-### Project group: configure how project groups are saved
-### Ontology: configure the data structure for current project group
-### Miscellaneous: different things like look-and-feel
 """
 
 gitWindows = """
@@ -148,10 +177,31 @@ This step helps to verify the installation and provides an helpful example for n
 This step usually takes up to 1min, so please be patient.
 """
 
+
 shortcuts = """
-Ctrl+P: List projects
+Ctrl+Space: List projects
 Ctrl+M: List measurements
 Ctrl+S: List samples
+Ctrl+P: List procedures
+Ctrl+I: List instruments
 Ctrl+T: List tags
+Ctrl+U: List unidentified
+F2: Test file extraction
+F5: Synchronize
+F9: Restart
 Ctrl+?: Verify database integrity
+Ctrl+0: Configuration
+"""
+
+
+tableHeaderHelp = """
+<h4>You can add custom rows via bottom text area.</h4>
+
+If you want to add a column:
+<ul>
+<li> for a normal data-field (comment, content, name, type, tags, user, date), enter this field : 'comment'
+<li> to check the existence of an image: enter 'image'
+<li> to check if a tag is present: "#tag", in which you replace "tag" by the tag you want to look for. "_curated" is a special tag for measurements.
+<li> for information inside the metadata, use a "/": e.g. "metaVendor/fileExtension", "metaUser/stress". Capitalization is important.
+</ul>
 """

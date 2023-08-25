@@ -3,65 +3,62 @@ todoString = """
 
 <h3>Very important show stopper</h3>
 <ul>
-<li> sometimes sample is created in project hierarchy: not sure when it occurs
 </ul>
 
 <h3>Things currently working on</h3>
 <ul>
-<li> tags: add docType to allow for user to see why cannot click in table
-<li> tags: get selected via a editable QCombobox and get shown as qlabels, that can be deleted
+<li> design: make the checkboxes larger!
+<li> finish ontology dialog
+<li> make markdown format correctly immediately
+<li> move folder to different folder: use unidentified for notes
+<li> not save now: when opening text files, system can crash
+<li> not save now: when opening text files, system can crash
+<li> render comment nicely without screwing up the rest
+<li> table: shift-select
 </ul>
 
 <h3>Improvement to convenience</h3>
 <ul>
-<li> add splitter to increase / decrease image
-<li> allow to unassign previously assigned data
-<li> design ProjectView: Currently, the comment is more highlighted than the title of an item due
-<li> design projectLeaves:
-<li> design projectLeaves: 3 columns?
-<li> design: make full width; scale fonts appropriately
-<li> design: what is the difference to TextButton?
-<li> finish ontology dialog
+<li> -> lambda and change buttons/actions: cleaner code
+<li> export to dataverse
+<li> extractor: creates links to sample/instrument
 <li> form: add button to add key-values
-<li> ontologyCheck: all names must be different
-<li> other items as non-edible things that can be copy-pasted
-<li> scanning for progress bar
-<li> table: shift-select
-<li> tableHeaderChange: requires view to change to views, not ontology
+<li> form: other items as non-edible things that can be copy-pasted
+<li> move all changeExtractor of this type to separate function
+<li> move all context menu of this type to separate function
 </ul>
 
 <h3>Bigger things implemented soon</h3>
 <ul>
-<li> allow to adjust height
-<li> design of project tree
-<li> projectTree design: If folders and other items have boxes of slightly different brightness
+<li> add nice glyphs later, see also below \u00D7')
+<li> add splitter to increase / decrease image
+<li> addToConfig
+<li> can you sort for true false in tables too?
+<li> change to string-output
+<li> configuration
+<li> from config file
+<li> not sure this will be important
+<li> projectTree can select sub-folders: if table-row click, move to view it project
 <li> projectTree: allow right click on measurement to change recipe
 <li> projectTree: drag&drop of external files
 <li> projectTree: select multiple items to edit... What is use case
-<li> projectView: allow scroll in sidebar, size changegable, drag-and-drop to move
-<li> projectView: if table-row click, move to view it project
-<li> projectView: selection does not scroll; one cannot select a row
-<li>: projectTree technology: image does not allow for easy context aware clicks: like click on links, right-click image
+<li> projectTree: selection does not scroll; one cannot select a row
+<li> redraw/reread only part of the tree
+<li> sidebar-scroll cannot figure out issue
 </ul>
 
 <h3>Things worthwile remembering/uncritical</h3>
 <ul>
-<li> Aug 2023: remove
-<li> addToConfig
-<li> addToConfig
-<li> addToConfig
-<li> can you sort for true false in tables too?
+<li> allow to add more users and each user can have multiple organizations
 <li> copy of file: should it the be the same in database or should it be two separate entities??
 <li> create list of unaccessible files: linked with accessible files
-<li> extractor: creates links to sample/instrument
-<li> for now, sorted by last change of project itself: future create a view that does that automatically
-<li> if successful in Aug2023: remove
+<li> for now, sorted by last change of project itself. future create a view that does that automatically(if docType x0: emit changeDate)
 <li> if successful in Aug2023: remove "echo....read"
 <li> invert filter: not 'Sur' in name => '^((?!Sur).)*$' in name
 <li> moreChecksDB: if parent has corresponding show
 <li> only write markdown files for now
 <li> remove this warning
 <li> serverConfiguration: this should become a GUI and CLI and separate into three-files: functions, CLI, GUI
-<li> this will rerun useExtractor: ok for now
+<li> this childNumSearch could become new function
 </ul>
 """

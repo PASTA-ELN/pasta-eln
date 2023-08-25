@@ -1,33 +1,36 @@
 #!/usr/bin/python3
 """Commandline utility to admin the remote server"""
 import sys, json, secrets, base64, os
+from typing import Any
 from datetime import datetime
 from pathlib import Path
 from zipfile import ZipFile, ZIP_DEFLATED
 import keyring as cred
 import requests
+from requests.structures import CaseInsensitiveDict
+from requests.auth import AuthBase
 from PIL import Image, ImageDraw, ImageFont
 
 #TODO_P5 serverConfiguration: this should become a GUI and CLI and separate into three-files: functions, CLI, GUI
 # add: delete all documents, backup database, backup server (incl. all small things)
 
-def passwordEncrypt(message):
+def passwordEncrypt(message:str) -> bytes:
   """
   obfuscate message
   """
   return base64.b64encode(bytearray(message, encoding='utf-8'))
-def passwordDecrypt(message):
+def passwordDecrypt(message:bytes) -> str:
   """
   de-obfuscate message
   """
   return base64.b64decode(message).decode('utf-8')
 
 #global variables
-headers = requests.structures.CaseInsensitiveDict()
+headers:CaseInsensitiveDict[str]= CaseInsensitiveDict()
 headers["Content-Type"] = "application/json"
 
 
-def createUserDatabase(url, auth, userName):
+def createUserDatabase(url:str, auth:AuthBase, userName:str) -> None:
   '''
   create a new user and database
 
@@ -40,35 +43,37 @@ def createUserDatabase(url, auth, userName):
   userDB = userName.replace('.','_')
 
   # create database
-  resp = requests.put(url+'/'+userDB, headers=headers, auth=auth, timeout=10)
+  resp = requests.put(f'{url}/{userDB}', headers=headers, auth=auth, timeout=10)
   if not resp.ok:
     print("**ERROR 1: put not successful",resp.reason)
     return
 
   # create user
-  data = {"docs":[{"_id":"org.couchdb.user:"+userName,"name": userName,"password":userPW,
-    "roles":[userDB+"-W"], "type": "user", "orcid": ""}]}
-  data = json.dumps(data)
-  resp = requests.post(url+'/_users/_bulk_docs', headers=headers, auth=auth, data=data, timeout=10)
+  userDict = {"_id": f"org.couchdb.user:{userName}", "name": userName, "password": userPW, "roles": [f"{userDB}-W"], "type": "user", "orcid": ""}
+  dataDict: dict[str, Any] = { "docs": [userDict] }
+  data = json.dumps(dataDict)
+  resp = requests.post(f'{url}/_users/_bulk_docs', headers=headers, auth=auth, data=data, timeout=10)
   if not resp.ok:
     print("**ERROR 2: post not successful",resp.reason)
     return
 
   # create _security in database
-  data = {"admins": {"names":[],"roles":[userDB+"-W"]},
-          "members":{"names":[],"roles":[userDB+"-R"]}}
-  data = json.dumps(data)
-  resp = requests.put(url+'/'+userDB+'/_security', headers=headers, auth=auth, data=data, timeout=10)
+  dataDict = {
+      "admins": {"names": [], "roles": [f"{userDB}-W"]},
+      "members": {"names": [], "roles": [f"{userDB}-R"]},
+  }
+  data = json.dumps(dataDict)
+  resp = requests.put(f'{url}/{userDB}/_security', headers=headers, auth=auth, data=data, timeout=10)
   if not resp.ok:
     print("**ERROR 3: post not successful",resp.reason)
     return
 
   # create _design/authentication in database
-  data = {"validate_doc_update": "function(newDoc, oldDoc, userCtx) {"+\
+  dataDict = {"validate_doc_update": "function(newDoc, oldDoc, userCtx) {"+\
     "if (userCtx.roles.indexOf('"+userDB+"-W')!==-1){return;} "+\
     "else {throw({unauthorized:'Only Writers (W) may edit the database'});}}"}
-  data = json.dumps(data)
-  resp = requests.put(url+'/'+userDB+'/_design/authentication',headers=headers,auth=auth,data=data,timeout=10)
+  data = json.dumps(dataDict)
+  resp = requests.put(f'{url}/{userDB}/_design/authentication', headers=headers, auth=auth, data=data, timeout=10)
   if not resp.ok:
     print("**ERROR 4: post not successful",resp.reason)
     return
@@ -79,22 +84,22 @@ def createUserDatabase(url, auth, userName):
   d = ImageDraw. Draw(img)
   font = ImageFont.truetype("arial.ttf", 24)
   d.text((30, 30),  "configuration name: remote", fill=(240,240,240), font=font)
-  d.text((30, 70),  "user-name: "+userName, fill=(240,240,240), font=font)
-  d.text((30,110),  "password: " +userPW,   fill=(240,240,240), font=font)
-  d.text((30,150),  "database: " +userDB,   fill=(240,240,240), font=font)
-  d.text((30,190),  "Remote configuration", fill=(240,240,240), font=font)
-  d.text((30,230),  "Server:   " +url, fill=(240,240,240), font=font)
-  img.save(userDB+'.png')
+  d.text((30, 70), f"user-name: {userName}", fill=(240,240,240), font=font)
+  d.text((30,110), f"password: {userPW}",    fill=(240,240,240), font=font)
+  d.text((30,150), f"database: {userDB}",    fill=(240,240,240), font=font)
+  d.text((30,190),  "Remote configuration",  fill=(240,240,240), font=font)
+  d.text((30,230), f"Server:   {url}",       fill=(240,240,240), font=font)
+  img.save(f'{userDB}.png')
   #create key file
-  data = {"configuration name":"remote","user-name":userName,"password":userPW,"database":userDB,\
+  dataDict = {"configuration name":"remote","user-name":userName,"password":userPW,"database":userDB,\
     "Remote configuration":"true","Server":url}
-  data = passwordEncrypt(json.dumps(data).encode())
-  with open(userDB+'.key','bw') as fOut:
-    fOut.write(data)
+  dataBin = passwordEncrypt(json.dumps(dataDict))
+  with open(f'{userDB}.key','bw') as fOut:
+    fOut.write(dataBin)
   return
 
 
-def listUsers(url, auth, verbose=True):
+def listUsers(url:str, auth:AuthBase, verbose:bool=True) -> dict[str,Any]:
   '''
   list (and test) all users
 
@@ -106,7 +111,7 @@ def listUsers(url, auth, verbose=True):
   Returns:
     dict: user information
   '''
-  resp = requests.get(url+'/_users/_all_docs', headers=headers, auth=auth, timeout=10)
+  resp = requests.get(f'{url}/_users/_all_docs', headers=headers, auth=auth, timeout=10)
   if not resp.ok:
     print("**ERROR: get not successful",resp.reason)
     return {}
@@ -118,8 +123,8 @@ def listUsers(url, auth, verbose=True):
       continue
     if verbose:
       print(i['id'][17:]+'       key:'+i['key'][17:])
-    respI = requests.get(url+'/_users/'+i['id'], headers=headers, auth=auth, timeout=10)
-    respI = json.loads(respI.text)
+    responseI = requests.get(f'{url}/_users/'+i['id'], headers=headers, auth=auth, timeout=10)
+    respI = json.loads(responseI.text)
     results[respI['name']] = respI['roles']
     if verbose:
       print('  Roles',respI['roles'])
@@ -133,12 +138,10 @@ def listUsers(url, auth, verbose=True):
       else:
         print('  -> DOES NOT correspond to id-name convention:',respI['name'])
       print('  Orcid',respI['orcid'])
-  if verbose:
-    return {}
-  return results
+  return {} if verbose else results
 
 
-def listDB(url, auth, verbose):
+def listDB(url:str, auth:AuthBase, verbose:bool) -> dict[str,Any]:
   '''
   list (and test) all databases
 
@@ -150,7 +153,7 @@ def listDB(url, auth, verbose):
   Returns:
     dict: database information
   '''
-  resp = requests.get(url+'/_all_dbs', headers=headers, auth=auth, timeout=10)
+  resp = requests.get(f'{url}/_all_dbs', headers=headers, auth=auth, timeout=10)
   if not resp.ok:
     print("**ERROR: get not successful",resp.reason)
     return {}
@@ -163,8 +166,8 @@ def listDB(url, auth, verbose):
     if verbose:
       print(i)
     # test security
-    respI = requests.get(url+'/'+i+'/_security', headers=headers, auth=auth, timeout=10)
-    respI = json.loads(respI.text)
+    responseI = requests.get(f'{url}/{i}/_security', headers=headers, auth=auth, timeout=10)
+    respI = json.loads(responseI.text)
     security = [respI['admins']['roles'], respI['members']['roles']]
     if verbose:
       print('  Write',respI['admins']['roles'])
@@ -176,21 +179,23 @@ def listDB(url, auth, verbose):
       else:
         print('  -> **ERROR** security')
     # test authentication
-    respI = requests.get(url+'/'+i+'/_design/authentication', headers=headers, auth=auth, timeout=10)
-    respI = json.loads(respI.text)['validate_doc_update']
-    respI = respI.split('indexOf')[1].split('!==')[0].strip()[2:-2]
-    results[i] = security+[respI]
-    if verbose:
-      if respI == i+'-W':
-        print('  -> everything ok')
-      else:
-        print('  -> **ERROR** authentication',respI)
-  if verbose:
-    return {}
-  return results
+    respI = requests.get(f'{url}/{i}/_design/authentication', headers=headers, auth=auth, timeout=10)
+    respI = json.loads(respI.text)
+    if 'validate_doc_update' in respI:
+      respI = respI['validate_doc_update']
+      respI = respI.split('indexOf')[1].split('!==')[0].strip()[2:-2]
+      results[i] = security+[respI]
+      if verbose:
+        if respI == f'{i}-W':
+          print('  -> everything ok')
+        else:
+          print('  -> **ERROR** authentication',respI)
+    else:
+      print("**ERROR <url>/<userDB>/_design/authentication' does not exist. Everybody can access!")
+  return {} if verbose else results
 
 
-def testUser(url, auth, userName, userPassword):
+def testUser(url:str, auth:AuthBase, userName:str, userPassword:str) -> None:
   '''
   test if configuration for this user is correct
   '''
@@ -221,14 +226,14 @@ def testUser(url, auth, userName, userPassword):
         print("**ERROR: ",write,read,authen,iDB)
         break
     #test server with user credentials 1
-    resp = requests.get(url+'/'+iDB, headers=headers, auth=authUser, timeout=10)
+    resp = requests.get(f'{url}/{iDB}', headers=headers, auth=authUser, timeout=10)
     if resp.ok:
       print("-> Database can be read")
     else:
       print("**ERROR: Database cannot be read")
       break
     #test server with user credentials 2
-    resp = requests.get(url+'/'+iDB+'/_design/authentication', headers=headers, auth=authUser, timeout=10)
+    resp = requests.get(f'{url}/{iDB}/_design/authentication', headers=headers, auth=authUser, timeout=10)
     if resp.ok:
       print("-> Authentication can be read")
     else:
@@ -237,7 +242,7 @@ def testUser(url, auth, userName, userPassword):
   return
 
 
-def testLocal(userName, password, database=''):
+def testLocal(userName:str, password:str, database:str='') -> str:
   """
   test local server
 
@@ -262,15 +267,15 @@ def testLocal(userName, password, database=''):
   else:
     answer += 'ERROR: Local username or password incorrect\n'
   if database!='':
-    resp = requests.get('http://127.0.0.1:5984/'+database, headers=headers, auth=authUser, timeout=10)
+    resp = requests.get(f'http://127.0.0.1:5984/{database}', headers=headers, auth=authUser, timeout=10)
     if resp.ok:
       answer += 'success: Local database exists\n'
     else:
-      answer += 'Warning: Local database does not exist\n'
+      answer += 'Error: Local database does not exist\n'
   return answer
 
 
-def testRemote(url, userName, password, database):
+def testRemote(url:str, userName:str, password:str, database:str) -> str:
   """
   test remote server
 
@@ -290,7 +295,7 @@ def testRemote(url, userName, password, database):
   else:
     answer += 'ERROR: Remote server is not working\n'
   authUser = requests.auth.HTTPBasicAuth(userName, password)
-  resp = requests.get(url+'/'+database, headers=headers, auth=authUser, timeout=10)
+  resp = requests.get(f'{url}/{database}', headers=headers, auth=authUser, timeout=10)
   if resp.ok:
     answer += 'success: Remote database exists\n'
   else:
@@ -298,7 +303,33 @@ def testRemote(url, userName, password, database):
   return answer
 
 
-def backupCouchDB(location='', userName='', password=''):
+def listDocuments(url:str, userName:str, password:str, database:str, full:bool=True) -> str:
+  """
+  list documents in database
+
+  Args:
+    url (str): url of remote server
+    userName (str): user name at remote server
+    password (str): password at remote server
+    database (str): couchdb database
+    full (bool): full list or just number
+
+  Returns:
+    str: success and errors in '\n'-string
+  """
+  authUser = requests.auth.HTTPBasicAuth(userName, password)
+  resp = requests.get(f'{url}/{database}/_all_docs', headers=headers, auth=authUser, timeout=10)
+  if resp.status_code != 200:
+    print('**ERROR response for _all_dbs wrong', resp.text)
+    print('Username and password', userName, password)
+    return 'ERROR!'
+  print(f"\nNumber of docs: {resp.json()['total_rows']}")
+  if full:
+    print(', '.join([doc['id'] for doc in resp.json()['rows']]))
+  return 'Success'
+
+
+def backupCouchDB(location:str='', userName:str='', password:str='') -> None:
   """
   Backup everything of the CouchDB installation accross all databases and all configurations
   - remote location uses username/password combo in local keystore
@@ -310,56 +341,60 @@ def backupCouchDB(location='', userName='', password=''):
     password (str): password
   """
   # get username and password
-  if location=='':
+  if not location:
     location = 'remote' if input('Enter location: [r] remote; else local: ')=='r' else 'local'
   if location=='local':
     location = '127.0.0.1'
-    if userName=='':
+    if not userName:
       userName = input('Enter username: ').strip()
-    if password=='':
+    if not password:
       password = input('Enter password: ').strip()
   elif location=='remote':
     try:
       myString = cred.get_password('pastaDB','admin')
+      if myString is None:
+        print("**ERROR Could not get credentials from keyring 2. Please create manually.")
+        return
       location, userName, password = myString.split(':')
       print("URL and credentials successfully read from keyring")
-    except:
-      print("**ERROR Could not get credentials from keyring. Please create manually.")
+    except Exception:
+      print("**ERROR Could not get credentials from keyring 2b. Please create manually.")
       return
   else:
     print('**ERROR: wrong location given.')
     return
   # use information
   authUser = requests.auth.HTTPBasicAuth(userName, password)
-  kwargs   = {'headers':headers, 'auth':authUser, 'timeout':10}
-  resp = requests.get('http://'+location+':5984/_all_dbs', **kwargs)
+  resp = requests.get(f'http://{location}:5984/_all_dbs', headers=headers, auth=authUser, timeout=10)
   if resp.status_code != 200:
     print('**ERROR response for _all_dbs wrong', resp.text)
     print('Username and password', userName, password)
     return
   timestamp = datetime.now().isoformat().split('.')[0].replace('-','').replace(':','')
   zipFileName = 'couchDB_backup_'+location.replace('.','')+'_'+timestamp
-  print('Create zip-file '+zipFileName+'.zip')
+  print(f'Create zip-file {zipFileName}.zip')
   databases = resp.json()
-  with ZipFile(zipFileName+'.zip', 'w', compression=ZIP_DEFLATED) as zipFile:
+  with ZipFile(f'{zipFileName}.zip', 'w', compression=ZIP_DEFLATED) as zipFile:
     for database in databases:
       if database.startswith('_'):
         print('Special database', database, ': Nothing to do')
       else:
         print('Backup normal database ',database)
-        resp = requests.get('http://'+location+':5984/'+database+'/_all_docs', **kwargs)
+        resp = requests.get(f'http://{location}:5984/{database}/_all_docs', headers=headers, auth=authUser, timeout=10)
         for item in resp.json()['rows']:
           docID = item['id']
-          doc   = requests.get('http://'+location+':5984/'+database+'/'+docID, **kwargs).json()
-          zipFile.writestr(zipFileName+'/'+database+'/'+docID, json.dumps(doc))
+          doc   = requests.get(f'http://{location}:5984/{database}/{docID}', headers=headers, auth=authUser, timeout=10).json()
+          zipFile.writestr(f'{zipFileName}/{database}/{docID}', json.dumps(doc))
           if '_attachments' in doc:
             for att in doc['_attachments']:
-              docAttach = requests.get('http://'+location+':5984/'+database+'/'+docID+'/'+att,**kwargs).json()
-              zipFile.writestr(zipFileName+'/'+database+'/'+docID+'_attach/'+att, json.dumps(docAttach))
+              docAttach = requests.get(f'http://{location}:5984/{database}/{docID}/{att}',
+                                        headers=headers, auth=authUser, timeout=10).json()
+              zipFile.writestr(f'{zipFileName}/{database}/{docID}_attach/{att}', json.dumps(docAttach))
         #_design/authentication is automatically included
         #_security
-        doc   = requests.get('http://'+location+':5984/'+database+'/_security', **kwargs).json()
-        zipFile.writestr(zipFileName+'/'+database+'/_security', json.dumps(doc))
+        doc   = requests.get(f'http://{location}:5984/{database}/_security',
+                              headers=headers, auth=authUser, timeout=10).json()
+        zipFile.writestr(f'{zipFileName}/{database}/_security', json.dumps(doc))
     with open(Path.home()/'.pastaELN.json', encoding='utf-8') as fIn:
       configuration = json.loads(fIn.read())
       for projectG in configuration['projectGroups']:
@@ -368,11 +403,11 @@ def backupCouchDB(location='', userName='', password=''):
           if 'cred' in subsection and ('user' not in subsection or 'password' not in subsection):
             key = cred.get_password('pastaDB', subsection['cred'])
             subsection['user'], subsection['password'] = ['',''] if key is None else key.split('bcA:Maw')
-      zipFile.writestr(zipFileName+'/pastaELN.json', json.dumps(configuration))
+      zipFile.writestr(f'{zipFileName}/pastaELN.json', json.dumps(configuration))
   return
 
 
-def restoreCouchDB(location='', userName='', password='', fileName=''):
+def restoreCouchDB(location:str='', userName:str='', password:str='', fileName:str='') -> None:
   """
   restore everything to the CouchDB installation accross all databases and all configurations
   - remote location uses username/password combo in local keystore
@@ -385,34 +420,36 @@ def restoreCouchDB(location='', userName='', password='', fileName=''):
     fileName (str): file used for restoration
   """
   # get username and password
-  if location=='':
+  if not location:
     location = 'remote' if input('Enter location: [r]emote; else local: ')=='r' else 'local'
   if location=='local':
     location = '127.0.0.1'
-    if userName=='':
+    if not userName:
       userName = input('Enter username: ').strip()
-    if password=='':
+    if not password:
       password = input('Enter password: ').strip()
   elif location=='remote':
     try:
       myString = cred.get_password('pastaDB','admin')
+      if myString is None:
+        print("**ERROR Could not get credentials from keyring 3. Please create manually.")
+        return
       location, userName, password = myString.split(':')
       print("URL and credentials successfully read from keyring")
-    except:
-      print("**ERROR Could not get credentials from keyring. Please create manually.")
+    except Exception:
+      print("**ERROR Could not get credentials from keyring 3b. Please create manually.")
       return
   else:
     print('**ERROR: wrong location given.')
     return
-  if fileName=='':
+  if not fileName:
     possFiles = [i for i in os.listdir('.') if i.startswith('couchDB') and i.endswith('.zip')]
     for idx, i in enumerate(possFiles):
-      print('['+str(idx+1)+'] '+i)
-    fileName = input('Which file to use for restored? (1-'+str(len(possFiles))+') ')
+      print(f'[{str(idx + 1)}] {i}')
+    fileName = input(f'Which file to use for restored? (1-{len(possFiles)}) ')
     fileName = possFiles[int(fileName)-1]
   # use information
   authUser = requests.auth.HTTPBasicAuth(userName, password)
-  kwargs   = {'headers':headers, 'auth':authUser, 'timeout':10}
   with ZipFile(fileName, 'r', compression=ZIP_DEFLATED) as zipFile:
     files = zipFile.namelist()
     #first run through: create documents and design documents
@@ -423,23 +460,23 @@ def restoreCouchDB(location='', userName='', password='', fileName=''):
       if docID.endswith('_attach'):
         continue #Do in second loop
       #test if database is exists: create otherwise
-      resp = requests.get('http://'+location+':5984/'+database+'/_all_docs', **kwargs)
+      resp = requests.get(f'http://{location}:5984/{database}/_all_docs', headers=headers, auth=authUser, timeout=10)
       if resp.status_code != 200 and resp.json()['reason']=='Database does not exist.':
-        resp = requests.put('http://'+location+':5984/'+database, **kwargs)
+        resp = requests.put(f'http://{location}:5984/{database}', headers=headers, auth=authUser, timeout=10)
         if not resp.ok:
           print("**ERROR: could not create database",resp.reason)
           return
       #test if document is exists: create otherwise
       if docID=='_design':
         docID = '/'.join(fileParts[1:])
-      resp = requests.get('http://'+location+':5984/'+database+'/'+docID, **kwargs)
+      resp = requests.get(f'http://{location}:5984/{database}/{docID}', headers=headers, auth=authUser, timeout=10)
       if resp.status_code != 200 and resp.json()['reason']=='missing':
         with zipFile.open(fileI) as dataIn:
           doc = json.loads( dataIn.read() )  #need doc conversion since deleted from it
           del doc['_rev']
           if '_attachments' in doc:
             del doc['_attachments']
-          resp = requests.put('http://'+location+':5984/'+database+'/'+docID, **kwargs,data=json.dumps(doc) )
+          resp = requests.put(f'http://{location}:5984/{database}/{docID}', data=json.dumps(doc), headers=headers, auth=authUser, timeout=10)
           if resp.ok:
             print('Saved document:', database, docID)
           else:
@@ -452,15 +489,14 @@ def restoreCouchDB(location='', userName='', password='', fileName=''):
       if not docID.endswith('_attach'):
         continue #Did already in the first loop
       #test if attachement exists: create otherwise
-      attachPath =docID[:-7]+'/'+fileParts[-1]
-      resp = requests.get('http://'+location+':5984/'+database+'/'+attachPath, **kwargs)
+      attachPath = f'{docID[:-7]}/{fileParts[-1]}'
+      resp = requests.get(f'http://{location}:5984/{database}/{attachPath}', headers=headers, auth=authUser, timeout=10)
       if resp.status_code == 404 and 'missing' in resp.json()['reason']:
         with zipFile.open(fileI) as dataIn:
           attachDoc = dataIn.read()
-          resp = requests.get('http://'+location+':5984/'+database+'/'+docID[:-7],**kwargs)
+          resp = requests.get(f'http://{location}:5984/{database}/{docID[:-7]}', headers=headers, auth=authUser, timeout=10)
           headers['If-Match'] = resp.json()['_rev'] #will be overwritten each time
-          kwargs   = {'headers':headers, 'auth':authUser, 'timeout':10}
-          resp = requests.put('http://'+location+':5984/'+database+'/'+attachPath,**kwargs, data=attachDoc)
+          resp = requests.put(f'http://{location}:5984/{database}/{attachPath}', data=attachDoc, headers=headers, auth=authUser, timeout=10)
           if resp.ok:
             print('Saved attachment:', database, attachPath)
           else:
@@ -468,7 +504,7 @@ def restoreCouchDB(location='', userName='', password='', fileName=''):
   return
 
 
-def main():
+def main() -> None:
   '''
   Main function
   '''
@@ -478,9 +514,13 @@ def main():
   #  cred.set_password('pastaDB','admin',myString)
   try:
     myString = cred.get_password('pastaDB','admin')
+    if myString is None:
+      print("**ERROR Could not get credentials from keyring 1. Please create manually.")
+      print("import keyring as cred\nmyString = url+':'+adminUserName+':'+adminPassword\n#  url without http and port\ncred.set_password('pastaDB','admin',myString)")
+      sys.exit(1)
     url, administrator, password = myString.split(':')
     print("URL and credentials successfully read from keyring")
-  except:
+  except Exception:
     print("Could not get credentials from keyring.")
     ## URL
     url = input('Enter the URL without http and without port: ')
@@ -491,21 +531,24 @@ def main():
     administrator = input('Enter the administrator username: ')
     password =      input('Enter the administrator password: ')
   #assemble information
-  url = 'http://'+url+':5984'
+  url = f'http://{url}:5984'
   auth = requests.auth.HTTPBasicAuth(administrator, password)
 
+  print('\n-------------------------------------------------------------------------')
+  print(  'Manage users and databases for PASTA-ELN on a remote couchDB installation')
+  print(  '-------------------------------------------------------------------------')
   while True:
-    print('\nAdopt a server to PASTA-ELN\nCommands: [q]uit; [n]ew user; list [u]ser; list [d]atabases; '+\
-          '[t]est user; [b]ackup data; [r]estore data')
+    print('\nCommands: [q]uit; [n]ew user; list [u]ser; list [d]atabases; '+\
+          '[t]est username and password; [b]ackup data; [r]estore data; [c]redentials; [l]ist documents in database')
     command = input('> ')
     userName, userPassword = '', ''
     if command == 'q':
       break
     # ask questions for parameters
-    if command in ['n', 't']:
+    if command in ['n', 't', 'l']:
       userName =      input('Enter the user-name, e.g. m.miller: ')
-    if command in ['t']:
-      userPassword =      input('Enter the user-password: ')
+    if command in ['t', 'l']:
+      userPassword =  input('Enter the user-password: ')
     # execute command
     if command == 'n' and userName and len(userName)>2:
       createUserDatabase(url, auth, userName)
@@ -517,6 +560,21 @@ def main():
       backupCouchDB()
     elif command == 'r':
       restoreCouchDB()
+    elif command == 'c':
+      print('``` python')
+      print('import json, requests')
+      print('from requests.structures import CaseInsensitiveDict')
+      print('headers:CaseInsensitiveDict[str]= CaseInsensitiveDict()')
+      print('headers["Content-Type"] = "application/json"\n')
+      print(f'url = "{url}"')
+      print(f'administrator = "{administrator}"')
+      print(f'password = "{password}"\n')
+      print('auth = requests.auth.HTTPBasicAuth(administrator, password)')
+      print('```')
+    elif command == 'l':
+      database = input('Enter the database: ')
+      full     = input('Full output [yN] ')=='y'
+      listDocuments(url, userName, userPassword, database, full)
     elif command == 't' and userName and userPassword and len(userName)>2 and len(userPassword)>2:
       testUser(url, auth, userName, userPassword)
     else:

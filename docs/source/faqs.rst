@@ -64,3 +64,9 @@ Implementation
 
 *Why dont' you package everything in a flatpak or snap?*
     Containerization is a great concept for many software as it separates the host operating system from the software. This concept is not for PASTA-ELN because we require and want to extend extractors [See ...](extractors.md). As such the user/scientist should be able to change code and require libraries that are not included by default. These libraries cannot be added to the container. Scientist developed extractors cannot be archived in a container which should be self-sufficient and encapsulated. (Also, one could think of creating detours via system-calls / demons on the host system. However, flatpak and snap severely restrict host system-calls and cannot interact with processes on the host system.)
+
+Why does PASTA-ELN work in the way it does?
+===========================================
+
+*When a folder is moved somewhere in the folder tree or deleted through the file explorer,  the old one does not disappear from the project view and it results in an error during scanning and integrity checks.*
+    The user should not remove or move folders. Currently, we do not want to remove the data from the database, to keep showing the error. In the future, this solution might change.

@@ -17,7 +17,10 @@ def use(filePath, recipe='', saveFileName=None):
   # Extractor for fancy instrument
   metaVendor = ''
   with open(filePath,'r', encoding='utf-8') as jsonFile:
-    metaVendor = json.load(jsonFile)
+    jsonContent = jsonFile.read()
+    metaVendor = json.loads(jsonContent)
+    if not isinstance(metaVendor, dict):
+      metaVendor= {'content': json.loads(jsonContent)}
   image = ''
   recipe = '-'
 

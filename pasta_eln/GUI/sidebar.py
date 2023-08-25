@@ -1,15 +1,15 @@
 """ Sidebar widget that includes the navigation items """
-import logging
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QGridLayout, QTreeWidget, QTreeWidgetItem, QFrame # pylint: disable=no-name-in-module
-from PySide6.QtCore import QSize, Slot                                      # pylint: disable=no-name-in-module
-from anytree import PreOrderIter
-
-from .dialogConfig import Configuration
-from .style import TextButton, LetterButton, IconButton, getColor, showMessage
+from PySide6.QtGui import QResizeEvent                                                                 # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QTreeWidget, QTreeWidgetItem, QFrame, QProgressBar # pylint: disable=no-name-in-module
+from PySide6.QtCore import Slot                                                                        # pylint: disable=no-name-in-module
+from anytree import PreOrderIter, Node
+from .config import Configuration
+from ..guiStyle import TextButton, IconButton, getColor, showMessage, widgetAndLayout, space, iconsDocTypes
+from ..guiCommunicate import Communicate
 
 class Sidebar(QWidget):
   """ Sidebar widget that includes the navigation items """
-  def __init__(self, comm):
+  def __init__(self, comm:Communicate):
     super().__init__()
     self.comm = comm
     comm.changeSidebar.connect(self.redraw)
@@ -22,38 +22,55 @@ class Sidebar(QWidget):
     self.openProjectId = ''
 
     # GUI elements
-    self.mainL = QVBoxLayout()
-    self.mainL.setContentsMargins(7,15,0,7)
-    self.mainL.setSpacing(7)
-    self.setLayout(self.mainL)
+    mainL = QVBoxLayout()
+    mainL.setContentsMargins(space['s'],space['s'],space['0'],space['s'])
+    mainL.setSpacing(0)
+    _, self.projectsListL = widgetAndLayout('V', mainL, spacing='s')
+    #TODO_P4 sidebar-scroll cannot figure out issue
+    # current solution shows as many projects as fit in the sidebar
+    #  - Scrollarea seems to need fixed size, which is assigned by giving its main widget a height
+    #  - if I add a qlabel then I can qlabel afterwards, but the sizes of the projectW are too small
+    # projectListW, self.projectsListL = widgetAndLayout('V', None, spacing='s')
+    # scrollSection = QScrollArea()
+    # scrollSection.setWidget(projectListW)
+    # mainL.addWidget(scrollSection)
+    self.progress = QProgressBar(self)
+    self.progress.hide()
+    self.comm.progressBar = self.progress
+    mainL.addWidget(self.progress)
+    self.setLayout(mainL)
     self.redraw()
-    #TODO_P4 projectView: allow scroll in sidebar, size changegable, drag-and-drop to move
+    #++ TODO projectView: allow size changegable, drag-and-drop to move
     #   more below and other files
 
 
-  @Slot()
-  def redraw(self, reset=False):
+  @Slot(str)
+  def redraw(self, projectID:str='') -> None:
     """
     Redraw sidebar: e.g. after change of project visibility in table
 
     Args:
-      reset (bool): reset which project is open
+      projectID (str): projectID on which to focus: '' string=draw default; 'redraw' implies redraw; id implies id
     """
-    logging.debug('sidebar:redraw |')
     # Delete old widgets from layout and create storage
-    for i in reversed(range(self.mainL.count())):
-      self.mainL.itemAt(i).widget().setParent(None)
-    if reset:
-      self.openProjectId = ''
+    for i in reversed(range(self.projectsListL.count())):
+      self.projectsListL.itemAt(i).widget().setParent(None) # type: ignore
+    if projectID != 'redraw':
+      self.openProjectId = projectID
     self.widgetsAction = {}
     self.widgetsList = {}
     self.widgetsProject = {} #title bar and widget that contains all of project
+    backend = self.comm.backend
 
-    if hasattr(self.comm.backend, 'db'):
-      hierarchy = self.comm.backend.db.getView('viewDocType/x0')
-      #TODO_P5 for now, sorted by last change of project itself: future create a view that does that automatically
-      lastChangeDate = [self.comm.backend.db.getDoc(project['id'])['-date'] for project in hierarchy]
-      for project in [x for _, x in sorted(zip(lastChangeDate, hierarchy))]:
+    if hasattr(backend, 'db'):
+      db = self.comm.backend.db
+      hierarchy = db.getView('viewDocType/x0')
+      #TODO_P5 for now, sorted by last change of project itself. future create a view that does that automatically(if docType x0: emit changeDate)
+      lastChangeDate = [db.getDoc(project['id'])['-date'] for project in hierarchy]
+      maxProjects = int((self.height()-120)/50)-1
+      for index, project in enumerate(x for _, x in sorted(zip(lastChangeDate, hierarchy), reverse=True)):
+        if index>maxProjects:
+          break
         projID = project['id']
         projName = project['value'][0]
         if self.openProjectId == '':
@@ -64,57 +81,47 @@ class Sidebar(QWidget):
         projectL = QVBoxLayout(projectW)
         projectL.setContentsMargins(3,3,3,3)
         maxLabelCharacters = int((self.sideBarWidth-50)/7.1)
-        label = projName if len(projName)<maxLabelCharacters else projName[:maxLabelCharacters-3]+'...'
-        btnProj = TextButton(label, self.btnProject, projectL, projID+'/')
+        label = (projName if len(projName) < maxLabelCharacters else f'{projName[:maxLabelCharacters - 3]}...')
+        btnProj = TextButton(label, self.btnProject, projectL, f'{projID}/')
         btnProj.setStyleSheet("border-width:0")
         self.widgetsProject[projID] = [btnProj, projectW]
 
         # actions: scan, curate, ...
-        actionW = QWidget()
+        actionW, actionL = widgetAndLayout('Grid', projectL)
         if self.openProjectId != projID: #depending which project is open
           actionW.hide()
-          projectW.setStyleSheet("background-color:"+ getColor(self.comm.backend, 'secondaryDark'))
+          projectW.setStyleSheet("background-color:"+ getColor(backend, 'secondaryDark'))
         else:
-          projectW.setStyleSheet("background-color:"+ getColor(self.comm.backend, 'secondaryLight'))
-        actionL = QGridLayout(actionW)
-        actionL.setContentsMargins(0,0,0,0)
-        btnScan = IconButton('mdi.clipboard-search-outline', self.btnScan, None, projID, 'Scan', self.comm.backend, text='Scan')
-        actionL.addWidget(btnScan, 0,0)
-        btnCurate = IconButton('mdi.filter-plus-outline', self.btnCurate, None, projID, 'Special', self.comm.backend, text='Special')
+          projectW.setStyleSheet("background-color:"+ getColor(backend, 'secondaryLight'))
+        btnScan = IconButton('mdi.clipboard-search-outline', self.btnScan, None, projID, 'Scan', backend, text='Scan')
+        actionL.addWidget(btnScan, 0,0)  # type: ignore
+        btnCurate = IconButton('mdi.filter-plus-outline', self.btnCurate, None, projID, 'Special', backend, text='Special')
         btnCurate.hide()
-        actionL.addWidget(btnCurate, 0,1)
-        projectL.addWidget(actionW)
+        actionL.addWidget(btnCurate, 0,1)         # type: ignore
         self.widgetsAction[projID] = actionW
         btnScan.setStyleSheet("border-width:0")
         btnCurate.setStyleSheet("border-width:0")
 
         # lists: view list of measurements, ... of this project
-        listW = QWidget()
-        listW.setContentsMargins(0,0,0,0)
+        listW, listL = widgetAndLayout('Grid', projectL)
         if self.openProjectId != projID:
           listW.hide()
-        listL = QGridLayout(listW)
-        iconTable = {"Measurements":"fa.thermometer-3","Samples":"fa5s.vial","Procedures":"fa.list-ol","Instruments":"ri.scales-2-line"}
-        for idx, doctype in enumerate(self.comm.backend.db.dataLabels):
+        for idx, doctype in enumerate(db.dataLabels):
           if doctype[0]!='x':
-            button = IconButton(iconTable[self.comm.backend.db.dataLabels[doctype]], self.btnDocType, None, \
-                     doctype+'/'+projID, self.comm.backend.db.dataLabels[doctype],self.comm.backend)
-            button.setStyleSheet("border-width:0")
-            listL.addWidget(button, 0, idx)
-        button = IconButton('fa.file-o', self.btnDocType, None, '-/'+projID, 'Unidentified', self.comm.backend)
-        button.setStyleSheet("border-width:0")
-        listL.addWidget(button, 0, len(self.comm.backend.db.dataLabels)+1)
-        projectL.addWidget(listW)
+            icon = iconsDocTypes[db.dataLabels[doctype]]
+            button = IconButton(icon, self.btnDocType, None, f'{doctype}/{projID}', db.dataLabels[doctype], backend)
+            listL.addWidget(button, 0, idx)    # type: ignore
+        button = IconButton(iconsDocTypes['-'], self.btnDocType, None, f'-/{projID}', 'Unidentified', backend)
+        listL.addWidget(button, 0, len(db.dataLabels)+1)  # type: ignore
         self.widgetsList[projID] = listW
 
         # show folders as hierarchy
-        #TODO_P4 allow to adjust height
         treeW = QTreeWidget()
         treeW.hide()  #convenience: allow scroll in sidebar
         treeW.setHeaderHidden(True)
         treeW.setColumnCount(1)
         treeW.itemClicked.connect(self.btnTree)
-        hierarchy = self.comm.backend.db.getHierarchy(projID)
+        hierarchy = db.getHierarchy(projID)
         rootItem = treeW.invisibleRootItem()
         count = 0
         for node in PreOrderIter(hierarchy, maxlevel=2):
@@ -123,15 +130,14 @@ class Sidebar(QWidget):
             count += 1
         projectL.addWidget(treeW)
         # finalize layout
-        self.mainL.addWidget(projectW)
+        self.projectsListL.addWidget(projectW)
     # Other buttons
     stretch = QWidget()
-
-    self.mainL.addWidget(stretch, stretch=2)
+    self.projectsListL.addWidget(stretch, stretch=2)  # type: ignore
     return
 
 
-  def iterateTree(self, nodeHier, projectID):
+  def iterateTree(self, nodeHier:Node, projectID:str) -> QTreeWidgetItem:
     """
     Recursive function to translate the hierarchical node into a tree-node
 
@@ -143,18 +149,18 @@ class Sidebar(QWidget):
       QtTreeWidgetItem: tree node
     """
     #prefill with name, doctype, id
-    nodeTree = QTreeWidgetItem([nodeHier.name, projectID+'/'+nodeHier.id ])
+    nodeTree = QTreeWidgetItem([nodeHier.name, f'{projectID}/{nodeHier.id}'])
     children = []
     for childHier in nodeHier.children:
       if childHier.docType[0][0]=='x':
         childTree = self.iterateTree(childHier, projectID)
         children.append(childTree)
-    if len(children)>0:
+    if children:
       nodeTree.insertChildren(0,children)
     return nodeTree
 
 
-  def btnDocType(self):
+  def btnDocType(self) -> None:
     """
     What happens when user clicks to change doc-type
     """
@@ -164,7 +170,7 @@ class Sidebar(QWidget):
     return
 
 
-  def btnProject(self):
+  def btnProject(self) -> None:
     """
     What happens when user clicks to view project
     """
@@ -191,27 +197,39 @@ class Sidebar(QWidget):
     return
 
 
-  def btnScan(self):
+  def btnScan(self) -> None:
     """
     What happens if user clicks button "Scan"
     """
-    self.comm.backend.scanProject(self.openProjectId)
-    #TODO_P3 scanning for progress bar
+    self.comm.backend.scanProject(self.progress, self.openProjectId, '')
     self.comm.changeProject.emit(self.openProjectId,'')
-    self.comm.changeSidebar.emit()
     showMessage(self, 'Information','Scanning finished')
     return
 
-  def btnCurate(self):
+
+  def btnCurate(self) -> None:
     """
     What happens if user clicks button "Special"
     -> pull data from server and include
     """
     return
-  def btnTree(self, item):
+
+
+  def btnTree(self, item:QTreeWidgetItem) -> None:
     """
     What happpens if user clicks on branch in tree
     """
     projId, docId = item.text(1).split('/')
     self.comm.changeProject.emit(projId, docId)
     return
+
+
+  def resizeEvent(self, event: QResizeEvent) -> None:
+    """
+    executed upon resize
+
+    Args:
+      event (QResizeEvent): event
+    """
+    self.redraw()
+    return super().resizeEvent(event)

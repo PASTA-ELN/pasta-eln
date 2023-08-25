@@ -2,14 +2,13 @@
 import json
 from pathlib import Path
 #pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QDialog, QWidget, QVBoxLayout, QHBoxLayout, QListWidget, QListWidgetItem, \
-                              QLineEdit, QDialogButtonBox
+from PySide6.QtWidgets import QDialog, QVBoxLayout, QDialogButtonBox, QPushButton
 #pylint: enable=no-name-in-module
-from .style import IconButton
+from ..backend import Backend
 
 class Ontology(QDialog):
   """ Table Header dialog: change which colums are shown and in which order """
-  def __init__(self, backend):
+  def __init__(self, backend:Backend):
     """
     Initialization
 
@@ -30,13 +29,13 @@ class Ontology(QDialog):
     mainL.addWidget(buttonBox)
 
 
-  # TODO_P3 ontologyCheck: all names must be different
-  def save(self, btn):
+  #++ TODO ontologyCheck: all names must be different
+  def save(self, btn:QPushButton) -> None:
     """ save selectedList to configuration and exit """
     if btn.text().endswith('Cancel'):
       self.reject()
     elif btn.text().endswith('Save'):
-      #TODO_P3 finish ontology dialog
+      #TODO_P2 finish ontology dialog
       self.accept()  #close
     else:
       print('dialogOntology: did not get a fitting btn ',btn.text())

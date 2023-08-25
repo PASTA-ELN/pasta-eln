@@ -49,14 +49,11 @@ def newVersion(level=2, message=''):
       fileNew.append(line)
     with open(path,'w', encoding='utf-8') as fOut:
       fOut.write('\n'.join(fileNew)+'\n')
-  #execute git commands: move tests away and back
-  os.system('git mv pasta_eln/Tests Tests')
+  #execute git commands
   os.system('git commit -a -m "'+message+'"')
   os.system('git tag -a v'+version+' -m "Version '+version+'"')
   os.system('git push')
   os.system('git push origin v'+version)
-  os.system('git mv Tests pasta_eln/Tests')
-  os.system('git commit -a -m "Added Tests back into distribution"')
   return
 
 
@@ -88,10 +85,9 @@ def runTests():
 
   Cannot be an action, since dependencies are partly private
   """
-  for fileI in os.listdir('pasta_eln/Tests'):
-    if not fileI.endswith('.py'):
-      continue
-    result = subprocess.run(['python3','-m','pasta_eln.Tests.'+fileI[:-3]], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
+  tests = [i for i in os.listdir('tests') if i.endswith('.py') and i.startswith('test_')]
+  for fileI in sorted(tests):
+    result = subprocess.run(['pytest','-s','tests/'+fileI], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
     success = result.stdout.decode('utf-8').count('*** DONE WITH VERIFY ***')
     if success==1:
       success += result.stdout.decode('utf-8').count('**ERROR')
@@ -100,7 +96,7 @@ def runTests():
     else:
       successAll = False
       print("  FAILED: Python unit test "+fileI)
-      print("    run: 'python3 -m pasta_eln.Tests."+fileI[:-3]+"' and check logFile")
+      print("    run: 'pytest -s tests/"+fileI+"' and check logFile")
   return
 
 
@@ -169,3 +165,4 @@ if __name__=='__main__':
   if level is not None:
     message = sys.argv[1]
     newVersion(level, message)
+  print("\n==============================\nAlso publish extractors\n======================")

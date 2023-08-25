@@ -1,18 +1,20 @@
 """ Widget: setup tab inside the configuration dialog window """
-import webbrowser, logging
+import logging
 from pathlib import Path
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTextEdit, QMessageBox, QInputDialog, QFileDialog, QProgressBar   # pylint: disable=no-name-in-module
+from typing import Callable
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QMessageBox, QFileDialog, QProgressBar   # pylint: disable=no-name-in-module
 
-from .style import TextButton
-from .installationTools import couchdb, couchdbUserPassword, configuration, ontology, exampleData, createShortcut
-from .fixedStrings import setupTextWindows, couchDBWindows, exampleDataWindows, restartPastaWindows
-from .miscTools import restart
+from ..guiStyle import TextButton, widgetAndLayout
+from ..installationTools import couchdb, configuration, ontology, exampleData, createShortcut
+from ..fixedStringsJson import setupTextWindows, couchDBWindows, exampleDataWindows, restartPastaWindows
+from ..miscTools import restart
+from ..backend import Backend
 
 class ConfigurationSetup(QWidget):
   """
   Main class
   """
-  def __init__(self, backend, callbackFinished):
+  def __init__(self, backend:Backend, callbackFinished:Callable[[],None]):
     """
     Initialization
 
@@ -29,9 +31,7 @@ class ConfigurationSetup(QWidget):
     self.backend = backend
 
     #widget 1 = screen 1
-    self.screen1W = QWidget()
-    self.mainL.addWidget(self.screen1W)
-    screen1L = QVBoxLayout(self.screen1W)
+    self.screen1W, screen1L = widgetAndLayout('V', self.mainL)
     self.text1 = QTextEdit()
     self.mainText = setupTextWindows
     self.text1.setMarkdown(self.mainText)
@@ -41,13 +41,11 @@ class ConfigurationSetup(QWidget):
     self.progress1.hide()
     screen1L.addWidget(self.progress1)
 
-    footerW = QWidget()
-    screen1L.addWidget(footerW)
-    footerL = QHBoxLayout(footerW)
+    _, footerL = widgetAndLayout('H', screen1L)
     self.button1 = TextButton('Start analyse and repair', self.analyse, footerL)
 
 
-  def callbackProgress(self, number):
+  def callbackProgress(self, number:int) -> None:
     """
     Increse progressbar by moving to number
 
@@ -57,8 +55,9 @@ class ConfigurationSetup(QWidget):
     self.progress1.setValue(number)
     return
 
-
-  def analyse(self):
+  # create windows package: Packaging Pyside6 applications for Windows with PyInstaller & InstallForge
+  def analyse(self) -> None:
+    # sourcery skip: extract-duplicate-method, inline-immediately-returned-variable
     """
     Main method that does all the analysis: open dialogs, ...
     """
@@ -80,7 +79,7 @@ class ConfigurationSetup(QWidget):
           if len(res.split('|'))==3:
             password=res.split('|')[1]
           else:
-            logging.error('Could not retrieve password :'+str(res))
+            logging.error('Could not retrieve password :%s',str(res))
         else:
           self.mainText = self.mainText.replace('- CouchDB','- CouchDB: user chose to NOT install' )
           self.text1.setMarkdown(self.mainText)
@@ -96,7 +95,7 @@ class ConfigurationSetup(QWidget):
         button = QMessageBox.question(self, "PASTA-ELN configuration", "Do you want to create/repain the configuration.")
         if button == QMessageBox.Yes:
           dirName = QFileDialog.getExistingDirectory(self,'Create and select directory for scientific data',str(Path.home()/'Documents'))
-          configuration('repair','admin', password,dirName)
+          configuration('repair','admin', password, Path(dirName))
           flagInstalledSoftware = True
         else:
           self.mainText = self.mainText.replace('- Configuration of preferences','- Configuration: user chose to NOT install' )
@@ -159,7 +158,7 @@ class ConfigurationSetup(QWidget):
     return
 
 
-  def finished(self):
+  def finished(self) -> None:
     """
     What do do when setup is finished: success or unsuccessfully
     """
