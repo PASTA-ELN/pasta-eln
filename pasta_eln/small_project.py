@@ -1,16 +1,13 @@
-from PySide6.QtWidgets import QListWidget, QDialogButtonBox, QDialog, QApplication, QMainWindow, QWidget, QVBoxLayout, QLineEdit, QScrollArea, QCheckBox
+from PySide6.QtWidgets import QListWidget, QDialogButtonBox, QDialog, QApplication, QMainWindow, QWidget, QVBoxLayout, QLineEdit, QScrollArea, QCheckBox, QPushButton
 from PySide6.QtCore import QSize 
-from .style import TextButton
-import requests, json
 from rdflib import Graph, Namespace, URIRef
-from collections import Counter
+import requests, json
 
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.desc_list = []
-
 
         self.setWindowTitle("Work in Progress!")
         self.setMinimumSize(QSize(400,400))
@@ -32,9 +29,9 @@ class MainWindow(QMainWindow):
         self.outputList = QListWidget()
         mainLayout.addWidget(self.outputList)
 
-        
         #executeButton
-        executeButton = TextButton("Start Execution", self.execute_button, mainLayout)
+        executeButton = QPushButton("Start Execution")
+        executeButton.clicked.connect(self.execute_button)
         mainLayout.addWidget(executeButton)
 
 
@@ -55,7 +52,7 @@ class MainWindow(QMainWindow):
 
     def definition_search(self, searchterms):
         """Opens the Definition Dialog and returns a nested list
-        of all chosen definitions (as str) for each term 
+        of the links to all chosen definitions (as str) for each term 
 
         Args:
             searchterms (list(str)): a list of search terms
@@ -64,7 +61,7 @@ class MainWindow(QMainWindow):
         self.temp_def_list = [] #list of chosen definitions for single searchterm; filled by dialog
         for searchterm in searchterms:
             def_dialog = DefinitionDialog(searchterm, self)
-            if def_dialog.exec_():
+            if def_dialog.exec():
                 returned_definitions.append(self.temp_def_list)
                 self.temp_def_list = []
             else:
@@ -119,14 +116,14 @@ class DefinitionDialog(QDialog):
             self.wikipedia_search()
             self.wikidata_search()
             self.ols_search()
-            self.tib_search() 
+            #self.tib_search() 
         for cb in self.listCB:
-            self.scrollLayout.addWidget(cb)
+            self.scrollLayout.addWidget(cb[0])
 
     def finalize(self):
         for cb in self.listCB:
-            if cb.isChecked():
-                self.parent.temp_def_list.append(cb.text())
+            if cb[0].isChecked():
+                self.parent.temp_def_list.append(cb[1])
         self.accept()
     
     def wikipedia_search(self):
@@ -139,7 +136,8 @@ class DefinitionDialog(QDialog):
         response = json.loads(response.text)
         for page in response["pages"]:
             if page['description'] is not None and page['description'] != "Topics referred to by the same term":
-                self.listCB.append(QCheckBox(page["title"]+": "+page["description"]+" (Wikipedia)"))
+                self.listCB.append((QCheckBox(page["title"]+": "+page["description"]+" (Wikipedia)"),"https://en.wikipedia.org/w/index.php?curid="+str(page["id"])))
+                #https://en.wikipedia.org/w/index.php?curid=82974 link to each article using the id parameter
 
     def wikidata_search(self):
         base_url = "https://www.wikidata.org/w/api.php"
@@ -154,7 +152,7 @@ class DefinitionDialog(QDialog):
             if 'description' in a:
                 label = a['label']
                 description = a["description"]
-                self.listCB.append(QCheckBox(label['value']+": "+description['value']+" (Wikidata)"))
+                self.listCB.append((QCheckBox(label['value']+": "+description['value']+" (Wikidata)"), result["concepturi"]))
 
     def ols_search(self): #some Ontologies do not provide a description in the json
         base_url = "http://www.ebi.ac.uk/ols/api/search"
@@ -166,12 +164,12 @@ class DefinitionDialog(QDialog):
         response = response["response"]
         for result in response['docs']:
             if 'description' in result and result['description'] is not None:
-                self.listCB.append(QCheckBox(result["label"]+": "+"".join(result["description"])+" ("+result["ontology_name"]+")"))
+                self.listCB.append((QCheckBox(result["label"]+": "+"".join(result["description"])+" ("+result["ontology_name"]+")"), result["iri"]))
 
     def tib_search(self):#some Ontologies do not provide a description in the json, this is handled by the devs of tib
         base_url = "https://service.tib.eu/ts4tib/api/search"
         response = requests.get(base_url, params={"q": self.search_term})
-        if response.status_code != 200:
+        if response.status_code != 200: #useless for some errors because requests.get raises exceptions
             print("TIB Terminology Service: Request failed with status Code:"+ response.status_code)
             return
         response = response.json()
@@ -180,7 +178,7 @@ class DefinitionDialog(QDialog):
         duplicate_ontos = ["afo", "bco", "bto", "chiro", "chmo", "duo", "edam", "efo", "fix", "hp", "iao", "mod", "mop", "ms", "nmrcv", "ncit", "obi", "om", "pato", "po", "proco", "prov", "rex", "ro", "rxno", "sbo", "sepio", "sio", "swo", "t4fs", "uo"]
         for result in response['docs']:
             if 'description' in result and result['description'] is not None and not result["ontology_name"] in duplicate_ontos:
-                self.listCB.append(QCheckBox(result["label"]+": "+"".join(result["description"])+" ("+result["ontology_name"]+")"))
+                self.listCB.append((QCheckBox(result["label"]+": "+"".join(result["description"])+" ("+result["ontology_name"]+")"), result["iri"]))
 
 app = QApplication()
 window = MainWindow()
