@@ -116,7 +116,7 @@ class DefinitionDialog(QDialog):
             self.wikipedia_search()
             self.wikidata_search()
             self.ols_search()
-            #self.tib_search() 
+            self.tib_search() 
         for cb in self.listCB:
             self.scrollLayout.addWidget(cb[0])
 
@@ -169,6 +169,7 @@ class DefinitionDialog(QDialog):
     def tib_search(self):#some Ontologies do not provide a description in the json, this is handled by the devs of tib
         base_url = "https://service.tib.eu/ts4tib/api/search"
         response = requests.get(base_url, params={"q": self.search_term})
+        print(response)
         if response.status_code != 200: #useless for some errors because requests.get raises exceptions
             print("TIB Terminology Service: Request failed with status Code:"+ response.status_code)
             return
