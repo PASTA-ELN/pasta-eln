@@ -13,19 +13,29 @@ from PySide6.QtCore import QCoreApplication
 from PySide6.QtWidgets import QApplication
 from cloudant.document import Document
 from pytest import fixture
-from pytestqt.exceptions import capture_exceptions
 from pytestqt.qtbot import QtBot
 
 from pasta_eln.gui import main_gui, MainWindow
+from pasta_eln.ontology_configuration.delete_column_delegate import DeleteColumnDelegate
 from pasta_eln.ontology_configuration.ontology_configuration_extended import OntologyConfigurationForm, get_gui
+from pasta_eln.ontology_configuration.reorder_column_delegate import ReorderColumnDelegate
+from pasta_eln.ontology_configuration.required_column_delegate import RequiredColumnDelegate
 from tests.app_tests.common.test_utils import get_ontology_document
 
 
 @fixture()
-def qtbot_session(qt_app, request):
-  result = QtBot(qt_app)
-  with capture_exceptions():
-    yield result
+def reorder_delegate():
+  return ReorderColumnDelegate()
+
+
+@fixture()
+def required_delegate():
+  return RequiredColumnDelegate()
+
+
+@fixture()
+def delete_delegate():
+  return DeleteColumnDelegate()
 
 
 @fixture()
