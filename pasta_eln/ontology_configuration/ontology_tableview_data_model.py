@@ -6,9 +6,11 @@
 #  Filename: ontology_attachments_tableview_data_model.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
+# import logging
 import logging
 from typing import Union, Any
 
+import PySide6.QtCore
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt, QPersistentModelIndex, Slot
 from PySide6.QtWidgets import QWidget
 
@@ -31,6 +33,9 @@ class OntologyTableViewModel(QAbstractTableModel):
     self.data_name_map = {}
     self.header_values = None
     self.columns_count = None
+
+  def hasChildren(self, parent: Union[PySide6.QtCore.QModelIndex, PySide6.QtCore.QPersistentModelIndex]) -> bool:
+    return False  # Since it's a table model, the children are not supported
 
   def headerData(self,
                  section: int,
@@ -77,6 +82,7 @@ class OntologyTableViewModel(QAbstractTableModel):
     return len(self.data_set) \
       if self.data_set \
       else 0
+
   def columnCount(self,
                   parent: Union[QModelIndex, QPersistentModelIndex] = ...) -> int:
     """
@@ -105,7 +111,7 @@ class OntologyTableViewModel(QAbstractTableModel):
     Returns (bool): True when data is set, otherwise false
 
     """
-    if role == Qt.EditRole or role == Qt.UserRole:
+    if index.isValid() and role == Qt.EditRole or role == Qt.UserRole:
       prop_row_index = index.row()
       prop = self.data_name_map.get(index.column())
       self.data_set[prop_row_index][prop] = value
@@ -149,9 +155,10 @@ class OntologyTableViewModel(QAbstractTableModel):
     Returns (Qt.ItemFlags): The combinations of flags for the cell represented by the index
 
     """
-    return (Qt.ItemIsEditable
-            | Qt.ItemIsSelectable
-            | Qt.ItemIsEnabled)
+    if index.isValid():
+      return (Qt.ItemIsEditable
+              | Qt.ItemIsSelectable
+              | Qt.ItemIsEnabled)
 
   @Slot(int)
   def delete_data(self, position: int):
