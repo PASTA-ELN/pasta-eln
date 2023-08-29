@@ -27,18 +27,23 @@ def qtbot_session(qt_app, request):
   with capture_exceptions():
     yield result
 
+
 @fixture()
 def ontology_doc_mock(mocker) -> Document:
   mock_doc = mocker.patch('cloudant.document.Document')
-  mock_doc.__getitem__.side_effect = get_ontology_document('ontology_document.json').__getitem__
+  mock_doc_content = get_ontology_document('ontology_document.json')
+  mocker.patch.object(mock_doc, "__len__",
+                      lambda x, y: len(mock_doc_content))
+  mock_doc.__getitem__.side_effect = mock_doc_content.__getitem__
+  mock_doc.__iter__.side_effect = mock_doc_content.__iter__
   return mock_doc
 
 
 @fixture()
 def ontology_editor_gui(request, ontology_doc_mock) -> tuple[QApplication,
-                                                            QtWidgets.QDialog,
-                                                            OntologyConfigurationForm,
-                                                            QtBot]:
+QtWidgets.QDialog,
+OntologyConfigurationForm,
+QtBot]:
   app, ui_dialog, ui_form_extended = get_gui(ontology_doc_mock)
   qtbot: QtBot = QtBot(app)
   return app, ui_dialog, ui_form_extended, qtbot
@@ -46,10 +51,8 @@ def ontology_editor_gui(request, ontology_doc_mock) -> tuple[QApplication,
 
 @fixture(scope="module")
 def pasta_gui(request) -> tuple[Union[QApplication, QCoreApplication, None],
-                              MainWindow,
-                              QtBot]:
+MainWindow,
+QtBot]:
   app, image_viewer = main_gui()
   qtbot = QtBot(app)
-  # QTest.qWait(0.5 * 1000)
-
   return app, image_viewer, qtbot
