@@ -162,7 +162,7 @@ class Table(QWidget):
         item = (QStandardItem(', '.join(self.data[i]['value'][j])) if isinstance(
             self.data[i]['value'][j][0], str) else QStandardItem(', '.join(
                 [str(i) for i in self.data[i]['value'][j]])))
-      elif re.match(r'^[a-z\-]-[a-z0-9]{32}$',self.data[i]['value'][j]):      #Link
+      elif isinstance(self.data[i]['value'][j], str) and re.match(r'^[a-z\-]-[a-z0-9]{32}$',self.data[i]['value'][j]):      #Link
         item = QStandardItem('oo') # \u260D')
         # item.setFont(QFont("Helvetica [Cronyx]", 16))
       else:
@@ -175,7 +175,7 @@ class Table(QWidget):
               tags[tags.index(f'_{str(iStar)}')] = '*'*iStar
           text = ' '.join(tags)
         else:
-          text = self.data[i]['value'][j]
+          text = str(self.data[i]['value'][j])  #could be a number
         item = QStandardItem(text)
       if j==0:
         doc = self.comm.backend.db.getDoc(self.data[i]['id'])
@@ -301,7 +301,7 @@ class Table(QWidget):
           self.comm.backend.db.hideShow(docID)
       if self.docType=='x0':
         self.comm.changeSidebar.emit('redraw')
-      self.changeTable('','')  # redraw table
+      self.change('','')  # redraw table
     elif command[0] is Command.TOGGLE_SELECTION:
       for row in range(self.models[-1].rowCount()):
         item,_ = self.itemFromRow(row)
@@ -311,7 +311,7 @@ class Table(QWidget):
           item.setCheckState(Qt.CheckState.Checked)
     elif command[0] is Command.SHOW_ALL:
       self.showAll = not self.showAll
-      self.changeTable('','')  # redraw table
+      self.change('','')  # redraw table
     elif command[0] is Command.RERUN_EXTRACTORS:
       for row in range(self.models[-1].rowCount()):
         item, docID = self.itemFromRow(row)
@@ -332,7 +332,7 @@ class Table(QWidget):
             del doc['_rev']
             doc['-name'] = doc['-branch'][0]['path']
             self.comm.backend.addData('/'.join(doc['-type']), doc, doc['-branch'][0]['stack'])
-      self.changeTable('','')  # redraw table
+      self.change('','')  # redraw table
       self.comm.changeDetails.emit('redraw')
     elif command[0] is Command.DELETE_FILTER: # Remove filter from list of filters
       row = command[1]
