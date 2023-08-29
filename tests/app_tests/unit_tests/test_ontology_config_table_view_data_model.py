@@ -15,14 +15,16 @@ from pasta_eln.ontology_configuration.ontology_tableview_data_model import Ontol
 
 class TestOntologyConfigTableViewDataModel(object):
 
-  def test_data_models_basic(self, qtmodeltester):
+  def test_data_models_basic(self,
+                             qtmodeltester):
     base_model = OntologyTableViewModel()
     base_model.setObjectName("OntologyTableViewModel")
     items = {i: str(i) for i in range(4)}
     base_model.update(items)
     qtmodeltester.check(base_model)
 
-  def test_data_models_property_table_model(self, qtmodeltester):
+  def test_data_models_property_table_model(self,
+                                            qtmodeltester):
     props_model = OntologyPropsTableViewModel()
     props_model.setObjectName("OntologyPropsTableViewModel")
     props_items = {
@@ -33,7 +35,8 @@ class TestOntologyConfigTableViewDataModel(object):
     with pytest.raises(AssertionError):
       qtmodeltester.check(props_model, force_py=True)
 
-  def test_data_models_attachments_table_model(self, qtmodeltester):
+  def test_data_models_attachments_table_model(self,
+                                               qtmodeltester):
     attachments_model = OntologyAttachmentsTableViewModel()
     attachments_model.setObjectName("OntologyAttachmentsTableViewModel")
     attachments = {

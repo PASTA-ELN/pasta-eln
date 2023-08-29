@@ -11,5 +11,7 @@ from tests.app_tests.common.test_delegate_funcs_common import delegate_editor_me
 
 
 class TestOntologyConfigRequiredColumnDelegate(object):
-  def test_delegate_create_editor_method(self, mocker, required_delegate: required_delegate):
+  def test_delegate_create_editor_method(self,
+                                         mocker,
+                                         required_delegate: required_delegate):
     delegate_editor_method_common(required_delegate, mocker)

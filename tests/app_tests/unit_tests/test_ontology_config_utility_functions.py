@@ -19,14 +19,16 @@ from pasta_eln.ontology_configuration.utility_functions import is_click_within_b
 
 class TestOntologyConfigUtilityFunctions(object):
 
-  def test_is_click_within_bounds_when_null_arguments_returns_false(self, mocker):
+  def test_is_click_within_bounds_when_null_arguments_returns_false(self,
+                                                                    mocker):
     assert is_click_within_bounds(mocker.patch('PySide6.QtGui.QSinglePointEvent'),
                                   None) == False, "is_click_within_bounds should return False for null argument"
     assert is_click_within_bounds(None, mocker.patch(
       'PySide6.QtWidgets.QStyleOptionViewItem')) == False, "is_click_within_bounds should return False for null argument"
     assert is_click_within_bounds(None, None) == False, "is_click_within_bounds should return False for null argument"
 
-  def test_is_click_within_bounds_when_within_bounds_returns_true(self, mocker):
+  def test_is_click_within_bounds_when_within_bounds_returns_true(self,
+                                                                  mocker):
     mock_mouse_event = mocker.patch('PySide6.QtGui.QSinglePointEvent')
     mock_mouse_event.type.side_effect = lambda: QEvent.MouseButtonRelease
     mock_mouse_event.x.side_effect = lambda: 10  # left is 5 and right is left + width 5+10=15
@@ -48,7 +50,8 @@ class TestOntologyConfigUtilityFunctions(object):
     assert mock_q_style_option_view_item.rect.width.call_count == 1, "QStyleOptionViewItem left call count must be 1"
     assert mock_q_style_option_view_item.rect.height.call_count == 1, "QStyleOptionViewItem top call count must be 1"
 
-  def test_is_click_within_bounds_when_outside_bounds_returns_false(self, mocker):
+  def test_is_click_within_bounds_when_outside_bounds_returns_false(self,
+                                                                    mocker):
     mock_mouse_event = mocker.patch('PySide6.QtGui.QSinglePointEvent')
     mock_mouse_event.type.side_effect = lambda: QEvent.MouseButtonRelease
     mock_mouse_event.x.side_effect = lambda: 10  # range: 5 -> 15 (within range)
@@ -70,7 +73,8 @@ class TestOntologyConfigUtilityFunctions(object):
     assert mock_q_style_option_view_item.rect.width.call_count == 1, "QStyleOptionViewItem left call count must be 1"
     assert mock_q_style_option_view_item.rect.height.call_count == 0, "QStyleOptionViewItem top call count must be zero"
 
-  def test_adjust_ontology_data_to_v3_when_empty_document_do_nothing(self, mocker):
+  def test_adjust_ontology_data_to_v3_when_empty_document_do_nothing(self,
+                                                                     mocker):
     contents = {}
     mock_doc = self.create_mock_doc(contents, mocker)
     assert adjust_ontology_data_to_v3(mock_doc) is None, "adjust_ontology_data_to_v3 should return None"
@@ -78,7 +82,8 @@ class TestOntologyConfigUtilityFunctions(object):
 
     assert adjust_ontology_data_to_v3(None) is None, "adjust_ontology_data_to_v3 should return None"
 
-  def test_adjust_ontology_data_to_v3_when_v2document_given_do_needfull(self, mocker):
+  def test_adjust_ontology_data_to_v3_when_v2document_given_do_needfull(self,
+                                                                        mocker):
     # Without attachments
     contents = {"x0":
       {
@@ -140,7 +145,8 @@ class TestOntologyConfigUtilityFunctions(object):
     assert get_next_possible_structural_level_label(None) is None, \
       "get_next_possible_structural_level_label should return True"
 
-  def test_get_next_possible_structural_level_label_when_valid_list_arg_returns_right_result(self, mocker):
+  def test_get_next_possible_structural_level_label_when_valid_list_arg_returns_right_result(self,
+                                                                                             mocker):
     mock_list = mocker.MagicMock()
     mock_list.__iter__.return_value = ["x0", "x2"]
     assert get_next_possible_structural_level_label(
@@ -162,7 +168,8 @@ class TestOntologyConfigUtilityFunctions(object):
     assert get_next_possible_structural_level_label(
       mock_list) == "x0", "get_next_possible_structural_level_label should return as expected"
 
-  def test_get_db_with_right_arguments_returns_valid_db_instance(self, mocker):
+  def test_get_db_with_right_arguments_returns_valid_db_instance(self,
+                                                                 mocker):
     mock_client = mocker.MagicMock(spec=CouchDB)
     mock_client.all_dbs.return_value = ["db_name1", "db_name2"]
     db_instances = {"db_name1": mocker.MagicMock(spec=CouchDB), "db_name2": mocker.MagicMock(spec=CouchDB)}
@@ -187,7 +194,8 @@ class TestOntologyConfigUtilityFunctions(object):
     assert mock_client.all_dbs.call_count == 3, "get_db should call all_dbs"
     assert mock_client.create_database.call_count == 1, "get_db should call create_database"
 
-  def test_get_db_with_wrong_arguments_throws_exception(self, mocker):
+  def test_get_db_with_wrong_arguments_throws_exception(self,
+                                                        mocker):
     mock_logger = mocker.MagicMock(spec=logging)
     logger_spy = mocker.spy(mock_logger, 'error')
     mocker.patch.object(CouchDB, "__new__", mocker.MagicMock(side_effect=Exception('Database error')))
@@ -205,7 +213,8 @@ class TestOntologyConfigUtilityFunctions(object):
   def test_show_message_with_none_argument_does_nothing(self):
     assert show_message(None) is None, "show_message should return None"
 
-  def test_show_message_with_valid_argument_shows_message(self, mocker):
+  def test_show_message_with_valid_argument_shows_message(self,
+                                                          mocker):
     mock_msg_box = mocker.patch("PySide6.QtWidgets.QMessageBox")
     set_text_spy = mocker.spy(mock_msg_box, 'setText')
     mocker.patch.object(QMessageBox, "__new__", lambda s: mock_msg_box)
