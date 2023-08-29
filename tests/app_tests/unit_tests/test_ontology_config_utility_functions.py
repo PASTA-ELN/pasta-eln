@@ -19,7 +19,7 @@ from pasta_eln.ontology_configuration.utility_functions import is_click_within_b
 
 class TestOntologyConfigUtilityFunctions(object):
 
-  def test_is_click_within_bounds_when_null_arguments_returns_False(self, mocker):
+  def test_is_click_within_bounds_when_null_arguments_returns_false(self, mocker):
     assert is_click_within_bounds(mocker.patch('PySide6.QtGui.QSinglePointEvent'),
                                   None) == False, "is_click_within_bounds should return False for null argument"
     assert is_click_within_bounds(None, mocker.patch(
@@ -136,8 +136,8 @@ class TestOntologyConfigUtilityFunctions(object):
     mock_doc.__getitem__.side_effect = contents.__getitem__
     return mock_doc
 
-  def test_get_next_possible_structural_level_label_when_null_arg_returns_None(self):
-    assert get_next_possible_structural_level_label(None) == None, \
+  def test_get_next_possible_structural_level_label_when_null_arg_returns_none(self):
+    assert get_next_possible_structural_level_label(None) is None, \
       "get_next_possible_structural_level_label should return True"
 
   def test_get_next_possible_structural_level_label_when_valid_list_arg_returns_right_result(self, mocker):
