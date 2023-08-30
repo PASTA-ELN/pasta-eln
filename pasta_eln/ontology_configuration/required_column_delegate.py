@@ -48,7 +48,7 @@ class RequiredColumnDelegate(QStyledItemDelegate):
                      option.rect.top(),
                      option.rect.width(),
                      option.rect.height())
-    opt.state |= QStyle.State_On \
+    opt.state = QStyle.State_On \
       if index.data(Qt.UserRole) == 'True' \
       else QStyle.State_Off
     style.drawControl(QStyle.CE_RadioButton, opt, painter, widget)
