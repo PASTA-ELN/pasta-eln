@@ -1,15 +1,16 @@
 """ widget that shows the details of the items """
-import logging
+import logging, json
 from enum import Enum
 from pathlib import Path
 from typing import Any
-import yaml
 from PySide6.QtWidgets import QScrollArea, QLabel, QTextEdit  # pylint: disable=no-name-in-module
 from PySide6.QtCore import Qt, Slot # pylint: disable=no-name-in-module
 from ..guiStyle import TextButton, Image, Label, showMessage, widgetAndLayout
 from ._contextMenu import initContextMenu, executeContextMenu, CommandMenu
 from ..fixedStringsJson import defaultOntologyNode
 from ..guiCommunicate import Communicate
+from ..handleDictionaries import dict2ul
+
 
 class Details(QScrollArea):
   """ widget that shows the details of the items """
@@ -136,7 +137,9 @@ class Details(QScrollArea):
         self.btnVendor.show()
         label = QLabel()
         label.setWordWrap(True)
-        label.setText(yaml.dump(self.doc[key], indent=4))
+        label.setText(dict2ul(self.doc[key]))
+        #TODO_P1 how can I style <ul> on qlabel?
+        # label.setStyleSheet('list-style-type: none; padding-left: 20px;  margin: 0;')
         label.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.metaVendorL.addWidget(label)
         self.metaVendorW.show()
@@ -144,7 +147,7 @@ class Details(QScrollArea):
         self.btnUser.show()
         label = QLabel()
         label.setWordWrap(True)
-        label.setText(yaml.dump(self.doc[key], indent=4))
+        label.setText(dict2ul(self.doc[key]))
         label.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.metaUserL.addWidget(label)
         self.metaUserW.show()

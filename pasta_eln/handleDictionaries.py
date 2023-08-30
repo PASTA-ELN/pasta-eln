@@ -1,5 +1,5 @@
 """Change the format of dictionaries"""
-import re, uuid
+import re, uuid, json
 from typing import Any
 from datetime import datetime
 
@@ -127,6 +127,22 @@ def fillDocBeforeCreate(data:dict[str,Any], docType:list[str]) -> dict[str,Any]:
   for key in toDelete:
     del data[key]
   return data
+
+
+def dict2ul(aDict:dict[str,Any]) -> str:
+  """
+  convert a dictionary into a corresponding <ul>-html list
+
+  Args:
+    aDict (dict): dictionary to be translated
+  """
+  text = '<ul>'
+  for key, value in aDict.items():
+    if isinstance(value,str) and value.startswith('{') and value.endswith('}'):
+      value = json.loads(value.replace("'",'"'))
+    valueString = dict2ul(value) if isinstance(value, dict) else str(value)
+    text += f'<li>{key}: {valueString}</li>\n'
+  return text+'</ul>'
 
 
 def diffDicts(dict1:dict[str,Any], dict2:dict[str,Any]) -> str:

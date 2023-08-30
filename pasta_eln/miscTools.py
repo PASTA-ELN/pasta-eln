@@ -4,7 +4,7 @@ from io import BufferedReader
 from pathlib import Path
 from re import sub, match
 import platform
-import yaml
+from .handleDictionaries import dict2ul
 
 class Bcolors:
   """
@@ -301,14 +301,12 @@ def updateExtractorList(directory:Path) -> str:
         extractorsAll[ending]=extractorsThis
                     #header not used for now
   #update configuration file
-  print('\n\nFound extractors:')
-  print(yaml.dump(extractorsAll))
   with open(Path.home()/'.pastaELN.json','r', encoding='utf-8') as f:
     configuration = json.load(f)
   configuration['extractors'] = extractorsAll
   with open(Path.home()/'.pastaELN.json','w', encoding='utf-8') as f:
     f.write(json.dumps(configuration, indent=2))
-  return yaml.dump(extractorsAll)
+  return dict2ul(extractorsAll)
 
 
 def restart() -> None:
