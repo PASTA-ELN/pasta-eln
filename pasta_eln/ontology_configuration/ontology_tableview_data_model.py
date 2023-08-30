@@ -111,10 +111,10 @@ class OntologyTableViewModel(QAbstractTableModel):
     Returns (bool): True when data is set, otherwise false
 
     """
-    if index.isValid() and role == Qt.EditRole or role == Qt.UserRole:
-      prop_row_index = index.row()
-      prop = self.data_name_map.get(index.column())
-      self.data_set[prop_row_index][prop] = value
+    if index.isValid() and (role == Qt.EditRole or role == Qt.UserRole):
+      row_index = index.row()
+      column = self.data_name_map.get(index.column())
+      self.data_set[row_index][column] = value
       self.dataChanged.emit(index, index, role)
       return True
     return False
@@ -195,7 +195,7 @@ class OntologyTableViewModel(QAbstractTableModel):
                      f"data: {data_to_be_pushed})")
     self.layoutChanged.emit()
 
-  def add_data_row(self):
+  def add_data_row(self) -> None:
     """
     Add an empty row to the table data set
     Returns: None
@@ -204,3 +204,4 @@ class OntologyTableViewModel(QAbstractTableModel):
     self.logger.info(f"Added new row...")
     self.data_set.insert(len(self.data_set), {})
     self.layoutChanged.emit()
+    return None

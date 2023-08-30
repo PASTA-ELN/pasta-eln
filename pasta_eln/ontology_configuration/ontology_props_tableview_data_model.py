@@ -27,7 +27,7 @@ class OntologyPropsTableViewModel(OntologyTableViewModel):
     """
     super().__init__(parent)
     self.logger = logging.getLogger(__name__ + "." + self.__class__.__name__)
-    self.props_data_set = None
+    self.data_set = None
     self.data_name_map = {
       0: "name",
       1: "query",

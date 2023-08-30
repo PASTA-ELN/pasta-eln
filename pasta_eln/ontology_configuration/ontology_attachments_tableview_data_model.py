@@ -19,7 +19,7 @@ class OntologyAttachmentsTableViewModel(OntologyTableViewModel):
   """
 
   def __init__(self,
-               parent: QWidget=None):
+               parent: QWidget = None):
     """
     Initialize the data model representing attachments from ontology document in the database
     Args:
@@ -27,7 +27,7 @@ class OntologyAttachmentsTableViewModel(OntologyTableViewModel):
     """
     super().__init__(parent)
     self.logger = logging.getLogger(__name__ + "." + self.__class__.__name__)
-    self.attachments_data_set = None
+    self.data_set = None
     self.data_name_map = {
       0: "location",
       1: "link",

@@ -17,10 +17,34 @@ from pytestqt.qtbot import QtBot
 
 from pasta_eln.gui import main_gui, MainWindow
 from pasta_eln.ontology_configuration.delete_column_delegate import DeleteColumnDelegate
+from pasta_eln.ontology_configuration.ontology_attachments_tableview_data_model import OntologyAttachmentsTableViewModel
 from pasta_eln.ontology_configuration.ontology_configuration_extended import OntologyConfigurationForm, get_gui
+from pasta_eln.ontology_configuration.ontology_props_tableview_data_model import OntologyPropsTableViewModel
+from pasta_eln.ontology_configuration.ontology_tableview_data_model import OntologyTableViewModel
 from pasta_eln.ontology_configuration.reorder_column_delegate import ReorderColumnDelegate
 from pasta_eln.ontology_configuration.required_column_delegate import RequiredColumnDelegate
 from tests.app_tests.common.test_utils import get_ontology_document
+
+
+@fixture()
+def table_model():
+  base_model = OntologyTableViewModel()
+  base_model.setObjectName("OntologyTableViewModel")
+  return base_model
+
+
+@fixture()
+def props_table_model():
+  props_model = OntologyPropsTableViewModel()
+  props_model.setObjectName("OntologyPropsTableViewModel")
+  return props_model
+
+
+@fixture()
+def attachments_table_model():
+  attachments_model = OntologyAttachmentsTableViewModel()
+  attachments_model.setObjectName("OntologyAttachmentsTableViewModel")
+  return attachments_model
 
 
 @fixture()
