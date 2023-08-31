@@ -29,8 +29,21 @@ class CreateTypeDialog(Ui_CreateTypeDialog):
     self.logger = logging.getLogger(__name__ + "." + self.__class__.__name__)
     self.next_struct_level = None
     self.instance = QDialog()
-    ui = super()
-    ui.setupUi(self.instance)
+    super().setupUi(self.instance)
+    self.setup_slots(accepted_callback, rejected_callback)
+
+  def setup_slots(self,
+                  accepted_callback: Callable,
+                  rejected_callback: Callable):
+    """
+    Sets up the slots for the dialog
+    Args:
+      accepted_callback (Callable): Accepted button parent callback.
+      rejected_callback (Callable): Rejected button parent callback.
+
+    Returns: None
+
+    """
     self.buttonBox.accepted.connect(accepted_callback)
     self.buttonBox.rejected.connect(rejected_callback)
     self.structuralLevelCheckBox.stateChanged.connect(self.structural_level_checkbox_callback)

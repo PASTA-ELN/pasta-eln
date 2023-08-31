@@ -46,8 +46,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
 
     # Set up the UI elements
     self.instance = QtWidgets.QDialog()
-    ui = super()
-    ui.setupUi(self.instance)
+    super().setupUi(self.instance)
 
     # Gets the ontology data from db and adjust the data to the latest version
     if not ontology_document:
@@ -336,7 +335,8 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
       show_message(f"Type (title: {title} label: {label}) has been added....")
 
 
-def get_gui(ontology_document: Document) -> tuple[QApplication | QApplication, QtWidgets.QDialog, OntologyConfigurationForm]:
+def get_gui(ontology_document: Document) -> tuple[
+  QApplication | QApplication, QtWidgets.QDialog, OntologyConfigurationForm]:
   """
   Creates the editor UI and return it
   Args:
