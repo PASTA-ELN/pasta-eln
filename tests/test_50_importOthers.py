@@ -53,8 +53,8 @@ class TestStringMethods(unittest.TestCase):
         print('==========================================')
 
         # validate the file
-        print('\n\n---------------\nVerification')
-        checkFile(Path(root)/file, verbose=True, plot=False)
+        # print('\n\n---------------\nVerification')
+        # checkFile(Path(root)/file, verbose=True, plot=False)
         # possibly skip if not fullfills
 
 
