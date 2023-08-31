@@ -53,8 +53,10 @@ class TestStringMethods(unittest.TestCase):
         print('==========================================')
 
         # validate the file
+        print('\n\n---------------\nVerification')
         checkFile(Path(root)/file, verbose=True, plot=False)
         # possibly skip if not fullfills
+
 
         # remove everything else
         self.be = Backend(projectGroup, initConfig=False)
@@ -65,6 +67,7 @@ class TestStringMethods(unittest.TestCase):
         self.be = Backend(projectGroup, initViews=True, initConfig=False)
 
         # import
+        print('\n\n---------------\nImport')
         status = importELN(self.be, str(Path(root)/file))
         print(status)
         self.assertEqual(status[:7],'Success','Import unsuccessful')

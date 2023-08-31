@@ -28,7 +28,6 @@ class TestStringMethods(unittest.TestCase):
     """
     main function
     """
-    dummyProgressBar = DummyProgressBar()
     outputFormat = 'print'
     # initialization: create database, destroy on filesystem and database and then create new one
     warnings.filterwarnings('ignore', message='numpy.ufunc size changed')
@@ -62,6 +61,7 @@ class TestStringMethods(unittest.TestCase):
       self.be.db.remove(doc['id'])
 
     # import
+    print('\n\n---------------\nImport')
     status = importELN(self.be, self.fileName)
     print(status)
     self.assertEqual(status[:7],'Success','Import unsuccessful')
