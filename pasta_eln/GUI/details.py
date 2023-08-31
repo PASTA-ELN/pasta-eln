@@ -137,8 +137,8 @@ class Details(QScrollArea):
         self.btnVendor.show()
         label = QLabel()
         label.setWordWrap(True)
-        format = '<style> ul {list-style-type: none; padding-left: 0; margin: 0;} </style>'
-        label.setText(format+dict2ul(self.doc[key]))
+        cssStyle = '<style> ul {list-style-type: none; padding-left: 0; margin: 0;} </style>'
+        label.setText(cssStyle+dict2ul(self.doc[key]))
         label.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.metaVendorL.addWidget(label)
         self.metaVendorW.show()
@@ -146,8 +146,8 @@ class Details(QScrollArea):
         self.btnUser.show()
         label = QLabel()
         label.setWordWrap(True)
-        format = '<style> ul {list-style-type: none; padding-left: 0; margin: 0;} </style>'
-        label.setText(format+dict2ul(self.doc[key]))
+        cssStyle = '<style> ul {list-style-type: none; padding-left: 0; margin: 0;} </style>'
+        label.setText(cssStyle+dict2ul(self.doc[key]))
         label.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.metaUserL.addWidget(label)
         self.metaUserW.show()
