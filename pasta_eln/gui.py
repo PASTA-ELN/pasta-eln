@@ -78,7 +78,6 @@ class MainWindow(QMainWindow):
     Action('&Website',               self, [Command.WEBSITE],        helpMenu)
     Action('&Verify database',       self, [Command.VERIFY_DB],      helpMenu, shortcut='Ctrl+?')
     Action('Shortcuts',              self, [Command.SHORTCUTS],      helpMenu)
-    Action('Todo list',              self, [Command.TODO],           helpMenu)
     helpMenu.addSeparator()
     #shortcuts for advanced usage (user should not need)
     QShortcut('F9', self, lambda : self.execute([Command.RESTART]))
@@ -179,12 +178,6 @@ class MainWindow(QMainWindow):
       showMessage(self, 'Report of database verification', report, style='QLabel {min-width: 800px}')
     elif command[0] is Command.SHORTCUTS:
       showMessage(self, 'Keyboard shortcuts', shortcuts)
-    elif command[0] is Command.TODO:
-      try:
-        from .tempStrings import todoString
-        showMessage(self, 'List of items on todo list',todoString)
-      except Exception:
-        pass
 
     elif command[0] is Command.RESTART:
       restart()
@@ -241,8 +234,7 @@ class Command(Enum):
   WEBSITE       = 13
   VERIFY_DB     = 14
   SHORTCUTS     = 15
-  TODO          = 16
-  RESTART       = 17
+  RESTART       = 16
 
 
 # called by python3 -m pasta_eln.gui
