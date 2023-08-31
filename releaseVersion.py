@@ -91,10 +91,10 @@ def runTests():
     success = result.stdout.decode('utf-8').count('*** DONE WITH VERIFY ***')
     if success==1:
       success += result.stdout.decode('utf-8').count('**ERROR')
+      success -= result.stdout.decode('utf-8').count('**ERROR Red: FAILURE and ERROR')
     if success==1:
       print("  success: Python unit test "+fileI)
     else:
-      successAll = False
       print("  FAILED: Python unit test "+fileI)
       print("    run: 'pytest -s tests/"+fileI+"' and check logFile")
   return

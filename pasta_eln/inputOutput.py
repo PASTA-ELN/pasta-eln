@@ -134,6 +134,7 @@ def importELN(backend:Backend, elnFileName:str) -> str:
         fullPath = backend.basePath/elnID
       else:
         fullPath = backend.basePath/backend.cwd/elnID.split('/')[-1]
+      datasetIsFolder = False
       if dataType.lower()=='dataset':
         #print('  Dataset',elnID,dataType)
         if elnName == 'PASTA ELN':
@@ -143,15 +144,17 @@ def importELN(backend:Backend, elnFileName:str) -> str:
         else:
           print('**ERROR could not identify elnName', elnName)
           return -1
-        with elnFile.open(supplementalInfo.as_posix()) as fIn:
-          jsonContent = json.loads( fIn.read() )
-          if isinstance(jsonContent, list):
-            jsonContent = jsonContent[0]
-          if elnName == 'PASTA ELN':
-            doc.update( jsonContent['__main__'] )
-          else:
-            doc[f'from {elnName}'] = jsonContent
-      else:
+        if supplementalInfo.as_posix() in elnFile.namelist():
+          datasetIsFolder = True
+          with elnFile.open(supplementalInfo.as_posix()) as fIn:
+            jsonContent = json.loads( fIn.read() )
+            if isinstance(jsonContent, list):
+              jsonContent = jsonContent[0]
+            if elnName == 'PASTA ELN':
+              doc.update( jsonContent['__main__'] )
+            else:
+              doc[f'from {elnName}'] = jsonContent
+      if not datasetIsFolder:
         #print('  ELSE ',elnID,dataType)
         if elnName == 'PASTA ELN':
           if elnID.endswith('datastructure.json'):
@@ -173,7 +176,7 @@ def importELN(backend:Backend, elnFileName:str) -> str:
       # save
       if elnName == 'PASTA ELN':
         doc['-user'] = '_'
-        if dataType.lower()=='dataset':
+        if datasetIsFolder:
           fullPath.mkdir(exist_ok=True)
           with open(fullPath/'.id_pastaELN.json', 'w', encoding='utf-8') as fOut:
             fOut.write(json.dumps(doc))
@@ -221,6 +224,8 @@ def importELN(backend:Backend, elnFileName:str) -> str:
       if not part['@id'].endswith('ro-crate-metadata.json'):
         addedDocuments += processPart(part)
   return f'Success: imported {str(addedDocuments)} documents from file {elnFileName} from ELN {elnName} {elnVersion}'
+
+
 
 
 ##########################################
@@ -343,6 +348,9 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
       else:
         print(f'Info: could not get file {path}')
       docMain['@type'] = 'File'
+    elif '@type' not in docMain:  #samples will be here
+      docMain['@type'] = 'Dataset'
+      docMain['@id'] = docMain['@id'] if docMain['@id'].endswith('/') else f"{docMain['@id']}/"
 
     append(graph, docMain)
     return docMain['@id']

@@ -45,10 +45,11 @@ class TestStringMethods(unittest.TestCase):
     idProj = self.be.db.getView('viewDocType/x0')[0]['id']
     self.fileName = str(Path.home()/'temporary_pastaTest.eln')
     status = exportELN(self.be, idProj, self.fileName)
-    print('\n'+status)
+    print(f'Export to: {self.fileName}\n{status}')
     self.assertEqual(status[:21],'Success: exported 31 ','Export unsuccessful')
 
     # verify eln
+    print('\n\n---------------\nVerification')
     if elnValidation:
       checkFile(Path(self.fileName), verbose=True, plot=False)
 
@@ -79,7 +80,7 @@ class TestStringMethods(unittest.TestCase):
 
   def tearDown(self):
     logging.info('End Export-import test')
-    Path(self.fileName).unlink()  #remove file
+    # Path(self.fileName).unlink()  #remove file
     return
 
 if __name__ == '__main__':
