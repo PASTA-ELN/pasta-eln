@@ -28,6 +28,13 @@ from pasta_eln.ontology_configuration.utility_functions import adjust_ontology_d
 
 
 class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
+
+  def __new__(cls, *_, **__):
+    """
+    Instantiates the OntologyConfigurationForm
+    """
+    return super(OntologyConfigurationForm, cls).__new__(cls)
+
   def __init__(self,
                ontology_document: Document):
     """

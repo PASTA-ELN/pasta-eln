@@ -29,22 +29,36 @@ from tests.app_tests.common.test_utils import get_ontology_document
 
 
 @fixture()
-def create_type_dialog_mock(request, mocker) -> CreateTypeDialog:
-  mock_logger = mocker.patch('logging.Logger')
+def create_type_dialog_mock(mocker) -> CreateTypeDialog:
   mock_callable_1 = mocker.patch('typing.Callable')
   mock_callable_2 = mocker.patch('typing.Callable')
-  mock_dialog = mocker.patch('PySide6.QtWidgets.QDialog')
-  mock_type_dialog_base_setup = mocker.patch(
-    'pasta_eln.ontology_configuration.create_type_dialog.create_type_dialog_extended.Ui_CreateTypeDialog.setupUi')
-  mocker.patch.object(CreateTypeDialog, 'setup_slots', mocker.MagicMock())
-  mocker.patch('pasta_eln.ontology_configuration.create_type_dialog.create_type_dialog_extended.logging.getLogger',
-               return_value=mock_logger)
+  mocker.patch.object(CreateTypeDialog, 'setup_slots')
+  mocker.patch('pasta_eln.ontology_configuration.create_type_dialog.create_type_dialog_extended.logging.getLogger')
   mocker.patch(
-    'pasta_eln.ontology_configuration.create_type_dialog.create_type_dialog_extended.Ui_CreateTypeDialog.setupUi',
-    return_value=mock_type_dialog_base_setup)
-  mocker.patch.object(QDialog, '__new__', return_value=mock_dialog)
-  dialog_instance = CreateTypeDialog(mock_callable_1, mock_callable_2)
-  return dialog_instance
+    'pasta_eln.ontology_configuration.create_type_dialog.create_type_dialog_extended.Ui_CreateTypeDialog.setupUi')
+  mocker.patch.object(QDialog, '__new__')
+  return CreateTypeDialog(mock_callable_1, mock_callable_2)
+
+
+@fixture()
+def configuration_extended(mocker) -> OntologyConfigurationForm:
+  mock_document = mocker.patch('cloudant.document.Document')
+  mocker.patch('pasta_eln.ontology_configuration.create_type_dialog.create_type_dialog_extended.logging.getLogger')
+  mocker.patch('pasta_eln.ontology_configuration.ontology_configuration.Ui_OntologyConfigurationBaseForm.setupUi')
+  mocker.patch('pasta_eln.ontology_configuration.ontology_configuration_extended.adjust_ontology_data_to_v3')
+  mocker.patch.object(QDialog, '__new__')
+  mocker.patch.object(OntologyPropsTableViewModel, '__new__')
+  mocker.patch.object(OntologyAttachmentsTableViewModel, '__new__')
+  mocker.patch.object(RequiredColumnDelegate, '__new__')
+  mocker.patch.object(DeleteColumnDelegate, '__new__')
+  mocker.patch.object(ReorderColumnDelegate, '__new__')
+  mocker.patch.object(OntologyConfigurationForm, 'typePropsTableView', create=True)
+  mocker.patch.object(OntologyConfigurationForm, 'typeAttachmentsTableView', create=True)
+  mocker.patch.object(CreateTypeDialog, '__new__')
+  mocker.patch(
+    'pasta_eln.ontology_configuration.ontology_configuration_extended.OntologyConfigurationForm.setup_slots')
+  config_instance = OntologyConfigurationForm(mock_document)
+  return config_instance
 
 
 @fixture()

@@ -17,11 +17,17 @@ from pasta_eln.ontology_configuration.create_type_dialog.create_type_dialog impo
 
 class CreateTypeDialog(Ui_CreateTypeDialog):
 
+  def __new__(cls, *_, **__):
+    """
+    Instantiates the create type dialog
+    """
+    return super(CreateTypeDialog, cls).__new__(cls)
+
   def __init__(self,
                accepted_callback: Callable,
                rejected_callback: Callable):
     """
-    Instantiates the create type dialog
+    Initializes the create type dialog
     Args:
       accepted_callback (Callable): Accepted button parent callback.
       rejected_callback (Callable): Rejected button parent callback.
