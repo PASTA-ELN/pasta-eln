@@ -49,9 +49,7 @@ class TreeView(QTreeView):
     return
 
 
-  #TODO_P4 projectTree: drag&drop of external files
   def execute(self, command:list[Any]) -> None:
-    # sourcery skip: extract-duplicate-method, extract-method
     """
     after selecting a item from context menu
 
@@ -73,7 +71,7 @@ class TreeView(QTreeView):
       # - better: insertRow before the first non-folder, depending on the child number
       #   -> get highest non 9999 childNumber
       # turns out, one can easily move it to correct position with drag&drop
-      # TODO_P4 not sure this will be important
+      # -  not sure this will be important
     elif command[0] is Command.ADD_SIBLING:
       hierStack= hierStack[:-1]
       docType= f'x{len(hierStack)}'

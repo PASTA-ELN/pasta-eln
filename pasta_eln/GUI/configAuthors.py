@@ -8,7 +8,6 @@ from ..miscTools import restart
 from ..guiStyle import TextButton
 from ..guiCommunicate import Communicate
 
-#TODO_P5 allow to add more users and each user can have multiple organizations
 
 class ConfigurationAuthors(QWidget):
   """ Main class of config tab on authors """

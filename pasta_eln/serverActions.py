@@ -11,9 +11,6 @@ from requests.structures import CaseInsensitiveDict
 from requests.auth import AuthBase
 from PIL import Image, ImageDraw, ImageFont
 
-#TODO_P5 serverConfiguration: this should become a GUI and CLI and separate into three-files: functions, CLI, GUI
-# add: delete all documents, backup database, backup server (incl. all small things)
-
 def passwordEncrypt(message:str) -> bytes:
   """
   obfuscate message

@@ -58,7 +58,6 @@ class MainWindow(QMainWindow):
       viewMenu.addSeparator()
       Action('&Tags',               self, [Command.VIEW, '_tags_'], viewMenu, shortcut='Ctrl+T')
       Action('&Unidentified',       self, [Command.VIEW, '-'],      viewMenu, shortcut='Ctrl+U')
-        #TODO_P5 create list of unaccessible files: linked with accessible files
 
     systemMenu = menu.addMenu("&System")
     Action('&Project groups',       self, [Command.PROJECT_GROUP],    systemMenu)
@@ -84,7 +83,6 @@ class MainWindow(QMainWindow):
     #shortcuts for advanced usage (user should not need)
     QShortcut('F9', self, lambda : self.execute([Command.RESTART]))
 
-    #TODO_P3 export to dataverse
     #GUI elements
     mainWidget, mainLayout = widgetAndLayout('H')
     self.setCentralWidget(mainWidget)      # Set the central widget of the Window
@@ -194,10 +192,6 @@ class MainWindow(QMainWindow):
       print("**ERROR gui menu unknown:",command)
     return
 
-
-# TODO_P5 copy of file: should it the be the same in database or should it be two separate entities??
-#         - what happens if you want to change metadata of one but don't want to change the other?
-#           - copy of raw data into one that will changed, to clean
 
 ##############
 ## Main function

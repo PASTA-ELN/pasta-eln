@@ -195,9 +195,7 @@ def installLinuxRoot(couchDBExists:bool, pathPasta:Path=Path(''), password:str='
       f'curl -X PUT http://admin:{password}@127.0.0.1:5984/_replicator',
       f'curl -X PUT http://admin:{password}@127.0.0.1:5984/_global_changes',
       f'curl -X PUT http://admin:{password}@127.0.0.1:5984/_node/_local/_config/couch_httpd_auth/timeout/ -d \'"60000"\'',
-      'sleep 10',
-      'echo DONE-Press-Key',
-      'read']  #TODO_P5 if successful in Aug2023: remove "echo....read"
+      'sleep 10']
   #Try all terminals
   scriptFile = Path.home()/'pastaELN_Install.sh'
   with open(scriptFile,'w', encoding='utf-8') as shell:
@@ -223,9 +221,7 @@ def installLinuxRoot(couchDBExists:bool, pathPasta:Path=Path(''), password:str='
 
 
 def configuration(command:str='test', user:str='', password:str='', pathPasta:Path=Path('')) -> str:
-  # sourcery skip: hoist-similar-statement-from-if, merge-duplicate-blocks, merge-else-if-into-elif, remove-redundant-if, swap-if-else-branches, swap-nested-ifs
   '''
-  #TODO_P4 change to string-output
   Check configuration file .pastaELN.json for consistencies
 
   Args:
@@ -280,7 +276,6 @@ def configuration(command:str='test', user:str='', password:str='', pathPasta:Pa
 
 
 def ontology(command:str='test') -> str:
-  # sourcery skip: switch
   '''
   Check configuration file .pastaELN.json for consistencies
 

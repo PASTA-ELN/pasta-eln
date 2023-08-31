@@ -79,8 +79,6 @@ class Table(QWidget):
     header.setMaximumSectionSize(self.comm.backend.configuration['GUI']['maxTableColumnWidth'])
     header.resizeSections(QHeaderView.ResizeToContents)
     header.setStretchLastSection(True)
-    #TODO_P2 table: shift-select
-    # ---
     mainL.addWidget(self.table)
     self.setLayout(mainL)
 
@@ -106,7 +104,6 @@ class Table(QWidget):
       self.projID  = projID
     if self.docType=='_tags_':
       self.addBtn.hide()
-      #TODO_P4 projectTree can select sub-folders: if table-row click, move to view it project
       if self.showAll:
         self.data = self.comm.backend.db.getView('viewIdentify/viewTagsAll')
       else:
@@ -153,7 +150,7 @@ class Table(QWidget):
         else:
           item = QStandardItem(self.data[i]['value'][j-1])
       elif self.data[i]['value'][j] is None or not self.data[i]['value'][j]:  #None, False
-        item = QStandardItem('-') # TODO_P4 add nice glyphs later, see also below \u00D7')
+        item = QStandardItem('-') # if you want to add nice glyphs, see also below \u00D7')
         # item.setFont(QFont("Helvetica [Cronyx]", 16))
       elif isinstance(self.data[i]['value'][j], bool): #True
         item = QStandardItem('Y') # \u2713')
@@ -185,7 +182,6 @@ class Table(QWidget):
         if docType!='x0':
           item.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)   # type: ignore[operator]
           item.setCheckState(Qt.CheckState.Unchecked)
-          #TODO_P2 design: make the checkboxes larger!
       else:
         item.setFlags(Qt.ItemIsEnabled) # type: ignore[arg-type]
       model.setItem(i, j, item)
@@ -220,7 +216,6 @@ class Table(QWidget):
       rowL.addWidget(select)
       IconButton('fa5s.minus-square', self, [Command.DELETE_FILTER, len(self.models)], rowL)
       # data
-      #TODO_P4 can you sort for true false in tables too?
       filterModel = QSortFilterProxyModel()
       text.textChanged.connect(filterModel.setFilterRegularExpression)
       filterModel.setSourceModel(self.models[-1])
@@ -419,7 +414,6 @@ class Table(QWidget):
     return item, item.accessibleText()
 
 
-  #TODO_P5 invert filter: not 'Sur' in name => '^((?!Sur).)*$' in name
   def filterChoice(self, item:QStandardItem) -> None:
     """
     Change the column which is used for filtering

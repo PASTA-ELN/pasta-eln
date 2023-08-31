@@ -69,11 +69,11 @@ class Project(QWidget):
     for key,value in self.docProj.items():
       if key[0] in ['_','-'] or (key=='comment' and '\n' in value):
         continue
-      if 'from ' in key:  #TODO_P5 for now until the content of other ELNs is perfectly included
+      if 'from ' in key:
         continue
       infoL.addWidget(QLabel(f'{key}: {str(value)}'))
     if 'comment' in self.docProj and '\n' in self.docProj['comment']:     #format nicely
-      # comment = QTextEdit()  #TODO_P2 render comment nicely without screwing up the rest
+      # comment = QTextEdit()
       # comment.setMarkdown(self.docProj['comment'])
       # comment.setReadOnly(True)
       # comment.setFixedHeight(200)
@@ -116,7 +116,6 @@ class Project(QWidget):
     # self.tree.expandAll()
     if selectedIndex is not None:
       self.tree.selectionModel().select(selectedIndex, QItemSelectionModel.Select)
-      #TODO_P4 projectTree: selection does not scroll; one cannot select a row
       self.tree.setCurrentIndex(selectedIndex)# Item(selectedItem)
     self.mainL.addWidget(self.tree)
     if len(nodeHier.children)>0 and self.btnAddSubfolder is not None:
@@ -124,8 +123,6 @@ class Project(QWidget):
     return
 
 
-  #TODO_P4 projectTree: select multiple items to edit... What is use case
-  #TODO_P4 projectTree: allow right click on measurement to change recipe
   def execute(self, command:list[Any]) -> None:
     """
     Event if user clicks button in the center

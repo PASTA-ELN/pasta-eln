@@ -88,7 +88,6 @@ class CLI_Mixin:
 
 
   def outputHierarchy(self, onlyHierarchy=True, addID=False, addTags=None, **kwargs):
-    # sourcery skip: inline-immediately-returned-variable, use-join
     """
     output hierarchical structure in database
     - convert view into native dictionary

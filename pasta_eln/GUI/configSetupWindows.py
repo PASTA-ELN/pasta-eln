@@ -57,7 +57,6 @@ class ConfigurationSetup(QWidget):
 
   # create windows package: Packaging Pyside6 applications for Windows with PyInstaller & InstallForge
   def execute(self, _:list[Any]) -> None:
-    # sourcery skip: extract-duplicate-method, inline-immediately-returned-variable
     """
     Main method that does all the analysis: open dialogs, ...
     """

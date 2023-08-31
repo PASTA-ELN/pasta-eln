@@ -169,13 +169,7 @@ class Form(QDialog):
     mainL.addWidget(buttonBox)
 
 
-  # TODO_P2 make markdown format correctly immediately
-  # TODO_P2 move folder to different folder: use unidentified for notes
-  # TODO_P4 add splitter to increase / decrease image
-  # TODO_P3 form: add button to add key-values
-  # TODO_P3 form: other items as non-edible things that can be copy-pasted
   def closeDialog(self, btn:QPushButton) -> None:
-    # sourcery skip: merge-else-if-into-elif
     """
     Action upon save / cancel
     """
@@ -213,7 +207,7 @@ class Form(QDialog):
             if key == 'content' and '-branch' in self.doc:
               for branch in self.doc['-branch']:
                 if branch['path'] is not None:
-                  if branch['path'].endswith('.md'):  #TODO_P5 only write markdown files for now
+                  if branch['path'].endswith('.md'):
                     with open(self.comm.backend.basePath/branch['path'], 'w', encoding='utf-8') as fOut:
                       fOut.write(self.doc['content'])
                     logging.debug('Wrote new content to '+branch['path'])

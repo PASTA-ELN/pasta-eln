@@ -28,10 +28,6 @@ class Sidebar(QWidget):
     mainL.setContentsMargins(space['s'],space['s'],space['0'],space['s'])
     mainL.setSpacing(0)
     _, self.projectsListL = widgetAndLayout('V', mainL, spacing='s')
-    #TODO_P4 sidebar-scroll cannot figure out issue
-    # current solution shows as many projects as fit in the sidebar
-    #  - Scrollarea seems to need fixed size, which is assigned by giving its main widget a height
-    #  - if I add a qlabel then I can qlabel afterwards, but the sizes of the projectW are too small
     # projectListW, self.projectsListL = widgetAndLayout('V', None, spacing='s')
     # scrollSection = QScrollArea()
     # scrollSection.setWidget(projectListW)
@@ -71,7 +67,6 @@ class Sidebar(QWidget):
     if hasattr(backend, 'db'):
       db = self.comm.backend.db
       hierarchy = db.getView('viewDocType/x0')
-      #TODO_P5 for now, sorted by last change of project itself. future create a view that does that automatically(if docType x0: emit changeDate)
       lastChangeDate = [db.getDoc(project['id'])['-date'] for project in hierarchy]
       maxProjects = int((self.height()-120)/50)-1
       for index, project in enumerate(x for _, x in sorted(zip(lastChangeDate, hierarchy), reverse=True)):

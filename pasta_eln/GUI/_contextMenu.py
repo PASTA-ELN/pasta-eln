@@ -8,8 +8,7 @@ from PySide6.QtCore import     QPoint # pylint: disable=no-name-in-module
 from ..guiStyle import Action
 
 
-def initContextMenu(widget:QWidget, pos:QPoint) -> None: #TODO_P3 move all context menu of this type to separate function
-  # sourcery skip: extract-method
+def initContextMenu(widget:QWidget, pos:QPoint) -> None:
   """
   Create a context menu
 
@@ -30,7 +29,6 @@ def initContextMenu(widget:QWidget, pos:QPoint) -> None: #TODO_P3 move all conte
       Action(value,                     widget, [CommandMenu.CHANGE_EXTRACTOR, key], context)
     context.addSeparator()
     Action('Save image',                widget, [CommandMenu.SAVE_IMAGE],            context)
-  #TODO_P2 not save now: when opening text files, system can crash as default option might be 'vi'
   # Action('Open file with another application', widget.changeExtractor, context, widget, name='_openExternal_')
   Action('Open folder in file browser', widget, [CommandMenu.OPEN_FILEBROWSER],      context)
   Action('Hide',                        widget, [CommandMenu.HIDE],                  context)

@@ -281,8 +281,6 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
     return
 
 
-  #TODO_P2 Progress bar: , progressBar:Optional[QProgressBar]=None
-  # SimStack (matsci.org/c/simstack), PMD Meeting september KIT
   def iterateTree(nodeHier:Node, graph:list[dict[str,Any]]) -> Optional[str]:
     """
     Recursive function to translate the hierarchical node into a tree-node

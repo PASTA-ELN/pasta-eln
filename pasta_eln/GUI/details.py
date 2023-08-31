@@ -137,9 +137,8 @@ class Details(QScrollArea):
         self.btnVendor.show()
         label = QLabel()
         label.setWordWrap(True)
-        label.setText(dict2ul(self.doc[key]))
-        #TODO_P1 how can I style <ul> on qlabel?
-        # label.setStyleSheet('list-style-type: none; padding-left: 20px;  margin: 0;')
+        format = '<style> ul {list-style-type: none; padding-left: 0; margin: 0;} </style>'
+        label.setText(format+dict2ul(self.doc[key]))
         label.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.metaVendorL.addWidget(label)
         self.metaVendorW.show()
@@ -147,7 +146,8 @@ class Details(QScrollArea):
         self.btnUser.show()
         label = QLabel()
         label.setWordWrap(True)
-        label.setText(dict2ul(self.doc[key]))
+        format = '<style> ul {list-style-type: none; padding-left: 0; margin: 0;} </style>'
+        label.setText(format+dict2ul(self.doc[key]))
         label.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.metaUserL.addWidget(label)
         self.metaUserW.show()
