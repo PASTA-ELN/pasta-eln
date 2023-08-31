@@ -1,5 +1,6 @@
-from PySide6.QtWidgets import QListWidget, QDialogButtonBox, QDialog, QApplication, QMainWindow, QWidget, QVBoxLayout, QLineEdit, QScrollArea, QCheckBox, QPushButton
-from PySide6.QtCore import QSize 
+from PySide6.QtWidgets import QLabel, QHBoxLayout, QListWidget, QDialogButtonBox, QDialog, QApplication, QMainWindow, QWidget, QVBoxLayout, QLineEdit, QScrollArea, QCheckBox, QPushButton
+from PySide6.QtCore import QSize, Qt
+from PySide6.QtGui import QPixmap
 from rdflib import Graph, Namespace, URIRef
 import requests, json
 
@@ -48,7 +49,6 @@ class MainWindow(QMainWindow):
             nested_def_list = self.definition_search(searchterms)
             for def_list in nested_def_list:
                 self.outputList.addItems(def_list)
-            #self.sort_for_weight(self.outputList)
 
     def definition_search(self, searchterms):
         """Opens the Definition Dialog and returns a nested list
@@ -68,14 +68,6 @@ class MainWindow(QMainWindow):
                 break      
         return returned_definitions
 
-    """def sort_for_weight(self, def_list):
-        self.source_counter = Counter()
-        for definition in def_list:
-            a = definition.rfind("(")
-            b = definition.rfind(")")
-            print(definition[a+1:b])
-            self.source_counter[definition[a+1:b]] += 1"""
-
 
 class DefinitionDialog(QDialog):
     def __init__(self, searchterm, parent=None):
@@ -89,12 +81,20 @@ class DefinitionDialog(QDialog):
         #variables
         self.parent = parent
         self.listCB = []
+        self.nested_widgets = []
         self.search_term = searchterm
         
+        #icons
+        self.wikipedia_pixmap = self.pixmap_from_url("https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/Wikipedia_Logo_Mini.svg/240px-Wikipedia_Logo_Mini.svg.png")
+        self.wikidata_pixmap = self.pixmap_from_url("https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Wikidata-logo.png/234px-Wikidata-logo.png")
+        self.ols_pixmap = self.pixmap_from_url("https://www.ebi.ac.uk/ols/img/OLS_logo_2017.png")
+        self.tib_pixmap = self.pixmap_from_url("https://service.tib.eu/ts4tib/img/TIB_Logo_en.png")
+
         #Widget setup
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
         self.setWindowTitle("Choose any Definitions")
+        self.setMinimumSize(QSize(600,200))
 
         #ScrollArea
         self.scrollWidget = QWidget()
@@ -116,9 +116,12 @@ class DefinitionDialog(QDialog):
             self.wikipedia_search()
             self.wikidata_search()
             self.ols_search()
-            self.tib_search() 
-        for cb in self.listCB:
-            self.scrollLayout.addWidget(cb[0])
+            self.tib_search()
+
+        
+        for widget in self.nested_widgets:
+            self.scrollLayout.addWidget(widget)
+
 
     def finalize(self):
         for cb in self.listCB:
@@ -136,8 +139,10 @@ class DefinitionDialog(QDialog):
         response = json.loads(response.text)
         for page in response["pages"]:
             if page['description'] is not None and page['description'] != "Topics referred to by the same term":
-                self.listCB.append((QCheckBox(page["title"]+": "+page["description"]+" (Wikipedia)"),"https://en.wikipedia.org/w/index.php?curid="+str(page["id"])))
-                #https://en.wikipedia.org/w/index.php?curid=82974 link to each article using the id parameter
+                self.listCB.append((QCheckBox(page["title"]+": "+page["description"]),
+                                    "https://en.wikipedia.org/w/index.php?curid="+str(page["id"])))
+                current = self.listCB[-1]
+                self.nested_widgets.append(self.cb_and_image_widget(current[0], self.wikipedia_pixmap))
 
     def wikidata_search(self):
         base_url = "https://www.wikidata.org/w/api.php"
@@ -152,7 +157,10 @@ class DefinitionDialog(QDialog):
             if 'description' in a:
                 label = a['label']
                 description = a["description"]
-                self.listCB.append((QCheckBox(label['value']+": "+description['value']+" (Wikidata)"), result["concepturi"]))
+                self.listCB.append((QCheckBox(label['value']+": "+description['value']), 
+                                    result["concepturi"]))
+                current = self.listCB[-1]
+                self.nested_widgets.append(self.cb_and_image_widget(current[0], self.wikidata_pixmap))
 
     def ols_search(self): #some Ontologies do not provide a description in the json
         base_url = "http://www.ebi.ac.uk/ols/api/search"
@@ -164,12 +172,14 @@ class DefinitionDialog(QDialog):
         response = response["response"]
         for result in response['docs']:
             if 'description' in result and result['description'] is not None:
-                self.listCB.append((QCheckBox(result["label"]+": "+"".join(result["description"])+" ("+result["ontology_name"]+")"), result["iri"]))
+                self.listCB.append((QCheckBox(result["label"]+": "+"".join(result["description"])+" ("+result["ontology_name"]+")"),
+                                    result["iri"]))
+                current = self.listCB[-1]
+                self.nested_widgets.append(self.cb_and_image_widget(current[0], self.ols_pixmap))
 
     def tib_search(self):#some Ontologies do not provide a description in the json, this is handled by the devs of tib
         base_url = "https://service.tib.eu/ts4tib/api/search"
         response = requests.get(base_url, params={"q": self.search_term})
-        print(response)
         if response.status_code != 200: #useless for some errors because requests.get raises exceptions
             print("TIB Terminology Service: Request failed with status Code:"+ response.status_code)
             return
@@ -179,7 +189,29 @@ class DefinitionDialog(QDialog):
         duplicate_ontos = ["afo", "bco", "bto", "chiro", "chmo", "duo", "edam", "efo", "fix", "hp", "iao", "mod", "mop", "ms", "nmrcv", "ncit", "obi", "om", "pato", "po", "proco", "prov", "rex", "ro", "rxno", "sbo", "sepio", "sio", "swo", "t4fs", "uo"]
         for result in response['docs']:
             if 'description' in result and result['description'] is not None and not result["ontology_name"] in duplicate_ontos:
-                self.listCB.append((QCheckBox(result["label"]+": "+"".join(result["description"])+" ("+result["ontology_name"]+")"), result["iri"]))
+                self.listCB.append((QCheckBox(result["label"]+": "+"".join(result["description"])+" ("+result["ontology_name"]+")"), 
+                                    result["iri"]))
+                current = self.listCB[-1]
+                self.nested_widgets.append(self.cb_and_image_widget(current[0], self.tib_pixmap))
+
+    def pixmap_from_url(self, url):
+        image = requests.get(url)
+        pixmap = QPixmap()
+        pixmap.loadFromData(image.content)
+        pixmap = pixmap.scaled(40,40, Qt.KeepAspectRatio)
+        return pixmap
+
+    def cb_and_image_widget(self, checkbox, pixmap):
+        nested_widget = QWidget()
+        nested_widget.setStyleSheet("font-size: 17px")
+        nested_layout = QHBoxLayout()
+        nested_label = QLabel()
+        nested_label.setPixmap(pixmap)
+        nested_widget.setLayout(nested_layout)
+        nested_layout.addWidget(checkbox)
+        nested_layout.addWidget(nested_label)
+        return nested_widget
+
 
 app = QApplication()
 window = MainWindow()
