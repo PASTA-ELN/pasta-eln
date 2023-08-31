@@ -170,8 +170,11 @@ class OntologyTableViewModel(QAbstractTableModel):
     Returns: None
 
     """
-    data_deleted = self.data_set[position]
-    self.data_set.pop(position)
+    try:
+      data_deleted = self.data_set.pop(position)
+    except IndexError:
+      self.logger.warning(f"Invalid position: {position}")
+      return None
     self.logger.info(f"Deleted (row: {position}, data: {data_deleted})...")
     self.layoutChanged.emit()
 
@@ -186,7 +189,11 @@ class OntologyTableViewModel(QAbstractTableModel):
     Returns: None
 
     """
-    data_to_be_pushed = self.data_set.pop(position)
+    try:
+      data_to_be_pushed = self.data_set.pop(position)
+    except IndexError:
+      self.logger.warning(f"Invalid position: {position}")
+      return None
     shift_position = position - 1
     shift_position = shift_position if shift_position > 0 else 0
     self.data_set.insert(shift_position, data_to_be_pushed)
