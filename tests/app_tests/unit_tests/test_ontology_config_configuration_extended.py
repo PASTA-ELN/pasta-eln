@@ -327,7 +327,8 @@ class TestOntologyConfigConfiguration(object):
     ("instrument", {"x0": {"link": "x0"}, "instrument": {"link": "x1"}},
      {"x0": {"link": "x0"}, "instrument": {"link": "x1"}}),
     (
-    "subtask5", {"x0": {"link": "x0"}, "subtask5": {"link": "x1"}}, {"x0": {"link": "x0"}, "subtask5": {"link": "x1"}}),
+        "subtask5", {"x0": {"link": "x0"}, "subtask5": {"link": "x1"}},
+        {"x0": {"link": "x0"}, "subtask5": {"link": "x1"}}),
     ("x0", {"x0": {"link": "x0"}, "subtask5": {"link": "x1"}}, {"subtask5": {"link": "x1"}}),
     ("x0", {"subtask5": {"link": "x1"}}, {"x0": {"link": "x0"}, "subtask5": {"link": "x1"}}),
   ])
@@ -347,7 +348,7 @@ class TestOntologyConfigConfiguration(object):
     add_items_selected_spy = mocker.spy(configuration_extended.typeComboBox, 'addItems')
     logger_info_spy = mocker.spy(configuration_extended.logger, 'info')
     if ontology_document:
-      original_ontology_types = ontology_types.copy()
+      original_ontology_document = ontology_document.copy()
       configuration_extended.ontology_document.__setitem__.side_effect = ontology_document.__setitem__
       configuration_extended.ontology_document.__getitem__.side_effect = ontology_document.__getitem__
       configuration_extended.ontology_document.__iter__.side_effect = ontology_document.__iter__
@@ -356,7 +357,7 @@ class TestOntologyConfigConfiguration(object):
       configuration_extended.ontology_document.pop.side_effect = ontology_document.pop
     pop_items_selected_ontology_document_spy = mocker.spy(configuration_extended.ontology_document, 'pop')
     if ontology_types:
-      original_ontology_document = ontology_document.copy()
+      original_ontology_types = ontology_types.copy()
       configuration_extended.ontology_types.__setitem__.side_effect = ontology_types.__setitem__
       configuration_extended.ontology_types.__getitem__.side_effect = ontology_types.__getitem__
       configuration_extended.ontology_types.__iter__.side_effect = ontology_types.__iter__
@@ -430,3 +431,97 @@ class TestOntologyConfigConfiguration(object):
     clear_ui_spy = mocker.patch.object(configuration_extended.create_type_dialog, 'clear_ui', create=True)
     assert configuration_extended.create_type_rejected_callback() is None, "Nothing should be returned"
     clear_ui_spy.assert_called_once_with()
+
+  @pytest.mark.parametrize("new_structural_title, ontology_types", [
+    (None, None),
+    ("x0", None),
+    (None, {"x0": {"link": "x0"}, "x1": {"link": "x1"}}),
+    ("x3", {"x0": {"link": "x0"}, "x1": {"link": "x1"}}),
+    ("x7", {"x0": {"link": "x0"}, "instrument": {"link": "x1"}}),
+    ("x6", {"x0": {"link": "x0"}, "subtask5": {"link": "x1"}})
+  ])
+  def test_show_create_type_dialog_should_do_expected(self,
+                                                      mocker,
+                                                      configuration_extended: configuration_extended,
+                                                      new_structural_title,
+                                                      ontology_types):
+    mocker.patch.object(configuration_extended, 'create_type_dialog', create=True)
+    mocker.patch.object(configuration_extended, 'ontology_types', create=True)
+    set_structural_level_title_spy = mocker.patch.object(configuration_extended.create_type_dialog,
+                                                         'set_structural_level_title', create=True)
+    show_create_type_dialog_spy = mocker.patch.object(configuration_extended.create_type_dialog, 'show', create=True)
+    show_message_spy = mocker.patch('pasta_eln.ontology_configuration.ontology_configuration_extended.show_message')
+    get_next_possible_structural_level_label_spy = mocker.patch(
+      'pasta_eln.ontology_configuration.ontology_configuration_extended.get_next_possible_structural_level_label',
+      return_value=new_structural_title)
+    if ontology_types is not None:
+      configuration_extended.ontology_types.__setitem__.side_effect = ontology_types.__setitem__
+      configuration_extended.ontology_types.__getitem__.side_effect = ontology_types.__getitem__
+      configuration_extended.ontology_types.__iter__.side_effect = ontology_types.__iter__
+      configuration_extended.ontology_types.get.side_effect = ontology_types.get
+      configuration_extended.ontology_types.keys.side_effect = ontology_types.keys
+      configuration_extended.ontology_types.pop.side_effect = ontology_types.pop
+    else:
+      mocker.patch.object(configuration_extended, 'ontology_types', None)
+
+    assert configuration_extended.show_create_type_dialog() is None, "Nothing should be returned"
+    if ontology_types is not None:
+      get_next_possible_structural_level_label_spy.assert_called_once_with(ontology_types.keys())
+      set_structural_level_title_spy.assert_called_once_with(new_structural_title)
+      show_create_type_dialog_spy.assert_called_once_with()
+    else:
+      show_message_spy.assert_called_once_with("Load the ontology data first...")
+      get_next_possible_structural_level_label_spy.assert_not_called()
+      set_structural_level_title_spy.assert_not_called()
+      show_create_type_dialog_spy.assert_not_called()
+
+  def test_setup_slots_should_do_expected(self,
+                                          configuration_extended: configuration_extended):
+    configuration_extended.logger.info.assert_called_once_with(f"Setting up slots for the editor..")
+    configuration_extended.loadOntologyPushButton.clicked.connect.assert_called_once_with(
+      configuration_extended.load_ontology_data)
+    configuration_extended.loadOntologyPushButton.clicked.connect.assert_called_once_with(
+      configuration_extended.load_ontology_data)
+    configuration_extended.addPropsRowPushButton.clicked.connect.assert_called_once_with(
+      configuration_extended.props_table_data_model.add_data_row)
+    configuration_extended.addAttachmentPushButton.clicked.connect.assert_called_once_with(
+      configuration_extended.attachments_table_data_model.add_data_row)
+    configuration_extended.saveOntologyPushButton.clicked.connect.assert_called_once_with(
+      configuration_extended.save_ontology)
+    configuration_extended.addPropsCategoryPushButton.clicked.connect.assert_called_once_with(
+      configuration_extended.add_new_prop_category)
+    configuration_extended.deletePropsCategoryPushButton.clicked.connect.assert_called_once_with(
+      configuration_extended.delete_selected_prop_category)
+    configuration_extended.deleteTypePushButton.clicked.connect.assert_called_once_with(
+      configuration_extended.delete_selected_type)
+    configuration_extended.addTypePushButton.clicked.connect.assert_called_once_with(
+      configuration_extended.show_create_type_dialog)
+
+    # Slots for the combo-boxes
+    configuration_extended.typeComboBox.currentTextChanged.connect.assert_called_once_with(
+      configuration_extended.type_combo_box_changed)
+    configuration_extended.propsCategoryComboBox.currentTextChanged.connect.assert_called_once_with(
+      configuration_extended.category_combo_box_changed)
+
+    # Slots for line edits
+    configuration_extended.typeLabelLineEdit.textChanged[str].connect.assert_called_once_with(
+      configuration_extended.update_structure_label)
+    configuration_extended.typeLinkLineEdit.textChanged[str].connect.assert_called_once_with(
+      configuration_extended.update_type_link)
+
+    # Slots for the delegates
+    configuration_extended.delete_column_delegate_props_table.delete_clicked_signal.connect.assert_called_once_with(
+      configuration_extended.props_table_data_model.delete_data)
+    configuration_extended.reorder_column_delegate_props_table.re_order_signal.connect.assert_called_once_with(
+      configuration_extended.props_table_data_model.re_order_data)
+
+    configuration_extended.delete_column_delegate_attach_table.delete_clicked_signal.connect.assert_called_once_with(
+      configuration_extended.attachments_table_data_model.delete_data)
+    configuration_extended.reorder_column_delegate_attach_table.re_order_signal.connect.assert_called_once_with(
+      configuration_extended.attachments_table_data_model.re_order_data)
+
+  def test_load_ontology_data_should_do_expected(self,
+                                                 mocker,
+                                                 configuration_extended: configuration_extended):
+
+    pass
