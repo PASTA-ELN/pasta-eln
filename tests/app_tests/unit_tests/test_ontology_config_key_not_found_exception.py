@@ -8,17 +8,17 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import pytest
 
-from tests.app_tests.common.fixtures import doc_null_exception
+from tests.app_tests.common.fixtures import key_not_found_exception
 
 
-class TestOntologyConfigDocumentNullException(object):
-  @pytest.mark.parametrize('doc_null_exception',
+class TestOntologyConfigKeyNotFoundException(object):
+  @pytest.mark.parametrize('key_not_found_exception',
                            [{'message': 'error thrown', 'errors': {'error1': 'error1', 'error2': 'error2'}}],
                            indirect=True)
   def test_ontology_config_document_null_exception(self,
-                                                   doc_null_exception,
+                                                   key_not_found_exception,
                                                    request):
-    assert str(doc_null_exception) or doc_null_exception.message == "error thrown", \
-      "doc_null_exception) should return error thrown"
-    assert doc_null_exception.detailed_errors == {'error1': 'error1', 'error2': 'error2'}, \
-      "doc_null_exception.detailed_errors should return error1 and error2"
+    assert str(key_not_found_exception) or key_not_found_exception.message == "error thrown", \
+      "key_not_found_exception should return error thrown"
+    assert key_not_found_exception.detailed_errors == {'error1': 'error1', 'error2': 'error2'}, \
+      "key_not_found_exception.detailed_errors should return error1 and error2"

@@ -17,6 +17,9 @@ from cloudant.document import Document
 from pasta_eln.ontology_configuration import ontology_configuration_constants
 from pasta_eln.ontology_configuration.create_type_dialog.create_type_dialog_extended import CreateTypeDialog
 from pasta_eln.ontology_configuration.delete_column_delegate import DeleteColumnDelegate
+from pasta_eln.ontology_configuration.exceptions.ontology_config_generic_exception import OntologyConfigGenericException
+from pasta_eln.ontology_configuration.exceptions.ontology_config_key_not_found_exception import \
+  OntologyConfigKeyNotFoundException
 from pasta_eln.ontology_configuration.exceptions.ontology_document_null_exception import OntologyDocumentNullException
 from pasta_eln.ontology_configuration.ontology_attachments_tableview_data_model import OntologyAttachmentsTableViewModel
 from pasta_eln.ontology_configuration.ontology_configuration import Ui_OntologyConfigurationBaseForm
@@ -103,10 +106,17 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
 
     Returns:
       None
+
+    Raises:
+      OntologyConfigKeyNotFoundException: Raised when passed in argument @new_type_selected is not found in ontology_types
+
     """
     self.logger.info(f"New type selected in UI: {new_type_selected}")
     self.addPropsCategoryLineEdit.clear()
     if new_type_selected and self.ontology_types:
+      if new_type_selected not in self.ontology_types:
+        raise OntologyConfigKeyNotFoundException(f"Key {new_type_selected} "
+                                                 f"not found in ontology_types", {})
       # Get the properties for the selected type and store the list in selected_type_properties
       self.selected_type_properties = self.ontology_types.get(new_type_selected).get('prop')
 
@@ -121,7 +131,8 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
 
       # Reset the props category combo-box
       self.propsCategoryComboBox.clear()
-      self.propsCategoryComboBox.addItems(self.selected_type_properties.keys())
+      self.propsCategoryComboBox.addItems(self.selected_type_properties.keys()
+                                          if self.selected_type_properties else [])
       self.propsCategoryComboBox.setCurrentIndex(0)
 
   def category_combo_box_changed(self,
@@ -149,6 +160,9 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     if not self.ontology_types:
       show_message("Load the ontology data first....")
       return
+    if new_category in self.selected_type_properties.keys():
+      show_message("Category already exists....")
+      return
     if new_category:
       # Add the new category to the property list and refresh the category combo box
       self.logger.info(f"User added new category: {new_category}")
@@ -166,7 +180,9 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
       None
     """
     selected_category = self.propsCategoryComboBox.currentText()
-    if selected_category and selected_category in self.selected_type_properties:
+    if self.selected_type_properties is None:
+      raise OntologyConfigGenericException("Null selected_type_properties, erroneous app state", {})
+    if selected_category and selected_category in self.selected_type_properties.keys():
       self.logger.info(f"User deleted the selected category: {selected_category}")
       self.selected_type_properties.pop(selected_category)
       self.propsCategoryComboBox.clear()
@@ -184,8 +200,9 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     Returns:
         None
     """
-    if modified_type_label:
-      self.ontology_types.get(self.typeComboBox.currentText())["label"] = modified_type_label
+    current_type = self.typeComboBox.currentText()
+    if modified_type_label and current_type in self.ontology_types.keys():
+      self.ontology_types.get(current_type)["label"] = modified_type_label
 
   def update_type_link(self, modified_link: str):
     """
@@ -197,8 +214,9 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     Returns:
         None
     """
-    if modified_link:
-      self.ontology_types.get(self.typeComboBox.currentText())["link"] = modified_link
+    current_type = self.typeComboBox.currentText()
+    if modified_link and current_type in self.ontology_types.keys():
+      self.ontology_types.get(current_type)["link"] = modified_link
 
   def delete_selected_type(self):
     """
@@ -208,8 +226,11 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
       None
     """
     selected_type = self.typeComboBox.currentText()
-    if (selected_type and selected_type in self.ontology_types
-        and selected_type in self.ontology_document):
+    if self.ontology_types is None or self.ontology_document is None:
+      raise OntologyConfigGenericException("Null ontology_types or ontology_document,"
+                                           " erroneous app state", {})
+    if (selected_type and selected_type in self.ontology_types.keys()
+        and selected_type in self.ontology_document.keys()):
       self.logger.info(f"User deleted the selected type: {selected_type}")
       self.ontology_types.pop(selected_type)
       self.ontology_document.pop(selected_type)

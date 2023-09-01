@@ -18,6 +18,8 @@ from pytestqt.qtbot import QtBot
 from pasta_eln.gui import main_gui, MainWindow
 from pasta_eln.ontology_configuration.create_type_dialog.create_type_dialog_extended import CreateTypeDialog
 from pasta_eln.ontology_configuration.delete_column_delegate import DeleteColumnDelegate
+from pasta_eln.ontology_configuration.exceptions.ontology_config_key_not_found_exception import \
+  OntologyConfigKeyNotFoundException
 from pasta_eln.ontology_configuration.exceptions.ontology_document_null_exception import OntologyDocumentNullException
 from pasta_eln.ontology_configuration.ontology_attachments_tableview_data_model import OntologyAttachmentsTableViewModel
 from pasta_eln.ontology_configuration.ontology_configuration_extended import OntologyConfigurationForm, get_gui
@@ -65,6 +67,12 @@ def configuration_extended(mocker) -> OntologyConfigurationForm:
 def doc_null_exception(request) -> OntologyDocumentNullException:
   return OntologyDocumentNullException(request.param['message'],
                                        request.param['errors'])
+
+
+@fixture()
+def key_not_found_exception(request) -> OntologyConfigKeyNotFoundException:
+  return OntologyConfigKeyNotFoundException(request.param['message'],
+                                            request.param['errors'])
 
 
 @fixture()
