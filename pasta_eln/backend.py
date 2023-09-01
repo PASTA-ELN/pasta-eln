@@ -300,7 +300,7 @@ class Backend(CLI_Mixin):
         docID (string): information on how to change
         dirName (string): change into this directory (absolute path given). For if data is moved
     """
-    logging.debug('changeHierarchy should only be used in CLI mode') #TODO_P5 remove this warning
+    logging.debug('changeHierarchy should only be used in CLI mode')
     if self.cwd is None:
       return
     if docID is None or (docID[0]=='x' and docID[1]!='-'):  #cd ..: none. close 'project', 'task'
@@ -317,7 +317,6 @@ class Backend(CLI_Mixin):
 
 
   def scanProject(self, progressBar:Union[QProgressBar,DummyProgressBar] , projID:str, projPath:str='') -> None:
-    # sourcery skip: use-next
     """ Scan directory tree recursively from project/...
     - find changes on file system and move those changes to DB
     - use .id_pastaELN.json to track changes of directories, aka projects/steps/tasks
@@ -377,7 +376,7 @@ class Backend(CLI_Mixin):
             newPath = path
           else:
             #determine childNumber
-            thisStack = ' '.join(hierStack)  #TODO_P5 this childNumSearch could become new function
+            thisStack = ' '.join(hierStack)
             view = self.db.getView('viewHierarchy/viewHierarchy', startKey=thisStack)
             childNum = 0
             for item in view:
@@ -499,7 +498,6 @@ class Backend(CLI_Mixin):
         if 'fileExtension' not in doc['metaVendor']:
           doc['metaVendor']['fileExtension'] = extension.lower()
         if 'links' in doc and len(doc['links'])==0:
-          #TODO_P3 extractor: creates links to sample/instrument
           del doc['links']
     if not success:
       print('  **Warning, issue with extractor', pyFile)

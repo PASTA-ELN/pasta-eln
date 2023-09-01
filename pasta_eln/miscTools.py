@@ -4,7 +4,7 @@ from io import BufferedReader
 from pathlib import Path
 from re import sub, match
 import platform
-import yaml
+from .handleDictionaries import dict2ul
 
 class Bcolors:
   """
@@ -77,8 +77,7 @@ def tracebackString(log:bool=False, docID:str='') -> str:
   Returns:
     str: | separated string of call functions
   """
-  #TODO_P1 SHORTEN reply
-  tracebackList = traceback.format_stack()[2:-2]
+  tracebackList = [i for i in traceback.format_stack()[2:-2] if 'pasta_eln' in i] #skip first and last and then filter only things with pasta_eln
   reply = '|'.join([item.split('\n')[1].strip() for item in tracebackList])  #| separated list of stack excluding last
   if log:
     logging.info(' traceback %s %s', docID, reply)
@@ -302,14 +301,12 @@ def updateExtractorList(directory:Path) -> str:
         extractorsAll[ending]=extractorsThis
                     #header not used for now
   #update configuration file
-  print('\n\nFound extractors:')
-  print(yaml.dump(extractorsAll))
   with open(Path.home()/'.pastaELN.json','r', encoding='utf-8') as f:
     configuration = json.load(f)
   configuration['extractors'] = extractorsAll
   with open(Path.home()/'.pastaELN.json','w', encoding='utf-8') as f:
     f.write(json.dumps(configuration, indent=2))
-  return yaml.dump(extractorsAll)
+  return dict2ul(extractorsAll)
 
 
 def restart() -> None:

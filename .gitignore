@@ -12,3 +12,4 @@ TODO*.md
 pastaELN*.py
 
 .coverage
+htmlcov/

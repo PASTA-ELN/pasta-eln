@@ -171,7 +171,6 @@ class Database:
                                    'viewHierarchyAll':jsHierarchyAll,'viewPathsAll':jsPathAll})
     jsSHA= "if (doc['-type'][0]==='measurement'){emit(doc.shasum, doc['-name']);}"
     jsQR = "if (doc.qrCode.length > 0) {doc.qrCode.forEach(function(thisCode) {emit(thisCode, doc['-name']);});}"
-    #TODO_P5 SampleID = QR? helps uniqueness ease. Counter example printing might be more difficult: print for this sample VS. print and assign to sample
     jsTags="if ('-tags' in doc && (doc['-branch'][0].show.every(function(i) {return i;})))"+\
               "{doc['-tags'].forEach(function(tag){emit(tag,[doc['-name'], doc['-type'].join('/')]);});}"
     jsTagsAll="if ('-tags' in doc){doc['-tags'].forEach(function(tag){emit(tag,[doc['-name'], doc['-type'].join('/')]);});}"
@@ -726,7 +725,6 @@ class Database:
 
 
   def checkDB(self, outputStyle:str='text', repair:bool=False, minimal:bool=False) -> str:
-    # sourcery skip: lift-duplicated-conditional, merge-else-if-into-elif
     """
     Check database for consistencies by iterating through all documents
     - slow since no views used
@@ -901,7 +899,6 @@ class Database:
             outstring+= outputString(outputStyle,'error',f"dch08a: branch does not have show: {doc['_id']}")
           elif len(branch['show']) != len(branch['stack'])+1:
             outstring+= outputString(outputStyle,'error',f"dch08b: branch-show not same length as branch-stack: {doc['_id']}")
-                #TODO_P5 moreChecksDB: if parent has corresponding show
 
         #every doc should have these:
         for key in ['-name','-tags','-client','-user','-date']:

@@ -1,14 +1,14 @@
 """ widget that shows the table of the items """
-
 import itertools
 import re, logging
+from enum import Enum
 from pathlib import Path
 from typing import Any
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QTableView, QMenu, QFileDialog, QMessageBox, QHeaderView, QLineEdit, QComboBox # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QTableView, QFileDialog, QMessageBox, QHeaderView, QLineEdit, QComboBox, QMenu # pylint: disable=no-name-in-module
 from PySide6.QtCore import Qt, Slot, QSortFilterProxyModel, QModelIndex       # pylint: disable=no-name-in-module
-from PySide6.QtGui import QStandardItemModel, QStandardItem, QFont            # pylint: disable=no-name-in-module
+from PySide6.QtGui import QStandardItemModel, QStandardItem            # pylint: disable=no-name-in-module
 from .tableHeader import TableHeader
-from ..guiStyle import TextButton, IconButton, Label, Action, widgetAndLayout, space
+from ..guiStyle import IconButton, Action, TextButton, Label, widgetAndLayout, space
 from ..fixedStringsJson import defaultOntologyNode
 from ..guiCommunicate import Communicate
 
@@ -24,7 +24,7 @@ class Table(QWidget):
     """
     super().__init__()
     self.comm = comm
-    comm.changeTable.connect(self.changeTable)
+    comm.changeTable.connect(self.change)
     comm.stopSequentialEdit.connect(self.stopSequentialEditFunction)
     self.stopSequentialEdit = False
     self.data:list[dict[str,Any]] = []
@@ -43,27 +43,27 @@ class Table(QWidget):
     self.headerW.hide()
     self.headline = Label('','h1', headerL)
     headerL.addStretch(1)
-    self.addBtn = TextButton('Add',        self.executeAction, headerL, name='addItem')
-    TextButton('Add Filter', self.executeAction, headerL, name='addFilter')
+    self.addBtn = TextButton('Add',  self, [Command.ADD_ITEM],   headerL)
+    TextButton('Add Filter',         self, [Command.ADD_FILTER], headerL)
 
-    self.selectionBtn = TextButton('Selection', None, headerL)
+    self.selectionBtn = TextButton('Selection', self, [], headerL)
     selectionMenu = QMenu(self)
-    Action('Toggle selection',self.executeAction, selectionMenu, self, name='toggleSelection')
+    Action('Toggle selection',self, [Command.TOGGLE_SELECTION], selectionMenu)
     selectionMenu.addSeparator()
-    Action('Group Edit',      self.executeAction, selectionMenu, self, name='groupEdit')
-    Action('Sequential edit', self.executeAction, selectionMenu, self, name='sequentialEdit')
-    Action('Toggle hidden',   self.executeAction, selectionMenu, self, name='toggleHide')
-    Action('Rerun extractors',self.executeAction, selectionMenu, self, name='rerunExtractors')
-    Action('Delete',          self.executeAction, selectionMenu, self, name='delete')
+    Action('Group Edit',      self, [Command.GROUP_EDIT],       selectionMenu)
+    Action('Sequential edit', self, [Command.SEQUENTIAL_EDIT],  selectionMenu)
+    Action('Toggle hidden',   self, [Command.TOGGLE_HIDE],      selectionMenu)
+    Action('Rerun extractors',self, [Command.RERUN_EXTRACTORS], selectionMenu)
+    Action('Delete',          self, [Command.DELETE],           selectionMenu)
     self.selectionBtn.setMenu(selectionMenu)
 
-    more = TextButton('More',None, headerL)
+    more = TextButton('More', self, [], headerL)
     self.moreMenu = QMenu(self)
-    Action('Show / Hide hidden items', self.executeAction, self.moreMenu, self, name='showAll')
-    Action('Export to csv',            self.executeAction, self.moreMenu, self, name='export')
-    self.actionChangeColums = Action('Change columns',  self.executeAction, self.moreMenu, self, name='changeColumns')  #add action at end
-
+    Action('Show / Hide hidden items', self, [Command.SHOW_ALL], self.moreMenu)
+    Action('Export to csv',            self, [Command.EXPORT],   self.moreMenu)
+    self.actionChangeColums = Action('Change columns',  self, [Command.CHANGE_COLUMNS], self.moreMenu)  #add this action at end
     more.setMenu(self.moreMenu)
+
     # filter
     _, self.filterL = widgetAndLayout('Grid', mainL, top='s', bottom='s')
     # table
@@ -79,14 +79,12 @@ class Table(QWidget):
     header.setMaximumSectionSize(self.comm.backend.configuration['GUI']['maxTableColumnWidth'])
     header.resizeSections(QHeaderView.ResizeToContents)
     header.setStretchLastSection(True)
-    #TODO_P2 table: shift-select
-    # ---
     mainL.addWidget(self.table)
     self.setLayout(mainL)
 
 
   @Slot(str, str)
-  def changeTable(self, docType:str, projID:str) -> None:
+  def change(self, docType:str, projID:str) -> None:
     """
     What happens when the table changes its raw information
 
@@ -106,7 +104,6 @@ class Table(QWidget):
       self.projID  = projID
     if self.docType=='_tags_':
       self.addBtn.hide()
-      #TODO_P4 projectTree can select sub-folders: if table-row click, move to view it project
       if self.showAll:
         self.data = self.comm.backend.db.getView('viewIdentify/viewTagsAll')
       else:
@@ -153,7 +150,7 @@ class Table(QWidget):
         else:
           item = QStandardItem(self.data[i]['value'][j-1])
       elif self.data[i]['value'][j] is None or not self.data[i]['value'][j]:  #None, False
-        item = QStandardItem('-') # TODO_P4 add nice glyphs later, see also below \u00D7')
+        item = QStandardItem('-') # if you want to add nice glyphs, see also below \u00D7')
         # item.setFont(QFont("Helvetica [Cronyx]", 16))
       elif isinstance(self.data[i]['value'][j], bool): #True
         item = QStandardItem('Y') # \u2713')
@@ -162,7 +159,7 @@ class Table(QWidget):
         item = (QStandardItem(', '.join(self.data[i]['value'][j])) if isinstance(
             self.data[i]['value'][j][0], str) else QStandardItem(', '.join(
                 [str(i) for i in self.data[i]['value'][j]])))
-      elif re.match(r'^[a-z\-]-[a-z0-9]{32}$',self.data[i]['value'][j]):      #Link
+      elif isinstance(self.data[i]['value'][j], str) and re.match(r'^[a-z\-]-[a-z0-9]{32}$',self.data[i]['value'][j]):      #Link
         item = QStandardItem('oo') # \u260D')
         # item.setFont(QFont("Helvetica [Cronyx]", 16))
       else:
@@ -175,7 +172,7 @@ class Table(QWidget):
               tags[tags.index(f'_{str(iStar)}')] = '*'*iStar
           text = ' '.join(tags)
         else:
-          text = self.data[i]['value'][j]
+          text = str(self.data[i]['value'][j])  #could be a number
         item = QStandardItem(text)
       if j==0:
         doc = self.comm.backend.db.getDoc(self.data[i]['id'])
@@ -185,13 +182,166 @@ class Table(QWidget):
         if docType!='x0':
           item.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)   # type: ignore[operator]
           item.setCheckState(Qt.CheckState.Unchecked)
-          #TODO_P2 design: make the checkboxes larger!
       else:
         item.setFlags(Qt.ItemIsEnabled) # type: ignore[arg-type]
       model.setItem(i, j, item)
     self.models.append(model)
     self.table.setModel(self.models[-1])
     self.table.show()
+    return
+
+
+  def execute(self, command:list[Any]) -> None:
+    """
+    Event if user clicks button in the center
+
+    Args:
+      command (list): list of commands
+    """
+    if command[0] is Command.ADD_ITEM:
+      self.comm.formDoc.emit({'-type':[self.docType]})
+      self.comm.changeTable.emit(self.docType, self.projID)
+      if self.docType=='x0':
+        self.comm.changeSidebar.emit('redraw')
+    elif command[0] is Command.ADD_FILTER:
+      # gui
+      _, rowL = widgetAndLayout('H', self.filterL, 'm', 'xl', '0', 'xl')
+      text = QLineEdit('')
+      rowL.addWidget(text)
+      select = QComboBox()
+      select.addItems(self.filterHeader)
+      select.currentIndexChanged.connect(self.filterChoice)
+      select.setMinimumWidth(max(len(i) for i in self.filterHeader)*14)
+      select.setAccessibleName(str(len(self.models)))
+      rowL.addWidget(select)
+      IconButton('fa5s.minus-square', self, [Command.DELETE_FILTER, len(self.models)], rowL)
+      # data
+      filterModel = QSortFilterProxyModel()
+      text.textChanged.connect(filterModel.setFilterRegularExpression)
+      filterModel.setSourceModel(self.models[-1])
+      filterModel.setFilterCaseSensitivity(Qt.CaseInsensitive)
+      filterModel.setFilterKeyColumn(0)
+      self.models.append(filterModel)
+      self.table.setModel(self.models[-1])
+    elif command[0] is Command.GROUP_EDIT:
+      intersection = None
+      docIDs = []
+      for row in range(self.models[-1].rowCount()):
+        item, docID = self.itemFromRow(row)
+        if item.checkState() == Qt.CheckState.Checked:
+          docIDs.append(docID)
+          thisKeys = set(self.comm.backend.db.getDoc(docID))
+          if intersection is None:
+            intersection = thisKeys
+          else:
+            intersection = intersection.intersection(thisKeys)
+      #remove keys that should not be group edited and build dict
+      if intersection is not None:
+        intersection = intersection.difference({'-branch', '-user', '-client', 'metaVendor', 'shasum', \
+            '_id', 'metaUser', '_rev', '-name', '-date', 'image', '_attachments','links'})
+        intersectionDict:dict[str,Any] = {i:'' for i in intersection}
+        intersectionDict['-tags'] = []
+        intersectionDict['-type'] = [self.docType]
+        intersectionDict['_ids'] = docIDs
+        self.comm.formDoc.emit(intersectionDict)
+        self.comm.changeDetails.emit('redraw')
+        self.comm.changeTable.emit(self.docType, '')
+    elif command[0] is Command.SEQUENTIAL_EDIT:
+      self.stopSequentialEdit = False
+      for row in range(self.models[-1].rowCount()):
+        item, docID = self.itemFromRow(row)
+        if item.checkState() == Qt.CheckState.Checked:
+          self.comm.formDoc.emit(self.comm.backend.db.getDoc(docID))
+        if self.stopSequentialEdit:
+          break
+      self.comm.changeTable.emit(self.docType, '')
+    elif command[0] is Command.DELETE:
+      for row in range(self.models[-1].rowCount()):
+        item, docID = self.itemFromRow(row)
+        if item.checkState() == Qt.CheckState.Checked:
+          ret = QMessageBox.critical(
+              self,
+              'Warning',
+              f'Are you sure you want to delete this data: {item.text()}?',
+              QMessageBox.StandardButton.Yes,
+              QMessageBox.StandardButton.No,
+          )
+          if ret==QMessageBox.StandardButton.Yes:
+            doc = self.comm.backend.db.getDoc(docID)
+            for branch in doc['-branch']:
+              oldPath = self.comm.backend.basePath/branch['path']
+              if oldPath.exists():
+                newPath = oldPath.parent / f'trash_{oldPath.name}'
+                oldPath.rename(newPath)
+            self.comm.backend.db.remove(docID)
+      self.comm.changeTable.emit(self.docType, '')
+    elif command[0] is Command.CHANGE_COLUMNS:
+      dialog = TableHeader(self.comm, self.docType)
+      dialog.exec()
+    elif command[0] is Command.EXPORT:
+      fileName = QFileDialog.getSaveFileName(self,'Export to ..',str(Path.home()),'*.csv')[0]
+      with open(fileName,'w', encoding='utf-8') as fOut:
+        header = [f'"{i}"' for i in self.filterHeader]
+        fOut.write(','.join(header)+'\n')
+        for row in range(self.models[-1].rowCount()):
+          rowContent = []
+          for col in range(self.models[-1].columnCount()):
+            value = self.models[-1].index( row, col, QModelIndex() ).data( Qt.DisplayRole )  # type: ignore[arg-type]
+            rowContent.append(f'"{value}"')
+          fOut.write(','.join(rowContent)+'\n')
+    elif command[0] is Command.TOGGLE_HIDE:
+      for row in range(self.models[-1].rowCount()):
+        item, docID = self.itemFromRow(row)
+        if item.checkState() == Qt.CheckState.Checked:
+          self.comm.backend.db.hideShow(docID)
+      if self.docType=='x0':
+        self.comm.changeSidebar.emit('redraw')
+      self.change('','')  # redraw table
+    elif command[0] is Command.TOGGLE_SELECTION:
+      for row in range(self.models[-1].rowCount()):
+        item,_ = self.itemFromRow(row)
+        if item.checkState() == Qt.CheckState.Checked:
+          item.setCheckState(Qt.CheckState.Unchecked)
+        else:
+          item.setCheckState(Qt.CheckState.Checked)
+    elif command[0] is Command.SHOW_ALL:
+      self.showAll = not self.showAll
+      self.change('','')  # redraw table
+    elif command[0] is Command.RERUN_EXTRACTORS:
+      for row in range(self.models[-1].rowCount()):
+        item, docID = self.itemFromRow(row)
+        if item.checkState() == Qt.CheckState.Checked:
+          doc = self.comm.backend.db.getDoc(docID)
+          oldDocType = doc['-type']
+          if doc['-branch'][0]['path'].startswith('http'):
+            path = Path(doc['-branch'][0]['path'])
+          else:
+            path = self.comm.backend.basePath/doc['-branch'][0]['path']
+          self.comm.backend.useExtractors(path, '', doc)
+          if doc['-type'][0] == oldDocType[0]:
+            del doc['-branch']  #don't update
+            self.comm.backend.db.updateDoc(doc, self.data[row]['id'])
+          else:
+            self.comm.backend.db.remove( self.data[row]['id'] )
+            del doc['_id']
+            del doc['_rev']
+            doc['-name'] = doc['-branch'][0]['path']
+            self.comm.backend.addData('/'.join(doc['-type']), doc, doc['-branch'][0]['stack'])
+      self.change('','')  # redraw table
+      self.comm.changeDetails.emit('redraw')
+    elif command[0] is Command.DELETE_FILTER: # Remove filter from list of filters
+      row = command[1]
+      #print('Delete filter row', row)
+      for i in range(row, self.filterL.count()):        #e.g. model 1 is in row=0, so start in 1 for renumbering
+        minusBtnW = self.filterL.itemAt(i).widget().layout().itemAt(2).widget()
+        minusBtnW.setAccessibleName( str(int(minusBtnW.accessibleName())-1) )  #rename: -1 from accessibleName
+      del self.models[row]
+      self.filterL.itemAt(row-1).widget().setParent(None) # type: ignore # e.g. model 1 is in row=0 for deletion
+      for i in range(1, len(self.models)):
+        self.models[i].setSourceModel(self.models[i-1])
+      self.table.setModel(self.models[-1])
+    else:
+      print("**ERROR table menu unknown:",command)
     return
 
 
@@ -239,154 +389,13 @@ class Table(QWidget):
       self.comm.changeDetails.emit('redraw')
     return
 
-  def executeAction(self) -> None:
-    """ Any action by the buttons and menu at the top of the page """
-    if hasattr(self.sender(), 'data'):  #action
-      menuName = self.sender().data()
-    else:                               #button
-      menuName = self.sender().accessibleName()
-    if menuName == 'addItem':
-      self.comm.formDoc.emit({'-type':[self.docType]})
-      self.comm.changeTable.emit(self.docType, self.projID)
-      if self.docType=='x0':
-        self.comm.changeSidebar.emit('redraw')
-    elif menuName == 'addFilter':
-      # gui
-      _, rowL = widgetAndLayout('H', self.filterL, 'm', 'xl', '0', 'xl')
-      text = QLineEdit('')
-      rowL.addWidget(text)
-      select = QComboBox()
-      select.addItems(self.filterHeader)
-      select.currentIndexChanged.connect(self.filterChoice)
-      select.setMinimumWidth(max(len(i) for i in self.filterHeader)*14)
-      select.setAccessibleName(str(len(self.models)))
-      rowL.addWidget(select)
-      IconButton('fa5s.minus-square', self.delFilter, rowL, str(len(self.models)), backend=self.comm.backend)
-      # data
-      #TODO_P4 can you sort for true false in tables too?
-      filterModel = QSortFilterProxyModel()
-      text.textChanged.connect(filterModel.setFilterRegularExpression)
-      filterModel.setSourceModel(self.models[-1])
-      filterModel.setFilterCaseSensitivity(Qt.CaseInsensitive)
-      filterModel.setFilterKeyColumn(0)
-      self.models.append(filterModel)
-      self.table.setModel(self.models[-1])
-    elif menuName == 'groupEdit':
-      intersection = None
-      docIDs = []
-      for row in range(self.models[-1].rowCount()):
-        item, docID = self.itemFromRow(row)
-        if item.checkState() == Qt.CheckState.Checked:
-          docIDs.append(docID)
-          thisKeys = set(self.comm.backend.db.getDoc(docID))
-          if intersection is None:
-            intersection = thisKeys
-          else:
-            intersection = intersection.intersection(thisKeys)
-      #remove keys that should not be group edited and build dict
-      if intersection is not None:
-        intersection = intersection.difference({'-branch', '-user', '-client', 'metaVendor', 'shasum', \
-            '_id', 'metaUser', '_rev', '-name', '-date', 'image', '_attachments','links'})
-        intersectionDict:dict[str,Any] = {i:'' for i in intersection}
-        intersectionDict['-tags'] = []
-        intersectionDict['-type'] = [self.docType]
-        intersectionDict['_ids'] = docIDs
-        self.comm.formDoc.emit(intersectionDict)
-        self.comm.changeDetails.emit('redraw')
-        self.comm.changeTable.emit(self.docType, '')
-    elif menuName == 'sequentialEdit':
-      self.stopSequentialEdit = False
-      for row in range(self.models[-1].rowCount()):
-        item, docID = self.itemFromRow(row)
-        if item.checkState() == Qt.CheckState.Checked:
-          self.comm.formDoc.emit(self.comm.backend.db.getDoc(docID))
-        if self.stopSequentialEdit:
-          break
-      self.comm.changeTable.emit(self.docType, '')
-    elif menuName == 'delete':
-      for row in range(self.models[-1].rowCount()):
-        item, docID = self.itemFromRow(row)
-        if item.checkState() == Qt.CheckState.Checked:
-          ret = QMessageBox.critical(
-              self,
-              'Warning',
-              f'Are you sure you want to delete this data: {item.text()}?',
-              QMessageBox.StandardButton.Yes,
-              QMessageBox.StandardButton.No,
-          )
-          if ret==QMessageBox.StandardButton.Yes:
-            doc = self.comm.backend.db.getDoc(docID)
-            for branch in doc['-branch']:
-              oldPath = self.comm.backend.basePath/branch['path']
-              if oldPath.exists():
-                newPath = oldPath.parent / f'trash_{oldPath.name}'
-                oldPath.rename(newPath)
-            self.comm.backend.db.remove(docID)
-      self.comm.changeTable.emit(self.docType, '')
-    elif menuName == 'changeColumns':
-      dialog = TableHeader(self.comm, self.docType)
-      dialog.exec()
-    elif menuName == 'export':
-      fileName = QFileDialog.getSaveFileName(self,'Export to ..',str(Path.home()),'*.csv')[0]
-      with open(fileName,'w', encoding='utf-8') as fOut:
-        header = [f'"{i}"' for i in self.filterHeader]
-        fOut.write(','.join(header)+'\n')
-        for row in range(self.models[-1].rowCount()):
-          rowContent = []
-          for col in range(self.models[-1].columnCount()):
-            value = self.models[-1].index( row, col, QModelIndex() ).data( Qt.DisplayRole )  # type: ignore[arg-type]
-            rowContent.append(f'"{value}"')
-          fOut.write(','.join(rowContent)+'\n')
-    elif menuName == 'toggleHide':
-      for row in range(self.models[-1].rowCount()):
-        item, docID = self.itemFromRow(row)
-        if item.checkState() == Qt.CheckState.Checked:
-          self.comm.backend.db.hideShow(docID)
-      if self.docType=='x0':
-        self.comm.changeSidebar.emit('redraw')
-      self.changeTable('','')  # redraw table
-    elif menuName == 'toggleSelection':
-      for row in range(self.models[-1].rowCount()):
-        item,_ = self.itemFromRow(row)
-        if item.checkState() == Qt.CheckState.Checked:
-          item.setCheckState(Qt.CheckState.Unchecked)
-        else:
-          item.setCheckState(Qt.CheckState.Checked)
-    elif menuName == 'showAll':
-      self.showAll = not self.showAll
-      self.changeTable('','')  # redraw table
-    elif menuName == 'rerunExtractors':
-      for row in range(self.models[-1].rowCount()):
-        item, docID = self.itemFromRow(row)
-        if item.checkState() == Qt.CheckState.Checked:
-          doc = self.comm.backend.db.getDoc(docID)
-          oldDocType = doc['-type']
-          if doc['-branch'][0]['path'].startswith('http'):
-            path = Path(doc['-branch'][0]['path'])
-          else:
-            path = self.comm.backend.basePath/doc['-branch'][0]['path']
-          self.comm.backend.useExtractors(path, '', doc)
-          if doc['-type'][0] == oldDocType[0]:
-            del doc['-branch']  #don't update
-            self.comm.backend.db.updateDoc(doc, self.data[row]['id'])
-          else:
-            self.comm.backend.db.remove( self.data[row]['id'] )
-            del doc['_id']
-            del doc['_rev']
-            doc['-name'] = doc['-branch'][0]['path']
-            self.comm.backend.addData('/'.join(doc['-type']), doc, doc['-branch'][0]['stack'])
-      self.changeTable('','')  # redraw table
-      self.comm.changeDetails.emit('redraw')
-    else:
-      print("**ERROR widgetTable menu unknown:",menuName)
-    return
-
 
   @Slot()
   def stopSequentialEditFunction(self) -> None:
     """ Stop the sequential edit of a number of items """
     self.stopSequentialEdit=True
     return
+
 
   def itemFromRow(self, row:int) -> tuple[QStandardItem, str]:
     """
@@ -405,7 +414,6 @@ class Table(QWidget):
     return item, item.accessibleText()
 
 
-  #TODO_P5 invert filter: not 'Sur' in name => '^((?!Sur).)*$' in name
   def filterChoice(self, item:QStandardItem) -> None:
     """
     Change the column which is used for filtering
@@ -417,16 +425,18 @@ class Table(QWidget):
     self.models[int(row)].setFilterKeyColumn(item)
     return
 
-  def delFilter(self) -> None:
-    """ Remove filter from list of filters """
-    row = int(self.sender().accessibleName())
-    #print('Delete filter row', row)
-    for i in range(row, self.filterL.count()):        #e.g. model 1 is in row=0, so start in 1 for renumbering
-      minusBtnW = self.filterL.itemAt(i).widget().layout().itemAt(2).widget()
-      minusBtnW.setAccessibleName( str(int(minusBtnW.accessibleName())-1) )  #rename: -1 from accessibleName
-    del self.models[row]
-    self.filterL.itemAt(row-1).widget().setParent(None) # type: ignore # e.g. model 1 is in row=0 for deletion
-    for i in range(1, len(self.models)):
-      self.models[i].setSourceModel(self.models[i-1])
-    self.table.setModel(self.models[-1])
-    return
+
+class Command(Enum):
+  """ Commands used in this file """
+  ADD_FILTER       = 1
+  ADD_ITEM         = 2
+  TOGGLE_SELECTION = 3
+  GROUP_EDIT       = 4
+  SEQUENTIAL_EDIT  = 5
+  TOGGLE_HIDE      = 6
+  RERUN_EXTRACTORS = 7
+  DELETE           = 8
+  SHOW_ALL         = 9
+  EXPORT           = 10
+  CHANGE_COLUMNS   = 11
+  DELETE_FILTER    = 12

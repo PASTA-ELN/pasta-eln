@@ -1,6 +1,8 @@
 """ Table Header dialog: change which colums are shown and in which order """
 import json, platform
+from enum import Enum
 from pathlib import Path
+from typing import Any
 import qrcode
 from PIL.ImageQt import ImageQt
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QLabel, QGroupBox, QLineEdit, QDialogButtonBox, QFormLayout, QComboBox, QFileDialog, QMessageBox  # pylint: disable=no-name-in-module
@@ -9,11 +11,11 @@ from cloudant.client import CouchDB
 from ..guiStyle import Label, TextButton, IconButton, showMessage, widgetAndLayout
 from ..miscTools import upOut, restart, upIn
 from ..serverActions import testLocal, testRemote, passwordDecrypt
-from ..backend import Backend
+from ..guiCommunicate import Communicate
 
 class ProjectGroup(QDialog):
   """ Table Header dialog: change which colums are shown and in which order """
-  def __init__(self, backend:Backend):
+  def __init__(self, comm:Communicate):
     """
     Initialization
 
@@ -21,7 +23,8 @@ class ProjectGroup(QDialog):
       backend (Backend): PASTA-ELN backend
     """
     super().__init__()
-    self.backend = backend
+    self.comm    = comm
+    self.configuration = self.comm.backend.configuration
 
     # GUI elements
     self.setWindowTitle('Define and use project groups')
@@ -30,13 +33,13 @@ class ProjectGroup(QDialog):
     Label('Project group', 'h1', mainL)
     _, topbarL = widgetAndLayout('H', mainL, spacing='m')
     self.selectGroup = QComboBox()
-    self.selectGroup.addItems(self.backend.configuration['projectGroups'].keys())
+    self.selectGroup.addItems(self.configuration['projectGroups'].keys())
     self.selectGroup.currentTextChanged.connect(self.changeProjectGroup)
     topbarL.addWidget(self.selectGroup)
-    TextButton('New', self.btnEvent, topbarL, 'new')
-    TextButton('Fill remote', self.btnEvent, topbarL, 'fill')
-    TextButton('Create QR', self.btnEvent, topbarL, 'createQR')
-    TextButton('Check All', self.btnEvent, topbarL, 'check')
+    TextButton('New',         self, [Command.NEW],       topbarL)
+    TextButton('Fill remote', self, [Command.FILL],      topbarL)
+    TextButton('Create QR',   self, [Command.CREATE_QR], topbarL)
+    TextButton('Check All',   self, [Command.CHECK],     topbarL)
     self.projectGroupName = QLineEdit('')
     self.projectGroupName.hide()
     mainL.addWidget(self.projectGroupName)
@@ -61,7 +64,7 @@ class ProjectGroup(QDialog):
       self.pathL.setValidator(QRegularExpressionValidator(r"[\\/~][\\w\\\\\\/:\.~]{5,}"))
     else:
       self.pathL.setValidator(QRegularExpressionValidator(r"[\\/~][\\w\\/]{5,}"))
-    IconButton('fa5.folder-open', self.btnEvent, pathL, 'openDir', 'Folder to save data in')
+    IconButton('fa5.folder-open', self, [Command.OPEN_DIR], pathL, 'Folder to save data in')
     localL.addRow('Path', pathW)
     bodyL.addWidget(localW)
     #remote
@@ -90,7 +93,7 @@ class ProjectGroup(QDialog):
     buttonBox.addButton('Save encrypted', QDialogButtonBox.AcceptRole)
     buttonBox.clicked.connect(self.closeDialog)
     mainL.addWidget(buttonBox)
-    self.selectGroup.currentTextChanged.emit(self.backend.configuration['defaultProjectGroup']) #emit to fill initially
+    self.selectGroup.currentTextChanged.emit(self.configuration['defaultProjectGroup']) #emit to fill initially
 
 
   def closeDialog(self, btn:TextButton) -> None:
@@ -118,25 +121,29 @@ class ProjectGroup(QDialog):
         local = {'cred':credL, 'database':self.databaseL.text(), 'path':self.pathL.text()}
         remote = {'cred':credR, 'database':self.databaseR.text(), 'url':self.serverR.text()}
       newGroup = {'local':local, 'remote':remote}
-      self.backend.configuration['projectGroups'][name] = newGroup
-      self.backend.configuration['defaultProjectGroup'] = name
+      self.configuration['projectGroups'][name] = newGroup
+      self.configuration['defaultProjectGroup'] = name
       with open(Path.home()/'.pastaELN.json', 'w', encoding='utf-8') as fConf:
-        fConf.write(json.dumps(self.backend.configuration,indent=2))
+        fConf.write(json.dumps(self.configuration,indent=2))
       restart()
     else:
       print('dialogProjectGroup: did not get a fitting btn ',btn.text())
     return
 
 
-  def btnEvent(self) -> None:
-    """ events that occur when top-bar buttons are pressed """
-    btnName = self.sender().accessibleName()
-    if btnName=='new':
+  def execute(self, command:list[Any]) -> None:
+    """
+    Event if user clicks button in the center
+
+    Args:
+      command (list): list of commands
+    """
+    if command[0] is Command.NEW:
       self.selectGroup.hide()
       self.projectGroupName.show()
       self.projectGroupName.setText('my_project_group_name')
-      defaultProjectGroup = self.backend.configuration['defaultProjectGroup']
-      config = self.backend.configuration['projectGroups'][defaultProjectGroup]
+      defaultProjectGroup = self.configuration['defaultProjectGroup']
+      config = self.configuration['projectGroups'][defaultProjectGroup]
       if 'cred' in config['local']:
         u,p = upOut(config['local']['cred'])[0].split(':')
       else:
@@ -149,7 +156,7 @@ class ProjectGroup(QDialog):
       self.databaseR.setText('')
       self.pathL.setText('')
       self.serverR.setText('')
-    elif btnName=='fill':
+    elif command[0] is Command.FILL:
       content = QFileDialog.getOpenFileName(self, "Load remote credentials", str(Path.home()), '*.key')[0]
       with open(content, encoding='utf-8') as fIn:
         content = json.loads( passwordDecrypt(bytes(fIn.read(), 'UTF-8')) )
@@ -157,7 +164,7 @@ class ProjectGroup(QDialog):
         self.passwordR.setText(content['password'])
         self.databaseR.setText(content['database'])
         self.serverR.setText(content['Server'])
-    elif btnName=='createQR':
+    elif command[0] is Command.CREATE_QR:
       if self.projectGroupName.isHidden():
         configname = self.selectGroup.currentText()
       else:
@@ -167,11 +174,13 @@ class ProjectGroup(QDialog):
       img = qrcode.make(json.dumps(qrCode), error_correction=qrcode.constants.ERROR_CORRECT_M)
       pixmap = QPixmap.fromImage(ImageQt(img).scaledToWidth(200))
       self.image.setPixmap(pixmap)
-    elif btnName=='check':
+    elif command[0] is Command.CHECK:
       self.checkEntries()
-    elif btnName=='openDir':
+    elif command[0] is Command.OPEN_DIR:
       if dirName := QFileDialog.getExistingDirectory(self, 'Choose directory to save data', str(Path.home())):
         self.pathL.setText(dirName)
+    else:
+      print("**ERROR projectGroup unknown:",command)
     return
 
 
@@ -196,7 +205,7 @@ class ProjectGroup(QDialog):
     if not self.pathL.text():
       localTest += 'ERROR: Local path not given\n'
     else:
-      fullLocalPath = self.backend.basePath/self.pathL.text()
+      fullLocalPath = self.comm.backend.basePath/self.pathL.text()
       if fullLocalPath.exists():
         localTest += 'success: Local path exists\n'
       else:
@@ -227,7 +236,7 @@ class ProjectGroup(QDialog):
     Args:
       item (str): name of project group
     """
-    config = self.backend.configuration['projectGroups'][item]
+    config = self.configuration['projectGroups'][item]
     if 'cred' in config['local']:
       u,p = upOut(config['local']['cred'])[0].split(':')
     else:
@@ -246,3 +255,12 @@ class ProjectGroup(QDialog):
       self.databaseR.setText(config['remote']['database'])
       self.serverR.setText(config['remote']['url'])
     return
+
+
+class Command(Enum):
+  """ Commands used in this file """
+  NEW       = 1
+  FILL      = 2
+  CREATE_QR = 3
+  CHECK     = 4
+  OPEN_DIR  = 5
