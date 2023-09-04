@@ -45,7 +45,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       return
     docID   = hierStack.split('/')[-1]
     if docID.endswith(' -'):
-      docID = docID[:-2]
+      docID = docID[:34]
       folded = True
     else:
       folded = False
@@ -143,7 +143,6 @@ class ProjectLeafRenderer(QStyledItemDelegate):
 
 
   def sizeHint(self, option:QStyleOptionViewItem, index:QModelIndex) -> QSize:
-    # sourcery skip: de-morgan, merge-assign-and-aug-assign
     """
     determine size of this leaf
     """
@@ -157,7 +156,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       return QSize(400, self.lineSep*2)
     doc = self.comm.backend.db.getDoc(docID)
     if len(doc)<2:
-      self.comm.changeProject.emit('','')  #TODO_P4 redraw/reread only part of the tree
+      self.comm.changeProject.emit('','')
       return QSize()
     docKeys = doc.keys()
     height  = len([i for i in docKeys if not i in _DO_NOT_RENDER_ and i[0] not in ['-','_'] ])  #height in text lines

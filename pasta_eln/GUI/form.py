@@ -1,12 +1,13 @@
 """ New/Edit dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""
-import logging, re, copy, subprocess, platform, os
+import logging, re, copy
+from enum import Enum
 from typing import Any, Union
-from pathlib import Path
-from PySide6.QtWidgets import QDialog, QWidget, QVBoxLayout, QHBoxLayout, QDialogButtonBox, QSplitter, QSizePolicy, QMenu # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QDialog, QWidget, QVBoxLayout, QHBoxLayout, QDialogButtonBox, QSplitter, QSizePolicy # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QLabel, QTextEdit, QPushButton, QPlainTextEdit, QComboBox, QLineEdit # pylint: disable=no-name-in-module
 from PySide6.QtGui import QRegularExpressionValidator # pylint: disable=no-name-in-module
-from PySide6.QtCore import QSize, Qt, QPoint                  # pylint: disable=no-name-in-module
-from ..guiStyle import Image, TextButton, IconButton, Label, Action, showMessage, widgetAndLayout
+from PySide6.QtCore import QSize, Qt                  # pylint: disable=no-name-in-module
+from ..guiStyle import Image, TextButton, IconButton, Label, showMessage, widgetAndLayout
+from ._contextMenu import initContextMenu, executeContextMenu, CommandMenu
 from ..fixedStringsJson import defaultOntologyNode
 from ..handleDictionaries import fillDocBeforeCreate
 from ..miscTools import createDirName
@@ -46,7 +47,7 @@ class Form(QDialog):
       imageW, imageL = widgetAndLayout('V', mainL)
       Image(self.doc['image'], imageL, anyDimension=width)
       imageW.setContextMenuPolicy(Qt.CustomContextMenu)
-      imageW.customContextMenuRequested.connect(self.contextMenu)
+      imageW.customContextMenuRequested.connect(lambda pos: initContextMenu(self, pos))
 
     _, self.formL = widgetAndLayout('Form', mainL, 's')
     #Add things that are in ontology
@@ -72,22 +73,17 @@ class Form(QDialog):
       if key in ['comment','content']:
         labelW, labelL = widgetAndLayout('V')
         labelL.addWidget(QLabel(key.capitalize()))
-        TextButton('More', self.btnFocus, labelL, key, checkable=True)  # type: ignore # btnFocus req. bool, cannot get it to work
+        TextButton('More', self, [Command.FOCUS_AREA, key], labelL, checkable=True)
         rightSideW, rightSideL = widgetAndLayout('V')
         setattr(self, f'buttonBarW_{key}', QWidget())
         getattr(self, f'buttonBarW_{key}').hide()
         buttonBarL = QHBoxLayout(getattr(self, f'buttonBarW_{key}'))
         for name, tooltip in [['bold','Bold text'],['italic','Italic text'],['list-ul','Bullet list'],\
                                     ['list-ol','Numbered list']]:
-          IconButton(f'fa5s.{name}', self.btnText, buttonBarL, f'{name}_{key}', tooltip)
+          IconButton(f'fa5s.{name}', self, [Command.BUTTON_BAR, name, key], buttonBarL, tooltip)
         for i in range(1,4):
-          IconButton(
-              f'mdi.format-header-{str(i)}',
-              self.btnText,
-              buttonBarL,
-              f'heading{str(i)}_{key}',
-              f'Heading {str(i)}',
-          )
+          icon = f'mdi.format-header-{str(i)}'
+          IconButton(icon, self, [Command.BUTTON_BAR, 'heading{str(i)}', key], buttonBarL, f'Heading {str(i)}')
         rightSideL.addWidget(getattr(self, f'buttonBarW_{key}'))
         setattr(self, f'textEdit_{key}', QPlainTextEdit(value))
         getattr(self, f'textEdit_{key}').setAccessibleName(key)
@@ -170,16 +166,11 @@ class Form(QDialog):
     buttonBox = QDialogButtonBox(QDialogButtonBox.Cancel | QDialogButtonBox.Save)
     if self.flagNewDoc: #new dataset
       buttonBox.addButton('Save && Next', QDialogButtonBox.ApplyRole)
-    buttonBox.clicked.connect(self.save)
+    buttonBox.clicked.connect(self.closeDialog)
     mainL.addWidget(buttonBox)
 
-  # TODO_P2 make markdown format correctly immediately
-  # TODO_P2 move folder to different folder: use unidentified for notes
-  # TODO_P4 add splitter to increase / decrease image
-  # TODO_P3 form: add button to add key-values
-  # TODO_P3 form: other items as non-edible things that can be copy-pasted
-  def save(self, btn:QPushButton) -> None:
-    # sourcery skip: merge-else-if-into-elif
+
+  def closeDialog(self, btn:QPushButton) -> None:
     """
     Action upon save / cancel
     """
@@ -217,7 +208,7 @@ class Form(QDialog):
             if key == 'content' and '-branch' in self.doc:
               for branch in self.doc['-branch']:
                 if branch['path'] is not None:
-                  if branch['path'].endswith('.md'):  #TODO_P5 only write markdown files for now
+                  if branch['path'].endswith('.md'):
                     with open(self.comm.backend.basePath/branch['path'], 'w', encoding='utf-8') as fOut:
                       fOut.write(self.doc['content'])
                     logging.debug('Wrote new content to '+branch['path'])
@@ -317,128 +308,62 @@ class Form(QDialog):
     return
 
 
-  def contextMenu(self, pos:QPoint) -> None:
-    # sourcery skip: extract-method
+  def execute(self, command:list[Any]) -> None:
     """
-    Create a context menu
+    Event if user clicks button or users context menu
 
     Args:
-      pos (position): Position to create context menu at
+      command (list): list of commands
     """
-    context = QMenu(self)
-    # for extractors
-    extractors = self.comm.backend.configuration['extractors']
-    extension = Path(self.doc['-branch'][0]['path']).suffix[1:]
-    if extension.lower() in extractors:
-      extractors = extractors[extension.lower()]
-      baseDocType= self.doc['-type'][0]
-      choices= {key:value for key,value in extractors.items() \
-                  if key.startswith(baseDocType)}
-      for key,value in choices.items():
-        Action(value, self.changeExtractor, context, self, name=key)
-      context.addSeparator()
-      Action('Save image',                       self.changeExtractor, context, self, name='_saveAsImage_')
-    #TODO_P2 not save now: when opening text files, system can crash
-    # Action('Open file with another application', self.changeExtractor, context, self, name='_openExternal_')
-    Action('Open folder in file browser',        self.changeExtractor, context, self, name='_openInFileBrowser_')
-    context.exec(self.mapToGlobal(pos))
-    return
-
-
-  def changeExtractor(self) -> None:
-    """
-    What happens when user changes extractor
-    """
-    menuName = self.sender().data()
-    filePath = Path(self.doc['-branch'][0]['path'])
-    if menuName in ['_openInFileBrowser_','_openExternal_']:
-      filePath = self.comm.backend.basePath/filePath
-      filePath = filePath if menuName=='_openExternal_' else filePath.parent
-      if platform.system() == 'Darwin':       # macOS
-        subprocess.call(('open', filePath))
-      elif platform.system() == 'Windows':    # Windows
-        os.startfile(filePath) # type: ignore[attr-defined]
-      else:                                   # linux variants
-        subprocess.call(('xdg-open', filePath))
-    elif menuName =='_saveAsImage_':
-      image = self.doc['image']
-      if image.startswith('data:image/'):
-        imageType = image[11:14] if image[14]==';' else image[11:15]
+    if isinstance(command[0], CommandMenu):
+      executeContextMenu(self, command)
+    elif command[0] is Command.BUTTON_BAR:
+      if command[1]=='bold':
+        getattr(self, f'textEdit_{command[2]}').insertPlainText('**TEXT**')
+      elif command[1]=='italic':
+        getattr(self, f'textEdit_{command[2]}').insertPlainText('*TEXT*')
+      elif command[1]=='list-ul':
+        getattr(self, f'textEdit_{command[2]}').insertPlainText('\n- item 1\n- item 2')
+      elif command[1]=='list-ol':
+        getattr(self, f'textEdit_{command[2]}').insertPlainText('\n1. item 1\n1. item 2')
+      elif command[1].startswith('heading'):
+        getattr(self, f'textEdit_{command[2]}').insertPlainText('#' * int(command[-1]) +' Heading\n')
+    elif command[0] is Command.FOCUS_AREA:
+      unknownWidget = []
+      if getattr(self, f'buttonBarW_{command[1]}').isHidden(): #current status hidden
+        getattr(self, f'textShow_{command[1]}').show()
+        getattr(self, f'buttonBarW_{command[1]}').show()
+        for i in range(self.formL.count()):
+          widget = self.formL.itemAt(i).widget()
+          if isinstance(widget, (QLabel, QComboBox, QLineEdit)):
+            widget.hide()
+          else:
+            unknownWidget.append(i)
+        if command[1]=='content' and len(unknownWidget)==5:
+          self.formL.itemAt(unknownWidget[0]).widget().hide()
+          self.formL.itemAt(unknownWidget[1]).widget().hide()
+        if command[1]=='comment' and len(unknownWidget)==5:
+          self.formL.itemAt(unknownWidget[2]).widget().hide()
+          self.formL.itemAt(unknownWidget[3]).widget().hide()
       else:
-        imageType = 'svg'
-      saveFilePath = self.comm.backend.basePath/filePath.parent/f'{filePath.stem}_PastaExport.{imageType.lower()}'
-      path = Path(self.doc['-branch'][0]['path'])
-      if not path.as_posix().startswith('http'):
-        path = self.comm.backend.basePath/path
-      self.comm.backend.testExtractor(path, recipe='/'.join(self.doc['-type']), saveFig=str(saveFilePath))
-    else:
-      self.doc['-type'] = menuName.split('/')
-      self.comm.backend.useExtractors(filePath, self.doc['shasum'], self.doc)  #any path is good since the file is the same everywhere; data-changed by reference
-      if len(self.doc['-type'])>1 and len(self.doc['image'])>1:
-        self.doc = self.comm.backend.db.updateDoc({'image':self.doc['image'], '-type':self.doc['-type']}, self.doc['_id'])
-        self.comm.changeTable.emit('','')
-        self.comm.changeDetails.emit(self.doc['_id'])
-    return
-
-
-  def btnFocus(self, status:bool) -> None:
-    """
-    Action if advanced button is clicked
-    """
-    key = self.sender().accessibleName()  #comment or content
-    unknownWidget = []
-    if status:
-      getattr(self, f'textShow_{key}').hide()
-      getattr(self, f'buttonBarW_{key}').hide()
-      for i in range(self.formL.count()):
-        widget = self.formL.itemAt(i).widget()
-        if isinstance(widget, (QLabel, QComboBox, QLineEdit)):
-          widget.show()
-        else:
-          unknownWidget.append(i)
-      if key=='content' and len(unknownWidget)==4:  #show / hide label and right-side of non-content and non-comment
-        self.formL.itemAt(unknownWidget[0]).widget().show()
-        self.formL.itemAt(unknownWidget[1]).widget().show()
-      if key=='comment' and len(unknownWidget)==4:
-        self.formL.itemAt(unknownWidget[2]).widget().show()
-        self.formL.itemAt(unknownWidget[3]).widget().show()
-    else:
-      getattr(self, f'textShow_{key}').show()
-      getattr(self, f'buttonBarW_{key}').show()
-      for i in range(self.formL.count()):
-        widget = self.formL.itemAt(i).widget()
-        if isinstance(widget, (QLabel, QComboBox, QLineEdit)):
-          widget.hide()
-        else:
-          unknownWidget.append(i)
-      if key=='content' and len(unknownWidget)==4:
-        self.formL.itemAt(unknownWidget[0]).widget().hide()
-        self.formL.itemAt(unknownWidget[1]).widget().hide()
-      if key=='comment' and len(unknownWidget)==4:
-        self.formL.itemAt(unknownWidget[2]).widget().hide()
-        self.formL.itemAt(unknownWidget[3]).widget().hide()
-    return
-
-
-  def btnText(self) -> None:
-    """
-    Add help to text area
-    """
-    command, key = self.sender().accessibleName().split('_')
-    if command=='bold':
-      getattr(self, f'textEdit_{key}').insertPlainText('**TEXT**')
-    elif command=='italic':
-      getattr(self, f'textEdit_{key}').insertPlainText('*TEXT*')
-    elif command=='list-ul':
-      getattr(self, f'textEdit_{key}').insertPlainText('\n- item 1\n- item 2')
-    elif command=='list-ol':
-      getattr(self, f'textEdit_{key}').insertPlainText('\n1. item 1\n1. item 2')
-    elif command.startswith('heading'):
-      getattr(self, f'textEdit_{key}').insertPlainText('#' * int(command[-1]) +
-                                                       ' Heading\n')
+        getattr(self, f'textShow_{command[1]}').hide()
+        getattr(self, f'buttonBarW_{command[1]}').hide()
+        for i in range(self.formL.count()):
+          widget = self.formL.itemAt(i).widget()
+          if isinstance(widget, (QLabel, QComboBox, QLineEdit)):
+            widget.show()
+          else:
+            unknownWidget.append(i)
+        if command[1]=='content' and len(unknownWidget)==5:  #show / hide label and right-side of non-content and non-comment
+          self.formL.itemAt(unknownWidget[0]).widget().show()
+          self.formL.itemAt(unknownWidget[1]).widget().show()
+        if command[1]=='comment' and len(unknownWidget)==5:
+          self.formL.itemAt(unknownWidget[2]).widget().show()
+          self.formL.itemAt(unknownWidget[3]).widget().show()
     else:
       print('**ERROR dialogForm: unknowCommand',command)
     return
+
 
   def textChanged(self) -> None:
     """
@@ -503,3 +428,13 @@ class Form(QDialog):
     self.otherChoices.clear()
     self.otherChoices.addItems(newChoicesList)
     return
+
+
+class Command(Enum):
+  """ Commands used in this file """
+  BUTTON_BAR       = 1
+  CHANGE_EXTRACTOR = 2
+  SAVE_IMAGE       = 3
+  OPEN_FILEBROWSER = 4
+  OPEN_EXTERNAL    = 5
+  FOCUS_AREA       = 6

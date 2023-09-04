@@ -5,7 +5,6 @@ QtAwesome
 cloudant
 pandas
 numpy
-PyYAML
 keyring
 requests
 anytree

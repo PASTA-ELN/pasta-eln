@@ -1,7 +1,8 @@
 """ all styling of buttons and other general widgets, some defined colors... """
-from typing import Callable, Optional
-from PySide6.QtWidgets import QPushButton, QLabel, QSizePolicy, QMessageBox, QLayout, QWidget, QMenu, QVBoxLayout, QHBoxLayout, QGridLayout, QFormLayout # pylint: disable=no-name-in-module
-from PySide6.QtGui import QImage, QPixmap, QAction, QKeySequence, QMouseEvent  # pylint: disable=no-name-in-module
+from typing import Callable, Optional, Any
+from PySide6.QtWidgets import QPushButton, QLabel, QSizePolicy, QMessageBox, QLayout, QWidget, QMenu, \
+                              QVBoxLayout, QHBoxLayout, QGridLayout, QFormLayout, QComboBox, QTextEdit # pylint: disable=no-name-in-module
+from PySide6.QtGui import QImage, QPixmap, QAction, QKeySequence, QMouseEvent, QFontMetrics  # pylint: disable=no-name-in-module
 from PySide6.QtCore import QByteArray, Qt           # pylint: disable=no-name-in-module
 from PySide6.QtSvgWidgets import QSvgWidget         # pylint: disable=no-name-in-module
 import qtawesome as qta
@@ -47,14 +48,14 @@ def getColor(backend:Backend, color:str) -> str:
 
 class TextButton(QPushButton):
   """ Button that has only text"""
-  def __init__(self, label:str, function:Optional[Callable[[],None]], layout:Optional[QLayout], name:str='',
-               tooltip:str='', checkable:bool=False, style:str='', hide:bool=False, backend:Optional[Backend]=None):
+  def __init__(self, label:str, widget:QWidget, command:list[Any]=[], layout:Optional[QLayout]=None,
+               tooltip:str='', checkable:bool=False, style:str='', hide:bool=False, iconName:str=''):
     """
     Args:
       label (str): label printed on button
-      function (function): function to be called upon button-click-event
+      widget (QWidget): widget / dialog that host the button and that has the execute function
+      command (enum): command that is used in called-function: possibly a list of multiple terms
       layout (QLayout): button to be added to this layout
-      name (str): name used for button identification in called-function
       tooltip (str): tooltip shown when mouse hovers the button
       checkable (bool): can the button change its background color
       style (str): css style
@@ -64,58 +65,51 @@ class TextButton(QPushButton):
     self.setText(label)
     self.setCheckable(checkable)
     self.setChecked(checkable)
-    self.clicked.connect(function)
-    if name != '':
-      self.setAccessibleName(name)
-    if tooltip != '':
+    self.clicked.connect(lambda: widget.execute(command))
+    if tooltip:
       self.setToolTip(tooltip)
-    if style != '':
+    if style:
       self.setStyleSheet(style)
     else:
-      if backend is None:
-        primaryColor = '#448aff'
-        secTextColor = '#eeeeee'
-      else:
-        primaryColor = getColor(backend, 'primary')
-        secTextColor = getColor(backend, 'secondaryText')
+      primaryColor = getColor(widget.comm.backend, 'primary')
+      secTextColor = getColor(widget.comm.backend, 'secondaryText')
       self.setStyleSheet(f'border-width: 0px; background-color: {primaryColor}; color: {secTextColor}')
     if hide:
       self.hide()
+    if iconName:
+      color = 'black' if widget is None else getColor(widget.comm.backend, 'primary')
+      icon = qta.icon(iconName, color=color, scale_factor=1)
+      self.setIcon(icon)
     if layout is not None:
       layout.addWidget(self)
 
 
 class IconButton(QPushButton):
   """ Button that has only an icon"""
-  def __init__(self, iconName:str, function:Callable[[],None], layout:Optional[QLayout], name:str='',
-               tooltip:str='', backend:Optional[Backend]=None, style:str='', hide:bool=False, text:str=''):
+  def __init__(self, iconName:str, widget:QWidget, command:list[Any]=[], layout:Optional[QLayout]=None,
+               tooltip:str='', style:str='', hide:bool=False):
     """
     Args:
       iconName (str): icon to show on button
-      function (function): function to be called upon button-click-event
+      widget (QWidget): widget / dialog that host the button and that has the execute function
+      command (enum): command that is used in called-function: possibly a list of multiple terms
       layout (QLayout): button to be added to this layout
-      name (str): name used for button identification in called-function
       tooltip (str): tooltip shown when mouse hovers the button
-      backend (Pasta): pasta backend
       style (str): css style
       hide (bool): hidden or shown initially
-      text (str): text shown on button additionally
     """
     super().__init__()
-    color = 'black' if backend is None else getColor(backend, 'primary')
+    color = 'black' if widget is None else getColor(widget.comm.backend, 'primary')
     icon = qta.icon(iconName, color=color, scale_factor=1)
     self.setIcon(icon)
-    self.setText(text)
-    self.clicked.connect(function)
+    self.clicked.connect(lambda: widget.execute(command))
     self.setFixedHeight(30)
-    if name != '':
-      self.setAccessibleName(name)
-    if tooltip != '':
+    if tooltip:
       self.setToolTip(tooltip)
-    if not style:
-      self.setStyleSheet("border-width:0")
-    else:
+    if style:
       self.setStyleSheet(style)
+    else:
+      self.setStyleSheet("border-width:0")
     if hide:
       self.hide()
     if layout is not None:
@@ -124,30 +118,26 @@ class IconButton(QPushButton):
 
 class Action(QAction):
   """ QAction and assign function to menu"""
-  def __init__(self, label:str, function:Callable[[],None], menu:QMenu, parent:QWidget,
-               shortcut:Optional[str]=None, name:Optional[str]=None, icon:str=''):
+  def __init__(self, label:str, widget:QWidget, command:list[Any],
+               menu:QMenu, shortcut:Optional[str]=None, icon:str=''):
     """
     Args:
       label (str): label printed on submenu
-      function (function): function to be called
+      widget (QWidget): widget / dialog that host the button and that has the execute function
+      command (enum): command that is used in called-function: possibly a list of multiple terms
       menu (QMenu): button to be added to this menu
-      parent (QWidget): parent widget
       shortcut (str): shortcut (e.g. Ctrl+K)
-      name (str): additional data to transport
       icon (str): icon name
     """
     super().__init__()
-    self.setParent(parent)
+    self.setParent(widget)
     self.setText(label)
-    self.triggered.connect(function)
+    self.triggered.connect(lambda : widget.execute(command))
     if icon:
       self.setIcon(qta.icon(icon, scale_factor=1))
-    if menu is not None:
-      menu.addAction(self)
     if shortcut is not None:
       self.setShortcut(QKeySequence(shortcut))
-    if name is not None:
-      self.setData(name)
+    menu.addAction(self)
 
 
 class Image():
@@ -304,3 +294,23 @@ def widgetAndLayout(direction:str='V', parentLayout:Optional[QLayout]=None, spac
   if parentLayout is not None:
     parentLayout.addWidget(widget)
   return widget, layout
+
+
+def addRowList(layout:QLayout, label:str, default:str, itemList:list[str]) -> QComboBox:
+  """
+  Add a row with a combo-box to the form
+
+  Args:
+    layout (QLayout): layout to add row to
+    label (str): label used in form
+    default (str): default value
+    itemList (list(str)): items to choose from
+
+  Returns:
+    QCombobox: filled combobox
+  """
+  widget = QComboBox()
+  widget.addItems(itemList)
+  widget.setCurrentText(default)
+  layout.addRow(QLabel(label), widget)
+  return widget

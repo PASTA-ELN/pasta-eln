@@ -1,4 +1,6 @@
 """ Table Header dialog: change which colums are shown and in which order """
+from enum import Enum
+from typing import Any
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QListWidget, QLineEdit, QDialogButtonBox  # pylint: disable=no-name-in-module
 from ..guiStyle import IconButton, widgetAndLayout, showMessage
 from ..miscTools import restart
@@ -37,41 +39,47 @@ class TableHeader(QDialog):
     self.inputLine = QLineEdit()
     leftL.addWidget(self.inputLine)
     _, centerL = widgetAndLayout('V', bodyL)
-    IconButton('fa5s.angle-right',        self.executeAction, centerL, 'add',  'add right')
-    IconButton('fa5s.angle-left',         self.executeAction, centerL, 'del',  'remove right')
-    IconButton('fa5s.angle-up',           self.executeAction, centerL, 'up',   'move up')
-    IconButton('fa5s.angle-down',         self.executeAction, centerL, 'down', 'move down')
-    IconButton('fa5s.angle-double-right', self.executeAction, centerL, 'text', 'use text')
+    IconButton('fa5s.angle-right',        self, [Command.ADD],      centerL, 'add to right')
+    IconButton('fa5s.angle-left',         self, [Command.DELETE],   centerL, 'delete from right')
+    IconButton('fa5s.angle-up',           self, [Command.MOVE_UP],  centerL, 'move up')
+    IconButton('fa5s.angle-down',         self, [Command.MOVE_UP],  centerL, 'move down')
+    IconButton('fa5s.angle-double-right', self, [Command.USE_TEXT], centerL, 'use text field')
     self.selectW = QListWidget()
     self.selectW.addItems(self.selectedList)
     bodyL.addWidget(self.selectW)
     #final button box
     buttonBox = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel | QDialogButtonBox.Help)
-    buttonBox.clicked.connect(self.save)
+    buttonBox.clicked.connect(self.closeDialog)
     mainL.addWidget(buttonBox)
 
 
-  def executeAction(self) -> None:
-    """ Event if user clicks button in the center """
-    btn = self.sender().accessibleName()
+  def execute(self, command:list[Any]) -> None:
+    """
+    Event if user clicks button in the center
+
+    Args:
+      command (list): list of commands
+    """
     selectedLeft   = [i.text() for i in self.choicesW.selectedItems()]
     selectedRight  = [i.text() for i in self.selectW.selectedItems()]
     oldIndex, newIndex = -1, -1
-    if btn == 'add':
+    if command[0] is Command.ADD:
       self.selectedList += selectedLeft
-    elif btn == 'del':
+    elif command[0] is Command.DELETE:
       self.selectedList = [i for i in self.selectedList if i not in selectedRight ]
-    elif btn == 'up' and len(selectedRight)==1:
+    elif command[0] is Command.MOVE_UP  and len(selectedRight)==1:
       oldIndex = self.selectedList.index(selectedRight[0])
       if oldIndex>0:
         newIndex = oldIndex-1
-    elif btn == 'down' and len(selectedRight)==1:
+    elif command[0] is Command.MOVE_DOWN and len(selectedRight)==1:
       oldIndex = self.selectedList.index(selectedRight[0])
       if oldIndex<len(self.selectedList)-1:
         newIndex = oldIndex+1
-    elif btn == 'text' and self.inputLine.text()!='':
+    elif command[0] is Command.USE_TEXT and self.inputLine.text()!='':
       self.selectedList += [self.inputLine.text()]
       self.allSet.add(self.inputLine.text())
+    else:
+      print("**ERROR tableHeader menu unknown:",command)
     #change content
     if oldIndex>-1 and newIndex>-1:
       self.selectedList.insert(newIndex, self.selectedList.pop(oldIndex))
@@ -84,7 +92,7 @@ class TableHeader(QDialog):
     return
 
 
-  def save(self, btn:IconButton) -> None:
+  def closeDialog(self, btn:IconButton) -> None:
     """ save selectedList to configuration and exit """
     if btn.text().endswith('Cancel'):
       self.reject()
@@ -103,3 +111,12 @@ class TableHeader(QDialog):
     else:
       print('dialogTableHeader: did not get a fitting btn ',btn.text())
     return
+
+
+class Command(Enum):
+  """ Commands used in this file """
+  ADD       = 1
+  DELETE    = 2
+  MOVE_UP   = 3
+  MOVE_DOWN = 4
+  USE_TEXT  = 5

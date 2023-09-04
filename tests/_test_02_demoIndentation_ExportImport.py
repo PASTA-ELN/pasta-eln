@@ -28,7 +28,6 @@ class TestStringMethods(unittest.TestCase):
     """
     main function
     """
-    dummyProgressBar = DummyProgressBar()
     outputFormat = 'print'
     # initialization: create database, destroy on filesystem and database and then create new one
     warnings.filterwarnings('ignore', message='numpy.ufunc size changed')
@@ -45,10 +44,11 @@ class TestStringMethods(unittest.TestCase):
     idProj = self.be.db.getView('viewDocType/x0')[0]['id']
     self.fileName = str(Path.home()/'temporary_pastaTest.eln')
     status = exportELN(self.be, idProj, self.fileName)
-    print('\n'+status)
+    print(f'Export to: {self.fileName}\n{status}')
     self.assertEqual(status[:21],'Success: exported 31 ','Export unsuccessful')
 
     # verify eln
+    print('\n\n---------------\nVerification')
     if elnValidation:
       checkFile(Path(self.fileName), verbose=True, plot=False)
 
@@ -61,6 +61,7 @@ class TestStringMethods(unittest.TestCase):
       self.be.db.remove(doc['id'])
 
     # import
+    print('\n\n---------------\nImport')
     status = importELN(self.be, self.fileName)
     print(status)
     self.assertEqual(status[:7],'Success','Import unsuccessful')
@@ -79,7 +80,7 @@ class TestStringMethods(unittest.TestCase):
 
   def tearDown(self):
     logging.info('End Export-import test')
-    Path(self.fileName).unlink()  #remove file
+    # Path(self.fileName).unlink()  #remove file
     return
 
 if __name__ == '__main__':
