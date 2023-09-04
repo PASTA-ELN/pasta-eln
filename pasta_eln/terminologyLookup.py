@@ -160,11 +160,9 @@ class TerminologyLookup(QDialog):
     responses = await asyncio.gather(self.wikipediaRequest(searchTerm), self.wikidataRequest(searchTerm), \
                                      self.olsRequest(searchTerm), self.tibRequest(searchTerm))
 
-    print(self.preferredSources) 
     for source in ("wp", "wd", "ols", "tib"):
       if source not in self.preferredSources:
         self.preferredSources[source] = ""
-    print(self.preferredSources) 
   
     for source in self.preferredSources:
       if   source == "wp": self.wikipediaSearch(responses[0])
