@@ -135,6 +135,12 @@ def ontology_doc_mock(mocker) -> Document:
   mock_doc.__setitem__.side_effect = mock_doc_content.__setitem__
   mock_doc.__contains__.side_effect = mock_doc_content.__contains__
   mock_doc.__iter__.side_effect = mock_doc_content.__iter__
+  mock_doc.keys.side_effect = mock_doc_content.keys
+  mock_doc.types.side_effect = mocker.MagicMock(return_value=dict((data, mock_doc_content[data])
+                                                                  for data in mock_doc_content
+                                                                  if type(mock_doc_content[data]) is dict))
+  mock_doc.types_list.side_effect = mocker.MagicMock(return_value=[data for data in mock_doc_content
+                                                                   if type(mock_doc_content[data]) is dict])
   return mock_doc
 
 
