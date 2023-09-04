@@ -73,8 +73,6 @@ def configuration_extended(mocker) -> OntologyConfigurationForm:
   mocker.patch.object(OntologyConfigurationForm, 'delete_column_delegate_attach_table', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'reorder_column_delegate_attach_table', create=True)
   mocker.patch.object(CreateTypeDialog, '__new__')
-  # mocker.patch(
-  #   'pasta_eln.ontology_configuration.ontology_configuration_extended.OntologyConfigurationForm.setup_slots')
   config_instance = OntologyConfigurationForm(mock_document)
   return config_instance
 
@@ -134,6 +132,8 @@ def ontology_doc_mock(mocker) -> Document:
   mocker.patch.object(mock_doc, "__len__",
                       lambda x, y: len(mock_doc_content))
   mock_doc.__getitem__.side_effect = mock_doc_content.__getitem__
+  mock_doc.__setitem__.side_effect = mock_doc_content.__setitem__
+  mock_doc.__contains__.side_effect = mock_doc_content.__contains__
   mock_doc.__iter__.side_effect = mock_doc_content.__iter__
   return mock_doc
 

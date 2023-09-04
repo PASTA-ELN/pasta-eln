@@ -312,6 +312,8 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
 
     """
     self.logger.info("User loaded the ontology data in UI")
+    if self.ontology_document is None:
+      raise OntologyConfigGenericException("Null ontology_document, erroneous app state", {})
     # Load the ontology types from the db document
     self.ontology_types = dict([(data, self.ontology_document[data])
                                 for data in self.ontology_document
@@ -342,11 +344,18 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     Returns:
 
     """
+    if self.ontology_document is None or self.ontology_types is None:
+      self.logger.error("Null ontology_document/ontology_types, erroneous app state")
+      raise OntologyConfigGenericException("Null ontology_document/ontology_types, erroneous app state", {})
     if title in self.ontology_document:
       show_message(f"Type (title: {title} label: {label}) cannot be added since it exists in DB already....")
     else:
+      if title is None:
+        self.logger.warning("Enter non-null/valid title!!.....")
+        show_message("Enter non-null/valid title!!.....")
+        return
       self.logger.info(f"User created a new type and added "
-                       f"it to the ontology document: Title: {title}, Label: {label}")
+                       f"to the ontology document: Title: {title}, Label: {label}")
       empty_type = {
         "link": "",
         "label": label,
@@ -372,17 +381,23 @@ def get_gui(ontology_document: Document) -> tuple[
   Returns:
 
   """
-  if not QApplication.instance():
+  instance = QApplication.instance()
+  if instance is None:
     application = QApplication(sys.argv)
   else:
-    application = QApplication.instance()
+    application = instance
+
   ontology_form: OntologyConfigurationForm = OntologyConfigurationForm(ontology_document)
 
   return application, ontology_form.instance, ontology_form
 
 
-if __name__ == "__main__":
+def main():
   db = get_db("research", "admin", "DxiBfYvdMOZF", 'http://127.0.0.1:5984')
   app, ui_form_dialog, ui_form = get_gui(db['-ontology-'])
   ui_form_dialog.show()
   sys.exit(app.exec())
+
+
+if __name__ == "__main__":
+  main()
