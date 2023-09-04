@@ -1,5 +1,7 @@
 import requests 
 import json
+import asyncio
+import aiohttp
 from PySide6.QtWidgets import QLabel, QHBoxLayout, QListWidget, QDialogButtonBox, QDialog, \
                               QApplication, QMainWindow, QWidget, QVBoxLayout, QLineEdit, \
                               QScrollArea, QCheckBox, QPushButton   # pylint: disable=no-name-in-module
@@ -66,19 +68,20 @@ class TerminologyLookup(QDialog):
   """ written by Raphael: look up terminology servers """
   def __init__(self, searchterms:str):
     """
-    Opens a Dialog which displays definitions for the given searchterm
-        and returns chosen definitions as a list
+    Opens a Dialog which displays definitions for the given searchterms
+        and returns chosen definitions as a nested list
 
     Args:
-        searchterm (str): The term you search for
+        searchterms (str): A list of terms to search
     """
     super().__init__()
 
     #variables
-    self.listCB:list[tuple[QCheckBox,str]] = []
+    self.listCB:list[tuple[QCheckBox,str]]= []
     self.nestedWidgets:list[QWidget]      = []
-    self.searchTerm                       = searchterms
-    self.returnValues:list[str]            = []
+    self.searchTerms                      = searchterms
+    self.returnValues:list[str]           = []
+    self.preferredSources                 = dict()
 
     #icons
     # pylint: disable=line-too-long
@@ -119,105 +122,193 @@ class TerminologyLookup(QDialog):
     self.buttonBox.rejected.connect(self.reject)
     self.mainL.addWidget(self.buttonBox)
 
-    if self.searchTerm != "":
-      self.wikipediaSearch()
-      self.wikidataSearch()
-      self.olsSearch()
-      self.tibSearch()
+    #self.show()
+
+    #start the Search for definitions
+    self.searchTerms.reverse() #so I can use pop() more easily
+    self.startSearch()
+
+
+
+  def startSearch(self) -> None:
+    searchTerm = self.searchTerms.pop()
+    #self.startRequestsSync(searchTerm) #Use this instead of line below if you want to test synchronised Speed
+    asyncio.run(self.asyncSearch(searchTerm))
 
     for widget in self.nestedWidgets:
       self.scrollLayout.addWidget(widget)
 
-
   def finalize(self) -> None:
     """ what to do, when user clicks save """
-    self.returnValues = [cb[1] for cb in self.listCB if cb[0].isChecked()]
-    self.accept()
-    return
+    self.returnValues.append([cb[1] for cb in self.listCB if cb[0].isChecked()])
+    self.preferredSources =  {cb[2]:"" for cb in self.listCB if cb[0].isChecked()}
+    if self.searchTerms:
+      self.clearLayout(self.scrollLayout)
+      self.nestedWidgets.clear()
+      self.listCB.clear()
+      self.startSearch()
+    else:
+      self.accept()
+      return
+
+  async def asyncSearch(self, searchTerm):
+    """Starts the async search for given searchTerm
+
+    Args:
+        searchTerm (str): word to be searched
+    """
+    responses = await asyncio.gather(self.wikipediaRequest(searchTerm), self.wikidataRequest(searchTerm), \
+                                     self.olsRequest(searchTerm), self.tibRequest(searchTerm))
+
+    print(self.preferredSources) 
+    for source in ("wp", "wd", "ols", "tib"):
+      if source not in self.preferredSources:
+        self.preferredSources[source] = ""
+    print(self.preferredSources) 
+  
+    for source in self.preferredSources:
+      if   source == "wp": self.wikipediaSearch(responses[0])
+      elif source == "wd": self.wikidataSearch(responses[1])
+      elif source == "ols": self.olsSearch(responses[2])
+      elif source == "tib": self.tibSearch(responses[3])
+  
+  async def olsRequest(self, searchTerm):
+     #Start Request for OLS
+    baseUrlOLS = "http://www.ebi.ac.uk/ols/api/search"
+    async with aiohttp.ClientSession() as session:
+        async with session.get(baseUrlOLS, params= {"q": searchTerm}) as response:
+            return await response.text()
+  
+  async def wikidataRequest(self, searchTerm):  
+    #Start Request for Wikidata
+    baseUrlWd = "https://www.wikidata.org/w/api.php"
+    async with aiohttp.ClientSession() as session:
+      async with session.get(baseUrlWd, params={"search": searchTerm, \
+                  "action":"wbsearchentities", "format":"json","language":"en","type":"item","continue":"0",}) as response:
+          return await response.text()
+
+  async def wikipediaRequest(self, searchTerm):
+    #Start Request for Wikipedia
+    numberOfResultsWp = 5
+    baseUrlWp = "https://en.wikipedia.org/w/rest.php/v1/search/page"
+    async with aiohttp.ClientSession() as session:
+      async with session.get(baseUrlWp, params={'q': searchTerm, 'limit': numberOfResultsWp}) as response:
+          return await response.text()
+
+  async def tibRequest(self, searchTerm):  
+    #Start Request for TIB
+    baseUrlTIB = "https://service.tib.eu/ts4tib/api/search"
+    async with aiohttp.ClientSession() as session:
+      async with session.get(baseUrlTIB, params={"q": searchTerm}) as response:
+          return await response.text()
 
 
-  def wikipediaSearch(self) -> None:
+  
+
+  def startRequestsSync(self, searchTerm):
+    """SYNCHRONISED VERSION OF asyncSearch FOR COMPARISON"""
+
+    #Start Request for OLS
+    baseUrlOLS = "http://www.ebi.ac.uk/ols/api/search"
+    responseOLS = requests.get(baseUrlOLS, params= {"q": searchTerm})
+    
+    #Start Request for Wikidata
+    baseUrlWd = "https://www.wikidata.org/w/api.php"
+    responseWd = requests.get(baseUrlWd, params={"search": searchTerm, \
+                   "action":"wbsearchentities", "format":"json","language":"en","type":"item","continue":"0",})
+    
+    #Start Request for Wikipedia
+    numberOfResultsWp = 5
+    baseUrlWp = "https://en.wikipedia.org/w/rest.php/v1/search/page"
+    responseWp = requests.get(baseUrlWp, params={'q': searchTerm, 'limit': numberOfResultsWp})  # type: ignore[arg-type]
+    
+    #Start Request for TIB
+    baseUrlTIB = "https://service.tib.eu/ts4tib/api/search"
+    responseTIB = requests.get(baseUrlTIB, params={"q": searchTerm})
+
+    print(self.preferredSources) 
+    for source in ("wp", "wd", "ols", "tib"):
+      if source not in self.preferredSources:
+        self.preferredSources[source] = ""
+    print(self.preferredSources) 
+  
+    for source in self.preferredSources:
+      if   source == "wp": self.wikipediaSearch(responseWp.text)
+      elif source == "wd": self.wikidataSearch(responseWd.text)
+      elif source == "ols": self.olsSearch(responseOLS.text)
+      elif source == "tib": self.tibSearch(responseTIB.text)
+    
+
+  def wikipediaSearch(self, response) -> None:
     """
     Search Wikipedia
     """
-    numberOfResults = 5
-    baseUrl = "https://en.wikipedia.org/w/rest.php/v1/search/page"
-    response = requests.get(baseUrl, params={'q': self.searchTerm, 'limit': numberOfResults})  # type: ignore[arg-type]
-    if response.status_code != 200:
-      print(f"Wikidata: Request failed with status Code: {response.status_code}")
-      return
-    for page in json.loads(response.text)["pages"]:
+    for page in json.loads(response)["pages"]:
       if page['description'] is not None and page['description'] != "Topics referred to by the same term":
-        self.listCB.append((QCheckBox(page["title"]+": "+page["description"]),
-                            "https://en.wikipedia.org/w/index.php?curid="+str(page["id"])))
+        self.listCB.append((QCheckBox(page["title"]+": "+page["description"]),\
+                            "https://en.wikipedia.org/w/index.php?curid="+str(page["id"]),"wp"))
         current = self.listCB[-1]
         self.nestedWidgets.append(self.cbImage_widget(current[0], self.wikipediaPixmap))
     return
 
-
-  def wikidataSearch(self) -> None:
+  def wikidataSearch(self, response) -> None:
     """
     Search Wikidata
     """
-    baseUrl = "https://www.wikidata.org/w/api.php"
-    response = requests.get(baseUrl, params={"search": self.searchTerm, \
-                   "action":"wbsearchentities", "format":"json","language":"en","type":"item","continue":"0",})
-    if response.status_code != 200:
-      print(f"Wikidata: Request failed with status Code: {response.status_code}")
-      return
-    for result in json.loads(response.text)["search"]:
+    for result in json.loads(response)["search"]:
       a = result['display']
       if 'description' in a:
         label = a['label']
         description = a["description"]
-        self.listCB.append((QCheckBox(label['value']+": "+description['value']), result["concepturi"]))
+        self.listCB.append((QCheckBox(label['value']+": "+description['value']), result["concepturi"],"wd"))
         current = self.listCB[-1]
         self.nestedWidgets.append(self.cbImage_widget(current[0], self.wikidataPixmap))
     return
 
-
-  def olsSearch(self) -> None:
+  def olsSearch(self, response) -> None:
     """
     Search Terminology server of OLS
     - some Ontologies do not provide a description in the json
     """
-    baseUrl = "http://www.ebi.ac.uk/ols/api/search"
-    response = requests.get(baseUrl, params= {"q": self.searchTerm})
-    if response.status_code != 200:
-      print(f"Ontology Lookup Service: Request failed with status Code: {response.status_code}")
-      return
-    for result in response.json()["response"]['docs']:
+    for result in json.loads(response)["response"]['docs']:
       if 'description' in result and result['description'] is not None:
         checkboxText = result["label"]+": "+"".join(result["description"])+" ("+result["ontology_name"]+")"
-        self.listCB.append((QCheckBox(checkboxText), result["iri"]))
+        self.listCB.append((QCheckBox(checkboxText), result["iri"], "ols"))
         current = self.listCB[-1]
         self.nestedWidgets.append(self.cbImage_widget(current[0], self.olsPixmap))
     return
 
-
-  def tibSearch(self) -> None:
+  def tibSearch(self, response) -> None:
     """
     Search Terminology server of TIB
     - some Ontologies do not provide a description in the json, this is handled by the devs of tib
     """
-    baseUrl = "https://service.tib.eu/ts4tib/api/search"
-    response = requests.get(baseUrl, params={"q": self.searchTerm})
-    if response.status_code != 200: #useless for some errors because requests.get raises exceptions
-      print(f"TIB Terminology Service: Request failed with status Code: {response.status_code}")
-      return
     #ontologies that are both found in ols and tib:
-    duplicate_ontos = ["afo", "bco", "bto", "chiro", "chmo", "duo", "edam", "efo", "fix", "hp", "iao", "mod", \
+    duplicateOntos = ["afo", "bco", "bto", "chiro", "chmo", "duo", "edam", "efo", "fix", "hp", "iao", "mod", \
                        "mop", "ms", "nmrcv", "ncit", "obi", "om", "pato", "po", "proco", "prov", "rex", "ro", \
                        "rxno", "sbo", "sepio", "sio", "swo", "t4fs", "uo"]
-    for result in response.json()["response"]['docs']:
+    for result in json.loads(response)["response"]['docs']:
       if 'description' in result and result['description'] is not None and \
-        not result["ontology_name"] in duplicate_ontos:
+        not result["ontology_name"] in duplicateOntos:
         checkboxText = result["label"]+": "+"".join(result["description"])+" ("+result["ontology_name"]+")"
-        self.listCB.append((QCheckBox(checkboxText), result["iri"]))
+        self.listCB.append((QCheckBox(checkboxText), result["iri"], "tib"))
         current = self.listCB[-1]
         self.nestedWidgets.append(self.cbImage_widget(current[0], self.tibPixmap))
     return
 
+
+
+  def clearLayout(self, layout):
+    """Clears given layout
+
+    Args:
+        layout (QLayout): Layout to be cleared
+    """
+    while layout.count():
+        child = layout.takeAt(0)
+        childWidget = child.widget()
+        if childWidget:
+            childWidget.setParent(None)
 
   def pixmapFromUrl(self, url:str) -> QPixmap:
     """ get pixmap from remote content
@@ -233,7 +324,6 @@ class TerminologyLookup(QDialog):
     pixmap.loadFromData(image.content)
     pixmap = pixmap.scaled(40,40, Qt.KeepAspectRatio)
     return pixmap
-
 
   def cbImage_widget(self, checkbox:QCheckBox, pixmap:QPixmap) -> QWidget:
     """ add checkbox and logo into one widget and return it
