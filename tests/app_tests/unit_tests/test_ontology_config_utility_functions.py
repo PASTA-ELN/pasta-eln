@@ -78,7 +78,7 @@ class TestOntologyConfigUtilityFunctions(object):
     contents = {}
     mock_doc = self.create_mock_doc(contents, mocker)
     assert adjust_ontology_data_to_v3(mock_doc) is None, "adjust_ontology_data_to_v3 should return None"
-    assert len(contents) is 0, "No change to the document contents"
+    assert len(contents) == 0, "No change to the document contents"
 
     assert adjust_ontology_data_to_v3(None) is None, "adjust_ontology_data_to_v3 should return None"
 
@@ -110,7 +110,7 @@ class TestOntologyConfigUtilityFunctions(object):
     assert "prop" in contents["x0"], "prop should be set"
     assert type(contents["x0"]["prop"]) is dict, "prop should be dictionary"
     assert "default" in contents["x0"]["prop"] and len(
-      contents["x0"]["prop"]["default"]) is 0, "default prop list be defined"
+      contents["x0"]["prop"]["default"]) == 0, "default prop list be defined"
 
     # With some content
     contents = {"x1":
@@ -132,7 +132,7 @@ class TestOntologyConfigUtilityFunctions(object):
     assert "prop" in contents["x1"], "prop should be set"
     assert type(contents["x1"]["prop"]) is dict, "prop should be dictionary"
     assert "default" in contents["x1"]["prop"] and len(
-      contents["x1"]["prop"]["default"]) is 1, "default prop list should be the same"
+      contents["x1"]["prop"]["default"]) == 1, "default prop list should be the same"
 
   @staticmethod
   def create_mock_doc(contents, mocker):

@@ -32,7 +32,7 @@ class OntologyTableViewModel(QAbstractTableModel):
     self.data_set = None
     self.data_name_map = {}
     self.header_values = None
-    self.columns_count = None
+    self.columns_count = 0
 
   def hasChildren(self, parent: Union[PySide6.QtCore.QModelIndex, PySide6.QtCore.QPersistentModelIndex]) -> bool:
     return False  # Since it's a table model, the children are not supported
