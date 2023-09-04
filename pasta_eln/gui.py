@@ -1,10 +1,10 @@
 """ Graphical user interface includes all widgets """
 import os, logging, webbrowser, json, sys
 from enum import Enum
-from typing import Any, Optional
+from typing import Any, Optional, Union
 from pathlib import Path
 from PySide6.QtWidgets import QMainWindow, QApplication, QFileDialog, QScrollArea # pylint: disable=no-name-in-module
-from PySide6.QtCore import Qt, Slot      # pylint: disable=no-name-in-module
+from PySide6.QtCore import Qt, Slot, QCoreApplication  # pylint: disable=no-name-in-module
 from PySide6.QtGui import QIcon, QPixmap, QShortcut  # pylint: disable=no-name-in-module
 from qt_material import apply_stylesheet  #of https://github.com/UN-GCPDS/qt-material
 
@@ -185,37 +185,38 @@ class MainWindow(QMainWindow):
       print("**ERROR gui menu unknown:",command)
     return
 
+def main_gui() -> tuple[Union[QApplication, QCoreApplication, None], MainWindow]:
+  """
+    Main method and entry point for commands
+  Returns:
 
-##############
-## Main function
-def main() -> None:
-  """ Main method and entry point for commands """
+  """
   # logging has to be started first
-  logPath = Path.home()/'pastaELN.log'
+  log_path = Path.home() / 'pastaELN.log'
   #  old versions of basicConfig do not know "encoding='utf-8'"
-  logging.basicConfig(filename=logPath, level=logging.INFO, format='%(asctime)s|%(levelname)s:%(message)s',
+  logging.basicConfig(filename=log_path, level=logging.INFO, format='%(asctime)s|%(levelname)s:%(message)s',
                       datefmt='%m-%d %H:%M:%S')
   for package in ['urllib3', 'requests', 'asyncio', 'PIL', 'matplotlib']:
     logging.getLogger(package).setLevel(logging.WARNING)
   logging.info('Start PASTA GUI')
   # remainder
-  app = QApplication()
-  window = MainWindow()
-  logging.getLogger().setLevel(getattr(logging, window.backend.configuration['GUI']['loggingLevel']))
-  theme = window.backend.configuration['GUI']['theme']
-  if theme!='none':
-    apply_stylesheet(app, theme=f'{theme}.xml')
+  if not QApplication.instance():
+    application = QApplication()
+  else:
+    application = QApplication.instance()
+  main_window = MainWindow()
+  logging.getLogger().setLevel(getattr(logging, main_window.backend.configuration['GUI']['loggingLevel']))
+  theme = main_window.backend.configuration['GUI']['theme']
+  if theme != 'none':
+    apply_stylesheet(application, theme=f'{theme}.xml')
   # qtawesome and matplot cannot coexist
   import qtawesome as qta
   if not isinstance(qta.icon('fa5s.times'), QIcon):
     logging.error('qtawesome: could not load. Likely matplotlib is included and can not coexist.')
     print('qtawesome: could not load. Likely matplotlib is included and can not coexist.')
   # end test coexistance
-  window.show()
-  app.exec()
   logging.info('End PASTA GUI')
-  return
-
+  return application, main_window
 
 class Command(Enum):
   """ Commands used in this file """
@@ -236,7 +237,9 @@ class Command(Enum):
   SHORTCUTS     = 15
   RESTART       = 16
 
-
 # called by python3 -m pasta_eln.gui
 if __name__ == '__main__':
-  main()
+  app, window = main_gui()
+  window.show()
+  if app:
+    app.exec()

@@ -393,7 +393,7 @@ def get_gui(ontology_document: Document) -> tuple[
 
 
 def main():
-  db = get_db("research", "admin", "DxiBfYvdMOZF", 'http://127.0.0.1:5984')
+  db = get_db("research", "admin", "qYHtPcObqLiC", 'http://127.0.0.1:5984')
   app, ui_form_dialog, ui_form = get_gui(db['-ontology-'])
   ui_form_dialog.show()
   sys.exit(app.exec())
