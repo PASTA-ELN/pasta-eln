@@ -96,6 +96,11 @@ class MainWindow(QMainWindow):
     mainLayout.addWidget(body)
     self.comm.changeTable.emit('x0','')
 
+    #check if temporary save exist: warn user
+    if (Path.home()/'.pastaELN.temp').exists():
+      showMessage(self, 'Information', 'There is data from prematurely closed form. Please reopen the form'+\
+                  'and the content will be reloaded. Save it or delete it.', 'Information')
+
 
   @Slot(str)
   def formDoc(self, doc:dict[str,Any]) -> None:
