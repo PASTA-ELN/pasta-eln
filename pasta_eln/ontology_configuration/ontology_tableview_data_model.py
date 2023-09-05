@@ -208,7 +208,8 @@ class OntologyTableViewModel(QAbstractTableModel):
     Returns: None
 
     """
-    self.logger.info(f"Added new row...")
-    self.data_set.insert(len(self.data_set), {})
-    self.layoutChanged.emit()
+    if self.data_set:
+      self.logger.info(f"Added new row...")
+      self.data_set.insert(len(self.data_set), {})
+      self.layoutChanged.emit()
     return None
