@@ -315,6 +315,7 @@ class TestOntologyConfigConfiguration(object):
     set_current_index_category_combo_box_spy = mocker.spy(configuration_extended.propsCategoryComboBox,
                                                           'setCurrentIndex')
     mocker.patch.object(configuration_extended, 'selected_type_properties', create=True)
+    mock_show_message = mocker.patch("pasta_eln.ontology_configuration.ontology_configuration_extended.show_message")
     if selected_type_properties:
       configuration_extended.selected_type_properties.__setitem__.side_effect = selected_type_properties.__setitem__
       configuration_extended.selected_type_properties.__getitem__.side_effect = selected_type_properties.__getitem__
@@ -326,8 +327,8 @@ class TestOntologyConfigConfiguration(object):
 
     if selected_type_properties is None:
       mocker.patch.object(configuration_extended, 'selected_type_properties', None)
-      with pytest.raises(OntologyConfigGenericException, match="Null selected_type_properties, erroneous app state"):
-        assert configuration_extended.delete_selected_prop_category() is None, "Nothing should be returned"
+      assert configuration_extended.delete_selected_prop_category() is None, "Nothing should be returned"
+      mock_show_message.assert_called_once_with("Load the ontology data first....")
       return
     if selected_type_properties and selected_category in selected_type_properties:
       assert configuration_extended.delete_selected_prop_category() is None, "Nothing should be returned"
@@ -434,6 +435,7 @@ class TestOntologyConfigConfiguration(object):
     set_current_index_category_combo_box_spy = mocker.spy(configuration_extended.typeComboBox, 'setCurrentIndex')
     add_items_selected_spy = mocker.spy(configuration_extended.typeComboBox, 'addItems')
     logger_info_spy = mocker.spy(configuration_extended.logger, 'info')
+    mock_show_message = mocker.patch("pasta_eln.ontology_configuration.ontology_configuration_extended.show_message")
     if ontology_document:
       original_ontology_document = ontology_document.copy()
       configuration_extended.ontology_document.__setitem__.side_effect = ontology_document.__setitem__
@@ -456,9 +458,8 @@ class TestOntologyConfigConfiguration(object):
     if ontology_document is None or ontology_types is None:
       mocker.patch.object(configuration_extended, 'ontology_types', ontology_types)
       mocker.patch.object(configuration_extended, 'ontology_document', ontology_document)
-      with pytest.raises(OntologyConfigGenericException,
-                         match="Null ontology_types or ontology_document, erroneous app state"):
-        assert configuration_extended.delete_selected_type() is None, "Nothing should be returned"
+      assert configuration_extended.delete_selected_type() is None, "Nothing should be returned"
+      mock_show_message.assert_called_once_with("Load the ontology data first....")
       return
     if selected_type:
       assert configuration_extended.delete_selected_type() is None, "Nothing should be returned"

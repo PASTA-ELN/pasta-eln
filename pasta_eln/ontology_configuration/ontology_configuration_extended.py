@@ -112,7 +112,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
 
     """
     self.logger.info(f"New type selected in UI: {new_type_selected}")
-    self.addPropsCategoryLineEdit.clear()
+    self.clear_ui()
     if new_type_selected and self.ontology_types:
       if new_type_selected not in self.ontology_types:
         raise OntologyConfigKeyNotFoundException(f"Key {new_type_selected} "
@@ -130,7 +130,6 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
       self.attachments_table_data_model.update(self.ontology_types.get(new_type_selected).get('attachments'))
 
       # Reset the props category combo-box
-      self.propsCategoryComboBox.clear()
       self.propsCategoryComboBox.addItems(self.selected_type_properties.keys()
                                           if self.selected_type_properties else [])
       self.propsCategoryComboBox.setCurrentIndex(0)
@@ -181,11 +180,13 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     """
     selected_category = self.propsCategoryComboBox.currentText()
     if self.selected_type_properties is None:
-      raise OntologyConfigGenericException("Null selected_type_properties, erroneous app state", {})
+      show_message("Load the ontology data first....")
+      return
     if selected_category and selected_category in self.selected_type_properties.keys():
       self.logger.info(f"User deleted the selected category: {selected_category}")
       self.selected_type_properties.pop(selected_category)
       self.propsCategoryComboBox.clear()
+      self.typePropsTableView.model().update({})
       self.propsCategoryComboBox.addItems(self.selected_type_properties.keys())
       self.propsCategoryComboBox.setCurrentIndex(len(self.selected_type_properties.keys()) - 1)
 
@@ -227,8 +228,8 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     """
     selected_type = self.typeComboBox.currentText()
     if self.ontology_types is None or self.ontology_document is None:
-      raise OntologyConfigGenericException("Null ontology_types or ontology_document,"
-                                           " erroneous app state", {})
+      show_message("Load the ontology data first....")
+      return
     if (selected_type and selected_type in self.ontology_types.keys()
         and selected_type in self.ontology_document.keys()):
       self.logger.info(f"User deleted the selected type: {selected_type}")
@@ -237,6 +238,20 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
       self.typeComboBox.clear()
       self.typeComboBox.addItems(self.ontology_types.keys())
       self.typeComboBox.setCurrentIndex(0)
+
+  def clear_ui(self):
+    """
+    Clear the UI elements including the tables.
+    Invoked when the type combobox selection changes
+    Returns: None
+
+    """
+    self.typeLabelLineEdit.clear()
+    self.typeLinkLineEdit.clear()
+    self.propsCategoryComboBox.clear()
+    self.addPropsCategoryLineEdit.clear()
+    self.typePropsTableView.model().update({})
+    self.typeAttachmentsTableView.model().update({})
 
   def create_type_accepted_callback(self):
     """
@@ -393,7 +408,7 @@ def get_gui(ontology_document: Document) -> tuple[
 
 
 def main():
-  db = get_db("research", "admin", "qYHtPcObqLiC", 'http://127.0.0.1:5984')
+  db = get_db("research", "admin", "hDssWpuNDObd", 'http://127.0.0.1:5984')
   app, ui_form_dialog, ui_form = get_gui(db['-ontology-'])
   ui_form_dialog.show()
   sys.exit(app.exec())
