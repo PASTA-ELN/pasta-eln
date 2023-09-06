@@ -70,11 +70,10 @@ def show_message(message: str):
   Returns: Return None if message is empty otherwise displays the message
 
   """
-  if not message:
-    return None
-  msg_box = QMessageBox()
-  msg_box.setText(message)
-  msg_box.exec()
+  if message:
+    msg_box = QMessageBox()
+    msg_box.setText(message)
+    msg_box.exec()
 
 
 def get_next_possible_structural_level_label(existing_type_labels: Any) -> str | None:
