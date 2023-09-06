@@ -1,2 +1,2 @@
 #!/bin/sh
-coverage run -m pytest . && coverage html -i
+coverage run --omit="*/test*" -m pytest . && coverage html -i

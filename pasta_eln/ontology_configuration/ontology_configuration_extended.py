@@ -186,7 +186,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
       self.logger.info(f"User deleted the selected category: {selected_category}")
       self.selected_type_properties.pop(selected_category)
       self.propsCategoryComboBox.clear()
-      self.typePropsTableView.model().update({})
+      self.typePropsTableView.model().update([])
       self.propsCategoryComboBox.addItems(self.selected_type_properties.keys())
       self.propsCategoryComboBox.setCurrentIndex(len(self.selected_type_properties.keys()) - 1)
 
@@ -250,8 +250,8 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     self.typeLinkLineEdit.clear()
     self.propsCategoryComboBox.clear()
     self.addPropsCategoryLineEdit.clear()
-    self.typePropsTableView.model().update({})
-    self.typeAttachmentsTableView.model().update({})
+    self.typePropsTableView.model().update([])
+    self.typeAttachmentsTableView.model().update([])
 
   def create_type_accepted_callback(self):
     """
@@ -280,7 +280,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     Returns:
         None
     """
-    if self.ontology_types:
+    if self.ontology_types is not None:
       structural_title = get_next_possible_structural_level_label(self.ontology_types.keys())
       self.create_type_dialog.set_structural_level_title(structural_title)
       self.create_type_dialog.show()

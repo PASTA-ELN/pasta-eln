@@ -86,15 +86,19 @@ def get_next_possible_structural_level_label(existing_type_labels: Any) -> str |
   Returns (str|None):
     The next possible name is returned with the decimal part greater than the existing largest one
   """
-  if existing_type_labels:
-    from re import compile
-    regexp = compile(r'^[Xx][0-9]+$')
-    labels = [label for label in existing_type_labels if regexp.match(label)]
-    new_level = max([int(label
-                         .replace('x', '')
-                         .replace('X', '')) for label in labels], default=-1)
-    return f"x{new_level + 1}"
-  return None
+  if existing_type_labels is not None:
+    if len(existing_type_labels) > 0:
+      from re import compile
+      regexp = compile(r'^[Xx][0-9]+$')
+      labels = [label for label in existing_type_labels if regexp.match(label)]
+      new_level = max([int(label
+                           .replace('x', '')
+                           .replace('X', '')) for label in labels], default=-1)
+      return f"x{new_level + 1}"
+    elif len(existing_type_labels) == 0:
+      return "x0"
+  else:
+    return None
 
 
 def get_db(db_name: str,

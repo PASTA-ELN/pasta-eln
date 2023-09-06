@@ -8,6 +8,7 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import logging
 
+import pytest
 from PySide6.QtCore import QEvent
 from PySide6.QtGui import QMouseEvent
 from PySide6.QtWidgets import QMessageBox
@@ -145,28 +146,20 @@ class TestOntologyConfigUtilityFunctions(object):
     assert get_next_possible_structural_level_label(None) is None, \
       "get_next_possible_structural_level_label should return True"
 
+  @pytest.mark.parametrize("existing_list, expected_next_level", [
+    (None, None),
+    ([], "x0"),
+    (["x0", "x2"], "x3"),
+    (["x0", "xa", "x3", "x-1", "x10"], "x11"),
+    (["x0", "xa", "x3", "x-1", "a10", "X23"], "x24"),
+    (["a"], "x0")
+  ])
   def test_get_next_possible_structural_level_label_when_valid_list_arg_returns_right_result(self,
-                                                                                             mocker):
-    mock_list = mocker.MagicMock()
-    mock_list.__iter__.return_value = ["x0", "x2"]
+                                                                                             mocker,
+                                                                                             existing_list,
+                                                                                             expected_next_level):
     assert get_next_possible_structural_level_label(
-      mock_list) == "x3", "get_next_possible_structural_level_label should return as expected"
-
-    mock_list.__iter__.return_value = ["x0", "xa", "x3", "x-1", "x10"]
-    assert get_next_possible_structural_level_label(
-      mock_list) == "x11", "get_next_possible_structural_level_label should return as expected"
-
-    mock_list.__iter__.return_value = ["x0", "xa", "x3", "x-1", "a10", "X23"]
-    assert get_next_possible_structural_level_label(
-      mock_list) == "x24", "get_next_possible_structural_level_label should return as expected"
-
-    mock_list.__iter__.return_value = ["a"]
-    assert get_next_possible_structural_level_label(
-      mock_list) == "x0", "get_next_possible_structural_level_label should return as expected"
-
-    mock_list.__iter__.return_value = []
-    assert get_next_possible_structural_level_label(
-      mock_list) == "x0", "get_next_possible_structural_level_label should return as expected"
+      existing_list) == expected_next_level, "get_next_possible_structural_level_label should return as expected"
 
   def test_get_db_with_right_arguments_returns_valid_db_instance(self,
                                                                  mocker):

@@ -208,7 +208,7 @@ class OntologyTableViewModel(QAbstractTableModel):
     Returns: None
 
     """
-    if self.data_set:
+    if self.data_set is not None:
       self.logger.info(f"Added new row...")
       self.data_set.insert(len(self.data_set), {})
       self.layoutChanged.emit()
