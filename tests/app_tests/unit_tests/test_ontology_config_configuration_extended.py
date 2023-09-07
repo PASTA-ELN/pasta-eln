@@ -185,7 +185,7 @@ class TestOntologyConfigConfiguration(object):
         and new_type_selected
         and new_type_selected in mock_ontology_types):
       assert configuration_extended.type_combo_box_changed(new_type_selected) is None, "Nothing should be returned"
-      logger_info_spy.assert_called_once_with(f"New type selected in UI: {new_type_selected}")
+      logger_info_spy.assert_called_once_with("New type selected in UI: {%s}", new_type_selected)
       clear_add_props_category_line_edit_spy.assert_called_once_with()
       set_text_label_line_edit_spy.assert_called_once_with(mock_ontology_types.get(new_type_selected).get('label'))
       set_text_link_line_edit_spy.assert_called_once_with(mock_ontology_types.get(new_type_selected).get('link'))
@@ -221,7 +221,7 @@ class TestOntologyConfigConfiguration(object):
     update_props_table_model_spy = mocker.spy(configuration_extended.props_table_data_model, 'update')
     assert configuration_extended.category_combo_box_changed(
       new_selected_prop_category) is None, "Nothing should be returned"
-    logger_info_spy.assert_called_once_with(f"New property category selected in UI: {new_selected_prop_category}")
+    logger_info_spy.assert_called_once_with("New property category selected in UI: {%s}", new_selected_prop_category)
     if new_selected_prop_category and selected_type_props:
       update_props_table_model_spy.assert_called_once_with(selected_type_props.get(new_selected_prop_category))
 
@@ -280,7 +280,7 @@ class TestOntologyConfigConfiguration(object):
     else:
       if new_category:
         assert configuration_extended.add_new_prop_category() is None, "Nothing should be returned"
-        logger_info_spy.assert_called_once_with(f"User added new category: {new_category}")
+        logger_info_spy.assert_called_once_with("User added new category: {%s}", new_category)
         set_items_selected_spy.assert_called_once_with(new_category, [])
         set_current_index_category_combo_box_spy.assert_called_once_with(len(selected_type_properties.keys()) - 1)
         clear_category_combo_box_spy.assert_called_once_with()
@@ -338,7 +338,7 @@ class TestOntologyConfigConfiguration(object):
     if selected_type_properties and selected_category in selected_type_properties:
       assert configuration_extended.delete_selected_prop_category() is None, "Nothing should be returned"
       current_text_category_combo_box_spy.assert_called_once_with()
-      logger_info_spy.assert_called_once_with(f"User deleted the selected category: {selected_category}")
+      logger_info_spy.assert_called_once_with("User deleted the selected category: {%s}", selected_category)
       pop_items_selected_spy.assert_called_once_with(selected_category)
       clear_category_combo_box_spy.assert_called_once_with()
       add_items_selected_spy.assert_called_once_with(
@@ -368,6 +368,7 @@ class TestOntologyConfigConfiguration(object):
       configuration_extended.ontology_types.__setitem__.side_effect = ontology_types.__setitem__
       configuration_extended.ontology_types.__getitem__.side_effect = ontology_types.__getitem__
       configuration_extended.ontology_types.__iter__.side_effect = ontology_types.__iter__
+      configuration_extended.ontology_types.__contains__.side_effect = ontology_types.__contains__
       configuration_extended.ontology_types.get.side_effect = ontology_types.get
       configuration_extended.ontology_types.keys.side_effect = ontology_types.keys
 
@@ -401,6 +402,7 @@ class TestOntologyConfigConfiguration(object):
       configuration_extended.ontology_types.__setitem__.side_effect = ontology_types.__setitem__
       configuration_extended.ontology_types.__getitem__.side_effect = ontology_types.__getitem__
       configuration_extended.ontology_types.__iter__.side_effect = ontology_types.__iter__
+      configuration_extended.ontology_types.__contains__.side_effect = ontology_types.__contains__
       configuration_extended.ontology_types.get.side_effect = ontology_types.get
       configuration_extended.ontology_types.keys.side_effect = ontology_types.keys
 
@@ -447,6 +449,7 @@ class TestOntologyConfigConfiguration(object):
       configuration_extended.ontology_document.__setitem__.side_effect = ontology_document.__setitem__
       configuration_extended.ontology_document.__getitem__.side_effect = ontology_document.__getitem__
       configuration_extended.ontology_document.__iter__.side_effect = ontology_document.__iter__
+      configuration_extended.ontology_document.__contains__.side_effect = ontology_document.__contains__
       configuration_extended.ontology_document.get.side_effect = ontology_document.get
       configuration_extended.ontology_document.keys.side_effect = ontology_document.keys
       configuration_extended.ontology_document.pop.side_effect = ontology_document.pop
@@ -456,6 +459,7 @@ class TestOntologyConfigConfiguration(object):
       configuration_extended.ontology_types.__setitem__.side_effect = ontology_types.__setitem__
       configuration_extended.ontology_types.__getitem__.side_effect = ontology_types.__getitem__
       configuration_extended.ontology_types.__iter__.side_effect = ontology_types.__iter__
+      configuration_extended.ontology_types.__contains__.side_effect = ontology_types.__contains__
       configuration_extended.ontology_types.get.side_effect = ontology_types.get
       configuration_extended.ontology_types.keys.side_effect = ontology_types.keys
       configuration_extended.ontology_types.pop.side_effect = ontology_types.pop
@@ -470,7 +474,7 @@ class TestOntologyConfigConfiguration(object):
     if selected_type:
       assert configuration_extended.delete_selected_type() is None, "Nothing should be returned"
       if selected_type and selected_type in original_ontology_types and selected_type in original_ontology_document:
-        logger_info_spy.assert_called_once_with(f"User deleted the selected type: {selected_type}")
+        logger_info_spy.assert_called_once_with("User deleted the selected type: {%s}", selected_type)
         pop_items_selected_ontology_types_spy.assert_called_once_with(selected_type)
         pop_items_selected_ontology_document_spy.assert_called_once_with(selected_type)
         clear_category_combo_box_spy.assert_called_once_with()
@@ -553,6 +557,7 @@ class TestOntologyConfigConfiguration(object):
       configuration_extended.ontology_types.__setitem__.side_effect = ontology_types.__setitem__
       configuration_extended.ontology_types.__getitem__.side_effect = ontology_types.__getitem__
       configuration_extended.ontology_types.__iter__.side_effect = ontology_types.__iter__
+      configuration_extended.ontology_types.__contains__.side_effect = ontology_types.__contains__
       configuration_extended.ontology_types.get.side_effect = ontology_types.get
       configuration_extended.ontology_types.keys.side_effect = ontology_types.keys
       configuration_extended.ontology_types.pop.side_effect = ontology_types.pop
@@ -736,8 +741,8 @@ class TestOntologyConfigConfiguration(object):
         mock_log_warn.assert_called_once_with("Enter non-null/valid title!!.....")
       else:
         assert configuration_extended.create_new_type(new_title, new_label) is None, "Nothing should be returned"
-        mock_log_info.assert_called_once_with(f"User created a new type and added "
-                                              f"to the ontology document: Title: {new_title}, Label: {new_label}")
+        mock_log_info.assert_called_once_with("User created a new type and added "
+                                              "to the ontology document: Title: {%s}, Label: {%s}", new_title, new_label)
 
         (configuration_extended.ontology_document
          .__setitem__.assert_called_once_with(new_title,

@@ -1,3 +1,4 @@
+""" RequiredColumnDelegate  module used for the table views """
 #  PASTA-ELN and all its sub-parts are covered by the MIT license.
 #
 #  Copyright (c) 2023
@@ -70,7 +71,7 @@ class RequiredColumnDelegate(QStyledItemDelegate):
 
     """
     if event.type() == QEvent.MouseButtonRelease:
-      model.setData(index, str(not (index.data(Qt.UserRole) == 'True')), Qt.UserRole)
+      model.setData(index, str(not index.data(Qt.UserRole) == 'True'), Qt.UserRole)
     return super().editorEvent(event, model, option, index)
 
   def createEditor(self,

@@ -1,3 +1,4 @@
+""" ReorderColumnDelegate for the table views """
 #  PASTA-ELN and all its sub-parts are covered by the MIT license.
 #
 #  Copyright (c) 2023
@@ -85,7 +86,7 @@ class ReorderColumnDelegate(QStyledItemDelegate):
     """
     if is_click_within_bounds(event, option):
       row = index.row()
-      self.logger.info(f"Re-order signal emitted for the position: {row} in the table..")
+      self.logger.info("Re-order signal emitted for the position: {%s} in the table..", row)
       self.re_order_signal.emit(row)
       return True
     return False

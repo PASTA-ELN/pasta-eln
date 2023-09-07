@@ -83,7 +83,7 @@ class TestOntologyConfigUtilityFunctions(object):
 
     assert adjust_ontology_data_to_v3(None) is None, "adjust_ontology_data_to_v3 should return None"
 
-  def test_adjust_ontology_data_to_v3_when_v2document_given_do_needfull(self,
+  def test_adjust_ontology_data_to_v3_when_v2document_given_do_expected(self,
                                                                         mocker):
     # Without attachments
     contents = {"x0":

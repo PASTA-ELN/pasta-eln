@@ -1,3 +1,4 @@
+""" CreateTypeDialog used for the create type dialog """
 #  PASTA-ELN and all its sub-parts are covered by the MIT license.
 #
 #  Copyright (c) 2023
@@ -17,6 +18,9 @@ from pasta_eln.ontology_configuration.create_type_dialog.create_type_dialog impo
 
 
 class CreateTypeDialog(Ui_CreateTypeDialog):
+  """
+  Abstracted dialog for the create type
+  """
 
   def __new__(cls, *_: Any, **__: Any) -> Any:
     """
@@ -59,8 +63,7 @@ class CreateTypeDialog(Ui_CreateTypeDialog):
     """
     Callback invoked when the state changes for structuralLevelCheckBox
 
-    Returns:
-        None
+    Returns: Nothing
     """
     if self.structuralLevelCheckBox.isChecked():
       self.titleLineEdit.setText(self.next_struct_level)
@@ -83,8 +86,7 @@ class CreateTypeDialog(Ui_CreateTypeDialog):
     """
     Clear the Dialog UI
 
-    Returns:
-      None
+    Returns: Nothing
 
     """
     self.labelLineEdit.clear()
@@ -99,9 +101,8 @@ class CreateTypeDialog(Ui_CreateTypeDialog):
     Args:
       structural_level (str): Passed in structural level of the format (x0, x1, x2 ...)
 
-    Returns:
-      None
+    Returns: Nothing
 
     """
-    self.logger.info(f"Next structural level set: {structural_level}...")
+    self.logger.info("Next structural level set: {%s}...", structural_level)
     self.next_struct_level = structural_level

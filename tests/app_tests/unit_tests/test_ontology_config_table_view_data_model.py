@@ -242,10 +242,10 @@ class TestOntologyConfigTableViewDataModel(object):
     assert data_set == data_set_modified, "data_set should be set to expected value"
     if data_to_be_deleted:
       data_set_pop_spy.assert_called_once_with(delete_position)
-      logger_info_spy.assert_called_once_with(f"Deleted (row: {delete_position}, data: {data_to_be_deleted})...")
+      logger_info_spy.assert_called_once_with("Deleted (row: {%s}, data: {%s})...", delete_position, data_to_be_deleted)
       assert layout_changed_emit_spy.call_count == 1, "layout_changed_emit() should be called once"
     else:
-      logger_warning_spy.assert_called_once_with(f"Invalid position: {delete_position}")
+      logger_warning_spy.assert_called_once_with("Invalid position: {%s}", delete_position)
 
   @pytest.mark.parametrize("data_set, re_order_position, data_set_modified", [
     ([{"name": "name", "query": "query"}] * 4 + [{"name": "reorder", "query": "reorder"}] + [
@@ -307,9 +307,12 @@ class TestOntologyConfigTableViewDataModel(object):
       data_set_pop_spy.assert_called_once_with(re_order_position)
       shift_position = re_order_position - 1 if re_order_position > 0 else re_order_position
       data_set_insert_spy.assert_called_once_with(shift_position, data_to_be_ordered)
-      logger_info_spy.assert_called_once_with(f"Reordered the data, Actual position: {re_order_position}, "
-                                              f"New Position: {shift_position}, "
-                                              f"data: {data_to_be_ordered})")
+      logger_info_spy.assert_called_once_with("Reordered the data, Actual position: {%s}, "
+                                              "New Position: {%s}, "
+                                              "data: {%s})",
+                                              re_order_position,
+                                              shift_position,
+                                              data_to_be_ordered)
       assert layout_changed_emit_spy.call_count == 1, "layout_changed_emit() should be called once"
     else:
-      logger_warning_spy.assert_called_once_with(f"Invalid position: {re_order_position}")
+      logger_warning_spy.assert_called_once_with("Invalid position: {%s}", re_order_position)

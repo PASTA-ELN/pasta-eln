@@ -199,7 +199,9 @@ class TestOntologyConfigurationExtended(object):
       f"Combo list should have {previous_types_count - 1} items!"
     assert ui_form.typeComboBox.currentText() == ontology_doc_mock.types_list()[1], \
       "Type combo box should be selected to second item"
-    selected_type = ontology_doc_mock.types()[ui_form.typeComboBox.currentText()]
+    types = ontology_doc_mock.types()
+    text = ui_form.typeComboBox.currentText()
+    selected_type = types[text]
     assert ui_form.typeLabelLineEdit.text() == selected_type["label"], \
       "Type label line edit should be selected to second item"
     assert ui_form.typeLinkLineEdit.text() == selected_type["link"], \

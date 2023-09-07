@@ -79,5 +79,5 @@ class TestOntologyConfigCreateTypeDialog(object):
     logger_info_spy = mocker.spy(create_type_dialog_mock.logger, 'info')
     assert create_type_dialog_mock.set_structural_level_title(
       next_level) is None, "set_structural_level_title() should return None"
-    logger_info_spy.assert_called_once_with(f"Next structural level set: {next_level}...")
+    logger_info_spy.assert_called_once_with("Next structural level set: {%s}...", next_level)
     assert create_type_dialog_mock.next_struct_level == next_level, "next_struct_level should be set to next_level"

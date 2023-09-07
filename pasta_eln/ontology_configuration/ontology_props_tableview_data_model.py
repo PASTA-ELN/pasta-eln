@@ -1,3 +1,4 @@
+""" Table view model used for the properties table in the ontology editor """
 #  PASTA-ELN and all its sub-parts are covered by the MIT license.
 #
 #  Copyright (c) 2023

@@ -1,3 +1,4 @@
+""" Custom exception class for null ontology document """
 #  PASTA-ELN and all its sub-parts are covered by the MIT license.
 #
 #  Copyright (c) 2023

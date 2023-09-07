@@ -1,3 +1,4 @@
+""" OntologyTableViewModel Generic module used for the table views """
 #  PASTA-ELN and all its sub-parts are covered by the MIT license.
 #
 #  Copyright (c) 2023
@@ -10,7 +11,6 @@
 import logging
 from typing import Union, Any
 
-import PySide6.QtCore
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt, QPersistentModelIndex, Slot
 from PySide6.QtWidgets import QWidget
 
@@ -34,7 +34,15 @@ class OntologyTableViewModel(QAbstractTableModel):
     self.header_values: list[str] = []
     self.columns_count = 0
 
-  def hasChildren(self, parent: Union[PySide6.QtCore.QModelIndex, PySide6.QtCore.QPersistentModelIndex]) -> bool:
+  def hasChildren(self, parent: Union[QModelIndex, QPersistentModelIndex]) -> bool:
+    """
+    Returns whether the model has children
+    Args:
+      parent (Union[QModelIndex, QPersistentModelIndex]): Parent index
+
+    Returns: False since it's a tree view model
+
+    """
     return False  # Since it's a table model, the children are not supported
 
   def headerData(self,
@@ -111,7 +119,7 @@ class OntologyTableViewModel(QAbstractTableModel):
     Returns (bool): True when data is set, otherwise false
 
     """
-    if index.isValid() and (role == Qt.EditRole or role == Qt.UserRole):
+    if index.isValid() and role in (Qt.EditRole, Qt.UserRole):
       row_index = index.row()
       column = self.data_name_map.get(index.column())
       self.data_set[row_index][column] = value
@@ -134,10 +142,8 @@ class OntologyTableViewModel(QAbstractTableModel):
     Returns (Any): String data representation if available, otherwise null-string/None
 
     """
-    if (index.isValid()
-        and (role == Qt.DisplayRole
-             or role == Qt.EditRole
-             or role == Qt.UserRole)):
+    if (index.isValid() and
+        role in (Qt.DisplayRole, Qt.EditRole, Qt.UserRole)):
       row = index.row()
       column = index.column()
       value = self.data_set[row].get(self.data_name_map.get(column))
@@ -159,6 +165,7 @@ class OntologyTableViewModel(QAbstractTableModel):
       return (Qt.ItemIsEditable
               | Qt.ItemIsSelectable
               | Qt.ItemIsEnabled)
+    return None
 
   @Slot(int)
   def delete_data(self, position: int) -> None:
@@ -173,10 +180,11 @@ class OntologyTableViewModel(QAbstractTableModel):
     try:
       data_deleted = self.data_set.pop(position)
     except IndexError:
-      self.logger.warning(f"Invalid position: {position}")
+      self.logger.warning("Invalid position: {%s}", position)
       return None
-    self.logger.info(f"Deleted (row: {position}, data: {data_deleted})...")
+    self.logger.info("Deleted (row: {%s}, data: {%s})...", position, data_deleted)
     self.layoutChanged.emit()
+    return None
 
   @Slot(int)
   def re_order_data(self,
@@ -192,15 +200,18 @@ class OntologyTableViewModel(QAbstractTableModel):
     try:
       data_to_be_pushed = self.data_set.pop(position)
     except IndexError:
-      self.logger.warning(f"Invalid position: {position}")
+      self.logger.warning("Invalid position: {%s}", position)
       return None
     shift_position = position - 1
     shift_position = shift_position if shift_position > 0 else 0
     self.data_set.insert(shift_position, data_to_be_pushed)
-    self.logger.info(f"Reordered the data, Actual position: {position}, "
-                     f"New Position: {shift_position}, "
-                     f"data: {data_to_be_pushed})")
+    self.logger.info("Reordered the data, Actual position: {%s}, "
+                     "New Position: {%s}, "
+                     "data: {%s})", position,
+                     shift_position,
+                     data_to_be_pushed)
     self.layoutChanged.emit()
+    return None
 
   def add_data_row(self) -> None:
     """
@@ -209,7 +220,7 @@ class OntologyTableViewModel(QAbstractTableModel):
 
     """
     if self.data_set is not None:
-      self.logger.info(f"Added new row...")
+      self.logger.info("Added new row...")
       self.data_set.insert(len(self.data_set), {})
       self.layoutChanged.emit()
     return None

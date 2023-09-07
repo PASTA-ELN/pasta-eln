@@ -1,3 +1,4 @@
+""" OntologyAttachmentsTableViewModel used for the ontology editor's attachments table view """
 #  PASTA-ELN and all its sub-parts are covered by the MIT license.
 #
 #  Copyright (c) 2023

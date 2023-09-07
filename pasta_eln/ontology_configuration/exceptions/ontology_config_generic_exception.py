@@ -1,3 +1,4 @@
+""" OntologyConfigGenericException used for the ontology configuration """
 #  PASTA-ELN and all its sub-parts are covered by the MIT license.
 #
 #  Copyright (c) 2023
@@ -8,6 +9,9 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
 class OntologyConfigGenericException(Exception):
+  """
+  Custom generic exception class for ontology configuration
+  """
   def __init__(self,
                message: str,
                detailed_errors: dict[str, str]):

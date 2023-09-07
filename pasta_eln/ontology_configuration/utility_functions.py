@@ -1,3 +1,4 @@
+""" Utility function used by the ontology configuration module """
 #  PASTA-ELN and all its sub-parts are covered by the MIT license.
 #
 #  Copyright (c) 2023
@@ -49,16 +50,20 @@ def adjust_ontology_data_to_v3(ontology_doc: Document) -> None:
   """
   if not ontology_doc:
     return None
-  type_structures = dict([(data, ontology_doc[data])
-                          for data in ontology_doc
-                          if type(ontology_doc[data]) is dict])
+  type_structures = {}
+  for data in ontology_doc:
+    if isinstance(ontology_doc[data], dict):
+      type_structures[data] = ontology_doc[data]
   if type_structures:
     for _, type_structure in type_structures.items():
       type_structure.setdefault("attachments", [])
       props = type_structure.get("prop")
-      props = props if props else []
-      if not props or type(props) is not dict:
+      if props is None:
+        type_structure["prop"] = {"default": []}
+        continue
+      if not isinstance(props, dict):
         type_structure["prop"] = {"default": props}
+  return None
 
 
 def show_message(message: str) -> None:
@@ -80,19 +85,18 @@ def get_next_possible_structural_level_label(existing_type_labels: Any) -> str |
   """
   Get the title for the next possible structural type level
   Args:
-    existing_type_labels (Any):
+    existing_type_labels (Any): The list of labels existing in the ontology document
 
   Returns (str|None):
     The next possible name is returned with the decimal part greater than the existing largest one
   """
   if existing_type_labels is not None:
     if len(existing_type_labels) > 0:
-      from re import compile
-      regexp = compile(r'^[Xx][0-9]+$')
-      labels = [label for label in existing_type_labels if regexp.match(label)]
-      new_level = max([int(label
-                           .replace('x', '')
-                           .replace('X', '')) for label in labels], default=-1)
+      import re
+      regexp = re.compile(r'^[Xx][0-9]+$')
+      labels = [int(label.replace('x', '').replace('X', ''))
+                for label in existing_type_labels if regexp.match(label)]
+      new_level = max(labels, default=-1)
       return f"x{new_level + 1}"
     else:
       return "x0"

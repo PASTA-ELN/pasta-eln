@@ -1,3 +1,4 @@
+""" DeleteColumnDelegate for the table views """
 #  PASTA-ELN and all its sub-parts are covered by the MIT license.
 #
 #  Copyright (c) 2023
@@ -86,7 +87,7 @@ class DeleteColumnDelegate(QStyledItemDelegate):
     """
     if is_click_within_bounds(event, option):
       row = index.row()
-      self.logger.info(f"Delete signal emitted for the position: {row}")
+      self.logger.info("Delete signal emitted for the position: {%s}", row)
       self.delete_clicked_signal.emit(row)
       return True
     return False
