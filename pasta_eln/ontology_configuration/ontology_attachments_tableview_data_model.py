@@ -27,12 +27,12 @@ class OntologyAttachmentsTableViewModel(OntologyTableViewModel):
     """
     super().__init__(parent)
     self.logger = logging.getLogger(__name__ + "." + self.__class__.__name__)
-    self.data_set = None
+    self.data_set = []
     self.data_name_map = {
       0: "location",
       1: "link",
       2: "delete",
       3: "re-order"
     }
-    self.header_values = list(self.data_name_map.values())
-    self.columns_count = len(self.header_values)
+    self.header_values: list[str] = list(self.data_name_map.values())
+    self.columns_count: int = len(self.header_values)

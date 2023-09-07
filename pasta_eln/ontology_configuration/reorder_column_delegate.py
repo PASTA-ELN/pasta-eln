@@ -23,7 +23,7 @@ class ReorderColumnDelegate(QStyledItemDelegate):
   """
   re_order_signal = Signal(int)
 
-  def __init__(self):
+  def __init__(self) -> None:
     """
       Constructor
     """

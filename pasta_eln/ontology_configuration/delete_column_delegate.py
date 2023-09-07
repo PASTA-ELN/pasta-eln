@@ -24,7 +24,7 @@ class DeleteColumnDelegate(QStyledItemDelegate):
   delete_clicked_signal = Signal(
     int)  # Signal to inform the delete button click with the position in the table as the parameter
 
-  def __init__(self):
+  def __init__(self) -> None:
     """
       Constructor
     """

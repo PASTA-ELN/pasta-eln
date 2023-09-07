@@ -29,9 +29,9 @@ class OntologyTableViewModel(QAbstractTableModel):
     """
     super().__init__(parent)
     self.logger = logging.getLogger(__name__ + "." + self.__class__.__name__)
-    self.data_set = None
-    self.data_name_map = {}
-    self.header_values = None
+    self.data_set: list[dict[Any, Any]] | Any = []
+    self.data_name_map: dict[int, str] = {}
+    self.header_values: list[str] = []
     self.columns_count = 0
 
   def hasChildren(self, parent: Union[PySide6.QtCore.QModelIndex, PySide6.QtCore.QPersistentModelIndex]) -> bool:
@@ -40,7 +40,7 @@ class OntologyTableViewModel(QAbstractTableModel):
   def headerData(self,
                  section: int,
                  orientation: Qt.Orientation,
-                 role: int = ...) -> Any:
+                 role: int = Qt.ItemDataRole) -> Any:
     """
     Returns the header data from self.header_values
     Args:
@@ -56,7 +56,7 @@ class OntologyTableViewModel(QAbstractTableModel):
     return super().headerData(section, orientation, role)
 
   def update(self,
-             updated_table_data: dict):
+             updated_table_data: list[dict[Any, Any]] | Any) -> None:
     """
     Updating the table data model
     Args:
@@ -98,7 +98,7 @@ class OntologyTableViewModel(QAbstractTableModel):
   def setData(self,
               index: Union[QModelIndex, QPersistentModelIndex],
               value: Any,
-              role: int = ...) -> bool:
+              role: int = Qt.ItemDataRole) -> bool:
     """
     Sets the data for the table cell represented by the index. The data is set only for the below cases
      - EditRole: When the data in the cell is edited via line edit
@@ -121,7 +121,7 @@ class OntologyTableViewModel(QAbstractTableModel):
 
   def data(self,
            index: Union[QModelIndex, QPersistentModelIndex],
-           role: int = ...) -> Any:
+           role: int = Qt.ItemDataRole) -> Any:
     """
     Gets the data from the table cell represented by the index. Data is only retrieved for the following roles:
     - DisplayRole: When the table needs to be displayed
@@ -161,7 +161,7 @@ class OntologyTableViewModel(QAbstractTableModel):
               | Qt.ItemIsEnabled)
 
   @Slot(int)
-  def delete_data(self, position: int):
+  def delete_data(self, position: int) -> None:
     """
     Slot invoked to delete the data from data set at the specific position
     Args:
@@ -180,7 +180,7 @@ class OntologyTableViewModel(QAbstractTableModel):
 
   @Slot(int)
   def re_order_data(self,
-                    position: int):
+                    position: int) -> None:
     """
     Slot invoked to re-order the data position in the data set. Data at the position: row will be moved above in the set
     Args:

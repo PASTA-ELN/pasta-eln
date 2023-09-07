@@ -61,7 +61,7 @@ def adjust_ontology_data_to_v3(ontology_doc: Document) -> None:
         type_structure["prop"] = {"default": props}
 
 
-def show_message(message: str):
+def show_message(message: str) -> None:
   """
   Displays a message to the user using QMessageBox
   Args:
@@ -94,7 +94,7 @@ def get_next_possible_structural_level_label(existing_type_labels: Any) -> str |
                            .replace('x', '')
                            .replace('X', '')) for label in labels], default=-1)
       return f"x{new_level + 1}"
-    elif len(existing_type_labels) == 0:
+    else:
       return "x0"
   else:
     return None
@@ -104,7 +104,7 @@ def get_db(db_name: str,
            db_user: str,
            db_pass: str,
            db_url: str,
-           logger: logging = None) -> CouchDB | None:
+           logger: logging.Logger) -> CouchDB | None:
   """
   Get the db instance for the test purpose
   Args:

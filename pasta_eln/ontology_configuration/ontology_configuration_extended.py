@@ -32,7 +32,7 @@ from pasta_eln.ontology_configuration.utility_functions import adjust_ontology_d
 
 class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
 
-  def __new__(cls, *_, **__):
+  def __new__(cls, *_: Any, **__: Any) -> Any:
     """
     Instantiates the OntologyConfigurationForm
     """
@@ -51,8 +51,9 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     """
     self.logger = logging.getLogger(__name__ + "." + self.__class__.__name__)
 
-    self.ontology_types = None
-    self.selected_type_properties = None
+    self.ontology_loaded: bool = False
+    self.ontology_types: Any = {}
+    self.selected_type_properties: dict[str, list[dict[str, Any]]] | Any = {}
 
     # Set up the UI elements
     self.instance = QtWidgets.QDialog()
@@ -117,17 +118,19 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
       if new_type_selected not in self.ontology_types:
         raise OntologyConfigKeyNotFoundException(f"Key {new_type_selected} "
                                                  f"not found in ontology_types", {})
-      # Get the properties for the selected type and store the list in selected_type_properties
-      self.selected_type_properties = self.ontology_types.get(new_type_selected).get('prop')
+      if new_type_selected in self.ontology_types:
+        selected_type = self.ontology_types.get(new_type_selected)
+        # Get the properties for the selected type and store the list in selected_type_properties
+        self.selected_type_properties = selected_type.get('prop')
 
-      # Type label is set in a line edit
-      self.typeLabelLineEdit.setText(self.ontology_types.get(new_type_selected).get('label'))
+        # Type label is set in a line edit
+        self.typeLabelLineEdit.setText(selected_type.get('label'))
 
-      # Type link is set in a line edit
-      self.typeLinkLineEdit.setText(self.ontology_types.get(new_type_selected).get('link'))
+        # Type link is set in a line edit
+        self.typeLinkLineEdit.setText(selected_type.get('link'))
 
-      # Gets the attachment data from selected type and set it in table view
-      self.attachments_table_data_model.update(self.ontology_types.get(new_type_selected).get('attachments'))
+        # Gets the attachment data from selected type and set it in table view
+        self.attachments_table_data_model.update(selected_type.get('attachments'))
 
       # Reset the props category combo-box
       self.propsCategoryComboBox.addItems(self.selected_type_properties.keys()
@@ -135,7 +138,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
       self.propsCategoryComboBox.setCurrentIndex(0)
 
   def category_combo_box_changed(self,
-                                 new_selected_prop_category: Any):
+                                 new_selected_prop_category: Any) -> None:
     """
     Combobox value changed callback for the selected type property categories
     Args:
@@ -149,30 +152,30 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
       # Update the property table as per the selected property category from combobox
       self.props_table_data_model.update(self.selected_type_properties.get(new_selected_prop_category))
 
-  def add_new_prop_category(self):
+  def add_new_prop_category(self) -> None:
     """
     Click event handler for adding new property category
     Returns:
       None
     """
     new_category = self.addPropsCategoryLineEdit.text()
-    if not self.ontology_types:
+    if not new_category:
+      show_message("Enter non-null/valid category name!!.....")
+      return None
+    if not self.ontology_loaded or self.ontology_types is None:
       show_message("Load the ontology data first....")
-      return
+      return None
     if new_category in self.selected_type_properties.keys():
       show_message("Category already exists....")
-      return
-    if new_category:
-      # Add the new category to the property list and refresh the category combo box
-      self.logger.info(f"User added new category: {new_category}")
-      self.selected_type_properties[new_category] = []
-      self.propsCategoryComboBox.clear()
-      self.propsCategoryComboBox.addItems(self.selected_type_properties.keys())
-      self.propsCategoryComboBox.setCurrentIndex(len(self.selected_type_properties.keys()) - 1)
-    else:
-      show_message("Enter non-null/valid category name!!.....")
+      return None
+    # Add the new category to the property list and refresh the category combo box
+    self.logger.info(f"User added new category: {new_category}")
+    self.selected_type_properties[new_category] = []
+    self.propsCategoryComboBox.clear()
+    self.propsCategoryComboBox.addItems(self.selected_type_properties.keys())
+    self.propsCategoryComboBox.setCurrentIndex(len(self.selected_type_properties.keys()) - 1)
 
-  def delete_selected_prop_category(self):
+  def delete_selected_prop_category(self) -> None:
     """
     Click event handler for deleting the selected property category
     Returns:
@@ -181,7 +184,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     selected_category = self.propsCategoryComboBox.currentText()
     if self.selected_type_properties is None:
       show_message("Load the ontology data first....")
-      return
+      return None
     if selected_category and selected_category in self.selected_type_properties.keys():
       self.logger.info(f"User deleted the selected category: {selected_category}")
       self.selected_type_properties.pop(selected_category)
@@ -191,7 +194,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
       self.propsCategoryComboBox.setCurrentIndex(len(self.selected_type_properties.keys()) - 1)
 
   def update_structure_label(self,
-                             modified_type_label: str):
+                             modified_type_label: str) -> None:
     """
     Value changed callback for the type label line edit
 
@@ -205,7 +208,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     if modified_type_label and current_type in self.ontology_types.keys():
       self.ontology_types.get(current_type)["label"] = modified_type_label
 
-  def update_type_link(self, modified_link: str):
+  def update_type_link(self, modified_link: str) -> None:
     """
     Value changed callback for the link line edit
 
@@ -219,7 +222,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     if modified_link and current_type in self.ontology_types.keys():
       self.ontology_types.get(current_type)["link"] = modified_link
 
-  def delete_selected_type(self):
+  def delete_selected_type(self) -> None:
     """
     Delete the selected type from the type selection combo-box and also from the loaded ontology_types
 
@@ -227,6 +230,9 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
       None
     """
     selected_type = self.typeComboBox.currentText()
+    if not self.ontology_loaded:
+      show_message("Load the ontology data first....")
+      return
     if self.ontology_types is None or self.ontology_document is None:
       show_message("Load the ontology data first....")
       return
@@ -239,7 +245,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
       self.typeComboBox.addItems(self.ontology_types.keys())
       self.typeComboBox.setCurrentIndex(0)
 
-  def clear_ui(self):
+  def clear_ui(self) -> None:
     """
     Clear the UI elements including the tables.
     Invoked when the type combobox selection changes
@@ -253,7 +259,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     self.typePropsTableView.model().update([])
     self.typeAttachmentsTableView.model().update([])
 
-  def create_type_accepted_callback(self):
+  def create_type_accepted_callback(self) -> None:
     """
     Callback for the OK button of CreateTypeDialog to create a new type in the ontology data set
 
@@ -265,7 +271,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     self.create_type_dialog.clear_ui()
     self.create_new_type(title, label)
 
-  def create_type_rejected_callback(self):
+  def create_type_rejected_callback(self) -> None:
     """
     Callback for the cancel button of CreateTypeDialog
 
@@ -274,20 +280,20 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     """
     self.create_type_dialog.clear_ui()
 
-  def show_create_type_dialog(self):
+  def show_create_type_dialog(self) -> None:
     """
     Opens a dialog which allows the user to enter the details to create a new type (structural or normal)
     Returns:
         None
     """
-    if self.ontology_types is not None:
+    if self.ontology_types is not None and self.ontology_loaded:
       structural_title = get_next_possible_structural_level_label(self.ontology_types.keys())
       self.create_type_dialog.set_structural_level_title(structural_title)
       self.create_type_dialog.show()
     else:
       show_message("Load the ontology data first...")
 
-  def setup_slots(self):
+  def setup_slots(self) -> None:
     """
     Set up the slots for the UI elements of Ontology editor
     Returns:
@@ -320,7 +326,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
       self.attachments_table_data_model.delete_data)
     self.reorder_column_delegate_attach_table.re_order_signal.connect(self.attachments_table_data_model.re_order_data)
 
-  def load_ontology_data(self):
+  def load_ontology_data(self) -> None:
     """
     Load button click event handler which loads the data in the UI
     Returns:
@@ -333,13 +339,14 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     self.ontology_types = dict([(data, self.ontology_document[data])
                                 for data in self.ontology_document
                                 if type(self.ontology_document[data]) is dict])
+    self.ontology_loaded = True
 
     # Set the types in the type selector combo-box
     self.typeComboBox.clear()
     self.typeComboBox.addItems(self.ontology_types.keys())
     self.typeComboBox.setCurrentIndex(0)
 
-  def save_ontology(self):
+  def save_ontology(self) -> None:
     """
     Save the modified ontology document data in database
     """
@@ -407,11 +414,16 @@ def get_gui(ontology_document: Document) -> tuple[
   return application, ontology_form.instance, ontology_form
 
 
-def main():
-  db = get_db("research", "admin", "hDssWpuNDObd", 'http://127.0.0.1:5984')
-  app, ui_form_dialog, ui_form = get_gui(db['-ontology-'])
-  ui_form_dialog.show()
-  sys.exit(app.exec())
+def main() -> None:
+  db = get_db("research",
+              "admin",
+              "hDssWpuNDObd",
+              'http://127.0.0.1:5984',
+              logging.getLogger(__name__))
+  if db is not None:
+    app, ui_form_dialog, ui_form = get_gui(db['-ontology-'])
+    ui_form_dialog.show()
+    sys.exit(app.exec())
 
 
 if __name__ == "__main__":

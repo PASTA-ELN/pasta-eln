@@ -21,10 +21,12 @@ from PySide6.QtWidgets import QApplication
 from pytestqt.qtbot import QtBot
 
 from pasta_eln.ontology_configuration.ontology_configuration_extended import OntologyConfigurationForm
-from tests.app_tests.common.fixtures import ontology_editor_gui, ontology_doc_mock
+from tests.app_tests.common.fixtures import ontology_editor_gui, ontology_doc_mock, props_column_names, \
+  attachments_column_names
 
 
 class TestOntologyConfigurationExtended(object):
+
   def test_component_launch_should_display_all_ui_elements(self,
                                                            ontology_editor_gui: tuple[
                                                              QApplication,
@@ -56,7 +58,9 @@ class TestOntologyConfigurationExtended(object):
                                                                    QtWidgets.QDialog,
                                                                    OntologyConfigurationForm,
                                                                    QtBot],
-                                                                 ontology_doc_mock: ontology_doc_mock):
+                                                                 ontology_doc_mock: ontology_doc_mock,
+                                                                 props_column_names: props_column_names,
+                                                                 attachments_column_names: attachments_column_names):
     app, ui_dialog, ui_form, qtbot = ontology_editor_gui
     assert ([ui_form.typeComboBox.itemText(i) for i in range(ui_form.typeComboBox.count())]
             == []), "Type combo box should not be loaded!"
@@ -76,47 +80,28 @@ class TestOntologyConfigurationExtended(object):
             == categories), "propsCategoryComboBox combo box not loaded!"
     assert (ui_form.propsCategoryComboBox.currentText()
             == categories[0]), "propsCategoryComboBox should be selected to first item"
+    self.check_table_contents(attachments_column_names, props_column_names, selected_type, ui_form)
 
-    props_selected = selected_type["prop"][categories[0]]
-    props_column_names = {
-      0: "name",
-      1: "query",
-      2: "list",
-      3: "link",
-      4: "required",
-      5: "unit"
-    }
+  @staticmethod
+  def check_table_view_model(model, column_names, data_selected):
+    for row in range(model.rowCount()):
+      data = data_selected[row]
+      for column in range(model.columnCount() - 2):
+        index = model.index(row, column)
+        if column_names[column] in data:
+          assert (model.data(index, Qt.DisplayRole)
+                  == str(data[column_names[column]])), f"{column_names[column]} not loaded!"
+        else:
+          assert model.data(index, Qt.DisplayRole) == "", f"{column_names[column]} should be null string!"
 
+  def check_table_contents(self, attachments_column_names, props_column_names, selected_type, ui_form):
+    categories = list(selected_type["prop"].keys())
     # Assert if the properties are loaded in the table view
     model = ui_form.typePropsTableView.model()
-    for row in range(model.rowCount()):
-      prop = props_selected[row]
-      for column in range(model.columnCount() - 2):
-        index = model.index(row, column)
-        if props_column_names[column] in prop:
-          assert (model.data(index, Qt.DisplayRole)
-                  == str(prop[props_column_names[column]])), f"{props_column_names[column]} not loaded!"
-        else:
-          assert model.data(index, Qt.DisplayRole) == "", f"{props_column_names[column]} should be null string!"
-
-    attachments_selected = selected_type["attachments"]
-
-    attachments_column_names = {
-      0: "location",
-      1: "link"
-    }
+    self.check_table_view_model(model, props_column_names, selected_type["prop"][categories[0]])
     # Assert if the attachments are loaded in the table view
     model = ui_form.typeAttachmentsTableView.model()
-    for row in range(model.rowCount()):
-      prop = attachments_selected[row]
-      for column in range(model.columnCount() - 2):
-        index = model.index(row, column)
-        if attachments_column_names[column] in prop:
-          assert model.data(index, Qt.DisplayRole) == str(prop[attachments_column_names[column]]), \
-            f"{attachments_column_names[column]} not loaded!"
-        else:
-          assert model.data(index, Qt.DisplayRole) == "", \
-            f"{attachments_column_names[column]} should be null string!"
+    self.check_table_view_model(model, attachments_column_names, selected_type["attachments"])
 
   def test_component_add_new_type_with_ontology_loaded_should_display_error_message(self,
                                                                                     ontology_editor_gui: tuple[
@@ -159,14 +144,16 @@ class TestOntologyConfigurationExtended(object):
     mock_show_message.assert_called_once_with("Load the ontology data first....")
     assert ui_form.create_type_dialog.buttonBox.isVisible() is False, "Create new type dialog should not be shown!"
 
-  def test_component_delete_selected_type_with_loaded_ontology_should_delete_and_update_type_combobox(self,
-                                                                                                      ontology_editor_gui:
-                                                                                                      tuple[
-                                                                                                        QApplication,
-                                                                                                        QtWidgets.QDialog,
-                                                                                                        OntologyConfigurationForm,
-                                                                                                        QtBot],
-                                                                                                      ontology_doc_mock: ontology_doc_mock):
+  def test_component_delete_selected_type_with_loaded_ontology_should_delete_and_update_ui(self,
+                                                                                           ontology_editor_gui:
+                                                                                           tuple[
+                                                                                             QApplication,
+                                                                                             QtWidgets.QDialog,
+                                                                                             OntologyConfigurationForm,
+                                                                                             QtBot],
+                                                                                           ontology_doc_mock: ontology_doc_mock,
+                                                                                           props_column_names: props_column_names,
+                                                                                           attachments_column_names: attachments_column_names):
     app, ui_dialog, ui_form, qtbot = ontology_editor_gui
     assert ui_form.create_type_dialog.buttonBox.isVisible() is False, "Create new type dialog should not be shown!"
     qtbot.mouseClick(ui_form.loadOntologyPushButton, Qt.LeftButton)
@@ -180,3 +167,43 @@ class TestOntologyConfigurationExtended(object):
       f"Combo list should have {previous_types_count - 1} items!"
     assert ui_form.typeComboBox.currentText() == ontology_doc_mock.types_list()[1], \
       "Type combo box should be selected to second item"
+    selected_type = ontology_doc_mock.types()[ui_form.typeComboBox.currentText()]
+    assert ui_form.typeLabelLineEdit.text() == selected_type["label"], \
+      "Type label line edit should be selected to second item"
+    assert ui_form.typeLinkLineEdit.text() == selected_type["link"], \
+      "Type label line edit should be selected to second item"
+    assert ui_form.propsCategoryComboBox.currentText() == list(selected_type["prop"].keys())[0], \
+      "Type label line edit should be selected to second item"
+    self.check_table_contents(attachments_column_names, props_column_names, selected_type, ui_form)
+
+  def test_component_add_selected_type_with_loaded_ontology_should_delete_and_update_ui(self,
+                                                                                        ontology_editor_gui:
+                                                                                        tuple[
+                                                                                          QApplication,
+                                                                                          QtWidgets.QDialog,
+                                                                                          OntologyConfigurationForm,
+                                                                                          QtBot],
+                                                                                        ontology_doc_mock: ontology_doc_mock,
+                                                                                        props_column_names: props_column_names,
+                                                                                        attachments_column_names: attachments_column_names):
+    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    assert ui_form.create_type_dialog.buttonBox.isVisible() is False, "Create new type dialog should not be shown!"
+    qtbot.mouseClick(ui_form.loadOntologyPushButton, Qt.LeftButton)
+    current_selected_type = ui_form.typeComboBox.currentText()
+    previous_types_count = ui_form.typeComboBox.count()
+    qtbot.mouseClick(ui_form.deleteTypePushButton, Qt.LeftButton)
+    assert (current_selected_type not in [ui_form.typeComboBox.itemText(i)
+                                          for i in range(ui_form.typeComboBox.count())]), \
+      f"Deleted type:{current_selected_type} should not exist in combo list!"
+    assert (previous_types_count - 1 == ui_form.typeComboBox.count()), \
+      f"Combo list should have {previous_types_count - 1} items!"
+    assert ui_form.typeComboBox.currentText() == ontology_doc_mock.types_list()[1], \
+      "Type combo box should be selected to second item"
+    selected_type = ontology_doc_mock.types()[ui_form.typeComboBox.currentText()]
+    assert ui_form.typeLabelLineEdit.text() == selected_type["label"], \
+      "Type label line edit should be selected to second item"
+    assert ui_form.typeLinkLineEdit.text() == selected_type["link"], \
+      "Type Link line edit should be selected to second item"
+    assert ui_form.propsCategoryComboBox.currentText() == list(selected_type["prop"].keys())[0], \
+      "Type label line edit should be selected to second item"
+    self.check_table_contents(attachments_column_names, props_column_names, selected_type, ui_form)

@@ -172,17 +172,17 @@ class TestOntologyConfigUtilityFunctions(object):
     mocker.patch.object(CouchDB, "__new__", lambda s, user, auth_token, url, connect: mock_client)
     mocker.patch.object(CouchDB, "__init__", lambda s, user, auth_token, url, connect: None)
 
-    assert get_db("db_name1", "test", "test", "test") is db_instances["db_name1"], \
+    assert get_db("db_name1", "test", "test", "test", None) is db_instances["db_name1"], \
       "get_db should return valid db instance"
     assert mock_client.all_dbs.call_count == 1, "get_db should call all_dbs"
     assert mock_client.__getitem__.call_count == 1, "get_db should call __getitem__"
 
-    assert get_db("db_name2", "test", "test", "test") is db_instances["db_name2"], \
+    assert get_db("db_name2", "test", "test", "test", None) is db_instances["db_name2"], \
       "get_db should return valid db instance"
     assert mock_client.all_dbs.call_count == 2, "get_db should call all_dbs"
     assert mock_client.__getitem__.call_count == 2, "get_db should call __getitem__"
 
-    assert get_db("db_name3", "test", "test", "test") is created_db_instance, \
+    assert get_db("db_name3", "test", "test", "test", None) is created_db_instance, \
       "get_db should return created db instance"
     assert mock_client.all_dbs.call_count == 3, "get_db should call all_dbs"
     assert mock_client.create_database.call_count == 1, "get_db should call create_database"
@@ -193,7 +193,7 @@ class TestOntologyConfigUtilityFunctions(object):
     logger_spy = mocker.spy(mock_logger, 'error')
     mocker.patch.object(CouchDB, "__new__", mocker.MagicMock(side_effect=Exception('Database error')))
     mocker.patch.object(CouchDB, "__init__", lambda s, user, auth_token, url, connect: None)
-    assert get_db("db_name1", "test", "test", "test") is None, \
+    assert get_db("db_name1", "test", "test", "test", None) is None, \
       "get_db should return None"
     assert mock_logger.error.call_count == 0, "get_db should not call log.error"
 

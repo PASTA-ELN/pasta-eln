@@ -8,6 +8,7 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import logging
 from collections.abc import Callable
+from typing import Any
 
 from PySide6 import QtCore
 from PySide6.QtWidgets import QDialog
@@ -17,15 +18,15 @@ from pasta_eln.ontology_configuration.create_type_dialog.create_type_dialog impo
 
 class CreateTypeDialog(Ui_CreateTypeDialog):
 
-  def __new__(cls, *_, **__):
+  def __new__(cls, *_: Any, **__: Any) -> Any:
     """
     Instantiates the create type dialog
     """
     return super(CreateTypeDialog, cls).__new__(cls)
 
   def __init__(self,
-               accepted_callback: Callable,
-               rejected_callback: Callable):
+               accepted_callback: Callable[[], None],
+               rejected_callback: Callable[[], None]) -> None:
     """
     Initializes the create type dialog
     Args:
@@ -33,14 +34,14 @@ class CreateTypeDialog(Ui_CreateTypeDialog):
       rejected_callback (Callable): Rejected button parent callback.
     """
     self.logger = logging.getLogger(__name__ + "." + self.__class__.__name__)
-    self.next_struct_level = None
+    self.next_struct_level: str | None = ""
     self.instance = QDialog()
     super().setupUi(self.instance)
     self.setup_slots(accepted_callback, rejected_callback)
 
   def setup_slots(self,
-                  accepted_callback: Callable,
-                  rejected_callback: Callable):
+                  accepted_callback: Callable[[], None],
+                  rejected_callback: Callable[[], None]) -> None:
     """
     Sets up the slots for the dialog
     Args:
@@ -54,7 +55,7 @@ class CreateTypeDialog(Ui_CreateTypeDialog):
     self.buttonBox.rejected.connect(rejected_callback)
     self.structuralLevelCheckBox.stateChanged.connect(self.structural_level_checkbox_callback)
 
-  def structural_level_checkbox_callback(self):
+  def structural_level_checkbox_callback(self) -> None:
     """
     Callback invoked when the state changes for structuralLevelCheckBox
 
@@ -68,7 +69,7 @@ class CreateTypeDialog(Ui_CreateTypeDialog):
       self.titleLineEdit.clear()
       self.titleLineEdit.setDisabled(False)
 
-  def show(self):
+  def show(self) -> None:
     """
     Displays the dialog
 
@@ -78,7 +79,7 @@ class CreateTypeDialog(Ui_CreateTypeDialog):
     self.instance.setWindowModality(QtCore.Qt.ApplicationModal)
     self.instance.show()
 
-  def clear_ui(self):
+  def clear_ui(self) -> None:
     """
     Clear the Dialog UI
 
@@ -91,7 +92,7 @@ class CreateTypeDialog(Ui_CreateTypeDialog):
     self.structuralLevelCheckBox.setChecked(False)
 
   def set_structural_level_title(self,
-                                 structural_level: str):
+                                 structural_level: str | None) -> None:
     """
     Set the next possible structural type level title
 

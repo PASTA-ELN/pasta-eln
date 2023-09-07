@@ -250,6 +250,7 @@ class TestOntologyConfigConfiguration(object):
     mocker.patch.object(configuration_extended.addPropsCategoryLineEdit, 'text', return_value=new_category)
     mocker.patch.object(configuration_extended, 'ontology_types', ontology_types, create=True)
     mocker.patch.object(configuration_extended, 'propsCategoryComboBox', create=True)
+    mocker.patch.object(configuration_extended, 'ontology_loaded', create=True)
     add_items_selected_spy = mocker.spy(configuration_extended.propsCategoryComboBox, 'addItems')
     clear_category_combo_box_spy = mocker.spy(configuration_extended.propsCategoryComboBox, 'clear')
     set_current_index_category_combo_box_spy = mocker.spy(configuration_extended.propsCategoryComboBox,
@@ -264,6 +265,10 @@ class TestOntologyConfigConfiguration(object):
                  lambda x: len(selected_type_properties.keys()))
     mock_show_message = mocker.patch('pasta_eln.ontology_configuration.ontology_configuration_extended.show_message')
 
+    if not new_category:
+      assert configuration_extended.add_new_prop_category() is None, "Nothing should be returned"
+      mock_show_message.assert_called_once_with("Enter non-null/valid category name!!.....")
+      return
     if not ontology_types:
       assert configuration_extended.add_new_prop_category() is None, "Nothing should be returned"
       mock_show_message.assert_called_once_with("Load the ontology data first....")
@@ -436,6 +441,7 @@ class TestOntologyConfigConfiguration(object):
     add_items_selected_spy = mocker.spy(configuration_extended.typeComboBox, 'addItems')
     logger_info_spy = mocker.spy(configuration_extended.logger, 'info')
     mock_show_message = mocker.patch("pasta_eln.ontology_configuration.ontology_configuration_extended.show_message")
+    mocker.patch.object(configuration_extended, 'ontology_loaded', True, create=True)
     if ontology_document:
       original_ontology_document = ontology_document.copy()
       configuration_extended.ontology_document.__setitem__.side_effect = ontology_document.__setitem__
@@ -537,6 +543,7 @@ class TestOntologyConfigConfiguration(object):
     mocker.patch.object(configuration_extended, 'ontology_types', create=True)
     set_structural_level_title_spy = mocker.patch.object(configuration_extended.create_type_dialog,
                                                          'set_structural_level_title', create=True)
+    mocker.patch.object(configuration_extended, 'ontology_loaded', create=True)
     show_create_type_dialog_spy = mocker.patch.object(configuration_extended.create_type_dialog, 'show', create=True)
     show_message_spy = mocker.patch('pasta_eln.ontology_configuration.ontology_configuration_extended.show_message')
     get_next_possible_structural_level_label_spy = mocker.patch(

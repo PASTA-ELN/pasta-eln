@@ -14,7 +14,7 @@ class OntologyDocumentNullException(Exception):
 
   def __init__(self,
                message: str,
-               detailed_errors: dict):
+               detailed_errors: dict[str, str]):
     """
     Constructs OntologyDocumentNullException
     Args:

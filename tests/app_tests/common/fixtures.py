@@ -154,6 +154,26 @@ QtBot]:
   return app, ui_dialog, ui_form_extended, qtbot
 
 
+@fixture()
+def props_column_names():
+  return {
+    0: "name",
+    1: "query",
+    2: "list",
+    3: "link",
+    4: "required",
+    5: "unit"
+  }
+
+
+@fixture()
+def attachments_column_names():
+  return {
+    0: "location",
+    1: "link"
+  }
+
+
 @fixture(scope="module")
 def pasta_gui(request) -> tuple[Union[QApplication, QCoreApplication, None],
 MainWindow,

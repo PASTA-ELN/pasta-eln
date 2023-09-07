@@ -27,7 +27,7 @@ class OntologyPropsTableViewModel(OntologyTableViewModel):
     """
     super().__init__(parent)
     self.logger = logging.getLogger(__name__ + "." + self.__class__.__name__)
-    self.data_set = None
+    self.data_set = []
     self.data_name_map = {
       0: "name",
       1: "query",
@@ -38,5 +38,5 @@ class OntologyPropsTableViewModel(OntologyTableViewModel):
       6: "delete",
       7: "re-order"
     }
-    self.header_values = list(self.data_name_map.values())
-    self.columns_count = len(self.header_values)
+    self.header_values: list[str] = list(self.data_name_map.values())
+    self.columns_count: int = len(self.header_values)

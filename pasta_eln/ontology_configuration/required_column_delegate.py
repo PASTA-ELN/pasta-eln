@@ -20,7 +20,7 @@ class RequiredColumnDelegate(QStyledItemDelegate):
   Delegate for creating the radio buttons for the required column in ontology editor tables
   """
 
-  def __init__(self):
+  def __init__(self) -> None:
     """
       Constructor
     """
