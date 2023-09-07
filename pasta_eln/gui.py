@@ -192,7 +192,7 @@ class MainWindow(QMainWindow):
     return
 
 
-def main_gui() -> tuple[Union[QApplication, QCoreApplication, None], MainWindow]:
+def main_gui() -> tuple[Union[QCoreApplication, None], MainWindow]:
   """
     Main method and entry point for commands
   Returns:
@@ -208,7 +208,7 @@ def main_gui() -> tuple[Union[QApplication, QCoreApplication, None], MainWindow]
   logging.info('Start PASTA GUI')
   # remainder
   if not QApplication.instance():
-    application = QApplication()
+    application = QApplication().instance()
   else:
     application = QApplication.instance()
   main_window = MainWindow()
