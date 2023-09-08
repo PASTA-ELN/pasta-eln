@@ -415,8 +415,8 @@ def main() -> None:
 
   """
   db = get_db("research",
-              "admin",
-              "hDssWpuNDObd",
+              "",
+              "",
               'http://127.0.0.1:5984',
               logging.getLogger(__name__))
   if db is not None:
