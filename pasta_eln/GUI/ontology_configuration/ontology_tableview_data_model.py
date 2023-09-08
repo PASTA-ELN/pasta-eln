@@ -21,7 +21,7 @@ class OntologyTableViewModel(QAbstractTableModel):
   """
 
   def __init__(self,
-               parent: QWidget = None):
+               parent: Union[QWidget | None] = None):
     """
     Initialize the data model representing attachments from ontology document in the database
     Args:

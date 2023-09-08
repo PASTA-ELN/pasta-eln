@@ -77,7 +77,7 @@ class RequiredColumnDelegate(QStyledItemDelegate):
   def createEditor(self,
                    parent: QWidget,
                    option: QStyleOptionViewItem,
-                   index: Union[QModelIndex, QPersistentModelIndex]) -> None:
+                   index: Union[QModelIndex, QPersistentModelIndex]) -> QWidget:
     """
     Disable the editor for the whole required column by simply returning None
     Args:

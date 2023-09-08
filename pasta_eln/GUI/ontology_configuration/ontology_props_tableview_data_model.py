@@ -8,6 +8,7 @@
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import logging
+from typing import Union
 
 from PySide6.QtWidgets import QWidget
 
@@ -20,7 +21,7 @@ class OntologyPropsTableViewModel(OntologyTableViewModel):
   """
 
   def __init__(self,
-               parent: QWidget = None):
+               parent: Union[QWidget | None] = None):
     """
     Initialize the data model representing the properties of a type in the ontology document
     Args:

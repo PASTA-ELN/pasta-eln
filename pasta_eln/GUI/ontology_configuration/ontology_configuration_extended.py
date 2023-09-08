@@ -15,8 +15,6 @@ from PySide6 import QtWidgets
 from PySide6.QtWidgets import QApplication
 from cloudant.document import Document
 
-from .ontology_configuration_constants import PROPS_TABLE_DELETE_COLUMN_INDEX, PROPS_TABLE_REORDER_COLUMN_INDEX,\
-    PROPS_TABLE_REQUIRED_COLUMN_INDEX, ATTACHMENT_TABLE_DELETE_COLUMN_INDEX, ATTACHMENT_TABLE_REORDER_COLUMN_INDEX
 from .create_type_dialog.create_type_dialog_extended import CreateTypeDialog
 from .delete_column_delegate import DeleteColumnDelegate
 from .exceptions.ontology_config_generic_exception import OntologyConfigGenericException
@@ -24,6 +22,8 @@ from .exceptions.ontology_config_key_not_found_exception import OntologyConfigKe
 from .exceptions.ontology_document_null_exception import OntologyDocumentNullException
 from .ontology_attachments_tableview_data_model import OntologyAttachmentsTableViewModel
 from .ontology_configuration import Ui_OntologyConfigurationBaseForm
+from .ontology_configuration_constants import PROPS_TABLE_DELETE_COLUMN_INDEX, PROPS_TABLE_REORDER_COLUMN_INDEX, \
+  PROPS_TABLE_REQUIRED_COLUMN_INDEX, ATTACHMENT_TABLE_DELETE_COLUMN_INDEX, ATTACHMENT_TABLE_REORDER_COLUMN_INDEX
 from .ontology_props_tableview_data_model import OntologyPropsTableViewModel
 from .reorder_column_delegate import ReorderColumnDelegate
 from .required_column_delegate import RequiredColumnDelegate
@@ -135,7 +135,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
         self.attachments_table_data_model.update(selected_type.get('attachments'))
 
       # Reset the props category combo-box
-      self.propsCategoryComboBox.addItems(self.selected_type_properties.keys()
+      self.propsCategoryComboBox.addItems(list(self.selected_type_properties.keys())
                                           if self.selected_type_properties else [])
       self.propsCategoryComboBox.setCurrentIndex(0)
 
@@ -172,7 +172,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     self.logger.info("User added new category: {%s}", new_category)
     self.selected_type_properties[new_category] = []
     self.propsCategoryComboBox.clear()
-    self.propsCategoryComboBox.addItems(self.selected_type_properties.keys())
+    self.propsCategoryComboBox.addItems(list(self.selected_type_properties.keys()))
     self.propsCategoryComboBox.setCurrentIndex(len(self.selected_type_properties.keys()) - 1)
     return None
 
@@ -190,7 +190,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
       self.selected_type_properties.pop(selected_category)
       self.propsCategoryComboBox.clear()
       self.typePropsTableView.model().update([])
-      self.propsCategoryComboBox.addItems(self.selected_type_properties.keys())
+      self.propsCategoryComboBox.addItems(list(self.selected_type_properties.keys()))
       self.propsCategoryComboBox.setCurrentIndex(len(self.selected_type_properties.keys()) - 1)
     return None
 
