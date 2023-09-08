@@ -20,7 +20,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
 from pytestqt.qtbot import QtBot
 
-from pasta_eln.ontology_configuration.ontology_configuration_extended import OntologyConfigurationForm
+from pasta_eln.GUI.ontology_configuration.ontology_configuration_extended import OntologyConfigurationForm
 from tests.app_tests.common.fixtures import ontology_editor_gui, ontology_doc_mock, props_column_names, \
   attachments_column_names
 
@@ -112,7 +112,7 @@ class TestOntologyConfigurationExtended(object):
                                                                                     ontology_doc_mock: ontology_doc_mock,
                                                                                     mocker):
     app, ui_dialog, ui_form, qtbot = ontology_editor_gui
-    mock_show_message = mocker.patch("pasta_eln.ontology_configuration.ontology_configuration_extended.show_message")
+    mock_show_message = mocker.patch("pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.show_message")
     qtbot.mouseClick(ui_form.addTypePushButton, Qt.LeftButton)
     mock_show_message.assert_called_once_with("Load the ontology data first...")
     assert ui_form.create_type_dialog.buttonBox.isVisible() is False, "Create new type dialog should not be shown!"
@@ -139,7 +139,7 @@ class TestOntologyConfigurationExtended(object):
                                                                                     ontology_doc_mock: ontology_doc_mock,
                                                                                     mocker):
     app, ui_dialog, ui_form, qtbot = ontology_editor_gui
-    mock_show_message = mocker.patch("pasta_eln.ontology_configuration.ontology_configuration_extended.show_message")
+    mock_show_message = mocker.patch("pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.show_message")
     qtbot.mouseClick(ui_form.deleteTypePushButton, Qt.LeftButton)
     mock_show_message.assert_called_once_with("Load the ontology data first....")
     assert ui_form.create_type_dialog.buttonBox.isVisible() is False, "Create new type dialog should not be shown!"

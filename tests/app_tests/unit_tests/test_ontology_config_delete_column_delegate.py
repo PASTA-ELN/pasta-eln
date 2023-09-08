@@ -27,13 +27,13 @@ class TestOntologyConfigDeleteColumnDelegate(object):
   def test_delegate_create_editor_event_method_when_clicked_within_bounds_returns_true(self,
                                                                                        mocker,
                                                                                        delete_delegate: delete_delegate):
-    mocker.patch('pasta_eln.ontology_configuration.delete_column_delegate.is_click_within_bounds',
+    mocker.patch('pasta_eln.GUI.ontology_configuration.delete_column_delegate.is_click_within_bounds',
                  return_value=True)
     delegate_editor_event_common(delete_delegate, mocker, is_click_within_bounds=True)
 
   def test_delegate_create_editor_event_method_when_clicked_outside_bounds_returns_false(self,
                                                                                          mocker,
                                                                                          delete_delegate: delete_delegate):
-    mocker.patch('pasta_eln.ontology_configuration.delete_column_delegate.is_click_within_bounds',
+    mocker.patch('pasta_eln.GUI.ontology_configuration.delete_column_delegate.is_click_within_bounds',
                  return_value=False)
     delegate_editor_event_common(delete_delegate, mocker, is_click_within_bounds=False)

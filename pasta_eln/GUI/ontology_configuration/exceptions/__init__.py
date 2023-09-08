@@ -1,6 +1,6 @@
 #  PASTA-ELN and all its sub-parts are covered by the MIT license.
 #
-#  Copyright (c) 2023
+#  Copyright (c) 2023.
 #
 #  Author: Jithu Murugan
 #  Filename: __init__.py
