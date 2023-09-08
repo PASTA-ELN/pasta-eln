@@ -192,7 +192,7 @@ class TestOntologyConfigConfiguration(object):
       set_current_index_category_combo_box_spy.assert_called_once_with(0)
       clear_category_combo_box_spy.assert_called_once_with()
       add_items_category_combo_box_spy.assert_called_once_with(
-        mock_ontology_types.get(new_type_selected).get('prop').keys()
+        list(mock_ontology_types.get(new_type_selected).get('prop').keys())
         if mock_ontology_types.get(new_type_selected).get('prop') else [])
       update_attachment_table_model_spy.assert_called_once_with(
         mock_ontology_types.get(new_type_selected).get('attachments'))
@@ -285,7 +285,7 @@ class TestOntologyConfigConfiguration(object):
         set_current_index_category_combo_box_spy.assert_called_once_with(len(selected_type_properties.keys()) - 1)
         clear_category_combo_box_spy.assert_called_once_with()
         add_items_selected_spy.assert_called_once_with(
-          selected_type_properties.keys()
+          list(selected_type_properties.keys())
         )
       else:
         assert configuration_extended.add_new_prop_category() is None, "Nothing should be returned"
@@ -342,7 +342,7 @@ class TestOntologyConfigConfiguration(object):
       pop_items_selected_spy.assert_called_once_with(selected_category)
       clear_category_combo_box_spy.assert_called_once_with()
       add_items_selected_spy.assert_called_once_with(
-        selected_type_properties.keys()
+        list(selected_type_properties.keys())
       )
       set_current_index_category_combo_box_spy.assert_called_once_with(len(selected_type_properties.keys()) - 1)
 
