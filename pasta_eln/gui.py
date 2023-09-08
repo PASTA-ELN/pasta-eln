@@ -24,6 +24,7 @@ from .fixedStringsJson import shortcuts
 from .guiCommunicate import Communicate
 from .guiStyle import Action, showMessage, widgetAndLayout, shortCuts
 from .inputOutput import exportELN, importELN
+from .GUI.ontology_configuration.ontology_configuration_extended import OntologyConfigurationForm
 from .miscTools import updateExtractorList, restart
 
 os.environ['QT_API'] = 'pyside6'
@@ -73,7 +74,7 @@ class MainWindow(QMainWindow):
       for name in self.backend.configuration['projectGroups'].keys():
         Action(name, self, [Command.CHANGE_PG, name], changeProjectGroups)
     Action('&Syncronize', self, [Command.SYNC], systemMenu, shortcut='F5')
-    Action('&Questionaires', self, [Command.ONTOLOGY], systemMenu)
+    Action('&Questionaires', self, [Command.ONTOLOGY], systemMenu, shortcut='F8')
     systemMenu.addSeparator()
     Action('&Test extraction from a file', self, [Command.TEST1], systemMenu)
     Action('Test &selected item extraction', self, [Command.TEST2], systemMenu, shortcut='F2')
@@ -159,10 +160,8 @@ class MainWindow(QMainWindow):
       report = self.comm.backend.replicateDB(progressBar=self.sidebar.progress)
       showMessage(self, 'Report of syncronization', report, style='QLabel {min-width: 450px}')
     elif command[0] is Command.ONTOLOGY:
-      showMessage(self, 'To be implemented',
-                  'A possibility to change the questionaires / change the ontology is missing.')
-      # dialog = Ontology(self.comm.backend)
-      # dialog.exec()
+      ontologyForm = OntologyConfigurationForm(self.comm.backend.db.ontology)
+      ontologyForm.instance.exec()
     elif command[0] is Command.TEST1:
       fileName = QFileDialog.getOpenFileName(self, 'Open file for extractor test', str(Path.home()), '*.*')[0]
       report = self.comm.backend.testExtractor(fileName, outputStyle='html')
@@ -192,7 +191,7 @@ class MainWindow(QMainWindow):
     return
 
 
-def main_gui() -> tuple[Union[QCoreApplication, None], MainWindow]:
+def mainGUI() -> tuple[Union[QCoreApplication, None], MainWindow]:
   """
     Main method and entry point for commands
   Returns:
@@ -246,9 +245,16 @@ class Command(Enum):
   RESTART = 16
 
 
-# called by python3 -m pasta_eln.gui
-if __name__ == '__main__':
-  app, window = main_gui()
+def startMain() -> None:
+  """
+  Main function to start GUI. Extra function is required to allow starting in module fashion
+  """
+  app, window = mainGUI()
   window.show()
   if app:
     app.exec()
+
+
+# called by python3 -m pasta_eln.gui
+if __name__ == '__main__':
+  startMain()

@@ -11,7 +11,7 @@ import logging
 
 from PySide6.QtWidgets import QWidget
 
-from pasta_eln.ontology_configuration.ontology_tableview_data_model import OntologyTableViewModel
+from .ontology_tableview_data_model import OntologyTableViewModel
 
 
 class OntologyAttachmentsTableViewModel(OntologyTableViewModel):

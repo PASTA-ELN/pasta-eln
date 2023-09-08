@@ -14,7 +14,7 @@ from typing import Any
 from PySide6 import QtCore
 from PySide6.QtWidgets import QDialog
 
-from pasta_eln.ontology_configuration.create_type_dialog.create_type_dialog import Ui_CreateTypeDialog
+from .create_type_dialog import Ui_CreateTypeDialog
 
 
 class CreateTypeDialog(Ui_CreateTypeDialog):

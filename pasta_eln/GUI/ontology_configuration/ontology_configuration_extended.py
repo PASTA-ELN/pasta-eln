@@ -15,20 +15,20 @@ from PySide6 import QtWidgets
 from PySide6.QtWidgets import QApplication
 from cloudant.document import Document
 
-from pasta_eln.ontology_configuration import ontology_configuration_constants
-from pasta_eln.ontology_configuration.create_type_dialog.create_type_dialog_extended import CreateTypeDialog
-from pasta_eln.ontology_configuration.delete_column_delegate import DeleteColumnDelegate
-from pasta_eln.ontology_configuration.exceptions.ontology_config_generic_exception import OntologyConfigGenericException
-from pasta_eln.ontology_configuration.exceptions.ontology_config_key_not_found_exception import \
-  OntologyConfigKeyNotFoundException
-from pasta_eln.ontology_configuration.exceptions.ontology_document_null_exception import OntologyDocumentNullException
-from pasta_eln.ontology_configuration.ontology_attachments_tableview_data_model import OntologyAttachmentsTableViewModel
-from pasta_eln.ontology_configuration.ontology_configuration import Ui_OntologyConfigurationBaseForm
-from pasta_eln.ontology_configuration.ontology_props_tableview_data_model import OntologyPropsTableViewModel
-from pasta_eln.ontology_configuration.reorder_column_delegate import ReorderColumnDelegate
-from pasta_eln.ontology_configuration.required_column_delegate import RequiredColumnDelegate
-from pasta_eln.ontology_configuration.utility_functions import adjust_ontology_data_to_v3, show_message, \
-  get_next_possible_structural_level_label, get_db
+from .ontology_configuration_constants import PROPS_TABLE_DELETE_COLUMN_INDEX, PROPS_TABLE_REORDER_COLUMN_INDEX,\
+    PROPS_TABLE_REQUIRED_COLUMN_INDEX, ATTACHMENT_TABLE_DELETE_COLUMN_INDEX, ATTACHMENT_TABLE_REORDER_COLUMN_INDEX
+from .create_type_dialog.create_type_dialog_extended import CreateTypeDialog
+from .delete_column_delegate import DeleteColumnDelegate
+from .exceptions.ontology_config_generic_exception import OntologyConfigGenericException
+from .exceptions.ontology_config_key_not_found_exception import OntologyConfigKeyNotFoundException
+from .exceptions.ontology_document_null_exception import OntologyDocumentNullException
+from .ontology_attachments_tableview_data_model import OntologyAttachmentsTableViewModel
+from .ontology_configuration import Ui_OntologyConfigurationBaseForm
+from .ontology_props_tableview_data_model import OntologyPropsTableViewModel
+from .reorder_column_delegate import ReorderColumnDelegate
+from .required_column_delegate import RequiredColumnDelegate
+from .utility_functions import adjust_ontology_data_to_v3, show_message, \
+  get_next_possible_structural_level_label
 
 
 class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
@@ -79,19 +79,19 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     self.delete_column_delegate_attach_table = DeleteColumnDelegate()
     self.reorder_column_delegate_attach_table = ReorderColumnDelegate()
 
-    self.typePropsTableView.setItemDelegateForColumn(ontology_configuration_constants.PROPS_TABLE_REQUIRED_COLUMN_INDEX,
+    self.typePropsTableView.setItemDelegateForColumn(PROPS_TABLE_REQUIRED_COLUMN_INDEX,
                                                      self.required_column_delegate_props_table)
-    self.typePropsTableView.setItemDelegateForColumn(ontology_configuration_constants.PROPS_TABLE_DELETE_COLUMN_INDEX,
+    self.typePropsTableView.setItemDelegateForColumn(PROPS_TABLE_DELETE_COLUMN_INDEX,
                                                      self.delete_column_delegate_props_table)
-    self.typePropsTableView.setItemDelegateForColumn(ontology_configuration_constants.PROPS_TABLE_REORDER_COLUMN_INDEX,
+    self.typePropsTableView.setItemDelegateForColumn(PROPS_TABLE_REORDER_COLUMN_INDEX,
                                                      self.reorder_column_delegate_props_table)
     self.typePropsTableView.setModel(self.props_table_data_model)
 
     self.typeAttachmentsTableView.setItemDelegateForColumn(
-      ontology_configuration_constants.ATTACHMENT_TABLE_DELETE_COLUMN_INDEX,
+      ATTACHMENT_TABLE_DELETE_COLUMN_INDEX,
       self.delete_column_delegate_attach_table)
     self.typeAttachmentsTableView.setItemDelegateForColumn(
-      ontology_configuration_constants.ATTACHMENT_TABLE_REORDER_COLUMN_INDEX,
+      ATTACHMENT_TABLE_REORDER_COLUMN_INDEX,
       self.reorder_column_delegate_attach_table)
     self.typeAttachmentsTableView.setModel(self.attachments_table_data_model)
 
@@ -406,24 +406,3 @@ def get_gui(ontology_document: Document) -> tuple[
   ontology_form: OntologyConfigurationForm = OntologyConfigurationForm(ontology_document)
 
   return application, ontology_form.instance, ontology_form
-
-
-def main() -> None:
-  """
-  Main entry point for the application
-  Returns: None
-
-  """
-  db = get_db("research",
-              "",
-              "",
-              'http://127.0.0.1:5984',
-              logging.getLogger(__name__))
-  if db is not None:
-    app, ui_form_dialog, _ = get_gui(db['-ontology-'])
-    ui_form_dialog.show()
-    sys.exit(app.exec())
-
-
-if __name__ == "__main__":
-  main()
