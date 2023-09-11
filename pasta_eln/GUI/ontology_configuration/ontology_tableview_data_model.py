@@ -48,7 +48,7 @@ class OntologyTableViewModel(QAbstractTableModel):
   def headerData(self,
                  section: int,
                  orientation: Qt.Orientation,
-                 role: int = Qt.ItemDataRole) -> Any:
+                 role: int = Qt.ItemDataRole) -> Any: # type: ignore[assignment]
     """
     Returns the header data from self.header_values
     Args:
