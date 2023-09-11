@@ -1,4 +1,4 @@
-name: Python package
+name: PyTest&Coverage
 
 on: [push, pull_request]
 
@@ -22,6 +22,7 @@ jobs:
           pip install -r requirements-linux.txt
       - name: Test with pytest
         run: |
-         chmod +x ./run_tests.sh
-         ./run_tests.sh
-        shell: bash
+          coverage run --omit="*/test*" -m pytest . && coverage html -i
+#         chmod +x ./run_tests.sh
+#         ./run_tests.sh
+        #shell: bash
