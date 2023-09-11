@@ -21,7 +21,7 @@ class OntologyTableViewModel(QAbstractTableModel):
   """
 
   def __init__(self,
-               parent: QWidget = None):
+               parent: Union[QWidget | None] = None):
     """
     Initialize the data model representing attachments from ontology document in the database
     Args:
@@ -34,7 +34,7 @@ class OntologyTableViewModel(QAbstractTableModel):
     self.header_values: list[str] = []
     self.columns_count = 0
 
-  def hasChildren(self, parent: Union[QModelIndex, QPersistentModelIndex]) -> bool:
+  def hasChildren(self, parent: Union[QModelIndex, QPersistentModelIndex] = ...) -> bool:  # type: ignore[assignment]
     """
     Returns whether the model has children
     Args:
@@ -48,7 +48,7 @@ class OntologyTableViewModel(QAbstractTableModel):
   def headerData(self,
                  section: int,
                  orientation: Qt.Orientation,
-                 role: int = Qt.ItemDataRole) -> Any:
+                 role: int = Qt.ItemDataRole) -> Any:  # type: ignore[assignment]
     """
     Returns the header data from self.header_values
     Args:
@@ -78,7 +78,7 @@ class OntologyTableViewModel(QAbstractTableModel):
     self.layoutChanged.emit()
 
   def rowCount(self,
-               parent: Union[QModelIndex, QPersistentModelIndex] = ...) -> int:
+               parent: Union[QModelIndex, QPersistentModelIndex] = ...) -> int:  # type: ignore[assignment]
     """
     Returns the row count for the table under the given parent
     Args:
@@ -92,7 +92,7 @@ class OntologyTableViewModel(QAbstractTableModel):
       else 0
 
   def columnCount(self,
-                  parent: Union[QModelIndex, QPersistentModelIndex] = ...) -> int:
+                  parent: Union[QModelIndex, QPersistentModelIndex] = ...) -> int:  # type: ignore[assignment]
     """
     Returns the column count for the table under the given parent
     Args:
@@ -106,7 +106,7 @@ class OntologyTableViewModel(QAbstractTableModel):
   def setData(self,
               index: Union[QModelIndex, QPersistentModelIndex],
               value: Any,
-              role: int = Qt.ItemDataRole) -> bool:
+              role: int = Qt.ItemDataRole) -> bool:  # type: ignore[assignment]
     """
     Sets the data for the table cell represented by the index. The data is set only for the below cases
      - EditRole: When the data in the cell is edited via line edit
@@ -129,7 +129,7 @@ class OntologyTableViewModel(QAbstractTableModel):
 
   def data(self,
            index: Union[QModelIndex, QPersistentModelIndex],
-           role: int = Qt.ItemDataRole) -> Any:
+           role: int = Qt.ItemDataRole) -> Any:  # type: ignore[assignment]
     """
     Gets the data from the table cell represented by the index. Data is only retrieved for the following roles:
     - DisplayRole: When the table needs to be displayed
@@ -162,10 +162,10 @@ class OntologyTableViewModel(QAbstractTableModel):
 
     """
     if index.isValid():
-      return (Qt.ItemIsEditable
+      return (Qt.ItemIsEditable  # type: ignore[operator]
               | Qt.ItemIsSelectable
               | Qt.ItemIsEnabled)
-    return None
+    return None  # type: ignore[return-value]
 
   @Slot(int)
   def delete_data(self, position: int) -> None:

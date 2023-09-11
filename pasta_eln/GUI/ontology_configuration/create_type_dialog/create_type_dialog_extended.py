@@ -14,7 +14,7 @@ from typing import Any
 from PySide6 import QtCore
 from PySide6.QtWidgets import QDialog
 
-from pasta_eln.ontology_configuration.create_type_dialog.create_type_dialog import Ui_CreateTypeDialog
+from .create_type_dialog import Ui_CreateTypeDialog
 
 
 class CreateTypeDialog(Ui_CreateTypeDialog):
@@ -66,7 +66,7 @@ class CreateTypeDialog(Ui_CreateTypeDialog):
     Returns: Nothing
     """
     if self.structuralLevelCheckBox.isChecked():
-      self.titleLineEdit.setText(self.next_struct_level)
+      self.titleLineEdit.setText(self.next_struct_level if self.next_struct_level else "")
       self.titleLineEdit.setDisabled(True)
     else:
       self.titleLineEdit.clear()

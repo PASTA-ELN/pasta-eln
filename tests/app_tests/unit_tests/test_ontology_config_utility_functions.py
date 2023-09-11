@@ -14,7 +14,7 @@ from PySide6.QtGui import QMouseEvent
 from PySide6.QtWidgets import QMessageBox
 from cloudant import CouchDB
 
-from pasta_eln.ontology_configuration.utility_functions import is_click_within_bounds, adjust_ontology_data_to_v3, \
+from pasta_eln.GUI.ontology_configuration.utility_functions import is_click_within_bounds, adjust_ontology_data_to_v3, \
   get_next_possible_structural_level_label, get_db, show_message
 
 

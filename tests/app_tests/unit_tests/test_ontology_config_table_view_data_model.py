@@ -177,7 +177,7 @@ class TestOntologyConfigTableViewDataModel(object):
     mock_layout_changed = mocker.patch("PySide6.QtCore.SignalInstance")
     mock_data_set.__getitem__.side_effect = data_set.__getitem__
     mock_data_set.__setitem__.side_effect = data_set.__setitem__
-    mocker.patch('pasta_eln.ontology_configuration.ontology_tableview_data_model.len', lambda x: len(data_set))
+    mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_tableview_data_model.len', lambda x: len(data_set))
     mock_data_set.insert.side_effect = data_set.insert
     mocker.patch.object(table_model, "data_set", mock_data_set)
     data_set_insert_spy = mocker.spy(mock_data_set, 'insert')

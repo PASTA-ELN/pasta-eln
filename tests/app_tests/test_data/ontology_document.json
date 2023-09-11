@@ -1,0 +1,211 @@
+{
+  "_id": "-ontology-",
+  "_rev": "5-a3f3f6b96ba5839081fa8b2f745df64a",
+  "-version": 2,
+  "x0": {
+    "link": "http://url.com",
+    "label": "Projects",
+    "prop": {
+      "default": [
+        {
+          "name": "-name",
+          "query": "What is the name of the project?",
+          "link": "http://url.com",
+          "required": "True"
+        },
+        {
+          "name": "status",
+          "query": "What is the project status",
+          "list": [
+            "active",
+            "paused",
+            "passive",
+            "finished"
+          ]
+        },
+        {
+          "name": "objective",
+          "query": "What is the objective?"
+        },
+        {
+          "name": "-tags"
+        },
+        {
+          "name": "comment",
+          "query": "#tags comments remarks :field:value:"
+        }
+      ],
+      "category1": [
+        {
+          "name": "-name",
+          "query": "What is the name of the property?",
+          "required": "True",
+          "link": "http://url.com",
+          "unit": ""
+        },
+        {
+          "name": "sample1",
+          "query": "",
+          "required": "True",
+          "link": "http://url.com",
+          "unit": "m"
+        }
+      ]
+    },
+    "attachments": []
+  },
+  "x1": {
+    "link": "",
+    "label": "Tasks",
+    "prop": {
+      "default": [
+        {
+          "name": "-name",
+          "query": "What is the name of task?"
+        },
+        {
+          "name": "comment",
+          "query": "#tags comments remarks :field:value:"
+        }
+      ]
+    },
+    "attachments": []
+  },
+  "x2": {
+    "link": "",
+    "label": "Subtasks",
+    "prop": {
+      "default": [
+        {
+          "name": "-name",
+          "query": "What is the name of subtask?"
+        },
+        {
+          "name": "comment",
+          "query": "#tags comments remarks :field:value:"
+        }
+      ]
+    },
+    "attachments": []
+  },
+  "measurement": {
+    "link": "",
+    "label": "Measurements",
+    "prop": {
+      "default": [
+        {
+          "name": "-name",
+          "query": "What is the file name?"
+        },
+        {
+          "name": "-tags"
+        },
+        {
+          "name": "comment",
+          "query": "#tags comments remarks :field:value:"
+        },
+        {
+          "name": "-type"
+        },
+        {
+          "name": "image"
+        },
+        {
+          "name": "#_curated"
+        },
+        {
+          "name": "sample",
+          "query": "Which sample was used?",
+          "list": "sample",
+          "unit": "m",
+          "required": "True",
+          "link": "http://url.com"
+        },
+        {
+          "name": "procedure",
+          "query": "Which procedure was used?",
+          "list": "procedure"
+        }
+      ]
+    },
+    "attachments": []
+  },
+  "sample": {
+    "link": "",
+    "label": "Samples",
+    "prop": {
+      "default": [
+        {
+          "name": "-name",
+          "query": "What is the name / identifier of the sample?"
+        },
+        {
+          "name": "chemistry",
+          "query": "What is its chemical composition?"
+        },
+        {
+          "name": "-tags"
+        },
+        {
+          "name": "comment",
+          "query": "#tags comments remarks :field:value:"
+        },
+        {
+          "name": "qrCode"
+        }
+      ]
+    },
+    "attachments": []
+  },
+  "procedure": {
+    "link": "",
+    "label": "Procedures",
+    "prop": {
+      "default": [
+        {
+          "name": "-name",
+          "query": "What is the name / path?"
+        },
+        {
+          "name": "-tags"
+        },
+        {
+          "name": "comment",
+          "query": "#tags comments :field:value: e.g. #SOP_v1"
+        },
+        {
+          "name": "content",
+          "query": "What is procedure (Markdown possible; autofilled if file given)?"
+        }
+      ]
+    },
+    "attachments": []
+  },
+  "instrument": {
+    "link": "",
+    "label": "Instruments",
+    "prop": {
+      "default": [
+        {
+          "name": "-name",
+          "query": "What is the name / path?",
+          "required": "True"
+        },
+        {
+          "name": "comment",
+          "query": "#tags comments :field:value: e.g. #SOP_v1"
+        },
+        {
+          "name": "vendor",
+          "query": "Who is the vendor?"
+        }
+      ]
+    },
+    "attachments": [
+      {
+        "location": "Right side of the instrument",
+        "link": "device1"
+      }
+    ]
+  }
+}

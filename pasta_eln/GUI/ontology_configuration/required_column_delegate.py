@@ -49,8 +49,9 @@ class RequiredColumnDelegate(QStyledItemDelegate):
                      option.rect.top(),
                      option.rect.width(),
                      option.rect.height())
+    is_user_role = index.data(Qt.UserRole) == 'True'  # type: ignore[arg-type]
     opt.state = QStyle.State_On \
-      if index.data(Qt.UserRole) == 'True' \
+      if is_user_role \
       else QStyle.State_Off
     style.drawControl(QStyle.CE_RadioButton, opt, painter, widget)
 
@@ -71,13 +72,13 @@ class RequiredColumnDelegate(QStyledItemDelegate):
 
     """
     if event.type() == QEvent.MouseButtonRelease:
-      model.setData(index, str(not index.data(Qt.UserRole) == 'True'), Qt.UserRole)
+      model.setData(index, str(not index.data(Qt.UserRole) == 'True'), Qt.UserRole)  # type: ignore[arg-type]
     return super().editorEvent(event, model, option, index)
 
   def createEditor(self,
                    parent: QWidget,
                    option: QStyleOptionViewItem,
-                   index: Union[QModelIndex, QPersistentModelIndex]) -> None:
+                   index: Union[QModelIndex, QPersistentModelIndex]) -> QWidget:
     """
     Disable the editor for the whole required column by simply returning None
     Args:
@@ -88,4 +89,4 @@ class RequiredColumnDelegate(QStyledItemDelegate):
     Returns: None
 
     """
-    return None
+    return None  # type: ignore[return-value]
