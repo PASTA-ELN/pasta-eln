@@ -26,6 +26,8 @@ jobs:
         run: |
           mkdir -p htmlcov
           coverage run --omit="*/test*" -m pytest . && coverage html -i
-#         chmod +x ./run_tests.sh
+        env:
+          QT_QPA_PLATFORM: "offscreen"
+        #         chmod +x ./run_tests.sh
 #         ./run_tests.sh
         #shell: bash
