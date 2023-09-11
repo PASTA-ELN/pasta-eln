@@ -47,7 +47,7 @@ class ReorderColumnDelegate(QStyledItemDelegate):
     """
     button = QPushButton()
     opt = QStyleOptionButton()
-    opt.state = QStyle.State_Active | QStyle.State_Enabled
+    opt.state = QStyle.State_Active | QStyle.State_Enabled  # type: ignore[operator]
     opt.rect = option.rect
     opt.text = "^"
     QApplication.style().drawControl(QStyle.CE_PushButton, opt, painter, button)
@@ -55,7 +55,7 @@ class ReorderColumnDelegate(QStyledItemDelegate):
   def createEditor(self,
                    parent: QWidget,
                    option: QStyleOptionViewItem,
-                   index: Union[QModelIndex, QPersistentModelIndex]) -> None:
+                   index: Union[QModelIndex, QPersistentModelIndex]) -> QWidget:
     """
     Disable the editor for the whole re-order column by simply returning None
     Args:
@@ -66,7 +66,7 @@ class ReorderColumnDelegate(QStyledItemDelegate):
     Returns: None
 
     """
-    return None
+    return None  # type: ignore[return-value]
 
   def editorEvent(self,
                   event: QEvent,

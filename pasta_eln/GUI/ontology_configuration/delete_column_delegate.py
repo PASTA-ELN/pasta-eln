@@ -48,7 +48,7 @@ class DeleteColumnDelegate(QStyledItemDelegate):
     """
     button = QPushButton()
     opt = QStyleOptionButton()
-    opt.state = QStyle.State_Active | QStyle.State_Enabled
+    opt.state = QStyle.State_Active | QStyle.State_Enabled  # type: ignore[operator]
     opt.rect = option.rect
     opt.text = "Delete"
     QApplication.style().drawControl(QStyle.CE_PushButton, opt, painter, button)
@@ -56,7 +56,7 @@ class DeleteColumnDelegate(QStyledItemDelegate):
   def createEditor(self,
                    parent: QWidget,
                    option: QStyleOptionViewItem,
-                   index: Union[QModelIndex, QPersistentModelIndex]) -> None:
+                   index: Union[QModelIndex, QPersistentModelIndex]) -> QWidget:
     """
     Disable the editor for the delete column by simply returning None
     Args:
@@ -67,7 +67,7 @@ class DeleteColumnDelegate(QStyledItemDelegate):
     Returns: None
 
     """
-    return None
+    return None  # type: ignore[return-value]
 
   def editorEvent(self,
                   event: QEvent,
