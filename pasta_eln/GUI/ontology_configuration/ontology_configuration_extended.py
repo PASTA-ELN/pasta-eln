@@ -15,16 +15,17 @@ from PySide6 import QtWidgets
 from PySide6.QtWidgets import QApplication
 from cloudant.document import Document
 
-from .create_type_dialog.create_type_dialog_extended import CreateTypeDialog
-from .delete_column_delegate import DeleteColumnDelegate
-from .exceptions.ontology_config_generic_exception import OntologyConfigGenericException
-from .exceptions.ontology_config_key_not_found_exception import OntologyConfigKeyNotFoundException
-from .exceptions.ontology_document_null_exception import OntologyDocumentNullException
+from .create_type_dialog_extended import CreateTypeDialog
+from .ontology_config_generic_exception import OntologyConfigGenericException
+from .ontology_config_key_not_found_exception import \
+  OntologyConfigKeyNotFoundException
+from .ontology_document_null_exception import OntologyDocumentNullException
 from .ontology_attachments_tableview_data_model import OntologyAttachmentsTableViewModel
 from .ontology_configuration import Ui_OntologyConfigurationBaseForm
 from .ontology_configuration_constants import PROPS_TABLE_DELETE_COLUMN_INDEX, PROPS_TABLE_REORDER_COLUMN_INDEX, \
   PROPS_TABLE_REQUIRED_COLUMN_INDEX, ATTACHMENT_TABLE_DELETE_COLUMN_INDEX, ATTACHMENT_TABLE_REORDER_COLUMN_INDEX
 from .ontology_props_tableview_data_model import OntologyPropsTableViewModel
+from .delete_column_delegate import DeleteColumnDelegate
 from .reorder_column_delegate import ReorderColumnDelegate
 from .required_column_delegate import RequiredColumnDelegate
 from .utility_functions import adjust_ontology_data_to_v3, show_message, \
