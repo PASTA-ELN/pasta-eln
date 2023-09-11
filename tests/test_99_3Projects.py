@@ -22,7 +22,7 @@ class TestStringMethods(unittest.TestCase):
     self.dirName = ''
 
   @pytest.mark.skip(
-    reason="Disabled until the PASTA GUI app is modified for the latest schema changes in ontology data")
+    reason="Disabled until proper mocking of the backend data is implemented")
   def test_main(self):
     """
     main function
