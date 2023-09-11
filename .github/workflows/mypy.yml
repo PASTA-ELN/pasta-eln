@@ -18,4 +18,4 @@ jobs:
         pip install -r requirements-linux.txt
     - name: Analysing the code with mypy
       run: |
-        mypy pasta_eln --verbose
+        mypy pasta_eln
