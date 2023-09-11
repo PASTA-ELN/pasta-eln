@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install ubuntu dependencies
-        run: sudo apt-get install libgl1-mesa-glx
+        run: sudo apt-get install libsm6 libxext6 ffmpeg libfontconfig1 libxrender1 libgl1-mesa-glx
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
