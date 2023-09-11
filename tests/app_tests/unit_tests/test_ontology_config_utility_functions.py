@@ -89,10 +89,10 @@ class TestOntologyConfigUtilityFunctions(object):
     contents = {
       "-version": 2,
       "x0":
-      {
-        "label": "",
-        "prop": []
-      }
+        {
+          "label": "",
+          "prop": []
+        }
     }
     mock_doc = self.create_mock_doc(contents, mocker)
     assert adjust_ontology_data_to_v3(mock_doc) is None, "adjust_ontology_data_to_v3 should return None"
@@ -104,7 +104,7 @@ class TestOntologyConfigUtilityFunctions(object):
     # Without anything much
     contents = {
       "-version": 2,
-      "x0":{}
+      "x0": {}
     }
     mock_doc = self.create_mock_doc(contents, mocker)
     assert adjust_ontology_data_to_v3(mock_doc) is None, "adjust_ontology_data_to_v3 should return None"
@@ -119,16 +119,16 @@ class TestOntologyConfigUtilityFunctions(object):
     contents = {
       "-version": 2,
       "x1":
-      {
-        "attachments": [{"test": "test", "test1": "test2"}],
-        "label": "",
-        "prop": {"default": [
-          {
-            "name": "value",
-            "test": "test1"
-          }
-        ]}
-      }
+        {
+          "attachments": [{"test": "test", "test1": "test2"}],
+          "label": "",
+          "prop": {"default": [
+            {
+              "name": "value",
+              "test": "test1"
+            }
+          ]}
+        }
     }
     mock_doc = self.create_mock_doc(contents, mocker)
     assert adjust_ontology_data_to_v3(mock_doc) is None, "adjust_ontology_data_to_v3 should return None"

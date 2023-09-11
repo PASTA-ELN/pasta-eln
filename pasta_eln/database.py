@@ -45,7 +45,7 @@ class Database:
       self.initGeneralViews()
     self.ontology = self.db['-ontology-']
     if '-version' not in self.ontology or self.ontology['-version']!=2:
-      print("**ERROR wrong ontology version")
+      print(F"**ERROR wrong ontology version: {self.ontology['-version']}")
       raise ValueError("Wrong ontology version")
     self.dataLabels = {i:self.ontology[i]['label'] for i in self.ontology if i[0] not in ['_','-']}
     self.basePath   = basePath
