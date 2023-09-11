@@ -54,6 +54,7 @@ def adjust_ontology_data_to_v3(ontology_doc: Document) -> None:
   for data in ontology_doc:
     if isinstance(ontology_doc[data], dict):
       type_structures[data] = ontology_doc[data]
+  ontology_doc["-version"] = 3
   if type_structures:
     for _, type_structure in type_structures.items():
       type_structure.setdefault("attachments", [])
