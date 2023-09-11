@@ -12,6 +12,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+      - name: Install ubuntu dependencies
+        run: apt-get install libgl1-mesa-glx
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
