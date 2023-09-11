@@ -23,10 +23,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements-linux.txt
       - name: Test with pytest
-        with:
-          name: pytest
-          path: src/htmlcov
         run: |
+          mkdir -p htmlcov
           coverage run --omit="*/test*" -m pytest . && coverage html -i
 #         chmod +x ./run_tests.sh
 #         ./run_tests.sh
