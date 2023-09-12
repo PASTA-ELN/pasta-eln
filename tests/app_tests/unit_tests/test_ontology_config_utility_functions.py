@@ -79,31 +79,32 @@ class TestOntologyConfigUtilityFunctions(object):
     contents = {}
     mock_doc = self.create_mock_doc(contents, mocker)
     assert adjust_ontology_data_to_v3(mock_doc) is None, "adjust_ontology_data_to_v3 should return None"
-    assert len(contents) == 0, "No change to the document contents"
+    assert list(contents.keys()) == ["-version"], "Only version should be added"
 
     assert adjust_ontology_data_to_v3(None) is None, "adjust_ontology_data_to_v3 should return None"
 
   def test_adjust_ontology_data_to_v3_when_v2document_given_do_expected(self,
                                                                         mocker):
     # Without attachments
-    contents = {"x0":
-      {
-        "version": 2,
-        "label": "",
-        "prop": []
-      }
+    contents = {
+      "-version": 2,
+      "x0":
+        {
+          "label": "",
+          "prop": []
+        }
     }
     mock_doc = self.create_mock_doc(contents, mocker)
     assert adjust_ontology_data_to_v3(mock_doc) is None, "adjust_ontology_data_to_v3 should return None"
     assert "attachments" in contents["x0"], "attachments should be set"
     assert "prop" in contents["x0"], "prop should be set"
     assert type(contents["x0"]["prop"]) is dict, "prop should be dictionary"
+    assert contents["-version"] == 3, "Version must be updated to 3"
 
     # Without anything much
-    contents = {"x0":
-      {
-        "version": 2
-      }
+    contents = {
+      "-version": 2,
+      "x0": {}
     }
     mock_doc = self.create_mock_doc(contents, mocker)
     assert adjust_ontology_data_to_v3(mock_doc) is None, "adjust_ontology_data_to_v3 should return None"
@@ -112,20 +113,22 @@ class TestOntologyConfigUtilityFunctions(object):
     assert type(contents["x0"]["prop"]) is dict, "prop should be dictionary"
     assert "default" in contents["x0"]["prop"] and len(
       contents["x0"]["prop"]["default"]) == 0, "default prop list be defined"
+    assert contents["-version"] == 3, "Version must be updated to 3"
 
     # With some content
-    contents = {"x1":
-      {
-        "version": 2,
-        "attachments": [{"test": "test", "test1": "test2"}],
-        "label": "",
-        "prop": {"default": [
-          {
-            "name": "value",
-            "test": "test1"
-          }
-        ]}
-      }
+    contents = {
+      "-version": 2,
+      "x1":
+        {
+          "attachments": [{"test": "test", "test1": "test2"}],
+          "label": "",
+          "prop": {"default": [
+            {
+              "name": "value",
+              "test": "test1"
+            }
+          ]}
+        }
     }
     mock_doc = self.create_mock_doc(contents, mocker)
     assert adjust_ontology_data_to_v3(mock_doc) is None, "adjust_ontology_data_to_v3 should return None"
@@ -134,12 +137,14 @@ class TestOntologyConfigUtilityFunctions(object):
     assert type(contents["x1"]["prop"]) is dict, "prop should be dictionary"
     assert "default" in contents["x1"]["prop"] and len(
       contents["x1"]["prop"]["default"]) == 1, "default prop list should be the same"
+    assert contents["-version"] == 3, "Version must be updated to 3"
 
   @staticmethod
   def create_mock_doc(contents, mocker):
     mock_doc = mocker.patch('cloudant.document.Document')
     mock_doc.__iter__ = mocker.Mock(return_value=iter(contents))
     mock_doc.__getitem__.side_effect = contents.__getitem__
+    mock_doc.__setitem__.side_effect = contents.__setitem__
     return mock_doc
 
   def test_get_next_possible_structural_level_label_when_null_arg_returns_none(self):

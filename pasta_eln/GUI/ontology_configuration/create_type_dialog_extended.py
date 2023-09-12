@@ -1,7 +1,15 @@
 """ CreateTypeDialog used for the create type dialog """
 #  PASTA-ELN and all its sub-parts are covered by the MIT license.
 #
-#  Copyright (c) 2023
+#  Copyright (c) 2023.
+#
+#  Author: Jithu Murugan
+#  Filename: create_type_dialog_extended.py
+#
+#  You should have received a copy of the license with this file. Please refer the license file for more information.
+
+#  PASTA-ELN and all its sub-parts are covered by the MIT license.
+#
 #
 #  Author: Jithu Murugan
 #  Filename: create_type_dialog_extended.py
@@ -14,7 +22,7 @@ from typing import Any
 from PySide6 import QtCore
 from PySide6.QtWidgets import QDialog
 
-from .create_type_dialog import Ui_CreateTypeDialog
+from pasta_eln.GUI.ontology_configuration.create_type_dialog import Ui_CreateTypeDialog
 
 
 class CreateTypeDialog(Ui_CreateTypeDialog):

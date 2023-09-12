@@ -10,13 +10,14 @@
 import pytest
 from PySide6.QtWidgets import QApplication, QDialog
 
-from pasta_eln.GUI.ontology_configuration.create_type_dialog.create_type_dialog_extended import CreateTypeDialog
+from pasta_eln.GUI.ontology_configuration.create_type_dialog_extended import CreateTypeDialog
 from pasta_eln.GUI.ontology_configuration.delete_column_delegate import DeleteColumnDelegate
-from pasta_eln.GUI.ontology_configuration.exceptions.ontology_config_generic_exception import OntologyConfigGenericException
-from pasta_eln.GUI.ontology_configuration.exceptions.ontology_config_key_not_found_exception import \
+from pasta_eln.GUI.ontology_configuration.ontology_config_generic_exception import OntologyConfigGenericException
+from pasta_eln.GUI.ontology_configuration.ontology_config_key_not_found_exception import \
   OntologyConfigKeyNotFoundException
-from pasta_eln.GUI.ontology_configuration.exceptions.ontology_document_null_exception import OntologyDocumentNullException
-from pasta_eln.GUI.ontology_configuration.ontology_attachments_tableview_data_model import OntologyAttachmentsTableViewModel
+from pasta_eln.GUI.ontology_configuration.ontology_document_null_exception import OntologyDocumentNullException
+from pasta_eln.GUI.ontology_configuration.ontology_attachments_tableview_data_model import \
+  OntologyAttachmentsTableViewModel
 from pasta_eln.GUI.ontology_configuration.ontology_configuration_extended import OntologyConfigurationForm, get_gui
 from pasta_eln.GUI.ontology_configuration.ontology_props_tableview_data_model import OntologyPropsTableViewModel
 from pasta_eln.GUI.ontology_configuration.reorder_column_delegate import ReorderColumnDelegate
@@ -29,7 +30,7 @@ class TestOntologyConfigConfiguration(object):
   def test_instantiation_should_succeed(self,
                                         mocker):
     mock_document = mocker.patch('cloudant.document.Document')
-    mocker.patch('pasta_eln.GUI.ontology_configuration.create_type_dialog.create_type_dialog_extended.logging.getLogger')
+    mocker.patch('pasta_eln.GUI.ontology_configuration.create_type_dialog_extended.logging.getLogger')
     mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration.Ui_OntologyConfigurationBaseForm.setupUi')
     mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.adjust_ontology_data_to_v3')
     mocker.patch.object(QDialog, '__new__')
@@ -62,7 +63,7 @@ class TestOntologyConfigConfiguration(object):
 
   def test_instantiation_with_null_document_should_throw_exception(self,
                                                                    mocker):
-    mocker.patch('pasta_eln.GUI.ontology_configuration.create_type_dialog.create_type_dialog_extended.logging.getLogger')
+    mocker.patch('pasta_eln.GUI.ontology_configuration.create_type_dialog_extended.logging.getLogger')
     mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration.Ui_OntologyConfigurationBaseForm.setupUi')
     mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.adjust_ontology_data_to_v3')
     mocker.patch.object(QDialog, '__new__')
@@ -263,7 +264,8 @@ class TestOntologyConfigConfiguration(object):
     set_items_selected_spy = mocker.spy(configuration_extended.selected_type_properties, '__setitem__')
     mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.len',
                  lambda x: len(selected_type_properties.keys()))
-    mock_show_message = mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.show_message')
+    mock_show_message = mocker.patch(
+      'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.show_message')
 
     if not new_category:
       assert configuration_extended.add_new_prop_category() is None, "Nothing should be returned"
@@ -320,7 +322,8 @@ class TestOntologyConfigConfiguration(object):
     set_current_index_category_combo_box_spy = mocker.spy(configuration_extended.propsCategoryComboBox,
                                                           'setCurrentIndex')
     mocker.patch.object(configuration_extended, 'selected_type_properties', create=True)
-    mock_show_message = mocker.patch("pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.show_message")
+    mock_show_message = mocker.patch(
+      "pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.show_message")
     if selected_type_properties:
       configuration_extended.selected_type_properties.__setitem__.side_effect = selected_type_properties.__setitem__
       configuration_extended.selected_type_properties.__getitem__.side_effect = selected_type_properties.__getitem__
@@ -442,7 +445,8 @@ class TestOntologyConfigConfiguration(object):
     set_current_index_category_combo_box_spy = mocker.spy(configuration_extended.typeComboBox, 'setCurrentIndex')
     add_items_selected_spy = mocker.spy(configuration_extended.typeComboBox, 'addItems')
     logger_info_spy = mocker.spy(configuration_extended.logger, 'info')
-    mock_show_message = mocker.patch("pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.show_message")
+    mock_show_message = mocker.patch(
+      "pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.show_message")
     mocker.patch.object(configuration_extended, 'ontology_loaded', True, create=True)
     if ontology_document:
       original_ontology_document = ontology_document.copy()
@@ -671,7 +675,8 @@ class TestOntologyConfigConfiguration(object):
       configuration_extended.ontology_document.__contains__.side_effect = doc.__contains__
 
     mocker.patch.object(configuration_extended.logger, 'info')
-    mock_show_message = mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.show_message')
+    mock_show_message = mocker.patch(
+      'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.show_message')
     assert configuration_extended.save_ontology() is None, "Nothing should be returned"
     configuration_extended.logger.info.assert_called_once_with("User saved the ontology data document!!")
     configuration_extended.ontology_document.save.assert_called_once()
@@ -696,7 +701,8 @@ class TestOntologyConfigConfiguration(object):
                                               configuration_extended: configuration_extended):
     mocker.patch.object(configuration_extended, 'ontology_document', create=True)
     mocker.patch.object(configuration_extended, 'ontology_types', create=True)
-    mock_show_message = mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.show_message')
+    mock_show_message = mocker.patch(
+      'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.show_message')
     mock_log_info = mocker.patch.object(configuration_extended.logger, 'info')
     mock_log_error = mocker.patch.object(configuration_extended.logger, 'error')
     mock_log_warn = mocker.patch.object(configuration_extended.logger, 'warning')
@@ -742,7 +748,8 @@ class TestOntologyConfigConfiguration(object):
       else:
         assert configuration_extended.create_new_type(new_title, new_label) is None, "Nothing should be returned"
         mock_log_info.assert_called_once_with("User created a new type and added "
-                                              "to the ontology document: Title: {%s}, Label: {%s}", new_title, new_label)
+                                              "to the ontology document: Title: {%s}, Label: {%s}", new_title,
+                                              new_label)
 
         (configuration_extended.ontology_document
          .__setitem__.assert_called_once_with(new_title,
