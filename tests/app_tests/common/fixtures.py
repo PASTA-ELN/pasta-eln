@@ -161,9 +161,9 @@ def props_column_names():
     0: "name",
     1: "query",
     2: "list",
-    3: "link",
-    4: "required",
-    5: "unit"
+    3: "unit",
+    4: "link",
+    5: "required"
   }
 
 
