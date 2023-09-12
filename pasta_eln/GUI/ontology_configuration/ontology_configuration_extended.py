@@ -88,6 +88,9 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
                                                      self.reorder_column_delegate_props_table)
     self.typePropsTableView.setModel(self.props_table_data_model)
 
+    for index, width in self.props_table_data_model.column_widths.items():
+      self.typePropsTableView.setColumnWidth(index, width)
+
     self.typeAttachmentsTableView.setItemDelegateForColumn(
       ATTACHMENT_TABLE_DELETE_COLUMN_INDEX,
       self.delete_column_delegate_attach_table)
