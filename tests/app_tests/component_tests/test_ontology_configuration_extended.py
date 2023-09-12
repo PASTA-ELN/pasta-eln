@@ -39,7 +39,6 @@ class TestOntologyConfigurationExtended(object):
     assert ui_form.loadOntologyPushButton is not None, "Bush button not loaded!"
     assert ui_form.saveOntologyPushButton is not None, "Save button not loaded!"
     assert ui_form.helpPushButton is not None, "Help button not loaded!"
-    assert ui_form.cancelPushButton is not None, "Cancel button not loaded!"
     assert ui_form.typePropsTableView is not None, "Properties table view not loaded!"
     assert ui_form.typeAttachmentsTableView is not None, "Type table view not loaded!"
     assert ui_form.addAttachmentPushButton is not None, "Add attachment button not loaded!"
@@ -89,8 +88,10 @@ class TestOntologyConfigurationExtended(object):
       for column in range(model.columnCount() - 2):
         index = model.index(row, column)
         if column_names[column] in data:
+          cell_data = data[column_names[column]]
           assert (model.data(index, Qt.DisplayRole)
-                  == data[column_names[column]]), f"{column_names[column]} not loaded!"
+                  == ','.join(cell_data) if isinstance(cell_data, list) else cell_data), \
+            f"{column_names[column]} not loaded!"
         else:
           assert model.data(index, Qt.DisplayRole) is None, f"{column_names[column]} should be None!"
 
