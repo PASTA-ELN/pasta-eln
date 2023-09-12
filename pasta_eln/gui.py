@@ -110,7 +110,7 @@ class MainWindow(QMainWindow):
                   'and the content will be reloaded. Save it or delete it.', 'Information')
 
 
-      
+
   @Slot(str)
   def formDoc(self, doc: dict[str, Any]) -> None:
     """
