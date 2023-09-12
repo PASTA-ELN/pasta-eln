@@ -5,6 +5,9 @@ from datetime import datetime
 import warnings
 import unittest
 from pathlib import Path
+
+import pytest
+
 from pasta_eln.backend import Backend
 from pasta_eln.miscTools import outputString
 from pasta_eln.miscTools import DummyProgressBar
