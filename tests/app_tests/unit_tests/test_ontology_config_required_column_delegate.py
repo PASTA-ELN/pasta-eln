@@ -29,8 +29,8 @@ class TestOntologyConfigRequiredColumnDelegate(object):
     delegate_editor_method_common(required_delegate, mocker)
 
   @pytest.mark.parametrize("test_data_value, expected", [
-    ('False', 'True'),
-    ('True', 'False')
+    (False, True),
+    (True, False)
   ])
   def test_delegate_editor_event_method(self,
                                         mocker,

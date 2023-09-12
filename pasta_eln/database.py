@@ -44,9 +44,10 @@ class Database:
       self.initDocTypeViews( configuration['tableColumnsMax'] )
       self.initGeneralViews()
     self.ontology = self.db['-ontology-']
-    if '-version' not in self.ontology or self.ontology['-version']!=2:
+    if ('-version' not in self.ontology
+        or self.ontology['-version'] not in [2, 3]):
       print(F"**ERROR wrong ontology version: {self.ontology['-version']}")
-      raise ValueError("Wrong ontology version")
+      raise ValueError(F"**ERROR wrong ontology version: {self.ontology['-version']}")
     self.dataLabels = {i:self.ontology[i]['label'] for i in self.ontology if i[0] not in ['_','-']}
     self.basePath   = basePath
     return

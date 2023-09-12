@@ -90,9 +90,9 @@ class TestOntologyConfigurationExtended(object):
         index = model.index(row, column)
         if column_names[column] in data:
           assert (model.data(index, Qt.DisplayRole)
-                  == str(data[column_names[column]])), f"{column_names[column]} not loaded!"
+                  == data[column_names[column]]), f"{column_names[column]} not loaded!"
         else:
-          assert model.data(index, Qt.DisplayRole) == "", f"{column_names[column]} should be null string!"
+          assert model.data(index, Qt.DisplayRole) is None, f"{column_names[column]} should be None!"
 
   def check_table_contents(self, attachments_column_names, props_column_names, selected_type, ui_form):
     categories = list(selected_type["prop"].keys())

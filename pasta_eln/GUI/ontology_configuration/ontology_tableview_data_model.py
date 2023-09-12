@@ -146,8 +146,7 @@ class OntologyTableViewModel(QAbstractTableModel):
         role in (Qt.DisplayRole, Qt.EditRole, Qt.UserRole)):
       row = index.row()
       column = index.column()
-      value = self.data_set[row].get(self.data_name_map.get(column))
-      return str(value if value else '')
+      return self.data_set[row].get(self.data_name_map.get(column))
     else:
       return None
 

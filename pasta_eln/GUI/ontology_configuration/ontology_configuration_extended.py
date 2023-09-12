@@ -206,7 +206,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     Returns: Nothing
     """
     current_type = self.typeComboBox.currentText()
-    if modified_type_label and current_type in self.ontology_types:
+    if modified_type_label is not None and current_type in self.ontology_types:
       self.ontology_types.get(current_type)["label"] = modified_type_label
 
   def update_type_link(self, modified_link: str) -> None:
@@ -219,7 +219,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     Returns: Nothing
     """
     current_type = self.typeComboBox.currentText()
-    if modified_link and current_type in self.ontology_types:
+    if modified_link is not None and current_type in self.ontology_types:
       self.ontology_types.get(current_type)["link"] = modified_link
 
   def delete_selected_type(self) -> None:
