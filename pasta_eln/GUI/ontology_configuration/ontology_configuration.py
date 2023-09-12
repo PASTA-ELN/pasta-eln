@@ -31,13 +31,13 @@ class Ui_OntologyConfigurationBaseForm(object):
     self.mainGridLayout.setContentsMargins(30, 0, 30, 0)
     self.mainGridLayout.setObjectName("mainGridLayout")
     self.typePropsTableView = QtWidgets.QTableView(parent=self.verticalLayoutWidget_2)
-    self.typePropsTableView.setSortingEnabled(True)
+    self.typePropsTableView.setSortingEnabled(False)
     self.typePropsTableView.setObjectName("typePropsTableView")
     self.typePropsTableView.horizontalHeader().setCascadingSectionResizes(True)
-    self.typePropsTableView.horizontalHeader().setSortIndicatorShown(True)
+    self.typePropsTableView.horizontalHeader().setSortIndicatorShown(False)
     self.typePropsTableView.horizontalHeader().setStretchLastSection(True)
     self.typePropsTableView.verticalHeader().setCascadingSectionResizes(True)
-    self.typePropsTableView.verticalHeader().setSortIndicatorShown(True)
+    self.typePropsTableView.verticalHeader().setSortIndicatorShown(False)
     self.typePropsTableView.verticalHeader().setStretchLastSection(False)
     self.mainGridLayout.addWidget(self.typePropsTableView, 6, 0, 1, 1)
     self.attachmentsHeaderHorizontalLayout = QtWidgets.QHBoxLayout()
@@ -181,9 +181,6 @@ class Ui_OntologyConfigurationBaseForm(object):
     self.helpPushButton = QtWidgets.QPushButton(parent=self.verticalLayoutWidget_2)
     self.helpPushButton.setObjectName("helpPushButton")
     self.headerHorizontalLayout.addWidget(self.helpPushButton)
-    self.cancelPushButton = QtWidgets.QPushButton(parent=self.verticalLayoutWidget_2)
-    self.cancelPushButton.setObjectName("cancelPushButton")
-    self.headerHorizontalLayout.addWidget(self.cancelPushButton)
     self.mainGridLayout.addLayout(self.headerHorizontalLayout, 0, 0, 1, 1)
     self.gridLayout.addWidget(self.mainWidget, 0, 1, 1, 1)
 
@@ -225,8 +222,6 @@ class Ui_OntologyConfigurationBaseForm(object):
     self.saveOntologyPushButton.setText(_translate("OntologyConfigurationBaseForm", "Save"))
     self.helpPushButton.setToolTip(_translate("OntologyConfigurationBaseForm", "Navigate to the help page"))
     self.helpPushButton.setText(_translate("OntologyConfigurationBaseForm", "Help"))
-    self.cancelPushButton.setToolTip(_translate("OntologyConfigurationBaseForm", "Close the editor"))
-    self.cancelPushButton.setText(_translate("OntologyConfigurationBaseForm", "Cancel"))
 
 
 if __name__ == "__main__":
