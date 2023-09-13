@@ -34,9 +34,8 @@ def is_click_within_bounds(event: QEvent,
       click_x = e.x()
       click_y = e.y()
       r = option.rect
-      if r.left() < click_x < r.left() + r.width():
-        if r.top() < click_y < r.top() + r.height():
-          return True
+      return (r.left() < click_x < r.left() + r.width()
+              and r.top() < click_y < r.top() + r.height())
   return False
 
 
@@ -50,10 +49,10 @@ def adjust_ontology_data_to_v3(ontology_doc: Document) -> None:
   """
   if not ontology_doc:
     return None
-  type_structures = {}
-  for data in ontology_doc:
-    if isinstance(ontology_doc[data], dict):
-      type_structures[data] = ontology_doc[data]
+  type_structures = {
+      data: ontology_doc[data]
+      for data in ontology_doc if isinstance(ontology_doc[data], dict)
+  }
   ontology_doc["-version"] = 3
   if type_structures:
     for _, type_structure in type_structures.items():
@@ -132,8 +131,5 @@ def get_db(db_name: str,
     if logger:
       logger.error(f'Could not connect with username+password to local server, error: {ex}')
     return None
-  if db_name in client.all_dbs():
-    db_instance = client[db_name]
-  else:
-    db_instance = client.create_database(db_name)
-  return db_instance
+  return (client[db_name]
+          if db_name in client.all_dbs() else client.create_database(db_name))

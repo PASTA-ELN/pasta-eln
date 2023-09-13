@@ -16,16 +16,16 @@ from PySide6.QtWidgets import QApplication
 from cloudant.document import Document
 
 from .create_type_dialog_extended import CreateTypeDialog
+from .delete_column_delegate import DeleteColumnDelegate
+from .ontology_attachments_tableview_data_model import OntologyAttachmentsTableViewModel
 from .ontology_config_generic_exception import OntologyConfigGenericException
 from .ontology_config_key_not_found_exception import \
   OntologyConfigKeyNotFoundException
-from .ontology_document_null_exception import OntologyDocumentNullException
-from .ontology_attachments_tableview_data_model import OntologyAttachmentsTableViewModel
 from .ontology_configuration import Ui_OntologyConfigurationBaseForm
 from .ontology_configuration_constants import PROPS_TABLE_DELETE_COLUMN_INDEX, PROPS_TABLE_REORDER_COLUMN_INDEX, \
   PROPS_TABLE_REQUIRED_COLUMN_INDEX, ATTACHMENT_TABLE_DELETE_COLUMN_INDEX, ATTACHMENT_TABLE_REORDER_COLUMN_INDEX
+from .ontology_document_null_exception import OntologyDocumentNullException
 from .ontology_props_tableview_data_model import OntologyPropsTableViewModel
-from .delete_column_delegate import DeleteColumnDelegate
 from .reorder_column_delegate import ReorderColumnDelegate
 from .required_column_delegate import RequiredColumnDelegate
 from .utility_functions import adjust_ontology_data_to_v3, show_message, \
@@ -53,7 +53,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     Raises:
       OntologyDocumentNullException: Raised when passed in argument @ontology_document is null.
     """
-    self.logger = logging.getLogger(__name__ + "." + self.__class__.__name__)
+    self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
 
     self.ontology_loaded: bool = False
     self.ontology_types: Any = {}
@@ -88,8 +88,8 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
                                                      self.reorder_column_delegate_props_table)
     self.typePropsTableView.setModel(self.props_table_data_model)
 
-    for index, width in self.props_table_data_model.column_widths.items():
-      self.typePropsTableView.setColumnWidth(index, width)
+    for column_index, width in self.props_table_data_model.column_widths.items():
+      self.typePropsTableView.setColumnWidth(column_index, width)
 
     self.typeAttachmentsTableView.setItemDelegateForColumn(
       ATTACHMENT_TABLE_DELETE_COLUMN_INDEX,
@@ -98,6 +98,9 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
       ATTACHMENT_TABLE_REORDER_COLUMN_INDEX,
       self.reorder_column_delegate_attach_table)
     self.typeAttachmentsTableView.setModel(self.attachments_table_data_model)
+
+    for column_index, width in self.attachments_table_data_model.column_widths.items():
+      self.typeAttachmentsTableView.setColumnWidth(column_index, width)
 
     # Create the dialog for new type creation
     self.create_type_dialog = CreateTypeDialog(self.create_type_accepted_callback, self.create_type_rejected_callback)
@@ -124,19 +127,18 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
       if new_type_selected not in self.ontology_types:
         raise OntologyConfigKeyNotFoundException(f"Key {new_type_selected} "
                                                  f"not found in ontology_types", {})
-      if new_type_selected in self.ontology_types:
-        selected_type = self.ontology_types.get(new_type_selected)
-        # Get the properties for the selected type and store the list in selected_type_properties
-        self.selected_type_properties = selected_type.get('prop')
+      selected_type = self.ontology_types.get(new_type_selected)
+      # Get the properties for the selected type and store the list in selected_type_properties
+      self.selected_type_properties = selected_type.get('prop')
 
-        # Type label is set in a line edit
-        self.typeLabelLineEdit.setText(selected_type.get('label'))
+      # Type label is set in a line edit
+      self.typeLabelLineEdit.setText(selected_type.get('label'))
 
-        # Type link is set in a line edit
-        self.typeLinkLineEdit.setText(selected_type.get('link'))
+      # Type link is set in a line edit
+      self.typeLinkLineEdit.setText(selected_type.get('link'))
 
-        # Gets the attachment data from selected type and set it in table view
-        self.attachments_table_data_model.update(selected_type.get('attachments'))
+      # Gets the attachment data from selected type and set it in table view
+      self.attachments_table_data_model.update(selected_type.get('attachments'))
 
       # Reset the props category combo-box
       self.propsCategoryComboBox.addItems(list(self.selected_type_properties.keys())
@@ -402,11 +404,7 @@ def get_gui(ontology_document: Document) -> tuple[
 
   """
   instance = QApplication.instance()
-  if instance is None:
-    application = QApplication(sys.argv)
-  else:
-    application = instance
-
+  application = QApplication(sys.argv) if instance is None else instance
   ontology_form: OntologyConfigurationForm = OntologyConfigurationForm(ontology_document)
 
   return application, ontology_form.instance, ontology_form

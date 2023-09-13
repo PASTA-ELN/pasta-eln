@@ -45,10 +45,10 @@ class OntologyPropsTableViewModel(OntologyTableViewModel):
     self.header_values: list[str] = list(self.data_name_map.values())
     self.column_widths: dict[int, int] = {
       0: 100,  # Name column width
-      1: 400,  # Query column width
-      2: 200,  # list column width
+      1: 300,  # Query column width
+      2: 150,  # list column width
       3: 100,  # unit column width
-      4: 150,  # link column width
+      4: 100,  # link column width
       5: 120,  # required column width
       6: 120,  # delete column width
       7: 120  # re-order column width
