@@ -482,6 +482,8 @@ class Backend(CLI_Mixin):
       if success:
         doc |= content
         for meta in ['metaVendor','metaUser']:
+          if meta not in doc:
+            doc[meta] = {}
           for item in doc[meta]:
             if isinstance(doc[meta][item], tuple):
               doc[meta][item] = list(doc[meta][item])
