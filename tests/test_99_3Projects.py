@@ -21,6 +21,8 @@ class TestStringMethods(unittest.TestCase):
     self.be = None
     self.dirName = ''
 
+  @pytest.mark.skip(
+    reason="Disabled until proper mocking of the backend data is implemented")
   def test_main(self):
     """
     main function

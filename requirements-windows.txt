@@ -15,3 +15,8 @@ cairosvg
 win-unicode-console
 winshell
 pypiwin32
+pytest
+pytest-qt
+pytest-qt-app
+pytest-mock
+coverage
