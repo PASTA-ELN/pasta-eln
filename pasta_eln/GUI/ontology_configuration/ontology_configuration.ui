@@ -292,10 +292,10 @@
             </sizepolicy>
            </property>
            <property name="toolTip">
-            <string>Enter the link/url to be associated with this data-type</string>
+            <string>Enter the link/iri to be associated with this data-type</string>
            </property>
            <property name="placeholderText">
-            <string>Enter the uri for the type</string>
+            <string>Enter the iri for the type</string>
            </property>
           </widget>
          </item>
@@ -376,7 +376,7 @@
         </layout>
        </item>
        <item row="13" column="0">
-        <layout class="QHBoxLayout" name="structureTableHorizontalLayout">
+        <layout class="QHBoxLayout" name="attchmentTableButtonsHorizontalLayout">
          <property name="leftMargin">
           <number>0</number>
          </property>
