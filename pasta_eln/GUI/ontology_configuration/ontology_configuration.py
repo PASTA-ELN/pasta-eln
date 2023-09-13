@@ -181,6 +181,9 @@ class Ui_OntologyConfigurationBaseForm(object):
     self.helpPushButton = QtWidgets.QPushButton(parent=self.verticalLayoutWidget_2)
     self.helpPushButton.setObjectName("helpPushButton")
     self.headerHorizontalLayout.addWidget(self.helpPushButton)
+    self.cancelPushButton = QtWidgets.QPushButton(parent=self.verticalLayoutWidget_2)
+    self.cancelPushButton.setObjectName("cancelPushButton")
+    self.headerHorizontalLayout.addWidget(self.cancelPushButton)
     self.mainGridLayout.addLayout(self.headerHorizontalLayout, 0, 0, 1, 1)
     self.gridLayout.addWidget(self.mainWidget, 0, 1, 1, 1)
 
@@ -205,7 +208,7 @@ class Ui_OntologyConfigurationBaseForm(object):
     self.typeLabelLineEdit.setToolTip(_translate("OntologyConfigurationBaseForm", "Modify the label property of the type"))
     self.typeLabelLineEdit.setPlaceholderText(_translate("OntologyConfigurationBaseForm", "Modify the type label here"))
     self.typeLinkLineEdit.setToolTip(_translate("OntologyConfigurationBaseForm", "Enter the link/url to be associated with this data-type"))
-    self.typeLinkLineEdit.setPlaceholderText(_translate("OntologyConfigurationBaseForm", "Enter the type for the link"))
+    self.typeLinkLineEdit.setPlaceholderText(_translate("OntologyConfigurationBaseForm", "Enter the uri for the type"))
     self.addTypePushButton.setToolTip(_translate("OntologyConfigurationBaseForm", "Add a new type (structural or normal type) to the ontology data set."))
     self.addTypePushButton.setText(_translate("OntologyConfigurationBaseForm", "+ Add"))
     self.deleteTypePushButton.setToolTip(_translate("OntologyConfigurationBaseForm", "Delete the type with the full properties completely"))
@@ -222,6 +225,8 @@ class Ui_OntologyConfigurationBaseForm(object):
     self.saveOntologyPushButton.setText(_translate("OntologyConfigurationBaseForm", "Save"))
     self.helpPushButton.setToolTip(_translate("OntologyConfigurationBaseForm", "Navigate to the help page"))
     self.helpPushButton.setText(_translate("OntologyConfigurationBaseForm", "Help"))
+    self.cancelPushButton.setToolTip(_translate("OntologyConfigurationBaseForm", "Close the editor"))
+    self.cancelPushButton.setText(_translate("OntologyConfigurationBaseForm", "Cancel"))
 
 
 if __name__ == "__main__":

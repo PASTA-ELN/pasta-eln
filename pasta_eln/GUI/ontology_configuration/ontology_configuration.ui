@@ -295,7 +295,7 @@
             <string>Enter the link/url to be associated with this data-type</string>
            </property>
            <property name="placeholderText">
-            <string>Enter the type for the link</string>
+            <string>Enter the uri for the type</string>
            </property>
           </widget>
          </item>
@@ -511,6 +511,16 @@
            </property>
            <property name="text">
             <string>Help</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="cancelPushButton">
+           <property name="toolTip">
+            <string>Close the editor</string>
+           </property>
+           <property name="text">
+            <string>Cancel</string>
            </property>
           </widget>
          </item>
