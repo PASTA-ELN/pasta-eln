@@ -65,6 +65,7 @@ def configuration_extended(mocker) -> OntologyConfigurationForm:
   mocker.patch.object(OntologyConfigurationForm, 'deletePropsCategoryPushButton', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'deleteTypePushButton', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'addTypePushButton', create=True)
+  mocker.patch.object(OntologyConfigurationForm, 'cancelPushButton', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'typeComboBox', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'propsCategoryComboBox', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'typeLabelLineEdit', create=True)
@@ -74,8 +75,7 @@ def configuration_extended(mocker) -> OntologyConfigurationForm:
   mocker.patch.object(OntologyConfigurationForm, 'delete_column_delegate_attach_table', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'reorder_column_delegate_attach_table', create=True)
   mocker.patch.object(CreateTypeDialog, '__new__')
-  config_instance = OntologyConfigurationForm(mock_document)
-  return config_instance
+  return OntologyConfigurationForm(mock_document)
 
 
 @fixture()

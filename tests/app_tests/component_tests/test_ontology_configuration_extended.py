@@ -45,6 +45,7 @@ class TestOntologyConfigurationExtended(object):
     assert ui_form.addTypePushButton is not None, "Add type button not loaded!"
     assert ui_form.addPropsRowPushButton is not None, "Add property row button not loaded!"
     assert ui_form.addPropsCategoryPushButton is not None, "Add property category button not loaded!"
+    assert ui_form.cancelPushButton is not None, "Cancel button not loaded!"
     assert ui_form.typeLabelLineEdit is not None, "Data type line edit not loaded!"
     assert ui_form.typeLinkLineEdit is not None, "Data type link line edit not loaded!"
     assert ui_form.addPropsCategoryLineEdit is not None, "Property category line edit not loaded!"

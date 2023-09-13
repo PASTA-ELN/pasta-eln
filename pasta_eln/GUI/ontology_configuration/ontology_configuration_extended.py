@@ -309,6 +309,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     self.deletePropsCategoryPushButton.clicked.connect(self.delete_selected_prop_category)
     self.deleteTypePushButton.clicked.connect(self.delete_selected_type)
     self.addTypePushButton.clicked.connect(self.show_create_type_dialog)
+    self.cancelPushButton.clicked.connect(self.instance.close)
 
     # Slots for the combo-boxes
     self.typeComboBox.currentTextChanged.connect(self.type_combo_box_changed)

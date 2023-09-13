@@ -12,13 +12,13 @@ from PySide6.QtWidgets import QApplication, QDialog
 
 from pasta_eln.GUI.ontology_configuration.create_type_dialog_extended import CreateTypeDialog
 from pasta_eln.GUI.ontology_configuration.delete_column_delegate import DeleteColumnDelegate
+from pasta_eln.GUI.ontology_configuration.ontology_attachments_tableview_data_model import \
+  OntologyAttachmentsTableViewModel
 from pasta_eln.GUI.ontology_configuration.ontology_config_generic_exception import OntologyConfigGenericException
 from pasta_eln.GUI.ontology_configuration.ontology_config_key_not_found_exception import \
   OntologyConfigKeyNotFoundException
-from pasta_eln.GUI.ontology_configuration.ontology_document_null_exception import OntologyDocumentNullException
-from pasta_eln.GUI.ontology_configuration.ontology_attachments_tableview_data_model import \
-  OntologyAttachmentsTableViewModel
 from pasta_eln.GUI.ontology_configuration.ontology_configuration_extended import OntologyConfigurationForm, get_gui
+from pasta_eln.GUI.ontology_configuration.ontology_document_null_exception import OntologyDocumentNullException
 from pasta_eln.GUI.ontology_configuration.ontology_props_tableview_data_model import OntologyPropsTableViewModel
 from pasta_eln.GUI.ontology_configuration.reorder_column_delegate import ReorderColumnDelegate
 from pasta_eln.GUI.ontology_configuration.required_column_delegate import RequiredColumnDelegate
@@ -49,6 +49,7 @@ class TestOntologyConfigConfiguration(object):
     mocker.patch.object(OntologyConfigurationForm, 'deletePropsCategoryPushButton', create=True)
     mocker.patch.object(OntologyConfigurationForm, 'deleteTypePushButton', create=True)
     mocker.patch.object(OntologyConfigurationForm, 'addTypePushButton', create=True)
+    mocker.patch.object(OntologyConfigurationForm, 'cancelPushButton', create=True)
     mocker.patch.object(OntologyConfigurationForm, 'typeComboBox', create=True)
     mocker.patch.object(OntologyConfigurationForm, 'propsCategoryComboBox', create=True)
     mocker.patch.object(OntologyConfigurationForm, 'typeLabelLineEdit', create=True)
