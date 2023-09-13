@@ -8,6 +8,7 @@ from cloudant.client import CouchDB
 from cloudant.replicator import Replicator
 from PySide6.QtWidgets import QProgressBar  # pylint: disable=no-name-in-module
 from .fixedStringsJson import defaultOntology, defaultOntologyNode
+from .handleDictionaries import ontologyV2_to_V3
 from .miscTools import tracebackString, DummyProgressBar
 
 class Database:
@@ -43,11 +44,16 @@ class Database:
       self.db.create_document(self.ontology)
       self.initDocTypeViews( configuration['tableColumnsMax'] )
       self.initGeneralViews()
-    self.ontology = self.db['-ontology-']
-    if '-version' not in self.ontology or self.ontology['-version']!=2:
+    self.ontology = dict(self.db['-ontology-'])
+    if '-version' in self.ontology and self.ontology['-version']==2:
+      logging.info('Convert ontology version 2 to 3')
+      ontologyV2_to_V3(self.ontology)
+      self.db['-ontology-'].delete()
+      self.db.create_document(self.ontology)
+    if '-version' not in self.ontology or self.ontology['-version']!=3:
       print(F"**ERROR wrong ontology version: {self.ontology['-version']}")
       raise ValueError("Wrong ontology version")
-    self.dataLabels = {i:self.ontology[i]['label'] for i in self.ontology if i[0] not in ['_','-']}
+    self.dataLabels = {k:v['label'] for k,v in self.ontology.items() if k[0] not in ['_','-']}
     self.basePath   = basePath
     return
 
@@ -88,12 +94,12 @@ class Database:
       elif baseDocType in oldColumnNames:
         columnNames = oldColumnNames[baseDocType].split(',')
       elif docType == '-':
-        columnNames = [i['name'] for i in defaultOntologyNode if 'name' in i]
+        columnNames = [i['name'] for i in defaultOntologyNode['default'] if 'name' in i]
       else:
-        columnNames = [i['name'] for i in self.ontology[docType]['prop'] if 'name' in i]
+        columnNames = [i['name'] for group in self.ontology[docType]['prop']
+                       for i in self.ontology[docType]['prop'][group]]
       columnNames = columnNames[:tableColumnsMax]
       commentString = f'// {docType} : ' + ','.join(columnNames) + '\n'
-      # print('STEFFEN verify comment string',commentString)
       for name in columnNames:
         if name == 'image':
           outputList.append('doc.image.length>3')  #Not as .toString() because that leads to inconsistencies
@@ -116,7 +122,6 @@ class Database:
       viewCode[docType.replace('/','__')]       = commentString+js.replace('$outputList$', outputStr)
       viewCode[docType.replace('/','__')+'All'] = commentString+jsAll.replace('$outputList$', outputStr)
     self.saveView('viewDocType', viewCode)
-    # print('SB result of columnNames',oldColumnNames)
     return
 
 
@@ -129,14 +134,16 @@ class Database:
     if '_design/viewDocType' not in self.db:
       return {}
     try:
-      comments = [v['map'].split('\n// ')[1].split('\n')[0] for v in self.db['_design/viewDocType']['views'].values()]
+      comments = [v['map'].split('\n// ')[1].split('\n')[0]
+                  for v in self.db['_design/viewDocType']['views'].values()]
       return {i.split(' : ')[0]:i.split(' : ')[1] for i in comments}
     except Exception:
-      defaultColumnNames = {'-':','.join([i['name'] for i in defaultOntologyNode if 'name' in i])}
-      for docType in self.ontology:
+      defaultColumnNames = {'-':','.join([i['name'] for i in defaultOntologyNode['default'] if 'name' in i])}
+      for docType, docTypeDict in self.ontology.items():
         if docType[0] in ['_','-']:
           continue
-        defaultColumnNames[docType] = ','.join([i['name'] for i in self.ontology[docType]['prop'] if 'name' in i])
+        columnNames = [i['name'] for group in docTypeDict['prop'] for i in docTypeDict['prop'][group]]
+        defaultColumnNames[docType] = ','.join(columnNames)
       return defaultColumnNames
 
 
@@ -552,7 +559,8 @@ class Database:
     from cloudant.design_document import DesignDocument
     if f'_design/{designName}' in self.db:
       designDoc = self.db[f'_design/{designName}']
-      designDoc.delete()
+      if '_rev' in designDoc:
+        designDoc.delete()
     designDoc = DesignDocument(self.db, designName)
     for view in viewCode:
       thisJsCode = 'function (doc) {\n' + viewCode[view] + '\n}'
