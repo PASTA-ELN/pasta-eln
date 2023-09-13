@@ -4,6 +4,9 @@ import os, shutil, traceback, logging, socket
 import warnings
 import unittest
 from pathlib import Path
+
+import pytest
+
 from pasta_eln.backend import Backend
 from pasta_eln.miscTools import outputString
 from pasta_eln.miscTools import DummyProgressBar
@@ -17,6 +20,8 @@ class TestStringMethods(unittest.TestCase):
     self.be = None
     self.dirName = ''
 
+  @pytest.mark.skip(
+    reason="Disabled until proper mocking of the backend data is implemented")
   def test_main(self):
     """
     main function

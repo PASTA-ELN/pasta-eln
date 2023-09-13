@@ -49,10 +49,10 @@ class MainWindow(QMainWindow):
     # Menubar
     menu = self.menuBar()
     projectMenu = menu.addMenu("&Project")
-    Action('&Export .eln', self, [Command.EXPORT], projectMenu)
-    Action('&Import .eln', self, [Command.IMPORT], projectMenu)
+    Action('&Export .eln',                   self, [Command.EXPORT],         projectMenu)
+    Action('&Import .eln',                   self, [Command.IMPORT],         projectMenu)
     projectMenu.addSeparator()
-    Action('&Exit', self, [Command.EXIT], projectMenu)
+    Action('&Exit',                          self, [Command.EXIT],           projectMenu)
 
     viewMenu = menu.addMenu("&Lists")
     if hasattr(self.backend, 'db'):
@@ -60,33 +60,32 @@ class MainWindow(QMainWindow):
         if docType[0] == 'x' and docType[1] != '0':
           continue
         shortcut = f"Ctrl+{shortCuts[docType]}" if docType in shortCuts else None
-        Action(docLabel, self, [Command.VIEW, docType], viewMenu, shortcut=shortcut)
+        Action(docLabel,                     self, [Command.VIEW, docType],  viewMenu, shortcut=shortcut)
         if docType == 'x0':
           viewMenu.addSeparator()
       viewMenu.addSeparator()
-      Action('&Tags', self, [Command.VIEW, '_tags_'], viewMenu, shortcut='Ctrl+T')
-      Action('&Unidentified', self, [Command.VIEW, '-'], viewMenu, shortcut='Ctrl+U')
+      Action('&Tags',                        self, [Command.VIEW, '_tags_'], viewMenu, shortcut='Ctrl+T')
+      Action('&Unidentified',                self, [Command.VIEW, '-'],      viewMenu, shortcut='Ctrl+U')
 
     systemMenu = menu.addMenu("&System")
-    Action('&Project groups', self, [Command.PROJECT_GROUP], systemMenu)
+    Action('&Project groups',                self, [Command.PROJECT_GROUP],   systemMenu)
     changeProjectGroups = systemMenu.addMenu("&Change project group")
-    if hasattr(self.backend, 'configuration'):  # not case in fresh install
+    if hasattr(self.backend, 'configuration'):                            # not case in fresh install
       for name in self.backend.configuration['projectGroups'].keys():
-        Action(name, self, [Command.CHANGE_PG, name], changeProjectGroups)
-    Action('&Syncronize', self, [Command.SYNC], systemMenu, shortcut='F5')
-    Action('&Questionaires', self, [Command.ONTOLOGY], systemMenu, shortcut='F8')
+        Action(name,                         self, [Command.CHANGE_PG, name], changeProjectGroups)
+    Action('&Syncronize',                    self, [Command.SYNC],            systemMenu, shortcut='F5')
+    Action('&Questionaires',                 self, [Command.ONTOLOGY],        systemMenu, shortcut='F8')
     systemMenu.addSeparator()
-    Action('&Test extraction from a file', self, [Command.TEST1], systemMenu)
-    Action('Test &selected item extraction', self, [Command.TEST2], systemMenu, shortcut='F2')
-    Action('Update &Extractor list', self, [Command.UPDATE], systemMenu)
+    Action('&Test extraction from a file',   self, [Command.TEST1],           systemMenu)
+    Action('Test &selected item extraction', self, [Command.TEST2],           systemMenu, shortcut='F2')
+    Action('Update &Extractor list',         self, [Command.UPDATE],          systemMenu)
     systemMenu.addSeparator()
-    Action('&Configuration', self, [Command.CONFIG], systemMenu, shortcut='Ctrl+0')
+    Action('&Configuration',                 self, [Command.CONFIG],          systemMenu, shortcut='Ctrl+0')
 
     helpMenu = menu.addMenu("&Help")
-    Action('&Website', self, [Command.WEBSITE], helpMenu)
-    Action('&Verify database', self, [Command.VERIFY_DB], helpMenu, shortcut='Ctrl+?')
-    Action('Shortcuts', self, [Command.SHORTCUTS], helpMenu)
-    helpMenu.addSeparator()
+    Action('&Website',                       self, [Command.WEBSITE],         helpMenu)
+    Action('&Verify database',               self, [Command.VERIFY_DB],       helpMenu, shortcut='Ctrl+?')
+    Action('Shortcuts',                      self, [Command.SHORTCUTS],       helpMenu)
     # shortcuts for advanced usage (user should not need)
     QShortcut('F9', self, lambda: self.execute([Command.RESTART]))
 
@@ -130,6 +129,7 @@ class MainWindow(QMainWindow):
     if ret == 0:
       self.comm.stopSequentialEdit.emit()
     return
+
 
   def execute(self, command: list[Any]) -> None:
     """
@@ -201,8 +201,9 @@ class MainWindow(QMainWindow):
 def mainGUI() -> tuple[Union[QCoreApplication, None], MainWindow]:
   """
     Main method and entry point for commands
-  Returns:
 
+  Returns:
+    MainWindow: main window
   """
   # logging has to be started first
   log_path = Path.home() / 'pastaELN.log'
