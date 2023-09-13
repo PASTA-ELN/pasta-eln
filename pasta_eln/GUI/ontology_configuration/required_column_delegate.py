@@ -13,7 +13,7 @@ from typing import Union
 from PySide6.QtCore import QModelIndex, QPersistentModelIndex, QEvent, QAbstractItemModel, QRect, Qt
 from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import QStyledItemDelegate, QWidget, QStyleOptionViewItem, QStyleOptionButton, \
-  QStyle, QApplication
+  QStyle, QApplication, QRadioButton
 
 
 class RequiredColumnDelegate(QStyledItemDelegate):
@@ -26,7 +26,7 @@ class RequiredColumnDelegate(QStyledItemDelegate):
       Constructor
     """
     super().__init__()
-    self.logger = logging.getLogger(__name__ + "." + self.__class__.__name__)
+    self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
 
   def paint(self,
             painter: QPainter,
@@ -45,7 +45,8 @@ class RequiredColumnDelegate(QStyledItemDelegate):
     widget = option.widget
     style = widget.style() if widget else QApplication.style()
     opt = QStyleOptionButton()
-    opt.rect = QRect(option.rect.left() + option.rect.width() / 2 - 5,
+    radio_button = QRadioButton()
+    opt.rect = QRect(option.rect.left() + option.rect.width() / 2 - 10,
                      option.rect.top(),
                      option.rect.width(),
                      option.rect.height())
@@ -53,7 +54,7 @@ class RequiredColumnDelegate(QStyledItemDelegate):
     opt.state = QStyle.State_On \
       if is_required \
       else QStyle.State_Off
-    style.drawControl(QStyle.CE_RadioButton, opt, painter, widget)
+    style.drawControl(QStyle.CE_RadioButton, opt, painter, radio_button)
 
   def editorEvent(self,
                   event: QEvent,
