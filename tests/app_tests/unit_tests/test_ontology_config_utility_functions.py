@@ -76,7 +76,7 @@ class TestOntologyConfigUtilityFunctions(object):
 
   def test_adjust_ontology_data_to_v3_when_empty_document_do_nothing(self,
                                                                      mocker):
-    contents = {}
+    contents = {"-version": 2}
     mock_doc = self.create_mock_doc(contents, mocker)
     assert adjust_ontology_data_to_v3(mock_doc) is None, "adjust_ontology_data_to_v3 should return None"
     assert list(contents.keys()) == ["-version"], "Only version should be added"
