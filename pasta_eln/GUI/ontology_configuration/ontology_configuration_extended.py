@@ -29,7 +29,7 @@ from .delete_column_delegate import DeleteColumnDelegate
 from .reorder_column_delegate import ReorderColumnDelegate
 from .required_column_delegate import RequiredColumnDelegate
 from .utility_functions import adjust_ontology_data_to_v3, show_message, \
-  get_next_possible_structural_level_label, get_types_for_display, adapt_type
+  get_next_possible_structural_level_label, get_types_for_display, adapt_type, generate_empty_type
 
 
 class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
@@ -385,14 +385,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
         return
       self.logger.info("User created a new type and added "
                        "to the ontology document: Title: {%s}, Label: {%s}", title, label)
-      empty_type = {
-        "link": "",
-        "label": label,
-        "prop": {
-          "default": []
-        },
-        "attachments": []
-      }
+      empty_type = generate_empty_type(label)
       self.ontology_document[title] = empty_type
       self.ontology_types[title] = empty_type
       self.typeComboBox.clear()

@@ -22,7 +22,7 @@ from pasta_eln.GUI.ontology_configuration.ontology_document_null_exception impor
 from pasta_eln.GUI.ontology_configuration.ontology_props_tableview_data_model import OntologyPropsTableViewModel
 from pasta_eln.GUI.ontology_configuration.reorder_column_delegate import ReorderColumnDelegate
 from pasta_eln.GUI.ontology_configuration.required_column_delegate import RequiredColumnDelegate
-from pasta_eln.GUI.ontology_configuration.utility_functions import get_types_for_display
+from pasta_eln.GUI.ontology_configuration.utility_functions import get_types_for_display, generate_empty_type
 from tests.app_tests.common.fixtures import configuration_extended, ontology_doc_mock
 
 
@@ -761,25 +761,9 @@ class TestOntologyConfigConfiguration(object):
                                               new_label)
 
         (configuration_extended.ontology_document
-         .__setitem__.assert_called_once_with(new_title,
-                                              {
-                                                "link": "",
-                                                "label": new_label,
-                                                "prop": {
-                                                  "default": []
-                                                },
-                                                "attachments": []
-                                              }))
+         .__setitem__.assert_called_once_with(new_title, generate_empty_type(new_label)))
         (configuration_extended.ontology_types
-         .__setitem__.assert_called_once_with(new_title,
-                                              {
-                                                "link": "",
-                                                "label": new_label,
-                                                "prop": {
-                                                  "default": []
-                                                },
-                                                "attachments": []
-                                              }))
+         .__setitem__.assert_called_once_with(new_title, generate_empty_type(new_label)))
         configuration_extended.typeComboBox.clear.assert_called_once_with()
         configuration_extended.typeComboBox.addItems.assert_called_once_with(
           get_types_for_display(configuration_extended.ontology_types.keys()))

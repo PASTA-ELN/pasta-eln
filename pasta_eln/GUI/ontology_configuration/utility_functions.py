@@ -174,3 +174,33 @@ def is_structural_level(title: str) -> bool:
 
   """
   return re.compile(r'^[Xx][0-9]+$').match(title) is not None
+
+
+def generate_empty_type(label: str) -> dict[str, Any]:
+  """
+  Generate an empty type for creating a new ontology type
+  Args:
+    label (str): Label of the new type
+
+  Returns: Dictionary representing a bare new type
+
+  """
+  return {
+    "link": "",
+    "label": label,
+    "prop": {
+      "default": [
+        {
+          "name": "-name",
+          "query": "What is the name of the project?",
+          "required": True
+        },
+        {
+          "name": "-tags",
+          "query": "What are the tags associated with the project?",
+          "required": True
+        }
+      ]
+    },
+    "attachments": []
+  }
