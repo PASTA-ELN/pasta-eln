@@ -21,6 +21,7 @@ from PySide6.QtWidgets import QApplication
 from pytestqt.qtbot import QtBot
 
 from pasta_eln.GUI.ontology_configuration.ontology_configuration_extended import OntologyConfigurationForm
+from pasta_eln.GUI.ontology_configuration.utility_functions import adapt_type, get_types_for_display
 from tests.app_tests.common.fixtures import ontology_editor_gui, ontology_doc_mock, props_column_names, \
   attachments_column_names
 
@@ -66,10 +67,10 @@ class TestOntologyConfigurationExtended(object):
             == []), "Type combo box should not be loaded!"
     assert ui_form.loadOntologyPushButton.click() is None, "Load button not clicked!"
     assert ([ui_form.typeComboBox.itemText(i) for i in range(ui_form.typeComboBox.count())]
-            == ontology_doc_mock.types_list()), "Type combo box not loaded!"
-    assert (ui_form.typeComboBox.currentText()
+            == get_types_for_display(ontology_doc_mock.types_list())), "Type combo box not loaded!"
+    assert (adapt_type(ui_form.typeComboBox.currentText())
             == ontology_doc_mock.types_list()[0]), "Type combo box should be selected to first item"
-    selected_type = ontology_doc_mock.types()[ui_form.typeComboBox.currentText()]
+    selected_type = ontology_doc_mock.types()[adapt_type(ui_form.typeComboBox.currentText())]
     assert (ui_form.typeLabelLineEdit.text() ==
             selected_type["label"]), "Data type label line edit not loaded!"
     assert (ui_form.typeLinkLineEdit.text() ==
@@ -169,9 +170,9 @@ class TestOntologyConfigurationExtended(object):
       f"Deleted type:{current_selected_type} should not exist in combo list!"
     assert (previous_types_count - 1 == ui_form.typeComboBox.count()), \
       f"Combo list should have {previous_types_count - 1} items!"
-    assert ui_form.typeComboBox.currentText() == ontology_doc_mock.types_list()[1], \
+    assert adapt_type(ui_form.typeComboBox.currentText()) == ontology_doc_mock.types_list()[1], \
       "Type combo box should be selected to second item"
-    selected_type = ontology_doc_mock.types()[ui_form.typeComboBox.currentText()]
+    selected_type = ontology_doc_mock.types()[adapt_type(ui_form.typeComboBox.currentText())]
     assert ui_form.typeLabelLineEdit.text() == selected_type["label"], \
       "Type label line edit should be selected to second item"
     assert ui_form.typeLinkLineEdit.text() == selected_type["link"], \
@@ -201,11 +202,10 @@ class TestOntologyConfigurationExtended(object):
       f"Deleted type:{current_selected_type} should not exist in combo list!"
     assert (previous_types_count - 1 == ui_form.typeComboBox.count()), \
       f"Combo list should have {previous_types_count - 1} items!"
-    assert ui_form.typeComboBox.currentText() == ontology_doc_mock.types_list()[1], \
+    assert adapt_type(ui_form.typeComboBox.currentText()) == ontology_doc_mock.types_list()[1], \
       "Type combo box should be selected to second item"
     types = ontology_doc_mock.types()
-    text = ui_form.typeComboBox.currentText()
-    selected_type = types[text]
+    selected_type = types[adapt_type(ui_form.typeComboBox.currentText())]
     assert ui_form.typeLabelLineEdit.text() == selected_type["label"], \
       "Type label line edit should be selected to second item"
     assert ui_form.typeLinkLineEdit.text() == selected_type["link"], \

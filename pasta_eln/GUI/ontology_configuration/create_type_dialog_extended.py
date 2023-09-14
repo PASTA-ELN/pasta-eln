@@ -74,7 +74,8 @@ class CreateTypeDialog(Ui_CreateTypeDialog):
     Returns: Nothing
     """
     if self.structuralLevelCheckBox.isChecked():
-      self.titleLineEdit.setText(self.next_struct_level if self.next_struct_level else "")
+      self.titleLineEdit.setText(self.next_struct_level.replace("x", "Structure level ")
+                                 if self.next_struct_level else "")
       self.titleLineEdit.setDisabled(True)
     else:
       self.titleLineEdit.clear()

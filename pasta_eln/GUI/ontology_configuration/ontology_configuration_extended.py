@@ -16,7 +16,6 @@ from PySide6.QtWidgets import QApplication
 from cloudant.document import Document
 
 from .create_type_dialog_extended import CreateTypeDialog
-from .delete_column_delegate import DeleteColumnDelegate
 from .ontology_attachments_tableview_data_model import OntologyAttachmentsTableViewModel
 from .ontology_config_generic_exception import OntologyConfigGenericException
 from .ontology_config_key_not_found_exception import \
@@ -26,10 +25,11 @@ from .ontology_configuration_constants import PROPS_TABLE_DELETE_COLUMN_INDEX, P
   PROPS_TABLE_REQUIRED_COLUMN_INDEX, ATTACHMENT_TABLE_DELETE_COLUMN_INDEX, ATTACHMENT_TABLE_REORDER_COLUMN_INDEX
 from .ontology_document_null_exception import OntologyDocumentNullException
 from .ontology_props_tableview_data_model import OntologyPropsTableViewModel
+from .delete_column_delegate import DeleteColumnDelegate
 from .reorder_column_delegate import ReorderColumnDelegate
 from .required_column_delegate import RequiredColumnDelegate
 from .utility_functions import adjust_ontology_data_to_v3, show_message, \
-  get_next_possible_structural_level_label
+  get_next_possible_structural_level_label, get_types_for_display, adapt_type
 
 
 class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
@@ -123,6 +123,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     """
     self.logger.info("New type selected in UI: {%s}", new_type_selected)
     self.clear_ui()
+    new_type_selected = adapt_type(new_type_selected)
     if new_type_selected and self.ontology_types:
       if new_type_selected not in self.ontology_types:
         raise OntologyConfigKeyNotFoundException(f"Key {new_type_selected} "
@@ -200,8 +201,8 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
       self.propsCategoryComboBox.setCurrentIndex(len(self.selected_type_properties.keys()) - 1)
     return None
 
-  def update_structure_label(self,
-                             modified_type_label: str) -> None:
+  def update_type_label(self,
+                        modified_type_label: str) -> None:
     """
     Value changed callback for the type label line edit
 
@@ -211,6 +212,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     Returns: Nothing
     """
     current_type = self.typeComboBox.currentText()
+    current_type = adapt_type(current_type)
     if modified_type_label is not None and current_type in self.ontology_types:
       self.ontology_types.get(current_type)["label"] = modified_type_label
 
@@ -224,6 +226,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     Returns: Nothing
     """
     current_type = self.typeComboBox.currentText()
+    current_type = adapt_type(current_type)
     if modified_link is not None and current_type in self.ontology_types:
       self.ontology_types.get(current_type)["link"] = modified_link
 
@@ -234,6 +237,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     Returns: Nothing
     """
     selected_type = self.typeComboBox.currentText()
+    selected_type = adapt_type(selected_type)
     if not self.ontology_loaded:
       show_message("Load the ontology data first....")
       return
@@ -246,7 +250,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
       self.ontology_types.pop(selected_type)
       self.ontology_document.pop(selected_type)
       self.typeComboBox.clear()
-      self.typeComboBox.addItems(self.ontology_types.keys())
+      self.typeComboBox.addItems(get_types_for_display(self.ontology_types.keys()))
       self.typeComboBox.setCurrentIndex(0)
 
   def clear_ui(self) -> None:
@@ -269,7 +273,9 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
 
     Returns: Nothing
     """
-    title = self.create_type_dialog.titleLineEdit.text()
+    title = self.create_type_dialog.next_struct_level \
+      if self.create_type_dialog.structuralLevelCheckBox.isChecked() \
+      else self.create_type_dialog.titleLineEdit.text()
     label = self.create_type_dialog.labelLineEdit.text()
     self.create_type_dialog.clear_ui()
     self.create_new_type(title, label)
@@ -316,7 +322,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     self.propsCategoryComboBox.currentTextChanged.connect(self.category_combo_box_changed)
 
     # Slots for line edits
-    self.typeLabelLineEdit.textChanged[str].connect(self.update_structure_label)
+    self.typeLabelLineEdit.textChanged[str].connect(self.update_type_label)
     self.typeLinkLineEdit.textChanged[str].connect(self.update_type_link)
 
     # Slots for the delegates
@@ -344,7 +350,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
 
     # Set the types in the type selector combo-box
     self.typeComboBox.clear()
-    self.typeComboBox.addItems(self.ontology_types.keys())
+    self.typeComboBox.addItems(get_types_for_display(self.ontology_types.keys()))
     self.typeComboBox.setCurrentIndex(0)
 
   def save_ontology(self) -> None:
@@ -390,7 +396,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
       self.ontology_document[title] = empty_type
       self.ontology_types[title] = empty_type
       self.typeComboBox.clear()
-      self.typeComboBox.addItems(self.ontology_types.keys())
+      self.typeComboBox.addItems(get_types_for_display(self.ontology_types.keys()))
       self.typeComboBox.setCurrentIndex(len(self.ontology_types) - 1)
       show_message(f"Type (title: {title} label: {label}) has been added....")
 

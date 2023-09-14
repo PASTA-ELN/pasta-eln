@@ -22,6 +22,7 @@ from pasta_eln.GUI.ontology_configuration.ontology_document_null_exception impor
 from pasta_eln.GUI.ontology_configuration.ontology_props_tableview_data_model import OntologyPropsTableViewModel
 from pasta_eln.GUI.ontology_configuration.reorder_column_delegate import ReorderColumnDelegate
 from pasta_eln.GUI.ontology_configuration.required_column_delegate import RequiredColumnDelegate
+from pasta_eln.GUI.ontology_configuration.utility_functions import get_types_for_display
 from tests.app_tests.common.fixtures import configuration_extended, ontology_doc_mock
 
 
@@ -379,7 +380,7 @@ class TestOntologyConfigConfiguration(object):
     get_ontology_types_spy = mocker.spy(configuration_extended.ontology_types, 'get')
 
     if modified_type_label:
-      assert configuration_extended.update_structure_label(modified_type_label) is None, "Nothing should be returned"
+      assert configuration_extended.update_type_label(modified_type_label) is None, "Nothing should be returned"
       if ontology_types is not None and current_type in ontology_types:
         get_ontology_types_spy.assert_called_once_with(current_type)
         assert ontology_types[current_type]["label"] == modified_type_label
@@ -484,7 +485,7 @@ class TestOntologyConfigConfiguration(object):
         pop_items_selected_ontology_document_spy.assert_called_once_with(selected_type)
         clear_category_combo_box_spy.assert_called_once_with()
         add_items_selected_spy.assert_called_once_with(
-          ontology_types.keys()
+          get_types_for_display(ontology_types.keys())
         )
         set_current_index_category_combo_box_spy.assert_called_once_with(0)
         assert selected_type not in ontology_types and ontology_document, "selected_type should be deleted"
@@ -497,20 +498,25 @@ class TestOntologyConfigConfiguration(object):
         add_items_selected_spy.assert_not_called()
         set_current_index_category_combo_box_spy.assert_not_called()
 
-  @pytest.mark.parametrize("new_title, new_label", [
-    (None, None),
-    ("x0", None),
-    (None, "x2"),
-    ("x3", "x3"),
-    ("instrument", "new Instrument")
+  @pytest.mark.parametrize("new_title, new_label, is_structure_level", [
+    (None, None, False),
+    ("x0", None, True),
+    (None, "x2", True),
+    ("x3", "x3", True),
+    ("instrument", "new Instrument", False)
   ])
   def test_create_type_accepted_callback_should_do_expected(self,
                                                             mocker,
                                                             configuration_extended: configuration_extended,
                                                             new_title,
-                                                            new_label):
+                                                            new_label,
+                                                            is_structure_level):
     mocker.patch.object(configuration_extended, 'create_type_dialog', create=True)
     mocker.patch.object(configuration_extended.create_type_dialog, 'titleLineEdit', create=True)
+    mocker.patch.object(configuration_extended.create_type_dialog, 'next_struct_level', new_title, create=True)
+    mock_check_box = mocker.patch.object(configuration_extended.create_type_dialog, 'structuralLevelCheckBox',
+                                         create=True)
+    mocker.patch.object(mock_check_box, 'isChecked', return_value=is_structure_level, create=True)
     mocker.patch.object(configuration_extended.create_type_dialog.titleLineEdit, 'text', return_value=new_title)
     mocker.patch.object(configuration_extended.create_type_dialog, 'labelLineEdit', create=True)
     mocker.patch.object(configuration_extended.create_type_dialog.labelLineEdit, 'text', return_value=new_label)
@@ -520,7 +526,8 @@ class TestOntologyConfigConfiguration(object):
     text_label_line_edit_text_spy = mocker.spy(configuration_extended.create_type_dialog.labelLineEdit, 'text')
 
     assert configuration_extended.create_type_accepted_callback() is None, "Nothing should be returned"
-    text_title_line_edit_text_spy.assert_called_once_with()
+    if not is_structure_level:
+      text_title_line_edit_text_spy.assert_called_once_with()
     text_label_line_edit_text_spy.assert_called_once_with()
     clear_ui_spy.assert_called_once_with()
     create_new_type_spy.assert_called_once_with(
@@ -610,7 +617,7 @@ class TestOntologyConfigConfiguration(object):
 
     # Slots for line edits
     configuration_extended.typeLabelLineEdit.textChanged[str].connect.assert_called_once_with(
-      configuration_extended.update_structure_label)
+      configuration_extended.update_type_label)
     configuration_extended.typeLinkLineEdit.textChanged[str].connect.assert_called_once_with(
       configuration_extended.update_type_link)
 
@@ -647,7 +654,8 @@ class TestOntologyConfigConfiguration(object):
       return
     assert configuration_extended.load_ontology_data() is None, "Nothing should be returned"
     configuration_extended.typeComboBox.clear.assert_called_once_with()
-    configuration_extended.typeComboBox.addItems.assert_called_once_with(configuration_extended.ontology_types.keys())
+    configuration_extended.typeComboBox.addItems.assert_called_once_with(
+      get_types_for_display(configuration_extended.ontology_types.keys()))
     configuration_extended.typeComboBox.setCurrentIndex.assert_called_once_with(0)
     for data in ontology_document:
       if type(data) is dict:
@@ -774,7 +782,7 @@ class TestOntologyConfigConfiguration(object):
                                               }))
         configuration_extended.typeComboBox.clear.assert_called_once_with()
         configuration_extended.typeComboBox.addItems.assert_called_once_with(
-          configuration_extended.ontology_types.keys())
+          get_types_for_display(configuration_extended.ontology_types.keys()))
         mock_show_message.assert_called_once_with(f"Type (title: {new_title} label: {new_label}) has been added....")
 
   @pytest.mark.parametrize("instance_exists", [True, False])

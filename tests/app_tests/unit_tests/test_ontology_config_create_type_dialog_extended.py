@@ -34,7 +34,7 @@ class TestOntologyConfigCreateTypeDialog(object):
     clear_line_edit_spy = mocker.spy(mock_line_edit, 'clear')
     assert create_type_dialog_mock.structural_level_checkbox_callback() is None, "create_type_dialog_mock.structural_level_checkbox_callback() should return None"
     if checked:
-      set_text_line_edit_spy.assert_called_once_with(next_level)
+      set_text_line_edit_spy.assert_called_once_with(next_level.replace("x", "Structure level "))
       set_disabled_line_edit_spy.assert_called_once_with(True)
     else:
       clear_line_edit_spy.assert_called_once_with()
