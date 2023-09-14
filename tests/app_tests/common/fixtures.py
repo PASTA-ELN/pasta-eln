@@ -69,7 +69,7 @@ def configuration_extended(mocker) -> OntologyConfigurationForm:
   mocker.patch.object(OntologyConfigurationForm, 'typeComboBox', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'propsCategoryComboBox', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'typeLabelLineEdit', create=True)
-  mocker.patch.object(OntologyConfigurationForm, 'typeLinkLineEdit', create=True)
+  mocker.patch.object(OntologyConfigurationForm, 'typeIriLineEdit', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'delete_column_delegate_props_table', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'reorder_column_delegate_props_table', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'delete_column_delegate_attach_table', create=True)
@@ -162,7 +162,7 @@ def props_column_names():
     1: "query",
     2: "list",
     3: "unit",
-    4: "link",
+    4: "IRI",
     5: "required"
   }
 
@@ -170,8 +170,8 @@ def props_column_names():
 @fixture()
 def attachments_column_names():
   return {
-    0: "location",
-    1: "link"
+    0: "description",
+    1: "type"
   }
 
 

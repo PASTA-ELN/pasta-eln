@@ -54,7 +54,7 @@ class TestOntologyConfigConfiguration(object):
     mocker.patch.object(OntologyConfigurationForm, 'typeComboBox', create=True)
     mocker.patch.object(OntologyConfigurationForm, 'propsCategoryComboBox', create=True)
     mocker.patch.object(OntologyConfigurationForm, 'typeLabelLineEdit', create=True)
-    mocker.patch.object(OntologyConfigurationForm, 'typeLinkLineEdit', create=True)
+    mocker.patch.object(OntologyConfigurationForm, 'typeIriLineEdit', create=True)
     mocker.patch.object(OntologyConfigurationForm, 'delete_column_delegate_props_table', create=True)
     mocker.patch.object(OntologyConfigurationForm, 'reorder_column_delegate_props_table', create=True)
     mocker.patch.object(OntologyConfigurationForm, 'delete_column_delegate_attach_table', create=True)
@@ -76,7 +76,7 @@ class TestOntologyConfigConfiguration(object):
     ("x0", {
       "x0": {
         "label": "x0",
-        "link": "url",
+        "IRI": "url",
         "prop": {
           "default": [
             {
@@ -94,7 +94,7 @@ class TestOntologyConfigConfiguration(object):
       },
       "x1": {
         "label": "x0",
-        "link": "url",
+        "IRI": "url",
         "prop": {
           "default": [
             {
@@ -114,7 +114,7 @@ class TestOntologyConfigConfiguration(object):
     ("x1", {
       "x0": {
         "label": "x0",
-        "link": "url",
+        "IRI": "url",
         "prop": {
           "default": [
             {
@@ -132,7 +132,7 @@ class TestOntologyConfigConfiguration(object):
       },
       "x1": {
         "label": "x0",
-        "link": "url",
+        "IRI": "url",
         "prop": {
           "default": [
             {
@@ -153,8 +153,8 @@ class TestOntologyConfigConfiguration(object):
     ("x0", {}),
     ("x0", {"x1": {}}),
     ("x0", {"x0": {}}),
-    ("x0", {"x0": {"label": None, "link": None, "prop": None, "attachments": None}}),
-    ("x0", {"x0": {"label": None, "link": None, "prop": {"": None}, "attachments": [{"": None}]}}),
+    ("x0", {"x0": {"label": None, "IRI": None, "prop": None, "attachments": None}}),
+    ("x0", {"x0": {"label": None, "IRI": None, "prop": {"": None}, "attachments": [{"": None}]}}),
     ("x0", {"x0": {"": None, "§": None, "props": {"": None}, "attachment": [{"": None}]}})
   ])
   def test_type_combo_box_changed_should_do_expected(self,
@@ -166,11 +166,11 @@ class TestOntologyConfigConfiguration(object):
     mocker.patch.object(configuration_extended, 'addPropsCategoryLineEdit', create=True)
     mocker.patch.object(configuration_extended, 'ontology_types', mock_ontology_types, create=True)
     mocker.patch.object(configuration_extended, 'typeLabelLineEdit', create=True)
-    mocker.patch.object(configuration_extended, 'typeLinkLineEdit', create=True)
+    mocker.patch.object(configuration_extended, 'typeIriLineEdit', create=True)
     mocker.patch.object(configuration_extended, 'attachments_table_data_model', create=True)
     mocker.patch.object(configuration_extended, 'propsCategoryComboBox', create=True)
     set_text_label_line_edit_spy = mocker.spy(configuration_extended.typeLabelLineEdit, 'setText')
-    set_text_link_line_edit_spy = mocker.spy(configuration_extended.typeLinkLineEdit, 'setText')
+    set_text_iri_line_edit_spy = mocker.spy(configuration_extended.typeIriLineEdit, 'setText')
     set_current_index_category_combo_box_spy = mocker.spy(configuration_extended.propsCategoryComboBox,
                                                           'setCurrentIndex')
     clear_add_props_category_line_edit_spy = mocker.spy(configuration_extended.addPropsCategoryLineEdit, 'clear')
@@ -191,7 +191,7 @@ class TestOntologyConfigConfiguration(object):
       logger_info_spy.assert_called_once_with("New type selected in UI: {%s}", new_type_selected)
       clear_add_props_category_line_edit_spy.assert_called_once_with()
       set_text_label_line_edit_spy.assert_called_once_with(mock_ontology_types.get(new_type_selected).get('label'))
-      set_text_link_line_edit_spy.assert_called_once_with(mock_ontology_types.get(new_type_selected).get('link'))
+      set_text_iri_line_edit_spy.assert_called_once_with(mock_ontology_types.get(new_type_selected).get('IRI'))
       set_current_index_category_combo_box_spy.assert_called_once_with(0)
       clear_category_combo_box_spy.assert_called_once_with()
       add_items_category_combo_box_spy.assert_called_once_with(
@@ -385,7 +385,7 @@ class TestOntologyConfigConfiguration(object):
         get_ontology_types_spy.assert_called_once_with(current_type)
         assert ontology_types[current_type]["label"] == modified_type_label
 
-  @pytest.mark.parametrize("modified_type_link, current_type, ontology_types", [
+  @pytest.mark.parametrize("modified_type_iri, current_type, ontology_types", [
     (None, None, None),
     ("new_url", None, None),
     (None, "x0", {"x0": {"label": "x0"}, "x1": {"label": "x1"}}),
@@ -393,10 +393,10 @@ class TestOntologyConfigConfiguration(object):
     ("new_url_2", "instrument", {"x0": {"label": "x0"}, "instrument": {"label": "x1"}}),
     ("type_new_url", "subtask4", {"x0": {"label": "x0"}, "subtask5": {"label": "x1"}}),
   ])
-  def test_update_type_link_should_do_expected(self,
+  def test_update_type_iri_should_do_expected(self,
                                                mocker,
                                                configuration_extended: configuration_extended,
-                                               modified_type_link,
+                                               modified_type_iri,
                                                current_type,
                                                ontology_types):
     mocker.patch.object(configuration_extended, 'typeComboBox', create=True)
@@ -413,24 +413,24 @@ class TestOntologyConfigConfiguration(object):
 
     get_ontology_types_spy = mocker.spy(configuration_extended.ontology_types, 'get')
 
-    if modified_type_link:
-      assert configuration_extended.update_type_link(modified_type_link) is None, "Nothing should be returned"
+    if modified_type_iri:
+      assert configuration_extended.update_type_iri(modified_type_iri) is None, "Nothing should be returned"
       if ontology_types is not None and current_type in ontology_types:
         get_ontology_types_spy.assert_called_once_with(current_type)
-        assert ontology_types[current_type]["link"] == modified_type_link
+        assert ontology_types[current_type]["IRI"] == modified_type_iri
 
   @pytest.mark.parametrize("selected_type, ontology_types, ontology_document", [
     (None, None, None),
     ("x0", None, None),
-    (None, {"x0": {"link": "x0"}, "x1": {"link": "x1"}}, {"x0": {"link": "x0"}, "x1": {"link": "x1"}}),
-    ("x3", {"x0": {"link": "x0"}, "x1": {"link": "x1"}}, {"x0": {"link": "x0"}, "x1": {"link": "x1"}}),
-    ("instrument", {"x0": {"link": "x0"}, "instrument": {"link": "x1"}},
-     {"x0": {"link": "x0"}, "instrument": {"link": "x1"}}),
+    (None, {"x0": {"IRI": "x0"}, "x1": {"IRI": "x1"}}, {"x0": {"IRI": "x0"}, "x1": {"IRI": "x1"}}),
+    ("x3", {"x0": {"IRI": "x0"}, "x1": {"IRI": "x1"}}, {"x0": {"IRI": "x0"}, "x1": {"IRI": "x1"}}),
+    ("instrument", {"x0": {"IRI": "x0"}, "instrument": {"IRI": "x1"}},
+     {"x0": {"IRI": "x0"}, "instrument": {"IRI": "x1"}}),
     (
-        "subtask5", {"x0": {"link": "x0"}, "subtask5": {"link": "x1"}},
-        {"x0": {"link": "x0"}, "subtask5": {"link": "x1"}}),
-    ("x0", {"x0": {"link": "x0"}, "subtask5": {"link": "x1"}}, {"subtask5": {"link": "x1"}}),
-    ("x0", {"subtask5": {"link": "x1"}}, {"x0": {"link": "x0"}, "subtask5": {"link": "x1"}}),
+        "subtask5", {"x0": {"IRI": "x0"}, "subtask5": {"IRI": "x1"}},
+        {"x0": {"IRI": "x0"}, "subtask5": {"IRI": "x1"}}),
+    ("x0", {"x0": {"IRI": "x0"}, "subtask5": {"IRI": "x1"}}, {"subtask5": {"IRI": "x1"}}),
+    ("x0", {"subtask5": {"IRI": "x1"}}, {"x0": {"IRI": "x0"}, "subtask5": {"IRI": "x1"}}),
   ])
   def test_delete_selected_type_should_do_expected(self,
                                                    mocker,
@@ -545,10 +545,10 @@ class TestOntologyConfigConfiguration(object):
   @pytest.mark.parametrize("new_structural_title, ontology_types", [
     (None, None),
     ("x0", None),
-    (None, {"x0": {"link": "x0"}, "x1": {"link": "x1"}}),
-    ("x3", {"x0": {"link": "x0"}, "x1": {"link": "x1"}}),
-    ("x7", {"x0": {"link": "x0"}, "instrument": {"link": "x1"}}),
-    ("x6", {"x0": {"link": "x0"}, "subtask5": {"link": "x1"}})
+    (None, {"x0": {"IRI": "x0"}, "x1": {"IRI": "x1"}}),
+    ("x3", {"x0": {"IRI": "x0"}, "x1": {"IRI": "x1"}}),
+    ("x7", {"x0": {"IRI": "x0"}, "instrument": {"IRI": "x1"}}),
+    ("x6", {"x0": {"IRI": "x0"}, "subtask5": {"IRI": "x1"}})
   ])
   def test_show_create_type_dialog_should_do_expected(self,
                                                       mocker,
@@ -618,8 +618,8 @@ class TestOntologyConfigConfiguration(object):
     # Slots for line edits
     configuration_extended.typeLabelLineEdit.textChanged[str].connect.assert_called_once_with(
       configuration_extended.update_type_label)
-    configuration_extended.typeLinkLineEdit.textChanged[str].connect.assert_called_once_with(
-      configuration_extended.update_type_link)
+    configuration_extended.typeIriLineEdit.textChanged[str].connect.assert_called_once_with(
+      configuration_extended.update_type_iri)
 
     # Slots for the delegates
     configuration_extended.delete_column_delegate_props_table.delete_clicked_signal.connect.assert_called_once_with(
@@ -635,8 +635,8 @@ class TestOntologyConfigConfiguration(object):
   @pytest.mark.parametrize("ontology_document", [
     'ontology_doc_mock',
     None,
-    {"x0": {"link": "x0"}, "": {"link": "x1"}},
-    {"x0": {"link": "x0"}, "": {"link": "x1"}, 23: "test", "__id": "test"},
+    {"x0": {"IRI": "x0"}, "": {"IRI": "x1"}},
+    {"x0": {"IRI": "x0"}, "": {"IRI": "x1"}, 23: "test", "__id": "test"},
     {"test": ["test1", "test2", "test3"]}
   ])
   def test_load_ontology_data_should_with_variant_types_of_doc_should_do_expected(self,
@@ -664,8 +664,8 @@ class TestOntologyConfigConfiguration(object):
   @pytest.mark.parametrize("ontology_document", [
     'ontology_doc_mock',
     None,
-    {"x0": {"link": "x0"}, "": {"link": "x1"}},
-    {"x0": {"link": "x0"}, "": {"link": "x1"}, 23: "test", "__id": "test"},
+    {"x0": {"IRI": "x0"}, "": {"IRI": "x1"}},
+    {"x0": {"IRI": "x0"}, "": {"IRI": "x1"}, 23: "test", "__id": "test"},
     {"test": ["test1", "test2", "test3"]}
   ])
   def test_save_ontology_should_do_expected(self,
@@ -693,13 +693,13 @@ class TestOntologyConfigConfiguration(object):
 
   @pytest.mark.parametrize("new_title, new_label, ontology_document, ontology_types", [
     (None, None, None, None),
-    (None, None, {"x0": {"link": "x0"}, "x1": {"link": "x1"}}, {"x0": {"link": "x0"}, "x1": {"link": "x1"}}),
-    ("x0", None, {"x0": {"link": "x0"}, "x1": {"link": "x1"}}, {"x0": {"link": "x0"}, "x1": {"link": "x1"}}),
-    (None, "x1", {"x0": {"link": "x0"}, "x1": {"link": "x1"}}, {"x0": {"link": "x0"}, "x1": {"link": "x1"}}),
-    ("x0", "x1", {"x0": {"link": "x0"}, "x1": {"link": "x1"}}, {"x0": {"link": "x0"}, "x1": {"link": "x1"}}),
+    (None, None, {"x0": {"IRI": "x0"}, "x1": {"IRI": "x1"}}, {"x0": {"IRI": "x0"}, "x1": {"IRI": "x1"}}),
+    ("x0", None, {"x0": {"IRI": "x0"}, "x1": {"IRI": "x1"}}, {"x0": {"IRI": "x0"}, "x1": {"IRI": "x1"}}),
+    (None, "x1", {"x0": {"IRI": "x0"}, "x1": {"IRI": "x1"}}, {"x0": {"IRI": "x0"}, "x1": {"IRI": "x1"}}),
+    ("x0", "x1", {"x0": {"IRI": "x0"}, "x1": {"IRI": "x1"}}, {"x0": {"IRI": "x0"}, "x1": {"IRI": "x1"}}),
     ("x0", "x1", None, None),
-    ("instrument", "new Instrument", {"x0": {"link": "x0"}, "x1": {"link": "x1"}},
-     {"x0": {"link": "x0"}, "x1": {"link": "x1"}})
+    ("instrument", "new Instrument", {"x0": {"IRI": "x0"}, "x1": {"IRI": "x1"}},
+     {"x0": {"IRI": "x0"}, "x1": {"IRI": "x1"}})
   ])
   def test_create_new_type_should_do_expected(self,
                                               mocker,

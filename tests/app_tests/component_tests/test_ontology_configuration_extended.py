@@ -48,7 +48,7 @@ class TestOntologyConfigurationExtended(object):
     assert ui_form.addPropsCategoryPushButton is not None, "Add property category button not loaded!"
     assert ui_form.cancelPushButton is not None, "Cancel button not loaded!"
     assert ui_form.typeLabelLineEdit is not None, "Data type line edit not loaded!"
-    assert ui_form.typeLinkLineEdit is not None, "Data type link line edit not loaded!"
+    assert ui_form.typeIriLineEdit is not None, "Data type IRI line edit not loaded!"
     assert ui_form.addPropsCategoryLineEdit is not None, "Property category line edit not loaded!"
     assert ui_form.typeComboBox is not None, "Data type combo box not loaded!"
     assert ui_form.propsCategoryComboBox is not None, "Property category combo box not loaded!"
@@ -73,8 +73,8 @@ class TestOntologyConfigurationExtended(object):
     selected_type = ontology_doc_mock.types()[adapt_type(ui_form.typeComboBox.currentText())]
     assert (ui_form.typeLabelLineEdit.text() ==
             selected_type["label"]), "Data type label line edit not loaded!"
-    assert (ui_form.typeLinkLineEdit.text() ==
-            selected_type["link"]), "Data type link line edit not loaded!"
+    assert (ui_form.typeIriLineEdit.text() ==
+            selected_type["IRI"]), "Data type IRI line edit not loaded!"
 
     categories = list(selected_type["prop"].keys())
     assert ([ui_form.propsCategoryComboBox.itemText(i) for i in range(ui_form.propsCategoryComboBox.count())]
@@ -175,7 +175,7 @@ class TestOntologyConfigurationExtended(object):
     selected_type = ontology_doc_mock.types()[adapt_type(ui_form.typeComboBox.currentText())]
     assert ui_form.typeLabelLineEdit.text() == selected_type["label"], \
       "Type label line edit should be selected to second item"
-    assert ui_form.typeLinkLineEdit.text() == selected_type["link"], \
+    assert ui_form.typeIriLineEdit.text() == selected_type["IRI"], \
       "Type label line edit should be selected to second item"
     assert ui_form.propsCategoryComboBox.currentText() == list(selected_type["prop"].keys())[0], \
       "Type label line edit should be selected to second item"
@@ -208,8 +208,8 @@ class TestOntologyConfigurationExtended(object):
     selected_type = types[adapt_type(ui_form.typeComboBox.currentText())]
     assert ui_form.typeLabelLineEdit.text() == selected_type["label"], \
       "Type label line edit should be selected to second item"
-    assert ui_form.typeLinkLineEdit.text() == selected_type["link"], \
-      "Type Link line edit should be selected to second item"
+    assert ui_form.typeIriLineEdit.text() == selected_type["IRI"], \
+      "Type IRI line edit should be selected to second item"
     assert ui_form.propsCategoryComboBox.currentText() == list(selected_type["prop"].keys())[0], \
       "Type label line edit should be selected to second item"
     self.check_table_contents(attachments_column_names, props_column_names, selected_type, ui_form)

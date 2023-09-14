@@ -135,8 +135,8 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
       # Type label is set in a line edit
       self.typeLabelLineEdit.setText(selected_type.get('label'))
 
-      # Type link is set in a line edit
-      self.typeLinkLineEdit.setText(selected_type.get('link'))
+      # Type IRI is set in a line edit
+      self.typeIriLineEdit.setText(selected_type.get('IRI'))
 
       # Gets the attachment data from selected type and set it in table view
       self.attachments_table_data_model.update(selected_type.get('attachments'))
@@ -216,19 +216,20 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     if modified_type_label is not None and current_type in self.ontology_types:
       self.ontology_types.get(current_type)["label"] = modified_type_label
 
-  def update_type_link(self, modified_link: str) -> None:
+  def update_type_iri(self,
+                      modified_iri: str) -> None:
     """
-    Value changed callback for the link line edit
+    Value changed callback for the IRI line edit
 
     Args:
-        modified_link (str): Modified link to be set for the selected type
+        modified_iri (str): Modified IRI to be set for the selected type
 
     Returns: Nothing
     """
     current_type = self.typeComboBox.currentText()
     current_type = adapt_type(current_type)
-    if modified_link is not None and current_type in self.ontology_types:
-      self.ontology_types.get(current_type)["link"] = modified_link
+    if modified_iri is not None and current_type in self.ontology_types:
+      self.ontology_types.get(current_type)["IRI"] = modified_iri
 
   def delete_selected_type(self) -> None:
     """
@@ -261,7 +262,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
 
     """
     self.typeLabelLineEdit.clear()
-    self.typeLinkLineEdit.clear()
+    self.typeIriLineEdit.clear()
     self.propsCategoryComboBox.clear()
     self.addPropsCategoryLineEdit.clear()
     self.typePropsTableView.model().update([])
@@ -323,7 +324,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
 
     # Slots for line edits
     self.typeLabelLineEdit.textChanged[str].connect(self.update_type_label)
-    self.typeLinkLineEdit.textChanged[str].connect(self.update_type_link)
+    self.typeIriLineEdit.textChanged[str].connect(self.update_type_iri)
 
     # Slots for the delegates
     self.delete_column_delegate_props_table.delete_clicked_signal.connect(self.props_table_data_model.delete_data)

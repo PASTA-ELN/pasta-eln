@@ -3,14 +3,14 @@
   "_rev": "5-a3f3f6b96ba5839081fa8b2f745df64a",
   "-version": 3,
   "x0": {
-    "link": "http://url.com",
+    "IRI": "http://url.com",
     "label": "Projects",
     "prop": {
       "default": [
         {
           "name": "-name",
           "query": "What is the name of the project?",
-          "link": "http://url.com",
+          "IRI": "http://url.com",
           "required": "True"
         },
         {
@@ -40,14 +40,14 @@
           "name": "-name",
           "query": "What is the name of the property?",
           "required": "True",
-          "link": "http://url.com",
+          "IRI": "http://url.com",
           "unit": ""
         },
         {
           "name": "sample1",
           "query": "",
           "required": "True",
-          "link": "http://url.com",
+          "IRI": "http://url.com",
           "unit": "m"
         }
       ]
@@ -55,7 +55,7 @@
     "attachments": []
   },
   "x1": {
-    "link": "",
+    "IRI": "",
     "label": "Tasks",
     "prop": {
       "default": [
@@ -72,7 +72,7 @@
     "attachments": []
   },
   "x2": {
-    "link": "",
+    "IRI": "",
     "label": "Subtasks",
     "prop": {
       "default": [
@@ -89,7 +89,7 @@
     "attachments": []
   },
   "measurement": {
-    "link": "",
+    "IRI": "",
     "label": "Measurements",
     "prop": {
       "default": [
@@ -119,7 +119,7 @@
           "list": "sample",
           "unit": "m",
           "required": "True",
-          "link": "http://url.com"
+          "IRI": "http://url.com"
         },
         {
           "name": "procedure",
@@ -131,7 +131,7 @@
     "attachments": []
   },
   "sample": {
-    "link": "",
+    "IRI": "",
     "label": "Samples",
     "prop": {
       "default": [
@@ -158,7 +158,7 @@
     "attachments": []
   },
   "procedure": {
-    "link": "",
+    "IRI": "",
     "label": "Procedures",
     "prop": {
       "default": [
@@ -182,7 +182,7 @@
     "attachments": []
   },
   "instrument": {
-    "link": "",
+    "IRI": "",
     "label": "Instruments",
     "prop": {
       "default": [
@@ -203,8 +203,8 @@
     },
     "attachments": [
       {
-        "location": "Right side of the instrument",
-        "link": "device1"
+        "description": "Right side of the instrument",
+        "type": "device1"
       }
     ]
   }

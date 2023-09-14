@@ -31,8 +31,8 @@ class OntologyAttachmentsTableViewModel(OntologyTableViewModel):
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
     self.data_set = []
     self.data_name_map = {
-      0: "location",
-      1: "link",
+      0: "description",
+      1: "type",
       2: "delete",
       3: "re-order"
     }
