@@ -86,6 +86,7 @@ class Form(QDialog):
         rightSideL.addWidget(getattr(self, f'buttonBarW_{key}'))
         setattr(self, f'textEdit_{key}', QPlainTextEdit(value))
         getattr(self, f'textEdit_{key}').setAccessibleName(key)
+        getattr(self, f'textEdit_{key}').setTabStopDistance(20)
         getattr(self, f'textEdit_{key}').textChanged.connect(self.textChanged)
         setattr(self, f'textShow_{key}', QTextEdit(value))
         getattr(self, f'textShow_{key}').setReadOnly(True)
