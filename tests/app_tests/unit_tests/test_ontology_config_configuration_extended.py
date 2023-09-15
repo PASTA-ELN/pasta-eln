@@ -24,7 +24,7 @@ from pasta_eln.GUI.ontology_configuration.reorder_column_delegate import Reorder
 from pasta_eln.GUI.ontology_configuration.required_column_delegate import RequiredColumnDelegate
 from pasta_eln.GUI.ontology_configuration.utility_functions import get_types_for_display, generate_empty_type, \
   generate_required_properties
-from tests.app_tests.common.fixtures import configuration_extended
+from tests.app_tests.common.fixtures import configuration_extended, ontology_doc_mock
 
 
 class TestOntologyConfigConfiguration(object):

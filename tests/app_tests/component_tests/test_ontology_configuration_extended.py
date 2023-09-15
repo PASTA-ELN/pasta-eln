@@ -114,6 +114,22 @@ class TestOntologyConfigurationExtended(object):
     qtbot.mouseClick(ui_form.addTypePushButton, Qt.LeftButton)
     assert ui_form.create_type_dialog.buttonBox.isVisible() is True, "Create new type dialog not shown!"
 
+  def test_component_delete_new_type_without_ontology_loaded_should_show_error_message(self,
+                                                                                       ontology_editor_gui: tuple[
+                                                                                         QApplication,
+                                                                                         QtWidgets.QDialog,
+                                                                                         OntologyConfigurationForm,
+                                                                                         QtBot],
+                                                                                       ontology_doc_mock: ontology_doc_mock,
+                                                                                       mocker):
+    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    mock_show_message = mocker.patch(
+      "pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.show_message")
+    mocker.patch.object(ui_form, "ontology_loaded", False)
+    qtbot.mouseClick(ui_form.deleteTypePushButton, Qt.LeftButton)
+    mock_show_message.assert_called_once_with("Load the ontology data first....")
+    assert ui_form.create_type_dialog.buttonBox.isVisible() is False, "Create new type dialog should not be shown!"
+
   def test_component_delete_selected_type_with_loaded_ontology_should_delete_and_update_ui(self,
                                                                                            ontology_editor_gui:
                                                                                            tuple[
