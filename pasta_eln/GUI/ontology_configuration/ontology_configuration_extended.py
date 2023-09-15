@@ -29,7 +29,8 @@ from .delete_column_delegate import DeleteColumnDelegate
 from .reorder_column_delegate import ReorderColumnDelegate
 from .required_column_delegate import RequiredColumnDelegate
 from .utility_functions import adjust_ontology_data_to_v3, show_message, \
-  get_next_possible_structural_level_label, get_types_for_display, adapt_type, generate_empty_type
+  get_next_possible_structural_level_label, get_types_for_display, adapt_type, generate_empty_type, \
+  generate_required_properties
 
 
 class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
@@ -179,7 +180,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
       return None
     # Add the new category to the property list and refresh the category combo box
     self.logger.info("User added new category: {%s}", new_category)
-    self.selected_type_properties[new_category] = []
+    self.selected_type_properties[new_category] = generate_required_properties()
     self.propsCategoryComboBox.clear()
     self.propsCategoryComboBox.addItems(list(self.selected_type_properties.keys()))
     self.propsCategoryComboBox.setCurrentIndex(len(self.selected_type_properties.keys()) - 1)

@@ -22,8 +22,9 @@ from pasta_eln.GUI.ontology_configuration.ontology_document_null_exception impor
 from pasta_eln.GUI.ontology_configuration.ontology_props_tableview_data_model import OntologyPropsTableViewModel
 from pasta_eln.GUI.ontology_configuration.reorder_column_delegate import ReorderColumnDelegate
 from pasta_eln.GUI.ontology_configuration.required_column_delegate import RequiredColumnDelegate
-from pasta_eln.GUI.ontology_configuration.utility_functions import get_types_for_display, generate_empty_type
-from tests.app_tests.common.fixtures import configuration_extended, ontology_doc_mock
+from pasta_eln.GUI.ontology_configuration.utility_functions import get_types_for_display, generate_empty_type, \
+  generate_required_properties
+from tests.app_tests.common.fixtures import configuration_extended
 
 
 class TestOntologyConfigConfiguration(object):
@@ -284,7 +285,7 @@ class TestOntologyConfigConfiguration(object):
       if new_category:
         assert configuration_extended.add_new_prop_category() is None, "Nothing should be returned"
         logger_info_spy.assert_called_once_with("User added new category: {%s}", new_category)
-        set_items_selected_spy.assert_called_once_with(new_category, [])
+        set_items_selected_spy.assert_called_once_with(new_category, generate_required_properties())
         set_current_index_category_combo_box_spy.assert_called_once_with(len(selected_type_properties.keys()) - 1)
         clear_category_combo_box_spy.assert_called_once_with()
         add_items_selected_spy.assert_called_once_with(

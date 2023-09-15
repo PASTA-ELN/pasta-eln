@@ -189,18 +189,27 @@ def generate_empty_type(label: str) -> dict[str, Any]:
     "IRI": "",
     "label": label,
     "prop": {
-      "default": [
-        {
-          "name": "-name",
-          "query": "What is the name of the project?",
-          "required": True
-        },
-        {
-          "name": "-tags",
-          "query": "What are the tags associated with the project?",
-          "required": True
-        }
-      ]
+      "default": generate_required_properties()
     },
     "attachments": []
   }
+
+
+def generate_required_properties() -> list[dict[str, Any]]:
+  """
+  Generate a list of required properties for creating a new ontology type
+  Returns (list[dict[str, Any]]): List of required properties
+
+  """
+  return [
+    {
+      "name": "-name",
+      "query": "What is the name of the project?",
+      "required": True
+    },
+    {
+      "name": "-tags",
+      "query": "What are the tags associated with the project?",
+      "required": True
+    }
+  ]
