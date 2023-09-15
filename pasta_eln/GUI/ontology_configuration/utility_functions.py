@@ -48,7 +48,7 @@ def adjust_ontology_data_to_v3(ontology_doc: Document) -> None:
 
   Returns: None
   """
-  if not ontology_doc:
+  if not ontology_doc or ontology_doc['-version'] != 2:
     return None
   type_structures = {
     data: ontology_doc[data]
