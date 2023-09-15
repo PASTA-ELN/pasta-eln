@@ -132,7 +132,7 @@ class Project(QWidget):
     """
     if command[0] is Command.EDIT:
       self.comm.formDoc.emit(self.docProj)
-      self.comm.changeProject.emit(self.projID,'')
+      self.change(self.projID,'')
       #collect information and then change
       oldPath = self.comm.backend.basePath/self.docProj['-branch'][0]['path']
       if oldPath.exists():
@@ -160,7 +160,7 @@ class Project(QWidget):
         self.infoW.show()
       elif self.infoW is not None:
         self.infoW.hide()
-    elif command[0] is Command.HIDE_SHOW_ITEMS:
+    elif command[0] is Command.HIDE:
       self.comm.backend.db.hideShow(self.projID)
       self.comm.changeSidebar.emit('')
       self.comm.changeTable.emit('x0','') # go back to project table
@@ -176,13 +176,13 @@ class Project(QWidget):
             recursiveRowIteration(subIndex)
         return
       recursiveRowIteration(self.tree.model().index(-1,0))
-    elif command[0] is Command.HIDE:
+    elif command[0] is Command.HIDE_SHOW_ITEMS:
       self.showAll = not self.showAll
-      self.changeProject('','')
+      self.change('','')
     elif command[0] is Command.ADD_CHILD:
       self.comm.backend.cwd = self.comm.backend.basePath/self.docProj['-branch'][0]['path']
       self.comm.backend.addData('x1', {'-name':'new folder'}, [self.projID])
-      self.comm.changeProject.emit('','') #refresh project
+      self.change('','') #refresh project
     elif command[0] is Command.SHOW_TABLE:
       self.comm.changeTable.emit(command[1], self.projID)
     else:
@@ -210,7 +210,7 @@ class Project(QWidget):
       return
     branchOldList= [i for i in doc['-branch'] if i['stack']==stackOld]
     if len(branchOldList)!=1:
-      self.changeProject('','')
+      self.change('','')
       return
     branchOld = branchOldList[0]
     childOld = branchOld['child']
