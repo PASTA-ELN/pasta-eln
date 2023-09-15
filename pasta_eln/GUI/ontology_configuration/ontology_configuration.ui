@@ -376,7 +376,7 @@
         </layout>
        </item>
        <item row="13" column="0">
-        <layout class="QHBoxLayout" name="attchmentTableButtonsHorizontalLayout">
+        <layout class="QHBoxLayout" name="attachmentTableButtonsHorizontalLayout">
          <property name="leftMargin">
           <number>0</number>
          </property>
