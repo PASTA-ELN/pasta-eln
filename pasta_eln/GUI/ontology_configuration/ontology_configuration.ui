@@ -485,16 +485,6 @@
           </spacer>
          </item>
          <item>
-          <widget class="QPushButton" name="loadOntologyPushButton">
-           <property name="toolTip">
-            <string>Load ontology from local database</string>
-           </property>
-           <property name="text">
-            <string>Load</string>
-           </property>
-          </widget>
-         </item>
-         <item>
           <widget class="QPushButton" name="saveOntologyPushButton">
            <property name="toolTip">
             <string>Save loaded ontology in local database</string>

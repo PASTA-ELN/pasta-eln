@@ -42,7 +42,6 @@ class TestOntologyConfigConfiguration(object):
     mocker.patch.object(ReorderColumnDelegate, '__new__', lambda _: mocker.MagicMock())
     mocker.patch.object(OntologyConfigurationForm, 'typePropsTableView', create=True)
     mocker.patch.object(OntologyConfigurationForm, 'typeAttachmentsTableView', create=True)
-    mocker.patch.object(OntologyConfigurationForm, 'loadOntologyPushButton', create=True)
     mocker.patch.object(OntologyConfigurationForm, 'addPropsRowPushButton', create=True)
     mocker.patch.object(OntologyConfigurationForm, 'addAttachmentPushButton', create=True)
     mocker.patch.object(OntologyConfigurationForm, 'saveOntologyPushButton', create=True)
@@ -394,11 +393,11 @@ class TestOntologyConfigConfiguration(object):
     ("type_new_url", "subtask4", {"x0": {"label": "x0"}, "subtask5": {"label": "x1"}}),
   ])
   def test_update_type_iri_should_do_expected(self,
-                                               mocker,
-                                               configuration_extended: configuration_extended,
-                                               modified_type_iri,
-                                               current_type,
-                                               ontology_types):
+                                              mocker,
+                                              configuration_extended: configuration_extended,
+                                              modified_type_iri,
+                                              current_type,
+                                              ontology_types):
     mocker.patch.object(configuration_extended, 'typeComboBox', create=True)
     mocker.patch.object(configuration_extended.typeComboBox, 'currentText', return_value=current_type)
 
@@ -587,13 +586,10 @@ class TestOntologyConfigConfiguration(object):
       set_structural_level_title_spy.assert_not_called()
       show_create_type_dialog_spy.assert_not_called()
 
-  def test_setup_slots_should_do_expected(self,
-                                          configuration_extended: configuration_extended):
-    configuration_extended.logger.info.assert_called_once_with(f"Setting up slots for the editor..")
-    configuration_extended.loadOntologyPushButton.clicked.connect.assert_called_once_with(
-      configuration_extended.load_ontology_data)
-    configuration_extended.loadOntologyPushButton.clicked.connect.assert_called_once_with(
-      configuration_extended.load_ontology_data)
+  def test_initialize_should_setup_slots_and_should_do_expected(self,
+                                                                configuration_extended: configuration_extended):
+    configuration_extended.logger.info.assert_any_call("Setting up slots for the editor..")
+    configuration_extended.logger.info.assert_any_call("User loaded the ontology data in UI")
     configuration_extended.addPropsRowPushButton.clicked.connect.assert_called_once_with(
       configuration_extended.props_table_data_model.add_data_row)
     configuration_extended.addAttachmentPushButton.clicked.connect.assert_called_once_with(
@@ -653,10 +649,12 @@ class TestOntologyConfigConfiguration(object):
         assert configuration_extended.load_ontology_data() is None, "Nothing should be returned"
       return
     assert configuration_extended.load_ontology_data() is None, "Nothing should be returned"
-    configuration_extended.typeComboBox.clear.assert_called_once_with()
-    configuration_extended.typeComboBox.addItems.assert_called_once_with(
+    assert configuration_extended.typeComboBox.clear.call_count == 2, "Clear should be called twice"
+    assert configuration_extended.typeComboBox.addItems.call_count == 2, "addItems should be called twice"
+    configuration_extended.typeComboBox.addItems.assert_called_with(
       get_types_for_display(configuration_extended.ontology_types.keys()))
-    configuration_extended.typeComboBox.setCurrentIndex.assert_called_once_with(0)
+    assert configuration_extended.typeComboBox.setCurrentIndex.call_count == 2, "setCurrentIndex should be called twice"
+    configuration_extended.typeComboBox.setCurrentIndex.assert_called_with(0)
     for data in ontology_document:
       if type(data) is dict:
         assert data in configuration_extended.ontology_types, "Data should be loaded"
@@ -764,8 +762,9 @@ class TestOntologyConfigConfiguration(object):
          .__setitem__.assert_called_once_with(new_title, generate_empty_type(new_label)))
         (configuration_extended.ontology_types
          .__setitem__.assert_called_once_with(new_title, generate_empty_type(new_label)))
-        configuration_extended.typeComboBox.clear.assert_called_once_with()
-        configuration_extended.typeComboBox.addItems.assert_called_once_with(
+        assert configuration_extended.typeComboBox.clear.call_count == 2, "ComboBox should be cleared twice"
+        assert configuration_extended.typeComboBox.addItems.call_count == 2, "ComboBox addItems should be called twice"
+        configuration_extended.typeComboBox.addItems.assert_called_with(
           get_types_for_display(configuration_extended.ontology_types.keys()))
         mock_show_message.assert_called_once_with(f"Type (title: {new_title} label: {new_label}) has been added....")
 

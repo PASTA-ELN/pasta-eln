@@ -108,6 +108,8 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     # Set up the slots for the UI items
     self.setup_slots()
 
+    self.load_ontology_data()
+
   def type_combo_box_changed(self,
                              new_type_selected: Any) -> None:
     """
@@ -315,7 +317,6 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     """
     self.logger.info("Setting up slots for the editor..")
     # Slots for the buttons
-    self.loadOntologyPushButton.clicked.connect(self.load_ontology_data)
     self.addPropsRowPushButton.clicked.connect(self.props_table_data_model.add_data_row)
     self.addAttachmentPushButton.clicked.connect(self.attachments_table_data_model.add_data_row)
     self.saveOntologyPushButton.clicked.connect(self.save_ontology)

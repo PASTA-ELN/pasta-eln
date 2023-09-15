@@ -37,7 +37,6 @@ class TestOntologyConfigurationExtended(object):
     app, ui_dialog, ui_form, qtbot = ontology_editor_gui
     assert ui_form.headerLabel is not None, "Header not loaded!"
     assert ui_form.typeLabel is not None, "Data type label not loaded!"
-    assert ui_form.loadOntologyPushButton is not None, "Bush button not loaded!"
     assert ui_form.saveOntologyPushButton is not None, "Save button not loaded!"
     assert ui_form.helpPushButton is not None, "Help button not loaded!"
     assert ui_form.typePropsTableView is not None, "Properties table view not loaded!"
@@ -53,19 +52,16 @@ class TestOntologyConfigurationExtended(object):
     assert ui_form.typeComboBox is not None, "Data type combo box not loaded!"
     assert ui_form.propsCategoryComboBox is not None, "Property category combo box not loaded!"
 
-  def test_component_load_button_click_should_load_ontology_data(self,
-                                                                 ontology_editor_gui: tuple[
-                                                                   QApplication,
-                                                                   QtWidgets.QDialog,
-                                                                   OntologyConfigurationForm,
-                                                                   QtBot],
-                                                                 ontology_doc_mock: ontology_doc_mock,
-                                                                 props_column_names: props_column_names,
-                                                                 attachments_column_names: attachments_column_names):
+  def test_component_launch_should_load_ontology_data(self,
+                                                      ontology_editor_gui: tuple[
+                                                        QApplication,
+                                                        QtWidgets.QDialog,
+                                                        OntologyConfigurationForm,
+                                                        QtBot],
+                                                      ontology_doc_mock: ontology_doc_mock,
+                                                      props_column_names: props_column_names,
+                                                      attachments_column_names: attachments_column_names):
     app, ui_dialog, ui_form, qtbot = ontology_editor_gui
-    assert ([ui_form.typeComboBox.itemText(i) for i in range(ui_form.typeComboBox.count())]
-            == []), "Type combo box should not be loaded!"
-    assert ui_form.loadOntologyPushButton.click() is None, "Load button not clicked!"
     assert ([ui_form.typeComboBox.itemText(i) for i in range(ui_form.typeComboBox.count())]
             == get_types_for_display(ontology_doc_mock.types_list())), "Type combo box not loaded!"
     assert (adapt_type(ui_form.typeComboBox.currentText())
@@ -106,21 +102,6 @@ class TestOntologyConfigurationExtended(object):
     model = ui_form.typeAttachmentsTableView.model()
     self.check_table_view_model(model, attachments_column_names, selected_type["attachments"])
 
-  def test_component_add_new_type_with_ontology_loaded_should_display_error_message(self,
-                                                                                    ontology_editor_gui: tuple[
-                                                                                      QApplication,
-                                                                                      QtWidgets.QDialog,
-                                                                                      OntologyConfigurationForm,
-                                                                                      QtBot],
-                                                                                    ontology_doc_mock: ontology_doc_mock,
-                                                                                    mocker):
-    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
-    mock_show_message = mocker.patch(
-      "pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.show_message")
-    qtbot.mouseClick(ui_form.addTypePushButton, Qt.LeftButton)
-    mock_show_message.assert_called_once_with("Load the ontology data first...")
-    assert ui_form.create_type_dialog.buttonBox.isVisible() is False, "Create new type dialog should not be shown!"
-
   def test_component_add_new_type_with_loaded_ontology_should_display_create_new_type_window(self,
                                                                                              ontology_editor_gui: tuple[
                                                                                                QApplication,
@@ -130,24 +111,8 @@ class TestOntologyConfigurationExtended(object):
                                                                                              ontology_doc_mock: ontology_doc_mock):
     app, ui_dialog, ui_form, qtbot = ontology_editor_gui
     assert ui_form.create_type_dialog.buttonBox.isVisible() is False, "Create new type dialog should not be shown!"
-    qtbot.mouseClick(ui_form.loadOntologyPushButton, Qt.LeftButton)
     qtbot.mouseClick(ui_form.addTypePushButton, Qt.LeftButton)
     assert ui_form.create_type_dialog.buttonBox.isVisible() is True, "Create new type dialog not shown!"
-
-  def test_component_delete_new_type_with_ontology_loaded_should_show_error_message(self,
-                                                                                    ontology_editor_gui: tuple[
-                                                                                      QApplication,
-                                                                                      QtWidgets.QDialog,
-                                                                                      OntologyConfigurationForm,
-                                                                                      QtBot],
-                                                                                    ontology_doc_mock: ontology_doc_mock,
-                                                                                    mocker):
-    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
-    mock_show_message = mocker.patch(
-      "pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.show_message")
-    qtbot.mouseClick(ui_form.deleteTypePushButton, Qt.LeftButton)
-    mock_show_message.assert_called_once_with("Load the ontology data first....")
-    assert ui_form.create_type_dialog.buttonBox.isVisible() is False, "Create new type dialog should not be shown!"
 
   def test_component_delete_selected_type_with_loaded_ontology_should_delete_and_update_ui(self,
                                                                                            ontology_editor_gui:
@@ -161,7 +126,6 @@ class TestOntologyConfigurationExtended(object):
                                                                                            attachments_column_names: attachments_column_names):
     app, ui_dialog, ui_form, qtbot = ontology_editor_gui
     assert ui_form.create_type_dialog.buttonBox.isVisible() is False, "Create new type dialog should not be shown!"
-    qtbot.mouseClick(ui_form.loadOntologyPushButton, Qt.LeftButton)
     current_selected_type = ui_form.typeComboBox.currentText()
     previous_types_count = ui_form.typeComboBox.count()
     qtbot.mouseClick(ui_form.deleteTypePushButton, Qt.LeftButton)
@@ -193,7 +157,6 @@ class TestOntologyConfigurationExtended(object):
                                                                                         attachments_column_names: attachments_column_names):
     app, ui_dialog, ui_form, qtbot = ontology_editor_gui
     assert ui_form.create_type_dialog.buttonBox.isVisible() is False, "Create new type dialog should not be shown!"
-    qtbot.mouseClick(ui_form.loadOntologyPushButton, Qt.LeftButton)
     current_selected_type = ui_form.typeComboBox.currentText()
     previous_types_count = ui_form.typeComboBox.count()
     qtbot.mouseClick(ui_form.deleteTypePushButton, Qt.LeftButton)

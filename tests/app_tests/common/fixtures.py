@@ -58,7 +58,6 @@ def configuration_extended(mocker) -> OntologyConfigurationForm:
   mocker.patch.object(ReorderColumnDelegate, '__new__', lambda _: mocker.MagicMock())
   mocker.patch.object(OntologyConfigurationForm, 'typePropsTableView', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'typeAttachmentsTableView', create=True)
-  mocker.patch.object(OntologyConfigurationForm, 'loadOntologyPushButton', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'addPropsRowPushButton', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'addAttachmentPushButton', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'saveOntologyPushButton', create=True)
