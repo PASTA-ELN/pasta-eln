@@ -153,7 +153,7 @@ class Details(QScrollArea):
         self.metaUserW.show()
       else:
         link = False
-        ontologyItem = [i for i in ontologyNode if i['name']==key]
+        ontologyItem = [i for group in ontologyNode for i in ontologyNode[group] if i['name']==key]
         if '\n' in self.doc[key]:     #if returns in value: format nicely
           _, labelL = widgetAndLayout('H', self.metaDetailsL, top='s', bottom='s')
           labelL.addWidget(QLabel(f'{key}: '), alignment=Qt.AlignTop) # type: ignore

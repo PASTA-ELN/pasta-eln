@@ -38,6 +38,32 @@ def ontology2Labels(ontology:dict[str,Any], tableFormat:dict[str,Any]) -> dict[s
   return dataDict
 
 
+def ontologyV2_to_V3(ontology: dict[str, Any]) -> None:
+  """ Translate ontology version 2 to version 3
+
+  Based on work of Jithu Murugan
+
+  Args:
+      ontology (dict[str, Any]): ontology
+
+  """
+  if ontology['-version'] != 2:
+    return
+  ontology["-version"] = 3
+  typeStructures = {}
+  for key in ontology:
+    if key[0] not in {'-', '_'}:
+      typeStructures[key] = ontology[key]
+  for typeStructure in typeStructures.values():
+    typeStructure.setdefault("attachments", [])
+    props = typeStructure.get("prop")
+    if props is None:
+      typeStructure["prop"] = {"default": []}
+    elif not isinstance(props, dict):
+      typeStructure["prop"] = {"default": props}
+  return
+
+
 def fillDocBeforeCreate(data:dict[str,Any], docType:list[str]) -> dict[str,Any]:
   """ Fill the data before submission to database with common data
   - type, project, childs

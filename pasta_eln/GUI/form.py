@@ -61,7 +61,7 @@ class Form(QDialog):
       ontologyNode = self.db.ontology[self.doc['-type'][0]]['prop']
     else:
       ontologyNode = defaultOntologyNode
-    for item in ontologyNode:
+    for item in [i for group in ontologyNode for i in ontologyNode[group]]:
       if item['name'] not in self.doc and  item['name'][0] not in ['_','-']:
         self.doc[item['name']] = ''
     # Create form
@@ -124,7 +124,7 @@ class Form(QDialog):
           setattr(self, f'key_{key}', QLineEdit('-- strange content --'))
         self.formL.addRow(QLabel(key.capitalize()), getattr(self, f'key_{key}'))
       elif isinstance(value, str):    #string
-        ontologyItem = [i for i in ontologyNode if i['name']==key]
+        ontologyItem = [i for group in ontologyNode for i in ontologyNode[group] if i['name']==key]
         if len(ontologyItem)==1 and 'list' in ontologyItem[0]:       #choice dropdown
           setattr(self, f'key_{key}', QComboBox())
           if isinstance(ontologyItem[0]['list'], list):            #ontology-defined choices

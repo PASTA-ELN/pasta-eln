@@ -21,7 +21,8 @@ class TableHeader(QDialog):
     self.comm = comm
     self.docType = docType
     self.selectedList = self.comm.backend.db.getColumnNames()[docType].split(',')
-    self.allSet = {i['name'] for i in self.comm.backend.db.ontology[docType]['prop']}
+    self.allSet = {i['name'] for group in self.db.ontology[docType]['prop']
+                   for i in self.db.ontology[docType]['prop'][group]}
     self.allSet = self.allSet.union({'date','#_curated', 'type', 'name', 'comment', 'tags', 'image'})
     #clean it
     self.allSet       = {i[1:] if i[0] in ['-','_'] else i for i in self.allSet}  #change -something to something
