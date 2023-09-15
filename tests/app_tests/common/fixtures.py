@@ -40,6 +40,7 @@ def create_type_dialog_mock(mocker) -> CreateTypeDialog:
   mocker.patch(
     'pasta_eln.GUI.ontology_configuration.create_type_dialog_extended.Ui_CreateTypeDialog.setupUi')
   mocker.patch.object(QDialog, '__new__')
+  mocker.patch.object(CreateTypeDialog, 'titleLineEdit', create=True)
   return CreateTypeDialog(mock_callable_1, mock_callable_2)
 
 

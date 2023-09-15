@@ -33,7 +33,6 @@ class Ui_CreateTypeDialog(object):
     spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Minimum)
     self.tileHorizontalLayout.addItem(spacerItem)
     self.titleLineEdit = QtWidgets.QLineEdit(parent=self.verticalLayoutWidget)
-    self.titleLineEdit.setToolTip("")
     self.titleLineEdit.setObjectName("titleLineEdit")
     self.tileHorizontalLayout.addWidget(self.titleLineEdit)
     self.mainVerticalLayout.addLayout(self.tileHorizontalLayout)
@@ -65,9 +64,11 @@ class Ui_CreateTypeDialog(object):
     _translate = QtCore.QCoreApplication.translate
     CreateTypeDialog.setWindowTitle(_translate("CreateTypeDialog", "Create New Type"))
     self.titleLabel.setText(_translate("CreateTypeDialog", "Enter Type title"))
-    self.titleLineEdit.setPlaceholderText(_translate("CreateTypeDialog", "Enter the title for the new type"))
+    self.titleLineEdit.setToolTip(_translate("CreateTypeDialog", "Exclude titles which start with \'x\' (reserved for structure level titles) or whitespace"))
+    self.titleLineEdit.setPlaceholderText(_translate("CreateTypeDialog", "Enter title for the new type"))
     self.typeLabel.setText(_translate("CreateTypeDialog", "Enter Type Label"))
-    self.labelLineEdit.setPlaceholderText(_translate("CreateTypeDialog", "Enter the label for the new type"))
+    self.labelLineEdit.setToolTip(_translate("CreateTypeDialog", "Enter label for the new type, which can also be modified later in the main editor window"))
+    self.labelLineEdit.setPlaceholderText(_translate("CreateTypeDialog", "Enter label for the new type"))
     self.structuralLevelCheckBox.setToolTip(_translate("CreateTypeDialog", "If this is a structural type, then title will be automatically populated as (x0, x1...xn). Next number will be chosen for xn from the existing list of structural items."))
     self.structuralLevelCheckBox.setText(_translate("CreateTypeDialog", "Is this a structural Type?"))
 

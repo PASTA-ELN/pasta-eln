@@ -186,7 +186,7 @@ def generate_empty_type(label: str) -> dict[str, Any]:
 
   """
   return {
-    "link": "",
+    "IRI": "",
     "label": label,
     "prop": {
       "default": [

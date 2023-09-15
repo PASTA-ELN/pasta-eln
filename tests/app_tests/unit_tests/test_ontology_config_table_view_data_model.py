@@ -27,8 +27,8 @@ class TestOntologyConfigTableViewDataModel(object):
                                             qtmodeltester):
 
     props_items = [
-      {"name": "name", "query": "query", "list": "list", "link": "link", "required": "required", "unit": "unit"},
-      {"name": "name", "query": "query", "list": "list", "link": "link", "required": "required", "unit": "unit"}
+      {"name": "name", "query": "query", "list": "list", "IRI": "link", "required": "required", "unit": "unit"},
+      {"name": "name", "query": "query", "list": "list", "IRI": "link", "required": "required", "unit": "unit"}
     ]
     props_table_model.update(props_items)
     with pytest.raises(AssertionError):

@@ -20,6 +20,8 @@ from collections.abc import Callable
 from typing import Any
 
 from PySide6 import QtCore
+from PySide6.QtCore import QRegularExpression
+from PySide6.QtGui import QRegularExpressionValidator
 from PySide6.QtWidgets import QDialog
 
 from pasta_eln.GUI.ontology_configuration.create_type_dialog import Ui_CreateTypeDialog
@@ -45,10 +47,13 @@ class CreateTypeDialog(Ui_CreateTypeDialog):
       accepted_callback (Callable): Accepted button parent callback.
       rejected_callback (Callable): Rejected button parent callback.
     """
-    self.logger = logging.getLogger(__name__ + "." + self.__class__.__name__)
+    self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
     self.next_struct_level: str | None = ""
     self.instance = QDialog()
     super().setupUi(self.instance)
+    # Restricts the title input to allow anything except x or space
+    # as the first character which is reserved for structural level
+    self.titleLineEdit.setValidator(QRegularExpressionValidator(QRegularExpression("^[^ Ax].*")))
     self.setup_slots(accepted_callback, rejected_callback)
 
   def setup_slots(self,
