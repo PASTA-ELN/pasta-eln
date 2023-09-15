@@ -46,8 +46,8 @@ class Form(QDialog):
     if 'image' in self.doc:
       width = self.comm.backend.configuration['GUI']['imageSizeDetails'] \
                       if hasattr(self.comm.backend, 'configuration') else 300
-      imageW, imageL = widgetAndLayout('V', mainL)
-      Image(self.doc['image'], imageL, anyDimension=width)
+      imageW, self.imageL = widgetAndLayout('V', mainL)
+      Image(self.doc['image'], self.imageL, anyDimension=width)
       imageW.setContextMenuPolicy(Qt.CustomContextMenu)
       imageW.customContextMenuRequested.connect(lambda pos: initContextMenu(self, pos))
 
@@ -352,13 +352,18 @@ class Form(QDialog):
 
   def execute(self, command:list[Any]) -> None:
     """
-    Event if user clicks button or users context menu
+    Event if user clicks button
 
     Args:
       command (list): list of commands
     """
     if isinstance(command[0], CommandMenu):
-      executeContextMenu(self, command)
+      if executeContextMenu(self, command):
+        print('I should repaint the image', len(self.doc))
+        self.imageL.itemAt(0).widget().setParent(None)   # type: ignore
+        width = self.comm.backend.configuration['GUI']['imageSizeDetails'] \
+                if hasattr(self.comm.backend, 'configuration') else 300
+        Image(self.doc['image'], self.imageL, anyDimension=width)
     elif command[0] is Command.BUTTON_BAR:
       if command[1]=='bold':
         getattr(self, f'textEdit_{command[2]}').insertPlainText('**TEXT**')

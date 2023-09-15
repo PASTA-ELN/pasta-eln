@@ -134,7 +134,8 @@ class Action(QAction):
     self.setText(label)
     self.triggered.connect(lambda : widget.execute(command))
     if icon:
-      self.setIcon(qta.icon(icon, scale_factor=1))
+      color = 'black' if widget is None else getColor(widget.comm.backend, 'secondaryText')
+      self.setIcon(qta.icon(icon, color=color, scale_factor=1))
     if shortcut is not None:
       self.setShortcut(QKeySequence(shortcut))
     menu.addAction(self)

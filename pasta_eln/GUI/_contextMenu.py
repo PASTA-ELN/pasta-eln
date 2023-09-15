@@ -36,13 +36,16 @@ def initContextMenu(widget:QWidget, pos:QPoint) -> None:
   return
 
 
-def executeContextMenu(widget:QWidget, command:list[Any]) -> None:
+def executeContextMenu(widget:QWidget, command:list[Any]) -> bool:
   """
   Execute context menu command
 
   Args:
     widget (QWidget): parent widget
     command (list): command
+
+  Returns:
+    bool: success
   """
   filePath = Path(widget.doc['-branch'][0]['path'])
   if command[0] is CommandMenu.OPEN_FILEBROWSER or command[0] is CommandMenu.OPEN_EXTERNAL:
@@ -67,18 +70,16 @@ def executeContextMenu(widget:QWidget, command:list[Any]) -> None:
     widget.comm.backend.testExtractor(path, recipe='/'.join(widget.doc['-type']), saveFig=str(saveFilePath))
   elif command[0] is CommandMenu.HIDE:
     widget.comm.backend.db.hideShow(widget.docID)
-    widget.comm.changeTable.emit('','')
-    widget.comm.changeDetails.emit(widget.doc['_id'])
   elif command[0] is CommandMenu.CHANGE_EXTRACTOR:
     widget.doc['-type'] = command[1].split('/')
     widget.comm.backend.useExtractors(filePath, widget.doc['shasum'], widget.doc)  #any path is good since the file is the same everywhere; data-changed by reference
     if len(widget.doc['-type'])>1 and len(widget.doc['image'])>1:
       widget.doc = widget.comm.backend.db.updateDoc({'image':widget.doc['image'], '-type':widget.doc['-type']}, widget.doc['_id'])
-      widget.comm.changeTable.emit('','')
-      widget.comm.changeDetails.emit(widget.doc['_id'])
+    else:
+      return False
   else:
     print(f'**ERROR: command not found in _contextMenu {command}')
-  return
+  return True
 
 
 class CommandMenu(Enum):
