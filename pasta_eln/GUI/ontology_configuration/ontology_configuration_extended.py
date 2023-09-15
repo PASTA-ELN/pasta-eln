@@ -261,8 +261,15 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     Returns: None
 
     """
+    # Disable the signals for the line edits before clearing in order to avoid clearing the respective
+    # iri and labels for the selected type from ontology document
+    self.typeLabelLineEdit.textChanged[str].disconnect()
+    self.typeIriLineEdit.textChanged[str].disconnect()
     self.typeLabelLineEdit.clear()
     self.typeIriLineEdit.clear()
+    self.typeLabelLineEdit.textChanged[str].connect(self.update_type_label)
+    self.typeIriLineEdit.textChanged[str].connect(self.update_type_iri)
+
     self.propsCategoryComboBox.clear()
     self.addPropsCategoryLineEdit.clear()
     self.typePropsTableView.model().update([])
