@@ -1,58 +1,57 @@
 """ Long strings and dictionaries/JSON that would obfuscate code """
 from typing import Any
 
-defaultOntology:dict[str,Any] = {
-  "_id":"-ontology-",
-  "-version":3,
+defaultOntology: dict[str, Any] = {
+  "_id": "-ontology-",
+  "-version": 3,
 
-  "x0": {"IRI":"", "label":"Projects", "prop": {"default": [
-    {"name":"-name",    "query":"What is the name of the project?"},
-    {"name":"status",   "query":"What is the project status", "list":["active","paused","passive","finished"]},
-    {"name":"objective","query":"What is the objective?"},
-    {"name":"-tags"},
-    {"name":"comment",  "query":"#tags comments remarks :field:value:"}
+  "x0": {"IRI": "", "attachments": [], "label": "Projects", "prop": {"default": [
+    {"name": "-name", "query": "What is the name of the project?"},
+    {"name": "status", "query": "What is the project status", "list": ["active", "paused", "passive", "finished"]},
+    {"name": "objective", "query": "What is the objective?"},
+    {"name": "-tags"},
+    {"name": "comment", "query": "#tags comments remarks :field:value:"}
   ]}},
-  "x1": {"IRI":"", "label":"Tasks", "prop": {"default": [
-    {"name":"-name",    "query":"What is the name of task?"},
-    {"name":"comment",  "query":"#tags comments remarks :field:value:"}
+  "x1": {"IRI": "", "attachments": [], "label": "Tasks", "prop": {"default": [
+    {"name": "-name", "query": "What is the name of task?"},
+    {"name": "comment", "query": "#tags comments remarks :field:value:"}
   ]}},
-  "x2": {"IRI":"", "label":"Subtasks", "prop": {"default": [
-    {"name":"-name",    "query":"What is the name of subtask?"},
-    {"name":"comment",  "query":"#tags comments remarks :field:value:"}
+  "x2": {"IRI": "", "attachments": [], "label": "Subtasks", "prop": {"default": [
+    {"name": "-name", "query": "What is the name of subtask?"},
+    {"name": "comment", "query": "#tags comments remarks :field:value:"}
   ]}},
 
-  "measurement": {"IRI":"", "label":"Measurements", "prop": {"default": [
-    {"name":"-name",       "query":"What is the file name?"},
-    {"name":"-tags"},
-    {"name":"comment",    "query":"#tags comments remarks :field:value:"},
-    {"name":"-type"},
-    {"name":"image"},
-    {"name":"#_curated"},
-    {"name":"sample",     "query":"Which sample was used?",     "list":"sample"},
-    {"name":"procedure",  "query":"Which procedure was used?",  "list":"procedure"}
+  "measurement": {"IRI": "", "attachments": [], "label": "Measurements", "prop": {"default": [
+    {"name": "-name", "query": "What is the file name?"},
+    {"name": "-tags"},
+    {"name": "comment", "query": "#tags comments remarks :field:value:"},
+    {"name": "-type"},
+    {"name": "image"},
+    {"name": "#_curated"},
+    {"name": "sample", "query": "Which sample was used?", "list": "sample"},
+    {"name": "procedure", "query": "Which procedure was used?", "list": "procedure"}
   ]}},
-  "sample": {"IRI":"", "label":"Samples", "prop": {"default": [
-    {"name":"-name",       "query":"What is the name / identifier of the sample?"},
-    {"name":"chemistry",  "query":"What is its chemical composition?"},
-    {"name":"-tags"},
-    {"name":"comment",    "query":"#tags comments remarks :field:value:"},
-    {"name":"qrCode"}
+  "sample": {"IRI": "", "attachments": [], "label": "Samples", "prop": {"default": [
+    {"name": "-name", "query": "What is the name / identifier of the sample?"},
+    {"name": "chemistry", "query": "What is its chemical composition?"},
+    {"name": "-tags"},
+    {"name": "comment", "query": "#tags comments remarks :field:value:"},
+    {"name": "qrCode"}
   ]}},
-  "procedure": {"IRI":"", "label":"Procedures", "prop": {"default": [
-    {"name":"-name",       "query":"What is the name / path?"},
-    {"name":"-tags"},
-    {"name":"comment",    "query":"#tags comments :field:value: e.g. #SOP_v1"},
-    {"name":"content",    "query":"What is procedure (Markdown possible; autofilled if file given)?"}
+  "procedure": {"IRI": "", "attachments": [], "label": "Procedures", "prop": {"default": [
+    {"name": "-name", "query": "What is the name / path?"},
+    {"name": "-tags"},
+    {"name": "comment", "query": "#tags comments :field:value: e.g. #SOP_v1"},
+    {"name": "content", "query": "What is procedure (Markdown possible; autofilled if file given)?"}
   ]}},
-  "instrument": {"IRI":"", "label":"Instruments", "prop": {"default": [
-    {"name":"-name",       "query":"What is the name / path?"},
-    {"name":"comment",    "query":"#tags comments :field:value: e.g. #SOP_v1"},
-    {"name":"vendor",     "query":"Who is the vendor?"}
+  "instrument": {"IRI": "", "attachments": [], "label": "Instruments", "prop": {"default": [
+    {"name": "-name", "query": "What is the name / path?"},
+    {"name": "comment", "query": "#tags comments :field:value: e.g. #SOP_v1"},
+    {"name": "vendor", "query": "Who is the vendor?"}
   ]}}
 }
 
-
-defaultOntologyNode:dict[str,list[dict[str,str]]] = {
+defaultOntologyNode: dict[str, list[dict[str, str]]] = {
   "default": [
     {"name": "-name", "query": "What is the file name?"},
     {"name": "-tags"},
@@ -60,8 +59,7 @@ defaultOntologyNode:dict[str,list[dict[str,str]]] = {
     {"name": "-type"}
   ]}
 
-
-defaultConfiguration:dict[str,Any] = {
+defaultConfiguration: dict[str, Any] = {
   "defaultProjectGroup": "research",
   "userID": "$os.getlogin()$",
   "version": 0,
@@ -69,24 +67,25 @@ defaultConfiguration:dict[str,Any] = {
   "qrPrinter": {},
   "extractorDir": "$(Path(__file__).parent/'Extractors').as_posix()$",
   "extractors": {},
-  "authors": [{"first":"", "last":"", "title":"", "email":"", "orcid":"","organizations":[{"organization":"", "rorid":""}]}],
+  "authors": [{"first": "", "last": "", "title": "", "email": "", "orcid": "",
+               "organizations": [{"organization": "", "rorid": ""}]}],
   "GUI": {},
   "projectGroups": {}
-  }
-
+}
 
 # level 1: type of property
 #   within each: array of 3: description, default, all_choices
-configurationGUI:dict[str,Any] = {
+configurationGUI: dict[str, Any] = {
   "general": {
     "theme": ["Theme",
               "light_blue",
-              ["dark_amber","dark_blue","dark_cyan","dark_lightgreen","dark_pink","dark_purple", "dark_red",\
-               "dark_teal","dark_yellow","light_amber","light_blue","light_cyan","light_cyan_500","light_lightgreen",\
-               "light_pink","light_purple","light_red","light_teal","light_yellow","none"]],
-    "loggingLevel": ["Logging level (more->less)","INFO",["DEBUG","INFO","WARNING","ERROR"]],
+              ["dark_amber", "dark_blue", "dark_cyan", "dark_lightgreen", "dark_pink", "dark_purple", "dark_red", \
+               "dark_teal", "dark_yellow", "light_amber", "light_blue", "light_cyan", "light_cyan_500",
+               "light_lightgreen", \
+               "light_pink", "light_purple", "light_red", "light_teal", "light_yellow", "none"]],
+    "loggingLevel": ["Logging level (more->less)", "INFO", ["DEBUG", "INFO", "WARNING", "ERROR"]],
   },
-  "dimensions":{
+  "dimensions": {
     "sidebarWidth": ["Sidebar width", 280, [220, 280, 340]],
     "maxTableColumnWidth": ["Maximum column width in tables", 400, [300, 400, 500, 600]],
     "imageSizeDetails": ["Image size in details view and form", 600, [300, 400, 500, 600]],
@@ -97,7 +96,6 @@ configurationGUI:dict[str,Any] = {
     "frameSize": ["Frame width around items in project view", 6, [4, 6, 8, 10]],
   }
 }
-
 
 setupTextLinux = """
 ### Welcome to the PASTA-ELN setup for Linux
@@ -110,7 +108,6 @@ This setup will analyse and (possibly) correct these items.
 
 If the installation is successful, manually and permanently remove the 'pastaELN.log' logfile that is in your home-directory.
 """
-
 
 setupTextWindows = """
 ### Welcome to the PASTA-ELN setup for Windows
@@ -178,7 +175,6 @@ This step helps to verify the installation and provides an helpful example for n
 This step usually takes up to 1min, so please be patient.
 """
 
-
 shortcuts = """
 Ctrl+Space: List projects
 Ctrl+M: List measurements
@@ -193,7 +189,6 @@ F9: Restart
 Ctrl+?: Verify database integrity
 Ctrl+0: Configuration
 """
-
 
 tableHeaderHelp = """
 <h4>You can add custom rows via bottom text area.</h4>
