@@ -1,6 +1,7 @@
 """ Misc functions that do not require instances """
 import os, sys, uuid, logging, traceback, json
 from io import BufferedReader
+from urllib import request
 from pathlib import Path
 from re import sub, match
 import platform
@@ -138,10 +139,9 @@ def generic_hash(path:Path, forceFile:bool=False) -> str:
   Raises:
     ValueError: shasum of directory not supported
   """
-  from urllib import request
   if str(path).startswith('http'):                      #Remote file:
     try:
-      with request.urlopen(path.as_posix().replace(':/','://')) as site:
+      with request.urlopen(path.as_posix().replace(':/','://'), timeout=60) as site:
         meta = site.headers
         size = int(meta.get_all('Content-Length')[0])
         return blob_hash(site, size)

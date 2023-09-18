@@ -457,7 +457,12 @@ class Backend(CLI_Mixin):
     extension = filePath.suffix[1:]  #cut off initial . of .jpg
     if str(filePath).startswith('http'):
       absFilePath = Path(tempfile.gettempdir())/filePath.name
-      request.urlretrieve(filePath.as_posix().replace(':/','://'), absFilePath)
+      with request.urlopen(filePath.as_posix().replace(':/','://'), timeout=60) as urlRequest:
+        with open(absFilePath, 'wb') as f:
+          try:
+            f.write(urlRequest.read())
+          except Exception:
+            print("Error saving downloaded file to temporary disk")
     else:
       if filePath.is_absolute():
         filePath = filePath.relative_to(self.basePath)
@@ -482,6 +487,8 @@ class Backend(CLI_Mixin):
       if success:
         doc |= content
         for meta in ['metaVendor','metaUser']:
+          if meta not in doc:
+            doc[meta] = {}
           for item in doc[meta]:
             if isinstance(doc[meta][item], tuple):
               doc[meta][item] = list(doc[meta][item])
