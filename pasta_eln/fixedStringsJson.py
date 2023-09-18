@@ -5,23 +5,23 @@ defaultOntology:dict[str,Any] = {
   "_id":"-ontology-",
   "-version":3,
 
-  "x0": {"link":"", "label":"Projects", "prop": {"default": [
+  "x0": {"IRI":"", "label":"Projects", "prop": {"default": [
     {"name":"-name",    "query":"What is the name of the project?"},
     {"name":"status",   "query":"What is the project status", "list":["active","paused","passive","finished"]},
     {"name":"objective","query":"What is the objective?"},
     {"name":"-tags"},
     {"name":"comment",  "query":"#tags comments remarks :field:value:"}
   ]}},
-  "x1": {"link":"", "label":"Tasks", "prop": {"default": [
+  "x1": {"IRI":"", "label":"Tasks", "prop": {"default": [
     {"name":"-name",    "query":"What is the name of task?"},
     {"name":"comment",  "query":"#tags comments remarks :field:value:"}
   ]}},
-  "x2": {"link":"", "label":"Subtasks", "prop": {"default": [
+  "x2": {"IRI":"", "label":"Subtasks", "prop": {"default": [
     {"name":"-name",    "query":"What is the name of subtask?"},
     {"name":"comment",  "query":"#tags comments remarks :field:value:"}
   ]}},
 
-  "measurement": {"link":"", "label":"Measurements", "prop": {"default": [
+  "measurement": {"IRI":"", "label":"Measurements", "prop": {"default": [
     {"name":"-name",       "query":"What is the file name?"},
     {"name":"-tags"},
     {"name":"comment",    "query":"#tags comments remarks :field:value:"},
@@ -31,20 +31,20 @@ defaultOntology:dict[str,Any] = {
     {"name":"sample",     "query":"Which sample was used?",     "list":"sample"},
     {"name":"procedure",  "query":"Which procedure was used?",  "list":"procedure"}
   ]}},
-  "sample": {"link":"", "label":"Samples", "prop": {"default": [
+  "sample": {"IRI":"", "label":"Samples", "prop": {"default": [
     {"name":"-name",       "query":"What is the name / identifier of the sample?"},
     {"name":"chemistry",  "query":"What is its chemical composition?"},
     {"name":"-tags"},
     {"name":"comment",    "query":"#tags comments remarks :field:value:"},
     {"name":"qrCode"}
   ]}},
-  "procedure": {"link":"", "label":"Procedures", "prop": {"default": [
+  "procedure": {"IRI":"", "label":"Procedures", "prop": {"default": [
     {"name":"-name",       "query":"What is the name / path?"},
     {"name":"-tags"},
     {"name":"comment",    "query":"#tags comments :field:value: e.g. #SOP_v1"},
     {"name":"content",    "query":"What is procedure (Markdown possible; autofilled if file given)?"}
   ]}},
-  "instrument": {"link":"", "label":"Instruments", "prop": {"default": [
+  "instrument": {"IRI":"", "label":"Instruments", "prop": {"default": [
     {"name":"-name",       "query":"What is the name / path?"},
     {"name":"comment",    "query":"#tags comments :field:value: e.g. #SOP_v1"},
     {"name":"vendor",     "query":"Who is the vendor?"}

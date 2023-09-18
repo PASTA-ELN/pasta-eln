@@ -40,6 +40,7 @@ def create_type_dialog_mock(mocker) -> CreateTypeDialog:
   mocker.patch(
     'pasta_eln.GUI.ontology_configuration.create_type_dialog_extended.Ui_CreateTypeDialog.setupUi')
   mocker.patch.object(QDialog, '__new__')
+  mocker.patch.object(CreateTypeDialog, 'titleLineEdit', create=True)
   return CreateTypeDialog(mock_callable_1, mock_callable_2)
 
 
@@ -57,7 +58,6 @@ def configuration_extended(mocker) -> OntologyConfigurationForm:
   mocker.patch.object(ReorderColumnDelegate, '__new__', lambda _: mocker.MagicMock())
   mocker.patch.object(OntologyConfigurationForm, 'typePropsTableView', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'typeAttachmentsTableView', create=True)
-  mocker.patch.object(OntologyConfigurationForm, 'loadOntologyPushButton', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'addPropsRowPushButton', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'addAttachmentPushButton', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'saveOntologyPushButton', create=True)
@@ -65,17 +65,17 @@ def configuration_extended(mocker) -> OntologyConfigurationForm:
   mocker.patch.object(OntologyConfigurationForm, 'deletePropsCategoryPushButton', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'deleteTypePushButton', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'addTypePushButton', create=True)
+  mocker.patch.object(OntologyConfigurationForm, 'cancelPushButton', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'typeComboBox', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'propsCategoryComboBox', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'typeLabelLineEdit', create=True)
-  mocker.patch.object(OntologyConfigurationForm, 'typeLinkLineEdit', create=True)
+  mocker.patch.object(OntologyConfigurationForm, 'typeIriLineEdit', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'delete_column_delegate_props_table', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'reorder_column_delegate_props_table', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'delete_column_delegate_attach_table', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'reorder_column_delegate_attach_table', create=True)
   mocker.patch.object(CreateTypeDialog, '__new__')
-  config_instance = OntologyConfigurationForm(mock_document)
-  return config_instance
+  return OntologyConfigurationForm(mock_document)
 
 
 @fixture()
@@ -161,17 +161,17 @@ def props_column_names():
     0: "name",
     1: "query",
     2: "list",
-    3: "link",
-    4: "required",
-    5: "unit"
+    3: "unit",
+    4: "IRI",
+    5: "required"
   }
 
 
 @fixture()
 def attachments_column_names():
   return {
-    0: "location",
-    1: "link"
+    0: "description",
+    1: "type"
   }
 
 

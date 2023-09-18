@@ -9,6 +9,7 @@
 import pytest
 from PySide6.QtCore import Qt
 
+from pasta_eln.GUI.ontology_configuration.ontology_configuration_constants import PROPS_TABLE_LIST_COLUMN_INDEX
 from tests.app_tests.common.fixtures import table_model, props_table_model, attachments_table_model
 
 
@@ -26,8 +27,8 @@ class TestOntologyConfigTableViewDataModel(object):
                                             qtmodeltester):
 
     props_items = [
-      {"name": "name", "query": "query", "list": "list", "link": "link", "required": "required", "unit": "unit"},
-      {"name": "name", "query": "query", "list": "list", "link": "link", "required": "required", "unit": "unit"}
+      {"name": "name", "query": "query", "list": "list", "IRI": "link", "required": "required", "unit": "unit"},
+      {"name": "name", "query": "query", "list": "list", "IRI": "link", "required": "required", "unit": "unit"}
     ]
     props_table_model.update(props_items)
     with pytest.raises(AssertionError):
@@ -316,3 +317,71 @@ class TestOntologyConfigTableViewDataModel(object):
       assert layout_changed_emit_spy.call_count == 1, "layout_changed_emit() should be called once"
     else:
       logger_warning_spy.assert_called_once_with("Invalid position: {%s}", re_order_position)
+
+  @pytest.mark.parametrize("column_index, set_value, convert_value, is_valid, role, set_success", [
+    (None, None, None, False, Qt.DisplayRole, True),
+    (0, None, None, False, Qt.DisplayRole, True),
+    (0, None, None, True, Qt.UserRole, True),
+    (PROPS_TABLE_LIST_COLUMN_INDEX, 'test', 'test', True, Qt.UserRole, True),
+    (PROPS_TABLE_LIST_COLUMN_INDEX, 'test test1', 'test test1', True, Qt.UserRole, True),
+    (PROPS_TABLE_LIST_COLUMN_INDEX, '1, 2', ['1', '2'], True, Qt.UserRole, True),
+    (PROPS_TABLE_LIST_COLUMN_INDEX, 'test, 12312', ['test', '12312'], True, Qt.UserRole, True),
+    (PROPS_TABLE_LIST_COLUMN_INDEX, ' test,    12312 12, 112', ['test', '12312 12', '112'], True, Qt.UserRole, True),
+    (None, None, None, False, Qt.EditRole, True),
+  ])
+  def test_props_table_data_model_set_data_should_do_expected(self,
+                                                              props_table_model: props_table_model,
+                                                              mocker,
+                                                              column_index,
+                                                              set_value,
+                                                              convert_value,
+                                                              is_valid,
+                                                              role,
+                                                              set_success):
+
+    mock_index = mocker.patch("PySide6.QtCore.QModelIndex")
+    mock_is_valid_spy = mocker.patch.object(mock_index, "isValid", return_value=is_valid)
+    mock_column_spy = mocker.patch.object(mock_index, "column", return_value=column_index)
+    mock_data_set_spy = mocker.patch(
+      "pasta_eln.GUI.ontology_configuration.ontology_tableview_data_model.OntologyTableViewModel.setData",
+      return_value=set_success)
+    assert props_table_model.setData(mock_index, set_value, role) is set_success, \
+      "set_data() should return expected value"
+    mock_is_valid_spy.assert_called_once_with()
+    if is_valid:
+      mock_column_spy.assert_called_once_with()
+    mock_data_set_spy.assert_called_once_with(mock_index, convert_value, role)
+
+  @pytest.mark.parametrize("column_index, is_valid, role, base_return_data, return_value", [
+    (None, False, Qt.DisplayRole, '', ''),
+    (0, False, Qt.DisplayRole, 'True', 'True'),
+    (0, True, Qt.UserRole, '', ''),
+    (PROPS_TABLE_LIST_COLUMN_INDEX, True, Qt.UserRole, [], ''),
+    (PROPS_TABLE_LIST_COLUMN_INDEX, True, Qt.UserRole, ['23', '56'], '23,56'),
+    (PROPS_TABLE_LIST_COLUMN_INDEX, True, Qt.UserRole, ['test 23', 'test'], 'test 23,test'),
+    (PROPS_TABLE_LIST_COLUMN_INDEX, True, Qt.UserRole, ['test 2334'] * 20, ('test 2334,test 2334,' * 10)[:-1]),
+    (PROPS_TABLE_LIST_COLUMN_INDEX, True, Qt.UserRole, '', ''),
+    (PROPS_TABLE_LIST_COLUMN_INDEX, True, Qt.UserRole, 'testsdfsdf', 'testsdfsdf'),
+    (None, None, Qt.EditRole, False, False)
+  ])
+  def test_props_table_data_model_get_data_should_do_expected(self,
+                                                              props_table_model: props_table_model,
+                                                              mocker,
+                                                              column_index,
+                                                              is_valid,
+                                                              role,
+                                                              base_return_data,
+                                                              return_value):
+
+    mock_index = mocker.patch("PySide6.QtCore.QModelIndex")
+    mock_is_valid_spy = mocker.patch.object(mock_index, "isValid", return_value=is_valid)
+    mock_column_spy = mocker.patch.object(mock_index, "column", return_value=column_index)
+    mock_data_get_spy = mocker.patch(
+      "pasta_eln.GUI.ontology_configuration.ontology_tableview_data_model.OntologyTableViewModel.data",
+      return_value=base_return_data)
+    assert props_table_model.data(mock_index, role) == return_value, \
+      "data() should return expected value"
+    mock_is_valid_spy.assert_called_once_with()
+    if is_valid:
+      mock_column_spy.assert_called_once_with()
+    mock_data_get_spy.assert_called_once_with(mock_index, role)

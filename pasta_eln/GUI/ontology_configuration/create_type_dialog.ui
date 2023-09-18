@@ -49,6 +49,12 @@
      <layout class="QHBoxLayout" name="tileHorizontalLayout">
       <item>
        <widget class="QLabel" name="titleLabel">
+        <property name="minimumSize">
+         <size>
+          <width>120</width>
+          <height>0</height>
+         </size>
+        </property>
         <property name="text">
          <string>Enter Type title</string>
         </property>
@@ -73,10 +79,10 @@
       <item>
        <widget class="QLineEdit" name="titleLineEdit">
         <property name="toolTip">
-         <string/>
+         <string>Exclude titles which start with 'x' (reserved for structure level titles) or whitespace</string>
         </property>
         <property name="placeholderText">
-         <string>Enter the title for the new type</string>
+         <string>Enter title for the new type</string>
         </property>
        </widget>
       </item>
@@ -86,6 +92,12 @@
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
        <widget class="QLabel" name="typeLabel">
+        <property name="minimumSize">
+         <size>
+          <width>120</width>
+          <height>0</height>
+         </size>
+        </property>
         <property name="text">
          <string>Enter Type Label</string>
         </property>
@@ -109,8 +121,11 @@
       </item>
       <item>
        <widget class="QLineEdit" name="labelLineEdit">
+        <property name="toolTip">
+         <string>Enter label for the new type, which can also be modified later in the main editor window</string>
+        </property>
         <property name="placeholderText">
-         <string>Enter the label for the new type</string>
+         <string>Enter label for the new type</string>
         </property>
        </widget>
       </item>
