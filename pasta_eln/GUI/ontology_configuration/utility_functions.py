@@ -213,3 +213,60 @@ def generate_required_properties() -> list[dict[str, Any]]:
       "required": True
     }
   ]
+
+
+def check_ontology_document(ontology_document: Document) -> dict[str, dict[str, list[str]]]:
+  """
+  Check the ontology document data to see if all the required properties ["-name", "-tags"] are present under all categories
+  Args:
+    ontology_document (Document): Ontology document loaded from the database
+
+  Returns (dict[str, dict[str, list[str]]]): Empty dictionary if all the required properties are present under all categories
+  otherwise returns a dictionary of types with categories missing required properties
+
+  """
+  if not ontology_document:
+    return {}
+  types_with_missing_properties: dict[str, dict[str, list[str]]] = {}
+  required_properties = ["-name", "-tags"]
+  type_structures = {
+    data: ontology_document[data]
+    for data in ontology_document if isinstance(ontology_document[data], dict)
+  }
+  if type_structures:
+    for type_name, type_structure in type_structures.items():
+      type_name = type_name.replace("x", "Structure level ") \
+        if is_structural_level(type_name) \
+        else type_name
+      if type_structure.get("prop"):
+        for category, properties in type_structure.get("prop").items():
+          names = [prop["name"] for prop in properties]
+          for req_property in required_properties:
+            if req_property not in names:
+              if type_name not in types_with_missing_properties:
+                types_with_missing_properties[type_name] = {}
+              if category not in types_with_missing_properties[type_name]:
+                types_with_missing_properties[type_name][category] = []
+              types_with_missing_properties[type_name][category].append(req_property)
+  return types_with_missing_properties
+
+
+def get_missing_props_message(missing_properties: dict[str, dict[str, list[str]]]) -> str:
+  """
+  Get formatted message for missing properties
+  Args:
+    missing_properties (dict[str, dict[str, list[str]]]): Missing properties
+
+  Returns (str): Formatted message
+
+  """
+  if not missing_properties:
+    return ""
+  message = "Missing required properties: \t\t\t\n\n"
+  for type_name, categories in missing_properties.items():
+    message += f"Type: {type_name}\n"
+    for category, properties in categories.items():
+      message += f"\tCategory: {category}\n"
+      for property_name in properties:
+        message += f"\t\tMissing Property: {property_name}\n"
+  return message

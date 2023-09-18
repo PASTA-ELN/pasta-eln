@@ -30,7 +30,7 @@ from .reorder_column_delegate import ReorderColumnDelegate
 from .required_column_delegate import RequiredColumnDelegate
 from .utility_functions import adjust_ontology_data_to_v3, show_message, \
   get_next_possible_structural_level_label, get_types_for_display, adapt_type, generate_empty_type, \
-  generate_required_properties
+  generate_required_properties, check_ontology_document, get_missing_props_message
 
 
 class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
@@ -368,6 +368,11 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     Save the modified ontology document data in database
     """
     self.logger.info("User saved the ontology data document!!")
+    if missing_properties := check_ontology_document(self.ontology_document):
+      message = get_missing_props_message(missing_properties)
+      show_message(message)
+      self.logger.warning(f"Missing required properties: \n {missing_properties}")
+      return
     self.ontology_document.save()
     show_message("Ontology data saved successfully..")
 
