@@ -12,7 +12,7 @@ import sys
 from typing import Any
 
 from PySide6 import QtWidgets
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QMessageBox
 from cloudant.document import Document
 
 from .create_type_dialog_extended import CreateTypeDialog
@@ -370,7 +370,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     self.logger.info("User clicked the save button..")
     if missing_properties := check_ontology_document(self.ontology_document):
       message = get_missing_props_message(missing_properties)
-      show_message(message)
+      show_message(message, QMessageBox.Warning)
       self.logger.warning(message)
       return
     self.ontology_document.save()

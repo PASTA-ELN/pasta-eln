@@ -8,7 +8,7 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
 import pytest
-from PySide6.QtWidgets import QApplication, QDialog
+from PySide6.QtWidgets import QApplication, QDialog, QMessageBox
 
 from pasta_eln.GUI.ontology_configuration.create_type_dialog_extended import CreateTypeDialog
 from pasta_eln.GUI.ontology_configuration.delete_column_delegate import DeleteColumnDelegate
@@ -718,7 +718,7 @@ class TestOntologyConfigConfiguration(object):
     log_info_spy.assert_called_once_with("User clicked the save button..")
     mock_check_ontology_document.assert_called_once_with(configuration_extended.ontology_document)
     mock_get_missing_props_message.assert_called_once_with(missing_props)
-    mock_show_message.assert_called_once_with("Missing message")
+    mock_show_message.assert_called_once_with("Missing message", QMessageBox.Warning)
     log_warn_spy.assert_called_once_with("Missing message")
 
   @pytest.mark.parametrize("new_title, new_label, ontology_document, ontology_types", [

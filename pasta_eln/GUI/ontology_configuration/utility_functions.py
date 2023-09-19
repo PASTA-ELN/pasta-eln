@@ -67,10 +67,12 @@ def adjust_ontology_data_to_v3(ontology_doc: Document) -> None:
   return None
 
 
-def show_message(message: str) -> None:
+def show_message(message: str,
+                 icon: Any = QMessageBox.Information) -> None:
   """
   Displays a message to the user using QMessageBox
   Args:
+    icon (Any): Message box icon
     message (str): Message to be displayed
 
   Returns: Return None if message is empty otherwise displays the message
@@ -78,6 +80,8 @@ def show_message(message: str) -> None:
   """
   if message:
     msg_box = QMessageBox()
+    msg_box.setWindowTitle("Ontology Editor")
+    msg_box.setIcon(icon)
     msg_box.setText(message)
     msg_box.exec()
 
