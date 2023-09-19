@@ -367,7 +367,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     """
     Save the modified ontology document data in database
     """
-    self.logger.info("User saved the ontology data document!!")
+    self.logger.info("User clicked the save button..")
     if missing_properties := check_ontology_document(self.ontology_document):
       message = get_missing_props_message(missing_properties)
       show_message(message)

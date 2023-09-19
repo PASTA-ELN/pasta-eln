@@ -660,13 +660,12 @@ class TestOntologyConfigConfiguration(object):
       if type(data) is dict:
         assert data in configuration_extended.ontology_types, "Data should be loaded"
 
-  @pytest.mark.parametrize("ontology_document", [
-    'ontology_doc_mock',
-    None,
-    {"x0": {"IRI": "x0"}, "": {"IRI": "x1"}},
-    {"x0": {"IRI": "x0"}, "": {"IRI": "x1"}, 23: "test", "__id": "test"},
-    {"test": ["test1", "test2", "test3"]}
-  ])
+  @pytest.mark.parametrize("ontology_document",
+                           [None,
+                            {"x0": {"IRI": "x0"}, "": {"IRI": "x1"}},
+                            {"x0": {"IRI": "x0"}, "": {"IRI": "x1"}, 23: "test", "__id": "test"},
+                            {"test": ["test1", "test2", "test3"]}
+                            ])
   def test_save_ontology_should_do_expected(self,
                                             mocker,
                                             ontology_document,
@@ -686,9 +685,41 @@ class TestOntologyConfigConfiguration(object):
     mock_show_message = mocker.patch(
       'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.show_message')
     assert configuration_extended.save_ontology() is None, "Nothing should be returned"
-    configuration_extended.logger.info.assert_called_once_with("User saved the ontology data document!!")
+    configuration_extended.logger.info.assert_called_once_with("User clicked the save button..")
     configuration_extended.ontology_document.save.assert_called_once()
     mock_show_message.assert_called_once_with("Ontology data saved successfully..")
+
+  def test_save_ontology_with_missing_properties_should_skip_save_and_show_message(self,
+                                                                                   mocker,
+                                                                                   ontology_doc_mock,
+                                                                                   configuration_extended: configuration_extended):
+    mocker.patch.object(configuration_extended, 'ontology_document', create=True)
+    configuration_extended.ontology_document.__setitem__.side_effect = ontology_doc_mock.__setitem__
+    configuration_extended.ontology_document.__getitem__.side_effect = ontology_doc_mock.__getitem__
+    configuration_extended.ontology_document.__iter__.side_effect = ontology_doc_mock.__iter__
+    configuration_extended.ontology_document.__contains__.side_effect = ontology_doc_mock.__contains__
+
+    log_info_spy = mocker.patch.object(configuration_extended.logger, 'info')
+    log_warn_spy = mocker.patch.object(configuration_extended.logger, 'warning')
+    mock_show_message = mocker.patch(
+      'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.show_message')
+    missing_props = {
+      'Structure level 0': {'category1': ['-tags']},
+      'Structure level 1': {'default': ['-tags']},
+      'Structure level 2': {'default': ['-tags']},
+      'instrument': {'default': ['-tags']}}
+    mock_check_ontology_document = mocker.patch(
+      'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.check_ontology_document',
+      return_value=missing_props)
+    mock_get_missing_props_message = mocker.patch(
+      'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.get_missing_props_message',
+      return_value="Missing message")
+    assert configuration_extended.save_ontology() is None, "Nothing should be returned"
+    log_info_spy.assert_called_once_with("User clicked the save button..")
+    mock_check_ontology_document.assert_called_once_with(configuration_extended.ontology_document)
+    mock_get_missing_props_message.assert_called_once_with(missing_props)
+    mock_show_message.assert_called_once_with("Missing message")
+    log_warn_spy.assert_called_once_with("Missing message")
 
   @pytest.mark.parametrize("new_title, new_label, ontology_document, ontology_types", [
     (None, None, None, None),
