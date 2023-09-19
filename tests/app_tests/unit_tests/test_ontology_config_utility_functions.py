@@ -357,6 +357,33 @@ class TestOntologyConfigUtilityFunctions(object):
          }
        }
      },
+     {'Structure level 1': {'default': ['-name']}, 'test': {'default': ['-tags']}}),
+    ({
+       "x0": {
+       },
+       "x1": {
+         "prop": {
+           "default": [
+             {"name": "name", "query": "What is the name of task?"},
+             {"name": "-tags", "query": "What is the name of task?"},
+             {},
+             {}
+           ],
+           "category2": [
+             {"name": "-name", "query": "What is the name of task?"},
+             {"name": "-tags", "query": "What is the name of task?"},
+             {"query": "What is the name of task?"}
+           ]
+         }
+       },
+       "test": {
+         "prop": {
+           "default": [
+             {"name": "-name", "query": "What is the name of task?"},
+           ]
+         }
+       }
+     },
      {'Structure level 1': {'default': ['-name']}, 'test': {'default': ['-tags']}})
   ])
   def test_check_ontology_document_with_full_and_missing_properties_returns_expected_result(self,

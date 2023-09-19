@@ -204,12 +204,12 @@ def generate_required_properties() -> list[dict[str, Any]]:
   return [
     {
       "name": "-name",
-      "query": "What is the name of the project?",
+      "query": "What is the name of the property?",
       "required": True
     },
     {
       "name": "-tags",
-      "query": "What are the tags associated with the project?",
+      "query": "What are the tags associated with this property?",
       "required": True
     }
   ]
@@ -240,7 +240,7 @@ def check_ontology_document(ontology_document: Document) -> dict[str, dict[str, 
         else type_name
       if type_structure.get("prop"):
         for category, properties in type_structure.get("prop").items():
-          names = [prop["name"] for prop in properties]
+          names = [prop.get("name") for prop in properties]
           for req_property in required_properties:
             if req_property not in names:
               if type_name not in types_with_missing_properties:
