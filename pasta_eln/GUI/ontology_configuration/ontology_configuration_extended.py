@@ -371,7 +371,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     if missing_properties := check_ontology_document(self.ontology_document):
       message = get_missing_props_message(missing_properties)
       show_message(message)
-      self.logger.warning(f"Missing required properties: \n {missing_properties}")
+      self.logger.warning(message)
       return
     self.ontology_document.save()
     show_message("Ontology data saved successfully..")
