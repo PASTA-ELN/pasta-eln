@@ -1,19 +1,11 @@
-#  PASTA-ELN and all its sub-parts are covered by the MIT license.
-#
-#  Copyright (c) 2023
-#
-#  Author: Jithu Murugan
-#  Filename: test_ontology_configuration_extended.py
-#
-#  You should have received a copy of the license with this file. Please refer the license file for more information.
-
-#  PASTA-ELN and all its sub-parts are covered by the MIT license.
-#
-#
-#  Author: Jithu Murugan
-#  Filename: test_ontology_configuration_extended.py
-#
-#  You should have received a copy of the license with this file. Please refer the license file for more information.
+#   PASTA-ELN and all its sub-parts are covered by the MIT license.
+#  #
+#   Copyright (c) 2023
+#  #
+#   Author: Jithu Murugan
+#   Filename: test_ontology_configuration_extended.py
+#  #
+#   You should have received a copy of the license with this file. Please refer the license file for more information.
 
 from PySide6 import QtWidgets
 from PySide6.QtCore import Qt
