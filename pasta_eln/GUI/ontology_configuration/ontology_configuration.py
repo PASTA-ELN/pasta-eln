@@ -252,6 +252,7 @@ class Ui_OntologyConfigurationBaseForm(object):
     self.deleteTypePushButton.setText(_translate("OntologyConfigurationBaseForm", "- Delete"))
     self.addPropsRowPushButton.setToolTip(_translate("OntologyConfigurationBaseForm", "Add a new property row to the above table with empty values"))
     self.addPropsRowPushButton.setText(_translate("OntologyConfigurationBaseForm", "+ Add Property"))
+    self.addAttachmentPushButton.setToolTip(_translate("OntologyConfigurationBaseForm", "Add a new attachment row to the above table with empty values"))
     self.addAttachmentPushButton.setText(_translate("OntologyConfigurationBaseForm", "+ Add Attachment"))
     self.propertiesTableHeaderLabel.setText(_translate("OntologyConfigurationBaseForm", "Properties"))
     self.typeAttachmentsTableView.setToolTip(_translate("OntologyConfigurationBaseForm", "Table which displays the attachments for the above selected data type"))

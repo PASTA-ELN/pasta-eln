@@ -453,6 +453,9 @@
               <height>0</height>
              </size>
             </property>
+            <property name="toolTip">
+             <string>Add a new attachment row to the above table with empty values</string>
+            </property>
             <property name="text">
              <string>+ Add Attachment</string>
             </property>
