@@ -91,6 +91,8 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
 
     for column_index, width in self.props_table_data_model.column_widths.items():
       self.typePropsTableView.setColumnWidth(column_index, width)
+    # When resized, only stretch the query column of typePropsTableView
+    self.typePropsTableView.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
 
     self.typeAttachmentsTableView.setItemDelegateForColumn(
       ATTACHMENT_TABLE_DELETE_COLUMN_INDEX,
@@ -102,6 +104,8 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
 
     for column_index, width in self.attachments_table_data_model.column_widths.items():
       self.typeAttachmentsTableView.setColumnWidth(column_index, width)
+    # When resized, only stretch the type column of typeAttachmentsTableView
+    self.typeAttachmentsTableView.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
 
     # Create the dialog for new type creation
     self.create_type_dialog = CreateTypeDialog(self.create_type_accepted_callback, self.create_type_rejected_callback)
