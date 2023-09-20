@@ -16,3 +16,6 @@ PROPS_TABLE_REORDER_COLUMN_INDEX = 7
 
 ATTACHMENT_TABLE_DELETE_COLUMN_INDEX = 2
 ATTACHMENT_TABLE_REORDER_COLUMN_INDEX = 3
+
+# Help page URL
+ONTOLOGY_HELP_PAGE_URL = "https://pasta-eln.github.io/pasta-eln/ontology_configuration.html"

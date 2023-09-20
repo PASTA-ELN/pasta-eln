@@ -8,7 +8,7 @@ Motivation for PASTA-ELN
 
 *What is the goal of the software?*
     Data has two origins
-    - local harddrive where data can be dumped into (freedom to research)
+    - local hard-drive where data can be dumped into (freedom to research)
     - links to stored data in a repository
     follows [agile project management](agileProjects.md), which is used in IT-projects
     PASTA is similar to Labfolder(TM), SciNote(TM), etc. only that it is open-source, has two data-sources, etc.
@@ -20,7 +20,7 @@ Motivation for PASTA-ELN
 
 *How is privacy (german Datenschutz) accounted for?*
     The lead designer of PASTA-ELN (as well as many of his immediate colleagues) demand privacy when they use software. PASTA was designed to support privacy on multiple levels.
-    - Initially all data and metadata are collected only on the desktop/laptop of the researcher. No data is collected in a central location. Only if the researcher whishes to share the data, it will be uploaded to the database of the research group.
+    - Initially all data and metadata are collected only on the desktop/laptop of the researcher. No data is collected in a central location. Only if the researcher wishes to share the data, it will be uploaded to the database of the research group.
     - Complete decoupling of authorization and authorship (Only, members of a research group are allowed to write to the database (authorization). Who writes each entry can be recorded or not (authorship).)
     - Everybody can select if she/he wants to be identified as author in the database of the research group. If the scientist does not want to be identified, he becomes anonymous (We use a _ for that.) Even another user, or the system administrator cannot identify the author of a entry because that information is not stored.
     - Once the data and meta is shared - as it should be according to the FAIR principles of research - all user identification is removed (even if you choose to be known to your research group) and everybody becomes an anonymous _.
@@ -40,7 +40,7 @@ Implementation
     - Most programs that scientists use work well for local files: imageJ, Gwyddion, Origin. Implementing all this functionality into a web-interface is too complicated.
 
 *What are the advantages of web-based and desktop-based software?*
-    - Webbased (webforms incl. drag-drop)
+    - Web-based (webforms incl. drag-drop)
         - works independently of operating system
         - works for all screen sizes
         - always updated software
