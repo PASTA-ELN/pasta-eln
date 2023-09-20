@@ -66,6 +66,7 @@ def configuration_extended(mocker) -> OntologyConfigurationForm:
   mocker.patch.object(OntologyConfigurationForm, 'deleteTypePushButton', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'addTypePushButton', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'cancelPushButton', create=True)
+  mocker.patch.object(OntologyConfigurationForm, 'helpPushButton', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'typeComboBox', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'propsCategoryComboBox', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'typeLabelLineEdit', create=True)
