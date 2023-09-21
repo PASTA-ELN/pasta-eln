@@ -1,4 +1,5 @@
 """ OntologyConfigurationForm which is extended from the Ui_OntologyConfigurationBaseForm """
+import copy
 #  PASTA-ELN and all its sub-parts are covered by the MIT license.
 #
 #  Copyright (c) 2023
@@ -353,7 +354,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     # Load the ontology types from the db document
     for data in self.ontology_document:
       if isinstance(self.ontology_document[data], dict):
-        self.ontology_types[data] = dict(self.ontology_document[data])
+        self.ontology_types[data] = copy.deepcopy(self.ontology_document[data])
     adjust_ontology_data_to_v3(self.ontology_types)
     self.ontology_loaded = True
 
