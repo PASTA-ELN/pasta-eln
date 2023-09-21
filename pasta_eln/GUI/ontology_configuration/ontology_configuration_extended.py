@@ -30,7 +30,7 @@ from .reorder_column_delegate import ReorderColumnDelegate
 from .required_column_delegate import RequiredColumnDelegate
 from .utility_functions import adjust_ontology_data_to_v3, show_message, \
   get_next_possible_structural_level_label, get_types_for_display, adapt_type, generate_empty_type, \
-  generate_required_properties, check_ontology_document, get_missing_props_message
+  generate_required_properties, check_ontology_types, get_missing_props_message
 
 
 class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
@@ -69,7 +69,6 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
       raise OntologyDocumentNullException("Null document passed for ontology data", {})
 
     self.ontology_document: Document = ontology_document
-    adjust_ontology_data_to_v3(self.ontology_document)
 
     # Instantiates property & attachment table models along with the column delegates
     self.props_table_data_model = OntologyPropsTableViewModel()
@@ -252,7 +251,6 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
         and selected_type in self.ontology_document):
       self.logger.info("User deleted the selected type: {%s}", selected_type)
       self.ontology_types.pop(selected_type)
-      self.ontology_document.pop(selected_type)
       self.typeComboBox.clear()
       self.typeComboBox.addItems(get_types_for_display(self.ontology_types.keys()))
       self.typeComboBox.setCurrentIndex(0)
@@ -355,7 +353,8 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     # Load the ontology types from the db document
     for data in self.ontology_document:
       if isinstance(self.ontology_document[data], dict):
-        self.ontology_types[data] = self.ontology_document[data]
+        self.ontology_types[data] = dict(self.ontology_document[data])
+    adjust_ontology_data_to_v3(self.ontology_types)
     self.ontology_loaded = True
 
     # Set the types in the type selector combo-box
@@ -368,11 +367,19 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     Save the modified ontology document data in database
     """
     self.logger.info("User clicked the save button..")
-    if missing_properties := check_ontology_document(self.ontology_document):
+    if missing_properties := check_ontology_types(self.ontology_types):
       message = get_missing_props_message(missing_properties)
       show_message(message)
       self.logger.warning(message)
       return
+    # Clear all the data from the ontology_document
+    for data in list(self.ontology_document.keys()):
+      if isinstance(self.ontology_document[data], dict):
+        del self.ontology_document[data]
+    # Copy all the modifications
+    for type_name, type_structure in self.ontology_types.items():
+      self.ontology_document[type_name] = type_structure
+    # Save the modified document
     self.ontology_document.save()
     show_message("Ontology data saved successfully..")
 
@@ -401,7 +408,6 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
       self.logger.info("User created a new type and added "
                        "to the ontology document: Title: {%s}, Label: {%s}", title, label)
       empty_type = generate_empty_type(label)
-      self.ontology_document[title] = empty_type
       self.ontology_types[title] = empty_type
       self.typeComboBox.clear()
       self.typeComboBox.addItems(get_types_for_display(self.ontology_types.keys()))
