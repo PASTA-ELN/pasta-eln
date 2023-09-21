@@ -459,7 +459,6 @@ class TestOntologyConfigConfiguration(object):
       configuration_extended.ontology_document.get.side_effect = ontology_document.get
       configuration_extended.ontology_document.keys.side_effect = ontology_document.keys
       configuration_extended.ontology_document.pop.side_effect = ontology_document.pop
-    pop_items_selected_ontology_document_spy = mocker.spy(configuration_extended.ontology_document, 'pop')
     if ontology_types:
       original_ontology_types = ontology_types.copy()
       configuration_extended.ontology_types.__setitem__.side_effect = ontology_types.__setitem__
@@ -482,7 +481,6 @@ class TestOntologyConfigConfiguration(object):
       if selected_type and selected_type in original_ontology_types and selected_type in original_ontology_document:
         logger_info_spy.assert_called_once_with("User deleted the selected type: {%s}", selected_type)
         pop_items_selected_ontology_types_spy.assert_called_once_with(selected_type)
-        pop_items_selected_ontology_document_spy.assert_called_once_with(selected_type)
         clear_category_combo_box_spy.assert_called_once_with()
         add_items_selected_spy.assert_called_once_with(
           get_types_for_display(ontology_types.keys())
@@ -493,7 +491,6 @@ class TestOntologyConfigConfiguration(object):
         logger_info_spy.assert_not_called()
         logger_info_spy.assert_not_called()
         pop_items_selected_ontology_types_spy.assert_not_called()
-        pop_items_selected_ontology_document_spy.assert_not_called()
         clear_category_combo_box_spy.assert_not_called()
         add_items_selected_spy.assert_not_called()
         set_current_index_category_combo_box_spy.assert_not_called()
@@ -676,15 +673,33 @@ class TestOntologyConfigConfiguration(object):
       else ontology_document
     mocker.patch.object(configuration_extended, 'ontology_document', create=True)
     if doc:
+      mocker.patch.object(configuration_extended, 'ontology_types', dict(ontology_document), create=True)
       configuration_extended.ontology_document.__setitem__.side_effect = doc.__setitem__
       configuration_extended.ontology_document.__getitem__.side_effect = doc.__getitem__
       configuration_extended.ontology_document.__iter__.side_effect = doc.__iter__
       configuration_extended.ontology_document.__contains__.side_effect = doc.__contains__
+      configuration_extended.ontology_document.__delitem__.side_effect = doc.__delitem__
+      configuration_extended.ontology_document.keys.side_effect = doc.keys
 
     mocker.patch.object(configuration_extended.logger, 'info')
     mock_show_message = mocker.patch(
       'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.show_message')
+    mock_is_instance = mocker.patch(
+      'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.isinstance')
+    mock_check_ontology_types = mocker.patch(
+      'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.check_ontology_types', return_value=None)
     assert configuration_extended.save_ontology() is None, "Nothing should be returned"
+
+    if doc:
+      for item in doc:
+        mock_is_instance.assert_any_call(doc[item], dict)
+        if isinstance(doc[item], dict):
+          configuration_extended.ontology_document.__delitem__.assert_any_call(item)
+      for item in configuration_extended.ontology_types:
+        configuration_extended.ontology_document.__setitem__.assert_any_call(item,
+                                                                             configuration_extended.ontology_types[
+                                                                               item])
+    mock_check_ontology_types.assert_called_once_with(configuration_extended.ontology_types)
     configuration_extended.logger.info.assert_called_once_with("User clicked the save button..")
     configuration_extended.ontology_document.save.assert_called_once()
     mock_show_message.assert_called_once_with("Ontology data saved successfully..")
@@ -693,7 +708,7 @@ class TestOntologyConfigConfiguration(object):
                                                                                    mocker,
                                                                                    ontology_doc_mock,
                                                                                    configuration_extended: configuration_extended):
-    mocker.patch.object(configuration_extended, 'ontology_document', create=True)
+    mocker.patch.object(configuration_extended, 'ontology_types', create=True)
     configuration_extended.ontology_document.__setitem__.side_effect = ontology_doc_mock.__setitem__
     configuration_extended.ontology_document.__getitem__.side_effect = ontology_doc_mock.__getitem__
     configuration_extended.ontology_document.__iter__.side_effect = ontology_doc_mock.__iter__
@@ -708,15 +723,15 @@ class TestOntologyConfigConfiguration(object):
       'Structure level 1': {'default': ['-tags']},
       'Structure level 2': {'default': ['-tags']},
       'instrument': {'default': ['-tags']}}
-    mock_check_ontology_document = mocker.patch(
-      'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.check_ontology_document',
+    mock_check_ontology_document_types = mocker.patch(
+      'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.check_ontology_types',
       return_value=missing_props)
     mock_get_missing_props_message = mocker.patch(
       'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.get_missing_props_message',
       return_value="Missing message")
     assert configuration_extended.save_ontology() is None, "Nothing should be returned"
     log_info_spy.assert_called_once_with("User clicked the save button..")
-    mock_check_ontology_document.assert_called_once_with(configuration_extended.ontology_document)
+    mock_check_ontology_document_types.assert_called_once_with(configuration_extended.ontology_types)
     mock_get_missing_props_message.assert_called_once_with(missing_props)
     mock_show_message.assert_called_once_with("Missing message", QMessageBox.Warning)
     log_warn_spy.assert_called_once_with("Missing message")
@@ -790,8 +805,6 @@ class TestOntologyConfigConfiguration(object):
                                               "to the ontology document: Title: {%s}, Label: {%s}", new_title,
                                               new_label)
 
-        (configuration_extended.ontology_document
-         .__setitem__.assert_called_once_with(new_title, generate_empty_type(new_label)))
         (configuration_extended.ontology_types
          .__setitem__.assert_called_once_with(new_title, generate_empty_type(new_label)))
         assert configuration_extended.typeComboBox.clear.call_count == 2, "ComboBox should be cleared twice"
