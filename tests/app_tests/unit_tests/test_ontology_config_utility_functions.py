@@ -15,7 +15,7 @@ from PySide6.QtWidgets import QMessageBox
 from cloudant import CouchDB
 
 from pasta_eln.GUI.ontology_configuration.utility_functions import is_click_within_bounds, adjust_ontology_data_to_v3, \
-  get_next_possible_structural_level_label, get_db, show_message, check_ontology_document, get_missing_props_message
+  get_next_possible_structural_level_label, get_db, show_message, check_ontology_types, get_missing_props_message
 
 
 class TestOntologyConfigUtilityFunctions(object):
@@ -83,42 +83,19 @@ class TestOntologyConfigUtilityFunctions(object):
 
     assert adjust_ontology_data_to_v3(None) is None, "adjust_ontology_data_to_v3 should return None"
 
-  def test_adjust_ontology_data_to_v3_when_v2document_given_do_expected(self,
-                                                                        mocker):
-    # Without attachments
-    contents = {
-      "-version": 2,
+  @pytest.mark.parametrize("contents", [
+    ({
       "x0":
         {
           "label": "",
           "prop": []
         }
-    }
-    mock_doc = self.create_mock_doc(contents, mocker)
-    assert adjust_ontology_data_to_v3(mock_doc) is None, "adjust_ontology_data_to_v3 should return None"
-    assert "attachments" in contents["x0"], "attachments should be set"
-    assert "prop" in contents["x0"], "prop should be set"
-    assert type(contents["x0"]["prop"]) is dict, "prop should be dictionary"
-    assert contents["-version"] == 3, "Version must be updated to 3"
-
-    # Without anything much
-    contents = {
-      "-version": 2,
-      "x0": {}
-    }
-    mock_doc = self.create_mock_doc(contents, mocker)
-    assert adjust_ontology_data_to_v3(mock_doc) is None, "adjust_ontology_data_to_v3 should return None"
-    assert "attachments" in contents["x0"], "attachments should be set"
-    assert "prop" in contents["x0"], "prop should be set"
-    assert type(contents["x0"]["prop"]) is dict, "prop should be dictionary"
-    assert "default" in contents["x0"]["prop"] and len(
-      contents["x0"]["prop"]["default"]) == 0, "default prop list be defined"
-    assert contents["-version"] == 3, "Version must be updated to 3"
-
-    # With some content
-    contents = {
-      "-version": 2,
-      "x1":
+    }),
+    ({
+      "x1": {}
+    }),
+    ({
+      "x2":
         {
           "attachments": [{"test": "test", "test1": "test2"}],
           "label": "",
@@ -129,15 +106,29 @@ class TestOntologyConfigUtilityFunctions(object):
             }
           ]}
         }
-    }
-    mock_doc = self.create_mock_doc(contents, mocker)
-    assert adjust_ontology_data_to_v3(mock_doc) is None, "adjust_ontology_data_to_v3 should return None"
-    assert "attachments" in contents["x1"], "attachments should be set"
-    assert "prop" in contents["x1"], "prop should be set"
-    assert type(contents["x1"]["prop"]) is dict, "prop should be dictionary"
-    assert "default" in contents["x1"]["prop"] and len(
-      contents["x1"]["prop"]["default"]) == 1, "default prop list should be the same"
-    assert contents["-version"] == 3, "Version must be updated to 3"
+    })
+  ])
+  def test_adjust_ontology_data_to_v3_when_v2document_given_do_expected(self,
+                                                                        contents):
+    assert adjust_ontology_data_to_v3(contents) is None, "adjust_ontology_data_to_v3 should return None"
+    if "x0" in contents:
+      assert "attachments" in contents["x0"], "attachments should be set"
+      assert "prop" in contents["x0"], "prop should be set"
+      assert type(contents["x0"]["prop"]) is dict, "prop should be dictionary"
+
+    if "x1" in contents:
+      assert "attachments" in contents["x1"], "attachments should be set"
+      assert "prop" in contents["x1"], "prop should be set"
+      assert type(contents["x1"]["prop"]) is dict, "prop should be dictionary"
+      assert "default" in contents["x1"]["prop"] and len(
+        contents["x1"]["prop"]["default"]) == 0, "default prop list be defined"
+
+    if "x2" in contents:
+      assert "attachments" in contents["x2"], "attachments should be set"
+      assert "prop" in contents["x2"], "prop should be set"
+      assert type(contents["x2"]["prop"]) is dict, "prop should be dictionary"
+      assert "default" in contents["x2"]["prop"] and len(
+        contents["x2"]["prop"]["default"]) == 1, "default prop list should be the same"
 
   @staticmethod
   def create_mock_doc(contents, mocker):
@@ -221,7 +212,7 @@ class TestOntologyConfigUtilityFunctions(object):
       "Valid message")
     assert mock_msg_box.exec.call_count == 1, "show_message should call exec()"
 
-  @pytest.mark.parametrize("ontology_document, expected_result", [
+  @pytest.mark.parametrize("ontology_types, expected_result", [
     ({}, {}),
     ({
        "x0": {
@@ -387,17 +378,12 @@ class TestOntologyConfigUtilityFunctions(object):
      {'Structure level 1': {'default': ['-name']}, 'test': {'default': ['-tags']}})
   ])
   def test_check_ontology_document_with_full_and_missing_properties_returns_expected_result(self,
-                                                                                            mocker,
-                                                                                            ontology_document,
+                                                                                            ontology_types,
                                                                                             expected_result):
-    mock_doc = mocker.patch('cloudant.document.Document')
-    mock_doc.__iter__ = mocker.Mock(return_value=iter(ontology_document))
-    mock_doc.__getitem__.side_effect = ontology_document.__getitem__
-    mock_doc.__contains__.side_effect = ontology_document.__contains__
-    assert check_ontology_document(mock_doc) == expected_result, "show_message should return None"
+    assert check_ontology_types(ontology_types) == expected_result, "show_message should return None"
 
   def test_check_ontology_document_with_null_doc_returns_empty_dict(self):
-    assert check_ontology_document(None) == {}, "check_ontology_document should return empty dict"
+    assert check_ontology_types(None) == {}, "check_ontology_document should return empty dict"
 
   @pytest.mark.parametrize("missing_properties, expected_message", [
     ({}, ""),
