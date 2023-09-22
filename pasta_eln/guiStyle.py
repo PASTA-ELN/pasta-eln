@@ -1,8 +1,8 @@
 """ all styling of buttons and other general widgets, some defined colors... """
 from typing import Callable, Optional, Any
 from PySide6.QtWidgets import QPushButton, QLabel, QSizePolicy, QMessageBox, QLayout, QWidget, QMenu, \
-                              QVBoxLayout, QHBoxLayout, QGridLayout, QFormLayout, QComboBox, QTextEdit # pylint: disable=no-name-in-module
-from PySide6.QtGui import QImage, QPixmap, QAction, QKeySequence, QMouseEvent, QFontMetrics  # pylint: disable=no-name-in-module
+                              QVBoxLayout, QHBoxLayout, QGridLayout, QFormLayout, QComboBox # pylint: disable=no-name-in-module
+from PySide6.QtGui import QImage, QPixmap, QAction, QKeySequence, QMouseEvent               # pylint: disable=no-name-in-module
 from PySide6.QtCore import QByteArray, Qt           # pylint: disable=no-name-in-module
 from PySide6.QtSvgWidgets import QSvgWidget         # pylint: disable=no-name-in-module
 import qtawesome as qta

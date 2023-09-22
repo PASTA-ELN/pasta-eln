@@ -1,9 +1,9 @@
 """ Widget that shows the content of project in a electronic labnotebook """
 import logging
-from enum import Enum, auto
+from enum import Enum
 from typing import Optional, Any
 from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget, QMenu, QMessageBox, QTextEdit # pylint: disable=no-name-in-module
-from PySide6.QtGui import QStandardItemModel, QStandardItem   # pylint: disable=no-name-in-module
+from PySide6.QtGui import QStandardItemModel, QStandardItem, QAction   # pylint: disable=no-name-in-module
 from PySide6.QtCore import Slot, Qt, QItemSelectionModel, QModelIndex # pylint: disable=no-name-in-module
 from anytree import PreOrderIter, Node
 from .projectTreeView import TreeView
@@ -22,6 +22,10 @@ class Project(QWidget):
     self.tree:Optional[TreeView]             = None
     self.model:Optional[QStandardItemModel]  = None
     self.infoW:Optional[QWidget]             = None
+    self.actionHideDetails = QAction()
+    self.actionHideItems   = QAction()
+    self.actionHideProject = QAction()
+    self.actionFoldAll     = QAction()
     self.projID = ''
     self.taskID = ''
     self.docProj:dict[str,Any]= {}
@@ -179,9 +183,9 @@ class Project(QWidget):
     elif command[0] is Command.FOLD_ALL_ITEMS and self.tree is not None:
       self.foldedAll = not self.foldedAll
       def recursiveRowIteration(index:QModelIndex) -> None:
-        for subRow in range(self.tree.model().rowCount(index)):
-          subIndex = self.tree.model().index(subRow,0, index)
-          subItem  = self.tree.model().itemFromIndex(subIndex)
+        for subRow in range(self.tree.model().rowCount(index)):   # type: ignore[union-attr]
+          subIndex = self.tree.model().index(subRow,0, index)     # type: ignore[union-attr]
+          subItem  = self.tree.model().itemFromIndex(subIndex)    # type: ignore[union-attr]
           if self.foldedAll       and not subItem.text().endswith(' -'):
             subItem.setText(f'{subItem.text()} -')
           elif not self.foldedAll and subItem.text().endswith(' -'):
