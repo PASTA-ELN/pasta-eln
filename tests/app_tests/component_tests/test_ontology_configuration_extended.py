@@ -184,3 +184,53 @@ class TestOntologyConfigurationExtended(object):
     assert ui_form.propsCategoryComboBox.currentText() == list(selected_type["prop"].keys())[0], \
       "Type label line edit should be selected to second item"
     self.check_table_contents(attachments_column_names, props_column_names, selected_type, ui_form)
+
+  def test_component_cancel_button_click_after_delete_category_should_not_modify_ontology_document_data(self,
+                                                                                                        ontology_editor_gui:
+                                                                                                        tuple[
+                                                                                                          QApplication,
+                                                                                                          QtWidgets.QDialog,
+                                                                                                          OntologyConfigurationForm,
+                                                                                                          QtBot],
+                                                                                                        ontology_doc_mock: ontology_doc_mock,
+                                                                                                        props_column_names: props_column_names,
+                                                                                                        attachments_column_names: attachments_column_names):
+    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    assert ui_form.create_type_dialog.buttonBox.isVisible() is False, "Create new type dialog should not be shown!"
+    current_selected_type_category = ui_form.propsCategoryComboBox.currentText()
+    previous_types_category_count = ui_form.propsCategoryComboBox.count()
+    qtbot.mouseClick(ui_form.deletePropsCategoryPushButton, Qt.LeftButton)
+    assert (current_selected_type_category not in [ui_form.propsCategoryComboBox.itemText(i)
+                                                   for i in range(ui_form.propsCategoryComboBox.count())]), \
+      f"Deleted category: {current_selected_type_category} should not exist in combo list!"
+    assert (previous_types_category_count - 1 == ui_form.propsCategoryComboBox.count()), \
+      f"Combo list should have {previous_types_category_count - 1} items!"
+    qtbot.mouseClick(ui_form.cancelPushButton, Qt.LeftButton)
+    assert ontology_doc_mock.types() != ui_form.ontology_types, "Ontology document should not be modified!"
+
+  def test_component_save_button_click_after_delete_category_should_modify_ontology_document_data(self,
+                                                                                                  mocker,
+                                                                                                  ontology_editor_gui:
+                                                                                                  tuple[
+                                                                                                    QApplication,
+                                                                                                    QtWidgets.QDialog,
+                                                                                                    OntologyConfigurationForm,
+                                                                                                    QtBot],
+                                                                                                  ontology_doc_mock: ontology_doc_mock,
+                                                                                                  props_column_names: props_column_names,
+                                                                                                  attachments_column_names: attachments_column_names):
+    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    assert ui_form.create_type_dialog.buttonBox.isVisible() is False, "Create new type dialog should not be shown!"
+    mock_show_message = mocker.patch(
+      "pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.show_message")
+    current_selected_type_category = ui_form.propsCategoryComboBox.currentText()
+    previous_types_category_count = ui_form.propsCategoryComboBox.count()
+    qtbot.mouseClick(ui_form.deletePropsCategoryPushButton, Qt.LeftButton)
+    assert (current_selected_type_category not in [ui_form.propsCategoryComboBox.itemText(i)
+                                                   for i in range(ui_form.propsCategoryComboBox.count())]), \
+      f"Deleted category: {current_selected_type_category} should not exist in combo list!"
+    assert (previous_types_category_count - 1 == ui_form.propsCategoryComboBox.count()), \
+      f"Combo list should have {previous_types_category_count - 1} items!"
+    qtbot.mouseClick(ui_form.saveOntologyPushButton, Qt.LeftButton)
+    assert ontology_doc_mock.types() == ui_form.ontology_types, "Ontology document should be modified!"
+    mock_show_message.assert_called_once_with("Ontology data saved successfully..")
