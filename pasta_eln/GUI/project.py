@@ -22,7 +22,7 @@ class Project(QWidget):
     self.tree:Optional[TreeView]             = None
     self.model:Optional[QStandardItemModel]  = None
     self.infoW:Optional[QWidget]             = None
-    self.actionHideDetails = QAction()
+    self.actHideDetail = QAction()
     self.actionHideItems   = QAction()
     self.actionHideProject = QAction()
     self.actionFoldAll     = QAction()
@@ -52,14 +52,14 @@ class Project(QWidget):
     TextButton('Edit project',                         self, [Command.EDIT],      buttonL)
     visibility = TextButton(          'Visibility',    self, [],                  buttonL)
     visibilityMenu = QMenu(self)
-    self.actionHideDetails = Action('Minimize project',   self, [Command.REDUCE_HEIGHT_HEAD], visibilityMenu)
+    self.actHideDetail = Action('Minimize project details', self, [Command.REDUCE_HEIGHT_HEAD], visibilityMenu)
     if self.showAll:
       menuTextItems = 'Omit hidden subitems'
     else:
       menuTextItems = 'Display hidden subitems'
-    self.actionHideItems   = Action( menuTextItems,       self, [Command.HIDE_SHOW_ITEMS],    visibilityMenu)
-    self.actionHideProject = Action( menuTextHidden,      self, [Command.HIDE],               visibilityMenu)
-    self.actionFoldAll     = Action('Minimize subitems',  self, [Command.FOLD_ALL_ITEMS],     visibilityMenu)
+    self.actionHideItems   = Action( menuTextItems,         self, [Command.HIDE_SHOW_ITEMS],    visibilityMenu)
+    self.actionHideProject = Action( menuTextHidden,        self, [Command.HIDE],               visibilityMenu)
+    self.actionFoldAll     = Action('Minimize subitems',    self, [Command.FOLD_ALL_ITEMS],     visibilityMenu)
     visibility.setMenu(visibilityMenu)
     more = TextButton('More',           self, [], buttonL)
     moreMenu = QMenu(self)
@@ -168,10 +168,10 @@ class Project(QWidget):
     elif command[0] is Command.REDUCE_HEIGHT_HEAD:
       if self.infoW is not None and self.infoW.isHidden():
         self.infoW.show()
-        self.actionHideDetails.setText('Minimize project details')
+        self.actHideDetail.setText('Minimize project details')
       elif self.infoW is not None:
         self.infoW.hide()
-        self.actionHideDetails.setText('Maximize project details')
+        self.actHideDetail.setText('Maximize project details')
     elif command[0] is Command.HIDE:
       self.comm.backend.db.hideShow(self.projID)
       self.docProj = self.comm.backend.db.getDoc(self.projID)
@@ -180,6 +180,7 @@ class Project(QWidget):
         self.comm.changeTable.emit('x0','') # go back to project table
       else:
         self.change('', '')
+        self.comm.changeSidebar.emit('')
     elif command[0] is Command.FOLD_ALL_ITEMS and self.tree is not None:
       self.foldedAll = not self.foldedAll
       def recursiveRowIteration(index:QModelIndex) -> None:
