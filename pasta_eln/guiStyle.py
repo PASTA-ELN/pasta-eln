@@ -24,6 +24,10 @@ shortCuts = {'measurement':'m', 'sample':'s', 'procedure':'p', 'instrument':'i',
 def getColor(backend:Backend, color:str) -> str:
   """
   get color from theme
+  - Python access: theme = get_theme(themeName)
+  - For dark-blue:
+     - {'primaryColor': '#448aff', 'primaryLightColor': '#83b9ff', 'secondaryColor': '#232629', 'secondaryLightColor': '#4f5b62',
+     - 'secondaryDarkColor': '#31363b', 'primaryTextColor': '#000000', 'secondaryTextColor': '#ffffff'}
 
   Args:
     backend (Pasta): backend instance
@@ -32,17 +36,9 @@ def getColor(backend:Backend, color:str) -> str:
   Returns:
     str: #123456 color code
   """
-  if hasattr(backend, 'configuration'):
-    themeName = backend.configuration['GUI']['theme']
-  else:
-    themeName = 'none'
-  # theme = get_theme(themeName)
-  # print(theme)
-  ## For dark-blue:
-  ## {'primaryColor': '#448aff', 'primaryLightColor': '#83b9ff', 'secondaryColor': '#232629', 'secondaryLightColor': '#4f5b62',
-  ##  'secondaryDarkColor': '#31363b', 'primaryTextColor': '#000000', 'secondaryTextColor': '#ffffff'}
-  if themeName == 'none':
+  if not hasattr(backend, 'configuration') or backend.configuration['GUI']['theme']=='none':
     return '#000000'
+  themeName = backend.configuration['GUI']['theme']
   return get_theme(f'{themeName}.xml')[f'{color}Color']
 
 

@@ -426,7 +426,8 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
   backend.changeHierarchy(semStepID)
   if callbackPercent is not None:
     callbackPercent(21)
-  backend.addData('measurement', {'-name': 'https://upload.wikimedia.org/wikipedia/commons/a/a4/Misc_pollen.jpg', \
+  backend.addData('measurement', {
+    '-name': 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Misc_pollen.jpg/315px-Misc_pollen.jpg',\
     'comment':'remote image from wikipedia. Used for testing and reference. Can be deleted.'})
   if callbackPercent is not None:
     callbackPercent(22)

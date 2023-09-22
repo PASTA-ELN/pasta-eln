@@ -8,7 +8,7 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import pytest
 from PySide6.QtCore import QRect, QEvent, Qt
-from PySide6.QtWidgets import QStyleOptionButton, QApplication, QStyle, QStyledItemDelegate
+from PySide6.QtWidgets import QStyleOptionButton, QApplication, QStyle, QStyledItemDelegate, QRadioButton
 
 from tests.app_tests.common.fixtures import required_delegate
 from tests.app_tests.common.test_delegate_funcs_common import delegate_editor_method_common
@@ -29,8 +29,8 @@ class TestOntologyConfigRequiredColumnDelegate(object):
     delegate_editor_method_common(required_delegate, mocker)
 
   @pytest.mark.parametrize("test_data_value, expected", [
-    ('False', 'True'),
-    ('True', 'False')
+    (False, True),
+    (True, False)
   ])
   def test_delegate_editor_event_method(self,
                                         mocker,
@@ -63,10 +63,13 @@ class TestOntologyConfigRequiredColumnDelegate(object):
     mock_option_rect = mocker.patch("PySide6.QtCore.QRect")
     mock_index = mocker.patch("PySide6.QtCore.QModelIndex")
     mock_option_widget = mocker.patch("PySide6.QtWidgets.QRadioButton")
+    mock_option_radio_button = mocker.patch("PySide6.QtWidgets.QRadioButton")
     mock_button_option = mocker.patch("PySide6.QtWidgets.QStyleOptionButton")
     mock_style = mocker.patch("PySide6.QtWidgets.QStyle")
     mocker.patch.object(QStyleOptionButton, "__new__",
                         lambda x: mock_button_option)
+    mocker.patch.object(QRadioButton, "__new__",
+                        lambda x: mock_option_radio_button)
     mocker.patch.object(mock_option, "widget", None)
     mocker.patch.object(mock_option, "rect", mock_option_rect)
     mocker.patch.object(mock_option_rect, "left", mocker.MagicMock(return_value=5))
@@ -83,11 +86,12 @@ class TestOntologyConfigRequiredColumnDelegate(object):
                         mocker.MagicMock(return_value=mock_style))
     draw_control_spy = mocker.spy(mock_style, 'drawControl')
     required_delegate.paint(mock_painter, mock_option, mock_index)
-    draw_control_spy.assert_called_once_with(QStyle.CE_RadioButton, mock_button_option, mock_painter, None)
+    draw_control_spy.assert_called_once_with(QStyle.CE_RadioButton, mock_button_option, mock_painter,
+                                             mock_option_radio_button)
     assert mock_option.rect.left.call_count == 1, "rect.left should be called once"
     assert mock_option.rect.top.call_count == 1, "rect.top should be called once"
     assert mock_option.rect.width.call_count == 2, "rect.top should be called twice"
     assert mock_option.rect.height.call_count == 1, "rect.height should be called once"
-    assert mock_button_option.rect == QRect(2, 5, 5, 5), "rect should be the expected QRect(2, 5, 5, 5)"
+    assert mock_button_option.rect == QRect(-2, 5, 5, 5), "rect should be the expected QRect(-2, 5, 5, 5)"
     assert mock_button_option.state == QStyle.State_On if editor_data_value == 'True' else QStyle.State_Off, \
       f"button state should be {'on' if editor_data_value == 'True' else 'off'}"
