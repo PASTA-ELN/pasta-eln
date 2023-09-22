@@ -28,7 +28,8 @@
           "query": "What is the objective?"
         },
         {
-          "name": "-tags"
+          "name": "-tags",
+          "query": "What are the tags associated with this project?"
         },
         {
           "name": "comment",
@@ -42,6 +43,10 @@
           "required": "True",
           "IRI": "http://url.com",
           "unit": ""
+        },
+        {
+          "name": "-tags",
+          "query": "What are the tags associated with this project?"
         },
         {
           "name": "sample1",
@@ -64,6 +69,10 @@
           "query": "What is the name of task?"
         },
         {
+          "name": "-tags",
+          "query": "What are the tags associated with this task?"
+        },
+        {
           "name": "comment",
           "query": "#tags comments remarks :field:value:"
         }
@@ -79,6 +88,10 @@
         {
           "name": "-name",
           "query": "What is the name of subtask?"
+        },
+        {
+          "name": "-tags",
+          "query": "What are the tags associated with this subtask?"
         },
         {
           "name": "comment",
@@ -98,7 +111,8 @@
           "query": "What is the file name?"
         },
         {
-          "name": "-tags"
+          "name": "-tags",
+          "query": "What are the tags associated with this file name?"
         },
         {
           "name": "comment",
@@ -144,7 +158,8 @@
           "query": "What is its chemical composition?"
         },
         {
-          "name": "-tags"
+          "name": "-tags",
+          "query": "What are the tags associated with this sample?"
         },
         {
           "name": "comment",
@@ -167,7 +182,8 @@
           "query": "What is the name / path?"
         },
         {
-          "name": "-tags"
+          "name": "-tags",
+          "query": "What are the tags associated with this procedure?"
         },
         {
           "name": "comment",
@@ -190,6 +206,10 @@
           "name": "-name",
           "query": "What is the name / path?",
           "required": "True"
+        },
+        {
+          "name": "-tags",
+          "query": "What are the tags associated with this instruments?"
         },
         {
           "name": "comment",
