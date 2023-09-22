@@ -59,7 +59,7 @@ class Table(QWidget):
 
     more = TextButton('More', self, [], headerL)
     self.moreMenu = QMenu(self)
-    Action('Show / Hide hidden items', self, [Command.SHOW_ALL], self.moreMenu)
+    Action('Display/omit hidden items', self, [Command.SHOW_ALL], self.moreMenu)
     Action('Export to csv',            self, [Command.EXPORT],   self.moreMenu)
     self.actionChangeColums = Action('Change columns',  self, [Command.CHANGE_COLUMNS], self.moreMenu)  #add this action at end
     more.setMenu(self.moreMenu)
