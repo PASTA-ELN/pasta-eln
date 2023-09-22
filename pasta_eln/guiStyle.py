@@ -71,9 +71,9 @@ class TextButton(QPushButton):
     if style:
       self.setStyleSheet(style)
     else:
-      primaryColor = getColor(widget.comm.backend, 'primary')
-      secTextColor = getColor(widget.comm.backend, 'secondaryText')
-      self.setStyleSheet(f'border-width: 0px; background-color: {primaryColor}; color: {secTextColor}')
+      primaryColor   = getColor(widget.comm.backend, 'primary')
+      secondaryColor = getColor(widget.comm.backend, 'secondary')
+      self.setStyleSheet(f'border-width: 0px; background-color: {primaryColor}; color: {secondaryColor}')
     if hide:
       self.hide()
     if iconName:
