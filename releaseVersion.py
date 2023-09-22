@@ -4,7 +4,7 @@ from unittest import main as mainTest
 import configparser
 
 
-def get_version():
+def getVersion():
   """
   Get current version number from git-tag
 
@@ -20,23 +20,12 @@ def get_version():
   return 'v'+versionList[-1]
 
 
-def newVersion(level=2, message=''):
+def updateVersion():
   """
-  Create a new version
-
-  Args:
-    level (int): which number of the version to increase 0=mayor,1=minor,2=sub
-    message (str): what is the name/message
+  update the version number in the different files
   """
-  #get old version number
-  version = [int(i) for i in get_version()[1:].split('.')]
-  #create new version number
-  version[level] += 1
-  for i in range(level+1,3):
-    version[i] = 0
-  version = '.'.join([str(i) for i in version])
-  print('======== Version '+version+' =======')
-  #update python files
+  version = getVersion()[1:]
+  print('======== Version '+version+' ========')
   filesToUpdate = {'pasta_eln/__init__.py':'__version__ = ', 'docs/source/conf.py':'version = '}
   for path in filesToUpdate:
     with open(path, encoding='utf-8') as fIn:
@@ -49,11 +38,6 @@ def newVersion(level=2, message=''):
       fileNew.append(line)
     with open(path,'w', encoding='utf-8') as fOut:
       fOut.write('\n'.join(fileNew)+'\n')
-  #execute git commands
-  os.system('git commit -a -m "'+message+'"')
-  os.system('git tag -a v'+version+' -m "Version '+version+'"')
-  os.system('git push')
-  os.system('git push origin v'+version)
   return
 
 
@@ -87,7 +71,7 @@ def runTests():
   """
   tests = [i for i in os.listdir('tests') if i.endswith('.py') and i.startswith('test_')]
   for fileI in sorted(tests):
-    result = subprocess.run(['pytest','-s','tests/'+fileI], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
+    result = subprocess.run(['pytest','-s','--no-skip','tests/'+fileI], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
     success = result.stdout.decode('utf-8').count('*** DONE WITH VERIFY ***')
     if success==1:
       success += result.stdout.decode('utf-8').count('**ERROR')
@@ -114,19 +98,8 @@ def copyExtractors():
 
 
 if __name__=='__main__':
-  #test and prepare everything
-  runTests()
+  updateVersion()
   copyExtractors()
   createRequirementsFile()
-  #do update
-  if len(sys.argv)==1:
-    print("**Require more arguments for creating new version 'message' 'level (optionally)' ")
-    level = None
-  elif len(sys.argv)==2:
-    level=2
-  else:
-    level = int(sys.argv[2])
-  if level is not None:
-    message = sys.argv[1]
-    newVersion(level, message)
-  print("\n==============================\nAlso publish extractors\n======================")
+  runTests()
+  print("\n================================\nPush this and publish extractors\n================================")

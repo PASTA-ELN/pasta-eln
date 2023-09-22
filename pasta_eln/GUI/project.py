@@ -1,9 +1,9 @@
 """ Widget that shows the content of project in a electronic labnotebook """
 import logging
-from enum import Enum, auto
+from enum import Enum
 from typing import Optional, Any
 from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget, QMenu, QMessageBox, QTextEdit # pylint: disable=no-name-in-module
-from PySide6.QtGui import QStandardItemModel, QStandardItem   # pylint: disable=no-name-in-module
+from PySide6.QtGui import QStandardItemModel, QStandardItem, QAction   # pylint: disable=no-name-in-module
 from PySide6.QtCore import Slot, Qt, QItemSelectionModel, QModelIndex # pylint: disable=no-name-in-module
 from anytree import PreOrderIter, Node
 from .projectTreeView import TreeView
@@ -22,6 +22,10 @@ class Project(QWidget):
     self.tree:Optional[TreeView]             = None
     self.model:Optional[QStandardItemModel]  = None
     self.infoW:Optional[QWidget]             = None
+    self.actHideDetail = QAction()
+    self.actionHideItems   = QAction()
+    self.actionHideProject = QAction()
+    self.actionFoldAll     = QAction()
     self.projID = ''
     self.taskID = ''
     self.docProj:dict[str,Any]= {}
@@ -36,7 +40,9 @@ class Project(QWidget):
     """
     self.docProj = self.comm.backend.db.getDoc(self.projID)
     _, topLineL       = widgetAndLayout('H',self.mainL)  #topLine includes name on left, buttons on right
-    hidden = '     \U0001F441' if [b for b in self.docProj['-branch'] if False in b['show']] else ''
+    hidden, menuTextHidden = ('     \U0001F441', 'Show entire project') \
+                       if [b for b in self.docProj['-branch'] if False in b['show']] else \
+                       ('', 'Hide entire project')
     topLineL.addWidget(Label(self.docProj['-name']+hidden, 'h2'))
     topLineL.addStretch(1)
 
@@ -46,10 +52,14 @@ class Project(QWidget):
     TextButton('Edit project',                         self, [Command.EDIT],      buttonL)
     visibility = TextButton(          'Visibility',    self, [],                  buttonL)
     visibilityMenu = QMenu(self)
-    Action('Hide/show project details', self, [Command.REDUCE_HEIGHT_HEAD], visibilityMenu)
-    Action('Hide/show hidden subitems', self, [Command.HIDE_SHOW_ITEMS],    visibilityMenu)
-    Action('Hide/show entire project',  self, [Command.HIDE],               visibilityMenu)
-    Action('Minimize/Maximize subitems',self, [Command.FOLD_ALL_ITEMS],     visibilityMenu)
+    self.actHideDetail = Action('Minimize project details', self, [Command.REDUCE_HEIGHT_HEAD], visibilityMenu)
+    if self.showAll:
+      menuTextItems = 'Omit hidden subitems'
+    else:
+      menuTextItems = 'Display hidden subitems'
+    self.actionHideItems   = Action( menuTextItems,         self, [Command.HIDE_SHOW_ITEMS],    visibilityMenu)
+    self.actionHideProject = Action( menuTextHidden,        self, [Command.HIDE],               visibilityMenu)
+    self.actionFoldAll     = Action('Minimize subitems',    self, [Command.FOLD_ALL_ITEMS],     visibilityMenu)
     visibility.setMenu(visibilityMenu)
     more = TextButton('More',           self, [], buttonL)
     moreMenu = QMenu(self)
@@ -132,7 +142,7 @@ class Project(QWidget):
     """
     if command[0] is Command.EDIT:
       self.comm.formDoc.emit(self.docProj)
-      self.comm.changeProject.emit(self.projID,'')
+      self.change(self.projID,'')
       #collect information and then change
       oldPath = self.comm.backend.basePath/self.docProj['-branch'][0]['path']
       if oldPath.exists():
@@ -158,31 +168,43 @@ class Project(QWidget):
     elif command[0] is Command.REDUCE_HEIGHT_HEAD:
       if self.infoW is not None and self.infoW.isHidden():
         self.infoW.show()
+        self.actHideDetail.setText('Minimize project details')
       elif self.infoW is not None:
         self.infoW.hide()
-    elif command[0] is Command.HIDE_SHOW_ITEMS:
+        self.actHideDetail.setText('Maximize project details')
+    elif command[0] is Command.HIDE:
       self.comm.backend.db.hideShow(self.projID)
-      self.comm.changeSidebar.emit('')
-      self.comm.changeTable.emit('x0','') # go back to project table
+      self.docProj = self.comm.backend.db.getDoc(self.projID)
+      if [b for b in self.docProj['-branch'] if False in b['show']]: # hidden->go back to project table
+        self.comm.changeSidebar.emit('')
+        self.comm.changeTable.emit('x0','') # go back to project table
+      else:
+        self.change('', '')
+        self.comm.changeSidebar.emit('')
     elif command[0] is Command.FOLD_ALL_ITEMS and self.tree is not None:
       self.foldedAll = not self.foldedAll
       def recursiveRowIteration(index:QModelIndex) -> None:
-        if self.tree is not None:
-          for subRow in range(self.tree.model().rowCount(index)):
-            subIndex = self.tree.model().index(subRow,0, index)
-            subItem  = self.tree.model().itemFromIndex(subIndex)
-            if self.foldedAll and not subItem.text().endswith(' -'):
-              subItem.setText(f'{subItem.text()} -')
-            recursiveRowIteration(subIndex)
+        for subRow in range(self.tree.model().rowCount(index)):   # type: ignore[union-attr]
+          subIndex = self.tree.model().index(subRow,0, index)     # type: ignore[union-attr]
+          subItem  = self.tree.model().itemFromIndex(subIndex)    # type: ignore[union-attr]
+          if self.foldedAll       and not subItem.text().endswith(' -'):
+            subItem.setText(f'{subItem.text()} -')
+          elif not self.foldedAll and subItem.text().endswith(' -'):
+            subItem.setText(subItem.text()[:-2])
+          recursiveRowIteration(subIndex)
         return
       recursiveRowIteration(self.tree.model().index(-1,0))
-    elif command[0] is Command.HIDE:
+      if self.foldedAll:
+        self.actionFoldAll.setText('Maximize subitems')
+      else:
+        self.actionFoldAll.setText('Minimize subitems')
+    elif command[0] is Command.HIDE_SHOW_ITEMS:
       self.showAll = not self.showAll
-      self.changeProject('','')
+      self.change('','')
     elif command[0] is Command.ADD_CHILD:
       self.comm.backend.cwd = self.comm.backend.basePath/self.docProj['-branch'][0]['path']
       self.comm.backend.addData('x1', {'-name':'new folder'}, [self.projID])
-      self.comm.changeProject.emit('','') #refresh project
+      self.change('','') #refresh project
     elif command[0] is Command.SHOW_TABLE:
       self.comm.changeTable.emit(command[1], self.projID)
     else:
@@ -192,7 +214,7 @@ class Project(QWidget):
 
   def modelChanged(self, item:QStandardItem) -> None:
     """
-    After drag-drop, record changes to backend and database directly
+    Autocalled after drag-drop and other changes, record changes to backend and database directly
 
     Args:
       item (QStandardItem): item changed, new location
@@ -206,11 +228,11 @@ class Project(QWidget):
       docID = docID[:34]
       maximized = False
     doc      = db.getDoc(docID)
-    if '-branch' not in doc:
+    if '-branch' not in doc or not stackOld: #skip everything if project or not contain branch
       return
     branchOldList= [i for i in doc['-branch'] if i['stack']==stackOld]
     if len(branchOldList)!=1:
-      self.changeProject('','')
+      self.change('','')
       return
     branchOld = branchOldList[0]
     childOld = branchOld['child']
