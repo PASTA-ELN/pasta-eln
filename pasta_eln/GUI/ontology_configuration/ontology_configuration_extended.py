@@ -70,12 +70,12 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
 
     # Gets the ontology data from db and adjust the data to the latest version
     if database is None:
-      raise OntologyConfigGenericException("Null database passed for ontology data", {})
+      raise OntologyConfigGenericException("Null database instance passed to the initializer", {})
 
     self.database: Database = database
     self.ontology_document: Document = self.database.db['-ontology-']
     if not self.ontology_document:
-      raise OntologyDocumentNullException("Null document passed for ontology data", {})
+      raise OntologyDocumentNullException("Null ontology document in db instance", {})
 
     # Instantiates property & attachment table models along with the column delegates
     self.props_table_data_model = OntologyPropsTableViewModel()

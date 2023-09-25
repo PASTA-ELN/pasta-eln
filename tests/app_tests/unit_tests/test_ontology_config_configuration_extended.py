@@ -71,7 +71,7 @@ class TestOntologyConfigConfiguration(object):
     mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration.Ui_OntologyConfigurationBaseForm.setupUi')
     mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.adjust_ontology_data_to_v3')
     mocker.patch.object(QDialog, '__new__')
-    with pytest.raises(OntologyConfigGenericException, match="Null database passed for ontology data"):
+    with pytest.raises(OntologyConfigGenericException, match="Null database instance passed to the initializer"):
       OntologyConfigurationForm(None)
 
   def test_instantiation_with_database_with_null_document_should_throw_exception(self,
@@ -82,7 +82,7 @@ class TestOntologyConfigConfiguration(object):
     mocker.patch.object(QDialog, '__new__')
     mock_db = mocker.patch('pasta_eln.database.Database')
     mocker.patch.object(mock_db, 'db', {'-ontology-': None}, create=True)
-    with pytest.raises(OntologyDocumentNullException, match="Null document passed for ontology data"):
+    with pytest.raises(OntologyDocumentNullException, match="Null ontology document in db instance"):
       OntologyConfigurationForm(mock_db)
 
   @pytest.mark.parametrize("new_type_selected, mock_ontology_types", [
