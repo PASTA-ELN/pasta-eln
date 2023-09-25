@@ -3,7 +3,7 @@ Motivation
 
 Extractors are little python scripts that 'extract' metadata, thumbnails and user-metadata from the raw measurement files. These little programs can be written/adopted by scientists and can be shared. :ref:`To read more ... for advanced users <extractors>`.
 
-Adaptive software development (scrum) has revolutionized software projects. We believe that **agile project planning** is also highly beneficial for scientific research projects. :ref:`To read more ... for all useres <Agile Project Planning>`.
+Adaptive software development (scrum) has revolutionized software projects. We believe that **agile project planning** is also highly beneficial for scientific research projects. :ref:`To read more ... for all users <Agile Project Planning>`.
 
 In `PASTA-ELN`_, the meta-data is stored in a document database called **CouchDB**. This non-SQL database is very adaptive to the different raw data sources and corresponding different meta-data. People that want to contribute to PASTA-ELN, :ref:`read more on the CouchDB implementation <CouchDB information>`.
 
@@ -101,7 +101,7 @@ One part of PASTA is the hierarchical information: a project is the "parent" of 
 
   - "path", "child-number" and "stack of id-numbers" (parental hierarchy) form a branch
   - a measurement, sample, procedure can have multiple branches as the scientist can use a measurement in different projects.
-  - Projects/tasks/subtasks only have one branch as they are only existant in a project.
+  - Projects/tasks/subtasks only have one branch as they are only existent in a project.
 
 
 What data is stored:
@@ -127,11 +127,11 @@ All documents have the following properties
 
 - type is a list of hierarchical types:
   - examples for most data: ["measurement", "Zeiss tif image"], ["measurement", "Indentation", "Pop-in study"]
-  - text items (projects, tasks) are ["x0"], ["x1"], ... as the types are non hierarchical in the class view (IT-term). A task is not a special class of the project class. Moreover, the hierarchical level is engrained in the type
+  - text items (projects, tasks) are ["x0"], ["x1"], ... as the types are non hierarchical in the class view (IT-term). A task is not a special class of the project class. Moreover, the hierarchical level is ingrained in the type
 - Tags #tag, #1 (no spaces in the string). #1 implies one-star, #2 implies two-stars. Tags are stored as list of stings.
 - other fields can be easily added in the comment field of the form and are thereafter separated. Examples for other fields:  :BakingTime:2h: :quality:3:  (':' is a marker here)
 - Comments
-  - If the user enters a comment in the comment field: tags and fields are substracted and everything that remains is the comment
+  - If the user enters a comment in the comment field: tags and fields are subtracted and everything that remains is the comment
   - Comments should be in the Markdown format (Pandoc flavor)
 - List of branches: each branch has a path (link to the file on disk, remote url), its hierarchy-stack and the number of this child
 - all data should be saved in SI units or specified
@@ -204,7 +204,7 @@ Bracket across data and metadata storage
 - Python backend that allows extractors (default and custom) for metadata from measurement files
 - Python-Command-Line-Program interacts between user and backend
 - React-Electron programs (GUI) interact in between user and backend
-- All these form superlayer ontop of Metadata and Data storage
+- All these form super layer on top of Metadata and Data storage
 
 Access Control and Authorship
 -----------------------------

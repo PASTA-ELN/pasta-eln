@@ -193,7 +193,9 @@ class Details(QScrollArea):
       else:
         getattr(self, f'meta{command[1]}W').hide()
     elif isinstance(command[0], CommandMenu):
-      executeContextMenu(self, command)
+      if executeContextMenu(self, command):
+        self.comm.changeTable.emit('','')
+        self.comm.changeDetails.emit(self.doc['_id'])
     else:
       print("**ERROR details command unknown:",command)
     return

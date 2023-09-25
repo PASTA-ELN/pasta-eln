@@ -6,6 +6,7 @@
 #  Filename: test_ontology_config_delete_column_delegate.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
+from PySide6.QtWidgets import QStyle
 
 from tests.app_tests.common.fixtures import delete_delegate
 from tests.app_tests.common.test_delegate_funcs_common import delegate_paint_common, delegate_editor_method_common, \
@@ -17,7 +18,7 @@ class TestOntologyConfigDeleteColumnDelegate(object):
   def test_delegate_paint_method(self,
                                  mocker,
                                  delete_delegate: delete_delegate):
-    delegate_paint_common(mocker, delete_delegate, "Delete")
+    delegate_paint_common(mocker, delete_delegate, QStyle.StandardPixmap.SP_DialogDiscardButton)
 
   def test_delegate_create_editor_method(self,
                                          mocker,

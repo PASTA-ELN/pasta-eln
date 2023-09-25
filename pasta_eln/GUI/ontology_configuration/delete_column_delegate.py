@@ -10,7 +10,7 @@
 import logging
 from typing import Union
 
-from PySide6.QtCore import QModelIndex, QPersistentModelIndex, QEvent, QAbstractItemModel, Signal
+from PySide6.QtCore import QModelIndex, QPersistentModelIndex, QEvent, QAbstractItemModel, Signal, QSize
 from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import QStyledItemDelegate, QPushButton, QWidget, QStyleOptionViewItem, QStyleOptionButton, \
   QStyle, QApplication
@@ -30,7 +30,7 @@ class DeleteColumnDelegate(QStyledItemDelegate):
       Constructor
     """
     super().__init__()
-    self.logger = logging.getLogger(__name__ + "." + self.__class__.__name__)
+    self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
 
   def paint(self,
             painter: QPainter,
@@ -50,7 +50,8 @@ class DeleteColumnDelegate(QStyledItemDelegate):
     opt = QStyleOptionButton()
     opt.state = QStyle.State_Active | QStyle.State_Enabled  # type: ignore[operator]
     opt.rect = option.rect
-    opt.text = "Delete"
+    opt.icon = QApplication.style().standardIcon(QStyle.StandardPixmap.SP_DialogDiscardButton)
+    opt.iconSize = QSize(15, 15)
     QApplication.style().drawControl(QStyle.CE_PushButton, opt, painter, button)
 
   def createEditor(self,
