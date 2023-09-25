@@ -11,7 +11,7 @@ Good research data management practices resemble those of the actual paper labor
 
 Whether one uses PASTA-ELN with a task-based approach for ongoing research or to store existing data (:ref:`see user stories<Planning based research>`), it is helpful to decide on the project's structure during the planning stage. For this purpose, a scientist may update the metadata definitions of a project. The default project structure is inspired by agile project planning (:ref:`...<motivation>`).
 
-Data files and other entries should have self-explanatory names and sufficient metadata to describe their context. PASTA-ELN allows users to add tags to increase the searchability of data. These practices make the data accessible and comprehensible for the author and other scientists in collaborative research projects.
+Data files and other entries should have self-explanatory names and sufficient metadata to describe their context. PASTA-ELN allows users to add tags to increase the search-ability of data. These practices make the data accessible and comprehensible for the author and other scientists in collaborative research projects.
 
 Do not delete data
 ------------------

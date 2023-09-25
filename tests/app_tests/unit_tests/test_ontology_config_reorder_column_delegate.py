@@ -6,6 +6,7 @@
 #  Filename: test_ontology_config_reorder_column_delegate.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
+from PySide6.QtWidgets import QStyle
 
 from tests.app_tests.common.fixtures import reorder_delegate
 from tests.app_tests.common.test_delegate_funcs_common import delegate_paint_common, delegate_editor_method_common, \
@@ -16,7 +17,7 @@ class TestOntologyConfigReorderColumnDelegate(object):
   def test_delegate_paint_method(self,
                                  mocker,
                                  reorder_delegate: reorder_delegate):
-    delegate_paint_common(mocker, reorder_delegate, "^")
+    delegate_paint_common(mocker, reorder_delegate, QStyle.StandardPixmap.SP_ArrowUp)
 
   def test_delegate_create_editor_method(self,
                                          mocker,

@@ -167,7 +167,7 @@ class MainWindow(QMainWindow):
       report = self.comm.backend.replicateDB(progressBar=self.sidebar.progress)
       showMessage(self, 'Report of syncronization', report, style='QLabel {min-width: 450px}')
     elif command[0] is Command.ONTOLOGY:
-      ontologyForm = OntologyConfigurationForm(self.comm.backend.db.ontology)
+      ontologyForm = OntologyConfigurationForm(self.comm.backend.db.db['-ontology-'])
       ontologyForm.instance.exec()
     elif command[0] is Command.TEST1:
       fileName = QFileDialog.getOpenFileName(self, 'Open file for extractor test', str(Path.home()), '*.*')[0]

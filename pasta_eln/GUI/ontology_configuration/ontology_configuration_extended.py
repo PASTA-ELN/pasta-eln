@@ -1,4 +1,5 @@
 """ OntologyConfigurationForm which is extended from the Ui_OntologyConfigurationBaseForm """
+import copy
 #  PASTA-ELN and all its sub-parts are covered by the MIT license.
 #
 #  Copyright (c) 2023
@@ -9,10 +10,11 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import logging
 import sys
+import webbrowser
 from typing import Any
 
 from PySide6 import QtWidgets
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QMessageBox
 from cloudant.document import Document
 
 from .create_type_dialog_extended import CreateTypeDialog
@@ -22,7 +24,8 @@ from .ontology_config_key_not_found_exception import \
   OntologyConfigKeyNotFoundException
 from .ontology_configuration import Ui_OntologyConfigurationBaseForm
 from .ontology_configuration_constants import PROPS_TABLE_DELETE_COLUMN_INDEX, PROPS_TABLE_REORDER_COLUMN_INDEX, \
-  PROPS_TABLE_REQUIRED_COLUMN_INDEX, ATTACHMENT_TABLE_DELETE_COLUMN_INDEX, ATTACHMENT_TABLE_REORDER_COLUMN_INDEX
+  PROPS_TABLE_REQUIRED_COLUMN_INDEX, ATTACHMENT_TABLE_DELETE_COLUMN_INDEX, ATTACHMENT_TABLE_REORDER_COLUMN_INDEX, \
+  ONTOLOGY_HELP_PAGE_URL
 from .ontology_document_null_exception import OntologyDocumentNullException
 from .ontology_props_tableview_data_model import OntologyPropsTableViewModel
 from .delete_column_delegate import DeleteColumnDelegate
@@ -30,7 +33,7 @@ from .reorder_column_delegate import ReorderColumnDelegate
 from .required_column_delegate import RequiredColumnDelegate
 from .utility_functions import adjust_ontology_data_to_v3, show_message, \
   get_next_possible_structural_level_label, get_types_for_display, adapt_type, generate_empty_type, \
-  generate_required_properties
+  generate_required_properties, check_ontology_types, get_missing_props_message
 
 
 class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
@@ -69,7 +72,6 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
       raise OntologyDocumentNullException("Null document passed for ontology data", {})
 
     self.ontology_document: Document = ontology_document
-    adjust_ontology_data_to_v3(self.ontology_document)
 
     # Instantiates property & attachment table models along with the column delegates
     self.props_table_data_model = OntologyPropsTableViewModel()
@@ -91,6 +93,8 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
 
     for column_index, width in self.props_table_data_model.column_widths.items():
       self.typePropsTableView.setColumnWidth(column_index, width)
+    # When resized, only stretch the query column of typePropsTableView
+    self.typePropsTableView.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
 
     self.typeAttachmentsTableView.setItemDelegateForColumn(
       ATTACHMENT_TABLE_DELETE_COLUMN_INDEX,
@@ -102,12 +106,18 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
 
     for column_index, width in self.attachments_table_data_model.column_widths.items():
       self.typeAttachmentsTableView.setColumnWidth(column_index, width)
+    # When resized, only stretch the type column of typeAttachmentsTableView
+    self.typeAttachmentsTableView.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
 
     # Create the dialog for new type creation
     self.create_type_dialog = CreateTypeDialog(self.create_type_accepted_callback, self.create_type_rejected_callback)
 
     # Set up the slots for the UI items
     self.setup_slots()
+
+    # Hide the attachment table and the add attachment button initially
+    self.addAttachmentPushButton.hide()
+    self.typeAttachmentsTableView.hide()
 
     self.load_ontology_data()
 
@@ -252,7 +262,6 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
         and selected_type in self.ontology_document):
       self.logger.info("User deleted the selected type: {%s}", selected_type)
       self.ontology_types.pop(selected_type)
-      self.ontology_document.pop(selected_type)
       self.typeComboBox.clear()
       self.typeComboBox.addItems(get_types_for_display(self.ontology_types.keys()))
       self.typeComboBox.setCurrentIndex(0)
@@ -326,6 +335,8 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     self.deleteTypePushButton.clicked.connect(self.delete_selected_type)
     self.addTypePushButton.clicked.connect(self.show_create_type_dialog)
     self.cancelPushButton.clicked.connect(self.instance.close)
+    self.helpPushButton.clicked.connect(lambda: webbrowser.open(ONTOLOGY_HELP_PAGE_URL))
+    self.attachmentsShowHidePushButton.clicked.connect(self.show_hide_attachments_table)
 
     # Slots for the combo-boxes
     self.typeComboBox.currentTextChanged.connect(self.type_combo_box_changed)
@@ -355,7 +366,8 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     # Load the ontology types from the db document
     for data in self.ontology_document:
       if isinstance(self.ontology_document[data], dict):
-        self.ontology_types[data] = self.ontology_document[data]
+        self.ontology_types[data] = copy.deepcopy(self.ontology_document[data])
+    adjust_ontology_data_to_v3(self.ontology_types)
     self.ontology_loaded = True
 
     # Set the types in the type selector combo-box
@@ -367,7 +379,20 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     """
     Save the modified ontology document data in database
     """
-    self.logger.info("User saved the ontology data document!!")
+    self.logger.info("User clicked the save button..")
+    if missing_properties := check_ontology_types(self.ontology_types):
+      message = get_missing_props_message(missing_properties)
+      show_message(message, QMessageBox.Warning)
+      self.logger.warning(message)
+      return
+    # Clear all the data from the ontology_document
+    for data in list(self.ontology_document.keys()):
+      if isinstance(self.ontology_document[data], dict):
+        del self.ontology_document[data]
+    # Copy all the modifications
+    for type_name, type_structure in self.ontology_types.items():
+      self.ontology_document[type_name] = type_structure
+    # Save the modified document
     self.ontology_document.save()
     show_message("Ontology data saved successfully..")
 
@@ -396,12 +421,19 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
       self.logger.info("User created a new type and added "
                        "to the ontology document: Title: {%s}, Label: {%s}", title, label)
       empty_type = generate_empty_type(label)
-      self.ontology_document[title] = empty_type
       self.ontology_types[title] = empty_type
       self.typeComboBox.clear()
       self.typeComboBox.addItems(get_types_for_display(self.ontology_types.keys()))
       self.typeComboBox.setCurrentIndex(len(self.ontology_types) - 1)
       show_message(f"Type (title: {title} label: {label}) has been added....")
+
+  def show_hide_attachments_table(self) -> None:
+    """
+    Show/hide the attachments table and the add attachment button
+    Returns: Nothing
+    """
+    self.typeAttachmentsTableView.setVisible(not self.typeAttachmentsTableView.isVisible())
+    self.addAttachmentPushButton.setVisible(not self.addAttachmentPushButton.isVisible())
 
 
 def get_gui(ontology_document: Document) -> tuple[

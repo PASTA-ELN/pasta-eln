@@ -202,7 +202,7 @@ class OntologyTableViewModel(QAbstractTableModel):
       self.logger.warning("Invalid position: {%s}", position)
       return None
     shift_position = position - 1
-    shift_position = shift_position if shift_position > 0 else 0
+    shift_position = max(shift_position, 0)
     self.data_set.insert(shift_position, data_to_be_pushed)
     self.logger.info("Reordered the data, Actual position: {%s}, "
                      "New Position: {%s}, "

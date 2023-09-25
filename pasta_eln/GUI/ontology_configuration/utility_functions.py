@@ -40,37 +40,33 @@ def is_click_within_bounds(event: QEvent,
   return False
 
 
-def adjust_ontology_data_to_v3(ontology_doc: Document) -> None:
+def adjust_ontology_data_to_v3(ontology_types: dict[str, Any]) -> None:
   """Correct the ontology data and add missing information if the loaded data is of version < 3.0
 
   Args:
-      ontology_doc (Document): Ontology document loaded from the database
+      ontology_types (dict[str, Any]): Ontology types loaded from the database
 
   Returns: None
   """
-  if not ontology_doc or ontology_doc['-version'] != 2:
+  if not ontology_types:
     return None
-  type_structures = {
-    data: ontology_doc[data]
-    for data in ontology_doc if isinstance(ontology_doc[data], dict)
-  }
-  ontology_doc["-version"] = 3
-  if type_structures:
-    for _, type_structure in type_structures.items():
-      type_structure.setdefault("attachments", [])
-      props = type_structure.get("prop")
-      if props is None:
-        type_structure["prop"] = {"default": []}
-        continue
-      if not isinstance(props, dict):
-        type_structure["prop"] = {"default": props}
+  for _, type_structure in ontology_types.items():
+    type_structure.setdefault("attachments", [])
+    props = type_structure.get("prop")
+    if props is None:
+      type_structure["prop"] = {"default": []}
+      continue
+    if not isinstance(props, dict):
+      type_structure["prop"] = {"default": props}
   return None
 
 
-def show_message(message: str) -> None:
+def show_message(message: str,
+                 icon: Any = QMessageBox.Information) -> None:
   """
   Displays a message to the user using QMessageBox
   Args:
+    icon (Any): Message box icon
     message (str): Message to be displayed
 
   Returns: Return None if message is empty otherwise displays the message
@@ -78,6 +74,8 @@ def show_message(message: str) -> None:
   """
   if message:
     msg_box = QMessageBox()
+    msg_box.setWindowTitle("Ontology Editor")
+    msg_box.setIcon(icon)
     msg_box.setText(message)
     msg_box.exec()
 
@@ -204,12 +202,64 @@ def generate_required_properties() -> list[dict[str, Any]]:
   return [
     {
       "name": "-name",
-      "query": "What is the name of the project?",
+      "query": "What is the name of the property?",
       "required": True
     },
     {
       "name": "-tags",
-      "query": "What are the tags associated with the project?",
+      "query": "What are the tags associated with this property?",
       "required": True
     }
   ]
+
+
+def check_ontology_types(ontology_types: dict[str, Any]) -> dict[str, dict[str, list[str]]]:
+  """
+  Check the ontology data to see if all the required properties ["-name", "-tags"] are present under all categories
+  Args:
+    ontology_types (Document): Ontology types loaded from the database
+
+  Returns (dict[str, dict[str, list[str]]]): Empty dictionary if all the required properties are present under all categories
+  otherwise returns a dictionary of types with categories missing required properties
+
+  """
+  if not ontology_types:
+    return {}
+  types_with_missing_properties: dict[str, dict[str, list[str]]] = {}
+  required_properties = ["-name", "-tags"]
+  for type_name, type_structure in ontology_types.items():
+    type_name = type_name.replace("x", "Structure level ") \
+      if is_structural_level(type_name) \
+      else type_name
+    if type_structure.get("prop"):
+      for category, properties in type_structure.get("prop").items():
+        names = [prop.get("name") for prop in properties]
+        for req_property in required_properties:
+          if req_property not in names:
+            if type_name not in types_with_missing_properties:
+              types_with_missing_properties[type_name] = {}
+            if category not in types_with_missing_properties[type_name]:
+              types_with_missing_properties[type_name][category] = []
+            types_with_missing_properties[type_name][category].append(req_property)
+  return types_with_missing_properties
+
+
+def get_missing_props_message(missing_properties: dict[str, dict[str, list[str]]]) -> str:
+  """
+  Get formatted message for missing properties
+  Args:
+    missing_properties (dict[str, dict[str, list[str]]]): Missing properties
+
+  Returns (str): Formatted message
+
+  """
+  if not missing_properties:
+    return ""
+  message = "Missing required properties: \t\t\t\n\n"
+  for type_name, categories in missing_properties.items():
+    message += f"Type: {type_name}\n"
+    for category, properties in categories.items():
+      message += f"\tCategory: {category}\n"
+      for property_name in properties:
+        message += f"\t\tMissing Property: {property_name}\n"
+  return message

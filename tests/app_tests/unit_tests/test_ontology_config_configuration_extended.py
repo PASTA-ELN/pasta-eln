@@ -8,7 +8,7 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
 import pytest
-from PySide6.QtWidgets import QApplication, QDialog
+from PySide6.QtWidgets import QApplication, QDialog, QMessageBox
 
 from pasta_eln.GUI.ontology_configuration.create_type_dialog_extended import CreateTypeDialog
 from pasta_eln.GUI.ontology_configuration.delete_column_delegate import DeleteColumnDelegate
@@ -51,6 +51,8 @@ class TestOntologyConfigConfiguration(object):
     mocker.patch.object(OntologyConfigurationForm, 'deleteTypePushButton', create=True)
     mocker.patch.object(OntologyConfigurationForm, 'addTypePushButton', create=True)
     mocker.patch.object(OntologyConfigurationForm, 'cancelPushButton', create=True)
+    mocker.patch.object(OntologyConfigurationForm, 'helpPushButton', create=True)
+    mocker.patch.object(OntologyConfigurationForm, 'attachmentsShowHidePushButton', create=True)
     mocker.patch.object(OntologyConfigurationForm, 'typeComboBox', create=True)
     mocker.patch.object(OntologyConfigurationForm, 'propsCategoryComboBox', create=True)
     mocker.patch.object(OntologyConfigurationForm, 'typeLabelLineEdit', create=True)
@@ -459,7 +461,6 @@ class TestOntologyConfigConfiguration(object):
       configuration_extended.ontology_document.get.side_effect = ontology_document.get
       configuration_extended.ontology_document.keys.side_effect = ontology_document.keys
       configuration_extended.ontology_document.pop.side_effect = ontology_document.pop
-    pop_items_selected_ontology_document_spy = mocker.spy(configuration_extended.ontology_document, 'pop')
     if ontology_types:
       original_ontology_types = ontology_types.copy()
       configuration_extended.ontology_types.__setitem__.side_effect = ontology_types.__setitem__
@@ -482,7 +483,6 @@ class TestOntologyConfigConfiguration(object):
       if selected_type and selected_type in original_ontology_types and selected_type in original_ontology_document:
         logger_info_spy.assert_called_once_with("User deleted the selected type: {%s}", selected_type)
         pop_items_selected_ontology_types_spy.assert_called_once_with(selected_type)
-        pop_items_selected_ontology_document_spy.assert_called_once_with(selected_type)
         clear_category_combo_box_spy.assert_called_once_with()
         add_items_selected_spy.assert_called_once_with(
           get_types_for_display(ontology_types.keys())
@@ -493,7 +493,6 @@ class TestOntologyConfigConfiguration(object):
         logger_info_spy.assert_not_called()
         logger_info_spy.assert_not_called()
         pop_items_selected_ontology_types_spy.assert_not_called()
-        pop_items_selected_ontology_document_spy.assert_not_called()
         clear_category_combo_box_spy.assert_not_called()
         add_items_selected_spy.assert_not_called()
         set_current_index_category_combo_box_spy.assert_not_called()
@@ -660,13 +659,12 @@ class TestOntologyConfigConfiguration(object):
       if type(data) is dict:
         assert data in configuration_extended.ontology_types, "Data should be loaded"
 
-  @pytest.mark.parametrize("ontology_document", [
-    'ontology_doc_mock',
-    None,
-    {"x0": {"IRI": "x0"}, "": {"IRI": "x1"}},
-    {"x0": {"IRI": "x0"}, "": {"IRI": "x1"}, 23: "test", "__id": "test"},
-    {"test": ["test1", "test2", "test3"]}
-  ])
+  @pytest.mark.parametrize("ontology_document",
+                           [None,
+                            {"x0": {"IRI": "x0"}, "": {"IRI": "x1"}},
+                            {"x0": {"IRI": "x0"}, "": {"IRI": "x1"}, 23: "test", "__id": "test"},
+                            {"test": ["test1", "test2", "test3"]}
+                            ])
   def test_save_ontology_should_do_expected(self,
                                             mocker,
                                             ontology_document,
@@ -677,18 +675,68 @@ class TestOntologyConfigConfiguration(object):
       else ontology_document
     mocker.patch.object(configuration_extended, 'ontology_document', create=True)
     if doc:
+      mocker.patch.object(configuration_extended, 'ontology_types', dict(ontology_document), create=True)
       configuration_extended.ontology_document.__setitem__.side_effect = doc.__setitem__
       configuration_extended.ontology_document.__getitem__.side_effect = doc.__getitem__
       configuration_extended.ontology_document.__iter__.side_effect = doc.__iter__
       configuration_extended.ontology_document.__contains__.side_effect = doc.__contains__
+      configuration_extended.ontology_document.__delitem__.side_effect = doc.__delitem__
+      configuration_extended.ontology_document.keys.side_effect = doc.keys
 
     mocker.patch.object(configuration_extended.logger, 'info')
     mock_show_message = mocker.patch(
       'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.show_message')
+    mock_is_instance = mocker.patch(
+      'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.isinstance')
+    mock_check_ontology_types = mocker.patch(
+      'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.check_ontology_types', return_value=None)
     assert configuration_extended.save_ontology() is None, "Nothing should be returned"
-    configuration_extended.logger.info.assert_called_once_with("User saved the ontology data document!!")
+
+    if doc:
+      for item in doc:
+        mock_is_instance.assert_any_call(doc[item], dict)
+        if isinstance(doc[item], dict):
+          configuration_extended.ontology_document.__delitem__.assert_any_call(item)
+      for item in configuration_extended.ontology_types:
+        configuration_extended.ontology_document.__setitem__.assert_any_call(item,
+                                                                             configuration_extended.ontology_types[
+                                                                               item])
+    mock_check_ontology_types.assert_called_once_with(configuration_extended.ontology_types)
+    configuration_extended.logger.info.assert_called_once_with("User clicked the save button..")
     configuration_extended.ontology_document.save.assert_called_once()
     mock_show_message.assert_called_once_with("Ontology data saved successfully..")
+
+  def test_save_ontology_with_missing_properties_should_skip_save_and_show_message(self,
+                                                                                   mocker,
+                                                                                   ontology_doc_mock,
+                                                                                   configuration_extended: configuration_extended):
+    mocker.patch.object(configuration_extended, 'ontology_types', create=True)
+    configuration_extended.ontology_document.__setitem__.side_effect = ontology_doc_mock.__setitem__
+    configuration_extended.ontology_document.__getitem__.side_effect = ontology_doc_mock.__getitem__
+    configuration_extended.ontology_document.__iter__.side_effect = ontology_doc_mock.__iter__
+    configuration_extended.ontology_document.__contains__.side_effect = ontology_doc_mock.__contains__
+
+    log_info_spy = mocker.patch.object(configuration_extended.logger, 'info')
+    log_warn_spy = mocker.patch.object(configuration_extended.logger, 'warning')
+    mock_show_message = mocker.patch(
+      'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.show_message')
+    missing_props = {
+      'Structure level 0': {'category1': ['-tags']},
+      'Structure level 1': {'default': ['-tags']},
+      'Structure level 2': {'default': ['-tags']},
+      'instrument': {'default': ['-tags']}}
+    mock_check_ontology_document_types = mocker.patch(
+      'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.check_ontology_types',
+      return_value=missing_props)
+    mock_get_missing_props_message = mocker.patch(
+      'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.get_missing_props_message',
+      return_value="Missing message")
+    assert configuration_extended.save_ontology() is None, "Nothing should be returned"
+    log_info_spy.assert_called_once_with("User clicked the save button..")
+    mock_check_ontology_document_types.assert_called_once_with(configuration_extended.ontology_types)
+    mock_get_missing_props_message.assert_called_once_with(missing_props)
+    mock_show_message.assert_called_once_with("Missing message", QMessageBox.Warning)
+    log_warn_spy.assert_called_once_with("Missing message")
 
   @pytest.mark.parametrize("new_title, new_label, ontology_document, ontology_types", [
     (None, None, None, None),
@@ -759,8 +807,6 @@ class TestOntologyConfigConfiguration(object):
                                               "to the ontology document: Title: {%s}, Label: {%s}", new_title,
                                               new_label)
 
-        (configuration_extended.ontology_document
-         .__setitem__.assert_called_once_with(new_title, generate_empty_type(new_label)))
         (configuration_extended.ontology_types
          .__setitem__.assert_called_once_with(new_title, generate_empty_type(new_label)))
         assert configuration_extended.typeComboBox.clear.call_count == 2, "ComboBox should be cleared twice"
@@ -798,3 +844,21 @@ class TestOntologyConfigConfiguration(object):
       assert app is mock_new_app_inst, "Should return new instance"
       assert form_inst is mock_form_instance, "Should return existing instance"
       assert form is mock_form, "Should return existing instance"
+
+  @pytest.mark.parametrize("hidden", [True, False])
+  def test_show_hide_attachments_table_do_expected(self,
+                                                   mocker,
+                                                   configuration_extended: configuration_extended,
+                                                   hidden):
+    spy_table_view_set_visible = mocker.patch.object(configuration_extended.typeAttachmentsTableView, 'setVisible')
+    spy_table_view_is_visible = mocker.patch.object(configuration_extended.typeAttachmentsTableView, 'isVisible',
+                                                    return_value=hidden)
+    spy_add_attachment_set_visible = mocker.patch.object(configuration_extended.addAttachmentPushButton, 'setVisible')
+    spy_add_attachment_is_visible = mocker.patch.object(configuration_extended.addAttachmentPushButton, 'isVisible',
+                                                        return_value=hidden)
+
+    assert configuration_extended.show_hide_attachments_table() is None, "Nothing should be returned"
+    spy_table_view_set_visible.assert_called_once_with(not hidden)
+    spy_table_view_is_visible.assert_called_once_with()
+    spy_add_attachment_set_visible.assert_called_once_with(not hidden)
+    spy_add_attachment_is_visible.assert_called_once_with()
