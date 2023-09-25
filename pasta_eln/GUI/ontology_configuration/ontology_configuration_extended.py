@@ -115,6 +115,10 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     # Set up the slots for the UI items
     self.setup_slots()
 
+    # Hide the attachment table and the add attachment button initially
+    self.addAttachmentPushButton.hide()
+    self.typeAttachmentsTableView.hide()
+
     self.load_ontology_data()
 
   def type_combo_box_changed(self,
@@ -331,7 +335,8 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     self.deleteTypePushButton.clicked.connect(self.delete_selected_type)
     self.addTypePushButton.clicked.connect(self.show_create_type_dialog)
     self.cancelPushButton.clicked.connect(self.instance.close)
-    self.helpPushButton.clicked.connect(lambda : webbrowser.open(ONTOLOGY_HELP_PAGE_URL))
+    self.helpPushButton.clicked.connect(lambda: webbrowser.open(ONTOLOGY_HELP_PAGE_URL))
+    self.attachmentsShowHidePushButton.clicked.connect(self.show_hide_attachments_table)
 
     # Slots for the combo-boxes
     self.typeComboBox.currentTextChanged.connect(self.type_combo_box_changed)
@@ -421,6 +426,14 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
       self.typeComboBox.addItems(get_types_for_display(self.ontology_types.keys()))
       self.typeComboBox.setCurrentIndex(len(self.ontology_types) - 1)
       show_message(f"Type (title: {title} label: {label}) has been added....")
+
+  def show_hide_attachments_table(self):
+    """
+    Show/hide the attachments table and the add attachment button
+    Returns: Nothing
+    """
+    self.typeAttachmentsTableView.setVisible(not self.typeAttachmentsTableView.isVisible())
+    self.addAttachmentPushButton.setVisible(not self.addAttachmentPushButton.isVisible())
 
 
 def get_gui(ontology_document: Document) -> tuple[
