@@ -427,7 +427,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
       self.typeComboBox.setCurrentIndex(len(self.ontology_types) - 1)
       show_message(f"Type (title: {title} label: {label}) has been added....")
 
-  def show_hide_attachments_table(self):
+  def show_hide_attachments_table(self) -> None:
     """
     Show/hide the attachments table and the add attachment button
     Returns: Nothing

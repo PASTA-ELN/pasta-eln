@@ -52,6 +52,7 @@ class TestOntologyConfigConfiguration(object):
     mocker.patch.object(OntologyConfigurationForm, 'addTypePushButton', create=True)
     mocker.patch.object(OntologyConfigurationForm, 'cancelPushButton', create=True)
     mocker.patch.object(OntologyConfigurationForm, 'helpPushButton', create=True)
+    mocker.patch.object(OntologyConfigurationForm, 'attachmentsShowHidePushButton', create=True)
     mocker.patch.object(OntologyConfigurationForm, 'typeComboBox', create=True)
     mocker.patch.object(OntologyConfigurationForm, 'propsCategoryComboBox', create=True)
     mocker.patch.object(OntologyConfigurationForm, 'typeLabelLineEdit', create=True)
@@ -843,3 +844,21 @@ class TestOntologyConfigConfiguration(object):
       assert app is mock_new_app_inst, "Should return new instance"
       assert form_inst is mock_form_instance, "Should return existing instance"
       assert form is mock_form, "Should return existing instance"
+
+  @pytest.mark.parametrize("hidden", [True, False])
+  def test_show_hide_attachments_table_do_expected(self,
+                                                   mocker,
+                                                   configuration_extended: configuration_extended,
+                                                   hidden):
+    spy_table_view_set_visible = mocker.patch.object(configuration_extended.typeAttachmentsTableView, 'setVisible')
+    spy_table_view_is_visible = mocker.patch.object(configuration_extended.typeAttachmentsTableView, 'isVisible',
+                                                    return_value=hidden)
+    spy_add_attachment_set_visible = mocker.patch.object(configuration_extended.addAttachmentPushButton, 'setVisible')
+    spy_add_attachment_is_visible = mocker.patch.object(configuration_extended.addAttachmentPushButton, 'isVisible',
+                                                        return_value=hidden)
+
+    assert configuration_extended.show_hide_attachments_table() is None, "Nothing should be returned"
+    spy_table_view_set_visible.assert_called_once_with(not hidden)
+    spy_table_view_is_visible.assert_called_once_with()
+    spy_add_attachment_set_visible.assert_called_once_with(not hidden)
+    spy_add_attachment_is_visible.assert_called_once_with()
