@@ -66,7 +66,10 @@ class Project(QWidget):
     Action('Scan',                      self, [Command.SCAN], moreMenu)
     for doctype in self.comm.backend.db.dataLabels:
       if doctype[0]!='x':
-        icon = iconsDocTypes[self.comm.backend.db.dataLabels[doctype]]
+        if self.comm.backend.db.dataLabels[doctype] in iconsDocTypes:
+          icon = iconsDocTypes[self.comm.backend.db.dataLabels[doctype]]
+        else:
+          icon = 'fa.asterisk'
         Action(f'table of {doctype}',   self, [Command.SHOW_TABLE, doctype], moreMenu, icon=icon)
     Action('table of unidentified',     self, [Command.SHOW_TABLE, '-'],     moreMenu, icon=iconsDocTypes['-'])
     moreMenu.addSeparator()

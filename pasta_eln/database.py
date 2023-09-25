@@ -518,7 +518,6 @@ class Database:
       return False
 
 
-
   def getView(self, thePath:str, startKey:Optional[str]=None, preciseKey:Optional[str]=None) -> list[dict[str,Any]]:
     """
     Wrapper for getting view function
@@ -542,7 +541,7 @@ class Database:
       else:
         res = list(v.result)
     except Exception:
-      print('**ERROR dgv01: Database / Network problem for path |',thePath[0],thePath[1])
+      print('**ERROR dgv01: Database / Network problem for path |', thePath)
       print(traceback.format_exc())
       res = []
     return res
