@@ -10,7 +10,7 @@
 import logging
 from typing import Union
 
-from PySide6.QtCore import QModelIndex, QPersistentModelIndex, Signal, QEvent, QAbstractItemModel
+from PySide6.QtCore import QModelIndex, QPersistentModelIndex, Signal, QEvent, QAbstractItemModel, QSize
 from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import QStyledItemDelegate, QPushButton, QWidget, QStyleOptionViewItem, QStyleOptionButton, \
   QStyle, QApplication
@@ -29,7 +29,7 @@ class ReorderColumnDelegate(QStyledItemDelegate):
       Constructor
     """
     super().__init__()
-    self.logger = logging.getLogger(__name__ + "." + self.__class__.__name__)
+    self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
 
   def paint(self,
             painter: QPainter,
@@ -49,7 +49,8 @@ class ReorderColumnDelegate(QStyledItemDelegate):
     opt = QStyleOptionButton()
     opt.state = QStyle.State_Active | QStyle.State_Enabled  # type: ignore[operator]
     opt.rect = option.rect
-    opt.text = "^"
+    opt.icon = QApplication.style().standardIcon(QStyle.StandardPixmap.SP_ArrowUp)
+    opt.iconSize = QSize(15, 15)
     QApplication.style().drawControl(QStyle.CE_PushButton, opt, painter, button)
 
   def createEditor(self,
