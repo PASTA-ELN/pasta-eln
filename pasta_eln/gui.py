@@ -169,6 +169,7 @@ class MainWindow(QMainWindow):
     elif command[0] is Command.ONTOLOGY:
       ontologyForm = OntologyConfigurationForm(self.comm.backend.db.db['-ontology-'])
       ontologyForm.instance.exec()
+      restart()
     elif command[0] is Command.TEST1:
       fileName = QFileDialog.getOpenFileName(self, 'Open file for extractor test', str(Path.home()), '*.*')[0]
       report = self.comm.backend.testExtractor(fileName, outputStyle='html')
