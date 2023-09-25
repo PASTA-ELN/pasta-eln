@@ -34,6 +34,7 @@ from .required_column_delegate import RequiredColumnDelegate
 from .utility_functions import adjust_ontology_data_to_v3, show_message, \
   get_next_possible_structural_level_label, get_types_for_display, adapt_type, generate_empty_type, \
   generate_required_properties, check_ontology_types, get_missing_props_message
+from ...database import Database
 
 
 class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
@@ -47,12 +48,12 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     return super(OntologyConfigurationForm, cls).__new__(cls)
 
   def __init__(self,
-               ontology_document: Document) -> None:
+               database: Database) -> None:
     """
     Constructs the ontology data editor
 
     Args:
-      ontology_document (Document): Ontology data document from couch DB instance passed by the parent.
+      database (Database): Pasta ELN database instance
 
     Raises:
       OntologyDocumentNullException: Raised when passed in argument @ontology_document is null.
@@ -68,10 +69,13 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     super().setupUi(self.instance)
 
     # Gets the ontology data from db and adjust the data to the latest version
-    if not ontology_document:
-      raise OntologyDocumentNullException("Null document passed for ontology data", {})
+    if database is None:
+      raise OntologyConfigGenericException("Null database passed for ontology data", {})
 
-    self.ontology_document: Document = ontology_document
+    self.database: Database = database
+    self.ontology_document: Document = self.database.db['-ontology-']
+    if not self.ontology_document:
+      raise OntologyDocumentNullException("Null document passed for ontology data", {})
 
     # Instantiates property & attachment table models along with the column delegates
     self.props_table_data_model = OntologyPropsTableViewModel()
@@ -394,6 +398,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
       self.ontology_document[type_name] = type_structure
     # Save the modified document
     self.ontology_document.save()
+    self.database.initDocTypeViews(16)
     show_message("Ontology data saved successfully..")
 
   def create_new_type(self,
@@ -436,17 +441,17 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     self.addAttachmentPushButton.setVisible(not self.addAttachmentPushButton.isVisible())
 
 
-def get_gui(ontology_document: Document) -> tuple[
+def get_gui(database: Database) -> tuple[
   QApplication | QApplication, QtWidgets.QDialog, OntologyConfigurationForm]:
   """
   Creates the editor UI and return it
   Args:
-    ontology_document (object): Ontology document from the couch DB.
+    database (Database): PASTA ELN Database instance.
   Returns:
 
   """
   instance = QApplication.instance()
   application = QApplication(sys.argv) if instance is None else instance
-  ontology_form: OntologyConfigurationForm = OntologyConfigurationForm(ontology_document)
+  ontology_form: OntologyConfigurationForm = OntologyConfigurationForm(database)
 
   return application, ontology_form.instance, ontology_form

@@ -14,7 +14,7 @@ from pytestqt.qtbot import QtBot
 
 from pasta_eln.GUI.ontology_configuration.ontology_configuration_extended import OntologyConfigurationForm
 from pasta_eln.GUI.ontology_configuration.utility_functions import adapt_type, get_types_for_display
-from tests.app_tests.common.fixtures import ontology_editor_gui, ontology_doc_mock, props_column_names, \
+from tests.app_tests.common.fixtures import ontology_editor_gui, ontology_doc_mock, pasta_db_mock, props_column_names, \
   attachments_column_names
 
 
