@@ -398,6 +398,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
       self.ontology_document[type_name] = type_structure
     # Save the modified document
     self.ontology_document.save()
+    self.database.ontology = dict(self.ontology_document)
     self.database.initDocTypeViews(16)
     show_message("Ontology data saved successfully..")
 
