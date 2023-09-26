@@ -110,7 +110,10 @@ class Sidebar(QWidget):
           listW.hide()
         for idx, doctype in enumerate(db.dataLabels):
           if doctype[0]!='x':
-            icon = iconsDocTypes[db.dataLabels[doctype]]
+            if db.dataLabels[doctype] in iconsDocTypes:
+              icon = iconsDocTypes[db.dataLabels[doctype]]
+            else:
+              icon = 'fa.asterisk'
             btn = IconButton(icon, self, [Command.LIST_DOCTYPE,doctype,projID], None,db.dataLabels[doctype])
             listL.addWidget(btn, 0, idx)    # type: ignore
         btn = IconButton(iconsDocTypes['-'], self, [Command.LIST_DOCTYPE,'-',projID], None, 'Unidentified')
