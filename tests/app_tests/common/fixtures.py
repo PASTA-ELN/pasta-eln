@@ -27,6 +27,7 @@ from pasta_eln.GUI.ontology_configuration.ontology_props_tableview_data_model im
 from pasta_eln.GUI.ontology_configuration.ontology_tableview_data_model import OntologyTableViewModel
 from pasta_eln.GUI.ontology_configuration.reorder_column_delegate import ReorderColumnDelegate
 from pasta_eln.GUI.ontology_configuration.required_column_delegate import RequiredColumnDelegate
+from pasta_eln.database import Database
 from pasta_eln.gui import mainGUI, MainWindow
 from tests.app_tests.common.test_utils import get_ontology_document
 
@@ -47,6 +48,10 @@ def create_type_dialog_mock(mocker) -> CreateTypeDialog:
 @fixture()
 def configuration_extended(mocker) -> OntologyConfigurationForm:
   mock_document = mocker.patch('cloudant.document.Document')
+  mock_pasta_db = mocker.patch('pasta_eln.database')
+  mock_couch_db = mocker.patch('cloudant.couchdb')
+  mock_couch_db['-ontology-'] = mock_document
+  mock_pasta_db = mocker.patch.object(mock_pasta_db, 'db', create=True)
   mocker.patch('pasta_eln.GUI.ontology_configuration.create_type_dialog_extended.logging.getLogger')
   mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration.Ui_OntologyConfigurationBaseForm.setupUi')
   mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.adjust_ontology_data_to_v3')
@@ -77,7 +82,7 @@ def configuration_extended(mocker) -> OntologyConfigurationForm:
   mocker.patch.object(OntologyConfigurationForm, 'delete_column_delegate_attach_table', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'reorder_column_delegate_attach_table', create=True)
   mocker.patch.object(CreateTypeDialog, '__new__')
-  return OntologyConfigurationForm(mock_document)
+  return OntologyConfigurationForm(mock_pasta_db)
 
 
 @fixture()
@@ -151,11 +156,21 @@ def ontology_doc_mock(mocker) -> Document:
 
 
 @fixture()
-def ontology_editor_gui(request, ontology_doc_mock) -> tuple[QApplication,
+def pasta_db_mock(mocker, ontology_doc_mock) -> Database:
+  mock_db = mocker.patch('pasta_eln.database.Database')
+  mock_couch_db = mocker.patch('cloudant.client.CouchDB')
+  dbs = {'-ontology-': ontology_doc_mock}
+  mock_couch_db.__getitem__.side_effect = dbs.__getitem__
+  mocker.patch.object(mock_db, 'db', mock_couch_db, create=True)
+  return mock_db
+
+
+@fixture()
+def ontology_editor_gui(request, pasta_db_mock) -> tuple[QApplication,
 QtWidgets.QDialog,
 OntologyConfigurationForm,
 QtBot]:
-  app, ui_dialog, ui_form_extended = get_gui(ontology_doc_mock)
+  app, ui_dialog, ui_form_extended = get_gui(pasta_db_mock)
   qtbot: QtBot = QtBot(app)
   return app, ui_dialog, ui_form_extended, qtbot
 

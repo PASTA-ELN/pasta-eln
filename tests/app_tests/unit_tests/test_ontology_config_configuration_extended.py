@@ -65,14 +65,25 @@ class TestOntologyConfigConfiguration(object):
     config_instance = OntologyConfigurationForm(mock_document)
     assert config_instance, "OntologyConfigurationForm should be created"
 
-  def test_instantiation_with_null_document_should_throw_exception(self,
+  def test_instantiation_with_null_database_should_throw_exception(self,
                                                                    mocker):
     mocker.patch('pasta_eln.GUI.ontology_configuration.create_type_dialog_extended.logging.getLogger')
     mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration.Ui_OntologyConfigurationBaseForm.setupUi')
     mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.adjust_ontology_data_to_v3')
     mocker.patch.object(QDialog, '__new__')
-    with pytest.raises(OntologyDocumentNullException, match="Null document passed for ontology data"):
+    with pytest.raises(OntologyConfigGenericException, match="Null database instance passed to the initializer"):
       OntologyConfigurationForm(None)
+
+  def test_instantiation_with_database_with_null_document_should_throw_exception(self,
+                                                                                 mocker):
+    mocker.patch('pasta_eln.GUI.ontology_configuration.create_type_dialog_extended.logging.getLogger')
+    mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration.Ui_OntologyConfigurationBaseForm.setupUi')
+    mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.adjust_ontology_data_to_v3')
+    mocker.patch.object(QDialog, '__new__')
+    mock_db = mocker.patch('pasta_eln.database.Database')
+    mocker.patch.object(mock_db, 'db', {'-ontology-': None}, create=True)
+    with pytest.raises(OntologyDocumentNullException, match="Null ontology document in db instance"):
+      OntologyConfigurationForm(mock_db)
 
   @pytest.mark.parametrize("new_type_selected, mock_ontology_types", [
     ("x0", {
@@ -690,6 +701,8 @@ class TestOntologyConfigConfiguration(object):
       'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.isinstance')
     mock_check_ontology_types = mocker.patch(
       'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.check_ontology_types', return_value=None)
+    mock_db_init_views = mocker.patch.object(configuration_extended.database,
+                                             'initDocTypeViews', return_value=None)
     assert configuration_extended.save_ontology() is None, "Nothing should be returned"
 
     if doc:
@@ -704,6 +717,7 @@ class TestOntologyConfigConfiguration(object):
     mock_check_ontology_types.assert_called_once_with(configuration_extended.ontology_types)
     configuration_extended.logger.info.assert_called_once_with("User clicked the save button..")
     configuration_extended.ontology_document.save.assert_called_once()
+    mock_db_init_views.assert_called_once_with(16)
     mock_show_message.assert_called_once_with("Ontology data saved successfully..")
 
   def test_save_ontology_with_missing_properties_should_skip_save_and_show_message(self,
@@ -826,15 +840,15 @@ class TestOntologyConfigConfiguration(object):
     mock_new_app_inst = mocker.patch("PySide6.QtWidgets.QApplication")
     mock_exist_app_inst = mocker.patch("PySide6.QtWidgets.QApplication")
     mock_form_instance = mocker.patch("PySide6.QtWidgets.QDialog")
-    mock_document = mocker.patch("cloudant.document.Document")
+    mock_database = mocker.patch("pasta_eln.database.Database")
 
     mocker.patch.object(QApplication, 'instance', return_value=mock_exist_app_inst if instance_exists else None)
     mocker.patch.object(mock_form, 'instance', mock_form_instance, create=True)
     spy_new_app_inst = mocker.patch.object(QApplication, '__new__', return_value=mock_new_app_inst)
     spy_form_inst = mocker.patch.object(OntologyConfigurationForm, '__new__', return_value=mock_form)
 
-    (app, form_inst, form) = get_gui(mock_document)
-    spy_form_inst.assert_called_once_with(OntologyConfigurationForm, mock_document)
+    (app, form_inst, form) = get_gui(mock_database)
+    spy_form_inst.assert_called_once_with(OntologyConfigurationForm, mock_database)
     if instance_exists:
       assert app is mock_exist_app_inst, "Should return existing instance"
       assert form_inst is mock_form_instance, "Should return existing instance"

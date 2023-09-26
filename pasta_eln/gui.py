@@ -73,8 +73,8 @@ class MainWindow(QMainWindow):
     if hasattr(self.backend, 'configuration'):                            # not case in fresh install
       for name in self.backend.configuration['projectGroups'].keys():
         Action(name,                         self, [Command.CHANGE_PG, name], changeProjectGroups)
-    Action('&Syncronize',                    self, [Command.SYNC],            systemMenu, shortcut='F5')
-    Action('&Questionaires',                 self, [Command.ONTOLOGY],        systemMenu, shortcut='F8')
+    Action('&Synchronize',                    self, [Command.SYNC],            systemMenu, shortcut='F5')
+    Action('&Questionnaires',                 self, [Command.ONTOLOGY],        systemMenu, shortcut='F8')
     systemMenu.addSeparator()
     Action('&Test extraction from a file',   self, [Command.TEST1],           systemMenu)
     Action('Test &selected item extraction', self, [Command.TEST2],           systemMenu, shortcut='F2')
@@ -167,7 +167,7 @@ class MainWindow(QMainWindow):
       report = self.comm.backend.replicateDB(progressBar=self.sidebar.progress)
       showMessage(self, 'Report of syncronization', report, style='QLabel {min-width: 450px}')
     elif command[0] is Command.ONTOLOGY:
-      ontologyForm = OntologyConfigurationForm(self.comm.backend.db.db['-ontology-'])
+      ontologyForm = OntologyConfigurationForm(self.comm.backend.db)
       ontologyForm.instance.exec()
     elif command[0] is Command.TEST1:
       fileName = QFileDialog.getOpenFileName(self, 'Open file for extractor test', str(Path.home()), '*.*')[0]
