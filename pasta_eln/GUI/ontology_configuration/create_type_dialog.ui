@@ -61,6 +61,9 @@
          <property name="placeholderText">
           <string>Enter title for the new type</string>
          </property>
+         <property name="clearButtonEnabled">
+          <bool>true</bool>
+         </property>
         </widget>
        </item>
       </layout>
@@ -103,6 +106,9 @@
          </property>
          <property name="placeholderText">
           <string>Enter label for the new type</string>
+         </property>
+         <property name="clearButtonEnabled">
+          <bool>true</bool>
          </property>
         </widget>
        </item>

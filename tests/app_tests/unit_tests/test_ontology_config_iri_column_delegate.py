@@ -37,6 +37,7 @@ class TestOntologyConfigIriColumnDelegate(object):
                                                              return_value=mock_retrieve_iri_action)
     mock_line_edit_construct = mocker.patch.object(QLineEdit, '__new__', return_value=mock_line_edit)
     mock_line_edit_add_action = mocker.patch.object(mock_line_edit, 'addAction')
+    mock_line_set_clear_button_enabled = mocker.patch.object(mock_line_edit, 'setClearButtonEnabled')
     mock_style_option = mocker.patch('PySide6.QtWidgets.QStyleOptionViewItem')
     mock_model_index = mocker.patch('PySide6.QtCore.QModelIndex')
     line_edit = iri_delegate.createEditor(mock_parent, mock_style_option, mock_model_index)
@@ -44,3 +45,4 @@ class TestOntologyConfigIriColumnDelegate(object):
     mock_retrieve_iri_action_construct.assert_called_once_with(RetrieveIriAction, parent=mock_parent)
     mock_line_edit_construct.assert_called_once_with(QLineEdit, mock_parent)
     mock_line_edit_add_action.assert_called_once_with(mock_retrieve_iri_action, QLineEdit.TrailingPosition)
+    mock_line_set_clear_button_enabled.assert_called_once_with(True)

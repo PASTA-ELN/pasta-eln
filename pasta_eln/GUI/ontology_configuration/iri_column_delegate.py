@@ -45,4 +45,5 @@ class IriColumnDelegate(QStyledItemDelegate):
     line_edit.addAction(
       RetrieveIriAction(parent=parent),
       QLineEdit.TrailingPosition)
+    line_edit.setClearButtonEnabled(True)
     return line_edit
