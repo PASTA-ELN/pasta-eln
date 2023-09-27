@@ -1,10 +1,11 @@
 #!/usr/bin/python3
 """TEST using the FULL set of python-requirements: create 3 projects; simplified form of testTutorialComplex """
-import os, shutil, logging, socket
+import os, shutil, logging
 import warnings
 import unittest
 import tempfile
 import urllib.request
+import pytest
 from pathlib import Path
 from pasta_eln.backend import Backend
 from pasta_eln.inputOutput import exportELN, importELN
@@ -24,6 +25,8 @@ class TestStringMethods(unittest.TestCase):
     self.be = None
     self.dirName = ''
 
+  @pytest.mark.skip(
+    reason="Disabled for github since cannot create couchdb instance during actions")
   def test_main(self):
     """
     main function
