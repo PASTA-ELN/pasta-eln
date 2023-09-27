@@ -35,6 +35,7 @@ class TestOntologyConfigConfiguration(object):
     mocker.patch('pasta_eln.GUI.ontology_configuration.create_type_dialog_extended.logging.getLogger')
     mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration.Ui_OntologyConfigurationBaseForm.setupUi')
     mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.adjust_ontology_data_to_v3')
+    mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.RetrieveIriAction')
     mocker.patch.object(QDialog, '__new__')
     mocker.patch.object(OntologyPropsTableViewModel, '__new__')
     mocker.patch.object(OntologyAttachmentsTableViewModel, '__new__')

@@ -1,5 +1,4 @@
 """ OntologyConfigurationForm which is extended from the Ui_OntologyConfigurationBaseForm """
-import copy
 #  PASTA-ELN and all its sub-parts are covered by the MIT license.
 #
 #  Copyright (c) 2023
@@ -8,13 +7,14 @@ import copy
 #  Filename: ontology_configuration_extended.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
+import copy
 import logging
 import sys
 import webbrowser
 from typing import Any
 
 from PySide6 import QtWidgets
-from PySide6.QtWidgets import QApplication, QMessageBox
+from PySide6.QtWidgets import QApplication, QMessageBox, QLineEdit
 from cloudant.document import Document
 
 from .create_type_dialog_extended import CreateTypeDialog
@@ -25,12 +25,14 @@ from .ontology_config_key_not_found_exception import \
 from .ontology_configuration import Ui_OntologyConfigurationBaseForm
 from .ontology_configuration_constants import PROPS_TABLE_DELETE_COLUMN_INDEX, PROPS_TABLE_REORDER_COLUMN_INDEX, \
   PROPS_TABLE_REQUIRED_COLUMN_INDEX, ATTACHMENT_TABLE_DELETE_COLUMN_INDEX, ATTACHMENT_TABLE_REORDER_COLUMN_INDEX, \
-  ONTOLOGY_HELP_PAGE_URL
+  ONTOLOGY_HELP_PAGE_URL, PROPS_TABLE_IRI_COLUMN_INDEX
 from .ontology_document_null_exception import OntologyDocumentNullException
 from .ontology_props_tableview_data_model import OntologyPropsTableViewModel
-from .delete_column_delegate import DeleteColumnDelegate
 from .reorder_column_delegate import ReorderColumnDelegate
 from .required_column_delegate import RequiredColumnDelegate
+from .delete_column_delegate import DeleteColumnDelegate
+from .iri_column_delegate import IriColumnDelegate
+from .retrieve_iri_action import RetrieveIriAction
 from .utility_functions import adjust_ontology_data_to_v3, show_message, \
   get_next_possible_structural_level_label, get_types_for_display, adapt_type, generate_empty_type, \
   generate_required_properties, check_ontology_types, get_missing_props_message
@@ -84,6 +86,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     self.required_column_delegate_props_table = RequiredColumnDelegate()
     self.delete_column_delegate_props_table = DeleteColumnDelegate()
     self.reorder_column_delegate_props_table = ReorderColumnDelegate()
+    self.iri_column_delegate_props_table = IriColumnDelegate()
     self.delete_column_delegate_attach_table = DeleteColumnDelegate()
     self.reorder_column_delegate_attach_table = ReorderColumnDelegate()
 
@@ -93,6 +96,8 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
                                                      self.delete_column_delegate_props_table)
     self.typePropsTableView.setItemDelegateForColumn(PROPS_TABLE_REORDER_COLUMN_INDEX,
                                                      self.reorder_column_delegate_props_table)
+    self.typePropsTableView.setItemDelegateForColumn(PROPS_TABLE_IRI_COLUMN_INDEX,
+                                                     self.iri_column_delegate_props_table)
     self.typePropsTableView.setModel(self.props_table_data_model)
 
     for column_index, width in self.props_table_data_model.column_widths.items():
@@ -122,6 +127,11 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     # Hide the attachment table and the add attachment button initially
     self.addAttachmentPushButton.hide()
     self.typeAttachmentsTableView.hide()
+
+    # Set up search icon for the IRI line edit
+    self.typeIriLineEdit.addAction(
+      RetrieveIriAction(parent=self.instance),
+      QLineEdit.TrailingPosition)
 
     self.load_ontology_data()
 
