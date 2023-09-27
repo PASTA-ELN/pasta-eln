@@ -3,6 +3,8 @@
 import os, shutil, logging, socket
 import warnings
 import unittest
+import tempfile
+import urllib.request
 from pathlib import Path
 from pasta_eln.backend import Backend
 from pasta_eln.inputOutput import exportELN, importELN
@@ -33,54 +35,36 @@ class TestStringMethods(unittest.TestCase):
     warnings.filterwarnings('ignore', message='invalid escape sequence')
     warnings.filterwarnings('ignore', category=ResourceWarning, module='PIL')
     warnings.filterwarnings('ignore', category=ImportWarning)
-    if socket.gethostname()=='dena':  #SB's computer
-      projectGroup = 'pasta_tutorial'
-    else:
-      print("Only SB's computer has the files")
-      return
+    projectGroup = 'research'
+    url = 'https://github.com/TheELNConsortium/TheELNFileFormat/raw/master/examples/elabftw/multiple-database-items.eln'
+    dirpath = Path(tempfile.mkdtemp())
+    elnFile = dirpath/'multiple-database-items.eln'
+    urllib.request.urlretrieve(url, elnFile)
 
-    for root,_,files in os.walk('/home/steffen/FZJ/DataScience/Repositories/TheELNConsortium/eln-file-format/examples'):
-      for file in files:
-        if not file.endswith('.eln') or file=='PASTA.eln':
-          continue
+    # remove everything else
+    self.be = Backend(projectGroup, initConfig=False)
+    self.dirName = self.be.basePath
+    self.be.exit(deleteDB=True)
+    shutil.rmtree(self.dirName)
+    os.makedirs(self.dirName)
+    self.be = Backend(projectGroup, initViews=True, initConfig=False)
 
-        #TODO_P5 for now and to increase reproducibility
-        if file!='multiple-database-items.eln':
-          continue
+    # import
+    print('\n\n---------------\nImport')
+    status = importELN(self.be, str(elnFile))
+    print(status)
+    self.assertEqual(status[:7],'Success','Import unsuccessful')
 
-        print('\n\n==========================================')
-        print(f'Verify in {root} the file {file}')
-        print('==========================================')
-
-        # validate the file
-        # print('\n\n---------------\nVerification')
-        # checkFile(Path(root)/file, verbose=True, plot=False)
-        # possibly skip if not fullfills
-
-
-        # remove everything else
-        self.be = Backend(projectGroup, initConfig=False)
-        self.dirName = self.be.basePath
-        self.be.exit(deleteDB=True)
-        shutil.rmtree(self.dirName)
-        os.makedirs(self.dirName)
-        self.be = Backend(projectGroup, initViews=True, initConfig=False)
-
-        # import
-        print('\n\n---------------\nImport')
-        status = importELN(self.be, str(Path(root)/file))
-        print(status)
-        self.assertEqual(status[:7],'Success','Import unsuccessful')
-
-        # test / verify after import
-        print('Number of documents', len(self.be.db.getView('viewHierarchy/viewHierarchy')))
-        outputString(outputFormat,'h2','VERIFY DATABASE INTEGRITY')
-        outputString(outputFormat,'info', self.be.checkDB(outputStyle='text'))
-        outputString(outputFormat,'h2','DONE WITH VERIFY')
-        fileCount = 0
-        for _, _, files in os.walk(self.be.basePath):
-          fileCount+=len(files)
-        print('Number of files 25=', fileCount)
+    # test / verify after import
+    print('Number of documents', len(self.be.db.getView('viewHierarchy/viewHierarchy')))
+    outputString(outputFormat,'h2','VERIFY DATABASE INTEGRITY')
+    outputString(outputFormat,'info', self.be.checkDB(outputStyle='text'))
+    outputString(outputFormat,'h2','DONE WITH VERIFY')
+    fileCount = 0
+    for _, _, files in os.walk(self.be.basePath):
+      fileCount+=len(files)
+    print('Number of files 8 =', fileCount)
+    self.assertEqual(fileCount, 8, 'Not 8 files exist')
     return
 
   def tearDown(self):

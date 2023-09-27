@@ -8,7 +8,7 @@ import requests
 from anytree import Node
 from pasta_eln import __version__
 from .backend import Backend
-from .miscTools import createDirName
+from .miscTools import createDirName, generic_hash
 
 # Always use RO-crate names
 # GENERAL TERMS IN ro-crate-metadata.json (None implies definitely should not be saved)
@@ -130,7 +130,9 @@ def importELN(backend:Backend, elnFileName:str) -> str:
         print('**ERROR zero or multiple nodes with same id', docS,' or cwd is None in '+part['@id'])
         return -1
       doc, elnID, children, dataType = json2pastaFunction(copy.deepcopy(docS[0]))
-      if elnName == 'PASTA ELN':
+      if elnName == 'PASTA ELN' and elnID.startswith('http') and ':/' in elnID:
+        fullPath = None
+      elif elnName == 'PASTA ELN':
         fullPath = backend.basePath/elnID
       else:
         fullPath = backend.basePath/backend.cwd/elnID.split('/')[-1]
@@ -160,11 +162,13 @@ def importELN(backend:Backend, elnFileName:str) -> str:
           if elnID.endswith('datastructure.json'):
             return 0
           parentIDList = [i['@id'] for i in graph if 'hasPart' in i and {'@id':'./'+elnID} in i['hasPart']]
+          if not parentIDList: #if no parent found, aka for remote data
+            parentIDList = [i['@id'] for i in graph if 'hasPart' in i and {'@id':elnID} in i['hasPart']]
           if len(parentIDList)==1:
             metadataPath = Path(dirName)/parentIDList[0]/'metadata.json'
-          with elnFile.open(metadataPath.as_posix()) as fIn:
-            metadataContent = json.loads( fIn.read() )
-            doc.update( metadataContent[doc['_id']] )
+            with elnFile.open(metadataPath.as_posix()) as fIn:
+              metadataContent = json.loads( fIn.read() )
+              doc.update( metadataContent[doc['_id']] )
         elif elnName == 'eLabFTW' and elnID.endswith('export-elabftw.json'):
           return 0
         else:
@@ -180,7 +184,7 @@ def importELN(backend:Backend, elnFileName:str) -> str:
           fullPath.mkdir(exist_ok=True)
           with open(fullPath/'.id_pastaELN.json', 'w', encoding='utf-8') as fOut:
             fOut.write(json.dumps(doc))
-        else:
+        elif fullPath is not None:
           if not fullPath.parent.exists():
             fullPath.parent.mkdir()
           if f'{dirName}/' + part['@id'][2:] in files:  #if a file is saved
@@ -191,6 +195,9 @@ def importELN(backend:Backend, elnFileName:str) -> str:
             backend.useExtractors(fullPath, doc['shasum'], doc)
           else:
             logging.warning('  could not read file from zip: %s',part['@id'])
+        else:
+          shasum = generic_hash(Path(elnID), forceFile=True)
+          backend.useExtractors(Path(elnID), shasum, doc)
         backend.db.saveDoc(doc)
       else:  # OTHER VENDORS
         if dataType.lower()=='dataset':
@@ -252,6 +259,10 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
   filesNotInProject = []
 
   def separate(doc: dict[str,Any]) -> tuple[str, dict[str,Any], dict[str,Any]]:
+    """ separate document into
+    - main information (for all elns) and
+    - supplemental information (specific to PastaELN)
+    """
     path =  f"{doc['-branch'][0]['path']}/" if doc['-type'][0][0]=='x' else doc['-branch'][0]['path']
     pathUsed = True
     if path is None:
@@ -273,6 +284,8 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
     del docSupp['-user']
     if 'image' in docSupp:
       del docSupp['image']
+    if '_attachments' in docSupp:
+      del docSupp['_attachments']
     docSupp['_id'] = docMain['identifier'] #ensure id is present in main and supplementary information
     nonlocal keysInSupplemental
     keysInSupplemental = keysInSupplemental.union(docSupp)

@@ -2,14 +2,9 @@
 .venvPasta/
 docs/build/
 __pycache__
-TODO/
-tests/DemonstratorIndentation/
-tests/DataForDemonstration/
+testsComplicated/
+htmlcov/
 
 pasta_eln/test.py
-pasta_eln/temp.py
-TODO*.md
 pastaELN*.py
-
 .coverage
-htmlcov/
