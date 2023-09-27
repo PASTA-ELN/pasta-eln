@@ -171,7 +171,7 @@ def importELN(backend:Backend, elnFileName:str) -> str:
               doc.update( metadataContent[doc['_id']] )
         elif elnName == 'eLabFTW' and elnID.endswith('export-elabftw.json'):
           return 0
-        else:
+        elif fullPath is not None:
           print('**ERROR got a file which I do not understand ',elnID)
           target = open(fullPath, "wb")
           source = elnFile.open(f'{dirName}/{elnID}')
@@ -180,7 +180,7 @@ def importELN(backend:Backend, elnFileName:str) -> str:
       # save
       if elnName == 'PASTA ELN':
         doc['-user'] = '_'
-        if datasetIsFolder:
+        if datasetIsFolder and fullPath is not None:
           fullPath.mkdir(exist_ok=True)
           with open(fullPath/'.id_pastaELN.json', 'w', encoding='utf-8') as fOut:
             fOut.write(json.dumps(doc))
