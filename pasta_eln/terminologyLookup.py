@@ -172,7 +172,7 @@ class TerminologyLookup(QDialog):
     customURL = "http://rest.matportal.org/search" #Replace this with content from config-json
     tasks = [self.wikipediaRequest(searchTerm), self.wikidataRequest(searchTerm), \
               self.olsRequest(searchTerm), self.tibRequest(searchTerm), \
-              self.portalRequest(searchTerm, customURL)]
+              ]#self.portalRequest(searchTerm, customURL) taken out because of API-Key
     responses = await asyncio.gather(*tasks)
 
     for source in ("wp", "wd", "ols", "tib","portal"):
@@ -184,7 +184,7 @@ class TerminologyLookup(QDialog):
       elif source == "wd": self.wikidataSearch(responses[1])
       elif source == "ols": self.olsSearch(responses[2])
       elif source == "tib": self.tibSearch(responses[3])
-      elif source == "portal": self.portalSearch(responses[4])
+      #elif source == "portal": self.portalSearch(responses[4]) taken out because of API-KEY
     return
 
 
@@ -292,6 +292,7 @@ class TerminologyLookup(QDialog):
   def portalSearch(self, response) -> None:
     """
     Request content from any bioportal API
+    Not finished yet TODO
 
     Args:
       searchTerm (str): text to search for
