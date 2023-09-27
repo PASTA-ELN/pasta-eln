@@ -12,6 +12,8 @@ import logging
 from PySide6.QtGui import QAction, QIcon
 from PySide6.QtWidgets import QWidget
 
+from pasta_eln.GUI.ontology_configuration.terminology_lookup_dialog import TerminologyLookupDialog
+
 
 class RetrieveIriAction(QAction):
   """ RetrieveIriAction class which is extended from the QAction class and contains IRI lookup logic"""
@@ -28,6 +30,7 @@ class RetrieveIriAction(QAction):
       text="Lookup IRI online",
       parent=parent)
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
+    self.terminology_lookup_dialog = TerminologyLookupDialog()
     super().triggered.connect(self.retrieve_iris)
 
   def retrieve_iris(self) -> None:
@@ -38,3 +41,4 @@ class RetrieveIriAction(QAction):
     """
     # Needs to be implemented
     self.logger.info("IRI lookup initiated..")
+    self.terminology_lookup_dialog.show()

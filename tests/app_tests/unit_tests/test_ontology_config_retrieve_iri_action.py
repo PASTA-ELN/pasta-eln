@@ -11,6 +11,7 @@ import logging
 from PySide6.QtGui import QAction, QIcon
 
 from pasta_eln.GUI.ontology_configuration.retrieve_iri_action import RetrieveIriAction
+from tests.app_tests.common.fixtures import retrieve_iri_action
 
 
 class TestOntologyConfigRetrieveIriAction(object):
@@ -24,6 +25,9 @@ class TestOntologyConfigRetrieveIriAction(object):
     mock_parent = mocker.patch('PySide6.QtWidgets.QWidget')
     mock_logger = mocker.patch('logging.Logger')
     mock_get_logger = mocker.patch.object(logging, 'getLogger', return_value=mock_logger)
+    mock_dialog = mocker.MagicMock()
+    mock_terminology_lookup_dialog = mocker.patch(
+      'pasta_eln.GUI.ontology_configuration.retrieve_iri_action.TerminologyLookupDialog', return_value=mock_dialog)
     action = RetrieveIriAction(mock_parent)
     mock_base_init.assert_called_once_with(
       icon=mock_icon,
@@ -34,4 +38,16 @@ class TestOntologyConfigRetrieveIriAction(object):
     mock_get_logger.assert_called_once_with(
       'pasta_eln.GUI.ontology_configuration.retrieve_iri_action.RetrieveIriAction')
     mock_icon_from_theme.assert_called_once_with("go-next")
+    mock_terminology_lookup_dialog.assert_called_once_with()
     assert action.logger is mock_logger, "logger should be set"
+    assert action.terminology_lookup_dialog is mock_dialog, "dialog should be set"
+
+  def test_retrieve_iris_invoke_should_show_terminology_lookup_dialog(self,
+                                                                      mocker,
+                                                                      retrieve_iri_action: retrieve_iri_action):
+    mocker.patch.object(QAction, 'triggered', create=True)
+    mock_log_info = mocker.patch.object(retrieve_iri_action.logger, 'info')
+    mock_show = mocker.patch.object(retrieve_iri_action.terminology_lookup_dialog, 'show')
+    assert retrieve_iri_action.retrieve_iris() is None, "Nothing should be returned"
+    mock_log_info.assert_called_once_with("IRI lookup initiated..")
+    mock_show.assert_called_once_with()
