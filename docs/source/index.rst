@@ -27,6 +27,7 @@ Overview
    dodonts
    faqs
    extractors
+   ontology_configuration
    motivation
 
 

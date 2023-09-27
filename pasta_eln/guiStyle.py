@@ -1,8 +1,8 @@
 """ all styling of buttons and other general widgets, some defined colors... """
 from typing import Callable, Optional, Any
 from PySide6.QtWidgets import QPushButton, QLabel, QSizePolicy, QMessageBox, QLayout, QWidget, QMenu, \
-                              QVBoxLayout, QHBoxLayout, QGridLayout, QFormLayout, QComboBox, QTextEdit # pylint: disable=no-name-in-module
-from PySide6.QtGui import QImage, QPixmap, QAction, QKeySequence, QMouseEvent, QFontMetrics  # pylint: disable=no-name-in-module
+                              QVBoxLayout, QHBoxLayout, QGridLayout, QFormLayout, QComboBox # pylint: disable=no-name-in-module
+from PySide6.QtGui import QImage, QPixmap, QAction, QKeySequence, QMouseEvent               # pylint: disable=no-name-in-module
 from PySide6.QtCore import QByteArray, Qt           # pylint: disable=no-name-in-module
 from PySide6.QtSvgWidgets import QSvgWidget         # pylint: disable=no-name-in-module
 import qtawesome as qta
@@ -24,6 +24,10 @@ shortCuts = {'measurement':'m', 'sample':'s', 'procedure':'p', 'instrument':'i',
 def getColor(backend:Backend, color:str) -> str:
   """
   get color from theme
+  - Python access: theme = get_theme(themeName)
+  - For dark-blue:
+     - {'primaryColor': '#448aff', 'primaryLightColor': '#83b9ff', 'secondaryColor': '#232629', 'secondaryLightColor': '#4f5b62',
+     - 'secondaryDarkColor': '#31363b', 'primaryTextColor': '#000000', 'secondaryTextColor': '#ffffff'}
 
   Args:
     backend (Pasta): backend instance
@@ -32,17 +36,9 @@ def getColor(backend:Backend, color:str) -> str:
   Returns:
     str: #123456 color code
   """
-  if hasattr(backend, 'configuration'):
-    themeName = backend.configuration['GUI']['theme']
-  else:
-    themeName = 'none'
-  # theme = get_theme(themeName)
-  # print(theme)
-  ## For dark-blue:
-  ## {'primaryColor': '#448aff', 'primaryLightColor': '#83b9ff', 'secondaryColor': '#232629', 'secondaryLightColor': '#4f5b62',
-  ##  'secondaryDarkColor': '#31363b', 'primaryTextColor': '#000000', 'secondaryTextColor': '#ffffff'}
-  if themeName == 'none':
+  if not hasattr(backend, 'configuration') or backend.configuration['GUI']['theme']=='none':
     return '#000000'
+  themeName = backend.configuration['GUI']['theme']
   return get_theme(f'{themeName}.xml')[f'{color}Color']
 
 
@@ -71,9 +67,9 @@ class TextButton(QPushButton):
     if style:
       self.setStyleSheet(style)
     else:
-      primaryColor = getColor(widget.comm.backend, 'primary')
-      secTextColor = getColor(widget.comm.backend, 'secondaryText')
-      self.setStyleSheet(f'border-width: 0px; background-color: {primaryColor}; color: {secTextColor}')
+      primaryColor   = getColor(widget.comm.backend, 'primary')
+      secondaryColor = getColor(widget.comm.backend, 'secondary')
+      self.setStyleSheet(f'border-width: 0px; background-color: {primaryColor}; color: {secondaryColor}')
     if hide:
       self.hide()
     if iconName:
@@ -134,7 +130,8 @@ class Action(QAction):
     self.setText(label)
     self.triggered.connect(lambda : widget.execute(command))
     if icon:
-      self.setIcon(qta.icon(icon, scale_factor=1))
+      color = 'black' if widget is None else getColor(widget.comm.backend, 'secondaryText')
+      self.setIcon(qta.icon(icon, color=color, scale_factor=1))
     if shortcut is not None:
       self.setShortcut(QKeySequence(shortcut))
     menu.addAction(self)

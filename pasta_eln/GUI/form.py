@@ -1,11 +1,13 @@
 """ New/Edit dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""
-import logging, re, copy
+import logging, re, copy, json
 from enum import Enum
+from pathlib import Path
 from typing import Any, Union
-from PySide6.QtWidgets import QDialog, QWidget, QVBoxLayout, QHBoxLayout, QDialogButtonBox, QSplitter, QSizePolicy # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QLabel, QTextEdit, QPushButton, QPlainTextEdit, QComboBox, QLineEdit # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QDialog, QWidget, QVBoxLayout, QHBoxLayout, QDialogButtonBox, QSplitter  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QLabel, QTextEdit, QPushButton, QPlainTextEdit, QComboBox, QLineEdit     # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QSizePolicy, QMessageBox# pylint: disable=no-name-in-module
 from PySide6.QtGui import QRegularExpressionValidator # pylint: disable=no-name-in-module
-from PySide6.QtCore import QSize, Qt                  # pylint: disable=no-name-in-module
+from PySide6.QtCore import QSize, Qt, QTimer          # pylint: disable=no-name-in-module
 from ..guiStyle import Image, TextButton, IconButton, Label, showMessage, widgetAndLayout
 from ._contextMenu import initContextMenu, executeContextMenu, CommandMenu
 from ..fixedStringsJson import defaultOntologyNode
@@ -44,8 +46,8 @@ class Form(QDialog):
     if 'image' in self.doc:
       width = self.comm.backend.configuration['GUI']['imageSizeDetails'] \
                       if hasattr(self.comm.backend, 'configuration') else 300
-      imageW, imageL = widgetAndLayout('V', mainL)
-      Image(self.doc['image'], imageL, anyDimension=width)
+      imageW, self.imageL = widgetAndLayout('V', mainL)
+      Image(self.doc['image'], self.imageL, anyDimension=width)
       imageW.setContextMenuPolicy(Qt.CustomContextMenu)
       imageW.customContextMenuRequested.connect(lambda pos: initContextMenu(self, pos))
 
@@ -59,7 +61,7 @@ class Form(QDialog):
       ontologyNode = self.db.ontology[self.doc['-type'][0]]['prop']
     else:
       ontologyNode = defaultOntologyNode
-    for item in ontologyNode:
+    for item in [i for group in ontologyNode for i in ontologyNode[group]]:
       if item['name'] not in self.doc and  item['name'][0] not in ['_','-']:
         self.doc[item['name']] = ''
     # Create form
@@ -86,6 +88,7 @@ class Form(QDialog):
         rightSideL.addWidget(getattr(self, f'buttonBarW_{key}'))
         setattr(self, f'textEdit_{key}', QPlainTextEdit(value))
         getattr(self, f'textEdit_{key}').setAccessibleName(key)
+        getattr(self, f'textEdit_{key}').setTabStopDistance(20)
         getattr(self, f'textEdit_{key}').textChanged.connect(self.textChanged)
         setattr(self, f'textShow_{key}', QTextEdit(value))
         getattr(self, f'textShow_{key}').setReadOnly(True)
@@ -122,7 +125,7 @@ class Form(QDialog):
           setattr(self, f'key_{key}', QLineEdit('-- strange content --'))
         self.formL.addRow(QLabel(key.capitalize()), getattr(self, f'key_{key}'))
       elif isinstance(value, str):    #string
-        ontologyItem = [i for i in ontologyNode if i['name']==key]
+        ontologyItem = [i for group in ontologyNode for i in ontologyNode[group] if i['name']==key]
         if len(ontologyItem)==1 and 'list' in ontologyItem[0]:       #choice dropdown
           setattr(self, f'key_{key}', QComboBox())
           if isinstance(ontologyItem[0]['list'], list):            #ontology-defined choices
@@ -168,6 +171,37 @@ class Form(QDialog):
     buttonBox.clicked.connect(self.closeDialog)
     mainL.addWidget(buttonBox)
 
+    if (Path.home()/'.pastaELN.temp').exists():
+      with open(Path.home()/'.pastaELN.temp', 'r', encoding='utf-8') as fTemp:
+        content = json.loads(fTemp.read())
+        for key in self.doc.keys():
+          if key[0] in ['_','-', '#'] or key in ['image','metaVendor','metaUser','shasum'] or \
+             key not in content:
+            continue
+          if key in ['comment','content']:
+            getattr(self, f'textEdit_{key}').setPlainText(content[key])
+          else:
+            getattr(self, f'key_{key}').setText(content[key])
+    self.checkThreadTimer = QTimer(self)
+    self.checkThreadTimer.setInterval(1*60*1000) #5 min
+    self.checkThreadTimer.timeout.connect(self.autosave)
+    self.checkThreadTimer.start()
+
+
+  def autosave(self) -> None:
+    """ Autosave comment to file """
+    content = {'-name': getattr(self, 'key_-name').text().strip()}
+    for key in self.doc.keys():
+      if key[0] in ['_','-', '#'] or key in ['image','metaVendor','metaUser','shasum']:
+        continue
+      if key in ['comment','content']:
+        content[key] = getattr(self, f'textEdit_{key}').toPlainText().strip()
+      else:
+        content[key] = getattr(self, f'key_{key}').text().strip()
+    with open(Path.home()/'.pastaELN.temp', 'w', encoding='utf-8') as fTemp:
+      fTemp.write(json.dumps(content))
+    return
+
 
   def closeDialog(self, btn:QPushButton) -> None:
     """
@@ -176,9 +210,19 @@ class Form(QDialog):
     if self.otherChoices.hasFocus():
       return
     if btn.text().endswith('Cancel'):
+      ret = QMessageBox.critical(self, 'Warning', 'You will loose all entered data. Do you want to save the '+\
+                                 'content for next time?',
+                                 QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
+      if ret==QMessageBox.StandardButton.No:
+        self.checkThreadTimer.stop()
+        if (Path.home()/'.pastaELN.temp').exists():
+          (Path.home()/'.pastaELN.temp').unlink()
       self.reject()
     elif 'Save' in btn.text():
       # create the data that has to be saved
+      self.checkThreadTimer.stop()
+      if (Path.home()/'.pastaELN.temp').exists():
+        (Path.home()/'.pastaELN.temp').unlink()
       if hasattr(self, 'key_-name'):
         self.doc['-name'] = getattr(self, 'key_-name').text().strip()
         if self.doc['-name'] == '':
@@ -309,13 +353,18 @@ class Form(QDialog):
 
   def execute(self, command:list[Any]) -> None:
     """
-    Event if user clicks button or users context menu
+    Event if user clicks button
 
     Args:
       command (list): list of commands
     """
     if isinstance(command[0], CommandMenu):
-      executeContextMenu(self, command)
+      if executeContextMenu(self, command):
+        print('I should repaint the image', len(self.doc))
+        self.imageL.itemAt(0).widget().setParent(None)   # type: ignore
+        width = self.comm.backend.configuration['GUI']['imageSizeDetails'] \
+                if hasattr(self.comm.backend, 'configuration') else 300
+        Image(self.doc['image'], self.imageL, anyDimension=width)
     elif command[0] is Command.BUTTON_BAR:
       if command[1]=='bold':
         getattr(self, f'textEdit_{command[2]}').insertPlainText('**TEXT**')

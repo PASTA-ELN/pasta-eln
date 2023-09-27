@@ -40,7 +40,7 @@ class TreeView(QTreeView):
     Action('Delete item',        self, [Command.DELETE],         context)
     context.addSeparator()
     Action('Minimize/Maximize',  self, [Command.MAX_MIN_HEIGHT], context)
-    Action('Hide',               self, [Command.HIDE],           context)
+    Action('Hide/Show',          self, [Command.HIDE],           context)
     context.addSeparator()
     if not folder:
       Action('Open file with another application', self, [Command.OPEN_EXTERNAL],    context)
@@ -114,7 +114,7 @@ class TreeView(QTreeView):
     elif command[0] is Command.MAX_MIN_HEIGHT:
       item = self.model().itemFromIndex(self.currentIndex())
       if item.text().endswith(' -'):
-        item.setText(item.text()[:34])
+        item.setText(item.text()[:-2])
       else:
         item.setText(f'{item.text()} -')
     elif command[0] is Command.HIDE:

@@ -9,7 +9,7 @@ Extractors
 
 Extractors are little python programs that 'extract' metadata, thumbnails and user-metadata from the raw files. These little programs can be written/adopted by scientists and can be shared. Because of this, the extractors can have any level of data processing complexity, depending on the research goals. In detail, the extractor generates the following data that is automatically included in the ELN:
 
-- the meaningfull thumbnail / image helps the user to curate and annotate the measurement. As such it should be sufficiently big to allow the user to judge the measurement qualitiy.
+- the meaningful thumbnail / image helps the user to curate and annotate the measurement. As such it should be sufficiently big to allow the user to judge the measurement quality.
 - the metadata as determined by the instrument vendor. This data is a typical dictionary of key-value terms that can be hierarchical.
 - the scientist user can add additional metadata that is beneficial for the research project, e.g. outliers in this measurement. This step is a kind of post-processing by the scientist. Also this data is stored as key-value pairs in a dictionary.
 - links to instruments, procedures, .... If all measurements of one type come from one machine or the measurements are based on one measurement procedure, a link to these descriptions can be added, such that it is automatically included in the ELN. Please note that this is optional and greatly depends on the individual lab.
@@ -20,7 +20,7 @@ The list of common extractors available for all PASTA-ELN users includes extract
 
 Tutorial: Extractor explained
 =============================
-A typical Python extractor file starts, as any python file, with a headerline with '"'-marks and the import of the required libraries::
+A typical Python extractor file starts, as any python file, with a headline with '"'-marks and the import of the required libraries::
 
   """extract data from vendor FEI/ThermoFischer """
   import base64
@@ -43,7 +43,7 @@ All extractors have a common interface, which starts with the following python c
       dict: containing image, metaVendor, metaUser, recipe
     """
 
-The first argument is a path to the file as a string.  The recipe allows to guide the extraction: if you create an extractor for datafile.abc this recipe starts typically with 'measurement/abc/' and can be 'measurement/abc/outlier' if it is for outlier identifaction. The last argument is the fileName used for saving; if it is not given, no image is saved. This function is helpful if you create a extractor and want to verify things.
+The first argument is a path to the file as a string.  The recipe allows to guide the extraction: if you create an extractor for datafile.abc this recipe starts typically with 'measurement/abc/' and can be 'measurement/abc/outlier' if it is for outlier identification. The last argument is the fileName used for saving; if it is not given, no image is saved. This function is helpful if you create a extractor and want to verify things.
 
 The main part of the extractor comes next. These lines have to be adopted for the measurement in question and might be adopted by the scientist for the individual preference (The other parts of the extractor are more-or-less identical for all extractors)::
 
@@ -61,7 +61,7 @@ The main part of the extractor comes next. These lines have to be adopted for th
 
 Here we use a ncempy library to get the data, use matplotlib to plot it and calculate some metadata: the number of black and white pixel. We also see how if-else statements are used on recipes to guide the image creation and the creation of user-metadata.
 
-Then a few lines are included, to create a image-file on the harddisk. This is only for testing and not used in the ELN::
+Then a few lines are included, to create a image-file on the hard-disk. This is only for testing and not used in the ELN::
 
     if saveFileName is not None:
       plt.savefig(saveFileName, dpi=150, bbox_inches='tight')
@@ -153,7 +153,7 @@ Python errors should not occur after writing the extractor and are mainly connec
 Metadata error
 --------------
 
-Matadata should be key-value pairs stored in dictionaries: metaVendor={"username":"Elvis", "outlier":4}. As seen, the keys have to be strings, while the values can be strings, numbers (int, float) or even boolean values. You can even create hierarchical structures: metaVendor={"detector":{"calibration a":4, "calibration b":1}, "settings":"high"} where detector is another dictionary. Be careful which values you store. Some instruement vendors store non-latin letters or use different numbers which would lead to failures down the road. Therefore, it is good to always test your dictionary when creating them::
+Metadata should be key-value pairs stored in dictionaries: metaVendor={"username":"Elvis", "outlier":4}. As seen, the keys have to be strings, while the values can be strings, numbers (int, float) or even boolean values. You can even create hierarchical structures: metaVendor={"detector":{"calibration a":4, "calibration b":1}, "settings":"high"} where detector is another dictionary. Be careful which values you store. Some instrument vendors store non-latin letters or use different numbers which would lead to failures down the road. Therefore, it is good to always test your dictionary when creating them::
 
   json.dumps(metaVendor)
 

@@ -5,7 +5,7 @@
 def use(filePath, recipe='', saveFileName=None):
   """
   Args:
-    filePath (string): full path file name
+    filePath (Path): full path file name
     recipe (string): supplied to guide recipes
                      recipe is / separated hierarchical elements parent->child
     saveFileName (string): if given, save the image to this file-name
@@ -19,4 +19,4 @@ def use(filePath, recipe='', saveFileName=None):
   #...
 
   #final return if nothing successful
-  # return {}
+  # return {'recipe': '-', 'metaVendor':{}, 'metaUser':{}}
