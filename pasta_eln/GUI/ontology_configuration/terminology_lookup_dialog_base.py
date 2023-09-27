@@ -24,11 +24,6 @@ class Ui_TerminologyLookupDialogBase(object):
     self.mainVerticalLayout.setObjectName("mainVerticalLayout")
     self.searchBarHorizontalLayout = QtWidgets.QHBoxLayout()
     self.searchBarHorizontalLayout.setObjectName("searchBarHorizontalLayout")
-    self.searchLabel = QtWidgets.QLabel(parent=TerminologyLookupDialogBase)
-    self.searchLabel.setObjectName("searchLabel")
-    self.searchBarHorizontalLayout.addWidget(self.searchLabel)
-    spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Minimum)
-    self.searchBarHorizontalLayout.addItem(spacerItem)
     self.terminologyLineEdit = QtWidgets.QLineEdit(parent=TerminologyLookupDialogBase)
     self.terminologyLineEdit.setClearButtonEnabled(True)
     self.terminologyLineEdit.setObjectName("terminologyLineEdit")
@@ -53,7 +48,6 @@ class Ui_TerminologyLookupDialogBase(object):
   def retranslateUi(self, TerminologyLookupDialogBase):
     _translate = QtCore.QCoreApplication.translate
     TerminologyLookupDialogBase.setWindowTitle(_translate("TerminologyLookupDialogBase", "Terminology Lookup"))
-    self.searchLabel.setText(_translate("TerminologyLookupDialogBase", "Enter Search Term"))
     self.terminologyLineEdit.setPlaceholderText(_translate("TerminologyLookupDialogBase", "\"Search for Definitions in Wikis/Ontologies\""))
     self.terminologySearchPushButton.setText(_translate("TerminologyLookupDialogBase", "Search"))
     self.terminologyListView.setToolTip(_translate("TerminologyLookupDialogBase", "Lists all the retrieved results from the various sites"))
