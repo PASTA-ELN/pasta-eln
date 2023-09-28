@@ -1,0 +1,40 @@
+[
+  {
+    "name": "wikipedia",
+    "url": "https://en.wikipedia.org/w/rest.php/v1/search/page",
+    "search_term_key": "q",
+    "request_params": {
+      "q": "searchTerm",
+      "limit": 5
+    }
+  },
+  {
+    "name": "wikidata",
+    "url": "https://www.wikidata.org/w/api.php",
+    "search_term_key": "search",
+    "request_params": {
+      "search": "searchTerm",
+      "action": "wbsearchentities",
+      "format": "json",
+      "language": "en",
+      "type": "item",
+      "continue": "0"
+    }
+  },
+  {
+    "name": "ontology_lookup_service",
+    "url": "http://www.ebi.ac.uk/ols/api/search",
+    "search_term_key": "q",
+    "request_params": {
+      "q": "searchTerm"
+    }
+  },
+  {
+    "name": "tib_terminology_service",
+    "url": "https://service.tib.eu/ts4tib/api/search",
+    "search_term_key": "q",
+    "request_params": {
+      "q": "searchTerm"
+    }
+  }
+]

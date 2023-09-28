@@ -12,7 +12,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 class Ui_TerminologyLookupDialogBase(object):
   def setupUi(self, TerminologyLookupDialogBase):
     TerminologyLookupDialogBase.setObjectName("TerminologyLookupDialogBase")
-    TerminologyLookupDialogBase.resize(656, 436)
+    TerminologyLookupDialogBase.resize(854, 623)
     self.gridLayout = QtWidgets.QGridLayout(TerminologyLookupDialogBase)
     self.gridLayout.setObjectName("gridLayout")
     self.buttonBox = QtWidgets.QDialogButtonBox(parent=TerminologyLookupDialogBase)
@@ -32,12 +32,22 @@ class Ui_TerminologyLookupDialogBase(object):
     self.terminologySearchPushButton.setObjectName("terminologySearchPushButton")
     self.searchBarHorizontalLayout.addWidget(self.terminologySearchPushButton)
     self.mainVerticalLayout.addLayout(self.searchBarHorizontalLayout)
-    self.listViewHorizontalLayout = QtWidgets.QHBoxLayout()
-    self.listViewHorizontalLayout.setObjectName("listViewHorizontalLayout")
-    self.terminologyListView = QtWidgets.QListView(parent=TerminologyLookupDialogBase)
-    self.terminologyListView.setObjectName("terminologyListView")
-    self.listViewHorizontalLayout.addWidget(self.terminologyListView)
-    self.mainVerticalLayout.addLayout(self.listViewHorizontalLayout)
+    self.scrollAreaHorizontalLayout = QtWidgets.QHBoxLayout()
+    self.scrollAreaHorizontalLayout.setObjectName("scrollAreaHorizontalLayout")
+    self.scrollArea = QtWidgets.QScrollArea(parent=TerminologyLookupDialogBase)
+    self.scrollArea.setWidgetResizable(True)
+    self.scrollArea.setObjectName("scrollArea")
+    self.scrollAreaWidgetContents = QtWidgets.QWidget()
+    self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 830, 535))
+    self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
+    self.gridLayout_2 = QtWidgets.QGridLayout(self.scrollAreaWidgetContents)
+    self.gridLayout_2.setObjectName("gridLayout_2")
+    self.scrollAreaContentsVerticalLayout = QtWidgets.QVBoxLayout()
+    self.scrollAreaContentsVerticalLayout.setObjectName("scrollAreaContentsVerticalLayout")
+    self.gridLayout_2.addLayout(self.scrollAreaContentsVerticalLayout, 0, 0, 1, 1)
+    self.scrollArea.setWidget(self.scrollAreaWidgetContents)
+    self.scrollAreaHorizontalLayout.addWidget(self.scrollArea)
+    self.mainVerticalLayout.addLayout(self.scrollAreaHorizontalLayout)
     self.gridLayout.addLayout(self.mainVerticalLayout, 0, 0, 1, 1)
 
     self.retranslateUi(TerminologyLookupDialogBase)
@@ -50,7 +60,6 @@ class Ui_TerminologyLookupDialogBase(object):
     TerminologyLookupDialogBase.setWindowTitle(_translate("TerminologyLookupDialogBase", "Terminology Lookup"))
     self.terminologyLineEdit.setPlaceholderText(_translate("TerminologyLookupDialogBase", "\"Search for Definitions in Wikis/Ontologies\""))
     self.terminologySearchPushButton.setText(_translate("TerminologyLookupDialogBase", "Search"))
-    self.terminologyListView.setToolTip(_translate("TerminologyLookupDialogBase", "Lists all the retrieved results from the various sites"))
 
 
 if __name__ == "__main__":

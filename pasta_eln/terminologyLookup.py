@@ -58,7 +58,7 @@ class MainWindow(QMainWindow):
         self.outputList.addItems(def_list)
 
   def definition_search(self, searchterms):
-    termDialog = TerminologyLookup(searchterms)
+    termDialog = TerminologyLookupDialog(searchterms)
     if termDialog.exec():
       if termDialog.returnValues:
         return termDialog.returnValues
@@ -66,7 +66,7 @@ class MainWindow(QMainWindow):
         return []
 
 
-class TerminologyLookup(QDialog):
+class TerminologyLookupDialog(QDialog):
   """ written by Raphael: look up terminology servers """
 
   def __init__(self, searchterms: list[str]):

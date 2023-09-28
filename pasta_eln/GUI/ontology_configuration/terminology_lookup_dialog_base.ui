@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>656</width>
-    <height>436</height>
+    <width>854</width>
+    <height>623</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -48,12 +48,27 @@
       </layout>
      </item>
      <item>
-      <layout class="QHBoxLayout" name="listViewHorizontalLayout">
+      <layout class="QHBoxLayout" name="scrollAreaHorizontalLayout">
        <item>
-        <widget class="QListView" name="terminologyListView">
-         <property name="toolTip">
-          <string>Lists all the retrieved results from the various sites</string>
+        <widget class="QScrollArea" name="scrollArea">
+         <property name="widgetResizable">
+          <bool>true</bool>
          </property>
+         <widget class="QWidget" name="scrollAreaWidgetContents">
+          <property name="geometry">
+           <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>830</width>
+            <height>535</height>
+           </rect>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_2">
+           <item row="0" column="0">
+            <layout class="QVBoxLayout" name="scrollAreaContentsVerticalLayout"/>
+           </item>
+          </layout>
+         </widget>
         </widget>
        </item>
       </layout>
