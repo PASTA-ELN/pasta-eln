@@ -196,8 +196,7 @@ def importELN(backend:Backend, elnFileName:str) -> str:
           else:
             logging.warning('  could not read file from zip: %s',part['@id'])
         else:
-          shasum = generic_hash(Path(elnID), forceFile=True)
-          backend.useExtractors(Path(elnID), shasum, doc)
+          backend.useExtractors(Path(elnID), doc['shasum'], doc)
         backend.db.saveDoc(doc)
       else:  # OTHER VENDORS
         if dataType.lower()=='dataset':
