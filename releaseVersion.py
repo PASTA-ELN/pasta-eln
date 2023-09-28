@@ -20,12 +20,24 @@ def getVersion():
   return 'v'+versionList[-1]
 
 
-def updateVersion():
+def newVersion(level=2):
   """
-  update the version number in the different files
+  Create a new version
+
+  Args:
+    level (int): which number of the version to increase 0=mayor,1=minor,2=sub
   """
-  version = getVersion()[1:]
-  print('======== Version '+version+' ========')
+  #create CHANGELOG
+  os.system("github_changelog_generator -u PASTA-ELN -p pasta-eln")
+  #get old version number
+  version = [int(i) for i in getVersion()[1:].split('.')]
+  #create new version number
+  version[level] += 1
+  for i in range(level+1,3):
+    version[i] = 0
+  version = '.'.join([str(i) for i in version])
+  print('======== Version '+version+' =======')
+  #update python files
   filesToUpdate = {'pasta_eln/__init__.py':'__version__ = ', 'docs/source/conf.py':'version = '}
   for path in filesToUpdate:
     with open(path, encoding='utf-8') as fIn:
@@ -38,6 +50,11 @@ def updateVersion():
       fileNew.append(line)
     with open(path,'w', encoding='utf-8') as fOut:
       fOut.write('\n'.join(fileNew)+'\n')
+  #execute git commands
+  os.system(f'git pull')
+  os.system(f'git tag -a v {version} -m "Version {version}; see CHANGELOG for details"')
+  os.system(f'git push')
+  os.system(f'git push origin v{version}')
   return
 
 
@@ -98,8 +115,16 @@ def copyExtractors():
 
 
 if __name__=='__main__':
-  updateVersion()
+  runTests()
   copyExtractors()
   createRequirementsFile()
-  runTests()
-  print("\n================================\nPush this and publish extractors\n================================")
+  #do update
+  if len(sys.argv)==1:
+    print("** Require more arguments for creating new version 'message' 'level (optionally)' ")
+  else:
+    if len(sys.argv)==2:
+      level=2
+    else:
+      level = int(sys.argv[2])
+    newVersion(level)
+    print("\n================================\nPush this and publish extractors\n================================")
