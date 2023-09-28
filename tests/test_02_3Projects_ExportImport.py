@@ -1,12 +1,10 @@
 #!/usr/bin/python3
 """TEST using the FULL set of python-requirements: create 3 projects; simplified form of testTutorialComplex """
-import os, shutil, logging, socket
+import os, shutil, logging
 import warnings
 import unittest
 from pathlib import Path
-
 import pytest
-
 from pasta_eln.backend import Backend
 from pasta_eln.inputOutput import exportELN, importELN
 from pasta_eln.miscTools import outputString
@@ -28,7 +26,7 @@ class TestStringMethods(unittest.TestCase):
     self.dirName = ''
 
   @pytest.mark.skip(
-    reason="Disabled until proper mocking of the backend data is implemented")
+    reason="Disabled for github since cannot create couchdb instance during actions")
   def test_main(self):
     """
     main function
@@ -39,18 +37,24 @@ class TestStringMethods(unittest.TestCase):
     warnings.filterwarnings('ignore', message='invalid escape sequence')
     warnings.filterwarnings('ignore', category=ResourceWarning, module='PIL')
     warnings.filterwarnings('ignore', category=ImportWarning)
-    if socket.gethostname()=='dena':  #SB's computer
-      projectGroup = 'pasta_tutorial'
-    else:
-      projectGroup = 'research'
+    projectGroup = 'research'
     self.be = Backend(projectGroup, initConfig=False)
 
+    # change documents
+    docIDs = [i.split('|')[-1].strip() for i in self.be.output('procedure',True).split('\n')[2:-1]]
+    docIDs +=[i.split('|')[-1].strip() for i in self.be.output('sample',True).split('\n')[2:-1]]
+    for idx,docID in enumerate(docIDs):
+      doc = self.be.db.getDoc(docID)
+      doc['comment'] = f'Test string {idx}'
+      self.be.editData(doc)
+
     # export
-    idProj = self.be.db.getView('viewDocType/x0')[0]['id']
+    viewProj = self.be.db.getView('viewDocType/x0')
+    idProj  = [i['id'] for i in viewProj if i['value'][0]=='Intermetals at interfaces'][0]
     self.fileName = str(Path.home()/'temporary_pastaTest.eln')
     status = exportELN(self.be, idProj, self.fileName)
     print(f'Export to: {self.fileName}\n{status}')
-    self.assertEqual(status[:21],'Success: exported 31 ','Export unsuccessful')
+    self.assertEqual(status[:21],'Success: exported 23 ','Export unsuccessful')
 
     # verify eln
     print('\n\n---------------\nVerification')
@@ -79,8 +83,8 @@ class TestStringMethods(unittest.TestCase):
     fileCount = 0
     for _, _, files in os.walk(self.be.basePath):
       fileCount+=len(files)
-    print('Number of files 25=', fileCount)
-    self.assertEqual(fileCount, 25, 'Not 25 files exist')
+    print('Number of files 16=', fileCount)
+    self.assertEqual(fileCount, 16, 'Not 16 files exist')
     return
 
   def tearDown(self):
