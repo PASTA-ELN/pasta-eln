@@ -40,7 +40,7 @@ class TestStringMethods(unittest.TestCase):
     logging.info('Start 3Projects test')
 
     projectGroup = 'research'
-    self.be = Backend(projectGroup, initConfig=False)
+    self.be = Backend('research', initConfig=False)
     self.dirName = self.be.basePath
     self.be.exit(deleteDB=True)
     shutil.rmtree(self.dirName)

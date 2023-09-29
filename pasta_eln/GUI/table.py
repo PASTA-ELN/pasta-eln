@@ -269,10 +269,11 @@ class Table(QWidget):
           if ret==QMessageBox.StandardButton.Yes:
             doc = self.comm.backend.db.getDoc(docID)
             for branch in doc['-branch']:
-              oldPath = self.comm.backend.basePath/branch['path']
-              if oldPath.exists():
-                newPath = oldPath.parent / f'trash_{oldPath.name}'
-                oldPath.rename(newPath)
+              if branch['path'] is not None:
+                oldPath = self.comm.backend.basePath/branch['path']
+                if oldPath.exists():
+                  newPath = oldPath.parent / f'trash_{oldPath.name}'
+                  oldPath.rename(newPath)
             self.comm.backend.db.remove(docID)
       self.comm.changeTable.emit(self.docType, '')
     elif command[0] is Command.CHANGE_COLUMNS:
