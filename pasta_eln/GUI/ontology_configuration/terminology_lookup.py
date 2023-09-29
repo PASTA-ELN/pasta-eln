@@ -11,7 +11,7 @@ import logging
 import os
 from typing import Any
 
-import aiohttp
+from aiohttp import ClientSession
 
 
 class TerminologyLookup(object):
@@ -21,7 +21,7 @@ class TerminologyLookup(object):
 
   async def get_request(self,
                         base_url: str,
-                        request_params: dict[str, Any] = None) -> str:
+                        request_params: dict[str, Any] = None) -> dict[str, Any]:
     """
     Send get request to the given url and parameters
     Args:
@@ -32,24 +32,24 @@ class TerminologyLookup(object):
 
     """
     self.logger.info("Requesting url: {0}, params: {1}", base_url, request_params)
-    async with aiohttp.ClientSession() as session:
+    async with ClientSession() as session:
       async with session.get(base_url, params=request_params) as response:
-        return await response.text()
+        return json.loads(await response.text())
 
-  async def do_lookup(self, search_term: str) -> str:
-      """
+  async def do_lookup(self, search_term: str) -> list[dict[str, Any]]:
+    """
 
-      Args:
-
-
-      Returns:
-
-      """
-      self.logger.info("Searching for term: %s", search_term)
-      current_path = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
-      lookup_data = json.load(open(os.path.join(current_path, 'terminology_lookup_config.json')))
-      for item in lookup_data:
-        item['request_params'][item['search_term_key']] = search_term
-        test = await self.get_request(item['url'], item['request_params'])
+    Args:
 
 
+    Returns:
+
+    """
+    self.logger.info("Searching for term: %s", search_term)
+    current_path = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
+    lookup_data = json.load(open(os.path.join(current_path, 'terminology_lookup_config.json')))
+    results = list[dict[str, Any]]()
+    for lookup_service in lookup_data:
+      lookup_service['request_params'][lookup_service['search_term_key']] = search_term
+      results.append(await self.get_request(lookup_service['url'], lookup_service['request_params']))
+    return results
