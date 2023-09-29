@@ -6,6 +6,7 @@
 #  Filename: test_ontology_config_terminology_lookup_dialog.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
+
 import logging
 
 from PySide6 import QtCore

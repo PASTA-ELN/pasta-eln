@@ -6,13 +6,14 @@
 #  Filename: test_ontology_config_terminology_lookup.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
+
 import asyncio
 import logging
 
 import pytest
 from aiohttp import ClientSession
 
-from pasta_eln.GUI.ontology_configuration.terminology_lookup import TerminologyLookup
+from pasta_eln.GUI.ontology_configuration.terminology_lookup_service import TerminologyLookupService
 from tests.app_tests.common.fixtures import terminology_lookup_mock
 
 pytest_plugins = ('pytest_asyncio',)
@@ -24,8 +25,8 @@ class TestOntologyConfigTerminologyLookup(object):
                                                            mocker):
     mock_logger = mocker.patch('logging.Logger')
     mock_get_logger = mocker.patch.object(logging, 'getLogger', return_value=mock_logger)
-    dialog = TerminologyLookup()
-    mock_get_logger.assert_called_once_with('pasta_eln.GUI.ontology_configuration.terminology_lookup.TerminologyLookup')
+    dialog = TerminologyLookupService()
+    mock_get_logger.assert_called_once_with('pasta_eln.GUI.ontology_configuration.terminology_lookup_service.TerminologyLookupService')
     assert dialog.logger is mock_logger
 
   @pytest.mark.parametrize(
@@ -54,7 +55,7 @@ class TestOntologyConfigTerminologyLookup(object):
     mock_json_load = mocker.patch('json.loads', return_value=response_json)
     assert await terminology_lookup_mock.get_request(base_url,
                                                      request_params) == response_json, "Valid results must be returned"
-    mock_log_info.assert_any_call("Requesting url: {0}, params: {1}", base_url,
+    mock_log_info.assert_any_call("Requesting url: %s, params: %s", base_url,
                                   request_params)
     mock_client_session_constructor.assert_called_once_with()
     mock_client_session_get_response.assert_called_once_with(base_url, params=request_params)

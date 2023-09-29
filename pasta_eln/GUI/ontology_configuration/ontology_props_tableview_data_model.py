@@ -7,8 +7,9 @@
 #  Filename: ontology_props_tableview_data_model.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
+
 import logging
-from typing import Union, Any
+from typing import Any, Union
 
 from PySide6.QtCore import QModelIndex, QPersistentModelIndex, Qt
 from PySide6.QtWidgets import QWidget

@@ -30,7 +30,7 @@ from pasta_eln.GUI.ontology_configuration.ontology_tableview_data_model import O
 from pasta_eln.GUI.ontology_configuration.reorder_column_delegate import ReorderColumnDelegate
 from pasta_eln.GUI.ontology_configuration.required_column_delegate import RequiredColumnDelegate
 from pasta_eln.GUI.ontology_configuration.retrieve_iri_action import RetrieveIriAction
-from pasta_eln.GUI.ontology_configuration.terminology_lookup import TerminologyLookup
+from pasta_eln.GUI.ontology_configuration.terminology_lookup_service import TerminologyLookupService
 from pasta_eln.GUI.ontology_configuration.terminology_lookup_dialog import TerminologyLookupDialog
 from pasta_eln.GUI.ontology_configuration.terminology_lookup_dialog_base import Ui_TerminologyLookupDialogBase
 from pasta_eln.database import Database
@@ -58,9 +58,9 @@ def terminology_lookup_dialog_mock(mocker) -> TerminologyLookupDialog:
   return TerminologyLookupDialog()
 
 @fixture()
-def terminology_lookup_mock(mocker) -> TerminologyLookup:
+def terminology_lookup_mock(mocker) -> TerminologyLookupService:
   mocker.patch('pasta_eln.GUI.ontology_configuration.create_type_dialog_extended.logging.getLogger')
-  return TerminologyLookup()
+  return TerminologyLookupService()
 
 
 @fixture()

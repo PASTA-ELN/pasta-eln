@@ -6,6 +6,7 @@
 #  Filename: test_ontology_config_iri_column_delegate.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
+
 import logging
 
 from PySide6.QtWidgets import QStyledItemDelegate, QLineEdit

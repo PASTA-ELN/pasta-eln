@@ -7,6 +7,7 @@
 #  Filename: ontology_configuration_extended.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
+
 import copy
 import logging
 import sys
@@ -14,7 +15,7 @@ import webbrowser
 from typing import Any
 
 from PySide6 import QtWidgets
-from PySide6.QtWidgets import QApplication, QMessageBox, QLineEdit
+from PySide6.QtWidgets import QApplication, QLineEdit, QMessageBox
 from cloudant.document import Document
 
 from .create_type_dialog_extended import CreateTypeDialog
@@ -23,9 +24,9 @@ from .ontology_config_generic_exception import OntologyConfigGenericException
 from .ontology_config_key_not_found_exception import \
   OntologyConfigKeyNotFoundException
 from .ontology_configuration import Ui_OntologyConfigurationBaseForm
-from .ontology_configuration_constants import PROPS_TABLE_DELETE_COLUMN_INDEX, PROPS_TABLE_REORDER_COLUMN_INDEX, \
-  PROPS_TABLE_REQUIRED_COLUMN_INDEX, ATTACHMENT_TABLE_DELETE_COLUMN_INDEX, ATTACHMENT_TABLE_REORDER_COLUMN_INDEX, \
-  ONTOLOGY_HELP_PAGE_URL, PROPS_TABLE_IRI_COLUMN_INDEX
+from .ontology_configuration_constants import ATTACHMENT_TABLE_DELETE_COLUMN_INDEX, \
+  ATTACHMENT_TABLE_REORDER_COLUMN_INDEX, ONTOLOGY_HELP_PAGE_URL, PROPS_TABLE_DELETE_COLUMN_INDEX, \
+  PROPS_TABLE_IRI_COLUMN_INDEX, PROPS_TABLE_REORDER_COLUMN_INDEX, PROPS_TABLE_REQUIRED_COLUMN_INDEX
 from .ontology_document_null_exception import OntologyDocumentNullException
 from .ontology_props_tableview_data_model import OntologyPropsTableViewModel
 from .reorder_column_delegate import ReorderColumnDelegate
@@ -33,9 +34,9 @@ from .required_column_delegate import RequiredColumnDelegate
 from .delete_column_delegate import DeleteColumnDelegate
 from .iri_column_delegate import IriColumnDelegate
 from .retrieve_iri_action import RetrieveIriAction
-from .utility_functions import adjust_ontology_data_to_v3, show_message, \
-  get_next_possible_structural_level_label, get_types_for_display, adapt_type, generate_empty_type, \
-  generate_required_properties, check_ontology_types, get_missing_props_message
+from .utility_functions import adapt_type, adjust_ontology_data_to_v3, check_ontology_types, generate_empty_type, \
+  generate_required_properties, get_missing_props_message, get_next_possible_structural_level_label, \
+  get_types_for_display, show_message
 from ...database import Database
 
 

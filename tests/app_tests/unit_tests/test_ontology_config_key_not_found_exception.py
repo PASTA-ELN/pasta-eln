@@ -6,6 +6,7 @@
 #  Filename: test_ontology_config_document_null_exception.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
+
 import pytest
 
 from tests.app_tests.common.fixtures import key_not_found_exception

@@ -7,11 +7,11 @@
 #  Filename: ontology_attachments_tableview_data_model.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
-# import logging
-import logging
-from typing import Union, Any
 
-from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt, QPersistentModelIndex, Slot
+import logging
+from typing import Any, Union
+
+from PySide6.QtCore import QAbstractTableModel, QModelIndex, QPersistentModelIndex, Qt, Slot
 from PySide6.QtWidgets import QWidget
 
 
