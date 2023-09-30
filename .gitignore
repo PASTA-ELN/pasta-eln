@@ -3,9 +3,8 @@
 docs/build/
 __pycache__
 testsComplicated/
+htmlcov/
 
 pasta_eln/test.py
 pastaELN*.py
-
 .coverage
-htmlcov/
