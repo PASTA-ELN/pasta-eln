@@ -1,0 +1,110 @@
+[
+  {
+    "name": "wikipedia",
+    "search_term": "name",
+    "results": [
+      {
+        "iri": "https://en.wikipedia.org/w/index.php?curid=164226",
+        "information": "Word or term used for identification by an external observer"
+      },
+      {
+        "iri": "https://en.wikipedia.org/w/index.php?curid=21673",
+        "information": "Most generalized variety of the English language as spoken in United States and Canada"
+      },
+      {
+        "iri": "https://en.wikipedia.org/w/index.php?curid=483205",
+        "information": "Generic top-level domain"
+      },
+      {
+        "iri": "https://en.wikipedia.org/w/index.php?curid=72243",
+        "information": "Part of a naming scheme for individuals, used in many cultures worldwide"
+      }
+    ]
+  },
+  {
+    "name": "wikidata",
+    "search_term": "name",
+    "results": [
+      {
+        "iri": "http://www.wikidata.org/entity/Q82799",
+        "information": "word or phrase used for identification"
+      },
+      {
+        "iri": "http://www.wikidata.org/entity/Q41588186",
+        "information": "family name"
+      },
+      {
+        "iri": "http://www.wikidata.org/entity/Q134121",
+        "information": "capital of Wallonia, Belgium"
+      },
+      {
+        "iri": "http://www.wikidata.org/entity/Q107608526",
+        "information": "professional association"
+      },
+      {
+        "iri": "http://www.wikidata.org/entity/Q6961497",
+        "information": "single by the American rock band Goo Goo Dolls"
+      },
+      {
+        "iri": "http://www.wikidata.org/entity/Q103854771",
+        "information": "anime television series episode of Noragami"
+      },
+      {
+        "iri": "http://www.wikidata.org/entity/Q13873817",
+        "information": "episode of Law & Order: Special Victims Unit"
+      }
+    ]
+  },
+  {
+    "name": "ontology_lookup_service",
+    "search_term": "name",
+    "results": [
+      {
+        "iri": "http://purl.obolibrary.org/obo/NCIT_C42614",
+        "information": "The words or language units by which a thing is known."
+      },
+      {
+        "iri": "http://purl.obolibrary.org/obo/NCIT_C42614",
+        "information": "The words or language units by which a thing is known."
+      },
+      {
+        "iri": "https://w3id.org/reproduceme#name",
+        "information": "The name of a thing."
+      },
+      {
+        "iri": "http://edamontology.org/data_2099",
+        "information": "A name of a thing, which need not necessarily uniquely identify it."
+      },
+      {
+        "iri": "http://semanticscience.org/resource/SIO_000116",
+        "information": "A name is a label used to identify an entity."
+      },
+      {
+        "iri": "http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C42614",
+        "information": "The words or language units by which a thing is known."
+      },
+      {
+        "iri": "https://w3id.org/linkml/name",
+        "information": "The unique name of the element within the context of the schema. Name is combined with the default prefix to form the globally unique subject of the target class."
+      }
+    ]
+  },
+  {
+    "name": "tib_terminology_service",
+    "search_term": "name",
+    "results": [
+      {
+        "iri": "http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C42614",
+        "information": "The words or language units by which a thing is known."
+      },
+      {
+        "iri": "http://bimerr.iot.linkeddata.es/def/building#name",
+        "information": "Name of the element in the ifc file."
+      },
+      {
+        "iri": "http://www.w3id.org/ecsel-dr-ORG#name",
+        "information": "The name of the project"
+      }
+    ]
+  }
+]

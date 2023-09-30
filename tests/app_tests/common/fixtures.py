@@ -30,12 +30,12 @@ from pasta_eln.GUI.ontology_configuration.ontology_tableview_data_model import O
 from pasta_eln.GUI.ontology_configuration.reorder_column_delegate import ReorderColumnDelegate
 from pasta_eln.GUI.ontology_configuration.required_column_delegate import RequiredColumnDelegate
 from pasta_eln.GUI.ontology_configuration.retrieve_iri_action import RetrieveIriAction
-from pasta_eln.GUI.ontology_configuration.terminology_lookup_service import TerminologyLookupService
 from pasta_eln.GUI.ontology_configuration.terminology_lookup_dialog import TerminologyLookupDialog
 from pasta_eln.GUI.ontology_configuration.terminology_lookup_dialog_base import Ui_TerminologyLookupDialogBase
+from pasta_eln.GUI.ontology_configuration.terminology_lookup_service import TerminologyLookupService
 from pasta_eln.database import Database
-from pasta_eln.gui import mainGUI, MainWindow
-from tests.app_tests.common.test_utils import get_ontology_document
+from pasta_eln.gui import MainWindow, mainGUI
+from tests.app_tests.common.test_utils import read_json
 
 
 @fixture()
@@ -56,6 +56,7 @@ def terminology_lookup_dialog_mock(mocker) -> TerminologyLookupDialog:
   mocker.patch('PySide6.QtWidgets.QDialog')
   mocker.patch.object(Ui_TerminologyLookupDialogBase, 'setupUi')
   return TerminologyLookupDialog()
+
 
 @fixture()
 def terminology_lookup_mock(mocker) -> TerminologyLookupService:
@@ -160,7 +161,7 @@ def iri_delegate() -> IriColumnDelegate:
 @fixture()
 def ontology_doc_mock(mocker) -> Document:
   mock_doc = mocker.patch('cloudant.document.Document')
-  mock_doc_content = get_ontology_document('ontology_document.json')
+  mock_doc_content = read_json('ontology_document.json')
   mocker.patch.object(mock_doc, "__len__",
                       lambda x, y: len(mock_doc_content))
   mock_doc.__getitem__.side_effect = mock_doc_content.__getitem__
@@ -177,6 +178,41 @@ def ontology_doc_mock(mocker) -> Document:
   mock_doc.types_list.side_effect = mocker.MagicMock(return_value=[data for data in mock_doc_content
                                                                    if type(mock_doc_content[data]) is dict])
   return mock_doc
+
+
+@fixture()
+def terminology_lookup_config_mock() -> dict:
+  return read_json('../../../pasta_eln/GUI/ontology_configuration/terminology_lookup_config.json')
+
+
+@fixture()
+def retrieved_iri_results_pasta_mock() -> dict:
+  return read_json('retrieved_iri_results_pasta.json')
+
+
+@fixture()
+def iri_lookup_web_results_pasta_mock() -> dict:
+  return read_json('iri_lookup_web_results_pasta.json')
+
+
+@fixture()
+def retrieved_iri_results_science_mock() -> dict:
+  return read_json('retrieved_iri_results_science.json')
+
+
+@fixture()
+def iri_lookup_web_results_science_mock() -> dict:
+  return read_json('iri_lookup_web_results_science.json')
+
+
+@fixture()
+def retrieved_iri_results_name_mock() -> dict:
+  return read_json('retrieved_iri_results_name.json')
+
+
+@fixture()
+def iri_lookup_web_results_name_mock() -> dict:
+  return read_json('iri_lookup_web_results_name.json')
 
 
 @fixture()
