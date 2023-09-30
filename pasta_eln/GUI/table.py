@@ -264,8 +264,8 @@ class Table(QWidget):
               'Warning',
               f'Are you sure you want to delete this data: {item.text()}?',
               QMessageBox.StandardButton.Yes,
-              QMessageBox.StandardButton.No
-              )
+              QMessageBox.StandardButton.No,
+            )
           if ret==QMessageBox.StandardButton.Yes:
             doc = self.comm.backend.db.getDoc(docID)
             for branch in doc['-branch']:
