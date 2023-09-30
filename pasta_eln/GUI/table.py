@@ -259,9 +259,13 @@ class Table(QWidget):
       for row in range(self.models[-1].rowCount()):
         item, docID = self.itemFromRow(row)
         if item.checkState() == Qt.CheckState.Checked:
-          ret = QMessageBox.critical(self, 'Warning',
+          ret = QMessageBox.critical(
+              self,
+              'Warning',
               f'Are you sure you want to delete this data: {item.text()}?',
-              QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.No)
+              QMessageBox.StandardButton.Yes,
+              QMessageBox.StandardButton.No
+              )
           if ret==QMessageBox.StandardButton.Yes:
             doc = self.comm.backend.db.getDoc(docID)
             for branch in doc['-branch']:
