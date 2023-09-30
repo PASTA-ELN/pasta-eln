@@ -43,7 +43,7 @@ class ConfigurationSetup(QWidget):
     self.progress1.hide()
     screen1L.addWidget(self.progress1)
 
-    _, footerL = widgetAndLayout('H', screen1L)
+    _, footerL = widgetAndLayout('H', screen1L, 's')
     self.button1 = TextButton('Start analyse and repair', self, [Command.ANALYSE], footerL)
     self.button2 = TextButton('Finished',                 self, [Command.FINISHED], footerL)
     self.button2.hide()
