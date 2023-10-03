@@ -145,10 +145,11 @@ class MainWindow(QMainWindow):
       showMessage(self, 'Finished', status, 'Information')
     elif command[0] is Command.IMPORT:
       fileName = QFileDialog.getOpenFileName(self, 'Load data from .eln file', str(Path.home()), '*.eln')[0]
-      status = importELN(self.comm.backend, fileName)
-      showMessage(self, 'Finished', status, 'Information')
-      self.comm.changeSidebar.emit('redraw')
-      self.comm.changeTable.emit('x0', '')
+      if fileName != '':
+        status = importELN(self.comm.backend, fileName)
+        showMessage(self, 'Finished', status, 'Information')
+        self.comm.changeSidebar.emit('redraw')
+        self.comm.changeTable.emit('x0', '')
     elif command[0] is Command.EXIT:
       self.close()
     # view menu
