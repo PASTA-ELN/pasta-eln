@@ -56,7 +56,7 @@ def newVersion(level=2):
       fOut.write('\n'.join(fileNew)+'\n')
   #execute git commands
   os.system(f'git pull')
-  os.system(f'git tag -a v {version} -m "Version {version}; see CHANGELOG for details"')
+  os.system(f'git tag -a v{version} -m "Version {version}; see CHANGELOG for details"')
   os.system(f'git push')
   os.system(f'git push origin v{version}')
   return
