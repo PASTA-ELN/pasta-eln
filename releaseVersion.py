@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 import sys, os, subprocess, shutil
+from pathlib import Path
 from unittest import main as mainTest
 import configparser
 
@@ -27,8 +28,11 @@ def newVersion(level=2):
   Args:
     level (int): which number of the version to increase 0=mayor,1=minor,2=sub
   """
+  print('Create new version...')
   #create CHANGELOG
-  os.system("github_changelog_generator -u PASTA-ELN -p pasta-eln")
+  with open(Path.home()/'.ssh'/'github.token', 'r', encoding='utf-8') as fIn:
+    token = fIn.read().strip()
+  os.system("github_changelog_generator -u PASTA-ELN -p pasta-eln -t "+token)
   #get old version number
   version = [int(i) for i in getVersion()[1:].split('.')]
   #create new version number
@@ -62,6 +66,7 @@ def createRequirementsFile():
   """
   Create a requirements.txt file from the setup.cfg information
   """
+  print('Start creating requirement files')
   config = configparser.ConfigParser()
   config.read('setup.cfg')
   requirements = config['options']['install_requires'].split('\n')
@@ -86,6 +91,7 @@ def runTests():
 
   Cannot be an action, since dependencies are partly private
   """
+  print('Start running tests')
   tests = [i for i in os.listdir('tests') if i.endswith('.py') and i.startswith('test_')]
   for fileI in sorted(tests):
     result = subprocess.run(['pytest','-s','--no-skip','tests/'+fileI], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
@@ -105,6 +111,7 @@ def copyExtractors():
   """
   Copy extractors from main location to distribution
   """
+  print('Start copying extractors')
   basePath = 'pasta_eln/Extractors'
   skipFiles= ['extractor_csv.py', 'extractor_jpg.py']
   for fileI in os.listdir(basePath):
@@ -120,11 +127,8 @@ if __name__=='__main__':
   createRequirementsFile()
   #do update
   if len(sys.argv)==1:
-    print("** Require more arguments for creating new version 'message' 'level (optionally)' ")
+    level=2
   else:
-    if len(sys.argv)==2:
-      level=2
-    else:
-      level = int(sys.argv[2])
-    newVersion(level)
-    print("\n================================\nPush this and publish extractors\n================================")
+    level = int(sys.argv[1])
+  newVersion(level)
+  print("\n================================\nPush this and publish extractors\n================================")
