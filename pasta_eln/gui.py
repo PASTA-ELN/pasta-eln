@@ -141,8 +141,9 @@ class MainWindow(QMainWindow):
         showMessage(self, 'Error', 'You have to open a project to export', 'Warning')
         return
       fileName = QFileDialog.getSaveFileName(self, 'Save data into .eln file', str(Path.home()), '*.eln')[0]
-      status = exportELN(self.comm.backend, self.comm.projectID, fileName)
-      showMessage(self, 'Finished', status, 'Information')
+      if fileName != '':
+        status = exportELN(self.comm.backend, self.comm.projectID, fileName)
+        showMessage(self, 'Finished', status, 'Information')
     elif command[0] is Command.IMPORT:
       fileName = QFileDialog.getOpenFileName(self, 'Load data from .eln file', str(Path.home()), '*.eln')[0]
       if fileName != '':
