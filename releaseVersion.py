@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 import sys, os, subprocess, shutil
+from pathlib import Path
 from unittest import main as mainTest
 import configparser
 
@@ -20,12 +21,27 @@ def getVersion():
   return 'v'+versionList[-1]
 
 
-def updateVersion():
+def newVersion(level=2):
   """
-  update the version number in the different files
+  Create a new version
+
+  Args:
+    level (int): which number of the version to increase 0=mayor,1=minor,2=sub
   """
-  version = getVersion()[1:]
-  print('======== Version '+version+' ========')
+  print('Create new version...')
+  #create CHANGELOG
+  with open(Path.home()/'.ssh'/'github.token', 'r', encoding='utf-8') as fIn:
+    token = fIn.read().strip()
+  os.system("github_changelog_generator -u PASTA-ELN -p pasta-eln -t "+token)
+  #get old version number
+  version = [int(i) for i in getVersion()[1:].split('.')]
+  #create new version number
+  version[level] += 1
+  for i in range(level+1,3):
+    version[i] = 0
+  version = '.'.join([str(i) for i in version])
+  print('======== Version '+version+' =======')
+  #update python files
   filesToUpdate = {'pasta_eln/__init__.py':'__version__ = ', 'docs/source/conf.py':'version = '}
   for path in filesToUpdate:
     with open(path, encoding='utf-8') as fIn:
@@ -38,6 +54,11 @@ def updateVersion():
       fileNew.append(line)
     with open(path,'w', encoding='utf-8') as fOut:
       fOut.write('\n'.join(fileNew)+'\n')
+  #execute git commands
+  os.system(f'git pull')
+  os.system(f'git tag -a v{version} -m "Version {version}; see CHANGELOG for details"')
+  os.system(f'git push')
+  os.system(f'git push origin v{version}')
   return
 
 
@@ -45,6 +66,7 @@ def createRequirementsFile():
   """
   Create a requirements.txt file from the setup.cfg information
   """
+  print('Start creating requirement files')
   config = configparser.ConfigParser()
   config.read('setup.cfg')
   requirements = config['options']['install_requires'].split('\n')
@@ -69,6 +91,7 @@ def runTests():
 
   Cannot be an action, since dependencies are partly private
   """
+  print('Start running tests')
   tests = [i for i in os.listdir('tests') if i.endswith('.py') and i.startswith('test_')]
   for fileI in sorted(tests):
     result = subprocess.run(['pytest','-s','--no-skip','tests/'+fileI], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
@@ -88,6 +111,7 @@ def copyExtractors():
   """
   Copy extractors from main location to distribution
   """
+  print('Start copying extractors')
   basePath = 'pasta_eln/Extractors'
   skipFiles= ['extractor_csv.py', 'extractor_jpg.py']
   for fileI in os.listdir(basePath):
@@ -98,8 +122,13 @@ def copyExtractors():
 
 
 if __name__=='__main__':
-  updateVersion()
+  runTests()
   copyExtractors()
   createRequirementsFile()
-  runTests()
+  #do update
+  if len(sys.argv)==1:
+    level=2
+  else:
+    level = int(sys.argv[1])
+  newVersion(level)
   print("\n================================\nPush this and publish extractors\n================================")

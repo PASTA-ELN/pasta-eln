@@ -7,9 +7,9 @@ if [ "$(diff -q ../Extractors/ pasta_eln/Extractors/ |grep differ |grep extracto
 else
   echo "All is correct: extractors match"
 fi
-# Run pylint
-exec pylint pasta_eln
-exec pylint tests
+# Run pylint: run as github action
+# exec pylint pasta_eln
+# exec pylint tests
 # Run mypy
 exec mypy pasta_eln
 # Test document creation
