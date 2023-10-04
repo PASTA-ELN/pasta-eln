@@ -32,6 +32,7 @@ class Project(QWidget):
     self.showAll= False
     self.foldedAll = False
     self.btnAddSubfolder:Optional[TextButton] = None
+    self.lineSep = 20
 
 
   def projHeader(self) -> None:
@@ -79,19 +80,26 @@ class Project(QWidget):
     self.infoW, infoL         = widgetAndLayout('V', self.mainL)
     tags = ', '.join([f'#{i}' for i in self.docProj['-tags']]) if '-tags' in self.docProj else ''
     infoL.addWidget(QLabel(f'Tags: {tags}'))
+    countLines = 0
+    flagCommentInline = True
     for key,value in self.docProj.items():
-      if key[0] in ['_','-'] or (key=='comment' and '\n' in value):
+      if key[0] in ['_','-'] or (key=='comment' and ('\n' in value or len(value)>80)):
+        flagCommentInline = False
         continue
       if 'from ' in key:
         continue
-      infoL.addWidget(QLabel(f'{key}: {str(value)}'))
-    if 'comment' in self.docProj and '\n' in self.docProj['comment']:     #format nicely
-      # comment = QTextEdit()
-      # comment.setMarkdown(self.docProj['comment'])
-      # comment.setReadOnly(True)
-      # comment.setFixedHeight(200)
-      # infoL.addWidget(comment)
-      infoL.addWidget(QLabel(self.docProj['comment']))
+      infoL.addWidget(QLabel(f'{key.title()}: {str(value)}'))
+      countLines += 1
+    if not flagCommentInline:     #format as label and QTextEdit
+      commentW, commentL         = widgetAndLayout('H', infoL, 's')
+      commentL.addWidget(QLabel('Comment:'), alignment=Qt.AlignTop)
+      comment = QTextEdit()
+      comment.setMarkdown(self.docProj['comment'])
+      comment.setReadOnly(True)
+      comment.setFixedHeight(200)
+      commentL.addWidget(comment)
+      self.infoW.setMaximumHeight(210+countLines*self.lineSep )
+      commentW.setMaximumHeight(210+countLines*self.lineSep )
     return
 
 
