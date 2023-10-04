@@ -10,14 +10,12 @@
 
 import logging
 import textwrap
-import uuid
 from asyncio import get_event_loop
 from os import getcwd
 from os.path import dirname, join, realpath
 from typing import Callable
 
 from PySide6 import QtCore, QtWidgets
-from PySide6.QtCore import QByteArray
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QCheckBox, QHBoxLayout, QLabel, QMessageBox, QWidget
 
@@ -29,7 +27,14 @@ class TerminologyLookupDialog(Ui_TerminologyLookupDialogBase):
   """ Terminology Lookup Dialog class which handles the IRI lookup online """
 
   def __init__(self,
-               accepted_callback: Callable[[], None]) -> None:
+               default_lookup_term: str | None = None,
+               accepted_callback: Callable[[], None] = None) -> None:  # type: ignore[assignment]
+    """
+    Initializes the dialog
+    Args:
+      default_lookup_term (str): Default search term to be used by the terminology lookup service.
+      accepted_callback (Callable[[], None]): Accepted button parent callback.
+    """
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
     self.accepted_callback: Callable[[], None] = accepted_callback
     # Set up the UI elements
@@ -58,6 +63,7 @@ class TerminologyLookupDialog(Ui_TerminologyLookupDialogBase):
     self.buttonBox.accepted.connect(self.set_selected_iris)
     self.buttonBox.accepted.connect(self.accepted_callback)
     self.terminologySearchPushButton.clicked.connect(self.terminology_search_button_clicked)
+    self.terminologyLineEdit.setText(default_lookup_term)
 
   def show(self) -> None:
     """

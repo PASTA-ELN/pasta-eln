@@ -12,9 +12,10 @@ import logging
 from typing import Union
 
 from PySide6.QtCore import QModelIndex, QPersistentModelIndex
+from PySide6.QtGui import Qt
 from PySide6.QtWidgets import QLineEdit, QStyleOptionViewItem, QStyledItemDelegate, QWidget
 
-from pasta_eln.GUI.ontology_configuration.retrieve_iri_action import RetrieveIriAction
+from pasta_eln.GUI.ontology_configuration.lookup_iri_action import LookupIriAction
 
 
 class IriColumnDelegate(QStyledItemDelegate):
@@ -42,8 +43,13 @@ class IriColumnDelegate(QStyledItemDelegate):
 
     """
     line_edit = QLineEdit(parent)
+    lookup_term = None
+    if index.isValid():
+      # The first column value is taken as the default lookup term
+      lookup_term = index.siblingAtColumn(0).data(Qt.UserRole)  # type: ignore[union-attr, arg-type]
     line_edit.addAction(
-      RetrieveIriAction(parent=line_edit),
+      LookupIriAction(cell_index=index,
+                      lookup_term=lookup_term),
       QLineEdit.TrailingPosition)
     line_edit.setClearButtonEnabled(True)
     return line_edit

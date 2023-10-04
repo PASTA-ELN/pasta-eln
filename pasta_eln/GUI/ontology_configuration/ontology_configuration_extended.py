@@ -33,7 +33,7 @@ from .reorder_column_delegate import ReorderColumnDelegate
 from .required_column_delegate import RequiredColumnDelegate
 from .delete_column_delegate import DeleteColumnDelegate
 from .iri_column_delegate import IriColumnDelegate
-from .retrieve_iri_action import RetrieveIriAction
+from .lookup_iri_action import LookupIriAction
 from .utility_functions import adapt_type, adjust_ontology_data_to_v3, check_ontology_types, generate_empty_type, \
   generate_required_properties, get_missing_props_message, get_next_possible_structural_level_label, \
   get_types_for_display, show_message
@@ -104,7 +104,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     for column_index, width in self.props_table_data_model.column_widths.items():
       self.typePropsTableView.setColumnWidth(column_index, width)
     # When resized, only stretch the query column of typePropsTableView
-    self.typePropsTableView.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+    self.typePropsTableView.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
 
     self.typeAttachmentsTableView.setItemDelegateForColumn(
       ATTACHMENT_TABLE_DELETE_COLUMN_INDEX,
@@ -128,11 +128,6 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     # Hide the attachment table and the add attachment button initially
     self.addAttachmentPushButton.hide()
     self.typeAttachmentsTableView.hide()
-
-    # Set up search icon for the IRI line edit
-    self.typeIriLineEdit.addAction(
-      RetrieveIriAction(parent=self.typeIriLineEdit),
-      QLineEdit.TrailingPosition)
 
     self.load_ontology_data()
 
@@ -173,6 +168,23 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
       self.propsCategoryComboBox.addItems(list(self.selected_type_properties.keys())
                                           if self.selected_type_properties else [])
       self.propsCategoryComboBox.setCurrentIndex(0)
+
+  def set_iri_lookup_action(self,
+                            lookup_term: str) -> None:
+    """
+    Sets the IRI lookup action for the IRI line edit
+    Args:
+      lookup_term (str): Default lookup term to be used by the lookup service
+
+    Returns: Nothing
+
+    """
+    for act in self.typeIriLineEdit.actions():
+      if isinstance(act, LookupIriAction):
+        act.deleteLater()
+    self.typeIriLineEdit.addAction(
+      LookupIriAction(parent_line_edit=self.typeIriLineEdit, lookup_term=lookup_term),
+      QLineEdit.TrailingPosition)
 
   def category_combo_box_changed(self,
                                  new_selected_prop_category: Any) -> None:
@@ -243,6 +255,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     current_type = adapt_type(current_type)
     if modified_type_label is not None and current_type in self.ontology_types:
       self.ontology_types.get(current_type)["label"] = modified_type_label
+      self.set_iri_lookup_action(modified_type_label)
 
   def update_type_iri(self,
                       modified_iri: str) -> None:

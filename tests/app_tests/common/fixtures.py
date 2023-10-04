@@ -19,6 +19,7 @@ from pytestqt.qtbot import QtBot
 from pasta_eln.GUI.ontology_configuration.create_type_dialog_extended import CreateTypeDialog
 from pasta_eln.GUI.ontology_configuration.delete_column_delegate import DeleteColumnDelegate
 from pasta_eln.GUI.ontology_configuration.iri_column_delegate import IriColumnDelegate
+from pasta_eln.GUI.ontology_configuration.lookup_iri_action import LookupIriAction
 from pasta_eln.GUI.ontology_configuration.ontology_attachments_tableview_data_model import \
   OntologyAttachmentsTableViewModel
 from pasta_eln.GUI.ontology_configuration.ontology_config_key_not_found_exception import \
@@ -29,7 +30,6 @@ from pasta_eln.GUI.ontology_configuration.ontology_props_tableview_data_model im
 from pasta_eln.GUI.ontology_configuration.ontology_tableview_data_model import OntologyTableViewModel
 from pasta_eln.GUI.ontology_configuration.reorder_column_delegate import ReorderColumnDelegate
 from pasta_eln.GUI.ontology_configuration.required_column_delegate import RequiredColumnDelegate
-from pasta_eln.GUI.ontology_configuration.retrieve_iri_action import RetrieveIriAction
 from pasta_eln.GUI.ontology_configuration.terminology_lookup_dialog import TerminologyLookupDialog
 from pasta_eln.GUI.ontology_configuration.terminology_lookup_dialog_base import Ui_TerminologyLookupDialogBase
 from pasta_eln.GUI.ontology_configuration.terminology_lookup_service import TerminologyLookupService
@@ -64,6 +64,8 @@ def terminology_lookup_dialog_mock(mocker) -> TerminologyLookupDialog:
                       create=True)
   mocker.patch.object(Ui_TerminologyLookupDialogBase, 'buttonBox',
                       create=True)
+  mocker.patch.object(Ui_TerminologyLookupDialogBase, 'terminologyLineEdit',
+                      create=True)
   mocker.patch('pasta_eln.GUI.ontology_configuration.terminology_lookup_dialog.QPixmap')
   return TerminologyLookupDialog(mocker.MagicMock())
 
@@ -84,7 +86,7 @@ def configuration_extended(mocker) -> OntologyConfigurationForm:
   mocker.patch('pasta_eln.GUI.ontology_configuration.create_type_dialog_extended.logging.getLogger')
   mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration.Ui_OntologyConfigurationBaseForm.setupUi')
   mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.adjust_ontology_data_to_v3')
-  mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.RetrieveIriAction')
+  mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.LookupIriAction')
   mocker.patch.object(QDialog, '__new__')
   mocker.patch.object(OntologyPropsTableViewModel, '__new__')
   mocker.patch.object(OntologyAttachmentsTableViewModel, '__new__')
@@ -266,14 +268,14 @@ def attachments_column_names():
 
 
 @fixture()
-def retrieve_iri_action(mocker) -> RetrieveIriAction:
+def lookup_iri_action(mocker) -> LookupIriAction:
   mocker.patch.object(QAction, '__init__')
   mocker.patch.object(QAction, 'triggered', create=True)
   mock_icon = mocker.patch('PySide6.QtGui.QIcon')
   mocker.patch.object(QIcon, 'fromTheme', return_value=mock_icon)
   mock_parent = mocker.patch('PySide6.QtWidgets.QWidget')
-  mocker.patch('pasta_eln.GUI.ontology_configuration.retrieve_iri_action.TerminologyLookupDialog')
-  return RetrieveIriAction(mock_parent)
+  mocker.patch('pasta_eln.GUI.ontology_configuration.lookup_iri_action.TerminologyLookupDialog')
+  return LookupIriAction(mock_parent)
 
 
 @fixture(scope="module")

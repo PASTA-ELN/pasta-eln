@@ -34,6 +34,7 @@ class TestOntologyConfigTerminologyLookupDialog(object):
     mock_q_dialog_constructor = mocker.patch('PySide6.QtWidgets.QDialog', return_value=mock_dialog)
     mock_base_setup = mocker.patch.object(Ui_TerminologyLookupDialogBase, 'setupUi')
     mocker.patch.object(Ui_TerminologyLookupDialogBase, 'terminologySearchPushButton', create=True)
+    mocker.patch.object(Ui_TerminologyLookupDialogBase, 'terminologyLineEdit', create=True)
 
     mock_error_console_push_button = mocker.patch.object(Ui_TerminologyLookupDialogBase, 'errorConsolePushButton',
                                                          create=True)
@@ -70,7 +71,7 @@ class TestOntologyConfigTerminologyLookupDialog(object):
                                     return_value=mock_realpath)
     mock_accepted_callback = mocker.MagicMock()
 
-    dialog = TerminologyLookupDialog(mock_accepted_callback)
+    dialog = TerminologyLookupDialog("default", mock_accepted_callback)
     mock_q_dialog_constructor.assert_called_once_with()
     mock_base_setup.assert_called_once_with(mock_dialog)
     mock_get_logger.assert_called_once_with(
@@ -115,6 +116,7 @@ class TestOntologyConfigTerminologyLookupDialog(object):
     mock_accepted_connect.assert_any_call(mock_accepted_callback)
     dialog.terminologySearchPushButton.clicked.connect.assert_any_call(dialog.terminology_search_button_clicked)
     assert dialog.selected_iris == [], "selected_iris should be initialized to empty list"
+    dialog.terminologyLineEdit.setText.assert_called_once_with("default")
 
   def test_terminology_lookup_dialog_show_should_do_as_expected(self,
                                                                 mocker,
