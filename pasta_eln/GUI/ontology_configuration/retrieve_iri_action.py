@@ -48,4 +48,4 @@ class RetrieveIriAction(QAction):
     Returns: Nothing
     """
     self.logger.info("Accepted IRIs: %s", self.terminology_lookup_dialog.selected_iris)
-    self.parent().setText(" ".join(self.terminology_lookup_dialog.selected_iris)) # type: ignore[attr-defined]
+    self.parent().setText(" ".join(self.terminology_lookup_dialog.selected_iris))
