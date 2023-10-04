@@ -46,7 +46,7 @@ class IriColumnDelegate(QStyledItemDelegate):
     lookup_term = None
     if index.isValid():
       # The first column value is taken as the default lookup term
-      lookup_term = index.siblingAtColumn(0).data(Qt.UserRole)  # type: ignore[union-attr, arg-type]
+      lookup_term = index.siblingAtColumn(0).data(Qt.UserRole)  # type: ignore[arg-type]
     line_edit.addAction(
       LookupIriAction(cell_index=index,
                       lookup_term=lookup_term),
