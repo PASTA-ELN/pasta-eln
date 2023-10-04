@@ -79,7 +79,7 @@ class TestOntologyConfigTerminologyLookupDialog(object):
     assert dialog.logger is mock_logger, "logger should be set"
 
     assert mock_os_path_dir_name.call_args.args[0].endswith(
-      'pasta-eln/src/pasta_eln/GUI/ontology_configuration/terminology_lookup_dialog.py'), \
+      'pasta_eln/GUI/ontology_configuration/terminology_lookup_dialog.py'), \
       "directory name should contain pasta-eln/src/pasta_eln/GUI/ontology_configuration/terminology_lookup_dialog.py"
     mock_os_path_get_cwd.assert_called_once_with()
     mock_os_path_join.assert_any_call(mock_cd, mock_dir_name)
