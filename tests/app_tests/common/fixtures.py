@@ -55,7 +55,17 @@ def create_type_dialog_mock(mocker) -> CreateTypeDialog:
 def terminology_lookup_dialog_mock(mocker) -> TerminologyLookupDialog:
   mocker.patch('PySide6.QtWidgets.QDialog')
   mocker.patch.object(Ui_TerminologyLookupDialogBase, 'setupUi')
-  return TerminologyLookupDialog()
+  mocker.patch.object(Ui_TerminologyLookupDialogBase, 'terminologySearchPushButton', create=True)
+  mocker.patch.object(Ui_TerminologyLookupDialogBase, 'errorConsolePushButton',
+                      create=True)
+  mocker.patch.object(Ui_TerminologyLookupDialogBase, 'errorConsoleTextEdit',
+                      create=True)
+  mocker.patch.object(Ui_TerminologyLookupDialogBase, 'searchProgressBar',
+                      create=True)
+  mocker.patch.object(Ui_TerminologyLookupDialogBase, 'buttonBox',
+                      create=True)
+  mocker.patch('pasta_eln.GUI.ontology_configuration.terminology_lookup_dialog.QPixmap')
+  return TerminologyLookupDialog(mocker.MagicMock())
 
 
 @fixture()

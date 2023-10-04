@@ -131,7 +131,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
 
     # Set up search icon for the IRI line edit
     self.typeIriLineEdit.addAction(
-      RetrieveIriAction(parent=self.instance),
+      RetrieveIriAction(parent=self.typeIriLineEdit),
       QLineEdit.TrailingPosition)
 
     self.load_ontology_data()

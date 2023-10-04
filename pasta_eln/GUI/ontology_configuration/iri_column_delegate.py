@@ -11,8 +11,8 @@
 import logging
 from typing import Union
 
-from PySide6.QtCore import QPersistentModelIndex, QModelIndex
-from PySide6.QtWidgets import QStyledItemDelegate, QStyleOptionViewItem, QWidget, QLineEdit
+from PySide6.QtCore import QModelIndex, QPersistentModelIndex
+from PySide6.QtWidgets import QLineEdit, QStyleOptionViewItem, QStyledItemDelegate, QWidget
 
 from pasta_eln.GUI.ontology_configuration.retrieve_iri_action import RetrieveIriAction
 
@@ -43,7 +43,7 @@ class IriColumnDelegate(QStyledItemDelegate):
     """
     line_edit = QLineEdit(parent)
     line_edit.addAction(
-      RetrieveIriAction(parent=parent),
+      RetrieveIriAction(parent=line_edit),
       QLineEdit.TrailingPosition)
     line_edit.setClearButtonEnabled(True)
     return line_edit

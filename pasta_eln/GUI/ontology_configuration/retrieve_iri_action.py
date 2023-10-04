@@ -30,15 +30,22 @@ class RetrieveIriAction(QAction):
       text="Lookup IRI online",
       parent=parent)
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
-    self.terminology_lookup_dialog = TerminologyLookupDialog()
-    super().triggered.connect(self.retrieve_iris)
+    self.terminology_lookup_dialog = TerminologyLookupDialog(self.terminology_lookup_accepted_callback)
+    super().triggered.connect(self.show_terminology_lookup_dialog)
 
-  def retrieve_iris(self) -> None:
+  def show_terminology_lookup_dialog(self) -> None:
     """
     Retrieves the IRI using terminology lookup widget
     Returns: Nothing
 
     """
-    # Needs to be implemented
-    self.logger.info("IRI lookup initiated..")
+    self.logger.info("Lookup dialog shown..")
     self.terminology_lookup_dialog.show()
+
+  def terminology_lookup_accepted_callback(self) -> None:
+    """
+    Callback for the terminology lookup accepted button
+    Returns: Nothing
+    """
+    self.logger.info("Accepted IRIs: %s", self.terminology_lookup_dialog.selected_iris)
+    self.parent().setText(" ".join(self.terminology_lookup_dialog.selected_iris)) # type: ignore[attr-defined]

@@ -7,25 +7,57 @@
 #  Filename: terminology_lookup_dialog.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
-import logging
-import uuid
 
-from PySide6 import QtWidgets, QtCore
+import logging
+import textwrap
+import uuid
+from asyncio import get_event_loop
+from os import getcwd
+from os.path import dirname, join, realpath
+from typing import Callable
+
+from PySide6 import QtCore, QtWidgets
 from PySide6.QtCore import QByteArray
 from PySide6.QtGui import QPixmap
-from PySide6.QtWidgets import QWidget, QLabel, QHBoxLayout, QCheckBox
+from PySide6.QtWidgets import QCheckBox, QHBoxLayout, QLabel, QMessageBox, QWidget
 
 from pasta_eln.GUI.ontology_configuration.terminology_lookup_dialog_base import Ui_TerminologyLookupDialogBase
+from pasta_eln.GUI.ontology_configuration.terminology_lookup_service import TerminologyLookupService
 
 
 class TerminologyLookupDialog(Ui_TerminologyLookupDialogBase):
   """ Terminology Lookup Dialog class which handles the IRI lookup online """
 
-  def __init__(self) -> None:
+  def __init__(self,
+               accepted_callback: Callable[[], None]) -> None:
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
+    self.accepted_callback: Callable[[], None] = accepted_callback
     # Set up the UI elements
     self.instance = QtWidgets.QDialog()
     super().setupUi(self.instance)
+    self.terminology_lookup_service = TerminologyLookupService()
+
+    # User selected urls
+    self.selected_iris: list[str] = []
+
+    # Load the icon images for lookup portals
+    current_path = realpath(join(getcwd(), dirname(__file__)))
+    resources_path = join(current_path, "../../Resources/Icons")
+    self.icons_pixmap = {
+      "wikipedia": QPixmap(join(resources_path, "wikipedia.png")).scaledToWidth(50),
+      "wikidata": QPixmap(join(resources_path, "wikidata.png")).scaledToWidth(50),
+      "ontology_lookup_service": QPixmap(join(resources_path, "ols.png")).scaledToWidth(50),
+      "tib_terminology_service": QPixmap(join(resources_path, "tib.png")).scaledToWidth(50),
+    }
+
+    # Hide the error console and connect the slot
+    self.errorConsoleTextEdit.hide()
+    self.errorConsolePushButton.clicked.connect(lambda:
+                                                self.errorConsoleTextEdit
+                                                .setVisible(not self.errorConsoleTextEdit.isVisible()))
+    self.buttonBox.accepted.connect(self.set_selected_iris)
+    self.buttonBox.accepted.connect(self.accepted_callback)
+    self.terminologySearchPushButton.clicked.connect(self.terminology_search_button_clicked)
 
   def show(self) -> None:
     """
@@ -39,7 +71,8 @@ class TerminologyLookupDialog(Ui_TerminologyLookupDialogBase):
 
   def add_scroll_area_entry(self,
                             pixmap: QPixmap,
-                            checkbox_text: str) -> None:
+                            checkbox_text: str,
+                            checkbox_tooltip: str) -> None:
     """
     Adds an entry to the scroll area of terminology lookup dialog.
     Entry consists of a checkbox and a label
@@ -47,6 +80,7 @@ class TerminologyLookupDialog(Ui_TerminologyLookupDialogBase):
     Args:
       pixmap (QPixmap): Icon image to be added
       checkbox_text (str): Text to be added to the checkbox
+      checkbox_tooltip (str): Tooltip for the checkbox
 
     Returns: Nothing
 
@@ -54,7 +88,9 @@ class TerminologyLookupDialog(Ui_TerminologyLookupDialogBase):
     self.logger.info("Adding entry to scroll area, checkbox_text: %s", checkbox_text)
     # Set up the layout for the entry with check box and label
     entry_layout = QHBoxLayout()
-    entry_layout.addWidget(QCheckBox(checkbox_text))
+    check_box = QCheckBox(checkbox_text)
+    check_box.setToolTip(checkbox_tooltip)
+    entry_layout.addWidget(check_box)
     entry_layout.addStretch(1)
     entry_layout.addWidget(QLabel(pixmap=pixmap))  # type: ignore[call-overload]
 
@@ -75,19 +111,58 @@ class TerminologyLookupDialog(Ui_TerminologyLookupDialogBase):
     for widget_pos in reversed(range(self.scrollAreaContentsVerticalLayout.count())):
       self.scrollAreaContentsVerticalLayout.itemAt(widget_pos).widget().setParent(None)
 
+  def set_selected_iris(self) -> None:
+    """
+      Gets the IRIs from the checked QCheckBoxes of the scroll area and appends them to the list of selected IRIs
+      Tooltip of the checked QCheckBox holds the IRI information
+    """
+    self.selected_iris.clear()
+    for widget_pos in range(self.scrollAreaContentsVerticalLayout.count()):
+      check_box = self.scrollAreaContentsVerticalLayout.itemAt(widget_pos).widget().findChildren(QCheckBox)[0]
+      if check_box.isChecked():
+        self.selected_iris.append(check_box.toolTip())
+    self.logger.info("Set IRIs: %s", self.selected_iris)
 
-if __name__ == "__main__":
-  import sys
+  def terminology_search_button_clicked(self) -> None:
+    """
+      terminologySearchPushButton Button click event handler which initiates
+      the terminology search, retrieve the results and updated the scroll area
+    Returns: Nothing
 
-  app = QtWidgets.QApplication(sys.argv)
-  TerminologyLookupDialogBase = TerminologyLookupDialog()
-  TerminologyLookupDialogBase.show()
-  tibPixmap = QPixmap()
-  baTIB = QByteArray.fromBase64(
-    b'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')
-  tibPixmap.loadFromData(baTIB)
-  for i in range(12):
-    TerminologyLookupDialogBase.add_scroll_area_entry(tibPixmap,
-                                                      f"Test {uuid.uuid4()}{uuid.uuid4()}{uuid.uuid4()}{uuid.uuid4()}")
-  TerminologyLookupDialogBase.terminologySearchPushButton.clicked.connect(TerminologyLookupDialogBase.clear_scroll_area)
-  sys.exit(app.exec())
+    """
+    self.reset_ui()
+    search_term = self.terminologyLineEdit.text()
+    if not search_term or search_term.isspace():
+      self.logger.warning("Enter non null search term!")
+      QMessageBox.warning(self.instance, "Error", "Enter non null search term!")
+      return
+
+    self.logger.info("Terminology search initiated for term: %s..", search_term)
+    self.searchProgressBar.setValue(5)
+    event_loop = get_event_loop()
+    lookup_results = event_loop.run_until_complete(
+      self.terminology_lookup_service.do_lookup(search_term))
+    if lookup_results:
+      for service in lookup_results:
+        for result in service['results']:
+          self.add_scroll_area_entry(self.icons_pixmap[service['name']],
+                                     textwrap.fill(result['information'], width=100, max_lines=2),
+                                     result['iri'])
+          self.searchProgressBar.setValue((100 - self.searchProgressBar.value()) / 2)
+    if self.terminology_lookup_service.session_request_errors:
+      self.errorConsoleTextEdit.setText('\n'.join(self.terminology_lookup_service.session_request_errors))
+      self.errorConsoleTextEdit.setVisible(True)
+    self.searchProgressBar.setValue(100)
+
+  def reset_ui(self) -> None:
+    """
+    Resets the UI elements for the dialog
+    Returns:
+
+    """
+    self.logger.info("Resetting UI..")
+    self.searchProgressBar.setValue(0)
+    self.clear_scroll_area()
+    self.errorConsoleTextEdit.clear()
+    self.errorConsoleTextEdit.setVisible(False)
+    self.selected_iris.clear()

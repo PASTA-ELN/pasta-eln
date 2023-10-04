@@ -6,15 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>854</width>
-    <height>623</height>
+    <width>900</width>
+    <height>767</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Terminology Lookup</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="1" column="0">
+   <item row="2" column="0">
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
@@ -25,7 +25,7 @@
     </widget>
    </item>
    <item row="0" column="0">
-    <layout class="QVBoxLayout" name="mainVerticalLayout">
+    <layout class="QVBoxLayout" name="mainVerticalLayout" stretch="0,0,0,0">
      <item>
       <layout class="QHBoxLayout" name="searchBarHorizontalLayout">
        <item>
@@ -40,12 +40,31 @@
        </item>
        <item>
         <widget class="QPushButton" name="terminologySearchPushButton">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>150</width>
+           <height>0</height>
+          </size>
+         </property>
          <property name="text">
           <string>Search</string>
          </property>
         </widget>
        </item>
       </layout>
+     </item>
+     <item>
+      <widget class="QProgressBar" name="searchProgressBar">
+       <property name="value">
+        <number>0</number>
+       </property>
+      </widget>
      </item>
      <item>
       <layout class="QHBoxLayout" name="scrollAreaHorizontalLayout">
@@ -59,8 +78,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>830</width>
-            <height>535</height>
+            <width>876</width>
+            <height>415</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_2">
@@ -69,6 +88,62 @@
            </item>
           </layout>
          </widget>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QVBoxLayout" name="errorConsoleVerticalLayout">
+       <item>
+        <layout class="QHBoxLayout" name="errorButtonsHorizontalLayout">
+         <item>
+          <widget class="QPushButton" name="errorConsolePushButton">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>150</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Show/Hide Errors</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QTextEdit" name="errorConsoleTextEdit">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
         </widget>
        </item>
       </layout>

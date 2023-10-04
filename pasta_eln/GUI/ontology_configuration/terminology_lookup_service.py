@@ -8,15 +8,17 @@
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
-import asyncio
 import logging
+from asyncio import CancelledError, IncompleteReadError, InvalidStateError, LimitOverrunError, \
+  TimeoutError as AsyncTimeoutError
 from functools import reduce
-from json import load, loads
+from json import JSONDecodeError, load, loads
 from os import getcwd
 from os.path import dirname, join, realpath
 from typing import Any
 
 from aiohttp import ClientSession
+from aiohttp.client_exceptions import ClientConnectorError, InvalidURL
 
 
 class TerminologyLookupService:
@@ -28,7 +30,8 @@ class TerminologyLookupService:
 
   def __init__(self) -> None:
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
-    self.session_timeout = 10  # Timeout in seconds for the requests send to the lookup services
+    self.session_timeout = 5  # Timeout in seconds for the requests send to the lookup services
+    self.session_request_errors: list[str] = []  # List of request errors
 
   async def get_request(self,
                         base_url: str,
@@ -49,15 +52,50 @@ class TerminologyLookupService:
                                params=request_params,
                                timeout=self.session_timeout) as response:
           return loads(await response.text())
-      except asyncio.exceptions.TimeoutError as e:
-        self.logger.error("Client session timeout for url (%s) with error: %s",
-                          base_url,
-                          e)
+      except AsyncTimeoutError as e:
+        error = f"Client session request timeout for url ({base_url}) with error: {e}"
+        self.logger.error(error)
+        self.session_request_errors.append(error)
+        return {}
+      except CancelledError as e:
+        error = f"Client session request cancelled for url ({base_url}) with error: {e}"
+        self.logger.error(error)
+        self.session_request_errors.append(error)
+        return {}
+      except InvalidStateError as e:
+        error = f"Client session request in invalid state for url ({base_url}) with error: {e}"
+        self.logger.error(error)
+        self.session_request_errors.append(error)
+        return {}
+      except IncompleteReadError as e:
+        error = f"Client session request incomplete read for url ({base_url}) with error: {e}"
+        self.logger.error(error)
+        self.session_request_errors.append(error)
+        return {}
+      except LimitOverrunError as e:
+        error = f"Client session request limit overrun for url ({base_url}) with error: {e}"
+        self.logger.error(error)
+        self.session_request_errors.append(error)
         return {}
       except TypeError as e:
-        self.logger.error("Client session type error for url (%s) with error: %s",
-                          base_url,
-                          e)
+        error = f"Client session type error for url ({base_url}) with error: {e}"
+        self.logger.error(error)
+        self.session_request_errors.append(error)
+        return {}
+      except ClientConnectorError as e:
+        error = f"ClientConnectorError for url ({base_url}) with error: {e}"
+        self.logger.error(error)
+        self.session_request_errors.append(error)
+        return {}
+      except InvalidURL as e:
+        error = f"Client session InvalidURL for url ({base_url}) with error: {e}"
+        self.logger.error(error)
+        self.session_request_errors.append(error)
+        return {}
+      except JSONDecodeError as e:
+        error = f"Client session JSONDecodeError for url ({base_url}) with error: {e}"
+        self.logger.error(error)
+        self.session_request_errors.append(error)
         return {}
 
   async def do_lookup(self,
@@ -68,9 +106,14 @@ class TerminologyLookupService:
       search_term (str): Search term used for the lookup
 
     Returns: List of IRI information for the search term crawled online using the services in the terminology_lookup_config.json
+    In case of error, an empty list is returned and session_request_errors is updated with failures
 
     """
+    if not search_term or search_term.isspace():
+      self.logger.error("Invalid null search term!")
+      return []
     self.logger.info("Searching for term: %s", search_term)
+    self.session_request_errors.clear()  # Clear the list of request errors before the lookup
     current_path = realpath(join(getcwd(), dirname(__file__)))
     results = list[dict[str, Any]]()
     with open(join(current_path, "terminology_lookup_config.json"), encoding="utf-8") as config_file:
@@ -80,7 +123,8 @@ class TerminologyLookupService:
         result = self.parse_web_result(search_term,
                                        web_result,
                                        lookup_service)
-        results.append(result)
+        if result:
+          results.append(result)
     return results
 
   def parse_web_result(self,
@@ -97,32 +141,43 @@ class TerminologyLookupService:
     Returns (dict[str, Any]): Dictionary containing the name, search term and results which is a list of dict(iri, information)
 
     """
+    if (not search_term or
+        not web_result or
+        not lookup_service):
+      self.logger.error("Invalid search term or web result or lookup service!")
+      return {}
     self.logger.info("Searching term: %s for online service: %s",
                      search_term,
-                     lookup_service.get('name'))
+                     lookup_service['name'])
     retrieved_results: dict[str, Any] = {
-      "name": lookup_service.get('name'),
+      "name": lookup_service['name'],
       "search_term": search_term,
       "results": []
     }
+
+    # Get mandatory attributes
+    result_keys = lookup_service['search_criteria']['results_keys']
+    desc_keys = lookup_service['search_criteria']['description_keys']
+    id_key = lookup_service['search_criteria']['id_key']
+
+    # Get non mandatory attributes
     duplicate_ontology_names = lookup_service.get('duplicate_ontology_names')
-    result_keys = lookup_service.get('search_criteria').get('results_keys')  # type: ignore[union-attr]
-    desc_keys = lookup_service.get('search_criteria').get('description_keys')  # type: ignore[union-attr]
-    id_key = lookup_service.get('search_criteria').get('id_key')  # type: ignore[union-attr]
-    duplicate_ontology_key = lookup_service.get('search_criteria').get('ontology_name_key')  # type: ignore[union-attr]
-    results = reduce(lambda d, key: d.get(key) if d else None, result_keys,  # type: ignore[arg-type,return-value]
+    skip_desc = lookup_service.get('skip_description')
+    duplicate_ontology_key = lookup_service['search_criteria'].get('ontology_name_key')
+
+    results = reduce(lambda d, key: d.get(key) if d else None, result_keys,  # type: ignore[arg-type, return-value]
                      web_result)
     for item in results if results else []:
       description = reduce(lambda d, key: d.get(key) if d else None, desc_keys, item)  # type: ignore[attr-defined]
-      is_duplicate = (item.get(duplicate_ontology_key)  # type: ignore[attr-defined,operator]
+      is_duplicate = (item[duplicate_ontology_key]  # type: ignore[operator]
                       in duplicate_ontology_names) if duplicate_ontology_key else False
       if (description
-          and description != lookup_service.get('skip_description')
+          and description != skip_desc
           and not is_duplicate):
         retrieved_results["results"].append(
           {
-            "iri": f"{lookup_service.get('iri_prefix')}{item.get(id_key)}"  # type: ignore[attr-defined]
-            if lookup_service.get('iri_prefix') else item.get(id_key),  # type: ignore[attr-defined]
+            "iri": f"{lookup_service['iri_prefix']}{item[id_key]}"
+            if lookup_service.get('iri_prefix') else item[id_key],
             "information": ",".join(description) if isinstance(description, list)
             else description
           }
