@@ -92,7 +92,7 @@ class Project(QWidget):
       countLines += 1
     if not flagCommentInline:     #format as label and QTextEdit
       commentW, commentL         = widgetAndLayout('H', infoL, 's')
-      commentL.addWidget(QLabel('Comment:'), alignment=Qt.AlignTop)
+      commentL.addWidget(QLabel('Comment:'), alignment=Qt.AlignTop)   # type: ignore[call-arg]
       comment = QTextEdit()
       comment.setMarkdown(self.docProj['comment'])
       comment.setReadOnly(True)
