@@ -196,7 +196,9 @@ class Form(QDialog):
         continue
       if key in ['comment','content']:
         content[key] = getattr(self, f'textEdit_{key}').toPlainText().strip()
-      else:
+      elif isinstance(getattr(self, f'key_{key}'), QComboBox):
+        content[key] = getattr(self, f'key_{key}').currentText().strip()
+      else:                                            #all text fields
         content[key] = getattr(self, f'key_{key}').text().strip()
     with open(Path.home()/'.pastaELN.temp', 'w', encoding='utf-8') as fTemp:
       fTemp.write(json.dumps(content))
