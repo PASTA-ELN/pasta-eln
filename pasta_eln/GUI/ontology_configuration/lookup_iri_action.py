@@ -11,8 +11,9 @@ import logging
 from typing import Union
 
 from PySide6.QtCore import QModelIndex, QPersistentModelIndex, Qt
-from PySide6.QtGui import QAction, QIcon
+from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QLineEdit, QWidget
+from qtawesome import icon
 
 from pasta_eln.GUI.ontology_configuration.terminology_lookup_dialog import TerminologyLookupDialog
 
@@ -32,7 +33,7 @@ class LookupIriAction(QAction):
       cell_index (Union[QModelIndex, QPersistentModelIndex]): Cell index of the table view whose value is to be updated when lookup results are available
     """
     super().__init__(
-      icon=QIcon.fromTheme("go-next"),
+      icon=icon('fa.angle-right', color='black', scale_factor=1),
       text="Lookup IRI online",
       parent=parent_line_edit)
     self.parent_line_edit: QLineEdit | None = parent_line_edit

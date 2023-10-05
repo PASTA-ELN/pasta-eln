@@ -10,7 +10,7 @@
 import logging
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QAction, QIcon
+from PySide6.QtGui import QAction
 
 from pasta_eln.GUI.ontology_configuration.lookup_iri_action import LookupIriAction
 from tests.app_tests.common.fixtures import lookup_iri_action
@@ -22,8 +22,7 @@ class TestOntologyConfigLookupIriAction(object):
     mock_base_init = mocker.patch.object(QAction, '__init__')
     mocker.patch.object(QAction, 'triggered', create=True)
     mock_base_triggered_connect = mocker.patch.object(QAction.triggered, 'connect', create=True)
-    mock_icon = mocker.patch('PySide6.QtGui.QIcon')
-    mock_icon_from_theme = mocker.patch.object(QIcon, 'fromTheme', return_value=mock_icon)
+    mock_icon = mocker.patch('pasta_eln.GUI.ontology_configuration.lookup_iri_action.icon')
     mock_parent = mocker.patch('PySide6.QtWidgets.QLineEdit')
     mock_cell_index = mocker.patch('PySide6.QtCore.QModelIndex')
     mock_logger = mocker.patch('logging.Logger')
@@ -33,14 +32,14 @@ class TestOntologyConfigLookupIriAction(object):
       'pasta_eln.GUI.ontology_configuration.lookup_iri_action.TerminologyLookupDialog', return_value=mock_dialog)
     action = LookupIriAction(lookup_term="default", parent_line_edit=mock_parent, cell_index=mock_cell_index)
     mock_base_init.assert_called_once_with(
-      icon=mock_icon,
+      icon=mock_icon.return_value,
       text="Lookup IRI online",
       parent=mock_parent
     )
     mock_base_triggered_connect.assert_called_once_with(action.show_terminology_lookup_dialog)
     mock_get_logger.assert_called_once_with(
       'pasta_eln.GUI.ontology_configuration.lookup_iri_action.LookupIriAction')
-    mock_icon_from_theme.assert_called_once_with("go-next")
+    mock_icon.assert_called_once_with('fa.angle-right', color='black', scale_factor=1)
     mock_terminology_lookup_dialog.assert_called_once_with("default", action.terminology_lookup_accepted_callback)
     assert action.logger is mock_logger, "logger should be set"
     assert action.terminology_lookup_dialog is mock_dialog, "dialog should be set"
