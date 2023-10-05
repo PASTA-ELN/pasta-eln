@@ -84,7 +84,7 @@ class Form(QDialog):
           IconButton(f'fa5s.{name}', self, [Command.BUTTON_BAR, name, key], buttonBarL, tooltip)
         for i in range(1,4):
           icon = f'mdi.format-header-{str(i)}'
-          IconButton(icon, self, [Command.BUTTON_BAR, 'heading{str(i)}', key], buttonBarL, f'Heading {str(i)}')
+          IconButton(icon, self, [Command.BUTTON_BAR, f'heading{str(i)}', key], buttonBarL, f'Heading {str(i)}')
         rightSideL.addWidget(getattr(self, f'buttonBarW_{key}'))
         setattr(self, f'textEdit_{key}', QPlainTextEdit(value))
         getattr(self, f'textEdit_{key}').setAccessibleName(key)
@@ -375,7 +375,7 @@ class Form(QDialog):
       elif command[1]=='list-ol':
         getattr(self, f'textEdit_{command[2]}').insertPlainText('\n1. item 1\n1. item 2')
       elif command[1].startswith('heading'):
-        getattr(self, f'textEdit_{command[2]}').insertPlainText('#' * int(command[-1]) +' Heading\n')
+        getattr(self, f'textEdit_{command[2]}').insertPlainText('#' * int(command[1][-1]) +' Heading\n')
     elif command[0] is Command.FOCUS_AREA:
       unknownWidget = []
       if getattr(self, f'buttonBarW_{command[1]}').isHidden(): #current status hidden
