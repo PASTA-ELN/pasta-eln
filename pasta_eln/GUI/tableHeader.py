@@ -20,7 +20,8 @@ class TableHeader(QDialog):
     super().__init__()
     self.comm = comm
     self.docType = docType
-    self.selectedList = self.comm.backend.db.getColumnNames()[docType].split(',')
+    self.db = self.comm.backend.db
+    self.selectedList = self.db.getColumnNames()[docType].split(',')
     self.allSet = {i['name'] for group in self.db.ontology[docType]['prop']
                    for i in self.db.ontology[docType]['prop'][group]}
     self.allSet = self.allSet.union({'date','#_curated', 'type', 'name', 'comment', 'tags', 'image'})
@@ -99,14 +100,10 @@ class TableHeader(QDialog):
       self.reject()
     elif btn.text().endswith('Save'):
       specialFields = ['name', 'type', 'tags', 'user', 'date']
-      self.selectedList = [
-          f'-{i}' if i in specialFields else i for i in self.selectedList
-      ]
-      self.comm.backend.db.initDocTypeViews(self.comm.backend.configuration['tableColumnsMax'],
-                                            docTypeChange=self.docType, columnsChange=self.selectedList)
+      self.selectedList = [f'-{i}' if i in specialFields else i for i in self.selectedList]
+      self.db.initDocTypeViews(self.comm.backend.configuration['tableColumnsMax'], docTypeChange=self.docType,
+                               columnsChange=self.selectedList)
       restart()
-        # self.comm.changeTable.emit('','')
-        # self.accept()  #close
     elif btn.text().endswith('Help'):
       showMessage(self, 'Help on individual entry', tableHeaderHelp)
     else:
