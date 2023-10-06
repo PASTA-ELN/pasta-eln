@@ -1,5 +1,4 @@
 """ OntologyConfigurationForm which is extended from the Ui_OntologyConfigurationBaseForm """
-import copy
 #  PASTA-ELN and all its sub-parts are covered by the MIT license.
 #
 #  Copyright (c) 2023
@@ -8,13 +7,15 @@ import copy
 #  Filename: ontology_configuration_extended.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
+
+import copy
 import logging
 import sys
 import webbrowser
 from typing import Any
 
 from PySide6 import QtWidgets
-from PySide6.QtWidgets import QApplication, QMessageBox
+from PySide6.QtWidgets import QApplication, QLineEdit, QMessageBox
 from cloudant.document import Document
 
 from .create_type_dialog_extended import CreateTypeDialog
@@ -23,17 +24,19 @@ from .ontology_config_generic_exception import OntologyConfigGenericException
 from .ontology_config_key_not_found_exception import \
   OntologyConfigKeyNotFoundException
 from .ontology_configuration import Ui_OntologyConfigurationBaseForm
-from .ontology_configuration_constants import PROPS_TABLE_DELETE_COLUMN_INDEX, PROPS_TABLE_REORDER_COLUMN_INDEX, \
-  PROPS_TABLE_REQUIRED_COLUMN_INDEX, ATTACHMENT_TABLE_DELETE_COLUMN_INDEX, ATTACHMENT_TABLE_REORDER_COLUMN_INDEX, \
-  ONTOLOGY_HELP_PAGE_URL
+from .ontology_configuration_constants import ATTACHMENT_TABLE_DELETE_COLUMN_INDEX, \
+  ATTACHMENT_TABLE_REORDER_COLUMN_INDEX, ONTOLOGY_HELP_PAGE_URL, PROPS_TABLE_DELETE_COLUMN_INDEX, \
+  PROPS_TABLE_IRI_COLUMN_INDEX, PROPS_TABLE_REORDER_COLUMN_INDEX, PROPS_TABLE_REQUIRED_COLUMN_INDEX
 from .ontology_document_null_exception import OntologyDocumentNullException
 from .ontology_props_tableview_data_model import OntologyPropsTableViewModel
-from .delete_column_delegate import DeleteColumnDelegate
 from .reorder_column_delegate import ReorderColumnDelegate
 from .required_column_delegate import RequiredColumnDelegate
-from .utility_functions import adjust_ontology_data_to_v3, show_message, \
-  get_next_possible_structural_level_label, get_types_for_display, adapt_type, generate_empty_type, \
-  generate_required_properties, check_ontology_types, get_missing_props_message
+from .delete_column_delegate import DeleteColumnDelegate
+from .iri_column_delegate import IriColumnDelegate
+from .lookup_iri_action import LookupIriAction
+from .utility_functions import adapt_type, adjust_ontology_data_to_v3, check_ontology_types, generate_empty_type, \
+  generate_required_properties, get_missing_props_message, get_next_possible_structural_level_label, \
+  get_types_for_display, show_message
 from ...database import Database
 
 
@@ -84,6 +87,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     self.required_column_delegate_props_table = RequiredColumnDelegate()
     self.delete_column_delegate_props_table = DeleteColumnDelegate()
     self.reorder_column_delegate_props_table = ReorderColumnDelegate()
+    self.iri_column_delegate_props_table = IriColumnDelegate()
     self.delete_column_delegate_attach_table = DeleteColumnDelegate()
     self.reorder_column_delegate_attach_table = ReorderColumnDelegate()
 
@@ -93,12 +97,14 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
                                                      self.delete_column_delegate_props_table)
     self.typePropsTableView.setItemDelegateForColumn(PROPS_TABLE_REORDER_COLUMN_INDEX,
                                                      self.reorder_column_delegate_props_table)
+    self.typePropsTableView.setItemDelegateForColumn(PROPS_TABLE_IRI_COLUMN_INDEX,
+                                                     self.iri_column_delegate_props_table)
     self.typePropsTableView.setModel(self.props_table_data_model)
 
     for column_index, width in self.props_table_data_model.column_widths.items():
       self.typePropsTableView.setColumnWidth(column_index, width)
     # When resized, only stretch the query column of typePropsTableView
-    self.typePropsTableView.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+    self.typePropsTableView.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
 
     self.typeAttachmentsTableView.setItemDelegateForColumn(
       ATTACHMENT_TABLE_DELETE_COLUMN_INDEX,
@@ -162,6 +168,23 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
       self.propsCategoryComboBox.addItems(list(self.selected_type_properties.keys())
                                           if self.selected_type_properties else [])
       self.propsCategoryComboBox.setCurrentIndex(0)
+
+  def set_iri_lookup_action(self,
+                            lookup_term: str) -> None:
+    """
+    Sets the IRI lookup action for the IRI line edit
+    Args:
+      lookup_term (str): Default lookup term to be used by the lookup service
+
+    Returns: Nothing
+
+    """
+    for act in self.typeIriLineEdit.actions():
+      if isinstance(act, LookupIriAction):
+        act.deleteLater()
+    self.typeIriLineEdit.addAction(
+      LookupIriAction(parent_line_edit=self.typeIriLineEdit, lookup_term=lookup_term),
+      QLineEdit.TrailingPosition)
 
   def category_combo_box_changed(self,
                                  new_selected_prop_category: Any) -> None:
@@ -232,6 +255,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     current_type = adapt_type(current_type)
     if modified_type_label is not None and current_type in self.ontology_types:
       self.ontology_types.get(current_type)["label"] = modified_type_label
+      self.set_iri_lookup_action(modified_type_label)
 
   def update_type_iri(self,
                       modified_iri: str) -> None:

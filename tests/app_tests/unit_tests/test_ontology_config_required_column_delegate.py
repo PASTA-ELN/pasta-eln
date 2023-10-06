@@ -6,6 +6,7 @@
 #  Filename: test_ontology_config_required_column_delegate.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
+
 import pytest
 from PySide6.QtCore import QRect, QEvent, Qt
 from PySide6.QtWidgets import QStyleOptionButton, QApplication, QStyle, QStyledItemDelegate, QRadioButton

@@ -9,18 +9,21 @@
 
 from PySide6 import QtWidgets
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QCheckBox
 from pytestqt.qtbot import QtBot
 
+from pasta_eln.GUI.ontology_configuration.lookup_iri_action import LookupIriAction
 from pasta_eln.GUI.ontology_configuration.ontology_configuration_extended import OntologyConfigurationForm
 from pasta_eln.GUI.ontology_configuration.utility_functions import adapt_type, get_types_for_display
-from tests.app_tests.common.fixtures import ontology_editor_gui, ontology_doc_mock, pasta_db_mock, props_column_names, \
-  attachments_column_names
+from tests.app_tests.common.fixtures import attachments_column_names, ontology_doc_mock, ontology_editor_gui, \
+  pasta_db_mock, props_column_names
 
 
 class TestOntologyConfigurationExtended(object):
 
   def test_component_launch_should_display_all_ui_elements(self,
+                                                           pasta_db_mock: pasta_db_mock,
+                                                           # Added to import fixture by other tests
                                                            ontology_editor_gui: tuple[
                                                              QApplication,
                                                              QtWidgets.QDialog,
@@ -234,3 +237,78 @@ class TestOntologyConfigurationExtended(object):
     qtbot.mouseClick(ui_form.saveOntologyPushButton, Qt.LeftButton)
     assert ontology_doc_mock.types() == ui_form.ontology_types, "Ontology document should be modified!"
     mock_show_message.assert_called_once_with("Ontology data saved successfully..")
+
+  def test_component_iri_lookup_button_click_should_show_ontology_lookup_dialog_and_set_iris_on_accept(self,
+                                                                                                       ontology_editor_gui:
+                                                                                                       tuple[
+                                                                                                         QApplication,
+                                                                                                         QtWidgets.QDialog,
+                                                                                                         OntologyConfigurationForm,
+                                                                                                         QtBot],
+                                                                                                       ontology_doc_mock: ontology_doc_mock,
+                                                                                                       props_column_names: props_column_names,
+                                                                                                       attachments_column_names: attachments_column_names):
+    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    assert ui_form.typeIriLineEdit.text() == 'http://url.com', "typeIriLineEdit should be default test value"
+    iri_lookup_action = None
+    for act in ui_form.typeIriLineEdit.actions():
+      if isinstance(act, LookupIriAction):
+        iri_lookup_action = act
+        act.trigger()
+    lookup_dialog = iri_lookup_action.terminology_lookup_dialog
+    assert lookup_dialog.selected_iris == [], "Selected IRIs should be empty"
+    with qtbot.waitExposed(lookup_dialog.instance, timeout=500):
+      assert lookup_dialog.instance.isVisible() is True, "Ontology lookup dialog should be visible"
+      assert lookup_dialog.terminologyLineEdit.text() == "Projects", "Search term should be 'Projects'"
+      assert lookup_dialog.errorConsoleTextEdit.isVisible() is False, "Error console should not be visible"
+      assert lookup_dialog.scrollAreaWidgetContents.isVisible() is True, "Scroll area should be visible"
+      assert lookup_dialog.scrollAreaContentsVerticalLayout.count() == 0, "Scroll area should be empty"
+      qtbot.mouseClick(lookup_dialog.terminologySearchPushButton, Qt.LeftButton)
+      assert lookup_dialog.scrollAreaContentsVerticalLayout.count() == 11, "Scroll area should be populated with 11 items"
+      for pos in range(lookup_dialog.scrollAreaContentsVerticalLayout.count()):
+        check_box = lookup_dialog.scrollAreaContentsVerticalLayout.itemAt(pos).widget().findChildren(QCheckBox)[0]
+        assert check_box is not None and check_box.isChecked() is False, "Checkbox should not be checked"
+        check_box.setChecked(True)
+        assert check_box.isChecked() is True, "Checkbox should be checked"
+    qtbot.mouseClick(lookup_dialog.buttonBox.button(lookup_dialog.buttonBox.Ok), Qt.LeftButton)
+    assert lookup_dialog.instance.isVisible() is False, "Ontology lookup dialog should be accepted and closed"
+    assert len(lookup_dialog.selected_iris) == 11, "IRIs should be set"
+    assert ui_form.typeIriLineEdit.text() == " ".join(
+      lookup_dialog.selected_iris), "typeIriLineEdit should contain all selected IRIs"
+
+  def test_component_iri_lookup_button_click_should_show_ontology_lookup_dialog_and_should_not_set_iris_on_cancel(self,
+                                                                                                                  ontology_editor_gui:
+                                                                                                                  tuple[
+                                                                                                                    QApplication,
+                                                                                                                    QtWidgets.QDialog,
+                                                                                                                    OntologyConfigurationForm,
+                                                                                                                    QtBot],
+                                                                                                                  ontology_doc_mock: ontology_doc_mock,
+                                                                                                                  props_column_names: props_column_names,
+                                                                                                                  attachments_column_names: attachments_column_names):
+    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    assert ui_form.typeIriLineEdit.text() == 'http://url.com', "typeIriLineEdit should be default test value"
+    iri_lookup_action = None
+    for act in ui_form.typeIriLineEdit.actions():
+      if isinstance(act, LookupIriAction):
+        iri_lookup_action = act
+        act.trigger()
+    lookup_dialog = iri_lookup_action.terminology_lookup_dialog
+    assert lookup_dialog.selected_iris == [], "Selected IRIs should be empty"
+    with qtbot.waitExposed(lookup_dialog.instance, timeout=500):
+      assert lookup_dialog.instance.isVisible() is True, "Ontology lookup dialog should be visible"
+      assert lookup_dialog.terminologyLineEdit.text() == "Projects", "Search term should be 'Projects'"
+      assert lookup_dialog.errorConsoleTextEdit.isVisible() is False, "Error console should not be visible"
+      assert lookup_dialog.scrollAreaWidgetContents.isVisible() is True, "Scroll area should be visible"
+      assert lookup_dialog.scrollAreaContentsVerticalLayout.count() == 0, "Scroll area should be empty"
+      qtbot.mouseClick(lookup_dialog.terminologySearchPushButton, Qt.LeftButton)
+      assert lookup_dialog.scrollAreaContentsVerticalLayout.count() == 11, "Scroll area should be populated with 11 items"
+      for pos in range(lookup_dialog.scrollAreaContentsVerticalLayout.count()):
+        check_box = lookup_dialog.scrollAreaContentsVerticalLayout.itemAt(pos).widget().findChildren(QCheckBox)[0]
+        assert check_box is not None and check_box.isChecked() is False, "Checkbox should not be checked"
+        check_box.setChecked(True)
+        assert check_box.isChecked() is True, "Checkbox should be checked"
+    qtbot.mouseClick(lookup_dialog.buttonBox.button(lookup_dialog.buttonBox.Cancel), Qt.LeftButton)
+    assert lookup_dialog.instance.isVisible() is False, "Ontology lookup dialog should be cancelled and closed"
+    assert lookup_dialog.selected_iris == [], "IRIs should not be set"
+    assert ui_form.typeIriLineEdit.text() == 'http://url.com', "typeIriLineEdit should be default test value after the cancellation"

@@ -7,6 +7,7 @@
 #  Filename: ontology_attachments_tableview_data_model.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
+
 import logging
 from typing import Union
 
