@@ -104,7 +104,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     for column_index, width in self.props_table_data_model.column_widths.items():
       self.typePropsTableView.setColumnWidth(column_index, width)
     # When resized, only stretch the query column of typePropsTableView
-    self.typePropsTableView.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
+    self.typePropsTableView.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
 
     self.typeAttachmentsTableView.setItemDelegateForColumn(
       ATTACHMENT_TABLE_DELETE_COLUMN_INDEX,
