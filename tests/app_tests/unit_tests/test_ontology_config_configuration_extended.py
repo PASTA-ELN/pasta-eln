@@ -703,7 +703,8 @@ class TestOntologyConfigConfiguration(object):
     mock_is_instance = mocker.patch(
       'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.isinstance')
     mock_check_ontology_types = mocker.patch(
-      'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.check_ontology_types', return_value=None)
+      'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.check_ontology_types',
+      return_value=(None, None))
     mock_db_init_views = mocker.patch.object(configuration_extended.database,
                                              'initDocTypeViews', return_value=None)
     assert configuration_extended.save_ontology() is None, "Nothing should be returned"
@@ -737,11 +738,15 @@ class TestOntologyConfigConfiguration(object):
     log_warn_spy = mocker.patch.object(configuration_extended.logger, 'warning')
     mock_show_message = mocker.patch(
       'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.show_message')
-    missing_props = {
-      'Structure level 0': {'category1': ['-tags']},
-      'Structure level 1': {'default': ['-tags']},
-      'Structure level 2': {'default': ['-tags']},
-      'instrument': {'default': ['-tags']}}
+    missing_props = ({
+                       'Structure level 0': {'category1': ['-tags']},
+                       'Structure level 1': {'default': ['-tags']},
+                       'Structure level 2': {'default': ['-tags']},
+                       'instrument': {'default': ['-tags']}},
+                     {
+                       'Structure level 0': ['category1', '-tags'],
+                       'instrument': ['category1', '-tags']
+                     })
     mock_check_ontology_document_types = mocker.patch(
       'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.check_ontology_types',
       return_value=missing_props)
@@ -751,7 +756,7 @@ class TestOntologyConfigConfiguration(object):
     assert configuration_extended.save_ontology() is None, "Nothing should be returned"
     log_info_spy.assert_called_once_with("User clicked the save button..")
     mock_check_ontology_document_types.assert_called_once_with(configuration_extended.ontology_types)
-    mock_get_missing_props_message.assert_called_once_with(missing_props)
+    mock_get_missing_props_message.assert_called_once_with(missing_props[0], missing_props[1])
     mock_show_message.assert_called_once_with("Missing message", QMessageBox.Warning)
     log_warn_spy.assert_called_once_with("Missing message")
 
