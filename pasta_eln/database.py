@@ -567,7 +567,9 @@ class Database:
     try:
       designDoc.save()
     except Exception:
-      print('**ERROR dsv01: something unexpected has happend. Log-file has traceback')
+      print('**ERROR dsv01: something unexpected has happend.')
+      logging.error('dsv01: something unexpected has happend.')
+      logging.error(traceback.format_exc())
     return
 
 
