@@ -83,17 +83,17 @@ class Project(QWidget):
     countLines = 0
     flagCommentInline = True
     for key,value in self.docProj.items():
-      if key[0] in ['_','-'] or (key=='comment' and ('\n' in value or len(value)>80)):
-        flagCommentInline = False
+      if key[0] in ['_','-'] or 'from ' in key:
         continue
-      if 'from ' in key:
+      if key=='comment' and ('\n' in value or len(value)>80):
+        flagCommentInline = False
         continue
       infoL.addWidget(QLabel(f'{key.title()}: {str(value)}'))
       countLines += 1
     if not flagCommentInline:     #format as label and QTextEdit
       commentW, commentL         = widgetAndLayout('H', infoL, 's')
       labelW = QLabel('Comment:')
-      labelW.setStyleSheet('padding-top: 5px')
+      # labelW.setStyleSheet('padding-top: 5px') #make "Comment:" text aligned with other content, not with text-edit
       commentL.addWidget(labelW, alignment=Qt.AlignTop)   # type: ignore[call-arg]
       comment = QTextEdit()
       comment.setMarkdown(self.docProj['comment'])
