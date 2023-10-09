@@ -29,10 +29,6 @@ def newVersion(level=2):
     level (int): which number of the version to increase 0=mayor,1=minor,2=sub
   """
   print('Create new version...')
-  #create CHANGELOG
-  with open(Path.home()/'.ssh'/'github.token', 'r', encoding='utf-8') as fIn:
-    token = fIn.read().strip()
-  os.system("github_changelog_generator -u PASTA-ELN -p pasta-eln -t "+token)
   #get old version number
   version = [int(i) for i in getVersion()[1:].split('.')]
   #create new version number
@@ -57,6 +53,12 @@ def newVersion(level=2):
   #execute git commands
   os.system(f'git pull')
   os.system(f'git tag -a v{version} -m "Version {version}; see CHANGELOG for details"')
+  #create CHANGELOG
+  with open(Path.home()/'.ssh'/'github.token', 'r', encoding='utf-8') as fIn:
+    token = fIn.read().strip()
+  os.system("github_changelog_generator -u PASTA-ELN -p pasta-eln -t "+token)
+  os.system(f'git commit -a -m "updated changelog"')
+  #push and publish
   os.system(f'git push')
   os.system(f'git push origin v{version}')
   return
