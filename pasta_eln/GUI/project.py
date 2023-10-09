@@ -253,7 +253,7 @@ class Project(QWidget):
     stackNew = [self.projID] + stackNew[::-1]  #add project id and reverse
     childNew = item.row()
     if branchOld['path'] is not None and not branchOld['path'].startswith('http'):
-      dirNameNew= createDirName(doc['-name'],doc['-type'][0],childNew)
+      dirNameNew= createDirName(doc['-name'],doc['-type'][0],childNew) # determine path: do not create yet
       parentDir = db.getDoc(stackNew[-1])['-branch'][0]['path']
       pathNew = f'{parentDir}/{dirNameNew}'
     else:
@@ -261,7 +261,8 @@ class Project(QWidget):
     siblingsNew = db.getView('viewHierarchy/viewHierarchy', startKey=' '.join(stackNew))
     siblingsNew = [i for i in siblingsNew if len(i['key'].split(' '))==len(stackNew)+1 and \
                                                    i['value'][0]>=childNew and i['value'][0]<9999]
-    logging.debug('Change project: docID -old- -new- %s|%s  %i|%s %i %s', docID, str(stackOld), branchIdx, str(stackNew), childNew, pathNew)
+    logging.debug('Change project: docID %s branch %i | old stack %s child %i | new stack %s child %i path %s'\
+                  , docID, branchIdx, str(stackOld), childOld, str(stackNew), childNew, pathNew)
     if stackOld==stackNew and childOld==childNew:  #nothing changed, just redraw
       return
     # change item in question
