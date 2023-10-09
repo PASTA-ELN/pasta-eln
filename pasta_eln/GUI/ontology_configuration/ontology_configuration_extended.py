@@ -408,11 +408,13 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     Save the modified ontology document data in database
     """
     self.logger.info("User clicked the save button..")
-    if missing_properties := check_ontology_types(self.ontology_types):
-      message = get_missing_props_message(missing_properties)
+    types_with_missing_properties, types_with_null_name_properties = check_ontology_types(self.ontology_types)
+    if types_with_missing_properties or types_with_null_name_properties:
+      message = get_missing_props_message(types_with_missing_properties, types_with_null_name_properties)
       show_message(message, QMessageBox.Warning)
       self.logger.warning(message)
       return
+
     # Clear all the data from the ontology_document
     for data in list(self.ontology_document.keys()):
       if isinstance(self.ontology_document[data], dict):
