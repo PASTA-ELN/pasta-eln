@@ -567,8 +567,8 @@ class Database:
     try:
       designDoc.save()
     except Exception:
-      print('**ERROR dsv01: something unexpected has happend.')
-      logging.error('dsv01: something unexpected has happend.')
+      print('**ERROR dsv01: something unexpected has happened.')
+      logging.error('dsv01: something unexpected has happened.')
       logging.error(traceback.format_exc())
     return
 
