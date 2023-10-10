@@ -7,7 +7,7 @@ from PySide6.QtGui import QStandardItemModel, QStandardItem, QAction   # pylint:
 from PySide6.QtCore import Slot, Qt, QItemSelectionModel, QModelIndex # pylint: disable=no-name-in-module
 from anytree import PreOrderIter, Node
 from .projectTreeView import TreeView
-from ..guiStyle import TextButton, Action, Label, showMessage, widgetAndLayout, iconsDocTypes
+from ..guiStyle import TextButton, Action, Label, showMessage, widgetAndLayout, iconsDocTypes, getColor
 from ..miscTools import createDirName
 from ..guiCommunicate import Communicate
 
@@ -32,6 +32,7 @@ class Project(QWidget):
     self.showAll= False
     self.foldedAll = False
     self.btnAddSubfolder:Optional[TextButton] = None
+    self.lineSep = 20
 
 
   def projHeader(self) -> None:
@@ -79,19 +80,32 @@ class Project(QWidget):
     self.infoW, infoL         = widgetAndLayout('V', self.mainL)
     tags = ', '.join([f'#{i}' for i in self.docProj['-tags']]) if '-tags' in self.docProj else ''
     infoL.addWidget(QLabel(f'Tags: {tags}'))
+    countLines = 0
+    flagCommentInline = True
     for key,value in self.docProj.items():
-      if key[0] in ['_','-'] or (key=='comment' and '\n' in value):
+      if key[0] in ['_','-'] or 'from ' in key:
         continue
-      if 'from ' in key:
+      if key=='comment' and ('\n' in value or len(value)>80):
+        flagCommentInline = False
         continue
-      infoL.addWidget(QLabel(f'{key}: {str(value)}'))
-    if 'comment' in self.docProj and '\n' in self.docProj['comment']:     #format nicely
-      # comment = QTextEdit()
-      # comment.setMarkdown(self.docProj['comment'])
-      # comment.setReadOnly(True)
-      # comment.setFixedHeight(200)
-      # infoL.addWidget(comment)
-      infoL.addWidget(QLabel(self.docProj['comment']))
+      infoL.addWidget(QLabel(f'{key.title()}: {str(value)}'))
+      countLines += 1
+    if not flagCommentInline:     #format as label and QTextEdit
+      commentW, commentL         = widgetAndLayout('H', infoL, 's')
+      labelW = QLabel('Comment:')
+      # labelW.setStyleSheet('padding-top: 5px') #make "Comment:" text aligned with other content, not with text-edit
+      commentL.addWidget(labelW, alignment=Qt.AlignTop)   # type: ignore[call-arg]
+      comment = QTextEdit()
+      comment.setMarkdown(self.docProj['comment'])
+      bgColor   = getColor(self.comm.backend, 'secondaryDark')
+      fgColor = getColor(self.comm.backend, 'primaryText')
+      comment.setStyleSheet(f"QTextEdit {{ border: none; padding: 0px; background-color: {bgColor}; "\
+                            f"color: {fgColor} }}")
+      comment.setReadOnly(True)
+      comment.setFixedHeight(200)
+      commentL.addWidget(comment)
+      self.infoW.setMaximumHeight(210+countLines*self.lineSep )
+      commentW.setMaximumHeight(210+countLines*self.lineSep )
     return
 
 
