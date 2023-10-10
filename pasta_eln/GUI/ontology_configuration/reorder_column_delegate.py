@@ -7,13 +7,14 @@
 #  Filename: reorder_column_delegate.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
+
 import logging
 from typing import Union
 
-from PySide6.QtCore import QModelIndex, QPersistentModelIndex, Signal, QEvent, QAbstractItemModel, QSize
+from PySide6.QtCore import QAbstractItemModel, QEvent, QModelIndex, QPersistentModelIndex, QSize, Signal
 from PySide6.QtGui import QPainter
-from PySide6.QtWidgets import QStyledItemDelegate, QPushButton, QWidget, QStyleOptionViewItem, QStyleOptionButton, \
-  QStyle, QApplication
+from PySide6.QtWidgets import QApplication, QPushButton, QStyle, QStyleOptionButton, QStyleOptionViewItem, \
+  QStyledItemDelegate, QWidget
 
 from .utility_functions import is_click_within_bounds
 

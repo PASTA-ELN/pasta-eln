@@ -7,13 +7,14 @@
 #  Filename: required_column_delegate.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
+
 import logging
 from typing import Union
 
-from PySide6.QtCore import QModelIndex, QPersistentModelIndex, QEvent, QAbstractItemModel, QRect, Qt
+from PySide6.QtCore import QAbstractItemModel, QEvent, QModelIndex, QPersistentModelIndex, QRect, Qt
 from PySide6.QtGui import QPainter
-from PySide6.QtWidgets import QStyledItemDelegate, QWidget, QStyleOptionViewItem, QStyleOptionButton, \
-  QStyle, QApplication, QRadioButton
+from PySide6.QtWidgets import QApplication, QRadioButton, QStyle, QStyleOptionButton, QStyleOptionViewItem, \
+  QStyledItemDelegate, QWidget
 
 
 class RequiredColumnDelegate(QStyledItemDelegate):

@@ -1,0 +1,73 @@
+[
+  {
+    "name": "wikipedia",
+    "search_term": "pasta",
+    "results": [
+      {
+        "iri": "https://en.wikipedia.org/w/index.php?curid=23871",
+        "information": "Cooked dough food in Italian cuisine"
+      },
+      {
+        "iri": "https://en.wikipedia.org/w/index.php?curid=4275382",
+        "information": "Traditional Italian soup of pasta and beans"
+      },
+      {
+        "iri": "https://en.wikipedia.org/w/index.php?curid=6984468",
+        "information": "Summer salad made with pasta"
+      }
+    ]
+  },
+  {
+    "name": "wikidata",
+    "search_term": "pasta",
+    "results": [
+      {
+        "iri": "http://www.wikidata.org/entity/Q178",
+        "information": "Italian food made from flour, eggs and water and shaped in different forms, usually cooked and served with a sauce"
+      },
+      {
+        "iri": "http://www.wikidata.org/entity/Q496290",
+        "information": "2010 South Korean TV series"
+      },
+      {
+        "iri": "http://www.wikidata.org/entity/Q3897473",
+        "information": "family name"
+      },
+      {
+        "iri": "http://www.wikidata.org/entity/Q18443960",
+        "information": "human settlement in Italy"
+      },
+      {
+        "iri": "http://www.wikidata.org/entity/Q33687792",
+        "information": "Italian botanist"
+      },
+      {
+        "iri": "http://www.wikidata.org/entity/Q112830708",
+        "information": "2022 song by Tananai"
+      },
+      {
+        "iri": "http://www.wikidata.org/entity/Q83611381",
+        "information": "song by Angie McMahon"
+      }
+    ]
+  },
+  {
+    "name": "ontology_lookup_service",
+    "search_term": "pasta",
+    "results": [
+      {
+        "iri": "http://purl.obolibrary.org/obo/NCIT_C178202",
+        "information": "A dough made from flour and water and sometimes egg that is made in different shapes and typically cooked in boiling water. It can be dried or used fresh."
+      },
+      {
+        "iri": "http://purl.obolibrary.org/obo/ENVO_0010123",
+        "information": "A food made from an unleavened dough of wheat or buckwheat  flour and water, sometimes with other ingredients such as eggs and vegetable  extracts."
+      }
+    ]
+  },
+  {
+    "name": "tib_terminology_service",
+    "search_term": "pasta",
+    "results": []
+  }
+]

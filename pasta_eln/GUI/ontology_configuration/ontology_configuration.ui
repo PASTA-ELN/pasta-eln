@@ -206,6 +206,9 @@
             <property name="placeholderText">
              <string>Enter the new category to be added</string>
             </property>
+            <property name="clearButtonEnabled">
+             <bool>true</bool>
+            </property>
            </widget>
           </item>
           <item>
@@ -335,6 +338,9 @@
             <property name="placeholderText">
              <string>Modify the type label here</string>
             </property>
+            <property name="clearButtonEnabled">
+             <bool>true</bool>
+            </property>
            </widget>
           </item>
           <item>
@@ -350,6 +356,9 @@
             </property>
             <property name="placeholderText">
              <string>Enter the iri for the type</string>
+            </property>
+            <property name="clearButtonEnabled">
+             <bool>true</bool>
             </property>
            </widget>
           </item>

@@ -8,7 +8,7 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
 import pytest
-from PySide6.QtWidgets import QApplication, QDialog, QMessageBox
+from PySide6.QtWidgets import QApplication, QDialog, QLineEdit, QMessageBox
 
 from pasta_eln.GUI.ontology_configuration.create_type_dialog_extended import CreateTypeDialog
 from pasta_eln.GUI.ontology_configuration.delete_column_delegate import DeleteColumnDelegate
@@ -22,8 +22,8 @@ from pasta_eln.GUI.ontology_configuration.ontology_document_null_exception impor
 from pasta_eln.GUI.ontology_configuration.ontology_props_tableview_data_model import OntologyPropsTableViewModel
 from pasta_eln.GUI.ontology_configuration.reorder_column_delegate import ReorderColumnDelegate
 from pasta_eln.GUI.ontology_configuration.required_column_delegate import RequiredColumnDelegate
-from pasta_eln.GUI.ontology_configuration.utility_functions import get_types_for_display, generate_empty_type, \
-  generate_required_properties
+from pasta_eln.GUI.ontology_configuration.utility_functions import generate_empty_type, generate_required_properties, \
+  get_types_for_display
 from tests.app_tests.common.fixtures import configuration_extended, ontology_doc_mock
 
 
@@ -35,6 +35,7 @@ class TestOntologyConfigConfiguration(object):
     mocker.patch('pasta_eln.GUI.ontology_configuration.create_type_dialog_extended.logging.getLogger')
     mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration.Ui_OntologyConfigurationBaseForm.setupUi')
     mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.adjust_ontology_data_to_v3')
+    mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.LookupIriAction')
     mocker.patch.object(QDialog, '__new__')
     mocker.patch.object(OntologyPropsTableViewModel, '__new__')
     mocker.patch.object(OntologyAttachmentsTableViewModel, '__new__')
@@ -379,6 +380,7 @@ class TestOntologyConfigConfiguration(object):
                                                      current_type,
                                                      ontology_types):
     mocker.patch.object(configuration_extended, 'typeComboBox', create=True)
+    mocker.patch.object(configuration_extended, 'set_iri_lookup_action', create=True)
     mocker.patch.object(configuration_extended.typeComboBox, 'currentText', return_value=current_type)
 
     mocker.patch.object(configuration_extended, 'ontology_types', create=True)
@@ -397,6 +399,7 @@ class TestOntologyConfigConfiguration(object):
       if ontology_types is not None and current_type in ontology_types:
         get_ontology_types_spy.assert_called_once_with(current_type)
         assert ontology_types[current_type]["label"] == modified_type_label
+        configuration_extended.set_iri_lookup_action.assert_called_once_with(modified_type_label)
 
   @pytest.mark.parametrize("modified_type_iri, current_type, ontology_types", [
     (None, None, None),
@@ -700,7 +703,8 @@ class TestOntologyConfigConfiguration(object):
     mock_is_instance = mocker.patch(
       'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.isinstance')
     mock_check_ontology_types = mocker.patch(
-      'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.check_ontology_types', return_value=None)
+      'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.check_ontology_types',
+      return_value=(None, None))
     mock_db_init_views = mocker.patch.object(configuration_extended.database,
                                              'initDocTypeViews', return_value=None)
     assert configuration_extended.save_ontology() is None, "Nothing should be returned"
@@ -734,11 +738,15 @@ class TestOntologyConfigConfiguration(object):
     log_warn_spy = mocker.patch.object(configuration_extended.logger, 'warning')
     mock_show_message = mocker.patch(
       'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.show_message')
-    missing_props = {
-      'Structure level 0': {'category1': ['-tags']},
-      'Structure level 1': {'default': ['-tags']},
-      'Structure level 2': {'default': ['-tags']},
-      'instrument': {'default': ['-tags']}}
+    missing_props = ({
+                       'Structure level 0': {'category1': ['-tags']},
+                       'Structure level 1': {'default': ['-tags']},
+                       'Structure level 2': {'default': ['-tags']},
+                       'instrument': {'default': ['-tags']}},
+                     {
+                       'Structure level 0': ['category1', '-tags'],
+                       'instrument': ['category1', '-tags']
+                     })
     mock_check_ontology_document_types = mocker.patch(
       'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.check_ontology_types',
       return_value=missing_props)
@@ -748,7 +756,7 @@ class TestOntologyConfigConfiguration(object):
     assert configuration_extended.save_ontology() is None, "Nothing should be returned"
     log_info_spy.assert_called_once_with("User clicked the save button..")
     mock_check_ontology_document_types.assert_called_once_with(configuration_extended.ontology_types)
-    mock_get_missing_props_message.assert_called_once_with(missing_props)
+    mock_get_missing_props_message.assert_called_once_with(missing_props[0], missing_props[1])
     mock_show_message.assert_called_once_with("Missing message", QMessageBox.Warning)
     log_warn_spy.assert_called_once_with("Missing message")
 
@@ -876,3 +884,22 @@ class TestOntologyConfigConfiguration(object):
     spy_table_view_is_visible.assert_called_once_with()
     spy_add_attachment_set_visible.assert_called_once_with(not hidden)
     spy_add_attachment_is_visible.assert_called_once_with()
+
+  def test_set_iri_lookup_action_do_expected(self,
+                                             mocker,
+                                             configuration_extended: configuration_extended):
+    mock_actions = [mocker.MagicMock(), mocker.MagicMock()]
+    configuration_extended.typeIriLineEdit.actions.return_value = mock_actions
+    mock_is_instance = mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.isinstance',
+                                    return_value=True)
+    mock_is_lookup_iri_action = mocker.patch(
+      'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.LookupIriAction')
+
+    assert configuration_extended.set_iri_lookup_action("default") is None, "Nothing should be returned"
+    mock_is_instance.assert_has_calls(
+      [mocker.call(mock_actions[0], mock_is_lookup_iri_action),
+       mocker.call(mock_actions[1], mock_is_lookup_iri_action)])
+    mock_is_lookup_iri_action.assert_called_once_with(parent_line_edit=configuration_extended.typeIriLineEdit,
+                                                      lookup_term="default")
+    configuration_extended.typeIriLineEdit.addAction.assert_called_once_with(mock_is_lookup_iri_action.return_value,
+                                                                             QLineEdit.TrailingPosition)

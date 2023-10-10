@@ -6,6 +6,7 @@
 #  Filename: test_ontology_config_delete_column_delegate.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
+
 from PySide6.QtWidgets import QStyle
 
 from tests.app_tests.common.fixtures import delete_delegate
