@@ -287,3 +287,30 @@ def get_missing_props_message(types_with_missing_properties: dict[str, dict[str,
     message += "</ul>"
   message += "</html>"
   return message
+
+
+def can_delete_type(existing_types: list[str],
+                    selected_type: str) -> bool:
+  """
+  Check if the selected type can be deleted
+    - Non-structural types can be deleted always
+    - Structural type 'x0' cannot be deleted at all, the other structural types can
+    only be deleted if they are the last one in the hierarchy
+  Args:
+    existing_types (list[str]): List of existing types
+    selected_type (str): Selected type to be deleted
+
+  Returns (bool): True/False depending on whether the selected type can be deleted
+  """
+  if not selected_type:
+    return False
+  existing_types = [t for t in existing_types if t]
+  if not is_structural_level(selected_type):
+    return True
+  structural_types = list(filter(is_structural_level, existing_types))
+  if selected_type == 'x0':
+    return False
+  if selected_type not in structural_types:
+    return False
+  else:
+    return max(structural_types) == selected_type
