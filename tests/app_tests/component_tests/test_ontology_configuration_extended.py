@@ -121,6 +121,9 @@ class TestOntologyConfigurationExtended(object):
     mock_show_message = mocker.patch(
       "pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.show_message")
     mocker.patch.object(ui_form, "ontology_loaded", False)
+    # Select a non-structural type in the type combo box, in-order to enable delete button
+    ui_form.typeComboBox.setCurrentText("measurement")
+    assert ui_form.typeComboBox.currentText() == "measurement", "Data type combo box should be selected to measurement"
     qtbot.mouseClick(ui_form.deleteTypePushButton, Qt.LeftButton)
     mock_show_message.assert_called_once_with("Load the ontology data first....")
     assert ui_form.create_type_dialog.buttonBox.isVisible() is False, "Create new type dialog should not be shown!"
@@ -137,6 +140,9 @@ class TestOntologyConfigurationExtended(object):
                                                                                            attachments_column_names: attachments_column_names):
     app, ui_dialog, ui_form, qtbot = ontology_editor_gui
     assert ui_form.create_type_dialog.buttonBox.isVisible() is False, "Create new type dialog should not be shown!"
+    # Select a non-structural type in the type combo box, in order to enable the "delete" button
+    ui_form.typeComboBox.setCurrentText("measurement")
+    assert ui_form.typeComboBox.currentText() == "measurement", "Data type combo box should be selected to measurement"
     current_selected_type = ui_form.typeComboBox.currentText()
     previous_types_count = ui_form.typeComboBox.count()
     qtbot.mouseClick(ui_form.deleteTypePushButton, Qt.LeftButton)
@@ -145,48 +151,116 @@ class TestOntologyConfigurationExtended(object):
       f"Deleted type:{current_selected_type} should not exist in combo list!"
     assert (previous_types_count - 1 == ui_form.typeComboBox.count()), \
       f"Combo list should have {previous_types_count - 1} items!"
-    assert adapt_type(ui_form.typeComboBox.currentText()) == ontology_doc_mock.types_list()[1], \
-      "Type combo box should be selected to second item"
+    assert adapt_type(ui_form.typeComboBox.currentText()) == ontology_doc_mock.types_list()[0], \
+      "Type combo box should be selected to first structural item"
     selected_type = ontology_doc_mock.types()[adapt_type(ui_form.typeComboBox.currentText())]
     assert ui_form.typeLabelLineEdit.text() == selected_type["label"], \
-      "Type label line edit should be selected to second item"
+      "Type label line edit should be selected to first structural item"
     assert ui_form.typeIriLineEdit.text() == selected_type["IRI"], \
-      "Type label line edit should be selected to second item"
+      "Type label line edit should be selected to first structural item"
     assert ui_form.propsCategoryComboBox.currentText() == list(selected_type["prop"].keys())[0], \
-      "Type label line edit should be selected to second item"
+      "Type label line edit should be selected to first structural item"
     self.check_table_contents(attachments_column_names, props_column_names, selected_type, ui_form)
 
-  def test_component_add_selected_type_with_loaded_ontology_should_delete_and_update_ui(self,
-                                                                                        ontology_editor_gui:
-                                                                                        tuple[
-                                                                                          QApplication,
-                                                                                          QtWidgets.QDialog,
-                                                                                          OntologyConfigurationForm,
-                                                                                          QtBot],
-                                                                                        ontology_doc_mock: ontology_doc_mock,
-                                                                                        props_column_names: props_column_names,
-                                                                                        attachments_column_names: attachments_column_names):
+  def test_component_add_new_type_button_click_should_display_create_new_type_window(self,
+                                                                                     ontology_editor_gui:
+                                                                                     tuple[
+                                                                                       QApplication,
+                                                                                       QtWidgets.QDialog,
+                                                                                       OntologyConfigurationForm,
+                                                                                       QtBot],
+                                                                                     ontology_doc_mock: ontology_doc_mock,
+                                                                                     props_column_names: props_column_names,
+                                                                                     attachments_column_names: attachments_column_names):
     app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
     assert ui_form.create_type_dialog.buttonBox.isVisible() is False, "Create new type dialog should not be shown!"
-    current_selected_type = ui_form.typeComboBox.currentText()
-    previous_types_count = ui_form.typeComboBox.count()
-    qtbot.mouseClick(ui_form.deleteTypePushButton, Qt.LeftButton)
-    assert (current_selected_type not in [ui_form.typeComboBox.itemText(i)
-                                          for i in range(ui_form.typeComboBox.count())]), \
-      f"Deleted type:{current_selected_type} should not exist in combo list!"
-    assert (previous_types_count - 1 == ui_form.typeComboBox.count()), \
-      f"Combo list should have {previous_types_count - 1} items!"
-    assert adapt_type(ui_form.typeComboBox.currentText()) == ontology_doc_mock.types_list()[1], \
-      "Type combo box should be selected to second item"
-    types = ontology_doc_mock.types()
-    selected_type = types[adapt_type(ui_form.typeComboBox.currentText())]
-    assert ui_form.typeLabelLineEdit.text() == selected_type["label"], \
-      "Type label line edit should be selected to second item"
-    assert ui_form.typeIriLineEdit.text() == selected_type["IRI"], \
-      "Type IRI line edit should be selected to second item"
-    assert ui_form.propsCategoryComboBox.currentText() == list(selected_type["prop"].keys())[0], \
-      "Type label line edit should be selected to second item"
-    self.check_table_contents(attachments_column_names, props_column_names, selected_type, ui_form)
+    qtbot.mouseClick(ui_form.addTypePushButton, Qt.LeftButton)
+    with qtbot.waitExposed(ui_form.create_type_dialog.instance, timeout=500):
+      assert ui_form.create_type_dialog.instance.isVisible() is True, "Create new type dialog should be shown!"
+      assert ui_form.create_type_dialog.buttonBox.isVisible() is True, "Create new type dialog not shown!"
+
+  def test_component_create_new_type_structural_type_should_add_new_type_with_label(self,
+                                                                                    ontology_editor_gui:
+                                                                                    tuple[
+                                                                                      QApplication,
+                                                                                      QtWidgets.QDialog,
+                                                                                      OntologyConfigurationForm,
+                                                                                      QtBot],
+                                                                                    ontology_doc_mock: ontology_doc_mock,
+                                                                                    props_column_names: props_column_names,
+                                                                                    attachments_column_names: attachments_column_names):
+
+    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
+    assert ui_form.create_type_dialog.buttonBox.isVisible() is False, "Create new type dialog button box should not be shown!"
+    qtbot.mouseClick(ui_form.addTypePushButton, Qt.LeftButton)
+    with qtbot.waitExposed(ui_form.create_type_dialog.instance, timeout=200):
+      assert ui_form.create_type_dialog.instance.isVisible() is True, "Create new type dialog should be shown!"
+      assert ui_form.create_type_dialog.buttonBox.isVisible() is True, "Create new type dialog button box should be shown!"
+      ui_form.create_type_dialog.structuralLevelCheckBox.setChecked(True)
+      ui_form.create_type_dialog.labelLineEdit.setText("test")
+      assert ui_form.create_type_dialog.titleLineEdit.text() == ui_form.create_type_dialog.next_struct_level.replace(
+        'x', 'Structure level '), "title should be set to 'Structure level 3'"
+    qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(ui_form.create_type_dialog.buttonBox.Ok),
+                     Qt.LeftButton)
+    assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
+    assert ui_form.typeComboBox.currentText() == "Structure level 3", "Data type combo box should be newly added structural item"
+    assert ui_form.typeLabelLineEdit.text() == "test", "Data type label should be newly added label"
+
+  def test_component_create_new_type_normal_type_should_add_new_type_with_label(self,
+                                                                                ontology_editor_gui:
+                                                                                tuple[
+                                                                                  QApplication,
+                                                                                  QtWidgets.QDialog,
+                                                                                  OntologyConfigurationForm,
+                                                                                  QtBot],
+                                                                                ontology_doc_mock: ontology_doc_mock,
+                                                                                props_column_names: props_column_names,
+                                                                                attachments_column_names: attachments_column_names):
+
+    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
+    assert ui_form.create_type_dialog.buttonBox.isVisible() is False, "Create new type dialog button box should not be shown!"
+    qtbot.mouseClick(ui_form.addTypePushButton, Qt.LeftButton)
+    with qtbot.waitExposed(ui_form.create_type_dialog.instance, timeout=200):
+      assert ui_form.create_type_dialog.instance.isVisible() is True, "Create new type dialog should be shown!"
+      assert ui_form.create_type_dialog.buttonBox.isVisible() is True, "Create new type dialog button box should be shown!"
+      assert ui_form.create_type_dialog.structuralLevelCheckBox.isChecked() is False, "structuralLevelCheckBox should be unchecked"
+      ui_form.create_type_dialog.titleLineEdit.setText("title")
+      ui_form.create_type_dialog.labelLineEdit.setText("label")
+    qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(ui_form.create_type_dialog.buttonBox.Ok),
+                     Qt.LeftButton)
+    assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
+    assert ui_form.typeComboBox.currentText() == "title", "Data type combo box should be newly added type title"
+    assert ui_form.typeLabelLineEdit.text() == "label", "Data type combo box should be newly added type label"
+
+  def test_component_create_new_type_reject_should_not_add_new_type_with_label(self,
+                                                                               ontology_editor_gui:
+                                                                               tuple[
+                                                                                 QApplication,
+                                                                                 QtWidgets.QDialog,
+                                                                                 OntologyConfigurationForm,
+                                                                                 QtBot],
+                                                                               ontology_doc_mock: ontology_doc_mock,
+                                                                               props_column_names: props_column_names,
+                                                                               attachments_column_names: attachments_column_names):
+
+    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
+    assert ui_form.create_type_dialog.buttonBox.isVisible() is False, "Create new type dialog button box should not be shown!"
+    qtbot.mouseClick(ui_form.addTypePushButton, Qt.LeftButton)
+    with qtbot.waitExposed(ui_form.create_type_dialog.instance, timeout=200):
+      assert ui_form.create_type_dialog.instance.isVisible() is True, "Create new type dialog should be shown!"
+      assert ui_form.create_type_dialog.buttonBox.isVisible() is True, "Create new type dialog button box should be shown!"
+      assert ui_form.create_type_dialog.structuralLevelCheckBox.isChecked() is False, "structuralLevelCheckBox should be unchecked"
+      ui_form.create_type_dialog.titleLineEdit.setText("title")
+      ui_form.create_type_dialog.labelLineEdit.setText("label")
+    qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(ui_form.create_type_dialog.buttonBox.Cancel),
+                     Qt.LeftButton)
+    assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
+    assert ui_form.typeComboBox.currentText() != "title", "Data type combo box should not be newly added type title"
+    assert ui_form.typeLabelLineEdit.text() != "label", "Data type combo box should not be newly added type label"
 
   def test_component_cancel_button_click_after_delete_category_should_not_modify_ontology_document_data(self,
                                                                                                         ontology_editor_gui:
@@ -210,6 +284,51 @@ class TestOntologyConfigurationExtended(object):
       f"Combo list should have {previous_types_category_count - 1} items!"
     qtbot.mouseClick(ui_form.cancelPushButton, Qt.LeftButton)
     assert ontology_doc_mock.types() != ui_form.ontology_types, "Ontology document should not be modified!"
+
+  def test_component_delete_type_after_creation_of_new_structural_type_should_succeed(self,
+                                                                                      ontology_editor_gui:
+                                                                                      tuple[
+                                                                                        QApplication,
+                                                                                        QtWidgets.QDialog,
+                                                                                        OntologyConfigurationForm,
+                                                                                        QtBot],
+                                                                                      ontology_doc_mock: ontology_doc_mock,
+                                                                                      props_column_names: props_column_names,
+                                                                                      attachments_column_names: attachments_column_names):
+    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
+    assert ui_form.create_type_dialog.buttonBox.isVisible() is False, "Create new type dialog button box should not be shown!"
+    qtbot.mouseClick(ui_form.addTypePushButton, Qt.LeftButton)
+    with qtbot.waitExposed(ui_form.create_type_dialog.instance, timeout=200):
+      assert ui_form.create_type_dialog.instance.isVisible() is True, "Create new type dialog should be shown!"
+      assert ui_form.create_type_dialog.buttonBox.isVisible() is True, "Create new type dialog button box should be shown!"
+      ui_form.create_type_dialog.structuralLevelCheckBox.setChecked(True)
+      ui_form.create_type_dialog.labelLineEdit.setText("test")
+      assert ui_form.create_type_dialog.titleLineEdit.text() == ui_form.create_type_dialog.next_struct_level.replace(
+        'x', 'Structure level '), "title should be set to 'Structure level 3'"
+    qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(ui_form.create_type_dialog.buttonBox.Ok),
+                     Qt.LeftButton)
+    assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
+    assert ui_form.typeComboBox.currentText() == "Structure level 3", "Data type combo box should be newly added structural item"
+    assert ui_form.typeLabelLineEdit.text() == "test", "Data type label should be newly added label"
+    current_selected_type = ui_form.typeComboBox.currentText()
+    previous_types_count = ui_form.typeComboBox.count()
+    qtbot.mouseClick(ui_form.deleteTypePushButton, Qt.LeftButton)
+    assert (current_selected_type not in [ui_form.typeComboBox.itemText(i)
+                                          for i in range(ui_form.typeComboBox.count())]), \
+      f"Deleted type:{current_selected_type} should not exist in combo list!"
+    assert (previous_types_count - 1 == ui_form.typeComboBox.count()), \
+      f"Combo list should have {previous_types_count - 1} items!"
+    assert adapt_type(ui_form.typeComboBox.currentText()) == ontology_doc_mock.types_list()[0], \
+      "Type combo box should be selected to first structural item"
+    selected_type = ontology_doc_mock.types()[adapt_type(ui_form.typeComboBox.currentText())]
+    assert ui_form.typeLabelLineEdit.text() == selected_type["label"], \
+      "Type label line edit should be selected to first structural item"
+    assert ui_form.typeIriLineEdit.text() == selected_type["IRI"], \
+      "Type label line edit should be selected to first structural item"
+    assert ui_form.propsCategoryComboBox.currentText() == list(selected_type["prop"].keys())[0], \
+      "Type label line edit should be selected to first structural item"
+    self.check_table_contents(attachments_column_names, props_column_names, selected_type, ui_form)
 
   def test_component_save_button_click_after_delete_category_should_modify_ontology_document_data(self,
                                                                                                   mocker,
@@ -312,3 +431,140 @@ class TestOntologyConfigurationExtended(object):
     assert lookup_dialog.instance.isVisible() is False, "Ontology lookup dialog should be cancelled and closed"
     assert lookup_dialog.selected_iris == [], "IRIs should not be set"
     assert ui_form.typeIriLineEdit.text() == 'http://url.com', "typeIriLineEdit should be default test value after the cancellation"
+
+  def test_delete_type_button_must_be_disabled_for_every_structural_level_except_the_last(self,
+                                                                                          ontology_editor_gui:
+                                                                                          tuple[
+                                                                                            QApplication,
+                                                                                            QtWidgets.QDialog,
+                                                                                            OntologyConfigurationForm,
+                                                                                            QtBot],
+                                                                                          ontology_doc_mock: ontology_doc_mock,
+                                                                                          props_column_names: props_column_names,
+                                                                                          attachments_column_names: attachments_column_names):
+    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    assert ui_form.typeComboBox.currentText() == "Structure level 0", "Initial loaded type must be 'Structure level 0'"
+    assert ui_form.deleteTypePushButton.isEnabled() is False, "Delete type button must be disabled for 'Structure level 0'"
+    loaded_types = []
+    for i in range(ui_form.typeComboBox.count()):
+      loaded_types.append(ui_form.typeComboBox.itemText(i))
+    enabled_structural_type = max(filter(lambda k: 'Structure level' in k, loaded_types))
+    ui_form.typeComboBox.setCurrentText(enabled_structural_type)
+    assert ui_form.deleteTypePushButton.isEnabled() is True, f"Delete type button must be enabled for only enabled structural type: '{enabled_structural_type}'"
+    loaded_types.remove(enabled_structural_type)
+    for loaded_type in loaded_types:
+      ui_form.typeComboBox.setCurrentText(loaded_type)
+      if "Structure level" in loaded_type:
+        assert ui_form.deleteTypePushButton.isEnabled() is False, f"Delete type button must be disabled for '{loaded_type}'"
+      else:
+        assert ui_form.deleteTypePushButton.isEnabled() is True, "Delete type button must be enabled for normal types"
+
+    # Add a new structural type and check if the delete button is disabled for the previously enabled type
+    qtbot.mouseClick(ui_form.addTypePushButton, Qt.LeftButton)
+    with qtbot.waitExposed(ui_form.create_type_dialog.instance, timeout=200):
+      ui_form.create_type_dialog.structuralLevelCheckBox.setChecked(True)
+      ui_form.create_type_dialog.labelLineEdit.setText("test")
+    qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(ui_form.create_type_dialog.buttonBox.Ok),
+                     Qt.LeftButton)
+    ui_form.typeComboBox.setCurrentText(enabled_structural_type)
+    assert ui_form.deleteTypePushButton.isEnabled() is False, f"Delete type button must be disabled for only previously enabled structural type: '{enabled_structural_type}'"
+
+    # Reload the types and check after the addition of new type and check if the delete button is enabled/disabled
+    loaded_types.clear()
+    for i in range(ui_form.typeComboBox.count()):
+      loaded_types.append(ui_form.typeComboBox.itemText(i))
+    enabled_structural_type = max(filter(lambda k: 'Structure level' in k, loaded_types))
+    ui_form.typeComboBox.setCurrentText(enabled_structural_type)
+    assert ui_form.deleteTypePushButton.isEnabled() is True, f"Delete type button must be enabled for only enabled structural type: '{enabled_structural_type}'"
+    loaded_types.remove(enabled_structural_type)
+    for loaded_type in loaded_types:
+      ui_form.typeComboBox.setCurrentText(loaded_type)
+      if "Structure level" in loaded_type:
+        assert ui_form.deleteTypePushButton.isEnabled() is False, f"Delete type button must be disabled for '{loaded_type}'"
+      else:
+        assert ui_form.deleteTypePushButton.isEnabled() is True, "Delete type button must be enabled for normal types"
+
+    # Add a normal type and check if the delete button is disabled correctly for the structural types
+    qtbot.mouseClick(ui_form.addTypePushButton, Qt.LeftButton)
+    with qtbot.waitExposed(ui_form.create_type_dialog.instance, timeout=200):
+      ui_form.create_type_dialog.titleLineEdit.setText("new type")
+      ui_form.create_type_dialog.labelLineEdit.setText("test")
+    qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(ui_form.create_type_dialog.buttonBox.Ok),
+                     Qt.LeftButton)
+
+    # Reload the types and check after the addition of new type and check if the delete button is enabled/disabled
+    loaded_types.clear()
+    for i in range(ui_form.typeComboBox.count()):
+      loaded_types.append(ui_form.typeComboBox.itemText(i))
+    enabled_structural_type = max(filter(lambda k: 'Structure level' in k, loaded_types))
+    ui_form.typeComboBox.setCurrentText(enabled_structural_type)
+    assert ui_form.deleteTypePushButton.isEnabled() is True, f"Delete type button must be enabled for only enabled structural type: '{enabled_structural_type}'"
+    loaded_types.remove(enabled_structural_type)
+    for loaded_type in loaded_types:
+      ui_form.typeComboBox.setCurrentText(loaded_type)
+      if "Structure level" in loaded_type:
+        assert ui_form.deleteTypePushButton.isEnabled() is False, f"Delete type button must be disabled for '{loaded_type}'"
+      else:
+        assert ui_form.deleteTypePushButton.isEnabled() is True, "Delete type button must be enabled for normal types'"
+
+  def test_delete_of_structural_type_possible_from_xn_to_x1_must_succeed_and_x0_delete_disabled(self,
+                                                                                                ontology_editor_gui:
+                                                                                                tuple[
+                                                                                                  QApplication,
+                                                                                                  QtWidgets.QDialog,
+                                                                                                  OntologyConfigurationForm,
+                                                                                                  QtBot],
+                                                                                                ontology_doc_mock: ontology_doc_mock,
+                                                                                                props_column_names: props_column_names,
+                                                                                                attachments_column_names: attachments_column_names):
+    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    assert ui_form.typeComboBox.currentText() == "Structure level 0", "Initial loaded type must be 'Structure level 0'"
+    assert ui_form.deleteTypePushButton.isEnabled() is False, "Delete type button must be disabled for 'Structure level 0'"
+    # Add 5 structural types
+    for i in range(5):
+      qtbot.mouseClick(ui_form.addTypePushButton, Qt.LeftButton)
+      with qtbot.waitExposed(ui_form.create_type_dialog.instance, timeout=200):
+        ui_form.create_type_dialog.structuralLevelCheckBox.setChecked(True)
+        ui_form.create_type_dialog.labelLineEdit.setText("test")
+      qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(ui_form.create_type_dialog.buttonBox.Ok),
+                       Qt.LeftButton)
+
+    # Read the loaded types
+    loaded_types = []
+    for i in range(ui_form.typeComboBox.count()):
+      loaded_types.append(ui_form.typeComboBox.itemText(i))
+
+    # Delete the normal types from UI
+    normal_types = list(filter(lambda k: 'Structure level' not in k, loaded_types))
+    for normal_type in normal_types:
+      ui_form.typeComboBox.setCurrentText(normal_type)
+      assert ui_form.deleteTypePushButton.isEnabled() is True, f"Delete type button must be enabled for only enabled structural type: '{normal_type}'"
+      qtbot.mouseClick(ui_form.deleteTypePushButton, Qt.LeftButton)
+      for i in range(ui_form.typeComboBox.count()):
+        assert ui_form.typeComboBox.itemText(
+          i) != normal_type, f"Deleted type:{normal_type} should not exist in combo list!"
+      loaded_types.remove(normal_type)
+
+    # Delete the structural types from UI
+    structural_types = list(filter(lambda k: 'Structure level' in k, loaded_types))
+    structural_types.sort()
+    assert structural_types == loaded_types, "All normal types must be deleted from UI, hence only structural types are left!"
+    for i in range(len(structural_types)):
+      enabled_structural_type = max(structural_types)
+      if enabled_structural_type == 'Structure level 0':
+        break
+      for structural_type in list(structural_types):
+        if structural_type == enabled_structural_type:
+          ui_form.typeComboBox.setCurrentText(structural_type)
+          assert ui_form.deleteTypePushButton.isEnabled() is True, f"Delete type button must be enabled for only enabled structural type: '{structural_type}'"
+          qtbot.mouseClick(ui_form.deleteTypePushButton, Qt.LeftButton)
+          for j in range(ui_form.typeComboBox.count()):
+            assert ui_form.typeComboBox.itemText(
+              j) != structural_type, f"Deleted type:{structural_type} should not exist in combo list!"
+          structural_types.remove(structural_type)
+          loaded_types.remove(structural_type)
+        else:
+          ui_form.typeComboBox.setCurrentText(structural_type)
+          assert ui_form.deleteTypePushButton.isEnabled() is False, f"Delete type button must be disabled for '{structural_type}'"
+    assert structural_types == loaded_types == [
+      "Structure level 0"], "All structural types must be deleted from UI except 'Structure level 0'"

@@ -8,18 +8,19 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
 import pytest
+from PySide6 import QtWidgets
 from PySide6.QtWidgets import QApplication, QDialog, QLineEdit, QMessageBox
 
 from pasta_eln.GUI.ontology_configuration.create_type_dialog_extended import CreateTypeDialog
 from pasta_eln.GUI.ontology_configuration.delete_column_delegate import DeleteColumnDelegate
-from pasta_eln.GUI.ontology_configuration.ontology_attachments_tableview_data_model import \
-  OntologyAttachmentsTableViewModel
 from pasta_eln.GUI.ontology_configuration.ontology_config_generic_exception import OntologyConfigGenericException
 from pasta_eln.GUI.ontology_configuration.ontology_config_key_not_found_exception import \
   OntologyConfigKeyNotFoundException
+from pasta_eln.GUI.ontology_configuration.ontology_configuration_constants import ATTACHMENT_TABLE_DELETE_COLUMN_INDEX, \
+  ATTACHMENT_TABLE_REORDER_COLUMN_INDEX, PROPS_TABLE_DELETE_COLUMN_INDEX, \
+  PROPS_TABLE_IRI_COLUMN_INDEX, PROPS_TABLE_REORDER_COLUMN_INDEX, PROPS_TABLE_REQUIRED_COLUMN_INDEX
 from pasta_eln.GUI.ontology_configuration.ontology_configuration_extended import OntologyConfigurationForm, get_gui
 from pasta_eln.GUI.ontology_configuration.ontology_document_null_exception import OntologyDocumentNullException
-from pasta_eln.GUI.ontology_configuration.ontology_props_tableview_data_model import OntologyPropsTableViewModel
 from pasta_eln.GUI.ontology_configuration.reorder_column_delegate import ReorderColumnDelegate
 from pasta_eln.GUI.ontology_configuration.required_column_delegate import RequiredColumnDelegate
 from pasta_eln.GUI.ontology_configuration.utility_functions import generate_empty_type, generate_required_properties, \
@@ -31,14 +32,44 @@ class TestOntologyConfigConfiguration(object):
 
   def test_instantiation_should_succeed(self,
                                         mocker):
-    mock_document = mocker.patch('cloudant.document.Document')
+    mock_database = mocker.patch('pasta_eln.database.Database')
     mocker.patch('pasta_eln.GUI.ontology_configuration.create_type_dialog_extended.logging.getLogger')
-    mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration.Ui_OntologyConfigurationBaseForm.setupUi')
+    mock_setup_ui = mocker.patch(
+      'pasta_eln.GUI.ontology_configuration.ontology_configuration.Ui_OntologyConfigurationBaseForm.setupUi')
     mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.adjust_ontology_data_to_v3')
     mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.LookupIriAction')
-    mocker.patch.object(QDialog, '__new__')
-    mocker.patch.object(OntologyPropsTableViewModel, '__new__')
-    mocker.patch.object(OntologyAttachmentsTableViewModel, '__new__')
+    mock_props_table_view_model = mocker.MagicMock()
+    mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.OntologyPropsTableViewModel',
+                 lambda: mock_props_table_view_model)
+    column_widths: dict[int, int] = {
+      0: 100,
+      1: 300,
+    }
+    mock_props_table_view_model.column_widths = column_widths
+    mock_attachments_table_view_model = mocker.MagicMock()
+    mocker.patch(
+      'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.OntologyAttachmentsTableViewModel',
+      lambda: mock_attachments_table_view_model)
+    mock_attachments_table_view_model.column_widths = column_widths
+    mock_required_column_delegate = mocker.MagicMock()
+    mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.RequiredColumnDelegate',
+                 lambda: mock_required_column_delegate)
+    mock_create_type_dialog = mocker.MagicMock()
+    mock_create = mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.CreateTypeDialog',
+                               return_value=mock_create_type_dialog)
+    mock_delete_column_delegate = mocker.MagicMock()
+    mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.DeleteColumnDelegate',
+                 lambda: mock_delete_column_delegate)
+    mock_reorder_column_delegate = mocker.MagicMock()
+    mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.ReorderColumnDelegate',
+                 lambda: mock_reorder_column_delegate)
+    mock_iri_column_delegate = mocker.MagicMock()
+    mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.IriColumnDelegate',
+                 lambda: mock_iri_column_delegate)
+    mock_signal = mocker.patch(
+      'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.OntologyConfigurationForm.type_changed_signal')
+    mock_dialog = mocker.MagicMock()
+    mocker.patch.object(QDialog, '__new__', lambda _: mock_dialog)
     mocker.patch.object(RequiredColumnDelegate, '__new__', lambda _: mocker.MagicMock())
     mocker.patch.object(DeleteColumnDelegate, '__new__', lambda _: mocker.MagicMock())
     mocker.patch.object(ReorderColumnDelegate, '__new__', lambda _: mocker.MagicMock())
@@ -62,9 +93,66 @@ class TestOntologyConfigConfiguration(object):
     mocker.patch.object(OntologyConfigurationForm, 'reorder_column_delegate_props_table', create=True)
     mocker.patch.object(OntologyConfigurationForm, 'delete_column_delegate_attach_table', create=True)
     mocker.patch.object(OntologyConfigurationForm, 'reorder_column_delegate_attach_table', create=True)
+    mock_setup_slots = mocker.patch.object(OntologyConfigurationForm, 'setup_slots', create=True)
+    mock_load_ontology_data = mocker.patch.object(OntologyConfigurationForm, 'load_ontology_data', create=True)
     mocker.patch.object(CreateTypeDialog, '__new__')
-    config_instance = OntologyConfigurationForm(mock_document)
+    config_instance = OntologyConfigurationForm(mock_database)
     assert config_instance, "OntologyConfigurationForm should be created"
+    assert config_instance.type_changed_signal == mock_signal, "Signal should be created"
+    mock_setup_ui.assert_called_once_with(mock_dialog)
+    assert config_instance.database is mock_database, "Database should be set"
+    config_instance.database.db.__getitem__.assert_called_once_with('-ontology-')
+    assert config_instance.ontology_document is config_instance.database.db.__getitem__.return_value, "Ontology document should be set"
+    assert config_instance.props_table_data_model == mock_props_table_view_model, "Props table data model should be set"
+    assert config_instance.attachments_table_data_model == mock_attachments_table_view_model, "Attachments table data model should be set"
+    assert config_instance.required_column_delegate_props_table == mock_required_column_delegate, "Required column delegate should be set"
+    assert config_instance.delete_column_delegate_props_table == mock_delete_column_delegate, "Delete column delegate should be set"
+    assert config_instance.reorder_column_delegate_props_table == mock_reorder_column_delegate, "Reorder column delegate should be set"
+    assert config_instance.iri_column_delegate_props_table == mock_iri_column_delegate, "Iri column delegate should be set"
+    assert config_instance.delete_column_delegate_attach_table == mock_delete_column_delegate, "Delete column delegate should be set"
+    assert config_instance.reorder_column_delegate_attach_table == mock_reorder_column_delegate, "Reorder column delegate should be set"
+    config_instance.typePropsTableView.setItemDelegateForColumn.assert_any_call(
+      PROPS_TABLE_REQUIRED_COLUMN_INDEX,
+      mock_required_column_delegate
+    )
+    config_instance.typePropsTableView.setItemDelegateForColumn.assert_any_call(
+      PROPS_TABLE_DELETE_COLUMN_INDEX,
+      mock_delete_column_delegate
+    )
+    config_instance.typePropsTableView.setItemDelegateForColumn.assert_any_call(
+      PROPS_TABLE_REORDER_COLUMN_INDEX,
+      mock_reorder_column_delegate
+    )
+    config_instance.typePropsTableView.setItemDelegateForColumn.assert_any_call(
+      PROPS_TABLE_IRI_COLUMN_INDEX,
+      mock_iri_column_delegate
+    )
+    config_instance.typePropsTableView.setModel.assert_called_once_with(mock_props_table_view_model)
+    for column_index, width in column_widths.items():
+      config_instance.typePropsTableView.setColumnWidth.assert_any_call(column_index, width)
+    (config_instance.typePropsTableView.horizontalHeader()
+     .setSectionResizeMode.assert_called_once_with(1, QtWidgets.QHeaderView.Stretch))
+
+    config_instance.typeAttachmentsTableView.setItemDelegateForColumn.assert_any_call(
+      ATTACHMENT_TABLE_DELETE_COLUMN_INDEX,
+      mock_delete_column_delegate)
+    config_instance.typeAttachmentsTableView.setItemDelegateForColumn.assert_any_call(
+      ATTACHMENT_TABLE_REORDER_COLUMN_INDEX,
+      mock_reorder_column_delegate)
+    config_instance.typeAttachmentsTableView.setModel.assert_any_call(mock_attachments_table_view_model)
+
+    for column_index, width in config_instance.attachments_table_data_model.column_widths.items():
+      config_instance.typeAttachmentsTableView.setColumnWidth.assert_any_call(column_index, width)
+    config_instance.typeAttachmentsTableView.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+
+    mock_create.assert_called_once_with(config_instance.create_type_accepted_callback,
+                                        config_instance.create_type_rejected_callback)
+    assert config_instance.create_type_dialog == mock_create_type_dialog, "CreateTypeDialog should be set"
+    mock_setup_slots.assert_called_once_with()
+
+    config_instance.addAttachmentPushButton.hide.assert_called_once_with()
+    config_instance.typeAttachmentsTableView.hide.assert_called_once_with()
+    mock_load_ontology_data.assert_called_once_with()
 
   def test_instantiation_with_null_database_should_throw_exception(self,
                                                                    mocker):
@@ -177,12 +265,15 @@ class TestOntologyConfigConfiguration(object):
                                                      new_type_selected,
                                                      mock_ontology_types):
     logger_info_spy = mocker.spy(configuration_extended.logger, 'info')
+    mock_signal = mocker.patch(
+      'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.OntologyConfigurationForm.type_changed_signal')
     mocker.patch.object(configuration_extended, 'addPropsCategoryLineEdit', create=True)
     mocker.patch.object(configuration_extended, 'ontology_types', mock_ontology_types, create=True)
     mocker.patch.object(configuration_extended, 'typeLabelLineEdit', create=True)
     mocker.patch.object(configuration_extended, 'typeIriLineEdit', create=True)
     mocker.patch.object(configuration_extended, 'attachments_table_data_model', create=True)
     mocker.patch.object(configuration_extended, 'propsCategoryComboBox', create=True)
+    mocker.patch.object(configuration_extended, 'type_changed_signal', mock_signal, create=True)
     set_text_label_line_edit_spy = mocker.spy(configuration_extended.typeLabelLineEdit, 'setText')
     set_text_iri_line_edit_spy = mocker.spy(configuration_extended.typeIriLineEdit, 'setText')
     set_current_index_category_combo_box_spy = mocker.spy(configuration_extended.propsCategoryComboBox,
@@ -202,6 +293,7 @@ class TestOntologyConfigConfiguration(object):
         and new_type_selected
         and new_type_selected in mock_ontology_types):
       assert configuration_extended.type_combo_box_changed(new_type_selected) is None, "Nothing should be returned"
+      mock_signal.emit.assert_called_once_with(new_type_selected)
       logger_info_spy.assert_called_once_with("New type selected in UI: {%s}", new_type_selected)
       clear_add_props_category_line_edit_spy.assert_called_once_with()
       set_text_label_line_edit_spy.assert_called_once_with(mock_ontology_types.get(new_type_selected).get('label'))
@@ -454,8 +546,11 @@ class TestOntologyConfigConfiguration(object):
                                                    selected_type,
                                                    ontology_types,
                                                    ontology_document):
+    mock_signal = mocker.patch(
+      'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.OntologyConfigurationForm.type_changed_signal')
     mocker.patch.object(configuration_extended, 'typeComboBox', create=True)
     mocker.patch.object(configuration_extended.typeComboBox, 'currentText', return_value=selected_type)
+    mocker.patch.object(configuration_extended, 'type_changed_signal', mock_signal, create=True)
 
     mocker.patch.object(configuration_extended, 'ontology_types', create=True)
     mocker.patch.object(configuration_extended, 'ontology_document', create=True)
@@ -494,7 +589,7 @@ class TestOntologyConfigConfiguration(object):
       return
     if selected_type:
       assert configuration_extended.delete_selected_type() is None, "Nothing should be returned"
-      if selected_type and selected_type in original_ontology_types and selected_type in original_ontology_document:
+      if selected_type and selected_type in original_ontology_types:
         logger_info_spy.assert_called_once_with("User deleted the selected type: {%s}", selected_type)
         pop_items_selected_ontology_types_spy.assert_called_once_with(selected_type)
         clear_category_combo_box_spy.assert_called_once_with()
@@ -835,7 +930,6 @@ class TestOntologyConfigConfiguration(object):
         assert configuration_extended.typeComboBox.addItems.call_count == 2, "ComboBox addItems should be called twice"
         configuration_extended.typeComboBox.addItems.assert_called_with(
           get_types_for_display(configuration_extended.ontology_types.keys()))
-        mock_show_message.assert_called_once_with(f"Type (title: {new_title} label: {new_label}) has been added....")
 
   @pytest.mark.parametrize("instance_exists", [True, False])
   def test_get_gui_should_do_expected(self,
@@ -903,3 +997,15 @@ class TestOntologyConfigConfiguration(object):
                                                       lookup_term="default")
     configuration_extended.typeIriLineEdit.addAction.assert_called_once_with(mock_is_lookup_iri_action.return_value,
                                                                              QLineEdit.TrailingPosition)
+
+  def test_check_and_disable_delete_button_should_do_expected(self,
+                                                              mocker,
+                                                              configuration_extended: configuration_extended):
+    mock_can_delete_type = mocker.patch(
+      'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.can_delete_type', return_value=True)
+    mock_ontology_types = mocker.MagicMock()
+    mocker.patch.object(configuration_extended, 'ontology_types', mock_ontology_types)
+    mock_ontology_types.keys.return_value = ['one', 'two']
+    assert configuration_extended.check_and_disable_delete_button("three") is None, "Nothing should be returned"
+    configuration_extended.deleteTypePushButton.setEnabled.assert_called_once_with(True)
+    mock_can_delete_type.assert_called_once_with(['one', 'two'], "three")

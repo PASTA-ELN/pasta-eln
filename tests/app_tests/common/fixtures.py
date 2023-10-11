@@ -238,11 +238,13 @@ def pasta_db_mock(mocker, ontology_doc_mock) -> Database:
 
 
 @fixture()
-def ontology_editor_gui(request, pasta_db_mock) -> tuple[QApplication,
+def ontology_editor_gui(mocker, request, pasta_db_mock) -> tuple[QApplication,
 QtWidgets.QDialog,
 OntologyConfigurationForm,
 QtBot]:
+  mock_message_box = mocker.patch('pasta_eln.GUI.ontology_configuration.utility_functions.QMessageBox')
   app, ui_dialog, ui_form_extended = get_gui(pasta_db_mock)
+  mocker.patch.object(ui_form_extended, 'message_box', mock_message_box, create=True)
   qtbot: QtBot = QtBot(app)
   return app, ui_dialog, ui_form_extended, qtbot
 

@@ -448,7 +448,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm, QObject):
     if self.ontology_document is None or self.ontology_types is None:
       self.logger.error("Null ontology_document/ontology_types, erroneous app state")
       raise OntologyConfigGenericException("Null ontology_document/ontology_types, erroneous app state", {})
-    if title in self.ontology_document:
+    if title in self.ontology_types:
       show_message(f"Type (title: {title} label: {label}) cannot be added since it exists in DB already....")
     else:
       if title is None:
@@ -462,24 +462,29 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm, QObject):
       self.typeComboBox.clear()
       self.typeComboBox.addItems(get_types_for_display(self.ontology_types.keys()))
       self.typeComboBox.setCurrentIndex(len(self.ontology_types) - 1)
-      show_message(f"Type (title: {title} label: {label}) has been added....")
 
   def show_hide_attachments_table(self) -> None:
     """
-    Show/hide the attachments table and the add attachment button
+    Show/hide the attachment table and the add attachment button
     Returns: Nothing
     """
     self.typeAttachmentsTableView.setVisible(not self.typeAttachmentsTableView.isVisible())
     self.addAttachmentPushButton.setVisible(not self.addAttachmentPushButton.isVisible())
 
-  @Slot(int)
+  @Slot(str)
   def check_and_disable_delete_button(self,
                                       selected_type: str) -> None:
     """
-    Slot invoked to check and disable the delete button for the selected type
+    Slot to check and disable the "delete" button for the selected type
+    Args:
+      selected_type (str): Selected type: typesComboBox
+
+    Returns: Nothing
+
     """
-    self.logger.info("User checked and disabled the delete button")
-    self.deleteTypePushButton.setEnabled(can_delete_type(self.ontology_types.keys(), selected_type))
+    (self.deleteTypePushButton
+     .setEnabled(can_delete_type(self.ontology_types.keys(),
+                                 selected_type)))
 
 
 def get_gui(database: Database) -> tuple[
