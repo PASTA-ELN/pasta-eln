@@ -20,9 +20,6 @@ from PySide6.QtWidgets import QApplication, QLineEdit, QMessageBox
 from cloudant.document import Document
 
 from .create_type_dialog_extended import CreateTypeDialog
-from .delete_column_delegate import DeleteColumnDelegate
-from .iri_column_delegate import IriColumnDelegate
-from .lookup_iri_action import LookupIriAction
 from .ontology_attachments_tableview_data_model import OntologyAttachmentsTableViewModel
 from .ontology_config_generic_exception import OntologyConfigGenericException
 from .ontology_config_key_not_found_exception import \
@@ -35,6 +32,9 @@ from .ontology_document_null_exception import OntologyDocumentNullException
 from .ontology_props_tableview_data_model import OntologyPropsTableViewModel
 from .reorder_column_delegate import ReorderColumnDelegate
 from .required_column_delegate import RequiredColumnDelegate
+from .delete_column_delegate import DeleteColumnDelegate
+from .iri_column_delegate import IriColumnDelegate
+from .lookup_iri_action import LookupIriAction
 from .utility_functions import adapt_type, adjust_ontology_data_to_v3, can_delete_type, check_ontology_types, \
   generate_empty_type, \
   generate_required_properties, get_missing_props_message, get_next_possible_structural_level_label, \
