@@ -48,8 +48,10 @@ class Form(QDialog):
                       if hasattr(self.comm.backend, 'configuration') else 300
       imageW, self.imageL = widgetAndLayout('V', mainL)
       Image(self.doc['image'], self.imageL, anyDimension=width)
-      imageW.setContextMenuPolicy(Qt.CustomContextMenu)
-      imageW.customContextMenuRequested.connect(lambda pos: initContextMenu(self, pos))
+      if '_id' in self.doc:
+        self.docID= doc['_id']  #required for hide to work
+        imageW.setContextMenuPolicy(Qt.CustomContextMenu)
+        imageW.customContextMenuRequested.connect(lambda pos: initContextMenu(self, pos))
 
     _, self.formL = widgetAndLayout('Form', mainL, 's')
     #Add things that are in ontology
@@ -362,7 +364,6 @@ class Form(QDialog):
     """
     if isinstance(command[0], CommandMenu):
       if executeContextMenu(self, command):
-        print('I should repaint the image', len(self.doc))
         self.imageL.itemAt(0).widget().setParent(None)   # type: ignore
         width = self.comm.backend.configuration['GUI']['imageSizeDetails'] \
                 if hasattr(self.comm.backend, 'configuration') else 300
