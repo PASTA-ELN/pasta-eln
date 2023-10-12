@@ -451,7 +451,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm, QObject):
     if title in self.ontology_types:
       show_message(f"Type (title: {title} label: {label}) cannot be added since it exists in DB already....")
     else:
-      if title is None:
+      if not title:
         self.logger.warning("Enter non-null/valid title!!.....")
         show_message("Enter non-null/valid title!!.....")
         return

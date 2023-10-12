@@ -235,6 +235,65 @@ class TestOntologyConfigurationExtended(object):
     assert ui_form.typeComboBox.currentText() == "title", "Data type combo box should be newly added type title"
     assert ui_form.typeLabelLineEdit.text() == "label", "Data type combo box should be newly added type label"
 
+  def test_component_create_new_type_normal_type_with_empty_title_should_warn_user(self,
+                                                                                   mocker,
+                                                                                   ontology_editor_gui:
+                                                                                   tuple[
+                                                                                     QApplication,
+                                                                                     QtWidgets.QDialog,
+                                                                                     OntologyConfigurationForm,
+                                                                                     QtBot],
+                                                                                   ontology_doc_mock: ontology_doc_mock,
+                                                                                   props_column_names: props_column_names,
+                                                                                   attachments_column_names: attachments_column_names):
+
+    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    mocker.patch.object(ui_form.logger, 'warning')
+
+    # Checking with empty title
+    assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
+    assert ui_form.create_type_dialog.buttonBox.isVisible() is False, "Create new type dialog button box should not be shown!"
+    qtbot.mouseClick(ui_form.addTypePushButton, Qt.LeftButton)
+    with qtbot.waitExposed(ui_form.create_type_dialog.instance, timeout=200):
+      assert ui_form.create_type_dialog.instance.isVisible() is True, "Create new type dialog should be shown!"
+      assert ui_form.create_type_dialog.buttonBox.isVisible() is True, "Create new type dialog button box should be shown!"
+      assert ui_form.create_type_dialog.structuralLevelCheckBox.isChecked() is False, "structuralLevelCheckBox should be unchecked"
+      ui_form.create_type_dialog.titleLineEdit.setText("")
+      ui_form.create_type_dialog.labelLineEdit.setText("label")
+    qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(ui_form.create_type_dialog.buttonBox.Ok),
+                     Qt.LeftButton)
+    assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
+    ui_form.logger.warning.assert_called_once_with("Enter non-null/valid title!!.....")
+    ui_form.message_box.setText.assert_called_once_with('Enter non-null/valid title!!.....')
+    ui_form.message_box.exec.assert_called_once_with()
+    assert ui_form.typeComboBox.currentText() != "", "Data type combo box should not be empty title"
+    assert ui_form.typeLabelLineEdit.text() != "label", "Data type combo box should not be newly added type label"
+
+    # Checking with None title
+    assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
+    assert ui_form.create_type_dialog.buttonBox.isVisible() is False, "Create new type dialog button box should not be shown!"
+    qtbot.mouseClick(ui_form.addTypePushButton, Qt.LeftButton)
+    with qtbot.waitExposed(ui_form.create_type_dialog.instance, timeout=200):
+      assert ui_form.create_type_dialog.instance.isVisible() is True, "Create new type dialog should be shown!"
+      assert ui_form.create_type_dialog.buttonBox.isVisible() is True, "Create new type dialog button box should be shown!"
+      assert ui_form.create_type_dialog.structuralLevelCheckBox.isChecked() is False, "structuralLevelCheckBox should be unchecked"
+      ui_form.create_type_dialog.titleLineEdit.setText(None)
+      ui_form.create_type_dialog.labelLineEdit.setText("label")
+    qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(ui_form.create_type_dialog.buttonBox.Ok),
+                     Qt.LeftButton)
+    assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
+    ui_form.logger.warning.assert_has_calls([
+      mocker.call("Enter non-null/valid title!!....."),
+      mocker.call("Enter non-null/valid title!!.....")])
+    ui_form.message_box.setText.assert_has_calls([
+      mocker.call("Enter non-null/valid title!!....."),
+      mocker.call("Enter non-null/valid title!!.....")])
+    ui_form.message_box.exec.assert_has_calls([
+      mocker.call(),
+      mocker.call()])
+    assert ui_form.typeComboBox.currentText() != None, "Data type combo box should not be None"
+    assert ui_form.typeLabelLineEdit.text() != "label", "Data type combo box should not be newly added type label"
+
   def test_component_create_new_type_reject_should_not_add_new_type_with_label(self,
                                                                                ontology_editor_gui:
                                                                                tuple[
