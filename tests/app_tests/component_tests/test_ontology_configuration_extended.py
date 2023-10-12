@@ -9,7 +9,7 @@
 
 from PySide6 import QtWidgets
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QApplication, QCheckBox
+from PySide6.QtWidgets import QApplication, QCheckBox, QMessageBox
 from pytestqt.qtbot import QtBot
 
 from pasta_eln.GUI.ontology_configuration.lookup_iri_action import LookupIriAction
@@ -46,6 +46,8 @@ class TestOntologyConfigurationExtended(object):
     assert ui_form.addPropsCategoryLineEdit is not None, "Property category line edit not loaded!"
     assert ui_form.typeComboBox is not None, "Data type combo box not loaded!"
     assert ui_form.propsCategoryComboBox is not None, "Property category combo box not loaded!"
+    assert ui_form.typeAttachmentsTableView.isHidden() is True, "Type attachments table view should not be shown!"
+    assert ui_form.addAttachmentPushButton.isHidden() is True, "addAttachmentPushButton should not be shown!"
 
   def test_component_launch_should_load_ontology_data(self,
                                                       ontology_editor_gui: tuple[
@@ -121,11 +123,11 @@ class TestOntologyConfigurationExtended(object):
     mock_show_message = mocker.patch(
       "pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.show_message")
     mocker.patch.object(ui_form, "ontology_loaded", False)
-    # Select a non-structural type in the type combo box, in-order to enable delete button
+    # Select a non-structural type in the type combo box, in order to enable the delete button
     ui_form.typeComboBox.setCurrentText("measurement")
     assert ui_form.typeComboBox.currentText() == "measurement", "Data type combo box should be selected to measurement"
     qtbot.mouseClick(ui_form.deleteTypePushButton, Qt.LeftButton)
-    mock_show_message.assert_called_once_with("Load the ontology data first....")
+    mock_show_message.assert_called_once_with("Load the ontology data first....", QMessageBox.Warning)
     assert ui_form.create_type_dialog.buttonBox.isVisible() is False, "Create new type dialog should not be shown!"
 
   def test_component_delete_selected_type_with_loaded_ontology_should_delete_and_update_ui(self,
@@ -266,6 +268,7 @@ class TestOntologyConfigurationExtended(object):
     ui_form.logger.warning.assert_called_once_with("Enter non-null/valid title!!.....")
     ui_form.message_box.setText.assert_called_once_with('Enter non-null/valid title!!.....')
     ui_form.message_box.exec.assert_called_once_with()
+    ui_form.message_box.setIcon.assert_called_once_with(QtWidgets.QMessageBox.Warning)
     assert ui_form.typeComboBox.currentText() != "", "Data type combo box should not be empty title"
     assert ui_form.typeLabelLineEdit.text() != "label", "Data type combo box should not be newly added type label"
 
@@ -291,6 +294,9 @@ class TestOntologyConfigurationExtended(object):
     ui_form.message_box.exec.assert_has_calls([
       mocker.call(),
       mocker.call()])
+    ui_form.message_box.setIcon.assert_has_calls([
+      mocker.call(QtWidgets.QMessageBox.Warning),
+      mocker.call(QtWidgets.QMessageBox.Warning)])
     assert ui_form.typeComboBox.currentText() != None, "Data type combo box should not be None"
     assert ui_form.typeLabelLineEdit.text() != "label", "Data type combo box should not be newly added type label"
 
@@ -627,3 +633,95 @@ class TestOntologyConfigurationExtended(object):
           assert ui_form.deleteTypePushButton.isEnabled() is False, f"Delete type button must be disabled for '{structural_type}'"
     assert structural_types == loaded_types == [
       "Structure level 0"], "All structural types must be deleted from UI except 'Structure level 0'"
+
+  def test_hide_show_attachments_table_should_do_as_expected(self,
+                                                             ontology_editor_gui:
+                                                             tuple[
+                                                               QApplication,
+                                                               QtWidgets.QDialog,
+                                                               OntologyConfigurationForm,
+                                                               QtBot],
+                                                             ontology_doc_mock: ontology_doc_mock,
+                                                             props_column_names: props_column_names,
+                                                             attachments_column_names: attachments_column_names):
+    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    assert ui_form.typeAttachmentsTableView.isHidden() is True, "Attachments table should not be visible initially!"
+    assert ui_form.addAttachmentPushButton.isHidden() is True, "addAttachmentPushButton should not be visible initially!"
+
+    qtbot.mouseClick(ui_form.attachmentsShowHidePushButton,
+                     Qt.LeftButton)
+    assert ui_form.typeAttachmentsTableView.isHidden() is False, "Attachments table should be visible now!"
+    assert ui_form.addAttachmentPushButton.isHidden() is False, "addAttachmentPushButton should be visible now!"
+    qtbot.mouseClick(ui_form.attachmentsShowHidePushButton,
+                     Qt.LeftButton)
+    assert ui_form.typeAttachmentsTableView.isVisible() is False, "Attachments table should not be visible now!"
+    assert ui_form.addAttachmentPushButton.isVisible() is False, "addAttachmentPushButton should not be visible now!"
+
+    qtbot.mouseClick(ui_form.attachmentsShowHidePushButton,
+                     Qt.LeftButton)
+    assert ui_form.typeAttachmentsTableView.isHidden() is False, "Attachments table should be visible now!"
+    assert ui_form.addAttachmentPushButton.isHidden() is False, "addAttachmentPushButton should be visible now!"
+
+    qtbot.mouseClick(ui_form.attachmentsShowHidePushButton,
+                     Qt.LeftButton)
+    assert ui_form.typeAttachmentsTableView.isVisible() is False, "Attachments table should not be visible now!"
+    assert ui_form.addAttachmentPushButton.isVisible() is False, "addAttachmentPushButton should not be visible now!"
+
+  def test_add_category_with_empty_name_should_warn_user(self,
+                                                         ontology_editor_gui:
+                                                         tuple[
+                                                           QApplication,
+                                                           QtWidgets.QDialog,
+                                                           OntologyConfigurationForm,
+                                                           QtBot],
+                                                         ontology_doc_mock: ontology_doc_mock,
+                                                         props_column_names: props_column_names,
+                                                         attachments_column_names: attachments_column_names):
+    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    assert ui_form.addPropsCategoryPushButton.isHidden() is False, "addPropsCategoryPushButton should be visible now!"
+    ui_form.addPropsCategoryLineEdit.setText("")
+    qtbot.mouseClick(ui_form.addPropsCategoryPushButton, Qt.LeftButton)
+    ui_form.message_box.setText.assert_called_once_with('Enter non-null/valid category name!!.....')
+    ui_form.message_box.setIcon.assert_called_once_with(QtWidgets.QMessageBox.Warning)
+    ui_form.message_box.exec.assert_called_once_with()
+
+  def test_add_category_with_valid_name_should_successfully_add_category_with_default_properties(self,
+                                                                                                 ontology_editor_gui:
+                                                                                                 tuple[
+                                                                                                   QApplication,
+                                                                                                   QtWidgets.QDialog,
+                                                                                                   OntologyConfigurationForm,
+                                                                                                   QtBot],
+                                                                                                 ontology_doc_mock: ontology_doc_mock,
+                                                                                                 props_column_names: props_column_names,
+                                                                                                 attachments_column_names: attachments_column_names):
+    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    assert ui_form.addPropsCategoryPushButton.isHidden() is False, "addPropsCategoryPushButton should be visible now!"
+    categories = []
+    initial_categories = []
+    newly_added_categories = []
+    for i in range(ui_form.propsCategoryComboBox.count()):
+      initial_categories.append(ui_form.propsCategoryComboBox.itemText(i))
+
+    # Add 10 categories and check if the category combo-box is updated and also the property-table too
+    for index in range(10):
+      new_category = f"new category {index}"
+      categories.clear()
+      for i in range(ui_form.propsCategoryComboBox.count()):
+        categories.append(ui_form.propsCategoryComboBox.itemText(i))
+      assert new_category not in categories, f"{new_category} should not exist in combo list!"
+      ui_form.addPropsCategoryLineEdit.setText(new_category)
+      qtbot.mouseClick(ui_form.addPropsCategoryPushButton, Qt.LeftButton)
+      assert ui_form.propsCategoryComboBox.currentText() == new_category, f"propsCategoryComboBox.currentText() should be {new_category}!"
+      newly_added_categories.append(new_category)
+      model = ui_form.typePropsTableView.model()
+      assert model.rowCount() == 2, "Minimum of two required properties must be added"
+      assert model.data(model.index(0, 0), Qt.DisplayRole) == '-name', "Name property must be added!"
+      assert model.data(model.index(1, 0), Qt.DisplayRole) == '-tags', "Tags property must be added!"
+
+    # Check finally if all the newly added categories are present apart from the initial categories
+    categories.clear()
+    for i in range(ui_form.propsCategoryComboBox.count()):
+      categories.append(ui_form.propsCategoryComboBox.itemText(i))
+    assert [c for c in categories if
+            c not in initial_categories] == newly_added_categories, "Present - Initial must give newly added categories!"

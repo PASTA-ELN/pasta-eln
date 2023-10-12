@@ -377,16 +377,16 @@ class TestOntologyConfigConfiguration(object):
 
     if not new_category:
       assert configuration_extended.add_new_prop_category() is None, "Nothing should be returned"
-      mock_show_message.assert_called_once_with("Enter non-null/valid category name!!.....")
+      mock_show_message.assert_called_once_with("Enter non-null/valid category name!!.....", QMessageBox.Warning)
       return
     if not ontology_types:
       assert configuration_extended.add_new_prop_category() is None, "Nothing should be returned"
-      mock_show_message.assert_called_once_with("Load the ontology data first....")
+      mock_show_message.assert_called_once_with("Load the ontology data first....", QMessageBox.Warning)
       return
 
     if new_category in selected_type_properties:
       assert configuration_extended.add_new_prop_category() is None, "Nothing should be returned"
-      mock_show_message.assert_called_once_with("Category already exists....")
+      mock_show_message.assert_called_once_with("Category already exists....", QMessageBox.Warning)
     else:
       if new_category:
         assert configuration_extended.add_new_prop_category() is None, "Nothing should be returned"
@@ -444,7 +444,7 @@ class TestOntologyConfigConfiguration(object):
     if selected_type_properties is None:
       mocker.patch.object(configuration_extended, 'selected_type_properties', None)
       assert configuration_extended.delete_selected_prop_category() is None, "Nothing should be returned"
-      mock_show_message.assert_called_once_with("Load the ontology data first....")
+      mock_show_message.assert_called_once_with("Load the ontology data first....", QMessageBox.Warning)
       return
     if selected_type_properties and selected_category in selected_type_properties:
       assert configuration_extended.delete_selected_prop_category() is None, "Nothing should be returned"
@@ -585,7 +585,7 @@ class TestOntologyConfigConfiguration(object):
       mocker.patch.object(configuration_extended, 'ontology_types', ontology_types)
       mocker.patch.object(configuration_extended, 'ontology_document', ontology_document)
       assert configuration_extended.delete_selected_type() is None, "Nothing should be returned"
-      mock_show_message.assert_called_once_with("Load the ontology data first....")
+      mock_show_message.assert_called_once_with("Load the ontology data first....", QMessageBox.Warning)
       return
     if selected_type:
       assert configuration_extended.delete_selected_type() is None, "Nothing should be returned"
@@ -690,7 +690,7 @@ class TestOntologyConfigConfiguration(object):
       set_structural_level_title_spy.assert_called_once_with(new_structural_title)
       show_create_type_dialog_spy.assert_called_once_with()
     else:
-      show_message_spy.assert_called_once_with("Load the ontology data first...")
+      show_message_spy.assert_called_once_with("Load the ontology data first...", QMessageBox.Warning)
       get_next_possible_structural_level_label_spy.assert_not_called()
       set_structural_level_title_spy.assert_not_called()
       show_create_type_dialog_spy.assert_not_called()
@@ -912,11 +912,11 @@ class TestOntologyConfigConfiguration(object):
         assert configuration_extended.create_new_type(new_title, new_label) is None, "Nothing should be returned"
         mock_show_message.assert_called_once_with(f"Type (title: {new_title} "
                                                   f"label: {new_label}) cannot be added "
-                                                  f"since it exists in DB already....")
+                                                  f"since it exists in DB already....", QMessageBox.Warning)
     else:
       if new_title is None:
         assert configuration_extended.create_new_type(None, new_label) is None, "Nothing should be returned"
-        mock_show_message.assert_called_once_with("Enter non-null/valid title!!.....")
+        mock_show_message.assert_called_once_with("Enter non-null/valid title!!.....", QMessageBox.Warning)
         mock_log_warn.assert_called_once_with("Enter non-null/valid title!!.....")
       else:
         assert configuration_extended.create_new_type(new_title, new_label) is None, "Nothing should be returned"
