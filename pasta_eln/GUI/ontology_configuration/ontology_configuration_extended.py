@@ -15,6 +15,7 @@ import webbrowser
 from typing import Any
 
 from PySide6 import QtWidgets
+from PySide6.QtCore import QObject, Signal, Slot
 from PySide6.QtWidgets import QApplication, QLineEdit, QMessageBox
 from cloudant.document import Document
 
@@ -34,15 +35,17 @@ from .required_column_delegate import RequiredColumnDelegate
 from .delete_column_delegate import DeleteColumnDelegate
 from .iri_column_delegate import IriColumnDelegate
 from .lookup_iri_action import LookupIriAction
-from .utility_functions import adapt_type, adjust_ontology_data_to_v3, check_ontology_types, generate_empty_type, \
+from .utility_functions import adapt_type, adjust_ontology_data_to_v3, can_delete_type, check_ontology_types, \
+  generate_empty_type, \
   generate_required_properties, get_missing_props_message, get_next_possible_structural_level_label, \
   get_types_for_display, show_message
 from ...database import Database
 
 
-class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
+class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm, QObject):
   """ OntologyConfigurationForm class which is extended from the Ui_OntologyConfigurationBaseForm
   and contains the UI elements and related logic"""
+  type_changed_signal = Signal(str)
 
   def __new__(cls, *_: Any, **__: Any) -> Any:
     """
@@ -50,8 +53,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     """
     return super(OntologyConfigurationForm, cls).__new__(cls)
 
-  def __init__(self,
-               database: Database) -> None:
+  def __init__(self, database: Database) -> None:
     """
     Constructs the ontology data editor
 
@@ -61,6 +63,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     Raises:
       OntologyDocumentNullException: Raised when passed in argument @ontology_document is null.
     """
+    super().__init__()
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
 
     self.ontology_loaded: bool = False
@@ -147,6 +150,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     self.logger.info("New type selected in UI: {%s}", new_type_selected)
     self.clear_ui()
     new_type_selected = adapt_type(new_type_selected)
+    self.type_changed_signal.emit(new_type_selected)
     if new_type_selected and self.ontology_types:
       if new_type_selected not in self.ontology_types:
         raise OntologyConfigKeyNotFoundException(f"Key {new_type_selected} "
@@ -286,8 +290,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     if self.ontology_types is None or self.ontology_document is None:
       show_message("Load the ontology data first....")
       return
-    if (selected_type and selected_type in self.ontology_types
-        and selected_type in self.ontology_document):
+    if selected_type and selected_type in self.ontology_types:
       self.logger.info("User deleted the selected type: {%s}", selected_type)
       self.ontology_types.pop(selected_type)
       self.typeComboBox.clear()
@@ -382,6 +385,8 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
       self.attachments_table_data_model.delete_data)
     self.reorder_column_delegate_attach_table.re_order_signal.connect(self.attachments_table_data_model.re_order_data)
 
+    self.type_changed_signal.connect(self.check_and_disable_delete_button)
+
   def load_ontology_data(self) -> None:
     """
     Load button click event handler which loads the data in the UI
@@ -443,10 +448,10 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
     if self.ontology_document is None or self.ontology_types is None:
       self.logger.error("Null ontology_document/ontology_types, erroneous app state")
       raise OntologyConfigGenericException("Null ontology_document/ontology_types, erroneous app state", {})
-    if title in self.ontology_document:
+    if title in self.ontology_types:
       show_message(f"Type (title: {title} label: {label}) cannot be added since it exists in DB already....")
     else:
-      if title is None:
+      if not title:
         self.logger.warning("Enter non-null/valid title!!.....")
         show_message("Enter non-null/valid title!!.....")
         return
@@ -457,15 +462,29 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm):
       self.typeComboBox.clear()
       self.typeComboBox.addItems(get_types_for_display(self.ontology_types.keys()))
       self.typeComboBox.setCurrentIndex(len(self.ontology_types) - 1)
-      show_message(f"Type (title: {title} label: {label}) has been added....")
 
   def show_hide_attachments_table(self) -> None:
     """
-    Show/hide the attachments table and the add attachment button
+    Show/hide the attachment table and the add attachment button
     Returns: Nothing
     """
     self.typeAttachmentsTableView.setVisible(not self.typeAttachmentsTableView.isVisible())
     self.addAttachmentPushButton.setVisible(not self.addAttachmentPushButton.isVisible())
+
+  @Slot(str)
+  def check_and_disable_delete_button(self,
+                                      selected_type: str) -> None:
+    """
+    Slot to check and disable the "delete" button for the selected type
+    Args:
+      selected_type (str): Selected type: typesComboBox
+
+    Returns: Nothing
+
+    """
+    (self.deleteTypePushButton
+     .setEnabled(can_delete_type(self.ontology_types.keys(),
+                                 selected_type)))
 
 
 def get_gui(database: Database) -> tuple[

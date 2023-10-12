@@ -15,7 +15,8 @@ from PySide6.QtGui import QMouseEvent
 from PySide6.QtWidgets import QMessageBox
 from cloudant import CouchDB
 
-from pasta_eln.GUI.ontology_configuration.utility_functions import adjust_ontology_data_to_v3, check_ontology_types, \
+from pasta_eln.GUI.ontology_configuration.utility_functions import adjust_ontology_data_to_v3, can_delete_type, \
+  check_ontology_types, \
   get_db, get_missing_props_message, get_next_possible_structural_level_label, is_click_within_bounds, show_message
 
 
@@ -447,3 +448,25 @@ class TestOntologyConfigUtilityFunctions(object):
                                                                         expected_message):
     assert get_missing_props_message(
       missing_properties, missing_names) == expected_message, "get_missing_props_message should return expected"
+
+  @pytest.mark.parametrize("existing_types, selected_type, expected_result", [
+    (["x0", "x1", "x3", "samples", "instruments"], "test", True),
+    (["x0", "x1", "x3", "x4", "instruments"], "x5", False),
+    (["x0", "x1", "x3", "x4", "instruments"], "x0", False),
+    (["x0", "x1", "x3", "x4", "instruments"], "x4", True),
+    (["x0", "x1", "x3", "x4", "instruments"], "x3", False),
+    (["x0", "x1", "x3", "x4", "instruments"], "x0", False),
+    (["x0", "x1", "x3", "x4", "instruments"], "x1", False),
+    (["x0", "x1", "x3", "x4", "instruments"], "instruments", True),
+    (["x2", "x3", "x5", "x0", "instruments"], "x5", True),
+    (["x2", "x3", "x5", "x0", "x7", "", "samples"], "x7", True),
+    (["x2", "x3", "x5", "x0", "x7", "", "samples"], "x8", False),
+    (["x2", "x3", "x5", "x0", "x7", "", None], "x8", False),
+    (["x2", "x3", "x5", "x0", "x7", "", None], None, False)
+  ])
+  def test_can_delete_type_returns_expected(self,
+                                            existing_types,
+                                            selected_type,
+                                            expected_result):
+    assert can_delete_type(
+      existing_types, selected_type) == expected_result, "can_delete_type should return expected"
