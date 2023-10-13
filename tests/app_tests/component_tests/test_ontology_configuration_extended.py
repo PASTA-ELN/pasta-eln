@@ -6,7 +6,6 @@
 #   Filename: test_ontology_configuration_extended.py
 #  #
 #   You should have received a copy of the license with this file. Please refer the license file for more information.
-
 from PySide6 import QtWidgets
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication, QCheckBox, QMessageBox
@@ -725,3 +724,143 @@ class TestOntologyConfigurationExtended(object):
       categories.append(ui_form.propsCategoryComboBox.itemText(i))
     assert [c for c in categories if
             c not in initial_categories] == newly_added_categories, "Present - Initial must give newly added categories!"
+
+  def test_add_category_with_valid_name_and_delete_should_successfully_delete_categories_with_properties(self,
+                                                                                                         ontology_editor_gui:
+                                                                                                         tuple[
+                                                                                                           QApplication,
+                                                                                                           QtWidgets.QDialog,
+                                                                                                           OntologyConfigurationForm,
+                                                                                                           QtBot],
+                                                                                                         ontology_doc_mock: ontology_doc_mock,
+                                                                                                         props_column_names: props_column_names,
+                                                                                                         attachments_column_names: attachments_column_names):
+    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    assert ui_form.addPropsCategoryPushButton.isHidden() is False, "addPropsCategoryPushButton should be visible now!"
+
+    # Add 10 categories
+    for index in range(10):
+      new_category = f"new category {index}"
+      ui_form.addPropsCategoryLineEdit.setText(new_category)
+      qtbot.mouseClick(ui_form.addPropsCategoryPushButton, Qt.LeftButton)
+      assert ui_form.propsCategoryComboBox.currentText() == new_category, f"propsCategoryComboBox.currentText() should be {new_category}!"
+
+    categories = []
+    for i in range(ui_form.propsCategoryComboBox.count()):
+      categories.append(ui_form.propsCategoryComboBox.itemText(i))
+
+    reversed_categories = list(reversed(categories))
+    for idx, cat in enumerate(reversed_categories):
+      assert ui_form.propsCategoryComboBox.currentText() == cat, f"propsCategoryComboBox.currentText() should be {cat}!"
+      qtbot.mouseClick(ui_form.deletePropsCategoryPushButton, Qt.LeftButton)
+      assert ui_form.propsCategoryComboBox.currentText() != cat, f"propsCategoryComboBox.currentText() should be {cat}!"
+      if idx == len(categories) - 1:
+        # ALl property categories are deleted, hence the property table should be empty!
+        assert ui_form.propsCategoryComboBox.currentText() == "", \
+          f"propsCategoryComboBox.currentText() should be empty string!"
+        model = ui_form.typePropsTableView.model()
+        assert model.rowCount() == 0, "Property table should be empty!"
+      else:
+        assert ui_form.propsCategoryComboBox.currentText() == reversed_categories[
+          idx + 1], f"propsCategoryComboBox.currentText() should be {reversed_categories[idx + 1]}!"
+        model = ui_form.typePropsTableView.model()
+        assert model.rowCount() >= 2, "Minimum of two required properties must be present"
+
+  def test_add_properties_to_table_should_succeed(self,
+                                                  ontology_editor_gui:
+                                                  tuple[
+                                                    QApplication,
+                                                    QtWidgets.QDialog,
+                                                    OntologyConfigurationForm,
+                                                    QtBot],
+                                                  ontology_doc_mock: ontology_doc_mock,
+                                                  props_column_names: props_column_names,
+                                                  attachments_column_names: attachments_column_names):
+    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    assert ui_form.addPropsCategoryPushButton.isHidden() is False, "addPropsCategoryPushButton should be visible now!"
+    ui_form.addPropsCategoryLineEdit.setText("new category")
+    qtbot.mouseClick(ui_form.addPropsCategoryPushButton, Qt.LeftButton)
+    ui_form.propsCategoryComboBox.setCurrentText("new category")
+    model = ui_form.typePropsTableView.model()
+    assert model.rowCount() == 2, "Minimum of two required properties must be present"
+    assert model.data(model.index(0, 0), Qt.DisplayRole) == '-name', "Name property must be present!"
+    assert model.data(model.index(1, 0), Qt.DisplayRole) == '-tags', "Tags property must be present!"
+    qtbot.mouseClick(ui_form.addPropsRowPushButton, Qt.LeftButton)
+    assert model.rowCount() == 3, "Three properties must be present after addition!"
+    model.setData(model.index(2, 0), "Test name", Qt.UserRole)
+    model.setData(model.index(2, 1), "Test query", Qt.UserRole)
+
+    ui_form.propsCategoryComboBox.setCurrentText("default")
+    assert ui_form.propsCategoryComboBox.currentText() == "default", f"propsCategoryComboBox.currentText() should be default!"
+    model = ui_form.typePropsTableView.model()
+    assert model.rowCount() == 5, "5 properties must be present in default category"
+
+    ui_form.propsCategoryComboBox.setCurrentText("new category")
+    assert ui_form.propsCategoryComboBox.currentText() == "new category", f"propsCategoryComboBox.currentText() should be default!"
+    model = ui_form.typePropsTableView.model()
+    assert model.rowCount() == 3, "Three properties must be present after addition!"
+    assert model.data(model.index(0, 0), Qt.DisplayRole) == '-name', "Name property must be present!"
+    assert model.data(model.index(1, 0), Qt.DisplayRole) == '-tags', "Tags property must be present!"
+    assert model.data(model.index(2, 0), Qt.DisplayRole) == 'Test name', "Test name property must be present!"
+    assert model.data(model.index(2, 1), Qt.DisplayRole) == 'Test query', "Test query property must be present!"
+
+  def test_delete_property_from_table_should_work(self,
+                                                  ontology_editor_gui:
+                                                  tuple[
+                                                    QApplication,
+                                                    QtWidgets.QDialog,
+                                                    OntologyConfigurationForm,
+                                                    QtBot],
+                                                  ontology_doc_mock: ontology_doc_mock,
+                                                  props_column_names: props_column_names,
+                                                  attachments_column_names: attachments_column_names):
+    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    ui_form.propsCategoryComboBox.setCurrentText("default")
+    assert ui_form.propsCategoryComboBox.currentText() == "default", f"propsCategoryComboBox.currentText() should be default!"
+    model = ui_form.typePropsTableView.model()
+    assert model.rowCount() == 5, "5 properties must be present before deletion!"
+    row_count = model.rowCount()
+    for i in range(model.rowCount()):
+      last_row_delete_index = ui_form.typePropsTableView.model().index(
+        ui_form.typePropsTableView.model().rowCount() - 1,
+        ui_form.typePropsTableView.model().columnCount() - 2)
+      rect = ui_form.typePropsTableView.visualRect(last_row_delete_index)
+      qtbot.mouseClick(ui_form.typePropsTableView.viewport(), Qt.LeftButton, pos=rect.center())
+      assert model.rowCount() == row_count - 1, f"{row_count - 1} properties must be present after deletion!"
+      row_count -= 1
+    assert model.rowCount() == 0, "After full deletion, nothing must exist!"
+
+  def test_re_order_property_table_should_work_as_expected(self,
+                                                           ontology_editor_gui:
+                                                           tuple[
+                                                             QApplication,
+                                                             QtWidgets.QDialog,
+                                                             OntologyConfigurationForm,
+                                                             QtBot],
+                                                           ontology_doc_mock: ontology_doc_mock,
+                                                           props_column_names: props_column_names,
+                                                           attachments_column_names: attachments_column_names):
+    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    ui_form.propsCategoryComboBox.setCurrentText("default")
+    assert ui_form.propsCategoryComboBox.currentText() == "default", f"propsCategoryComboBox.currentText() should be default!"
+    model = ui_form.typePropsTableView.model()
+    assert model.rowCount() == 5, "5 properties must be present before deletion!"
+    row_count = model.rowCount()
+    # Initial data oder
+    data_order = []
+    for i in range(model.rowCount()):
+      data_order.append(model.data(model.index(i, 0), Qt.DisplayRole))
+    for i in range(model.rowCount()):
+      last_row_delete_index = ui_form.typePropsTableView.model().index(
+        ui_form.typePropsTableView.model().rowCount() - 1,
+        ui_form.typePropsTableView.model().columnCount() - 2)
+      data_order.remove(last_row_delete_index.siblingAtColumn(0).data(Qt.DisplayRole))
+      rect = ui_form.typePropsTableView.visualRect(last_row_delete_index)
+      qtbot.mouseClick(ui_form.typePropsTableView.viewport(), Qt.LeftButton, pos=rect.center())
+      assert model.rowCount() == row_count - 1, f"{row_count - 1} properties must be present after deletion!"
+      last_row_colum_0 = data_order[-1] if data_order else None
+      assert ui_form.typePropsTableView.model().index(
+        ui_form.typePropsTableView.model().rowCount() - 1, 0).data(
+        Qt.DisplayRole) == last_row_colum_0, f"Last row should be {last_row_colum_0}!"
+      row_count -= 1
+    assert model.rowCount() == 0, "After full deletion, nothing must exist!"
