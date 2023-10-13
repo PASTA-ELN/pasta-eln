@@ -2,7 +2,41 @@
 
 ## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
 
-[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.13...HEAD)
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.14...HEAD)
+
+**Implemented enhancements:**
+
+- Auto-populating IRI field of ontology editor  [\#58](https://github.com/PASTA-ELN/pasta-eln/issues/58)
+- fix\(ontology\): deletion of structural level types & normal types [\#83](https://github.com/PASTA-ELN/pasta-eln/pull/83) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
+- feat\(ontology\): auto-populating IRI fields of ontology editor tool [\#75](https://github.com/PASTA-ELN/pasta-eln/pull/75) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
+
+**Fixed bugs:**
+
+- Deleting Structure 0 data types in Questionnaires [\#68](https://github.com/PASTA-ELN/pasta-eln/issues/68)
+- Empty properties in Questionnaires [\#67](https://github.com/PASTA-ELN/pasta-eln/issues/67)
+- fix\(ontology\): introduced check for properties with empty names [\#80](https://github.com/PASTA-ELN/pasta-eln/pull/80) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
+- fix\(ontology\): enabled auto stretch for the property table [\#77](https://github.com/PASTA-ELN/pasta-eln/pull/77) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
+- repaired \#36 \#20 [\#74](https://github.com/PASTA-ELN/pasta-eln/pull/74) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- repaired \#59 [\#72](https://github.com/PASTA-ELN/pasta-eln/pull/72) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- repaired issue \#64 [\#71](https://github.com/PASTA-ELN/pasta-eln/pull/71) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- fixed issue \#65 [\#70](https://github.com/PASTA-ELN/pasta-eln/pull/70) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+
+**Closed issues:**
+
+- Table view: Change columns [\#59](https://github.com/PASTA-ELN/pasta-eln/issues/59)
+- Deletion of an item in table view [\#57](https://github.com/PASTA-ELN/pasta-eln/issues/57)
+- Import of own .eln files [\#38](https://github.com/PASTA-ELN/pasta-eln/issues/38)
+- Importing the eLabFTW .eln files [\#37](https://github.com/PASTA-ELN/pasta-eln/issues/37)
+- project view header: show comment nicely [\#20](https://github.com/PASTA-ELN/pasta-eln/issues/20)
+
+**Merged pull requests:**
+
+- Sb improve logging save view error [\#81](https://github.com/PASTA-ELN/pasta-eln/pull/81) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Merging the new changes, so I can use this Branch again [\#9](https://github.com/PASTA-ELN/pasta-eln/pull/9) ([RaphaelRoeske](https://github.com/RaphaelRoeske))
+
+## [v2.4.14](https://github.com/PASTA-ELN/pasta-eln/tree/v2.4.14) (2023-10-03)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.13...v2.4.14)
 
 **Fixed bugs:**
 

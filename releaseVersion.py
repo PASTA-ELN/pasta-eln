@@ -57,7 +57,8 @@ def newVersion(level=2):
   with open(Path.home()/'.ssh'/'github.token', 'r', encoding='utf-8') as fIn:
     token = fIn.read().strip()
   os.system("github_changelog_generator -u PASTA-ELN -p pasta-eln -t "+token)
-  os.system(f'git commit -a -m "updated changelog"')
+  addition = input('\n\nWhat do you want to add to the push message? ')
+  os.system(f'git commit -a -m "updated changelog; {addition}"')
   #push and publish
   os.system(f'git push')
   os.system(f'git push origin v{version}')
@@ -106,6 +107,20 @@ def runTests():
     else:
       print("  FAILED: Python unit test "+fileI)
       print("    run: 'pytest -s tests/"+fileI+"' and check logFile")
+  print('Start running complicated tests')
+  tests = [i for i in os.listdir('testsComplicated') if i.endswith('.py') and i.startswith('test_')]
+  for fileI in sorted(tests):
+    result = subprocess.run(['pytest','-s','--no-skip','testsComplicated/'+fileI],
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
+    success = result.stdout.decode('utf-8').count('*** DONE WITH VERIFY ***')
+    if success==1:
+      success += result.stdout.decode('utf-8').count('**ERROR')
+      success -= result.stdout.decode('utf-8').count('**ERROR Red: FAILURE and ERROR')
+    if success==1:
+      print("  success: Python unit test "+fileI)
+    else:
+      print("  FAILED: Python unit test "+fileI)
+      print("    run: 'pytest -s testsComplicated/"+fileI+"' and check logFile")
   return
 
 
@@ -132,5 +147,6 @@ if __name__=='__main__':
     level=2
   else:
     level = int(sys.argv[1])
-  newVersion(level)
+  if input('Continue: only "y" continues. ') == 'y':
+    newVersion(level)
   print("\n================================\nPush this and publish extractors\n================================")
