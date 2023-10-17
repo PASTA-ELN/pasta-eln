@@ -597,7 +597,7 @@ class Database:
         if len(level)==1:
           dataTree = Node(id=level[0]['key'], docType=level[0]['value'][1], name=level[0]['value'][2])
         else:
-          print(f'**ERROR getHierarchy Did not find corresponding {str(levelNum)}')
+          print(f'**ERROR getHierarchy Did not find corresponding level={levelNum} under docID {start}')
           dataTree = Node(id=None, name='')
       else:
         childList = [i['value'][0] for i in level]   #temporary list to allow sorting for child-number

@@ -229,6 +229,9 @@ def importELN(backend:Backend, elnFileName:str) -> str:
     for part in mainNode['hasPart']:
       if not part['@id'].endswith('ro-crate-metadata.json'):
         addedDocuments += processPart(part)
+  #return to home stack and path
+  backend.cwd = Path(backend.basePath)
+  backend.hierStack = []
   return f'Success: imported {str(addedDocuments)} documents from file {elnFileName} from ELN {elnName} {elnVersion}'
 
 
