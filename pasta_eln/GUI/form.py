@@ -218,7 +218,7 @@ class Form(QDialog):
     if btn.text().endswith('Cancel'):
       ret = QMessageBox.critical(self, 'Warning', 'You will loose all entered data. Do you want to save the '+\
                                  'content for next time?',
-                                 QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
+                                 QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,  # type: ignore[operator]
                                  QMessageBox.StandardButton.No)
       if ret==QMessageBox.StandardButton.Yes:
         self.autosave()
