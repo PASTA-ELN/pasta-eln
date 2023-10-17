@@ -220,7 +220,9 @@ class Form(QDialog):
                                  'content for next time?',
                                  QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
                                  QMessageBox.StandardButton.No)
-      if ret==QMessageBox.StandardButton.No:
+      if ret==QMessageBox.StandardButton.Yes:
+        self.autosave()
+      else:
         self.checkThreadTimer.stop()
         if (Path.home()/'.pastaELN.temp').exists():
           (Path.home()/'.pastaELN.temp').unlink()

@@ -10,7 +10,7 @@ from typing import Any, Union
 
 from PySide6.QtCore import Qt, Slot, QCoreApplication  # pylint: disable=no-name-in-module
 from PySide6.QtGui import QIcon, QPixmap, QShortcut  # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QMainWindow, QApplication, QFileDialog  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QMainWindow, QApplication, QFileDialog, QMessageBox  # pylint: disable=no-name-in-module
 from qt_material import apply_stylesheet  # of https://github.com/UN-GCPDS/qt-material
 
 from pasta_eln import __version__
@@ -105,9 +105,13 @@ class MainWindow(QMainWindow):
 
     #check if temporary save exist: warn user
     if (Path.home()/'.pastaELN.temp').exists():
-      showMessage(self, 'Information', 'There is data from prematurely closed form. Please reopen the form'+\
-                  'and the content will be reloaded. Save it or delete it.', 'Information')
-
+      ret = QMessageBox.information(self, 'Information', f'There is data from a prematurely closed form. '
+              f'Do you want to use it? \n\n- If you choose yes, please reopen that form and content will'
+              f'be reloaded.\n\n- If you choose no, this temporary data will be removed now.',
+              QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
+              QMessageBox.StandardButton.Yes)
+      if ret==QMessageBox.StandardButton.No:
+        (Path.home()/'.pastaELN.temp').unlink()
 
 
   @Slot(str)
