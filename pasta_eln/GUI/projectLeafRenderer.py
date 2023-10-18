@@ -67,7 +67,9 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     # header
     y = self.lineSep/2
     hiddenText = ('     \U0001F441' if [b for b in doc['-branch'] if False in b['show']] else '')
-    docTypeText= 'folder' if doc['-type'][0][0]=='x' else '/'.join(doc['-type'])
+    docTypeText= '/'.join(doc['-type'])
+    if doc['-type'][0][0]=='x':
+      docTypeText = self.comm.backend.db.ontology[doc['-type'][0]]['label'].lower()[:-1]
     nameText = doc['-name'] if len(doc['-name'])<55 else '...'+doc['-name'][-50:]
     staticText = QStaticText(f'<strong>{nameText}{hiddenText}</strong>')
     staticText.setTextWidth(self.docTypeOffset)
