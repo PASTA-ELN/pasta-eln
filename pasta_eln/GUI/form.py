@@ -155,7 +155,9 @@ class Form(QDialog):
       self.projectComboBox = QComboBox()
       self.projectComboBox.addItem(label, userData='')
       for line in self.db.getView('viewDocType/x0'):
-        if '-branch' not in self.doc or all(line['id']!=branch['stack'][0] for branch in self.doc['-branch']):
+        # add all projects but the one that is present
+        if '-branch' not in self.doc or all( not(len(branch['stack'])>0 and line['id']==branch['stack'][0])
+                                            for branch in self.doc['-branch']):
           self.projectComboBox.addItem(line['value'][0], userData=line['id'])
       self.formL.addRow(QLabel('Project'), self.projectComboBox)
     if allowProjectAndDocTypeChange: #if not-new and non-folder

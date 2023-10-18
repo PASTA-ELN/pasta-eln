@@ -60,6 +60,7 @@ def newVersion(level=2):
   addition = input('\n\nWhat do you want to add to the push message? ')
   os.system(f'git commit -a -m "updated changelog; {addition}"')
   #push and publish
+  print('\n\nWill bypass rule violation\n\n')
   os.system(f'git push')
   os.system(f'git push origin v{version}')
   return
