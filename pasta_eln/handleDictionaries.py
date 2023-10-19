@@ -66,7 +66,7 @@ def ontologyV2_to_V3(ontology: dict[str, Any]) -> None:
 
 def fillDocBeforeCreate(data:dict[str,Any], docType:list[str]) -> dict[str,Any]:
   """ Fill the data before submission to database with common data
-  - type, project, childs
+  - type, project, children
   - separate comment into tags, fields
   - create id if needed
 
