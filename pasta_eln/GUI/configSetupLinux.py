@@ -132,10 +132,13 @@ class ConfigurationSetup(QWidget):
           self.mainText = self.mainText.replace('- Example data', '- Example data was added')
         else:
           self.mainText = self.mainText.replace('- Example data', '- Example data was NOT added, per user choice')
+          flagContinue = False
         self.text1.setMarkdown(self.mainText)
 
       #at end
       self.button1.hide()
+      if not flagContinue:
+        self.button2.setText('Incomplete end')
       self.button2.show()
       logging.info('Linux setup analyse end')
     elif command[0] is Command.FINISHED: # What do do when setup is finished: success or unsuccessfully
