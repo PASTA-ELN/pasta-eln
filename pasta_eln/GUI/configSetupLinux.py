@@ -132,6 +132,7 @@ class ConfigurationSetup(QWidget):
           self.mainText = self.mainText.replace('- Example data', '- Example data was added')
         else:
           self.mainText = self.mainText.replace('- Example data', '- Example data was NOT added, per user choice')
+          flagContinue = False
         self.text1.setMarkdown(self.mainText)
 
       #at end
