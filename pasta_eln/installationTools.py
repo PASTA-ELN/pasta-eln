@@ -493,7 +493,7 @@ def createShortcut() -> None:
         fBat.write(batContent)
       shortcut.Targetpath = batLocation
     else:
-      shortcut.Targetpath = r"pastaELN"
+      shortcut.Targetpath = r"python -m pasta_eln.gui"
     shortcut.WorkingDirectory = str(Path.home())
     shortcut.IconLocation = str(Path(__file__).parent/'Resources'/'Icons'/'favicon64.ico')
     shortcut.save()

@@ -155,8 +155,6 @@ class ConfigurationSetup(QWidget):
 
       #at end
       self.button1.hide()
-      if not flagContinue:
-        self.button2.setText('Incomplete end')
       self.button2.show()
       logging.info('Windows setup analyse end')
     elif command[0] is Command.FINISHED: # What do do when setup is finished: success or unsuccessfully
