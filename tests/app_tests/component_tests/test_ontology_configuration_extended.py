@@ -845,22 +845,166 @@ class TestOntologyConfigurationExtended(object):
     assert ui_form.propsCategoryComboBox.currentText() == "default", f"propsCategoryComboBox.currentText() should be default!"
     model = ui_form.typePropsTableView.model()
     assert model.rowCount() == 5, "5 properties must be present before deletion!"
-    row_count = model.rowCount()
     # Initial data oder
+    init_data_order = ['-name', 'status', 'objective', '-tags', 'comment']
+    post_reorder_data_order1 = ['-name', 'status', 'objective', 'comment', '-tags']
+    post_reorder_data_order2 = ['status', '-name', 'objective', 'comment', '-tags']
     data_order = []
     for i in range(model.rowCount()):
       data_order.append(model.data(model.index(i, 0), Qt.DisplayRole))
+    assert init_data_order == data_order, "Initial data order is not as expected!"
+
+    # Click re-order for the last row
+    last_row_re_order_index = ui_form.typePropsTableView.model().index(
+      ui_form.typePropsTableView.model().rowCount() - 1,
+      ui_form.typePropsTableView.model().columnCount() - 1)
+    rect = ui_form.typePropsTableView.visualRect(last_row_re_order_index)
+    qtbot.mouseClick(ui_form.typePropsTableView.viewport(), Qt.LeftButton, pos=rect.center())
+    data_order.clear()
     for i in range(model.rowCount()):
-      last_row_delete_index = ui_form.typePropsTableView.model().index(
-        ui_form.typePropsTableView.model().rowCount() - 1,
-        ui_form.typePropsTableView.model().columnCount() - 2)
-      data_order.remove(last_row_delete_index.siblingAtColumn(0).data(Qt.DisplayRole))
-      rect = ui_form.typePropsTableView.visualRect(last_row_delete_index)
-      qtbot.mouseClick(ui_form.typePropsTableView.viewport(), Qt.LeftButton, pos=rect.center())
-      assert model.rowCount() == row_count - 1, f"{row_count - 1} properties must be present after deletion!"
-      last_row_colum_0 = data_order[-1] if data_order else None
-      assert ui_form.typePropsTableView.model().index(
-        ui_form.typePropsTableView.model().rowCount() - 1, 0).data(
-        Qt.DisplayRole) == last_row_colum_0, f"Last row should be {last_row_colum_0}!"
-      row_count -= 1
-    assert model.rowCount() == 0, "After full deletion, nothing must exist!"
+      data_order.append(model.data(model.index(i, 0), Qt.DisplayRole))
+    assert post_reorder_data_order1 == data_order, "Post reorder data order is not as expected!"
+
+    # Click re-order for the second row
+    second_row_re_order_index = ui_form.typePropsTableView.model().index(
+      1,
+      ui_form.typePropsTableView.model().columnCount() - 1)
+    rect = ui_form.typePropsTableView.visualRect(second_row_re_order_index)
+    qtbot.mouseClick(ui_form.typePropsTableView.viewport(), Qt.LeftButton, pos=rect.center())
+    data_order.clear()
+    for i in range(model.rowCount()):
+      data_order.append(model.data(model.index(i, 0), Qt.DisplayRole))
+    assert post_reorder_data_order2 == data_order, "Post reorder data order is not as expected!"
+
+  def test_add_attachments_to_table_should_succeed(self,
+                                                   ontology_editor_gui:
+                                                   tuple[
+                                                     QApplication,
+                                                     QtWidgets.QDialog,
+                                                     OntologyConfigurationForm,
+                                                     QtBot],
+                                                   ontology_doc_mock: ontology_doc_mock,
+                                                   props_column_names: props_column_names,
+                                                   attachments_column_names: attachments_column_names):
+    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    assert ui_form.addAttachmentPushButton.isHidden() is True, "addAttachmentPushButton should be hidden initially!"
+    qtbot.mouseClick(ui_form.attachmentsShowHidePushButton, Qt.LeftButton)
+    assert ui_form.addAttachmentPushButton.isHidden() is False, "addAttachmentPushButton should be shown after clicking attachmentsShowHidePushButton!"
+
+    selected_type = ui_form.typeComboBox.currentText()
+
+    model = ui_form.typeAttachmentsTableView.model()
+    assert model.rowCount() == 0, "Initially the table must be empty!"
+
+    qtbot.mouseClick(ui_form.addAttachmentPushButton, Qt.LeftButton)
+
+    assert model.rowCount() == 1, "One row should be added!"
+    model.setData(model.index(0, 0), "Test description", Qt.UserRole)
+    model.setData(model.index(0, 1), "Test location", Qt.UserRole)
+
+    ui_form.typeComboBox.setCurrentText("Structure level 1")
+
+    model = ui_form.typeAttachmentsTableView.model()
+    assert model.rowCount() == 0, "'Structure level 1' attachment table must be empty!"
+
+    ui_form.typeComboBox.setCurrentText(selected_type)
+
+    model = ui_form.typeAttachmentsTableView.model()
+    assert model.data(model.index(0, 0), Qt.DisplayRole) == 'Test description', "Description property must be present!"
+    assert model.data(model.index(0, 1), Qt.DisplayRole) == 'Test location', "Location property must be present!"
+
+  def test_delete_attachments_from_table_should_succeed(self,
+                                                        ontology_editor_gui:
+                                                        tuple[
+                                                          QApplication,
+                                                          QtWidgets.QDialog,
+                                                          OntologyConfigurationForm,
+                                                          QtBot],
+                                                        ontology_doc_mock: ontology_doc_mock,
+                                                        props_column_names: props_column_names,
+                                                        attachments_column_names: attachments_column_names):
+    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    assert ui_form.addAttachmentPushButton.isHidden() is True, "addAttachmentPushButton should be hidden initially!"
+    qtbot.mouseClick(ui_form.attachmentsShowHidePushButton, Qt.LeftButton)
+    assert ui_form.addAttachmentPushButton.isHidden() is False, "addAttachmentPushButton should be shown after clicking attachmentsShowHidePushButton!"
+
+    selected_type = ui_form.typeComboBox.currentText()
+
+    model = ui_form.typeAttachmentsTableView.model()
+    assert model.rowCount() == 0, "Initially the table must be empty!"
+
+    qtbot.mouseClick(ui_form.addAttachmentPushButton, Qt.LeftButton)
+    qtbot.mouseClick(ui_form.addAttachmentPushButton, Qt.LeftButton)
+
+    assert model.rowCount() == 2, "Two attachments should be added!"
+    model.setData(model.index(0, 0), "Test description1", Qt.UserRole)
+    model.setData(model.index(0, 1), "Test location1", Qt.UserRole)
+    model.setData(model.index(1, 0), "Test description2", Qt.UserRole)
+    model.setData(model.index(1, 1), "Test location2", Qt.UserRole)
+
+    ui_form.typeComboBox.setCurrentText("Structure level 1")
+
+    model = ui_form.typeAttachmentsTableView.model()
+    assert model.rowCount() == 0, "'Structure level 1' attachment table must be empty!"
+
+    ui_form.typeComboBox.setCurrentText(selected_type)
+
+    first_row_delete_index = ui_form.typeAttachmentsTableView.model().index(
+      0,
+      ui_form.typeAttachmentsTableView.model().columnCount() - 2)
+
+    rect = ui_form.typeAttachmentsTableView.visualRect(first_row_delete_index)
+    qtbot.mouseClick(ui_form.typeAttachmentsTableView.viewport(), Qt.LeftButton, pos=rect.center())
+
+    assert model.rowCount() == 1, "One attachment should be present!"
+    model.setData(model.index(0, 0), "Test description2", Qt.UserRole)
+    model.setData(model.index(0, 1), "Test location2", Qt.UserRole)
+
+  def test_re_order_attachments_from_table_should_succeed(self,
+                                                          ontology_editor_gui:
+                                                          tuple[
+                                                            QApplication,
+                                                            QtWidgets.QDialog,
+                                                            OntologyConfigurationForm,
+                                                            QtBot],
+                                                          ontology_doc_mock: ontology_doc_mock,
+                                                          props_column_names: props_column_names,
+                                                          attachments_column_names: attachments_column_names):
+    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    assert ui_form.addAttachmentPushButton.isHidden() is True, "addAttachmentPushButton should be hidden initially!"
+    qtbot.mouseClick(ui_form.attachmentsShowHidePushButton, Qt.LeftButton)
+    assert ui_form.addAttachmentPushButton.isHidden() is False, "addAttachmentPushButton should be shown after clicking attachmentsShowHidePushButton!"
+
+    selected_type = ui_form.typeComboBox.currentText()
+
+    model = ui_form.typeAttachmentsTableView.model()
+    assert model.rowCount() == 0, "Initially the table must be empty!"
+
+    qtbot.mouseClick(ui_form.addAttachmentPushButton, Qt.LeftButton)
+    qtbot.mouseClick(ui_form.addAttachmentPushButton, Qt.LeftButton)
+
+    assert model.rowCount() == 2, "Two attachments should be added!"
+    model.setData(model.index(0, 0), "Test description1", Qt.UserRole)
+    model.setData(model.index(0, 1), "Test location1", Qt.UserRole)
+    model.setData(model.index(1, 0), "Test description2", Qt.UserRole)
+    model.setData(model.index(1, 1), "Test location2", Qt.UserRole)
+
+    ui_form.typeComboBox.setCurrentText("Structure level 1")
+
+    model = ui_form.typeAttachmentsTableView.model()
+    assert model.rowCount() == 0, "'Structure level 1' attachment table must be empty!"
+
+    ui_form.typeComboBox.setCurrentText(selected_type)
+
+    second_row_re_order_index = ui_form.typeAttachmentsTableView.model().index(
+      1,
+      ui_form.typeAttachmentsTableView.model().columnCount() - 1)
+
+    rect = ui_form.typeAttachmentsTableView.visualRect(second_row_re_order_index)
+    qtbot.mouseClick(ui_form.typeAttachmentsTableView.viewport(), Qt.LeftButton, pos=rect.center())
+
+    assert model.rowCount() == 2, "Two attachments should be present!"
+    assert model.index(0, 0).data(Qt.UserRole) == "Test description2", "After re-order data order is not as expected!"
+    assert model.index(0, 1).data(Qt.UserRole) == "Test location2", "After re-order data order is not as expected!"
+    assert model.index(1, 0).data(Qt.UserRole) == "Test description1", "After re-order data order is not as expected!"
+    assert model.index(1, 1).data(Qt.UserRole) == "Test location1", "After re-order data order is not as expected!"
