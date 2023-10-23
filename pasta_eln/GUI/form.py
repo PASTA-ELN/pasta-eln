@@ -176,6 +176,10 @@ class Form(QDialog):
     if (Path.home()/'.pastaELN.temp').exists():
       with open(Path.home()/'.pastaELN.temp', 'r', encoding='utf-8') as fTemp:
         content = json.loads(fTemp.read())
+        # Temporary print to help debugging occasional bugs
+        logging.info('Autosave: '+str(content))
+        logging.info('from db :'+str(self.doc))
+        # end temporary print
         for key in self.doc.keys():
           if key[0] in ['_','-', '#'] or key in ['image','metaVendor','metaUser','shasum'] or \
              key not in content:
