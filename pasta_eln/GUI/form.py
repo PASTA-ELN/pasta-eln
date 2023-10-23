@@ -184,6 +184,8 @@ class Form(QDialog):
             continue
           if key in ['comment','content']:
             getattr(self, f'textEdit_{key}').setPlainText(content[key])
+          elif isinstance(getattr(self, f'key_{key}'), QComboBox):
+            getattr(self, f'key_{key}').setCurrentText(content[key])
           else:
             getattr(self, f'key_{key}').setText(content[key])
     self.checkThreadTimer = QTimer(self)
@@ -218,8 +220,11 @@ class Form(QDialog):
     if btn.text().endswith('Cancel'):
       ret = QMessageBox.critical(self, 'Warning', 'You will loose all entered data. Do you want to save the '+\
                                  'content for next time?',
-                                 QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
-      if ret==QMessageBox.StandardButton.No:
+                                 QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,  # type: ignore[operator]
+                                 QMessageBox.StandardButton.No)
+      if ret==QMessageBox.StandardButton.Yes:
+        self.autosave()
+      else:
         self.checkThreadTimer.stop()
         if (Path.home()/'.pastaELN.temp').exists():
           (Path.home()/'.pastaELN.temp').unlink()
