@@ -209,7 +209,9 @@ class TestOntologyConfigUtilityFunctions(object):
     mock_msg_box = mocker.patch("PySide6.QtWidgets.QMessageBox")
     set_text_spy = mocker.spy(mock_msg_box, 'setText')
     mocker.patch.object(QMessageBox, "__new__", lambda s: mock_msg_box)
-    assert show_message("Valid message") is None, "show_message should return None"
+    mock_exec = mocker.MagicMock()
+    mocker.patch.object(mock_msg_box, "exec", return_value=mock_exec)
+    assert show_message("Valid message") is mock_exec, "show_message should not be None"
     set_text_spy.assert_called_once_with(
       "Valid message")
     mock_msg_box.exec.assert_called_once_with()
@@ -222,7 +224,9 @@ class TestOntologyConfigUtilityFunctions(object):
     mock_msg_box = mocker.patch("PySide6.QtWidgets.QMessageBox")
     set_text_spy = mocker.spy(mock_msg_box, 'setText')
     mocker.patch.object(QMessageBox, "__new__", lambda s: mock_msg_box)
-    assert show_message("Error message", QMessageBox.Warning) is None, "show_message should return None"
+    mock_exec = mocker.MagicMock()
+    mocker.patch.object(mock_msg_box, "exec", return_value=mock_exec)
+    assert show_message("Error message", QMessageBox.Warning) is mock_exec, "show_message should not be None"
     set_text_spy.assert_called_once_with(
       "Error message")
     mock_msg_box.exec.assert_called_once_with()

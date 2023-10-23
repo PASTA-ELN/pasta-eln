@@ -9,7 +9,7 @@
 
 from PySide6 import QtWidgets
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QApplication, QCheckBox
+from PySide6.QtWidgets import QApplication, QCheckBox, QMessageBox
 from pytestqt.qtbot import QtBot
 
 from pasta_eln.GUI.ontology_configuration.lookup_iri_action import LookupIriAction
@@ -403,7 +403,7 @@ class TestOntologyConfigurationExtended(object):
     app, ui_dialog, ui_form, qtbot = ontology_editor_gui
     assert ui_form.create_type_dialog.buttonBox.isVisible() is False, "Create new type dialog should not be shown!"
     mock_show_message = mocker.patch(
-      "pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.show_message")
+      'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.show_message', return_value=QMessageBox.Yes)
     current_selected_type_category = ui_form.propsCategoryComboBox.currentText()
     previous_types_category_count = ui_form.propsCategoryComboBox.count()
     qtbot.mouseClick(ui_form.deletePropsCategoryPushButton, Qt.LeftButton)
@@ -414,7 +414,10 @@ class TestOntologyConfigurationExtended(object):
       f"Combo list should have {previous_types_category_count - 1} items!"
     qtbot.mouseClick(ui_form.saveOntologyPushButton, Qt.LeftButton)
     assert ontology_doc_mock.types() == ui_form.ontology_types, "Ontology document should be modified!"
-    mock_show_message.assert_called_once_with("Ontology data saved successfully..")
+    mock_show_message.assert_called_once_with('Save will close the tool and restart the Pasta Application (Yes/No?)',
+                                               QMessageBox.Question,
+                                               QMessageBox.No | QMessageBox.Yes,
+                                               QMessageBox.Yes)
 
   def test_component_iri_lookup_button_click_should_show_ontology_lookup_dialog_and_set_iris_on_accept(self,
                                                                                                        ontology_editor_gui:

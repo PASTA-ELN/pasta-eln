@@ -62,12 +62,17 @@ def adjust_ontology_data_to_v3(ontology_types: dict[str, Any]) -> None:
 
 
 def show_message(message: str,
-                 icon: Any = QMessageBox.Information) -> None:
+                 icon: Any = QMessageBox.Information,
+                 standard_buttons: Any = QMessageBox.Ok,
+                 default_button: Any = QMessageBox.Ok) -> Any:
   """
   Displays a message to the user using QMessageBox
   Args:
-    icon (Any): Message box icon
     message (str): Message to be displayed
+    icon (Any): Message box icon
+    standard_buttons (Any): Standard buttons
+    default_button (Any): Default button
+
 
   Returns: Return None if message is empty otherwise displays the message
 
@@ -78,7 +83,9 @@ def show_message(message: str,
     msg_box.setTextFormat(Qt.RichText)
     msg_box.setIcon(icon)
     msg_box.setText(message)
-    msg_box.exec()
+    msg_box.setStandardButtons(standard_buttons)
+    msg_box.setDefaultButton(default_button)
+    return msg_box.exec()
 
 
 def get_next_possible_structural_level_label(existing_type_labels: Any) -> str | None:

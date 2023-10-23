@@ -420,18 +420,24 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm, QObject):
       self.logger.warning(message)
       return
 
-    # Clear all the data from the ontology_document
-    for data in list(self.ontology_document.keys()):
-      if isinstance(self.ontology_document[data], dict):
-        del self.ontology_document[data]
-    # Copy all the modifications
-    for type_name, type_structure in self.ontology_types.items():
-      self.ontology_document[type_name] = type_structure
-    # Save the modified document
-    self.ontology_document.save()
-    self.database.ontology = dict(self.ontology_document)
-    self.database.initDocTypeViews(16)
-    show_message("Ontology data saved successfully..")
+    result = show_message("Save will close the tool and restart the Pasta Application (Yes/No?)",
+                 QMessageBox.Question,
+                 QMessageBox.No | QMessageBox.Yes,
+                 QMessageBox.Yes)
+
+    if result == QMessageBox.Yes:
+      # Clear all the data from the ontology_document
+      for data in list(self.ontology_document.keys()):
+        if isinstance(self.ontology_document[data], dict):
+          del self.ontology_document[data]
+      # Copy all the modifications
+      for type_name, type_structure in self.ontology_types.items():
+        self.ontology_document[type_name] = type_structure
+      # Save the modified document
+      self.ontology_document.save()
+      self.database.ontology = dict(self.ontology_document)
+      self.database.initDocTypeViews(16)
+      self.instance.close()
 
   def create_new_type(self,
                       title: str,
