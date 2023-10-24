@@ -6,6 +6,7 @@
 #   Filename: test_ontology_configuration_extended.py
 #  #
 #   You should have received a copy of the license with this file. Please refer the license file for more information.
+import pytest
 from PySide6 import QtWidgets
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication, QCheckBox, QMessageBox
@@ -47,6 +48,35 @@ class TestOntologyConfigurationExtended(object):
     assert ui_form.propsCategoryComboBox is not None, "Property category combo box not loaded!"
     assert ui_form.typeAttachmentsTableView.isHidden() is True, "Type attachments table view should not be shown!"
     assert ui_form.addAttachmentPushButton.isHidden() is True, "addAttachmentPushButton should not be shown!"
+
+  @pytest.mark.parametrize(
+    "type_to_select, category_selected, properties", [
+      ('Structure level 0', 'default', ['-name', 'status', 'objective', '-tags', 'comment']),
+      ('Structure level 1', 'default', ['-name', '-tags', 'comment']),
+      ('Structure level 2', 'default', ['-name', '-tags', 'comment']),
+      ('measurement', 'default', ['-name', '-tags', 'comment', '-type', 'image', '#_curated', 'sample', 'procedure']),
+      ('sample', 'default', ['-name', 'chemistry', '-tags', 'comment', 'qrCode']),
+      ('procedure', 'default', ['-name', '-tags', 'comment', 'content']),
+      ('instrument', 'default', ['-name', '-tags', 'comment', 'vendor'])
+    ])
+  def test_type_select_should_load_data_and_update_ui_elements(self,
+                                                               ontology_editor_gui: tuple[
+                                                                 QApplication,
+                                                                 QtWidgets.QDialog,
+                                                                 OntologyConfigurationForm,
+                                                                 QtBot],
+                                                               type_to_select: str,
+                                                               category_selected: str,
+                                                               properties: list):
+    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    ui_form.typeComboBox.setCurrentText(type_to_select)
+    assert ui_form.typeComboBox.currentText() == type_to_select, "Type combo box not selected!"
+    assert ui_form.propsCategoryComboBox.currentText() == category_selected, "Property category combo box not selected!"
+    selected_props = []
+    model = ui_form.typePropsTableView.model()
+    for i in range(model.rowCount()):
+      selected_props.append(model.data(model.index(i, 0), Qt.DisplayRole))
+    assert properties == selected_props, "Selected properties not as expected!"
 
   def test_component_launch_should_load_ontology_data(self,
                                                       ontology_editor_gui: tuple[
@@ -420,9 +450,9 @@ class TestOntologyConfigurationExtended(object):
     qtbot.mouseClick(ui_form.saveOntologyPushButton, Qt.LeftButton)
     assert ontology_doc_mock.types() == ui_form.ontology_types, "Ontology document should be modified!"
     mock_show_message.assert_called_once_with('Save will close the tool and restart the Pasta Application (Yes/No?)',
-                                               QMessageBox.Question,
-                                               QMessageBox.No | QMessageBox.Yes,
-                                               QMessageBox.Yes)
+                                              QMessageBox.Question,
+                                              QMessageBox.No | QMessageBox.Yes,
+                                              QMessageBox.Yes)
 
   def test_component_iri_lookup_button_click_should_show_ontology_lookup_dialog_and_set_iris_on_accept(self,
                                                                                                        ontology_editor_gui:
