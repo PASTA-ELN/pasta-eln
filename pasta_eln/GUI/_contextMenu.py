@@ -70,6 +70,7 @@ def executeContextMenu(widget:QWidget, command:list[Any]) -> bool:
     widget.comm.backend.testExtractor(path, recipe='/'.join(widget.doc['-type']), saveFig=str(saveFilePath))
   elif command[0] is CommandMenu.HIDE:
     widget.comm.backend.db.hideShow(widget.docID)
+    widget.doc = widget.comm.backend.db.getDoc(widget.docID)
   elif command[0] is CommandMenu.CHANGE_EXTRACTOR:
     widget.doc['-type'] = command[1].split('/')
     widget.comm.backend.useExtractors(filePath, widget.doc['shasum'], widget.doc)  #any path is good since the file is the same everywhere; data-changed by reference
