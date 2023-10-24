@@ -164,10 +164,10 @@ class Details(QScrollArea):
           text.setStyleSheet(f"QTextEdit {{ border: none; padding: 0px; background-color: {bgColor}; "\
                                 f"color: {fgColor} }}")
           text.document().setTextWidth(labelW.width())
-          _, height = text.document().size().toTuple()
+          height:int = text.document().size().toTuple()[1] # type: ignore[index]
           text.setFixedHeight(height)
           text.setReadOnly(True)
-          labelL.addWidget(text, stretch=1)
+          labelL.addWidget(text, stretch=1) # type: ignore[call-arg]
         else:
           if len(ontologyItem)==1 and 'list' in ontologyItem[0]:
             if not isinstance(ontologyItem[0]['list'], list):                #choice among docType

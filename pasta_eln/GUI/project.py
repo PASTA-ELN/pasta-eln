@@ -103,7 +103,7 @@ class Project(QWidget):
                             f"color: {fgColor} }}")
       comment.setReadOnly(True)
       comment.document().setTextWidth(commentW.width())
-      _, height = comment.document().size().toTuple()
+      height:int = comment.document().size().toTuple()[1] # type: ignore[index]
       comment.setFixedHeight(height)
       commentL.addWidget(comment)
       self.infoW.setMaximumHeight(height+10+countLines*self.lineSep )
