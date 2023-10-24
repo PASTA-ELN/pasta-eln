@@ -12,3 +12,4 @@ qrcode
 Pillow
 matplotlib
 cairosvg
+aiohttp

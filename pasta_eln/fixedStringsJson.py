@@ -12,12 +12,12 @@ defaultOntology: dict[str, Any] = {
     {"name": "objective", "query": "What is the objective?"},
     {"name": "comment", "query": "#tags comments remarks :field:value:"}
   ]}},
-  "x1": {"IRI": "", "attachments": [], "label": "Tasks", "prop": {"default": [
+  "x1": {"IRI": "", "attachments": [], "label": "Folders", "prop": {"default": [
     {"name": "-name", "query": "What is the name of task?", "required": True},
     {"name": "-tags", "query": "What are the tags associated with the task?", "required": True},
     {"name": "comment", "query": "#tags comments remarks :field:value:"}
   ]}},
-  "x2": {"IRI": "", "attachments": [], "label": "Subtasks", "prop": {"default": [
+  "x2": {"IRI": "", "attachments": [], "label": "Folders", "prop": {"default": [
     {"name": "-name", "query": "What is the name of subtask?", "required": True},
     {"name": "-tags", "query": "What are the tags associated with the subtask?", "required": True},
     {"name": "comment", "query": "#tags comments remarks :field:value:"}

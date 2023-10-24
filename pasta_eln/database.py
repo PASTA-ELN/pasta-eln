@@ -102,7 +102,7 @@ class Database:
       commentString = f'// {docType} : ' + ','.join(columnNames) + '\n'
       for name in columnNames:
         if name == 'image':
-          outputList.append('doc.image.length>3')  #Not as .toString() because that leads to inconsistencies
+          outputList.append('doc.image?doc.image.length>3:false')  #Not as .toString() because that leads to inconsistencies
         elif name == '-tags':
           outputList.append("doc['-tags'].join(' ')")
         elif '#_' in name:
@@ -569,7 +569,9 @@ class Database:
     try:
       designDoc.save()
     except Exception:
-      print('**ERROR dsv01: something unexpected has happend. Log-file has traceback')
+      print('**ERROR dsv01: something unexpected has happened.')
+      logging.error('dsv01: something unexpected has happened.')
+      logging.error(traceback.format_exc())
     return
 
 

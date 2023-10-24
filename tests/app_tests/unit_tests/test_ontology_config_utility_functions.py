@@ -6,16 +6,18 @@
 #  Filename: test_ontology_config_utility_functions.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
+
 import logging
 
 import pytest
-from PySide6.QtCore import QEvent
+from PySide6.QtCore import QEvent, Qt
 from PySide6.QtGui import QMouseEvent
 from PySide6.QtWidgets import QMessageBox
 from cloudant import CouchDB
 
-from pasta_eln.GUI.ontology_configuration.utility_functions import is_click_within_bounds, adjust_ontology_data_to_v3, \
-  get_next_possible_structural_level_label, get_db, show_message, check_ontology_types, get_missing_props_message
+from pasta_eln.GUI.ontology_configuration.utility_functions import adjust_ontology_data_to_v3, can_delete_type, \
+  check_ontology_types, \
+  get_db, get_missing_props_message, get_next_possible_structural_level_label, is_click_within_bounds, show_message
 
 
 class TestOntologyConfigUtilityFunctions(object):
@@ -207,13 +209,33 @@ class TestOntologyConfigUtilityFunctions(object):
     mock_msg_box = mocker.patch("PySide6.QtWidgets.QMessageBox")
     set_text_spy = mocker.spy(mock_msg_box, 'setText')
     mocker.patch.object(QMessageBox, "__new__", lambda s: mock_msg_box)
-    assert show_message("Valid message") is None, "show_message should return None"
+    mock_exec = mocker.MagicMock()
+    mocker.patch.object(mock_msg_box, "exec", return_value=mock_exec)
+    assert show_message("Valid message") is mock_exec, "show_message should not be None"
     set_text_spy.assert_called_once_with(
       "Valid message")
-    assert mock_msg_box.exec.call_count == 1, "show_message should call exec()"
+    mock_msg_box.exec.assert_called_once_with()
+    mock_msg_box.setWindowTitle.assert_called_once_with("Ontology Editor")
+    mock_msg_box.setTextFormat.assert_called_once_with(Qt.RichText)
+    mock_msg_box.setIcon.assert_called_once_with(QMessageBox.Information)
+
+  def test_show_message_with_error_argument_shows_warning(self,
+                                                          mocker):
+    mock_msg_box = mocker.patch("PySide6.QtWidgets.QMessageBox")
+    set_text_spy = mocker.spy(mock_msg_box, 'setText')
+    mocker.patch.object(QMessageBox, "__new__", lambda s: mock_msg_box)
+    mock_exec = mocker.MagicMock()
+    mocker.patch.object(mock_msg_box, "exec", return_value=mock_exec)
+    assert show_message("Error message", QMessageBox.Warning) is mock_exec, "show_message should not be None"
+    set_text_spy.assert_called_once_with(
+      "Error message")
+    mock_msg_box.exec.assert_called_once_with()
+    mock_msg_box.setWindowTitle.assert_called_once_with("Ontology Editor")
+    mock_msg_box.setTextFormat.assert_called_once_with(Qt.RichText)
+    mock_msg_box.setIcon.assert_called_once_with(QMessageBox.Warning)
 
   @pytest.mark.parametrize("ontology_types, expected_result", [
-    ({}, {}),
+    ({}, ({}, {})),
     ({
        "x0": {
          "prop": {
@@ -240,18 +262,23 @@ class TestOntologyConfigUtilityFunctions(object):
          }
        }
      },
-     {'Structure level 0': {'category1': ['-name', '-tags'], 'default': ['-name', '-tags']},
-      'Structure level 1': {'category2': ['-name', '-tags'], 'default': ['-name', '-tags']}}),
+     ({'Structure level 0': {'category1': ['-name', '-tags'], 'default': ['-name', '-tags']},
+       'Structure level 1': {'category2': ['-name', '-tags'], 'default': ['-name', '-tags']}},
+      {}
+      )),
     ({
        "x0": {
          "prop": {
            "default": [
              {"name": "name", "query": "What is the name of task?"},
-             {"name": "-tags", "query": "What is the name of task?"}
+             {"name": "-tags", "query": "What is the name of task?"},
+             {"name": "    ", "query": "What is the name of task?"},
+             {"name": None, "query": "What is the name of task?"}
            ],
            "category1": [
              {"name": "-name", "query": "What is the name of task?"},
-             {"name": "tags", "query": "What is the name of task?"}
+             {"name": "tags", "query": "What is the name of task?"},
+             {"name": "", "query": "What is the name of task?"}
            ]
          }
        },
@@ -264,12 +291,19 @@ class TestOntologyConfigUtilityFunctions(object):
            "category2": [
              {"name": "name", "query": "What is the name of task?"},
              {"name": "-tags", "query": "What is the name of task?"}
+           ],
+           "category3": [
+             {"name": "name", "query": "What is the name of task?"},
+             {"name": "-tags", "query": "What is the name of task?"},
+             {"name": "   ", "query": "What is the name of task?"}
            ]
          }
        }
      },
-     {'Structure level 0': {'category1': ['-tags'], 'default': ['-name']},
-      'Structure level 1': {'category2': ['-name']}}),
+     ({'Structure level 0': {'category1': ['-tags'], 'default': ['-name']},
+       'Structure level 1': {'category2': ['-name'], 'category3': ['-name']}},
+      {'Structure level 0': ['default', 'category1'],
+       'Structure level 1': ['category3']})),
     ({
        "x0": {
          "prop": {
@@ -297,17 +331,21 @@ class TestOntologyConfigUtilityFunctions(object):
          }
        }
      },
-     {'Structure level 0': {'category2': ['-name', '-tags']}}),
+     ({'Structure level 0': {'category2': ['-name', '-tags']}}, {})),
+
     ({
        "x0": {
          "prop": {
            "default": [
              {"name": "-name", "query": "What is the name of task?"},
-             {"name": "-tags", "query": "What is the name of task?"}
+             {"name": "-tags", "query": "What is the name of task?"},
+             {"name": None, "query": "What is the name of task?"}
+
            ],
            "category1": [
              {"name": "-name", "query": "What is the name of task?"},
-             {"name": "-tags", "query": "What is the name of task?"}
+             {"name": "-tags", "query": "What is the name of task?"},
+             {"name": None, "query": "What is the name of task?"}
            ]
          }
        },
@@ -315,16 +353,20 @@ class TestOntologyConfigUtilityFunctions(object):
          "prop": {
            "default": [
              {"name": "-name", "query": "What is the name of task?"},
-             {"name": "-tags", "query": "What is the name of task?"}
+             {"name": "-tags", "query": "What is the name of task?"},
+             {"name": "", "query": "What is the name of task?"}
            ],
            "category2": [
              {"name": "-name", "query": "What is the name of task?"},
-             {"name": "-tags", "query": "What is the name of task?"}
+             {"name": "-tags", "query": "What is the name of task?"},
+             {"name": " ", "query": "What is the name of task?"}
            ]
          }
        }
      },
-     {}),
+     ({},
+      {'Structure level 0': ['default', 'category1'],
+       'Structure level 1': ['default', 'category2']})),
     ({
        "x0": {
        },
@@ -344,11 +386,13 @@ class TestOntologyConfigUtilityFunctions(object):
          "prop": {
            "default": [
              {"name": "-name", "query": "What is the name of task?"},
+             {"name": "", "query": "What is the name of task?"},
            ]
          }
        }
      },
-     {'Structure level 1': {'default': ['-name']}, 'test': {'default': ['-tags']}}),
+     ({'Structure level 1': {'default': ['-name']}, 'test': {'default': ['-tags']}},
+      {'test': ['default']})),
     ({
        "x0": {
        },
@@ -375,24 +419,58 @@ class TestOntologyConfigUtilityFunctions(object):
          }
        }
      },
-     {'Structure level 1': {'default': ['-name']}, 'test': {'default': ['-tags']}})
+     ({'Structure level 1': {'default': ['-name']}, 'test': {'default': ['-tags']}},
+      {'Structure level 1': ['default', 'category2']}))
   ])
   def test_check_ontology_document_with_full_and_missing_properties_returns_expected_result(self,
                                                                                             ontology_types,
                                                                                             expected_result):
     assert check_ontology_types(ontology_types) == expected_result, "show_message should return None"
 
-  def test_check_ontology_document_with_null_doc_returns_empty_dict(self):
-    assert check_ontology_types(None) == {}, "check_ontology_document should return empty dict"
+  def test_check_ontology_document_with_null_doc_returns_empty_tuple(self):
+    assert check_ontology_types(None) == ({}, {}), "check_ontology_document should return empty tuple"
 
-  @pytest.mark.parametrize("missing_properties, expected_message", [
-    ({}, ""),
+  @pytest.mark.parametrize("missing_properties, missing_names, expected_message", [
+    ({}, {}, ""),
     ({'Structure level 0': {'category1': ['-name', '-tags'], 'default': ['-name', '-tags']},
       'Structure level 1': {'category2': ['-name', '-tags'], 'default': ['-name', '-tags']}},
-     'Missing required properties: \t\t\t\n\nType: Structure level 0\n\tCategory: category1\n\t\tMissing Property: -name\n\t\tMissing Property: -tags\n\tCategory: default\n\t\tMissing Property: -name\n\t\tMissing Property: -tags\nType: Structure level 1\n\tCategory: category2\n\t\tMissing Property: -name\n\t\tMissing Property: -tags\n\tCategory: default\n\t\tMissing Property: -name\n\t\tMissing Property: -tags\n'),
+     {'Structure level 0': ['default', 'category1'],
+      'Structure level 1': ['default', 'category2']},
+     "<html><b>Missing required properties: </b><ul><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">category1</i>&nbsp;&nbsp;Property Name: <i style=\"color:Crimson\">-name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">category1</i>&nbsp;&nbsp;Property Name: <i style=\"color:Crimson\">-tags</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Property Name: <i style=\"color:Crimson\">-name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Property Name: <i style=\"color:Crimson\">-tags</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">category2</i>&nbsp;&nbsp;Property Name: <i style=\"color:Crimson\">-name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">category2</i>&nbsp;&nbsp;Property Name: <i style=\"color:Crimson\">-tags</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Property Name: <i style=\"color:Crimson\">-name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Property Name: <i style=\"color:Crimson\">-tags</i></li></ul><b>Missing property names:</b><ul><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">default</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">category1</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">default</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">category2</i></li></ul></html>"),
+    ({'Structure level 0': {'category1': ['-name', '-tags'], 'default': ['-name', '-tags']},
+      'Structure level 1': {'category2': ['-name', '-tags'], 'default': ['-name', '-tags']}},
+     {},
+     "<html><b>Missing required properties: </b><ul><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">category1</i>&nbsp;&nbsp;Property Name: <i style=\"color:Crimson\">-name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">category1</i>&nbsp;&nbsp;Property Name: <i style=\"color:Crimson\">-tags</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Property Name: <i style=\"color:Crimson\">-name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Property Name: <i style=\"color:Crimson\">-tags</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">category2</i>&nbsp;&nbsp;Property Name: <i style=\"color:Crimson\">-name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">category2</i>&nbsp;&nbsp;Property Name: <i style=\"color:Crimson\">-tags</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Property Name: <i style=\"color:Crimson\">-name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Property Name: <i style=\"color:Crimson\">-tags</i></li></ul></html>"),
+    ({},
+     {'Structure level 0': ['default', 'category1'],
+      'Structure level 1': ['default', 'category2']},
+     "<html><b>Missing property names:</b><ul><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">default</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">category1</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">default</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">category2</i></li></ul></html>")
   ])
   def test_get_formatted_missing_props_message_returns_expected_message(self,
                                                                         missing_properties,
+                                                                        missing_names,
                                                                         expected_message):
     assert get_missing_props_message(
-      missing_properties) == expected_message, "get_missing_props_message should return expected"
+      missing_properties, missing_names) == expected_message, "get_missing_props_message should return expected"
+
+  @pytest.mark.parametrize("existing_types, selected_type, expected_result", [
+    (["x0", "x1", "x3", "samples", "instruments"], "test", True),
+    (["x0", "x1", "x3", "x4", "instruments"], "x5", False),
+    (["x0", "x1", "x3", "x4", "instruments"], "x0", False),
+    (["x0", "x1", "x3", "x4", "instruments"], "x4", True),
+    (["x0", "x1", "x3", "x4", "instruments"], "x3", False),
+    (["x0", "x1", "x3", "x4", "instruments"], "x0", False),
+    (["x0", "x1", "x3", "x4", "instruments"], "x1", False),
+    (["x0", "x1", "x3", "x4", "instruments"], "instruments", True),
+    (["x2", "x3", "x5", "x0", "instruments"], "x5", True),
+    (["x2", "x3", "x5", "x0", "x7", "", "samples"], "x7", True),
+    (["x2", "x3", "x5", "x0", "x7", "", "samples"], "x8", False),
+    (["x2", "x3", "x5", "x0", "x7", "", None], "x8", False),
+    (["x2", "x3", "x5", "x0", "x7", "", None], None, False)
+  ])
+  def test_can_delete_type_returns_expected(self,
+                                            existing_types,
+                                            selected_type,
+                                            expected_result):
+    assert can_delete_type(
+      existing_types, selected_type) == expected_result, "can_delete_type should return expected"

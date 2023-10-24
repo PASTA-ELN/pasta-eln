@@ -7,15 +7,15 @@
 #  Filename: utility_functions.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
+
 import logging
 import re
-from typing import Any
+from typing import Any, Tuple
 
 from PySide6.QtCore import QEvent
-from PySide6.QtGui import QMouseEvent
-from PySide6.QtWidgets import QStyleOptionViewItem, QMessageBox
+from PySide6.QtGui import QMouseEvent, Qt
+from PySide6.QtWidgets import QMessageBox, QStyleOptionViewItem
 from cloudant import CouchDB
-from cloudant.document import Document
 
 
 def is_click_within_bounds(event: QEvent,
@@ -62,12 +62,17 @@ def adjust_ontology_data_to_v3(ontology_types: dict[str, Any]) -> None:
 
 
 def show_message(message: str,
-                 icon: Any = QMessageBox.Information) -> None:
+                 icon: Any = QMessageBox.Information,
+                 standard_buttons: Any = QMessageBox.Ok,
+                 default_button: Any = QMessageBox.Ok) -> Any:
   """
   Displays a message to the user using QMessageBox
   Args:
-    icon (Any): Message box icon
     message (str): Message to be displayed
+    icon (Any): Message box icon
+    standard_buttons (Any): Standard buttons
+    default_button (Any): Default button
+
 
   Returns: Return None if message is empty otherwise displays the message
 
@@ -75,9 +80,13 @@ def show_message(message: str,
   if message:
     msg_box = QMessageBox()
     msg_box.setWindowTitle("Ontology Editor")
+    msg_box.setTextFormat(Qt.RichText)
     msg_box.setIcon(icon)
     msg_box.setText(message)
-    msg_box.exec()
+    msg_box.setStandardButtons(standard_buttons)
+    msg_box.setDefaultButton(default_button)
+    return msg_box.exec()
+  return None
 
 
 def get_next_possible_structural_level_label(existing_type_labels: Any) -> str | None:
@@ -213,19 +222,23 @@ def generate_required_properties() -> list[dict[str, Any]]:
   ]
 
 
-def check_ontology_types(ontology_types: dict[str, Any]) -> dict[str, dict[str, list[str]]]:
+def check_ontology_types(ontology_types: dict[str, Any]) \
+    -> Tuple[dict[str, dict[str, list[str]]], dict[str, list[str]]]:
   """
-  Check the ontology data to see if all the required properties ["-name", "-tags"] are present under all categories
+  Check the ontology data to see if all the required properties ["-name", "-tags"]
+  are present under all categories and also if all the properties have a name
   Args:
-    ontology_types (Document): Ontology types loaded from the database
+    ontology_types (dict[str, Any]): Ontology types loaded from the database
 
-  Returns (dict[str, dict[str, list[str]]]): Empty dictionary if all the required properties are present under all categories
-  otherwise returns a dictionary of types with categories missing required properties
+  Returns (Tuple[dict[str, dict[str, list[str]]], dict[str, str]]):
+    Empty tuple if all the required properties are present under all categories and all properties have a name
+    otherwise returns a tuple of types with categories missing required properties or names
 
   """
   if not ontology_types:
-    return {}
+    return {}, {}
   types_with_missing_properties: dict[str, dict[str, list[str]]] = {}
+  types_with_null_name_properties: dict[str, list[str]] = {}
   required_properties = ["-name", "-tags"]
   for type_name, type_structure in ontology_types.items():
     type_name = type_name.replace("x", "Structure level ") \
@@ -234,6 +247,10 @@ def check_ontology_types(ontology_types: dict[str, Any]) -> dict[str, dict[str, 
     if type_structure.get("prop"):
       for category, properties in type_structure.get("prop").items():
         names = [prop.get("name") for prop in properties]
+        if not all(n and not n.isspace() for n in names):
+          if type_name not in types_with_null_name_properties:
+            types_with_null_name_properties[type_name] = []
+          types_with_null_name_properties[type_name].append(category)
         for req_property in required_properties:
           if req_property not in names:
             if type_name not in types_with_missing_properties:
@@ -241,25 +258,67 @@ def check_ontology_types(ontology_types: dict[str, Any]) -> dict[str, dict[str, 
             if category not in types_with_missing_properties[type_name]:
               types_with_missing_properties[type_name][category] = []
             types_with_missing_properties[type_name][category].append(req_property)
-  return types_with_missing_properties
+  return types_with_missing_properties, types_with_null_name_properties
 
 
-def get_missing_props_message(missing_properties: dict[str, dict[str, list[str]]]) -> str:
+def get_missing_props_message(types_with_missing_properties: dict[str, dict[str, list[str]]],
+                              types_with_null_name_properties: dict[str, list[str]]) -> str:
   """
   Get formatted message for missing properties
   Args:
-    missing_properties (dict[str, dict[str, list[str]]]): Missing properties
+    types_with_null_name_properties (dict[str, str]): Type categories with missing property names
+    types_with_missing_properties (dict[str, dict[str, list[str]]]): Type categories with missing properties
 
-  Returns (str): Formatted message
+  Returns (str): Html formatted message
 
   """
-  if not missing_properties:
-    return ""
-  message = "Missing required properties: \t\t\t\n\n"
-  for type_name, categories in missing_properties.items():
-    message += f"Type: {type_name}\n"
-    for category, properties in categories.items():
-      message += f"\tCategory: {category}\n"
-      for property_name in properties:
-        message += f"\t\tMissing Property: {property_name}\n"
+  message = ""
+  if (not types_with_missing_properties
+      and not types_with_null_name_properties):
+    return message
+  message += "<html>"
+  if types_with_missing_properties:
+    message += "<b>Missing required properties: </b><ul>"
+    for type_name, categories in types_with_missing_properties.items():
+      for category, properties in categories.items():
+        for property_name in properties:
+          message += (f"<li>Type: <i style=\"color:Crimson\">{type_name}</i>&nbsp;&nbsp;"
+                      f"Category: <i style=\"color:Crimson\">{category}</i>&nbsp;&nbsp;"
+                      f"Property Name: <i style=\"color:Crimson\">{property_name}</i></li>")
+    message += "</ul>"
+  if types_with_null_name_properties:
+    message += "<b>Missing property names:</b><ul>"
+    for type_name, categories_list in types_with_null_name_properties.items():
+      for category in categories_list:
+        message += (f"<li>Type: <i style=\"color:Crimson\">{type_name}</i>&nbsp;&nbsp;"
+                    f"Category: <i style=\"color:Crimson\">{category}</i></li>")
+    message += "</ul>"
+  message += "</html>"
   return message
+
+
+def can_delete_type(existing_types: list[str],
+                    selected_type: str) -> bool:
+  """
+  Check if the selected type can be deleted
+    - Non-structural types can be deleted always
+    - Structural type 'x0' cannot be deleted at all, the other structural types can
+    only be deleted if they are the last one in the hierarchy
+  Args:
+    existing_types (list[str]): List of existing types
+    selected_type (str): Selected type to be deleted
+
+  Returns (bool): True/False depending on whether the selected type can be deleted
+  """
+  if not selected_type:
+    return False
+  existing_types = [t for t in existing_types if t]
+  if not is_structural_level(selected_type):
+    return True
+  structural_types = list(filter(is_structural_level, existing_types))
+  if selected_type == 'x0':
+    return False
+  if selected_type not in structural_types:
+    return False
+  else:
+    return max(structural_types) == selected_type

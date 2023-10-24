@@ -10,7 +10,7 @@ from typing import Any, Union
 
 from PySide6.QtCore import Qt, Slot, QCoreApplication  # pylint: disable=no-name-in-module
 from PySide6.QtGui import QIcon, QPixmap, QShortcut  # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QMainWindow, QApplication, QFileDialog  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QMainWindow, QApplication, QFileDialog, QMessageBox  # pylint: disable=no-name-in-module
 from qt_material import apply_stylesheet  # of https://github.com/UN-GCPDS/qt-material
 
 from pasta_eln import __version__
@@ -105,9 +105,13 @@ class MainWindow(QMainWindow):
 
     #check if temporary save exist: warn user
     if (Path.home()/'.pastaELN.temp').exists():
-      showMessage(self, 'Information', 'There is data from prematurely closed form. Please reopen the form'+\
-                  'and the content will be reloaded. Save it or delete it.', 'Information')
-
+      ret = QMessageBox.information(self, 'Information', 'There is data from a prematurely closed form. '+
+              'Do you want to use it? \n\n- If you choose yes, please reopen that form and content will' +
+              'be reloaded.\n\n- If you choose no, this temporary data will be removed now.',
+              QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,      # type: ignore[operator]
+              QMessageBox.StandardButton.Yes)
+      if ret==QMessageBox.StandardButton.No:
+        (Path.home()/'.pastaELN.temp').unlink()
 
 
   @Slot(str)
@@ -141,8 +145,9 @@ class MainWindow(QMainWindow):
         showMessage(self, 'Error', 'You have to open a project to export', 'Warning')
         return
       fileName = QFileDialog.getSaveFileName(self, 'Save data into .eln file', str(Path.home()), '*.eln')[0]
-      status = exportELN(self.comm.backend, self.comm.projectID, fileName)
-      showMessage(self, 'Finished', status, 'Information')
+      if fileName != '':
+        status = exportELN(self.comm.backend, self.comm.projectID, fileName)
+        showMessage(self, 'Finished', status, 'Information')
     elif command[0] is Command.IMPORT:
       fileName = QFileDialog.getOpenFileName(self, 'Load data from .eln file', str(Path.home()), '*.eln')[0]
       if fileName != '':

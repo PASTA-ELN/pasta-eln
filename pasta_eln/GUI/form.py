@@ -86,7 +86,7 @@ class Form(QDialog):
           IconButton(f'fa5s.{name}', self, [Command.BUTTON_BAR, name, key], buttonBarL, tooltip)
         for i in range(1,4):
           icon = f'mdi.format-header-{str(i)}'
-          IconButton(icon, self, [Command.BUTTON_BAR, 'heading{str(i)}', key], buttonBarL, f'Heading {str(i)}')
+          IconButton(icon, self, [Command.BUTTON_BAR, f'heading{str(i)}', key], buttonBarL, f'Heading {str(i)}')
         rightSideL.addWidget(getattr(self, f'buttonBarW_{key}'))
         setattr(self, f'textEdit_{key}', QPlainTextEdit(value))
         getattr(self, f'textEdit_{key}').setAccessibleName(key)
@@ -155,7 +155,9 @@ class Form(QDialog):
       self.projectComboBox = QComboBox()
       self.projectComboBox.addItem(label, userData='')
       for line in self.db.getView('viewDocType/x0'):
-        if '-branch' not in self.doc or all(line['id']!=branch['stack'][0] for branch in self.doc['-branch']):
+        # add all projects but the one that is present
+        if '-branch' not in self.doc or all( not(len(branch['stack'])>0 and line['id']==branch['stack'][0])
+                                            for branch in self.doc['-branch']):
           self.projectComboBox.addItem(line['value'][0], userData=line['id'])
       self.formL.addRow(QLabel('Project'), self.projectComboBox)
     if allowProjectAndDocTypeChange: #if not-new and non-folder
@@ -180,12 +182,18 @@ class Form(QDialog):
     if (Path.home()/'.pastaELN.temp').exists():
       with open(Path.home()/'.pastaELN.temp', 'r', encoding='utf-8') as fTemp:
         content = json.loads(fTemp.read())
+        # Temporary print to help debugging occasional bugs
+        logging.info('Autosave: '+str(content))
+        logging.info('from db :'+str(self.doc))
+        # end temporary print
         for key in self.doc.keys():
           if key[0] in ['_','-', '#'] or key in ['image','metaVendor','metaUser','shasum'] or \
              key not in content:
             continue
           if key in ['comment','content']:
             getattr(self, f'textEdit_{key}').setPlainText(content[key])
+          elif isinstance(getattr(self, f'key_{key}'), QComboBox):
+            getattr(self, f'key_{key}').setCurrentText(content[key])
           else:
             getattr(self, f'key_{key}').setText(content[key])
     self.checkThreadTimer = QTimer(self)
@@ -202,7 +210,9 @@ class Form(QDialog):
         continue
       if key in ['comment','content']:
         content[key] = getattr(self, f'textEdit_{key}').toPlainText().strip()
-      elif isinstance(getattr(self, f'key_{key}'), QLineEdit):
+      elif isinstance(getattr(self, f'key_{key}'), QComboBox):
+        content[key] = getattr(self, f'key_{key}').currentText().strip()
+      else:                                            #all text fields
         content[key] = getattr(self, f'key_{key}').text().strip()
     with open(Path.home()/'.pastaELN.temp', 'w', encoding='utf-8') as fTemp:
       fTemp.write(json.dumps(content))
@@ -218,8 +228,11 @@ class Form(QDialog):
     if btn.text().endswith('Cancel'):
       ret = QMessageBox.critical(self, 'Warning', 'You will loose all entered data. Do you want to save the '+\
                                  'content for next time?',
-                                 QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
-      if ret==QMessageBox.StandardButton.No:
+                                 QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,  # type: ignore[operator]
+                                 QMessageBox.StandardButton.No)
+      if ret==QMessageBox.StandardButton.Yes:
+        self.autosave()
+      else:
         self.checkThreadTimer.stop()
         if (Path.home()/'.pastaELN.temp').exists():
           (Path.home()/'.pastaELN.temp').unlink()
@@ -382,7 +395,7 @@ class Form(QDialog):
       elif command[1]=='list-ol':
         getattr(self, f'textEdit_{command[2]}').insertPlainText('\n1. item 1\n1. item 2')
       elif command[1].startswith('heading'):
-        getattr(self, f'textEdit_{command[2]}').insertPlainText('#' * int(command[-1]) +' Heading\n')
+        getattr(self, f'textEdit_{command[2]}').insertPlainText('#' * int(command[1][-1]) +' Heading\n')
     elif command[0] is Command.FOCUS_AREA:
       unknownWidget = []
       if getattr(self, f'buttonBarW_{command[1]}').isHidden(): #current status hidden
