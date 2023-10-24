@@ -128,7 +128,7 @@ All documents have the following properties
 - type is a list of hierarchical types:
   - examples for most data: ["measurement", "Zeiss tif image"], ["measurement", "Indentation", "Pop-in study"]
   - text items (projects, tasks) are ["x0"], ["x1"], ... as the types are non hierarchical in the class view (IT-term). A task is not a special class of the project class. Moreover, the hierarchical level is ingrained in the type
-- Tags #tag, #1 (no spaces in the string). #1 implies one-star, #2 implies two-stars. Tags are stored as list of stings.
+- Tags #tag, #1 (no spaces in the string). #1 implies one-star, #2 implies two-stars. Tags are stored as list of strings.
 - other fields can be easily added in the comment field of the form and are thereafter separated. Examples for other fields:  :BakingTime:2h: :quality:3:  (':' is a marker here)
 - Comments
   - If the user enters a comment in the comment field: tags and fields are subtracted and everything that remains is the comment

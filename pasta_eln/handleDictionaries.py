@@ -101,7 +101,7 @@ def fillDocBeforeCreate(data:dict[str,Any], docType:list[str]) -> dict[str,Any]:
     data['comment'] =''
   if '-tags' not in data:
     data['-tags'] = []
-  #always do regex expressions twice: if #lala at beginnig or in middle of comment
+  #always do regex expressions twice: if #lala at beginning or in middle of comment
   curated = re.findall(r'(?:^|\s)#_curated(?:\s|$)', data['comment']) # #_curated
   rating  = re.findall(r'(?:^|\s)#_\d(?:\s|$)',      data['comment']) # #_number
   if rating is None:

@@ -143,7 +143,7 @@ class Table(QWidget):
       self.showHidden.setText(f'Show/hide hidden {docLabel.lower()}')
       self.filterHeader = self.comm.backend.db.getColumnNames()[self.docType].split(',')
       self.filterHeader = [i[1:] if i[0]=='-'   else i for i in self.filterHeader]  #change -something to something
-      self.filterHeader = [i[2:] if i[:2]=='#_' else i for i in self.filterHeader]  #change #_something to somehing
+      self.filterHeader = [i[2:] if i[:2]=='#_' else i for i in self.filterHeader]  #change #_something to something
     self.headerW.show()
     nrows, ncols = len(self.data), len(self.filterHeader)
     model = QStandardItemModel(nrows, ncols)

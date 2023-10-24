@@ -51,7 +51,7 @@ Implementation
         - no lock-in by software, software-architecture
     - Best version
         - A scientist has a desktop-based version that uploads the data to central servers.
-        - Supervisors, guests can use the webbased version to see the meta-data
+        - Supervisors, guests can use the web-based version to see the meta-data
         - The database can be filled with a command-line-interface (CLI), desktop program or cellphone.
         - Similar to 'git' which is the standard for distributed development.
 

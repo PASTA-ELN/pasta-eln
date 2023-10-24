@@ -223,7 +223,7 @@ class Database:
     - full path (from basePath) allows to easily create a view of all paths and search through them
       during each scan, which happens rather often
     - just the incremental path (file-name, folder-name) allows to easily change that if the user wants
-      and not change all the children paths, too. However, the renaming of the folder is likely occuring
+      and not change all the children paths, too. However, the renaming of the folder is likely occurring
       less often.
 
     Args:
@@ -348,7 +348,7 @@ class Database:
           elif item in newDoc:
             oldDoc[item] = newDoc[item]
           newDoc[item] = change[item]
-      # Always update, for some reason single tags are not recongnized
+      # Always update, for some reason single tags are not recognized
       # if nothingChanged:
       #   logging.debug('database.update.2: doc not updated-nothing changed: '+newDoc['_id']+' '+newDoc['-name'])
       #   return newDoc
@@ -718,7 +718,7 @@ class Database:
       if np.min(value) < firstSubmit:
         firstSubmit = np.min(value)
     bins = np.linspace(firstSubmit, datetime.now().timestamp(), 100 )
-    #calculate histgram and save it
+    #calculate histogram and save it
     collectionCopy = dict(collection)
     for key,value in collection.items():
       hist, _ = np.histogram(value, bins)

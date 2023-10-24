@@ -34,7 +34,7 @@ def outputString(fmt:str='print', level:str='info', message:str='') -> str:
   """ Output a message into different formats:
     - print: print to stdout
     - logging; log to file
-    - text: return text string (superseeds html)
+    - text: return text string (supersedes html)
     - html: return html string https://doc.qt.io/qtforpython/overviews/richtext-html-subset.html#supported-html-subset
     - else: no output
     - formats can be union ('print,text')
