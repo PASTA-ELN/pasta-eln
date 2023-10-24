@@ -32,7 +32,7 @@ class Table(QWidget):
     self.docType = ''
     self.projID = ''
     self.filterHeader:list[str] = []
-    self.showAll= False
+    self.showAll= True
 
     ### GUI elements
     mainL = QVBoxLayout()
@@ -42,9 +42,9 @@ class Table(QWidget):
     self.headerW, headerL = widgetAndLayout('H', mainL, 'm')
     self.headerW.hide()
     self.headline = Label('','h1', headerL)
+    self.showState= Label('', 'h3', headerL)
     headerL.addStretch(1)
     self.addBtn = TextButton('Add',  self, [Command.ADD_ITEM],   headerL)
-    TextButton('Add Filter',         self, [Command.ADD_FILTER], headerL)
 
     self.selectionBtn = TextButton('Selection', self, [], headerL)
     selectionMenu = QMenu(self)
@@ -52,14 +52,19 @@ class Table(QWidget):
     selectionMenu.addSeparator()
     Action('Group Edit',      self, [Command.GROUP_EDIT],       selectionMenu)
     Action('Sequential edit', self, [Command.SEQUENTIAL_EDIT],  selectionMenu)
-    Action('Toggle hidden',   self, [Command.TOGGLE_HIDE],      selectionMenu)
     Action('Rerun extractors',self, [Command.RERUN_EXTRACTORS], selectionMenu)
     Action('Delete',          self, [Command.DELETE],           selectionMenu)
     self.selectionBtn.setMenu(selectionMenu)
 
+    self.visibilityBtn = TextButton('Visibility', self, [], headerL)
+    visibilityMenu = QMenu(self)
+    Action(                    'Add Filter',                       self, [Command.ADD_FILTER],  visibilityMenu)
+    self.showHidden   = Action('Show/hide hidden ___',             self, [Command.SHOW_ALL],    visibilityMenu)
+    self.toggleHidden = Action('Invert hidden status of selected', self, [Command.TOGGLE_HIDE], visibilityMenu)
+    self.visibilityBtn.setMenu(visibilityMenu)
+
     more = TextButton('More', self, [], headerL)
     self.moreMenu = QMenu(self)
-    Action('Display/omit hidden items', self, [Command.SHOW_ALL], self.moreMenu)
     Action('Export to csv',            self, [Command.EXPORT],   self.moreMenu)
     self.actionChangeColums = Action('Change columns',  self, [Command.CHANGE_COLUMNS], self.moreMenu)  #add this action at end
     more.setMenu(self.moreMenu)
@@ -115,8 +120,10 @@ class Table(QWidget):
       self.addBtn.show()
       if docType.startswith('x0'):
         self.selectionBtn.hide()
+        self.toggleHidden.setVisible(False)
       else:
         self.selectionBtn.show()
+        self.toggleHidden.setVisible(True)
       path = (f'viewDocType/{self.docType}All' if self.showAll else f'viewDocType/{self.docType}')
       if self.projID=='':
         self.data = self.comm.backend.db.getView(path)
@@ -124,13 +131,16 @@ class Table(QWidget):
         self.data = self.comm.backend.db.getView(path, preciseKey=self.projID)
       # filter multiple lines of the same item: #https://stackoverflow.com/questions/11092511/list-of-unique-dictionaries
       self.data = list({v['id']:v for v in self.data}.values())
+      self.showState.setText('(show all rows)' if self.showAll else '(hide hidden rows)')
       if self.docType=='-':
         self.headline.setText('Unidentified')
         self.actionChangeColums.setVisible(False)
       else:
         self.actionChangeColums.setVisible(True)
         if self.docType in self.comm.backend.db.dataLabels:
-          self.headline.setText(self.comm.backend.db.dataLabels[self.docType])
+          docLabel = self.comm.backend.db.dataLabels[self.docType]
+          self.headline.setText(docLabel)
+      self.showHidden.setText(f'Show/hide hidden {docLabel.lower()}')
       self.filterHeader = self.comm.backend.db.getColumnNames()[self.docType].split(',')
       self.filterHeader = [i[1:] if i[0]=='-'   else i for i in self.filterHeader]  #change -something to something
       self.filterHeader = [i[2:] if i[:2]=='#_' else i for i in self.filterHeader]  #change #_something to somehing

@@ -29,7 +29,7 @@ class Project(QWidget):
     self.projID = ''
     self.taskID = ''
     self.docProj:dict[str,Any]= {}
-    self.showAll= False
+    self.showAll= True
     self.foldedAll = False
     self.btnAddSubfolder:Optional[TextButton] = None
     self.lineSep = 20
@@ -40,11 +40,13 @@ class Project(QWidget):
     Initialize / Create header of page
     """
     self.docProj = self.comm.backend.db.getDoc(self.projID)
-    _, topLineL       = widgetAndLayout('H',self.mainL)  #topLine includes name on left, buttons on right
-    hidden, menuTextHidden = ('     \U0001F441', 'Show entire project') \
+    _, topLineL       = widgetAndLayout('H',self.mainL,'m')  #topLine includes name on left, buttons on right
+    hidden, menuTextHidden = ('     \U0001F441', 'Mark project as shown') \
                        if [b for b in self.docProj['-branch'] if False in b['show']] else \
-                       ('', 'Hide entire project')
+                       ('', 'Mark project as hidden')
     topLineL.addWidget(Label(self.docProj['-name']+hidden, 'h2'))
+    showStatus = '(Show all items)' if self.showAll else '(Hide hidden items)'
+    topLineL.addWidget(QLabel(showStatus))
     topLineL.addStretch(1)
 
     buttonW, buttonL = widgetAndLayout('H', spacing='m')
@@ -53,14 +55,12 @@ class Project(QWidget):
     TextButton('Edit project',                         self, [Command.EDIT],      buttonL)
     visibility = TextButton(          'Visibility',    self, [],                  buttonL)
     visibilityMenu = QMenu(self)
-    self.actHideDetail = Action('Minimize project details', self, [Command.REDUCE_HEIGHT_HEAD], visibilityMenu)
-    if self.showAll:
-      menuTextItems = 'Omit hidden subitems'
-    else:
-      menuTextItems = 'Display hidden subitems'
-    self.actionHideItems   = Action( menuTextItems,         self, [Command.HIDE_SHOW_ITEMS],    visibilityMenu)
-    self.actionHideProject = Action( menuTextHidden,        self, [Command.HIDE],               visibilityMenu)
-    self.actionFoldAll     = Action('Minimize subitems',    self, [Command.FOLD_ALL_ITEMS],     visibilityMenu)
+    self.actHideDetail = Action('Hide project details',self, [Command.REDUCE_HEIGHT_HEAD],visibilityMenu)
+    menuTextItems = 'Hide hidden items' if self.showAll else 'Show hidden items'
+    minimizeItems = 'Show all item details' if self.foldedAll else 'Hide all item details'
+    self.actionHideItems   = Action( menuTextItems,    self, [Command.HIDE_SHOW_ITEMS],  visibilityMenu)
+    self.actionHideProject = Action( menuTextHidden,   self, [Command.HIDE],             visibilityMenu)
+    self.actionFoldAll     = Action( minimizeItems,    self, [Command.FOLD_ALL_ITEMS],   visibilityMenu)
     visibility.setMenu(visibilityMenu)
     more = TextButton('More',           self, [], buttonL)
     moreMenu = QMenu(self)
@@ -185,10 +185,10 @@ class Project(QWidget):
     elif command[0] is Command.REDUCE_HEIGHT_HEAD:
       if self.infoW is not None and self.infoW.isHidden():
         self.infoW.show()
-        self.actHideDetail.setText('Minimize project details')
+        self.actHideDetail.setText('Hide project details')
       elif self.infoW is not None:
         self.infoW.hide()
-        self.actHideDetail.setText('Maximize project details')
+        self.actHideDetail.setText('Show project details')
     elif command[0] is Command.HIDE:
       self.comm.backend.db.hideShow(self.projID)
       self.docProj = self.comm.backend.db.getDoc(self.projID)
@@ -212,9 +212,9 @@ class Project(QWidget):
         return
       recursiveRowIteration(self.tree.model().index(-1,0))
       if self.foldedAll:
-        self.actionFoldAll.setText('Maximize subitems')
+        self.actionFoldAll.setText('Show all item details')
       else:
-        self.actionFoldAll.setText('Minimize subitems')
+        self.actionFoldAll.setText('Hide all item details')
     elif command[0] is Command.HIDE_SHOW_ITEMS:
       self.showAll = not self.showAll
       self.change('','')
@@ -302,6 +302,8 @@ class Project(QWidget):
     """
     #prefill docID
     label = '/'.join([i.id for i in nodeHier.ancestors]+[nodeHier.id])
+    if self.foldedAll:
+      label += ' -'
     nodeTree = QStandardItem(label)  #nodeHier.name,'/'.join(nodeHier.docType),nodeHier.id])
     if nodeHier.id[0]=='x':
       nodeTree.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled) # type: ignore
