@@ -35,12 +35,12 @@ class TreeView(QTreeView):
     folder = self.currentIndex().data().split('/')[-1][0]=='x'
     context = QMenu(self)
     if folder:
-      Action('Add child folder', self, [Command.ADD_CHILD],      context)
-    Action('Add sibling folder', self, [Command.ADD_SIBLING],    context)
-    Action('Delete item',        self, [Command.DELETE],         context)
+      Action('Add child folder',                   self, [Command.ADD_CHILD],      context)
+    Action('Add sibling folder',                   self, [Command.ADD_SIBLING],    context)
+    Action('Delete item',                          self, [Command.DELETE],         context)
     context.addSeparator()
-    Action('Minimize/Maximize',  self, [Command.MAX_MIN_HEIGHT], context)
-    Action('Hide/Show',          self, [Command.HIDE],           context)
+    Action('Hide/show item details',               self, [Command.MAX_MIN_HEIGHT], context)
+    Action('Mark item as hidden/shown',            self, [Command.HIDE],           context)
     context.addSeparator()
     if not folder:
       Action('Open file with another application', self, [Command.OPEN_EXTERNAL],    context)
