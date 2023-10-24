@@ -421,9 +421,9 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm, QObject):
       return
 
     result = show_message("Save will close the tool and restart the Pasta Application (Yes/No?)",
-                 QMessageBox.Question,
-                 QMessageBox.No | QMessageBox.Yes,
-                 QMessageBox.Yes)
+                          QMessageBox.Question,
+                          QMessageBox.No | QMessageBox.Yes,
+                          QMessageBox.Yes)
 
     if result == QMessageBox.Yes:
       # Clear all the data from the ontology_document
