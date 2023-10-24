@@ -86,6 +86,7 @@ def show_message(message: str,
     msg_box.setStandardButtons(standard_buttons)
     msg_box.setDefaultButton(default_button)
     return msg_box.exec()
+  return None
 
 
 def get_next_possible_structural_level_label(existing_type_labels: Any) -> str | None:
