@@ -16,6 +16,12 @@
 ---
 
 ## Developers: notes on windows installation
+
+### How to start Pasta ELN
+- Anaconda
+  - python -m pasta_eln.gui
+  - DOES NOT WORK "pastaELN"
+
 ### Installation location windows:
 - Default installation
   - C:\Users\...\AppData\Local\Programs\Python\Python311\Scripts
@@ -25,14 +31,19 @@
   - C:\Users\...\anaconda3\envs\...\Lib\site-packages\pasta_eln
 
 ### Restart windows
-- uninstall couchdb, python x2
+- (possibly) uninstall python x2
+- uninstall couchdb
 - remove directories
-  - C:\Program Files\Apache CouchDB
-  - C:\Users\....\AppData\Local\Programs\Python
+  - **C:\Program Files\Apache CouchDB**
+  - C:\Users\....\AppData\Local\Programs\Python [If deleted python]
   - Pasta-Folder in Documents
 - remove Users\...\.pastaELN.json
 - remove shortcut on Windows desktop
 - restart Windows
+- **python -m pasta_eln.gui**
+- go through steps and wait for restart
+- after restart go to System->Configuration (ctrl-0) ->Setup-> start again
+  - or have a separate button for that
 
 ---
 

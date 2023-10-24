@@ -61,7 +61,8 @@ class TreeView(QTreeView):
       docType= f'x{len(hierStack)}'
       docID = hierStack[-1][:34] if hierStack[-1].endswith(' -') else hierStack[-1]
       self.comm.backend.cwd = Path(self.comm.backend.db.getDoc(docID)['-branch'][0]['path'])
-      docID = self.comm.backend.addData(docType, {'-name':'new folder'}, hierStack)
+      label = self.comm.backend.db.ontology[docType]['label'].lower()[:-1]
+      docID = self.comm.backend.addData(docType, {'-name':f'new {label}'}, hierStack)
       # append item to the GUI
       item  = self.model().itemFromIndex(self.currentIndex())
       child = QStandardItem('/'.join(hierStack+[docID]))
@@ -77,7 +78,8 @@ class TreeView(QTreeView):
       docType= f'x{len(hierStack)}'
       docID = hierStack[-1][:34] if hierStack[-1].endswith(' -') else hierStack[-1]
       self.comm.backend.cwd = Path(self.comm.backend.db.getDoc(docID)['-branch'][0]['path'])
-      docID = self.comm.backend.addData(docType, {'-name':'new folder'}, hierStack)
+      label = self.comm.backend.db.ontology[docType]['label'].lower()[:-1]
+      docID = self.comm.backend.addData(docType, {'-name':f'new {label}'}, hierStack)
       # append item to the GUI
       item  = self.model().itemFromIndex(self.currentIndex())
       parent = item.parent() if item.parent() is not None else self.model().invisibleRootItem()

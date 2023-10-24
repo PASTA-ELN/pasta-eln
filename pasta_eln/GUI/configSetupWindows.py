@@ -150,12 +150,12 @@ class ConfigurationSetup(QWidget):
             self.mainText = self.mainText.replace('- Example data', '- Example data was added')
         else:
           self.mainText = self.mainText.replace('- Example data', '- Example data was NOT added, per user choice')
+          flagContinue = False
         self.text1.setMarkdown(self.mainText)
 
       #at end
-      self.button1.setText('Finished')
-      self.button1.clicked.disconnect(self.analyse)
-      self.button1.clicked.connect(self.finished)
+      self.button1.hide()
+      self.button2.show()
       logging.info('Windows setup analyse end')
     elif command[0] is Command.FINISHED: # What do do when setup is finished: success or unsuccessfully
       restart()

@@ -211,13 +211,13 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm, QObject):
     """
     new_category = self.addPropsCategoryLineEdit.text()
     if not new_category:
-      show_message("Enter non-null/valid category name!!.....")
+      show_message("Enter non-null/valid category name!!.....", QMessageBox.Warning)
       return None
     if not self.ontology_loaded or self.ontology_types is None:
-      show_message("Load the ontology data first....")
+      show_message("Load the ontology data first....", QMessageBox.Warning)
       return None
     if new_category in self.selected_type_properties.keys():
-      show_message("Category already exists....")
+      show_message("Category already exists....", QMessageBox.Warning)
       return None
     # Add the new category to the property list and refresh the category combo box
     self.logger.info("User added new category: {%s}", new_category)
@@ -234,7 +234,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm, QObject):
     """
     selected_category = self.propsCategoryComboBox.currentText()
     if self.selected_type_properties is None:
-      show_message("Load the ontology data first....")
+      show_message("Load the ontology data first....", QMessageBox.Warning)
       return None
     if selected_category and selected_category in self.selected_type_properties.keys():
       self.logger.info("User deleted the selected category: {%s}", selected_category)
@@ -285,10 +285,10 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm, QObject):
     selected_type = self.typeComboBox.currentText()
     selected_type = adapt_type(selected_type)
     if not self.ontology_loaded:
-      show_message("Load the ontology data first....")
+      show_message("Load the ontology data first....", QMessageBox.Warning)
       return
     if self.ontology_types is None or self.ontology_document is None:
-      show_message("Load the ontology data first....")
+      show_message("Load the ontology data first....", QMessageBox.Warning)
       return
     if selected_type and selected_type in self.ontology_types:
       self.logger.info("User deleted the selected type: {%s}", selected_type)
@@ -349,7 +349,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm, QObject):
       self.create_type_dialog.set_structural_level_title(structural_title)
       self.create_type_dialog.show()
     else:
-      show_message("Load the ontology data first...")
+      show_message("Load the ontology data first...", QMessageBox.Warning)
 
   def setup_slots(self) -> None:
     """
@@ -455,11 +455,12 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm, QObject):
       self.logger.error("Null ontology_document/ontology_types, erroneous app state")
       raise OntologyConfigGenericException("Null ontology_document/ontology_types, erroneous app state", {})
     if title in self.ontology_types:
-      show_message(f"Type (title: {title} label: {label}) cannot be added since it exists in DB already....")
+      show_message(f"Type (title: {title} label: {label}) cannot be added since it exists in DB already....",
+                   QMessageBox.Warning)
     else:
       if not title:
         self.logger.warning("Enter non-null/valid title!!.....")
-        show_message("Enter non-null/valid title!!.....")
+        show_message("Enter non-null/valid title!!.....", QMessageBox.Warning)
         return
       self.logger.info("User created a new type and added "
                        "to the ontology document: Title: {%s}, Label: {%s}", title, label)

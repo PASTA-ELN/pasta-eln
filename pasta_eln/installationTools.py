@@ -483,7 +483,17 @@ def createShortcut() -> None:
     from win32com.client import Dispatch
     shell = Dispatch('WScript.Shell')
     shortcut = shell.CreateShortCut( os.path.join(winshell.desktop(), "pastaELN.lnk") )
-    shortcut.Targetpath = r"pastaELN"
+    env = os.environ['CONDA_PREFIX'] if 'CONDA_PREFIX' in os.environ else ''  #full path of env
+    if env:
+      env = env.split('\\')[-1]  #just the env name
+      user = os.getlogin()
+      batContent = f"cmd.exe /c \"C:\\Users\\{user}\\anaconda3\\Scripts\\activate {env} && python -m pasta_eln.gui\""
+      batLocation= f"C:\\Users\\{user}\\startPastaELN.bat"
+      with open(batLocation, 'w', encoding='utf-8') as fBat:
+        fBat.write(batContent)
+      shortcut.Targetpath = batLocation
+    else:
+      shortcut.Targetpath = r"python -m pasta_eln.gui"
     shortcut.WorkingDirectory = str(Path.home())
     shortcut.IconLocation = str(Path(__file__).parent/'Resources'/'Icons'/'favicon64.ico')
     shortcut.save()
