@@ -164,7 +164,7 @@ class OntologyTableViewModel(QAbstractTableModel):
       return (Qt.ItemIsEditable  # type: ignore[operator]
               | Qt.ItemIsSelectable
               | Qt.ItemIsEnabled)
-    return None  # type: ignore[return-value]
+    return Qt.NoItemFlags  # type: ignore[return-value]
 
   @Slot(int)
   def delete_data(self, position: int) -> None:
