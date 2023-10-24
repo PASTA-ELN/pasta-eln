@@ -106,9 +106,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     for textType in ['comment', 'content']:
       if textType in doc and (textType != 'content' or 'image' not in doc or doc['image'] == ''):
         textDoc = QTextDocument()
-        text = doc[textType].replace('\n# ','\n### ').replace('\n## ','\n### ')
-        text = f'##{text}' if text.startswith('# ') else text
-        textDoc.setMarkdown(text.strip())
+        textDoc.setMarkdown(re.sub(r'(^|\n)(#+)', r'\1##\2', doc[textType].strip()))
         if textType == 'comment':
           textDoc.setTextWidth(bottomRight2nd.toTuple()[0]-x0-self.widthContent-2*self.frameSize)
           width, height = textDoc.size().toTuple() # type: ignore

@@ -1,11 +1,11 @@
 """ widget that shows the details of the items """
-import logging, json
+import logging, re
 from enum import Enum
 from pathlib import Path
 from typing import Any
 from PySide6.QtWidgets import QScrollArea, QLabel, QTextEdit  # pylint: disable=no-name-in-module
 from PySide6.QtCore import Qt, Slot # pylint: disable=no-name-in-module
-from ..guiStyle import TextButton, Image, Label, showMessage, widgetAndLayout
+from ..guiStyle import TextButton, Image, Label, showMessage, widgetAndLayout, getColor
 from ._contextMenu import initContextMenu, executeContextMenu, CommandMenu
 from ..fixedStringsJson import defaultOntologyNode
 from ..guiCommunicate import Communicate
@@ -155,12 +155,19 @@ class Details(QScrollArea):
         link = False
         ontologyItem = [i for group in ontologyNode for i in ontologyNode[group] if i['name']==key]
         if '\n' in self.doc[key]:     #if returns in value: format nicely
-          _, labelL = widgetAndLayout('H', self.metaDetailsL, top='s', bottom='s')
+          labelW, labelL = widgetAndLayout('H', self.metaDetailsL, top='s', bottom='s')
           labelL.addWidget(QLabel(f'{key}: '), alignment=Qt.AlignTop) # type: ignore
           text = QTextEdit()
-          text.setMarkdown(self.doc[key])
+          text.setMarkdown(re.sub(r'(^|\n)(#+)', r'\1##\2', self.doc[key].strip()))
+          bgColor = getColor(self.comm.backend, 'secondaryDark')
+          fgColor = getColor(self.comm.backend, 'primaryText')
+          text.setStyleSheet(f"QTextEdit {{ border: none; padding: 0px; background-color: {bgColor}; "\
+                                f"color: {fgColor} }}")
+          text.document().setTextWidth(labelW.width())
+          _, height = text.document().size().toTuple()
+          text.setFixedHeight(height)
           text.setReadOnly(True)
-          labelL.addWidget(text)
+          labelL.addWidget(text, stretch=1)
         else:
           if len(ontologyItem)==1 and 'list' in ontologyItem[0]:
             if not isinstance(ontologyItem[0]['list'], list):                #choice among docType
