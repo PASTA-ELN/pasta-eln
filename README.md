@@ -18,6 +18,9 @@
 <!-- readme: contributors -start -->
 <!-- readme: contributors -end -->
 
+Most of the file-layout and the integration of webservices follows the example of datalad and datalad-gooey
+https://github.com/datalad. We thank those developers for their work and contribution to free software.
+
 ---
 
 ## Developers: notes on windows installation
