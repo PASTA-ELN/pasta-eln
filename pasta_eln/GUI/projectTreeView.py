@@ -123,7 +123,7 @@ class TreeView(QTreeView):
       logging.debug('hide stack %s',str(hierStack))
       self.comm.backend.db.hideShow(hierStack)
       # self.comm.changeProject.emit('','') #refresh project
-      # after hide, not immediately hidded but on next refresh
+      # after hide, not immediately hidden but on next refresh
       # TODO Comment out for now to keep consistent with hide via context menu directly or form (which does
       # not know it is a project )
     elif command[0] is Command.OPEN_EXTERNAL or command[0] is Command.OPEN_FILEBROWSER:

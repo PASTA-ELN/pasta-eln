@@ -14,9 +14,16 @@
 > **This page / area is for developers and contains some helpful information for them**
 
 ---
+## Contributors
 
-<!-- readme: contributors -start -->
-<!-- readme: contributors -end -->
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+
+<!-- ALL-CONTRIBUTORS-LIST:END -->
 
 Most of the file-layout and the integration of webservices follows the example of datalad and datalad-gooey
 https://github.com/datalad. We thank those developers for their work and contribution to free software.

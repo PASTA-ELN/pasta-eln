@@ -1,8 +1,8 @@
 # Changelog
 
-## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
+## [v2.4.17](https://github.com/PASTA-ELN/pasta-eln/tree/v2.4.17) (2023-10-25)
 
-[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.16...HEAD)
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.16...v2.4.17)
 
 **Implemented enhancements:**
 
