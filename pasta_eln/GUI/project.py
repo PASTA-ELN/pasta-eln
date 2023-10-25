@@ -1,5 +1,5 @@
 """ Widget that shows the content of project in a electronic labnotebook """
-import logging
+import logging, re
 from enum import Enum
 from typing import Optional, Any
 from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget, QMenu, QMessageBox, QTextEdit # pylint: disable=no-name-in-module
@@ -96,16 +96,18 @@ class Project(QWidget):
       # labelW.setStyleSheet('padding-top: 5px') #make "Comment:" text aligned with other content, not with text-edit
       commentL.addWidget(labelW, alignment=Qt.AlignTop)   # type: ignore[call-arg]
       comment = QTextEdit()
-      comment.setMarkdown(self.docProj['comment'])
-      bgColor   = getColor(self.comm.backend, 'secondaryDark')
+      comment.setMarkdown(re.sub(r'(^|\n)(#+)', r'\1##\2', self.docProj['comment'].strip()))
+      bgColor = getColor(self.comm.backend, 'secondaryDark')
       fgColor = getColor(self.comm.backend, 'primaryText')
       comment.setStyleSheet(f"QTextEdit {{ border: none; padding: 0px; background-color: {bgColor}; "\
                             f"color: {fgColor} }}")
       comment.setReadOnly(True)
-      comment.setFixedHeight(200)
+      comment.document().setTextWidth(commentW.width())
+      height:int = comment.document().size().toTuple()[1] # type: ignore[index]
+      comment.setFixedHeight(height)
       commentL.addWidget(comment)
-      self.infoW.setMaximumHeight(210+countLines*self.lineSep )
-      commentW.setMaximumHeight(210+countLines*self.lineSep )
+      self.infoW.setMaximumHeight(height+10+countLines*self.lineSep )
+      commentW.setMaximumHeight(height+10+countLines*self.lineSep )
     return
 
 
