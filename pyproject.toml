@@ -1,2 +1,9 @@
 [build-system]
 requires = ["setuptools >= 43.0.0", "wheel"]
+
+[tool.codespell]
+skip = '.git,*.pdf,*.svg,*lookup*.json'
+# for shortcuts like [l]ist
+ignore-regex = '\[[a-z]\][a-z]+'
+#
+ignore-words-list = 'speciall,ons,crate,ser'

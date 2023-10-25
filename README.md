@@ -180,7 +180,7 @@ and execute "python -m pasta_eln.test"
 
 #### HOW TO DIFF Version-1 and Version-2
 **COMPARE BOTH DIRECTIONS**
-at .. pasta-eln$ and remeber the changes required to Version2 in first change. If nothing to remember, do not execute 2nd command
+at .. pasta-eln$ and remember the changes required to Version2 in first change. If nothing to remember, do not execute 2nd command
 ``` bash
 kdiff pasta_eln/miscTools.py ../Python/miscTools.py
 kdiff ../Python/miscTools.py pasta_eln/miscTools.py
