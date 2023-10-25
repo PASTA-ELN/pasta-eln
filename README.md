@@ -15,6 +15,11 @@
 
 ---
 
+<!-- readme: contributors -start -->
+<!-- readme: contributors -end -->
+
+---
+
 ## Developers: notes on windows installation
 
 ### How to start Pasta ELN
