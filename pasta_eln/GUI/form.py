@@ -155,7 +155,9 @@ class Form(QDialog):
       self.projectComboBox = QComboBox()
       self.projectComboBox.addItem(label, userData='')
       for line in self.db.getView('viewDocType/x0'):
-        if '-branch' not in self.doc or all(line['id']!=branch['stack'][0] for branch in self.doc['-branch']):
+        # add all projects but the one that is present
+        if '-branch' not in self.doc or all( not(len(branch['stack'])>0 and line['id']==branch['stack'][0])
+                                            for branch in self.doc['-branch']):
           self.projectComboBox.addItem(line['value'][0], userData=line['id'])
       self.formL.addRow(QLabel('Project'), self.projectComboBox)
     if allowProjectAndDocTypeChange: #if not-new and non-folder
@@ -176,8 +178,6 @@ class Form(QDialog):
     if (Path.home()/'.pastaELN.temp').exists():
       with open(Path.home()/'.pastaELN.temp', 'r', encoding='utf-8') as fTemp:
         content = json.loads(fTemp.read())
-        print('from file:',str(content))
-        print('from db',   str(self.doc))
         for key in self.doc.keys():
           if key[0] in ['_','-', '#'] or key in ['image','metaVendor','metaUser','shasum'] or \
              key not in content:
@@ -218,8 +218,11 @@ class Form(QDialog):
     if btn.text().endswith('Cancel'):
       ret = QMessageBox.critical(self, 'Warning', 'You will loose all entered data. Do you want to save the '+\
                                  'content for next time?',
-                                 QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
-      if ret==QMessageBox.StandardButton.No:
+                                 QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,  # type: ignore[operator]
+                                 QMessageBox.StandardButton.No)
+      if ret==QMessageBox.StandardButton.Yes:
+        self.autosave()
+      else:
         self.checkThreadTimer.stop()
         if (Path.home()/'.pastaELN.temp').exists():
           (Path.home()/'.pastaELN.temp').unlink()

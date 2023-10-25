@@ -377,16 +377,16 @@ class TestOntologyConfigConfiguration(object):
 
     if not new_category:
       assert configuration_extended.add_new_prop_category() is None, "Nothing should be returned"
-      mock_show_message.assert_called_once_with("Enter non-null/valid category name!!.....")
+      mock_show_message.assert_called_once_with("Enter non-null/valid category name!!.....", QMessageBox.Warning)
       return
     if not ontology_types:
       assert configuration_extended.add_new_prop_category() is None, "Nothing should be returned"
-      mock_show_message.assert_called_once_with("Load the ontology data first....")
+      mock_show_message.assert_called_once_with("Load the ontology data first....", QMessageBox.Warning)
       return
 
     if new_category in selected_type_properties:
       assert configuration_extended.add_new_prop_category() is None, "Nothing should be returned"
-      mock_show_message.assert_called_once_with("Category already exists....")
+      mock_show_message.assert_called_once_with("Category already exists....", QMessageBox.Warning)
     else:
       if new_category:
         assert configuration_extended.add_new_prop_category() is None, "Nothing should be returned"
@@ -444,7 +444,7 @@ class TestOntologyConfigConfiguration(object):
     if selected_type_properties is None:
       mocker.patch.object(configuration_extended, 'selected_type_properties', None)
       assert configuration_extended.delete_selected_prop_category() is None, "Nothing should be returned"
-      mock_show_message.assert_called_once_with("Load the ontology data first....")
+      mock_show_message.assert_called_once_with("Load the ontology data first....", QMessageBox.Warning)
       return
     if selected_type_properties and selected_category in selected_type_properties:
       assert configuration_extended.delete_selected_prop_category() is None, "Nothing should be returned"
@@ -585,7 +585,7 @@ class TestOntologyConfigConfiguration(object):
       mocker.patch.object(configuration_extended, 'ontology_types', ontology_types)
       mocker.patch.object(configuration_extended, 'ontology_document', ontology_document)
       assert configuration_extended.delete_selected_type() is None, "Nothing should be returned"
-      mock_show_message.assert_called_once_with("Load the ontology data first....")
+      mock_show_message.assert_called_once_with("Load the ontology data first....", QMessageBox.Warning)
       return
     if selected_type:
       assert configuration_extended.delete_selected_type() is None, "Nothing should be returned"
@@ -690,7 +690,7 @@ class TestOntologyConfigConfiguration(object):
       set_structural_level_title_spy.assert_called_once_with(new_structural_title)
       show_create_type_dialog_spy.assert_called_once_with()
     else:
-      show_message_spy.assert_called_once_with("Load the ontology data first...")
+      show_message_spy.assert_called_once_with("Load the ontology data first...", QMessageBox.Warning)
       get_next_possible_structural_level_label_spy.assert_not_called()
       set_structural_level_title_spy.assert_not_called()
       show_create_type_dialog_spy.assert_not_called()
@@ -794,7 +794,7 @@ class TestOntologyConfigConfiguration(object):
 
     mocker.patch.object(configuration_extended.logger, 'info')
     mock_show_message = mocker.patch(
-      'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.show_message')
+      'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.show_message', return_value=QMessageBox.Yes)
     mock_is_instance = mocker.patch(
       'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.isinstance')
     mock_check_ontology_types = mocker.patch(
@@ -817,7 +817,62 @@ class TestOntologyConfigConfiguration(object):
     configuration_extended.logger.info.assert_called_once_with("User clicked the save button..")
     configuration_extended.ontology_document.save.assert_called_once()
     mock_db_init_views.assert_called_once_with(16)
-    mock_show_message.assert_called_once_with("Ontology data saved successfully..")
+    mock_show_message.assert_called_once_with('Save will close the tool and restart the Pasta Application (Yes/No?)',
+                                               QMessageBox.Question,
+                                               QMessageBox.No | QMessageBox.Yes,
+                                               QMessageBox.Yes)
+
+  @pytest.mark.parametrize("ontology_document",
+                           [None,
+                            {"x0": {"IRI": "x0"}, "": {"IRI": "x1"}},
+                            {"x0": {"IRI": "x0"}, "": {"IRI": "x1"}, 23: "test", "__id": "test"},
+                            {"test": ["test1", "test2", "test3"]}
+                            ])
+  def test_cancel_save_ontology_should_do_expected(self,
+                                            mocker,
+                                            ontology_document,
+                                            configuration_extended: configuration_extended,
+                                            request):
+    doc = request.getfixturevalue(ontology_document) \
+      if ontology_document and type(ontology_document) is str \
+      else ontology_document
+    mocker.patch.object(configuration_extended, 'ontology_document', create=True)
+    if doc:
+      mocker.patch.object(configuration_extended, 'ontology_types', dict(ontology_document), create=True)
+      configuration_extended.ontology_document.__setitem__.side_effect = doc.__setitem__
+      configuration_extended.ontology_document.__getitem__.side_effect = doc.__getitem__
+      configuration_extended.ontology_document.__iter__.side_effect = doc.__iter__
+      configuration_extended.ontology_document.__contains__.side_effect = doc.__contains__
+      configuration_extended.ontology_document.__delitem__.side_effect = doc.__delitem__
+      configuration_extended.ontology_document.keys.side_effect = doc.keys
+
+    mocker.patch.object(configuration_extended.logger, 'info')
+    mock_show_message = mocker.patch(
+      'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.show_message', return_value=QMessageBox.No)
+    mock_is_instance = mocker.patch(
+      'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.isinstance')
+    mock_check_ontology_types = mocker.patch(
+      'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.check_ontology_types',
+      return_value=(None, None))
+    mock_db_init_views = mocker.patch.object(configuration_extended.database,
+                                             'initDocTypeViews', return_value=None)
+    assert configuration_extended.save_ontology() is None, "Nothing should be returned"
+
+    if doc:
+      for item in doc:
+        mock_is_instance.assert_not_called()
+        if isinstance(doc[item], dict):
+          configuration_extended.ontology_document.__delitem__.assert_not_called()
+      for item in configuration_extended.ontology_types:
+        configuration_extended.ontology_document.__setitem__.assert_not_called()
+    mock_check_ontology_types.assert_called_once_with(configuration_extended.ontology_types)
+    configuration_extended.logger.info.assert_called_once_with("User clicked the save button..")
+    configuration_extended.ontology_document.save.assert_not_called()
+    mock_db_init_views.assert_not_called()
+    mock_show_message.assert_called_once_with('Save will close the tool and restart the Pasta Application (Yes/No?)',
+                                               QMessageBox.Question,
+                                               QMessageBox.No | QMessageBox.Yes,
+                                               QMessageBox.Yes)
 
   def test_save_ontology_with_missing_properties_should_skip_save_and_show_message(self,
                                                                                    mocker,
@@ -912,11 +967,11 @@ class TestOntologyConfigConfiguration(object):
         assert configuration_extended.create_new_type(new_title, new_label) is None, "Nothing should be returned"
         mock_show_message.assert_called_once_with(f"Type (title: {new_title} "
                                                   f"label: {new_label}) cannot be added "
-                                                  f"since it exists in DB already....")
+                                                  f"since it exists in DB already....", QMessageBox.Warning)
     else:
       if new_title is None:
         assert configuration_extended.create_new_type(None, new_label) is None, "Nothing should be returned"
-        mock_show_message.assert_called_once_with("Enter non-null/valid title!!.....")
+        mock_show_message.assert_called_once_with("Enter non-null/valid title!!.....", QMessageBox.Warning)
         mock_log_warn.assert_called_once_with("Enter non-null/valid title!!.....")
       else:
         assert configuration_extended.create_new_type(new_title, new_label) is None, "Nothing should be returned"

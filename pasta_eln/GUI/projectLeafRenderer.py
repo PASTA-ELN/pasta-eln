@@ -67,7 +67,9 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     # header
     y = self.lineSep/2
     hiddenText = ('     \U0001F441' if [b for b in doc['-branch'] if False in b['show']] else '')
-    docTypeText= 'folder' if doc['-type'][0][0]=='x' else '/'.join(doc['-type'])
+    docTypeText= '/'.join(doc['-type'])
+    if doc['-type'][0][0]=='x':
+      docTypeText = self.comm.backend.db.ontology[doc['-type'][0]]['label'].lower()[:-1]
     nameText = doc['-name'] if len(doc['-name'])<55 else '...'+doc['-name'][-50:]
     staticText = QStaticText(f'<strong>{nameText}{hiddenText}</strong>')
     staticText.setTextWidth(self.docTypeOffset)
@@ -104,9 +106,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     for textType in ['comment', 'content']:
       if textType in doc and (textType != 'content' or 'image' not in doc or doc['image'] == ''):
         textDoc = QTextDocument()
-        text = doc[textType].replace('\n# ','\n### ').replace('\n## ','\n### ')
-        text = f'##{text}' if text.startswith('# ') else text
-        textDoc.setMarkdown(text.strip())
+        textDoc.setMarkdown(re.sub(r'(^|\n)(#+)', r'\1##\2', doc[textType].strip()))
         if textType == 'comment':
           textDoc.setTextWidth(bottomRight2nd.toTuple()[0]-x0-self.widthContent-2*self.frameSize)
           width, height = textDoc.size().toTuple() # type: ignore

@@ -56,7 +56,7 @@ class TestOntologyConfigTableViewDataModel(object):
 
   @pytest.mark.parametrize(
     "is_valid, flag_combination", [
-      (False, None),
+      (False, Qt.NoItemFlags),
       (True, Qt.ItemIsEditable | Qt.ItemIsSelectable | Qt.ItemIsEnabled)
     ])
   def test_data_models_basic_get_flags_returns_expected(self,
