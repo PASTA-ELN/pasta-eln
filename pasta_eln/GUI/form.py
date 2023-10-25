@@ -184,8 +184,9 @@ class Form(QDialog):
             continue
           if key in ['comment','content']:
             getattr(self, f'textEdit_{key}').setPlainText(content[key])
-          else:
+          elif isinstance(getattr(self, f'key_{key}'), QLineEdit):
             getattr(self, f'key_{key}').setText(content[key])
+          # skip QCombobox items since cannot be sure that next from has them and they are easy to recreate
     self.checkThreadTimer = QTimer(self)
     self.checkThreadTimer.setInterval(1*60*1000) #5 min
     self.checkThreadTimer.timeout.connect(self.autosave)
@@ -200,10 +201,9 @@ class Form(QDialog):
         continue
       if key in ['comment','content']:
         content[key] = getattr(self, f'textEdit_{key}').toPlainText().strip()
-      elif isinstance(getattr(self, f'key_{key}'), QComboBox):
-        content[key] = getattr(self, f'key_{key}').currentText().strip()
-      else:                                            #all text fields
+      elif isinstance(getattr(self, f'key_{key}'), QLineEdit):
         content[key] = getattr(self, f'key_{key}').text().strip()
+      # skip QCombobox items since cannot be sure that next from has them and they are easy to recreate
     with open(Path.home()/'.pastaELN.temp', 'w', encoding='utf-8') as fTemp:
       fTemp.write(json.dumps(content))
     return
