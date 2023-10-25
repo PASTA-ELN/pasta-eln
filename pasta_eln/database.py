@@ -302,7 +302,7 @@ class Database:
                     newDoc['-name'] = os.path.basename(str(change['-branch']['path']))
                   branch['path'] = branch['path'].replace(oldpath ,change['-branch']['path'])
                   branch['stack']= change['-branch']['stack']
-                  branch['show'] = self.createShowFromStack(change['-branch']['stack'])
+                  branch['show'] = self.createShowFromStack(change['-branch']['stack'], branch['show'][-1])
                   break
             else:
               newDoc['-branch'][0] = change['-branch'] #change the initial one
@@ -420,7 +420,8 @@ class Database:
     stackOld = list(doc['-branch'][branch]['stack'])
     if stack is not None:
       doc['-branch'][branch]['stack']=stack
-    doc['-branch'][branch]['show'] = self.createShowFromStack( doc['-branch'][branch]['stack'] )
+    doc['-branch'][branch]['show'] = self.createShowFromStack(doc['-branch'][branch]['stack'],
+                                                              doc['-branch'][branch]['show'][-1])
     doc.save()
     logging.debug('success BRANCH updated with type and branch '+doc['_id']+' '+'/'.join(doc['-type'])+'  |  '+str(doc['-branch'])+'\n')
     # move content: folder and data and write .json to disk
@@ -443,7 +444,7 @@ class Database:
             flagNotChanged = False
           if stack is not None and '/'.join(branchLine['stack']).startswith('/'.join(stackOld)):
             branchLine['stack'] = stack+branchLine['stack'][len(stackOld):]
-            branchLine['show']  = self.createShowFromStack( branchLine['stack'] )
+            branchLine['show']  = self.createShowFromStack(branchLine['stack'], branchLine['show'][-1])
             flagNotChanged = False
         if flagNotChanged:
           print(f"**Unsure** Not updated{str(line)}")
@@ -456,7 +457,7 @@ class Database:
     return oldPath, path
 
 
-  def createShowFromStack(self, stack:list[str]) -> list[bool]:
+  def createShowFromStack(self, stack:list[str], currentShow:bool=True) -> list[bool]:
     """
     For branches: create show entry in the branches by using the stack
     - should be 1 longer than stack
@@ -464,11 +465,12 @@ class Database:
 
     Args:
       stack (list): list of ancestor docIDs
+      currentShow (bool): current show-indicator of this item
 
     Returns:
       list: list of show = list of bool
     """
-    show = (len(stack)+1)*[True]
+    show = len(stack)*[True] + [currentShow]
     for idx, docID in enumerate(stack):
       if not self.db[docID]['-branch'][0]['show'][-1]:
         show[idx] = False

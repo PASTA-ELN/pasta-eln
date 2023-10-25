@@ -169,11 +169,15 @@ class Form(QDialog):
       self.docTypeComboBox.addItem('_UNIDENTIFIED_', userData='-')
       self.formL.addRow(QLabel('Data type'), self.docTypeComboBox)
     #final button box
+    _, buttonLineL = widgetAndLayout('H', mainL)
+    visibilityIcon = all(all(branch['show']) for branch in self.doc['-branch'])
+    self.visibilityText = QLabel('' if visibilityIcon else 'HIDDEN     \U0001F441')
+    buttonLineL.addWidget(self.visibilityText)
     buttonBox = QDialogButtonBox(QDialogButtonBox.Cancel | QDialogButtonBox.Save)
     if self.flagNewDoc: #new dataset
       buttonBox.addButton('Save && Next', QDialogButtonBox.ApplyRole)
     buttonBox.clicked.connect(self.closeDialog)
-    mainL.addWidget(buttonBox)
+    buttonLineL.addWidget(buttonBox)
 
     if (Path.home()/'.pastaELN.temp').exists():
       with open(Path.home()/'.pastaELN.temp', 'r', encoding='utf-8') as fTemp:
@@ -373,6 +377,8 @@ class Form(QDialog):
         width = self.comm.backend.configuration['GUI']['imageSizeDetails'] \
                 if hasattr(self.comm.backend, 'configuration') else 300
         Image(self.doc['image'], self.imageL, anyDimension=width)
+        visibilityIcon = all(all(branch['show']) for branch in self.doc['-branch'])
+        self.visibilityText.setText('' if visibilityIcon else 'HIDDEN     \U0001F441')
     elif command[0] is Command.BUTTON_BAR:
       if command[1]=='bold':
         getattr(self, f'textEdit_{command[2]}').insertPlainText('**TEXT**')
