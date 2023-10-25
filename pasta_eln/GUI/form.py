@@ -178,20 +178,15 @@ class Form(QDialog):
     if (Path.home()/'.pastaELN.temp').exists():
       with open(Path.home()/'.pastaELN.temp', 'r', encoding='utf-8') as fTemp:
         content = json.loads(fTemp.read())
-        # Temporary print to help debugging occasional bugs
-        logging.info('Autosave: '+str(content))
-        logging.info('from db :'+str(self.doc))
-        # end temporary print
         for key in self.doc.keys():
           if key[0] in ['_','-', '#'] or key in ['image','metaVendor','metaUser','shasum'] or \
              key not in content:
             continue
           if key in ['comment','content']:
             getattr(self, f'textEdit_{key}').setPlainText(content[key])
-          elif isinstance(getattr(self, f'key_{key}'), QComboBox):
-            getattr(self, f'key_{key}').setCurrentText(content[key])
-          else:
+          elif isinstance(getattr(self, f'key_{key}'), QLineEdit):
             getattr(self, f'key_{key}').setText(content[key])
+          # skip QCombobox items since cannot be sure that next from has them and they are easy to recreate
     self.checkThreadTimer = QTimer(self)
     self.checkThreadTimer.setInterval(1*60*1000) #5 min
     self.checkThreadTimer.timeout.connect(self.autosave)
@@ -206,10 +201,9 @@ class Form(QDialog):
         continue
       if key in ['comment','content']:
         content[key] = getattr(self, f'textEdit_{key}').toPlainText().strip()
-      elif isinstance(getattr(self, f'key_{key}'), QComboBox):
-        content[key] = getattr(self, f'key_{key}').currentText().strip()
-      else:                                            #all text fields
+      elif isinstance(getattr(self, f'key_{key}'), QLineEdit):
         content[key] = getattr(self, f'key_{key}').text().strip()
+      # skip QCombobox items since cannot be sure that next from has them and they are easy to recreate
     with open(Path.home()/'.pastaELN.temp', 'w', encoding='utf-8') as fTemp:
       fTemp.write(json.dumps(content))
     return
