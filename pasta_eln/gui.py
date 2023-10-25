@@ -235,7 +235,7 @@ def mainGUI() -> tuple[Union[QCoreApplication, None], MainWindow]:
   if not isinstance(qta.icon('fa5s.times'), QIcon):
     logging.error('qtawesome: could not load. Likely matplotlib is included and can not coexist.')
     print('qtawesome: could not load. Likely matplotlib is included and can not coexist.')
-  # end test coexistance
+  # end test coexistence
   logging.info('End PASTA GUI')
   return application, main_window
 

@@ -49,7 +49,7 @@ class ConfigurationSetup(QWidget):
 
   def callbackProgress(self, number:int) -> None:
     """
-    Increse progressbar by moving to number
+    Increase progressbar by moving to number
 
     Args:
       number (int): integer to move to

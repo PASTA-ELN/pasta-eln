@@ -878,7 +878,7 @@ class TestOntologyConfigurationExtended(object):
     assert ui_form.propsCategoryComboBox.currentText() == "default", f"propsCategoryComboBox.currentText() should be default!"
     model = ui_form.typePropsTableView.model()
     assert model.rowCount() == 5, "5 properties must be present before deletion!"
-    # Initial data oder
+    # Initial data order
     init_data_order = ['-name', 'status', 'objective', '-tags', 'comment']
     post_reorder_data_order1 = ['-name', 'status', 'objective', 'comment', '-tags']
     post_reorder_data_order2 = ['status', '-name', 'objective', 'comment', '-tags']

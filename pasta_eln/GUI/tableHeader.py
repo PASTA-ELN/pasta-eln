@@ -1,4 +1,4 @@
-""" Table Header dialog: change which colums are shown and in which order """
+""" Table Header dialog: change which columns are shown and in which order """
 from enum import Enum
 from typing import Any
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QListWidget, QLineEdit, QDialogButtonBox  # pylint: disable=no-name-in-module
@@ -8,7 +8,7 @@ from ..guiCommunicate import Communicate
 from ..fixedStringsJson import tableHeaderHelp
 
 class TableHeader(QDialog):
-  """ Table Header dialog: change which colums are shown and in which order """
+  """ Table Header dialog: change which columns are shown and in which order """
   def __init__(self, comm:Communicate, docType:str):
     """
     Initialization
