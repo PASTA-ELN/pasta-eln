@@ -41,7 +41,7 @@ class TestOntologyConfigurationExtended(object):
     assert ui_form.addMetadataRowPushButton is not None, "Add metadata row button not loaded!"
     assert ui_form.addMetadataGroupPushButton is not None, "Add metadata Group button not loaded!"
     assert ui_form.cancelPushButton is not None, "Cancel button not loaded!"
-    assert ui_form.typeLabelLineEdit is not None, "Data type line edit not loaded!"
+    assert ui_form.typeDisplayedTitleLineEdit is not None, "Data type line edit not loaded!"
     assert ui_form.typeIriLineEdit is not None, "Data type IRI line edit not loaded!"
     assert ui_form.addMetadataGroupLineEdit is not None, "metadata Group line edit not loaded!"
     assert ui_form.typeComboBox is not None, "Data type combo box not loaded!"
@@ -93,8 +93,8 @@ class TestOntologyConfigurationExtended(object):
     assert (adapt_type(ui_form.typeComboBox.currentText())
             == ontology_doc_mock.types_list()[0]), "Type combo box should be selected to first item"
     selected_type = ontology_doc_mock.types()[adapt_type(ui_form.typeComboBox.currentText())]
-    assert (ui_form.typeLabelLineEdit.text() ==
-            selected_type["label"]), "Data type label line edit not loaded!"
+    assert (ui_form.typeDisplayedTitleLineEdit.text() ==
+            selected_type["displayedTitle"]), "Data type displayedTitle line edit not loaded!"
     assert (ui_form.typeIriLineEdit.text() ==
             selected_type["IRI"]), "Data type IRI line edit not loaded!"
 
@@ -185,8 +185,8 @@ class TestOntologyConfigurationExtended(object):
     assert adapt_type(ui_form.typeComboBox.currentText()) == ontology_doc_mock.types_list()[0], \
       "Type combo box should be selected to first structural item"
     selected_type = ontology_doc_mock.types()[adapt_type(ui_form.typeComboBox.currentText())]
-    assert ui_form.typeLabelLineEdit.text() == selected_type["label"], \
-      "Type label line edit should be selected to first structural item"
+    assert ui_form.typeDisplayedTitleLineEdit.text() == selected_type["displayedTitle"], \
+      "Type displayedTitle line edit should be selected to first structural item"
     assert ui_form.typeIriLineEdit.text() == selected_type["IRI"], \
       "Type IRI line edit should be selected to selected type IRI"
     assert ui_form.metadataGroupComboBox.currentText() == list(selected_type["metadata"].keys())[0], \
@@ -211,7 +211,7 @@ class TestOntologyConfigurationExtended(object):
       assert ui_form.create_type_dialog.instance.isVisible() is True, "Create new type dialog should be shown!"
       assert ui_form.create_type_dialog.buttonBox.isVisible() is True, "Create new type dialog not shown!"
 
-  def test_component_create_new_type_structural_type_should_add_new_type_with_label(self,
+  def test_component_create_new_type_structural_type_should_add_new_type_with_displayed_title(self,
                                                                                     ontology_editor_gui:
                                                                                     tuple[
                                                                                       QApplication,
@@ -230,16 +230,16 @@ class TestOntologyConfigurationExtended(object):
       assert ui_form.create_type_dialog.instance.isVisible() is True, "Create new type dialog should be shown!"
       assert ui_form.create_type_dialog.buttonBox.isVisible() is True, "Create new type dialog button box should be shown!"
       ui_form.create_type_dialog.structuralLevelCheckBox.setChecked(True)
-      ui_form.create_type_dialog.labelLineEdit.setText("test")
+      ui_form.create_type_dialog.displayedTitleLineEdit.setText("test")
       assert ui_form.create_type_dialog.titleLineEdit.text() == ui_form.create_type_dialog.next_struct_level.replace(
         'x', 'Structure level '), "title should be set to 'Structure level 3'"
     qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(ui_form.create_type_dialog.buttonBox.Ok),
                      Qt.LeftButton)
     assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
     assert ui_form.typeComboBox.currentText() == "Structure level 3", "Data type combo box should be newly added structural item"
-    assert ui_form.typeLabelLineEdit.text() == "test", "Data type label should be newly added label"
+    assert ui_form.typeDisplayedTitleLineEdit.text() == "test", "Data type displayedTitle should be newly added displayedTitle"
 
-  def test_component_create_new_type_normal_type_should_add_new_type_with_label(self,
+  def test_component_create_new_type_normal_type_should_add_new_type_with_displayed_title(self,
                                                                                 ontology_editor_gui:
                                                                                 tuple[
                                                                                   QApplication,
@@ -258,13 +258,13 @@ class TestOntologyConfigurationExtended(object):
       assert ui_form.create_type_dialog.instance.isVisible() is True, "Create new type dialog should be shown!"
       assert ui_form.create_type_dialog.buttonBox.isVisible() is True, "Create new type dialog button box should be shown!"
       assert ui_form.create_type_dialog.structuralLevelCheckBox.isChecked() is False, "structuralLevelCheckBox should be unchecked"
-      ui_form.create_type_dialog.titleLineEdit.setText("title")
-      ui_form.create_type_dialog.labelLineEdit.setText("label")
+      ui_form.create_type_dialog.titleLineEdit.setText("Title")
+      ui_form.create_type_dialog.displayedTitleLineEdit.setText("Displayed Title")
     qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(ui_form.create_type_dialog.buttonBox.Ok),
                      Qt.LeftButton)
     assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
-    assert ui_form.typeComboBox.currentText() == "title", "Data type combo box should be newly added type title"
-    assert ui_form.typeLabelLineEdit.text() == "label", "Data type combo box should be newly added type label"
+    assert ui_form.typeComboBox.currentText() == "Title", "Data type combo box should be newly added type title"
+    assert ui_form.typeDisplayedTitleLineEdit.text() == "Displayed Title", "Data type combo box should be newly added type displayedTitle"
 
   def test_component_create_new_type_normal_type_with_empty_title_should_warn_user(self,
                                                                                    mocker,
@@ -290,7 +290,7 @@ class TestOntologyConfigurationExtended(object):
       assert ui_form.create_type_dialog.buttonBox.isVisible() is True, "Create new type dialog button box should be shown!"
       assert ui_form.create_type_dialog.structuralLevelCheckBox.isChecked() is False, "structuralLevelCheckBox should be unchecked"
       ui_form.create_type_dialog.titleLineEdit.setText("")
-      ui_form.create_type_dialog.labelLineEdit.setText("label")
+      ui_form.create_type_dialog.displayedTitleLineEdit.setText("displayedTitle")
     qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(ui_form.create_type_dialog.buttonBox.Ok),
                      Qt.LeftButton)
     assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
@@ -299,7 +299,7 @@ class TestOntologyConfigurationExtended(object):
     ui_form.message_box.exec.assert_called_once_with()
     ui_form.message_box.setIcon.assert_called_once_with(QtWidgets.QMessageBox.Warning)
     assert ui_form.typeComboBox.currentText() != "", "Data type combo box should not be empty title"
-    assert ui_form.typeLabelLineEdit.text() != "label", "Data type combo box should not be newly added type label"
+    assert ui_form.typeDisplayedTitleLineEdit.text() != "displayedTitle", "Data type combo box should not be newly added type displayedTitle"
 
     # Checking with None title
     assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
@@ -310,7 +310,7 @@ class TestOntologyConfigurationExtended(object):
       assert ui_form.create_type_dialog.buttonBox.isVisible() is True, "Create new type dialog button box should be shown!"
       assert ui_form.create_type_dialog.structuralLevelCheckBox.isChecked() is False, "structuralLevelCheckBox should be unchecked"
       ui_form.create_type_dialog.titleLineEdit.setText(None)
-      ui_form.create_type_dialog.labelLineEdit.setText("label")
+      ui_form.create_type_dialog.displayedTitleLineEdit.setText("displayedTitle")
     qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(ui_form.create_type_dialog.buttonBox.Ok),
                      Qt.LeftButton)
     assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
@@ -327,9 +327,9 @@ class TestOntologyConfigurationExtended(object):
       mocker.call(QtWidgets.QMessageBox.Warning),
       mocker.call(QtWidgets.QMessageBox.Warning)])
     assert ui_form.typeComboBox.currentText() != None, "Data type combo box should not be None"
-    assert ui_form.typeLabelLineEdit.text() != "label", "Data type combo box should not be newly added type label"
+    assert ui_form.typeDisplayedTitleLineEdit.text() != "displayedTitle", "Data type combo box should not be newly added type displayedTitle"
 
-  def test_component_create_new_type_reject_should_not_add_new_type_with_label(self,
+  def test_component_create_new_type_reject_should_not_add_new_type_with_displayed_title(self,
                                                                                ontology_editor_gui:
                                                                                tuple[
                                                                                  QApplication,
@@ -344,17 +344,17 @@ class TestOntologyConfigurationExtended(object):
     assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
     assert ui_form.create_type_dialog.buttonBox.isVisible() is False, "Create new type dialog button box should not be shown!"
     qtbot.mouseClick(ui_form.addTypePushButton, Qt.LeftButton)
-    with qtbot.waitExposed(ui_form.create_type_dialog.instance, timeout=200):
+    with qtbot.waitExposed(ui_form.create_type_dialog.instance, timeout=300):
       assert ui_form.create_type_dialog.instance.isVisible() is True, "Create new type dialog should be shown!"
       assert ui_form.create_type_dialog.buttonBox.isVisible() is True, "Create new type dialog button box should be shown!"
       assert ui_form.create_type_dialog.structuralLevelCheckBox.isChecked() is False, "structuralLevelCheckBox should be unchecked"
       ui_form.create_type_dialog.titleLineEdit.setText("title")
-      ui_form.create_type_dialog.labelLineEdit.setText("label")
+      ui_form.create_type_dialog.displayedTitleLineEdit.setText("displayedTitle")
     qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(ui_form.create_type_dialog.buttonBox.Cancel),
                      Qt.LeftButton)
     assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
     assert ui_form.typeComboBox.currentText() != "title", "Data type combo box should not be newly added type title"
-    assert ui_form.typeLabelLineEdit.text() != "label", "Data type combo box should not be newly added type label"
+    assert ui_form.typeDisplayedTitleLineEdit.text() != "displayedTitle", "Data type combo box should not be newly added type displayedTitle"
 
   def test_component_cancel_button_click_after_delete_group_should_not_modify_ontology_document_data(self,
                                                                                                         ontology_editor_gui:
@@ -397,14 +397,14 @@ class TestOntologyConfigurationExtended(object):
       assert ui_form.create_type_dialog.instance.isVisible() is True, "Create new type dialog should be shown!"
       assert ui_form.create_type_dialog.buttonBox.isVisible() is True, "Create new type dialog button box should be shown!"
       ui_form.create_type_dialog.structuralLevelCheckBox.setChecked(True)
-      ui_form.create_type_dialog.labelLineEdit.setText("test")
+      ui_form.create_type_dialog.displayedTitleLineEdit.setText("test")
       assert ui_form.create_type_dialog.titleLineEdit.text() == ui_form.create_type_dialog.next_struct_level.replace(
         'x', 'Structure level '), "title should be set to 'Structure level 3'"
     qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(ui_form.create_type_dialog.buttonBox.Ok),
                      Qt.LeftButton)
     assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
     assert ui_form.typeComboBox.currentText() == "Structure level 3", "Data type combo box should be newly added structural item"
-    assert ui_form.typeLabelLineEdit.text() == "test", "Data type label should be newly added label"
+    assert ui_form.typeDisplayedTitleLineEdit.text() == "test", "Data type displayedTitle should be newly added displayedTitle"
     current_selected_type = ui_form.typeComboBox.currentText()
     previous_types_count = ui_form.typeComboBox.count()
     qtbot.mouseClick(ui_form.deleteTypePushButton, Qt.LeftButton)
@@ -416,8 +416,8 @@ class TestOntologyConfigurationExtended(object):
     assert adapt_type(ui_form.typeComboBox.currentText()) == ontology_doc_mock.types_list()[0], \
       "Type combo box should be selected to first structural item"
     selected_type = ontology_doc_mock.types()[adapt_type(ui_form.typeComboBox.currentText())]
-    assert ui_form.typeLabelLineEdit.text() == selected_type["label"], \
-      "Type label line edit should be selected to first structural item"
+    assert ui_form.typeDisplayedTitleLineEdit.text() == selected_type["displayedTitle"], \
+      "Type displayedTitle line edit should be selected to first structural item"
     assert ui_form.typeIriLineEdit.text() == selected_type["IRI"], \
       "Type IRI line edit should be selected to IRI in selected type"
     assert ui_form.metadataGroupComboBox.currentText() == list(selected_type["metadata"].keys())[0], \
@@ -560,7 +560,7 @@ class TestOntologyConfigurationExtended(object):
     qtbot.mouseClick(ui_form.addTypePushButton, Qt.LeftButton)
     with qtbot.waitExposed(ui_form.create_type_dialog.instance, timeout=200):
       ui_form.create_type_dialog.structuralLevelCheckBox.setChecked(True)
-      ui_form.create_type_dialog.labelLineEdit.setText("test")
+      ui_form.create_type_dialog.displayedTitleLineEdit.setText("test")
     qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(ui_form.create_type_dialog.buttonBox.Ok),
                      Qt.LeftButton)
     ui_form.typeComboBox.setCurrentText(enabled_structural_type)
@@ -585,7 +585,7 @@ class TestOntologyConfigurationExtended(object):
     qtbot.mouseClick(ui_form.addTypePushButton, Qt.LeftButton)
     with qtbot.waitExposed(ui_form.create_type_dialog.instance, timeout=200):
       ui_form.create_type_dialog.titleLineEdit.setText("new type")
-      ui_form.create_type_dialog.labelLineEdit.setText("test")
+      ui_form.create_type_dialog.displayedTitleLineEdit.setText("test")
     qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(ui_form.create_type_dialog.buttonBox.Ok),
                      Qt.LeftButton)
 
@@ -622,7 +622,7 @@ class TestOntologyConfigurationExtended(object):
       qtbot.mouseClick(ui_form.addTypePushButton, Qt.LeftButton)
       with qtbot.waitExposed(ui_form.create_type_dialog.instance, timeout=200):
         ui_form.create_type_dialog.structuralLevelCheckBox.setChecked(True)
-        ui_form.create_type_dialog.labelLineEdit.setText("test")
+        ui_form.create_type_dialog.displayedTitleLineEdit.setText("test")
       qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(ui_form.create_type_dialog.buttonBox.Ok),
                        Qt.LeftButton)
 

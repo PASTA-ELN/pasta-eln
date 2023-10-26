@@ -107,7 +107,7 @@ def configuration_extended(mocker) -> OntologyConfigurationForm:
   mocker.patch.object(OntologyConfigurationForm, 'attachmentsShowHidePushButton', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'typeComboBox', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'metadataGroupComboBox', create=True)
-  mocker.patch.object(OntologyConfigurationForm, 'typeLabelLineEdit', create=True)
+  mocker.patch.object(OntologyConfigurationForm, 'typeDisplayedTitleLineEdit', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'typeIriLineEdit', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'delete_column_delegate_metadata_table', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'reorder_column_delegate_metadata_table', create=True)

@@ -17,7 +17,7 @@ from cloudant import CouchDB
 
 from pasta_eln.GUI.ontology_configuration.utility_functions import adjust_ontology_data_to_v3, can_delete_type, \
   check_ontology_types, \
-  get_db, get_missing_metadata_message, get_next_possible_structural_level_label, is_click_within_bounds, show_message
+  get_db, get_missing_metadata_message, get_next_possible_structural_level_title, is_click_within_bounds, show_message
 
 
 class TestOntologyConfigUtilityFunctions(object):
@@ -89,7 +89,7 @@ class TestOntologyConfigUtilityFunctions(object):
     ({
       "x0":
         {
-          "label": "",
+          "displayedTitle": "",
           "metadata": []
         }
     }),
@@ -100,7 +100,7 @@ class TestOntologyConfigUtilityFunctions(object):
       "x2":
         {
           "attachments": [{"test": "test", "test1": "test2"}],
-          "label": "",
+          "displayedTitle": "",
           "metadata": {"default": [
             {
               "name": "value",
@@ -140,9 +140,9 @@ class TestOntologyConfigUtilityFunctions(object):
     mock_doc.__setitem__.side_effect = contents.__setitem__
     return mock_doc
 
-  def test_get_next_possible_structural_level_label_when_null_arg_returns_none(self):
-    assert get_next_possible_structural_level_label(None) is None, \
-      "get_next_possible_structural_level_label should return True"
+  def test_get_next_possible_structural_level_title_when_null_arg_returns_none(self):
+    assert get_next_possible_structural_level_title(None) is None, \
+      "get_next_possible_structural_level_title should return True"
 
   @pytest.mark.parametrize("existing_list, expected_next_level", [
     (None, None),
@@ -152,12 +152,12 @@ class TestOntologyConfigUtilityFunctions(object):
     (["x0", "xa", "x3", "x-1", "a10", "X23"], "x24"),
     (["a"], "x0")
   ])
-  def test_get_next_possible_structural_level_label_when_valid_list_arg_returns_right_result(self,
+  def test_get_next_possible_structural_level_displayed_title_when_valid_list_arg_returns_right_result(self,
                                                                                              mocker,
                                                                                              existing_list,
                                                                                              expected_next_level):
-    assert get_next_possible_structural_level_label(
-      existing_list) == expected_next_level, "get_next_possible_structural_level_label should return as expected"
+    assert get_next_possible_structural_level_title(
+      existing_list) == expected_next_level, "get_next_possible_structural_level_displayed_title should return as expected"
 
   def test_get_db_with_right_arguments_returns_valid_db_instance(self,
                                                                  mocker):

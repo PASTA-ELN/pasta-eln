@@ -37,7 +37,7 @@ from .iri_column_delegate import IriColumnDelegate
 from .lookup_iri_action import LookupIriAction
 from .utility_functions import adapt_type, adjust_ontology_data_to_v3, can_delete_type, check_ontology_types, \
   generate_empty_type, \
-  generate_mandatory_metadata, get_missing_metadata_message, get_next_possible_structural_level_label, \
+  generate_mandatory_metadata, get_missing_metadata_message, get_next_possible_structural_level_title, \
   get_types_for_display, show_message
 from ...database import Database
 
@@ -159,8 +159,8 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm, QObject):
       # Get the metadata for the selected type and store the list in selected_type_metadata
       self.selected_type_metadata = selected_type.get('metadata')
 
-      # Type label is set in a line edit
-      self.typeLabelLineEdit.setText(selected_type.get('label'))
+      # Type displayed_title is set in a line edit
+      self.typeDisplayedTitleLineEdit.setText(selected_type.get('displayedTitle'))
 
       # Type IRI is set in a line edit
       self.typeIriLineEdit.setText(selected_type.get('IRI'))
@@ -245,21 +245,21 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm, QObject):
       self.metadataGroupComboBox.setCurrentIndex(len(self.selected_type_metadata.keys()) - 1)
     return None
 
-  def update_type_label(self,
-                        modified_type_label: str) -> None:
+  def update_type_displayed_title(self,
+                        modified_type_displayed_title: str) -> None:
     """
-    Value changed callback for the type label line edit
+    Value changed callback for the type displayed title line edit
 
     Args:
-        modified_type_label (str): Modified ontology type label
+        modified_type_displayed_title (str): Modified ontology type displayed title
 
     Returns: Nothing
     """
     current_type = self.typeComboBox.currentText()
     current_type = adapt_type(current_type)
-    if modified_type_label is not None and current_type in self.ontology_types:
-      self.ontology_types.get(current_type)["label"] = modified_type_label
-      self.set_iri_lookup_action(modified_type_label)
+    if modified_type_displayed_title is not None and current_type in self.ontology_types:
+      self.ontology_types.get(current_type)["displayedTitle"] = modified_type_displayed_title
+      self.set_iri_lookup_action(modified_type_displayed_title)
 
   def update_type_iri(self,
                       modified_iri: str) -> None:
@@ -305,12 +305,12 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm, QObject):
 
     """
     # Disable the signals for the line edits before clearing in order to avoid clearing the respective
-    # iri and labels for the selected type from ontology document
-    self.typeLabelLineEdit.textChanged[str].disconnect()
+    # iri and displayed_titles for the selected type from ontology document
+    self.typeDisplayedTitleLineEdit.textChanged[str].disconnect()
     self.typeIriLineEdit.textChanged[str].disconnect()
-    self.typeLabelLineEdit.clear()
+    self.typeDisplayedTitleLineEdit.clear()
     self.typeIriLineEdit.clear()
-    self.typeLabelLineEdit.textChanged[str].connect(self.update_type_label)
+    self.typeDisplayedTitleLineEdit.textChanged[str].connect(self.update_type_displayed_title)
     self.typeIriLineEdit.textChanged[str].connect(self.update_type_iri)
 
     self.metadataGroupComboBox.clear()
@@ -327,9 +327,9 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm, QObject):
     title = self.create_type_dialog.next_struct_level \
       if self.create_type_dialog.structuralLevelCheckBox.isChecked() \
       else self.create_type_dialog.titleLineEdit.text()
-    label = self.create_type_dialog.labelLineEdit.text()
+    displayed_title = self.create_type_dialog.displayedTitleLineEdit.text()
     self.create_type_dialog.clear_ui()
-    self.create_new_type(title, label)
+    self.create_new_type(title, displayed_title)
 
   def create_type_rejected_callback(self) -> None:
     """
@@ -345,7 +345,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm, QObject):
     Returns: Nothing
     """
     if self.ontology_types is not None and self.ontology_loaded:
-      structural_title = get_next_possible_structural_level_label(self.ontology_types.keys())
+      structural_title = get_next_possible_structural_level_title(self.ontology_types.keys())
       self.create_type_dialog.set_structural_level_title(structural_title)
       self.create_type_dialog.show()
     else:
@@ -374,7 +374,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm, QObject):
     self.metadataGroupComboBox.currentTextChanged.connect(self.metadata_group_combo_box_changed)
 
     # Slots for line edits
-    self.typeLabelLineEdit.textChanged[str].connect(self.update_type_label)
+    self.typeDisplayedTitleLineEdit.textChanged[str].connect(self.update_type_displayed_title)
     self.typeIriLineEdit.textChanged[str].connect(self.update_type_iri)
 
     # Slots for the delegates
@@ -441,12 +441,12 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm, QObject):
 
   def create_new_type(self,
                       title: str,
-                      label: str) -> None:
+                      displayed_title: str) -> None:
     """
     Add a new type to the loaded ontology_data from the db
     Args:
       title (str): The new key entry used for the ontology_data
-      label (str): The new label set for the new type entry in ontology_data
+      displayed_title (str): The new displayed_title set for the new type entry in ontology_data
 
     Returns:
 
@@ -455,7 +455,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm, QObject):
       self.logger.error("Null ontology_document/ontology_types, erroneous app state")
       raise OntologyConfigGenericException("Null ontology_document/ontology_types, erroneous app state", {})
     if title in self.ontology_types:
-      show_message(f"Type (title: {title} label: {label}) cannot be added since it exists in DB already....",
+      show_message(f"Type (title: {title} displayed title: {displayed_title}) cannot be added since it exists in DB already....",
                    QMessageBox.Warning)
     else:
       if not title:
@@ -463,8 +463,8 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm, QObject):
         show_message("Enter non-null/valid title!!.....", QMessageBox.Warning)
         return
       self.logger.info("User created a new type and added "
-                       "to the ontology document: Title: {%s}, Label: {%s}", title, label)
-      empty_type = generate_empty_type(label)
+                       "to the ontology document: Title: {%s}, Displayed Title: {%s}", title, displayed_title)
+      empty_type = generate_empty_type(displayed_title)
       self.ontology_types[title] = empty_type
       self.typeComboBox.clear()
       self.typeComboBox.addItems(get_types_for_display(self.ontology_types.keys()))

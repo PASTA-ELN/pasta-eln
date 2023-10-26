@@ -89,25 +89,23 @@ def show_message(message: str,
   return None
 
 
-def get_next_possible_structural_level_label(existing_type_labels: Any) -> str | None:
+def get_next_possible_structural_level_title(existing_type_titles: Any) -> str | None:
   """
   Get the title for the next possible structural type level
   Args:
-    existing_type_labels (Any): The list of labels existing in the ontology document
+    existing_type_titles (Any): The list of titles existing in the ontology document
 
   Returns (str|None):
     The next possible name is returned with the decimal part greater than the existing largest one
   """
-  if existing_type_labels is not None:
-    if len(existing_type_labels) > 0:
-      labels = [int(label.replace('x', '').replace('X', ''))
-                for label in existing_type_labels if is_structural_level(label)]
-      new_level = max(labels, default=-1)
-      return f"x{new_level + 1}"
-    else:
-      return "x0"
-  else:
+  if existing_type_titles is None:
     return None
+  if len(existing_type_titles) <= 0:
+    return "x0"
+  titles = [int(title.replace('x', '').replace('X', ''))
+            for title in existing_type_titles if is_structural_level(title)]
+  new_level = max(titles, default=-1)
+  return f"x{new_level + 1}"
 
 
 def get_db(db_name: str,
@@ -183,18 +181,18 @@ def is_structural_level(title: str) -> bool:
   return re.compile(r'^[Xx][0-9]+$').match(title) is not None
 
 
-def generate_empty_type(label: str) -> dict[str, Any]:
+def generate_empty_type(displayed_title: str) -> dict[str, Any]:
   """
   Generate an empty type for creating a new ontology type
   Args:
-    label (str): Label of the new type
+    displayed_title (str): displayed_title of the new type
 
   Returns: Dictionary representing a bare new type
 
   """
   return {
     "IRI": "",
-    "label": label,
+    "displayedTitle": displayed_title,
     "metadata": {
       "default": generate_mandatory_metadata()
     },
@@ -315,10 +313,8 @@ def can_delete_type(existing_types: list[str],
   existing_types = [t for t in existing_types if t]
   if not is_structural_level(selected_type):
     return True
-  structural_types = list(filter(is_structural_level, existing_types))
   if selected_type == 'x0':
     return False
-  if selected_type not in structural_types:
-    return False
-  else:
-    return max(structural_types) == selected_type
+  structural_types = list(filter(is_structural_level, existing_types))
+  return (False if selected_type not in structural_types else
+          max(structural_types) == selected_type)

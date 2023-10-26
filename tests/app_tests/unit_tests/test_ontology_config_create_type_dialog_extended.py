@@ -58,13 +58,13 @@ class TestOntologyConfigCreateTypeDialog(object):
     mock_label_line_edit = mocker.patch('PySide6.QtWidgets.QLineEdit')
     mocker.patch.object(create_type_dialog_mock, 'structuralLevelCheckBox', mock_check_box, create=True)
     mocker.patch.object(create_type_dialog_mock, 'titleLineEdit', mock_title_line_edit, create=True)
-    mocker.patch.object(create_type_dialog_mock, 'labelLineEdit', mock_label_line_edit, create=True)
+    mocker.patch.object(create_type_dialog_mock, 'displayedTitleLineEdit', mock_label_line_edit, create=True)
     title_line_edit_clear_spy = mocker.spy(mock_title_line_edit, 'clear')
     label_line_edit_clear_spy = mocker.spy(mock_label_line_edit, 'clear')
     check_box_set_checked_spy = mocker.spy(mock_check_box, 'setChecked')
     assert create_type_dialog_mock.clear_ui() is None, "create_type_dialog_mock.clear_ui() should return None"
     assert title_line_edit_clear_spy.call_count == 1, "titleLineEdit.clear() should be called once"
-    assert label_line_edit_clear_spy.call_count == 1, "labelLineEdit.clear() should be called once"
+    assert label_line_edit_clear_spy.call_count == 1, "displayedTitleLineEdit.clear() should be called once"
     check_box_set_checked_spy.assert_called_once_with(False)
 
   @pytest.mark.parametrize("next_level", [

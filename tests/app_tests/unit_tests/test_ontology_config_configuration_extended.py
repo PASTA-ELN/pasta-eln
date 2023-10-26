@@ -87,7 +87,7 @@ class TestOntologyConfigConfiguration(object):
     mocker.patch.object(OntologyConfigurationForm, 'attachmentsShowHidePushButton', create=True)
     mocker.patch.object(OntologyConfigurationForm, 'typeComboBox', create=True)
     mocker.patch.object(OntologyConfigurationForm, 'metadataGroupComboBox', create=True)
-    mocker.patch.object(OntologyConfigurationForm, 'typeLabelLineEdit', create=True)
+    mocker.patch.object(OntologyConfigurationForm, 'typeDisplayedTitleLineEdit', create=True)
     mocker.patch.object(OntologyConfigurationForm, 'typeIriLineEdit', create=True)
     mocker.patch.object(OntologyConfigurationForm, 'delete_column_delegate_metadata_table', create=True)
     mocker.patch.object(OntologyConfigurationForm, 'reorder_column_delegate_metadata_table', create=True)
@@ -177,7 +177,7 @@ class TestOntologyConfigConfiguration(object):
   @pytest.mark.parametrize("new_type_selected, mock_ontology_types", [
     ("x0", {
       "x0": {
-        "label": "x0",
+        "displayedTitle": "x0",
         "IRI": "url",
         "metadata": {
           "default": [
@@ -195,7 +195,7 @@ class TestOntologyConfigConfiguration(object):
         "attachments": []
       },
       "x1": {
-        "label": "x0",
+        "displayedTitle": "x0",
         "IRI": "url",
         "metadata": {
           "default": [
@@ -215,7 +215,7 @@ class TestOntologyConfigConfiguration(object):
     }),
     ("x1", {
       "x0": {
-        "label": "x0",
+        "displayedTitle": "x0",
         "IRI": "url",
         "metadata": {
           "default": [
@@ -233,7 +233,7 @@ class TestOntologyConfigConfiguration(object):
         "attachments": []
       },
       "x1": {
-        "label": "x0",
+        "displayedTitle": "x0",
         "IRI": "url",
         "metadata": {
           "default": [
@@ -255,8 +255,8 @@ class TestOntologyConfigConfiguration(object):
     ("x0", {}),
     ("x0", {"x1": {}}),
     ("x0", {"x0": {}}),
-    ("x0", {"x0": {"label": None, "IRI": None, "metadata": None, "attachments": None}}),
-    ("x0", {"x0": {"label": None, "IRI": None, "metadata": {"": None}, "attachments": [{"": None}]}}),
+    ("x0", {"x0": {"displayedTitle": None, "IRI": None, "metadata": None, "attachments": None}}),
+    ("x0", {"x0": {"displayedTitle": None, "IRI": None, "metadata": {"": None}, "attachments": [{"": None}]}}),
     ("x0", {"x0": {"": None, "§": None, "metadata": {"": None}, "attachment": [{"": None}]}})
   ])
   def test_type_combo_box_changed_should_do_expected(self,
@@ -269,12 +269,12 @@ class TestOntologyConfigConfiguration(object):
       'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.OntologyConfigurationForm.type_changed_signal')
     mocker.patch.object(configuration_extended, 'addMetadataGroupLineEdit', create=True)
     mocker.patch.object(configuration_extended, 'ontology_types', mock_ontology_types, create=True)
-    mocker.patch.object(configuration_extended, 'typeLabelLineEdit', create=True)
+    mocker.patch.object(configuration_extended, 'typeDisplayedTitleLineEdit', create=True)
     mocker.patch.object(configuration_extended, 'typeIriLineEdit', create=True)
     mocker.patch.object(configuration_extended, 'attachments_table_data_model', create=True)
     mocker.patch.object(configuration_extended, 'metadataGroupComboBox', create=True)
     mocker.patch.object(configuration_extended, 'type_changed_signal', mock_signal, create=True)
-    set_text_label_line_edit_spy = mocker.spy(configuration_extended.typeLabelLineEdit, 'setText')
+    set_text_displayed_title_line_edit_spy = mocker.spy(configuration_extended.typeDisplayedTitleLineEdit, 'setText')
     set_text_iri_line_edit_spy = mocker.spy(configuration_extended.typeIriLineEdit, 'setText')
     set_current_index_metadata_group_combo_box_spy = mocker.spy(configuration_extended.metadataGroupComboBox,
                                                           'setCurrentIndex')
@@ -296,7 +296,7 @@ class TestOntologyConfigConfiguration(object):
       mock_signal.emit.assert_called_once_with(new_type_selected)
       logger_info_spy.assert_called_once_with("New type selected in UI: {%s}", new_type_selected)
       clear_add_metadata_metadata_group_line_edit_spy.assert_called_once_with()
-      set_text_label_line_edit_spy.assert_called_once_with(mock_ontology_types.get(new_type_selected).get('label'))
+      set_text_displayed_title_line_edit_spy.assert_called_once_with(mock_ontology_types.get(new_type_selected).get('displayedTitle'))
       set_text_iri_line_edit_spy.assert_called_once_with(mock_ontology_types.get(new_type_selected).get('IRI'))
       set_current_index_metadata_group_combo_box_spy.assert_called_once_with(0)
       clear_metadata_group_combo_box_spy.assert_called_once_with()
@@ -457,18 +457,18 @@ class TestOntologyConfigConfiguration(object):
       )
       set_current_index_metadata_group_combo_box_spy.assert_called_once_with(len(selected_type_metadata.keys()) - 1)
 
-  @pytest.mark.parametrize("modified_type_label, current_type, ontology_types", [
+  @pytest.mark.parametrize("modified_type_displayed_title, current_type, ontology_types", [
     (None, None, None),
-    ("new_label_1", None, None),
-    (None, "x0", {"x0": {"label": "x0"}, "x1": {"label": "x1"}}),
-    ("new_label_2", "x1", {"x0": {"label": "x0"}, "x1": {"label": "x1"}}),
-    ("new_label_2", "instrument", {"x0": {"label": "x0"}, "instrument": {"label": "x1"}}),
-    ("type_new_label", "subtask4", {"x0": {"label": "x0"}, "subtask5": {"label": "x1"}}),
+    ("new_displayed_title_1", None, None),
+    (None, "x0", {"x0": {"displayedTitle": "x0"}, "x1": {"displayedTitle": "x1"}}),
+    ("new_displayed_title_2", "x1", {"x0": {"displayedTitle": "x0"}, "x1": {"displayedTitle": "x1"}}),
+    ("new_displayed_title_2", "instrument", {"x0": {"displayedTitle": "x0"}, "instrument": {"displayedTitle": "x1"}}),
+    ("type_new_displayed_title", "subtask4", {"x0": {"displayedTitle": "x0"}, "subtask5": {"displayedTitle": "x1"}}),
   ])
-  def test_update_structure_label_should_do_expected(self,
+  def test_update_structure_displayed_title_should_do_expected(self,
                                                      mocker,
                                                      configuration_extended: configuration_extended,
-                                                     modified_type_label,
+                                                     modified_type_displayed_title,
                                                      current_type,
                                                      ontology_types):
     mocker.patch.object(configuration_extended, 'typeComboBox', create=True)
@@ -486,20 +486,20 @@ class TestOntologyConfigConfiguration(object):
 
     get_ontology_types_spy = mocker.spy(configuration_extended.ontology_types, 'get')
 
-    if modified_type_label:
-      assert configuration_extended.update_type_label(modified_type_label) is None, "Nothing should be returned"
+    if modified_type_displayed_title:
+      assert configuration_extended.update_type_displayed_title(modified_type_displayed_title) is None, "Nothing should be returned"
       if ontology_types is not None and current_type in ontology_types:
         get_ontology_types_spy.assert_called_once_with(current_type)
-        assert ontology_types[current_type]["label"] == modified_type_label
-        configuration_extended.set_iri_lookup_action.assert_called_once_with(modified_type_label)
+        assert ontology_types[current_type]["displayedTitle"] == modified_type_displayed_title
+        configuration_extended.set_iri_lookup_action.assert_called_once_with(modified_type_displayed_title)
 
   @pytest.mark.parametrize("modified_type_iri, current_type, ontology_types", [
     (None, None, None),
     ("new_url", None, None),
-    (None, "x0", {"x0": {"label": "x0"}, "x1": {"label": "x1"}}),
-    ("new_url_2", "x1", {"x0": {"label": "x0"}, "x1": {"label": "x1"}}),
-    ("new_url_2", "instrument", {"x0": {"label": "x0"}, "instrument": {"label": "x1"}}),
-    ("type_new_url", "subtask4", {"x0": {"label": "x0"}, "subtask5": {"label": "x1"}}),
+    (None, "x0", {"x0": {"displayedTitle": "x0"}, "x1": {"displayedTitle": "x1"}}),
+    ("new_url_2", "x1", {"x0": {"displayedTitle": "x0"}, "x1": {"displayedTitle": "x1"}}),
+    ("new_url_2", "instrument", {"x0": {"displayedTitle": "x0"}, "instrument": {"displayedTitle": "x1"}}),
+    ("type_new_url", "subtask4", {"x0": {"displayedTitle": "x0"}, "subtask5": {"displayedTitle": "x1"}}),
   ])
   def test_update_type_iri_should_do_expected(self,
                                               mocker,
@@ -606,7 +606,7 @@ class TestOntologyConfigConfiguration(object):
         add_items_selected_spy.assert_not_called()
         set_current_index_type_combo_box_spy.assert_not_called()
 
-  @pytest.mark.parametrize("new_title, new_label, is_structure_level", [
+  @pytest.mark.parametrize("new_title, new_displayed_title, is_structure_level", [
     (None, None, False),
     ("x0", None, True),
     (None, "x2", True),
@@ -617,7 +617,7 @@ class TestOntologyConfigConfiguration(object):
                                                             mocker,
                                                             configuration_extended: configuration_extended,
                                                             new_title,
-                                                            new_label,
+                                                            new_displayed_title,
                                                             is_structure_level):
     mocker.patch.object(configuration_extended, 'create_type_dialog', create=True)
     mocker.patch.object(configuration_extended.create_type_dialog, 'titleLineEdit', create=True)
@@ -626,20 +626,20 @@ class TestOntologyConfigConfiguration(object):
                                          create=True)
     mocker.patch.object(mock_check_box, 'isChecked', return_value=is_structure_level, create=True)
     mocker.patch.object(configuration_extended.create_type_dialog.titleLineEdit, 'text', return_value=new_title)
-    mocker.patch.object(configuration_extended.create_type_dialog, 'labelLineEdit', create=True)
-    mocker.patch.object(configuration_extended.create_type_dialog.labelLineEdit, 'text', return_value=new_label)
+    mocker.patch.object(configuration_extended.create_type_dialog, 'displayedTitleLineEdit', create=True)
+    mocker.patch.object(configuration_extended.create_type_dialog.displayedTitleLineEdit, 'text', return_value=new_displayed_title)
     clear_ui_spy = mocker.patch.object(configuration_extended.create_type_dialog, 'clear_ui', create=True)
     create_new_type_spy = mocker.patch.object(configuration_extended, 'create_new_type', create=True)
     text_title_line_edit_text_spy = mocker.spy(configuration_extended.create_type_dialog.titleLineEdit, 'text')
-    text_label_line_edit_text_spy = mocker.spy(configuration_extended.create_type_dialog.labelLineEdit, 'text')
+    text_displayed_title_line_edit_text_spy = mocker.spy(configuration_extended.create_type_dialog.displayedTitleLineEdit, 'text')
 
     assert configuration_extended.create_type_accepted_callback() is None, "Nothing should be returned"
     if not is_structure_level:
       text_title_line_edit_text_spy.assert_called_once_with()
-    text_label_line_edit_text_spy.assert_called_once_with()
+    text_displayed_title_line_edit_text_spy.assert_called_once_with()
     clear_ui_spy.assert_called_once_with()
     create_new_type_spy.assert_called_once_with(
-      new_title, new_label
+      new_title, new_displayed_title
     )
 
   def test_create_type_rejected_callback_should_do_expected(self,
@@ -670,8 +670,8 @@ class TestOntologyConfigConfiguration(object):
     mocker.patch.object(configuration_extended, 'ontology_loaded', create=True)
     show_create_type_dialog_spy = mocker.patch.object(configuration_extended.create_type_dialog, 'show', create=True)
     show_message_spy = mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.show_message')
-    get_next_possible_structural_level_label_spy = mocker.patch(
-      'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.get_next_possible_structural_level_label',
+    get_next_possible_structural_level_title_spy = mocker.patch(
+      'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.get_next_possible_structural_level_title',
       return_value=new_structural_title)
     if ontology_types is not None:
       configuration_extended.ontology_types.__setitem__.side_effect = ontology_types.__setitem__
@@ -686,12 +686,12 @@ class TestOntologyConfigConfiguration(object):
 
     assert configuration_extended.show_create_type_dialog() is None, "Nothing should be returned"
     if ontology_types is not None:
-      get_next_possible_structural_level_label_spy.assert_called_once_with(ontology_types.keys())
+      get_next_possible_structural_level_title_spy.assert_called_once_with(ontology_types.keys())
       set_structural_level_title_spy.assert_called_once_with(new_structural_title)
       show_create_type_dialog_spy.assert_called_once_with()
     else:
       show_message_spy.assert_called_once_with("Load the ontology data first...", QMessageBox.Warning)
-      get_next_possible_structural_level_label_spy.assert_not_called()
+      get_next_possible_structural_level_title_spy.assert_not_called()
       set_structural_level_title_spy.assert_not_called()
       show_create_type_dialog_spy.assert_not_called()
 
@@ -721,8 +721,8 @@ class TestOntologyConfigConfiguration(object):
       configuration_extended.metadata_group_combo_box_changed)
 
     # Slots for line edits
-    configuration_extended.typeLabelLineEdit.textChanged[str].connect.assert_called_once_with(
-      configuration_extended.update_type_label)
+    configuration_extended.typeDisplayedTitleLineEdit.textChanged[str].connect.assert_called_once_with(
+      configuration_extended.update_type_displayed_title)
     configuration_extended.typeIriLineEdit.textChanged[str].connect.assert_called_once_with(
       configuration_extended.update_type_iri)
 
@@ -910,7 +910,7 @@ class TestOntologyConfigConfiguration(object):
     mock_show_message.assert_called_once_with("Missing message", QMessageBox.Warning)
     log_warn_spy.assert_called_once_with("Missing message")
 
-  @pytest.mark.parametrize("new_title, new_label, ontology_document, ontology_types", [
+  @pytest.mark.parametrize("new_title, new_displayed_title, ontology_document, ontology_types", [
     (None, None, None, None),
     (None, None, {"x0": {"IRI": "x0"}, "x1": {"IRI": "x1"}}, {"x0": {"IRI": "x0"}, "x1": {"IRI": "x1"}}),
     ("x0", None, {"x0": {"IRI": "x0"}, "x1": {"IRI": "x1"}}, {"x0": {"IRI": "x0"}, "x1": {"IRI": "x1"}}),
@@ -923,7 +923,7 @@ class TestOntologyConfigConfiguration(object):
   def test_create_new_type_should_do_expected(self,
                                               mocker,
                                               new_title,
-                                              new_label,
+                                              new_displayed_title,
                                               ontology_document,
                                               ontology_types,
                                               configuration_extended: configuration_extended):
@@ -961,26 +961,26 @@ class TestOntologyConfigConfiguration(object):
       if ontology_document is None or ontology_types is None:
         with pytest.raises(OntologyConfigGenericException,
                            match="Null ontology_document/ontology_types, erroneous app state"):
-          assert configuration_extended.create_new_type(new_title, new_label) is None, "Nothing should be returned"
+          assert configuration_extended.create_new_type(new_title, new_displayed_title) is None, "Nothing should be returned"
           mock_log_error.assert_called_once_with("Null ontology_document/ontology_types, erroneous app state")
       else:
-        assert configuration_extended.create_new_type(new_title, new_label) is None, "Nothing should be returned"
+        assert configuration_extended.create_new_type(new_title, new_displayed_title) is None, "Nothing should be returned"
         mock_show_message.assert_called_once_with(f"Type (title: {new_title} "
-                                                  f"label: {new_label}) cannot be added "
+                                                  f"displayed title: {new_displayed_title}) cannot be added "
                                                   f"since it exists in DB already....", QMessageBox.Warning)
     else:
       if new_title is None:
-        assert configuration_extended.create_new_type(None, new_label) is None, "Nothing should be returned"
+        assert configuration_extended.create_new_type(None, new_displayed_title) is None, "Nothing should be returned"
         mock_show_message.assert_called_once_with("Enter non-null/valid title!!.....", QMessageBox.Warning)
         mock_log_warn.assert_called_once_with("Enter non-null/valid title!!.....")
       else:
-        assert configuration_extended.create_new_type(new_title, new_label) is None, "Nothing should be returned"
+        assert configuration_extended.create_new_type(new_title, new_displayed_title) is None, "Nothing should be returned"
         mock_log_info.assert_called_once_with("User created a new type and added "
-                                              "to the ontology document: Title: {%s}, Label: {%s}", new_title,
-                                              new_label)
+                                              "to the ontology document: Title: {%s}, Displayed Title: {%s}", new_title,
+                                              new_displayed_title)
 
         (configuration_extended.ontology_types
-         .__setitem__.assert_called_once_with(new_title, generate_empty_type(new_label)))
+         .__setitem__.assert_called_once_with(new_title, generate_empty_type(new_displayed_title)))
         assert configuration_extended.typeComboBox.clear.call_count == 2, "ComboBox should be cleared twice"
         assert configuration_extended.typeComboBox.addItems.call_count == 2, "ComboBox addItems should be called twice"
         configuration_extended.typeComboBox.addItems.assert_called_with(

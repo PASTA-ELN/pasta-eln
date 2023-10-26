@@ -96,7 +96,7 @@ class CreateTypeDialog(Ui_CreateTypeDialog):
     Returns: Nothing
 
     """
-    self.labelLineEdit.clear()
+    self.displayedTitleLineEdit.clear()
     self.titleLineEdit.clear()
     self.structuralLevelCheckBox.setChecked(False)
 
