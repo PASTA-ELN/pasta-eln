@@ -26,10 +26,10 @@ from .ontology_config_key_not_found_exception import \
   OntologyConfigKeyNotFoundException
 from .ontology_configuration import Ui_OntologyConfigurationBaseForm
 from .ontology_configuration_constants import ATTACHMENT_TABLE_DELETE_COLUMN_INDEX, \
-  ATTACHMENT_TABLE_REORDER_COLUMN_INDEX, ONTOLOGY_HELP_PAGE_URL, PROPS_TABLE_DELETE_COLUMN_INDEX, \
-  PROPS_TABLE_IRI_COLUMN_INDEX, PROPS_TABLE_REORDER_COLUMN_INDEX, PROPS_TABLE_REQUIRED_COLUMN_INDEX
+  ATTACHMENT_TABLE_REORDER_COLUMN_INDEX, ONTOLOGY_HELP_PAGE_URL, METADATA_TABLE_DELETE_COLUMN_INDEX, \
+  METADATA_TABLE_IRI_COLUMN_INDEX, METADATA_TABLE_REORDER_COLUMN_INDEX, METADATA_TABLE_REQUIRED_COLUMN_INDEX
 from .ontology_document_null_exception import OntologyDocumentNullException
-from .ontology_props_tableview_data_model import OntologyPropsTableViewModel
+from .ontology_metadata_tableview_data_model import OntologyMetadataTableViewModel
 from .reorder_column_delegate import ReorderColumnDelegate
 from .required_column_delegate import RequiredColumnDelegate
 from .delete_column_delegate import DeleteColumnDelegate
@@ -37,7 +37,7 @@ from .iri_column_delegate import IriColumnDelegate
 from .lookup_iri_action import LookupIriAction
 from .utility_functions import adapt_type, adjust_ontology_data_to_v3, can_delete_type, check_ontology_types, \
   generate_empty_type, \
-  generate_required_properties, get_missing_props_message, get_next_possible_structural_level_label, \
+  generate_required_metadata, get_missing_metadata_message, get_next_possible_structural_level_label, \
   get_types_for_display, show_message
 from ...database import Database
 
@@ -68,7 +68,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm, QObject):
 
     self.ontology_loaded: bool = False
     self.ontology_types: Any = {}
-    self.selected_type_properties: dict[str, list[dict[str, Any]]] | Any = {}
+    self.selected_type_metadata: dict[str, list[dict[str, Any]]] | Any = {}
 
     # Set up the UI elements
     self.instance = QtWidgets.QDialog()
@@ -83,31 +83,31 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm, QObject):
     if not self.ontology_document:
       raise OntologyDocumentNullException("Null ontology document in db instance", {})
 
-    # Instantiates property & attachment table models along with the column delegates
-    self.props_table_data_model = OntologyPropsTableViewModel()
+    # Instantiates metadata & attachment table models along with the column delegates
+    self.metadata_table_data_model = OntologyMetadataTableViewModel()
     self.attachments_table_data_model = OntologyAttachmentsTableViewModel()
 
-    self.required_column_delegate_props_table = RequiredColumnDelegate()
-    self.delete_column_delegate_props_table = DeleteColumnDelegate()
-    self.reorder_column_delegate_props_table = ReorderColumnDelegate()
-    self.iri_column_delegate_props_table = IriColumnDelegate()
+    self.required_column_delegate_metadata_table = RequiredColumnDelegate()
+    self.delete_column_delegate_metadata_table = DeleteColumnDelegate()
+    self.reorder_column_delegate_metadata_table = ReorderColumnDelegate()
+    self.iri_column_delegate_metadata_table = IriColumnDelegate()
     self.delete_column_delegate_attach_table = DeleteColumnDelegate()
     self.reorder_column_delegate_attach_table = ReorderColumnDelegate()
 
-    self.typePropsTableView.setItemDelegateForColumn(PROPS_TABLE_REQUIRED_COLUMN_INDEX,
-                                                     self.required_column_delegate_props_table)
-    self.typePropsTableView.setItemDelegateForColumn(PROPS_TABLE_DELETE_COLUMN_INDEX,
-                                                     self.delete_column_delegate_props_table)
-    self.typePropsTableView.setItemDelegateForColumn(PROPS_TABLE_REORDER_COLUMN_INDEX,
-                                                     self.reorder_column_delegate_props_table)
-    self.typePropsTableView.setItemDelegateForColumn(PROPS_TABLE_IRI_COLUMN_INDEX,
-                                                     self.iri_column_delegate_props_table)
-    self.typePropsTableView.setModel(self.props_table_data_model)
+    self.typeMetadataTableView.setItemDelegateForColumn(METADATA_TABLE_REQUIRED_COLUMN_INDEX,
+                                                        self.required_column_delegate_metadata_table)
+    self.typeMetadataTableView.setItemDelegateForColumn(METADATA_TABLE_DELETE_COLUMN_INDEX,
+                                                        self.delete_column_delegate_metadata_table)
+    self.typeMetadataTableView.setItemDelegateForColumn(METADATA_TABLE_REORDER_COLUMN_INDEX,
+                                                        self.reorder_column_delegate_metadata_table)
+    self.typeMetadataTableView.setItemDelegateForColumn(METADATA_TABLE_IRI_COLUMN_INDEX,
+                                                        self.iri_column_delegate_metadata_table)
+    self.typeMetadataTableView.setModel(self.metadata_table_data_model)
 
-    for column_index, width in self.props_table_data_model.column_widths.items():
-      self.typePropsTableView.setColumnWidth(column_index, width)
-    # When resized, only stretch the query column of typePropsTableView
-    self.typePropsTableView.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+    for column_index, width in self.metadata_table_data_model.column_widths.items():
+      self.typeMetadataTableView.setColumnWidth(column_index, width)
+    # When resized, only stretch the query column of typeMetadataTableView
+    self.typeMetadataTableView.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
 
     self.typeAttachmentsTableView.setItemDelegateForColumn(
       ATTACHMENT_TABLE_DELETE_COLUMN_INDEX,
@@ -156,8 +156,8 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm, QObject):
         raise OntologyConfigKeyNotFoundException(f"Key {new_type_selected} "
                                                  f"not found in ontology_types", {})
       selected_type = self.ontology_types.get(new_type_selected)
-      # Get the properties for the selected type and store the list in selected_type_properties
-      self.selected_type_properties = selected_type.get('prop')
+      # Get the metadata for the selected type and store the list in selected_type_metadata
+      self.selected_type_metadata = selected_type.get('metadata')
 
       # Type label is set in a line edit
       self.typeLabelLineEdit.setText(selected_type.get('label'))
@@ -168,10 +168,10 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm, QObject):
       # Gets the attachment data from selected type and set it in table view
       self.attachments_table_data_model.update(selected_type.get('attachments'))
 
-      # Reset the props category combo-box
-      self.propsCategoryComboBox.addItems(list(self.selected_type_properties.keys())
-                                          if self.selected_type_properties else [])
-      self.propsCategoryComboBox.setCurrentIndex(0)
+      # Reset the metadata group combo-box
+      self.metadataGroupComboBox.addItems(list(self.selected_type_metadata.keys())
+                                          if self.selected_type_metadata else [])
+      self.metadataGroupComboBox.setCurrentIndex(0)
 
   def set_iri_lookup_action(self,
                             lookup_term: str) -> None:
@@ -190,59 +190,59 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm, QObject):
       LookupIriAction(parent_line_edit=self.typeIriLineEdit, lookup_term=lookup_term),
       QLineEdit.TrailingPosition)
 
-  def category_combo_box_changed(self,
-                                 new_selected_prop_category: Any) -> None:
+  def metadata_group_combo_box_changed(self,
+                                       new_selected_metadata_group: Any) -> None:
     """
-    Combobox value changed callback for the selected type property categories
+    Combobox value changed callback for the selected type metadata groups
     Args:
-      new_selected_prop_category (Any): Newly set value for the combobox.
+      new_selected_metadata_group (Any): Newly set value for the combobox.
 
     Returns: Nothing
     """
-    self.logger.info("New property category selected in UI: {%s}", new_selected_prop_category)
-    if new_selected_prop_category and self.selected_type_properties:
-      # Update the property table as per the selected property category from combobox
-      self.props_table_data_model.update(self.selected_type_properties.get(new_selected_prop_category))
+    self.logger.info("New metadata group selected in UI: {%s}", new_selected_metadata_group)
+    if new_selected_metadata_group and self.selected_type_metadata:
+      # Update the metadata table as per the selected metadata group from combobox
+      self.metadata_table_data_model.update(self.selected_type_metadata.get(new_selected_metadata_group))
 
-  def add_new_prop_category(self) -> None:
+  def add_new_metadata_group(self) -> None:
     """
-    Click event handler for adding new property category
+    Click event handler for adding new metadata group
     Returns: Nothing
     """
-    new_category = self.addPropsCategoryLineEdit.text()
-    if not new_category:
-      show_message("Enter non-null/valid category name!!.....", QMessageBox.Warning)
+    new_group = self.addMetadataGroupLineEdit.text()
+    if not new_group:
+      show_message("Enter non-null/valid metadata group name!!.....", QMessageBox.Warning)
       return None
     if not self.ontology_loaded or self.ontology_types is None:
       show_message("Load the ontology data first....", QMessageBox.Warning)
       return None
-    if new_category in self.selected_type_properties.keys():
-      show_message("Category already exists....", QMessageBox.Warning)
+    if new_group in self.selected_type_metadata.keys():
+      show_message("Metadata group already exists....", QMessageBox.Warning)
       return None
-    # Add the new category to the property list and refresh the category combo box
-    self.logger.info("User added new category: {%s}", new_category)
-    self.selected_type_properties[new_category] = generate_required_properties()
-    self.propsCategoryComboBox.clear()
-    self.propsCategoryComboBox.addItems(list(self.selected_type_properties.keys()))
-    self.propsCategoryComboBox.setCurrentIndex(len(self.selected_type_properties.keys()) - 1)
+    # Add the new group to the metadata list and refresh the group combo box
+    self.logger.info("User added new metadata group: {%s}", new_group)
+    self.selected_type_metadata[new_group] = generate_required_metadata()
+    self.metadataGroupComboBox.clear()
+    self.metadataGroupComboBox.addItems(list(self.selected_type_metadata.keys()))
+    self.metadataGroupComboBox.setCurrentIndex(len(self.selected_type_metadata.keys()) - 1)
     return None
 
-  def delete_selected_prop_category(self) -> None:
+  def delete_selected_metadata_group(self) -> None:
     """
-    Click event handler for deleting the selected property category
+    Click event handler for deleting the selected metadata group
     Returns: Nothing
     """
-    selected_category = self.propsCategoryComboBox.currentText()
-    if self.selected_type_properties is None:
+    selected_group = self.metadataGroupComboBox.currentText()
+    if self.selected_type_metadata is None:
       show_message("Load the ontology data first....", QMessageBox.Warning)
       return None
-    if selected_category and selected_category in self.selected_type_properties.keys():
-      self.logger.info("User deleted the selected category: {%s}", selected_category)
-      self.selected_type_properties.pop(selected_category)
-      self.propsCategoryComboBox.clear()
-      self.typePropsTableView.model().update([])
-      self.propsCategoryComboBox.addItems(list(self.selected_type_properties.keys()))
-      self.propsCategoryComboBox.setCurrentIndex(len(self.selected_type_properties.keys()) - 1)
+    if selected_group and selected_group in self.selected_type_metadata.keys():
+      self.logger.info("User deleted the selected metadata group: {%s}", selected_group)
+      self.selected_type_metadata.pop(selected_group)
+      self.metadataGroupComboBox.clear()
+      self.typeMetadataTableView.model().update([])
+      self.metadataGroupComboBox.addItems(list(self.selected_type_metadata.keys()))
+      self.metadataGroupComboBox.setCurrentIndex(len(self.selected_type_metadata.keys()) - 1)
     return None
 
   def update_type_label(self,
@@ -313,9 +313,9 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm, QObject):
     self.typeLabelLineEdit.textChanged[str].connect(self.update_type_label)
     self.typeIriLineEdit.textChanged[str].connect(self.update_type_iri)
 
-    self.propsCategoryComboBox.clear()
-    self.addPropsCategoryLineEdit.clear()
-    self.typePropsTableView.model().update([])
+    self.metadataGroupComboBox.clear()
+    self.addMetadataGroupLineEdit.clear()
+    self.typeMetadataTableView.model().update([])
     self.typeAttachmentsTableView.model().update([])
 
   def create_type_accepted_callback(self) -> None:
@@ -358,11 +358,11 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm, QObject):
     """
     self.logger.info("Setting up slots for the editor..")
     # Slots for the buttons
-    self.addPropsRowPushButton.clicked.connect(self.props_table_data_model.add_data_row)
+    self.addMetadataRowPushButton.clicked.connect(self.metadata_table_data_model.add_data_row)
     self.addAttachmentPushButton.clicked.connect(self.attachments_table_data_model.add_data_row)
     self.saveOntologyPushButton.clicked.connect(self.save_ontology)
-    self.addPropsCategoryPushButton.clicked.connect(self.add_new_prop_category)
-    self.deletePropsCategoryPushButton.clicked.connect(self.delete_selected_prop_category)
+    self.addMetadataGroupPushButton.clicked.connect(self.add_new_metadata_group)
+    self.deleteMetadataGroupPushButton.clicked.connect(self.delete_selected_metadata_group)
     self.deleteTypePushButton.clicked.connect(self.delete_selected_type)
     self.addTypePushButton.clicked.connect(self.show_create_type_dialog)
     self.cancelPushButton.clicked.connect(self.instance.close)
@@ -371,15 +371,15 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm, QObject):
 
     # Slots for the combo-boxes
     self.typeComboBox.currentTextChanged.connect(self.type_combo_box_changed)
-    self.propsCategoryComboBox.currentTextChanged.connect(self.category_combo_box_changed)
+    self.metadataGroupComboBox.currentTextChanged.connect(self.metadata_group_combo_box_changed)
 
     # Slots for line edits
     self.typeLabelLineEdit.textChanged[str].connect(self.update_type_label)
     self.typeIriLineEdit.textChanged[str].connect(self.update_type_iri)
 
     # Slots for the delegates
-    self.delete_column_delegate_props_table.delete_clicked_signal.connect(self.props_table_data_model.delete_data)
-    self.reorder_column_delegate_props_table.re_order_signal.connect(self.props_table_data_model.re_order_data)
+    self.delete_column_delegate_metadata_table.delete_clicked_signal.connect(self.metadata_table_data_model.delete_data)
+    self.reorder_column_delegate_metadata_table.re_order_signal.connect(self.metadata_table_data_model.re_order_data)
 
     self.delete_column_delegate_attach_table.delete_clicked_signal.connect(
       self.attachments_table_data_model.delete_data)
@@ -413,9 +413,9 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm, QObject):
     Save the modified ontology document data in database
     """
     self.logger.info("User clicked the save button..")
-    types_with_missing_properties, types_with_null_name_properties = check_ontology_types(self.ontology_types)
-    if types_with_missing_properties or types_with_null_name_properties:
-      message = get_missing_props_message(types_with_missing_properties, types_with_null_name_properties)
+    types_with_missing_metadata, types_with_null_name_metadata = check_ontology_types(self.ontology_types)
+    if types_with_missing_metadata or types_with_null_name_metadata:
+      message = get_missing_metadata_message(types_with_missing_metadata, types_with_null_name_metadata)
       show_message(message, QMessageBox.Warning)
       self.logger.warning(message)
       return

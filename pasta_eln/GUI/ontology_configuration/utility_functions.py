@@ -52,12 +52,12 @@ def adjust_ontology_data_to_v3(ontology_types: dict[str, Any]) -> None:
     return None
   for _, type_structure in ontology_types.items():
     type_structure.setdefault("attachments", [])
-    props = type_structure.get("prop")
-    if props is None:
-      type_structure["prop"] = {"default": []}
+    metadata = type_structure.get("metadata")
+    if metadata is None:
+      type_structure["metadata"] = {"default": []}
       continue
-    if not isinstance(props, dict):
-      type_structure["prop"] = {"default": props}
+    if not isinstance(metadata, dict):
+      type_structure["metadata"] = {"default": metadata}
   return None
 
 
@@ -79,7 +79,7 @@ def show_message(message: str,
   """
   if message:
     msg_box = QMessageBox()
-    msg_box.setWindowTitle("Ontology Editor")
+    msg_box.setWindowTitle("Data Hierarchy Editor")
     msg_box.setTextFormat(Qt.RichText)
     msg_box.setIcon(icon)
     msg_box.setText(message)
@@ -195,28 +195,28 @@ def generate_empty_type(label: str) -> dict[str, Any]:
   return {
     "IRI": "",
     "label": label,
-    "prop": {
-      "default": generate_required_properties()
+    "metadata": {
+      "default": generate_required_metadata()
     },
     "attachments": []
   }
 
 
-def generate_required_properties() -> list[dict[str, Any]]:
+def generate_required_metadata() -> list[dict[str, Any]]:
   """
-  Generate a list of required properties for creating a new ontology type
-  Returns (list[dict[str, Any]]): List of required properties
+  Generate a list of required metadata for creating a new ontology type
+  Returns (list[dict[str, Any]]): List of required metadata
 
   """
   return [
     {
       "name": "-name",
-      "query": "What is the name of the property?",
+      "query": "What is the name of the metadata?",
       "required": True
     },
     {
       "name": "-tags",
-      "query": "What are the tags associated with this property?",
+      "query": "What are the tags associated with this metadata?",
       "required": True
     }
   ]
@@ -225,73 +225,73 @@ def generate_required_properties() -> list[dict[str, Any]]:
 def check_ontology_types(ontology_types: dict[str, Any]) \
     -> Tuple[dict[str, dict[str, list[str]]], dict[str, list[str]]]:
   """
-  Check the ontology data to see if all the required properties ["-name", "-tags"]
-  are present under all categories and also if all the properties have a name
+  Check the ontology data to see if all the required metadata ["-name", "-tags"]
+  are present under all groups and also if all the metadata have a name
   Args:
     ontology_types (dict[str, Any]): Ontology types loaded from the database
 
   Returns (Tuple[dict[str, dict[str, list[str]]], dict[str, str]]):
-    Empty tuple if all the required properties are present under all categories and all properties have a name
-    otherwise returns a tuple of types with categories missing required properties or names
+    Empty tuple if all the required metadata present under all groups and all metadata-item have a name
+    otherwise returns a tuple of types with metadata-groups missing required metadata or names
 
   """
   if not ontology_types:
     return {}, {}
-  types_with_missing_properties: dict[str, dict[str, list[str]]] = {}
-  types_with_null_name_properties: dict[str, list[str]] = {}
-  required_properties = ["-name", "-tags"]
+  types_with_missing_metadata: dict[str, dict[str, list[str]]] = {}
+  types_with_null_name_metadata: dict[str, list[str]] = {}
+  required_metadata = ["-name", "-tags"]
   for type_name, type_structure in ontology_types.items():
     type_name = type_name.replace("x", "Structure level ") \
       if is_structural_level(type_name) \
       else type_name
-    if type_structure.get("prop"):
-      for category, properties in type_structure.get("prop").items():
-        names = [prop.get("name") for prop in properties]
+    if type_structure.get("metadata"):
+      for group, metadata in type_structure.get("metadata").items():
+        names = [item.get("name") for item in metadata]
         if not all(n and not n.isspace() for n in names):
-          if type_name not in types_with_null_name_properties:
-            types_with_null_name_properties[type_name] = []
-          types_with_null_name_properties[type_name].append(category)
-        for req_property in required_properties:
-          if req_property not in names:
-            if type_name not in types_with_missing_properties:
-              types_with_missing_properties[type_name] = {}
-            if category not in types_with_missing_properties[type_name]:
-              types_with_missing_properties[type_name][category] = []
-            types_with_missing_properties[type_name][category].append(req_property)
-  return types_with_missing_properties, types_with_null_name_properties
+          if type_name not in types_with_null_name_metadata:
+            types_with_null_name_metadata[type_name] = []
+          types_with_null_name_metadata[type_name].append(group)
+        for req_metadata in required_metadata:
+          if req_metadata not in names:
+            if type_name not in types_with_missing_metadata:
+              types_with_missing_metadata[type_name] = {}
+            if group not in types_with_missing_metadata[type_name]:
+              types_with_missing_metadata[type_name][group] = []
+            types_with_missing_metadata[type_name][group].append(req_metadata)
+  return types_with_missing_metadata, types_with_null_name_metadata
 
 
-def get_missing_props_message(types_with_missing_properties: dict[str, dict[str, list[str]]],
-                              types_with_null_name_properties: dict[str, list[str]]) -> str:
+def get_missing_metadata_message(types_with_missing_metadata: dict[str, dict[str, list[str]]],
+                                 types_with_null_name_metadata: dict[str, list[str]]) -> str:
   """
-  Get formatted message for missing properties
+  Get a formatted message for missing metadata
   Args:
-    types_with_null_name_properties (dict[str, str]): Type categories with missing property names
-    types_with_missing_properties (dict[str, dict[str, list[str]]]): Type categories with missing properties
+    types_with_null_name_metadata (dict[str, str]): Type groups with missing metadata names
+    types_with_missing_metadata (dict[str, dict[str, list[str]]]): Type groups with missing metadata
 
   Returns (str): Html formatted message
 
   """
   message = ""
-  if (not types_with_missing_properties
-      and not types_with_null_name_properties):
+  if (not types_with_missing_metadata
+      and not types_with_null_name_metadata):
     return message
   message += "<html>"
-  if types_with_missing_properties:
-    message += "<b>Missing required properties: </b><ul>"
-    for type_name, categories in types_with_missing_properties.items():
-      for category, properties in categories.items():
-        for property_name in properties:
+  if types_with_missing_metadata:
+    message += "<b>Missing required metadata: </b><ul>"
+    for type_name, groups in types_with_missing_metadata.items():
+      for group, metadata in groups.items():
+        for metadata_name in metadata:
           message += (f"<li>Type: <i style=\"color:Crimson\">{type_name}</i>&nbsp;&nbsp;"
-                      f"Category: <i style=\"color:Crimson\">{category}</i>&nbsp;&nbsp;"
-                      f"Property Name: <i style=\"color:Crimson\">{property_name}</i></li>")
+                      f"Metadata Group: <i style=\"color:Crimson\">{group}</i>&nbsp;&nbsp;"
+                      f"Metadata Name: <i style=\"color:Crimson\">{metadata_name}</i></li>")
     message += "</ul>"
-  if types_with_null_name_properties:
-    message += "<b>Missing property names:</b><ul>"
-    for type_name, categories_list in types_with_null_name_properties.items():
-      for category in categories_list:
+  if types_with_null_name_metadata:
+    message += "<b>Missing metadata names:</b><ul>"
+    for type_name, groups_list in types_with_null_name_metadata.items():
+      for group in groups_list:
         message += (f"<li>Type: <i style=\"color:Crimson\">{type_name}</i>&nbsp;&nbsp;"
-                    f"Category: <i style=\"color:Crimson\">{category}</i></li>")
+                    f"Metadata Group: <i style=\"color:Crimson\">{group}</i></li>")
     message += "</ul>"
   message += "</html>"
   return message

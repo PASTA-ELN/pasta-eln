@@ -74,7 +74,7 @@ class MainWindow(QMainWindow):
       for name in self.backend.configuration['projectGroups'].keys():
         Action(name,                         self, [Command.CHANGE_PG, name], changeProjectGroups)
     Action('&Synchronize',                    self, [Command.SYNC],            systemMenu, shortcut='F5')
-    Action('&Questionnaires',                 self, [Command.ONTOLOGY],        systemMenu, shortcut='F8')
+    Action('&Data Hierarchy Editor',                 self, [Command.ONTOLOGY],        systemMenu, shortcut='F8')
     systemMenu.addSeparator()
     Action('&Test extraction from a file',   self, [Command.TEST1],           systemMenu)
     Action('Test &selected item extraction', self, [Command.TEST2],           systemMenu, shortcut='F2')

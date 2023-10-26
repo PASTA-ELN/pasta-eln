@@ -5,7 +5,7 @@
   "x0": {
     "IRI": "http://url.com",
     "label": "Projects",
-    "prop": {
+    "metadata": {
       "default": [
         {
           "name": "-name",
@@ -36,10 +36,10 @@
           "query": "#tags comments remarks :field:value:"
         }
       ],
-      "category1": [
+      "metadata_group1": [
         {
           "name": "-name",
-          "query": "What is the name of the property?",
+          "query": "What is the name of the metadata?",
           "required": "True",
           "IRI": "http://url.com",
           "unit": ""
@@ -62,7 +62,7 @@
   "x1": {
     "IRI": "",
     "label": "Tasks",
-    "prop": {
+    "metadata": {
       "default": [
         {
           "name": "-name",
@@ -83,7 +83,7 @@
   "x2": {
     "IRI": "",
     "label": "Subtasks",
-    "prop": {
+    "metadata": {
       "default": [
         {
           "name": "-name",
@@ -104,7 +104,7 @@
   "measurement": {
     "IRI": "",
     "label": "Measurements",
-    "prop": {
+    "metadata": {
       "default": [
         {
           "name": "-name",
@@ -147,7 +147,7 @@
   "sample": {
     "IRI": "",
     "label": "Samples",
-    "prop": {
+    "metadata": {
       "default": [
         {
           "name": "-name",
@@ -175,7 +175,7 @@
   "procedure": {
     "IRI": "",
     "label": "Procedures",
-    "prop": {
+    "metadata": {
       "default": [
         {
           "name": "-name",
@@ -200,7 +200,7 @@
   "instrument": {
     "IRI": "",
     "label": "Instruments",
-    "prop": {
+    "metadata": {
       "default": [
         {
           "name": "-name",

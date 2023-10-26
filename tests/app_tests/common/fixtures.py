@@ -26,7 +26,7 @@ from pasta_eln.GUI.ontology_configuration.ontology_config_key_not_found_exceptio
   OntologyConfigKeyNotFoundException
 from pasta_eln.GUI.ontology_configuration.ontology_configuration_extended import OntologyConfigurationForm, get_gui
 from pasta_eln.GUI.ontology_configuration.ontology_document_null_exception import OntologyDocumentNullException
-from pasta_eln.GUI.ontology_configuration.ontology_props_tableview_data_model import OntologyPropsTableViewModel
+from pasta_eln.GUI.ontology_configuration.ontology_metadata_tableview_data_model import OntologyMetadataTableViewModel
 from pasta_eln.GUI.ontology_configuration.ontology_tableview_data_model import OntologyTableViewModel
 from pasta_eln.GUI.ontology_configuration.reorder_column_delegate import ReorderColumnDelegate
 from pasta_eln.GUI.ontology_configuration.required_column_delegate import RequiredColumnDelegate
@@ -88,29 +88,29 @@ def configuration_extended(mocker) -> OntologyConfigurationForm:
   mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.adjust_ontology_data_to_v3')
   mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.LookupIriAction')
   mocker.patch.object(QDialog, '__new__')
-  mocker.patch.object(OntologyPropsTableViewModel, '__new__')
+  mocker.patch.object(OntologyMetadataTableViewModel, '__new__')
   mocker.patch.object(OntologyAttachmentsTableViewModel, '__new__')
   mocker.patch.object(RequiredColumnDelegate, '__new__', lambda _: mocker.MagicMock())
   mocker.patch.object(DeleteColumnDelegate, '__new__', lambda _: mocker.MagicMock())
   mocker.patch.object(ReorderColumnDelegate, '__new__', lambda _: mocker.MagicMock())
-  mocker.patch.object(OntologyConfigurationForm, 'typePropsTableView', create=True)
+  mocker.patch.object(OntologyConfigurationForm, 'typeMetadataTableView', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'typeAttachmentsTableView', create=True)
-  mocker.patch.object(OntologyConfigurationForm, 'addPropsRowPushButton', create=True)
+  mocker.patch.object(OntologyConfigurationForm, 'addMetadataRowPushButton', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'addAttachmentPushButton', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'saveOntologyPushButton', create=True)
-  mocker.patch.object(OntologyConfigurationForm, 'addPropsCategoryPushButton', create=True)
-  mocker.patch.object(OntologyConfigurationForm, 'deletePropsCategoryPushButton', create=True)
+  mocker.patch.object(OntologyConfigurationForm, 'addMetadataGroupPushButton', create=True)
+  mocker.patch.object(OntologyConfigurationForm, 'deleteMetadataGroupPushButton', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'deleteTypePushButton', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'addTypePushButton', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'cancelPushButton', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'helpPushButton', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'attachmentsShowHidePushButton', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'typeComboBox', create=True)
-  mocker.patch.object(OntologyConfigurationForm, 'propsCategoryComboBox', create=True)
+  mocker.patch.object(OntologyConfigurationForm, 'metadataGroupComboBox', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'typeLabelLineEdit', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'typeIriLineEdit', create=True)
-  mocker.patch.object(OntologyConfigurationForm, 'delete_column_delegate_props_table', create=True)
-  mocker.patch.object(OntologyConfigurationForm, 'reorder_column_delegate_props_table', create=True)
+  mocker.patch.object(OntologyConfigurationForm, 'delete_column_delegate_metadata_table', create=True)
+  mocker.patch.object(OntologyConfigurationForm, 'reorder_column_delegate_metadata_table', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'delete_column_delegate_attach_table', create=True)
   mocker.patch.object(OntologyConfigurationForm, 'reorder_column_delegate_attach_table', create=True)
   mocker.patch.object(CreateTypeDialog, '__new__')
@@ -137,10 +137,10 @@ def table_model() -> OntologyTableViewModel:
 
 
 @fixture()
-def props_table_model() -> OntologyPropsTableViewModel:
-  props_model = OntologyPropsTableViewModel()
-  props_model.setObjectName("OntologyPropsTableViewModel")
-  return props_model
+def metadata_table_model() -> OntologyMetadataTableViewModel:
+  metadata_model = OntologyMetadataTableViewModel()
+  metadata_model.setObjectName("OntologyMetadataTableViewModel")
+  return metadata_model
 
 
 @fixture()
@@ -250,7 +250,7 @@ QtBot]:
 
 
 @fixture()
-def props_column_names():
+def metadata_column_names():
   return {
     0: "name",
     1: "query",

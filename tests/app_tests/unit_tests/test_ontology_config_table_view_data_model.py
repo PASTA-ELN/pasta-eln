@@ -10,8 +10,8 @@
 import pytest
 from PySide6.QtCore import Qt
 
-from pasta_eln.GUI.ontology_configuration.ontology_configuration_constants import PROPS_TABLE_LIST_COLUMN_INDEX
-from tests.app_tests.common.fixtures import table_model, props_table_model, attachments_table_model
+from pasta_eln.GUI.ontology_configuration.ontology_configuration_constants import METADATA_TABLE_LIST_COLUMN_INDEX
+from tests.app_tests.common.fixtures import table_model, metadata_table_model, attachments_table_model
 
 
 class TestOntologyConfigTableViewDataModel(object):
@@ -23,17 +23,17 @@ class TestOntologyConfigTableViewDataModel(object):
     table_model.update(items)
     qtmodeltester.check(table_model)
 
-  def test_data_models_property_table_model(self,
-                                            props_table_model: props_table_model,
+  def test_data_models_metadata_table_model(self,
+                                            metadata_table_model: metadata_table_model,
                                             qtmodeltester):
 
-    props_items = [
+    metadata_items = [
       {"name": "name", "query": "query", "list": "list", "IRI": "link", "required": "required", "unit": "unit"},
       {"name": "name", "query": "query", "list": "list", "IRI": "link", "required": "required", "unit": "unit"}
     ]
-    props_table_model.update(props_items)
+    metadata_table_model.update(metadata_items)
     with pytest.raises(AssertionError):
-      qtmodeltester.check(props_table_model, force_py=True)
+      qtmodeltester.check(metadata_table_model, force_py=True)
 
   def test_data_models_attachments_table_model(self,
                                                attachments_table_model: attachments_table_model,
@@ -323,15 +323,15 @@ class TestOntologyConfigTableViewDataModel(object):
     (None, None, None, False, Qt.DisplayRole, True),
     (0, None, None, False, Qt.DisplayRole, True),
     (0, None, None, True, Qt.UserRole, True),
-    (PROPS_TABLE_LIST_COLUMN_INDEX, 'test', 'test', True, Qt.UserRole, True),
-    (PROPS_TABLE_LIST_COLUMN_INDEX, 'test test1', 'test test1', True, Qt.UserRole, True),
-    (PROPS_TABLE_LIST_COLUMN_INDEX, '1, 2', ['1', '2'], True, Qt.UserRole, True),
-    (PROPS_TABLE_LIST_COLUMN_INDEX, 'test, 12312', ['test', '12312'], True, Qt.UserRole, True),
-    (PROPS_TABLE_LIST_COLUMN_INDEX, ' test,    12312 12, 112', ['test', '12312 12', '112'], True, Qt.UserRole, True),
+    (METADATA_TABLE_LIST_COLUMN_INDEX, 'test', 'test', True, Qt.UserRole, True),
+    (METADATA_TABLE_LIST_COLUMN_INDEX, 'test test1', 'test test1', True, Qt.UserRole, True),
+    (METADATA_TABLE_LIST_COLUMN_INDEX, '1, 2', ['1', '2'], True, Qt.UserRole, True),
+    (METADATA_TABLE_LIST_COLUMN_INDEX, 'test, 12312', ['test', '12312'], True, Qt.UserRole, True),
+    (METADATA_TABLE_LIST_COLUMN_INDEX, ' test,    12312 12, 112', ['test', '12312 12', '112'], True, Qt.UserRole, True),
     (None, None, None, False, Qt.EditRole, True),
   ])
-  def test_props_table_data_model_set_data_should_do_expected(self,
-                                                              props_table_model: props_table_model,
+  def test_metadata_table_data_model_set_data_should_do_expected(self,
+                                                              metadata_table_model: metadata_table_model,
                                                               mocker,
                                                               column_index,
                                                               set_value,
@@ -346,7 +346,7 @@ class TestOntologyConfigTableViewDataModel(object):
     mock_data_set_spy = mocker.patch(
       "pasta_eln.GUI.ontology_configuration.ontology_tableview_data_model.OntologyTableViewModel.setData",
       return_value=set_success)
-    assert props_table_model.setData(mock_index, set_value, role) is set_success, \
+    assert metadata_table_model.setData(mock_index, set_value, role) is set_success, \
       "set_data() should return expected value"
     mock_is_valid_spy.assert_called_once_with()
     if is_valid:
@@ -357,16 +357,16 @@ class TestOntologyConfigTableViewDataModel(object):
     (None, False, Qt.DisplayRole, '', ''),
     (0, False, Qt.DisplayRole, 'True', 'True'),
     (0, True, Qt.UserRole, '', ''),
-    (PROPS_TABLE_LIST_COLUMN_INDEX, True, Qt.UserRole, [], ''),
-    (PROPS_TABLE_LIST_COLUMN_INDEX, True, Qt.UserRole, ['23', '56'], '23,56'),
-    (PROPS_TABLE_LIST_COLUMN_INDEX, True, Qt.UserRole, ['test 23', 'test'], 'test 23,test'),
-    (PROPS_TABLE_LIST_COLUMN_INDEX, True, Qt.UserRole, ['test 2334'] * 20, ('test 2334,test 2334,' * 10)[:-1]),
-    (PROPS_TABLE_LIST_COLUMN_INDEX, True, Qt.UserRole, '', ''),
-    (PROPS_TABLE_LIST_COLUMN_INDEX, True, Qt.UserRole, 'testsdfsdf', 'testsdfsdf'),
+    (METADATA_TABLE_LIST_COLUMN_INDEX, True, Qt.UserRole, [], ''),
+    (METADATA_TABLE_LIST_COLUMN_INDEX, True, Qt.UserRole, ['23', '56'], '23,56'),
+    (METADATA_TABLE_LIST_COLUMN_INDEX, True, Qt.UserRole, ['test 23', 'test'], 'test 23,test'),
+    (METADATA_TABLE_LIST_COLUMN_INDEX, True, Qt.UserRole, ['test 2334'] * 20, ('test 2334,test 2334,' * 10)[:-1]),
+    (METADATA_TABLE_LIST_COLUMN_INDEX, True, Qt.UserRole, '', ''),
+    (METADATA_TABLE_LIST_COLUMN_INDEX, True, Qt.UserRole, 'testsdfsdf', 'testsdfsdf'),
     (None, None, Qt.EditRole, False, False)
   ])
-  def test_props_table_data_model_get_data_should_do_expected(self,
-                                                              props_table_model: props_table_model,
+  def test_metadata_table_data_model_get_data_should_do_expected(self,
+                                                              metadata_table_model: metadata_table_model,
                                                               mocker,
                                                               column_index,
                                                               is_valid,
@@ -380,7 +380,7 @@ class TestOntologyConfigTableViewDataModel(object):
     mock_data_get_spy = mocker.patch(
       "pasta_eln.GUI.ontology_configuration.ontology_tableview_data_model.OntologyTableViewModel.data",
       return_value=base_return_data)
-    assert props_table_model.data(mock_index, role) == return_value, \
+    assert metadata_table_model.data(mock_index, role) == return_value, \
       "data() should return expected value"
     mock_is_valid_spy.assert_called_once_with()
     if is_valid:

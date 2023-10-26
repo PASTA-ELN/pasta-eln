@@ -17,7 +17,7 @@ from cloudant import CouchDB
 
 from pasta_eln.GUI.ontology_configuration.utility_functions import adjust_ontology_data_to_v3, can_delete_type, \
   check_ontology_types, \
-  get_db, get_missing_props_message, get_next_possible_structural_level_label, is_click_within_bounds, show_message
+  get_db, get_missing_metadata_message, get_next_possible_structural_level_label, is_click_within_bounds, show_message
 
 
 class TestOntologyConfigUtilityFunctions(object):
@@ -90,7 +90,7 @@ class TestOntologyConfigUtilityFunctions(object):
       "x0":
         {
           "label": "",
-          "prop": []
+          "metadata": []
         }
     }),
     ({
@@ -101,7 +101,7 @@ class TestOntologyConfigUtilityFunctions(object):
         {
           "attachments": [{"test": "test", "test1": "test2"}],
           "label": "",
-          "prop": {"default": [
+          "metadata": {"default": [
             {
               "name": "value",
               "test": "test1"
@@ -115,22 +115,22 @@ class TestOntologyConfigUtilityFunctions(object):
     assert adjust_ontology_data_to_v3(contents) is None, "adjust_ontology_data_to_v3 should return None"
     if "x0" in contents:
       assert "attachments" in contents["x0"], "attachments should be set"
-      assert "prop" in contents["x0"], "prop should be set"
-      assert type(contents["x0"]["prop"]) is dict, "prop should be dictionary"
+      assert "metadata" in contents["x0"], "metadata should be set"
+      assert type(contents["x0"]["metadata"]) is dict, "metadata should be dictionary"
 
     if "x1" in contents:
       assert "attachments" in contents["x1"], "attachments should be set"
-      assert "prop" in contents["x1"], "prop should be set"
-      assert type(contents["x1"]["prop"]) is dict, "prop should be dictionary"
-      assert "default" in contents["x1"]["prop"] and len(
-        contents["x1"]["prop"]["default"]) == 0, "default prop list be defined"
+      assert "metadata" in contents["x1"], "metadata should be set"
+      assert type(contents["x1"]["metadata"]) is dict, "metadata should be dictionary"
+      assert "default" in contents["x1"]["metadata"] and len(
+        contents["x1"]["metadata"]["default"]) == 0, "default metadata list be defined"
 
     if "x2" in contents:
       assert "attachments" in contents["x2"], "attachments should be set"
-      assert "prop" in contents["x2"], "prop should be set"
-      assert type(contents["x2"]["prop"]) is dict, "prop should be dictionary"
-      assert "default" in contents["x2"]["prop"] and len(
-        contents["x2"]["prop"]["default"]) == 1, "default prop list should be the same"
+      assert "metadata" in contents["x2"], "metadata should be set"
+      assert type(contents["x2"]["metadata"]) is dict, "metadata should be dictionary"
+      assert "default" in contents["x2"]["metadata"] and len(
+        contents["x2"]["metadata"]["default"]) == 1, "default metadata list should be the same"
 
   @staticmethod
   def create_mock_doc(contents, mocker):
@@ -215,7 +215,7 @@ class TestOntologyConfigUtilityFunctions(object):
     set_text_spy.assert_called_once_with(
       "Valid message")
     mock_msg_box.exec.assert_called_once_with()
-    mock_msg_box.setWindowTitle.assert_called_once_with("Ontology Editor")
+    mock_msg_box.setWindowTitle.assert_called_once_with("Data Hierarchy Editor")
     mock_msg_box.setTextFormat.assert_called_once_with(Qt.RichText)
     mock_msg_box.setIcon.assert_called_once_with(QMessageBox.Information)
 
@@ -230,7 +230,7 @@ class TestOntologyConfigUtilityFunctions(object):
     set_text_spy.assert_called_once_with(
       "Error message")
     mock_msg_box.exec.assert_called_once_with()
-    mock_msg_box.setWindowTitle.assert_called_once_with("Ontology Editor")
+    mock_msg_box.setWindowTitle.assert_called_once_with("Data Hierarchy Editor")
     mock_msg_box.setTextFormat.assert_called_once_with(Qt.RichText)
     mock_msg_box.setIcon.assert_called_once_with(QMessageBox.Warning)
 
@@ -238,44 +238,44 @@ class TestOntologyConfigUtilityFunctions(object):
     ({}, ({}, {})),
     ({
        "x0": {
-         "prop": {
+         "metadata": {
            "default": [
              {"name": "name", "query": "What is the name of task?"},
              {"name": "tags", "query": "What is the name of task?"}
            ],
-           "category1": [
+           "metadata_group1": [
              {"name": "name", "query": "What is the name of task?"},
              {"name": "tags", "query": "What is the name of task?"}
            ]
          }
        },
        "x1": {
-         "prop": {
+         "metadata": {
            "default": [
              {"name": "name", "query": "What is the name of task?"},
              {"name": "tags", "query": "What is the name of task?"}
            ],
-           "category2": [
+           "metadata_group2": [
              {"name": "name", "query": "What is the name of task?"},
              {"name": "tags", "query": "What is the name of task?"}
            ]
          }
        }
      },
-     ({'Structure level 0': {'category1': ['-name', '-tags'], 'default': ['-name', '-tags']},
-       'Structure level 1': {'category2': ['-name', '-tags'], 'default': ['-name', '-tags']}},
+     ({'Structure level 0': {'metadata_group1': ['-name', '-tags'], 'default': ['-name', '-tags']},
+       'Structure level 1': {'metadata_group2': ['-name', '-tags'], 'default': ['-name', '-tags']}},
       {}
       )),
     ({
        "x0": {
-         "prop": {
+         "metadata": {
            "default": [
              {"name": "name", "query": "What is the name of task?"},
              {"name": "-tags", "query": "What is the name of task?"},
              {"name": "    ", "query": "What is the name of task?"},
              {"name": None, "query": "What is the name of task?"}
            ],
-           "category1": [
+           "metadata_group1": [
              {"name": "-name", "query": "What is the name of task?"},
              {"name": "tags", "query": "What is the name of task?"},
              {"name": "", "query": "What is the name of task?"}
@@ -283,16 +283,16 @@ class TestOntologyConfigUtilityFunctions(object):
          }
        },
        "x1": {
-         "prop": {
+         "metadata": {
            "default": [
              {"name": "-name", "query": "What is the name of task?"},
              {"name": "-tags", "query": "What is the name of task?"}
            ],
-           "category2": [
+           "metadata_group2": [
              {"name": "name", "query": "What is the name of task?"},
              {"name": "-tags", "query": "What is the name of task?"}
            ],
-           "category3": [
+           "metadata_group3": [
              {"name": "name", "query": "What is the name of task?"},
              {"name": "-tags", "query": "What is the name of task?"},
              {"name": "   ", "query": "What is the name of task?"}
@@ -300,49 +300,49 @@ class TestOntologyConfigUtilityFunctions(object):
          }
        }
      },
-     ({'Structure level 0': {'category1': ['-tags'], 'default': ['-name']},
-       'Structure level 1': {'category2': ['-name'], 'category3': ['-name']}},
-      {'Structure level 0': ['default', 'category1'],
-       'Structure level 1': ['category3']})),
+     ({'Structure level 0': {'metadata_group1': ['-tags'], 'default': ['-name']},
+       'Structure level 1': {'metadata_group2': ['-name'], 'metadata_group3': ['-name']}},
+      {'Structure level 0': ['default', 'metadata_group1'],
+       'Structure level 1': ['metadata_group3']})),
     ({
        "x0": {
-         "prop": {
+         "metadata": {
            "default": [
              {"name": "-name", "query": "What is the name of task?"},
              {"name": "-tags", "query": "What is the name of task?"}
            ],
-           "category1": [
+           "metadata_group1": [
              {"name": "-name", "query": "What is the name of task?"},
              {"name": "-tags", "query": "What is the name of task?"}
            ],
-           "category2": []
+           "metadata_group2": []
          }
        },
        "x1": {
-         "prop": {
+         "metadata": {
            "default": [
              {"name": "-name", "query": "What is the name of task?"},
              {"name": "-tags", "query": "What is the name of task?"}
            ],
-           "category2": [
+           "metadata_group2": [
              {"name": "-name", "query": "What is the name of task?"},
              {"name": "-tags", "query": "What is the name of task?"}
            ]
          }
        }
      },
-     ({'Structure level 0': {'category2': ['-name', '-tags']}}, {})),
+     ({'Structure level 0': {'metadata_group2': ['-name', '-tags']}}, {})),
 
     ({
        "x0": {
-         "prop": {
+         "metadata": {
            "default": [
              {"name": "-name", "query": "What is the name of task?"},
              {"name": "-tags", "query": "What is the name of task?"},
              {"name": None, "query": "What is the name of task?"}
 
            ],
-           "category1": [
+           "metadata_group1": [
              {"name": "-name", "query": "What is the name of task?"},
              {"name": "-tags", "query": "What is the name of task?"},
              {"name": None, "query": "What is the name of task?"}
@@ -350,13 +350,13 @@ class TestOntologyConfigUtilityFunctions(object):
          }
        },
        "x1": {
-         "prop": {
+         "metadata": {
            "default": [
              {"name": "-name", "query": "What is the name of task?"},
              {"name": "-tags", "query": "What is the name of task?"},
              {"name": "", "query": "What is the name of task?"}
            ],
-           "category2": [
+           "metadata_group2": [
              {"name": "-name", "query": "What is the name of task?"},
              {"name": "-tags", "query": "What is the name of task?"},
              {"name": " ", "query": "What is the name of task?"}
@@ -365,25 +365,25 @@ class TestOntologyConfigUtilityFunctions(object):
        }
      },
      ({},
-      {'Structure level 0': ['default', 'category1'],
-       'Structure level 1': ['default', 'category2']})),
+      {'Structure level 0': ['default', 'metadata_group1'],
+       'Structure level 1': ['default', 'metadata_group2']})),
     ({
        "x0": {
        },
        "x1": {
-         "prop": {
+         "metadata": {
            "default": [
              {"name": "name", "query": "What is the name of task?"},
              {"name": "-tags", "query": "What is the name of task?"}
            ],
-           "category2": [
+           "metadata_group2": [
              {"name": "-name", "query": "What is the name of task?"},
              {"name": "-tags", "query": "What is the name of task?"}
            ]
          }
        },
        "test": {
-         "prop": {
+         "metadata": {
            "default": [
              {"name": "-name", "query": "What is the name of task?"},
              {"name": "", "query": "What is the name of task?"},
@@ -397,14 +397,14 @@ class TestOntologyConfigUtilityFunctions(object):
        "x0": {
        },
        "x1": {
-         "prop": {
+         "metadata": {
            "default": [
              {"name": "name", "query": "What is the name of task?"},
              {"name": "-tags", "query": "What is the name of task?"},
              {},
              {}
            ],
-           "category2": [
+           "metadata_group2": [
              {"name": "-name", "query": "What is the name of task?"},
              {"name": "-tags", "query": "What is the name of task?"},
              {"query": "What is the name of task?"}
@@ -412,7 +412,7 @@ class TestOntologyConfigUtilityFunctions(object):
          }
        },
        "test": {
-         "prop": {
+         "metadata": {
            "default": [
              {"name": "-name", "query": "What is the name of task?"},
            ]
@@ -420,9 +420,9 @@ class TestOntologyConfigUtilityFunctions(object):
        }
      },
      ({'Structure level 1': {'default': ['-name']}, 'test': {'default': ['-tags']}},
-      {'Structure level 1': ['default', 'category2']}))
+      {'Structure level 1': ['default', 'metadata_group2']}))
   ])
-  def test_check_ontology_document_with_full_and_missing_properties_returns_expected_result(self,
+  def test_check_ontology_document_with_full_and_missing_metadata_returns_expected_result(self,
                                                                                             ontology_types,
                                                                                             expected_result):
     assert check_ontology_types(ontology_types) == expected_result, "show_message should return None"
@@ -430,28 +430,28 @@ class TestOntologyConfigUtilityFunctions(object):
   def test_check_ontology_document_with_null_doc_returns_empty_tuple(self):
     assert check_ontology_types(None) == ({}, {}), "check_ontology_document should return empty tuple"
 
-  @pytest.mark.parametrize("missing_properties, missing_names, expected_message", [
+  @pytest.mark.parametrize("missing_metadata, missing_names, expected_message", [
     ({}, {}, ""),
-    ({'Structure level 0': {'category1': ['-name', '-tags'], 'default': ['-name', '-tags']},
-      'Structure level 1': {'category2': ['-name', '-tags'], 'default': ['-name', '-tags']}},
-     {'Structure level 0': ['default', 'category1'],
-      'Structure level 1': ['default', 'category2']},
-     "<html><b>Missing required properties: </b><ul><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">category1</i>&nbsp;&nbsp;Property Name: <i style=\"color:Crimson\">-name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">category1</i>&nbsp;&nbsp;Property Name: <i style=\"color:Crimson\">-tags</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Property Name: <i style=\"color:Crimson\">-name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Property Name: <i style=\"color:Crimson\">-tags</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">category2</i>&nbsp;&nbsp;Property Name: <i style=\"color:Crimson\">-name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">category2</i>&nbsp;&nbsp;Property Name: <i style=\"color:Crimson\">-tags</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Property Name: <i style=\"color:Crimson\">-name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Property Name: <i style=\"color:Crimson\">-tags</i></li></ul><b>Missing property names:</b><ul><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">default</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">category1</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">default</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">category2</i></li></ul></html>"),
-    ({'Structure level 0': {'category1': ['-name', '-tags'], 'default': ['-name', '-tags']},
-      'Structure level 1': {'category2': ['-name', '-tags'], 'default': ['-name', '-tags']}},
+    ({'Structure level 0': {'metadata_group1': ['-name', '-tags'], 'default': ['-name', '-tags']},
+      'Structure level 1': {'metadata_group2': ['-name', '-tags'], 'default': ['-name', '-tags']}},
+     {'Structure level 0': ['default', 'metadata_group1'],
+      'Structure level 1': ['default', 'metadata_group2']},
+     "<html><b>Missing required metadata: </b><ul><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">metadata_group1</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">metadata_group1</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-tags</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-tags</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">metadata_group2</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">metadata_group2</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-tags</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-tags</i></li></ul><b>Missing metadata names:</b><ul><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">metadata_group1</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">metadata_group2</i></li></ul></html>"),
+    ({'Structure level 0': {'metadata_group1': ['-name', '-tags'], 'default': ['-name', '-tags']},
+      'Structure level 1': {'metadata_group2': ['-name', '-tags'], 'default': ['-name', '-tags']}},
      {},
-     "<html><b>Missing required properties: </b><ul><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">category1</i>&nbsp;&nbsp;Property Name: <i style=\"color:Crimson\">-name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">category1</i>&nbsp;&nbsp;Property Name: <i style=\"color:Crimson\">-tags</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Property Name: <i style=\"color:Crimson\">-name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Property Name: <i style=\"color:Crimson\">-tags</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">category2</i>&nbsp;&nbsp;Property Name: <i style=\"color:Crimson\">-name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">category2</i>&nbsp;&nbsp;Property Name: <i style=\"color:Crimson\">-tags</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Property Name: <i style=\"color:Crimson\">-name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Property Name: <i style=\"color:Crimson\">-tags</i></li></ul></html>"),
+     "<html><b>Missing required metadata: </b><ul><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">metadata_group1</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">metadata_group1</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-tags</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-tags</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">metadata_group2</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">metadata_group2</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-tags</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-tags</i></li></ul></html>"),
     ({},
-     {'Structure level 0': ['default', 'category1'],
-      'Structure level 1': ['default', 'category2']},
-     "<html><b>Missing property names:</b><ul><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">default</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">category1</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">default</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Category: <i style=\"color:Crimson\">category2</i></li></ul></html>")
+     {'Structure level 0': ['default', 'metadata_group1'],
+      'Structure level 1': ['default', 'metadata_group2']},
+     "<html><b>Missing metadata names:</b><ul><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">metadata_group1</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">metadata_group2</i></li></ul></html>")
   ])
-  def test_get_formatted_missing_props_message_returns_expected_message(self,
-                                                                        missing_properties,
+  def test_get_formatted_missing_metadata_message_returns_expected_message(self,
+                                                                        missing_metadata,
                                                                         missing_names,
                                                                         expected_message):
-    assert get_missing_props_message(
-      missing_properties, missing_names) == expected_message, "get_missing_props_message should return expected"
+    assert get_missing_metadata_message(
+      missing_metadata, missing_names) == expected_message, "get_missing_metadata_message should return expected"
 
   @pytest.mark.parametrize("existing_types, selected_type, expected_result", [
     (["x0", "x1", "x3", "samples", "instruments"], "test", True),

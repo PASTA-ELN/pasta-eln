@@ -17,13 +17,13 @@ from pasta_eln.GUI.ontology_configuration.ontology_config_generic_exception impo
 from pasta_eln.GUI.ontology_configuration.ontology_config_key_not_found_exception import \
   OntologyConfigKeyNotFoundException
 from pasta_eln.GUI.ontology_configuration.ontology_configuration_constants import ATTACHMENT_TABLE_DELETE_COLUMN_INDEX, \
-  ATTACHMENT_TABLE_REORDER_COLUMN_INDEX, PROPS_TABLE_DELETE_COLUMN_INDEX, \
-  PROPS_TABLE_IRI_COLUMN_INDEX, PROPS_TABLE_REORDER_COLUMN_INDEX, PROPS_TABLE_REQUIRED_COLUMN_INDEX
+  ATTACHMENT_TABLE_REORDER_COLUMN_INDEX, METADATA_TABLE_DELETE_COLUMN_INDEX, \
+  METADATA_TABLE_IRI_COLUMN_INDEX, METADATA_TABLE_REORDER_COLUMN_INDEX, METADATA_TABLE_REQUIRED_COLUMN_INDEX
 from pasta_eln.GUI.ontology_configuration.ontology_configuration_extended import OntologyConfigurationForm, get_gui
 from pasta_eln.GUI.ontology_configuration.ontology_document_null_exception import OntologyDocumentNullException
 from pasta_eln.GUI.ontology_configuration.reorder_column_delegate import ReorderColumnDelegate
 from pasta_eln.GUI.ontology_configuration.required_column_delegate import RequiredColumnDelegate
-from pasta_eln.GUI.ontology_configuration.utility_functions import generate_empty_type, generate_required_properties, \
+from pasta_eln.GUI.ontology_configuration.utility_functions import generate_empty_type, generate_required_metadata, \
   get_types_for_display
 from tests.app_tests.common.fixtures import configuration_extended, ontology_doc_mock
 
@@ -38,14 +38,14 @@ class TestOntologyConfigConfiguration(object):
       'pasta_eln.GUI.ontology_configuration.ontology_configuration.Ui_OntologyConfigurationBaseForm.setupUi')
     mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.adjust_ontology_data_to_v3')
     mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.LookupIriAction')
-    mock_props_table_view_model = mocker.MagicMock()
-    mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.OntologyPropsTableViewModel',
-                 lambda: mock_props_table_view_model)
+    mock_metadata_table_view_model = mocker.MagicMock()
+    mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.OntologyMetadataTableViewModel',
+                 lambda: mock_metadata_table_view_model)
     column_widths: dict[int, int] = {
       0: 100,
       1: 300,
     }
-    mock_props_table_view_model.column_widths = column_widths
+    mock_metadata_table_view_model.column_widths = column_widths
     mock_attachments_table_view_model = mocker.MagicMock()
     mocker.patch(
       'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.OntologyAttachmentsTableViewModel',
@@ -73,24 +73,24 @@ class TestOntologyConfigConfiguration(object):
     mocker.patch.object(RequiredColumnDelegate, '__new__', lambda _: mocker.MagicMock())
     mocker.patch.object(DeleteColumnDelegate, '__new__', lambda _: mocker.MagicMock())
     mocker.patch.object(ReorderColumnDelegate, '__new__', lambda _: mocker.MagicMock())
-    mocker.patch.object(OntologyConfigurationForm, 'typePropsTableView', create=True)
+    mocker.patch.object(OntologyConfigurationForm, 'typeMetadataTableView', create=True)
     mocker.patch.object(OntologyConfigurationForm, 'typeAttachmentsTableView', create=True)
-    mocker.patch.object(OntologyConfigurationForm, 'addPropsRowPushButton', create=True)
+    mocker.patch.object(OntologyConfigurationForm, 'addMetadataRowPushButton', create=True)
     mocker.patch.object(OntologyConfigurationForm, 'addAttachmentPushButton', create=True)
     mocker.patch.object(OntologyConfigurationForm, 'saveOntologyPushButton', create=True)
-    mocker.patch.object(OntologyConfigurationForm, 'addPropsCategoryPushButton', create=True)
-    mocker.patch.object(OntologyConfigurationForm, 'deletePropsCategoryPushButton', create=True)
+    mocker.patch.object(OntologyConfigurationForm, 'addMetadataGroupPushButton', create=True)
+    mocker.patch.object(OntologyConfigurationForm, 'deleteMetadataGroupPushButton', create=True)
     mocker.patch.object(OntologyConfigurationForm, 'deleteTypePushButton', create=True)
     mocker.patch.object(OntologyConfigurationForm, 'addTypePushButton', create=True)
     mocker.patch.object(OntologyConfigurationForm, 'cancelPushButton', create=True)
     mocker.patch.object(OntologyConfigurationForm, 'helpPushButton', create=True)
     mocker.patch.object(OntologyConfigurationForm, 'attachmentsShowHidePushButton', create=True)
     mocker.patch.object(OntologyConfigurationForm, 'typeComboBox', create=True)
-    mocker.patch.object(OntologyConfigurationForm, 'propsCategoryComboBox', create=True)
+    mocker.patch.object(OntologyConfigurationForm, 'metadataGroupComboBox', create=True)
     mocker.patch.object(OntologyConfigurationForm, 'typeLabelLineEdit', create=True)
     mocker.patch.object(OntologyConfigurationForm, 'typeIriLineEdit', create=True)
-    mocker.patch.object(OntologyConfigurationForm, 'delete_column_delegate_props_table', create=True)
-    mocker.patch.object(OntologyConfigurationForm, 'reorder_column_delegate_props_table', create=True)
+    mocker.patch.object(OntologyConfigurationForm, 'delete_column_delegate_metadata_table', create=True)
+    mocker.patch.object(OntologyConfigurationForm, 'reorder_column_delegate_metadata_table', create=True)
     mocker.patch.object(OntologyConfigurationForm, 'delete_column_delegate_attach_table', create=True)
     mocker.patch.object(OntologyConfigurationForm, 'reorder_column_delegate_attach_table', create=True)
     mock_setup_slots = mocker.patch.object(OntologyConfigurationForm, 'setup_slots', create=True)
@@ -103,34 +103,34 @@ class TestOntologyConfigConfiguration(object):
     assert config_instance.database is mock_database, "Database should be set"
     config_instance.database.db.__getitem__.assert_called_once_with('-ontology-')
     assert config_instance.ontology_document is config_instance.database.db.__getitem__.return_value, "Ontology document should be set"
-    assert config_instance.props_table_data_model == mock_props_table_view_model, "Props table data model should be set"
+    assert config_instance.metadata_table_data_model == mock_metadata_table_view_model, "Metadata table data model should be set"
     assert config_instance.attachments_table_data_model == mock_attachments_table_view_model, "Attachments table data model should be set"
-    assert config_instance.required_column_delegate_props_table == mock_required_column_delegate, "Required column delegate should be set"
-    assert config_instance.delete_column_delegate_props_table == mock_delete_column_delegate, "Delete column delegate should be set"
-    assert config_instance.reorder_column_delegate_props_table == mock_reorder_column_delegate, "Reorder column delegate should be set"
-    assert config_instance.iri_column_delegate_props_table == mock_iri_column_delegate, "Iri column delegate should be set"
+    assert config_instance.required_column_delegate_metadata_table == mock_required_column_delegate, "Required column delegate should be set"
+    assert config_instance.delete_column_delegate_metadata_table == mock_delete_column_delegate, "Delete column delegate should be set"
+    assert config_instance.reorder_column_delegate_metadata_table == mock_reorder_column_delegate, "Reorder column delegate should be set"
+    assert config_instance.iri_column_delegate_metadata_table == mock_iri_column_delegate, "Iri column delegate should be set"
     assert config_instance.delete_column_delegate_attach_table == mock_delete_column_delegate, "Delete column delegate should be set"
     assert config_instance.reorder_column_delegate_attach_table == mock_reorder_column_delegate, "Reorder column delegate should be set"
-    config_instance.typePropsTableView.setItemDelegateForColumn.assert_any_call(
-      PROPS_TABLE_REQUIRED_COLUMN_INDEX,
+    config_instance.typeMetadataTableView.setItemDelegateForColumn.assert_any_call(
+      METADATA_TABLE_REQUIRED_COLUMN_INDEX,
       mock_required_column_delegate
     )
-    config_instance.typePropsTableView.setItemDelegateForColumn.assert_any_call(
-      PROPS_TABLE_DELETE_COLUMN_INDEX,
+    config_instance.typeMetadataTableView.setItemDelegateForColumn.assert_any_call(
+      METADATA_TABLE_DELETE_COLUMN_INDEX,
       mock_delete_column_delegate
     )
-    config_instance.typePropsTableView.setItemDelegateForColumn.assert_any_call(
-      PROPS_TABLE_REORDER_COLUMN_INDEX,
+    config_instance.typeMetadataTableView.setItemDelegateForColumn.assert_any_call(
+      METADATA_TABLE_REORDER_COLUMN_INDEX,
       mock_reorder_column_delegate
     )
-    config_instance.typePropsTableView.setItemDelegateForColumn.assert_any_call(
-      PROPS_TABLE_IRI_COLUMN_INDEX,
+    config_instance.typeMetadataTableView.setItemDelegateForColumn.assert_any_call(
+      METADATA_TABLE_IRI_COLUMN_INDEX,
       mock_iri_column_delegate
     )
-    config_instance.typePropsTableView.setModel.assert_called_once_with(mock_props_table_view_model)
+    config_instance.typeMetadataTableView.setModel.assert_called_once_with(mock_metadata_table_view_model)
     for column_index, width in column_widths.items():
-      config_instance.typePropsTableView.setColumnWidth.assert_any_call(column_index, width)
-    (config_instance.typePropsTableView.horizontalHeader()
+      config_instance.typeMetadataTableView.setColumnWidth.assert_any_call(column_index, width)
+    (config_instance.typeMetadataTableView.horizontalHeader()
      .setSectionResizeMode.assert_called_once_with(1, QtWidgets.QHeaderView.Stretch))
 
     config_instance.typeAttachmentsTableView.setItemDelegateForColumn.assert_any_call(
@@ -179,13 +179,13 @@ class TestOntologyConfigConfiguration(object):
       "x0": {
         "label": "x0",
         "IRI": "url",
-        "prop": {
+        "metadata": {
           "default": [
             {
               "key": "key",
               "value": "value"}
           ],
-          "category1": [
+          "metadata group1": [
             {
               "key": "key",
               "value": "value"
@@ -197,13 +197,13 @@ class TestOntologyConfigConfiguration(object):
       "x1": {
         "label": "x0",
         "IRI": "url",
-        "prop": {
+        "metadata": {
           "default": [
             {
               "key": "key",
               "value": "value"}
           ],
-          "category1": [
+          "metadata group1": [
             {
               "key": "key",
               "value": "value"
@@ -217,13 +217,13 @@ class TestOntologyConfigConfiguration(object):
       "x0": {
         "label": "x0",
         "IRI": "url",
-        "prop": {
+        "metadata": {
           "default": [
             {
               "key": "key",
               "value": "value"}
           ],
-          "category1": [
+          "metadata group1": [
             {
               "key": "key",
               "value": "value"
@@ -235,13 +235,13 @@ class TestOntologyConfigConfiguration(object):
       "x1": {
         "label": "x0",
         "IRI": "url",
-        "prop": {
+        "metadata": {
           "default": [
             {
               "key": "key",
               "value": "value"}
           ],
-          "category1": [
+          "metadata group1": [
             {
               "key": "key",
               "value": "value"
@@ -255,9 +255,9 @@ class TestOntologyConfigConfiguration(object):
     ("x0", {}),
     ("x0", {"x1": {}}),
     ("x0", {"x0": {}}),
-    ("x0", {"x0": {"label": None, "IRI": None, "prop": None, "attachments": None}}),
-    ("x0", {"x0": {"label": None, "IRI": None, "prop": {"": None}, "attachments": [{"": None}]}}),
-    ("x0", {"x0": {"": None, "§": None, "props": {"": None}, "attachment": [{"": None}]}})
+    ("x0", {"x0": {"label": None, "IRI": None, "metadata": None, "attachments": None}}),
+    ("x0", {"x0": {"label": None, "IRI": None, "metadata": {"": None}, "attachments": [{"": None}]}}),
+    ("x0", {"x0": {"": None, "§": None, "metadata": {"": None}, "attachment": [{"": None}]}})
   ])
   def test_type_combo_box_changed_should_do_expected(self,
                                                      mocker,
@@ -267,20 +267,20 @@ class TestOntologyConfigConfiguration(object):
     logger_info_spy = mocker.spy(configuration_extended.logger, 'info')
     mock_signal = mocker.patch(
       'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.OntologyConfigurationForm.type_changed_signal')
-    mocker.patch.object(configuration_extended, 'addPropsCategoryLineEdit', create=True)
+    mocker.patch.object(configuration_extended, 'addMetadataGroupLineEdit', create=True)
     mocker.patch.object(configuration_extended, 'ontology_types', mock_ontology_types, create=True)
     mocker.patch.object(configuration_extended, 'typeLabelLineEdit', create=True)
     mocker.patch.object(configuration_extended, 'typeIriLineEdit', create=True)
     mocker.patch.object(configuration_extended, 'attachments_table_data_model', create=True)
-    mocker.patch.object(configuration_extended, 'propsCategoryComboBox', create=True)
+    mocker.patch.object(configuration_extended, 'metadataGroupComboBox', create=True)
     mocker.patch.object(configuration_extended, 'type_changed_signal', mock_signal, create=True)
     set_text_label_line_edit_spy = mocker.spy(configuration_extended.typeLabelLineEdit, 'setText')
     set_text_iri_line_edit_spy = mocker.spy(configuration_extended.typeIriLineEdit, 'setText')
-    set_current_index_category_combo_box_spy = mocker.spy(configuration_extended.propsCategoryComboBox,
+    set_current_index_metadata_group_combo_box_spy = mocker.spy(configuration_extended.metadataGroupComboBox,
                                                           'setCurrentIndex')
-    clear_add_props_category_line_edit_spy = mocker.spy(configuration_extended.addPropsCategoryLineEdit, 'clear')
-    clear_category_combo_box_spy = mocker.spy(configuration_extended.propsCategoryComboBox, 'clear')
-    add_items_category_combo_box_spy = mocker.spy(configuration_extended.propsCategoryComboBox, 'addItems')
+    clear_add_metadata_metadata_group_line_edit_spy = mocker.spy(configuration_extended.addMetadataGroupLineEdit, 'clear')
+    clear_metadata_group_combo_box_spy = mocker.spy(configuration_extended.metadataGroupComboBox, 'clear')
+    add_items_metadata_group_combo_box_spy = mocker.spy(configuration_extended.metadataGroupComboBox, 'addItems')
     update_attachment_table_model_spy = mocker.spy(configuration_extended.attachments_table_data_model, 'update')
     if mock_ontology_types is not None and len(
         mock_ontology_types) > 0 and new_type_selected not in mock_ontology_types:
@@ -295,167 +295,167 @@ class TestOntologyConfigConfiguration(object):
       assert configuration_extended.type_combo_box_changed(new_type_selected) is None, "Nothing should be returned"
       mock_signal.emit.assert_called_once_with(new_type_selected)
       logger_info_spy.assert_called_once_with("New type selected in UI: {%s}", new_type_selected)
-      clear_add_props_category_line_edit_spy.assert_called_once_with()
+      clear_add_metadata_metadata_group_line_edit_spy.assert_called_once_with()
       set_text_label_line_edit_spy.assert_called_once_with(mock_ontology_types.get(new_type_selected).get('label'))
       set_text_iri_line_edit_spy.assert_called_once_with(mock_ontology_types.get(new_type_selected).get('IRI'))
-      set_current_index_category_combo_box_spy.assert_called_once_with(0)
-      clear_category_combo_box_spy.assert_called_once_with()
-      add_items_category_combo_box_spy.assert_called_once_with(
-        list(mock_ontology_types.get(new_type_selected).get('prop').keys())
-        if mock_ontology_types.get(new_type_selected).get('prop') else [])
+      set_current_index_metadata_group_combo_box_spy.assert_called_once_with(0)
+      clear_metadata_group_combo_box_spy.assert_called_once_with()
+      add_items_metadata_group_combo_box_spy.assert_called_once_with(
+        list(mock_ontology_types.get(new_type_selected).get('metadata').keys())
+        if mock_ontology_types.get(new_type_selected).get('metadata') else [])
       update_attachment_table_model_spy.assert_called_once_with(
         mock_ontology_types.get(new_type_selected).get('attachments'))
 
-  @pytest.mark.parametrize("new_selected_prop_category, selected_type_props", [
+  @pytest.mark.parametrize("new_selected_metadata_group, selected_type_metadata", [
     (None, {}),
     ("default", {}),
-    ("default", {"default": [], "category1": [], "category2": []}),
-    ("category1", {"default": [], "category1": [], "category2": []}),
-    ("default", {"default": [], "category1": [], "category2": []}),
-    ("category1", {"default": [], "category1": [], "category2": []}),
-    ("category2", {"default": [], "category1": [], "category2": []}),
-    ("category2", {"default": [], "category1": [{"name": "key", "value": "value"}], "category2": []}),
-    ("category1", {"default": [], "category1": [{"name": None, "value": None}], "category2": None}),
-    ("category2", {"default": [], "category1": [{"name": None, "value": None}], "category2": None}),
-    ("category3", {"default": [], "category1": [], "category2": []}),
+    ("default", {"default": [], "metadata group1": [], "metadata group2": []}),
+    ("metadata group1", {"default": [], "metadata group1": [], "metadata group2": []}),
+    ("default", {"default": [], "metadata group1": [], "metadata group2": []}),
+    ("metadata group1", {"default": [], "metadata group1": [], "metadata group2": []}),
+    ("metadata group2", {"default": [], "metadata group1": [], "metadata group2": []}),
+    ("metadata group2", {"default": [], "metadata group1": [{"name": "key", "value": "value"}], "metadata group2": []}),
+    ("metadata group1", {"default": [], "metadata group1": [{"name": None, "value": None}], "metadata group2": None}),
+    ("metadata group2", {"default": [], "metadata group1": [{"name": None, "value": None}], "metadata group2": None}),
+    ("metadata group3", {"default": [], "metadata group1": [], "metadata group2": []}),
   ])
-  def test_type_category_combo_box_changed_should_do_expected(self,
+  def test_type_metadata_group_combo_box_changed_should_do_expected(self,
                                                               mocker,
                                                               configuration_extended: configuration_extended,
-                                                              new_selected_prop_category,
-                                                              selected_type_props):
+                                                              new_selected_metadata_group,
+                                                              selected_type_metadata):
     logger_info_spy = mocker.spy(configuration_extended.logger, 'info')
-    mocker.patch.object(configuration_extended, 'selected_type_properties', selected_type_props, create=True)
-    mocker.patch.object(configuration_extended, 'props_table_data_model', create=True)
-    update_props_table_model_spy = mocker.spy(configuration_extended.props_table_data_model, 'update')
-    assert configuration_extended.category_combo_box_changed(
-      new_selected_prop_category) is None, "Nothing should be returned"
-    logger_info_spy.assert_called_once_with("New property category selected in UI: {%s}", new_selected_prop_category)
-    if new_selected_prop_category and selected_type_props:
-      update_props_table_model_spy.assert_called_once_with(selected_type_props.get(new_selected_prop_category))
+    mocker.patch.object(configuration_extended, 'selected_type_metadata', selected_type_metadata, create=True)
+    mocker.patch.object(configuration_extended, 'metadata_table_data_model', create=True)
+    update_metadata_table_model_spy = mocker.spy(configuration_extended.metadata_table_data_model, 'update')
+    assert configuration_extended.metadata_group_combo_box_changed(
+      new_selected_metadata_group) is None, "Nothing should be returned"
+    logger_info_spy.assert_called_once_with("New metadata group selected in UI: {%s}", new_selected_metadata_group)
+    if new_selected_metadata_group and selected_type_metadata:
+      update_metadata_table_model_spy.assert_called_once_with(selected_type_metadata.get(new_selected_metadata_group))
 
-  @pytest.mark.parametrize("new_category, ontology_types, selected_type_properties", [
+  @pytest.mark.parametrize("new_metadata_group, ontology_types, selected_type_metadata", [
     (None, None, {}),
     ("default", None, {}),
-    (None, {0: "x0"}, {"default": [], "category1": [], "category2": []}),
-    ("default", {0: "x0"}, {"default": [], "category1": [], "category2": []}),
-    ("category1", {0: "x0"}, {"default": [], "category1": [], "category2": []}),
-    ("default", {0: "x0"}, {"default": [], "category1": [], "category2": []}),
-    ("category1", {0: "x0"}, {"default": [], "category1": [], "category2": []}),
-    ("category2", {0: "x0"}, {"default": [], "category1": [], "category2": []}),
-    ("category2", {0: "x0"}, {"default": [], "category1": [{"name": "key", "value": "value"}], "category2": []}),
-    ("category1", {0: "x0"}, {"default": [], "category1": [{"name": None, "value": None}], "category2": None}),
-    ("category2", {0: "x0"}, {"default": [], "category1": [{"name": None, "value": None}], "category2": None}),
-    ("category3", {0: "x0"}, {"default": [], "category1": [], "category2": []}),
+    (None, {0: "x0"}, {"default": [], "metadata group1": [], "metadata group2": []}),
+    ("default", {0: "x0"}, {"default": [], "metadata group1": [], "metadata group2": []}),
+    ("metadata group1", {0: "x0"}, {"default": [], "metadata group1": [], "metadata group2": []}),
+    ("default", {0: "x0"}, {"default": [], "metadata group1": [], "metadata group2": []}),
+    ("metadata group1", {0: "x0"}, {"default": [], "metadata group1": [], "metadata group2": []}),
+    ("metadata group2", {0: "x0"}, {"default": [], "metadata group1": [], "metadata group2": []}),
+    ("metadata group2", {0: "x0"}, {"default": [], "metadata group1": [{"name": "key", "value": "value"}], "metadata group2": []}),
+    ("metadata group1", {0: "x0"}, {"default": [], "metadata group1": [{"name": None, "value": None}], "metadata group2": None}),
+    ("metadata group2", {0: "x0"}, {"default": [], "metadata group1": [{"name": None, "value": None}], "metadata group2": None}),
+    ("metadata group3", {0: "x0"}, {"default": [], "metadata group1": [], "metadata group2": []}),
   ])
-  def test_add_new_prop_category_should_do_expected(self,
-                                                    mocker,
-                                                    configuration_extended: configuration_extended,
-                                                    new_category,
-                                                    ontology_types,
-                                                    selected_type_properties):
+  def test_add_new_metadata_group_should_do_expected(self,
+                                                     mocker,
+                                                     configuration_extended: configuration_extended,
+                                                     new_metadata_group,
+                                                     ontology_types,
+                                                     selected_type_metadata):
     logger_info_spy = mocker.spy(configuration_extended.logger, 'info')
-    mocker.patch.object(configuration_extended, 'addPropsCategoryLineEdit', create=True)
-    mocker.patch.object(configuration_extended.addPropsCategoryLineEdit, 'text', return_value=new_category)
+    mocker.patch.object(configuration_extended, 'addMetadataGroupLineEdit', create=True)
+    mocker.patch.object(configuration_extended.addMetadataGroupLineEdit, 'text', return_value=new_metadata_group)
     mocker.patch.object(configuration_extended, 'ontology_types', ontology_types, create=True)
-    mocker.patch.object(configuration_extended, 'propsCategoryComboBox', create=True)
+    mocker.patch.object(configuration_extended, 'metadataGroupComboBox', create=True)
     mocker.patch.object(configuration_extended, 'ontology_loaded', create=True)
-    add_items_selected_spy = mocker.spy(configuration_extended.propsCategoryComboBox, 'addItems')
-    clear_category_combo_box_spy = mocker.spy(configuration_extended.propsCategoryComboBox, 'clear')
-    set_current_index_category_combo_box_spy = mocker.spy(configuration_extended.propsCategoryComboBox,
+    add_items_selected_spy = mocker.spy(configuration_extended.metadataGroupComboBox, 'addItems')
+    clear_metadata_group_combo_box_spy = mocker.spy(configuration_extended.metadataGroupComboBox, 'clear')
+    set_current_index_metadata_group_combo_box_spy = mocker.spy(configuration_extended.metadataGroupComboBox,
                                                           'setCurrentIndex')
-    mocker.patch.object(configuration_extended, 'selected_type_properties', create=True)
-    configuration_extended.selected_type_properties.__setitem__.side_effect = selected_type_properties.__setitem__
-    configuration_extended.selected_type_properties.__getitem__.side_effect = selected_type_properties.__getitem__
-    configuration_extended.selected_type_properties.__iter__.side_effect = selected_type_properties.__iter__
-    configuration_extended.selected_type_properties.keys.side_effect = selected_type_properties.keys
-    set_items_selected_spy = mocker.spy(configuration_extended.selected_type_properties, '__setitem__')
+    mocker.patch.object(configuration_extended, 'selected_type_metadata', create=True)
+    configuration_extended.selected_type_metadata.__setitem__.side_effect = selected_type_metadata.__setitem__
+    configuration_extended.selected_type_metadata.__getitem__.side_effect = selected_type_metadata.__getitem__
+    configuration_extended.selected_type_metadata.__iter__.side_effect = selected_type_metadata.__iter__
+    configuration_extended.selected_type_metadata.keys.side_effect = selected_type_metadata.keys
+    set_items_selected_spy = mocker.spy(configuration_extended.selected_type_metadata, '__setitem__')
     mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.len',
-                 lambda x: len(selected_type_properties.keys()))
+                 lambda x: len(selected_type_metadata.keys()))
     mock_show_message = mocker.patch(
       'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.show_message')
 
-    if not new_category:
-      assert configuration_extended.add_new_prop_category() is None, "Nothing should be returned"
-      mock_show_message.assert_called_once_with("Enter non-null/valid category name!!.....", QMessageBox.Warning)
+    if not new_metadata_group:
+      assert configuration_extended.add_new_metadata_group() is None, "Nothing should be returned"
+      mock_show_message.assert_called_once_with("Enter non-null/valid metadata group name!!.....", QMessageBox.Warning)
       return
     if not ontology_types:
-      assert configuration_extended.add_new_prop_category() is None, "Nothing should be returned"
+      assert configuration_extended.add_new_metadata_group() is None, "Nothing should be returned"
       mock_show_message.assert_called_once_with("Load the ontology data first....", QMessageBox.Warning)
       return
 
-    if new_category in selected_type_properties:
-      assert configuration_extended.add_new_prop_category() is None, "Nothing should be returned"
-      mock_show_message.assert_called_once_with("Category already exists....", QMessageBox.Warning)
+    if new_metadata_group in selected_type_metadata:
+      assert configuration_extended.add_new_metadata_group() is None, "Nothing should be returned"
+      mock_show_message.assert_called_once_with("Metadata group already exists....", QMessageBox.Warning)
     else:
-      if new_category:
-        assert configuration_extended.add_new_prop_category() is None, "Nothing should be returned"
-        logger_info_spy.assert_called_once_with("User added new category: {%s}", new_category)
-        set_items_selected_spy.assert_called_once_with(new_category, generate_required_properties())
-        set_current_index_category_combo_box_spy.assert_called_once_with(len(selected_type_properties.keys()) - 1)
-        clear_category_combo_box_spy.assert_called_once_with()
+      if new_metadata_group:
+        assert configuration_extended.add_new_metadata_group() is None, "Nothing should be returned"
+        logger_info_spy.assert_called_once_with("User added new metadata group: {%s}", new_metadata_group)
+        set_items_selected_spy.assert_called_once_with(new_metadata_group, generate_required_metadata())
+        set_current_index_metadata_group_combo_box_spy.assert_called_once_with(len(selected_type_metadata.keys()) - 1)
+        clear_metadata_group_combo_box_spy.assert_called_once_with()
         add_items_selected_spy.assert_called_once_with(
-          list(selected_type_properties.keys())
+          list(selected_type_metadata.keys())
         )
       else:
-        assert configuration_extended.add_new_prop_category() is None, "Nothing should be returned"
-        mock_show_message.assert_called_once_with("Enter non-null/valid category name!!.....")
+        assert configuration_extended.add_new_metadata_metadata_group() is None, "Nothing should be returned"
+        mock_show_message.assert_called_once_with("Enter non-null/valid metadata group name!!.....")
 
-  @pytest.mark.parametrize("selected_category, selected_type_properties", [
+  @pytest.mark.parametrize("selected_metadata_group, selected_type_metadata", [
     (None, {}),
     ("default", {}),
     ("default", None),
-    (None, {"default": [], "category1": [], "category2": []}),
-    ("default", {"default": [], "category1": [], "category2": []}),
-    ("category1", {"default": [], "category1": [], "category2": []}),
-    ("default", {"default": [], "category1": [], "category2": []}),
-    ("category1", {"default": [], "category1": [], "category2": []}),
-    ("category2", {"default": [], "category1": [], "category2": []}),
-    ("category2", {"default": [], "category1": [{"name": "key", "value": "value"}], "category2": []}),
-    ("category1", {"default": [], "category1": [{"name": None, "value": None}], "category2": None}),
-    ("category2", {"default": [], "category1": [{"name": None, "value": None}], "category2": None}),
-    ("category3", {"default": [], "category1": [], "category2": []}),
+    (None, {"default": [], "metadata group1": [], "metadata group2": []}),
+    ("default", {"default": [], "metadata group1": [], "metadata group2": []}),
+    ("metadata group1", {"default": [], "metadata group1": [], "metadata group2": []}),
+    ("default", {"default": [], "metadata group1": [], "metadata group2": []}),
+    ("metadata group1", {"default": [], "metadata group1": [], "metadata group2": []}),
+    ("metadata group2", {"default": [], "metadata group1": [], "metadata group2": []}),
+    ("metadata group2", {"default": [], "metadata group1": [{"name": "key", "value": "value"}], "metadata group2": []}),
+    ("metadata group1", {"default": [], "metadata group1": [{"name": None, "value": None}], "metadata group2": None}),
+    ("metadata group2", {"default": [], "metadata group1": [{"name": None, "value": None}], "metadata group2": None}),
+    ("metadata group3", {"default": [], "metadata group1": [], "metadata group2": []}),
   ])
-  def test_delete_selected_category_should_do_expected(self,
+  def test_delete_selected_metadata_group_should_do_expected(self,
                                                        mocker,
                                                        configuration_extended: configuration_extended,
-                                                       selected_category,
-                                                       selected_type_properties):
+                                                       selected_metadata_group,
+                                                       selected_type_metadata):
     logger_info_spy = mocker.spy(configuration_extended.logger, 'info')
-    mocker.patch.object(configuration_extended, 'propsCategoryComboBox', create=True)
-    current_text_category_combo_box_spy = mocker.patch.object(configuration_extended.propsCategoryComboBox,
-                                                              'currentText', return_value=selected_category)
-    add_items_selected_spy = mocker.spy(configuration_extended.propsCategoryComboBox, 'addItems')
-    clear_category_combo_box_spy = mocker.spy(configuration_extended.propsCategoryComboBox, 'clear')
-    set_current_index_category_combo_box_spy = mocker.spy(configuration_extended.propsCategoryComboBox,
+    mocker.patch.object(configuration_extended, 'metadataGroupComboBox', create=True)
+    current_text_metadata_group_combo_box_spy = mocker.patch.object(configuration_extended.metadataGroupComboBox,
+                                                              'currentText', return_value=selected_metadata_group)
+    add_items_selected_spy = mocker.spy(configuration_extended.metadataGroupComboBox, 'addItems')
+    clear_metadata_group_combo_box_spy = mocker.spy(configuration_extended.metadataGroupComboBox, 'clear')
+    set_current_index_metadata_group_combo_box_spy = mocker.spy(configuration_extended.metadataGroupComboBox,
                                                           'setCurrentIndex')
-    mocker.patch.object(configuration_extended, 'selected_type_properties', create=True)
+    mocker.patch.object(configuration_extended, 'selected_type_metadata', create=True)
     mock_show_message = mocker.patch(
       "pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.show_message")
-    if selected_type_properties:
-      configuration_extended.selected_type_properties.__setitem__.side_effect = selected_type_properties.__setitem__
-      configuration_extended.selected_type_properties.__getitem__.side_effect = selected_type_properties.__getitem__
-      configuration_extended.selected_type_properties.pop.side_effect = selected_type_properties.pop
-      configuration_extended.selected_type_properties.keys.side_effect = selected_type_properties.keys
-    pop_items_selected_spy = mocker.spy(configuration_extended.selected_type_properties, 'pop')
+    if selected_type_metadata:
+      configuration_extended.selected_type_metadata.__setitem__.side_effect = selected_type_metadata.__setitem__
+      configuration_extended.selected_type_metadata.__getitem__.side_effect = selected_type_metadata.__getitem__
+      configuration_extended.selected_type_metadata.pop.side_effect = selected_type_metadata.pop
+      configuration_extended.selected_type_metadata.keys.side_effect = selected_type_metadata.keys
+    pop_items_selected_spy = mocker.spy(configuration_extended.selected_type_metadata, 'pop')
     mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.len',
-                 lambda x: len(selected_type_properties.keys()))
+                 lambda x: len(selected_type_metadata.keys()))
 
-    if selected_type_properties is None:
-      mocker.patch.object(configuration_extended, 'selected_type_properties', None)
-      assert configuration_extended.delete_selected_prop_category() is None, "Nothing should be returned"
+    if selected_type_metadata is None:
+      mocker.patch.object(configuration_extended, 'selected_type_metadata', None)
+      assert configuration_extended.delete_selected_metadata_group() is None, "Nothing should be returned"
       mock_show_message.assert_called_once_with("Load the ontology data first....", QMessageBox.Warning)
       return
-    if selected_type_properties and selected_category in selected_type_properties:
-      assert configuration_extended.delete_selected_prop_category() is None, "Nothing should be returned"
-      current_text_category_combo_box_spy.assert_called_once_with()
-      logger_info_spy.assert_called_once_with("User deleted the selected category: {%s}", selected_category)
-      pop_items_selected_spy.assert_called_once_with(selected_category)
-      clear_category_combo_box_spy.assert_called_once_with()
+    if selected_type_metadata and selected_metadata_group in selected_type_metadata:
+      assert configuration_extended.delete_selected_metadata_group() is None, "Nothing should be returned"
+      current_text_metadata_group_combo_box_spy.assert_called_once_with()
+      logger_info_spy.assert_called_once_with("User deleted the selected metadata group: {%s}", selected_metadata_group)
+      pop_items_selected_spy.assert_called_once_with(selected_metadata_group)
+      clear_metadata_group_combo_box_spy.assert_called_once_with()
       add_items_selected_spy.assert_called_once_with(
-        list(selected_type_properties.keys())
+        list(selected_type_metadata.keys())
       )
-      set_current_index_category_combo_box_spy.assert_called_once_with(len(selected_type_properties.keys()) - 1)
+      set_current_index_metadata_group_combo_box_spy.assert_called_once_with(len(selected_type_metadata.keys()) - 1)
 
   @pytest.mark.parametrize("modified_type_label, current_type, ontology_types", [
     (None, None, None),
@@ -554,8 +554,8 @@ class TestOntologyConfigConfiguration(object):
 
     mocker.patch.object(configuration_extended, 'ontology_types', create=True)
     mocker.patch.object(configuration_extended, 'ontology_document', create=True)
-    clear_category_combo_box_spy = mocker.spy(configuration_extended.typeComboBox, 'clear')
-    set_current_index_category_combo_box_spy = mocker.spy(configuration_extended.typeComboBox, 'setCurrentIndex')
+    clear_type_combo_box_spy = mocker.spy(configuration_extended.typeComboBox, 'clear')
+    set_current_index_type_combo_box_spy = mocker.spy(configuration_extended.typeComboBox, 'setCurrentIndex')
     add_items_selected_spy = mocker.spy(configuration_extended.typeComboBox, 'addItems')
     logger_info_spy = mocker.spy(configuration_extended.logger, 'info')
     mock_show_message = mocker.patch(
@@ -592,19 +592,19 @@ class TestOntologyConfigConfiguration(object):
       if selected_type and selected_type in original_ontology_types:
         logger_info_spy.assert_called_once_with("User deleted the selected type: {%s}", selected_type)
         pop_items_selected_ontology_types_spy.assert_called_once_with(selected_type)
-        clear_category_combo_box_spy.assert_called_once_with()
+        clear_type_combo_box_spy.assert_called_once_with()
         add_items_selected_spy.assert_called_once_with(
           get_types_for_display(ontology_types.keys())
         )
-        set_current_index_category_combo_box_spy.assert_called_once_with(0)
+        set_current_index_type_combo_box_spy.assert_called_once_with(0)
         assert selected_type not in ontology_types and ontology_document, "selected_type should be deleted"
       else:
         logger_info_spy.assert_not_called()
         logger_info_spy.assert_not_called()
         pop_items_selected_ontology_types_spy.assert_not_called()
-        clear_category_combo_box_spy.assert_not_called()
+        clear_type_combo_box_spy.assert_not_called()
         add_items_selected_spy.assert_not_called()
-        set_current_index_category_combo_box_spy.assert_not_called()
+        set_current_index_type_combo_box_spy.assert_not_called()
 
   @pytest.mark.parametrize("new_title, new_label, is_structure_level", [
     (None, None, False),
@@ -699,16 +699,16 @@ class TestOntologyConfigConfiguration(object):
                                                                 configuration_extended: configuration_extended):
     configuration_extended.logger.info.assert_any_call("Setting up slots for the editor..")
     configuration_extended.logger.info.assert_any_call("User loaded the ontology data in UI")
-    configuration_extended.addPropsRowPushButton.clicked.connect.assert_called_once_with(
-      configuration_extended.props_table_data_model.add_data_row)
+    configuration_extended.addMetadataRowPushButton.clicked.connect.assert_called_once_with(
+      configuration_extended.metadata_table_data_model.add_data_row)
     configuration_extended.addAttachmentPushButton.clicked.connect.assert_called_once_with(
       configuration_extended.attachments_table_data_model.add_data_row)
     configuration_extended.saveOntologyPushButton.clicked.connect.assert_called_once_with(
       configuration_extended.save_ontology)
-    configuration_extended.addPropsCategoryPushButton.clicked.connect.assert_called_once_with(
-      configuration_extended.add_new_prop_category)
-    configuration_extended.deletePropsCategoryPushButton.clicked.connect.assert_called_once_with(
-      configuration_extended.delete_selected_prop_category)
+    configuration_extended.addMetadataGroupPushButton.clicked.connect.assert_called_once_with(
+      configuration_extended.add_new_metadata_group)
+    configuration_extended.deleteMetadataGroupPushButton.clicked.connect.assert_called_once_with(
+      configuration_extended.delete_selected_metadata_group)
     configuration_extended.deleteTypePushButton.clicked.connect.assert_called_once_with(
       configuration_extended.delete_selected_type)
     configuration_extended.addTypePushButton.clicked.connect.assert_called_once_with(
@@ -717,8 +717,8 @@ class TestOntologyConfigConfiguration(object):
     # Slots for the combo-boxes
     configuration_extended.typeComboBox.currentTextChanged.connect.assert_called_once_with(
       configuration_extended.type_combo_box_changed)
-    configuration_extended.propsCategoryComboBox.currentTextChanged.connect.assert_called_once_with(
-      configuration_extended.category_combo_box_changed)
+    configuration_extended.metadataGroupComboBox.currentTextChanged.connect.assert_called_once_with(
+      configuration_extended.metadata_group_combo_box_changed)
 
     # Slots for line edits
     configuration_extended.typeLabelLineEdit.textChanged[str].connect.assert_called_once_with(
@@ -727,10 +727,10 @@ class TestOntologyConfigConfiguration(object):
       configuration_extended.update_type_iri)
 
     # Slots for the delegates
-    configuration_extended.delete_column_delegate_props_table.delete_clicked_signal.connect.assert_called_once_with(
-      configuration_extended.props_table_data_model.delete_data)
-    configuration_extended.reorder_column_delegate_props_table.re_order_signal.connect.assert_called_once_with(
-      configuration_extended.props_table_data_model.re_order_data)
+    configuration_extended.delete_column_delegate_metadata_table.delete_clicked_signal.connect.assert_called_once_with(
+      configuration_extended.metadata_table_data_model.delete_data)
+    configuration_extended.reorder_column_delegate_metadata_table.re_order_signal.connect.assert_called_once_with(
+      configuration_extended.metadata_table_data_model.re_order_data)
 
     configuration_extended.delete_column_delegate_attach_table.delete_clicked_signal.connect.assert_called_once_with(
       configuration_extended.attachments_table_data_model.delete_data)
@@ -874,7 +874,7 @@ class TestOntologyConfigConfiguration(object):
                                                QMessageBox.No | QMessageBox.Yes,
                                                QMessageBox.Yes)
 
-  def test_save_ontology_with_missing_properties_should_skip_save_and_show_message(self,
+  def test_save_ontology_with_missing_metadata_should_skip_save_and_show_message(self,
                                                                                    mocker,
                                                                                    ontology_doc_mock,
                                                                                    configuration_extended: configuration_extended):
@@ -888,25 +888,25 @@ class TestOntologyConfigConfiguration(object):
     log_warn_spy = mocker.patch.object(configuration_extended.logger, 'warning')
     mock_show_message = mocker.patch(
       'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.show_message')
-    missing_props = ({
-                       'Structure level 0': {'category1': ['-tags']},
+    missing_metadata = ({
+                       'Structure level 0': {'metadata group1': ['-tags']},
                        'Structure level 1': {'default': ['-tags']},
                        'Structure level 2': {'default': ['-tags']},
                        'instrument': {'default': ['-tags']}},
                      {
-                       'Structure level 0': ['category1', '-tags'],
-                       'instrument': ['category1', '-tags']
+                       'Structure level 0': ['metadata group1', '-tags'],
+                       'instrument': ['metadata group1', '-tags']
                      })
     mock_check_ontology_document_types = mocker.patch(
       'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.check_ontology_types',
-      return_value=missing_props)
-    mock_get_missing_props_message = mocker.patch(
-      'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.get_missing_props_message',
+      return_value=missing_metadata)
+    mock_get_missing_metadata_message = mocker.patch(
+      'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.get_missing_metadata_message',
       return_value="Missing message")
     assert configuration_extended.save_ontology() is None, "Nothing should be returned"
     log_info_spy.assert_called_once_with("User clicked the save button..")
     mock_check_ontology_document_types.assert_called_once_with(configuration_extended.ontology_types)
-    mock_get_missing_props_message.assert_called_once_with(missing_props[0], missing_props[1])
+    mock_get_missing_metadata_message.assert_called_once_with(missing_metadata[0], missing_metadata[1])
     mock_show_message.assert_called_once_with("Missing message", QMessageBox.Warning)
     log_warn_spy.assert_called_once_with("Missing message")
 
