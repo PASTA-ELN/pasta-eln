@@ -48,7 +48,7 @@ class TestOntologyConfigTerminologyLookup(object):
     mock_get_logger.assert_called_once_with(
       'pasta_eln.GUI.ontology_configuration.terminology_lookup_service.TerminologyLookupService')
     assert service.logger is mock_logger
-    assert service.session_timeout == 5, "session_timeout should be set to 5"
+    assert service.session_timeout == 10, "session_timeout should be set to 10"
     assert service.session_request_errors == [], "session_request_errors should be empty"
 
   @pytest.mark.parametrize(

@@ -30,7 +30,7 @@ class TerminologyLookupService:
 
   def __init__(self) -> None:
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
-    self.session_timeout = 5  # Timeout in seconds for the requests send to the lookup services
+    self.session_timeout = 10  # Timeout in seconds for the requests send to the lookup services
     self.session_request_errors: list[str] = []  # List of request errors
 
   async def get_request(self,
