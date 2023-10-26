@@ -129,7 +129,8 @@ def runTests():
   print('Start running tests')
   tests = [i for i in os.listdir('tests') if i.endswith('.py') and i.startswith('test_')]
   for fileI in sorted(tests):
-    result = subprocess.run(['pytest','-s','--no-skip','tests/'+fileI], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
+    result = subprocess.run(['pytest','-s','--no-skip','tests/'+fileI], stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE, check=False)
     success = result.stdout.decode('utf-8').count('*** DONE WITH VERIFY ***')
     if success==1:
       success += result.stdout.decode('utf-8').count('**ERROR')
@@ -138,7 +139,8 @@ def runTests():
       print("  success: Python unit test "+fileI)
     else:
       print("  FAILED: Python unit test "+fileI)
-      print("    run: 'pytest -s tests/"+fileI+"' and check logFile")
+      print("    run: 'pytest -s tests/{fileI}' and check logFile")
+      print(f"\n---------------------------\n{result.stdout.decode('utf-8')}\n---------------------------\n")
   print('Start running complicated tests')
   tests = [i for i in os.listdir('testsComplicated') if i.endswith('.py') and i.startswith('test_')]
   for fileI in sorted(tests):
@@ -152,7 +154,8 @@ def runTests():
       print("  success: Python unit test "+fileI)
     else:
       print("  FAILED: Python unit test "+fileI)
-      print("    run: 'pytest -s testsComplicated/"+fileI+"' and check logFile")
+      print(f"    run: 'pytest -s testsComplicated/{fileI}' and check logFile")
+      print(f"\n---------------------------\n{result.stdout.decode('utf-8')}\n---------------------------\n")
   return
 
 
