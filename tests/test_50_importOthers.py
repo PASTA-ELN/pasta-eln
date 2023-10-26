@@ -39,10 +39,14 @@ class TestStringMethods(unittest.TestCase):
     warnings.filterwarnings('ignore', category=ResourceWarning, module='PIL')
     warnings.filterwarnings('ignore', category=ImportWarning)
     projectGroup = 'research'
-    url = 'https://github.com/TheELNConsortium/TheELNFileFormat/raw/master/examples/elabftw/multiple-database-items.eln'
+    url = 'https://github.com/TheELNConsortium/TheELNFileFormat/raw/master/examples/elabftw/multiple-experiments.eln'
     dirpath = Path(tempfile.mkdtemp())
     elnFile = dirpath/'multiple-database-items.eln'
-    urllib.request.urlretrieve(url, elnFile)
+    try:
+      urllib.request.urlretrieve(url, elnFile)
+    except:
+      print('Could not download eln file')
+      return
 
     # remove everything else
     self.be = Backend(projectGroup, initConfig=False)

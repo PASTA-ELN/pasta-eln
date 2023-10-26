@@ -88,7 +88,9 @@ class Project(QWidget):
       if key=='comment' and ('\n' in value or len(value)>80):
         flagCommentInline = False
         continue
-      infoL.addWidget(QLabel(f'{key.title()}: {str(value)}'))
+      labelW = QLabel(f'{key.title()}: {str(value)}')
+      labelW.setMaximumWidth(self.width()-50)
+      infoL.addWidget(labelW)
       countLines += 1
     if not flagCommentInline:     #format as label and QTextEdit
       commentW, commentL         = widgetAndLayout('H', infoL, 's')
