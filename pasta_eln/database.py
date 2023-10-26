@@ -53,7 +53,7 @@ class Database:
     if '-version' not in self.ontology or self.ontology['-version']!=3:
       print(F"**ERROR wrong ontology version: {self.ontology['-version']}")
       raise ValueError(f"Wrong ontology version {self.ontology['-version']}")
-    self.dataLabels = {k:v['label'] for k,v in self.ontology.items() if k[0] not in ['_','-']}
+    self.dataLabels = {k:v['displayedTitle'] for k,v in self.ontology.items() if k[0] not in ['_','-']}
     self.basePath   = basePath
     return
 

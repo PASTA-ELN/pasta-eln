@@ -222,8 +222,8 @@ class Project(QWidget):
       self.change('','')
     elif command[0] is Command.ADD_CHILD:
       self.comm.backend.cwd = self.comm.backend.basePath/self.docProj['-branch'][0]['path']
-      label = self.comm.backend.db.ontology['x1']['label'].lower()[:-1]
-      self.comm.backend.addData('x1', {'-name':f'new {label}'}, [self.projID])
+      displayedTitle = self.comm.backend.db.ontology['x1']['displayedTitle'].lower()[:-1]
+      self.comm.backend.addData('x1', {'-name':f'new {displayedTitle}'}, [self.projID])
       self.change('','') #refresh project
     elif command[0] is Command.SHOW_TABLE:
       self.comm.changeTable.emit(command[1], self.projID)
