@@ -325,7 +325,7 @@ def main() -> None:
   usage+= commands(True, argparse.Namespace())
   argparser = argparse.ArgumentParser(usage=usage)
   argparser.add_argument('command', help='see above...')
-  argparser.add_argument('-i','--docID',   help='docID of project; a long alpha-numeric code', default='')
+  argparser.add_argument('-i','--docID',   help='docID of project; a long alphanumeric code', default='')
   argparser.add_argument('-c','--content', help='content to save/store', default=None)
   argparser.add_argument('-l','--label',   help='label used for printing', default='x0')
   argparser.add_argument('-d','--database',help='name of database configuration', default='') #required for be = Pasta(args.database)

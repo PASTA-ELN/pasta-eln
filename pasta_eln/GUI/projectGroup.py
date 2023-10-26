@@ -1,4 +1,4 @@
-""" Table Header dialog: change which colums are shown and in which order """
+""" Table Header dialog: change which columns are shown and in which order """
 import json, platform
 from enum import Enum
 from pathlib import Path
@@ -14,7 +14,7 @@ from ..serverActions import testLocal, testRemote, passwordDecrypt
 from ..guiCommunicate import Communicate
 
 class ProjectGroup(QDialog):
-  """ Table Header dialog: change which colums are shown and in which order """
+  """ Table Header dialog: change which columns are shown and in which order """
   def __init__(self, comm:Communicate):
     """
     Initialization

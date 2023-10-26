@@ -14,6 +14,21 @@
 > **This page / area is for developers and contains some helpful information for them**
 
 ---
+## Contributors
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+
+Most of the file-layout and the integration of webservices follows the example of datalad and datalad-gooey
+https://github.com/datalad. We thank those developers for their work and contribution to free software.
+
+---
 
 ## Developers: notes on windows installation
 
@@ -180,7 +195,7 @@ and execute "python -m pasta_eln.test"
 
 #### HOW TO DIFF Version-1 and Version-2
 **COMPARE BOTH DIRECTIONS**
-at .. pasta-eln$ and remeber the changes required to Version2 in first change. If nothing to remember, do not execute 2nd command
+at .. pasta-eln$ and remember the changes required to Version2 in first change. If nothing to remember, do not execute 2nd command
 ``` bash
 kdiff pasta_eln/miscTools.py ../Python/miscTools.py
 kdiff ../Python/miscTools.py pasta_eln/miscTools.py

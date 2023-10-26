@@ -223,7 +223,7 @@ class Database:
     - full path (from basePath) allows to easily create a view of all paths and search through them
       during each scan, which happens rather often
     - just the incremental path (file-name, folder-name) allows to easily change that if the user wants
-      and not change all the children paths, too. However, the renaming of the folder is likely occuring
+      and not change all the children paths, too. However, the renaming of the folder is likely occurring
       less often.
 
     Args:
@@ -302,7 +302,7 @@ class Database:
                     newDoc['-name'] = os.path.basename(str(change['-branch']['path']))
                   branch['path'] = branch['path'].replace(oldpath ,change['-branch']['path'])
                   branch['stack']= change['-branch']['stack']
-                  branch['show'] = self.createShowFromStack(change['-branch']['stack'])
+                  branch['show'] = self.createShowFromStack(change['-branch']['stack'], branch['show'][-1])
                   break
             else:
               newDoc['-branch'][0] = change['-branch'] #change the initial one
@@ -348,7 +348,7 @@ class Database:
           elif item in newDoc:
             oldDoc[item] = newDoc[item]
           newDoc[item] = change[item]
-      # Always update, for some reason single tags are not recongnized
+      # Always update, for some reason single tags are not recognized
       # if nothingChanged:
       #   logging.debug('database.update.2: doc not updated-nothing changed: '+newDoc['_id']+' '+newDoc['-name'])
       #   return newDoc
@@ -420,7 +420,8 @@ class Database:
     stackOld = list(doc['-branch'][branch]['stack'])
     if stack is not None:
       doc['-branch'][branch]['stack']=stack
-    doc['-branch'][branch]['show'] = self.createShowFromStack( doc['-branch'][branch]['stack'] )
+    doc['-branch'][branch]['show'] = self.createShowFromStack(doc['-branch'][branch]['stack'],
+                                                              doc['-branch'][branch]['show'][-1])
     doc.save()
     logging.debug('success BRANCH updated with type and branch '+doc['_id']+' '+'/'.join(doc['-type'])+'  |  '+str(doc['-branch'])+'\n')
     # move content: folder and data and write .json to disk
@@ -443,7 +444,7 @@ class Database:
             flagNotChanged = False
           if stack is not None and '/'.join(branchLine['stack']).startswith('/'.join(stackOld)):
             branchLine['stack'] = stack+branchLine['stack'][len(stackOld):]
-            branchLine['show']  = self.createShowFromStack( branchLine['stack'] )
+            branchLine['show']  = self.createShowFromStack(branchLine['stack'], branchLine['show'][-1])
             flagNotChanged = False
         if flagNotChanged:
           print(f"**Unsure** Not updated{str(line)}")
@@ -456,7 +457,7 @@ class Database:
     return oldPath, path
 
 
-  def createShowFromStack(self, stack:list[str]) -> list[bool]:
+  def createShowFromStack(self, stack:list[str], currentShow:bool=True) -> list[bool]:
     """
     For branches: create show entry in the branches by using the stack
     - should be 1 longer than stack
@@ -464,11 +465,12 @@ class Database:
 
     Args:
       stack (list): list of ancestor docIDs
+      currentShow (bool): current show-indicator of this item
 
     Returns:
       list: list of show = list of bool
     """
-    show = (len(stack)+1)*[True]
+    show = len(stack)*[True] + [currentShow]
     for idx, docID in enumerate(stack):
       if not self.db[docID]['-branch'][0]['show'][-1]:
         show[idx] = False
@@ -718,7 +720,7 @@ class Database:
       if np.min(value) < firstSubmit:
         firstSubmit = np.min(value)
     bins = np.linspace(firstSubmit, datetime.now().timestamp(), 100 )
-    #calculate histgram and save it
+    #calculate histogram and save it
     collectionCopy = dict(collection)
     for key,value in collection.items():
       hist, _ = np.histogram(value, bins)

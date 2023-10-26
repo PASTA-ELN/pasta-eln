@@ -328,7 +328,7 @@ def listDocuments(url:str, userName:str, password:str, database:str, full:bool=T
 
 def backupCouchDB(location:str='', userName:str='', password:str='') -> None:
   """
-  Backup everything of the CouchDB installation accross all databases and all configurations
+  Backup everything of the CouchDB installation across all databases and all configurations
   - remote location uses username/password combo in local keystore
   - local location requires username and password
 
@@ -406,7 +406,7 @@ def backupCouchDB(location:str='', userName:str='', password:str='') -> None:
 
 def restoreCouchDB(location:str='', userName:str='', password:str='', fileName:str='') -> None:
   """
-  restore everything to the CouchDB installation accross all databases and all configurations
+  restore everything to the CouchDB installation across all databases and all configurations
   - remote location uses username/password combo in local keystore
   - local location requires username and password
 
@@ -485,7 +485,7 @@ def restoreCouchDB(location:str='', userName:str='', password:str='', fileName:s
       docID = fileParts[1]
       if not docID.endswith('_attach'):
         continue #Did already in the first loop
-      #test if attachement exists: create otherwise
+      #test if attachment exists: create otherwise
       attachPath = f'{docID[:-7]}/{fileParts[-1]}'
       resp = requests.get(f'http://{location}:5984/{database}/{attachPath}', headers=headers, auth=authUser, timeout=10)
       if resp.status_code == 404 and 'missing' in resp.json()['reason']:

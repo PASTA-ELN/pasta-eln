@@ -1,8 +1,41 @@
 # Changelog
 
-## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
+## [v2.4.17](https://github.com/PASTA-ELN/pasta-eln/tree/v2.4.17) (2023-10-25)
 
-[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.14...HEAD)
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.16...v2.4.17)
+
+**Implemented enhancements:**
+
+- test\(ontology\): added automated tests for ontology component [\#100](https://github.com/PASTA-ELN/pasta-eln/pull/100) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
+
+**Fixed bugs:**
+
+- Deleting "Comment" in Ontology editor [\#99](https://github.com/PASTA-ELN/pasta-eln/issues/99)
+- Using "Re-order" in Questionnaires [\#66](https://github.com/PASTA-ELN/pasta-eln/issues/66)
+- fix\(ontology\): runtime errors been thrown for flags returning NoneType [\#102](https://github.com/PASTA-ELN/pasta-eln/pull/102) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
+- fix\(ontology\): consecutive save click throws console errors  [\#101](https://github.com/PASTA-ELN/pasta-eln/pull/101) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
+- repaired issue  \#63 [\#73](https://github.com/PASTA-ELN/pasta-eln/pull/73) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+
+**Closed issues:**
+
+- Cancel export eln [\#65](https://github.com/PASTA-ELN/pasta-eln/issues/65)
+- Markdown editor  - heading styles [\#64](https://github.com/PASTA-ELN/pasta-eln/issues/64)
+
+**Merged pull requests:**
+
+- - Unified comments in all views \#98 \#84 [\#104](https://github.com/PASTA-ELN/pasta-eln/pull/104) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Implemented visibility issues mentioned in \#62 [\#103](https://github.com/PASTA-ELN/pasta-eln/pull/103) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Sb start windows [\#97](https://github.com/PASTA-ELN/pasta-eln/pull/97) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- add codespell: configuration, workflow + get it to fix found typos [\#96](https://github.com/PASTA-ELN/pasta-eln/pull/96) ([yarikoptic](https://github.com/yarikoptic))
+- Honor labels from ontology in project view and change the default labels … [\#93](https://github.com/PASTA-ELN/pasta-eln/pull/93) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- fixed:  Creating new project after eLabFTW eln import \#78 [\#91](https://github.com/PASTA-ELN/pasta-eln/pull/91) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Fixed: Changing column names in table \#76 [\#90](https://github.com/PASTA-ELN/pasta-eln/pull/90) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- fixed: Autosaving after adding the comment [\#89](https://github.com/PASTA-ELN/pasta-eln/pull/89) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Fixed: [\#88](https://github.com/PASTA-ELN/pasta-eln/pull/88) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+
+## [v2.4.16](https://github.com/PASTA-ELN/pasta-eln/tree/v2.4.16) (2023-10-13)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.14...v2.4.16)
 
 **Implemented enhancements:**
 
