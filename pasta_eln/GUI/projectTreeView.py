@@ -61,7 +61,7 @@ class TreeView(QTreeView):
       docType= f'x{len(hierStack)}'
       docID = hierStack[-1][:34] if hierStack[-1].endswith(' -') else hierStack[-1]
       self.comm.backend.cwd = Path(self.comm.backend.db.getDoc(docID)['-branch'][0]['path'])
-      label = self.comm.backend.db.ontology[docType]['label'].lower()[:-1]
+      label = self.comm.backend.db.dataHierarchy[docType]['label'].lower()[:-1]
       docID = self.comm.backend.addData(docType, {'-name':f'new {label}'}, hierStack)
       # append item to the GUI
       item  = self.model().itemFromIndex(self.currentIndex())
@@ -78,7 +78,7 @@ class TreeView(QTreeView):
       docType= f'x{len(hierStack)}'
       docID = hierStack[-1][:34] if hierStack[-1].endswith(' -') else hierStack[-1]
       self.comm.backend.cwd = Path(self.comm.backend.db.getDoc(docID)['-branch'][0]['path'])
-      label = self.comm.backend.db.ontology[docType]['label'].lower()[:-1]
+      label = self.comm.backend.db.dataHierarchy[docType]['label'].lower()[:-1]
       docID = self.comm.backend.addData(docType, {'-name':f'new {label}'}, hierStack)
       # append item to the GUI
       item  = self.model().itemFromIndex(self.currentIndex())

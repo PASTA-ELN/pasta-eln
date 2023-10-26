@@ -3,7 +3,7 @@ import re, uuid, json
 from typing import Any
 from datetime import datetime
 
-def ontology2Labels(ontology:dict[str,Any], tableFormat:dict[str,Any]) -> dict[str,Any]:
+def dataHierarchy2Labels(dataHierarchy:dict[str,Any], tableFormat:dict[str,Any]) -> dict[str,Any]:
   """
   Extract labels and create lists of docType,docLabel pair
   - docLabel is the plural human-readable form of the docType
@@ -12,7 +12,7 @@ def ontology2Labels(ontology:dict[str,Any], tableFormat:dict[str,Any]) -> dict[s
   Not sure if separation into datalabels and hierarchy labels is still needed. Join
 
   Args:
-     ontology (dict): ontology
+     dataHierarchy (dict): data hierarchy
      tableFormat (dict): tableFormat branch from .pastaELN.json
 
   Returns:
@@ -20,7 +20,7 @@ def ontology2Labels(ontology:dict[str,Any], tableFormat:dict[str,Any]) -> dict[s
   """
   dataDict = {}
   hierarchyDict = {}
-  for key in ontology:
+  for key in dataHierarchy:
     if key in ['_id', '_rev']:
       continue
     label = None
@@ -38,22 +38,22 @@ def ontology2Labels(ontology:dict[str,Any], tableFormat:dict[str,Any]) -> dict[s
   return dataDict
 
 
-def ontologyV2_to_V3(ontology: dict[str, Any]) -> None:
-  """ Translate ontology version 2 to version 3
+def dataHierarchyV2_to_V3(dataHierarchy: dict[str, Any]) -> None:
+  """ Translate dataHierarchy version 2 to version 3
 
   Based on work of Jithu Murugan
 
   Args:
-      ontology (dict[str, Any]): ontology
+      dataHierarchy (dict[str, Any]): dataHierarchy
 
   """
-  if ontology['-version'] != 2:
+  if dataHierarchy['-version'] != 2:
     return
-  ontology["-version"] = 3
+  dataHierarchy["-version"] = 3
   typeStructures = {}
-  for key in ontology:
+  for key in dataHierarchy:
     if key[0] not in {'-', '_'}:
-      typeStructures[key] = ontology[key]
+      typeStructures[key] = dataHierarchy[key]
   for typeStructure in typeStructures.values():
     typeStructure.setdefault("attachments", [])
     props = typeStructure.get("prop")

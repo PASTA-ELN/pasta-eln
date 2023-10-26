@@ -9,7 +9,6 @@ from PySide6.QtCore import Qt, Slot, QSortFilterProxyModel, QModelIndex       # 
 from PySide6.QtGui import QStandardItemModel, QStandardItem            # pylint: disable=no-name-in-module
 from .tableHeader import TableHeader
 from ..guiStyle import IconButton, Action, TextButton, Label, widgetAndLayout, space
-from ..fixedStringsJson import defaultOntologyNode
 from ..guiCommunicate import Communicate
 
 #Scan button to more button

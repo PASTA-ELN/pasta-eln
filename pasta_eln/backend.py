@@ -25,7 +25,7 @@ class Backend(CLI_Mixin):
         defaultProjectGroup (string): name of configuration / project-group used; if not given, use the one defined by 'defaultProjectGroup' in config file
         **kwargs (dict): additional parameters
           - initViews (bool): initialize views at startup
-          - resetOntology (bool): reset ontology on database from one on file
+          - resetDataHierarchy (bool): reset dataHierarchy on database from one on file
     """
     #initialize basic values
     self.hierStack:list[str] = []
@@ -42,7 +42,7 @@ class Backend(CLI_Mixin):
         defaultProjectGroup (string): name of configuration / project-group used; if not given, use the one defined by 'defaultProjectGroup' in config file
         **kwargs (dict): additional parameters
           - initViews (bool): initialize views at startup
-          - resetOntology (bool): reset ontology on database from one on file
+          - resetDataHierarchy (bool): reset dataHierarchy on database from one on file
     """
     configFileName = Path.home()/'.pastaELN.json'
     self.configuration = defaultConfiguration
@@ -579,7 +579,7 @@ class Backend(CLI_Mixin):
           size = len(str(content))
           report += outputString(outputStyle, 'info', f'Entire extracted size: {size // 1024}kB')
         else:
-          report += outputString(outputStyle, 'error', 'Recipe does not follow doctype in ontology.')
+          report += outputString(outputStyle, 'error', 'Recipe does not follow doctype in dataHierarchy.')
       else:
         report += outputString(outputStyle,'error','Recipe not included in extractor.')
     if success:

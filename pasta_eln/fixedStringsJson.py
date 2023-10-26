@@ -1,8 +1,8 @@
 """ Long strings and dictionaries/JSON that would obfuscate code """
 from typing import Any
 
-defaultOntology: dict[str, Any] = {
-  "_id": "-ontology-",
+defaultDataHierarchy: dict[str, Any] = {
+  "_id": "-dataHierarchy-",
   "-version": 3,
 
   "x0": {"IRI": "", "attachments": [], "label": "Projects", "prop": {"default": [
@@ -54,7 +54,7 @@ defaultOntology: dict[str, Any] = {
   ]}}
 }
 
-defaultOntologyNode: dict[str, list[dict[str, str]]] = {
+defaultDataHierarchyNode: dict[str, list[dict[str, str]]] = {
   "default": [
     {"name": "-name", "query": "What is the file name?"},
     {"name": "-tags"},
@@ -104,7 +104,7 @@ setupTextLinux = """
 ### Welcome to the PASTA-ELN setup for Linux
 Three components are needed for proper functioning of PASTA-ELN:
 - CouchDB
-- Configuration of preferences / default ontology
+- Configuration of preferences / default data hierarchy
 - Example project creation
 
 This setup will analyse and (possibly) correct these items.
@@ -116,7 +116,7 @@ setupTextWindows = """
 ### Welcome to the PASTA-ELN setup for Windows
 Four components are needed for proper functioning of PASTA-ELN:
 - CouchDB
-- Configuration of preferences / default ontology
+- Configuration of preferences / default data hierarchy
 - Shortcut creation
 - Example project creation
 
