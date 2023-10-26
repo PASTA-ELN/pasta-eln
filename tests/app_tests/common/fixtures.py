@@ -29,7 +29,7 @@ from pasta_eln.GUI.ontology_configuration.ontology_document_null_exception impor
 from pasta_eln.GUI.ontology_configuration.ontology_metadata_tableview_data_model import OntologyMetadataTableViewModel
 from pasta_eln.GUI.ontology_configuration.ontology_tableview_data_model import OntologyTableViewModel
 from pasta_eln.GUI.ontology_configuration.reorder_column_delegate import ReorderColumnDelegate
-from pasta_eln.GUI.ontology_configuration.required_column_delegate import RequiredColumnDelegate
+from pasta_eln.GUI.ontology_configuration.mandatory_column_delegate import MandatoryColumnDelegate
 from pasta_eln.GUI.ontology_configuration.terminology_lookup_dialog import TerminologyLookupDialog
 from pasta_eln.GUI.ontology_configuration.terminology_lookup_dialog_base import Ui_TerminologyLookupDialogBase
 from pasta_eln.GUI.ontology_configuration.terminology_lookup_service import TerminologyLookupService
@@ -90,7 +90,7 @@ def configuration_extended(mocker) -> OntologyConfigurationForm:
   mocker.patch.object(QDialog, '__new__')
   mocker.patch.object(OntologyMetadataTableViewModel, '__new__')
   mocker.patch.object(OntologyAttachmentsTableViewModel, '__new__')
-  mocker.patch.object(RequiredColumnDelegate, '__new__', lambda _: mocker.MagicMock())
+  mocker.patch.object(MandatoryColumnDelegate, '__new__', lambda _: mocker.MagicMock())
   mocker.patch.object(DeleteColumnDelegate, '__new__', lambda _: mocker.MagicMock())
   mocker.patch.object(ReorderColumnDelegate, '__new__', lambda _: mocker.MagicMock())
   mocker.patch.object(OntologyConfigurationForm, 'typeMetadataTableView', create=True)
@@ -156,8 +156,8 @@ def reorder_delegate() -> ReorderColumnDelegate:
 
 
 @fixture()
-def required_delegate() -> RequiredColumnDelegate:
-  return RequiredColumnDelegate()
+def mandatory_delegate() -> MandatoryColumnDelegate:
+  return MandatoryColumnDelegate()
 
 
 @fixture()
@@ -257,7 +257,7 @@ def metadata_column_names():
     2: "list",
     3: "unit",
     4: "IRI",
-    5: "required"
+    5: "mandatory"
   }
 
 

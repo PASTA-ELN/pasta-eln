@@ -6,26 +6,26 @@ defaultOntology: dict[str, Any] = {
   "-version": 3,
 
   "x0": {"IRI": "", "attachments": [], "label": "Projects", "metadata": {"default": [
-    {"name": "-name", "query": "What is the name of the project?", "required": True},
-    {"name": "-tags", "query": "What are the tags associated with the project?", "required": True},
+    {"name": "-name", "query": "What is the name of the project?", "mandatory": True},
+    {"name": "-tags", "query": "What are the tags associated with the project?", "mandatory": True},
     {"name": "status", "query": "What is the project status", "list": ["active", "paused", "passive", "finished"]},
     {"name": "objective", "query": "What is the objective?"},
     {"name": "comment", "query": "#tags comments remarks :field:value:"}
   ]}},
   "x1": {"IRI": "", "attachments": [], "label": "Folders", "metadata": {"default": [
-    {"name": "-name", "query": "What is the name of task?", "required": True},
-    {"name": "-tags", "query": "What are the tags associated with the task?", "required": True},
+    {"name": "-name", "query": "What is the name of task?", "mandatory": True},
+    {"name": "-tags", "query": "What are the tags associated with the task?", "mandatory": True},
     {"name": "comment", "query": "#tags comments remarks :field:value:"}
   ]}},
   "x2": {"IRI": "", "attachments": [], "label": "Folders", "metadata": {"default": [
-    {"name": "-name", "query": "What is the name of subtask?", "required": True},
-    {"name": "-tags", "query": "What are the tags associated with the subtask?", "required": True},
+    {"name": "-name", "query": "What is the name of subtask?", "mandatory": True},
+    {"name": "-tags", "query": "What are the tags associated with the subtask?", "mandatory": True},
     {"name": "comment", "query": "#tags comments remarks :field:value:"}
   ]}},
 
   "measurement": {"IRI": "", "attachments": [], "label": "Measurements", "metadata": {"default": [
-    {"name": "-name", "query": "What is the name of file name?", "required": True},
-    {"name": "-tags", "query": "What are the tags associated with the file name?", "required": True},
+    {"name": "-name", "query": "What is the name of file name?", "mandatory": True},
+    {"name": "-tags", "query": "What are the tags associated with the file name?", "mandatory": True},
     {"name": "comment", "query": "#tags comments remarks :field:value:"},
     {"name": "-type"},
     {"name": "image"},
@@ -34,21 +34,21 @@ defaultOntology: dict[str, Any] = {
     {"name": "procedure", "query": "Which procedure was used?", "list": "procedure"}
   ]}},
   "sample": {"IRI": "", "attachments": [], "label": "Samples", "metadata": {"default": [
-    {"name": "-name", "query": "What is the name / identifier of the sample?", "required": True},
-    {"name": "-tags", "query": "What are the tags associated with the sample?", "required": True},
+    {"name": "-name", "query": "What is the name / identifier of the sample?", "mandatory": True},
+    {"name": "-tags", "query": "What are the tags associated with the sample?", "mandatory": True},
     {"name": "chemistry", "query": "What is its chemical composition?"},
     {"name": "comment", "query": "#tags comments remarks :field:value:"},
     {"name": "qrCode"}
   ]}},
   "procedure": {"IRI": "", "attachments": [], "label": "Procedures", "metadata": {"default": [
-    {"name": "-name", "query": "What is the name / path of the procedure?", "required": True},
-    {"name": "-tags", "query": "What are the tags associated with the procedure?", "required": True},
+    {"name": "-name", "query": "What is the name / path of the procedure?", "mandatory": True},
+    {"name": "-tags", "query": "What are the tags associated with the procedure?", "mandatory": True},
     {"name": "comment", "query": "#tags comments :field:value: e.g. #SOP_v1"},
-    {"name": "content", "query": "What is procedure (Markdown possible; autofilled if file given)?"}
+    {"name": "content", "query": "What is procedure (Markdown possible; autofill if file given)?"}
   ]}},
   "instrument": {"IRI": "", "attachments": [], "label": "Instruments", "metadata": {"default": [
-    {"name": "-name", "query": "What is the name / path of the instrument?", "required": True},
-    {"name": "-tags", "query": "What are the tags associated with the instrument?", "required": True},
+    {"name": "-name", "query": "What is the name / path of the instrument?", "mandatory": True},
+    {"name": "-tags", "query": "What are the tags associated with the instrument?", "mandatory": True},
     {"name": "comment", "query": "#tags comments :field:value: e.g. #SOP_v1"},
     {"name": "vendor", "query": "Who is the vendor?"}
   ]}}

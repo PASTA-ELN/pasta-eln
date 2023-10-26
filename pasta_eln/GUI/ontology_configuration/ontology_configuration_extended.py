@@ -31,13 +31,13 @@ from .ontology_configuration_constants import ATTACHMENT_TABLE_DELETE_COLUMN_IND
 from .ontology_document_null_exception import OntologyDocumentNullException
 from .ontology_metadata_tableview_data_model import OntologyMetadataTableViewModel
 from .reorder_column_delegate import ReorderColumnDelegate
-from .required_column_delegate import RequiredColumnDelegate
+from .mandatory_column_delegate import MandatoryColumnDelegate
 from .delete_column_delegate import DeleteColumnDelegate
 from .iri_column_delegate import IriColumnDelegate
 from .lookup_iri_action import LookupIriAction
 from .utility_functions import adapt_type, adjust_ontology_data_to_v3, can_delete_type, check_ontology_types, \
   generate_empty_type, \
-  generate_required_metadata, get_missing_metadata_message, get_next_possible_structural_level_label, \
+  generate_mandatory_metadata, get_missing_metadata_message, get_next_possible_structural_level_label, \
   get_types_for_display, show_message
 from ...database import Database
 
@@ -87,7 +87,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm, QObject):
     self.metadata_table_data_model = OntologyMetadataTableViewModel()
     self.attachments_table_data_model = OntologyAttachmentsTableViewModel()
 
-    self.required_column_delegate_metadata_table = RequiredColumnDelegate()
+    self.required_column_delegate_metadata_table = MandatoryColumnDelegate()
     self.delete_column_delegate_metadata_table = DeleteColumnDelegate()
     self.reorder_column_delegate_metadata_table = ReorderColumnDelegate()
     self.iri_column_delegate_metadata_table = IriColumnDelegate()
@@ -221,7 +221,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm, QObject):
       return None
     # Add the new group to the metadata list and refresh the group combo box
     self.logger.info("User added new metadata group: {%s}", new_group)
-    self.selected_type_metadata[new_group] = generate_required_metadata()
+    self.selected_type_metadata[new_group] = generate_mandatory_metadata()
     self.metadataGroupComboBox.clear()
     self.metadataGroupComboBox.addItems(list(self.selected_type_metadata.keys()))
     self.metadataGroupComboBox.setCurrentIndex(len(self.selected_type_metadata.keys()) - 1)

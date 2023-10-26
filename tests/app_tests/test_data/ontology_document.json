@@ -11,7 +11,7 @@
           "name": "-name",
           "query": "What is the name of the project?",
           "IRI": "http://url.com",
-          "required": "True"
+          "mandatory": "True"
         },
         {
           "name": "status",
@@ -40,7 +40,7 @@
         {
           "name": "-name",
           "query": "What is the name of the metadata?",
-          "required": "True",
+          "mandatory": "True",
           "IRI": "http://url.com",
           "unit": ""
         },
@@ -51,7 +51,7 @@
         {
           "name": "sample1",
           "query": "",
-          "required": "True",
+          "mandatory": "True",
           "IRI": "http://url.com",
           "unit": "m"
         }
@@ -132,7 +132,7 @@
           "query": "Which sample was used?",
           "list": "sample",
           "unit": "m",
-          "required": "True",
+          "mandatory": "True",
           "IRI": "http://url.com"
         },
         {
@@ -205,7 +205,7 @@
         {
           "name": "-name",
           "query": "What is the name / path?",
-          "required": "True"
+          "mandatory": "True"
         },
         {
           "name": "-tags",

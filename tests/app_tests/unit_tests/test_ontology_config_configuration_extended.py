@@ -22,8 +22,8 @@ from pasta_eln.GUI.ontology_configuration.ontology_configuration_constants impor
 from pasta_eln.GUI.ontology_configuration.ontology_configuration_extended import OntologyConfigurationForm, get_gui
 from pasta_eln.GUI.ontology_configuration.ontology_document_null_exception import OntologyDocumentNullException
 from pasta_eln.GUI.ontology_configuration.reorder_column_delegate import ReorderColumnDelegate
-from pasta_eln.GUI.ontology_configuration.required_column_delegate import RequiredColumnDelegate
-from pasta_eln.GUI.ontology_configuration.utility_functions import generate_empty_type, generate_required_metadata, \
+from pasta_eln.GUI.ontology_configuration.mandatory_column_delegate import MandatoryColumnDelegate
+from pasta_eln.GUI.ontology_configuration.utility_functions import generate_empty_type, generate_mandatory_metadata, \
   get_types_for_display
 from tests.app_tests.common.fixtures import configuration_extended, ontology_doc_mock
 
@@ -52,7 +52,7 @@ class TestOntologyConfigConfiguration(object):
       lambda: mock_attachments_table_view_model)
     mock_attachments_table_view_model.column_widths = column_widths
     mock_required_column_delegate = mocker.MagicMock()
-    mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.RequiredColumnDelegate',
+    mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.MandatoryColumnDelegate',
                  lambda: mock_required_column_delegate)
     mock_create_type_dialog = mocker.MagicMock()
     mock_create = mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.CreateTypeDialog',
@@ -70,7 +70,7 @@ class TestOntologyConfigConfiguration(object):
       'pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.OntologyConfigurationForm.type_changed_signal')
     mock_dialog = mocker.MagicMock()
     mocker.patch.object(QDialog, '__new__', lambda _: mock_dialog)
-    mocker.patch.object(RequiredColumnDelegate, '__new__', lambda _: mocker.MagicMock())
+    mocker.patch.object(MandatoryColumnDelegate, '__new__', lambda _: mocker.MagicMock())
     mocker.patch.object(DeleteColumnDelegate, '__new__', lambda _: mocker.MagicMock())
     mocker.patch.object(ReorderColumnDelegate, '__new__', lambda _: mocker.MagicMock())
     mocker.patch.object(OntologyConfigurationForm, 'typeMetadataTableView', create=True)
@@ -391,7 +391,7 @@ class TestOntologyConfigConfiguration(object):
       if new_metadata_group:
         assert configuration_extended.add_new_metadata_group() is None, "Nothing should be returned"
         logger_info_spy.assert_called_once_with("User added new metadata group: {%s}", new_metadata_group)
-        set_items_selected_spy.assert_called_once_with(new_metadata_group, generate_required_metadata())
+        set_items_selected_spy.assert_called_once_with(new_metadata_group, generate_mandatory_metadata())
         set_current_index_metadata_group_combo_box_spy.assert_called_once_with(len(selected_type_metadata.keys()) - 1)
         clear_metadata_group_combo_box_spy.assert_called_once_with()
         add_items_selected_spy.assert_called_once_with(

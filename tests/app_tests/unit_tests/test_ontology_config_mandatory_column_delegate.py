@@ -3,7 +3,7 @@
 #  Copyright (c) 2023
 #
 #  Author: Jithu Murugan
-#  Filename: test_ontology_config_required_column_delegate.py
+#  Filename: test_ontology_config_mandatory_column_delegate.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
@@ -11,23 +11,23 @@ import pytest
 from PySide6.QtCore import QRect, QEvent, Qt
 from PySide6.QtWidgets import QStyleOptionButton, QApplication, QStyle, QStyledItemDelegate, QRadioButton
 
-from tests.app_tests.common.fixtures import required_delegate
+from tests.app_tests.common.fixtures import mandatory_delegate
 from tests.app_tests.common.test_delegate_funcs_common import delegate_editor_method_common
 
 
-class TestOntologyConfigRequiredColumnDelegate(object):
+class TestOntologyConfigMandatoryColumnDelegate(object):
   def test_delegate_paint_method(self,
                                  mocker,
-                                 required_delegate: required_delegate):
-    # When data set if True, the required radio box is checked
-    self.verify_delegate_paint_method(mocker, required_delegate, 'True')
-    # When data set if False, the required radio box is un-checked
-    self.verify_delegate_paint_method(mocker, required_delegate, 'False')
+                                 mandatory_delegate: mandatory_delegate):
+    # When data set if True, the mandatory radio box is checked
+    self.verify_delegate_paint_method(mocker, mandatory_delegate, 'True')
+    # When data set if False, the mandatory radio box is un-checked
+    self.verify_delegate_paint_method(mocker, mandatory_delegate, 'False')
 
   def test_delegate_create_editor_method(self,
                                          mocker,
-                                         required_delegate: required_delegate):
-    delegate_editor_method_common(required_delegate, mocker)
+                                         mandatory_delegate: mandatory_delegate):
+    delegate_editor_method_common(mandatory_delegate, mocker)
 
   @pytest.mark.parametrize("test_data_value, expected", [
     (False, True),
@@ -35,7 +35,7 @@ class TestOntologyConfigRequiredColumnDelegate(object):
   ])
   def test_delegate_editor_event_method(self,
                                         mocker,
-                                        required_delegate: required_delegate,
+                                        mandatory_delegate: mandatory_delegate,
                                         test_data_value,
                                         expected):
     mock_option_event = mocker.patch("PySide6.QtCore.QEvent")
@@ -49,7 +49,7 @@ class TestOntologyConfigRequiredColumnDelegate(object):
     mocker.patch.object(mock_option_event, "type", mocker.MagicMock(return_value=QEvent.MouseButtonRelease))
     model_set_data_spy = mocker.spy(mock_table_model, 'setData')
     delegate_editor_event_spy = mocker.spy(QStyledItemDelegate, 'editorEvent')
-    assert required_delegate.editorEvent(mock_option_event, mock_table_model, mock_option, mock_index) is expected, \
+    assert mandatory_delegate.editorEvent(mock_option_event, mock_table_model, mock_option, mock_index) is expected, \
       "editorEvent should return expected value"
 
     assert mock_option_event.type.call_count == 1, "editorEvent.type should be called once"
@@ -58,7 +58,7 @@ class TestOntologyConfigRequiredColumnDelegate(object):
     delegate_editor_event_spy.assert_called_once_with(mock_option_event, mock_table_model, mock_option, mock_index)
 
   @staticmethod
-  def verify_delegate_paint_method(mocker, required_delegate, editor_data_value):
+  def verify_delegate_paint_method(mocker, mandatory_delegate, editor_data_value):
     mock_painter = mocker.patch("PySide6.QtGui.QPainter")
     mock_option = mocker.patch("PySide6.QtWidgets.QStyleOptionViewItem")
     mock_option_rect = mocker.patch("PySide6.QtCore.QRect")
@@ -86,7 +86,7 @@ class TestOntologyConfigRequiredColumnDelegate(object):
     mocker.patch.object(mock_option_widget, "style",
                         mocker.MagicMock(return_value=mock_style))
     draw_control_spy = mocker.spy(mock_style, 'drawControl')
-    required_delegate.paint(mock_painter, mock_option, mock_index)
+    mandatory_delegate.paint(mock_painter, mock_option, mock_index)
     draw_control_spy.assert_called_once_with(QStyle.CE_RadioButton, mock_button_option, mock_painter,
                                              mock_option_radio_button)
     assert mock_option.rect.left.call_count == 1, "rect.left should be called once"

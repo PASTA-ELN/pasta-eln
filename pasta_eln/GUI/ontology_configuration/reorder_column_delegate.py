@@ -37,7 +37,7 @@ class ReorderColumnDelegate(QStyledItemDelegate):
             option: QStyleOptionViewItem,
             index: Union[QModelIndex, QPersistentModelIndex]) -> None:
     """
-    Draws the required re-order button within the cell represented by index
+    Draws the re-order button within the cell represented by index
     Args:
       painter (QPainter): Painter instance for painting the button.
       option (QStyleOptionViewItem): Style option for the cell represented by index.

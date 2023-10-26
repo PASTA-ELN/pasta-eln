@@ -196,28 +196,28 @@ def generate_empty_type(label: str) -> dict[str, Any]:
     "IRI": "",
     "label": label,
     "metadata": {
-      "default": generate_required_metadata()
+      "default": generate_mandatory_metadata()
     },
     "attachments": []
   }
 
 
-def generate_required_metadata() -> list[dict[str, Any]]:
+def generate_mandatory_metadata() -> list[dict[str, Any]]:
   """
-  Generate a list of required metadata for creating a new ontology type
-  Returns (list[dict[str, Any]]): List of required metadata
+  Generate a list of mandatory metadata for creating a new ontology type
+  Returns (list[dict[str, Any]]): List of mandatory metadata
 
   """
   return [
     {
       "name": "-name",
       "query": "What is the name of the metadata?",
-      "required": True
+      "mandatory": True
     },
     {
       "name": "-tags",
       "query": "What are the tags associated with this metadata?",
-      "required": True
+      "mandatory": True
     }
   ]
 
@@ -225,21 +225,21 @@ def generate_required_metadata() -> list[dict[str, Any]]:
 def check_ontology_types(ontology_types: dict[str, Any]) \
     -> Tuple[dict[str, dict[str, list[str]]], dict[str, list[str]]]:
   """
-  Check the ontology data to see if all the required metadata ["-name", "-tags"]
+  Check the ontology data to see if all the mandatory metadata ["-name", "-tags"]
   are present under all groups and also if all the metadata have a name
   Args:
     ontology_types (dict[str, Any]): Ontology types loaded from the database
 
   Returns (Tuple[dict[str, dict[str, list[str]]], dict[str, str]]):
-    Empty tuple if all the required metadata present under all groups and all metadata-item have a name
-    otherwise returns a tuple of types with metadata-groups missing required metadata or names
+    Empty tuple if all the mandatory metadata present under all groups and all metadata-item have a name
+    otherwise returns a tuple of types with metadata-groups missing mandatory metadata or names
 
   """
   if not ontology_types:
     return {}, {}
   types_with_missing_metadata: dict[str, dict[str, list[str]]] = {}
   types_with_null_name_metadata: dict[str, list[str]] = {}
-  required_metadata = ["-name", "-tags"]
+  mandatory_metadata = ["-name", "-tags"]
   for type_name, type_structure in ontology_types.items():
     type_name = type_name.replace("x", "Structure level ") \
       if is_structural_level(type_name) \
@@ -251,7 +251,7 @@ def check_ontology_types(ontology_types: dict[str, Any]) \
           if type_name not in types_with_null_name_metadata:
             types_with_null_name_metadata[type_name] = []
           types_with_null_name_metadata[type_name].append(group)
-        for req_metadata in required_metadata:
+        for req_metadata in mandatory_metadata:
           if req_metadata not in names:
             if type_name not in types_with_missing_metadata:
               types_with_missing_metadata[type_name] = {}
@@ -278,7 +278,7 @@ def get_missing_metadata_message(types_with_missing_metadata: dict[str, dict[str
     return message
   message += "<html>"
   if types_with_missing_metadata:
-    message += "<b>Missing required metadata: </b><ul>"
+    message += "<b>Missing mandatory metadata: </b><ul>"
     for type_name, groups in types_with_missing_metadata.items():
       for group, metadata in groups.items():
         for metadata_name in metadata:

@@ -1,10 +1,10 @@
-""" RequiredColumnDelegate  module used for the table views """
+""" MandatoryColumnDelegate  module used for the table views """
 #  PASTA-ELN and all its sub-parts are covered by the MIT license.
 #
 #  Copyright (c) 2023
 #
 #  Author: Jithu Murugan
-#  Filename: required_column_delegate.py
+#  Filename: mandatory_column_delegate.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
@@ -17,9 +17,9 @@ from PySide6.QtWidgets import QApplication, QRadioButton, QStyle, QStyleOptionBu
   QStyledItemDelegate, QWidget
 
 
-class RequiredColumnDelegate(QStyledItemDelegate):
+class MandatoryColumnDelegate(QStyledItemDelegate):
   """
-  Delegate for creating the radio buttons for the required column in ontology editor tables
+  Delegate for creating the radio buttons for the mandatory column in ontology editor tables
   """
 
   def __init__(self) -> None:
@@ -34,7 +34,7 @@ class RequiredColumnDelegate(QStyledItemDelegate):
             option: QStyleOptionViewItem,
             index: Union[QModelIndex, QPersistentModelIndex]) -> None:
     """
-    Draws the required radio button within the cell represented by index
+    Draws the mandatory radio button within the cell represented by index
     Args:
       painter (QPainter): Painter instance for painting the button.
       option (QStyleOptionViewItem): Style option for the cell represented by index.
@@ -51,9 +51,9 @@ class RequiredColumnDelegate(QStyledItemDelegate):
                      option.rect.top(),
                      option.rect.width(),
                      option.rect.height())
-    is_required = bool(index.data(Qt.UserRole))  # type: ignore[arg-type]
+    is_mandatory = bool(index.data(Qt.UserRole))  # type: ignore[arg-type]
     opt.state = QStyle.State_On \
-      if is_required \
+      if is_mandatory \
       else QStyle.State_Off
     style.drawControl(QStyle.CE_RadioButton, opt, painter, radio_button)
 
@@ -82,7 +82,7 @@ class RequiredColumnDelegate(QStyledItemDelegate):
                    option: QStyleOptionViewItem,
                    index: Union[QModelIndex, QPersistentModelIndex]) -> QWidget:
     """
-    Disable the editor for the whole required column by simply returning None
+    Disable the editor for the whole mandatory column by simply returning None
     Args:
       parent (QWidget): Parent table view.
       option (QStyleOptionViewItem): Style option for the cell represented by index.
