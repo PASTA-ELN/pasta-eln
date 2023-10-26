@@ -99,7 +99,7 @@ class Details(QScrollArea):
     if self.doc['-type'][0]=='-':
       ontologyNode = defaultOntologyNode
     else:
-      ontologyNode = self.comm.backend.db.ontology[self.doc['-type'][0]]['prop']
+      ontologyNode = self.comm.backend.db.ontology[self.doc['-type'][0]]['metadata']
     label = self.doc['-name'] if len(self.doc['-name'])<80 else self.doc['-name'][:77]+'...'
     Label(label,'h1', self.headerL)
     if 'metaVendor' not in self.doc:

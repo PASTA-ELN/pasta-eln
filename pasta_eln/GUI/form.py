@@ -60,7 +60,7 @@ class Form(QDialog):
       getattr(self, 'key_-name').setValidator(QRegularExpressionValidator("[\\w\\ .-]+"))
       self.formL.addRow('Name', getattr(self, 'key_-name'))
     if self.doc['-type'][0] in self.db.ontology:
-      ontologyNode = self.db.ontology[self.doc['-type'][0]]['prop']
+      ontologyNode = self.db.ontology[self.doc['-type'][0]]['metadata']
     else:
       ontologyNode = defaultOntologyNode
     for item in [i for group in ontologyNode for i in ontologyNode[group]]:

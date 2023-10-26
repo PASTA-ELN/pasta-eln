@@ -96,8 +96,8 @@ class Database:
       elif docType == '-':
         columnNames = [i['name'] for i in defaultOntologyNode['default'] if 'name' in i]
       else:
-        columnNames = [i['name'] for group in self.ontology[docType]['prop']
-                       for i in self.ontology[docType]['prop'][group]]
+        columnNames = [i['name'] for group in self.ontology[docType]['metadata']
+                       for i in self.ontology[docType]['metadata'][group]]
       columnNames = columnNames[:tableColumnsMax]
       commentString = f'// {docType} : ' + ','.join(columnNames) + '\n'
       for name in columnNames:
@@ -142,7 +142,7 @@ class Database:
       for docType, docTypeDict in self.ontology.items():
         if docType[0] in ['_','-']:
           continue
-        columnNames = [i['name'] for group in docTypeDict['prop'] for i in docTypeDict['prop'][group]]
+        columnNames = [i['name'] for group in docTypeDict['metadata'] for i in docTypeDict['metadata'][group]]
         defaultColumnNames[docType] = ','.join(columnNames)
       return defaultColumnNames
 

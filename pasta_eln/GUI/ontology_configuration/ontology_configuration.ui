@@ -437,10 +437,10 @@
              </size>
             </property>
             <property name="toolTip">
-             <string>Add a new property row to the above table with empty values</string>
+             <string>Add a new metadata row to the above table with empty values</string>
             </property>
             <property name="text">
-             <string>+ Add Property</string>
+             <string>+ Add Metadata group</string>
             </property>
            </widget>
           </item>
