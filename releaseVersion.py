@@ -1,7 +1,9 @@
 #!/usr/bin/python3
-import sys, os, subprocess, shutil
+import sys, os, subprocess, shutil, json
 from pathlib import Path
 from unittest import main as mainTest
+import requests
+from requests.structures import CaseInsensitiveDict
 import configparser
 
 
@@ -19,6 +21,34 @@ def getVersion():
     return 'v0.0.1'
   versionList.sort(key=lambda s: list(map(int, s.split('.'))))
   return 'v'+versionList[-1]
+
+def createContributors():
+  """
+  curl -L -H "Accept: application/vnd.github+json"  -H "X-GitHub-Api-Version: 2022-11-28"   https://api.github.com/repos/PASTA-ELN/pasta-eln/contributors
+  """
+  headers:CaseInsensitiveDict[str]= CaseInsensitiveDict()
+  headers["Content-Type"] = "application/json"
+  resp = requests.get('https://api.github.com/repos/PASTA-ELN/pasta-eln/contributors', headers=headers, timeout=10)
+  if not resp.ok:
+    print("**ERROR: get not successful",resp.reason)
+    return {}
+  with open('CONTRIBUTORS.md', 'w', encoding='utf-8') as fOut:
+    fOut.write('# Contributors \n## Code contributors\nThe following people have contributed code to this project:\n')
+    fOut.write('<table border="2"><tr>\n')
+    for idx, user in enumerate(json.loads(resp.text)):
+      userName = user['login']
+      link     = user['html_url']
+      avatar   = user['avatar_url']
+      fOut.write(f'<td style="text-align: center"><a href="{link}"><img src="{avatar}" /><br>{userName}</a></td>')
+      if idx%3==2:
+        fOut.write('</tr>\n')
+    fOut.write('<td></td></tr>\n</table>')
+    fOut.write('\n\n## Support contributors \n The following people contributed in the discussions:\n')
+    fOut.write('- Hanna Tsybenko\n')
+    fOut.write('- Ruth Schwaiger\n')
+    fOut.write('\n\n## Software projects\nMost of the file-layout and the integration of webservices follows the example of datalad and datalad-gooey')
+    fOut.write('https://github.com/datalad. We thank those developers for their work and contribution to free software.')
+  return
 
 
 def newVersion(level=2):
@@ -53,10 +83,11 @@ def newVersion(level=2):
   #execute git commands
   os.system(f'git pull')
   os.system(f'git tag -a v{version} -m "Version {version}; see CHANGELOG for details"')
-  #create CHANGELOG
+  #create CHANGELOG / Contributor-list
   with open(Path.home()/'.ssh'/'github.token', 'r', encoding='utf-8') as fIn:
     token = fIn.read().strip()
   os.system("github_changelog_generator -u PASTA-ELN -p pasta-eln -t "+token)
+  createContributors()
   addition = input('\n\nWhat do you want to add to the push message? ')
   os.system(f'git commit -a -m "updated changelog; {addition}"')
   #push and publish
