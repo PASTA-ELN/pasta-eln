@@ -1,5 +1,34 @@
 # Changelog
 
+## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.18...HEAD)
+
+**Implemented enhancements:**
+
+- Improving user experience with "Visibility" options [\#62](https://github.com/PASTA-ELN/pasta-eln/issues/62)
+
+**Fixed bugs:**
+
+- Autosaving after adding the comment [\#87](https://github.com/PASTA-ELN/pasta-eln/issues/87)
+- Changing column names in table [\#76](https://github.com/PASTA-ELN/pasta-eln/issues/76)
+- Hide in item editor [\#63](https://github.com/PASTA-ELN/pasta-eln/issues/63)
+- Button should highlight premature end of install [\#32](https://github.com/PASTA-ELN/pasta-eln/issues/32)
+
+**Closed issues:**
+
+- Ontologie issues for Steffen [\#92](https://github.com/PASTA-ELN/pasta-eln/issues/92)
+- Heading styles in project view [\#84](https://github.com/PASTA-ELN/pasta-eln/issues/84)
+- comment in project view [\#36](https://github.com/PASTA-ELN/pasta-eln/issues/36)
+
+**Merged pull requests:**
+
+- repair bug \#107 [\#108](https://github.com/PASTA-ELN/pasta-eln/pull/108) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+
+## [v2.4.18](https://github.com/PASTA-ELN/pasta-eln/tree/v2.4.18) (2023-10-25)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.17...v2.4.18)
+
 ## [v2.4.17](https://github.com/PASTA-ELN/pasta-eln/tree/v2.4.17) (2023-10-25)
 
 [Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.16...v2.4.17)

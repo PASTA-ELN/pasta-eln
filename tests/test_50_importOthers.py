@@ -39,7 +39,7 @@ class TestStringMethods(unittest.TestCase):
     warnings.filterwarnings('ignore', category=ResourceWarning, module='PIL')
     warnings.filterwarnings('ignore', category=ImportWarning)
     projectGroup = 'research'
-    url = 'https://github.com/TheELNConsortium/TheELNFileFormat/raw/master/examples/elabftw/multiple-database-items.eln'
+    url = 'https://github.com/TheELNConsortium/TheELNFileFormat/raw/master/examples/elabftw/multiple-experiments.eln'
     dirpath = Path(tempfile.mkdtemp())
     elnFile = dirpath/'multiple-database-items.eln'
     urllib.request.urlretrieve(url, elnFile)
@@ -66,8 +66,8 @@ class TestStringMethods(unittest.TestCase):
     fileCount = 0
     for _, _, files in os.walk(self.be.basePath):
       fileCount+=len(files)
-    print('Number of files 8 =', fileCount)
-    self.assertEqual(fileCount, 8, 'Not 8 files exist')
+    print('Number of files 4 =', fileCount)
+    self.assertEqual(fileCount, 4, 'Not 4 files exist')
     return
 
   def tearDown(self):
