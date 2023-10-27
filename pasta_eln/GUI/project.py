@@ -81,35 +81,30 @@ class Project(QWidget):
     tags = ', '.join([f'#{i}' for i in self.docProj['-tags']]) if '-tags' in self.docProj else ''
     infoL.addWidget(QLabel(f'Tags: {tags}'))
     countLines = 0
-    flagCommentInline = True
     for key,value in self.docProj.items():
-      if key[0] in ['_','-'] or 'from ' in key:
-        continue
-      if key=='comment' and ('\n' in value or len(value)>80):
-        flagCommentInline = False
+      if key[0] in {'_','-'} or 'from ' in key or key in {'comment'}:
         continue
       labelW = QLabel(f'{key.title()}: {str(value)}')
       labelW.setMaximumWidth(self.width()-50)
       infoL.addWidget(labelW)
       countLines += 1
-    if not flagCommentInline:     #format as label and QTextEdit
-      commentW, commentL         = widgetAndLayout('H', infoL, 's')
-      labelW = QLabel('Comment:')
-      # labelW.setStyleSheet('padding-top: 5px') #make "Comment:" text aligned with other content, not with text-edit
-      commentL.addWidget(labelW, alignment=Qt.AlignTop)   # type: ignore[call-arg]
-      comment = QTextEdit()
-      comment.setMarkdown(re.sub(r'(^|\n)(#+)', r'\1##\2', self.docProj['comment'].strip()))
-      bgColor = getColor(self.comm.backend, 'secondaryDark')
-      fgColor = getColor(self.comm.backend, 'primaryText')
-      comment.setStyleSheet(f"QTextEdit {{ border: none; padding: 0px; background-color: {bgColor}; "\
-                            f"color: {fgColor} }}")
-      comment.setReadOnly(True)
-      comment.document().setTextWidth(commentW.width())
-      height:int = comment.document().size().toTuple()[1] # type: ignore[index]
-      comment.setFixedHeight(height)
-      commentL.addWidget(comment)
-      self.infoW.setMaximumHeight(height+10+countLines*self.lineSep )
-      commentW.setMaximumHeight(height+10+countLines*self.lineSep )
+    commentW, commentL         = widgetAndLayout('H', infoL, 's')
+    labelW = QLabel('Comment:')
+    # labelW.setStyleSheet('padding-top: 5px') #make "Comment:" text aligned with other content, not with text-edit
+    commentL.addWidget(labelW, alignment=Qt.AlignTop)   # type: ignore[call-arg]
+    comment = QTextEdit()
+    comment.setMarkdown(re.sub(r'(^|\n)(#+)', r'\1##\2', self.docProj['comment'].strip()))
+    bgColor = getColor(self.comm.backend, 'secondaryDark')
+    fgColor = getColor(self.comm.backend, 'primaryText')
+    comment.setStyleSheet(f"QTextEdit {{ border: none; padding: 0px; background-color: {bgColor}; "\
+                          f"color: {fgColor} }}")
+    comment.setReadOnly(True)
+    comment.document().setTextWidth(commentW.width())
+    height:int = comment.document().size().toTuple()[1] # type: ignore[index]
+    comment.setFixedHeight(height)
+    commentL.addWidget(comment)
+    self.infoW.setMaximumHeight(height+10+countLines*self.lineSep )
+    commentW.setMaximumHeight(height+10+countLines*self.lineSep )
     return
 
 
