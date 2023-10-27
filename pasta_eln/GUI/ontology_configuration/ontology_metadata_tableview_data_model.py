@@ -50,7 +50,7 @@ class OntologyMetadataTableViewModel(OntologyTableViewModel):
       2: 150,  # list column width
       3: 100,  # unit column width
       4: 100,  # IRI column width
-      5: 120,  # mandatory column width
+      5: 130,  # mandatory column width
       6: 120,  # delete column width
       7: 120  # re-order column width
     }
