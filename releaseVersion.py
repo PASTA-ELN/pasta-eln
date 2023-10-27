@@ -135,6 +135,7 @@ def runTests():
     if success==1:
       success += result.stdout.decode('utf-8').count('**ERROR')
       success -= result.stdout.decode('utf-8').count('**ERROR Red: FAILURE and ERROR')
+      success -= result.stdout.decode('utf-8').count('**ERROR got a file')
     if success==1:
       print("  success: Python unit test "+fileI)
     else:
@@ -150,6 +151,7 @@ def runTests():
     if success==1:
       success += result.stdout.decode('utf-8').count('**ERROR')
       success -= result.stdout.decode('utf-8').count('**ERROR Red: FAILURE and ERROR')
+      success -= result.stdout.decode('utf-8').count('**ERROR got a file')
     if success==1:
       print("  success: Python unit test "+fileI)
     else:

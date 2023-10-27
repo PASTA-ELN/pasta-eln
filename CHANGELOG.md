@@ -2,7 +2,15 @@
 
 ## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
 
-[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.18...HEAD)
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.19...HEAD)
+
+**Merged pull requests:**
+
+- Repair rendering in projects \#105 [\#109](https://github.com/PASTA-ELN/pasta-eln/pull/109) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+
+## [v2.4.19](https://github.com/PASTA-ELN/pasta-eln/tree/v2.4.19) (2023-10-27)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.18...v2.4.19)
 
 **Implemented enhancements:**
 
