@@ -133,13 +133,13 @@ class Table(QWidget):
       self.data = list({v['id']:v for v in self.data}.values())
       self.showState.setText('(show all rows)' if self.showAll else '(hide hidden rows)')
       if self.docType=='-':
-        self.headline.setText('Unidentified')
+        docLabel = 'Unidentified'
         self.actionChangeColums.setVisible(False)
       else:
         self.actionChangeColums.setVisible(True)
         if self.docType in self.comm.backend.db.dataLabels:
           docLabel = self.comm.backend.db.dataLabels[self.docType]
-          self.headline.setText(docLabel)
+      self.headline.setText(docLabel)
       self.showHidden.setText(f'Show/hide hidden {docLabel.lower()}')
       self.filterHeader = self.comm.backend.db.getColumnNames()[self.docType].split(',')
       self.filterHeader = [i[1:] if i[0]=='-'   else i for i in self.filterHeader]  #change -something to something
@@ -189,7 +189,7 @@ class Table(QWidget):
         if [b for b in doc['-branch'] if False in b['show']]:
           item.setText( item.text()+'  \U0001F441' )
         item.setAccessibleText(doc['_id'])
-        if docType!='x0':
+        if self.docType!='x0':
           item.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)   # type: ignore[operator]
           item.setCheckState(Qt.CheckState.Unchecked)
       else:
