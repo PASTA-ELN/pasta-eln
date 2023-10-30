@@ -78,8 +78,9 @@ class Project(QWidget):
     more.setMenu(moreMenu)
 
     self.infoW, infoL         = widgetAndLayout('V', self.mainL)
+    self.infoW.setFixedWidth(self.width())
     tags = ', '.join([f'#{i}' for i in self.docProj['-tags']]) if '-tags' in self.docProj else ''
-    infoL.addWidget(QLabel(f'Tags: {tags}'))
+    infoL.addWidget(QLabel(f'Tags: {tags[:int((self.width()-50)/6.2)]}'))
     countLines = 0
     for key,value in self.docProj.items():
       if key[0] in {'_','-'} or 'from ' in key or key in {'comment'}:
@@ -99,12 +100,10 @@ class Project(QWidget):
     comment.setStyleSheet(f"QTextEdit {{ border: none; padding: 0px; background-color: {bgColor}; "\
                           f"color: {fgColor} }}")
     comment.setReadOnly(True)
-    comment.document().setTextWidth(commentW.width())
+    comment.document().setTextWidth(self.infoW.width())
     height:int = comment.document().size().toTuple()[1] # type: ignore[index]
-    comment.setFixedHeight(height)
     commentL.addWidget(comment)
-    self.infoW.setMaximumHeight(height+10+countLines*self.lineSep )
-    commentW.setMaximumHeight(height+10+countLines*self.lineSep )
+    self.infoW.setMaximumHeight(height + (countLines+1)*self.lineSep )
     return
 
 
