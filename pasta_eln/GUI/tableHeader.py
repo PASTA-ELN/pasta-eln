@@ -68,7 +68,7 @@ class TableHeader(QDialog):
     if command[0] is Command.ADD:
       self.selectedList += selectedLeft
     elif command[0] is Command.DELETE:
-      self.selectedList = [i for i in self.selectedList if i not in selectedRight or i in ['name'] ]
+      self.selectedList = [i for i in self.selectedList if i not in selectedRight ]
     elif command[0] is Command.MOVE_UP  and len(selectedRight)==1:
       oldIndex = self.selectedList.index(selectedRight[0])
       if oldIndex>0:
