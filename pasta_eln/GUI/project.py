@@ -89,7 +89,7 @@ class Project(QWidget):
       labelW.setMaximumWidth(self.width()-50)
       infoL.addWidget(labelW)
       countLines += 1
-    commentW, commentL         = widgetAndLayout('H', infoL, 's')
+    _, commentL         = widgetAndLayout('H', infoL, 's')
     labelW = QLabel('Comment:')
     # labelW.setStyleSheet('padding-top: 5px') #make "Comment:" text aligned with other content, not with text-edit
     commentL.addWidget(labelW, alignment=Qt.AlignTop)   # type: ignore[call-arg]
