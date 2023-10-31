@@ -24,7 +24,7 @@ from .fixedStringsJson import shortcuts
 from .guiCommunicate import Communicate
 from .guiStyle import Action, showMessage, widgetAndLayout, shortCuts
 from .inputOutput import exportELN, importELN
-from .GUI.ontology_configuration.ontology_configuration_extended import OntologyConfigurationForm
+from .GUI.data_hierarchy.ontology_configuration_extended import OntologyConfigurationForm
 from .miscTools import updateExtractorList, restart
 
 os.environ['QT_API'] = 'pyside6'

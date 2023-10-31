@@ -12,8 +12,8 @@ import logging
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QLineEdit, QStyledItemDelegate
 
-from pasta_eln.GUI.ontology_configuration.iri_column_delegate import IriColumnDelegate
-from pasta_eln.GUI.ontology_configuration.lookup_iri_action import LookupIriAction
+from pasta_eln.GUI.data_hierarchy.iri_column_delegate import IriColumnDelegate
+from pasta_eln.GUI.data_hierarchy.lookup_iri_action import LookupIriAction
 from tests.app_tests.common.fixtures import iri_delegate
 
 
@@ -25,7 +25,7 @@ class TestOntologyConfigIriColumnDelegate(object):
     delegate = IriColumnDelegate()
     mock_base_init.assert_called_once_with()
     mock_get_logger.assert_called_once_with(
-      'pasta_eln.GUI.ontology_configuration.iri_column_delegate.IriColumnDelegate')
+      'pasta_eln.GUI.data_hierarchy.iri_column_delegate.IriColumnDelegate')
     assert delegate.logger is mock_logger, "logger should be set"
 
   def test_create_editor_should_return_line_edit(self,
@@ -34,7 +34,7 @@ class TestOntologyConfigIriColumnDelegate(object):
     mock_parent = mocker.patch('PySide6.QtWidgets.QWidget')
     mock_line_edit = mocker.patch('PySide6.QtWidgets.QLineEdit')
     mock_lookup_iri_action = mocker.patch(
-      'pasta_eln.GUI.ontology_configuration.lookup_iri_action.LookupIriAction')
+      'pasta_eln.GUI.data_hierarchy.lookup_iri_action.LookupIriAction')
     mock_lookup_iri_action_construct = mocker.patch.object(LookupIriAction, '__new__',
                                                            return_value=mock_lookup_iri_action)
     mock_line_edit_construct = mocker.patch.object(QLineEdit, '__new__', return_value=mock_line_edit)

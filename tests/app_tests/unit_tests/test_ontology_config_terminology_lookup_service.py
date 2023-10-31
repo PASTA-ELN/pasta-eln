@@ -18,7 +18,7 @@ from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientConnectorError, InvalidURL
 from aiohttp.client_reqrep import ConnectionKey
 
-from pasta_eln.GUI.ontology_configuration.terminology_lookup_service import TerminologyLookupService
+from pasta_eln.GUI.data_hierarchy.terminology_lookup_service import TerminologyLookupService
 from tests.app_tests.common.fixtures import iri_lookup_web_results_name_mock, iri_lookup_web_results_pasta_mock, \
   iri_lookup_web_results_science_mock, retrieved_iri_results_name_mock, retrieved_iri_results_pasta_mock, \
   retrieved_iri_results_science_mock, terminology_lookup_config_mock, terminology_lookup_mock
@@ -46,7 +46,7 @@ class TestOntologyConfigTerminologyLookup(object):
     mock_get_logger = mocker.patch.object(logging, 'getLogger', return_value=mock_logger)
     service = TerminologyLookupService()
     mock_get_logger.assert_called_once_with(
-      'pasta_eln.GUI.ontology_configuration.terminology_lookup_service.TerminologyLookupService')
+      'pasta_eln.GUI.data_hierarchy.terminology_lookup_service.TerminologyLookupService')
     assert service.logger is mock_logger
     assert service.session_timeout == 10, "session_timeout should be set to 10"
     assert service.session_request_errors == [], "session_request_errors should be empty"
@@ -76,7 +76,7 @@ class TestOntologyConfigTerminologyLookup(object):
     response_future.set_result(response_string)
     mock_client_session_get_response_text = mocker.patch.object(mock_client_response, 'text',
                                                                 return_value=response_future)
-    mock_json_loads = mocker.patch('pasta_eln.GUI.ontology_configuration.terminology_lookup_service.loads',
+    mock_json_loads = mocker.patch('pasta_eln.GUI.data_hierarchy.terminology_lookup_service.loads',
                                    return_value=response_json)
 
     # Act and asserts
@@ -265,27 +265,27 @@ class TestOntologyConfigTerminologyLookup(object):
     mock_get_request_resp = mocker.MagicMock()
     mocker.patch.object(terminology_lookup_mock, 'session_request_errors')
     mock_session_request_errors_clear = mocker.patch.object(terminology_lookup_mock.session_request_errors, 'clear')
-    mock_os_path_dir_name = mocker.patch('pasta_eln.GUI.ontology_configuration.terminology_lookup_service.dirname',
+    mock_os_path_dir_name = mocker.patch('pasta_eln.GUI.data_hierarchy.terminology_lookup_service.dirname',
                                          return_value=mock_dir_name)
-    mock_os_path_get_cwd = mocker.patch('pasta_eln.GUI.ontology_configuration.terminology_lookup_service.getcwd',
+    mock_os_path_get_cwd = mocker.patch('pasta_eln.GUI.data_hierarchy.terminology_lookup_service.getcwd',
                                         return_value=mock_cd)
-    mock_os_path_join = mocker.patch('pasta_eln.GUI.ontology_configuration.terminology_lookup_service.join',
+    mock_os_path_join = mocker.patch('pasta_eln.GUI.data_hierarchy.terminology_lookup_service.join',
                                      return_value=mock_join)
-    mock_os_realpath = mocker.patch('pasta_eln.GUI.ontology_configuration.terminology_lookup_service.realpath',
+    mock_os_realpath = mocker.patch('pasta_eln.GUI.data_hierarchy.terminology_lookup_service.realpath',
                                     return_value=mock_realpath)
-    mock_os_open = mocker.patch('pasta_eln.GUI.ontology_configuration.terminology_lookup_service.open',
+    mock_os_open = mocker.patch('pasta_eln.GUI.data_hierarchy.terminology_lookup_service.open',
                                 return_value=mock_open_file)
     mock_get_request = mocker.patch(
-      'pasta_eln.GUI.ontology_configuration.terminology_lookup_service.TerminologyLookupService.get_request',
+      'pasta_eln.GUI.data_hierarchy.terminology_lookup_service.TerminologyLookupService.get_request',
       return_value=mock_get_request_resp)
     mock_parse_web_result = mocker.patch(
-      'pasta_eln.GUI.ontology_configuration.terminology_lookup_service.TerminologyLookupService.parse_web_result')
+      'pasta_eln.GUI.data_hierarchy.terminology_lookup_service.TerminologyLookupService.parse_web_result')
     mock_parse_web_result.side_effect = retrieved_iri_results
     mocker.patch.object(mock_get_request_resp, '__aenter__', return_value=mock_get_request_resp)
     mocker.patch.object(mock_open_file, '__enter__', return_value=mock_open_file)
     mock_log_info = mocker.patch.object(terminology_lookup_mock.logger, 'info')
     mock_log_error = mocker.patch.object(terminology_lookup_mock.logger, 'error')
-    mock_json_load = mocker.patch('pasta_eln.GUI.ontology_configuration.terminology_lookup_service.load',
+    mock_json_load = mocker.patch('pasta_eln.GUI.data_hierarchy.terminology_lookup_service.load',
                                   return_value=terminology_lookup_config_mock)
     for item in terminology_lookup_config_mock:
       assert item['request_params'][item['search_term_key']] == 'searchTerm', \
@@ -310,8 +310,8 @@ class TestOntologyConfigTerminologyLookup(object):
       mock_os_path_join.assert_any_call(mock_realpath, "terminology_lookup_config.json")
       mock_os_path_get_cwd.assert_called_once_with()
       assert mock_os_path_dir_name.call_args.args[0].endswith(
-        'pasta_eln/GUI/ontology_configuration/terminology_lookup_service.py'), \
-        "Directory name must end with pasta_eln/GUI/ontology_configuration/terminology_lookup_service.py"
+        'pasta_eln/GUI/data_hierarchy/terminology_lookup_service.py'), \
+        "Directory name must end with pasta_eln/GUI/data_hierarchy/terminology_lookup_service.py"
     else:
       mock_log_error.assert_called_once_with("Invalid null search term!")
 

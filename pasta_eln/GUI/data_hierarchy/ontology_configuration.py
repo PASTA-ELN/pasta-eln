@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'ontology_configuration.ui'
+# Form implementation generated from reading ui file 'data_hierarchy.ui'
 #
 # Created by: PyQt6 UI code generator 6.4.2
 #

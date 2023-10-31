@@ -11,8 +11,8 @@ from typing import Union
 from PySide6.QtCore import QSize
 from PySide6.QtWidgets import QPushButton, QStyleOptionButton, QApplication, QStyle
 
-from pasta_eln.GUI.ontology_configuration.delete_column_delegate import DeleteColumnDelegate
-from pasta_eln.GUI.ontology_configuration.reorder_column_delegate import ReorderColumnDelegate
+from pasta_eln.GUI.data_hierarchy.delete_column_delegate import DeleteColumnDelegate
+from pasta_eln.GUI.data_hierarchy.reorder_column_delegate import ReorderColumnDelegate
 from tests.app_tests.common.fixtures import delete_delegate, reorder_delegate
 
 

@@ -15,7 +15,7 @@ from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QLineEdit, QWidget
 from qtawesome import icon
 
-from pasta_eln.GUI.ontology_configuration.terminology_lookup_dialog import TerminologyLookupDialog
+from pasta_eln.GUI.data_hierarchy.terminology_lookup_dialog import TerminologyLookupDialog
 
 
 class LookupIriAction(QAction):

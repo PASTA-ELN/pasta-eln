@@ -4,7 +4,7 @@
 #  Copyright (c) 2023
 #
 #  Author: Jithu Murugan
-#  Filename: create_type_dialog_extended.py
+#  Filename: create_type_dialog.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
@@ -17,10 +17,10 @@ from PySide6.QtCore import QRegularExpression
 from PySide6.QtGui import QRegularExpressionValidator
 from PySide6.QtWidgets import QDialog
 
-from pasta_eln.GUI.ontology_configuration.create_type_dialog import Ui_CreateTypeDialog
+from pasta_eln.GUI.data_hierarchy.create_type_dialog_base import Ui_CreateTypeDialogBase
 
 
-class CreateTypeDialog(Ui_CreateTypeDialog):
+class CreateTypeDialog(Ui_CreateTypeDialogBase):
   """
   Abstracted dialog for the create type
   """

@@ -10,7 +10,7 @@
 import pytest
 from PySide6.QtCore import Qt
 
-from pasta_eln.GUI.ontology_configuration.ontology_configuration_constants import METADATA_TABLE_LIST_COLUMN_INDEX
+from pasta_eln.GUI.data_hierarchy.ontology_configuration_constants import METADATA_TABLE_LIST_COLUMN_INDEX
 from tests.app_tests.common.fixtures import table_model, metadata_table_model, attachments_table_model
 
 
@@ -179,7 +179,7 @@ class TestOntologyConfigTableViewDataModel(object):
     mock_layout_changed = mocker.patch("PySide6.QtCore.SignalInstance")
     mock_data_set.__getitem__.side_effect = data_set.__getitem__
     mock_data_set.__setitem__.side_effect = data_set.__setitem__
-    mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_tableview_data_model.len', lambda x: len(data_set))
+    mocker.patch('pasta_eln.GUI.data_hierarchy.ontology_tableview_data_model.len', lambda x: len(data_set))
     mock_data_set.insert.side_effect = data_set.insert
     mocker.patch.object(table_model, "data_set", mock_data_set)
     data_set_insert_spy = mocker.spy(mock_data_set, 'insert')
@@ -344,7 +344,7 @@ class TestOntologyConfigTableViewDataModel(object):
     mock_is_valid_spy = mocker.patch.object(mock_index, "isValid", return_value=is_valid)
     mock_column_spy = mocker.patch.object(mock_index, "column", return_value=column_index)
     mock_data_set_spy = mocker.patch(
-      "pasta_eln.GUI.ontology_configuration.ontology_tableview_data_model.OntologyTableViewModel.setData",
+      "pasta_eln.GUI.data_hierarchy.ontology_tableview_data_model.OntologyTableViewModel.setData",
       return_value=set_success)
     assert metadata_table_model.setData(mock_index, set_value, role) is set_success, \
       "set_data() should return expected value"
@@ -378,7 +378,7 @@ class TestOntologyConfigTableViewDataModel(object):
     mock_is_valid_spy = mocker.patch.object(mock_index, "isValid", return_value=is_valid)
     mock_column_spy = mocker.patch.object(mock_index, "column", return_value=column_index)
     mock_data_get_spy = mocker.patch(
-      "pasta_eln.GUI.ontology_configuration.ontology_tableview_data_model.OntologyTableViewModel.data",
+      "pasta_eln.GUI.data_hierarchy.ontology_tableview_data_model.OntologyTableViewModel.data",
       return_value=base_return_data)
     assert metadata_table_model.data(mock_index, role) == return_value, \
       "data() should return expected value"

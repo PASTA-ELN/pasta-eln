@@ -1,5 +1,5 @@
 """ Table view model used for the metadata table in the ontology editor """
-# Context from Code Snippet pasta_eln/GUI/ontology_configuration/ontology_metadata_tableview_data_model.py:##  PASTA-ELN and all its sub-parts are covered by the MIT license.
+# Context from Code Snippet pasta_eln/GUI/data_hierarchy/ontology_metadata_tableview_data_model.py:##  PASTA-ELN and all its sub-parts are covered by the MIT license.
 #
 #  Copyright (c) 2023
 #

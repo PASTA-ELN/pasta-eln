@@ -14,8 +14,8 @@ import pytest
 from PySide6 import QtCore
 from PySide6.QtWidgets import QCheckBox, QLabel
 
-from pasta_eln.GUI.ontology_configuration.terminology_lookup_dialog import TerminologyLookupDialog
-from pasta_eln.GUI.ontology_configuration.terminology_lookup_dialog_base import Ui_TerminologyLookupDialogBase
+from pasta_eln.GUI.data_hierarchy.terminology_lookup_dialog import TerminologyLookupDialog
+from pasta_eln.GUI.data_hierarchy.terminology_lookup_dialog_base import Ui_TerminologyLookupDialogBase
 from tests.app_tests.common.fixtures import retrieved_iri_results_name_mock, retrieved_iri_results_pasta_mock, \
   retrieved_iri_results_science_mock, terminology_lookup_dialog_mock
 
@@ -47,9 +47,9 @@ class TestOntologyConfigTerminologyLookupDialog(object):
     mocker.patch.object(mock_error_console_text_edit, 'isVisible')
     mocker.patch.object(mock_error_console_text_edit, 'setVisible')
     mock_terminology_lookup_service = mocker.patch(
-      'pasta_eln.GUI.ontology_configuration.terminology_lookup_dialog.TerminologyLookupService')
+      'pasta_eln.GUI.data_hierarchy.terminology_lookup_dialog.TerminologyLookupService')
     mock_pixmap = mocker.MagicMock()
-    mock_pixmap_constructor = mocker.patch('pasta_eln.GUI.ontology_configuration.terminology_lookup_dialog.QPixmap',
+    mock_pixmap_constructor = mocker.patch('pasta_eln.GUI.data_hierarchy.terminology_lookup_dialog.QPixmap',
                                            return_value=mock_pixmap)
     mock_pixmap_scaled_to_width = mocker.patch.object(mock_pixmap, 'scaledToWidth', return_value=mock_pixmap)
 
@@ -61,13 +61,13 @@ class TestOntologyConfigTerminologyLookupDialog(object):
     mock_cd = mocker.MagicMock()
     mock_join = mocker.MagicMock()
     mock_realpath = mocker.MagicMock()
-    mock_os_path_dir_name = mocker.patch('pasta_eln.GUI.ontology_configuration.terminology_lookup_dialog.dirname',
+    mock_os_path_dir_name = mocker.patch('pasta_eln.GUI.data_hierarchy.terminology_lookup_dialog.dirname',
                                          return_value=mock_dir_name)
-    mock_os_path_get_cwd = mocker.patch('pasta_eln.GUI.ontology_configuration.terminology_lookup_dialog.getcwd',
+    mock_os_path_get_cwd = mocker.patch('pasta_eln.GUI.data_hierarchy.terminology_lookup_dialog.getcwd',
                                         return_value=mock_cd)
-    mock_os_path_join = mocker.patch('pasta_eln.GUI.ontology_configuration.terminology_lookup_dialog.join',
+    mock_os_path_join = mocker.patch('pasta_eln.GUI.data_hierarchy.terminology_lookup_dialog.join',
                                      return_value=mock_join)
-    mock_os_realpath = mocker.patch('pasta_eln.GUI.ontology_configuration.terminology_lookup_dialog.realpath',
+    mock_os_realpath = mocker.patch('pasta_eln.GUI.data_hierarchy.terminology_lookup_dialog.realpath',
                                     return_value=mock_realpath)
     mock_accepted_callback = mocker.MagicMock()
 
@@ -75,13 +75,13 @@ class TestOntologyConfigTerminologyLookupDialog(object):
     mock_q_dialog_constructor.assert_called_once_with()
     mock_base_setup.assert_called_once_with(mock_dialog)
     mock_get_logger.assert_called_once_with(
-      'pasta_eln.GUI.ontology_configuration.terminology_lookup_dialog.TerminologyLookupDialog')
+      'pasta_eln.GUI.data_hierarchy.terminology_lookup_dialog.TerminologyLookupDialog')
     assert dialog.instance is mock_dialog, "dialog instance should be returned"
     assert dialog.logger is mock_logger, "logger should be set"
 
     assert mock_os_path_dir_name.call_args.args[0].endswith(
-      'pasta_eln/GUI/ontology_configuration/terminology_lookup_dialog.py'), \
-      "directory name should contain pasta-eln/src/pasta_eln/GUI/ontology_configuration/terminology_lookup_dialog.py"
+      'pasta_eln/GUI/data_hierarchy/terminology_lookup_dialog.py'), \
+      "directory name should contain pasta-eln/src/pasta_eln/GUI/data_hierarchy/terminology_lookup_dialog.py"
     mock_os_path_get_cwd.assert_called_once_with()
     mock_os_path_join.assert_any_call(mock_cd, mock_dir_name)
     mock_os_realpath.assert_called_once_with(mock_join)
@@ -138,12 +138,12 @@ class TestOntologyConfigTerminologyLookupDialog(object):
 
     mock_layout = mocker.MagicMock()
     mock_entry_layout_constructor = mocker.patch(
-      'pasta_eln.GUI.ontology_configuration.terminology_lookup_dialog.QHBoxLayout', return_value=mock_layout)
+      'pasta_eln.GUI.data_hierarchy.terminology_lookup_dialog.QHBoxLayout', return_value=mock_layout)
     mock_entry_widget = mocker.MagicMock()
     mock_entry_widget_constructor = mocker.patch(
-      'pasta_eln.GUI.ontology_configuration.terminology_lookup_dialog.QWidget', return_value=mock_entry_widget)
+      'pasta_eln.GUI.data_hierarchy.terminology_lookup_dialog.QWidget', return_value=mock_entry_widget)
     mock_entry_cb_constructor = mocker.patch(
-      'pasta_eln.GUI.ontology_configuration.terminology_lookup_dialog.QCheckBox', return_value=mock_entry_checkbox)
+      'pasta_eln.GUI.data_hierarchy.terminology_lookup_dialog.QCheckBox', return_value=mock_entry_checkbox)
 
     mocker.patch.object(QCheckBox, '__init__', return_value=None)
     mocker.patch.object(QLabel, '__init__', return_value=None)
@@ -234,7 +234,7 @@ class TestOntologyConfigTerminologyLookupDialog(object):
     mock_do_loop = mocker.MagicMock()
     mocker.patch.object(mock_terminology_service, 'do_lookup', return_value=mock_do_loop)
     mock_event_loop = mocker.MagicMock()
-    mock_get_event_loop = mocker.patch('pasta_eln.GUI.ontology_configuration.terminology_lookup_dialog.get_event_loop',
+    mock_get_event_loop = mocker.patch('pasta_eln.GUI.data_hierarchy.terminology_lookup_dialog.get_event_loop',
                                        return_value=mock_event_loop)
     mock_run_until_complete = mocker.patch.object(mock_event_loop, 'run_until_complete',
                                                   return_value=retrieved_iri_results)
@@ -270,7 +270,7 @@ class TestOntologyConfigTerminologyLookupDialog(object):
     mock_instance = mocker.MagicMock()
     mocker.patch.object(terminology_lookup_dialog_mock, 'instance', mock_instance, create=True)
     mock_terminology_line_edit_text = mocker.patch.object(mock_terminology_line_edit, 'text', return_value=search_term)
-    mock_warning = mocker.patch('pasta_eln.GUI.ontology_configuration.terminology_lookup_dialog.QMessageBox.warning')
+    mock_warning = mocker.patch('pasta_eln.GUI.data_hierarchy.terminology_lookup_dialog.QMessageBox.warning')
     assert terminology_lookup_dialog_mock.terminology_search_button_clicked() is None, "show should return None"
     mock_logger_warning.assert_called_once_with("Enter non null search term!")
     mock_terminology_line_edit_text.assert_called_once_with()
@@ -298,7 +298,7 @@ class TestOntologyConfigTerminologyLookupDialog(object):
     mocker.patch.object(mock_terminology_service, 'do_lookup', return_value=mock_do_loop)
     mocker.patch.object(mock_terminology_service, 'session_request_errors', ["error1", "error2", "error3", "error4"])
     mock_event_loop = mocker.MagicMock()
-    mock_get_event_loop = mocker.patch('pasta_eln.GUI.ontology_configuration.terminology_lookup_dialog.get_event_loop',
+    mock_get_event_loop = mocker.patch('pasta_eln.GUI.data_hierarchy.terminology_lookup_dialog.get_event_loop',
                                        return_value=mock_event_loop)
     mock_run_until_complete = mocker.patch.object(mock_event_loop, 'run_until_complete',
                                                   return_value={})
@@ -345,7 +345,7 @@ class TestOntologyConfigTerminologyLookupDialog(object):
     mock_logger_info = mocker.patch.object(terminology_lookup_dialog_mock.logger, 'info')
     mocker.patch.object(Ui_TerminologyLookupDialogBase, 'scrollAreaContentsVerticalLayout', create=True)
     mocker.patch.object(terminology_lookup_dialog_mock.scrollAreaContentsVerticalLayout, 'count', return_value=2)
-    mock_range = mocker.patch('pasta_eln.GUI.ontology_configuration.terminology_lookup_dialog.range',
+    mock_range = mocker.patch('pasta_eln.GUI.data_hierarchy.terminology_lookup_dialog.range',
                               return_value=[0, 1])
     mocker.patch.object(terminology_lookup_dialog_mock, 'selected_iris')
     mock_widgets = [mocker.MagicMock(), mocker.MagicMock()]

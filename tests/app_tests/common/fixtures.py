@@ -16,23 +16,23 @@ from cloudant.document import Document
 from pytest import fixture
 from pytestqt.qtbot import QtBot
 
-from pasta_eln.GUI.ontology_configuration.create_type_dialog_extended import CreateTypeDialog
-from pasta_eln.GUI.ontology_configuration.delete_column_delegate import DeleteColumnDelegate
-from pasta_eln.GUI.ontology_configuration.iri_column_delegate import IriColumnDelegate
-from pasta_eln.GUI.ontology_configuration.lookup_iri_action import LookupIriAction
-from pasta_eln.GUI.ontology_configuration.ontology_attachments_tableview_data_model import \
+from pasta_eln.GUI.data_hierarchy.create_type_dialog import CreateTypeDialog
+from pasta_eln.GUI.data_hierarchy.delete_column_delegate import DeleteColumnDelegate
+from pasta_eln.GUI.data_hierarchy.iri_column_delegate import IriColumnDelegate
+from pasta_eln.GUI.data_hierarchy.lookup_iri_action import LookupIriAction
+from pasta_eln.GUI.data_hierarchy.ontology_attachments_tableview_data_model import \
   OntologyAttachmentsTableViewModel
-from pasta_eln.GUI.ontology_configuration.ontology_config_key_not_found_exception import \
+from pasta_eln.GUI.data_hierarchy.ontology_config_key_not_found_exception import \
   OntologyConfigKeyNotFoundException
-from pasta_eln.GUI.ontology_configuration.ontology_configuration_extended import OntologyConfigurationForm, get_gui
-from pasta_eln.GUI.ontology_configuration.ontology_document_null_exception import OntologyDocumentNullException
-from pasta_eln.GUI.ontology_configuration.ontology_metadata_tableview_data_model import OntologyMetadataTableViewModel
-from pasta_eln.GUI.ontology_configuration.ontology_tableview_data_model import OntologyTableViewModel
-from pasta_eln.GUI.ontology_configuration.reorder_column_delegate import ReorderColumnDelegate
-from pasta_eln.GUI.ontology_configuration.mandatory_column_delegate import MandatoryColumnDelegate
-from pasta_eln.GUI.ontology_configuration.terminology_lookup_dialog import TerminologyLookupDialog
-from pasta_eln.GUI.ontology_configuration.terminology_lookup_dialog_base import Ui_TerminologyLookupDialogBase
-from pasta_eln.GUI.ontology_configuration.terminology_lookup_service import TerminologyLookupService
+from pasta_eln.GUI.data_hierarchy.ontology_configuration_extended import OntologyConfigurationForm, get_gui
+from pasta_eln.GUI.data_hierarchy.ontology_document_null_exception import OntologyDocumentNullException
+from pasta_eln.GUI.data_hierarchy.ontology_metadata_tableview_data_model import OntologyMetadataTableViewModel
+from pasta_eln.GUI.data_hierarchy.ontology_tableview_data_model import OntologyTableViewModel
+from pasta_eln.GUI.data_hierarchy.reorder_column_delegate import ReorderColumnDelegate
+from pasta_eln.GUI.data_hierarchy.mandatory_column_delegate import MandatoryColumnDelegate
+from pasta_eln.GUI.data_hierarchy.terminology_lookup_dialog import TerminologyLookupDialog
+from pasta_eln.GUI.data_hierarchy.terminology_lookup_dialog_base import Ui_TerminologyLookupDialogBase
+from pasta_eln.GUI.data_hierarchy.terminology_lookup_service import TerminologyLookupService
 from pasta_eln.database import Database
 from pasta_eln.gui import MainWindow, mainGUI
 from tests.app_tests.common.test_utils import read_json
@@ -43,9 +43,9 @@ def create_type_dialog_mock(mocker) -> CreateTypeDialog:
   mock_callable_1 = mocker.patch('typing.Callable')
   mock_callable_2 = mocker.patch('typing.Callable')
   mocker.patch.object(CreateTypeDialog, 'setup_slots')
-  mocker.patch('pasta_eln.GUI.ontology_configuration.create_type_dialog_extended.logging.getLogger')
+  mocker.patch('pasta_eln.GUI.data_hierarchy.create_type_dialog.logging.getLogger')
   mocker.patch(
-    'pasta_eln.GUI.ontology_configuration.create_type_dialog_extended.Ui_CreateTypeDialog.setupUi')
+    'pasta_eln.GUI.data_hierarchy.create_type_dialog_base.Ui_CreateTypeDialogBase.setupUi')
   mocker.patch.object(QDialog, '__new__')
   mocker.patch.object(CreateTypeDialog, 'titleLineEdit', create=True)
   return CreateTypeDialog(mock_callable_1, mock_callable_2)
@@ -66,13 +66,13 @@ def terminology_lookup_dialog_mock(mocker) -> TerminologyLookupDialog:
                       create=True)
   mocker.patch.object(Ui_TerminologyLookupDialogBase, 'terminologyLineEdit',
                       create=True)
-  mocker.patch('pasta_eln.GUI.ontology_configuration.terminology_lookup_dialog.QPixmap')
+  mocker.patch('pasta_eln.GUI.data_hierarchy.terminology_lookup_dialog.QPixmap')
   return TerminologyLookupDialog(mocker.MagicMock())
 
 
 @fixture()
 def terminology_lookup_mock(mocker) -> TerminologyLookupService:
-  mocker.patch('pasta_eln.GUI.ontology_configuration.create_type_dialog_extended.logging.getLogger')
+  mocker.patch('pasta_eln.GUI.data_hierarchy.create_type_dialog.logging.getLogger')
   return TerminologyLookupService()
 
 
@@ -83,10 +83,10 @@ def configuration_extended(mocker) -> OntologyConfigurationForm:
   mock_couch_db = mocker.patch('cloudant.couchdb')
   mock_couch_db['-ontology-'] = mock_document
   mock_pasta_db = mocker.patch.object(mock_pasta_db, 'db', create=True)
-  mocker.patch('pasta_eln.GUI.ontology_configuration.create_type_dialog_extended.logging.getLogger')
-  mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration.Ui_OntologyConfigurationBaseForm.setupUi')
-  mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.adjust_ontology_data_to_v3')
-  mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.LookupIriAction')
+  mocker.patch('pasta_eln.GUI.data_hierarchy.create_type_dialog.logging.getLogger')
+  mocker.patch('pasta_eln.GUI.data_hierarchy.ontology_configuration.Ui_OntologyConfigurationBaseForm.setupUi')
+  mocker.patch('pasta_eln.GUI.data_hierarchy.ontology_configuration_extended.adjust_ontology_data_to_v3')
+  mocker.patch('pasta_eln.GUI.data_hierarchy.ontology_configuration_extended.LookupIriAction')
   mocker.patch.object(QDialog, '__new__')
   mocker.patch.object(OntologyMetadataTableViewModel, '__new__')
   mocker.patch.object(OntologyAttachmentsTableViewModel, '__new__')
@@ -194,7 +194,7 @@ def ontology_doc_mock(mocker) -> Document:
 
 @fixture()
 def terminology_lookup_config_mock() -> dict:
-  return read_json('../../../pasta_eln/GUI/ontology_configuration/terminology_lookup_config.json')
+  return read_json('../../../pasta_eln/GUI/data_hierarchy/terminology_lookup_config.json')
 
 
 @fixture()
@@ -242,7 +242,7 @@ def ontology_editor_gui(mocker, request, pasta_db_mock) -> tuple[QApplication,
 QtWidgets.QDialog,
 OntologyConfigurationForm,
 QtBot]:
-  mock_message_box = mocker.patch('pasta_eln.GUI.ontology_configuration.utility_functions.QMessageBox')
+  mock_message_box = mocker.patch('pasta_eln.GUI.data_hierarchy.utility_functions.QMessageBox')
   app, ui_dialog, ui_form_extended = get_gui(pasta_db_mock)
   mocker.patch.object(ui_form_extended, 'message_box', mock_message_box.return_value, create=True)
   qtbot: QtBot = QtBot(app)
@@ -276,7 +276,7 @@ def lookup_iri_action(mocker) -> LookupIriAction:
   mock_icon = mocker.patch('PySide6.QtGui.QIcon')
   mocker.patch.object(QIcon, 'fromTheme', return_value=mock_icon)
   mock_parent = mocker.patch('PySide6.QtWidgets.QWidget')
-  mocker.patch('pasta_eln.GUI.ontology_configuration.lookup_iri_action.TerminologyLookupDialog')
+  mocker.patch('pasta_eln.GUI.data_hierarchy.lookup_iri_action.TerminologyLookupDialog')
   return LookupIriAction(mock_parent)
 
 

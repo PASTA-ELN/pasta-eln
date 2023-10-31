@@ -19,7 +19,7 @@ from PySide6.QtCore import QObject, Signal, Slot
 from PySide6.QtWidgets import QApplication, QLineEdit, QMessageBox
 from cloudant.document import Document
 
-from .create_type_dialog_extended import CreateTypeDialog
+from .create_type_dialog import CreateTypeDialog
 from .ontology_attachments_tableview_data_model import OntologyAttachmentsTableViewModel
 from .ontology_config_generic_exception import OntologyConfigGenericException
 from .ontology_config_key_not_found_exception import \

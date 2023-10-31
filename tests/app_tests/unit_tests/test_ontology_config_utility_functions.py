@@ -15,7 +15,7 @@ from PySide6.QtGui import QMouseEvent
 from PySide6.QtWidgets import QMessageBox
 from cloudant import CouchDB
 
-from pasta_eln.GUI.ontology_configuration.utility_functions import adjust_ontology_data_to_v3, can_delete_type, \
+from pasta_eln.GUI.data_hierarchy.utility_functions import adjust_ontology_data_to_v3, can_delete_type, \
   check_ontology_types, \
   get_db, get_missing_metadata_message, get_next_possible_structural_level_title, is_click_within_bounds, show_message
 
