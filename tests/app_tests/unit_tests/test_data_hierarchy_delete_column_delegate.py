@@ -3,7 +3,7 @@
 #  Copyright (c) 2023
 #
 #  Author: Jithu Murugan
-#  Filename: test_ontology_config_delete_column_delegate.py
+#  Filename: test_data_hierarchy_delete_column_delegate.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
@@ -14,7 +14,7 @@ from tests.app_tests.common.test_delegate_funcs_common import delegate_paint_com
   delegate_editor_event_common
 
 
-class TestOntologyConfigDeleteColumnDelegate(object):
+class TestDataHierarchyDeleteColumnDelegate(object):
 
   def test_delegate_paint_method(self,
                                  mocker,

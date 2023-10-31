@@ -3,7 +3,7 @@
 #   Copyright (c) 2023
 #  #
 #   Author: Jithu Murugan
-#   Filename: test_ontology_configuration_extended.py
+#   Filename: test_data_hierarchy_configuration_extended.py
 #  #
 #   You should have received a copy of the license with this file. Please refer the license file for more information.
 import pytest
@@ -15,24 +15,24 @@ from pytestqt.qtbot import QtBot
 from pasta_eln.GUI.data_hierarchy.lookup_iri_action import LookupIriAction
 from pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration import DataHierarchyConfiguration
 from pasta_eln.GUI.data_hierarchy.utility_functions import adapt_type, get_types_for_display
-from tests.app_tests.common.fixtures import attachments_column_names, ontology_doc_mock, ontology_editor_gui, \
+from tests.app_tests.common.fixtures import attachments_column_names, data_hierarchy_doc_mock, data_hierarchy_editor_gui, \
   pasta_db_mock, metadata_column_names
 
 
-class TestOntologyConfigurationExtended(object):
+class TestDataHierarchyConfigurationExtended(object):
 
   def test_component_launch_should_display_all_ui_elements(self,
                                                            pasta_db_mock: pasta_db_mock,
                                                            # Added to import fixture by other tests
-                                                           ontology_editor_gui: tuple[
+                                                           data_hierarchy_editor_gui: tuple[
                                                              QApplication,
                                                              QtWidgets.QDialog,
                                                              DataHierarchyConfiguration,
                                                              QtBot]):
-    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    app, ui_dialog, ui_form, qtbot = data_hierarchy_editor_gui
     assert ui_form.headerLabel is not None, "Header not loaded!"
     assert ui_form.typeLabel is not None, "Data type label not loaded!"
-    assert ui_form.saveOntologyPushButton is not None, "Save button not loaded!"
+    assert ui_form.saveDataHierarchyPushButton is not None, "Save button not loaded!"
     assert ui_form.helpPushButton is not None, "Help button not loaded!"
     assert ui_form.typeMetadataTableView is not None, "metadata table view not loaded!"
     assert ui_form.typeAttachmentsTableView is not None, "Type table view not loaded!"
@@ -60,7 +60,7 @@ class TestOntologyConfigurationExtended(object):
       ('instrument', 'default', ['-name', '-tags', 'comment', 'vendor'])
     ])
   def test_type_select_should_load_data_and_update_ui_elements(self,
-                                                               ontology_editor_gui: tuple[
+                                                               data_hierarchy_editor_gui: tuple[
                                                                  QApplication,
                                                                  QtWidgets.QDialog,
                                                                  DataHierarchyConfiguration,
@@ -68,7 +68,7 @@ class TestOntologyConfigurationExtended(object):
                                                                type_to_select: str,
                                                                metadata_group_selected: str,
                                                                metadata: list):
-    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    app, ui_dialog, ui_form, qtbot = data_hierarchy_editor_gui
     ui_form.typeComboBox.setCurrentText(type_to_select)
     assert ui_form.typeComboBox.currentText() == type_to_select, "Type combo box not selected!"
     assert ui_form.metadataGroupComboBox.currentText() == metadata_group_selected, "Metadata group combo box not selected!"
@@ -78,21 +78,21 @@ class TestOntologyConfigurationExtended(object):
       selected_metadata.append(model.data(model.index(i, 0), Qt.DisplayRole))
     assert metadata == selected_metadata, "Selected metadata not as expected!"
 
-  def test_component_launch_should_load_ontology_data(self,
-                                                      ontology_editor_gui: tuple[
+  def test_component_launch_should_load_data_hierarchy_data(self,
+                                                      data_hierarchy_editor_gui: tuple[
                                                         QApplication,
                                                         QtWidgets.QDialog,
                                                         DataHierarchyConfiguration,
                                                         QtBot],
-                                                      ontology_doc_mock: ontology_doc_mock,
+                                                      data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                       metadata_column_names: metadata_column_names,
                                                       attachments_column_names: attachments_column_names):
-    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    app, ui_dialog, ui_form, qtbot = data_hierarchy_editor_gui
     assert ([ui_form.typeComboBox.itemText(i) for i in range(ui_form.typeComboBox.count())]
-            == get_types_for_display(ontology_doc_mock.types_list())), "Type combo box not loaded!"
+            == get_types_for_display(data_hierarchy_doc_mock.types_list())), "Type combo box not loaded!"
     assert (adapt_type(ui_form.typeComboBox.currentText())
-            == ontology_doc_mock.types_list()[0]), "Type combo box should be selected to first item"
-    selected_type = ontology_doc_mock.types()[adapt_type(ui_form.typeComboBox.currentText())]
+            == data_hierarchy_doc_mock.types_list()[0]), "Type combo box should be selected to first item"
+    selected_type = data_hierarchy_doc_mock.types()[adapt_type(ui_form.typeComboBox.currentText())]
     assert (ui_form.typeDisplayedTitleLineEdit.text() ==
             selected_type["displayedTitle"]), "Data type displayedTitle line edit not loaded!"
     assert (ui_form.typeIriLineEdit.text() ==
@@ -128,48 +128,48 @@ class TestOntologyConfigurationExtended(object):
     model = ui_form.typeAttachmentsTableView.model()
     self.check_table_view_model(model, attachments_column_names, selected_type["attachments"])
 
-  def test_component_add_new_type_with_loaded_ontology_should_display_create_new_type_window(self,
-                                                                                             ontology_editor_gui: tuple[
+  def test_component_add_new_type_with_loaded_data_hierarchy_should_display_create_new_type_window(self,
+                                                                                             data_hierarchy_editor_gui: tuple[
                                                                                                QApplication,
                                                                                                QtWidgets.QDialog,
                                                                                                DataHierarchyConfiguration,
                                                                                                QtBot],
-                                                                                             ontology_doc_mock: ontology_doc_mock):
-    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+                                                                                             data_hierarchy_doc_mock: data_hierarchy_doc_mock):
+    app, ui_dialog, ui_form, qtbot = data_hierarchy_editor_gui
     assert ui_form.create_type_dialog.buttonBox.isVisible() is False, "Create new type dialog should not be shown!"
     qtbot.mouseClick(ui_form.addTypePushButton, Qt.LeftButton)
     assert ui_form.create_type_dialog.buttonBox.isVisible() is True, "Create new type dialog not shown!"
 
-  def test_component_delete_new_type_without_ontology_loaded_should_show_error_message(self,
-                                                                                       ontology_editor_gui: tuple[
+  def test_component_delete_new_type_without_data_hierarchy_loaded_should_show_error_message(self,
+                                                                                       data_hierarchy_editor_gui: tuple[
                                                                                          QApplication,
                                                                                          QtWidgets.QDialog,
                                                                                          DataHierarchyConfiguration,
                                                                                          QtBot],
-                                                                                       ontology_doc_mock: ontology_doc_mock,
+                                                                                       data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                                                        mocker):
-    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    app, ui_dialog, ui_form, qtbot = data_hierarchy_editor_gui
     mock_show_message = mocker.patch(
       "pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.show_message")
-    mocker.patch.object(ui_form, "ontology_loaded", False)
+    mocker.patch.object(ui_form, "data_hierarchy_loaded", False)
     # Select a non-structural type in the type combo box, in order to enable the delete button
     ui_form.typeComboBox.setCurrentText("measurement")
     assert ui_form.typeComboBox.currentText() == "measurement", "Data type combo box should be selected to measurement"
     qtbot.mouseClick(ui_form.deleteTypePushButton, Qt.LeftButton)
-    mock_show_message.assert_called_once_with("Load the ontology data first....", QMessageBox.Warning)
+    mock_show_message.assert_called_once_with("Load the data hierarchy data first....", QMessageBox.Warning)
     assert ui_form.create_type_dialog.buttonBox.isVisible() is False, "Create new type dialog should not be shown!"
 
-  def test_component_delete_selected_type_with_loaded_ontology_should_delete_and_update_ui(self,
-                                                                                           ontology_editor_gui:
+  def test_component_delete_selected_type_with_loaded_data_hierarchy_should_delete_and_update_ui(self,
+                                                                                           data_hierarchy_editor_gui:
                                                                                            tuple[
                                                                                              QApplication,
                                                                                              QtWidgets.QDialog,
                                                                                              DataHierarchyConfiguration,
                                                                                              QtBot],
-                                                                                           ontology_doc_mock: ontology_doc_mock,
+                                                                                           data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                                                            metadata_column_names: metadata_column_names,
                                                                                            attachments_column_names: attachments_column_names):
-    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    app, ui_dialog, ui_form, qtbot = data_hierarchy_editor_gui
     assert ui_form.create_type_dialog.buttonBox.isVisible() is False, "Create new type dialog should not be shown!"
     # Select a non-structural type in the type combo box, in-order to enable the "delete" button
     ui_form.typeComboBox.setCurrentText("measurement")
@@ -182,9 +182,9 @@ class TestOntologyConfigurationExtended(object):
       f"Deleted type:{current_selected_type} should not exist in combo list!"
     assert (previous_types_count - 1 == ui_form.typeComboBox.count()), \
       f"Combo list should have {previous_types_count - 1} items!"
-    assert adapt_type(ui_form.typeComboBox.currentText()) == ontology_doc_mock.types_list()[0], \
+    assert adapt_type(ui_form.typeComboBox.currentText()) == data_hierarchy_doc_mock.types_list()[0], \
       "Type combo box should be selected to first structural item"
-    selected_type = ontology_doc_mock.types()[adapt_type(ui_form.typeComboBox.currentText())]
+    selected_type = data_hierarchy_doc_mock.types()[adapt_type(ui_form.typeComboBox.currentText())]
     assert ui_form.typeDisplayedTitleLineEdit.text() == selected_type["displayedTitle"], \
       "Type displayedTitle line edit should be selected to first structural item"
     assert ui_form.typeIriLineEdit.text() == selected_type["IRI"], \
@@ -194,16 +194,16 @@ class TestOntologyConfigurationExtended(object):
     self.check_table_contents(attachments_column_names, metadata_column_names, selected_type, ui_form)
 
   def test_component_add_new_type_button_click_should_display_create_new_type_window(self,
-                                                                                     ontology_editor_gui:
+                                                                                     data_hierarchy_editor_gui:
                                                                                      tuple[
                                                                                        QApplication,
                                                                                        QtWidgets.QDialog,
                                                                                        DataHierarchyConfiguration,
                                                                                        QtBot],
-                                                                                     ontology_doc_mock: ontology_doc_mock,
+                                                                                     data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                                                      metadata_column_names: metadata_column_names,
                                                                                      attachments_column_names: attachments_column_names):
-    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    app, ui_dialog, ui_form, qtbot = data_hierarchy_editor_gui
     assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
     assert ui_form.create_type_dialog.buttonBox.isVisible() is False, "Create new type dialog should not be shown!"
     qtbot.mouseClick(ui_form.addTypePushButton, Qt.LeftButton)
@@ -212,17 +212,17 @@ class TestOntologyConfigurationExtended(object):
       assert ui_form.create_type_dialog.buttonBox.isVisible() is True, "Create new type dialog not shown!"
 
   def test_component_create_new_type_structural_type_should_add_new_type_with_displayed_title(self,
-                                                                                    ontology_editor_gui:
+                                                                                    data_hierarchy_editor_gui:
                                                                                     tuple[
                                                                                       QApplication,
                                                                                       QtWidgets.QDialog,
                                                                                       DataHierarchyConfiguration,
                                                                                       QtBot],
-                                                                                    ontology_doc_mock: ontology_doc_mock,
+                                                                                    data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                                                     metadata_column_names: metadata_column_names,
                                                                                     attachments_column_names: attachments_column_names):
 
-    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    app, ui_dialog, ui_form, qtbot = data_hierarchy_editor_gui
     assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
     assert ui_form.create_type_dialog.buttonBox.isVisible() is False, "Create new type dialog button box should not be shown!"
     qtbot.mouseClick(ui_form.addTypePushButton, Qt.LeftButton)
@@ -240,17 +240,17 @@ class TestOntologyConfigurationExtended(object):
     assert ui_form.typeDisplayedTitleLineEdit.text() == "test", "Data type displayedTitle should be newly added displayedTitle"
 
   def test_component_create_new_type_normal_type_should_add_new_type_with_displayed_title(self,
-                                                                                ontology_editor_gui:
+                                                                                data_hierarchy_editor_gui:
                                                                                 tuple[
                                                                                   QApplication,
                                                                                   QtWidgets.QDialog,
                                                                                   DataHierarchyConfiguration,
                                                                                   QtBot],
-                                                                                ontology_doc_mock: ontology_doc_mock,
+                                                                                data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                                                 metadata_column_names: metadata_column_names,
                                                                                 attachments_column_names: attachments_column_names):
 
-    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    app, ui_dialog, ui_form, qtbot = data_hierarchy_editor_gui
     assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
     assert ui_form.create_type_dialog.buttonBox.isVisible() is False, "Create new type dialog button box should not be shown!"
     qtbot.mouseClick(ui_form.addTypePushButton, Qt.LeftButton)
@@ -268,17 +268,17 @@ class TestOntologyConfigurationExtended(object):
 
   def test_component_create_new_type_normal_type_with_empty_title_should_warn_user(self,
                                                                                    mocker,
-                                                                                   ontology_editor_gui:
+                                                                                   data_hierarchy_editor_gui:
                                                                                    tuple[
                                                                                      QApplication,
                                                                                      QtWidgets.QDialog,
                                                                                      DataHierarchyConfiguration,
                                                                                      QtBot],
-                                                                                   ontology_doc_mock: ontology_doc_mock,
+                                                                                   data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                                                    metadata_column_names: metadata_column_names,
                                                                                    attachments_column_names: attachments_column_names):
 
-    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    app, ui_dialog, ui_form, qtbot = data_hierarchy_editor_gui
     mocker.patch.object(ui_form.logger, 'warning')
 
     # Checking with empty title
@@ -330,17 +330,17 @@ class TestOntologyConfigurationExtended(object):
     assert ui_form.typeDisplayedTitleLineEdit.text() != "displayedTitle", "Data type combo box should not be newly added type displayedTitle"
 
   def test_component_create_new_type_reject_should_not_add_new_type_with_displayed_title(self,
-                                                                               ontology_editor_gui:
+                                                                               data_hierarchy_editor_gui:
                                                                                tuple[
                                                                                  QApplication,
                                                                                  QtWidgets.QDialog,
                                                                                  DataHierarchyConfiguration,
                                                                                  QtBot],
-                                                                               ontology_doc_mock: ontology_doc_mock,
+                                                                               data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                                                metadata_column_names: metadata_column_names,
                                                                                attachments_column_names: attachments_column_names):
 
-    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    app, ui_dialog, ui_form, qtbot = data_hierarchy_editor_gui
     assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
     assert ui_form.create_type_dialog.buttonBox.isVisible() is False, "Create new type dialog button box should not be shown!"
     qtbot.mouseClick(ui_form.addTypePushButton, Qt.LeftButton)
@@ -356,17 +356,17 @@ class TestOntologyConfigurationExtended(object):
     assert ui_form.typeComboBox.currentText() != "title", "Data type combo box should not be newly added type title"
     assert ui_form.typeDisplayedTitleLineEdit.text() != "displayedTitle", "Data type combo box should not be newly added type displayedTitle"
 
-  def test_component_cancel_button_click_after_delete_group_should_not_modify_ontology_document_data(self,
-                                                                                                        ontology_editor_gui:
+  def test_component_cancel_button_click_after_delete_group_should_not_modify_data_hierarchy_document_data(self,
+                                                                                                        data_hierarchy_editor_gui:
                                                                                                         tuple[
                                                                                                           QApplication,
                                                                                                           QtWidgets.QDialog,
                                                                                                           DataHierarchyConfiguration,
                                                                                                           QtBot],
-                                                                                                        ontology_doc_mock: ontology_doc_mock,
+                                                                                                        data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                                                                         metadata_column_names: metadata_column_names,
                                                                                                         attachments_column_names: attachments_column_names):
-    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    app, ui_dialog, ui_form, qtbot = data_hierarchy_editor_gui
     assert ui_form.create_type_dialog.buttonBox.isVisible() is False, "Create new type dialog should not be shown!"
     current_selected_type_metadata_group = ui_form.metadataGroupComboBox.currentText()
     previous_types_metadata_group_count = ui_form.metadataGroupComboBox.count()
@@ -377,19 +377,19 @@ class TestOntologyConfigurationExtended(object):
     assert (previous_types_metadata_group_count - 1 == ui_form.metadataGroupComboBox.count()), \
       f"Combo list should have {previous_types_metadata_group_count - 1} items!"
     qtbot.mouseClick(ui_form.cancelPushButton, Qt.LeftButton)
-    assert ontology_doc_mock.types() != ui_form.ontology_types, "Ontology document should not be modified!"
+    assert data_hierarchy_doc_mock.types() != ui_form.data_hierarchy_types, "Data Hierarchy Document should not be modified!"
 
   def test_component_delete_type_after_creation_of_new_structural_type_should_succeed(self,
-                                                                                      ontology_editor_gui:
+                                                                                      data_hierarchy_editor_gui:
                                                                                       tuple[
                                                                                         QApplication,
                                                                                         QtWidgets.QDialog,
                                                                                         DataHierarchyConfiguration,
                                                                                         QtBot],
-                                                                                      ontology_doc_mock: ontology_doc_mock,
+                                                                                      data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                                                       metadata_column_names: metadata_column_names,
                                                                                       attachments_column_names: attachments_column_names):
-    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    app, ui_dialog, ui_form, qtbot = data_hierarchy_editor_gui
     assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
     assert ui_form.create_type_dialog.buttonBox.isVisible() is False, "Create new type dialog button box should not be shown!"
     qtbot.mouseClick(ui_form.addTypePushButton, Qt.LeftButton)
@@ -413,9 +413,9 @@ class TestOntologyConfigurationExtended(object):
       f"Deleted type:{current_selected_type} should not exist in combo list!"
     assert (previous_types_count - 1 == ui_form.typeComboBox.count()), \
       f"Combo list should have {previous_types_count - 1} items!"
-    assert adapt_type(ui_form.typeComboBox.currentText()) == ontology_doc_mock.types_list()[0], \
+    assert adapt_type(ui_form.typeComboBox.currentText()) == data_hierarchy_doc_mock.types_list()[0], \
       "Type combo box should be selected to first structural item"
-    selected_type = ontology_doc_mock.types()[adapt_type(ui_form.typeComboBox.currentText())]
+    selected_type = data_hierarchy_doc_mock.types()[adapt_type(ui_form.typeComboBox.currentText())]
     assert ui_form.typeDisplayedTitleLineEdit.text() == selected_type["displayedTitle"], \
       "Type displayedTitle line edit should be selected to first structural item"
     assert ui_form.typeIriLineEdit.text() == selected_type["IRI"], \
@@ -424,18 +424,18 @@ class TestOntologyConfigurationExtended(object):
       "Type metadata group combo box should be selected to first metadata group"
     self.check_table_contents(attachments_column_names, metadata_column_names, selected_type, ui_form)
 
-  def test_component_save_button_click_after_delete_group_should_modify_ontology_document_data(self,
+  def test_component_save_button_click_after_delete_group_should_modify_data_hierarchy_document_data(self,
                                                                                                   mocker,
-                                                                                                  ontology_editor_gui:
+                                                                                                  data_hierarchy_editor_gui:
                                                                                                   tuple[
                                                                                                     QApplication,
                                                                                                     QtWidgets.QDialog,
                                                                                                     DataHierarchyConfiguration,
                                                                                                     QtBot],
-                                                                                                  ontology_doc_mock: ontology_doc_mock,
+                                                                                                  data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                                                                   metadata_column_names: metadata_column_names,
                                                                                                   attachments_column_names: attachments_column_names):
-    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    app, ui_dialog, ui_form, qtbot = data_hierarchy_editor_gui
     assert ui_form.create_type_dialog.buttonBox.isVisible() is False, "Create new type dialog should not be shown!"
     mock_show_message = mocker.patch(
       'pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.show_message', return_value=QMessageBox.Yes)
@@ -447,24 +447,24 @@ class TestOntologyConfigurationExtended(object):
       f"Deleted group : {current_selected_type_metadata_group} should not exist in combo list!"
     assert (previous_types_metadata_group_count - 1 == ui_form.metadataGroupComboBox.count()), \
       f"Combo list should have {previous_types_metadata_group_count - 1} items!"
-    qtbot.mouseClick(ui_form.saveOntologyPushButton, Qt.LeftButton)
-    assert ontology_doc_mock.types() == ui_form.ontology_types, "Ontology document should be modified!"
+    qtbot.mouseClick(ui_form.saveDataHierarchyPushButton, Qt.LeftButton)
+    assert data_hierarchy_doc_mock.types() == ui_form.data_hierarchy_types, "data_hierarchy document should be modified!"
     mock_show_message.assert_called_once_with('Save will close the tool and restart the Pasta Application (Yes/No?)',
                                               QMessageBox.Question,
                                               QMessageBox.No | QMessageBox.Yes,
                                               QMessageBox.Yes)
 
-  def test_component_iri_lookup_button_click_should_show_ontology_lookup_dialog_and_set_iris_on_accept(self,
-                                                                                                       ontology_editor_gui:
+  def test_component_iri_lookup_button_click_should_show_data_hierarchy_lookup_dialog_and_set_iris_on_accept(self,
+                                                                                                       data_hierarchy_editor_gui:
                                                                                                        tuple[
                                                                                                          QApplication,
                                                                                                          QtWidgets.QDialog,
                                                                                                          DataHierarchyConfiguration,
                                                                                                          QtBot],
-                                                                                                       ontology_doc_mock: ontology_doc_mock,
+                                                                                                       data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                                                                        metadata_column_names: metadata_column_names,
                                                                                                        attachments_column_names: attachments_column_names):
-    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    app, ui_dialog, ui_form, qtbot = data_hierarchy_editor_gui
     assert ui_form.typeIriLineEdit.text() == 'http://url.com', "typeIriLineEdit should be default test value"
     iri_lookup_action = None
     for act in ui_form.typeIriLineEdit.actions():
@@ -474,7 +474,7 @@ class TestOntologyConfigurationExtended(object):
     lookup_dialog = iri_lookup_action.terminology_lookup_dialog
     assert lookup_dialog.selected_iris == [], "Selected IRIs should be empty"
     with qtbot.waitExposed(lookup_dialog.instance, timeout=500):
-      assert lookup_dialog.instance.isVisible() is True, "Ontology lookup dialog should be visible"
+      assert lookup_dialog.instance.isVisible() is True, "Data Hierarchy lookup dialog should be visible"
       assert lookup_dialog.terminologyLineEdit.text() == "Projects", "Search term should be 'Projects'"
       assert lookup_dialog.errorConsoleTextEdit.isVisible() is False, "Error console should not be visible"
       assert lookup_dialog.scrollAreaWidgetContents.isVisible() is True, "Scroll area should be visible"
@@ -487,22 +487,22 @@ class TestOntologyConfigurationExtended(object):
         check_box.setChecked(True)
         assert check_box.isChecked() is True, "Checkbox should be checked"
     qtbot.mouseClick(lookup_dialog.buttonBox.button(lookup_dialog.buttonBox.Ok), Qt.LeftButton)
-    assert lookup_dialog.instance.isVisible() is False, "Ontology lookup dialog should be accepted and closed"
+    assert lookup_dialog.instance.isVisible() is False, "Data Hierarchy lookup dialog should be accepted and closed"
     assert len(lookup_dialog.selected_iris) >= 5 , "IRIs should be set"
     assert ui_form.typeIriLineEdit.text() == " ".join(
       lookup_dialog.selected_iris), "typeIriLineEdit should contain all selected IRIs"
 
-  def test_component_iri_lookup_button_click_should_show_ontology_lookup_dialog_and_should_not_set_iris_on_cancel(self,
-                                                                                                                  ontology_editor_gui:
+  def test_component_iri_lookup_button_click_should_show_data_hierarchy_lookup_dialog_and_should_not_set_iris_on_cancel(self,
+                                                                                                                  data_hierarchy_editor_gui:
                                                                                                                   tuple[
                                                                                                                     QApplication,
                                                                                                                     QtWidgets.QDialog,
                                                                                                                     DataHierarchyConfiguration,
                                                                                                                     QtBot],
-                                                                                                                  ontology_doc_mock: ontology_doc_mock,
+                                                                                                                  data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                                                                                   metadata_column_names: metadata_column_names,
                                                                                                                   attachments_column_names: attachments_column_names):
-    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    app, ui_dialog, ui_form, qtbot = data_hierarchy_editor_gui
     assert ui_form.typeIriLineEdit.text() == 'http://url.com', "typeIriLineEdit should be default test value"
     iri_lookup_action = None
     for act in ui_form.typeIriLineEdit.actions():
@@ -512,7 +512,7 @@ class TestOntologyConfigurationExtended(object):
     lookup_dialog = iri_lookup_action.terminology_lookup_dialog
     assert lookup_dialog.selected_iris == [], "Selected IRIs should be empty"
     with qtbot.waitExposed(lookup_dialog.instance, timeout=500):
-      assert lookup_dialog.instance.isVisible() is True, "Ontology lookup dialog should be visible"
+      assert lookup_dialog.instance.isVisible() is True, "Data Hierarchy lookup dialog should be visible"
       assert lookup_dialog.terminologyLineEdit.text() == "Projects", "Search term should be 'Projects'"
       assert lookup_dialog.errorConsoleTextEdit.isVisible() is False, "Error console should not be visible"
       assert lookup_dialog.scrollAreaWidgetContents.isVisible() is True, "Scroll area should be visible"
@@ -525,21 +525,21 @@ class TestOntologyConfigurationExtended(object):
         check_box.setChecked(True)
         assert check_box.isChecked() is True, "Checkbox should be checked"
     qtbot.mouseClick(lookup_dialog.buttonBox.button(lookup_dialog.buttonBox.Cancel), Qt.LeftButton)
-    assert lookup_dialog.instance.isVisible() is False, "Ontology lookup dialog should be cancelled and closed"
+    assert lookup_dialog.instance.isVisible() is False, "data_hierarchy lookup dialog should be cancelled and closed"
     assert lookup_dialog.selected_iris == [], "IRIs should not be set"
     assert ui_form.typeIriLineEdit.text() == 'http://url.com', "typeIriLineEdit should be default test value after the cancellation"
 
   def test_delete_type_button_must_be_disabled_for_every_structural_level_except_the_last(self,
-                                                                                          ontology_editor_gui:
+                                                                                          data_hierarchy_editor_gui:
                                                                                           tuple[
                                                                                             QApplication,
                                                                                             QtWidgets.QDialog,
                                                                                             DataHierarchyConfiguration,
                                                                                             QtBot],
-                                                                                          ontology_doc_mock: ontology_doc_mock,
+                                                                                          data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                                                           metadata_column_names: metadata_column_names,
                                                                                           attachments_column_names: attachments_column_names):
-    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    app, ui_dialog, ui_form, qtbot = data_hierarchy_editor_gui
     assert ui_form.typeComboBox.currentText() == "Structure level 0", "Initial loaded type must be 'Structure level 0'"
     assert ui_form.deleteTypePushButton.isEnabled() is False, "Delete type button must be disabled for 'Structure level 0'"
     loaded_types = []
@@ -605,16 +605,16 @@ class TestOntologyConfigurationExtended(object):
         assert ui_form.deleteTypePushButton.isEnabled() is True, "Delete type button must be enabled for normal types'"
 
   def test_delete_of_structural_type_possible_from_xn_to_x1_must_succeed_and_x0_delete_disabled(self,
-                                                                                                ontology_editor_gui:
+                                                                                                data_hierarchy_editor_gui:
                                                                                                 tuple[
                                                                                                   QApplication,
                                                                                                   QtWidgets.QDialog,
                                                                                                   DataHierarchyConfiguration,
                                                                                                   QtBot],
-                                                                                                ontology_doc_mock: ontology_doc_mock,
+                                                                                                data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                                                                 metadata_column_names: metadata_column_names,
                                                                                                 attachments_column_names: attachments_column_names):
-    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    app, ui_dialog, ui_form, qtbot = data_hierarchy_editor_gui
     assert ui_form.typeComboBox.currentText() == "Structure level 0", "Initial loaded type must be 'Structure level 0'"
     assert ui_form.deleteTypePushButton.isEnabled() is False, "Delete type button must be disabled for 'Structure level 0'"
     # Add 5 structural types
@@ -665,16 +665,16 @@ class TestOntologyConfigurationExtended(object):
       "Structure level 0"], "All structural types must be deleted from UI except 'Structure level 0'"
 
   def test_hide_show_attachments_table_should_do_as_expected(self,
-                                                             ontology_editor_gui:
+                                                             data_hierarchy_editor_gui:
                                                              tuple[
                                                                QApplication,
                                                                QtWidgets.QDialog,
                                                                DataHierarchyConfiguration,
                                                                QtBot],
-                                                             ontology_doc_mock: ontology_doc_mock,
+                                                             data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                              metadata_column_names: metadata_column_names,
                                                              attachments_column_names: attachments_column_names):
-    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    app, ui_dialog, ui_form, qtbot = data_hierarchy_editor_gui
     assert ui_form.typeAttachmentsTableView.isHidden() is True, "Attachments table should not be visible initially!"
     assert ui_form.addAttachmentPushButton.isHidden() is True, "addAttachmentPushButton should not be visible initially!"
 
@@ -698,16 +698,16 @@ class TestOntologyConfigurationExtended(object):
     assert ui_form.addAttachmentPushButton.isVisible() is False, "addAttachmentPushButton should not be visible now!"
 
   def test_add_group_with_empty_name_should_warn_user(self,
-                                                         ontology_editor_gui:
+                                                         data_hierarchy_editor_gui:
                                                          tuple[
                                                            QApplication,
                                                            QtWidgets.QDialog,
                                                            DataHierarchyConfiguration,
                                                            QtBot],
-                                                         ontology_doc_mock: ontology_doc_mock,
+                                                         data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                          metadata_column_names: metadata_column_names,
                                                          attachments_column_names: attachments_column_names):
-    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    app, ui_dialog, ui_form, qtbot = data_hierarchy_editor_gui
     assert ui_form.addMetadataGroupPushButton.isHidden() is False, "addMetadataGroupPushButton should be visible now!"
     ui_form.addMetadataGroupLineEdit.setText("")
     qtbot.mouseClick(ui_form.addMetadataGroupPushButton, Qt.LeftButton)
@@ -716,16 +716,16 @@ class TestOntologyConfigurationExtended(object):
     ui_form.message_box.exec.assert_called_once_with()
 
   def test_add_metadata_group_with_valid_name_should_successfully_add_group_with_default_metadata(self,
-                                                                                                 ontology_editor_gui:
+                                                                                                 data_hierarchy_editor_gui:
                                                                                                  tuple[
                                                                                                    QApplication,
                                                                                                    QtWidgets.QDialog,
                                                                                                    DataHierarchyConfiguration,
                                                                                                    QtBot],
-                                                                                                 ontology_doc_mock: ontology_doc_mock,
+                                                                                                 data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                                                                  metadata_column_names: metadata_column_names,
                                                                                                  attachments_column_names: attachments_column_names):
-    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    app, ui_dialog, ui_form, qtbot = data_hierarchy_editor_gui
     assert ui_form.addMetadataGroupPushButton.isHidden() is False, "addMetadataGroupPushButton should be visible now!"
     groups = []
     initial_groups = []
@@ -757,16 +757,16 @@ class TestOntologyConfigurationExtended(object):
             c not in initial_groups] == newly_added_groups, "Present - Initial must give newly added groups!"
 
   def test_add_group_with_valid_name_and_delete_should_successfully_delete_categories_with_metadata(self,
-                                                                                                         ontology_editor_gui:
+                                                                                                         data_hierarchy_editor_gui:
                                                                                                          tuple[
                                                                                                            QApplication,
                                                                                                            QtWidgets.QDialog,
                                                                                                            DataHierarchyConfiguration,
                                                                                                            QtBot],
-                                                                                                         ontology_doc_mock: ontology_doc_mock,
+                                                                                                         data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                                                                          metadata_column_names: metadata_column_names,
                                                                                                          attachments_column_names: attachments_column_names):
-    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    app, ui_dialog, ui_form, qtbot = data_hierarchy_editor_gui
     assert ui_form.addMetadataGroupPushButton.isHidden() is False, "addMetadataGroupPushButton should be visible now!"
 
     # Add 10 categories
@@ -798,16 +798,16 @@ class TestOntologyConfigurationExtended(object):
         assert model.rowCount() >= 2, "Minimum of two required metadata must be present"
 
   def test_add_metadata_to_table_should_succeed(self,
-                                                  ontology_editor_gui:
+                                                  data_hierarchy_editor_gui:
                                                   tuple[
                                                     QApplication,
                                                     QtWidgets.QDialog,
                                                     DataHierarchyConfiguration,
                                                     QtBot],
-                                                  ontology_doc_mock: ontology_doc_mock,
+                                                  data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                   metadata_column_names: metadata_column_names,
                                                   attachments_column_names: attachments_column_names):
-    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    app, ui_dialog, ui_form, qtbot = data_hierarchy_editor_gui
     assert ui_form.addMetadataGroupPushButton.isHidden() is False, "addMetadataGroupPushButton should be visible now!"
     ui_form.addMetadataGroupLineEdit.setText("new Group")
     qtbot.mouseClick(ui_form.addMetadataGroupPushButton, Qt.LeftButton)
@@ -836,16 +836,16 @@ class TestOntologyConfigurationExtended(object):
     assert model.data(model.index(2, 1), Qt.DisplayRole) == 'Test query', "Test query metadata must be present!"
 
   def test_delete_metadata_from_table_should_work(self,
-                                                  ontology_editor_gui:
+                                                  data_hierarchy_editor_gui:
                                                   tuple[
                                                     QApplication,
                                                     QtWidgets.QDialog,
                                                     DataHierarchyConfiguration,
                                                     QtBot],
-                                                  ontology_doc_mock: ontology_doc_mock,
+                                                  data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                   metadata_column_names: metadata_column_names,
                                                   attachments_column_names: attachments_column_names):
-    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    app, ui_dialog, ui_form, qtbot = data_hierarchy_editor_gui
     ui_form.metadataGroupComboBox.setCurrentText("default")
     assert ui_form.metadataGroupComboBox.currentText() == "default", f"metadataGroupComboBox.currentText() should be default!"
     model = ui_form.typeMetadataTableView.model()
@@ -862,16 +862,16 @@ class TestOntologyConfigurationExtended(object):
     assert model.rowCount() == 0, "After full deletion, nothing must exist!"
 
   def test_re_order_metadata_table_should_work_as_expected(self,
-                                                           ontology_editor_gui:
+                                                           data_hierarchy_editor_gui:
                                                            tuple[
                                                              QApplication,
                                                              QtWidgets.QDialog,
                                                              DataHierarchyConfiguration,
                                                              QtBot],
-                                                           ontology_doc_mock: ontology_doc_mock,
+                                                           data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                            metadata_column_names: metadata_column_names,
                                                            attachments_column_names: attachments_column_names):
-    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    app, ui_dialog, ui_form, qtbot = data_hierarchy_editor_gui
     ui_form.metadataGroupComboBox.setCurrentText("default")
     assert ui_form.metadataGroupComboBox.currentText() == "default", f"metadataGroupComboBox.currentText() should be default!"
     model = ui_form.typeMetadataTableView.model()
@@ -908,16 +908,16 @@ class TestOntologyConfigurationExtended(object):
     assert post_reorder_data_order2 == data_order, "Post reorder data order is not as expected!"
 
   def test_add_attachments_to_table_should_succeed(self,
-                                                   ontology_editor_gui:
+                                                   data_hierarchy_editor_gui:
                                                    tuple[
                                                      QApplication,
                                                      QtWidgets.QDialog,
                                                      DataHierarchyConfiguration,
                                                      QtBot],
-                                                   ontology_doc_mock: ontology_doc_mock,
+                                                   data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                    metadata_column_names: metadata_column_names,
                                                    attachments_column_names: attachments_column_names):
-    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    app, ui_dialog, ui_form, qtbot = data_hierarchy_editor_gui
     assert ui_form.addAttachmentPushButton.isHidden() is True, "addAttachmentPushButton should be hidden initially!"
     qtbot.mouseClick(ui_form.attachmentsShowHidePushButton, Qt.LeftButton)
     assert ui_form.addAttachmentPushButton.isHidden() is False, "addAttachmentPushButton should be shown after clicking attachmentsShowHidePushButton!"
@@ -945,16 +945,16 @@ class TestOntologyConfigurationExtended(object):
     assert model.data(model.index(0, 1), Qt.DisplayRole) == 'Test location', "Location metadata must be present!"
 
   def test_delete_attachments_from_table_should_succeed(self,
-                                                        ontology_editor_gui:
+                                                        data_hierarchy_editor_gui:
                                                         tuple[
                                                           QApplication,
                                                           QtWidgets.QDialog,
                                                           DataHierarchyConfiguration,
                                                           QtBot],
-                                                        ontology_doc_mock: ontology_doc_mock,
+                                                        data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                         metadata_column_names: metadata_column_names,
                                                         attachments_column_names: attachments_column_names):
-    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    app, ui_dialog, ui_form, qtbot = data_hierarchy_editor_gui
     assert ui_form.addAttachmentPushButton.isHidden() is True, "addAttachmentPushButton should be hidden initially!"
     qtbot.mouseClick(ui_form.attachmentsShowHidePushButton, Qt.LeftButton)
     assert ui_form.addAttachmentPushButton.isHidden() is False, "addAttachmentPushButton should be shown after clicking attachmentsShowHidePushButton!"
@@ -992,16 +992,16 @@ class TestOntologyConfigurationExtended(object):
     model.setData(model.index(0, 1), "Test location2", Qt.UserRole)
 
   def test_re_order_attachments_from_table_should_succeed(self,
-                                                          ontology_editor_gui:
+                                                          data_hierarchy_editor_gui:
                                                           tuple[
                                                             QApplication,
                                                             QtWidgets.QDialog,
                                                             DataHierarchyConfiguration,
                                                             QtBot],
-                                                          ontology_doc_mock: ontology_doc_mock,
+                                                          data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                           metadata_column_names: metadata_column_names,
                                                           attachments_column_names: attachments_column_names):
-    app, ui_dialog, ui_form, qtbot = ontology_editor_gui
+    app, ui_dialog, ui_form, qtbot = data_hierarchy_editor_gui
     assert ui_form.addAttachmentPushButton.isHidden() is True, "addAttachmentPushButton should be hidden initially!"
     qtbot.mouseClick(ui_form.attachmentsShowHidePushButton, Qt.LeftButton)
     assert ui_form.addAttachmentPushButton.isHidden() is False, "addAttachmentPushButton should be shown after clicking attachmentsShowHidePushButton!"

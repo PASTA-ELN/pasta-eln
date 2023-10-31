@@ -3,7 +3,7 @@
 #  Copyright (c) 2023
 #
 #  Author: Jithu Murugan
-#  Filename: test_ontology_config_lookup_iri_action.py
+#  Filename: test_data_hierarchy_lookup_iri_action.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
@@ -16,7 +16,7 @@ from pasta_eln.GUI.data_hierarchy.lookup_iri_action import LookupIriAction
 from tests.app_tests.common.fixtures import lookup_iri_action
 
 
-class TestOntologyConfigLookupIriAction(object):
+class TestDataHierarchyLookupIriAction(object):
 
   def test_lookup_iri_action_initialize_should_succeed(self, mocker):
     mock_base_init = mocker.patch.object(QAction, '__init__')

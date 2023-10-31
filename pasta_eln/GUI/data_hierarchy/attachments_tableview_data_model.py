@@ -1,4 +1,4 @@
-""" AttachmentsTableViewModel used for the ontology editor's attachments table view """
+""" AttachmentsTableViewModel used for the data hierarchy editor's attachments table view """
 #  PASTA-ELN and all its sub-parts are covered by the MIT license.
 #
 #  Copyright (c) 2023
@@ -18,13 +18,13 @@ from .tableview_data_model import TableViewModel
 
 class AttachmentsTableViewModel(TableViewModel):
   """
-  Abstracted data-model for the ontology editor's attachments table view
+  Abstracted data-model for the data hierarchy editor's attachments table view
   """
 
   def __init__(self,
                parent: Union[QWidget | None] = None):
     """
-    Initialize the data model representing attachments from ontology document in the database
+    Initialize the data model representing attachments from data hierarchy document in the database
     Args:
       parent (QWidget): Parent view or the widget
     """

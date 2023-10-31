@@ -3,7 +3,7 @@
 #  Copyright (c) 2023
 #
 #  Author: Jithu Murugan
-#  Filename: test_ontology_config_document_null_exception.py
+#  Filename: test_data_hierarchy_document_null_exception.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
@@ -12,7 +12,7 @@ import pytest
 from tests.app_tests.common.fixtures import key_not_found_exception
 
 
-class TestOntologyConfigKeyNotFoundException(object):
+class TestDataHierarchyKeyNotFoundException(object):
   @pytest.mark.parametrize('key_not_found_exception',
                            [{'message': 'error thrown', 'errors': {'error1': 'error1', 'error2': 'error2'}}],
                            indirect=True)

@@ -3,7 +3,7 @@
 #  Copyright (c) 2023
 #
 #  Author: Jithu Murugan
-#  Filename: test_ontology_config_table_view_data_model.py
+#  Filename: test_data_hierarchy_table_view_data_model.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
@@ -14,7 +14,7 @@ from pasta_eln.GUI.data_hierarchy.constants import METADATA_TABLE_LIST_COLUMN_IN
 from tests.app_tests.common.fixtures import table_model, metadata_table_model, attachments_table_model
 
 
-class TestOntologyConfigTableViewDataModel(object):
+class TestDataHierarchyTableViewDataModel(object):
 
   def test_data_models_basic(self,
                              table_model: table_model,

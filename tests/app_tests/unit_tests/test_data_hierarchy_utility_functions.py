@@ -3,7 +3,7 @@
 #  Copyright (c) 2023
 #
 #  Author: Jithu Murugan
-#  Filename: test_ontology_config_utility_functions.py
+#  Filename: test_data_hierarchy_utility_functions.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
@@ -15,12 +15,12 @@ from PySide6.QtGui import QMouseEvent
 from PySide6.QtWidgets import QMessageBox
 from cloudant import CouchDB
 
-from pasta_eln.GUI.data_hierarchy.utility_functions import adjust_ontology_data_to_v3, can_delete_type, \
-  check_ontology_types, \
+from pasta_eln.GUI.data_hierarchy.utility_functions import adjust_data_hierarchy_data_to_v3, can_delete_type, \
+  check_data_hierarchy_types, \
   get_db, get_missing_metadata_message, get_next_possible_structural_level_title, is_click_within_bounds, show_message
 
 
-class TestOntologyConfigUtilityFunctions(object):
+class TestDataHierarchyUtilityFunctions(object):
 
   def test_is_click_within_bounds_when_null_arguments_returns_false(self,
                                                                     mocker):
@@ -76,14 +76,14 @@ class TestOntologyConfigUtilityFunctions(object):
     assert mock_q_style_option_view_item.rect.width.call_count == 1, "QStyleOptionViewItem left call count must be 1"
     assert mock_q_style_option_view_item.rect.height.call_count == 0, "QStyleOptionViewItem top call count must be zero"
 
-  def test_adjust_ontology_data_to_v3_when_empty_document_do_nothing(self,
+  def test_adjust_data_hierarchy_data_to_v3_when_empty_document_do_nothing(self,
                                                                      mocker):
     contents = {"-version": 2}
     mock_doc = self.create_mock_doc(contents, mocker)
-    assert adjust_ontology_data_to_v3(mock_doc) is None, "adjust_ontology_data_to_v3 should return None"
+    assert adjust_data_hierarchy_data_to_v3(mock_doc) is None, "adjust_data_hierarchy_data_to_v3 should return None"
     assert list(contents.keys()) == ["-version"], "Only version should be added"
 
-    assert adjust_ontology_data_to_v3(None) is None, "adjust_ontology_data_to_v3 should return None"
+    assert adjust_data_hierarchy_data_to_v3(None) is None, "adjust_data_hierarchy_data_to_v3 should return None"
 
   @pytest.mark.parametrize("contents", [
     ({
@@ -110,9 +110,9 @@ class TestOntologyConfigUtilityFunctions(object):
         }
     })
   ])
-  def test_adjust_ontology_data_to_v3_when_v2document_given_do_expected(self,
+  def test_adjust_data_hierarchy_data_to_v3_when_v2document_given_do_expected(self,
                                                                         contents):
-    assert adjust_ontology_data_to_v3(contents) is None, "adjust_ontology_data_to_v3 should return None"
+    assert adjust_data_hierarchy_data_to_v3(contents) is None, "adjust_data_hierarchy_data_to_v3 should return None"
     if "x0" in contents:
       assert "attachments" in contents["x0"], "attachments should be set"
       assert "metadata" in contents["x0"], "metadata should be set"
@@ -234,7 +234,7 @@ class TestOntologyConfigUtilityFunctions(object):
     mock_msg_box.setTextFormat.assert_called_once_with(Qt.RichText)
     mock_msg_box.setIcon.assert_called_once_with(QMessageBox.Warning)
 
-  @pytest.mark.parametrize("ontology_types, expected_result", [
+  @pytest.mark.parametrize("data_hierarchy_types, expected_result", [
     ({}, ({}, {})),
     ({
        "x0": {
@@ -422,13 +422,13 @@ class TestOntologyConfigUtilityFunctions(object):
      ({'Structure level 1': {'default': ['-name']}, 'test': {'default': ['-tags']}},
       {'Structure level 1': ['default', 'metadata_group2']}))
   ])
-  def test_check_ontology_document_with_full_and_missing_metadata_returns_expected_result(self,
-                                                                                            ontology_types,
+  def test_check_data_hierarchy_document_with_full_and_missing_metadata_returns_expected_result(self,
+                                                                                            data_hierarchy_types,
                                                                                             expected_result):
-    assert check_ontology_types(ontology_types) == expected_result, "show_message should return None"
+    assert check_data_hierarchy_types(data_hierarchy_types) == expected_result, "show_message should return None"
 
-  def test_check_ontology_document_with_null_doc_returns_empty_tuple(self):
-    assert check_ontology_types(None) == ({}, {}), "check_ontology_document should return empty tuple"
+  def test_check_data_hierarchy_document_with_null_doc_returns_empty_tuple(self):
+    assert check_data_hierarchy_types(None) == ({}, {}), "check_data_hierarchy_document should return empty tuple"
 
   @pytest.mark.parametrize("missing_metadata, missing_names, expected_message", [
     ({}, {}, ""),

@@ -3,7 +3,7 @@
 #  Copyright (c) 2023
 #
 #  Author: Jithu Murugan
-#  Filename: test_ontology_config_configuration_extended.py
+#  Filename: test_data_hierarchy_configuration_extended.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
@@ -25,10 +25,10 @@ from pasta_eln.GUI.data_hierarchy.reorder_column_delegate import ReorderColumnDe
 from pasta_eln.GUI.data_hierarchy.mandatory_column_delegate import MandatoryColumnDelegate
 from pasta_eln.GUI.data_hierarchy.utility_functions import generate_empty_type, generate_mandatory_metadata, \
   get_types_for_display
-from tests.app_tests.common.fixtures import configuration_extended, ontology_doc_mock
+from tests.app_tests.common.fixtures import configuration_extended, data_hierarchy_doc_mock
 
 
-class TestOntologyConfigConfiguration(object):
+class TestDataHierarchyConfiguration(object):
 
   def test_instantiation_should_succeed(self,
                                         mocker):
@@ -36,7 +36,7 @@ class TestOntologyConfigConfiguration(object):
     mocker.patch('pasta_eln.GUI.data_hierarchy.create_type_dialog.logging.getLogger')
     mock_setup_ui = mocker.patch(
       'pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.Ui_DataHierarchyConfigurationBase.setupUi')
-    mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.adjust_ontology_data_to_v3')
+    mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.adjust_data_hierarchy_data_to_v3')
     mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.LookupIriAction')
     mock_metadata_table_view_model = mocker.MagicMock()
     mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.MetadataTableViewModel',
@@ -77,7 +77,7 @@ class TestOntologyConfigConfiguration(object):
     mocker.patch.object(DataHierarchyConfiguration, 'typeAttachmentsTableView', create=True)
     mocker.patch.object(DataHierarchyConfiguration, 'addMetadataRowPushButton', create=True)
     mocker.patch.object(DataHierarchyConfiguration, 'addAttachmentPushButton', create=True)
-    mocker.patch.object(DataHierarchyConfiguration, 'saveOntologyPushButton', create=True)
+    mocker.patch.object(DataHierarchyConfiguration, 'saveDataHierarchyPushButton', create=True)
     mocker.patch.object(DataHierarchyConfiguration, 'addMetadataGroupPushButton', create=True)
     mocker.patch.object(DataHierarchyConfiguration, 'deleteMetadataGroupPushButton', create=True)
     mocker.patch.object(DataHierarchyConfiguration, 'deleteTypePushButton', create=True)
@@ -94,7 +94,7 @@ class TestOntologyConfigConfiguration(object):
     mocker.patch.object(DataHierarchyConfiguration, 'delete_column_delegate_attach_table', create=True)
     mocker.patch.object(DataHierarchyConfiguration, 'reorder_column_delegate_attach_table', create=True)
     mock_setup_slots = mocker.patch.object(DataHierarchyConfiguration, 'setup_slots', create=True)
-    mock_load_ontology_data = mocker.patch.object(DataHierarchyConfiguration, 'load_ontology_data', create=True)
+    mock_load_data_hierarchy_data = mocker.patch.object(DataHierarchyConfiguration, 'load_data_hierarchy_data', create=True)
     mocker.patch.object(CreateTypeDialog, '__new__')
     config_instance = DataHierarchyConfiguration(mock_database)
     assert config_instance, "DataHierarchyConfiguration should be created"
@@ -102,7 +102,7 @@ class TestOntologyConfigConfiguration(object):
     mock_setup_ui.assert_called_once_with(mock_dialog)
     assert config_instance.database is mock_database, "Database should be set"
     config_instance.database.db.__getitem__.assert_called_once_with('-ontology-')
-    assert config_instance.ontology_document is config_instance.database.db.__getitem__.return_value, "Ontology document should be set"
+    assert config_instance.data_hierarchy_document is config_instance.database.db.__getitem__.return_value, "Data Hierarchy document should be set"
     assert config_instance.metadata_table_data_model == mock_metadata_table_view_model, "Metadata table data model should be set"
     assert config_instance.attachments_table_data_model == mock_attachments_table_view_model, "Attachments table data model should be set"
     assert config_instance.required_column_delegate_metadata_table == mock_required_column_delegate, "Required column delegate should be set"
@@ -152,13 +152,13 @@ class TestOntologyConfigConfiguration(object):
 
     config_instance.addAttachmentPushButton.hide.assert_called_once_with()
     config_instance.typeAttachmentsTableView.hide.assert_called_once_with()
-    mock_load_ontology_data.assert_called_once_with()
+    mock_load_data_hierarchy_data.assert_called_once_with()
 
   def test_instantiation_with_null_database_should_throw_exception(self,
                                                                    mocker):
     mocker.patch('pasta_eln.GUI.data_hierarchy.create_type_dialog.logging.getLogger')
     mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.Ui_DataHierarchyConfigurationBase.setupUi')
-    mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.adjust_ontology_data_to_v3')
+    mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.adjust_data_hierarchy_data_to_v3')
     mocker.patch.object(QDialog, '__new__')
     with pytest.raises(GenericException, match="Null database instance passed to the initializer"):
       DataHierarchyConfiguration(None)
@@ -167,14 +167,14 @@ class TestOntologyConfigConfiguration(object):
                                                                                  mocker):
     mocker.patch('pasta_eln.GUI.data_hierarchy.create_type_dialog.logging.getLogger')
     mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.Ui_DataHierarchyConfigurationBase.setupUi')
-    mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.adjust_ontology_data_to_v3')
+    mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.adjust_data_hierarchy_data_to_v3')
     mocker.patch.object(QDialog, '__new__')
     mock_db = mocker.patch('pasta_eln.database.Database')
     mocker.patch.object(mock_db, 'db', {'-ontology-': None}, create=True)
-    with pytest.raises(DocumentNullException, match="Null ontology document in db instance"):
+    with pytest.raises(DocumentNullException, match="Null data_hierarchy document in db instance"):
       DataHierarchyConfiguration(mock_db)
 
-  @pytest.mark.parametrize("new_type_selected, mock_ontology_types", [
+  @pytest.mark.parametrize("new_type_selected, mock_data_hierarchy_types", [
     ("x0", {
       "x0": {
         "displayedTitle": "x0",
@@ -263,12 +263,12 @@ class TestOntologyConfigConfiguration(object):
                                                      mocker,
                                                      configuration_extended: configuration_extended,
                                                      new_type_selected,
-                                                     mock_ontology_types):
+                                                     mock_data_hierarchy_types):
     logger_info_spy = mocker.spy(configuration_extended.logger, 'info')
     mock_signal = mocker.patch(
       'pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.DataHierarchyConfiguration.type_changed_signal')
     mocker.patch.object(configuration_extended, 'addMetadataGroupLineEdit', create=True)
-    mocker.patch.object(configuration_extended, 'ontology_types', mock_ontology_types, create=True)
+    mocker.patch.object(configuration_extended, 'data_hierarchy_types', mock_data_hierarchy_types, create=True)
     mocker.patch.object(configuration_extended, 'typeDisplayedTitleLineEdit', create=True)
     mocker.patch.object(configuration_extended, 'typeIriLineEdit', create=True)
     mocker.patch.object(configuration_extended, 'attachments_table_data_model', create=True)
@@ -282,29 +282,29 @@ class TestOntologyConfigConfiguration(object):
     clear_metadata_group_combo_box_spy = mocker.spy(configuration_extended.metadataGroupComboBox, 'clear')
     add_items_metadata_group_combo_box_spy = mocker.spy(configuration_extended.metadataGroupComboBox, 'addItems')
     update_attachment_table_model_spy = mocker.spy(configuration_extended.attachments_table_data_model, 'update')
-    if mock_ontology_types is not None and len(
-        mock_ontology_types) > 0 and new_type_selected not in mock_ontology_types:
+    if mock_data_hierarchy_types is not None and len(
+        mock_data_hierarchy_types) > 0 and new_type_selected not in mock_data_hierarchy_types:
       with pytest.raises(KeyNotFoundException,
-                         match=f"Key {new_type_selected} not found in ontology_types"):
+                         match=f"Key {new_type_selected} not found in data_hierarchy_types"):
         assert configuration_extended.type_combo_box_changed(
           new_type_selected) is not None, "Nothing should be returned"
 
-    if (mock_ontology_types
+    if (mock_data_hierarchy_types
         and new_type_selected
-        and new_type_selected in mock_ontology_types):
+        and new_type_selected in mock_data_hierarchy_types):
       assert configuration_extended.type_combo_box_changed(new_type_selected) is None, "Nothing should be returned"
       mock_signal.emit.assert_called_once_with(new_type_selected)
       logger_info_spy.assert_called_once_with("New type selected in UI: {%s}", new_type_selected)
       clear_add_metadata_metadata_group_line_edit_spy.assert_called_once_with()
-      set_text_displayed_title_line_edit_spy.assert_called_once_with(mock_ontology_types.get(new_type_selected).get('displayedTitle'))
-      set_text_iri_line_edit_spy.assert_called_once_with(mock_ontology_types.get(new_type_selected).get('IRI'))
+      set_text_displayed_title_line_edit_spy.assert_called_once_with(mock_data_hierarchy_types.get(new_type_selected).get('displayedTitle'))
+      set_text_iri_line_edit_spy.assert_called_once_with(mock_data_hierarchy_types.get(new_type_selected).get('IRI'))
       set_current_index_metadata_group_combo_box_spy.assert_called_once_with(0)
       clear_metadata_group_combo_box_spy.assert_called_once_with()
       add_items_metadata_group_combo_box_spy.assert_called_once_with(
-        list(mock_ontology_types.get(new_type_selected).get('metadata').keys())
-        if mock_ontology_types.get(new_type_selected).get('metadata') else [])
+        list(mock_data_hierarchy_types.get(new_type_selected).get('metadata').keys())
+        if mock_data_hierarchy_types.get(new_type_selected).get('metadata') else [])
       update_attachment_table_model_spy.assert_called_once_with(
-        mock_ontology_types.get(new_type_selected).get('attachments'))
+        mock_data_hierarchy_types.get(new_type_selected).get('attachments'))
 
   @pytest.mark.parametrize("new_selected_metadata_group, selected_type_metadata", [
     (None, {}),
@@ -334,7 +334,7 @@ class TestOntologyConfigConfiguration(object):
     if new_selected_metadata_group and selected_type_metadata:
       update_metadata_table_model_spy.assert_called_once_with(selected_type_metadata.get(new_selected_metadata_group))
 
-  @pytest.mark.parametrize("new_metadata_group, ontology_types, selected_type_metadata", [
+  @pytest.mark.parametrize("new_metadata_group, data_hierarchy_types, selected_type_metadata", [
     (None, None, {}),
     ("default", None, {}),
     (None, {0: "x0"}, {"default": [], "metadata group1": [], "metadata group2": []}),
@@ -352,14 +352,14 @@ class TestOntologyConfigConfiguration(object):
                                                      mocker,
                                                      configuration_extended: configuration_extended,
                                                      new_metadata_group,
-                                                     ontology_types,
+                                                     data_hierarchy_types,
                                                      selected_type_metadata):
     logger_info_spy = mocker.spy(configuration_extended.logger, 'info')
     mocker.patch.object(configuration_extended, 'addMetadataGroupLineEdit', create=True)
     mocker.patch.object(configuration_extended.addMetadataGroupLineEdit, 'text', return_value=new_metadata_group)
-    mocker.patch.object(configuration_extended, 'ontology_types', ontology_types, create=True)
+    mocker.patch.object(configuration_extended, 'data_hierarchy_types', data_hierarchy_types, create=True)
     mocker.patch.object(configuration_extended, 'metadataGroupComboBox', create=True)
-    mocker.patch.object(configuration_extended, 'ontology_loaded', create=True)
+    mocker.patch.object(configuration_extended, 'data_hierarchy_loaded', create=True)
     add_items_selected_spy = mocker.spy(configuration_extended.metadataGroupComboBox, 'addItems')
     clear_metadata_group_combo_box_spy = mocker.spy(configuration_extended.metadataGroupComboBox, 'clear')
     set_current_index_metadata_group_combo_box_spy = mocker.spy(configuration_extended.metadataGroupComboBox,
@@ -379,9 +379,9 @@ class TestOntologyConfigConfiguration(object):
       assert configuration_extended.add_new_metadata_group() is None, "Nothing should be returned"
       mock_show_message.assert_called_once_with("Enter non-null/valid metadata group name!!.....", QMessageBox.Warning)
       return
-    if not ontology_types:
+    if not data_hierarchy_types:
       assert configuration_extended.add_new_metadata_group() is None, "Nothing should be returned"
-      mock_show_message.assert_called_once_with("Load the ontology data first....", QMessageBox.Warning)
+      mock_show_message.assert_called_once_with("Load the data hierarchy data first....", QMessageBox.Warning)
       return
 
     if new_metadata_group in selected_type_metadata:
@@ -444,7 +444,7 @@ class TestOntologyConfigConfiguration(object):
     if selected_type_metadata is None:
       mocker.patch.object(configuration_extended, 'selected_type_metadata', None)
       assert configuration_extended.delete_selected_metadata_group() is None, "Nothing should be returned"
-      mock_show_message.assert_called_once_with("Load the ontology data first....", QMessageBox.Warning)
+      mock_show_message.assert_called_once_with("Load the data hierarchy data first....", QMessageBox.Warning)
       return
     if selected_type_metadata and selected_metadata_group in selected_type_metadata:
       assert configuration_extended.delete_selected_metadata_group() is None, "Nothing should be returned"
@@ -457,7 +457,7 @@ class TestOntologyConfigConfiguration(object):
       )
       set_current_index_metadata_group_combo_box_spy.assert_called_once_with(len(selected_type_metadata.keys()) - 1)
 
-  @pytest.mark.parametrize("modified_type_displayed_title, current_type, ontology_types", [
+  @pytest.mark.parametrize("modified_type_displayed_title, current_type, data_hierarchy_types", [
     (None, None, None),
     ("new_displayed_title_1", None, None),
     (None, "x0", {"x0": {"displayedTitle": "x0"}, "x1": {"displayedTitle": "x1"}}),
@@ -470,30 +470,30 @@ class TestOntologyConfigConfiguration(object):
                                                      configuration_extended: configuration_extended,
                                                      modified_type_displayed_title,
                                                      current_type,
-                                                     ontology_types):
+                                                     data_hierarchy_types):
     mocker.patch.object(configuration_extended, 'typeComboBox', create=True)
     mocker.patch.object(configuration_extended, 'set_iri_lookup_action', create=True)
     mocker.patch.object(configuration_extended.typeComboBox, 'currentText', return_value=current_type)
 
-    mocker.patch.object(configuration_extended, 'ontology_types', create=True)
-    if ontology_types:
-      configuration_extended.ontology_types.__setitem__.side_effect = ontology_types.__setitem__
-      configuration_extended.ontology_types.__getitem__.side_effect = ontology_types.__getitem__
-      configuration_extended.ontology_types.__iter__.side_effect = ontology_types.__iter__
-      configuration_extended.ontology_types.__contains__.side_effect = ontology_types.__contains__
-      configuration_extended.ontology_types.get.side_effect = ontology_types.get
-      configuration_extended.ontology_types.keys.side_effect = ontology_types.keys
+    mocker.patch.object(configuration_extended, 'data_hierarchy_types', create=True)
+    if data_hierarchy_types:
+      configuration_extended.data_hierarchy_types.__setitem__.side_effect = data_hierarchy_types.__setitem__
+      configuration_extended.data_hierarchy_types.__getitem__.side_effect = data_hierarchy_types.__getitem__
+      configuration_extended.data_hierarchy_types.__iter__.side_effect = data_hierarchy_types.__iter__
+      configuration_extended.data_hierarchy_types.__contains__.side_effect = data_hierarchy_types.__contains__
+      configuration_extended.data_hierarchy_types.get.side_effect = data_hierarchy_types.get
+      configuration_extended.data_hierarchy_types.keys.side_effect = data_hierarchy_types.keys
 
-    get_ontology_types_spy = mocker.spy(configuration_extended.ontology_types, 'get')
+    get_data_hierarchy_types_spy = mocker.spy(configuration_extended.data_hierarchy_types, 'get')
 
     if modified_type_displayed_title:
       assert configuration_extended.update_type_displayed_title(modified_type_displayed_title) is None, "Nothing should be returned"
-      if ontology_types is not None and current_type in ontology_types:
-        get_ontology_types_spy.assert_called_once_with(current_type)
-        assert ontology_types[current_type]["displayedTitle"] == modified_type_displayed_title
+      if data_hierarchy_types is not None and current_type in data_hierarchy_types:
+        get_data_hierarchy_types_spy.assert_called_once_with(current_type)
+        assert data_hierarchy_types[current_type]["displayedTitle"] == modified_type_displayed_title
         configuration_extended.set_iri_lookup_action.assert_called_once_with(modified_type_displayed_title)
 
-  @pytest.mark.parametrize("modified_type_iri, current_type, ontology_types", [
+  @pytest.mark.parametrize("modified_type_iri, current_type, data_hierarchy_types", [
     (None, None, None),
     ("new_url", None, None),
     (None, "x0", {"x0": {"displayedTitle": "x0"}, "x1": {"displayedTitle": "x1"}}),
@@ -506,28 +506,28 @@ class TestOntologyConfigConfiguration(object):
                                               configuration_extended: configuration_extended,
                                               modified_type_iri,
                                               current_type,
-                                              ontology_types):
+                                              data_hierarchy_types):
     mocker.patch.object(configuration_extended, 'typeComboBox', create=True)
     mocker.patch.object(configuration_extended.typeComboBox, 'currentText', return_value=current_type)
 
-    mocker.patch.object(configuration_extended, 'ontology_types', create=True)
-    if ontology_types:
-      configuration_extended.ontology_types.__setitem__.side_effect = ontology_types.__setitem__
-      configuration_extended.ontology_types.__getitem__.side_effect = ontology_types.__getitem__
-      configuration_extended.ontology_types.__iter__.side_effect = ontology_types.__iter__
-      configuration_extended.ontology_types.__contains__.side_effect = ontology_types.__contains__
-      configuration_extended.ontology_types.get.side_effect = ontology_types.get
-      configuration_extended.ontology_types.keys.side_effect = ontology_types.keys
+    mocker.patch.object(configuration_extended, 'data_hierarchy_types', create=True)
+    if data_hierarchy_types:
+      configuration_extended.data_hierarchy_types.__setitem__.side_effect = data_hierarchy_types.__setitem__
+      configuration_extended.data_hierarchy_types.__getitem__.side_effect = data_hierarchy_types.__getitem__
+      configuration_extended.data_hierarchy_types.__iter__.side_effect = data_hierarchy_types.__iter__
+      configuration_extended.data_hierarchy_types.__contains__.side_effect = data_hierarchy_types.__contains__
+      configuration_extended.data_hierarchy_types.get.side_effect = data_hierarchy_types.get
+      configuration_extended.data_hierarchy_types.keys.side_effect = data_hierarchy_types.keys
 
-    get_ontology_types_spy = mocker.spy(configuration_extended.ontology_types, 'get')
+    get_data_hierarchy_types_spy = mocker.spy(configuration_extended.data_hierarchy_types, 'get')
 
     if modified_type_iri:
       assert configuration_extended.update_type_iri(modified_type_iri) is None, "Nothing should be returned"
-      if ontology_types is not None and current_type in ontology_types:
-        get_ontology_types_spy.assert_called_once_with(current_type)
-        assert ontology_types[current_type]["IRI"] == modified_type_iri
+      if data_hierarchy_types is not None and current_type in data_hierarchy_types:
+        get_data_hierarchy_types_spy.assert_called_once_with(current_type)
+        assert data_hierarchy_types[current_type]["IRI"] == modified_type_iri
 
-  @pytest.mark.parametrize("selected_type, ontology_types, ontology_document", [
+  @pytest.mark.parametrize("selected_type, data_hierarchy_types, data_hierarchy_document", [
     (None, None, None),
     ("x0", None, None),
     (None, {"x0": {"IRI": "x0"}, "x1": {"IRI": "x1"}}, {"x0": {"IRI": "x0"}, "x1": {"IRI": "x1"}}),
@@ -544,64 +544,64 @@ class TestOntologyConfigConfiguration(object):
                                                    mocker,
                                                    configuration_extended: configuration_extended,
                                                    selected_type,
-                                                   ontology_types,
-                                                   ontology_document):
+                                                   data_hierarchy_types,
+                                                   data_hierarchy_document):
     mock_signal = mocker.patch(
       'pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.DataHierarchyConfiguration.type_changed_signal')
     mocker.patch.object(configuration_extended, 'typeComboBox', create=True)
     mocker.patch.object(configuration_extended.typeComboBox, 'currentText', return_value=selected_type)
     mocker.patch.object(configuration_extended, 'type_changed_signal', mock_signal, create=True)
 
-    mocker.patch.object(configuration_extended, 'ontology_types', create=True)
-    mocker.patch.object(configuration_extended, 'ontology_document', create=True)
+    mocker.patch.object(configuration_extended, 'data_hierarchy_types', create=True)
+    mocker.patch.object(configuration_extended, 'data_hierarchy_document', create=True)
     clear_type_combo_box_spy = mocker.spy(configuration_extended.typeComboBox, 'clear')
     set_current_index_type_combo_box_spy = mocker.spy(configuration_extended.typeComboBox, 'setCurrentIndex')
     add_items_selected_spy = mocker.spy(configuration_extended.typeComboBox, 'addItems')
     logger_info_spy = mocker.spy(configuration_extended.logger, 'info')
     mock_show_message = mocker.patch(
       "pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.show_message")
-    mocker.patch.object(configuration_extended, 'ontology_loaded', True, create=True)
-    if ontology_document:
-      original_ontology_document = ontology_document.copy()
-      configuration_extended.ontology_document.__setitem__.side_effect = ontology_document.__setitem__
-      configuration_extended.ontology_document.__getitem__.side_effect = ontology_document.__getitem__
-      configuration_extended.ontology_document.__iter__.side_effect = ontology_document.__iter__
-      configuration_extended.ontology_document.__contains__.side_effect = ontology_document.__contains__
-      configuration_extended.ontology_document.get.side_effect = ontology_document.get
-      configuration_extended.ontology_document.keys.side_effect = ontology_document.keys
-      configuration_extended.ontology_document.pop.side_effect = ontology_document.pop
-    if ontology_types:
-      original_ontology_types = ontology_types.copy()
-      configuration_extended.ontology_types.__setitem__.side_effect = ontology_types.__setitem__
-      configuration_extended.ontology_types.__getitem__.side_effect = ontology_types.__getitem__
-      configuration_extended.ontology_types.__iter__.side_effect = ontology_types.__iter__
-      configuration_extended.ontology_types.__contains__.side_effect = ontology_types.__contains__
-      configuration_extended.ontology_types.get.side_effect = ontology_types.get
-      configuration_extended.ontology_types.keys.side_effect = ontology_types.keys
-      configuration_extended.ontology_types.pop.side_effect = ontology_types.pop
-    pop_items_selected_ontology_types_spy = mocker.spy(configuration_extended.ontology_types, 'pop')
+    mocker.patch.object(configuration_extended, 'data_hierarchy_loaded', True, create=True)
+    if data_hierarchy_document:
+      original_data_hierarchy_document = data_hierarchy_document.copy()
+      configuration_extended.data_hierarchy_document.__setitem__.side_effect = data_hierarchy_document.__setitem__
+      configuration_extended.data_hierarchy_document.__getitem__.side_effect = data_hierarchy_document.__getitem__
+      configuration_extended.data_hierarchy_document.__iter__.side_effect = data_hierarchy_document.__iter__
+      configuration_extended.data_hierarchy_document.__contains__.side_effect = data_hierarchy_document.__contains__
+      configuration_extended.data_hierarchy_document.get.side_effect = data_hierarchy_document.get
+      configuration_extended.data_hierarchy_document.keys.side_effect = data_hierarchy_document.keys
+      configuration_extended.data_hierarchy_document.pop.side_effect = data_hierarchy_document.pop
+    if data_hierarchy_types:
+      original_data_hierarchy_types = data_hierarchy_types.copy()
+      configuration_extended.data_hierarchy_types.__setitem__.side_effect = data_hierarchy_types.__setitem__
+      configuration_extended.data_hierarchy_types.__getitem__.side_effect = data_hierarchy_types.__getitem__
+      configuration_extended.data_hierarchy_types.__iter__.side_effect = data_hierarchy_types.__iter__
+      configuration_extended.data_hierarchy_types.__contains__.side_effect = data_hierarchy_types.__contains__
+      configuration_extended.data_hierarchy_types.get.side_effect = data_hierarchy_types.get
+      configuration_extended.data_hierarchy_types.keys.side_effect = data_hierarchy_types.keys
+      configuration_extended.data_hierarchy_types.pop.side_effect = data_hierarchy_types.pop
+    pop_items_selected_data_hierarchy_types_spy = mocker.spy(configuration_extended.data_hierarchy_types, 'pop')
 
-    if ontology_document is None or ontology_types is None:
-      mocker.patch.object(configuration_extended, 'ontology_types', ontology_types)
-      mocker.patch.object(configuration_extended, 'ontology_document', ontology_document)
+    if data_hierarchy_document is None or data_hierarchy_types is None:
+      mocker.patch.object(configuration_extended, 'data_hierarchy_types', data_hierarchy_types)
+      mocker.patch.object(configuration_extended, 'data_hierarchy_document', data_hierarchy_document)
       assert configuration_extended.delete_selected_type() is None, "Nothing should be returned"
-      mock_show_message.assert_called_once_with("Load the ontology data first....", QMessageBox.Warning)
+      mock_show_message.assert_called_once_with("Load the data hierarchy data first....", QMessageBox.Warning)
       return
     if selected_type:
       assert configuration_extended.delete_selected_type() is None, "Nothing should be returned"
-      if selected_type and selected_type in original_ontology_types:
+      if selected_type and selected_type in original_data_hierarchy_types:
         logger_info_spy.assert_called_once_with("User deleted the selected type: {%s}", selected_type)
-        pop_items_selected_ontology_types_spy.assert_called_once_with(selected_type)
+        pop_items_selected_data_hierarchy_types_spy.assert_called_once_with(selected_type)
         clear_type_combo_box_spy.assert_called_once_with()
         add_items_selected_spy.assert_called_once_with(
-          get_types_for_display(ontology_types.keys())
+          get_types_for_display(data_hierarchy_types.keys())
         )
         set_current_index_type_combo_box_spy.assert_called_once_with(0)
-        assert selected_type not in ontology_types and ontology_document, "selected_type should be deleted"
+        assert selected_type not in data_hierarchy_types and data_hierarchy_document, "selected_type should be deleted"
       else:
         logger_info_spy.assert_not_called()
         logger_info_spy.assert_not_called()
-        pop_items_selected_ontology_types_spy.assert_not_called()
+        pop_items_selected_data_hierarchy_types_spy.assert_not_called()
         clear_type_combo_box_spy.assert_not_called()
         add_items_selected_spy.assert_not_called()
         set_current_index_type_combo_box_spy.assert_not_called()
@@ -650,7 +650,7 @@ class TestOntologyConfigConfiguration(object):
     assert configuration_extended.create_type_rejected_callback() is None, "Nothing should be returned"
     clear_ui_spy.assert_called_once_with()
 
-  @pytest.mark.parametrize("new_structural_title, ontology_types", [
+  @pytest.mark.parametrize("new_structural_title, data_hierarchy_types", [
     (None, None),
     ("x0", None),
     (None, {"x0": {"IRI": "x0"}, "x1": {"IRI": "x1"}}),
@@ -662,35 +662,35 @@ class TestOntologyConfigConfiguration(object):
                                                       mocker,
                                                       configuration_extended: configuration_extended,
                                                       new_structural_title,
-                                                      ontology_types):
+                                                      data_hierarchy_types):
     mocker.patch.object(configuration_extended, 'create_type_dialog', create=True)
-    mocker.patch.object(configuration_extended, 'ontology_types', create=True)
+    mocker.patch.object(configuration_extended, 'data_hierarchy_types', create=True)
     set_structural_level_title_spy = mocker.patch.object(configuration_extended.create_type_dialog,
                                                          'set_structural_level_title', create=True)
-    mocker.patch.object(configuration_extended, 'ontology_loaded', create=True)
+    mocker.patch.object(configuration_extended, 'data_hierarchy_loaded', create=True)
     show_create_type_dialog_spy = mocker.patch.object(configuration_extended.create_type_dialog, 'show', create=True)
     show_message_spy = mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.show_message')
     get_next_possible_structural_level_title_spy = mocker.patch(
       'pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.get_next_possible_structural_level_title',
       return_value=new_structural_title)
-    if ontology_types is not None:
-      configuration_extended.ontology_types.__setitem__.side_effect = ontology_types.__setitem__
-      configuration_extended.ontology_types.__getitem__.side_effect = ontology_types.__getitem__
-      configuration_extended.ontology_types.__iter__.side_effect = ontology_types.__iter__
-      configuration_extended.ontology_types.__contains__.side_effect = ontology_types.__contains__
-      configuration_extended.ontology_types.get.side_effect = ontology_types.get
-      configuration_extended.ontology_types.keys.side_effect = ontology_types.keys
-      configuration_extended.ontology_types.pop.side_effect = ontology_types.pop
+    if data_hierarchy_types is not None:
+      configuration_extended.data_hierarchy_types.__setitem__.side_effect = data_hierarchy_types.__setitem__
+      configuration_extended.data_hierarchy_types.__getitem__.side_effect = data_hierarchy_types.__getitem__
+      configuration_extended.data_hierarchy_types.__iter__.side_effect = data_hierarchy_types.__iter__
+      configuration_extended.data_hierarchy_types.__contains__.side_effect = data_hierarchy_types.__contains__
+      configuration_extended.data_hierarchy_types.get.side_effect = data_hierarchy_types.get
+      configuration_extended.data_hierarchy_types.keys.side_effect = data_hierarchy_types.keys
+      configuration_extended.data_hierarchy_types.pop.side_effect = data_hierarchy_types.pop
     else:
-      mocker.patch.object(configuration_extended, 'ontology_types', None)
+      mocker.patch.object(configuration_extended, 'data_hierarchy_types', None)
 
     assert configuration_extended.show_create_type_dialog() is None, "Nothing should be returned"
-    if ontology_types is not None:
-      get_next_possible_structural_level_title_spy.assert_called_once_with(ontology_types.keys())
+    if data_hierarchy_types is not None:
+      get_next_possible_structural_level_title_spy.assert_called_once_with(data_hierarchy_types.keys())
       set_structural_level_title_spy.assert_called_once_with(new_structural_title)
       show_create_type_dialog_spy.assert_called_once_with()
     else:
-      show_message_spy.assert_called_once_with("Load the ontology data first...", QMessageBox.Warning)
+      show_message_spy.assert_called_once_with("Load the data hierarchy data first...", QMessageBox.Warning)
       get_next_possible_structural_level_title_spy.assert_not_called()
       set_structural_level_title_spy.assert_not_called()
       show_create_type_dialog_spy.assert_not_called()
@@ -698,13 +698,13 @@ class TestOntologyConfigConfiguration(object):
   def test_initialize_should_setup_slots_and_should_do_expected(self,
                                                                 configuration_extended: configuration_extended):
     configuration_extended.logger.info.assert_any_call("Setting up slots for the editor..")
-    configuration_extended.logger.info.assert_any_call("User loaded the ontology data in UI")
+    configuration_extended.logger.info.assert_any_call("User loaded the data hierarchy data in UI")
     configuration_extended.addMetadataRowPushButton.clicked.connect.assert_called_once_with(
       configuration_extended.metadata_table_data_model.add_data_row)
     configuration_extended.addAttachmentPushButton.clicked.connect.assert_called_once_with(
       configuration_extended.attachments_table_data_model.add_data_row)
-    configuration_extended.saveOntologyPushButton.clicked.connect.assert_called_once_with(
-      configuration_extended.save_ontology)
+    configuration_extended.saveDataHierarchyPushButton.clicked.connect.assert_called_once_with(
+      configuration_extended.save_data_hierarchy)
     configuration_extended.addMetadataGroupPushButton.clicked.connect.assert_called_once_with(
       configuration_extended.add_new_metadata_group)
     configuration_extended.deleteMetadataGroupPushButton.clicked.connect.assert_called_once_with(
@@ -737,152 +737,152 @@ class TestOntologyConfigConfiguration(object):
     configuration_extended.reorder_column_delegate_attach_table.re_order_signal.connect.assert_called_once_with(
       configuration_extended.attachments_table_data_model.re_order_data)
 
-  @pytest.mark.parametrize("ontology_document", [
-    'ontology_doc_mock',
+  @pytest.mark.parametrize("data_hierarchy_document", [
+    'data_hierarchy_doc_mock',
     None,
     {"x0": {"IRI": "x0"}, "": {"IRI": "x1"}},
     {"x0": {"IRI": "x0"}, "": {"IRI": "x1"}, 23: "test", "__id": "test"},
     {"test": ["test1", "test2", "test3"]}
   ])
-  def test_load_ontology_data_should_with_variant_types_of_doc_should_do_expected(self,
+  def test_load_data_hierarchy_data_should_with_variant_types_of_doc_should_do_expected(self,
                                                                                   mocker,
-                                                                                  ontology_document,
+                                                                                  data_hierarchy_document,
                                                                                   configuration_extended: configuration_extended,
                                                                                   request):
-    doc = request.getfixturevalue(ontology_document) \
-      if ontology_document and type(ontology_document) is str \
-      else ontology_document
-    mocker.patch.object(configuration_extended, 'ontology_document', doc, create=True)
-    if ontology_document is None:
-      with pytest.raises(GenericException, match="Null ontology_document, erroneous app state"):
-        assert configuration_extended.load_ontology_data() is None, "Nothing should be returned"
+    doc = request.getfixturevalue(data_hierarchy_document) \
+      if data_hierarchy_document and type(data_hierarchy_document) is str \
+      else data_hierarchy_document
+    mocker.patch.object(configuration_extended, 'data_hierarchy_document', doc, create=True)
+    if data_hierarchy_document is None:
+      with pytest.raises(GenericException, match="Null data_hierarchy_document, erroneous app state"):
+        assert configuration_extended.load_data_hierarchy_data() is None, "Nothing should be returned"
       return
-    assert configuration_extended.load_ontology_data() is None, "Nothing should be returned"
+    assert configuration_extended.load_data_hierarchy_data() is None, "Nothing should be returned"
     assert configuration_extended.typeComboBox.clear.call_count == 2, "Clear should be called twice"
     assert configuration_extended.typeComboBox.addItems.call_count == 2, "addItems should be called twice"
     configuration_extended.typeComboBox.addItems.assert_called_with(
-      get_types_for_display(configuration_extended.ontology_types.keys()))
+      get_types_for_display(configuration_extended.data_hierarchy_types.keys()))
     assert configuration_extended.typeComboBox.setCurrentIndex.call_count == 2, "setCurrentIndex should be called twice"
     configuration_extended.typeComboBox.setCurrentIndex.assert_called_with(0)
-    for data in ontology_document:
+    for data in data_hierarchy_document:
       if type(data) is dict:
-        assert data in configuration_extended.ontology_types, "Data should be loaded"
+        assert data in configuration_extended.data_hierarchy_types, "Data should be loaded"
 
-  @pytest.mark.parametrize("ontology_document",
+  @pytest.mark.parametrize("data_hierarchy_document",
                            [None,
                             {"x0": {"IRI": "x0"}, "": {"IRI": "x1"}},
                             {"x0": {"IRI": "x0"}, "": {"IRI": "x1"}, 23: "test", "__id": "test"},
                             {"test": ["test1", "test2", "test3"]}
                             ])
-  def test_save_ontology_should_do_expected(self,
+  def test_save_data_hierarchy_should_do_expected(self,
                                             mocker,
-                                            ontology_document,
+                                            data_hierarchy_document,
                                             configuration_extended: configuration_extended,
                                             request):
-    doc = request.getfixturevalue(ontology_document) \
-      if ontology_document and type(ontology_document) is str \
-      else ontology_document
-    mocker.patch.object(configuration_extended, 'ontology_document', create=True)
+    doc = request.getfixturevalue(data_hierarchy_document) \
+      if data_hierarchy_document and type(data_hierarchy_document) is str \
+      else data_hierarchy_document
+    mocker.patch.object(configuration_extended, 'data_hierarchy_document', create=True)
     if doc:
-      mocker.patch.object(configuration_extended, 'ontology_types', dict(ontology_document), create=True)
-      configuration_extended.ontology_document.__setitem__.side_effect = doc.__setitem__
-      configuration_extended.ontology_document.__getitem__.side_effect = doc.__getitem__
-      configuration_extended.ontology_document.__iter__.side_effect = doc.__iter__
-      configuration_extended.ontology_document.__contains__.side_effect = doc.__contains__
-      configuration_extended.ontology_document.__delitem__.side_effect = doc.__delitem__
-      configuration_extended.ontology_document.keys.side_effect = doc.keys
+      mocker.patch.object(configuration_extended, 'data_hierarchy_types', dict(data_hierarchy_document), create=True)
+      configuration_extended.data_hierarchy_document.__setitem__.side_effect = doc.__setitem__
+      configuration_extended.data_hierarchy_document.__getitem__.side_effect = doc.__getitem__
+      configuration_extended.data_hierarchy_document.__iter__.side_effect = doc.__iter__
+      configuration_extended.data_hierarchy_document.__contains__.side_effect = doc.__contains__
+      configuration_extended.data_hierarchy_document.__delitem__.side_effect = doc.__delitem__
+      configuration_extended.data_hierarchy_document.keys.side_effect = doc.keys
 
     mocker.patch.object(configuration_extended.logger, 'info')
     mock_show_message = mocker.patch(
       'pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.show_message', return_value=QMessageBox.Yes)
     mock_is_instance = mocker.patch(
       'pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.isinstance')
-    mock_check_ontology_types = mocker.patch(
-      'pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.check_ontology_types',
+    mock_check_data_hierarchy_types = mocker.patch(
+      'pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.check_data_hierarchy_types',
       return_value=(None, None))
     mock_db_init_views = mocker.patch.object(configuration_extended.database,
                                              'initDocTypeViews', return_value=None)
-    assert configuration_extended.save_ontology() is None, "Nothing should be returned"
+    assert configuration_extended.save_data_hierarchy() is None, "Nothing should be returned"
 
     if doc:
       for item in doc:
         mock_is_instance.assert_any_call(doc[item], dict)
         if isinstance(doc[item], dict):
-          configuration_extended.ontology_document.__delitem__.assert_any_call(item)
-      for item in configuration_extended.ontology_types:
-        configuration_extended.ontology_document.__setitem__.assert_any_call(item,
-                                                                             configuration_extended.ontology_types[
+          configuration_extended.data_hierarchy_document.__delitem__.assert_any_call(item)
+      for item in configuration_extended.data_hierarchy_types:
+        configuration_extended.data_hierarchy_document.__setitem__.assert_any_call(item,
+                                                                             configuration_extended.data_hierarchy_types[
                                                                                item])
-    mock_check_ontology_types.assert_called_once_with(configuration_extended.ontology_types)
+    mock_check_data_hierarchy_types.assert_called_once_with(configuration_extended.data_hierarchy_types)
     configuration_extended.logger.info.assert_called_once_with("User clicked the save button..")
-    configuration_extended.ontology_document.save.assert_called_once()
+    configuration_extended.data_hierarchy_document.save.assert_called_once()
     mock_db_init_views.assert_called_once_with(16)
     mock_show_message.assert_called_once_with('Save will close the tool and restart the Pasta Application (Yes/No?)',
                                                QMessageBox.Question,
                                                QMessageBox.No | QMessageBox.Yes,
                                                QMessageBox.Yes)
 
-  @pytest.mark.parametrize("ontology_document",
+  @pytest.mark.parametrize("data_hierarchy_document",
                            [None,
                             {"x0": {"IRI": "x0"}, "": {"IRI": "x1"}},
                             {"x0": {"IRI": "x0"}, "": {"IRI": "x1"}, 23: "test", "__id": "test"},
                             {"test": ["test1", "test2", "test3"]}
                             ])
-  def test_cancel_save_ontology_should_do_expected(self,
+  def test_cancel_save_data_hierarchy_should_do_expected(self,
                                             mocker,
-                                            ontology_document,
+                                            data_hierarchy_document,
                                             configuration_extended: configuration_extended,
                                             request):
-    doc = request.getfixturevalue(ontology_document) \
-      if ontology_document and type(ontology_document) is str \
-      else ontology_document
-    mocker.patch.object(configuration_extended, 'ontology_document', create=True)
+    doc = request.getfixturevalue(data_hierarchy_document) \
+      if data_hierarchy_document and type(data_hierarchy_document) is str \
+      else data_hierarchy_document
+    mocker.patch.object(configuration_extended, 'data_hierarchy_document', create=True)
     if doc:
-      mocker.patch.object(configuration_extended, 'ontology_types', dict(ontology_document), create=True)
-      configuration_extended.ontology_document.__setitem__.side_effect = doc.__setitem__
-      configuration_extended.ontology_document.__getitem__.side_effect = doc.__getitem__
-      configuration_extended.ontology_document.__iter__.side_effect = doc.__iter__
-      configuration_extended.ontology_document.__contains__.side_effect = doc.__contains__
-      configuration_extended.ontology_document.__delitem__.side_effect = doc.__delitem__
-      configuration_extended.ontology_document.keys.side_effect = doc.keys
+      mocker.patch.object(configuration_extended, 'data_hierarchy_types', dict(data_hierarchy_document), create=True)
+      configuration_extended.data_hierarchy_document.__setitem__.side_effect = doc.__setitem__
+      configuration_extended.data_hierarchy_document.__getitem__.side_effect = doc.__getitem__
+      configuration_extended.data_hierarchy_document.__iter__.side_effect = doc.__iter__
+      configuration_extended.data_hierarchy_document.__contains__.side_effect = doc.__contains__
+      configuration_extended.data_hierarchy_document.__delitem__.side_effect = doc.__delitem__
+      configuration_extended.data_hierarchy_document.keys.side_effect = doc.keys
 
     mocker.patch.object(configuration_extended.logger, 'info')
     mock_show_message = mocker.patch(
       'pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.show_message', return_value=QMessageBox.No)
     mock_is_instance = mocker.patch(
       'pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.isinstance')
-    mock_check_ontology_types = mocker.patch(
-      'pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.check_ontology_types',
+    mock_check_data_hierarchy_types = mocker.patch(
+      'pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.check_data_hierarchy_types',
       return_value=(None, None))
     mock_db_init_views = mocker.patch.object(configuration_extended.database,
                                              'initDocTypeViews', return_value=None)
-    assert configuration_extended.save_ontology() is None, "Nothing should be returned"
+    assert configuration_extended.save_data_hierarchy() is None, "Nothing should be returned"
 
     if doc:
       for item in doc:
         mock_is_instance.assert_not_called()
         if isinstance(doc[item], dict):
-          configuration_extended.ontology_document.__delitem__.assert_not_called()
-      for item in configuration_extended.ontology_types:
-        configuration_extended.ontology_document.__setitem__.assert_not_called()
-    mock_check_ontology_types.assert_called_once_with(configuration_extended.ontology_types)
+          configuration_extended.data_hierarchy_document.__delitem__.assert_not_called()
+      for item in configuration_extended.data_hierarchy_types:
+        configuration_extended.data_hierarchy_document.__setitem__.assert_not_called()
+    mock_check_data_hierarchy_types.assert_called_once_with(configuration_extended.data_hierarchy_types)
     configuration_extended.logger.info.assert_called_once_with("User clicked the save button..")
-    configuration_extended.ontology_document.save.assert_not_called()
+    configuration_extended.data_hierarchy_document.save.assert_not_called()
     mock_db_init_views.assert_not_called()
     mock_show_message.assert_called_once_with('Save will close the tool and restart the Pasta Application (Yes/No?)',
                                                QMessageBox.Question,
                                                QMessageBox.No | QMessageBox.Yes,
                                                QMessageBox.Yes)
 
-  def test_save_ontology_with_missing_metadata_should_skip_save_and_show_message(self,
+  def test_save_data_hierarchy_with_missing_metadata_should_skip_save_and_show_message(self,
                                                                                    mocker,
-                                                                                   ontology_doc_mock,
+                                                                                   data_hierarchy_doc_mock,
                                                                                    configuration_extended: configuration_extended):
-    mocker.patch.object(configuration_extended, 'ontology_types', create=True)
-    configuration_extended.ontology_document.__setitem__.side_effect = ontology_doc_mock.__setitem__
-    configuration_extended.ontology_document.__getitem__.side_effect = ontology_doc_mock.__getitem__
-    configuration_extended.ontology_document.__iter__.side_effect = ontology_doc_mock.__iter__
-    configuration_extended.ontology_document.__contains__.side_effect = ontology_doc_mock.__contains__
+    mocker.patch.object(configuration_extended, 'data_hierarchy_types', create=True)
+    configuration_extended.data_hierarchy_document.__setitem__.side_effect = data_hierarchy_doc_mock.__setitem__
+    configuration_extended.data_hierarchy_document.__getitem__.side_effect = data_hierarchy_doc_mock.__getitem__
+    configuration_extended.data_hierarchy_document.__iter__.side_effect = data_hierarchy_doc_mock.__iter__
+    configuration_extended.data_hierarchy_document.__contains__.side_effect = data_hierarchy_doc_mock.__contains__
 
     log_info_spy = mocker.patch.object(configuration_extended.logger, 'info')
     log_warn_spy = mocker.patch.object(configuration_extended.logger, 'warning')
@@ -897,20 +897,20 @@ class TestOntologyConfigConfiguration(object):
                        'Structure level 0': ['metadata group1', '-tags'],
                        'instrument': ['metadata group1', '-tags']
                      })
-    mock_check_ontology_document_types = mocker.patch(
-      'pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.check_ontology_types',
+    mock_check_data_hierarchy_document_types = mocker.patch(
+      'pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.check_data_hierarchy_types',
       return_value=missing_metadata)
     mock_get_missing_metadata_message = mocker.patch(
       'pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.get_missing_metadata_message',
       return_value="Missing message")
-    assert configuration_extended.save_ontology() is None, "Nothing should be returned"
+    assert configuration_extended.save_data_hierarchy() is None, "Nothing should be returned"
     log_info_spy.assert_called_once_with("User clicked the save button..")
-    mock_check_ontology_document_types.assert_called_once_with(configuration_extended.ontology_types)
+    mock_check_data_hierarchy_document_types.assert_called_once_with(configuration_extended.data_hierarchy_types)
     mock_get_missing_metadata_message.assert_called_once_with(missing_metadata[0], missing_metadata[1])
     mock_show_message.assert_called_once_with("Missing message", QMessageBox.Warning)
     log_warn_spy.assert_called_once_with("Missing message")
 
-  @pytest.mark.parametrize("new_title, new_displayed_title, ontology_document, ontology_types", [
+  @pytest.mark.parametrize("new_title, new_displayed_title, data_hierarchy_document, data_hierarchy_types", [
     (None, None, None, None),
     (None, None, {"x0": {"IRI": "x0"}, "x1": {"IRI": "x1"}}, {"x0": {"IRI": "x0"}, "x1": {"IRI": "x1"}}),
     ("x0", None, {"x0": {"IRI": "x0"}, "x1": {"IRI": "x1"}}, {"x0": {"IRI": "x0"}, "x1": {"IRI": "x1"}}),
@@ -924,45 +924,45 @@ class TestOntologyConfigConfiguration(object):
                                               mocker,
                                               new_title,
                                               new_displayed_title,
-                                              ontology_document,
-                                              ontology_types,
+                                              data_hierarchy_document,
+                                              data_hierarchy_types,
                                               configuration_extended: configuration_extended):
-    mocker.patch.object(configuration_extended, 'ontology_document', create=True)
-    mocker.patch.object(configuration_extended, 'ontology_types', create=True)
+    mocker.patch.object(configuration_extended, 'data_hierarchy_document', create=True)
+    mocker.patch.object(configuration_extended, 'data_hierarchy_types', create=True)
     mock_show_message = mocker.patch(
       'pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.show_message')
     mock_log_info = mocker.patch.object(configuration_extended.logger, 'info')
     mock_log_error = mocker.patch.object(configuration_extended.logger, 'error')
     mock_log_warn = mocker.patch.object(configuration_extended.logger, 'warning')
-    if ontology_document:
-      configuration_extended.ontology_document.__setitem__.side_effect = ontology_document.__setitem__
-      configuration_extended.ontology_document.__getitem__.side_effect = ontology_document.__getitem__
-      configuration_extended.ontology_document.__iter__.side_effect = ontology_document.__iter__
-      configuration_extended.ontology_document.__contains__.side_effect = ontology_document.__contains__
-      configuration_extended.ontology_document.get.side_effect = ontology_document.get
-      configuration_extended.ontology_document.keys.side_effect = ontology_document.keys
-      configuration_extended.ontology_document.pop.side_effect = ontology_document.pop
-    if ontology_types is not None:
-      configuration_extended.ontology_types.__setitem__.side_effect = ontology_types.__setitem__
-      configuration_extended.ontology_types.__getitem__.side_effect = ontology_types.__getitem__
-      configuration_extended.ontology_types.__iter__.side_effect = ontology_types.__iter__
-      configuration_extended.ontology_types.__contains__.side_effect = ontology_types.__contains__
-      configuration_extended.ontology_types.get.side_effect = ontology_types.get
-      configuration_extended.ontology_types.keys.side_effect = ontology_types.keys
-      configuration_extended.ontology_types.pop.side_effect = ontology_types.pop
-      configuration_extended.ontology_types.__len__.side_effect = ontology_types.__len__
+    if data_hierarchy_document:
+      configuration_extended.data_hierarchy_document.__setitem__.side_effect = data_hierarchy_document.__setitem__
+      configuration_extended.data_hierarchy_document.__getitem__.side_effect = data_hierarchy_document.__getitem__
+      configuration_extended.data_hierarchy_document.__iter__.side_effect = data_hierarchy_document.__iter__
+      configuration_extended.data_hierarchy_document.__contains__.side_effect = data_hierarchy_document.__contains__
+      configuration_extended.data_hierarchy_document.get.side_effect = data_hierarchy_document.get
+      configuration_extended.data_hierarchy_document.keys.side_effect = data_hierarchy_document.keys
+      configuration_extended.data_hierarchy_document.pop.side_effect = data_hierarchy_document.pop
+    if data_hierarchy_types is not None:
+      configuration_extended.data_hierarchy_types.__setitem__.side_effect = data_hierarchy_types.__setitem__
+      configuration_extended.data_hierarchy_types.__getitem__.side_effect = data_hierarchy_types.__getitem__
+      configuration_extended.data_hierarchy_types.__iter__.side_effect = data_hierarchy_types.__iter__
+      configuration_extended.data_hierarchy_types.__contains__.side_effect = data_hierarchy_types.__contains__
+      configuration_extended.data_hierarchy_types.get.side_effect = data_hierarchy_types.get
+      configuration_extended.data_hierarchy_types.keys.side_effect = data_hierarchy_types.keys
+      configuration_extended.data_hierarchy_types.pop.side_effect = data_hierarchy_types.pop
+      configuration_extended.data_hierarchy_types.__len__.side_effect = data_hierarchy_types.__len__
 
-    if ontology_document is None:
-      mocker.patch.object(configuration_extended, 'ontology_document', None, create=True)
-    if ontology_types is None:
-      mocker.patch.object(configuration_extended, 'ontology_types', None, create=True)
+    if data_hierarchy_document is None:
+      mocker.patch.object(configuration_extended, 'data_hierarchy_document', None, create=True)
+    if data_hierarchy_types is None:
+      mocker.patch.object(configuration_extended, 'data_hierarchy_types', None, create=True)
 
-    if ontology_document is None or ontology_types is None or new_title in ontology_document:
-      if ontology_document is None or ontology_types is None:
+    if data_hierarchy_document is None or data_hierarchy_types is None or new_title in data_hierarchy_document:
+      if data_hierarchy_document is None or data_hierarchy_types is None:
         with pytest.raises(GenericException,
-                           match="Null ontology_document/ontology_types, erroneous app state"):
+                           match="Null data_hierarchy_document/data_hierarchy_types, erroneous app state"):
           assert configuration_extended.create_new_type(new_title, new_displayed_title) is None, "Nothing should be returned"
-          mock_log_error.assert_called_once_with("Null ontology_document/ontology_types, erroneous app state")
+          mock_log_error.assert_called_once_with("Null data_hierarchy_document/data_hierarchy_types, erroneous app state")
       else:
         assert configuration_extended.create_new_type(new_title, new_displayed_title) is None, "Nothing should be returned"
         mock_show_message.assert_called_once_with(f"Type (title: {new_title} "
@@ -976,15 +976,15 @@ class TestOntologyConfigConfiguration(object):
       else:
         assert configuration_extended.create_new_type(new_title, new_displayed_title) is None, "Nothing should be returned"
         mock_log_info.assert_called_once_with("User created a new type and added "
-                                              "to the ontology document: Title: {%s}, Displayed Title: {%s}", new_title,
+                                              "to the data_hierarchy document: Title: {%s}, Displayed Title: {%s}", new_title,
                                               new_displayed_title)
 
-        (configuration_extended.ontology_types
+        (configuration_extended.data_hierarchy_types
          .__setitem__.assert_called_once_with(new_title, generate_empty_type(new_displayed_title)))
         assert configuration_extended.typeComboBox.clear.call_count == 2, "ComboBox should be cleared twice"
         assert configuration_extended.typeComboBox.addItems.call_count == 2, "ComboBox addItems should be called twice"
         configuration_extended.typeComboBox.addItems.assert_called_with(
-          get_types_for_display(configuration_extended.ontology_types.keys()))
+          get_types_for_display(configuration_extended.data_hierarchy_types.keys()))
 
   @pytest.mark.parametrize("instance_exists", [True, False])
   def test_get_gui_should_do_expected(self,
@@ -1058,9 +1058,9 @@ class TestOntologyConfigConfiguration(object):
                                                               configuration_extended: configuration_extended):
     mock_can_delete_type = mocker.patch(
       'pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.can_delete_type', return_value=True)
-    mock_ontology_types = mocker.MagicMock()
-    mocker.patch.object(configuration_extended, 'ontology_types', mock_ontology_types)
-    mock_ontology_types.keys.return_value = ['one', 'two']
+    mock_data_hierarchy_types = mocker.MagicMock()
+    mocker.patch.object(configuration_extended, 'data_hierarchy_types', mock_data_hierarchy_types)
+    mock_data_hierarchy_types.keys.return_value = ['one', 'two']
     assert configuration_extended.check_and_disable_delete_button("three") is None, "Nothing should be returned"
     configuration_extended.deleteTypePushButton.setEnabled.assert_called_once_with(True)
     mock_can_delete_type.assert_called_once_with(['one', 'two'], "three")

@@ -26,7 +26,7 @@ from .key_not_found_exception import \
   KeyNotFoundException
 from .data_hierarchy_configuration_base import Ui_DataHierarchyConfigurationBase
 from .constants import ATTACHMENT_TABLE_DELETE_COLUMN_INDEX, \
-  ATTACHMENT_TABLE_REORDER_COLUMN_INDEX, ONTOLOGY_HELP_PAGE_URL, METADATA_TABLE_DELETE_COLUMN_INDEX, \
+  ATTACHMENT_TABLE_REORDER_COLUMN_INDEX, DATA_HIERARCHY_HELP_PAGE_URL, METADATA_TABLE_DELETE_COLUMN_INDEX, \
   METADATA_TABLE_IRI_COLUMN_INDEX, METADATA_TABLE_REORDER_COLUMN_INDEX, METADATA_TABLE_REQUIRED_COLUMN_INDEX
 from .document_null_exception import DocumentNullException
 from .metadata_tableview_data_model import MetadataTableViewModel
@@ -35,7 +35,7 @@ from .mandatory_column_delegate import MandatoryColumnDelegate
 from .delete_column_delegate import DeleteColumnDelegate
 from .iri_column_delegate import IriColumnDelegate
 from .lookup_iri_action import LookupIriAction
-from .utility_functions import adapt_type, adjust_ontology_data_to_v3, can_delete_type, check_ontology_types, \
+from .utility_functions import adapt_type, adjust_data_hierarchy_data_to_v3, can_delete_type, check_data_hierarchy_types, \
   generate_empty_type, \
   generate_mandatory_metadata, get_missing_metadata_message, get_next_possible_structural_level_title, \
   get_types_for_display, show_message
@@ -55,33 +55,33 @@ class DataHierarchyConfiguration(Ui_DataHierarchyConfigurationBase, QObject):
 
   def __init__(self, database: Database) -> None:
     """
-    Constructs the ontology data editor
+    Constructs the data hierarchy data editor
 
     Args:
       database (Database): Pasta ELN database instance
 
     Raises:
-      DocumentNullException: Raised when passed in argument @ontology_document is null.
+      DocumentNullException: Raised when passed in argument database has null data_hierarchy_document.
     """
     super().__init__()
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
 
-    self.ontology_loaded: bool = False
-    self.ontology_types: Any = {}
+    self.data_hierarchy_loaded: bool = False
+    self.data_hierarchy_types: Any = {}
     self.selected_type_metadata: dict[str, list[dict[str, Any]]] | Any = {}
 
     # Set up the UI elements
     self.instance = QtWidgets.QDialog()
     super().setupUi(self.instance)
 
-    # Gets the ontology data from db and adjust the data to the latest version
+    # Gets the data_hierarchy data from db and adjust the data to the latest version
     if database is None:
       raise GenericException("Null database instance passed to the initializer", {})
 
     self.database: Database = database
-    self.ontology_document: Document = self.database.db['-ontology-']
-    if not self.ontology_document:
-      raise DocumentNullException("Null ontology document in db instance", {})
+    self.data_hierarchy_document: Document = self.database.db['-ontology-']
+    if not self.data_hierarchy_document:
+      raise DocumentNullException("Null data_hierarchy document in db instance", {})
 
     # Instantiates metadata & attachment table models along with the column delegates
     self.metadata_table_data_model = MetadataTableViewModel()
@@ -132,7 +132,7 @@ class DataHierarchyConfiguration(Ui_DataHierarchyConfigurationBase, QObject):
     self.addAttachmentPushButton.hide()
     self.typeAttachmentsTableView.hide()
 
-    self.load_ontology_data()
+    self.load_data_hierarchy_data()
 
   def type_combo_box_changed(self,
                              new_type_selected: Any) -> None:
@@ -144,18 +144,18 @@ class DataHierarchyConfiguration(Ui_DataHierarchyConfigurationBase, QObject):
     Returns: Nothing
 
     Raises:
-      KeyNotFoundException: Raised when passed in argument @new_type_selected is not found in ontology_types
+      KeyNotFoundException: Raised when passed in argument @new_type_selected is not found in data_hierarchy_types
 
     """
     self.logger.info("New type selected in UI: {%s}", new_type_selected)
     self.clear_ui()
     new_type_selected = adapt_type(new_type_selected)
     self.type_changed_signal.emit(new_type_selected)
-    if new_type_selected and self.ontology_types:
-      if new_type_selected not in self.ontology_types:
+    if new_type_selected and self.data_hierarchy_types:
+      if new_type_selected not in self.data_hierarchy_types:
         raise KeyNotFoundException(f"Key {new_type_selected} "
-                                                 f"not found in ontology_types", {})
-      selected_type = self.ontology_types.get(new_type_selected)
+                                                 f"not found in data_hierarchy_types", {})
+      selected_type = self.data_hierarchy_types.get(new_type_selected)
       # Get the metadata for the selected type and store the list in selected_type_metadata
       self.selected_type_metadata = selected_type.get('metadata')
 
@@ -213,8 +213,8 @@ class DataHierarchyConfiguration(Ui_DataHierarchyConfigurationBase, QObject):
     if not new_group:
       show_message("Enter non-null/valid metadata group name!!.....", QMessageBox.Warning)
       return None
-    if not self.ontology_loaded or self.ontology_types is None:
-      show_message("Load the ontology data first....", QMessageBox.Warning)
+    if not self.data_hierarchy_loaded or self.data_hierarchy_types is None:
+      show_message("Load the data hierarchy data first....", QMessageBox.Warning)
       return None
     if new_group in self.selected_type_metadata.keys():
       show_message("Metadata group already exists....", QMessageBox.Warning)
@@ -234,7 +234,7 @@ class DataHierarchyConfiguration(Ui_DataHierarchyConfigurationBase, QObject):
     """
     selected_group = self.metadataGroupComboBox.currentText()
     if self.selected_type_metadata is None:
-      show_message("Load the ontology data first....", QMessageBox.Warning)
+      show_message("Load the data hierarchy data first....", QMessageBox.Warning)
       return None
     if selected_group and selected_group in self.selected_type_metadata.keys():
       self.logger.info("User deleted the selected metadata group: {%s}", selected_group)
@@ -251,14 +251,14 @@ class DataHierarchyConfiguration(Ui_DataHierarchyConfigurationBase, QObject):
     Value changed callback for the type displayed title line edit
 
     Args:
-        modified_type_displayed_title (str): Modified ontology type displayed title
+        modified_type_displayed_title (str): Modified data_hierarchy type displayed title
 
     Returns: Nothing
     """
     current_type = self.typeComboBox.currentText()
     current_type = adapt_type(current_type)
-    if modified_type_displayed_title is not None and current_type in self.ontology_types:
-      self.ontology_types.get(current_type)["displayedTitle"] = modified_type_displayed_title
+    if modified_type_displayed_title is not None and current_type in self.data_hierarchy_types:
+      self.data_hierarchy_types.get(current_type)["displayedTitle"] = modified_type_displayed_title
       self.set_iri_lookup_action(modified_type_displayed_title)
 
   def update_type_iri(self,
@@ -273,28 +273,28 @@ class DataHierarchyConfiguration(Ui_DataHierarchyConfigurationBase, QObject):
     """
     current_type = self.typeComboBox.currentText()
     current_type = adapt_type(current_type)
-    if modified_iri is not None and current_type in self.ontology_types:
-      self.ontology_types.get(current_type)["IRI"] = modified_iri
+    if modified_iri is not None and current_type in self.data_hierarchy_types:
+      self.data_hierarchy_types.get(current_type)["IRI"] = modified_iri
 
   def delete_selected_type(self) -> None:
     """
-    Delete the selected type from the type selection combo-box and also from the loaded ontology_types
+    Delete the selected type from the type selection combo-box and also from the loaded data_hierarchy_types
 
     Returns: Nothing
     """
     selected_type = self.typeComboBox.currentText()
     selected_type = adapt_type(selected_type)
-    if not self.ontology_loaded:
-      show_message("Load the ontology data first....", QMessageBox.Warning)
+    if not self.data_hierarchy_loaded:
+      show_message("Load the data hierarchy data first....", QMessageBox.Warning)
       return
-    if self.ontology_types is None or self.ontology_document is None:
-      show_message("Load the ontology data first....", QMessageBox.Warning)
+    if self.data_hierarchy_types is None or self.data_hierarchy_document is None:
+      show_message("Load the data hierarchy data first....", QMessageBox.Warning)
       return
-    if selected_type and selected_type in self.ontology_types:
+    if selected_type and selected_type in self.data_hierarchy_types:
       self.logger.info("User deleted the selected type: {%s}", selected_type)
-      self.ontology_types.pop(selected_type)
+      self.data_hierarchy_types.pop(selected_type)
       self.typeComboBox.clear()
-      self.typeComboBox.addItems(get_types_for_display(self.ontology_types.keys()))
+      self.typeComboBox.addItems(get_types_for_display(self.data_hierarchy_types.keys()))
       self.typeComboBox.setCurrentIndex(0)
 
   def clear_ui(self) -> None:
@@ -305,7 +305,7 @@ class DataHierarchyConfiguration(Ui_DataHierarchyConfigurationBase, QObject):
 
     """
     # Disable the signals for the line edits before clearing in order to avoid clearing the respective
-    # iri and displayed_titles for the selected type from ontology document
+    # iri and displayed_titles for the selected type from data_hierarchy document
     self.typeDisplayedTitleLineEdit.textChanged[str].disconnect()
     self.typeIriLineEdit.textChanged[str].disconnect()
     self.typeDisplayedTitleLineEdit.clear()
@@ -320,7 +320,7 @@ class DataHierarchyConfiguration(Ui_DataHierarchyConfigurationBase, QObject):
 
   def create_type_accepted_callback(self) -> None:
     """
-    Callback for the OK button of CreateTypeDialog to create a new type in the ontology data set
+    Callback for the OK button of CreateTypeDialog to create a new type in the data_hierarchy data set
 
     Returns: Nothing
     """
@@ -344,29 +344,29 @@ class DataHierarchyConfiguration(Ui_DataHierarchyConfigurationBase, QObject):
     Opens a dialog which allows the user to enter the details to create a new type (structural or normal)
     Returns: Nothing
     """
-    if self.ontology_types is not None and self.ontology_loaded:
-      structural_title = get_next_possible_structural_level_title(self.ontology_types.keys())
+    if self.data_hierarchy_types is not None and self.data_hierarchy_loaded:
+      structural_title = get_next_possible_structural_level_title(self.data_hierarchy_types.keys())
       self.create_type_dialog.set_structural_level_title(structural_title)
       self.create_type_dialog.show()
     else:
-      show_message("Load the ontology data first...", QMessageBox.Warning)
+      show_message("Load the data hierarchy data first...", QMessageBox.Warning)
 
   def setup_slots(self) -> None:
     """
-    Set up the slots for the UI elements of Ontology editor
+    Set up the slots for the UI elements of data hierarchy editor
     Returns: Nothing
     """
     self.logger.info("Setting up slots for the editor..")
     # Slots for the buttons
     self.addMetadataRowPushButton.clicked.connect(self.metadata_table_data_model.add_data_row)
     self.addAttachmentPushButton.clicked.connect(self.attachments_table_data_model.add_data_row)
-    self.saveOntologyPushButton.clicked.connect(self.save_ontology)
+    self.saveDataHierarchyPushButton.clicked.connect(self.save_data_hierarchy)
     self.addMetadataGroupPushButton.clicked.connect(self.add_new_metadata_group)
     self.deleteMetadataGroupPushButton.clicked.connect(self.delete_selected_metadata_group)
     self.deleteTypePushButton.clicked.connect(self.delete_selected_type)
     self.addTypePushButton.clicked.connect(self.show_create_type_dialog)
     self.cancelPushButton.clicked.connect(self.instance.close)
-    self.helpPushButton.clicked.connect(lambda: webbrowser.open(ONTOLOGY_HELP_PAGE_URL))
+    self.helpPushButton.clicked.connect(lambda: webbrowser.open(DATA_HIERARCHY_HELP_PAGE_URL))
     self.attachmentsShowHidePushButton.clicked.connect(self.show_hide_attachments_table)
 
     # Slots for the combo-boxes
@@ -387,33 +387,33 @@ class DataHierarchyConfiguration(Ui_DataHierarchyConfigurationBase, QObject):
 
     self.type_changed_signal.connect(self.check_and_disable_delete_button)
 
-  def load_ontology_data(self) -> None:
+  def load_data_hierarchy_data(self) -> None:
     """
     Load button click event handler which loads the data in the UI
     Returns:
 
     """
-    self.logger.info("User loaded the ontology data in UI")
-    if self.ontology_document is None:
-      raise GenericException("Null ontology_document, erroneous app state", {})
-    # Load the ontology types from the db document
-    for data in self.ontology_document:
-      if isinstance(self.ontology_document[data], dict):
-        self.ontology_types[data] = copy.deepcopy(self.ontology_document[data])
-    adjust_ontology_data_to_v3(self.ontology_types)
-    self.ontology_loaded = True
+    self.logger.info("User loaded the data hierarchy data in UI")
+    if self.data_hierarchy_document is None:
+      raise GenericException("Null data_hierarchy_document, erroneous app state", {})
+    # Load the data_hierarchy types from the db document
+    for data in self.data_hierarchy_document:
+      if isinstance(self.data_hierarchy_document[data], dict):
+        self.data_hierarchy_types[data] = copy.deepcopy(self.data_hierarchy_document[data])
+    adjust_data_hierarchy_data_to_v3(self.data_hierarchy_types)
+    self.data_hierarchy_loaded = True
 
     # Set the types in the type selector combo-box
     self.typeComboBox.clear()
-    self.typeComboBox.addItems(get_types_for_display(self.ontology_types.keys()))
+    self.typeComboBox.addItems(get_types_for_display(self.data_hierarchy_types.keys()))
     self.typeComboBox.setCurrentIndex(0)
 
-  def save_ontology(self) -> None:
+  def save_data_hierarchy(self) -> None:
     """
-    Save the modified ontology document data in database
+    Save the modified data hierarchy document data in database
     """
     self.logger.info("User clicked the save button..")
-    types_with_missing_metadata, types_with_null_name_metadata = check_ontology_types(self.ontology_types)
+    types_with_missing_metadata, types_with_null_name_metadata = check_data_hierarchy_types(self.data_hierarchy_types)
     if types_with_missing_metadata or types_with_null_name_metadata:
       message = get_missing_metadata_message(types_with_missing_metadata, types_with_null_name_metadata)
       show_message(message, QMessageBox.Warning)
@@ -426,16 +426,16 @@ class DataHierarchyConfiguration(Ui_DataHierarchyConfigurationBase, QObject):
                           QMessageBox.Yes)
 
     if result == QMessageBox.Yes:
-      # Clear all the data from the ontology_document
-      for data in list(self.ontology_document.keys()):
-        if isinstance(self.ontology_document[data], dict):
-          del self.ontology_document[data]
+      # Clear all the data from the data_hierarchy_document
+      for data in list(self.data_hierarchy_document.keys()):
+        if isinstance(self.data_hierarchy_document[data], dict):
+          del self.data_hierarchy_document[data]
       # Copy all the modifications
-      for type_name, type_structure in self.ontology_types.items():
-        self.ontology_document[type_name] = type_structure
+      for type_name, type_structure in self.data_hierarchy_types.items():
+        self.data_hierarchy_document[type_name] = type_structure
       # Save the modified document
-      self.ontology_document.save()
-      self.database.ontology = dict(self.ontology_document)
+      self.data_hierarchy_document.save()
+      self.database.ontology = dict(self.data_hierarchy_document)
       self.database.initDocTypeViews(16)
       self.instance.close()
 
@@ -443,18 +443,18 @@ class DataHierarchyConfiguration(Ui_DataHierarchyConfigurationBase, QObject):
                       title: str,
                       displayed_title: str) -> None:
     """
-    Add a new type to the loaded ontology_data from the db
+    Add a new type to the loaded data_hierarchy_data from the db
     Args:
-      title (str): The new key entry used for the ontology_data
-      displayed_title (str): The new displayed_title set for the new type entry in ontology_data
+      title (str): The new key entry used for the data_hierarchy_data
+      displayed_title (str): The new displayed_title set for the new type entry in data_hierarchy_data
 
     Returns:
 
     """
-    if self.ontology_document is None or self.ontology_types is None:
-      self.logger.error("Null ontology_document/ontology_types, erroneous app state")
-      raise GenericException("Null ontology_document/ontology_types, erroneous app state", {})
-    if title in self.ontology_types:
+    if self.data_hierarchy_document is None or self.data_hierarchy_types is None:
+      self.logger.error("Null data_hierarchy_document/data_hierarchy_types, erroneous app state")
+      raise GenericException("Null data_hierarchy_document/data_hierarchy_types, erroneous app state", {})
+    if title in self.data_hierarchy_types:
       show_message(f"Type (title: {title} displayed title: {displayed_title}) cannot be added since it exists in DB already....",
                    QMessageBox.Warning)
     else:
@@ -463,12 +463,12 @@ class DataHierarchyConfiguration(Ui_DataHierarchyConfigurationBase, QObject):
         show_message("Enter non-null/valid title!!.....", QMessageBox.Warning)
         return
       self.logger.info("User created a new type and added "
-                       "to the ontology document: Title: {%s}, Displayed Title: {%s}", title, displayed_title)
+                       "to the data_hierarchy document: Title: {%s}, Displayed Title: {%s}", title, displayed_title)
       empty_type = generate_empty_type(displayed_title)
-      self.ontology_types[title] = empty_type
+      self.data_hierarchy_types[title] = empty_type
       self.typeComboBox.clear()
-      self.typeComboBox.addItems(get_types_for_display(self.ontology_types.keys()))
-      self.typeComboBox.setCurrentIndex(len(self.ontology_types) - 1)
+      self.typeComboBox.addItems(get_types_for_display(self.data_hierarchy_types.keys()))
+      self.typeComboBox.setCurrentIndex(len(self.data_hierarchy_types) - 1)
 
   def show_hide_attachments_table(self) -> None:
     """
@@ -490,7 +490,7 @@ class DataHierarchyConfiguration(Ui_DataHierarchyConfigurationBase, QObject):
 
     """
     (self.deleteTypePushButton
-     .setEnabled(can_delete_type(self.ontology_types.keys(),
+     .setEnabled(can_delete_type(self.data_hierarchy_types.keys(),
                                  selected_type)))
 
 
@@ -505,6 +505,6 @@ def get_gui(database: Database) -> tuple[
   """
   instance = QApplication.instance()
   application = QApplication(sys.argv) if instance is None else instance
-  ontology_form: DataHierarchyConfiguration = DataHierarchyConfiguration(database)
+  data_hierarchy_form: DataHierarchyConfiguration = DataHierarchyConfiguration(database)
 
-  return application, ontology_form.instance, ontology_form
+  return application, data_hierarchy_form.instance, data_hierarchy_form

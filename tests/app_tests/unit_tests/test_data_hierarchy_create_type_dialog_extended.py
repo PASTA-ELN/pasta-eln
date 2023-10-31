@@ -3,7 +3,7 @@
 #  Copyright (c) 2023
 #
 #  Author: Jithu Murugan
-#  Filename: test_ontology_config_create_type_dialog_extended.py
+#  Filename: test_data_hierarchy_create_type_dialog_extended.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
@@ -13,7 +13,7 @@ from PySide6.QtCore import Qt
 from tests.app_tests.common.fixtures import create_type_dialog_mock
 
 
-class TestOntologyConfigCreateTypeDialog(object):
+class TestDataHierarchyCreateTypeDialog(object):
 
   @pytest.mark.parametrize("checked, next_level", [
     (True, "x0"),

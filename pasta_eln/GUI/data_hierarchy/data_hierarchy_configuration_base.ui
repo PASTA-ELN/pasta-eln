@@ -308,7 +308,7 @@
              </size>
             </property>
             <property name="toolTip">
-             <string>Select the type from the loaded ontology</string>
+             <string>Select the type from the loaded data hierarchy types</string>
             </property>
             <property name="sizeAdjustPolicy">
              <enum>QComboBox::AdjustToContents</enum>
@@ -377,7 +377,7 @@
              </size>
             </property>
             <property name="toolTip">
-             <string>Add a new type (structural or normal type) to the ontology data set.</string>
+             <string>Add a new type (structural or normal type) to the data hierarchy data set.</string>
             </property>
             <property name="text">
              <string>+ Add</string>
@@ -592,9 +592,9 @@
            </spacer>
           </item>
           <item>
-           <widget class="QPushButton" name="saveOntologyPushButton">
+           <widget class="QPushButton" name="saveDataHierarchyPushButton">
             <property name="toolTip">
-             <string>Save loaded ontology in local database</string>
+             <string>Save loaded data hierarchy in local database</string>
             </property>
             <property name="text">
              <string>Save</string>

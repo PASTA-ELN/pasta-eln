@@ -21,7 +21,7 @@ from .utility_functions import is_click_within_bounds
 
 class ReorderColumnDelegate(QStyledItemDelegate):
   """
-  Delegate for creating the icons for the re-order column in the ontology editor tables
+  Delegate for creating the icons for the re-order column in the data hierarchy editor tables
   """
   re_order_signal = Signal(int)
 

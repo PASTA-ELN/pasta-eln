@@ -1,4 +1,4 @@
-""" Utility function used by the ontology configuration module """
+""" Utility function used by the data hierarchy configuration module """
 #  PASTA-ELN and all its sub-parts are covered by the MIT license.
 #
 #  Copyright (c) 2023
@@ -40,17 +40,17 @@ def is_click_within_bounds(event: QEvent,
   return False
 
 
-def adjust_ontology_data_to_v3(ontology_types: dict[str, Any]) -> None:
-  """Correct the ontology data and add missing information if the loaded data is of version < 3.0
+def adjust_data_hierarchy_data_to_v3(data_hierarchy_types: dict[str, Any]) -> None:
+  """Correct the data hierarchy data and add missing information if the loaded data is of version < 3.0
 
   Args:
-      ontology_types (dict[str, Any]): Ontology types loaded from the database
+      data_hierarchy_types (dict[str, Any]): Data hierarchy types loaded from the database
 
   Returns: None
   """
-  if not ontology_types:
+  if not data_hierarchy_types:
     return None
-  for _, type_structure in ontology_types.items():
+  for _, type_structure in data_hierarchy_types.items():
     type_structure.setdefault("attachments", [])
     metadata = type_structure.get("metadata")
     if metadata is None:
@@ -93,7 +93,7 @@ def get_next_possible_structural_level_title(existing_type_titles: Any) -> str |
   """
   Get the title for the next possible structural type level
   Args:
-    existing_type_titles (Any): The list of titles existing in the ontology document
+    existing_type_titles (Any): The list of titles existing in the data hierarchy document
 
   Returns (str|None):
     The next possible name is returned with the decimal part greater than the existing largest one
@@ -183,7 +183,7 @@ def is_structural_level(title: str) -> bool:
 
 def generate_empty_type(displayed_title: str) -> dict[str, Any]:
   """
-  Generate an empty type for creating a new ontology type
+  Generate an empty type for creating a new data hierarchy type
   Args:
     displayed_title (str): displayed_title of the new type
 
@@ -202,7 +202,7 @@ def generate_empty_type(displayed_title: str) -> dict[str, Any]:
 
 def generate_mandatory_metadata() -> list[dict[str, Any]]:
   """
-  Generate a list of mandatory metadata for creating a new ontology type
+  Generate a list of mandatory metadata for creating a new data hierarchy type
   Returns (list[dict[str, Any]]): List of mandatory metadata
 
   """
@@ -220,25 +220,25 @@ def generate_mandatory_metadata() -> list[dict[str, Any]]:
   ]
 
 
-def check_ontology_types(ontology_types: dict[str, Any]) \
+def check_data_hierarchy_types(data_hierarchy_types: dict[str, Any]) \
     -> Tuple[dict[str, dict[str, list[str]]], dict[str, list[str]]]:
   """
-  Check the ontology data to see if all the mandatory metadata ["-name", "-tags"]
+  Check the data hierarchy data to see if all the mandatory metadata ["-name", "-tags"]
   are present under all groups and also if all the metadata have a name
   Args:
-    ontology_types (dict[str, Any]): Ontology types loaded from the database
+    data_hierarchy_types (dict[str, Any]): Data hierarchy types loaded from the database
 
   Returns (Tuple[dict[str, dict[str, list[str]]], dict[str, str]]):
     Empty tuple if all the mandatory metadata present under all groups and all metadata-item have a name
     otherwise returns a tuple of types with metadata-groups missing mandatory metadata or names
 
   """
-  if not ontology_types:
+  if not data_hierarchy_types:
     return {}, {}
   types_with_missing_metadata: dict[str, dict[str, list[str]]] = {}
   types_with_null_name_metadata: dict[str, list[str]] = {}
   mandatory_metadata = ["-name", "-tags"]
-  for type_name, type_structure in ontology_types.items():
+  for type_name, type_structure in data_hierarchy_types.items():
     type_name = type_name.replace("x", "Structure level ") \
       if is_structural_level(type_name) \
       else type_name

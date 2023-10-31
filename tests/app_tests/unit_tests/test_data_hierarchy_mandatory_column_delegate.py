@@ -3,7 +3,7 @@
 #  Copyright (c) 2023
 #
 #  Author: Jithu Murugan
-#  Filename: test_ontology_config_mandatory_column_delegate.py
+#  Filename: test_data_hierarchy_mandatory_column_delegate.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
@@ -15,7 +15,7 @@ from tests.app_tests.common.fixtures import mandatory_delegate
 from tests.app_tests.common.test_delegate_funcs_common import delegate_editor_method_common
 
 
-class TestOntologyConfigMandatoryColumnDelegate(object):
+class TestDataHierarchyMandatoryColumnDelegate(object):
   def test_delegate_paint_method(self,
                                  mocker,
                                  mandatory_delegate: mandatory_delegate):

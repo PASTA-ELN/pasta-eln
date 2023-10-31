@@ -85,7 +85,7 @@ def configuration_extended(mocker) -> DataHierarchyConfiguration:
   mock_pasta_db = mocker.patch.object(mock_pasta_db, 'db', create=True)
   mocker.patch('pasta_eln.GUI.data_hierarchy.create_type_dialog.logging.getLogger')
   mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.Ui_DataHierarchyConfigurationBase.setupUi')
-  mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.adjust_ontology_data_to_v3')
+  mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.adjust_data_hierarchy_data_to_v3')
   mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.LookupIriAction')
   mocker.patch.object(QDialog, '__new__')
   mocker.patch.object(MetadataTableViewModel, '__new__')
@@ -97,7 +97,7 @@ def configuration_extended(mocker) -> DataHierarchyConfiguration:
   mocker.patch.object(DataHierarchyConfiguration, 'typeAttachmentsTableView', create=True)
   mocker.patch.object(DataHierarchyConfiguration, 'addMetadataRowPushButton', create=True)
   mocker.patch.object(DataHierarchyConfiguration, 'addAttachmentPushButton', create=True)
-  mocker.patch.object(DataHierarchyConfiguration, 'saveOntologyPushButton', create=True)
+  mocker.patch.object(DataHierarchyConfiguration, 'saveDataHierarchyPushButton', create=True)
   mocker.patch.object(DataHierarchyConfiguration, 'addMetadataGroupPushButton', create=True)
   mocker.patch.object(DataHierarchyConfiguration, 'deleteMetadataGroupPushButton', create=True)
   mocker.patch.object(DataHierarchyConfiguration, 'deleteTypePushButton', create=True)
@@ -171,9 +171,9 @@ def iri_delegate() -> IriColumnDelegate:
 
 
 @fixture()
-def ontology_doc_mock(mocker) -> Document:
+def data_hierarchy_doc_mock(mocker) -> Document:
   mock_doc = mocker.patch('cloudant.document.Document')
-  mock_doc_content = read_json('ontology_document.json')
+  mock_doc_content = read_json('data_hierarchy_document.json')
   mocker.patch.object(mock_doc, "__len__",
                       lambda x, y: len(mock_doc_content))
   mock_doc.__getitem__.side_effect = mock_doc_content.__getitem__
@@ -228,17 +228,17 @@ def iri_lookup_web_results_name_mock() -> dict:
 
 
 @fixture()
-def pasta_db_mock(mocker, ontology_doc_mock) -> Database:
+def pasta_db_mock(mocker, data_hierarchy_doc_mock) -> Database:
   mock_db = mocker.patch('pasta_eln.database.Database')
   mock_couch_db = mocker.patch('cloudant.client.CouchDB')
-  dbs = {'-ontology-': ontology_doc_mock}
+  dbs = {'-ontology-': data_hierarchy_doc_mock}
   mock_couch_db.__getitem__.side_effect = dbs.__getitem__
   mocker.patch.object(mock_db, 'db', mock_couch_db, create=True)
   return mock_db
 
 
 @fixture()
-def ontology_editor_gui(mocker, request, pasta_db_mock) -> tuple[QApplication,
+def data_hierarchy_editor_gui(mocker, request, pasta_db_mock) -> tuple[QApplication,
 QtWidgets.QDialog,
 DataHierarchyConfiguration,
 QtBot]:

@@ -1,4 +1,4 @@
-""" GenericException used for the ontology configuration """
+""" GenericException used for the data hierarchy configuration """
 #  PASTA-ELN and all its sub-parts are covered by the MIT license.
 #
 #  Copyright (c) 2023
@@ -10,7 +10,7 @@
 
 class GenericException(Exception):
   """
-  Custom generic exception class for ontology configuration
+  Custom generic exception class for data hierarchy configuration
   """
 
   def __init__(self,

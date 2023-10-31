@@ -21,7 +21,7 @@ from .utility_functions import is_click_within_bounds
 
 class DeleteColumnDelegate(QStyledItemDelegate):
   """
-  Delegate for creating the delete icon for the delete column in the ontology table views
+  Delegate for creating the delete icon for the delete column in the data hierarchy table views
   """
   delete_clicked_signal = Signal(
     int)  # Signal to inform the delete button click with the position in the table as the parameter

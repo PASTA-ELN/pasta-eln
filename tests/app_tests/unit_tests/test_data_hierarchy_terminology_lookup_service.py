@@ -3,7 +3,7 @@
 #  Copyright (c) 2023
 #
 #  Author: Jithu Murugan
-#  Filename: test_ontology_config_terminology_lookup_service.py
+#  Filename: test_data_hierarchy_terminology_lookup_service.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
@@ -27,7 +27,7 @@ from tests.app_tests.common.test_utils import are_json_equal
 pytest_plugins = ('pytest_asyncio',)
 
 
-class TestOntologyConfigTerminologyLookup(object):
+class TestDataHierarchyTerminologyLookup(object):
 
   def test_terminology_lookup_instantiation_should_succeed(self,
                                                            mocker,

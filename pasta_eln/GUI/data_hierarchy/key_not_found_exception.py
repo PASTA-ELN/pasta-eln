@@ -1,4 +1,4 @@
-""" KeyNotFoundException used for the ontology configuration """
+""" KeyNotFoundException used for the data hierarchy configuration """
 #  PASTA-ELN and all its sub-parts are covered by the MIT license.
 #
 #  Copyright (c) 2023
@@ -10,7 +10,7 @@
 
 class KeyNotFoundException(Exception):
   """
-  Custom exception class for null ontology document
+  Custom exception class for null data hierarchy document
   """
 
   def __init__(self,

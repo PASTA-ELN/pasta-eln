@@ -20,7 +20,7 @@ from pasta_eln.GUI.data_hierarchy.lookup_iri_action import LookupIriAction
 
 class IriColumnDelegate(QStyledItemDelegate):
   """
-  Delegate for creating the line edit with lookup icon for the iri column in ontology editor tables
+  Delegate for creating the line edit with lookup icon for the iri column in data hierarchy editor tables
   """
 
   def __init__(self) -> None:

@@ -17,13 +17,13 @@ from PySide6.QtWidgets import QWidget
 
 class TableViewModel(QAbstractTableModel):
   """
-  Abstracted data-model base for the ontology table views
+  Abstracted data-model base for the data hierarchy table views
   """
 
   def __init__(self,
                parent: Union[QWidget | None] = None):
     """
-    Initialize the data model representing attachments from ontology document in the database
+    Initialize the data model representing attachments from data hierarchy document in the database
     Args:
       parent (QWidget): Parent view or widget
     """

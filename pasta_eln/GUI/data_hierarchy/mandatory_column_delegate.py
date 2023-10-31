@@ -19,7 +19,7 @@ from PySide6.QtWidgets import QApplication, QRadioButton, QStyle, QStyleOptionBu
 
 class MandatoryColumnDelegate(QStyledItemDelegate):
   """
-  Delegate for creating the radio buttons for the mandatory column in ontology editor tables
+  Delegate for creating the radio buttons for the mandatory column in data hierarchy editor tables
   """
 
   def __init__(self) -> None:
