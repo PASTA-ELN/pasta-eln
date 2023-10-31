@@ -37,7 +37,7 @@ from .iri_column_delegate import IriColumnDelegate
 from .lookup_iri_action import LookupIriAction
 from .utility_functions import adapt_type, adjust_data_hierarchy_data_to_v3, can_delete_type, check_data_hierarchy_types, \
   generate_empty_type, \
-  generate_mandatory_metadata, get_missing_metadata_message, get_next_possible_structural_level_title, \
+  generate_required_metadata, get_missing_metadata_message, get_next_possible_structural_level_title, \
   get_types_for_display, show_message
 from ...database import Database
 
@@ -221,7 +221,7 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
       return None
     # Add the new group to the metadata list and refresh the group combo box
     self.logger.info("User added new metadata group: {%s}", new_group)
-    self.selected_type_metadata[new_group] = generate_mandatory_metadata()
+    self.selected_type_metadata[new_group] = generate_required_metadata()
     self.metadataGroupComboBox.clear()
     self.metadataGroupComboBox.addItems(list(self.selected_type_metadata.keys()))
     self.metadataGroupComboBox.setCurrentIndex(len(self.selected_type_metadata.keys()) - 1)

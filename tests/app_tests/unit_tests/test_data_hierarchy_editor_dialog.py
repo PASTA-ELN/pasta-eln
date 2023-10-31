@@ -23,7 +23,7 @@ from pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog import DataHierar
 from pasta_eln.GUI.data_hierarchy.document_null_exception import DocumentNullException
 from pasta_eln.GUI.data_hierarchy.reorder_column_delegate import ReorderColumnDelegate
 from pasta_eln.GUI.data_hierarchy.mandatory_column_delegate import MandatoryColumnDelegate
-from pasta_eln.GUI.data_hierarchy.utility_functions import generate_empty_type, generate_mandatory_metadata, \
+from pasta_eln.GUI.data_hierarchy.utility_functions import generate_empty_type, generate_required_metadata, \
   get_types_for_display
 from tests.app_tests.common.fixtures import configuration_extended, data_hierarchy_doc_mock
 
@@ -391,7 +391,7 @@ class TestDataHierarchyEditorDialog(object):
       if new_metadata_group:
         assert configuration_extended.add_new_metadata_group() is None, "Nothing should be returned"
         logger_info_spy.assert_called_once_with("User added new metadata group: {%s}", new_metadata_group)
-        set_items_selected_spy.assert_called_once_with(new_metadata_group, generate_mandatory_metadata())
+        set_items_selected_spy.assert_called_once_with(new_metadata_group, generate_required_metadata())
         set_current_index_metadata_group_combo_box_spy.assert_called_once_with(len(selected_type_metadata.keys()) - 1)
         clear_metadata_group_combo_box_spy.assert_called_once_with()
         add_items_selected_spy.assert_called_once_with(

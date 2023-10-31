@@ -194,16 +194,16 @@ def generate_empty_type(displayed_title: str) -> dict[str, Any]:
     "IRI": "",
     "displayedTitle": displayed_title,
     "meta": {
-      "default": generate_mandatory_metadata()
+      "default": generate_required_metadata()
     },
     "attachments": []
   }
 
 
-def generate_mandatory_metadata() -> list[dict[str, Any]]:
+def generate_required_metadata() -> list[dict[str, Any]]:
   """
-  Generate a list of mandatory metadata for creating a new data hierarchy type
-  Returns (list[dict[str, Any]]): List of mandatory metadata
+  Generate a list of required metadata for creating a new data hierarchy type
+  Returns (list[dict[str, Any]]): List of required metadata
 
   """
   return [
@@ -215,7 +215,7 @@ def generate_mandatory_metadata() -> list[dict[str, Any]]:
     {
       "name": "-tags",
       "query": "What are the tags associated with this metadata?",
-      "mandatory": True
+      "mandatory": False
     }
   ]
 
