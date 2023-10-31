@@ -19,7 +19,7 @@ from pasta_eln.GUI.data_hierarchy.ontology_config_key_not_found_exception import
 from pasta_eln.GUI.data_hierarchy.ontology_configuration_constants import ATTACHMENT_TABLE_DELETE_COLUMN_INDEX, \
   ATTACHMENT_TABLE_REORDER_COLUMN_INDEX, METADATA_TABLE_DELETE_COLUMN_INDEX, \
   METADATA_TABLE_IRI_COLUMN_INDEX, METADATA_TABLE_REORDER_COLUMN_INDEX, METADATA_TABLE_REQUIRED_COLUMN_INDEX
-from pasta_eln.GUI.data_hierarchy.ontology_configuration_extended import OntologyConfigurationForm, get_gui
+from pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration import DataHierarchyConfiguration, get_gui
 from pasta_eln.GUI.data_hierarchy.ontology_document_null_exception import OntologyDocumentNullException
 from pasta_eln.GUI.data_hierarchy.reorder_column_delegate import ReorderColumnDelegate
 from pasta_eln.GUI.data_hierarchy.mandatory_column_delegate import MandatoryColumnDelegate
@@ -35,11 +35,11 @@ class TestOntologyConfigConfiguration(object):
     mock_database = mocker.patch('pasta_eln.database.Database')
     mocker.patch('pasta_eln.GUI.data_hierarchy.create_type_dialog.logging.getLogger')
     mock_setup_ui = mocker.patch(
-      'pasta_eln.GUI.data_hierarchy.ontology_configuration.Ui_OntologyConfigurationBaseForm.setupUi')
-    mocker.patch('pasta_eln.GUI.data_hierarchy.ontology_configuration_extended.adjust_ontology_data_to_v3')
-    mocker.patch('pasta_eln.GUI.data_hierarchy.ontology_configuration_extended.LookupIriAction')
+      'pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.Ui_DataHierarchyConfigurationBase.setupUi')
+    mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.adjust_ontology_data_to_v3')
+    mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.LookupIriAction')
     mock_metadata_table_view_model = mocker.MagicMock()
-    mocker.patch('pasta_eln.GUI.data_hierarchy.ontology_configuration_extended.OntologyMetadataTableViewModel',
+    mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.OntologyMetadataTableViewModel',
                  lambda: mock_metadata_table_view_model)
     column_widths: dict[int, int] = {
       0: 100,
@@ -48,56 +48,56 @@ class TestOntologyConfigConfiguration(object):
     mock_metadata_table_view_model.column_widths = column_widths
     mock_attachments_table_view_model = mocker.MagicMock()
     mocker.patch(
-      'pasta_eln.GUI.data_hierarchy.ontology_configuration_extended.OntologyAttachmentsTableViewModel',
+      'pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.OntologyAttachmentsTableViewModel',
       lambda: mock_attachments_table_view_model)
     mock_attachments_table_view_model.column_widths = column_widths
     mock_required_column_delegate = mocker.MagicMock()
-    mocker.patch('pasta_eln.GUI.data_hierarchy.ontology_configuration_extended.MandatoryColumnDelegate',
+    mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.MandatoryColumnDelegate',
                  lambda: mock_required_column_delegate)
     mock_create_type_dialog = mocker.MagicMock()
-    mock_create = mocker.patch('pasta_eln.GUI.data_hierarchy.ontology_configuration_extended.CreateTypeDialog',
+    mock_create = mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.CreateTypeDialog',
                                return_value=mock_create_type_dialog)
     mock_delete_column_delegate = mocker.MagicMock()
-    mocker.patch('pasta_eln.GUI.data_hierarchy.ontology_configuration_extended.DeleteColumnDelegate',
+    mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.DeleteColumnDelegate',
                  lambda: mock_delete_column_delegate)
     mock_reorder_column_delegate = mocker.MagicMock()
-    mocker.patch('pasta_eln.GUI.data_hierarchy.ontology_configuration_extended.ReorderColumnDelegate',
+    mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.ReorderColumnDelegate',
                  lambda: mock_reorder_column_delegate)
     mock_iri_column_delegate = mocker.MagicMock()
-    mocker.patch('pasta_eln.GUI.data_hierarchy.ontology_configuration_extended.IriColumnDelegate',
+    mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.IriColumnDelegate',
                  lambda: mock_iri_column_delegate)
     mock_signal = mocker.patch(
-      'pasta_eln.GUI.data_hierarchy.ontology_configuration_extended.OntologyConfigurationForm.type_changed_signal')
+      'pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.DataHierarchyConfiguration.type_changed_signal')
     mock_dialog = mocker.MagicMock()
     mocker.patch.object(QDialog, '__new__', lambda _: mock_dialog)
     mocker.patch.object(MandatoryColumnDelegate, '__new__', lambda _: mocker.MagicMock())
     mocker.patch.object(DeleteColumnDelegate, '__new__', lambda _: mocker.MagicMock())
     mocker.patch.object(ReorderColumnDelegate, '__new__', lambda _: mocker.MagicMock())
-    mocker.patch.object(OntologyConfigurationForm, 'typeMetadataTableView', create=True)
-    mocker.patch.object(OntologyConfigurationForm, 'typeAttachmentsTableView', create=True)
-    mocker.patch.object(OntologyConfigurationForm, 'addMetadataRowPushButton', create=True)
-    mocker.patch.object(OntologyConfigurationForm, 'addAttachmentPushButton', create=True)
-    mocker.patch.object(OntologyConfigurationForm, 'saveOntologyPushButton', create=True)
-    mocker.patch.object(OntologyConfigurationForm, 'addMetadataGroupPushButton', create=True)
-    mocker.patch.object(OntologyConfigurationForm, 'deleteMetadataGroupPushButton', create=True)
-    mocker.patch.object(OntologyConfigurationForm, 'deleteTypePushButton', create=True)
-    mocker.patch.object(OntologyConfigurationForm, 'addTypePushButton', create=True)
-    mocker.patch.object(OntologyConfigurationForm, 'cancelPushButton', create=True)
-    mocker.patch.object(OntologyConfigurationForm, 'helpPushButton', create=True)
-    mocker.patch.object(OntologyConfigurationForm, 'attachmentsShowHidePushButton', create=True)
-    mocker.patch.object(OntologyConfigurationForm, 'typeComboBox', create=True)
-    mocker.patch.object(OntologyConfigurationForm, 'metadataGroupComboBox', create=True)
-    mocker.patch.object(OntologyConfigurationForm, 'typeDisplayedTitleLineEdit', create=True)
-    mocker.patch.object(OntologyConfigurationForm, 'typeIriLineEdit', create=True)
-    mocker.patch.object(OntologyConfigurationForm, 'delete_column_delegate_metadata_table', create=True)
-    mocker.patch.object(OntologyConfigurationForm, 'reorder_column_delegate_metadata_table', create=True)
-    mocker.patch.object(OntologyConfigurationForm, 'delete_column_delegate_attach_table', create=True)
-    mocker.patch.object(OntologyConfigurationForm, 'reorder_column_delegate_attach_table', create=True)
-    mock_setup_slots = mocker.patch.object(OntologyConfigurationForm, 'setup_slots', create=True)
-    mock_load_ontology_data = mocker.patch.object(OntologyConfigurationForm, 'load_ontology_data', create=True)
+    mocker.patch.object(DataHierarchyConfiguration, 'typeMetadataTableView', create=True)
+    mocker.patch.object(DataHierarchyConfiguration, 'typeAttachmentsTableView', create=True)
+    mocker.patch.object(DataHierarchyConfiguration, 'addMetadataRowPushButton', create=True)
+    mocker.patch.object(DataHierarchyConfiguration, 'addAttachmentPushButton', create=True)
+    mocker.patch.object(DataHierarchyConfiguration, 'saveOntologyPushButton', create=True)
+    mocker.patch.object(DataHierarchyConfiguration, 'addMetadataGroupPushButton', create=True)
+    mocker.patch.object(DataHierarchyConfiguration, 'deleteMetadataGroupPushButton', create=True)
+    mocker.patch.object(DataHierarchyConfiguration, 'deleteTypePushButton', create=True)
+    mocker.patch.object(DataHierarchyConfiguration, 'addTypePushButton', create=True)
+    mocker.patch.object(DataHierarchyConfiguration, 'cancelPushButton', create=True)
+    mocker.patch.object(DataHierarchyConfiguration, 'helpPushButton', create=True)
+    mocker.patch.object(DataHierarchyConfiguration, 'attachmentsShowHidePushButton', create=True)
+    mocker.patch.object(DataHierarchyConfiguration, 'typeComboBox', create=True)
+    mocker.patch.object(DataHierarchyConfiguration, 'metadataGroupComboBox', create=True)
+    mocker.patch.object(DataHierarchyConfiguration, 'typeDisplayedTitleLineEdit', create=True)
+    mocker.patch.object(DataHierarchyConfiguration, 'typeIriLineEdit', create=True)
+    mocker.patch.object(DataHierarchyConfiguration, 'delete_column_delegate_metadata_table', create=True)
+    mocker.patch.object(DataHierarchyConfiguration, 'reorder_column_delegate_metadata_table', create=True)
+    mocker.patch.object(DataHierarchyConfiguration, 'delete_column_delegate_attach_table', create=True)
+    mocker.patch.object(DataHierarchyConfiguration, 'reorder_column_delegate_attach_table', create=True)
+    mock_setup_slots = mocker.patch.object(DataHierarchyConfiguration, 'setup_slots', create=True)
+    mock_load_ontology_data = mocker.patch.object(DataHierarchyConfiguration, 'load_ontology_data', create=True)
     mocker.patch.object(CreateTypeDialog, '__new__')
-    config_instance = OntologyConfigurationForm(mock_database)
-    assert config_instance, "OntologyConfigurationForm should be created"
+    config_instance = DataHierarchyConfiguration(mock_database)
+    assert config_instance, "DataHierarchyConfiguration should be created"
     assert config_instance.type_changed_signal == mock_signal, "Signal should be created"
     mock_setup_ui.assert_called_once_with(mock_dialog)
     assert config_instance.database is mock_database, "Database should be set"
@@ -157,22 +157,22 @@ class TestOntologyConfigConfiguration(object):
   def test_instantiation_with_null_database_should_throw_exception(self,
                                                                    mocker):
     mocker.patch('pasta_eln.GUI.data_hierarchy.create_type_dialog.logging.getLogger')
-    mocker.patch('pasta_eln.GUI.data_hierarchy.ontology_configuration.Ui_OntologyConfigurationBaseForm.setupUi')
-    mocker.patch('pasta_eln.GUI.data_hierarchy.ontology_configuration_extended.adjust_ontology_data_to_v3')
+    mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.Ui_DataHierarchyConfigurationBase.setupUi')
+    mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.adjust_ontology_data_to_v3')
     mocker.patch.object(QDialog, '__new__')
     with pytest.raises(OntologyConfigGenericException, match="Null database instance passed to the initializer"):
-      OntologyConfigurationForm(None)
+      DataHierarchyConfiguration(None)
 
   def test_instantiation_with_database_with_null_document_should_throw_exception(self,
                                                                                  mocker):
     mocker.patch('pasta_eln.GUI.data_hierarchy.create_type_dialog.logging.getLogger')
-    mocker.patch('pasta_eln.GUI.data_hierarchy.ontology_configuration.Ui_OntologyConfigurationBaseForm.setupUi')
-    mocker.patch('pasta_eln.GUI.data_hierarchy.ontology_configuration_extended.adjust_ontology_data_to_v3')
+    mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.Ui_DataHierarchyConfigurationBase.setupUi')
+    mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.adjust_ontology_data_to_v3')
     mocker.patch.object(QDialog, '__new__')
     mock_db = mocker.patch('pasta_eln.database.Database')
     mocker.patch.object(mock_db, 'db', {'-ontology-': None}, create=True)
     with pytest.raises(OntologyDocumentNullException, match="Null ontology document in db instance"):
-      OntologyConfigurationForm(mock_db)
+      DataHierarchyConfiguration(mock_db)
 
   @pytest.mark.parametrize("new_type_selected, mock_ontology_types", [
     ("x0", {
@@ -266,7 +266,7 @@ class TestOntologyConfigConfiguration(object):
                                                      mock_ontology_types):
     logger_info_spy = mocker.spy(configuration_extended.logger, 'info')
     mock_signal = mocker.patch(
-      'pasta_eln.GUI.data_hierarchy.ontology_configuration_extended.OntologyConfigurationForm.type_changed_signal')
+      'pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.DataHierarchyConfiguration.type_changed_signal')
     mocker.patch.object(configuration_extended, 'addMetadataGroupLineEdit', create=True)
     mocker.patch.object(configuration_extended, 'ontology_types', mock_ontology_types, create=True)
     mocker.patch.object(configuration_extended, 'typeDisplayedTitleLineEdit', create=True)
@@ -370,10 +370,10 @@ class TestOntologyConfigConfiguration(object):
     configuration_extended.selected_type_metadata.__iter__.side_effect = selected_type_metadata.__iter__
     configuration_extended.selected_type_metadata.keys.side_effect = selected_type_metadata.keys
     set_items_selected_spy = mocker.spy(configuration_extended.selected_type_metadata, '__setitem__')
-    mocker.patch('pasta_eln.GUI.data_hierarchy.ontology_configuration_extended.len',
+    mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.len',
                  lambda x: len(selected_type_metadata.keys()))
     mock_show_message = mocker.patch(
-      'pasta_eln.GUI.data_hierarchy.ontology_configuration_extended.show_message')
+      'pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.show_message')
 
     if not new_metadata_group:
       assert configuration_extended.add_new_metadata_group() is None, "Nothing should be returned"
@@ -431,14 +431,14 @@ class TestOntologyConfigConfiguration(object):
                                                           'setCurrentIndex')
     mocker.patch.object(configuration_extended, 'selected_type_metadata', create=True)
     mock_show_message = mocker.patch(
-      "pasta_eln.GUI.data_hierarchy.ontology_configuration_extended.show_message")
+      "pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.show_message")
     if selected_type_metadata:
       configuration_extended.selected_type_metadata.__setitem__.side_effect = selected_type_metadata.__setitem__
       configuration_extended.selected_type_metadata.__getitem__.side_effect = selected_type_metadata.__getitem__
       configuration_extended.selected_type_metadata.pop.side_effect = selected_type_metadata.pop
       configuration_extended.selected_type_metadata.keys.side_effect = selected_type_metadata.keys
     pop_items_selected_spy = mocker.spy(configuration_extended.selected_type_metadata, 'pop')
-    mocker.patch('pasta_eln.GUI.data_hierarchy.ontology_configuration_extended.len',
+    mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.len',
                  lambda x: len(selected_type_metadata.keys()))
 
     if selected_type_metadata is None:
@@ -547,7 +547,7 @@ class TestOntologyConfigConfiguration(object):
                                                    ontology_types,
                                                    ontology_document):
     mock_signal = mocker.patch(
-      'pasta_eln.GUI.data_hierarchy.ontology_configuration_extended.OntologyConfigurationForm.type_changed_signal')
+      'pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.DataHierarchyConfiguration.type_changed_signal')
     mocker.patch.object(configuration_extended, 'typeComboBox', create=True)
     mocker.patch.object(configuration_extended.typeComboBox, 'currentText', return_value=selected_type)
     mocker.patch.object(configuration_extended, 'type_changed_signal', mock_signal, create=True)
@@ -559,7 +559,7 @@ class TestOntologyConfigConfiguration(object):
     add_items_selected_spy = mocker.spy(configuration_extended.typeComboBox, 'addItems')
     logger_info_spy = mocker.spy(configuration_extended.logger, 'info')
     mock_show_message = mocker.patch(
-      "pasta_eln.GUI.data_hierarchy.ontology_configuration_extended.show_message")
+      "pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.show_message")
     mocker.patch.object(configuration_extended, 'ontology_loaded', True, create=True)
     if ontology_document:
       original_ontology_document = ontology_document.copy()
@@ -669,9 +669,9 @@ class TestOntologyConfigConfiguration(object):
                                                          'set_structural_level_title', create=True)
     mocker.patch.object(configuration_extended, 'ontology_loaded', create=True)
     show_create_type_dialog_spy = mocker.patch.object(configuration_extended.create_type_dialog, 'show', create=True)
-    show_message_spy = mocker.patch('pasta_eln.GUI.data_hierarchy.ontology_configuration_extended.show_message')
+    show_message_spy = mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.show_message')
     get_next_possible_structural_level_title_spy = mocker.patch(
-      'pasta_eln.GUI.data_hierarchy.ontology_configuration_extended.get_next_possible_structural_level_title',
+      'pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.get_next_possible_structural_level_title',
       return_value=new_structural_title)
     if ontology_types is not None:
       configuration_extended.ontology_types.__setitem__.side_effect = ontology_types.__setitem__
@@ -794,11 +794,11 @@ class TestOntologyConfigConfiguration(object):
 
     mocker.patch.object(configuration_extended.logger, 'info')
     mock_show_message = mocker.patch(
-      'pasta_eln.GUI.data_hierarchy.ontology_configuration_extended.show_message', return_value=QMessageBox.Yes)
+      'pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.show_message', return_value=QMessageBox.Yes)
     mock_is_instance = mocker.patch(
-      'pasta_eln.GUI.data_hierarchy.ontology_configuration_extended.isinstance')
+      'pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.isinstance')
     mock_check_ontology_types = mocker.patch(
-      'pasta_eln.GUI.data_hierarchy.ontology_configuration_extended.check_ontology_types',
+      'pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.check_ontology_types',
       return_value=(None, None))
     mock_db_init_views = mocker.patch.object(configuration_extended.database,
                                              'initDocTypeViews', return_value=None)
@@ -848,11 +848,11 @@ class TestOntologyConfigConfiguration(object):
 
     mocker.patch.object(configuration_extended.logger, 'info')
     mock_show_message = mocker.patch(
-      'pasta_eln.GUI.data_hierarchy.ontology_configuration_extended.show_message', return_value=QMessageBox.No)
+      'pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.show_message', return_value=QMessageBox.No)
     mock_is_instance = mocker.patch(
-      'pasta_eln.GUI.data_hierarchy.ontology_configuration_extended.isinstance')
+      'pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.isinstance')
     mock_check_ontology_types = mocker.patch(
-      'pasta_eln.GUI.data_hierarchy.ontology_configuration_extended.check_ontology_types',
+      'pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.check_ontology_types',
       return_value=(None, None))
     mock_db_init_views = mocker.patch.object(configuration_extended.database,
                                              'initDocTypeViews', return_value=None)
@@ -887,7 +887,7 @@ class TestOntologyConfigConfiguration(object):
     log_info_spy = mocker.patch.object(configuration_extended.logger, 'info')
     log_warn_spy = mocker.patch.object(configuration_extended.logger, 'warning')
     mock_show_message = mocker.patch(
-      'pasta_eln.GUI.data_hierarchy.ontology_configuration_extended.show_message')
+      'pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.show_message')
     missing_metadata = ({
                        'Structure level 0': {'metadata group1': ['-tags']},
                        'Structure level 1': {'default': ['-tags']},
@@ -898,10 +898,10 @@ class TestOntologyConfigConfiguration(object):
                        'instrument': ['metadata group1', '-tags']
                      })
     mock_check_ontology_document_types = mocker.patch(
-      'pasta_eln.GUI.data_hierarchy.ontology_configuration_extended.check_ontology_types',
+      'pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.check_ontology_types',
       return_value=missing_metadata)
     mock_get_missing_metadata_message = mocker.patch(
-      'pasta_eln.GUI.data_hierarchy.ontology_configuration_extended.get_missing_metadata_message',
+      'pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.get_missing_metadata_message',
       return_value="Missing message")
     assert configuration_extended.save_ontology() is None, "Nothing should be returned"
     log_info_spy.assert_called_once_with("User clicked the save button..")
@@ -930,7 +930,7 @@ class TestOntologyConfigConfiguration(object):
     mocker.patch.object(configuration_extended, 'ontology_document', create=True)
     mocker.patch.object(configuration_extended, 'ontology_types', create=True)
     mock_show_message = mocker.patch(
-      'pasta_eln.GUI.data_hierarchy.ontology_configuration_extended.show_message')
+      'pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.show_message')
     mock_log_info = mocker.patch.object(configuration_extended.logger, 'info')
     mock_log_error = mocker.patch.object(configuration_extended.logger, 'error')
     mock_log_warn = mocker.patch.object(configuration_extended.logger, 'warning')
@@ -993,7 +993,7 @@ class TestOntologyConfigConfiguration(object):
                                       instance_exists):
     mock_form = mocker.MagicMock()
     mock_sys_argv = mocker.patch(
-      "pasta_eln.GUI.data_hierarchy.ontology_configuration_extended.sys.argv")
+      "pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.sys.argv")
     mock_new_app_inst = mocker.patch("PySide6.QtWidgets.QApplication")
     mock_exist_app_inst = mocker.patch("PySide6.QtWidgets.QApplication")
     mock_form_instance = mocker.patch("PySide6.QtWidgets.QDialog")
@@ -1002,10 +1002,10 @@ class TestOntologyConfigConfiguration(object):
     mocker.patch.object(QApplication, 'instance', return_value=mock_exist_app_inst if instance_exists else None)
     mocker.patch.object(mock_form, 'instance', mock_form_instance, create=True)
     spy_new_app_inst = mocker.patch.object(QApplication, '__new__', return_value=mock_new_app_inst)
-    spy_form_inst = mocker.patch.object(OntologyConfigurationForm, '__new__', return_value=mock_form)
+    spy_form_inst = mocker.patch.object(DataHierarchyConfiguration, '__new__', return_value=mock_form)
 
     (app, form_inst, form) = get_gui(mock_database)
-    spy_form_inst.assert_called_once_with(OntologyConfigurationForm, mock_database)
+    spy_form_inst.assert_called_once_with(DataHierarchyConfiguration, mock_database)
     if instance_exists:
       assert app is mock_exist_app_inst, "Should return existing instance"
       assert form_inst is mock_form_instance, "Should return existing instance"
@@ -1039,10 +1039,10 @@ class TestOntologyConfigConfiguration(object):
                                              configuration_extended: configuration_extended):
     mock_actions = [mocker.MagicMock(), mocker.MagicMock()]
     configuration_extended.typeIriLineEdit.actions.return_value = mock_actions
-    mock_is_instance = mocker.patch('pasta_eln.GUI.data_hierarchy.ontology_configuration_extended.isinstance',
+    mock_is_instance = mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.isinstance',
                                     return_value=True)
     mock_is_lookup_iri_action = mocker.patch(
-      'pasta_eln.GUI.data_hierarchy.ontology_configuration_extended.LookupIriAction')
+      'pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.LookupIriAction')
 
     assert configuration_extended.set_iri_lookup_action("default") is None, "Nothing should be returned"
     mock_is_instance.assert_has_calls(
@@ -1057,7 +1057,7 @@ class TestOntologyConfigConfiguration(object):
                                                               mocker,
                                                               configuration_extended: configuration_extended):
     mock_can_delete_type = mocker.patch(
-      'pasta_eln.GUI.data_hierarchy.ontology_configuration_extended.can_delete_type', return_value=True)
+      'pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.can_delete_type', return_value=True)
     mock_ontology_types = mocker.MagicMock()
     mocker.patch.object(configuration_extended, 'ontology_types', mock_ontology_types)
     mock_ontology_types.keys.return_value = ['one', 'two']

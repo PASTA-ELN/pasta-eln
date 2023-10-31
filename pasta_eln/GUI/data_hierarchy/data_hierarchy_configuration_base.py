@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'data_hierarchy.ui'
+# Form implementation generated from reading ui file 'data_hierarchy_configuration_base.ui'
 #
 # Created by: PyQt6 UI code generator 6.4.2
 #
@@ -9,15 +9,15 @@
 from PySide6 import QtCore, QtGui, QtWidgets
 
 
-class Ui_OntologyConfigurationBaseForm(object):
-  def setupUi(self, OntologyConfigurationBaseForm):
-    OntologyConfigurationBaseForm.setObjectName("OntologyConfigurationBaseForm")
-    OntologyConfigurationBaseForm.resize(1271, 845)
-    OntologyConfigurationBaseForm.setToolTip("")
-    self.gridLayout = QtWidgets.QGridLayout(OntologyConfigurationBaseForm)
+class Ui_DataHierarchyConfigurationBase(object):
+  def setupUi(self, DataHierarchyConfigurationBase):
+    DataHierarchyConfigurationBase.setObjectName("DataHierarchyConfigurationBase")
+    DataHierarchyConfigurationBase.resize(1271, 845)
+    DataHierarchyConfigurationBase.setToolTip("")
+    self.gridLayout = QtWidgets.QGridLayout(DataHierarchyConfigurationBase)
     self.gridLayout.setContentsMargins(10, 10, 10, 10)
     self.gridLayout.setObjectName("gridLayout")
-    self.mainWidget = QtWidgets.QWidget(parent=OntologyConfigurationBaseForm)
+    self.mainWidget = QtWidgets.QWidget(parent=DataHierarchyConfigurationBase)
     sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
     sizePolicy.setHorizontalStretch(0)
     sizePolicy.setVerticalStretch(0)
@@ -242,52 +242,52 @@ class Ui_OntologyConfigurationBaseForm(object):
     self.gridLayout_2.addLayout(self.mainGridLayout, 0, 0, 1, 1)
     self.gridLayout.addWidget(self.mainWidget, 0, 1, 1, 1)
 
-    self.retranslateUi(OntologyConfigurationBaseForm)
-    QtCore.QMetaObject.connectSlotsByName(OntologyConfigurationBaseForm)
+    self.retranslateUi(DataHierarchyConfigurationBase)
+    QtCore.QMetaObject.connectSlotsByName(DataHierarchyConfigurationBase)
 
-  def retranslateUi(self, OntologyConfigurationBaseForm):
+  def retranslateUi(self, DataHierarchyConfigurationBase):
     _translate = QtCore.QCoreApplication.translate
-    OntologyConfigurationBaseForm.setWindowTitle(_translate("OntologyConfigurationBaseForm", "Data Hierarchy Editor"))
-    self.typeMetadataTableView.setToolTip(_translate("OntologyConfigurationBaseForm", "Table which lists and allows editing of all the metadata associated with the above selected type"))
-    self.attachmentsShowHidePushButton.setText(_translate("OntologyConfigurationBaseForm", "Show/Hide Attachments"))
-    self.metadataGroupLabel.setText(_translate("OntologyConfigurationBaseForm", "Metadata Group"))
-    self.metadataGroupComboBox.setToolTip(_translate("OntologyConfigurationBaseForm", "Select the group of metadata to be listed below in the table"))
-    self.addMetadataGroupLineEdit.setToolTip(_translate("OntologyConfigurationBaseForm", "Enter the new group to be added to the data type"))
-    self.addMetadataGroupLineEdit.setPlaceholderText(_translate("OntologyConfigurationBaseForm", "Enter the new group to be added"))
-    self.addMetadataGroupPushButton.setToolTip(_translate("OntologyConfigurationBaseForm", "Add a new group of metadata to the data type, table below will be reset to empty list!"))
-    self.addMetadataGroupPushButton.setText(_translate("OntologyConfigurationBaseForm", "+ Add"))
-    self.deleteMetadataGroupPushButton.setToolTip(_translate("OntologyConfigurationBaseForm", "Delete the selected group in the group combobox"))
-    self.deleteMetadataGroupPushButton.setText(_translate("OntologyConfigurationBaseForm", "- Delete"))
-    self.typeLabel.setText(_translate("OntologyConfigurationBaseForm", "Data Type"))
-    self.typeComboBox.setToolTip(_translate("OntologyConfigurationBaseForm", "Select the type from the loaded ontology"))
-    self.typeDisplayedTitleLineEdit.setToolTip(_translate("OntologyConfigurationBaseForm", "Modify the displayed title property of the type"))
-    self.typeDisplayedTitleLineEdit.setPlaceholderText(_translate("OntologyConfigurationBaseForm", "Modify the type displayed title here"))
-    self.typeIriLineEdit.setToolTip(_translate("OntologyConfigurationBaseForm", "Enter the link/iri to be associated with this data-type"))
-    self.typeIriLineEdit.setPlaceholderText(_translate("OntologyConfigurationBaseForm", "Enter the IRI for the type"))
-    self.addTypePushButton.setToolTip(_translate("OntologyConfigurationBaseForm", "Add a new type (structural or normal type) to the ontology data set."))
-    self.addTypePushButton.setText(_translate("OntologyConfigurationBaseForm", "+ Add"))
-    self.deleteTypePushButton.setToolTip(_translate("OntologyConfigurationBaseForm", "Delete the type with the full metadata and attachments completely"))
-    self.deleteTypePushButton.setText(_translate("OntologyConfigurationBaseForm", "- Delete"))
-    self.addMetadataRowPushButton.setToolTip(_translate("OntologyConfigurationBaseForm", "Add a new metadata row to the above table with empty values"))
-    self.addMetadataRowPushButton.setText(_translate("OntologyConfigurationBaseForm", "+ Add Metadata group"))
-    self.addAttachmentPushButton.setToolTip(_translate("OntologyConfigurationBaseForm", "Add a new attachment row to the above table with empty values"))
-    self.addAttachmentPushButton.setText(_translate("OntologyConfigurationBaseForm", "+ Add Attachment"))
-    self.metadataTableHeaderLabel.setText(_translate("OntologyConfigurationBaseForm", "Metadata Form Editor"))
-    self.typeAttachmentsTableView.setToolTip(_translate("OntologyConfigurationBaseForm", "Table which displays the attachments for the above selected data type"))
-    self.headerLabel.setText(_translate("OntologyConfigurationBaseForm", "Edit the data hierarchy for the PASTA-ELN projects"))
-    self.saveOntologyPushButton.setToolTip(_translate("OntologyConfigurationBaseForm", "Save loaded ontology in local database"))
-    self.saveOntologyPushButton.setText(_translate("OntologyConfigurationBaseForm", "Save"))
-    self.helpPushButton.setToolTip(_translate("OntologyConfigurationBaseForm", "Navigate to the help page"))
-    self.helpPushButton.setText(_translate("OntologyConfigurationBaseForm", "Help"))
-    self.cancelPushButton.setToolTip(_translate("OntologyConfigurationBaseForm", "Close the editor"))
-    self.cancelPushButton.setText(_translate("OntologyConfigurationBaseForm", "Cancel"))
+    DataHierarchyConfigurationBase.setWindowTitle(_translate("DataHierarchyConfigurationBase", "Data Hierarchy Editor"))
+    self.typeMetadataTableView.setToolTip(_translate("DataHierarchyConfigurationBase", "Table which lists and allows editing of all the metadata associated with the above selected type"))
+    self.attachmentsShowHidePushButton.setText(_translate("DataHierarchyConfigurationBase", "Show/Hide Attachments"))
+    self.metadataGroupLabel.setText(_translate("DataHierarchyConfigurationBase", "Metadata Group"))
+    self.metadataGroupComboBox.setToolTip(_translate("DataHierarchyConfigurationBase", "Select the group of metadata to be listed below in the table"))
+    self.addMetadataGroupLineEdit.setToolTip(_translate("DataHierarchyConfigurationBase", "Enter the new group to be added to the data type"))
+    self.addMetadataGroupLineEdit.setPlaceholderText(_translate("DataHierarchyConfigurationBase", "Enter the new group to be added"))
+    self.addMetadataGroupPushButton.setToolTip(_translate("DataHierarchyConfigurationBase", "Add a new group of metadata to the data type, table below will be reset to empty list!"))
+    self.addMetadataGroupPushButton.setText(_translate("DataHierarchyConfigurationBase", "+ Add"))
+    self.deleteMetadataGroupPushButton.setToolTip(_translate("DataHierarchyConfigurationBase", "Delete the selected group in the group combobox"))
+    self.deleteMetadataGroupPushButton.setText(_translate("DataHierarchyConfigurationBase", "- Delete"))
+    self.typeLabel.setText(_translate("DataHierarchyConfigurationBase", "Data Type"))
+    self.typeComboBox.setToolTip(_translate("DataHierarchyConfigurationBase", "Select the type from the loaded ontology"))
+    self.typeDisplayedTitleLineEdit.setToolTip(_translate("DataHierarchyConfigurationBase", "Modify the displayed title property of the type"))
+    self.typeDisplayedTitleLineEdit.setPlaceholderText(_translate("DataHierarchyConfigurationBase", "Modify the type displayed title here"))
+    self.typeIriLineEdit.setToolTip(_translate("DataHierarchyConfigurationBase", "Enter the link/iri to be associated with this data-type"))
+    self.typeIriLineEdit.setPlaceholderText(_translate("DataHierarchyConfigurationBase", "Enter the IRI for the type"))
+    self.addTypePushButton.setToolTip(_translate("DataHierarchyConfigurationBase", "Add a new type (structural or normal type) to the ontology data set."))
+    self.addTypePushButton.setText(_translate("DataHierarchyConfigurationBase", "+ Add"))
+    self.deleteTypePushButton.setToolTip(_translate("DataHierarchyConfigurationBase", "Delete the type with the full metadata and attachments completely"))
+    self.deleteTypePushButton.setText(_translate("DataHierarchyConfigurationBase", "- Delete"))
+    self.addMetadataRowPushButton.setToolTip(_translate("DataHierarchyConfigurationBase", "Add a new metadata row to the above table with empty values"))
+    self.addMetadataRowPushButton.setText(_translate("DataHierarchyConfigurationBase", "+ Add Metadata group"))
+    self.addAttachmentPushButton.setToolTip(_translate("DataHierarchyConfigurationBase", "Add a new attachment row to the above table with empty values"))
+    self.addAttachmentPushButton.setText(_translate("DataHierarchyConfigurationBase", "+ Add Attachment"))
+    self.metadataTableHeaderLabel.setText(_translate("DataHierarchyConfigurationBase", "Metadata Form Editor"))
+    self.typeAttachmentsTableView.setToolTip(_translate("DataHierarchyConfigurationBase", "Table which displays the attachments for the above selected data type"))
+    self.headerLabel.setText(_translate("DataHierarchyConfigurationBase", "Edit the data hierarchy for the PASTA-ELN projects"))
+    self.saveOntologyPushButton.setToolTip(_translate("DataHierarchyConfigurationBase", "Save loaded ontology in local database"))
+    self.saveOntologyPushButton.setText(_translate("DataHierarchyConfigurationBase", "Save"))
+    self.helpPushButton.setToolTip(_translate("DataHierarchyConfigurationBase", "Navigate to the help page"))
+    self.helpPushButton.setText(_translate("DataHierarchyConfigurationBase", "Help"))
+    self.cancelPushButton.setToolTip(_translate("DataHierarchyConfigurationBase", "Close the editor"))
+    self.cancelPushButton.setText(_translate("DataHierarchyConfigurationBase", "Cancel"))
 
 
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
-    OntologyConfigurationBaseForm = QtWidgets.QWidget()
-    ui = Ui_OntologyConfigurationBaseForm()
-    ui.setupUi(OntologyConfigurationBaseForm)
-    OntologyConfigurationBaseForm.show()
+    DataHierarchyConfigurationBase = QtWidgets.QWidget()
+    ui = Ui_DataHierarchyConfigurationBase()
+    ui.setupUi(DataHierarchyConfigurationBase)
+    DataHierarchyConfigurationBase.show()
     sys.exit(app.exec())

@@ -1,10 +1,10 @@
-""" OntologyConfigurationForm which is extended from the Ui_OntologyConfigurationBaseForm """
+""" DataHierarchyConfiguration which is extended from the Ui_DataHierarchyConfigurationBase """
 #  PASTA-ELN and all its sub-parts are covered by the MIT license.
 #
 #  Copyright (c) 2023
 #
 #  Author: Jithu Murugan
-#  Filename: ontology_configuration_extended.py
+#  Filename: data_hierarchy_configuration.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
@@ -24,7 +24,7 @@ from .ontology_attachments_tableview_data_model import OntologyAttachmentsTableV
 from .ontology_config_generic_exception import OntologyConfigGenericException
 from .ontology_config_key_not_found_exception import \
   OntologyConfigKeyNotFoundException
-from .ontology_configuration import Ui_OntologyConfigurationBaseForm
+from .data_hierarchy_configuration_base import Ui_DataHierarchyConfigurationBase
 from .ontology_configuration_constants import ATTACHMENT_TABLE_DELETE_COLUMN_INDEX, \
   ATTACHMENT_TABLE_REORDER_COLUMN_INDEX, ONTOLOGY_HELP_PAGE_URL, METADATA_TABLE_DELETE_COLUMN_INDEX, \
   METADATA_TABLE_IRI_COLUMN_INDEX, METADATA_TABLE_REORDER_COLUMN_INDEX, METADATA_TABLE_REQUIRED_COLUMN_INDEX
@@ -42,16 +42,16 @@ from .utility_functions import adapt_type, adjust_ontology_data_to_v3, can_delet
 from ...database import Database
 
 
-class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm, QObject):
-  """ OntologyConfigurationForm class which is extended from the Ui_OntologyConfigurationBaseForm
+class DataHierarchyConfiguration(Ui_DataHierarchyConfigurationBase, QObject):
+  """ DataHierarchyConfiguration class which is extended from the Ui_DataHierarchyConfigurationBase
   and contains the UI elements and related logic"""
   type_changed_signal = Signal(str)
 
   def __new__(cls, *_: Any, **__: Any) -> Any:
     """
-    Instantiates the OntologyConfigurationForm
+    Instantiates the DataHierarchyConfiguration
     """
-    return super(OntologyConfigurationForm, cls).__new__(cls)
+    return super(DataHierarchyConfiguration, cls).__new__(cls)
 
   def __init__(self, database: Database) -> None:
     """
@@ -495,7 +495,7 @@ class OntologyConfigurationForm(Ui_OntologyConfigurationBaseForm, QObject):
 
 
 def get_gui(database: Database) -> tuple[
-  QApplication | QApplication, QtWidgets.QDialog, OntologyConfigurationForm]:
+  QApplication | QApplication, QtWidgets.QDialog, DataHierarchyConfiguration]:
   """
   Creates the editor UI and return it
   Args:
@@ -505,6 +505,6 @@ def get_gui(database: Database) -> tuple[
   """
   instance = QApplication.instance()
   application = QApplication(sys.argv) if instance is None else instance
-  ontology_form: OntologyConfigurationForm = OntologyConfigurationForm(database)
+  ontology_form: DataHierarchyConfiguration = DataHierarchyConfiguration(database)
 
   return application, ontology_form.instance, ontology_form
