@@ -90,7 +90,7 @@ class TestDataHierarchyUtilityFunctions(object):
       "x0":
         {
           "displayedTitle": "",
-          "metadata": []
+          "meta": []
         }
     }),
     ({
@@ -101,7 +101,7 @@ class TestDataHierarchyUtilityFunctions(object):
         {
           "attachments": [{"test": "test", "test1": "test2"}],
           "displayedTitle": "",
-          "metadata": {"default": [
+          "meta": {"default": [
             {
               "name": "value",
               "test": "test1"
@@ -115,22 +115,22 @@ class TestDataHierarchyUtilityFunctions(object):
     assert adjust_data_hierarchy_data_to_v3(contents) is None, "adjust_data_hierarchy_data_to_v3 should return None"
     if "x0" in contents:
       assert "attachments" in contents["x0"], "attachments should be set"
-      assert "metadata" in contents["x0"], "metadata should be set"
-      assert type(contents["x0"]["metadata"]) is dict, "metadata should be dictionary"
+      assert "meta" in contents["x0"], "metadata should be set"
+      assert type(contents["x0"]["meta"]) is dict, "metadata should be dictionary"
 
     if "x1" in contents:
       assert "attachments" in contents["x1"], "attachments should be set"
-      assert "metadata" in contents["x1"], "metadata should be set"
-      assert type(contents["x1"]["metadata"]) is dict, "metadata should be dictionary"
-      assert "default" in contents["x1"]["metadata"] and len(
-        contents["x1"]["metadata"]["default"]) == 0, "default metadata list be defined"
+      assert "meta" in contents["x1"], "metadata should be set"
+      assert type(contents["x1"]["meta"]) is dict, "metadata should be dictionary"
+      assert "default" in contents["x1"]["meta"] and len(
+        contents["x1"]["meta"]["default"]) == 0, "default metadata list be defined"
 
     if "x2" in contents:
       assert "attachments" in contents["x2"], "attachments should be set"
-      assert "metadata" in contents["x2"], "metadata should be set"
-      assert type(contents["x2"]["metadata"]) is dict, "metadata should be dictionary"
-      assert "default" in contents["x2"]["metadata"] and len(
-        contents["x2"]["metadata"]["default"]) == 1, "default metadata list should be the same"
+      assert "meta" in contents["x2"], "metadata should be set"
+      assert type(contents["x2"]["meta"]) is dict, "metadata should be dictionary"
+      assert "default" in contents["x2"]["meta"] and len(
+        contents["x2"]["meta"]["default"]) == 1, "default metadata list should be the same"
 
   @staticmethod
   def create_mock_doc(contents, mocker):
@@ -238,7 +238,7 @@ class TestDataHierarchyUtilityFunctions(object):
     ({}, ({}, {})),
     ({
        "x0": {
-         "metadata": {
+         "meta": {
            "default": [
              {"name": "name", "query": "What is the name of task?"},
              {"name": "tags", "query": "What is the name of task?"}
@@ -250,7 +250,7 @@ class TestDataHierarchyUtilityFunctions(object):
          }
        },
        "x1": {
-         "metadata": {
+         "meta": {
            "default": [
              {"name": "name", "query": "What is the name of task?"},
              {"name": "tags", "query": "What is the name of task?"}
@@ -268,7 +268,7 @@ class TestDataHierarchyUtilityFunctions(object):
       )),
     ({
        "x0": {
-         "metadata": {
+         "meta": {
            "default": [
              {"name": "name", "query": "What is the name of task?"},
              {"name": "-tags", "query": "What is the name of task?"},
@@ -283,7 +283,7 @@ class TestDataHierarchyUtilityFunctions(object):
          }
        },
        "x1": {
-         "metadata": {
+         "meta": {
            "default": [
              {"name": "-name", "query": "What is the name of task?"},
              {"name": "-tags", "query": "What is the name of task?"}
@@ -306,7 +306,7 @@ class TestDataHierarchyUtilityFunctions(object):
        'Structure level 1': ['metadata_group3']})),
     ({
        "x0": {
-         "metadata": {
+         "meta": {
            "default": [
              {"name": "-name", "query": "What is the name of task?"},
              {"name": "-tags", "query": "What is the name of task?"}
@@ -319,7 +319,7 @@ class TestDataHierarchyUtilityFunctions(object):
          }
        },
        "x1": {
-         "metadata": {
+         "meta": {
            "default": [
              {"name": "-name", "query": "What is the name of task?"},
              {"name": "-tags", "query": "What is the name of task?"}
@@ -335,7 +335,7 @@ class TestDataHierarchyUtilityFunctions(object):
 
     ({
        "x0": {
-         "metadata": {
+         "meta": {
            "default": [
              {"name": "-name", "query": "What is the name of task?"},
              {"name": "-tags", "query": "What is the name of task?"},
@@ -350,7 +350,7 @@ class TestDataHierarchyUtilityFunctions(object):
          }
        },
        "x1": {
-         "metadata": {
+         "meta": {
            "default": [
              {"name": "-name", "query": "What is the name of task?"},
              {"name": "-tags", "query": "What is the name of task?"},
@@ -371,7 +371,7 @@ class TestDataHierarchyUtilityFunctions(object):
        "x0": {
        },
        "x1": {
-         "metadata": {
+         "meta": {
            "default": [
              {"name": "name", "query": "What is the name of task?"},
              {"name": "-tags", "query": "What is the name of task?"}
@@ -383,7 +383,7 @@ class TestDataHierarchyUtilityFunctions(object):
          }
        },
        "test": {
-         "metadata": {
+         "meta": {
            "default": [
              {"name": "-name", "query": "What is the name of task?"},
              {"name": "", "query": "What is the name of task?"},
@@ -397,7 +397,7 @@ class TestDataHierarchyUtilityFunctions(object):
        "x0": {
        },
        "x1": {
-         "metadata": {
+         "meta": {
            "default": [
              {"name": "name", "query": "What is the name of task?"},
              {"name": "-tags", "query": "What is the name of task?"},
@@ -412,7 +412,7 @@ class TestDataHierarchyUtilityFunctions(object):
          }
        },
        "test": {
-         "metadata": {
+         "meta": {
            "default": [
              {"name": "-name", "query": "What is the name of task?"},
            ]

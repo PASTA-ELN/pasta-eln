@@ -98,7 +98,7 @@ class TestDataHierarchyEditorDialog(object):
     assert (ui_form.typeIriLineEdit.text() ==
             selected_type["IRI"]), "Data type IRI line edit not loaded!"
 
-    categories = list(selected_type["metadata"].keys())
+    categories = list(selected_type["meta"].keys())
     assert ([ui_form.metadataGroupComboBox.itemText(i) for i in range(ui_form.metadataGroupComboBox.count())]
             == categories), "metadataGroupComboBox not loaded!"
     assert (ui_form.metadataGroupComboBox.currentText()
@@ -120,10 +120,10 @@ class TestDataHierarchyEditorDialog(object):
           assert model.data(index, Qt.DisplayRole) is None, f"{column_names[column]} should be None!"
 
   def check_table_contents(self, attachments_column_names, metadata_column_names, selected_type, ui_form):
-    categories = list(selected_type["metadata"].keys())
+    categories = list(selected_type["meta"].keys())
     # Assert if the metadata loaded in the table view
     model = ui_form.typeMetadataTableView.model()
-    self.check_table_view_model(model, metadata_column_names, selected_type["metadata"][categories[0]])
+    self.check_table_view_model(model, metadata_column_names, selected_type["meta"][categories[0]])
     # Assert if the attachments are loaded in the table view
     model = ui_form.typeAttachmentsTableView.model()
     self.check_table_view_model(model, attachments_column_names, selected_type["attachments"])
@@ -189,7 +189,7 @@ class TestDataHierarchyEditorDialog(object):
       "Type displayedTitle line edit should be selected to first structural item"
     assert ui_form.typeIriLineEdit.text() == selected_type["IRI"], \
       "Type IRI line edit should be selected to selected type IRI"
-    assert ui_form.metadataGroupComboBox.currentText() == list(selected_type["metadata"].keys())[0], \
+    assert ui_form.metadataGroupComboBox.currentText() == list(selected_type["meta"].keys())[0], \
       "Type metadata group combo box should be selected to first item in the selected type"
     self.check_table_contents(attachments_column_names, metadata_column_names, selected_type, ui_form)
 
@@ -420,7 +420,7 @@ class TestDataHierarchyEditorDialog(object):
       "Type displayedTitle line edit should be selected to first structural item"
     assert ui_form.typeIriLineEdit.text() == selected_type["IRI"], \
       "Type IRI line edit should be selected to IRI in selected type"
-    assert ui_form.metadataGroupComboBox.currentText() == list(selected_type["metadata"].keys())[0], \
+    assert ui_form.metadataGroupComboBox.currentText() == list(selected_type["meta"].keys())[0], \
       "Type metadata group combo box should be selected to first metadata group"
     self.check_table_contents(attachments_column_names, metadata_column_names, selected_type, ui_form)
 

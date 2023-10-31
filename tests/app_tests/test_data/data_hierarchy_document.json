@@ -5,7 +5,7 @@
   "x0": {
     "IRI": "http://url.com",
     "displayedTitle": "Projects",
-    "metadata": {
+    "meta": {
       "default": [
         {
           "name": "-name",
@@ -62,7 +62,7 @@
   "x1": {
     "IRI": "",
     "displayedTitle": "Tasks",
-    "metadata": {
+    "meta": {
       "default": [
         {
           "name": "-name",
@@ -83,7 +83,7 @@
   "x2": {
     "IRI": "",
     "displayedTitle": "Subtasks",
-    "metadata": {
+    "meta": {
       "default": [
         {
           "name": "-name",
@@ -104,7 +104,7 @@
   "measurement": {
     "IRI": "",
     "displayedTitle": "Measurements",
-    "metadata": {
+    "meta": {
       "default": [
         {
           "name": "-name",
@@ -147,7 +147,7 @@
   "sample": {
     "IRI": "",
     "displayedTitle": "Samples",
-    "metadata": {
+    "meta": {
       "default": [
         {
           "name": "-name",
@@ -175,7 +175,7 @@
   "procedure": {
     "IRI": "",
     "displayedTitle": "Procedures",
-    "metadata": {
+    "meta": {
       "default": [
         {
           "name": "-name",
@@ -200,7 +200,7 @@
   "instrument": {
     "IRI": "",
     "displayedTitle": "Instruments",
-    "metadata": {
+    "meta": {
       "default": [
         {
           "name": "-name",

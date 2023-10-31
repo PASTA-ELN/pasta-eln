@@ -157,7 +157,7 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
                                                  f"not found in data_hierarchy_types", {})
       selected_type = self.data_hierarchy_types.get(new_type_selected)
       # Get the metadata for the selected type and store the list in selected_type_metadata
-      self.selected_type_metadata = selected_type.get('metadata')
+      self.selected_type_metadata = selected_type.get("meta")
 
       # Type displayed_title is set in a line edit
       self.typeDisplayedTitleLineEdit.setText(selected_type.get('displayedTitle'))

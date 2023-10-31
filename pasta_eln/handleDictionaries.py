@@ -56,11 +56,11 @@ def ontologyV2_to_V3(ontology: dict[str, Any]) -> None:
       typeStructures[key] = ontology[key]
   for typeStructure in typeStructures.values():
     typeStructure.setdefault("attachments", [])
-    metadata = typeStructure.get("metadata")
+    metadata = typeStructure.get("meta")
     if metadata is None:
-      typeStructure["metadata"] = {"default": []}
+      typeStructure["meta"] = {"default": []}
     elif not isinstance(metadata, dict):
-      typeStructure["metadata"] = {"default": metadata}
+      typeStructure["meta"] = {"default": metadata}
   return
 
 

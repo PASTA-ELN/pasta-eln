@@ -179,7 +179,7 @@ class TestDataHierarchyEditorDialog(object):
       "x0": {
         "displayedTitle": "x0",
         "IRI": "url",
-        "metadata": {
+        "meta": {
           "default": [
             {
               "key": "key",
@@ -197,7 +197,7 @@ class TestDataHierarchyEditorDialog(object):
       "x1": {
         "displayedTitle": "x0",
         "IRI": "url",
-        "metadata": {
+        "meta": {
           "default": [
             {
               "key": "key",
@@ -217,7 +217,7 @@ class TestDataHierarchyEditorDialog(object):
       "x0": {
         "displayedTitle": "x0",
         "IRI": "url",
-        "metadata": {
+        "meta": {
           "default": [
             {
               "key": "key",
@@ -235,7 +235,7 @@ class TestDataHierarchyEditorDialog(object):
       "x1": {
         "displayedTitle": "x0",
         "IRI": "url",
-        "metadata": {
+        "meta": {
           "default": [
             {
               "key": "key",
@@ -255,9 +255,9 @@ class TestDataHierarchyEditorDialog(object):
     ("x0", {}),
     ("x0", {"x1": {}}),
     ("x0", {"x0": {}}),
-    ("x0", {"x0": {"displayedTitle": None, "IRI": None, "metadata": None, "attachments": None}}),
-    ("x0", {"x0": {"displayedTitle": None, "IRI": None, "metadata": {"": None}, "attachments": [{"": None}]}}),
-    ("x0", {"x0": {"": None, "§": None, "metadata": {"": None}, "attachment": [{"": None}]}})
+    ("x0", {"x0": {"displayedTitle": None, "IRI": None, "meta": None, "attachments": None}}),
+    ("x0", {"x0": {"displayedTitle": None, "IRI": None, "meta": {"": None}, "attachments": [{"": None}]}}),
+    ("x0", {"x0": {"": None, "§": None, "meta": {"": None}, "attachment": [{"": None}]}})
   ])
   def test_type_combo_box_changed_should_do_expected(self,
                                                      mocker,
@@ -301,8 +301,8 @@ class TestDataHierarchyEditorDialog(object):
       set_current_index_metadata_group_combo_box_spy.assert_called_once_with(0)
       clear_metadata_group_combo_box_spy.assert_called_once_with()
       add_items_metadata_group_combo_box_spy.assert_called_once_with(
-        list(mock_data_hierarchy_types.get(new_type_selected).get('metadata').keys())
-        if mock_data_hierarchy_types.get(new_type_selected).get('metadata') else [])
+        list(mock_data_hierarchy_types.get(new_type_selected).get("meta").keys())
+        if mock_data_hierarchy_types.get(new_type_selected).get("meta") else [])
       update_attachment_table_model_spy.assert_called_once_with(
         mock_data_hierarchy_types.get(new_type_selected).get('attachments'))
 

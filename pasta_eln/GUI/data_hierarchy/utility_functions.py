@@ -52,12 +52,12 @@ def adjust_data_hierarchy_data_to_v3(data_hierarchy_types: dict[str, Any]) -> No
     return None
   for _, type_structure in data_hierarchy_types.items():
     type_structure.setdefault("attachments", [])
-    metadata = type_structure.get("metadata")
+    metadata = type_structure.get("meta")
     if metadata is None:
-      type_structure["metadata"] = {"default": []}
+      type_structure["meta"] = {"default": []}
       continue
     if not isinstance(metadata, dict):
-      type_structure["metadata"] = {"default": metadata}
+      type_structure["meta"] = {"default": metadata}
   return None
 
 
@@ -193,7 +193,7 @@ def generate_empty_type(displayed_title: str) -> dict[str, Any]:
   return {
     "IRI": "",
     "displayedTitle": displayed_title,
-    "metadata": {
+    "meta": {
       "default": generate_mandatory_metadata()
     },
     "attachments": []
@@ -242,8 +242,8 @@ def check_data_hierarchy_types(data_hierarchy_types: dict[str, Any]) \
     type_name = type_name.replace("x", "Structure level ") \
       if is_structural_level(type_name) \
       else type_name
-    if type_structure.get("metadata"):
-      for group, metadata in type_structure.get("metadata").items():
+    if type_structure.get("meta"):
+      for group, metadata in type_structure.get("meta").items():
         names = [item.get("name") for item in metadata]
         if not all(n and not n.isspace() for n in names):
           if type_name not in types_with_null_name_metadata:
