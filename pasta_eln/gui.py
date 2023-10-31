@@ -24,7 +24,7 @@ from .fixedStringsJson import shortcuts
 from .guiCommunicate import Communicate
 from .guiStyle import Action, showMessage, widgetAndLayout, shortCuts
 from .inputOutput import exportELN, importELN
-from .GUI.data_hierarchy.data_hierarchy_configuration import DataHierarchyConfiguration
+from .GUI.data_hierarchy.data_hierarchy_editor_dialog import DataHierarchyEditorDialog
 from .miscTools import updateExtractorList, restart
 
 os.environ['QT_API'] = 'pyside6'
@@ -173,7 +173,7 @@ class MainWindow(QMainWindow):
       report = self.comm.backend.replicateDB(progressBar=self.sidebar.progress)
       showMessage(self, 'Report of syncronization', report, style='QLabel {min-width: 450px}')
     elif command[0] is Command.ONTOLOGY:
-      ontologyForm = DataHierarchyConfiguration(self.comm.backend.db)
+      ontologyForm = DataHierarchyEditorDialog(self.comm.backend.db)
       ontologyForm.instance.exec()
       restart()
     elif command[0] is Command.TEST1:

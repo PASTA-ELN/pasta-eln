@@ -1,10 +1,10 @@
-""" DataHierarchyConfiguration which is extended from the Ui_DataHierarchyConfigurationBase """
+""" DataHierarchyEditorDialog which is extended from the Ui_DataHierarchyEditorDialogBase """
 #  PASTA-ELN and all its sub-parts are covered by the MIT license.
 #
 #  Copyright (c) 2023
 #
 #  Author: Jithu Murugan
-#  Filename: data_hierarchy_configuration.py
+#  Filename: data_hierarchy_editor_dialog.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
@@ -24,7 +24,7 @@ from .attachments_tableview_data_model import AttachmentsTableViewModel
 from .generic_exception import GenericException
 from .key_not_found_exception import \
   KeyNotFoundException
-from .data_hierarchy_configuration_base import Ui_DataHierarchyConfigurationBase
+from .data_hierarchy_editor_dialog_base import Ui_DataHierarchyEditorDialogBase
 from .constants import ATTACHMENT_TABLE_DELETE_COLUMN_INDEX, \
   ATTACHMENT_TABLE_REORDER_COLUMN_INDEX, DATA_HIERARCHY_HELP_PAGE_URL, METADATA_TABLE_DELETE_COLUMN_INDEX, \
   METADATA_TABLE_IRI_COLUMN_INDEX, METADATA_TABLE_REORDER_COLUMN_INDEX, METADATA_TABLE_REQUIRED_COLUMN_INDEX
@@ -42,16 +42,16 @@ from .utility_functions import adapt_type, adjust_data_hierarchy_data_to_v3, can
 from ...database import Database
 
 
-class DataHierarchyConfiguration(Ui_DataHierarchyConfigurationBase, QObject):
-  """ DataHierarchyConfiguration class which is extended from the Ui_DataHierarchyConfigurationBase
+class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
+  """ DataHierarchyEditorDialog class which is extended from the Ui_DataHierarchyEditorDialogBase
   and contains the UI elements and related logic"""
   type_changed_signal = Signal(str)
 
   def __new__(cls, *_: Any, **__: Any) -> Any:
     """
-    Instantiates the DataHierarchyConfiguration
+    Instantiates the DataHierarchyEditorDialog
     """
-    return super(DataHierarchyConfiguration, cls).__new__(cls)
+    return super(DataHierarchyEditorDialog, cls).__new__(cls)
 
   def __init__(self, database: Database) -> None:
     """
@@ -495,7 +495,7 @@ class DataHierarchyConfiguration(Ui_DataHierarchyConfigurationBase, QObject):
 
 
 def get_gui(database: Database) -> tuple[
-  QApplication | QApplication, QtWidgets.QDialog, DataHierarchyConfiguration]:
+  QApplication | QApplication, QtWidgets.QDialog, DataHierarchyEditorDialog]:
   """
   Creates the editor UI and return it
   Args:
@@ -505,6 +505,6 @@ def get_gui(database: Database) -> tuple[
   """
   instance = QApplication.instance()
   application = QApplication(sys.argv) if instance is None else instance
-  data_hierarchy_form: DataHierarchyConfiguration = DataHierarchyConfiguration(database)
+  data_hierarchy_form: DataHierarchyEditorDialog = DataHierarchyEditorDialog(database)
 
   return application, data_hierarchy_form.instance, data_hierarchy_form

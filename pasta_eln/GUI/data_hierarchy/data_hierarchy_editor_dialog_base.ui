@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>DataHierarchyConfigurationBase</class>
- <widget class="QWidget" name="DataHierarchyConfigurationBase">
+ <class>DataHierarchyEditorDialogBase</class>
+ <widget class="QWidget" name="DataHierarchyEditorDialogBase">
   <property name="geometry">
    <rect>
     <x>0</x>

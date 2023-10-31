@@ -3,7 +3,7 @@
 #  Copyright (c) 2023
 #
 #  Author: Jithu Murugan
-#  Filename: test_data_hierarchy_create_type_dialog_extended.py
+#  Filename: test_data_hierarchy_create_type_dialog.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 

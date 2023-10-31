@@ -3,7 +3,7 @@
 #   Copyright (c) 2023
 #  #
 #   Author: Jithu Murugan
-#   Filename: test_data_hierarchy_configuration_extended.py
+#   Filename: test_data_hierarchy_editor_dialog.py
 #  #
 #   You should have received a copy of the license with this file. Please refer the license file for more information.
 import pytest
@@ -13,7 +13,7 @@ from PySide6.QtWidgets import QApplication, QCheckBox, QMessageBox
 from pytestqt.qtbot import QtBot
 
 from pasta_eln.GUI.data_hierarchy.lookup_iri_action import LookupIriAction
-from pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration import DataHierarchyConfiguration
+from pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog import DataHierarchyEditorDialog
 from pasta_eln.GUI.data_hierarchy.utility_functions import adapt_type, get_types_for_display
 from tests.app_tests.common.fixtures import attachments_column_names, data_hierarchy_doc_mock, data_hierarchy_editor_gui, \
   pasta_db_mock, metadata_column_names
@@ -27,7 +27,7 @@ class TestDataHierarchyConfigurationExtended(object):
                                                            data_hierarchy_editor_gui: tuple[
                                                              QApplication,
                                                              QtWidgets.QDialog,
-                                                             DataHierarchyConfiguration,
+                                                             DataHierarchyEditorDialog,
                                                              QtBot]):
     app, ui_dialog, ui_form, qtbot = data_hierarchy_editor_gui
     assert ui_form.headerLabel is not None, "Header not loaded!"
@@ -63,7 +63,7 @@ class TestDataHierarchyConfigurationExtended(object):
                                                                data_hierarchy_editor_gui: tuple[
                                                                  QApplication,
                                                                  QtWidgets.QDialog,
-                                                                 DataHierarchyConfiguration,
+                                                                 DataHierarchyEditorDialog,
                                                                  QtBot],
                                                                type_to_select: str,
                                                                metadata_group_selected: str,
@@ -82,7 +82,7 @@ class TestDataHierarchyConfigurationExtended(object):
                                                       data_hierarchy_editor_gui: tuple[
                                                         QApplication,
                                                         QtWidgets.QDialog,
-                                                        DataHierarchyConfiguration,
+                                                        DataHierarchyEditorDialog,
                                                         QtBot],
                                                       data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                       metadata_column_names: metadata_column_names,
@@ -132,7 +132,7 @@ class TestDataHierarchyConfigurationExtended(object):
                                                                                              data_hierarchy_editor_gui: tuple[
                                                                                                QApplication,
                                                                                                QtWidgets.QDialog,
-                                                                                               DataHierarchyConfiguration,
+                                                                                               DataHierarchyEditorDialog,
                                                                                                QtBot],
                                                                                              data_hierarchy_doc_mock: data_hierarchy_doc_mock):
     app, ui_dialog, ui_form, qtbot = data_hierarchy_editor_gui
@@ -144,13 +144,13 @@ class TestDataHierarchyConfigurationExtended(object):
                                                                                        data_hierarchy_editor_gui: tuple[
                                                                                          QApplication,
                                                                                          QtWidgets.QDialog,
-                                                                                         DataHierarchyConfiguration,
+                                                                                         DataHierarchyEditorDialog,
                                                                                          QtBot],
                                                                                        data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                                                        mocker):
     app, ui_dialog, ui_form, qtbot = data_hierarchy_editor_gui
     mock_show_message = mocker.patch(
-      "pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.show_message")
+      "pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.show_message")
     mocker.patch.object(ui_form, "data_hierarchy_loaded", False)
     # Select a non-structural type in the type combo box, in order to enable the delete button
     ui_form.typeComboBox.setCurrentText("measurement")
@@ -164,7 +164,7 @@ class TestDataHierarchyConfigurationExtended(object):
                                                                                            tuple[
                                                                                              QApplication,
                                                                                              QtWidgets.QDialog,
-                                                                                             DataHierarchyConfiguration,
+                                                                                             DataHierarchyEditorDialog,
                                                                                              QtBot],
                                                                                            data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                                                            metadata_column_names: metadata_column_names,
@@ -198,7 +198,7 @@ class TestDataHierarchyConfigurationExtended(object):
                                                                                      tuple[
                                                                                        QApplication,
                                                                                        QtWidgets.QDialog,
-                                                                                       DataHierarchyConfiguration,
+                                                                                       DataHierarchyEditorDialog,
                                                                                        QtBot],
                                                                                      data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                                                      metadata_column_names: metadata_column_names,
@@ -216,7 +216,7 @@ class TestDataHierarchyConfigurationExtended(object):
                                                                                     tuple[
                                                                                       QApplication,
                                                                                       QtWidgets.QDialog,
-                                                                                      DataHierarchyConfiguration,
+                                                                                      DataHierarchyEditorDialog,
                                                                                       QtBot],
                                                                                     data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                                                     metadata_column_names: metadata_column_names,
@@ -244,7 +244,7 @@ class TestDataHierarchyConfigurationExtended(object):
                                                                                 tuple[
                                                                                   QApplication,
                                                                                   QtWidgets.QDialog,
-                                                                                  DataHierarchyConfiguration,
+                                                                                  DataHierarchyEditorDialog,
                                                                                   QtBot],
                                                                                 data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                                                 metadata_column_names: metadata_column_names,
@@ -272,7 +272,7 @@ class TestDataHierarchyConfigurationExtended(object):
                                                                                    tuple[
                                                                                      QApplication,
                                                                                      QtWidgets.QDialog,
-                                                                                     DataHierarchyConfiguration,
+                                                                                     DataHierarchyEditorDialog,
                                                                                      QtBot],
                                                                                    data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                                                    metadata_column_names: metadata_column_names,
@@ -334,7 +334,7 @@ class TestDataHierarchyConfigurationExtended(object):
                                                                                tuple[
                                                                                  QApplication,
                                                                                  QtWidgets.QDialog,
-                                                                                 DataHierarchyConfiguration,
+                                                                                 DataHierarchyEditorDialog,
                                                                                  QtBot],
                                                                                data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                                                metadata_column_names: metadata_column_names,
@@ -361,7 +361,7 @@ class TestDataHierarchyConfigurationExtended(object):
                                                                                                         tuple[
                                                                                                           QApplication,
                                                                                                           QtWidgets.QDialog,
-                                                                                                          DataHierarchyConfiguration,
+                                                                                                          DataHierarchyEditorDialog,
                                                                                                           QtBot],
                                                                                                         data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                                                                         metadata_column_names: metadata_column_names,
@@ -384,7 +384,7 @@ class TestDataHierarchyConfigurationExtended(object):
                                                                                       tuple[
                                                                                         QApplication,
                                                                                         QtWidgets.QDialog,
-                                                                                        DataHierarchyConfiguration,
+                                                                                        DataHierarchyEditorDialog,
                                                                                         QtBot],
                                                                                       data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                                                       metadata_column_names: metadata_column_names,
@@ -430,7 +430,7 @@ class TestDataHierarchyConfigurationExtended(object):
                                                                                                   tuple[
                                                                                                     QApplication,
                                                                                                     QtWidgets.QDialog,
-                                                                                                    DataHierarchyConfiguration,
+                                                                                                    DataHierarchyEditorDialog,
                                                                                                     QtBot],
                                                                                                   data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                                                                   metadata_column_names: metadata_column_names,
@@ -438,7 +438,7 @@ class TestDataHierarchyConfigurationExtended(object):
     app, ui_dialog, ui_form, qtbot = data_hierarchy_editor_gui
     assert ui_form.create_type_dialog.buttonBox.isVisible() is False, "Create new type dialog should not be shown!"
     mock_show_message = mocker.patch(
-      'pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.show_message', return_value=QMessageBox.Yes)
+      'pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.show_message', return_value=QMessageBox.Yes)
     current_selected_type_metadata_group = ui_form.metadataGroupComboBox.currentText()
     previous_types_metadata_group_count = ui_form.metadataGroupComboBox.count()
     qtbot.mouseClick(ui_form.deleteMetadataGroupPushButton, Qt.LeftButton)
@@ -459,7 +459,7 @@ class TestDataHierarchyConfigurationExtended(object):
                                                                                                        tuple[
                                                                                                          QApplication,
                                                                                                          QtWidgets.QDialog,
-                                                                                                         DataHierarchyConfiguration,
+                                                                                                         DataHierarchyEditorDialog,
                                                                                                          QtBot],
                                                                                                        data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                                                                        metadata_column_names: metadata_column_names,
@@ -497,7 +497,7 @@ class TestDataHierarchyConfigurationExtended(object):
                                                                                                                   tuple[
                                                                                                                     QApplication,
                                                                                                                     QtWidgets.QDialog,
-                                                                                                                    DataHierarchyConfiguration,
+                                                                                                                    DataHierarchyEditorDialog,
                                                                                                                     QtBot],
                                                                                                                   data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                                                                                   metadata_column_names: metadata_column_names,
@@ -534,7 +534,7 @@ class TestDataHierarchyConfigurationExtended(object):
                                                                                           tuple[
                                                                                             QApplication,
                                                                                             QtWidgets.QDialog,
-                                                                                            DataHierarchyConfiguration,
+                                                                                            DataHierarchyEditorDialog,
                                                                                             QtBot],
                                                                                           data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                                                           metadata_column_names: metadata_column_names,
@@ -609,7 +609,7 @@ class TestDataHierarchyConfigurationExtended(object):
                                                                                                 tuple[
                                                                                                   QApplication,
                                                                                                   QtWidgets.QDialog,
-                                                                                                  DataHierarchyConfiguration,
+                                                                                                  DataHierarchyEditorDialog,
                                                                                                   QtBot],
                                                                                                 data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                                                                 metadata_column_names: metadata_column_names,
@@ -669,7 +669,7 @@ class TestDataHierarchyConfigurationExtended(object):
                                                              tuple[
                                                                QApplication,
                                                                QtWidgets.QDialog,
-                                                               DataHierarchyConfiguration,
+                                                               DataHierarchyEditorDialog,
                                                                QtBot],
                                                              data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                              metadata_column_names: metadata_column_names,
@@ -702,7 +702,7 @@ class TestDataHierarchyConfigurationExtended(object):
                                                          tuple[
                                                            QApplication,
                                                            QtWidgets.QDialog,
-                                                           DataHierarchyConfiguration,
+                                                           DataHierarchyEditorDialog,
                                                            QtBot],
                                                          data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                          metadata_column_names: metadata_column_names,
@@ -720,7 +720,7 @@ class TestDataHierarchyConfigurationExtended(object):
                                                                                                  tuple[
                                                                                                    QApplication,
                                                                                                    QtWidgets.QDialog,
-                                                                                                   DataHierarchyConfiguration,
+                                                                                                   DataHierarchyEditorDialog,
                                                                                                    QtBot],
                                                                                                  data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                                                                  metadata_column_names: metadata_column_names,
@@ -761,7 +761,7 @@ class TestDataHierarchyConfigurationExtended(object):
                                                                                                          tuple[
                                                                                                            QApplication,
                                                                                                            QtWidgets.QDialog,
-                                                                                                           DataHierarchyConfiguration,
+                                                                                                           DataHierarchyEditorDialog,
                                                                                                            QtBot],
                                                                                                          data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                                                                          metadata_column_names: metadata_column_names,
@@ -802,7 +802,7 @@ class TestDataHierarchyConfigurationExtended(object):
                                                   tuple[
                                                     QApplication,
                                                     QtWidgets.QDialog,
-                                                    DataHierarchyConfiguration,
+                                                    DataHierarchyEditorDialog,
                                                     QtBot],
                                                   data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                   metadata_column_names: metadata_column_names,
@@ -840,7 +840,7 @@ class TestDataHierarchyConfigurationExtended(object):
                                                   tuple[
                                                     QApplication,
                                                     QtWidgets.QDialog,
-                                                    DataHierarchyConfiguration,
+                                                    DataHierarchyEditorDialog,
                                                     QtBot],
                                                   data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                   metadata_column_names: metadata_column_names,
@@ -866,7 +866,7 @@ class TestDataHierarchyConfigurationExtended(object):
                                                            tuple[
                                                              QApplication,
                                                              QtWidgets.QDialog,
-                                                             DataHierarchyConfiguration,
+                                                             DataHierarchyEditorDialog,
                                                              QtBot],
                                                            data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                            metadata_column_names: metadata_column_names,
@@ -912,7 +912,7 @@ class TestDataHierarchyConfigurationExtended(object):
                                                    tuple[
                                                      QApplication,
                                                      QtWidgets.QDialog,
-                                                     DataHierarchyConfiguration,
+                                                     DataHierarchyEditorDialog,
                                                      QtBot],
                                                    data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                    metadata_column_names: metadata_column_names,
@@ -949,7 +949,7 @@ class TestDataHierarchyConfigurationExtended(object):
                                                         tuple[
                                                           QApplication,
                                                           QtWidgets.QDialog,
-                                                          DataHierarchyConfiguration,
+                                                          DataHierarchyEditorDialog,
                                                           QtBot],
                                                         data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                         metadata_column_names: metadata_column_names,
@@ -996,7 +996,7 @@ class TestDataHierarchyConfigurationExtended(object):
                                                           tuple[
                                                             QApplication,
                                                             QtWidgets.QDialog,
-                                                            DataHierarchyConfiguration,
+                                                            DataHierarchyEditorDialog,
                                                             QtBot],
                                                           data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                           metadata_column_names: metadata_column_names,

@@ -24,7 +24,7 @@ from pasta_eln.GUI.data_hierarchy.attachments_tableview_data_model import \
   AttachmentsTableViewModel
 from pasta_eln.GUI.data_hierarchy.key_not_found_exception import \
   KeyNotFoundException
-from pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration import DataHierarchyConfiguration, get_gui
+from pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog import DataHierarchyEditorDialog, get_gui
 from pasta_eln.GUI.data_hierarchy.document_null_exception import DocumentNullException
 from pasta_eln.GUI.data_hierarchy.metadata_tableview_data_model import MetadataTableViewModel
 from pasta_eln.GUI.data_hierarchy.tableview_data_model import TableViewModel
@@ -77,44 +77,44 @@ def terminology_lookup_mock(mocker) -> TerminologyLookupService:
 
 
 @fixture()
-def configuration_extended(mocker) -> DataHierarchyConfiguration:
+def configuration_extended(mocker) -> DataHierarchyEditorDialog:
   mock_document = mocker.patch('cloudant.document.Document')
   mock_pasta_db = mocker.patch('pasta_eln.database')
   mock_couch_db = mocker.patch('cloudant.couchdb')
   mock_couch_db['-ontology-'] = mock_document
   mock_pasta_db = mocker.patch.object(mock_pasta_db, 'db', create=True)
   mocker.patch('pasta_eln.GUI.data_hierarchy.create_type_dialog.logging.getLogger')
-  mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.Ui_DataHierarchyConfigurationBase.setupUi')
-  mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.adjust_data_hierarchy_data_to_v3')
-  mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.LookupIriAction')
+  mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog_base.Ui_DataHierarchyEditorDialogBase.setupUi')
+  mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.adjust_data_hierarchy_data_to_v3')
+  mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.LookupIriAction')
   mocker.patch.object(QDialog, '__new__')
   mocker.patch.object(MetadataTableViewModel, '__new__')
   mocker.patch.object(AttachmentsTableViewModel, '__new__')
   mocker.patch.object(MandatoryColumnDelegate, '__new__', lambda _: mocker.MagicMock())
   mocker.patch.object(DeleteColumnDelegate, '__new__', lambda _: mocker.MagicMock())
   mocker.patch.object(ReorderColumnDelegate, '__new__', lambda _: mocker.MagicMock())
-  mocker.patch.object(DataHierarchyConfiguration, 'typeMetadataTableView', create=True)
-  mocker.patch.object(DataHierarchyConfiguration, 'typeAttachmentsTableView', create=True)
-  mocker.patch.object(DataHierarchyConfiguration, 'addMetadataRowPushButton', create=True)
-  mocker.patch.object(DataHierarchyConfiguration, 'addAttachmentPushButton', create=True)
-  mocker.patch.object(DataHierarchyConfiguration, 'saveDataHierarchyPushButton', create=True)
-  mocker.patch.object(DataHierarchyConfiguration, 'addMetadataGroupPushButton', create=True)
-  mocker.patch.object(DataHierarchyConfiguration, 'deleteMetadataGroupPushButton', create=True)
-  mocker.patch.object(DataHierarchyConfiguration, 'deleteTypePushButton', create=True)
-  mocker.patch.object(DataHierarchyConfiguration, 'addTypePushButton', create=True)
-  mocker.patch.object(DataHierarchyConfiguration, 'cancelPushButton', create=True)
-  mocker.patch.object(DataHierarchyConfiguration, 'helpPushButton', create=True)
-  mocker.patch.object(DataHierarchyConfiguration, 'attachmentsShowHidePushButton', create=True)
-  mocker.patch.object(DataHierarchyConfiguration, 'typeComboBox', create=True)
-  mocker.patch.object(DataHierarchyConfiguration, 'metadataGroupComboBox', create=True)
-  mocker.patch.object(DataHierarchyConfiguration, 'typeDisplayedTitleLineEdit', create=True)
-  mocker.patch.object(DataHierarchyConfiguration, 'typeIriLineEdit', create=True)
-  mocker.patch.object(DataHierarchyConfiguration, 'delete_column_delegate_metadata_table', create=True)
-  mocker.patch.object(DataHierarchyConfiguration, 'reorder_column_delegate_metadata_table', create=True)
-  mocker.patch.object(DataHierarchyConfiguration, 'delete_column_delegate_attach_table', create=True)
-  mocker.patch.object(DataHierarchyConfiguration, 'reorder_column_delegate_attach_table', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'typeMetadataTableView', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'typeAttachmentsTableView', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'addMetadataRowPushButton', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'addAttachmentPushButton', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'saveDataHierarchyPushButton', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'addMetadataGroupPushButton', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'deleteMetadataGroupPushButton', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'deleteTypePushButton', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'addTypePushButton', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'cancelPushButton', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'helpPushButton', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'attachmentsShowHidePushButton', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'typeComboBox', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'metadataGroupComboBox', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'typeDisplayedTitleLineEdit', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'typeIriLineEdit', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'delete_column_delegate_metadata_table', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'reorder_column_delegate_metadata_table', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'delete_column_delegate_attach_table', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'reorder_column_delegate_attach_table', create=True)
   mocker.patch.object(CreateTypeDialog, '__new__')
-  return DataHierarchyConfiguration(mock_pasta_db)
+  return DataHierarchyEditorDialog(mock_pasta_db)
 
 
 @fixture()
@@ -240,7 +240,7 @@ def pasta_db_mock(mocker, data_hierarchy_doc_mock) -> Database:
 @fixture()
 def data_hierarchy_editor_gui(mocker, request, pasta_db_mock) -> tuple[QApplication,
 QtWidgets.QDialog,
-DataHierarchyConfiguration,
+DataHierarchyEditorDialog,
 QtBot]:
   mock_message_box = mocker.patch('pasta_eln.GUI.data_hierarchy.utility_functions.QMessageBox')
   app, ui_dialog, ui_form_extended = get_gui(pasta_db_mock)
