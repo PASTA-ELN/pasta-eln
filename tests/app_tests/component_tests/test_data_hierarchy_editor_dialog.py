@@ -19,7 +19,7 @@ from tests.app_tests.common.fixtures import attachments_column_names, data_hiera
   pasta_db_mock, metadata_column_names
 
 
-class TestDataHierarchyConfigurationExtended(object):
+class TestDataHierarchyEditorDialog(object):
 
   def test_component_launch_should_display_all_ui_elements(self,
                                                            pasta_db_mock: pasta_db_mock,
