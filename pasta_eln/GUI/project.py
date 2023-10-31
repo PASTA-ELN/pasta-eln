@@ -165,8 +165,9 @@ class Project(QWidget):
         newPath = self.comm.backend.basePath/createDirName(self.docProj['-name'],'x0',0)
         oldPath.rename(newPath)
     elif command[0] is Command.DELETE:
-      ret = QMessageBox.critical(self, 'Warning', 'Are you sure you want to delete project?',\
-                                   QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.No)
+      ret = QMessageBox.critical(self, 'Warning', 'Are you sure you want to delete project?', \
+                      QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,  # type: ignore[operator]
+                      QMessageBox.StandardButton.No)
       if ret==QMessageBox.StandardButton.Yes:
         #delete database and rename folder
         doc = self.comm.backend.db.remove(self.projID)
@@ -174,6 +175,10 @@ class Project(QWidget):
           oldPath = self.comm.backend.basePath/doc['-branch'][0]['path']
           newPath = self.comm.backend.basePath/('trash_'+doc['-branch'][0]['path'])
           oldPath.rename(newPath)
+        # go through children, remove from DB
+        children = self.comm.backend.db.getView('viewHierarchy/viewHierarchy', startKey=self.projID)
+        for line in children:
+          self.comm.backend.db.remove(line['id'])
         #update sidebar, show projects
         self.comm.changeSidebar.emit('redraw')
         self.comm.changeTable.emit('x0','')

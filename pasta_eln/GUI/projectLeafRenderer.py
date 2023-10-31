@@ -160,7 +160,8 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       return QSize(400, self.lineSep*2)
     doc = self.comm.backend.db.getDoc(docID)
     if len(doc)<2:
-      self.comm.changeProject.emit('','')
+      if len(self.comm.backend.db.getDoc(hierStack.split('/')[0]))>2: #only refresh when project still exists
+        self.comm.changeProject.emit('','')
       return QSize()
     docKeys = doc.keys()
     widthContent = min(self.widthContent,  \
