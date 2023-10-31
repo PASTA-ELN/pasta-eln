@@ -1,10 +1,10 @@
-""" OntologyAttachmentsTableViewModel used for the ontology editor's attachments table view """
+""" AttachmentsTableViewModel used for the ontology editor's attachments table view """
 #  PASTA-ELN and all its sub-parts are covered by the MIT license.
 #
 #  Copyright (c) 2023
 #
 #  Author: Jithu Murugan
-#  Filename: ontology_attachments_tableview_data_model.py
+#  Filename: attachments_tableview_data_model.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
@@ -13,10 +13,10 @@ from typing import Union
 
 from PySide6.QtWidgets import QWidget
 
-from .ontology_tableview_data_model import OntologyTableViewModel
+from .tableview_data_model import TableViewModel
 
 
-class OntologyAttachmentsTableViewModel(OntologyTableViewModel):
+class AttachmentsTableViewModel(TableViewModel):
   """
   Abstracted data-model for the ontology editor's attachments table view
   """

@@ -1,10 +1,10 @@
-""" OntologyTableViewModel Generic module used for the table views """
+""" TableViewModel Generic module used for the table views """
 #  PASTA-ELN and all its sub-parts are covered by the MIT license.
 #
 #  Copyright (c) 2023
 #
 #  Author: Jithu Murugan
-#  Filename: ontology_attachments_tableview_data_model.py
+#  Filename: tableview_data_model.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
@@ -15,7 +15,7 @@ from PySide6.QtCore import QAbstractTableModel, QModelIndex, QPersistentModelInd
 from PySide6.QtWidgets import QWidget
 
 
-class OntologyTableViewModel(QAbstractTableModel):
+class TableViewModel(QAbstractTableModel):
   """
   Abstracted data-model base for the ontology table views
   """
@@ -28,7 +28,7 @@ class OntologyTableViewModel(QAbstractTableModel):
       parent (QWidget): Parent view or widget
     """
     super().__init__(parent)
-    self.logger = logging.getLogger(__name__ + "." + self.__class__.__name__)
+    self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
     self.data_set: list[dict[Any, Any]] | Any = []
     self.data_name_map: dict[int, str] = {}
     self.header_values: list[str] = []

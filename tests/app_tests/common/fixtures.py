@@ -20,14 +20,14 @@ from pasta_eln.GUI.data_hierarchy.create_type_dialog import CreateTypeDialog
 from pasta_eln.GUI.data_hierarchy.delete_column_delegate import DeleteColumnDelegate
 from pasta_eln.GUI.data_hierarchy.iri_column_delegate import IriColumnDelegate
 from pasta_eln.GUI.data_hierarchy.lookup_iri_action import LookupIriAction
-from pasta_eln.GUI.data_hierarchy.ontology_attachments_tableview_data_model import \
-  OntologyAttachmentsTableViewModel
-from pasta_eln.GUI.data_hierarchy.ontology_config_key_not_found_exception import \
-  OntologyConfigKeyNotFoundException
+from pasta_eln.GUI.data_hierarchy.attachments_tableview_data_model import \
+  AttachmentsTableViewModel
+from pasta_eln.GUI.data_hierarchy.key_not_found_exception import \
+  KeyNotFoundException
 from pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration import DataHierarchyConfiguration, get_gui
-from pasta_eln.GUI.data_hierarchy.ontology_document_null_exception import OntologyDocumentNullException
-from pasta_eln.GUI.data_hierarchy.ontology_metadata_tableview_data_model import OntologyMetadataTableViewModel
-from pasta_eln.GUI.data_hierarchy.ontology_tableview_data_model import OntologyTableViewModel
+from pasta_eln.GUI.data_hierarchy.document_null_exception import DocumentNullException
+from pasta_eln.GUI.data_hierarchy.metadata_tableview_data_model import MetadataTableViewModel
+from pasta_eln.GUI.data_hierarchy.tableview_data_model import TableViewModel
 from pasta_eln.GUI.data_hierarchy.reorder_column_delegate import ReorderColumnDelegate
 from pasta_eln.GUI.data_hierarchy.mandatory_column_delegate import MandatoryColumnDelegate
 from pasta_eln.GUI.data_hierarchy.terminology_lookup_dialog import TerminologyLookupDialog
@@ -88,8 +88,8 @@ def configuration_extended(mocker) -> DataHierarchyConfiguration:
   mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.adjust_ontology_data_to_v3')
   mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.LookupIriAction')
   mocker.patch.object(QDialog, '__new__')
-  mocker.patch.object(OntologyMetadataTableViewModel, '__new__')
-  mocker.patch.object(OntologyAttachmentsTableViewModel, '__new__')
+  mocker.patch.object(MetadataTableViewModel, '__new__')
+  mocker.patch.object(AttachmentsTableViewModel, '__new__')
   mocker.patch.object(MandatoryColumnDelegate, '__new__', lambda _: mocker.MagicMock())
   mocker.patch.object(DeleteColumnDelegate, '__new__', lambda _: mocker.MagicMock())
   mocker.patch.object(ReorderColumnDelegate, '__new__', lambda _: mocker.MagicMock())
@@ -118,35 +118,35 @@ def configuration_extended(mocker) -> DataHierarchyConfiguration:
 
 
 @fixture()
-def doc_null_exception(request) -> OntologyDocumentNullException:
-  return OntologyDocumentNullException(request.param['message'],
-                                       request.param['errors'])
+def doc_null_exception(request) -> DocumentNullException:
+  return DocumentNullException(request.param['message'],
+                               request.param['errors'])
 
 
 @fixture()
-def key_not_found_exception(request) -> OntologyConfigKeyNotFoundException:
-  return OntologyConfigKeyNotFoundException(request.param['message'],
-                                            request.param['errors'])
+def key_not_found_exception(request) -> KeyNotFoundException:
+  return KeyNotFoundException(request.param['message'],
+                              request.param['errors'])
 
 
 @fixture()
-def table_model() -> OntologyTableViewModel:
-  base_model = OntologyTableViewModel()
-  base_model.setObjectName("OntologyTableViewModel")
+def table_model() -> TableViewModel:
+  base_model = TableViewModel()
+  base_model.setObjectName("TableViewModel")
   return base_model
 
 
 @fixture()
-def metadata_table_model() -> OntologyMetadataTableViewModel:
-  metadata_model = OntologyMetadataTableViewModel()
-  metadata_model.setObjectName("OntologyMetadataTableViewModel")
+def metadata_table_model() -> MetadataTableViewModel:
+  metadata_model = MetadataTableViewModel()
+  metadata_model.setObjectName("MetadataTableViewModel")
   return metadata_model
 
 
 @fixture()
-def attachments_table_model() -> OntologyAttachmentsTableViewModel:
-  attachments_model = OntologyAttachmentsTableViewModel()
-  attachments_model.setObjectName("OntologyAttachmentsTableViewModel")
+def attachments_table_model() -> AttachmentsTableViewModel:
+  attachments_model = AttachmentsTableViewModel()
+  attachments_model.setObjectName("AttachmentsTableViewModel")
   return attachments_model
 
 

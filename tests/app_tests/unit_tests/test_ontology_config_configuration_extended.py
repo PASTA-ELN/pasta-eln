@@ -13,14 +13,14 @@ from PySide6.QtWidgets import QApplication, QDialog, QLineEdit, QMessageBox
 
 from pasta_eln.GUI.data_hierarchy.create_type_dialog import CreateTypeDialog
 from pasta_eln.GUI.data_hierarchy.delete_column_delegate import DeleteColumnDelegate
-from pasta_eln.GUI.data_hierarchy.ontology_config_generic_exception import OntologyConfigGenericException
-from pasta_eln.GUI.data_hierarchy.ontology_config_key_not_found_exception import \
-  OntologyConfigKeyNotFoundException
-from pasta_eln.GUI.data_hierarchy.ontology_configuration_constants import ATTACHMENT_TABLE_DELETE_COLUMN_INDEX, \
+from pasta_eln.GUI.data_hierarchy.generic_exception import GenericException
+from pasta_eln.GUI.data_hierarchy.key_not_found_exception import \
+  KeyNotFoundException
+from pasta_eln.GUI.data_hierarchy.constants import ATTACHMENT_TABLE_DELETE_COLUMN_INDEX, \
   ATTACHMENT_TABLE_REORDER_COLUMN_INDEX, METADATA_TABLE_DELETE_COLUMN_INDEX, \
   METADATA_TABLE_IRI_COLUMN_INDEX, METADATA_TABLE_REORDER_COLUMN_INDEX, METADATA_TABLE_REQUIRED_COLUMN_INDEX
 from pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration import DataHierarchyConfiguration, get_gui
-from pasta_eln.GUI.data_hierarchy.ontology_document_null_exception import OntologyDocumentNullException
+from pasta_eln.GUI.data_hierarchy.document_null_exception import DocumentNullException
 from pasta_eln.GUI.data_hierarchy.reorder_column_delegate import ReorderColumnDelegate
 from pasta_eln.GUI.data_hierarchy.mandatory_column_delegate import MandatoryColumnDelegate
 from pasta_eln.GUI.data_hierarchy.utility_functions import generate_empty_type, generate_mandatory_metadata, \
@@ -39,7 +39,7 @@ class TestOntologyConfigConfiguration(object):
     mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.adjust_ontology_data_to_v3')
     mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.LookupIriAction')
     mock_metadata_table_view_model = mocker.MagicMock()
-    mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.OntologyMetadataTableViewModel',
+    mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.MetadataTableViewModel',
                  lambda: mock_metadata_table_view_model)
     column_widths: dict[int, int] = {
       0: 100,
@@ -48,7 +48,7 @@ class TestOntologyConfigConfiguration(object):
     mock_metadata_table_view_model.column_widths = column_widths
     mock_attachments_table_view_model = mocker.MagicMock()
     mocker.patch(
-      'pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.OntologyAttachmentsTableViewModel',
+      'pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.AttachmentsTableViewModel',
       lambda: mock_attachments_table_view_model)
     mock_attachments_table_view_model.column_widths = column_widths
     mock_required_column_delegate = mocker.MagicMock()
@@ -160,7 +160,7 @@ class TestOntologyConfigConfiguration(object):
     mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.Ui_DataHierarchyConfigurationBase.setupUi')
     mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_configuration.adjust_ontology_data_to_v3')
     mocker.patch.object(QDialog, '__new__')
-    with pytest.raises(OntologyConfigGenericException, match="Null database instance passed to the initializer"):
+    with pytest.raises(GenericException, match="Null database instance passed to the initializer"):
       DataHierarchyConfiguration(None)
 
   def test_instantiation_with_database_with_null_document_should_throw_exception(self,
@@ -171,7 +171,7 @@ class TestOntologyConfigConfiguration(object):
     mocker.patch.object(QDialog, '__new__')
     mock_db = mocker.patch('pasta_eln.database.Database')
     mocker.patch.object(mock_db, 'db', {'-ontology-': None}, create=True)
-    with pytest.raises(OntologyDocumentNullException, match="Null ontology document in db instance"):
+    with pytest.raises(DocumentNullException, match="Null ontology document in db instance"):
       DataHierarchyConfiguration(mock_db)
 
   @pytest.mark.parametrize("new_type_selected, mock_ontology_types", [
@@ -284,7 +284,7 @@ class TestOntologyConfigConfiguration(object):
     update_attachment_table_model_spy = mocker.spy(configuration_extended.attachments_table_data_model, 'update')
     if mock_ontology_types is not None and len(
         mock_ontology_types) > 0 and new_type_selected not in mock_ontology_types:
-      with pytest.raises(OntologyConfigKeyNotFoundException,
+      with pytest.raises(KeyNotFoundException,
                          match=f"Key {new_type_selected} not found in ontology_types"):
         assert configuration_extended.type_combo_box_changed(
           new_type_selected) is not None, "Nothing should be returned"
@@ -754,7 +754,7 @@ class TestOntologyConfigConfiguration(object):
       else ontology_document
     mocker.patch.object(configuration_extended, 'ontology_document', doc, create=True)
     if ontology_document is None:
-      with pytest.raises(OntologyConfigGenericException, match="Null ontology_document, erroneous app state"):
+      with pytest.raises(GenericException, match="Null ontology_document, erroneous app state"):
         assert configuration_extended.load_ontology_data() is None, "Nothing should be returned"
       return
     assert configuration_extended.load_ontology_data() is None, "Nothing should be returned"
@@ -959,7 +959,7 @@ class TestOntologyConfigConfiguration(object):
 
     if ontology_document is None or ontology_types is None or new_title in ontology_document:
       if ontology_document is None or ontology_types is None:
-        with pytest.raises(OntologyConfigGenericException,
+        with pytest.raises(GenericException,
                            match="Null ontology_document/ontology_types, erroneous app state"):
           assert configuration_extended.create_new_type(new_title, new_displayed_title) is None, "Nothing should be returned"
           mock_log_error.assert_called_once_with("Null ontology_document/ontology_types, erroneous app state")

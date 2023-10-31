@@ -4,7 +4,7 @@
 #  Copyright (c) 2023
 #
 #  Author: Jithu Murugan
-#  Filename: ontology_configuration_constants.py
+#  Filename: constants.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 

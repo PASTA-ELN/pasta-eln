@@ -20,16 +20,16 @@ from PySide6.QtWidgets import QApplication, QLineEdit, QMessageBox
 from cloudant.document import Document
 
 from .create_type_dialog import CreateTypeDialog
-from .ontology_attachments_tableview_data_model import OntologyAttachmentsTableViewModel
-from .ontology_config_generic_exception import OntologyConfigGenericException
-from .ontology_config_key_not_found_exception import \
-  OntologyConfigKeyNotFoundException
+from .attachments_tableview_data_model import AttachmentsTableViewModel
+from .generic_exception import GenericException
+from .key_not_found_exception import \
+  KeyNotFoundException
 from .data_hierarchy_configuration_base import Ui_DataHierarchyConfigurationBase
-from .ontology_configuration_constants import ATTACHMENT_TABLE_DELETE_COLUMN_INDEX, \
+from .constants import ATTACHMENT_TABLE_DELETE_COLUMN_INDEX, \
   ATTACHMENT_TABLE_REORDER_COLUMN_INDEX, ONTOLOGY_HELP_PAGE_URL, METADATA_TABLE_DELETE_COLUMN_INDEX, \
   METADATA_TABLE_IRI_COLUMN_INDEX, METADATA_TABLE_REORDER_COLUMN_INDEX, METADATA_TABLE_REQUIRED_COLUMN_INDEX
-from .ontology_document_null_exception import OntologyDocumentNullException
-from .ontology_metadata_tableview_data_model import OntologyMetadataTableViewModel
+from .document_null_exception import DocumentNullException
+from .metadata_tableview_data_model import MetadataTableViewModel
 from .reorder_column_delegate import ReorderColumnDelegate
 from .mandatory_column_delegate import MandatoryColumnDelegate
 from .delete_column_delegate import DeleteColumnDelegate
@@ -61,7 +61,7 @@ class DataHierarchyConfiguration(Ui_DataHierarchyConfigurationBase, QObject):
       database (Database): Pasta ELN database instance
 
     Raises:
-      OntologyDocumentNullException: Raised when passed in argument @ontology_document is null.
+      DocumentNullException: Raised when passed in argument @ontology_document is null.
     """
     super().__init__()
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
@@ -76,16 +76,16 @@ class DataHierarchyConfiguration(Ui_DataHierarchyConfigurationBase, QObject):
 
     # Gets the ontology data from db and adjust the data to the latest version
     if database is None:
-      raise OntologyConfigGenericException("Null database instance passed to the initializer", {})
+      raise GenericException("Null database instance passed to the initializer", {})
 
     self.database: Database = database
     self.ontology_document: Document = self.database.db['-ontology-']
     if not self.ontology_document:
-      raise OntologyDocumentNullException("Null ontology document in db instance", {})
+      raise DocumentNullException("Null ontology document in db instance", {})
 
     # Instantiates metadata & attachment table models along with the column delegates
-    self.metadata_table_data_model = OntologyMetadataTableViewModel()
-    self.attachments_table_data_model = OntologyAttachmentsTableViewModel()
+    self.metadata_table_data_model = MetadataTableViewModel()
+    self.attachments_table_data_model = AttachmentsTableViewModel()
 
     self.required_column_delegate_metadata_table = MandatoryColumnDelegate()
     self.delete_column_delegate_metadata_table = DeleteColumnDelegate()
@@ -144,7 +144,7 @@ class DataHierarchyConfiguration(Ui_DataHierarchyConfigurationBase, QObject):
     Returns: Nothing
 
     Raises:
-      OntologyConfigKeyNotFoundException: Raised when passed in argument @new_type_selected is not found in ontology_types
+      KeyNotFoundException: Raised when passed in argument @new_type_selected is not found in ontology_types
 
     """
     self.logger.info("New type selected in UI: {%s}", new_type_selected)
@@ -153,7 +153,7 @@ class DataHierarchyConfiguration(Ui_DataHierarchyConfigurationBase, QObject):
     self.type_changed_signal.emit(new_type_selected)
     if new_type_selected and self.ontology_types:
       if new_type_selected not in self.ontology_types:
-        raise OntologyConfigKeyNotFoundException(f"Key {new_type_selected} "
+        raise KeyNotFoundException(f"Key {new_type_selected} "
                                                  f"not found in ontology_types", {})
       selected_type = self.ontology_types.get(new_type_selected)
       # Get the metadata for the selected type and store the list in selected_type_metadata
@@ -395,7 +395,7 @@ class DataHierarchyConfiguration(Ui_DataHierarchyConfigurationBase, QObject):
     """
     self.logger.info("User loaded the ontology data in UI")
     if self.ontology_document is None:
-      raise OntologyConfigGenericException("Null ontology_document, erroneous app state", {})
+      raise GenericException("Null ontology_document, erroneous app state", {})
     # Load the ontology types from the db document
     for data in self.ontology_document:
       if isinstance(self.ontology_document[data], dict):
@@ -453,7 +453,7 @@ class DataHierarchyConfiguration(Ui_DataHierarchyConfigurationBase, QObject):
     """
     if self.ontology_document is None or self.ontology_types is None:
       self.logger.error("Null ontology_document/ontology_types, erroneous app state")
-      raise OntologyConfigGenericException("Null ontology_document/ontology_types, erroneous app state", {})
+      raise GenericException("Null ontology_document/ontology_types, erroneous app state", {})
     if title in self.ontology_types:
       show_message(f"Type (title: {title} displayed title: {displayed_title}) cannot be added since it exists in DB already....",
                    QMessageBox.Warning)
