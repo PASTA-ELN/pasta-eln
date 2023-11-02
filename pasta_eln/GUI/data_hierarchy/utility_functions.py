@@ -311,11 +311,14 @@ def set_types_with_duplicate_metadata(type_name, type_value, types_with_duplicat
         types_with_duplicate_metadata[type_name][name] \
           = list(set(types_with_duplicate_metadata[type_name][name]))
 
+
 def get_missing_metadata_message(types_with_missing_metadata: dict[str, dict[str, list[str]]],
-                                 types_with_null_name_metadata: dict[str, list[str]]) -> str:
+                                 types_with_null_name_metadata: dict[str, list[str]],
+                                 types_with_duplicate_metadata: dict[str, dict[str, list[str]]], ) -> str:
   """
   Get a formatted message for missing metadata
   Args:
+    types_with_duplicate_metadata (dict[str, dict[str, list[str]]]): Type groups with duplicate metadata
     types_with_null_name_metadata (dict[str, str]): Type groups with missing metadata names
     types_with_missing_metadata (dict[str, dict[str, list[str]]]): Type groups with missing metadata
 
@@ -327,15 +330,14 @@ def get_missing_metadata_message(types_with_missing_metadata: dict[str, dict[str
       and not types_with_null_name_metadata):
     return message
   message += "<html>"
-  if types_with_missing_metadata:
-    message += "<b>Missing mandatory metadata: </b><ul>"
-    for type_name, groups in types_with_missing_metadata.items():
-      for group, metadata in groups.items():
-        for metadata_name in metadata:
-          message += (f"<li>Type: <i style=\"color:Crimson\">{type_name}</i>&nbsp;&nbsp;"
-                      f"Metadata Group: <i style=\"color:Crimson\">{group}</i>&nbsp;&nbsp;"
-                      f"Metadata Name: <i style=\"color:Crimson\">{metadata_name}</i></li>")
-    message += "</ul>"
+  message = get_missing_required_metadata_formatted_message(message, types_with_missing_metadata)
+  message = get_duplicate_metadata_formatted_message(message, types_with_duplicate_metadata)
+  message = get_empty_metadata_name_formatted_message(message, types_with_null_name_metadata)
+  message += "</html>"
+  return message
+
+
+def get_empty_metadata_name_formatted_message(message, types_with_null_name_metadata) -> str:
   if types_with_null_name_metadata:
     message += "<b>Missing metadata names:</b><ul>"
     for type_name, groups_list in types_with_null_name_metadata.items():
@@ -343,7 +345,32 @@ def get_missing_metadata_message(types_with_missing_metadata: dict[str, dict[str
         message += (f"<li>Type: <i style=\"color:Crimson\">{type_name}</i>&nbsp;&nbsp;"
                     f"Metadata Group: <i style=\"color:Crimson\">{group}</i></li>")
     message += "</ul>"
-  message += "</html>"
+  return message
+
+
+def get_missing_required_metadata_formatted_message(message, types_with_missing_metadata) -> str:
+  if types_with_missing_metadata:
+    message += "<b>Missing required metadata: </b><ul>"
+    for type_name, groups in types_with_missing_metadata.items():
+      for group, metadata in groups.items():
+        for metadata_name in metadata:
+          message += (f"<li>Type: <i style=\"color:Crimson\">{type_name}</i>&nbsp;&nbsp;"
+                      f"Metadata Group: <i style=\"color:Crimson\">{group}</i>&nbsp;&nbsp;"
+                      f"Metadata Name: <i style=\"color:Crimson\">{metadata_name}</i></li>")
+    message += "</ul>"
+  return message
+
+
+def get_duplicate_metadata_formatted_message(message, types_with_duplicate_metadata) -> str:
+  if types_with_duplicate_metadata:
+    message += "<b>Duplicate metadata found: </b><ul>"
+    for type_name, duplicate in types_with_duplicate_metadata.items():
+      for metadata_name, groups in duplicate.items():
+        for group in groups:
+          message += (f"<li>Type: <i style=\"color:Crimson\">{type_name}</i>&nbsp;&nbsp;"
+                      f"Metadata Group: <i style=\"color:Crimson\">{group}</i>&nbsp;&nbsp;"
+                      f"Metadata Name: <i style=\"color:Crimson\">{metadata_name}</i></li>")
+    message += "</ul>"
   return message
 
 

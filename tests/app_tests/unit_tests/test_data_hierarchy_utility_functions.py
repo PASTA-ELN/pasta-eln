@@ -573,7 +573,6 @@ class TestDataHierarchyUtilityFunctions(object):
     assert set_types_without_name_in_metadata(type_name, type_value, types_with_null_name_metadata) is None
     assert types_with_null_name_metadata == expected_result, "set_types_without_name_in_metadata should return expected result"
 
-
   @pytest.mark.parametrize("type_name, type_value, expected_result", [
     (None, {}, {}),
     ("Structure Level 0",
@@ -631,13 +630,48 @@ class TestDataHierarchyUtilityFunctions(object):
              {'name': '-name', 'query': 'What is the name of task?'},
              {'name': None, 'query': 'What is the name of task?'},
              {'name': '-tags', 'query': 'What is the name of task?'}],
-           None: [
+           'test': [
              {'name': '', 'query': 'What is the name of task?'},
              {'name': None, 'query': 'What is the name of task?'},
              {'name': '-tags', 'query': 'What is the name of task?'}],
          }
      },
-     {'test1': {'-tags': ['default', None]}})
+     {'test1': {'-tags': ['default', 'test']}}),
+    ("test2",
+     {
+       'meta':
+         {
+           'default': [
+             {'name': '-name', 'query': 'What is the name of task?'},
+             {'name': 'duplicate1', 'query': 'What is the name of task?'},
+             {'name': 'duplicate3', 'query': 'What is the name of task?'},
+             {'name': 'duplicate2', 'query': 'What is the name of task?'},
+             {'name': '-tags', 'query': 'What is the name of task?'}],
+           'group1': [
+             {'name': '', 'query': 'What is the name of task?'},
+             {'name': 'duplicate1', 'query': 'What is the name of task?'},
+             {'name': '-tags', 'query': 'What is the name of task?'}],
+           'group2': [
+             {'name': '', 'query': 'What is the name of task?'},
+             {'name': 'duplicate1', 'query': 'What is the name of task?'},
+             {'name': 'duplicate2', 'query': 'What is the name of task?'},
+             {'name': '-tags', 'query': 'What is the name of task?'}],
+           'group3': [
+             {'name': '', 'query': 'What is the name of task?'},
+             {'name': 'duplicate1', 'query': 'What is the name of task?'},
+             {'name': 'duplicate2', 'query': 'What is the name of task?'},
+             {'name': 'duplicate3', 'query': 'What is the name of task?'},
+             {'name': '-tags', 'query': 'What is the name of task?'}],
+           'group4': [
+             {'name': '', 'query': 'What is the name of task?'},
+             {'name': 'duplicate3', 'query': 'What is the name of task?'}]
+         }
+     },
+     {'test2': {
+       '-tags': ['group2', 'group3', 'default', 'group1'],
+       'duplicate1': ['group2', 'group3', 'default', 'group1'],
+       'duplicate2': ['group2', 'group3', 'default'],
+       'duplicate3': ['group3', 'default', 'group4']}})
   ])
   def test_set_types_with_duplicate_metadata_returns_expected_result(self, type_name, type_value, expected_result):
     types_with_duplicate_metadata = {}
@@ -653,30 +687,36 @@ class TestDataHierarchyUtilityFunctions(object):
         assert sorted(g1) == sorted(g2), "check_data_hierarchy_document returned types_with_duplicate_metadata mismatch"
 
   def test_check_data_hierarchy_document_with_null_doc_returns_empty_tuple(self):
-    assert check_data_hierarchy_types(None) == ({}, {}), "check_data_hierarchy_document should return empty tuple"
+    assert check_data_hierarchy_types(None) == ({}, {}, {}), "check_data_hierarchy_document should return empty tuple"
 
-  @pytest.mark.parametrize("missing_metadata, missing_names, expected_message", [
-    ({}, {}, ""),
+  @pytest.mark.parametrize("missing_metadata, missing_names, duplicate_metadata, expected_message", [
+    ({}, {}, {}, ""),
     ({'Structure level 0': {'metadata_group1': ['-name', '-tags'], 'default': ['-name', '-tags']},
       'Structure level 1': {'metadata_group2': ['-name', '-tags'], 'default': ['-name', '-tags']}},
      {'Structure level 0': ['default', 'metadata_group1'],
       'Structure level 1': ['default', 'metadata_group2']},
+     {},
      "<html><b>Missing mandatory metadata: </b><ul><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">metadata_group1</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">metadata_group1</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-tags</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-tags</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">metadata_group2</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">metadata_group2</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-tags</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-tags</i></li></ul><b>Missing metadata names:</b><ul><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">metadata_group1</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">metadata_group2</i></li></ul></html>"),
     ({'Structure level 0': {'metadata_group1': ['-name', '-tags'], 'default': ['-name', '-tags']},
       'Structure level 1': {'metadata_group2': ['-name', '-tags'], 'default': ['-name', '-tags']}},
+     {},
      {},
      "<html><b>Missing mandatory metadata: </b><ul><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">metadata_group1</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">metadata_group1</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-tags</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-tags</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">metadata_group2</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">metadata_group2</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-tags</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-tags</i></li></ul></html>"),
     ({},
      {'Structure level 0': ['default', 'metadata_group1'],
       'Structure level 1': ['default', 'metadata_group2']},
+     {},
      "<html><b>Missing metadata names:</b><ul><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">metadata_group1</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">metadata_group2</i></li></ul></html>")
   ])
   def test_get_formatted_missing_metadata_message_returns_expected_message(self,
                                                                            missing_metadata,
                                                                            missing_names,
-                                                                           expected_message):
+                                                                           expected_message,
+                                                                           duplicate_metadata):
     assert get_missing_metadata_message(
-      missing_metadata, missing_names) == expected_message, "get_missing_metadata_message should return expected"
+      missing_metadata,
+      missing_names,
+      duplicate_metadata) == expected_message, "get_missing_metadata_message should return expected"
 
   @pytest.mark.parametrize("existing_types, selected_type, expected_result", [
     (["x0", "x1", "x3", "samples", "instruments"], "test", True),

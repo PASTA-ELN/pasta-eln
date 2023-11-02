@@ -19,23 +19,24 @@ from PySide6.QtCore import QObject, Signal, Slot
 from PySide6.QtWidgets import QApplication, QLineEdit, QMessageBox
 from cloudant.document import Document
 
-from .create_type_dialog import CreateTypeDialog
 from .attachments_tableview_data_model import AttachmentsTableViewModel
-from .generic_exception import GenericException
-from .key_not_found_exception import \
-  KeyNotFoundException
-from .data_hierarchy_editor_dialog_base import Ui_DataHierarchyEditorDialogBase
 from .constants import ATTACHMENT_TABLE_DELETE_COLUMN_INDEX, \
   ATTACHMENT_TABLE_REORDER_COLUMN_INDEX, DATA_HIERARCHY_HELP_PAGE_URL, METADATA_TABLE_DELETE_COLUMN_INDEX, \
   METADATA_TABLE_IRI_COLUMN_INDEX, METADATA_TABLE_REORDER_COLUMN_INDEX, METADATA_TABLE_REQUIRED_COLUMN_INDEX
+from .create_type_dialog import CreateTypeDialog
+from .data_hierarchy_editor_dialog_base import Ui_DataHierarchyEditorDialogBase
+from .delete_column_delegate import DeleteColumnDelegate
 from .document_null_exception import DocumentNullException
+from .generic_exception import GenericException
+from .iri_column_delegate import IriColumnDelegate
+from .key_not_found_exception import \
+  KeyNotFoundException
+from .lookup_iri_action import LookupIriAction
+from .mandatory_column_delegate import MandatoryColumnDelegate
 from .metadata_tableview_data_model import MetadataTableViewModel
 from .reorder_column_delegate import ReorderColumnDelegate
-from .mandatory_column_delegate import MandatoryColumnDelegate
-from .delete_column_delegate import DeleteColumnDelegate
-from .iri_column_delegate import IriColumnDelegate
-from .lookup_iri_action import LookupIriAction
-from .utility_functions import adapt_type, adjust_data_hierarchy_data_to_v3, can_delete_type, check_data_hierarchy_types, \
+from .utility_functions import adapt_type, adjust_data_hierarchy_data_to_v3, can_delete_type, \
+  check_data_hierarchy_types, \
   generate_empty_type, \
   generate_required_metadata, get_missing_metadata_message, get_next_possible_structural_level_title, \
   get_types_for_display, show_message
@@ -154,7 +155,7 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
     if new_type_selected and self.data_hierarchy_types:
       if new_type_selected not in self.data_hierarchy_types:
         raise KeyNotFoundException(f"Key {new_type_selected} "
-                                                 f"not found in data_hierarchy_types", {})
+                                   f"not found in data_hierarchy_types", {})
       selected_type = self.data_hierarchy_types.get(new_type_selected)
       # Get the metadata for the selected type and store the list in selected_type_metadata
       self.selected_type_metadata = selected_type.get("meta")
@@ -246,7 +247,7 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
     return None
 
   def update_type_displayed_title(self,
-                        modified_type_displayed_title: str) -> None:
+                                  modified_type_displayed_title: str) -> None:
     """
     Value changed callback for the type displayed title line edit
 
@@ -413,9 +414,12 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
     Save the modified data hierarchy document data in database
     """
     self.logger.info("User clicked the save button..")
-    types_with_missing_metadata, types_with_null_name_metadata = check_data_hierarchy_types(self.data_hierarchy_types)
+    types_with_missing_metadata, types_with_null_name_metadata, types_with_duplicate_metadata \
+      = check_data_hierarchy_types(self.data_hierarchy_types)
     if types_with_missing_metadata or types_with_null_name_metadata:
-      message = get_missing_metadata_message(types_with_missing_metadata, types_with_null_name_metadata)
+      message = get_missing_metadata_message(types_with_missing_metadata,
+                                             types_with_null_name_metadata,
+                                             types_with_duplicate_metadata)
       show_message(message, QMessageBox.Warning)
       self.logger.warning(message)
       return
@@ -455,8 +459,9 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
       self.logger.error("Null data_hierarchy_document/data_hierarchy_types, erroneous app state")
       raise GenericException("Null data_hierarchy_document/data_hierarchy_types, erroneous app state", {})
     if title in self.data_hierarchy_types:
-      show_message(f"Type (title: {title} displayed title: {displayed_title}) cannot be added since it exists in DB already....",
-                   QMessageBox.Warning)
+      show_message(
+        f"Type (title: {title} displayed title: {displayed_title}) cannot be added since it exists in DB already....",
+        QMessageBox.Warning)
     else:
       if not title:
         self.logger.warning("Enter non-null/valid title!!.....")

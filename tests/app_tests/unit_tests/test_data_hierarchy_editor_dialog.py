@@ -11,18 +11,18 @@ import pytest
 from PySide6 import QtWidgets
 from PySide6.QtWidgets import QApplication, QDialog, QLineEdit, QMessageBox
 
-from pasta_eln.GUI.data_hierarchy.create_type_dialog import CreateTypeDialog
-from pasta_eln.GUI.data_hierarchy.delete_column_delegate import DeleteColumnDelegate
-from pasta_eln.GUI.data_hierarchy.generic_exception import GenericException
-from pasta_eln.GUI.data_hierarchy.key_not_found_exception import \
-  KeyNotFoundException
 from pasta_eln.GUI.data_hierarchy.constants import ATTACHMENT_TABLE_DELETE_COLUMN_INDEX, \
   ATTACHMENT_TABLE_REORDER_COLUMN_INDEX, METADATA_TABLE_DELETE_COLUMN_INDEX, \
   METADATA_TABLE_IRI_COLUMN_INDEX, METADATA_TABLE_REORDER_COLUMN_INDEX, METADATA_TABLE_REQUIRED_COLUMN_INDEX
+from pasta_eln.GUI.data_hierarchy.create_type_dialog import CreateTypeDialog
 from pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog import DataHierarchyEditorDialog, get_gui
+from pasta_eln.GUI.data_hierarchy.delete_column_delegate import DeleteColumnDelegate
 from pasta_eln.GUI.data_hierarchy.document_null_exception import DocumentNullException
-from pasta_eln.GUI.data_hierarchy.reorder_column_delegate import ReorderColumnDelegate
+from pasta_eln.GUI.data_hierarchy.generic_exception import GenericException
+from pasta_eln.GUI.data_hierarchy.key_not_found_exception import \
+  KeyNotFoundException
 from pasta_eln.GUI.data_hierarchy.mandatory_column_delegate import MandatoryColumnDelegate
+from pasta_eln.GUI.data_hierarchy.reorder_column_delegate import ReorderColumnDelegate
 from pasta_eln.GUI.data_hierarchy.utility_functions import generate_empty_type, generate_required_metadata, \
   get_types_for_display
 from tests.app_tests.common.fixtures import configuration_extended, data_hierarchy_doc_mock
@@ -94,7 +94,8 @@ class TestDataHierarchyEditorDialog(object):
     mocker.patch.object(DataHierarchyEditorDialog, 'delete_column_delegate_attach_table', create=True)
     mocker.patch.object(DataHierarchyEditorDialog, 'reorder_column_delegate_attach_table', create=True)
     mock_setup_slots = mocker.patch.object(DataHierarchyEditorDialog, 'setup_slots', create=True)
-    mock_load_data_hierarchy_data = mocker.patch.object(DataHierarchyEditorDialog, 'load_data_hierarchy_data', create=True)
+    mock_load_data_hierarchy_data = mocker.patch.object(DataHierarchyEditorDialog, 'load_data_hierarchy_data',
+                                                        create=True)
     mocker.patch.object(CreateTypeDialog, '__new__')
     config_instance = DataHierarchyEditorDialog(mock_database)
     assert config_instance, "DataHierarchyEditorDialog should be created"
@@ -277,8 +278,9 @@ class TestDataHierarchyEditorDialog(object):
     set_text_displayed_title_line_edit_spy = mocker.spy(configuration_extended.typeDisplayedTitleLineEdit, 'setText')
     set_text_iri_line_edit_spy = mocker.spy(configuration_extended.typeIriLineEdit, 'setText')
     set_current_index_metadata_group_combo_box_spy = mocker.spy(configuration_extended.metadataGroupComboBox,
-                                                          'setCurrentIndex')
-    clear_add_metadata_metadata_group_line_edit_spy = mocker.spy(configuration_extended.addMetadataGroupLineEdit, 'clear')
+                                                                'setCurrentIndex')
+    clear_add_metadata_metadata_group_line_edit_spy = mocker.spy(configuration_extended.addMetadataGroupLineEdit,
+                                                                 'clear')
     clear_metadata_group_combo_box_spy = mocker.spy(configuration_extended.metadataGroupComboBox, 'clear')
     add_items_metadata_group_combo_box_spy = mocker.spy(configuration_extended.metadataGroupComboBox, 'addItems')
     update_attachment_table_model_spy = mocker.spy(configuration_extended.attachments_table_data_model, 'update')
@@ -296,7 +298,8 @@ class TestDataHierarchyEditorDialog(object):
       mock_signal.emit.assert_called_once_with(new_type_selected)
       logger_info_spy.assert_called_once_with("New type selected in UI: {%s}", new_type_selected)
       clear_add_metadata_metadata_group_line_edit_spy.assert_called_once_with()
-      set_text_displayed_title_line_edit_spy.assert_called_once_with(mock_data_hierarchy_types.get(new_type_selected).get('displayedTitle'))
+      set_text_displayed_title_line_edit_spy.assert_called_once_with(
+        mock_data_hierarchy_types.get(new_type_selected).get('displayedTitle'))
       set_text_iri_line_edit_spy.assert_called_once_with(mock_data_hierarchy_types.get(new_type_selected).get('IRI'))
       set_current_index_metadata_group_combo_box_spy.assert_called_once_with(0)
       clear_metadata_group_combo_box_spy.assert_called_once_with()
@@ -320,10 +323,10 @@ class TestDataHierarchyEditorDialog(object):
     ("metadata group3", {"default": [], "metadata group1": [], "metadata group2": []}),
   ])
   def test_type_metadata_group_combo_box_changed_should_do_expected(self,
-                                                              mocker,
-                                                              configuration_extended: configuration_extended,
-                                                              new_selected_metadata_group,
-                                                              selected_type_metadata):
+                                                                    mocker,
+                                                                    configuration_extended: configuration_extended,
+                                                                    new_selected_metadata_group,
+                                                                    selected_type_metadata):
     logger_info_spy = mocker.spy(configuration_extended.logger, 'info')
     mocker.patch.object(configuration_extended, 'selected_type_metadata', selected_type_metadata, create=True)
     mocker.patch.object(configuration_extended, 'metadata_table_data_model', create=True)
@@ -343,9 +346,12 @@ class TestDataHierarchyEditorDialog(object):
     ("default", {0: "x0"}, {"default": [], "metadata group1": [], "metadata group2": []}),
     ("metadata group1", {0: "x0"}, {"default": [], "metadata group1": [], "metadata group2": []}),
     ("metadata group2", {0: "x0"}, {"default": [], "metadata group1": [], "metadata group2": []}),
-    ("metadata group2", {0: "x0"}, {"default": [], "metadata group1": [{"name": "key", "value": "value"}], "metadata group2": []}),
-    ("metadata group1", {0: "x0"}, {"default": [], "metadata group1": [{"name": None, "value": None}], "metadata group2": None}),
-    ("metadata group2", {0: "x0"}, {"default": [], "metadata group1": [{"name": None, "value": None}], "metadata group2": None}),
+    ("metadata group2", {0: "x0"},
+     {"default": [], "metadata group1": [{"name": "key", "value": "value"}], "metadata group2": []}),
+    ("metadata group1", {0: "x0"},
+     {"default": [], "metadata group1": [{"name": None, "value": None}], "metadata group2": None}),
+    ("metadata group2", {0: "x0"},
+     {"default": [], "metadata group1": [{"name": None, "value": None}], "metadata group2": None}),
     ("metadata group3", {0: "x0"}, {"default": [], "metadata group1": [], "metadata group2": []}),
   ])
   def test_add_new_metadata_group_should_do_expected(self,
@@ -363,7 +369,7 @@ class TestDataHierarchyEditorDialog(object):
     add_items_selected_spy = mocker.spy(configuration_extended.metadataGroupComboBox, 'addItems')
     clear_metadata_group_combo_box_spy = mocker.spy(configuration_extended.metadataGroupComboBox, 'clear')
     set_current_index_metadata_group_combo_box_spy = mocker.spy(configuration_extended.metadataGroupComboBox,
-                                                          'setCurrentIndex')
+                                                                'setCurrentIndex')
     mocker.patch.object(configuration_extended, 'selected_type_metadata', create=True)
     configuration_extended.selected_type_metadata.__setitem__.side_effect = selected_type_metadata.__setitem__
     configuration_extended.selected_type_metadata.__getitem__.side_effect = selected_type_metadata.__getitem__
@@ -417,18 +423,18 @@ class TestDataHierarchyEditorDialog(object):
     ("metadata group3", {"default": [], "metadata group1": [], "metadata group2": []}),
   ])
   def test_delete_selected_metadata_group_should_do_expected(self,
-                                                       mocker,
-                                                       configuration_extended: configuration_extended,
-                                                       selected_metadata_group,
-                                                       selected_type_metadata):
+                                                             mocker,
+                                                             configuration_extended: configuration_extended,
+                                                             selected_metadata_group,
+                                                             selected_type_metadata):
     logger_info_spy = mocker.spy(configuration_extended.logger, 'info')
     mocker.patch.object(configuration_extended, 'metadataGroupComboBox', create=True)
     current_text_metadata_group_combo_box_spy = mocker.patch.object(configuration_extended.metadataGroupComboBox,
-                                                              'currentText', return_value=selected_metadata_group)
+                                                                    'currentText', return_value=selected_metadata_group)
     add_items_selected_spy = mocker.spy(configuration_extended.metadataGroupComboBox, 'addItems')
     clear_metadata_group_combo_box_spy = mocker.spy(configuration_extended.metadataGroupComboBox, 'clear')
     set_current_index_metadata_group_combo_box_spy = mocker.spy(configuration_extended.metadataGroupComboBox,
-                                                          'setCurrentIndex')
+                                                                'setCurrentIndex')
     mocker.patch.object(configuration_extended, 'selected_type_metadata', create=True)
     mock_show_message = mocker.patch(
       "pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.show_message")
@@ -466,11 +472,11 @@ class TestDataHierarchyEditorDialog(object):
     ("type_new_displayed_title", "subtask4", {"x0": {"displayedTitle": "x0"}, "subtask5": {"displayedTitle": "x1"}}),
   ])
   def test_update_structure_displayed_title_should_do_expected(self,
-                                                     mocker,
-                                                     configuration_extended: configuration_extended,
-                                                     modified_type_displayed_title,
-                                                     current_type,
-                                                     data_hierarchy_types):
+                                                               mocker,
+                                                               configuration_extended: configuration_extended,
+                                                               modified_type_displayed_title,
+                                                               current_type,
+                                                               data_hierarchy_types):
     mocker.patch.object(configuration_extended, 'typeComboBox', create=True)
     mocker.patch.object(configuration_extended, 'set_iri_lookup_action', create=True)
     mocker.patch.object(configuration_extended.typeComboBox, 'currentText', return_value=current_type)
@@ -487,7 +493,8 @@ class TestDataHierarchyEditorDialog(object):
     get_data_hierarchy_types_spy = mocker.spy(configuration_extended.data_hierarchy_types, 'get')
 
     if modified_type_displayed_title:
-      assert configuration_extended.update_type_displayed_title(modified_type_displayed_title) is None, "Nothing should be returned"
+      assert configuration_extended.update_type_displayed_title(
+        modified_type_displayed_title) is None, "Nothing should be returned"
       if data_hierarchy_types is not None and current_type in data_hierarchy_types:
         get_data_hierarchy_types_spy.assert_called_once_with(current_type)
         assert data_hierarchy_types[current_type]["displayedTitle"] == modified_type_displayed_title
@@ -627,11 +634,13 @@ class TestDataHierarchyEditorDialog(object):
     mocker.patch.object(mock_check_box, 'isChecked', return_value=is_structure_level, create=True)
     mocker.patch.object(configuration_extended.create_type_dialog.titleLineEdit, 'text', return_value=new_title)
     mocker.patch.object(configuration_extended.create_type_dialog, 'displayedTitleLineEdit', create=True)
-    mocker.patch.object(configuration_extended.create_type_dialog.displayedTitleLineEdit, 'text', return_value=new_displayed_title)
+    mocker.patch.object(configuration_extended.create_type_dialog.displayedTitleLineEdit, 'text',
+                        return_value=new_displayed_title)
     clear_ui_spy = mocker.patch.object(configuration_extended.create_type_dialog, 'clear_ui', create=True)
     create_new_type_spy = mocker.patch.object(configuration_extended, 'create_new_type', create=True)
     text_title_line_edit_text_spy = mocker.spy(configuration_extended.create_type_dialog.titleLineEdit, 'text')
-    text_displayed_title_line_edit_text_spy = mocker.spy(configuration_extended.create_type_dialog.displayedTitleLineEdit, 'text')
+    text_displayed_title_line_edit_text_spy = mocker.spy(
+      configuration_extended.create_type_dialog.displayedTitleLineEdit, 'text')
 
     assert configuration_extended.create_type_accepted_callback() is None, "Nothing should be returned"
     if not is_structure_level:
@@ -745,10 +754,10 @@ class TestDataHierarchyEditorDialog(object):
     {"test": ["test1", "test2", "test3"]}
   ])
   def test_load_data_hierarchy_data_should_with_variant_types_of_doc_should_do_expected(self,
-                                                                                  mocker,
-                                                                                  data_hierarchy_document,
-                                                                                  configuration_extended: configuration_extended,
-                                                                                  request):
+                                                                                        mocker,
+                                                                                        data_hierarchy_document,
+                                                                                        configuration_extended: configuration_extended,
+                                                                                        request):
     doc = request.getfixturevalue(data_hierarchy_document) \
       if data_hierarchy_document and type(data_hierarchy_document) is str \
       else data_hierarchy_document
@@ -775,10 +784,10 @@ class TestDataHierarchyEditorDialog(object):
                             {"test": ["test1", "test2", "test3"]}
                             ])
   def test_save_data_hierarchy_should_do_expected(self,
-                                            mocker,
-                                            data_hierarchy_document,
-                                            configuration_extended: configuration_extended,
-                                            request):
+                                                  mocker,
+                                                  data_hierarchy_document,
+                                                  configuration_extended: configuration_extended,
+                                                  request):
     doc = request.getfixturevalue(data_hierarchy_document) \
       if data_hierarchy_document and type(data_hierarchy_document) is str \
       else data_hierarchy_document
@@ -799,7 +808,7 @@ class TestDataHierarchyEditorDialog(object):
       'pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.isinstance')
     mock_check_data_hierarchy_types = mocker.patch(
       'pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.check_data_hierarchy_types',
-      return_value=(None, None))
+      return_value=(None, None, None))
     mock_db_init_views = mocker.patch.object(configuration_extended.database,
                                              'initDocTypeViews', return_value=None)
     assert configuration_extended.save_data_hierarchy() is None, "Nothing should be returned"
@@ -811,16 +820,16 @@ class TestDataHierarchyEditorDialog(object):
           configuration_extended.data_hierarchy_document.__delitem__.assert_any_call(item)
       for item in configuration_extended.data_hierarchy_types:
         configuration_extended.data_hierarchy_document.__setitem__.assert_any_call(item,
-                                                                             configuration_extended.data_hierarchy_types[
-                                                                               item])
+                                                                                   configuration_extended.data_hierarchy_types[
+                                                                                     item])
     mock_check_data_hierarchy_types.assert_called_once_with(configuration_extended.data_hierarchy_types)
     configuration_extended.logger.info.assert_called_once_with("User clicked the save button..")
     configuration_extended.data_hierarchy_document.save.assert_called_once()
     mock_db_init_views.assert_called_once_with(16)
     mock_show_message.assert_called_once_with('Save will close the tool and restart the Pasta Application (Yes/No?)',
-                                               QMessageBox.Question,
-                                               QMessageBox.No | QMessageBox.Yes,
-                                               QMessageBox.Yes)
+                                              QMessageBox.Question,
+                                              QMessageBox.No | QMessageBox.Yes,
+                                              QMessageBox.Yes)
 
   @pytest.mark.parametrize("data_hierarchy_document",
                            [None,
@@ -829,10 +838,10 @@ class TestDataHierarchyEditorDialog(object):
                             {"test": ["test1", "test2", "test3"]}
                             ])
   def test_cancel_save_data_hierarchy_should_do_expected(self,
-                                            mocker,
-                                            data_hierarchy_document,
-                                            configuration_extended: configuration_extended,
-                                            request):
+                                                         mocker,
+                                                         data_hierarchy_document,
+                                                         configuration_extended: configuration_extended,
+                                                         request):
     doc = request.getfixturevalue(data_hierarchy_document) \
       if data_hierarchy_document and type(data_hierarchy_document) is str \
       else data_hierarchy_document
@@ -853,7 +862,7 @@ class TestDataHierarchyEditorDialog(object):
       'pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.isinstance')
     mock_check_data_hierarchy_types = mocker.patch(
       'pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.check_data_hierarchy_types',
-      return_value=(None, None))
+      return_value=(None, None, None))
     mock_db_init_views = mocker.patch.object(configuration_extended.database,
                                              'initDocTypeViews', return_value=None)
     assert configuration_extended.save_data_hierarchy() is None, "Nothing should be returned"
@@ -870,14 +879,14 @@ class TestDataHierarchyEditorDialog(object):
     configuration_extended.data_hierarchy_document.save.assert_not_called()
     mock_db_init_views.assert_not_called()
     mock_show_message.assert_called_once_with('Save will close the tool and restart the Pasta Application (Yes/No?)',
-                                               QMessageBox.Question,
-                                               QMessageBox.No | QMessageBox.Yes,
-                                               QMessageBox.Yes)
+                                              QMessageBox.Question,
+                                              QMessageBox.No | QMessageBox.Yes,
+                                              QMessageBox.Yes)
 
   def test_save_data_hierarchy_with_missing_metadata_should_skip_save_and_show_message(self,
-                                                                                   mocker,
-                                                                                   data_hierarchy_doc_mock,
-                                                                                   configuration_extended: configuration_extended):
+                                                                                       mocker,
+                                                                                       data_hierarchy_doc_mock,
+                                                                                       configuration_extended: configuration_extended):
     mocker.patch.object(configuration_extended, 'data_hierarchy_types', create=True)
     configuration_extended.data_hierarchy_document.__setitem__.side_effect = data_hierarchy_doc_mock.__setitem__
     configuration_extended.data_hierarchy_document.__getitem__.side_effect = data_hierarchy_doc_mock.__getitem__
@@ -889,14 +898,23 @@ class TestDataHierarchyEditorDialog(object):
     mock_show_message = mocker.patch(
       'pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.show_message')
     missing_metadata = ({
-                       'Structure level 0': {'metadata group1': ['-tags']},
-                       'Structure level 1': {'default': ['-tags']},
-                       'Structure level 2': {'default': ['-tags']},
-                       'instrument': {'default': ['-tags']}},
-                     {
-                       'Structure level 0': ['metadata group1', '-tags'],
-                       'instrument': ['metadata group1', '-tags']
-                     })
+                          'Structure level 0': {'metadata group1': ['-tags']},
+                          'Structure level 1': {'default': ['-tags']},
+                          'Structure level 2': {'default': ['-tags']},
+                          'instrument': {'default': ['-tags']}
+                        },
+                        {
+                          'Structure level 0': ['metadata group1', '-tags'],
+                          'instrument': ['metadata group1', '-tags']
+                        },
+                        {
+                          'Structure level 2': {
+                            '-tags': ['group2', 'group3', 'default', 'group1'],
+                            'duplicate1': ['group2', 'group3', 'default', 'group1'],
+                            'duplicate2': ['group2', 'group3', 'default'],
+                            'duplicate3': ['group3', 'default', 'group4']
+                          }
+                        })
     mock_check_data_hierarchy_document_types = mocker.patch(
       'pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.check_data_hierarchy_types',
       return_value=missing_metadata)
@@ -961,10 +979,13 @@ class TestDataHierarchyEditorDialog(object):
       if data_hierarchy_document is None or data_hierarchy_types is None:
         with pytest.raises(GenericException,
                            match="Null data_hierarchy_document/data_hierarchy_types, erroneous app state"):
-          assert configuration_extended.create_new_type(new_title, new_displayed_title) is None, "Nothing should be returned"
-          mock_log_error.assert_called_once_with("Null data_hierarchy_document/data_hierarchy_types, erroneous app state")
+          assert configuration_extended.create_new_type(new_title,
+                                                        new_displayed_title) is None, "Nothing should be returned"
+          mock_log_error.assert_called_once_with(
+            "Null data_hierarchy_document/data_hierarchy_types, erroneous app state")
       else:
-        assert configuration_extended.create_new_type(new_title, new_displayed_title) is None, "Nothing should be returned"
+        assert configuration_extended.create_new_type(new_title,
+                                                      new_displayed_title) is None, "Nothing should be returned"
         mock_show_message.assert_called_once_with(f"Type (title: {new_title} "
                                                   f"displayed title: {new_displayed_title}) cannot be added "
                                                   f"since it exists in DB already....", QMessageBox.Warning)
@@ -974,9 +995,11 @@ class TestDataHierarchyEditorDialog(object):
         mock_show_message.assert_called_once_with("Enter non-null/valid title!!.....", QMessageBox.Warning)
         mock_log_warn.assert_called_once_with("Enter non-null/valid title!!.....")
       else:
-        assert configuration_extended.create_new_type(new_title, new_displayed_title) is None, "Nothing should be returned"
+        assert configuration_extended.create_new_type(new_title,
+                                                      new_displayed_title) is None, "Nothing should be returned"
         mock_log_info.assert_called_once_with("User created a new type and added "
-                                              "to the data_hierarchy document: Title: {%s}, Displayed Title: {%s}", new_title,
+                                              "to the data_hierarchy document: Title: {%s}, Displayed Title: {%s}",
+                                              new_title,
                                               new_displayed_title)
 
         (configuration_extended.data_hierarchy_types
