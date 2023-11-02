@@ -118,7 +118,7 @@ class Table(QWidget):
       self.actionChangeColums.setVisible(False)
     else:
       self.addBtn.show()
-      if docType.startswith('x0'):
+      if self.docType.startswith('x0'):
         self.selectionBtn.hide()
         self.toggleHidden.setVisible(False)
       else:
