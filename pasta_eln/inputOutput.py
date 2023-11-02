@@ -179,7 +179,7 @@ def importELN(backend:Backend, elnFileName:str) -> str:
             shutil.copyfileobj(source, target)
       # save
       if elnName == 'PASTA ELN':
-        doc['-user'] = '_'
+        del doc['-user']
         if datasetIsFolder and fullPath is not None:
           fullPath.mkdir(exist_ok=True)
           with open(fullPath/'.id_pastaELN.json', 'w', encoding='utf-8') as fOut:

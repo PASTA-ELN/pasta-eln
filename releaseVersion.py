@@ -2,9 +2,12 @@
 import sys, os, subprocess, shutil, json
 from pathlib import Path
 from unittest import main as mainTest
-import requests
-from requests.structures import CaseInsensitiveDict
 import configparser
+try:
+  import requests
+  from requests.structures import CaseInsensitiveDict
+except:
+  pass
 
 
 def getVersion():
