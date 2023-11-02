@@ -1,4 +1,5 @@
 """ Utility function used by the data hierarchy configuration module """
+import copy
 #  PASTA-ELN and all its sub-parts are covered by the MIT license.
 #
 #  Copyright (c) 2023
@@ -10,7 +11,7 @@
 
 import logging
 import re
-from typing import Any, Tuple
+from typing import Any, Dict, List, Tuple
 
 from PySide6.QtCore import QEvent
 from PySide6.QtGui import QMouseEvent, Qt
@@ -220,44 +221,95 @@ def generate_required_metadata() -> list[dict[str, Any]]:
   ]
 
 
-def check_data_hierarchy_types(data_hierarchy_types: dict[str, Any]) \
-    -> Tuple[dict[str, dict[str, list[str]]], dict[str, list[str]]]:
+def check_data_hierarchy_types(data_hierarchy_types: dict[str, Any]) -> tuple[
+  dict[str, dict[str, list[str]]],
+  dict[str, list[str]],
+  dict[str, dict[str, list[str]]]]:
   """
-  Check the data hierarchy data to see if all the mandatory metadata ["-name", "-tags"]
-  are present under all groups and also if all the metadata have a name
+  Check the data hierarchy types to see:
+    1. If all the required metadata ["-name", "-tags"] present in default-group
+    2. If all the meta-data have name property
+    3. If all the meta-data are unique across all groups
   Args:
     data_hierarchy_types (dict[str, Any]): Data hierarchy types loaded from the database
 
-  Returns (Tuple[dict[str, dict[str, list[str]]], dict[str, str]]):
-    Empty tuple if all the mandatory metadata present under all groups and all metadata-item have a name
-    otherwise returns a tuple of types with metadata-groups missing mandatory metadata or names
+  Returns (tuple[
+  dict[str, dict[str, list[str]]],
+  dict[str, list[str]],
+  dict[str, dict[str, list[str]]]
+  ]):
+    Empty tuple if all the mandatory metadata present under default group and all meta-data have a name and all meta-data are unique
+    Otherwise returns a tuple containing:
+      1. Types with metadata-groups missing required metadata
+      2. Types with metadata-groups missing names
+      3. Types with duplicate metadata name and list of groups where the name is duplicated
 
   """
   if not data_hierarchy_types:
-    return {}, {}
-  types_with_missing_metadata: dict[str, dict[str, list[str]]] = {}
+    return {}, {}, {}
   types_with_null_name_metadata: dict[str, list[str]] = {}
-  mandatory_metadata = ["-name", "-tags"]
-  for type_name, type_structure in data_hierarchy_types.items():
+  types_with_missing_metadata: dict[str, dict[str, list[str]]] = {}
+  types_with_duplicate_metadata: dict[str, dict[str, list[str]]] = {}
+  for type_name, type_value in data_hierarchy_types.items():
     type_name = type_name.replace("x", "Structure level ") \
       if is_structural_level(type_name) \
       else type_name
-    if type_structure.get("meta"):
-      for group, metadata in type_structure.get("meta").items():
-        names = [item.get("name") for item in metadata]
-        if not all(n and not n.isspace() for n in names):
-          if type_name not in types_with_null_name_metadata:
-            types_with_null_name_metadata[type_name] = []
-          types_with_null_name_metadata[type_name].append(group)
-        for req_metadata in mandatory_metadata:
-          if req_metadata not in names:
-            if type_name not in types_with_missing_metadata:
-              types_with_missing_metadata[type_name] = {}
-            if group not in types_with_missing_metadata[type_name]:
-              types_with_missing_metadata[type_name][group] = []
-            types_with_missing_metadata[type_name][group].append(req_metadata)
-  return types_with_missing_metadata, types_with_null_name_metadata
+    if type_value.get("meta"):
+      # Check if all required meta-data are present in the default metadata group
+      set_types_missing_required_metadata(type_name, type_value, types_with_missing_metadata)
+      # Check if all meta-data have a name
+      set_types_without_name_in_metadata(type_name, type_value, types_with_null_name_metadata)
+      # Check if all meta-data are unique across all groups
+      set_types_with_duplicate_metadata(type_name, type_value, types_with_duplicate_metadata)
+  return types_with_missing_metadata, types_with_null_name_metadata, types_with_duplicate_metadata
 
+
+def set_types_missing_required_metadata(type_name, type_value, types_with_missing_metadata) -> None:
+  if not type_name:
+    return
+  if default_metadata := type_value.get("meta").get("default"):
+    names_in_default_group = [item.get("name") for item in default_metadata]
+    required_metadata = ["-name", "-tags"]
+    for req_metadata in required_metadata:
+      if req_metadata not in names_in_default_group:
+        if type_name not in types_with_missing_metadata:
+          types_with_missing_metadata[type_name] = {}
+        if "default" not in types_with_missing_metadata[type_name]:
+          types_with_missing_metadata[type_name]["default"] = []
+        types_with_missing_metadata[type_name]["default"].append(req_metadata)
+
+
+def set_types_without_name_in_metadata(type_name, type_value, types_with_null_name_metadata) -> None:
+  if not type_name:
+    return
+  for group, metadata in type_value.get("meta").items():
+    if metadata:
+      names = [item.get("name") for item in metadata]
+      if not all(name and not name.isspace() for name in names):
+        if type_name not in types_with_null_name_metadata:
+          types_with_null_name_metadata[type_name] = []
+        types_with_null_name_metadata[type_name].append(group)
+
+
+def set_types_with_duplicate_metadata(type_name, type_value, types_with_duplicate_metadata) -> None:
+  if not type_name:
+    return
+  metadata_copy = copy.deepcopy(type_value.get("meta"))
+  for group, metadata in type_value.get("meta").items():
+    metadata_copy.pop(group)
+    for neighbour_group, neighbour_metadata in metadata_copy.items():
+      # Get all duplicate names filtering the empty strings
+      duplicates = filter(None, {item.get("name") for item in metadata}.intersection(
+        [item.get("name") for item in neighbour_metadata]))
+      for name in duplicates:
+        if type_name not in types_with_duplicate_metadata:
+          types_with_duplicate_metadata[type_name] = {}
+        if name not in types_with_duplicate_metadata[type_name]:
+          types_with_duplicate_metadata[type_name][name] = []
+        types_with_duplicate_metadata[type_name][name].extend([group, neighbour_group])
+        # Remove duplicates if any exists
+        types_with_duplicate_metadata[type_name][name] \
+          = list(set(types_with_duplicate_metadata[type_name][name]))
 
 def get_missing_metadata_message(types_with_missing_metadata: dict[str, dict[str, list[str]]],
                                  types_with_null_name_metadata: dict[str, list[str]]) -> str:

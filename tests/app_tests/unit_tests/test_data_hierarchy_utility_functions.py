@@ -17,7 +17,9 @@ from cloudant import CouchDB
 
 from pasta_eln.GUI.data_hierarchy.utility_functions import adjust_data_hierarchy_data_to_v3, can_delete_type, \
   check_data_hierarchy_types, \
-  get_db, get_missing_metadata_message, get_next_possible_structural_level_title, is_click_within_bounds, show_message
+  get_db, get_missing_metadata_message, get_next_possible_structural_level_title, is_click_within_bounds, \
+  set_types_missing_required_metadata, set_types_with_duplicate_metadata, set_types_without_name_in_metadata, \
+  show_message
 
 
 class TestDataHierarchyUtilityFunctions(object):
@@ -77,7 +79,7 @@ class TestDataHierarchyUtilityFunctions(object):
     assert mock_q_style_option_view_item.rect.height.call_count == 0, "QStyleOptionViewItem top call count must be zero"
 
   def test_adjust_data_hierarchy_data_to_v3_when_empty_document_do_nothing(self,
-                                                                     mocker):
+                                                                           mocker):
     contents = {"-version": 2}
     mock_doc = self.create_mock_doc(contents, mocker)
     assert adjust_data_hierarchy_data_to_v3(mock_doc) is None, "adjust_data_hierarchy_data_to_v3 should return None"
@@ -111,7 +113,7 @@ class TestDataHierarchyUtilityFunctions(object):
     })
   ])
   def test_adjust_data_hierarchy_data_to_v3_when_v2document_given_do_expected(self,
-                                                                        contents):
+                                                                              contents):
     assert adjust_data_hierarchy_data_to_v3(contents) is None, "adjust_data_hierarchy_data_to_v3 should return None"
     if "x0" in contents:
       assert "attachments" in contents["x0"], "attachments should be set"
@@ -153,9 +155,9 @@ class TestDataHierarchyUtilityFunctions(object):
     (["a"], "x0")
   ])
   def test_get_next_possible_structural_level_displayed_title_when_valid_list_arg_returns_right_result(self,
-                                                                                             mocker,
-                                                                                             existing_list,
-                                                                                             expected_next_level):
+                                                                                                       mocker,
+                                                                                                       existing_list,
+                                                                                                       expected_next_level):
     assert get_next_possible_structural_level_title(
       existing_list) == expected_next_level, "get_next_possible_structural_level_displayed_title should return as expected"
 
@@ -235,7 +237,7 @@ class TestDataHierarchyUtilityFunctions(object):
     mock_msg_box.setIcon.assert_called_once_with(QMessageBox.Warning)
 
   @pytest.mark.parametrize("data_hierarchy_types, expected_result", [
-    ({}, ({}, {})),
+    ({}, ({}, {}, {})),
     ({
        "x0": {
          "meta": {
@@ -262,9 +264,13 @@ class TestDataHierarchyUtilityFunctions(object):
          }
        }
      },
-     ({'Structure level 0': {'metadata_group1': ['-name', '-tags'], 'default': ['-name', '-tags']},
-       'Structure level 1': {'metadata_group2': ['-name', '-tags'], 'default': ['-name', '-tags']}},
-      {}
+     ({'Structure level 0': {'default': ['-name', '-tags']},
+       'Structure level 1': {'default': ['-name', '-tags']}},
+      {},
+      {'Structure level 0': {'name': ['default', 'metadata_group1'],
+                             'tags': ['default', 'metadata_group1']},
+       'Structure level 1': {'name': ['default', 'metadata_group2'],
+                             'tags': ['default', 'metadata_group2']}}
       )),
     ({
        "x0": {
@@ -300,10 +306,15 @@ class TestDataHierarchyUtilityFunctions(object):
          }
        }
      },
-     ({'Structure level 0': {'metadata_group1': ['-tags'], 'default': ['-name']},
-       'Structure level 1': {'metadata_group2': ['-name'], 'metadata_group3': ['-name']}},
+     ({'Structure level 0': {'default': ['-name']}},
       {'Structure level 0': ['default', 'metadata_group1'],
-       'Structure level 1': ['metadata_group3']})),
+       'Structure level 1': ['metadata_group3']},
+
+      {'Structure level 1': {'-tags': ['default',
+                                       'metadata_group2',
+                                       'metadata_group3'],
+                             'name': ['metadata_group2', 'metadata_group3']}}
+      )),
     ({
        "x0": {
          "meta": {
@@ -331,7 +342,11 @@ class TestDataHierarchyUtilityFunctions(object):
          }
        }
      },
-     ({'Structure level 0': {'metadata_group2': ['-name', '-tags']}}, {})),
+     ({},
+      {},
+      {'Structure level 0': {'-name': ['default', 'metadata_group1'], '-tags': ['default', 'metadata_group1']},
+       'Structure level 1': {'-name': ['default', 'metadata_group2'], '-tags': ['default', 'metadata_group2']}}
+      )),
 
     ({
        "x0": {
@@ -366,7 +381,10 @@ class TestDataHierarchyUtilityFunctions(object):
      },
      ({},
       {'Structure level 0': ['default', 'metadata_group1'],
-       'Structure level 1': ['default', 'metadata_group2']})),
+       'Structure level 1': ['default', 'metadata_group2']},
+      {'Structure level 0': {'-name': ['default', 'metadata_group1'], '-tags': ['default', 'metadata_group1']},
+       'Structure level 1': {'-name': ['default', 'metadata_group2'], '-tags': ['default', 'metadata_group2']}}
+      )),
     ({
        "x0": {
        },
@@ -392,7 +410,8 @@ class TestDataHierarchyUtilityFunctions(object):
        }
      },
      ({'Structure level 1': {'default': ['-name']}, 'test': {'default': ['-tags']}},
-      {'test': ['default']})),
+      {'test': ['default']},
+      {'Structure level 1': {'-tags': ['default', 'metadata_group2']}})),
     ({
        "x0": {
        },
@@ -420,12 +439,218 @@ class TestDataHierarchyUtilityFunctions(object):
        }
      },
      ({'Structure level 1': {'default': ['-name']}, 'test': {'default': ['-tags']}},
-      {'Structure level 1': ['default', 'metadata_group2']}))
+      {'Structure level 1': ['default', 'metadata_group2']},
+      {'Structure level 1': {'-tags': ['default', 'metadata_group2']}})),
   ])
   def test_check_data_hierarchy_document_with_full_and_missing_metadata_returns_expected_result(self,
-                                                                                            data_hierarchy_types,
-                                                                                            expected_result):
-    assert check_data_hierarchy_types(data_hierarchy_types) == expected_result, "show_message should return None"
+                                                                                                data_hierarchy_types,
+                                                                                                expected_result):
+    types_with_missing_metadata, types_with_null_name_metadata, types_with_duplicate_metadata = check_data_hierarchy_types(
+      data_hierarchy_types)
+    assert types_with_missing_metadata == expected_result[
+      0], "check_data_hierarchy_document should return expected types_with_missing_metadata"
+    assert types_with_null_name_metadata == expected_result[
+      1], "check_data_hierarchy_document should return expected types_with_null_name_metadata"
+    assert len(types_with_duplicate_metadata) == len(
+      expected_result[2]), "check_data_hierarchy_document should return expected types_with_duplicate_metadata"
+    for t1, t2 in zip(dict(sorted(types_with_duplicate_metadata.items())).values(),
+                      dict(sorted(expected_result[2].items())).values()):
+      assert len(t1) == len(t2), "check_data_hierarchy_document returned types_with_duplicate_metadata length mismatch"
+      for d1, d2 in zip(sorted(t1.keys()), (t2.keys())):
+        assert d1 == d2, "check_data_hierarchy_document returned types_with_duplicate_metadata mismatch"
+      for g1, g2 in zip(dict(sorted(t1.items())).values(), dict(sorted(t2.items())).values()):
+        assert sorted(g1) == sorted(g2), "check_data_hierarchy_document returned types_with_duplicate_metadata mismatch"
+
+  @pytest.mark.parametrize("type_name, type_value, expected_result", [
+    (None, {}, {}),
+    ("Structure Level 0",
+     {
+       'meta':
+         {
+           'default': [
+             {'name': 'name', 'query': 'What is the name of task?'},
+             {'name': 'tags', 'query': 'What is the name of task?'}],
+           'metadata_group1': [
+             {'name': 'name', 'query': 'What is the name of task?'},
+             {'name': 'tags', 'query': 'What is the name of task?'}
+           ]
+         }
+     },
+     {'Structure Level 0': {'default': ['-name', '-tags']}}),
+    ("test",
+     {'meta': {'default': []}},
+     {}),
+    ("test1",
+     {'meta': {'default': None}},
+     {}),
+    ("Structure Level 0",
+     {
+       'meta':
+         {
+           'default': [
+             {'name': '-name', 'query': 'What is the name of task?'},
+             {'name': '-tags', 'query': 'What is the name of task?'}],
+           'metadata_group1': [
+             {'name': 'name', 'query': 'What is the name of task?'},
+             {'name': 'tags', 'query': 'What is the name of task?'}
+           ]
+         }
+     },
+     {})
+  ])
+  def test_set_types_missing_required_metadata_returns_expected_result(self, type_name, type_value, expected_result):
+    types_with_missing_metadata = {}
+    assert set_types_missing_required_metadata(type_name, type_value, types_with_missing_metadata) is None
+    assert types_with_missing_metadata == expected_result, "set_types_missing_required_metadata should return expected result"
+
+  @pytest.mark.parametrize("type_name, type_value, expected_result", [
+    (None, {}, {}),
+    ("Structure Level 0",
+     {
+       'meta':
+         {
+           'default': [
+             {'name': '', 'query': 'What is the name of task?'},
+             {'name': 'tags', 'query': 'What is the name of task?'}],
+           'metadata_group1': [
+             {'query': 'What is the name of task?'},
+             {'name': 'tags', 'query': 'What is the name of task?'}
+           ]
+         }
+     },
+     {'Structure Level 0': ['default', 'metadata_group1']}),
+    ("test",
+     {'meta': {'default': []}},
+     {}),
+    ("test1",
+     {'meta': {'default': None}},
+     {}),
+    ("Structure Level 0",
+     {
+       'meta':
+         {
+           'default': [
+             {'name': '-name', 'query': 'What is the name of task?'},
+             {'name': None, 'query': 'What is the name of task?'},
+             {'name': '-tags', 'query': 'What is the name of task?'}],
+           'metadata_group1': []
+         }
+     },
+     {'Structure Level 0': ['default']}),
+    ("test",
+     {
+       'meta':
+         {
+           'default': [
+             {'name': '-name', 'query': 'What is the name of task?'},
+             {'name': None, 'query': 'What is the name of task?'},
+             {'name': '-tags', 'query': 'What is the name of task?'}],
+           'metadata_group1': [
+             {'name': '', 'query': 'What is the name of task?'},
+             {'name': None, 'query': 'What is the name of task?'},
+             {'name': '-tags', 'query': 'What is the name of task?'}],
+         }
+     },
+     {'test': ['default', 'metadata_group1']}),
+    ("test1",
+     {
+       'meta':
+         {
+           'default': [
+             {'name': '-name', 'query': 'What is the name of task?'},
+             {'name': None, 'query': 'What is the name of task?'},
+             {'name': '-tags', 'query': 'What is the name of task?'}],
+           None: [
+             {'name': '', 'query': 'What is the name of task?'},
+             {'name': None, 'query': 'What is the name of task?'},
+             {'name': '-tags', 'query': 'What is the name of task?'}],
+         }
+     },
+     {'test1': ['default', None]})
+  ])
+  def test_set_types_without_name_in_metadata_returns_expected_result(self, type_name, type_value, expected_result):
+    types_with_null_name_metadata = {}
+    assert set_types_without_name_in_metadata(type_name, type_value, types_with_null_name_metadata) is None
+    assert types_with_null_name_metadata == expected_result, "set_types_without_name_in_metadata should return expected result"
+
+
+  @pytest.mark.parametrize("type_name, type_value, expected_result", [
+    (None, {}, {}),
+    ("Structure Level 0",
+     {
+       'meta':
+         {
+           'default': [
+             {'name': '', 'query': 'What is the name of task?'},
+             {'name': 'tags', 'query': 'What is the name of task?'}],
+           'metadata_group1': [
+             {'query': 'What is the name of task?'},
+             {'name': 'tags', 'query': 'What is the name of task?'}
+           ]
+         }
+     },
+     {'Structure Level 0': {'tags': ['default', 'metadata_group1']}}),
+    ("test",
+     {'meta': {'default': []}},
+     {}),
+    ("test1",
+     {'meta': {'default': None}},
+     {}),
+    ("Structure Level 0",
+     {
+       'meta':
+         {
+           'default': [
+             {'name': '-name', 'query': 'What is the name of task?'},
+             {'name': None, 'query': 'What is the name of task?'},
+             {'name': '-tags', 'query': 'What is the name of task?'}],
+           'metadata_group1': []
+         }
+     },
+     {}),
+    ("test",
+     {
+       'meta':
+         {
+           'default': [
+             {'name': '-name', 'query': 'What is the name of task?'},
+             {'name': None, 'query': 'What is the name of task?'},
+             {'name': '-tags', 'query': 'What is the name of task?'}],
+           'metadata_group1': [
+             {'name': '', 'query': 'What is the name of task?'},
+             {'name': None, 'query': 'What is the name of task?'},
+             {'name': '-tags', 'query': 'What is the name of task?'}],
+         }
+     },
+     {'test': {'-tags': ['default', 'metadata_group1']}}),
+    ("test1",
+     {
+       'meta':
+         {
+           'default': [
+             {'name': '-name', 'query': 'What is the name of task?'},
+             {'name': None, 'query': 'What is the name of task?'},
+             {'name': '-tags', 'query': 'What is the name of task?'}],
+           None: [
+             {'name': '', 'query': 'What is the name of task?'},
+             {'name': None, 'query': 'What is the name of task?'},
+             {'name': '-tags', 'query': 'What is the name of task?'}],
+         }
+     },
+     {'test1': {'-tags': ['default', None]}})
+  ])
+  def test_set_types_with_duplicate_metadata_returns_expected_result(self, type_name, type_value, expected_result):
+    types_with_duplicate_metadata = {}
+    assert set_types_with_duplicate_metadata(type_name, type_value, types_with_duplicate_metadata) is None
+    assert len(types_with_duplicate_metadata) == len(
+      expected_result), "set_types_with_duplicate_metadata should return expected types_with_duplicate_metadata"
+    for t1, t2 in zip(dict(sorted(types_with_duplicate_metadata.items())).values(),
+                      dict(sorted(expected_result.items())).values()):
+      assert len(t1) == len(t2), "check_data_hierarchy_document returned types_with_duplicate_metadata length mismatch"
+      for d1, d2 in zip(sorted(t1.keys()), (t2.keys())):
+        assert d1 == d2, "check_data_hierarchy_document returned types_with_duplicate_metadata mismatch"
+      for g1, g2 in zip(dict(sorted(t1.items())).values(), dict(sorted(t2.items())).values()):
+        assert sorted(g1) == sorted(g2), "check_data_hierarchy_document returned types_with_duplicate_metadata mismatch"
 
   def test_check_data_hierarchy_document_with_null_doc_returns_empty_tuple(self):
     assert check_data_hierarchy_types(None) == ({}, {}), "check_data_hierarchy_document should return empty tuple"
@@ -447,9 +672,9 @@ class TestDataHierarchyUtilityFunctions(object):
      "<html><b>Missing metadata names:</b><ul><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">metadata_group1</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">metadata_group2</i></li></ul></html>")
   ])
   def test_get_formatted_missing_metadata_message_returns_expected_message(self,
-                                                                        missing_metadata,
-                                                                        missing_names,
-                                                                        expected_message):
+                                                                           missing_metadata,
+                                                                           missing_names,
+                                                                           expected_message):
     assert get_missing_metadata_message(
       missing_metadata, missing_names) == expected_message, "get_missing_metadata_message should return expected"
 
