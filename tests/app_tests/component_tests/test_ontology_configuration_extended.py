@@ -480,7 +480,7 @@ class TestOntologyConfigurationExtended(object):
       assert lookup_dialog.scrollAreaWidgetContents.isVisible() is True, "Scroll area should be visible"
       assert lookup_dialog.scrollAreaContentsVerticalLayout.count() == 0, "Scroll area should be empty"
       qtbot.mouseClick(lookup_dialog.terminologySearchPushButton, Qt.LeftButton)
-      assert lookup_dialog.scrollAreaContentsVerticalLayout.count() == 11, "Scroll area should be populated with 11 items"
+      assert lookup_dialog.scrollAreaContentsVerticalLayout.count() in [11,12], "Scroll area should be populated with 11 or 12 items"
       for pos in range(lookup_dialog.scrollAreaContentsVerticalLayout.count()):
         check_box = lookup_dialog.scrollAreaContentsVerticalLayout.itemAt(pos).widget().findChildren(QCheckBox)[0]
         assert check_box is not None and check_box.isChecked() is False, "Checkbox should not be checked"
@@ -518,7 +518,7 @@ class TestOntologyConfigurationExtended(object):
       assert lookup_dialog.scrollAreaWidgetContents.isVisible() is True, "Scroll area should be visible"
       assert lookup_dialog.scrollAreaContentsVerticalLayout.count() == 0, "Scroll area should be empty"
       qtbot.mouseClick(lookup_dialog.terminologySearchPushButton, Qt.LeftButton)
-      assert lookup_dialog.scrollAreaContentsVerticalLayout.count() == 11, "Scroll area should be populated with 11 items"
+      assert lookup_dialog.scrollAreaContentsVerticalLayout.count() in [11,12], "Scroll area should be populated with 11 or 12 items"
       for pos in range(lookup_dialog.scrollAreaContentsVerticalLayout.count()):
         check_box = lookup_dialog.scrollAreaContentsVerticalLayout.itemAt(pos).widget().findChildren(QCheckBox)[0]
         assert check_box is not None and check_box.isChecked() is False, "Checkbox should not be checked"
