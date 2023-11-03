@@ -279,7 +279,7 @@ def set_types_missing_required_metadata(type_name: str,
   """
   if not type_name:
     return
-  if default_metadata := type_value.get("meta").get("default"):
+  if default_metadata := type_value.get("meta").get("default"): # type: ignore[union-attr]
     names_in_default_group = [item.get("name") for item in default_metadata]
     required_metadata = ["-name", "-tags"]
     for req_metadata in required_metadata:
@@ -306,7 +306,7 @@ def set_types_without_name_in_metadata(type_name: str,
   """
   if not type_name:
     return
-  for group, metadata in type_value.get("meta").items():
+  for group, metadata in type_value.get("meta").items(): # type: ignore[union-attr]
     if metadata:
       names = [item.get("name") for item in metadata]
       if not all(name and not name.isspace() for name in names):
@@ -331,12 +331,13 @@ def set_types_with_duplicate_metadata(type_name: str,
   if not type_name:
     return
   metadata_copy = copy.deepcopy(type_value.get("meta"))
-  for group, metadata in type_value.get("meta").items():
-    metadata_copy.pop(group)
-    for neighbour_group, neighbour_metadata in metadata_copy.items():
-      # Get all duplicate names filtering the empty strings
-      duplicates = filter(None, {item.get("name") for item in metadata}.intersection(
+  for group, metadata in type_value.get("meta").items(): # type: ignore[union-attr]
+    metadata_copy.pop(group) # type: ignore[union-attr]
+    for neighbour_group, neighbour_metadata in metadata_copy.items(): # type: ignore[union-attr]
+      # Get all duplicate names after filtering away the empty strings
+      duplicates: list[str] =  list({item.get("name") for item in metadata}.intersection(
         [item.get("name") for item in neighbour_metadata]))
+      duplicates = list(filter(None, duplicates))
       for name in duplicates:
         if type_name not in types_with_duplicate_metadata:
           types_with_duplicate_metadata[type_name] = {}
