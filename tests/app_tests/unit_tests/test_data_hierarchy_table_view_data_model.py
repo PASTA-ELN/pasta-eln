@@ -11,7 +11,7 @@ import pytest
 from PySide6.QtCore import Qt
 
 from pasta_eln.GUI.data_hierarchy.constants import METADATA_TABLE_LIST_COLUMN_INDEX
-from tests.app_tests.common.fixtures import table_model, metadata_table_model, attachments_table_model
+from tests.app_tests.common.fixtures import attachments_table_model, metadata_table_model, table_model
 
 
 class TestDataHierarchyTableViewDataModel(object):
@@ -331,14 +331,14 @@ class TestDataHierarchyTableViewDataModel(object):
     (None, None, None, False, Qt.EditRole, True),
   ])
   def test_metadata_table_data_model_set_data_should_do_expected(self,
-                                                              metadata_table_model: metadata_table_model,
-                                                              mocker,
-                                                              column_index,
-                                                              set_value,
-                                                              convert_value,
-                                                              is_valid,
-                                                              role,
-                                                              set_success):
+                                                                 metadata_table_model: metadata_table_model,
+                                                                 mocker,
+                                                                 column_index,
+                                                                 set_value,
+                                                                 convert_value,
+                                                                 is_valid,
+                                                                 role,
+                                                                 set_success):
 
     mock_index = mocker.patch("PySide6.QtCore.QModelIndex")
     mock_is_valid_spy = mocker.patch.object(mock_index, "isValid", return_value=is_valid)
@@ -366,13 +366,13 @@ class TestDataHierarchyTableViewDataModel(object):
     (None, None, Qt.EditRole, False, False)
   ])
   def test_metadata_table_data_model_get_data_should_do_expected(self,
-                                                              metadata_table_model: metadata_table_model,
-                                                              mocker,
-                                                              column_index,
-                                                              is_valid,
-                                                              role,
-                                                              base_return_data,
-                                                              return_value):
+                                                                 metadata_table_model: metadata_table_model,
+                                                                 mocker,
+                                                                 column_index,
+                                                                 is_valid,
+                                                                 role,
+                                                                 base_return_data,
+                                                                 return_value):
 
     mock_index = mocker.patch("PySide6.QtCore.QModelIndex")
     mock_is_valid_spy = mocker.patch.object(mock_index, "isValid", return_value=is_valid)

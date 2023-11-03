@@ -8,8 +8,8 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
 import pytest
-from PySide6.QtCore import QRect, QEvent, Qt
-from PySide6.QtWidgets import QStyleOptionButton, QApplication, QStyle, QStyledItemDelegate, QRadioButton
+from PySide6.QtCore import QEvent, QRect, Qt
+from PySide6.QtWidgets import QApplication, QRadioButton, QStyle, QStyleOptionButton, QStyledItemDelegate
 
 from tests.app_tests.common.fixtures import mandatory_delegate
 from tests.app_tests.common.test_delegate_funcs_common import delegate_editor_method_common

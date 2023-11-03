@@ -10,8 +10,8 @@
 from PySide6.QtWidgets import QStyle
 
 from tests.app_tests.common.fixtures import reorder_delegate
-from tests.app_tests.common.test_delegate_funcs_common import delegate_paint_common, delegate_editor_method_common, \
-  delegate_editor_event_common
+from tests.app_tests.common.test_delegate_funcs_common import delegate_editor_event_common, \
+  delegate_editor_method_common, delegate_paint_common
 
 
 class TestDataHierarchyReorderColumnDelegate(object):

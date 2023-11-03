@@ -1,5 +1,4 @@
 """ Utility function used by the data hierarchy configuration module """
-import copy
 #  PASTA-ELN and all its sub-parts are covered by the MIT license.
 #
 #  Copyright (c) 2023
@@ -9,9 +8,10 @@ import copy
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
+import copy
 import logging
 import re
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 from PySide6.QtCore import QEvent
 from PySide6.QtGui import QMouseEvent, Qt
@@ -264,7 +264,19 @@ def check_data_hierarchy_types(data_hierarchy_types: dict[str, Any]) -> tuple[
   return types_with_missing_metadata, types_with_null_name_metadata, types_with_duplicate_metadata
 
 
-def set_types_missing_required_metadata(type_name, type_value, types_with_missing_metadata) -> None:
+def set_types_missing_required_metadata(type_name: str,
+                                        type_value: dict[str, Any],
+                                        types_with_missing_metadata: dict[str, dict[str, list[str]]]) -> None:
+  """
+  Set types and respective groups with missing required metadata in types_with_missing_metadata.
+  Args:
+    type_name (str): Data hierarchy type name.
+    type_value (dict[str, Any]): Data hierarchy type value.
+    types_with_missing_metadata (dict[str, dict[str, list[str]]]): Type groups mapping with missing metadata.
+
+  Returns: Nothing
+
+  """
   if not type_name:
     return
   if default_metadata := type_value.get("meta").get("default"):
@@ -279,7 +291,19 @@ def set_types_missing_required_metadata(type_name, type_value, types_with_missin
         types_with_missing_metadata[type_name]["default"].append(req_metadata)
 
 
-def set_types_without_name_in_metadata(type_name, type_value, types_with_null_name_metadata) -> None:
+def set_types_without_name_in_metadata(type_name: str,
+                                       type_value: dict[str, Any],
+                                       types_with_null_name_metadata: dict[str, list[str]]) -> None:
+  """
+  Set types and respective groups containing metadata with missing name in types_with_null_name_metadata.
+  Args:
+    type_name (str): Data hierarchy type name.
+    type_value (dict[str, Any]): Data hierarchy type value.
+    types_with_null_name_metadata (dict[str, list[str]]): Type groups mapping with missing name.
+
+  Returns: Nothing
+
+  """
   if not type_name:
     return
   for group, metadata in type_value.get("meta").items():
@@ -291,7 +315,19 @@ def set_types_without_name_in_metadata(type_name, type_value, types_with_null_na
         types_with_null_name_metadata[type_name].append(group)
 
 
-def set_types_with_duplicate_metadata(type_name, type_value, types_with_duplicate_metadata) -> None:
+def set_types_with_duplicate_metadata(type_name: str,
+                                      type_value: dict[str, Any],
+                                      types_with_duplicate_metadata: dict[str, dict[str, list[str]]]) -> None:
+  """
+  Set types and respective groups containing duplicate metadata in types_with_duplicate_metadata.
+  Args:
+    type_name (str): Data hierarchy type name.
+    type_value (dict[str, Any]): Data hierarchy type value.
+    types_with_duplicate_metadata (dict[str, dict[str, list[str]]]): Type groups mapping with duplicate metadata.
+
+  Returns: Nothing
+
+  """
   if not type_name:
     return
   metadata_copy = copy.deepcopy(type_value.get("meta"))
@@ -314,7 +350,7 @@ def set_types_with_duplicate_metadata(type_name, type_value, types_with_duplicat
 
 def get_missing_metadata_message(types_with_missing_metadata: dict[str, dict[str, list[str]]],
                                  types_with_null_name_metadata: dict[str, list[str]],
-                                 types_with_duplicate_metadata: dict[str, dict[str, list[str]]], ) -> str:
+                                 types_with_duplicate_metadata: dict[str, dict[str, list[str]]]) -> str:
   """
   Get a formatted message for missing metadata
   Args:
@@ -337,7 +373,17 @@ def get_missing_metadata_message(types_with_missing_metadata: dict[str, dict[str
   return message
 
 
-def get_empty_metadata_name_formatted_message(message, types_with_null_name_metadata) -> str:
+def get_empty_metadata_name_formatted_message(message: str,
+                                              types_with_null_name_metadata: dict[str, list[str]]) -> str:
+  """
+  Get html formatted message for missing metadata.
+  Args:
+    message (str): Html formatted message
+    types_with_null_name_metadata (dict[str, list[str]]): Type groups mapping with missing name.
+
+  Returns: Html formatted message for missing metadata name.
+
+  """
   if types_with_null_name_metadata:
     message += "<b>Missing metadata names:</b><ul>"
     for type_name, groups_list in types_with_null_name_metadata.items():
@@ -348,7 +394,18 @@ def get_empty_metadata_name_formatted_message(message, types_with_null_name_meta
   return message
 
 
-def get_missing_required_metadata_formatted_message(message, types_with_missing_metadata) -> str:
+def get_missing_required_metadata_formatted_message(message: str,
+                                                    types_with_missing_metadata: dict[
+                                                      str, dict[str, list[str]]]) -> str:
+  """
+  Get html formatted message for missing required metadata.
+  Args:
+    message (str): Html formatted message
+    types_with_missing_metadata (dict[str, dict[str, list[str]]]): Type groups mapping with missing required metadata
+
+  Returns: Html formatted message for missing required metadata.
+
+  """
   if types_with_missing_metadata:
     message += "<b>Missing required metadata: </b><ul>"
     for type_name, groups in types_with_missing_metadata.items():
@@ -361,7 +418,17 @@ def get_missing_required_metadata_formatted_message(message, types_with_missing_
   return message
 
 
-def get_duplicate_metadata_formatted_message(message, types_with_duplicate_metadata) -> str:
+def get_duplicate_metadata_formatted_message(message: str,
+                                             types_with_duplicate_metadata: dict[str, dict[str, list[str]]]) -> str:
+  """
+  Get html formatted message for duplicate metadata.
+  Args:
+    message (str): Html formatted message
+    types_with_duplicate_metadata (dict[str, dict[str, list[str]]]): Type groups mapping with duplicate metadata
+
+  Returns: Html formatted message for duplicate metadata.
+
+  """
   if types_with_duplicate_metadata:
     message += "<b>Duplicate metadata found: </b><ul>"
     for type_name, duplicate in types_with_duplicate_metadata.items():

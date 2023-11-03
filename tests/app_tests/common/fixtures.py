@@ -16,20 +16,20 @@ from cloudant.document import Document
 from pytest import fixture
 from pytestqt.qtbot import QtBot
 
-from pasta_eln.GUI.data_hierarchy.create_type_dialog import CreateTypeDialog
-from pasta_eln.GUI.data_hierarchy.delete_column_delegate import DeleteColumnDelegate
-from pasta_eln.GUI.data_hierarchy.iri_column_delegate import IriColumnDelegate
-from pasta_eln.GUI.data_hierarchy.lookup_iri_action import LookupIriAction
 from pasta_eln.GUI.data_hierarchy.attachments_tableview_data_model import \
   AttachmentsTableViewModel
+from pasta_eln.GUI.data_hierarchy.create_type_dialog import CreateTypeDialog
+from pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog import DataHierarchyEditorDialog, get_gui
+from pasta_eln.GUI.data_hierarchy.delete_column_delegate import DeleteColumnDelegate
+from pasta_eln.GUI.data_hierarchy.document_null_exception import DocumentNullException
+from pasta_eln.GUI.data_hierarchy.iri_column_delegate import IriColumnDelegate
 from pasta_eln.GUI.data_hierarchy.key_not_found_exception import \
   KeyNotFoundException
-from pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog import DataHierarchyEditorDialog, get_gui
-from pasta_eln.GUI.data_hierarchy.document_null_exception import DocumentNullException
-from pasta_eln.GUI.data_hierarchy.metadata_tableview_data_model import MetadataTableViewModel
-from pasta_eln.GUI.data_hierarchy.tableview_data_model import TableViewModel
-from pasta_eln.GUI.data_hierarchy.reorder_column_delegate import ReorderColumnDelegate
+from pasta_eln.GUI.data_hierarchy.lookup_iri_action import LookupIriAction
 from pasta_eln.GUI.data_hierarchy.mandatory_column_delegate import MandatoryColumnDelegate
+from pasta_eln.GUI.data_hierarchy.metadata_tableview_data_model import MetadataTableViewModel
+from pasta_eln.GUI.data_hierarchy.reorder_column_delegate import ReorderColumnDelegate
+from pasta_eln.GUI.data_hierarchy.tableview_data_model import TableViewModel
 from pasta_eln.GUI.data_hierarchy.terminology_lookup_dialog import TerminologyLookupDialog
 from pasta_eln.GUI.data_hierarchy.terminology_lookup_dialog_base import Ui_TerminologyLookupDialogBase
 from pasta_eln.GUI.data_hierarchy.terminology_lookup_service import TerminologyLookupService
@@ -84,7 +84,8 @@ def configuration_extended(mocker) -> DataHierarchyEditorDialog:
   mock_couch_db['-ontology-'] = mock_document
   mock_pasta_db = mocker.patch.object(mock_pasta_db, 'db', create=True)
   mocker.patch('pasta_eln.GUI.data_hierarchy.create_type_dialog.logging.getLogger')
-  mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog_base.Ui_DataHierarchyEditorDialogBase.setupUi')
+  mocker.patch(
+    'pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog_base.Ui_DataHierarchyEditorDialogBase.setupUi')
   mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.adjust_data_hierarchy_data_to_v3')
   mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.LookupIriAction')
   mocker.patch.object(QDialog, '__new__')

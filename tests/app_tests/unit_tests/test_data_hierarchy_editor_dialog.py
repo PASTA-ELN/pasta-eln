@@ -924,7 +924,8 @@ class TestDataHierarchyEditorDialog(object):
     assert configuration_extended.save_data_hierarchy() is None, "Nothing should be returned"
     log_info_spy.assert_called_once_with("User clicked the save button..")
     mock_check_data_hierarchy_document_types.assert_called_once_with(configuration_extended.data_hierarchy_types)
-    mock_get_missing_metadata_message.assert_called_once_with(missing_metadata[0], missing_metadata[1])
+    mock_get_missing_metadata_message.assert_called_once_with(missing_metadata[0], missing_metadata[1],
+                                                              missing_metadata[2])
     mock_show_message.assert_called_once_with("Missing message", QMessageBox.Warning)
     log_warn_spy.assert_called_once_with("Missing message")
 

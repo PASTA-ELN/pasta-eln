@@ -9,7 +9,7 @@
 from typing import Union
 
 from PySide6.QtCore import QSize
-from PySide6.QtWidgets import QPushButton, QStyleOptionButton, QApplication, QStyle
+from PySide6.QtWidgets import QApplication, QPushButton, QStyle, QStyleOptionButton
 
 from pasta_eln.GUI.data_hierarchy.delete_column_delegate import DeleteColumnDelegate
 from pasta_eln.GUI.data_hierarchy.reorder_column_delegate import ReorderColumnDelegate
