@@ -79,7 +79,7 @@ class MetadataTableViewModel(TableViewModel):
            index: Union[QModelIndex, QPersistentModelIndex],
            role: int = Qt.ItemDataRole) -> Any:  # type: ignore[assignment]
     """
-    Overriden method for getting the data, only handles the METADATA_TABLE_LIST_COLUMN_INDEX case
+    Overridden method for getting the data, only handles the METADATA_TABLE_LIST_COLUMN_INDEX case
     Args:
       index (Union[QModelIndex, QPersistentModelIndex]): Table cell index
       role (int): Role for the data

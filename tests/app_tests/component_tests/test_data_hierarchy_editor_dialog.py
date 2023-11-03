@@ -873,7 +873,7 @@ class TestDataHierarchyEditorDialog(object):
     assert ui_form.metadataGroupComboBox.currentText() == "default", f"metadataGroupComboBox.currentText() should be default!"
     model = ui_form.typeMetadataTableView.model()
     assert model.rowCount() == 5, "5 metadata must be present before deletion!"
-    # Initial data oder
+    # Initial data order
     init_data_order = ['-name', 'status', 'objective', '-tags', 'comment']
     post_reorder_data_order1 = ['-name', 'status', 'objective', 'comment', '-tags']
     post_reorder_data_order2 = ['status', '-name', 'objective', 'comment', '-tags']
