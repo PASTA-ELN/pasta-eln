@@ -276,9 +276,8 @@ class Backend(CLI_Mixin):
       path = Path(doc['-branch'][0]['path'])
       if edit and oldPath is not None:
         if not (self.basePath/oldPath).exists():
-          print(
-              f'**WARNING: addData edit of folder should have oldPath and that should exist:{oldPath}'
-              + '\n This can be triggered if user moved the folder.')
+          print(f'**WARNING: addData edit of folder should have oldPath and that should exist:{oldPath}'
+                f'\n This can be triggered if user moved the folder.')
           return ''
         (self.basePath/oldPath).rename(self.basePath/path)
       else:
@@ -492,10 +491,11 @@ class Backend(CLI_Mixin):
           for item in doc[meta]:
             if isinstance(doc[meta][item], tuple):
               doc[meta][item] = list(doc[meta][item])
-            if not isinstance(doc[meta][item], (str, int, float, list)) and \
-                    doc[meta][item] is not None:
-              print(' -> simplify ',meta,item, doc[meta][item])
+            try:
+              _ = json.dumps(doc[meta][item])
+            except:
               doc[meta][item] = str(doc[meta][item])
+              print('**Warning -> stringified  ',meta, item)
         if doc['-type'][0] in [doc['recipe'].split('/')[0], '-']:
           doc['-type']     = doc['recipe'].split('/')
         else:

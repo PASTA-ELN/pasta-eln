@@ -58,6 +58,10 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     if self.penDefault is None:
       self.penDefault = QPen(painter.pen())
     x0, y0 = option.rect.topLeft().toTuple()
+    widthContent = min(self.widthContent,  \
+                       int((option.rect.bottomRight()-option.rect.topLeft()).toTuple()[0]/2) )
+    docTypeOffset = min(self.docTypeOffset, \
+                        int((option.rect.bottomRight()-option.rect.topLeft()).toTuple()[0]/3.5) )
     bottomRight2nd = option.rect.bottomRight()- QPoint(self.frameSize+1,self.frameSize)
     painter.fillRect(option.rect.marginsRemoved(QMargins(2,6,4,0)),  self.colorMargin1)
     if doc['-type'][0][0]=='x':
@@ -69,12 +73,12 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     hiddenText = ('     \U0001F441' if [b for b in doc['-branch'] if False in b['show']] else '')
     docTypeText= '/'.join(doc['-type'])
     if doc['-type'][0][0]=='x':
-      docTypeText = self.comm.backend.db.ontology[doc['-type'][0]]['displayedTitle'].lower()[:-1]
+      docTypeText = self.comm.backend.db.ontology['x1']['label'].lower()[:-1]
     nameText = doc['-name'] if len(doc['-name'])<55 else '...'+doc['-name'][-50:]
     staticText = QStaticText(f'<strong>{nameText}{hiddenText}</strong>')
-    staticText.setTextWidth(self.docTypeOffset)
+    staticText.setTextWidth(docTypeOffset)
     painter.drawStaticText(x0, y0+y, staticText)
-    painter.drawStaticText(x0+self.docTypeOffset, y0+y, QStaticText(docTypeText))
+    painter.drawStaticText(x0+docTypeOffset, y0+y, QStaticText(docTypeText))
     if self.debugMode:
       painter.drawStaticText(x0+700, y0+y, QStaticText(index.data(Qt.DisplayRole)))  # type: ignore
     if folded:  #stop drawing after first line
@@ -108,12 +112,12 @@ class ProjectLeafRenderer(QStyledItemDelegate):
         textDoc = QTextDocument()
         textDoc.setMarkdown(re.sub(r'(^|\n)(#+)', r'\1##\2', doc[textType].strip()))
         if textType == 'comment':
-          textDoc.setTextWidth(bottomRight2nd.toTuple()[0]-x0-self.widthContent-2*self.frameSize)
+          textDoc.setTextWidth(bottomRight2nd.toTuple()[0]-x0-widthContent-2*self.frameSize)
           width, height = textDoc.size().toTuple() # type: ignore
           painter.translate(QPoint(x0-3, y0+y+15))
           yMax = int(self.maxHeight-2*self.frameSize-y-15)
         else:
-          textDoc.setTextWidth(self.widthContent)
+          textDoc.setTextWidth(widthContent)
           width, height = textDoc.size().toTuple() # type: ignore
           topLeftContent = option.rect.topRight() - QPoint(width+self.frameSize-2,-self.frameSize)
           painter.translate(topLeftContent)
@@ -132,7 +136,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     if 'image' in doc and doc['image']!='':
       if doc['image'].startswith('data:image/'):
         pixmap = self.imageFromDoc(doc)
-        width2nd = min(self.widthImage,pixmap.width()+self.frameSize)
+        width2nd = min(self.widthImage, pixmap.width()+self.frameSize)
         topLeft2nd     = option.rect.topRight()   - QPoint(width2nd+self.frameSize+1,-self.frameSize)
         painter.drawPixmap(topLeft2nd, pixmap)
       elif doc['image'].startswith('<?xml'):
@@ -156,16 +160,19 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       return QSize(400, self.lineSep*2)
     doc = self.comm.backend.db.getDoc(docID)
     if len(doc)<2:
-      self.comm.changeProject.emit('','')
+      if len(self.comm.backend.db.getDoc(hierStack.split('/')[0]))>2: #only refresh when project still exists
+        self.comm.changeProject.emit('','')
       return QSize()
     docKeys = doc.keys()
+    widthContent = min(self.widthContent,  \
+                       int((option.rect.bottomRight()-option.rect.topLeft()).toTuple()[0]/2) )
     height  = len([i for i in docKeys if not i in _DO_NOT_RENDER_ and i[0] not in ['-','_'] ])  #height in text lines
     height += 1 if '-tags' in docKeys and len(doc['-tags']) > 0 else 0
     height  = (height+3) * self.lineSep
     if 'content' in docKeys:
       text = QTextDocument()
       text.setMarkdown(doc['content'])
-      text.setTextWidth(self.widthContent)
+      text.setTextWidth(widthContent)
       height = max(height, text.size().toTuple()[1]) +2*self.frameSize # type: ignore
     elif 'image' in docKeys:
       if doc['image'].startswith('data:image/'):
@@ -177,7 +184,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       text = QTextDocument()
       comment = doc['comment']
       text.setMarkdown(comment.strip())
-      text.setTextWidth(self.widthContent)
+      text.setTextWidth(widthContent)
       height += text.size().toTuple()[1] # type: ignore
       height -= 25
     else:

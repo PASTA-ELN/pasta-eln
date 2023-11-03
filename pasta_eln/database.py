@@ -242,6 +242,7 @@ class Database:
       res = self.db.create_document(doc)
       logging.debug('successfully saved doc with type and branch '+doc['_id']+' '+'/'.join(doc['-type'])+'  |  '+str(doc['-branch'])+'\n')
     except Exception:
+      logging.error('could not save, likely JSON issue; Check logging file')
       logging.error('could not save, likely JSON issue')
       if 'image' in doc:
         del doc['image']

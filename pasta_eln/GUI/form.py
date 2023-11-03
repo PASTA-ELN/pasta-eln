@@ -170,9 +170,10 @@ class Form(QDialog):
       self.formL.addRow(QLabel('Data type'), self.docTypeComboBox)
     #final button box
     _, buttonLineL = widgetAndLayout('H', mainL)
-    visibilityIcon = all(all(branch['show']) for branch in self.doc['-branch'])
-    self.visibilityText = QLabel('' if visibilityIcon else 'HIDDEN     \U0001F441')
-    buttonLineL.addWidget(self.visibilityText)
+    if '-branch' in self.doc:
+      visibilityIcon = all(all(branch['show']) for branch in self.doc['-branch'])
+      self.visibilityText = QLabel('' if visibilityIcon else 'HIDDEN     \U0001F441')
+      buttonLineL.addWidget(self.visibilityText)
     buttonBox = QDialogButtonBox(QDialogButtonBox.Cancel | QDialogButtonBox.Save)
     if self.flagNewDoc: #new dataset
       buttonBox.addButton('Save && Next', QDialogButtonBox.ApplyRole)

@@ -2,7 +2,7 @@
 import logging, re
 from enum import Enum
 from typing import Optional, Any
-from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget, QMenu, QMessageBox, QTextEdit # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget, QMenu, QMessageBox, QTextEdit, QScrollArea # pylint: disable=no-name-in-module
 from PySide6.QtGui import QStandardItemModel, QStandardItem, QAction   # pylint: disable=no-name-in-module
 from PySide6.QtCore import Slot, Qt, QItemSelectionModel, QModelIndex # pylint: disable=no-name-in-module
 from anytree import PreOrderIter, Node
@@ -40,7 +40,8 @@ class Project(QWidget):
     Initialize / Create header of page
     """
     self.docProj = self.comm.backend.db.getDoc(self.projID)
-    _, topLineL       = widgetAndLayout('H',self.mainL,'m')  #topLine includes name on left, buttons on right
+    # TOP LINE includes name on left, buttons on right
+    _, topLineL       = widgetAndLayout('H',self.mainL,'m')
     hidden, menuTextHidden = ('     \U0001F441', 'Mark project as shown') \
                        if [b for b in self.docProj['-branch'] if False in b['show']] else \
                        ('', 'Mark project as hidden')
@@ -48,7 +49,7 @@ class Project(QWidget):
     showStatus = '(Show all items)' if self.showAll else '(Hide hidden items)'
     topLineL.addWidget(QLabel(showStatus))
     topLineL.addStretch(1)
-
+    # buttons in top line
     buttonW, buttonL = widgetAndLayout('H', spacing='m')
     topLineL.addWidget(buttonW, alignment=Qt.AlignTop)  # type: ignore
     self.btnAddSubfolder = TextButton('Add subfolder', self, [Command.ADD_CHILD], buttonL)
@@ -77,37 +78,39 @@ class Project(QWidget):
     Action('Delete',                    self, [Command.DELETE], moreMenu)
     more.setMenu(moreMenu)
 
-    self.infoW, infoL         = widgetAndLayout('V', self.mainL)
+    # Details section
+    self.infoW = QScrollArea()
+    self.infoW.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+    self.infoW.setWidgetResizable(True)
+    infoW_, infoL = widgetAndLayout('V')
+    self.infoW.setWidget(infoW_)
+    self.mainL.addWidget(self.infoW)
+    # details
     tags = ', '.join([f'#{i}' for i in self.docProj['-tags']]) if '-tags' in self.docProj else ''
-    infoL.addWidget(QLabel(f'Tags: {tags}'))
+    infoL.addWidget(QLabel(f'Tags: {tags[:int((self.width()-50)/6.2)]}'))
     countLines = 0
-    flagCommentInline = True
     for key,value in self.docProj.items():
-      if key[0] in ['_','-'] or 'from ' in key:
+      if key[0] in {'_','-'} or 'from ' in key or key in {'comment'}:
         continue
-      if key=='comment' and ('\n' in value or len(value)>80):
-        flagCommentInline = False
-        continue
-      infoL.addWidget(QLabel(f'{key.title()}: {str(value)}'))
+      labelW = QLabel(f'{key.title()}: {str(value)}')
+      infoL.addWidget(labelW)
       countLines += 1
-    if not flagCommentInline:     #format as label and QTextEdit
-      commentW, commentL         = widgetAndLayout('H', infoL, 's')
-      labelW = QLabel('Comment:')
-      # labelW.setStyleSheet('padding-top: 5px') #make "Comment:" text aligned with other content, not with text-edit
-      commentL.addWidget(labelW, alignment=Qt.AlignTop)   # type: ignore[call-arg]
-      comment = QTextEdit()
-      comment.setMarkdown(re.sub(r'(^|\n)(#+)', r'\1##\2', self.docProj['comment'].strip()))
-      bgColor = getColor(self.comm.backend, 'secondaryDark')
-      fgColor = getColor(self.comm.backend, 'primaryText')
-      comment.setStyleSheet(f"QTextEdit {{ border: none; padding: 0px; background-color: {bgColor}; "\
-                            f"color: {fgColor} }}")
-      comment.setReadOnly(True)
-      comment.document().setTextWidth(commentW.width())
-      height:int = comment.document().size().toTuple()[1] # type: ignore[index]
-      comment.setFixedHeight(height)
-      commentL.addWidget(comment)
-      self.infoW.setMaximumHeight(height+10+countLines*self.lineSep )
-      commentW.setMaximumHeight(height+10+countLines*self.lineSep )
+    # comment
+    _, commentL         = widgetAndLayout('H', infoL, 's')
+    labelW = QLabel('Comment:')
+    # labelW.setStyleSheet('padding-top: 5px') #make "Comment:" text aligned with other content, not with text-edit
+    commentL.addWidget(labelW, alignment=Qt.AlignTop)   # type: ignore[call-arg]
+    comment = QTextEdit()
+    comment.setMarkdown(re.sub(r'(^|\n)(#+)', r'\1##\2', self.docProj['comment'].strip()))
+    bgColor = getColor(self.comm.backend, 'secondaryDark')
+    fgColor = getColor(self.comm.backend, 'primaryText')
+    comment.setStyleSheet(f"border: none; padding: 0px; background-color: {bgColor}; color: {fgColor}")
+    comment.setReadOnly(True)
+    comment.document().setTextWidth(self.infoW.width())
+    height:int = comment.document().size().toTuple()[1] # type: ignore[index]
+    commentL.addWidget(comment)
+    infoW_.setMaximumHeight(height + (countLines+1)*self.lineSep     +2)
+    self.infoW.setMaximumHeight(height + (countLines+1)*self.lineSep +5)
     return
 
 
@@ -168,8 +171,9 @@ class Project(QWidget):
         newPath = self.comm.backend.basePath/createDirName(self.docProj['-name'],'x0',0)
         oldPath.rename(newPath)
     elif command[0] is Command.DELETE:
-      ret = QMessageBox.critical(self, 'Warning', 'Are you sure you want to delete project?',\
-                                   QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.No)
+      ret = QMessageBox.critical(self, 'Warning', 'Are you sure you want to delete project?', \
+                      QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,  # type: ignore[operator]
+                      QMessageBox.StandardButton.No)
       if ret==QMessageBox.StandardButton.Yes:
         #delete database and rename folder
         doc = self.comm.backend.db.remove(self.projID)
@@ -177,6 +181,10 @@ class Project(QWidget):
           oldPath = self.comm.backend.basePath/doc['-branch'][0]['path']
           newPath = self.comm.backend.basePath/('trash_'+doc['-branch'][0]['path'])
           oldPath.rename(newPath)
+        # go through children, remove from DB
+        children = self.comm.backend.db.getView('viewHierarchy/viewHierarchy', startKey=self.projID)
+        for line in children:
+          self.comm.backend.db.remove(line['id'])
         #update sidebar, show projects
         self.comm.changeSidebar.emit('redraw')
         self.comm.changeTable.emit('x0','')
