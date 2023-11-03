@@ -35,10 +35,10 @@ from .lookup_iri_action import LookupIriAction
 from .mandatory_column_delegate import MandatoryColumnDelegate
 from .metadata_tableview_data_model import MetadataTableViewModel
 from .reorder_column_delegate import ReorderColumnDelegate
-from .utility_functions import adapt_type, adjust_data_hierarchy_data_to_v3, can_delete_type, \
+from .utility_functions import adapt_type, adjust_data_hierarchy_data_to_v4, can_delete_type, \
   check_data_hierarchy_types, \
   generate_empty_type, \
-  generate_required_metadata, get_missing_metadata_message, get_next_possible_structural_level_title, \
+  get_missing_metadata_message, get_next_possible_structural_level_title, \
   get_types_for_display, show_message
 from ...database import Database
 
@@ -222,7 +222,7 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
       return None
     # Add the new group to the metadata list and refresh the group combo box
     self.logger.info("User added new metadata group: {%s}", new_group)
-    self.selected_type_metadata[new_group] = generate_required_metadata()
+    self.selected_type_metadata[new_group] = []
     self.metadataGroupComboBox.clear()
     self.metadataGroupComboBox.addItems(list(self.selected_type_metadata.keys()))
     self.metadataGroupComboBox.setCurrentIndex(len(self.selected_type_metadata.keys()) - 1)
@@ -401,7 +401,7 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
     for data in self.data_hierarchy_document:
       if isinstance(self.data_hierarchy_document[data], dict):
         self.data_hierarchy_types[data] = copy.deepcopy(self.data_hierarchy_document[data])
-    adjust_data_hierarchy_data_to_v3(self.data_hierarchy_types)
+    adjust_data_hierarchy_data_to_v4(self.data_hierarchy_types)
     self.data_hierarchy_loaded = True
 
     # Set the types in the type selector combo-box
@@ -416,7 +416,9 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
     self.logger.info("User clicked the save button..")
     types_with_missing_metadata, types_with_null_name_metadata, types_with_duplicate_metadata \
       = check_data_hierarchy_types(self.data_hierarchy_types)
-    if types_with_missing_metadata or types_with_null_name_metadata:
+    if (types_with_missing_metadata
+        or types_with_null_name_metadata
+        or types_with_duplicate_metadata):
       message = get_missing_metadata_message(types_with_missing_metadata,
                                              types_with_null_name_metadata,
                                              types_with_duplicate_metadata)

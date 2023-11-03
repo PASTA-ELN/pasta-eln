@@ -86,7 +86,7 @@ def configuration_extended(mocker) -> DataHierarchyEditorDialog:
   mocker.patch('pasta_eln.GUI.data_hierarchy.create_type_dialog.logging.getLogger')
   mocker.patch(
     'pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog_base.Ui_DataHierarchyEditorDialogBase.setupUi')
-  mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.adjust_data_hierarchy_data_to_v3')
+  mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.adjust_data_hierarchy_data_to_v4')
   mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.LookupIriAction')
   mocker.patch.object(QDialog, '__new__')
   mocker.patch.object(MetadataTableViewModel, '__new__')

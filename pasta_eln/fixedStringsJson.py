@@ -3,7 +3,7 @@ from typing import Any
 
 defaultOntology: dict[str, Any] = {
   "_id": "-ontology-",
-  "-version": 3,
+  "-version": 4,
 
   "x0": {"IRI": "", "attachments": [], "displayedTitle": "Projects", "meta": {"default": [
     {"name": "-name", "query": "What is the name of the project?", "mandatory": True},

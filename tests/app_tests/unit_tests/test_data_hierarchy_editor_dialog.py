@@ -23,8 +23,7 @@ from pasta_eln.GUI.data_hierarchy.key_not_found_exception import \
   KeyNotFoundException
 from pasta_eln.GUI.data_hierarchy.mandatory_column_delegate import MandatoryColumnDelegate
 from pasta_eln.GUI.data_hierarchy.reorder_column_delegate import ReorderColumnDelegate
-from pasta_eln.GUI.data_hierarchy.utility_functions import generate_empty_type, generate_required_metadata, \
-  get_types_for_display
+from pasta_eln.GUI.data_hierarchy.utility_functions import generate_empty_type, get_types_for_display
 from tests.app_tests.common.fixtures import configuration_extended, data_hierarchy_doc_mock
 
 
@@ -36,7 +35,7 @@ class TestDataHierarchyEditorDialog(object):
     mocker.patch('pasta_eln.GUI.data_hierarchy.create_type_dialog.logging.getLogger')
     mock_setup_ui = mocker.patch(
       'pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog_base.Ui_DataHierarchyEditorDialogBase.setupUi')
-    mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.adjust_data_hierarchy_data_to_v3')
+    mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.adjust_data_hierarchy_data_to_v4')
     mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.LookupIriAction')
     mock_metadata_table_view_model = mocker.MagicMock()
     mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.MetadataTableViewModel',
@@ -159,7 +158,7 @@ class TestDataHierarchyEditorDialog(object):
                                                                    mocker):
     mocker.patch('pasta_eln.GUI.data_hierarchy.create_type_dialog.logging.getLogger')
     mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.Ui_DataHierarchyEditorDialogBase.setupUi')
-    mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.adjust_data_hierarchy_data_to_v3')
+    mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.adjust_data_hierarchy_data_to_v4')
     mocker.patch.object(QDialog, '__new__')
     with pytest.raises(GenericException, match="Null database instance passed to the initializer"):
       DataHierarchyEditorDialog(None)
@@ -168,7 +167,7 @@ class TestDataHierarchyEditorDialog(object):
                                                                                  mocker):
     mocker.patch('pasta_eln.GUI.data_hierarchy.create_type_dialog.logging.getLogger')
     mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.Ui_DataHierarchyEditorDialogBase.setupUi')
-    mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.adjust_data_hierarchy_data_to_v3')
+    mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.adjust_data_hierarchy_data_to_v4')
     mocker.patch.object(QDialog, '__new__')
     mock_db = mocker.patch('pasta_eln.database.Database')
     mocker.patch.object(mock_db, 'db', {'-ontology-': None}, create=True)
@@ -397,7 +396,6 @@ class TestDataHierarchyEditorDialog(object):
       if new_metadata_group:
         assert configuration_extended.add_new_metadata_group() is None, "Nothing should be returned"
         logger_info_spy.assert_called_once_with("User added new metadata group: {%s}", new_metadata_group)
-        set_items_selected_spy.assert_called_once_with(new_metadata_group, generate_required_metadata())
         set_current_index_metadata_group_combo_box_spy.assert_called_once_with(len(selected_type_metadata.keys()) - 1)
         clear_metadata_group_combo_box_spy.assert_called_once_with()
         add_items_selected_spy.assert_called_once_with(

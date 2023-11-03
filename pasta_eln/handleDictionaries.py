@@ -38,8 +38,8 @@ def ontology2Labels(ontology:dict[str,Any], tableFormat:dict[str,Any]) -> dict[s
   return dataDict
 
 
-def ontologyV2_to_V3(ontology: dict[str, Any]) -> None:
-  """ Translate ontology version 2 to version 3
+def ontology_pre_to_V4(ontology: dict[str, Any]) -> None:
+  """ Translate old ontology version to version 4
 
   Based on work of Jithu Murugan
 
@@ -47,20 +47,29 @@ def ontologyV2_to_V3(ontology: dict[str, Any]) -> None:
       ontology (dict[str, Any]): ontology
 
   """
-  if ontology['-version'] != 2:
-    return
-  ontology["-version"] = 3
+  ontology["-version"] = 4
   typeStructures = {}
   for key in ontology:
     if key[0] not in {'-', '_'}:
       typeStructures[key] = ontology[key]
   for typeStructure in typeStructures.values():
+    # Adjustments previous versions <= v3.0
     typeStructure.setdefault("attachments", [])
-    metadata = typeStructure.get("meta")
-    if metadata is None:
-      typeStructure["meta"] = {"default": []}
-    elif not isinstance(metadata, dict):
-      typeStructure["meta"] = {"default": metadata}
+    properties = typeStructure.get("prop")
+    if properties is None:
+      properties = {"default": []}
+      typeStructure["prop"] = properties
+    if not isinstance(properties, dict):
+      typeStructure["prop"] = {"default": properties}
+    # Adjustments for v4.0
+    if "prop" in typeStructure:
+      # replace "meta" with "prop" only if it does not exist
+      typeStructure.setdefault("meta", typeStructure["prop"])
+      del typeStructure["prop"]
+    if "label" in typeStructure:
+      typeStructure.setdefault("displayedTitle", typeStructure["label"])
+      del typeStructure["label"]
+    typeStructure.setdefault("displayedTitle", "")
   return
 
 

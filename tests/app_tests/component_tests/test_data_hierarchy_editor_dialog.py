@@ -748,9 +748,7 @@ class TestDataHierarchyEditorDialog(object):
       assert ui_form.metadataGroupComboBox.currentText() == new_group, f"metadataGroupComboBox.currentText() should be {new_group}!"
       newly_added_groups.append(new_group)
       model = ui_form.typeMetadataTableView.model()
-      assert model.rowCount() == 2, "Minimum of two required metadata must be added"
-      assert model.data(model.index(0, 0), Qt.DisplayRole) == '-name', "Name metadata must be added!"
-      assert model.data(model.index(1, 0), Qt.DisplayRole) == '-tags', "Tags metadata must be added!"
+      assert model.rowCount() == 0, "Metadata table should be empty now!"
 
     # Check finally if all the newly added groups are present apart from the initial metadata groups
     groups.clear()
@@ -798,7 +796,7 @@ class TestDataHierarchyEditorDialog(object):
         assert ui_form.metadataGroupComboBox.currentText() == reversed_categories[
           idx + 1], f"metadataGroupComboBox.currentText() should be {reversed_categories[idx + 1]}!"
         model = ui_form.typeMetadataTableView.model()
-        assert model.rowCount() >= 2, "Minimum of two required metadata must be present"
+        assert model.rowCount() >= 0, "Metadata table can be empty or not!"
 
   def test_add_metadata_to_table_should_succeed(self,
                                                 data_hierarchy_editor_gui:
@@ -814,15 +812,13 @@ class TestDataHierarchyEditorDialog(object):
     assert ui_form.addMetadataGroupPushButton.isHidden() is False, "addMetadataGroupPushButton should be visible now!"
     ui_form.addMetadataGroupLineEdit.setText("new Group")
     qtbot.mouseClick(ui_form.addMetadataGroupPushButton, Qt.LeftButton)
-    ui_form.metadataGroupComboBox.setCurrentText("new Group")
+    assert "new Group" == ui_form.metadataGroupComboBox.currentText(), "metadataGroupComboBox.currentText() should be new Group!"
     model = ui_form.typeMetadataTableView.model()
-    assert model.rowCount() == 2, "Minimum of two required metadata must be present"
-    assert model.data(model.index(0, 0), Qt.DisplayRole) == '-name', "Name metadata must be present!"
-    assert model.data(model.index(1, 0), Qt.DisplayRole) == '-tags', "Tags metadata must be present!"
+    assert model.rowCount() == 0, "Metadata table should be empty!"
     qtbot.mouseClick(ui_form.addMetadataRowPushButton, Qt.LeftButton)
-    assert model.rowCount() == 3, "Three metadata must be present after addition!"
-    model.setData(model.index(2, 0), "Test name", Qt.UserRole)
-    model.setData(model.index(2, 1), "Test query", Qt.UserRole)
+    assert model.rowCount() == 1, "Single metadata must be present after addition!"
+    model.setData(model.index(0, 0), "Test name", Qt.UserRole)
+    model.setData(model.index(0, 1), "Test query", Qt.UserRole)
 
     ui_form.metadataGroupComboBox.setCurrentText("default")
     assert ui_form.metadataGroupComboBox.currentText() == "default", f"metadataGroupComboBox.currentText() should be default!"
@@ -832,11 +828,9 @@ class TestDataHierarchyEditorDialog(object):
     ui_form.metadataGroupComboBox.setCurrentText("new Group")
     assert ui_form.metadataGroupComboBox.currentText() == "new Group", f"metadataGroupComboBox.currentText() should be default!"
     model = ui_form.typeMetadataTableView.model()
-    assert model.rowCount() == 3, "Three metadata must be present after addition!"
-    assert model.data(model.index(0, 0), Qt.DisplayRole) == '-name', "Name metadata must be present!"
-    assert model.data(model.index(1, 0), Qt.DisplayRole) == '-tags', "Tags metadata must be present!"
-    assert model.data(model.index(2, 0), Qt.DisplayRole) == 'Test name', "Test name metadata must be present!"
-    assert model.data(model.index(2, 1), Qt.DisplayRole) == 'Test query', "Test query metadata must be present!"
+    assert model.rowCount() == 1, "Single metadata must be present after addition!"
+    assert model.data(model.index(0, 0), Qt.DisplayRole) == 'Test name', "Test name metadata must be present!"
+    assert model.data(model.index(0, 1), Qt.DisplayRole) == 'Test query', "Test query metadata must be present!"
 
   def test_delete_metadata_from_table_should_work(self,
                                                   data_hierarchy_editor_gui:

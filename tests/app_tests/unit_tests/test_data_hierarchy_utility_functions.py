@@ -15,11 +15,12 @@ from PySide6.QtGui import QMouseEvent
 from PySide6.QtWidgets import QMessageBox
 from cloudant import CouchDB
 
-from pasta_eln.GUI.data_hierarchy.utility_functions import adjust_data_hierarchy_data_to_v3, can_delete_type, \
+from pasta_eln.GUI.data_hierarchy.utility_functions import adjust_data_hierarchy_data_to_v4, can_delete_type, \
   check_data_hierarchy_types, \
   get_db, get_missing_metadata_message, get_next_possible_structural_level_title, is_click_within_bounds, \
   set_types_missing_required_metadata, set_types_with_duplicate_metadata, set_types_without_name_in_metadata, \
   show_message
+from tests.app_tests.common.test_utils import are_json_equal
 
 
 class TestDataHierarchyUtilityFunctions(object):
@@ -78,61 +79,159 @@ class TestDataHierarchyUtilityFunctions(object):
     assert mock_q_style_option_view_item.rect.width.call_count == 1, "QStyleOptionViewItem left call count must be 1"
     assert mock_q_style_option_view_item.rect.height.call_count == 0, "QStyleOptionViewItem top call count must be zero"
 
-  def test_adjust_data_hierarchy_data_to_v3_when_empty_document_do_nothing(self,
+  def test_adjust_data_hierarchy_data_to_v4_when_empty_document_do_nothing(self,
                                                                            mocker):
     contents = {"-version": 2}
     mock_doc = self.create_mock_doc(contents, mocker)
-    assert adjust_data_hierarchy_data_to_v3(mock_doc) is None, "adjust_data_hierarchy_data_to_v3 should return None"
+    assert adjust_data_hierarchy_data_to_v4(mock_doc) is None, "adjust_data_hierarchy_data_to_v4 should return None"
     assert list(contents.keys()) == ["-version"], "Only version should be added"
 
-    assert adjust_data_hierarchy_data_to_v3(None) is None, "adjust_data_hierarchy_data_to_v3 should return None"
+    assert adjust_data_hierarchy_data_to_v4(None) is None, "adjust_data_hierarchy_data_to_v4 should return None"
 
-  @pytest.mark.parametrize("contents", [
-    ({
-      "x0":
+  @pytest.mark.parametrize("contents, expected_result", [
+    (
         {
-          "displayedTitle": "",
-          "meta": []
-        }
-    }),
-    ({
-      "x1": {}
-    }),
-    ({
-      "x2":
-        {
-          "attachments": [{"test": "test", "test1": "test2"}],
-          "displayedTitle": "",
-          "meta": {"default": [
+          "x0":
             {
-              "name": "value",
-              "test": "test1"
+              "label": "",
+              "prop": []
             }
-          ]}
+        },
+        {
+          "x0":
+            {
+              "attachments": [],
+              "displayedTitle": "",
+              "meta": {
+                "default": []
+              }
+            }
         }
-    })
+    ),
+    (
+        {
+          "x1": {}
+        },
+        {
+          "x1":
+            {
+              "attachments": [],
+              "displayedTitle": "",
+              "meta": {
+                "default": []
+              }
+            }
+        }
+    ),
+    (
+        {
+          "x2":
+            {
+              "attachments": [
+                {
+                  "test": "test", "test1": "test2"
+                }
+              ],
+              "label": "",
+              "prop": {
+                "default": [
+                  {
+                    "name": "value",
+                    "test": "test1"
+                  }
+                ]
+              }
+            }
+        },
+        {
+          "x2":
+            {
+              "attachments": [
+                {
+                  "test": "test",
+                  "test1": "test2"
+                }
+              ],
+              "displayedTitle": "",
+              "meta": {
+                "default": [
+                  {
+                    "name": "value",
+                    "test": "test1"
+                  }
+                ]
+              }
+            }
+        }
+    ),
+    (
+        {
+          "x1":
+            {
+              "attachments": [
+                {
+                  "test": "test",
+                  "test1": "test2"
+                }
+              ],
+              "displayedTitle": "",
+              "meta": {
+                "default": [
+                  {
+                    "name": "value",
+                    "test": "test1"
+                  }
+                ]
+              }
+            }
+        },
+        {
+          "x1":
+            {
+              "attachments": [
+                {
+                  "test": "test",
+                  "test1": "test2"
+                }
+              ],
+              "displayedTitle": "",
+              "meta": {
+                "default": [
+                  {
+                    "name": "value",
+                    "test": "test1"
+                  }
+                ]
+              }
+            }
+        }
+    ),
+    (
+        {
+          "x5":
+            {
+              "attachments": None,
+              "label": None,
+              "prop": None
+            }
+        },
+        {
+          "x5":
+            {
+              "attachments": None,
+              "displayedTitle": None,
+              "meta": {
+                "default": []
+              }
+            }
+        }
+    )
   ])
-  def test_adjust_data_hierarchy_data_to_v3_when_v2document_given_do_expected(self,
-                                                                              contents):
-    assert adjust_data_hierarchy_data_to_v3(contents) is None, "adjust_data_hierarchy_data_to_v3 should return None"
-    if "x0" in contents:
-      assert "attachments" in contents["x0"], "attachments should be set"
-      assert "meta" in contents["x0"], "metadata should be set"
-      assert type(contents["x0"]["meta"]) is dict, "metadata should be dictionary"
-
-    if "x1" in contents:
-      assert "attachments" in contents["x1"], "attachments should be set"
-      assert "meta" in contents["x1"], "metadata should be set"
-      assert type(contents["x1"]["meta"]) is dict, "metadata should be dictionary"
-      assert "default" in contents["x1"]["meta"] and len(
-        contents["x1"]["meta"]["default"]) == 0, "default metadata list be defined"
-
-    if "x2" in contents:
-      assert "attachments" in contents["x2"], "attachments should be set"
-      assert "meta" in contents["x2"], "metadata should be set"
-      assert type(contents["x2"]["meta"]) is dict, "metadata should be dictionary"
-      assert "default" in contents["x2"]["meta"] and len(
-        contents["x2"]["meta"]["default"]) == 1, "default metadata list should be the same"
+  def test_adjust_data_hierarchy_data_to_v4_given_do_expected(self,
+                                                              contents,
+                                                              expected_result):
+    assert adjust_data_hierarchy_data_to_v4(contents) is None, "adjust_data_hierarchy_data_to_v4 should return None"
+    assert are_json_equal(contents, expected_result), "adjust_data_hierarchy_data_to_v4 should return as expected"
 
   @staticmethod
   def create_mock_doc(contents, mocker):

@@ -41,8 +41,8 @@ def is_click_within_bounds(event: QEvent,
   return False
 
 
-def adjust_data_hierarchy_data_to_v3(data_hierarchy_types: dict[str, Any]) -> None:
-  """Correct the data hierarchy data and add missing information if the loaded data is of version < 3.0
+def adjust_data_hierarchy_data_to_v4(data_hierarchy_types: dict[str, Any]) -> None:
+  """Correct the data hierarchy data and add missing information if the loaded data is of version < 4.0
 
   Args:
       data_hierarchy_types (dict[str, Any]): Data hierarchy types loaded from the database
@@ -51,14 +51,24 @@ def adjust_data_hierarchy_data_to_v3(data_hierarchy_types: dict[str, Any]) -> No
   """
   if not data_hierarchy_types:
     return None
-  for _, type_structure in data_hierarchy_types.items():
+  for type_structure in data_hierarchy_types.values():
+    # Adjustments previous versions <= v3.0
     type_structure.setdefault("attachments", [])
-    metadata = type_structure.get("meta")
-    if metadata is None:
-      type_structure["meta"] = {"default": []}
-      continue
-    if not isinstance(metadata, dict):
-      type_structure["meta"] = {"default": metadata}
+    properties = type_structure.get("prop")
+    if properties is None:
+      properties = {"default": []}
+      type_structure["prop"] = properties
+    if not isinstance(properties, dict):
+      type_structure["prop"] = {"default": properties}
+    # Adjustments for v4.0
+    if "prop" in type_structure:
+      # replace "meta" with "prop" only if it does not exist
+      type_structure.setdefault("meta", type_structure["prop"])
+      del type_structure["prop"]
+    if "label" in type_structure:
+      type_structure.setdefault("displayedTitle", type_structure["label"])
+      del type_structure["label"]
+    type_structure.setdefault("displayedTitle", "")
   return None
 
 
@@ -75,7 +85,7 @@ def show_message(message: str,
     default_button (Any): Default button
 
 
-  Returns: Return None if message is empty otherwise displays the message
+  Returns: Return None if a message is empty otherwise displays the message
 
   """
   if message:
@@ -158,7 +168,7 @@ def get_types_for_display(types: list[str]) -> list[str]:
 
 def adapt_type(title: str) -> str:
   """
-  Convert only structural type from format: 'Structure Level n' -> xn
+  Convert only structural-type from format: 'Structure Level n' -> xn
   Args:
     title (str): Title to be adapted
 
@@ -279,7 +289,7 @@ def set_types_missing_required_metadata(type_name: str,
   """
   if not type_name:
     return
-  if default_metadata := type_value.get("meta").get("default"): # type: ignore[union-attr]
+  if default_metadata := type_value.get("meta").get("default"):  # type: ignore[union-attr]
     names_in_default_group = [item.get("name") for item in default_metadata]
     required_metadata = ["-name", "-tags"]
     for req_metadata in required_metadata:
@@ -306,7 +316,7 @@ def set_types_without_name_in_metadata(type_name: str,
   """
   if not type_name:
     return
-  for group, metadata in type_value.get("meta").items(): # type: ignore[union-attr]
+  for group, metadata in type_value.get("meta").items():  # type: ignore[union-attr]
     if metadata:
       names = [item.get("name") for item in metadata]
       if not all(name and not name.isspace() for name in names):
@@ -331,11 +341,11 @@ def set_types_with_duplicate_metadata(type_name: str,
   if not type_name:
     return
   metadata_copy = copy.deepcopy(type_value.get("meta"))
-  for group, metadata in type_value.get("meta").items(): # type: ignore[union-attr]
-    metadata_copy.pop(group) # type: ignore[union-attr]
-    for neighbour_group, neighbour_metadata in metadata_copy.items(): # type: ignore[union-attr]
+  for group, metadata in type_value.get("meta").items():  # type: ignore[union-attr]
+    metadata_copy.pop(group)  # type: ignore[union-attr]
+    for neighbour_group, neighbour_metadata in metadata_copy.items():  # type: ignore[union-attr]
       # Get all duplicate names after filtering away the empty strings
-      duplicates: list[str] =  list({item.get("name") for item in metadata}.intersection(
+      duplicates: list[str] = list({item.get("name") for item in metadata}.intersection(
         [item.get("name") for item in neighbour_metadata]))
       duplicates = list(filter(None, duplicates))
       for name in duplicates:
@@ -364,7 +374,8 @@ def get_missing_metadata_message(types_with_missing_metadata: dict[str, dict[str
   """
   message = ""
   if (not types_with_missing_metadata
-      and not types_with_null_name_metadata):
+      and not types_with_null_name_metadata
+      and not types_with_duplicate_metadata):
     return message
   message += "<html>"
   message = get_missing_required_metadata_formatted_message(message, types_with_missing_metadata)

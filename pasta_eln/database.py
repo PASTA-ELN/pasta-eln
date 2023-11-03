@@ -8,7 +8,7 @@ from cloudant.client import CouchDB
 from cloudant.replicator import Replicator
 from PySide6.QtWidgets import QProgressBar  # pylint: disable=no-name-in-module
 from .fixedStringsJson import defaultOntology, defaultOntologyNode
-from .handleDictionaries import ontologyV2_to_V3
+from .handleDictionaries import ontology_pre_to_V4
 from .miscTools import tracebackString, DummyProgressBar
 
 class Database:
@@ -45,12 +45,12 @@ class Database:
       self.initDocTypeViews( configuration['tableColumnsMax'] )
       self.initGeneralViews()
     self.ontology = dict(self.db['-ontology-'])
-    if '-version' in self.ontology and self.ontology['-version']==2:
-      logging.info('Convert ontology version 2 to 3')
-      ontologyV2_to_V3(self.ontology)
+    if '-version' in self.ontology and int(self.ontology['-version']) < 4:
+      logging.info('Convert ontology to V4.0')
+      ontology_pre_to_V4(self.ontology)
       self.db['-ontology-'].delete()
       self.db.create_document(self.ontology)
-    if '-version' not in self.ontology or self.ontology['-version']!=3:
+    if '-version' not in self.ontology or self.ontology['-version'] != 4:
       print(F"**ERROR wrong ontology version: {self.ontology['-version']}")
       raise ValueError(f"Wrong ontology version {self.ontology['-version']}")
     self.dataLabels = {k:v['displayedTitle'] for k,v in self.ontology.items() if k[0] not in ['_','-']}
