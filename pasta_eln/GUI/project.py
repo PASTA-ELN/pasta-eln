@@ -87,7 +87,7 @@ class Project(QWidget):
     self.mainL.addWidget(self.infoW)
     # details
     tags = ', '.join([f'#{i}' for i in self.docProj['-tags']]) if '-tags' in self.docProj else ''
-    infoL.addWidget(QLabel(f'Tags: {tags[:int((self.width()-50)/6.2)]}'))
+    infoL.addWidget(QLabel(f'Tags: {tags}'))
     countLines = 0
     for key,value in self.docProj.items():
       if key[0] in {'_','-'} or 'from ' in key or key in {'comment'}:
