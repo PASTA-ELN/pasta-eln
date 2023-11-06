@@ -23,11 +23,13 @@ class ConfigurationGUI(QWidget):
 
     #GUI elements
     if hasattr(self.comm.backend, 'configuration'):
-      self.tabAppearanceL = QFormLayout(self)
+      onDisk = self.comm.backend.configuration['GUI']
+      self.mainL = QFormLayout(self)
       for items  in configurationGUI.values():
         for k,v in items.items():
-          setattr(self, k, addRowList(self.tabAppearanceL, v[0], str(v[1]), [str(i) for i in v[2]]))
-      self.tabAppearanceL.addRow('Save changes', TextButton('Save changes', self, [], None))
+          setattr(self, k,
+                  addRowList(self.mainL, label=v[0], default=str(onDisk[k]), itemList=[str(i) for i in v[2]]))
+      self.mainL.addRow('Save changes', TextButton('Save changes', self, [], None))
 
 
   def execute(self, _:list[Any]) -> None:
