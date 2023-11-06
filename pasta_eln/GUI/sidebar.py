@@ -208,7 +208,7 @@ class Sidebar(QWidget):
 
   def resizeEvent(self, event: QResizeEvent) -> None:
     """
-    executed upon resize, maximize
+    executed upon resize
 
     Args:
       event (QResizeEvent): event
