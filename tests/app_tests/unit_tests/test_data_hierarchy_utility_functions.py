@@ -771,7 +771,76 @@ class TestDataHierarchyUtilityFunctions(object):
        '-tags': ['group2', 'group3', 'default', 'group1'],
        'duplicate1': ['group2', 'group3', 'default', 'group1'],
        'duplicate2': ['group2', 'group3', 'default'],
-       'duplicate3': ['group3', 'default', 'group4']}})
+       'duplicate3': ['group3', 'default', 'group4']}}),
+    ("test",
+     {
+       'meta':
+         {
+           'default': [
+             {'name': '-name', 'query': 'What is the name of task?'},
+             {'name': '-name', 'query': 'What is the name of task?'},
+             {'name': None, 'query': 'What is the name of task?'},
+             {'name': '-tags', 'query': 'What is the name of task?'},
+             {'name': '-tags', 'query': 'What is the name of task?'}
+           ],
+           'metadata_group1': [
+             {'name': '', 'query': 'What is the name of task?'},
+             {'name': None, 'query': 'What is the name of task?'},
+             {'name': '-tags', 'query': 'What is the name of task?'}],
+         }
+     },
+     {'test': {'-name': ['default'], '-tags': ['default', 'metadata_group1']}}),
+    ("test",
+     {
+       'meta':
+         {
+           'default': [
+             {'name': '-name', 'query': 'What is the name of task?'},
+             {'name': '-name', 'query': 'What is the name of task?'},
+             {'name': None, 'query': 'What is the name of task?'},
+             {'name': '-tags', 'query': 'What is the name of task?'},
+             {'name': '-tags', 'query': 'What is the name of task?'},
+             {'name': 'new', 'query': 'What is the name of task?'},
+             {'name': 'new', 'query': 'What is the name of task?'},
+             {'name': 'new', 'query': 'What is the name of task?'}
+           ],
+           'metadata_group1': [
+             {'name': '', 'query': 'What is the name of task?'},
+             {'name': None, 'query': 'What is the name of task?'},
+             {'name': '-tags', 'query': 'What is the name of task?'}],
+         }
+     },
+     {'test': {'new': ['default'], '-name': ['default'], '-tags': ['default', 'metadata_group1']}}),
+    ("test",
+     {
+       'meta':
+         {
+           'default': [
+             {'name': '-name', 'query': 'What is the name of task?'},
+             {'name': '-name', 'query': 'What is the name of task?'},
+             {'name': None, 'query': 'What is the name of task?'},
+             {'name': '-tags', 'query': 'What is the name of task?'},
+             {'name': '-tags', 'query': 'What is the name of task?'},
+             {'name': 'new', 'query': 'What is the name of task?'},
+             {'name': 'new', 'query': 'What is the name of task?'},
+             {'name': 'new', 'query': 'What is the name of task?'}
+           ],
+           'metadata_group1': [
+             {'name': '', 'query': 'What is the name of task?'},
+             {'name': None, 'query': 'What is the name of task?'},
+             {'name': 'test', 'query': 'What is the name of task?'},
+             {'name': 'test', 'query': 'What is the name of task?'},
+             {'name': '-tags', 'query': 'What is the name of task?'}],
+           'metadata_group2': [
+             {'name': '', 'query': 'What is the name of task?'},
+             {'name': None, 'query': 'What is the name of task?'},
+             {'name': 'test', 'query': 'What is the name of task?'},
+             {'name': 'test', 'query': 'What is the name of task?'},
+             {'name': '-tags', 'query': 'What is the name of task?'}],
+         }
+     },
+     {'test': {'new': ['default'], '-name': ['default'], '-tags': ['default', 'metadata_group1', 'metadata_group2'],
+               'test': ['metadata_group1', 'metadata_group2']}})
   ])
   def test_set_types_with_duplicate_metadata_returns_expected_result(self, type_name, type_value, expected_result):
     types_with_duplicate_metadata = {}
@@ -781,7 +850,7 @@ class TestDataHierarchyUtilityFunctions(object):
     for t1, t2 in zip(dict(sorted(types_with_duplicate_metadata.items())).values(),
                       dict(sorted(expected_result.items())).values()):
       assert len(t1) == len(t2), "check_data_hierarchy_document returned types_with_duplicate_metadata length mismatch"
-      for d1, d2 in zip(sorted(t1.keys()), (t2.keys())):
+      for d1, d2 in zip(sorted(t1.keys()), sorted(t2.keys())):
         assert d1 == d2, "check_data_hierarchy_document returned types_with_duplicate_metadata mismatch"
       for g1, g2 in zip(dict(sorted(t1.items())).values(), dict(sorted(t2.items())).values()):
         assert sorted(g1) == sorted(g2), "check_data_hierarchy_document returned types_with_duplicate_metadata mismatch"
