@@ -343,13 +343,13 @@ def set_types_with_duplicate_metadata(type_name: str,
   metadata_copy = copy.deepcopy(type_value.get("meta"))
   for group, metadata in type_value.get("meta").items():  # type: ignore[union-attr]
     # Check if any duplicate metadata within the same group
-    names = list(filter(None, [item.get("name") for item in metadata] if metadata else []))
-    duplicates = [name for name in names if names.count(name) > 1]
+    names: list[str] = list(filter(None, [item.get("name") for item in metadata] if metadata else []))
+    duplicates: list[str] = [name for name in names if names.count(name) > 1]
     set_duplicates(types_with_duplicate_metadata, type_name, duplicates, group)
     metadata_copy.pop(group)  # type: ignore[union-attr]
     for neighbour_group, neighbour_metadata in metadata_copy.items():  # type: ignore[union-attr]
       # Get all duplicate names after filtering away the empty strings
-      duplicates: list[str] = list({item.get("name") for item in metadata}.intersection(
+      duplicates = list({item.get("name") for item in metadata}.intersection(
         [item.get("name") for item in neighbour_metadata]))
       duplicates = list(filter(None, duplicates))
       set_duplicates(types_with_duplicate_metadata, type_name, duplicates, group, neighbour_group)
@@ -359,7 +359,7 @@ def set_duplicates(types_with_duplicate_metadata: dict[str, dict[str, list[str]]
                    type_name: str,
                    duplicates: list[str],
                    group: str,
-                   neighbour_group: str = None):
+                   neighbour_group: str = "") -> None:
   """
   Set duplicates in types_with_duplicate_metadata
   Args:
