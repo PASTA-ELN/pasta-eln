@@ -73,8 +73,8 @@ class MainWindow(QMainWindow):
     if hasattr(self.backend, 'configuration'):                            # not case in fresh install
       for name in self.backend.configuration['projectGroups'].keys():
         Action(name,                         self, [Command.CHANGE_PG, name], changeProjectGroups)
-    Action('&Synchronize',                    self, [Command.SYNC],            systemMenu, shortcut='F5')
-    Action('&Data Hierarchy Editor',                 self, [Command.ONTOLOGY],        systemMenu, shortcut='F8')
+    Action('&Synchronize',                   self, [Command.SYNC],            systemMenu, shortcut='F5')
+    Action('&Data hierarchy editor',         self, [Command.DATAHIERARCHY],        systemMenu, shortcut='F8')
     systemMenu.addSeparator()
     Action('&Test extraction from a file',   self, [Command.TEST1],           systemMenu)
     Action('Test &selected item extraction', self, [Command.TEST2],           systemMenu, shortcut='F2')
@@ -172,9 +172,9 @@ class MainWindow(QMainWindow):
     elif command[0] is Command.SYNC:
       report = self.comm.backend.replicateDB(progressBar=self.sidebar.progress)
       showMessage(self, 'Report of syncronization', report, style='QLabel {min-width: 450px}')
-    elif command[0] is Command.ONTOLOGY:
-      ontologyForm = DataHierarchyEditorDialog(self.comm.backend.db)
-      ontologyForm.instance.exec()
+    elif command[0] is Command.DATAHIERARCHY:
+      dataHierarchyForm = DataHierarchyEditorDialog(self.comm.backend.db)
+      dataHierarchyForm.instance.exec()
       restart()
     elif command[0] is Command.TEST1:
       fileName = QFileDialog.getOpenFileName(self, 'Open file for extractor test', str(Path.home()), '*.*')[0]
@@ -249,7 +249,7 @@ class Command(Enum):
   PROJECT_GROUP = 5
   CHANGE_PG = 6
   SYNC = 7
-  ONTOLOGY = 8
+  DATAHIERARCHY = 8
   TEST1 = 9
   TEST2 = 10
   UPDATE = 11

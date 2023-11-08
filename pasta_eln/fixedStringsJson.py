@@ -1,29 +1,29 @@
 """ Long strings and dictionaries/JSON that would obfuscate code """
 from typing import Any
 
-defaultOntology: dict[str, Any] = {
-  "_id": "-ontology-",
+defaultDataHierarchy: dict[str, Any] = {
+  "_id": "-dataHierarchy-",
   "-version": 4,
 
-  "x0": {"IRI": "", "attachments": [], "displayedTitle": "Projects", "meta": {"default": [
+  "x0": {"IRI": "", "attachments": [], "title": "Projects", "meta": {"default": [
     {"name": "-name", "query": "What is the name of the project?", "mandatory": True},
     {"name": "-tags", "query": "What are the tags associated with the project?", "mandatory": True},
     {"name": "status", "query": "What is the project status", "list": ["active", "paused", "passive", "finished"]},
     {"name": "objective", "query": "What is the objective?"},
     {"name": "comment", "query": "#tags comments remarks :field:value:"}
   ]}},
-  "x1": {"IRI": "", "attachments": [], "displayedTitle": "Folders", "meta": {"default": [
+  "x1": {"IRI": "", "attachments": [], "title": "Folders", "meta": {"default": [
     {"name": "-name", "query": "What is the name of task?", "mandatory": True},
     {"name": "-tags", "query": "What are the tags associated with the task?", "mandatory": True},
     {"name": "comment", "query": "#tags comments remarks :field:value:"}
   ]}},
-  "x2": {"IRI": "", "attachments": [], "displayedTitle": "Folders", "meta": {"default": [
+  "x2": {"IRI": "", "attachments": [], "title": "Folders", "meta": {"default": [
     {"name": "-name", "query": "What is the name of subtask?", "mandatory": True},
     {"name": "-tags", "query": "What are the tags associated with the subtask?", "mandatory": True},
     {"name": "comment", "query": "#tags comments remarks :field:value:"}
   ]}},
 
-  "measurement": {"IRI": "", "attachments": [], "displayedTitle": "Measurements", "meta": {"default": [
+  "measurement": {"IRI": "", "attachments": [], "title": "Measurements", "meta": {"default": [
     {"name": "-name", "query": "What is the name of file name?", "mandatory": True},
     {"name": "-tags", "query": "What are the tags associated with the file name?", "mandatory": True},
     {"name": "comment", "query": "#tags comments remarks :field:value:"},
@@ -33,20 +33,20 @@ defaultOntology: dict[str, Any] = {
     {"name": "sample", "query": "Which sample was used?", "list": "sample"},
     {"name": "procedure", "query": "Which procedure was used?", "list": "procedure"}
   ]}},
-  "sample": {"IRI": "", "attachments": [], "displayedTitle": "Samples", "meta": {"default": [
+  "sample": {"IRI": "", "attachments": [], "title": "Samples", "meta": {"default": [
     {"name": "-name", "query": "What is the name / identifier of the sample?", "mandatory": True},
     {"name": "-tags", "query": "What are the tags associated with the sample?", "mandatory": True},
     {"name": "chemistry", "query": "What is its chemical composition?"},
     {"name": "comment", "query": "#tags comments remarks :field:value:"},
     {"name": "qrCode"}
   ]}},
-  "procedure": {"IRI": "", "attachments": [], "displayedTitle": "Procedures", "meta": {"default": [
+  "procedure": {"IRI": "", "attachments": [], "title": "Procedures", "meta": {"default": [
     {"name": "-name", "query": "What is the name / path of the procedure?", "mandatory": True},
     {"name": "-tags", "query": "What are the tags associated with the procedure?", "mandatory": True},
     {"name": "comment", "query": "#tags comments :field:value: e.g. #SOP_v1"},
     {"name": "content", "query": "What is procedure (Markdown possible; autofill if file given)?"}
   ]}},
-  "instrument": {"IRI": "", "attachments": [], "displayedTitle": "Instruments", "meta": {"default": [
+  "instrument": {"IRI": "", "attachments": [], "title": "Instruments", "meta": {"default": [
     {"name": "-name", "query": "What is the name / path of the instrument?", "mandatory": True},
     {"name": "-tags", "query": "What are the tags associated with the instrument?", "mandatory": True},
     {"name": "comment", "query": "#tags comments :field:value: e.g. #SOP_v1"},
@@ -54,7 +54,7 @@ defaultOntology: dict[str, Any] = {
   ]}}
 }
 
-defaultOntologyNode: dict[str, list[dict[str, str]]] = {
+defaultDataHierarchyNode: dict[str, list[dict[str, str]]] = {
   "default": [
     {"name": "-name", "query": "What is the file name?"},
     {"name": "-tags"},
@@ -104,7 +104,7 @@ setupTextLinux = """
 ### Welcome to the PASTA-ELN setup for Linux
 Three components are needed for proper functioning of PASTA-ELN:
 - CouchDB
-- Configuration of preferences / default ontology
+- Configuration of preferences / default data hierarchy
 - Example project creation
 
 This setup will analyse and (possibly) correct these items.
@@ -116,7 +116,7 @@ setupTextWindows = """
 ### Welcome to the PASTA-ELN setup for Windows
 Four components are needed for proper functioning of PASTA-ELN:
 - CouchDB
-- Configuration of preferences / default ontology
+- Configuration of preferences / default data hierarchy
 - Shortcut creation
 - Example project creation
 

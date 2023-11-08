@@ -7,8 +7,8 @@ from anytree.search import find_by_attr
 from cloudant.client import CouchDB
 from cloudant.replicator import Replicator
 from PySide6.QtWidgets import QProgressBar  # pylint: disable=no-name-in-module
-from .fixedStringsJson import defaultOntology, defaultOntologyNode
-from .handleDictionaries import ontology_pre_to_V4
+from .fixedStringsJson import defaultDataHierarchy, defaultDataHierarchyNode
+from .handleDictionaries import dataHierarchy_pre_to_V4
 from .miscTools import tracebackString, DummyProgressBar
 
 class Database:
@@ -16,14 +16,14 @@ class Database:
   Class for interaction with couchDB
   """
   def __init__(self, user:str, password:str, databaseName:str, configuration:dict[str,Any],
-               resetOntology:bool=False, basePath:Path=Path()):
+               resetDataHierarchy:bool=False, basePath:Path=Path()):
     """
     Args:
       user (string): user name to local database
       password (string): password to local database
       databaseName (string): local database name
       configuration (dict): configuration of GUI elements
-      resetOntology (bool): reset ontology
+      resetDataHierarchy (bool): reset dataHierarchy
     """
     try:
       self.client = CouchDB(user, password, url='http://127.0.0.1:5984', connect=True)
@@ -36,24 +36,24 @@ class Database:
     else:
       self.db = self.client.create_database(self.databaseName)  #tests and initial creation of example data set requires this
     # check if default documents exist and create
-    if '-ontology-' not in self.db or resetOntology:
-      if '-ontology-' in self.db:
-        print('Info: remove old ontology')
-        self.db['-ontology-'].delete()
-      self.ontology = defaultOntology
-      self.db.create_document(self.ontology)
+    if '-dataHierarchy-' not in self.db or resetDataHierarchy:
+      if '-dataHierarchy-' in self.db:
+        print('Info: remove old dataHierarchy')
+        self.db['-dataHierarchy-'].delete()
+      self.dataHierarchy = defaultDataHierarchy
+      self.db.create_document(self.dataHierarchy)
       self.initDocTypeViews( configuration['tableColumnsMax'] )
       self.initGeneralViews()
-    self.ontology = dict(self.db['-ontology-'])
-    if '-version' in self.ontology and int(self.ontology['-version']) < 4:
+    self.dataHierarchy = dict(self.db['-dataHierarchy-'])
+    if '-version' in self.dataHierarchy and self.dataHierarchy['-version'] < 4:
       logging.info('Convert ontology to V4.0')
-      ontology_pre_to_V4(self.ontology)
-      self.db['-ontology-'].delete()
-      self.db.create_document(self.ontology)
-    if '-version' not in self.ontology or self.ontology['-version'] != 4:
-      print(F"**ERROR wrong ontology version: {self.ontology['-version']}")
-      raise ValueError(f"Wrong ontology version {self.ontology['-version']}")
-    self.dataLabels = {k:v['displayedTitle'] for k,v in self.ontology.items() if k[0] not in ['_','-']}
+      dataHierarchy_pre_to_V4(self.dataHierarchy)
+      self.db['-dataHierarchy-'].delete()
+      self.db.create_document(self.dataHierarchy)
+    if '-version' not in self.dataHierarchy or self.dataHierarchy['-version']!=4:
+      print(F"**ERROR wrong dataHierarchy version: {self.dataHierarchy['-version']}")
+      raise ValueError(f"Wrong dataHierarchy version {self.dataHierarchy['-version']}")
+    self.dataLabels = {k:v['title'] for k,v in self.dataHierarchy.items() if k[0] not in ['_','-']}
     self.basePath   = basePath
     return
 
@@ -72,7 +72,7 @@ class Database:
     oldColumnNames = self.getColumnNames()
     jsDefault = 'if ($docType$) {doc["-branch"].forEach(function(branch){emit($key$, [$outputList$]);});}'
     viewCode = {}
-    for docType in [i for i in self.ontology if i[0] not in ['_','-']]+['-']:
+    for docType in [i for i in self.dataHierarchy if i[0] not in ['_','-']]+['-']:
       if docType=='x0':
         newString = "doc['-type']=='x0' && (doc['-branch'][0].show.every(function(i) {return i;}))"
         js    = jsDefault.replace('$docType$', newString).replace('$key$','doc._id')
@@ -94,10 +94,10 @@ class Database:
       elif baseDocType in oldColumnNames:
         columnNames = oldColumnNames[baseDocType].split(',')
       elif docType == '-':
-        columnNames = [i['name'] for i in defaultOntologyNode['default'] if 'name' in i]
+        columnNames = [i['name'] for i in defaultDataHierarchyNode['default'] if 'name' in i]
       else:
-        columnNames = [i['name'] for group in self.ontology[docType]['meta']
-                       for i in self.ontology[docType]['meta'][group]]
+        columnNames = [i['name'] for group in self.dataHierarchy[docType]['meta']
+                       for i in self.dataHierarchy[docType]['meta'][group]]
       columnNames = columnNames[:tableColumnsMax]
       commentString = f'// {docType} : ' + ','.join(columnNames) + '\n'
       for name in columnNames:
@@ -138,8 +138,8 @@ class Database:
                   for v in self.db['_design/viewDocType']['views'].values()]
       return {i.split(' : ')[0]:i.split(' : ')[1] for i in comments}
     except Exception:
-      defaultColumnNames = {'-':','.join([i['name'] for i in defaultOntologyNode['default'] if 'name' in i])}
-      for docType, docTypeDict in self.ontology.items():
+      defaultColumnNames = {'-':','.join([i['name'] for i in defaultDataHierarchyNode['default'] if 'name' in i])}
+      for docType, docTypeDict in self.dataHierarchy.items():
         if docType[0] in ['_','-']:
           continue
         columnNames = [i['name'] for group in docTypeDict['meta'] for i in docTypeDict['meta'][group]]
@@ -778,7 +778,7 @@ class Database:
           if not minimal:
             outstring+= outputString(outputStyle,'ok','..info: Design document '+doc['_id'])
           continue
-        if doc['_id'] == '-ontology-':
+        if doc['_id'] == '-dataHierarchy-':
           if repair:
             if '-hierarchy-' in doc:
               del doc['-hierarchy-']
@@ -788,7 +788,7 @@ class Database:
                 del doc[old]
             doc.save()
           if not minimal:
-            outstring+= outputString(outputStyle,'ok','..info: ontology exists')
+            outstring+= outputString(outputStyle,'ok','..info: dataHierarchy exists')
           continue
         #only normal documents after this line
 

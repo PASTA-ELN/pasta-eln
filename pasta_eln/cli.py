@@ -108,7 +108,7 @@ def commands(getDocu:bool, args:argparse.Namespace) -> str:
       if args.database=='':
         args.database = config['defaultProjectGroup']
 
-    initViews, initConfig, resetOntology = False, True, False
+    initViews, initConfig, resetDataHierarchy = False, True, False
     if getDocu:
       doc += '  test: test PASTA setup\n'
       doc += '    example: pastaELN_CLI.py test -d instruments\n'
@@ -116,7 +116,7 @@ def commands(getDocu:bool, args:argparse.Namespace) -> str:
       #PART 1 of test: precede with configuration test
       initViews, initConfig = True, True
       if args.command=='testDev':
-        resetOntology = True
+        resetDataHierarchy = True
       output = "" #checkConfiguration(repair=False)  #verify configuration file .pastaELN_CLI.py
       print(output)
       if 'ERROR' in output:
@@ -140,7 +140,7 @@ def commands(getDocu:bool, args:argparse.Namespace) -> str:
     if not getDocu:
       try:
         be = Backend(defaultProjectGroup=args.database, initViews=initViews, initConfig=initConfig,
-                  resetOntology=resetOntology)
+                  resetDataHierarchy=resetDataHierarchy)
       except Exception:
         print('**ERROR pma20: backend could not be started.\n'+traceback.format_exc()+'\n\n')
         return ''
@@ -156,10 +156,10 @@ def commands(getDocu:bool, args:argparse.Namespace) -> str:
         numViews = len(item['doc']['views']) if 'views' in item['doc'] else 0
         print('  ',item['id'], '   Num. of views:', numViews )
       try:
-        data = be.db.getDoc('-ontology-')
-        print('Ontology exists on server')
+        data = be.db.getDoc('-dataHierarchy-')
+        print('DataHierarchy exists on server')
       except Exception:
-        print('**ERROR pma02: Ontology does NOT exist on server')
+        print('**ERROR pma02: DataHierarchy does NOT exist on server')
       print('local directory:',be.basePath)
       print(f'software version: {__version__}')
       return '1'
@@ -231,7 +231,7 @@ def commands(getDocu:bool, args:argparse.Namespace) -> str:
     #   doc += '    before: ensure database configuration and project exist\n'
     #   doc += '    example: pastaELN_CLI.py importXLS -d instruments -i x-123456 -c "~/path/to.xls" -l instrument\n'
     #   doc += '    -l is the document type\n'
-    #   doc += '    afterwards: adopt ontology (views are automatically generated)\n'
+    #   doc += '    afterwards: adopt dataHierarchy (views are automatically generated)\n'
     # elif args.command=='importXLS':
     #   import pandas as pd
     #   from commonTools import commonTools as cT  #not globally imported since confuses translation

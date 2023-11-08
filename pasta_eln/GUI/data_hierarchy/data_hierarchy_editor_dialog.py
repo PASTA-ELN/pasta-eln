@@ -161,7 +161,7 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
       self.selected_type_metadata = selected_type.get("meta")
 
       # Type displayed_title is set in a line edit
-      self.typeDisplayedTitleLineEdit.setText(selected_type.get('displayedTitle'))
+      self.typeDisplayedTitleLineEdit.setText(selected_type.get('title'))
 
       # Type IRI is set in a line edit
       self.typeIriLineEdit.setText(selected_type.get('IRI'))
@@ -259,7 +259,7 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
     current_type = self.typeComboBox.currentText()
     current_type = adapt_type(current_type)
     if modified_type_displayed_title is not None and current_type in self.data_hierarchy_types:
-      self.data_hierarchy_types.get(current_type)["displayedTitle"] = modified_type_displayed_title
+      self.data_hierarchy_types.get(current_type)["title"] = modified_type_displayed_title
       self.set_iri_lookup_action(modified_type_displayed_title)
 
   def update_type_iri(self,
