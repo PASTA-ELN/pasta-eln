@@ -2,7 +2,35 @@
 
 ## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
 
-[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.19...HEAD)
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.20...HEAD)
+
+**Fixed bugs:**
+
+- Bug if branch not in doc [\#107](https://github.com/PASTA-ELN/pasta-eln/issues/107)
+- Editing unassigned items [\#82](https://github.com/PASTA-ELN/pasta-eln/issues/82)
+- Importing .eln with unidentified-\>measurement files [\#79](https://github.com/PASTA-ELN/pasta-eln/issues/79)
+- Creating new project after eLabFTW eln import [\#78](https://github.com/PASTA-ELN/pasta-eln/issues/78)
+
+**Closed issues:**
+
+- Jpeg extractor issue [\#118](https://github.com/PASTA-ELN/pasta-eln/issues/118)
+- Deleting structure levels 2 and 1 [\#117](https://github.com/PASTA-ELN/pasta-eln/issues/117)
+- Edit of sample that has no project [\#85](https://github.com/PASTA-ELN/pasta-eln/issues/85)
+
+**Merged pull requests:**
+
+- undo a recently created bug [\#132](https://github.com/PASTA-ELN/pasta-eln/pull/132) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- repaired \#125: Appearance options not used from saved state [\#127](https://github.com/PASTA-ELN/pasta-eln/pull/127) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Remove bug that occurs if you remove a project with content [\#124](https://github.com/PASTA-ELN/pasta-eln/pull/124) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Sb project view x3 does not exist [\#123](https://github.com/PASTA-ELN/pasta-eln/pull/123) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Sb extractor bad metadata [\#122](https://github.com/PASTA-ELN/pasta-eln/pull/122) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- repaired \#116 [\#121](https://github.com/PASTA-ELN/pasta-eln/pull/121) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Sb table bugs [\#120](https://github.com/PASTA-ELN/pasta-eln/pull/120) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Repaired \#110 and \#111 since they belong to the same file [\#119](https://github.com/PASTA-ELN/pasta-eln/pull/119) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+
+## [v2.4.20](https://github.com/PASTA-ELN/pasta-eln/tree/v2.4.20) (2023-10-27)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.19...v2.4.20)
 
 **Merged pull requests:**
 
