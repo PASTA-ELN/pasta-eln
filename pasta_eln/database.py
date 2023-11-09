@@ -154,12 +154,12 @@ class Database:
     tracebackString(True, 'initGeneralView')
     jsHierarchy  = '''
       if ('-type' in doc && (doc["-branch"][0].show.every(function(i) {return i;}))) {
-        doc['-branch'].forEach(function(branch, idx) {emit(branch.stack.concat([doc._id]).join(' '),[branch.child,doc['-type'],doc['-name'],idx]);});
+        doc['-branch'].forEach(function(branch, idx) {emit(branch.stack.concat([doc._id]).join(' '),[branch.child,doc['-type'],doc['-name'],doc['-gui'],idx]);});
       }
     '''
     jsHierarchyAll  = '''
       if ('-type' in doc) {
-        doc['-branch'].forEach(function(branch, idx) {emit(branch.stack.concat([doc._id]).join(' '),[branch.child,doc['-type'],doc['-name'],idx]);});
+        doc['-branch'].forEach(function(branch, idx) {emit(branch.stack.concat([doc._id]).join(' '),[branch.child,doc['-type'],doc['-name'],doc['-gui'],idx]);});
       }
     '''
     jsPath = '''
@@ -598,7 +598,8 @@ class Database:
       level = [i for i in view if len(i['key'].split())==levelNum]
       if levelNum==1:
         if len(level)==1:
-          dataTree = Node(id=level[0]['key'], docType=level[0]['value'][1], name=level[0]['value'][2])
+          value= level[0]['value']
+          dataTree = Node(id=level[0]['key'], docType=value[1], name=value[2], gui=value[3])
         else:
           print(f'**ERROR getHierarchy Did not find corresponding level={levelNum} under docID {start}')
           dataTree = Node(id=None, name='')
@@ -608,7 +609,8 @@ class Database:
         for node in [x for (_,x) in sorted(zip(childList, level), key=lambda pair: pair[0])]:
           parentID = node['key'].split()[-2]
           parentNode = find_by_attr(dataTree, parentID, name='id')
-          _ = Node(id=node['id'], parent=parentNode, docType=node['value'][1], name=node['value'][2])
+          value = node['value']
+          _ = Node(id=node['id'], parent=parentNode, docType=value[1], name=value[2], gui=value[3])
       if not level: #if len(level)==0
         break
       levelNum += 1
@@ -646,6 +648,22 @@ class Database:
     if doc['-type'][0][0]=='x':
       with open(self.basePath/doc['-branch'][0]['path']/'.id_pastaELN.json','w', encoding='utf-8') as fOut:
         fOut.write(json.dumps(doc))
+    return
+
+
+  def setGUI(self, docID:str, guiState:list[bool]) -> None:
+    """
+    Set the gui state
+    - 0: true=show details; false=hide details
+    - 1: true=show children; false=hide children (only makes sense for folders = x1, x2)
+
+    Args:
+      docID (str): docID
+      guiState (list): list of bool that show if document is shown
+    """
+    doc = self.db[docID]
+    doc['-gui'] = guiState
+    doc.save()
     return
 
 
@@ -772,6 +790,10 @@ class Database:
     if repair:
       print('REPAIR MODE IS ON: afterwards, full-reload and create views')
     ## loop all documents
+    versionNumber = self.db['-dataHierarchy-']['-version'] if '-dataHierarchy-' in self.db else \
+                    self.db['-ontology-']['-version']
+    if versionNumber<4 and '-ontology-' in self.db:
+      self.db['-ontology-'].delete()
     for doc in self.db:
       try:
         if '_design' in doc['_id']:
@@ -794,56 +816,6 @@ class Database:
 
         ###custom temporary changes: keep few as examples;
         # BE CAREFUL: PRINT FIRST, delete second run ; RUN ONLY ONCE
-        # Version1->Version2 changes
-        # if '-branch' in doc:
-        #   for b in doc['-branch']:
-        #     b['show']=[True]*(len(b['stack'])+1)
-        # if '-tags' not in doc:
-        #   tags = doc['tags']
-        #   del doc['tags']
-        #   tags = [i[1:] if i[0]=='#' else i for i in tags]
-        #   tags = ['_1' if i=='1' else i for i in tags]
-        #   tags = ['_2' if i=='2' else i for i in tags]
-        #   tags = ['_3' if i=='3' else i for i in tags]
-        #   tags = ['_4' if i=='4' else i for i in tags]
-        #   tags = ['_5' if i=='5' else i for i in tags]
-        #   if '-curated' in doc:
-        #     if doc['-type'][0][0]!='x':
-        #       tags.append('_curated')
-        #     del doc['-curated']
-        #   doc['-tags'] = tags
-        #   print(doc['_id'], 'tags' in doc, doc['-tags'], '-curated' in doc)
-        #### doc.save()
-        # END VERSION 1 -> 2 changes
-        #   del doc['revisions']
-        #   doc.save()
-        # if len(doc['_id'].split('-'))==3:
-        #   print('id',doc['_id'])
-        #   doc.delete()
-        #   continue
-        ## output size of document
-        # print('Name: {0: <16.16}'.format(doc['-name']),'| id:',doc['_id'],'| len:',len(json.dumps(doc)))
-        # if repair:
-        #   # print("before",doc.keys(),doc['_id'])
-        #   # if doc['_id']== "x-028456be353dd7b5092c48841d6dfec8":
-        #   #   print('found')
-        #   for item in ['branch','curated','user','type','client','date']:
-        #     if '-'+item not in doc and item in doc:
-        #       if item in ('branch', 'type'):
-        #         doc['-'+item] = doc[item].copy()
-        #       else:
-        #         doc['-'+item] = doc[item]
-        #       del doc[item]
-        #   #print(doc.keys())
-        #   if not '-type' in doc:
-        #     doc['-type'] =[]
-        #   if doc['-type'] == ["text","project"]:
-        #     doc['-type'] = ["x0"]
-        #   if doc['-type'] == ["text","step"]:
-        #     doc['-type'] = ["x1"]
-        #   if doc['-type'] == ["text","task"]:
-        #     doc['-type'] = ["x2"]
-
         #   Project renaming bug 1)
         # if doc['-branch'][0]['path'].startswith('PastaEln'):
         #   oldPath = doc['-branch'][0]['path']
@@ -851,10 +823,15 @@ class Database:
         #   print(oldPath, '->', newPath)
         #   doc['-branch'][0]['path'] = newPath
         #   doc.save()
-        #
-        #   #   if len(doc['-branch'][0]['stack']) == len(doc['-branch'][0]['path'].split('/'))-1 :
-        #   #     doc['-type'] = ["x"+str(len(doc['-branch'][0]['stack'])) ]
-        #   # print("after ",doc.keys(),doc['_id'])
+
+        # change database to version 4
+        if versionNumber<4:
+          if '-gui' not in doc:
+            outstring+= outputString(outputStyle,'error',f"dch00: gui does not exist {doc['_id']}")
+            doc['-gui'] = [True, True]
+            doc.save()
+
+
 
         #branch test
         if '-branch' not in doc:

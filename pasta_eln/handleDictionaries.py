@@ -212,8 +212,10 @@ def diffDicts(dict1:dict[str,Any], dict2:dict[str,Any]) -> str:
           for idx,_ in enumerate(value):
             branch1 = value[idx]
             branch2 = dict2Copy['-branch'][idx]
-            del branch1['show']
-            del branch2['show']
+            if 'show' in branch1:
+              del branch1['show']
+            if 'show' in branch2:
+              del branch2['show']
             if branch1!=branch2:
               outString += 'branches differ\n   '+str(value)+'\n   '+str(dict2Copy[key])+'\n'
       else:

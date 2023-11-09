@@ -40,20 +40,11 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       option (QStyleOptionViewItem): option incl. current coordinates
       index (QModelIndex): index
     """
-    hierStack = index.data(Qt.DisplayRole) # type: ignore
-    if hierStack is None or self.comm is None:
+    name = index.data(Qt.DisplayRole) # type: ignore
+    data = index.data(Qt.UserRole+1) # type: ignore
+    if not data or data['hierStack'] is None or self.comm is None:
       return
-    docID   = hierStack.split('/')[-1]
-    if docID.endswith(' -'):
-      docID = docID[:34]
-      folded = True
-    else:
-      folded = False
-    doc     = self.comm.backend.db.getDoc(docID)
-    if len(doc)<2:
-      print(f'**ERROR cannot read docID: {docID}')
-      logging.error('LeafRenderer: Cannot read docID %s',docID)
-      return
+    docID   = data['hierStack'].split('/')[-1]
     # GUI
     if self.penDefault is None:
       self.penDefault = QPen(painter.pen())
@@ -64,32 +55,41 @@ class ProjectLeafRenderer(QStyledItemDelegate):
                         int((option.rect.bottomRight()-option.rect.topLeft()).toTuple()[0]/3.5) )
     bottomRight2nd = option.rect.bottomRight()- QPoint(self.frameSize+1,self.frameSize)
     painter.fillRect(option.rect.marginsRemoved(QMargins(2,6,4,0)),  self.colorMargin1)
-    if doc['-type'][0][0]=='x':
+    if data['docType'][0][0]=='x':
       painter.fillRect(option.rect.marginsRemoved(QMargins(-2,3,8,5)), self.colorMargin2.darker(102))
     else:
       painter.fillRect(option.rect.marginsRemoved(QMargins(-2,3,8,5)), self.colorMargin2.lighter(210))
     # header
     y = self.lineSep/2
-    hiddenText = ('     \U0001F441' if [b for b in doc['-branch'] if False in b['show']] else '')
-    docTypeText= '/'.join(doc['-type'])
-    if doc['-type'][0][0]=='x':
+    docTypeText= '/'.join(data['docType'])
+    if data['docType'][0][0]=='x':
       docTypeText = self.comm.backend.db.dataHierarchy['x1']['title'].lower()[:-1]
-    nameText = doc['-name'] if len(doc['-name'])<55 else '...'+doc['-name'][-50:]
-    staticText = QStaticText(f'<strong>{nameText}{hiddenText}</strong>')
+    nameText = name if len(name)<55 else '...'+name[-50:]
+    if not data['gui'][0]:  #Only draw first line
+      staticText = QStaticText(f'<strong>{nameText}</strong>')
+      staticText.setTextWidth(docTypeOffset)
+      painter.drawStaticText(x0, y0+y, staticText)
+      painter.drawStaticText(x0+docTypeOffset, y0+y, QStaticText(docTypeText))
+      return
+    # details = body
+    doc     = self.comm.backend.db.getDoc(docID)
+    if len(doc)<2:
+      print(f'**ERROR cannot read docID: {docID}')
+      logging.error('LeafRenderer: Cannot read docID %s',docID)
+      return
+    hiddenText = ('     \U0001F441' if [b for b in doc['-branch'] if False in b['show']] else '')
+    staticText = QStaticText(f'<strong>{nameText} {hiddenText}</strong>')
     staticText.setTextWidth(docTypeOffset)
     painter.drawStaticText(x0, y0+y, staticText)
     painter.drawStaticText(x0+docTypeOffset, y0+y, QStaticText(docTypeText))
     if self.debugMode:
       painter.drawStaticText(x0+700, y0+y, QStaticText(index.data(Qt.DisplayRole)))  # type: ignore
-    if folded:  #stop drawing after first line
-      return
-    # body
     width, height = -1, -1
-    if '-tags' in doc and len(doc['-tags'])>0:
+    if doc['-tags']:
       y += self.lineSep
       tags = ['_curated_' if i=='_curated' else f'#{i}' for i in doc['-tags']]
       tags = ['\u2605'*int(i[2]) if i[:2]=='#_' else i for i in tags]
-      painter.drawStaticText(x0, y0+y, QStaticText('Tags: '+' '.join(tags)))
+      painter.drawStaticText(x0, y0+y, QStaticText(f'Tags: {" ".join(tags)}'))
     for key in doc:
       if key in _DO_NOT_RENDER_ or key[0] in ['-','_']:
         continue
@@ -150,14 +150,14 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     """
     determine size of this leaf
     """
-    if not index:
+    if not index or not index.data(Qt.UserRole+1):
       return QSize()
-    hierStack = index.data(Qt.DisplayRole)  # type: ignore
+    hierStack = index.data(Qt.UserRole+1)['hierStack'] # type: ignore
     if hierStack is None or self.comm is None:
       return QSize()
-    docID   = hierStack.split('/')[-1]
-    if docID.endswith(' -'):
+    if not index.data(Qt.UserRole+1)['gui'][0]:
       return QSize(400, self.lineSep*2)
+    docID   = hierStack.split('/')[-1]
     doc = self.comm.backend.db.getDoc(docID)
     if len(doc)<2:
       if len(self.comm.backend.db.getDoc(hierStack.split('/')[0]))>2: #only refresh when project still exists

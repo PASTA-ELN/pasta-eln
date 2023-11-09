@@ -85,6 +85,7 @@ class MainWindow(QMainWindow):
     helpMenu = menu.addMenu("&Help")
     Action('&Website',                       self, [Command.WEBSITE],         helpMenu)
     Action('&Verify database',               self, [Command.VERIFY_DB],       helpMenu, shortcut='Ctrl+?')
+    Action('&Repair database',               self, [Command.REPAIR_DB],       helpMenu)
     Action('Shortcuts',                      self, [Command.SHORTCUTS],       helpMenu)
     # shortcuts for advanced usage (user should not need)
     QShortcut('F9', self, lambda: self.execute([Command.RESTART]))
@@ -195,6 +196,14 @@ class MainWindow(QMainWindow):
     elif command[0] is Command.VERIFY_DB:
       report = self.comm.backend.checkDB(outputStyle='html', minimal=True)
       showMessage(self, 'Report of database verification', report, style='QLabel {min-width: 800px}')
+    elif command[0] is Command.REPAIR_DB:
+      ret = QMessageBox.critical(self, 'Warning', 'Are you sure you want to repair the database as it can destroy information?', \
+                      QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,  # type: ignore[operator]
+                      QMessageBox.StandardButton.No)
+      if ret==QMessageBox.StandardButton.Yes:
+        self.comm.backend.checkDB(outputStyle='html', minimal=True, repair=True)
+        showMessage(self, 'Report of database verification', 'Rerun verification to test success',
+                    style='QLabel {min-width: 800px}')
     elif command[0] is Command.SHORTCUTS:
       showMessage(self, 'Keyboard shortcuts', shortcuts)
 
@@ -242,22 +251,23 @@ def mainGUI() -> tuple[Union[QCoreApplication, None], MainWindow]:
 
 class Command(Enum):
   """ Commands used in this file """
-  EXPORT = 1
-  IMPORT = 2
-  EXIT = 3
-  VIEW = 4
+  EXPORT    = 1
+  IMPORT    = 2
+  EXIT      = 3
+  VIEW      = 4
   PROJECT_GROUP = 5
   CHANGE_PG = 6
-  SYNC = 7
+  SYNC      = 7
   DATAHIERARCHY = 8
-  TEST1 = 9
-  TEST2 = 10
-  UPDATE = 11
-  CONFIG = 12
-  WEBSITE = 13
+  TEST1     = 9
+  TEST2     = 10
+  UPDATE    = 11
+  CONFIG    = 12
+  WEBSITE   = 13
   VERIFY_DB = 14
-  SHORTCUTS = 15
-  RESTART = 16
+  REPAIR_DB = 15
+  SHORTCUTS = 16
+  RESTART   = 17
 
 
 def startMain() -> None:

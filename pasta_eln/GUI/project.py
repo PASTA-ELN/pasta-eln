@@ -2,7 +2,7 @@
 import logging, re
 from enum import Enum
 from typing import Optional, Any
-from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget, QMenu, QMessageBox, QTextEdit, QScrollArea # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget, QMenu, QMessageBox, QTextEdit, QScrollArea, QTreeWidgetItemIterator # pylint: disable=no-name-in-module
 from PySide6.QtGui import QStandardItemModel, QStandardItem, QAction   # pylint: disable=no-name-in-module
 from PySide6.QtCore import Slot, Qt, QItemSelectionModel, QModelIndex # pylint: disable=no-name-in-module
 from anytree import PreOrderIter, Node
@@ -30,7 +30,7 @@ class Project(QWidget):
     self.taskID = ''
     self.docProj:dict[str,Any]= {}
     self.showAll= True
-    self.foldedAll = False
+    self.showDetailsAll = False
     self.btnAddSubfolder:Optional[TextButton] = None
     self.lineSep = 20
 
@@ -56,12 +56,12 @@ class Project(QWidget):
     TextButton('Edit project',                         self, [Command.EDIT],      buttonL)
     visibility = TextButton(          'Visibility',    self, [],                  buttonL)
     visibilityMenu = QMenu(self)
-    self.actHideDetail = Action('Hide project details',self, [Command.REDUCE_HEIGHT_HEAD],visibilityMenu)
+    self.actHideDetail = Action('Hide project details',self, [Command.SHOW_PROJ_DETAILS],visibilityMenu)
     menuTextItems = 'Hide hidden items' if self.showAll else 'Show hidden items'
-    minimizeItems = 'Show all item details' if self.foldedAll else 'Hide all item details'
+    minimizeItems = 'Show all item details' if self.showDetailsAll else 'Hide all item details'
     self.actionHideItems   = Action( menuTextItems,    self, [Command.HIDE_SHOW_ITEMS],  visibilityMenu)
     self.actionHideProject = Action( menuTextHidden,   self, [Command.HIDE],             visibilityMenu)
-    self.actionFoldAll     = Action( minimizeItems,    self, [Command.FOLD_ALL_ITEMS],   visibilityMenu)
+    self.actionFoldAll     = Action( minimizeItems,    self, [Command.SHOW_DETAILS],   visibilityMenu)
     visibility.setMenu(visibilityMenu)
     more = TextButton('More',           self, [], buttonL)
     moreMenu = QMenu(self)
@@ -117,7 +117,7 @@ class Project(QWidget):
   @Slot(str, str)
   def change(self, projID:str, docID:str) -> None:
     """
-    What happens when user clicks to change doc-type
+    What happens when user clicks to change project
 
     Args:
       projID (str): document id of project; if empty, just refresh
@@ -145,7 +145,13 @@ class Project(QWidget):
         self.projHeader()
       else:
         rootItem.appendRow(self.iterateTree(node))
-    # self.tree.expandAll()
+    # collapse / expand depending on stored value
+    for itemIndex,data in self.iterItems(self.model.invisibleRootItem()):
+      gui  = data['gui']
+      print(data['hierStack'].split('/')[-1], data['hierStack'].split('/')[-1][0]=='x',gui[1], itemIndex )
+      # if data['hierStack'].split('/')[-1][0]=='x':
+      print('  ',self.tree.collapse(itemIndex))# (index, False)# not gui[1])
+      print('  ',self.tree.isExpanded(itemIndex))# (index, False)# not gui[1])
     if selectedIndex is not None:
       self.tree.selectionModel().select(selectedIndex, QItemSelectionModel.Select)
       self.tree.setCurrentIndex(selectedIndex)# Item(selectedItem)
@@ -192,7 +198,7 @@ class Project(QWidget):
       self.comm.backend.scanProject(self.comm.progressBar, self.projID, self.docProj['-branch'][0]['path'])
       self.comm.changeSidebar.emit('redraw')
       showMessage(self, 'Information','Scanning finished')
-    elif command[0] is Command.REDUCE_HEIGHT_HEAD:
+    elif command[0] is Command.SHOW_PROJ_DETAILS:
       if self.infoW is not None and self.infoW.isHidden():
         self.infoW.show()
         self.actHideDetail.setText('Hide project details')
@@ -208,20 +214,19 @@ class Project(QWidget):
       else:
         self.change('', '')
         self.comm.changeSidebar.emit('')
-    elif command[0] is Command.FOLD_ALL_ITEMS and self.tree is not None:
-      self.foldedAll = not self.foldedAll
+    elif command[0] is Command.SHOW_DETAILS and self.tree is not None:
       def recursiveRowIteration(index:QModelIndex) -> None:
         for subRow in range(self.tree.model().rowCount(index)):   # type: ignore[union-attr]
           subIndex = self.tree.model().index(subRow,0, index)     # type: ignore[union-attr]
           subItem  = self.tree.model().itemFromIndex(subIndex)    # type: ignore[union-attr]
-          if self.foldedAll       and not subItem.text().endswith(' -'):
-            subItem.setText(f'{subItem.text()} -')
-          elif not self.foldedAll and subItem.text().endswith(' -'):
-            subItem.setText(subItem.text()[:-2])
-          recursiveRowIteration(subIndex)
-        return
+          docID    = subItem.data()['hierStack'].split('/')[-1]
+          gui      = subItem.data()['gui']
+          gui[0]   = self.showDetailsAll
+          subItem.setData({ **subItem.data(), **{'gui':gui}})
+          self.comm.backend.db.setGUI(docID, gui)
       recursiveRowIteration(self.tree.model().index(-1,0))
-      if self.foldedAll:
+      self.showDetailsAll = not self.showDetailsAll
+      if self.showDetailsAll:
         self.actionFoldAll.setText('Show all item details')
       else:
         self.actionFoldAll.setText('Hide all item details')
@@ -249,12 +254,10 @@ class Project(QWidget):
     """
     #gather old information
     db       = self.comm.backend.db
-    stackOld = item.text().split('/')[:-1]
-    docID    = item.text().split('/')[-1]
-    maximized = True
-    if docID.endswith(' -'):
-      docID = docID[:34]
-      maximized = False
+    if not item.data():
+      return
+    stackOld = item.data()['hierStack'].split('/')[:-1]
+    docID    = item.data()['hierStack'].split('/')[-1]
     doc      = db.getDoc(docID)
     if '-branch' not in doc or not stackOld: #skip everything if project or not contain branch
       return
@@ -274,7 +277,7 @@ class Project(QWidget):
     while currentItem.parent() is not None:
       currentItem = currentItem.parent()
       docIDj = currentItem.text().split('/')[-1]
-      stackNew.append(docIDj[:34] if docIDj.endswith(' -') else docIDj)
+      stackNew.append(docIDj)
     stackNew = [self.projID] + stackNew[::-1]  #add project id and reverse
     childNew = item.row()
     if branchOld['path'] is not None and not branchOld['path'].startswith('http'):
@@ -292,7 +295,7 @@ class Project(QWidget):
       return
     # change item in question
     db.updateBranch(docID=docID, branch=branchIdx, stack=stackNew, path=pathNew, child=childNew)
-    item.setText('/'.join(stackNew+[docID]) if maximized else '/'.join(stackNew+[f'{docID} -']) )     #update item.text() to new stack
+    item.setData({})     #update item.text() to new stack
     # change siblings
     for line in siblingsOld:
       db.updateBranch(docID=line['id'], branch=line['value'][3], child=line['value'][0]-1)
@@ -313,10 +316,10 @@ class Project(QWidget):
       QtTreeWidgetItem: tree node
     """
     #prefill docID
-    label = '/'.join([i.id for i in nodeHier.ancestors]+[nodeHier.id])
-    if self.foldedAll:
-      label += ' -'
-    nodeTree = QStandardItem(label)  #nodeHier.name,'/'.join(nodeHier.docType),nodeHier.id])
+    hierStack = '/'.join([i.id for i in nodeHier.ancestors]+[nodeHier.id])
+    gui = nodeHier.gui
+    nodeTree = QStandardItem(nodeHier.name)
+    nodeTree.setData({"hierStack":hierStack, "docType":nodeHier.docType, "gui":gui})
     if nodeHier.id[0]=='x':
       nodeTree.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled) # type: ignore
     else:
@@ -330,14 +333,25 @@ class Project(QWidget):
     return nodeTree
 
 
+  def iterItems(self, root:QStandardItem):
+    """
+    Recursive function that creates an iterator over all the items of the tree
+    """
+    if root.hasChildren():
+      for row in range(root.rowCount()):
+        yield from self.iterItems( root.child(row, 0) )
+    else:
+      yield (root.index(), root.data(role=Qt.UserRole+1))
+
+
 class Command(Enum):
   """ Commands used in this file """
   EDIT   = 1
   DELETE = 2
   SCAN   = 3
   HIDE   = 4
-  REDUCE_HEIGHT_HEAD = 5
+  SHOW_PROJ_DETAILS = 5
   HIDE_SHOW_ITEMS    = 6
-  FOLD_ALL_ITEMS     = 7
+  SHOW_DETAILS     = 7
   ADD_CHILD          = 8
   SHOW_TABLE         = 9
