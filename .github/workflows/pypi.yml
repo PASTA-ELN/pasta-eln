@@ -1,12 +1,6 @@
 name: pypi
 
-on:
-  push:
-    branches:
-    - main
-  pull_request:
-    branches:
-    - main
+on: [push, pull_request]
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
