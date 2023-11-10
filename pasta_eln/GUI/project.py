@@ -146,18 +146,30 @@ class Project(QWidget):
       else:
         rootItem.appendRow(self.iterateTree(node))
     # collapse / expand depending on stored value
-    for itemIndex,data in self.iterItems(self.model.invisibleRootItem()):
-      gui  = data['gui']
-      print(data['hierStack'].split('/')[-1], data['hierStack'].split('/')[-1][0]=='x',gui[1], itemIndex )
-      # if data['hierStack'].split('/')[-1][0]=='x':
-      print('  ',self.tree.collapse(itemIndex))# (index, False)# not gui[1])
-      print('  ',self.tree.isExpanded(itemIndex))# (index, False)# not gui[1])
+    # by iterating each leaf, and converting item and index
+    root = self.model.invisibleRootItem()
+    for iRow in range(root.rowCount()):
+      item = self.model.item(iRow,0)
+      data = item.data(role=Qt.UserRole+1)
+      if data['hierStack'].split('/')[-1][0]=='x':
+        index = self.model.indexFromItem(item)
+        self.tree.setExpanded(index, data['gui'][1])
     if selectedIndex is not None:
       self.tree.selectionModel().select(selectedIndex, QItemSelectionModel.Select)
       self.tree.setCurrentIndex(selectedIndex)# Item(selectedItem)
     self.mainL.addWidget(self.tree)
     if len(nodeHier.children)>0 and self.btnAddSubfolder is not None:
       self.btnAddSubfolder.setVisible(False)
+    self.tree.expanded.connect(lambda index: self.actionExpandCollapse(index, True))
+    self.tree.collapsed.connect(lambda index: self.actionExpandCollapse(index, False))
+    return
+
+
+  def actionExpandCollapse(self, index:QModelIndex, flag):
+    gui  = [index.data(Qt.UserRole+1)['gui'][0]]+[flag]
+    docID = index.data(Qt.UserRole+1)['hierStack'].split('/')[-1]
+    self.model.itemFromIndex(index).setData({ **index.data(Qt.UserRole+1), **{'gui':gui}})
+    self.comm.backend.db.setGUI(docID, gui)
     return
 
 
@@ -276,7 +288,7 @@ class Project(QWidget):
     currentItem = item
     while currentItem.parent() is not None:
       currentItem = currentItem.parent()
-      docIDj = currentItem.text().split('/')[-1]
+      docIDj = currentItem.data()['hierStack'].split('/')[-1]
       stackNew.append(docIDj)
     stackNew = [self.projID] + stackNew[::-1]  #add project id and reverse
     childNew = item.row()
@@ -331,17 +343,6 @@ class Project(QWidget):
     if children:
       nodeTree.appendRows(children)
     return nodeTree
-
-
-  def iterItems(self, root:QStandardItem):
-    """
-    Recursive function that creates an iterator over all the items of the tree
-    """
-    if root.hasChildren():
-      for row in range(root.rowCount()):
-        yield from self.iterItems( root.child(row, 0) )
-    else:
-      yield (root.index(), root.data(role=Qt.UserRole+1))
 
 
 class Command(Enum):

@@ -792,7 +792,7 @@ class Database:
     ## loop all documents
     versionNumber = self.db['-dataHierarchy-']['-version'] if '-dataHierarchy-' in self.db else \
                     self.db['-ontology-']['-version']
-    if versionNumber<4 and '-ontology-' in self.db:
+    if repair and '-ontology-' in self.db:
       self.db['-ontology-'].delete()
     for doc in self.db:
       try:
@@ -825,9 +825,9 @@ class Database:
         #   doc.save()
 
         # change database to version 4
-        if versionNumber<4:
-          if '-gui' not in doc:
-            outstring+= outputString(outputStyle,'error',f"dch00: gui does not exist {doc['_id']}")
+        if '-gui' not in doc:
+          outstring+= outputString(outputStyle,'error',f"dch00: gui does not exist {doc['_id']}")
+          if repair:
             doc['-gui'] = [True, True]
             doc.save()
 
