@@ -22,7 +22,7 @@ from .GUI.sidebar import Sidebar
 from .backend import Backend
 from .fixedStringsJson import shortcuts
 from .guiCommunicate import Communicate
-from .guiStyle import Action, showMessage, widgetAndLayout, shortCuts
+from .guiStyle import Action, showMessage, widgetAndLayout
 from .inputOutput import exportELN, importELN
 from .GUI.data_hierarchy.data_hierarchy_editor_dialog import DataHierarchyEditorDialog
 from .miscTools import updateExtractorList, restart
@@ -59,7 +59,8 @@ class MainWindow(QMainWindow):
       for docType, docLabel in self.comm.backend.db.dataLabels.items():
         if docType[0] == 'x' and docType[1] != '0':
           continue
-        shortcut = f"Ctrl+{shortCuts[docType]}" if docType in shortCuts else None
+        shortcut = self.comm.backend.db.dataHierarchy[docType]['shortcut']
+        shortcut = None if shortcut=='' else f"Ctrl+{shortcut}"
         Action(docLabel,                     self, [Command.VIEW, docType],  viewMenu, shortcut=shortcut)
         if docType == 'x0':
           viewMenu.addSeparator()

@@ -7,7 +7,7 @@ from PySide6.QtGui import QStandardItemModel, QStandardItem, QAction   # pylint:
 from PySide6.QtCore import Slot, Qt, QItemSelectionModel, QModelIndex # pylint: disable=no-name-in-module
 from anytree import PreOrderIter, Node
 from .projectTreeView import TreeView
-from ..guiStyle import TextButton, Action, Label, showMessage, widgetAndLayout, iconsDocTypes, getColor
+from ..guiStyle import TextButton, Action, Label, showMessage, widgetAndLayout, getColor
 from ..miscTools import createDirName
 from ..guiCommunicate import Communicate
 
@@ -68,12 +68,10 @@ class Project(QWidget):
     Action('Scan',                      self, [Command.SCAN], moreMenu)
     for doctype in self.comm.backend.db.dataLabels:
       if doctype[0]!='x':
-        if self.comm.backend.db.dataLabels[doctype] in iconsDocTypes:
-          icon = iconsDocTypes[self.comm.backend.db.dataLabels[doctype]]
-        else:
-          icon = 'fa.asterisk'
+        icon = self.comm.backend.db.dataHierarchy[doctype]['icon']
+        icon = 'fa.asterisk' if icon=='' else icon
         Action(f'table of {doctype}',   self, [Command.SHOW_TABLE, doctype], moreMenu, icon=icon)
-    Action('table of unidentified',     self, [Command.SHOW_TABLE, '-'],     moreMenu, icon=iconsDocTypes['-'])
+    Action('table of unidentified',     self, [Command.SHOW_TABLE, '-'],     moreMenu, icon='fa5.file')
     moreMenu.addSeparator()
     Action('Delete',                    self, [Command.DELETE], moreMenu)
     more.setMenu(moreMenu)
