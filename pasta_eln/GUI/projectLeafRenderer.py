@@ -41,7 +41,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       index (QModelIndex): index
     """
     name = index.data(Qt.DisplayRole) # type: ignore
-    data = index.data(Qt.UserRole+1) # type: ignore
+    data = index.data(Qt.UserRole+1) # type: ignore[operator]
     if not data or data['hierStack'] is None or self.comm is None:
       return
     docID   = data['hierStack'].split('/')[-1]
@@ -150,12 +150,12 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     """
     determine size of this leaf
     """
-    if not index or not index.data(Qt.UserRole+1):
+    if not index or not index.data(Qt.UserRole+1):      # type: ignore[operator]
       return QSize()
-    hierStack = index.data(Qt.UserRole+1)['hierStack'] # type: ignore
+    hierStack = index.data(Qt.UserRole+1)['hierStack']  # type: ignore[operator]
     if hierStack is None or self.comm is None:
       return QSize()
-    if not index.data(Qt.UserRole+1)['gui'][0]:
+    if not index.data(Qt.UserRole+1)['gui'][0]:         # type: ignore[operator]
       return QSize(400, self.lineSep*2)
     docID   = hierStack.split('/')[-1]
     doc = self.comm.backend.db.getDoc(docID)

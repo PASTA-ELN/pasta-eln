@@ -80,7 +80,7 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
       raise GenericException("Null database instance passed to the initializer", {})
 
     self.database: Database = database
-    self.data_hierarchy_document: Document = self.database.db['-ontology-']
+    self.data_hierarchy_document: Document = self.database.db['-dataHierarchy-']
     if not self.data_hierarchy_document:
       raise DocumentNullException("Null data_hierarchy document in db instance", {})
 
@@ -441,7 +441,7 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
         self.data_hierarchy_document[type_name] = type_structure
       # Save the modified document
       self.data_hierarchy_document.save()
-      self.database.ontology = dict(self.data_hierarchy_document)
+      self.database.dataHierarchy = dict(self.data_hierarchy_document)
       self.database.initDocTypeViews(16)
       self.instance.close()
 

@@ -790,8 +790,6 @@ class Database:
     if repair:
       print('REPAIR MODE IS ON: afterwards, full-reload and create views')
     ## loop all documents
-    versionNumber = self.db['-dataHierarchy-']['-version'] if '-dataHierarchy-' in self.db else \
-                    self.db['-ontology-']['-version']
     if repair and '-ontology-' in self.db:
       self.db['-ontology-'].delete()
     for doc in self.db:

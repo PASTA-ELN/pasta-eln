@@ -148,7 +148,7 @@ class Project(QWidget):
     root = self.model.invisibleRootItem()
     for iRow in range(root.rowCount()):
       item = self.model.item(iRow,0)
-      data = item.data(role=Qt.UserRole+1)
+      data = item.data(role=Qt.UserRole+1)         # type: ignore[operator]
       if data['hierStack'].split('/')[-1][0]=='x':
         index = self.model.indexFromItem(item)
         self.tree.setExpanded(index, data['gui'][1])
@@ -163,10 +163,18 @@ class Project(QWidget):
     return
 
 
-  def actionExpandCollapse(self, index:QModelIndex, flag):
-    gui  = [index.data(Qt.UserRole+1)['gui'][0]]+[flag]
-    docID = index.data(Qt.UserRole+1)['hierStack'].split('/')[-1]
-    self.model.itemFromIndex(index).setData({ **index.data(Qt.UserRole+1), **{'gui':gui}})
+  def actionExpandCollapse(self, index:QModelIndex, flag:bool) -> None:
+    """ Action upon expansion or collapsing of folder (showing its children)
+
+    Args:
+      index (QModelIndex): index that send the signal
+      flag (bool): true=expand=show-children, false=collapse=hide-children
+    """
+    if self.model is None:
+      return
+    gui  = [index.data(Qt.UserRole+1)['gui'][0]]+[flag]                                   # type: ignore[operator]
+    docID = index.data(Qt.UserRole+1)['hierStack'].split('/')[-1]                         # type: ignore[operator]
+    self.model.itemFromIndex(index).setData({ **index.data(Qt.UserRole+1), **{'gui':gui}})# type: ignore[operator]
     self.comm.backend.db.setGUI(docID, gui)
     return
 
