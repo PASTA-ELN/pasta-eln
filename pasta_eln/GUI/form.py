@@ -40,6 +40,9 @@ class Form(QDialog):
     else:
       self.setWindowTitle('Edit content')
     self.setMinimumWidth(600)
+    self.skipKeys = ['image','metaVendor','metaUser','shasum']
+    self.skipKeys0= ['_','-', '#']
+
 
     # GUI elements
     mainL = QVBoxLayout(self)
@@ -70,7 +73,7 @@ class Form(QDialog):
     if '-tags' not in self.doc:
       self.doc['-tags'] = []
     for key,value in self.doc.items():
-      if (key[0] in ['_','-', '#'] and key!='-tags') or key in ['image','metaVendor','metaUser','shasum']:
+      if (key[0] in self.skipKeys0 and key!='-tags') or key in self.skipKeys:
         continue
       # print("Key:value in form | "+key+':'+str(value))
       if key in ['comment','content']:
@@ -143,7 +146,7 @@ class Form(QDialog):
           setattr(self, f'key_{key}', QLineEdit(value))
         self.formL.addRow(QLabel(key.capitalize()), getattr(self, f'key_{key}'))
       else:
-        print("**ERROR dialogForm: unknown value type",key, value)
+        print(f"**WARNING dialogForm: unknown value type. key:{key}, type:{type(value)}")
     #add extra questions at bottom of form
     allowProjectAndDocTypeChange = '_id' in self.doc and self.doc['-type'][0][0]!='x'
     if '_ids' in self.doc: #if group edit
@@ -184,8 +187,7 @@ class Form(QDialog):
       with open(Path.home()/'.pastaELN.temp', 'r', encoding='utf-8') as fTemp:
         content = json.loads(fTemp.read())
         for key in self.doc.keys():
-          if key[0] in ['_','-', '#'] or key in ['image','metaVendor','metaUser','shasum'] or \
-             key not in content:
+          if key[0] in self.skipKeys0 or key in self.skipKeys or key not in content:
             continue
           if key in ['comment','content']:
             getattr(self, f'textEdit_{key}').setPlainText(content[key])
@@ -202,7 +204,7 @@ class Form(QDialog):
     """ Autosave comment to file """
     content = {'-name': getattr(self, 'key_-name').text().strip()}
     for key in self.doc.keys():
-      if key[0] in ['_','-', '#'] or key in ['image','metaVendor','metaUser','shasum']:
+      if key[0] in self.skipKeys0 or key in self.skipKeys or not hasattr(self, f'key_{key}'):
         continue
       if key in ['comment','content']:
         content[key] = getattr(self, f'textEdit_{key}').toPlainText().strip()
