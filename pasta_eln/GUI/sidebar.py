@@ -52,7 +52,7 @@ class Sidebar(QWidget):
     Redraw sidebar: e.g. after change of project visibility in table
 
     Args:
-      projectChoice (str): projectID on which to focus: '' string=draw default; 'redraw' implies redraw; id implies id
+      projectChoice (str): projectID on which to focus: '' string=draw default=none; 'redraw' implies redraw; id implies id
     """
     # Delete old widgets from layout and create storage
     for i in reversed(range(self.projectsListL.count())):
@@ -74,8 +74,6 @@ class Sidebar(QWidget):
           break
         projID = project['id']
         projName = project['value'][0]
-        if self.openProjectId == '':
-          self.openProjectId = projID
         #head: show project name as button
         projectW = QFrame()
         # projectW.setMinimumHeight(300) #convenience: allow scroll in sidebar

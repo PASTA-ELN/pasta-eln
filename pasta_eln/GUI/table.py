@@ -139,6 +139,9 @@ class Table(QWidget):
         self.actionChangeColums.setVisible(True)
         if self.docType in self.comm.backend.db.dataLabels:
           docLabel = self.comm.backend.db.dataLabels[self.docType]
+      if not self.projID:
+        docLabel = f'All {docLabel}'
+        self.comm.changeSidebar.emit('')  #close the project in sidebar
       self.headline.setText(docLabel)
       self.showHidden.setText(f'Show/hide hidden {docLabel.lower()}')
       self.filterHeader = self.comm.backend.db.getColumnNames()[self.docType].split(',')
@@ -285,7 +288,7 @@ class Table(QWidget):
                   newPath = oldPath.parent / f'trash_{oldPath.name}'
                   oldPath.rename(newPath)
             self.comm.backend.db.remove(docID)
-      self.comm.changeTable.emit(self.docType, '')
+      self.comm.changeTable.emit(self.docType, self.projID)
     elif command[0] is Command.CHANGE_COLUMNS:
       dialog = TableHeader(self.comm, self.docType)
       dialog.exec()
