@@ -1,5 +1,29 @@
 # Changelog
 
+## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.23...HEAD)
+
+**Closed issues:**
+
+- Appearance options not used from saved state [\#125](https://github.com/PASTA-ELN/pasta-eln/issues/125)
+- Removing all colums from tables [\#116](https://github.com/PASTA-ELN/pasta-eln/issues/116)
+- Importing incorrect [\#115](https://github.com/PASTA-ELN/pasta-eln/issues/115)
+- Unidentified table cannot be opened [\#114](https://github.com/PASTA-ELN/pasta-eln/issues/114)
+- Checkboxes in project table view [\#113](https://github.com/PASTA-ELN/pasta-eln/issues/113)
+- Long text in the project view header [\#110](https://github.com/PASTA-ELN/pasta-eln/issues/110)
+
+**Merged pull requests:**
+
+- repair issue \#134 [\#140](https://github.com/PASTA-ELN/pasta-eln/pull/140) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- if \_attachment in doc prior to saving a new document, … [\#139](https://github.com/PASTA-ELN/pasta-eln/pull/139) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- debug unknown keys with strange values [\#138](https://github.com/PASTA-ELN/pasta-eln/pull/138) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Sb redo name has to be in table [\#137](https://github.com/PASTA-ELN/pasta-eln/pull/137) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+
+## [v2.4.23](https://github.com/PASTA-ELN/pasta-eln/tree/v2.4.23) (2023-11-09)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.22...v2.4.23)
+
 ## [v2.4.22](https://github.com/PASTA-ELN/pasta-eln/tree/v2.4.22) (2023-11-09)
 
 [Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.21...v2.4.22)
