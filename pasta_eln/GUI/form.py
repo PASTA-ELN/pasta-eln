@@ -324,6 +324,7 @@ class Form(QDialog):
       if hasattr(self, 'docTypeComboBox') and self.docTypeComboBox.currentData() != '':
         self.doc['-type'] = [self.docTypeComboBox.currentData()]
         if '_ids' in self.doc: #group update
+          self.doc = {k:v for k,v in self.doc.items() if v} # filter out empty items
           for docID in self.doc.pop('_ids'):
             doc = self.db.getDoc(docID)
             doc.update( self.doc )
