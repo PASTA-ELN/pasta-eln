@@ -40,6 +40,10 @@ class Project(QWidget):
     Initialize / Create header of page
     """
     self.docProj = self.comm.backend.db.getDoc(self.projID)
+    # remove if still there
+    for i in reversed(range(self.mainL.count())): #remove old
+      self.mainL.itemAt(i).widget().setParent(None)  # type: ignore
+    logging.debug('ProjectView elements at 2: %i',self.mainL.count())
     # TOP LINE includes name on left, buttons on right
     _, topLineL       = widgetAndLayout('H',self.mainL,'m')
     hidden, menuTextHidden = ('     \U0001F441', 'Mark project as shown') \
@@ -127,6 +131,7 @@ class Project(QWidget):
     #initialize
     for i in reversed(range(self.mainL.count())): #remove old
       self.mainL.itemAt(i).widget().setParent(None)  # type: ignore
+    logging.debug('ProjectView elements at 1: %i',self.mainL.count())
     if projID!='':
       self.projID         = projID
       self.taskID         = docID
@@ -145,11 +150,13 @@ class Project(QWidget):
         self.projHeader()
       else:
         rootItem.appendRow(self.iterateTree(node))
+    logging.debug('ProjectView elements at 3: %i',self.mainL.count())
     # self.tree.expandAll()
     if selectedIndex is not None:
       self.tree.selectionModel().select(selectedIndex, QItemSelectionModel.Select)
       self.tree.setCurrentIndex(selectedIndex)# Item(selectedItem)
     self.mainL.addWidget(self.tree)
+    logging.debug('ProjectView elements at 4: %i',self.mainL.count())
     if len(nodeHier.children)>0 and self.btnAddSubfolder is not None:
       self.btnAddSubfolder.setVisible(False)
     return

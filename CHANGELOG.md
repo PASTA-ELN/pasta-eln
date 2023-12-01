@@ -7,7 +7,7 @@
 **Closed issues:**
 
 - Appearance options not used from saved state [\#125](https://github.com/PASTA-ELN/pasta-eln/issues/125)
-- Removing all colums from tables [\#116](https://github.com/PASTA-ELN/pasta-eln/issues/116)
+- Removing all columns from tables [\#116](https://github.com/PASTA-ELN/pasta-eln/issues/116)
 - Importing incorrect [\#115](https://github.com/PASTA-ELN/pasta-eln/issues/115)
 - Unidentified table cannot be opened [\#114](https://github.com/PASTA-ELN/pasta-eln/issues/114)
 - Checkboxes in project table view [\#113](https://github.com/PASTA-ELN/pasta-eln/issues/113)
