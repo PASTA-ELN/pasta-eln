@@ -3,8 +3,8 @@ import logging, re
 from enum import Enum
 from typing import Optional, Any
 from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget, QMenu, QMessageBox, QTextEdit, QScrollArea # pylint: disable=no-name-in-module
-from PySide6.QtGui import QStandardItemModel, QStandardItem, QAction   # pylint: disable=no-name-in-module
-from PySide6.QtCore import Slot, Qt, QItemSelectionModel, QModelIndex # pylint: disable=no-name-in-module
+from PySide6.QtGui import QStandardItemModel, QStandardItem, QAction, QResizeEvent                     # pylint: disable=no-name-in-module
+from PySide6.QtCore import Slot, Qt, QItemSelectionModel, QModelIndex                                  # pylint: disable=no-name-in-module
 from anytree import PreOrderIter, Node
 from .projectTreeView import TreeView
 from ..guiStyle import TextButton, Action, Label, showMessage, widgetAndLayout, iconsDocTypes, getColor
@@ -79,45 +79,53 @@ class Project(QWidget):
     more.setMenu(moreMenu)
 
     # Details section
-    self.infoW = QScrollArea()
-    self.infoW.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-    self.infoW.setWidgetResizable(True)
-    infoW_, infoL = widgetAndLayout('V')
-    self.infoW.setWidget(infoW_)
-    self.mainL.addWidget(self.infoW)
+    self.infoWSA = QScrollArea()
+    self.infoWSA.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+    self.infoWSA.setWidgetResizable(True)
+    self.infoW_, infoL = widgetAndLayout('V')
+    self.infoWSA.setWidget(self.infoW_)
+    self.mainL.addWidget(self.infoWSA)
     # details
     tags = ', '.join([f'#{i}' for i in self.docProj['-tags']]) if '-tags' in self.docProj else ''
     infoL.addWidget(QLabel(f'Tags: {tags}'))
-    countLines = 0
+    self.countLines = 0
     for key,value in self.docProj.items():
       if key[0] in {'_','-'} or 'from ' in key or key in {'comment'}:
         continue
       labelW = QLabel(f'{key.title()}: {str(value)}')
       infoL.addWidget(labelW)
-      countLines += 1
+      self.countLines += 1
     # comment
-    _, commentL         = widgetAndLayout('H', infoL, 's')
+    commentW, commentL   = widgetAndLayout('H', infoL, 's')
+    commentW.resizeEvent = self.commentResize
     labelW = QLabel('Comment:')
     # labelW.setStyleSheet('padding-top: 5px') #make "Comment:" text aligned with other content, not with text-edit
     commentL.addWidget(labelW, alignment=Qt.AlignTop)   # type: ignore[call-arg]
-    comment = QTextEdit()
-    comment.setMarkdown(re.sub(r'(^|\n)(#+)', r'\1##\2', self.docProj['comment'].strip()))
+    self.commentTE = QTextEdit()
+    self.commentTE.setMarkdown(re.sub(r'(^|\n)(#+)', r'\1##\2', self.docProj['comment'].strip()))
     bgColor = getColor(self.comm.backend, 'secondaryDark')
     fgColor = getColor(self.comm.backend, 'primaryText')
-    comment.setStyleSheet(f"border: none; padding: 0px; background-color: {bgColor}; color: {fgColor}")
-    comment.setReadOnly(True)
-    comment.document().setTextWidth(self.infoW.width())
-    height:int = comment.document().size().toTuple()[1] # type: ignore[index]
-    commentL.addWidget(comment)
-    infoW_.setMaximumHeight(height + (countLines+1)*self.lineSep     +2)
-    self.infoW.setMaximumHeight(height + (countLines+1)*self.lineSep +5)
+    self.commentTE.setStyleSheet(f"border: none; padding: 0px; background-color: {bgColor}; color: {fgColor}")
+    self.commentTE.setReadOnly(True)
+    self.commentResize(None)
+    commentL.addWidget(self.commentTE)
+    return
+
+  def commentResize(self, _) -> None:
+    """ called if comment is resized because widget initially/finally knows its size
+    - comment widget is hard coded size it depends on the rendered size
+    """
+    self.commentTE.document().setTextWidth(self.infoWSA.width())
+    height:int = self.commentTE.document().size().toTuple()[1] # type: ignore[index]
+    self.infoW_.setMaximumHeight(height + (self.countLines+1)*self.lineSep     -12)
+    self.infoWSA.setMaximumHeight(height + (self.countLines+1)*self.lineSep  -10)
     return
 
 
   @Slot(str, str)
   def change(self, projID:str, docID:str) -> None:
     """
-    What happens when user clicks to change doc-type
+    What happens when user clicks to select project
 
     Args:
       projID (str): document id of project; if empty, just refresh
