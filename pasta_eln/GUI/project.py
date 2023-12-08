@@ -21,7 +21,9 @@ class Project(QWidget):
     self.setLayout(self.mainL)
     self.tree:Optional[TreeView]             = None
     self.model:Optional[QStandardItemModel]  = None
-    self.infoW:Optional[QWidget]             = None
+    self.infoWSA:Optional[QWidget]           = None
+    self.infoW_:Optional[QWidget]            = None
+    self.commentTE:Optional[QWidget]         = None
     self.actHideDetail = QAction()
     self.actionHideItems   = QAction()
     self.actionHideProject = QAction()
@@ -33,6 +35,7 @@ class Project(QWidget):
     self.foldedAll = False
     self.btnAddSubfolder:Optional[TextButton] = None
     self.lineSep = 20
+    self.countLines = -1
 
 
   def projHeader(self) -> None:
