@@ -100,7 +100,7 @@ class Project(QWidget):
       self.countLines += 1
     # comment
     commentW, commentL   = widgetAndLayout('H', infoL, 's')
-    commentW.resizeEvent = self.commentResize
+    commentW.resizeEvent = self.commentResize # type: ignore
     labelW = QLabel('Comment:')
     # labelW.setStyleSheet('padding-top: 5px') #make "Comment:" text aligned with other content, not with text-edit
     commentL.addWidget(labelW, alignment=Qt.AlignTop)   # type: ignore[call-arg]
@@ -114,12 +114,14 @@ class Project(QWidget):
     commentL.addWidget(self.commentTE)
     return
 
-  def commentResize(self, _) -> None:
+  def commentResize(self, _:Any) -> None:
     """ called if comment is resized because widget initially/finally knows its size
     - comment widget is hard coded size it depends on the rendered size
     """
+    if self.commentTE is None or self.infoWSA is None or self.infoW_ is None:
+      return
     self.commentTE.document().setTextWidth(self.infoWSA.width())
-    height:int = self.commentTE.document().size().toTuple()[1] # type: ignore[index]
+    height:int = self.commentTE.document().size().toTuple()[1]
     self.infoW_.setMaximumHeight(height + (self.countLines+1)*self.lineSep     -12)
     self.infoWSA.setMaximumHeight(height + (self.countLines+1)*self.lineSep  -10)
     return
