@@ -153,7 +153,8 @@ class TreeView(QTreeView):
     after double-click on tree leaf: open form
     - no redraw required since renderer asks automatically for update
     """
-    docID = self.currentIndex().data().split('/')[-1]
+    item = self.model().itemFromIndex(self.currentIndex())
+    docID = item.data()['hierStack'].split('/')[-1]
     doc   = self.comm.backend.db.getDoc(docID)
     self.comm.formDoc.emit(doc)
     item  = self.model().itemFromIndex(self.currentIndex())
