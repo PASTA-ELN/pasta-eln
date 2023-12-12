@@ -2,7 +2,30 @@
 
 ## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
 
-[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.23...HEAD)
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.24...HEAD)
+
+**Implemented enhancements:**
+
+- Progress bar to import and export [\#18](https://github.com/PASTA-ELN/pasta-eln/issues/18)
+
+**Fixed bugs:**
+
+- Import and edit the eLabFTW project [\#133](https://github.com/PASTA-ELN/pasta-eln/issues/133)
+
+**Closed issues:**
+
+- Deleting an item in a specific table opens a general table [\#134](https://github.com/PASTA-ELN/pasta-eln/issues/134)
+
+**Merged pull requests:**
+
+- Repaired issue \#111 [\#160](https://github.com/PASTA-ELN/pasta-eln/pull/160) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Try to repair \#142 [\#158](https://github.com/PASTA-ELN/pasta-eln/pull/158) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- \#repair issue 146 [\#157](https://github.com/PASTA-ELN/pasta-eln/pull/157) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Repair issue \#149 [\#155](https://github.com/PASTA-ELN/pasta-eln/pull/155) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+
+## [v2.4.24](https://github.com/PASTA-ELN/pasta-eln/tree/v2.4.24) (2023-11-17)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.23...v2.4.24)
 
 **Closed issues:**
 
