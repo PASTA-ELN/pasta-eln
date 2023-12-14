@@ -2,7 +2,28 @@
 
 ## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
 
-[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.24...HEAD)
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.25...HEAD)
+
+**Fixed bugs:**
+
+- Using "Hide project details" raises an error [\#161](https://github.com/PASTA-ELN/pasta-eln/issues/161)
+- Data loss when changing Data Type [\#146](https://github.com/PASTA-ELN/pasta-eln/issues/146)
+- Project header moved after changing Data Type [\#142](https://github.com/PASTA-ELN/pasta-eln/issues/142)
+- Changing data types and rerunning extractors [\#136](https://github.com/PASTA-ELN/pasta-eln/issues/136)
+- Does not start in windows, reason unclear [\#86](https://github.com/PASTA-ELN/pasta-eln/issues/86)
+
+**Closed issues:**
+
+- Confirmation popup when deleting multiple items [\#149](https://github.com/PASTA-ELN/pasta-eln/issues/149)
+- Comment display in the project view header [\#111](https://github.com/PASTA-ELN/pasta-eln/issues/111)
+
+**Merged pull requests:**
+
+- Debug \#162: Deleting projects with same names [\#164](https://github.com/PASTA-ELN/pasta-eln/pull/164) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+
+## [v2.4.25](https://github.com/PASTA-ELN/pasta-eln/tree/v2.4.25) (2023-12-12)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.24...v2.4.25)
 
 **Implemented enhancements:**
 
