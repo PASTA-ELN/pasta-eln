@@ -213,11 +213,11 @@ class Project(QWidget):
       self.comm.changeSidebar.emit('redraw')
       showMessage(self, 'Information','Scanning finished')
     elif command[0] is Command.REDUCE_HEIGHT_HEAD:
-      if self.infoW is not None and self.infoW.isHidden():
-        self.infoW.show()
+      if self.infoWSA is not None and self.infoWSA.isHidden():
+        self.infoWSA.show()
         self.actHideDetail.setText('Hide project details')
-      elif self.infoW is not None:
-        self.infoW.hide()
+      elif self.infoWSA is not None:
+        self.infoWSA.hide()
         self.actHideDetail.setText('Show project details')
     elif command[0] is Command.HIDE:
       self.comm.backend.db.hideShow(self.projID)
