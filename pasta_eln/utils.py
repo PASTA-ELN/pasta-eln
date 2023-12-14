@@ -15,7 +15,6 @@ from json import JSONDecodeError
 from typing import Any, Callable
 
 from aiohttp import ClientConnectorError, InvalidURL
-from jsonschema.exceptions import ValidationError
 from pyDataverse.exceptions import ApiAuthorizationError, OperationFailedError
 from requests.exceptions import ConnectionError as RequestsConnectionError, InvalidSchema, MissingSchema
 
@@ -41,7 +40,6 @@ def handle_dataverse_exception_async(wrapped: Callable[..., Any]) -> Callable[..
             InvalidSchema,
             OperationFailedError,
             TypeError,
-            ValidationError,
             FileNotFoundError) as e:
       self.logger.error(e)
       return False, str(e)
