@@ -2,6 +2,7 @@
 import logging, re
 from enum import Enum
 from typing import Optional, Any
+import shutil
 from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget, QMenu, QMessageBox, QTextEdit, QScrollArea # pylint: disable=no-name-in-module
 from PySide6.QtGui import QStandardItemModel, QStandardItem, QAction, QResizeEvent                     # pylint: disable=no-name-in-module
 from PySide6.QtCore import Slot, Qt, QItemSelectionModel, QModelIndex                                  # pylint: disable=no-name-in-module
@@ -200,6 +201,12 @@ class Project(QWidget):
         if '-branch' in doc and len(doc['-branch'])>0 and 'path' in doc['-branch'][0]:
           oldPath = self.comm.backend.basePath/doc['-branch'][0]['path']
           newPath = self.comm.backend.basePath/('trash_'+doc['-branch'][0]['path'])
+          if newPath.exsits():
+            ret = QMessageBox.critical(self, 'Warning', 'Old project data exists. Do you want to delete?', \
+                      QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,  # type: ignore[operator]
+                      QMessageBox.StandardButton.No)
+            if ret==QMessageBox.StandardButton.Yes:
+              shutil.rmtree(newPath)
           oldPath.rename(newPath)
         # go through children, remove from DB
         children = self.comm.backend.db.getView('viewHierarchy/viewHierarchy', startKey=self.projID)
