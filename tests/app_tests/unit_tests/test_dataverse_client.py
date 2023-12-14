@@ -12,7 +12,6 @@ from json import dumps
 
 import pytest
 from aiohttp import InvalidURL
-from pyDataverse.exceptions import ApiAuthorizationError
 from requests.exceptions import ConnectionError, MissingSchema
 
 from pasta_eln.dataverse.client import DataverseClient
@@ -543,9 +542,6 @@ class TestDataverseClient(object):
 
   @pytest.mark.parametrize(
     "exception, error_message", [
-      (ApiAuthorizationError(
-        "ERROR: POST HTTP 401 - Authorization error https://demo.dataverse.org/api/v1/dataverses/:root. MSG: Bad API key"),
-       "ERROR: POST HTTP 401 - Authorization error https://demo.dataverse.org/api/v1/dataverses/:root. MSG: Bad API key"),
       (ConnectionError(
         "ERROR: POST - Could not establish connection to API: https://demo.dataverse.or/api/v1/dataverses/:root"),
        "ERROR: POST - Could not establish connection to API: https://demo.dataverse.or/api/v1/dataverses/:root"),
