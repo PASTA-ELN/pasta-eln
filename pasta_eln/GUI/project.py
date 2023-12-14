@@ -201,9 +201,9 @@ class Project(QWidget):
         if '-branch' in doc and len(doc['-branch'])>0 and 'path' in doc['-branch'][0]:
           oldPath = self.comm.backend.basePath/doc['-branch'][0]['path']
           newPath = self.comm.backend.basePath/('trash_'+doc['-branch'][0]['path'])
-          if newPath.exsits():
+          if newPath.exits():
             ret = QMessageBox.critical(self, 'Warning', 'Old project data exists. Do you want to delete?', \
-                      QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,  # type: ignore[operator]
+                      QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
                       QMessageBox.StandardButton.No)
             if ret==QMessageBox.StandardButton.Yes:
               shutil.rmtree(newPath)
