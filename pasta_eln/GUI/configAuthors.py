@@ -27,12 +27,12 @@ class ConfigurationAuthors(QWidget):
       self.configuration = self.comm.backend.configuration
       self.tabAppearanceL = QFormLayout(self)
       self.userOrcid = self.addRowText('orcid','ORCID')
-      self.userTitle = self.addRowText('title','title')
-      self.userFirst = self.addRowText('first','first name')
-      self.userLast = self.addRowText('last','surname')
-      self.userEmail = self.addRowText('email','email address')
+      self.userTitle = self.addRowText('title','Title')
+      self.userFirst = self.addRowText('first','First name')
+      self.userLast  = self.addRowText('last', 'Surname')
+      self.userEmail = self.addRowText('email','Email address')
       self.userRorid = self.addRowText('rorid','RORID')
-      self.userOrganization = self.addRowText('organization','organization')
+      self.userOrg   = self.addRowText('organization','Organization')
       self.tabAppearanceL.addRow('Save changes', TextButton('Save changes', self, [], None))
 
 
@@ -68,7 +68,7 @@ class ConfigurationAuthors(QWidget):
       if re.match(r'^\w{9}$', self.userRorid.text().strip() ) is not None:
         reply = requests.get(
             f'https://api.ror.org/organizations/{self.userRorid.text().strip()}')
-        self.userOrganization.setText(reply.json()['name'])
+        self.userOrg.setText(reply.json()['name'])
     elif sender == 'orcid':
       if re.match(r'^\w{4}-\w{4}-\w{4}-\w{4}$', self.userOrcid.text().strip() ) is not None:
         reply = requests.get(
@@ -92,7 +92,7 @@ class ConfigurationAuthors(QWidget):
     self.configuration['authors'][0]['title'] = self.userTitle.text().strip()
     self.configuration['authors'][0]['email'] = self.userEmail.text().strip()
     self.configuration['authors'][0]['orcid'] = self.userOrcid.text().strip()
-    self.configuration['authors'][0]['organizations'][0]['organization'] = self.userOrganization.text().strip()
+    self.configuration['authors'][0]['organizations'][0]['organization'] = self.userOrg.text().strip()
     self.configuration['authors'][0]['organizations'][0]['rorid']        = self.userRorid.text().strip()
     with open(Path.home()/'.pastaELN.json', 'w', encoding='utf-8') as fConf:
       fConf.write(json.dumps(self.configuration,indent=2))
