@@ -671,6 +671,10 @@ class Database:
     """
     Replication to another instance
 
+    One cannot simply create the document no the other server...
+    - because then the _rev do not match and will never sync
+    - issues arise if the documents in a database are deleted. Better remove the entire database and recreate it
+
     Args:
         dbInfo (dict): info on the remote database
         progressBar (QProgressBar): gui - qt progress bar
@@ -703,11 +707,20 @@ class Database:
         if '_replication_state' in replResult:
           logging.info('Success replication '+replResult['_id']+'.')
           progressBar.hide()
-          reply = f"Replication success state: {replResult['_replication_state']}\n" + \
-                  f"  time of reporting: {replResult['_replication_state_time']}\n"
+          reply = f"Replication success state: {replResult['_replication_state']}\n" \
+                  f"  time of reporting: {replResult['_replication_state_time']}\n" \
+                  f"Documents in source database: {len([i for i in self.db])}\n"
           stats = dict(replResult['_replication_stats'])
           del stats['checkpointed_source_seq']
-          return reply+'\n  '.join([f"{k.replace('_',' ')}:{v}" for k,v in stats.items()])
+          reply += '\n  '.join([f"{k.replace('_',' ')}:{v}" for k,v in stats.items()])+'\n'
+          # check replication successful
+          setLocal = {i['_id'] for i in self.db}
+          setRemote= {i['_id'] for i in db2}
+          if setLocal.difference(setRemote):
+            reply += f' Difference local-global {setLocal.difference(setRemote)}\n'
+          if setRemote.difference(setLocal):
+            reply += f' Difference global-local {setRemote.difference(setLocal)}\n'
+          return reply
         time.sleep(10)
     except Exception:
       progressBar.hide()

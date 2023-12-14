@@ -94,7 +94,7 @@ def fillDocBeforeCreate(data:dict[str,Any], docType:list[str]) -> dict[str,Any]:
     str: document
   """
   protectedKeys = ['comment','-tags','image']
-  # Handle the important entries: -type, _id, -date, -branch
+  # Handle the important entries: -type, _id, -date, -branch, -gui
   if '-type' not in data:
     data['-type'] = docType
   if data['-type']==['']:
@@ -109,6 +109,8 @@ def fillDocBeforeCreate(data:dict[str,Any], docType:list[str]) -> dict[str,Any]:
     data['-branch'] = [{'stack':[], 'path':None, 'child':-1, 'show':[]}]
   if 'show' not in data['-branch'] and isinstance(data['-branch'], dict):
     data['-branch']['show'] = [True]*(len(data['-branch']['stack'])+1)
+  if '-gui' not in data:
+    data['-gui'] = [True, True]
   # separate comment into tags and fields
   # these tags are lost: '#d': too short; '#3tag': starts with number
   if 'comment' not in data:
