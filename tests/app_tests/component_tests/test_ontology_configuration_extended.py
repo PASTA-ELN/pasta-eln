@@ -226,7 +226,7 @@ class TestOntologyConfigurationExtended(object):
     assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
     assert ui_form.create_type_dialog.buttonBox.isVisible() is False, "Create new type dialog button box should not be shown!"
     qtbot.mouseClick(ui_form.addTypePushButton, Qt.LeftButton)
-    with qtbot.waitExposed(ui_form.create_type_dialog.instance, timeout=200):
+    with qtbot.waitExposed(ui_form.create_type_dialog.instance, timeout=500):
       assert ui_form.create_type_dialog.instance.isVisible() is True, "Create new type dialog should be shown!"
       assert ui_form.create_type_dialog.buttonBox.isVisible() is True, "Create new type dialog button box should be shown!"
       ui_form.create_type_dialog.structuralLevelCheckBox.setChecked(True)

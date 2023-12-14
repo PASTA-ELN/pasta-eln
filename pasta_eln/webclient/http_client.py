@@ -39,8 +39,6 @@ async def prepare_result(response: ClientResponse) -> dict[str, Any]:
   match response.headers.get('Content-Type'):
     case x if "json" in x:  # type: ignore[operator]
       result["result"] = await response.json()
-    case 'application/text':
-      result["result"] = await response.text()
     case _:
       result["result"] = await response.text()
   return result
