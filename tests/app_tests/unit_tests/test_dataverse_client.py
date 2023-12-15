@@ -3122,12 +3122,3 @@ class TestDataverseClient(object):
       f"{dataverse_client_mock.server_url}/api/dataverses/dv_test",
       request_headers={'Accept': 'application/json', 'X-Dataverse-key': dataverse_client_mock.api_token}
     )
-
-  @pytest.mark.asyncio
-  async def test_method(self,
-                        mocker,
-                        dataverse_client_mock: dataverse_client_mock):
-    dataverse_client = DataverseClient("http://localhost:8080", "a663931d-a8f9-467c-9fcf-fcf9523b7fa0")
-
-    result = await dataverse_client.delete_published_dataset("doi:10.5072/FK2/JRRO5W")
-    assert result is not None, "Dataverse not created!"
