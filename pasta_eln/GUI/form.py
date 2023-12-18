@@ -8,7 +8,7 @@ from PySide6.QtWidgets import QLabel, QTextEdit, QPushButton, QPlainTextEdit, QC
 from PySide6.QtWidgets import QSizePolicy, QMessageBox# pylint: disable=no-name-in-module
 from PySide6.QtGui import QRegularExpressionValidator # pylint: disable=no-name-in-module
 from PySide6.QtCore import QSize, Qt, QTimer          # pylint: disable=no-name-in-module
-from ..guiStyle import Image, TextButton, IconButton, Label, showMessage, widgetAndLayout
+from ..guiStyle import Image, TextButton, IconButton, Label, showMessage, widgetAndLayout, ScrollMessageBox
 from ._contextMenu import initContextMenu, executeContextMenu, CommandMenu
 from ..fixedStringsJson import defaultOntologyNode
 from ..handleDictionaries import fillDocBeforeCreate
@@ -171,18 +171,20 @@ class Form(QDialog):
           self.docTypeComboBox.addItem(value, userData=key)
       self.docTypeComboBox.addItem('_UNIDENTIFIED_', userData='-')
       self.formL.addRow(QLabel('Data type'), self.docTypeComboBox)
-    #final button box
-    _, buttonLineL = widgetAndLayout('H', mainL)
+    # final button box
+    _, buttonLineL = widgetAndLayout('H', mainL, 'm')
     if '-branch' in self.doc:
       visibilityIcon = all(all(branch['show']) for branch in self.doc['-branch'])
       self.visibilityText = QLabel('' if visibilityIcon else 'HIDDEN     \U0001F441')
       buttonLineL.addWidget(self.visibilityText)
-    buttonBox = QDialogButtonBox(QDialogButtonBox.Cancel | QDialogButtonBox.Save)
+    buttonLineL.addStretch(1)
+    IconButton('ri.menu-add-fill', self, [Command.FORM_ADD_KV],   buttonLineL, 'Add key-value pair')
+    IconButton('fa5s.poll-h',      self, [Command.FORM_SHOW_DOC], buttonLineL, 'Show all information')
+    TextButton('Save',             self, [Command.FORM_SAVE],     buttonLineL, 'Save changes')
+    TextButton('Cancel',           self, [Command.FORM_CANCEL],   buttonLineL, 'Discard changes')
     if self.flagNewDoc: #new dataset
-      buttonBox.addButton('Save && Next', QDialogButtonBox.ApplyRole)
-    buttonBox.clicked.connect(self.closeDialog)
-    buttonLineL.addWidget(buttonBox)
-
+      TextButton('Save && Next', self, [Command.FORM_SAVE_NEXT], buttonLineL, 'Save this and handle next')
+    # autosave
     if (Path.home()/'.pastaELN.temp').exists():
       with open(Path.home()/'.pastaELN.temp', 'r', encoding='utf-8') as fTemp:
         content = json.loads(fTemp.read())
@@ -195,13 +197,15 @@ class Form(QDialog):
             getattr(self, f'key_{key}').setText(content[key])
           # skip QCombobox items since cannot be sure that next from has them and they are easy to recreate
     self.checkThreadTimer = QTimer(self)
-    self.checkThreadTimer.setInterval(1*60*1000) #5 min
+    self.checkThreadTimer.setInterval(1*60*1000) #1 min
     self.checkThreadTimer.timeout.connect(self.autosave)
     self.checkThreadTimer.start()
 
 
   def autosave(self) -> None:
     """ Autosave comment to file """
+    if self.comm.backend.configuration['GUI']['autosave'] == 'No':
+      return
     content = {'-name': getattr(self, 'key_-name').text().strip()}
     for key in self.doc.keys():
       if key[0] in self.skipKeys0 or key in self.skipKeys or not hasattr(self, f'key_{key}'):
@@ -216,13 +220,65 @@ class Form(QDialog):
     return
 
 
-  def closeDialog(self, btn:QPushButton) -> None:
+  def execute(self, command:list[Any]) -> None:
     """
-    Action upon save / cancel
+    Event if user clicks button
+
+    Args:
+      command (list): list of commands
     """
-    if self.otherChoices.hasFocus():
-      return
-    if btn.text().endswith('Cancel'):
+    if isinstance(command[0], CommandMenu):
+      if executeContextMenu(self, command):
+        self.imageL.itemAt(0).widget().setParent(None)   # type: ignore
+        width = self.comm.backend.configuration['GUI']['imageSizeDetails'] \
+                if hasattr(self.comm.backend, 'configuration') else 300
+        Image(self.doc['image'], self.imageL, anyDimension=width)
+        visibilityIcon = all(all(branch['show']) for branch in self.doc['-branch'])
+        self.visibilityText.setText('' if visibilityIcon else 'HIDDEN     \U0001F441')
+    elif command[0] is Command.BUTTON_BAR:
+      if command[1]=='bold':
+        getattr(self, f'textEdit_{command[2]}').insertPlainText('**TEXT**')
+      elif command[1]=='italic':
+        getattr(self, f'textEdit_{command[2]}').insertPlainText('*TEXT*')
+      elif command[1]=='list-ul':
+        getattr(self, f'textEdit_{command[2]}').insertPlainText('\n- item 1\n- item 2')
+      elif command[1]=='list-ol':
+        getattr(self, f'textEdit_{command[2]}').insertPlainText('\n1. item 1\n1. item 2')
+      elif command[1].startswith('heading'):
+        getattr(self, f'textEdit_{command[2]}').insertPlainText('#' * int(command[1][-1]) +' Heading\n')
+    elif command[0] is Command.FOCUS_AREA:
+      unknownWidget = []
+      if getattr(self, f'buttonBarW_{command[1]}').isHidden(): #current status hidden
+        getattr(self, f'textShow_{command[1]}').show()
+        getattr(self, f'buttonBarW_{command[1]}').show()
+        for i in range(self.formL.count()):
+          widget = self.formL.itemAt(i).widget()
+          if isinstance(widget, (QLabel, QComboBox, QLineEdit)):
+            widget.hide()
+          else:
+            unknownWidget.append(i)
+        if command[1]=='content' and len(unknownWidget)==5:
+          self.formL.itemAt(unknownWidget[0]).widget().hide()
+          self.formL.itemAt(unknownWidget[1]).widget().hide()
+        if command[1]=='comment' and len(unknownWidget)==5:
+          self.formL.itemAt(unknownWidget[2]).widget().hide()
+          self.formL.itemAt(unknownWidget[3]).widget().hide()
+      else:
+        getattr(self, f'textShow_{command[1]}').hide()
+        getattr(self, f'buttonBarW_{command[1]}').hide()
+        for i in range(self.formL.count()):
+          widget = self.formL.itemAt(i).widget()
+          if isinstance(widget, (QLabel, QComboBox, QLineEdit)):
+            widget.show()
+          else:
+            unknownWidget.append(i)
+        if command[1]=='content' and len(unknownWidget)==5:  #show / hide label and right-side of non-content and non-comment
+          self.formL.itemAt(unknownWidget[0]).widget().show()
+          self.formL.itemAt(unknownWidget[1]).widget().show()
+        if command[1]=='comment' and len(unknownWidget)==5:
+          self.formL.itemAt(unknownWidget[2]).widget().show()
+          self.formL.itemAt(unknownWidget[3]).widget().show()
+    elif command[0] is Command.FORM_CANCEL:
       ret = QMessageBox.critical(self, 'Warning', 'You will loose all entered data. Do you want to save the '+\
                                  'content for next time?',
                                  QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,  # type: ignore[operator]
@@ -234,7 +290,7 @@ class Form(QDialog):
         if (Path.home()/'.pastaELN.temp').exists():
           (Path.home()/'.pastaELN.temp').unlink()
       self.reject()
-    elif 'Save' in btn.text():
+    elif command[0] in (Command.FORM_SAVE, Command.FORM_SAVE_NEXT):
       # create the data that has to be saved
       self.checkThreadTimer.stop()
       if (Path.home()/'.pastaELN.temp').exists():
@@ -356,78 +412,23 @@ class Form(QDialog):
           self.comm.backend.addData(self.doc['-type'][0], copy.deepcopy(self.doc), newProjID)
       #!!! NO updates / redraw here since one does not know from where form came
       # e.g. sequential edit cannot have redraw here
-      if btn.text().endswith('Next'):
+      if command[0] is Command.FORM_SAVE_NEXT:
         for delKey in [i for i in self.doc.keys() if i[0] in ['-','_'] and i not in ['-name','-type','-tags']]:
           del self.doc[delKey]
         self.comm.changeTable.emit('', '')
       else:
         self.accept()  #close
         self.close()
+    elif command[0] is Command.FORM_ADD_KV:
+      pass
+    elif command[0] is Command.FORM_SHOW_DOC:
+      doc = copy.deepcopy(self.doc)
+      if 'image' in doc:
+        del doc['image']
+      messageWindow = ScrollMessageBox('Details', doc, style='QScrollArea{min-width:600 px; min-height:400px}')
+      ret = messageWindow.exec()
     else:
-      print('dialogForm: did not get a fitting btn ',btn.text())
-    return
-
-
-  def execute(self, command:list[Any]) -> None:
-    """
-    Event if user clicks button
-
-    Args:
-      command (list): list of commands
-    """
-    if isinstance(command[0], CommandMenu):
-      if executeContextMenu(self, command):
-        self.imageL.itemAt(0).widget().setParent(None)   # type: ignore
-        width = self.comm.backend.configuration['GUI']['imageSizeDetails'] \
-                if hasattr(self.comm.backend, 'configuration') else 300
-        Image(self.doc['image'], self.imageL, anyDimension=width)
-        visibilityIcon = all(all(branch['show']) for branch in self.doc['-branch'])
-        self.visibilityText.setText('' if visibilityIcon else 'HIDDEN     \U0001F441')
-    elif command[0] is Command.BUTTON_BAR:
-      if command[1]=='bold':
-        getattr(self, f'textEdit_{command[2]}').insertPlainText('**TEXT**')
-      elif command[1]=='italic':
-        getattr(self, f'textEdit_{command[2]}').insertPlainText('*TEXT*')
-      elif command[1]=='list-ul':
-        getattr(self, f'textEdit_{command[2]}').insertPlainText('\n- item 1\n- item 2')
-      elif command[1]=='list-ol':
-        getattr(self, f'textEdit_{command[2]}').insertPlainText('\n1. item 1\n1. item 2')
-      elif command[1].startswith('heading'):
-        getattr(self, f'textEdit_{command[2]}').insertPlainText('#' * int(command[1][-1]) +' Heading\n')
-    elif command[0] is Command.FOCUS_AREA:
-      unknownWidget = []
-      if getattr(self, f'buttonBarW_{command[1]}').isHidden(): #current status hidden
-        getattr(self, f'textShow_{command[1]}').show()
-        getattr(self, f'buttonBarW_{command[1]}').show()
-        for i in range(self.formL.count()):
-          widget = self.formL.itemAt(i).widget()
-          if isinstance(widget, (QLabel, QComboBox, QLineEdit)):
-            widget.hide()
-          else:
-            unknownWidget.append(i)
-        if command[1]=='content' and len(unknownWidget)==5:
-          self.formL.itemAt(unknownWidget[0]).widget().hide()
-          self.formL.itemAt(unknownWidget[1]).widget().hide()
-        if command[1]=='comment' and len(unknownWidget)==5:
-          self.formL.itemAt(unknownWidget[2]).widget().hide()
-          self.formL.itemAt(unknownWidget[3]).widget().hide()
-      else:
-        getattr(self, f'textShow_{command[1]}').hide()
-        getattr(self, f'buttonBarW_{command[1]}').hide()
-        for i in range(self.formL.count()):
-          widget = self.formL.itemAt(i).widget()
-          if isinstance(widget, (QLabel, QComboBox, QLineEdit)):
-            widget.show()
-          else:
-            unknownWidget.append(i)
-        if command[1]=='content' and len(unknownWidget)==5:  #show / hide label and right-side of non-content and non-comment
-          self.formL.itemAt(unknownWidget[0]).widget().show()
-          self.formL.itemAt(unknownWidget[1]).widget().show()
-        if command[1]=='comment' and len(unknownWidget)==5:
-          self.formL.itemAt(unknownWidget[2]).widget().show()
-          self.formL.itemAt(unknownWidget[3]).widget().show()
-    else:
-      print('**ERROR dialogForm: unknowCommand',command)
+      print('**ERROR dialogForm: unknown Command ', command)
     return
 
 
@@ -504,3 +505,9 @@ class Command(Enum):
   OPEN_FILEBROWSER = 4
   OPEN_EXTERNAL    = 5
   FOCUS_AREA       = 6
+  FORM_SAVE        = 7
+  FORM_CANCEL      = 8
+  FORM_ADD_KV      = 9
+  FORM_SHOW_DOC    = 10
+  FORM_SAVE_NEXT   = 11
+

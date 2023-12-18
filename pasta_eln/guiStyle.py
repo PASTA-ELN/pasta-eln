@@ -1,13 +1,14 @@
 """ all styling of buttons and other general widgets, some defined colors... """
 from typing import Callable, Optional, Any
 from PySide6.QtWidgets import QPushButton, QLabel, QSizePolicy, QMessageBox, QLayout, QWidget, QMenu, \
-                              QVBoxLayout, QHBoxLayout, QGridLayout, QFormLayout, QComboBox # pylint: disable=no-name-in-module
+                              QVBoxLayout, QHBoxLayout, QGridLayout, QFormLayout, QComboBox, QScrollArea # pylint: disable=no-name-in-module
 from PySide6.QtGui import QImage, QPixmap, QAction, QKeySequence, QMouseEvent               # pylint: disable=no-name-in-module
 from PySide6.QtCore import QByteArray, Qt           # pylint: disable=no-name-in-module
 from PySide6.QtSvgWidgets import QSvgWidget         # pylint: disable=no-name-in-module
 import qtawesome as qta
 from qt_material import get_theme
 from .backend import Backend
+from .handleDictionaries import dict2ul
 
 space = {'0':0, 's':5, 'm':10, 'l':20, 'xl':200} #spaces: padding and margin
 
@@ -232,7 +233,7 @@ class Label(QLabel):
 
 def showMessage(parent:QWidget, title:str, text:str, icon:str='', style:str='') -> None:
   """
-  Show a message box
+  Show simple message box
 
   Args:
     parent (QWidget): parent widget (self)
@@ -244,12 +245,32 @@ def showMessage(parent:QWidget, title:str, text:str, icon:str='', style:str='') 
   dialog = QMessageBox(parent)
   dialog.setWindowTitle(title)
   dialog.setText(text)
+  dialog.setTextFormat(Qt.MarkdownText) #TODO selectable, add scrollbar
   if icon in {'Information', 'Warning', 'Critical'}:
     dialog.setIcon(getattr(QMessageBox, icon))
   if style!='':
     dialog.setStyleSheet(style)
   dialog.exec()
   return
+
+
+class ScrollMessageBox(QMessageBox):
+  def __init__(self, title:str, text:str, style:str=''):
+    cssStyle = '<style> ul {padding-left: 0; margin: 0;} </style>'
+    QMessageBox.__init__(self)
+    self.setWindowTitle(title)
+    if style == '':
+      self.setStyleSheet('QScrollArea{min-width:300 px; min-height: 400px}')
+    else:
+      self.setStyleSheet(style)
+    scroll = QScrollArea(self)
+    scroll.setWidgetResizable(True)
+    self.content = QLabel()
+    self.content.setWordWrap(True)
+    self.content.setText(cssStyle+dict2ul(text))
+    self.content.setTextInteractionFlags(Qt.TextSelectableByMouse)
+    scroll.setWidget(self.content)
+    self.layout().addWidget(scroll, 0, 0, 1, self.layout().columnCount())
 
 
 def widgetAndLayout(direction:str='V', parentLayout:Optional[QLayout]=None, spacing:str='0', left:str='0', top:str='0', right:str='0', bottom:str='0') -> tuple[QWidget, QLayout]:
