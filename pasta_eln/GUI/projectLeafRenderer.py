@@ -83,7 +83,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     painter.drawStaticText(x0, y0+y, staticText)
     painter.drawStaticText(x0+docTypeOffset, y0+y, QStaticText(docTypeText))
     if self.debugMode:
-      painter.drawStaticText(x0+700, y0+y, QStaticText(data['hierStack']))  # type: ignore
+      painter.drawStaticText(x0+700, y0+y, QStaticText(data['hierStack']))
     width, height = -1, -1
     if doc['-tags']:
       y += self.lineSep
