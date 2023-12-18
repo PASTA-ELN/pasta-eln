@@ -86,6 +86,8 @@ class IconButton(QPushButton):
   def __init__(self, iconName:str, widget:QWidget, command:list[Any]=[], layout:Optional[QLayout]=None,
                tooltip:str='', style:str='', hide:bool=False):
     """
+    Color inventing the button seems impossible
+
     Args:
       iconName (str): icon to show on button
       widget (QWidget): widget / dialog that host the button and that has the execute function
@@ -273,7 +275,8 @@ class ScrollMessageBox(QMessageBox):
     self.layout().addWidget(scroll, 0, 0, 1, self.layout().columnCount())
 
 
-def widgetAndLayout(direction:str='V', parentLayout:Optional[QLayout]=None, spacing:str='0', left:str='0', top:str='0', right:str='0', bottom:str='0') -> tuple[QWidget, QLayout]:
+def widgetAndLayout(direction:str='V', parentLayout:Optional[QLayout]=None, spacing:str='0', left:str='0',
+                    top:str='0', right:str='0', bottom:str='0') -> tuple[QWidget, QLayout]:
   """
   Convenient function for widget and a boxLayout
 

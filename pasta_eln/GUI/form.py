@@ -39,7 +39,6 @@ class Form(QDialog):
       self.doc['-name'] = ''
     else:
       self.setWindowTitle('Edit content')
-    self.setMinimumWidth(1000)
     self.skipKeys = ['image','metaVendor','metaUser','shasum']
     self.skipKeys0= ['_','-', '#']
 
@@ -65,6 +64,9 @@ class Form(QDialog):
         imageW.customContextMenuRequested.connect(lambda pos: initContextMenu(self, pos))
       imageWSA.setWidget(imageW)
       splitter.addWidget(imageWSA)
+      self.setMinimumWidth(1000)
+    else:
+      self.setMinimumWidth(600)
 
     #Add things that are in ontology
     _, self.formL = widgetAndLayout('Form', splitter, 's')
@@ -194,8 +196,10 @@ class Form(QDialog):
       self.visibilityText = QLabel('' if visibilityIcon else 'HIDDEN     \U0001F441')
       buttonLineL.addWidget(self.visibilityText)
     buttonLineL.addStretch(1)
-    IconButton('ri.menu-add-fill', self, [Command.FORM_ADD_KV],   buttonLineL, 'Add key-value pair')
-    IconButton('fa5s.poll-h',      self, [Command.FORM_SHOW_DOC], buttonLineL, 'Show all information')
+    IconButton('ri.menu-add-fill', self, [Command.FORM_ADD_KV],   buttonLineL, 'Add key-value pair',
+               style='border-width:1')
+    IconButton('fa5s.poll-h',      self, [Command.FORM_SHOW_DOC], buttonLineL, 'Show all information',
+               style='border-width:1')
     TextButton('Save',             self, [Command.FORM_SAVE],     buttonLineL, 'Save changes')
     TextButton('Cancel',           self, [Command.FORM_CANCEL],   buttonLineL, 'Discard changes')
     if self.flagNewDoc: #new dataset
