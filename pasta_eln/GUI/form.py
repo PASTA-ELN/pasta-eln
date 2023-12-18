@@ -3,7 +3,7 @@ import logging, re, copy, json
 from enum import Enum
 from pathlib import Path
 from typing import Any, Union
-from PySide6.QtWidgets import QDialog, QWidget, QVBoxLayout, QHBoxLayout, QDialogButtonBox, QSplitter  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QDialog, QWidget, QVBoxLayout, QHBoxLayout, QScrollArea, QSplitter  # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QLabel, QTextEdit, QPushButton, QPlainTextEdit, QComboBox, QLineEdit     # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QSizePolicy, QMessageBox# pylint: disable=no-name-in-module
 from PySide6.QtGui import QRegularExpressionValidator # pylint: disable=no-name-in-module
@@ -39,25 +39,35 @@ class Form(QDialog):
       self.doc['-name'] = ''
     else:
       self.setWindowTitle('Edit content')
-    self.setMinimumWidth(600)
+    self.setMinimumWidth(1000)
     self.skipKeys = ['image','metaVendor','metaUser','shasum']
     self.skipKeys0= ['_','-', '#']
 
-
     # GUI elements
     mainL = QVBoxLayout(self)
+    splitter = QSplitter(Qt.Horizontal)
+    splitter.setHandleWidth(10)
+    splitter.setContentsMargins(0,0,0,0)
+    mainL.addWidget(splitter)
+
+    # image
     if 'image' in self.doc:
+      imageWSA = QScrollArea()
+      self.imageL = QVBoxLayout(imageWSA)
+      imageWSA.setWidgetResizable(True)
+      imageW, self.imageL = widgetAndLayout('V', splitter)
       width = self.comm.backend.configuration['GUI']['imageSizeDetails'] \
-                      if hasattr(self.comm.backend, 'configuration') else 300
-      imageW, self.imageL = widgetAndLayout('V', mainL)
+                if hasattr(self.comm.backend, 'configuration') else 300
       Image(self.doc['image'], self.imageL, anyDimension=width)
       if '_id' in self.doc:
         self.docID= doc['_id']  #required for hide to work
         imageW.setContextMenuPolicy(Qt.CustomContextMenu)
         imageW.customContextMenuRequested.connect(lambda pos: initContextMenu(self, pos))
+      imageWSA.setWidget(imageW)
+      splitter.addWidget(imageWSA)
 
-    _, self.formL = widgetAndLayout('Form', mainL, 's')
     #Add things that are in ontology
+    _, self.formL = widgetAndLayout('Form', splitter, 's')
     if '_ids' not in self.doc:  #normal form
       setattr(self, 'key_-name', QLineEdit(self.doc['-name']))
       getattr(self, 'key_-name').setValidator(QRegularExpressionValidator("[\\w\\ .-]+"))
@@ -147,7 +157,13 @@ class Form(QDialog):
         self.formL.addRow(QLabel(key.capitalize()), getattr(self, f'key_{key}'))
       else:
         print(f"**WARNING dialogForm: unknown value type. key:{key}, type:{type(value)}")
-    #add extra questions at bottom of form
+    # individual key-value items
+    self.keyValueListW, self.keyValueListL = widgetAndLayout('Form', None, 's')
+    self.keyValueListW.hide()
+    self.keyValueLabel = QLabel('Key - values')
+    self.keyValueLabel.hide()
+    self.formL.addRow(self.keyValueLabel, self.keyValueListW)
+    # add extra questions at bottom of form
     allowProjectAndDocTypeChange = '_id' in self.doc and self.doc['-type'][0][0]!='x'
     if '_ids' in self.doc: #if group edit
       allowProjectAndDocTypeChange = all(docID[0] != 'x' for docID in self.doc['_ids'])
@@ -350,6 +366,11 @@ class Form(QDialog):
           self.doc[key]=''
         else:
           print("**ERROR dialogForm unknown value type",key, valueOld)
+      # new key-value pairs
+      keyValueList = [self.keyValueListL.itemAt(i).widget().text() for i in range(self.keyValueListL.count())]
+      keyValueDict = dict(zip(keyValueList[::2],keyValueList[1::2] ))
+      keyValueDict = {k:v for k,v in keyValueDict.items() if k}
+      self.doc = keyValueDict | self.doc
       # ---- if project changed: only branch save; remaining data still needs saving
       newProjID = []
       if hasattr(self, 'projectComboBox') and self.projectComboBox.currentData() != '':
@@ -420,7 +441,15 @@ class Form(QDialog):
         self.accept()  #close
         self.close()
     elif command[0] is Command.FORM_ADD_KV:
-      pass
+      self.keyValueLabel.show()
+      self.keyValueListW.show()
+      key = QLineEdit('')
+      key.setPlaceholderText('key')
+      key.setToolTip('Key (leave empty to delete key-value pair)')
+      key.setValidator(QRegularExpressionValidator("[a-zA-Z0-9]\\S+"))
+      value = QLineEdit('')
+      value.setPlaceholderText('value')
+      self.keyValueListL.addRow(key, value)
     elif command[0] is Command.FORM_SHOW_DOC:
       doc = copy.deepcopy(self.doc)
       if 'image' in doc:

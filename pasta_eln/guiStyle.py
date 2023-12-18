@@ -256,7 +256,7 @@ def showMessage(parent:QWidget, title:str, text:str, icon:str='', style:str='') 
 
 class ScrollMessageBox(QMessageBox):
   def __init__(self, title:str, text:str, style:str=''):
-    cssStyle = '<style> ul {padding-left: 0; margin: 0;} </style>'
+    cssStyle = '<style> ul {list-style-type: none; padding-left: 0; margin: 0; text-indent: -20px; padding-left: -20px;} </style>'
     QMessageBox.__init__(self)
     self.setWindowTitle(title)
     if style == '':
