@@ -203,7 +203,7 @@ def generate_empty_type(displayed_title: str) -> dict[str, Any]:
   """
   return {
     "IRI": "",
-    "displayedTitle": displayed_title,
+    "title": displayed_title,
     "meta": {
       "default": generate_required_metadata()
     },

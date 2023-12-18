@@ -81,7 +81,7 @@ def configuration_extended(mocker) -> DataHierarchyEditorDialog:
   mock_document = mocker.patch('cloudant.document.Document')
   mock_pasta_db = mocker.patch('pasta_eln.database')
   mock_couch_db = mocker.patch('cloudant.couchdb')
-  mock_couch_db['-ontology-'] = mock_document
+  mock_couch_db['-dataHierarchy-'] = mock_document
   mock_pasta_db = mocker.patch.object(mock_pasta_db, 'db', create=True)
   mocker.patch('pasta_eln.GUI.data_hierarchy.create_type_dialog.logging.getLogger')
   mocker.patch(
@@ -232,7 +232,7 @@ def iri_lookup_web_results_name_mock() -> dict:
 def pasta_db_mock(mocker, data_hierarchy_doc_mock) -> Database:
   mock_db = mocker.patch('pasta_eln.database.Database')
   mock_couch_db = mocker.patch('cloudant.client.CouchDB')
-  dbs = {'-ontology-': data_hierarchy_doc_mock}
+  dbs = {'-dataHierarchy-': data_hierarchy_doc_mock}
   mock_couch_db.__getitem__.side_effect = dbs.__getitem__
   mocker.patch.object(mock_db, 'db', mock_couch_db, create=True)
   return mock_db
