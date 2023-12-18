@@ -28,11 +28,12 @@ class DataverseClient:
 
   def __init__(self,
                server_url: str,
-               api_token: str, ) -> None:
+               api_token: str,
+               client_session_timeout: int = 10) -> None:
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
     self.api_token = api_token
     self.server_url = server_url
-    self.http_client = AsyncHttpClient(5)
+    self.http_client = AsyncHttpClient(client_session_timeout)
 
   @handle_dataverse_exception_async
   async def check_if_token_expired(self) -> bool:
