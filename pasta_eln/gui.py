@@ -22,7 +22,7 @@ from .GUI.sidebar import Sidebar
 from .backend import Backend
 from .fixedStringsJson import shortcuts
 from .guiCommunicate import Communicate
-from .guiStyle import Action, showMessage, widgetAndLayout, shortCuts
+from .guiStyle import Action, showMessage, widgetAndLayout
 from .inputOutput import exportELN, importELN
 from .GUI.data_hierarchy.data_hierarchy_editor_dialog import DataHierarchyEditorDialog
 from .miscTools import updateExtractorList, restart
@@ -59,7 +59,8 @@ class MainWindow(QMainWindow):
       for docType, docLabel in self.comm.backend.db.dataLabels.items():
         if docType[0] == 'x' and docType[1] != '0':
           continue
-        shortcut = f"Ctrl+{shortCuts[docType]}" if docType in shortCuts else None
+        shortcut = self.comm.backend.db.dataHierarchy[docType]['shortcut']
+        shortcut = None if shortcut=='' else f"Ctrl+{shortcut}"
         Action(docLabel,                     self, [Command.VIEW, docType],  viewMenu, shortcut=shortcut)
         if docType == 'x0':
           viewMenu.addSeparator()
@@ -73,8 +74,8 @@ class MainWindow(QMainWindow):
     if hasattr(self.backend, 'configuration'):                            # not case in fresh install
       for name in self.backend.configuration['projectGroups'].keys():
         Action(name,                         self, [Command.CHANGE_PG, name], changeProjectGroups)
-    Action('&Synchronize',                    self, [Command.SYNC],            systemMenu, shortcut='F5')
-    Action('&Data Hierarchy Editor',                 self, [Command.ONTOLOGY],        systemMenu, shortcut='F8')
+    Action('&Synchronize',                   self, [Command.SYNC],            systemMenu, shortcut='F5')
+    Action('&Data hierarchy editor',         self, [Command.DATAHIERARCHY],        systemMenu, shortcut='F8')
     systemMenu.addSeparator()
     Action('&Test extraction from a file',   self, [Command.TEST1],           systemMenu)
     Action('Test &selected item extraction', self, [Command.TEST2],           systemMenu, shortcut='F2')
@@ -85,6 +86,7 @@ class MainWindow(QMainWindow):
     helpMenu = menu.addMenu("&Help")
     Action('&Website',                       self, [Command.WEBSITE],         helpMenu)
     Action('&Verify database',               self, [Command.VERIFY_DB],       helpMenu, shortcut='Ctrl+?')
+    Action('&Repair database',               self, [Command.REPAIR_DB],       helpMenu)
     Action('Shortcuts',                      self, [Command.SHORTCUTS],       helpMenu)
     # shortcuts for advanced usage (user should not need)
     QShortcut('F9', self, lambda: self.execute([Command.RESTART]))
@@ -172,9 +174,9 @@ class MainWindow(QMainWindow):
     elif command[0] is Command.SYNC:
       report = self.comm.backend.replicateDB(progressBar=self.sidebar.progress)
       showMessage(self, 'Report of syncronization', report, style='QLabel {min-width: 450px}')
-    elif command[0] is Command.ONTOLOGY:
-      ontologyForm = DataHierarchyEditorDialog(self.comm.backend.db)
-      ontologyForm.instance.exec()
+    elif command[0] is Command.DATAHIERARCHY:
+      dataHierarchyForm = DataHierarchyEditorDialog(self.comm.backend.db)
+      dataHierarchyForm.instance.exec()
       restart()
     elif command[0] is Command.TEST1:
       fileName = QFileDialog.getOpenFileName(self, 'Open file for extractor test', str(Path.home()), '*.*')[0]
@@ -195,6 +197,14 @@ class MainWindow(QMainWindow):
     elif command[0] is Command.VERIFY_DB:
       report = self.comm.backend.checkDB(outputStyle='html', minimal=True)
       showMessage(self, 'Report of database verification', report, style='QLabel {min-width: 800px}')
+    elif command[0] is Command.REPAIR_DB:
+      ret = QMessageBox.critical(self, 'Warning', 'Are you sure you want to repair the database as it can destroy information?', \
+                      QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,  # type: ignore[operator]
+                      QMessageBox.StandardButton.No)
+      if ret==QMessageBox.StandardButton.Yes:
+        self.comm.backend.checkDB(outputStyle='html', minimal=True, repair=True)
+        showMessage(self, 'Report of database verification', 'Rerun verification to test success',
+                    style='QLabel {min-width: 800px}')
     elif command[0] is Command.SHORTCUTS:
       showMessage(self, 'Keyboard shortcuts', shortcuts)
 
@@ -242,22 +252,23 @@ def mainGUI() -> tuple[Union[QCoreApplication, None], MainWindow]:
 
 class Command(Enum):
   """ Commands used in this file """
-  EXPORT = 1
-  IMPORT = 2
-  EXIT = 3
-  VIEW = 4
+  EXPORT    = 1
+  IMPORT    = 2
+  EXIT      = 3
+  VIEW      = 4
   PROJECT_GROUP = 5
   CHANGE_PG = 6
-  SYNC = 7
-  ONTOLOGY = 8
-  TEST1 = 9
-  TEST2 = 10
-  UPDATE = 11
-  CONFIG = 12
-  WEBSITE = 13
+  SYNC      = 7
+  DATAHIERARCHY = 8
+  TEST1     = 9
+  TEST2     = 10
+  UPDATE    = 11
+  CONFIG    = 12
+  WEBSITE   = 13
   VERIFY_DB = 14
-  SHORTCUTS = 15
-  RESTART = 16
+  REPAIR_DB = 15
+  SHORTCUTS = 16
+  RESTART   = 17
 
 
 def startMain() -> None:

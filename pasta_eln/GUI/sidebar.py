@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QTreeWidget, QTreeWidgetItem
 from PySide6.QtCore import Slot                                                                        # pylint: disable=no-name-in-module
 from anytree import PreOrderIter, Node
 from .config import Configuration
-from ..guiStyle import TextButton, IconButton, getColor, showMessage, widgetAndLayout, space, iconsDocTypes
+from ..guiStyle import TextButton, IconButton, getColor, showMessage, widgetAndLayout, space
 from ..guiCommunicate import Communicate
 
 class Sidebar(QWidget):
@@ -108,13 +108,11 @@ class Sidebar(QWidget):
           listW.hide()
         for idx, doctype in enumerate(db.dataLabels):
           if doctype[0]!='x':
-            if db.dataLabels[doctype] in iconsDocTypes:
-              icon = iconsDocTypes[db.dataLabels[doctype]]
-            else:
-              icon = 'fa.asterisk'
+            icon = self.comm.backend.db.dataHierarchy[doctype]['icon']
+            icon = 'fa.asterisk' if icon=='' else icon
             btn = IconButton(icon, self, [Command.LIST_DOCTYPE,doctype,projID], None,db.dataLabels[doctype])
             listL.addWidget(btn, 0, idx)    # type: ignore
-        btn = IconButton(iconsDocTypes['-'], self, [Command.LIST_DOCTYPE,'-',projID], None, 'Unidentified')
+        btn = IconButton('fa5.file', self, [Command.LIST_DOCTYPE,'-',projID], None, 'Unidentified')
         listL.addWidget(btn, 0, len(db.dataLabels)+1)  # type: ignore
         self.widgetsList[projID] = listW
 

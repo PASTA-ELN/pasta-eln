@@ -80,7 +80,7 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
       raise GenericException("Null database instance passed to the initializer", {})
 
     self.database: Database = database
-    self.data_hierarchy_document: Document = self.database.db['-ontology-']
+    self.data_hierarchy_document: Document = self.database.db['-dataHierarchy-']
     if not self.data_hierarchy_document:
       raise DocumentNullException("Null data_hierarchy document in db instance", {})
 
@@ -161,7 +161,7 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
       self.selected_type_metadata = selected_type.get("meta")
 
       # Type displayed_title is set in a line edit
-      self.typeDisplayedTitleLineEdit.setText(selected_type.get('displayedTitle'))
+      self.typeDisplayedTitleLineEdit.setText(selected_type.get('title'))
 
       # Type IRI is set in a line edit
       self.typeIriLineEdit.setText(selected_type.get('IRI'))
@@ -259,7 +259,7 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
     current_type = self.typeComboBox.currentText()
     current_type = adapt_type(current_type)
     if modified_type_displayed_title is not None and current_type in self.data_hierarchy_types:
-      self.data_hierarchy_types.get(current_type)["displayedTitle"] = modified_type_displayed_title
+      self.data_hierarchy_types.get(current_type)["title"] = modified_type_displayed_title
       self.set_iri_lookup_action(modified_type_displayed_title)
 
   def update_type_iri(self,
@@ -441,7 +441,7 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
         self.data_hierarchy_document[type_name] = type_structure
       # Save the modified document
       self.data_hierarchy_document.save()
-      self.database.ontology = dict(self.data_hierarchy_document)
+      self.database.dataHierarchy = dict(self.data_hierarchy_document)
       self.database.initDocTypeViews(16)
       self.instance.close()
 

@@ -66,9 +66,9 @@ def adjust_data_hierarchy_data_to_v4(data_hierarchy_types: dict[str, Any]) -> No
       type_structure.setdefault("meta", type_structure["prop"])
       del type_structure["prop"]
     if "label" in type_structure:
-      type_structure.setdefault("displayedTitle", type_structure["label"])
+      type_structure.setdefault("title", type_structure["label"])
       del type_structure["label"]
-    type_structure.setdefault("displayedTitle", "")
+    type_structure.setdefault("title", "")
   return None
 
 
