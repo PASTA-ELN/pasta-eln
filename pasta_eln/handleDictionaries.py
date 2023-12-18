@@ -3,7 +3,7 @@ import re, uuid, json
 from typing import Any
 from datetime import datetime
 
-def ontology2Labels(ontology:dict[str,Any], tableFormat:dict[str,Any]) -> dict[str,Any]:
+def dataHierarchy2Labels(dataHierarchy:dict[str,Any], tableFormat:dict[str,Any]) -> dict[str,Any]:
   """
   Extract labels and create lists of docType,docLabel pair
   - docLabel is the plural human-readable form of the docType
@@ -12,7 +12,7 @@ def ontology2Labels(ontology:dict[str,Any], tableFormat:dict[str,Any]) -> dict[s
   Not sure if separation into datalabels and hierarchy labels is still needed. Join
 
   Args:
-     ontology (dict): ontology
+     dataHierarchy (dict): data hierarchy
      tableFormat (dict): tableFormat branch from .pastaELN.json
 
   Returns:
@@ -20,7 +20,7 @@ def ontology2Labels(ontology:dict[str,Any], tableFormat:dict[str,Any]) -> dict[s
   """
   dataDict = {}
   hierarchyDict = {}
-  for key in ontology:
+  for key in dataHierarchy:
     if key in ['_id', '_rev']:
       continue
     label = None
@@ -38,23 +38,28 @@ def ontology2Labels(ontology:dict[str,Any], tableFormat:dict[str,Any]) -> dict[s
   return dataDict
 
 
-def ontology_pre_to_V4(ontology: dict[str, Any]) -> None:
-  """ Translate old ontology version to version 4
+def dataHierarchy_pre_to_V4(dataHierarchy: dict[str, Any]) -> None:
+  """ Translate old dataHierarchy version to version 4
 
   Based on work of Jithu Murugan
 
   Args:
-      ontology (dict[str, Any]): ontology
+      dataHierarchy (dict[str, Any]): dataHierarchy
 
   """
-  ontology["-version"] = 4
+  icons = {'measurement':'fa5s.thermometer-half', 'sample':'fa5s.vial', 'procedure':'fa5s.list-ol',
+           'instrument': 'ri.scales-2-line'}
+  shortcuts = {'measurement':'m', 'sample':'s', 'procedure':'p', 'instrument':'i', 'x0':'space'}
+  dataHierarchy["-version"] = 4
   typeStructures = {}
-  for key in ontology:
+  for key in dataHierarchy:
     if key[0] not in {'-', '_'}:
-      typeStructures[key] = ontology[key]
-  for typeStructure in typeStructures.values():
+      typeStructures[key] = dataHierarchy[key]
+  for docType, typeStructure in typeStructures.items():
     # Adjustments previous versions <= v3.0
     typeStructure.setdefault("attachments", [])
+    typeStructure.setdefault("icon", icons[docType] if docType in icons else "")
+    typeStructure.setdefault("shortcut", shortcuts[docType] if docType in shortcuts else "")
     properties = typeStructure.get("prop")
     if properties is None:
       properties = {"default": []}
@@ -67,9 +72,9 @@ def ontology_pre_to_V4(ontology: dict[str, Any]) -> None:
       typeStructure.setdefault("meta", typeStructure["prop"])
       del typeStructure["prop"]
     if "label" in typeStructure:
-      typeStructure.setdefault("displayedTitle", typeStructure["label"])
+      typeStructure.setdefault("title", typeStructure["label"])
       del typeStructure["label"]
-    typeStructure.setdefault("displayedTitle", "")
+    typeStructure.setdefault("title", "")
   return
 
 
@@ -89,7 +94,7 @@ def fillDocBeforeCreate(data:dict[str,Any], docType:list[str]) -> dict[str,Any]:
     str: document
   """
   protectedKeys = ['comment','-tags','image']
-  # Handle the important entries: -type, _id, -date, -branch
+  # Handle the important entries: -type, _id, -date, -branch, -gui
   if '-type' not in data:
     data['-type'] = docType
   if data['-type']==['']:
@@ -104,6 +109,8 @@ def fillDocBeforeCreate(data:dict[str,Any], docType:list[str]) -> dict[str,Any]:
     data['-branch'] = [{'stack':[], 'path':None, 'child':-1, 'show':[]}]
   if 'show' not in data['-branch'] and isinstance(data['-branch'], dict):
     data['-branch']['show'] = [True]*(len(data['-branch']['stack'])+1)
+  if '-gui' not in data:
+    data['-gui'] = [True, True]
   # separate comment into tags and fields
   # these tags are lost: '#d': too short; '#3tag': starts with number
   if 'comment' not in data:
@@ -195,7 +202,7 @@ def diffDicts(dict1:dict[str,Any], dict2:dict[str,Any]) -> str:
   Returns:
     str: output with \\n
   """
-  ignoreKeys = ['-client','_rev']
+  ignoreKeys = ['-client','_rev','-gui']
   outString = ''
   dict2Copy = dict(dict2)
   for key,value in dict1.items():
@@ -212,8 +219,10 @@ def diffDicts(dict1:dict[str,Any], dict2:dict[str,Any]) -> str:
           for idx,_ in enumerate(value):
             branch1 = value[idx]
             branch2 = dict2Copy['-branch'][idx]
-            del branch1['show']
-            del branch2['show']
+            if 'show' in branch1:
+              del branch1['show']
+            if 'show' in branch2:
+              del branch2['show']
             if branch1!=branch2:
               outString += 'branches differ\n   '+str(value)+'\n   '+str(dict2Copy[key])+'\n'
       else:

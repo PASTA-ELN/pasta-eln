@@ -101,7 +101,7 @@ class TestDataHierarchyEditorDialog(object):
     assert config_instance.type_changed_signal == mock_signal, "Signal should be created"
     mock_setup_ui.assert_called_once_with(mock_dialog)
     assert config_instance.database is mock_database, "Database should be set"
-    config_instance.database.db.__getitem__.assert_called_once_with('-ontology-')
+    config_instance.database.db.__getitem__.assert_called_once_with('-dataHierarchy-')
     assert config_instance.data_hierarchy_document is config_instance.database.db.__getitem__.return_value, "Data Hierarchy document should be set"
     assert config_instance.metadata_table_data_model == mock_metadata_table_view_model, "Metadata table data model should be set"
     assert config_instance.attachments_table_data_model == mock_attachments_table_view_model, "Attachments table data model should be set"
@@ -170,14 +170,14 @@ class TestDataHierarchyEditorDialog(object):
     mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.adjust_data_hierarchy_data_to_v4')
     mocker.patch.object(QDialog, '__new__')
     mock_db = mocker.patch('pasta_eln.database.Database')
-    mocker.patch.object(mock_db, 'db', {'-ontology-': None}, create=True)
+    mocker.patch.object(mock_db, 'db', {'-dataHierarchy-': None}, create=True)
     with pytest.raises(DocumentNullException, match="Null data_hierarchy document in db instance"):
       DataHierarchyEditorDialog(mock_db)
 
   @pytest.mark.parametrize("new_type_selected, mock_data_hierarchy_types", [
     ("x0", {
       "x0": {
-        "displayedTitle": "x0",
+        "title": "x0",
         "IRI": "url",
         "meta": {
           "default": [
@@ -195,7 +195,7 @@ class TestDataHierarchyEditorDialog(object):
         "attachments": []
       },
       "x1": {
-        "displayedTitle": "x0",
+        "title": "x0",
         "IRI": "url",
         "meta": {
           "default": [
@@ -215,7 +215,7 @@ class TestDataHierarchyEditorDialog(object):
     }),
     ("x1", {
       "x0": {
-        "displayedTitle": "x0",
+        "title": "x0",
         "IRI": "url",
         "meta": {
           "default": [
@@ -233,7 +233,7 @@ class TestDataHierarchyEditorDialog(object):
         "attachments": []
       },
       "x1": {
-        "displayedTitle": "x0",
+        "title": "x0",
         "IRI": "url",
         "meta": {
           "default": [
@@ -255,8 +255,8 @@ class TestDataHierarchyEditorDialog(object):
     ("x0", {}),
     ("x0", {"x1": {}}),
     ("x0", {"x0": {}}),
-    ("x0", {"x0": {"displayedTitle": None, "IRI": None, "meta": None, "attachments": None}}),
-    ("x0", {"x0": {"displayedTitle": None, "IRI": None, "meta": {"": None}, "attachments": [{"": None}]}}),
+    ("x0", {"x0": {"title": None, "IRI": None, "meta": None, "attachments": None}}),
+    ("x0", {"x0": {"title": None, "IRI": None, "meta": {"": None}, "attachments": [{"": None}]}}),
     ("x0", {"x0": {"": None, "§": None, "meta": {"": None}, "attachment": [{"": None}]}})
   ])
   def test_type_combo_box_changed_should_do_expected(self,
@@ -298,7 +298,7 @@ class TestDataHierarchyEditorDialog(object):
       logger_info_spy.assert_called_once_with("New type selected in UI: {%s}", new_type_selected)
       clear_add_metadata_metadata_group_line_edit_spy.assert_called_once_with()
       set_text_displayed_title_line_edit_spy.assert_called_once_with(
-        mock_data_hierarchy_types.get(new_type_selected).get('displayedTitle'))
+        mock_data_hierarchy_types.get(new_type_selected).get('title'))
       set_text_iri_line_edit_spy.assert_called_once_with(mock_data_hierarchy_types.get(new_type_selected).get('IRI'))
       set_current_index_metadata_group_combo_box_spy.assert_called_once_with(0)
       clear_metadata_group_combo_box_spy.assert_called_once_with()
@@ -464,10 +464,10 @@ class TestDataHierarchyEditorDialog(object):
   @pytest.mark.parametrize("modified_type_displayed_title, current_type, data_hierarchy_types", [
     (None, None, None),
     ("new_displayed_title_1", None, None),
-    (None, "x0", {"x0": {"displayedTitle": "x0"}, "x1": {"displayedTitle": "x1"}}),
-    ("new_displayed_title_2", "x1", {"x0": {"displayedTitle": "x0"}, "x1": {"displayedTitle": "x1"}}),
-    ("new_displayed_title_2", "instrument", {"x0": {"displayedTitle": "x0"}, "instrument": {"displayedTitle": "x1"}}),
-    ("type_new_displayed_title", "subtask4", {"x0": {"displayedTitle": "x0"}, "subtask5": {"displayedTitle": "x1"}}),
+    (None, "x0", {"x0": {"title": "x0"}, "x1": {"title": "x1"}}),
+    ("new_displayed_title_2", "x1", {"x0": {"title": "x0"}, "x1": {"title": "x1"}}),
+    ("new_displayed_title_2", "instrument", {"x0": {"title": "x0"}, "instrument": {"title": "x1"}}),
+    ("type_new_displayed_title", "subtask4", {"x0": {"title": "x0"}, "subtask5": {"title": "x1"}}),
   ])
   def test_update_structure_displayed_title_should_do_expected(self,
                                                                mocker,
@@ -495,16 +495,16 @@ class TestDataHierarchyEditorDialog(object):
         modified_type_displayed_title) is None, "Nothing should be returned"
       if data_hierarchy_types is not None and current_type in data_hierarchy_types:
         get_data_hierarchy_types_spy.assert_called_once_with(current_type)
-        assert data_hierarchy_types[current_type]["displayedTitle"] == modified_type_displayed_title
+        assert data_hierarchy_types[current_type]["title"] == modified_type_displayed_title
         configuration_extended.set_iri_lookup_action.assert_called_once_with(modified_type_displayed_title)
 
   @pytest.mark.parametrize("modified_type_iri, current_type, data_hierarchy_types", [
     (None, None, None),
     ("new_url", None, None),
-    (None, "x0", {"x0": {"displayedTitle": "x0"}, "x1": {"displayedTitle": "x1"}}),
-    ("new_url_2", "x1", {"x0": {"displayedTitle": "x0"}, "x1": {"displayedTitle": "x1"}}),
-    ("new_url_2", "instrument", {"x0": {"displayedTitle": "x0"}, "instrument": {"displayedTitle": "x1"}}),
-    ("type_new_url", "subtask4", {"x0": {"displayedTitle": "x0"}, "subtask5": {"displayedTitle": "x1"}}),
+    (None, "x0", {"x0": {"title": "x0"}, "x1": {"title": "x1"}}),
+    ("new_url_2", "x1", {"x0": {"title": "x0"}, "x1": {"title": "x1"}}),
+    ("new_url_2", "instrument", {"x0": {"title": "x0"}, "instrument": {"title": "x1"}}),
+    ("type_new_url", "subtask4", {"x0": {"title": "x0"}, "subtask5": {"title": "x1"}}),
   ])
   def test_update_type_iri_should_do_expected(self,
                                               mocker,

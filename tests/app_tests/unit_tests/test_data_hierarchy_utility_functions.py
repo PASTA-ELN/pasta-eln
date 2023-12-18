@@ -101,7 +101,7 @@ class TestDataHierarchyUtilityFunctions(object):
           "x0":
             {
               "attachments": [],
-              "displayedTitle": "",
+              "title": "",
               "meta": {
                 "default": []
               }
@@ -116,7 +116,7 @@ class TestDataHierarchyUtilityFunctions(object):
           "x1":
             {
               "attachments": [],
-              "displayedTitle": "",
+              "title": "",
               "meta": {
                 "default": []
               }
@@ -152,7 +152,7 @@ class TestDataHierarchyUtilityFunctions(object):
                   "test1": "test2"
                 }
               ],
-              "displayedTitle": "",
+              "title": "",
               "meta": {
                 "default": [
                   {
@@ -174,7 +174,7 @@ class TestDataHierarchyUtilityFunctions(object):
                   "test1": "test2"
                 }
               ],
-              "displayedTitle": "",
+              "title": "",
               "meta": {
                 "default": [
                   {
@@ -194,7 +194,7 @@ class TestDataHierarchyUtilityFunctions(object):
                   "test1": "test2"
                 }
               ],
-              "displayedTitle": "",
+              "title": "",
               "meta": {
                 "default": [
                   {
@@ -219,7 +219,7 @@ class TestDataHierarchyUtilityFunctions(object):
           "x5":
             {
               "attachments": None,
-              "displayedTitle": None,
+              "title": None,
               "meta": {
                 "default": []
               }

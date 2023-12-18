@@ -2,7 +2,119 @@
 
 ## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
 
-[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.19...HEAD)
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.26...HEAD)
+
+**Fixed bugs:**
+
+- Deleting projects with same names [\#162](https://github.com/PASTA-ELN/pasta-eln/issues/162)
+
+**Merged pull requests:**
+
+- implement HT idea [\#169](https://github.com/PASTA-ELN/pasta-eln/pull/169) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+
+## [v2.4.26](https://github.com/PASTA-ELN/pasta-eln/tree/v2.4.26) (2023-12-14)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.25...v2.4.26)
+
+**Fixed bugs:**
+
+- Using "Hide project details" raises an error [\#161](https://github.com/PASTA-ELN/pasta-eln/issues/161)
+- Data loss when changing Data Type [\#146](https://github.com/PASTA-ELN/pasta-eln/issues/146)
+- Project header moved after changing Data Type [\#142](https://github.com/PASTA-ELN/pasta-eln/issues/142)
+- Changing data types and rerunning extractors [\#136](https://github.com/PASTA-ELN/pasta-eln/issues/136)
+- Does not start in windows, reason unclear [\#86](https://github.com/PASTA-ELN/pasta-eln/issues/86)
+
+**Closed issues:**
+
+- Confirmation popup when deleting multiple items [\#149](https://github.com/PASTA-ELN/pasta-eln/issues/149)
+- Comment display in the project view header [\#111](https://github.com/PASTA-ELN/pasta-eln/issues/111)
+
+**Merged pull requests:**
+
+- Debug \#162: Deleting projects with same names [\#164](https://github.com/PASTA-ELN/pasta-eln/pull/164) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+
+## [v2.4.25](https://github.com/PASTA-ELN/pasta-eln/tree/v2.4.25) (2023-12-12)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.24...v2.4.25)
+
+**Implemented enhancements:**
+
+- Progress bar to import and export [\#18](https://github.com/PASTA-ELN/pasta-eln/issues/18)
+
+**Fixed bugs:**
+
+- Import and edit the eLabFTW project [\#133](https://github.com/PASTA-ELN/pasta-eln/issues/133)
+
+**Closed issues:**
+
+- Deleting an item in a specific table opens a general table [\#134](https://github.com/PASTA-ELN/pasta-eln/issues/134)
+
+**Merged pull requests:**
+
+- Repaired issue \#111 [\#160](https://github.com/PASTA-ELN/pasta-eln/pull/160) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Try to repair \#142 [\#158](https://github.com/PASTA-ELN/pasta-eln/pull/158) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- \#repair issue 146 [\#157](https://github.com/PASTA-ELN/pasta-eln/pull/157) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Repair issue \#149 [\#155](https://github.com/PASTA-ELN/pasta-eln/pull/155) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+
+## [v2.4.24](https://github.com/PASTA-ELN/pasta-eln/tree/v2.4.24) (2023-11-17)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.23...v2.4.24)
+
+**Closed issues:**
+
+- Appearance options not used from saved state [\#125](https://github.com/PASTA-ELN/pasta-eln/issues/125)
+- Removing all columns from tables [\#116](https://github.com/PASTA-ELN/pasta-eln/issues/116)
+- Importing incorrect [\#115](https://github.com/PASTA-ELN/pasta-eln/issues/115)
+- Unidentified table cannot be opened [\#114](https://github.com/PASTA-ELN/pasta-eln/issues/114)
+- Checkboxes in project table view [\#113](https://github.com/PASTA-ELN/pasta-eln/issues/113)
+- Long text in the project view header [\#110](https://github.com/PASTA-ELN/pasta-eln/issues/110)
+
+**Merged pull requests:**
+
+- repair issue \#134 [\#140](https://github.com/PASTA-ELN/pasta-eln/pull/140) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- if \_attachment in doc prior to saving a new document, … [\#139](https://github.com/PASTA-ELN/pasta-eln/pull/139) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- debug unknown keys with strange values [\#138](https://github.com/PASTA-ELN/pasta-eln/pull/138) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Sb redo name has to be in table [\#137](https://github.com/PASTA-ELN/pasta-eln/pull/137) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+
+## [v2.4.23](https://github.com/PASTA-ELN/pasta-eln/tree/v2.4.23) (2023-11-09)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.22...v2.4.23)
+
+## [v2.4.22](https://github.com/PASTA-ELN/pasta-eln/tree/v2.4.22) (2023-11-09)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.21...v2.4.22)
+
+## [v2.4.21](https://github.com/PASTA-ELN/pasta-eln/tree/v2.4.21) (2023-11-09)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.20...v2.4.21)
+
+**Fixed bugs:**
+
+- Bug if branch not in doc [\#107](https://github.com/PASTA-ELN/pasta-eln/issues/107)
+- Editing unassigned items [\#82](https://github.com/PASTA-ELN/pasta-eln/issues/82)
+- Importing .eln with unidentified-\>measurement files [\#79](https://github.com/PASTA-ELN/pasta-eln/issues/79)
+- Creating new project after eLabFTW eln import [\#78](https://github.com/PASTA-ELN/pasta-eln/issues/78)
+
+**Closed issues:**
+
+- Jpeg extractor issue [\#118](https://github.com/PASTA-ELN/pasta-eln/issues/118)
+- Deleting structure levels 2 and 1 [\#117](https://github.com/PASTA-ELN/pasta-eln/issues/117)
+- Edit of sample that has no project [\#85](https://github.com/PASTA-ELN/pasta-eln/issues/85)
+
+**Merged pull requests:**
+
+- undo a recently created bug [\#132](https://github.com/PASTA-ELN/pasta-eln/pull/132) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- repaired \#125: Appearance options not used from saved state [\#127](https://github.com/PASTA-ELN/pasta-eln/pull/127) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Remove bug that occurs if you remove a project with content [\#124](https://github.com/PASTA-ELN/pasta-eln/pull/124) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Sb project view x3 does not exist [\#123](https://github.com/PASTA-ELN/pasta-eln/pull/123) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Sb extractor bad metadata [\#122](https://github.com/PASTA-ELN/pasta-eln/pull/122) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- repaired \#116 [\#121](https://github.com/PASTA-ELN/pasta-eln/pull/121) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Sb table bugs [\#120](https://github.com/PASTA-ELN/pasta-eln/pull/120) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Repaired \#110 and \#111 since they belong to the same file [\#119](https://github.com/PASTA-ELN/pasta-eln/pull/119) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+
+## [v2.4.20](https://github.com/PASTA-ELN/pasta-eln/tree/v2.4.20) (2023-10-27)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.19...v2.4.20)
 
 **Merged pull requests:**
 

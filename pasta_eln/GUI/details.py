@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QScrollArea, QLabel, QTextEdit  # pylint: disable=
 from PySide6.QtCore import Qt, Slot # pylint: disable=no-name-in-module
 from ..guiStyle import TextButton, Image, Label, showMessage, widgetAndLayout, getColor
 from ._contextMenu import initContextMenu, executeContextMenu, CommandMenu
-from ..fixedStringsJson import defaultOntologyNode
+from ..fixedStringsJson import defaultDataHierarchyNode
 from ..guiCommunicate import Communicate
 from ..handleDictionaries import dict2ul
 
@@ -97,9 +97,9 @@ class Details(QScrollArea):
       self.comm.changeTable.emit('','')
       return
     if self.doc['-type'][0]=='-':
-      ontologyNode = defaultOntologyNode
+      dataHierarchyNode = defaultDataHierarchyNode
     else:
-      ontologyNode = self.comm.backend.db.ontology[self.doc['-type'][0]]['meta']
+      dataHierarchyNode = self.comm.backend.db.dataHierarchy[self.doc['-type'][0]]['meta']
     label = self.doc['-name'] if len(self.doc['-name'])<80 else self.doc['-name'][:77]+'...'
     Label(label,'h1', self.headerL)
     if 'metaVendor' not in self.doc:
@@ -153,7 +153,7 @@ class Details(QScrollArea):
         self.metaUserW.show()
       else:
         link = False
-        ontologyItem = [i for group in ontologyNode for i in ontologyNode[group] if i['name']==key]
+        dataHierarchyItem = [i for group in dataHierarchyNode for i in dataHierarchyNode[group] if i['name']==key]
         if '\n' in self.doc[key]:     #if returns in value: format nicely
           labelW, labelL = widgetAndLayout('H', self.metaDetailsL, top='s', bottom='s')
           labelL.addWidget(QLabel(f'{key}: '), alignment=Qt.AlignTop) # type: ignore
@@ -169,9 +169,9 @@ class Details(QScrollArea):
           text.setReadOnly(True)
           labelL.addWidget(text, stretch=1) # type: ignore[call-arg]
         else:
-          if len(ontologyItem)==1 and 'list' in ontologyItem[0]:
-            if not isinstance(ontologyItem[0]['list'], list):                #choice among docType
-              table  = self.comm.backend.db.getView('viewDocType/'+ontologyItem[0]['list'])
+          if len(dataHierarchyItem)==1 and 'list' in dataHierarchyItem[0]:
+            if not isinstance(dataHierarchyItem[0]['list'], list):                #choice among docType
+              table  = self.comm.backend.db.getView('viewDocType/'+dataHierarchyItem[0]['list'])
               choices= [i for i in table if i['id']==self.doc[key]]
               if len(choices)==1:
                 value = '\u260D '+choices[0]['value'][0]

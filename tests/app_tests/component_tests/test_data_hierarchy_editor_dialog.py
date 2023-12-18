@@ -94,7 +94,7 @@ class TestDataHierarchyEditorDialog(object):
             == data_hierarchy_doc_mock.types_list()[0]), "Type combo box should be selected to first item"
     selected_type = data_hierarchy_doc_mock.types()[adapt_type(ui_form.typeComboBox.currentText())]
     assert (ui_form.typeDisplayedTitleLineEdit.text() ==
-            selected_type["displayedTitle"]), "Data type displayedTitle line edit not loaded!"
+            selected_type["title"]), "Data type displayedTitle line edit not loaded!"
     assert (ui_form.typeIriLineEdit.text() ==
             selected_type["IRI"]), "Data type IRI line edit not loaded!"
 
@@ -187,8 +187,8 @@ class TestDataHierarchyEditorDialog(object):
     assert adapt_type(ui_form.typeComboBox.currentText()) == data_hierarchy_doc_mock.types_list()[0], \
       "Type combo box should be selected to first structural item"
     selected_type = data_hierarchy_doc_mock.types()[adapt_type(ui_form.typeComboBox.currentText())]
-    assert ui_form.typeDisplayedTitleLineEdit.text() == selected_type["displayedTitle"], \
-      "Type displayedTitle line edit should be selected to first structural item"
+    assert ui_form.typeDisplayedTitleLineEdit.text() == selected_type["title"], \
+      "Type title line edit should be selected to first structural item"
     assert ui_form.typeIriLineEdit.text() == selected_type["IRI"], \
       "Type IRI line edit should be selected to selected type IRI"
     assert ui_form.metadataGroupComboBox.currentText() == list(selected_type["meta"].keys())[0], \
@@ -292,7 +292,7 @@ class TestDataHierarchyEditorDialog(object):
       assert ui_form.create_type_dialog.buttonBox.isVisible() is True, "Create new type dialog button box should be shown!"
       assert ui_form.create_type_dialog.structuralLevelCheckBox.isChecked() is False, "structuralLevelCheckBox should be unchecked"
       ui_form.create_type_dialog.titleLineEdit.setText("")
-      ui_form.create_type_dialog.displayedTitleLineEdit.setText("displayedTitle")
+      ui_form.create_type_dialog.displayedTitleLineEdit.setText("title")
     qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(ui_form.create_type_dialog.buttonBox.Ok),
                      Qt.LeftButton)
     assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
@@ -418,7 +418,7 @@ class TestDataHierarchyEditorDialog(object):
     assert adapt_type(ui_form.typeComboBox.currentText()) == data_hierarchy_doc_mock.types_list()[0], \
       "Type combo box should be selected to first structural item"
     selected_type = data_hierarchy_doc_mock.types()[adapt_type(ui_form.typeComboBox.currentText())]
-    assert ui_form.typeDisplayedTitleLineEdit.text() == selected_type["displayedTitle"], \
+    assert ui_form.typeDisplayedTitleLineEdit.text() == selected_type["title"], \
       "Type displayedTitle line edit should be selected to first structural item"
     assert ui_form.typeIriLineEdit.text() == selected_type["IRI"], \
       "Type IRI line edit should be selected to IRI in selected type"
@@ -482,7 +482,7 @@ class TestDataHierarchyEditorDialog(object):
       assert lookup_dialog.scrollAreaWidgetContents.isVisible() is True, "Scroll area should be visible"
       assert lookup_dialog.scrollAreaContentsVerticalLayout.count() == 0, "Scroll area should be empty"
       qtbot.mouseClick(lookup_dialog.terminologySearchPushButton, Qt.LeftButton)
-      assert lookup_dialog.scrollAreaContentsVerticalLayout.count() >= 5, "Scroll area should be populated with more than 5 items"
+      assert lookup_dialog.scrollAreaContentsVerticalLayout.count() > 5, "Scroll area should be populated with more than 5 items"
       for pos in range(lookup_dialog.scrollAreaContentsVerticalLayout.count()):
         check_box = lookup_dialog.scrollAreaContentsVerticalLayout.itemAt(pos).widget().findChildren(QCheckBox)[0]
         assert check_box is not None and check_box.isChecked() is False, "Checkbox should not be checked"
@@ -521,7 +521,7 @@ class TestDataHierarchyEditorDialog(object):
       assert lookup_dialog.scrollAreaWidgetContents.isVisible() is True, "Scroll area should be visible"
       assert lookup_dialog.scrollAreaContentsVerticalLayout.count() == 0, "Scroll area should be empty"
       qtbot.mouseClick(lookup_dialog.terminologySearchPushButton, Qt.LeftButton)
-      assert lookup_dialog.scrollAreaContentsVerticalLayout.count() >= 5, "Scroll area should be populated with more than 5 items"
+      assert lookup_dialog.scrollAreaContentsVerticalLayout.count() > 5, "Scroll area should be populated with more than 5 items"
       for pos in range(lookup_dialog.scrollAreaContentsVerticalLayout.count()):
         check_box = lookup_dialog.scrollAreaContentsVerticalLayout.itemAt(pos).widget().findChildren(QCheckBox)[0]
         assert check_box is not None and check_box.isChecked() is False, "Checkbox should not be checked"

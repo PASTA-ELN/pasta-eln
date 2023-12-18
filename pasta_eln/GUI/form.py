@@ -10,7 +10,7 @@ from PySide6.QtGui import QRegularExpressionValidator # pylint: disable=no-name-
 from PySide6.QtCore import QSize, Qt, QTimer          # pylint: disable=no-name-in-module
 from ..guiStyle import Image, TextButton, IconButton, Label, showMessage, widgetAndLayout
 from ._contextMenu import initContextMenu, executeContextMenu, CommandMenu
-from ..fixedStringsJson import defaultOntologyNode
+from ..fixedStringsJson import defaultDataHierarchyNode
 from ..handleDictionaries import fillDocBeforeCreate
 from ..miscTools import createDirName
 from ..guiCommunicate import Communicate
@@ -40,6 +40,9 @@ class Form(QDialog):
     else:
       self.setWindowTitle('Edit content')
     self.setMinimumWidth(600)
+    self.skipKeys = ['image','metaVendor','metaUser','shasum']
+    self.skipKeys0= ['_','-', '#']
+
 
     # GUI elements
     mainL = QVBoxLayout(self)
@@ -54,23 +57,23 @@ class Form(QDialog):
         imageW.customContextMenuRequested.connect(lambda pos: initContextMenu(self, pos))
 
     _, self.formL = widgetAndLayout('Form', mainL, 's')
-    #Add things that are in ontology
+    #Add things that are in dataHierarchy
     if '_ids' not in self.doc:  #normal form
       setattr(self, 'key_-name', QLineEdit(self.doc['-name']))
       getattr(self, 'key_-name').setValidator(QRegularExpressionValidator("[\\w\\ .-]+"))
       self.formL.addRow('Name', getattr(self, 'key_-name'))
-    if self.doc['-type'][0] in self.db.ontology:
-      ontologyNode = self.db.ontology[self.doc['-type'][0]]['meta']
+    if self.doc['-type'][0] in self.db.dataHierarchy:
+      dataHierarchyNode = self.db.dataHierarchy[self.doc['-type'][0]]['meta']
     else:
-      ontologyNode = defaultOntologyNode
-    for item in [i for group in ontologyNode for i in ontologyNode[group]]:
+      dataHierarchyNode = defaultDataHierarchyNode
+    for item in [i for group in dataHierarchyNode for i in dataHierarchyNode[group]]:
       if item['name'] not in self.doc and  item['name'][0] not in ['_','-']:
         self.doc[item['name']] = ''
     # Create form
     if '-tags' not in self.doc:
       self.doc['-tags'] = []
     for key,value in self.doc.items():
-      if (key[0] in ['_','-', '#'] and key!='-tags') or key in ['image','metaVendor','metaUser','shasum']:
+      if (key[0] in self.skipKeys0 and key!='-tags') or key in self.skipKeys:
         continue
       # print("Key:value in form | "+key+':'+str(value))
       if key in ['comment','content']:
@@ -127,13 +130,13 @@ class Form(QDialog):
           setattr(self, f'key_{key}', QLineEdit('-- strange content --'))
         self.formL.addRow(QLabel(key.capitalize()), getattr(self, f'key_{key}'))
       elif isinstance(value, str):    #string
-        ontologyItem = [i for group in ontologyNode for i in ontologyNode[group] if i['name']==key]
-        if len(ontologyItem)==1 and 'list' in ontologyItem[0]:       #choice dropdown
+        dataHierarchyItem = [i for group in dataHierarchyNode for i in dataHierarchyNode[group] if i['name']==key]
+        if len(dataHierarchyItem)==1 and 'list' in dataHierarchyItem[0]:       #choice dropdown
           setattr(self, f'key_{key}', QComboBox())
-          if isinstance(ontologyItem[0]['list'], list):            #ontology-defined choices
-            getattr(self, f'key_{key}').addItems(ontologyItem[0]['list'])
+          if isinstance(dataHierarchyItem[0]['list'], list):            #dataHierarchy-defined choices
+            getattr(self, f'key_{key}').addItems(dataHierarchyItem[0]['list'])
           else:                                                    #choice among docType
-            listDocType = ontologyItem[0]['list']
+            listDocType = dataHierarchyItem[0]['list']
             getattr(self, f'key_{key}').addItem('- no link -', userData='')
             for line in self.db.getView(f'viewDocType/{listDocType}'):
               getattr(self, f'key_{key}').addItem(line['value'][0], userData=line['id'])
@@ -143,7 +146,7 @@ class Form(QDialog):
           setattr(self, f'key_{key}', QLineEdit(value))
         self.formL.addRow(QLabel(key.capitalize()), getattr(self, f'key_{key}'))
       else:
-        print("**ERROR dialogForm: unknown value type",key, value)
+        print(f"**WARNING dialogForm: unknown value type. key:{key}, type:{type(value)}")
     #add extra questions at bottom of form
     allowProjectAndDocTypeChange = '_id' in self.doc and self.doc['-type'][0][0]!='x'
     if '_ids' in self.doc: #if group edit
@@ -184,8 +187,7 @@ class Form(QDialog):
       with open(Path.home()/'.pastaELN.temp', 'r', encoding='utf-8') as fTemp:
         content = json.loads(fTemp.read())
         for key in self.doc.keys():
-          if key[0] in ['_','-', '#'] or key in ['image','metaVendor','metaUser','shasum'] or \
-             key not in content:
+          if key[0] in self.skipKeys0 or key in self.skipKeys or key not in content:
             continue
           if key in ['comment','content']:
             getattr(self, f'textEdit_{key}').setPlainText(content[key])
@@ -202,7 +204,7 @@ class Form(QDialog):
     """ Autosave comment to file """
     content = {'-name': getattr(self, 'key_-name').text().strip()}
     for key in self.doc.keys():
-      if key[0] in ['_','-', '#'] or key in ['image','metaVendor','metaUser','shasum']:
+      if key[0] in self.skipKeys0 or key in self.skipKeys or not hasattr(self, f'key_{key}'):
         continue
       if key in ['comment','content']:
         content[key] = getattr(self, f'textEdit_{key}').toPlainText().strip()
@@ -322,6 +324,7 @@ class Form(QDialog):
       if hasattr(self, 'docTypeComboBox') and self.docTypeComboBox.currentData() != '':
         self.doc['-type'] = [self.docTypeComboBox.currentData()]
         if '_ids' in self.doc: #group update
+          self.doc = {k:v for k,v in self.doc.items() if v} # filter out empty items
           for docID in self.doc.pop('_ids'):
             doc = self.db.getDoc(docID)
             doc.update( self.doc )

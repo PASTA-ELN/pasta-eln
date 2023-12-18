@@ -22,8 +22,8 @@ class TableHeader(QDialog):
     self.docType = docType
     self.db = self.comm.backend.db
     self.selectedList = self.db.getColumnNames()[docType].split(',')
-    self.allSet = {i['name'] for group in self.db.ontology[docType]['meta']
-                   for i in self.db.ontology[docType]['meta'][group]}
+    self.allSet = {i['name'] for group in self.db.dataHierarchy[docType]['meta']
+                   for i in self.db.dataHierarchy[docType]['meta'][group]}
     self.allSet = self.allSet.union({'date','#_curated', 'type', 'name', 'comment', 'tags', 'image'})
     #clean it
     self.allSet       = {i[1:] if i[0] in ['-','_'] else i for i in self.allSet}  #change -something to something
@@ -68,7 +68,7 @@ class TableHeader(QDialog):
     if command[0] is Command.ADD:
       self.selectedList += selectedLeft
     elif command[0] is Command.DELETE:
-      self.selectedList = [i for i in self.selectedList if i not in selectedRight ]
+      self.selectedList = [i for i in self.selectedList if i not in selectedRight or i in ['name'] ]
     elif command[0] is Command.MOVE_UP  and len(selectedRight)==1:
       oldIndex = self.selectedList.index(selectedRight[0])
       if oldIndex>0:

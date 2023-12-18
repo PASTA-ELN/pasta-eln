@@ -4,7 +4,7 @@
   "-version": 3,
   "x0": {
     "IRI": "http://url.com",
-    "displayedTitle": "Projects",
+    "title": "Projects",
     "meta": {
       "default": [
         {
@@ -61,7 +61,7 @@
   },
   "x1": {
     "IRI": "",
-    "displayedTitle": "Tasks",
+    "title": "Tasks",
     "meta": {
       "default": [
         {
@@ -82,7 +82,7 @@
   },
   "x2": {
     "IRI": "",
-    "displayedTitle": "Subtasks",
+    "title": "Subtasks",
     "meta": {
       "default": [
         {
@@ -103,7 +103,7 @@
   },
   "measurement": {
     "IRI": "",
-    "displayedTitle": "Measurements",
+    "title": "Measurements",
     "meta": {
       "default": [
         {
@@ -146,7 +146,7 @@
   },
   "sample": {
     "IRI": "",
-    "displayedTitle": "Samples",
+    "title": "Samples",
     "meta": {
       "default": [
         {
@@ -174,7 +174,7 @@
   },
   "procedure": {
     "IRI": "",
-    "displayedTitle": "Procedures",
+    "title": "Procedures",
     "meta": {
       "default": [
         {
@@ -199,7 +199,7 @@
   },
   "instrument": {
     "IRI": "",
-    "displayedTitle": "Instruments",
+    "title": "Instruments",
     "meta": {
       "default": [
         {

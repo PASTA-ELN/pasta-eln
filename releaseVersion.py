@@ -69,6 +69,8 @@ def newVersion(level=2):
   for i in range(level+1,3):
     version[i] = 0
   version = '.'.join([str(i) for i in version])
+  reply = input(f'Create version (2.5, 3.1.4b1): [{version}]: ')
+  version = version if not reply or len(reply.split('.'))<2 else reply
   print('======== Version '+version+' =======')
   #update python files
   filesToUpdate = {'pasta_eln/__init__.py':'__version__ = ', 'docs/source/conf.py':'version = '}
