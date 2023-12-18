@@ -543,4 +543,3 @@ class Command(Enum):
   FORM_ADD_KV      = 9
   FORM_SHOW_DOC    = 10
   FORM_SAVE_NEXT   = 11
-

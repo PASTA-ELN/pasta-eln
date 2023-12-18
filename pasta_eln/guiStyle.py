@@ -235,7 +235,7 @@ class Label(QLabel):
 
 def showMessage(parent:QWidget, title:str, text:str, icon:str='', style:str='') -> None:
   """
-  Show simple message box
+  Show simple message box for little information
 
   Args:
     parent (QWidget): parent widget (self)
@@ -247,7 +247,7 @@ def showMessage(parent:QWidget, title:str, text:str, icon:str='', style:str='') 
   dialog = QMessageBox(parent)
   dialog.setWindowTitle(title)
   dialog.setText(text)
-  dialog.setTextFormat(Qt.MarkdownText) #TODO selectable, add scrollbar
+  dialog.setTextFormat(Qt.MarkdownText)
   if icon in {'Information', 'Warning', 'Critical'}:
     dialog.setIcon(getattr(QMessageBox, icon))
   if style!='':
@@ -257,7 +257,14 @@ def showMessage(parent:QWidget, title:str, text:str, icon:str='', style:str='') 
 
 
 class ScrollMessageBox(QMessageBox):
-  def __init__(self, title:str, text:str, style:str=''):
+  """ Scrollable message box for lots of dictionary information """
+  def __init__(self, title:str, content:dict[str,Any], style:str=''):
+    """
+    Args:
+      title (str): title
+      content (dict): dictionary of lots of information
+      style (str): css style
+    """
     cssStyle = '<style> ul {list-style-type: none; padding-left: 0; margin: 0; text-indent: -20px; padding-left: -20px;} </style>'
     QMessageBox.__init__(self)
     self.setWindowTitle(title)
@@ -269,10 +276,10 @@ class ScrollMessageBox(QMessageBox):
     scroll.setWidgetResizable(True)
     self.content = QLabel()
     self.content.setWordWrap(True)
-    self.content.setText(cssStyle+dict2ul(text))
-    self.content.setTextInteractionFlags(Qt.TextSelectableByMouse)
+    self.content.setText(cssStyle+dict2ul(content))
+    self.content.setTextInteractionFlags(Qt.TextSelectableByMouse)        # type: ignore[arg-type]
     scroll.setWidget(self.content)
-    self.layout().addWidget(scroll, 0, 0, 1, self.layout().columnCount())
+    self.layout().addWidget(scroll, 0, 0, 1, self.layout().columnCount()) # type: ignore[call-arg]
 
 
 def widgetAndLayout(direction:str='V', parentLayout:Optional[QLayout]=None, spacing:str='0', left:str='0',
