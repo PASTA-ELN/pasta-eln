@@ -238,6 +238,8 @@ class Database:
       if 'show' not in doc['-branch']:
         doc['-branch']['show'] = self.createShowFromStack(doc['-branch']['stack'])
       doc['-branch'] = [doc['-branch']]
+    if '_attachments' in doc:   # delete if document was moved
+      del doc['_attachments']
     try:
       res = self.db.create_document(doc)
       logging.debug('successfully saved doc with type and branch '+doc['_id']+' '+'/'.join(doc['-type'])+'  |  '+str(doc['-branch'])+'\n')

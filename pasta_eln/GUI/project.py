@@ -2,9 +2,10 @@
 import logging, re
 from enum import Enum
 from typing import Optional, Any
+import shutil
 from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget, QMenu, QMessageBox, QTextEdit, QScrollArea # pylint: disable=no-name-in-module
-from PySide6.QtGui import QStandardItemModel, QStandardItem, QAction   # pylint: disable=no-name-in-module
-from PySide6.QtCore import Slot, Qt, QItemSelectionModel, QModelIndex # pylint: disable=no-name-in-module
+from PySide6.QtGui import QStandardItemModel, QStandardItem, QAction, QResizeEvent                     # pylint: disable=no-name-in-module
+from PySide6.QtCore import Slot, Qt, QItemSelectionModel, QModelIndex                                  # pylint: disable=no-name-in-module
 from anytree import PreOrderIter, Node
 from .projectTreeView import TreeView
 from ..guiStyle import TextButton, Action, Label, showMessage, widgetAndLayout, iconsDocTypes, getColor
@@ -21,7 +22,9 @@ class Project(QWidget):
     self.setLayout(self.mainL)
     self.tree:Optional[TreeView]             = None
     self.model:Optional[QStandardItemModel]  = None
-    self.infoW:Optional[QWidget]             = None
+    self.infoWSA:Optional[QWidget]           = None
+    self.infoW_:Optional[QWidget]            = None
+    self.commentTE:Optional[QWidget]         = None
     self.actHideDetail = QAction()
     self.actionHideItems   = QAction()
     self.actionHideProject = QAction()
@@ -33,6 +36,7 @@ class Project(QWidget):
     self.foldedAll = False
     self.btnAddSubfolder:Optional[TextButton] = None
     self.lineSep = 20
+    self.countLines = -1
 
 
   def projHeader(self) -> None:
@@ -40,6 +44,10 @@ class Project(QWidget):
     Initialize / Create header of page
     """
     self.docProj = self.comm.backend.db.getDoc(self.projID)
+    # remove if still there
+    for i in reversed(range(self.mainL.count())): #remove old
+      self.mainL.itemAt(i).widget().setParent(None)  # type: ignore
+    logging.debug('ProjectView elements at 2: %i',self.mainL.count())
     # TOP LINE includes name on left, buttons on right
     _, topLineL       = widgetAndLayout('H',self.mainL,'m')
     hidden, menuTextHidden = ('     \U0001F441', 'Mark project as shown') \
@@ -79,45 +87,55 @@ class Project(QWidget):
     more.setMenu(moreMenu)
 
     # Details section
-    self.infoW = QScrollArea()
-    self.infoW.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-    self.infoW.setWidgetResizable(True)
-    infoW_, infoL = widgetAndLayout('V')
-    self.infoW.setWidget(infoW_)
-    self.mainL.addWidget(self.infoW)
+    self.infoWSA = QScrollArea()
+    self.infoWSA.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+    self.infoWSA.setWidgetResizable(True)
+    self.infoW_, infoL = widgetAndLayout('V')
+    self.infoWSA.setWidget(self.infoW_)
+    self.mainL.addWidget(self.infoWSA)
     # details
     tags = ', '.join([f'#{i}' for i in self.docProj['-tags']]) if '-tags' in self.docProj else ''
     infoL.addWidget(QLabel(f'Tags: {tags}'))
-    countLines = 0
+    self.countLines = 0
     for key,value in self.docProj.items():
       if key[0] in {'_','-'} or 'from ' in key or key in {'comment'}:
         continue
       labelW = QLabel(f'{key.title()}: {str(value)}')
       infoL.addWidget(labelW)
-      countLines += 1
+      self.countLines += 1
     # comment
-    _, commentL         = widgetAndLayout('H', infoL, 's')
+    commentW, commentL   = widgetAndLayout('H', infoL, 's')
+    commentW.resizeEvent = self.commentResize # type: ignore
     labelW = QLabel('Comment:')
     # labelW.setStyleSheet('padding-top: 5px') #make "Comment:" text aligned with other content, not with text-edit
     commentL.addWidget(labelW, alignment=Qt.AlignTop)   # type: ignore[call-arg]
-    comment = QTextEdit()
-    comment.setMarkdown(re.sub(r'(^|\n)(#+)', r'\1##\2', self.docProj['comment'].strip()))
+    self.commentTE = QTextEdit()
+    self.commentTE.setMarkdown(re.sub(r'(^|\n)(#+)', r'\1##\2', self.docProj['comment'].strip()))
     bgColor = getColor(self.comm.backend, 'secondaryDark')
     fgColor = getColor(self.comm.backend, 'primaryText')
-    comment.setStyleSheet(f"border: none; padding: 0px; background-color: {bgColor}; color: {fgColor}")
-    comment.setReadOnly(True)
-    comment.document().setTextWidth(self.infoW.width())
-    height:int = comment.document().size().toTuple()[1] # type: ignore[index]
-    commentL.addWidget(comment)
-    infoW_.setMaximumHeight(height + (countLines+1)*self.lineSep     +2)
-    self.infoW.setMaximumHeight(height + (countLines+1)*self.lineSep +5)
+    self.commentTE.setStyleSheet(f"border: none; padding: 0px; background-color: {bgColor}; color: {fgColor}")
+    self.commentTE.setReadOnly(True)
+    self.commentResize(None)
+    commentL.addWidget(self.commentTE)
+    return
+
+  def commentResize(self, _:Any) -> None:
+    """ called if comment is resized because widget initially/finally knows its size
+    - comment widget is hard coded size it depends on the rendered size
+    """
+    if self.commentTE is None or self.infoWSA is None or self.infoW_ is None:
+      return
+    self.commentTE.document().setTextWidth(self.infoWSA.width())
+    height:int = self.commentTE.document().size().toTuple()[1]
+    self.infoW_.setMaximumHeight(height + (self.countLines+1)*self.lineSep     -12)
+    self.infoWSA.setMaximumHeight(height + (self.countLines+1)*self.lineSep  -10)
     return
 
 
   @Slot(str, str)
   def change(self, projID:str, docID:str) -> None:
     """
-    What happens when user clicks to change doc-type
+    What happens when user clicks to select project
 
     Args:
       projID (str): document id of project; if empty, just refresh
@@ -127,6 +145,7 @@ class Project(QWidget):
     #initialize
     for i in reversed(range(self.mainL.count())): #remove old
       self.mainL.itemAt(i).widget().setParent(None)  # type: ignore
+    logging.debug('ProjectView elements at 1: %i',self.mainL.count())
     if projID!='':
       self.projID         = projID
       self.taskID         = docID
@@ -145,11 +164,13 @@ class Project(QWidget):
         self.projHeader()
       else:
         rootItem.appendRow(self.iterateTree(node))
+    logging.debug('ProjectView elements at 3: %i',self.mainL.count())
     # self.tree.expandAll()
     if selectedIndex is not None:
       self.tree.selectionModel().select(selectedIndex, QItemSelectionModel.Select)
       self.tree.setCurrentIndex(selectedIndex)# Item(selectedItem)
     self.mainL.addWidget(self.tree)
+    logging.debug('ProjectView elements at 4: %i',self.mainL.count())
     if len(nodeHier.children)>0 and self.btnAddSubfolder is not None:
       self.btnAddSubfolder.setVisible(False)
     return
@@ -180,6 +201,10 @@ class Project(QWidget):
         if '-branch' in doc and len(doc['-branch'])>0 and 'path' in doc['-branch'][0]:
           oldPath = self.comm.backend.basePath/doc['-branch'][0]['path']
           newPath = self.comm.backend.basePath/('trash_'+doc['-branch'][0]['path'])
+          nextIteration = 1
+          while newPath.exists():
+            newPath = self.comm.backend.basePath/(f"trash_{doc['-branch'][0]['path']}_{nextIteration}")
+            nextIteration += 1
           oldPath.rename(newPath)
         # go through children, remove from DB
         children = self.comm.backend.db.getView('viewHierarchy/viewHierarchy', startKey=self.projID)
@@ -193,11 +218,11 @@ class Project(QWidget):
       self.comm.changeSidebar.emit('redraw')
       showMessage(self, 'Information','Scanning finished')
     elif command[0] is Command.REDUCE_HEIGHT_HEAD:
-      if self.infoW is not None and self.infoW.isHidden():
-        self.infoW.show()
+      if self.infoWSA is not None and self.infoWSA.isHidden():
+        self.infoWSA.show()
         self.actHideDetail.setText('Hide project details')
-      elif self.infoW is not None:
-        self.infoW.hide()
+      elif self.infoWSA is not None:
+        self.infoWSA.hide()
         self.actHideDetail.setText('Show project details')
     elif command[0] is Command.HIDE:
       self.comm.backend.db.hideShow(self.projID)

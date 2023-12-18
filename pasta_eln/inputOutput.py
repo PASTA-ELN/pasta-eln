@@ -179,7 +179,7 @@ def importELN(backend:Backend, elnFileName:str) -> str:
             shutil.copyfileobj(source, target)
       # save
       if elnName == 'PASTA ELN':
-        del doc['-user']
+        doc['-user'] = '_'
         if datasetIsFolder and fullPath is not None:
           fullPath.mkdir(exist_ok=True)
           with open(fullPath/'.id_pastaELN.json', 'w', encoding='utf-8') as fOut:
@@ -282,7 +282,6 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
       else:
         docSupp[key] = value
     # remove personal data
-    docMain['author'] = '_'
     del docSupp['-user']
     if 'image' in docSupp:
       del docSupp['image']

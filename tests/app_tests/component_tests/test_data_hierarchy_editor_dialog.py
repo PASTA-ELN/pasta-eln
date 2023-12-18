@@ -482,7 +482,7 @@ class TestDataHierarchyEditorDialog(object):
       assert lookup_dialog.scrollAreaWidgetContents.isVisible() is True, "Scroll area should be visible"
       assert lookup_dialog.scrollAreaContentsVerticalLayout.count() == 0, "Scroll area should be empty"
       qtbot.mouseClick(lookup_dialog.terminologySearchPushButton, Qt.LeftButton)
-      assert lookup_dialog.scrollAreaContentsVerticalLayout.count() >= 5, "Scroll area should be populated with more than 5 items"
+      assert lookup_dialog.scrollAreaContentsVerticalLayout.count() > 5, "Scroll area should be populated with more than 5 items"
       for pos in range(lookup_dialog.scrollAreaContentsVerticalLayout.count()):
         check_box = lookup_dialog.scrollAreaContentsVerticalLayout.itemAt(pos).widget().findChildren(QCheckBox)[0]
         assert check_box is not None and check_box.isChecked() is False, "Checkbox should not be checked"
@@ -521,7 +521,7 @@ class TestDataHierarchyEditorDialog(object):
       assert lookup_dialog.scrollAreaWidgetContents.isVisible() is True, "Scroll area should be visible"
       assert lookup_dialog.scrollAreaContentsVerticalLayout.count() == 0, "Scroll area should be empty"
       qtbot.mouseClick(lookup_dialog.terminologySearchPushButton, Qt.LeftButton)
-      assert lookup_dialog.scrollAreaContentsVerticalLayout.count() >= 5, "Scroll area should be populated with more than 5 items"
+      assert lookup_dialog.scrollAreaContentsVerticalLayout.count() > 5, "Scroll area should be populated with more than 5 items"
       for pos in range(lookup_dialog.scrollAreaContentsVerticalLayout.count()):
         check_box = lookup_dialog.scrollAreaContentsVerticalLayout.itemAt(pos).widget().findChildren(QCheckBox)[0]
         assert check_box is not None and check_box.isChecked() is False, "Checkbox should not be checked"
