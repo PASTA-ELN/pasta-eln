@@ -32,10 +32,10 @@ class TestDataverseClient(object):
                              api_token="test_token")
     mock_get_logger.assert_called_once_with(
       'pasta_eln.dataverse.client.DataverseClient')
-    mock_http_client.assert_called_once_with(5)
+    mock_http_client.assert_called_once_with(10)
     assert client.logger is mock_logger
-    assert client.server_url is "test_url"
-    assert client.api_token is "test_token"
+    assert client.server_url == "test_url"
+    assert client.api_token == "test_token"
     assert client.http_client is mock_client
 
   @pytest.mark.asyncio
