@@ -1,6 +1,6 @@
 .. |EditorWindow| image:: _static/ontology_editor.png
   :width: 700
-  :alt: The screen capture of the ontology editor main window
+  :alt: The screen capture of the data hierarchy editor main window
 
 .. |TypesComboBox| image:: _static/types_combo_box.png
   :width: 200
@@ -42,8 +42,8 @@ Usage
 Inorder to open the ontology tool, follow the below given steps:
 
 - Run the PASTA Application
-- Go to **System | Questionnaires** or press **F8**
-- A ontology editor will be opened with the loaded data from the database as shown in the picture below
+- Go to **System | Data Hierarchy Editor** or press **F8**
+- An                editor will be opened with the loaded data from the database as shown in the picture below
 
 |EditorWindow|
 

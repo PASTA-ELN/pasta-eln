@@ -25,7 +25,7 @@ class Backend(CLI_Mixin):
         defaultProjectGroup (string): name of configuration / project-group used; if not given, use the one defined by 'defaultProjectGroup' in config file
         **kwargs (dict): additional parameters
           - initViews (bool): initialize views at startup
-          - resetOntology (bool): reset ontology on database from one on file
+          - resetDataHierarchy (bool): reset dataHierarchy on database from one on file
     """
     #initialize basic values
     self.hierStack:list[str] = []
@@ -42,7 +42,7 @@ class Backend(CLI_Mixin):
         defaultProjectGroup (string): name of configuration / project-group used; if not given, use the one defined by 'defaultProjectGroup' in config file
         **kwargs (dict): additional parameters
           - initViews (bool): initialize views at startup
-          - resetOntology (bool): reset ontology on database from one on file
+          - resetDataHierarchy (bool): reset dataHierarchy on database from one on file
     """
     configFileName = Path.home()/'.pastaELN.json'
     self.configuration = defaultConfiguration
@@ -579,7 +579,7 @@ class Backend(CLI_Mixin):
           size = len(str(content))
           report += outputString(outputStyle, 'info', f'Entire extracted size: {size // 1024}kB')
         else:
-          report += outputString(outputStyle, 'error', 'Recipe does not follow doctype in ontology.')
+          report += outputString(outputStyle, 'error', 'Recipe does not follow doctype in dataHierarchy.')
       else:
         report += outputString(outputStyle,'error','Recipe not included in extractor.')
     if success:
@@ -698,6 +698,8 @@ class Backend(CLI_Mixin):
     """
     ### check database itself for consistency
     output = self.db.checkDB(outputStyle=outputStyle, repair=repair, minimal=minimal)
+    if repair:
+      self.db.initGeneralViews()
     ### compare with file system
     output += outputString(outputStyle,'h2','File status')
     viewProjects   = self.db.getView('viewDocType/x0All')
@@ -743,9 +745,10 @@ class Backend(CLI_Mixin):
                 if len(difference)>1:
                   output += outputString(outputStyle,'error','disk(1) and db(2) content do not match:'+docDisk['_id'])
                   output += outputString(outputStyle,'error',difference)
+                  if repair:
+                    with open(self.basePath/root/dirName/'.id_pastaELN.json','w',encoding='utf-8') as fOut:
+                      json.dump(docDB, fOut)
                   # #use only for resetting the content in the .id_pastaELN.json
-                  # with open(self.basePath/root/dirName/'.id_pastaELN.json','w',encoding='utf-8') as fOut:
-                  #   json.dump(docDB, fOut)
             else:
               output += outputString(outputStyle, 'error', f'Folder has no .id_pastaELN.json:{path}')
               count += 1

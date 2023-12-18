@@ -20,8 +20,8 @@ class CLI_Mixin:
     """
     outString = []
     widthArray = [25,25,25,25]
-    for idx,item in enumerate(i for group in self.db.ontology[docType]['prop']
-                              for i in self.db.ontology[docType]['prop'][group]):
+    for idx,item in enumerate(i for group in self.db.dataHierarchy[docType]['meta']
+                              for i in self.db.dataHierarchy[docType]['meta'][group]):
       width = widthArray[idx] if idx<len(widthArray) else 0
       if width!=0:
         formatString = '{0: <'+str(abs(width))+'}'
@@ -30,8 +30,8 @@ class CLI_Mixin:
     outString += '-'*104+'\n'
     for lineItem in self.db.getView(f'viewDocType/{docType}'):
       rowString = []
-      for idx, item in enumerate(i for group in self.db.ontology[docType]['prop']
-                                 for i in self.db.ontology[docType]['prop'][group]):
+      for idx, item in enumerate(i for group in self.db.dataHierarchy[docType]['meta']
+                                 for i in self.db.dataHierarchy[docType]['meta'][group]):
         width = widthArray[idx] if idx<len(widthArray) else 0
         if width!=0:
           formatString = '{0: <'+str(abs(width))+'}'

@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Callable, Any
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QMessageBox, QFileDialog, QProgressBar   # pylint: disable=no-name-in-module
 from ..guiStyle import TextButton, widgetAndLayout
-from ..installationTools import couchdb, configuration, ontology, exampleData, createShortcut
+from ..installationTools import couchdb, configuration, dataHierarchy, exampleData, createShortcut
 from ..fixedStringsJson import setupTextWindows, couchDBWindows, exampleDataWindows, restartPastaWindows
 from ..miscTools import restart
 from ..guiCommunicate import Communicate
@@ -104,18 +104,18 @@ class ConfigurationSetup(QWidget):
             self.text1.setMarkdown(self.mainText)
             flagContinue = False
 
-      #Ontology
+      #DataHierarchy
       if flagContinue:
-        res = ontology('test')
+        res = dataHierarchy('test')
         if '**ERROR' not in res:
-          self.mainText = self.mainText.replace('- Ontology of the datastructure','- Ontology of the datastructure is acceptable\n'+res )
+          self.mainText = self.mainText.replace('- DataHierarchy of the datastructure','- DataHierarchy of the datastructure is acceptable\n'+res )
           self.text1.setMarkdown(self.mainText)
         else:
-          # button = QMessageBox.question(self, "PASTA-ELN ontology", "Do you want to create the default ontology?")
+          # button = QMessageBox.question(self, "PASTA-ELN dataHierarchy", "Do you want to create the default dataHierarchy?")
           # if button == QMessageBox.Yes:
-          ontology('install')
+          dataHierarchy('install')
           # else:
-          #   self.mainText = self.mainText.replace('- Ontology of the datastructure','- Ontology: user chose to NOT install' )
+          #   self.mainText = self.mainText.replace('- DataHierarchy of the datastructure','- DataHierarchy: user chose to NOT install' )
           #   self.text1.setMarkdown(self.mainText)
           #   flagContinue = False
 
