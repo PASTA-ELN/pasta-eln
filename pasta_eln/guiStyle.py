@@ -86,8 +86,6 @@ class IconButton(QPushButton):
   def __init__(self, iconName:str, widget:QWidget, command:list[Any]=[], layout:Optional[QLayout]=None,
                tooltip:str='', style:str='', hide:bool=False):
     """
-    Color inventing the button seems impossible
-
     Args:
       iconName (str): icon to show on button
       widget (QWidget): widget / dialog that host the button and that has the execute function
@@ -99,7 +97,7 @@ class IconButton(QPushButton):
     """
     super().__init__()
     color = 'black' if widget is None else getColor(widget.comm.backend, 'primary')
-    icon = qta.icon(iconName, color=color, scale_factor=1)
+    icon = qta.icon(iconName, color=color, scale_factor=1)  #color change here
     self.setIcon(icon)
     self.clicked.connect(lambda: widget.execute(command))
     self.setFixedHeight(30)
