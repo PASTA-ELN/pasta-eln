@@ -692,7 +692,7 @@ class Database:
         client2 = CouchDB(dbInfo['user'], dbInfo['password'], url=dbInfo['url'], connect=True)
       except Exception:
         return '<b>ERROR drp01: Could not connect to remote server. Abort replication.</b><br>'+\
-                 'user:'+dbInfo['user']+'<br>password:'+dbInfo['password']+'<br>url:'+dbInfo['url']
+                   'user:'+dbInfo['user']+'<br>password:'+dbInfo['password']+'<br>url:'+dbInfo['url']
       db2 = client2[dbInfo['database']]
       replResult = rep.create_replication(self.db, db2, create_target=False, continuous=False)
       logging.info('Start replication '+replResult['_id']+'.')
@@ -709,9 +709,9 @@ class Database:
         if '_replication_state' in replResult:
           logging.info('Success replication '+replResult['_id']+'.')
           progressBar.hide()
-          reply = f"Replication success state: {replResult['_replication_state']}\n" \
-                  f"  time of reporting: {replResult['_replication_state_time']}\n" \
-                  f"Documents in source database: {len([i for i in self.db])}\n"
+          reply = (f"Replication success state: {replResult['_replication_state']}\n  "
+                   f"time of reporting: {replResult['_replication_state_time']}\n"
+                   f"Documents in source database: {len(list(self.db))}\n")
           stats = dict(replResult['_replication_stats'])
           del stats['checkpointed_source_seq']
           reply += '\n  '.join([f"{k.replace('_',' ')}:{v}" for k,v in stats.items()])+'\n'

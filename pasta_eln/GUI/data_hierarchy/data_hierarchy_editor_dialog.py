@@ -15,7 +15,7 @@ import webbrowser
 from typing import Any
 
 from PySide6 import QtWidgets
-from PySide6.QtCore import QObject, Signal, Slot
+from PySide6.QtCore import QCoreApplication, QObject, Signal, Slot
 from PySide6.QtWidgets import QApplication, QLineEdit, QMessageBox
 from cloudant.document import Document
 
@@ -502,7 +502,7 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
 
 
 def get_gui(database: Database) -> tuple[
-  QApplication | QApplication, QtWidgets.QDialog, DataHierarchyEditorDialog]:
+  QCoreApplication | QApplication, QtWidgets.QDialog, DataHierarchyEditorDialog]:
   """
   Creates the editor UI and return it
   Args:
