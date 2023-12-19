@@ -55,7 +55,7 @@
            </sizepolicy>
           </property>
           <property name="toolTip">
-           <string>Table which lists and allows editing of all the metadata associated with the above selected type</string>
+           <string>Table for all metadata associated with the Data Type. Add &quot;comment&quot; or &quot;content&quot; for editable text fields, &quot;image&quot; for image support, or enter another Data Type to enable links.</string>
           </property>
           <property name="sortingEnabled">
            <bool>false</bool>
@@ -440,7 +440,7 @@
              <string>Add a new metadata row to the above table with empty values</string>
             </property>
             <property name="text">
-             <string>+ Add Metadata group</string>
+             <string>+ Add Metadata</string>
             </property>
            </widget>
           </item>
@@ -526,7 +526,7 @@
              </font>
             </property>
             <property name="text">
-             <string>Metadata Form Editor</string>
+             <string>Metadata</string>
             </property>
            </widget>
           </item>
