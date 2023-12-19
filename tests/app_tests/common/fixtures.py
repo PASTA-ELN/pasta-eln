@@ -7,6 +7,7 @@
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 from typing import Union
+from xml.etree.ElementTree import Element
 
 from PySide6 import QtWidgets
 from PySide6.QtCore import QCoreApplication
@@ -34,8 +35,10 @@ from pasta_eln.GUI.data_hierarchy.terminology_lookup_dialog import TerminologyLo
 from pasta_eln.GUI.data_hierarchy.terminology_lookup_dialog_base import Ui_TerminologyLookupDialogBase
 from pasta_eln.GUI.data_hierarchy.terminology_lookup_service import TerminologyLookupService
 from pasta_eln.database import Database
+from pasta_eln.dataverse.client import DataverseClient
 from pasta_eln.gui import MainWindow, mainGUI
-from tests.app_tests.common.test_utils import read_json
+from pasta_eln.webclient.http_client import AsyncHttpClient
+from tests.app_tests.common.test_utils import read_json, read_xml
 
 
 @fixture()
@@ -74,6 +77,34 @@ def terminology_lookup_dialog_mock(mocker) -> TerminologyLookupDialog:
 def terminology_lookup_mock(mocker) -> TerminologyLookupService:
   mocker.patch('pasta_eln.GUI.data_hierarchy.create_type_dialog.logging.getLogger')
   return TerminologyLookupService()
+
+
+@fixture()
+def http_client_mock(mocker) -> AsyncHttpClient:
+  mocker.patch('pasta_eln.webclient.http_client.logging.getLogger')
+  return AsyncHttpClient()
+
+
+@fixture()
+def dataverse_client_mock(mocker) -> DataverseClient:
+  mocker.patch('pasta_eln.dataverse.client.logging.getLogger')
+  mocker.patch('pasta_eln.dataverse.client.AsyncHttpClient')
+  return DataverseClient("test_url", "test_token")
+
+
+@fixture()
+def dataverse_tree_mock(mocker) -> Element | None:
+  mocked_element_tree = mocker.MagicMock()
+  mocked_element_tree_root = mocker.MagicMock()
+  test_tree = read_xml('dataverse_list.xml')
+  mocked_element_tree.getroot.return_value = mocked_element_tree_root
+  mocked_element_tree_root.findall.side_effect = test_tree.getroot().findall
+  return mocked_element_tree
+
+
+@fixture()
+def dataverse_list_mock() -> dict | None:
+  return read_json('dataverse_list.json')
 
 
 @fixture()
