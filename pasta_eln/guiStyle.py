@@ -12,16 +12,6 @@ from .handleDictionaries import dict2ul
 
 space = {'0':0, 's':5, 'm':10, 'l':20, 'xl':200} #spaces: padding and margin
 
-iconsDocTypes = {'Measurements':'fa5s.thermometer-half',
-                 'Samples':     'fa5s.vial',
-                 'Procedures':  'fa5s.list-ol',
-                 'Instruments': 'ri.scales-2-line',
-                 '-':           'fa5.file'}
-
-shortCuts = {'measurement':'m', 'sample':'s', 'procedure':'p', 'instrument':'i', 'x0':'space'}
-
-
-
 def getColor(backend:Backend, color:str) -> str:
   """
   get color from theme

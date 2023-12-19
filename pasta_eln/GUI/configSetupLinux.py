@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Callable, Any
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QMessageBox, QFileDialog, QProgressBar    # pylint: disable=no-name-in-module
 from ..guiStyle import TextButton, widgetAndLayout
-from ..installationTools import couchdb, configuration, ontology, exampleData, createShortcut, installLinuxRoot
+from ..installationTools import couchdb, configuration, dataHierarchy, exampleData, createShortcut, installLinuxRoot
 from ..fixedStringsJson import setupTextLinux, rootInstallLinux, exampleDataLinux
 from ..miscTools import restart
 from ..guiCommunicate import Communicate
@@ -104,14 +104,14 @@ class ConfigurationSetup(QWidget):
             self.text1.setMarkdown(self.mainText)
             flagContinue = False
 
-      #Ontology
+      #DataHierarchy
       if flagContinue:
-        res = ontology('test')
+        res = dataHierarchy('test')
         if '**ERROR' not in res:
-          self.mainText = self.mainText.replace('- Ontology of the datastructure','- Ontology of the datastructure is acceptable\n'+res )
+          self.mainText = self.mainText.replace('- DataHierarchy of the datastructure','- DataHierarchy of the datastructure is acceptable\n'+res )
           self.text1.setMarkdown(self.mainText)
         else:
-          ontology('install')
+          dataHierarchy('install')
 
       #Shortcut
       if flagContinue:

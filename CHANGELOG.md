@@ -2,7 +2,19 @@
 
 ## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
 
-[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.25...HEAD)
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.26...HEAD)
+
+**Fixed bugs:**
+
+- Deleting projects with same names [\#162](https://github.com/PASTA-ELN/pasta-eln/issues/162)
+
+**Merged pull requests:**
+
+- implement HT idea [\#169](https://github.com/PASTA-ELN/pasta-eln/pull/169) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+
+## [v2.4.26](https://github.com/PASTA-ELN/pasta-eln/tree/v2.4.26) (2023-12-14)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.25...v2.4.26)
 
 **Fixed bugs:**
 

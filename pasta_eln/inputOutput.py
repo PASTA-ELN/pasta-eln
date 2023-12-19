@@ -431,7 +431,7 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
         'datePublished':datetime.now().isoformat(),
     }
     graphMaster.append(masterNodeRoot)
-    zipContent = json.dumps(backend.db.getDoc('-ontology-'))
+    zipContent = json.dumps(backend.db.getDoc('-dataHierarchy-'))
     dataStructureInfo = {
         '@id':  f'./{dirNameProject}/datastructure.json',
         '@type': 'File',

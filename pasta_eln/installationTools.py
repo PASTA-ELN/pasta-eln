@@ -6,7 +6,7 @@ from pathlib import Path
 from cloudant.client import CouchDB
 
 from .backend import Backend
-from .fixedStringsJson import defaultOntology, defaultConfiguration, configurationGUI
+from .fixedStringsJson import defaultDataHierarchy, defaultConfiguration, configurationGUI
 from .miscTools import outputString, DummyProgressBar
 
 
@@ -275,7 +275,7 @@ def configuration(command:str='test', user:str='', password:str='', pathPasta:Pa
 
 
 
-def ontology(command:str='test') -> str:
+def dataHierarchy(command:str='test') -> str:
   '''
   Check configuration file .pastaELN.json for consistencies
 
@@ -294,16 +294,16 @@ def ontology(command:str='test') -> str:
       numViews = len(item['doc']['views']) if 'views' in item['doc'] else 0
       output += '  '+item['id']+'   Num. of views:'+str(numViews)+'\n'
     try:
-      _ = backend.db.getDoc('-ontology-')
-      output += 'Ontology exists on server'+'\n'
+      _ = backend.db.getDoc('-dataHierarchy-')
+      output += 'DataHierarchy exists on server'+'\n'
     except Exception:
-      output += '**ERROR: Ontology does NOT exist on server'+'\n'
+      output += '**ERROR: DataHierarchy does NOT exist on server'+'\n'
     return output
   elif command == 'install':
-    logging.info('ontology starting ...')
-    doc = defaultOntology
+    logging.info('dataHierarchy starting ...')
+    doc = defaultDataHierarchy
     logging.info(str(doc))
-    logging.info('ontology ending ...')
+    logging.info('dataHierarchy ending ...')
     # _ = backend.db.create_document(doc)
     return ''
 
@@ -522,12 +522,12 @@ def main() -> None:
   flagConfiguration = 'ERROR' in res
   print('configuration:', res)
   try:
-    res = '\n'+ontology()
+    res = '\n'+dataHierarchy()
   except Exception:
     res = ' **ERROR**'
     #No new 'raise' so that it install-script continues its path
-  flagOntology = 'ERROR' in res
-  print(f'ontology     :{res}')
+  flagDataHierarchy = 'ERROR' in res
+  print(f'dataHierarchy     :{res}')
 
   print('Add "install" argument to install PASTA-ELN.')
   if len(sys.argv)>1 and 'install' in sys.argv:
@@ -538,8 +538,8 @@ def main() -> None:
         installLinuxRoot(existsCouchDB, Path.home()/'pastaELN')
       if flagConfiguration:
         print('repair  configuration:', configuration('repair'))
-      if flagOntology and existsCouchDB:
-        print('install ontology     :', ontology('install'))
+      if flagDataHierarchy and existsCouchDB:
+        print('install dataHierarchy     :', dataHierarchy('install'))
 
     elif platform.system()=='Windows':
       print('---- Create PASTA-ELN installation Windows ----')
@@ -547,8 +547,8 @@ def main() -> None:
         print('install couchDB      :', couchdb('install'))
       if flagConfiguration:
         print('repair  configuration:', configuration('repair'))
-      if flagOntology and existsCouchDB:
-        print('install ontology     :', ontology('install'))
+      if flagDataHierarchy and existsCouchDB:
+        print('install dataHierarchy     :', dataHierarchy('install'))
 
   print('Add "example" argument to create example data.')
   if len(sys.argv)>1 and 'example' in sys.argv:

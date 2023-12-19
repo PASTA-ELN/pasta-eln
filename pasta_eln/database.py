@@ -7,8 +7,8 @@ from anytree.search import find_by_attr
 from cloudant.client import CouchDB
 from cloudant.replicator import Replicator
 from PySide6.QtWidgets import QProgressBar  # pylint: disable=no-name-in-module
-from .fixedStringsJson import defaultOntology, defaultOntologyNode
-from .handleDictionaries import ontologyV2_to_V3
+from .fixedStringsJson import defaultDataHierarchy, defaultDataHierarchyNode
+from .handleDictionaries import dataHierarchy_pre_to_V4
 from .miscTools import tracebackString, DummyProgressBar
 
 class Database:
@@ -16,14 +16,14 @@ class Database:
   Class for interaction with couchDB
   """
   def __init__(self, user:str, password:str, databaseName:str, configuration:dict[str,Any],
-               resetOntology:bool=False, basePath:Path=Path()):
+               resetDataHierarchy:bool=False, basePath:Path=Path()):
     """
     Args:
       user (string): user name to local database
       password (string): password to local database
       databaseName (string): local database name
       configuration (dict): configuration of GUI elements
-      resetOntology (bool): reset ontology
+      resetDataHierarchy (bool): reset dataHierarchy
     """
     try:
       self.client = CouchDB(user, password, url='http://127.0.0.1:5984', connect=True)
@@ -36,24 +36,24 @@ class Database:
     else:
       self.db = self.client.create_database(self.databaseName)  #tests and initial creation of example data set requires this
     # check if default documents exist and create
-    if '-ontology-' not in self.db or resetOntology:
-      if '-ontology-' in self.db:
-        print('Info: remove old ontology')
-        self.db['-ontology-'].delete()
-      self.ontology = defaultOntology
-      self.db.create_document(self.ontology)
+    if '-dataHierarchy-' not in self.db or resetDataHierarchy:
+      if '-dataHierarchy-' in self.db:
+        print('Info: remove old dataHierarchy')
+        self.db['-dataHierarchy-'].delete()
+      self.dataHierarchy = defaultDataHierarchy
+      self.db.create_document(self.dataHierarchy)
       self.initDocTypeViews( configuration['tableColumnsMax'] )
       self.initGeneralViews()
-    self.ontology = dict(self.db['-ontology-'])
-    if '-version' in self.ontology and self.ontology['-version']==2:
-      logging.info('Convert ontology version 2 to 3')
-      ontologyV2_to_V3(self.ontology)
-      self.db['-ontology-'].delete()
-      self.db.create_document(self.ontology)
-    if '-version' not in self.ontology or self.ontology['-version']!=3:
-      print(F"**ERROR wrong ontology version: {self.ontology['-version']}")
-      raise ValueError(f"Wrong ontology version {self.ontology['-version']}")
-    self.dataLabels = {k:v['label'] for k,v in self.ontology.items() if k[0] not in ['_','-']}
+    self.dataHierarchy = dict(self.db['-dataHierarchy-'])
+    if '-version' in self.dataHierarchy and self.dataHierarchy['-version'] < 4:
+      logging.info('Convert ontology to V4.0')
+      dataHierarchy_pre_to_V4(self.dataHierarchy)
+      self.db['-dataHierarchy-'].delete()
+      self.db.create_document(self.dataHierarchy)
+    if '-version' not in self.dataHierarchy or self.dataHierarchy['-version']!=4:
+      print(F"**ERROR wrong dataHierarchy version: {self.dataHierarchy['-version']}")
+      raise ValueError(f"Wrong dataHierarchy version {self.dataHierarchy['-version']}")
+    self.dataLabels = {k:v['title'] for k,v in self.dataHierarchy.items() if k[0] not in ['_','-']}
     self.basePath   = basePath
     return
 
@@ -72,7 +72,7 @@ class Database:
     oldColumnNames = self.getColumnNames()
     jsDefault = 'if ($docType$) {doc["-branch"].forEach(function(branch){emit($key$, [$outputList$]);});}'
     viewCode = {}
-    for docType in [i for i in self.ontology if i[0] not in ['_','-']]+['-']:
+    for docType in [i for i in self.dataHierarchy if i[0] not in ['_','-']]+['-']:
       if docType=='x0':
         newString = "doc['-type']=='x0' && (doc['-branch'][0].show.every(function(i) {return i;}))"
         js    = jsDefault.replace('$docType$', newString).replace('$key$','doc._id')
@@ -94,10 +94,10 @@ class Database:
       elif baseDocType in oldColumnNames:
         columnNames = oldColumnNames[baseDocType].split(',')
       elif docType == '-':
-        columnNames = [i['name'] for i in defaultOntologyNode['default'] if 'name' in i]
+        columnNames = [i['name'] for i in defaultDataHierarchyNode['default'] if 'name' in i]
       else:
-        columnNames = [i['name'] for group in self.ontology[docType]['prop']
-                       for i in self.ontology[docType]['prop'][group]]
+        columnNames = [i['name'] for group in self.dataHierarchy[docType]['meta']
+                       for i in self.dataHierarchy[docType]['meta'][group]]
       columnNames = columnNames[:tableColumnsMax]
       commentString = f'// {docType} : ' + ','.join(columnNames) + '\n'
       for name in columnNames:
@@ -138,11 +138,11 @@ class Database:
                   for v in self.db['_design/viewDocType']['views'].values()]
       return {i.split(' : ')[0]:i.split(' : ')[1] for i in comments}
     except Exception:
-      defaultColumnNames = {'-':','.join([i['name'] for i in defaultOntologyNode['default'] if 'name' in i])}
-      for docType, docTypeDict in self.ontology.items():
+      defaultColumnNames = {'-':','.join([i['name'] for i in defaultDataHierarchyNode['default'] if 'name' in i])}
+      for docType, docTypeDict in self.dataHierarchy.items():
         if docType[0] in ['_','-']:
           continue
-        columnNames = [i['name'] for group in docTypeDict['prop'] for i in docTypeDict['prop'][group]]
+        columnNames = [i['name'] for group in docTypeDict['meta'] for i in docTypeDict['meta'][group]]
         defaultColumnNames[docType] = ','.join(columnNames)
       return defaultColumnNames
 
@@ -154,12 +154,12 @@ class Database:
     tracebackString(True, 'initGeneralView')
     jsHierarchy  = '''
       if ('-type' in doc && (doc["-branch"][0].show.every(function(i) {return i;}))) {
-        doc['-branch'].forEach(function(branch, idx) {emit(branch.stack.concat([doc._id]).join(' '),[branch.child,doc['-type'],doc['-name'],idx]);});
+        doc['-branch'].forEach(function(branch, idx) {emit(branch.stack.concat([doc._id]).join(' '),[branch.child,doc['-type'],doc['-name'],doc['-gui'],idx]);});
       }
     '''
     jsHierarchyAll  = '''
       if ('-type' in doc) {
-        doc['-branch'].forEach(function(branch, idx) {emit(branch.stack.concat([doc._id]).join(' '),[branch.child,doc['-type'],doc['-name'],idx]);});
+        doc['-branch'].forEach(function(branch, idx) {emit(branch.stack.concat([doc._id]).join(' '),[branch.child,doc['-type'],doc['-name'],doc['-gui'],idx]);});
       }
     '''
     jsPath = '''
@@ -600,7 +600,8 @@ class Database:
       level = [i for i in view if len(i['key'].split())==levelNum]
       if levelNum==1:
         if len(level)==1:
-          dataTree = Node(id=level[0]['key'], docType=level[0]['value'][1], name=level[0]['value'][2])
+          value= level[0]['value']
+          dataTree = Node(id=level[0]['key'], docType=value[1], name=value[2], gui=value[3])
         else:
           print(f'**ERROR getHierarchy Did not find corresponding level={levelNum} under docID {start}')
           dataTree = Node(id=None, name='')
@@ -610,7 +611,8 @@ class Database:
         for node in [x for (_,x) in sorted(zip(childList, level), key=lambda pair: pair[0])]:
           parentID = node['key'].split()[-2]
           parentNode = find_by_attr(dataTree, parentID, name='id')
-          _ = Node(id=node['id'], parent=parentNode, docType=node['value'][1], name=node['value'][2])
+          value = node['value']
+          _ = Node(id=node['id'], parent=parentNode, docType=value[1], name=value[2], gui=value[3])
       if not level: #if len(level)==0
         break
       levelNum += 1
@@ -651,9 +653,29 @@ class Database:
     return
 
 
+  def setGUI(self, docID:str, guiState:list[bool]) -> None:
+    """
+    Set the gui state
+    - 0: true=show details; false=hide details
+    - 1: true=show children; false=hide children (only makes sense for folders = x1, x2)
+
+    Args:
+      docID (str): docID
+      guiState (list): list of bool that show if document is shown
+    """
+    doc = self.db[docID]
+    doc['-gui'] = guiState
+    doc.save()
+    return
+
+
   def replicateDB(self, dbInfo:dict[str,Any], progressBar:Union[QProgressBar,DummyProgressBar], removeAtStart:bool=False) -> str:
     """
     Replication to another instance
+
+    One cannot simply create the document no the other server...
+    - because then the _rev do not match and will never sync
+    - issues arise if the documents in a database are deleted. Better remove the entire database and recreate it
 
     Args:
         dbInfo (dict): info on the remote database
@@ -670,7 +692,7 @@ class Database:
         client2 = CouchDB(dbInfo['user'], dbInfo['password'], url=dbInfo['url'], connect=True)
       except Exception:
         return '<b>ERROR drp01: Could not connect to remote server. Abort replication.</b><br>'+\
-                 'user:'+dbInfo['user']+'<br>password:'+dbInfo['password']+'<br>url:'+dbInfo['url']
+                   'user:'+dbInfo['user']+'<br>password:'+dbInfo['password']+'<br>url:'+dbInfo['url']
       db2 = client2[dbInfo['database']]
       replResult = rep.create_replication(self.db, db2, create_target=False, continuous=False)
       logging.info('Start replication '+replResult['_id']+'.')
@@ -687,11 +709,20 @@ class Database:
         if '_replication_state' in replResult:
           logging.info('Success replication '+replResult['_id']+'.')
           progressBar.hide()
-          reply = f"Replication success state: {replResult['_replication_state']}\n" + \
-                  f"  time of reporting: {replResult['_replication_state_time']}\n"
+          reply = (f"Replication success state: {replResult['_replication_state']}\n  "
+                   f"time of reporting: {replResult['_replication_state_time']}\n"
+                   f"Documents in source database: {len(list(self.db))}\n")
           stats = dict(replResult['_replication_stats'])
           del stats['checkpointed_source_seq']
-          return reply+'\n  '.join([f"{k.replace('_',' ')}:{v}" for k,v in stats.items()])
+          reply += '\n  '.join([f"{k.replace('_',' ')}:{v}" for k,v in stats.items()])+'\n'
+          # check replication successful
+          setLocal = {i['_id'] for i in self.db}
+          setRemote= {i['_id'] for i in db2}
+          if setLocal.difference(setRemote):
+            reply += f' Difference local-global {setLocal.difference(setRemote)}\n'
+          if setRemote.difference(setLocal):
+            reply += f' Difference global-local {setRemote.difference(setLocal)}\n'
+          return reply
         time.sleep(10)
     except Exception:
       progressBar.hide()
@@ -774,13 +805,15 @@ class Database:
     if repair:
       print('REPAIR MODE IS ON: afterwards, full-reload and create views')
     ## loop all documents
+    if repair and '-ontology-' in self.db:
+      self.db['-ontology-'].delete()
     for doc in self.db:
       try:
         if '_design' in doc['_id']:
           if not minimal:
             outstring+= outputString(outputStyle,'ok','..info: Design document '+doc['_id'])
           continue
-        if doc['_id'] == '-ontology-':
+        if doc['_id'] == '-dataHierarchy-':
           if repair:
             if '-hierarchy-' in doc:
               del doc['-hierarchy-']
@@ -790,62 +823,12 @@ class Database:
                 del doc[old]
             doc.save()
           if not minimal:
-            outstring+= outputString(outputStyle,'ok','..info: ontology exists')
+            outstring+= outputString(outputStyle,'ok','..info: dataHierarchy exists')
           continue
         #only normal documents after this line
 
         ###custom temporary changes: keep few as examples;
         # BE CAREFUL: PRINT FIRST, delete second run ; RUN ONLY ONCE
-        # Version1->Version2 changes
-        # if '-branch' in doc:
-        #   for b in doc['-branch']:
-        #     b['show']=[True]*(len(b['stack'])+1)
-        # if '-tags' not in doc:
-        #   tags = doc['tags']
-        #   del doc['tags']
-        #   tags = [i[1:] if i[0]=='#' else i for i in tags]
-        #   tags = ['_1' if i=='1' else i for i in tags]
-        #   tags = ['_2' if i=='2' else i for i in tags]
-        #   tags = ['_3' if i=='3' else i for i in tags]
-        #   tags = ['_4' if i=='4' else i for i in tags]
-        #   tags = ['_5' if i=='5' else i for i in tags]
-        #   if '-curated' in doc:
-        #     if doc['-type'][0][0]!='x':
-        #       tags.append('_curated')
-        #     del doc['-curated']
-        #   doc['-tags'] = tags
-        #   print(doc['_id'], 'tags' in doc, doc['-tags'], '-curated' in doc)
-        #### doc.save()
-        # END VERSION 1 -> 2 changes
-        #   del doc['revisions']
-        #   doc.save()
-        # if len(doc['_id'].split('-'))==3:
-        #   print('id',doc['_id'])
-        #   doc.delete()
-        #   continue
-        ## output size of document
-        # print('Name: {0: <16.16}'.format(doc['-name']),'| id:',doc['_id'],'| len:',len(json.dumps(doc)))
-        # if repair:
-        #   # print("before",doc.keys(),doc['_id'])
-        #   # if doc['_id']== "x-028456be353dd7b5092c48841d6dfec8":
-        #   #   print('found')
-        #   for item in ['branch','curated','user','type','client','date']:
-        #     if '-'+item not in doc and item in doc:
-        #       if item in ('branch', 'type'):
-        #         doc['-'+item] = doc[item].copy()
-        #       else:
-        #         doc['-'+item] = doc[item]
-        #       del doc[item]
-        #   #print(doc.keys())
-        #   if not '-type' in doc:
-        #     doc['-type'] =[]
-        #   if doc['-type'] == ["text","project"]:
-        #     doc['-type'] = ["x0"]
-        #   if doc['-type'] == ["text","step"]:
-        #     doc['-type'] = ["x1"]
-        #   if doc['-type'] == ["text","task"]:
-        #     doc['-type'] = ["x2"]
-
         #   Project renaming bug 1)
         # if doc['-branch'][0]['path'].startswith('PastaEln'):
         #   oldPath = doc['-branch'][0]['path']
@@ -853,10 +836,15 @@ class Database:
         #   print(oldPath, '->', newPath)
         #   doc['-branch'][0]['path'] = newPath
         #   doc.save()
-        #
-        #   #   if len(doc['-branch'][0]['stack']) == len(doc['-branch'][0]['path'].split('/'))-1 :
-        #   #     doc['-type'] = ["x"+str(len(doc['-branch'][0]['stack'])) ]
-        #   # print("after ",doc.keys(),doc['_id'])
+
+        # change database to version 4
+        if '-gui' not in doc:
+          outstring+= outputString(outputStyle,'error',f"dch00: gui does not exist {doc['_id']}")
+          if repair:
+            doc['-gui'] = [True, True]
+            doc.save()
+
+
 
         #branch test
         if '-branch' not in doc:
