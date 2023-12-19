@@ -17,23 +17,23 @@ from cloudant.document import Document
 from pytest import fixture
 from pytestqt.qtbot import QtBot
 
-from pasta_eln.GUI.ontology_configuration.create_type_dialog_extended import CreateTypeDialog
-from pasta_eln.GUI.ontology_configuration.delete_column_delegate import DeleteColumnDelegate
-from pasta_eln.GUI.ontology_configuration.iri_column_delegate import IriColumnDelegate
-from pasta_eln.GUI.ontology_configuration.lookup_iri_action import LookupIriAction
-from pasta_eln.GUI.ontology_configuration.ontology_attachments_tableview_data_model import \
-  OntologyAttachmentsTableViewModel
-from pasta_eln.GUI.ontology_configuration.ontology_config_key_not_found_exception import \
-  OntologyConfigKeyNotFoundException
-from pasta_eln.GUI.ontology_configuration.ontology_configuration_extended import OntologyConfigurationForm, get_gui
-from pasta_eln.GUI.ontology_configuration.ontology_document_null_exception import OntologyDocumentNullException
-from pasta_eln.GUI.ontology_configuration.ontology_props_tableview_data_model import OntologyPropsTableViewModel
-from pasta_eln.GUI.ontology_configuration.ontology_tableview_data_model import OntologyTableViewModel
-from pasta_eln.GUI.ontology_configuration.reorder_column_delegate import ReorderColumnDelegate
-from pasta_eln.GUI.ontology_configuration.required_column_delegate import RequiredColumnDelegate
-from pasta_eln.GUI.ontology_configuration.terminology_lookup_dialog import TerminologyLookupDialog
-from pasta_eln.GUI.ontology_configuration.terminology_lookup_dialog_base import Ui_TerminologyLookupDialogBase
-from pasta_eln.GUI.ontology_configuration.terminology_lookup_service import TerminologyLookupService
+from pasta_eln.GUI.data_hierarchy.attachments_tableview_data_model import \
+  AttachmentsTableViewModel
+from pasta_eln.GUI.data_hierarchy.create_type_dialog import CreateTypeDialog
+from pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog import DataHierarchyEditorDialog, get_gui
+from pasta_eln.GUI.data_hierarchy.delete_column_delegate import DeleteColumnDelegate
+from pasta_eln.GUI.data_hierarchy.document_null_exception import DocumentNullException
+from pasta_eln.GUI.data_hierarchy.iri_column_delegate import IriColumnDelegate
+from pasta_eln.GUI.data_hierarchy.key_not_found_exception import \
+  KeyNotFoundException
+from pasta_eln.GUI.data_hierarchy.lookup_iri_action import LookupIriAction
+from pasta_eln.GUI.data_hierarchy.mandatory_column_delegate import MandatoryColumnDelegate
+from pasta_eln.GUI.data_hierarchy.metadata_tableview_data_model import MetadataTableViewModel
+from pasta_eln.GUI.data_hierarchy.reorder_column_delegate import ReorderColumnDelegate
+from pasta_eln.GUI.data_hierarchy.tableview_data_model import TableViewModel
+from pasta_eln.GUI.data_hierarchy.terminology_lookup_dialog import TerminologyLookupDialog
+from pasta_eln.GUI.data_hierarchy.terminology_lookup_dialog_base import Ui_TerminologyLookupDialogBase
+from pasta_eln.GUI.data_hierarchy.terminology_lookup_service import TerminologyLookupService
 from pasta_eln.database import Database
 from pasta_eln.dataverse.client import DataverseClient
 from pasta_eln.gui import MainWindow, mainGUI
@@ -46,9 +46,9 @@ def create_type_dialog_mock(mocker) -> CreateTypeDialog:
   mock_callable_1 = mocker.patch('typing.Callable')
   mock_callable_2 = mocker.patch('typing.Callable')
   mocker.patch.object(CreateTypeDialog, 'setup_slots')
-  mocker.patch('pasta_eln.GUI.ontology_configuration.create_type_dialog_extended.logging.getLogger')
+  mocker.patch('pasta_eln.GUI.data_hierarchy.create_type_dialog.logging.getLogger')
   mocker.patch(
-    'pasta_eln.GUI.ontology_configuration.create_type_dialog_extended.Ui_CreateTypeDialog.setupUi')
+    'pasta_eln.GUI.data_hierarchy.create_type_dialog_base.Ui_CreateTypeDialogBase.setupUi')
   mocker.patch.object(QDialog, '__new__')
   mocker.patch.object(CreateTypeDialog, 'titleLineEdit', create=True)
   return CreateTypeDialog(mock_callable_1, mock_callable_2)
@@ -69,13 +69,13 @@ def terminology_lookup_dialog_mock(mocker) -> TerminologyLookupDialog:
                       create=True)
   mocker.patch.object(Ui_TerminologyLookupDialogBase, 'terminologyLineEdit',
                       create=True)
-  mocker.patch('pasta_eln.GUI.ontology_configuration.terminology_lookup_dialog.QPixmap')
+  mocker.patch('pasta_eln.GUI.data_hierarchy.terminology_lookup_dialog.QPixmap')
   return TerminologyLookupDialog(mocker.MagicMock())
 
 
 @fixture()
 def terminology_lookup_mock(mocker) -> TerminologyLookupService:
-  mocker.patch('pasta_eln.GUI.ontology_configuration.create_type_dialog_extended.logging.getLogger')
+  mocker.patch('pasta_eln.GUI.data_hierarchy.create_type_dialog.logging.getLogger')
   return TerminologyLookupService()
 
 
@@ -108,76 +108,77 @@ def dataverse_list_mock() -> dict | None:
 
 
 @fixture()
-def configuration_extended(mocker) -> OntologyConfigurationForm:
+def configuration_extended(mocker) -> DataHierarchyEditorDialog:
   mock_document = mocker.patch('cloudant.document.Document')
   mock_pasta_db = mocker.patch('pasta_eln.database')
   mock_couch_db = mocker.patch('cloudant.couchdb')
-  mock_couch_db['-ontology-'] = mock_document
+  mock_couch_db['-dataHierarchy-'] = mock_document
   mock_pasta_db = mocker.patch.object(mock_pasta_db, 'db', create=True)
-  mocker.patch('pasta_eln.GUI.ontology_configuration.create_type_dialog_extended.logging.getLogger')
-  mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration.Ui_OntologyConfigurationBaseForm.setupUi')
-  mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.adjust_ontology_data_to_v3')
-  mocker.patch('pasta_eln.GUI.ontology_configuration.ontology_configuration_extended.LookupIriAction')
+  mocker.patch('pasta_eln.GUI.data_hierarchy.create_type_dialog.logging.getLogger')
+  mocker.patch(
+    'pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog_base.Ui_DataHierarchyEditorDialogBase.setupUi')
+  mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.adjust_data_hierarchy_data_to_v4')
+  mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.LookupIriAction')
   mocker.patch.object(QDialog, '__new__')
-  mocker.patch.object(OntologyPropsTableViewModel, '__new__')
-  mocker.patch.object(OntologyAttachmentsTableViewModel, '__new__')
-  mocker.patch.object(RequiredColumnDelegate, '__new__', lambda _: mocker.MagicMock())
+  mocker.patch.object(MetadataTableViewModel, '__new__')
+  mocker.patch.object(AttachmentsTableViewModel, '__new__')
+  mocker.patch.object(MandatoryColumnDelegate, '__new__', lambda _: mocker.MagicMock())
   mocker.patch.object(DeleteColumnDelegate, '__new__', lambda _: mocker.MagicMock())
   mocker.patch.object(ReorderColumnDelegate, '__new__', lambda _: mocker.MagicMock())
-  mocker.patch.object(OntologyConfigurationForm, 'typePropsTableView', create=True)
-  mocker.patch.object(OntologyConfigurationForm, 'typeAttachmentsTableView', create=True)
-  mocker.patch.object(OntologyConfigurationForm, 'addPropsRowPushButton', create=True)
-  mocker.patch.object(OntologyConfigurationForm, 'addAttachmentPushButton', create=True)
-  mocker.patch.object(OntologyConfigurationForm, 'saveOntologyPushButton', create=True)
-  mocker.patch.object(OntologyConfigurationForm, 'addPropsCategoryPushButton', create=True)
-  mocker.patch.object(OntologyConfigurationForm, 'deletePropsCategoryPushButton', create=True)
-  mocker.patch.object(OntologyConfigurationForm, 'deleteTypePushButton', create=True)
-  mocker.patch.object(OntologyConfigurationForm, 'addTypePushButton', create=True)
-  mocker.patch.object(OntologyConfigurationForm, 'cancelPushButton', create=True)
-  mocker.patch.object(OntologyConfigurationForm, 'helpPushButton', create=True)
-  mocker.patch.object(OntologyConfigurationForm, 'attachmentsShowHidePushButton', create=True)
-  mocker.patch.object(OntologyConfigurationForm, 'typeComboBox', create=True)
-  mocker.patch.object(OntologyConfigurationForm, 'propsCategoryComboBox', create=True)
-  mocker.patch.object(OntologyConfigurationForm, 'typeLabelLineEdit', create=True)
-  mocker.patch.object(OntologyConfigurationForm, 'typeIriLineEdit', create=True)
-  mocker.patch.object(OntologyConfigurationForm, 'delete_column_delegate_props_table', create=True)
-  mocker.patch.object(OntologyConfigurationForm, 'reorder_column_delegate_props_table', create=True)
-  mocker.patch.object(OntologyConfigurationForm, 'delete_column_delegate_attach_table', create=True)
-  mocker.patch.object(OntologyConfigurationForm, 'reorder_column_delegate_attach_table', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'typeMetadataTableView', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'typeAttachmentsTableView', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'addMetadataRowPushButton', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'addAttachmentPushButton', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'saveDataHierarchyPushButton', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'addMetadataGroupPushButton', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'deleteMetadataGroupPushButton', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'deleteTypePushButton', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'addTypePushButton', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'cancelPushButton', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'helpPushButton', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'attachmentsShowHidePushButton', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'typeComboBox', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'metadataGroupComboBox', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'typeDisplayedTitleLineEdit', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'typeIriLineEdit', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'delete_column_delegate_metadata_table', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'reorder_column_delegate_metadata_table', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'delete_column_delegate_attach_table', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'reorder_column_delegate_attach_table', create=True)
   mocker.patch.object(CreateTypeDialog, '__new__')
-  return OntologyConfigurationForm(mock_pasta_db)
+  return DataHierarchyEditorDialog(mock_pasta_db)
 
 
 @fixture()
-def doc_null_exception(request) -> OntologyDocumentNullException:
-  return OntologyDocumentNullException(request.param['message'],
-                                       request.param['errors'])
+def doc_null_exception(request) -> DocumentNullException:
+  return DocumentNullException(request.param['message'],
+                               request.param['errors'])
 
 
 @fixture()
-def key_not_found_exception(request) -> OntologyConfigKeyNotFoundException:
-  return OntologyConfigKeyNotFoundException(request.param['message'],
-                                            request.param['errors'])
+def key_not_found_exception(request) -> KeyNotFoundException:
+  return KeyNotFoundException(request.param['message'],
+                              request.param['errors'])
 
 
 @fixture()
-def table_model() -> OntologyTableViewModel:
-  base_model = OntologyTableViewModel()
-  base_model.setObjectName("OntologyTableViewModel")
+def table_model() -> TableViewModel:
+  base_model = TableViewModel()
+  base_model.setObjectName("TableViewModel")
   return base_model
 
 
 @fixture()
-def props_table_model() -> OntologyPropsTableViewModel:
-  props_model = OntologyPropsTableViewModel()
-  props_model.setObjectName("OntologyPropsTableViewModel")
-  return props_model
+def metadata_table_model() -> MetadataTableViewModel:
+  metadata_model = MetadataTableViewModel()
+  metadata_model.setObjectName("MetadataTableViewModel")
+  return metadata_model
 
 
 @fixture()
-def attachments_table_model() -> OntologyAttachmentsTableViewModel:
-  attachments_model = OntologyAttachmentsTableViewModel()
-  attachments_model.setObjectName("OntologyAttachmentsTableViewModel")
+def attachments_table_model() -> AttachmentsTableViewModel:
+  attachments_model = AttachmentsTableViewModel()
+  attachments_model.setObjectName("AttachmentsTableViewModel")
   return attachments_model
 
 
@@ -187,8 +188,8 @@ def reorder_delegate() -> ReorderColumnDelegate:
 
 
 @fixture()
-def required_delegate() -> RequiredColumnDelegate:
-  return RequiredColumnDelegate()
+def mandatory_delegate() -> MandatoryColumnDelegate:
+  return MandatoryColumnDelegate()
 
 
 @fixture()
@@ -202,9 +203,9 @@ def iri_delegate() -> IriColumnDelegate:
 
 
 @fixture()
-def ontology_doc_mock(mocker) -> Document:
+def data_hierarchy_doc_mock(mocker) -> Document:
   mock_doc = mocker.patch('cloudant.document.Document')
-  mock_doc_content = read_json('ontology_document.json')
+  mock_doc_content = read_json('data_hierarchy_document.json')
   mocker.patch.object(mock_doc, "__len__",
                       lambda x, y: len(mock_doc_content))
   mock_doc.__getitem__.side_effect = mock_doc_content.__getitem__
@@ -225,7 +226,7 @@ def ontology_doc_mock(mocker) -> Document:
 
 @fixture()
 def terminology_lookup_config_mock() -> dict:
-  return read_json('../../../pasta_eln/GUI/ontology_configuration/terminology_lookup_config.json')
+  return read_json('../../../pasta_eln/GUI/data_hierarchy/terminology_lookup_config.json')
 
 
 @fixture()
@@ -259,21 +260,21 @@ def iri_lookup_web_results_name_mock() -> dict:
 
 
 @fixture()
-def pasta_db_mock(mocker, ontology_doc_mock) -> Database:
+def pasta_db_mock(mocker, data_hierarchy_doc_mock) -> Database:
   mock_db = mocker.patch('pasta_eln.database.Database')
   mock_couch_db = mocker.patch('cloudant.client.CouchDB')
-  dbs = {'-ontology-': ontology_doc_mock}
+  dbs = {'-dataHierarchy-': data_hierarchy_doc_mock}
   mock_couch_db.__getitem__.side_effect = dbs.__getitem__
   mocker.patch.object(mock_db, 'db', mock_couch_db, create=True)
   return mock_db
 
 
 @fixture()
-def ontology_editor_gui(mocker, request, pasta_db_mock) -> tuple[QApplication,
+def data_hierarchy_editor_gui(mocker, request, pasta_db_mock) -> tuple[QApplication,
 QtWidgets.QDialog,
-OntologyConfigurationForm,
+DataHierarchyEditorDialog,
 QtBot]:
-  mock_message_box = mocker.patch('pasta_eln.GUI.ontology_configuration.utility_functions.QMessageBox')
+  mock_message_box = mocker.patch('pasta_eln.GUI.data_hierarchy.utility_functions.QMessageBox')
   app, ui_dialog, ui_form_extended = get_gui(pasta_db_mock)
   mocker.patch.object(ui_form_extended, 'message_box', mock_message_box.return_value, create=True)
   qtbot: QtBot = QtBot(app)
@@ -281,14 +282,14 @@ QtBot]:
 
 
 @fixture()
-def props_column_names():
+def metadata_column_names():
   return {
     0: "name",
     1: "query",
     2: "list",
     3: "unit",
     4: "IRI",
-    5: "required"
+    5: "mandatory"
   }
 
 
@@ -307,7 +308,7 @@ def lookup_iri_action(mocker) -> LookupIriAction:
   mock_icon = mocker.patch('PySide6.QtGui.QIcon')
   mocker.patch.object(QIcon, 'fromTheme', return_value=mock_icon)
   mock_parent = mocker.patch('PySide6.QtWidgets.QWidget')
-  mocker.patch('pasta_eln.GUI.ontology_configuration.lookup_iri_action.TerminologyLookupDialog')
+  mocker.patch('pasta_eln.GUI.data_hierarchy.lookup_iri_action.TerminologyLookupDialog')
   return LookupIriAction(mock_parent)
 
 
