@@ -16,7 +16,7 @@ class TestDataHierarchyKeyNotFoundException(object):
   @pytest.mark.parametrize('key_not_found_exception',
                            [{'message': 'error thrown', 'errors': {'error1': 'error1', 'error2': 'error2'}}],
                            indirect=True)
-  def test_ontology_config_document_null_exception(self,
+  def test_data_hierarchy_config_document_null_exception(self,
                                                    key_not_found_exception,
                                                    request):
     assert str(key_not_found_exception) or key_not_found_exception.message == "error thrown", \

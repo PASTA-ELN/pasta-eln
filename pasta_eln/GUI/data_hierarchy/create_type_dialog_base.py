@@ -70,13 +70,13 @@ class Ui_CreateTypeDialogBase(object):
 
   def retranslateUi(self, CreateTypeDialogBase):
     _translate = QtCore.QCoreApplication.translate
-    CreateTypeDialogBase.setWindowTitle(_translate("CreateTypeDialogBase", "Create New Type"))
-    self.titleLabel.setText(_translate("CreateTypeDialogBase", "Title in the hierarchy"))
+    CreateTypeDialogBase.setWindowTitle(_translate("CreateTypeDialogBase", "Create a new data type"))
+    self.titleLabel.setText(_translate("CreateTypeDialogBase", "Data type"))
     self.titleLineEdit.setToolTip(_translate("CreateTypeDialogBase", "Exclude titles which start with \'x\' (reserved for structure level titles) or whitespace"))
-    self.titleLineEdit.setPlaceholderText(_translate("CreateTypeDialogBase", "Enter the Data Type title for the hierarchy"))
-    self.typeLabel.setText(_translate("CreateTypeDialogBase", "Displayed title"))
+    self.titleLineEdit.setPlaceholderText(_translate("CreateTypeDialogBase", "Enter the data type"))
+    self.typeLabel.setText(_translate("CreateTypeDialogBase", "Title"))
     self.displayedTitleLineEdit.setToolTip(_translate("CreateTypeDialogBase", "Enter displayed title for the new type, which can also be modified later in the main editor window"))
-    self.displayedTitleLineEdit.setPlaceholderText(_translate("CreateTypeDialogBase", "Enter the displayed title of the Data Type"))
+    self.displayedTitleLineEdit.setPlaceholderText(_translate("CreateTypeDialogBase", "Enter the displayed title"))
     self.structuralLevelCheckBox.setToolTip(_translate("CreateTypeDialogBase", "If this is a structural type, then title will be automatically populated as (x0, x1...xn). Next number will be chosen for xn from the existing list of structural items."))
     self.structuralLevelCheckBox.setText(_translate("CreateTypeDialogBase", "Is this a structural Type?"))
 

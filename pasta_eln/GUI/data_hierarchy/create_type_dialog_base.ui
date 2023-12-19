@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Create New Type</string>
+   <string>Create a new data type</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
@@ -33,7 +33,7 @@
           </size>
          </property>
          <property name="text">
-          <string>Title in the hierarchy</string>
+          <string>Data type</string>
          </property>
         </widget>
        </item>
@@ -59,7 +59,7 @@
           <string>Exclude titles which start with 'x' (reserved for structure level titles) or whitespace</string>
          </property>
          <property name="placeholderText">
-          <string>Enter the Data Type title for the hierarchy</string>
+          <string>Enter the data type</string>
          </property>
          <property name="clearButtonEnabled">
           <bool>true</bool>
@@ -79,7 +79,7 @@
           </size>
          </property>
          <property name="text">
-          <string>Displayed title</string>
+          <string>Title</string>
          </property>
         </widget>
        </item>
@@ -105,7 +105,7 @@
           <string>Enter displayed title for the new type, which can also be modified later in the main editor window</string>
          </property>
          <property name="placeholderText">
-          <string>Enter the displayed title of the Data Type</string>
+          <string>Enter the displayed title</string>
          </property>
          <property name="clearButtonEnabled">
           <bool>true</bool>
