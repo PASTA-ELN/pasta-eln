@@ -53,6 +53,10 @@ class Database:
       self.db.create_document(self.dataHierarchy)
       if '-ontology-' in self.db:
         self.db['-ontology-'].delete()
+      for doc in self.db:
+        if '-gui' not in doc:
+          doc['-gui'] = [True, True]
+          doc.save()
     if '-version' not in self.dataHierarchy or self.dataHierarchy['-version']!=4:
       print(F"**ERROR wrong dataHierarchy version: {self.dataHierarchy['-version']}")
       raise ValueError(f"Wrong dataHierarchy version {self.dataHierarchy['-version']}")
@@ -215,12 +219,7 @@ class Database:
     Returns:
         dict: json representation of document
     """
-    doc = self.db[docID]
-    if '-gui' not in doc:
-      logging.warning('Add gui attribute to doc %s',doc['_id'])
-      doc['-gui'] = [True, True]
-      doc.save()
-    return dict(doc)
+    return dict(self.db[docID])
 
 
   def saveDoc(self, doc:dict[str,Any]) -> dict[str,Any]:
