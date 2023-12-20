@@ -53,7 +53,12 @@ class Database:
       self.db.create_document(self.dataHierarchy)
       if '-ontology-' in self.db:
         self.db['-ontology-'].delete()
+    # temporary changes for version 2.5: remove afterwards: code does not harm but would be legacy then
+    testDocID = [doc['_id'] for doc in self.db if doc['_id'].startswith('x-')][0]
+    if '-gui' not in self.db[testDocID]:
       for doc in self.db:
+        if doc['_id'].startswith('_') or doc['_id'].endswith('-'):
+          continue
         if '-gui' not in doc:
           doc['-gui'] = [True, True]
           doc.save()
