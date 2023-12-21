@@ -1,5 +1,5 @@
 """extract data from vendor
-- comma and semicolor separated table
+- comma and semicolon separated table
 """
 from io import StringIO
 import pandas as pd
@@ -18,7 +18,7 @@ def use(filePath, recipe='', saveFileName=None):
   producer = ''
   lines = []
   with open(filePath, encoding='unicode_escape') as fIn:
-    for  j in range(10):
+    for  _ in range(10):
       lines.append(fIn.readline()[:-1])
     # files with some form of header: try 3 criteria
     if lines[0].count(';')>lines[0].count(' ') and lines[0].count(';')==lines[1].count(';') and \
@@ -55,4 +55,3 @@ def use(filePath, recipe='', saveFileName=None):
 
   #final return if nothing successful
   # return {}
-
