@@ -28,7 +28,10 @@ def getColor(backend:Backend, color:str) -> str:
     str: #123456 color code
   """
   if not hasattr(backend, 'configuration') or backend.configuration['GUI']['theme']=='none':
-    return '#000000'
+    if color=='primary':
+      return '#000000'
+    else:
+      return '#BBBBBB'
   themeName = backend.configuration['GUI']['theme']
   return get_theme(f'{themeName}.xml')[f'{color}Color']
 
