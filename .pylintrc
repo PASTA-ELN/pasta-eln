@@ -11,7 +11,7 @@ ignore=CVS
 
 # Add files or directories matching the regex patterns to the blacklist. The
 # regex matches against base names, not paths.
-ignore-patterns=ontology_configuration.py,create_type_dialog.py,terminology_lookup_dialog_base.py
+ignore-patterns=data_hierarchy_editor_dialog_base.py,create_type_dialog_base.py,terminology_lookup_dialog_base.py
 
 # Python code to execute, usually for sys.path manipulation such as
 # pygtk.require().

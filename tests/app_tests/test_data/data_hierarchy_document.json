@@ -1,0 +1,231 @@
+{
+  "_id": "-ontology-",
+  "_rev": "5-a3f3f6b96ba5839081fa8b2f745df64a",
+  "-version": 3,
+  "x0": {
+    "IRI": "http://url.com",
+    "title": "Projects",
+    "meta": {
+      "default": [
+        {
+          "name": "-name",
+          "query": "What is the name of the project?",
+          "IRI": "http://url.com",
+          "mandatory": "True"
+        },
+        {
+          "name": "status",
+          "query": "What is the project status",
+          "list": [
+            "active",
+            "paused",
+            "passive",
+            "finished"
+          ]
+        },
+        {
+          "name": "objective",
+          "query": "What is the objective?"
+        },
+        {
+          "name": "-tags",
+          "query": "What are the tags associated with this project?"
+        },
+        {
+          "name": "comment",
+          "query": "#tags comments remarks :field:value:"
+        }
+      ],
+      "metadata_group1": [
+        {
+          "name": "-name",
+          "query": "What is the name of the metadata?",
+          "mandatory": "True",
+          "IRI": "http://url.com",
+          "unit": ""
+        },
+        {
+          "name": "-tags",
+          "query": "What are the tags associated with this project?"
+        },
+        {
+          "name": "sample1",
+          "query": "",
+          "mandatory": "True",
+          "IRI": "http://url.com",
+          "unit": "m"
+        }
+      ]
+    },
+    "attachments": []
+  },
+  "x1": {
+    "IRI": "",
+    "title": "Tasks",
+    "meta": {
+      "default": [
+        {
+          "name": "-name",
+          "query": "What is the name of task?"
+        },
+        {
+          "name": "-tags",
+          "query": "What are the tags associated with this task?"
+        },
+        {
+          "name": "comment",
+          "query": "#tags comments remarks :field:value:"
+        }
+      ]
+    },
+    "attachments": []
+  },
+  "x2": {
+    "IRI": "",
+    "title": "Subtasks",
+    "meta": {
+      "default": [
+        {
+          "name": "-name",
+          "query": "What is the name of subtask?"
+        },
+        {
+          "name": "-tags",
+          "query": "What are the tags associated with this subtask?"
+        },
+        {
+          "name": "comment",
+          "query": "#tags comments remarks :field:value:"
+        }
+      ]
+    },
+    "attachments": []
+  },
+  "measurement": {
+    "IRI": "",
+    "title": "Measurements",
+    "meta": {
+      "default": [
+        {
+          "name": "-name",
+          "query": "What is the file name?"
+        },
+        {
+          "name": "-tags",
+          "query": "What are the tags associated with this file name?"
+        },
+        {
+          "name": "comment",
+          "query": "#tags comments remarks :field:value:"
+        },
+        {
+          "name": "-type"
+        },
+        {
+          "name": "image"
+        },
+        {
+          "name": "#_curated"
+        },
+        {
+          "name": "sample",
+          "query": "Which sample was used?",
+          "list": "sample",
+          "unit": "m",
+          "mandatory": "True",
+          "IRI": "http://url.com"
+        },
+        {
+          "name": "procedure",
+          "query": "Which procedure was used?",
+          "list": "procedure"
+        }
+      ]
+    },
+    "attachments": []
+  },
+  "sample": {
+    "IRI": "",
+    "title": "Samples",
+    "meta": {
+      "default": [
+        {
+          "name": "-name",
+          "query": "What is the name / identifier of the sample?"
+        },
+        {
+          "name": "chemistry",
+          "query": "What is its chemical composition?"
+        },
+        {
+          "name": "-tags",
+          "query": "What are the tags associated with this sample?"
+        },
+        {
+          "name": "comment",
+          "query": "#tags comments remarks :field:value:"
+        },
+        {
+          "name": "qrCode"
+        }
+      ]
+    },
+    "attachments": []
+  },
+  "procedure": {
+    "IRI": "",
+    "title": "Procedures",
+    "meta": {
+      "default": [
+        {
+          "name": "-name",
+          "query": "What is the name / path?"
+        },
+        {
+          "name": "-tags",
+          "query": "What are the tags associated with this procedure?"
+        },
+        {
+          "name": "comment",
+          "query": "#tags comments :field:value: e.g. #SOP_v1"
+        },
+        {
+          "name": "content",
+          "query": "What is procedure (Markdown possible; autofilled if file given)?"
+        }
+      ]
+    },
+    "attachments": []
+  },
+  "instrument": {
+    "IRI": "",
+    "title": "Instruments",
+    "meta": {
+      "default": [
+        {
+          "name": "-name",
+          "query": "What is the name / path?",
+          "mandatory": "True"
+        },
+        {
+          "name": "-tags",
+          "query": "What are the tags associated with this instruments?"
+        },
+        {
+          "name": "comment",
+          "query": "#tags comments :field:value: e.g. #SOP_v1"
+        },
+        {
+          "name": "vendor",
+          "query": "Who is the vendor?"
+        }
+      ]
+    },
+    "attachments": [
+      {
+        "description": "Right side of the instrument",
+        "type": "device1"
+      }
+    ]
+  }
+}

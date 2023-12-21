@@ -9,6 +9,8 @@
 
 import json
 import os
+import xml.etree.ElementTree as etree
+from xml.etree.ElementTree import ElementTree
 
 
 def save_json(json_object: object,
@@ -41,13 +43,29 @@ def read_json(json_file: str) -> dict | None:
     return json.loads(f.read())
 
 
+def read_xml(xml_file: str) -> ElementTree | None:
+  """
+  Returns the Element tress representation of the json file
+  Args:
+      xml_file (str): File name representing data in test_data folder or relative path from test data folder
+
+  Returns:
+      XML representation of the file
+  """
+  test_data_path = get_test_data_path(os.getcwd(), xml_file)
+  if not os.path.exists(test_data_path):
+    return None
+  with open(test_data_path, encoding='utf-8') as f:
+    return etree.ElementTree(etree.fromstring(f.read()))
+
+
 def are_json_equal(json1: dict,
                    json2: dict) -> bool:
   """
   Compare two json objects
   Args:
-    json1 (dict):
-    json2 (dict):
+    json1 (dict): First json object
+    json2 (dict): Second json object
 
   Returns: True if the two json objects are equal
 
@@ -56,20 +74,20 @@ def are_json_equal(json1: dict,
 
 
 def get_test_data_path(executing_path: str,
-                       document_json_file: str):
+                       test_file: str):
   """
   Resolve the test data path
   Args:
-    document_json_file (str):
-    executing_path (str):
+    test_file (str): Test file name
+    executing_path (str): Current executing path
 
   Returns:
 
   """
   if os.path.exists(os.path.join(executing_path, "tests", "app_tests", "test_data")):
-    test_data_path = os.path.join(executing_path, "tests", "app_tests", "test_data", document_json_file)
+    test_data_path = os.path.join(executing_path, "tests", "app_tests", "test_data", test_file)
   else:
-    test_data_path = os.path.join(executing_path, "..//test_data", document_json_file)
+    test_data_path = os.path.join(executing_path, "..//test_data", test_file)
   import pathlib
   if not os.path.exists(pathlib.Path(test_data_path).parent):
     os.makedirs(pathlib.Path(test_data_path).parent)

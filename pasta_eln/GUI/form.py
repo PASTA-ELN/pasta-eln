@@ -10,7 +10,7 @@ from PySide6.QtGui import QRegularExpressionValidator # pylint: disable=no-name-
 from PySide6.QtCore import QSize, Qt, QTimer          # pylint: disable=no-name-in-module
 from ..guiStyle import Image, TextButton, IconButton, Label, showMessage, widgetAndLayout, ScrollMessageBox
 from ._contextMenu import initContextMenu, executeContextMenu, CommandMenu
-from ..fixedStringsJson import defaultOntologyNode
+from ..fixedStringsJson import defaultDataHierarchyNode
 from ..handleDictionaries import fillDocBeforeCreate
 from ..miscTools import createDirName
 from ..guiCommunicate import Communicate
@@ -68,17 +68,17 @@ class Form(QDialog):
     else:
       self.setMinimumWidth(600)
 
-    #Add things that are in ontology
+    #Add things that are in dataHierarchy
     _, self.formL = widgetAndLayout('Form', splitter, 's')
     if '_ids' not in self.doc:  #normal form
       setattr(self, 'key_-name', QLineEdit(self.doc['-name']))
       getattr(self, 'key_-name').setValidator(QRegularExpressionValidator("[\\w\\ .-]+"))
       self.formL.addRow('Name', getattr(self, 'key_-name'))
-    if self.doc['-type'][0] in self.db.ontology:
-      ontologyNode = self.db.ontology[self.doc['-type'][0]]['prop']
+    if self.doc['-type'][0] in self.db.dataHierarchy:
+      dataHierarchyNode = self.db.dataHierarchy[self.doc['-type'][0]]['meta']
     else:
-      ontologyNode = defaultOntologyNode
-    for item in [i for group in ontologyNode for i in ontologyNode[group]]:
+      dataHierarchyNode = defaultDataHierarchyNode
+    for item in [i for group in dataHierarchyNode for i in dataHierarchyNode[group]]:
       if item['name'] not in self.doc and  item['name'][0] not in ['_','-']:
         self.doc[item['name']] = ''
     # Create form
@@ -142,13 +142,13 @@ class Form(QDialog):
           setattr(self, f'key_{key}', QLineEdit('-- strange content --'))
         self.formL.addRow(QLabel(key.capitalize()), getattr(self, f'key_{key}'))
       elif isinstance(value, str):    #string
-        ontologyItem = [i for group in ontologyNode for i in ontologyNode[group] if i['name']==key]
-        if len(ontologyItem)==1 and 'list' in ontologyItem[0]:       #choice dropdown
+        dataHierarchyItem = [i for group in dataHierarchyNode for i in dataHierarchyNode[group] if i['name']==key]
+        if len(dataHierarchyItem)==1 and 'list' in dataHierarchyItem[0]:       #choice dropdown
           setattr(self, f'key_{key}', QComboBox())
-          if isinstance(ontologyItem[0]['list'], list):            #ontology-defined choices
-            getattr(self, f'key_{key}').addItems(ontologyItem[0]['list'])
+          if isinstance(dataHierarchyItem[0]['list'], list):            #dataHierarchy-defined choices
+            getattr(self, f'key_{key}').addItems(dataHierarchyItem[0]['list'])
           else:                                                    #choice among docType
-            listDocType = ontologyItem[0]['list']
+            listDocType = dataHierarchyItem[0]['list']
             getattr(self, f'key_{key}').addItem('- no link -', userData='')
             for line in self.db.getView(f'viewDocType/{listDocType}'):
               getattr(self, f'key_{key}').addItem(line['value'][0], userData=line['id'])

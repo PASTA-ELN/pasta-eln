@@ -18,7 +18,8 @@ from tests.app_tests.common.fixtures import pasta_gui
 
 
 class TestPastaAppUI(object):
-  @pytest.mark.skip(reason="Disabled until the PASTA GUI app is modified for the latest schema changes in ontology data")
+  @pytest.mark.skip(
+    reason="Disabled until the PASTA GUI app is modified for the latest schema changes in data hierarchy data")
   def test_app_launch(self, pasta_gui: tuple[Union[QApplication, QCoreApplication, None], MainWindow, QtBot]):
     app, image_viewer, qtbot = pasta_gui
     assert image_viewer.sidebar is not None, "Sidebar not loaded!"

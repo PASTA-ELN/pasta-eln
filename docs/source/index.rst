@@ -27,7 +27,7 @@ Overview
    dodonts
    faqs
    extractors
-   ontology_configuration
+   data_hierarchy_configuration
    motivation
 
 
