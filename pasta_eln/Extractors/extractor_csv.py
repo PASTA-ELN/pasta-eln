@@ -20,7 +20,6 @@ def use(filePath, recipe='', saveFileName=None):
   with open(filePath, encoding='unicode_escape') as fIn:
     for  j in range(10):
       lines.append(fIn.readline()[:-1])
-    print('\n'.join(lines)) #temporary
     # files with some form of header: try 3 criteria
     if lines[0].count(';')>lines[0].count(' ') and lines[0].count(';')==lines[1].count(';') and \
                                                    lines[0].count(';')==lines[2].count(';'): #Separate by ; not ' '
