@@ -139,7 +139,9 @@ class Form(QDialog):
         if len(value)>0 and isinstance(value[0], str):
           setattr(self, f'key_{key}', QLineEdit(' '.join(value)))
         else:
-          setattr(self, f'key_{key}', QLineEdit('-- strange content --'))
+          setattr(self, f'key_{key}', QLineEdit('-- unknown content --'))
+          logging.info(f'Cannot display value of key={key}: {str(value)}.'\
+                       f'Write unknown content for docID={self.doc["_id"]}')
         self.formL.addRow(QLabel(key.capitalize()), getattr(self, f'key_{key}'))
       elif isinstance(value, str):    #string
         dataHierarchyItem = [i for group in dataHierarchyNode for i in dataHierarchyNode[group] if i['name']==key]
