@@ -235,7 +235,8 @@ def showMessage(parent:QWidget, title:str, text:str, icon:str='', style:str='') 
   dialog = QMessageBox(parent)
   dialog.setWindowTitle(title)
   dialog.setText(text)
-  dialog.setTextFormat(Qt.MarkdownText)
+  if not (text.startswith('<') and text.endswith('>')):
+    dialog.setTextFormat(Qt.MarkdownText)
   if icon in {'Information', 'Warning', 'Critical'}:
     dialog.setIcon(getattr(QMessageBox, icon))
   if style!='':

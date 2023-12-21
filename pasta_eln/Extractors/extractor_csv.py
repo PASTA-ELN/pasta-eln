@@ -36,6 +36,7 @@ def use(filePath, recipe='', saveFileName=None):
   metaUser = {}
   metaVendor = {}
   links = []
+  recipe = 'measurement/csv'
 
   #save to file
   if saveFileName is not None:

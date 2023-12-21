@@ -188,18 +188,31 @@ This step usually takes up to 1min, so please be patient.
 """
 
 shortcuts = """
-Ctrl+Space: List projects
-Ctrl+M: List measurements
-Ctrl+S: List samples
-Ctrl+P: List procedures
-Ctrl+I: List instruments
-Ctrl+T: List tags
-Ctrl+U: List unidentified
-F2: Test file extraction
-F5: Synchronize
-F9: Restart
-Ctrl+?: Verify database integrity
-Ctrl+0: Configuration
+### Shortcuts:
+
+**Ctrl+Space**: List projects
+
+**Ctrl+M**: List measurements
+
+**Ctrl+S**: List samples
+
+**Ctrl+P**: List procedures
+
+**Ctrl+I**: List instruments
+
+**Ctrl+T**: List tags
+
+**Ctrl+U**: List unidentified
+
+**F2**: Test file extraction
+
+**F5**: Synchronize
+
+**F9**: Restart
+
+**Ctrl+?**: Verify database integrity
+
+**Ctrl+0**: Configuration
 """
 
 tableHeaderHelp = """
