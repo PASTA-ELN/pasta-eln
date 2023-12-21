@@ -46,7 +46,7 @@ class Database:
       self.initGeneralViews()
     self.dataHierarchy = dict(self.db['-dataHierarchy-'])
     if '-version' in self.dataHierarchy and self.dataHierarchy['-version'] < 4:
-      logging.info('Convert ontology to V4.0')
+      logging.info('Convert data hierarchy to V4.0')
       dataHierarchy_pre_to_V4(self.dataHierarchy)
       if '-dataHierarchy-' in self.db:
         self.db['-dataHierarchy-'].delete()

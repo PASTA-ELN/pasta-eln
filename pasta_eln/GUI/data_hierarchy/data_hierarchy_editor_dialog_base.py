@@ -248,7 +248,7 @@ class Ui_DataHierarchyEditorDialogBase(object):
   def retranslateUi(self, DataHierarchyEditorDialogBase):
     _translate = QtCore.QCoreApplication.translate
     DataHierarchyEditorDialogBase.setWindowTitle(_translate("DataHierarchyEditorDialogBase", "Data Hierarchy Editor"))
-    self.typeMetadataTableView.setToolTip(_translate("DataHierarchyEditorDialogBase", "Table which lists and allows editing of all the metadata associated with the above selected type"))
+    self.typeMetadataTableView.setToolTip(_translate("DataHierarchyEditorDialogBase", "Table for all metadata associated with the Data Type. Add \"comment\" or \"content\" for editable text fields, \"image\" for image support, or enter another Data Type to enable links."))
     self.attachmentsShowHidePushButton.setText(_translate("DataHierarchyEditorDialogBase", "Show/Hide Attachments"))
     self.metadataGroupLabel.setText(_translate("DataHierarchyEditorDialogBase", "Metadata Group"))
     self.metadataGroupComboBox.setToolTip(_translate("DataHierarchyEditorDialogBase", "Select the group of metadata to be listed below in the table"))
@@ -269,10 +269,10 @@ class Ui_DataHierarchyEditorDialogBase(object):
     self.deleteTypePushButton.setToolTip(_translate("DataHierarchyEditorDialogBase", "Delete the type with the full metadata and attachments completely"))
     self.deleteTypePushButton.setText(_translate("DataHierarchyEditorDialogBase", "- Delete"))
     self.addMetadataRowPushButton.setToolTip(_translate("DataHierarchyEditorDialogBase", "Add a new metadata row to the above table with empty values"))
-    self.addMetadataRowPushButton.setText(_translate("DataHierarchyEditorDialogBase", "+ Add Metadata group"))
+    self.addMetadataRowPushButton.setText(_translate("DataHierarchyEditorDialogBase", "+ Add Metadata"))
     self.addAttachmentPushButton.setToolTip(_translate("DataHierarchyEditorDialogBase", "Add a new attachment row to the above table with empty values"))
     self.addAttachmentPushButton.setText(_translate("DataHierarchyEditorDialogBase", "+ Add Attachment"))
-    self.metadataTableHeaderLabel.setText(_translate("DataHierarchyEditorDialogBase", "Metadata Form Editor"))
+    self.metadataTableHeaderLabel.setText(_translate("DataHierarchyEditorDialogBase", "Metadata"))
     self.typeAttachmentsTableView.setToolTip(_translate("DataHierarchyEditorDialogBase", "Table which displays the attachments for the above selected data type"))
     self.headerLabel.setText(_translate("DataHierarchyEditorDialogBase", "Edit the data hierarchy for the PASTA-ELN projects"))
     self.saveDataHierarchyPushButton.setToolTip(_translate("DataHierarchyEditorDialogBase", "Save loaded data hierarchy in local database"))

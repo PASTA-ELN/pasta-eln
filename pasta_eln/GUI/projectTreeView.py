@@ -56,7 +56,8 @@ class TreeView(QTreeView):
     Args:
       command (list): list of commands
     """
-    hierStack = self.currentIndex().data().split('/')
+    item = self.model().itemFromIndex(self.currentIndex())
+    hierStack = item.data()['hierStack'].split('/')
     if command[0] is Command.ADD_CHILD:
       docType= f'x{len(hierStack)}'
       docID = hierStack[-1]
