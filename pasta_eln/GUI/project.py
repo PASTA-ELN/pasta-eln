@@ -336,7 +336,7 @@ class Project(QWidget):
       return
     # change item in question
     db.updateBranch(docID=docID, branch=branchIdx, stack=stackNew, path=pathNew, child=childNew)
-    item.setData({})     #update item.text() to new stack
+    item.setData(item.data() | {'hierStack': '/'.join(stackNew+[docID])})
     # change siblings
     for line in siblingsOld:
       db.updateBranch(docID=line['id'], branch=line['value'][3], child=line['value'][0]-1)

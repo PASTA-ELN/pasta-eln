@@ -1,13 +1,14 @@
 """ all styling of buttons and other general widgets, some defined colors... """
 from typing import Callable, Optional, Any
 from PySide6.QtWidgets import QPushButton, QLabel, QSizePolicy, QMessageBox, QLayout, QWidget, QMenu, \
-                              QVBoxLayout, QHBoxLayout, QGridLayout, QFormLayout, QComboBox # pylint: disable=no-name-in-module
+                              QVBoxLayout, QHBoxLayout, QGridLayout, QFormLayout, QComboBox, QScrollArea # pylint: disable=no-name-in-module
 from PySide6.QtGui import QImage, QPixmap, QAction, QKeySequence, QMouseEvent               # pylint: disable=no-name-in-module
 from PySide6.QtCore import QByteArray, Qt           # pylint: disable=no-name-in-module
 from PySide6.QtSvgWidgets import QSvgWidget         # pylint: disable=no-name-in-module
 import qtawesome as qta
 from qt_material import get_theme
 from .backend import Backend
+from .handleDictionaries import dict2ul
 
 space = {'0':0, 's':5, 'm':10, 'l':20, 'xl':200} #spaces: padding and margin
 
@@ -86,7 +87,7 @@ class IconButton(QPushButton):
     """
     super().__init__()
     color = 'black' if widget is None else getColor(widget.comm.backend, 'primary')
-    icon = qta.icon(iconName, color=color, scale_factor=1)
+    icon = qta.icon(iconName, color=color, scale_factor=1)  #color change here
     self.setIcon(icon)
     self.clicked.connect(lambda: widget.execute(command))
     self.setFixedHeight(30)
@@ -222,7 +223,7 @@ class Label(QLabel):
 
 def showMessage(parent:QWidget, title:str, text:str, icon:str='', style:str='') -> None:
   """
-  Show a message box
+  Show simple message box for little information
 
   Args:
     parent (QWidget): parent widget (self)
@@ -234,6 +235,8 @@ def showMessage(parent:QWidget, title:str, text:str, icon:str='', style:str='') 
   dialog = QMessageBox(parent)
   dialog.setWindowTitle(title)
   dialog.setText(text)
+  if not (text.startswith('<') and text.endswith('>')):
+    dialog.setTextFormat(Qt.MarkdownText)
   if icon in {'Information', 'Warning', 'Critical'}:
     dialog.setIcon(getattr(QMessageBox, icon))
   if style!='':
@@ -242,7 +245,34 @@ def showMessage(parent:QWidget, title:str, text:str, icon:str='', style:str='') 
   return
 
 
-def widgetAndLayout(direction:str='V', parentLayout:Optional[QLayout]=None, spacing:str='0', left:str='0', top:str='0', right:str='0', bottom:str='0') -> tuple[QWidget, QLayout]:
+class ScrollMessageBox(QMessageBox):
+  """ Scrollable message box for lots of dictionary information """
+  def __init__(self, title:str, content:dict[str,Any], style:str=''):
+    """
+    Args:
+      title (str): title
+      content (dict): dictionary of lots of information
+      style (str): css style
+    """
+    cssStyle = '<style> ul {list-style-type: none; padding-left: 0; margin: 0; text-indent: -20px; padding-left: -20px;} </style>'
+    QMessageBox.__init__(self)
+    self.setWindowTitle(title)
+    if style == '':
+      self.setStyleSheet('QScrollArea{min-width:300 px; min-height: 400px}')
+    else:
+      self.setStyleSheet(style)
+    scroll = QScrollArea(self)
+    scroll.setWidgetResizable(True)
+    self.content = QLabel()
+    self.content.setWordWrap(True)
+    self.content.setText(cssStyle+dict2ul(content))
+    self.content.setTextInteractionFlags(Qt.TextSelectableByMouse)        # type: ignore[arg-type]
+    scroll.setWidget(self.content)
+    self.layout().addWidget(scroll, 0, 0, 1, self.layout().columnCount()) # type: ignore[call-arg]
+
+
+def widgetAndLayout(direction:str='V', parentLayout:Optional[QLayout]=None, spacing:str='0', left:str='0',
+                    top:str='0', right:str='0', bottom:str='0') -> tuple[QWidget, QLayout]:
   """
   Convenient function for widget and a boxLayout
 
