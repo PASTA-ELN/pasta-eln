@@ -322,9 +322,11 @@ class Table(QWidget):
       self.showAll = not self.showAll
       self.change('','')  # redraw table
     elif command[0] is Command.RERUN_EXTRACTORS:
+      redraw = False
       for row in range(self.models[-1].rowCount()):
         item, docID = self.itemFromRow(row)
         if item.checkState() == Qt.CheckState.Checked:
+          redraw = True
           doc = self.comm.backend.db.getDoc(docID)
           oldDocType = doc['-type']
           if doc['-branch'][0]['path'].startswith('http'):
@@ -341,8 +343,9 @@ class Table(QWidget):
             del doc['_rev']
             doc['-name'] = doc['-branch'][0]['path']
             self.comm.backend.addData('/'.join(doc['-type']), doc, doc['-branch'][0]['stack'])
-      self.change('','')  # redraw table
-      self.comm.changeDetails.emit('redraw')
+      if redraw:
+        self.change('','')  # redraw table
+        self.comm.changeDetails.emit('redraw')
     elif command[0] is Command.DELETE_FILTER: # Remove filter from list of filters
       row = command[1]
       #print('Delete filter row', row)
