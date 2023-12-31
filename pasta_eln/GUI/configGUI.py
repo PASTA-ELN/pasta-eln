@@ -2,7 +2,7 @@
 import json
 from pathlib import Path
 from typing import Callable, Any
-from PySide6.QtWidgets import QWidget, QFormLayout  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QWidget, QFormLayout, QVBoxLayout, QGroupBox, QLabel  # pylint: disable=no-name-in-module
 from ..miscTools import restart
 from ..guiStyle import TextButton, addRowList
 from ..guiCommunicate import Communicate
@@ -20,16 +20,18 @@ class ConfigurationGUI(QWidget):
     """
     super().__init__()
     self.comm = comm
-
     #GUI elements
     if hasattr(self.comm.backend, 'configuration'):
       onDisk = self.comm.backend.configuration['GUI']
-      self.mainL = QFormLayout(self)
-      for items  in configurationGUI.values():
+      mainL  = QVBoxLayout(self)
+      for label, items  in configurationGUI.items():
+        groupbox = QGroupBox(label)
+        mainL.addWidget(groupbox)
+        sectionL = QFormLayout(groupbox)
         for k,v in items.items():
           setattr(self, k,
-                  addRowList(self.mainL, label=v[0], default=str(onDisk[k]), itemList=[str(i) for i in v[2]]))
-      self.mainL.addRow('Save changes', TextButton('Save changes', self, [], None))
+                  addRowList(sectionL, label=v[0], default=str(onDisk[k]), itemList=[str(i) for i in v[2]]))
+      mainL.addWidget(TextButton('Save changes', self, [], None))
 
 
   def execute(self, _:list[Any]) -> None:

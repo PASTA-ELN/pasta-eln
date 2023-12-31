@@ -48,8 +48,20 @@ class Database:
     if '-version' in self.dataHierarchy and self.dataHierarchy['-version'] < 4:
       logging.info('Convert data hierarchy to V4.0')
       dataHierarchy_pre_to_V4(self.dataHierarchy)
-      self.db['-dataHierarchy-'].delete()
+      if '-dataHierarchy-' in self.db:
+        self.db['-dataHierarchy-'].delete()
       self.db.create_document(self.dataHierarchy)
+      if '-ontology-' in self.db:
+        self.db['-ontology-'].delete()
+    # temporary changes for version 2.5: remove afterwards: code does not harm but would be legacy then
+    testDocIDs = [doc['_id'] for doc in self.db if doc['_id'].startswith('x-')]
+    if testDocIDs and '-gui' not in self.db[testDocIDs[0]]:
+      for doc in self.db:
+        if doc['_id'].startswith('_') or doc['_id'].endswith('-'):
+          continue
+        if '-gui' not in doc:
+          doc['-gui'] = [True, True]
+          doc.save()
     if '-version' not in self.dataHierarchy or self.dataHierarchy['-version']!=4:
       print(F"**ERROR wrong dataHierarchy version: {self.dataHierarchy['-version']}")
       raise ValueError(f"Wrong dataHierarchy version {self.dataHierarchy['-version']}")
@@ -804,9 +816,6 @@ class Database:
     outstring+= outputString(outputStyle,'h2','List all database entries')
     if repair:
       print('REPAIR MODE IS ON: afterwards, full-reload and create views')
-    ## loop all documents
-    if repair and '-ontology-' in self.db:
-      self.db['-ontology-'].delete()
     for doc in self.db:
       try:
         if '_design' in doc['_id']:
@@ -836,15 +845,6 @@ class Database:
         #   print(oldPath, '->', newPath)
         #   doc['-branch'][0]['path'] = newPath
         #   doc.save()
-
-        # change database to version 4
-        if '-gui' not in doc:
-          outstring+= outputString(outputStyle,'error',f"dch00: gui does not exist {doc['_id']}")
-          if repair:
-            doc['-gui'] = [True, True]
-            doc.save()
-
-
 
         #branch test
         if '-branch' not in doc:
