@@ -236,7 +236,7 @@ def blob_hash(stream:BufferedReader, size:int) -> str:
   return hasher.hexdigest()
 
 
-def updateExtractorList(directory:Path) -> str:
+def updateExtractorList(directory:Path, style:str='html') -> str:
   """
   Rules:
   - each data-type in its own try-except
@@ -246,7 +246,8 @@ def updateExtractorList(directory:Path) -> str:
   - if want to force to skip top datatypes and use one at bottom: if doctype... -> exception
 
   Args:
-    directory (string): relative directory to scan
+    directory (str): relative directory to scan
+    style (str): report as html or dict
 
   Returns:
     bool: success
@@ -306,7 +307,9 @@ def updateExtractorList(directory:Path) -> str:
   configuration['extractors'] = extractorsAll
   with open(Path.home()/'.pastaELN.json','w', encoding='utf-8') as f:
     f.write(json.dumps(configuration, indent=2))
-  return dict2ul(extractorsAll)
+  if style=='html':
+    return dict2ul(extractorsAll)
+  return extractorsAll
 
 
 def restart() -> None:
