@@ -184,8 +184,9 @@ class MainWindow(QMainWindow):
     elif command[0] is Command.TEST2:
       self.comm.testExtractor.emit()
     elif command[0] is Command.UPDATE:
-      report = updateExtractorList(self.backend.extractorPath, style='dict')
-      messageWindow = ScrollMessageBox('Extractor list updated', report, style='QScrollArea{min-width:600 px; min-height:400px}')
+      reportDict = updateExtractorList(self.backend.extractorPath)
+      messageWindow = ScrollMessageBox('Extractor list updated', reportDict,
+                                       style='QScrollArea{min-width:600 px; min-height:400px}')
       messageWindow.exec()
       restart()
     elif command[0] is Command.CONFIG:
