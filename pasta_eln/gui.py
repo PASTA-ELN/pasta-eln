@@ -22,7 +22,7 @@ from .GUI.sidebar import Sidebar
 from .backend import Backend
 from .fixedStringsJson import shortcuts
 from .guiCommunicate import Communicate
-from .guiStyle import Action, showMessage, widgetAndLayout
+from .guiStyle import Action, showMessage, widgetAndLayout, ScrollMessageBox
 from .inputOutput import exportELN, importELN
 from .GUI.data_hierarchy.data_hierarchy_editor_dialog import DataHierarchyEditorDialog
 from .miscTools import updateExtractorList, restart
@@ -184,8 +184,10 @@ class MainWindow(QMainWindow):
     elif command[0] is Command.TEST2:
       self.comm.testExtractor.emit()
     elif command[0] is Command.UPDATE:
-      report = updateExtractorList(self.backend.extractorPath)
-      showMessage(self, 'Extractor list updated', report)
+      reportDict = updateExtractorList(self.backend.extractorPath)
+      messageWindow = ScrollMessageBox('Extractor list updated', reportDict,
+                                       style='QScrollArea{min-width:600 px; min-height:400px}')
+      messageWindow.exec()
       restart()
     elif command[0] is Command.CONFIG:
       dialog = Configuration(self.comm)

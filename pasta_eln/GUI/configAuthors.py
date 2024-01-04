@@ -1,16 +1,20 @@
 """ Main class of config tab on authors """
 import json, re
+from enum import Enum
 from pathlib import Path
 from typing import Callable, Any
 import requests
-from PySide6.QtWidgets import QWidget, QFormLayout, QLabel, QLineEdit  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QWidget, QFormLayout, QLabel, QLineEdit, QComboBox  # pylint: disable=no-name-in-module
 from ..miscTools import restart
-from ..guiStyle import TextButton
+from ..guiStyle import TextButton, IconButton, widgetAndLayout
 from ..guiCommunicate import Communicate
 
 
 class ConfigurationAuthors(QWidget):
-  """ Main class of config tab on authors """
+  """ Main class of config tab on authors
+
+  FOR NOW: only one author (one self) can be added to align with GDPR
+  """
   def __init__(self, comm:Communicate, callbackFinished:Callable[[],None]):
     """
     Initialization
@@ -24,16 +28,29 @@ class ConfigurationAuthors(QWidget):
 
     #GUI elements
     if hasattr(self.comm.backend, 'configuration'):
-      self.configuration = self.comm.backend.configuration
-      self.tabAppearanceL = QFormLayout(self)
+      self.author = self.comm.backend.configuration['authors'][0]
+      self.tabAuthorL = QFormLayout(self)
       self.userOrcid = self.addRowText('orcid','ORCID')
       self.userTitle = self.addRowText('title','Title')
       self.userFirst = self.addRowText('first','First name')
       self.userLast  = self.addRowText('last', 'Surname')
       self.userEmail = self.addRowText('email','Email address')
+      orgaW, orgaL = widgetAndLayout('H', None, spacing='s', top='l')
+      self.orgaCB = QComboBox()
+      self.orgaCB.addItems([i['organization'] for i in self.author['organizations']])
+      orgaL.addStretch(1)
+      orgaL.addWidget(self.orgaCB)
+      IconButton('fa5s.plus-circle', self, [Command.ADD], orgaL, 'Add organization')
+      IconButton('fa5s.minus-circle', self, [Command.DELETE], orgaL, 'Delete organization')
+      self.tabAuthorL.addRow(orgaW)
       self.userRorid = self.addRowText('rorid','RORID')
       self.userOrg   = self.addRowText('organization','Organization')
-      self.tabAppearanceL.addRow('Save changes', TextButton('Save changes', self, [], None))
+      buttonBarW, buttonBarL = widgetAndLayout('H', None, top='l')
+      buttonBarL.addStretch(1)
+      TextButton('Save changes', self, [Command.SAVE], buttonBarL)
+      self.tabAuthorL.addRow(buttonBarW)
+      self.orgaCB_lastIndex = 0
+      self.orgaCB.currentIndexChanged.connect(lambda: self.execute([Command.CHANGE])) #connect to slot only after all painting is done
 
 
   def addRowText(self, item:str, label:str) -> QLineEdit:
@@ -49,13 +66,13 @@ class ConfigurationAuthors(QWidget):
     """
     rightW = QLineEdit()
     if item in {'organization','rorid'}:
-      rightW.setText(self.configuration['authors'][0]['organizations'][0][item])
+      rightW.setText(self.author['organizations'][0][item])
     else:
-      rightW.setText(self.configuration['authors'][0][item])
+      rightW.setText(self.author[item])
     rightW.setAccessibleName(item)
     if item in {'rorid','orcid'}:
       rightW.editingFinished.connect(self.changedID)
-    self.tabAppearanceL.addRow(QLabel(label), rightW)
+    self.tabAuthorL.addRow(QLabel(label), rightW)
     return rightW
 
 
@@ -83,18 +100,46 @@ class ConfigurationAuthors(QWidget):
     return
 
 
-  def execute(self, _:list[Any]) -> None:
+  def execute(self, command:list[Any]) -> None:
     """
     Save changes to hard-disk
     """
-    self.configuration['authors'][0]['first'] = self.userFirst.text().strip()
-    self.configuration['authors'][0]['last']  = self.userLast.text().strip()
-    self.configuration['authors'][0]['title'] = self.userTitle.text().strip()
-    self.configuration['authors'][0]['email'] = self.userEmail.text().strip()
-    self.configuration['authors'][0]['orcid'] = self.userOrcid.text().strip()
-    self.configuration['authors'][0]['organizations'][0]['organization'] = self.userOrg.text().strip()
-    self.configuration['authors'][0]['organizations'][0]['rorid']        = self.userRorid.text().strip()
-    with open(Path.home()/'.pastaELN.json', 'w', encoding='utf-8') as fConf:
-      fConf.write(json.dumps(self.configuration,indent=2))
-    restart()
+    if command[0] is Command.SAVE:
+      self.author['first'] = self.userFirst.text().strip()
+      self.author['last']  = self.userLast.text().strip()
+      self.author['title'] = self.userTitle.text().strip()
+      self.author['email'] = self.userEmail.text().strip()
+      self.author['orcid'] = self.userOrcid.text().strip()
+      j = self.orgaCB_lastIndex
+      self.author['organizations'][j]['organization'] = self.userOrg.text().strip()
+      self.author['organizations'][j]['rorid']        = self.userRorid.text().strip()
+      with open(Path.home()/'.pastaELN.json', 'w', encoding='utf-8') as fConf:
+        fConf.write(json.dumps(self.configuration,indent=2))
+      restart()
+    elif command[0] is Command.ADD:
+      self.author['organizations'].append({'rorid':'', 'organization':''})
+      self.orgaCB.addItem('- new -')
+      self.orgaCB.setCurrentText('- new -')
+    elif command[0] is Command.DELETE:
+      k = self.orgaCB.currentIndex()
+      j = 0 if k>0 else -1
+      self.orgaCB.setCurrentIndex(j)
+      self.author['organizations'].pop(k)
+      self.orgaCB.removeItem(k)
+    elif command[0] is Command.CHANGE:
+      j = self.orgaCB_lastIndex
+      self.author['organizations'][j]['organization'] = self.userOrg.text().strip()
+      self.author['organizations'][j]['rorid']        = self.userRorid.text().strip()
+      k = self.orgaCB.currentIndex()
+      self.userRorid.setText(self.author['organizations'][k]['rorid'])
+      self.userOrg.setText(self.author['organizations'][k]['organization'])
+      self.orgaCB_lastIndex = k
     return
+
+
+class Command(Enum):
+  """ Commands used in this file """
+  SAVE   = 1
+  ADD    = 2
+  DELETE = 3
+  CHANGE = 4
