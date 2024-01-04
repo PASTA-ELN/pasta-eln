@@ -186,7 +186,7 @@ def installLinuxRoot(couchDBExists:bool, pathPasta:Path=Path(''), password:str='
         fConf.write(json.dumps(conf, indent=2) )
     bashCommand = [
       'sudo snap install couchdb',
-      f'sudo snap set couchdb admin={password}',
+      f'sudo snap set couchdb admin={password} setcookie=abcdefghijklmo',
       'sudo snap start couchdb',
       'sudo snap connect couchdb:mount-observe',
       'sudo snap connect couchdb:process-control',
