@@ -6,128 +6,55 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>900</width>
-    <height>767</height>
+    <width>1261</width>
+    <height>837</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Dataverse Upload</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="2" column="0">
+   <item row="3" column="0">
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
      <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+      <set>QDialogButtonBox::Cancel</set>
      </property>
     </widget>
    </item>
    <item row="0" column="0">
-    <layout class="QVBoxLayout" name="mainVerticalLayout" stretch="0,0,0,0,0">
+    <layout class="QHBoxLayout" name="mainHorizontalLayout">
      <item>
-      <layout class="QHBoxLayout" name="searchBarHorizontalLayout">
+      <layout class="QVBoxLayout" name="mainVerticalLayout" stretch="0,0,0,0">
        <item>
-        <widget class="QLineEdit" name="terminologyLineEdit">
-         <property name="placeholderText">
-          <string>&quot;Search for Definitions in Wikis/Ontologies&quot;</string>
-         </property>
-         <property name="clearButtonEnabled">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="terminologySearchPushButton">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>150</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>Search</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <widget class="QProgressBar" name="searchProgressBar">
-       <property name="value">
-        <number>0</number>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="scrollAreaHorizontalLayout">
-       <item>
-        <widget class="QListView" name="listView"/>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="uploadButtonHorizontalLayout">
-       <item>
-        <widget class="QPushButton" name="uploadPushButton">
-         <property name="minimumSize">
-          <size>
-           <width>150</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>Upload</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <spacer name="horizontalSpacer_2">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>40</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <layout class="QVBoxLayout" name="errorConsoleVerticalLayout">
-       <item>
-        <layout class="QHBoxLayout" name="errorButtonsHorizontalLayout">
+        <layout class="QHBoxLayout" name="scrollAreaHorizontalLayout">
          <item>
-          <widget class="QPushButton" name="errorConsolePushButton">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
+          <widget class="QListView" name="projectsListView"/>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="uploadButtonHorizontalLayout">
+         <item>
+          <widget class="QPushButton" name="uploadPushButton">
            <property name="minimumSize">
             <size>
              <width>150</width>
              <height>0</height>
             </size>
            </property>
+           <property name="toolTip">
+            <string>Start uploading the above selected projects to dataverse.</string>
+           </property>
            <property name="text">
-            <string>Show/Hide Errors</string>
+            <string>Start Upload</string>
            </property>
           </widget>
          </item>
          <item>
-          <spacer name="horizontalSpacer">
+          <spacer name="uploadButtonsHorizontalSpacer">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
@@ -142,20 +69,212 @@
         </layout>
        </item>
        <item>
-        <widget class="QTextEdit" name="errorConsoleTextEdit">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
+        <layout class="QVBoxLayout" name="scrollAreaVerticalLayout">
+         <item>
+          <widget class="QScrollArea" name="uploadItemsScrollArea">
+           <property name="widgetResizable">
+            <bool>true</bool>
+           </property>
+           <widget class="QWidget" name="scrollAreaWidgetContents">
+            <property name="geometry">
+             <rect>
+              <x>0</x>
+              <y>0</y>
+              <width>989</width>
+              <height>219</height>
+             </rect>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout">
+             <item>
+              <layout class="QVBoxLayout" name="scrollAreaContentsVerticalLayout"/>
+             </item>
+            </layout>
+           </widget>
+          </widget>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="scrollAreaButtonsHorizontalLayout">
+           <item>
+            <widget class="QPushButton" name="clearAllPushButton">
+             <property name="minimumSize">
+              <size>
+               <width>150</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="toolTip">
+              <string>Clear all finished uploads.</string>
+             </property>
+             <property name="text">
+              <string>Clear All</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="cancelAllPushButton">
+             <property name="minimumSize">
+              <size>
+               <width>150</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="toolTip">
+              <string>Cancel all the ongoing uploads.</string>
+             </property>
+             <property name="text">
+              <string>Cancel All</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_2">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="errorConsoleVerticalLayout">
+         <item>
+          <layout class="QHBoxLayout" name="errorButtonsHorizontalLayout">
+           <item>
+            <widget class="QPushButton" name="errorConsolePushButton">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>150</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Show/Hide Errors</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <widget class="QTextEdit" name="errorConsoleTextEdit">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>0</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QVBoxLayout" name="buttonsVerticalLayout">
+       <property name="leftMargin">
+        <number>20</number>
+       </property>
+       <property name="topMargin">
+        <number>20</number>
+       </property>
+       <property name="rightMargin">
+        <number>20</number>
+       </property>
+       <property name="bottomMargin">
+        <number>20</number>
+       </property>
+       <item>
+        <widget class="QPushButton" name="showCompletedPushButton">
          <property name="minimumSize">
           <size>
-           <width>0</width>
+           <width>200</width>
            <height>0</height>
           </size>
          </property>
+         <property name="toolTip">
+          <string>Show uploaded projects history.</string>
+         </property>
+         <property name="text">
+          <string>Show Completed</string>
+         </property>
         </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="editMinimalMetadataPushButton">
+         <property name="minimumSize">
+          <size>
+           <width>200</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>Click to edit minimal list of metadata to be used for dataverse upload.</string>
+         </property>
+         <property name="text">
+          <string>Edit Minimal Metadata</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="editFullMetadataPushButton">
+         <property name="minimumSize">
+          <size>
+           <width>200</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>Click to edit full list of metadata to be used for dataverse upload.</string>
+         </property>
+         <property name="text">
+          <string>Edit Full Medata</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
        </item>
       </layout>
      </item>

@@ -10,11 +10,12 @@ import logging
 from typing import Any
 
 from PySide6 import QtWidgets
-from PySide6.QtWidgets import QDialog
+from PySide6.QtWidgets import QDialog, QWidget
 from cloudant import CouchDB
 
 from pasta_eln.GUI.dataverse_ui.dataverse_data_model import DataverseDataModel
 from pasta_eln.GUI.dataverse_ui.dataverse_dialog_base import Ui_DataverseDialogBase
+from pasta_eln.GUI.dataverse_ui.dataverse_upload_widget_base import Ui_ProjectUploadForm
 
 
 class DataverseDialog(Ui_DataverseDialogBase):
@@ -33,9 +34,19 @@ class DataverseDialog(Ui_DataverseDialogBase):
     self.instance = QDialog()
     super().setupUi(self.instance)
     self.model = DataverseDataModel()
-    self.listView.setModel(self.model)
+    self.projectsListView.setModel(self.model)
     #test = db.
     self.model.add_data(["Project 1", "Project 2", "Project 3"] * 1000)
+    for i in range(50):
+      widget = self.get_upload_widget(f"Example Project {i + 1}")
+      self.scrollAreaContentsVerticalLayout.addWidget(widget)
+  def get_upload_widget(self, project_name: str = 0) -> QWidget:
+    uploadWidget = QtWidgets.QWidget()
+    uploadWidgetUi = Ui_ProjectUploadForm()
+    uploadWidgetUi.setupUi(uploadWidget)
+    uploadWidgetUi.uploadProjectLabel.setText(project_name)
+    return uploadWidget
+
 
 def get_db(db_name: str,
            db_user: str,
