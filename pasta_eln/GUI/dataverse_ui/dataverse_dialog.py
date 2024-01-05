@@ -6,6 +6,7 @@
 #  Filename: dataverse_dialog.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
+import datetime
 import logging
 from typing import Any
 
@@ -15,7 +16,7 @@ from cloudant import CouchDB
 
 from pasta_eln.GUI.dataverse_ui.dataverse_data_model import DataverseDataModel
 from pasta_eln.GUI.dataverse_ui.dataverse_dialog_base import Ui_DataverseDialogBase
-from pasta_eln.GUI.dataverse_ui.dataverse_upload_widget_base import Ui_ProjectUploadForm
+from pasta_eln.GUI.dataverse_ui.dataverse_upload_widget_base import Ui_UploadWidgetFrame
 
 
 class DataverseDialog(Ui_DataverseDialogBase):
@@ -41,11 +42,27 @@ class DataverseDialog(Ui_DataverseDialogBase):
       widget = self.get_upload_widget(f"Example Project {i + 1}")
       self.scrollAreaContentsVerticalLayout.addWidget(widget)
   def get_upload_widget(self, project_name: str = 0) -> QWidget:
-    uploadWidget = QtWidgets.QWidget()
-    uploadWidgetUi = Ui_ProjectUploadForm()
-    uploadWidgetUi.setupUi(uploadWidget)
+    uploadWidgetFrame = QtWidgets.QFrame()
+    uploadWidgetUi = Ui_UploadWidgetFrame()
+    uploadWidgetUi.setupUi(uploadWidgetFrame)
     uploadWidgetUi.uploadProjectLabel.setText(project_name)
-    return uploadWidget
+    uploadWidgetUi.logConsoleTextEdit.hide()
+    uploadWidgetUi.logConsoleTextEdit.setText(f"<html>Log for {project_name}<br />"
+                                              f"Started upload at time: {datetime.datetime.now()}<br />"
+                                              f"Generating ELN file: success, filename.................<br />"
+                                              f"Uploading.................<br />"
+                                              f"Uploading.................<br />"
+                                              f"Uploading.................<br />"
+                                              f"Uploading.................<br />"
+                                              f"Uploading.................<br />"
+                                              f"Uploading.................<br />"
+                                              f"Upload URL: <a href=\"https://data-beta.fz-juelich.de/dataset.xhtml?persistentId=doi:10.0346/JUELICH-DATA-BETA/BORORQ\">Dataverse Link</a><br />"
+                                              f"Finalized upload at time: {datetime.datetime.now()}</html>")
+    uploadWidgetUi.showLogPushButton.clicked.connect(lambda:
+                                                     uploadWidgetUi.logConsoleTextEdit.show()
+                                                     if uploadWidgetUi.logConsoleTextEdit.isHidden()
+                                                     else uploadWidgetUi.logConsoleTextEdit.hide())
+    return uploadWidgetFrame
 
 
 def get_db(db_name: str,

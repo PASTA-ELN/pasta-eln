@@ -9,50 +9,65 @@
 from PySide6 import QtCore, QtGui, QtWidgets
 
 
-class Ui_ProjectUploadForm(object):
-  def setupUi(self, ProjectUploadForm):
-    ProjectUploadForm.setObjectName("ProjectUploadForm")
-    ProjectUploadForm.setEnabled(True)
-    ProjectUploadForm.resize(1171, 73)
-    self.gridLayout = QtWidgets.QGridLayout(ProjectUploadForm)
+class Ui_UploadWidgetFrame(object):
+  def setupUi(self, UploadWidgetFrame):
+    UploadWidgetFrame.setObjectName("UploadWidgetFrame")
+    UploadWidgetFrame.resize(1189, 205)
+    UploadWidgetFrame.setFrameShape(QtWidgets.QFrame.Shape.StyledPanel)
+    UploadWidgetFrame.setFrameShadow(QtWidgets.QFrame.Shadow.Raised)
+    self.gridLayout = QtWidgets.QGridLayout(UploadWidgetFrame)
     self.gridLayout.setObjectName("gridLayout")
+    self.uploadWidgetMainverticalLayout = QtWidgets.QVBoxLayout()
+    self.uploadWidgetMainverticalLayout.setObjectName("uploadWidgetMainverticalLayout")
     self.uploadWidgetHorizontalLayout = QtWidgets.QHBoxLayout()
     self.uploadWidgetHorizontalLayout.setObjectName("uploadWidgetHorizontalLayout")
-    self.uploadProjectLabel = QtWidgets.QLabel(parent=ProjectUploadForm)
+    self.uploadProjectLabel = QtWidgets.QLabel(parent=UploadWidgetFrame)
     self.uploadProjectLabel.setObjectName("uploadProjectLabel")
     self.uploadWidgetHorizontalLayout.addWidget(self.uploadProjectLabel)
-    self.uploadProgressBar = QtWidgets.QProgressBar(parent=ProjectUploadForm)
+    self.uploadProgressBar = QtWidgets.QProgressBar(parent=UploadWidgetFrame)
     self.uploadProgressBar.setProperty("value", 24)
     self.uploadProgressBar.setObjectName("uploadProgressBar")
     self.uploadWidgetHorizontalLayout.addWidget(self.uploadProgressBar)
-    self.showLogPushButton = QtWidgets.QPushButton(parent=ProjectUploadForm)
+    self.showLogPushButton = QtWidgets.QPushButton(parent=UploadWidgetFrame)
     icon = QtGui.QIcon.fromTheme("document-page-setup")
     self.showLogPushButton.setIcon(icon)
     self.showLogPushButton.setObjectName("showLogPushButton")
     self.uploadWidgetHorizontalLayout.addWidget(self.showLogPushButton)
-    self.uploadCancelPushButton = QtWidgets.QPushButton(parent=ProjectUploadForm)
+    self.uploadCancelPushButton = QtWidgets.QPushButton(parent=UploadWidgetFrame)
     icon = QtGui.QIcon.fromTheme("window-close")
     self.uploadCancelPushButton.setIcon(icon)
     self.uploadCancelPushButton.setObjectName("uploadCancelPushButton")
     self.uploadWidgetHorizontalLayout.addWidget(self.uploadCancelPushButton)
-    self.gridLayout.addLayout(self.uploadWidgetHorizontalLayout, 0, 0, 1, 1)
+    self.uploadWidgetMainverticalLayout.addLayout(self.uploadWidgetHorizontalLayout)
+    self.logConsoleTextEdit = QtWidgets.QTextEdit(parent=UploadWidgetFrame)
+    self.logConsoleTextEdit.setEnabled(True)
+    self.logConsoleTextEdit.setMinimumSize(QtCore.QSize(0, 150))
+    self.logConsoleTextEdit.setReadOnly(True)
+    self.logConsoleTextEdit.setObjectName("logConsoleTextEdit")
+    self.uploadWidgetMainverticalLayout.addWidget(self.logConsoleTextEdit)
+    self.gridLayout.addLayout(self.uploadWidgetMainverticalLayout, 0, 0, 1, 1)
 
-    self.retranslateUi(ProjectUploadForm)
-    QtCore.QMetaObject.connectSlotsByName(ProjectUploadForm)
+    self.retranslateUi(UploadWidgetFrame)
+    QtCore.QMetaObject.connectSlotsByName(UploadWidgetFrame)
 
-  def retranslateUi(self, ProjectUploadForm):
+  def retranslateUi(self, UploadWidgetFrame):
     _translate = QtCore.QCoreApplication.translate
-    ProjectUploadForm.setWindowTitle(_translate("ProjectUploadForm", "UploadWidget"))
-    self.uploadProjectLabel.setText(_translate("ProjectUploadForm", "Example Project 1"))
-    self.showLogPushButton.setText(_translate("ProjectUploadForm", "Show Log"))
-    self.uploadCancelPushButton.setText(_translate("ProjectUploadForm", "Cancel"))
+    UploadWidgetFrame.setWindowTitle(_translate("UploadWidgetFrame", "Frame"))
+    self.uploadProjectLabel.setToolTip(_translate("UploadWidgetFrame", "Name of the PASTA project enqueued for dataverse upload."))
+    self.uploadProjectLabel.setText(_translate("UploadWidgetFrame", "Example Project 1"))
+    self.uploadProgressBar.setToolTip(_translate("UploadWidgetFrame", "Shows the upload progress."))
+    self.showLogPushButton.setToolTip(_translate("UploadWidgetFrame", "Click to view the log for this particular upload."))
+    self.showLogPushButton.setText(_translate("UploadWidgetFrame", "Show Log"))
+    self.uploadCancelPushButton.setToolTip(_translate("UploadWidgetFrame", "Click to cancel this particular upload."))
+    self.uploadCancelPushButton.setText(_translate("UploadWidgetFrame", "Cancel"))
+    self.logConsoleTextEdit.setToolTip(_translate("UploadWidgetFrame", "Displays the generated log messages for this particular upload."))
 
 
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
-    ProjectUploadForm = QtWidgets.QWidget()
-    ui = Ui_ProjectUploadForm()
-    ui.setupUi(ProjectUploadForm)
-    ProjectUploadForm.show()
+    UploadWidgetFrame = QtWidgets.QFrame()
+    ui = Ui_UploadWidgetFrame()
+    ui.setupUi(UploadWidgetFrame)
+    UploadWidgetFrame.show()
     sys.exit(app.exec())

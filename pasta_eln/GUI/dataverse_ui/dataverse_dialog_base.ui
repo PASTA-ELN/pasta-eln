@@ -27,11 +27,15 @@
    <item row="0" column="0">
     <layout class="QHBoxLayout" name="mainHorizontalLayout">
      <item>
-      <layout class="QVBoxLayout" name="mainVerticalLayout" stretch="0,0,0,0">
+      <layout class="QVBoxLayout" name="mainVerticalLayout" stretch="0,0,0">
        <item>
         <layout class="QHBoxLayout" name="scrollAreaHorizontalLayout">
          <item>
-          <widget class="QListView" name="projectsListView"/>
+          <widget class="QListView" name="projectsListView">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;DIsplays the list of PASTA projects and users can select the projects which needs to uploaded to dataverse.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+          </widget>
          </item>
         </layout>
        </item>
@@ -72,6 +76,9 @@
         <layout class="QVBoxLayout" name="scrollAreaVerticalLayout">
          <item>
           <widget class="QScrollArea" name="uploadItemsScrollArea">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Displays the enqueued lists of PASTA projects to be uploaded to dataverse.&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Users can view indvidual logs for each project upload, cancel each or all of them and also clear all the finished items anytime.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
            <property name="widgetResizable">
             <bool>true</bool>
            </property>
@@ -81,7 +88,7 @@
               <x>0</x>
               <y>0</y>
               <width>989</width>
-              <height>219</height>
+              <height>335</height>
              </rect>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout">
@@ -140,62 +147,6 @@
             </spacer>
            </item>
           </layout>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <layout class="QVBoxLayout" name="errorConsoleVerticalLayout">
-         <item>
-          <layout class="QHBoxLayout" name="errorButtonsHorizontalLayout">
-           <item>
-            <widget class="QPushButton" name="errorConsolePushButton">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="minimumSize">
-              <size>
-               <width>150</width>
-               <height>0</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>Show/Hide Errors</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <spacer name="horizontalSpacer">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>40</width>
-               <height>20</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-          </layout>
-         </item>
-         <item>
-          <widget class="QTextEdit" name="errorConsoleTextEdit">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>0</height>
-            </size>
-           </property>
-          </widget>
          </item>
         </layout>
        </item>
