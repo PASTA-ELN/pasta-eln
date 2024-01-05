@@ -36,9 +36,8 @@ class DataverseDialog(Ui_DataverseDialogBase):
     super().setupUi(self.instance)
     self.model = DataverseDataModel()
     self.projectsListView.setModel(self.model)
-    #test = db.
     self.model.add_data(["Project 1", "Project 2", "Project 3"] * 1000)
-    for i in range(50):
+    for i in range(1000):
       widget = self.get_upload_widget(f"Example Project {i + 1}")
       self.scrollAreaContentsVerticalLayout.addWidget(widget)
   def get_upload_widget(self, project_name: str = 0) -> QWidget:
