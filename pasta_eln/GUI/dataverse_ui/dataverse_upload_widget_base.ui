@@ -26,6 +26,12 @@
       <layout class="QHBoxLayout" name="uploadWidgetHorizontalLayout">
        <item>
         <widget class="QLabel" name="uploadProjectLabel">
+         <property name="minimumSize">
+          <size>
+           <width>200</width>
+           <height>0</height>
+          </size>
+         </property>
          <property name="toolTip">
           <string>Name of the PASTA project enqueued for dataverse upload.</string>
          </property>
@@ -41,6 +47,22 @@
          </property>
          <property name="value">
           <number>24</number>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="statusPushButton">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="toolTip">
+          <string>Displays the status of the upload process (success/failed/in-progress).</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset theme="finish"/>
          </property>
         </widget>
        </item>
