@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1051</width>
-    <height>73</height>
+    <width>1058</width>
+    <height>71</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -60,7 +60,7 @@
         <string>The dataverse URL where the PASTA project was uploaded.</string>
        </property>
        <property name="text">
-        <string>Dataverse URL</string>
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Dataverse URL: &lt;a href=&quot;https://data-beta.fz-juelich.de/dataset.xhtml?persistentId=doi:10.0346/JUELICH-DATA-BETA/BORORQ&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Test Data Set 12&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
       </widget>
      </item>

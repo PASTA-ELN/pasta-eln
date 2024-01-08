@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>765</width>
-    <height>503</height>
+    <width>1106</width>
+    <height>482</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,6 +16,19 @@
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
     <layout class="QVBoxLayout" name="mainVerticalLayout">
+     <item>
+      <widget class="QLineEdit" name="historyFilterLineEdit">
+       <property name="toolTip">
+        <string>Enter project name / dataverse URL / finished time to filter the below listed tasks.</string>
+       </property>
+       <property name="placeholderText">
+        <string>Enter the information to filter the tasks.</string>
+       </property>
+       <property name="clearButtonEnabled">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
      <item>
       <widget class="QScrollArea" name="completedUploadsScrollArea">
        <property name="toolTip">
@@ -29,8 +42,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>743</width>
-          <height>448</height>
+          <width>1084</width>
+          <height>396</height>
          </rect>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_3">

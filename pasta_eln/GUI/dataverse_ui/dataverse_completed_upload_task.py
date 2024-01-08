@@ -12,7 +12,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 class Ui_CompletedUploadTaskFrame(object):
   def setupUi(self, CompletedUploadTaskFrame):
     CompletedUploadTaskFrame.setObjectName("CompletedUploadTaskFrame")
-    CompletedUploadTaskFrame.resize(1051, 73)
+    CompletedUploadTaskFrame.resize(1058, 71)
     CompletedUploadTaskFrame.setFrameShape(QtWidgets.QFrame.Shape.StyledPanel)
     CompletedUploadTaskFrame.setFrameShadow(QtWidgets.QFrame.Shadow.Raised)
     self.horizontalLayout_2 = QtWidgets.QHBoxLayout(CompletedUploadTaskFrame)
@@ -51,7 +51,7 @@ class Ui_CompletedUploadTaskFrame(object):
     self.projectNameLabel.setToolTip(_translate("CompletedUploadTaskFrame", "PASTA project name which was uploaded to dataverse."))
     self.projectNameLabel.setText(_translate("CompletedUploadTaskFrame", "Example Project 1"))
     self.dataverseUrlLabel.setToolTip(_translate("CompletedUploadTaskFrame", "The dataverse URL where the PASTA project was uploaded."))
-    self.dataverseUrlLabel.setText(_translate("CompletedUploadTaskFrame", "Dataverse URL"))
+    self.dataverseUrlLabel.setText(_translate("CompletedUploadTaskFrame", "<html><head/><body><p>Dataverse URL: <a href=\"https://data-beta.fz-juelich.de/dataset.xhtml?persistentId=doi:10.0346/JUELICH-DATA-BETA/BORORQ\"><span style=\" text-decoration: underline; color:#0000ff;\">Test Data Set 12</span></a></p></body></html>"))
     self.finishedDateTimeEdit.setToolTip(_translate("CompletedUploadTaskFrame", "The dataverse upload time."))
 
 

@@ -12,16 +12,20 @@ from PySide6 import QtCore, QtGui, QtWidgets
 class Ui_DataverseCompletedUploadsForm(object):
   def setupUi(self, DataverseCompletedUploadsForm):
     DataverseCompletedUploadsForm.setObjectName("DataverseCompletedUploadsForm")
-    DataverseCompletedUploadsForm.resize(765, 503)
+    DataverseCompletedUploadsForm.resize(1106, 482)
     self.gridLayout = QtWidgets.QGridLayout(DataverseCompletedUploadsForm)
     self.gridLayout.setObjectName("gridLayout")
     self.mainVerticalLayout = QtWidgets.QVBoxLayout()
     self.mainVerticalLayout.setObjectName("mainVerticalLayout")
+    self.lineEdit = QtWidgets.QLineEdit(parent=DataverseCompletedUploadsForm)
+    self.lineEdit.setClearButtonEnabled(True)
+    self.lineEdit.setObjectName("lineEdit")
+    self.mainVerticalLayout.addWidget(self.lineEdit)
     self.completedUploadsScrollArea = QtWidgets.QScrollArea(parent=DataverseCompletedUploadsForm)
     self.completedUploadsScrollArea.setWidgetResizable(True)
     self.completedUploadsScrollArea.setObjectName("completedUploadsScrollArea")
     self.scrollAreaWidgetContents = QtWidgets.QWidget()
-    self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 743, 448))
+    self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 1084, 396))
     self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
     self.verticalLayout_3 = QtWidgets.QVBoxLayout(self.scrollAreaWidgetContents)
     self.verticalLayout_3.setObjectName("verticalLayout_3")
@@ -52,6 +56,8 @@ class Ui_DataverseCompletedUploadsForm(object):
   def retranslateUi(self, DataverseCompletedUploadsForm):
     _translate = QtCore.QCoreApplication.translate
     DataverseCompletedUploadsForm.setWindowTitle(_translate("DataverseCompletedUploadsForm", "Dataverse Upload History"))
+    self.lineEdit.setToolTip(_translate("DataverseCompletedUploadsForm", "Enter project name / dataverse URL / finished time to filter the below listed tasks."))
+    self.lineEdit.setPlaceholderText(_translate("DataverseCompletedUploadsForm", "Enter the information to filter the tasks."))
     self.completedUploadsScrollArea.setToolTip(_translate("DataverseCompletedUploadsForm", "<html><head/><body><p><span style=\" font-style:italic;\">Displays the history of finished dataverse uploads done in the past.</span></p></body></html>"))
     self.selectAllPushButton.setToolTip(_translate("DataverseCompletedUploadsForm", "Select all the above listed upload tasks."))
     self.selectAllPushButton.setText(_translate("DataverseCompletedUploadsForm", "Select All"))
