@@ -29,7 +29,7 @@ class Database:
       self.client = CouchDB(user, password, url='http://127.0.0.1:5984', connect=True)
     except Exception:
       print('**ERROR dit01: Could not connect with username+password to local server')
-      return
+      raise  #there is no possibility to recover
     self.databaseName = databaseName
     if self.databaseName in self.client.all_dbs():
       self.db = self.client[self.databaseName]
