@@ -18,23 +18,25 @@ from pasta_eln.GUI.dataverse_ui.dataverse_completed_uploads_base import Ui_Datav
 
 class DataverseCompletedUploads(Ui_DataverseCompletedUploadsForm):
 
-    def __new__(cls, *_: Any, **__: Any) -> Any:
-        """
-        Instantiates the create type dialog
-        """
-        return super(DataverseCompletedUploads, cls).__new__(cls)
-    def __init__(self):
-        self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
-        self.instance = QDialog()
-        super().setupUi(self.instance)
-        for _ in range(1000):
-          widget = self.get_completed_upload_task_widget()
-          self.completedUploadsVerticalLayout.addWidget(widget)
-    def get_completed_upload_task_widget(self):
-      completedTaskFrame = QtWidgets.QFrame()
-      completedTaskUi = Ui_CompletedUploadTaskFrame()
-      completedTaskUi.setupUi(completedTaskFrame)
-      return completedTaskFrame
+  def __new__(cls, *_: Any, **__: Any) -> Any:
+    """
+    Instantiates the create type dialog
+    """
+    return super(DataverseCompletedUploads, cls).__new__(cls)
+
+  def __init__(self):
+    self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
+    self.instance = QDialog()
+    super().setupUi(self.instance)
+    for _ in range(1000):
+      widget = self.get_completed_upload_task_widget()
+      self.completedUploadsVerticalLayout.addWidget(widget)
+
+  def get_completed_upload_task_widget(self):
+    completedTaskFrame = QtWidgets.QFrame()
+    completedTaskUi = Ui_CompletedUploadTaskFrame()
+    completedTaskUi.setupUi(completedTaskFrame)
+    return completedTaskFrame
 
 
 if __name__ == "__main__":
@@ -45,5 +47,3 @@ if __name__ == "__main__":
   ui = DataverseCompletedUploads()
   ui.instance.show()
   sys.exit(app.exec())
-
-

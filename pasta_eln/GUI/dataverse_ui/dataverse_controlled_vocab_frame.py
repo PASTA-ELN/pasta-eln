@@ -11,7 +11,6 @@ from typing import Any
 
 from PySide6 import QtWidgets
 from PySide6.QtCore import QSize
-from PySide6.QtWidgets import QDialog
 
 from pasta_eln.GUI.dataverse_ui.dataverse_controlled_vocab_frame_base import Ui_ControlledVocabularyFrame
 

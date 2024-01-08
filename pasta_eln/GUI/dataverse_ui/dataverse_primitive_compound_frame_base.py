@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'dataverse_compound_frame_base.ui'
+# Form implementation generated from reading ui file 'dataverse_primitive_compound_frame_base.ui'
 #
 # Created by: PyQt6 UI code generator 6.4.2
 #
@@ -9,16 +9,16 @@
 from PySide6 import QtCore, QtGui, QtWidgets
 
 
-class Ui_CompoundFrame(object):
-  def setupUi(self, CompoundFrame):
-    CompoundFrame.setObjectName("CompoundFrame")
-    CompoundFrame.resize(1345, 101)
-    CompoundFrame.setFrameShape(QtWidgets.QFrame.Shape.NoFrame)
-    self.verticalLayout = QtWidgets.QVBoxLayout(CompoundFrame)
+class Ui_PrimitiveCompoundFrame(object):
+  def setupUi(self, PrimitiveCompoundFrame):
+    PrimitiveCompoundFrame.setObjectName("PrimitiveCompoundFrame")
+    PrimitiveCompoundFrame.resize(1345, 101)
+    PrimitiveCompoundFrame.setFrameShape(QtWidgets.QFrame.Shape.NoFrame)
+    self.verticalLayout = QtWidgets.QVBoxLayout(PrimitiveCompoundFrame)
     self.verticalLayout.setObjectName("verticalLayout")
     self.mainVerticalLayout = QtWidgets.QVBoxLayout()
     self.mainVerticalLayout.setObjectName("mainVerticalLayout")
-    self.addPushButton = QtWidgets.QPushButton(parent=CompoundFrame)
+    self.addPushButton = QtWidgets.QPushButton(parent=PrimitiveCompoundFrame)
     sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
     sizePolicy.setHorizontalStretch(0)
     sizePolicy.setVerticalStretch(0)
@@ -32,22 +32,22 @@ class Ui_CompoundFrame(object):
     self.mainVerticalLayout.addLayout(self.compoundHorizontalLayout)
     self.verticalLayout.addLayout(self.mainVerticalLayout)
 
-    self.retranslateUi(CompoundFrame)
-    QtCore.QMetaObject.connectSlotsByName(CompoundFrame)
+    self.retranslateUi(PrimitiveCompoundFrame)
+    QtCore.QMetaObject.connectSlotsByName(PrimitiveCompoundFrame)
 
-  def retranslateUi(self, CompoundFrame):
+  def retranslateUi(self, PrimitiveCompoundFrame):
     _translate = QtCore.QCoreApplication.translate
-    CompoundFrame.setWindowTitle(_translate("CompoundFrame", "Frame"))
-    CompoundFrame.setToolTip(_translate("CompoundFrame", "Set the compound type for metadata block."))
-    self.addPushButton.setToolTip(_translate("CompoundFrame", "Add a new compound entry to the list."))
-    self.addPushButton.setText(_translate("CompoundFrame", "Add"))
+    PrimitiveCompoundFrame.setWindowTitle(_translate("PrimitiveCompoundFrame", "Frame"))
+    PrimitiveCompoundFrame.setToolTip(_translate("PrimitiveCompoundFrame", "Set the compound type for metadata block."))
+    self.addPushButton.setToolTip(_translate("PrimitiveCompoundFrame", "Add a new compound entry to the list."))
+    self.addPushButton.setText(_translate("PrimitiveCompoundFrame", "Add"))
 
 
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
-    CompoundFrame = QtWidgets.QFrame()
-    ui = Ui_CompoundFrame()
-    ui.setupUi(CompoundFrame)
-    CompoundFrame.show()
+    PrimitiveCompoundFrame = QtWidgets.QFrame()
+    ui = Ui_PrimitiveCompoundFrame()
+    ui.setupUi(PrimitiveCompoundFrame)
+    PrimitiveCompoundFrame.show()
     sys.exit(app.exec())

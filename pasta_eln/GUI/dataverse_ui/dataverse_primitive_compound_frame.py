@@ -3,7 +3,7 @@
 #  Copyright (c) 2024
 #
 #  Author: Jithu Murugan
-#  Filename: dataverse_compound_frame.py
+#  Filename: dataverse_primitive_compound_frame.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import logging
@@ -12,15 +12,15 @@ from typing import Any
 from PySide6 import QtWidgets
 from PySide6.QtCore import QSize
 
-from pasta_eln.GUI.dataverse_ui.dataverse_compound_frame_base import Ui_CompoundFrame
+from pasta_eln.GUI.dataverse_ui.dataverse_primitive_compound_frame_base import Ui_PrimitiveCompoundFrame
 
 
-class CompoundFrame(Ui_CompoundFrame):
+class PrimitiveCompoundFrame(Ui_PrimitiveCompoundFrame):
 
   def __new__(cls, *_: Any, **__: Any) -> Any:
     """
     """
-    return super(CompoundFrame, cls).__new__(cls)
+    return super(PrimitiveCompoundFrame, cls).__new__(cls)
 
   def __init__(self, types_dict: dict[str, Any]) -> None:
     """
@@ -31,7 +31,10 @@ class CompoundFrame(Ui_CompoundFrame):
     super().setupUi(self.instance)
     self.types_dict = types_dict
     for type_val in types_dict.values():
-      if type_val['typeName'].endswith("Date"):
+      if ("Date" in type_val['typeName']
+          or "Time" in type_val['typeName']
+          or "time" in type_val['typeName']
+          or "date" in type_val['typeName']):
         date_time_edit = QtWidgets.QDateTimeEdit(parent=self.instance)
         date_time_edit.setToolTip(f"Enter the {type_val['typeName']} value here. e.g. {type_val['value']}")
         date_time_edit.setObjectName("entryLineEdit")
@@ -61,7 +64,10 @@ class CompoundFrame(Ui_CompoundFrame):
     new_compound_entry_layout = QtWidgets.QHBoxLayout()
     new_compound_entry_layout.setObjectName("compoundHorizontalLayout")
     for type_val in self.types_dict.values():
-      if type_val['typeName'].endswith("Date"):
+      if ("Date" in type_val['typeName']
+          or "Time" in type_val['typeName']
+          or "time" in type_val['typeName']
+          or "date" in type_val['typeName']):
         date_time_edit = QtWidgets.QDateTimeEdit(parent=self.instance)
         date_time_edit.setToolTip(f"Enter the {type_val['typeName']} value here. e.g. {type_val['value']}")
         date_time_edit.setObjectName("entryLineEdit")
@@ -92,31 +98,31 @@ if __name__ == "__main__":
 
   app = QtWidgets.QApplication(sys.argv)
 
-  ui = CompoundFrame({
-                "authorName": {
-                  "typeName": "authorName",
-                  "multiple": False,
-                  "typeClass": "primitive",
-                  "value": "LastAuthor1, FirstAuthor1"
-                },
-                "authorAffiliation": {
-                  "typeName": "authorAffiliation",
-                  "multiple": False,
-                  "typeClass": "primitive",
-                  "value": "AuthorAffiliation1"
-                },
-                "authorIdentifierScheme": {
-                  "typeName": "authorIdentifierScheme",
-                  "multiple": False,
-                  "typeClass": "controlledVocabulary",
-                  "value": "ORCID"
-                },
-                "authorIdentifier": {
-                  "typeName": "authorIdentifier",
-                  "multiple": False,
-                  "typeClass": "primitive",
-                  "value": "AuthorIdentifier1"
-                }
-              })
+  ui = PrimitiveCompoundFrame({
+    "authorName": {
+      "typeName": "authorName",
+      "multiple": False,
+      "typeClass": "primitive",
+      "value": "LastAuthor1, FirstAuthor1"
+    },
+    "authorAffiliation": {
+      "typeName": "authorAffiliation",
+      "multiple": False,
+      "typeClass": "primitive",
+      "value": "AuthorAffiliation1"
+    },
+    "authorIdentifierScheme": {
+      "typeName": "authorIdentifierScheme",
+      "multiple": False,
+      "typeClass": "controlledVocabulary",
+      "value": "ORCID"
+    },
+    "authorIdentifier": {
+      "typeName": "authorIdentifier",
+      "multiple": False,
+      "typeClass": "primitive",
+      "value": "AuthorIdentifier1"
+    }
+  })
   ui.instance.show()
   sys.exit(app.exec())

@@ -24,7 +24,11 @@
       </widget>
      </item>
      <item>
-      <widget class="QComboBox" name="typesComboBox"/>
+      <widget class="QComboBox" name="typesComboBox">
+       <property name="toolTip">
+        <string>Select the metadata block type to be edited.</string>
+       </property>
+      </widget>
      </item>
      <item>
       <widget class="QScrollArea" name="metadataScrollArea">

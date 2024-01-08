@@ -52,6 +52,7 @@ class Ui_EditMetadataDialog(object):
     _translate = QtCore.QCoreApplication.translate
     EditMetadataDialog.setWindowTitle(_translate("EditMetadataDialog", "Dialog"))
     self.metadataBlockComboBox.setToolTip(_translate("EditMetadataDialog", "Select the metadata block to be edited."))
+    self.typesComboBox.setToolTip(_translate("EditMetadataDialog", "Select the metadata block type to be edited."))
 
 
 if __name__ == "__main__":

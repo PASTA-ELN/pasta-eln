@@ -12,7 +12,6 @@ from typing import Any
 
 from PySide6 import QtWidgets
 from PySide6.QtWidgets import QDialog, QWidget
-from cloudant import CouchDB
 
 from pasta_eln.GUI.dataverse_ui.dataverse_data_model import DataverseDataModel
 from pasta_eln.GUI.dataverse_ui.dataverse_dialog_base import Ui_DataverseDialogBase
@@ -27,7 +26,7 @@ class DataverseDialog(Ui_DataverseDialogBase):
     """
     return super(DataverseDialog, cls).__new__(cls)
 
-  def __init__(self, db: CouchDB | None = None) -> None:
+  def __init__(self) -> None:
     """
     Initializes the creation type dialog
     """
@@ -40,6 +39,7 @@ class DataverseDialog(Ui_DataverseDialogBase):
     for i in range(1000):
       widget = self.get_upload_widget(f"Example Project {i + 1}")
       self.scrollAreaContentsVerticalLayout.addWidget(widget)
+
   def get_upload_widget(self, project_name: str = 0) -> QWidget:
     uploadWidgetFrame = QtWidgets.QFrame()
     uploadWidgetUi = Ui_UploadWidgetFrame()
@@ -64,41 +64,11 @@ class DataverseDialog(Ui_DataverseDialogBase):
     return uploadWidgetFrame
 
 
-def get_db(db_name: str,
-           db_user: str,
-           db_pass: str,
-           db_url: str) -> CouchDB | None:
-  """
-  Get the db instance for the test purpose
-  Args:
-    db_name (str): Database instance name in CouchDB
-    db_user (str): Database user-name used for CouchDB access.
-    db_pass (str): Database password used for CouchDB access.
-    db_url (str): Database connection URL.
-  Returns (CouchDB | None):
-    Connected DB instance
-  """
-  try:
-    client = CouchDB(user=db_user,
-                     auth_token=db_pass,
-                     url=db_url,
-                     connect=True)
-  except Exception:
-    print('**ERROR dit01: Could not connect with username+password to local server')
-    return
-  if db_name in client.all_dbs():
-    db_instance = client[db_name]
-  else:
-    db_instance = client.create_database(db_name)
-  return db_instance
-
 if __name__ == "__main__":
   import sys
 
   app = QtWidgets.QApplication(sys.argv)
 
-  ui = DataverseDialog(get_db("research", "admin", "MJOBcBzGUWwW", 'http://127.0.0.1:5984'))
+  ui = DataverseDialog()
   ui.instance.show()
   sys.exit(app.exec())
-
-
