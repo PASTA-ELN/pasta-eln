@@ -1,5 +1,6 @@
 """ Misc functions that do not require instances """
-import os, sys, uuid, logging, traceback, json
+import os, uuid, logging, traceback, json, sys
+from typing import Any
 from io import BufferedReader
 from urllib import request
 from pathlib import Path
@@ -236,7 +237,7 @@ def blob_hash(stream:BufferedReader, size:int) -> str:
   return hasher.hexdigest()
 
 
-def updateExtractorList(directory:Path) -> str:
+def updateExtractorList(directory:Path) -> dict[str, Any]:
   """
   Rules:
   - each data-type in its own try-except
@@ -246,7 +247,7 @@ def updateExtractorList(directory:Path) -> str:
   - if want to force to skip top datatypes and use one at bottom: if doctype... -> exception
 
   Args:
-    directory (string): relative directory to scan
+    directory (str): relative directory to scan
 
   Returns:
     bool: success
@@ -306,7 +307,7 @@ def updateExtractorList(directory:Path) -> str:
   configuration['extractors'] = extractorsAll
   with open(Path.home()/'.pastaELN.json','w', encoding='utf-8') as f:
     f.write(json.dumps(configuration, indent=2))
-  return dict2ul(extractorsAll)
+  return extractorsAll
 
 
 def restart() -> None:

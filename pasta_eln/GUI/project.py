@@ -75,7 +75,7 @@ class Project(QWidget):
     Action('Scan',                      self, [Command.SCAN], moreMenu)
     for doctype in self.comm.backend.db.dataLabels:
       if doctype[0]!='x':
-        icon = self.comm.backend.db.dataHierarchy[doctype]['icon']
+        icon = self.comm.backend.db.dataHierarchy[doctype].get('icon','')
         icon = 'fa.asterisk' if icon=='' else icon
         Action(f'table of {doctype}',   self, [Command.SHOW_TABLE, doctype], moreMenu, icon=icon)
     Action('table of unidentified',     self, [Command.SHOW_TABLE, '-'],     moreMenu, icon='fa5.file')
@@ -336,7 +336,7 @@ class Project(QWidget):
       return
     # change item in question
     db.updateBranch(docID=docID, branch=branchIdx, stack=stackNew, path=pathNew, child=childNew)
-    item.setData({})     #update item.text() to new stack
+    item.setData(item.data() | {'hierStack': '/'.join(stackNew+[docID])})
     # change siblings
     for line in siblingsOld:
       db.updateBranch(docID=line['id'], branch=line['value'][3], child=line['value'][0]-1)

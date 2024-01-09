@@ -156,14 +156,15 @@ For testing dialogs put this code into "pasta_eln/test.py":
 ``` Python
 import sys
 from PySide6.QtWidgets import QApplication
-from .dialogForm import Form
+from .GUI.form import Form
 from .backend import Backend
-from .communicate import Communicate
+from .guiCommunicate import Communicate
 
 app = QApplication(sys.argv)
 backend = Backend()
-doc = {'_id': 's-4cf85492d9684601b70e057c278e4ab5', '_rev': '1-3fbe417334a18b29e9f3180847dbae2b'}
-dialog = Form(backend, doc)
+comm = Communicate(backend)
+doc = backend.db.getDoc("m-3a43570c4fd84b1ab81a8863ae058fb0")
+dialog = Form(comm, doc)
 dialog.show()
 sys.exit(app.exec())
 ```

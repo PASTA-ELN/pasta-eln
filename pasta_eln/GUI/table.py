@@ -138,11 +138,13 @@ class Table(QWidget):
         self.actionChangeColums.setVisible(True)
         if self.docType in self.comm.backend.db.dataLabels:
           docLabel = self.comm.backend.db.dataLabels[self.docType]
-      if not self.projID:
-        docLabel = f'All {docLabel}'
+      if self.projID:
+        self.headline.setText(docLabel)
+        self.showHidden.setText(f'Show/hide hidden {docLabel.lower()}')
+      else:
         self.comm.changeSidebar.emit('')  #close the project in sidebar
-      self.headline.setText(docLabel)
-      self.showHidden.setText(f'Show/hide hidden {docLabel.lower()}')
+        self.headline.setText(f'All {docLabel}')
+        self.showHidden.setText(f'Show/hide all hidden {docLabel.lower()}')
       self.filterHeader = self.comm.backend.db.getColumnNames()[self.docType].split(',')
       self.filterHeader = [i[1:] if i[0]=='-'   else i for i in self.filterHeader]  #change -something to something
       self.filterHeader = [i[2:] if i[:2]=='#_' else i for i in self.filterHeader]  #change #_something to something
@@ -257,7 +259,7 @@ class Table(QWidget):
         intersectionDict['_ids'] = docIDs
         self.comm.formDoc.emit(intersectionDict)
         self.comm.changeDetails.emit('redraw')
-        self.comm.changeTable.emit(self.docType, '')
+        self.comm.changeTable.emit(self.docType, self.projID)
     elif command[0] is Command.SEQUENTIAL_EDIT:
       self.stopSequentialEdit = False
       for row in range(self.models[-1].rowCount()):
@@ -266,7 +268,7 @@ class Table(QWidget):
           self.comm.formDoc.emit(self.comm.backend.db.getDoc(docID))
         if self.stopSequentialEdit:
           break
-      self.comm.changeTable.emit(self.docType, '')
+      self.comm.changeTable.emit(self.docType, self.projID)
     elif command[0] is Command.DELETE:
       ret = None
       for row in range(self.models[-1].rowCount()):
@@ -290,6 +292,8 @@ class Table(QWidget):
       dialog.exec()
     elif command[0] is Command.EXPORT:
       fileName = QFileDialog.getSaveFileName(self,'Export to ..',str(Path.home()),'*.csv')[0]
+      if not fileName.endswith('.csv'):
+        fileName += '.csv'
       with open(fileName,'w', encoding='utf-8') as fOut:
         header = [f'"{i}"' for i in self.filterHeader]
         fOut.write(','.join(header)+'\n')
@@ -318,9 +322,11 @@ class Table(QWidget):
       self.showAll = not self.showAll
       self.change('','')  # redraw table
     elif command[0] is Command.RERUN_EXTRACTORS:
+      redraw = False
       for row in range(self.models[-1].rowCount()):
         item, docID = self.itemFromRow(row)
         if item.checkState() == Qt.CheckState.Checked:
+          redraw = True
           doc = self.comm.backend.db.getDoc(docID)
           oldDocType = doc['-type']
           if doc['-branch'][0]['path'].startswith('http'):
@@ -337,8 +343,9 @@ class Table(QWidget):
             del doc['_rev']
             doc['-name'] = doc['-branch'][0]['path']
             self.comm.backend.addData('/'.join(doc['-type']), doc, doc['-branch'][0]['stack'])
-      self.change('','')  # redraw table
-      self.comm.changeDetails.emit('redraw')
+      if redraw:
+        self.change('','')  # redraw table
+        self.comm.changeDetails.emit('redraw')
     elif command[0] is Command.DELETE_FILTER: # Remove filter from list of filters
       row = command[1]
       #print('Delete filter row', row)

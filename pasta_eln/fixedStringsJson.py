@@ -92,10 +92,10 @@ configurationGUI: dict[str, Any] = {
     "theme": ["Theme",
               "light_blue",
               ["dark_amber", "dark_blue", "dark_cyan", "dark_lightgreen", "dark_pink", "dark_purple", "dark_red", \
-               "dark_teal", "dark_yellow", "light_amber", "light_blue", "light_cyan", "light_cyan_500",
-               "light_lightgreen", \
+               "dark_teal", "dark_yellow", "light_amber", "light_blue", "light_cyan", "light_lightgreen", \
                "light_pink", "light_purple", "light_red", "light_teal", "light_yellow", "none"]],
     "loggingLevel": ["Logging level (more->less)", "INFO", ["DEBUG", "INFO", "WARNING", "ERROR"]],
+    "autosave":     ["Autosave entries in form", "Yes", ["Yes", "No"]]
   },
   "dimensions": {
     "sidebarWidth": ["Sidebar width", 280, [220, 280, 340]],
@@ -188,18 +188,31 @@ This step usually takes up to 1min, so please be patient.
 """
 
 shortcuts = """
-Ctrl+Space: List projects
-Ctrl+M: List measurements
-Ctrl+S: List samples
-Ctrl+P: List procedures
-Ctrl+I: List instruments
-Ctrl+T: List tags
-Ctrl+U: List unidentified
-F2: Test file extraction
-F5: Synchronize
-F9: Restart
-Ctrl+?: Verify database integrity
-Ctrl+0: Configuration
+### Shortcuts:
+
+**Ctrl+Space**: List projects
+
+**Ctrl+M**: List measurements
+
+**Ctrl+S**: List samples
+
+**Ctrl+P**: List procedures
+
+**Ctrl+I**: List instruments
+
+**Ctrl+T**: List tags
+
+**Ctrl+U**: List unidentified
+
+**F2**: Test file extraction
+
+**F5**: Synchronize
+
+**F9**: Restart
+
+**Ctrl+?**: Verify database integrity
+
+**Ctrl+0**: Configuration
 """
 
 tableHeaderHelp = """

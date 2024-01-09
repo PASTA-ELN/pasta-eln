@@ -32,7 +32,7 @@ class Configuration(QDialog):
     tabGUI = ConfigurationGUI(self.comm, self.finished)
     tabW.addTab(tabGUI, 'Appearance')
     tabGUI = ConfigurationAuthors(self.comm, self.finished)
-    tabW.addTab(tabGUI, 'Authors')
+    tabW.addTab(tabGUI, 'Author')
 
     # Setup / Troubleshoot Pasta: main widget
     tabSetup = ConfigurationSetup(self.comm, self.finished)
