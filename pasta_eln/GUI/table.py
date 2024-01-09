@@ -259,7 +259,7 @@ class Table(QWidget):
         intersectionDict['_ids'] = docIDs
         self.comm.formDoc.emit(intersectionDict)
         self.comm.changeDetails.emit('redraw')
-        self.comm.changeTable.emit(self.docType, '')
+        self.comm.changeTable.emit(self.docType, self.projID)
     elif command[0] is Command.SEQUENTIAL_EDIT:
       self.stopSequentialEdit = False
       for row in range(self.models[-1].rowCount()):
@@ -268,7 +268,7 @@ class Table(QWidget):
           self.comm.formDoc.emit(self.comm.backend.db.getDoc(docID))
         if self.stopSequentialEdit:
           break
-      self.comm.changeTable.emit(self.docType, '')
+      self.comm.changeTable.emit(self.docType, self.projID)
     elif command[0] is Command.DELETE:
       ret = None
       for row in range(self.models[-1].rowCount()):
