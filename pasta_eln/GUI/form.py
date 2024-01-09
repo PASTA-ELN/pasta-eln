@@ -106,7 +106,7 @@ class Form(QDialog):
           getattr(self, 'key_-name').setValidator(QRegularExpressionValidator("[\\w\\ .-]+"))
           formL.addRow('Name', getattr(self, 'key_-name'))
         elif key == '-tags':
-          tagsBarMainW, tagsBarMainL = widgetAndLayout('H', spacing='s')
+          self.tagsBarMainW, tagsBarMainL = widgetAndLayout('H', spacing='s')
           _, self.tagsBarSubL = widgetAndLayout('H', tagsBarMainL, spacing='s', right='m') #part which shows all the tags
           self.otherChoices = QComboBox()   #part/combobox that allow user to select
           self.otherChoices.setEditable(True)
@@ -121,7 +121,7 @@ class Form(QDialog):
           self.gradeChoices.addItems(['','\u2605','\u2605'*2,'\u2605'*3,'\u2605'*4,'\u2605'*5])
           self.gradeChoices.currentTextChanged.connect(self.addTag)
           tagsBarMainL.addWidget(self.gradeChoices)
-          formL.addRow(QLabel('Tags:'), tagsBarMainW)
+          formL.addRow(QLabel('Tags:'), self.tagsBarMainW)
           self.updateTagsBar()
           self.otherChoices.currentIndexChanged.connect(self.addTag) #connect to slot only after all painting is done
         elif key in ['comment','content']:
@@ -291,7 +291,7 @@ class Form(QDialog):
     elif command[0] is Command.FOCUS_AREA:
       unknownWidget = []
       idx = 0 if self.tabW.count()==0 else self.tabW.currentIndex()
-      if self.allHidden:
+      if self.allHidden:  #hide the special buttons and show general form
         getattr(self, f'textShow_{command[1]}').hide()
         getattr(self, f'buttonBarW_{command[1]}').hide()
         for i in range(self.formsL[idx].count()):
@@ -300,13 +300,17 @@ class Form(QDialog):
             widget.show()
           else:
             unknownWidget.append(i)
+        self.tagsBarMainW.show()
         if command[1]=='content' and len(unknownWidget)==5:  #show / hide label and right-side of non-content and non-comment
           self.formsL[idx].itemAt(unknownWidget[0]).widget().show()
           self.formsL[idx].itemAt(unknownWidget[1]).widget().show()
         if command[1]=='comment' and len(unknownWidget)==5:
           self.formsL[idx].itemAt(unknownWidget[2]).widget().show()
           self.formsL[idx].itemAt(unknownWidget[3]).widget().show()
-      else:
+        if self.keyValueListL.count() == 0:
+          self.keyValueLabel.hide()
+          self.keyValueListW.hide()
+      else:  #show buttons to allow for easy markdown edit; hide general form
         getattr(self, f'textShow_{command[1]}').show()
         getattr(self, f'buttonBarW_{command[1]}').show()
         for i in range(self.formsL[idx].count()):
@@ -315,6 +319,7 @@ class Form(QDialog):
             widget.hide()
           else:
             unknownWidget.append(i)
+        self.tagsBarMainW.hide()
         if command[1]=='content' and len(unknownWidget)==5:
           self.formsL[idx].itemAt(unknownWidget[0]).widget().hide()
           self.formsL[idx].itemAt(unknownWidget[1]).widget().hide()
