@@ -84,20 +84,23 @@ class Form(QDialog):
       self.doc['-tags'] = []
     if len(dataHierarchyNode)>1:
       self.tabW = QTabWidget(self)
+      self.tabW.tabBarClicked.connect(self.changeTabs)
       splitter.addWidget(self.tabW)
     else:
       self.tabW = None
+
+    # create forms by looping
     self.formsL = []
     for group in dataHierarchyNode:
       if len(dataHierarchyNode)==1:
         _, formL = widgetAndLayout('Form', splitter, 's')
       else:
-        formW, formL = widgetAndLayout('Form', None, 's')
+        formW, formL = widgetAndLayout('Form', None, 's', top='m')
         self.tabW.addTab(formW, group if group!='default' else 'Home')
       self.formsL.append(formL)
       for key in [i['name'] for i in dataHierarchyNode[group]]:
         value = self.doc.get(key, '')
-        # print("Key:value in form | "+key+':'+str(value))
+
         # case list
         if key == '-name' and '_ids' not in self.doc:
           setattr(self, 'key_-name', QLineEdit(self.doc['-name']))
@@ -216,8 +219,8 @@ class Form(QDialog):
       self.visibilityText = QLabel('' if visibilityIcon else 'HIDDEN     \U0001F441')
       buttonLineL.addWidget(self.visibilityText)
     buttonLineL.addStretch(1)
-    IconButton('ri.menu-add-fill', self, [Command.FORM_ADD_KV],   buttonLineL, 'Add key-value pair',
-               style='border-width:1')
+    self.btnAddKWPairs = IconButton('ri.menu-add-fill', self, [Command.FORM_ADD_KV],   buttonLineL,
+                                    'Add key-value pair', style='border-width:1')
     IconButton('fa5s.poll-h',      self, [Command.FORM_SHOW_DOC], buttonLineL, 'Show all information',
                style='border-width:1')
     TextButton('Save',             self, [Command.FORM_SAVE],     buttonLineL, 'Save changes')
@@ -527,7 +530,6 @@ class Form(QDialog):
     self.updateTagsBar()
     return
 
-
   def updateTagsBar(self) -> None:
     """
     After creation, tag removal, tag addition: update the information on screen
@@ -549,6 +551,20 @@ class Form(QDialog):
     newChoicesList = ['']+list(tagsSet.difference([i for i in self.doc['-tags'] if i[0]!='_']))
     self.otherChoices.clear()
     self.otherChoices.addItems(newChoicesList)
+    return
+
+
+  def changeTabs(self, idx:int) -> None:
+    """
+    Clicked on tabs to change to different one
+
+    Args:
+      idx (int): index of tab that was clicked
+    """
+    if idx == 0:
+      self.btnAddKWPairs.show()
+    else:
+      self.btnAddKWPairs.hide()
     return
 
 
