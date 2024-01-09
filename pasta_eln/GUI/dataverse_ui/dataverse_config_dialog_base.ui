@@ -105,6 +105,9 @@
          <property name="placeholderText">
           <string>Enter the REST API Token, e.g. c6527048-5bdc-48b0-a1d5-ed1b62c4513b</string>
          </property>
+         <property name="clearButtonEnabled">
+          <bool>true</bool>
+         </property>
         </widget>
        </item>
        <item>

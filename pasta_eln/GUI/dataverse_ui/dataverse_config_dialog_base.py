@@ -44,6 +44,7 @@ class Ui_DataverseConfigDialogBase(object):
     self.apiTokenLabel.setObjectName("apiTokenLabel")
     self.apiTokenHorizontalLayout.addWidget(self.apiTokenLabel)
     self.apiTokenLineEdit = QtWidgets.QLineEdit(parent=DataverseConfigDialogBase)
+    self.apiTokenLineEdit.setClearButtonEnabled(True)
     self.apiTokenLineEdit.setObjectName("apiTokenLineEdit")
     self.apiTokenHorizontalLayout.addWidget(self.apiTokenLineEdit)
     self.apitTokenVerifyPushButton = QtWidgets.QPushButton(parent=DataverseConfigDialogBase)
