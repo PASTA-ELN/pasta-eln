@@ -82,12 +82,11 @@ class Form(QDialog):
     # create tabs or not: depending on the number of groups
     if '-tags' not in self.doc:
       self.doc['-tags'] = []
+    self.tabW = QTabWidget() #has count=0 if not connected
     if len(dataHierarchyNode)>1:
-      self.tabW = QTabWidget(self)
+      self.tabW.setParent(self)
       self.tabW.tabBarClicked.connect(self.changeTabs)
       splitter.addWidget(self.tabW)
-    else:
-      self.tabW = None
 
     # create forms by looping
     self.formsL = []
@@ -291,7 +290,7 @@ class Form(QDialog):
         getattr(self, f'textEdit_{command[2]}').insertPlainText('#' * int(command[1][-1]) +' Heading\n')
     elif command[0] is Command.FOCUS_AREA:
       unknownWidget = []
-      idx = 0 if self.tabW is None else self.tabW.currentIndex()
+      idx = 0 if self.tabW.count()==0 else self.tabW.currentIndex()
       if self.allHidden:
         getattr(self, f'textShow_{command[1]}').hide()
         getattr(self, f'buttonBarW_{command[1]}').hide()
