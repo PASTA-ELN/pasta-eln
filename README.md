@@ -30,9 +30,8 @@
   - C:\Users\...\anaconda3\envs\...\Scripts>
   - C:\Users\...\anaconda3\envs\...\Lib\site-packages\pasta_eln
 
-### Restart windows
-- (possibly) uninstall python x2
-- uninstall couchdb
+### Reinstall /retry windows installation
+- uninstall couchdb in Settings
 - remove directories
   - **C:\Program Files\Apache CouchDB**
   - C:\Users\....\AppData\Local\Programs\Python [If deleted python]
@@ -52,7 +51,7 @@
 - Default
   - /usr/local/lib/python3.10/dist-packages/pasta_eln
 
-### Restart Linux
+### Restart installation on linux / ubuntu
 ``` bash
 rm .pastaELN.json pastaELN.log
 rm -rf pastaELN/PastasExampleProject pastaELN/StandardOperatingProcedures
@@ -61,9 +60,14 @@ sudo snap remove couchdb
 ```
 
 ---
+## Test couchDB running
+- CouchDB at HTTP! [http://127.0.0.1:5984/_utils/#login](http://127.0.0.1:5984/_utils/#login)
+- curl -f http://127.0.0.1:5984/
+- curl -X POST -H "Content-Type: application/json; charset=utf-8" -d '{"name": "*+*", "password": "*+*"}' http://127.0.0.1:5984/_session
+
 
 ## Notes on all systems
-### Run Pasta-ELN directly from commandline without installation
+Run Pasta-ELN directly from commandline without installation
 - python3 -m pasta_eln.gui
 - python3 -m pasta_eln.installationTools
 - python3 -m pasta_eln.Tests.3Projects
@@ -72,51 +76,6 @@ sudo snap remove couchdb
 ---
 
 ## How to write code
-### How to create a new version
-1. Lint
-1. Type checking: ignore extractors to keep them simple, some mistake might still remain
-2. test documentation building. The documentation can be viewed with "firefox docs/build/html/index.html"
-3. run test
-4. ensure extractors updated
-5. do normal commit
-6. create a new version:
-``` bash
-pylint pasta_eln
-mypy pasta_eln/*.py
-make -C docs html
-pytest -s Tests
-diff -q ../Extractors/ pasta_eln/Extractors/ |grep differ
-
-git commit -a -m 'linting and testing'
-
-./commit.py "Minimal viable product" 1
-```
-   **THIS STEP IS NECESSARY FOR ALL GITHUB-Actions TO WORK**
-
-### Create git-commit-hook
-To automatically run many tests, create a file '.git/hooks/pre-commit' and make it executable
-``` bash
-#!/bin/sh
-#
-# Test if extractors updated
-if [ "$(diff -q ../Extractors/ pasta_eln/Extractors/ |grep differ |grep extractor)" ]; then
-  echo "Differences in EXTRACTOR EXIST"
-  exit 1
-else
-  echo "All is correct: extractors match"
-fi
-# Run pylint
-exec pylint pasta_eln
-# Run mypy
-exec mypy pasta_eln/*.py
-# Test document creation
-exec make -C docs html
-# Run pytest
-exec pytest -s tests
-#
-echo 'Pre-commit-tests are finished'
-```
-
 ### How to write small python programs that do things
 #### Backend
 ``` Python
@@ -129,7 +88,7 @@ print(pasta.outputHierarchy())
 ```
 
 #### Frontend
-For testing widgets put this code into "pasta_eln/test.py":
+For testing WIDGETS put this code into "pasta_eln/test.py":
 ``` Python
 from PySide6.QtWidgets import QApplication, QMainWindow
 from .backend import Backend
@@ -152,7 +111,7 @@ app.exec()
 ```
 and execute "python -m pasta_eln.test"
 
-For testing dialogs put this code into "pasta_eln/test.py":
+For testing DIALOGS put this code into "pasta_eln/test.py":
 ``` Python
 import sys
 from PySide6.QtWidgets import QApplication
@@ -173,49 +132,3 @@ and execute "python -m pasta_eln.test"
 #### General notes
 - Find qt-awesome icons: qta-browser
 - print works great in frondend and backend
-- magic order of creating widgets and layouts
-  1. define widget
-  2. define layout and immediately assign widget
-  3. define and add immediately subwidgets to layout
-
-
-#### HOW TO DIFF Version-1 and Version-2
-**COMPARE BOTH DIRECTIONS**
-at .. pasta-eln$ and remember the changes required to Version2 in first change. If nothing to remember, do not execute 2nd command
-``` bash
-kdiff pasta_eln/miscTools.py ../Python/miscTools.py
-kdiff ../Python/miscTools.py pasta_eln/miscTools.py
-kdiff pasta_eln/inputOutput.py ../Python/inputOutput.py
-kdiff ../Python/inputOutput.py pasta_eln/inputOutput.py
-kdiff pasta_eln/database.py ../Python/database.py
-kdiff ../Python/database.py pasta_eln/database.py
-kdiff pasta_eln/backend.py ../Python/backend.py
-kdiff ../Python/backend.py pasta_eln/backend.py
-```
-Desired Differences:
-- miscTools:
-  - Version1 has colors at the beginning and few additional functions at the end
-- inputOutput:
-  - NO differences
-- database:
-  - imports are different
-  - __init__ arguments are different
-  - Version1 has testUser
-  - colorDefinition is small-case in one and upper-case in the other
-- backend:
-  - imports and base-class different
-
-
-Differences don't matter:
-- subdirectories
-- __init__.py
--
-
-
-
----
-
-## Test couchDB running
-- CouchDB at HTTP! [http://127.0.0.1:5984/_utils/#login](http://127.0.0.1:5984/_utils/#login)
-- curl -f http://127.0.0.1:5984/
-- curl -X POST -H "Content-Type: application/json; charset=utf-8" -d '{"name": "*+*", "password": "*+*"}' http://127.0.0.1:5984/_session

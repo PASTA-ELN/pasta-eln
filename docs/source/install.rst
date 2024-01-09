@@ -6,11 +6,45 @@ Installation and Troubleshoot Instructions
 WINDOWS
 =======
 
-Requirement: install python
----------------------------
+Install python via Anaconda and then PASTA-ELN
+----------------------------------------------
 
-If you do not have Python installed, we recommend the default python installation without conda environments.
+If you do not have Python installed, we recommend using Anaconda.
+1. Go to https://www.anaconda.com/download
+2. Download installer and run install. Accept all defaults
+3. Create environment, e.g. PASTA-ELN
+4. Open environment in command-prompt
+5. "pip install pasta-eln"
+6. "python -m pasta_eln.gui"
 
+
+Manual installation
+^^^^^^^^^^^^^^^^^^^
+
+If automatic installation fails
+1. Manually install couchdb https://docs.couchdb.org/en/stable/install/windows.html
+   During the setup use the username "admin" and remember to use a long password
+3. "pip install pasta-eln"
+4. Make sure that the configuration file is not there: Users\...\.pastaELN.json
+5. "python -m pasta_eln.installationTools install" and enter username and password
+6. "python -m pasta_eln.gui" and go to configuration-setup to test the installation
+   After the restart of the software, PASTA-ELN should be fully operational.
+
+CouchDB de-installation
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Sometimes, the couchdb installation can be quite persistent when removing
+1. Go to settings are remove CouchDB
+2. Go through the default places are remove CouchDB
+   - C:\Program Files\Apache CouchDB
+   - C:\Program Files 64\Apache CouchDB
+
+
+
+Install python via default python and then PASTA-ELN (not recommended)
+----------------------------------------------------------------------
+
+If you choose to install the default Python without Conda.
 1. Go to https://www.python.org/downloads/windows/
 2. Download "Windows installer" for your architecture, likely 64-bit.
 3. In the installer, click "Add python.exe to PATH" at the bottom of the window.
@@ -26,6 +60,7 @@ Afterwards, we recommend that you install some nice-to-have packages and test th
 
     pip install matplotlib pandas spyder
     python.exe -c "import numpy as np;x = np.linspace(0,2*np.pi);y = np.sin(x);import matplotlib.pyplot as plt;plt.plot(x,y);plt.show()"
+
 
 
 
