@@ -23,13 +23,13 @@ Manual installation
 
 If automatic installation fails
 1. Manually install couchdb https://docs.couchdb.org/en/stable/install/windows.html
-   - Version 3.3.3 was successfully tested
-   - During the setup use the username "admin" and remember to use a long password
+    - Version 3.3.3 was successfully tested
+    - During the setup use the username "admin" and remember to use a long password
 3. "pip install pasta-eln"
 4. Make sure that the configuration file is not present: Users\...\.pastaELN.json
 5. "python -m pasta_eln.installationTools install" and enter username and password
 6. "python -m pasta_eln.gui" and go to configuration-setup to test the installation
-   After the restart of the software, PASTA-ELN should be fully operational.
+    After the restart of the software, PASTA-ELN should be fully operational.
 
 ---
 
@@ -47,8 +47,8 @@ CouchDB uninstallation
 Sometimes, the couchdb installation can be quite persistent when removing
 1. Go to settings are remove CouchDB
 2. Go through the default places are remove CouchDB
-   - C:\Program Files\Apache CouchDB
-   - C:\Program Files 64\Apache CouchDB
+    - C:\Program Files\Apache CouchDB
+    - C:\Program Files 64\Apache CouchDB
 
 
 
