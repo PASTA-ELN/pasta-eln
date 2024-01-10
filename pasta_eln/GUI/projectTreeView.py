@@ -159,7 +159,9 @@ class TreeView(QTreeView):
     docID = item.data()['hierStack'].split('/')[-1]
     doc   = self.comm.backend.db.getDoc(docID)
     self.comm.formDoc.emit(doc)
-    item  = self.model().itemFromIndex(self.currentIndex())
+    docNew = self.comm.backend.db.getDoc(docID)
+    item.setText(docNew['-name'])
+    item.setData(item.data() | {"docType":docNew['-type'], "gui":docNew['-gui']})
     item.emitDataChanged()  #force redraw (resizing and repainting) of this item only
     return
 
