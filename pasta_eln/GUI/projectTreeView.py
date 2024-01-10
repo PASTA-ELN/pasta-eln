@@ -32,7 +32,8 @@ class TreeView(QTreeView):
     Args:
       p (QPoint): point of clicking
     """
-    folder = self.currentIndex().data().split('/')[-1][0]=='x'
+    item = self.model().itemFromIndex(self.currentIndex())
+    folder = item.data()['hierStack'].split('/')[-1][0]=='x'
     context = QMenu(self)
     if folder:
       Action('Add child folder',                   self, [Command.ADD_CHILD],      context)
