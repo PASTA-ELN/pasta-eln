@@ -10,6 +10,7 @@ Three (fictitious) user stories highlight different methods of using PASTA-ELN:
 - Andrew plans his research first and then executes the tasks. :ref:`Read on how you can follow this path.. <Planning based research>`.
 
 - Brenda has lots of data from her previous research in different folders and wants to integrate that data conveniently. :ref:`Read on how you can follow this path.. <Importing previous data>`.
+
 - Claire goes to many conferences and meetings and wants to structure her notes. :ref:`Read on how you can follow this path.. <Recording meeting notes>`.
 
 PASTA-ELN uses a local-first approach to store all data and metadata on user's storage devices and synchronize with a server upon user request. Thus, the data is always accessible through conventional software and its security and confidentiality are ensured. In addition, every researcher can fully adapt the metadata definitions to their personal taste and create an arbitrary folder structure in accordance with their typical workflows and research goals.
