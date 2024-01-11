@@ -48,7 +48,7 @@ class Form(QDialog):
     splitter = QSplitter(Qt.Horizontal)
     splitter.setHandleWidth(10)
     splitter.setContentsMargins(0,0,0,0)
-    mainL.addWidget(splitter)
+    mainL.addWidget(splitter, stretch=2)
 
     # image
     if 'image' in self.doc:
