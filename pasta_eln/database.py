@@ -422,8 +422,7 @@ class Database:
           oldJsonContent = json.load(fIn)
           oldDocID = oldJsonContent['_id']
       if path is not None and (self.basePath/path).exists() and docID!=oldDocID:
-        print(f'**ERROR** Target folder already exist: {path}. Try to create a new path name')
-        logging.error('Target folder already exist: %s. Try to create a new path name', path)
+        logging.info('Target folder already exist: %s. I will try to create a new path name', path)
       while path is not None and (self.basePath/path).exists() and docID!=oldDocID:
         if re.search(r"_\d+$", path) is None:
           path += '_1'

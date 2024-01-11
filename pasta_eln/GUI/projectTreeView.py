@@ -70,6 +70,7 @@ class TreeView(QTreeView):
       child = QStandardItem('/'.join(hierStack+[docID]))
       child.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled) # type: ignore
       item.appendRow(child)
+      self.comm.changeProject.emit('','') #refresh project
       #appendRow is not 100% correct:
       # - better: insertRow before the first non-folder, depending on the child number
       #   -> get highest non 9999 childNumber
@@ -88,6 +89,7 @@ class TreeView(QTreeView):
       child = QStandardItem('/'.join(hierStack+[docID]))
       child.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled) # type: ignore
       parent.appendRow(child)
+      self.comm.changeProject.emit('','') #refresh project
       #++ TODO appendRow is not 100% correct: see above
     elif command[0] is Command.DELETE:
       ret = QMessageBox.critical(self, 'Warning', 'Are you sure you want to delete this data?',\
