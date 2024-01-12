@@ -433,37 +433,18 @@ class Form(QDialog):
       # ---- if docType changed: save; no further save to db required ----
       if hasattr(self, 'docTypeComboBox') and self.docTypeComboBox.currentData() != '':
         self.doc['-type'] = [self.docTypeComboBox.currentData()]
-        if '_ids' in self.doc: #group update
-          self.doc = {k:v for k,v in self.doc.items() if v} # filter out empty items
-          for docID in self.doc.pop('_ids'):
-            doc = self.db.getDoc(docID)
-            doc.update( self.doc )
-            self.db.remove(doc['_id'])
-            del doc['_id']
-            del doc['_rev']
-            doc = fillDocBeforeCreate(doc, self.docTypeComboBox.currentData())
-            self.db.saveDoc(doc)
-        else:                  #single or sequential update
-          self.db.remove(self.doc['_id'])
-          del self.doc['_id']
-          del self.doc['_rev']
-          self.doc = fillDocBeforeCreate(self.doc, self.docTypeComboBox.currentData())
-          self.db.saveDoc(self.doc)
-      # ---- all other changes ----
-      else:
-        if '_ids' in self.doc: #group update
-          if '-name' in self.doc:
-            del self.doc['-name']
-          ids = self.doc.pop('_ids')
-          self.doc = {i:j for i,j in self.doc.items() if j!=''}
-          for docID in ids:
-            doc = self.db.getDoc(docID)
-            doc.update( self.doc )
-            self.comm.backend.editData(doc)
-        elif '_id' in self.doc:                                   #default update on item
-          self.comm.backend.editData(self.doc)
-        else:                                                     #create new dataset
-          self.comm.backend.addData(self.doc['-type'][0], copy.deepcopy(self.doc), newProjID)
+      if '_ids' in self.doc:                              # group update
+        if '-name' in self.doc:
+          del self.doc['-name']
+        self.doc = {k:v for k,v in self.doc.items() if v} # filter out empty items
+        for docID in self.doc.pop('_ids'):
+          doc = self.db.getDoc(docID)
+          doc.update( self.doc )
+          self.comm.backend.editData(doc)
+      elif '_id' in self.doc:                             # default update on item
+        self.comm.backend.editData(self.doc)
+      else:                                               # create new dataset
+        self.comm.backend.addData(self.doc['-type'][0], copy.deepcopy(self.doc), newProjID)
       #!!! NO updates / redraw here since one does not know from where form came
       # e.g. sequential edit cannot have redraw here
       if command[0] is Command.FORM_SAVE_NEXT:
