@@ -7,6 +7,7 @@
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import logging
+import time
 from typing import Any
 
 from PySide6 import QtWidgets
@@ -34,8 +35,9 @@ class UIThreadTests(Ui_UIThreadTestsDialog):
     self.create_update_thread(self.progressPushButton2, self.progressBar2, self.label2)
     self.create_update_thread(self.progressPushButton3, self.progressBar3, self.label3)
     self.create_update_thread(self.progressPushButton4, self.progressBar4, self.label4)
-    self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).clicked.connect(lambda: [i.quit() for i in self.worker_threads])
-    self.buttonBox.button(QtWidgets.QDialogButtonBox.Cancel).clicked.connect(lambda: [i.quit() for i in self.worker_threads])
+    self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).clicked.connect(lambda: self.finalize_threads())
+    self.buttonBox.button(QtWidgets.QDialogButtonBox.Cancel).clicked.connect(lambda: self.finalize_threads())
+    self.cancelPushButton.clicked.connect(lambda: [i.cancel() for i in self.workers])
 
   def create_update_thread(self,
                            progressBarPushButton: QtWidgets.QPushButton,
@@ -57,6 +59,11 @@ class UIThreadTests(Ui_UIThreadTestsDialog):
   def update_clicks(self):
     self.clicks += 1
     self.clickLabel.setText(f"Clicks: {self.clicks}")
+
+  def finalize_threads(self):
+    [i.cancel() for i in self.workers]
+    time.sleep(0.1)
+    [i.quit() for i in self.worker_threads]
 
 
 if __name__ == "__main__":

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>559</width>
-    <height>482</height>
+    <width>820</width>
+    <height>619</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -124,6 +124,13 @@
       <widget class="QPushButton" name="progressPushButton1">
        <property name="text">
         <string>doProgress1</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="cancelPushButton">
+       <property name="text">
+        <string>Cancel all</string>
        </property>
       </widget>
      </item>

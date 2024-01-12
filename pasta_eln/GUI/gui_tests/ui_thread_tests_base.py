@@ -12,7 +12,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 class Ui_UIThreadTestsDialog(object):
   def setupUi(self, UIThreadTestsDialog):
     UIThreadTestsDialog.setObjectName("UIThreadTestsDialog")
-    UIThreadTestsDialog.resize(559, 482)
+    UIThreadTestsDialog.resize(820, 619)
     self.verticalLayout_2 = QtWidgets.QVBoxLayout(UIThreadTestsDialog)
     self.verticalLayout_2.setObjectName("verticalLayout_2")
     self.mainVerticalLayout = QtWidgets.QVBoxLayout()
@@ -69,6 +69,9 @@ class Ui_UIThreadTestsDialog(object):
     self.progressPushButton1 = QtWidgets.QPushButton(parent=UIThreadTestsDialog)
     self.progressPushButton1.setObjectName("progressPushButton1")
     self.mainVerticalLayout.addWidget(self.progressPushButton1)
+    self.cancelPushButton = QtWidgets.QPushButton(parent=UIThreadTestsDialog)
+    self.cancelPushButton.setObjectName("cancelPushButton")
+    self.mainVerticalLayout.addWidget(self.cancelPushButton)
     self.verticalLayout_2.addLayout(self.mainVerticalLayout)
     self.buttonBox = QtWidgets.QDialogButtonBox(parent=UIThreadTestsDialog)
     self.buttonBox.setOrientation(QtCore.Qt.Orientation.Horizontal)
@@ -90,6 +93,7 @@ class Ui_UIThreadTestsDialog(object):
     self.progressPushButton3.setText(_translate("UIThreadTestsDialog", "doProgress3"))
     self.progressPushButton2.setText(_translate("UIThreadTestsDialog", "doProgress2"))
     self.progressPushButton1.setText(_translate("UIThreadTestsDialog", "doProgress1"))
+    self.cancelPushButton.setText(_translate("UIThreadTestsDialog", "Cancel all"))
 
 
 if __name__ == "__main__":

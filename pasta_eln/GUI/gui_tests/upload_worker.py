@@ -12,19 +12,27 @@ from PySide6.QtCore import QObject, Signal
 
 
 class UploadWorker(QObject):
+    cancelled: bool = False
     progressChanged = Signal(int)
     statusChanged = Signal(str)
     finished = Signal()
     def __init__(self):
         super().__init__()
+    def cancel(self):
+        self.cancelled = True
+
     def work(self):
+        if self.cancelled:
+            return
         self.progressChanged.emit(0)
         self.statusChanged.emit("Queued...")
         self.statusChanged.emit("Uploading...")
         for progressbar_value in range(101):
             self.progressChanged.emit(progressbar_value)
+            if self.cancelled:
+                break
             time.sleep(0.07)
         self.finished.emit()
-        self.statusChanged.emit("Finished...")
+        self.statusChanged.emit("Finished..." if not self.cancelled else "Cancelled...")
         
     
