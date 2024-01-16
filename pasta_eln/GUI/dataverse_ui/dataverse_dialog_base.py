@@ -12,7 +12,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 class Ui_DataverseDialogBase(object):
   def setupUi(self, DataverseDialogBase):
     DataverseDialogBase.setObjectName("DataverseDialogBase")
-    DataverseDialogBase.resize(1219, 788)
+    DataverseDialogBase.resize(1261, 782)
     self.gridLayout = QtWidgets.QGridLayout(DataverseDialogBase)
     self.gridLayout.setObjectName("gridLayout")
     self.buttonBox = QtWidgets.QDialogButtonBox(parent=DataverseDialogBase)
@@ -30,7 +30,7 @@ class Ui_DataverseDialogBase(object):
     self.projectsScrollArea.setWidgetResizable(True)
     self.projectsScrollArea.setObjectName("projectsScrollArea")
     self.projectScrollAreaWidgetContents = QtWidgets.QWidget()
-    self.projectScrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 1193, 344))
+    self.projectScrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 1235, 336))
     self.projectScrollAreaWidgetContents.setObjectName("projectScrollAreaWidgetContents")
     self.verticalLayout_3 = QtWidgets.QVBoxLayout(self.projectScrollAreaWidgetContents)
     self.verticalLayout_3.setObjectName("verticalLayout_3")
@@ -87,7 +87,7 @@ class Ui_DataverseDialogBase(object):
     self.uploadItemsScrollArea.setWidgetResizable(True)
     self.uploadItemsScrollArea.setObjectName("uploadItemsScrollArea")
     self.scrollAreaWidgetContents = QtWidgets.QWidget()
-    self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 1193, 311))
+    self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 1235, 302))
     self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
     self.verticalLayout = QtWidgets.QVBoxLayout(self.scrollAreaWidgetContents)
     self.verticalLayout.setObjectName("verticalLayout")
@@ -116,6 +116,8 @@ class Ui_DataverseDialogBase(object):
     self.mainVerticalLayout.addLayout(self.scrollAreaVerticalLayout)
     self.mainHorizontalLayout.addLayout(self.mainVerticalLayout)
     self.gridLayout.addLayout(self.mainHorizontalLayout, 0, 0, 1, 1)
+    spacerItem2 = QtWidgets.QSpacerItem(20, 5, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Fixed)
+    self.gridLayout.addItem(spacerItem2, 1, 0, 1, 1)
 
     self.retranslateUi(DataverseDialogBase)
     self.buttonBox.accepted.connect(DataverseDialogBase.accept) # type: ignore
