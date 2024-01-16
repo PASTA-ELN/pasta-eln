@@ -47,6 +47,9 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
     self.typesComboBox.currentTextChanged.connect(self.change_metadata_type)
     self.metadataBlockComboBox.addItems(self.metadata_types.keys())
     self.typesComboBox.addItems(self.metadata_types[self.metadataBlockComboBox.currentText()])
+    self.minimalFullComboBox.addItems(["Minimal", "Full"])
+    self.minimalFullComboBox.currentTextChanged.connect(self.toggle_minimal_full)
+    self.minimalFullComboBox.setCurrentText("Full")
 
   def get_metadata_types(self):
     metadata_types_mapping = {}
@@ -83,6 +86,19 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
     if new_metadata_block:
       self.typesComboBox.clear()
       self.typesComboBox.addItems(self.metadata_types[new_metadata_block])
+
+  def toggle_minimal_full(self, selection: str):
+    match selection:
+      case "Minimal":
+        self.metadataBlockComboBox.hide()
+        self.typesComboBox.clear()
+        self.typesComboBox.addItems(["subject", "author", "datasetContact", "dsDescription"])
+      case "Full":
+        self.metadataBlockComboBox.show()
+        self.metadataBlockComboBox.clear()
+        self.metadataBlockComboBox.addItems(self.metadata_types.keys())
+        self.typesComboBox.clear()
+        self.typesComboBox.addItems(self.metadata_types[self.metadataBlockComboBox.currentText()])
 
 
 if __name__ == "__main__":

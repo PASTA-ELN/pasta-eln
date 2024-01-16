@@ -12,11 +12,14 @@ from PySide6 import QtCore, QtGui, QtWidgets
 class Ui_EditMetadataDialog(object):
   def setupUi(self, EditMetadataDialog):
     EditMetadataDialog.setObjectName("EditMetadataDialog")
-    EditMetadataDialog.resize(1143, 227)
+    EditMetadataDialog.resize(905, 258)
     self.verticalLayout = QtWidgets.QVBoxLayout(EditMetadataDialog)
     self.verticalLayout.setObjectName("verticalLayout")
     self.mainVerticalLayout = QtWidgets.QVBoxLayout()
     self.mainVerticalLayout.setObjectName("mainVerticalLayout")
+    self.minimalFullComboBox = QtWidgets.QComboBox(parent=EditMetadataDialog)
+    self.minimalFullComboBox.setObjectName("minimalFullComboBox")
+    self.mainVerticalLayout.addWidget(self.minimalFullComboBox)
     self.metadataBlockComboBox = QtWidgets.QComboBox(parent=EditMetadataDialog)
     self.metadataBlockComboBox.setObjectName("metadataBlockComboBox")
     self.mainVerticalLayout.addWidget(self.metadataBlockComboBox)
@@ -27,7 +30,7 @@ class Ui_EditMetadataDialog(object):
     self.metadataScrollArea.setWidgetResizable(True)
     self.metadataScrollArea.setObjectName("metadataScrollArea")
     self.scrollAreaWidgetContents = QtWidgets.QWidget()
-    self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 1121, 112))
+    self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 883, 112))
     self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
     self.verticalLayout_3 = QtWidgets.QVBoxLayout(self.scrollAreaWidgetContents)
     self.verticalLayout_3.setObjectName("verticalLayout_3")
@@ -50,7 +53,9 @@ class Ui_EditMetadataDialog(object):
 
   def retranslateUi(self, EditMetadataDialog):
     _translate = QtCore.QCoreApplication.translate
-    EditMetadataDialog.setWindowTitle(_translate("EditMetadataDialog", "Dialog"))
+    EditMetadataDialog.setWindowTitle(_translate("EditMetadataDialog", "Edit metadata"))
+    EditMetadataDialog.setToolTip(_translate("EditMetadataDialog", "<html><head/><body><p><span style=\" font-style:italic;\">Edit the full/minimal set of metadata information for the datasets created in dataverse. Datasets corresponds to PASTA projects and needs to be mapped to the appropriate PASTA level properties as needed.</span></p></body></html>"))
+    self.minimalFullComboBox.setToolTip(_translate("EditMetadataDialog", "Select either \"minimal\" or \"full\" from the given list. Below UI will be updated accordingly."))
     self.metadataBlockComboBox.setToolTip(_translate("EditMetadataDialog", "Select the metadata block to be edited."))
     self.typesComboBox.setToolTip(_translate("EditMetadataDialog", "Select the metadata block type to be edited."))
 

@@ -6,12 +6,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1374</width>
-    <height>219</height>
+    <width>963</width>
+    <height>192</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dataverse Configuration</string>
+   <string>Dataverse configuration</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="2" column="0">
@@ -37,7 +37,7 @@
           </size>
          </property>
          <property name="text">
-          <string>Server Base URL</string>
+          <string>Dataverse URL</string>
          </property>
         </widget>
        </item>
@@ -96,14 +96,14 @@
           </size>
          </property>
          <property name="text">
-          <string>REST API Token</string>
+          <string>API token</string>
          </property>
         </widget>
        </item>
        <item>
         <widget class="QLineEdit" name="apiTokenLineEdit">
          <property name="placeholderText">
-          <string>Enter the REST API Token, e.g. c6527048-5bdc-48b0-a1d5-ed1b62c4513b</string>
+          <string>Enter the API token, e.g. c6527048-5bdc-48b0-a1d5-ed1b62c4513b</string>
          </property>
          <property name="clearButtonEnabled">
           <bool>true</bool>
@@ -171,7 +171,7 @@
           </size>
          </property>
          <property name="text">
-          <string>Dataverse List</string>
+          <string>Dataverse list</string>
          </property>
         </widget>
        </item>

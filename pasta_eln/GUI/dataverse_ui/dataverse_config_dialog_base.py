@@ -12,7 +12,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 class Ui_DataverseConfigDialogBase(object):
   def setupUi(self, DataverseConfigDialogBase):
     DataverseConfigDialogBase.setObjectName("DataverseConfigDialogBase")
-    DataverseConfigDialogBase.resize(1374, 219)
+    DataverseConfigDialogBase.resize(963, 192)
     self.gridLayout = QtWidgets.QGridLayout(DataverseConfigDialogBase)
     self.gridLayout.setObjectName("gridLayout")
     self.buttonBox = QtWidgets.QDialogButtonBox(parent=DataverseConfigDialogBase)
@@ -90,16 +90,16 @@ class Ui_DataverseConfigDialogBase(object):
 
   def retranslateUi(self, DataverseConfigDialogBase):
     _translate = QtCore.QCoreApplication.translate
-    DataverseConfigDialogBase.setWindowTitle(_translate("DataverseConfigDialogBase", "Dataverse Configuration"))
-    self.dataverseServerLabel.setText(_translate("DataverseConfigDialogBase", "Server Base URL"))
+    DataverseConfigDialogBase.setWindowTitle(_translate("DataverseConfigDialogBase", "Dataverse configuration"))
+    self.dataverseServerLabel.setText(_translate("DataverseConfigDialogBase", "Dataverse URL"))
     self.dataverseServerLineEdit.setPlaceholderText(_translate("DataverseConfigDialogBase", "Enter the dataverse server URL, e.g. https://data.fz-juelich.de/"))
-    self.apiTokenLabel.setText(_translate("DataverseConfigDialogBase", "REST API Token"))
-    self.apiTokenLineEdit.setPlaceholderText(_translate("DataverseConfigDialogBase", "Enter the REST API Token, e.g. c6527048-5bdc-48b0-a1d5-ed1b62c4513b"))
+    self.apiTokenLabel.setText(_translate("DataverseConfigDialogBase", "API token"))
+    self.apiTokenLineEdit.setPlaceholderText(_translate("DataverseConfigDialogBase", "Enter the API token, e.g. c6527048-5bdc-48b0-a1d5-ed1b62c4513b"))
     self.apitTokenVerifyPushButton.setToolTip(_translate("DataverseConfigDialogBase", "Verify if the given dataverse server and api token are reachable."))
     self.apitTokenVerifyPushButton.setText(_translate("DataverseConfigDialogBase", "Verify"))
     self.apiTokenHelpPushButton.setToolTip(_translate("DataverseConfigDialogBase", "Navigate to the help page for generating dataverse API token."))
     self.apiTokenHelpPushButton.setText(_translate("DataverseConfigDialogBase", "Help"))
-    self.dataverseListLabel.setText(_translate("DataverseConfigDialogBase", "Dataverse List"))
+    self.dataverseListLabel.setText(_translate("DataverseConfigDialogBase", "Dataverse list"))
     self.dataverseListPushButton.setToolTip(_translate("DataverseConfigDialogBase", "Loads available dataverse"))
     self.dataverseListPushButton.setText(_translate("DataverseConfigDialogBase", "Load"))
 

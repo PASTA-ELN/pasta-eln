@@ -35,10 +35,9 @@ class Ui_CompletedUploadTaskFrame(object):
     self.dataverseUrlLabel = QtWidgets.QLabel(parent=CompletedUploadTaskFrame)
     self.dataverseUrlLabel.setObjectName("dataverseUrlLabel")
     self.horizontalLayout.addWidget(self.dataverseUrlLabel)
-    self.finishedDateTimeEdit = QtWidgets.QDateTimeEdit(parent=CompletedUploadTaskFrame)
-    self.finishedDateTimeEdit.setReadOnly(True)
-    self.finishedDateTimeEdit.setObjectName("finishedDateTimeEdit")
-    self.horizontalLayout.addWidget(self.finishedDateTimeEdit)
+    self.finishedDateTimeLabel = QtWidgets.QLabel(parent=CompletedUploadTaskFrame)
+    self.finishedDateTimeLabel.setObjectName("finishedDateTimeLabel")
+    self.horizontalLayout.addWidget(self.finishedDateTimeLabel)
     self.horizontalLayout_2.addLayout(self.horizontalLayout)
 
     self.retranslateUi(CompletedUploadTaskFrame)
@@ -52,7 +51,8 @@ class Ui_CompletedUploadTaskFrame(object):
     self.projectNameLabel.setText(_translate("CompletedUploadTaskFrame", "Example Project 1"))
     self.dataverseUrlLabel.setToolTip(_translate("CompletedUploadTaskFrame", "The dataverse URL where the PASTA project was uploaded."))
     self.dataverseUrlLabel.setText(_translate("CompletedUploadTaskFrame", "<html><head/><body><p>Dataverse URL: <a href=\"https://data-beta.fz-juelich.de/dataset.xhtml?persistentId=doi:10.0346/JUELICH-DATA-BETA/BORORQ\"><span style=\" text-decoration: underline; color:#0000ff;\">Test Data Set 12</span></a></p></body></html>"))
-    self.finishedDateTimeEdit.setToolTip(_translate("CompletedUploadTaskFrame", "The dataverse upload time."))
+    self.finishedDateTimeLabel.setToolTip(_translate("CompletedUploadTaskFrame", "Dataverse upload time."))
+    self.finishedDateTimeLabel.setText(_translate("CompletedUploadTaskFrame", "01-16-2024 10:52:15"))
 
 
 if __name__ == "__main__":

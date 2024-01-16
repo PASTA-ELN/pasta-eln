@@ -6,12 +6,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1261</width>
-    <height>837</height>
+    <width>1219</width>
+    <height>788</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dataverse Upload</string>
+   <string>Dataverse upload</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="3" column="0">
@@ -31,10 +31,25 @@
        <item>
         <layout class="QHBoxLayout" name="scrollAreaHorizontalLayout">
          <item>
-          <widget class="QListView" name="projectsListView">
-           <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;DIsplays the list of PASTA projects and users can select the projects which needs to uploaded to dataverse.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <widget class="QScrollArea" name="projectsScrollArea">
+           <property name="widgetResizable">
+            <bool>true</bool>
            </property>
+           <widget class="QWidget" name="projectScrollAreaWidgetContents">
+            <property name="geometry">
+             <rect>
+              <x>0</x>
+              <y>0</y>
+              <width>1193</width>
+              <height>344</height>
+             </rect>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_3">
+             <item>
+              <layout class="QVBoxLayout" name="projectsScrollAreaVerticalLayout"/>
+             </item>
+            </layout>
+           </widget>
           </widget>
          </item>
         </layout>
@@ -42,20 +57,103 @@
        <item>
         <layout class="QHBoxLayout" name="uploadButtonHorizontalLayout">
          <item>
-          <widget class="QPushButton" name="uploadPushButton">
-           <property name="minimumSize">
-            <size>
-             <width>150</width>
-             <height>0</height>
-            </size>
-           </property>
-           <property name="toolTip">
-            <string>Start uploading the above selected projects to dataverse.</string>
-           </property>
-           <property name="text">
-            <string>Start Upload</string>
-           </property>
-          </widget>
+          <layout class="QHBoxLayout" name="horizontalLayout">
+           <item>
+            <widget class="QCheckBox" name="measurementsCheckBox">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="toolTip">
+              <string>Check if the measurements need to be included as part of ELN file to be uploaded to dataverse.</string>
+             </property>
+             <property name="text">
+              <string>Measurements</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="samplesCheckBox">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="toolTip">
+              <string>Check if the samples need to be included as part of ELN file to be uploaded to dataverse.</string>
+             </property>
+             <property name="text">
+              <string>Samples</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="proceduresCheckBox">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="toolTip">
+              <string>Check if the procedures need to be included as part of ELN file to be uploaded to dataverse.</string>
+             </property>
+             <property name="text">
+              <string>Procedures</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="instrumentsCheckBox">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="toolTip">
+              <string>Check if the instruments need to be included as part of ELN file to be uploaded to dataverse.</string>
+             </property>
+             <property name="text">
+              <string>Instruments</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="unidentifiedCheckBox">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="toolTip">
+              <string>Check if the unidentified items need to be included as part of ELN file to be uploaded to dataverse.</string>
+             </property>
+             <property name="text">
+              <string>Unidentified</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+          </layout>
          </item>
          <item>
           <spacer name="uploadButtonsHorizontalSpacer">
@@ -69,6 +167,38 @@
             </size>
            </property>
           </spacer>
+         </item>
+         <item>
+          <widget class="QPushButton" name="editFullMetadataPushButton">
+           <property name="minimumSize">
+            <size>
+             <width>150</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="toolTip">
+            <string>Click to edit full/minimal list of metadata to be used for dataverse upload.</string>
+           </property>
+           <property name="text">
+            <string>Edit metadata</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="uploadPushButton">
+           <property name="minimumSize">
+            <size>
+             <width>150</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="toolTip">
+            <string>Start uploading the above selected projects to dataverse.</string>
+           </property>
+           <property name="text">
+            <string>Start upload</string>
+           </property>
+          </widget>
          </item>
         </layout>
        </item>
@@ -87,8 +217,8 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>989</width>
-              <height>335</height>
+              <width>1193</width>
+              <height>311</height>
              </rect>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout">
@@ -102,7 +232,20 @@
          <item>
           <layout class="QHBoxLayout" name="scrollAreaButtonsHorizontalLayout">
            <item>
-            <widget class="QPushButton" name="clearAllPushButton">
+            <spacer name="horizontalSpacer_2">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QPushButton" name="clearFinishedPushButton">
              <property name="minimumSize">
               <size>
                <width>150</width>
@@ -113,7 +256,7 @@
               <string>Clear all finished uploads.</string>
              </property>
              <property name="text">
-              <string>Clear All</string>
+              <string>Clear finished</string>
              </property>
             </widget>
            </item>
@@ -129,103 +272,29 @@
               <string>Cancel all the ongoing uploads.</string>
              </property>
              <property name="text">
-              <string>Cancel All</string>
+              <string>Cancel all</string>
              </property>
             </widget>
            </item>
            <item>
-            <spacer name="horizontalSpacer_2">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
+            <widget class="QPushButton" name="showCompletedPushButton">
+             <property name="minimumSize">
               <size>
-               <width>40</width>
-               <height>20</height>
+               <width>150</width>
+               <height>0</height>
               </size>
              </property>
-            </spacer>
+             <property name="toolTip">
+              <string>Show uploaded projects history.</string>
+             </property>
+             <property name="text">
+              <string>Show completed</string>
+             </property>
+            </widget>
            </item>
           </layout>
          </item>
         </layout>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <layout class="QVBoxLayout" name="buttonsVerticalLayout">
-       <property name="leftMargin">
-        <number>20</number>
-       </property>
-       <property name="topMargin">
-        <number>20</number>
-       </property>
-       <property name="rightMargin">
-        <number>20</number>
-       </property>
-       <property name="bottomMargin">
-        <number>20</number>
-       </property>
-       <item>
-        <widget class="QPushButton" name="showCompletedPushButton">
-         <property name="minimumSize">
-          <size>
-           <width>200</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="toolTip">
-          <string>Show uploaded projects history.</string>
-         </property>
-         <property name="text">
-          <string>Show Completed</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="editMinimalMetadataPushButton">
-         <property name="minimumSize">
-          <size>
-           <width>200</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="toolTip">
-          <string>Click to edit minimal list of metadata to be used for dataverse upload.</string>
-         </property>
-         <property name="text">
-          <string>Edit Minimal Metadata</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="editFullMetadataPushButton">
-         <property name="minimumSize">
-          <size>
-           <width>200</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="toolTip">
-          <string>Click to edit full list of metadata to be used for dataverse upload.</string>
-         </property>
-         <property name="text">
-          <string>Edit Full Medata</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <spacer name="verticalSpacer">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
        </item>
       </layout>
      </item>

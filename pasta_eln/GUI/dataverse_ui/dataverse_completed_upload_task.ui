@@ -65,12 +65,12 @@
       </widget>
      </item>
      <item>
-      <widget class="QDateTimeEdit" name="finishedDateTimeEdit">
+      <widget class="QLabel" name="finishedDateTimeLabel">
        <property name="toolTip">
-        <string>The dataverse upload time.</string>
+        <string>Dataverse upload time.</string>
        </property>
-       <property name="readOnly">
-        <bool>true</bool>
+       <property name="text">
+        <string>01-16-2024 10:52:15</string>
        </property>
       </widget>
      </item>

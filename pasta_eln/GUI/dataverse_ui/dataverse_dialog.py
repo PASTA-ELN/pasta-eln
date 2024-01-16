@@ -13,8 +13,8 @@ from typing import Any
 from PySide6 import QtWidgets
 from PySide6.QtWidgets import QDialog, QWidget
 
-from pasta_eln.GUI.dataverse_ui.dataverse_data_model import DataverseDataModel
 from pasta_eln.GUI.dataverse_ui.dataverse_dialog_base import Ui_DataverseDialogBase
+from pasta_eln.GUI.dataverse_ui.dataverse_project_item_frame_base import Ui_ProjectItemFrame
 from pasta_eln.GUI.dataverse_ui.dataverse_upload_widget_base import Ui_UploadWidgetFrame
 
 
@@ -33,10 +33,10 @@ class DataverseDialog(Ui_DataverseDialogBase):
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
     self.instance = QDialog()
     super().setupUi(self.instance)
-    self.model = DataverseDataModel()
-    self.projectsListView.setModel(self.model)
-    self.model.add_data(["Project 1", "Project 2", "Project 3"] * 1000)
-    for i in range(1000):
+    for i in range(200):
+      widget = self.get_project_widget(f"Example Project {i + 1}")
+      self.projectsScrollAreaVerticalLayout.addWidget(widget)
+    for i in range(200):
       widget = self.get_upload_widget(f"Example Project {i + 1}")
       self.scrollAreaContentsVerticalLayout.addWidget(widget)
 
@@ -62,6 +62,14 @@ class DataverseDialog(Ui_DataverseDialogBase):
                                                      if uploadWidgetUi.logConsoleTextEdit.isHidden()
                                                      else uploadWidgetUi.logConsoleTextEdit.hide())
     return uploadWidgetFrame
+
+  def get_project_widget(self, project_name: str = 0) -> QWidget:
+    projectWidgetFrame = QtWidgets.QFrame()
+    projectWidgetUi = Ui_ProjectItemFrame()
+    projectWidgetUi.setupUi(projectWidgetFrame)
+    projectWidgetUi.projectNameLabel.setText(project_name)
+    projectWidgetUi.modifiedDateTimeLabel.setText(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    return projectWidgetFrame
 
 
 if __name__ == "__main__":
