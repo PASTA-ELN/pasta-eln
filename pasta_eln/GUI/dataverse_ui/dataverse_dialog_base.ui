@@ -57,105 +57,6 @@
        <item>
         <layout class="QHBoxLayout" name="uploadButtonHorizontalLayout">
          <item>
-          <layout class="QHBoxLayout" name="horizontalLayout">
-           <item>
-            <widget class="QCheckBox" name="measurementsCheckBox">
-             <property name="minimumSize">
-              <size>
-               <width>0</width>
-               <height>0</height>
-              </size>
-             </property>
-             <property name="toolTip">
-              <string>Check if the measurements need to be included as part of ELN file to be uploaded to dataverse.</string>
-             </property>
-             <property name="text">
-              <string>Measurements</string>
-             </property>
-             <property name="checked">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QCheckBox" name="samplesCheckBox">
-             <property name="minimumSize">
-              <size>
-               <width>0</width>
-               <height>0</height>
-              </size>
-             </property>
-             <property name="toolTip">
-              <string>Check if the samples need to be included as part of ELN file to be uploaded to dataverse.</string>
-             </property>
-             <property name="text">
-              <string>Samples</string>
-             </property>
-             <property name="checked">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QCheckBox" name="proceduresCheckBox">
-             <property name="minimumSize">
-              <size>
-               <width>0</width>
-               <height>0</height>
-              </size>
-             </property>
-             <property name="toolTip">
-              <string>Check if the procedures need to be included as part of ELN file to be uploaded to dataverse.</string>
-             </property>
-             <property name="text">
-              <string>Procedures</string>
-             </property>
-             <property name="checked">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QCheckBox" name="instrumentsCheckBox">
-             <property name="minimumSize">
-              <size>
-               <width>0</width>
-               <height>0</height>
-              </size>
-             </property>
-             <property name="toolTip">
-              <string>Check if the instruments need to be included as part of ELN file to be uploaded to dataverse.</string>
-             </property>
-             <property name="text">
-              <string>Instruments</string>
-             </property>
-             <property name="checked">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QCheckBox" name="unidentifiedCheckBox">
-             <property name="minimumSize">
-              <size>
-               <width>0</width>
-               <height>0</height>
-              </size>
-             </property>
-             <property name="toolTip">
-              <string>Check if the unidentified items need to be included as part of ELN file to be uploaded to dataverse.</string>
-             </property>
-             <property name="text">
-              <string>Unidentified</string>
-             </property>
-             <property name="checked">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item>
           <spacer name="uploadButtonsHorizontalSpacer">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
@@ -169,10 +70,58 @@
           </spacer>
          </item>
          <item>
+          <widget class="QPushButton" name="selectAllPushButton">
+           <property name="minimumSize">
+            <size>
+             <width>100</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="toolTip">
+            <string>Select all the projects listed above.</string>
+           </property>
+           <property name="text">
+            <string>Select all</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="deselectAllPushButton">
+           <property name="minimumSize">
+            <size>
+             <width>100</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="toolTip">
+            <string>Deselect all the projects listed above.</string>
+           </property>
+           <property name="text">
+            <string>Deselect all</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="configureUploadPushButton">
+           <property name="minimumSize">
+            <size>
+             <width>100</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="toolTip">
+            <string>Configure the contents of projects which need to be uploaded to dataverse.</string>
+           </property>
+           <property name="text">
+            <string>Configure</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QPushButton" name="editFullMetadataPushButton">
            <property name="minimumSize">
             <size>
-             <width>150</width>
+             <width>100</width>
              <height>0</height>
             </size>
            </property>
@@ -188,7 +137,7 @@
           <widget class="QPushButton" name="uploadPushButton">
            <property name="minimumSize">
             <size>
-             <width>150</width>
+             <width>100</width>
              <height>0</height>
             </size>
            </property>
@@ -205,7 +154,7 @@
        <item>
         <layout class="QVBoxLayout" name="scrollAreaVerticalLayout">
          <item>
-          <widget class="QScrollArea" name="uploadItemsScrollArea">
+          <widget class="QScrollArea" name="uploadQueueScrollArea">
            <property name="toolTip">
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Displays the enqueued lists of PASTA projects to be uploaded to dataverse.&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Users can view indvidual logs for each project upload, cancel each or all of them and also clear all the finished items anytime.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
@@ -223,7 +172,7 @@
             </property>
             <layout class="QVBoxLayout" name="verticalLayout">
              <item>
-              <layout class="QVBoxLayout" name="scrollAreaContentsVerticalLayout"/>
+              <layout class="QVBoxLayout" name="uploadQueueVerticalLayout"/>
              </item>
             </layout>
            </widget>

@@ -33,6 +33,6 @@ class UploadWorker(QObject):
                 break
             time.sleep(0.07)
         self.finished.emit()
-        self.statusChanged.emit("Finished..." if not self.cancelled else "Cancelled...")
+        self.statusChanged.emit("Cancelled..." if self.cancelled else "Finished...")
         
     

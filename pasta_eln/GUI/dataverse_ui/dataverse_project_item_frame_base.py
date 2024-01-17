@@ -12,7 +12,13 @@ from PySide6 import QtCore, QtGui, QtWidgets
 class Ui_ProjectItemFrame(object):
   def setupUi(self, ProjectItemFrame):
     ProjectItemFrame.setObjectName("ProjectItemFrame")
-    ProjectItemFrame.resize(1009, 44)
+    ProjectItemFrame.resize(1009, 50)
+    sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Fixed)
+    sizePolicy.setHorizontalStretch(0)
+    sizePolicy.setVerticalStretch(0)
+    sizePolicy.setHeightForWidth(ProjectItemFrame.sizePolicy().hasHeightForWidth())
+    ProjectItemFrame.setSizePolicy(sizePolicy)
+    ProjectItemFrame.setMaximumSize(QtCore.QSize(16777215, 50))
     ProjectItemFrame.setFrameShape(QtWidgets.QFrame.Shape.StyledPanel)
     ProjectItemFrame.setFrameShadow(QtWidgets.QFrame.Shadow.Raised)
     self.horizontalLayout_2 = QtWidgets.QHBoxLayout(ProjectItemFrame)
