@@ -25,12 +25,14 @@ class UploadTask(QObject):
         self.progressChanged.connect(widget.uploadProgressBar.setValue)
         self.statusChanged.connect(widget.statusPushButton.setText)
         self.start.connect(self.do_upload)
-        widget.uploadCancelPushButton.clicked.connect(lambda: self.cancel_upload())
+        widget.uploadCancelPushButton.clicked.connect(lambda: self.cancel_process())
+        self.started = False
 
-    def cancel_upload(self):
+    def cancel_process(self):
         self.cancelled = True
     def do_upload(self):
         self.cancelled = False
+        self.started = True
         self.progressChanged.emit(0)
         self.statusChanged.emit("Queued...")
         self.statusChanged.emit("Uploading...")
@@ -38,7 +40,7 @@ class UploadTask(QObject):
             self.progressChanged.emit(progressbar_value)
             if self.cancelled:
                 break
-            time.sleep(random.uniform(0.1, 0.6))
+            time.sleep(random.uniform(0.1, 0.5))
         self.finished.emit()
         self.statusChanged.emit("Cancelled..." if self.cancelled else "Finished...")
 

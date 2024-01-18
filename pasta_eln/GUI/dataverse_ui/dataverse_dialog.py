@@ -13,18 +13,17 @@ from typing import Any, Dict
 from uuid import uuid4
 
 from PySide6 import QtCore, QtWidgets
-from PySide6.QtCore import QThread
+from PySide6.QtCore import QThread, Signal
 from PySide6.QtWidgets import QDialog, QFrame, QWidget
 
 from pasta_eln.GUI.dataverse_ui.dataverse_config_upload_dialog_base import Ui_ConfigUploadDialog
 from pasta_eln.GUI.dataverse_ui.dataverse_dialog_base import Ui_DataverseDialogBase
 from pasta_eln.GUI.dataverse_ui.dataverse_project_item_frame_base import Ui_ProjectItemFrame
+from pasta_eln.GUI.dataverse_ui.dataverse_qt_dialog import DataverseQtDialog
 from pasta_eln.GUI.dataverse_ui.dataverse_upload_widget_base import Ui_UploadWidgetFrame
 from pasta_eln.GUI.gui_tests.upload_worker import UploadWorker
 from pasta_eln.dataverse.upload_manager import UploadManager
 from pasta_eln.dataverse.upload_task import UploadTask
-
-
 class DataverseDialog(Ui_DataverseDialogBase):
 
   def __new__(cls, *_: Any, **__: Any) -> Any:
@@ -38,14 +37,11 @@ class DataverseDialog(Ui_DataverseDialogBase):
     Initializes the creation type dialog
     """
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
-    self.instance = QDialog()
+    self.instance = DataverseQtDialog()
     super().setupUi(self.instance)
     for i in range(100):
       widget = self.get_project_widget(f"Example Project {i + 1}")
       self.projectsScrollAreaVerticalLayout.addWidget(widget)
-    for i in range(100):
-      widget = self.get_upload_widget(f"Example Project {i + 1}")
-      self.uploadQueueVerticalLayout.addWidget(widget["base"])
     self.uploadPushButton.clicked.connect(self.start_upload)
     self.clearFinishedPushButton.clicked.connect(self.clear_finished)
     self.selectAllPushButton.clicked.connect(lambda: self.select_deselect_all_projects(True))
@@ -59,6 +55,9 @@ class DataverseDialog(Ui_DataverseDialogBase):
     self.upload_manager_thread = QThread()
     self.upload_manager_thread.start()
     self.upload_manager.moveToThread(self.upload_manager_thread)
+    self.cancelAllPushButton.clicked.connect(self.upload_manager.cleanup)
+    self.buttonBox.button(QtWidgets.QDialogButtonBox.Cancel).clicked.connect(lambda: self.release_upload_manager())
+    self.instance.closed.connect(self.release_upload_manager)
 
   def create_update_task(self,
                            widget: Ui_UploadWidgetFrame) -> dict[str, UploadTask | QThread]:
@@ -121,6 +120,14 @@ class DataverseDialog(Ui_DataverseDialogBase):
 
   def show_configure_upload(self):
     self.config_upload_base_dialog.show()
+
+  def release_upload_manager(self):
+    self.upload_manager.cancel_process()
+    self.upload_manager.cleanup()
+    self.upload_manager_thread.quit()
+
+
+
 
 
 if __name__ == "__main__":
