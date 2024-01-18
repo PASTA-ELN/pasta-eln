@@ -49,7 +49,7 @@ class Ui_DataverseCompletedUploadsForm(object):
 
   def retranslateUi(self, DataverseCompletedUploadsForm):
     _translate = QtCore.QCoreApplication.translate
-    DataverseCompletedUploadsForm.setWindowTitle(_translate("DataverseCompletedUploadsForm", "Dataverse Upload History"))
+    DataverseCompletedUploadsForm.setWindowTitle(_translate("DataverseCompletedUploadsForm", "Dataverse upload history"))
     self.historyFilterLineEdit.setToolTip(_translate("DataverseCompletedUploadsForm", "Enter project name / dataverse URL / finished time to filter the below listed tasks."))
     self.historyFilterLineEdit.setPlaceholderText(_translate("DataverseCompletedUploadsForm", "Enter the information to filter the tasks."))
     self.filterPushButton.setToolTip(_translate("DataverseCompletedUploadsForm", "Click to filter the dataverse uploads done in the past."))

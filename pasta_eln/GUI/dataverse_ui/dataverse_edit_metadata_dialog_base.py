@@ -42,7 +42,7 @@ class Ui_EditMetadataDialog(object):
     self.verticalLayout.addLayout(self.mainVerticalLayout)
     self.buttonBox = QtWidgets.QDialogButtonBox(parent=EditMetadataDialog)
     self.buttonBox.setOrientation(QtCore.Qt.Orientation.Horizontal)
-    self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.StandardButton.Discard|QtWidgets.QDialogButtonBox.StandardButton.Save)
+    self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.StandardButton.Cancel|QtWidgets.QDialogButtonBox.StandardButton.Save)
     self.buttonBox.setObjectName("buttonBox")
     self.verticalLayout.addWidget(self.buttonBox)
 

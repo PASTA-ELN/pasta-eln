@@ -8,16 +8,21 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import datetime
 import logging
-from typing import Any
+import time
+from typing import Any, Dict
 from uuid import uuid4
 
 from PySide6 import QtCore, QtWidgets
-from PySide6.QtWidgets import QDialog, QWidget
+from PySide6.QtCore import QThread
+from PySide6.QtWidgets import QDialog, QFrame, QWidget
 
 from pasta_eln.GUI.dataverse_ui.dataverse_config_upload_dialog_base import Ui_ConfigUploadDialog
 from pasta_eln.GUI.dataverse_ui.dataverse_dialog_base import Ui_DataverseDialogBase
 from pasta_eln.GUI.dataverse_ui.dataverse_project_item_frame_base import Ui_ProjectItemFrame
 from pasta_eln.GUI.dataverse_ui.dataverse_upload_widget_base import Ui_UploadWidgetFrame
+from pasta_eln.GUI.gui_tests.upload_worker import UploadWorker
+from pasta_eln.dataverse.upload_manager import UploadManager
+from pasta_eln.dataverse.upload_task import UploadTask
 
 
 class DataverseDialog(Ui_DataverseDialogBase):
@@ -40,7 +45,7 @@ class DataverseDialog(Ui_DataverseDialogBase):
       self.projectsScrollAreaVerticalLayout.addWidget(widget)
     for i in range(100):
       widget = self.get_upload_widget(f"Example Project {i + 1}")
-      self.uploadQueueVerticalLayout.addWidget(widget)
+      self.uploadQueueVerticalLayout.addWidget(widget["base"])
     self.uploadPushButton.clicked.connect(self.start_upload)
     self.clearFinishedPushButton.clicked.connect(self.clear_finished)
     self.selectAllPushButton.clicked.connect(lambda: self.select_deselect_all_projects(True))
@@ -50,8 +55,20 @@ class DataverseDialog(Ui_DataverseDialogBase):
     self.config_upload_dialog.setupUi(self.config_upload_base_dialog)
     self.config_upload_base_dialog.setWindowModality(QtCore.Qt.ApplicationModal)
     self.configureUploadPushButton.clicked.connect(self.show_configure_upload)
+    self.upload_manager = UploadManager()
+    self.upload_manager_thread = QThread()
+    self.upload_manager_thread.start()
+    self.upload_manager.moveToThread(self.upload_manager_thread)
 
-  def get_upload_widget(self, project_name: str = 0) -> QWidget:
+  def create_update_task(self,
+                           widget: Ui_UploadWidgetFrame) -> dict[str, UploadTask | QThread]:
+    thread = QThread()
+    thread.start()
+    upload_task = UploadTask(widget)
+    upload_task.moveToThread(thread)
+    return {"task": upload_task, "thread": thread}
+
+  def get_upload_widget(self, project_name: str = 0) -> dict[str, QFrame | Ui_UploadWidgetFrame]:
     uploadWidgetFrame = QtWidgets.QFrame()
     uploadWidgetUi = Ui_UploadWidgetFrame()
     uploadWidgetUi.setupUi(uploadWidgetFrame)
@@ -72,7 +89,7 @@ class DataverseDialog(Ui_DataverseDialogBase):
                                                      uploadWidgetUi.logConsoleTextEdit.show()
                                                      if uploadWidgetUi.logConsoleTextEdit.isHidden()
                                                      else uploadWidgetUi.logConsoleTextEdit.hide())
-    return uploadWidgetFrame
+    return {"base": uploadWidgetFrame, "widget": uploadWidgetUi}
 
   def get_project_widget(self, project_name: str = 0) -> QWidget:
     projectWidgetFrame = QtWidgets.QFrame()
@@ -88,7 +105,10 @@ class DataverseDialog(Ui_DataverseDialogBase):
       project_widget = self.projectsScrollAreaVerticalLayout.itemAt(widget_pos).widget()
       if project_widget.findChild(QtWidgets.QCheckBox, name="projectCheckBox").isChecked():
         widget = self.get_upload_widget(project_widget.findChild(QtWidgets.QLabel, name="projectNameLabel").text())
-        self.uploadQueueVerticalLayout.addWidget(widget)
+        self.uploadQueueVerticalLayout.addWidget(widget["base"])
+        task = self.create_update_task(widget["widget"])
+        self.upload_manager.add_to_queue(task)
+    self.upload_manager.start.emit()
 
   def clear_finished(self):
     for widget_pos in reversed(range(self.uploadQueueVerticalLayout.count())):
