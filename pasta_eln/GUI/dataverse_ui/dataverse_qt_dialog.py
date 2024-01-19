@@ -16,5 +16,3 @@ class DataverseQtDialog(QDialog):
   def closeEvent(self, arg__1):
     super().closeEvent(arg__1)
     self.closed.emit()
-
-

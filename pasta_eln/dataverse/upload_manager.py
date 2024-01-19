@@ -3,49 +3,56 @@
 #  Copyright (c) 2024
 #
 #  Author: Jithu Murugan
-#  Filename: upload_manager.py
+#  Filename: upload_manager_task_thread.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import time
 
-from PySide6.QtCore import QObject, QThread, Signal
-
-from pasta_eln.dataverse.upload_task import UploadTask
-
-
-class UploadManager(QObject):
-    start = Signal()
-    cancel = Signal()
-    def __init__(self):
-        super().__init__()
-        self.upload_queue: list[dict[str, UploadTask | QThread]] = []
-        self.start.connect(self.process_queue)
-        self.cancelled = False
-        self.cancel.connect(self.cancel_process)
-
-    def add_to_queue(self, upload_task: dict[str, UploadTask | QThread]):
-        self.upload_queue.append(upload_task)
-        upload_task["task"].finished.connect(lambda: self.remove_from_queue(upload_task))
-
-    def remove_from_queue(self, upload_task: dict[str, UploadTask | QThread]):
-        if upload_task in self.upload_queue:
-            self.upload_queue.remove(upload_task)
-            upload_task["thread"].quit()
-
-    def process_queue(self):
-        for upload_task in self.upload_queue:
-            if self.cancelled:
-                break
-            if not upload_task["task"].started:
-                upload_task["task"].start.emit()
-    def cancel_process(self):
-        self.cancelled = True
-
-    def cleanup(self):
-        for upload_task in self.upload_queue:
-            upload_task["task"].cancel()
-        time.sleep(0.1)
-        for upload_task in self.upload_queue:
-            upload_task["thread"].quit()
+from pasta_eln.dataverse.generic_task_object import GenericTaskObject
+from pasta_eln.dataverse.task_thread_abstraction import TaskThreadAbstraction
 
 
+class UploadManager(GenericTaskObject):
+  def __init__(self):
+    super().__init__()
+    self.upload_queue: list[TaskThreadAbstraction] = []
+    self.running_queue: list[TaskThreadAbstraction] = []
+    self.number_of_concurrent_uploads = 5
+
+  def add_to_queue(self, upload_task_thread: TaskThreadAbstraction):
+    self.upload_queue.append(upload_task_thread)
+    upload_task_thread.task.finished.connect(lambda: self.remove_from_queue(upload_task_thread))
+
+  def remove_from_queue(self, upload_task_thread: TaskThreadAbstraction):
+    if upload_task_thread in self.upload_queue:
+      self.upload_queue.remove(upload_task_thread)
+    if upload_task_thread in self.running_queue:
+      self.running_queue.remove(upload_task_thread)
+    upload_task_thread.thread.quit()
+
+  def start_task(self):
+    super().start_task()
+    while not self.cancelled:
+      if len(self.running_queue) < self.number_of_concurrent_uploads:
+        for upload_task_thread in self.upload_queue:
+          if self.cancelled or len(self.running_queue) >= self.number_of_concurrent_uploads:
+            break
+          if not upload_task_thread.task.started:
+            self.running_queue.append(upload_task_thread)
+            upload_task_thread.task.start.emit()
+      time.sleep(0.5)
+
+  def cleanup(self):
+    super().cleanup()
+    print(f"Cleanup..., queue count: {len(self.upload_queue)}")
+    self.empty_upload_queue()
+
+  def empty_upload_queue(self):
+    for upload_task_thread in self.upload_queue:
+      upload_task_thread.quit()
+    self.upload_queue.clear()
+
+  def cancel_task(self):
+    super().cancel_task()
+    for upload_task_thread in self.upload_queue:
+      upload_task_thread.task.cancel.emit()
