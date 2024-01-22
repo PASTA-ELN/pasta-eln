@@ -54,5 +54,7 @@ class UploadManager(GenericTaskObject):
 
   def cancel_task(self):
     super().cancel_task()
-    for upload_task_thread in self.upload_queue:
+    for upload_task_thread in self.running_queue:
       upload_task_thread.task.cancel.emit()
+    self.empty_upload_queue()
+

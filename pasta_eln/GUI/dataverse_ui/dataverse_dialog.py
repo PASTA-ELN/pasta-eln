@@ -14,10 +14,10 @@ from typing import Any
 from PySide6 import QtCore, QtWidgets
 from PySide6.QtWidgets import QFrame, QWidget
 
-from pasta_eln.GUI.dataverse_ui.dataverse_config_upload_dialog_base import Ui_ConfigUploadDialog
 from pasta_eln.GUI.dataverse_ui.dataverse_dialog_base import Ui_DataverseDialogBase
 from pasta_eln.GUI.dataverse_ui.dataverse_project_item_frame_base import Ui_ProjectItemFrame
 from pasta_eln.GUI.dataverse_ui.dataverse_qt_dialog import DataverseQtDialog
+from pasta_eln.GUI.dataverse_ui.dataverse_upload_config_dialog import DataverseUploadConfigDialog
 from pasta_eln.GUI.dataverse_ui.dataverse_upload_widget_base import Ui_UploadWidgetFrame
 from pasta_eln.dataverse.task_thread_abstraction import TaskThreadAbstraction
 from pasta_eln.dataverse.upload_manager import UploadManager
@@ -27,9 +27,6 @@ from pasta_eln.dataverse.upload_task import UploadGenericTask
 class DataverseDialog(Ui_DataverseDialogBase):
 
   def __new__(cls, *_: Any, **__: Any) -> Any:
-    """
-    Instantiates the create type dialog
-    """
     return super(DataverseDialog, cls).__new__(cls)
 
   def __init__(self) -> None:
@@ -46,10 +43,7 @@ class DataverseDialog(Ui_DataverseDialogBase):
     self.clearFinishedPushButton.clicked.connect(self.clear_finished)
     self.selectAllPushButton.clicked.connect(lambda: self.select_deselect_all_projects(True))
     self.deselectAllPushButton.clicked.connect(lambda: self.select_deselect_all_projects(False))
-    self.config_upload_base_dialog = QtWidgets.QDialog()
-    self.config_upload_dialog = Ui_ConfigUploadDialog()
-    self.config_upload_dialog.setupUi(self.config_upload_base_dialog)
-    self.config_upload_base_dialog.setWindowModality(QtCore.Qt.ApplicationModal)
+    self.config_upload_dialog = DataverseUploadConfigDialog()
     self.configureUploadPushButton.clicked.connect(self.show_configure_upload)
     self.upload_manager_task = UploadManager()
     self.upload_manager_task_thread = TaskThreadAbstraction(self.upload_manager_task)
@@ -114,7 +108,7 @@ class DataverseDialog(Ui_DataverseDialogBase):
       project_widget.findChild(QtWidgets.QCheckBox, name="projectCheckBox").setChecked(checked)
 
   def show_configure_upload(self):
-    self.config_upload_base_dialog.show()
+    self.config_upload_dialog.instance.show()
 
   def release_upload_manager(self):
     self.upload_manager_task_thread.quit()
