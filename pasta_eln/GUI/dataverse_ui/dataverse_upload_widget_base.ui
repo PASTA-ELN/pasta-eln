@@ -51,23 +51,46 @@
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="statusLabel">
-         <property name="minimumSize">
-          <size>
-           <width>100</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="toolTip">
-          <string>Displays the status of the upload process (Queued/Success/Failed/In-progress).</string>
-         </property>
-         <property name="text">
-          <string>Queued...</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-        </widget>
+        <layout class="QHBoxLayout" name="statusHorizontalLayout">
+         <item>
+          <widget class="QLabel" name="statusIconLabel">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>16</width>
+             <height>16</height>
+            </size>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="statusLabel">
+           <property name="minimumSize">
+            <size>
+             <width>100</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="toolTip">
+            <string>Displays the status of the upload process (Queued/Success/Failed/In-progress).</string>
+           </property>
+           <property name="text">
+            <string>Queued...</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
        <item>
         <widget class="QPushButton" name="showLogPushButton">
