@@ -62,8 +62,8 @@
            </property>
            <property name="minimumSize">
             <size>
-             <width>16</width>
-             <height>16</height>
+             <width>20</width>
+             <height>20</height>
             </size>
            </property>
            <property name="text">
@@ -86,7 +86,7 @@
             <string>Queued...</string>
            </property>
            <property name="alignment">
-            <set>Qt::AlignCenter</set>
+            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
            </property>
           </widget>
          </item>

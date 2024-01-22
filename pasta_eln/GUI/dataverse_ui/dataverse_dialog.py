@@ -23,6 +23,9 @@ from pasta_eln.dataverse.task_thread_abstraction import TaskThreadAbstraction
 from pasta_eln.dataverse.upload_manager import UploadManager
 from pasta_eln.dataverse.upload_task import UploadGenericTask
 
+import qtawesome as qta
+
+
 
 class DataverseDialog(Ui_DataverseDialogBase):
 
@@ -60,6 +63,7 @@ class DataverseDialog(Ui_DataverseDialogBase):
     uploadWidgetUi = Ui_UploadWidgetFrame()
     uploadWidgetUi.setupUi(uploadWidgetFrame)
     uploadWidgetUi.uploadProjectLabel.setText(project_name)
+    uploadWidgetUi.statusIconLabel.setPixmap(qta.icon('ph.queue-light').pixmap(uploadWidgetUi.statusIconLabel.size()))
     uploadWidgetUi.logConsoleTextEdit.hide()
     uploadWidgetUi.logConsoleTextEdit.setText(f"<html>Log for {project_name}<br />"
                                               f"Started upload at time: {datetime.datetime.now()}<br />"
