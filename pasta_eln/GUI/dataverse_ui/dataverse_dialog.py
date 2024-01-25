@@ -18,6 +18,7 @@ from PySide6.QtWidgets import QFrame, QWidget
 
 from pasta_eln.GUI.database_tests.dataverse_db_api import DataverseDBAPI
 from pasta_eln.GUI.database_tests.dataverse_project_model import DataverseProjectModel
+from pasta_eln.GUI.dataverse_ui.dataverse_completed_uploads import DataverseCompletedUploads
 from pasta_eln.GUI.dataverse_ui.dataverse_dialog_base import Ui_DataverseDialogBase
 from pasta_eln.GUI.dataverse_ui.dataverse_project_item_frame_base import Ui_ProjectItemFrame
 from pasta_eln.GUI.dataverse_ui.dataverse_qt_dialog import DataverseQtDialog
@@ -49,7 +50,9 @@ class DataverseDialog(Ui_DataverseDialogBase):
     self.selectAllPushButton.clicked.connect(lambda: self.select_deselect_all_projects(True))
     self.deselectAllPushButton.clicked.connect(lambda: self.select_deselect_all_projects(False))
     self.config_upload_dialog = DataverseUploadConfigDialog()
+    self.completed_uploads_dialog = DataverseCompletedUploads()
     self.configureUploadPushButton.clicked.connect(self.show_configure_upload)
+    self.showCompletedPushButton.clicked.connect(self.show_completed_uploads)
     self.upload_manager_task = UploadManager()
     self.upload_manager_task_thread = TaskThreadAbstraction(self.upload_manager_task)
     self.cancelAllPushButton.clicked.connect(lambda: self.upload_manager_task.cancel.emit())
@@ -69,17 +72,6 @@ class DataverseDialog(Ui_DataverseDialogBase):
     uploadWidgetUi.uploadProjectLabel.setToolTip(project_name)
     uploadWidgetUi.statusIconLabel.setPixmap(qta.icon('ph.queue-light').pixmap(uploadWidgetUi.statusIconLabel.size()))
     uploadWidgetUi.logConsoleTextEdit.hide()
-    uploadWidgetUi.logConsoleTextEdit.setText(f"<html>Log for {project_name}<br />"
-                                              f"Started upload at time: {datetime.datetime.now()}<br />"
-                                              f"Generating ELN file: success, filename.................<br />"
-                                              f"Uploading.................<br />"
-                                              f"Uploading.................<br />"
-                                              f"Uploading.................<br />"
-                                              f"Uploading.................<br />"
-                                              f"Uploading.................<br />"
-                                              f"Uploading.................<br />"
-                                              f"Upload URL: <a href=\"https://data-beta.fz-juelich.de/dataset.xhtml?persistentId=doi:10.0346/JUELICH-DATA-BETA/BORORQ\">Dataverse Link</a><br />"
-                                              f"Finalized upload at time: {datetime.datetime.now()}</html>")
     uploadWidgetUi.showLogPushButton.clicked.connect(lambda: self.show_hide_log(uploadWidgetUi.showLogPushButton))
     uploadWidgetUi.modelIdLabel.hide()
     return {"base": uploadWidgetFrame, "widget": uploadWidgetUi}
@@ -120,6 +112,10 @@ class DataverseDialog(Ui_DataverseDialogBase):
   def show_configure_upload(self):
     self.config_upload_dialog.instance.show()
 
+  def show_completed_uploads(self):
+    self.completed_uploads_dialog.load_ui()
+    self.completed_uploads_dialog.instance.show()
+
   def release_upload_manager(self):
     self.upload_manager_task_thread.quit()
 
@@ -128,15 +124,13 @@ class DataverseDialog(Ui_DataverseDialogBase):
     time.sleep(0.5)
 
   def show_hide_log(self, button):
-    upload_model_id =  button.parent().findChild(QtWidgets.QLabel, name="modelIdLabel").text()
-    logConsoleTextEdit = button.parent().findChild(QtWidgets.QTextEdit, name="logConsoleTextEdit")
-    logConsoleTextEdit.show() if logConsoleTextEdit.isHidden() else logConsoleTextEdit.hide()
-    if upload_model_id:
+    frame = button.parent()
+    log_console_text_edit = frame.findChild(QtWidgets.QTextEdit, name="logConsoleTextEdit")
+    log_console_text_edit.show() if log_console_text_edit.isHidden() else log_console_text_edit.hide()
+    if (upload_model_id :=
+        frame.findChild(QtWidgets.QLabel, name="modelIdLabel").text()):
       model = self.db_api.get_upload_model(upload_model_id)
-      logConsoleTextEdit.setText(model.upload_log)
-
-  def update_model_id_label(self, id, modelIdLabel):
-    modelIdLabel.setText(id)
+      log_console_text_edit.setText(model.upload_log)
 
 
 if __name__ == "__main__":

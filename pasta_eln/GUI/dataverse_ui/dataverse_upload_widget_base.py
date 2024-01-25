@@ -70,6 +70,7 @@ class Ui_UploadWidgetFrame(object):
     self.logConsoleTextEdit.setObjectName("logConsoleTextEdit")
     self.uploadWidgetMainverticalLayout.addWidget(self.logConsoleTextEdit)
     self.modelIdLabel = QtWidgets.QLabel(parent=UploadWidgetFrame)
+    self.modelIdLabel.setText("")
     self.modelIdLabel.setObjectName("modelIdLabel")
     self.uploadWidgetMainverticalLayout.addWidget(self.modelIdLabel)
     self.gridLayout.addLayout(self.uploadWidgetMainverticalLayout, 0, 0, 1, 1)
@@ -90,7 +91,6 @@ class Ui_UploadWidgetFrame(object):
     self.uploadCancelPushButton.setToolTip(_translate("UploadWidgetFrame", "Click to cancel this particular upload."))
     self.uploadCancelPushButton.setText(_translate("UploadWidgetFrame", "Cancel"))
     self.logConsoleTextEdit.setToolTip(_translate("UploadWidgetFrame", "Displays the generated log messages for this particular upload."))
-    self.modelIdLabel.setText(_translate("UploadWidgetFrame", "TextLabel"))
 
 
 if __name__ == "__main__":

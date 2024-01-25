@@ -26,7 +26,7 @@ class DataverseDBAPI(object):
 
   def update_upload_model_document(self, data: DataverseUploadModel):
     self.db_api.update_document(data.__dict__)
-    return self.get_upload_model(data.id)
+    #return self.get_upload_model(data.id)
 
   def create_dataverse_design_document(self):
     data = {"_id": self.design_doc_name}

@@ -6,9 +6,11 @@
 #  Filename: upload_task_thread.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
+import datetime
 import random
 import time
 
+import faker
 import qtawesome as qta
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QLabel
@@ -40,19 +42,31 @@ class UploadGenericTask(GenericTaskObject):
     self.statusChanged.emit("Queued")
     self.statusChanged.emit("Uploading")
     self.uploadModelCreated.emit(self.upload_model.id)
+    self.upload_model.append_log(f"Generating ELN file.....\n")
     for progressbar_value in range(101):
       self.progressChanged.emit(progressbar_value)
       if self.cancelled:
         break
       self.upload_model.append_log(f"Uploading.......... Progress: {progressbar_value}%\n")
+      self.upload_model.upload_status = "In progress"
       self.db_api.update_upload_model_document(self.upload_model)
-      #time.sleep(random.uniform(0.01, 0.06))
-      time.sleep(1)
+
+      time.sleep(random.uniform(0.01, 0.06))
+      #time.sleep(0.05)
+    if not self.cancelled:
+      self.upload_model.append_log(f"Uploading completed at {time.asctime()}\n")
+      self.upload_model.upload_finished_time = datetime.datetime.now().isoformat()
+      self.upload_model.upload_status = "Finished"
+      self.upload_model.dataverse_url = faker.Faker().url()
+      self.upload_model.append_log(f"Uploading to url: {self.upload_model.dataverse_url}\n")
+    self.db_api.update_upload_model_document(self.upload_model)
     self.finished.emit()
     self.statusChanged.emit("Cancelled" if self.cancelled else "Finished")
 
   def cancel_task(self):
     super().cancel_task()
+    self.upload_model.append_log(f"Cancelled at {time.asctime()}\n")
+    self.upload_model.upload_status = "Cancelled"
     self.statusChanged.emit("Cancelled")
 
   def update_status(self,
