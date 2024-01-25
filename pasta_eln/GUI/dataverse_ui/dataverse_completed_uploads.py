@@ -35,18 +35,40 @@ class DataverseCompletedUploads(Ui_DataverseCompletedUploadsForm):
     self.instance.setWindowModality(QtCore.Qt.ApplicationModal)
 
   def load_ui(self):
+    self.clear_ui()
     for upload in self.db_api.get_all_upload_models():
       widget = self.get_completed_upload_task_widget(upload)
       self.completedUploadsVerticalLayout.addWidget(widget)
+
+  def clear_ui(self):
+    for widget_pos in reversed(range(self.completedUploadsVerticalLayout.count())):
+      self.completedUploadsVerticalLayout.itemAt(widget_pos).widget().setParent(None)
 
   def get_completed_upload_task_widget(self, upload: DataverseUploadModel)->QFrame:
     completedTaskFrame = QtWidgets.QFrame()
     completedTaskUi = Ui_CompletedUploadTaskFrame()
     completedTaskUi.setupUi(completedTaskFrame)
     completedTaskUi.projectNameLabel.setText(upload.project_name)
-    completedTaskUi.dataverseUrlLabel.setText(upload.dataverse_url)
-    completedTaskUi.finishedDateTimeLabel.setText(datetime.fromisoformat(upload.upload_finished_time).strftime("%Y-%m-%d %H:%M:%S") if upload.upload_finished_time else "")
+
+
     completedTaskUi.statusLabel.setText(upload.upload_status)
+    match upload.upload_status:
+      case "In progress":
+        completedTaskUi.dataverseUrlLabel.setText("Waiting..")
+        completedTaskUi.finishedDateTimeLabel.setText("Waiting..")
+      case "Finished":
+        completedTaskUi.dataverseUrlLabel.setText(upload.dataverse_url)
+        completedTaskUi.finishedDateTimeLabel.setText(datetime.fromisoformat(upload.upload_finished_time).strftime(
+          "%Y-%m-%d %H:%M:%S") if upload.upload_finished_time else "")
+      case "Failed" | "Cancelled":
+        completedTaskUi.dataverseUrlLabel.setText("NA")
+        completedTaskUi.finishedDateTimeLabel.setText("NA")
+      case "Queued":
+        completedTaskUi.dataverseUrlLabel.setText("Waiting..")
+        completedTaskUi.finishedDateTimeLabel.setText("Waiting..")
+      case _:
+        completedTaskUi.dataverseUrlLabel.setText("Error state..")
+        completedTaskUi.finishedDateTimeLabel.setText("Error state..")
     return completedTaskFrame
 
 
