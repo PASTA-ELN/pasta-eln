@@ -49,26 +49,30 @@ if __name__ == "__main__":
 
   fake = Faker()
   api = DataverseDBAPI()
-  # api.create_dataverse_design_document()
-  # api.create_upload_documents_view()
-  # api.create_projects_view()
+  api.create_dataverse_design_document()
+  api.create_upload_documents_view()
+  api.create_projects_view()
   # for _ in range(500):
   #   dv_upload_model = DataverseUploadModel(fake.name(), "uploading", fake.iso8601(), fake.text(), fake.url())
   #   new_doc = api.create_upload_document(dv_upload_model)
-  dv_upload_model = DataverseUploadModel(fake.name(), "uploading", fake.iso8601(), fake.text(), fake.url())
-  print(dv_upload_model.__dict__)
-  print("######################")
-  new_doc = api.create_upload_document(dv_upload_model)
-  results = api.get_all_upload_model_results()
-  print(f"###################### count: {len(results)}")
-  for result in results:
-    print(result.__dict__)
-  print("######################")
-  result = api.get_upload_model_result(new_doc['_id'])
-  print(result.__dict__)
-  print("######################")
-  projects = api.get_all_projects()
-  for project in projects:
-    print(project.__dict__)
+  # dv_upload_model = DataverseUploadModel(fake.name(), "uploading", fake.iso8601(), fake.text(), fake.url())
+  # print(dv_upload_model.__dict__)
+  # print("######################")
+  # new_doc = api.create_upload_model_document(dv_upload_model)
+  # results = api.get_all_upload_models()
+  # print(f"###################### count: {len(results)}")
+  # for result in results:
+  #   print(result.__dict__)
+  # print("######################")
+  # result = api.get_upload_model(new_doc['_id'])
+  # print(result.__dict__)
+  # result.project_name = fake.name() + fake.name()
+  # result.upload_status = "finished"
+  # result = api.update_upload_model_document(result)
+  # print(result.__dict__)
+  # print("######################")
+  # projects = api.get_all_project_models()
+  # for project in projects:
+  #   print(project.__dict__)
 
 # tests = DBTests()

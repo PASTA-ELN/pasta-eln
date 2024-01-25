@@ -34,6 +34,7 @@ class Ui_ProjectItemFrame(object):
     self.horizontalLayout.addWidget(self.projectCheckBox)
     self.projectNameLabel = QtWidgets.QLabel(parent=ProjectItemFrame)
     self.projectNameLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignLeading|QtCore.Qt.AlignmentFlag.AlignLeft|QtCore.Qt.AlignmentFlag.AlignVCenter)
+    self.projectNameLabel.setWordWrap(True)
     self.projectNameLabel.setObjectName("projectNameLabel")
     self.horizontalLayout.addWidget(self.projectNameLabel)
     self.modifiedDateTimeLabel = QtWidgets.QLabel(parent=ProjectItemFrame)

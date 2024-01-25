@@ -10,11 +10,11 @@
 class DataverseUploadModel(object):
 
   def __init__(self,
-               project_name: str,
-               upload_status: str,
-               upload_finished_time: str,
-               upload_log: str,
-               dataverse_url: str,
+               project_name: str = None,
+               upload_status: str = None,
+               upload_finished_time: str = None,
+               upload_log: str = None,
+               dataverse_url: str = None,
                _id: str = None,
                _rev: str = None,
                data_type: str = None):
@@ -30,3 +30,7 @@ class DataverseUploadModel(object):
 
   def append_log(self, value):
     self.upload_log += value
+
+  @property
+  def id(self):
+    return self._id

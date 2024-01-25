@@ -13,6 +13,8 @@ import qtawesome as qta
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QLabel
 
+from pasta_eln.GUI.database_tests.dataverse_db_api import DataverseDBAPI
+from pasta_eln.GUI.database_tests.dataverse_upload_model import DataverseUploadModel
 from pasta_eln.GUI.dataverse_ui.dataverse_upload_widget_base import Ui_UploadWidgetFrame
 from pasta_eln.dataverse.generic_task_object import GenericTaskObject
 
@@ -20,11 +22,16 @@ from pasta_eln.dataverse.generic_task_object import GenericTaskObject
 class UploadGenericTask(GenericTaskObject):
   progressChanged = Signal(int)
   statusChanged = Signal(str)
+  uploadModelCreated = Signal(str)
 
   def __init__(self, widget: Ui_UploadWidgetFrame):
     super().__init__()
     self.progressChanged.connect(widget.uploadProgressBar.setValue)
     self.statusChanged.connect(lambda status: self.update_status(status, widget.statusIconLabel, widget.statusLabel))
+    self.project_name = widget.uploadProjectLabel.text()
+    self.db_api = DataverseDBAPI()
+    self.upload_model = DataverseUploadModel(project_name=self.project_name, upload_status="Queued", upload_log=f"Upload initiated for project {self.project_name} at {time.asctime()}\n")
+    self.upload_model = self.db_api.create_upload_model_document(self.upload_model)
     widget.uploadCancelPushButton.clicked.connect(lambda: self.cancel.emit())
 
   def start_task(self):
@@ -32,11 +39,15 @@ class UploadGenericTask(GenericTaskObject):
     self.progressChanged.emit(0)
     self.statusChanged.emit("Queued")
     self.statusChanged.emit("Uploading")
+    self.uploadModelCreated.emit(self.upload_model.id)
     for progressbar_value in range(101):
       self.progressChanged.emit(progressbar_value)
       if self.cancelled:
         break
-      time.sleep(random.uniform(0.01, 0.06))
+      self.upload_model.append_log(f"Uploading.......... Progress: {progressbar_value}%\n")
+      self.db_api.update_upload_model_document(self.upload_model)
+      #time.sleep(random.uniform(0.01, 0.06))
+      time.sleep(1)
     self.finished.emit()
     self.statusChanged.emit("Cancelled" if self.cancelled else "Finished")
 

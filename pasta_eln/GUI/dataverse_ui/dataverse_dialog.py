@@ -8,12 +8,16 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import datetime
 import logging
+import textwrap
 import time
 from typing import Any
 
-from PySide6 import QtCore, QtWidgets
+import qtawesome as qta
+from PySide6 import QtWidgets
 from PySide6.QtWidgets import QFrame, QWidget
 
+from pasta_eln.GUI.database_tests.dataverse_db_api import DataverseDBAPI
+from pasta_eln.GUI.database_tests.dataverse_project_model import DataverseProjectModel
 from pasta_eln.GUI.dataverse_ui.dataverse_dialog_base import Ui_DataverseDialogBase
 from pasta_eln.GUI.dataverse_ui.dataverse_project_item_frame_base import Ui_ProjectItemFrame
 from pasta_eln.GUI.dataverse_ui.dataverse_qt_dialog import DataverseQtDialog
@@ -22,9 +26,6 @@ from pasta_eln.GUI.dataverse_ui.dataverse_upload_widget_base import Ui_UploadWid
 from pasta_eln.dataverse.task_thread_abstraction import TaskThreadAbstraction
 from pasta_eln.dataverse.upload_manager import UploadManager
 from pasta_eln.dataverse.upload_task import UploadGenericTask
-
-import qtawesome as qta
-
 
 
 class DataverseDialog(Ui_DataverseDialogBase):
@@ -39,8 +40,9 @@ class DataverseDialog(Ui_DataverseDialogBase):
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
     self.instance = DataverseQtDialog()
     super().setupUi(self.instance)
-    for i in range(300):
-      widget = self.get_project_widget(f"Example Project {i + 1}")
+    self.db_api = DataverseDBAPI()
+    for project in self.db_api.get_all_project_models():
+      widget = self.get_project_widget(project)
       self.projectsScrollAreaVerticalLayout.addWidget(widget)
     self.uploadPushButton.clicked.connect(self.start_upload)
     self.clearFinishedPushButton.clicked.connect(self.clear_finished)
@@ -51,7 +53,7 @@ class DataverseDialog(Ui_DataverseDialogBase):
     self.upload_manager_task = UploadManager()
     self.upload_manager_task_thread = TaskThreadAbstraction(self.upload_manager_task)
     self.cancelAllPushButton.clicked.connect(lambda: self.upload_manager_task.cancel.emit())
-    self.buttonBox.button(QtWidgets.QDialogButtonBox.Cancel).clicked.connect(lambda : self.close_ui())
+    self.buttonBox.button(QtWidgets.QDialogButtonBox.Cancel).clicked.connect(lambda: self.close_ui())
     self.instance.closed.connect(lambda: self.close_ui())
 
   def create_update_task(self,
@@ -62,7 +64,9 @@ class DataverseDialog(Ui_DataverseDialogBase):
     uploadWidgetFrame = QtWidgets.QFrame()
     uploadWidgetUi = Ui_UploadWidgetFrame()
     uploadWidgetUi.setupUi(uploadWidgetFrame)
-    uploadWidgetUi.uploadProjectLabel.setText(project_name)
+    uploadWidgetUi.uploadProjectLabel.setText(textwrap.fill(project_name, 45
+                                                            , max_lines=1))
+    uploadWidgetUi.uploadProjectLabel.setToolTip(project_name)
     uploadWidgetUi.statusIconLabel.setPixmap(qta.icon('ph.queue-light').pixmap(uploadWidgetUi.statusIconLabel.size()))
     uploadWidgetUi.logConsoleTextEdit.hide()
     uploadWidgetUi.logConsoleTextEdit.setText(f"<html>Log for {project_name}<br />"
@@ -76,18 +80,18 @@ class DataverseDialog(Ui_DataverseDialogBase):
                                               f"Uploading.................<br />"
                                               f"Upload URL: <a href=\"https://data-beta.fz-juelich.de/dataset.xhtml?persistentId=doi:10.0346/JUELICH-DATA-BETA/BORORQ\">Dataverse Link</a><br />"
                                               f"Finalized upload at time: {datetime.datetime.now()}</html>")
-    uploadWidgetUi.showLogPushButton.clicked.connect(lambda:
-                                                     uploadWidgetUi.logConsoleTextEdit.show()
-                                                     if uploadWidgetUi.logConsoleTextEdit.isHidden()
-                                                     else uploadWidgetUi.logConsoleTextEdit.hide())
+    uploadWidgetUi.showLogPushButton.clicked.connect(lambda: self.show_hide_log(uploadWidgetUi.showLogPushButton))
+    uploadWidgetUi.modelIdLabel.hide()
     return {"base": uploadWidgetFrame, "widget": uploadWidgetUi}
 
-  def get_project_widget(self, project_name: str = 0) -> QWidget:
+  def get_project_widget(self, project: DataverseProjectModel) -> QWidget:
     projectWidgetFrame = QtWidgets.QFrame()
     projectWidgetUi = Ui_ProjectItemFrame()
     projectWidgetUi.setupUi(projectWidgetFrame)
-    projectWidgetUi.projectNameLabel.setText(project_name)
-    projectWidgetUi.modifiedDateTimeLabel.setText(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    projectWidgetUi.projectNameLabel.setText(textwrap.fill(project.name, width=80, max_lines=1))
+    projectWidgetUi.projectNameLabel.setToolTip(project.name)
+    projectWidgetUi.modifiedDateTimeLabel.setText(
+      datetime.datetime.fromisoformat(project.date).strftime("%Y-%m-%d %H:%M:%S"))
     return projectWidgetFrame
 
   def start_upload(self):
@@ -96,11 +100,13 @@ class DataverseDialog(Ui_DataverseDialogBase):
       project_widget = self.projectsScrollAreaVerticalLayout.itemAt(widget_pos).widget()
       if project_widget.findChild(QtWidgets.QCheckBox, name="projectCheckBox").isChecked():
         upload_widget = self.get_upload_widget(
-          project_widget.findChild(QtWidgets.QLabel, name="projectNameLabel").text())
+          project_widget.findChild(QtWidgets.QLabel, name="projectNameLabel").toolTip())
         self.uploadQueueVerticalLayout.addWidget(upload_widget["base"])
         task = self.create_update_task(upload_widget["widget"])
         self.upload_manager_task.add_to_queue(task)
+        task.task.uploadModelCreated.connect(upload_widget["widget"].modelIdLabel.setText)
     self.upload_manager_task_thread.task.start.emit()
+
 
   def clear_finished(self):
     for widget_pos in reversed(range(self.uploadQueueVerticalLayout.count())):
@@ -120,6 +126,17 @@ class DataverseDialog(Ui_DataverseDialogBase):
   def close_ui(self):
     self.upload_manager_task_thread.quit()
     time.sleep(0.5)
+
+  def show_hide_log(self, button):
+    upload_model_id =  button.parent().findChild(QtWidgets.QLabel, name="modelIdLabel").text()
+    logConsoleTextEdit = button.parent().findChild(QtWidgets.QTextEdit, name="logConsoleTextEdit")
+    logConsoleTextEdit.show() if logConsoleTextEdit.isHidden() else logConsoleTextEdit.hide()
+    if upload_model_id:
+      model = self.db_api.get_upload_model(upload_model_id)
+      logConsoleTextEdit.setText(model.upload_log)
+
+  def update_model_id_label(self, id, modelIdLabel):
+    modelIdLabel.setText(id)
 
 
 if __name__ == "__main__":

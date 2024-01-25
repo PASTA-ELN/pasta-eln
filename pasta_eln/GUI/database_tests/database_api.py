@@ -9,9 +9,11 @@
 import logging
 from json import load
 from pathlib import Path
+from typing import Any
 
 from cloudant import couchdb
 from cloudant.design_document import DesignDocument
+from cloudant.document import Document
 from cloudant.view import View
 
 from pasta_eln.GUI.database_tests.database_error import DatabaseError
@@ -39,13 +41,24 @@ class DatabaseAPI:
       self.username = config['projectGroups'][config['defaultProjectGroup']]['local']['user']
       self.password = config['projectGroups'][config['defaultProjectGroup']]['local']['password']
 
-  def create_document(self, data):
+  def create_document(self, data: dict[str, Any]) -> Document:
     with couchdb(self.username,
                  self.password,
                  url=self.url,
                  connect=True) as client:
       pasta_db = client[self.db_name]
       return pasta_db.create_document(data, throw_on_exists=True)
+
+  def update_document(self, data: dict[str, Any])->None:
+    with couchdb(self.username,
+                     self.password,
+                     url=self.url,
+                     connect=True) as client:
+      pasta_db = client[self.db_name]
+      with Document(pasta_db, data['_id']) as document:
+        for key, value in data.items():
+          if key not in ['_id', '_rev']:
+            document[key] = value
 
   def add_view(self,
                design_document_name,

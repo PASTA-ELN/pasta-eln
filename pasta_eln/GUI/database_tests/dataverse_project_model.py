@@ -10,10 +10,10 @@
 class DataverseProjectModel(object):
 
   def __init__(self,
-               name: str,
-               comment: str,
-               user: str,
-               date: str,
+               name: str = None,
+               comment: str = None,
+               user: str = None,
+               date: str = None,
                status: str = None,
                objective: str = None,
                _id: str = None,
