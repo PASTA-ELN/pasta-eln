@@ -1,0 +1,85 @@
+#  PASTA-ELN and all its sub-parts are covered by the MIT license.
+#
+#  Copyright (c) 2024
+#
+#  Author: Jithu Murugan
+#  Filename: test_project_model.py
+#
+#  You should have received a copy of the license with this file. Please refer the license file for more information.
+import pytest
+
+from pasta_eln.GUI.database_tests.project_model import ProjectModel
+
+
+class TestProjectModel:
+  # Test IDs for different scenarios
+  SUCCESS_PATH_ID = "Success Path"
+  EDGE_CASE_ID = "Edge Case"
+  ERROR_CASE_ID = "Error Case"
+
+  # Test values for success path
+  success_path_params = [
+    (SUCCESS_PATH_ID, "1", "rev1", "Project A", "Initial comment", "user1", "2023-01-01", "active", "Research"),
+    (SUCCESS_PATH_ID, "2", "rev2", "Project B", "Follow-up comment", "user2", "2023-01-02", "completed", "Development"),
+  ]
+
+  # Test values for edge cases
+  edge_case_params = [
+    (EDGE_CASE_ID, "", "", "", "", "", "", "", ""),
+    (EDGE_CASE_ID, None, None, None, None, None, None, None, None),
+  ]
+
+  @pytest.mark.parametrize("test_id, _id, _rev, _name, _comment, _user, _date, _status, _objective",
+                           success_path_params)
+  def test_dataverse_project_model_happy_path(self,
+                                              test_id,
+                                              _id,
+                                              _rev,
+                                              _name,
+                                              _comment,
+                                              _user,
+                                              _date,
+                                              _status,
+                                              _objective):
+    # Arrange
+    # All input values are provided via test parameters, so we omit the Arrange section.
+
+    # Act
+    project = ProjectModel(_id, _rev, _name, _comment, _user, _date, _status, _objective)
+
+    # Assert
+    assert project.id == _id
+    assert project.rev == _rev
+    assert project.name == _name
+    assert project.comment == _comment
+    assert project.user == _user
+    assert project.date == _date
+    assert project.status == _status
+    assert project.objective == _objective
+
+  @pytest.mark.parametrize("test_id, _id, _rev, _name, _comment, _user, _date, _status, _objective", edge_case_params)
+  def test_dataverse_project_model_edge_cases(self,
+                                              test_id,
+                                              _id,
+                                              _rev,
+                                              _name,
+                                              _comment,
+                                              _user,
+                                              _date,
+                                              _status,
+                                              _objective):
+    # Arrange
+    # All input values are provided via test parameters, so we omit the Arrange section.
+
+    # Act
+    project = ProjectModel(_id, _rev, _name, _comment, _user, _date, _status, _objective)
+
+    # Assert
+    assert project.id == _id
+    assert project.rev == _rev
+    assert project.name == _name
+    assert project.comment == _comment
+    assert project.user == _user
+    assert project.date == _date
+    assert project.status == _status
+    assert project.objective == _objective

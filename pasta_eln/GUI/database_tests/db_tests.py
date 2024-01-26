@@ -10,7 +10,7 @@
 from cloudant import CouchDB
 
 from pasta_eln.GUI.database_tests.dataverse_db_api import DataverseDBAPI
-from pasta_eln.GUI.database_tests.dataverse_upload_model import DataverseUploadModel
+from pasta_eln.GUI.database_tests.upload_model import UploadModel
 
 
 class DBTests(object):
@@ -53,9 +53,9 @@ if __name__ == "__main__":
   api.create_upload_documents_view()
   api.create_projects_view()
   # for _ in range(500):
-  #   dv_upload_model = DataverseUploadModel(fake.name(), "uploading", fake.iso8601(), fake.text(), fake.url())
-  #   new_doc = api.create_upload_document(dv_upload_model)
-  # dv_upload_model = DataverseUploadModel(fake.name(), "uploading", fake.iso8601(), fake.text(), fake.url())
+  #   dv_upload_model = UploadModel(fake.name(), "Finished", fake.iso8601(), fake.text(), fake.url())
+  #   new_doc = api.create_upload_model_document(dv_upload_model)
+  # dv_upload_model = UploadModel(fake.name(), "uploading", fake.iso8601(), fake.text(), fake.url())
   # print(dv_upload_model.__dict__)
   # print("######################")
   # new_doc = api.create_upload_model_document(dv_upload_model)

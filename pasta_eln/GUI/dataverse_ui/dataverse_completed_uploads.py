@@ -14,7 +14,7 @@ from PySide6 import QtCore, QtWidgets
 from PySide6.QtWidgets import QDialog, QFrame
 
 from pasta_eln.GUI.database_tests.dataverse_db_api import DataverseDBAPI
-from pasta_eln.GUI.database_tests.dataverse_upload_model import DataverseUploadModel
+from pasta_eln.GUI.database_tests.upload_model import UploadModel
 from pasta_eln.GUI.dataverse_ui.dataverse_completed_upload_task import Ui_CompletedUploadTaskFrame
 from pasta_eln.GUI.dataverse_ui.dataverse_completed_uploads_base import Ui_DataverseCompletedUploadsForm
 
@@ -44,22 +44,22 @@ class DataverseCompletedUploads(Ui_DataverseCompletedUploadsForm):
     for widget_pos in reversed(range(self.completedUploadsVerticalLayout.count())):
       self.completedUploadsVerticalLayout.itemAt(widget_pos).widget().setParent(None)
 
-  def get_completed_upload_task_widget(self, upload: DataverseUploadModel)->QFrame:
+  def get_completed_upload_task_widget(self, upload: UploadModel)->QFrame:
     completedTaskFrame = QtWidgets.QFrame()
     completedTaskUi = Ui_CompletedUploadTaskFrame()
     completedTaskUi.setupUi(completedTaskFrame)
     completedTaskUi.projectNameLabel.setText(upload.project_name)
 
 
-    completedTaskUi.statusLabel.setText(upload.upload_status)
-    match upload.upload_status:
+    completedTaskUi.statusLabel.setText(upload.status)
+    match upload.status:
       case "In progress":
         completedTaskUi.dataverseUrlLabel.setText("Waiting..")
         completedTaskUi.finishedDateTimeLabel.setText("Waiting..")
       case "Finished":
         completedTaskUi.dataverseUrlLabel.setText(upload.dataverse_url)
-        completedTaskUi.finishedDateTimeLabel.setText(datetime.fromisoformat(upload.upload_finished_time).strftime(
-          "%Y-%m-%d %H:%M:%S") if upload.upload_finished_time else "")
+        completedTaskUi.finishedDateTimeLabel.setText(datetime.fromisoformat(upload.finished_date_time).strftime(
+          "%Y-%m-%d %H:%M:%S") if upload.finished_date_time else "")
       case "Failed" | "Cancelled":
         completedTaskUi.dataverseUrlLabel.setText("NA")
         completedTaskUi.finishedDateTimeLabel.setText("NA")

@@ -17,7 +17,7 @@ from PySide6 import QtWidgets
 from PySide6.QtWidgets import QFrame, QWidget
 
 from pasta_eln.GUI.database_tests.dataverse_db_api import DataverseDBAPI
-from pasta_eln.GUI.database_tests.dataverse_project_model import DataverseProjectModel
+from pasta_eln.GUI.database_tests.project_model import ProjectModel
 from pasta_eln.GUI.dataverse_ui.dataverse_completed_uploads import DataverseCompletedUploads
 from pasta_eln.GUI.dataverse_ui.dataverse_dialog_base import Ui_DataverseDialogBase
 from pasta_eln.GUI.dataverse_ui.dataverse_project_item_frame_base import Ui_ProjectItemFrame
@@ -76,7 +76,7 @@ class DataverseDialog(Ui_DataverseDialogBase):
     uploadWidgetUi.modelIdLabel.hide()
     return {"base": uploadWidgetFrame, "widget": uploadWidgetUi}
 
-  def get_project_widget(self, project: DataverseProjectModel) -> QWidget:
+  def get_project_widget(self, project: ProjectModel) -> QWidget:
     projectWidgetFrame = QtWidgets.QFrame()
     projectWidgetUi = Ui_ProjectItemFrame()
     projectWidgetUi.setupUi(projectWidgetFrame)
