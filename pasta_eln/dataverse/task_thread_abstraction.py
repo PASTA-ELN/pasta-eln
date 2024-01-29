@@ -6,9 +6,8 @@
 #  Filename: task_thread_abstraction.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
-import time
 
-from PySide6.QtCore import QObject, QThread, QTimer
+from PySide6.QtCore import QObject, QThread
 
 from pasta_eln.dataverse.generic_task_object import GenericTaskObject
 
