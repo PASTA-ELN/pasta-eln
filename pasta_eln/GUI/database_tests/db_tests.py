@@ -9,8 +9,8 @@
 
 from cloudant import CouchDB
 
+from pasta_eln.GUI.database_tests.config_model import ConfigModel
 from pasta_eln.GUI.database_tests.dataverse_db_api import DataverseDBAPI
-from pasta_eln.GUI.database_tests.upload_model import UploadModel
 
 
 class DBTests(object):
@@ -49,9 +49,19 @@ if __name__ == "__main__":
 
   fake = Faker()
   api = DataverseDBAPI()
-  api.create_dataverse_design_document()
-  api.create_upload_documents_view()
-  api.create_projects_view()
+  # api.create_dataverse_design_document()
+  # api.create_upload_documents_view()
+  # api.create_projects_view()
+
+  # config_model = ConfigModel("dataverseConfig")
+  # config_model.project_upload_items = {}
+  # config_model.dataverse_login_info = {"username": fake.name(), "password": fake.name()}
+  # config_model.metadata = {}
+  # config_model.parallel_uploads_count = 5
+  # config_model = api.create_model_document(config_model)
+  config_model = api.get_model("dataverseConfig", ConfigModel)
+  print(config_model.__dict__)
+
   # for _ in range(500):
   #   dv_upload_model = UploadModel(fake.name(), "Finished", fake.iso8601(), fake.text(), fake.url())
   #   new_doc = api.create_upload_model_document(dv_upload_model)

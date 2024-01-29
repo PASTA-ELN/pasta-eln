@@ -36,7 +36,7 @@ class DataverseCompletedUploads(Ui_DataverseCompletedUploadsForm):
 
   def load_ui(self):
     self.clear_ui()
-    for upload in self.db_api.get_all_upload_models():
+    for upload in self.db_api.get_models(UploadModel):
       widget = self.get_completed_upload_task_widget(upload)
       self.completedUploadsVerticalLayout.addWidget(widget)
 

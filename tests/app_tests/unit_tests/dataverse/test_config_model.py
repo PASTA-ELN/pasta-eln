@@ -16,49 +16,49 @@ class TestConfigModel:
 
   # Happy path tests with various realistic test values
   @pytest.mark.parametrize(
-    "test_id, _id, _rev, _upload_items, _parallel_uploads_count, _dataverse_login_info, _metadata",
+    "test_id, _id, _rev, project_upload_items, parallel_uploads_count, dataverse_login_info, metadata",
     [
       ("success_case_full", "id123", "rev123", {"item1": "data1"}, 5, {"user": "test_user"},
        {"title": "Test Metadata"}),
       ("success_case_minimal", None, None, None, None, None, None),
       # Add more test cases as needed
     ], ids=lambda test_id: test_id)
-  def test_init_happy_path(self, test_id, _id, _rev, _upload_items, _parallel_uploads_count, _dataverse_login_info,
-                           _metadata):
+  def test_init_happy_path(self, test_id, _id, _rev, project_upload_items, parallel_uploads_count, dataverse_login_info,
+                           metadata):
     # Act
-    instance = ConfigModel(_id, _rev, _upload_items, _parallel_uploads_count, _dataverse_login_info, _metadata)
+    instance = ConfigModel(_id, _rev, project_upload_items, parallel_uploads_count, dataverse_login_info, metadata)
 
     # Assert
-    assert instance._id == _id
-    assert instance._rev == _rev
-    assert instance._upload_items == _upload_items
-    assert instance._parallel_uploads_count == _parallel_uploads_count
-    assert instance._dataverse_login_info == _dataverse_login_info
-    assert instance._metadata == _metadata
+    assert instance.id == _id
+    assert instance.rev == _rev
+    assert instance.project_upload_items == project_upload_items
+    assert instance.parallel_uploads_count == parallel_uploads_count
+    assert instance.dataverse_login_info == dataverse_login_info
+    assert instance.metadata == metadata
 
   # Edge cases
   @pytest.mark.parametrize(
-    "test_id, _id, _rev, _upload_items, _parallel_uploads_count, _dataverse_login_info, _metadata",
+    "test_id, _id, _rev, project_upload_items, parallel_uploads_count, dataverse_login_info, metadata",
     [
       ("edge_case_empty_strings", "", "", {}, 0, {}, {}),
       # Add more edge cases as needed
     ], ids=lambda test_id: test_id)
-  def test_init_edge_cases(self, test_id, _id, _rev, _upload_items, _parallel_uploads_count, _dataverse_login_info,
-                           _metadata):
+  def test_init_edge_cases(self, test_id, _id, _rev, project_upload_items, parallel_uploads_count, dataverse_login_info,
+                           metadata):
     # Act
-    instance = ConfigModel(_id, _rev, _upload_items, _parallel_uploads_count, _dataverse_login_info, _metadata)
+    instance = ConfigModel(_id, _rev, project_upload_items, parallel_uploads_count, dataverse_login_info, metadata)
 
     # Assert
-    assert instance._id == _id
-    assert instance._rev == _rev
-    assert instance._upload_items == _upload_items
-    assert instance._parallel_uploads_count == _parallel_uploads_count
-    assert instance._dataverse_login_info == _dataverse_login_info
-    assert instance._metadata == _metadata
+    assert instance.id == _id
+    assert instance.rev == _rev
+    assert instance.project_upload_items == project_upload_items
+    assert instance.parallel_uploads_count == parallel_uploads_count
+    assert instance.dataverse_login_info == dataverse_login_info
+    assert instance.metadata == metadata
 
   # Error cases
   @pytest.mark.parametrize(
-    "test_id, _id, _rev, _upload_items, _parallel_uploads_count, _dataverse_login_info, _metadata, expected_exception",
+    "test_id, _id, _rev, project_upload_items, parallel_uploads_count, dataverse_login_info, metadata, expected_exception",
     [
       ("error_case_invalid_metadata", "123", "rev123", {"item1": "data1"}, 5, {"user": "test_user"}, "invalid_metadata",
        IncorrectParameterError),
@@ -66,9 +66,9 @@ class TestConfigModel:
        IncorrectParameterError),
       # Add more error cases as needed
     ], ids=lambda test_id: test_id)
-  def test_init_error_cases(self, test_id, _id, _rev, _upload_items, _parallel_uploads_count, _dataverse_login_info,
-                            _metadata,
+  def test_init_error_cases(self, test_id, _id, _rev, project_upload_items, parallel_uploads_count, dataverse_login_info,
+                            metadata,
                             expected_exception):
     # Act & Assert
     with pytest.raises(expected_exception):
-      ConfigModel(_id, _rev, _upload_items, _parallel_uploads_count, _dataverse_login_info, _metadata)
+      ConfigModel(_id, _rev, project_upload_items, parallel_uploads_count, dataverse_login_info, metadata)

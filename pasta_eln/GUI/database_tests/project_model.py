@@ -14,37 +14,37 @@ class ProjectModel(BaseModel):
   def __init__(self,
                _id: str = None,
                _rev: str = None,
-               _name: str = None,
-               _comment: str = None,
-               _user: str = None,
-               _date: str = None,
-               _status: str = None,
-               _objective: str = None):
+               name: str = None,
+               comment: str = None,
+               user: str = None,
+               date: str = None,
+               status: str = None,
+               objective: str = None):
     super().__init__(_id, _rev)
-    if isinstance(_name, str | None):
-      self._name: str = _name
+    if isinstance(name, str | None):
+      self._name: str = name
     else:
-      raise IncorrectParameterError(f"Expected string type for name but got {type(_name)}")
-    if isinstance(_comment, str | None):
-      self._comment: str = _comment
+      raise IncorrectParameterError(f"Expected string type for name but got {type(name)}")
+    if isinstance(comment, str | None):
+      self._comment: str = comment
     else:
-      raise IncorrectParameterError(f"Expected string type for comment but got {type(_comment)}")
-    if isinstance(_user, str | None):
-      self._user: str = _user
+      raise IncorrectParameterError(f"Expected string type for comment but got {type(comment)}")
+    if isinstance(user, str | None):
+      self._user: str = user
     else:
-      raise IncorrectParameterError(f"Expected string type for user but got {type(_user)}")
-    if isinstance(_date, str | None):
-      self._date: str = _date
+      raise IncorrectParameterError(f"Expected string type for user but got {type(user)}")
+    if isinstance(date, str | None):
+      self._date: str = date
     else:
-      raise IncorrectParameterError(f"Expected string type for date but got {type(_date)}")
-    if isinstance(_status, str | None):
-      self._status: str = _status
+      raise IncorrectParameterError(f"Expected string type for date but got {type(date)}")
+    if isinstance(status, str | None):
+      self._status: str = status
     else:
-      raise IncorrectParameterError(f"Expected string type for status but got {type(_status)}")
-    if isinstance(_objective, str | None):
-      self._objective: str = _objective
+      raise IncorrectParameterError(f"Expected string type for status but got {type(status)}")
+    if isinstance(objective, str | None):
+      self._objective: str = objective
     else:
-      raise IncorrectParameterError(f"Expected string type for objective but got {type(_objective)}")
+      raise IncorrectParameterError(f"Expected string type for objective but got {type(objective)}")
 
 
   @property

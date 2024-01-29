@@ -49,6 +49,14 @@ class DatabaseAPI:
       pasta_db = client[self.db_name]
       return pasta_db.create_document(data, throw_on_exists=True)
 
+  def get_document(self, document_id: str) -> Document:
+    with couchdb(self.username,
+                 self.password,
+                 url=self.url,
+                 connect=True) as client:
+      pasta_db = client[self.db_name]
+      return pasta_db[document_id]
+
   def update_document(self, data: dict[str, Any])->None:
     with couchdb(self.username,
                      self.password,

@@ -28,3 +28,27 @@ class BaseModel(object):
         yield key, getattr(self, key)
       else:
         yield key[1:], getattr(self, key)
+
+  @property
+  def id(self):
+    return self._id
+
+  @id.setter
+  def id(self, value: str):
+    self._id = value
+
+  @id.deleter
+  def id(self):
+    del self._id
+
+  @property
+  def rev(self):
+    return self._rev
+
+  @rev.setter
+  def rev(self, value: str):
+    self._rev = value
+
+  @rev.deleter
+  def rev(self):
+    del self._rev

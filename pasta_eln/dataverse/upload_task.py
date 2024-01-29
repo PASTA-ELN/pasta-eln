@@ -33,7 +33,7 @@ class UploadGenericTask(GenericTaskObject):
     self.project_name = widget.uploadProjectLabel.text()
     self.db_api = DataverseDBAPI()
     self.upload_model = UploadModel(project_name=self.project_name, status="Queued", log=f"Upload initiated for project {self.project_name} at {time.asctime()}\n")
-    self.upload_model = self.db_api.create_upload_model_document(self.upload_model)
+    self.upload_model = self.db_api.create_model_document(self.upload_model)
     widget.uploadCancelPushButton.clicked.connect(lambda: self.cancel.emit())
 
   def start_task(self):
@@ -49,7 +49,7 @@ class UploadGenericTask(GenericTaskObject):
         break
       self.upload_model.log = f"Uploading.......... Progress: {progressbar_value}%"
       self.upload_model.status = "In progress"
-      self.db_api.update_upload_model_document(self.upload_model)
+      self.db_api.update_model_document(self.upload_model)
 
       time.sleep(random.uniform(0.01, 0.06))
       #time.sleep(0.05)
@@ -59,7 +59,7 @@ class UploadGenericTask(GenericTaskObject):
       self.upload_model.status = "Finished"
       self.upload_model.dataverse_url = faker.Faker().url()
       self.upload_model.log = f"Uploading to url: {self.upload_model.dataverse_url}"
-    self.db_api.update_upload_model_document(self.upload_model)
+    self.db_api.update_model_document(self.upload_model)
     self.finished.emit()
     self.statusChanged.emit("Cancelled" if self.cancelled else "Finished")
 

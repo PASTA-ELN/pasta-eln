@@ -18,6 +18,7 @@ from PySide6.QtWidgets import QFrame, QWidget
 
 from pasta_eln.GUI.database_tests.dataverse_db_api import DataverseDBAPI
 from pasta_eln.GUI.database_tests.project_model import ProjectModel
+from pasta_eln.GUI.database_tests.upload_model import UploadModel
 from pasta_eln.GUI.dataverse_ui.dataverse_completed_uploads import DataverseCompletedUploads
 from pasta_eln.GUI.dataverse_ui.dataverse_dialog_base import Ui_DataverseDialogBase
 from pasta_eln.GUI.dataverse_ui.dataverse_project_item_frame_base import Ui_ProjectItemFrame
@@ -42,7 +43,7 @@ class DataverseDialog(Ui_DataverseDialogBase):
     self.instance = DataverseQtDialog()
     super().setupUi(self.instance)
     self.db_api = DataverseDBAPI()
-    for project in self.db_api.get_all_project_models():
+    for project in self.db_api.get_models(ProjectModel):
       widget = self.get_project_widget(project)
       self.projectsScrollAreaVerticalLayout.addWidget(widget)
     self.uploadPushButton.clicked.connect(self.start_upload)
@@ -129,8 +130,8 @@ class DataverseDialog(Ui_DataverseDialogBase):
     log_console_text_edit.show() if log_console_text_edit.isHidden() else log_console_text_edit.hide()
     if (upload_model_id :=
         frame.findChild(QtWidgets.QLabel, name="modelIdLabel").text()):
-      model = self.db_api.get_upload_model(upload_model_id)
-      log_console_text_edit.setText(model.upload_log)
+      model = self.db_api.get_model(upload_model_id, UploadModel)
+      log_console_text_edit.setText(model.log)
 
 
 if __name__ == "__main__":

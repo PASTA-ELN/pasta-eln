@@ -30,65 +30,65 @@ class TestProjectModel:
     (EDGE_CASE_ID, None, None, None, None, None, None, None, None),
   ]
 
-  @pytest.mark.parametrize("test_id, _id, _rev, _name, _comment, _user, _date, _status, _objective",
+  @pytest.mark.parametrize("test_id, _id, _rev, name, comment, user, date, status, objective",
                            success_path_params)
   def test_dataverse_project_model_happy_path(self,
                                               test_id,
                                               _id,
                                               _rev,
-                                              _name,
-                                              _comment,
-                                              _user,
-                                              _date,
-                                              _status,
-                                              _objective):
+                                              name,
+                                              comment,
+                                              user,
+                                              date,
+                                              status,
+                                              objective):
     # Arrange
     # All input values are provided via test parameters, so we omit the Arrange section.
 
     # Act
-    project = ProjectModel(_id, _rev, _name, _comment, _user, _date, _status, _objective)
+    project = ProjectModel(_id, _rev, name, comment, user, date, status, objective)
 
     # Assert
     assert project.id == _id
     assert project.rev == _rev
-    assert project.name == _name
-    assert project.comment == _comment
-    assert project.user == _user
-    assert project.date == _date
-    assert project.status == _status
-    assert project.objective == _objective
+    assert project.name == name
+    assert project.comment == comment
+    assert project.user == user
+    assert project.date == date
+    assert project.status == status
+    assert project.objective == objective
 
-  @pytest.mark.parametrize("test_id, _id, _rev, _name, _comment, _user, _date, _status, _objective", edge_case_params)
+  @pytest.mark.parametrize("test_id, _id, _rev, name, comment, user, date, status, objective", edge_case_params)
   def test_dataverse_project_model_edge_cases(self,
                                               test_id,
                                               _id,
                                               _rev,
-                                              _name,
-                                              _comment,
-                                              _user,
-                                              _date,
-                                              _status,
-                                              _objective):
+                                              name,
+                                              comment,
+                                              user,
+                                              date,
+                                              status,
+                                              objective):
     # Arrange
     # All input values are provided via test parameters, so we omit the Arrange section.
 
     # Act
-    project = ProjectModel(_id, _rev, _name, _comment, _user, _date, _status, _objective)
+    project = ProjectModel(_id, _rev, name, comment, user, date, status, objective)
 
     # Assert
     assert project.id == _id
     assert project.rev == _rev
-    assert project.name == _name
-    assert project.comment == _comment
-    assert project.user == _user
-    assert project.date == _date
-    assert project.status == _status
-    assert project.objective == _objective
+    assert project.name == name
+    assert project.comment == comment
+    assert project.user == user
+    assert project.date == date
+    assert project.status == status
+    assert project.objective == objective
 
   @pytest.mark.parametrize("test_id, attribute, value, expected_exception", [
-    ("ERR-1", "_name", 123, IncorrectParameterError),
-    ("ERR-2", "_comment", 123.45, IncorrectParameterError),
-    ("ERR-3", "_user", ["user1"], IncorrectParameterError),
+    ("ERR-1", "name", 123, IncorrectParameterError),
+    ("ERR-2", "comment", 123.45, IncorrectParameterError),
+    ("ERR-3", "user", ["user1"], IncorrectParameterError),
     # Add more test cases as needed
   ])
   def test_project_model_error_cases(self, test_id, attribute, value, expected_exception):
@@ -96,12 +96,12 @@ class TestProjectModel:
     kwargs = {
       "_id": "123",
       "_rev": "rev1",
-      "_name": "Project Alpha",
-      "_comment": "Initial phase",
-      "_user": "user1",
-      "_date": "2023-01-01",
-      "_status": "active",
-      "_objective": "Research",
+      "name": "Project Alpha",
+      "comment": "Initial phase",
+      "user": "user1",
+      "date": "2023-01-01",
+      "status": "active",
+      "objective": "Research",
       attribute: value,
     }
     # Act / Assert

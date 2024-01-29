@@ -6,6 +6,9 @@
 #  Filename: dataverse_db_api.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
+from typing import Type
+
+from pasta_eln.GUI.database_tests.config_model import ConfigModel
 from pasta_eln.GUI.database_tests.database_api import DatabaseAPI
 from pasta_eln.GUI.database_tests.project_model import ProjectModel
 from pasta_eln.GUI.database_tests.upload_model import UploadModel
@@ -18,15 +21,6 @@ class DataverseDBAPI(object):
     self.db_api = DatabaseAPI()
     self.design_doc_name = '_design/viewDataverse'
 
-  def create_upload_model_document(self, data: UploadModel):
-    data_dict = dict(data)
-    del data_dict['_id']
-    del data_dict['_rev']
-    return UploadModel(**self.db_api.create_document(data_dict))
-
-  def update_upload_model_document(self, data: UploadModel):
-    self.db_api.update_document(dict(data))
-
   def create_dataverse_design_document(self):
     data = {"_id": self.design_doc_name}
     return self.db_api.create_document(data)
@@ -34,7 +28,7 @@ class DataverseDBAPI(object):
   def create_upload_documents_view(self):
     self.db_api.add_view(self.design_doc_name,
                          "dvUploadView",
-                         "function (doc) { if (doc._data_type === 'dataverse_upload') { emit(doc._id, doc); } }",
+                         "function (doc) { if (doc.data_type === 'dataverse_upload') { emit(doc._id, doc); } }",
                          None
                          )
 
@@ -56,13 +50,32 @@ class DataverseDBAPI(object):
                          None
                          )
 
-  def get_all_upload_models(self):
-    results = self.db_api.get_view_results(self.design_doc_name, "dvUploadView")
-    return [UploadModel(**result) for result in results]
+  def create_model_document(self, data: UploadModel | ConfigModel | ProjectModel):
+    data_dict = dict(data)
+    if data_dict['_id'] is None:
+      del data_dict['_id']
+    del data_dict['_rev']
+    return type(data)(**self.db_api.create_document(data_dict))
 
-  def get_all_project_models(self):
-    results = self.db_api.get_view_results(self.design_doc_name, "dvProjectsView")
-    return [ProjectModel(**result) for result in results]
+  def update_model_document(self, data: UploadModel | ConfigModel | ProjectModel):
+    self.db_api.update_document(dict(data))
 
-  def get_upload_model(self, model_id: str) -> UploadModel:
-    return UploadModel(**self.db_api.get_view_results_by_id(self.design_doc_name, "dvUploadView", model_id))
+  def get_models(self, model_type: Type[UploadModel | ConfigModel | ProjectModel]):
+    match model_type():
+      case UploadModel():
+        return [UploadModel(**result) for result in
+                self.db_api.get_view_results(self.design_doc_name, "dvUploadView")]
+      case ProjectModel():
+        return [ProjectModel(**result) for result in
+                self.db_api.get_view_results(self.design_doc_name, "dvProjectsView")]
+      case _:
+        raise ValueError(f"Unsupported model type {model_type}")
+
+  def get_model(self, model_id: str,
+                model_type: Type[UploadModel | ConfigModel | ProjectModel]) -> UploadModel | ProjectModel | ConfigModel:
+    if model_type not in (UploadModel, ProjectModel, ConfigModel):
+      raise ValueError(f"Unsupported model type {model_type}")
+    elif model_id is None:
+      raise ValueError("model_id cannot be None")
+    else:
+      return model_type(**self.db_api.get_document(model_id))
