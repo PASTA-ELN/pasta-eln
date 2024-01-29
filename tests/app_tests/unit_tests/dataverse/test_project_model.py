@@ -8,6 +8,7 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import pytest
 
+from pasta_eln.GUI.database_tests.incorrect_parameter_error import IncorrectParameterError
 from pasta_eln.GUI.database_tests.project_model import ProjectModel
 
 
@@ -83,3 +84,26 @@ class TestProjectModel:
     assert project.date == _date
     assert project.status == _status
     assert project.objective == _objective
+
+  @pytest.mark.parametrize("test_id, attribute, value, expected_exception", [
+    ("ERR-1", "_name", 123, IncorrectParameterError),
+    ("ERR-2", "_comment", 123.45, IncorrectParameterError),
+    ("ERR-3", "_user", ["user1"], IncorrectParameterError),
+    # Add more test cases as needed
+  ])
+  def test_project_model_error_cases(self, test_id, attribute, value, expected_exception):
+    # Arrange
+    kwargs = {
+      "_id": "123",
+      "_rev": "rev1",
+      "_name": "Project Alpha",
+      "_comment": "Initial phase",
+      "_user": "user1",
+      "_date": "2023-01-01",
+      "_status": "active",
+      "_objective": "Research",
+      attribute: value,
+    }
+    # Act / Assert
+    with pytest.raises(expected_exception):
+      ProjectModel(**kwargs)

@@ -9,6 +9,7 @@
 
 import pytest
 
+from pasta_eln.GUI.database_tests.incorrect_parameter_error import IncorrectParameterError
 from pasta_eln.GUI.database_tests.upload_model import UploadModel
 
 
@@ -136,14 +137,13 @@ class TestDataverseUploadModel:
     # Assert
     assert result == expected, f"Failed on {test_id}"
 
-
   @pytest.mark.parametrize("test_id, attributes, expected", [
     # Success path tests with various realistic test values
     ("Success-1",
      {
        "id": "value1",
        "rev": "value2",
-       "data_type": "value3",
+       "_data_type": "value3",
        "project_name": "value4",
        "status": "value5",
        "finished_date_time": "value6",
@@ -170,4 +170,22 @@ class TestDataverseUploadModel:
     # Assert
     assert result == expected, f"Failed on {test_id}"
 
-
+  # Error cases
+  @pytest.mark.parametrize("test_id, kwargs, expected_exception, expected_message", [
+    ("ERR-1", {"_data_type": 123}, IncorrectParameterError, "Expected string type for data_type but got <class 'int'>"),
+    ("ERR-2", {"_project_name": 123}, IncorrectParameterError,
+     "Expected string type for project_name but got <class 'int'>"),
+    ("ERR-3", {"_status": 123}, IncorrectParameterError, "Expected string type for status but got <class 'int'>"),
+    ("ERR-4", {"_finished_date_time": 123}, IncorrectParameterError,
+     "Expected string type for finished_date_time but got <class 'int'>"),
+    ("ERR-5", {"_log": 123}, IncorrectParameterError, "Expected string type for log but got <class 'int'>"),
+    ("ERR-6", {"_dataverse_url": 123}, IncorrectParameterError,
+     "Expected string type for dataverse_url but got <class 'int'>"),
+    # Add more error cases for other type mismatches
+  ])
+  def test_upload_model_error_cases(self, test_id, kwargs, expected_exception, expected_message):
+    # Arrange
+    # Act & Assert
+    with pytest.raises(expected_exception) as exc_info:
+      UploadModel(**kwargs)
+    assert str(exc_info.value) == expected_message

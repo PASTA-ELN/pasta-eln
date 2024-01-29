@@ -7,6 +7,7 @@
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 from pasta_eln.GUI.database_tests.base_model import BaseModel
+from pasta_eln.GUI.database_tests.incorrect_parameter_error import IncorrectParameterError
 
 
 class ProjectModel(BaseModel):
@@ -20,12 +21,31 @@ class ProjectModel(BaseModel):
                _status: str = None,
                _objective: str = None):
     super().__init__(_id, _rev)
-    self._name = _name
-    self._comment = _comment
-    self._user = _user
-    self._date = _date
-    self._status = _status
-    self._objective = _objective
+    if isinstance(_name, str | None):
+      self._name: str = _name
+    else:
+      raise IncorrectParameterError(f"Expected string type for name but got {type(_name)}")
+    if isinstance(_comment, str | None):
+      self._comment: str = _comment
+    else:
+      raise IncorrectParameterError(f"Expected string type for comment but got {type(_comment)}")
+    if isinstance(_user, str | None):
+      self._user: str = _user
+    else:
+      raise IncorrectParameterError(f"Expected string type for user but got {type(_user)}")
+    if isinstance(_date, str | None):
+      self._date: str = _date
+    else:
+      raise IncorrectParameterError(f"Expected string type for date but got {type(_date)}")
+    if isinstance(_status, str | None):
+      self._status: str = _status
+    else:
+      raise IncorrectParameterError(f"Expected string type for status but got {type(_status)}")
+    if isinstance(_objective, str | None):
+      self._objective: str = _objective
+    else:
+      raise IncorrectParameterError(f"Expected string type for objective but got {type(_objective)}")
+
 
   @property
   def id(self):

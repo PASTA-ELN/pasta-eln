@@ -34,7 +34,7 @@ class DataverseDBAPI(object):
   def create_upload_documents_view(self):
     self.db_api.add_view(self.design_doc_name,
                          "dvUploadView",
-                         "function (doc) { if (doc.data_type === 'dataverse_upload') { emit(doc._id, doc); } }",
+                         "function (doc) { if (doc._data_type === 'dataverse_upload') { emit(doc._id, doc); } }",
                          None
                          )
 

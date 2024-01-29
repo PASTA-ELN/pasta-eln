@@ -18,9 +18,9 @@ class TestConfigModel:
   @pytest.mark.parametrize(
     "test_id, _id, _rev, _upload_items, _parallel_uploads_count, _dataverse_login_info, _metadata",
     [
-      ("happy_case_full", "id123", "rev123", {"item1": "data1"}, 5, {"user": "test_user"},
+      ("success_case_full", "id123", "rev123", {"item1": "data1"}, 5, {"user": "test_user"},
        {"title": "Test Metadata"}),
-      ("happy_case_minimal", None, None, None, None, None, None),
+      ("success_case_minimal", None, None, None, None, None, None),
       # Add more test cases as needed
     ], ids=lambda test_id: test_id)
   def test_init_happy_path(self, test_id, _id, _rev, _upload_items, _parallel_uploads_count, _dataverse_login_info,

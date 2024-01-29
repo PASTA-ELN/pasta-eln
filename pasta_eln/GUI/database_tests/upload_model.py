@@ -7,6 +7,7 @@
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 from pasta_eln.GUI.database_tests.base_model import BaseModel
+from pasta_eln.GUI.database_tests.incorrect_parameter_error import IncorrectParameterError
 
 
 class UploadModel(BaseModel):
@@ -14,19 +15,37 @@ class UploadModel(BaseModel):
   def __init__(self,
                _id: str = None,
                _rev: str = None,
-               data_type: str = None,
-               project_name: str = None,
-               status: str = None,
-               finished_date_time: str = None,
-               log: str = "",
-               dataverse_url: str = None):
+               _data_type: str = None,
+               _project_name: str = None,
+               _status: str = None,
+               _finished_date_time: str = None,
+               _log: str = "",
+               _dataverse_url: str = None):
     super().__init__(_id, _rev)
-    self._data_type = 'dataverse_upload' if data_type is None else data_type
-    self._project_name = project_name
-    self._status = status
-    self._finished_date_time = finished_date_time
-    self._log = log
-    self._dataverse_url = dataverse_url
+    if isinstance(_data_type, str | None):
+      self.data_type: str = 'dataverse_upload' if _data_type is None else _data_type
+    else:
+      raise IncorrectParameterError(f"Expected string type for data_type but got {type(_data_type)}")
+    if isinstance(_project_name, str | None):
+      self._project_name: str = _project_name
+    else:
+      raise IncorrectParameterError(f"Expected string type for project_name but got {type(_project_name)}")
+    if isinstance(_status, str | None):
+      self._status: str = _status
+    else:
+      raise IncorrectParameterError(f"Expected string type for status but got {type(_status)}")
+    if isinstance(_finished_date_time, str | None):
+      self._finished_date_time: str = _finished_date_time
+    else:
+      raise IncorrectParameterError(f"Expected string type for finished_date_time but got {type(_finished_date_time)}")
+    if isinstance(_log, str | None):
+      self._log: str = _log
+    else:
+      raise IncorrectParameterError(f"Expected string type for log but got {type(_log)}")
+    if isinstance(_dataverse_url, str | None):
+      self._dataverse_url: str = _dataverse_url
+    else:
+      raise IncorrectParameterError(f"Expected string type for dataverse_url but got {type(_dataverse_url)}")
 
   @property
   def id(self):
