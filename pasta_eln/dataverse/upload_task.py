@@ -15,6 +15,7 @@ import qtawesome as qta
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QLabel
 
+from pasta_eln.GUI.database_tests.config_model import ConfigModel
 from pasta_eln.GUI.database_tests.dataverse_db_api import DataverseDBAPI
 from pasta_eln.GUI.database_tests.upload_model import UploadModel
 from pasta_eln.GUI.dataverse_ui.dataverse_upload_widget_base import Ui_UploadWidgetFrame
@@ -34,6 +35,7 @@ class UploadGenericTask(GenericTaskObject):
     self.db_api = DataverseDBAPI()
     self.upload_model = UploadModel(project_name=self.project_name, status="Queued", log=f"Upload initiated for project {self.project_name} at {time.asctime()}\n")
     self.upload_model = self.db_api.create_model_document(self.upload_model)
+    self.config_model = self.db_api.get_model("-dataverseConfig-", ConfigModel)
     widget.uploadCancelPushButton.clicked.connect(lambda: self.cancel.emit())
 
   def start_task(self):

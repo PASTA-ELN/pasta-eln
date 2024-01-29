@@ -6,7 +6,7 @@
 #  Filename: dataverse_db_api.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
-from typing import Type
+from typing import Any, Type
 
 from pasta_eln.GUI.database_tests.config_model import ConfigModel
 from pasta_eln.GUI.database_tests.database_api import DatabaseAPI
@@ -79,3 +79,10 @@ class DataverseDBAPI(object):
       raise ValueError("model_id cannot be None")
     else:
       return model_type(**self.db_api.get_document(model_id))
+
+  def get_data_hierarchy(self) -> dict[str, Any]:
+    data = dict(self.db_api.get_document("-dataHierarchy-"))
+    del data['_id']
+    del data['_rev']
+    del data['-version']
+    return data

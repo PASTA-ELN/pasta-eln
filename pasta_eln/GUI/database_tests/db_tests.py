@@ -53,14 +53,16 @@ if __name__ == "__main__":
   # api.create_upload_documents_view()
   # api.create_projects_view()
 
-  # config_model = ConfigModel("dataverseConfig")
+  # config_model = ConfigModel("-dataverseConfig-")
   # config_model.project_upload_items = {}
   # config_model.dataverse_login_info = {"username": fake.name(), "password": fake.name()}
   # config_model.metadata = {}
   # config_model.parallel_uploads_count = 5
   # config_model = api.create_model_document(config_model)
-  config_model = api.get_model("dataverseConfig", ConfigModel)
+  config_model = api.get_model("-dataverseConfig-", ConfigModel)
   print(config_model.__dict__)
+  data_hierarchy = api.get_data_hierarchy()
+  print(data_hierarchy)
 
   # for _ in range(500):
   #   dv_upload_model = UploadModel(fake.name(), "Finished", fake.iso8601(), fake.text(), fake.url())

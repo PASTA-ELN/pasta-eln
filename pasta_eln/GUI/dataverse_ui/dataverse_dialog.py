@@ -21,6 +21,7 @@ from pasta_eln.GUI.database_tests.project_model import ProjectModel
 from pasta_eln.GUI.database_tests.upload_model import UploadModel
 from pasta_eln.GUI.dataverse_ui.dataverse_completed_uploads import DataverseCompletedUploads
 from pasta_eln.GUI.dataverse_ui.dataverse_dialog_base import Ui_DataverseDialogBase
+from pasta_eln.GUI.dataverse_ui.dataverse_edit_metadata_dialog import EditMetadataDialog
 from pasta_eln.GUI.dataverse_ui.dataverse_project_item_frame_base import Ui_ProjectItemFrame
 from pasta_eln.GUI.dataverse_ui.dataverse_qt_dialog import DataverseQtDialog
 from pasta_eln.GUI.dataverse_ui.dataverse_upload_config_dialog import DataverseUploadConfigDialog
@@ -52,13 +53,15 @@ class DataverseDialog(Ui_DataverseDialogBase):
     self.deselectAllPushButton.clicked.connect(lambda: self.select_deselect_all_projects(False))
     self.config_upload_dialog = DataverseUploadConfigDialog()
     self.completed_uploads_dialog = DataverseCompletedUploads()
+    self.edit_metadata_dialog = EditMetadataDialog()
     self.configureUploadPushButton.clicked.connect(self.show_configure_upload)
     self.showCompletedPushButton.clicked.connect(self.show_completed_uploads)
+    self.editFullMetadataPushButton.clicked.connect(self.show_edit_metadata)
     self.upload_manager_task = UploadManager()
     self.upload_manager_task_thread = TaskThreadAbstraction(self.upload_manager_task)
     self.cancelAllPushButton.clicked.connect(lambda: self.upload_manager_task.cancel.emit())
-    self.buttonBox.button(QtWidgets.QDialogButtonBox.Cancel).clicked.connect(lambda: self.close_ui())
-    self.instance.closed.connect(lambda: self.close_ui())
+    self.buttonBox.button(QtWidgets.QDialogButtonBox.Cancel).clicked.connect(self.close_ui)
+    self.instance.closed.connect(self.close_ui)
 
   def create_update_task(self,
                          widget: Ui_UploadWidgetFrame) -> TaskThreadAbstraction:
@@ -111,11 +114,17 @@ class DataverseDialog(Ui_DataverseDialogBase):
       project_widget.findChild(QtWidgets.QCheckBox, name="projectCheckBox").setChecked(checked)
 
   def show_configure_upload(self):
+    self.config_upload_dialog.load_ui()
     self.config_upload_dialog.instance.show()
+
 
   def show_completed_uploads(self):
     self.completed_uploads_dialog.load_ui()
     self.completed_uploads_dialog.instance.show()
+
+  def show_edit_metadata(self):
+    self.edit_metadata_dialog.load_ui()
+    self.edit_metadata_dialog.instance.show()
 
   def release_upload_manager(self):
     self.upload_manager_task_thread.quit()

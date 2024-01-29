@@ -10,8 +10,11 @@ import logging
 from typing import Any
 
 from PySide6 import QtCore, QtWidgets
-from PySide6.QtWidgets import QDialog
+from PySide6.QtWidgets import QCheckBox, QDialog
 
+from pasta_eln.GUI import data_hierarchy
+from pasta_eln.GUI.database_tests.config_model import ConfigModel
+from pasta_eln.GUI.database_tests.dataverse_db_api import DataverseDBAPI
 from pasta_eln.GUI.dataverse_ui.dataverse_upload_config_dialog_base import Ui_UploadConfigDialog
 
 
@@ -27,10 +30,44 @@ class DataverseUploadConfigDialog(Ui_UploadConfigDialog):
         self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
         self.instance = QDialog()
         super().setupUi(self.instance)
+        self.db_api = DataverseDBAPI()
         self.numParallelComboBox.addItems(map(str, range(3, 26)))
         self.numParallelComboBox.setCurrentIndex(2)
         self.instance.setWindowModality(QtCore.Qt.ApplicationModal)
+        self.config_model: ConfigModel = None
+        self.data_hierarchy_types: list[str] = []
+        self.buttonBox.button(QtWidgets.QDialogButtonBox.Save).clicked.connect(lambda: self.save_ui())
+        self.set_data_hierarchy_types()
+        self.load_ui()
 
+    def load_ui(self):
+        self.config_model = self.db_api.get_model("-dataverseConfig-", ConfigModel)
+        for widget_pos in reversed(range(self.projectItemsVerticalLayout.count())):
+            self.projectItemsVerticalLayout.itemAt(widget_pos).widget().setParent(None)
+        for data_type in self.data_hierarchy_types:
+            self.projectItemsVerticalLayout.addWidget(QCheckBox(text=data_type,
+                                                                parent=self.instance,
+                                                                checkState=QtCore.Qt.Checked
+                                                                if self.config_model.project_upload_items.get(data_type, False)
+                                                                else QtCore.Qt.Unchecked))
+        self.numParallelComboBox.setCurrentText(str(self.config_model.parallel_uploads_count))
+
+    def set_data_hierarchy_types(self):
+        for data_type in self.db_api.get_data_hierarchy():
+            if data_type not in ("x0", "x1", "x2"):
+                type_capitalized = data_type.capitalize()
+                if type_capitalized not in self.data_hierarchy_types:
+                    self.data_hierarchy_types.append(type_capitalized)
+        self.data_hierarchy_types.append("Unidentified")
+
+    def save_ui(self):
+        self.config_model.parallel_uploads_count = int(self.numParallelComboBox.currentText())
+        items = {}
+        for widget_pos in reversed(range(self.projectItemsVerticalLayout.count())):
+            check_box = self.projectItemsVerticalLayout.itemAt(widget_pos).widget()
+            items[check_box.text()] = check_box.checkState() == QtCore.Qt.Checked
+        self.config_model.project_upload_items = items
+        self.db_api.update_model_document(self.config_model)
 
 
 if __name__ == "__main__":

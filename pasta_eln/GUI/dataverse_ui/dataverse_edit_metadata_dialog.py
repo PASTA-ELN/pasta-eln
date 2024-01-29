@@ -13,9 +13,11 @@ from os import getcwd
 from os.path import dirname, join, realpath
 from typing import Any
 
-from PySide6 import QtWidgets
+from PySide6 import QtCore, QtWidgets
 from PySide6.QtWidgets import QDialog
 
+from pasta_eln.GUI.database_tests.config_model import ConfigModel
+from pasta_eln.GUI.database_tests.dataverse_db_api import DataverseDBAPI
 from pasta_eln.GUI.dataverse_ui.dataverse_controlled_vocab_frame import ControlledVocabFrame
 from pasta_eln.GUI.dataverse_ui.dataverse_edit_metadata_dialog_base import Ui_EditMetadataDialog
 from pasta_eln.GUI.dataverse_ui.dataverse_primitive_compound_frame import PrimitiveCompoundFrame
@@ -24,24 +26,21 @@ from pasta_eln.GUI.dataverse_ui.dataverse_primitive_compound_frame import Primit
 class EditMetadataDialog(Ui_EditMetadataDialog):
 
   def __new__(cls, *_: Any, **__: Any) -> Any:
-    """
-    Instantiates the create type dialog
-    """
     return super(EditMetadataDialog, cls).__new__(cls)
 
   def __init__(self) -> None:
-    """
-    Initializes the creation type dialog
-    """
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
     self.primitive_compound_frame = None
     self.controlled_vocab_frame = None
     self.instance = QDialog()
     super().setupUi(self.instance)
-    current_path = realpath(join(getcwd(), dirname(__file__)))
-    with open(join(current_path, "..//..//dataverse//dataset-create-new-all-default-fields.json"),
-              encoding="utf-8") as config_file:
-      self.metadata = load(config_file)
+    self.db_api = DataverseDBAPI()
+    self.config_model: ConfigModel = self.db_api.get_model("-dataverseConfig-", ConfigModel)
+    # current_path = realpath(join(getcwd(), dirname(__file__)))
+    # with open(join(current_path, "..//..//dataverse//dataset-create-new-all-default-fields.json"),
+    #           encoding="utf-8") as config_file:
+    #   self.metadata = load(config_file)
+    self.metadata = self.config_model.metadata
     self.metadata_types = self.get_metadata_types()
     self.metadataBlockComboBox.currentTextChanged.connect(self.change_metadata_block)
     self.typesComboBox.currentTextChanged.connect(self.change_metadata_type)
@@ -50,6 +49,8 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
     self.minimalFullComboBox.addItems(["Minimal", "Full"])
     self.minimalFullComboBox.currentTextChanged.connect(self.toggle_minimal_full)
     self.minimalFullComboBox.setCurrentText("Full")
+    self.instance.setWindowModality(QtCore.Qt.ApplicationModal)
+    self.buttonBox.button(QtWidgets.QDialogButtonBox.Save).clicked.connect(self.save_ui)
 
   def get_metadata_types(self):
     metadata_types_mapping = {}
@@ -99,6 +100,14 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
         self.metadataBlockComboBox.addItems(self.metadata_types.keys())
         self.typesComboBox.clear()
         self.typesComboBox.addItems(self.metadata_types[self.metadataBlockComboBox.currentText()])
+
+  def load_ui(self):
+    pass
+
+  def save_ui(self):
+    self.config_model.metadata = self.metadata
+    self.db_api.update_model_document(self.config_model)
+    pass
 
 
 if __name__ == "__main__":
