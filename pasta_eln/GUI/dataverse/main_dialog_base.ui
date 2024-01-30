@@ -156,7 +156,7 @@
          <item>
           <widget class="QScrollArea" name="uploadQueueScrollArea">
            <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Displays the enqueued lists of PASTA projects to be uploaded to dataverse.&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Users can view indvidual logs for each project upload, cancel each or all of them and also clear all the finished items anytime.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Displays the enqueued lists of PASTA projects to be uploaded to dataverse.&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Users can view individual logs for each project upload, cancel each or all of them and also clear all the finished items anytime.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="widgetResizable">
             <bool>true</bool>

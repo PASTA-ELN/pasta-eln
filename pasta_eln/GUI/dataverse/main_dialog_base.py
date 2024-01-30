@@ -121,7 +121,7 @@ class Ui_MainDialogBase(object):
     self.editFullMetadataPushButton.setText(_translate("MainDialogBase", "Edit metadata"))
     self.uploadPushButton.setToolTip(_translate("MainDialogBase", "Start uploading the above selected projects to dataverse."))
     self.uploadPushButton.setText(_translate("MainDialogBase", "Start upload"))
-    self.uploadQueueScrollArea.setToolTip(_translate("MainDialogBase", "<html><head/><body><p><span style=\" font-style:italic;\">Displays the enqueued lists of PASTA projects to be uploaded to dataverse.</span><span style=\" font-style:italic;\">Users can view indvidual logs for each project upload, cancel each or all of them and also clear all the finished items anytime.</span></p></body></html>"))
+    self.uploadQueueScrollArea.setToolTip(_translate("MainDialogBase", "<html><head/><body><p><span style=\" font-style:italic;\">Displays the enqueued lists of PASTA projects to be uploaded to dataverse.</span><span style=\" font-style:italic;\">Users can view individual logs for each project upload, cancel each or all of them and also clear all the finished items anytime.</span></p></body></html>"))
     self.clearFinishedPushButton.setToolTip(_translate("MainDialogBase", "Clear all finished uploads."))
     self.clearFinishedPushButton.setText(_translate("MainDialogBase", "Clear finished"))
     self.cancelAllPushButton.setToolTip(_translate("MainDialogBase", "Cancel all the ongoing uploads."))
