@@ -13,7 +13,7 @@ class IncorrectParameterError(Exception):
 
   def __init__(self,
                message: str,
-               detailed_errors: dict[str, str] = None):
+               detailed_errors: dict[str, str] = {}):
     """
     Constructs IncorrectParameterError
     Args:

@@ -13,27 +13,50 @@ from pasta_eln.dataverse.incorrect_parameter_error import IncorrectParameterErro
 
 
 class ConfigModel(BaseModel):
+  """
+  Represents a configuration model object.
+
+  This class inherits from the BaseModel class and provides additional properties and methods for managing configuration-related information.
+
+  Args:
+      _id (str): The ID of the configuration. Defaults to None.
+      _rev (str): The revision of the configuration. Defaults to None.
+      project_upload_items (dict[str, Any]): A dictionary containing upload items of the PASTA project to be uploaded to Dataverse. Defaults to None.
+      parallel_uploads_count (int): The number of parallel uploads configured. Defaults to None.
+      dataverse_login_info (dict[str, Any]): A dictionary containing Dataverse login information. Defaults to None.
+      metadata (dict[str, Any]): A dictionary containing metadata for the dataset in Dataverse. Defaults to None.
+
+  Raises:
+      IncorrectParameterError: If any of the arguments have an invalid type.
+
+  Attributes:
+      project_upload_items (dict[str, Any]): The upload items of the PASTA project.
+      parallel_uploads_count (int): The number of parallel uploads configured.
+      dataverse_login_info (dict[str, Any]): The Dataverse login information.
+      metadata (dict[str, Any]): The metadata for the dataset in Dataverse.
+
+  """
 
   def __init__(self,
-               _id: str = None,
-               _rev: str = None,
-               project_upload_items: dict[str, Any] = None,
-               parallel_uploads_count: int = None,
-               dataverse_login_info: dict[str, Any] = None,
-               metadata: dict[str, Any] = None):
+               _id: str = "",
+               _rev: str = "",
+               project_upload_items: dict[str, Any] = {},
+               parallel_uploads_count: int = 0,
+               dataverse_login_info: dict[str, Any] = {},
+               metadata: dict[str, Any] = {}):
     """
-    Initializes a ConfigModel object.
+    Initializes a config model object.
 
     Args:
-        _id: The ID of the config.
-        _rev: The revision of the config.
-        project_upload_items: A dictionary containing upload items of the PASTA project to be uploaded to dataverse.
-        parallel_uploads_count: The number of parallel uploads configured.
-        dataverse_login_info: A dictionary containing dataverse login information.
-        metadata: A dictionary containing metadata for the dataset in dataverse.
+        _id (str): The ID of the object. Defaults to an empty string.
+        _rev (str): The revision of the object. Defaults to an empty string.
+        project_upload_items (dict[str, Any]): A dictionary containing upload items of the project. Defaults to an empty dictionary.
+        parallel_uploads_count (int): The number of parallel uploads configured. Defaults to 0.
+        dataverse_login_info (dict[str, Any]): A dictionary containing Dataverse login information. Defaults to an empty dictionary.
+        metadata (dict[str, Any]): A dictionary containing metadata for the dataset in Dataverse. Defaults to an empty dictionary.
 
     Raises:
-        IncorrectParameterError: If any of the arguments have an invalid type.
+        IncorrectParameterError: If any of the parameters have an invalid type.
 
     """
     super().__init__(_id, _rev)
@@ -57,59 +80,77 @@ class ConfigModel(BaseModel):
       raise IncorrectParameterError(f"Expected dictionary for metadata but got {type(metadata)}")
 
   @property
-  def project_upload_items(self):
+  def project_upload_items(self) -> dict[str, Any]:
     """
-    Gets the upload items.
+    Returns the upload items of the project.
 
     Returns:
-        The upload items.
+        dict[str, Any]: A dictionary containing the upload items of the project.
 
     """
     return self._project_upload_items
 
   @project_upload_items.setter
-  def project_upload_items(self, value: dict[str, Any]):
+  def project_upload_items(self, value: dict[str, Any]) -> None:
     """
-    Sets the upload items.
+    Sets the upload items of the project.
 
     Args:
-        value: The upload items to set.
+        value (dict[str, Any]): The upload items to set. Defaults to None.
+
+    Raises:
+        IncorrectParameterError: If the value is not of type dict or None.
+
+    Returns:
+        None
 
     """
-    self._project_upload_items = value
+    if isinstance(value, dict):
+      self._project_upload_items = value
+    else:
+      raise IncorrectParameterError(f"Expected dictionary for upload_items but got {type(value)}")
 
   @project_upload_items.deleter
-  def project_upload_items(self):
+  def project_upload_items(self) -> None:
     """
-    Deletes the upload items.
+    Deletes the upload items of the project.
 
     """
     del self._project_upload_items
 
   @property
-  def parallel_uploads_count(self):
+  def parallel_uploads_count(self) -> int:
     """
-    Gets the number of parallel uploads.
+    Returns the number of parallel uploads.
 
     Returns:
-        The number of parallel uploads.
+        int: The number of parallel uploads.
 
     """
     return self._parallel_uploads_count
 
   @parallel_uploads_count.setter
-  def parallel_uploads_count(self, value: int):
+  def parallel_uploads_count(self, value: int) -> None:
     """
     Sets the number of parallel uploads.
 
     Args:
-        value: The number of parallel uploads to set.
+        value (int): The number of parallel uploads to set.
+
+    Raises:
+        IncorrectParameterError: If the value is not of type int.
+
+    Returns:
+        None
 
     """
-    self._parallel_uploads_count = value
+    if isinstance(value, int):
+      self._parallel_uploads_count = value
+    else:
+      raise IncorrectParameterError(f"Expected integer for parallel_uploads_count but got {type(value)}")
 
   @parallel_uploads_count.deleter
-  def parallel_uploads_count(self):
+  def parallel_uploads_count(self) -> None:
     """
     Deletes the number of parallel uploads.
 
@@ -117,29 +158,38 @@ class ConfigModel(BaseModel):
     del self._parallel_uploads_count
 
   @property
-  def dataverse_login_info(self):
+  def dataverse_login_info(self) -> dict[str, Any]:
     """
-    Gets the dataverse login information.
+    Returns the dataverse login information.
 
     Returns:
-        The dataverse login information.
+        dict[str, Any]: The dataverse login information.
 
     """
     return self._dataverse_login_info
 
   @dataverse_login_info.setter
-  def dataverse_login_info(self, value: dict[str, Any]):
+  def dataverse_login_info(self, value: dict[str, Any]) -> None:
     """
     Sets the dataverse login information.
 
     Args:
-        value: The dataverse login information to set.
+        value (dict[str, Any]): The dataverse login information to set.
+
+    Raises:
+        IncorrectParameterError: If the value is not of type dict.
+
+    Returns:
+        None
 
     """
-    self._dataverse_login_info = value
+    if isinstance(value, dict):
+      self._dataverse_login_info = value
+    else:
+      raise IncorrectParameterError(f"Expected dictionary for dataverse_login_info but got {type(value)}")
 
   @dataverse_login_info.deleter
-  def dataverse_login_info(self):
+  def dataverse_login_info(self) -> None:
     """
     Deletes the dataverse login information.
 
@@ -147,29 +197,38 @@ class ConfigModel(BaseModel):
     del self._dataverse_login_info
 
   @property
-  def metadata(self):
+  def metadata(self) -> dict[str, Any]:
     """
-    Gets the metadata.
+    Returns the metadata.
 
     Returns:
-        The metadata.
+        dict[str, Any]: The metadata.
 
     """
     return self._metadata
 
   @metadata.setter
-  def metadata(self, value: dict[str, Any]):
+  def metadata(self, value: dict[str, Any]) -> None:
     """
     Sets the metadata.
 
     Args:
-        value: The metadata to set.
+        value (dict[str, Any]): The metadata to set.
+
+    Raises:
+        IncorrectParameterError: If the value is not of type dict.
+
+    Returns:
+        None
 
     """
-    self._metadata = value
+    if isinstance(value, dict):
+      self._metadata = value
+    else:
+      raise IncorrectParameterError(f"Expected dictionary for metadata but got {type(value)}")
 
   @metadata.deleter
-  def metadata(self):
+  def metadata(self) -> None:
     """
     Deletes the metadata.
 
