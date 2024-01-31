@@ -339,10 +339,10 @@ class Project(QWidget):
     item.setData(item.data() | {'hierStack': '/'.join(stackNew+[docID])})
     # change siblings
     for line in siblingsOld:
-      db.updateBranch(docID=line['id'], branch=line['value'][3], child=line['value'][0]-1)
+      db.updateBranch(  docID=line['id'], branch=line['value'][4], child=line['value'][0]-1)
     for line in siblingsNew:
       if line['id']!=docID:
-        db.updateBranch(docID=line['id'], branch=line['value'][3], child=line['value'][0]+1)
+        db.updateBranch(docID=line['id'], branch=line['value'][4], child=line['value'][0]+1)
     return
 
 

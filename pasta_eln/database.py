@@ -1,15 +1,16 @@
 """ Class for interaction with couchDB """
-import traceback, logging, time, json, os, re
+import traceback, logging, time, json, os, re, base64, io
 from typing import Any, Optional, Union
 from pathlib import Path
 from anytree import Node
 from anytree.search import find_by_attr
+from PIL import Image
 from cloudant.client import CouchDB
 from cloudant.replicator import Replicator
 from PySide6.QtWidgets import QProgressBar  # pylint: disable=no-name-in-module
 from .fixedStringsJson import defaultDataHierarchy, defaultDataHierarchyNode
 from .handleDictionaries import dataHierarchy_pre_to_V4
-from .miscTools import tracebackString, DummyProgressBar
+from .miscTools import tracebackString, DummyProgressBar, outputString
 
 class Database:
   """
@@ -422,8 +423,7 @@ class Database:
           oldJsonContent = json.load(fIn)
           oldDocID = oldJsonContent['_id']
       if path is not None and (self.basePath/path).exists() and docID!=oldDocID:
-        print(f'**ERROR** Target folder already exist: {path}. Try to create a new path name')
-        logging.error('Target folder already exist: %s. Try to create a new path name', path)
+        logging.info('Target folder already exist: %s. I will try to create a new path name', path)
       while path is not None and (self.basePath/path).exists() and docID!=oldDocID:
         if re.search(r"_\d+$", path) is None:
           path += '_1'
@@ -798,9 +798,6 @@ class Database:
     Returns:
         str: output
     """
-    import base64, io
-    from PIL import Image
-    from .miscTools import outputString
     outstring = ''
     if outputStyle=='html':
       outstring += '<div align="right">'
@@ -808,8 +805,8 @@ class Database:
     if not minimal:
       outstring+= outputString(outputStyle,'ok','Green: perfect and as intended')
       outstring+= outputString(outputStyle,'okish', 'Blue: ok-ish, can happen: empty files for testing, strange path for measurements')
-    outstring+= outputString(outputStyle,'unsure','Pink: unsure if bug or desired (e.g. move step to random path-name)')
-    outstring+= outputString(outputStyle,'warning','Yellow: WARNING should not happen (e.g. procedures without project)')
+    outstring+= outputString(outputStyle,'unsure', 'Dark magenta: unsure if bug or desired (e.g. move step to random path-name)')
+    outstring+= outputString(outputStyle,'warning','Orange-red: WARNING should not happen (e.g. procedures without project)')
     outstring+= outputString(outputStyle,'error',  'Red: FAILURE and ERROR: NOT ALLOWED AT ANY TIME')
     if outputStyle=='html':
       outstring += '</div>'
@@ -910,12 +907,12 @@ class Database:
         #doc-type specific tests
         if '-type' in doc and doc['-type'][0] == 'sample':
           if 'qrCode' not in doc:
-            outstring+= outputString(outputStyle,'error',f"dch09: qrCode not in sample {doc['_id']}")
+            outstring+= outputString(outputStyle,'warning',f"dch09: qrCode not in sample {doc['_id']}")
         elif '-type' in doc and doc['-type'][0] == 'measurement':
           if 'shasum' not in doc:
-            outstring+= outputString(outputStyle,'error',f"dch10: shasum not in measurement {doc['_id']}")
+            outstring+= outputString(outputStyle,'warning',f"dch10: shasum not in measurement {doc['_id']}")
           if 'image' not in doc:
-            outstring+= outputString(outputStyle,'error',f"dch11: image not in measurement {doc['_id']}")
+            outstring+= outputString(outputStyle,'warning',f"dch11: image not in measurement {doc['_id']}")
           else:
             if doc['image'].startswith('data:image'):  #for jpg and png
               try:
@@ -943,7 +940,7 @@ class Database:
     shasumKeys = []
     for item in view:
       if item['key']=='':
-        outstring+= outputString(outputStyle,'error', f"measurement without shasum: {item['id']} {item['value']}")
+        outstring+= outputString(outputStyle,'warning', f"measurement without shasum: {item['id']} {item['value']}")
       else:
         if item['key'] in shasumKeys:
           key = item['key'] or '- empty string -'
