@@ -31,7 +31,7 @@ class BaseDatabaseAPI:
 
   """
 
-  def __init__(self):
+  def __init__(self) -> None:
     """
     Initializes the BaseDatabaseAPI instance.
 
@@ -65,7 +65,7 @@ class BaseDatabaseAPI:
         self.log_and_raise_error("Incorrect config file, defaultProjectGroup not found!")
       self.set_username_password(config)
 
-  def set_username_password(self, config: dict[str, Any]):
+  def set_username_password(self, config: dict[str, Any]) -> None:
     """
     Sets the username and password based on the provided config.
 
@@ -83,7 +83,7 @@ class BaseDatabaseAPI:
     if not project_groups:
       self.log_and_raise_error(
         "Incorrect config file, projectGroups not found!")
-    main_group = project_groups.get(self.db_name)
+    main_group = project_groups.get(self.db_name)  # type: ignore[union-attr]
     if not main_group:
       self.log_and_raise_error(
         "Incorrect config file, defaultProjectGroup not found!")
@@ -94,7 +94,7 @@ class BaseDatabaseAPI:
     self.username = local_info.get('user')
     self.password = local_info.get('password')
 
-  def log_and_raise_error(self, error_message: str):
+  def log_and_raise_error(self, error_message: str) -> None:
     """
     Logs an error message and raises a DatabaseError.
 
@@ -278,8 +278,8 @@ class BaseDatabaseAPI:
                              design_document_name: str,
                              view_name: str,
                              document_id: str,
-                             map_func=None,
-                             reduce_func=None) -> Document | None:
+                             map_func: str | None = None,
+                             reduce_func: str | None = None) -> Document | None:
     """
     Gets the result of a view for a specific document ID from the specified design document in the database.
 
@@ -287,8 +287,8 @@ class BaseDatabaseAPI:
         design_document_name (str): The name of the design document.
         view_name (str): The name of the view.
         document_id (str): The ID of the document.
-        map_func (str, optional): The map function for the view. Defaults to None.
-        reduce_func (str, optional): The reduce function for the view. Defaults to None.
+        map_func (str | None, optional): The map function for the view. Defaults to None.
+        reduce_func (str | None, optional): The reduce function for the view. Defaults to None.
 
     Raises:
         ValueError: If design_document_name, view_name, or document_id is None.

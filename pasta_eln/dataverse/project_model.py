@@ -17,51 +17,51 @@ class ProjectModel(BaseModel):
   This class inherits from the BaseModel class and provides additional properties and methods for managing project-related information.
 
   Args:
-      _id (str): The ID of the object. Defaults to None.
-      _rev (str): The revision of the object. Defaults to None.
-      name (str): The name of the project. Defaults to None.
-      comment (str): The comment associated with the project. Defaults to None.
-      user (str): The user associated with the project. Defaults to None.
-      date (str): The date of the project. Defaults to None.
-      status (str): The status of the project. Defaults to None.
-      objective (str): The objective of the project. Defaults to None.
+      _id (str | None): The ID of the object. Defaults to None.
+      _rev (str | None): The revision of the object. Defaults to None.
+      name (str | None): The name of the project. Defaults to None.
+      comment (str | None): The comment associated with the project. Defaults to None.
+      user (str | None): The user associated with the project. Defaults to None.
+      date (str | None): The date of the project. Defaults to None.
+      status (str | None): The status of the project. Defaults to None.
+      objective (str | None): The objective of the project. Defaults to None.
 
   Raises:
       IncorrectParameterError: If any of the parameters are not of type str or None.
 
   Attributes:
-      id (str): The ID of the object.
-      rev (str): The revision of the object.
-      name (str): The name of the project.
-      comment (str): The comment associated with the project.
-      user (str): The user associated with the project.
-      date (str): The date of the project.
-      status (str): The status of the project.
-      objective (str): The objective of the project.
+      id (str | None): The ID of the object.
+      rev (str | None): The revision of the object.
+      name (str | None): The name of the project.
+      comment (str | None): The comment associated with the project.
+      user (str | None): The user associated with the project.
+      date (str | None): The date of the project.
+      status (str | None): The status of the project.
+      objective (str | None): The objective of the project.
 
   """
 
   def __init__(self,
-               _id: str = "",
-               _rev: str = "",
-               name: str = "",
-               comment: str = "",
-               user: str = "",
-               date: str = "",
-               status: str = "",
-               objective: str = ""):
+               _id: str | None = None,
+               _rev: str | None = None,
+               name: str | None = None,
+               comment: str | None = None,
+               user: str | None = None,
+               date: str | None = None,
+               status: str | None = None,
+               objective: str | None = None) -> None:
     """
     Initializes a project model object.
 
     Args:
-        _id (str): The ID of the object. Defaults to None.
-        _rev (str): The revision of the object. Defaults to None.
-        name (str): The name of the project. Defaults to None.
-        comment (str): The comment associated with the project. Defaults to None.
-        user (str): The user associated with the project. Defaults to None.
-        date (str): The date of the project. Defaults to None.
-        status (str): The status of the project. Defaults to None.
-        objective (str): The objective of the project. Defaults to None.
+        _id (str | None): The ID of the object. Defaults to None.
+        _rev (str | None): The revision of the object. Defaults to None.
+        name (str | None): The name of the project. Defaults to None.
+        comment (str | None): The comment associated with the project. Defaults to None.
+        user (str | None): The user associated with the project. Defaults to None.
+        date (str | None): The date of the project. Defaults to None.
+        status (str | None): The status of the project. Defaults to None.
+        objective (str | None): The objective of the project. Defaults to None.
 
     Raises:
         IncorrectParameterError: If any of the parameters are not of type str or None.
@@ -69,48 +69,48 @@ class ProjectModel(BaseModel):
     """
     super().__init__(_id, _rev)
     if isinstance(name, str | None):
-      self._name: str = name
+      self._name: str | None = name
     else:
       raise IncorrectParameterError(f"Expected string type for name but got {type(name)}")
     if isinstance(comment, str | None):
-      self._comment: str = comment
+      self._comment: str | None = comment
     else:
       raise IncorrectParameterError(f"Expected string type for comment but got {type(comment)}")
     if isinstance(user, str | None):
-      self._user: str = user
+      self._user: str | None = user
     else:
       raise IncorrectParameterError(f"Expected string type for user but got {type(user)}")
     if isinstance(date, str | None):
-      self._date: str = date
+      self._date: str | None = date
     else:
       raise IncorrectParameterError(f"Expected string type for date but got {type(date)}")
     if isinstance(status, str | None):
-      self._status: str = status
+      self._status: str | None = status
     else:
       raise IncorrectParameterError(f"Expected string type for status but got {type(status)}")
     if isinstance(objective, str | None):
-      self._objective: str = objective
+      self._objective: str | None = objective
     else:
       raise IncorrectParameterError(f"Expected string type for objective but got {type(objective)}")
 
   @property
-  def name(self) -> str:
+  def name(self) -> str | None:
     """
     Returns the name of the project.
 
     Returns:
-        str: The name of the project.
+        str | None: The name of the project.
 
     """
     return self._name
 
   @name.setter
-  def name(self, value: str) -> None:
+  def name(self, value: str | None) -> None:
     """
     Sets the name of the project.
 
     Args:
-        value (str): The name value to be set.
+        value (str | None): The name value to be set.
 
     Raises:
         IncorrectParameterError: If the value is not of type str.
@@ -119,7 +119,7 @@ class ProjectModel(BaseModel):
         None
 
     """
-    if isinstance(value, str):
+    if isinstance(value, str | None):
       self._name = value
     else:
       raise IncorrectParameterError(f"Expected string type for name but got {type(value)}")
@@ -136,23 +136,23 @@ class ProjectModel(BaseModel):
     del self._name
 
   @property
-  def comment(self) -> str:
+  def comment(self) -> str | None:
     """
     Returns the comment associated with the project.
 
     Returns:
-        str: The comment associated with the project.
+        str | None: The comment associated with the project.
 
     """
     return self._comment
 
   @comment.setter
-  def comment(self, value: str) -> None:
+  def comment(self, value: str | None) -> None:
     """
     Sets the comment associated with the project.
 
     Args:
-        value (str): The comment value to be set.
+        value (str | None): The comment value to be set.
 
     Raises:
         IncorrectParameterError: If the value is not of type str.
@@ -161,7 +161,7 @@ class ProjectModel(BaseModel):
         None
 
     """
-    if isinstance(value, str):
+    if isinstance(value, str | None):
       self._comment = value
     else:
       raise IncorrectParameterError(f"Expected string type for comment but got {type(value)}")
@@ -178,23 +178,23 @@ class ProjectModel(BaseModel):
     del self._comment
 
   @property
-  def user(self) -> str:
+  def user(self) -> str | None:
     """
     Returns the user associated with the project.
 
     Returns:
-        str: The user associated with the project.
+        str | None: The user associated with the project.
 
     """
     return self._user
 
   @user.setter
-  def user(self, value: str) -> None:
+  def user(self, value: str | None) -> None:
     """
     Sets the user associated with the project.
 
     Args:
-        value (str): The user value to be set.
+        value (str | None): The user value to be set.
 
     Raises:
         IncorrectParameterError: If the value is not of type str.
@@ -203,7 +203,7 @@ class ProjectModel(BaseModel):
         None
 
     """
-    if isinstance(value, str):
+    if isinstance(value, str | None):
       self._user = value
     else:
       raise IncorrectParameterError(f"Expected string type for user but got {type(value)}")
@@ -220,23 +220,23 @@ class ProjectModel(BaseModel):
     del self._user
 
   @property
-  def date(self) -> str:
+  def date(self) -> str | None:
     """
     Returns the date of the project.
 
     Returns:
-        str: The date of the project.
+        str | None: The date of the project.
 
     """
     return self._date
 
   @date.setter
-  def date(self, value: str) -> None:
+  def date(self, value: str | None) -> None:
     """
     Sets the date of the project.
 
     Args:
-        value (str): The date value to be set.
+        value (str | None): The date value to be set.
 
     Raises:
         IncorrectParameterError: If the value is not of type str.
@@ -245,7 +245,7 @@ class ProjectModel(BaseModel):
         None
 
     """
-    if isinstance(value, str):
+    if isinstance(value, str | None):
       self._date = value
     else:
       raise IncorrectParameterError(f"Expected string type for date but got {type(value)}")
@@ -262,23 +262,23 @@ class ProjectModel(BaseModel):
     del self._date
 
   @property
-  def status(self) -> str:
+  def status(self) -> str | None:
     """
     Returns the status of the project.
 
     Returns:
-        str: The status of the project.
+        str | None: The status of the project.
 
     """
     return self._status
 
   @status.setter
-  def status(self, value: str) -> None:
+  def status(self, value: str | None) -> None:
     """
     Sets the status of the project.
 
     Args:
-        value (str): The status value to be set.
+        value (str | None): The status value to be set.
 
     Raises:
         IncorrectParameterError: If the value is not of type str.
@@ -287,7 +287,7 @@ class ProjectModel(BaseModel):
         None
 
     """
-    if isinstance(value, str):
+    if isinstance(value, str | None):
       self._status = value
     else:
       raise IncorrectParameterError(f"Expected string type for status but got {type(value)}")
@@ -304,23 +304,23 @@ class ProjectModel(BaseModel):
     del self._status
 
   @property
-  def objective(self) -> str:
+  def objective(self) -> str | None:
     """
     Returns the objective of the project.
 
     Returns:
-        str: The objective of the project.
+        str | None: The objective of the project.
 
     """
     return self._objective
 
   @objective.setter
-  def objective(self, value: str) -> None:
+  def objective(self, value: str | None) -> None:
     """
     Sets the objective of the project.
 
     Args:
-        value (str): The objective value to be set.
+        value (str | None): The objective value to be set.
 
     Raises:
         IncorrectParameterError: If the value is not of type str.
@@ -329,7 +329,7 @@ class ProjectModel(BaseModel):
         None
 
     """
-    if isinstance(value, str):
+    if isinstance(value, str | None):
       self._objective = value
     else:
       raise IncorrectParameterError(f"Expected string type for objective but got {type(value)}")
