@@ -112,21 +112,102 @@ class DatabaseAPI(object):
 
   def create_model_document(self,
                             data: UploadModel | ConfigModel | ProjectModel) -> UploadModel | ConfigModel | ProjectModel:
+
+    """
+    Creates a model document in the database.
+
+    Explanation:
+        This method creates a model document in the database using the provided data.
+        It removes the '_id' and '_rev' fields from the data dictionary before creating the document.
+
+    Args:
+        self: The DatabaseAPI instance.
+        data (UploadModel | ConfigModel | ProjectModel): The data to be stored in the model document.
+
+    Raises:
+        ValueError: If the data parameter is None.
+
+    Returns:
+        UploadModel | ConfigModel | ProjectModel: The created model document.
+
+    """
     self.logger.info("Creating model document: %s", data)
     if data is None:
-      error = "Data cannot be None"
-      self.logger.error(error)
-      raise ValueError(error)
+      self.log_and_raise_error(ValueError, "Data cannot be None!")
+    if not isinstance(data, (UploadModel, ConfigModel, ProjectModel)):
+      self.log_and_raise_error(TypeError, "Data must be an UploadModel, ConfigModel, or ProjectModel!")
     data_dict = dict(data)
-    if data_dict['_id'] == "":
+    if data_dict['_id'] is None:
       del data_dict['_id']
     del data_dict['_rev']
     return type(data)(**self.db_api.create_document(data_dict))
 
   def update_model_document(self, data: UploadModel | ConfigModel | ProjectModel):
+    """
+    Updates the model document with the provided data.
+
+    Explanation:
+        This method updates the model document with the provided data. It logs the update operation and performs necessary validations.
+
+    Args:
+        self: The DatabaseAPI instance.
+        data (UploadModel | ConfigModel | ProjectModel): The data to update the model document with.
+
+    Raises:
+        ValueError: If the data parameter is None.
+        TypeError: If the data parameter is not an instance of UploadModel, ConfigModel, or ProjectModel.
+
+    Returns:
+        None
+    """
+    self.logger.info("Updating model document: %s", data)
+    if data is None:
+      self.log_and_raise_error(ValueError, "Data cannot be None!")
+    if not isinstance(data, (UploadModel, ConfigModel, ProjectModel)):
+      self.log_and_raise_error(TypeError, "Data must be an UploadModel, ConfigModel, or ProjectModel!")
     self.db_api.update_document(dict(data))
 
-  def get_models(self, model_type: Type[UploadModel | ConfigModel | ProjectModel]):
+  def log_and_raise_error(self, exception_type: Type[Exception], error_message: str) -> None:
+    """
+    Logs an error message and raises an exception of the specified type.
+
+    Explanation:
+        This method logs the provided error message using the logger and raises an exception of the specified type with the same message.
+
+    Args:
+        self: The DatabaseAPI instance.
+        exception_type (Type[Exception]): The type of exception to be raised.
+        error_message (str): The error message to be logged and raised.
+
+    Returns:
+        None
+    """
+    self.logger.error(error_message)
+    match exception_type():
+      case ValueError():
+        raise ValueError(error_message)
+      case TypeError():
+        raise TypeError(error_message)
+
+  def get_models(self, model_type: Type[UploadModel | ConfigModel | ProjectModel]) -> list[
+    UploadModel | ConfigModel | ProjectModel]:
+    """
+    Retrieves models of the specified type from the database.
+
+    Explanation:
+        This method retrieves models of the specified type from the database using the appropriate view.
+
+    Args:
+        self: The DatabaseAPI instance.
+        model_type (Type[UploadModel | ConfigModel | ProjectModel]): The type of models to retrieve.
+
+    Raises:
+        ValueError: If the model_type is not supported.
+
+    Returns:
+        List[UploadModel | ConfigModel | ProjectModel]: The retrieved models.
+    """
+    self.logger.info("Getting models of type: %s", model_type)
     match model_type():
       case UploadModel():
         return [UploadModel(**result) for result in
@@ -135,14 +216,15 @@ class DatabaseAPI(object):
         return [ProjectModel(**result) for result in
                 self.db_api.get_view_results(self.design_doc_name, "dvProjectsView")]
       case _:
-        raise ValueError(f"Unsupported model type {model_type}")
+        raise self.log_and_raise_error(TypeError, f"Unsupported model type {model_type}")
 
   def get_model(self, model_id: str,
                 model_type: Type[UploadModel | ConfigModel | ProjectModel]) -> UploadModel | ProjectModel | ConfigModel:
+    self.logger.info("Getting model with id: %s, type: %s", model_id, model_type)
     if model_type not in (UploadModel, ProjectModel, ConfigModel):
-      raise ValueError(f"Unsupported model type {model_type}")
+      raise self.log_and_raise_error(TypeError, f"Unsupported model type {model_type}")
     elif model_id is None:
-      raise ValueError("model_id cannot be None")
+      raise self.log_and_raise_error(ValueError, "model_id cannot be None")
     else:
       return model_type(**self.db_api.get_document(model_id))
 

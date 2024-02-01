@@ -191,7 +191,7 @@ class TestDatabaseAPI:
     # Success path tests with various realistic test values
     (UploadModel(_id="id", _rev='rev1', project_name='data1'),
      UploadModel(_id='mock_id', _rev='mock_rev', project_name='data1'), 'success_path_upload', None),
-    (UploadModel(_id="", _rev='rev1', project_name='data1'),
+    (UploadModel(_id=None, _rev='rev1', project_name='data1'),
      UploadModel(_id='mock_id', _rev='mock_rev', project_name='data1'), 'success_path_upload', None),
     (ConfigModel(_id="id", _rev='rev2', metadata={'value': 'value'}),
      ConfigModel(_id='mock_id', _rev='mock_rev', metadata={'value': 'value'}), 'success_path_config', None),
@@ -202,8 +202,11 @@ class TestDatabaseAPI:
     # Assuming error cases would be related to the incorrect types or missing required fields
     # These tests would normally raise exceptions, but since the function's error handling is not shown, we'll assume it returns None
     (None, None, 'error_case_none_input', ValueError("Data cannot be None")),
-    ('not_a_model_instance', None, 'error_case_wrong_type', ValueError("Data cannot be None")),
-    # Add more error cases as needed
+    ('not_a_model_instance', None, 'error_case_wrong_type',
+     TypeError("Data must be an UploadModel, ConfigModel, or ProjectModel!")),
+    (ProjectModel(_id="id", _rev='rev3', name='Project'),
+     UploadModel(_id='mock_id', _rev='mock_rev', project_name='Project'),
+     'error_case_wrong_type_returned_document', TypeError("Expected UploadModel but got ProjectModel")),
   ])
   def test_create_model_document(self, input_model, expected_output, test_id, exception, mocker, mock_database_api):
     # Arrange
@@ -223,12 +226,112 @@ class TestDatabaseAPI:
         result = mock_database_api.create_model_document(input_model)
 
     # Assert
+    mock_database_api.logger.info.assert_called_once_with("Creating model document: %s", input_model)
     if exception is None:
       assert type(result) == type(
         expected_output), f"Result type is {type(result)} but expected {type(expected_output)}"
       assert dict(result) == dict(expected_output), f"Test failed for {test_id}"
       data = dict(input_model)
       del data['_rev']
+      if data['_id'] is None:
+        del data['_id']
       mock_database_api.db_api.create_document.assert_called_once_with(data)
     else:
       assert result is None
+
+  @pytest.mark.parametrize("data, exception, test_id", [
+    # Success path tests with various realistic test values
+    (UploadModel(project_name="test/path", status="status"), None, "success_path_upload_model"),
+    (ConfigModel(metadata={"key": "value"}, dataverse_login_info={"key": "value"}), None, "success_path_config_model"),
+    (ProjectModel(name="name", comment="comment"), None, "success_path_project_model"),
+
+    # Error cases
+    (None, ValueError("Data cannot be None"), "error_case_none_data"),
+    ("Not a model instance", TypeError("Data must be an UploadModel, ConfigModel, or ProjectModel!"),
+     "error_case_wrong_type"),
+    (123, TypeError("Data must be an UploadModel, ConfigModel, or ProjectModel!"), "error_case_numeric_data"),
+  ])
+  def test_update_model_document(self, data, exception, test_id, mock_database_api):
+    # Arrange
+    if exception is not None:
+      mock_database_api.db_api.update_document.side_effect = exception
+
+    # Act
+    if exception is None:
+      mock_database_api.update_model_document(data)
+    else:
+      with pytest.raises(type(exception)):
+        mock_database_api.update_model_document(data)
+
+    # Assert
+    mock_database_api.logger.info.assert_called_once_with("Updating model document: %s", data)
+    if isinstance(data, (UploadModel, ConfigModel, ProjectModel)):
+      mock_database_api.db_api.update_document.assert_called_once_with(dict(data))
+      mock_database_api.logger.info.assert_called_once()
+    else:
+      mock_database_api.db_api.update_document.assert_not_called()
+      mock_database_api.logger.error(str(exception))
+
+  @pytest.mark.parametrize("model_type, view_name, expected_results, expected_exception", [
+    # success path tests with various realistic test values
+    (UploadModel, "dvUploadView", [UploadModel(**res) for res in [{'_id': 'upload1', 'project_name': 'data1'},
+                                                                  {'_id': 'upload2', 'project_name': 'data2'}]], None),
+    (ProjectModel, "dvProjectsView",
+     [ProjectModel(**res) for res in [{'_id': 'project1', 'name': 'data1'}, {'_id': 'project2', 'name': 'data2'}]],
+     None),
+    # Error case for unsupported model
+    (ConfigModel, None, None, TypeError),
+  ], ids=[
+    'success_path_upload_model',
+    'success_path_project_model',
+    'error_case_unsupported_model'
+  ])
+  def test_get_models(self, model_type, view_name, expected_results, expected_exception, mock_database_api):
+    # Arrange
+    if not expected_exception:
+      mock_database_api.db_api.get_view_results.return_value = [dict(result) for result in expected_results]
+
+    # Act
+    if expected_exception:
+      with pytest.raises(expected_exception):
+        mock_database_api.get_models(model_type)
+    else:
+      results = mock_database_api.get_models(model_type)
+
+    # Assert
+    mock_database_api.logger.info.assert_called_once_with("Getting models of type: %s", model_type)
+    if not expected_exception:
+      mock_database_api.db_api.get_view_results.assert_called_with(mock_database_api.design_doc_name, view_name)
+      assert type(results) == type(expected_results)
+      assert [dict(result) for result in results] == [dict(result) for result in expected_results]
+    else:
+      mock_database_api.db_api.get_view_results.assert_not_called()
+      mock_database_api.logger.error(str(expected_exception))
+
+  @pytest.mark.parametrize("model_id,model_type,expected", [
+    # Success path tests
+    pytest.param("1", UploadModel, UploadModel(_id="1", project_name="Test Model"), id="success_path_upload"),
+    pytest.param("2", ConfigModel,
+                 ConfigModel(_id="2", metadata={"key": "value"}, dataverse_login_info={"key": "value"}),
+                 id="success_path_config"),
+    pytest.param("3", ProjectModel, ProjectModel(_id="3", name="Test Model"), id="success_path_project"),
+
+    # Error cases
+    pytest.param(None, UploadModel, ValueError("Model ID cannot be None!"), id="error_null_model_id"),
+    pytest.param("1", str, TypeError("Model type must be an UploadModel, ConfigModel, or ProjectModel!"),
+                 id="error_unsupported_model_type"),
+  ])
+  def test_get_model(self, model_id, model_type, expected, mock_database_api):
+    # Arrange
+    if type(expected) is not ValueError | TypeError:
+      mock_database_api.db_api.get_document.return_value = dict(expected)
+
+    # Act and Assert
+    if type(expected) is ValueError | TypeError:
+      with pytest.raises(expected):
+        mock_database_api.get_model(model_id, model_type)
+    else:
+      result = mock_database_api.get_model(model_id, model_type)
+      # Assert
+      assert type(result) == type(expected), f"Expected type {type(expected)}, got type {type(result)}"
+      assert dict(result) == dict(expected), f"Expected {expected}, got {result}"
