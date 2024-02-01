@@ -669,7 +669,7 @@ class Database:
     """
     Set the gui state
     - 0: true=show details; false=hide details
-    - 1: true=show children; false=hide children (only makes sense for folders = x1, x2)
+    - 1: true=show children; false=hide children; only makes sense for folders: doctype = x1
 
     Args:
       docID (str): docID
