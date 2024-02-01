@@ -95,7 +95,7 @@ configurationGUI: dict[str, Any] = {
                "dark_teal", "dark_yellow", "light_amber", "light_blue", "light_cyan", "light_lightgreen", \
                "light_pink", "light_purple", "light_red", "light_teal", "light_yellow", "none"]],
     "loggingLevel": ["Logging level (more->less)", "INFO", ["DEBUG", "INFO", "WARNING", "ERROR"]],
-    "autosave":     ["Autosave entries in form", "Yes", ["Yes", "No"]]
+    "autosave":     ["(Auto)-save entries in form", "Yes", ["Yes", "No"]]
   },
   "dimensions": {
     "sidebarWidth": ["Sidebar width", 280, [220, 280, 340]],

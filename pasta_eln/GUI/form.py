@@ -328,16 +328,17 @@ class Form(QDialog):
           self.formsL[idx].itemAt(unknownWidget[3]).widget().hide()
       self.allHidden = not self.allHidden
     elif command[0] is Command.FORM_CANCEL:
-      ret = QMessageBox.critical(self, 'Warning', 'You will loose all entered data. Do you want to save the '+\
-                                 'content for next time?',
-                                 QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,  # type: ignore[operator]
-                                 QMessageBox.StandardButton.No)
-      if ret==QMessageBox.StandardButton.Yes:
-        self.autosave()
-      else:
-        self.checkThreadTimer.stop()
-        if (Path.home()/'.pastaELN.temp').exists():
-          (Path.home()/'.pastaELN.temp').unlink()
+      if self.comm.backend.configuration['GUI']['autosave'] == 'Yes':
+        ret = QMessageBox.critical(self, 'Warning', 'You will loose all new data. Do you want to save it '+\
+                                   'for next time?',
+                                   QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,  # type: ignore[operator]
+                                   QMessageBox.StandardButton.No)
+        if ret==QMessageBox.StandardButton.Yes:
+          self.autosave()
+        else:
+          self.checkThreadTimer.stop()
+          if (Path.home()/'.pastaELN.temp').exists():
+            (Path.home()/'.pastaELN.temp').unlink()
       self.reject()
     elif command[0] in (Command.FORM_SAVE, Command.FORM_SAVE_NEXT):
       # create the data that has to be saved
