@@ -44,7 +44,7 @@ class MainDialog(Ui_MainDialogBase):
     self.instance = DialogExtension()
     super().setupUi(self.instance)
     self.db_api = DatabaseAPI()
-    self.db_api.initialize()
+    self.db_api.initialize_database()
     for project in self.db_api.get_models(ProjectModel):
       widget = self.get_project_widget(project)
       self.projectsScrollAreaVerticalLayout.addWidget(widget)

@@ -48,7 +48,7 @@ class DatabaseAPI(object):
     self.db_api = BaseDatabaseAPI()
     self.design_doc_name = '_design/viewDataverse'
     self.config_doc_id = '-dataverseConfig-'
-    self.data_hierarchy_doc_id = '-dataverseHierarchy-'
+    self.data_hierarchy_doc_id = '-dataHierarchy-'
     self.upload_model_view_name = "dvUploadView"
     self.project_model_view_name = "dvProjectsView"
 
