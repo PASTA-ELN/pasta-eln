@@ -6,13 +6,14 @@
 #  Filename: generic_task_object.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
+from PySide6 import QtCore
 from PySide6.QtCore import QObject, Signal
 
 
 class GenericTaskObject(QObject):
-  cancel = Signal()
-  start = Signal()
-  finished = Signal()
+  cancel = QtCore.Signal()
+  start = QtCore.Signal()
+  finished = QtCore.Signal()
 
   def __init__(self):
     super().__init__()

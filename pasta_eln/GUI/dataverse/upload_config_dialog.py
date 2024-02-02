@@ -32,7 +32,7 @@ class UploadConfigDialog(Ui_UploadConfigDialog, QObject):
     self.instance = QDialog()
     super().setupUi(self.instance)
     self.db_api = DatabaseAPI()
-    self.numParallelComboBox.addItems(map(str, range(3, 26)))
+    self.numParallelComboBox.addItems(map(str, range(2, 9)))
     self.numParallelComboBox.setCurrentIndex(2)
     self.instance.setWindowModality(QtCore.Qt.ApplicationModal)
     self.config_model: ConfigModel = None
