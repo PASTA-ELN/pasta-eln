@@ -9,7 +9,7 @@
 
 import json
 from secrets import compare_digest
-from unittest.mock import mock_open, patch
+from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
 from cloudant.error import CloudantDatabaseException
@@ -457,3 +457,46 @@ class TestBaseDatabaseApi:
         mock_database_api.logger.info.assert_called()
         mock_database_api.logger.error.assert_called_with(
           "Design document name, view name and document id cannot be empty!")
+
+  @pytest.mark.parametrize("test_id, design_document_name, view_name, expected_result", [
+    # Success path tests
+    ("SuccessCase-1", "design_doc_1", "view_1", MagicMock()),
+    ("SuccessCase-2", "design_doc_2", "view_2", MagicMock()),
+    # Edge cases
+    ("EdgeCase-1", "", "view", None),  # Empty design document name
+    ("EdgeCase-2", "design_doc", "", None),  # Empty view name
+    # Error cases
+    ("ErrorCase-1", None, "view", DatabaseError("Design document name and view name cannot be empty")),
+    # None design document name
+    ("ErrorCase-2", "design_doc", None, DatabaseError("Design document name and view name cannot be empty")),
+    # None view name
+  ])
+  def test_get_view(self, mocker, test_id, design_document_name, view_name, expected_result,
+                    mock_database_api):
+    # Arrange
+    mock_client = mocker.MagicMock()
+    mock_couch = mocker.MagicMock()
+    mock_design_doc = mocker.MagicMock()
+    mock_db = mocker.MagicMock()
+    mock_design_doc.get_view.return_value = expected_result
+    mock_add_view = mocker.MagicMock()
+    mock_couch.__enter__.return_value = mock_client
+    mock_design_doc.__enter__.return_value = mock_design_doc
+    mock_design_doc.add_view = mock_add_view
+    mock_client.__getitem__.return_value = mock_db
+    mocker.patch('pasta_eln.dataverse.base_database_api.couchdb', return_value=mock_couch)
+    mocker.patch('pasta_eln.dataverse.base_database_api.DesignDocument',
+                 return_value=mock_design_doc)
+
+    # Act
+    if isinstance(expected_result, Exception):
+      with pytest.raises(type(expected_result)):
+        mock_database_api.get_view(design_document_name, view_name)
+    else:
+      result = mock_database_api.get_view(design_document_name, view_name)
+
+    # Assert
+    if not isinstance(expected_result, Exception):
+      assert result == expected_result
+      mock_database_api.logger.info.assert_called_with("Retrieving view: %s from design document: %s",
+                                                       view_name, design_document_name)

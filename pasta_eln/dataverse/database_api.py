@@ -21,6 +21,13 @@ from pasta_eln.dataverse.upload_model import UploadModel
 
 
 class DatabaseAPI(object):
+  """
+  Provides an interface to interact with the database for dataverse specific operations.
+
+  Explanation:
+      This class represents the DatabaseAPI and provides methods to interact with the database.
+      It includes methods for initializing the database, retrieving models and data, and performing other database operations.
+  """
 
   def __init__(self) -> None:
     """
@@ -40,6 +47,10 @@ class DatabaseAPI(object):
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
     self.db_api = BaseDatabaseAPI()
     self.design_doc_name = '_design/viewDataverse'
+    self.config_doc_id = '-dataverseConfig-'
+    self.data_hierarchy_doc_id = '-dataverseHierarchy-'
+    self.upload_model_view_name = "dvUploadView"
+    self.project_model_view_name = "dvProjectsView"
 
   def create_dataverse_design_document(self) -> Document:
     """
@@ -59,7 +70,7 @@ class DatabaseAPI(object):
     self.logger.info("Creating design document: %s", self.design_doc_name)
     return self.db_api.create_document({"_id": self.design_doc_name})
 
-  def create_upload_documents_view(self) -> None:
+  def create_upload_model_view(self) -> None:
     """
     Creates the dvUploadView as part of the design document.
 
@@ -74,7 +85,7 @@ class DatabaseAPI(object):
     """
     self.logger.info("Creating dvUploadView as part of design document: %s", self.design_doc_name)
     self.db_api.add_view(self.design_doc_name,
-                         "dvUploadView",
+                         self.upload_model_view_name,
                          "function (doc) { if (doc.data_type === 'dataverse_upload') { emit(doc._id, doc); } }",
                          None
                          )
@@ -94,7 +105,7 @@ class DatabaseAPI(object):
     """
     self.logger.info("Creating dvProjectsView as part of design document: %s", self.design_doc_name)
     self.db_api.add_view(self.design_doc_name,
-                         "dvProjectsView",
+                         self.project_model_view_name,
                          "function (doc) { "
                          "if (doc['-type']=='x0') {"
                          "emit(doc._id, {"
@@ -142,7 +153,7 @@ class DatabaseAPI(object):
     del data_dict['_rev']
     return type(data)(**self.db_api.create_document(data_dict))
 
-  def update_model_document(self, data: UploadModel | ConfigModel | ProjectModel):
+  def update_model_document(self, data: UploadModel | ConfigModel | ProjectModel) -> None:
     """
     Updates the model document with the provided data.
 
@@ -180,7 +191,7 @@ class DatabaseAPI(object):
         error_message (str): The error message to be logged and raised.
 
     Returns:
-        None
+        Raises the exception of the specified type with the provided error message.
     """
     self.logger.error(error_message)
     match exception_type():
@@ -216,34 +227,106 @@ class DatabaseAPI(object):
         return [ProjectModel(**result) for result in
                 self.db_api.get_view_results(self.design_doc_name, "dvProjectsView")]
       case _:
-        raise self.log_and_raise_error(TypeError, f"Unsupported model type {model_type}")
+        raise self.log_and_raise_error(TypeError,
+                                       f"Unsupported model type {model_type}")  # type: ignore[func-returns-value]
 
   def get_model(self, model_id: str,
                 model_type: Type[UploadModel | ConfigModel | ProjectModel]) -> UploadModel | ProjectModel | ConfigModel:
+    """
+    Retrieves a model of the specified type from the database.
+
+    Explanation:
+        This method retrieves a model of the specified type from the database using the provided model ID.
+        It performs the necessary validations and returns the retrieved model.
+
+    Args:
+        self: The DatabaseAPI instance.
+        model_id (str): The ID of the model to retrieve.
+        model_type (Type[UploadModel | ConfigModel | ProjectModel]): The type of the model to retrieve.
+
+    Raises:
+        TypeError: If the model_type is not supported.
+        ValueError: If the model_id is None.
+
+    Returns:
+        UploadModel | ProjectModel | ConfigModel: The retrieved model.
+    """
     self.logger.info("Getting model with id: %s, type: %s", model_id, model_type)
     if model_type not in (UploadModel, ProjectModel, ConfigModel):
-      raise self.log_and_raise_error(TypeError, f"Unsupported model type {model_type}")
+      raise self.log_and_raise_error(TypeError,
+                                     f"Unsupported model type {model_type}")  # type: ignore[func-returns-value]
     elif model_id is None:
       raise self.log_and_raise_error(ValueError, "model_id cannot be None")
     else:
       return model_type(**self.db_api.get_document(model_id))
 
-  def get_data_hierarchy(self) -> dict[str, Any]:
-    data = dict(self.db_api.get_document("-dataHierarchy-"))
+  def get_data_hierarchy(self) -> dict[str, Any] | None:
+    """
+    Retrieves the data hierarchy from the database.
+
+    Explanation:
+        This method retrieves the data hierarchy from the database using the appropriate document ID.
+        It performs necessary validations and returns the retrieved data hierarchy.
+
+    Args:
+        self: The DatabaseAPI instance.
+
+    Returns:
+        dict[str, Any] | None: The retrieved data hierarchy, or None if the document is not found.
+    """
+    self.logger.info("Getting data hierarchy...")
+    document = self.db_api.get_document(self.data_hierarchy_doc_id)
+    if document is None:
+      self.logger.warning("Data hierarchy document not found!")
+      return document
+    data = dict(document)
     del data['_id']
     del data['_rev']
     del data['-version']
     return data
 
-  def initialize(self):
-    self.create_dataverse_design_document()
-    self.create_upload_documents_view()
-    self.create_projects_view()
-    model = ConfigModel()
-    model.id = "-dataverseConfig-"
-    model.parallel_uploads_count = 3
-    model.dataverse_login_info = {}
-    model.project_upload_items = {}
+  def initialize_database(self) -> None:
+    """
+    Initializes the database for the dataverse module.
+
+    Explanation:
+        This method initializes the database for the dataverse module by creating necessary documents and views if they do not exist.
+
+    Args:
+        self: The DatabaseAPI instance.
+
+    Returns:
+        None
+    """
+    self.logger.info("Initializing database for dataverse module...")
+    if self.db_api.get_document(self.design_doc_name) is None:
+      self.create_dataverse_design_document()
+    if self.db_api.get_view(self.design_doc_name, self.upload_model_view_name) is None:
+      self.create_upload_model_view()
+    if self.db_api.get_view(self.design_doc_name, self.project_model_view_name) is None:
+      self.create_projects_view()
+    if self.db_api.get_document(self.design_doc_name) is None:
+      self.initialize_config_document()
+
+  def initialize_config_document(self) -> None:
+    """
+    Initializes the config document.
+
+    Explanation:
+        This method initializes the config document by creating a ConfigModel instance with the provided attributes.
+        It loads the metadata from a JSON file and calls the create_model_document method to create the document.
+
+    Args:
+        self: The DatabaseAPI instance.
+
+    Returns:
+        None
+    """
+    self.logger.info("Initializing config document...")
+    model = ConfigModel(_id=self.config_doc_id,
+                        parallel_uploads_count=3,
+                        dataverse_login_info={},
+                        project_upload_items={})
     current_path = realpath(join(getcwd(), dirname(__file__)))
     with open(join(current_path, "dataset-create-new-all-default-fields.json"),
               encoding="utf-8") as config_file:

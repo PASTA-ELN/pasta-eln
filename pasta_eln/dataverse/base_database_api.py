@@ -229,6 +229,41 @@ class BaseDatabaseAPI:
       with DesignDocument(pasta_db, design_document_name) as design_doc:
         design_doc.add_view(view_name, map_func, reduce_func)
 
+  def get_view(self,
+               design_document_name: str,
+               view_name: str) -> View:
+    """
+    Retrieves a view from the design document.
+
+    Explanation:
+        This method retrieves a view from the specified design document.
+        It connects to the CouchDB instance, selects the appropriate database,
+        and retrieves the view from the design document.
+
+    Args:
+        self: The DatabaseAPI instance.
+        design_document_name (str): The name of the design document.
+        view_name (str): The name of the view.
+
+    Raises:
+        ValueError: If the design document name or view name is empty.
+
+    Returns:
+        View: The retrieved view.
+    """
+    self.logger.info("Retrieving view: %s from design document: %s",
+                     view_name,
+                     design_document_name)
+    if design_document_name is None or view_name is None:
+      self.log_and_raise_error("Design document name, view name cannot be empty!")
+    with couchdb(self.username,
+                 self.password,
+                 url=self.url,
+                 connect=True) as client:
+      pasta_db = client[self.db_name]
+      with DesignDocument(pasta_db, design_document_name) as design_doc:
+        return design_doc.get_view(view_name)
+
   def get_view_results(self,
                        design_document_name: str,
                        view_name: str,

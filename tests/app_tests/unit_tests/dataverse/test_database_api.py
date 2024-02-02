@@ -6,7 +6,9 @@
 #  Filename: test_database_api.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
+from json import JSONDecodeError
 from logging import Logger
+from unittest.mock import mock_open, patch
 
 import pytest
 
@@ -125,10 +127,10 @@ class TestDatabaseAPI:
 
     # Act
     if exception is None:
-      mock_database_api.create_upload_documents_view()
+      mock_database_api.create_upload_model_view()
     else:
       with pytest.raises(DatabaseError):
-        mock_database_api.create_upload_documents_view()
+        mock_database_api.create_upload_model_view()
 
     # Assert
     mock_database_api.db_api.add_view.assert_called_once_with(*expected_call)
@@ -320,18 +322,191 @@ class TestDatabaseAPI:
     pytest.param(None, UploadModel, ValueError("Model ID cannot be None!"), id="error_null_model_id"),
     pytest.param("1", str, TypeError("Model type must be an UploadModel, ConfigModel, or ProjectModel!"),
                  id="error_unsupported_model_type"),
+    pytest.param({"1"}, str, TypeError("Model type must be an UploadModel, ConfigModel, or ProjectModel!"),
+                 id="error_unsupported_model_type"),
   ])
   def test_get_model(self, model_id, model_type, expected, mock_database_api):
     # Arrange
-    if type(expected) is not ValueError | TypeError:
+    if not isinstance(expected, ValueError | TypeError):
       mock_database_api.db_api.get_document.return_value = dict(expected)
 
     # Act and Assert
-    if type(expected) is ValueError | TypeError:
-      with pytest.raises(expected):
+    if isinstance(expected, ValueError | TypeError):
+      with pytest.raises(type(expected)):
         mock_database_api.get_model(model_id, model_type)
     else:
       result = mock_database_api.get_model(model_id, model_type)
       # Assert
       assert type(result) == type(expected), f"Expected type {type(expected)}, got type {type(result)}"
       assert dict(result) == dict(expected), f"Expected {expected}, got {result}"
+    mock_database_api.logger.info.assert_called_once_with("Getting model with id: %s, type: %s", model_id, model_type)
+
+  @pytest.mark.parametrize(
+    "document, expected, test_id",
+    [
+      # Happy path tests with various realistic test values
+      ({"_id": "1", "_rev": "1-abc", "-version": "1.0", "data": "value"}, {"data": "value"}, "happy_path_1"),
+      ({"_id": "2", "_rev": "2-def", "-version": "2.0", "more_data": [1, 2, 3]}, {"more_data": [1, 2, 3]},
+       "happy_path_2"),
+
+      # Edge case: Empty document except for system fields
+      ({"_id": "", "_rev": "", "-version": ""}, {}, "edge_case_empty_doc"),
+
+      # Error case: Document is None
+      (None, None, "error_case_none_doc"),
+    ],
+  )
+  def test_get_data_hierarchy(self, mocker, document, expected, test_id, mock_database_api):
+    # Arrange
+    mock_database_api.db_api.get_document.return_value = document
+
+    # Act
+    result = mock_database_api.get_data_hierarchy()
+
+    # Assert
+    if document is not None:
+      mock_database_api.db_api.get_document.assert_called_once_with(mock_database_api.data_hierarchy_doc_id)
+      assert result == expected, f"Test failed for {test_id}"
+    else:
+      mock_database_api.logger.warning.assert_called_once_with("Data hierarchy document not found!")
+      assert result is None, f"Test failed for {test_id}"
+    mock_database_api.logger.info.assert_called_once_with("Getting data hierarchy...")
+
+  @pytest.mark.parametrize(
+    "test_id, design_doc_exists, upload_model_view_exists, project_model_view_exists, expected_calls", [
+      ("success_path", True, True, True, []),
+      ("edge_case_no_design_doc", None, None, None,
+       ['create_dataverse_design_document', 'create_upload_documents_view', 'create_projects_view',
+        'initialize_config_document']),
+      ("error_case_db_api_failure", None, None, None, ['get_document', 'get_view']),
+    ])
+  def test_initialize_database(self, mocker, test_id, design_doc_exists, upload_model_view_exists,
+                               project_model_view_exists, expected_calls, mock_database_api):
+    # Arrange
+    mock_database_api.db_api.get_document.return_value = design_doc_exists
+    mock_database_api.db_api.get_view.side_effect = [upload_model_view_exists, project_model_view_exists]
+    mock_database_api.create_dataverse_design_document = mocker.MagicMock()
+    mock_database_api.create_upload_model_view = mocker.MagicMock()
+    mock_database_api.create_projects_view = mocker.MagicMock()
+    mock_database_api.initialize_config_document = mocker.MagicMock()
+
+    # Act
+    mock_database_api.initialize_database()
+
+    # Assert
+    if design_doc_exists is None:
+      mock_database_api.db_api.get_document.assert_called_with(mock_database_api.design_doc_name)
+      mock_database_api.db_api.get_view.assert_not_called()
+    else:
+      mock_database_api.db_api.get_document.assert_called_with(mock_database_api.design_doc_name)
+      if not design_doc_exists:
+        mock_database_api.create_dataverse_design_document.assert_called_once()
+      if not upload_model_view_exists:
+        mock_database_api.create_upload_model_view.assert_called_once()
+      if not project_model_view_exists:
+        mock_database_api.create_projects_view.assert_called_once()
+      if not design_doc_exists:
+        mock_database_api.initialize_config_document.assert_called_once()
+
+    for call in expected_calls:
+      getattr(mock_database_api, call).assert_called_once()
+
+  # Parametrized test cases
+  @pytest.mark.parametrize(
+    "test_id, design_doc_exists, upload_view_exists, project_view_exists, config_doc_exists, expected_calls", [
+      # Happy path tests with various realistic test values
+      ("success_path", None, None, None, None, 3),  # None of the documents/views exist
+      ("success_path", {}, None, None, None, 2),  # Only design document exists
+      ("success_path", {}, {}, None, None, 1),  # Design document and upload view exist
+      ("success_path", {}, {}, {}, None, 1),  # All documents/views exist except config document
+
+      # Edge cases
+      ("edge_case", {}, {}, {}, {}, 0),  # All documents/views already exist
+
+      # Error cases
+      ("error_case", DatabaseError("DB Error"), None, None, None, 0),  # DB error on getting design document
+      # Add more error cases as needed
+    ])
+  def test_initialize_database(self, mocker, test_id, design_doc_exists, upload_view_exists, project_view_exists,
+                               config_doc_exists, expected_calls, mock_database_api):
+    # Arrange
+    mock_database_api.db_api.get_document.side_effect = [design_doc_exists, config_doc_exists]
+    mock_database_api.db_api.get_view.side_effect = [upload_view_exists, project_view_exists]
+    mock_database_api.create_dataverse_design_document = mocker.MagicMock()
+    mock_database_api.create_upload_model_view = mocker.MagicMock()
+    mock_database_api.create_projects_view = mocker.MagicMock()
+    mock_database_api.initialize_config_document = mocker.MagicMock()
+
+    # Act
+    if isinstance(design_doc_exists, DatabaseError):
+      with pytest.raises(type(design_doc_exists)):
+        mock_database_api.initialize_database()
+    else:
+      mock_database_api.initialize_database()
+
+    # Assert
+    mock_database_api.logger.info.assert_called_with("Initializing database for dataverse module...")
+    if not isinstance(design_doc_exists, DatabaseError):
+      if design_doc_exists:
+        mock_database_api.create_dataverse_design_document.assert_called_with(mock_database_api.design_doc_name)
+      if upload_view_exists:
+        mock_database_api.create_upload_model_view.assert_called_with(mock_database_api.upload_model_view_name)
+      if project_view_exists:
+        mock_database_api.create_projects_view.assert_called_with(mock_database_api.project_model_view_name)
+      if config_doc_exists:
+        mock_database_api.initialize_config_document.assert_called_once()
+    else:
+      mock_database_api.db_api.get_document.assert_called_with(mock_database_api.design_doc_name)
+
+  @pytest.mark.parametrize(
+    "test_id",
+    [
+      ("success_path_default_values")
+    ])
+  def test_initialize_config_document_success_path(self, mocker, test_id, mock_database_api):
+    # Arrange
+    mock_database_api.create_model_document = mocker.MagicMock()
+
+    # Act
+    with patch('pasta_eln.dataverse.database_api.realpath') as mock_realpath, \
+        patch('pasta_eln.dataverse.database_api.getcwd') as mock_getcwd, \
+        patch('pasta_eln.dataverse.database_api.dirname') as mock_dirname, \
+        patch('pasta_eln.dataverse.database_api.open',
+              mock_open(read_data='{"metadata_key": "metadata_value"}')) as mock_file:
+      mock_realpath.return_value = '/fakepath'
+      mock_getcwd.return_value = '/home/jmurugan'
+      mock_dirname.return_value = '/pasta_eln/src/pasta_eln/dataverse'
+      mock_database_api.initialize_config_document()
+
+    # Assert
+    mock_database_api.logger.info.assert_called_with("Initializing config document...")
+    mock_database_api.create_model_document.assert_called_once()
+    called_with_model = mock_database_api.create_model_document.call_args[0][0]
+    assert isinstance(called_with_model, ConfigModel)
+    assert called_with_model._id == mock_database_api.config_doc_id
+    assert called_with_model.parallel_uploads_count == 3
+    assert called_with_model.dataverse_login_info == {}
+    assert called_with_model.project_upload_items == {}
+    assert called_with_model.metadata is not None
+
+  # Various error cases
+  # Assuming error cases might involve exceptions thrown during file reading or JSON parsing
+  @pytest.mark.parametrize("side_effect, test_id", [
+    (FileNotFoundError(), "error_case_file_not_found"),
+    (JSONDecodeError("Expecting value", "", 0), "error_case_invalid_json"),
+  ])
+  def test_initialize_config_document_error_cases(self, mocker, side_effect, test_id, mock_database_api):
+    # Arrange
+    mock_database_api.create_model_document = mocker.MagicMock()
+
+    # Act & Assert
+    with patch('pasta_eln.dataverse.database_api.realpath') as mock_realpath, \
+        patch('pasta_eln.dataverse.database_api.getcwd') as mock_getcwd, \
+        patch('pasta_eln.dataverse.database_api.dirname') as mock_dirname, \
+        patch('pasta_eln.dataverse.database_api.open', mock_open()) as mock_file:
+      mock_file.side_effect = side_effect
+      mock_realpath.return_value = '/fakepath'
+      mock_getcwd.return_value = '/home/jmurugan'
+      mock_dirname.return_value = '/pasta_eln/src/pasta_eln/dataverse'
+      with pytest.raises(type(side_effect)):
+        mock_database_api.initialize_config_document()
