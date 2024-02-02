@@ -266,7 +266,7 @@ class DatabaseAPI(object):
 
     Explanation:
         This method retrieves the data hierarchy from the database using the appropriate document ID.
-        It performs necessary validations and returns the retrieved data hierarchy.
+        It performs the necessary validations and returns the retrieved data hierarchy.
 
     Args:
         self: The DatabaseAPI instance.
