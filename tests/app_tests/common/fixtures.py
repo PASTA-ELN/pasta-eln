@@ -6,6 +6,7 @@
 #  Filename: fixtures.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
+import os
 from typing import Union
 from xml.etree.ElementTree import Element
 
@@ -96,6 +97,7 @@ def dataverse_client_mock(mocker) -> DataverseClient:
 def dataverse_tree_mock(mocker) -> Element | None:
   mocked_element_tree = mocker.MagicMock()
   mocked_element_tree_root = mocker.MagicMock()
+  mocker.patch('tests.app_tests.common.test_utils.os.getcwd', return_value=os.path.join(os.getcwd(), '..'))
   test_tree = read_xml('dataverse_list.xml')
   mocked_element_tree.getroot.return_value = mocked_element_tree_root
   mocked_element_tree_root.findall.side_effect = test_tree.getroot().findall

@@ -1,3 +1,4 @@
+""" Provides an interface to interact with the database for dataverse specific operations. """
 #  PASTA-ELN and all its sub-parts are covered by the MIT license.
 #
 #  Copyright (c) 2024
