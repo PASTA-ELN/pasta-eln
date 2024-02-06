@@ -301,9 +301,11 @@ class TestUploadQueueManager:
     mock_config_model = ConfigModel()
     mock_config_model.parallel_uploads_count = parallel_uploads_count
     mock_db_api.get_model.return_value = mock_config_model
+    mocker.patch('pasta_eln.dataverse.upload_queue_manager.DatabaseAPI', return_value=mock_db_api)
     upload_queue_manager = UploadQueueManager()
     upload_queue_manager.db_api = mock_db_api
     upload_queue_manager.logger = mock_logger
+    mock_db_api.get_model.reset_mock()
 
     # Act
     upload_queue_manager.set_concurrent_uploads()
