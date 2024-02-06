@@ -32,7 +32,8 @@ class TreeView(QTreeView):
     Args:
       p (QPoint): point of clicking
     """
-    folder = self.currentIndex().data().split('/')[-1][0]=='x'
+    item = self.model().itemFromIndex(self.currentIndex())
+    folder = item.data()['hierStack'].split('/')[-1][0]=='x'
     context = QMenu(self)
     if folder:
       Action('Add child folder',                   self, [Command.ADD_CHILD],      context)
@@ -69,6 +70,7 @@ class TreeView(QTreeView):
       child = QStandardItem('/'.join(hierStack+[docID]))
       child.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled) # type: ignore
       item.appendRow(child)
+      self.comm.changeProject.emit('','') #refresh project
       #appendRow is not 100% correct:
       # - better: insertRow before the first non-folder, depending on the child number
       #   -> get highest non 9999 childNumber
@@ -87,6 +89,7 @@ class TreeView(QTreeView):
       child = QStandardItem('/'.join(hierStack+[docID]))
       child.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled) # type: ignore
       parent.appendRow(child)
+      self.comm.changeProject.emit('','') #refresh project
       #++ TODO appendRow is not 100% correct: see above
     elif command[0] is Command.DELETE:
       ret = QMessageBox.critical(self, 'Warning', 'Are you sure you want to delete this data?',\
@@ -158,7 +161,9 @@ class TreeView(QTreeView):
     docID = item.data()['hierStack'].split('/')[-1]
     doc   = self.comm.backend.db.getDoc(docID)
     self.comm.formDoc.emit(doc)
-    item  = self.model().itemFromIndex(self.currentIndex())
+    docNew = self.comm.backend.db.getDoc(docID)
+    item.setText(docNew['-name'])
+    item.setData(item.data() | {"docType":docNew['-type'], "gui":docNew['-gui']})
     item.emitDataChanged()  #force redraw (resizing and repainting) of this item only
     return
 
