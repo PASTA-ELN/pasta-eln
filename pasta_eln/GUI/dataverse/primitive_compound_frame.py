@@ -60,7 +60,7 @@ class PrimitiveCompoundFrame(Ui_PrimitiveCompoundFrame):
     self.compoundHorizontalLayout.addWidget(delete_push_button)
     self.addPushButton.clicked.connect(self.add_new_compound_entry)
 
-  def add_new_compound_entry(self):
+  def add_new_compound_entry(self) -> None:
     new_compound_entry_layout = QtWidgets.QHBoxLayout()
     new_compound_entry_layout.setObjectName("compoundHorizontalLayout")
     for type_val in self.types_dict.values():

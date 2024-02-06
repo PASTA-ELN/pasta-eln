@@ -123,7 +123,8 @@ class DatabaseAPI(object):
                          )
 
   def create_model_document(self,
-                            data: UploadModel | ConfigModel | ProjectModel) -> UploadModel | ConfigModel | ProjectModel:
+                            data: UploadModel | ConfigModel | ProjectModel) -> Union[
+    UploadModel, ConfigModel, ProjectModel]:
 
     """
     Creates a model document in the database.
@@ -140,7 +141,7 @@ class DatabaseAPI(object):
         ValueError: If the data parameter is None.
 
     Returns:
-        UploadModel | ConfigModel | ProjectModel: The created model document.
+        Union[UploadModel, ConfigModel, ProjectModel]: The created model document.
 
     """
     self.logger.info("Creating model document: %s", data)

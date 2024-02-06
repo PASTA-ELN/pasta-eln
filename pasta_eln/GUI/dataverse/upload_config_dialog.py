@@ -36,34 +36,43 @@ class UploadConfigDialog(Ui_UploadConfigDialog, QObject):
     self.numParallelComboBox.addItems(map(str, range(2, 9)))
     self.numParallelComboBox.setCurrentIndex(2)
     self.instance.setWindowModality(QtCore.Qt.ApplicationModal)
-    self.config_model: ConfigModel = None
+    self.config_model: ConfigModel | None = None
     self.data_hierarchy_types: list[str] = []
     self.buttonBox.button(QtWidgets.QDialogButtonBox.Save).clicked.connect(lambda: self.save_ui())
     self.set_data_hierarchy_types()
     self.load_ui()
 
-  def load_ui(self):
-    self.config_model = self.db_api.get_model(self.db_api.config_doc_id, ConfigModel)
+  def load_ui(self) -> None:
+    self.config_model = self.db_api.get_model(self.db_api.config_doc_id, ConfigModel)  # type: ignore[assignment]
+    if self.config_model is None:
+      self.logger.error("Failed to load config model!")
+      return None
     for widget_pos in reversed(range(self.projectItemsVerticalLayout.count())):
       self.projectItemsVerticalLayout.itemAt(widget_pos).widget().setParent(None)
     for data_type in self.data_hierarchy_types:
-      self.projectItemsVerticalLayout.addWidget(QCheckBox(text=data_type,
+      self.projectItemsVerticalLayout.addWidget(QCheckBox(text=data_type,  # type: ignore[call-overload]
                                                           parent=self.instance,
                                                           checkState=QtCore.Qt.Checked
-                                                          if self.config_model.project_upload_items.get(data_type,
-                                                                                                        False)
+                                                          if self.config_model.project_upload_items
+                                                             and self.config_model.project_upload_items.get(data_type,
+                                                                                                            False)
                                                           else QtCore.Qt.Unchecked))
     self.numParallelComboBox.setCurrentText(str(self.config_model.parallel_uploads_count))
 
-  def set_data_hierarchy_types(self):
-    for data_type in self.db_api.get_data_hierarchy():
+  def set_data_hierarchy_types(self) -> None:
+    data_hierarchy = self.db_api.get_data_hierarchy()
+    if data_hierarchy is None:
+      return None
+    for data_type in data_hierarchy:
       if data_type not in ("x0", "x1", "x2"):
         type_capitalized = data_type.capitalize()
         if type_capitalized and type_capitalized not in self.data_hierarchy_types:
           self.data_hierarchy_types.append(type_capitalized)
     self.data_hierarchy_types.append("Unidentified")
 
-  def save_ui(self):
+  def save_ui(self) -> None:
+    if self.config_model is None:
+      return
     self.config_model.parallel_uploads_count = int(self.numParallelComboBox.currentText())
     items = {}
     for widget_pos in reversed(range(self.projectItemsVerticalLayout.count())):

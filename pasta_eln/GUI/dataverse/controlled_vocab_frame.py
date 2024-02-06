@@ -32,7 +32,7 @@ class ControlledVocabFrame(Ui_ControlledVocabularyFrame):
     self.vocabComboBox.addItems(vocabulary_list)
     self.addPushButton.clicked.connect(self.add_new_vocab_entry)
 
-  def add_new_vocab_entry(self):
+  def add_new_vocab_entry(self) -> None:
     new_vocab_entry_layout = QtWidgets.QHBoxLayout()
     new_vocab_entry_layout.setObjectName("vocabHorizontalLayout")
     combo_box = QtWidgets.QComboBox(parent=self.instance)

@@ -27,12 +27,12 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
 
   def __init__(self) -> None:
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
-    self.primitive_compound_frame = None
-    self.controlled_vocab_frame = None
+    self.primitive_compound_frame: PrimitiveCompoundFrame | None = None
+    self.controlled_vocab_frame: ControlledVocabFrame | None = None
     self.instance = QDialog()
     super().setupUi(self.instance)
     self.db_api = DatabaseAPI()
-    self.config_model: ConfigModel = self.db_api.get_model(self.db_api.config_doc_id, ConfigModel)
+    self.config_model: ConfigModel = self.db_api.get_model(self.db_api.config_doc_id, ConfigModel) # type: ignore[assignment]
     self.metadata = self.config_model.metadata
     self.metadata_types = self.get_metadata_types()
     self.metadataBlockComboBox.currentTextChanged.connect(self.change_metadata_block)
@@ -45,8 +45,11 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
     self.instance.setWindowModality(QtCore.Qt.ApplicationModal)
     self.buttonBox.button(QtWidgets.QDialogButtonBox.Save).clicked.connect(self.save_ui)
 
-  def get_metadata_types(self):
-    metadata_types_mapping = {}
+  def get_metadata_types(self)  -> dict[str, list[str]]:
+    metadata_types_mapping: dict[str, list[str]] = {}
+    if not self.metadata:
+      self.logger.error("Failed to load metadata model!")
+      return metadata_types_mapping
     for _, metablock in self.metadata['datasetVersion']['metadataBlocks'].items():
       if metablock['displayName'] not in metadata_types_mapping:
         metadata_types_mapping[metablock['displayName']] = []
@@ -55,10 +58,13 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
           metadata_types_mapping[metablock['displayName']].append(field['typeName'])
     return metadata_types_mapping
 
-  def change_metadata_type(self, new_metadata_type: str):
+  def change_metadata_type(self, new_metadata_type: str)  -> None:
     # Clear the contents of UI elements
     for widget_pos in reversed(range(self.metadataScrollVerticalLayout.count())):
       self.metadataScrollVerticalLayout.itemAt(widget_pos).widget().setParent(None)
+    if not self.metadata:
+      self.logger.error("Failed to load metadata model!")
+      return None
     for _, metablock in self.metadata['datasetVersion']['metadataBlocks'].items():
       for field in metablock['fields']:
         if field['typeName'] == new_metadata_type:
@@ -76,12 +82,12 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
               self.metadataScrollVerticalLayout.addWidget(self.controlled_vocab_frame.instance)
               break
 
-  def change_metadata_block(self, new_metadata_block: str = None):
+  def change_metadata_block(self, new_metadata_block: str | None = None) -> None:
     if new_metadata_block:
       self.typesComboBox.clear()
       self.typesComboBox.addItems(self.metadata_types[new_metadata_block])
 
-  def toggle_minimal_full(self, selection: str):
+  def toggle_minimal_full(self, selection: str) -> None:
     match selection:
       case "Minimal":
         self.metadataBlockComboBox.hide()
@@ -94,13 +100,12 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
         self.typesComboBox.clear()
         self.typesComboBox.addItems(self.metadata_types[self.metadataBlockComboBox.currentText()])
 
-  def load_ui(self):
+  def load_ui(self) -> None:
     pass
 
-  def save_ui(self):
+  def save_ui(self) -> None:
     self.config_model.metadata = self.metadata
     self.db_api.update_model_document(self.config_model)
-    pass
 
 
 if __name__ == "__main__":

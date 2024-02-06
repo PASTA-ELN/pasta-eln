@@ -64,7 +64,7 @@ class DataUploadTask(GenericTaskObject):
     self.upload_model = UploadModel(project_name=self.project_name,
                                     status=UploadStatusValues.Queued.name,
                                     log=f"Upload initiated for project {self.project_name} at {datetime.datetime.now().isoformat()}\n")
-    self.upload_model = self.db_api.create_model_document(self.upload_model)
+    self.upload_model = self.db_api.create_model_document(self.upload_model) # type: ignore[assignment]
     self.config_model = self.db_api.get_model(self.db_api.config_doc_id, ConfigModel)
     widget.uploadCancelPushButton.clicked.connect(lambda: self.cancel.emit())
 
@@ -114,7 +114,7 @@ class DataUploadTask(GenericTaskObject):
     self.finished.emit()
     self.statusChanged.emit(UploadStatusValues.Cancelled.name if self.cancelled else UploadStatusValues.Finished.name)
 
-  def cancel_task(self):
+  def cancel_task(self) -> None:
     """
     Cancels the data upload task.
 

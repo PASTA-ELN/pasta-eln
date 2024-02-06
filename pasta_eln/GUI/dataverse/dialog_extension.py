@@ -6,16 +6,17 @@
 #  Filename: dialog_extension.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
-from PySide6.QtCore import Signal
+from PySide6 import QtCore
+from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QDialog
 
 
 class DialogExtension(QDialog):
-  closed = Signal()
+  closed = QtCore.Signal()
 
-  def __init__(self):
+  def __init__(self) -> None:
     super().__init__()
 
-  def closeEvent(self, arg__1):
-    super().closeEvent(arg__1)
+  def closeEvent(self, close_event: QCloseEvent) -> None:
+    super().closeEvent(close_event)
     self.closed.emit()

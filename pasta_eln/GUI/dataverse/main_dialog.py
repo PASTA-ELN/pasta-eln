@@ -23,12 +23,12 @@ from pasta_eln.GUI.dataverse.main_dialog_base import Ui_MainDialogBase
 from pasta_eln.GUI.dataverse.project_item_frame_base import Ui_ProjectItemFrame
 from pasta_eln.GUI.dataverse.upload_config_dialog import UploadConfigDialog
 from pasta_eln.GUI.dataverse.upload_widget_base import Ui_UploadWidgetFrame
+from pasta_eln.dataverse.data_upload_task import DataUploadTask
 from pasta_eln.dataverse.database_api import DatabaseAPI
 from pasta_eln.dataverse.project_model import ProjectModel
 from pasta_eln.dataverse.task_thread_extension import TaskThreadExtension
-from pasta_eln.dataverse.upload_queue_manager import UploadQueueManager
 from pasta_eln.dataverse.upload_model import UploadModel
-from pasta_eln.dataverse.data_upload_task import DataUploadTask
+from pasta_eln.dataverse.upload_queue_manager import UploadQueueManager
 
 
 class MainDialog(Ui_MainDialogBase):

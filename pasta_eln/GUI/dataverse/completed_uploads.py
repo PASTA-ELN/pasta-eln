@@ -27,20 +27,21 @@ class CompletedUploads(Ui_CompletedUploadsForm):
     """
     return super(CompletedUploads, cls).__new__(cls)
 
-  def __init__(self):
+  def __init__(self)  -> None:
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
     self.instance = QDialog()
     super().setupUi(self.instance)
     self.db_api = DatabaseAPI()
     self.instance.setWindowModality(QtCore.Qt.ApplicationModal)
 
-  def load_ui(self):
+  def load_ui(self) -> None:
     self.clear_ui()
     for upload in self.db_api.get_models(UploadModel):
-      widget = self.get_completed_upload_task_widget(upload)
-      self.completedUploadsVerticalLayout.addWidget(widget)
+      if isinstance(upload, UploadModel):
+        widget = self.get_completed_upload_task_widget(upload)
+        self.completedUploadsVerticalLayout.addWidget(widget)
 
-  def clear_ui(self):
+  def clear_ui(self)  -> None:
     for widget_pos in reversed(range(self.completedUploadsVerticalLayout.count())):
       self.completedUploadsVerticalLayout.itemAt(widget_pos).widget().setParent(None)
 
