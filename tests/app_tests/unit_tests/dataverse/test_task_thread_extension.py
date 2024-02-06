@@ -42,7 +42,8 @@ class TestTaskThreadExtension:
     mock_thread = MagicMock(spec=QThread)
     mock_logger = MagicMock(spec=Logger)
     mocker.patch('pasta_eln.dataverse.task_thread_extension.QtCore.QThread', return_value=mock_thread)
-    mock_get_logger = mocker.patch('pasta_eln.dataverse.task_thread_extension.logging.getLogger', return_value=mock_logger)
+    mock_get_logger = mocker.patch('pasta_eln.dataverse.task_thread_extension.logging.getLogger',
+                                   return_value=mock_logger)
     if test_id == "error":
       task.moveToThread.side_effect = exception
 
@@ -59,7 +60,6 @@ class TestTaskThreadExtension:
       # Assuming moveToThread will be called inside the __init__, we should check it
       task.moveToThread.assert_called_once_with(extension.worker_thread)
       mock_get_logger.assert_called_once_with("pasta_eln.dataverse.task_thread_extension.TaskThreadExtension")
-
 
   # Parametrized test for the success path
   @pytest.mark.parametrize("test_id", ["success_path_1"])
@@ -79,7 +79,7 @@ class TestTaskThreadExtension:
     mock_task.cleanup.assert_called_once()
     assert isinstance(extension.worker_thread, QThread)
     mock_thread.quit.assert_called_once()
-    mock_logger.info.assert_called_once_with('Quitting task thread, id: %s', 'test_task_id')
+    mock_logger.info.assert_called_once_with('Quitting task thread extension, Task id: %s', 'test_task_id')
 
   # Parametrized test for error cases
   @pytest.mark.parametrize("test_id, exception, expected_behavior", [

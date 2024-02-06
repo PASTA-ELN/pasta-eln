@@ -17,10 +17,13 @@ from pasta_eln.dataverse.upload_model import UploadModel
 class TestDataverseUploadModel:
 
   @pytest.mark.parametrize(
-    "test_id, identifier, revision, data_type, project_name, status, finished_date_time, log, dataverse_url", [
-      ("Success-1", "123", "1.0", "dataset", "ProjectX", "completed", "2023-04-01T12:00:00Z", "No errors.",
+    "test_id, identifier, revision, data_type, project_name, project_doc_id, status, finished_date_time, log, dataverse_url",
+    [
+      ("Success-1", "123", "1.0", "dataset", "ProjectX", "erwerwerwer23424", "completed", "2023-04-01T12:00:00Z",
+       "No errors.",
        "http://example.com/dataverse/123"),
-      ("Success-2", "456", "2.0", None, "ProjectY", "in_progress", "2023-04-02T12:00:00Z", "Processing.",
+      ("Success-2", "456", "2.0", None, "ProjectY", "dsfsfrwer23424", "in_progress", "2023-04-02T12:00:00Z",
+       "Processing.",
        "http://example.com/dataverse/456"),
       # Add more test cases as needed
     ])
@@ -30,6 +33,7 @@ class TestDataverseUploadModel:
                          revision,
                          data_type,
                          project_name,
+                         project_doc_id,
                          status,
                          finished_date_time,
                          log,
@@ -38,7 +42,7 @@ class TestDataverseUploadModel:
     expected_data_type = 'dataverse_upload' if data_type is None else data_type
 
     # Act
-    model = UploadModel(identifier, revision, data_type, project_name, status, finished_date_time, log,
+    model = UploadModel(identifier, revision, data_type, project_name, project_doc_id, status, finished_date_time, log,
                         dataverse_url)
 
     # Assert
@@ -46,6 +50,7 @@ class TestDataverseUploadModel:
     assert model.rev == revision
     assert model.data_type == expected_data_type
     assert model.project_name == project_name
+    assert model.project_doc_id == project_doc_id
     assert model.status == status
     assert model.finished_date_time == finished_date_time
     assert model.log == log
@@ -53,9 +58,10 @@ class TestDataverseUploadModel:
 
   # Edge cases
   @pytest.mark.parametrize(
-    "test_id, identifier, revision, data_type, project_name, status, finished_date_time, log, dataverse_url", [
-      ("EdgeCase-1", "", "", "", "", "", "", "", ""),  # Empty strings
-      ("EdgeCase-2", None, None, None, None, None, None, None, None),  # None values
+    "test_id, identifier, revision, data_type, project_name, project_doc_id, status, finished_date_time, log, dataverse_url",
+    [
+      ("EdgeCase-1", "", "", "", "", "", "", "", "", ""),  # Empty strings
+      ("EdgeCase-2", None, None, None, None, None, None, None, "", None),  # None values
       # Add more test cases as needed
     ])
   def test_edge_cases(self,
@@ -64,6 +70,7 @@ class TestDataverseUploadModel:
                       revision,
                       data_type,
                       project_name,
+                      project_doc_id,
                       status,
                       finished_date_time,
                       log,
@@ -72,7 +79,7 @@ class TestDataverseUploadModel:
     expected_data_type = 'dataverse_upload' if data_type is None else data_type
 
     # Act
-    model = UploadModel(identifier, revision, data_type, project_name, status, finished_date_time, log,
+    model = UploadModel(identifier, revision, data_type, project_name, project_doc_id, status, finished_date_time, log,
                         dataverse_url)
 
     # Assert
@@ -80,6 +87,7 @@ class TestDataverseUploadModel:
     assert model.rev == revision
     assert model.data_type == expected_data_type
     assert model.project_name == project_name
+    assert model.project_doc_id == project_doc_id
     assert model.status == status
     assert model.finished_date_time == finished_date_time
     assert model.log == log
@@ -93,22 +101,25 @@ class TestDataverseUploadModel:
        "rev": "value2",
        "data_type": "value3",
        "project_name": "value4",
-       "status": "value5",
-       "finished_date_time": "value6",
-       "log": "value7",
-       "dataverse_url": "value8"
+       "project_doc_id": "value5",
+       "status": "value6",
+       "finished_date_time": "value7",
+       "log": "value8",
+       "dataverse_url": "value9"
      }, [("_id", "value1"),
          ("_rev", "value2"),
          ("data_type", "value3"),
          ("project_name", "value4"),
-         ("status", "value5"),
-         ("finished_date_time", "value6"),
-         ("log", "value7\n"),
-         ("dataverse_url", "value8")]),
+         ("project_doc_id", "value5"),
+         ("status", "value6"),
+         ("finished_date_time", "value7"),
+         ("log", "value8\n"),
+         ("dataverse_url", "value9")]),
     ("Success-2", {}, [('_id', None),
                        ('_rev', None),
                        ('data_type', 'dataverse_upload'),
                        ('project_name', None),
+                       ('project_doc_id', None),
                        ('status', None),
                        ('finished_date_time', None),
                        ('log', ''),
@@ -120,6 +131,7 @@ class TestDataverseUploadModel:
                                                ('_rev', True),
                                                ('data_type', 'dataverse_upload'),
                                                ('project_name', None),
+                                               ('project_doc_id', None),
                                                ('status', None),
                                                ('finished_date_time', None),
                                                ('log', ''),
@@ -145,18 +157,21 @@ class TestDataverseUploadModel:
        "rev": "value2",
        "data_type": "value3",
        "project_name": "value4",
-       "status": "value5",
-       "finished_date_time": "value6",
-       "log": "value7",
-       "dataverse_url": "value8"
+       "project_doc_id": "value5",
+       "status": "value6",
+       "finished_date_time": "value7",
+       "log": "value8",
+       "dataverse_url": "value9"
      }, {'_id': 'value1',
          '_rev': 'value2',
          'data_type': 'value3',
-         'dataverse_url': 'value8',
-         'finished_date_time': 'value6',
-         'log': 'value7\n',
          'project_name': 'value4',
-         'status': 'value5'})
+         "project_doc_id": "value5",
+         'status': 'value6',
+         'finished_date_time': 'value7',
+         'log': 'value8\n',
+         'dataverse_url': 'value9'
+         })
   ])
   def test_dict_method(self, test_id, attributes, expected):
     # Arrange

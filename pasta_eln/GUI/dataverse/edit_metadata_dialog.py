@@ -32,7 +32,7 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
     self.instance = QDialog()
     super().setupUi(self.instance)
     self.db_api = DatabaseAPI()
-    self.config_model: ConfigModel = self.db_api.get_model("-dataverseConfig-", ConfigModel)
+    self.config_model: ConfigModel = self.db_api.get_model(self.db_api.config_doc_id, ConfigModel)
     self.metadata = self.config_model.metadata
     self.metadata_types = self.get_metadata_types()
     self.metadataBlockComboBox.currentTextChanged.connect(self.change_metadata_block)

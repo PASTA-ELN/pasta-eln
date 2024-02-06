@@ -7,6 +7,14 @@
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
+#  PASTA-ELN and all its sub-parts are covered by the MIT license.
+#
+#
+#  Author: Jithu Murugan
+#  Filename: test_dataverse_client.py
+#
+#  You should have received a copy of the license with this file. Please refer the license file for more information.
+
 from asyncio import Future
 from datetime import datetime
 from json import dumps

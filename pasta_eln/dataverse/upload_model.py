@@ -33,6 +33,7 @@ class UploadModel(BaseModel):
   Attributes:
       data_type (str | None): The data type of the upload.
       project_name (str | None): The name of the project.
+      project_doc_id (str | None): The document ID of the project.
       status (str | None): The status of the upload.
       finished_date_time (str | None): The date and time when the upload finished.
       log (str): The log associated with the upload.
@@ -45,6 +46,7 @@ class UploadModel(BaseModel):
                _rev: str | None = None,
                data_type: str | None = None,
                project_name: str | None = None,
+               project_doc_id: str | None = None,
                status: str | None = None,
                finished_date_time: str | None = None,
                log: str = "",
@@ -57,6 +59,7 @@ class UploadModel(BaseModel):
         _rev (str | None): The revision of the object. Defaults to None.
         data_type (str | None): The data type of the upload. Defaults to None.
         project_name (str | None): The name of the project. Defaults to None.
+        project_doc_id (str | None): The document ID of the project. Defaults to None.
         status (str | None): The status of the upload. Defaults to None.
         finished_date_time (str | None): The date and time when the upload finished. Defaults to None.
         log (str): The log associated with the upload. Defaults to empty string.
@@ -76,6 +79,10 @@ class UploadModel(BaseModel):
       self._project_name: str | None = project_name
     else:
       raise IncorrectParameterError(f"Expected string type for project_name but got {type(project_name)}")
+    if isinstance(project_doc_id, str | None):
+      self._project_doc_id: str | None = project_doc_id
+    else:
+      raise IncorrectParameterError(f"Expected string type for project_doc_id but got {type(project_doc_id)}")
     if isinstance(status, str | None):
       self._status: str | None = status
     else:
@@ -136,6 +143,53 @@ class UploadModel(BaseModel):
     del self._data_type
 
   @property
+  def project_doc_id(self) -> str | None:
+    """
+    Returns the project document ID associated with the upload.
+
+    Returns:
+        str | None: The project doc ID.
+
+    """
+    return self._project_doc_id
+
+  @project_doc_id.setter
+  def project_doc_id(self, value: str | None) -> None:
+    """
+    Sets the project document ID associated with the upload.
+
+    Args:
+        value (str | None): The project doc ID value to be set.
+
+    Raises:
+        IncorrectParameterError: If the value is not of type str.
+
+    Returns:
+        None
+
+    """
+    if isinstance(value, str | None):
+      self._project_doc_id = value
+    else:
+      raise IncorrectParameterError(f"Expected string type for project_doc_id but got {type(value)}")
+
+  @project_doc_id.deleter
+  def project_doc_id(self) -> None:
+    """
+    Deletes the project_doc_id attribute.
+
+    Explanation:
+        This method deletes the project_doc_id attribute.
+
+    Args:
+        self: The instance of the class.
+
+    Returns:
+        None
+    """
+    del self._project_doc_id
+
+  @property
   def project_name(self) -> str | None:
     """
     Returns the project name associated with the upload.
@@ -168,6 +222,18 @@ class UploadModel(BaseModel):
 
   @project_name.deleter
   def project_name(self) -> None:
+    """
+    Deletes the project_name attribute.
+
+    Explanation:
+        This method deletes the project_name attribute.
+
+    Args:
+        self: The instance of the class.
+
+    Returns:
+        None
+    """
     del self._project_name
 
   @property

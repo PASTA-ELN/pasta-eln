@@ -20,6 +20,7 @@ from pasta_eln.dataverse.database_api import DatabaseAPI
 
 class UploadConfigDialog(Ui_UploadConfigDialog, QObject):
   config_reloaded = QtCore.Signal()
+
   def __new__(cls, *_: Any, **__: Any) -> Any:
     return super(UploadConfigDialog, cls).__new__(cls)
 
@@ -42,7 +43,7 @@ class UploadConfigDialog(Ui_UploadConfigDialog, QObject):
     self.load_ui()
 
   def load_ui(self):
-    self.config_model = self.db_api.get_model("-dataverseConfig-", ConfigModel)
+    self.config_model = self.db_api.get_model(self.db_api.config_doc_id, ConfigModel)
     for widget_pos in reversed(range(self.projectItemsVerticalLayout.count())):
       self.projectItemsVerticalLayout.itemAt(widget_pos).widget().setParent(None)
     for data_type in self.data_hierarchy_types:
