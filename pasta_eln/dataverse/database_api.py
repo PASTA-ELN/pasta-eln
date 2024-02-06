@@ -11,7 +11,7 @@ import logging
 from json import load
 from os import getcwd
 from os.path import dirname, join, realpath
-from typing import Any, Type
+from typing import Any, Type, Union
 
 from cloudant.document import Document
 
@@ -232,25 +232,25 @@ class DatabaseAPI(object):
                                        f"Unsupported model type {model_type}")  # type: ignore[func-returns-value]
 
   def get_model(self, model_id: str,
-                model_type: Type[UploadModel | ConfigModel | ProjectModel]) -> UploadModel | ProjectModel | ConfigModel:
+                model_type: Type[UploadModel | ConfigModel | ProjectModel]) -> Union[
+    UploadModel, ProjectModel, ConfigModel]:
     """
-    Retrieves a model of the specified type from the database.
+    Retrieves a model from the database.
 
     Explanation:
-        This method retrieves a model of the specified type from the database using the provided model ID.
-        It performs the necessary validations and returns the retrieved model.
+        This method retrieves a model from the database based on the given model_id and model_type.
+        It performs the necessary validation and returns the corresponding model instance.
 
     Args:
-        self: The DatabaseAPI instance.
         model_id (str): The ID of the model to retrieve.
         model_type (Type[UploadModel | ConfigModel | ProjectModel]): The type of the model to retrieve.
 
-    Raises:
-        TypeError: If the model_type is not supported.
-        ValueError: If the model_id is None.
-
     Returns:
-        UploadModel | ProjectModel | ConfigModel: The retrieved model.
+        Union[UploadModel, ProjectModel, ConfigModel, None]: The retrieved model instance.
+
+    Raises:
+        TypeError: If the model_type is not one of the supported types.
+        ValueError: If the model_id is None.
     """
     self.logger.info("Getting model with id: %s, type: %s", model_id, model_type)
     if model_type not in (UploadModel, ProjectModel, ConfigModel):

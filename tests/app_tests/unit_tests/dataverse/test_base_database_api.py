@@ -61,8 +61,8 @@ class TestBaseDatabaseApi:
   def test_base_database_api_init_success_path(self, config_content, expected_db_name, expected_username,
                                                expected_password):
     # Arrange
-    with patch('builtins.open', mock_open(read_data=json.dumps(config_content))), \
-        patch('os.path.exists', return_value=True), \
+    with patch('pasta_eln.dataverse.base_database_api.open', mock_open(read_data=json.dumps(config_content))), \
+        patch('pasta_eln.dataverse.base_database_api.exists', return_value=True), \
         patch('logging.Logger.error') as mock_logger_error:
       # Act
       base_db_api = BaseDatabaseAPI()

@@ -45,11 +45,11 @@ class UploadQueueManager(GenericTaskObject):
     """
     super().__init__()
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
-    self.number_of_concurrent_uploads = None
-    self.config_model = None
+    self.number_of_concurrent_uploads: int | None = None
+    self.config_model: ConfigModel | None = None
     self.upload_queue: list[TaskThreadExtension] = []
     self.running_queue: list[TaskThreadExtension] = []
-    self.db_api = DatabaseAPI()
+    self.db_api: DatabaseAPI = DatabaseAPI()
     self.set_concurrent_uploads()
 
   def set_concurrent_uploads(self) -> None:
@@ -67,8 +67,9 @@ class UploadQueueManager(GenericTaskObject):
         None
     """
     self.logger.info("Resetting number of concurrent uploads..")
-    self.config_model = self.db_api.get_model(self.db_api.config_doc_id, ConfigModel)
-    self.number_of_concurrent_uploads = self.config_model.parallel_uploads_count
+    model = self.db_api.get_model(self.db_api.config_doc_id, ConfigModel)
+    self.config_model = model if isinstance(model, ConfigModel) else None
+    self.number_of_concurrent_uploads = self.config_model.parallel_uploads_count if self.config_model else None
 
   def add_to_queue(self, upload_task_thread: TaskThreadExtension) -> None:
     """
@@ -127,7 +128,7 @@ class UploadQueueManager(GenericTaskObject):
     self.logger.info("Starting upload queue..")
     super().start_task()
     while not self.cancelled:
-      if len(self.running_queue) < self.number_of_concurrent_uploads:
+      if self.number_of_concurrent_uploads and len(self.running_queue) < self.number_of_concurrent_uploads:
         for upload_task_thread in self.upload_queue:
           if self.cancelled or len(self.running_queue) >= self.number_of_concurrent_uploads:
             break
