@@ -133,11 +133,12 @@ class MainDialog(Ui_MainDialogBase):
   def show_hide_log(self, button: QtWidgets.QPushButton) -> None:
     frame = button.parent()
     log_console_text_edit = frame.findChild(QtWidgets.QTextEdit, name="logConsoleTextEdit")
-    log_console_text_edit.show() if log_console_text_edit.isHidden() else log_console_text_edit.hide()
-    if (upload_model_id :=
-    frame.findChild(QtWidgets.QLabel, name="modelIdLabel").text()):
-      model = self.db_api.get_model(upload_model_id, UploadModel)
-      log_console_text_edit.setText(model.log if isinstance(model, UploadModel) else "")
+    if isinstance(log_console_text_edit, QtWidgets.QTextEdit):
+      log_console_text_edit.show() if log_console_text_edit.isHidden() else log_console_text_edit.hide()
+      id_label = frame.findChild(QtWidgets.QLabel, name="modelIdLabel")
+      if upload_model_id := id_label.text() if isinstance(id_label, QtWidgets.QLabel) else "":
+        model = self.db_api.get_model(upload_model_id, UploadModel)
+        log_console_text_edit.setText(model.log if isinstance(model, UploadModel) else "")
 
 
 if __name__ == "__main__":
