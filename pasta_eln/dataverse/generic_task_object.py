@@ -48,7 +48,7 @@ class GenericTaskObject(QObject):
     self.cancelled = False
     self.started = False
     self.cleaned = False
-    self.cancel.connect(lambda: self.cancel_task())
+    self.cancel.connect(lambda: self.cancel_task())  # pylint: disable=unnecessary-lambda
     self.start.connect(self.start_task)
 
   def cancel_task(self) -> None:
@@ -56,7 +56,7 @@ class GenericTaskObject(QObject):
     Cancels the task.
 
     Explanation:
-        This method sets the cancelled attribute of the GenericTaskObject instance to True.
+        This method sets the canceled attribute of the GenericTaskObject instance to True.
 
     Args:
         self: The GenericTaskObject instance.

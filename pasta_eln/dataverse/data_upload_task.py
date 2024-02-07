@@ -66,7 +66,7 @@ class DataUploadTask(GenericTaskObject):
                                     log=f"Upload initiated for project {self.project_name} at {datetime.datetime.now().isoformat()}\n")
     self.upload_model = self.db_api.create_model_document(self.upload_model)  # type: ignore[assignment]
     self.config_model = self.db_api.get_model(self.db_api.config_doc_id, ConfigModel)
-    widget.uploadCancelPushButton.clicked.connect(lambda: self.cancel.emit())
+    widget.uploadCancelPushButton.clicked.connect(self.cancel.emit)
 
   def start_task(self) -> None:
     """
@@ -81,9 +81,6 @@ class DataUploadTask(GenericTaskObject):
           - Generating ELN file
           - Uploading to dataverse
           - Saving the upload model whenever needed
-
-    Args:
-        None
 
     """
     super().start_task()
@@ -119,9 +116,6 @@ class DataUploadTask(GenericTaskObject):
     Explanation:
         This method cancels the data upload task by calling the super-class's cancel_task method.
         It updates the upload model log and status accordingly, and emits the statusChanged signal.
-
-    Args:
-        None
 
     """
     super().cancel_task()

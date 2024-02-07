@@ -142,9 +142,9 @@ class DatabaseAPI:
     """
     self.logger.info("Creating model document: %s", data)
     if data is None:
-      self.log_and_raise_error(ValueError, "Data cannot be None!")
+      raise self.log_and_create_error(ValueError, "Data cannot be None!")
     if not isinstance(data, (UploadModel, ConfigModel, ProjectModel)):
-      self.log_and_raise_error(TypeError, "Data must be an UploadModel, ConfigModel, or ProjectModel!")
+      raise self.log_and_create_error(TypeError, "Data must be an UploadModel, ConfigModel, or ProjectModel!")
     data_dict = dict(data)
     if data_dict['_id'] is None:
       del data_dict['_id']
@@ -169,32 +169,27 @@ class DatabaseAPI:
     """
     self.logger.info("Updating model document: %s", data)
     if data is None:
-      self.log_and_raise_error(ValueError, "Data cannot be None!")
+      raise self.log_and_create_error(ValueError, "Data cannot be None!")
     if not isinstance(data, (UploadModel, ConfigModel, ProjectModel)):
-      self.log_and_raise_error(TypeError, "Data must be an UploadModel, ConfigModel, or ProjectModel!")
+      raise self.log_and_create_error(TypeError, "Data must be an UploadModel, ConfigModel, or ProjectModel!")
     self.db_api.update_document(dict(data))
 
-  def log_and_raise_error(self, exception_type: Type[Exception], error_message: str) -> None:
+  def log_and_create_error(self, exception_type: Type[Exception], error_message: str) -> Exception:
     """
-    Logs an error message and raises an exception of the specified type.
+    Logs an error message and creates an exception.
 
     Explanation:
-        This method logs the provided error message using the logger and raises an exception of the specified type with the same message.
+        This method logs the provided error message and creates an exception of the specified type.
 
     Args:
-        self: The DatabaseAPI instance.
-        exception_type (Type[Exception]): The type of exception to be raised.
-        error_message (str): The error message to be logged and raised.
+        exception_type (Type[Exception]): The type of exception to create.
+        error_message (str): The error message to log and include in the exception.
 
-    Raises:
-        Raises the exception of the specified type with the provided error message.
+    Returns:
+        Exception: The created exception.
     """
     self.logger.error(error_message)
-    match exception_type():
-      case ValueError():
-        raise ValueError(error_message)
-      case TypeError():
-        raise TypeError(error_message)
+    return exception_type(error_message)
 
   def get_models(self, model_type: Type[Union[UploadModel, ConfigModel, ProjectModel]]) -> list[Union
   [UploadModel, ConfigModel, ProjectModel]]:
@@ -223,8 +218,8 @@ class DatabaseAPI:
         return [ProjectModel(**result) for result in
                 self.db_api.get_view_results(self.design_doc_name, "dvProjectsView")]
       case _:
-        raise self.log_and_raise_error(TypeError,
-                                       f"Unsupported model type {model_type}")  # type: ignore[func-returns-value]
+        raise self.log_and_create_error(TypeError,
+                                        f"Unsupported model type {model_type}")
 
   def get_model(self, model_id: str,
                 model_type: Type[UploadModel | ConfigModel | ProjectModel]) -> Union[
@@ -249,12 +244,11 @@ class DatabaseAPI:
     """
     self.logger.info("Getting model with id: %s, type: %s", model_id, model_type)
     if model_type not in (UploadModel, ProjectModel, ConfigModel):
-      raise self.log_and_raise_error(TypeError,
-                                     f"Unsupported model type {model_type}")  # type: ignore[func-returns-value]
-    elif model_id is None:
-      raise self.log_and_raise_error(ValueError, "model_id cannot be None")
-    else:
-      return model_type(**self.db_api.get_document(model_id))
+      raise self.log_and_create_error(TypeError,
+                                      f"Unsupported model type {model_type}")
+    if model_id is None:
+      raise self.log_and_create_error(ValueError, "model_id cannot be None")
+    return model_type(**self.db_api.get_document(model_id))
 
   def get_data_hierarchy(self) -> dict[str, Any] | None:
     """

@@ -41,6 +41,7 @@ class MainDialog(Ui_MainDialogBase):
       It provides methods to handle UI events and manage the upload process.
 
   """
+
   def __new__(cls, *_: Any, **__: Any) -> Any:
     """
     Creates a new instance of the MainDialog class.
@@ -65,11 +66,6 @@ class MainDialog(Ui_MainDialogBase):
         This method initializes the MainDialog class and sets up the UI.
         It also initializes the database and populates the project widgets.
 
-    Args:
-        None
-
-    Returns:
-        None
     """
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
     self.instance = DialogExtension()
@@ -93,7 +89,7 @@ class MainDialog(Ui_MainDialogBase):
     self.upload_manager_task = UploadQueueManager()
     self.config_upload_dialog.config_reloaded.connect(self.upload_manager_task.set_concurrent_uploads)
     self.upload_manager_task_thread = TaskThreadExtension(self.upload_manager_task)
-    self.cancelAllPushButton.clicked.connect(lambda: self.upload_manager_task.cancel.emit())
+    self.cancelAllPushButton.clicked.connect(self.upload_manager_task.cancel.emit)
     self.buttonBox.button(QtWidgets.QDialogButtonBox.Cancel).clicked.connect(self.close_ui)
     self.instance.closed.connect(self.close_ui)
 
@@ -111,17 +107,18 @@ class MainDialog(Ui_MainDialogBase):
     Returns:
         dict[str, QFrame | Ui_UploadWidgetFrame]: The upload widget.
     """
-    uploadWidgetFrame = QtWidgets.QFrame()
-    uploadWidgetUi = Ui_UploadWidgetFrame()
-    uploadWidgetUi.setupUi(uploadWidgetFrame)
-    uploadWidgetUi.uploadProjectLabel.setText(textwrap.fill(project_name, 45
-                                                            , max_lines=1))
-    uploadWidgetUi.uploadProjectLabel.setToolTip(project_name)
-    uploadWidgetUi.statusIconLabel.setPixmap(qta.icon('ph.queue-light').pixmap(uploadWidgetUi.statusIconLabel.size()))
-    uploadWidgetUi.logConsoleTextEdit.hide()
-    uploadWidgetUi.showLogPushButton.clicked.connect(lambda: self.show_hide_log(uploadWidgetUi.showLogPushButton))
-    uploadWidgetUi.modelIdLabel.hide()
-    return {"base": uploadWidgetFrame, "widget": uploadWidgetUi}
+    upload_widget_frame = QtWidgets.QFrame()
+    upload_widget_ui = Ui_UploadWidgetFrame()
+    upload_widget_ui.setupUi(upload_widget_frame)
+    upload_widget_ui.uploadProjectLabel.setText(textwrap.fill(project_name, 45
+                                                              , max_lines=1))
+    upload_widget_ui.uploadProjectLabel.setToolTip(project_name)
+    upload_widget_ui.statusIconLabel.setPixmap(
+      qta.icon('ph.queue-light').pixmap(upload_widget_ui.statusIconLabel.size()))
+    upload_widget_ui.logConsoleTextEdit.hide()
+    upload_widget_ui.showLogPushButton.clicked.connect(lambda: self.show_hide_log(upload_widget_ui.showLogPushButton))
+    upload_widget_ui.modelIdLabel.hide()
+    return {"base": upload_widget_frame, "widget": upload_widget_ui}
 
   def get_project_widget(self, project: ProjectModel) -> QWidget:
     """
@@ -137,14 +134,14 @@ class MainDialog(Ui_MainDialogBase):
     Returns:
         QWidget: The project widget.
     """
-    projectWidgetFrame = QtWidgets.QFrame()
-    projectWidgetUi = Ui_ProjectItemFrame()
-    projectWidgetUi.setupUi(projectWidgetFrame)
-    projectWidgetUi.projectNameLabel.setText(textwrap.fill(project.name or "", width=80, max_lines=1))
-    projectWidgetUi.projectNameLabel.setToolTip(project.name)
-    projectWidgetUi.modifiedDateTimeLabel.setText(
+    project_widget_frame = QtWidgets.QFrame()
+    project_widget_ui = Ui_ProjectItemFrame()
+    project_widget_ui.setupUi(project_widget_frame)
+    project_widget_ui.projectNameLabel.setText(textwrap.fill(project.name or "", width=80, max_lines=1))
+    project_widget_ui.projectNameLabel.setToolTip(project.name)
+    project_widget_ui.modifiedDateTimeLabel.setText(
       datetime.datetime.fromisoformat(project.date or "").strftime("%Y-%m-%d %H:%M:%S"))
-    return projectWidgetFrame
+    return project_widget_frame
 
   def start_upload(self) -> None:
     """
@@ -155,8 +152,6 @@ class MainDialog(Ui_MainDialogBase):
         It retrieves the selected projects, creates upload widgets, and adds them to the upload queue.
         It also starts the upload manager task to process the upload queue.
 
-    Args:
-        None
     """
     for widget_pos in range(self.projectsScrollAreaVerticalLayout.count()):
       project_widget = self.projectsScrollAreaVerticalLayout.itemAt(widget_pos).widget()
@@ -176,9 +171,6 @@ class MainDialog(Ui_MainDialogBase):
 
     Explanation:
         This method clears the finished upload widgets from the upload queue.
-
-    Args:
-        None
 
     """
     for widget_pos in reversed(range(self.uploadQueueVerticalLayout.count())):
@@ -207,9 +199,6 @@ class MainDialog(Ui_MainDialogBase):
     Explanation:
         This method shows the configure upload dialog.
 
-    Args:
-        None
-
     """
     self.config_upload_dialog.load_ui()
     self.config_upload_dialog.instance.show()
@@ -220,9 +209,6 @@ class MainDialog(Ui_MainDialogBase):
 
     Explanation:
         This method shows the completed uploads dialog.
-
-    Args:
-        None
 
     """
     self.completed_uploads_dialog.load_ui()
@@ -235,9 +221,6 @@ class MainDialog(Ui_MainDialogBase):
     Explanation:
         This method shows the edit metadata dialog.
 
-    Args:
-        None
-
     """
     self.edit_metadata_dialog.load_ui()
     self.edit_metadata_dialog.instance.show()
@@ -249,9 +232,6 @@ class MainDialog(Ui_MainDialogBase):
     Explanation:
         This method releases the upload manager by quitting the upload manager task thread.
 
-    Args:
-        None
-
     """
     self.upload_manager_task_thread.quit()
 
@@ -261,9 +241,6 @@ class MainDialog(Ui_MainDialogBase):
 
     Explanation:
         This method closes the UI by quitting the upload manager task thread and adding a delay of 0.5 seconds.
-
-    Args:
-        None
 
     """
     self.upload_manager_task_thread.quit()
