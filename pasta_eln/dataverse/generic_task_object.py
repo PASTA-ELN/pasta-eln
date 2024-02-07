@@ -61,8 +61,6 @@ class GenericTaskObject(QObject):
     Args:
         self: The GenericTaskObject instance.
 
-    Returns:
-        None
     """
     self.logger.info("Cancelling task, id: %s", self.id)
     self.cancelled = True
@@ -77,8 +75,6 @@ class GenericTaskObject(QObject):
     Args:
         self: The GenericTaskObject instance.
 
-    Returns:
-        None
     """
     self.logger.info("Starting task, id: %s", self.id)
     self.cancelled = False
@@ -94,8 +90,6 @@ class GenericTaskObject(QObject):
     Args:
         self: The GenericTaskObject instance.
 
-    Returns:
-        None
     """
     self.logger.info("Cleaning up task, id: %s", self.id)
     self.cleaned = True

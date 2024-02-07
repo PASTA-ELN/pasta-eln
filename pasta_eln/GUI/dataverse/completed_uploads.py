@@ -1,3 +1,4 @@
+""" Represents the completed uploads UI. """
 #  PASTA-ELN and all its sub-parts are covered by the MIT license.
 #
 #  Copyright (c) 2024
@@ -20,14 +21,49 @@ from pasta_eln.dataverse.upload_model import UploadModel
 
 
 class CompletedUploads(Ui_CompletedUploadsForm):
+  """
+  Represents the completed uploads UI.
 
+  Explanation:
+      This class handles the completed uploads UI, including loading and clearing the UI,
+      and creating the completed upload task widget.
+
+  Args:
+      None
+
+  Returns:
+      None
+  """
   def __new__(cls, *_: Any, **__: Any) -> Any:
     """
-    Instantiates the create type dialog
+    Creates a new instance of the CompletedUploads class.
+
+    Explanation:
+        This method creates a new instance of the CompletedUploads class.
+
+    Args:
+        *_: Variable length argument list.
+        **__: Arbitrary keyword arguments.
+
+    Returns:
+        Any: The new instance of the CompletedUploads class.
     """
     return super(CompletedUploads, cls).__new__(cls)
 
   def __init__(self)  -> None:
+    """
+    Initializes a new instance of the CompletedUploads class.
+
+    Explanation:
+        This method initializes a new instance of the CompletedUploads class.
+        It sets up the logger, creates a QDialog instance, and sets the window modality.
+
+    Args:
+        None
+
+    Returns:
+        None
+    """
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
     self.instance = QDialog()
     super().setupUi(self.instance)
@@ -35,6 +71,18 @@ class CompletedUploads(Ui_CompletedUploadsForm):
     self.instance.setWindowModality(QtCore.Qt.ApplicationModal)
 
   def load_ui(self) -> None:
+    """
+    Loads the UI for completed uploads.
+
+    Explanation:
+        This method loads the UI for completed uploads
+        by clearing the existing UI and adding widgets for each upload.
+        It retrieves the completed uploads from the database and creates the corresponding widgets.
+
+    Args:
+        None
+
+    """
     self.clear_ui()
     for upload in self.db_api.get_models(UploadModel):
       if isinstance(upload, UploadModel):
@@ -42,10 +90,33 @@ class CompletedUploads(Ui_CompletedUploadsForm):
         self.completedUploadsVerticalLayout.addWidget(widget)
 
   def clear_ui(self)  -> None:
+    """
+    Clears the UI for completed uploads.
+
+    Explanation:
+        This method clears the UI for completed uploads by removing all the widgets from the layout.
+
+    Args:
+        None
+
+    """
     for widget_pos in reversed(range(self.completedUploadsVerticalLayout.count())):
       self.completedUploadsVerticalLayout.itemAt(widget_pos).widget().setParent(None)
 
   def get_completed_upload_task_widget(self, upload: UploadModel) -> QFrame:
+    """
+    Retrieves the completed upload task widget.
+
+    Explanation:
+        This function retrieves the completed upload task widget for the given upload.
+        It creates a QFrame instance and sets up the UI for the completed upload task.
+
+    Args:
+        upload (UploadModel): The upload model representing the completed upload.
+
+    Returns:
+        QFrame: The completed upload task widget.
+    """
     completedTaskFrame = QtWidgets.QFrame()
     completedTaskUi = Ui_CompletedUploadTaskFrame()
     completedTaskUi.setupUi(completedTaskFrame)

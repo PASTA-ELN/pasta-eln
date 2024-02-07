@@ -1,3 +1,4 @@
+""" Adds a new compound entry. """
 #  PASTA-ELN and all its sub-parts are covered by the MIT license.
 #
 #  Copyright (c) 2024
@@ -16,15 +17,42 @@ from pasta_eln.GUI.dataverse.primitive_compound_frame_base import Ui_PrimitiveCo
 
 
 class PrimitiveCompoundFrame(Ui_PrimitiveCompoundFrame):
+  """
+  Adds a new compound entry.
+
+  Explanation:
+      This method adds a new compound entry to the UI.
+      It creates a new layout for the entry and adds the appropriate UI elements based on the types dictionary.
+
+  """
 
   def __new__(cls, *_: Any, **__: Any) -> Any:
     """
+    Creates a new instance of the PrimitiveCompoundFrame class.
+
+    Explanation:
+        This method creates a new instance of the PrimitiveCompoundFrame class.
+
+    Args:
+        *_: Variable length argument list.
+        **__: Arbitrary keyword arguments.
+
+    Returns:
+        Any: The new instance of the PrimitiveCompoundFrame class.
     """
     return super(PrimitiveCompoundFrame, cls).__new__(cls)
 
   def __init__(self, types_dict: dict[str, Any]) -> None:
     """
-    Initializes the creation type dialog
+    Initializes the PrimitiveCompoundFrame.
+
+    Explanation:
+        This method initializes the PrimitiveCompoundFrame class.
+        It sets up the UI and initializes the types dictionary.
+
+    Args:
+        types_dict (dict[str, Any]): The dictionary containing the types information.
+
     """
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
     self.instance = QtWidgets.QFrame()
@@ -61,6 +89,17 @@ class PrimitiveCompoundFrame(Ui_PrimitiveCompoundFrame):
     self.addPushButton.clicked.connect(self.add_new_compound_entry)
 
   def add_new_compound_entry(self) -> None:
+    """
+    Adds a new compound entry.
+
+    Explanation:
+        This method adds a new compound entry to the UI.
+        It creates a new layout for the entry and adds the appropriate UI elements based on the types dictionary.
+
+    Args:
+        None
+
+    """
     new_compound_entry_layout = QtWidgets.QHBoxLayout()
     new_compound_entry_layout.setObjectName("compoundHorizontalLayout")
     for type_val in self.types_dict.values():

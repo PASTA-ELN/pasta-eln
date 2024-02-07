@@ -1,3 +1,4 @@
+""" Represents the possible upload status values. """
 #  PASTA-ELN and all its sub-parts are covered by the MIT license.
 #
 #  Copyright (c) 2024

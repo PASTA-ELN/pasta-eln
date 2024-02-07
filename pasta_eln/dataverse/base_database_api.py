@@ -76,9 +76,6 @@ class BaseDatabaseAPI:
     Raises:
         DatabaseError: If the config file or required fields are not found.
 
-    Returns:
-        None
-
     """
     project_groups = config.get('projectGroups')
     if not project_groups:
@@ -105,9 +102,6 @@ class BaseDatabaseAPI:
     Raises:
         DatabaseError: Always raised with the provided error message.
 
-    Returns:
-        None
-
     """
     self.logger.error(error_message)
     raise DatabaseError(error_message)
@@ -123,7 +117,7 @@ class BaseDatabaseAPI:
         Document: The created document.
 
     """
-    self.logger.info(f"Creating document with data: {data}")
+    self.logger.info("Creating document with data: %s", data)
     with couchdb(self.username,
                  self.password,
                  url=self.url,
@@ -173,9 +167,6 @@ class BaseDatabaseAPI:
     Args:
         data (dict[str, Any]): The data to update the document with.
 
-    Returns:
-        None
-
     """
     self.logger.info("Updating document with data: %s", data)
     with couchdb(self.username,
@@ -204,9 +195,6 @@ class BaseDatabaseAPI:
 
     Raises:
         ValueError: If design_document_name, view_name, or map_func is None.
-
-    Returns:
-        None
 
     Examples:
         # Add a view with a map function

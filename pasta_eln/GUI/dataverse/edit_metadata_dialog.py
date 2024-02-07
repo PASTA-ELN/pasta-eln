@@ -1,3 +1,4 @@
+""" Represents the edit metadata dialog. """
 #  PASTA-ELN and all its sub-parts are covered by the MIT license.
 #
 #  Copyright (c) 2024
@@ -21,18 +22,56 @@ from pasta_eln.dataverse.database_api import DatabaseAPI
 
 
 class EditMetadataDialog(Ui_EditMetadataDialog):
+  """
+  Represents the edit metadata dialog.
+
+  Explanation:
+      This class represents the edit metadata dialog and provides methods to handle the UI and save the changes.
+
+  Args:
+      None
+
+  Returns:
+      None
+  """
 
   def __new__(cls, *_: Any, **__: Any) -> Any:
+    """
+    Creates a new instance of the EditMetadataDialog class.
+
+    Explanation:
+        This method creates a new instance of the EditMetadataDialog class.
+
+    Args:
+        *_: Variable length argument list.
+        **__: Arbitrary keyword arguments.
+
+    Returns:
+        Any: The new instance of the EditMetadataDialog class.
+    """
     return super(EditMetadataDialog, cls).__new__(cls)
 
   def __init__(self) -> None:
+    """
+    Initializes a new instance of the EditMetadataDialog class.
+
+    Explanation:
+        This method initializes a new instance of the EditMetadataDialog class.
+
+    Args:
+        None
+
+    Returns:
+        None
+    """
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
     self.primitive_compound_frame: PrimitiveCompoundFrame | None = None
     self.controlled_vocab_frame: ControlledVocabFrame | None = None
     self.instance = QDialog()
     super().setupUi(self.instance)
     self.db_api = DatabaseAPI()
-    self.config_model: ConfigModel = self.db_api.get_model(self.db_api.config_doc_id, ConfigModel) # type: ignore[assignment]
+    self.config_model: ConfigModel = self.db_api.get_model(self.db_api.config_doc_id,
+                                                           ConfigModel)  # type: ignore[assignment]
     self.metadata = self.config_model.metadata
     self.metadata_types = self.get_metadata_types()
     self.metadataBlockComboBox.currentTextChanged.connect(self.change_metadata_block)
@@ -45,7 +84,19 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
     self.instance.setWindowModality(QtCore.Qt.ApplicationModal)
     self.buttonBox.button(QtWidgets.QDialogButtonBox.Save).clicked.connect(self.save_ui)
 
-  def get_metadata_types(self)  -> dict[str, list[str]]:
+  def get_metadata_types(self) -> dict[str, list[str]]:
+    """
+    Retrieves the metadata types mapping.
+
+    Explanation:
+        This method retrieves the mapping of metadata block display names to their corresponding field type names.
+
+    Args:
+        None
+
+    Returns:
+        dict[str, list[str]]: The mapping of metadata block display names to their corresponding field type names.
+    """
     metadata_types_mapping: dict[str, list[str]] = {}
     if not self.metadata:
       self.logger.error("Failed to load metadata model!")
@@ -58,13 +109,24 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
           metadata_types_mapping[metablock['displayName']].append(field['typeName'])
     return metadata_types_mapping
 
-  def change_metadata_type(self, new_metadata_type: str)  -> None:
+  def change_metadata_type(self, new_metadata_type: str) -> None:
+    """
+    Changes the metadata type.
+
+    Explanation:
+        This method changes the metadata type based on the selected new_metadata_type.
+        It clears the contents of UI elements and adds the appropriate UI elements based on the metadata type.
+
+    Args:
+        new_metadata_type (str): The selected new metadata type.
+
+    """
     # Clear the contents of UI elements
     for widget_pos in reversed(range(self.metadataScrollVerticalLayout.count())):
       self.metadataScrollVerticalLayout.itemAt(widget_pos).widget().setParent(None)
     if not self.metadata:
       self.logger.error("Failed to load metadata model!")
-      return None
+      return
     for _, metablock in self.metadata['datasetVersion']['metadataBlocks'].items():
       for field in metablock['fields']:
         if field['typeName'] == new_metadata_type:
@@ -83,11 +145,33 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
               break
 
   def change_metadata_block(self, new_metadata_block: str | None = None) -> None:
+    """
+    Changes the metadata block.
+
+    Explanation:
+        This method changes the metadata block based on the selected new_metadata_block.
+        It clears the contents of the typesComboBox and adds the appropriate metadata types based on the new metadata block.
+
+    Args:
+        new_metadata_block (str | None): The selected new metadata block.
+
+    """
     if new_metadata_block:
       self.typesComboBox.clear()
       self.typesComboBox.addItems(self.metadata_types[new_metadata_block])
 
   def toggle_minimal_full(self, selection: str) -> None:
+    """
+    Toggles between the minimal and full view of the metadata.
+
+    Explanation:
+        This method toggles between the minimal and full view of the metadata based on the selected selection.
+        It hides or shows the metadata block combo box and updates the types combo box accordingly.
+
+    Args:
+        selection (str): The selected view option ("Minimal" or "Full").
+
+    """
     match selection:
       case "Minimal":
         self.metadataBlockComboBox.hide()
@@ -101,9 +185,31 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
         self.typesComboBox.addItems(self.metadata_types[self.metadataBlockComboBox.currentText()])
 
   def load_ui(self) -> None:
-    pass
+    """
+    Loads the UI for the EditMetadataDialog.
+    To be implemented.
+
+    Explanation:
+        This method loads the UI for the EditMetadataDialog.
+
+    Args:
+        None
+
+    """
+    self.logger.info("Loading UI...")
 
   def save_ui(self) -> None:
+    """
+    Saves the UI changes.
+
+    Explanation:
+        This method saves the changes made in the UI to the metadata.
+        It updates the metadata in the config model and updates the model document in the database.
+
+    Args:
+        None
+
+    """
     self.config_model.metadata = self.metadata
     self.db_api.update_model_document(self.config_model)
 

@@ -116,9 +116,6 @@ class ProjectModel(BaseModel):
     Raises:
         IncorrectParameterError: If the value is not of type str.
 
-    Returns:
-        None
-
     """
     if isinstance(value, str | None):
       self._name = value
@@ -129,9 +126,6 @@ class ProjectModel(BaseModel):
   def name(self) -> None:
     """
     Deletes the name of the project.
-
-    Returns:
-        None
 
     """
     del self._name
@@ -158,9 +152,6 @@ class ProjectModel(BaseModel):
     Raises:
         IncorrectParameterError: If the value is not of type str.
 
-    Returns:
-        None
-
     """
     if isinstance(value, str | None):
       self._comment = value
@@ -171,9 +162,6 @@ class ProjectModel(BaseModel):
   def comment(self) -> None:
     """
     Deletes the comment associated with the project.
-
-    Returns:
-        None
 
     """
     del self._comment
@@ -200,9 +188,6 @@ class ProjectModel(BaseModel):
     Raises:
         IncorrectParameterError: If the value is not of type str.
 
-    Returns:
-        None
-
     """
     if isinstance(value, str | None):
       self._user = value
@@ -213,9 +198,6 @@ class ProjectModel(BaseModel):
   def user(self) -> None:
     """
     Deletes the user associated with the project.
-
-    Returns:
-        None
 
     """
     del self._user
@@ -242,9 +224,6 @@ class ProjectModel(BaseModel):
     Raises:
         IncorrectParameterError: If the value is not of type str.
 
-    Returns:
-        None
-
     """
     if isinstance(value, str | None):
       self._date = value
@@ -255,9 +234,6 @@ class ProjectModel(BaseModel):
   def date(self) -> None:
     """
     Deletes the date of the project.
-
-    Returns:
-        None
 
     """
     del self._date
@@ -284,9 +260,6 @@ class ProjectModel(BaseModel):
     Raises:
         IncorrectParameterError: If the value is not of type str.
 
-    Returns:
-        None
-
     """
     if isinstance(value, str | None):
       self._status = value
@@ -297,9 +270,6 @@ class ProjectModel(BaseModel):
   def status(self) -> None:
     """
     Deletes the status of the project.
-
-    Returns:
-        None
 
     """
     del self._status
@@ -326,9 +296,6 @@ class ProjectModel(BaseModel):
     Raises:
         IncorrectParameterError: If the value is not of type str.
 
-    Returns:
-        None
-
     """
     if isinstance(value, str | None):
       self._objective = value
@@ -339,9 +306,6 @@ class ProjectModel(BaseModel):
   def objective(self) -> None:
     """
     Deletes the objective of the project.
-
-    Returns:
-        None
 
     """
     del self._objective

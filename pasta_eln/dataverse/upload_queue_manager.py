@@ -63,8 +63,6 @@ class UploadQueueManager(GenericTaskObject):
     Args:
         None
 
-    Returns:
-        None
     """
     self.logger.info("Resetting number of concurrent uploads..")
     model = self.db_api.get_model(self.db_api.config_doc_id, ConfigModel)
@@ -82,8 +80,6 @@ class UploadQueueManager(GenericTaskObject):
     Args:
         upload_task_thread (TaskThreadExtension): The thread task to be added to the upload queue.
 
-    Returns:
-        None
     """
     self.logger.info("Adding thread task to upload queue, id: %s", upload_task_thread.task.id)
     self.upload_queue.append(upload_task_thread)
@@ -100,8 +96,6 @@ class UploadQueueManager(GenericTaskObject):
     Args:
         upload_task_thread (TaskThreadExtension): The thread task to be removed from the upload queue.
 
-    Returns:
-        None
     """
     self.logger.info("Removing thread task from upload queue, id: %s", upload_task_thread.task.id)
     if upload_task_thread in self.upload_queue:
@@ -122,8 +116,6 @@ class UploadQueueManager(GenericTaskObject):
     Args:
         None
 
-    Returns:
-        None
     """
     self.logger.info("Starting upload queue..")
     super().start_task()
@@ -148,8 +140,6 @@ class UploadQueueManager(GenericTaskObject):
     Args:
         None
 
-    Returns:
-        None
     """
     self.logger.info("Cleaning up upload manager..")
     super().cleanup()
@@ -165,8 +155,6 @@ class UploadQueueManager(GenericTaskObject):
     Args:
         None
 
-    Returns:
-        None
     """
     self.logger.info("Emptying upload queue..")
     for upload_task_thread in self.upload_queue:
@@ -184,8 +172,6 @@ class UploadQueueManager(GenericTaskObject):
     Args:
         None
 
-    Returns:
-        None
     """
     self.logger.info("Cancelling upload queue..")
     super().cancel_task()

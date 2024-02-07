@@ -122,9 +122,6 @@ class UploadModel(BaseModel):
     Raises:
         IncorrectParameterError: If the value is not of type str.
 
-    Returns:
-        None
-
     """
     if isinstance(value, str | None):
       self._data_type = value
@@ -135,9 +132,6 @@ class UploadModel(BaseModel):
   def data_type(self) -> None:
     """
     Deletes the data type of the upload.
-
-    Returns:
-        None
 
     """
     del self._data_type
@@ -164,9 +158,6 @@ class UploadModel(BaseModel):
     Raises:
         IncorrectParameterError: If the value is not of type str.
 
-    Returns:
-        None
-
     """
     if isinstance(value, str | None):
       self._project_doc_id = value
@@ -184,8 +175,6 @@ class UploadModel(BaseModel):
     Args:
         self: The instance of the class.
 
-    Returns:
-        None
     """
     del self._project_doc_id
 
@@ -211,9 +200,6 @@ class UploadModel(BaseModel):
     Raises:
         IncorrectParameterError: If the value is not of type str.
 
-    Returns:
-        None
-
     """
     if isinstance(value, str | None):
       self._project_name = value
@@ -231,8 +217,6 @@ class UploadModel(BaseModel):
     Args:
         self: The instance of the class.
 
-    Returns:
-        None
     """
     del self._project_name
 
@@ -258,9 +242,6 @@ class UploadModel(BaseModel):
     Raises:
         IncorrectParameterError: If the value is not of type str.
 
-    Returns:
-        None
-
     """
     if isinstance(value, str | None):
       self._status = value
@@ -271,9 +252,6 @@ class UploadModel(BaseModel):
   def status(self) -> None:
     """
     Deletes the status of the upload.
-
-    Returns:
-        None
 
     """
     del self._status
@@ -300,9 +278,6 @@ class UploadModel(BaseModel):
     Raises:
         IncorrectParameterError: If the value is not of type str.
 
-    Returns:
-        None
-
     """
     if isinstance(value, str | None):
       self._finished_date_time = value
@@ -313,9 +288,6 @@ class UploadModel(BaseModel):
   def finished_date_time(self) -> None:
     """
     Deletes the finished date and time of the upload.
-
-    Returns:
-        None
 
     """
     del self._finished_date_time
@@ -342,9 +314,6 @@ class UploadModel(BaseModel):
     Raises:
         IncorrectParameterError: If the value is not of type str.
 
-    Returns:
-        None
-
     """
     if isinstance(value, str):
       self._log += f"{value}\n"
@@ -355,9 +324,6 @@ class UploadModel(BaseModel):
   def log(self) -> None:
     """
     Deletes the log of the upload.
-
-    Returns:
-        None
 
     """
     del self._log
@@ -384,9 +350,6 @@ class UploadModel(BaseModel):
     Raises:
         IncorrectParameterError: If the value is not of type str.
 
-    Returns:
-        None
-
     """
     if isinstance(value, str | None):
       self._dataverse_url = value
@@ -397,9 +360,6 @@ class UploadModel(BaseModel):
   def dataverse_url(self) -> None:
     """
     Deletes the URL of the Dataverse.
-
-    Returns:
-        None
 
     """
     del self._dataverse_url

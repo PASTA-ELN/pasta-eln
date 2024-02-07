@@ -1,3 +1,4 @@
+""" Represents the controlled vocabulary frame. """
 #  PASTA-ELN and all its sub-parts are covered by the MIT license.
 #
 #  Copyright (c) 2024
@@ -16,15 +17,49 @@ from pasta_eln.GUI.dataverse.controlled_vocab_frame_base import Ui_ControlledVoc
 
 
 class ControlledVocabFrame(Ui_ControlledVocabularyFrame):
+  """
+  Represents the controlled vocabulary frame.
+
+  Explanation:
+      This class handles the controlled vocabulary frame, including the initialization of the frame
+      and the addition of new vocabulary entries.
+
+  Args:
+      vocabulary_list (list[str]): The list of vocabulary entries.
+
+  Returns:
+      None
+  """
 
   def __new__(cls, *_: Any, **__: Any) -> Any:
     """
+    Creates a new instance of the ControlledVocabFrame class.
+
+    Explanation:
+        This method creates a new instance of the ControlledVocabFrame class.
+
+    Args:
+        *_: Variable length argument list.
+        **__: Arbitrary keyword arguments.
+
+    Returns:
+        Any: The new instance of the ControlledVocabFrame class.
     """
     return super(ControlledVocabFrame, cls).__new__(cls)
 
   def __init__(self, vocabulary_list: list[str]) -> None:
     """
-    Initializes the creation type dialog
+    Initializes a new instance of the ControlledVocabFrame class.
+
+    Explanation:
+        This method initializes a new instance of the ControlledVocabFrame class.
+        It sets up the logger, creates a QFrame instance, and sets up the UI for the controlled vocabulary frame.
+
+    Args:
+        vocabulary_list (list[str]): The list of vocabulary entries.
+
+    Returns:
+        None
     """
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
     self.instance = QtWidgets.QFrame()
@@ -33,6 +68,18 @@ class ControlledVocabFrame(Ui_ControlledVocabularyFrame):
     self.addPushButton.clicked.connect(self.add_new_vocab_entry)
 
   def add_new_vocab_entry(self) -> None:
+    """
+    Adds a new vocabulary entry.
+
+    Explanation:
+        This method adds a new vocabulary entry to the controlled vocabulary frame.
+        It creates a new layout, adds a combo box and a delete button to the layout,
+        and adds the layout to the main vertical layout.
+
+    Args:
+        None
+
+    """
     new_vocab_entry_layout = QtWidgets.QHBoxLayout()
     new_vocab_entry_layout.setObjectName("vocabHorizontalLayout")
     combo_box = QtWidgets.QComboBox(parent=self.instance)

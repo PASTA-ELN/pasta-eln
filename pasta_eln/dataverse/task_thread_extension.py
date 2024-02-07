@@ -62,8 +62,6 @@ class TaskThreadExtension(QObject):
     Args:
         self: The TaskThreadExtension instance.
 
-    Returns:
-        None
     """
     self.logger.info("Quitting task thread extension, Task id: %s", self.task.id)
     self.task.cancel.emit()

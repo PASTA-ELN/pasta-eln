@@ -64,7 +64,7 @@ class DataUploadTask(GenericTaskObject):
     self.upload_model = UploadModel(project_name=self.project_name,
                                     status=UploadStatusValues.Queued.name,
                                     log=f"Upload initiated for project {self.project_name} at {datetime.datetime.now().isoformat()}\n")
-    self.upload_model = self.db_api.create_model_document(self.upload_model) # type: ignore[assignment]
+    self.upload_model = self.db_api.create_model_document(self.upload_model)  # type: ignore[assignment]
     self.config_model = self.db_api.get_model(self.db_api.config_doc_id, ConfigModel)
     widget.uploadCancelPushButton.clicked.connect(lambda: self.cancel.emit())
 
@@ -85,8 +85,6 @@ class DataUploadTask(GenericTaskObject):
     Args:
         None
 
-    Returns:
-        None
     """
     super().start_task()
     self.progressChanged.emit(0)
@@ -125,8 +123,6 @@ class DataUploadTask(GenericTaskObject):
     Args:
         None
 
-    Returns:
-        None
     """
     super().cancel_task()
     self.upload_model.log = f"Cancelled at {datetime.datetime.now().isoformat()}"

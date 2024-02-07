@@ -13,7 +13,7 @@ from typing import Any
 from pasta_eln.dataverse.incorrect_parameter_error import IncorrectParameterError
 
 
-class BaseModel(object):
+class BaseModel:
   """
   Represents a base model object.
 
@@ -80,9 +80,6 @@ class BaseModel(object):
     Args:
         value (str | None): The ID value to be set.
 
-    Returns:
-        None
-
     """
     self._id = value
 
@@ -90,9 +87,6 @@ class BaseModel(object):
   def id(self) -> None:
     """
     Deletes the ID of the object.
-
-    Returns:
-        None
 
     """
     del self._id
@@ -116,9 +110,6 @@ class BaseModel(object):
     Args:
         value (str | None): The revision value to be set.
 
-    Returns:
-        None
-
     """
     self._rev = value
 
@@ -126,9 +117,6 @@ class BaseModel(object):
   def rev(self) -> None:
     """
     Deletes the revision of the object.
-
-    Returns:
-        None
 
     """
     del self._rev

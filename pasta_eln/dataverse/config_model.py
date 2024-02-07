@@ -102,9 +102,6 @@ class ConfigModel(BaseModel):
     Raises:
         IncorrectParameterError: If the value is not of type dict or None.
 
-    Returns:
-        None
-
     """
     if isinstance(value, dict | None):
       self._project_upload_items = value
@@ -140,9 +137,6 @@ class ConfigModel(BaseModel):
 
     Raises:
         IncorrectParameterError: If the value is not of type int.
-
-    Returns:
-        None
 
     """
     if isinstance(value, int | None):
@@ -180,9 +174,6 @@ class ConfigModel(BaseModel):
     Raises:
         IncorrectParameterError: If the value is not of type dict.
 
-    Returns:
-        None
-
     """
     if isinstance(value, dict | None):
       self._dataverse_login_info = value
@@ -218,9 +209,6 @@ class ConfigModel(BaseModel):
 
     Raises:
         IncorrectParameterError: If the value is not of type dict.
-
-    Returns:
-        None
 
     """
     if isinstance(value, dict | None):

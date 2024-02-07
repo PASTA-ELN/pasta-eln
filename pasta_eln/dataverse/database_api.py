@@ -21,7 +21,7 @@ from pasta_eln.dataverse.project_model import ProjectModel
 from pasta_eln.dataverse.upload_model import UploadModel
 
 
-class DatabaseAPI(object):
+class DatabaseAPI:
   """
   Provides an interface to interact with the database for dataverse specific operations.
 
@@ -81,8 +81,6 @@ class DatabaseAPI(object):
     Args:
         self: The DatabaseAPI instance.
 
-    Returns:
-        None
     """
     self.logger.info("Creating dvUploadView as part of design document: %s", self.design_doc_name)
     self.db_api.add_view(self.design_doc_name,
@@ -101,8 +99,6 @@ class DatabaseAPI(object):
     Args:
         self: The DatabaseAPI instance.
 
-    Returns:
-        None
     """
     self.logger.info("Creating dvProjectsView as part of design document: %s", self.design_doc_name)
     self.db_api.add_view(self.design_doc_name,
@@ -170,8 +166,6 @@ class DatabaseAPI(object):
         ValueError: If the data parameter is None.
         TypeError: If the data parameter is not an instance of UploadModel, ConfigModel, or ProjectModel.
 
-    Returns:
-        None
     """
     self.logger.info("Updating model document: %s", data)
     if data is None:
@@ -192,7 +186,7 @@ class DatabaseAPI(object):
         exception_type (Type[Exception]): The type of exception to be raised.
         error_message (str): The error message to be logged and raised.
 
-    Returns:
+    Raises:
         Raises the exception of the specified type with the provided error message.
     """
     self.logger.error(error_message)
@@ -297,8 +291,6 @@ class DatabaseAPI(object):
     Args:
         self: The DatabaseAPI instance.
 
-    Returns:
-        None
     """
     self.logger.info("Initializing database for dataverse module...")
     if self.db_api.get_document(self.design_doc_name) is None:
@@ -321,8 +313,6 @@ class DatabaseAPI(object):
     Args:
         self: The DatabaseAPI instance.
 
-    Returns:
-        None
     """
     self.logger.info("Initializing config document...")
     model = ConfigModel(_id=self.config_doc_id,
