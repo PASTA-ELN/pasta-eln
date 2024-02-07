@@ -46,8 +46,9 @@ class MainDialog(Ui_MainDialogBase):
     self.db_api = DatabaseAPI()
     self.db_api.initialize_database()
     for project in self.db_api.get_models(ProjectModel):
-      widget = self.get_project_widget(project)
-      self.projectsScrollAreaVerticalLayout.addWidget(widget)
+      if isinstance(project, ProjectModel):
+        widget = self.get_project_widget(project)
+        self.projectsScrollAreaVerticalLayout.addWidget(widget)
     self.uploadPushButton.clicked.connect(self.start_upload)
     self.clearFinishedPushButton.clicked.connect(self.clear_finished)
     self.selectAllPushButton.clicked.connect(lambda: self.select_deselect_all_projects(True))
@@ -65,11 +66,7 @@ class MainDialog(Ui_MainDialogBase):
     self.buttonBox.button(QtWidgets.QDialogButtonBox.Cancel).clicked.connect(self.close_ui)
     self.instance.closed.connect(self.close_ui)
 
-  def create_update_task(self,
-                         widget: Ui_UploadWidgetFrame) -> TaskThreadExtension:
-    return TaskThreadExtension(DataUploadTask(widget))
-
-  def get_upload_widget(self, project_name: str = 0) -> dict[str, QFrame | Ui_UploadWidgetFrame]:
+  def get_upload_widget(self, project_name: str = "") -> dict[str, QFrame | Ui_UploadWidgetFrame]:
     uploadWidgetFrame = QtWidgets.QFrame()
     uploadWidgetUi = Ui_UploadWidgetFrame()
     uploadWidgetUi.setupUi(uploadWidgetFrame)
@@ -86,61 +83,61 @@ class MainDialog(Ui_MainDialogBase):
     projectWidgetFrame = QtWidgets.QFrame()
     projectWidgetUi = Ui_ProjectItemFrame()
     projectWidgetUi.setupUi(projectWidgetFrame)
-    projectWidgetUi.projectNameLabel.setText(textwrap.fill(project.name, width=80, max_lines=1))
+    projectWidgetUi.projectNameLabel.setText(textwrap.fill(project.name or "", width=80, max_lines=1))
     projectWidgetUi.projectNameLabel.setToolTip(project.name)
     projectWidgetUi.modifiedDateTimeLabel.setText(
-      datetime.datetime.fromisoformat(project.date).strftime("%Y-%m-%d %H:%M:%S"))
+      datetime.datetime.fromisoformat(project.date or "").strftime("%Y-%m-%d %H:%M:%S"))
     return projectWidgetFrame
 
-  def start_upload(self):
-    print("Start upload...")
+  def start_upload(self) -> None:
     for widget_pos in range(self.projectsScrollAreaVerticalLayout.count()):
       project_widget = self.projectsScrollAreaVerticalLayout.itemAt(widget_pos).widget()
       if project_widget.findChild(QtWidgets.QCheckBox, name="projectCheckBox").isChecked():
         upload_widget = self.get_upload_widget(
           project_widget.findChild(QtWidgets.QLabel, name="projectNameLabel").toolTip())
         self.uploadQueueVerticalLayout.addWidget(upload_widget["base"])
-        task = self.create_update_task(upload_widget["widget"])
-        self.upload_manager_task.add_to_queue(task)
-        task.task.uploadModelCreated.connect(upload_widget["widget"].modelIdLabel.setText)
+        task_thread = TaskThreadExtension(DataUploadTask(upload_widget["widget"]))
+        self.upload_manager_task.add_to_queue(task_thread)
+        if isinstance(task_thread.task, DataUploadTask):
+          task_thread.task.uploadModelCreated.connect(upload_widget["widget"].modelIdLabel.setText)
     self.upload_manager_task_thread.task.start.emit()
 
-  def clear_finished(self):
+  def clear_finished(self) -> None:
     for widget_pos in reversed(range(self.uploadQueueVerticalLayout.count())):
       self.uploadQueueVerticalLayout.itemAt(widget_pos).widget().setParent(None)
 
-  def select_deselect_all_projects(self, checked: bool):
+  def select_deselect_all_projects(self, checked: bool) -> None:
     for widget_pos in range(self.projectsScrollAreaVerticalLayout.count()):
       project_widget = self.projectsScrollAreaVerticalLayout.itemAt(widget_pos).widget()
       project_widget.findChild(QtWidgets.QCheckBox, name="projectCheckBox").setChecked(checked)
 
-  def show_configure_upload(self):
+  def show_configure_upload(self) -> None:
     self.config_upload_dialog.load_ui()
     self.config_upload_dialog.instance.show()
 
-  def show_completed_uploads(self):
+  def show_completed_uploads(self) -> None:
     self.completed_uploads_dialog.load_ui()
     self.completed_uploads_dialog.instance.show()
 
-  def show_edit_metadata(self):
+  def show_edit_metadata(self) -> None:
     self.edit_metadata_dialog.load_ui()
     self.edit_metadata_dialog.instance.show()
 
-  def release_upload_manager(self):
+  def release_upload_manager(self) -> None:
     self.upload_manager_task_thread.quit()
 
-  def close_ui(self):
+  def close_ui(self) -> None:
     self.upload_manager_task_thread.quit()
     time.sleep(0.5)
 
-  def show_hide_log(self, button):
+  def show_hide_log(self, button: QtWidgets.QPushButton) -> None:
     frame = button.parent()
     log_console_text_edit = frame.findChild(QtWidgets.QTextEdit, name="logConsoleTextEdit")
     log_console_text_edit.show() if log_console_text_edit.isHidden() else log_console_text_edit.hide()
     if (upload_model_id :=
     frame.findChild(QtWidgets.QLabel, name="modelIdLabel").text()):
       model = self.db_api.get_model(upload_model_id, UploadModel)
-      log_console_text_edit.setText(model.log)
+      log_console_text_edit.setText(model.log if isinstance(model, UploadModel) else "")
 
 
 if __name__ == "__main__":

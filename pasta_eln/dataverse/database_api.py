@@ -202,8 +202,8 @@ class DatabaseAPI(object):
       case TypeError():
         raise TypeError(error_message)
 
-  def get_models(self, model_type: Type[UploadModel | ConfigModel | ProjectModel]) -> list[
-    UploadModel | ConfigModel | ProjectModel]:
+  def get_models(self, model_type: Type[Union[UploadModel, ConfigModel, ProjectModel]]) -> list[Union
+  [UploadModel, ConfigModel, ProjectModel]]:
     """
     Retrieves models of the specified type from the database.
 
@@ -212,13 +212,13 @@ class DatabaseAPI(object):
 
     Args:
         self: The DatabaseAPI instance.
-        model_type (Type[UploadModel | ConfigModel | ProjectModel]): The type of models to retrieve.
+        model_type (Type[Union[UploadModel, ConfigModel, ProjectModel]]): The type of models to retrieve.
 
     Raises:
         ValueError: If the model_type is not supported.
 
     Returns:
-        List[UploadModel | ConfigModel | ProjectModel]: The retrieved models.
+        list[Union[UploadModel, ConfigModel, ProjectModel]]: The retrieved models.
     """
     self.logger.info("Getting models of type: %s", model_type)
     match model_type():
