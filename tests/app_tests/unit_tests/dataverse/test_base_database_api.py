@@ -125,7 +125,7 @@ class TestBaseDatabaseApi:
     actual_document = mock_database_api.create_document(data)
 
     # Assert
-    mock_database_api.logger.info.assert_called_with(f"Creating document with data: {data}")
+    mock_database_api.logger.info.assert_called_with(f"Creating document with data: %s", data)
     mock_client.__getitem__.assert_called_with(mock_database_api.db_name)
     mock_db.create_document.assert_called_with(data, throw_on_exists=True)
     mock_couch.__enter__.assert_called_once()
