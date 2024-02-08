@@ -180,6 +180,10 @@ def importELN(backend:Backend, elnFileName:str) -> str:
       # save
       if elnName == 'PASTA ELN':
         doc['-user'] = '_'
+        if '-tags' not in doc:
+          doc['-tags'] = []
+        else:
+          doc['-tags'] = doc['-tags'].split(',')
         if datasetIsFolder and fullPath is not None:
           fullPath.mkdir(exist_ok=True)
           with open(fullPath/'.id_pastaELN.json', 'w', encoding='utf-8') as fOut:
@@ -240,7 +244,7 @@ def importELN(backend:Backend, elnFileName:str) -> str:
 ##########################################
 ###               EXPORT               ###
 ##########################################
-def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
+def exportELN(backend:Backend, projectID:str, fileName:str='', dTypes:list[str]=[]) -> str:
   """
   export eln to file
 
@@ -281,13 +285,17 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
         docMain[pasta2json[key]] = value
       else:
         docSupp[key] = value
-    # remove personal data
+    # clean individual entries of docSupp: remove personal data
     del docSupp['-user']
     if 'image' in docSupp:
       del docSupp['image']
     if '_attachments' in docSupp:
       del docSupp['_attachments']
     docSupp['_id'] = docMain['identifier'] #ensure id is present in main and supplementary information
+    # clean individual entries of docMain
+    if 'keywords' in docMain:
+      docMain['keywords'] = ','.join(docMain['keywords'])
+    docMain = {k:v for k,v in docMain.items() if v}
     nonlocal keysInSupplemental
     keysInSupplemental = keysInSupplemental.union(docSupp)
     return path, docMain, docSupp
@@ -316,6 +324,8 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
     path, docMain, docSupp = separate(doc)
 
     hasPart = []
+    if (nodeHier.docType[0] not in dTypes) and nodeHier.docType[0][0]!='x' and len(dTypes)>0:
+      return None
     for child in nodeHier.children:
       res = iterateTree(child, graph)
       if res is not None:
@@ -384,7 +394,7 @@ def exportELN(backend:Backend, projectID:str, fileName:str='') -> str:
     graphMaster:list[dict[str,Any]] = []
     graphMisc:list[dict[str,Any]] = []
     masterNodeInfo = {
-        '@id': './ro-crate-metadata.json',
+        '@id': 'ro-crate-metadata.json',
         '@type': 'CreativeWork',
         'about': {
             '@id': './'
