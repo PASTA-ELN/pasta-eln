@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>963</width>
+    <width>1070</width>
     <height>192</height>
    </rect>
   </property>
@@ -111,7 +111,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="apitTokenVerifyPushButton">
+        <widget class="QPushButton" name="apiTokenVerifyPushButton">
          <property name="minimumSize">
           <size>
            <width>100</width>
@@ -183,10 +183,23 @@
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
+         <property name="sizeAdjustPolicy">
+          <enum>QComboBox::AdjustToMinimumContentsLengthWithIcon</enum>
+         </property>
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="dataverseListPushButton">
+        <widget class="QLineEdit" name="dataverseLineEdit">
+         <property name="toolTip">
+          <string>Displays the selected dataverse ID from the list</string>
+         </property>
+         <property name="placeholderText">
+          <string>Selected Dataverse ID</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="dataverseLoadPushButton">
          <property name="minimumSize">
           <size>
            <width>100</width>

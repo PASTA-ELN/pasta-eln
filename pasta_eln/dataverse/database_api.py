@@ -278,7 +278,7 @@ class DatabaseAPI:
       self.create_upload_model_view()
     if self.db_api.get_view(self.design_doc_name, self.project_model_view_name) is None:
       self.create_projects_view()
-    if self.db_api.get_document(self.design_doc_name) is None:
+    if self.db_api.get_document(self.config_doc_id) is None:
       self.initialize_config_document()
 
   def initialize_config_document(self) -> None:

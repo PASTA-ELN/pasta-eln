@@ -146,9 +146,8 @@ class TerminologyLookupDialog(Ui_TerminologyLookupDialogBase):
     self.logger.info("Terminology search initiated for term: %s..", search_term)
     self.searchProgressBar.setValue(5)
     event_loop = get_event_loop()
-    lookup_results = event_loop.run_until_complete(
-      self.terminology_lookup_service.do_lookup(search_term))
-    if lookup_results:
+    if lookup_results := event_loop.run_until_complete(
+        self.terminology_lookup_service.do_lookup(search_term)):
       for service in lookup_results:
         for result in service['results']:
           self.add_scroll_area_entry(self.icons_pixmap[service['name']],
