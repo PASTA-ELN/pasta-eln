@@ -8,6 +8,8 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 from json import JSONDecodeError
 from logging import Logger
+from os import getcwd
+from os.path import dirname, join, realpath
 from unittest.mock import mock_open, patch
 
 import pytest
@@ -466,17 +468,26 @@ class TestDatabaseAPI:
   def test_initialize_config_document_success_path(self, mocker, test_id, mock_database_api):
     # Arrange
     mock_database_api.create_model_document = mocker.MagicMock()
+    current_path = realpath(join(getcwd(), dirname(__file__)))
+    with open(join(current_path, "..//..//..//..//pasta_eln//dataverse", "dataset-create-new-all-default-fields.json"),
+              encoding="utf-8") as config_file:
+      file_data = config_file.read()
 
     # Act
     with patch('pasta_eln.dataverse.database_api.realpath') as mock_realpath, \
         patch('pasta_eln.dataverse.database_api.getcwd') as mock_getcwd, \
         patch('pasta_eln.dataverse.database_api.dirname') as mock_dirname, \
-        patch('pasta_eln.dataverse.database_api.open',
-              mock_open(read_data='{"metadata_key": "metadata_value"}')) as mock_file:
+        patch('pasta_eln.dataverse.database_api.open') as mock_file, \
+        patch('pasta_eln.dataverse.database_api.set_authors') as mock_set_authors:
+      mock_file.side_effect = (
+        mock_open(read_data=file_data).return_value,
+        mock_open(
+          read_data="{\"authors\": [{\"first\": \"\",\"last\": \"\",\"title\": \"\",\"email\": \"\",\"orcid\": \"\",\"organizations\": [{\"organization\": \"\",\"rorid\": \"\"}]}]}").return_value,)
       mock_realpath.return_value = '/fakepath'
       mock_getcwd.return_value = '/home/jmurugan'
       mock_dirname.return_value = '/pasta_eln/src/pasta_eln/dataverse'
       mock_database_api.initialize_config_document()
+      mock_set_authors.assert_called_once()
 
     # Assert
     mock_database_api.logger.info.assert_called_with("Initializing config document...")
@@ -485,7 +496,11 @@ class TestDatabaseAPI:
     assert isinstance(called_with_model, ConfigModel)
     assert called_with_model._id == mock_database_api.config_doc_id
     assert called_with_model.parallel_uploads_count == 3
-    assert called_with_model.dataverse_login_info == {}
+    assert called_with_model.dataverse_login_info == {
+      "server_url": "",
+      "api_token": "",
+      "dataverse_id": ""
+    }
     assert called_with_model.project_upload_items == {}
     assert called_with_model.metadata is not None
 

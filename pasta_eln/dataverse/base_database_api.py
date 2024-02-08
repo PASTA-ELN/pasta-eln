@@ -8,9 +8,6 @@
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import logging
-from json import load
-from os.path import exists, join
-from pathlib import Path
 from typing import Any
 
 from cloudant import couchdb
@@ -20,6 +17,7 @@ from cloudant.error import CloudantDatabaseException
 from cloudant.view import View
 
 from pasta_eln.dataverse.database_error import DatabaseError
+from pasta_eln.dataverse.utils import log_and_create_error, read_pasta_config_file
 
 
 class BaseDatabaseAPI:
@@ -55,16 +53,12 @@ class BaseDatabaseAPI:
     self.port = 5984
     self.url = f'http://{self.host}:{self.port}'
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
-    config_file_name = join(Path.home(), '.pastaELN.json')
-    if not exists(config_file_name):
-      self.log_and_raise_error("Config file not found, Corrupt installation!")
-    with open(config_file_name, 'r', encoding='utf-8') as confFile:
-      config = load(confFile)
-      if 'defaultProjectGroup' in config:
-        self.db_name = config['defaultProjectGroup']
-      else:
-        self.log_and_raise_error("Incorrect config file, defaultProjectGroup not found!")
-      self.set_username_password(config)
+    config = read_pasta_config_file(self.logger)
+    if 'defaultProjectGroup' in config:
+      self.db_name = config['defaultProjectGroup']
+    else:
+      raise log_and_create_error(self.logger, DatabaseError, "Incorrect config file, defaultProjectGroup not found!")
+    self.set_username_password(config)
 
   def set_username_password(self, config: dict[str, Any]) -> None:
     """
@@ -79,32 +73,18 @@ class BaseDatabaseAPI:
     """
     project_groups = config.get('projectGroups')
     if not project_groups:
-      self.log_and_raise_error(
-        "Incorrect config file, projectGroups not found!")
+      raise log_and_create_error(self.logger, DatabaseError,
+                                 "Incorrect config file, projectGroups not found!")
     main_group = project_groups.get(self.db_name)  # type: ignore[union-attr]
     if not main_group:
-      self.log_and_raise_error(
-        "Incorrect config file, defaultProjectGroup not found!")
+      raise log_and_create_error(self.logger, DatabaseError,
+                                 "Incorrect config file, defaultProjectGroup not found!")
     local_info = main_group.get('local')
     if not local_info:
-      self.log_and_raise_error(
-        "Incorrect config file, user or password not found!")
+      raise log_and_create_error(self.logger, DatabaseError,
+                                 "Incorrect config file, user or password not found!")
     self.username = local_info.get('user')
     self.password = local_info.get('password')
-
-  def log_and_raise_error(self, error_message: str) -> None:
-    """
-    Logs an error message and raises a DatabaseError.
-
-    Args:
-        error_message (str): The error message to log and raise.
-
-    Raises:
-        DatabaseError: Always raised with the provided error message.
-
-    """
-    self.logger.error(error_message)
-    raise DatabaseError(error_message)
 
   def create_document(self, data: dict[str, Any]) -> Document:
     """
@@ -146,7 +126,7 @@ class BaseDatabaseAPI:
     """
     self.logger.info("Retrieving document with id: %s", document_id)
     if not document_id:
-      self.log_and_raise_error("Document ID cannot be empty!")
+      raise log_and_create_error(self.logger, DatabaseError, "Document ID cannot be empty!")
     with couchdb(self.username,
                  self.password,
                  url=self.url,
@@ -209,7 +189,8 @@ class BaseDatabaseAPI:
                      map_func,
                      reduce_func)
     if design_document_name is None or view_name is None or map_func is None:
-      self.log_and_raise_error("Design document name, view name, and map function cannot be empty!")
+      raise log_and_create_error(self.logger, DatabaseError,
+                                 "Design document name, view name, and map function cannot be empty!")
     with couchdb(self.username,
                  self.password,
                  url=self.url,
@@ -244,7 +225,7 @@ class BaseDatabaseAPI:
                      view_name,
                      design_document_name)
     if design_document_name is None or view_name is None:
-      self.log_and_raise_error("Design document name, view name cannot be empty!")
+      raise log_and_create_error(self.logger, DatabaseError, "Design document name, view name cannot be empty!")
     with couchdb(self.username,
                  self.password,
                  url=self.url,
@@ -286,7 +267,7 @@ class BaseDatabaseAPI:
                      map_func,
                      reduce_func)
     if design_document_name is None or view_name is None:
-      self.log_and_raise_error("Design document name and view name cannot be empty!")
+      raise log_and_create_error(self.logger, DatabaseError, "Design document name and view name cannot be empty!")
     with couchdb(self.username,
                  self.password,
                  url=self.url,
@@ -338,7 +319,8 @@ class BaseDatabaseAPI:
                  url=self.url,
                  connect=True) as client:
       if design_document_name is None or view_name is None or document_id is None:
-        self.log_and_raise_error("Design document name, view name and document id cannot be empty!")
+        raise log_and_create_error(self.logger, DatabaseError,
+                                   "Design document name, view name and document id cannot be empty!")
       pasta_db = client[self.db_name]
       with DesignDocument(pasta_db, design_document_name) as design_doc:
         view = View(design_doc, view_name, map_func, reduce_func)

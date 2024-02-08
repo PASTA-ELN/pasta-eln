@@ -7,6 +7,7 @@
 #  Filename: database_api.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
+
 import logging
 from json import load
 from os import getcwd
@@ -19,6 +20,7 @@ from pasta_eln.dataverse.base_database_api import BaseDatabaseAPI
 from pasta_eln.dataverse.config_model import ConfigModel
 from pasta_eln.dataverse.project_model import ProjectModel
 from pasta_eln.dataverse.upload_model import UploadModel
+from pasta_eln.dataverse.utils import log_and_create_error, set_authors
 
 
 class DatabaseAPI:
@@ -142,9 +144,9 @@ class DatabaseAPI:
     """
     self.logger.info("Creating model document: %s", data)
     if data is None:
-      raise self.log_and_create_error(ValueError, "Data cannot be None!")
+      raise log_and_create_error(self.logger, ValueError, "Data cannot be None!")
     if not isinstance(data, (UploadModel, ConfigModel, ProjectModel)):
-      raise self.log_and_create_error(TypeError, "Data must be an UploadModel, ConfigModel, or ProjectModel!")
+      raise log_and_create_error(self.logger, TypeError, "Data must be an UploadModel, ConfigModel, or ProjectModel!")
     data_dict = dict(data)
     if data_dict['_id'] is None:
       del data_dict['_id']
@@ -169,27 +171,10 @@ class DatabaseAPI:
     """
     self.logger.info("Updating model document: %s", data)
     if data is None:
-      raise self.log_and_create_error(ValueError, "Data cannot be None!")
+      raise log_and_create_error(self.logger, ValueError, "Data cannot be None!")
     if not isinstance(data, (UploadModel, ConfigModel, ProjectModel)):
-      raise self.log_and_create_error(TypeError, "Data must be an UploadModel, ConfigModel, or ProjectModel!")
+      raise log_and_create_error(self.logger, TypeError, "Data must be an UploadModel, ConfigModel, or ProjectModel!")
     self.db_api.update_document(dict(data))
-
-  def log_and_create_error(self, exception_type: Type[Exception], error_message: str) -> Exception:
-    """
-    Logs an error message and creates an exception.
-
-    Explanation:
-        This method logs the provided error message and creates an exception of the specified type.
-
-    Args:
-        exception_type (Type[Exception]): The type of exception to create.
-        error_message (str): The error message to log and include in the exception.
-
-    Returns:
-        Exception: The created exception.
-    """
-    self.logger.error(error_message)
-    return exception_type(error_message)
 
   def get_models(self, model_type: Type[Union[UploadModel, ConfigModel, ProjectModel]]) -> list[Union
   [UploadModel, ConfigModel, ProjectModel]]:
@@ -218,8 +203,8 @@ class DatabaseAPI:
         return [ProjectModel(**result) for result in
                 self.db_api.get_view_results(self.design_doc_name, "dvProjectsView")]
       case _:
-        raise self.log_and_create_error(TypeError,
-                                        f"Unsupported model type {model_type}")
+        raise log_and_create_error(self.logger, TypeError,
+                                   f"Unsupported model type {model_type}")
 
   def get_model(self, model_id: str,
                 model_type: Type[UploadModel | ConfigModel | ProjectModel]) -> Union[
@@ -244,10 +229,10 @@ class DatabaseAPI:
     """
     self.logger.info("Getting model with id: %s, type: %s", model_id, model_type)
     if model_type not in (UploadModel, ProjectModel, ConfigModel):
-      raise self.log_and_create_error(TypeError,
-                                      f"Unsupported model type {model_type}")
+      raise log_and_create_error(self.logger, TypeError,
+                                 f"Unsupported model type {model_type}")
     if model_id is None:
-      raise self.log_and_create_error(ValueError, "model_id cannot be None")
+      raise log_and_create_error(self.logger, ValueError, "model_id cannot be None")
     return model_type(**self.db_api.get_document(model_id))
 
   def get_data_hierarchy(self) -> dict[str, Any] | None:
@@ -311,10 +296,15 @@ class DatabaseAPI:
     self.logger.info("Initializing config document...")
     model = ConfigModel(_id=self.config_doc_id,
                         parallel_uploads_count=3,
-                        dataverse_login_info={},
+                        dataverse_login_info={
+                          "server_url": "",
+                          "api_token": "",
+                          "dataverse_id": ""
+                        },
                         project_upload_items={})
     current_path = realpath(join(getcwd(), dirname(__file__)))
     with open(join(current_path, "dataset-create-new-all-default-fields.json"),
               encoding="utf-8") as config_file:
       model.metadata = load(config_file)
+    set_authors(self.logger, model.metadata)
     self.create_model_document(model)

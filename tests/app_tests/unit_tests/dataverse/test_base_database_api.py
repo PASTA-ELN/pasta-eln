@@ -7,9 +7,8 @@
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
-import json
 from secrets import compare_digest
-from unittest.mock import MagicMock, mock_open, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from cloudant.error import CloudantDatabaseException
@@ -43,17 +42,13 @@ def create_mock_config(default_project_group_exists=True, user_and_password_exis
 @pytest.fixture
 def mock_database_api(mocker) -> BaseDatabaseAPI:
   mocker.patch('pasta_eln.dataverse.base_database_api.logging.getLogger')
-  mocker.patch('pasta_eln.dataverse.base_database_api.Path.home', return_value='test_path')
-  mocker.patch('pasta_eln.dataverse.base_database_api.join', return_value=CONFIG_FILE_PATH)
-  mocker.patch('pasta_eln.dataverse.base_database_api.load', return_value=create_mock_config())
-  with patch('pasta_eln.dataverse.base_database_api.open'), \
-      patch('pasta_eln.dataverse.base_database_api.exists', return_value=True), \
+  with patch('pasta_eln.dataverse.base_database_api.read_pasta_config_file', return_value=create_mock_config()), \
       patch('pasta_eln.dataverse.base_database_api.logging.Logger.error'):
     return BaseDatabaseAPI()
 
 
 class TestBaseDatabaseApi:
-  # Parametrized test for success path
+  # Parametrized test for a success path
   @pytest.mark.parametrize("config_content, expected_db_name, expected_username, expected_password", [
     (create_mock_config(), DEFAULT_PROJECT_GROUP, USER, PASSWORD),
     # Add more test cases with different realistic values if necessary
@@ -61,8 +56,8 @@ class TestBaseDatabaseApi:
   def test_base_database_api_init_success_path(self, config_content, expected_db_name, expected_username,
                                                expected_password):
     # Arrange
-    with patch('pasta_eln.dataverse.base_database_api.open', mock_open(read_data=json.dumps(config_content))), \
-        patch('pasta_eln.dataverse.base_database_api.exists', return_value=True), \
+    with patch('pasta_eln.dataverse.base_database_api.read_pasta_config_file',
+               return_value=config_content) as read_config_mock, \
         patch('logging.Logger.error') as mock_logger_error:
       # Act
       base_db_api = BaseDatabaseAPI()
@@ -71,6 +66,7 @@ class TestBaseDatabaseApi:
       assert base_db_api.db_name == expected_db_name
       assert base_db_api.username == expected_username
       assert compare_digest(base_db_api.password, expected_password)
+      read_config_mock.assert_called_once()
       mock_logger_error.assert_not_called()
 
   # Parametrized test for various error cases
@@ -81,21 +77,20 @@ class TestBaseDatabaseApi:
     (create_mock_config(user_and_password_exists=False), True, "Incorrect config file, projectGroups not found!"),
     # Add more error cases if necessary
   ], ids=["error_no_config_file", "error_no_default_project_group", "error_no_user_password"])
-  def test_base_database_api_init_error_cases(self, mocker, config_content, exists_return_value,
+  def test_base_database_api_init_error_cases(self, config_content, exists_return_value,
                                               expected_error_message):
     # Arrange
-    home_mock = mocker.patch('pasta_eln.dataverse.base_database_api.Path.home', return_value='test_path')
-    join_mock = mocker.patch('pasta_eln.dataverse.base_database_api.join', return_value=CONFIG_FILE_PATH)
-    with patch('pasta_eln.dataverse.base_database_api.open', mock_open(read_data=json.dumps(config_content))), \
-        patch('pasta_eln.dataverse.base_database_api.exists', return_value=exists_return_value), \
+    with patch('pasta_eln.dataverse.base_database_api.read_pasta_config_file', return_value=config_content,
+               side_effect=None if exists_return_value else DatabaseError(
+                 "Config file not found, Corrupt installation!")) as read_config_mock, \
         patch('pasta_eln.dataverse.base_database_api.logging.Logger.error') as mock_logger_error:
       # Act & Assert
       with pytest.raises(DatabaseError) as exc_info:
         BaseDatabaseAPI()
       assert str(exc_info.value) == expected_error_message
-      mock_logger_error.assert_called_once_with(expected_error_message)
-      home_mock.assert_called_once()
-      join_mock.assert_called_once_with(home_mock.return_value, ".pastaELN.json")
+      read_config_mock.assert_called_once()
+      if exists_return_value:
+        mock_logger_error.assert_called_once_with(expected_error_message)
 
   @pytest.mark.parametrize("test_id, data, expected_document", [
     # Success path tests with various realistic test values
