@@ -143,14 +143,14 @@ class DataverseClient:
                f"Server: {self.server_url}, "
                f"Status: {pub_resp['status']}, "
                f"Reason: {pub_resp['reason']}, "
-               f"Info: {pub_resp['result'].get('message')}")
+               f"Info: {pub_resp['result'].get('message') if isinstance(pub_resp['result'], dict) else pub_resp['result']}")
       self.logger.error(error)
       return error
     error = (f"Error creating dataverse, "
              f"Server: {self.server_url}, "
              f"Status: {resp['status']}, "
              f"Reason: {resp['reason']}, "
-             f"Info: {resp['result'].get('message')}")
+             f"Info: {resp['result'].get('message') if isinstance(resp['result'], dict) else resp['result']}")
     self.logger.error(error)
     return error
 
@@ -177,7 +177,31 @@ class DataverseClient:
             f"Server: {self.server_url}, "
             f"Status: {resp['status']}, "
             f"Reason: {resp['reason']}, "
-            f"Info: {resp['result'].get('message')}")
+            f"Info: {resp['result'].get('message') if isinstance(resp['result'], dict) else resp['result']}")
+
+  @handle_dataverse_exception_async
+  async def check_if_api_token_is_valid(self) -> bool:
+    """
+    Checks if the given API token is valid.
+
+    Explanation:
+        This method checks if the provided API token is valid by making a request to the server.
+        It logs the server URL and sends a GET request to the token endpoint with the API token.
+        It returns True if the response is successful and the status code is not 401, 403, or 500.
+
+    Args:
+        self: The instance of the class.
+
+    Returns:
+        bool: True if the API token is valid, False otherwise.
+    """
+    self.logger.info("Check if API token is valid, Server: %s", self.server_url)
+    resp = await self.http_client.get(
+      f"{self.server_url}/api/users/token",
+      request_headers={'Accept': 'application/json', 'X-Dataverse-key': self.api_token})
+    status = resp.get("status")
+    return (bool(resp) and status is not None
+            and status not in [401, 403, 500])
 
   @handle_dataverse_exception_async
   async def get_dataverse_list(self) -> dict[Any, Any] | Any:

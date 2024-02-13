@@ -549,6 +549,28 @@ class TestDataverseClient(object):
       f"{dataverse_client_mock.server_url}/api/info/version",
       request_headers={'Accept': 'application/json', 'X-Dataverse-key': dataverse_client_mock.api_token})
 
+  @pytest.mark.asyncio
+  async def test_check_if_dataverse_reachable_when_fail_return_error_html(self,
+                                                                          mocker,
+                                                                          dataverse_client_mock: dataverse_client_mock):
+    mock_version_check_response = {
+      'status': 404,
+      'reason': "Not found",
+      'result': "<html><body>Error!!</body></html>"
+    }
+    version_check_response_future = Future()
+    version_check_response_future.set_result(mock_version_check_response)
+
+    mocker.patch.object(dataverse_client_mock.http_client, 'get', return_value=version_check_response_future)
+    assert await dataverse_client_mock.check_if_dataverse_server_reachable() == (
+      False,
+      f"Dataverse isn't reachable, Server: {dataverse_client_mock.server_url}, Status: 404, Reason: Not found, Info: <html><body>Error!!</body></html>")
+    dataverse_client_mock.logger.info.assert_called_once_with("Check if data-verse is reachable, Server: %s",
+                                                              dataverse_client_mock.server_url)
+    dataverse_client_mock.http_client.get.assert_called_once_with(
+      f"{dataverse_client_mock.server_url}/api/info/version",
+      request_headers={'Accept': 'application/json', 'X-Dataverse-key': dataverse_client_mock.api_token})
+
   @pytest.mark.parametrize(
     "exception, error_message", [
       (ConnectionError(
@@ -3130,4 +3152,48 @@ class TestDataverseClient(object):
     dataverse_client_mock.http_client.delete.assert_called_with(
       f"{dataverse_client_mock.server_url}/api/dataverses/dv_test",
       request_headers={'Accept': 'application/json', 'X-Dataverse-key': dataverse_client_mock.api_token}
+    )
+
+  @pytest.mark.asyncio
+  @pytest.mark.parametrize(
+    "server_url, api_token, response_status, response_body, expected_result, test_id",
+    [
+      # Success path tests with various realistic test values
+      ("https://test-dataverse.org", "valid-token", 200, {"status": "OK"}, True, "success-path-valid"),
+      ("https://prod-dataverse.org", "another-valid-token", 200, {"status": "OK"}, True, "success-path-another-valid"),
+
+      # Edge cases
+      ("https://edge-case-dataverse.org", "", 401, {"status": "OK"}, False, "edge-case-empty-token"),
+      ("https://edge-case-dataverse.org", "valid-token", None, {}, False, "edge-case-no-status"),
+
+      # Error cases
+      ("https://error-dataverse.org", "invalid-token", 401, {"status": "Unauthorized"}, False,
+       "error-case-unauthorized"),
+      ("https://error-dataverse.org", "forbidden-token", 403, {"status": "Forbidden"}, False, "error-case-forbidden"),
+      ("https://error-dataverse.org", "valid-token", 500, {"status": "Server Error"}, False,
+       "error-case-server-error"),
+    ],
+  )
+  async def test_check_if_api_token_is_valid(self, mocker, dataverse_client_mock: dataverse_client_mock, server_url,
+                                             api_token, response_status, response_body, expected_result,
+                                             test_id):
+    # Arrange
+    mocker.patch.object(dataverse_client_mock, 'server_url', server_url)
+    mocker.patch.object(dataverse_client_mock, 'api_token', api_token)
+
+    # Mocking the get method of http_client to return a response with specified status and body
+    info_future = Future()
+    info_future.set_result({"status": response_status, "body": response_body})
+    mocker.patch.object(dataverse_client_mock.http_client, 'get',
+                        side_effect=[info_future])
+
+    # Act
+    result = await dataverse_client_mock.check_if_api_token_is_valid()
+
+    # Assert
+    assert result == expected_result
+    dataverse_client_mock.logger.info.assert_called_with("Check if API token is valid, Server: %s", server_url)
+    dataverse_client_mock.http_client.get.assert_called_once_with(
+      f"{server_url}/api/users/token",
+      request_headers={'Accept': 'application/json', 'X-Dataverse-key': api_token}
     )

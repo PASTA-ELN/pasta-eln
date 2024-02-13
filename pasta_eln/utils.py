@@ -112,5 +112,11 @@ def handle_http_client_exception(wrapped: Callable[..., Any]) -> Callable[..., A
       self.logger.error(error)
       self.session_request_errors.append(error)
       return {}
+    except AssertionError as e:
+      url = kwargs["base_url"] if 'base_url' in kwargs else args[0]
+      error = f"Client session AssertionError for url ({url}) with error: {e}"
+      self.logger.error(error)
+      self.session_request_errors.append(error)
+      return {}
 
   return wrapper

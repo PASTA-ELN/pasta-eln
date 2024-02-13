@@ -80,6 +80,7 @@ class AsyncHttpClient:
       }
     """
     self.logger.info("Get url: %s", base_url)
+    self.session_request_errors.clear()
     async with ClientSession() as session:
       async with session.get(base_url,
                              params=request_params,
@@ -119,6 +120,7 @@ class AsyncHttpClient:
       }
     """
     self.logger.info("Post url: %s", base_url)
+    self.session_request_errors.clear()
     async with ClientSession() as session:
       async with session.post(base_url,
                               headers=request_headers,
@@ -160,6 +162,7 @@ class AsyncHttpClient:
       }
     """
     self.logger.info("Delete url: %s", base_url)
+    self.session_request_errors.clear()
     async with ClientSession() as session:
       async with session.delete(base_url,
                                 headers=request_headers,

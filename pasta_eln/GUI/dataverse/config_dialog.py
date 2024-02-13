@@ -9,6 +9,7 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
 import logging
+import webbrowser
 from asyncio import get_event_loop
 from typing import Any
 
@@ -70,6 +71,8 @@ class ConfigDialog(Ui_ConfigDialogBase):
 
     self.apiTokenVerifyPushButton.clicked.connect(self.verify_api_token)
     self.dataverseLoadPushButton.clicked.connect(self.load_dataverse_list)
+    self.apiTokenHelpPushButton.clicked.connect(
+      lambda: webbrowser.open("https://guides.dataverse.org/en/latest/api/auth.html"))
 
     self.dataverseLoadPushButton.click()
 
@@ -98,11 +101,16 @@ class ConfigDialog(Ui_ConfigDialogBase):
       return
     dataverse_client = DataverseClient(server_url, api_token)
     event_loop = get_event_loop()
-    if result := event_loop.run_until_complete(dataverse_client.check_if_dataverse_server_reachable()):
-      if result[0]:
-        QMessageBox.information(self.instance, "Success", result[1])
+    server_reachable_result = event_loop.run_until_complete(dataverse_client.check_if_dataverse_server_reachable())
+    token_valid = event_loop.run_until_complete(dataverse_client.check_if_api_token_is_valid())
+    if server_reachable_result:
+      if server_reachable_result[0]:
+        if token_valid:
+          QMessageBox.information(self.instance, "Success", "Data server is reachable and API token is valid")
+        else:
+          QMessageBox.warning(self.instance, "Failed", "Invalid API token!")
       else:
-        QMessageBox.warning(self.instance, "Failed", f"Server is not reachable. Error: {result[1][0]}")
+        QMessageBox.warning(self.instance, "Failed", f"Server is not reachable. Error: {server_reachable_result[1][0]}")
 
   def load_dataverse_list(self) -> None:
     server_url = self.dataverseServerLineEdit.text()
