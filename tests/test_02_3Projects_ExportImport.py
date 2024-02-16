@@ -169,7 +169,7 @@ class TestStringMethods(unittest.TestCase):
     self.assertEqual(status[:21],'Success: exported 20 ','Export unsuccessful')
 
     # verify eln
-    print('\n\n---------------\nVerification')
+    print('\n\nEnd export\n----------------------\nStart verification')
     test_A_File(self.fileName)
 
     # remove old

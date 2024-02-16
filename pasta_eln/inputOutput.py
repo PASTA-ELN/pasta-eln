@@ -159,7 +159,7 @@ def importELN(backend:Backend, elnFileName:str) -> str:
       if not datasetIsFolder:
         #print('  ELSE ',elnID,dataType)
         if elnName == 'PASTA ELN':
-          if elnID.endswith('datastructure.json'):
+          if elnID.endswith('data_hierarchy.json'):
             return 0
           parentIDList = [i['@id'] for i in graph if 'hasPart' in i and {'@id':'./'+elnID} in i['hasPart']]
           if not parentIDList: #if no parent found, aka for remote data
@@ -273,7 +273,7 @@ def exportELN(backend:Backend, projectID:str, fileName:str='', dTypes:list[str]=
     pathUsed = True
     if path is None:
       pathUsed = False
-      path = './'+dirNameProject+'/'+doc['-type'][0]+createDirName(doc['-name'], 'x0', 0)
+      path = './'+dirNameProject+'/'+doc['_id']
     if not path.startswith(dirNameProject) and not path.startswith('http') and pathUsed:
       filesNotInProject.append(path)
     if not path.startswith('http') and pathUsed:
@@ -301,7 +301,14 @@ def exportELN(backend:Backend, projectID:str, fileName:str='', dTypes:list[str]=
     return path, docMain, docSupp
 
 
-  def append(graph: list[dict[str,Any]], doc: dict[str,Any]) -> None:
+  def appendDocToGraph(graph: list[dict[str,Any]], doc: dict[str,Any]) -> None:
+    """
+    Append a document / dictionary to a graph
+
+    Args:
+      graph (list): graph to be appended to
+      doc   (dict): document to append to graph
+    """
     idsInGraph = [i['@id'] for i in graph]
     if doc['@id'] not in idsInGraph:
       graph.append(doc)
@@ -355,7 +362,7 @@ def exportELN(backend:Backend, projectID:str, fileName:str='', dTypes:list[str]=
                          }
       elnFile.writestr(f'{dirNameProject}/{pathMetadata[2:]}', zipContent)
       docMain['@type'] = 'Dataset'
-      append(graph, roCrateMetadata)
+      appendDocToGraph(graph, roCrateMetadata)
 
     fullPath = backend.basePath/path
     if path is not None and fullPath.exists() and fullPath.is_file():
@@ -376,7 +383,7 @@ def exportELN(backend:Backend, projectID:str, fileName:str='', dTypes:list[str]=
       docMain['@type'] = 'Dataset'
       docMain['@id'] = docMain['@id'] if docMain['@id'].endswith('/') else f"{docMain['@id']}/"
 
-    append(graph, docMain)
+    appendDocToGraph(graph, docMain)
     return docMain['@id']
 
   # == MAIN FUNCTION ==
@@ -442,8 +449,8 @@ def exportELN(backend:Backend, projectID:str, fileName:str='', dTypes:list[str]=
     }
     graphMaster.append(masterNodeRoot)
     zipContent = json.dumps(backend.db.getDoc('-dataHierarchy-'))
-    dataStructureInfo = {
-        '@id':  f'./{dirNameProject}/datastructure.json',
+    dataHierarchyInfo = {
+        '@id':  f'./{dirNameProject}/data_hierarchy.json',
         '@type': 'File',
         'name':  'data structure',
         'description': 'data structure / schema of the stored data',
@@ -451,9 +458,9 @@ def exportELN(backend:Backend, projectID:str, fileName:str='', dTypes:list[str]=
         'sha256':hashlib.sha256(zipContent.encode()).hexdigest(),
         'datePublished': datetime.now().isoformat()
     }
-    graphMisc.append(dataStructureInfo)
-    graph[-1]['hasPart'] += [{'@id': f'./{dirNameProject}/datastructure.json'}]
-    elnFile.writestr(f'{dirNameProject}/{dirNameProject}/datastructure.json', zipContent)
+    graphMisc.append(dataHierarchyInfo)
+    graph[-1]['hasPart'] += [{'@id': f'./{dirNameProject}/data_hierarchy.json'}]
+    elnFile.writestr(f'{dirNameProject}/{dirNameProject}/data_hierarchy.json', zipContent)
 
     # ------------------ copy data-files --------------------------
     # datafiles are already in the graph-graph: only copy and no addition to graph
@@ -471,6 +478,7 @@ def exportELN(backend:Backend, projectID:str, fileName:str='', dTypes:list[str]=
     #finalize file
     index['@graph'] = graphMaster+graph+graphMisc
     elnFile.writestr(f'{dirNameProject}/ro-crate-metadata.json', json.dumps(index))
+    print(json.dumps(index, indent=3))
   # end writing zip file
   # temporary json output
   # with open(fileName[:-3]+'json','w', encoding='utf-8') as fOut:
