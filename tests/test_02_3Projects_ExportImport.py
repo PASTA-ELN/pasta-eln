@@ -166,7 +166,7 @@ class TestStringMethods(unittest.TestCase):
     self.fileName = str(Path.home()/'temporary_pastaTest.eln')
     status = exportELN(self.be, idProj, self.fileName, ['procedure','measurement','sample'])
     print(f'Export to: {self.fileName}\n{status}')
-    self.assertEqual(status[:21],'Success: exported 20 ','Export unsuccessful')
+    self.assertEqual(status[:21],'Success: exported 20 entries','Export unsuccessful')
 
     # verify eln
     print('\n\nEnd export\n----------------------\nStart verification')
@@ -194,8 +194,8 @@ class TestStringMethods(unittest.TestCase):
     fileCount = 0
     for _, _, files in os.walk(self.be.basePath):
       fileCount+=len(files)
-    print('Number of files 15=', fileCount)
-    self.assertEqual(fileCount, 15, 'Not 15 files exist')
+    print(f'Number of files 15 (should be) = {fileCount} (are)')
+    self.assertEqual(fileCount, 15, 'Imported entries are not 15, as they should.')
     return
 
   def tearDown(self):
