@@ -10,6 +10,12 @@ from pasta_eln import __version__
 from .backend import Backend
 from .miscTools import createDirName, generic_hash
 
+# to discuss
+# - where to store additional metadata, not in ro-crate-metadata, separate files for each entry?
+# "ro-crate-metadata.json", "sdPublisher": "@id": or name
+# how to store different versions?
+# how should the folder structure be? kadi4mat, sampleDB:
+
 # Always use RO-crate names
 # GENERAL TERMS IN ro-crate-metadata.json (None implies definitely should not be saved)
 pasta2json:dict[str,Any] = {
@@ -32,16 +38,22 @@ json2pasta = {v:k for k,v in pasta2json.items() if v is not None}
 
 
 # Special terms in other ELNs: only add the ones that are required for function for PASTA
-elabFTW = {
-  'elabid':'_id',
-  'title':'-name',
-  'tags':'-tags',
-  'lastchange':'-date',
-  'userid':'-user',
-  'metadata':'metaUser',
-  'id':'_id',
-  'category': '-type',
-  'dateCreated': '-date'
+specialTerms = {
+    'elabFTW': {
+      # 'elabid':'_id',
+      # 'title':'-name',
+      # 'tags':'-tags',
+      # 'lastchange':'-date',
+      # 'userid':'-user',
+      # 'metadata':'metaUser',
+      # 'id':'_id',
+      # 'category': '-type',
+      # 'dateCreated': '-date'
+    },
+    'SampleDB':{
+      'comment':'userComment',
+      'genre': '-type'
+    }
 }
 
 
@@ -69,11 +81,13 @@ def importELN(backend:Backend, elnFileName:str) -> str:
     #find information from master node
     rocrateNode = [i for i in graph if i["@id"].endswith("ro-crate-metadata.json")][0]
     if 'sdPublisher' in rocrateNode:
-      elnName     = rocrateNode['sdPublisher']['name']
+      elnName     = rocrateNode['sdPublisher'].get('name', '')
+      if elnName == '':
+        elnName     = rocrateNode['sdPublisher'].get('@id', '')
     elnVersion = rocrateNode['version'] if 'version' in rocrateNode else ''
     logging.info('Import %s %s', elnName, elnVersion)
-    if elnName=='eLabFTW':
-      json2pasta.update(elabFTW)
+    if elnName!='PASTA ELN':
+      json2pasta.update(specialTerms.get(elnName, {}))
     logging.info('ELN and translator: %s %s', elnName, str(json2pasta))
     mainNode    = [i for i in graph if i["@id"]=="./"][0]
 
@@ -100,11 +114,11 @@ def importELN(backend:Backend, elnFileName:str) -> str:
       for key, value in inputData.items():
         if key in ['@id','@type','hasPart','author','contentSize', 'sha256']:
           continue
-        if key in json2pasta:
+        if key in json2pasta:  #use known translation
           output[json2pasta[key]] = value
-        else:
-          print(f'**Warning: could not translate: {key}   from eln:{elnName}')
-          output[f'imported_{key}'] = value
+        else:                  #keep name, only prevent causes for errors
+          key = f'imported_{key}' if key.startswith(('-','_')) else key
+          output[key] = value
       return output, elnID, children, dataType
 
 
@@ -144,8 +158,8 @@ def importELN(backend:Backend, elnFileName:str) -> str:
         elif elnName == 'eLabFTW':
           supplementalInfo = Path(dirName)/elnID/'export-elabftw.json'
         else:
-          print('**ERROR could not identify elnName', elnName)
-          return -1
+          print('**Info: no additional information in', elnName)
+          supplementalInfo = Path('')
         if supplementalInfo.as_posix() in elnFile.namelist():
           datasetIsFolder = True
           with elnFile.open(supplementalInfo.as_posix()) as fIn:
@@ -172,18 +186,20 @@ def importELN(backend:Backend, elnFileName:str) -> str:
         elif elnName == 'eLabFTW' and elnID.endswith('export-elabftw.json'):
           return 0
         elif fullPath is not None:
-          print('**ERROR got a file which I do not understand ',elnID)
-          target = open(fullPath, "wb")
-          source = elnFile.open(f'{dirName}/{elnID}')
-          with source, target:  #extract one file to its target directly
-            shutil.copyfileobj(source, target)
+          if f'{dirName}/{elnID}' in elnFile.namelist():  #could be directory, nothing to copy then
+            target = open(fullPath, "wb")
+            source = elnFile.open(f'{dirName}/{elnID}')
+            with source, target:  #extract one file to its target directly
+              shutil.copyfileobj(source, target)
       # save
+      # ALL ELNS
+      if '-tags' not in doc:
+        doc['-tags'] = []
+      else:
+        doc['-tags'] = [i.strip() for i in doc['-tags'].split(',')]
+      # PASTA_ELN
       if elnName == 'PASTA ELN':
         doc['-user'] = '_'
-        if '-tags' not in doc:
-          doc['-tags'] = []
-        else:
-          doc['-tags'] = doc['-tags'].split(',')
         if datasetIsFolder and fullPath is not None:
           fullPath.mkdir(exist_ok=True)
           with open(fullPath/'.id_pastaELN.json', 'w', encoding='utf-8') as fOut:
@@ -206,14 +222,17 @@ def importELN(backend:Backend, elnFileName:str) -> str:
         if dataType.lower()=='dataset':
           docType = 'x'+str(len(elnID.split('/')) - 1)
           backend.cwd = backend.basePath / Path(elnID).parent
+          if not backend.cwd.exists():
+            backend.cwd = backend.cwd.parent
         else:
           docType = '-'
         if docType=='x0':
           backend.hierStack = []
         if '_id' in doc:
           doc['externalID'] = doc.pop('_id')
+        print('Want to add doc:',doc, docType, backend.basePath, backend.cwd)
         docID = backend.addData(docType, doc)
-        if elnName != 'PASTA ELN' and docID[0]=='x':
+        if docID[0]=='x':
           backend.hierStack += [docID]
           backend.cwd        = backend.basePath/ backend.db.getDoc(docID)['-branch'][0]['path']
 

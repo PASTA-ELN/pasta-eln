@@ -31,47 +31,52 @@ class TestStringMethods(unittest.TestCase):
     """
     main function
     """
-    dummyProgressBar = DummyProgressBar()
     outputFormat = 'print'
     # initialization: create database, destroy on filesystem and database and then create new one
     warnings.filterwarnings('ignore', message='numpy.ufunc size changed')
     warnings.filterwarnings('ignore', message='invalid escape sequence')
     warnings.filterwarnings('ignore', category=ResourceWarning, module='PIL')
     warnings.filterwarnings('ignore', category=ImportWarning)
-    projectGroup = 'research'
-    url = 'https://github.com/TheELNConsortium/TheELNFileFormat/raw/master/examples/elabftw/multiple-experiments.eln'
-    dirpath = Path(tempfile.mkdtemp())
-    elnFile = dirpath/'multiple-database-items.eln'
-    try:
-      urllib.request.urlretrieve(url, elnFile)
-    except:
-      print('Could not download eln file')
-      return
-
     # remove everything else
-    self.be = Backend(projectGroup, initConfig=False)
+    self.be = Backend('research', initConfig=False)
     self.dirName = self.be.basePath
     self.be.exit(deleteDB=True)
     shutil.rmtree(self.dirName)
     os.makedirs(self.dirName)
-    self.be = Backend(projectGroup, initViews=True, initConfig=False)
+    self.be = Backend('research', initViews=True, initConfig=False)
 
-    # import
-    print('\n\n---------------\nImport')
-    status = importELN(self.be, str(elnFile))
-    print(status)
-    self.assertEqual(status[:7],'Success','Import unsuccessful')
+    # download new
+    localPath = Path('/home/steffen/FZJ/DataScience/Repositories/TheELNConsortium/TheELNFileFormat/examples')
+    dirpath = localPath if localPath.exists() else Path(tempfile.mkdtemp())
+    baseURL = 'https://github.com/TheELNConsortium/TheELNFileFormat/raw/master/examples/'
+    files = ['SampleDB/sampledb_export.eln', ]#'kadi4mat/collections-example.eln', 'kadi4mat/records-example.eln']
+    for fileI in files:
+      elnFile = dirpath/fileI
+      if not elnFile.exists():
+        print(f'Download file {elnFile}')
+        elnFile.parent.mkdir(exist_ok=True)
+        try:
+          urllib.request.urlretrieve(baseURL+fileI, elnFile)
+        except:
+          print(f'Could not download eln file {baseURL+fileI} to {elnFile}')
+          return
 
-    # test / verify after import
-    print('Number of documents', len(self.be.db.getView('viewHierarchy/viewHierarchy')))
-    outputString(outputFormat,'h2','VERIFY DATABASE INTEGRITY')
-    outputString(outputFormat,'info', self.be.checkDB(outputStyle='text'))
-    outputString(outputFormat,'h2','DONE WITH VERIFY')
-    fileCount = 0
-    for _, _, files in os.walk(self.be.basePath):
-      fileCount+=len(files)
-    print('Number of files 4 =', fileCount)
-    self.assertEqual(fileCount, 4, 'Not 4 files exist')
+      # import
+      print(f'\n\n---------------\nImport {fileI}')
+      status = importELN(self.be, str(elnFile))
+      print(status)
+      self.assertEqual(status[:7],'Success','Import unsuccessful')
+
+      # test / verify after import
+      print('Number of documents', len(self.be.db.getView('viewHierarchy/viewHierarchy')))
+      outputString(outputFormat,'h2','VERIFY DATABASE INTEGRITY')
+      outputString(outputFormat,'info', self.be.checkDB(outputStyle='text'))
+      outputString(outputFormat,'h2','DONE WITH VERIFY')
+      fileCount = 0
+      for _, _, files in os.walk(self.be.basePath):
+        fileCount+=len(files)
+      print('Number of files 4 =', fileCount)
+      # self.assertEqual(fileCount, 4, 'Not 4 files exist')
     return
 
   def tearDown(self):

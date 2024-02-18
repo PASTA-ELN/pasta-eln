@@ -166,7 +166,7 @@ class TestStringMethods(unittest.TestCase):
     self.fileName = str(Path.home()/'temporary_pastaTest.eln')
     status = exportELN(self.be, idProj, self.fileName, ['procedure','measurement','sample'])
     print(f'Export to: {self.fileName}\n{status}')
-    self.assertEqual(status[:21],'Success: exported 20 entries','Export unsuccessful')
+    self.assertEqual(status[:21],'Success: exported 20 ','Export unsuccessful')
 
     # verify eln
     print('\n\nEnd export\n----------------------\nStart verification')
