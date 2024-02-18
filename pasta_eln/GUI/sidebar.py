@@ -26,7 +26,9 @@ class Sidebar(QWidget):
     # GUI elements
     mainL = QVBoxLayout()
     mainL.setContentsMargins(space['s'],space['s'],space['0'],space['s'])
-    mainL.setSpacing(0)
+    mainL.setSpacing(15)
+    if self.comm.backend.configuration['GUI']['showProjectBtn']=='Yes':
+      TextButton('List projects', self, [Command.LIST_PROJECTS], mainL, 'Show list of all projects')
     _, self.projectsListL = widgetAndLayout('V', mainL, spacing='s')
     # projectListW, self.projectsListL = widgetAndLayout('V', None, spacing='s')
     # scrollSection = QScrollArea()
@@ -147,6 +149,8 @@ class Sidebar(QWidget):
     """
     if command[0] is Command.LIST_DOCTYPE:
       self.comm.changeTable.emit(command[1], command[2])
+    elif command[0] is Command.LIST_PROJECTS:
+      self.comm.changeTable.emit('x0', '')
     elif command[0] is Command.SHOW_PROJECT:
       projID = command[1]
       item   = command[2]
@@ -219,3 +223,4 @@ class Command(Enum):
   SHOW_PROJECT = 2
   SCAN_PROJECT = 3
   SHOW_FOLDER  = 4
+  LIST_PROJECTS= 5
