@@ -21,14 +21,10 @@ from tests.app_tests.common.fixtures import attachments_column_names, data_hiera
 
 class TestDataHierarchyEditorDialog(object):
 
-  def test_component_launch_should_display_all_ui_elements(self,
-                                                           pasta_db_mock: pasta_db_mock,
+  def test_component_launch_should_display_all_ui_elements(self, pasta_db_mock: pasta_db_mock,
                                                            # Added to import fixture by other tests
                                                            data_hierarchy_editor_gui: tuple[
-                                                             QApplication,
-                                                             QtWidgets.QDialog,
-                                                             DataHierarchyEditorDialog,
-                                                             QtBot]):
+                                                             QApplication, QtWidgets.QDialog, DataHierarchyEditorDialog, QtBot]):
     app, ui_dialog, ui_form, qtbot = data_hierarchy_editor_gui
     assert ui_form.headerLabel is not None, "Header not loaded!"
     assert ui_form.typeLabel is not None, "Data type label not loaded!"
@@ -49,60 +45,45 @@ class TestDataHierarchyEditorDialog(object):
     assert ui_form.typeAttachmentsTableView.isHidden() is True, "Type attachments table view should not be shown!"
     assert ui_form.addAttachmentPushButton.isHidden() is True, "addAttachmentPushButton should not be shown!"
 
-  @pytest.mark.parametrize(
-    "type_to_select, metadata_group_selected, metadata", [
-      ('Structure level 0', 'default', ['-name', 'status', 'objective', '-tags', 'comment']),
+  @pytest.mark.parametrize("type_to_select, metadata_group_selected, metadata",
+    [('Structure level 0', 'default', ['-name', 'status', 'objective', '-tags', 'comment']),
       ('Structure level 1', 'default', ['-name', '-tags', 'comment']),
       ('Structure level 2', 'default', ['-name', '-tags', 'comment']),
       ('measurement', 'default', ['-name', '-tags', 'comment', '-type', 'image', '#_curated', 'sample', 'procedure']),
       ('sample', 'default', ['-name', 'chemistry', '-tags', 'comment', 'qrCode']),
       ('procedure', 'default', ['-name', '-tags', 'comment', 'content']),
-      ('instrument', 'default', ['-name', '-tags', 'comment', 'vendor'])
-    ])
-  def test_type_select_should_load_data_and_update_ui_elements(self,
-                                                               data_hierarchy_editor_gui: tuple[
-                                                                 QApplication,
-                                                                 QtWidgets.QDialog,
-                                                                 DataHierarchyEditorDialog,
-                                                                 QtBot],
-                                                               type_to_select: str,
-                                                               metadata_group_selected: str,
-                                                               metadata: list):
+      ('instrument', 'default', ['-name', '-tags', 'comment', 'vendor'])])
+  def test_type_select_should_load_data_and_update_ui_elements(self, data_hierarchy_editor_gui: tuple[
+    QApplication, QtWidgets.QDialog, DataHierarchyEditorDialog, QtBot], type_to_select: str,
+                                                               metadata_group_selected: str, metadata: list):
     app, ui_dialog, ui_form, qtbot = data_hierarchy_editor_gui
     ui_form.typeComboBox.setCurrentText(type_to_select)
     assert ui_form.typeComboBox.currentText() == type_to_select, "Type combo box not selected!"
     assert ui_form.metadataGroupComboBox.currentText() == metadata_group_selected, "Metadata group combo box not selected!"
-    selected_metadata = []
     model = ui_form.typeMetadataTableView.model()
-    for i in range(model.rowCount()):
-      selected_metadata.append(model.data(model.index(i, 0), Qt.DisplayRole))
+    selected_metadata = [model.data(model.index(i, 0), Qt.DisplayRole) for i in range(model.rowCount())]
     assert metadata == selected_metadata, "Selected metadata not as expected!"
 
-  def test_component_launch_should_load_data_hierarchy_data(self,
-                                                            data_hierarchy_editor_gui: tuple[
-                                                              QApplication,
-                                                              QtWidgets.QDialog,
-                                                              DataHierarchyEditorDialog,
-                                                              QtBot],
+  def test_component_launch_should_load_data_hierarchy_data(self, data_hierarchy_editor_gui: tuple[
+    QApplication, QtWidgets.QDialog, DataHierarchyEditorDialog, QtBot],
                                                             data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                             metadata_column_names: metadata_column_names,
                                                             attachments_column_names: attachments_column_names):
     app, ui_dialog, ui_form, qtbot = data_hierarchy_editor_gui
-    assert ([ui_form.typeComboBox.itemText(i) for i in range(ui_form.typeComboBox.count())]
-            == get_types_for_display(data_hierarchy_doc_mock.types_list())), "Type combo box not loaded!"
-    assert (adapt_type(ui_form.typeComboBox.currentText())
-            == data_hierarchy_doc_mock.types_list()[0]), "Type combo box should be selected to first item"
+    assert ([ui_form.typeComboBox.itemText(i) for i in range(ui_form.typeComboBox.count())] == get_types_for_display(
+      data_hierarchy_doc_mock.types_list())), "Type combo box not loaded!"
+    assert (adapt_type(ui_form.typeComboBox.currentText()) == data_hierarchy_doc_mock.types_list()[
+      0]), "Type combo box should be selected to first item"
     selected_type = data_hierarchy_doc_mock.types()[adapt_type(ui_form.typeComboBox.currentText())]
-    assert (ui_form.typeDisplayedTitleLineEdit.text() ==
-            selected_type["title"]), "Data type displayedTitle line edit not loaded!"
-    assert (ui_form.typeIriLineEdit.text() ==
-            selected_type["IRI"]), "Data type IRI line edit not loaded!"
+    assert (ui_form.typeDisplayedTitleLineEdit.text() == selected_type[
+      "title"]), "Data type displayedTitle line edit not loaded!"
+    assert (ui_form.typeIriLineEdit.text() == selected_type["IRI"]), "Data type IRI line edit not loaded!"
 
     categories = list(selected_type["meta"].keys())
-    assert ([ui_form.metadataGroupComboBox.itemText(i) for i in range(ui_form.metadataGroupComboBox.count())]
-            == categories), "metadataGroupComboBox not loaded!"
-    assert (ui_form.metadataGroupComboBox.currentText()
-            == categories[0]), "metadataGroupComboBox should be selected to first item"
+    assert ([ui_form.metadataGroupComboBox.itemText(i) for i in
+             range(ui_form.metadataGroupComboBox.count())] == categories), "metadataGroupComboBox not loaded!"
+    assert (ui_form.metadataGroupComboBox.currentText() == categories[
+      0]), "metadataGroupComboBox should be selected to first item"
     self.check_table_contents(attachments_column_names, metadata_column_names, selected_type, ui_form)
 
   @staticmethod
@@ -113,9 +94,8 @@ class TestDataHierarchyEditorDialog(object):
         index = model.index(row, column)
         if column_names[column] in data:
           cell_data = data[column_names[column]]
-          assert (model.data(index, Qt.DisplayRole)
-                  == ','.join(cell_data) if isinstance(cell_data, list) else cell_data), \
-            f"{column_names[column]} not loaded!"
+          assert (model.data(index, Qt.DisplayRole) == ','.join(cell_data) if isinstance(cell_data,
+                                                                                         list) else cell_data), f"{column_names[column]} not loaded!"
         else:
           assert model.data(index, Qt.DisplayRole) is None, f"{column_names[column]} should be None!"
 
@@ -131,10 +111,7 @@ class TestDataHierarchyEditorDialog(object):
   def test_component_add_new_type_with_loaded_data_hierarchy_should_display_create_new_type_window(self,
                                                                                                    data_hierarchy_editor_gui:
                                                                                                    tuple[
-                                                                                                     QApplication,
-                                                                                                     QtWidgets.QDialog,
-                                                                                                     DataHierarchyEditorDialog,
-                                                                                                     QtBot],
+                                                                                                     QApplication, QtWidgets.QDialog, DataHierarchyEditorDialog, QtBot],
                                                                                                    data_hierarchy_doc_mock: data_hierarchy_doc_mock):
     app, ui_dialog, ui_form, qtbot = data_hierarchy_editor_gui
     assert ui_form.create_type_dialog.buttonBox.isVisible() is False, "Create new type dialog should not be shown!"
@@ -144,15 +121,11 @@ class TestDataHierarchyEditorDialog(object):
   def test_component_delete_new_type_without_data_hierarchy_loaded_should_show_error_message(self,
                                                                                              data_hierarchy_editor_gui:
                                                                                              tuple[
-                                                                                               QApplication,
-                                                                                               QtWidgets.QDialog,
-                                                                                               DataHierarchyEditorDialog,
-                                                                                               QtBot],
+                                                                                               QApplication, QtWidgets.QDialog, DataHierarchyEditorDialog, QtBot],
                                                                                              data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                                                              mocker):
     app, ui_dialog, ui_form, qtbot = data_hierarchy_editor_gui
-    mock_show_message = mocker.patch(
-      "pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.show_message")
+    mock_show_message = mocker.patch("pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.show_message")
     mocker.patch.object(ui_form, "data_hierarchy_loaded", False)
     # Select a non-structural type in the type combo box, in order to enable the delete button
     ui_form.typeComboBox.setCurrentText("measurement")
@@ -164,10 +137,7 @@ class TestDataHierarchyEditorDialog(object):
   def test_component_delete_selected_type_with_loaded_data_hierarchy_should_delete_and_update_ui(self,
                                                                                                  data_hierarchy_editor_gui:
                                                                                                  tuple[
-                                                                                                   QApplication,
-                                                                                                   QtWidgets.QDialog,
-                                                                                                   DataHierarchyEditorDialog,
-                                                                                                   QtBot],
+                                                                                                   QApplication, QtWidgets.QDialog, DataHierarchyEditorDialog, QtBot],
                                                                                                  data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                                                                  metadata_column_names: metadata_column_names,
                                                                                                  attachments_column_names: attachments_column_names):
@@ -179,29 +149,24 @@ class TestDataHierarchyEditorDialog(object):
     current_selected_type = ui_form.typeComboBox.currentText()
     previous_types_count = ui_form.typeComboBox.count()
     qtbot.mouseClick(ui_form.deleteTypePushButton, Qt.LeftButton)
-    assert (current_selected_type not in [ui_form.typeComboBox.itemText(i)
-                                          for i in range(ui_form.typeComboBox.count())]), \
-      f"Deleted type:{current_selected_type} should not exist in combo list!"
-    assert (previous_types_count - 1 == ui_form.typeComboBox.count()), \
-      f"Combo list should have {previous_types_count - 1} items!"
-    assert adapt_type(ui_form.typeComboBox.currentText()) == data_hierarchy_doc_mock.types_list()[0], \
-      "Type combo box should be selected to first structural item"
+    assert (current_selected_type not in [ui_form.typeComboBox.itemText(i) for i in range(
+      ui_form.typeComboBox.count())]), f"Deleted type:{current_selected_type} should not exist in combo list!"
+    assert (
+          previous_types_count - 1 == ui_form.typeComboBox.count()), f"Combo list should have {previous_types_count - 1} items!"
+    assert adapt_type(ui_form.typeComboBox.currentText()) == data_hierarchy_doc_mock.types_list()[
+      0], "Type combo box should be selected to first structural item"
     selected_type = data_hierarchy_doc_mock.types()[adapt_type(ui_form.typeComboBox.currentText())]
-    assert ui_form.typeDisplayedTitleLineEdit.text() == selected_type["title"], \
-      "Type title line edit should be selected to first structural item"
-    assert ui_form.typeIriLineEdit.text() == selected_type["IRI"], \
-      "Type IRI line edit should be selected to selected type IRI"
-    assert ui_form.metadataGroupComboBox.currentText() == list(selected_type["meta"].keys())[0], \
-      "Type metadata group combo box should be selected to first item in the selected type"
+    assert ui_form.typeDisplayedTitleLineEdit.text() == selected_type[
+      "title"], "Type title line edit should be selected to first structural item"
+    assert ui_form.typeIriLineEdit.text() == selected_type[
+      "IRI"], "Type IRI line edit should be selected to selected type IRI"
+    assert ui_form.metadataGroupComboBox.currentText() == list(selected_type["meta"].keys())[
+      0], "Type metadata group combo box should be selected to first item in the selected type"
     self.check_table_contents(attachments_column_names, metadata_column_names, selected_type, ui_form)
 
   def test_component_add_new_type_button_click_should_display_create_new_type_window(self,
-                                                                                     data_hierarchy_editor_gui:
-                                                                                     tuple[
-                                                                                       QApplication,
-                                                                                       QtWidgets.QDialog,
-                                                                                       DataHierarchyEditorDialog,
-                                                                                       QtBot],
+                                                                                     data_hierarchy_editor_gui: tuple[
+                                                                                       QApplication, QtWidgets.QDialog, DataHierarchyEditorDialog, QtBot],
                                                                                      data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                                                      metadata_column_names: metadata_column_names,
                                                                                      attachments_column_names: attachments_column_names):
@@ -216,10 +181,7 @@ class TestDataHierarchyEditorDialog(object):
   def test_component_create_new_type_structural_type_should_add_new_type_with_displayed_title(self,
                                                                                               data_hierarchy_editor_gui:
                                                                                               tuple[
-                                                                                                QApplication,
-                                                                                                QtWidgets.QDialog,
-                                                                                                DataHierarchyEditorDialog,
-                                                                                                QtBot],
+                                                                                                QApplication, QtWidgets.QDialog, DataHierarchyEditorDialog, QtBot],
                                                                                               data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                                                               metadata_column_names: metadata_column_names,
                                                                                               attachments_column_names: attachments_column_names):
@@ -244,10 +206,7 @@ class TestDataHierarchyEditorDialog(object):
   def test_component_create_new_type_normal_type_should_add_new_type_with_displayed_title(self,
                                                                                           data_hierarchy_editor_gui:
                                                                                           tuple[
-                                                                                            QApplication,
-                                                                                            QtWidgets.QDialog,
-                                                                                            DataHierarchyEditorDialog,
-                                                                                            QtBot],
+                                                                                            QApplication, QtWidgets.QDialog, DataHierarchyEditorDialog, QtBot],
                                                                                           data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                                                           metadata_column_names: metadata_column_names,
                                                                                           attachments_column_names: attachments_column_names):
@@ -268,14 +227,9 @@ class TestDataHierarchyEditorDialog(object):
     assert ui_form.typeComboBox.currentText() == "Title", "Data type combo box should be newly added type title"
     assert ui_form.typeDisplayedTitleLineEdit.text() == "Displayed Title", "Data type combo box should be newly added type displayedTitle"
 
-  def test_component_create_new_type_normal_type_with_empty_title_should_warn_user(self,
-                                                                                   mocker,
-                                                                                   data_hierarchy_editor_gui:
-                                                                                   tuple[
-                                                                                     QApplication,
-                                                                                     QtWidgets.QDialog,
-                                                                                     DataHierarchyEditorDialog,
-                                                                                     QtBot],
+  def test_component_create_new_type_normal_type_with_empty_title_should_warn_user(self, mocker,
+                                                                                   data_hierarchy_editor_gui: tuple[
+                                                                                     QApplication, QtWidgets.QDialog, DataHierarchyEditorDialog, QtBot],
                                                                                    data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                                                    metadata_column_names: metadata_column_names,
                                                                                    attachments_column_names: attachments_column_names):
@@ -316,28 +270,20 @@ class TestDataHierarchyEditorDialog(object):
     qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(ui_form.create_type_dialog.buttonBox.Ok),
                      Qt.LeftButton)
     assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
-    ui_form.logger.warning.assert_has_calls([
-      mocker.call("Enter non-null/valid title!!....."),
-      mocker.call("Enter non-null/valid title!!.....")])
-    ui_form.message_box.setText.assert_has_calls([
-      mocker.call("Enter non-null/valid title!!....."),
-      mocker.call("Enter non-null/valid title!!.....")])
-    ui_form.message_box.exec.assert_has_calls([
-      mocker.call(),
-      mocker.call()])
-    ui_form.message_box.setIcon.assert_has_calls([
-      mocker.call(QtWidgets.QMessageBox.Warning),
-      mocker.call(QtWidgets.QMessageBox.Warning)])
+    ui_form.logger.warning.assert_has_calls(
+      [mocker.call("Enter non-null/valid title!!....."), mocker.call("Enter non-null/valid title!!.....")])
+    ui_form.message_box.setText.assert_has_calls(
+      [mocker.call("Enter non-null/valid title!!....."), mocker.call("Enter non-null/valid title!!.....")])
+    ui_form.message_box.exec.assert_has_calls([mocker.call(), mocker.call()])
+    ui_form.message_box.setIcon.assert_has_calls(
+      [mocker.call(QtWidgets.QMessageBox.Warning), mocker.call(QtWidgets.QMessageBox.Warning)])
     assert ui_form.typeComboBox.currentText() != None, "Data type combo box should not be None"
     assert ui_form.typeDisplayedTitleLineEdit.text() != "displayedTitle", "Data type combo box should not be newly added type displayedTitle"
 
   def test_component_create_new_type_reject_should_not_add_new_type_with_displayed_title(self,
                                                                                          data_hierarchy_editor_gui:
                                                                                          tuple[
-                                                                                           QApplication,
-                                                                                           QtWidgets.QDialog,
-                                                                                           DataHierarchyEditorDialog,
-                                                                                           QtBot],
+                                                                                           QApplication, QtWidgets.QDialog, DataHierarchyEditorDialog, QtBot],
                                                                                          data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                                                          metadata_column_names: metadata_column_names,
                                                                                          attachments_column_names: attachments_column_names):
@@ -361,10 +307,7 @@ class TestDataHierarchyEditorDialog(object):
   def test_component_cancel_button_click_after_delete_group_should_not_modify_data_hierarchy_document_data(self,
                                                                                                            data_hierarchy_editor_gui:
                                                                                                            tuple[
-                                                                                                             QApplication,
-                                                                                                             QtWidgets.QDialog,
-                                                                                                             DataHierarchyEditorDialog,
-                                                                                                             QtBot],
+                                                                                                             QApplication, QtWidgets.QDialog, DataHierarchyEditorDialog, QtBot],
                                                                                                            data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                                                                            metadata_column_names: metadata_column_names,
                                                                                                            attachments_column_names: attachments_column_names):
@@ -373,21 +316,16 @@ class TestDataHierarchyEditorDialog(object):
     current_selected_type_metadata_group = ui_form.metadataGroupComboBox.currentText()
     previous_types_metadata_group_count = ui_form.metadataGroupComboBox.count()
     qtbot.mouseClick(ui_form.deleteMetadataGroupPushButton, Qt.LeftButton)
-    assert (current_selected_type_metadata_group not in [ui_form.metadataGroupComboBox.itemText(i)
-                                                         for i in range(ui_form.metadataGroupComboBox.count())]), \
-      f"Deleted group: {current_selected_type_metadata_group} should not exist in combo list!"
-    assert (previous_types_metadata_group_count - 1 == ui_form.metadataGroupComboBox.count()), \
-      f"Combo list should have {previous_types_metadata_group_count - 1} items!"
+    assert (current_selected_type_metadata_group not in [ui_form.metadataGroupComboBox.itemText(i) for i in range(
+      ui_form.metadataGroupComboBox.count())]), f"Deleted group: {current_selected_type_metadata_group} should not exist in combo list!"
+    assert (
+          previous_types_metadata_group_count - 1 == ui_form.metadataGroupComboBox.count()), f"Combo list should have {previous_types_metadata_group_count - 1} items!"
     qtbot.mouseClick(ui_form.cancelPushButton, Qt.LeftButton)
     assert data_hierarchy_doc_mock.types() != ui_form.data_hierarchy_types, "Data Hierarchy Document should not be modified!"
 
   def test_component_delete_type_after_creation_of_new_structural_type_should_succeed(self,
-                                                                                      data_hierarchy_editor_gui:
-                                                                                      tuple[
-                                                                                        QApplication,
-                                                                                        QtWidgets.QDialog,
-                                                                                        DataHierarchyEditorDialog,
-                                                                                        QtBot],
+                                                                                      data_hierarchy_editor_gui: tuple[
+                                                                                        QApplication, QtWidgets.QDialog, DataHierarchyEditorDialog, QtBot],
                                                                                       data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                                                       metadata_column_names: metadata_column_names,
                                                                                       attachments_column_names: attachments_column_names):
@@ -410,59 +348,48 @@ class TestDataHierarchyEditorDialog(object):
     current_selected_type = ui_form.typeComboBox.currentText()
     previous_types_count = ui_form.typeComboBox.count()
     qtbot.mouseClick(ui_form.deleteTypePushButton, Qt.LeftButton)
-    assert (current_selected_type not in [ui_form.typeComboBox.itemText(i)
-                                          for i in range(ui_form.typeComboBox.count())]), \
-      f"Deleted type:{current_selected_type} should not exist in combo list!"
-    assert (previous_types_count - 1 == ui_form.typeComboBox.count()), \
-      f"Combo list should have {previous_types_count - 1} items!"
-    assert adapt_type(ui_form.typeComboBox.currentText()) == data_hierarchy_doc_mock.types_list()[0], \
-      "Type combo box should be selected to first structural item"
+    assert (current_selected_type not in [ui_form.typeComboBox.itemText(i) for i in range(
+      ui_form.typeComboBox.count())]), f"Deleted type:{current_selected_type} should not exist in combo list!"
+    assert (
+          previous_types_count - 1 == ui_form.typeComboBox.count()), f"Combo list should have {previous_types_count - 1} items!"
+    assert adapt_type(ui_form.typeComboBox.currentText()) == data_hierarchy_doc_mock.types_list()[
+      0], "Type combo box should be selected to first structural item"
     selected_type = data_hierarchy_doc_mock.types()[adapt_type(ui_form.typeComboBox.currentText())]
-    assert ui_form.typeDisplayedTitleLineEdit.text() == selected_type["title"], \
-      "Type displayedTitle line edit should be selected to first structural item"
-    assert ui_form.typeIriLineEdit.text() == selected_type["IRI"], \
-      "Type IRI line edit should be selected to IRI in selected type"
-    assert ui_form.metadataGroupComboBox.currentText() == list(selected_type["meta"].keys())[0], \
-      "Type metadata group combo box should be selected to first metadata group"
+    assert ui_form.typeDisplayedTitleLineEdit.text() == selected_type[
+      "title"], "Type displayedTitle line edit should be selected to first structural item"
+    assert ui_form.typeIriLineEdit.text() == selected_type[
+      "IRI"], "Type IRI line edit should be selected to IRI in selected type"
+    assert ui_form.metadataGroupComboBox.currentText() == list(selected_type["meta"].keys())[
+      0], "Type metadata group combo box should be selected to first metadata group"
     self.check_table_contents(attachments_column_names, metadata_column_names, selected_type, ui_form)
 
-  def test_component_save_button_click_after_delete_group_should_modify_data_hierarchy_document_data(self,
-                                                                                                     mocker,
+  def test_component_save_button_click_after_delete_group_should_modify_data_hierarchy_document_data(self, mocker,
                                                                                                      data_hierarchy_editor_gui:
                                                                                                      tuple[
-                                                                                                       QApplication,
-                                                                                                       QtWidgets.QDialog,
-                                                                                                       DataHierarchyEditorDialog,
-                                                                                                       QtBot],
+                                                                                                       QApplication, QtWidgets.QDialog, DataHierarchyEditorDialog, QtBot],
                                                                                                      data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                                                                      metadata_column_names: metadata_column_names,
                                                                                                      attachments_column_names: attachments_column_names):
     app, ui_dialog, ui_form, qtbot = data_hierarchy_editor_gui
     assert ui_form.create_type_dialog.buttonBox.isVisible() is False, "Create new type dialog should not be shown!"
-    mock_show_message = mocker.patch(
-      'pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.show_message', return_value=QMessageBox.Yes)
+    mock_show_message = mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.show_message',
+      return_value=QMessageBox.Yes)
     current_selected_type_metadata_group = ui_form.metadataGroupComboBox.currentText()
     previous_types_metadata_group_count = ui_form.metadataGroupComboBox.count()
     qtbot.mouseClick(ui_form.deleteMetadataGroupPushButton, Qt.LeftButton)
-    assert (current_selected_type_metadata_group not in [ui_form.metadataGroupComboBox.itemText(i)
-                                                         for i in range(ui_form.metadataGroupComboBox.count())]), \
-      f"Deleted group : {current_selected_type_metadata_group} should not exist in combo list!"
-    assert (previous_types_metadata_group_count - 1 == ui_form.metadataGroupComboBox.count()), \
-      f"Combo list should have {previous_types_metadata_group_count - 1} items!"
+    assert (current_selected_type_metadata_group not in [ui_form.metadataGroupComboBox.itemText(i) for i in range(
+      ui_form.metadataGroupComboBox.count())]), f"Deleted group : {current_selected_type_metadata_group} should not exist in combo list!"
+    assert (
+          previous_types_metadata_group_count - 1 == ui_form.metadataGroupComboBox.count()), f"Combo list should have {previous_types_metadata_group_count - 1} items!"
     qtbot.mouseClick(ui_form.saveDataHierarchyPushButton, Qt.LeftButton)
     assert data_hierarchy_doc_mock.types() == ui_form.data_hierarchy_types, "data_hierarchy document should be modified!"
     mock_show_message.assert_called_once_with('Save will close the tool and restart the Pasta Application (Yes/No?)',
-                                              QMessageBox.Question,
-                                              QMessageBox.No | QMessageBox.Yes,
-                                              QMessageBox.Yes)
+                                              QMessageBox.Question, QMessageBox.No | QMessageBox.Yes, QMessageBox.Yes)
 
   def test_component_iri_lookup_button_click_should_show_data_hierarchy_lookup_dialog_and_set_iris_on_accept(self,
                                                                                                              data_hierarchy_editor_gui:
                                                                                                              tuple[
-                                                                                                               QApplication,
-                                                                                                               QtWidgets.QDialog,
-                                                                                                               DataHierarchyEditorDialog,
-                                                                                                               QtBot],
+                                                                                                               QApplication, QtWidgets.QDialog, DataHierarchyEditorDialog, QtBot],
                                                                                                              data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                                                                              metadata_column_names: metadata_column_names,
                                                                                                              attachments_column_names: attachments_column_names):
@@ -495,15 +422,8 @@ class TestDataHierarchyEditorDialog(object):
       lookup_dialog.selected_iris), "typeIriLineEdit should contain all selected IRIs"
 
   def test_component_iri_lookup_button_click_should_show_data_hierarchy_lookup_dialog_and_should_not_set_iris_on_cancel(
-      self,
-      data_hierarchy_editor_gui:
-      tuple[
-        QApplication,
-        QtWidgets.QDialog,
-        DataHierarchyEditorDialog,
-        QtBot],
-      data_hierarchy_doc_mock: data_hierarchy_doc_mock,
-      metadata_column_names: metadata_column_names,
+      self, data_hierarchy_editor_gui: tuple[QApplication, QtWidgets.QDialog, DataHierarchyEditorDialog, QtBot],
+      data_hierarchy_doc_mock: data_hierarchy_doc_mock, metadata_column_names: metadata_column_names,
       attachments_column_names: attachments_column_names):
     app, ui_dialog, ui_form, qtbot = data_hierarchy_editor_gui
     assert ui_form.typeIriLineEdit.text() == 'http://url.com', "typeIriLineEdit should be default test value"
@@ -535,10 +455,7 @@ class TestDataHierarchyEditorDialog(object):
   def test_delete_type_button_must_be_disabled_for_every_structural_level_except_the_last(self,
                                                                                           data_hierarchy_editor_gui:
                                                                                           tuple[
-                                                                                            QApplication,
-                                                                                            QtWidgets.QDialog,
-                                                                                            DataHierarchyEditorDialog,
-                                                                                            QtBot],
+                                                                                            QApplication, QtWidgets.QDialog, DataHierarchyEditorDialog, QtBot],
                                                                                           data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                                                           metadata_column_names: metadata_column_names,
                                                                                           attachments_column_names: attachments_column_names):
@@ -610,10 +527,7 @@ class TestDataHierarchyEditorDialog(object):
   def test_delete_of_structural_type_possible_from_xn_to_x1_must_succeed_and_x0_delete_disabled(self,
                                                                                                 data_hierarchy_editor_gui:
                                                                                                 tuple[
-                                                                                                  QApplication,
-                                                                                                  QtWidgets.QDialog,
-                                                                                                  DataHierarchyEditorDialog,
-                                                                                                  QtBot],
+                                                                                                  QApplication, QtWidgets.QDialog, DataHierarchyEditorDialog, QtBot],
                                                                                                 data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                                                                 metadata_column_names: metadata_column_names,
                                                                                                 attachments_column_names: attachments_column_names):
@@ -629,10 +543,7 @@ class TestDataHierarchyEditorDialog(object):
       qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(ui_form.create_type_dialog.buttonBox.Ok),
                        Qt.LeftButton)
 
-    loaded_types = [
-      ui_form.typeComboBox.itemText(i)
-      for i in range(ui_form.typeComboBox.count())
-    ]
+    loaded_types = [ui_form.typeComboBox.itemText(i) for i in range(ui_form.typeComboBox.count())]
     # Delete the normal types from UI
     normal_types = list(filter(lambda k: 'Structure level' not in k, loaded_types))
     for normal_type in normal_types:
@@ -644,8 +555,7 @@ class TestDataHierarchyEditorDialog(object):
           i) != normal_type, f"Deleted type:{normal_type} should not exist in combo list!"
       loaded_types.remove(normal_type)
 
-    structural_types = sorted(
-      filter(lambda k: 'Structure level' in k, loaded_types))
+    structural_types = sorted(filter(lambda k: 'Structure level' in k, loaded_types))
     assert structural_types == loaded_types, "All normal types must be deleted from UI, hence only structural types are left!"
     for _ in range(len(structural_types)):
       enabled_structural_type = max(structural_types)
@@ -667,13 +577,8 @@ class TestDataHierarchyEditorDialog(object):
     assert structural_types == loaded_types == [
       "Structure level 0"], "All structural types must be deleted from UI except 'Structure level 0'"
 
-  def test_hide_show_attachments_table_should_do_as_expected(self,
-                                                             data_hierarchy_editor_gui:
-                                                             tuple[
-                                                               QApplication,
-                                                               QtWidgets.QDialog,
-                                                               DataHierarchyEditorDialog,
-                                                               QtBot],
+  def test_hide_show_attachments_table_should_do_as_expected(self, data_hierarchy_editor_gui: tuple[
+    QApplication, QtWidgets.QDialog, DataHierarchyEditorDialog, QtBot],
                                                              data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                              metadata_column_names: metadata_column_names,
                                                              attachments_column_names: attachments_column_names):
@@ -681,32 +586,23 @@ class TestDataHierarchyEditorDialog(object):
     assert ui_form.typeAttachmentsTableView.isHidden() is True, "Attachments table should not be visible initially!"
     assert ui_form.addAttachmentPushButton.isHidden() is True, "addAttachmentPushButton should not be visible initially!"
 
-    qtbot.mouseClick(ui_form.attachmentsShowHidePushButton,
-                     Qt.LeftButton)
+    qtbot.mouseClick(ui_form.attachmentsShowHidePushButton, Qt.LeftButton)
     assert ui_form.typeAttachmentsTableView.isHidden() is False, "Attachments table should be visible now!"
     assert ui_form.addAttachmentPushButton.isHidden() is False, "addAttachmentPushButton should be visible now!"
-    qtbot.mouseClick(ui_form.attachmentsShowHidePushButton,
-                     Qt.LeftButton)
+    qtbot.mouseClick(ui_form.attachmentsShowHidePushButton, Qt.LeftButton)
     assert ui_form.typeAttachmentsTableView.isVisible() is False, "Attachments table should not be visible now!"
     assert ui_form.addAttachmentPushButton.isVisible() is False, "addAttachmentPushButton should not be visible now!"
 
-    qtbot.mouseClick(ui_form.attachmentsShowHidePushButton,
-                     Qt.LeftButton)
+    qtbot.mouseClick(ui_form.attachmentsShowHidePushButton, Qt.LeftButton)
     assert ui_form.typeAttachmentsTableView.isHidden() is False, "Attachments table should be visible now!"
     assert ui_form.addAttachmentPushButton.isHidden() is False, "addAttachmentPushButton should be visible now!"
 
-    qtbot.mouseClick(ui_form.attachmentsShowHidePushButton,
-                     Qt.LeftButton)
+    qtbot.mouseClick(ui_form.attachmentsShowHidePushButton, Qt.LeftButton)
     assert ui_form.typeAttachmentsTableView.isVisible() is False, "Attachments table should not be visible now!"
     assert ui_form.addAttachmentPushButton.isVisible() is False, "addAttachmentPushButton should not be visible now!"
 
-  def test_add_group_with_empty_name_should_warn_user(self,
-                                                      data_hierarchy_editor_gui:
-                                                      tuple[
-                                                        QApplication,
-                                                        QtWidgets.QDialog,
-                                                        DataHierarchyEditorDialog,
-                                                        QtBot],
+  def test_add_group_with_empty_name_should_warn_user(self, data_hierarchy_editor_gui: tuple[
+    QApplication, QtWidgets.QDialog, DataHierarchyEditorDialog, QtBot],
                                                       data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                       metadata_column_names: metadata_column_names,
                                                       attachments_column_names: attachments_column_names):
@@ -721,10 +617,7 @@ class TestDataHierarchyEditorDialog(object):
   def test_add_metadata_group_with_valid_name_should_successfully_add_group_with_default_metadata(self,
                                                                                                   data_hierarchy_editor_gui:
                                                                                                   tuple[
-                                                                                                    QApplication,
-                                                                                                    QtWidgets.QDialog,
-                                                                                                    DataHierarchyEditorDialog,
-                                                                                                    QtBot],
+                                                                                                    QApplication, QtWidgets.QDialog, DataHierarchyEditorDialog, QtBot],
                                                                                                   data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                                                                   metadata_column_names: metadata_column_names,
                                                                                                   attachments_column_names: attachments_column_names):
@@ -760,10 +653,7 @@ class TestDataHierarchyEditorDialog(object):
   def test_add_group_with_valid_name_and_delete_should_successfully_delete_categories_with_metadata(self,
                                                                                                     data_hierarchy_editor_gui:
                                                                                                     tuple[
-                                                                                                      QApplication,
-                                                                                                      QtWidgets.QDialog,
-                                                                                                      DataHierarchyEditorDialog,
-                                                                                                      QtBot],
+                                                                                                      QApplication, QtWidgets.QDialog, DataHierarchyEditorDialog, QtBot],
                                                                                                     data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                                                                     metadata_column_names: metadata_column_names,
                                                                                                     attachments_column_names: attachments_column_names):
@@ -788,8 +678,7 @@ class TestDataHierarchyEditorDialog(object):
       assert ui_form.metadataGroupComboBox.currentText() != cat, f"metadataGroupComboBox.currentText() should be {cat}!"
       if idx == len(categories) - 1:
         # ALl metadata group are deleted, hence the metadata table should be empty!
-        assert ui_form.metadataGroupComboBox.currentText() == "", \
-          f"metadataGroupComboBox.currentText() should be empty string!"
+        assert ui_form.metadataGroupComboBox.currentText() == "", f"metadataGroupComboBox.currentText() should be empty string!"
         model = ui_form.typeMetadataTableView.model()
         assert model.rowCount() == 0, "Metadata table should be empty!"
       else:
@@ -798,13 +687,8 @@ class TestDataHierarchyEditorDialog(object):
         model = ui_form.typeMetadataTableView.model()
         assert model.rowCount() >= 0, "Metadata table can be empty or not!"
 
-  def test_add_metadata_to_table_should_succeed(self,
-                                                data_hierarchy_editor_gui:
-                                                tuple[
-                                                  QApplication,
-                                                  QtWidgets.QDialog,
-                                                  DataHierarchyEditorDialog,
-                                                  QtBot],
+  def test_add_metadata_to_table_should_succeed(self, data_hierarchy_editor_gui: tuple[
+    QApplication, QtWidgets.QDialog, DataHierarchyEditorDialog, QtBot],
                                                 data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                 metadata_column_names: metadata_column_names,
                                                 attachments_column_names: attachments_column_names):
@@ -832,13 +716,8 @@ class TestDataHierarchyEditorDialog(object):
     assert model.data(model.index(0, 0), Qt.DisplayRole) == 'Test name', "Test name metadata must be present!"
     assert model.data(model.index(0, 1), Qt.DisplayRole) == 'Test query', "Test query metadata must be present!"
 
-  def test_delete_metadata_from_table_should_work(self,
-                                                  data_hierarchy_editor_gui:
-                                                  tuple[
-                                                    QApplication,
-                                                    QtWidgets.QDialog,
-                                                    DataHierarchyEditorDialog,
-                                                    QtBot],
+  def test_delete_metadata_from_table_should_work(self, data_hierarchy_editor_gui: tuple[
+    QApplication, QtWidgets.QDialog, DataHierarchyEditorDialog, QtBot],
                                                   data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                   metadata_column_names: metadata_column_names,
                                                   attachments_column_names: attachments_column_names):
@@ -850,21 +729,15 @@ class TestDataHierarchyEditorDialog(object):
     row_count = model.rowCount()
     for i in range(model.rowCount()):
       last_row_delete_index = ui_form.typeMetadataTableView.model().index(
-        ui_form.typeMetadataTableView.model().rowCount() - 1,
-        ui_form.typeMetadataTableView.model().columnCount() - 2)
+        ui_form.typeMetadataTableView.model().rowCount() - 1, ui_form.typeMetadataTableView.model().columnCount() - 2)
       rect = ui_form.typeMetadataTableView.visualRect(last_row_delete_index)
       qtbot.mouseClick(ui_form.typeMetadataTableView.viewport(), Qt.LeftButton, pos=rect.center())
       assert model.rowCount() == row_count - 1, f"{row_count - 1} metadata must be present after deletion!"
       row_count -= 1
     assert model.rowCount() == 0, "After full deletion, nothing must exist!"
 
-  def test_re_order_metadata_table_should_work_as_expected(self,
-                                                           data_hierarchy_editor_gui:
-                                                           tuple[
-                                                             QApplication,
-                                                             QtWidgets.QDialog,
-                                                             DataHierarchyEditorDialog,
-                                                             QtBot],
+  def test_re_order_metadata_table_should_work_as_expected(self, data_hierarchy_editor_gui: tuple[
+    QApplication, QtWidgets.QDialog, DataHierarchyEditorDialog, QtBot],
                                                            data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                            metadata_column_names: metadata_column_names,
                                                            attachments_column_names: attachments_column_names):
@@ -884,8 +757,7 @@ class TestDataHierarchyEditorDialog(object):
 
     # Click re-order for the last row
     last_row_re_order_index = ui_form.typeMetadataTableView.model().index(
-      ui_form.typeMetadataTableView.model().rowCount() - 1,
-      ui_form.typeMetadataTableView.model().columnCount() - 1)
+      ui_form.typeMetadataTableView.model().rowCount() - 1, ui_form.typeMetadataTableView.model().columnCount() - 1)
     rect = ui_form.typeMetadataTableView.visualRect(last_row_re_order_index)
     qtbot.mouseClick(ui_form.typeMetadataTableView.viewport(), Qt.LeftButton, pos=rect.center())
     data_order.clear()
@@ -894,8 +766,7 @@ class TestDataHierarchyEditorDialog(object):
     assert post_reorder_data_order1 == data_order, "Post reorder data order is not as expected!"
 
     # Click re-order for the second row
-    second_row_re_order_index = ui_form.typeMetadataTableView.model().index(
-      1,
+    second_row_re_order_index = ui_form.typeMetadataTableView.model().index(1,
       ui_form.typeMetadataTableView.model().columnCount() - 1)
     rect = ui_form.typeMetadataTableView.visualRect(second_row_re_order_index)
     qtbot.mouseClick(ui_form.typeMetadataTableView.viewport(), Qt.LeftButton, pos=rect.center())
@@ -904,13 +775,8 @@ class TestDataHierarchyEditorDialog(object):
       data_order.append(model.data(model.index(i, 0), Qt.DisplayRole))
     assert post_reorder_data_order2 == data_order, "Post reorder data order is not as expected!"
 
-  def test_add_attachments_to_table_should_succeed(self,
-                                                   data_hierarchy_editor_gui:
-                                                   tuple[
-                                                     QApplication,
-                                                     QtWidgets.QDialog,
-                                                     DataHierarchyEditorDialog,
-                                                     QtBot],
+  def test_add_attachments_to_table_should_succeed(self, data_hierarchy_editor_gui: tuple[
+    QApplication, QtWidgets.QDialog, DataHierarchyEditorDialog, QtBot],
                                                    data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                    metadata_column_names: metadata_column_names,
                                                    attachments_column_names: attachments_column_names):
@@ -941,13 +807,8 @@ class TestDataHierarchyEditorDialog(object):
     assert model.data(model.index(0, 0), Qt.DisplayRole) == 'Test description', "Description metadata must be present!"
     assert model.data(model.index(0, 1), Qt.DisplayRole) == 'Test location', "Location metadata must be present!"
 
-  def test_delete_attachments_from_table_should_succeed(self,
-                                                        data_hierarchy_editor_gui:
-                                                        tuple[
-                                                          QApplication,
-                                                          QtWidgets.QDialog,
-                                                          DataHierarchyEditorDialog,
-                                                          QtBot],
+  def test_delete_attachments_from_table_should_succeed(self, data_hierarchy_editor_gui: tuple[
+    QApplication, QtWidgets.QDialog, DataHierarchyEditorDialog, QtBot],
                                                         data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                         metadata_column_names: metadata_column_names,
                                                         attachments_column_names: attachments_column_names):
@@ -977,8 +838,7 @@ class TestDataHierarchyEditorDialog(object):
 
     ui_form.typeComboBox.setCurrentText(selected_type)
 
-    first_row_delete_index = ui_form.typeAttachmentsTableView.model().index(
-      0,
+    first_row_delete_index = ui_form.typeAttachmentsTableView.model().index(0,
       ui_form.typeAttachmentsTableView.model().columnCount() - 2)
 
     rect = ui_form.typeAttachmentsTableView.visualRect(first_row_delete_index)
@@ -988,13 +848,8 @@ class TestDataHierarchyEditorDialog(object):
     model.setData(model.index(0, 0), "Test description2", Qt.UserRole)
     model.setData(model.index(0, 1), "Test location2", Qt.UserRole)
 
-  def test_re_order_attachments_from_table_should_succeed(self,
-                                                          data_hierarchy_editor_gui:
-                                                          tuple[
-                                                            QApplication,
-                                                            QtWidgets.QDialog,
-                                                            DataHierarchyEditorDialog,
-                                                            QtBot],
+  def test_re_order_attachments_from_table_should_succeed(self, data_hierarchy_editor_gui: tuple[
+    QApplication, QtWidgets.QDialog, DataHierarchyEditorDialog, QtBot],
                                                           data_hierarchy_doc_mock: data_hierarchy_doc_mock,
                                                           metadata_column_names: metadata_column_names,
                                                           attachments_column_names: attachments_column_names):
@@ -1024,8 +879,7 @@ class TestDataHierarchyEditorDialog(object):
 
     ui_form.typeComboBox.setCurrentText(selected_type)
 
-    second_row_re_order_index = ui_form.typeAttachmentsTableView.model().index(
-      1,
+    second_row_re_order_index = ui_form.typeAttachmentsTableView.model().index(1,
       ui_form.typeAttachmentsTableView.model().columnCount() - 1)
 
     rect = ui_form.typeAttachmentsTableView.visualRect(second_row_re_order_index)
