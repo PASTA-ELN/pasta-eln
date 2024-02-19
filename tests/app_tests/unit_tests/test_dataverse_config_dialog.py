@@ -3,17 +3,10 @@
 #  Copyright (c) 2024
 #
 #  Author: Jithu Murugan
-#  Filename: test_config_dialog.py
+#  Filename: test_dataverse_config_dialog.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
-#  PASTA-ELN and all its sub-parts are covered by the MIT license.
-#
-#
-#  Author: Jithu Murugan
-#  Filename: test_config_dialog.py
-#
-#  You should have received a copy of the license with this file. Please refer the license file for more information.
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -175,7 +168,7 @@ class TestConfigDialog:
       [{'title': 'Dataverse1', 'id': 'dv1'}, {'title': 'Dataverse2', 'id': 'dv2'}], 2),
     ("success_path_valid_data", "http://valid.url", "valid_token", [{'title': 'Dataverse1', 'id': 'dv1'}], 1), (
         "success_path_valid_data_saved_id_exists", "http://valid.url", "valid_token",
-        [{'title': 'Dataverse1', 'id': 'test_dataverse_id'}, ], 1),
+        [{'title': 'Dataverse1', 'id': 'dv1'}, ], 1),
     ("edge_case_empty_fields", "http://valid.url", "valid_token", [], 0),
     ("edge_case_not_list", "http://valid.url", "valid_token", {"title": "Dataverse"}, 0),
     ("edge_case_list_with_non_dict", "http://valid.url", "valid_token", [1, 2, 3], 0),
@@ -200,7 +193,7 @@ class TestConfigDialog:
       assert config_dialog.dataverseListComboBox.count() == expected_items
       mock_dataverse_client.get_dataverse_list.assert_called_once_with()
     if test_id == "success_path_valid_data_saved_id_exists":
-      assert config_dialog.dataverseListComboBox.currentData(QtCore.Qt.ItemDataRole.UserRole) == "test_dataverse_id"
+      assert config_dialog.dataverseListComboBox.currentData(QtCore.Qt.ItemDataRole.UserRole) == "dv1"
       assert config_dialog.dataverseListComboBox.currentText() == "Dataverse1"
     if test_id == "edge_case_not_list":
       config_dialog.logger.error.assert_called_once_with("Failed to load dataverse list")
