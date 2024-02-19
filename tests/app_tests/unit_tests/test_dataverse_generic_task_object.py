@@ -3,7 +3,7 @@
 #  Copyright (c) 2024
 #
 #  Author: Jithu Murugan
-#  Filename: test_generic_task_object.py
+#  Filename: test_dataverse_generic_task_object.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 from logging import Logger
@@ -13,7 +13,7 @@ import pytest
 from pasta_eln.dataverse.generic_task_object import GenericTaskObject
 
 
-class TestGenericTaskObject:
+class TestDataverseGenericTaskObject:
   @pytest.mark.parametrize(
     "test_id, initial_cancelled, initial_started, initial_cleaned, expected_cancelled, expected_started, expected_cleaned",
     [

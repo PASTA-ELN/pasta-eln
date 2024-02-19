@@ -4,7 +4,7 @@
 #  Copyright (c) 2024
 #
 #  Author: Jithu Murugan
-#  Filename: test_task_thread_extension.py
+#  Filename: task_thread_extension.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 

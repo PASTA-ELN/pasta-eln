@@ -3,7 +3,7 @@
 #  Copyright (c) 2024
 #
 #  Author: Jithu Murugan
-#  Filename: test_database_error.py
+#  Filename: test_dataverse_database_error.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
@@ -12,7 +12,7 @@ import pytest
 from pasta_eln.dataverse.database_error import DatabaseError
 
 
-class TestDatabaseError:
+class TestDataverseDatabaseError:
 
   @pytest.mark.parametrize("test_id, message, detailed_errors, expected_message, expected_detailed_errors", [
     # Happy path tests with various realistic test values

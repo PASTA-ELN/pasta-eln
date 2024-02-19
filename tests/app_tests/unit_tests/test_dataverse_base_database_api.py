@@ -3,7 +3,7 @@
 #  Copyright (c) 2024
 #
 #  Author: Jithu Murugan
-#  Filename: test_base_database_api.py
+#  Filename: test_dataverse_base_database_api.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
@@ -47,7 +47,7 @@ def mock_database_api(mocker) -> BaseDatabaseAPI:
     return BaseDatabaseAPI()
 
 
-class TestBaseDatabaseApi:
+class TestDataverseBaseDatabaseApi:
   # Parametrized test for a success path
   @pytest.mark.parametrize("config_content, expected_db_name, expected_username, expected_password", [
     (create_mock_config(), DEFAULT_PROJECT_GROUP, USER, PASSWORD),

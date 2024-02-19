@@ -3,7 +3,7 @@
 #  Copyright (c) 2024
 #
 #  Author: Jithu Murugan
-#  Filename: test_incorrect_parameter_error.py
+#  Filename: test_dataverse_incorrect_parameter_error.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import pytest
@@ -11,7 +11,7 @@ import pytest
 from pasta_eln.dataverse.incorrect_parameter_error import IncorrectParameterError
 
 
-class TestIncorrectParameterError:
+class TestDataverseIncorrectParameterError:
   # Success path tests with various realistic test values
   @pytest.mark.parametrize("message, detailed_errors, test_id", [
     ("Error occurred", None, "happy_none_detailed_errors"),

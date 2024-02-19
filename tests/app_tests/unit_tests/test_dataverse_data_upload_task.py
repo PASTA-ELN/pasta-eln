@@ -3,7 +3,7 @@
 #  Copyright (c) 2024
 #
 #  Author: Jithu Murugan
-#  Filename: test_data_upload_task.py
+#  Filename: test_dataverse_data_upload_task.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import datetime
@@ -64,7 +64,7 @@ def mock_sleep():
     yield
 
 
-class TestDataUploadTask:
+class TestDataverseDataUploadTask:
 
   # Happy path tests with various realistic test values
   @pytest.mark.parametrize("test_id, project_name", [

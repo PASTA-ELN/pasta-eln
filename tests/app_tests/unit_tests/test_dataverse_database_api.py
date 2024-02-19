@@ -3,7 +3,15 @@
 #  Copyright (c) 2024
 #
 #  Author: Jithu Murugan
-#  Filename: test_database_api.py
+#  Filename: test_dataverse_database_api.py
+#
+#  You should have received a copy of the license with this file. Please refer the license file for more information.
+
+#  PASTA-ELN and all its sub-parts are covered by the MIT license.
+#
+#
+#  Author: Jithu Murugan
+#  Filename: test_dataverse_database_api.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 from json import JSONDecodeError
@@ -29,7 +37,7 @@ def mock_database_api(mocker) -> DatabaseAPI:
   return DatabaseAPI()
 
 
-class TestDatabaseAPI:
+class TestDataverseDatabaseAPI:
 
   @pytest.mark.parametrize("test_id", [
     ("success_case_default_values"),
@@ -469,7 +477,7 @@ class TestDatabaseAPI:
     # Arrange
     mock_database_api.create_model_document = mocker.MagicMock()
     current_path = realpath(join(getcwd(), dirname(__file__)))
-    with open(join(current_path, "..//..//..//..//pasta_eln//dataverse", "dataset-create-new-all-default-fields.json"),
+    with open(join(current_path, "..//..//..//pasta_eln//dataverse", "dataset-create-new-all-default-fields.json"),
               encoding="utf-8") as config_file:
       file_data = config_file.read()
 

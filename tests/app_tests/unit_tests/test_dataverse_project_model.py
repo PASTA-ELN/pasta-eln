@@ -3,7 +3,7 @@
 #  Copyright (c) 2024
 #
 #  Author: Jithu Murugan
-#  Filename: test_project_model.py
+#  Filename: test_dataverse_project_model.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import pytest
@@ -12,7 +12,7 @@ from pasta_eln.dataverse.incorrect_parameter_error import IncorrectParameterErro
 from pasta_eln.dataverse.project_model import ProjectModel
 
 
-class TestProjectModel:
+class TestDataverseProjectModel:
   # Test IDs for different scenarios
   SUCCESS_PATH_ID = "Success Path"
   EDGE_CASE_ID = "Edge Case"

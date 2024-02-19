@@ -3,7 +3,7 @@
 #  Copyright (c) 2024
 #
 #  Author: Jithu Murugan
-#  Filename: test_utils.py
+#  Filename: test_dataverse_utils.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import json
@@ -29,7 +29,7 @@ CONFIG_FILE = '.pastaELN.json'
 CONFIG_PATH = os.path.join(HOME_DIR, CONFIG_FILE)
 
 
-class TestUtils:
+class TestDataverseUtils:
 
   # Parametrized test cases for happy path, edge cases, and error cases
   @pytest.mark.parametrize("status, expected_icon_name, test_id",

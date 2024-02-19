@@ -3,7 +3,7 @@
 #  Copyright (c) 2024
 #
 #  Author: Jithu Murugan
-#  Filename: test_upload_queue_manager.py
+#  Filename: test_dataverse_upload_queue_manager.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import time
@@ -45,7 +45,7 @@ def get_mock_task_thread(mocker, cancelled=False):
   return mock
 
 
-class TestUploadQueueManager:
+class TestDataverseUploadQueueManager:
 
   def test_initialize(self, mock_manager):
     # Assert

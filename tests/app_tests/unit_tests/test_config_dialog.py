@@ -6,6 +6,14 @@
 #  Filename: test_config_dialog.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
+
+#  PASTA-ELN and all its sub-parts are covered by the MIT license.
+#
+#
+#  Author: Jithu Murugan
+#  Filename: test_config_dialog.py
+#
+#  You should have received a copy of the license with this file. Please refer the license file for more information.
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -49,7 +57,7 @@ def mock_database_api():
 
 
 @pytest.fixture
-def config_dialog(qtbot, mocker, mock_message_box, mock_webbrowser, mock_dataverse_client, mock_database_api):
+def config_dialog(qapp, qtbot, mocker, mock_message_box, mock_webbrowser, mock_dataverse_client, mock_database_api):
   mocker.patch('pasta_eln.GUI.dataverse.config_dialog.DataverseClient', return_value=mock_dataverse_client)
   mocker.patch('pasta_eln.GUI.dataverse.config_dialog.DatabaseAPI', return_value=mock_database_api)
   mocker.patch('pasta_eln.GUI.dataverse.config_dialog.QMessageBox', new=mock_message_box)
