@@ -49,7 +49,7 @@ class TestStringMethods(unittest.TestCase):
     localPath = Path('/home/steffen/FZJ/DataScience/Repositories/TheELNConsortium/TheELNFileFormat/examples')
     dirpath = localPath if localPath.exists() else Path(tempfile.mkdtemp())
     baseURL = 'https://github.com/TheELNConsortium/TheELNFileFormat/raw/master/examples/'
-    files = ['SampleDB/sampledb_export.eln', ]#'kadi4mat/collections-example.eln', 'kadi4mat/records-example.eln']
+    files = ['kadi4mat/collections-example.eln']#SampleDB/sampledb_export.eln', ]#, 'kadi4mat/records-example.eln']
     for fileI in files:
       elnFile = dirpath/fileI
       if not elnFile.exists():
@@ -62,7 +62,7 @@ class TestStringMethods(unittest.TestCase):
           return
 
       # import
-      print(f'\n\n---------------\nImport {fileI}')
+      print(f'\n\n==============================\nImport {fileI}\n==============================')
       status = importELN(self.be, str(elnFile))
       print(status)
       self.assertEqual(status[:7],'Success','Import unsuccessful')
@@ -71,7 +71,10 @@ class TestStringMethods(unittest.TestCase):
       print('Number of documents', len(self.be.db.getView('viewHierarchy/viewHierarchy')))
       outputString(outputFormat,'h2','VERIFY DATABASE INTEGRITY')
       outputString(outputFormat,'info', self.be.checkDB(outputStyle='text'))
+      outputString(outputFormat,'h2','Tree of results on hard disk')
+      os.system(f'tree {self.be.basePath}')
       outputString(outputFormat,'h2','DONE WITH VERIFY')
+
       fileCount = 0
       for _, _, files in os.walk(self.be.basePath):
         fileCount+=len(files)

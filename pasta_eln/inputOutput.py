@@ -56,6 +56,52 @@ specialTerms = {
     }
 }
 
+renameELN_names = {
+  'https://kadi.iam.kit.edu':'Kadi4Mat'
+}
+
+def tree(graph:dict[str,Any]) -> str:
+  """
+  use metadata to create hierarchical tree struction in ascii
+
+  Args:
+    metadata: graph
+  """
+  METADATA_FILE = 'ro-crate-metadata.json'
+
+  def process_part(part, level):
+    """
+    recursive function call to process this node
+    """
+    prefix = '    '*level + '- '
+    # find next node to process
+    newNode = [i for i in graph if '@id' in i and i['@id'] == part['@id']]
+    if len(newNode) == 1:
+      output = f'{prefix} {newNode[0]["@id"]} type:{newNode[0]["@type"]} items: {len(newNode[0])-1}\n'  # -1 because @id is not counted
+      subparts = newNode[0].pop('hasPart') if 'hasPart' in newNode[0] else []
+      if len(subparts) > 0:  # don't do if no subparts: measurements, ...
+        for subpart in subparts:
+          output += process_part(subpart, level + 1)
+    else:                                                       #not found
+      output += ('  items: ' + str(len(part) - 1) + '\n')  # -1 because @id is not counted
+    return output
+
+  # main tree-function
+  #   find information from master node
+  ro_crate_node = [i for i in graph if i["@id"] == METADATA_FILE][0]
+  output = '- '+METADATA_FILE+'\n'
+  if 'sdPublisher' in ro_crate_node:
+    name = ro_crate_node['sdPublisher'].get('name','---')
+    output += '    - publisher: ' + name  + '\n'
+  if 'version' in ro_crate_node:
+    output += '    - version: ' + ro_crate_node['version'] + '\n'
+  main_node = [i for i in graph if i["@id"] == "./"][0]
+  output += '- ./\n'
+  #   iteratively go through list
+  for part in main_node['hasPart']:
+    output += process_part(part, 1)
+  return output
+
 
 def importELN(backend:Backend, elnFileName:str) -> str:
   '''
@@ -70,6 +116,7 @@ def importELN(backend:Backend, elnFileName:str) -> str:
   '''
   elnName = ''
   elnVersion = ''
+  projID, projPWD= '', ''
   with ZipFile(elnFileName, 'r', compression=ZIP_DEFLATED) as elnFile:
     files = elnFile.namelist()
     logging.info('All files '+', '.join(files))
@@ -136,8 +183,8 @@ def importELN(backend:Backend, elnFileName:str) -> str:
       if not isinstance(part, dict): #leave these tests in since other .elns might do funky stuff
         print("**ERROR in part",part)
         return False
-      logging.info('Process: '+part['@id'])
-      print('Process: '+part['@id'])
+      logging.info('\nProcess: '+part['@id'])
+      print('\nProcess: '+part['@id'])
       # find next node to process
       docS = [i for i in graph if '@id' in i and i['@id']==part['@id']]
       if len(docS)!=1 or backend.cwd is None:
@@ -221,16 +268,27 @@ def importELN(backend:Backend, elnFileName:str) -> str:
       else:  # OTHER VENDORS
         if dataType.lower()=='dataset':
           docType = 'x'+str(len(elnID.split('/')) - 1)
-          backend.cwd = backend.basePath / Path(elnID).parent
-          if not backend.cwd.exists():
-            backend.cwd = backend.cwd.parent
+          nonlocal projID
+          nonlocal projPWD
+          if docType == 'x1' and projID == '':
+            print(f'  Want to created project name:{renameELN_names[elnName]}')
+            projID = backend.addData('x0', {'-name':f'Imported project of {renameELN_names[elnName]} '})
+            backend.changeHierarchy(projID)
+            projPWD= Path(backend.cwd)
+            backend.hierStack = [projID]
+          elif docType == 'x1':
+            backend.cwd = Path(projPWD)
+            backend.hierStack = [projID]
+          # backend.cwd = backend.basePath / Path(elnID).parent
+          # if not backend.cwd.exists():
+          #   backend.cwd = backend.cwd.parent
         else:
           docType = '-'
         if docType=='x0':
           backend.hierStack = []
         if '_id' in doc:
           doc['externalID'] = doc.pop('_id')
-        print('Want to add doc:',doc, docType, backend.basePath, backend.cwd)
+        print(f'Want to add doc:{doc} with type:{docType} and cwd:{backend.cwd}')
         docID = backend.addData(docType, doc)
         if docID[0]=='x':
           backend.hierStack += [docID]
@@ -255,6 +313,8 @@ def importELN(backend:Backend, elnFileName:str) -> str:
   #return to home stack and path
   backend.cwd = Path(backend.basePath)
   backend.hierStack = []
+  print(f'\n\nGraph in metadatafile\n{tree(graph)}')
+
   return f'Success: imported {str(addedDocuments)} documents from file {elnFileName} from ELN {elnName} {elnVersion}'
 
 
