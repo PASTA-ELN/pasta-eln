@@ -13,6 +13,7 @@ from asyncio import CancelledError, IncompleteReadError, InvalidStateError, Limi
 from functools import wraps
 from json import JSONDecodeError
 from typing import Any, Callable
+from xml.etree.ElementTree import ParseError
 
 from aiohttp import ClientConnectorError, InvalidURL
 from requests.exceptions import ConnectionError as RequestsConnectionError, InvalidSchema, MissingSchema
@@ -32,8 +33,9 @@ def handle_dataverse_exception_async(wrapped: Callable[..., Any]) -> Callable[..
   async def wrapper(self: Any, *args: object, **kwargs: object) -> Any:
     try:
       return await wrapped(self, *args, **kwargs)
-    except (RequestsConnectionError, InvalidURL, MissingSchema, InvalidSchema, TypeError, FileNotFoundError,
-            AttributeError) as e:
+    except (
+        RequestsConnectionError, InvalidURL, MissingSchema, InvalidSchema, TypeError, FileNotFoundError, AttributeError,
+        ParseError) as e:
       self.logger.error(e)
       return False, str(e)
 

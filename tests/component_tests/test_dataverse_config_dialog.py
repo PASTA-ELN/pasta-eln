@@ -210,6 +210,27 @@ class TestDataverseConfigDialog:
       assert config_dialog.dataverseListComboBox.currentText() == "Datafest 2021, Demo Dataverse", "Dataverse list combo box should be reset with mock data"
       assert config_dialog.dataverseListComboBox.count() == 115, "Dataverse list combo box should have 115 items"
 
+  def test_dataverse_load_button_click_when_server_URL_or_token_invalid_should_return_error(self, mocker, qtbot,
+                                                                                            config_dialog,
+                                                                                            mock_dataverse_client,
+                                                                                            mock_message_box):
+    # Arrange
+    mock_dataverse_client.get_dataverse_list.side_effect = mocker.AsyncMock(return_value="Invalid URL or API token")
+
+    # Act
+    config_dialog.show()
+    with qtbot.waitExposed(config_dialog.instance, timeout=500):
+      assert config_dialog.instance.isVisible() is True, "Dataverse config dialog should be shown!"
+      config_dialog.dataverseServerLineEdit.setText("InvalidURL")
+      config_dialog.apiTokenLineEdit.setText("InvalidToken")
+      config_dialog.config_model.dataverse_login_info["dataverse_id"] = "datafest2021"
+      qtbot.mouseClick(config_dialog.dataverseLoadPushButton, Qt.LeftButton, delay=1)
+      assert config_dialog.dataverseLineEdit.text() == ""
+      assert config_dialog.dataverseListComboBox.currentText() == ""
+      assert config_dialog.dataverseListComboBox.count() == 0, "Dataverse list combo box should have 0 items"
+      config_dialog.logger.error("Failed to load dataverse list, error: %s", "Invalid URL or API token")
+      mock_message_box.warning.assert_called_once_with(config_dialog.instance, "Error", "Failed to load dataverse list")
+
   def test_save_button_click_should_save_the_config(self, qtbot, config_dialog, mock_database_api):
     config_dialog.show()
     with qtbot.waitExposed(config_dialog.instance, timeout=500):

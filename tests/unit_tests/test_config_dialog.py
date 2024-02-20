@@ -173,7 +173,8 @@ class TestConfigDialog:
     ("edge_case_not_list", "http://valid.url", "valid_token", {"title": "Dataverse"}, 0),
     ("edge_case_list_with_non_dict", "http://valid.url", "valid_token", [1, 2, 3], 0),
     ("edge_case_list_with_no_properties", "http://valid.url", "valid_token", [{'title': 'Dataverse'}], 0),
-    ("error_case_empty_fields", "", "", [], 0)])
+    ("error_case_empty_fields", "", "", [], 0),
+    ("error_case_list_retrieval_failed", "http://valid.url", "valid_token", "404 error not found", 0)])
   def test_load_dataverse_list(self, mocker, config_dialog, test_id, server_url, api_token, expected_items,
                                dataverse_list, mock_dataverse_client, mock_message_box):
     # Arrange
@@ -195,8 +196,9 @@ class TestConfigDialog:
     if test_id == "success_path_valid_data_saved_id_exists":
       assert config_dialog.dataverseListComboBox.currentData(QtCore.Qt.ItemDataRole.UserRole) == "dv1"
       assert config_dialog.dataverseListComboBox.currentText() == "Dataverse1"
-    if test_id == "edge_case_not_list":
-      config_dialog.logger.error.assert_called_once_with("Failed to load dataverse list")
+    if test_id in ["edge_case_not_list", "error_case_list_retrieval_failed"]:
+      config_dialog.logger.error.assert_called_once_with("Failed to load dataverse list, error: %s", dataverse_list)
+      mock_message_box.warning.assert_called_once_with(config_dialog.instance, "Error", "Failed to load dataverse list")
 
   @pytest.mark.parametrize("key_exists, encrypt_key, expected_api_token, expected_dataverse_id, test_id",
                            [  # Success path tests
@@ -237,7 +239,7 @@ class TestConfigDialog:
     assert config_dialog.config_model.dataverse_login_info["dataverse_id"] == expected_dataverse_id
     assert config_dialog.config_model.dataverse_login_info["api_token"] == expected_api_token
 
-  @pytest.mark.parametrize("test_id, show_exception", [# Success tests with various realistic test values
+  @pytest.mark.parametrize("test_id, show_exception", [  # Success tests with various realistic test values
     ("success_case", None),
 
     # Error cases could include scenarios where instance.show() raises an exception.

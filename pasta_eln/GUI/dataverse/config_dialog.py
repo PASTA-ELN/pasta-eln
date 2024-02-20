@@ -214,7 +214,8 @@ class ConfigDialog(Ui_ConfigDialogBase):
               current_text = dv_title
         self.dataverseListComboBox.setCurrentText(current_text)
       else:
-        self.logger.error("Failed to load dataverse list")
+        self.logger.error("Failed to load dataverse list, error: %s", dataverses)
+        QMessageBox.warning(self.instance, "Error", "Failed to load dataverse list")
 
   def show(self) -> None:
     """
