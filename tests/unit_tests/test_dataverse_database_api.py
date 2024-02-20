@@ -34,7 +34,9 @@ from pasta_eln.dataverse.upload_model import UploadModel
 def mock_database_api(mocker) -> DatabaseAPI:
   mocker.patch('pasta_eln.dataverse.database_api.logging.getLogger')
   mocker.patch('pasta_eln.dataverse.database_api.BaseDatabaseAPI')
-  return DatabaseAPI()
+  api = DatabaseAPI()
+  mocker.resetall()
+  return api
 
 
 class TestDataverseDatabaseAPI:
@@ -48,6 +50,7 @@ class TestDataverseDatabaseAPI:
     if test_id == "success_case_default_values":
       base_db_api_constructor_mock = mocker.patch('pasta_eln.dataverse.database_api.BaseDatabaseAPI',
                                                   return_value=base_db_api_mock)
+      initialize_database_mock = mocker.patch('pasta_eln.dataverse.database_api.DatabaseAPI.initialize_database')
     else:
       base_db_api_constructor_mock = mocker.patch('pasta_eln.dataverse.database_api.BaseDatabaseAPI',
                                                   side_effect=DatabaseError("test_error"))
@@ -66,11 +69,12 @@ class TestDataverseDatabaseAPI:
     if test_id == "success_case_default_values":
       assert db_api.db_api == base_db_api_mock
       assert db_api.design_doc_name == '_design/viewDataverse'
+      initialize_database_mock.assert_called_once()
     else:
       assert db_api is None
 
   @pytest.mark.parametrize("design_doc_name, expected_id, test_id",
-    [("design_doc_1", "design_doc_1", "success_path_1"), ])
+                           [("design_doc_1", "design_doc_1", "success_path_1"), ])
   def test_create_dataverse_design_document_happy_path(self, mocker, design_doc_name, expected_id, test_id,
                                                        mock_database_api):
     # Arrange
@@ -85,8 +89,8 @@ class TestDataverseDatabaseAPI:
     assert result["_id"] == expected_id, f"Test {test_id}: The Document ID should be '{expected_id}'."
 
   @pytest.mark.parametrize("design_doc_name, exception, test_id",
-    [(None, DatabaseError("Document must have an _id"), "error_case_none"),
-      ("", DatabaseError("Document must have an _id"), "error_case_empty"), ])
+                           [(None, DatabaseError("Document must have an _id"), "error_case_none"),
+                            ("", DatabaseError("Document must have an _id"), "error_case_empty"), ])
   def test_create_dataverse_design_document_error_cases(self, mocker, design_doc_name, exception, test_id,
                                                         mock_database_api):
     # Arrange
@@ -101,19 +105,19 @@ class TestDataverseDatabaseAPI:
       exc_info.value) == "Document must have an _id", f"Test {test_id}: Expected ValueError with message 'Document must have an _id'."
 
   @pytest.mark.parametrize("design_doc_name, view_name, map_func, expected_call, exception, test_id",
-                           [# Success path tests with various realistic test values
+                           [  # Success path tests with various realistic test values
                              ("design_doc_1", "dvUploadView",
                               "function (doc) { if (doc.data_type === 'dataverse_upload') { emit(doc._id, doc); } }", (
-                              '_design/viewDataverse', "dvUploadView",
-                              "function (doc) { if (doc.data_type === 'dataverse_upload') { emit(doc._id, doc); } }",
-                              None), None, "SuccessCase-1"),
+                                  '_design/viewDataverse', "dvUploadView",
+                                  "function (doc) { if (doc.data_type === 'dataverse_upload') { emit(doc._id, doc); } }",
+                                  None), None, "SuccessCase-1"),
 
                              # Error cases could include scenarios where db_api.add_view raises an exception
                              ("design_doc_1", "dvUploadView",
                               "function (doc) { if (doc.data_type === 'dataverse_upload') { emit(doc._id, doc); } }", (
-                              '_design/viewDataverse', "dvUploadView",
-                              "function (doc) { if (doc.data_type === 'dataverse_upload') { emit(doc._id, doc); } }",
-                              None), DatabaseError("test_error"), "ErrorCase-1"), ])
+                                  '_design/viewDataverse', "dvUploadView",
+                                  "function (doc) { if (doc.data_type === 'dataverse_upload') { emit(doc._id, doc); } }",
+                                  None), DatabaseError("test_error"), "ErrorCase-1"), ])
   def test_create_upload_documents_view(self, mocker, design_doc_name, view_name, map_func, expected_call, exception,
                                         test_id, mock_database_api):
     # Arrange
@@ -135,28 +139,32 @@ class TestDataverseDatabaseAPI:
                                                      mock_database_api.design_doc_name)
 
   @pytest.mark.parametrize("test_id, expected_info_log, expected_view_name, expected_map_func, exception",
-    [# Happy path tests with various realistic test values
-      ("SuccessCase-1", ('Creating dvProjectsView as part of design document: %s', '_design/viewDataverse'),
-       "dvProjectsView",
-       "function (doc) { if (doc['-type']=='x0') {emit(doc._id, {'name': doc['-name'], '_id': doc._id, '_rev': doc._rev, 'objective': doc.objective, 'status': doc.status, 'comment': doc.comment, 'user': doc['-user'], 'date': doc['-date']});}}",
-       None), ("SuccessCase-2", ('Creating dvProjectsView as part of design document: %s', '_design/viewDataverse'),
-               "dvProjectsView",
-               "function (doc) { if (doc['-type']=='x0') {emit(doc._id, {'name': doc['-name'], '_id': doc._id, '_rev': doc._rev, 'objective': doc.objective, 'status': doc.status, 'comment': doc.comment, 'user': doc['-user'], 'date': doc['-date']});}}",
-               None),
+                           [  # Happy path tests with various realistic test values
+                             ("SuccessCase-1",
+                              ('Creating dvProjectsView as part of design document: %s', '_design/viewDataverse'),
+                              "dvProjectsView",
+                              "function (doc) { if (doc['-type']=='x0') {emit(doc._id, {'name': doc['-name'], '_id': doc._id, '_rev': doc._rev, 'objective': doc.objective, 'status': doc.status, 'comment': doc.comment, 'user': doc['-user'], 'date': doc['-date']});}}",
+                              None), ("SuccessCase-2", (
+                               'Creating dvProjectsView as part of design document: %s', '_design/viewDataverse'),
+                                      "dvProjectsView",
+                                      "function (doc) { if (doc['-type']=='x0') {emit(doc._id, {'name': doc['-name'], '_id': doc._id, '_rev': doc._rev, 'objective': doc.objective, 'status': doc.status, 'comment': doc.comment, 'user': doc['-user'], 'date': doc['-date']});}}",
+                                      None),
 
-      # Edge cases
-      # Assuming empty string is an edge case for design document name
-      ("EdgeCase-1", ('Creating dvProjectsView as part of design document: %s', '_design/viewDataverse'),
-       "dvProjectsView",
-       "function (doc) { if (doc['-type']=='x0') {emit(doc._id, {'name': doc['-name'], '_id': doc._id, '_rev': doc._rev, 'objective': doc.objective, 'status': doc.status, 'comment': doc.comment, 'user': doc['-user'], 'date': doc['-date']});}}",
-       None),
+                             # Edge cases
+                             # Assuming empty string is an edge case for design document name
+                             ("EdgeCase-1",
+                              ('Creating dvProjectsView as part of design document: %s', '_design/viewDataverse'),
+                              "dvProjectsView",
+                              "function (doc) { if (doc['-type']=='x0') {emit(doc._id, {'name': doc['-name'], '_id': doc._id, '_rev': doc._rev, 'objective': doc.objective, 'status': doc.status, 'comment': doc.comment, 'user': doc['-user'], 'date': doc['-date']});}}",
+                              None),
 
-      # Error cases
-      # Assuming None as an invalid design document name
-      ("ErrorCase-1", ('Creating dvProjectsView as part of design document: %s', '_design/viewDataverse'),
-       "dvProjectsView",
-       "function (doc) { if (doc['-type']=='x0') {emit(doc._id, {'name': doc['-name'], '_id': doc._id, '_rev': doc._rev, 'objective': doc.objective, 'status': doc.status, 'comment': doc.comment, 'user': doc['-user'], 'date': doc['-date']});}}",
-       DatabaseError("test_error")), ])
+                             # Error cases
+                             # Assuming None as an invalid design document name
+                             ("ErrorCase-1",
+                              ('Creating dvProjectsView as part of design document: %s', '_design/viewDataverse'),
+                              "dvProjectsView",
+                              "function (doc) { if (doc['-type']=='x0') {emit(doc._id, {'name': doc['-name'], '_id': doc._id, '_rev': doc._rev, 'objective': doc.objective, 'status': doc.status, 'comment': doc.comment, 'user': doc['-user'], 'date': doc['-date']});}}",
+                              DatabaseError("test_error")), ])
   def test_create_projects_view(self, mocker, test_id, expected_info_log, expected_view_name, expected_map_func,
                                 exception, mock_database_api):
     # Arrange
@@ -180,28 +188,29 @@ class TestDataverseDatabaseAPI:
                                                               expected_map_func, None)
 
   @pytest.mark.parametrize("input_model, expected_output, test_id, exception",
-                           [# Success path tests with various realistic test values
+                           [  # Success path tests with various realistic test values
                              (UploadModel(_id="id", _rev='rev1', project_name='data1'),
                               UploadModel(_id='mock_id', _rev='mock_rev', project_name='data1'), 'success_path_upload',
                               None), (UploadModel(_id=None, _rev='rev1', project_name='data1'),
                                       UploadModel(_id='mock_id', _rev='mock_rev', project_name='data1'),
                                       'success_path_upload', None), (
-                           ConfigModel(_id="id", _rev='rev2', metadata={'value': 'value'}),
-                           ConfigModel(_id='mock_id', _rev='mock_rev', metadata={'value': 'value'}),
-                           'success_path_config', None), (ProjectModel(_id="id", _rev='rev3', name='Project'),
-                                                          ProjectModel(_id='mock_id', _rev='mock_rev', name='Project'),
-                                                          'success_path_project', None),
+                               ConfigModel(_id="id", _rev='rev2', metadata={'value': 'value'}),
+                               ConfigModel(_id='mock_id', _rev='mock_rev', metadata={'value': 'value'}),
+                               'success_path_config', None), (ProjectModel(_id="id", _rev='rev3', name='Project'),
+                                                              ProjectModel(_id='mock_id', _rev='mock_rev',
+                                                                           name='Project'), 'success_path_project',
+                                                              None),
 
                              # Error cases
                              # Assuming error cases would be related to the incorrect types or missing required fields
                              # These tests would normally raise exceptions, but since the function's error handling is not shown, we'll assume it returns None
                              (None, None, 'error_case_none_input', ValueError("Data cannot be None")), (
-                           'not_a_model_instance', None, 'error_case_wrong_type',
-                           TypeError("Data must be an UploadModel, ConfigModel, or ProjectModel!")), (
-                           ProjectModel(_id="id", _rev='rev3', name='Project'),
-                           UploadModel(_id='mock_id', _rev='mock_rev', project_name='Project'),
-                           'error_case_wrong_type_returned_document',
-                           TypeError("Expected UploadModel but got ProjectModel")), ])
+                               'not_a_model_instance', None, 'error_case_wrong_type',
+                               TypeError("Data must be an UploadModel, ConfigModel, or ProjectModel!")), (
+                               ProjectModel(_id="id", _rev='rev3', name='Project'),
+                               UploadModel(_id='mock_id', _rev='mock_rev', project_name='Project'),
+                               'error_case_wrong_type_returned_document',
+                               TypeError("Expected UploadModel but got ProjectModel")), ])
   def test_create_model_document(self, input_model, expected_output, test_id, exception, mocker, mock_database_api):
     # Arrange
     mock_create_document = mocker.MagicMock()
@@ -233,15 +242,15 @@ class TestDataverseDatabaseAPI:
     else:
       assert result is None
 
-  @pytest.mark.parametrize("data, exception, test_id", [# Success path tests with various realistic test values
+  @pytest.mark.parametrize("data, exception, test_id", [  # Success path tests with various realistic test values
     (UploadModel(project_name="test/path", status="status"), None, "success_path_upload_model"),
     (ConfigModel(metadata={"key": "value"}, dataverse_login_info={"key": "value"}), None, "success_path_config_model"),
     (ProjectModel(name="name", comment="comment"), None, "success_path_project_model"),
 
     # Error cases
     (None, ValueError("Data cannot be None"), "error_case_none_data"), (
-    "Not a model instance", TypeError("Data must be an UploadModel, ConfigModel, or ProjectModel!"),
-    "error_case_wrong_type"),
+        "Not a model instance", TypeError("Data must be an UploadModel, ConfigModel, or ProjectModel!"),
+        "error_case_wrong_type"),
     (123, TypeError("Data must be an UploadModel, ConfigModel, or ProjectModel!"), "error_case_numeric_data"), ])
   def test_update_model_document(self, data, exception, test_id, mock_database_api):
     # Arrange
@@ -265,17 +274,17 @@ class TestDataverseDatabaseAPI:
       mock_database_api.logger.error(str(exception))
 
   @pytest.mark.parametrize("model_type, view_name, expected_results, expected_exception",
-                           [# success path tests with various realistic test values
+                           [  # success path tests with various realistic test values
                              (UploadModel, "dvUploadView", [UploadModel(**res) for res in
                                                             [{'_id': 'upload1', 'project_name': 'data1'},
                                                              {'_id': 'upload2', 'project_name': 'data2'}]], None), (
-                           ProjectModel, "dvProjectsView", [ProjectModel(**res) for res in
-                                                            [{'_id': 'project1', 'name': 'data1'},
-                                                             {'_id': 'project2', 'name': 'data2'}]], None),
+                               ProjectModel, "dvProjectsView", [ProjectModel(**res) for res in
+                                                                [{'_id': 'project1', 'name': 'data1'},
+                                                                 {'_id': 'project2', 'name': 'data2'}]], None),
                              # Error case for unsupported model
                              (ConfigModel, None, None, TypeError), ],
                            ids=['success_path_upload_model', 'success_path_project_model',
-                             'error_case_unsupported_model'])
+                                'error_case_unsupported_model'])
   def test_get_models(self, model_type, view_name, expected_results, expected_exception, mock_database_api):
     # Arrange
     if not expected_exception:
@@ -298,7 +307,7 @@ class TestDataverseDatabaseAPI:
       mock_database_api.db_api.get_view_results.assert_not_called()
       mock_database_api.logger.error(str(expected_exception))
 
-  @pytest.mark.parametrize("model_id,model_type,expected", [# Success path tests
+  @pytest.mark.parametrize("model_id,model_type,expected", [  # Success path tests
     pytest.param("1", UploadModel, UploadModel(_id="1", project_name="Test Model"), id="success_path_upload"),
     pytest.param("2", ConfigModel,
                  ConfigModel(_id="2", metadata={"key": "value"}, dataverse_login_info={"key": "value"}),
@@ -327,9 +336,10 @@ class TestDataverseDatabaseAPI:
       assert dict(result) == dict(expected), f"Expected {expected}, got {result}"
     mock_database_api.logger.info.assert_called_once_with("Getting model with id: %s, type: %s", model_id, model_type)
 
-  @pytest.mark.parametrize("document, expected, test_id", [# Happy path tests with various realistic test values
+  @pytest.mark.parametrize("document, expected, test_id", [  # Happy path tests with various realistic test values
     ({"_id": "1", "_rev": "1-abc", "-version": "1.0", "data": "value"}, {"data": "value"}, "happy_path_1"), (
-    {"_id": "2", "_rev": "2-def", "-version": "2.0", "more_data": [1, 2, 3]}, {"more_data": [1, 2, 3]}, "happy_path_2"),
+        {"_id": "2", "_rev": "2-def", "-version": "2.0", "more_data": [1, 2, 3]}, {"more_data": [1, 2, 3]},
+        "happy_path_2"),
 
     # Edge case: Empty document except for system fields
     ({"_id": "", "_rev": "", "-version": ""}, {}, "edge_case_empty_doc"),
@@ -357,7 +367,7 @@ class TestDataverseDatabaseAPI:
     [("success_path", True, True, True, []), ("edge_case_no_design_doc", None, None, None,
                                               ['create_dataverse_design_document', 'create_upload_documents_view',
                                                'create_projects_view', 'initialize_config_document']),
-      ("error_case_db_api_failure", None, None, None, ['get_document', 'get_view']), ])
+     ("error_case_db_api_failure", None, None, None, ['get_document', 'get_view']), ])
   def test_initialize_database(self, mocker, test_id, design_doc_exists, upload_model_view_exists,
                                project_model_view_exists, expected_calls, mock_database_api):
     # Arrange
@@ -392,7 +402,7 @@ class TestDataverseDatabaseAPI:
   # Parametrized test cases
   @pytest.mark.parametrize(
     "test_id, design_doc_exists, upload_view_exists, project_view_exists, config_doc_exists, expected_calls",
-    [# Happy path tests with various realistic test values
+    [  # Happy path tests with various realistic test values
       ("success_path", None, None, None, None, 3),  # None of the documents/views exist
       ("success_path", {}, None, None, None, 2),  # Only design document exists
       ("success_path", {}, {}, None, None, 1),  # Design document and upload view exist
@@ -447,7 +457,7 @@ class TestDataverseDatabaseAPI:
 
     # Act
     with patch('pasta_eln.dataverse.database_api.realpath') as mock_realpath, patch(
-      'pasta_eln.dataverse.database_api.getcwd') as mock_getcwd, patch(
+        'pasta_eln.dataverse.database_api.getcwd') as mock_getcwd, patch(
       'pasta_eln.dataverse.database_api.dirname') as mock_dirname, patch(
       'pasta_eln.dataverse.database_api.open') as mock_file, patch(
       'pasta_eln.dataverse.database_api.set_authors') as mock_set_authors:
@@ -472,15 +482,15 @@ class TestDataverseDatabaseAPI:
 
   # Various error cases
   # Assuming error cases might involve exceptions thrown during file reading or JSON parsing
-  @pytest.mark.parametrize("side_effect, test_id", [(FileNotFoundError(), "error_case_file_not_found"),
-    (JSONDecodeError("Expecting value", "", 0), "error_case_invalid_json"), ])
+  @pytest.mark.parametrize("side_effect, test_id", [(FileNotFoundError(), "error_case_file_not_found"), (
+      JSONDecodeError("Expecting value", "", 0), "error_case_invalid_json"), ])
   def test_initialize_config_document_error_cases(self, mocker, side_effect, test_id, mock_database_api):
     # Arrange
     mock_database_api.create_model_document = mocker.MagicMock()
 
     # Act & Assert
     with patch('pasta_eln.dataverse.database_api.realpath') as mock_realpath, patch(
-      'pasta_eln.dataverse.database_api.getcwd') as mock_getcwd, patch(
+        'pasta_eln.dataverse.database_api.getcwd') as mock_getcwd, patch(
       'pasta_eln.dataverse.database_api.dirname') as mock_dirname, patch('pasta_eln.dataverse.database_api.open',
                                                                          mock_open()) as mock_file:
       mock_file.side_effect = side_effect

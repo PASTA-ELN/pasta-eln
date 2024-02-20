@@ -54,6 +54,7 @@ class DatabaseAPI:
     self.data_hierarchy_doc_id = '-dataHierarchy-'
     self.upload_model_view_name = "dvUploadView"
     self.project_model_view_name = "dvProjectsView"
+    self.initialize_database()
 
   def create_dataverse_design_document(self) -> Document:
     """
@@ -85,11 +86,8 @@ class DatabaseAPI:
 
     """
     self.logger.info("Creating dvUploadView as part of design document: %s", self.design_doc_name)
-    self.db_api.add_view(self.design_doc_name,
-                         self.upload_model_view_name,
-                         "function (doc) { if (doc.data_type === 'dataverse_upload') { emit(doc._id, doc); } }",
-                         None
-                         )
+    self.db_api.add_view(self.design_doc_name, self.upload_model_view_name,
+                         "function (doc) { if (doc.data_type === 'dataverse_upload') { emit(doc._id, doc); } }", None)
 
   def create_projects_view(self) -> None:
     """
@@ -103,25 +101,20 @@ class DatabaseAPI:
 
     """
     self.logger.info("Creating dvProjectsView as part of design document: %s", self.design_doc_name)
-    self.db_api.add_view(self.design_doc_name,
-                         self.project_model_view_name,
-                         "function (doc) { "
-                         "if (doc['-type']=='x0') {"
-                         "emit(doc._id, {"
-                         "'name': doc['-name'], "
-                         "'_id': doc._id, "
-                         "'_rev': doc._rev, "
-                         "'objective': doc.objective, "
-                         "'status': doc.status, "
-                         "'comment': doc.comment, "
-                         "'user': doc['-user'], "
-                         "'date': doc['-date']});"
-                         "}}",
-                         None
-                         )
+    self.db_api.add_view(self.design_doc_name, self.project_model_view_name, "function (doc) { "
+                                                                             "if (doc['-type']=='x0') {"
+                                                                             "emit(doc._id, {"
+                                                                             "'name': doc['-name'], "
+                                                                             "'_id': doc._id, "
+                                                                             "'_rev': doc._rev, "
+                                                                             "'objective': doc.objective, "
+                                                                             "'status': doc.status, "
+                                                                             "'comment': doc.comment, "
+                                                                             "'user': doc['-user'], "
+                                                                             "'date': doc['-date']});"
+                                                                             "}}", None)
 
-  def create_model_document(self,
-                            data: UploadModel | ConfigModel | ProjectModel) -> Union[
+  def create_model_document(self, data: UploadModel | ConfigModel | ProjectModel) -> Union[
     UploadModel, ConfigModel, ProjectModel]:
 
     """
@@ -176,8 +169,8 @@ class DatabaseAPI:
       raise log_and_create_error(self.logger, TypeError, "Data must be an UploadModel, ConfigModel, or ProjectModel!")
     self.db_api.update_document(dict(data))
 
-  def get_models(self, model_type: Type[Union[UploadModel, ConfigModel, ProjectModel]]) -> list[Union
-  [UploadModel, ConfigModel, ProjectModel]]:
+  def get_models(self, model_type: Type[Union[UploadModel, ConfigModel, ProjectModel]]) -> list[
+    Union[UploadModel, ConfigModel, ProjectModel]]:
     """
     Retrieves models of the specified type from the database.
 
@@ -197,17 +190,14 @@ class DatabaseAPI:
     self.logger.info("Getting models of type: %s", model_type)
     match model_type():
       case UploadModel():
-        return [UploadModel(**result) for result in
-                self.db_api.get_view_results(self.design_doc_name, "dvUploadView")]
+        return [UploadModel(**result) for result in self.db_api.get_view_results(self.design_doc_name, "dvUploadView")]
       case ProjectModel():
         return [ProjectModel(**result) for result in
                 self.db_api.get_view_results(self.design_doc_name, "dvProjectsView")]
       case _:
-        raise log_and_create_error(self.logger, TypeError,
-                                   f"Unsupported model type {model_type}")
+        raise log_and_create_error(self.logger, TypeError, f"Unsupported model type {model_type}")
 
-  def get_model(self, model_id: str,
-                model_type: Type[UploadModel | ConfigModel | ProjectModel]) -> Union[
+  def get_model(self, model_id: str, model_type: Type[UploadModel | ConfigModel | ProjectModel]) -> Union[
     UploadModel, ProjectModel, ConfigModel]:
     """
     Retrieves a model from the database.
@@ -229,8 +219,7 @@ class DatabaseAPI:
     """
     self.logger.info("Getting model with id: %s, type: %s", model_id, model_type)
     if model_type not in (UploadModel, ProjectModel, ConfigModel):
-      raise log_and_create_error(self.logger, TypeError,
-                                 f"Unsupported model type {model_type}")
+      raise log_and_create_error(self.logger, TypeError, f"Unsupported model type {model_type}")
     if model_id is None:
       raise log_and_create_error(self.logger, ValueError, "model_id cannot be None")
     return model_type(**self.db_api.get_document(model_id))
@@ -294,17 +283,11 @@ class DatabaseAPI:
 
     """
     self.logger.info("Initializing config document...")
-    model = ConfigModel(_id=self.config_doc_id,
-                        parallel_uploads_count=3,
-                        dataverse_login_info={
-                          "server_url": "",
-                          "api_token": "",
-                          "dataverse_id": ""
-                        },
+    model = ConfigModel(_id=self.config_doc_id, parallel_uploads_count=3,
+                        dataverse_login_info={"server_url": "", "api_token": "", "dataverse_id": ""},
                         project_upload_items={})
     current_path = realpath(join(getcwd(), dirname(__file__)))
-    with open(join(current_path, "dataset-create-new-all-default-fields.json"),
-              encoding="utf-8") as config_file:
+    with open(join(current_path, "dataset-create-new-all-default-fields.json"), encoding="utf-8") as config_file:
       model.metadata = load(config_file)
     set_authors(self.logger, model.metadata)
     self.create_model_document(model)

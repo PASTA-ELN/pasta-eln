@@ -71,7 +71,6 @@ class MainDialog(Ui_MainDialogBase):
     self.instance = DialogExtension()
     super().setupUi(self.instance)
     self.db_api = DatabaseAPI()
-    self.db_api.initialize_database()
     for project in self.db_api.get_models(ProjectModel):
       if isinstance(project, ProjectModel):
         widget = self.get_project_widget(project)
@@ -110,8 +109,7 @@ class MainDialog(Ui_MainDialogBase):
     upload_widget_frame = QtWidgets.QFrame()
     upload_widget_ui = Ui_UploadWidgetFrame()
     upload_widget_ui.setupUi(upload_widget_frame)
-    upload_widget_ui.uploadProjectLabel.setText(textwrap.fill(project_name, 45
-                                                              , max_lines=1))
+    upload_widget_ui.uploadProjectLabel.setText(textwrap.fill(project_name, 45, max_lines=1))
     upload_widget_ui.uploadProjectLabel.setToolTip(project_name)
     upload_widget_ui.statusIconLabel.setPixmap(
       qta.icon('ph.queue-light').pixmap(upload_widget_ui.statusIconLabel.size()))

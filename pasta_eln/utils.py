@@ -32,7 +32,8 @@ def handle_dataverse_exception_async(wrapped: Callable[..., Any]) -> Callable[..
   async def wrapper(self: Any, *args: object, **kwargs: object) -> Any:
     try:
       return await wrapped(self, *args, **kwargs)
-    except (RequestsConnectionError, InvalidURL, MissingSchema, InvalidSchema, TypeError, FileNotFoundError) as e:
+    except (RequestsConnectionError, InvalidURL, MissingSchema, InvalidSchema, TypeError, FileNotFoundError,
+            AttributeError) as e:
       self.logger.error(e)
       return False, str(e)
 
