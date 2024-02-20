@@ -38,7 +38,6 @@ def update_status(status: str, statusIconLabel: QLabel, statusLabel: QLabel) -> 
       status (str): The status of the upload.
       statusIconLabel (QLabel): The label to display the status icon.
       statusLabel (QLabel): The label to display the status text.
-
   """
   statusLabel.setText(status)
   match status:
@@ -67,9 +66,6 @@ def set_authors(logger: Logger, metadata: dict[str, Any]) -> None:
   Args:
       logger (Logger): The logger instance for logging errors.
       metadata (dict[str, Any]): The metadata dictionary to update.
-
-  Returns:
-      None
   """
   config = read_pasta_config_file(logger)
   if 'authors' not in config:
@@ -89,7 +85,7 @@ def set_authors(logger: Logger, metadata: dict[str, Any]) -> None:
     authors_list.append(copy.deepcopy(author_copy))
 
 
-def get_encrypt_key(logger: Logger) -> tuple[bool, bytes] | Any:
+def get_encrypt_key(logger: Logger) -> tuple[bool, bytes]:
   """
   Gets the encrypt key for the dataverse.
 
@@ -101,7 +97,7 @@ def get_encrypt_key(logger: Logger) -> tuple[bool, bytes] | Any:
       logger (Logger): The logger instance for logging information.
 
   Returns:
-      tuple[bool, bytes] | Any: A tuple containing a boolean indicating if the key exists and the key itself.
+      tuple[bool, bytes]: A tuple containing a boolean indicating if the key exists and the key itself.
   """
   logger.info("Getting dataverse encrypt key..")
   config = read_pasta_config_file(logger)

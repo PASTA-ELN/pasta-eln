@@ -155,8 +155,8 @@ class TestConfigDialog:
       # Assert
       config_dialog.logger.info.assert_called_once_with("Verifying server URL and API token..")
       if not server_url or not api_token:
-        mock_message_box.information.assert_called_once_with(config_dialog.instance, "Error",
-                                                             "Please enter both server URL and API token")
+        mock_message_box.warning.assert_called_once_with(config_dialog.instance, "Error",
+                                                         "Please enter both server URL and API token")
       elif success:
         mock_message_box.information.assert_called_once_with(config_dialog.instance, "Credentials Valid", message)
       else:
@@ -187,8 +187,8 @@ class TestConfigDialog:
     # Assert
     config_dialog.logger.info.assert_called_once_with("Loading dataverse list..")
     if not server_url or not api_token:
-      mock_message_box.information.assert_called_once_with(config_dialog.instance, "Error",
-                                                           "Please enter both server URL and API token")
+      mock_message_box.warning.assert_called_once_with(config_dialog.instance, "Error",
+                                                       "Please enter both server URL and API token")
     else:
       assert config_dialog.dataverseListComboBox.count() == expected_items
       mock_dataverse_client.get_dataverse_list.assert_called_once_with()
@@ -236,3 +236,25 @@ class TestConfigDialog:
 
     assert config_dialog.config_model.dataverse_login_info["dataverse_id"] == expected_dataverse_id
     assert config_dialog.config_model.dataverse_login_info["api_token"] == expected_api_token
+
+  @pytest.mark.parametrize("test_id, show_exception", [# Success tests with various realistic test values
+    ("success_case", None),
+
+    # Error cases could include scenarios where instance.show() raises an exception.
+    ("error_case", Exception("Error during show")), ])
+  def test_show(self, test_id, config_dialog, show_exception):
+    # Arrange
+    config_dialog.instance = MagicMock()
+    if show_exception:
+      config_dialog.instance.show.side_effect = show_exception
+
+    # Act
+    if test_id == "error_case":
+      with pytest.raises(Exception) as exc_info:
+        config_dialog.show()
+      # Assert
+      assert str(exc_info.value) == "Error during show"
+    else:
+      config_dialog.show()
+      # Assert
+      config_dialog.instance.show.assert_called_once()

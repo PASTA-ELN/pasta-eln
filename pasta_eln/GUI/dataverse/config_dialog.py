@@ -80,7 +80,7 @@ class ConfigDialog(Ui_ConfigDialogBase):
     if self.dataverseServerLineEdit.text() and self.apiTokenLineEdit.text():
       self.dataverseLoadPushButton.click()
 
-  def decrypt_api_token(self):
+  def decrypt_api_token(self) -> None:
     """
     Decrypts the API token using the encryption key.
 
@@ -90,9 +90,6 @@ class ConfigDialog(Ui_ConfigDialogBase):
 
     Args:
         self: The instance of the class.
-
-    Returns:
-        None
     """
     key_exists, self.encrypt_key = get_encrypt_key(self.logger)
     if not key_exists:
@@ -107,19 +104,61 @@ class ConfigDialog(Ui_ConfigDialogBase):
                                                                            "api_token"])
 
   def update_dataverse_server(self, new_value: str) -> None:
+    """
+    Updates the server URL in the dataverse login info.
+
+    Explanation:
+        This method updates the server URL in the dataverse login info with the provided new value.
+
+    Args:
+        new_value (str): The new server URL.
+    """
     self.config_model.dataverse_login_info["server_url"] = new_value
 
   def update_api_token(self, new_value: str) -> None:
+    """
+    Updates the API token in the dataverse login info.
+
+    Explanation:
+        This method updates the API token in the dataverse login info with the provided new value.
+
+    Args:
+        new_value (str): The new API token.
+    """
     self.config_model.dataverse_login_info["api_token"] = new_value
 
   def update_dataverse_line_edit(self) -> None:
+    """
+    Updates the dataverse line edit with the provided dataverse ID.
+
+    Explanation:
+        This method updates the dataverse line edit with the provided dataverse ID.
+
+    Args:
+        dataverse_id (str): The dataverse ID to update the line edit with.
+    """
     dataverse_id = self.dataverseListComboBox.currentData(QtCore.Qt.ItemDataRole.UserRole)
     self.dataverseLineEdit.setText(dataverse_id)
 
   def update_dataverse_id(self, new_value: str) -> None:
+    """
+    Updates the dataverse ID in the dataverse login info.
+
+    Explanation:
+        This method updates the dataverse ID in the dataverse login info with the provided new value.
+
+    Args:
+        new_value (str): The new dataverse ID.
+    """
     self.config_model.dataverse_login_info["dataverse_id"] = new_value
 
   def save_config(self) -> None:
+    """
+    Saves the configuration in database.
+
+    Explanation:
+        This method saves the configuration by encrypting the API token.
+    """
     self.logger.info("Saving config..")
     self.config_model.dataverse_login_info["api_token"] = encrypt_data(self.logger, self.encrypt_key,
                                                                        self.config_model.dataverse_login_info[
@@ -127,11 +166,18 @@ class ConfigDialog(Ui_ConfigDialogBase):
     self.db_api.update_model_document(self.config_model)
 
   def verify_server_url_and_api_token(self) -> None:
+    """
+    Verifies the server URL and API token.
+
+    Explanation:
+        This method verifies the server URL and API token by checking if they are both provided.
+        If they are not provided, it shows a warning message.
+    """
     self.logger.info("Verifying server URL and API token..")
     server_url = self.dataverseServerLineEdit.text()
     api_token = self.apiTokenLineEdit.text()
     if not (server_url and api_token):
-      QMessageBox.information(self.instance, "Error", "Please enter both server URL and API token")
+      QMessageBox.warning(self.instance, "Error", "Please enter both server URL and API token")
       return
     success, message = check_login_credentials(self.logger, api_token, server_url)
     if success:
@@ -140,19 +186,25 @@ class ConfigDialog(Ui_ConfigDialogBase):
       QMessageBox.warning(self.instance, "Credentials Invalid", message)
 
   def load_dataverse_list(self) -> None:
+    """
+    Loads the dataverse list.
+
+    Explanation:
+        This method loads the dataverse list by making a request to the server and populating the dataverse list combo box with the retrieved dataverses.
+    """
     self.logger.info("Loading dataverse list..")
+    saved_id = self.config_model.dataverse_login_info.get("dataverse_id", "")
+    self.dataverseListComboBox.clear()
     server_url = self.dataverseServerLineEdit.text()
     api_token = self.apiTokenLineEdit.text()
     if not (server_url and api_token):
-      QMessageBox.information(self.instance, "Error", "Please enter both server URL and API token")
+      QMessageBox.warning(self.instance, "Error", "Please enter both server URL and API token")
       return
-    self.dataverseListComboBox.clear()
     dataverse_client = DataverseClient(server_url, api_token)
     event_loop = get_event_loop()
     if dataverses := event_loop.run_until_complete(dataverse_client.get_dataverse_list()):
       if isinstance(dataverses, list) and isinstance(dataverses[0], dict):
         current_text = ""
-        saved_id = self.config_model.dataverse_login_info.get("dataverse_id", "")
         for dataverse in dataverses:
           dv_title = dataverse.get('title', None)
           dv_id = dataverse.get('id', None)
@@ -164,6 +216,15 @@ class ConfigDialog(Ui_ConfigDialogBase):
       else:
         self.logger.error("Failed to load dataverse list")
 
+  def show(self) -> None:
+    """
+    Shows the instance.
+
+    Explanation:
+        This method shows the instance by calling its show method.
+    """
+    self.instance.show()
+
 
 if __name__ == "__main__":
   import sys
@@ -171,5 +232,5 @@ if __name__ == "__main__":
   app = QtWidgets.QApplication(sys.argv)
 
   ui = ConfigDialog()
-  ui.instance.show()
+  ui.show()
   sys.exit(app.exec())
