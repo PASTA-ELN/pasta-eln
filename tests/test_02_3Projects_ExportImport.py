@@ -122,7 +122,7 @@ class TestStringMethods(unittest.TestCase):
           else:
               logJson[fileName] = logJson[fileName] | {'params_metadata_json':success}
 
-          # count occurances of all keys
+          # count occurrences of all keys
           counts = {}
           for node in graph:
               if node['@id'] in ['./',METADATA_FILE]:

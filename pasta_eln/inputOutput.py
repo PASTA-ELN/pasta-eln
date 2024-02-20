@@ -14,7 +14,7 @@ from .miscTools import createDirName, generic_hash
 # - where to store additional metadata, not in ro-crate-metadata, separate files for each entry?
 # "ro-crate-metadata.json", "sdPublisher": "@id": or name
 # how to store different versions?
-# how should the folder structure be? kadi4mat, sampleDB, egal:
+# how should the folder structure be? kadi4mat, sampleDB, does-not-matter:
 # ro-crate.json: @type:Comment?
 
 # Always use RO-crate names
@@ -35,11 +35,11 @@ pasta2json:dict[str,Any] = {
   'links'       : 'mentions',
   'shasum'      : None,
 }
-json2pasta = {v:k for k,v in pasta2json.items() if v is not None}
+json2pasta:dict[str,Any] = {v:k for k,v in pasta2json.items() if v is not None}
 
 
 # Special terms in other ELNs: only add the ones that are required for function for PASTA
-specialTerms = {
+specialTerms:dict[str,dict[str,str]] = {
     'elabFTW': {
       # 'elabid':'_id',
       # 'title':'-name',
@@ -61,22 +61,32 @@ renameELN = {
   'https://kadi.iam.kit.edu':'Kadi4Mat'
 }
 
-def tree(graph:dict[str,Any]) -> str:
+def tree(graph:dict[Any,Any]) -> str:
   """
   use metadata to create hierarchical tree struction in ascii
 
   Args:
-    metadata: graph
+    graph (dict): graph to be plotted
+
+  Returns:
+    str: output of graph as a nice tree
   """
   METADATA_FILE = 'ro-crate-metadata.json'
 
-  def process_part(part, level):
+  def process_part(part:dict[Any,Any], level:int) -> str:
     """
     recursive function call to process this node
+
+    Args:
+      part (dict): dictionary entry of this hasPart=part of a parent node; is a node by-itself
+      level (int): hierarchy level
+
+    Returns:
+      str: one line in the tree
     """
     prefix = '    '*level + '- '
     # find next node to process
-    newNode = [i for i in graph if '@id' in i and i['@id'] == part['@id']]
+    newNode:list[Any] = [i for i in graph if '@id' in i and i['@id'] == part['@id']]
     if len(newNode) == 1:
       output = f'{prefix} {newNode[0]["@id"]} type:{newNode[0]["@type"]} items: {len(newNode[0])-1}\n'  # -1 because @id is not counted
       subparts = newNode[0].pop('hasPart') if 'hasPart' in newNode[0] else []
@@ -84,7 +94,7 @@ def tree(graph:dict[str,Any]) -> str:
         for subpart in subparts:
           output += process_part(subpart, level + 1)
     else:                                                       #not found
-      output += ('  items: ' + str(len(part) - 1) + '\n')  # -1 because @id is not counted
+      output = f'  items: {len(part) - 1}\n'      # -1 because @id is not counted
     return output
 
   # main tree-function
@@ -117,7 +127,7 @@ def importELN(backend:Backend, elnFileName:str) -> str:
   '''
   elnName = ''
   elnVersion = ''
-  projID, projPWD= '', ''
+  projID, projPWD= '', Path('')
   with ZipFile(elnFileName, 'r', compression=ZIP_DEFLATED) as elnFile:
     files = elnFile.namelist()
     logging.info('All files '+', '.join(files))
@@ -135,7 +145,8 @@ def importELN(backend:Backend, elnFileName:str) -> str:
     elnVersion = rocrateNode['version'] if 'version' in rocrateNode else ''
     logging.info('Import %s %s', elnName, elnVersion)
     if elnName!='PASTA ELN':
-      json2pasta.update(specialTerms.get(elnName, {}))
+      if elnName in specialTerms:
+        json2pasta.update(specialTerms[elnName])
     logging.info('ELN and translator: %s %s', elnName, str(json2pasta))
     mainNode    = [i for i in graph if i["@id"]=="./"][0]
 
@@ -332,6 +343,7 @@ def exportELN(backend:Backend, projectID:str, fileName:str='', dTypes:list[str]=
     backend (backend): PASTA backend instance
     projectID (str): docId of project
     fileName (str): fileName which to use for saving; default='' saves in local folder
+    dTypes (list): list of strings which should be included in the output, alongside folders x0 & x1; empty list=everything is exported
 
   Returns:
     str: report of exportation
