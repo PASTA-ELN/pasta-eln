@@ -24,6 +24,39 @@ from pasta_eln.dataverse.utils import check_login_credentials, decrypt_data, enc
 
 
 class ConfigDialog(Ui_ConfigDialogBase):
+  """
+  Creates a new instance of the ConfigDialog class.
+
+  Explanation:
+  This class represents a configuration dialog.
+  It initializes the dialog, sets up the logger,
+  and handles various UI elements and actions related to the configuration.
+
+  __new__(cls, *_: Any, **__: Any) -> Any
+
+  Creates a new instance of the ConfigDialog class.
+
+  Args:
+      *_: Variable length argument list.
+      **__: Arbitrary keyword arguments.
+
+  Returns:
+      Any: The new instance of the ConfigDialog class.
+
+  __init__(self) -> None
+
+  Initializes the ConfigDialog.
+
+  Explanation:
+  This method initializes the ConfigDialog class.
+  It sets up the logger, creates an instance of QDialog,
+  and performs various initialization tasks related to the configuration.
+
+  Usage:
+    config_dialog = ConfigDialog()
+    config_dialog.show()
+  """
+
   def __new__(cls, *_: Any, **__: Any) -> Any:
     """
     Creates a new instance of the ConfigDialog class.
@@ -131,11 +164,8 @@ class ConfigDialog(Ui_ConfigDialogBase):
     """
     Updates the dataverse line edit with the provided dataverse ID.
 
-    Explanation:
-        This method updates the dataverse line edit with the provided dataverse ID.
-
     Args:
-        dataverse_id (str): The dataverse ID to update the line edit with.
+        self: The instance of the class.
     """
     dataverse_id = self.dataverseListComboBox.currentData(QtCore.Qt.ItemDataRole.UserRole)
     self.dataverseLineEdit.setText(dataverse_id)
