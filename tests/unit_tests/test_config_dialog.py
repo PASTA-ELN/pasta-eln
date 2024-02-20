@@ -50,7 +50,7 @@ def mock_database_api():
 
 
 @pytest.fixture
-def config_dialog(qapp, qtbot, mocker, mock_message_box, mock_webbrowser, mock_dataverse_client, mock_database_api):
+def config_dialog(qtbot, mocker, mock_message_box, mock_webbrowser, mock_dataverse_client, mock_database_api):
   mocker.patch('pasta_eln.GUI.dataverse.config_dialog.DataverseClient', return_value=mock_dataverse_client)
   mocker.patch('pasta_eln.GUI.dataverse.config_dialog.DatabaseAPI', return_value=mock_database_api)
   mocker.patch('pasta_eln.GUI.dataverse.config_dialog.QMessageBox', new=mock_message_box)
@@ -70,7 +70,7 @@ class TestConfigDialog:
   @pytest.mark.parametrize("test_id, server_url",
                            [("success_path_valid_url", "http://valid.url"), ("edge_case_empty_string", ""),
                             ("error_case_invalid_url", "not_a_url")])
-  def test_update_dataverse_server(self, qtbot, config_dialog, test_id, server_url):
+  def test_update_dataverse_server(self, config_dialog, test_id, server_url):
     # Act
     config_dialog.update_dataverse_server(server_url)
 
@@ -81,7 +81,7 @@ class TestConfigDialog:
   @pytest.mark.parametrize("test_id, api_token",
                            [("success_path_valid_token", "valid_token"), ("edge_case_empty_string", ""),
                             ("error_case_special_chars", "!@#$%^&*()")])
-  def test_update_api_token(self, qtbot, config_dialog, test_id, api_token):
+  def test_update_api_token(self, config_dialog, test_id, api_token):
 
     # Act
     config_dialog.update_api_token(api_token)
@@ -120,7 +120,7 @@ class TestConfigDialog:
 
   # Parametrized test for save_config method
   @pytest.mark.parametrize("test_id", [("success_path_save_config")])
-  def test_save_config(self, qtbot, mocker, config_dialog, test_id, mock_message_box):
+  def test_save_config(self, mocker, config_dialog, test_id, mock_message_box):
     # Arrange
     config_dialog.db_api.update_model_document = MagicMock()
     mock_encrypt_data = mocker.patch('pasta_eln.GUI.dataverse.config_dialog.encrypt_data',
