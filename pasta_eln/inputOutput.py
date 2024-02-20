@@ -14,7 +14,8 @@ from .miscTools import createDirName, generic_hash
 # - where to store additional metadata, not in ro-crate-metadata, separate files for each entry?
 # "ro-crate-metadata.json", "sdPublisher": "@id": or name
 # how to store different versions?
-# how should the folder structure be? kadi4mat, sampleDB:
+# how should the folder structure be? kadi4mat, sampleDB, egal:
+# ro-crate.json: @type:Comment?
 
 # Always use RO-crate names
 # GENERAL TERMS IN ro-crate-metadata.json (None implies definitely should not be saved)
@@ -56,7 +57,7 @@ specialTerms = {
     }
 }
 
-renameELN_names = {
+renameELN = {
   'https://kadi.iam.kit.edu':'Kadi4Mat'
 }
 
@@ -271,8 +272,8 @@ def importELN(backend:Backend, elnFileName:str) -> str:
           nonlocal projID
           nonlocal projPWD
           if docType == 'x1' and projID == '':
-            print(f'  Want to created project name:{renameELN_names[elnName]}')
-            projID = backend.addData('x0', {'-name':f'Imported project of {renameELN_names[elnName]} '})
+            print(f'  Want to created project name:{renameELN.get(elnName, elnName)}')
+            projID = backend.addData('x0', {'-name':f'Imported project of {renameELN.get(elnName, elnName)} '})
             backend.changeHierarchy(projID)
             projPWD= Path(backend.cwd)
             backend.hierStack = [projID]

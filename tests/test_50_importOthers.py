@@ -37,20 +37,22 @@ class TestStringMethods(unittest.TestCase):
     warnings.filterwarnings('ignore', message='invalid escape sequence')
     warnings.filterwarnings('ignore', category=ResourceWarning, module='PIL')
     warnings.filterwarnings('ignore', category=ImportWarning)
-    # remove everything else
-    self.be = Backend('research', initConfig=False)
-    self.dirName = self.be.basePath
-    self.be.exit(deleteDB=True)
-    shutil.rmtree(self.dirName)
-    os.makedirs(self.dirName)
-    self.be = Backend('research', initViews=True, initConfig=False)
 
-    # download new
+    # setup
     localPath = Path('/home/steffen/FZJ/DataScience/Repositories/TheELNConsortium/TheELNFileFormat/examples')
     dirpath = localPath if localPath.exists() else Path(tempfile.mkdtemp())
     baseURL = 'https://github.com/TheELNConsortium/TheELNFileFormat/raw/master/examples/'
-    files = ['kadi4mat/collections-example.eln']#SampleDB/sampledb_export.eln', ]#, 'kadi4mat/records-example.eln']
-    for fileI in files:
+    files = [('kadi4mat/records-example.eln', 6), ('kadi4mat/collections-example.eln', 18),
+             ('SampleDB/sampledb_export.eln', 13)]
+    for fileI, numFiles in files:
+      # remove everything else
+      self.be = Backend('research', initConfig=False)
+      self.dirName = self.be.basePath
+      self.be.exit(deleteDB=True)
+      shutil.rmtree(self.dirName)
+      os.makedirs(self.dirName)
+      self.be = Backend('research', initViews=True, initConfig=False)
+
       elnFile = dirpath/fileI
       if not elnFile.exists():
         print(f'Download file {elnFile}')
@@ -78,8 +80,8 @@ class TestStringMethods(unittest.TestCase):
       fileCount = 0
       for _, _, files in os.walk(self.be.basePath):
         fileCount+=len(files)
-      print('Number of files 4 =', fileCount)
-      # self.assertEqual(fileCount, 4, 'Not 4 files exist')
+      print(f'Number of files should:{numFiles} = reality:{fileCount}')
+      self.assertEqual(fileCount, numFiles, f'Not {numFiles} files exist')
     return
 
   def tearDown(self):

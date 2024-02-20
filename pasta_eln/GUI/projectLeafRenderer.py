@@ -107,7 +107,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
             value = 'ERROR WITH LINK'
         painter.drawStaticText(x0, y0+y, QStaticText(f'{key}: {value}'))
       elif isinstance(doc[key], list):                     #list of qrCodes
-        painter.drawStaticText(x0, y0+y, QStaticText(f'{key}: ' + ', '.join(doc[key])))
+        painter.drawStaticText(x0, y0+y, QStaticText(f'{key}: ' + ', '.join([str(i) for i in doc[key]])))
     for textType in ['comment', 'content']:
       if textType in doc and (textType != 'content' or 'image' not in doc or doc['image'] == ''):
         textDoc = QTextDocument()
