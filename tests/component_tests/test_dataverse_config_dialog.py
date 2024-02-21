@@ -161,7 +161,7 @@ class TestDataverseConfigDialog:
     with qtbot.waitExposed(config_dialog.instance, timeout=500):
       assert config_dialog.instance.isVisible() is True, "Dataverse config dialog should be shown!"
       qtbot.mouseClick(config_dialog.apiTokenHelpPushButton, Qt.LeftButton)
-      mock_webbrowser.open.assert_called_once_with("https://guides.dataverse.org/en/latest/api/auth.html")
+      mock_webbrowser.open.assert_called_once_with("https://data.fz-juelich.de/guide/api/auth.html")
 
   def test_cancel_button_click_should_close_dialog(self, qtbot, config_dialog):
     config_dialog.show()

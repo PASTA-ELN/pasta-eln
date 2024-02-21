@@ -108,7 +108,7 @@ class ConfigDialog(Ui_ConfigDialogBase):
     self.apiTokenVerifyPushButton.clicked.connect(self.verify_server_url_and_api_token)
     self.dataverseLoadPushButton.clicked.connect(self.load_dataverse_list)
     self.apiTokenHelpPushButton.clicked.connect(
-      lambda: webbrowser.open("https://guides.dataverse.org/en/latest/api/auth.html"))
+      lambda: webbrowser.open("https://data.fz-juelich.de/guide/api/auth.html"))
 
     # Load dataverse list
     if self.dataverseServerLineEdit.text() and self.apiTokenLineEdit.text():
