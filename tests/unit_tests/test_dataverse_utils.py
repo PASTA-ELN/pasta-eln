@@ -15,7 +15,7 @@ from unittest.mock import mock_open
 import pytest
 from cryptography.fernet import Fernet
 
-from pasta_eln.dataverse.database_error import DatabaseError
+from pasta_eln.dataverse.config_error import ConfigError
 from pasta_eln.dataverse.upload_status_values import UploadStatusValues
 from pasta_eln.dataverse.utils import check_login_credentials, decrypt_data, encrypt_data, get_encrypt_key, \
   log_and_create_error, read_pasta_config_file, set_authors, update_status, write_pasta_config_file
@@ -38,7 +38,8 @@ class TestDataverseUtils:
                             (UploadStatusValues.Cancelled.name, 'mdi.cancel', 'happy_path_cancelled'),
                             (UploadStatusValues.Finished.name, 'fa.check-circle-o', 'happy_path_finished'),
                             (UploadStatusValues.Error.name, 'msc.error-small', 'happy_path_error'),
-                            (UploadStatusValues.Warning.name, 'fa.warning', 'happy_path_warning'), # Add edge cases here
+                            (UploadStatusValues.Warning.name, 'fa.warning', 'happy_path_warning'),
+                            # Add edge cases here
                             # Add error cases here
                             ])
   def test_update_status(self, mocker, status, expected_icon_name, test_id):
@@ -76,7 +77,7 @@ class TestDataverseUtils:
 
   # Parametrized test for error scenarios
   @pytest.mark.parametrize("test_id, exception, message",
-                           [("ErrorCase-1", DatabaseError, "Config file not found, Corrupt installation!"), ], )
+                           [("ErrorCase-1", ConfigError, "Config file not found, Corrupt installation!"), ], )
   def test_read_pasta_config_file_error_path(self, mocker, test_id, exception, message, tmp_path):
     # Arrange
     mock_logger = mocker.MagicMock(spec=logging.Logger)
@@ -138,22 +139,27 @@ class TestDataverseUtils:
 
   # Parametrized test for success path with various realistic test values
   @pytest.mark.parametrize("config_data, metadata, expected_authors_list, test_id", [(
-  {'authors': [{'last': 'Doe', 'first': 'John', 'orcid': '0000-0001', 'organizations': [{'organization': 'Org1'}]}]}, {
-    'datasetVersion': {'metadataBlocks': {'citation': {'fields': [{'typeName': 'author', 'value': [
-      {'authorName': {'value': 'Last, First'}, 'authorIdentifierScheme': {'value': 'ORCID'},
-        'authorIdentifier': {'value': ''}, 'authorAffiliation': {'value': ''}}]}]}}}}, [
-    {'authorName': {'value': 'Doe, John'}, 'authorIdentifierScheme': {'value': 'ORCID'},
-      'authorIdentifier': {'value': '0000-0001'}, 'authorAffiliation': {'value': 'Org1'}}],
-  "success-path-single-author"), ({'authors': [{'last': 'Smith', 'first': 'Jane', 'orcid': '0000-0002',
-    'organizations': [{'organization': 'Org2'}, {'organization': 'Org3'}]}]}, {'datasetVersion': {'metadataBlocks': {
-    'citation': {'fields': [{'typeName': 'author', 'value': [
-      {'authorName': {'value': 'Last, First'}, 'authorIdentifierScheme': {'value': 'ORCID'},
-        'authorIdentifier': {'value': ''}, 'authorAffiliation': {'value': ''}}]}]}}}}, [
-                                    {'authorName': {'value': 'Smith, Jane'},
-                                      'authorIdentifierScheme': {'value': 'ORCID'},
-                                      'authorIdentifier': {'value': '0000-0002'},
-                                      'authorAffiliation': {'value': 'Org2, Org3'}}],
-                                  "success-path-single-author-multiple-orgs"), ({'authors': [
+      {'authors': [
+        {'last': 'Doe', 'first': 'John', 'orcid': '0000-0001', 'organizations': [{'organization': 'Org1'}]}]}, {
+        'datasetVersion': {'metadataBlocks': {'citation': {'fields': [{'typeName': 'author', 'value': [
+          {'authorName': {'value': 'Last, First'}, 'authorIdentifierScheme': {'value': 'ORCID'},
+           'authorIdentifier': {'value': ''}, 'authorAffiliation': {'value': ''}}]}]}}}}, [
+        {'authorName': {'value': 'Doe, John'}, 'authorIdentifierScheme': {'value': 'ORCID'},
+         'authorIdentifier': {'value': '0000-0001'}, 'authorAffiliation': {'value': 'Org1'}}],
+      "success-path-single-author"), ({'authors': [{'last': 'Smith', 'first': 'Jane', 'orcid': '0000-0002',
+                                                    'organizations': [{'organization': 'Org2'},
+                                                                      {'organization': 'Org3'}]}]},
+                                      {'datasetVersion': {'metadataBlocks': {
+                                        'citation': {'fields': [{'typeName': 'author', 'value': [
+                                          {'authorName': {'value': 'Last, First'},
+                                           'authorIdentifierScheme': {'value': 'ORCID'},
+                                           'authorIdentifier': {'value': ''},
+                                           'authorAffiliation': {'value': ''}}]}]}}}}, [
+                                        {'authorName': {'value': 'Smith, Jane'},
+                                         'authorIdentifierScheme': {'value': 'ORCID'},
+                                         'authorIdentifier': {'value': '0000-0002'},
+                                         'authorAffiliation': {'value': 'Org2, Org3'}}],
+                                      "success-path-single-author-multiple-orgs"), ({'authors': [
     {'last': 'Doe', 'first': 'John', 'orcid': '0000-0001', 'organizations': [{'organization': 'Org1'}]},
     {'last': 'Smith', 'first': 'Jane', 'orcid': '0000-0002', 'organizations': [{'organization': 'Org2'}]},
     {'last': 'Keith', 'first': 'Sean', 'orcid': '0000-0003',
@@ -161,18 +167,19 @@ class TestDataverseUtils:
     'citation': {'fields': [{'typeName': 'author', 'value': [
       {'authorName': {'value': 'Last, First'}, 'authorIdentifierScheme': {'value': 'ORCID'},
        'authorIdentifier': {'value': ''}, 'authorAffiliation': {'value': ''}}]}]}}}}, [
-                                                                                  {'authorName': {'value': 'Doe, John'},
-                                                                                   'authorIdentifierScheme': {
-                                                                                     'value': 'ORCID'},
-                                                                                   'authorIdentifier': {
-                                                                                     'value': '0000-0001'},
-                                                                                   'authorAffiliation': {
-                                                                                     'value': 'Org1'}}, {
+                                                                                      {'authorName': {
+                                                                                        'value': 'Doe, John'},
+                                                                                        'authorIdentifierScheme': {
+                                                                                          'value': 'ORCID'},
+                                                                                        'authorIdentifier': {
+                                                                                          'value': '0000-0001'},
+                                                                                        'authorAffiliation': {
+                                                                                          'value': 'Org1'}}, {
       'authorName': {'value': 'Smith, Jane'}, 'authorIdentifierScheme': {'value': 'ORCID'},
       'authorIdentifier': {'value': '0000-0002'}, 'authorAffiliation': {'value': 'Org2'}}, {
       'authorName': {'value': 'Keith, Sean'}, 'authorIdentifierScheme': {'value': 'ORCID'},
       'authorIdentifier': {'value': '0000-0003'}, 'authorAffiliation': {'value': 'Org3, Org4'}}],
-                                                                                "success-path-multiple-authors"), ])
+                                                                                    "success-path-multiple-authors"), ])
   def test_set_authors_success_path(self, mocker, config_data, metadata, expected_authors_list, test_id):
     # Arrange
     logger = mocker.MagicMock()
@@ -221,10 +228,13 @@ class TestDataverseUtils:
     ({},  # No authors in config
      {'datasetVersion': {
        'metadataBlocks': {'citation': {'fields': [{'typeName': 'author', 'value': [{'authorName': {'value': ''}}]}]}}}},
-     DatabaseError("Incorrect config file, authors not found!"), "error-no-authors-in-config"),  # Test ID: 2
+     ConfigError("Incorrect config file, authors not found!"), "error-no-authors-in-config"),  # Test ID: 2
+    (None,  # No authors in config
+     None,
+     ConfigError("Incorrect config file, authors not found!"), "error-no-authors-in-config"),  # Test ID: 2
     ({'authors': []},  # Empty authors list in config
      {'datasetVersion': {'metadataBlocks': {'citation': {'fields': [{'typeName': 'author', 'value': []}]}}}},
-     DatabaseError("Incorrect config file, authors not found!"), "error-empty-authors-list"), ])
+     ConfigError("Incorrect config file, authors not found!"), "error-empty-authors-list"), ])
   def test_set_authors_error_cases(self, mocker, config_data, metadata, exception, test_id):
     # Arrange
     logger = mocker.MagicMock()
@@ -273,10 +283,12 @@ class TestDataverseUtils:
     else:
       mock_logger.info.assert_called()
 
-  @pytest.mark.parametrize("test_id, config, expected_key_exists, expected_key", [  # Success path tests
-    ("success-existing-key", {'dataverseEncryptKey': EXISTING_KEY}, True, EXISTING_KEY),
-    ("success-new-key", {}, False, NEW_KEY), ])
-  def test_get_encrypt_key(self, mocker, test_id, config, expected_key_exists, expected_key):
+  @pytest.mark.parametrize("test_id, config, expected_key_exists, expected_key, exception", [  # Success path tests
+    ("success-existing-key", {'dataverseEncryptKey': EXISTING_KEY}, True, EXISTING_KEY, None),
+    ("success-new-key", {}, False, NEW_KEY, None),
+    ("error-no-config", None, False, NEW_KEY, ConfigError("Config file not found, Corrupt installation!")),
+  ])
+  def test_get_encrypt_key(self, mocker, test_id, config, expected_key_exists, expected_key, exception):
     # Arrange
     logger = mocker.MagicMock(spec=logging.Logger)
     mock_read_config = mocker.patch('pasta_eln.dataverse.utils.read_pasta_config_file', return_value=config)
@@ -284,18 +296,23 @@ class TestDataverseUtils:
     mocker.patch('cryptography.fernet.Fernet.generate_key', return_value=b64decode(expected_key))
 
     # Act
-    key_exists, key = get_encrypt_key(logger)
+    if exception:
+      with pytest.raises(ConfigError):
+        key_exists, key = get_encrypt_key(logger)
+    else:
+      key_exists, key = get_encrypt_key(logger)
 
     # Assert
-    assert key_exists == expected_key_exists
-    assert b64encode(key).decode('ascii') == expected_key
-    if not expected_key_exists:
-      mock_write_config.assert_called_once()
-      logger.warning.assert_called_with("Dataverse encrypt key does not exist, hence generating a new key..")
-    else:
-      mock_write_config.assert_not_called()
-    mock_read_config.assert_called_once_with(logger)
     logger.info.assert_called_with("Getting dataverse encrypt key..")
+    if not exception:
+      assert key_exists == expected_key_exists
+      assert b64encode(key).decode('ascii') == expected_key
+      if not expected_key_exists:
+        mock_write_config.assert_called_once()
+        logger.warning.assert_called_with("Dataverse encrypt key does not exist, hence generating a new key..")
+      else:
+        mock_write_config.assert_not_called()
+      mock_read_config.assert_called_once_with(logger)
 
   # Parametrized test cases for happy path, edge cases, and error cases
   @pytest.mark.parametrize("test_id, config_data, file_exists, expected_call_count, expected_info_log",
@@ -321,13 +338,13 @@ class TestDataverseUtils:
     mock_open_call = mocker.patch('pasta_eln.dataverse.utils.open', mock_open())
     mock_error = mocker.patch('pasta_eln.dataverse.utils.log_and_create_error')
     if test_id == "error-1":
-      mock_error.side_effect = DatabaseError("Config file not found, Corrupt installation!")
+      mock_error.side_effect = ConfigError("Config file not found, Corrupt installation!")
 
     # Act
     if file_exists:
       write_pasta_config_file(logger_mock, config_data)
     else:
-      with pytest.raises(DatabaseError):
+      with pytest.raises(ConfigError):
         write_pasta_config_file(logger_mock, config_data)
 
     # Assert
@@ -337,7 +354,7 @@ class TestDataverseUtils:
       mock_open_call.assert_called_once_with(CONFIG_PATH, 'w', encoding='utf-8')
       mock_dump.assert_called_once_with(config_data, mock_open_call(), ensure_ascii=False, indent=4)
     else:
-      mock_error.assert_called_with(logger_mock, DatabaseError, "Config file not found, Corrupt installation!")
+      mock_error.assert_called_with(logger_mock, ConfigError, "Config file not found, Corrupt installation!")
 
   @pytest.mark.parametrize("test_id, encrypt_key, data, expected",
                            [  # success path tests with various realistic test values
@@ -378,7 +395,7 @@ class TestDataverseUtils:
       assert result is None
     elif expected is Exception:
       assert result is None
-      logger.warning.assert_called_once()
+      logger.error.assert_called_once()
     else:
       fernet = Fernet(encrypt_key)
       assert fernet.decrypt(result.encode('ascii')).decode('ascii') == fernet.decrypt(expected.encode('ascii')).decode(
@@ -391,9 +408,12 @@ class TestDataverseUtils:
                              ("happy-path-empty-string", VALID_KEY, Fernet(VALID_KEY).encrypt(b"").decode('ascii'), ""),
 
                              # Error cases
-                             ("error-none-key", None, "data", None), ("error-none-data", VALID_KEY, None, None), (
-                               "error-invalid-key", b"invalid_key", Fernet(VALID_KEY).encrypt(b"data").decode('ascii'),
-                               Exception), ("error-invalid-data", VALID_KEY, "invalid_data", Exception), ])
+                             ("error-none-key", None, "data", None), ("error-none-data", VALID_KEY, None, None),
+                             ("error-invalid-key", b"invalid_key", Fernet(VALID_KEY).encrypt(b"data").decode('ascii'),
+                              Exception),
+                             ("error-invalid-data", VALID_KEY, "invalid_data", Exception),
+                             ("error-invalid-data", VALID_KEY, "invalid_data", Exception),
+                           ])
   def test_decrypt_data(self, mocker, test_id, encrypt_key, data, expected):
     # Arrange
     logger = mocker.MagicMock(spec=logging.Logger)
@@ -410,6 +430,6 @@ class TestDataverseUtils:
       logger.warning.assert_called_with("encrypt_key/data cannot be None")
     elif expected is Exception:
       assert result is None
-      logger.warning.assert_called_once()
+      logger.error.assert_called_once()
     else:
       assert result == expected

@@ -22,7 +22,7 @@ from cryptography.fernet import Fernet, InvalidToken
 from qtawesome import icon
 
 from pasta_eln.dataverse.client import DataverseClient
-from pasta_eln.dataverse.database_error import DatabaseError
+from pasta_eln.dataverse.config_error import ConfigError
 from pasta_eln.dataverse.upload_status_values import UploadStatusValues
 
 
@@ -68,13 +68,15 @@ def set_authors(logger: Logger, metadata: dict[str, Any]) -> None:
       metadata (dict[str, Any]): The metadata dictionary to update.
   """
   config = read_pasta_config_file(logger)
+  if config is None:
+    raise log_and_create_error(logger, ConfigError, "Config file not found, Corrupt installation!")
   if 'authors' not in config:
-    raise log_and_create_error(logger, DatabaseError, "Incorrect config file, authors not found!")
+    raise log_and_create_error(logger, ConfigError, "Incorrect config file, authors not found!")
   author_field = next(
     f for f in metadata['datasetVersion']['metadataBlocks']['citation']['fields'] if f['typeName'] == 'author')
   authors_list = author_field['value']
   if not authors_list:
-    raise log_and_create_error(logger, DatabaseError, "Incorrect config file, authors not found!")
+    raise log_and_create_error(logger, ConfigError, "Incorrect config file, authors not found!")
   author_copy = authors_list[0].copy()
   authors_list.clear()
   for author in config['authors']:
@@ -87,20 +89,24 @@ def set_authors(logger: Logger, metadata: dict[str, Any]) -> None:
 
 def get_encrypt_key(logger: Logger) -> tuple[bool, bytes]:
   """
-  Gets the encrypt key for the dataverse.
+  Gets the dataverse encryption key.
 
   Explanation:
-      This function retrieves the encrypt key for the dataverse from the configuration.
-      If the key does not exist, it generates a new key and updates the configuration.
+  This function retrieves the dataverse encryption key from the configuration file. If the key does not exist, a new key is generated and stored in the configuration file.
 
   Args:
-      logger (Logger): The logger instance for logging information.
+      logger (Logger): The logger instance for logging messages.
+
+  Raises:
+    EnvironmentError: If the config file is not found or corrupt.
 
   Returns:
-      tuple[bool, bytes]: A tuple containing a boolean indicating if the key exists and the key itself.
+      tuple[bool, bytes]: A tuple containing a boolean indicating whether the key exists and the encryption key itself.
   """
   logger.info("Getting dataverse encrypt key..")
   config = read_pasta_config_file(logger)
+  if config is None:
+    raise log_and_create_error(logger, ConfigError, "Config file not found, Corrupt installation!")
   key_exists = False
   if 'dataverseEncryptKey' not in config:
     logger.warning("Dataverse encrypt key does not exist, hence generating a new key..")
@@ -135,13 +141,13 @@ def encrypt_data(logger: Logger, encrypt_key: bytes, data: str) -> str | None:
     fernet = Fernet(encrypt_key)
     data = fernet.encrypt(data.encode('ascii')).decode('ascii')
   except InvalidToken as e:
-    logger.warning("Invalid token: %s", e)
+    logger.error("Invalid token: %s", e)
     return None
   except ValueError as e:
-    logger.warning("Value error: %s", e)
+    logger.error("Value error: %s", e)
     return None
   except AttributeError as e:
-    logger.warning("AttributeError: %s", e)
+    logger.error("AttributeError: %s", e)
     return None
   return data
 
@@ -169,13 +175,13 @@ def decrypt_data(logger: Logger, encrypt_key: bytes, data: str) -> str | None:
     fernet = Fernet(encrypt_key)
     data = fernet.decrypt(data.encode('ascii')).decode('ascii')
   except InvalidToken as e:
-    logger.warning("Invalid token: %s", e)
+    logger.error("Invalid token: %s", e)
     return None
   except ValueError as e:
-    logger.warning("Value error: %s", e)
+    logger.error("Value error: %s", e)
     return None
   except AttributeError as e:
-    logger.warning("AttributeError: %s", e)
+    logger.error("AttributeError: %s", e)
     return None
   return data
 
@@ -196,7 +202,7 @@ def read_pasta_config_file(logger: Logger) -> dict[str, Any] | None:
   """
   config_file_name = join(Path.home(), '.pastaELN.json')
   if not exists(config_file_name):
-    raise log_and_create_error(logger, DatabaseError, "Config file not found, Corrupt installation!")
+    raise log_and_create_error(logger, ConfigError, "Config file not found, Corrupt installation!")
   logger.info("Reading config file: %s", config_file_name)
   with open(config_file_name, 'r', encoding='utf-8') as confFile:
     config = load(confFile)
@@ -217,7 +223,7 @@ def write_pasta_config_file(logger: Logger, config_data: dict[str, Any]) -> None
   """
   config_file_name = join(Path.home(), '.pastaELN.json')
   if not exists(config_file_name):
-    raise log_and_create_error(logger, DatabaseError, "Config file not found, Corrupt installation!")
+    raise log_and_create_error(logger, ConfigError, "Config file not found, Corrupt installation!")
   logger.info("Writing config file: %s", config_file_name)
   with open(config_file_name, 'w', encoding='utf-8') as confFile:
     dump(config_data, confFile, ensure_ascii=False, indent=4)
