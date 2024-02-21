@@ -14,6 +14,7 @@ import pytest
 from cloudant.error import CloudantDatabaseException
 
 from pasta_eln.dataverse.base_database_api import BaseDatabaseAPI
+from pasta_eln.dataverse.config_error import ConfigError
 from pasta_eln.dataverse.database_error import DatabaseError
 
 # Constants for test cases
@@ -36,7 +37,7 @@ def create_mock_config(default_project_group_exists=True, user_and_password_exis
 def mock_database_api(mocker) -> BaseDatabaseAPI:
   mocker.patch('pasta_eln.dataverse.base_database_api.logging.getLogger')
   with patch('pasta_eln.dataverse.base_database_api.read_pasta_config_file', return_value=create_mock_config()), patch(
-    'pasta_eln.dataverse.base_database_api.logging.Logger.error'):
+      'pasta_eln.dataverse.base_database_api.logging.Logger.error'):
     return BaseDatabaseAPI()
 
 
@@ -44,8 +45,8 @@ class TestDataverseBaseDatabaseApi:
   # Parametrized test for a success path
   @pytest.mark.parametrize("config_content, expected_db_name, expected_username, expected_password",
                            [(create_mock_config(), DEFAULT_PROJECT_GROUP, USER, PASSWORD),
-                             # Add more test cases with different realistic values if necessary
-                           ], ids=["success_path_default"])
+                            # Add more test cases with different realistic values if necessary
+                            ], ids=["success_path_default"])
   def test_base_database_api_init_success_path(self, config_content, expected_db_name, expected_username,
                                                expected_password):
     # Arrange
@@ -63,11 +64,12 @@ class TestDataverseBaseDatabaseApi:
 
   # Parametrized test for various error cases
   @pytest.mark.parametrize("config_content, exists_return_value, expected_error_message",
-                           [(create_mock_config(), False, "Config file not found, Corrupt installation!"), (
-                           create_mock_config(default_project_group_exists=False), True,
-                           "Incorrect config file, defaultProjectGroup not found!"), (
-                           create_mock_config(user_and_password_exists=False), True,
-                           "Incorrect config file, projectGroups not found!"), # Add more error cases if necessary
+                           [
+                             (create_mock_config(), False, "Config file not found, Corrupt installation!"),
+                             (create_mock_config(default_project_group_exists=False), True,
+                              "Incorrect config file, defaultProjectGroup not found!"),
+                             (create_mock_config(user_and_password_exists=False), True,
+                              "Incorrect config file, projectGroups not found!"),  # Add more error cases if necessary
                            ], ids=["error_no_config_file", "error_no_default_project_group", "error_no_user_password"])
   def test_base_database_api_init_error_cases(self, config_content, exists_return_value, expected_error_message):
     # Arrange
@@ -76,22 +78,24 @@ class TestDataverseBaseDatabaseApi:
                  "Config file not found, Corrupt installation!")) as read_config_mock, patch(
       'pasta_eln.dataverse.base_database_api.logging.Logger.error') as mock_logger_error:
       # Act & Assert
-      with pytest.raises(DatabaseError) as exc_info:
+      with pytest.raises(ConfigError if exists_return_value else DatabaseError) as exc_info:
         BaseDatabaseAPI()
       assert str(exc_info.value) == expected_error_message
       read_config_mock.assert_called_once()
       if exists_return_value:
         mock_logger_error.assert_called_once_with(expected_error_message)
 
-  @pytest.mark.parametrize("test_id, data, expected_document", [# Success path tests with various realistic test values
-    ("Success-1", {"name": "Spaghetti", "type": "Pasta"}, {"name": "Spaghetti", "type": "Pasta"}),
-    ("Success-2", {"name": "Fusilli", "quantity": 100}, {"name": "Fusilli", "quantity": 100}),
+  @pytest.mark.parametrize("test_id, data, expected_document",
+                           [  # Success path tests with various realistic test values
+                             ("Success-1", {"name": "Spaghetti", "type": "Pasta"},
+                              {"name": "Spaghetti", "type": "Pasta"}),
+                             ("Success-2", {"name": "Fusilli", "quantity": 100}, {"name": "Fusilli", "quantity": 100}),
 
-    # Edge cases
-    ("EdgeCase-1", {}, {}),  # Empty document data
+                             # Edge cases
+                             ("EdgeCase-1", {}, {}),  # Empty document data
 
-    # Error cases
-    ("ErrorCase-1", {"name": "Macaroni"}, None), ])
+                             # Error cases
+                             ("ErrorCase-1", {"name": "Macaroni"}, None), ])
   def test_create_document(self, mocker, test_id, data, expected_document, mock_database_api):
     # Arrange
     mock_client = mocker.MagicMock()
@@ -124,8 +128,8 @@ class TestDataverseBaseDatabaseApi:
   # Happy path tests with various realistic test values
   @pytest.mark.parametrize("document_id, expected_doc",
                            [pytest.param("12345", {'_id': '12345', 'data': 'value'}, id="valid_id_with_data"),
-                             pytest.param("67890", {'_id': '67890', 'data': 'value'},
-                                          id="valid_id_with_different_data"), ], ids=str)
+                            pytest.param("67890", {'_id': '67890', 'data': 'value'},
+                                         id="valid_id_with_different_data"), ], ids=str)
   def test_get_document_success_path(self, mocker, document_id, expected_doc, mock_database_api):
     # Arrange
     mock_client = mocker.MagicMock()
@@ -154,7 +158,7 @@ class TestDataverseBaseDatabaseApi:
   # Error cases
   @pytest.mark.parametrize("document_id, exception",
                            [pytest.param("nonexistent_id", KeyError, id="nonexistent_document"),
-                             pytest.param(None, DatabaseError, id="none_as_document_id"), ], ids=str)
+                            pytest.param(None, DatabaseError, id="none_as_document_id"), ], ids=str)
   def test_get_document_error_cases(self, mocker, document_id, exception, mock_database_api):
     # Arrange
     mock_client = mocker.MagicMock()
@@ -180,7 +184,7 @@ class TestDataverseBaseDatabaseApi:
 
   # Parametrized test cases
   @pytest.mark.parametrize("test_id, input_data, expected_data",
-                           [# Success path tests with various realistic test values
+                           [  # Success path tests with various realistic test values
                              ("SuccessCase_01", {'_id': '123', 'name': 'Spaghetti', 'type': 'Pasta'},
                               {'name': 'Spaghetti', 'type': 'Pasta'}), (
                                "SuccessCase_02", {'_id': '456', 'color': 'Yellow', 'texture': 'Smooth'},
@@ -216,11 +220,11 @@ class TestDataverseBaseDatabaseApi:
                                                 url=mock_database_api.url, connect=True)
 
   @pytest.mark.parametrize("test_id, design_document_name, view_name, map_func, reduce_func, expected_call",
-                           [# Success path tests
+                           [  # Success path tests
                              ("SuccessCase-1", "design_doc_1", "view_1", "function(doc) { emit(doc._id, 1); }", None,
                               True), (
-                           "SuccessCase-2", "design_doc_2", "view_2", "function(doc) { emit(doc.name, doc.age); }",
-                           "_sum", True), # Edge cases
+                               "SuccessCase-2", "design_doc_2", "view_2", "function(doc) { emit(doc.name, doc.age); }",
+                               "_sum", True),  # Edge cases
                              ("EdgeCase-1", "", "view", "function(doc) { emit(doc._id, 1); }", None, True),
                              # Empty design document name
                              ("EdgeCase-2", "design_doc", "", "function(doc) { emit(doc._id, 1); }", None, True),
@@ -260,7 +264,7 @@ class TestDataverseBaseDatabaseApi:
     else:
       mock_design_doc.add_view.assert_not_called()
 
-  @pytest.mark.parametrize("design_document_name, view_name, map_func, reduce_func, test_id", [# Success path tests
+  @pytest.mark.parametrize("design_document_name, view_name, map_func, reduce_func, test_id", [  # Success path tests
     ("design_doc_1", "view_1", "function(doc) { emit(doc._id, 1); }", "_count", "success_case_1"),
     ("design_doc_2", "view_2", "function(doc) { emit(doc.name, doc.age); }", None, "success_case_2"),
 
@@ -315,7 +319,7 @@ class TestDataverseBaseDatabaseApi:
 
   @pytest.mark.parametrize(
     "design_document_name, view_name, map_func, reduce_func, view_result, expected_results, test_id",
-    [# Success case tests
+    [  # Success case tests
       ("design_doc_1", "view_1", None, None, [{"value": {'key': 'value'}}], [{'key': 'value'}],
        "success_case_no_map_reduce"), ("design_doc_2", "view_2", "function(doc) { emit(doc._id, 1); }", "_count",
                                        [{"value": {'key': 'value'}}, {"value": {'key': 'value'}}],
@@ -374,11 +378,11 @@ class TestDataverseBaseDatabaseApi:
 
   @pytest.mark.parametrize(
     "design_document_name, view_name, document_id, map_func, reduce_func, view_result, expected_result, test_id",
-    [# Success path tests
+    [  # Success path tests
       ("design_doc_1", "view_1", "doc_1", None, None, {"doc_1": [{"value": {'key': 'value'}}]}, {'key': 'value'},
        "success_path_1"), (
-    "design_doc_2", "view_2", "doc_2", "map_func_2", "reduce_func_2", {"doc_2": [{"value": {'key': 'value'}}]},
-    {'key': 'value'}, "success_path_2"),
+        "design_doc_2", "view_2", "doc_2", "map_func_2", "reduce_func_2", {"doc_2": [{"value": {'key': 'value'}}]},
+        {'key': 'value'}, "success_path_2"),
 
       # Error cases
       (None, "view_1", "doc_1", None, None, None, None, "error_missing_design_document"),
@@ -421,7 +425,7 @@ class TestDataverseBaseDatabaseApi:
         mock_database_api.logger.error.assert_called_with(
           "Design document name, view name and document id cannot be empty!")
 
-  @pytest.mark.parametrize("test_id, design_document_name, view_name, expected_result", [# Success path tests
+  @pytest.mark.parametrize("test_id, design_document_name, view_name, expected_result", [  # Success path tests
     ("SuccessCase-1", "design_doc_1", "view_1", MagicMock()), ("SuccessCase-2", "design_doc_2", "view_2", MagicMock()),
     # Edge cases
     ("EdgeCase-1", "", "view", None),  # Empty design document name

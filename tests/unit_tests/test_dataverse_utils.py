@@ -283,12 +283,11 @@ class TestDataverseUtils:
     else:
       mock_logger.info.assert_called()
 
-  @pytest.mark.parametrize("test_id, config, expected_key_exists, expected_key, exception", [  # Success path tests
-    ("success-existing-key", {'dataverseEncryptKey': EXISTING_KEY}, True, EXISTING_KEY, None),
-    ("success-new-key", {}, False, NEW_KEY, None),
-    ("error-no-config", None, False, NEW_KEY, ConfigError("Config file not found, Corrupt installation!")),
+  @pytest.mark.parametrize("test_id, config, expected_key_exists, expected_key", [  # Success path tests
+    ("success-existing-key", {'dataverseEncryptKey': EXISTING_KEY}, True, EXISTING_KEY),
+    ("success-new-key", {}, False, NEW_KEY)
   ])
-  def test_get_encrypt_key(self, mocker, test_id, config, expected_key_exists, expected_key, exception):
+  def test_get_encrypt_key(self, mocker, test_id, config, expected_key_exists, expected_key):
     # Arrange
     logger = mocker.MagicMock(spec=logging.Logger)
     mock_read_config = mocker.patch('pasta_eln.dataverse.utils.read_pasta_config_file', return_value=config)
@@ -296,23 +295,18 @@ class TestDataverseUtils:
     mocker.patch('cryptography.fernet.Fernet.generate_key', return_value=b64decode(expected_key))
 
     # Act
-    if exception:
-      with pytest.raises(ConfigError):
-        key_exists, key = get_encrypt_key(logger)
-    else:
-      key_exists, key = get_encrypt_key(logger)
+    key_exists, key = get_encrypt_key(logger)
 
     # Assert
     logger.info.assert_called_with("Getting dataverse encrypt key..")
-    if not exception:
-      assert key_exists == expected_key_exists
-      assert b64encode(key).decode('ascii') == expected_key
-      if not expected_key_exists:
-        mock_write_config.assert_called_once()
-        logger.warning.assert_called_with("Dataverse encrypt key does not exist, hence generating a new key..")
-      else:
-        mock_write_config.assert_not_called()
-      mock_read_config.assert_called_once_with(logger)
+    assert key_exists == expected_key_exists
+    assert b64encode(key).decode('ascii') == expected_key
+    if not expected_key_exists:
+      mock_write_config.assert_called_once()
+      logger.warning.assert_called_with("Dataverse encrypt key does not exist, hence generating a new key..")
+    else:
+      mock_write_config.assert_not_called()
+    mock_read_config.assert_called_once_with(logger)
 
   # Parametrized test cases for happy path, edge cases, and error cases
   @pytest.mark.parametrize("test_id, config_data, file_exists, expected_call_count, expected_info_log",

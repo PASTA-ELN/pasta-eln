@@ -88,7 +88,8 @@ class ConfigDialog(Ui_ConfigDialogBase):
     self.instance: QDialog = QDialog()
     super().setupUi(self.instance)
     self.db_api = DatabaseAPI()
-    self.config_model = self.db_api.get_model(self.db_api.config_doc_id, ConfigModel)
+    self.config_model: ConfigModel = self.db_api.get_model(self.db_api.config_doc_id,
+                                                           ConfigModel)  # type: ignore[assignment]
     self.config_model.dataverse_login_info = self.config_model.dataverse_login_info or {}
     self.decrypt_api_token()
 
@@ -125,16 +126,18 @@ class ConfigDialog(Ui_ConfigDialogBase):
         self: The instance of the class.
     """
     key_exists, self.encrypt_key = get_encrypt_key(self.logger)
-    if not key_exists:
+    if key_exists:
+      self.config_model.dataverse_login_info["api_token"] = decrypt_data(self.logger,  # type: ignore[index]
+                                                                         self.encrypt_key,
+                                                                         self.config_model.dataverse_login_info[
+                                                                           # type: ignore[index]
+                                                                           "api_token"])
+    else:
       self.logger.warning(
         "No encryption key found. Hence if any API key exists, it will be removed and the user needs to re-enter it.")
-      self.config_model.dataverse_login_info["api_token"] = None
-      self.config_model.dataverse_login_info["dataverse_id"] = None
+      self.config_model.dataverse_login_info["api_token"] = None  # type: ignore[index]
+      self.config_model.dataverse_login_info["dataverse_id"] = None  # type: ignore[index]
       self.save_config()
-    else:
-      self.config_model.dataverse_login_info["api_token"] = decrypt_data(self.logger, self.encrypt_key,
-                                                                         self.config_model.dataverse_login_info[
-                                                                           "api_token"])
 
   def update_dataverse_server(self, new_value: str) -> None:
     """
@@ -146,7 +149,7 @@ class ConfigDialog(Ui_ConfigDialogBase):
     Args:
         new_value (str): The new server URL.
     """
-    self.config_model.dataverse_login_info["server_url"] = new_value
+    self.config_model.dataverse_login_info["server_url"] = new_value  # type: ignore[index]
 
   def update_api_token(self, new_value: str) -> None:
     """
@@ -158,7 +161,7 @@ class ConfigDialog(Ui_ConfigDialogBase):
     Args:
         new_value (str): The new API token.
     """
-    self.config_model.dataverse_login_info["api_token"] = new_value
+    self.config_model.dataverse_login_info["api_token"] = new_value  # type: ignore[index]
 
   def update_dataverse_line_edit(self) -> None:
     """
@@ -180,7 +183,7 @@ class ConfigDialog(Ui_ConfigDialogBase):
     Args:
         new_value (str): The new dataverse ID.
     """
-    self.config_model.dataverse_login_info["dataverse_id"] = new_value
+    self.config_model.dataverse_login_info["dataverse_id"] = new_value  # type: ignore[index]
 
   def save_config(self) -> None:
     """
@@ -191,7 +194,9 @@ class ConfigDialog(Ui_ConfigDialogBase):
     """
     self.logger.info("Saving config..")
     self.config_model.dataverse_login_info["api_token"] = encrypt_data(self.logger, self.encrypt_key,
+                                                                       # type: ignore[index]
                                                                        self.config_model.dataverse_login_info[
+                                                                         # type: ignore[index]
                                                                          "api_token"])
     self.db_api.update_model_document(self.config_model)
 
@@ -223,7 +228,7 @@ class ConfigDialog(Ui_ConfigDialogBase):
         This method loads the dataverse list by making a request to the server and populating the dataverse list combo box with the retrieved dataverses.
     """
     self.logger.info("Loading dataverse list..")
-    saved_id = self.config_model.dataverse_login_info.get("dataverse_id", "")
+    saved_id = self.config_model.dataverse_login_info.get("dataverse_id", "")  # type: ignore[union-attr]
     self.dataverseListComboBox.clear()
     server_url = self.dataverseServerLineEdit.text()
     api_token = self.apiTokenLineEdit.text()

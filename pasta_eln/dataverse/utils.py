@@ -105,8 +105,6 @@ def get_encrypt_key(logger: Logger) -> tuple[bool, bytes]:
   """
   logger.info("Getting dataverse encrypt key..")
   config = read_pasta_config_file(logger)
-  if config is None:
-    raise log_and_create_error(logger, ConfigError, "Config file not found, Corrupt installation!")
   key_exists = False
   if 'dataverseEncryptKey' not in config:
     logger.warning("Dataverse encrypt key does not exist, hence generating a new key..")
@@ -118,7 +116,7 @@ def get_encrypt_key(logger: Logger) -> tuple[bool, bytes]:
   return key_exists, key
 
 
-def encrypt_data(logger: Logger, encrypt_key: bytes, data: str) -> str | None:
+def encrypt_data(logger: Logger, encrypt_key: bytes | None, data: str | None) -> str | None:
   """
   Encrypts the provided data using the given encryption key.
 
@@ -128,8 +126,8 @@ def encrypt_data(logger: Logger, encrypt_key: bytes, data: str) -> str | None:
 
   Args:
       logger (Logger): The logger instance for logging information.
-      encrypt_key (bytes): The encryption key used for encryption.
-      data (str): The data to be encrypted.
+      encrypt_key (bytes | None): The encryption key used for encryption.
+      data (str | None): The data to be encrypted.
 
   Returns:
       str | None: The encrypted data as a string, or None if either the encrypt_key or data is None.
@@ -152,7 +150,7 @@ def encrypt_data(logger: Logger, encrypt_key: bytes, data: str) -> str | None:
   return data
 
 
-def decrypt_data(logger: Logger, encrypt_key: bytes, data: str) -> str | None:
+def decrypt_data(logger: Logger, encrypt_key: bytes | None, data: str | None) -> str | None:
   """
   Decrypts the provided data using the given encryption key.
 
@@ -162,8 +160,8 @@ def decrypt_data(logger: Logger, encrypt_key: bytes, data: str) -> str | None:
 
   Args:
       logger (Logger): The logger instance for logging information.
-      encrypt_key (bytes): The encryption key used for decryption.
-      data (str): The data to be decrypted.
+      encrypt_key (bytes | None): The encryption key used for decryption.
+      data (str | None): The data to be decrypted.
 
   Returns:
       str | None: The decrypted data as a string, or None if either the encrypt_key or data is None.
@@ -186,7 +184,7 @@ def decrypt_data(logger: Logger, encrypt_key: bytes, data: str) -> str | None:
   return data
 
 
-def read_pasta_config_file(logger: Logger) -> dict[str, Any] | None:
+def read_pasta_config_file(logger: Logger) -> dict[str, Any]:
   """
   Reads the PASTA configuration file.
 

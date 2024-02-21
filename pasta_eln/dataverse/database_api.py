@@ -289,5 +289,5 @@ class DatabaseAPI:
     current_path = realpath(join(getcwd(), dirname(__file__)))
     with open(join(current_path, "dataset-create-new-all-default-fields.json"), encoding="utf-8") as config_file:
       model.metadata = load(config_file)
-    set_authors(self.logger, model.metadata)
+    set_authors(self.logger, model.metadata or {})
     self.create_model_document(model)

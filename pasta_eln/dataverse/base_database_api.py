@@ -16,6 +16,7 @@ from cloudant.document import Document
 from cloudant.error import CloudantDatabaseException
 from cloudant.view import View
 
+from pasta_eln.dataverse.config_error import ConfigError
 from pasta_eln.dataverse.database_error import DatabaseError
 from pasta_eln.dataverse.utils import log_and_create_error, read_pasta_config_file
 
@@ -57,7 +58,7 @@ class BaseDatabaseAPI:
     if 'defaultProjectGroup' in config:
       self.db_name = config['defaultProjectGroup']
     else:
-      raise log_and_create_error(self.logger, DatabaseError, "Incorrect config file, defaultProjectGroup not found!")
+      raise log_and_create_error(self.logger, ConfigError, "Incorrect config file, defaultProjectGroup not found!")
     self.set_username_password(config)
 
   def set_username_password(self, config: dict[str, Any]) -> None:
@@ -73,15 +74,15 @@ class BaseDatabaseAPI:
     """
     project_groups = config.get('projectGroups')
     if not project_groups:
-      raise log_and_create_error(self.logger, DatabaseError,
+      raise log_and_create_error(self.logger, ConfigError,
                                  "Incorrect config file, projectGroups not found!")
-    main_group = project_groups.get(self.db_name)  # type: ignore[union-attr]
+    main_group = project_groups.get(self.db_name)
     if not main_group:
-      raise log_and_create_error(self.logger, DatabaseError,
+      raise log_and_create_error(self.logger, ConfigError,
                                  "Incorrect config file, defaultProjectGroup not found!")
     local_info = main_group.get('local')
     if not local_info:
-      raise log_and_create_error(self.logger, DatabaseError,
+      raise log_and_create_error(self.logger, ConfigError,
                                  "Incorrect config file, user or password not found!")
     self.username = local_info.get('user')
     self.password = local_info.get('password')
