@@ -193,8 +193,7 @@ class ConfigDialog(Ui_ConfigDialogBase):
         This method saves the configuration by encrypting the API token.
     """
     self.logger.info("Saving config..")
-    self.config_model.dataverse_login_info["api_token"] = encrypt_data(self.logger, self.encrypt_key,
-                                                                       # type: ignore[index]
+    self.config_model.dataverse_login_info["api_token"] = encrypt_data(self.logger, self.encrypt_key,# type:ignore[index]                                                                       # type: ignore[index]# type: ignore[index]# type: ignore[index]
                                                                        self.config_model.dataverse_login_info[
                                                                          # type: ignore[index]
                                                                          "api_token"])
