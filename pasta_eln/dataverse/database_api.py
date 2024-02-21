@@ -104,7 +104,7 @@ class DatabaseAPI:
     self.db_api.add_view(self.design_doc_name,
                          self.project_model_view_name,
                          "function (doc) { "
-                         "if (doc['-type']=='x0') {"
+                         "if (doc['-type'].includes('x0')) {"
                          "emit(doc._id, {"
                          "'name': doc['-name'], "
                          "'_id': doc._id, "

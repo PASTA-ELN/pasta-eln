@@ -143,25 +143,25 @@ class TestDatabaseAPI:
       # Happy path tests with various realistic test values
       ("SuccessCase-1", ('Creating dvProjectsView as part of design document: %s', '_design/viewDataverse'),
        "dvProjectsView",
-       "function (doc) { if (doc['-type']=='x0') {emit(doc._id, {'name': doc['-name'], '_id': doc._id, '_rev': doc._rev, 'objective': doc.objective, 'status': doc.status, 'comment': doc.comment, 'user': doc['-user'], 'date': doc['-date']});}}",
+       "function (doc) { if (doc['-type'].includes('x0')) {emit(doc._id, {'name': doc['-name'], '_id': doc._id, '_rev': doc._rev, 'objective': doc.objective, 'status': doc.status, 'comment': doc.comment, 'user': doc['-user'], 'date': doc['-date']});}}",
        None),
       ("SuccessCase-2", ('Creating dvProjectsView as part of design document: %s', '_design/viewDataverse'),
        "dvProjectsView",
-       "function (doc) { if (doc['-type']=='x0') {emit(doc._id, {'name': doc['-name'], '_id': doc._id, '_rev': doc._rev, 'objective': doc.objective, 'status': doc.status, 'comment': doc.comment, 'user': doc['-user'], 'date': doc['-date']});}}",
+       "function (doc) { if (doc['-type'].includes('x0')) {emit(doc._id, {'name': doc['-name'], '_id': doc._id, '_rev': doc._rev, 'objective': doc.objective, 'status': doc.status, 'comment': doc.comment, 'user': doc['-user'], 'date': doc['-date']});}}",
        None),
 
       # Edge cases
       # Assuming empty string is an edge case for design document name
       ("EdgeCase-1", ('Creating dvProjectsView as part of design document: %s', '_design/viewDataverse'),
        "dvProjectsView",
-       "function (doc) { if (doc['-type']=='x0') {emit(doc._id, {'name': doc['-name'], '_id': doc._id, '_rev': doc._rev, 'objective': doc.objective, 'status': doc.status, 'comment': doc.comment, 'user': doc['-user'], 'date': doc['-date']});}}",
+       "function (doc) { if (doc['-type'].includes('x0')) {emit(doc._id, {'name': doc['-name'], '_id': doc._id, '_rev': doc._rev, 'objective': doc.objective, 'status': doc.status, 'comment': doc.comment, 'user': doc['-user'], 'date': doc['-date']});}}",
        None),
 
       # Error cases
       # Assuming None as an invalid design document name
       ("ErrorCase-1", ('Creating dvProjectsView as part of design document: %s', '_design/viewDataverse'),
        "dvProjectsView",
-       "function (doc) { if (doc['-type']=='x0') {emit(doc._id, {'name': doc['-name'], '_id': doc._id, '_rev': doc._rev, 'objective': doc.objective, 'status': doc.status, 'comment': doc.comment, 'user': doc['-user'], 'date': doc['-date']});}}",
+       "function (doc) { if (doc['-type'].includes('x0')) {emit(doc._id, {'name': doc['-name'], '_id': doc._id, '_rev': doc._rev, 'objective': doc.objective, 'status': doc.status, 'comment': doc.comment, 'user': doc['-user'], 'date': doc['-date']});}}",
        DatabaseError("test_error")),
     ]
   )
