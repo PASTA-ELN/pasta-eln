@@ -101,18 +101,22 @@ class DatabaseAPI:
 
     """
     self.logger.info("Creating dvProjectsView as part of design document: %s", self.design_doc_name)
-    self.db_api.add_view(self.design_doc_name, self.project_model_view_name, "function (doc) { "
-                                                                             "if (doc['-type']=='x0') {"
-                                                                             "emit(doc._id, {"
-                                                                             "'name': doc['-name'], "
-                                                                             "'_id': doc._id, "
-                                                                             "'_rev': doc._rev, "
-                                                                             "'objective': doc.objective, "
-                                                                             "'status': doc.status, "
-                                                                             "'comment': doc.comment, "
-                                                                             "'user': doc['-user'], "
-                                                                             "'date': doc['-date']});"
-                                                                             "}}", None)
+    self.db_api.add_view(self.design_doc_name,
+                         self.project_model_view_name,
+                         "function (doc) { "
+                         "if (doc['-type'].includes('x0')) {"
+                         "emit(doc._id, {"
+                         "'name': doc['-name'], "
+                         "'_id': doc._id, "
+                         "'_rev': doc._rev, "
+                         "'objective': doc.objective, "
+                         "'status': doc.status, "
+                         "'comment': doc.comment, "
+                         "'user': doc['-user'], "
+                         "'date': doc['-date']});"
+                         "}}",
+                         None
+                         )
 
   def create_model_document(self, data: UploadModel | ConfigModel | ProjectModel) -> Union[
     UploadModel, ConfigModel, ProjectModel]:
