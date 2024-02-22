@@ -13,6 +13,7 @@ from asyncio import CancelledError, IncompleteReadError, InvalidStateError, Limi
 from functools import wraps
 from json import JSONDecodeError
 from typing import Any, Callable
+from xml.etree.ElementTree import ParseError
 
 from aiohttp import ClientConnectorError, InvalidURL
 from requests.exceptions import ConnectionError as RequestsConnectionError, InvalidSchema, MissingSchema
@@ -32,12 +33,9 @@ def handle_dataverse_exception_async(wrapped: Callable[..., Any]) -> Callable[..
   async def wrapper(self: Any, *args: object, **kwargs: object) -> Any:
     try:
       return await wrapped(self, *args, **kwargs)
-    except (RequestsConnectionError,
-            InvalidURL,
-            MissingSchema,
-            InvalidSchema,
-            TypeError,
-            FileNotFoundError) as e:
+    except (
+        RequestsConnectionError, InvalidURL, MissingSchema, InvalidSchema, TypeError, FileNotFoundError, AttributeError,
+        ParseError) as e:
       self.logger.error(e)
       return False, str(e)
 
@@ -109,6 +107,18 @@ def handle_http_client_exception(wrapped: Callable[..., Any]) -> Callable[..., A
     except JSONDecodeError as e:
       url = kwargs["base_url"] if 'base_url' in kwargs else args[0]
       error = f"Client session JSONDecodeError for url ({url}) with error: {e}"
+      self.logger.error(error)
+      self.session_request_errors.append(error)
+      return {}
+    except AssertionError as e:
+      url = kwargs["base_url"] if 'base_url' in kwargs else args[0]
+      error = f"Client session AssertionError for url ({url}) with error: {e}"
+      self.logger.error(error)
+      self.session_request_errors.append(error)
+      return {}
+    except ValueError as e:
+      url = kwargs["base_url"] if 'base_url' in kwargs else args[0]
+      error = f"Client session ValueError for url ({url}) with error: {e}"
       self.logger.error(error)
       self.session_request_errors.append(error)
       return {}

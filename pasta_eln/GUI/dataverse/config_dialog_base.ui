@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>963</width>
+    <width>1070</width>
     <height>192</height>
    </rect>
   </property>
@@ -43,6 +43,9 @@
        </item>
        <item>
         <widget class="QLineEdit" name="dataverseServerLineEdit">
+         <property name="toolTip">
+          <string>Enter the dataverse server URL.</string>
+         </property>
          <property name="placeholderText">
           <string>Enter the dataverse server URL, e.g. https://data.fz-juelich.de/</string>
          </property>
@@ -102,6 +105,12 @@
        </item>
        <item>
         <widget class="QLineEdit" name="apiTokenLineEdit">
+         <property name="toolTip">
+          <string>Enter the API token.</string>
+         </property>
+         <property name="echoMode">
+          <enum>QLineEdit::Password</enum>
+         </property>
          <property name="placeholderText">
           <string>Enter the API token, e.g. c6527048-5bdc-48b0-a1d5-ed1b62c4513b</string>
          </property>
@@ -111,7 +120,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="apitTokenVerifyPushButton">
+        <widget class="QPushButton" name="apiTokenVerifyPushButton">
          <property name="minimumSize">
           <size>
            <width>100</width>
@@ -183,10 +192,26 @@
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
+         <property name="toolTip">
+          <string>Displays the dataverse list from the server.</string>
+         </property>
+         <property name="sizeAdjustPolicy">
+          <enum>QComboBox::AdjustToMinimumContentsLengthWithIcon</enum>
+         </property>
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="dataverseListPushButton">
+        <widget class="QLineEdit" name="dataverseLineEdit">
+         <property name="toolTip">
+          <string>Displays the ID of the selected dataverse from the list.</string>
+         </property>
+         <property name="placeholderText">
+          <string>Selected Dataverse ID</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="dataverseLoadPushButton">
          <property name="minimumSize">
           <size>
            <width>100</width>
@@ -194,7 +219,7 @@
           </size>
          </property>
          <property name="toolTip">
-          <string>Loads available dataverse</string>
+          <string>Loads available dataverse list from the server.</string>
          </property>
          <property name="text">
           <string>Load</string>
