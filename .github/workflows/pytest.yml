@@ -21,7 +21,7 @@ jobs:
       - name: Install ubuntu dependencies
         run: |
           sudo apt-get update -qq
-          sudo apt-get install libegl1 -y
+          sudo apt-get install libegl1
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
