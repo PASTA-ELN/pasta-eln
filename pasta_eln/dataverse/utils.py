@@ -74,7 +74,7 @@ def set_authors(logger: Logger, metadata: dict[str, Any]) -> None:
     raise log_and_create_error(logger, ConfigError, "Incorrect config file, authors not found!")
   author_field = next(
     f for f in metadata['datasetVersion']['metadataBlocks']['citation']['fields'] if f['typeName'] == 'author')
-  authors_list = author_field['value']
+  authors_list = author_field['valueTemplate']
   if not authors_list:
     raise log_and_create_error(logger, ConfigError, "Incorrect config file, authors not found!")
   author_copy = authors_list[0].copy()
@@ -85,6 +85,29 @@ def set_authors(logger: Logger, metadata: dict[str, Any]) -> None:
     author_copy['authorIdentifier']['value'] = author['orcid']
     author_copy['authorAffiliation']['value'] = ', '.join([o['organization'] for o in author['organizations']])
     authors_list.append(copy.deepcopy(author_copy))
+
+
+def set_template_values(logger: Logger, metadata: dict[str, Any]) -> None:
+  if not metadata:
+    logger.warning("Empty metadata, make sure the metadata is loaded correctly...")
+    return
+  for _, metablock in metadata['datasetVersion']['metadataBlocks'].items():
+    for field in metablock['fields']:
+      match field['typeClass']:
+        case "primitive" | "controlledVocabulary":
+          # Array of primitive types
+          if field['multiple']:
+            field['valueTemplate'] = field['value'].copy()
+            field['value'].clear()
+          # Single primitive type, set to empty string
+          else:
+            field['valueTemplate'] = field['value']
+            field['value'] = ""
+        case "compound":
+          field['valueTemplate'] = field['value'].copy()
+          field['value'].clear()
+        case _:
+          logger.warning(f"Unsupported type class: {field['typeClass']}")
 
 
 def get_encrypt_key(logger: Logger) -> tuple[bool, bytes]:

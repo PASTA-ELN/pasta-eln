@@ -75,6 +75,7 @@ class Ui_ConfigDialogBase(object):
     self.dataverseListComboBox.setObjectName("dataverseListComboBox")
     self.dataverseListHorizontalLayout.addWidget(self.dataverseListComboBox)
     self.dataverseLineEdit = QtWidgets.QLineEdit(parent=ConfigDialogBase)
+    self.dataverseLineEdit.setClearButtonEnabled(True)
     self.dataverseLineEdit.setObjectName("dataverseLineEdit")
     self.dataverseListHorizontalLayout.addWidget(self.dataverseLineEdit)
     self.dataverseLoadPushButton = QtWidgets.QPushButton(parent=ConfigDialogBase)

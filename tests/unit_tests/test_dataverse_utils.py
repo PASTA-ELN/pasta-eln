@@ -10,6 +10,7 @@ import json
 import logging
 import os
 from base64 import b64decode, b64encode
+from typing import Type
 from unittest.mock import mock_open
 
 import pytest
@@ -18,7 +19,7 @@ from cryptography.fernet import Fernet
 from pasta_eln.dataverse.config_error import ConfigError
 from pasta_eln.dataverse.upload_status_values import UploadStatusValues
 from pasta_eln.dataverse.utils import check_login_credentials, decrypt_data, encrypt_data, get_encrypt_key, \
-  log_and_create_error, read_pasta_config_file, set_authors, update_status, write_pasta_config_file
+  log_and_create_error, read_pasta_config_file, set_authors, set_template_values, update_status, write_pasta_config_file
 
 # Constants for test
 EXISTING_KEY = b64encode(Fernet.generate_key()).decode('ascii')
@@ -427,3 +428,159 @@ class TestDataverseUtils:
       logger.error.assert_called_once()
     else:
       assert result == expected
+
+  @pytest.mark.parametrize("test_id, metadata, expected_warning, expected_result", [
+    # Happy path with various realistic test values
+    ("success_case_1", {
+      "datasetVersion": {
+        "metadataBlocks": {
+          "citation": {
+            "fields": [
+              {
+                "typeClass": "primitive",
+                "value": "Some value",
+                "multiple": False
+              },
+              {
+                "typeClass": "primitive",
+                "value": ["Some value 1", "Some value 2"],
+                "multiple": True
+              },
+              {
+                "typeClass": "compound",
+                "value": [{"subfield": "Another value"}],
+                "multiple": True
+              },
+              {
+                "typeClass": "compound",
+                "value": {"subfield": "Another value"},
+                "multiple": False
+              },
+              {
+                "typeClass": "controlledVocabulary",
+                "value": ["Option1", "Option2"],
+                "multiple": True
+              },
+              {
+                "typeName": "journalArticleType",
+                "multiple": False,
+                "typeClass": "controlledVocabulary",
+                "value": "abstract"
+              }
+            ]
+          }
+        }
+      }
+    }, None, {
+       "datasetVersion": {
+         "metadataBlocks": {
+           "citation": {
+             "fields": [
+               {
+                 "typeClass": "primitive",
+                 "value": "",
+                 "valueTemplate": "Some value",
+                 "multiple": False
+               },
+               {
+                 "typeClass": "primitive",
+                 "value": [],
+                 "valueTemplate": ["Some value 1", "Some value 2"],
+                 "multiple": True
+               },
+               {
+                 "typeClass": "compound",
+                 "value": [],
+                 "valueTemplate": [{"subfield": "Another value"}],
+                 "multiple": True
+               },
+               {
+                 "typeClass": "compound",
+                 "value": {},
+                 "valueTemplate": {"subfield": "Another value"},
+                 "multiple": False
+               },
+               {
+                 "typeClass": "controlledVocabulary",
+                 "value": [],
+                 "valueTemplate": ["Option1", "Option2"],
+                 "multiple": True
+               },
+              {
+                "typeName": "journalArticleType",
+                "multiple": False,
+                "typeClass": "controlledVocabulary",
+                "valueTemplate": "abstract",
+                "value": ""
+              }
+             ]
+           }
+         }
+       }
+     }),
+    # Edge case with empty metadata
+    ("edge_case_empty_metadata", {}, "Empty metadata, make sure the metadata is loaded correctly...", {}),
+    # Error case with invalid metadata structure
+    ("error_case_invalid_metadata", {
+      "datasetVersion": "Invalid structure"
+    }, None, TypeError),
+    ("error_case_invalid_metadata_with_unsupported_type", {
+      "datasetVersion": {
+        "metadataBlocks": {
+          "citation": {
+            "fields": [
+              {
+                "typeClass": "unsupported",
+                "value": "Some value",
+                "multiple": False
+              },
+              {
+                "typeClass": "primitive",
+                "value": ["Some value 1", "Some value 2"],
+                "multiple": True
+              }
+            ]
+          }
+        }
+      }
+    }, "Unsupported type class: unsupported", {
+       "datasetVersion": {
+         "metadataBlocks": {
+           "citation": {
+             "fields": [
+               {
+                 "typeClass": "unsupported",
+                 "value": "Some value",
+                 "multiple": False
+               },
+               {
+                 "typeClass": "primitive",
+                 "value": [],
+                 "valueTemplate": ["Some value 1", "Some value 2"],
+                 "multiple": True
+               }
+             ]
+           }
+         }
+       }
+     }),
+  ])
+  def test_set_template_values(self, mocker, test_id, metadata, expected_warning, expected_result):
+    logger = mocker.MagicMock(spec=logging.Logger)
+
+    # Arrange
+    # (Omitted if all input values are provided via test parameters)
+
+    # Act
+    if isinstance(expected_result, Type) and issubclass(expected_result, Exception):
+      with pytest.raises(expected_result):
+        set_template_values(logger, metadata)
+    else:
+      set_template_values(logger, metadata)
+
+    # Assert
+    if expected_warning:
+      logger.warning.assert_called_with(expected_warning)
+      assert metadata == expected_result, f"Test failed for {test_id}"
+    if not (isinstance(expected_result, Type) and issubclass(expected_result, Exception)):
+      assert metadata == expected_result, f"Test failed for {test_id}"

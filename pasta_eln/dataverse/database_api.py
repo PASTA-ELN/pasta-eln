@@ -20,7 +20,7 @@ from pasta_eln.dataverse.base_database_api import BaseDatabaseAPI
 from pasta_eln.dataverse.config_model import ConfigModel
 from pasta_eln.dataverse.project_model import ProjectModel
 from pasta_eln.dataverse.upload_model import UploadModel
-from pasta_eln.dataverse.utils import log_and_create_error, set_authors
+from pasta_eln.dataverse.utils import log_and_create_error, set_authors, set_template_values
 
 
 class DatabaseAPI:
@@ -293,5 +293,6 @@ class DatabaseAPI:
     current_path = realpath(join(getcwd(), dirname(__file__)))
     with open(join(current_path, "dataset-create-new-all-default-fields.json"), encoding="utf-8") as config_file:
       model.metadata = load(config_file)
+    set_template_values(self.logger, model.metadata or {})
     set_authors(self.logger, model.metadata or {})
     self.create_model_document(model)

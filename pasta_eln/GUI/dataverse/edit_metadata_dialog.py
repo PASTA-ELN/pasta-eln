@@ -131,13 +131,11 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
       for field in metablock['fields']:
         if field['typeName'] == new_metadata_type:
           match field['typeClass']:
-            case "primitive":
-              self.primitive_compound_frame = PrimitiveCompoundFrame({field['typeName']: field})
+            case "primitive" | "compound":
+              self.primitive_compound_frame = PrimitiveCompoundFrame(field)
               self.metadataScrollVerticalLayout.addWidget(self.primitive_compound_frame.instance)
-              break
-            case "compound":
-              self.primitive_compound_frame = PrimitiveCompoundFrame(field['value'][0])
-              self.metadataScrollVerticalLayout.addWidget(self.primitive_compound_frame.instance)
+              # self.primitive_compound_frame = PrimitiveCompoundFrame(field['value'][0])
+              # self.metadataScrollVerticalLayout.addWidget(self.primitive_compound_frame.instance)
               break
             case "controlledVocabulary":
               self.controlled_vocab_frame = ControlledVocabFrame(field['value'])
