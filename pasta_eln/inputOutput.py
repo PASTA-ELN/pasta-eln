@@ -218,7 +218,7 @@ def importELN(backend:Backend, elnFileName:str) -> str:
         elif elnName == 'eLabFTW':
           supplementalInfo = Path(dirName)/elnID/'export-elabftw.json'
         else:
-          logging.info('No additional information in', elnName)
+          logging.info('No additional information in %s', elnName)
           supplementalInfo = Path('')
         if supplementalInfo.as_posix() in elnFile.namelist():
           datasetIsFolder = True
