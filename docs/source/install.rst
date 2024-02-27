@@ -107,7 +107,7 @@ which typically can take some time. Afterwards, start PASTA-ELN with
 
 .. code-block:: bash
 
-    pastaELN
+    python -m pasta_eln.gui
 
 which starts automatically the **setup** if no valid PASTA-ELN configuration is found.
 
