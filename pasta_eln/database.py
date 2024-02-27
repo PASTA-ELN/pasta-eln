@@ -85,19 +85,29 @@ class Database:
     oldColumnNames = self.getColumnNames()
     jsDefault = 'if ($docType$) {doc["-branch"].forEach(function(branch){emit($key$, [$outputList$]);});}'
     viewCode = {}
-    for docType in [i for i in self.dataHierarchy if i[0] not in ['_','-']]+['-']:
-      if docType=='x0':
+    normalDocTypes = [i for i in self.dataHierarchy if i[0] not in ['_','-']]
+    for docType in normalDocTypes+['-']:
+      if docType == 'x0':
         newString = "doc['-type']=='x0' && (doc['-branch'][0].show.every(function(i) {return i;}))"
         js    = jsDefault.replace('$docType$', newString).replace('$key$','doc._id')
         jsAll = jsDefault.replace('$docType$', "doc['-type']=='x0'").replace('$key$','doc._id')
-      elif docType[0]=='x':
+      elif docType[0] == 'x':
         continue
+      elif docType == '-':
+        replaceStrings = []
+        for jDocType in normalDocTypes:
+          replaceStrings.append( f"doc['-type'].join('/').substring(0,{len(jDocType)})!='{jDocType}'" )
+        js = jsDefault.replace('$docType$',
+            ' && '.join(replaceStrings) +" && (doc['-branch'][0].show.every(function(i) {return i;}))",
+            ).replace('$key$', 'branch.stack[0]')
+        jsAll = jsDefault.replace('$docType$',
+            ' && '.join(replaceStrings)
+            ).replace('$key$', 'branch.stack[0]')
       else: #show all doctypes that have the same starting ..
         js = jsDefault.replace('$docType$',
             f"doc['-type'].join('/').substring(0,{len(docType)})=='{docType}"+"' && (doc['-branch'][0].show.every(function(i) {return i;}))",
             ).replace('$key$', 'branch.stack[0]')
-        jsAll = jsDefault.replace(
-            '$docType$',
+        jsAll = jsDefault.replace('$docType$',
             f"doc['-type'].join('/').substring(0, {len(docType)})=='{docType}'",
             ).replace('$key$', 'branch.stack[0]')
       outputList = []
