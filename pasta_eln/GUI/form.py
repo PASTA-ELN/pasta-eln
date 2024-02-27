@@ -157,11 +157,10 @@ class Form(QDialog):
         elif isinstance(value, list):   #list of items, qrCodes in sample
           if len(value)>0 and isinstance(value[0], str):
             setattr(self, f'key_{key}', QLineEdit(' '.join(value)))
+            formL.addRow(QLabel(key.capitalize()), getattr(self, f'key_{key}'))
           else:
-            setattr(self, f'key_{key}', QLineEdit('-- unknown content --'))
             logging.info('Cannot display value of key=%s: %s. Write unknown content for docID=%s',
                          key, str(value), self.doc['_id'])
-          formL.addRow(QLabel(key.capitalize()), getattr(self, f'key_{key}'))
         elif isinstance(value, str):    #string
           dataHierarchyItem = [i for group in dataHierarchyNode for i in dataHierarchyNode[group] if i['name']==key]
           if len(dataHierarchyItem)==1 and 'list' in dataHierarchyItem[0]:       #choice dropdown
