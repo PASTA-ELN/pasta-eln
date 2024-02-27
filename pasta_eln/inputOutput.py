@@ -57,16 +57,18 @@ specialTerms:dict[str,dict[str,str]] = {
     }
 }
 
+
 renameELN = {
   'https://kadi.iam.kit.edu':'Kadi4Mat'
 }
 
+
 def tree(graph:dict[Any,Any]) -> str:
   """
-  use metadata to create hierarchical tree struction in ascii
+  use metadata to create hierarchical tree structure in ascii
 
   Args:
-    graph (dict): graph to be plotted
+    graph (dict): tree-graph to be plotted
 
   Returns:
     str: output of graph as a nice tree
@@ -75,7 +77,7 @@ def tree(graph:dict[Any,Any]) -> str:
 
   def process_part(part:dict[Any,Any], level:int) -> str:
     """
-    recursive function call to process this node
+    recursive function call to process this node of the tree-graph
 
     Args:
       part (dict): dictionary entry of this hasPart=part of a parent node; is a node by-itself
@@ -196,7 +198,6 @@ def importELN(backend:Backend, elnFileName:str) -> str:
         print("**ERROR in part",part)
         return False
       logging.info('\nProcess: '+part['@id'])
-      print('\nProcess: '+part['@id'])
       # find next node to process
       docS = [i for i in graph if '@id' in i and i['@id']==part['@id']]
       if len(docS)!=1 or backend.cwd is None:
@@ -217,7 +218,7 @@ def importELN(backend:Backend, elnFileName:str) -> str:
         elif elnName == 'eLabFTW':
           supplementalInfo = Path(dirName)/elnID/'export-elabftw.json'
         else:
-          print('**Info: no additional information in', elnName)
+          logging.info('No additional information in', elnName)
           supplementalInfo = Path('')
         if supplementalInfo.as_posix() in elnFile.namelist():
           datasetIsFolder = True
