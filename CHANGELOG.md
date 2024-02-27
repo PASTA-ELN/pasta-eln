@@ -2,11 +2,47 @@
 
 ## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
 
-[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.26...HEAD)
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.27...HEAD)
+
+**Implemented enhancements:**
+
+- Allow user to disable / enable autosave in the configuration [\#184](https://github.com/PASTA-ELN/pasta-eln/issues/184)
+- Renaming of the Ontology editor/Questionnaires [\#106](https://github.com/PASTA-ELN/pasta-eln/issues/106)
+- feat\(dataverse-integration\): implement dataverse configuration dialog [\#196](https://github.com/PASTA-ELN/pasta-eln/pull/196) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
+- feat\(dataverse-integration\): add base classes and templates [\#190](https://github.com/PASTA-ELN/pasta-eln/pull/190) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
+- ci\(pasta\): update issue templates [\#175](https://github.com/PASTA-ELN/pasta-eln/pull/175) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
+- Improve editor of documents [\#174](https://github.com/PASTA-ELN/pasta-eln/pull/174) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- refactor\(data-hierarchy\): modify textual information in UI [\#173](https://github.com/PASTA-ELN/pasta-eln/pull/173) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
+- feat\(dataverse-integration\): implement dataverse client library [\#165](https://github.com/PASTA-ELN/pasta-eln/pull/165) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
+- feat\(data\_hierarchy\): renaming and restructuring data hierarchy tool [\#130](https://github.com/PASTA-ELN/pasta-eln/pull/130) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
 
 **Fixed bugs:**
 
+- "All items" table view opens after editing [\#168](https://github.com/PASTA-ELN/pasta-eln/issues/168)
 - Deleting projects with same names [\#162](https://github.com/PASTA-ELN/pasta-eln/issues/162)
+
+**Closed issues:**
+
+- Displaying issues after "Rerun extractors" [\#167](https://github.com/PASTA-ELN/pasta-eln/issues/167)
+
+**Merged pull requests:**
+
+- New version of .eln and reading sampleDB and kadi4mat files [\#197](https://github.com/PASTA-ELN/pasta-eln/pull/197) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- implemented feature wish \#150 [\#195](https://github.com/PASTA-ELN/pasta-eln/pull/195) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Repair smaller bugs that I found  [\#189](https://github.com/PASTA-ELN/pasta-eln/pull/189) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Issue 182: update documentation [\#187](https://github.com/PASTA-ELN/pasta-eln/pull/187) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Implement improvements to the edit form [\#186](https://github.com/PASTA-ELN/pasta-eln/pull/186) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Fix \#168  [\#183](https://github.com/PASTA-ELN/pasta-eln/pull/183) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Sb couchdb3.3.3 [\#181](https://github.com/PASTA-ELN/pasta-eln/pull/181) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- add organizations to author [\#180](https://github.com/PASTA-ELN/pasta-eln/pull/180) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- code does not crash if shortcut and/or icon does not exist in a [\#179](https://github.com/PASTA-ELN/pasta-eln/pull/179) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Display issues after rerun extractors [\#178](https://github.com/PASTA-ELN/pasta-eln/pull/178) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Sb less user interaction [\#177](https://github.com/PASTA-ELN/pasta-eln/pull/177) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- docs\(data\_hierarchy\): adapting help page to the latest version [\#131](https://github.com/PASTA-ELN/pasta-eln/pull/131) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
+
+## [v2.4.27](https://github.com/PASTA-ELN/pasta-eln/tree/v2.4.27) (2023-12-18)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.26...v2.4.27)
 
 **Merged pull requests:**
 
