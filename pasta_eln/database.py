@@ -763,8 +763,7 @@ class Database:
     #determine bins for histogram
     firstSubmit = datetime.now().timestamp()
     for value in collection.values():
-      if np.min(value) < firstSubmit:
-        firstSubmit = np.min(value)
+      firstSubmit = min(firstSubmit, np.min(value))
     bins = np.linspace(firstSubmit, datetime.now().timestamp(), 100 )
     #calculate histogram and save it
     collectionCopy = dict(collection)
