@@ -1,5 +1,5 @@
 """ Widget that shows the content of project in a electronic labnotebook """
-import logging, re
+import logging
 from enum import Enum
 from typing import Optional, Any
 from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget, QMenu, QMessageBox, QTextEdit, QScrollArea # pylint: disable=no-name-in-module
@@ -8,7 +8,7 @@ from PySide6.QtCore import Slot, Qt, QItemSelectionModel, QModelIndex           
 from anytree import PreOrderIter, Node
 from .projectTreeView import TreeView
 from ..guiStyle import TextButton, Action, Label, showMessage, widgetAndLayout, getColor
-from ..miscTools import createDirName
+from ..miscTools import createDirName, markdownStyler
 from ..guiCommunicate import Communicate
 
 class Project(QWidget):
@@ -107,7 +107,7 @@ class Project(QWidget):
     # labelW.setStyleSheet('padding-top: 5px') #make "Comment:" text aligned with other content, not with text-edit
     commentL.addWidget(labelW, alignment=Qt.AlignTop)   # type: ignore[call-arg]
     self.commentTE = QTextEdit()
-    self.commentTE.setMarkdown(re.sub(r'(^|\n)(#+)', r'\1##\2', self.docProj['comment'].strip()))
+    self.commentTE.setMarkdown(markdownStyler(self.docProj['comment']))
     bgColor = getColor(self.comm.backend, 'secondaryDark')
     fgColor = getColor(self.comm.backend, 'primaryText')
     self.commentTE.setStyleSheet(f"border: none; padding: 0px; background-color: {bgColor}; color: {fgColor}")

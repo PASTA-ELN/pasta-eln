@@ -7,6 +7,7 @@ from PySide6.QtWidgets import QStyledItemDelegate, QStyleOptionViewItem # pylint
 from PySide6.QtSvg import QSvgRenderer                        # pylint: disable=no-name-in-module
 from ..guiCommunicate import Communicate
 from ..guiStyle import getColor
+from ..miscTools import markdownStyler
 
 _DO_NOT_RENDER_ = ['image','content','metaVendor','metaUser','shasum','comment']
 
@@ -106,11 +107,11 @@ class ProjectLeafRenderer(QStyledItemDelegate):
             value = 'ERROR WITH LINK'
         painter.drawStaticText(x0, y0+y, QStaticText(f'{key}: {value}'))
       elif isinstance(doc[key], list):                     #list of qrCodes
-        painter.drawStaticText(x0, y0+y, QStaticText(f'{key}: ' + ', '.join(doc[key])))
+        painter.drawStaticText(x0, y0+y, QStaticText(f'{key}: ' + ', '.join([str(i) for i in doc[key]])))
     for textType in ['comment', 'content']:
       if textType in doc and (textType != 'content' or 'image' not in doc or doc['image'] == ''):
         textDoc = QTextDocument()
-        textDoc.setMarkdown(re.sub(r'(^|\n)(#+)', r'\1##\2', doc[textType].strip()))
+        textDoc.setMarkdown(markdownStyler(doc[textType]))
         if textType == 'comment':
           textDoc.setTextWidth(bottomRight2nd.toTuple()[0]-x0-widthContent-2*self.frameSize)
           width, height = textDoc.size().toTuple() # type: ignore

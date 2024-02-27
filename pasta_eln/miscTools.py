@@ -1,5 +1,5 @@
 """ Misc functions that do not require instances """
-import os, uuid, logging, traceback, json, sys
+import os, uuid, logging, traceback, json, sys, re
 from typing import Any
 from io import BufferedReader
 from urllib import request
@@ -84,6 +84,19 @@ def tracebackString(log:bool=False, docID:str='') -> str:
   if log:
     logging.info(' traceback %s %s', docID, reply)
   return reply
+
+
+def markdownStyler(text:str) -> str:
+  """
+  Create a markdown that well balanced with regard to font size, etc.
+
+  Args:
+    text (str): input string
+
+  Returns:
+    str: output str
+  """
+  return re.sub(r'(^|\n)(#+)', r'\1##\2', text.strip())
 
 
 def camelCase(text:str) -> str:

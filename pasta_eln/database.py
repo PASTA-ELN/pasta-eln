@@ -669,7 +669,7 @@ class Database:
     """
     Set the gui state
     - 0: true=show details; false=hide details
-    - 1: true=show children; false=hide children (only makes sense for folders = x1, x2)
+    - 1: true=show children; false=hide children; only makes sense for folders: doctype = x1
 
     Args:
       docID (str): docID
@@ -763,8 +763,7 @@ class Database:
     #determine bins for histogram
     firstSubmit = datetime.now().timestamp()
     for value in collection.values():
-      if np.min(value) < firstSubmit:
-        firstSubmit = np.min(value)
+      firstSubmit = min(firstSubmit, np.min(value))
     bins = np.linspace(firstSubmit, datetime.now().timestamp(), 100 )
     #calculate histogram and save it
     collectionCopy = dict(collection)

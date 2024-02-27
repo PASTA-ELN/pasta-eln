@@ -11,8 +11,7 @@ from PySide6.QtCore import QSize, Qt, QTimer          # pylint: disable=no-name-
 from ..guiStyle import Image, TextButton, IconButton, Label, showMessage, widgetAndLayout, ScrollMessageBox
 from ._contextMenu import initContextMenu, executeContextMenu, CommandMenu
 from ..fixedStringsJson import defaultDataHierarchyNode
-from ..handleDictionaries import fillDocBeforeCreate
-from ..miscTools import createDirName
+from ..miscTools import createDirName, markdownStyler
 from ..guiCommunicate import Communicate
 
 class Form(QDialog):
@@ -143,7 +142,8 @@ class Form(QDialog):
           getattr(self, f'textEdit_{key}').setAccessibleName(key)
           getattr(self, f'textEdit_{key}').setTabStopDistance(20)
           getattr(self, f'textEdit_{key}').textChanged.connect(self.textChanged)
-          setattr(self, f'textShow_{key}', QTextEdit(value))
+          setattr(self, f'textShow_{key}', QTextEdit())
+          getattr(self, f'textShow_{key}').setMarkdown(markdownStyler(value))
           getattr(self, f'textShow_{key}').setReadOnly(True)
           getattr(self, f'textShow_{key}').hide()
           splitter= QSplitter()
@@ -328,16 +328,17 @@ class Form(QDialog):
           self.formsL[idx].itemAt(unknownWidget[3]).widget().hide()
       self.allHidden = not self.allHidden
     elif command[0] is Command.FORM_CANCEL:
-      ret = QMessageBox.critical(self, 'Warning', 'You will loose all entered data. Do you want to save the '+\
-                                 'content for next time?',
-                                 QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,  # type: ignore[operator]
-                                 QMessageBox.StandardButton.No)
-      if ret==QMessageBox.StandardButton.Yes:
-        self.autosave()
-      else:
-        self.checkThreadTimer.stop()
-        if (Path.home()/'.pastaELN.temp').exists():
-          (Path.home()/'.pastaELN.temp').unlink()
+      if self.comm.backend.configuration['GUI']['autosave'] == 'Yes':
+        ret = QMessageBox.critical(self, 'Warning', 'You will loose all new data. Do you want to save it '+\
+                                   'for next time?',
+                                   QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,  # type: ignore[operator]
+                                   QMessageBox.StandardButton.No)
+        if ret==QMessageBox.StandardButton.Yes:
+          self.autosave()
+        else:
+          self.checkThreadTimer.stop()
+          if (Path.home()/'.pastaELN.temp').exists():
+            (Path.home()/'.pastaELN.temp').unlink()
       self.reject()
     elif command[0] in (Command.FORM_SAVE, Command.FORM_SAVE_NEXT):
       # create the data that has to be saved
@@ -480,8 +481,8 @@ class Form(QDialog):
     Text changed in editor -> update the display on the right
     """
     key = self.sender().accessibleName()
-    getattr(self, f'textShow_{key}').setMarkdown(
-        getattr(self, f'textEdit_{key}').toPlainText())
+    getattr(self, f'textShow_{key}').setMarkdown(markdownStyler(
+        getattr(self, f'textEdit_{key}').toPlainText()))
     return
 
   def delTag(self, _:str, tag:str) -> None:

@@ -1,5 +1,5 @@
 """ widget that shows the details of the items """
-import logging, re
+import logging
 from enum import Enum
 from pathlib import Path
 from typing import Any
@@ -10,6 +10,7 @@ from ._contextMenu import initContextMenu, executeContextMenu, CommandMenu
 from ..fixedStringsJson import defaultDataHierarchyNode
 from ..guiCommunicate import Communicate
 from ..handleDictionaries import dict2ul
+from ..miscTools import markdownStyler
 
 
 class Details(QScrollArea):
@@ -158,7 +159,7 @@ class Details(QScrollArea):
           labelW, labelL = widgetAndLayout('H', self.metaDetailsL, top='s', bottom='s')
           labelL.addWidget(QLabel(f'{key}: '), alignment=Qt.AlignTop) # type: ignore
           text = QTextEdit()
-          text.setMarkdown(re.sub(r'(^|\n)(#+)', r'\1##\2', self.doc[key].strip()))
+          text.setMarkdown(markdownStyler(self.doc[key]))
           bgColor = getColor(self.comm.backend, 'secondaryDark')
           fgColor = getColor(self.comm.backend, 'primaryText')
           text.setStyleSheet(f"QTextEdit {{ border: none; padding: 0px; background-color: {bgColor}; "\
