@@ -19,6 +19,7 @@ from pasta_eln.GUI.dataverse.edit_metadata_dialog_base import Ui_EditMetadataDia
 from pasta_eln.GUI.dataverse.primitive_compound_frame import PrimitiveCompoundFrame
 from pasta_eln.dataverse.config_model import ConfigModel
 from pasta_eln.dataverse.database_api import DatabaseAPI
+from pasta_eln.dataverse.utils import adjust_type_name
 
 
 class EditMetadataDialog(Ui_EditMetadataDialog):
@@ -74,17 +75,29 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
                                                            ConfigModel)  # type: ignore[assignment]
     self.metadata = self.config_model.metadata
     self.metadata_types = self.get_metadata_types()
+    self.minimal_metadata = [
+      {"name":"subject", "displayName": "Subject"},
+      {"name":"author", "displayName": "Author"},
+      {"name":"datasetContact", "displayName": "Dataset contact"},
+      {"name":"dsDescription", "displayName": "Ds Description"}
+    ]
     self.metadataBlockComboBox.currentTextChanged.connect(self.change_metadata_block)
     self.typesComboBox.currentTextChanged.connect(self.change_metadata_type)
     self.metadataBlockComboBox.addItems(self.metadata_types.keys())
-    self.typesComboBox.addItems(self.metadata_types[self.metadataBlockComboBox.currentText()])
-    self.minimalFullComboBox.addItems(["Minimal", "Full"])
-    self.minimalFullComboBox.currentTextChanged.connect(self.toggle_minimal_full)
-    self.minimalFullComboBox.setCurrentText("Full")
+    # for meta_type in self.metadata_types[self.metadataBlockComboBox.currentText()]:
+    #   self.typesComboBox.addItem(meta_type['displayName'], userData=meta_type['name'])
+    self.minimalFullComboBox.addItems(["Full", "Minimal"])
+    self.minimalFullComboBox.currentTextChanged[str].connect(self.toggle_minimal_full)
     self.instance.setWindowModality(QtCore.Qt.ApplicationModal)
     self.buttonBox.button(QtWidgets.QDialogButtonBox.Save).clicked.connect(self.save_ui)
+    self.licenseNameLineEdit.setText(self.config_model.metadata['datasetVersion']['license']['name'])
+    self.licenseURLLineEdit.setText(self.config_model.metadata['datasetVersion']['license']['uri'])
+    self.licenseNameLineEdit.textChanged[str].connect(
+      lambda name: self.config_model.metadata['datasetVersion']['license'].update({"name": name}))
+    self.licenseURLLineEdit.textChanged[str].connect(
+      lambda uri: self.config_model.metadata['datasetVersion']['license'].update({"uri": uri}))
 
-  def get_metadata_types(self) -> dict[str, list[str]]:
+  def get_metadata_types(self) -> dict[str, list[dict[str, str]]]:
     """
     Retrieves the metadata types mapping.
 
@@ -97,7 +110,7 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
     Returns:
         dict[str, list[str]]: The mapping of metadata block display names to their corresponding field type names.
     """
-    metadata_types_mapping: dict[str, list[str]] = {}
+    metadata_types_mapping: dict[str, list[dict[str, str]]] = {}
     if not self.metadata:
       self.logger.error("Failed to load metadata model!")
       return metadata_types_mapping
@@ -106,7 +119,12 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
         metadata_types_mapping[metablock['displayName']] = []
       for field in metablock['fields']:
         if field['typeName'] not in metadata_types_mapping[metablock['displayName']]:
-          metadata_types_mapping[metablock['displayName']].append(field['typeName'])
+          metadata_types_mapping[metablock['displayName']].append(
+            {
+              'name': field['typeName'],
+              'displayName': adjust_type_name(field['typeName'])
+            }
+          )
     return metadata_types_mapping
 
   def change_metadata_type(self, new_metadata_type: str) -> None:
@@ -122,11 +140,18 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
 
     """
     # Clear the contents of UI elements
+    if self.primitive_compound_frame:
+      self.primitive_compound_frame.save_modifications()
+      self.primitive_compound_frame.instance.close()
+    if self.controlled_vocab_frame:
+      self.controlled_vocab_frame.save_modifications()
+      self.controlled_vocab_frame.instance.close()
     for widget_pos in reversed(range(self.metadataScrollVerticalLayout.count())):
       self.metadataScrollVerticalLayout.itemAt(widget_pos).widget().setParent(None)
     if not self.metadata:
       self.logger.error("Failed to load metadata model!")
       return
+    new_metadata_type = self.typesComboBox.currentData(QtCore.Qt.ItemDataRole.UserRole)
     for _, metablock in self.metadata['datasetVersion']['metadataBlocks'].items():
       for field in metablock['fields']:
         if field['typeName'] == new_metadata_type:
@@ -134,13 +159,9 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
             case "primitive" | "compound":
               self.primitive_compound_frame = PrimitiveCompoundFrame(field)
               self.metadataScrollVerticalLayout.addWidget(self.primitive_compound_frame.instance)
-              # self.primitive_compound_frame = PrimitiveCompoundFrame(field['value'][0])
-              # self.metadataScrollVerticalLayout.addWidget(self.primitive_compound_frame.instance)
-              break
             case "controlledVocabulary":
-              self.controlled_vocab_frame = ControlledVocabFrame(field['value'])
+              self.controlled_vocab_frame = ControlledVocabFrame(field)
               self.metadataScrollVerticalLayout.addWidget(self.controlled_vocab_frame.instance)
-              break
 
   def change_metadata_block(self, new_metadata_block: str | None = None) -> None:
     """
@@ -156,7 +177,8 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
     """
     if new_metadata_block:
       self.typesComboBox.clear()
-      self.typesComboBox.addItems(self.metadata_types[new_metadata_block])
+      for meta_type in self.metadata_types[new_metadata_block]:
+        self.typesComboBox.addItem(meta_type['displayName'], userData=meta_type['name'])
 
   def toggle_minimal_full(self, selection: str) -> None:
     """
@@ -174,13 +196,12 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
       case "Minimal":
         self.metadataBlockComboBox.hide()
         self.typesComboBox.clear()
-        self.typesComboBox.addItems(["subject", "author", "datasetContact", "dsDescription"])
+        for meta_type in self.minimal_metadata:
+          self.typesComboBox.addItem(meta_type['displayName'], userData=meta_type['name'])
       case "Full":
         self.metadataBlockComboBox.show()
         self.metadataBlockComboBox.clear()
         self.metadataBlockComboBox.addItems(self.metadata_types.keys())
-        self.typesComboBox.clear()
-        self.typesComboBox.addItems(self.metadata_types[self.metadataBlockComboBox.currentText()])
 
   def load_ui(self) -> None:
     """
@@ -208,6 +229,10 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
         None
 
     """
+    if self.controlled_vocab_frame:
+      self.controlled_vocab_frame.save_modifications()
+    if self.primitive_compound_frame:
+      self.primitive_compound_frame.save_modifications()
     self.config_model.metadata = self.metadata
     self.db_api.update_model_document(self.config_model)
 

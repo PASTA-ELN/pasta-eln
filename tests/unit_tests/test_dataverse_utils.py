@@ -18,7 +18,8 @@ from cryptography.fernet import Fernet
 
 from pasta_eln.dataverse.config_error import ConfigError
 from pasta_eln.dataverse.upload_status_values import UploadStatusValues
-from pasta_eln.dataverse.utils import check_login_credentials, decrypt_data, encrypt_data, get_encrypt_key, \
+from pasta_eln.dataverse.utils import adjust_type_name, check_login_credentials, decrypt_data, encrypt_data, \
+  get_encrypt_key, \
   log_and_create_error, read_pasta_config_file, set_authors, set_template_values, update_status, write_pasta_config_file
 
 # Constants for test
@@ -139,48 +140,242 @@ class TestDataverseUtils:
       log_and_create_error(mock_logger, exception_type, error_message)
 
   # Parametrized test for success path with various realistic test values
-  @pytest.mark.parametrize("config_data, metadata, expected_authors_list, test_id", [(
-      {'authors': [
-        {'last': 'Doe', 'first': 'John', 'orcid': '0000-0001', 'organizations': [{'organization': 'Org1'}]}]}, {
-        'datasetVersion': {'metadataBlocks': {'citation': {'fields': [{'typeName': 'author', 'value': [
-          {'authorName': {'value': 'Last, First'}, 'authorIdentifierScheme': {'value': 'ORCID'},
-           'authorIdentifier': {'value': ''}, 'authorAffiliation': {'value': ''}}]}]}}}}, [
-        {'authorName': {'value': 'Doe, John'}, 'authorIdentifierScheme': {'value': 'ORCID'},
-         'authorIdentifier': {'value': '0000-0001'}, 'authorAffiliation': {'value': 'Org1'}}],
-      "success-path-single-author"), ({'authors': [{'last': 'Smith', 'first': 'Jane', 'orcid': '0000-0002',
-                                                    'organizations': [{'organization': 'Org2'},
-                                                                      {'organization': 'Org3'}]}]},
-                                      {'datasetVersion': {'metadataBlocks': {
-                                        'citation': {'fields': [{'typeName': 'author', 'value': [
-                                          {'authorName': {'value': 'Last, First'},
-                                           'authorIdentifierScheme': {'value': 'ORCID'},
-                                           'authorIdentifier': {'value': ''},
-                                           'authorAffiliation': {'value': ''}}]}]}}}}, [
-                                        {'authorName': {'value': 'Smith, Jane'},
-                                         'authorIdentifierScheme': {'value': 'ORCID'},
-                                         'authorIdentifier': {'value': '0000-0002'},
-                                         'authorAffiliation': {'value': 'Org2, Org3'}}],
-                                      "success-path-single-author-multiple-orgs"), ({'authors': [
-    {'last': 'Doe', 'first': 'John', 'orcid': '0000-0001', 'organizations': [{'organization': 'Org1'}]},
-    {'last': 'Smith', 'first': 'Jane', 'orcid': '0000-0002', 'organizations': [{'organization': 'Org2'}]},
-    {'last': 'Keith', 'first': 'Sean', 'orcid': '0000-0003',
-     'organizations': [{'organization': 'Org3'}, {'organization': 'Org4'}]}]}, {'datasetVersion': {'metadataBlocks': {
-    'citation': {'fields': [{'typeName': 'author', 'value': [
-      {'authorName': {'value': 'Last, First'}, 'authorIdentifierScheme': {'value': 'ORCID'},
-       'authorIdentifier': {'value': ''}, 'authorAffiliation': {'value': ''}}]}]}}}}, [
-                                                                                      {'authorName': {
-                                                                                        'value': 'Doe, John'},
-                                                                                        'authorIdentifierScheme': {
-                                                                                          'value': 'ORCID'},
-                                                                                        'authorIdentifier': {
-                                                                                          'value': '0000-0001'},
-                                                                                        'authorAffiliation': {
-                                                                                          'value': 'Org1'}}, {
-      'authorName': {'value': 'Smith, Jane'}, 'authorIdentifierScheme': {'value': 'ORCID'},
-      'authorIdentifier': {'value': '0000-0002'}, 'authorAffiliation': {'value': 'Org2'}}, {
-      'authorName': {'value': 'Keith, Sean'}, 'authorIdentifierScheme': {'value': 'ORCID'},
-      'authorIdentifier': {'value': '0000-0003'}, 'authorAffiliation': {'value': 'Org3, Org4'}}],
-                                                                                    "success-path-multiple-authors"), ])
+  @pytest.mark.parametrize("config_data, metadata, expected_authors_list, test_id", [
+    ({
+       "authors": [
+         {
+           "last": "Doe",
+           "first": "John",
+           "orcid": "0000-0001",
+           "organizations": [
+             {
+               "organization": "Org1"
+             }
+           ]
+         }
+       ]
+     },
+     {
+       "datasetVersion": {
+         "metadataBlocks": {
+           "citation": {
+             "fields": [
+               {
+                 "typeName": "author",
+                 "valueTemplate": [
+                   {
+                     "authorName": {
+                       "value": "Last, First"
+                     },
+                     "authorIdentifierScheme": {
+                       "value": "ORCID"
+                     },
+                     "authorIdentifier": {
+                       "value": ""
+                     },
+                     "authorAffiliation": {
+                       "value": ""
+                     }
+                   }
+                 ]
+               }
+             ]
+           }
+         }
+       }
+     },
+     [
+       {
+         "authorName": {
+           "value": "Doe, John"
+         },
+         "authorIdentifierScheme": {
+           "value": "ORCID"
+         },
+         "authorIdentifier": {
+           "value": "0000-0001"
+         },
+         "authorAffiliation": {
+           "value": "Org1"
+         }
+       }
+     ],
+     "success-path-single-author"),
+    ({
+       "authors": [
+         {
+           "last": "Smith",
+           "first": "Jane",
+           "orcid": "0000-0002",
+           "organizations": [
+             {
+               "organization": "Org2"
+             },
+             {
+               "organization": "Org3"
+             }
+           ]
+         }
+       ]
+     },
+     {
+       "datasetVersion": {
+         "metadataBlocks": {
+           "citation": {
+             "fields": [
+               {
+                 "typeName": "author",
+                 "valueTemplate": [
+                   {
+                     "authorName": {
+                       "value": "Last, First"
+                     },
+                     "authorIdentifierScheme": {
+                       "value": "ORCID"
+                     },
+                     "authorIdentifier": {
+                       "value": ""
+                     },
+                     "authorAffiliation": {
+                       "value": ""
+                     }
+                   }
+                 ]
+               }
+             ]
+           }
+         }
+       }
+     },
+     [
+       {
+         "authorName": {
+           "value": "Smith, Jane"
+         },
+         "authorIdentifierScheme": {
+           "value": "ORCID"
+         },
+         "authorIdentifier": {
+           "value": "0000-0002"
+         },
+         "authorAffiliation": {
+           "value": "Org2, Org3"
+         }
+       }
+     ],
+     "success-path-single-author-multiple-orgs"),
+    ({
+       "authors": [
+         {
+           "last": "Doe",
+           "first": "John",
+           "orcid": "0000-0001",
+           "organizations": [
+             {
+               "organization": "Org1"
+             }
+           ]
+         },
+         {
+           "last": "Smith",
+           "first": "Jane",
+           "orcid": "0000-0002",
+           "organizations": [
+             {
+               "organization": "Org2"
+             }
+           ]
+         },
+         {
+           "last": "Keith",
+           "first": "Sean",
+           "orcid": "0000-0003",
+           "organizations": [
+             {
+               "organization": "Org3"
+             },
+             {
+               "organization": "Org4"
+             }
+           ]
+         }
+       ]
+     },
+     {
+       "datasetVersion": {
+         "metadataBlocks": {
+           "citation": {
+             "fields": [
+               {
+                 "typeName": "author",
+                 "valueTemplate": [
+                   {
+                     "authorName": {
+                       "value": "Last, First"
+                     },
+                     "authorIdentifierScheme": {
+                       "value": "ORCID"
+                     },
+                     "authorIdentifier": {
+                       "value": ""
+                     },
+                     "authorAffiliation": {
+                       "value": ""
+                     }
+                   }
+                 ]
+               }
+             ]
+           }
+         }
+       }
+     },
+     [
+       {
+         "authorName": {
+           "value": "Doe, John"
+         },
+         "authorIdentifierScheme": {
+           "value": "ORCID"
+         },
+         "authorIdentifier": {
+           "value": "0000-0001"
+         },
+         "authorAffiliation": {
+           "value": "Org1"
+         }
+       },
+       {
+         "authorName": {
+           "value": "Smith, Jane"
+         },
+         "authorIdentifierScheme": {
+           "value": "ORCID"
+         },
+         "authorIdentifier": {
+           "value": "0000-0002"
+         },
+         "authorAffiliation": {
+           "value": "Org2"
+         }
+       },
+       {
+         "authorName": {
+           "value": "Keith, Sean"
+         },
+         "authorIdentifierScheme": {
+           "value": "ORCID"
+         },
+         "authorIdentifier": {
+           "value": "0000-0003"
+         },
+         "authorAffiliation": {
+           "value": "Org3, Org4"
+         }
+       }
+     ],
+     "success-path-multiple-authors")
+  ])
   def test_set_authors_success_path(self, mocker, config_data, metadata, expected_authors_list, test_id):
     # Arrange
     logger = mocker.MagicMock()
@@ -195,17 +390,72 @@ class TestDataverseUtils:
     # Assert
     author_field = next(
       f for f in metadata['datasetVersion']['metadataBlocks']['citation']['fields'] if f['typeName'] == 'author')
-    authors_list = author_field['value']
+    authors_list = author_field['valueTemplate']
     assert authors_list == expected_authors_list
     mock_log_and_create_error.assert_not_called()
 
-  @pytest.mark.parametrize("config_data, metadata, expected_authors_list, test_id", [(
-      {'authors': [{'last': '', 'first': '', 'orcid': '', 'organizations': [{'organization': ''}]}]}, {
-        'datasetVersion': {'metadataBlocks': {'citation': {'fields': [{'typeName': 'author', 'value': [
-          {'authorName': {'value': 'Last, First'}, 'authorIdentifierScheme': {'value': 'ORCID'},
-           'authorIdentifier': {'value': ''}, 'authorAffiliation': {'value': ''}}]}]}}}}, [
-        {'authorName': {'value': ''}, 'authorIdentifierScheme': {'value': 'ORCID'}, 'authorIdentifier': {'value': ''},
-         'authorAffiliation': {'value': ''}}], "edge-case-path-empty-author")])
+  @pytest.mark.parametrize("config_data, metadata, expected_authors_list, test_id", [
+    ({
+       "authors": [
+         {
+           "last": "",
+           "first": "",
+           "orcid": "",
+           "organizations": [
+             {
+               "organization": ""
+             }
+           ]
+         }
+       ]
+     },
+     {
+       "datasetVersion": {
+         "metadataBlocks": {
+           "citation": {
+             "fields": [
+               {
+                 "typeName": "author",
+                 "valueTemplate": [
+                   {
+                     "authorName": {
+                       "value": "Last, First"
+                     },
+                     "authorIdentifierScheme": {
+                       "value": "ORCID"
+                     },
+                     "authorIdentifier": {
+                       "value": ""
+                     },
+                     "authorAffiliation": {
+                       "value": ""
+                     }
+                   }
+                 ]
+               }
+             ]
+           }
+         }
+       }
+     },
+     [
+       {
+         "authorName": {
+           "value": ""
+         },
+         "authorIdentifierScheme": {
+           "value": "ORCID"
+         },
+         "authorIdentifier": {
+           "value": ""
+         },
+         "authorAffiliation": {
+           "value": ""
+         }
+       }
+     ],
+     "edge-case-path-empty-author")
+  ])
   def test_set_authors_edge_cases_path(self, mocker, config_data, metadata, expected_authors_list, test_id):
     # Arrange
     logger = mocker.MagicMock()
@@ -220,21 +470,22 @@ class TestDataverseUtils:
     # Assert
     author_field = next(
       f for f in metadata['datasetVersion']['metadataBlocks']['citation']['fields'] if f['typeName'] == 'author')
-    authors_list = author_field['value']
+    authors_list = author_field['valueTemplate']
     assert authors_list == expected_authors_list
     mock_log_and_create_error.assert_not_called()
 
   # Parametrized test for various error cases
-  @pytest.mark.parametrize("config_data, metadata, exception, test_id", [  # Test ID: 1
-    ({},  # No authors in config
+  @pytest.mark.parametrize("config_data, metadata, exception, test_id", [
+    ({},
      {'datasetVersion': {
-       'metadataBlocks': {'citation': {'fields': [{'typeName': 'author', 'value': [{'authorName': {'value': ''}}]}]}}}},
-     ConfigError("Incorrect config file, authors not found!"), "error-no-authors-in-config"),  # Test ID: 2
-    (None,  # No authors in config
+       'metadataBlocks': {
+         'citation': {'fields': [{'typeName': 'author', 'valueTemplate': [{'authorName': {'value': ''}}]}]}}}},
+     ConfigError("Incorrect config file, authors not found!"), "error-no-authors-in-config"),
+    (None,
      None,
-     ConfigError("Incorrect config file, authors not found!"), "error-no-authors-in-config"),  # Test ID: 2
-    ({'authors': []},  # Empty authors list in config
-     {'datasetVersion': {'metadataBlocks': {'citation': {'fields': [{'typeName': 'author', 'value': []}]}}}},
+     ConfigError("Incorrect config file, authors not found!"), "error-no-authors-in-config"),
+    ({'authors': []},
+     {'datasetVersion': {'metadataBlocks': {'citation': {'fields': [{'typeName': 'author', 'valueTemplate': []}]}}}},
      ConfigError("Incorrect config file, authors not found!"), "error-empty-authors-list"), ])
   def test_set_authors_error_cases(self, mocker, config_data, metadata, exception, test_id):
     # Arrange
@@ -506,13 +757,13 @@ class TestDataverseUtils:
                  "valueTemplate": ["Option1", "Option2"],
                  "multiple": True
                },
-              {
-                "typeName": "journalArticleType",
-                "multiple": False,
-                "typeClass": "controlledVocabulary",
-                "valueTemplate": "abstract",
-                "value": ""
-              }
+               {
+                 "typeName": "journalArticleType",
+                 "multiple": False,
+                 "typeClass": "controlledVocabulary",
+                 "valueTemplate": "abstract",
+                 "value": ""
+               }
              ]
            }
          }
@@ -584,3 +835,78 @@ class TestDataverseUtils:
       assert metadata == expected_result, f"Test failed for {test_id}"
     if not (isinstance(expected_result, Type) and issubclass(expected_result, Exception)):
       assert metadata == expected_result, f"Test failed for {test_id}"
+
+
+# Success path tests with various realistic test values
+@pytest.mark.parametrize("input_string, expected_output", [
+  # ID: Test single word starting with uppercase
+  ("Camel", "Camel"),
+  # ID: Test standard camel case
+  ("CamelCaseSplit", "Camel Case Split"),
+  # ID: Test consecutive uppercase letters
+  ("HTTPRequest", "HTTP Request"),
+  # ID: Test single uppercase letter
+  ("A", "A"),
+  # ID: Test camel case ending with uppercase letter
+  ("CamelCaseX", "Camel Case X"),
+  # ID: Test camel case with leading uppercase letters
+  ("XMLHttpRequest", "XML Http Request"),
+  ("alternativeTitle", "Alternative Title"),
+], ids=[
+  "single_word",
+  "standard_camel_case",
+  "consecutive_uppercase",
+  "single_uppercase",
+  "ending_with_uppercase",
+  "leading_uppercase",
+  "starting_lowercase",
+])
+def test_adjust_type_name_success_path(input_string, expected_output):
+  # Act
+  result = adjust_type_name(input_string)
+
+  # Assert
+  assert result == expected_output, f"Expected {expected_output} but got {result}"
+
+
+# Edge cases
+@pytest.mark.parametrize("input_string, expected_output", [
+  # ID: Test empty string
+  ("", ""),
+  # ID: Test string with only spaces
+  ("   ", ""),
+  # ID: Test string with special characters
+  ("CamelCase#Split", "Camel Case Split"),
+  # ID: Test string with underscores
+  ("Camel_Case_Split", "Camel Case Split"),
+], ids=[
+  "empty_string",
+  "only_spaces",
+  "special_characters",
+  "underscores",
+])
+def test_adjust_type_name_edge_cases(input_string, expected_output):
+  # Act
+  result = adjust_type_name(input_string)
+
+  # Assert
+  assert result == expected_output, f"Expected {expected_output} but got {result}"
+
+
+# Error cases
+@pytest.mark.parametrize("input_string, expected_exception", [
+  # ID: Test input is not a string (integer)
+  (123, TypeError),
+  # ID: Test input is not a string (list)
+  (["CamelCaseSplit"], TypeError),
+  # ID: Test input is not a string (None)
+  (None, TypeError),
+], ids=[
+  "input_is_integer",
+  "input_is_list",
+  "input_is_none",
+])
+def test_adjust_type_name_error_cases(input_string, expected_exception):
+  # Act / Assert
+  with pytest.raises(expected_exception):
+    adjust_type_name(input_string)

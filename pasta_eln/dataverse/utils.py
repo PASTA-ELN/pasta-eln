@@ -9,6 +9,7 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
 import copy
+import re
 from asyncio import get_event_loop
 from base64 import b64decode, b64encode
 from json import dump, load
@@ -88,6 +89,37 @@ def set_authors(logger: Logger, metadata: dict[str, Any]) -> None:
 
 
 def set_template_values(logger: Logger, metadata: dict[str, Any]) -> None:
+  """
+  Set template values in the metadata.
+
+  This function sets template values in the metadata dictionary based on the type of each field.
+  If the metadata is empty, a warning is logged.
+  The function iterates through the metadata blocks
+  and fields, and for each field, it matches the type class and performs the following actions:
+  - For "primitive" or "controlledVocabulary" types:
+      - If the field is a multiple type, the value template is set to a copy of the value, and the value is cleared.
+      - If the field is a single type, the value template is set to the value, and the value is set to an empty string.
+  - For "compound" types:
+      - The value template is set to a copy of the value, and the value is cleared.
+  - For unknown type classes, a warning is logged.
+
+  Args:
+      logger (Logger): The logger object used for logging warnings.
+      metadata (dict[str, Any]): The metadata dictionary to update.
+
+  Returns:
+      None
+
+  Raises:
+      None
+
+  Examples:
+      >>> logger = Logger()
+      >>> metadata = {'datasetVersion': {'metadataBlocks': {'citation': {'fields': [{'typeClass': 'primitive', 'multiple': False, 'value': 'Example'}]}}}}
+      >>> set_template_values(logger, metadata)
+      >>> metadata
+      {'datasetVersion': {'metadataBlocks': {'citation': {'fields': [{'typeClass': 'primitive', 'multiple': False, 'value': '', 'valueTemplate': 'Example'}]}}}}
+  """
   if not metadata:
     logger.warning("Empty metadata, make sure the metadata is loaded correctly...")
     return
@@ -304,3 +336,9 @@ def check_login_credentials(logger: Logger, api_token: str, server_url: str) -> 
     result = False, "Data server is not reachable"
     logger.warning("Data server is not reachable: %s", message)
   return result
+
+
+def adjust_type_name(camel_case_string: str):
+  split = re.findall(r'[A-Z]?[a-z]+|[A-Z]+(?=[A-Z]|$)',
+                    camel_case_string)
+  return ' '.join([i.capitalize() if i[0].islower() else i for i in split])

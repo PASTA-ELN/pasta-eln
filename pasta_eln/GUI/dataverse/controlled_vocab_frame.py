@@ -13,10 +13,10 @@ from typing import Any
 from PySide6 import QtWidgets
 from PySide6.QtCore import QSize
 
-from pasta_eln.GUI.dataverse.controlled_vocab_frame_base import Ui_ControlledVocabularyFrame
+from pasta_eln.GUI.dataverse.primitive_compound_controller_frame_base import Ui_PrimitiveCompoundControlledBaseFrame
 
 
-class ControlledVocabFrame(Ui_ControlledVocabularyFrame):
+class ControlledVocabFrame(Ui_PrimitiveCompoundControlledBaseFrame):
   """
   Represents the controlled vocabulary frame.
 
@@ -47,7 +47,7 @@ class ControlledVocabFrame(Ui_ControlledVocabularyFrame):
     """
     return super(ControlledVocabFrame, cls).__new__(cls)
 
-  def __init__(self, vocabulary_list: list[str]) -> None:
+  def __init__(self, meta_field: dict[str, Any]) -> None:
     """
     Initializes a new instance of the ControlledVocabFrame class.
 
@@ -64,10 +64,25 @@ class ControlledVocabFrame(Ui_ControlledVocabularyFrame):
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
     self.instance = QtWidgets.QFrame()
     super().setupUi(self.instance)
-    self.vocabComboBox.addItems(vocabulary_list)
-    self.addPushButton.clicked.connect(self.add_new_vocab_entry)
+    self.meta_field = meta_field
+    if self.meta_field['multiple']:
+      if self.meta_field['value']:
+        for value in self.meta_field['value']:
+          self.add_new_vocab_entry(self.meta_field["valueTemplate"], value)
+      else:
+        self.add_new_vocab_entry(self.meta_field["valueTemplate"], None)
+    else:
+      self.add_new_vocab_entry([self.meta_field["valueTemplate"]],self.meta_field['value'])
 
-  def add_new_vocab_entry(self) -> None:
+    self.addPushButton.clicked.connect(self.add_button_callback)
+
+  def add_button_callback(self):
+    if self.meta_field['multiple']:
+      self.add_new_vocab_entry(self.meta_field['valueTemplate'], self.meta_field['valueTemplate'][0])
+    else:
+      self.add_new_vocab_entry([self.meta_field['valueTemplate']], self.meta_field['valueTemplate'])
+
+  def add_new_vocab_entry(self, controlled_vocabulary: list[str] | None = None, value=None) -> None:
     """
     Adds a new vocabulary entry.
 
@@ -77,6 +92,8 @@ class ControlledVocabFrame(Ui_ControlledVocabularyFrame):
         and adds the layout to the main vertical layout.
 
     Args:
+        controlled_vocabulary ():
+        value ():
         None
 
     """
@@ -84,12 +101,13 @@ class ControlledVocabFrame(Ui_ControlledVocabularyFrame):
     new_vocab_entry_layout.setObjectName("vocabHorizontalLayout")
     combo_box = QtWidgets.QComboBox(parent=self.instance)
     combo_box.setObjectName("vocabComboBox")
-    combo_box.setToolTip(self.vocabComboBox.toolTip())
-    combo_box.setModel(self.vocabComboBox.model())
+    combo_box.setToolTip("Select the controlled vocabulary.")
+    combo_box.addItems(controlled_vocabulary)
+    combo_box.setCurrentText(value)
     new_vocab_entry_layout.addWidget(combo_box)
     delete_push_button = QtWidgets.QPushButton(parent=self.instance)
     delete_push_button.setText("Delete")
-    delete_push_button.setToolTip(self.deletePushButton.toolTip())
+    delete_push_button.setToolTip("Delete this particular vocabulary entry.")
     size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
     size_policy.setHorizontalStretch(0)
     size_policy.setVerticalStretch(0)
@@ -98,7 +116,29 @@ class ControlledVocabFrame(Ui_ControlledVocabularyFrame):
     delete_push_button.setMinimumSize(QSize(100, 0))
     delete_push_button.setObjectName("deletePushButton")
     new_vocab_entry_layout.addWidget(delete_push_button)
+    delete_push_button.clicked.connect(lambda _: delete(new_vocab_entry_layout))
     self.mainVerticalLayout.addLayout(new_vocab_entry_layout)
+
+  def save_modifications(self):
+    if self.meta_field['multiple']:
+      self.meta_field['value'].clear()
+      for layout_pos in range(self.mainVerticalLayout.count()):
+        if vocab_horizontal_layout := self.mainVerticalLayout.itemAt(layout_pos).layout():
+          combo_box = vocab_horizontal_layout.itemAt(0).widget()
+          self.meta_field['value'].append(combo_box.currentText())
+      self.meta_field['value'] = list(set(self.meta_field['value']))
+    else:
+      layout = self.mainVerticalLayout.findChild(QtWidgets.QHBoxLayout,
+                                                  "vocabHorizontalLayout")
+      if combo_box := layout.itemAt(0).widget():
+        self.meta_field['value'] = combo_box.currentText()
+
+
+def delete(layout):
+  for widget_pos in reversed(range(layout.count())):
+    if item := layout.itemAt(widget_pos):
+      item.widget().setParent(None)
+  layout.setParent(None)
 
 
 if __name__ == "__main__":
