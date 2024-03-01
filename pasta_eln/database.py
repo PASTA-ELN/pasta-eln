@@ -425,7 +425,7 @@ class Database:
       path = '/'.join(oldPath.split('/')[:-1]+[name])
     # test if path already exists
     if docID[0]=='x' and path is not None:
-      if not (self.basePath/path/'.id_pastaELN.json').exists():
+      if not (self.basePath/path/'.id_pastaELN.json').is_file():
         logging.debug('Target folder\'s json does not exist: '+path)
         oldDocID = ''
       else:
@@ -476,7 +476,7 @@ class Database:
         docLine.save()
         # update .json on disk
         for branchLine in docLine['-branch']:
-          if line['id'][0]=='x'  and (self.basePath/branchLine['path']).exists():
+          if line['id'][0]=='x'  and (self.basePath/branchLine['path']).is_dir():
             with open(self.basePath/branchLine['path']/'.id_pastaELN.json', 'w', encoding='utf-8') as fOut:
               fOut.write(json.dumps(docLine))
     return oldPath, path

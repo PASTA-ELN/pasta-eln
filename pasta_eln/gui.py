@@ -105,7 +105,7 @@ class MainWindow(QMainWindow):
     self.comm.changeTable.emit('x0', '')
 
     #check if temporary save exist: warn user
-    if (Path.home()/'.pastaELN.temp').exists():
+    if (Path.home()/'.pastaELN.temp').is_file():
       ret = QMessageBox.information(self, 'Information', 'There is data from a prematurely closed form. '+
               'Do you want to use it? \n\n- If you choose yes, please reopen that form and content will' +
               'be reloaded.\n\n- If you choose no, this temporary data will be removed now.',

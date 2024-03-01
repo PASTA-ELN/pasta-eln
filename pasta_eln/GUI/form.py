@@ -227,7 +227,7 @@ class Form(QDialog):
     if self.flagNewDoc: #new dataset
       TextButton('Save && Next', self, [Command.FORM_SAVE_NEXT], buttonLineL, 'Save this and handle next')
     # autosave
-    if (Path.home()/'.pastaELN.temp').exists():
+    if (Path.home()/'.pastaELN.temp').is_file():
       with open(Path.home()/'.pastaELN.temp', 'r', encoding='utf-8') as fTemp:
         content = json.loads(fTemp.read())
         for key in self.doc.keys():
@@ -337,13 +337,13 @@ class Form(QDialog):
           self.autosave()
         else:
           self.checkThreadTimer.stop()
-          if (Path.home()/'.pastaELN.temp').exists():
+          if (Path.home()/'.pastaELN.temp').is_file():
             (Path.home()/'.pastaELN.temp').unlink()
       self.reject()
     elif command[0] in (Command.FORM_SAVE, Command.FORM_SAVE_NEXT):
       # create the data that has to be saved
       self.checkThreadTimer.stop()
-      if (Path.home()/'.pastaELN.temp').exists():
+      if (Path.home()/'.pastaELN.temp').is_file():
         (Path.home()/'.pastaELN.temp').unlink()
       if hasattr(self, 'key_-name'):
         self.doc['-name'] = getattr(self, 'key_-name').text().strip()

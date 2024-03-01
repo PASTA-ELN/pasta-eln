@@ -265,7 +265,7 @@ def importELN(backend:Backend, elnFileName:str) -> str:
           with open(fullPath/'.id_pastaELN.json', 'w', encoding='utf-8') as fOut:
             fOut.write(json.dumps(doc))
         elif fullPath is not None:
-          if not fullPath.parent.exists():
+          if not fullPath.parent.is_dir():
             fullPath.parent.mkdir()
           if f'{dirName}/' + part['@id'][2:] in files:  #if a file is saved
             target = open(fullPath, "wb")

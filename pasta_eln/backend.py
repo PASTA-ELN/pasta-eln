@@ -46,7 +46,7 @@ class Backend(CLI_Mixin):
     """
     configFileName = Path.home()/'.pastaELN.json'
     self.configuration = defaultConfiguration
-    if configFileName.exists():
+    if configFileName.is_file():
       with open(configFileName,'r', encoding='utf-8') as confFile:
         self.configuration |= json.load(confFile)
     for _, items in configurationGUI.items():
@@ -220,14 +220,14 @@ class Backend(CLI_Mixin):
             except Exception:
               print('**ERROR bad01: fetch remote content failed. Data not added')
               return ''
-        elif doc['-name']!='' and (self.basePath/doc['-name']).exists():          #file exists
+        elif doc['-name']!='' and (self.basePath/doc['-name']).is_file():          #file exists
           path = self.basePath/doc['-name']
           doc['-name'] = Path(doc['-name']).name
-        elif doc['-name']!='' and (self.cwd/doc['-name']).exists():               #file exists
+        elif doc['-name']!='' and (self.cwd/doc['-name']).is_file():               #file exists
           path = self.cwd/doc['-name']
         elif '-branch' in doc:
           if len(doc['-branch'])==1:
-            if doc['-branch'][0]['path'] is not None and (self.basePath/doc['-branch'][0]['path']).exists():
+            if doc['-branch'][0]['path'] is not None and (self.basePath/doc['-branch'][0]['path']).is_file():
               path = self.basePath/doc['-branch'][0]['path']
           else:
             logging.warning('backend: add document with multiple branches'+str(doc['-branch']) )
@@ -275,7 +275,7 @@ class Backend(CLI_Mixin):
       #project, step, task
       path = Path(doc['-branch'][0]['path'])
       if edit and oldPath is not None:
-        if not (self.basePath/oldPath).exists():
+        if not (self.basePath/oldPath).is_dir():
           print(f'**WARNING: addData edit of folder should have oldPath and that should exist:{oldPath}'
                 f'\n This can be triggered if user moved the folder.')
           return ''
@@ -365,7 +365,7 @@ class Backend(CLI_Mixin):
         if path in pathsInDB_x: #path already in database
           pathsInDB_x.remove(path)
           continue
-        if (self.basePath/path/'.id_pastaELN.json').exists(): # update branch: path and stack
+        if (self.basePath/path/'.id_pastaELN.json').is_file(): # update branch: path and stack
           with open(self.basePath/path/'.id_pastaELN.json', 'r', encoding='utf-8') as fIn:
             doc = json.loads(fIn.read())
           if (self.basePath/doc['-branch'][0]['path']).parent.as_posix()  == root and \
@@ -384,7 +384,7 @@ class Backend(CLI_Mixin):
               if thisStack == ' '.join(item['key'].split(' ')[:-1]): #remove last item from string
                 childNum += 1
             newPath = '/'.join(path.split('/')[:-1])+'/'+createDirName(doc['-name'],doc['-type'][0],childNum) #update,or create (if new doc, update ignored anyhow)
-            if (self.basePath/newPath).exists():
+            if (self.basePath/newPath).exists():                     #can be either file or directory
               print("**ERROR new path should not exist",newPath)
             else:
               (self.basePath/path).rename(self.basePath/newPath)
@@ -469,7 +469,7 @@ class Backend(CLI_Mixin):
     pyFile = f'extractor_{extension.lower()}.py'
     pyPath = self.extractorPath/pyFile
     success = False
-    if pyPath.exists():
+    if pyPath.is_file():
       success = True
       # import module and use to get data
       os.environ['QT_API'] = 'pyside2'
@@ -553,7 +553,7 @@ class Backend(CLI_Mixin):
     if extractorPath is None:
       extractorPath = self.extractorPath
     #start testing
-    if (extractorPath/pyFile).exists():
+    if (extractorPath/pyFile).is_file():
       report += outputString(outputStyle, 'info', f'use extractor: {str(extractorPath / pyFile)}')
     else:
       success = False
@@ -734,7 +734,7 @@ class Backend(CLI_Mixin):
             count += 1
           else:
             pathsInDB_folder.remove(path)
-            if (self.basePath/root/dirName/'.id_pastaELN.json').exists():
+            if (self.basePath/root/dirName/'.id_pastaELN.json').is_file():
               with open(self.basePath/root/dirName/'.id_pastaELN.json','r',encoding='utf-8') as fIn:
                 docDisk = json.loads(fIn.read())
                 listDocs = self.db.getView('viewHierarchy/viewPathsAll', preciseKey=path)
@@ -757,7 +757,7 @@ class Backend(CLI_Mixin):
               #     docDB   = self.db.getDoc( docDisk['_id'] )
               #     json.dump(docDB, fOut)
     output += outputString(outputStyle, 'info', f'Number of files on disk that are not in database {str(count)}')
-    orphans = [i for i in pathsInDB_data   if not (self.basePath/i).exists() and ":/" not in i]
+    orphans = [i for i in pathsInDB_data   if not (self.basePath/i).exists() and ":/" not in i]  #paths can be files or directories
     orphans+= [i for i in pathsInDB_folder if not (self.basePath/i).exists() ]
     if orphans:
       output += outputString(outputStyle,'error','bch01: These files of database not on filesystem:\n- '+'\n- '.join(orphans))
