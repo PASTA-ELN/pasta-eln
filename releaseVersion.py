@@ -19,11 +19,14 @@ def getVersion():
   """
   result = subprocess.run(['git','tag'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
   versionList= result.stdout.decode('utf-8').strip()
-  versionList= [i[1:] for i in versionList.split('\n')]
+  versionList= [i[1:].replace('b','.') for i in versionList.split('\n')]
   if versionList == ['']:  #default
     return 'v0.0.1'
   versionList.sort(key=lambda s: list(map(int, s.split('.'))))
-  return 'v'+versionList[-1]
+  lastVersion = versionList[-1]
+  if lastVersion.count('.')==3:
+    lastVersion = '.'.join(lastVersion.split('.')[:3]) + f'b{lastVersion.split(".")[-1]}'
+  return 'v'+lastVersion
 
 def createContributors():
   """
@@ -63,7 +66,7 @@ def newVersion(level=2):
   """
   print('Create new version...')
   #get old version number
-  version = [int(i) for i in getVersion()[1:].split('.')]
+  version = [int(i) for i in getVersion()[1:].replace('b','.').split('.')]
   #create new version number
   version[level] += 1
   for i in range(level+1,3):
