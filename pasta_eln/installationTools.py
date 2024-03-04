@@ -1,5 +1,5 @@
 '''  Methods that check, repair, the local PASTA-ELN installation '''
-import os, platform, sys, json, shutil, random, string, logging
+import os, platform, sys, json, shutil, random, string, logging, uuid
 from typing import Optional, Any, Callable
 import urllib.request
 from pathlib import Path
@@ -186,10 +186,9 @@ def installLinuxRoot(couchDBExists:bool, pathPasta:Path=Path(''), password:str='
         fConf.write(json.dumps(conf, indent=2) )
     bashCommand = [
       'sudo snap install couchdb',
-      f'sudo snap set couchdb admin={password}',
+      f'sudo snap set couchdb admin={password} setcookie={uuid.uuid4().hex}',
       'sudo snap start couchdb',
       'sudo snap connect couchdb:mount-observe',
-      'sudo snap connect couchdb:process-control',
       'sleep 5',
       f'curl -X PUT http://admin:{password}@127.0.0.1:5984/_users',
       f'curl -X PUT http://admin:{password}@127.0.0.1:5984/_replicator',
