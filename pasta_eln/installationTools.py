@@ -61,7 +61,7 @@ def createDefaultConfiguration(user:str, password:str, pathPasta:Optional[Path]=
   except Exception:   #github action
     conf['userID']      = 'github_user'
   #create pastaDir if it does not exist
-  if not pathPasta.exists():
+  if not pathPasta.is_dir():
     pathPasta.mkdir()
   return conf
 
@@ -176,7 +176,7 @@ def installLinuxRoot(couchDBExists:bool, pathPasta:Path=Path(''), password:str='
       logging.info('PASSWORD: %s',password)
     #create or adopt .pastaELN.json
     path = Path.home()/'.pastaELN.json'
-    if path.exists():
+    if path.is_file():
       with open(path,'r', encoding='utf-8') as fConf:
         conf = json.load(fConf)
       logging.info('.pastaELN.json exists, do not change it')

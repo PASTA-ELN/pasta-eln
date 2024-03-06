@@ -80,7 +80,7 @@ class Project(QWidget):
         Action(f'table of {doctype}',   self, [Command.SHOW_TABLE, doctype], moreMenu, icon=icon)
     Action('table of unidentified',     self, [Command.SHOW_TABLE, '-'],     moreMenu, icon='fa5.file')
     moreMenu.addSeparator()
-    Action('Delete',                    self, [Command.DELETE], moreMenu)
+    Action('Delete project',            self, [Command.DELETE], moreMenu)
     more.setMenu(moreMenu)
 
     # Details section
@@ -210,7 +210,7 @@ class Project(QWidget):
       self.change(self.projID,'')
       #collect information and then change
       oldPath = self.comm.backend.basePath/self.docProj['-branch'][0]['path']
-      if oldPath.exists():
+      if oldPath.is_dir():
         newPath = self.comm.backend.basePath/createDirName(self.docProj['-name'],'x0',0)
         oldPath.rename(newPath)
     elif command[0] is Command.DELETE:
@@ -224,7 +224,7 @@ class Project(QWidget):
           oldPath = self.comm.backend.basePath/doc['-branch'][0]['path']
           newPath = self.comm.backend.basePath/('trash_'+doc['-branch'][0]['path'])
           nextIteration = 1
-          while newPath.exists():
+          while newPath.is_dir():
             newPath = self.comm.backend.basePath/(f"trash_{doc['-branch'][0]['path']}_{nextIteration}")
             nextIteration += 1
           oldPath.rename(newPath)
