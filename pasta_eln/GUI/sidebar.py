@@ -119,19 +119,22 @@ class Sidebar(QWidget):
         self.widgetsList[projID] = listW
 
         # show folders as hierarchy
-        treeW = QTreeWidget()
-        treeW.hide()  #convenience: allow scroll in sidebar
-        treeW.setHeaderHidden(True)
-        treeW.setColumnCount(1)
-        treeW.itemClicked.connect(lambda item: self.execute([Command.SHOW_FOLDER, *item.text(1).split('/')]))
-        hierarchy = db.getHierarchy(projID)
-        rootItem = treeW.invisibleRootItem()
-        count = 0
-        for node in PreOrderIter(hierarchy, maxlevel=2):
-          if not node.is_root and node.id[0]=='x':
-            rootItem.insertChild(count, self.iterateTree(node, projID))
-            count += 1
-        projectL.addWidget(treeW)
+        # Commented out temporarily until getHierarchy is fast
+        # - parentNode = find_by_attr(dataTree, parentID, name='id')
+        # - is slow if many entries, find better system
+        # treeW = QTreeWidget()
+        # treeW.hide()  #convenience: allow scroll in sidebar
+        # treeW.setHeaderHidden(True)
+        # treeW.setColumnCount(1)
+        # treeW.itemClicked.connect(lambda item: self.execute([Command.SHOW_FOLDER, *item.text(1).split('/')]))
+        # hierarchy = db.getHierarchy(projID)
+        # rootItem = treeW.invisibleRootItem()
+        # count = 0
+        # for node in PreOrderIter(hierarchy, maxlevel=2):
+        #   if not node.is_root and node.id[0]=='x':
+        #     rootItem.insertChild(count, self.iterateTree(node, projID))
+        #     count += 1
+        # projectL.addWidget(treeW)
         # finalize layout
         self.projectsListL.addWidget(projectW)
     # Other buttons
