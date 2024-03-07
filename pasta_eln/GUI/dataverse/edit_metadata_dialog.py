@@ -26,16 +26,12 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
   """
   Represents the edit metadata dialog.
 
-  Explanation:
-      This class represents the edit metadata dialog and provides methods to handle the UI and save the changes.
-
-  Args:
-      None
+  This class provides methods to handle the UI and save the changes in the edit metadata dialog.
 
   Returns:
-      None
-  """
+      Any: The new instance of the EditMetadataDialog class.
 
+  """
   def __new__(cls, *_: Any, **__: Any) -> Any:
     """
     Creates a new instance of the EditMetadataDialog class.
@@ -49,6 +45,7 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
 
     Returns:
         Any: The new instance of the EditMetadataDialog class.
+
     """
     return super(EditMetadataDialog, cls).__new__(cls)
 
@@ -59,57 +56,54 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
     Explanation:
         This method initializes a new instance of the EditMetadataDialog class.
 
-    Args:
-        None
-
-    Returns:
-        None
     """
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
     self.primitive_compound_frame: PrimitiveCompoundFrame | None = None
     self.controlled_vocab_frame: ControlledVocabFrame | None = None
     self.instance = QDialog()
     super().setupUi(self.instance)
+    self.instance.setWindowModality(QtCore.Qt.ApplicationModal)
+
+    # Database API instance
     self.db_api = DatabaseAPI()
     self.config_model: ConfigModel = self.db_api.get_model(self.db_api.config_doc_id,
                                                            ConfigModel)  # type: ignore[assignment]
+
+    # Initialize metadata
     self.metadata = self.config_model.metadata
     self.metadata_types = self.get_metadata_types()
     self.minimal_metadata = [
-      {"name":"subject", "displayName": "Subject"},
-      {"name":"author", "displayName": "Author"},
-      {"name":"datasetContact", "displayName": "Dataset contact"},
-      {"name":"dsDescription", "displayName": "Ds Description"}
+      {"name": "subject", "displayName": "Subject"},
+      {"name": "author", "displayName": "Author"},
+      {"name": "datasetContact", "displayName": "Dataset contact"},
+      {"name": "dsDescription", "displayName": "Ds Description"}
     ]
+
+    # Connect slots
     self.metadataBlockComboBox.currentTextChanged.connect(self.change_metadata_block)
     self.typesComboBox.currentTextChanged.connect(self.change_metadata_type)
-    self.metadataBlockComboBox.addItems(self.metadata_types.keys())
-    # for meta_type in self.metadata_types[self.metadataBlockComboBox.currentText()]:
-    #   self.typesComboBox.addItem(meta_type['displayName'], userData=meta_type['name'])
-    self.minimalFullComboBox.addItems(["Full", "Minimal"])
     self.minimalFullComboBox.currentTextChanged[str].connect(self.toggle_minimal_full)
-    self.instance.setWindowModality(QtCore.Qt.ApplicationModal)
     self.buttonBox.button(QtWidgets.QDialogButtonBox.Save).clicked.connect(self.save_ui)
-    self.licenseNameLineEdit.setText(self.config_model.metadata['datasetVersion']['license']['name'])
-    self.licenseURLLineEdit.setText(self.config_model.metadata['datasetVersion']['license']['uri'])
     self.licenseNameLineEdit.textChanged[str].connect(
       lambda name: self.config_model.metadata['datasetVersion']['license'].update({"name": name}))
     self.licenseURLLineEdit.textChanged[str].connect(
       lambda uri: self.config_model.metadata['datasetVersion']['license'].update({"uri": uri}))
 
+    # Initialize UI elements
+    self.load_ui()
+
   def get_metadata_types(self) -> dict[str, list[dict[str, str]]]:
-    """
-    Retrieves the metadata types mapping.
+    """Get the metadata types mapping.
 
-    Explanation:
-        This method retrieves the mapping of metadata block display names to their corresponding field type names.
-
-    Args:
-        None
+    Retrieves the metadata types mapping from the loaded metadata model.
+    The mapping is a dictionary where the keys are the display names of the metadata blocks,
+    and the values are lists of dictionaries containing the name and display name of each field type.
 
     Returns:
-        dict[str, list[str]]: The mapping of metadata block display names to their corresponding field type names.
+        dict[str, list[dict[str, str]]]: The metadata types mapping.
+
     """
+    self.logger.info("Loading metadata types mapping...")
     metadata_types_mapping: dict[str, list[dict[str, str]]] = {}
     if not self.metadata:
       self.logger.error("Failed to load metadata model!")
@@ -127,49 +121,49 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
           )
     return metadata_types_mapping
 
-  def change_metadata_type(self, new_metadata_type: str) -> None:
+  def change_metadata_type(self) -> None:
     """
-    Changes the metadata type.
+    Change the metadata type.
 
-    Explanation:
-        This method changes the metadata type based on the selected new_metadata_type.
-        It clears the contents of UI elements and adds the appropriate UI elements based on the metadata type.
-
-    Args:
-        new_metadata_type (str): The selected new metadata type.
+    Updates the UI elements based on the selected new_metadata_type.
+    Clears the contents of UI elements and adds the appropriate UI elements based on the selected metadata type.
 
     """
-    # Clear the contents of UI elements
+    # Save the current modifications
     if self.primitive_compound_frame:
       self.primitive_compound_frame.save_modifications()
       self.primitive_compound_frame.instance.close()
     if self.controlled_vocab_frame:
       self.controlled_vocab_frame.save_modifications()
       self.controlled_vocab_frame.instance.close()
+    # Clear the contents of UI elements
     for widget_pos in reversed(range(self.metadataScrollVerticalLayout.count())):
       self.metadataScrollVerticalLayout.itemAt(widget_pos).widget().setParent(None)
     if not self.metadata:
       self.logger.error("Failed to load metadata model!")
       return
-    new_metadata_type = self.typesComboBox.currentData(QtCore.Qt.ItemDataRole.UserRole)
-    for _, metablock in self.metadata['datasetVersion']['metadataBlocks'].items():
-      for field in metablock['fields']:
-        if field['typeName'] == new_metadata_type:
-          match field['typeClass']:
-            case "primitive" | "compound":
-              self.primitive_compound_frame = PrimitiveCompoundFrame(field)
-              self.metadataScrollVerticalLayout.addWidget(self.primitive_compound_frame.instance)
-            case "controlledVocabulary":
-              self.controlled_vocab_frame = ControlledVocabFrame(field)
-              self.metadataScrollVerticalLayout.addWidget(self.controlled_vocab_frame.instance)
+    if new_metadata_type := self.typesComboBox.currentData(QtCore.Qt.ItemDataRole.UserRole):
+      self.logger.info(f"Loading {new_metadata_type} metadata type...")
+      dataset = self.metadata.get('datasetVersion', {})
+      metadata_blocks = dataset.get('metadataBlocks', {})
+      for _, metablock in metadata_blocks.items():
+        for field in metablock['fields']:
+          if field['typeName'] == new_metadata_type:
+            self.logger.info(f"Loading {field['typeName']} metadata type of class: {field['typeClass']}...")
+            match field['typeClass']:
+              case "primitive" | "compound":
+                self.primitive_compound_frame = PrimitiveCompoundFrame(field)
+                self.metadataScrollVerticalLayout.addWidget(self.primitive_compound_frame.instance)
+              case "controlledVocabulary":
+                self.controlled_vocab_frame = ControlledVocabFrame(field)
+                self.metadataScrollVerticalLayout.addWidget(self.controlled_vocab_frame.instance)
 
   def change_metadata_block(self, new_metadata_block: str | None = None) -> None:
     """
-    Changes the metadata block.
+    Change the metadata block.
 
-    Explanation:
-        This method changes the metadata block based on the selected new_metadata_block.
-        It clears the contents of the typesComboBox and adds the appropriate metadata types based on the new metadata block.
+    Updates the typesComboBox based on the selected new_metadata_block.
+    Clears the typesComboBox and adds the metadata types from the new_metadata_block.
 
     Args:
         new_metadata_block (str | None): The selected new metadata block.
@@ -177,27 +171,30 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
     """
     if new_metadata_block:
       self.typesComboBox.clear()
-      for meta_type in self.metadata_types[new_metadata_block]:
+      block = self.metadata_types.get(new_metadata_block, [])
+      for meta_type in block:
         self.typesComboBox.addItem(meta_type['displayName'], userData=meta_type['name'])
 
   def toggle_minimal_full(self, selection: str) -> None:
     """
-    Toggles between the minimal and full view of the metadata.
+    Toggle between the minimal and full view of the metadata.
 
-    Explanation:
-        This method toggles between the minimal and full view of the metadata based on the selected selection.
-        It hides or shows the metadata block combo box and updates the types combo box accordingly.
+    Toggles the visibility of UI elements based on the selected selection.
+    If the selection is "Minimal", hides the metadataBlockComboBox and clears the typesComboBox.
+    If the selection is "Full", shows the metadataBlockComboBox and populates it with the metadata types.
 
     Args:
         selection (str): The selected view option ("Minimal" or "Full").
 
     """
+    self.logger.info(f"Toggled to {selection} view...")
     match selection:
       case "Minimal":
         self.metadataBlockComboBox.hide()
         self.typesComboBox.clear()
         for meta_type in self.minimal_metadata:
-          self.typesComboBox.addItem(meta_type['displayName'], userData=meta_type['name'])
+          self.typesComboBox.addItem(meta_type['displayName'],
+                                     userData=meta_type['name'])
       case "Full":
         self.metadataBlockComboBox.show()
         self.metadataBlockComboBox.clear()
@@ -205,30 +202,29 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
 
   def load_ui(self) -> None:
     """
-    Loads the UI for the EditMetadataDialog.
-    To be implemented.
+    Load the UI for the EditMetadataDialog.
 
-    Explanation:
-        This method loads the UI for the EditMetadataDialog.
-
-    Args:
-        None
+    This method initializes the UI elements for the EditMetadataDialog.
+    It adds items to combo boxes, sets text in line edits, and configures the UI based on the metadata.
 
     """
     self.logger.info("Loading UI...")
+    self.metadataBlockComboBox.addItems(self.metadata_types.keys())
+    self.minimalFullComboBox.addItems(["Full", "Minimal"])
+    dataset_version = self.config_model.metadata.get('datasetVersion', {})
+    dataset_license = dataset_version.get('license', {})
+    self.licenseNameLineEdit.setText(dataset_license.get('name', ''))
+    self.licenseURLLineEdit.setText(dataset_license.get('uri', ''))
 
   def save_ui(self) -> None:
     """
-    Saves the UI changes.
+    Save the UI changes.
 
-    Explanation:
-        This method saves the changes made in the UI to the metadata.
-        It updates the metadata in the config model and updates the model document in the database.
-
-    Args:
-        None
+    Saves the changes made in the UI to the metadata.
+    Updates the metadata in the config model and updates the model document in the database.
 
     """
+    self.logger.info("Saving Config Model...")
     if self.controlled_vocab_frame:
       self.controlled_vocab_frame.save_modifications()
     if self.primitive_compound_frame:

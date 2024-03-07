@@ -18,7 +18,8 @@ from cryptography.fernet import Fernet
 
 from pasta_eln.dataverse.config_error import ConfigError
 from pasta_eln.dataverse.upload_status_values import UploadStatusValues
-from pasta_eln.dataverse.utils import adjust_type_name, check_login_credentials, decrypt_data, encrypt_data, \
+from pasta_eln.dataverse.utils import adjust_type_name, check_login_credentials, clear_value, decrypt_data, \
+  encrypt_data, \
   get_encrypt_key, \
   log_and_create_error, read_pasta_config_file, set_authors, set_template_values, update_status, write_pasta_config_file
 
@@ -836,77 +837,110 @@ class TestDataverseUtils:
     if not (isinstance(expected_result, Type) and issubclass(expected_result, Exception)):
       assert metadata == expected_result, f"Test failed for {test_id}"
 
+  # Success path tests with various realistic test values
+  @pytest.mark.parametrize("input_string, expected_output", [
+    # ID: Test single word starting with uppercase
+    ("Camel", "Camel"),
+    # ID: Test standard camel case
+    ("CamelCaseSplit", "Camel Case Split"),
+    # ID: Test consecutive uppercase letters
+    ("HTTPRequest", "HTTP Request"),
+    # ID: Test single uppercase letter
+    ("A", "A"),
+    # ID: Test camel case ending with uppercase letter
+    ("CamelCaseX", "Camel Case X"),
+    # ID: Test camel case with leading uppercase letters
+    ("XMLHttpRequest", "XML Http Request"),
+    ("alternativeTitle", "Alternative Title"),
+  ], ids=[
+    "single_word",
+    "standard_camel_case",
+    "consecutive_uppercase",
+    "single_uppercase",
+    "ending_with_uppercase",
+    "leading_uppercase",
+    "starting_lowercase",
+  ])
+  def test_adjust_type_name_success_path(self, input_string, expected_output):
+    # Act
+    result = adjust_type_name(input_string)
 
-# Success path tests with various realistic test values
-@pytest.mark.parametrize("input_string, expected_output", [
-  # ID: Test single word starting with uppercase
-  ("Camel", "Camel"),
-  # ID: Test standard camel case
-  ("CamelCaseSplit", "Camel Case Split"),
-  # ID: Test consecutive uppercase letters
-  ("HTTPRequest", "HTTP Request"),
-  # ID: Test single uppercase letter
-  ("A", "A"),
-  # ID: Test camel case ending with uppercase letter
-  ("CamelCaseX", "Camel Case X"),
-  # ID: Test camel case with leading uppercase letters
-  ("XMLHttpRequest", "XML Http Request"),
-  ("alternativeTitle", "Alternative Title"),
-], ids=[
-  "single_word",
-  "standard_camel_case",
-  "consecutive_uppercase",
-  "single_uppercase",
-  "ending_with_uppercase",
-  "leading_uppercase",
-  "starting_lowercase",
-])
-def test_adjust_type_name_success_path(input_string, expected_output):
-  # Act
-  result = adjust_type_name(input_string)
+    # Assert
+    assert result == expected_output, f"Expected {expected_output} but got {result}"
 
-  # Assert
-  assert result == expected_output, f"Expected {expected_output} but got {result}"
+  # Edge cases
+  @pytest.mark.parametrize("input_string, expected_output", [
+    # ID: Test empty string
+    ("", ""),
+    # ID: Test string with only spaces
+    ("   ", ""),
+    # ID: Test string with special characters
+    ("CamelCase#Split", "Camel Case Split"),
+    # ID: Test string with underscores
+    ("Camel_Case_Split", "Camel Case Split"),
+  ], ids=[
+    "empty_string",
+    "only_spaces",
+    "special_characters",
+    "underscores",
+  ])
+  def test_adjust_type_name_edge_cases(self, input_string, expected_output):
+    # Act
+    result = adjust_type_name(input_string)
 
+    # Assert
+    assert result == expected_output, f"Expected {expected_output} but got {result}"
 
-# Edge cases
-@pytest.mark.parametrize("input_string, expected_output", [
-  # ID: Test empty string
-  ("", ""),
-  # ID: Test string with only spaces
-  ("   ", ""),
-  # ID: Test string with special characters
-  ("CamelCase#Split", "Camel Case Split"),
-  # ID: Test string with underscores
-  ("Camel_Case_Split", "Camel Case Split"),
-], ids=[
-  "empty_string",
-  "only_spaces",
-  "special_characters",
-  "underscores",
-])
-def test_adjust_type_name_edge_cases(input_string, expected_output):
-  # Act
-  result = adjust_type_name(input_string)
+  # Error cases
+  @pytest.mark.parametrize("input_string, expected_exception", [
+    # ID: Test input is not a string (integer)
+    (123, TypeError),
+    # ID: Test input is not a string (list)
+    (["CamelCaseSplit"], TypeError),
+    # ID: Test input is not a string (None)
+    (None, TypeError),
+  ], ids=[
+    "input_is_integer",
+    "input_is_list",
+    "input_is_none",
+  ])
+  def test_adjust_type_name_error_cases(self, input_string, expected_exception):
+    # Act / Assert
+    with pytest.raises(expected_exception):
+      adjust_type_name(input_string)
 
-  # Assert
-  assert result == expected_output, f"Expected {expected_output} but got {result}"
+  # Success path tests with various realistic test values
+  @pytest.mark.parametrize("test_input, expected", [
+    ({"a": {"value": 1}, "b": {"value": 2}}, {"a": {"value": None}, "b": {"value": None}}),
+    ({"single": {"value": "test", "other": "data"}}, {"single": {"value": None, "other": "data"}}),
+    ({"empty": {"value": ""}}, {"empty": {"value": None}}),
+  ], ids=["SuccessCase-1", "SuccessCase-2", "SuccessCase-3"])
+  def test_clear_value_happy_path(self, test_input, expected):
+    # Act
+    clear_value(test_input)
 
+    # Assert
+    assert test_input == expected, f"Expected {expected}, but got {test_input}"
 
-# Error cases
-@pytest.mark.parametrize("input_string, expected_exception", [
-  # ID: Test input is not a string (integer)
-  (123, TypeError),
-  # ID: Test input is not a string (list)
-  (["CamelCaseSplit"], TypeError),
-  # ID: Test input is not a string (None)
-  (None, TypeError),
-], ids=[
-  "input_is_integer",
-  "input_is_list",
-  "input_is_none",
-])
-def test_adjust_type_name_error_cases(input_string, expected_exception):
-  # Act / Assert
-  with pytest.raises(expected_exception):
-    adjust_type_name(input_string)
+  # Edge cases
+  @pytest.mark.parametrize("test_input, expected", [
+    # Test ID: EC-1
+    ({}, {}),  # Empty dictionary
+    # Test ID: EC-2
+    ({"none_value": None}, {"none_value": None}),  # Value is already None
+    ({"not_a_dict": [{"value": 1}]}, {"not_a_dict": [{"value": 1}]}),  # Value is already None
+  ], ids=["EdgeCase-1", "EdgeCase-2", "EdgeCase-3"])
+  def test_clear_value_edge_cases(self, test_input, expected):
+    # Act
+    clear_value(test_input)
+
+    # Assert
+    assert test_input == expected, f"Expected {expected}, but got {test_input}"
+
+  # Test for None input
+  def test_clear_value_with_none_input(self):
+    # Act
+    result = clear_value(None)
+
+    # Assert
+    assert result is None, "Expected None, but got a different result"

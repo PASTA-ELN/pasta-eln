@@ -339,6 +339,38 @@ def check_login_credentials(logger: Logger, api_token: str, server_url: str) -> 
 
 
 def adjust_type_name(camel_case_string: str):
+  """
+  Adjusts the type name from camel case to title case.
+
+  Splits the camel case string into individual words and capitalizes the first letter of each word.
+  If a word starts with an uppercase letter, it is left as is.
+
+  Args:
+      camel_case_string (str): The input string in camel case.
+
+  Returns:
+      str: The adjusted type name in title case.
+  """
   split = re.findall(r'[A-Z]?[a-z]+|[A-Z]+(?=[A-Z]|$)',
-                    camel_case_string)
+                     camel_case_string)
   return ' '.join([i.capitalize() if i[0].islower() else i for i in split])
+
+
+def clear_value(items: dict[str, Any] | None = None):
+  """
+  Clears the 'value' attribute of each item in the given dictionary.
+
+  Args:
+      items(dict[str, Any] | None): The dictionary containing items to be cleared.
+
+  Explanation:
+      This function iterates over the values of the given dictionary and sets the 'value'
+      attribute to None for each item.
+      If the 'items' argument is None, the function returns immediately.
+
+  """
+  if items is None:
+    return
+  for item in items.values():
+    if item and "value" in item:
+      item["value"] = None
