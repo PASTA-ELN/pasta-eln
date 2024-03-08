@@ -18,7 +18,7 @@ from os.path import exists, join
 from pathlib import Path
 from typing import Any, Type
 
-from PySide6.QtWidgets import QLabel
+from PySide6.QtWidgets import QBoxLayout, QLabel
 from cryptography.fernet import Fernet, InvalidToken
 from qtawesome import icon
 
@@ -374,3 +374,43 @@ def clear_value(items: dict[str, Any] | None = None):
   for item in items.values():
     if item and "value" in item:
       item["value"] = None
+
+
+def is_date_time_type(type_name: str) -> bool:
+  """
+  Checks if the given type_name contains 'date' or 'time' as a substring.
+
+  Args:
+      type_name (str): The type name to check.
+
+  Returns:
+      bool: True if the type_name contains 'date' or 'time', False otherwise.
+
+  Explanation:
+      This function checks if the given type_name contains 'date' or 'time' as a substring.
+      It performs a case-insensitive search to determine the presence of 'date' or 'time' in the type_name.
+
+  """
+  return any(
+    map(type_name.lower().__contains__, ["date", "time"]))
+
+
+def delete_layout_and_contents(layout: QBoxLayout):
+  """
+  Deletes the layout and its contents.
+
+  Args:
+      layout (QBoxLayout): The layout to delete.
+
+  Explanation:
+      This function deletes the given layout and its contents.
+      It iterates over the widgets in the layout and removes them from their parent.
+      Finally, it sets the layout's parent to None.
+
+  """
+  if layout is None:
+    return
+  for widget_pos in reversed(range(layout.count())):
+    if item := layout.itemAt(widget_pos):
+      item.widget().setParent(None)
+  layout.setParent(None)

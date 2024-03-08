@@ -18,19 +18,7 @@ from PySide6.QtWidgets import QBoxLayout, QDateTimeEdit, QFrame, QHBoxLayout, QL
   QVBoxLayout
 
 from pasta_eln.GUI.dataverse.primitive_compound_controller_frame_base import Ui_PrimitiveCompoundControlledBaseFrame
-from pasta_eln.dataverse.utils import adjust_type_name, clear_value
-
-
-def is_date_time_type(type_name):
-  return any(
-    map(type_name.lower().__contains__, ["date", "time"]))
-
-
-def delete(layout):
-  for widget_pos in reversed(range(layout.count())):
-    if item := layout.itemAt(widget_pos):
-      item.widget().setParent(None)
-  layout.setParent(None)
+from pasta_eln.dataverse.utils import adjust_type_name, clear_value, is_date_time_type
 
 
 class PrimitiveCompoundFrame(Ui_PrimitiveCompoundControlledBaseFrame):
@@ -156,7 +144,7 @@ class PrimitiveCompoundFrame(Ui_PrimitiveCompoundControlledBaseFrame):
     size_policy.setHeightForWidth(delete_push_button.sizePolicy().hasHeightForWidth())
     delete_push_button.setSizePolicy(size_policy)
     delete_push_button.setMinimumSize(QSize(100, 0))
-    delete_push_button.clicked.connect(lambda _: delete(parent))
+    delete_push_button.clicked.connect(lambda _: delete_layout_and_contents(parent))
     return delete_push_button
 
   def create_line_edit(self,

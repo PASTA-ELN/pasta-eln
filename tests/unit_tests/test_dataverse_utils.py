@@ -19,9 +19,10 @@ from cryptography.fernet import Fernet
 from pasta_eln.dataverse.config_error import ConfigError
 from pasta_eln.dataverse.upload_status_values import UploadStatusValues
 from pasta_eln.dataverse.utils import adjust_type_name, check_login_credentials, clear_value, decrypt_data, \
-  encrypt_data, \
+  delete_layout_and_contents, encrypt_data, \
   get_encrypt_key, \
-  log_and_create_error, read_pasta_config_file, set_authors, set_template_values, update_status, write_pasta_config_file
+  is_date_time_type, log_and_create_error, read_pasta_config_file, set_authors, set_template_values, update_status, \
+  write_pasta_config_file
 
 # Constants for test
 EXISTING_KEY = b64encode(Fernet.generate_key()).decode('ascii')
@@ -944,3 +945,83 @@ class TestDataverseUtils:
 
     # Assert
     assert result is None, "Expected None, but got a different result"
+
+  # Parametrized test for success path with various realistic test values
+  @pytest.mark.parametrize("type_name, expected_result", [
+    # Test ID: #success_case_1 - type_name contains 'date' in lowercase
+    ("date", True),
+    # Test ID: #success_case_2 - type_name contains 'Date' in mixed case
+    ("DateTime", True),
+    # Test ID: #success_case_3 - type_name contains 'time' in lowercase
+    ("timestamp", True),
+    # Test ID: #success_case_4 - type_name contains 'Time' in mixed case
+    ("modificationTime", True),
+    # Test ID: #success_case_5 - type_name contains 'date' in the middle
+    ("creation_date", True),
+    # Test ID: #success_case_6 - type_name contains 'time' at the end
+    ("update_time", True),
+  ], ids=["success_case_1", "success_case_1", "success_case_2", "success_case_3", "success_case_4", "success_case_5"])
+  def test_is_date_time_type_happy_path(self, type_name, expected_result):
+    # Act
+    result = is_date_time_type(type_name)
+
+    # Assert
+    assert result == expected_result, f"Failed for {type_name}"
+
+  # Parametrized test for edge cases
+  @pytest.mark.parametrize("type_name, expected_result", [
+    # Test ID: #edge_case_1 - type_name is an empty string
+    ("", False),
+    # Test ID: #edge_case_2 - type_name does not contain 'date' or 'time'
+    ("string", False),
+    # Test ID: #edge_case_3 - type_name contains 'date' or 'time' as a separate word
+    ("my date", True),
+    # Test ID: #edge_case_4 - type_name contains 'date' or 'time' with special characters
+    ("due-date", True),
+    # Test ID: #edge_case_5 - type_name contains 'date' or 'time' with numbers
+    ("date1", True),
+  ], ids=["edge_case_1", "edge_case_2", "edge_case_3", "edge_case_4", "edge_case_5"])
+  def test_is_date_time_type_edge_cases(self, type_name, expected_result):
+    # Act
+    result = is_date_time_type(type_name)
+
+    # Assert
+    assert result == expected_result, f"Failed for {type_name}"
+
+  # Parametrized test for error cases
+  @pytest.mark.parametrize("type_name, expected_exception", [
+    # Test ID: #error_case_1 - type_name is None (should raise an AttributeError)
+    (None, AttributeError),
+    # Test ID: #error_case_2 - type_name is not a string (should raise an AttributeError)
+    (123, AttributeError),
+    # Test ID: #error_case_3 - type_name is a list (should raise an AttributeError)
+    (["date"], AttributeError),
+  ], ids=["error_case_1", "error_case_2", "error_case_3"])
+  def test_is_date_time_type_error_cases(self, type_name, expected_exception):
+    # Act and Assert
+    with pytest.raises(expected_exception):
+      _ = is_date_time_type(type_name)
+
+  @pytest.mark.parametrize(
+    "test_id, num_widgets",
+    [
+      ("success_path_1_widget", 1),  # ID: happy_path_1_widget
+      ("success_path_multiple_widgets", 3),  # ID: happy_path_multiple_widgets
+      ("success_path_no_widgets", 0),  # ID: happy_path_no_widgets
+    ]
+  )
+  def test_delete_layout_and_contents(self, mocker, test_id, num_widgets):
+    # Arrange
+    layout = mocker.MagicMock()
+    widgets = [mocker.MagicMock() for _ in range(num_widgets)]
+    layout.itemAt = lambda pos: widgets[pos]
+    layout.count.return_value = len(widgets)
+
+    # Act
+    delete_layout_and_contents(layout)
+
+    # Assert
+    layout.count.assert_called_once()
+    layout.setParent.assert_called_once_with(None)
+    for widget in widgets:
+      widget.widget.return_value.setParent.assert_called_once_with(None)
