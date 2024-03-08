@@ -13,7 +13,7 @@ import logging
 from typing import Any
 
 from PySide6.QtCore import QDateTime, QSize
-from PySide6.QtWidgets import QApplication, QBoxLayout, QDateTimeEdit, QFrame, QHBoxLayout, QLineEdit, QPushButton, \
+from PySide6.QtWidgets import QBoxLayout, QDateTimeEdit, QFrame, QHBoxLayout, QLineEdit, QPushButton, \
   QSizePolicy, \
   QVBoxLayout
 
@@ -334,23 +334,59 @@ class PrimitiveCompoundFrame(Ui_PrimitiveCompoundControlledBaseFrame):
         type_template)
     self.mainVerticalLayout.addLayout(new_primitive_entry_layout)
 
-  def populate_primitive_horizontal_layout(self, new_primitive_entry_layout, type_name, type_value,
-                                           type_value_template):
+  def populate_primitive_horizontal_layout(self,
+                                           new_primitive_entry_layout: QBoxLayout,
+                                           type_name: str,
+                                           type_value: str,
+                                           type_value_template: str) -> None:
+    """
+    Populates the horizontal layout for a primitive entry.
+
+    Args:
+        new_primitive_entry_layout (QBoxLayout): The layout to populate.
+        type_name (str): The name of the primitive type.
+        type_value (str): The value of the primitive type.
+        type_value_template (str): The template value for the primitive type.
+
+    Explanation:
+        This function populates the horizontal layout for a primitive entry.
+        It creates a new QHBoxLayout and adds widgets to it based on the provided type_name, type_value, and type_value_template.
+        The widgets can be either a QDateTimeEdit or a QLineEdit, depending on the type_name.
+        The new QHBoxLayout is then added to the new_primitive_entry_layout, which is added to the main layout.
+
+    """
     new_primitive_entry_horizontal_layout = QHBoxLayout()
     new_primitive_entry_horizontal_layout.setObjectName("primitiveHorizontalLayout")
     new_primitive_entry_horizontal_layout.addWidget(
-      self.create_date_time_widget(type_name, type_value, type_value_template) if is_date_time_type(
-        type_name) else self.create_line_edit(type_name, type_value, type_value_template))
+      self.create_date_time_widget(type_name, type_value, type_value_template)
+      if is_date_time_type(type_name) else
+      self.create_line_edit(type_name, type_value, type_value_template))
     new_primitive_entry_horizontal_layout.addWidget(
       self.create_delete_button(new_primitive_entry_horizontal_layout, True))
     new_primitive_entry_layout.addLayout(new_primitive_entry_horizontal_layout)
 
   def save_modifications(self):
-    match self.meta_field['typeClass']:
+    """
+    Saves the changes made in UI elements to the meta_field.
+
+    Args:
+        self: The instance of the class.
+
+    Explanation:
+        This method saves the changes made to the meta_field.
+        It handles different cases based on the 'typeClass' value in the meta_field dictionary.
+        - For 'primitive' type, it updates the 'value' attribute of the meta_field.
+        - For 'compound' type, it updates the 'value' attribute of the meta_field based on the 'valueTemplate'.
+        - For any other 'typeClass' value, it logs an error for unsupported typeClass.
+    """
+    self.logger.info("Saving changes to meta_field for type, name: %s, class: %s",
+                     self.meta_field.get('typeName'),
+                     self.meta_field.get('typeClass'))
+    match self.meta_field.get('typeClass'):
       case "primitive":
         primitive_vertical_layout = self.mainVerticalLayout.findChild(QVBoxLayout,
                                                                       "primitiveVerticalLayout")
-        if self.meta_field['multiple']:
+        if self.meta_field.get('multiple'):
           self.meta_field['value'].clear()
           for widget_pos in range(primitive_vertical_layout.count()):
             if text := primitive_vertical_layout.itemAt(widget_pos).itemAt(0).widget().text():
@@ -358,18 +394,41 @@ class PrimitiveCompoundFrame(Ui_PrimitiveCompoundControlledBaseFrame):
         else:
           self.meta_field['value'] = primitive_vertical_layout.itemAt(0).itemAt(0).widget().text()
       case "compound":
-        if self.meta_field['multiple']:
+        if self.meta_field.get('multiple'):
           self.meta_field['value'].clear()
           for layout_pos in range(self.mainVerticalLayout.count()):
             compound_horizontal_layout = self.mainVerticalLayout.itemAt(layout_pos)
-            self.save_compound_horizontal_layout_values(compound_horizontal_layout, self.meta_field['valueTemplate'][0])
+            self.save_compound_horizontal_layout_values(
+              compound_horizontal_layout,
+              self.meta_field.get('valueTemplate')[0])
         else:
           self.meta_field['value'] = {}
           compound_horizontal_layout = self.mainVerticalLayout.findChild(QHBoxLayout,
                                                                          "compoundHorizontalLayout")
-          self.save_compound_horizontal_layout_values(compound_horizontal_layout, self.meta_field['valueTemplate'])
+          self.save_compound_horizontal_layout_values(
+            compound_horizontal_layout,
+            self.meta_field.get('valueTemplate'))
+      case _:
+        self.logger.error("Unsupported typeClass: %s", self.meta_field.get('typeClass'))
 
-  def save_compound_horizontal_layout_values(self, compound_horizontal_layout, value_template):
+  def save_compound_horizontal_layout_values(self,
+                                             compound_horizontal_layout: QBoxLayout,
+                                             value_template: dict[str, Any]) -> None:
+    """
+    Saves the values from the compound horizontal layout to the meta_field.
+
+    Args:
+        self: The instance of the class.
+        compound_horizontal_layout (QBoxLayout): The compound horizontal layout to save.
+        value_template (dict[str, Any]): The template for the compound values.
+
+    Explanation:
+        This method saves the values from the compound horizontal layout to the meta_field.
+        It iterates over the widgets in the compound horizontal layout and updates the meta_field accordingly.
+        The values are extracted from the widgets and stored in the meta_field['value'] attribute.
+        If the widget value is empty or None, the corresponding entry in the meta_field is not updated.
+
+    """
     if compound_horizontal_layout.layout():
       empty_entry = copy.deepcopy(value_template)
       update_needed = False
@@ -383,50 +442,3 @@ class PrimitiveCompoundFrame(Ui_PrimitiveCompoundControlledBaseFrame):
           update_needed = update_needed or (text != "" and text is not None)
       if update_needed:
         self.meta_field['value'].append(empty_entry)
-
-  def clear_main_layout(self):
-    for widget_pos in range(self.mainVerticalLayout.count()):
-      child = self.mainVerticalLayout.itemAt(widget_pos)
-      if child and child.layout():
-        for pos in range(child.count()):
-          in_child = child.itemAt(pos)
-          if in_child and in_child.layout():
-            for in_pos in range(in_child.count()):
-              in_in_child = in_child.itemAt(in_pos)
-              if in_in_child and in_in_child.widget():
-                in_in_child.widget().setParent(None)
-
-
-if __name__ == "__main__":
-  import sys
-
-  app = QApplication(sys.argv)
-
-  ui = PrimitiveCompoundFrame({
-    "authorName": {
-      "typeName": "authorName",
-      "multiple": False,
-      "typeClass": "primitive",
-      "value": "LastAuthor1, FirstAuthor1"
-    },
-    "authorAffiliation": {
-      "typeName": "authorAffiliation",
-      "multiple": False,
-      "typeClass": "primitive",
-      "value": "AuthorAffiliation1"
-    },
-    "authorIdentifierScheme": {
-      "typeName": "authorIdentifierScheme",
-      "multiple": False,
-      "typeClass": "controlledVocabulary",
-      "value": "ORCID"
-    },
-    "authorIdentifier": {
-      "typeName": "authorIdentifier",
-      "multiple": False,
-      "typeClass": "primitive",
-      "value": "AuthorIdentifier1"
-    }
-  })
-  ui.instance.show()
-  sys.exit(app.exec())

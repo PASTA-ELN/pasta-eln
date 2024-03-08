@@ -9,7 +9,7 @@
 from unittest.mock import patch
 
 import pytest
-from PySide6.QtWidgets import QVBoxLayout
+from PySide6.QtWidgets import QBoxLayout, QVBoxLayout
 
 from pasta_eln.GUI.dataverse.primitive_compound_frame import PrimitiveCompoundFrame
 
@@ -45,6 +45,14 @@ def primitive_compound_frame(qtbot, mocker):
     'valueTemplate': 'testTemplate'
   }
   return PrimitiveCompoundFrame(type_field)
+
+
+def create_mock_line_edit(mocker, name, text):
+  line_edit = mocker.MagicMock()
+  line_edit.objectName.return_value = f"{name}LineEdit"
+  line_edit.text.return_value = text
+  line_edit.widget.return_value = line_edit
+  return line_edit
 
 
 class TestDataversePrimitiveCompoundFrame:
@@ -464,3 +472,150 @@ class TestDataversePrimitiveCompoundFrame:
     primitive_compound_frame.logger.info.assert_called_with(
       "Populating new entry of type primitive, name: %s", meta_field.get('typeName')
     )
+
+  # Parametrized test cases
+  # Parametrized test cases
+  @pytest.mark.parametrize("type_name,type_value,type_value_template,is_date_time", [
+    # Test ID: #1 - Happy path, date time type
+    ("date", "2021-01-01T00:00:00", "YYYY-MM-DDTHH:MM:SS", True),
+    # Test ID: #2 - Happy path, non-date time type
+    ("text", "example", "{template}", False),
+    # Add more test cases for edge and error cases
+  ])
+  def test_populate_primitive_horizontal_layout(self, mocker, type_name, primitive_compound_frame, type_value,
+                                                type_value_template, is_date_time):
+    # Arrange
+    mock_layout = mocker.MagicMock(spec=QBoxLayout)
+    mock_qhbox_layout = mocker.patch('pasta_eln.GUI.dataverse.primitive_compound_frame.QHBoxLayout')
+    mocker.patch('pasta_eln.GUI.dataverse.primitive_compound_frame.PrimitiveCompoundFrame.create_date_time_widget')
+    mocker.patch('pasta_eln.GUI.dataverse.primitive_compound_frame.PrimitiveCompoundFrame.create_line_edit')
+    mocker.patch('pasta_eln.GUI.dataverse.primitive_compound_frame.PrimitiveCompoundFrame.create_delete_button')
+    is_date_time_type_mock = mocker.patch('pasta_eln.GUI.dataverse.primitive_compound_frame.is_date_time_type',
+                                          return_value=is_date_time)
+
+    # Act
+    primitive_compound_frame.populate_primitive_horizontal_layout(mock_layout, type_name, type_value,
+                                                                  type_value_template)
+
+    # Assert
+    is_date_time_type_mock.assert_called_once_with(type_name)
+    mock_qhbox_layout.return_value.setObjectName.assert_called_once_with('primitiveHorizontalLayout')
+    if is_date_time:
+      primitive_compound_frame.create_date_time_widget.assert_called_once_with(type_name, type_value,
+                                                                               type_value_template)
+      mock_qhbox_layout.return_value.addWidget.assert_has_calls(
+        primitive_compound_frame.create_date_time_widget.return_value)
+    else:
+      primitive_compound_frame.create_line_edit.assert_called_once_with(type_name, type_value, type_value_template)
+      mock_qhbox_layout.return_value.addWidget.assert_has_calls(
+        primitive_compound_frame.create_line_edit.return_value)
+    primitive_compound_frame.create_delete_button.assert_called_once()
+    mock_qhbox_layout.return_value.addWidget.assert_called_with(
+      primitive_compound_frame.create_delete_button.return_value)
+    mock_layout.addLayout.assert_called_once_with(mock_qhbox_layout.return_value)
+
+  @pytest.mark.parametrize("type_class, multiple, expected_value, test_id", [
+    # Success path tests
+    ("primitive", False, "single_value", "success_single_primitive"),
+    ("primitive", True, ["value1", "value2"], "success_multiple_primitive"),
+    ("compound", False, {"key": "value"}, "success_single_compound"),
+    ("compound", True, [{"key1": "value1"}, {"key2": "value2"}], "success_multiple_compound"),
+
+    # Edge cases
+    ("primitive", True, [], "edge_no_values_primitive"),
+    ("compound", True, [], "edge_no_values_compound"),
+
+    # Error cases
+    ("unsupported", False, None, "error_unsupported_type_class"),
+  ])
+  def test_save_modifications(self, type_class, mocker, primitive_compound_frame, multiple, expected_value, test_id):
+    # Arrange
+    mock_qvbox_layout = mocker.patch('pasta_eln.GUI.dataverse.primitive_compound_frame.QVBoxLayout')
+    mock_qhbox_layout = mocker.patch('pasta_eln.GUI.dataverse.primitive_compound_frame.QHBoxLayout')
+    mock_save_compound_horizontal_layout_values = mocker.patch(
+      'pasta_eln.GUI.dataverse.primitive_compound_frame.PrimitiveCompoundFrame.save_compound_horizontal_layout_values')
+    mocker.resetall()
+    primitive_compound_frame.meta_field = {
+      'typeName': 'testTypeName',
+      'typeClass': type_class,
+      'multiple': multiple,
+      'value': ["test"] if multiple else "",
+      'valueTemplate': ["test"] if multiple else ""
+    }
+    primitive_compound_frame.mainVerticalLayout.findChild.return_value.count.return_value = 1 if multiple else 0
+    primitive_compound_frame.mainVerticalLayout.count.return_value = 1 if multiple else 0
+
+    # Act
+    primitive_compound_frame.save_modifications()
+
+    # Assert
+    if type_class == "unsupported":
+      primitive_compound_frame.logger.error.assert_called_once_with("Unsupported typeClass: %s",
+                                                                    primitive_compound_frame.meta_field.get(
+                                                                      'typeClass'))
+    else:
+      if type_class == "primitive":
+        primitive_compound_frame.mainVerticalLayout.findChild.assert_called_once_with(mock_qvbox_layout,
+                                                                                      "primitiveVerticalLayout")
+        if multiple:
+          primitive_compound_frame.mainVerticalLayout.findChild.return_value.count.assert_called_once()
+          assert (primitive_compound_frame.meta_field['value'] ==
+                  [primitive_compound_frame.mainVerticalLayout.findChild.return_value.itemAt.return_value.
+                  itemAt.return_value.widget.return_value.text.return_value])
+        else:
+          assert (primitive_compound_frame.meta_field[
+                    'value'] == primitive_compound_frame.mainVerticalLayout.findChild.return_value
+                  .itemAt.return_value.itemAt.return_value.widget.return_value.text.return_value)
+      elif type_class == "compound":
+        if multiple:
+          primitive_compound_frame.mainVerticalLayout.count.assert_called_once()
+          primitive_compound_frame.mainVerticalLayout.itemAt.assert_called_once_with(0)
+          mock_save_compound_horizontal_layout_values.assert_called_once_with(
+            primitive_compound_frame.mainVerticalLayout.itemAt.return_value,
+            primitive_compound_frame.meta_field.get('valueTemplate')[0]
+          )
+        else:
+          primitive_compound_frame.mainVerticalLayout.findChild.assert_called_once_with(mock_qhbox_layout,
+                                                                                        "compoundHorizontalLayout")
+          mock_save_compound_horizontal_layout_values.assert_called_once_with(
+            primitive_compound_frame.mainVerticalLayout.findChild.return_value,
+            primitive_compound_frame.meta_field.get('valueTemplate')
+          )
+
+      primitive_compound_frame.logger.info.assert_called_once_with(
+        "Saving changes to meta_field for type, name: %s, class: %s",
+        primitive_compound_frame.meta_field.get('typeName'),
+        primitive_compound_frame.meta_field.get('typeClass'))
+
+  # Parametrized test cases
+  @pytest.mark.parametrize(
+    "test_id, layout_widgets, value_template, expected_meta_field_value",
+    [
+      # Happy path tests with various realistic test values
+      ("success-1", [("name1", "value1"), ("name2", "value2")], {"name1": {}, "name2": {}},
+       [{"name1": {"value": "value1"}, "name2": {"value": "value2"}}]),
+      ("success-2", [("name3", ""), ("name4", "value4")], {"name3": {}, "name4": {}},
+       [{"name3": {"value": ""}, "name4": {"value": "value4"}}]),
+
+      # Edge cases
+      ("edge-1", [], {"name1": {}}, []),  # No widgets in layout
+      ("edge-2", [("name1", None)], {"name1": {}}, []),  # Widget text is None
+    ]
+  )
+  def test_save_compound_horizontal_layout_values(self, mocker, primitive_compound_frame, test_id, layout_widgets,
+                                                  value_template, expected_meta_field_value):
+    # Arrange
+    mocker.resetall()
+    primitive_compound_frame.meta_field = {'value': []}
+
+    compound_horizontal_layout = mocker.MagicMock(spec=QBoxLayout)
+    compound_horizontal_layout.count.return_value = len(layout_widgets)
+    # Create mock widgets and add them to the layout
+    compound_horizontal_layout.itemAt = lambda pos, _widgets=layout_widgets: create_mock_line_edit(mocker, *_widgets[
+      pos]) if pos < len(_widgets) else None
+
+    # Act
+    primitive_compound_frame.save_compound_horizontal_layout_values(compound_horizontal_layout, value_template)
+
+    # Assert
+    assert primitive_compound_frame.meta_field['value'] == expected_meta_field_value
