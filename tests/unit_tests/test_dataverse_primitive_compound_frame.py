@@ -34,7 +34,7 @@ def qtbot(mocker):
 @pytest.fixture
 def primitive_compound_frame(qtbot, mocker):
   mocker.patch(
-    'pasta_eln.GUI.dataverse.primitive_compound_controller_frame_base.Ui_PrimitiveCompoundControlledBaseFrame.setupUi')
+    'pasta_eln.GUI.dataverse.primitive_compound_controlled_frame_base.Ui_PrimitiveCompoundControlledFrameBase.setupUi')
   mocker.patch('pasta_eln.GUI.dataverse.primitive_compound_frame.logging.getLogger')
   type_field = {
     'typeClass': 'primitive',
@@ -75,7 +75,7 @@ class TestDataversePrimitiveCompoundFrame:
     # Arrange
     mock_load_ui = mocker.patch('pasta_eln.GUI.dataverse.primitive_compound_frame.PrimitiveCompoundFrame.load_ui')
     with patch(
-        'pasta_eln.GUI.dataverse.primitive_compound_controller_frame_base.Ui_PrimitiveCompoundControlledBaseFrame.setupUi') as mock_setup_ui:
+        'pasta_eln.GUI.dataverse.primitive_compound_controlled_frame_base.Ui_PrimitiveCompoundControlledFrameBase.setupUi') as mock_setup_ui:
       # Act
       frame = PrimitiveCompoundFrame(type_field)
 
@@ -145,7 +145,7 @@ class TestDataversePrimitiveCompoundFrame:
     (
         {'typeClass': 'unknown', 'multiple': True, 'typeName': 'testType', 'value': [],
          'valueTemplate': ['testTemplate']},
-        "Unknown type class: unknown"
+        ('Unknown type class: %s', 'unknown')
     ),
   ], ids=["error-primitive-multiple-false", "error-unknown-typeclass"])
   def test_add_new_entry_errors(self, mocker, primitive_compound_frame, meta_field, expected_error_log):
@@ -155,9 +155,11 @@ class TestDataversePrimitiveCompoundFrame:
 
     # Act
     primitive_compound_frame.add_new_entry()
-
     # Assert
-    primitive_compound_frame.logger.error.assert_called_with(expected_error_log)
+    if isinstance(expected_error_log, str):
+      primitive_compound_frame.logger.error.assert_called_with(expected_error_log)
+    else:
+      primitive_compound_frame.logger.error.assert_called_with(*expected_error_log)
 
   # Parametrized test cases
   @pytest.mark.parametrize("enabled, expected_enabled", [
@@ -307,7 +309,7 @@ class TestDataversePrimitiveCompoundFrame:
      None, "Add operation not supported for non-multiple entries"),
     # ID: ErrorCase-UnknownTypeClass
     ({"typeName": "testType", "typeClass": "unknown", "multiple": True, "valueTemplate": [{"key": "value"}]},
-     None, "Unknown type class: unknown"),
+     None, ('Unknown type class: %s', 'unknown')),
   ], ids=["SuccessCase-Primitive", "SuccessCase-Compound", "ErrorCase-NonMultiple", "ErrorCase-UnknownTypeClass"])
   def test_add_new_entry(self, mocker, primitive_compound_frame, meta_field, expected_log, expected_error):
     mocker.resetall()
@@ -351,7 +353,10 @@ class TestDataversePrimitiveCompoundFrame:
     if expected_log:
       primitive_compound_frame.logger.info.assert_called_with(expected_log[0], expected_log[1], expected_log[2])
     if expected_error:
-      primitive_compound_frame.logger.error.assert_called_with(expected_error)
+      if isinstance(expected_error, tuple):
+        primitive_compound_frame.logger.error.assert_called_with(*expected_error)
+      else:
+        primitive_compound_frame.logger.error.assert_called_with(expected_error)
 
   # Parametrized test cases
   @pytest.mark.parametrize(

@@ -20,7 +20,7 @@ def qtbot(mocker):
   mocker.patch('pasta_eln.GUI.dataverse.controlled_vocab_frame.QSizePolicy')
   mocker.patch('pasta_eln.GUI.dataverse.controlled_vocab_frame.QSize')
   mocker.patch(
-    'pasta_eln.GUI.dataverse.primitive_compound_controller_frame_base.Ui_PrimitiveCompoundControlledBaseFrame.setupUi')
+    'pasta_eln.GUI.dataverse.primitive_compound_controlled_frame_base.Ui_PrimitiveCompoundControlledFrameBase.setupUi')
   mocker.patch('pasta_eln.GUI.dataverse.controlled_vocab_frame.logging.getLogger')
   mocker.patch.object(ControlledVocabFrame, 'addPushButton', create=True)
   mocker.patch.object(ControlledVocabFrame, 'mainVerticalLayout', create=True)
@@ -54,7 +54,7 @@ class TestControlledVocabFrame:
     # Arrange
     mock_load_ui = mocker.patch('pasta_eln.GUI.dataverse.controlled_vocab_frame.ControlledVocabFrame.load_ui')
     mock_super_setup_ui = mocker.patch(
-      'pasta_eln.GUI.dataverse.primitive_compound_controller_frame_base.Ui_PrimitiveCompoundControlledBaseFrame.setupUi')
+      'pasta_eln.GUI.dataverse.primitive_compound_controlled_frame_base.Ui_PrimitiveCompoundControlledFrameBase.setupUi')
     mock_get_logger = mocker.patch('pasta_eln.GUI.dataverse.controlled_vocab_frame.logging.getLogger')
     mock_frame_constructor = mocker.patch('pasta_eln.GUI.dataverse.controlled_vocab_frame.QFrame')
 

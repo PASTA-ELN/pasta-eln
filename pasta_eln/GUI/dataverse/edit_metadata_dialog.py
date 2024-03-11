@@ -32,6 +32,7 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
       Any: The new instance of the EditMetadataDialog class.
 
   """
+
   def __new__(cls, *_: Any, **__: Any) -> Any:
     """
     Creates a new instance of the EditMetadataDialog class.
@@ -143,13 +144,15 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
       self.logger.error("Failed to load metadata model!")
       return
     if new_metadata_type := self.typesComboBox.currentData(QtCore.Qt.ItemDataRole.UserRole):
-      self.logger.info(f"Loading {new_metadata_type} metadata type...")
+      self.logger.info("Loading %s metadata type...", new_metadata_type)
       dataset = self.metadata.get('datasetVersion', {})
       metadata_blocks = dataset.get('metadataBlocks', {})
       for _, metablock in metadata_blocks.items():
         for field in metablock['fields']:
           if field['typeName'] == new_metadata_type:
-            self.logger.info(f"Loading {field['typeName']} metadata type of class: {field['typeClass']}...")
+            self.logger.info("Loading %s metadata type of class: %s...",
+                             field['typeName'],
+                             field['typeClass'])
             match field['typeClass']:
               case "primitive" | "compound":
                 self.primitive_compound_frame = PrimitiveCompoundFrame(field)
@@ -187,7 +190,7 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
         selection (str): The selected view option ("Minimal" or "Full").
 
     """
-    self.logger.info(f"Toggled to {selection} view...")
+    self.logger.info("Toggled to %s view...", selection)
     match selection:
       case "Minimal":
         self.metadataBlockComboBox.hide()

@@ -225,7 +225,7 @@ class TestDataverseEditMetadataDialog:
       [mocker.call(1), mocker.call().widget(), mocker.call().widget().setParent(None), mocker.call(0),
        mocker.call().widget(), mocker.call().widget().setParent(None)])
     mock_edit_metadata_dialog.logger.info.assert_has_calls(
-      [mocker.call(f"Loading {new_metadata_type} metadata type of class: {type_class}...")])
+      [mocker.call("Loading %s metadata type of class: %s...", new_metadata_type, type_class)])
     if type_class in ['primitive', 'compound']:
       primitive_compound_frame = mock_dependencies['primitive_compound_frame']
       primitive_compound_frame.assert_called_once()
@@ -309,7 +309,7 @@ class TestDataverseEditMetadataDialog:
     mock_edit_metadata_dialog.toggle_minimal_full(selection)
 
     # Assert
-    mock_edit_metadata_dialog.logger.info.assert_called_with(f"Toggled to {selection} view...")
+    mock_edit_metadata_dialog.logger.info.assert_called_with("Toggled to %s view...", selection)
     if selection == "Minimal":
       assert mock_edit_metadata_dialog.typesComboBox.items == expected_types
       assert mock_edit_metadata_dialog.metadataBlockComboBox.visible == expected_visibility

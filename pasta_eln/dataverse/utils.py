@@ -107,12 +107,6 @@ def set_template_values(logger: Logger, metadata: dict[str, Any]) -> None:
       logger (Logger): The logger object used for logging warnings.
       metadata (dict[str, Any]): The metadata dictionary to update.
 
-  Returns:
-      None
-
-  Raises:
-      None
-
   Examples:
       >>> logger = Logger()
       >>> metadata = {'datasetVersion': {'metadataBlocks': {'citation': {'fields': [{'typeClass': 'primitive', 'multiple': False, 'value': 'Example'}]}}}}
