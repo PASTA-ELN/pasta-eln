@@ -17,11 +17,11 @@ from PySide6.QtWidgets import QBoxLayout, QDateTimeEdit, QFrame, QHBoxLayout, QL
   QSizePolicy, \
   QVBoxLayout
 
-from pasta_eln.GUI.dataverse.primitive_compound_controller_frame_base import Ui_PrimitiveCompoundControlledBaseFrame
+from pasta_eln.GUI.dataverse.primitive_compound_controlled_frame_base import Ui_PrimitiveCompoundControlledFrameBase
 from pasta_eln.dataverse.utils import adjust_type_name, clear_value, delete_layout_and_contents, is_date_time_type
 
 
-class PrimitiveCompoundFrame(Ui_PrimitiveCompoundControlledBaseFrame):
+class PrimitiveCompoundFrame(Ui_PrimitiveCompoundControlledFrameBase):
   """
   Adds a new compound entry.
 

@@ -13,11 +13,11 @@ from typing import Any
 from PySide6.QtCore import QSize
 from PySide6.QtWidgets import QComboBox, QFrame, QHBoxLayout, QPushButton, QSizePolicy
 
-from pasta_eln.GUI.dataverse.primitive_compound_controller_frame_base import Ui_PrimitiveCompoundControlledBaseFrame
+from pasta_eln.GUI.dataverse.primitive_compound_controlled_frame_base import Ui_PrimitiveCompoundControlledFrameBase
 from pasta_eln.dataverse.utils import delete_layout_and_contents
 
 
-class ControlledVocabFrame(Ui_PrimitiveCompoundControlledBaseFrame):
+class ControlledVocabFrame(Ui_PrimitiveCompoundControlledFrameBase):
   """
   Represents a controlled vocabulary frame.
 
