@@ -206,7 +206,7 @@ class ProjectGroup(QDialog):
       localTest += 'ERROR: Local path not given\n'
     else:
       fullLocalPath = self.comm.backend.basePath/self.pathL.text()
-      if fullLocalPath.exists():
+      if fullLocalPath.is_dir():
         localTest += 'success: Local path exists\n'
       else:
         button = QMessageBox.question(self, "Question", "Local folder does not exist. Should I create it?")

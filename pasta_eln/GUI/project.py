@@ -1,5 +1,5 @@
 """ Widget that shows the content of project in a electronic labnotebook """
-import logging, re
+import logging
 from enum import Enum
 from typing import Optional, Any
 from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget, QMenu, QMessageBox, QTextEdit, QScrollArea # pylint: disable=no-name-in-module
@@ -8,7 +8,7 @@ from PySide6.QtCore import Slot, Qt, QItemSelectionModel, QModelIndex           
 from anytree import PreOrderIter, Node
 from .projectTreeView import TreeView
 from ..guiStyle import TextButton, Action, Label, showMessage, widgetAndLayout, getColor
-from ..miscTools import createDirName
+from ..miscTools import createDirName, markdownStyler
 from ..guiCommunicate import Communicate
 
 class Project(QWidget):
@@ -80,7 +80,7 @@ class Project(QWidget):
         Action(f'table of {doctype}',   self, [Command.SHOW_TABLE, doctype], moreMenu, icon=icon)
     Action('table of unidentified',     self, [Command.SHOW_TABLE, '-'],     moreMenu, icon='fa5.file')
     moreMenu.addSeparator()
-    Action('Delete',                    self, [Command.DELETE], moreMenu)
+    Action('Delete project',            self, [Command.DELETE], moreMenu)
     more.setMenu(moreMenu)
 
     # Details section
@@ -107,7 +107,7 @@ class Project(QWidget):
     # labelW.setStyleSheet('padding-top: 5px') #make "Comment:" text aligned with other content, not with text-edit
     commentL.addWidget(labelW, alignment=Qt.AlignTop)   # type: ignore[call-arg]
     self.commentTE = QTextEdit()
-    self.commentTE.setMarkdown(re.sub(r'(^|\n)(#+)', r'\1##\2', self.docProj['comment'].strip()))
+    self.commentTE.setMarkdown(markdownStyler(self.docProj.get('comment', '')))
     bgColor = getColor(self.comm.backend, 'secondaryDark')
     fgColor = getColor(self.comm.backend, 'primaryText')
     self.commentTE.setStyleSheet(f"border: none; padding: 0px; background-color: {bgColor}; color: {fgColor}")
@@ -210,7 +210,7 @@ class Project(QWidget):
       self.change(self.projID,'')
       #collect information and then change
       oldPath = self.comm.backend.basePath/self.docProj['-branch'][0]['path']
-      if oldPath.exists():
+      if oldPath.is_dir():
         newPath = self.comm.backend.basePath/createDirName(self.docProj['-name'],'x0',0)
         oldPath.rename(newPath)
     elif command[0] is Command.DELETE:
@@ -224,7 +224,7 @@ class Project(QWidget):
           oldPath = self.comm.backend.basePath/doc['-branch'][0]['path']
           newPath = self.comm.backend.basePath/('trash_'+doc['-branch'][0]['path'])
           nextIteration = 1
-          while newPath.exists():
+          while newPath.is_dir():
             newPath = self.comm.backend.basePath/(f"trash_{doc['-branch'][0]['path']}_{nextIteration}")
             nextIteration += 1
           oldPath.rename(newPath)

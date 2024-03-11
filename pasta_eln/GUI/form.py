@@ -11,8 +11,7 @@ from PySide6.QtCore import QSize, Qt, QTimer          # pylint: disable=no-name-
 from ..guiStyle import Image, TextButton, IconButton, Label, showMessage, widgetAndLayout, ScrollMessageBox
 from ._contextMenu import initContextMenu, executeContextMenu, CommandMenu
 from ..fixedStringsJson import defaultDataHierarchyNode
-from ..handleDictionaries import fillDocBeforeCreate
-from ..miscTools import createDirName
+from ..miscTools import createDirName, markdownStyler
 from ..guiCommunicate import Communicate
 
 class Form(QDialog):
@@ -143,7 +142,8 @@ class Form(QDialog):
           getattr(self, f'textEdit_{key}').setAccessibleName(key)
           getattr(self, f'textEdit_{key}').setTabStopDistance(20)
           getattr(self, f'textEdit_{key}').textChanged.connect(self.textChanged)
-          setattr(self, f'textShow_{key}', QTextEdit(value))
+          setattr(self, f'textShow_{key}', QTextEdit())
+          getattr(self, f'textShow_{key}').setMarkdown(markdownStyler(value))
           getattr(self, f'textShow_{key}').setReadOnly(True)
           getattr(self, f'textShow_{key}').hide()
           splitter= QSplitter()
@@ -157,11 +157,10 @@ class Form(QDialog):
         elif isinstance(value, list):   #list of items, qrCodes in sample
           if len(value)>0 and isinstance(value[0], str):
             setattr(self, f'key_{key}', QLineEdit(' '.join(value)))
+            formL.addRow(QLabel(key.capitalize()), getattr(self, f'key_{key}'))
           else:
-            setattr(self, f'key_{key}', QLineEdit('-- unknown content --'))
             logging.info('Cannot display value of key=%s: %s. Write unknown content for docID=%s',
                          key, str(value), self.doc['_id'])
-          formL.addRow(QLabel(key.capitalize()), getattr(self, f'key_{key}'))
         elif isinstance(value, str):    #string
           dataHierarchyItem = [i for group in dataHierarchyNode for i in dataHierarchyNode[group] if i['name']==key]
           if len(dataHierarchyItem)==1 and 'list' in dataHierarchyItem[0]:       #choice dropdown
@@ -227,7 +226,7 @@ class Form(QDialog):
     if self.flagNewDoc: #new dataset
       TextButton('Save && Next', self, [Command.FORM_SAVE_NEXT], buttonLineL, 'Save this and handle next')
     # autosave
-    if (Path.home()/'.pastaELN.temp').exists():
+    if (Path.home()/'.pastaELN.temp').is_file():
       with open(Path.home()/'.pastaELN.temp', 'r', encoding='utf-8') as fTemp:
         content = json.loads(fTemp.read())
         for key in self.doc.keys():
@@ -328,21 +327,22 @@ class Form(QDialog):
           self.formsL[idx].itemAt(unknownWidget[3]).widget().hide()
       self.allHidden = not self.allHidden
     elif command[0] is Command.FORM_CANCEL:
-      ret = QMessageBox.critical(self, 'Warning', 'You will loose all entered data. Do you want to save the '+\
-                                 'content for next time?',
-                                 QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,  # type: ignore[operator]
-                                 QMessageBox.StandardButton.No)
-      if ret==QMessageBox.StandardButton.Yes:
-        self.autosave()
-      else:
-        self.checkThreadTimer.stop()
-        if (Path.home()/'.pastaELN.temp').exists():
-          (Path.home()/'.pastaELN.temp').unlink()
+      if self.comm.backend.configuration['GUI']['autosave'] == 'Yes':
+        ret = QMessageBox.critical(self, 'Warning', 'You will loose all new data. Do you want to save it '+\
+                                   'for next time?',
+                                   QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,  # type: ignore[operator]
+                                   QMessageBox.StandardButton.No)
+        if ret==QMessageBox.StandardButton.Yes:
+          self.autosave()
+        else:
+          self.checkThreadTimer.stop()
+          if (Path.home()/'.pastaELN.temp').is_file():
+            (Path.home()/'.pastaELN.temp').unlink()
       self.reject()
     elif command[0] in (Command.FORM_SAVE, Command.FORM_SAVE_NEXT):
       # create the data that has to be saved
       self.checkThreadTimer.stop()
-      if (Path.home()/'.pastaELN.temp').exists():
+      if (Path.home()/'.pastaELN.temp').is_file():
         (Path.home()/'.pastaELN.temp').unlink()
       if hasattr(self, 'key_-name'):
         self.doc['-name'] = getattr(self, 'key_-name').text().strip()
@@ -480,8 +480,8 @@ class Form(QDialog):
     Text changed in editor -> update the display on the right
     """
     key = self.sender().accessibleName()
-    getattr(self, f'textShow_{key}').setMarkdown(
-        getattr(self, f'textEdit_{key}').toPlainText())
+    getattr(self, f'textShow_{key}').setMarkdown(markdownStyler(
+        getattr(self, f'textEdit_{key}').toPlainText()))
     return
 
   def delTag(self, _:str, tag:str) -> None:

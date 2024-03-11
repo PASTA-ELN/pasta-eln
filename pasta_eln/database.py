@@ -85,19 +85,29 @@ class Database:
     oldColumnNames = self.getColumnNames()
     jsDefault = 'if ($docType$) {doc["-branch"].forEach(function(branch){emit($key$, [$outputList$]);});}'
     viewCode = {}
-    for docType in [i for i in self.dataHierarchy if i[0] not in ['_','-']]+['-']:
-      if docType=='x0':
+    normalDocTypes = [i for i in self.dataHierarchy if i[0] not in ['_','-']]
+    for docType in normalDocTypes+['-']:
+      if docType == 'x0':
         newString = "doc['-type']=='x0' && (doc['-branch'][0].show.every(function(i) {return i;}))"
         js    = jsDefault.replace('$docType$', newString).replace('$key$','doc._id')
         jsAll = jsDefault.replace('$docType$', "doc['-type']=='x0'").replace('$key$','doc._id')
-      elif docType[0]=='x':
+      elif docType[0] == 'x':
         continue
+      elif docType == '-':
+        replaceStrings = []
+        for jDocType in normalDocTypes:
+          replaceStrings.append( f"doc['-type'].join('/').substring(0,{len(jDocType)})!='{jDocType}'" )
+        js = jsDefault.replace('$docType$',
+            ' && '.join(replaceStrings) +" && (doc['-branch'][0].show.every(function(i) {return i;}))",
+            ).replace('$key$', 'branch.stack[0]')
+        jsAll = jsDefault.replace('$docType$',
+            ' && '.join(replaceStrings)
+            ).replace('$key$', 'branch.stack[0]')
       else: #show all doctypes that have the same starting ..
         js = jsDefault.replace('$docType$',
             f"doc['-type'].join('/').substring(0,{len(docType)})=='{docType}"+"' && (doc['-branch'][0].show.every(function(i) {return i;}))",
             ).replace('$key$', 'branch.stack[0]')
-        jsAll = jsDefault.replace(
-            '$docType$',
+        jsAll = jsDefault.replace('$docType$',
             f"doc['-type'].join('/').substring(0, {len(docType)})=='{docType}'",
             ).replace('$key$', 'branch.stack[0]')
       outputList = []
@@ -415,7 +425,7 @@ class Database:
       path = '/'.join(oldPath.split('/')[:-1]+[name])
     # test if path already exists
     if docID[0]=='x' and path is not None:
-      if not (self.basePath/path/'.id_pastaELN.json').exists():
+      if not (self.basePath/path/'.id_pastaELN.json').is_file():
         logging.debug('Target folder\'s json does not exist: '+path)
         oldDocID = ''
       else:
@@ -466,7 +476,7 @@ class Database:
         docLine.save()
         # update .json on disk
         for branchLine in docLine['-branch']:
-          if line['id'][0]=='x'  and (self.basePath/branchLine['path']).exists():
+          if line['id'][0]=='x'  and (self.basePath/branchLine['path']).is_dir():
             with open(self.basePath/branchLine['path']/'.id_pastaELN.json', 'w', encoding='utf-8') as fOut:
               fOut.write(json.dumps(docLine))
     return oldPath, path
@@ -669,7 +679,7 @@ class Database:
     """
     Set the gui state
     - 0: true=show details; false=hide details
-    - 1: true=show children; false=hide children (only makes sense for folders = x1, x2)
+    - 1: true=show children; false=hide children; only makes sense for folders: doctype = x1
 
     Args:
       docID (str): docID
@@ -763,8 +773,7 @@ class Database:
     #determine bins for histogram
     firstSubmit = datetime.now().timestamp()
     for value in collection.values():
-      if np.min(value) < firstSubmit:
-        firstSubmit = np.min(value)
+      firstSubmit = min(firstSubmit, np.min(value))
     bins = np.linspace(firstSubmit, datetime.now().timestamp(), 100 )
     #calculate histogram and save it
     collectionCopy = dict(collection)
