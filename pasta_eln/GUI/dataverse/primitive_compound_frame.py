@@ -110,7 +110,7 @@ class PrimitiveCompoundFrame(Ui_PrimitiveCompoundControlledFrameBase):
             clear_value(empty_entry)
             self.populate_compound_entry(empty_entry, value_template)
       case _:
-        self.logger.error(f"Unknown typeClass: %s", self.meta_field.get('typeClass'))
+        self.logger.error("Unknown typeClass: %s", self.meta_field.get('typeClass'))
 
   def create_delete_button(self,
                            parent: QBoxLayout,
