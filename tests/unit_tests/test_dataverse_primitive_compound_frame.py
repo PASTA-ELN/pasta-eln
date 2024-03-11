@@ -28,7 +28,6 @@ def qtbot(mocker):
   mocker.patch('pasta_eln.GUI.dataverse.primitive_compound_frame.QSize')
   mocker.patch.object(PrimitiveCompoundFrame, 'addPushButton', create=True)
   mocker.patch.object(PrimitiveCompoundFrame, 'mainVerticalLayout', create=True)
-  mocker.patch.object(PrimitiveCompoundFrame, 'mainVerticalLayout', create=True)
 
 
 # Fixture to create a PrimitiveCompoundFrame instance with a mocked parent

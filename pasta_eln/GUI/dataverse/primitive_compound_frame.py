@@ -18,7 +18,7 @@ from PySide6.QtWidgets import QBoxLayout, QDateTimeEdit, QFrame, QHBoxLayout, QL
   QVBoxLayout
 
 from pasta_eln.GUI.dataverse.primitive_compound_controller_frame_base import Ui_PrimitiveCompoundControlledBaseFrame
-from pasta_eln.dataverse.utils import adjust_type_name, clear_value, is_date_time_type
+from pasta_eln.dataverse.utils import adjust_type_name, clear_value, delete_layout_and_contents, is_date_time_type
 
 
 class PrimitiveCompoundFrame(Ui_PrimitiveCompoundControlledBaseFrame):
@@ -47,7 +47,7 @@ class PrimitiveCompoundFrame(Ui_PrimitiveCompoundControlledBaseFrame):
     """
     return super(PrimitiveCompoundFrame, cls).__new__(cls)
 
-  def __init__(self, type_field: dict[str, Any]) -> None:
+  def __init__(self, meta_field: dict[str, Any]) -> None:
     """
     Initializes the PrimitiveCompoundFrame.
 
@@ -56,13 +56,12 @@ class PrimitiveCompoundFrame(Ui_PrimitiveCompoundControlledBaseFrame):
         It sets up the UI and initializes the types dictionary.
 
     Args:
-        type_field (dict[str, Any]): The dictionary containing the types information.
-
+        meta_field (dict[str, Any]): The dictionary containing the metadata field information.
     """
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
     self.instance = QFrame()
     super().setupUi(self.instance)
-    self.meta_field = type_field
+    self.meta_field = meta_field
     self.addPushButton.clicked.connect(self.add_new_entry)
     self.load_ui()
 
