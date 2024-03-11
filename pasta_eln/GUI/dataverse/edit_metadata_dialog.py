@@ -235,6 +235,15 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
     self.config_model.metadata = self.metadata
     self.db_api.update_model_document(self.config_model)
 
+  def show(self) -> None:
+    """
+    Shows the instance.
+
+    Explanation:
+        This method shows the instance by calling its show method.
+    """
+    self.instance.show()
+
 
 if __name__ == "__main__":
   import sys
@@ -242,5 +251,5 @@ if __name__ == "__main__":
   app = QtWidgets.QApplication(sys.argv)
 
   ui = EditMetadataDialog()
-  ui.instance.show()
+  ui.show()
   sys.exit(app.exec())

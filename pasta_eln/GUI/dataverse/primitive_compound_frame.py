@@ -318,18 +318,21 @@ class PrimitiveCompoundFrame(Ui_PrimitiveCompoundControlledFrameBase):
         new_primitive_entry_layout,
         type_name,
         type_value,
-        type_template)
+        type_template,
+        False)
     self.mainVerticalLayout.addLayout(new_primitive_entry_layout)
 
   def populate_primitive_horizontal_layout(self,
                                            new_primitive_entry_layout: QBoxLayout,
                                            type_name: str,
                                            type_value: str,
-                                           type_value_template: str) -> None:
+                                           type_value_template: str,
+                                           enable_delete_button: bool = True) -> None:
     """
     Populates the horizontal layout for a primitive entry.
 
     Args:
+        enable_delete_button (bool): Enable or disable the delete button.
         new_primitive_entry_layout (QBoxLayout): The layout to populate.
         type_name (str): The name of the primitive type.
         type_value (str): The value of the primitive type.
@@ -349,7 +352,7 @@ class PrimitiveCompoundFrame(Ui_PrimitiveCompoundControlledFrameBase):
       if is_date_time_type(type_name) else
       self.create_line_edit(type_name, type_value, type_value_template))
     new_primitive_entry_horizontal_layout.addWidget(
-      self.create_delete_button(new_primitive_entry_horizontal_layout, True))
+      self.create_delete_button(new_primitive_entry_horizontal_layout, enable_delete_button))
     new_primitive_entry_layout.addLayout(new_primitive_entry_horizontal_layout)
 
   def save_modifications(self):

@@ -351,3 +351,14 @@ class TestDataverseEditMetadataDialog:
     mock_edit_metadata_dialog.minimalFullComboBox.addItems.assert_called_once_with(["Full", "Minimal"])
     mock_edit_metadata_dialog.licenseNameLineEdit.setText.assert_called_once_with(expected_license_name)
     mock_edit_metadata_dialog.licenseURLLineEdit.setText.assert_called_once_with(expected_license_uri)
+
+  @pytest.mark.parametrize("test_id, instance_method", [
+    # Happy path tests with various realistic test values
+    ("succes_path", 'show'),
+  ])
+  def test_show_method(self, mock_edit_metadata_dialog, test_id, instance_method):
+    # Act
+    mock_edit_metadata_dialog.show()
+
+    # Assert
+    getattr(mock_edit_metadata_dialog.instance, instance_method).assert_called_once()
