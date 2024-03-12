@@ -1,23 +1,33 @@
-name: pypi
+name: PyPi
 
-#pypi want to be pushed with a *new tag* that commit, next line ensures it happens
-on: [push, pull_request]
+on:
+    push:
+    pull_request:
+    workflow_dispatch:
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
+# based on https://github.com/pypa/gh-action-pypi-publish
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-      - uses: casperdcl/deploy-pypi@v2
-        with:
-          password: ${{ secrets.PYPI_TOKEN }}
-          pip: wheel -w dist/ --no-deps .
-          # only upload if a tag is pushed (otherwise just build & check)
-          upload: ${{ github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags') }}
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v2
+      with:
+        python-version: "3.10"
+
+    - name: Install dependencies
+      run: >-
+        python -m pip install --user --upgrade setuptools wheel
+    - name: Convert dependencies
+      run: >-
+        sed -i 's/==/>=/g' setup.py; cat setup.py
+    - name: Build
+      run: >-
+        python setup.py sdist bdist_wheel
+    - name: Publish distribution 📦 to PyPI
+      if: startsWith(github.event.ref, 'refs/tags') || github.event_name == 'release'
+      uses: pypa/gh-action-pypi-publish@master
+      with:
+        user: __token__
+        password: ${{ secrets.PYPI_TOKEN }}
