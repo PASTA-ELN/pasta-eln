@@ -346,7 +346,7 @@ def importELN(backend:Backend, elnFileName:str) -> str:
 ##########################################
 ###               EXPORT               ###
 ##########################################
-def exportELN(backend:Backend, projectID:str, fileName:str='', dTypes:list[str]=[], verbose=True) -> str:
+def exportELN(backend:Backend, projectID:str, fileName:str='', dTypes:list[str]=[], verbose:bool=True) -> str:
   """
   export eln to file
 
