@@ -15,11 +15,17 @@ def use(filePath, recipe='', saveFileName=None):
   Returns:
     dict: containing image, metaVendor, metaUser, recipe
   """
-  producer = ''
+  producer = 'comma separated'
+  delimiter = ','
   lines = []
+  skipRows = 0
   with open(filePath, encoding='unicode_escape') as fIn:
     for  _ in range(10):
-      lines.append(fIn.readline()[:-1])
+      line = fIn.readline()[:-1]
+      if line.startswith('#'):
+        skipRows+=1
+        continue
+      lines.append(line)
     # files with some form of header: try 3 criteria
     if lines[0].count(';')>lines[0].count(' ') and lines[0].count(';')==lines[1].count(';') and \
                                                    lines[0].count(';')==lines[2].count(';'): #Separate by ; not ' '
@@ -31,8 +37,8 @@ def use(filePath, recipe='', saveFileName=None):
       delimiter = ','
   print('Producer ', producer)
 
-  data = pd.read_csv(filePath, delimiter=delimiter)
-  plt.plot(data.iloc[:,1])
+  data = pd.read_csv(filePath, delimiter=delimiter, skiprows=skipRows-1)
+  plt.plot(data.iloc[:,0], data.iloc[:,1],'o-')
   metaUser = {}
   metaVendor = {}
   links = []

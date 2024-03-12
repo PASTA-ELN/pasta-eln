@@ -615,8 +615,8 @@ class Database:
       view = self.getView('viewHierarchy/viewHierarchy',    startKey=start)
     if allItems or len(view)==0:
       view = self.getView('viewHierarchy/viewHierarchyAll', startKey=start)
-    # for item in view:
-    #   print(item)
+    for item in view:
+      print(item)
     levelNum = 1
     while True:
       level = [i for i in view if len(i['key'].split())==levelNum]
@@ -634,7 +634,8 @@ class Database:
           parentID = node['key'].split()[-2]
           parentNode = find_by_attr(dataTree, parentID, name='id')
           value = node['value']
-          _ = Node(id=node['id'], parent=parentNode, docType=value[1], name=value[2], gui=value[3])
+          gui = value[3] if isinstance(value[3], list) else [True, True]
+          _ = Node(id=node['id'], parent=parentNode, docType=value[1], name=value[2], gui=gui)
       if not level: #if len(level)==0
         break
       levelNum += 1

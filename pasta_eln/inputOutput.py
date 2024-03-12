@@ -11,11 +11,22 @@ from .backend import Backend
 from .miscTools import createDirName, generic_hash
 
 # to discuss
+# - genre:docType, simulation, experiment/measurement;  status = Done, finished
+# - cathegory: project
+# - root entry: authors list, single: @id; multiple authors
+#    - add several authors
+#    - one creator, multiple authors
 # - where to store additional metadata, not in ro-crate-metadata, separate files for each entry?
-# "ro-crate-metadata.json", "sdPublisher": "@id": or name
-# how to store different versions?
-# how should the folder structure be? kadi4mat, sampleDB, does-not-matter:
-# ro-crate.json: @type:Comment?
+#    - https://github.com/TheELNConsortium/TheELNFileFormat/issues/58
+# - how to store different versions?
+#    - history: last version
+#    - is based based on, ro-crate id OR update action
+# - how should the folder structure be? kadi4mat, sampleDB, does-not-matter:
+# - sampleDB ro-crate.json: @type:comment!
+#   - ??
+# - in "ro-crate-metadata.json" / "sdPublisher": "@id": or name
+# - how to verify the import
+#   - import - export = the same
 
 # Always use RO-crate names
 # GENERAL TERMS IN ro-crate-metadata.json (None implies definitely should not be saved)
@@ -326,8 +337,7 @@ def importELN(backend:Backend, elnFileName:str) -> str:
   #return to home stack and path
   backend.cwd = Path(backend.basePath)
   backend.hierStack = []
-  print(f'\n\nGraph in metadatafile\n{tree(graph)}')
-
+  print(f'\n\nGraph in metadata file\n{tree(graph)}')
   return f'Success: imported {str(addedDocuments)} documents from file {elnFileName} from ELN {elnName} {elnVersion}'
 
 
@@ -336,7 +346,7 @@ def importELN(backend:Backend, elnFileName:str) -> str:
 ##########################################
 ###               EXPORT               ###
 ##########################################
-def exportELN(backend:Backend, projectID:str, fileName:str='', dTypes:list[str]=[]) -> str:
+def exportELN(backend:Backend, projectID:str, fileName:str='', dTypes:list[str]=[], verbose=True) -> str:
   """
   export eln to file
 
@@ -345,6 +355,7 @@ def exportELN(backend:Backend, projectID:str, fileName:str='', dTypes:list[str]=
     projectID (str): docId of project
     fileName (str): fileName which to use for saving; default='' saves in local folder
     dTypes (list): list of strings which should be included in the output, alongside folders x0 & x1; empty list=everything is exported
+    verbose (bool): verbose
 
   Returns:
     str: report of exportation
@@ -571,7 +582,8 @@ def exportELN(backend:Backend, projectID:str, fileName:str='', dTypes:list[str]=
     #finalize file
     index['@graph'] = graphMaster+graph+graphMisc
     elnFile.writestr(f'{dirNameProject}/ro-crate-metadata.json', json.dumps(index))
-    print(json.dumps(index, indent=3))
+    if verbose:
+      print(json.dumps(index, indent=3))
   # end writing zip file
   # temporary json output
   # with open(fileName[:-3]+'json','w', encoding='utf-8') as fOut:
