@@ -615,31 +615,36 @@ class Database:
       view = self.getView('viewHierarchy/viewHierarchy',    startKey=start)
     if allItems or len(view)==0:
       view = self.getView('viewHierarchy/viewHierarchyAll', startKey=start)
-    for item in view:
-      print(item)
-    levelNum = 1
-    while True:
-      level = [i for i in view if len(i['key'].split())==levelNum]
-      if levelNum==1:
-        if len(level)==1:
-          value= level[0]['value']
-          dataTree = Node(id=level[0]['key'], docType=value[1], name=value[2], gui=value[3])
-        else:
-          print(f'**ERROR getHierarchy Did not find corresponding level={levelNum} under docID {start}')
-          dataTree = Node(id=None, name='')
+    # for item in view:
+    #   print(item)
+    # Reorganize data into lists
+    childNum = {i['id']:i['value'][0] for i in view}
+    # ids = [i['id'] for i in view]
+    keys = [i['key'] for i in view]
+    values = [i['value'] for i in view]
+    for k,v in childNum.items():
+      keys = [i.replace(k,f'{v} {k}') for i in keys]
+    values = [x for _, x in sorted(zip(keys, values))]
+    keys   = sorted(keys)
+    dataTree = None
+    hierarchy = []
+    for idx, value in enumerate(values):
+      docType = value[1]
+      name    = value[2]
+      gui     = value[3]
+      _id     = keys[idx].split()[-1]
+      level   = int(len(keys[idx].split())/2)
+      if idx==0:
+        dataTree = Node(id=_id, docType=docType, name=name, gui=gui)
+        hierarchy.append(dataTree)
       else:
-        childList = [i['value'][0] for i in level]   #temporary list to allow sorting for child-number
-        # https://stackoverflow.com/questions/6618515/sorting-list-based-on-values-from-another-list
-        for node in [x for (_,x) in sorted(zip(childList, level), key=lambda pair: pair[0])]:
-          parentID = node['key'].split()[-2]
-          parentNode = find_by_attr(dataTree, parentID, name='id')
-          value = node['value']
-          gui = value[3] if isinstance(value[3], list) else [True, True]
-          _ = Node(id=node['id'], parent=parentNode, docType=value[1], name=value[2], gui=gui)
-      if not level: #if len(level)==0
-        break
-      levelNum += 1
-    # print(RenderTree(dataTree, style=AsciiStyle()))
+        parentNode = hierarchy[level-2]
+        subNode = Node(id=_id, parent=parentNode, docType=docType, name=name, gui=gui)
+        if len(hierarchy)<level:
+          hierarchy.append('')
+        elif len(hierarchy)>level:
+          hierarchy.pop()
+        hierarchy[-1] = subNode
     return dataTree
 
 
