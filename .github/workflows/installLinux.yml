@@ -23,6 +23,9 @@ jobs:
     #  run: |
     #    git config --global user.email "test@github.land"
     #    git config --global user.name "GitHub Almighty"
+    - name: Install ubuntu packages
+      run: |
+        apt install libEGL
     - name: Checkout content
       uses: actions/checkout@v3
     - name: Set up Python 3.9
