@@ -326,8 +326,10 @@ class Table(QWidget):
       for row in range(self.models[-1].rowCount()):
         item, docID = self.itemFromRow(row)
         if item.checkState() == Qt.CheckState.Checked:
-          redraw = True
           doc = self.comm.backend.db.getDoc(docID)
+          if doc['-branch'][0]['path'] is None:
+            continue
+          redraw = True
           oldDocType = doc['-type']
           if doc['-branch'][0]['path'].startswith('http'):
             path = Path(doc['-branch'][0]['path'])
