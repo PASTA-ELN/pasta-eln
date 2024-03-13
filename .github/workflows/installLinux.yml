@@ -34,7 +34,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements-linux.txt
     - name: Install ubuntu packages
-      run: sudo apt-get install -y libEGL
+      run: sudo apt-get install -y libegl1
     - name: Check installation - should fail
       run: |
         python3 -m pasta_eln.installationTools
