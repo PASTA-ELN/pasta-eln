@@ -74,16 +74,16 @@ class ControlledVocabFrame(Ui_PrimitiveCompoundControlledFrameBase):
         self: The instance of the class.
     """
     self.logger.info("Loading controlled vocabulary frame ui..")
-    if self.meta_field['multiple']:
-      if self.meta_field['value']:
-        for value in self.meta_field['value']:
-          self.add_new_vocab_entry(self.meta_field["valueTemplate"], value)
+    if self.meta_field.get('multiple'):
+      if self.meta_field.get('value'):
+        for value in self.meta_field.get('value'):
+          self.add_new_vocab_entry(self.meta_field.get("valueTemplate"), value)
       else:
-        self.add_new_vocab_entry(self.meta_field["valueTemplate"], None)
+        self.add_new_vocab_entry(self.meta_field.get("valueTemplate"), None)
     else:
       self.add_new_vocab_entry(
-        [self.meta_field["valueTemplate"]],
-        self.meta_field['value'])
+        [self.meta_field.get("valueTemplate")],
+        self.meta_field.get('value'))
 
   def add_button_callback(self) -> None:
     """
@@ -97,10 +97,10 @@ class ControlledVocabFrame(Ui_PrimitiveCompoundControlledFrameBase):
         self: The instance of the class.
     """
     self.logger.info("Adding new vocabulary entry, value: %s", self.meta_field)
-    if self.meta_field['multiple']:
-      self.add_new_vocab_entry(self.meta_field['valueTemplate'], self.meta_field['valueTemplate'][0])
+    if self.meta_field.get('multiple'):
+      self.add_new_vocab_entry(self.meta_field.get('valueTemplate'), self.meta_field.get('valueTemplate')[0])
     else:
-      self.add_new_vocab_entry([self.meta_field['valueTemplate']], self.meta_field['valueTemplate'])
+      self.add_new_vocab_entry([self.meta_field.get('valueTemplate')], self.meta_field.get('valueTemplate'))
 
   def add_new_vocab_entry(self,
                           controlled_vocabulary: list[str] | None = None,
@@ -158,8 +158,8 @@ class ControlledVocabFrame(Ui_PrimitiveCompoundControlledFrameBase):
         if vocab_horizontal_layout := self.mainVerticalLayout.itemAt(layout_pos).layout():
           combo_box = vocab_horizontal_layout.itemAt(0).widget()
           if text := combo_box.currentText():
-            self.meta_field['value'].append(text)
-      self.meta_field['value'] = list(set(self.meta_field['value']))
+            self.meta_field.get('value').append(text)
+      self.meta_field['value'] = list(set(self.meta_field.get('value')))
     elif layout := self.mainVerticalLayout.findChild(QHBoxLayout,
                                                      "vocabHorizontalLayout"):
       if combo_box := layout.itemAt(0).widget():
