@@ -7,10 +7,9 @@ from anytree.search import find_by_attr
 from PIL import Image
 from cloudant.client import CouchDB
 from cloudant.replicator import Replicator
-from PySide6.QtWidgets import QProgressBar  # pylint: disable=no-name-in-module
 from .fixedStringsJson import defaultDataHierarchy, defaultDataHierarchyNode
 from .handleDictionaries import dataHierarchy_pre_to_V4
-from .miscTools import tracebackString, DummyProgressBar, outputString
+from .miscTools import tracebackString, outputString
 
 class Database:
   """
@@ -697,7 +696,7 @@ class Database:
     return
 
 
-  def replicateDB(self, dbInfo:dict[str,Any], progressBar:Union[QProgressBar,DummyProgressBar], removeAtStart:bool=False) -> str:
+  def replicateDB(self, dbInfo:dict[str,Any], progressBar:Any, removeAtStart:bool=False) -> str:
     """
     Replication to another instance
 
