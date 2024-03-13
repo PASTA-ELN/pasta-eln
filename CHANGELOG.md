@@ -1,5 +1,29 @@
 # Changelog
 
+## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.28...HEAD)
+
+**Fixed bugs:**
+
+- CouchDB connectivity issues in pasta\_eln-2.4.27 [\#201](https://github.com/PASTA-ELN/pasta-eln/issues/201)
+
+**Merged pull requests:**
+
+- Update pypi.yml [\#215](https://github.com/PASTA-ELN/pasta-eln/pull/215) ([srmnitc](https://github.com/srmnitc))
+- Prevent extractor if the table line iteem does not have a file [\#210](https://github.com/PASTA-ELN/pasta-eln/pull/210) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Sb 126 items same name [\#200](https://github.com/PASTA-ELN/pasta-eln/pull/200) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Sb 141 external import elab ftw [\#199](https://github.com/PASTA-ELN/pasta-eln/pull/199) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Fixed issue 143: unknown items should be in the undefined group [\#198](https://github.com/PASTA-ELN/pasta-eln/pull/198) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+
+## [v2.4.28](https://github.com/PASTA-ELN/pasta-eln/tree/v2.4.28) (2024-03-04)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.0b3...v2.4.28)
+
+## [v2.5.0b3](https://github.com/PASTA-ELN/pasta-eln/tree/v2.5.0b3) (2024-02-27)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.0b2...v2.5.0b3)
+
 ## [v2.5.0b2](https://github.com/PASTA-ELN/pasta-eln/tree/v2.5.0b2) (2024-02-27)
 
 [Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.0b1...v2.5.0b2)
