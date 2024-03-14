@@ -265,6 +265,7 @@ class Project(QWidget):
           gui[0]   = self.showDetailsAll
           subItem.setData({ **subItem.data(), **{'gui':gui}})
           self.comm.backend.db.setGUI(docID, gui)
+          recursiveRowIteration(subIndex)
       recursiveRowIteration(self.tree.model().index(-1,0))
       self.showDetailsAll = not self.showDetailsAll
       if self.showDetailsAll:
