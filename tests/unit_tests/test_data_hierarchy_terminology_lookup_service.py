@@ -7,7 +7,6 @@
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
-import asyncio
 import logging
 from asyncio import CancelledError, IncompleteReadError, InvalidStateError, LimitOverrunError, TimeoutError
 from json import JSONDecodeError
@@ -43,44 +42,14 @@ class TestDataHierarchyTerminologyLookup(object):
                                                            # To enable fixture import used by other tests
                                                            retrieved_iri_results_name_mock: retrieved_iri_results_name_mock):  # To enable fixture import used by other tests
     mock_logger = mocker.patch('logging.Logger')
+    mock_client = mocker.patch('pasta_eln.GUI.data_hierarchy.terminology_lookup_service.AsyncHttpClient')
     mock_get_logger = mocker.patch.object(logging, 'getLogger', return_value=mock_logger)
     service = TerminologyLookupService()
-    mock_get_logger.assert_called_once_with(
+    mock_get_logger.assert_called_with(
       'pasta_eln.GUI.data_hierarchy.terminology_lookup_service.TerminologyLookupService')
     assert service.logger is mock_logger
     assert service.session_timeout == 10, "session_timeout should be set to 10"
-    assert service.session_request_errors == [], "session_request_errors should be empty"
-
-  @pytest.mark.parametrize("base_url, request_params, response_string, response_json", [
-    ('https://example.com', {"search_term": "pasta"}, "'test': 'testing'", {'test': 'testing'})])
-  @pytest.mark.asyncio
-  async def test_get_request_should_do_as_expected(self, mocker, terminology_lookup_mock: terminology_lookup_mock,
-                                                   base_url, request_params, response_string, response_json):
-
-    # Arrange
-    mock_log_info = mocker.patch.object(terminology_lookup_mock.logger, 'info')
-    mock_client_session = mocker.patch('aiohttp.client.ClientSession')
-    mock_client_response = mocker.patch('aiohttp.client.ClientResponse')
-    mock_client_session_constructor = mocker.patch.object(ClientSession, '__aenter__', return_value=mock_client_session)
-    mocker.patch.object(mock_client_response, '__aenter__', return_value=mock_client_response)
-    mock_client_session_get_response = mocker.patch.object(mock_client_session, 'get',
-                                                           return_value=mock_client_response)
-    response_future = asyncio.Future()
-    response_future.set_result(response_string)
-    mock_client_session_get_response_text = mocker.patch.object(mock_client_response, 'text',
-                                                                return_value=response_future)
-    mock_json_loads = mocker.patch('pasta_eln.GUI.data_hierarchy.terminology_lookup_service.loads',
-                                   return_value=response_json)
-
-    # Act and asserts
-    assert await terminology_lookup_mock.get_request(base_url,
-                                                     request_params) == response_json, "Valid results must be returned"
-    mock_log_info.assert_any_call("Requesting url: %s, params: %s", base_url, request_params)
-    mock_client_session_constructor.assert_called_once_with()
-    mock_client_session_get_response.assert_called_once_with(base_url, params=request_params,
-                                                             timeout=terminology_lookup_mock.session_timeout)
-    mock_client_session_get_response_text.assert_called_once_with()
-    mock_json_loads.assert_called_once_with(response_string)
+    assert service.http_client == mock_client.return_value, "http client should be set"
 
   @pytest.mark.parametrize("exception, error_message, url", [(TimeoutError("Timeout error occurred"),
                                                               "Client session request timeout for url (http://url.com) with error: Timeout error occurred",
@@ -93,31 +62,33 @@ class TestDataHierarchyTerminologyLookup(object):
                                                                  IncompleteReadError(b"Partial", expected=20),
                                                                  "Client session request incomplete read for url (http://url.com) with error: 7 bytes read on a total of 20 expected bytes",
                                                                  "http://url.com"), (
-                                                             LimitOverrunError("Limit overrun", 1),
-                                                             "Client session request limit overrun for url (http://url.com) with error: Limit overrun",
-                                                             "http://url.com"), (TypeError("TypeError occurred"),
-                                                                                 "Client session type error for url (http://url.com) with error: TypeError occurred",
-                                                                                 "http://url.com"), (
-                                                             ClientConnectorError(
-                                                               connection_key=ConnectionKey(ssl=False, host='url.com',
-                                                                                            port=443, is_ssl=False,
-                                                                                            proxy=None, proxy_auth=None,
-                                                                                            proxy_headers_hash=0),
-                                                               os_error=OSError()),
-                                                             "ClientConnectorError for url (http://url.com) with error: Cannot connect to host url.com:443 ssl:False [None]",
-                                                             "http://url.com"), (InvalidURL("InvalidURL occurred"),
-                                                                                 "Client session InvalidURL for url (None) with error: InvalidURL occurred",
-                                                                                 "None"), (
+                                                                 LimitOverrunError("Limit overrun", 1),
+                                                                 "Client session request limit overrun for url (http://url.com) with error: Limit overrun",
+                                                                 "http://url.com"), (TypeError("TypeError occurred"),
+                                                                                     "Client session type error for url (http://url.com) with error: TypeError occurred",
+                                                                                     "http://url.com"), (
+                                                                 ClientConnectorError(
+                                                                   connection_key=ConnectionKey(ssl=False,
+                                                                                                host='url.com',
+                                                                                                port=443, is_ssl=False,
+                                                                                                proxy=None,
+                                                                                                proxy_auth=None,
+                                                                                                proxy_headers_hash=0),
+                                                                   os_error=OSError()),
+                                                                 "ClientConnectorError for url (http://url.com) with error: Cannot connect to host url.com:443 ssl:False [None]",
+                                                                 "http://url.com"), (InvalidURL("InvalidURL occurred"),
+                                                                                     "Client session InvalidURL for url (None) with error: InvalidURL occurred",
+                                                                                     "None"), (
                                                                  InvalidURL("InvalidURL occurred"),
                                                                  "Client session InvalidURL for url (None) with error: InvalidURL occurred",
                                                                  None), (
-                                                             JSONDecodeError("JSONDecodeError occurred", doc="test",
-                                                                             pos=9),
-                                                             "Client session JSONDecodeError for url (http://url.com) with error: JSONDecodeError occurred: line 1 column 10 (char 9)",
-                                                             "http://url.com"), (
-                                                             TypeError("Constructor parameter should be str"),
-                                                             "Client session type error for url (None) with error: Constructor parameter should be str",
-                                                             None), ])
+                                                                 JSONDecodeError("JSONDecodeError occurred", doc="test",
+                                                                                 pos=9),
+                                                                 "Client session JSONDecodeError for url (http://url.com) with error: JSONDecodeError occurred: line 1 column 10 (char 9)",
+                                                                 "http://url.com"), (
+                                                                 TypeError("Constructor parameter should be str"),
+                                                                 "Client session type error for url (None) with error: Constructor parameter should be str",
+                                                                 None), ])
   @pytest.mark.asyncio
   async def test_get_request_when_exception_should_do_as_expected(self, mocker,
                                                                   terminology_lookup_mock: terminology_lookup_mock,
@@ -133,13 +104,16 @@ class TestDataHierarchyTerminologyLookup(object):
     mock_client_session_get_response = mocker.patch.object(mock_client_session, 'get', side_effect=exception)
 
     # Act and asserts
-    assert await terminology_lookup_mock.get_request(url, "request_params") == {}, "Valid results must be returned"
-    mock_log_info.assert_any_call('Requesting url: %s, params: %s', url, 'request_params')
+    assert await terminology_lookup_mock.http_client.get(url, "request_params") == {}, "Valid results must be returned"
+    mock_log_info.assert_any_call('Get url: %s', url)
     mock_client_session_constructor.assert_called_once_with()
-    mock_client_session_get_response.assert_called_once_with(url, params='request_params',
+    mock_client_session_get_response.assert_called_once_with(url,
+                                                             auth=None,
+                                                             headers=None,
+                                                             params='request_params',
                                                              timeout=terminology_lookup_mock.session_timeout)
     mock_log_error.assert_called_once_with(error_message)
-    assert terminology_lookup_mock.session_request_errors[
+    assert terminology_lookup_mock.http_client.session_request_errors[
              0] == error_message, "session_request_error message must be set!"
 
   def test_do_parse_web_result_for_mocked_wikipedia_web_results_should_do_as_expected(self, mocker,
@@ -201,15 +175,24 @@ class TestDataHierarchyTerminologyLookup(object):
       mock_log_info.assert_any_call("Searching term: %s for online service: %s", search_term,
                                     lookup_service.get('name'))
 
-  @pytest.mark.parametrize("search_term, results_fixture_name", [('pasta', 'retrieved_iri_results_pasta_mock'),
-                                                                 ('science', 'retrieved_iri_results_science_mock'),
-                                                                 ('name', 'retrieved_iri_results_name_mock'),
-                                                                 (None, ''), ('', ''), ("    ", '')])
+  @pytest.mark.parametrize("search_term, results_fixture_name, reason, status",
+                           [('pasta', 'retrieved_iri_results_pasta_mock', 'OK', 200),
+                            ('science', 'retrieved_iri_results_science_mock', 'OK', 200),
+                            ('name', 'retrieved_iri_results_name_mock', 'OK', 200),
+                            (None, '', 'OK', 200),
+                            ('', '', 'OK', 200),
+                            ("    ", '', 'OK', 200),
+                            ("pasta", 'retrieved_iri_results_pasta_mock', 'Error', 404)
+                            ])
   @pytest.mark.asyncio
   async def test_do_lookup_for_given_search_term_should_do_as_expected(self, mocker,
                                                                        terminology_lookup_mock: terminology_lookup_mock,
                                                                        terminology_lookup_config_mock: terminology_lookup_config_mock,
-                                                                       search_term, results_fixture_name, request):
+                                                                       search_term,
+                                                                       results_fixture_name,
+                                                                       request,
+                                                                       reason,
+                                                                       status):
 
     # Arrange
     retrieved_iri_results = request.getfixturevalue(results_fixture_name) if results_fixture_name else []
@@ -219,8 +202,11 @@ class TestDataHierarchyTerminologyLookup(object):
     mock_realpath = mocker.MagicMock()
     mock_open_file = mocker.MagicMock()
     mock_get_request_resp = mocker.MagicMock()
-    mocker.patch.object(terminology_lookup_mock, 'session_request_errors')
-    mock_session_request_errors_clear = mocker.patch.object(terminology_lookup_mock.session_request_errors, 'clear')
+    mock_get_request_resp.get.side_effect = lambda key: \
+      {'reason': reason, 'status': status, 'result': retrieved_iri_results}[key]
+    mocker.patch.object(terminology_lookup_mock.http_client, 'session_request_errors')
+    mock_session_request_errors_clear = mocker.patch.object(terminology_lookup_mock.http_client.session_request_errors,
+                                                            'clear')
     mock_os_path_dir_name = mocker.patch('pasta_eln.GUI.data_hierarchy.terminology_lookup_service.dirname',
                                          return_value=mock_dir_name)
     mock_os_path_get_cwd = mocker.patch('pasta_eln.GUI.data_hierarchy.terminology_lookup_service.getcwd',
@@ -231,9 +217,8 @@ class TestDataHierarchyTerminologyLookup(object):
                                     return_value=mock_realpath)
     mock_os_open = mocker.patch('pasta_eln.GUI.data_hierarchy.terminology_lookup_service.open',
                                 return_value=mock_open_file)
-    mock_get_request = mocker.patch(
-      'pasta_eln.GUI.data_hierarchy.terminology_lookup_service.TerminologyLookupService.get_request',
-      return_value=mock_get_request_resp)
+    mock_get_request = mocker.patch.object(terminology_lookup_mock.http_client, 'get',
+                                           return_value=mock_get_request_resp)
     mock_parse_web_result = mocker.patch(
       'pasta_eln.GUI.data_hierarchy.terminology_lookup_service.TerminologyLookupService.parse_web_result')
     mock_parse_web_result.side_effect = retrieved_iri_results
@@ -250,7 +235,10 @@ class TestDataHierarchyTerminologyLookup(object):
     # Act and asserts
     result = await terminology_lookup_mock.do_lookup(search_term)
     assert result is not None, "Results must be returned"
-    assert are_json_equal(result, retrieved_iri_results), "Valid results must be returned"
+    if status != 404:
+      assert are_json_equal(result, retrieved_iri_results), "Valid results must be returned"
+    else:
+      assert result == [], "Should not return any result"
 
     if search_term and not search_term.isspace():
       mock_log_info.assert_any_call('Searching for term: %s', search_term)
@@ -268,6 +256,36 @@ class TestDataHierarchyTerminologyLookup(object):
         'pasta_eln/GUI/data_hierarchy/terminology_lookup_service.py'), "Directory name must end with pasta_eln/GUI/data_hierarchy/terminology_lookup_service.py"
     else:
       mock_log_error.assert_called_once_with("Invalid null search term!")
+    if status == 404:
+      mock_log_error.assert_has_calls(
+        [mocker.call('Error while querying the lookup service: %s, Reason: %s, Status: %s, Error: '
+                     '%s',
+                     'wikipedia',
+                     mock_get_request_resp.get('reason'),
+                     mock_get_request_resp.get('status'),
+                     terminology_lookup_mock.http_client.session_request_errors),
+         mocker.call(
+           'Error while querying the lookup service: %s, Reason: %s, Status: %s, Error: '
+           '%s',
+           'wikidata',
+           mock_get_request_resp.get('reason'),
+           mock_get_request_resp.get('status'),
+           terminology_lookup_mock.http_client.session_request_errors),
+         mocker.call(
+           'Error while querying the lookup service: %s, Reason: %s, Status: %s, Error: '
+           '%s',
+           'ontology_lookup_service',
+           mock_get_request_resp.get('reason'),
+           mock_get_request_resp.get('status'),
+           terminology_lookup_mock.http_client.session_request_errors),
+         mocker.call(
+           'Error while querying the lookup service: %s, Reason: %s, Status: %s, Error: '
+           '%s',
+           'tib_terminology_service',
+           mock_get_request_resp.get('reason'),
+           mock_get_request_resp.get('status'),
+           terminology_lookup_mock.http_client.session_request_errors)]
+      )
 
   @pytest.mark.parametrize("search_term",
                            ['pasta', 'science', 'name', 'forschung', 'Glaskeramikfügung', "наука", "производство",
@@ -287,7 +305,7 @@ class TestDataHierarchyTerminologyLookup(object):
 
     assert results is not None, "Results must be returned"
     assert isinstance(results, list), "Results must be a list"
-    assert terminology_lookup_mock.session_request_errors == [], "Session request errors must be empty"
+    assert terminology_lookup_mock.http_client.session_request_errors == [], "Session request errors must be empty"
     assert len(results) == len(
       terminology_lookup_config_mock), "Length of results must be equal to the number of services in terminology_lookup_config.json"
     for iri_result, lookup_service in zip(results, terminology_lookup_config_mock):
