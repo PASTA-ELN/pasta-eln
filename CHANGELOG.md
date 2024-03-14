@@ -2,7 +2,19 @@
 
 ## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
 
-[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.28...HEAD)
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.0b4...HEAD)
+
+**Merged pull requests:**
+
+- Sb improve install [\#218](https://github.com/PASTA-ELN/pasta-eln/pull/218) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- debug install.workflow.github [\#217](https://github.com/PASTA-ELN/pasta-eln/pull/217) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Sb speed up start [\#214](https://github.com/PASTA-ELN/pasta-eln/pull/214) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Fix issue \#203 [\#213](https://github.com/PASTA-ELN/pasta-eln/pull/213) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- fix issue \#202 [\#212](https://github.com/PASTA-ELN/pasta-eln/pull/212) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+
+## [v2.5.0b4](https://github.com/PASTA-ELN/pasta-eln/tree/v2.5.0b4) (2024-03-12)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.4.28...v2.5.0b4)
 
 **Fixed bugs:**
 
