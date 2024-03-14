@@ -97,10 +97,14 @@ class ControlledVocabFrame(Ui_PrimitiveCompoundControlledFrameBase):
         self: The instance of the class.
     """
     self.logger.info("Adding new vocabulary entry, value: %s", self.meta_field)
+    value_template = self.meta_field.get('valueTemplate')
     if self.meta_field.get('multiple'):
-      self.add_new_vocab_entry(self.meta_field.get('valueTemplate'), self.meta_field.get('valueTemplate')[0])
+      self.add_new_vocab_entry(value_template, value_template[0]
+      if value_template and len(value_template) > 0 else None)
     else:
-      self.add_new_vocab_entry([self.meta_field.get('valueTemplate')], self.meta_field.get('valueTemplate'))
+      self.add_new_vocab_entry([value_template]
+                               if value_template and len(value_template) > 0
+                               else [], value_template)
 
   def add_new_vocab_entry(self,
                           controlled_vocabulary: list[str] | None = None,

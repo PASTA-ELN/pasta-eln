@@ -247,15 +247,15 @@ class TestDataversePrimitiveCompoundFrame:
   @pytest.mark.parametrize("test_id, type_name, type_value, template_value, expected_tool_tip, expected_object_name", [
     # Success path tests
     ("success-1", "DateCreated", "2023-01-01", "2023-01-01", "Enter the DateCreated value here. e.g. 2023-01-01",
-     "DateCreatedLineEdit"),
+     "DateCreatedDateTimeEdit"),
     ("success-2", "DateModified", "2021-12-31", "YYYY-MM-DD", "Enter the DateModified value here. e.g. YYYY-MM-DD",
-     "DateModifiedLineEdit"),
+     "DateModifiedDateTimeEdit"),
     # Edge cases
-    ("edge-1", "Date", "0001-01-01", "YYYY-MM-DD", "Enter the Date value here. e.g. YYYY-MM-DD", "DateLineEdit"),
+    ("edge-1", "Date", "0001-01-01", "YYYY-MM-DD", "Enter the Date value here. e.g. YYYY-MM-DD", "DateDateTimeEdit"),
     # Error cases
     # Assuming that the function should handle invalid date formats by setting a default or null QDateTime
     ("error-1", "InvalidDate", "not-a-date", "YYYY-MM-DD", "Enter the InvalidDate value here. e.g. YYYY-MM-DD",
-     "InvalidDateLineEdit"),
+     "InvalidDateDateTimeEdit"),
   ])
   def test_create_date_time_widget(self, mocker, primitive_compound_frame, test_id, type_name, type_value,
                                    template_value, expected_tool_tip, expected_object_name):

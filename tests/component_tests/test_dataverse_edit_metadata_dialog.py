@@ -177,54 +177,141 @@ class TestDataverseEditMetadataDialog:
       assert minimal_full_comboBox_items == ['Full', 'Minimal'], "minimalFullComboBox should have right contents"
     qtbot.mouseClick(edit_metadata_dialog.buttonBox.button(edit_metadata_dialog.buttonBox.Cancel), Qt.LeftButton)
 
-  @pytest.mark.parametrize("test_id, metadata_block, expected_fields, selected_field",
+  @pytest.mark.parametrize("test_id, metadata_block, expected_fields, selected_field, tooltips, placeholderTexts",
                            [  # Success tests with various realistic test values
-                             ("success_case_1", "Citation Metadata", ['Title',
-                                                                      'Subtitle',
-                                                                      'Alternative Title',
-                                                                      'Alternative URL',
-                                                                      'Other Id',
-                                                                      'Author',
-                                                                      'Dataset Contact',
-                                                                      'Ds Description',
-                                                                      'Subject',
-                                                                      'Keyword',
-                                                                      'Topic Classification',
-                                                                      'Publication',
-                                                                      'Notes Text',
-                                                                      'Language',
-                                                                      'Producer',
-                                                                      'Production Date',
-                                                                      'Production Place',
-                                                                      'Contributor',
-                                                                      'Grant Number',
-                                                                      'Distributor',
-                                                                      'Distribution Date',
-                                                                      'Depositor',
-                                                                      'Date Of Deposit',
-                                                                      'Time Period Covered',
-                                                                      'Date Of Collection',
-                                                                      'Kind Of Data',
-                                                                      'Series',
-                                                                      'Software',
-                                                                      'Related Material',
-                                                                      'Related Datasets',
-                                                                      'Other References',
-                                                                      'Data Sources',
-                                                                      'Origin Of Sources',
-                                                                      'Characteristic Of Sources',
-                                                                      'Access To Sources'], 'Title'),
-                             ("success_case_2", "Geospatial Metadata",
-                              ['Geographic Coverage', 'Geographic Unit', 'Geographic Bounding Box'], 'Geographic Coverage'),
-                             ("success_case_3", "Social Science and Humanities Metadata", [], 'Author'),
-                             ("success_case_4", "Astronomy and Astrophysics Metadata", [], 'Author'),
-                             ("success_case_4", "Life Sciences Metadata", [], 'Author'),
-                             ("success_case_4", "Journal Metadata", [], 'Author'),
+                             ("success_case_select_citation_metadata", "Citation Metadata", ['Title',
+                                                                                             'Subtitle',
+                                                                                             'Alternative Title',
+                                                                                             'Alternative URL',
+                                                                                             'Other Id',
+                                                                                             'Author',
+                                                                                             'Dataset Contact',
+                                                                                             'Ds Description',
+                                                                                             'Subject',
+                                                                                             'Keyword',
+                                                                                             'Topic Classification',
+                                                                                             'Publication',
+                                                                                             'Notes Text',
+                                                                                             'Language',
+                                                                                             'Producer',
+                                                                                             'Production Date',
+                                                                                             'Production Place',
+                                                                                             'Contributor',
+                                                                                             'Grant Number',
+                                                                                             'Distributor',
+                                                                                             'Distribution Date',
+                                                                                             'Depositor',
+                                                                                             'Date Of Deposit',
+                                                                                             'Time Period Covered',
+                                                                                             'Date Of Collection',
+                                                                                             'Kind Of Data',
+                                                                                             'Series',
+                                                                                             'Software',
+                                                                                             'Related Material',
+                                                                                             'Related Datasets',
+                                                                                             'Other References',
+                                                                                             'Data Sources',
+                                                                                             'Origin Of Sources',
+                                                                                             'Characteristic Of Sources',
+                                                                                             'Access To Sources'],
+                              'Title',
+                              ['Enter the Title value here. e.g. Replication Data for: Title',
+                               'Delete this particular entry.'], [
+                                'Enter the Title here.'
+                              ]),
+                             ("success_case_select_geospatial_metadata", "Geospatial Metadata",
+                              ['Geographic Coverage', 'Geographic Unit', 'Geographic Bounding Box'],
+                              'Geographic Coverage',
+                              ['Enter the Country value here. e.g. Afghanistan',
+                               'Enter the State value here. e.g. GeographicCoverageStateProvince1',
+                               'Enter the City value here. e.g. GeographicCoverageCity1',
+                               'Enter the Other Geographic Coverage value here. e.g. GeographicCoverageOther1',
+                               'Delete this particular entry.'],
+                              ['Enter the Country here.',
+                               'Enter the State here.',
+                               'Enter the City here.',
+                               'Enter the Other Geographic Coverage here.',
+                               'Delete this particular entry.']),
+                             ("success_case_select_social_science_metadata", "Social Science and Humanities Metadata", [
+                               'Unit Of Analysis',
+                               'Universe',
+                               'Time Method',
+                               'Data Collector',
+                               'Collector Training',
+                               'Frequency Of Data Collection',
+                               'Sampling Procedure',
+                               'Target Sample Size',
+                               'Deviations From Sample Design',
+                               'Collection Mode',
+                               'Research Instrument',
+                               'Data Collection Situation',
+                               'Actions To Minimize Loss',
+                               'Control Operations',
+                               'Weighting',
+                               'Cleaning Operations',
+                               'Dataset Level Error Notes',
+                               'Response Rate',
+                               'Sampling Error Estimates',
+                               'Other Data Appraisal',
+                               'Social Science Notes',
+                             ], 'Unit Of Analysis', [
+                                'Enter the Unit Of Analysis value here. e.g. UnitOfAnalysis1',
+                                'Delete this particular entry.'
+                              ], [
+                                'Enter the Unit Of Analysis here.',
+                                'Delete this particular entry.'
+                              ]),
+                             ("success_case_select_astronomy_metadata", "Astronomy and Astrophysics Metadata",
+                              ['Astro Type',
+                               'Astro Facility',
+                               'Astro Instrument',
+                               'Astro Object',
+                               'Resolution Spatial',
+                               'Resolution Spectral',
+                               'Resolution Temporal',
+                               'Coverage Spectral Bandpass',
+                               'Coverage Spectral Central Wavelength',
+                               'Coverage Spectral Wavelength',
+                               'Coverage Temporal',
+                               'Coverage Spatial',
+                               'Coverage Depth',
+                               'Coverage Object Density',
+                               'Coverage Object Count',
+                               'Coverage Sky Fraction',
+                               'Coverage Polarization',
+                               'Redshift Type',
+                               'Resolution Redshift',
+                               'Coverage Redshift Value'],
+                              'Astro Type',
+                              ['Select the controlled vocabulary.', 'Delete this particular vocabulary entry.'], []),
+                             ("success_case_life_sciences_metadata", "Life Sciences Metadata", ['Study Design Type',
+                                                                                                'Study Factor Type',
+                                                                                                'Study Assay Organism',
+                                                                                                'Study Assay Other Organism',
+                                                                                                'Study Assay Measurement Type',
+                                                                                                'Study Assay Other Measurment Type',
+                                                                                                'Study Assay Technology Type',
+                                                                                                'Study Assay Platform',
+                                                                                                'Study Assay Cell Type'],
+                              'Study Design Type',
+                              ['Select the controlled vocabulary.', 'Delete this particular vocabulary entry.'], []),
+                             ("success_case_journal_metadata", "Journal Metadata",
+                              ['Journal Volume Issue', 'Journal Article Type'],
+                              'Journal Volume Issue', ['Enter the Journal Volume value here. e.g. JournalVolume1',
+                                                       'Enter the Journal Issue value here. e.g. JournalIssue1',
+                                                       'Enter the Journal Pub Date value here. e.g. 1008-01-01',
+                                                       'Delete this particular entry.'],
+                              ['Enter the Journal Volume here.', 'Enter the Journal Issue here.',
+                               'Delete this particular entry.']),
                            ])
   def test_change_metadata_block_to_different_selection_should_update_the_ui_correctly(self, qtbot,
-                                                                                       edit_metadata_dialog, test_id,
-                                                                                       metadata_block, expected_fields,
-                                                                                       selected_field):
+                                                                                       edit_metadata_dialog,
+                                                                                       test_id,
+                                                                                       metadata_block,
+                                                                                       expected_fields,
+                                                                                       selected_field,
+                                                                                       tooltips,
+                                                                                       placeholderTexts):
     edit_metadata_dialog.show()
     with qtbot.waitExposed(edit_metadata_dialog.instance, timeout=500):
       assert edit_metadata_dialog.minimalFullComboBox.currentText() == "Full", "minimalFullComboBox must be initialized with default full option"
@@ -240,56 +327,91 @@ class TestDataverseEditMetadataDialog:
                           range(edit_metadata_dialog.typesComboBox.count())]
       assert meta_field_items == expected_fields, "typesComboBox should have right contents"
       assert edit_metadata_dialog.typesComboBox.currentText() == selected_field, f"typesComboBox must be initialized with default '{selected_field}' option"
-      assert edit_metadata_dialog.primitive_compound_frame.instance.isVisible(), "EditMetadataDialog primitive_compound_frame should be shown!"
-      assert edit_metadata_dialog.primitive_compound_frame.addPushButton.isVisible(), "EditMetadataDialog primitive_compound_frame addPushButton should be shown!"
-      compound_Horizontal_Layout = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.findChild(
-        QHBoxLayout,
-        "compoundHorizontalLayout")
-      assert compound_Horizontal_Layout, "EditMetadataDialog compound_Horizontal_Layout should be present!"
-      tooltips = ['Enter the Country value here. e.g. Afghanistan',
-                  'Enter the State value here. e.g. GeographicCoverageStateProvince1',
-                  'Enter the City value here. e.g. GeographicCoverageCity1',
-                  'Enter the Other Geographic Coverage value here. e.g. GeographicCoverageOther1',
-                  'Delete this particular entry.']
-      for i in range(compound_Horizontal_Layout.count()):
-        widget = compound_Horizontal_Layout.itemAt(i).widget()
-        assert widget.isEnabled(), f"EditMetadataDialog compound_Horizontal_Layout {widget.getObjectName()} should be enabled!"
-        assert widget.isVisible(), f"EditMetadataDialog primitive_compound_frame {widget.getObjectName()} should be shown!"
-        assert widget.toolTip() == tooltips[
-          i], f"EditMetadataDialog primitive_compound_frame {widget.getObjectName()} should have right tooltip!"
-      assert widget.text() == "Delete", "EditMetadataDialog compound_Horizontal_Layout widget should have right text!"
-      assert edit_metadata_dialog.primitive_compound_frame.addPushButton.isEnabled(), "EditMetadataDialog compound_Horizontal_Layout addPushButton should be disabled!"
-
-      # Select 'Social Science and Humanities Metadata' and check if other fields are updated correctly
-      qtbot.keyClicks(edit_metadata_dialog.metadataBlockComboBox, "Citation Metadata", delay=2)
-      qtbot.keyClicks(edit_metadata_dialog.metadataBlockComboBox, "Astronomy and Astrophysics Metadata", delay=10)
-      assert edit_metadata_dialog.typesComboBox.isVisible(), "EditMetadataDialog typesComboBox should be shown!"
-      assert edit_metadata_dialog.licenseURLLineEdit.isVisible(), "EditMetadataDialog licenseURLLineEdit should be shown!"
-      assert edit_metadata_dialog.licenseNameLineEdit.isVisible(), "EditMetadataDialog licenseNameLineEdit should be shown!"
-      assert edit_metadata_dialog.typesComboBox.currentText() == "Geographic Coverage", "typesComboBox must be initialized with default 'Geographic Coverage' option"
-      assert edit_metadata_dialog.licenseNameLineEdit.text() == "CC0 1.0", "licenseNameLineEdit must be initialized with default 'CC0 1.0' option"
-      assert edit_metadata_dialog.licenseURLLineEdit.text() == "http://creativecommons.org/publicdomain/zero/1.0", "licenseURLLineEdit must be initialized with default 'http://creativecommons.org/publicdomain/zero/1.0' option"
-      meta_field_items = [edit_metadata_dialog.typesComboBox.itemText(i) for i in
-                          range(edit_metadata_dialog.typesComboBox.count())]
-      assert meta_field_items == ['Geographic Coverage', 'Geographic Unit',
-                                  'Geographic Bounding Box'], "typesComboBox should have right contents"
-      assert edit_metadata_dialog.primitive_compound_frame.instance.isVisible(), "EditMetadataDialog primitive_compound_frame should be shown!"
-      assert edit_metadata_dialog.primitive_compound_frame.addPushButton.isVisible(), "EditMetadataDialog primitive_compound_frame addPushButton should be shown!"
-      compound_Horizontal_Layout = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.findChild(
-        QHBoxLayout,
-        "compoundHorizontalLayout")
-      assert compound_Horizontal_Layout, "EditMetadataDialog compound_Horizontal_Layout should be present!"
-      tooltips = ['Enter the Country value here. e.g. Afghanistan',
-                  'Enter the State value here. e.g. GeographicCoverageStateProvince1',
-                  'Enter the City value here. e.g. GeographicCoverageCity1',
-                  'Enter the Other Geographic Coverage value here. e.g. GeographicCoverageOther1',
-                  'Delete this particular entry.']
-      for i in range(compound_Horizontal_Layout.count()):
-        widget = compound_Horizontal_Layout.itemAt(i).widget()
-        assert widget.isEnabled(), f"EditMetadataDialog compound_Horizontal_Layout {widget.getObjectName()} should be enabled!"
-        assert widget.isVisible(), f"EditMetadataDialog primitive_compound_frame {widget.getObjectName()} should be shown!"
-        assert widget.toolTip() == tooltips[
-          i], f"EditMetadataDialog primitive_compound_frame {widget.getObjectName()} should have right tooltip!"
-      assert widget.text() == "Delete", "EditMetadataDialog compound_Horizontal_Layout widget should have right text!"
-      assert edit_metadata_dialog.primitive_compound_frame.addPushButton.isEnabled(), "EditMetadataDialog compound_Horizontal_Layout addPushButton should be disabled!"
-    qtbot.mouseClick(edit_metadata_dialog.buttonBox.button(edit_metadata_dialog.buttonBox.Cancel), Qt.LeftButton)
+      if test_id == "success_case_select_geospatial_metadata":
+        assert edit_metadata_dialog.primitive_compound_frame.instance.isVisible(), "EditMetadataDialog primitive_compound_frame should be shown!"
+        assert edit_metadata_dialog.primitive_compound_frame.addPushButton.isVisible(), "EditMetadataDialog primitive_compound_frame addPushButton should be shown!"
+        compound_Horizontal_Layout = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.findChild(
+          QHBoxLayout,
+          "compoundHorizontalLayout")
+        assert compound_Horizontal_Layout, "EditMetadataDialog compound_Horizontal_Layout should be present!"
+        for i in range(compound_Horizontal_Layout.count()):
+          widget = compound_Horizontal_Layout.itemAt(i).widget()
+          assert widget.isEnabled(), f"EditMetadataDialog compound_Horizontal_Layout {widget.objectName()} should be enabled!"
+          assert widget.isVisible(), f"EditMetadataDialog primitive_compound_frame {widget.objectName()} should be shown!"
+          assert widget.toolTip() == tooltips[
+            i], f"EditMetadataDialog primitive_compound_frame {widget.getObjectName()} should have right tooltip!"
+          if widget.objectName().lower().endswith("lineedit"):
+            assert widget.placeholderText() == placeholderTexts[
+              i], f"EditMetadataDialog primitive_compound_frame {widget.getObjectName()} should have right placeholderText!"
+        assert widget.text() == "Delete", "EditMetadataDialog compound_Horizontal_Layout widget should have right text!"
+        assert edit_metadata_dialog.primitive_compound_frame.addPushButton.isEnabled(), "EditMetadataDialog compound_Horizontal_Layout addPushButton should be disabled!"
+      elif test_id == "success_case_select_citation_metadata":
+        assert edit_metadata_dialog.primitive_compound_frame.instance.isVisible(), "EditMetadataDialog primitive_compound_frame should be shown!"
+        assert edit_metadata_dialog.primitive_compound_frame.addPushButton.isVisible(), "EditMetadataDialog primitive_compound_frame addPushButton should be shown!"
+        assert not edit_metadata_dialog.primitive_compound_frame.addPushButton.isEnabled(), "EditMetadataDialog primitive_compound_frame addPushButton should not be enabled!"
+        primitive_horizontal_layout = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.findChild(
+          QHBoxLayout,
+          "primitiveHorizontalLayout")
+        for i in range(primitive_horizontal_layout.count()):
+          widget = primitive_horizontal_layout.itemAt(i).widget()
+          assert not widget.isEnabled() if widget.objectName().lower().endswith(
+            "button") else widget.isEnabled(), f"EditMetadataDialog primitive_horizontal_layout {widget.objectName()} should not be enabled!"
+          assert widget.isVisible(), f"EditMetadataDialog primitive_horizontal_layout {widget.objectName()} should be shown!"
+          assert widget.toolTip() == tooltips[
+            i], f"EditMetadataDialog primitive_compound_frame {widget.objectName()} should have right tooltip!"
+          if widget.objectName().lower().endswith("lineedit"):
+            assert widget.placeholderText() == placeholderTexts[
+              i], f"EditMetadataDialog primitive_compound_frame {widget.getObjectName()} should have right placeholderText!"
+      elif test_id == "success_case_select_social_science_metadata":
+        assert edit_metadata_dialog.primitive_compound_frame.instance.isVisible(), "EditMetadataDialog primitive_compound_frame should be shown!"
+        assert edit_metadata_dialog.primitive_compound_frame.addPushButton.isVisible(), "EditMetadataDialog primitive_compound_frame addPushButton should be shown!"
+        assert edit_metadata_dialog.primitive_compound_frame.addPushButton.isEnabled(), "EditMetadataDialog primitive_compound_frame addPushButton should be enabled!"
+        primitive_horizontal_layout = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.findChild(
+          QHBoxLayout,
+          "primitiveHorizontalLayout")
+        for i in range(primitive_horizontal_layout.count()):
+          widget = primitive_horizontal_layout.itemAt(i).widget()
+          assert widget.isEnabled(), f"EditMetadataDialog primitive_horizontal_layout {widget.objectName()} should be enabled!"
+          assert widget.isVisible(), f"EditMetadataDialog primitive_horizontal_layout {widget.objectName()} should be shown!"
+          assert widget.toolTip() == tooltips[
+            i], f"EditMetadataDialog primitive_compound_frame {widget.objectName()} should have right tooltip!"
+          if widget.objectName().lower().endswith("lineedit"):
+            assert widget.placeholderText() == placeholderTexts[
+              i], f"EditMetadataDialog primitive_compound_frame {widget.getObjectName()} should have right placeholderText!"
+      elif test_id == "success_case_select_astronomy_metadata" or test_id == "success_case_life_sciences_metadata":
+        assert edit_metadata_dialog.controlled_vocab_frame, "EditMetadataDialog controlled_vocab_frame should be present!"
+        assert edit_metadata_dialog.controlled_vocab_frame.addPushButton.isVisible(), "EditMetadataDialog controlled_vocab_frame addPushButton should be shown!"
+        assert edit_metadata_dialog.controlled_vocab_frame.addPushButton.isEnabled(), "EditMetadataDialog controlled_vocab_frame addPushButton should be enabled!"
+        vocab_horizontal_layout = edit_metadata_dialog.controlled_vocab_frame.mainVerticalLayout.findChild(
+          QHBoxLayout,
+          "vocabHorizontalLayout")
+        assert vocab_horizontal_layout, "EditMetadataDialog vocab_horizontal_layout should be present!"
+        for i in range(vocab_horizontal_layout.count()):
+          widget = vocab_horizontal_layout.itemAt(i).widget()
+          assert widget.isEnabled(), f"EditMetadataDialog primitive_horizontal_layout {widget.objectName()} should be enabled!"
+          assert widget.isVisible(), f"EditMetadataDialog primitive_horizontal_layout {widget.objectName()} should be shown!"
+          assert widget.toolTip() == tooltips[
+            i], f"EditMetadataDialog primitive_compound_frame {widget.objectName()} should have right tooltip!"
+          if widget.objectName().lower().endswith("combobox"):
+            assert [widget.itemText(i) for i in
+                    range(widget.count())] == ['Image', 'Mosaic', 'EventList',
+                                               'Cube'] if test_id == "success_case_select_astronomy_metadata" else [
+              'Case Control', 'Cross Sectional', 'Cohort Study',
+              'Not Specified'], f"EditMetadataDialog primitive_compound_frame {widget.getObjectName()} should have right contents!"
+      elif test_id == "success_case_journal_metadata":
+        assert edit_metadata_dialog.primitive_compound_frame.instance.isVisible(), "EditMetadataDialog primitive_compound_frame should be shown!"
+        assert edit_metadata_dialog.primitive_compound_frame.addPushButton.isVisible(), "EditMetadataDialog primitive_compound_frame addPushButton should be shown!"
+        assert edit_metadata_dialog.primitive_compound_frame.addPushButton.isEnabled(), "EditMetadataDialog primitive_compound_frame addPushButton should be enabled!"
+        primitive_horizontal_layout = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.findChild(
+          QHBoxLayout,
+          "compoundHorizontalLayout")
+        assert primitive_horizontal_layout, "EditMetadataDialog primitive_horizontal_layout should be present!"
+        for i in range(primitive_horizontal_layout.count()):
+          widget = primitive_horizontal_layout.itemAt(i).widget()
+          assert widget.isEnabled(), f"EditMetadataDialog primitive_horizontal_layout {widget.objectName()} should be enabled!"
+          assert widget.isVisible(), f"EditMetadataDialog primitive_horizontal_layout {widget.objectName()} should be shown!"
+          assert widget.toolTip() == tooltips[
+            i], f"EditMetadataDialog primitive_compound_frame {widget.objectName()} should have right tooltip!"
+          if widget.objectName().lower().endswith("lineedit"):
+            assert widget.placeholderText() == placeholderTexts[
+              i], f"EditMetadataDialog primitive_compound_frame {widget.getObjectName()} should have right placeholderText!"

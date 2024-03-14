@@ -202,7 +202,7 @@ class PrimitiveCompoundFrame(Ui_PrimitiveCompoundControlledFrameBase):
     date_time_edit = QDateTimeEdit(parent=self.instance)
     adjusted_name = adjust_type_name(type_name)
     date_time_edit.setToolTip(f"Enter the {adjusted_name} value here. e.g. {template_value}")
-    date_time_edit.setObjectName(f"{type_name}LineEdit")
+    date_time_edit.setObjectName(f"{type_name}DateTimeEdit")
     date_time_edit.setDateTime(QDateTime.fromString(type_value, 'yyyy-MM-dd'))
     date_time_edit.setDisplayFormat('yyyy-MM-dd')
     return date_time_edit

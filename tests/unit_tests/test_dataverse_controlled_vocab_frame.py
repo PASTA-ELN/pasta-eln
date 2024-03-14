@@ -105,13 +105,12 @@ class TestControlledVocabFrame:
     ({"multiple": False, "valueTemplate": "term"}, ["term"], "term", "happy_multiple_false"),
 
     # Edge cases
-    ({"multiple": True, "valueTemplate": []}, pytest.raises(IndexError), None, "edge_empty_list"),
-    ({"multiple": False, "valueTemplate": ""}, [""], "", "edge_empty_string"),
+    ({"multiple": True, "valueTemplate": []}, [], None, "edge_empty_list"),
+    ({"multiple": False, "valueTemplate": ""}, [], '', "edge_empty_string"),
 
     # Error cases
-    # Assuming that the method should raise an error when 'valueTemplate' is not provided
-    ({"multiple": True}, pytest.raises(KeyError), None, "error_no_valueTemplate"),
-    ({"multiple": False}, pytest.raises(KeyError), None, "error_no_valueTemplate"),
+    ({"multiple": True}, None, None, "error_no_valueTemplate_multiple"),
+    ({"multiple": False}, [], None, "error_no_valueTemplate_single"),
   ])
   def test_add_button_callback(self, mocker, controlled_vocab_frame, meta_field, expected_entry, expected_value,
                                test_id):
@@ -120,20 +119,12 @@ class TestControlledVocabFrame:
     controlled_vocab_frame.add_new_vocab_entry = mocker.MagicMock()
 
     # Act
-    if isinstance(expected_entry, list):
-      controlled_vocab_frame.add_button_callback()
-    else:
-      with expected_entry:
-        controlled_vocab_frame.add_button_callback()
+    controlled_vocab_frame.add_button_callback()
 
     # Assert
     controlled_vocab_frame.logger.info.assert_called_once_with("Adding new vocabulary entry, value: %s",
                                                                controlled_vocab_frame.meta_field)
-    if isinstance(expected_entry, list):
-      controlled_vocab_frame.add_new_vocab_entry.assert_called_with(expected_entry, expected_value)
-    else:
-      with expected_entry:
-        controlled_vocab_frame.add_button_callback()
+    controlled_vocab_frame.add_new_vocab_entry.assert_called_with(expected_entry, expected_value)
 
   @pytest.mark.parametrize("controlled_vocabulary, value, test_id", [
     (['term1', 'term2', 'term3'], 'term2', 'happy_path'),
