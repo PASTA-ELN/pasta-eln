@@ -28,8 +28,12 @@ class CLI_Mixin:
         outString.append(formatString.format(item['name'].replace('-','')) )
     outString = '|'.join(outString)+'\n'
     outString += '-'*104+'\n'
-    for lineItem in self.db.getView(f'viewDocType/{docType}'):
+    dataList  = self.db.getView(f'viewDocType/{docType}')
+    for lineNum, lineItem in enumerate(dataList):
       rowString = []
+      if lineNum>20:
+        outString += f'... continued for {len(dataList)} items in total\n'
+        break
       for idx, item in enumerate(i for group in self.db.dataHierarchy[docType]['meta']
                                  for i in self.db.dataHierarchy[docType]['meta'][group]):
         width = widthArray[idx] if idx<len(widthArray) else 0

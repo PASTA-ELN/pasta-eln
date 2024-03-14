@@ -97,7 +97,7 @@ class Details(QScrollArea):
     if '-name' not in self.doc:  #keep empty details and wait for user to click
       self.comm.changeTable.emit('','')
       return
-    if self.doc['-type'][0]=='-':
+    if self.doc['-type'][0]=='-' or self.doc['-type'][0] not in self.comm.backend.db.dataHierarchy:
       dataHierarchyNode = defaultDataHierarchyNode
     else:
       dataHierarchyNode = self.comm.backend.db.dataHierarchy[self.doc['-type'][0]]['meta']
@@ -155,7 +155,7 @@ class Details(QScrollArea):
       else:
         link = False
         dataHierarchyItem = [i for group in dataHierarchyNode for i in dataHierarchyNode[group] if i['name']==key]
-        if '\n' in self.doc[key]:     #if returns in value: format nicely
+        if isinstance(self.doc[key],str) and '\n' in self.doc[key]:     #if returns in value: format nicely
           labelW, labelL = widgetAndLayout('H', self.metaDetailsL, top='s', bottom='s')
           labelL.addWidget(QLabel(f'{key}: '), alignment=Qt.AlignTop) # type: ignore
           text = QTextEdit()

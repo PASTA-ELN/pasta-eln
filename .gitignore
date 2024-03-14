@@ -8,3 +8,4 @@ htmlcov/
 pasta_eln/test.py
 pastaELN*.py
 .coverage
+profile.out

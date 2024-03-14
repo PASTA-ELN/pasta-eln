@@ -4,10 +4,9 @@ from pathlib import Path
 from typing import Any, Optional, Union
 from urllib import request
 from datetime import datetime, timezone
-from PySide6.QtWidgets import QProgressBar  # pylint: disable=no-name-in-module
 from .mixin_cli import CLI_Mixin
 from .database import Database
-from .miscTools import upOut, createDirName, generic_hash, camelCase, DummyProgressBar
+from .miscTools import upOut, createDirName, generic_hash, camelCase
 from .handleDictionaries import fillDocBeforeCreate, diffDicts
 from .miscTools import outputString
 from .fixedStringsJson import defaultConfiguration, configurationGUI
@@ -315,7 +314,7 @@ class Backend(CLI_Mixin):
     return
 
 
-  def scanProject(self, progressBar:Union[QProgressBar,DummyProgressBar] , projID:str, projPath:str='') -> None:
+  def scanProject(self, progressBar:Any , projID:str, projPath:str='') -> None:
     """ Scan directory tree recursively from project/...
     - find changes on file system and move those changes to DB
     - use .id_pastaELN.json to track changes of directories, aka projects/steps/tasks
@@ -663,7 +662,7 @@ class Backend(CLI_Mixin):
   ######################################################
   ### Wrapper for database functions
   ######################################################
-  def replicateDB(self, progressBar:Union[QProgressBar,DummyProgressBar], removeAtStart:bool=False) -> str:
+  def replicateDB(self, progressBar:Any, removeAtStart:bool=False) -> str:
     """
     Replicate local database to remote database
 
