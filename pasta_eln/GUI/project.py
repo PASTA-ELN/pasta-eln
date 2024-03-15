@@ -90,6 +90,9 @@ class Project(QWidget):
     self.infoW_, infoL = widgetAndLayout('V')
     self.infoWSA.setWidget(self.infoW_)
     self.mainL.addWidget(self.infoWSA)
+    if not self.docProj['-gui'][0]:
+      self.infoWSA.hide()
+      self.actHideDetail.setText('Show project details')
     # details
     tags = ', '.join([f'#{i}' for i in self.docProj['-tags']]) if '-tags' in self.docProj else ''
     infoL.addWidget(QLabel(f'Tags: {tags}'))
@@ -240,6 +243,8 @@ class Project(QWidget):
       self.comm.changeSidebar.emit('redraw')
       showMessage(self, 'Information','Scanning finished')
     elif command[0] is Command.SHOW_PROJ_DETAILS:
+      self.docProj['-gui'][0] = not self.docProj['-gui'][0]
+      self.comm.backend.db.setGUI(self.projID, self.docProj['-gui'])
       if self.infoWSA is not None and self.infoWSA.isHidden():
         self.infoWSA.show()
         self.actHideDetail.setText('Hide project details')
