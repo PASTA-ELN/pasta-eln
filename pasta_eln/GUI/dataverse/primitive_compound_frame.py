@@ -104,11 +104,11 @@ class PrimitiveCompoundFrame(Ui_PrimitiveCompoundControlledFrameBase):
         else:
           self.addPushButton.setDisabled(True)
           if value:
-            self.populate_compound_entry(value, value_template)
+            self.populate_compound_entry(value, value_template, False)
           else:
             empty_entry = copy.deepcopy(value_template)
             clear_value(empty_entry)
-            self.populate_compound_entry(empty_entry, value_template)
+            self.populate_compound_entry(empty_entry, value_template, False)
       case _:
         self.logger.error("Unknown typeClass: %s", self.meta_field.get('typeClass'))
 
@@ -251,7 +251,8 @@ class PrimitiveCompoundFrame(Ui_PrimitiveCompoundControlledFrameBase):
 
   def populate_compound_entry(self,
                               compound_entry: dict[str, Any],
-                              template_entry: dict[str, Any] | None = None) -> None:
+                              template_entry: dict[str, Any] | None = None,
+                              enable_delete_button: bool = True) -> None:
     """
     Populates the compound entry layout based on the compound_entry and template_entry information.
 
@@ -259,6 +260,7 @@ class PrimitiveCompoundFrame(Ui_PrimitiveCompoundControlledFrameBase):
         self: The instance of the class.
         compound_entry (dict[str, Any]): The compound entry information.
         template_entry (dict[str, Any] | None, optional): The template entry information. Defaults to None.
+        enable_delete_button (bool, optional): Whether to enable the delete button. Defaults to True.
 
     Explanation:
         This method populates the compound entry layout based on the compound_entry and template_entry information.
@@ -277,7 +279,8 @@ class PrimitiveCompoundFrame(Ui_PrimitiveCompoundControlledFrameBase):
         if is_date_time_type(compound_type_name)
         else self.create_line_edit(compound_type_name, compound_type['value'], template_value))
     if new_compound_entry_layout.count() > 0:
-      new_compound_entry_layout.addWidget(self.create_delete_button(new_compound_entry_layout))
+      new_compound_entry_layout.addWidget(self.create_delete_button(new_compound_entry_layout,
+                                                                    enable_delete_button))
       self.mainVerticalLayout.addLayout(new_compound_entry_layout)
 
   def populate_primitive_entry(self) -> None:
@@ -425,10 +428,15 @@ class PrimitiveCompoundFrame(Ui_PrimitiveCompoundControlledFrameBase):
       layout_items_count = compound_horizontal_layout.count()
       for widget_pos in range(layout_items_count):
         widget = compound_horizontal_layout.itemAt(widget_pos).widget()
-        name = widget.objectName().removesuffix("LineEdit")
+        name = widget.objectName().removesuffix("LineEdit").removesuffix("DateTimeEdit")
         if name in empty_entry:
           text = widget.text()
           empty_entry[name]['value'] = text
           update_needed = update_needed or (text != "" and text is not None)
       if update_needed:
-        self.meta_field['value'].append(empty_entry)
+        if isinstance(self.meta_field['value'], dict):
+          self.meta_field['value'] = {**self.meta_field['value'], **empty_entry}
+        elif isinstance(self.meta_field['value'], list):
+          self.meta_field['value'].append(empty_entry)
+        else:
+          self.meta_field['value'] = empty_entry

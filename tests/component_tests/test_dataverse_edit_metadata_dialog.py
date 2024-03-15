@@ -11,8 +11,8 @@ from os import getcwd
 from os.path import dirname, join, realpath
 
 import pytest
-from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout
+from PySide6.QtCore import QDateTime, Qt
+from PySide6.QtWidgets import QDialogButtonBox, QHBoxLayout, QVBoxLayout
 
 from pasta_eln.GUI.dataverse.edit_metadata_dialog import EditMetadataDialog
 from pasta_eln.dataverse.config_model import ConfigModel
@@ -415,3 +415,293 @@ class TestDataverseEditMetadataDialog:
           if widget.objectName().lower().endswith("lineedit"):
             assert widget.placeholderText() == placeholderTexts[
               i], f"EditMetadataDialog primitive_compound_frame {widget.getObjectName()} should have right placeholderText!"
+
+  def test_add_field_primitive_single_type_and_save_click_should_do_as_expected(self, qtbot, edit_metadata_dialog,
+                                                                                mock_database_api):
+    edit_metadata_dialog.show()
+    with qtbot.waitExposed(edit_metadata_dialog.instance, timeout=500):
+      assert edit_metadata_dialog.minimalFullComboBox.currentText() == "Full", "minimalFullComboBox must be initialized with default full option"
+      qtbot.keyClicks(edit_metadata_dialog.metadataBlockComboBox, "Citation Metadata", delay=1)
+      assert edit_metadata_dialog.metadataBlockComboBox.currentText() == "Citation Metadata", "metadataBlockComboBox must be initialized with  citation metadata option"
+      qtbot.keyClicks(edit_metadata_dialog.typesComboBox, 'Origin Of Sources', delay=1)
+      assert edit_metadata_dialog.typesComboBox.currentText() == "Origin Of Sources", "typesComboBox must be initialized with Origin Of Sources option"
+      assert edit_metadata_dialog.primitive_compound_frame.instance.isVisible(), "EditMetadataDialog primitive_compound_frame should be shown!"
+      assert edit_metadata_dialog.primitive_compound_frame.addPushButton.isVisible(), "EditMetadataDialog primitive_compound_frame addPushButton should be shown!"
+      assert not edit_metadata_dialog.primitive_compound_frame.addPushButton.isEnabled(), "EditMetadataDialog primitive_compound_frame addPushButton should not be enabled!"
+      primitive_horizontal_layout = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.findChild(
+        QHBoxLayout,
+        "primitiveHorizontalLayout")
+      assert primitive_horizontal_layout, "EditMetadataDialog primitive_horizontal_layout should be present!"
+      line_edit = primitive_horizontal_layout.itemAt(0).widget()
+      assert line_edit.isEnabled(), "EditMetadataDialog primitive_compound_frame line_edit should be enabled!"
+      assert line_edit.isVisible(), "EditMetadataDialog primitive_compound_frame line_edit should be shown!"
+      assert line_edit.toolTip() == 'Enter the Origin Of Sources value here. e.g. OriginOfSources', "EditMetadataDialog primitive_compound_frame line_edit should have right tooltip!"
+      assert line_edit.placeholderText() == 'Enter the Origin Of Sources here.', "EditMetadataDialog primitive_compound_frame line_edit should have right placeholderText!"
+      delete_button = primitive_horizontal_layout.itemAt(1).widget()
+      assert not delete_button.isEnabled(), "EditMetadataDialog primitive_compound_frame delete_button should not be enabled!"
+      assert delete_button.isVisible(), "EditMetadataDialog primitive_compound_frame delete_button should be shown!"
+      assert delete_button.toolTip() == 'Delete this particular entry.', "EditMetadataDialog primitive_compound_frame delete_button should have right tooltip!"
+
+      line_edit.setText("test data...")
+      qtbot.mouseClick(edit_metadata_dialog.buttonBox.button(QDialogButtonBox.Save), Qt.LeftButton)
+    assert not edit_metadata_dialog.instance.isVisible(), "EditMetadataDialog instance should be closed!"
+    assert edit_metadata_dialog.metadata['datasetVersion']['metadataBlocks']['citation']['fields'][32][
+             'value'] == 'test data...'
+    mock_database_api.update_model_document.assert_called_once_with(edit_metadata_dialog.config_model)
+
+  @pytest.mark.parametrize("test_id, test_data, expected_data",
+                           [  # Success tests with various realistic test values
+                             ("success_case_multiple_data",
+                              ["Kind Of Data1", "Kind Of Data2", "Kind Of Data3", "Kind Of Data4"],
+                              ["Kind Of Data1", "Kind Of Data2", "Kind Of Data3", "Kind Of Data4"]),
+                             ("success_case_multiple_data_with_empty_entries",
+                              ["Kind Of Data1", "", None, "Kind Of Data4"], ["Kind Of Data1", "Kind Of Data4"]),
+                             ("success_case_multiple_data_with_all_empty_entries", ["", "", None, ""], [])
+                           ])
+  def test_add_field_primitive_multiple_type_and_save_click_should_do_as_expected(self,
+                                                                                  qtbot,
+                                                                                  edit_metadata_dialog,
+                                                                                  mock_database_api,
+                                                                                  test_id,
+                                                                                  test_data,
+                                                                                  expected_data):
+    edit_metadata_dialog.show()
+    with qtbot.waitExposed(edit_metadata_dialog.instance, timeout=500):
+      assert edit_metadata_dialog.minimalFullComboBox.currentText() == "Full", "minimalFullComboBox must be initialized with default full option"
+      qtbot.keyClicks(edit_metadata_dialog.metadataBlockComboBox, "Citation Metadata", delay=1)
+      assert edit_metadata_dialog.metadataBlockComboBox.currentText() == "Citation Metadata", "metadataBlockComboBox must be initialized with  citation metadata option"
+      qtbot.keyClicks(edit_metadata_dialog.typesComboBox, 'Kind Of Data', delay=1)
+      assert edit_metadata_dialog.typesComboBox.currentText() == 'Kind Of Data', "typesComboBox must be initialized with 'Kind Of Data' option"
+      assert edit_metadata_dialog.primitive_compound_frame.instance.isVisible(), "EditMetadataDialog primitive_compound_frame should be shown!"
+      assert edit_metadata_dialog.primitive_compound_frame.addPushButton.isVisible(), "EditMetadataDialog primitive_compound_frame addPushButton should be shown!"
+      assert edit_metadata_dialog.primitive_compound_frame.addPushButton.isEnabled(), "EditMetadataDialog primitive_compound_frame addPushButton should be enabled!"
+
+      primitive_vertical_layout = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.findChild(
+        QVBoxLayout,
+        "primitiveVerticalLayout")
+      assert primitive_vertical_layout, "EditMetadataDialog primitive_vertical_layout should be present!"
+      assert primitive_vertical_layout.count() == 1, "EditMetadataDialog primitive_vertical_layout should have 1 child!"
+      qtbot.mouseClick(edit_metadata_dialog.primitive_compound_frame.addPushButton, Qt.LeftButton)
+      qtbot.mouseClick(edit_metadata_dialog.primitive_compound_frame.addPushButton, Qt.LeftButton)
+      qtbot.mouseClick(edit_metadata_dialog.primitive_compound_frame.addPushButton, Qt.LeftButton)
+      assert primitive_vertical_layout.count() == 4, "EditMetadataDialog primitive_vertical_layout should have 4 children!"
+      for pos in range(primitive_vertical_layout.count()):
+        line_edit = primitive_vertical_layout.itemAt(pos).itemAt(0).widget()
+        assert line_edit.isEnabled(), "EditMetadataDialog primitive_compound_frame line_edit should be enabled!"
+        assert line_edit.toolTip() == 'Enter the Kind Of Data value here. e.g. KindOfData1', "EditMetadataDialog primitive_compound_frame line_edit should have right tooltip!"
+        assert line_edit.placeholderText() == 'Enter the Kind Of Data here.', "EditMetadataDialog primitive_compound_frame line_edit should have right placeholderText!"
+        delete_button = primitive_vertical_layout.itemAt(pos).itemAt(1).widget()
+        assert delete_button.isEnabled(), "EditMetadataDialog primitive_compound_frame delete_button should be enabled!"
+        assert delete_button.toolTip() == 'Delete this particular entry.', "EditMetadataDialog primitive_compound_frame delete_button should have right tooltip!"
+        line_edit.setText(test_data[pos])
+
+      qtbot.mouseClick(edit_metadata_dialog.buttonBox.button(QDialogButtonBox.Save), Qt.LeftButton)
+    assert not edit_metadata_dialog.instance.isVisible(), "EditMetadataDialog instance should be closed!"
+    assert edit_metadata_dialog.metadata['datasetVersion']['metadataBlocks']['citation']['fields'][25][
+             'value'] == expected_data
+    mock_database_api.update_model_document.assert_called_once_with(edit_metadata_dialog.config_model)
+
+  def test_delete_field_primitive_multiple_type_and_save_click_should_do_as_expected(self,
+                                                                                     qtbot,
+                                                                                     edit_metadata_dialog,
+                                                                                     mock_database_api):
+    edit_metadata_dialog.show()
+    with qtbot.waitExposed(edit_metadata_dialog.instance, timeout=500):
+      assert edit_metadata_dialog.minimalFullComboBox.currentText() == "Full", "minimalFullComboBox must be initialized with default full option"
+      qtbot.keyClicks(edit_metadata_dialog.metadataBlockComboBox, "Citation Metadata", delay=1)
+      assert edit_metadata_dialog.metadataBlockComboBox.currentText() == "Citation Metadata", "metadataBlockComboBox must be initialized with  citation metadata option"
+      qtbot.keyClicks(edit_metadata_dialog.typesComboBox, 'Kind Of Data', delay=1)
+      assert edit_metadata_dialog.typesComboBox.currentText() == 'Kind Of Data', "typesComboBox must be initialized with 'Kind Of Data' option"
+      assert edit_metadata_dialog.primitive_compound_frame.instance.isVisible(), "EditMetadataDialog primitive_compound_frame should be shown!"
+      assert edit_metadata_dialog.primitive_compound_frame.addPushButton.isVisible(), "EditMetadataDialog primitive_compound_frame addPushButton should be shown!"
+      assert edit_metadata_dialog.primitive_compound_frame.addPushButton.isEnabled(), "EditMetadataDialog primitive_compound_frame addPushButton should be enabled!"
+
+      primitive_vertical_layout = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.findChild(
+        QVBoxLayout,
+        "primitiveVerticalLayout")
+      assert primitive_vertical_layout, "EditMetadataDialog primitive_vertical_layout should be present!"
+      assert primitive_vertical_layout.count() == 1, "EditMetadataDialog primitive_vertical_layout should have 1 child!"
+      qtbot.mouseClick(edit_metadata_dialog.primitive_compound_frame.addPushButton, Qt.LeftButton)
+      qtbot.mouseClick(edit_metadata_dialog.primitive_compound_frame.addPushButton, Qt.LeftButton)
+      qtbot.mouseClick(edit_metadata_dialog.primitive_compound_frame.addPushButton, Qt.LeftButton)
+      assert primitive_vertical_layout.count() == 4, "EditMetadataDialog primitive_vertical_layout should have 4 children!"
+      test_data = ["KindOfData1", "KindOfData2", "KindOfData3", "KindOfData4"]
+      for pos in range(primitive_vertical_layout.count()):
+        line_edit = primitive_vertical_layout.itemAt(pos).itemAt(0).widget()
+        assert line_edit.isEnabled(), "EditMetadataDialog primitive_compound_frame line_edit should be enabled!"
+        assert line_edit.toolTip() == 'Enter the Kind Of Data value here. e.g. KindOfData1', "EditMetadataDialog primitive_compound_frame line_edit should have right tooltip!"
+        assert line_edit.placeholderText() == 'Enter the Kind Of Data here.', "EditMetadataDialog primitive_compound_frame line_edit should have right placeholderText!"
+        delete_button = primitive_vertical_layout.itemAt(pos).itemAt(1).widget()
+        assert delete_button.isEnabled(), "EditMetadataDialog primitive_compound_frame delete_button should be enabled!"
+        assert delete_button.toolTip() == 'Delete this particular entry.', "EditMetadataDialog primitive_compound_frame delete_button should have right tooltip!"
+        line_edit.setText(test_data[pos])
+      # Delete two populated items
+      qtbot.mouseClick(primitive_vertical_layout.itemAt(1).itemAt(1).widget(), Qt.LeftButton)
+      assert primitive_vertical_layout.count() == 3, "EditMetadataDialog primitive_vertical_layout should have 3 children!"
+      qtbot.mouseClick(primitive_vertical_layout.itemAt(2).itemAt(1).widget(), Qt.LeftButton)
+      assert primitive_vertical_layout.count() == 2, "EditMetadataDialog primitive_vertical_layout should have 2 children!"
+
+      qtbot.mouseClick(edit_metadata_dialog.buttonBox.button(QDialogButtonBox.Save), Qt.LeftButton)
+    assert not edit_metadata_dialog.instance.isVisible(), "EditMetadataDialog instance should be closed!"
+    assert edit_metadata_dialog.metadata['datasetVersion']['metadataBlocks']['citation']['fields'][25][
+             'value'] == ["KindOfData1", "KindOfData3"]
+    mock_database_api.update_model_document.assert_called_once_with(edit_metadata_dialog.config_model)
+
+  def test_add_field_compound_single_type_and_save_click_should_do_as_expected(self,
+                                                                               qtbot,
+                                                                               edit_metadata_dialog,
+                                                                               mock_database_api):
+    edit_metadata_dialog.show()
+    with qtbot.waitExposed(edit_metadata_dialog.instance, timeout=500):
+      assert edit_metadata_dialog.minimalFullComboBox.currentText() == "Full", "minimalFullComboBox must be initialized with default full option"
+      qtbot.keyClicks(edit_metadata_dialog.metadataBlockComboBox, "Social Science and Humanities Metadata", delay=1)
+      assert edit_metadata_dialog.metadataBlockComboBox.currentText() == "Social Science and Humanities Metadata", "metadataBlockComboBox must be initialized with  Social Science and Humanities Metadata option"
+      qtbot.keyClicks(edit_metadata_dialog.typesComboBox, 'Target Sample Size', delay=1)
+      assert edit_metadata_dialog.typesComboBox.currentText() == 'Target Sample Size', "typesComboBox must be initialized with 'Target Sample Size' option"
+      assert edit_metadata_dialog.primitive_compound_frame.instance.isVisible(), "EditMetadataDialog primitive_compound_frame should be shown!"
+      assert edit_metadata_dialog.primitive_compound_frame.addPushButton.isVisible(), "EditMetadataDialog primitive_compound_frame addPushButton should be shown!"
+      assert not edit_metadata_dialog.primitive_compound_frame.addPushButton.isEnabled(), "EditMetadataDialog primitive_compound_frame addPushButton should not be enabled!"
+
+      compound_horizontal_layout = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.findChild(
+        QHBoxLayout,
+        "compoundHorizontalLayout")
+      assert compound_horizontal_layout, "EditMetadataDialog compound_horizontal_layout should be present!"
+      line_edit1 = compound_horizontal_layout.itemAt(0).widget()
+      assert line_edit1.isEnabled(), "EditMetadataDialog primitive_compound_frame line_edit should be enabled!"
+      assert line_edit1.toolTip() == 'Enter the Target Sample Actual Size value here. e.g. 100', "EditMetadataDialog compound_horizontal_layout line_edit should have right tooltip!"
+      assert line_edit1.placeholderText() == 'Enter the Target Sample Actual Size here.', "EditMetadataDialog compound_horizontal_layout line_edit should have right placeholderText!"
+      line_edit2 = compound_horizontal_layout.itemAt(1).widget()
+      assert line_edit2.isEnabled(), "EditMetadataDialog primitive_compound_frame line_edit should be enabled!"
+      assert line_edit2.toolTip() == 'Enter the Target Sample Size Formula value here. e.g. TargetSampleSizeFormula', "EditMetadataDialog compound_horizontal_layout line_edit should have right tooltip!"
+      assert line_edit2.placeholderText() == 'Enter the Target Sample Size Formula here.', "EditMetadataDialog compound_horizontal_layout line_edit should have right placeholderText!"
+      delete_button = compound_horizontal_layout.itemAt(2).widget()
+      assert not delete_button.isEnabled(), "EditMetadataDialog compound_horizontal_layout delete_button should not be enabled!"
+      assert delete_button.toolTip() == 'Delete this particular entry.', "EditMetadataDialog compound_horizontal_layout delete_button should have right tooltip!"
+      line_edit1.setText("targetSampleSize")
+      line_edit2.setText("targetSampleSizeFormula")
+
+      qtbot.mouseClick(edit_metadata_dialog.buttonBox.button(QDialogButtonBox.Save), Qt.LeftButton)
+    assert not edit_metadata_dialog.instance.isVisible(), "EditMetadataDialog instance should be closed!"
+    assert edit_metadata_dialog.metadata['datasetVersion']['metadataBlocks']['socialscience']['fields'][7][
+             'value']['targetSampleActualSize']['value'] == "targetSampleSize"
+    assert edit_metadata_dialog.metadata['datasetVersion']['metadataBlocks']['socialscience']['fields'][7][
+             'value']['targetSampleSizeFormula']['value'] == "targetSampleSizeFormula"
+    mock_database_api.update_model_document.assert_called_once_with(edit_metadata_dialog.config_model)
+
+  @pytest.mark.parametrize("test_id, test_data, expected_data",
+                           [  # Success tests with various realistic test values
+                             ("success_case_multiple_data",
+                              [("Description1", "2024-01-01"), ("Description2", "2024-01-23"),
+                               ("Description3", "2024-01-23"), ("Description4", "2024-01-23")],
+                              [("Description1", "2024-01-01"), ("Description2", "2024-01-23"),
+                               ("Description3", "2024-01-23"), ("Description4", "2024-01-23")]),
+                             ("success_case_multiple_data_with_none",
+                              [("Description1", None), (None, "2024-01-23"),
+                               ("", "2024-01-23"), ("Description4", "2024-01-23")],
+                              [("Description1", '2000-01-01'), ("", "2024-01-23"),
+                               ("", "2024-01-23"), ("Description4", "2024-01-23")]),
+                             ("success_case_multiple_data_with_none",
+                              [("", None), (None, ""),
+                               ("", ""), ("", "2024-01-23")],
+                              [("", '2000-01-01'), ("", "2000-01-01"),
+                               ("", "2000-01-01"), ("", "2024-01-23")]),
+                           ])
+  def test_add_field_compound_multiple_type_and_save_click_should_do_as_expected(self,
+                                                                                 qtbot,
+                                                                                 edit_metadata_dialog,
+                                                                                 mock_database_api,
+                                                                                 test_id,
+                                                                                 test_data,
+                                                                                 expected_data):
+    edit_metadata_dialog.show()
+    with qtbot.waitExposed(edit_metadata_dialog.instance, timeout=500):
+      assert edit_metadata_dialog.minimalFullComboBox.currentText() == "Full", "minimalFullComboBox must be initialized with default full option"
+      qtbot.keyClicks(edit_metadata_dialog.metadataBlockComboBox, "Citation Metadata", delay=1)
+      assert edit_metadata_dialog.metadataBlockComboBox.currentText() == "Citation Metadata", "metadataBlockComboBox must be initialized with  citation metadata option"
+      qtbot.keyClicks(edit_metadata_dialog.typesComboBox, 'Ds Description', delay=1)
+      assert edit_metadata_dialog.typesComboBox.currentText() == 'Ds Description', "typesComboBox must be initialized with 'Ds Description' option"
+      assert edit_metadata_dialog.primitive_compound_frame.instance.isVisible(), "EditMetadataDialog primitive_compound_frame should be shown!"
+      assert edit_metadata_dialog.primitive_compound_frame.addPushButton.isVisible(), "EditMetadataDialog primitive_compound_frame addPushButton should be shown!"
+      assert edit_metadata_dialog.primitive_compound_frame.addPushButton.isEnabled(), "EditMetadataDialog primitive_compound_frame addPushButton should be enabled!"
+
+      assert edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.count() == 2, "EditMetadataDialog primitive_vertical_layout should have 2 children!"
+      qtbot.mouseClick(edit_metadata_dialog.primitive_compound_frame.addPushButton, Qt.LeftButton)
+      qtbot.mouseClick(edit_metadata_dialog.primitive_compound_frame.addPushButton, Qt.LeftButton)
+      qtbot.mouseClick(edit_metadata_dialog.primitive_compound_frame.addPushButton, Qt.LeftButton)
+      assert edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.count() == 5, "EditMetadataDialog primitive_vertical_layout should have 5 children!"
+      for pos in range(1, edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.count()):
+        line_edit = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.itemAt(pos).itemAt(0).widget()
+        assert line_edit.isEnabled(), "EditMetadataDialog primitive_compound_frame line_edit should be enabled!"
+        assert line_edit.toolTip() == 'Enter the Ds Description Value value here. e.g. DescriptionText1', "EditMetadataDialog primitive_compound_frame line_edit should have right tooltip!"
+        assert line_edit.placeholderText() == 'Enter the Ds Description Value here.', "EditMetadataDialog primitive_compound_frame line_edit should have right placeholderText!"
+        date_time_edit = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.itemAt(pos).itemAt(1).widget()
+        assert date_time_edit.isEnabled(), "EditMetadataDialog primitive_compound_frame line_edit should be enabled!"
+        assert date_time_edit.toolTip() == 'Enter the Ds Description Date value here. e.g. 1000-01-01', "EditMetadataDialog primitive_compound_frame date_time_edit should have right tooltip!"
+        delete_button = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.itemAt(pos).itemAt(2).widget()
+        assert delete_button.isEnabled(), "EditMetadataDialog primitive_compound_frame delete_button should be enabled!"
+        assert delete_button.toolTip() == 'Delete this particular entry.', "EditMetadataDialog primitive_compound_frame delete_button should have right tooltip!"
+        line_edit.setText(test_data[pos - 1][0])
+        date_time_edit.setDateTime(QDateTime.fromString(test_data[pos - 1][1], 'yyyy-MM-dd'))
+
+      qtbot.mouseClick(edit_metadata_dialog.buttonBox.button(QDialogButtonBox.Save), Qt.LeftButton)
+    assert not edit_metadata_dialog.instance.isVisible(), "EditMetadataDialog instance should be closed!"
+    for pos in range(len(expected_data)):
+      assert edit_metadata_dialog.metadata['datasetVersion']['metadataBlocks']['citation']['fields'][7][
+               'value'][pos]['dsDescriptionValue']['value'] == expected_data[pos][0]
+    assert edit_metadata_dialog.metadata['datasetVersion']['metadataBlocks']['citation']['fields'][7][
+             'value'][pos]['dsDescriptionDate']['value'] == expected_data[pos][1]
+    mock_database_api.update_model_document.assert_called_once_with(edit_metadata_dialog.config_model)
+
+  def test_delete_fields_compound_multiple_type_and_save_click_should_do_as_expected(self,
+                                                                                     qtbot,
+                                                                                     edit_metadata_dialog,
+                                                                                     mock_database_api):
+    edit_metadata_dialog.show()
+    test_data = [("Description1", "2024-01-01"), ("Description2", "2024-01-23"),
+                 ("Description3", "2024-01-23"), ("Description4", "2024-01-23")]
+    expected_data = [("Description3", "2024-01-23"), ("Description4", "2024-01-23")]
+    with qtbot.waitExposed(edit_metadata_dialog.instance, timeout=500):
+      assert edit_metadata_dialog.minimalFullComboBox.currentText() == "Full", "minimalFullComboBox must be initialized with default full option"
+      qtbot.keyClicks(edit_metadata_dialog.metadataBlockComboBox, "Citation Metadata", delay=1)
+      assert edit_metadata_dialog.metadataBlockComboBox.currentText() == "Citation Metadata", "metadataBlockComboBox must be initialized with  citation metadata option"
+      qtbot.keyClicks(edit_metadata_dialog.typesComboBox, 'Ds Description', delay=1)
+      assert edit_metadata_dialog.typesComboBox.currentText() == 'Ds Description', "typesComboBox must be initialized with 'Ds Description' option"
+      assert edit_metadata_dialog.primitive_compound_frame.instance.isVisible(), "EditMetadataDialog primitive_compound_frame should be shown!"
+      assert edit_metadata_dialog.primitive_compound_frame.addPushButton.isVisible(), "EditMetadataDialog primitive_compound_frame addPushButton should be shown!"
+      assert edit_metadata_dialog.primitive_compound_frame.addPushButton.isEnabled(), "EditMetadataDialog primitive_compound_frame addPushButton should be enabled!"
+
+      assert edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.count() == 2, "EditMetadataDialog primitive_vertical_layout should have 2 children!"
+      qtbot.mouseClick(edit_metadata_dialog.primitive_compound_frame.addPushButton, Qt.LeftButton)
+      qtbot.mouseClick(edit_metadata_dialog.primitive_compound_frame.addPushButton, Qt.LeftButton)
+      qtbot.mouseClick(edit_metadata_dialog.primitive_compound_frame.addPushButton, Qt.LeftButton)
+      assert edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.count() == 5, "EditMetadataDialog primitive_vertical_layout should have 5 children!"
+      for pos in range(1, edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.count()):
+        line_edit = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.itemAt(pos).itemAt(0).widget()
+        assert line_edit.isEnabled(), "EditMetadataDialog primitive_compound_frame line_edit should be enabled!"
+        assert line_edit.toolTip() == 'Enter the Ds Description Value value here. e.g. DescriptionText1', "EditMetadataDialog primitive_compound_frame line_edit should have right tooltip!"
+        assert line_edit.placeholderText() == 'Enter the Ds Description Value here.', "EditMetadataDialog primitive_compound_frame line_edit should have right placeholderText!"
+        date_time_edit = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.itemAt(pos).itemAt(1).widget()
+        assert date_time_edit.isEnabled(), "EditMetadataDialog primitive_compound_frame line_edit should be enabled!"
+        assert date_time_edit.toolTip() == 'Enter the Ds Description Date value here. e.g. 1000-01-01', "EditMetadataDialog primitive_compound_frame date_time_edit should have right tooltip!"
+        delete_button = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.itemAt(pos).itemAt(2).widget()
+        assert delete_button.isEnabled(), "EditMetadataDialog primitive_compound_frame delete_button should be enabled!"
+        assert delete_button.toolTip() == 'Delete this particular entry.', "EditMetadataDialog primitive_compound_frame delete_button should have right tooltip!"
+        line_edit.setText(test_data[pos - 1][0])
+        date_time_edit.setDateTime(QDateTime.fromString(test_data[pos - 1][1], 'yyyy-MM-dd'))
+
+      # Delete two populated items
+      qtbot.mouseClick(edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.itemAt(1).itemAt(2).widget(),
+                       Qt.LeftButton)
+      assert edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.count() == 4, "EditMetadataDialog primitive_vertical_layout should have 4 children!"
+      qtbot.mouseClick(edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.itemAt(1).itemAt(2).widget(),
+                       Qt.LeftButton)
+      assert edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.count() == 3, "EditMetadataDialog primitive_vertical_layout should have 3 children!"
+
+      qtbot.mouseClick(edit_metadata_dialog.buttonBox.button(QDialogButtonBox.Save), Qt.LeftButton)
+    assert not edit_metadata_dialog.instance.isVisible(), "EditMetadataDialog instance should be closed!"
+    for pos in range(len(expected_data)):
+      assert edit_metadata_dialog.metadata['datasetVersion']['metadataBlocks']['citation']['fields'][7][
+               'value'][pos]['dsDescriptionValue']['value'] == expected_data[pos][0]
+    assert edit_metadata_dialog.metadata['datasetVersion']['metadataBlocks']['citation']['fields'][7][
+             'value'][pos]['dsDescriptionDate']['value'] == expected_data[pos][1]
+    mock_database_api.update_model_document.assert_called_once_with(edit_metadata_dialog.config_model)
