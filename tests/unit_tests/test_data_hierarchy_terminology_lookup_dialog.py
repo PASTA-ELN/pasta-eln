@@ -290,13 +290,14 @@ class TestDataHierarchyTerminologyLookupDialog(object):
     mocker.patch.object(terminology_lookup_dialog_mock, 'terminology_lookup_service', mock_terminology_service,
                         create=True)
     mocker.patch.object(terminology_lookup_dialog_mock, 'terminologyLineEdit', mock_terminology_line_edit, create=True)
-    mocker.patch.object(mock_terminology_service, 'session_request_errors', None)
+    mocker.patch.object(mock_terminology_service.http_client, 'session_request_errors', None)
     mock_terminology_line_edit_text = mocker.patch.object(mock_terminology_line_edit, 'text',
                                                           return_value="search_term")
 
     mock_do_loop = mocker.MagicMock()
     mocker.patch.object(mock_terminology_service, 'do_lookup', return_value=mock_do_loop)
-    mocker.patch.object(mock_terminology_service, 'session_request_errors', ["error1", "error2", "error3", "error4"])
+    mocker.patch.object(mock_terminology_service.http_client, 'session_request_errors',
+                        ["error1", "error2", "error3", "error4"])
     mock_event_loop = mocker.MagicMock()
     mock_get_event_loop = mocker.patch('pasta_eln.GUI.data_hierarchy.terminology_lookup_dialog.get_event_loop',
                                        return_value=mock_event_loop)

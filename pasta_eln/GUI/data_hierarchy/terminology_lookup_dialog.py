@@ -154,8 +154,8 @@ class TerminologyLookupDialog(Ui_TerminologyLookupDialogBase):
                                      textwrap.fill(result['information'], width=100, max_lines=2),
                                      result['iri'])
           self.searchProgressBar.setValue((100 - self.searchProgressBar.value()) / 2)
-    if self.terminology_lookup_service.session_request_errors:
-      self.errorConsoleTextEdit.setText('\n'.join(self.terminology_lookup_service.session_request_errors))
+    if self.terminology_lookup_service.http_client.session_request_errors:
+      self.errorConsoleTextEdit.setText('\n'.join(self.terminology_lookup_service.http_client.session_request_errors))
       self.errorConsoleTextEdit.setVisible(True)
     self.searchProgressBar.setValue(100)
 
@@ -171,3 +171,12 @@ class TerminologyLookupDialog(Ui_TerminologyLookupDialogBase):
     self.errorConsoleTextEdit.clear()
     self.errorConsoleTextEdit.setVisible(False)
     self.selected_iris.clear()
+
+
+if __name__ == "__main__":
+  import sys
+
+  app = QtWidgets.QApplication(sys.argv)
+  ui = TerminologyLookupDialog()
+  ui.instance.show()
+  sys.exit(app.exec())
