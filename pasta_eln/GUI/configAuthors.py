@@ -25,6 +25,7 @@ class ConfigurationAuthors(QWidget):
     """
     super().__init__()
     self.comm = comm
+    self.callbackFinished = callbackFinished
 
     #GUI elements
     if hasattr(self.comm.backend, 'configuration'):
@@ -111,11 +112,13 @@ class ConfigurationAuthors(QWidget):
       self.author['email'] = self.userEmail.text().strip()
       self.author['orcid'] = self.userOrcid.text().strip()
       j = self.orgaCB_lastIndex
-      self.author['organizations'][j]['organization'] = self.userOrg.text().strip()
-      self.author['organizations'][j]['rorid']        = self.userRorid.text().strip()
+      if j>-1:
+        self.author['organizations'][j]['organization'] = self.userOrg.text().strip()
+        self.author['organizations'][j]['rorid']        = self.userRorid.text().strip()
+      self.comm.backend.configuration['authors'][0] = self.author
       with open(Path.home()/'.pastaELN.json', 'w', encoding='utf-8') as fConf:
-        fConf.write(json.dumps(self.configuration,indent=2))
-      restart()
+        fConf.write(json.dumps(self.comm.backend.configuration,indent=2))
+      self.callbackFinished(False)
     elif command[0] is Command.ADD:
       self.author['organizations'].append({'rorid':'', 'organization':''})
       self.orgaCB.addItem('- new -')
