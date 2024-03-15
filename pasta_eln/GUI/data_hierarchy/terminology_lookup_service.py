@@ -9,16 +9,13 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
 import logging
-from asyncio import CancelledError, IncompleteReadError, InvalidStateError, LimitOverrunError, \
-  TimeoutError as AsyncTimeoutError
 from functools import reduce
-from json import JSONDecodeError, load, loads
+from json import load
 from os import getcwd
 from os.path import dirname, join, realpath
 from typing import Any
 
-from aiohttp import ClientSession
-from aiohttp.client_exceptions import ClientConnectorError, InvalidURL
+from pasta_eln.webclient.http_client import AsyncHttpClient
 
 
 class TerminologyLookupService:
@@ -31,72 +28,7 @@ class TerminologyLookupService:
   def __init__(self) -> None:
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
     self.session_timeout = 10  # Timeout in seconds for the requests send to the lookup services
-    self.session_request_errors: list[str] = []  # List of request errors
-
-  async def get_request(self,
-                        base_url: str,
-                        request_params: dict[str, Any] = {}) -> dict[str, Any]:
-    """
-    Send get request to the given url and parameters
-    Args:
-      base_url (str): Base url
-      request_params (dict[str, Any]): Request parameters for the get request
-
-    Returns: The response text for the request is returned
-
-    """
-    self.logger.info("Requesting url: %s, params: %s", base_url, request_params)
-    async with ClientSession() as session:
-      try:
-        async with session.get(base_url,
-                               params=request_params,
-                               timeout=self.session_timeout) as response:
-          return loads(await response.text())
-      except AsyncTimeoutError as e:
-        error = f"Client session request timeout for url ({base_url}) with error: {e}"
-        self.logger.error(error)
-        self.session_request_errors.append(error)
-        return {}
-      except CancelledError as e:
-        error = f"Client session request cancelled for url ({base_url}) with error: {e}"
-        self.logger.error(error)
-        self.session_request_errors.append(error)
-        return {}
-      except InvalidStateError as e:
-        error = f"Client session request in invalid state for url ({base_url}) with error: {e}"
-        self.logger.error(error)
-        self.session_request_errors.append(error)
-        return {}
-      except IncompleteReadError as e:
-        error = f"Client session request incomplete read for url ({base_url}) with error: {e}"
-        self.logger.error(error)
-        self.session_request_errors.append(error)
-        return {}
-      except LimitOverrunError as e:
-        error = f"Client session request limit overrun for url ({base_url}) with error: {e}"
-        self.logger.error(error)
-        self.session_request_errors.append(error)
-        return {}
-      except TypeError as e:
-        error = f"Client session type error for url ({base_url}) with error: {e}"
-        self.logger.error(error)
-        self.session_request_errors.append(error)
-        return {}
-      except ClientConnectorError as e:
-        error = f"ClientConnectorError for url ({base_url}) with error: {e}"
-        self.logger.error(error)
-        self.session_request_errors.append(error)
-        return {}
-      except InvalidURL as e:
-        error = f"Client session InvalidURL for url ({base_url}) with error: {e}"
-        self.logger.error(error)
-        self.session_request_errors.append(error)
-        return {}
-      except JSONDecodeError as e:
-        error = f"Client session JSONDecodeError for url ({base_url}) with error: {e}"
-        self.logger.error(error)
-        self.session_request_errors.append(error)
-        return {}
+    self.http_client = AsyncHttpClient(self.session_timeout)
 
   async def do_lookup(self,
                       search_term: str) -> list[dict[str, Any]]:
@@ -113,18 +45,23 @@ class TerminologyLookupService:
       self.logger.error("Invalid null search term!")
       return []
     self.logger.info("Searching for term: %s", search_term)
-    self.session_request_errors.clear()  # Clear the list of request errors before the lookup
+    self.http_client.session_request_errors.clear()  # Clear the list of request errors before the lookup
     current_path = realpath(join(getcwd(), dirname(__file__)))
     results = list[dict[str, Any]]()
     with open(join(current_path, "terminology_lookup_config.json"), encoding="utf-8") as config_file:
       for lookup_service in load(config_file):
         lookup_service['request_params'][lookup_service['search_term_key']] = search_term
-        web_result = await self.get_request(lookup_service['url'], lookup_service['request_params'])
-        result = self.parse_web_result(search_term,
-                                       web_result,
-                                       lookup_service)
-        if result:
-          results.append(result)
+        web_result = await self.http_client.get(lookup_service['url'], lookup_service['request_params'])
+        if web_result and (web_result.get('status') == 200 or web_result.get('reason') == 'OK'):
+          if result := self.parse_web_result(search_term, web_result.get('result'),
+                                             lookup_service):
+            results.append(result)
+        else:
+          self.logger.error("Error while querying the lookup service: %s, Reason: %s, Status: %s, Error: %s",
+                            lookup_service.get('name'),
+                            web_result.get('reason'),
+                            web_result.get('status'),
+                            self.http_client.session_request_errors)
     return results
 
   def parse_web_result(self,
@@ -167,7 +104,7 @@ class TerminologyLookupService:
 
     results = reduce(lambda d, key: d.get(key) if d else None, result_keys,  # type: ignore[arg-type, return-value]
                      web_result)
-    for item in results if results else []:
+    for item in results or []:
       description = reduce(lambda d, key: d.get(key) if d else None, desc_keys, item)  # type: ignore[attr-defined]
       is_duplicate = (item[duplicate_ontology_key]  # type: ignore[operator]
                       in duplicate_ontology_names) if duplicate_ontology_key else False

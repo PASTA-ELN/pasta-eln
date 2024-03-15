@@ -240,8 +240,8 @@ class Project(QWidget):
       self.comm.changeSidebar.emit('redraw')
       showMessage(self, 'Information','Scanning finished')
     elif command[0] is Command.SHOW_PROJ_DETAILS:
-      if self.infoW is not None and self.infoW.isHidden():
-        self.infoW.show()
+      if self.infoWSA is not None and self.infoWSA.isHidden():
+        self.infoWSA.show()
         self.actHideDetail.setText('Hide project details')
       elif self.infoWSA is not None:
         self.infoWSA.hide()
@@ -265,6 +265,7 @@ class Project(QWidget):
           gui[0]   = self.showDetailsAll
           subItem.setData({ **subItem.data(), **{'gui':gui}})
           self.comm.backend.db.setGUI(docID, gui)
+          recursiveRowIteration(subIndex)
       recursiveRowIteration(self.tree.model().index(-1,0))
       self.showDetailsAll = not self.showDetailsAll
       if self.showDetailsAll:

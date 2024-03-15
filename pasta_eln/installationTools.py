@@ -185,6 +185,7 @@ def installLinuxRoot(couchDBExists:bool, pathPasta:Path=Path(''), password:str='
       with open(path,'w', encoding='utf-8') as fConf:
         fConf.write(json.dumps(conf, indent=2) )
     bashCommand = [
+      'sudo apt-get install -y libegl1',
       'sudo snap install couchdb',
       f'sudo snap set couchdb admin={password} setcookie={uuid.uuid4().hex}',
       'sudo snap start couchdb',

@@ -7,3 +7,9 @@ skip = '.git,*.pdf,*.svg,*lookup*.json'
 ignore-regex = '\[[a-z]\][a-z]+'
 #
 ignore-words-list = 'speciall,ons,crate,ser'
+
+[tool.pytest.ini_options]
+log_cli = true
+log_cli_level = "INFO"
+log_cli_format = "%(asctime)s|%(levelname)s:%(message)s (%(filename)s:%(lineno)s)"
+log_cli_date_format = "%m-%d %H:%M:%S"
