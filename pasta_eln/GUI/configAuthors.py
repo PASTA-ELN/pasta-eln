@@ -15,7 +15,7 @@ class ConfigurationAuthors(QWidget):
 
   FOR NOW: only one author (one self) can be added to align with GDPR
   """
-  def __init__(self, comm:Communicate, callbackFinished:Callable[[],None]):
+  def __init__(self, comm:Communicate, callbackFinished:Callable[[bool],None]):
     """
     Initialization
 
