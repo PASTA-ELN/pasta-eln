@@ -65,7 +65,7 @@ class PrimitiveCompoundFrame(Ui_PrimitiveCompoundControlledFrameBase):
     self.addPushButton.clicked.connect(self.add_new_entry)
     self.load_ui()
 
-  def load_ui(self):
+  def load_ui(self) -> None:
     """
     Loads the UI based on the meta_field information.
 

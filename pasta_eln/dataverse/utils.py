@@ -212,7 +212,7 @@ def get_citation_field(metadata: dict[str, Any], name: str) -> dict[str, Any]:
 def check_if_compound_field_value_is_missing(field: dict[str, Any],
                                              field_key: str,
                                              missing_information: dict[str, list[str]],
-                                             sub_fields: list[tuple[str, str]]):
+                                             sub_fields: list[tuple[str, str]]) -> None:
   """
   Checks if the compound field value is missing and updates the missing_information dictionary if it is.
 
@@ -468,7 +468,7 @@ def check_login_credentials(logger: Logger, api_token: str, server_url: str) -> 
   return result
 
 
-def adjust_type_name(camel_case_string: str):
+def adjust_type_name(camel_case_string: str) -> str:
   """
   Adjusts the type name from camel case to title case.
 
@@ -486,7 +486,7 @@ def adjust_type_name(camel_case_string: str):
   return ' '.join([i.capitalize() if i[0].islower() else i for i in split])
 
 
-def clear_value(items: dict[str, Any] | None = None):
+def clear_value(items: dict[str, Any] | None = None) -> None:
   """
   Clears the 'value' attribute of each item in the given dictionary.
 
@@ -525,7 +525,7 @@ def is_date_time_type(type_name: str) -> bool:
     map(type_name.lower().__contains__, ["date", "time"]))
 
 
-def delete_layout_and_contents(layout: QBoxLayout):
+def delete_layout_and_contents(layout: QBoxLayout) -> None:
   """
   Deletes the layout and its contents.
 
@@ -542,5 +542,5 @@ def delete_layout_and_contents(layout: QBoxLayout):
     return
   for widget_pos in reversed(range(layout.count())):
     if item := layout.itemAt(widget_pos):
-      item.widget().setParent(None)
-  layout.setParent(None)
+      item.widget().setParent(None)  # type: ignore[call-overload]
+  layout.setParent(None)  # type: ignore[arg-type]
