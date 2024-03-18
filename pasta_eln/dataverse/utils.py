@@ -154,7 +154,7 @@ def check_if_minimal_metadata_exists(logger: Logger,
   """
   if not metadata:
     logger.warning("Empty metadata, make sure the metadata is loaded correctly...")
-    return
+    return None
   missing_information: dict[str, list[str]] = {
     'title': [],
     'author': [],
@@ -162,12 +162,15 @@ def check_if_minimal_metadata_exists(logger: Logger,
     'dsDescription': [],
     'subject': []
   }
-  get_field = lambda name: next(
-    f for f in metadata['datasetVersion']['metadataBlocks']['citation']['fields'] if f['typeName'] == name)
-  check_if_field_value_not_null(get_field('title'), missing_information, "title", check_title)
-  check_if_field_value_not_null(get_field('subject'), missing_information, "subject")
+  check_if_field_value_not_null(get_citation_field(metadata, 'title'),
+                                missing_information,
+                                "title",
+                                check_title)
+  check_if_field_value_not_null(get_citation_field(metadata, 'subject'),
+                                missing_information,
+                                "subject")
   check_if_compound_field_value_is_missing(
-    get_field('author'),
+    get_citation_field(metadata, 'author'),
     'author',
     missing_information,
     [('authorName', 'Author Name'),
@@ -175,19 +178,35 @@ def check_if_minimal_metadata_exists(logger: Logger,
      ('authorIdentifierScheme', 'Author Identifier Scheme'),
      ('authorIdentifier', 'Author Identifier')])
   check_if_compound_field_value_is_missing(
-    get_field('datasetContact'),
+    get_citation_field(metadata, 'datasetContact'),
     'datasetContact',
     missing_information,
     [('datasetContactName', 'Dataset Contact Name'),
      ('datasetContactAffiliation', 'Dataset Contact Affiliation'),
      ('datasetContactEmail', 'Dataset Contact Email')])
   check_if_compound_field_value_is_missing(
-    get_field('dsDescription'),
+    get_citation_field(metadata, 'dsDescription'),
     'dsDescription',
     missing_information,
     [('dsDescriptionValue', 'Dataset Description Value'),
      ('dsDescriptionDate', 'Dataset Description Date')])
   return missing_information
+
+
+def get_citation_field(metadata: dict[str, Any], name: str) -> dict[str, Any]:
+  """
+  Retrieves the citation field from the metadata.
+
+  Args:
+      metadata (dict[str, Any]): The metadata dictionary.
+      name (str): The name of the field to retrieve.
+
+  Returns:
+      dict[str, Any]: The citation field.
+
+  """
+  return next(
+    f for f in metadata['datasetVersion']['metadataBlocks']['citation']['fields'] if f.get('typeName') == name)
 
 
 def check_if_compound_field_value_is_missing(field: dict[str, Any],

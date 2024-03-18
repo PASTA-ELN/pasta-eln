@@ -25,7 +25,7 @@ from pasta_eln.dataverse.utils import adjust_type_name, check_if_compound_field_
   check_login_credentials, \
   clear_value, decrypt_data, \
   delete_layout_and_contents, encrypt_data, \
-  get_encrypt_key, \
+  get_citation_field, get_encrypt_key, \
   is_date_time_type, log_and_create_error, read_pasta_config_file, set_authors, set_template_values, update_status, \
   write_pasta_config_file
 
@@ -1361,6 +1361,38 @@ class TestDataverseUtils:
                             'dsDescription': [],
                             'subject': [],
                             'title': []}, "missing_info is not as expected"
+
+  @pytest.mark.parametrize("metadata, name, expected", [
+    ({"datasetVersion": {"metadataBlocks": {"citation": {"fields": [{"typeName": "title", "value": "Sample Title"}]}}}},
+     "title", {"typeName": "title", "value": "Sample Title"}),
+    ({"datasetVersion": {"metadataBlocks": {"citation": {
+      "fields": [{"typeName": "author", "value": "Author Name"}, {"typeName": "title", "value": "Sample Title"}]}}}},
+     "author", {"typeName": "author", "value": "Author Name"}),
+  ],
+                           ids=["valid_field", "valid_field_with_multiple"])
+  def test_get_citation_field_success_path(self, metadata, name, expected):
+    # Act
+    result = get_citation_field(metadata, name)
+
+    # Assert
+    assert result == expected, "The returned value is not as expected"
+
+  @pytest.mark.parametrize("metadata, name, expected_exception", [
+    # Test ID: ER-1
+    ({"datasetVersion": {"metadataBlocks": {"citation": {"fields": [{"typeName": "author", "value": "Author Name"}]}}}},
+     "title", StopIteration),
+    # Test ID: ER-2
+    ({"datasetVersion": {"metadataBlocks": {}}}, "title", KeyError),
+    # Test ID: ER-3
+    ({"datasetVersion": {}}, "title", KeyError),
+    # Test ID: ER-4
+    ({}, "title", KeyError),
+  ], ids=["field_not_found", "metadata_missing_citation", "metadata_missing_blocks",
+          "metadata_missing_version"])
+  def test_get_citation_field_error_cases(self, metadata, name, expected_exception):
+    # Act & Assert
+    with pytest.raises(expected_exception):
+      _ = get_citation_field(metadata, name)
 
   # Success path tests with various realistic test values
   @pytest.mark.parametrize("input_string, expected_output", [
