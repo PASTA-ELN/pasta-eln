@@ -158,7 +158,7 @@ class ControlledVocabFrame(Ui_PrimitiveCompoundControlledFrameBase):
     """
     if self.meta_field['multiple']:
       self.meta_field['value'].clear()
-      for layout_pos in range(self.mainVerticalLayout.count()):
+      for layout_pos in reversed(range(self.mainVerticalLayout.count())):
         if vocab_horizontal_layout := self.mainVerticalLayout.itemAt(layout_pos).layout():
           combo_box = vocab_horizontal_layout.itemAt(0).widget()
           if text := combo_box.currentText():
