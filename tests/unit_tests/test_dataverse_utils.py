@@ -10,6 +10,7 @@ import json
 import logging
 import os
 from base64 import b64decode, b64encode
+from os.path import dirname, join, realpath
 from typing import Type
 from unittest.mock import mock_open
 
@@ -18,7 +19,11 @@ from cryptography.fernet import Fernet
 
 from pasta_eln.dataverse.config_error import ConfigError
 from pasta_eln.dataverse.upload_status_values import UploadStatusValues
-from pasta_eln.dataverse.utils import adjust_type_name, check_login_credentials, clear_value, decrypt_data, \
+from pasta_eln.dataverse.utils import adjust_type_name, check_if_compound_field_value_is_missing, \
+  check_if_field_value_is_missing, check_if_field_value_not_null, \
+  check_if_minimal_metadata_exists, \
+  check_login_credentials, \
+  clear_value, decrypt_data, \
   delete_layout_and_contents, encrypt_data, \
   get_encrypt_key, \
   is_date_time_type, log_and_create_error, read_pasta_config_file, set_authors, set_template_values, update_status, \
@@ -31,6 +36,113 @@ VALID_KEY = Fernet.generate_key()
 HOME_DIR = "/home/user/"
 CONFIG_FILE = '.pastaELN.json'
 CONFIG_PATH = os.path.join(HOME_DIR, CONFIG_FILE)
+
+
+def valid_metadata():
+  return {
+    'datasetVersion': {
+      'metadataBlocks': {
+        'citation': {
+          'fields': [
+            {'typeName': 'title', 'value': 'Sample Title'},
+            {'typeName': 'author', 'value': [
+              {
+                "authorName": {
+                  "typeName": "authorName",
+                  "multiple": False,
+                  "typeClass": "primitive",
+                  "value": "Author One"
+                },
+                "authorAffiliation": {
+                  "typeName": "authorAffiliation",
+                  "multiple": False,
+                  "typeClass": "primitive",
+                  "value": "Affiliation One"
+                },
+                "authorIdentifierScheme": {
+                  "typeName": "authorIdentifierScheme",
+                  "multiple": False,
+                  "typeClass": "controlledVocabulary",
+                  "value": "ORCID"
+                },
+                "authorIdentifier": {
+                  "typeName": "authorIdentifier",
+                  "multiple": False,
+                  "typeClass": "primitive",
+                  "value": "0000-0000-0000-0001"
+                }
+              },
+              {
+                "authorName": {
+                  "typeName": "authorName",
+                  "multiple": False,
+                  "typeClass": "primitive",
+                  "value": "Author Two"
+                },
+                "authorAffiliation": {
+                  "typeName": "authorAffiliation",
+                  "multiple": False,
+                  "typeClass": "primitive",
+                  "value": "Affiliation Two"
+                },
+                "authorIdentifierScheme": {
+                  "typeName": "authorIdentifierScheme",
+                  "multiple": False,
+                  "typeClass": "controlledVocabulary",
+                  "value": "ORCID"
+                },
+                "authorIdentifier": {
+                  "typeName": "authorIdentifier",
+                  "multiple": False,
+                  "typeClass": "primitive",
+                  "value": "0000-0000-0000-0002"
+                }
+              }
+            ]},
+            {'typeName': 'datasetContact', 'value': [
+              {
+                "datasetContactName": {
+                  "typeName": "datasetContactName",
+                  "multiple": False,
+                  "typeClass": "primitive",
+                  "value": "Contact One"
+                },
+                "datasetContactAffiliation": {
+                  "typeName": "datasetContactAffiliation",
+                  "multiple": False,
+                  "typeClass": "primitive",
+                  "value": "Affiliation One"
+                },
+                "datasetContactEmail": {
+                  "typeName": "datasetContactEmail",
+                  "multiple": False,
+                  "typeClass": "primitive",
+                  "value": "contact.one@example.com"
+                }
+              }
+            ]},
+            {'typeName': 'dsDescription', 'value': [
+              {
+                "dsDescriptionValue": {
+                  "typeName": "dsDescriptionValue",
+                  "multiple": False,
+                  "typeClass": "primitive",
+                  "value": "Description One"
+                },
+                "dsDescriptionDate": {
+                  "typeName": "dsDescriptionDate",
+                  "multiple": False,
+                  "typeClass": "primitive",
+                  "value": "2021-01-01"
+                }
+              }
+            ]},
+            {'typeName': 'subject', 'value': 'Subject One'}
+          ]
+        }
+      }
+    }
+  }
 
 
 class TestDataverseUtils:
@@ -837,6 +949,418 @@ class TestDataverseUtils:
       assert metadata == expected_result, f"Test failed for {test_id}"
     if not (isinstance(expected_result, Type) and issubclass(expected_result, Exception)):
       assert metadata == expected_result, f"Test failed for {test_id}"
+
+  @pytest.mark.parametrize(
+    "field, missing_information, missing_field_name, check, expected",
+    [
+      (
+          {'value': 'some data'},
+          {'field_name': []},
+          'field_name',
+          True,
+          {'field_name': []}
+      ),
+      (
+          {'value': 123},
+          {'numeric_field': []},
+          'numeric_field',
+          True,
+          {'numeric_field': []}
+      ),
+      (
+          {'value': [1, 2, 3]},
+          {'list_field': []},
+          'list_field',
+          True,
+          {'list_field': []}
+      ),
+    ], ids=["SuccessCase-1", "SuccessCase-2", "SuccessCase-3"]
+  )
+  def test_check_if_field_value_not_null_success_path(self, field, missing_information, missing_field_name, check,
+                                                      expected):
+    # Act
+    check_if_field_value_not_null(field, missing_information, missing_field_name, check)
+
+    # Assert
+    assert missing_information == expected
+
+  # Edge cases
+  @pytest.mark.parametrize(
+    "field, missing_information, missing_field_name, check, expected",
+    [
+      # Test ID: EC-1
+      (
+          {'value': ''},
+          {'empty_string': []},
+          'empty_string',
+          True,
+          {'empty_string': ['Empty_string field is missing!']}
+      ),
+      # Test ID: EC-2
+      (
+          {'value': None},
+          {'none_field': []},
+          'none_field',
+          True,
+          {'none_field': ['None_field field is missing!']}
+      ),
+      # Test ID: EC-3
+      (
+          {'value': 'data'},
+          {'no_check': []},
+          'no_check',
+          False,
+          {'no_check': []}
+      ),
+    ], ids=["EdgeCase-1", "EdgeCase-2", "EdgeCase-3"]
+  )
+  def test_check_if_field_value_not_null_edge_cases(self, field, missing_information, missing_field_name, check,
+                                                    expected):
+    # Act
+    check_if_field_value_not_null(field, missing_information, missing_field_name, check)
+
+    # Assert
+    assert missing_information == expected
+
+  # Error cases
+  @pytest.mark.parametrize(
+    "field, missing_information, missing_field_name, check, expected_exception",
+    [
+      (
+          {'no_value': 'data'},
+          {},
+          'nonexistent_field',
+          True,
+          KeyError
+      ),
+      (
+          {'value': None},
+          {'field_name': 'not a list'},
+          'field_name',
+          True,
+          AttributeError
+      ),
+    ], ids=["ErrorCase-1", "ErrorCase-2"]
+  )
+  def test_check_if_field_value_not_null_error_cases(self, field, missing_information, missing_field_name, check,
+                                                     expected_exception):
+    # Act & Assert
+    with pytest.raises(expected_exception):
+      check_if_field_value_not_null(field, missing_information, missing_field_name, check)
+
+  @pytest.mark.parametrize(
+    "field, field_key, field_name, missing_field_name, missing_information, expected",
+    [
+      (
+          {'sample': {'value': 'data'}},  # field
+          'sample',  # field_key
+          'sample',  # field_name
+          'Sample',  # missing_field_name
+          {'sample': []},  # missing_information
+          {'sample': []},  # expected
+      ),
+      (
+          {'experiment': {'value': 'result'}},  # field
+          'experiment',  # field_key
+          'experiment',  # field_name
+          'Experiment',  # missing_field_name
+          {'experiment': []},  # missing_information
+          {'experiment': []},  # expected
+      ),
+    ],
+    ids=["SuccessCase-1", "SuccessCase-2"]
+  )
+  def test_check_if_field_value_is_missing_success_path(self, field, field_key, field_name, missing_field_name,
+                                                        missing_information, expected):
+    # Act
+    check_if_field_value_is_missing(field, field_key, field_name, missing_field_name, missing_information)
+
+    # Assert
+    assert missing_information == expected
+
+  # Parametrized test for edge cases
+  @pytest.mark.parametrize(
+    "field, field_key, field_name, missing_field_name, missing_information, expected",
+    [
+      # Test ID: EC-1
+      (
+          {'sample': {'value': ''}},  # field with empty string value
+          'sample',  # field_key
+          'sample',  # field_name
+          'Sample',  # missing_field_name
+          {'sample': []},  # missing_information
+          {'sample': ['Sample field is missing for one of the samples!']},  # expected
+      ),
+      # Test ID: EC-2
+      (
+          {'experiment': {'value': None}},  # field with None value
+          'experiment',  # field_key
+          'experiment',  # field_name
+          'Experiment',  # missing_field_name
+          {'experiment': []},  # missing_information
+          {'experiment': ['Experiment field is missing for one of the experiments!']},  # expected
+      ),
+    ],
+    ids=["EdgeCase-1", "EdgeCase-2"]
+  )
+  def test_check_if_field_value_is_missing_edge_cases(self, field, field_key, field_name, missing_field_name,
+                                                      missing_information, expected):
+    # Act
+    check_if_field_value_is_missing(field, field_key, field_name, missing_field_name, missing_information)
+
+    # Assert
+    assert missing_information == expected
+
+  # Parametrized test for error cases
+  @pytest.mark.parametrize(
+    "field, field_key, field_name, missing_field_name, missing_information, expected",
+    [
+      # Test ID: ER-1
+      (
+          {},  # field without the key
+          'sample',  # field_key
+          'sample',  # field_name
+          'Sample',  # missing_field_name
+          {'sample': []},  # missing_information,
+          {'sample': ['Sample field is missing for one of the samples!']}
+      ),
+      # Test ID: ER-2
+      (
+          {'sample': {}},  # field without 'value' key
+          'sample',  # field_key
+          'sample',  # field_name
+          'Sample',  # missing_field_name
+          {'sample': []},  # missing_information
+          {'sample': ['Sample field is missing for one of the samples!']}
+      )  # ),
+    ],
+    ids=["ErrorCase-1", "ErrorCase-2"]
+  )
+  def test_check_if_field_value_is_missing_error_cases(self, field, field_key, field_name, missing_field_name,
+                                                       missing_information, expected):
+    # Act & Assert
+    check_if_field_value_is_missing(field, field_key, field_name, missing_field_name, missing_information)
+
+    assert missing_information == expected, "Expected missing information dictionary not equal to actual!"
+
+  # Parametrized test cases
+  @pytest.mark.parametrize(
+    "test_id, field, field_key, missing_information, sub_fields, expected, expected_mock_call_1, expected_mock_call_2",
+    [
+      # Success path tests with various realistic test values
+      ("success_case", {'value': [{'subfield1': 'data1', 'subfield2': 'data2'}]}, 'field_key', {},
+       [('subfield1', 'missing_subfield1'), ('subfield2', 'missing_subfield2')], None,
+       ({'value': [{'subfield1': 'data1', 'subfield2': 'data2'}]}, {}, 'field_key'),
+       ({'subfield1': 'data1', 'subfield2': 'data2'},
+        'field_key',
+        'subfield2',
+        'missing_subfield2',
+        {})),
+
+      # Edge case where 'value' is an empty list
+      (
+          "edge_empty_field_value", {'value': []}, 'field_key', {}, [('subfield1', 'missing_subfield1')], None, None,
+          None),
+
+      # Error case where a sub_field is missing in the field_value
+      ("error_missing_sub_field", {'value': [{'subfield1': 'data1'}]}, 'field_key', {},
+       [('subfield1', 'missing_subfield1'), ('subfield2', 'missing_subfield2')], KeyError,
+       ({'value': [{'subfield1': 'data1'}]}, {}, 'field_key'), None),
+    ])
+  def test_check_if_compound_field_value_is_missing(self, mocker, test_id, field, field_key, missing_information,
+                                                    sub_fields,
+                                                    expected,
+                                                    expected_mock_call_1,
+                                                    expected_mock_call_2):
+    # Arrange
+    check_if_field_value_not_null_mock = mocker.patch("pasta_eln.dataverse.utils.check_if_field_value_not_null")
+    check_if_field_value_is_missing_mock = mocker.patch("pasta_eln.dataverse.utils.check_if_field_value_is_missing")
+    if expected:
+      check_if_field_value_is_missing_mock.side_effect = expected
+
+    # Act
+    if expected is None:
+      check_if_compound_field_value_is_missing(field, field_key, missing_information, sub_fields)
+    else:
+      with pytest.raises(expected):
+        check_if_compound_field_value_is_missing(field, field_key, missing_information, sub_fields)
+
+    # Assert
+    if expected_mock_call_1:
+      check_if_field_value_not_null_mock.assert_called_once_with(*expected_mock_call_1)
+    if expected_mock_call_2:
+      check_if_field_value_is_missing_mock.assert_called_with(*expected_mock_call_2)
+
+  @pytest.mark.parametrize("metadata, check_title, expected_warnings, expected_result", [
+    # ID: Success-Path-Complete-Metadata
+    (valid_metadata(), True, [], {
+      'title': [],
+      'author': [],
+      'datasetContact': [],
+      'dsDescription': [],
+      'subject': []
+    }),
+    # ID: Success-Path-Ignore-Title
+    (valid_metadata(), False, [], {
+      'title': [],
+      'author': [],
+      'datasetContact': [],
+      'dsDescription': [],
+      'subject': []
+    }),
+    # ID: Success-Path-Minimal-Metadata1
+    ({'datasetVersion': {'metadataBlocks': {'citation': {'fields': [
+      {'typeName': 'title', 'value': 'Sample Title'},
+      {'typeName': 'author', 'value': [{'authorName': {
+        "typeName": "authorName",
+        "multiple": False,
+        "typeClass": "primitive",
+        "value": "Author One"
+      }}]},
+      {'typeName': 'datasetContact', 'value': [{'datasetContactName': {
+        "typeName": "datasetContactName",
+        "multiple": False,
+        "typeClass": "primitive",
+        "value": "Contact One"
+      }}]},
+      {'typeName': 'dsDescription', 'value': [{'dsDescriptionValue': {
+        "typeName": "dsDescriptionValue",
+        "multiple": False,
+        "typeClass": "primitive",
+        "value": "Description One"
+      }}]},
+      {'typeName': 'subject', 'value': 'Subject One'}
+    ]}}}}, True, [], {'author': ['Author Affiliation field is missing for one of the authors!',
+                                 'Author Identifier Scheme field is missing for one of the authors!',
+                                 'Author Identifier field is missing for one of the authors!'],
+                      'datasetContact': ['Dataset Contact Affiliation field is missing for one of '
+                                         'the datasetContacts!',
+                                         'Dataset Contact Email field is missing for one of the '
+                                         'datasetContacts!'],
+                      'dsDescription': ['Dataset Description Date field is missing for one of the '
+                                        'dsDescriptions!'],
+                      'subject': [],
+                      'title': []}),
+    # ID: Success-Path-Minimal-Metadata2
+    ({'datasetVersion': {'metadataBlocks': {'citation': {'fields': [
+      {'typeName': 'title', 'value': 'Sample Title'},
+      {'typeName': 'author', 'value': [{'authorName': {
+        "typeName": "authorName",
+        "multiple": False,
+        "typeClass": "primitive",
+        "value": "Author One"
+      }},
+        {'authorIdentifierScheme': {
+          "typeName": "authorIdentifierScheme",
+          "multiple": False,
+          "typeClass": "primitive",
+          "value": "ORCID"
+        }}
+      ]},
+      {'typeName': 'datasetContact', 'value': [{'datasetContactName': {
+        "typeName": "datasetContactName",
+        "multiple": False,
+        "typeClass": "primitive",
+        "value": "Contact One"
+      }}]},
+      {'typeName': 'dsDescription', 'value': [{'dsDescriptionValue': {
+        "typeName": "dsDescriptionValue",
+        "multiple": False,
+        "typeClass": "primitive",
+        "value": "Description One"
+      }}]},
+      {'typeName': 'subject', 'value': 'Subject One'}
+    ]}}}}, True, [], {'author': ['Author Affiliation field is missing for one of the authors!',
+                                 'Author Identifier Scheme field is missing for one of the authors!',
+                                 'Author Identifier field is missing for one of the authors!',
+                                 'Author Name field is missing for one of the authors!'],
+                      'datasetContact': ['Dataset Contact Affiliation field is missing for one of '
+                                         'the datasetContacts!',
+                                         'Dataset Contact Email field is missing for one of the '
+                                         'datasetContacts!'],
+                      'dsDescription': ['Dataset Description Date field is missing for one of the '
+                                        'dsDescriptions!'],
+                      'subject': [],
+                      'title': []}),
+  ], ids=["Success-Path-Complete-Metadata", "Success-Path-Ignore-Title", "Success-Path-Minimal-Metadata1",
+          "Success-Path-Minimal-Metadata2"])
+  def test_check_if_minimal_metadata_exists_success_path(self,
+                                                         mocker,
+                                                         metadata,
+                                                         check_title,
+                                                         expected_warnings,
+                                                         expected_result):
+    # Arrange
+    mock_logger = mocker.MagicMock(spec=logging.Logger)
+
+    # Act
+    missing_information = check_if_minimal_metadata_exists(mock_logger, metadata, check_title)
+
+    # Assert
+    mock_logger.warning.assert_not_called()
+    assert missing_information == expected_result, f"Unexpected missing information: {missing_information}"
+
+  # Parametrized test for edge cases
+  @pytest.mark.parametrize("metadata, check_title, expected_warnings", [
+    # ID: Edge-Case-Empty-Metadata
+    ({}, True, ["Empty metadata, make sure the metadata is loaded correctly..."]),
+    # ID: Edge-Case-Title-Missing
+    (valid_metadata(), True, ["Missing title information"]),
+    # ID: Edge-Case-Subject-Missing
+    (valid_metadata(), True, ["Missing subject information"]),
+  ], ids=["Edge-Case-Empty-Metadata", "Edge-Case-Title-Missing", "Edge-Case-Subject-Missing"])
+  def test_check_if_minimal_metadata_exists_edge_cases(self, mocker, metadata, check_title, expected_warnings):
+    # Arrange
+    mock_logger = mocker.MagicMock(spec=logging.Logger)
+    if 'title' in expected_warnings:
+      metadata['datasetVersion']['metadataBlocks']['citation']['fields'][0]['value'] = None
+    if 'subject' in expected_warnings:
+      metadata['datasetVersion']['metadataBlocks']['citation']['fields'][4]['value'] = None
+
+    # Act
+    missing = check_if_minimal_metadata_exists(mock_logger, metadata, check_title)
+
+    # Assert
+    if "Empty metadata" in expected_warnings[0]:
+      mock_logger.warning.assert_any_call(expected_warnings[0])
+
+  # Parametrized test for error cases
+  @pytest.mark.parametrize("metadata, check_title, expected_warnings", [
+    # ID: Error-Case-Invalid-Metadata-Structure
+    ({'datasetVersion': {}}, True, ["'metadataBlocks'"]),
+  ], ids=["Error-Case-Invalid-Metadata-Structure"])
+  def test_check_if_minimal_metadata_exists_error_cases(self, mocker, metadata, check_title, expected_warnings):
+    # Arrange
+    mock_logger = mocker.MagicMock(spec=logging.Logger)
+    if "metadataBlocks" in expected_warnings:
+      del metadata['datasetVersion']['metadataBlocks']
+    if "'value'" in expected_warnings:
+      del metadata['datasetVersion']['metadataBlocks']['citation']['fields'][0]['value']
+
+    # Act
+    with pytest.raises(KeyError) as exc_info:
+      check_if_minimal_metadata_exists(mock_logger, metadata, check_title)
+
+    # Assert
+    assert str(exc_info.value) in expected_warnings
+
+  def test_check_if_minimal_metadata_exists_for_default_metadata_should_return_empty_missing_info(self, mocker):
+    # Arrange
+    logger = mocker.MagicMock(spec=logging.Logger)
+    current_path = realpath(join(os.getcwd(), dirname(__file__)))
+    with open(join(current_path, "..//..//pasta_eln//dataverse", "dataset-create-new-all-default-fields.json"),
+              encoding="utf-8") as config_file:
+      file_data = config_file.read()
+      metadata = json.loads(file_data)
+
+    # Act
+    missing_info = check_if_minimal_metadata_exists(logger, metadata)
+
+    assert missing_info == {'author': [],
+                            'datasetContact': [],
+                            'dsDescription': [],
+                            'subject': [],
+                            'title': []}, "missing_info is not as expected"
 
   # Success path tests with various realistic test values
   @pytest.mark.parametrize("input_string, expected_output", [

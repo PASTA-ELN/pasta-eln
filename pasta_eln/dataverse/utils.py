@@ -136,6 +136,123 @@ def set_template_values(logger: Logger, metadata: dict[str, Any]) -> None:
           logger.warning(f"Unsupported type class: {field['typeClass']}")
 
 
+def check_if_minimal_metadata_exists(logger: Logger,
+                                     metadata: dict[str, Any],
+                                     check_title: bool = True) -> dict[str, list[str]] | None:
+  """
+  Checks if the minimal metadata exists and returns the missing information.
+
+  Args:
+      logger (Logger): The logger object for logging warnings.
+      metadata (dict[str, Any]): The metadata dictionary.
+      check_title (bool, optional): Flag to indicate if the title should be checked.
+      Defaults to True.
+
+  Returns:
+      dict[str, list[str]] | None: The missing information dictionary or None if metadata is empty.
+
+  """
+  if not metadata:
+    logger.warning("Empty metadata, make sure the metadata is loaded correctly...")
+    return
+  missing_information: dict[str, list[str]] = {
+    'title': [],
+    'author': [],
+    'datasetContact': [],
+    'dsDescription': [],
+    'subject': []
+  }
+  get_field = lambda name: next(
+    f for f in metadata['datasetVersion']['metadataBlocks']['citation']['fields'] if f['typeName'] == name)
+  check_if_field_value_not_null(get_field('title'), missing_information, "title", check_title)
+  check_if_field_value_not_null(get_field('subject'), missing_information, "subject")
+  check_if_compound_field_value_is_missing(
+    get_field('author'),
+    'author',
+    missing_information,
+    [('authorName', 'Author Name'),
+     ('authorAffiliation', 'Author Affiliation'),
+     ('authorIdentifierScheme', 'Author Identifier Scheme'),
+     ('authorIdentifier', 'Author Identifier')])
+  check_if_compound_field_value_is_missing(
+    get_field('datasetContact'),
+    'datasetContact',
+    missing_information,
+    [('datasetContactName', 'Dataset Contact Name'),
+     ('datasetContactAffiliation', 'Dataset Contact Affiliation'),
+     ('datasetContactEmail', 'Dataset Contact Email')])
+  check_if_compound_field_value_is_missing(
+    get_field('dsDescription'),
+    'dsDescription',
+    missing_information,
+    [('dsDescriptionValue', 'Dataset Description Value'),
+     ('dsDescriptionDate', 'Dataset Description Date')])
+  return missing_information
+
+
+def check_if_compound_field_value_is_missing(field: dict[str, Any],
+                                             field_key: str,
+                                             missing_information: dict[str, list[str]],
+                                             sub_fields: list[tuple[str, str]]):
+  """
+  Checks if the compound field value is missing and updates the missing_information dictionary if it is.
+
+  Args:
+      field (dict[str, Any]): The compound field dictionary.
+      field_key (str): The key representing the compound field.
+      missing_information (dict[str, list[str]]): The dictionary to track missing information.
+      sub_fields (list[tuple[str, str]]): The list of sub-fields to check.
+  """
+  check_if_field_value_not_null(field, missing_information, field_key)
+  if values := field.get('value'):
+    for field_value in values:
+      for field_name, missing_field_name in sub_fields:
+        check_if_field_value_is_missing(field_value, field_key, field_name, missing_field_name,
+                                        missing_information)
+
+
+def check_if_field_value_is_missing(field: dict[str, Any],
+                                    field_key: str,
+                                    field_name: str,
+                                    missing_field_name: str,
+                                    missing_information: dict[str, list[str]]) -> None:
+  """
+  Checks if the field value is missing and updates the missing_information dictionary if it is.
+
+  Args:
+      field (dict[str, Any]): The field dictionary.
+      field_key (str): The key representing the field.
+      field_name (str): The name of the field.
+      missing_field_name (str): The name of the missing field.
+      missing_information (dict[str, list[str]]): The dictionary to track missing information.
+
+  """
+  if not field.get(field_name, {}).get('value'):
+    missing_message = f"{missing_field_name} field is missing for one of the {field_key}s!"
+    if missing_message not in missing_information[field_key]:
+      missing_information[field_key].append(missing_message)
+
+
+def check_if_field_value_not_null(field: dict[str, Any],
+                                  missing_information: dict[str, list[str]],
+                                  missing_field_name: str,
+                                  check: bool = True) -> None:
+  """
+  Checks if the field value is not null and updates the missing_information dictionary if it is.
+
+  Args:
+      field (dict[str, Any]): The field dictionary.
+      missing_information (dict[str, list[str]]): The dictionary to track missing information.
+      missing_field_name (str): The name of the missing field.
+      check (bool, optional): Flag to indicate if the check should be performed. Defaults to True.
+
+  """
+  if check and not field.get('value'):
+    missing_message = f"{missing_field_name.capitalize()} field is missing!"
+    if missing_message not in missing_information[missing_field_name]:
+      missing_information[missing_field_name].append(missing_message)
+
+
 def get_encrypt_key(logger: Logger) -> tuple[bool, bytes]:
   """
   Gets the dataverse encryption key.
