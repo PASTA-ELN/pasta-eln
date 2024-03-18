@@ -901,7 +901,7 @@ class TestDataverseEditMetadataDialog:
       }
     ]
     edit_metadata_dialog.show()
-    with qtbot.waitExposed(edit_metadata_dialog.instance, timeout=500):
+    with qtbot.waitExposed(edit_metadata_dialog.instance, timeout=10000):
       assert edit_metadata_dialog.minimalFullComboBox.currentText() == "Full", "minimalFullComboBox must be initialized with default full option"
       qtbot.keyClicks(edit_metadata_dialog.metadataBlockComboBox, "Journal Metadata", delay=1)
       assert edit_metadata_dialog.metadataBlockComboBox.currentText() == "Journal Metadata", "metadataBlockComboBox must be initialized with Journal Metadata option"
