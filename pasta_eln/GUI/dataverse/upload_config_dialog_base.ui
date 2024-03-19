@@ -20,11 +20,28 @@
    <item>
     <layout class="QVBoxLayout" name="mainVerticalLayout">
      <item>
-      <widget class="QComboBox" name="numParallelComboBox">
-       <property name="toolTip">
-        <string>Choose the number of parallel dataverse uploads.</string>
-       </property>
-      </widget>
+      <layout class="QHBoxLayout" name="parallelUploadsHorizontalLayout">
+       <item>
+        <widget class="QLabel" name="numParallelLabel">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>No of parallel uploads</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QComboBox" name="numParallelComboBox">
+         <property name="toolTip">
+          <string>Choose the number of parallel dataverse uploads.</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
      <item>
       <widget class="QScrollArea" name="projectContentsScrollArea">

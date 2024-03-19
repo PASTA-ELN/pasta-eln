@@ -151,6 +151,7 @@ class MainDialog(Ui_MainDialogBase):
         It also starts the upload manager task to process the upload queue.
 
     """
+    self.check_if_minimal_metadata_exists()
     for widget_pos in range(self.projectsScrollAreaVerticalLayout.count()):
       project_widget = self.projectsScrollAreaVerticalLayout.itemAt(widget_pos).widget()
       if project_widget.findChild(QtWidgets.QCheckBox, name="projectCheckBox").isChecked():
@@ -220,8 +221,7 @@ class MainDialog(Ui_MainDialogBase):
         This method shows the edit metadata dialog.
 
     """
-    self.edit_metadata_dialog.load_ui()
-    self.edit_metadata_dialog.instance.show()
+    self.edit_metadata_dialog.show()
 
   def release_upload_manager(self) -> None:
     """
@@ -268,6 +268,9 @@ class MainDialog(Ui_MainDialogBase):
       if upload_model_id := id_label.text() if isinstance(id_label, QtWidgets.QLabel) else "":
         model = self.db_api.get_model(upload_model_id, UploadModel)
         log_console_text_edit.setText(model.log if isinstance(model, UploadModel) else "")
+
+  def check_if_minimal_metadata_exists(self):
+    pass
 
 
 if __name__ == "__main__":

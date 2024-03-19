@@ -276,6 +276,7 @@ class TestDataverseUtils:
              "fields": [
                {
                  "typeName": "author",
+                 "value": [],
                  "valueTemplate": [
                    {
                      "authorName": {
@@ -339,6 +340,7 @@ class TestDataverseUtils:
              "fields": [
                {
                  "typeName": "author",
+                 "value": [],
                  "valueTemplate": [
                    {
                      "authorName": {
@@ -422,6 +424,7 @@ class TestDataverseUtils:
              "fields": [
                {
                  "typeName": "author",
+                 "value": [],
                  "valueTemplate": [
                    {
                      "authorName": {
@@ -504,7 +507,7 @@ class TestDataverseUtils:
     # Assert
     author_field = next(
       f for f in metadata['datasetVersion']['metadataBlocks']['citation']['fields'] if f['typeName'] == 'author')
-    authors_list = author_field['valueTemplate']
+    authors_list = author_field['value']
     assert authors_list == expected_authors_list
     mock_log_and_create_error.assert_not_called()
 
@@ -530,6 +533,7 @@ class TestDataverseUtils:
              "fields": [
                {
                  "typeName": "author",
+                 "value": [],
                  "valueTemplate": [
                    {
                      "authorName": {
@@ -584,7 +588,7 @@ class TestDataverseUtils:
     # Assert
     author_field = next(
       f for f in metadata['datasetVersion']['metadataBlocks']['citation']['fields'] if f['typeName'] == 'author')
-    authors_list = author_field['valueTemplate']
+    authors_list = author_field['value']
     assert authors_list == expected_authors_list
     mock_log_and_create_error.assert_not_called()
 
