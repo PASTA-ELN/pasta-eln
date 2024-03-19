@@ -49,9 +49,10 @@ class MainWindow(QMainWindow):
     # Menubar
     menu = self.menuBar()
     projectMenu = menu.addMenu("&Project")
-    Action('&Export .eln',                   self, [Command.EXPORT],         projectMenu)
+    Action('&Export project to .eln',        self, [Command.EXPORT],         projectMenu)
     Action('&Import .eln',                   self, [Command.IMPORT],         projectMenu)
     projectMenu.addSeparator()
+    Action('&Export everything to .eln',     self, [Command.EXPORT_ALL],     projectMenu, shortcut='Ctrl+A')
     Action('&Exit',                          self, [Command.EXIT],           projectMenu)
 
     viewMenu = menu.addMenu("&Lists")
@@ -145,9 +146,16 @@ class MainWindow(QMainWindow):
       if self.comm.projectID == '':
         showMessage(self, 'Error', 'You have to open a project to export', 'Warning')
         return
-      fileName = QFileDialog.getSaveFileName(self, 'Save data into .eln file', str(Path.home()), '*.eln')[0]
+      fileName = QFileDialog.getSaveFileName(self, 'Save project into .eln file', str(Path.home()), '*.eln')[0]
       if fileName != '':
-        status = exportELN(self.comm.backend, self.comm.projectID, fileName)
+        status = exportELN(self.comm.backend, [self.comm.projectID], fileName)
+        showMessage(self, 'Finished', status, 'Information')
+    elif command[0] is Command.EXPORT_ALL:
+      fileName = QFileDialog.getSaveFileName(self, 'Save everything to .eln file', str(Path.home()), '*.eln')[0]
+      if fileName != '':
+        allProjects = [i['id'] for i in self.comm.backend.db.getView('viewDocType/x0')]
+        print(allProjects)
+        status = exportELN(self.comm.backend, allProjects, fileName)
         showMessage(self, 'Finished', status, 'Information')
     elif command[0] is Command.IMPORT:
       fileName = QFileDialog.getOpenFileName(self, 'Load data from .eln file', str(Path.home()), '*.eln')[0]
@@ -261,6 +269,7 @@ class Command(Enum):
   VERIFY_DB = 14
   SHORTCUTS = 15
   RESTART   = 16
+  EXPORT_ALL= 17
 
 
 def startMain() -> None:
