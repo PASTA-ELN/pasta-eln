@@ -143,8 +143,7 @@ class ControlledVocabFrame(Ui_PrimitiveCompoundControlledFrameBase):
     delete_push_button.setMinimumSize(QSize(100, 0))
     delete_push_button.setObjectName("deletePushButton")
     new_vocab_entry_layout.addWidget(delete_push_button)
-    delete_push_button.clicked.connect(  # type: ignore[attr-defined]
-      lambda _: delete_layout_and_contents(new_vocab_entry_layout))
+    delete_push_button.clicked.connect(lambda _: delete_layout_and_contents(new_vocab_entry_layout))
     self.mainVerticalLayout.addLayout(new_vocab_entry_layout)
 
   def save_modifications(self) -> None:
