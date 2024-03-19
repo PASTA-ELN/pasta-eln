@@ -57,6 +57,28 @@ def createContributors():
   return
 
 
+def prevVersionsFromPypi(k=15):
+  """ Get and print the information of the last k versions on pypi
+
+  Args:
+    k (int): number of information
+  """
+  from urllib.request import urlopen
+  import datetime
+  import json
+  url = "https://pypi.org/pypi/pasta-eln/json"
+  response = urlopen(url)
+  data = json.loads(response.read())
+  releases = list(data['releases'].keys())
+  uploadTimes = [i[0]['upload_time'] for i in data['releases'].values()]
+  releases = [x for _, x in sorted(zip(uploadTimes, releases))]
+  uploadTimes = sorted(uploadTimes)
+  print('Version information from pypi')
+  for i in range(1, k):
+    print(f'  {releases[-i]:8s} was released {(datetime.datetime.now()-datetime.datetime.strptime(uploadTimes[-i],"%Y-%m-%dT%H:%M:%S")).days:3d} days ago')
+  return
+
+
 def newVersion(level=2):
   """
   Create a new version
@@ -65,6 +87,7 @@ def newVersion(level=2):
     level (int): which number of the version to increase 0=mayor,1=minor,2=sub
   """
   print('Create new version...')
+  prevVersionsFromPypi()
   #get old version number
   version = [int(i) for i in getVersion()[1:].replace('b','.').split('.')]
   #create new version number
