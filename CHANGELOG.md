@@ -2,7 +2,44 @@
 
 ## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
 
-[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.0b4...HEAD)
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.0b5...HEAD)
+
+**Implemented enhancements:**
+
+- Typos [\#172](https://github.com/PASTA-ELN/pasta-eln/issues/172)
+- "Projects" button in left sidebar [\#150](https://github.com/PASTA-ELN/pasta-eln/issues/150)
+- Permanent project view [\#95](https://github.com/PASTA-ELN/pasta-eln/issues/95)
+- Improve main form [\#11](https://github.com/PASTA-ELN/pasta-eln/issues/11)
+- feat\(terminology-service\): implement standalone version [\#219](https://github.com/PASTA-ELN/pasta-eln/pull/219) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
+
+**Fixed bugs:**
+
+- Saving the "Author" Configuration [\#221](https://github.com/PASTA-ELN/pasta-eln/issues/221)
+- Imported eln files incorrectly displayed [\#204](https://github.com/PASTA-ELN/pasta-eln/issues/204)
+- "Hide/show all item details" works only for x1 [\#203](https://github.com/PASTA-ELN/pasta-eln/issues/203)
+- "Hide project details" results in error [\#202](https://github.com/PASTA-ELN/pasta-eln/issues/202)
+- Adding "Curated" column to the Project table view [\#171](https://github.com/PASTA-ELN/pasta-eln/issues/171)
+- "Mark item as hidden" after "Hide item details" [\#166](https://github.com/PASTA-ELN/pasta-eln/issues/166)
+
+**Closed issues:**
+
+- Deleting a data type [\#207](https://github.com/PASTA-ELN/pasta-eln/issues/207)
+- Rerunning extractors of items with no files [\#206](https://github.com/PASTA-ELN/pasta-eln/issues/206)
+- Unidentified is not dataHierarchy: makes code simpler if it is [\#194](https://github.com/PASTA-ELN/pasta-eln/issues/194)
+- Installation of CouchDB via pastaELN Wizard not possible [\#182](https://github.com/PASTA-ELN/pasta-eln/issues/182)
+- Adding a new type leads to PASTA app crash [\#176](https://github.com/PASTA-ELN/pasta-eln/issues/176)
+- Importing items of other Data Types [\#143](https://github.com/PASTA-ELN/pasta-eln/issues/143)
+- Order of data hierarchy has to be followed in form [\#135](https://github.com/PASTA-ELN/pasta-eln/issues/135)
+- Export/import of items with the same name [\#126](https://github.com/PASTA-ELN/pasta-eln/issues/126)
+
+**Merged pull requests:**
+
+- fix \#95, fully? [\#225](https://github.com/PASTA-ELN/pasta-eln/pull/225) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- fix \#221 and \#222, since related [\#223](https://github.com/PASTA-ELN/pasta-eln/pull/223) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+
+## [v2.5.0b5](https://github.com/PASTA-ELN/pasta-eln/tree/v2.5.0b5) (2024-03-14)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.0b4...v2.5.0b5)
 
 **Merged pull requests:**
 
