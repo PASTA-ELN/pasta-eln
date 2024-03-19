@@ -208,6 +208,9 @@
          <property name="placeholderText">
           <string>Selected Dataverse ID</string>
          </property>
+         <property name="clearButtonEnabled">
+          <bool>true</bool>
+         </property>
         </widget>
        </item>
        <item>

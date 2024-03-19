@@ -9,6 +9,7 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
 import copy
+import re
 from asyncio import get_event_loop
 from base64 import b64decode, b64encode
 from json import dump, load
@@ -17,7 +18,7 @@ from os.path import exists, join
 from pathlib import Path
 from typing import Any, Type
 
-from PySide6.QtWidgets import QLabel
+from PySide6.QtWidgets import QBoxLayout, QLabel
 from cryptography.fernet import Fernet, InvalidToken
 from qtawesome import icon
 
@@ -74,7 +75,7 @@ def set_authors(logger: Logger, metadata: dict[str, Any]) -> None:
     raise log_and_create_error(logger, ConfigError, "Incorrect config file, authors not found!")
   author_field = next(
     f for f in metadata['datasetVersion']['metadataBlocks']['citation']['fields'] if f['typeName'] == 'author')
-  authors_list = author_field['value']
+  authors_list = author_field['valueTemplate']
   if not authors_list:
     raise log_and_create_error(logger, ConfigError, "Incorrect config file, authors not found!")
   author_copy = authors_list[0].copy()
@@ -85,6 +86,190 @@ def set_authors(logger: Logger, metadata: dict[str, Any]) -> None:
     author_copy['authorIdentifier']['value'] = author['orcid']
     author_copy['authorAffiliation']['value'] = ', '.join([o['organization'] for o in author['organizations']])
     authors_list.append(copy.deepcopy(author_copy))
+
+
+def set_template_values(logger: Logger, metadata: dict[str, Any]) -> None:
+  """
+  Set template values in the metadata.
+
+  This function sets template values in the metadata dictionary based on the type of each field.
+  If the metadata is empty, a warning is logged.
+  The function iterates through the metadata blocks
+  and fields, and for each field, it matches the type class and performs the following actions:
+  - For "primitive" or "controlledVocabulary" types:
+      - If the field is a multiple type, the value template is set to a copy of the value, and the value is cleared.
+      - If the field is a single type, the value template is set to the value, and the value is set to an empty string.
+  - For "compound" types:
+      - The value template is set to a copy of the value, and the value is cleared.
+  - For unknown type classes, a warning is logged.
+
+  Args:
+      logger (Logger): The logger object used for logging warnings.
+      metadata (dict[str, Any]): The metadata dictionary to update.
+
+  Examples:
+      >>> logger = Logger()
+      >>> metadata = {'datasetVersion': {'metadataBlocks': {'citation': {'fields': [{'typeClass': 'primitive', 'multiple': False, 'value': 'Example'}]}}}}
+      >>> set_template_values(logger, metadata)
+      >>> metadata
+      {'datasetVersion': {'metadataBlocks': {'citation': {'fields': [{'typeClass': 'primitive', 'multiple': False, 'value': '', 'valueTemplate': 'Example'}]}}}}
+  """
+  if not metadata:
+    logger.warning("Empty metadata, make sure the metadata is loaded correctly...")
+    return
+  for _, metablock in metadata['datasetVersion']['metadataBlocks'].items():
+    for field in metablock['fields']:
+      match field['typeClass']:
+        case "primitive" | "controlledVocabulary":
+          # Array of primitive types
+          if field['multiple']:
+            field['valueTemplate'] = field['value'].copy()
+            field['value'].clear()
+          # Single primitive type, set to empty string
+          else:
+            field['valueTemplate'] = field['value']
+            field['value'] = ""
+        case "compound":
+          field['valueTemplate'] = field['value'].copy()
+          field['value'].clear()
+        case _:
+          logger.warning(f"Unsupported type class: {field['typeClass']}")
+
+
+def check_if_minimal_metadata_exists(logger: Logger,
+                                     metadata: dict[str, Any],
+                                     check_title: bool = True) -> dict[str, list[str]] | None:
+  """
+  Checks if the minimal metadata exists and returns the missing information.
+
+  Args:
+      logger (Logger): The logger object for logging warnings.
+      metadata (dict[str, Any]): The metadata dictionary.
+      check_title (bool, optional): Flag to indicate if the title should be checked.
+      Defaults to True.
+
+  Returns:
+      dict[str, list[str]] | None: The missing information dictionary or None if metadata is empty.
+
+  """
+  if not metadata:
+    logger.warning("Empty metadata, make sure the metadata is loaded correctly...")
+    return None
+  missing_information: dict[str, list[str]] = {
+    'title': [],
+    'author': [],
+    'datasetContact': [],
+    'dsDescription': [],
+    'subject': []
+  }
+  check_if_field_value_not_null(get_citation_field(metadata, 'title'),
+                                missing_information,
+                                "title",
+                                check_title)
+  check_if_field_value_not_null(get_citation_field(metadata, 'subject'),
+                                missing_information,
+                                "subject")
+  check_if_compound_field_value_is_missing(
+    get_citation_field(metadata, 'author'),
+    'author',
+    missing_information,
+    [('authorName', 'Author Name'),
+     ('authorAffiliation', 'Author Affiliation'),
+     ('authorIdentifierScheme', 'Author Identifier Scheme'),
+     ('authorIdentifier', 'Author Identifier')])
+  check_if_compound_field_value_is_missing(
+    get_citation_field(metadata, 'datasetContact'),
+    'datasetContact',
+    missing_information,
+    [('datasetContactName', 'Dataset Contact Name'),
+     ('datasetContactAffiliation', 'Dataset Contact Affiliation'),
+     ('datasetContactEmail', 'Dataset Contact Email')])
+  check_if_compound_field_value_is_missing(
+    get_citation_field(metadata, 'dsDescription'),
+    'dsDescription',
+    missing_information,
+    [('dsDescriptionValue', 'Dataset Description Value'),
+     ('dsDescriptionDate', 'Dataset Description Date')])
+  return missing_information
+
+
+def get_citation_field(metadata: dict[str, Any], name: str) -> dict[str, Any]:
+  """
+  Retrieves the citation field from the metadata.
+
+  Args:
+      metadata (dict[str, Any]): The metadata dictionary.
+      name (str): The name of the field to retrieve.
+
+  Returns:
+      dict[str, Any]: The citation field.
+
+  """
+  return next(
+    f for f in metadata['datasetVersion']['metadataBlocks']['citation']['fields'] if f.get('typeName') == name)
+
+
+def check_if_compound_field_value_is_missing(field: dict[str, Any],
+                                             field_key: str,
+                                             missing_information: dict[str, list[str]],
+                                             sub_fields: list[tuple[str, str]]) -> None:
+  """
+  Checks if the compound field value is missing and updates the missing_information dictionary if it is.
+
+  Args:
+      field (dict[str, Any]): The compound field dictionary.
+      field_key (str): The key representing the compound field.
+      missing_information (dict[str, list[str]]): The dictionary to track missing information.
+      sub_fields (list[tuple[str, str]]): The list of sub-fields to check.
+  """
+  check_if_field_value_not_null(field, missing_information, field_key)
+  if values := field.get('value'):
+    for field_value in values:
+      for field_name, missing_field_name in sub_fields:
+        check_if_field_value_is_missing(field_value, field_key, field_name, missing_field_name,
+                                        missing_information)
+
+
+def check_if_field_value_is_missing(field: dict[str, Any],
+                                    field_key: str,
+                                    field_name: str,
+                                    missing_field_name: str,
+                                    missing_information: dict[str, list[str]]) -> None:
+  """
+  Checks if the field value is missing and updates the missing_information dictionary if it is.
+
+  Args:
+      field (dict[str, Any]): The field dictionary.
+      field_key (str): The key representing the field.
+      field_name (str): The name of the field.
+      missing_field_name (str): The name of the missing field.
+      missing_information (dict[str, list[str]]): The dictionary to track missing information.
+
+  """
+  if not field.get(field_name, {}).get('value'):
+    missing_message = f"{missing_field_name} field is missing for one of the {field_key}s!"
+    if missing_message not in missing_information[field_key]:
+      missing_information[field_key].append(missing_message)
+
+
+def check_if_field_value_not_null(field: dict[str, Any],
+                                  missing_information: dict[str, list[str]],
+                                  missing_field_name: str,
+                                  check: bool = True) -> None:
+  """
+  Checks if the field value is not null and updates the missing_information dictionary if it is.
+
+  Args:
+      field (dict[str, Any]): The field dictionary.
+      missing_information (dict[str, list[str]]): The dictionary to track missing information.
+      missing_field_name (str): The name of the missing field.
+      check (bool, optional): Flag to indicate if the check should be performed. Defaults to True.
+
+  """
+  if check and not field.get('value'):
+    missing_message = f"{missing_field_name.capitalize()} field is missing!"
+    if missing_message not in missing_information[missing_field_name]:
+      missing_information[missing_field_name].append(missing_message)
 
 
 def get_encrypt_key(logger: Logger) -> tuple[bool, bytes]:
@@ -281,3 +466,81 @@ def check_login_credentials(logger: Logger, api_token: str, server_url: str) -> 
     result = False, "Data server is not reachable"
     logger.warning("Data server is not reachable: %s", message)
   return result
+
+
+def adjust_type_name(camel_case_string: str) -> str:
+  """
+  Adjusts the type name from camel case to title case.
+
+  Splits the camel case string into individual words and capitalizes the first letter of each word.
+  If a word starts with an uppercase letter, it is left as is.
+
+  Args:
+      camel_case_string (str): The input string in camel case.
+
+  Returns:
+      str: The adjusted type name in title case.
+  """
+  split = re.findall(r'[A-Z]?[a-z]+|[A-Z]+(?=[A-Z]|$)',
+                     camel_case_string)
+  return ' '.join([i.capitalize() if i[0].islower() else i for i in split])
+
+
+def clear_value(items: dict[str, Any] | None = None) -> None:
+  """
+  Clears the 'value' attribute of each item in the given dictionary.
+
+  Args:
+      items(dict[str, Any] | None): The dictionary containing items to be cleared.
+
+  Explanation:
+      This function iterates over the values of the given dictionary and sets the 'value'
+      attribute to None for each item.
+      If the 'items' argument is None, the function returns immediately.
+
+  """
+  if items is None:
+    return
+  for item in items.values():
+    if item and "value" in item:
+      item["value"] = None
+
+
+def is_date_time_type(type_name: str) -> bool:
+  """
+  Checks if the given type_name contains 'date' or 'time' as a substring.
+
+  Args:
+      type_name (str): The type name to check.
+
+  Returns:
+      bool: True if the type_name contains 'date' or 'time', False otherwise.
+
+  Explanation:
+      This function checks if the given type_name contains 'date' or 'time' as a substring.
+      It performs a case-insensitive search to determine the presence of 'date' or 'time' in the type_name.
+
+  """
+  return any(
+    map(type_name.lower().__contains__, ["date", "time"]))
+
+
+def delete_layout_and_contents(layout: QBoxLayout) -> None:
+  """
+  Deletes the layout and its contents.
+
+  Args:
+      layout (QBoxLayout): The layout to delete.
+
+  Explanation:
+      This function deletes the given layout and its contents.
+      It iterates over the widgets in the layout and removes them from their parent.
+      Finally, it sets the layout's parent to None.
+
+  """
+  if layout is None:
+    return
+  for widget_pos in reversed(range(layout.count())):
+    if item := layout.itemAt(widget_pos):
+      item.widget().setParent(None)  # type: ignore[call-overload]
+  layout.setParent(None)  # type: ignore[arg-type]
