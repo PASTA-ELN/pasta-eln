@@ -44,10 +44,14 @@ class Configuration(QDialog):
       tabW.setTabEnabled(1, False)
 
 
-  def finished(self) -> None:
+  def finished(self, restart:bool=True) -> None:
     """
     callback function to close widget
+
+    Args:
+      restart (bool): if true, initialize
     """
     self.close()
-    self.comm.backend.initialize()  #restart backend
+    if restart:
+      self.comm.backend.initialize()  #restart backend
     return
