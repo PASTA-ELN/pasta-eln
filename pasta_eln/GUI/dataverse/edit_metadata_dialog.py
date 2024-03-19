@@ -86,9 +86,10 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
     self.minimalFullComboBox.currentTextChanged[str].connect(self.toggle_minimal_full)
     self.buttonBox.button(QtWidgets.QDialogButtonBox.Save).clicked.connect(self.save_ui)
     self.licenseNameLineEdit.textChanged[str].connect(
-      lambda name: self.config_model.metadata['datasetVersion']['license'].update({"name": name}))
+      lambda name: self.config_model.metadata['datasetVersion']['license'].update(  # type: ignore[index]
+        {"name": name}))
     self.licenseURLLineEdit.textChanged[str].connect(
-      lambda uri: self.config_model.metadata['datasetVersion']['license'].update({"uri": uri}))
+      lambda uri: self.config_model.metadata['datasetVersion']['license'].update({"uri": uri}))  # type: ignore[index]
 
     # Initialize UI elements
     self.load_ui()
@@ -214,7 +215,7 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
     self.logger.info("Loading UI...")
     self.metadataBlockComboBox.addItems(self.metadata_types.keys())
     self.minimalFullComboBox.addItems(["Full", "Minimal"])
-    dataset_version = self.config_model.metadata.get('datasetVersion', {})
+    dataset_version = self.config_model.metadata.get('datasetVersion', {})  # type: ignore[union-attr]
     dataset_license = dataset_version.get('license', {})
     self.licenseNameLineEdit.setText(dataset_license.get('name', ''))
     self.licenseURLLineEdit.setText(dataset_license.get('uri', ''))

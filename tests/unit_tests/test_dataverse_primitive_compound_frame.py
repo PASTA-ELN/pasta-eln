@@ -583,7 +583,7 @@ class TestDataversePrimitiveCompoundFrame:
                                                                                         "compoundHorizontalLayout")
           mock_save_compound_horizontal_layout_values.assert_called_once_with(
             primitive_compound_frame.mainVerticalLayout.findChild.return_value,
-            primitive_compound_frame.meta_field.get('valueTemplate')
+            primitive_compound_frame.meta_field.get('valueTemplate') or {}
           )
 
       primitive_compound_frame.logger.info.assert_called_once_with(

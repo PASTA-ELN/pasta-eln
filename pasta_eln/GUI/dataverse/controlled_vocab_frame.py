@@ -74,16 +74,18 @@ class ControlledVocabFrame(Ui_PrimitiveCompoundControlledFrameBase):
         self: The instance of the class.
     """
     self.logger.info("Loading controlled vocabulary frame ui..")
+    value = self.meta_field.get('value')
+    value_template = self.meta_field.get("valueTemplate")
     if self.meta_field.get('multiple'):
-      if self.meta_field.get('value'):
-        for value in self.meta_field.get('value'):
-          self.add_new_vocab_entry(self.meta_field.get("valueTemplate"), value)
+      if value:
+        for value in value:
+          self.add_new_vocab_entry(value_template, value)
       else:
-        self.add_new_vocab_entry(self.meta_field.get("valueTemplate"), None)
+        self.add_new_vocab_entry(value_template, None)
     else:
       self.add_new_vocab_entry(
-        [self.meta_field.get("valueTemplate")],
-        self.meta_field.get('value'))
+        [value_template or ""],
+        value)
 
   def add_button_callback(self) -> None:
     """
@@ -127,8 +129,8 @@ class ControlledVocabFrame(Ui_PrimitiveCompoundControlledFrameBase):
     combo_box = QComboBox(parent=self.instance)
     combo_box.setObjectName("vocabComboBox")
     combo_box.setToolTip("Select the controlled vocabulary.")
-    combo_box.addItems(controlled_vocabulary)
-    combo_box.setCurrentText(value)
+    combo_box.addItems(controlled_vocabulary or [])
+    combo_box.setCurrentText(value or "")
     new_vocab_entry_layout.addWidget(combo_box)
     delete_push_button = QPushButton(parent=self.instance)
     delete_push_button.setText("Delete")
@@ -141,10 +143,11 @@ class ControlledVocabFrame(Ui_PrimitiveCompoundControlledFrameBase):
     delete_push_button.setMinimumSize(QSize(100, 0))
     delete_push_button.setObjectName("deletePushButton")
     new_vocab_entry_layout.addWidget(delete_push_button)
-    delete_push_button.clicked.connect(lambda _: delete_layout_and_contents(new_vocab_entry_layout))
+    delete_push_button.clicked.connect(  # type: ignore[attr-defined]
+      lambda _: delete_layout_and_contents(new_vocab_entry_layout))
     self.mainVerticalLayout.addLayout(new_vocab_entry_layout)
 
-  def save_modifications(self):
+  def save_modifications(self) -> None:
     """
     Saves the modifications made in the controlled vocabulary.
 
@@ -156,14 +159,15 @@ class ControlledVocabFrame(Ui_PrimitiveCompoundControlledFrameBase):
     Args:
         self: The instance of the class.
     """
-    if self.meta_field['multiple']:
-      self.meta_field['value'].clear()
+    value = self.meta_field.get('value')
+    if self.meta_field['multiple'] and isinstance(value, list):
+      value.clear()
       for layout_pos in reversed(range(self.mainVerticalLayout.count())):
         if vocab_horizontal_layout := self.mainVerticalLayout.itemAt(layout_pos).layout():
           combo_box = vocab_horizontal_layout.itemAt(0).widget()
           if text := combo_box.currentText():
-            self.meta_field.get('value').append(text)
-      self.meta_field['value'] = list(set(self.meta_field.get('value')))
+            value.append(text)
+      self.meta_field['value'] = list(set(value))
     elif layout := self.mainVerticalLayout.findChild(QHBoxLayout,
                                                      "vocabHorizontalLayout"):
       if combo_box := layout.itemAt(0).widget():

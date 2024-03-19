@@ -151,8 +151,8 @@ class TestControlledVocabFrame:
     mock_combobox.assert_called_once_with(parent=controlled_vocab_frame.instance)
     mock_combobox.return_value.setObjectName.assert_called_once_with("vocabComboBox")
     mock_combobox.return_value.setToolTip.assert_called_once_with("Select the controlled vocabulary.")
-    mock_combobox.return_value.addItems.assert_called_once_with(controlled_vocabulary)
-    mock_combobox.return_value.setCurrentText.assert_called_once_with(value)
+    mock_combobox.return_value.addItems.assert_called_once_with(controlled_vocabulary or [])
+    mock_combobox.return_value.setCurrentText.assert_called_once_with(value or "")
     mock_h_layout.return_value.addWidget.assert_any_call(mock_combobox.return_value)
     mock_button.assert_called_once_with(parent=controlled_vocab_frame.instance)
     delete_push_button = mock_button.return_value

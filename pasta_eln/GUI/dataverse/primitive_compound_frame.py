@@ -94,13 +94,14 @@ class PrimitiveCompoundFrame(Ui_PrimitiveCompoundControlledFrameBase):
         value_template = self.meta_field.get('valueTemplate')
         value = self.meta_field.get('value')
         if self.meta_field['multiple']:
-          if len(value) == 0:
-            empty_entry = copy.deepcopy(value_template[0])
-            clear_value(empty_entry)
-            self.populate_compound_entry(empty_entry, value_template[0])
-          else:
-            for compound in value:
-              self.populate_compound_entry(compound, value_template[0])
+          if isinstance(value, list) and isinstance(value_template, list):
+            if len(value) == 0:
+              empty_entry = copy.deepcopy(value_template[0])
+              clear_value(empty_entry)
+              self.populate_compound_entry(empty_entry, value_template[0])
+            else:
+              for compound in value:
+                self.populate_compound_entry(compound, value_template[0])
         else:
           self.addPushButton.setDisabled(True)
           if value:
@@ -143,7 +144,7 @@ class PrimitiveCompoundFrame(Ui_PrimitiveCompoundControlledFrameBase):
     size_policy.setHeightForWidth(delete_push_button.sizePolicy().hasHeightForWidth())
     delete_push_button.setSizePolicy(size_policy)
     delete_push_button.setMinimumSize(QSize(100, 0))
-    delete_push_button.clicked.connect(lambda _: delete_layout_and_contents(parent))
+    delete_push_button.clicked.connect(lambda _: delete_layout_and_contents(parent))  # type: ignore[attr-defined]
     return delete_push_button
 
   def create_line_edit(self,
@@ -219,8 +220,8 @@ class PrimitiveCompoundFrame(Ui_PrimitiveCompoundControlledFrameBase):
             - For any other 'typeClass' value, it logs an error for unknown typeClass.
 
     """
-    type_name = self.meta_field.get('typeName')
-    type_class = self.meta_field.get('typeClass')
+    type_name = self.meta_field.get('typeName', '')
+    type_class = self.meta_field.get('typeClass', '')
     self.logger.info("Adding new entry of type %s, name: %s", type_class, type_name)
     if not self.meta_field.get('multiple'):
       self.logger.error("Add operation not supported for non-multiple entries")
@@ -229,15 +230,17 @@ class PrimitiveCompoundFrame(Ui_PrimitiveCompoundControlledFrameBase):
       case "primitive":
         new_primitive_entry_layout = self.mainVerticalLayout.findChild(QVBoxLayout,
                                                                        "primitiveVerticalLayout")
+        value_template = self.meta_field.get('valueTemplate', [""])[0]
         self.populate_primitive_horizontal_layout(
           new_primitive_entry_layout,
           type_name,
           "",
-          self.meta_field.get('valueTemplate')[0])
+          value_template)
       case "compound":
         new_compound_entry_layout = QHBoxLayout()
         new_compound_entry_layout.setObjectName("compoundHorizontalLayout")
-        for type_val in self.meta_field.get('valueTemplate')[0].values():
+        value_template = self.meta_field.get('valueTemplate', [{}])[0]
+        for type_val in value_template.values():
           type_name = type_val.get('typeName')
           type_value = type_val.get('value')
           new_compound_entry_layout.addWidget(
@@ -273,7 +276,7 @@ class PrimitiveCompoundFrame(Ui_PrimitiveCompoundControlledFrameBase):
     new_compound_entry_layout = QHBoxLayout()
     new_compound_entry_layout.setObjectName("compoundHorizontalLayout")
     for compound_type_name, compound_type in compound_entry.items():
-      template_value = template_entry.get(compound_type_name, {}).get('value')
+      template_value = template_entry.get(compound_type_name, {}).get('value') if template_entry else None
       new_compound_entry_layout.addWidget(
         self.create_date_time_widget(compound_type_name, compound_type['value'], template_value)
         if is_date_time_type(compound_type_name)
@@ -295,33 +298,34 @@ class PrimitiveCompoundFrame(Ui_PrimitiveCompoundControlledFrameBase):
 
     """
     type_value = self.meta_field.get('value')
-    type_name = self.meta_field.get('typeName')
-    type_template = self.meta_field.get('valueTemplate')
+    type_name = self.meta_field.get('typeName', "")
+    value_template = self.meta_field.get('valueTemplate')
 
     self.logger.info("Populating new entry of type primitive, name: %s", type_name)
 
     new_primitive_entry_layout = QVBoxLayout()
     new_primitive_entry_layout.setObjectName("primitiveVerticalLayout")
-    if self.meta_field.get('multiple'):
-      if len(type_value) == 0:
+    if self.meta_field.get('multiple') and isinstance(type_value, list):
+      template_first = value_template[0] if isinstance(value_template, list) else ""
+      if not type_value:
         self.populate_primitive_horizontal_layout(
           new_primitive_entry_layout,
           type_name,
           "",
-          type_template[0])
+          template_first)
       else:
         for value in type_value:
           self.populate_primitive_horizontal_layout(
             new_primitive_entry_layout,
             type_name,
             value,
-            type_template[0])
+            template_first)
     else:
       self.populate_primitive_horizontal_layout(
         new_primitive_entry_layout,
         type_name,
-        type_value,
-        type_template,
+        type_value or "",
+        value_template if isinstance(value_template, str) else "",
         False)
     self.mainVerticalLayout.addLayout(new_primitive_entry_layout)
 
@@ -358,7 +362,7 @@ class PrimitiveCompoundFrame(Ui_PrimitiveCompoundControlledFrameBase):
       self.create_delete_button(new_primitive_entry_horizontal_layout, enable_delete_button))
     new_primitive_entry_layout.addLayout(new_primitive_entry_horizontal_layout)
 
-  def save_modifications(self):
+  def save_modifications(self) -> None:
     """
     Saves the changes made in UI elements to the meta_field.
 
@@ -391,16 +395,19 @@ class PrimitiveCompoundFrame(Ui_PrimitiveCompoundControlledFrameBase):
           self.meta_field['value'].clear()
           for layout_pos in range(self.mainVerticalLayout.count()):
             compound_horizontal_layout = self.mainVerticalLayout.itemAt(layout_pos)
+            value_template = self.meta_field.get('valueTemplate', [{}])[0]
             self.save_compound_horizontal_layout_values(
               compound_horizontal_layout,
-              self.meta_field.get('valueTemplate')[0])
+              value_template)
         else:
           self.meta_field['value'] = {}
           compound_horizontal_layout = self.mainVerticalLayout.findChild(QHBoxLayout,
                                                                          "compoundHorizontalLayout")
+          value_template = self.meta_field.get('valueTemplate')
+          value_template = value_template if isinstance(value_template, dict) else {}
           self.save_compound_horizontal_layout_values(
             compound_horizontal_layout,
-            self.meta_field.get('valueTemplate'))
+            value_template)
       case _:
         self.logger.error("Unsupported typeClass: %s", self.meta_field.get('typeClass'))
 
@@ -422,21 +429,22 @@ class PrimitiveCompoundFrame(Ui_PrimitiveCompoundControlledFrameBase):
         If the widget value is empty or None, the corresponding entry in the meta_field is not updated.
 
     """
-    if compound_horizontal_layout.layout():
-      empty_entry = copy.deepcopy(value_template)
-      update_needed = False
-      layout_items_count = compound_horizontal_layout.count()
-      for widget_pos in range(layout_items_count):
-        widget = compound_horizontal_layout.itemAt(widget_pos).widget()
-        name = widget.objectName().removesuffix("LineEdit").removesuffix("DateTimeEdit")
-        if name in empty_entry:
-          text = widget.text()
-          empty_entry[name]['value'] = text
-          update_needed = update_needed or (text != "" and text is not None)
-      if update_needed:
-        if isinstance(self.meta_field['value'], dict):
-          self.meta_field['value'] = {**self.meta_field['value'], **empty_entry}
-        elif isinstance(self.meta_field['value'], list):
-          self.meta_field['value'].append(empty_entry)
-        else:
-          self.meta_field['value'] = empty_entry
+    if not compound_horizontal_layout.layout():
+      return
+    empty_entry = copy.deepcopy(value_template)
+    update_needed = False
+    layout_items_count = compound_horizontal_layout.count()
+    for widget_pos in range(layout_items_count):
+      widget = compound_horizontal_layout.itemAt(widget_pos).widget()
+      name = widget.objectName().removesuffix("LineEdit").removesuffix("DateTimeEdit")
+      if name in empty_entry:
+        text = widget.text()  # type: ignore[attr-defined]
+        empty_entry[name]['value'] = text
+        update_needed = update_needed or (text != "" and text is not None)
+    if update_needed:
+      if isinstance(self.meta_field['value'], dict):
+        self.meta_field['value'] = {**self.meta_field['value'], **empty_entry}
+      elif isinstance(self.meta_field['value'], list):
+        self.meta_field['value'].append(empty_entry)
+      else:
+        self.meta_field['value'] = empty_entry
