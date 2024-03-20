@@ -343,7 +343,7 @@ def backupCouchDB(location:str='', userName:str='', password:str='') -> None:
   if location=='local':
     location = '127.0.0.1'
     if not userName:
-      userName = input('Enter username: ').strip()
+      userName = input('Enter local admin username: ').strip()
     if not password:
       password = input('Enter password: ').strip()
   elif location=='remote':
@@ -518,7 +518,7 @@ def main() -> None:
     url, administrator, password = myString.split(':')
     print("URL and credentials successfully read from keyring")
   except Exception:
-    print("Could not get credentials from keyring.")
+    print("Could not get credentials for the remote server from keyring.")
     ## URL
     url = input('Enter the URL without http and without port: ')
     if len(url)<2:

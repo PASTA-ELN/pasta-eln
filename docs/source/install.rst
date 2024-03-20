@@ -12,10 +12,12 @@ Install python via Anaconda and then PASTA-ELN
 If you do not have Python installed, we recommend using Anaconda.
 1. Go to https://www.anaconda.com/download
 2. Download installer and run install. Accept all defaults
-3. Create environment, e.g. PASTA-ELN
-4. Open environment in command-prompt
+3. Create environment, e.g. PASTA-ELN and choose to install it with "Python 3.11..."
+4. Click on new green arrow button and open "Terminal"
 5. "pip install pasta-eln"
-6. "python -m pasta_eln.gui"
+6. "pip install pasta-eln -U --no-dependencies"
+    - if it complains about 'aiohttp' missing "pip install aiohttp"
+6. "python -m pasta_eln.gui" (make sure that you have administrator rights)
 
 
 Manual installation
