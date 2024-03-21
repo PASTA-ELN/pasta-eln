@@ -67,10 +67,7 @@ class ConfigurationAuthors(QWidget):
     """
     rightW = QLineEdit()
     if item in {'organization','rorid'}:
-      if len(self.author['organizations'])>0:
-        rightW.setText(self.author['organizations'][0][item])
-      else:
-        rightW.setText('')
+      rightW.setText(self.author['organizations'][0][item] if self.author['organizations'] else '')
     else:
       rightW.setText(self.author[item])
     rightW.setAccessibleName(item)
