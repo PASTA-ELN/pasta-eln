@@ -8,7 +8,7 @@ import requests
 from anytree import Node
 from pasta_eln import __version__
 from .backend import Backend
-from .miscTools import createDirName, generic_hash
+from .miscTools import createDirName, generic_hash, flatten, hierarchy
 
 # to discuss
 # - genre:docType, simulation, experiment/measurement;  status = Done, finished
@@ -40,6 +40,7 @@ pasta2json:dict[str,Any] = {
   '-date'       : 'dateModified',
   '-name'       : 'name',
   '-tags'       : 'keywords',
+  '-type'       : 'genre',
   'image'       : None,
   'comment'     : 'description',
   'content'     : 'text',
@@ -48,6 +49,7 @@ pasta2json:dict[str,Any] = {
 }
 json2pasta:dict[str,Any] = {v:k for k,v in pasta2json.items() if v is not None}
 
+pastaNameTranslation = {'Rev':'Revision'}
 
 # Special terms in other ELNs: only add the ones that are required for function for PASTA
 specialTerms:dict[str,dict[str,str]] = {
@@ -346,7 +348,7 @@ def importELN(backend:Backend, elnFileName:str) -> str:
 ##########################################
 ###               EXPORT               ###
 ##########################################
-def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[str]=[], verbose:bool=True) -> str:
+def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[str]=[], verbose:bool=False) -> str:
   """
   export eln to file
 
@@ -362,7 +364,6 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
   """
   # define initial information
   fileName = fileName if fileName.endswith('.eln') else f'{fileName}.eln'
-  keysInSupplemental:set[str] = set()
   filesNotInProject = []
   dirNameGlobal = fileName.split('/')[-1][:-4]
   # == MAIN FUNCTION ==
@@ -371,45 +372,53 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
     graph: list[dict[str,Any]] = []
 
     #for each project
+    dirNameProjects = []
     for projectID in projectIDs:
       docProject = backend.db.getDoc(projectID)
       dirNameProject = docProject['-branch'][0]['path']
+      dirNameProjects.append(dirNameProject)
 
-      def separate(doc: dict[str,Any]) -> tuple[str, dict[str,Any], dict[str,Any]]:
+      def separate(doc: dict[str,Any]) -> tuple[str, dict[str,Any]]:
         """ separate document into
         - main information (for all elns) and
         - supplemental information (specific to PastaELN)
         """
         path =  f"{doc['-branch'][0]['path']}/" if doc['-type'][0][0]=='x' else doc['-branch'][0]['path']
-        pathUsed = True
-        if path is None:
-          pathUsed = False
-          path = f'./{dirNameGlobal}/{dirNameProject}/{doc["_id"]}'
-        if not path.startswith(dirNameProject) and not path.startswith('http') and pathUsed:
-          filesNotInProject.append(path)
-        if not path.startswith('http') and pathUsed:
-          path = f'./{dirNameGlobal}/{path}'
-        docMain= {'@id': path}
+        docMain= {}
         docSupp = {}
+        if path is None:
+          path = dirNameProject+'/'+doc['_id']
+        elif not path.startswith(dirNameProject) and not path.startswith('http'):
+          filesNotInProject.append(path)  # files elsewhere, standardOperatingProcedures
+        if not path.startswith('http'):
+          docMain['@id'] = f'./{dirNameGlobal}/{path}'
+        else:
+          docMain['@id'] = path
         for key, value in doc.items():
           if key in pasta2json and pasta2json[key] is not None:
             docMain[pasta2json[key]] = value
           else:
             docSupp[key] = value
         # clean individual entries of docSupp: remove personal data
-        del docSupp['-user']
-        if 'image' in docSupp:
-          del docSupp['image']
-        if '_attachments' in docSupp:
-          del docSupp['_attachments']
-        docSupp['_id'] = docMain['identifier'] #ensure id is present in main and supplementary information
+        for k in ['-user', '-client', 'image', '_attachments']:
+          if 'image' in docSupp:
+            del docSupp[k]
         # clean individual entries of docMain
         if 'keywords' in docMain:
           docMain['keywords'] = ','.join(docMain['keywords'])
+        if docMain['genre'][0] == '-' or docMain['genre'][0][0]=='x':
+          del docMain['genre']
+        else:
+          docMain['genre'] = '/'.join(docMain['genre'])
         docMain = {k:v for k,v in docMain.items() if v}
-        nonlocal keysInSupplemental
-        keysInSupplemental = keysInSupplemental.union(docSupp)
-        return path, docMain, docSupp
+        # move docSupp into docMain
+        variableMeasured = []
+        for k, v in flatten(docSupp).items():
+          name = ' \u2192 '.join([i.replace('_','').replace('-','').capitalize() for i in k.split('.')])
+          name = pastaNameTranslation[name] if name in pastaNameTranslation else name
+          variableMeasured.append({'value':v, 'propertyID':k, 'name':name})
+        docMain['variableMeasured'] = variableMeasured
+        return path, docMain
 
 
       def appendDocToGraph(graph: list[dict[str,Any]], doc: dict[str,Any]) -> None:
@@ -439,8 +448,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
         """
         # separate into main and supplemental information
         doc = backend.db.getDoc(nodeHier.id)
-        path, docMain, docSupp = separate(doc)
-
+        path, docMain = separate(doc)
         hasPart = []
         if (nodeHier.docType[0] not in dTypes) and nodeHier.docType[0][0]!='x' and len(dTypes)>0:
           return None
@@ -449,32 +457,11 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
           if res is not None:
             hasPart.append( res )
         if nodeHier.id[0]=='x':
-          pathMetadata = f'{path}metadata.json'
-          docMain['hasPart'] = [{'@id':pathMetadata}]
+          parts = []
           if hasPart:
-            docMain['hasPart'] += [{'@id':i} for i in hasPart]
-
-          metadata = {'__main__':docSupp}
-          hierStack = docSupp['-branch'][0]['stack']+[docSupp['_id']]
-          viewFull = backend.db.getView('viewHierarchy/viewHierarchyAll', startKey=' '.join(hierStack))
-          viewIDs = [i['id'] for i in viewFull if len(i['key'].split())==len(hierStack)+1 and i['value'][1][0][0]!='x']
-          for childID in viewIDs:
-            _, _, docChildSupp = separate(backend.db.getDoc(childID))
-            metadata[childID] = docChildSupp
-          zipContent = json.dumps(metadata)
-          roCrateMetadata = {'@id':pathMetadata,
-                             '@type':'File',
-                             'name':'export_metadata.json',
-                             'description':'JSON export',
-                             'encodingFormat':'application/json',
-                             'contentSize':str(len(zipContent)),
-                             'sha256':hashlib.sha256(zipContent.encode()).hexdigest(),
-                             'dateModified': docMain['dateModified']
-                             }
-          elnFile.writestr(f'{dirNameGlobal}/{pathMetadata[2:]}', zipContent)
-          docMain['@type'] = 'Dataset'
-          appendDocToGraph(graph, roCrateMetadata)
-
+            parts += [{'@id':i} for i in hasPart]
+          if parts:
+            docMain['hasPart'] = parts
         fullPath = backend.basePath/path
         if path is not None and fullPath.exists() and fullPath.is_file():
           with open(fullPath, 'rb') as fIn:
@@ -529,7 +516,8 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
             'url': 'https://github.com/PASTA-ELN/', 'description': f'Version {__version__}'}}
     graphMaster.append(masterNodeInfo)
     authors = backend.configuration['authors']
-    masterNodeRoot = {'@id': './', '@type': 'Dataset', 'hasPart': [{'@id': f'./{dirNameGlobal}/'}],
+    masterParts = [{'@id': f'./{dirNameGlobal}/{i}/'} for i in dirNameProjects]
+    masterNodeRoot = {'@id': './', '@type': 'Dataset', 'hasPart': masterParts,
         'name': 'Exported from PASTA ELN', 'description': 'Exported content from PASTA ELN',
         'license':'CC BY 4.0', 'datePublished':datetime.now().isoformat(),
         'author': [{'firstName': authors[0]['first'], 'surname': authors[0]['last'],
@@ -551,12 +539,11 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
     #finalize file
     index['@graph'] = graphMaster+graph+graphMisc
     elnFile.writestr(f'{dirNameGlobal}/ro-crate-metadata.json', json.dumps(index))
-    if verbose:
-      print(json.dumps(index, indent=3))
+    # if verbose:
+    #   print(json.dumps(index, indent=3))
   # end writing zip file
+
   # temporary json output
-  # with open(fileName[:-3]+'json','w', encoding='utf-8') as fOut:
-  #   fOut.write( json.dumps(index, indent=2) )
-  keysInSupplemental = {i for i in keysInSupplemental if i not in pasta2json}
-  logging.info('Keys in supplemental information'+', '.join(keysInSupplemental))
+  with open(fileName[:-3]+'json','w', encoding='utf-8') as fOut:
+    fOut.write( json.dumps(index, indent=2) )
   return f'Success: exported {len(graph)} graph-nodes into file {fileName}'
