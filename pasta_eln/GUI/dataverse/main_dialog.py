@@ -24,12 +24,14 @@ from pasta_eln.GUI.dataverse.main_dialog_base import Ui_MainDialogBase
 from pasta_eln.GUI.dataverse.project_item_frame_base import Ui_ProjectItemFrame
 from pasta_eln.GUI.dataverse.upload_config_dialog import UploadConfigDialog
 from pasta_eln.GUI.dataverse.upload_widget_base import Ui_UploadWidgetFrame
+from pasta_eln.dataverse.config_model import ConfigModel
 from pasta_eln.dataverse.data_upload_task import DataUploadTask
 from pasta_eln.dataverse.database_api import DatabaseAPI
 from pasta_eln.dataverse.project_model import ProjectModel
 from pasta_eln.dataverse.task_thread_extension import TaskThreadExtension
 from pasta_eln.dataverse.upload_model import UploadModel
 from pasta_eln.dataverse.upload_queue_manager import UploadQueueManager
+from pasta_eln.dataverse.utils import check_if_minimal_metadata_exists
 
 
 class MainDialog(Ui_MainDialogBase):
@@ -151,6 +153,7 @@ class MainDialog(Ui_MainDialogBase):
         It also starts the upload manager task to process the upload queue.
 
     """
+    self.check_if_minimal_metadata_present()
     for widget_pos in range(self.projectsScrollAreaVerticalLayout.count()):
       project_widget = self.projectsScrollAreaVerticalLayout.itemAt(widget_pos).widget()
       if project_widget.findChild(QtWidgets.QCheckBox, name="projectCheckBox").isChecked():
@@ -267,6 +270,17 @@ class MainDialog(Ui_MainDialogBase):
       if upload_model_id := id_label.text() if isinstance(id_label, QtWidgets.QLabel) else "":
         model = self.db_api.get_model(upload_model_id, UploadModel)
         log_console_text_edit.setText(model.log if isinstance(model, UploadModel) else "")
+
+  def check_if_minimal_metadata_present(self) -> None:
+    config_model = self.db_api.get_model(self.db_api.config_doc_id, ConfigModel)
+    if config_model is None:
+      self.logger.error("Failed to load config model!")
+      return
+    if isinstance(config_model, ConfigModel) and isinstance(config_model.metadata, dict):
+      missing_metadata = check_if_minimal_metadata_exists(self.logger, config_model.metadata, False)
+      for name, value in missing_metadata.items() if missing_metadata else {}.items():
+        if value:
+          self.logger.info(f"Missing metadata: {name}")
 
 
 if __name__ == "__main__":
