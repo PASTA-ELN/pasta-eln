@@ -50,9 +50,9 @@ class MainWindow(QMainWindow):
     menu = self.menuBar()
     projectMenu = menu.addMenu("&Project")
     Action('&Export project to .eln',        self, [Command.EXPORT],         projectMenu)
-    Action('&Import .eln',                   self, [Command.IMPORT],         projectMenu)
+    Action('&Import .eln',                   self, [Command.IMPORT],         projectMenu, shortcut='Ctrl+A')
     projectMenu.addSeparator()
-    Action('&Export everything to .eln',     self, [Command.EXPORT_ALL],     projectMenu, shortcut='Ctrl+A')
+    Action('&Export all projects to .eln',   self, [Command.EXPORT_ALL],     projectMenu)
     Action('&Exit',                          self, [Command.EXIT],           projectMenu)
 
     viewMenu = menu.addMenu("&Lists")

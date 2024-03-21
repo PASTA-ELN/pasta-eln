@@ -210,7 +210,7 @@ def importELN(backend:Backend, elnFileName:str) -> str:
       if not isinstance(part, dict): #leave these tests in since other .elns might do funky stuff
         print("**ERROR in part",part)
         return False
-      logging.info('\nProcess: '+part['@id'])
+      print('\nProcess: '+part['@id'])
       # find next node to process
       docS = [i for i in graph if '@id' in i and i['@id']==part['@id']]
       if len(docS)!=1 or backend.cwd is None:
@@ -220,51 +220,15 @@ def importELN(backend:Backend, elnFileName:str) -> str:
       if elnName == 'PASTA ELN' and elnID.startswith('http') and ':/' in elnID:
         fullPath = None
       elif elnName == 'PASTA ELN':
-        fullPath = backend.basePath/elnID
+        fullPath = backend.basePath/( '/'.join(elnID.split('/')[1:]) )
       else:
         fullPath = backend.basePath/backend.cwd/elnID.split('/')[-1]
-      datasetIsFolder = False
-      if dataType.lower()=='dataset':
-        #print('  Dataset',elnID,dataType)
-        if elnName == 'PASTA ELN':
-          supplementalInfo = Path(dirName)/elnID/'metadata.json'
-        elif elnName == 'eLabFTW':
-          supplementalInfo = Path(dirName)/elnID/'export-elabftw.json'
-        else:
-          logging.info('No additional information in %s', elnName)
-          supplementalInfo = Path('')
-        if supplementalInfo.as_posix() in elnFile.namelist():
-          datasetIsFolder = True
-          with elnFile.open(supplementalInfo.as_posix()) as fIn:
-            jsonContent = json.loads( fIn.read() )
-            if isinstance(jsonContent, list):
-              jsonContent = jsonContent[0]
-            if elnName == 'PASTA ELN':
-              doc.update( jsonContent['__main__'] )
-            else:
-              doc[f'from {elnName}'] = jsonContent
-      if not datasetIsFolder:
-        #print('  ELSE ',elnID,dataType)
-        if elnName == 'PASTA ELN':
-          if elnID.endswith('data_hierarchy.json'):
-            return 0
-          parentIDList = [i['@id'] for i in graph if 'hasPart' in i and {'@id':'./'+elnID} in i['hasPart']]
-          if not parentIDList: #if no parent found, aka for remote data
-            parentIDList = [i['@id'] for i in graph if 'hasPart' in i and {'@id':elnID} in i['hasPart']]
-          if len(parentIDList)==1:
-            metadataPath = Path(dirName)/parentIDList[0]/'metadata.json'
-            with elnFile.open(metadataPath.as_posix()) as fIn:
-              metadataContent = json.loads( fIn.read() )
-              doc.update( metadataContent[doc['_id']] )
-        elif elnName == 'eLabFTW' and elnID.endswith('export-elabftw.json'):
-          return 0
-        elif fullPath is not None:
-          if f'{dirName}/{elnID}' in elnFile.namelist():  #could be directory, nothing to copy then
-            target = open(fullPath, "wb")
-            source = elnFile.open(f'{dirName}/{elnID}')
-            with source, target:  #extract one file to its target directly
-              shutil.copyfileobj(source, target)
-      # save
+      if fullPath is not None:
+        if f'{dirName}/{elnID}' in elnFile.namelist():  #could be directory, nothing to copy then
+          target = open(fullPath, "wb")
+          source = elnFile.open(f'{dirName}/{elnID}')
+          with source, target:  #extract one file to its target directly
+            shutil.copyfileobj(source, target)
       # ALL ELNS
       if '-tags' not in doc:
         doc['-tags'] = []
@@ -273,7 +237,7 @@ def importELN(backend:Backend, elnFileName:str) -> str:
       # PASTA_ELN
       if elnName == 'PASTA ELN':
         doc['-user'] = '_'
-        if datasetIsFolder and fullPath is not None:
+        if fullPath is not None:
           fullPath.mkdir(exist_ok=True)
           with open(fullPath/'.id_pastaELN.json', 'w', encoding='utf-8') as fOut:
             fOut.write(json.dumps(doc))
