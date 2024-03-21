@@ -66,7 +66,7 @@
            <item>
             <widget class="QCheckBox" name="measurementCheckBox">
              <property name="text">
-              <string>Measurements</string>
+              <string>Measurement</string>
              </property>
              <property name="checked">
               <bool>true</bool>
@@ -76,7 +76,7 @@
            <item>
             <widget class="QCheckBox" name="samplesCheckBox">
              <property name="text">
-              <string>Samples</string>
+              <string>Sample</string>
              </property>
              <property name="checked">
               <bool>true</bool>
@@ -86,7 +86,7 @@
            <item>
             <widget class="QCheckBox" name="proceduresCheckBox">
              <property name="text">
-              <string>Procedures</string>
+              <string>Procedure</string>
              </property>
              <property name="checked">
               <bool>true</bool>
@@ -96,7 +96,7 @@
            <item>
             <widget class="QCheckBox" name="instrumentsCheckBox">
              <property name="text">
-              <string>Instruments</string>
+              <string>Instrument</string>
              </property>
              <property name="checked">
               <bool>true</bool>
