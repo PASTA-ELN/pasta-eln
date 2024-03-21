@@ -151,6 +151,15 @@ class UploadConfigDialog(Ui_UploadConfigDialog, QObject):
     self.config_reloaded.emit()
 
   def show(self) -> None:
+    """
+    Shows the instance.
+
+    Explanation:
+        This method shows the instance by calling its show() method.
+
+    Args:
+        self: The instance of the class.
+    """
     self.instance.show()
 
 
