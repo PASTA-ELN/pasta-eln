@@ -2,7 +2,19 @@
 
 ## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
 
-[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.0b5...HEAD)
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.0b6...HEAD)
+
+**Implemented enhancements:**
+
+- feat\(dataverse-integration\): implement metadata editor [\#211](https://github.com/PASTA-ELN/pasta-eln/pull/211) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
+
+**Merged pull requests:**
+
+- Fix subissue 2 of \#222 [\#233](https://github.com/PASTA-ELN/pasta-eln/pull/233) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+
+## [v2.5.0b6](https://github.com/PASTA-ELN/pasta-eln/tree/v2.5.0b6) (2024-03-19)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.0b5...v2.5.0b6)
 
 **Implemented enhancements:**
 
