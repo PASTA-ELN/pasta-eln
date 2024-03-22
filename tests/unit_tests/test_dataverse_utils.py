@@ -26,7 +26,8 @@ from pasta_eln.dataverse.utils import adjust_type_name, check_if_compound_field_
   clear_value, decrypt_data, \
   delete_layout_and_contents, encrypt_data, \
   get_citation_field, get_encrypt_key, \
-  is_date_time_type, log_and_create_error, read_pasta_config_file, set_authors, set_template_values, update_status, \
+  get_formatted_message, is_date_time_type, log_and_create_error, read_pasta_config_file, set_authors, \
+  set_template_values, update_status, \
   write_pasta_config_file
 
 # Constants for test
@@ -998,7 +999,7 @@ class TestDataverseUtils:
           {'empty_string': []},
           'empty_string',
           True,
-          {'empty_string': ['Empty_string field is missing!']}
+          {'empty_string': ['Add at-least a single entry for Empty_string!']}
       ),
       # Test ID: EC-2
       (
@@ -1006,7 +1007,7 @@ class TestDataverseUtils:
           {'none_field': []},
           'none_field',
           True,
-          {'none_field': ['None_field field is missing!']}
+          {'none_field': ['Add at-least a single entry for None_field!']}
       ),
       # Test ID: EC-3
       (
@@ -1585,3 +1586,89 @@ class TestDataverseUtils:
     layout.setParent.assert_called_once_with(None)
     for widget in widgets:
       widget.widget.return_value.setParent.assert_called_once_with(None)
+
+  # Parametrized test cases for happy path, edge cases, and error cases
+  @pytest.mark.parametrize("missing_metadata, expected_output, test_id", [
+    # Success path tests with various realistic test values
+    (
+        {'author': ['Name', 'Email'], 'datasetContact': ['Phone']},
+        "<html><p><i>Goto 'Edit Metadata' dialog, enter the below given missing information and retry the upload!"
+        '</i></p><br></br><b><i>Author:</i></b><ul><i '
+        'style="color:Crimson"><li>Name</li></i><i '
+        'style="color:Crimson"><li>Email</li></i></ul><br></br><b><i>Dataset '
+        'Contact:</i></b><ul><i style="color:Crimson"><li>Phone</li></i></ul></html>',
+        "success_path_multiple_fields1"
+    ),
+    (
+        {'author': ['Name']},
+        "<html><p><i>Goto 'Edit Metadata' dialog, enter the below given missing information and retry the upload!"
+        '</i></p><br></br><b><i>Author:</i></b><ul><i '
+        'style="color:Crimson"><li>Name</li></i></ul></html>',
+        "success_path_single_field"
+    ),
+    (
+        {
+          'author': ['Author1 Missing!', 'Author2 Missing!'],
+          'datasetContact': ['Dataset Contact 1 Missing!', 'Dataset Contact 2 Missing!'],
+          'dsDescription': ['Dataset Description 1 Missing!', 'Dataset Description 2 Missing!'],
+          'subject': ['Subject 1 Missing!', 'Subject 2 Missing!']
+        },
+        "<html><p><i>Goto 'Edit Metadata' dialog, enter the below given missing information and retry the upload!"
+        '</i></p><br></br><b><i>Author:</i></b><ul><i '
+        'style="color:Crimson"><li>Author1 Missing!</li></i><i '
+        'style="color:Crimson"><li>Author2 '
+        'Missing!</li></i></ul><br></br><b><i>Dataset Contact:</i></b><ul><i '
+        'style="color:Crimson"><li>Dataset Contact 1 Missing!</li></i><i '
+        'style="color:Crimson"><li>Dataset Contact 2 '
+        'Missing!</li></i></ul><br></br><b><i>Dataset Description:</i></b><ul><i '
+        'style="color:Crimson"><li>Dataset Description 1 Missing!</li></i><i '
+        'style="color:Crimson"><li>Dataset Description 2 '
+        'Missing!</li></i></ul><br></br><b><i>Subject:</i></b><ul><i '
+        'style="color:Crimson"><li>Subject 1 Missing!</li></i><i '
+        'style="color:Crimson"><li>Subject 2 Missing!</li></i></ul></html>',
+        "success_path_multiple_fields2"
+    ),
+    (
+        {
+          'author': [],
+          'datasetContact': [],
+          'dsDescription': [],
+          'subject': []
+        },
+        "",
+        "success_path_empty_fields"
+    ),
+
+    # Edge cases
+    (
+        {},
+        "",
+        "edge_case_empty_input"
+    ),
+    (
+        {'author': [], 'datasetContact': []},
+        "",
+        "edge_case_empty_lists"
+    ),
+
+    # Error cases
+    (
+        {'unknownField': ['Unknown']},
+        KeyError("dict object has no attribute 'unknownField'"),
+        "error_case_unknown_field"
+    ),
+  ])
+  def test_get_formatted_message(self, missing_metadata, expected_output, test_id):
+    # Arrange
+    result = None
+    # Act
+    if isinstance(expected_output, Exception):
+      with pytest.raises(type(expected_output)):
+        result = get_formatted_message(missing_metadata)
+    else:
+      result = get_formatted_message(missing_metadata)
+    # Assert
+    if isinstance(expected_output, Exception):
+      assert result is None, f"Test failed for {test_id}"
+    else:
+      assert result == expected_output, f"Test failed for {test_id}"

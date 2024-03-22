@@ -269,7 +269,7 @@ def check_if_field_value_not_null(field: dict[str, Any],
 
   """
   if check and not field.get('value'):
-    missing_message = f"{missing_field_name.capitalize()} field is missing!"
+    missing_message = f"Add at-least a single entry for {missing_field_name.capitalize()}!"
     if missing_message not in missing_information[missing_field_name]:
       missing_information[missing_field_name].append(missing_message)
 
@@ -546,3 +546,39 @@ def delete_layout_and_contents(layout: QBoxLayout) -> None:
     if item := layout.itemAt(widget_pos):
       item.widget().setParent(None)  # type: ignore[call-overload]
   layout.setParent(None)  # type: ignore[arg-type]
+
+
+def get_formatted_message(missing_metadata: dict[str, list[str]]) -> str:
+  """
+  Returns a formatted message with missing metadata information.
+
+  Args:
+      missing_metadata (dict[str, list[str]]): A dictionary containing missing metadata information.
+
+  Returns:
+      str: A formatted message with the missing metadata information.
+
+  Explanation:
+      This function takes a dictionary of missing metadata information and returns a formatted message
+      with the missing information. The message is formatted as an HTML string and includes a list of missing
+      metadata items grouped by their corresponding metadata names.
+  """
+  if not any(missing_metadata.values()):
+    return ""
+  name_mapping = {
+    'author': 'Author',
+    'datasetContact': "Dataset Contact",
+    'dsDescription': "Dataset Description",
+    'subject': "Subject"
+  }
+  message = (
+    "<html><p><i>Goto 'Edit Metadata' dialog, enter the below given missing information and retry the upload!</i></p>"
+  )
+  for metadata_name, missing_list in missing_metadata.items():
+    if missing_list:
+      message += f"<br></br><b><i>{name_mapping[metadata_name]}:</i></b><ul>"
+      for missing in missing_list:
+        message += f"<i style=\"color:Crimson\"><li>{missing}</li></i>"
+      message += "</ul>"
+  message += "</html>"
+  return message

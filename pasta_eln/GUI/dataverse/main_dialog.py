@@ -15,7 +15,8 @@ from typing import Any
 
 import qtawesome as qta
 from PySide6 import QtWidgets
-from PySide6.QtWidgets import QFrame, QWidget
+from PySide6.QtGui import Qt
+from PySide6.QtWidgets import QFrame, QLabel, QMessageBox, QWidget
 
 from pasta_eln.GUI.dataverse.completed_uploads import CompletedUploads
 from pasta_eln.GUI.dataverse.dialog_extension import DialogExtension
@@ -31,7 +32,7 @@ from pasta_eln.dataverse.project_model import ProjectModel
 from pasta_eln.dataverse.task_thread_extension import TaskThreadExtension
 from pasta_eln.dataverse.upload_model import UploadModel
 from pasta_eln.dataverse.upload_queue_manager import UploadQueueManager
-from pasta_eln.dataverse.utils import check_if_minimal_metadata_exists
+from pasta_eln.dataverse.utils import check_if_minimal_metadata_exists, get_formatted_message
 
 
 class MainDialog(Ui_MainDialogBase):
@@ -153,7 +154,9 @@ class MainDialog(Ui_MainDialogBase):
         It also starts the upload manager task to process the upload queue.
 
     """
-    self.check_if_minimal_metadata_present()
+    if not self.check_if_minimal_metadata_present():
+      self.logger.warning("Minimum metadata not present. Please add all needed metadata and then retry!")
+      return
     for widget_pos in range(self.projectsScrollAreaVerticalLayout.count()):
       project_widget = self.projectsScrollAreaVerticalLayout.itemAt(widget_pos).widget()
       if project_widget.findChild(QtWidgets.QCheckBox, name="projectCheckBox").isChecked():
@@ -271,16 +274,38 @@ class MainDialog(Ui_MainDialogBase):
         model = self.db_api.get_model(upload_model_id, UploadModel)
         log_console_text_edit.setText(model.log if isinstance(model, UploadModel) else "")
 
-  def check_if_minimal_metadata_present(self) -> None:
+  def check_if_minimal_metadata_present(self) -> bool:
+    """
+    Checks if minimal metadata is present.
+
+    Returns:
+        bool: True if minimal metadata is present, False otherwise.
+
+    Explanation:
+        This function checks if minimal metadata is present in the configuration model.
+        It returns True if minimal metadata is present, and False otherwise.
+        If minimal metadata is missing, it displays a warning message to the user.
+    """
     config_model = self.db_api.get_model(self.db_api.config_doc_id, ConfigModel)
+    metadata_exists = False
     if config_model is None:
       self.logger.error("Failed to load config model!")
-      return
+      return metadata_exists
     if isinstance(config_model, ConfigModel) and isinstance(config_model.metadata, dict):
-      missing_metadata = check_if_minimal_metadata_exists(self.logger, config_model.metadata, False)
-      for name, value in missing_metadata.items() if missing_metadata else {}.items():
-        if value:
-          self.logger.info(f"Missing metadata: {name}")
+      if missing_metadata := check_if_minimal_metadata_exists(self.logger,
+                                                              config_model.metadata,
+                                                              False):
+        message = get_formatted_message(missing_metadata)
+        metadata_exists = message == ""
+        if not metadata_exists:
+          msg_box = QMessageBox(self.instance)
+          msg_box.setWindowTitle("Missing Minimal Metadata")
+          msg_box.setTextFormat(Qt.RichText)
+          msg_box.setIcon(QMessageBox.Warning)
+          msg_box.setText(message)
+          msg_box.findChild(QLabel, "qt_msgbox_label").setFixedWidth(650)  # type: ignore[attr-defined]
+          msg_box.exec()
+    return metadata_exists
 
 
 if __name__ == "__main__":
