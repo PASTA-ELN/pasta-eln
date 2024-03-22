@@ -220,8 +220,7 @@ class MainDialog(Ui_MainDialogBase):
         This method shows the edit metadata dialog.
 
     """
-    self.edit_metadata_dialog.load_ui()
-    self.edit_metadata_dialog.instance.show()
+    self.edit_metadata_dialog.show()
 
   def release_upload_manager(self) -> None:
     """

@@ -53,22 +53,20 @@ class UploadConfigDialog(Ui_UploadConfigDialog, QObject):
     Explanation:
         This method initializes the UploadConfigDialog class.
         It sets up the UI and initializes the necessary attributes.
-
-    Args:
-        None
-
     """
     super().__init__()
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
     self.instance = QDialog()
     super().setupUi(self.instance)
     self.db_api = DatabaseAPI()
-    self.numParallelComboBox.addItems(map(str, range(2, 9)))
+    self.numParallelComboBox.addItems(map(str, range(2, 6)))
     self.numParallelComboBox.setCurrentIndex(2)
     self.instance.setWindowModality(QtCore.Qt.ApplicationModal)
     self.config_model: ConfigModel | None = None
     self.data_hierarchy_types: list[str] = []
     self.buttonBox.button(QtWidgets.QDialogButtonBox.Save).clicked.connect(self.save_ui)
+    (self.numParallelComboBox.currentTextChanged[str]
+     .connect(lambda num: setattr(self.config_model, "parallel_uploads_count", int(num))))
     self.set_data_hierarchy_types()
     self.load_ui()
 
@@ -79,11 +77,8 @@ class UploadConfigDialog(Ui_UploadConfigDialog, QObject):
     Explanation:
         This method loads the UI for the UploadConfigDialog.
         It retrieves the config model from the database and sets up the UI elements based on the model data.
-
-    Args:
-        None
-
     """
+    self.logger.info("Loading data and initializing UI...")
     self.config_model = self.db_api.get_model(self.db_api.config_doc_id, ConfigModel)  # type: ignore[assignment]
     if self.config_model is None:
       self.logger.error("Failed to load config model!")
@@ -91,14 +86,34 @@ class UploadConfigDialog(Ui_UploadConfigDialog, QObject):
     for widget_pos in reversed(range(self.projectItemsVerticalLayout.count())):
       self.projectItemsVerticalLayout.itemAt(widget_pos).widget().setParent(None)
     for data_type in self.data_hierarchy_types:
-      self.projectItemsVerticalLayout.addWidget(QCheckBox(text=data_type,  # type: ignore[call-overload]
-                                                          parent=self.instance,
-                                                          checkState=QtCore.Qt.Checked
-                                                          if self.config_model.project_upload_items
-                                                             and self.config_model.project_upload_items.get(data_type,
-                                                                                                            False)
-                                                          else QtCore.Qt.Unchecked))
+      is_set = self.config_model.project_upload_items and self.config_model.project_upload_items.get(data_type, False)
+      check_box = QCheckBox(text=data_type,  # type: ignore[call-overload]
+                            parent=self.instance,
+                            checkState=QtCore.Qt.Checked
+                            if is_set else QtCore.Qt.Unchecked)
+      self.projectItemsVerticalLayout.addWidget(check_box)
+      check_box.stateChanged.connect(lambda state, item_name=check_box.text().capitalize():
+                                     self.check_box_changed_callback(state, item_name))
     self.numParallelComboBox.setCurrentText(str(self.config_model.parallel_uploads_count))
+
+  def check_box_changed_callback(self,
+                                 state: QtCore.Qt.CheckState,
+                                 project_item_name: str) -> None:
+    """
+    Updates the project upload items based on the state of a checkbox.
+
+    Args:
+        self: The instance of the class.
+        state (QtCore.Qt.CheckState): The state of the checkbox.
+        project_item_name (str): The name of the project item.
+
+    Explanation:
+        This function updates the project upload items in the config model based on the state of a checkbox.
+        If the config model and project upload items are not None, it updates the project item with the given name
+        to be checked or unchecked based on the state of the checkbox.
+    """
+    if self.config_model and self.config_model.project_upload_items is not None:
+      self.config_model.project_upload_items.update({project_item_name: state == QtCore.Qt.Checked})
 
   def set_data_hierarchy_types(self) -> None:
     """
@@ -106,18 +121,16 @@ class UploadConfigDialog(Ui_UploadConfigDialog, QObject):
 
     Explanation:
         This method sets the data hierarchy types based on the data hierarchy retrieved from the database.
-
-    Args:
-        None
-
     """
+    self.logger.info("Setting data hierarchy types...")
     data_hierarchy = self.db_api.get_data_hierarchy()
     if data_hierarchy is None:
       return
     for data_type in data_hierarchy:
-      if data_type not in ("x0", "x1", "x2"):
+      if (data_type and not data_type.isspace()
+          and data_type not in ("x0", "x1", "x2")):
         type_capitalized = data_type.capitalize()
-        if type_capitalized and type_capitalized not in self.data_hierarchy_types:
+        if type_capitalized not in self.data_hierarchy_types:
           self.data_hierarchy_types.append(type_capitalized)
     self.data_hierarchy_types.append("Unidentified")
 
@@ -129,21 +142,25 @@ class UploadConfigDialog(Ui_UploadConfigDialog, QObject):
         This method saves the UI settings to the configuration model.
         It retrieves the current settings from the UI elements and updates the configuration model.
         It then emits the config_reloaded signal to notify other components of the updated configuration.
-
-    Args:
-        None
-
     """
+    self.logger.info("Saving config model...")
     if self.config_model is None:
+      self.logger.error("Failed to load config model!")
       return
-    self.config_model.parallel_uploads_count = int(self.numParallelComboBox.currentText())
-    items = {}
-    for widget_pos in reversed(range(self.projectItemsVerticalLayout.count())):
-      check_box = self.projectItemsVerticalLayout.itemAt(widget_pos).widget()
-      items[check_box.text()] = check_box.checkState() == QtCore.Qt.Checked
-    self.config_model.project_upload_items = items
     self.db_api.update_model_document(self.config_model)
     self.config_reloaded.emit()
+
+  def show(self) -> None:
+    """
+    Shows the instance.
+
+    Explanation:
+        This method shows the instance by calling its show() method.
+
+    Args:
+        self: The instance of the class.
+    """
+    self.instance.show()
 
 
 if __name__ == "__main__":
