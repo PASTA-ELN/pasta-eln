@@ -1417,7 +1417,7 @@
             ]
           },
           {
-            "typeName": "studyAssayOtherMeasurementType",
+            "typeName": "studyAssayOtherMeasurmentType",
             "multiple": true,
             "typeClass": "primitive",
             "value": [
@@ -1441,10 +1441,10 @@
             "multiple": true,
             "typeClass": "controlledVocabulary",
             "value": [
-              "210-MS GC Ion Trap (Variant)",
-              "220-MS GC Ion Trap (Variant)",
-              "225-MS GC Ion Trap (Variant)",
-              "300-MS quadrupole GC/MS (Variant)"
+              "210-MS GC Ion Trap (Varian)",
+              "220-MS GC Ion Trap (Varian)",
+              "225-MS GC Ion Trap (Varian)",
+              "300-MS quadrupole GC/MS (Varian)"
             ]
           },
           {
