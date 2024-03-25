@@ -41,7 +41,7 @@ class ConfigurationAuthors(QWidget):
       self.orgaCB = QComboBox()
       self.orgaCB.addItems([i['organization'] for i in self.author['organizations']])
       orgaL.addStretch(1)
-      orgaL.addWidget(self.orgaCB, stretch=2)
+      orgaL.addWidget(self.orgaCB, stretch=2)                       # type: ignore[call-arg]
       IconButton('fa5s.plus-circle', self, [Command.ADD], orgaL, 'Add organization')
       IconButton('fa5s.minus-circle', self, [Command.DELETE], orgaL, 'Delete organization')
       self.tabAuthorL.addRow(orgaW)
