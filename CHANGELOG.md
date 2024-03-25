@@ -2,7 +2,15 @@
 
 ## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
 
-[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.0b7...HEAD)
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.0b8...HEAD)
+
+**Fixed bugs:**
+
+- Removing the organization from "Author" configuration [\#222](https://github.com/PASTA-ELN/pasta-eln/issues/222)
+
+## [v2.5.0b8](https://github.com/PASTA-ELN/pasta-eln/tree/v2.5.0b8) (2024-03-25)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.0b7...v2.5.0b8)
 
 **Implemented enhancements:**
 
