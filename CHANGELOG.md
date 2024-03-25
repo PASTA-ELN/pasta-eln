@@ -2,7 +2,19 @@
 
 ## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
 
-[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.0b6...HEAD)
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.0b7...HEAD)
+
+**Implemented enhancements:**
+
+- feat\(dataverse\): implement upload config dialog [\#234](https://github.com/PASTA-ELN/pasta-eln/pull/234) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
+
+**Merged pull requests:**
+
+- Sb 222 remove twice [\#238](https://github.com/PASTA-ELN/pasta-eln/pull/238) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+
+## [v2.5.0b7](https://github.com/PASTA-ELN/pasta-eln/tree/v2.5.0b7) (2024-03-21)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.0b6...v2.5.0b7)
 
 **Implemented enhancements:**
 
