@@ -1,5 +1,6 @@
 """ Python Backend: all operations with the filesystem are here """
 import json, sys, os, importlib, tempfile, logging, traceback
+from threading import Thread
 from pathlib import Path
 from typing import Any, Optional, Union
 from urllib import request
@@ -119,19 +120,30 @@ class Backend(CLI_Mixin):
     self.addData('-edit-', doc)
     # change folder-name in database of all children
     if doc['-type'][0][0]=='x' and self.cwd is not None:
-      items = self.db.getView(
-          'viewHierarchy/viewPaths',
-          startKey=f'{self.cwd.relative_to(self.basePath).as_posix()}/',
-      )
+      items = self.db.getView('viewHierarchy/viewPaths',
+                              startKey=f'{self.cwd.relative_to(self.basePath).as_posix()}/')
       for item in items:
-        oldPathparts = item['key'].split('/')
-        newPathParts = doc['-branch']['path'].split('/')
-        newPath = '/'.join(newPathParts+oldPathparts[len(newPathParts):]  )
-        # print(item['id']+'  old='+item['key']+'  branch='+str(item['value'][-1])+\
-        #      '  child='+str(item['value'][-3])+'  new='+newPath)
-        self.db.updateBranch(item['id'], item['value'][-1], item['value'][-3], path=newPath)
+        t = Thread(target=self.threadParallel, args=(item, doc))
+        t.start()
     self.cwd = self.basePath #reset to sensible before continuing
     self.hierStack = []
+    return
+
+
+  def threadParallel(self, item:dict[str,Any], doc:dict[str,Any]) -> None:
+    """ internal function to process items and documents in parallel: rename folders on the disk
+
+    Args:
+      item (dict): item of current item ot process
+      doc (dict):  parents documents
+    """
+    oldPathParts = item['key'].split('/')
+    newPathParts = doc['-branch']['path'].split('/')
+    newPath = '/'.join(newPathParts+oldPathParts[len(newPathParts):]  )
+    if newPath != item['key']:  # for-loop could also be implemented in parallel
+      # print(item['id']+'  old='+item['key']+'  branch='+str(item['value'][-1])+\
+      #      '  child='+str(item['value'][-3])+'  new='+newPath)
+      self.db.updateBranch(item['id'], item['value'][-1], item['value'][-3], path=newPath)
     return
 
 
