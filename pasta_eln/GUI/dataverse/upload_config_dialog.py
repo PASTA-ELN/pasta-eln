@@ -79,7 +79,7 @@ class UploadConfigDialog(Ui_UploadConfigDialog, QObject):
         It retrieves the config model from the database and sets up the UI elements based on the model data.
     """
     self.logger.info("Loading data and initializing UI...")
-    self.config_model = self.db_api.get_model(self.db_api.config_doc_id, ConfigModel)  # type: ignore[assignment]
+    self.config_model = self.db_api.get_config_model()
     if self.config_model is None:
       self.logger.error("Failed to load config model!")
       return

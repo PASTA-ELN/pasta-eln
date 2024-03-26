@@ -1,4 +1,5 @@
 """ Represents a data upload task. """
+import asyncio
 #  PASTA-ELN and all its sub-parts are covered by the MIT license.
 #
 #  Copyright (c) 2024
@@ -8,18 +9,20 @@
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import datetime
-import random
-from time import sleep
+import time
 
 from PySide6 import QtCore
 
 from pasta_eln.GUI.dataverse.upload_widget_base import Ui_UploadWidgetFrame
+from pasta_eln.dataverse.client import DataverseClient
+from pasta_eln.dataverse.config_error import ConfigError
 from pasta_eln.dataverse.config_model import ConfigModel
 from pasta_eln.dataverse.database_api import DatabaseAPI
 from pasta_eln.dataverse.generic_task_object import GenericTaskObject
+from pasta_eln.dataverse.progress_thread import ProgressThread
 from pasta_eln.dataverse.upload_model import UploadModel
 from pasta_eln.dataverse.upload_status_values import UploadStatusValues
-from pasta_eln.dataverse.utils import update_status
+from pasta_eln.dataverse.utils import get_adjusted_metadata, update_status
 
 
 class DataUploadTask(GenericTaskObject):
@@ -65,8 +68,19 @@ class DataUploadTask(GenericTaskObject):
                                     status=UploadStatusValues.Queued.name,
                                     log=f"Upload initiated for project {self.project_name} at {datetime.datetime.now().isoformat()}\n")
     self.upload_model = self.db_api.create_model_document(self.upload_model)  # type: ignore[assignment]
-    self.config_model = self.db_api.get_model(self.db_api.config_doc_id, ConfigModel)
+    self.config_model = self.db_api.get_config_model()
+    if (self.config_model is None
+        or not isinstance(self.config_model, ConfigModel)
+        or not self.config_model.dataverse_login_info):
+      raise ConfigError("Config model not found/Invalid Login Information.")
+    self.dataverse_server_url = self.config_model.dataverse_login_info.get("server_url") or ""
+    self.dataverse_api_token = self.config_model.dataverse_login_info.get("api_token") or ""
+    self.dataverse_id = self.config_model.dataverse_login_info.get("dataverse_id") or ""
+    self.metadata = self.config_model.metadata or {}
+    self.dataverse_client = DataverseClient(self.dataverse_server_url, self.dataverse_api_token, 60)
     widget.uploadCancelPushButton.clicked.connect(self.cancel.emit)
+    self.progress_thread = ProgressThread()
+    self.progress_thread.progress_update = self.progressChanged
 
   def start_task(self) -> None:
     """
@@ -83,31 +97,50 @@ class DataUploadTask(GenericTaskObject):
           - Saving the upload model whenever needed
 
     """
+
     super().start_task()
     self.progressChanged.emit(0)
     self.statusChanged.emit(UploadStatusValues.Queued.name)
     self.statusChanged.emit(UploadStatusValues.Uploading.name)
     self.uploadModelCreated.emit(self.upload_model.id)
-    self.upload_model.log = "Generating ELN file....."
-    for progressbar_value in range(101):
-      self.progressChanged.emit(progressbar_value)
-      if self.cancelled:
-        self.upload_model.status = UploadStatusValues.Cancelled.name
-        break
-      self.upload_model.log = f"Uploading.......... Progress: {progressbar_value}%"
-      self.upload_model.status = UploadStatusValues.Uploading.name
-      self.db_api.update_model_document(self.upload_model)
-
-      sleep(random.uniform(0.01, 0.06))
-    if not self.cancelled:
-      self.upload_model.log = f"Uploading completed at {datetime.datetime.now().isoformat()}"
-      self.upload_model.finished_date_time = datetime.datetime.now().isoformat()
-      self.upload_model.status = UploadStatusValues.Finished.name
-      self.upload_model.dataverse_url = f"https://dataverse.harvard.edu/dataverse/{self.upload_model.project_name}"
-      self.upload_model.log = f"Uploading to url: {self.upload_model.dataverse_url}"
+    test_file_path = "/home/jmurugan/Artefacts/10/Text File1.txt"
+    self.upload_model.log = f"Generating ELN file..... {test_file_path}"
     self.db_api.update_model_document(self.upload_model)
+
+    self.progress_thread.start()
+    pid = ""
+    try:
+      self.upload_model.log = f"Creating dataset..... {self.upload_model.project_name}"
+      metadata = get_adjusted_metadata(self.metadata)
+      metadata["title"] = self.upload_model.project_name
+      result = asyncio.run(self.dataverse_client.create_and_publish_dataset(self.dataverse_id, metadata))
+      pid = f"{result['protocol']}:{result['authority']}/{result['identifier']}"
+      self._extracted_from_start_task_32(
+        'Created dataset in dataverse with PID:', pid, 25)
+      # Uploading the ELN file to dataverse
+      time.sleep(5)
+      result = asyncio.run(self.dataverse_client.upload_file(pid,
+                                                             test_file_path,
+                                                             f"ELN file for the project: {self.upload_model.project_name}",
+                                                             ["ELN"]))
+      dataset_publish_result = result["dataset_publish_result"]
+      file_pid = f"{dataset_publish_result['protocol']}:{dataset_publish_result['authority']}/{dataset_publish_result['identifier']}"
+      self._extracted_from_start_task_32('Uploaded in dataverse with PID:',
+                                         file_pid, 75)
+    except Exception as e:
+      self.upload_model.log = f"Error while uploading to dataverse: {e}"
+      self.db_api.update_model_document(self.upload_model)
+      self.statusChanged.emit(UploadStatusValues.Error.name)
+    self._extracted_from_start_task_32('Finished the upload in dataverse with URL: ',
+                                       f"{self.dataverse_server_url}/dataset.xhtml?persistentId={pid}", 75)
+    self.progress_thread.finished = True
     self.finished.emit()
     self.statusChanged.emit(UploadStatusValues.Cancelled.name if self.cancelled else UploadStatusValues.Finished.name)
+
+  def _extracted_from_start_task_32(self, arg0, identifier, arg2):
+    self.upload_model.log = f"{arg0}{identifier}"
+    self.db_api.update_model_document(self.upload_model)
+    # self.progressChanged.emit(arg2)
 
   def cancel_task(self) -> None:
     """

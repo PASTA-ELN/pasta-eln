@@ -18,12 +18,13 @@ from os.path import exists, join
 from pathlib import Path
 from typing import Any, Type
 
-from PySide6.QtWidgets import QBoxLayout, QLabel
+from PySide6.QtWidgets import QBoxLayout, QLabel, QMessageBox
 from cryptography.fernet import Fernet, InvalidToken
 from qtawesome import icon
 
 from pasta_eln.dataverse.client import DataverseClient
 from pasta_eln.dataverse.config_error import ConfigError
+from pasta_eln.dataverse.config_model import ConfigModel
 from pasta_eln.dataverse.upload_status_values import UploadStatusValues
 
 
@@ -88,6 +89,25 @@ def set_authors(logger: Logger, metadata: dict[str, Any]) -> None:
     author_copy['authorIdentifier']['value'] = author['orcid']
     author_copy['authorAffiliation']['value'] = ', '.join([o['organization'] for o in author['organizations']])
     authors_list.append(author_copy)
+
+def get_adjusted_metadata(metadata: dict[str, Any]) -> dict[str, Any]:
+  """
+  Get the adjusted metadata.
+
+  Args:
+      metadata (dict[str, Any]): The metadata dictionary.
+
+  Returns:
+      dict[str, Any]: The adjusted metadata dictionary.
+  """
+  adjusted_metadata = {}
+  if metadata['datasetVersion']['license']:
+    adjusted_metadata['license'] = metadata['datasetVersion']['license']
+  for _, metablock in metadata['datasetVersion']['metadataBlocks'].items():
+    for field in metablock['fields']:
+      if field['value']:
+        adjusted_metadata[field['typeName']] = field['value']
+  return adjusted_metadata
 
 
 def set_template_values(logger: Logger, metadata: dict[str, Any]) -> None:
@@ -469,6 +489,16 @@ def check_login_credentials(logger: Logger, api_token: str, server_url: str) -> 
     logger.warning("Data server is not reachable: %s", message)
   return result
 
+def check_if_dataverse_exists(logger: Logger, api_token: str, server_url: str, dataverse_id: str) -> bool:
+  logger.info("Checking if login info is valid, server_url: %s", server_url)
+  dataverse_client = DataverseClient(server_url, api_token)
+  event_loop = get_event_loop()
+  message = event_loop.run_until_complete(dataverse_client.get_dataverse_size(dataverse_id))
+  result = bool(message.endswith("bytes"))
+  if not result:
+    logger.warning("Data verse with id %s does not exist, Server message: %s", dataverse_id, message)
+  return result
+
 
 def adjust_type_name(camel_case_string: str) -> str:
   """
@@ -582,3 +612,4 @@ def get_formatted_message(missing_metadata: dict[str, list[str]]) -> str:
       message += "</ul>"
   message += "</html>"
   return message
+

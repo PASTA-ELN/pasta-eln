@@ -15,10 +15,10 @@ from typing import Any
 
 import qtawesome as qta
 from PySide6 import QtWidgets
-from PySide6.QtGui import Qt
-from PySide6.QtWidgets import QFrame, QLabel, QMessageBox, QWidget
+from PySide6.QtWidgets import QDialog, QFrame, QLabel, QMessageBox, QWidget
 
 from pasta_eln.GUI.dataverse.completed_uploads import CompletedUploads
+from pasta_eln.GUI.dataverse.config_dialog import ConfigDialog
 from pasta_eln.GUI.dataverse.dialog_extension import DialogExtension
 from pasta_eln.GUI.dataverse.edit_metadata_dialog import EditMetadataDialog
 from pasta_eln.GUI.dataverse.main_dialog_base import Ui_MainDialogBase
@@ -32,7 +32,9 @@ from pasta_eln.dataverse.project_model import ProjectModel
 from pasta_eln.dataverse.task_thread_extension import TaskThreadExtension
 from pasta_eln.dataverse.upload_model import UploadModel
 from pasta_eln.dataverse.upload_queue_manager import UploadQueueManager
-from pasta_eln.dataverse.utils import check_if_minimal_metadata_exists, get_formatted_message
+from pasta_eln.dataverse.utils import check_if_dataverse_exists, check_if_minimal_metadata_exists, \
+  check_login_credentials, decrypt_data, \
+  get_encrypt_key, get_formatted_message
 
 
 class MainDialog(Ui_MainDialogBase):
@@ -74,26 +76,47 @@ class MainDialog(Ui_MainDialogBase):
     self.instance = DialogExtension()
     super().setupUi(self.instance)
     self.db_api = DatabaseAPI()
+    self.is_dataverse_configured: tuple[bool, str] = self.check_if_dataverse_is_configured()
+    self.config_dialog: ConfigDialog | None = None
+
+    if self.is_dataverse_configured[0]:
+      self.config_upload_dialog = UploadConfigDialog()
+      self.completed_uploads_dialog = CompletedUploads()
+      self.edit_metadata_dialog = EditMetadataDialog()
+      self.upload_manager_task = UploadQueueManager()
+      self.upload_manager_task_thread = TaskThreadExtension(self.upload_manager_task)
+
+      # Connect signals and slots
+      self.uploadPushButton.clicked.connect(self.start_upload)
+      self.clearFinishedPushButton.clicked.connect(self.clear_finished)
+      self.selectAllPushButton.clicked.connect(lambda: self.select_deselect_all_projects(True))
+      self.deselectAllPushButton.clicked.connect(lambda: self.select_deselect_all_projects(False))
+      self.configureUploadPushButton.clicked.connect(self.show_configure_upload)
+      self.showCompletedPushButton.clicked.connect(self.show_completed_uploads)
+      self.editFullMetadataPushButton.clicked.connect(self.show_edit_metadata)
+      self.config_upload_dialog.config_reloaded.connect(self.upload_manager_task.set_concurrent_uploads)
+      self.cancelAllPushButton.clicked.connect(self.upload_manager_task.cancel.emit)
+      self.buttonBox.button(QtWidgets.QDialogButtonBox.Cancel).clicked.connect(self.close_ui)
+      self.instance.closed.connect(self.close_ui)
+
+      # Load UI
+      self.load_ui()
+
+  def load_ui(self) -> None:
+    """
+    Loads the UI for the main dialog.
+
+    Explanation:
+        This method loads the UI for the main dialog by retrieving project models from the database
+        and adding corresponding widgets to the projects scroll area.
+
+    Args:
+        self: The instance of the class.
+    """
     for project in self.db_api.get_models(ProjectModel):
       if isinstance(project, ProjectModel):
         widget = self.get_project_widget(project)
         self.projectsScrollAreaVerticalLayout.addWidget(widget)
-    self.uploadPushButton.clicked.connect(self.start_upload)
-    self.clearFinishedPushButton.clicked.connect(self.clear_finished)
-    self.selectAllPushButton.clicked.connect(lambda: self.select_deselect_all_projects(True))
-    self.deselectAllPushButton.clicked.connect(lambda: self.select_deselect_all_projects(False))
-    self.config_upload_dialog = UploadConfigDialog()
-    self.completed_uploads_dialog = CompletedUploads()
-    self.edit_metadata_dialog = EditMetadataDialog()
-    self.configureUploadPushButton.clicked.connect(self.show_configure_upload)
-    self.showCompletedPushButton.clicked.connect(self.show_completed_uploads)
-    self.editFullMetadataPushButton.clicked.connect(self.show_edit_metadata)
-    self.upload_manager_task = UploadQueueManager()
-    self.config_upload_dialog.config_reloaded.connect(self.upload_manager_task.set_concurrent_uploads)
-    self.upload_manager_task_thread = TaskThreadExtension(self.upload_manager_task)
-    self.cancelAllPushButton.clicked.connect(self.upload_manager_task.cancel.emit)
-    self.buttonBox.button(QtWidgets.QDialogButtonBox.Cancel).clicked.connect(self.close_ui)
-    self.instance.closed.connect(self.close_ui)
 
   def get_upload_widget(self, project_name: str = "") -> dict[str, QFrame | Ui_UploadWidgetFrame]:
     """
@@ -286,7 +309,7 @@ class MainDialog(Ui_MainDialogBase):
         It returns True if minimal metadata is present, and False otherwise.
         If minimal metadata is missing, it displays a warning message to the user.
     """
-    config_model = self.db_api.get_model(self.db_api.config_doc_id, ConfigModel)
+    config_model = self.db_api.get_config_model()
     metadata_exists = False
     if config_model is None:
       self.logger.error("Failed to load config model!")
@@ -298,14 +321,57 @@ class MainDialog(Ui_MainDialogBase):
         message = get_formatted_message(missing_metadata)
         metadata_exists = message == ""
         if not metadata_exists:
-          msg_box = QMessageBox(self.instance)
-          msg_box.setWindowTitle("Missing Minimal Metadata")
-          msg_box.setTextFormat(Qt.RichText)
-          msg_box.setIcon(QMessageBox.Warning)
-          msg_box.setText(message)
-          msg_box.findChild(QLabel, "qt_msgbox_label").setFixedWidth(650)  # type: ignore[attr-defined]
-          msg_box.exec()
+          self.show_message(self.instance, "Missing Minimal Metadata", message)
     return metadata_exists
+
+  def check_if_dataverse_is_configured(self) -> tuple[bool, str]:
+    self.logger.info("Checking if dataverse is configured..")
+    config_model = self.db_api.get_config_model()
+    if config_model is None or config_model.dataverse_login_info is None:
+      self.logger.error("Failed to load config model!")
+      return False, "Failed to load config model!"
+    server_url = config_model.dataverse_login_info.get("server_url")
+    api_token = config_model.dataverse_login_info.get("api_token")
+    dataverse_id = config_model.dataverse_login_info.get("dataverse_id")
+    success, _ = check_login_credentials(self.logger, api_token, server_url)
+    if not success:
+      return False, "Please re-enter the correct API token / server URL via the configuration dialog."
+    if success := success and check_if_dataverse_exists(
+        self.logger, api_token, server_url, dataverse_id):
+      return success, "Dataverse configured successfully!"
+    else:
+      return False, f"Please re-enter the correct dataverse ID via the configuration dialog, Saved id: {dataverse_id} is incorrect!"
+
+  def show(self) -> None:
+    """
+    Shows the instance.
+
+    Explanation:
+        This method shows the instance by calling its show method.
+    """
+    if self.is_dataverse_configured[0]:
+      self.instance.show()
+    else:
+      self.show_message(self.instance, "Dataverse Not Configured", self.is_dataverse_configured[1])
+      self.config_dialog = ConfigDialog()
+      self.config_dialog.show()
+
+  def show_message(self,
+                   parent: QDialog,
+                   title: str,
+                   message: str,
+                   icon: QMessageBox.Icon = QMessageBox.Warning) -> None:
+    msg_box = QMessageBox(parent)
+    msg_box.setWindowTitle(title)
+    msg_box.setIcon(icon)
+    msg_box.setText(message)
+    qt_msgbox_label: QLabel | object = msg_box.findChild(QLabel, "qt_msgbox_label")
+    if not isinstance(qt_msgbox_label, QLabel):
+      self.logger.error("Failed to find message box label!")
+      return
+    width = qt_msgbox_label.fontMetrics().boundingRect(qt_msgbox_label.text()).width()
+    qt_msgbox_label.setFixedWidth(width)
+    msg_box.exec()
 
 
 if __name__ == "__main__":
@@ -314,5 +380,5 @@ if __name__ == "__main__":
   app = QtWidgets.QApplication(sys.argv)
 
   ui = MainDialog()
-  ui.instance.show()
+  ui.show()
   sys.exit(app.exec())

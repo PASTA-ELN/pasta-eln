@@ -30,6 +30,14 @@ class DataverseClient:
                server_url: str,
                api_token: str,
                client_session_timeout: int = 10) -> None:
+    """
+    Initializes the dataverse client.
+
+    Args:
+        server_url (str): The URL of the server.
+        api_token (str): The API token for authentication.
+        client_session_timeout (int): The timeout value for the client session in seconds.
+    """
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
     self.api_token = api_token
     self.server_url = server_url

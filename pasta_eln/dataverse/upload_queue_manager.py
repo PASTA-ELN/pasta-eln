@@ -65,8 +65,7 @@ class UploadQueueManager(GenericTaskObject):
 
     """
     self.logger.info("Resetting number of concurrent uploads..")
-    model = self.db_api.get_model(self.db_api.config_doc_id, ConfigModel)
-    self.config_model = model if isinstance(model, ConfigModel) else None
+    self.config_model = self.db_api.get_config_model()
     self.number_of_concurrent_uploads = self.config_model.parallel_uploads_count if self.config_model else None
 
   def add_to_queue(self, upload_task_thread: TaskThreadExtension) -> None:
