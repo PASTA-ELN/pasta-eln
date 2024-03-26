@@ -129,6 +129,16 @@ sys.exit(app.exec())
 ```
 and execute "python -m pasta_eln.test"
 
+#### Profiling
+Begin...
+      from cProfile import Profile
+      from pstats import SortKey, Stats
+      with Profile() as profile:
+
+End...
+      (Stats(profile).strip_dirs().sort_stats(SortKey.CUMULATIVE).print_stats()) #end cProfile
+
+
 #### General notes
 - Find qt-awesome icons: qta-browser
 - print works great in frondend and backend
