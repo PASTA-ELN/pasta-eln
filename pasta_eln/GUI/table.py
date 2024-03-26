@@ -143,7 +143,7 @@ class Table(QWidget):
         self.showHidden.setText(f'Show/hide hidden {docLabel.lower()}')
       else:
         self.comm.changeSidebar.emit('')  #close the project in sidebar
-        self.headline.setText(f'All {docLabel}')
+        self.headline.setText(f'All {docLabel.lower()}')
         self.showHidden.setText(f'Show/hide all hidden {docLabel.lower()}')
       self.filterHeader = self.comm.backend.db.getColumnNames()[self.docType].split(',')
       self.filterHeader = [i[1:] if i[0]=='-'   else i for i in self.filterHeader]  #change -something to something
@@ -335,7 +335,7 @@ class Table(QWidget):
             path = Path(doc['-branch'][0]['path'])
           else:
             path = self.comm.backend.basePath/doc['-branch'][0]['path']
-          self.comm.backend.useExtractors(path, '', doc)
+          self.comm.backend.useExtractors(path, doc.get('shasum',''), doc)
           if doc['-type'][0] == oldDocType[0]:
             del doc['-branch']  #don't update
             self.comm.backend.db.updateDoc(doc, self.data[row]['id'])
