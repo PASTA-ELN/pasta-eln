@@ -134,7 +134,7 @@ class Backend(CLI_Mixin):
     """ internal function to process items and documents in parallel: rename folders on the disk
 
     Args:
-      item (dict): item of current item ot process
+      item (dict): item of current item to process
       doc (dict):  parents documents
     """
     oldPathParts = item['key'].split('/')

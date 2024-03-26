@@ -344,111 +344,107 @@ class Form(QDialog):
       self.checkThreadTimer.stop()
       if (Path.home()/'.pastaELN.temp').is_file():
         (Path.home()/'.pastaELN.temp').unlink()
-      from cProfile import Profile
-      from pstats import SortKey, Stats
-      with Profile() as profile:
-        if hasattr(self, 'key_-name'):
-          self.doc['-name'] = getattr(self, 'key_-name').text().strip()
-          if self.doc['-name'] == '':
-            showMessage(self, 'Error', 'A created item has to have a valid name')
-            return
-          if self.doc['-type'][0]=='x0':  #prevent project-directory names that are identical
-            others = self.comm.backend.db.getView('viewDocType/x0All')
-            if '_id' in self.doc:
-              others = [i for i in others if i['id']!=self.doc['_id']] # create list of names but filter own name
-            others = [i['value'][0] for i in others]
-            othersList = [createDirName(str(i),'x0', 0) for i in others] #create names
-            while createDirName(self.doc['-name'],'x0', 0) in othersList:
-              if re.search(r"_\d+$", self.doc['-name']) is None:
-                self.doc['-name'] += '_1'
-              else:
-                self.doc['-name'] = '_'.join(self.doc['-name'].split('_')[:-1])+'_'+str(int(self.doc['-name'].split('_')[-1])+1)
-        # loop through all the subitems
-        for key, valueOld in self.doc.items():
-          if (key[0] in ['_', '-'] or key in ['image', 'metaVendor', 'metaUser']
-              or not hasattr(self, f'key_{key}') and not hasattr(self, f'textEdit_{key}')):
-            continue
-          if key in ['comment','content']:
-            text = getattr(self, f'textEdit_{key}').toPlainText().strip()
-            if '_ids' not in self.doc or text:  #if group edit, text has to have text
-              self.doc[key] = text
-              if key == 'content' and '-branch' in self.doc:
-                for branch in self.doc['-branch']:
-                  if branch['path'] is not None:
-                    if branch['path'].endswith('.md'):
-                      with open(self.comm.backend.basePath/branch['path'], 'w', encoding='utf-8') as fOut:
-                        fOut.write(self.doc['content'])
-                      logging.debug('Wrote new content to '+branch['path'])
-                    else:
-                      showMessage(self, 'Information', 'Did update the database but not the file on harddisk, since PASTA-ELN cannot write this format')
-          elif isinstance(valueOld, list):  #items that are comma separated in the text-field
-            self.doc[key] = getattr(self, f'key_{key}').text().strip().split(' ')
-          elif isinstance(valueOld, str):
-            if isinstance(getattr(self, f'key_{key}'), QComboBox):
-              valueNew = getattr(self, f'key_{key}').currentText()
-              if (valueNew != '- no link -'
-                  and getattr(self, f'key_{key}').currentData() is not None
-                  and re.search(
-                      r"^[a-z\-]-[a-z0-9]{32}$",
-                      getattr(self, f'key_{key}').currentData(),
-                  ) is not None):
-                #if docID is stored in currentData
-                self.doc[key] = getattr(self, f'key_{key}').currentData()
-              elif valueNew!='- no link -' :
-                self.doc[key] = valueNew
-            else:                          #normal text field
-              self.doc[key] = getattr(self, f'key_{key}').text().strip()
-          elif valueOld is None and key in self.doc:  #important entry, set to empty string
-            self.doc[key]=''
-          else:
-            print("**ERROR dialogForm unknown value type",key, valueOld)
-        # new key-value pairs
-        keyValueList = [self.keyValueListL.itemAt(i).widget().text() for i in range(self.keyValueListL.count())]
-        keyValueDict = dict(zip(keyValueList[::2],keyValueList[1::2] ))
-        keyValueDict = {k:v for k,v in keyValueDict.items() if k}
-        self.doc = keyValueDict | self.doc
-        # ---- if project changed: only branch save; remaining data still needs saving
-        newProjID = []
-        if hasattr(self, 'projectComboBox') and self.projectComboBox.currentData() != '':
-          parentPath = self.db.getDoc(self.projectComboBox.currentData())['-branch'][0]['path']
-          if '_ids' in self.doc:  # group update
-            for docID in self.doc['_ids']:
-              doc = self.db.getDoc(docID)
-              if doc['-branch'][0]['stack']!=self.projectComboBox.currentData(): #only if project changed
-                if doc['-branch'][0]['path'] is None:
-                  newPath    = ''
-                else:
-                  oldPath    = self.comm.backend.basePath/doc['-branch'][0]['path']
-                  newPath = f'{parentPath}/{oldPath.name}'
-                  oldPath.rename(self.comm.backend.basePath/newPath)
-                self.db.updateBranch( doc['_id'], 0, 9999, [self.projectComboBox.currentData()], newPath)
-          elif '-branch' in self.doc:             # sequential or single update
-            if self.doc['-branch'][0]['stack']!=self.projectComboBox.currentData(): #only if project changed
-              if self.doc['-branch'][0]['path'] is None:
+      if hasattr(self, 'key_-name'):
+        self.doc['-name'] = getattr(self, 'key_-name').text().strip()
+        if self.doc['-name'] == '':
+          showMessage(self, 'Error', 'A created item has to have a valid name')
+          return
+        if self.doc['-type'][0]=='x0':  #prevent project-directory names that are identical
+          others = self.comm.backend.db.getView('viewDocType/x0All')
+          if '_id' in self.doc:
+            others = [i for i in others if i['id']!=self.doc['_id']] # create list of names but filter own name
+          others = [i['value'][0] for i in others]
+          othersList = [createDirName(str(i),'x0', 0) for i in others] #create names
+          while createDirName(self.doc['-name'],'x0', 0) in othersList:
+            if re.search(r"_\d+$", self.doc['-name']) is None:
+              self.doc['-name'] += '_1'
+            else:
+              self.doc['-name'] = '_'.join(self.doc['-name'].split('_')[:-1])+'_'+str(int(self.doc['-name'].split('_')[-1])+1)
+      # loop through all the subitems
+      for key, valueOld in self.doc.items():
+        if (key[0] in ['_', '-'] or key in ['image', 'metaVendor', 'metaUser']
+            or not hasattr(self, f'key_{key}') and not hasattr(self, f'textEdit_{key}')):
+          continue
+        if key in ['comment','content']:
+          text = getattr(self, f'textEdit_{key}').toPlainText().strip()
+          if '_ids' not in self.doc or text:  #if group edit, text has to have text
+            self.doc[key] = text
+            if key == 'content' and '-branch' in self.doc:
+              for branch in self.doc['-branch']:
+                if branch['path'] is not None:
+                  if branch['path'].endswith('.md'):
+                    with open(self.comm.backend.basePath/branch['path'], 'w', encoding='utf-8') as fOut:
+                      fOut.write(self.doc['content'])
+                    logging.debug('Wrote new content to '+branch['path'])
+                  else:
+                    showMessage(self, 'Information', 'Did update the database but not the file on harddisk, since PASTA-ELN cannot write this format')
+        elif isinstance(valueOld, list):  #items that are comma separated in the text-field
+          self.doc[key] = getattr(self, f'key_{key}').text().strip().split(' ')
+        elif isinstance(valueOld, str):
+          if isinstance(getattr(self, f'key_{key}'), QComboBox):
+            valueNew = getattr(self, f'key_{key}').currentText()
+            if (valueNew != '- no link -'
+                and getattr(self, f'key_{key}').currentData() is not None
+                and re.search(
+                    r"^[a-z\-]-[a-z0-9]{32}$",
+                    getattr(self, f'key_{key}').currentData(),
+                ) is not None):
+              #if docID is stored in currentData
+              self.doc[key] = getattr(self, f'key_{key}').currentData()
+            elif valueNew!='- no link -' :
+              self.doc[key] = valueNew
+          else:                          #normal text field
+            self.doc[key] = getattr(self, f'key_{key}').text().strip()
+        elif valueOld is None and key in self.doc:  #important entry, set to empty string
+          self.doc[key]=''
+        else:
+          print("**ERROR dialogForm unknown value type",key, valueOld)
+      # new key-value pairs
+      keyValueList = [self.keyValueListL.itemAt(i).widget().text() for i in range(self.keyValueListL.count())]
+      keyValueDict = dict(zip(keyValueList[::2],keyValueList[1::2] ))
+      keyValueDict = {k:v for k,v in keyValueDict.items() if k}
+      self.doc = keyValueDict | self.doc
+      # ---- if project changed: only branch save; remaining data still needs saving
+      newProjID = []
+      if hasattr(self, 'projectComboBox') and self.projectComboBox.currentData() != '':
+        parentPath = self.db.getDoc(self.projectComboBox.currentData())['-branch'][0]['path']
+        if '_ids' in self.doc:  # group update
+          for docID in self.doc['_ids']:
+            doc = self.db.getDoc(docID)
+            if doc['-branch'][0]['stack']!=self.projectComboBox.currentData(): #only if project changed
+              if doc['-branch'][0]['path'] is None:
                 newPath    = ''
               else:
-                oldPath = self.comm.backend.basePath/self.doc['-branch'][0]['path']
+                oldPath    = self.comm.backend.basePath/doc['-branch'][0]['path']
                 newPath = f'{parentPath}/{oldPath.name}'
-              self.db.updateBranch( self.doc['_id'], 0, 9999, [self.projectComboBox.currentData()], newPath)
-              self.doc['-branch'][0] = {'stack':[self.projectComboBox.currentData()], 'path':newPath or None, 'child':9999, 'show':[True,True]}
-          else:
-            newProjID = [self.projectComboBox.currentData()]
-        # ---- if docType changed: save; no further save to db required ----
-        if hasattr(self, 'docTypeComboBox') and self.docTypeComboBox.currentData() != '':
-          self.doc['-type'] = [self.docTypeComboBox.currentData()]
-        if '_ids' in self.doc:                              # group update
-          if '-name' in self.doc:
-            del self.doc['-name']
-          self.doc = {k:v for k,v in self.doc.items() if v} # filter out empty items
-          for docID in self.doc.pop('_ids'):
-            doc = self.db.getDoc(docID)
-            doc.update( self.doc )
-            self.comm.backend.editData(doc)
-        elif '_id' in self.doc:                             # default update on item
-          self.comm.backend.editData(self.doc)
-        else:                                               # create new dataset
-          self.comm.backend.addData(self.doc['-type'][0], copy.deepcopy(self.doc), newProjID)
-      (Stats(profile).strip_dirs().sort_stats(SortKey.CUMULATIVE).print_stats()) #end cProfile
+                oldPath.rename(self.comm.backend.basePath/newPath)
+              self.db.updateBranch( doc['_id'], 0, 9999, [self.projectComboBox.currentData()], newPath)
+        elif '-branch' in self.doc:             # sequential or single update
+          if self.doc['-branch'][0]['stack']!=self.projectComboBox.currentData(): #only if project changed
+            if self.doc['-branch'][0]['path'] is None:
+              newPath    = ''
+            else:
+              oldPath = self.comm.backend.basePath/self.doc['-branch'][0]['path']
+              newPath = f'{parentPath}/{oldPath.name}'
+            self.db.updateBranch( self.doc['_id'], 0, 9999, [self.projectComboBox.currentData()], newPath)
+            self.doc['-branch'][0] = {'stack':[self.projectComboBox.currentData()], 'path':newPath or None, 'child':9999, 'show':[True,True]}
+        else:
+          newProjID = [self.projectComboBox.currentData()]
+      # ---- if docType changed: save; no further save to db required ----
+      if hasattr(self, 'docTypeComboBox') and self.docTypeComboBox.currentData() != '':
+        self.doc['-type'] = [self.docTypeComboBox.currentData()]
+      if '_ids' in self.doc:                              # group update
+        if '-name' in self.doc:
+          del self.doc['-name']
+        self.doc = {k:v for k,v in self.doc.items() if v} # filter out empty items
+        for docID in self.doc.pop('_ids'):
+          doc = self.db.getDoc(docID)
+          doc.update( self.doc )
+          self.comm.backend.editData(doc)
+      elif '_id' in self.doc:                             # default update on item
+        self.comm.backend.editData(self.doc)
+      else:                                               # create new dataset
+        self.comm.backend.addData(self.doc['-type'][0], copy.deepcopy(self.doc), newProjID)
       #!!! NO updates / redraw here since one does not know from where form came
       # e.g. sequential edit cannot have redraw here
       if command[0] is Command.FORM_SAVE_NEXT:
