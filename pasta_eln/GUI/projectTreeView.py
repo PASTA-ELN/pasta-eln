@@ -33,6 +33,8 @@ class TreeView(QTreeView):
       p (QPoint): point of clicking
     """
     item = self.model().itemFromIndex(self.currentIndex())
+    if item is None:  #clicked outside any leaf
+      return
     folder = item.data()['hierStack'].split('/')[-1][0]=='x'
     context = QMenu(self)
     if folder:
