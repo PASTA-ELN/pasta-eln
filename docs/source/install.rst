@@ -16,8 +16,10 @@ If you do not have Python installed, we recommend using Anaconda.
 4. Click on new green arrow button and open "Terminal"
 5. "pip install pasta-eln"
 6. "pip install pasta-eln -U --no-dependencies"
+
     - if it complains about 'aiohttp' missing "pip install aiohttp"
-6. "python -m pasta_eln.gui" (make sure that you have administrator rights)
+
+7. "python -m pasta_eln.gui" (make sure that you have administrator rights)
 
 
 Manual installation

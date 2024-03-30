@@ -79,7 +79,7 @@ class ConfigurationSetup(QWidget):
             try:
               isAdmin = os.getuid() == 0
             except AttributeError:
-              isAdmin = ctypes.windll.shell32.IsUserAnAdmin() == 1
+              isAdmin = ctypes.windll.shell32.IsUserAnAdmin() == 1 # type: ignore[attr-defined]
             if not isAdmin:
               QMessageBox.information(self,'Administrator rights required', \
                           'You require administrator rights for your user. I exit installation now.')
