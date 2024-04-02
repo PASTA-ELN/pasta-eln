@@ -1,4 +1,4 @@
-'''  Methods that check, repair, the local PASTA-ELN installation '''
+'''  Methods that check, repair, the local PASTA-ELN installation: no Qt-here '''
 import os, platform, sys, json, shutil, random, string, logging, uuid
 from typing import Optional, Any, Callable
 import urllib.request
@@ -114,7 +114,7 @@ def couchdb(command:str='test') -> str:
   elif command == 'install':
     if platform.system()=='Linux':
       return '**ERROR should not be called'
-    elif platform.system()=='Windows':
+    if platform.system()=='Windows':
       logging.info('CouchDB starting ...')
       url = 'https://couchdb.neighbourhood.ie/downloads/3.1.1/win/apache-couchdb-3.1.1.msi'
       path = Path.home()/'Downloads'/'apache-couchdb-3.1.1.msi'

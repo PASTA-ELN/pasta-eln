@@ -1,5 +1,5 @@
 """ Widget: setup tab inside the configuration dialog window """
-import logging
+import logging, os, ctypes
 from enum import Enum
 from pathlib import Path
 from typing import Callable, Any
@@ -76,12 +76,23 @@ class ConfigurationSetup(QWidget):
         else:
           button = QMessageBox.question(self, "CouchDB installation", couchDBWindows)
           if button == QMessageBox.Yes:
-            res = couchdb('install')
-            flagInstalledSoftware = True
-            if len(res.split('|'))==3:
-              password=res.split('|')[1]
+            try:
+              isAdmin = os.getuid() == 0
+            except AttributeError:
+              isAdmin = ctypes.windll.shell32.IsUserAnAdmin() == 1 # type: ignore[attr-defined]
+            if not isAdmin:
+              QMessageBox.information(self,'Administrator rights required', \
+                          'You require administrator rights for your user. I exit installation now.')
+              self.mainText = self.mainText.replace('- CouchDB','- CouchDB: no admin rights' )
+              self.text1.setMarkdown(self.mainText)
+              flagContinue = False
             else:
-              logging.error('Could not retrieve password :%s',str(res))
+              res = couchdb('install')
+              flagInstalledSoftware = True
+              if len(res.split('|'))==3:
+                password=res.split('|')[1]
+              else:
+                logging.error('Could not retrieve password :%s',str(res))
           else:
             self.mainText = self.mainText.replace('- CouchDB','- CouchDB: user chose to NOT install' )
             self.text1.setMarkdown(self.mainText)
@@ -131,7 +142,7 @@ class ConfigurationSetup(QWidget):
 
       #If installed, restart
       if flagInstalledSoftware:
-        button = QMessageBox.information(self,'PASTA-ELN restart required', restartPastaWindows)
+        QMessageBox.information(self,'PASTA-ELN restart required', restartPastaWindows)
         restart()
 
       #Example data
