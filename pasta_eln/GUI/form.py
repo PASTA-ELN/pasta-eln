@@ -76,7 +76,8 @@ class Form(QDialog):
     keysDataHierarchy = [i['name'] for group in dataHierarchyNode for i in dataHierarchyNode[group]]
     for keyInDocNotHierarchy in set(self.doc.keys()).difference(keysDataHierarchy ):
       dataHierarchyNode['default'].append({'name':keyInDocNotHierarchy})
-    self.allKeys = [i['name'] for group in dataHierarchyNode for i in dataHierarchyNode[group]]
+    self.allKeys = {i['name'] for group in dataHierarchyNode for i in dataHierarchyNode[group]}
+    self.allKeys = self.allKeys.union(self.doc.keys())
 
     # create tabs or not: depending on the number of groups
     if '-tags' not in self.doc:
@@ -361,8 +362,9 @@ class Form(QDialog):
             else:
               self.doc['-name'] = '_'.join(self.doc['-name'].split('_')[:-1])+'_'+str(int(self.doc['-name'].split('_')[-1])+1)
       # loop through all the subitems
-      for key, valueOld in self.doc.items():
-        if (key[0] in ['_', '-'] or key in ['image', 'metaVendor', 'metaUser']
+      for key in self.allKeys:
+        valueOld = self.doc.get(key, '')
+        if (key[0] in ['_', '-'] or key in ['image', 'metaVendor', 'metaUser']  #tags are already saved
             or not hasattr(self, f'key_{key}') and not hasattr(self, f'textEdit_{key}')):
           continue
         if key in ['comment','content']:
