@@ -444,6 +444,8 @@ def restoreCouchDB(location:str='', userName:str='', password:str='', fileName:s
     for idx, i in enumerate(possFiles):
       print(f'[{str(idx + 1)}] {i}')
     fileName = input(f'Which file to use for restored? (1-{len(possFiles)}) ')
+    if fileName=='':
+      fileName=1
     fileName = possFiles[int(fileName)-1]
   # use information
   authUser = requests.auth.HTTPBasicAuth(userName, password)
@@ -452,6 +454,8 @@ def restoreCouchDB(location:str='', userName:str='', password:str='', fileName:s
     #first run through: create documents and design documents
     for fileI in files:
       fileParts = fileI.split('/')[1:]
+      if fileParts==['pastaELN.json']: #do not recreate file, it is only there for manual recovery
+        continue
       database = fileParts[0]
       docID = fileParts[1]
       if docID.endswith('_attach'):
@@ -481,6 +485,8 @@ def restoreCouchDB(location:str='', userName:str='', password:str='', fileName:s
     #second run through: create attachments
     for fileI in files:
       fileParts = fileI.split('/')[1:]
+      if fileParts==['pastaELN.json']: #do not recreate file, it is only there for manual recovery
+        continue
       database = fileParts[0]
       docID = fileParts[1]
       if not docID.endswith('_attach'):
