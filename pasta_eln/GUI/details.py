@@ -249,7 +249,7 @@ class Details(QScrollArea):
     self.metaDetailsW.setFixedWidth(width)
     for text in self.rescaleTexts:
       text.document().setTextWidth(width)
-      height:int = text.document().size().toTuple()[1]
+      height:int = text.document().size().toTuple()[1] #type: ignore[index]
       text.setFixedHeight(height)
     return
 
