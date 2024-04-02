@@ -22,6 +22,7 @@ class Details(QScrollArea):
     comm.testExtractor.connect(self.testExtractor)
     self.doc:dict[str,Any]  = {}
     self.docID= ''
+    self.rescaleTexts = []
 
     # GUI elements
     self.mainW, self.mainL = widgetAndLayout('V', None)
@@ -86,6 +87,7 @@ class Details(QScrollArea):
     self.btnVendor.setChecked(True)
     self.btnUser.setChecked(True)
     self.btnDatabase.setChecked(False)
+    self.rescaleTexts = []
     if not docID:  #if given '' docID, return
       return
     # Create new
@@ -155,7 +157,7 @@ class Details(QScrollArea):
       else:
         link = False
         dataHierarchyItem = [i for group in dataHierarchyNode for i in dataHierarchyNode[group] if i['name']==key]
-        if isinstance(self.doc[key],str) and '\n' in self.doc[key]:     #if returns in value: format nicely
+        if (isinstance(self.doc[key],str) and '\n' in self.doc[key]) or key=='comment':
           labelW, labelL = widgetAndLayout('H', self.metaDetailsL, top='s', bottom='s')
           labelL.addWidget(QLabel(f'{key}: '), alignment=Qt.AlignTop) # type: ignore
           text = QTextEdit()
@@ -165,6 +167,7 @@ class Details(QScrollArea):
           text.setStyleSheet(f"QTextEdit {{ border: none; padding: 0px; background-color: {bgColor}; "\
                                 f"color: {fgColor} }}")
           text.document().setTextWidth(labelW.width())
+          self.rescaleTexts.append(text)
           height:int = text.document().size().toTuple()[1] # type: ignore[index]
           text.setFixedHeight(height)
           text.setReadOnly(True)
@@ -234,6 +237,20 @@ class Details(QScrollArea):
     """
     logging.debug('used link on %s|%s',label,docID)
     self.comm.changeDetails.emit(docID)
+    return
+
+
+  def resizeWidth(self, width:int) -> None:
+    """ called if details is resized by splitter at the parent widget
+    - resize all text-documents
+    """
+    if not self.rescaleTexts:
+      return
+    self.metaDetailsW.setFixedWidth(width)
+    for text in self.rescaleTexts:
+      text.document().setTextWidth(width)
+      height:int = text.document().size().toTuple()[1] # type: ignore[index]
+      text.setFixedHeight(height)
     return
 
 

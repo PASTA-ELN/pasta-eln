@@ -14,6 +14,7 @@ class DocTypes(QWidget):
     # GUI elements
     table = Table(comm)
     self.details = Details(comm)
+    self.details.resizeEvent = self.resizeWidget # type: ignore
     splitter = QSplitter()
     splitter.setHandleWidth(10)
     splitter.addWidget(table)
@@ -52,4 +53,10 @@ class DocTypes(QWidget):
     """
     if docID!='':
       self.details.show()
+    return
+
+
+  def resizeWidget(self, _) -> None:
+    """ called if splitter resizes details-view  """
+    self.details.resizeWidth(self.details.width())
     return
