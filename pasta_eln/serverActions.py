@@ -443,10 +443,10 @@ def restoreCouchDB(location:str='', userName:str='', password:str='', fileName:s
     possFiles = [i for i in os.listdir('.') if i.startswith('couchDB') and i.endswith('.zip')]
     for idx, i in enumerate(possFiles):
       print(f'[{str(idx + 1)}] {i}')
-    fileName = input(f'Which file to use for restored? (1-{len(possFiles)}) ')
-    if fileName=='':
-      fileName = '1'
-    fileName = possFiles[int(fileName)-1]
+    fileChoice = input(f'Which file to use for restored? (1-{len(possFiles)}) ')
+    if fileChoice=='':
+      fileChoice = '1'
+    fileName = possFiles[int(fileChoice)-1]
   # use information
   authUser = requests.auth.HTTPBasicAuth(userName, password)
   with ZipFile(fileName, 'r', compression=ZIP_DEFLATED) as zipFile:
