@@ -445,7 +445,7 @@ def restoreCouchDB(location:str='', userName:str='', password:str='', fileName:s
       print(f'[{str(idx + 1)}] {i}')
     fileName = input(f'Which file to use for restored? (1-{len(possFiles)}) ')
     if fileName=='':
-      fileName=1
+      fileName = '1'
     fileName = possFiles[int(fileName)-1]
   # use information
   authUser = requests.auth.HTTPBasicAuth(userName, password)
