@@ -249,10 +249,10 @@ class Form(QDialog):
       return
     content = {'-name': getattr(self, 'key_-name').text().strip()}
     for key in self.doc.keys():
-      if key[0] in self.skipKeys0 or key in self.skipKeys or not hasattr(self, f'key_{key}'):
-        continue
       if key in ['comment','content']:
         content[key] = getattr(self, f'textEdit_{key}').toPlainText().strip()
+      elif key[0] in self.skipKeys0 or key in self.skipKeys or not hasattr(self, f'key_{key}'):
+        continue
       elif isinstance(getattr(self, f'key_{key}'), QLineEdit):
         content[key] = getattr(self, f'key_{key}').text().strip()
       # skip QCombobox items since cannot be sure that next from has them and they are easy to recreate
