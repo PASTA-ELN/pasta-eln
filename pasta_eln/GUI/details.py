@@ -22,7 +22,7 @@ class Details(QScrollArea):
     comm.testExtractor.connect(self.testExtractor)
     self.doc:dict[str,Any]  = {}
     self.docID= ''
-    self.rescaleTexts = []
+    self.rescaleTexts:list[QTextEdit] = []
 
     # GUI elements
     self.mainW, self.mainL = widgetAndLayout('V', None)
@@ -249,7 +249,7 @@ class Details(QScrollArea):
     self.metaDetailsW.setFixedWidth(width)
     for text in self.rescaleTexts:
       text.document().setTextWidth(width)
-      height:int = text.document().size().toTuple()[1] # type: ignore[index]
+      height:int = text.document().size().toTuple()[1]
       text.setFixedHeight(height)
     return
 
