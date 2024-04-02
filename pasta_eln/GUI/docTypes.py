@@ -1,4 +1,5 @@
 """ widget that shows the table and the details of the items """
+from typing import Any
 from PySide6.QtCore import Slot                                # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QWidget, QSplitter, QVBoxLayout  # pylint: disable=no-name-in-module
 from .table import Table
@@ -14,6 +15,7 @@ class DocTypes(QWidget):
     # GUI elements
     table = Table(comm)
     self.details = Details(comm)
+    self.details.resizeEvent = self.resizeWidget # type: ignore
     splitter = QSplitter()
     splitter.setHandleWidth(10)
     splitter.addWidget(table)
@@ -52,4 +54,10 @@ class DocTypes(QWidget):
     """
     if docID!='':
       self.details.show()
+    return
+
+
+  def resizeWidget(self, _:Any) -> None:
+    """ called if splitter resizes details-view  """
+    self.details.resizeWidth(self.details.width())
     return

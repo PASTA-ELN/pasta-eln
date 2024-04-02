@@ -181,7 +181,10 @@ def dict2ul(aDict:dict[str,Any]) -> str:
   text = '<ul>'
   for key, value in aDict.items():
     if isinstance(value,str) and value.startswith('{') and value.endswith('}'):
-      value = json.loads(value.replace("'",'"'))
+      try:
+        value = json.loads(value.replace("'",'"'))
+      except:
+        pass
     if isinstance(value, dict):
       valueString = dict2ul(value)
     elif isinstance(value, list):

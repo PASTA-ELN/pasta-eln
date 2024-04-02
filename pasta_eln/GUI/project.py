@@ -119,6 +119,7 @@ class Project(QWidget):
     commentL.addWidget(self.commentTE)
     return
 
+
   def commentResize(self, _:Any) -> None:
     """ called if comment is resized because widget initially/finally knows its size
     - comment widget is hard coded size it depends on the rendered size
