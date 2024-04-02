@@ -444,9 +444,7 @@ def restoreCouchDB(location:str='', userName:str='', password:str='', fileName:s
     for idx, i in enumerate(possFiles):
       print(f'[{str(idx + 1)}] {i}')
     fileChoice = input(f'Which file to use for restored? (1-{len(possFiles)}) ')
-    if fileChoice=='':
-      fileChoice = '1'
-    fileName = possFiles[int(fileChoice)-1]
+    fileName = possFiles[int(fileChoice)-1] if fileChoice else possFiles[0]
   # use information
   authUser = requests.auth.HTTPBasicAuth(userName, password)
   with ZipFile(fileName, 'r', compression=ZIP_DEFLATED) as zipFile:
