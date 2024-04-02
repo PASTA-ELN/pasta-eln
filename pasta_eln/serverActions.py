@@ -443,8 +443,8 @@ def restoreCouchDB(location:str='', userName:str='', password:str='', fileName:s
     possFiles = [i for i in os.listdir('.') if i.startswith('couchDB') and i.endswith('.zip')]
     for idx, i in enumerate(possFiles):
       print(f'[{str(idx + 1)}] {i}')
-    fileName = input(f'Which file to use for restored? (1-{len(possFiles)}) ')
-    fileName = possFiles[int(fileName)-1]
+    fileChoice = input(f'Which file to use for restored? (1-{len(possFiles)}) ')
+    fileName = possFiles[int(fileChoice)-1] if fileChoice else possFiles[0]
   # use information
   authUser = requests.auth.HTTPBasicAuth(userName, password)
   with ZipFile(fileName, 'r', compression=ZIP_DEFLATED) as zipFile:
@@ -452,6 +452,8 @@ def restoreCouchDB(location:str='', userName:str='', password:str='', fileName:s
     #first run through: create documents and design documents
     for fileI in files:
       fileParts = fileI.split('/')[1:]
+      if fileParts==['pastaELN.json']: #do not recreate file, it is only there for manual recovery
+        continue
       database = fileParts[0]
       docID = fileParts[1]
       if docID.endswith('_attach'):
@@ -481,6 +483,8 @@ def restoreCouchDB(location:str='', userName:str='', password:str='', fileName:s
     #second run through: create attachments
     for fileI in files:
       fileParts = fileI.split('/')[1:]
+      if fileParts==['pastaELN.json']: #do not recreate file, it is only there for manual recovery
+        continue
       database = fileParts[0]
       docID = fileParts[1]
       if not docID.endswith('_attach'):
