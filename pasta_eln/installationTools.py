@@ -91,6 +91,19 @@ def runAsAdminWindows(cmdLine:list[str]) -> None:
   return
 
 
+def checkForDotNetVersion() -> bool:
+  ''' check if .NET version 3.5 is installed (only on windows)
+  '''
+  import subprocess
+  command = ['reg','query','HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\NET Framework Setup\\NDP','/s']
+  result = subprocess.run(command, stdout=subprocess.PIPE)
+  lines = [str(i).strip() for i in result.stdout.split(b'\n')]
+  lines = [i.split()[3][:-3] for i in lines if 'Version' in i]
+  versions = set(lines)
+  count3_5 = len([i for i in versions if i.startswith('3.5.')])
+  return count3_5>0
+
+
 def couchdb(command:str='test') -> str:
   '''
   test couchDB installation or (install it on Windows-only)

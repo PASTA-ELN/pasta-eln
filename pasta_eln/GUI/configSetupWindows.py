@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Callable, Any
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QMessageBox, QFileDialog, QProgressBar   # pylint: disable=no-name-in-module
 from ..guiStyle import TextButton, widgetAndLayout
-from ..installationTools import couchdb, configuration, dataHierarchy, exampleData, createShortcut
+from ..installationTools import couchdb, configuration, dataHierarchy, exampleData, createShortcut, checkForDotNetVersion
 from ..fixedStringsJson import setupTextWindows, couchDBWindows, exampleDataWindows, restartPastaWindows
 from ..miscTools import restart
 from ..guiCommunicate import Communicate
@@ -84,6 +84,12 @@ class ConfigurationSetup(QWidget):
               QMessageBox.information(self,'Administrator rights required', \
                           'You require administrator rights for your user. I exit installation now.')
               self.mainText = self.mainText.replace('- CouchDB','- CouchDB: no admin rights' )
+              self.text1.setMarkdown(self.mainText)
+              flagContinue = False
+            elif not checkForDotNetVersion():
+              QMessageBox.information(self,'.NET version 3.5 required', \
+                          '.NET version 3.5 is required for the installation of couchDB. I exit installation now.')
+              self.mainText = self.mainText.replace('- CouchDB','- CouchDB: no .NET 3.5' )
               self.text1.setMarkdown(self.mainText)
               flagContinue = False
             else:
@@ -172,7 +178,6 @@ class ConfigurationSetup(QWidget):
       restart()
       # self.callbackFinished()
     return
-
 
 
 
