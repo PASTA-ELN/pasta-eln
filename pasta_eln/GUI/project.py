@@ -168,12 +168,7 @@ class Project(QWidget):
     # collapse / expand depending on stored value
     # by iterating each leaf, and converting item and index
     root = self.model.invisibleRootItem()
-    for iRow in range(root.rowCount()):
-      item = self.model.item(iRow,0)
-      data = item.data(role=Qt.UserRole+1)         # type: ignore[operator]
-      if data['hierStack'].split('/')[-1][0]=='x':
-        index = self.model.indexFromItem(item)
-        self.tree.setExpanded(index, data['gui'][1])
+    self.setExpandedState(root)
     if selectedIndex is not None:
       self.tree.selectionModel().select(selectedIndex, QItemSelectionModel.Select)
       self.tree.setCurrentIndex(selectedIndex)# Item(selectedItem)
@@ -183,6 +178,22 @@ class Project(QWidget):
       self.btnAddSubfolder.setVisible(False)
     self.tree.expanded.connect(lambda index: self.actionExpandCollapse(index, True))
     self.tree.collapsed.connect(lambda index: self.actionExpandCollapse(index, False))
+    return
+
+
+  def setExpandedState(self, node:QStandardItem) -> None:
+    """ Recursive function to set the expanded state of nodes
+
+    Args:
+      node (QStandardItem): node to process
+    """
+    for iRow in range(node.rowCount()):
+      item = node.child(iRow)
+      data = item.data(role=Qt.UserRole+1)         # type: ignore[operator]
+      if data['hierStack'].split('/')[-1][0]=='x':
+        index = self.model.indexFromItem(item)
+        self.tree.setExpanded(index, data['gui'][1])
+      self.setExpandedState(item)
     return
 
 
