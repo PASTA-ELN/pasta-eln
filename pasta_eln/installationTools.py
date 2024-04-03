@@ -96,7 +96,7 @@ def checkForDotNetVersion() -> bool:
   '''
   import subprocess
   command = ['reg','query','HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\NET Framework Setup\\NDP','/s']
-  result = subprocess.run(command, stdout=subprocess.PIPE)
+  result = subprocess.run(command, stdout=subprocess.PIPE, check=True)
   lines = [str(i).strip() for i in result.stdout.split(b'\n')]
   lines = [i.split()[3][:-3] for i in lines if 'Version' in i]
   versions = set(lines)
