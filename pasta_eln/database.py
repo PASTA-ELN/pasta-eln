@@ -470,8 +470,6 @@ class Database:
             branchLine['stack'] = stack+branchLine['stack'][len(stackOld):]
             branchLine['show']  = self.createShowFromStack(branchLine['stack'], branchLine['show'][-1])
             flagNotChanged = False
-        if flagNotChanged:
-          print(f"**Unsure** Not updated{str(line)}")
         docLine.save()
         # update .json on disk
         for branchLine in docLine['-branch']:
