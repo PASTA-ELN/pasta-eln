@@ -187,6 +187,8 @@ class Project(QWidget):
     Args:
       node (QStandardItem): node to process
     """
+    if self.model is None or self.tree is None:
+      return
     for iRow in range(node.rowCount()):
       item = node.child(iRow)
       data = item.data(role=Qt.UserRole+1)         # type: ignore[operator]
