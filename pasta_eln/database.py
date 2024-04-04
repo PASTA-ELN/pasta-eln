@@ -461,17 +461,12 @@ class Database:
       children = self.getView('viewHierarchy/viewHierarchy', startKey=' '.join(stackOld+[docID,'']))
       for line in children:
         docLine = self.db[line['id']]
-        flagNotChanged = True
         for branchLine in docLine['-branch']:
           if branchLine['path'] is not None and branchLine['path'].startswith(oldPath):
             branchLine['path'] = path+branchLine['path'][len(oldPath):]
-            flagNotChanged = False
           if stack is not None and '/'.join(branchLine['stack']).startswith('/'.join(stackOld)):
             branchLine['stack'] = stack+branchLine['stack'][len(stackOld):]
             branchLine['show']  = self.createShowFromStack(branchLine['stack'], branchLine['show'][-1])
-            flagNotChanged = False
-        if flagNotChanged:
-          print(f"**Unsure** Not updated{str(line)}")
         docLine.save()
         # update .json on disk
         for branchLine in docLine['-branch']:
