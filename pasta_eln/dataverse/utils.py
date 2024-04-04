@@ -16,45 +16,55 @@ from json import dump, load
 from logging import Logger
 from os.path import exists, join
 from pathlib import Path
-from typing import Any, Type
+from typing import Any, Callable, Type
 
-from PySide6.QtWidgets import QBoxLayout, QLabel, QMessageBox
+from PySide6.QtCore import QSize
+from PySide6.QtGui import QImage, QPixmap
+from PySide6.QtWidgets import QBoxLayout
 from cryptography.fernet import Fernet, InvalidToken
 from qtawesome import icon
 
 from pasta_eln.dataverse.client import DataverseClient
 from pasta_eln.dataverse.config_error import ConfigError
-from pasta_eln.dataverse.config_model import ConfigModel
 from pasta_eln.dataverse.upload_status_values import UploadStatusValues
 
 
-def update_status(status: str, statusIconLabel: QLabel, statusLabel: QLabel) -> None:
+def update_status(status: str,
+                  status_label_set_text_callback: Callable[[str], None],
+                  status_icon_set_pixmap_callback: Callable[[QPixmap | QImage | str], None]) -> None:
   """
-  Updates the status and status icon of the upload.
-
-  Explanation:
-      This function updates the status and status icon of the upload based on the given status.
-      It sets the text of the statusLabel and the pixmap of the statusIconLabel based on the status value.
+  Updates the status with the corresponding label and icon.
 
   Args:
-      status (str): The status of the upload.
-      statusIconLabel (QLabel): The label to display the status icon.
-      statusLabel (QLabel): The label to display the status text.
+      status (str): The status value.
+      status_label_set_text_callback (Callable[[str], None]): The callback function to set the status label text.
+      status_icon_set_pixmap_callback (Callable[[QPixmap | QImage | str], None]):
+      The callback function to set the status icon pixmap.
+
+  Returns:
+      None
+
+  Explanation:
+      This function updates the status with the corresponding label and icon based on the given status value.
+      It uses the provided callback functions to set the status label text and status icon pixmap.
   """
-  statusLabel.setText(status)
   match status:
     case UploadStatusValues.Queued.name:
-      statusIconLabel.setPixmap(icon('ph.queue-bold').pixmap(statusIconLabel.size()))
+      icon_name = 'fa.circle-o-notch'
     case UploadStatusValues.Uploading.name:
-      statusIconLabel.setPixmap(icon('mdi6.progress-upload').pixmap(statusIconLabel.size()))
+      icon_name = 'fa.cloud-upload'
     case UploadStatusValues.Cancelled.name:
-      statusIconLabel.setPixmap(icon('mdi.cancel').pixmap(statusIconLabel.size()))
+      icon_name = 'fa.minus-circle'
     case UploadStatusValues.Finished.name:
-      statusIconLabel.setPixmap(icon('fa.check-circle-o').pixmap(statusIconLabel.size()))
+      icon_name = 'fa.check-circle-o'
     case UploadStatusValues.Error.name:
-      statusIconLabel.setPixmap(icon('msc.error-small').pixmap(statusIconLabel.size()))
+      icon_name = 'fa.times-circle-o'
     case UploadStatusValues.Warning.name:
-      statusIconLabel.setPixmap(icon('fa.warning').pixmap(statusIconLabel.size()))
+      icon_name = 'fa.warning'
+    case _:
+      icon_name = 'fa.times-circle-o'
+  status_label_set_text_callback(status)
+  status_icon_set_pixmap_callback(icon(icon_name).pixmap(QSize(30, 30)))
 
 
 def set_authors(logger: Logger, metadata: dict[str, Any]) -> None:
@@ -90,15 +100,21 @@ def set_authors(logger: Logger, metadata: dict[str, Any]) -> None:
     author_copy['authorAffiliation']['value'] = ', '.join([o['organization'] for o in author['organizations']])
     authors_list.append(author_copy)
 
-def get_adjusted_metadata(metadata: dict[str, Any]) -> dict[str, Any]:
+
+def get_flattened_metadata(metadata: dict[str, Any]) -> dict[str, Any]:
   """
-  Get the adjusted metadata.
+  Returns a flattened version of the metadata.
 
   Args:
-      metadata (dict[str, Any]): The metadata dictionary.
+      metadata (dict[str, Any]): The metadata to be flattened.
 
   Returns:
-      dict[str, Any]: The adjusted metadata dictionary.
+      dict[str, Any]: The flattened metadata.
+
+  Explanation:
+      This function takes a nested metadata dictionary and returns a flattened version of the metadata.
+      It extracts the values from the nested structure and creates a new dictionary with a flattened structure.
+      The resulting dictionary contains the field names as keys and their corresponding values.
   """
   adjusted_metadata = {}
   if metadata['datasetVersion']['license']:
@@ -489,6 +505,7 @@ def check_login_credentials(logger: Logger, api_token: str, server_url: str) -> 
     logger.warning("Data server is not reachable: %s", message)
   return result
 
+
 def check_if_dataverse_exists(logger: Logger, api_token: str, server_url: str, dataverse_id: str) -> bool:
   logger.info("Checking if login info is valid, server_url: %s", server_url)
   dataverse_client = DataverseClient(server_url, api_token)
@@ -612,4 +629,3 @@ def get_formatted_message(missing_metadata: dict[str, list[str]]) -> str:
       message += "</ul>"
   message += "</html>"
   return message
-

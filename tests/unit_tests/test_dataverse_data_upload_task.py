@@ -7,157 +7,170 @@
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import datetime
-from threading import Thread
-from time import sleep
-from unittest.mock import MagicMock, patch
 
 import pytest
-
-from pasta_eln.GUI.dataverse.upload_widget_base import Ui_UploadWidgetFrame
-from pasta_eln.dataverse.config_model import ConfigModel
+from unittest.mock import MagicMock, patch
+from PySide6.QtGui import QPixmap
 from pasta_eln.dataverse.data_upload_task import DataUploadTask
-from pasta_eln.dataverse.upload_model import UploadModel
 from pasta_eln.dataverse.upload_status_values import UploadStatusValues
+from pasta_eln.dataverse.config_error import ConfigError
 
-# Mock the QtCore module to avoid errors related to Qt dependencies
-pytest.mockQtCore = MagicMock()
-pytest.mockQtCore.Signal = MagicMock(return_value=MagicMock())
-
-
-# Mock the Ui_UploadWidgetFrame to avoid GUI interactions
+# Mock dependencies that are not directly related to the functionality being tested
 @pytest.fixture
-def mock_widget():
-  widget = MagicMock(spec=Ui_UploadWidgetFrame)
-  widget.uploadProgressBar = MagicMock()
-  widget.statusIconLabel = MagicMock()
-  widget.statusLabel = MagicMock()
-  widget.uploadProjectLabel = MagicMock()
-  widget.uploadProjectLabel.text.return_value = "TestProject"
-  widget.uploadCancelPushButton = MagicMock()
-  return widget
-
+def mock_db_api():
+    with patch('pasta_eln.dataverse.data_upload_task.DatabaseAPI') as mock:
+        yield mock
 
 @pytest.fixture
-def mock_data_upload_task(mocker, mock_widget, mock_upload_model):
-  mocker.patch('pasta_eln.dataverse.data_upload_task.DatabaseAPI')
-  mocker.patch('pasta_eln.dataverse.data_upload_task.UploadModel')
-  mocker.patch('pasta_eln.dataverse.data_upload_task.DataUploadTask.progressChanged')
-  mocker.patch('pasta_eln.dataverse.data_upload_task.DataUploadTask.statusChanged')
-  mocker.patch('pasta_eln.dataverse.data_upload_task.DataUploadTask.uploadModelCreated')
-  mock_data_upload_task = DataUploadTask(mock_widget)
-  mock_data_upload_task.db_api.create_model_document.return_value = mock_upload_model
-  return mock_data_upload_task
+def mock_dataverse_client():
+    with patch('pasta_eln.dataverse.data_upload_task.DataverseClient') as mock:
+        yield mock
 
+@pytest.fixture
+def mock_progress_thread():
+    with patch('pasta_eln.dataverse.data_upload_task.ProgressThread') as mock:
+        yield mock
 
-# Mock the UploadModel to avoid actual database interactions
 @pytest.fixture
 def mock_upload_model():
-  with patch('pasta_eln.dataverse.data_upload_task.UploadModel') as mock:
-    mock.id = "test_id"
-    return mock
+    with patch('pasta_eln.dataverse.data_upload_task.UploadModel') as mock:
+        yield mock
 
-
-# Mock time.sleep to speed up the tests
-@pytest.fixture(autouse=True)
-def mock_sleep():
-  with patch('time.sleep', return_value=None):
-    yield
-
+@pytest.fixture
+def setup_task(mocker, mock_db_api, mock_dataverse_client, mock_progress_thread, mock_upload_model):
+    # Arrange
+    project_name = "Test Project"
+    progress_update_callback = MagicMock()
+    status_label_set_text_callback = MagicMock()
+    status_icon_set_pixmap_callback = MagicMock()
+    upload_cancel_clicked_signal_callback = MagicMock()
+    task = DataUploadTask(
+        project_name,
+        progress_update_callback,
+        status_label_set_text_callback,
+        status_icon_set_pixmap_callback,
+        upload_cancel_clicked_signal_callback,
+    )
+    task.progress_changed = mocker.MagicMock()
+    task.status_changed = mocker.MagicMock()
+    task.upload_model_created = mocker.MagicMock()
+    return task
 
 class TestDataverseDataUploadTask:
 
-  # Happy path tests with various realistic test values
-  @pytest.mark.parametrize("test_id, project_name", [("Success_01", "TestProject1"), ("Success_02", "TestProject2"),
-    ("Success_03", "TestProject3"), ])
-  def test_data_upload_task_happy_path(self, mocker, mock_widget, test_id, project_name):
-    # Arrange
-    mock_widget.uploadProjectLabel.text.return_value = project_name
-    mock_db_api = mocker.MagicMock()
-    mock_db_api.create_model_document.return_value = UploadModel(project_name=project_name)
-    mock_db_api.get_model.return_value = ConfigModel()
-    mocker.patch('pasta_eln.dataverse.data_upload_task.DatabaseAPI', return_value=mock_db_api)
+    def test_init_succeeds(self, mocker):
+        # Arrange
+        mock_get_logger = mocker.patch('pasta_eln.dataverse.data_upload_task.logging.getLogger')
+        db_api_mock = mocker.patch('pasta_eln.dataverse.data_upload_task.DatabaseAPI')
+        client_mock = mocker.patch('pasta_eln.dataverse.data_upload_task.DataverseClient')
+        mocker.patch('pasta_eln.dataverse.data_upload_task.ProgressThread')
+        upload_model_mock = mocker.patch('pasta_eln.dataverse.data_upload_task.UploadModel')
+        mocker.patch('pasta_eln.dataverse.data_upload_task.super')
+        datetime_mock = mocker.patch('pasta_eln.dataverse.data_upload_task.datetime')
+        DataUploadTask.progress_changed = mocker.MagicMock()
+        DataUploadTask.status_changed = mocker.MagicMock()
+        DataUploadTask.upload_model_created = mocker.MagicMock()
+        progress_update_callback = MagicMock()
+        status_label_set_text_callback = MagicMock()
+        status_icon_set_pixmap_callback = MagicMock()
+        upload_cancel_clicked_signal_callback = MagicMock()
+        project_name = "Test Project"
 
-    # Act
-    task = DataUploadTask(mock_widget)
+        # Act
+        task = DataUploadTask(
+            project_name,
+            progress_update_callback,
+            status_label_set_text_callback,
+            status_icon_set_pixmap_callback,
+            upload_cancel_clicked_signal_callback,
+        )
 
-    # Assert
-    assert task.project_name == project_name
-    assert isinstance(task.upload_model, UploadModel)
-    assert task.upload_model.project_name == project_name
-    assert isinstance(task.config_model, ConfigModel)
-    mock_widget.uploadCancelPushButton.clicked.connect.assert_called_once()
+        # Assert
+        mock_get_logger.assert_called_once_with('pasta_eln.dataverse.data_upload_task.DataUploadTask')
+        assert task.project_name == project_name, "Project name should be set"
+        assert task.db_api == db_api_mock.return_value, "Database API should be set"
+        upload_model_mock.assert_called_once_with(project_name=project_name,
+                                                  status=UploadStatusValues.Queued.name,
+                                                  log=f"Upload initiated for project {project_name} at {datetime_mock.now.return_value.isoformat.return_value}\n")
+        db_api_mock.return_value.create_model_document.assert_called_once_with(upload_model_mock.return_value)
+        assert task.upload_model == db_api_mock.return_value.create_model_document.return_value, "Upload model should be set"
+        mock_get_logger.return_value.info.assert_called_once_with(f"Upload model created: {task.upload_model}")
+        db_api_mock.return_value.get_config_model.assert_called_once()
+        assert task.config_model == db_api_mock.return_value.get_config_model.return_value, "Config model should be set"
+        task.config_model.dataverse_login_info.get.assert_any_call("server_url", "")
+        assert task.dataverse_server_url == task.config_model.dataverse_login_info.get("server_url", ""), "Dataverse server URL should be set"
+        task.config_model.dataverse_login_info.get.assert_any_call("api_token", "")
+        assert task.dataverse_api_token == task.config_model.dataverse_login_info.get("api_token", ""), "Dataverse API Token should be set"
+        task.config_model.dataverse_login_info.get.assert_any_call("dataverse_id", "")
+        assert task.dataverse_id == task.config_model.dataverse_login_info.get("dataverse_id", ""), "Dataverse ID should be set"
+        assert task.metadata == task.config_model.metadata, "Metadata should be set"
+        client_mock.assert_called_once_with(task.dataverse_server_url, task.dataverse_api_token, 60)
+        assert task.dataverse_client == client_mock.return_value, "Dataverse client should be set"
 
-  # Error cases
-  @pytest.mark.parametrize("test_id, exception, expected_exception",
-                           [("error_01", Exception("DB Connection Error"), Exception),
-                             ("error_02", ValueError("Invalid Project Name"), ValueError), ])
-  def test_data_upload_task_error_cases(self, mocker, mock_widget, test_id, exception, expected_exception):
-    # Arrange
-    mock_db_api = mocker.MagicMock()
-    mock_db_api.create_model_document.side_effect = exception
-    mocker.patch('pasta_eln.dataverse.data_upload_task.DatabaseAPI', return_value=mock_db_api)
+    @pytest.mark.parametrize("status,expected_log", [
+        ("Uploading", "Upload initiated for project Test Project"),
+        ("Cancelled", "Cancelled at"),
+        ("Finished", "Successfully uploaded ELN file"),
+    ], ids=["happy-path-uploading", "cancel-task", "happy-path-finished"])
+    def test_start_task(self, setup_task, status, expected_log):
+        task = setup_task
+        # Mock methods to simulate behavior
+        task.check_if_cancelled = MagicMock(return_value=False)
+        task.create_dataset_for_pasta_project = MagicMock(return_value="persistent_id")
+        task.check_if_dataset_is_unlocked = MagicMock(return_value=True)
+        task.upload_generated_eln_file_to_dataset = MagicMock(return_value="file_pid")
+        task.finalize_upload_task = MagicMock()
 
-    # Act & Assert
-    with pytest.raises(expected_exception):
-      DataUploadTask(mock_widget)
+        # Act
+        task.start_task()
 
-  @pytest.mark.parametrize("progress_values, expected_status",
-                           [(range(101), UploadStatusValues.Finished.name),  # ID: success-path-complete
-                             (range(50), UploadStatusValues.Cancelled.name),  # ID: success-path-cancelled-midway
-                           ])
-  def test_start_task_happy_path(self, mock_data_upload_task, progress_values, expected_status):
-    # Arrange
-    def cancel_task():
-      sleep(2)
-      mock_data_upload_task.cancelled = expected_status == UploadStatusValues.Cancelled.name
+        # Assert
+        assert expected_log in task.upload_model.log
+        task.finalize_upload_task.assert_called()
 
-    # Act
-    mock_data_upload_task.start_task()
-    start_task = Thread(target=mock_data_upload_task.start_task)
-    cancel_task = Thread(target=cancel_task)
-    start_task.start()
-    sleep(1)
-    cancel_task.start()
-    start_task.join()
+    @pytest.mark.parametrize("config_model,expected_exception", [
+        (None, ConfigError),
+    ], ids=["config-error"])
+    def test_init_config_error(self, mock_db_api, config_model, expected_exception):
+        # Arrange
+        mock_db_api.return_value.get_config_model.return_value = config_model
+        project_name = "Test Project"
+        progress_update_callback = MagicMock()
+        status_label_set_text_callback = MagicMock()
+        status_icon_set_pixmap_callback = MagicMock()
+        upload_cancel_clicked_signal_callback = MagicMock()
 
-    # Assert
-    assert mock_data_upload_task.upload_model.status == expected_status
-    mock_data_upload_task.db_api.update_model_document.assert_called()
-    mock_data_upload_task.progressChanged.emit.assert_called()
-    if expected_status == UploadStatusValues.Finished.name:
-      assert mock_data_upload_task.upload_model.dataverse_url == f"https://dataverse.harvard.edu/dataverse/{mock_data_upload_task.upload_model.project_name}"
+        # Act / Assert
+        with pytest.raises(expected_exception):
+            DataUploadTask(project_name, progress_update_callback, status_label_set_text_callback, status_icon_set_pixmap_callback, upload_cancel_clicked_signal_callback)
 
-  # Parametrized test for error cases
-  @pytest.mark.parametrize("exception, expected_status",
-                           [(Exception, UploadStatusValues.Error.name),  # ID: error-case-exception
-                           ])
-  def test_start_task_error_cases(self, mock_data_upload_task, exception, expected_status):
-    # Arrange
-    mock_data_upload_task.db_api.update_model_document.side_effect = exception
+    @pytest.mark.parametrize("cancelled,expected_status", [
+        (True, UploadStatusValues.Cancelled.name),
+        (False, UploadStatusValues.Finished.name),
+    ], ids=["cancel-task", "finish-task"])
+    def test_finalize_upload_task(self, setup_task, cancelled, expected_status):
+        task = setup_task
+        task.cancelled = cancelled
 
-    # Act & Assert
-    with pytest.raises(exception):
-      mock_data_upload_task.start_task()
+        # Act
+        task.finalize_upload_task()
 
-  @pytest.mark.parametrize("test_id, current_time, expected_log, expected_status",
-    [("happy_path_1", datetime.datetime(2023, 4, 1, 12, 0), "Cancelled at 2023-04-01T12:00:00", "Cancelled"),
-      ("happy_path_2", datetime.datetime(2023, 4, 2, 13, 30), "Cancelled at 2023-04-02T13:30:00", "Cancelled"),
-      # Add more test cases for different times and scenarios
-    ], )
-  def test_cancel_task(self, test_id, mock_data_upload_task, current_time, expected_log, expected_status, mocker):
-    # Arrange
-    mocker.patch('datetime.datetime')
-    datetime.datetime.now.return_value = current_time
-    mock_data_upload_task.upload_model = MagicMock()
-    mock_data_upload_task.statusChanged = MagicMock()
-    super_mock = MagicMock()
-    mocker.patch('pasta_eln.dataverse.data_upload_task.super', return_value=super_mock)
+        # Assert
+        assert task.upload_model.status == expected_status
+        task.progress_thread.cancel.emit.assert_called()
+        task.finished.emit.assert_called()
+        task.status_changed.emit.assert_called_with(expected_status)
 
-    # Act
-    mock_data_upload_task.cancel_task()
+    @pytest.mark.parametrize("pid,unlocked,expected_result", [
+        ("persistent_id", True, True),
+        ("persistent_id", False, False),
+    ], ids=["dataset-unlocked", "dataset-locked"])
+    def test_check_if_dataset_is_unlocked(self, setup_task, mock_dataverse_client, pid, unlocked, expected_result):
+        task = setup_task
+        mock_dataverse_client.return_value.get_dataset_locks.return_value = {'locks': []} if unlocked else {'locks': [{'lockType': 'test', 'message': 'locked'}]}
 
-    # Assert
-    super_mock.cancel_task.assert_called_once()
-    assert mock_data_upload_task.upload_model.log == expected_log
-    assert mock_data_upload_task.upload_model.status == expected_status
-    mock_data_upload_task.statusChanged.emit.assert_called_once_with(expected_status)
+        # Act
+        result = task.check_if_dataset_is_unlocked(pid)
+
+        # Assert
+        assert result == expected_result

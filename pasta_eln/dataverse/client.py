@@ -400,7 +400,7 @@ class DataverseClient:
                      self.server_url)
     filename = basename(df_file_path)
     metadata = dumps({"description": df_description, "categories": df_categories})
-    data = FormData()
+    data = FormData(quote_fields=False)
     with open(df_file_path, 'rb') as file_stream:
       data.add_field('file',
                      file_stream,
@@ -500,6 +500,34 @@ class DataverseClient:
       return self.http_client.session_request_errors
     if resp["status"] == 200 and resp["reason"] == 'OK':
       return resp.get('result').get('data')
+    error = (f"Error fetching version list for dataset: {ds_persistent_id} "
+             f"on server: {self.server_url}, "
+             f"Reason: {resp['reason']}, "
+             f"Info: {resp['result']}")
+    self.logger.error(error)
+    return error
+
+  @handle_dataverse_exception_async
+  async def get_dataset_locks(self,
+                              ds_persistent_id: str) -> dict[Any, Any] | Any:
+    """
+    Fetch the version list for dataset.
+    Args:
+      ds_persistent_id (str): The identifier of the dataset.
+
+    Returns:
+      Version list for the dataset for successful request, otherwise the error message is returned.
+    """
+    self.logger.info("Fetching locks for dataset: %s for server: %s", ds_persistent_id,
+                     self.server_url)
+    resp = await self.http_client.get(
+      f"{self.server_url}/api/datasets/:persistentId/locks?persistentId={ds_persistent_id}",
+      request_params={'Accept': 'application/json'},
+      request_headers={'Content-Type': 'application/json', 'X-Dataverse-key': self.api_token})
+    if not resp and self.http_client.session_request_errors:
+      return self.http_client.session_request_errors
+    if resp["status"] == 200 and resp["reason"] == 'OK':
+      return {'locks': resp.get('result').get('data')}
     error = (f"Error fetching version list for dataset: {ds_persistent_id} "
              f"on server: {self.server_url}, "
              f"Reason: {resp['reason']}, "

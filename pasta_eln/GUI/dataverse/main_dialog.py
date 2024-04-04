@@ -32,9 +32,10 @@ from pasta_eln.dataverse.project_model import ProjectModel
 from pasta_eln.dataverse.task_thread_extension import TaskThreadExtension
 from pasta_eln.dataverse.upload_model import UploadModel
 from pasta_eln.dataverse.upload_queue_manager import UploadQueueManager
+from pasta_eln.dataverse.upload_status_values import UploadStatusValues
 from pasta_eln.dataverse.utils import check_if_dataverse_exists, check_if_minimal_metadata_exists, \
   check_login_credentials, decrypt_data, \
-  get_encrypt_key, get_formatted_message
+  get_encrypt_key, get_formatted_message, update_status
 
 
 class MainDialog(Ui_MainDialogBase):
@@ -137,8 +138,9 @@ class MainDialog(Ui_MainDialogBase):
     upload_widget_ui.setupUi(upload_widget_frame)
     upload_widget_ui.uploadProjectLabel.setText(textwrap.fill(project_name, 45, max_lines=1))
     upload_widget_ui.uploadProjectLabel.setToolTip(project_name)
-    upload_widget_ui.statusIconLabel.setPixmap(
-      qta.icon('ph.queue-light').pixmap(upload_widget_ui.statusIconLabel.size()))
+    update_status(UploadStatusValues.Queued.name,
+                  upload_widget_ui.statusLabel.setText,
+                  upload_widget_ui.statusIconLabel.setPixmap)
     upload_widget_ui.logConsoleTextEdit.hide()
     upload_widget_ui.showLogPushButton.clicked.connect(lambda: self.show_hide_log(upload_widget_ui.showLogPushButton))
     upload_widget_ui.modelIdLabel.hide()
@@ -186,10 +188,16 @@ class MainDialog(Ui_MainDialogBase):
         upload_widget = self.get_upload_widget(
           project_widget.findChild(QtWidgets.QLabel, name="projectNameLabel").toolTip())
         self.uploadQueueVerticalLayout.addWidget(upload_widget["base"])
-        task_thread = TaskThreadExtension(DataUploadTask(upload_widget["widget"]))
+        widget = upload_widget["widget"]
+        task_thread = TaskThreadExtension(
+          DataUploadTask(widget.uploadProjectLabel.text(),
+                         widget.uploadProgressBar.setValue,
+                         widget.statusLabel.setText,
+                         widget.statusIconLabel.setPixmap,
+                         widget.uploadCancelPushButton.clicked))
         self.upload_manager_task.add_to_queue(task_thread)
         if isinstance(task_thread.task, DataUploadTask):
-          task_thread.task.uploadModelCreated.connect(upload_widget["widget"].modelIdLabel.setText)
+          task_thread.task.upload_model_created.connect(widget.modelIdLabel.setText)
     self.upload_manager_task_thread.task.start.emit()
 
   def clear_finished(self) -> None:
