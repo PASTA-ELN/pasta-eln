@@ -97,11 +97,13 @@ def checkForDotNetVersion() -> bool:
   import subprocess
   command = ['reg','query','HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\NET Framework Setup\\NDP','/s']
   result = subprocess.run(command, stdout=subprocess.PIPE, check=True)
-  lines = [str(i).strip() for i in result.stdout.split(b'\n')]
-  lines = [i.split()[3][:-3] for i in lines if 'Version' in i]
-  versions = set(lines)
-  count3_5 = len([i for i in versions if i.startswith('3.5.')])
-  return count3_5>0
+  #### For reference: code to show all installed versions
+  # lines = [str(i).strip() for i in result.stdout.split(b'\n')]
+  # lines = [i.split()[3][:-3] for i in lines if 'Version' in i]
+  # versions = set(lines)
+  # count3_5 = len([i for i in versions if i.startswith('3.5.')])
+  # return count3_5>0
+  return b'Version    REG_SZ    3.5' in result.stdout
 
 
 def couchdb(command:str='test') -> str:
