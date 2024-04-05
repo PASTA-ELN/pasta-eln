@@ -2,12 +2,29 @@
 
 ## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
 
-[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.0...HEAD)
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.1b1...HEAD)
+
+**Fixed bugs:**
+
+- Right click on the empty project view [\#227](https://github.com/PASTA-ELN/pasta-eln/issues/227)
+- "Rerun extractors" removes shasum  [\#220](https://github.com/PASTA-ELN/pasta-eln/issues/220)
+- Metadata not saved in forms [\#208](https://github.com/PASTA-ELN/pasta-eln/issues/208)
+
+**Closed issues:**
+
+- Slow code if change of project details [\#144](https://github.com/PASTA-ELN/pasta-eln/issues/144)
+
+**Merged pull requests:**
+
+- Sb 232 corrosion import2 [\#252](https://github.com/PASTA-ELN/pasta-eln/pull/252) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+
+## [v2.5.1b1](https://github.com/PASTA-ELN/pasta-eln/tree/v2.5.1b1) (2024-04-05)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.0...v2.5.1b1)
 
 **Fixed bugs:**
 
 - CouchDB not installed on Windows [\#241](https://github.com/PASTA-ELN/pasta-eln/issues/241)
-- Issues during the corrosion data import [\#232](https://github.com/PASTA-ELN/pasta-eln/issues/232)
 - Removing the organization from "Author" configuration [\#222](https://github.com/PASTA-ELN/pasta-eln/issues/222)
 - ProjectView -\> Edit Project -\> Change name: new name not represented in left side bar [\#193](https://github.com/PASTA-ELN/pasta-eln/issues/193)
 - Project view -\> edit: after form closes, the corresponding item is expanded / collapsed [\#191](https://github.com/PASTA-ELN/pasta-eln/issues/191)
