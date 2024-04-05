@@ -10,16 +10,20 @@ Install python via Anaconda and then PASTA-ELN
 ----------------------------------------------
 
 If you do not have Python installed, we recommend using Anaconda.
-1. Go to https://www.anaconda.com/download
-2. Download installer and run install. Accept all defaults
-3. Create environment, e.g. PASTA-ELN and choose to install it with "Python 3.11..."
-4. Click on new green arrow button and open "Terminal"
-5. "pip install pasta-eln"
-6. "pip install pasta-eln -U --no-dependencies"
+1. Be sure that .NET version 3.5 is installed.
+
+   https://learn.microsoft.com/en-us/dotnet/framework/install/dotnet-35-windows
+
+2. Go to https://www.anaconda.com/download
+3. Download installer and run install. Accept all defaults
+4. Create environment, e.g. PASTA-ELN and choose to install it with "Python 3.11..."
+5. Click on new green arrow button and open "Terminal"
+6. "pip install pasta-eln"
+7. "pip install pasta-eln -U --no-dependencies"
 
     - if it complains about 'aiohttp' missing "pip install aiohttp"
 
-7. "python -m pasta_eln.gui" (make sure that you have administrator rights)
+8. "python -m pasta_eln.gui" (make sure that you have administrator rights)
 
 
 Manual installation
