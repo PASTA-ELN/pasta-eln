@@ -2,11 +2,37 @@
 
 ## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
 
-[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.0b8...HEAD)
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.0...HEAD)
 
 **Fixed bugs:**
 
+- CouchDB not installed on Windows [\#241](https://github.com/PASTA-ELN/pasta-eln/issues/241)
+- Issues during the corrosion data import [\#232](https://github.com/PASTA-ELN/pasta-eln/issues/232)
 - Removing the organization from "Author" configuration [\#222](https://github.com/PASTA-ELN/pasta-eln/issues/222)
+- ProjectView -\> Edit Project -\> Change name: new name not represented in left side bar [\#193](https://github.com/PASTA-ELN/pasta-eln/issues/193)
+- Project view -\> edit: after form closes, the corresponding item is expanded / collapsed [\#191](https://github.com/PASTA-ELN/pasta-eln/issues/191)
+- Display of comments in views [\#98](https://github.com/PASTA-ELN/pasta-eln/issues/98)
+
+**Closed issues:**
+
+- Check capilization in GUI: no "All Measurements" [\#185](https://github.com/PASTA-ELN/pasta-eln/issues/185)
+
+**Merged pull requests:**
+
+- Fix \#241: WIndows installation [\#250](https://github.com/PASTA-ELN/pasta-eln/pull/250) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Fix \#193 [\#249](https://github.com/PASTA-ELN/pasta-eln/pull/249) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Fix issue \#191 [\#248](https://github.com/PASTA-ELN/pasta-eln/pull/248) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- fix bug \#208 [\#246](https://github.com/PASTA-ELN/pasta-eln/pull/246) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Ignore configuration .pastaELN.json when restoring [\#245](https://github.com/PASTA-ELN/pasta-eln/pull/245) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Rescale all text documents in details, when the splitter changes size [\#244](https://github.com/PASTA-ELN/pasta-eln/pull/244) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- debug issue \#236 [\#243](https://github.com/PASTA-ELN/pasta-eln/pull/243) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- User prompt improvements [\#242](https://github.com/PASTA-ELN/pasta-eln/pull/242) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- speed up edit of project [\#240](https://github.com/PASTA-ELN/pasta-eln/pull/240) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Fix \#185 \#227 \#220 in one PR since ... [\#239](https://github.com/PASTA-ELN/pasta-eln/pull/239) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+
+## [v2.5.0](https://github.com/PASTA-ELN/pasta-eln/tree/v2.5.0) (2024-03-25)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.0b8...v2.5.0)
 
 ## [v2.5.0b8](https://github.com/PASTA-ELN/pasta-eln/tree/v2.5.0b8) (2024-03-25)
 
