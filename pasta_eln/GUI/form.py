@@ -228,16 +228,20 @@ class Form(QDialog):
       TextButton('Save && Next', self, [Command.FORM_SAVE_NEXT], buttonLineL, 'Save this and handle next')
     # autosave
     if (Path.home()/'.pastaELN.temp').is_file():
+      self.autoSaveFileIsUsed = False
       with open(Path.home()/'.pastaELN.temp', 'r', encoding='utf-8') as fTemp:
         content = json.loads(fTemp.read())
-        for key in self.doc.keys():
-          if key[0] in self.skipKeys0 or key in self.skipKeys or key not in content:
-            continue
-          if key in ['comment','content']:
-            getattr(self, f'textEdit_{key}').setPlainText(content[key])
-          elif isinstance(getattr(self, f'key_{key}'), QLineEdit):
-            getattr(self, f'key_{key}').setText(content[key])
-          # skip QCombobox items since cannot be sure that next from has them and they are easy to recreate
+        if self.doc.get('_id', '')==content['_id']:
+          self.autoSaveFileIsUsed = True
+          del content['_id']
+          for key in content.keys():
+            if key in ['comment','content']:
+              getattr(self, f'textEdit_{key}').setPlainText(content[key])
+            elif isinstance(getattr(self, f'key_{key}'), QLineEdit):
+              getattr(self, f'key_{key}').setText(content[key])
+            # skip QCombobox items since cannot be sure that next from has them and they are easy to recreate
+      if self.autoSaveFileIsUsed:
+        (Path.home()/'.pastaELN.temp').unlink()
     self.checkThreadTimer = QTimer(self)
     self.checkThreadTimer.setInterval(1*60*1000) #1 min
     self.checkThreadTimer.timeout.connect(self.autosave)
@@ -248,8 +252,8 @@ class Form(QDialog):
     """ Autosave comment to file """
     if self.comm.backend.configuration['GUI']['autosave'] == 'No':
       return
-    content = {'-name': getattr(self, 'key_-name').text().strip()}
-    for key in self.doc.keys():
+    content = {'-name':getattr(self, 'key_-name').text().strip(), '_id':self.doc.get('_id', '')}
+    for key in self.allKeys:
       if key in ['comment','content']:
         content[key] = getattr(self, f'textEdit_{key}').toPlainText().strip()
       elif key[0] in self.skipKeys0 or key in self.skipKeys or not hasattr(self, f'key_{key}'):
@@ -337,7 +341,7 @@ class Form(QDialog):
           self.autosave()
         else:
           self.checkThreadTimer.stop()
-          if (Path.home()/'.pastaELN.temp').is_file():
+          if (Path.home()/'.pastaELN.temp').is_file() and self.autoSaveFileIsUsed:
             (Path.home()/'.pastaELN.temp').unlink()
       self.reject()
     elif command[0] in (Command.FORM_SAVE, Command.FORM_SAVE_NEXT):
