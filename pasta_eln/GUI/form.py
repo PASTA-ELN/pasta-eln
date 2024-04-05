@@ -233,13 +233,19 @@ class Form(QDialog):
         content = json.loads(fTemp.read())
         if self.doc.get('_id', '')==content['_id']:
           self.autoSaveFileIsUsed = True
-          del content['_id']
-          for key in content.keys():
-            if key in ['comment','content']:
-              getattr(self, f'textEdit_{key}').setPlainText(content[key])
-            elif isinstance(getattr(self, f'key_{key}'), QLineEdit):
-              getattr(self, f'key_{key}').setText(content[key])
-            # skip QCombobox items since cannot be sure that next from has them and they are easy to recreate
+          ret = QMessageBox.information(self, 'Information', 'There is an unsaved information from a '+
+                  'prematurely closed form. Do you want to restore it?\nIf you decline, the unsaved information'+
+                  'will be removed',
+                  QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,      # type: ignore[operator]
+                  QMessageBox.StandardButton.Yes)
+          if ret==QMessageBox.StandardButton.Yes:
+            del content['_id']
+            for key in content.keys():
+              if key in ['comment','content']:
+                getattr(self, f'textEdit_{key}').setPlainText(content[key])
+              elif isinstance(getattr(self, f'key_{key}'), QLineEdit):
+                getattr(self, f'key_{key}').setText(content[key])
+              # skip QCombobox items since cannot be sure that next from has them and they are easy to recreate
       if self.autoSaveFileIsUsed:
         (Path.home()/'.pastaELN.temp').unlink()
     self.checkThreadTimer = QTimer(self)
@@ -333,8 +339,8 @@ class Form(QDialog):
       self.allHidden = not self.allHidden
     elif command[0] is Command.FORM_CANCEL:
       if self.comm.backend.configuration['GUI']['autosave'] == 'Yes':
-        ret = QMessageBox.critical(self, 'Warning', 'You will loose all new data. Do you want to save it '+\
-                                   'for next time?',
+        ret = QMessageBox.critical(self, 'Warning', 'You will lose the entered information. Do you want to '+
+                                   'save everything (except tags) to a temporary location?',
                                    QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,  # type: ignore[operator]
                                    QMessageBox.StandardButton.No)
         if ret==QMessageBox.StandardButton.Yes:

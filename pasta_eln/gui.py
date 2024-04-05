@@ -104,16 +104,6 @@ class MainWindow(QMainWindow):
     mainLayout.addWidget(body)
     self.comm.changeTable.emit('x0', '')
 
-    #check if temporary save exist: warn user
-    if (Path.home()/'.pastaELN.temp').is_file():
-      ret = QMessageBox.information(self, 'Information', 'There is data from a prematurely closed form. '+
-              'Do you want to use it? \n\n- If you choose yes, please reopen that form and content will' +
-              'be reloaded.\n\n- If you choose no, this temporary data will be removed now.',
-              QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,      # type: ignore[operator]
-              QMessageBox.StandardButton.Yes)
-      if ret==QMessageBox.StandardButton.No:
-        (Path.home()/'.pastaELN.temp').unlink()
-
 
   @Slot(str)
   def formDoc(self, doc: dict[str, Any]) -> None:
