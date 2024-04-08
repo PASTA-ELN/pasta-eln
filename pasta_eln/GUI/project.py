@@ -314,6 +314,7 @@ class Project(QWidget):
     Args:
       item (QStandardItem): item changed, new location
     """
+    print('start project model changed')
     #gather old information
     db       = self.comm.backend.db
     if not item.data():
