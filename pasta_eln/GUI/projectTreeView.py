@@ -3,8 +3,8 @@ import subprocess, os, platform, logging, shutil
 from enum import Enum
 from pathlib import Path
 from typing import Any
-from PySide6.QtWidgets import QWidget, QTreeView, QAbstractItemView, QMenu, QMessageBox # pylint: disable=no-name-in-module
-from PySide6.QtGui import QStandardItemModel, QStandardItem  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QWidget, QTreeView, QMenu, QMessageBox # pylint: disable=no-name-in-module
+from PySide6.QtGui import QStandardItemModel, QStandardItem, QMouseEvent # pylint: disable=no-name-in-module
 from PySide6.QtCore import QPoint, Qt  # pylint: disable=no-name-in-module
 from .projectLeafRenderer import ProjectLeafRenderer
 from ..guiStyle import Action, showMessage
@@ -18,11 +18,14 @@ class TreeView(QTreeView):
     self.setModel(model)
     self.setHeaderHidden(True)
     self.setStyleSheet('QTreeView::branch {border-image: none;}')
-    self.setExpandsOnDoubleClick(False)
     self.setIndentation(40)
     self.renderer = ProjectLeafRenderer(self.comm)
     self.setItemDelegate(self.renderer)
-    self.setDragDropMode(QAbstractItemView.InternalMove)
+    self.setExpandsOnDoubleClick(False)
+    self.setAcceptDrops(True)
+    self.setDropIndicatorShown(True)
+    self.setDefaultDropAction(Qt.MoveAction)
+    self.setDragDropMode(QTreeView.InternalMove)
     self.doubleClicked.connect(self.tree2Clicked)
 
 
@@ -131,9 +134,7 @@ class TreeView(QTreeView):
       logging.debug('hide stack %s',str(hierStack))
       self.comm.backend.db.hideShow(hierStack)
       # self.comm.changeProject.emit('','') #refresh project
-      # after hide, not immediately hidden but on next refresh
-      # TODO Comment out for now to keep consistent with hide via context menu directly or form (which does
-      # not know it is a project )
+      # after hide, do not hide immediately but wait on next refresh
     elif command[0] is Command.OPEN_EXTERNAL or command[0] is Command.OPEN_FILEBROWSER:
       # depending if non-folder / folder; address different item in hierstack
       docID = hierStack[-2] \
@@ -168,6 +169,50 @@ class TreeView(QTreeView):
     item.setText(docNew['-name'])
     item.setData(item.data() | {"docType":docNew['-type'], "gui":docNew['-gui']})
     item.emitDataChanged()  #force redraw (resizing and repainting) of this item only
+    return
+
+
+  def dragEnterEvent(self, event:QMouseEvent) -> None:
+    """
+    Overwrite default: what happens if you drag an item
+
+    Args:
+      event (QMouseEvent): event
+    """
+    event.acceptProposedAction()
+    return
+
+
+  def dropEvent(self, event:QMouseEvent) -> None:
+    """
+    Overwrite default: what happens at end of drag&drop
+
+    Args:
+      event (QMouseEvent): event
+    """
+    if event.mimeData().hasUrls():
+      item = self.model().itemFromIndex(self.indexAt(event.pos()))
+      if item.data()['docType'][0][0]!='x':
+        showMessage(self, 'Error', 'You cannot drop files on non folders.')
+        return
+      doc = self.comm.backend.db.getDoc(item.data()['hierStack'].split('/')[-1])
+      print('item', item, item.data(), item.text(), doc)
+      # create a list of all files
+      files, folders = [], []
+      for url in event.mimeData().urls():
+        path = url.toLocalFile()
+        files +=   list(Path(path).rglob("*"))
+        folders += [x[0] for x in os.walk(path)]
+      print(files, folders)
+      # create folders
+      # copy files, create measurements, create node
+      #   file_item = QStandardItem(path)
+      #   self.model.appendRow(file_item)
+      event.ignore()
+    elif 'application/x-qstandarditemmodeldatalist' in event.mimeData().formats():
+      super().dropEvent(event)
+    else:
+      print('Drop unknown data', event.mimeData().formats())
     return
 
 
