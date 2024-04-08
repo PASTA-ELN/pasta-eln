@@ -507,7 +507,7 @@ class Backend(CLI_Mixin):
             except:
               doc[meta][item] = str(doc[meta][item])
               print('**Warning -> stringified  ',meta, item)
-        if doc['-type'][0] in [doc['recipe'].split('/')[0], '-']:
+        if doc['-type'][0] in (doc['recipe'].split('/')[0]):
           doc['-type']     = doc['recipe'].split('/')
         else:
           #user has strange wish: trust him/her
