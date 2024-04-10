@@ -138,6 +138,13 @@ Begin...
 End...
       (Stats(profile).strip_dirs().sort_stats(SortKey.CUMULATIVE).print_stats()) #end cProfile
 
+#### Debugging on a conventional install: linux
+- 'sudo apt install python3-pudb' (not pip install)
+- create small 'temp.py' into any folder, with this content
+  from pasta_eln.gui import startMain
+  startMain()
+- start with 'pudb3 temp.py'
+
 
 #### General notes
 - Find qt-awesome icons: qta-browser

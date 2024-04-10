@@ -195,19 +195,30 @@ class TreeView(QTreeView):
       if item.data()['docType'][0][0]!='x':
         showMessage(self, 'Error', 'You cannot drop files on non folders.')
         return
-      doc = self.comm.backend.db.getDoc(item.data()['hierStack'].split('/')[-1])
-      print('item', item, item.data(), item.text(), doc)
       # create a list of all files
       files, folders = [], []
       for url in event.mimeData().urls():
         path = url.toLocalFile()
-        files +=   list(Path(path).rglob("*"))
-        folders += [x[0] for x in os.walk(path)]
-      print(files, folders)
-      # create folders
-      # copy files, create measurements, create node
-      #   file_item = QStandardItem(path)
-      #   self.model.appendRow(file_item)
+        if Path(path).is_file():
+          files.append(path)
+        else:
+          files +=   list(Path(path).rglob("*"))
+          folders += [x[0] for x in os.walk(path)]
+      docID = item.data()['hierStack'].split('/')[-1]
+      doc = self.comm.backend.db.getDoc(docID)
+      targetFolder = Path(self.comm.backend.cwd/doc['-branch'][0]['path'])
+      commonBase   = os.path.commonpath(folders+[str(i) for i in files])
+      # create folders and copy files
+      for folder in folders:
+        (targetFolder/(Path(folder).relative_to(commonBase))).mkdir(parents=True, exist_ok=True)
+      for fileStr in files:
+        file = Path(fileStr)
+        if file.is_file():
+          shutil.copy(file, targetFolder/(file.relative_to(commonBase)))
+      # scan
+      self.comm.backend.scanProject(self.comm.progressBar, docID, targetFolder)
+      self.comm.changeProject.emit(item.data()['hierStack'].split('/')[0],'')
+      showMessage(self, 'Information','Drag & drop is finished')
       event.ignore()
     elif 'application/x-qstandarditemmodeldatalist' in event.mimeData().formats():
       super().dropEvent(event)
