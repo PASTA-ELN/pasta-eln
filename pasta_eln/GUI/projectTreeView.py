@@ -216,7 +216,7 @@ class TreeView(QTreeView):
         if file.is_file():
           shutil.copy(file, targetFolder/(file.relative_to(commonBase)))
       # scan
-      self.comm.backend.scanProject(self.comm.progressBar, docID, targetFolder)
+      self.comm.backend.scanProject(self.comm.progressBar, docID, str(targetFolder) )
       self.comm.changeProject.emit(item.data()['hierStack'].split('/')[0],'')
       showMessage(self, 'Information','Drag & drop is finished')
       event.ignore()
