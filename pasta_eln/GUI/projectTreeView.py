@@ -174,7 +174,7 @@ class TreeView(QTreeView):
 
   def dragEnterEvent(self, event:QMouseEvent) -> None:
     """
-    Overwrite default: what happens if you drag an item
+    Override default: what happens if you drag an item
 
     Args:
       event (QMouseEvent): event
@@ -185,7 +185,7 @@ class TreeView(QTreeView):
 
   def dropEvent(self, event:QMouseEvent) -> None:
     """
-    Overwrite default: what happens at end of drag&drop
+    Override default: what happens at end of drag&drop
 
     Args:
       event (QMouseEvent): event
@@ -223,7 +223,7 @@ class TreeView(QTreeView):
     elif 'application/x-qstandarditemmodeldatalist' in event.mimeData().formats():
       super().dropEvent(event)
     else:
-      print('Drop unknown data', event.mimeData().formats())
+      logging.error('Drop unknown data: %s', event.mimeData().formats())
     return
 
 
