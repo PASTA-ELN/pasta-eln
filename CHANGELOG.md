@@ -2,7 +2,18 @@
 
 ## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
 
-[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.1b1...HEAD)
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.1...HEAD)
+
+**Merged pull requests:**
+
+- Drag drop [\#262](https://github.com/PASTA-ELN/pasta-eln/pull/262) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Fix issue \#255 [\#259](https://github.com/PASTA-ELN/pasta-eln/pull/259) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- fix the issue \#254 [\#258](https://github.com/PASTA-ELN/pasta-eln/pull/258) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Sb 236 make autosave more logical [\#257](https://github.com/PASTA-ELN/pasta-eln/pull/257) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+
+## [v2.5.1](https://github.com/PASTA-ELN/pasta-eln/tree/v2.5.1) (2024-04-05)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.1b1...v2.5.1)
 
 **Fixed bugs:**
 
