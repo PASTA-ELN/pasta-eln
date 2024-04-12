@@ -348,9 +348,11 @@ class Form(QDialog):
     elif command[0] is Command.FORM_CANCEL:
       if self.comm.backend.configuration['GUI']['autosave'] == 'Yes':
         ret = QMessageBox.critical(self, 'Warning', 'You will lose the entered information. Do you want to '+
-                                   'save everything to a temporary location?',
-                                   QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,  # type: ignore[operator]
-                                   QMessageBox.StandardButton.No)
+          'save everything to a temporary location?',
+          QMessageBox.StandardButton.Cancel | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,  # type: ignore[operator]
+          QMessageBox.StandardButton.No)
+        if ret==QMessageBox.StandardButton.Cancel:
+          return
         if ret==QMessageBox.StandardButton.Yes:
           self.autosave()
       self.checkThreadTimer.stop()
