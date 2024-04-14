@@ -331,6 +331,7 @@ class Table(QWidget):
             continue
           redraw = True
           oldDocType = doc['-type']
+          doc['-type'] = ['']
           if doc['-branch'][0]['path'].startswith('http'):
             path = Path(doc['-branch'][0]['path'])
           else:

@@ -110,7 +110,9 @@ class TreeView(QTreeView):
             if (oldPath.parent/newFileName).exists():  #ensure target does not exist
               endText = ' was marked for deletion. Save it or its content now to some place on harddisk. It will be deleted now!!!'
               showMessage(self, 'Warning', f'Warning! \nThe folder {oldPath.parent/newFileName}{endText}')
-              if (oldPath.parent/newFileName).exists():
+              if (oldPath.parent/newFileName).is_file():
+                (oldPath.parent/newFileName).unlink()
+              elif (oldPath.parent/newFileName).is_file():
                 shutil.rmtree(oldPath.parent/newFileName)
             oldPath.rename( oldPath.parent/newFileName)
         # go through children
@@ -216,7 +218,8 @@ class TreeView(QTreeView):
         if file.is_file():
           shutil.copy(file, targetFolder/(file.relative_to(commonBase)))
       # scan
-      self.comm.backend.scanProject(self.comm.progressBar, docID, str(targetFolder) )
+      for _ in range(2):  #scan twice: convert, extract
+        self.comm.backend.scanProject(self.comm.progressBar, docID, str(targetFolder) )
       self.comm.changeProject.emit(item.data()['hierStack'].split('/')[0],'')
       showMessage(self, 'Information','Drag & drop is finished')
       event.ignore()
