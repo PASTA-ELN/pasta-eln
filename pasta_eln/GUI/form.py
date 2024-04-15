@@ -231,9 +231,9 @@ class Form(QDialog):
       with open(Path.home()/'.pastaELN.temp', 'r', encoding='utf-8') as fTemp:
         content = json.loads(fTemp.read())
         if self.doc.get('_id', '') in content:
-          ret = QMessageBox.information(self, 'Information', 'There is an unsaved information from a '+
-                  'prematurely closed form. Do you want to restore it?\nIf you decline, the unsaved information'+
-                  'will be removed',
+          ret = QMessageBox.information(self, 'Information', 'There is unsaved information from a prematurely '+
+                    'closed form. Do you want to restore it?\n If you decline, the unsaved information will be'+
+                    ' removed.',
                   QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,      # type: ignore[operator]
                   QMessageBox.StandardButton.Yes)
           if ret==QMessageBox.StandardButton.Yes:
@@ -360,8 +360,12 @@ class Form(QDialog):
     elif command[0] in (Command.FORM_SAVE, Command.FORM_SAVE_NEXT):
       # create the data that has to be saved
       self.checkThreadTimer.stop()
-      if (Path.home()/'.pastaELN.temp').is_file():
-        (Path.home()/'.pastaELN.temp').unlink()
+      with open(Path.home()/'.pastaELN.temp', 'r', encoding='utf-8') as fTemp:
+        content = json.loads(fTemp.read())
+        if self.doc.get('_id', '') in content:
+          del content[self.doc.get('_id', '')]
+      with open(Path.home()/'.pastaELN.temp', 'w', encoding='utf-8') as fTemp:
+        fTemp.write(json.dumps(content))
       if hasattr(self, 'key_-name'):
         self.doc['-name'] = getattr(self, 'key_-name').text().strip()
         if self.doc['-name'] == '':
