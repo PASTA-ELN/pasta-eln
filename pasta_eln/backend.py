@@ -256,8 +256,6 @@ class Backend(CLI_Mixin):
           if len(view)==1:  #measurement is already in database
             doc['_id'] = view[0]['id']
             doc['shasum'] = shasum
-            if doc['-type'] == ['-']:  #don't overwrite identified type, without going through extractor
-              del doc['-type']
             edit = True
     # assemble branch information
     if childNum is None:
