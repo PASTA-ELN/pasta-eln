@@ -511,12 +511,17 @@ class DataverseClient:
   async def get_dataset_locks(self,
                               ds_persistent_id: str) -> dict[Any, Any] | Any:
     """
-    Fetch the version list for dataset.
+    Fetches locks for a dataset.
+
+    Explanation:
+        This method fetches the locks for a dataset identified by the persistent ID.
+        It makes an asynchronous HTTP GET request to retrieve the locks information and handles exceptions.
+
     Args:
-      ds_persistent_id (str): The identifier of the dataset.
+        ds_persistent_id (str): The persistent ID of the dataset to fetch locks for.
 
     Returns:
-      Version list for the dataset for successful request, otherwise the error message is returned.
+        dict[Any, Any] | Any: A dictionary containing the locks information if successful, or an error message.
     """
     self.logger.info("Fetching locks for dataset: %s for server: %s", ds_persistent_id,
                      self.server_url)
@@ -528,7 +533,7 @@ class DataverseClient:
       return self.http_client.session_request_errors
     if resp["status"] == 200 and resp["reason"] == 'OK':
       return {'locks': resp.get('result').get('data')}
-    error = (f"Error fetching version list for dataset: {ds_persistent_id} "
+    error = (f"Error fetching locks for dataset: {ds_persistent_id} "
              f"on server: {self.server_url}, "
              f"Reason: {resp['reason']}, "
              f"Info: {resp['result']}")

@@ -41,11 +41,12 @@ def mock_dataverse_client(mocker):
 def mock_database_api():
   with patch('pasta_eln.dataverse.database_api.DatabaseAPI') as mock:
     mock_instance = mock.return_value
-    mock_instance.get_model.return_value = ConfigModel(_id="test_id", _rev="test_rev",
-                                                       dataverse_login_info={"server_url": "http://valid.url",
-                                                                             "api_token": "test_token",
-                                                                             "dataverse_id": "test_dataverse_id"},
-                                                       parallel_uploads_count=1, project_upload_items={}, metadata={})
+    mock_instance.get_config_model.return_value = ConfigModel(_id="test_id", _rev="test_rev",
+                                                              dataverse_login_info={"server_url": "http://valid.url",
+                                                                                    "api_token": "test_token",
+                                                                                    "dataverse_id": "test_dataverse_id"},
+                                                              parallel_uploads_count=1, project_upload_items={},
+                                                              metadata={})
     yield mock_instance
 
 
@@ -55,9 +56,6 @@ def config_dialog(qtbot, mocker, mock_message_box, mock_webbrowser, mock_dataver
   mocker.patch('pasta_eln.GUI.dataverse.config_dialog.DatabaseAPI', return_value=mock_database_api)
   mocker.patch('pasta_eln.GUI.dataverse.config_dialog.QMessageBox', new=mock_message_box)
   mocker.patch('pasta_eln.GUI.dataverse.config_dialog.logging')
-  mocker.patch('pasta_eln.GUI.dataverse.config_dialog.get_encrypt_key', return_value=(True, b"test_encrypt_key"))
-  mocker.patch('pasta_eln.GUI.dataverse.config_dialog.decrypt_data', return_value='decrypted_api_token')
-  mocker.patch('pasta_eln.GUI.dataverse.config_dialog.encrypt_data', return_value='encrypted_api_token')
   dialog = ConfigDialog()
   mocker.resetall()
   qtbot.addWidget(dialog.instance)
@@ -120,21 +118,16 @@ class TestConfigDialog:
 
   # Parametrized test for save_config method
   @pytest.mark.parametrize("test_id", [("success_path_save_config")])
-  def test_save_config(self, mocker, config_dialog, test_id, mock_message_box):
+  def test_save_config(self, config_dialog, test_id, mock_message_box):
     # Arrange
     config_dialog.db_api.update_model_document = MagicMock()
-    mock_encrypt_data = mocker.patch('pasta_eln.GUI.dataverse.config_dialog.encrypt_data',
-                                     return_value='encrypted_api_token')
-    unencrypted_api_token = config_dialog.config_model.dataverse_login_info["api_token"]
 
     # Act
     config_dialog.save_config()
 
     # Assert
     config_dialog.logger.info.assert_called_once_with("Saving config..")
-    mock_encrypt_data.assert_called_once_with(config_dialog.logger, config_dialog.encrypt_key, unencrypted_api_token)
-    config_dialog.db_api.update_model_document.assert_called_once_with(config_dialog.config_model)
-    config_dialog.config_model.dataverse_login_info["api_token"] = "decrypted_api_token"
+    config_dialog.db_api.save_config_model.assert_called_once_with(config_dialog.config_model)
 
   # Parametrized test for verify_server_url_and_api_token method
   @pytest.mark.parametrize("test_id, server_url, api_token, success, message", [
@@ -199,45 +192,6 @@ class TestConfigDialog:
     if test_id in ["edge_case_not_list", "error_case_list_retrieval_failed"]:
       config_dialog.logger.error.assert_called_once_with("Failed to load dataverse list, error: %s", dataverse_list)
       mock_message_box.warning.assert_called_once_with(config_dialog.instance, "Error", "Failed to load dataverse list")
-
-  @pytest.mark.parametrize("key_exists, encrypt_key, expected_api_token, expected_dataverse_id, test_id",
-                           [  # Success path tests
-                             (True, 'mock_key', 'decrypted_api_token', 'some_dataverse_id', 'success_path_valid_key'),
-                             (True, '', 'decrypted_api_token', 'some_dataverse_id', 'success_path_empty_key'),
-
-                             # Edge cases
-                             (True, None, 'decrypted_api_token', 'some_dataverse_id', 'edge_case_none_key'),
-
-                             # Error cases
-                             (False, None, None, None, 'error_no_key'), ])
-  def test_decrypt_api_token(self, mocker, config_dialog, key_exists, encrypt_key, expected_api_token,
-                             expected_dataverse_id, test_id):
-    # Arrange
-    config_dialog.encrypt_key = None
-    mock_save_config = mocker.MagicMock()
-    config_dialog.config_model.dataverse_login_info = {'api_token': 'encrypted_api_token',
-                                                       'dataverse_id': 'some_dataverse_id'}
-    config_dialog.save_config = mock_save_config
-
-    mock_get_key = mocker.patch('pasta_eln.GUI.dataverse.config_dialog.get_encrypt_key',
-                                return_value=(key_exists, encrypt_key))
-    mock_decrypt_data = mocker.patch('pasta_eln.GUI.dataverse.config_dialog.decrypt_data',
-                                     return_value='decrypted_api_token')
-
-    # Act
-    config_dialog.decrypt_api_token()
-
-    # Assert
-    if key_exists:
-      mock_get_key.assert_called_once_with(config_dialog.logger)
-      mock_decrypt_data.assert_called_once_with(config_dialog.logger, encrypt_key, 'encrypted_api_token')
-    else:
-      config_dialog.logger.warning.assert_called_once_with(
-        'No encryption key found. Hence if any API key exists, it will be removed and the user needs to re-enter it.')
-      mock_save_config.assert_called_once()
-
-    assert config_dialog.config_model.dataverse_login_info["dataverse_id"] == expected_dataverse_id
-    assert config_dialog.config_model.dataverse_login_info["api_token"] == expected_api_token
 
   @pytest.mark.parametrize("test_id, show_exception", [  # Success tests with various realistic test values
     ("success_case", None),

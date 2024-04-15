@@ -147,7 +147,7 @@ class UploadConfigDialog(Ui_UploadConfigDialog, QObject):
     if self.config_model is None:
       self.logger.error("Failed to load config model!")
       return
-    self.db_api.update_model_document(self.config_model)
+    self.db_api.save_config_model(self.config_model)
     self.config_reloaded.emit()
 
   def show(self) -> None:

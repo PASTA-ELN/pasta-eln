@@ -115,6 +115,9 @@ def get_flattened_metadata(metadata: dict[str, Any]) -> dict[str, Any]:
       This function takes a nested metadata dictionary and returns a flattened version of the metadata.
       It extracts the values from the nested structure and creates a new dictionary with a flattened structure.
       The resulting dictionary contains the field names as keys and their corresponding values.
+
+  Exceptions:
+      KeyError: If a field name is not found in the metadata dictionary.
   """
   adjusted_metadata = {}
   if metadata['datasetVersion']['license']:
@@ -507,12 +510,30 @@ def check_login_credentials(logger: Logger, api_token: str, server_url: str) -> 
 
 
 def check_if_dataverse_exists(logger: Logger, api_token: str, server_url: str, dataverse_id: str) -> bool:
+  """
+  Checks if a dataverse exists by querying its size.
+
+  Explanation:
+      This function queries the dataverse size using the provided server URL, API token, and dataverse ID.
+      It returns True if the dataverse size message ends with 'bytes', indicating the dataverse exists.
+
+  Args:
+      logger (Logger): The logger instance for logging information.
+      api_token (str): The API token for authentication.
+      server_url (str): The URL of the server hosting the dataverse.
+      dataverse_id (str): The ID of the dataverse to check.
+
+  Returns:
+      bool: True if the dataverse exists, False otherwise.
+  """
   logger.info("Checking if login info is valid, server_url: %s", server_url)
   dataverse_client = DataverseClient(server_url, api_token)
   event_loop = get_event_loop()
   message = event_loop.run_until_complete(dataverse_client.get_dataverse_size(dataverse_id))
-  result = bool(message.endswith("bytes"))
-  if not result:
+  result = False
+  if isinstance(message, str):
+    result = bool(message.endswith("bytes"))
+  else:
     logger.warning("Data verse with id %s does not exist, Server message: %s", dataverse_id, message)
   return result
 

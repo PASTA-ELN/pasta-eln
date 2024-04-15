@@ -22,7 +22,7 @@ from pasta_eln.GUI.dataverse.config_dialog_base import Ui_ConfigDialogBase
 from pasta_eln.dataverse.client import DataverseClient
 from pasta_eln.dataverse.config_model import ConfigModel
 from pasta_eln.dataverse.database_api import DatabaseAPI
-from pasta_eln.dataverse.utils import check_login_credentials, decrypt_data, encrypt_data, get_encrypt_key
+from pasta_eln.dataverse.utils import check_login_credentials
 
 
 class ConfigDialog(Ui_ConfigDialogBase):

@@ -49,7 +49,7 @@ def mock_dialog(mocker, mock_database_api, mock_config_model):
   dialog = UploadConfigDialog()
   dialog.set_data_hierarchy_types = actual_set_data_hierarchy_types
   dialog.load_ui = actual_load_ui
-  dialog.db_api.get_model.return_value = mock_config_model
+  dialog.db_api.get_config_model.return_value = mock_config_model
   return dialog
 
 
@@ -116,7 +116,7 @@ class TestUploadConfigDialog:
 
     # Assert
     mock_dialog.logger.info.assert_called_once_with("Loading data and initializing UI...")
-    mock_dialog.db_api.get_model.assert_called_once_with(config_doc_id, ConfigModel)
+    mock_dialog.db_api.get_config_model.assert_called_once()
     assert mock_dialog.numParallelComboBox.setCurrentText.called_once_with(str(parallel_uploads_count))
     for pos in range(projects_items_layout_count):
       mock_dialog.projectItemsVerticalLayout.itemAt.assert_any_call(pos)
@@ -135,14 +135,14 @@ class TestUploadConfigDialog:
   ], ids=["Error-Case-1"])
   def test_load_ui_error_cases(self, mock_dialog, mock_config_model, config_doc_id, error_message):
     # Arrange
-    mock_dialog.db_api.get_model.return_value = None
+    mock_dialog.db_api.get_config_model.return_value = None
     mock_dialog.db_api.config_doc_id = config_doc_id
 
     # Act
     mock_dialog.load_ui(mock_dialog)
 
     # Assert
-    mock_dialog.db_api.get_model.assert_called_once_with(config_doc_id, ConfigModel)
+    mock_dialog.db_api.get_config_model.assert_called_once()
     mock_dialog.logger.error.assert_called_once_with(error_message)
 
   # Parametrized test cases
@@ -229,9 +229,9 @@ class TestUploadConfigDialog:
     else:
       mock_dialog.config_reloaded.emit.assert_not_called()
     if mock_dialog.config_model:
-      mock_dialog.db_api.update_model_document.assert_called_with(mock_dialog.config_model)
+      mock_dialog.db_api.save_config_model.assert_called_with(mock_dialog.config_model)
     else:
-      mock_dialog.db_api.update_model_document.assert_not_called()
+      mock_dialog.db_api.save_config_model.assert_not_called()
 
   @pytest.mark.parametrize("test_id", [
     ("success_case_1")

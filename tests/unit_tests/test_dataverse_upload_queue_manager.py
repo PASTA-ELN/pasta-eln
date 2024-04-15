@@ -93,7 +93,7 @@ class TestDataverseUploadQueueManager:
 
   # Error cases tests
   @pytest.mark.parametrize("test_id, concurrent_uploads, tasks_to_add, expected_upload_queue_length",
-    [("error_01", 2, 2, 2), ("error_02", 2, 5, 5), ("error_03", 5, 10, 10), ])
+                           [("error_01", 2, 2, 2), ("error_02", 2, 5, 5), ("error_03", 5, 10, 10), ])
   def test_remove_from_queue_error_cases(self, mocker, mock_manager, test_id, concurrent_uploads, tasks_to_add,
                                          expected_upload_queue_length):
     # Arrange
@@ -110,7 +110,8 @@ class TestDataverseUploadQueueManager:
     thread_task_to_remove.worker_thread.quit.assert_called_once()
 
   @pytest.mark.parametrize(
-    "test_id, number_of_concurrent_uploads, upload_queue_size, cancelled, expected_started_count", [# Success path tests
+    "test_id, number_of_concurrent_uploads, upload_queue_size, cancelled, expected_started_count",
+    [  # Success path tests
       ("SuccessCase-1", 2, 3, False, 2),  # Test with queue larger than concurrent uploads
       ("SuccessCase-2", 3, 3, False, 3),  # Test with queue equal to concurrent uploads
       ("SuccessCase-3", 4, 1, False, 1),  # Test with queue smaller than concurrent uploads
@@ -169,7 +170,7 @@ class TestDataverseUploadQueueManager:
     mock_base_cleanup.assert_called_once()
 
   @pytest.mark.parametrize("test_id, exception, expected_call_count",
-    [("error_case_exception_in_super_cleanup", Exception, 0), ])
+                           [("error_case_exception_in_super_cleanup", Exception, 0), ])
   def test_cleanup_error_cases(self, mocker, mock_manager, test_id, exception, expected_call_count):
     # Arrange
     mock_manager.empty_upload_queue = mocker.MagicMock()
@@ -183,7 +184,7 @@ class TestDataverseUploadQueueManager:
 
   @pytest.mark.parametrize("test_id, upload_tasks_count",
                            [("happy_path_single_task", 1), ("happy_path_multiple_tasks", 3),
-                             ("happy_path_no_tasks", 0), ], ids=str)
+                            ("happy_path_no_tasks", 0), ], ids=str)
   def test_empty_upload_queue_happy_path(self, mocker, mock_manager, test_id, upload_tasks_count):
     # Arrange
     mock_manager.upload_queue = [get_mock_task_thread(mocker) for _ in range(upload_tasks_count)]
@@ -204,7 +205,7 @@ class TestDataverseUploadQueueManager:
   # Assuming that quit() method could raise an exception
   @pytest.mark.parametrize("test_id, upload_tasks_count, exception, call_count",
                            [("error_quit_exception_single_task", 1, Exception("Task quit failed"), 1),
-                             ("error_quit_exception_multiple_tasks", 3, Exception("Task quit failed"), 3), ], ids=str)
+                            ("error_quit_exception_multiple_tasks", 3, Exception("Task quit failed"), 3), ], ids=str)
   def test_empty_upload_queue_error_cases(self, mocker, mock_manager, test_id, upload_tasks_count, exception,
                                           call_count):
     # Arrange
@@ -219,7 +220,7 @@ class TestDataverseUploadQueueManager:
     mock_manager.logger.info.assert_called_with("Emptying upload queue..")
 
   @pytest.mark.parametrize("test_id, running_queue_count, expected_log, super_method_exists",
-                           [# Success path test with various realistic test values
+                           [  # Success path test with various realistic test values
                              ("success_path_1", 2, "Cancelling upload queue..", True),
 
                              # Edge case with an empty running queue
@@ -258,7 +259,7 @@ class TestDataverseUploadQueueManager:
         mock_manager.cancel_task()
 
   @pytest.mark.parametrize("test_id, parallel_uploads_count, expected",
-                           [# Success path tests with various realistic test values
+                           [  # Success path tests with various realistic test values
                              ("SuccessCase-1", 1, 1), ("SuccessCase-2", 5, 5), ("SuccessCase-3", 10, 10),
 
                              # Edge cases
@@ -271,17 +272,17 @@ class TestDataverseUploadQueueManager:
     mock_logger = mocker.MagicMock()
     mock_config_model = ConfigModel()
     mock_config_model.parallel_uploads_count = parallel_uploads_count
-    mock_db_api.get_model.return_value = mock_config_model
+    mock_db_api.get_config_model.return_value = mock_config_model
     mocker.patch('pasta_eln.dataverse.upload_queue_manager.DatabaseAPI', return_value=mock_db_api)
     upload_queue_manager = UploadQueueManager()
     upload_queue_manager.db_api = mock_db_api
     upload_queue_manager.logger = mock_logger
-    mock_db_api.get_model.reset_mock()
+    mock_db_api.get_config_model.reset_mock()
 
     # Act
     upload_queue_manager.set_concurrent_uploads()
 
     # Assert
-    mock_db_api.get_model.assert_called_once_with(mock_db_api.config_doc_id, ConfigModel)
+    mock_db_api.get_config_model.assert_called_once()
     mock_logger.info.assert_called_once_with("Resetting number of concurrent uploads..")
     assert upload_queue_manager.number_of_concurrent_uploads == expected, f"Test ID {test_id}: Expected number_of_concurrent_uploads to be {expected}, got {upload_queue_manager.number_of_concurrent_uploads}"

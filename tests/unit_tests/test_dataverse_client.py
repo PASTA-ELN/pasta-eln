@@ -2259,3 +2259,102 @@ class TestDataverseClient(object):
     dataverse_client_mock.http_client.get.assert_called_once_with(f"{server_url}/api/users/token",
                                                                   request_headers={'Accept': 'application/json',
                                                                                    'X-Dataverse-key': api_token})
+
+  @pytest.mark.asyncio
+  @pytest.mark.parametrize("ds_persistent_id, mock_response, expected_result, test_id", [
+    ("valid_id_1", {"status": 200, "reason": "OK", "result": {"data": {"lock1": "data1"}}},
+     {'locks': {"lock1": "data1"}}, "success_path_1"),
+    ("valid_id_2", {"status": 200, "reason": "OK", "result": {"data": {}}}, {'locks': {}}, "success_path_2"),
+    ("invalid_id_1", {"status": 404, "reason": "Not Found", "result": "Dataset not found"},
+     "Error fetching locks for dataset: invalid_id_1 on server: test_server, Reason: Not Found, Info: Dataset not found",
+     "error_case_1"),
+    ("invalid_id_2", None, "Session request error", "error_case_2")
+    # Assuming session_request_errors is a string for simplicity
+  ], ids=["success_path_1", "success_path_2", "error_case_1", "error_case_2"])
+  async def test_get_dataset_locks(self, mocker, dataverse_client_mock: dataverse_client_mock, ds_persistent_id,
+                                   mock_response, expected_result, test_id):
+    # Arrange
+    dataverse_client_mock.server_url = "test_server"
+    dataverse_client_mock.api_token = "test_token"
+    dataverse_client_mock.http_client = mocker.AsyncMock()
+    dataverse_client_mock.http_client.get.return_value = mock_response
+    dataverse_client_mock.http_client.session_request_errors = "Session request error" if mock_response is None else None
+
+    # Act
+    result = await dataverse_client_mock.get_dataset_locks(ds_persistent_id)
+
+    # Assert
+    dataverse_client_mock.logger.info("Fetching locks for dataset: %s for server: %s", ds_persistent_id,
+                                      "test_server")
+    assert result == expected_result
+    if mock_response and mock_response["status"] == 200:
+      dataverse_client_mock.logger.info.assert_called()
+    if mock_response and mock_response["status"] != 200:
+      dataverse_client_mock.logger.error.assert_called()
+
+  @pytest.mark.asyncio
+  @pytest.mark.parametrize("ds_persistent_id, server_url, api_token, response, expected", [
+    # Success path tests
+    ("ds001", "http://testserver.com", "testtoken",
+     {"status": 200, "reason": "OK", "result": {"data": {"message": "Dataset deleted successfully"}}},
+     "Dataset deleted successfully"),
+    # Edge cases
+    ("", "http://testserver.com", "testtoken",
+     {"status": 200, "reason": "OK", "result": {"data": {"message": "Dataset deleted successfully"}}},
+     "Dataset deleted successfully"),
+    # Error cases
+    ("ds002", "http://testserver.com", "testtoken",
+     {"status": 403, "reason": "Forbidden", "result": "User needs to be superuser"},
+     "Error deleting dataset, Server: http://testserver.com, Id: ds002, Reason: Forbidden, Info: User needs to be superuser"),
+    ("invalid", "invalid", "invalid", None, ["Invalid server url or api token"]),
+  ], ids=["success-path", "edge-case-empty-id", "error-forbidden", "error-invalid-input"])
+  async def test_delete_published_dataset(self, mocker, dataverse_client_mock: dataverse_client_mock, ds_persistent_id,
+                                          server_url, api_token, response, expected):
+    # Arrange
+    dataverse_client_mock.server_url = server_url
+    dataverse_client_mock.api_token = api_token
+    dataverse_client_mock.http_client.delete = mocker.AsyncMock(return_value=response)
+    dataverse_client_mock.logger = mocker.AsyncMock()
+    dataverse_client_mock.http_client.session_request_errors = [
+      "Invalid server url or api token"] if response is None else None
+
+    # Act
+    result = await dataverse_client_mock.delete_published_dataset(ds_persistent_id)
+
+    # Assert
+    dataverse_client_mock.logger.info.assert_called_with("Deleting published dataset, Server: %s, Dataset: %s",
+                                                         server_url,
+                                                         ds_persistent_id)
+    assert result == expected
+    if response and response["status"] == 200:
+      dataverse_client_mock.logger.info.assert_called()
+    if response and response["status"] != 200:
+      dataverse_client_mock.logger.error.assert_called()
+
+  # @pytest.mark.asyncio
+  # @pytest.mark.parametrize("dv_identifier, contents, delete_response, expected", [
+  #     # Happy path tests
+  #     ("dv123", [{"type": "dataset", "protocol": "doi", "authority": "10.1234", "identifier": "xyz123"}], {"status": 200, "reason": "OK", "result": {"data": {"message": "Dataverse deleted successfully"}}}, "Dataverse deleted successfully"),
+  #     ("dv456", [{"type": "dataverse", "id": "dv789"}], {"status": 200, "reason": "OK", "result": {"data": {"message": "Dataverse deleted successfully"}}}, "Dataverse deleted successfully"),
+  #     # Edge case: Empty dataverse
+  #     ("dvEmpty", [], {"status": 200, "reason": "OK", "result": {"data": {"message": "Dataverse deleted successfully"}}}, "Dataverse deleted successfully"),
+  #     # Error cases
+  #     ("dvError", [{"type": "unknown"}], {"status": 400, "reason": "Bad Request", "result": "Error deleting dataverse"}, "Error deleting dataverse, Id: dvError, Reason: Bad Request, Info: Error deleting dataverse"),
+  # ], ids=["success-path-dataset", "success-path-dataverse", "edge-case-empty", "error-unknown-type"])
+  # async def test_delete_non_empty_dataverse(self, mocker, dataverse_client_mock: dataverse_client_mock, dv_identifier, contents, delete_response, expected):
+  #     # Arrange
+  #     dataverse_client_mock.get_dataverse_contents = mocker.AsyncMock(return_value=contents)
+  #     dataverse_client_mock.delete_published_dataset = mocker.AsyncMock()
+  #     dataverse_client_mock.http_client.delete = mocker.AsyncMock(return_value=delete_response)
+  #
+  #     # Act
+  #     result = await dataverse_client_mock.delete_non_empty_dataverse(dv_identifier)
+  #
+  #     # Assert
+  #     assert result == expected
+  #     dataverse_client_mock.get_dataverse_contents.assert_awaited_with(dv_identifier)
+  #     if contents and contents[0].get("type") == "dataset":
+  #         dataverse_client_mock.delete_published_dataset.assert_awaited()
+  #     elif contents and contents[0].get("type") == "dataverse":
+  #         dataverse_client_mock.delete_non_empty_dataverse.assert_awaited()
+  #     dataverse_client_mock.http_client.delete.assert_awaited_with(f"{dataverse_client_mock.server_url}/api/dataverses/{dv_identifier}", request_headers={'Accept': 'application/json', 'X-Dataverse-key': dataverse_client_mock.api_token})

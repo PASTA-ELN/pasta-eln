@@ -37,11 +37,12 @@ def mock_dataverse_client(mocker, dataverse_list_mock: dataverse_list_mock):
 def mock_database_api(mocker):
   mock = mocker.patch('pasta_eln.dataverse.database_api.DatabaseAPI')
   mock_instance = mock.return_value
-  mock_instance.get_model.return_value = ConfigModel(_id="test_id", _rev="test_rev",
-                                                     dataverse_login_info={"server_url": "http://valid.url",
-                                                                           "api_token": "encrypted_api_token",
-                                                                           "dataverse_id": "test_dataverse_id"},
-                                                     parallel_uploads_count=1, project_upload_items={}, metadata={})
+  mock_instance.get_config_model.return_value = ConfigModel(_id="test_id", _rev="test_rev",
+                                                            dataverse_login_info={"server_url": "http://valid.url",
+                                                                                  "api_token": "decrypted_api_token",
+                                                                                  "dataverse_id": "test_dataverse_id"},
+                                                            parallel_uploads_count=1, project_upload_items={},
+                                                            metadata={})
   return mock_instance
 
 
@@ -61,9 +62,9 @@ def config_dialog(qtbot, mocker, mock_message_box, mock_webbrowser, mock_dataver
   mocker.patch('pasta_eln.GUI.dataverse.config_dialog.QMessageBox', new=mock_message_box)
   mocker.patch('pasta_eln.GUI.dataverse.config_dialog.logging')
   mocker.patch('pasta_eln.GUI.dataverse.config_dialog.webbrowser', mock_webbrowser)
-  mocker.patch('pasta_eln.GUI.dataverse.config_dialog.get_encrypt_key', return_value=(True, b"test_encrypt_key"))
-  mocker.patch('pasta_eln.GUI.dataverse.config_dialog.decrypt_data', return_value='decrypted_api_token')
-  mocker.patch('pasta_eln.GUI.dataverse.config_dialog.encrypt_data', return_value='encrypted_api_token')
+  # mocker.patch('pasta_eln.GUI.dataverse.config_dialog.get_encrypt_key', return_value=(True, b"test_encrypt_key"))
+  # mocker.patch('pasta_eln.GUI.dataverse.config_dialog.decrypt_data', return_value='decrypted_api_token')
+  # mocker.patch('pasta_eln.GUI.dataverse.config_dialog.encrypt_data', return_value='encrypted_api_token')
   mocker.patch('pasta_eln.GUI.dataverse.config_dialog.check_login_credentials',
                side_effect=mock_check_login_credentials)
   dialog = ConfigDialog()
@@ -242,7 +243,5 @@ class TestDataverseConfigDialog:
       assert config_dialog.config_model.dataverse_login_info[
                "api_token"] == '123456789', "API token should not be encrypted before save"
       qtbot.mouseClick(config_dialog.buttonBox.button(config_dialog.buttonBox.Save), Qt.LeftButton, delay=1)
-      assert config_dialog.config_model.dataverse_login_info[
-               "api_token"] == 'encrypted_api_token', "API token should be encrypted"
-      mock_database_api.update_model_document.assert_called_once_with(config_dialog.config_model)
+      mock_database_api.save_config_model.assert_called_once_with(config_dialog.config_model)
       assert config_dialog.instance.isVisible() is False, "Dataverse config dialog should be closed!"

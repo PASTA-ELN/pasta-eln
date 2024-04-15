@@ -9,20 +9,19 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
 import asyncio
-from datetime import datetime
 import logging
 import time
+from datetime import datetime
 from typing import Callable
 
 from PySide6 import QtCore
 from PySide6.QtGui import QImage, QPixmap
 
-from pasta_eln.GUI.dataverse.upload_widget_base import Ui_UploadWidgetFrame
 from pasta_eln.dataverse.client import DataverseClient
 from pasta_eln.dataverse.config_error import ConfigError
 from pasta_eln.dataverse.database_api import DatabaseAPI
 from pasta_eln.dataverse.generic_task_object import GenericTaskObject
-from pasta_eln.dataverse.progress_thread import ProgressThread
+from pasta_eln.dataverse.progress_updater_thread import ProgressUpdaterThread
 from pasta_eln.dataverse.upload_model import UploadModel
 from pasta_eln.dataverse.upload_status_values import UploadStatusValues
 from pasta_eln.dataverse.utils import get_flattened_metadata, update_status
@@ -30,18 +29,11 @@ from pasta_eln.dataverse.utils import get_flattened_metadata, update_status
 
 class DataUploadTask(GenericTaskObject):
   """
-  Represents a data upload task.
+  Represents a task for uploading data to a Dataverse repository.
 
   Explanation:
-      This class handles the data upload task, including tracking progress, updating status,
-      and managing the upload model.
-      It provides methods to start the task, cancel the task, and handle the initialization of the task.
-
-  Args:
-      widget (Ui_UploadWidgetFrame): The widget containing the upload task elements.
-
-  Returns:
-      None
+      This class manages the process of uploading data to Dataverse, including creating datasets,
+      uploading files, checking dataset locks, and handling cancellation of the upload task.
   """
   progress_changed = QtCore.Signal(int)
   status_changed = QtCore.Signal(str)
@@ -53,6 +45,16 @@ class DataUploadTask(GenericTaskObject):
                status_label_set_text_callback: Callable[[str], None],
                status_icon_set_pixmap_callback: Callable[[QPixmap | QImage | str], None],
                upload_cancel_clicked_signal_callback: QtCore.Signal) -> None:
+    """
+    Initializes the DataUploadTask with necessary callbacks and information.
+
+    Args:
+        project_name (str): The name of the project for the upload task.
+        progress_update_callback (Callable[[int], None]): Callback for updating progress.
+        status_label_set_text_callback (Callable[[str], None]): Callback for setting status label text.
+        status_icon_set_pixmap_callback (Callable[[QPixmap | QImage | str], None]): Callback for setting status icon.
+        upload_cancel_clicked_signal_callback (QtCore.Signal): Signal for upload cancellation.
+    """
     super().__init__()
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
     self.project_name = project_name
@@ -83,26 +85,19 @@ class DataUploadTask(GenericTaskObject):
     upload_cancel_clicked_signal_callback.connect(self.cancel.emit)  # type: ignore[attr-defined]
 
     # Create progress thread to update the progress
-    self.progress_thread = ProgressThread()
+    self.progress_thread = ProgressUpdaterThread()
     self.progress_thread.progress_update = self.progress_changed
 
   def start_task(self) -> None:
     """
-    Starts the data upload task.
+    Start the data upload task by generating an ELN file, creating a dataset in Dataverse,
+    uploading the file, and finalizing the upload task.
 
-    Explanation:
-        This method starts the data upload task by emitting signals to update the progress and status,
-        creating the upload model, and performing the upload process.
-        It updates the progress and status, and updates the upload model accordingly.
-        It also handles the cancellation of the task and emits the appropriate signals.
-        It also handles the upload tasks to dataverse
-          - Generating ELN file
-          - Uploading to dataverse
-          - Saving the upload model whenever needed
-
+    Args:
+        self: Instance of the data upload task.
     """
-
     super().start_task()
+
     # Emitting signals to update initial status
     self.status_changed.emit(UploadStatusValues.Uploading.name)
     # Emit the upload model id
@@ -126,7 +121,7 @@ class DataUploadTask(GenericTaskObject):
     persistent_id = self.create_dataset_for_pasta_project()
     if persistent_id is None:
       self.logger.warning("Failed to create dataset for project: %s, hence finalizing the upload",
-                          self.upload_model.project_name)
+                          self.project_name)
       self.finalize_upload_task(UploadStatusValues.Error.name)
       return
 
@@ -135,7 +130,7 @@ class DataUploadTask(GenericTaskObject):
       return
     if not self.check_if_dataset_is_unlocked(persistent_id):
       self.logger.warning("Failed to unlock dataset for project: %s, hence finalizing the upload",
-                          self.upload_model.project_name)
+                          self.project_name)
       self.finalize_upload_task(UploadStatusValues.Error.name)
       return
 
@@ -145,7 +140,7 @@ class DataUploadTask(GenericTaskObject):
     file_pid = self.upload_generated_eln_file_to_dataset(persistent_id, eln_file_path)
     if file_pid is None:
       self.logger.warning("Failed to upload eln file to dataset for project: %s, hence finalizing the upload",
-                          self.upload_model.project_name)
+                          self.project_name)
       self.finalize_upload_task(UploadStatusValues.Error.name)
       return
 
@@ -155,9 +150,89 @@ class DataUploadTask(GenericTaskObject):
       self.logger.info)
     self.finalize_upload_task(UploadStatusValues.Cancelled.name if self.cancelled else UploadStatusValues.Finished.name)
 
-  def upload_generated_eln_file_to_dataset(self, pid, eln_file_path) -> str | None:
-    self.update_log(f"Step 4: Uploading file {eln_file_path} to dataset with PID: {pid}.....", self.logger.info)
-    result = asyncio.run(self.dataverse_client.upload_file(pid,
+  def finalize_upload_task(self, status: str = UploadStatusValues.Finished.name) -> None:
+    """
+    Finalizes the upload task by emitting signals to cancel progress, mark as finished, and update the UI status.
+
+    Args:
+        status (str): The status to be emitted.
+    """
+    self.progress_thread.cancel.emit()
+    self.finished.emit()
+    self.status_changed.emit(status)
+
+  def create_dataset_for_pasta_project(self) -> str | None:
+    """
+    Creates a dataset for the PASTA project by adjusting metadata and invoking the dataverse client method.
+
+    Returns:
+        str or None: The persistent identifier of the created dataset if successful, None otherwise.
+    """
+    self.update_log(f"Step 2: Creating dataset..... {self.upload_model.project_name}", self.logger.info)
+    persistent_id = None
+
+    # Get the saved metadata from the database
+    # and adjust it to the required format for invoking the dataverse client method
+    metadata_adjusted = get_flattened_metadata(self.metadata)
+    metadata_adjusted["title"] = self.upload_model.project_name  # Set the title to the PASTA project name
+    result = asyncio.run(self.dataverse_client.create_and_publish_dataset(self.dataverse_id, metadata_adjusted))
+    if (isinstance(result, dict) and
+        'identifier' in result and
+        'authority' in result and
+        'protocol' in result):
+      persistent_id = f"{result.get('protocol')}:{result.get('authority')}/{result.get('identifier')}"
+      log = f'Dataset creation succeeded with PID: {persistent_id}'
+      self.update_log(log, self.logger.info)
+      self.logger.info(log)
+    else:
+      self.update_log(f'Dataset creation failed with errors: {result}', self.logger.error)
+    return persistent_id
+
+  def check_if_dataset_is_unlocked(self, persistent_id: str) -> bool:
+    """
+    Checks if a dataset is unlocked after a publish operation.
+
+    Args:
+        persistent_id (str): The persistent identifier of the dataset to check.
+
+    Returns:
+        bool: True if the dataset is unlocked, False otherwise.
+    """
+    self.update_log("Step 3: Checking if dataset is unlocked after the publish operation..", self.logger.info)
+    unlocked = False
+    for _ in range(10):
+      result = asyncio.run(self.dataverse_client.get_dataset_locks(persistent_id))
+      if isinstance(result, dict):
+        if locks := result.get('locks'):
+          for lock in locks:
+            self.update_log(
+              f"Dataset with PID: {persistent_id} is locked. Lock type: {lock.get('lockType')}, Message: {lock.get('message')}",
+              self.logger.info)
+        else:
+          self.update_log(f"Dataset with PID: {persistent_id} is unlocked already!", self.logger.info)
+          unlocked = True
+          break
+      else:
+        self.update_log(f"Dataset lock check failed. {result}", self.logger.info)
+      time.sleep(1)
+    if not unlocked:
+      self.update_log(f"Dataset with PID: {persistent_id} is still locked after 10 retries!", self.logger.error)
+    return unlocked
+
+  def upload_generated_eln_file_to_dataset(self, persistent_id: str, eln_file_path: str) -> str | None:
+    """
+    Uploads the generated ELN file to a dataset in Dataverse.
+
+    Args:
+        persistent_id (str): The persistent identifier of the dataset.
+        eln_file_path (str): The path to the ELN file to upload.
+
+    Returns:
+        str or None: The file PID if upload is successful, None otherwise.
+    """
+    self.update_log(f"Step 4: Uploading file {eln_file_path} to dataset with PID: {persistent_id}.....",
+                    self.logger.info)
+    result = asyncio.run(self.dataverse_client.upload_file(persistent_id,
                                                            eln_file_path,
                                                            f"Generated ELN file for the project: {self.upload_model.project_name}",
                                                            ["ELN"]))
@@ -172,35 +247,14 @@ class DataUploadTask(GenericTaskObject):
       return None
     return file_pid
 
-  def finalize_upload_task(self, status: str = UploadStatusValues.Finished.name) -> None:
-    self.progress_thread.cancel.emit()
-    self.finished.emit()
-    self.status_changed.emit(status)
-
-  def create_dataset_for_pasta_project(self) -> str | None:
-    self.update_log(f"Step 2: Creating dataset..... {self.upload_model.project_name}", self.logger.info)
-    pid = None
-
-    # Get the saved metadata from the database and adjust it to the required format for invoking the
-    # dataverse client method
-    metadata_adjusted = get_flattened_metadata(self.metadata)
-    metadata_adjusted["title"] = self.upload_model.project_name  # Set the title to the PASTA project name
-    result = asyncio.run(self.dataverse_client.create_and_publish_dataset(self.dataverse_id, metadata_adjusted))
-    if isinstance(result, list):
-      self.update_log(f'Dataset creation failed with errors: {result}', self.logger.error)
-    elif (isinstance(result, dict) and
-          'identifier' in result and
-          'authority' in result and
-          'protocol' in result):
-      pid = f"{result.get('protocol')}:{result.get('authority')}/{result.get('identifier')}"
-      log = f'Dataset creation succeeded with PID: {pid}'
-      self.update_log(log, self.logger.info)
-      self.logger.info(log)
-    else:
-      self.update_log(f'Dataset creation failed with unknown error: {result}', self.logger.error)
-    return pid
-
   def update_log(self, log: str, logger_method: Callable[[str], None] | None) -> None:
+    """
+    Updates the log with the provided message and triggers the logger method if available.
+
+    Args:
+        log (str): The log message to be updated.
+        logger_method (Callable[[str], None] | None): The method to handle logging.
+    """
     logger_method(log) if logger_method is not None else None
     self.upload_model.log = log
     self.db_api.update_model_document(self.upload_model)
@@ -217,33 +271,17 @@ class DataUploadTask(GenericTaskObject):
     if self.finished:
       return
     super().cancel_task()
-    self.upload_model.log = f"Cancelled at {datetime.datetime.now().isoformat()}"
+    self.upload_model.log = f"Cancelled at {datetime.now().isoformat()}"
     self.upload_model.status = UploadStatusValues.Cancelled.name
     self.status_changed.emit(UploadStatusValues.Cancelled.name)
 
-  def check_if_dataset_is_unlocked(self, pid) -> bool:
-    self.update_log("Step 3: Checking if dataset is unlocked after the publish operation..", self.logger.info)
-    unlocked = False
-    for _ in range(10):
-      result = asyncio.run(self.dataverse_client.get_dataset_locks(pid))
-      if isinstance(result, dict):
-        if locks := result.get('locks'):
-          for lock in locks:
-            self.update_log(
-              f"Dataset with PID: {pid} is locked. Lock type: {lock.get('lockType')}, Message: {lock.get('message')}",
-              self.logger.info)
-        else:
-          self.update_log(f"Dataset with PID: {pid} is unlocked already!", self.logger.info)
-          unlocked = True
-          break
-      else:
-        self.update_log(f"Dataset lock check failed. {result}", self.logger.info)
-      time.sleep(1)
-    if not unlocked:
-      self.update_log(f"Dataset with PID: {pid} is still locked after 10 retries!", self.logger.error)
-    return unlocked
-
   def check_if_cancelled(self) -> bool:
+    """
+    Checks if the data upload task has been cancelled and finalizes the upload if cancelled.
+
+    Returns:
+        bool: True if the task is cancelled, False otherwise.
+    """
     if self.cancelled:
       self.update_log(
         "User cancelled the upload, hence finalizing the upload!",

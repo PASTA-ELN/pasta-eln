@@ -242,7 +242,7 @@ class DatabaseAPI:
         self: The DatabaseAPI instance.
 
     Returns:
-        ConfigModel: The retrieved config model.
+        ConfigModel: The retrieved config model.dataverse_login_info = {dict: 2} {'api_token': 'encrypted_token', 'dataverse_id': 'some_id'}
     """
     self.logger.info("Getting config model...")
     config_model = self.get_model(self.config_doc_id, ConfigModel)

@@ -12,7 +12,7 @@ import os
 from base64 import b64decode, b64encode
 from os.path import dirname, join, realpath
 from typing import Type
-from unittest.mock import mock_open
+from unittest.mock import AsyncMock, mock_open
 
 import pytest
 from cryptography.fernet import Fernet
@@ -20,13 +20,14 @@ from cryptography.fernet import Fernet
 from pasta_eln.dataverse.config_error import ConfigError
 from pasta_eln.dataverse.upload_status_values import UploadStatusValues
 from pasta_eln.dataverse.utils import adjust_type_name, check_if_compound_field_value_is_missing, \
-  check_if_field_value_is_missing, check_if_field_value_not_null, \
+  check_if_dataverse_exists, check_if_field_value_is_missing, check_if_field_value_not_null, \
   check_if_minimal_metadata_exists, \
   check_login_credentials, \
   clear_value, decrypt_data, \
   delete_layout_and_contents, encrypt_data, \
   get_citation_field, get_encrypt_key, \
-  get_formatted_message, is_date_time_type, log_and_create_error, read_pasta_config_file, set_authors, \
+  get_flattened_metadata, get_formatted_message, is_date_time_type, log_and_create_error, read_pasta_config_file, \
+  set_authors, \
   set_template_values, update_status, \
   write_pasta_config_file
 
@@ -148,34 +149,31 @@ def valid_metadata():
 
 class TestDataverseUtils:
 
-  # Parametrized test cases for happy path, edge cases, and error cases
-  @pytest.mark.parametrize("status, expected_icon_name, test_id",
-                           [(UploadStatusValues.Queued.name, 'ph.queue-bold', 'happy_path_queued'),
-                            (UploadStatusValues.Uploading.name, 'mdi6.progress-upload', 'happy_path_uploading'),
-                            (UploadStatusValues.Cancelled.name, 'mdi.cancel', 'happy_path_cancelled'),
-                            (UploadStatusValues.Finished.name, 'fa.check-circle-o', 'happy_path_finished'),
-                            (UploadStatusValues.Error.name, 'msc.error-small', 'happy_path_error'),
-                            (UploadStatusValues.Warning.name, 'fa.warning', 'happy_path_warning'),
-                            # Add edge cases here
-                            # Add error cases here
-                            ])
+  # Assuming qtawesome.icon function is patched to return a simple mock object
+  # that can produce a QPixmap when its pixmap method is called.
+  @pytest.mark.parametrize("status, expected_icon_name, test_id", [
+    (UploadStatusValues.Queued.name, 'fa.circle-o-notch', 'queued_status'),
+    (UploadStatusValues.Uploading.name, 'fa.cloud-upload', 'uploading_status'),
+    (UploadStatusValues.Cancelled.name, 'fa.minus-circle', 'cancelled_status'),
+    (UploadStatusValues.Finished.name, 'fa.check-circle-o', 'finished_status'),
+    (UploadStatusValues.Error.name, 'fa.times-circle-o', 'error_status'),
+    (UploadStatusValues.Warning.name, 'fa.warning', 'warning_status'),
+    ('UnknownStatus', 'fa.times-circle-o', 'default_case'),
+  ])
   def test_update_status(self, mocker, status, expected_icon_name, test_id):
     # Arrange
-    status_icon_label = mocker.MagicMock()
-    status_label = mocker.MagicMock()
-    mock_icon = mocker.MagicMock()
-    mock_icon.constructor = mocker.patch('pasta_eln.dataverse.utils.icon', return_value=mock_icon)
+    mock_icon = mocker.patch('pasta_eln.dataverse.utils.icon', return_value=mocker.MagicMock(pixmap=mocker.MagicMock()))
+    mocker.patch('pasta_eln.dataverse.utils.QSize')
+    status_label_set_text_callback = mocker.MagicMock()
+    status_icon_set_pixmap_callback = mocker.MagicMock()
 
     # Act
-    update_status(status, status_icon_label, status_label)
+    update_status(status, status_label_set_text_callback, status_icon_set_pixmap_callback)
 
     # Assert
-    status_label.setText.assert_called_once_with(status)
-    # Check if the correct icon is set for the given status
-    mock_icon.constructor.assert_called_once_with(expected_icon_name)
-    status_icon_label.size.assert_called_once()
-    status_icon_label.setPixmap.assert_called_once_with(mock_icon.pixmap.return_value)
-    mock_icon.pixmap.assert_called_once_with(status_icon_label.size())
+    status_label_set_text_callback.assert_called_once_with(status)
+    mock_icon.assert_called_once_with(expected_icon_name)
+    status_icon_set_pixmap_callback.assert_called_once_with(mock_icon.return_value.pixmap.return_value)
 
   @pytest.mark.parametrize("test_id, config_data",
                            [("SuccessCase-1", {"key": "value", "number": 42}), ("SuccessCase-2", {"empty_dict": {}}),
@@ -1672,3 +1670,140 @@ class TestDataverseUtils:
       assert result is None, f"Test failed for {test_id}"
     else:
       assert result == expected_output, f"Test failed for {test_id}"
+
+  # Test cases for happy path scenarios
+  @pytest.mark.parametrize("metadata,expected_output", [
+    # Test ID: SuccessCase-1
+    (
+        {
+          "datasetVersion": {
+            "license": "CC0",
+            "metadataBlocks": {
+              "citation": {
+                "fields": [
+                  {"typeName": "title", "value": "Test Dataset"},
+                  {"typeName": "author", "value": ["Author 1", "Author 2"]},
+                ]
+              }
+            }
+          }
+        },
+        {"license": "CC0", "title": "Test Dataset", "author": ["Author 1", "Author 2"]}
+    ),
+    # Test ID: SuccessCase-2
+    (
+        {
+          "datasetVersion": {
+            "license": None,
+            "metadataBlocks": {
+              "citation": {
+                "fields": [
+                  {"typeName": "title", "value": "No License Dataset"},
+                ]
+              }
+            }
+          }
+        },
+        {"title": "No License Dataset"}
+    ),
+  ], ids=["SuccessCase-1", "SuccessCase-2"])
+  def test_get_flattened_metadata_happy_path(self, metadata, expected_output):
+    # Act
+    result = get_flattened_metadata(metadata)
+
+    # Assert
+    assert result == expected_output, "The flattened metadata does not match the expected output."
+
+  # Test cases for edge cases
+  @pytest.mark.parametrize("metadata,expected_output", [
+    # Test ID: EdgeCase-1
+    (
+        {"datasetVersion": {"license": "CC0", "metadataBlocks": {}}},
+        {"license": "CC0"}
+    ),
+    # Test ID: EdgeCase-2
+    (
+        {
+          "datasetVersion": {
+            "license": "CC0",
+            "metadataBlocks": {
+              "citation": {
+                "fields": []
+              }
+            }
+          }
+        },
+        {"license": "CC0"}
+    ),
+  ], ids=["EdgeCase-1", "EdgeCase-2"])
+  def test_get_flattened_metadata_edge_cases(self, metadata, expected_output):
+    # Act
+    result = get_flattened_metadata(metadata)
+
+    # Assert
+    assert result == expected_output, "The flattened metadata does not match the expected output for edge cases."
+
+  # Test cases for error scenarios
+  @pytest.mark.parametrize("metadata,error_type", [
+    # Test ID: ErrorCase-1
+    ({}, KeyError),
+    # Test ID: ErrorCase-2
+    ({"datasetVersion": {}}, KeyError),
+    # Test ID: ErrorCase-3
+    (
+        {
+          "datasetVersion": {
+            "license": "CC0",
+            "metadataBlocks": {
+              "citation": {
+                "fields": [
+                  {"typeName": "title"},  # Missing 'value' key
+                ]
+              }
+            }
+          }
+        },
+        KeyError
+    ),
+  ], ids=["ErrorCase-1", "ErrorCase-2", "ErrorCase-3"])
+  def test_get_flattened_metadata_error_cases(self, metadata, error_type):
+    # Act & Assert
+    with pytest.raises(error_type):
+      get_flattened_metadata(metadata)
+
+  @pytest.mark.parametrize("server_url,api_token,dataverse_id,expected_message", [
+    ("valid_server_url_1", "valid_api_token_1", "valid_dataverse_id_1", "100 bytes"),
+    ("valid_server_url_2", "valid_api_token_2", "valid_dataverse_id_2", "2048 bytes"),
+    ("valid_server_url_3", "valid_api_token_2", "valid_dataverse_id_2", "0 bytes")
+  ], ids=["success_path_1", "success_path_2", "success_path_3"])
+  def test_check_if_dataverse_exists_success_path(self, mocker, server_url, api_token, dataverse_id,
+                                                  expected_message):
+    # Arrange
+    logger = mocker.MagicMock()
+    client_mock = mocker.patch("pasta_eln.dataverse.utils.DataverseClient")
+    client_mock.return_value.get_dataverse_size = AsyncMock(return_value=expected_message)
+
+    # Act
+    result = check_if_dataverse_exists(logger, api_token, server_url, dataverse_id)
+
+    # Assert
+    logger.info.assert_called_with("Checking if login info is valid, server_url: %s", server_url)
+    assert result == True, "Expected True for valid dataverse size message"
+
+  @pytest.mark.parametrize("server_url,api_token,dataverse_id,expected_message", [
+    ("invalid_server_url", "invalid_api_token", "invalid_dataverse_id", [
+      'Client session InvalidURL for url (invalid_server_url/api/dataverses/invalid_dataverse_id/storagesize) with error: invalid_server_url/api/dataverses/invalid_dataverse_id/storagesize']),
+  ], ids=["error_case_not_found"])
+  def test_check_if_dataverse_exists_error_cases(self, mocker, server_url, api_token, dataverse_id,
+                                                 expected_message):
+    # Arrange
+    logger = mocker.MagicMock()
+    client_mock = mocker.patch("pasta_eln.dataverse.utils.DataverseClient")
+    client_mock.return_value.get_dataverse_size = AsyncMock(return_value=expected_message)
+
+    # Act
+    result = check_if_dataverse_exists(logger, api_token, server_url, dataverse_id)
+
+    # Assert
+    logger.info.assert_called_with("Checking if login info is valid, server_url: %s", server_url)
+    assert result == False, "Expected False for invalid or empty server messages"
