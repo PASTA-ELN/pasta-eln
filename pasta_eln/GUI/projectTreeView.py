@@ -112,7 +112,7 @@ class TreeView(QTreeView):
               showMessage(self, 'Warning', f'Warning! \nThe folder {oldPath.parent/newFileName}{endText}')
               if (oldPath.parent/newFileName).is_file():
                 (oldPath.parent/newFileName).unlink()
-              elif (oldPath.parent/newFileName).is_file():
+              elif (oldPath.parent/newFileName).is_dir():
                 shutil.rmtree(oldPath.parent/newFileName)
             oldPath.rename( oldPath.parent/newFileName)
         # go through children
