@@ -8,6 +8,7 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import time
 from threading import Thread
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -108,6 +109,34 @@ class TestDataverseUploadQueueManager:
     # Assert
     assert len(mock_manager.upload_queue) == expected_upload_queue_length
     thread_task_to_remove.worker_thread.quit.assert_called_once()
+
+  @pytest.mark.parametrize("test_id, in_upload_queue, in_running_queue, expected_quit_call", [
+    ("happy_path_both_queues", True, True, 1),
+    ("happy_path_upload_only", True, False, 1),
+    ("happy_path_running_only", False, True, 1),
+    ("edge_case_neither_queue", False, False, 1),
+  ])
+  def test_remove_from_queue(self, mock_manager, test_id, in_upload_queue, in_running_queue, expected_quit_call):
+    # Arrange
+    mock_manager.upload_queue = []
+    mock_manager.running_queue = []
+    upload_task_thread = MagicMock()
+    upload_task_thread.worker_thread.quit = MagicMock()
+
+    if in_upload_queue:
+      mock_manager.upload_queue.append(upload_task_thread)
+    if in_running_queue:
+      mock_manager.running_queue.append(upload_task_thread)
+
+    # Act
+    mock_manager.remove_from_queue(upload_task_thread)
+
+    # Assert
+    if in_upload_queue:
+      assert upload_task_thread not in mock_manager.upload_queue
+    if in_running_queue:
+      assert upload_task_thread not in mock_manager.running_queue
+    assert upload_task_thread.worker_thread.quit.call_count == expected_quit_call
 
   @pytest.mark.parametrize(
     "test_id, number_of_concurrent_uploads, upload_queue_size, cancelled, expected_started_count",

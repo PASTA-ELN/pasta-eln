@@ -68,3 +68,171 @@ class TestDataverseProjectModel:
     with pytest.raises(IncorrectParameterError) as exc_info:
       ProjectModel(**kwargs)
     assert str(exc_info.value) == expected_exception_message
+
+  @pytest.mark.parametrize("test_input, expected, test_id", [
+    ("Project A", "Project A", "normal_string"),
+    ("", "", "empty_string"),
+    (None, None, "none_value")
+  ])
+  def test_name_setter_success_path(self, test_input, expected, test_id):
+    # Arrange
+    project = ProjectModel()
+
+    # Act
+    project.name = test_input
+
+    # Assert
+    assert project.name == expected, "The name property should correctly reflect the set value."
+
+  @pytest.mark.parametrize("test_input, expected, test_id", [
+    ("Comment A", "Comment A", "normal_string"),
+    ("", "", "empty_string"),
+    (None, None, "none_value")
+  ])
+  def test_comment_setter_success_path(self, test_input, expected, test_id):
+    # Arrange
+    project = ProjectModel()
+
+    # Act
+    project.comment = test_input
+
+    # Assert
+    assert project.comment == expected, "The comment property should correctly reflect the set value."
+
+  @pytest.mark.parametrize("test_input, expected, test_id", [
+    ("2024-01-01", "2024-01-01", "normal_string"),
+    ("", "", "empty_string"),
+    (None, None, "none_value")
+  ])
+  def test_date_setter_success_path(self, test_input, expected, test_id):
+    # Arrange
+    project = ProjectModel()
+
+    # Act
+    project.date = test_input
+
+    # Assert
+    assert project.date == expected, "The date property should correctly reflect the set value."
+
+  @pytest.mark.parametrize("test_input, expected, test_id", [
+    ("User A", "User A", "normal_string"),
+    ("", "", "empty_string"),
+    (None, None, "none_value")
+  ])
+  def test_user_setter_success_path(self, test_input, expected, test_id):
+    # Arrange
+    project = ProjectModel()
+
+    # Act
+    project.user = test_input
+
+    # Assert
+    assert project.user == expected, "The user property should correctly reflect the set value."
+
+  @pytest.mark.parametrize("test_input, expected, test_id", [
+    ("Status", "Status", "normal_string"),
+    ("", "", "empty_string"),
+    (None, None, "none_value")
+  ])
+  def test_status_setter_success_path(self, test_input, expected, test_id):
+    # Arrange
+    project = ProjectModel()
+
+    # Act
+    project.status = test_input
+
+    # Assert
+    assert project.status == expected, "The status property should correctly reflect the set value."
+
+  @pytest.mark.parametrize("test_input, expected, test_id", [
+    ("Objective", "Objective", "normal_string"),
+    ("", "", "empty_string"),
+    (None, None, "none_value")
+  ])
+  def test_objective_setter_success_path(self, test_input, expected, test_id):
+    # Arrange
+    project = ProjectModel()
+
+    # Act
+    project.objective = test_input
+
+    # Assert
+    assert project.objective == expected, "The objective property should correctly reflect the set value."
+
+  # Parametrized test for various error case
+  @pytest.mark.parametrize("test_input, attribute, test_id", [
+    (123, "name", "name_integer"),
+    (12.34, "name", "name_float"),
+    ([], "name", "name_empty_list"),
+    ({}, "name", "name_empty_dict"),
+    (True, "name", "name_boolean"),
+    (123, "comment", "comment_integer"),
+    (12.34, "comment", "comment_float"),
+    ([], "comment", "comment_empty_list"),
+    ({}, "comment", "comment_empty_dict"),
+    (True, "comment", "comment_boolean"),
+    (123, "user", "user_integer"),
+    (12.34, "user", "user_float"),
+    ([], "user", "user_empty_list"),
+    ({}, "user", "user_empty_dict"),
+    (True, "user", "user_boolean"),
+    (123, "status", "status_integer"),
+    (12.34, "status", "status_float"),
+    ([], "status", "status_empty_list"),
+    ({}, "status", "status_empty_dict"),
+    (True, "objective", "objective_boolean"),
+    (123, "objective", "objective_integer"),
+    (12.34, "objective", "objective_float"),
+    ([], "objective", "objective_empty_list"),
+    ({}, "objective", "objective_empty_dict"),
+    (True, "objective", "objective_boolean"),
+    (123, "date", "date_integer"),
+    (12.34, "date", "date_float"),
+    ([], "date", "date_empty_list"),
+    ({}, "date", "date_empty_dict"),
+    (True, "date", "date_boolean")
+  ])
+  def test_setter_error_cases(self, test_input, attribute, test_id):
+    # Arrange
+    project = ProjectModel()
+
+    # Act & Assert
+    with pytest.raises(IncorrectParameterError) as exc_info:
+      setattr(project, attribute, test_input)
+    assert str(exc_info.value) == f"Expected string type for {attribute} but got {type(test_input)}", \
+      "An IncorrectParameterError should be raised for non-string inputs."
+
+  @pytest.mark.parametrize("initial_value, attribute, expected_exception", [
+    ("Project Alpha", "name", None),
+    ("", "name", None),
+    ("Comment", "comment", None),
+    ("", "comment", None),
+    ("User", "user", None),
+    ("", "user", None),
+    ("Status", "status", None),
+    ("", "status", None),
+    ("Objective", "objective", None),
+    ("", "objective", None),
+    ("Date", "date", None),
+    ("", "date", None)
+  ], ids=["name-success-valid", "name-edge-empty-string",
+          "comment-success-valid", "comment-edge-empty-string",
+          "user-success-valid", "user-edge-empty-string",
+          "status-success-valid", "status-edge-empty-string",
+          "objective-success-valid", "objective-edge-empty-string",
+          "date-success-valid", "date-edge-empty-string"])
+  def test_deleter(self, initial_value, attribute, expected_exception):
+    project = ProjectModel()
+
+    # Arrange
+    if initial_value is not None:
+      setattr(project, attribute, initial_value)
+
+    # Act and Assert
+    if expected_exception:
+      with pytest.raises(expected_exception):
+        delattr(project, attribute)
+    else:
+      delattr(project, attribute)
+      with pytest.raises(AttributeError):  # Asserting that _name is indeed deleted
+        _ = getattr(project, attribute)

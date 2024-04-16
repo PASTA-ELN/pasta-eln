@@ -6,6 +6,7 @@
 #  Filename: test_dataverse_upload_model.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
+import inspect
 
 import pytest
 
@@ -68,7 +69,7 @@ class TestDataverseUploadModel:
     ("ERR06", "log", 161718),  # Non-string log
     ("ERR07", "dataverse_url", 192021),  # Non-string dataverse_url
   ])
-  def test_upload_model_error_cases(self, test_id, param, value):
+  def test_upload_model_init_error_cases(self, test_id, param, value):
     # Arrange
     kwargs = {"_id": None, "_rev": None, "data_type": None, "project_name": None, "project_doc_id": None,
               "status": None, "finished_date_time": None, "log": "", "dataverse_url": None}
@@ -145,3 +146,50 @@ class TestDataverseUploadModel:
     with pytest.raises(expected_exception) as exc_info:
       UploadModel(**kwargs)
     assert str(exc_info.value) == expected_message
+
+  def test_attribute_setter_success(self):
+    # Arrange
+    instance = UploadModel()
+
+    # Act & Assert
+    for i in inspect.getmembers(UploadModel):
+      if not i[0].startswith('_') and not inspect.ismethod(i[1]):
+        setattr(instance, i[0], f"Test {i[0]}")
+
+        assert getattr(instance, i[0]) == f"Test {i[0]}" if i[0] != 'log' else f"Test {i[0]}\n", f"Failed on {i[0]}"
+
+  @pytest.mark.parametrize("test_input, test_id", [
+    (123, "integer"),
+    (12.34, "float"),
+    ([], "empty_list"),
+    ({}, "empty_dict"),
+    (True, "boolean")
+  ])
+  def test_setter_error_cases(self, test_input, test_id):
+    # Arrange
+    instance = UploadModel()
+
+    # Act & Assert
+    for i in inspect.getmembers(UploadModel):
+      if not i[0].startswith('_') and not inspect.ismethod(i[1]) and i[0] not in ['id', 'rev']:
+        with pytest.raises(IncorrectParameterError) as exc_info:
+          setattr(instance, i[0], test_input)
+        assert str(exc_info.value) == f"Expected string type for {i[0]} but got {type(test_input)}", \
+          "An IncorrectParameterError should be raised for non-string inputs."
+
+  @pytest.mark.parametrize("initial_value", [
+    ("Test 1"),
+    ("")])
+  def test_deleter(self, initial_value):
+    # Arrange
+    instance = UploadModel()
+
+    # Act & Assert
+    for i in inspect.getmembers(UploadModel):
+      if not i[0].startswith('_') and not inspect.ismethod(i[1]) and i[0] not in ['id', 'rev']:
+        setattr(instance, i[0], initial_value)
+
+        # Act and Assert
+        delattr(instance, i[0])
+        with pytest.raises(AttributeError):  # Asserting that property is indeed deleted
+          _ = getattr(instance, i[0])

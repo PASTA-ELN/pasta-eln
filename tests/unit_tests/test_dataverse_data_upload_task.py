@@ -166,7 +166,8 @@ class TestDataverseDataUploadTask:
     ("Project A", "/home/jmurugan/Artefacts/10/Text File1.txt", "doi:10.5072/FK2/XYZ123", "file_pid_A", False),
     ("Project B", "/home/jmurugan/Artefacts/10/Text File1.txt", "doi:10.5072/FK2/XYZ456", "file_pid_B", True),
   ], ids=["Success-path-A", "Success-path-B"])
-  def test_success_path(self, mocker, setup_task, project_name, eln_file_path, persistent_id, file_pid, cancelled):
+  def test_start_task_success_path(self, mocker, setup_task, project_name, eln_file_path, persistent_id, file_pid,
+                                   cancelled):
     # Arrange
     mock_super_start_task = mocker.patch('pasta_eln.dataverse.data_upload_task.super')
     mocker.patch('pasta_eln.dataverse.data_upload_task.DataUploadTask.check_if_cancelled', return_value=cancelled)
@@ -207,7 +208,7 @@ class TestDataverseDataUploadTask:
     ("unlock_dataset", "Failed to unlock dataset for project: %s, hence finalizing the upload"),
     ("upload_eln_file", "Failed to upload eln file to dataset for project: %s, hence finalizing the upload"),
   ], ids=["error-create-dataset", "error-unlock-dataset", "error-upload-eln-file"])
-  def test_error_cases(self, mocker, setup_task, error_step, log_message):
+  def test_start_task_error_cases(self, mocker, setup_task, error_step, log_message):
     # Arrange
     mock_super_start_task = mocker.patch('pasta_eln.dataverse.data_upload_task.super')
     mocker.patch('pasta_eln.dataverse.data_upload_task.DataUploadTask.check_if_cancelled', return_value=False)
@@ -233,6 +234,51 @@ class TestDataverseDataUploadTask:
     mock_super_start_task.return_value.start_task.assert_called_once_with()
     setup_task.logger.warning.assert_called_with(log_message, "Project A")
     setup_task.finalize_upload_task.assert_called_with(UploadStatusValues.Error.name)
+
+  @pytest.mark.parametrize(
+    "cancel_status,expected_final_status,create_dataset_return,check_dataset_unlocked_return,upload_file_return", [
+      ([False, False, False, False], UploadStatusValues.Finished.name, "persistent_id_mock", True, "file_pid_mock"),
+      # Happy path
+      ([True, False, False, False], UploadStatusValues.Cancelled.name, "persistent_id_mock", True, "file_pid_mock"),
+      # Cancelled after start
+      ([False, True, False, False], UploadStatusValues.Cancelled.name, "persistent_id_mock", True, "file_pid_mock"),
+      # Cancelled after start
+      ([False, False, True, False], UploadStatusValues.Cancelled.name, "persistent_id_mock", True, "file_pid_mock"),
+      # Cancelled after start
+      ([False, False, False, True], UploadStatusValues.Cancelled.name, "persistent_id_mock", True, "file_pid_mock"),
+      # Cancelled after start
+      ([False, False, False, False], UploadStatusValues.Error.name, None, True, "file_pid_mock"),
+      # Dataset creation fails
+      ([False, False, False, False], UploadStatusValues.Error.name, "persistent_id_mock", False, "file_pid_mock"),
+      # Dataset unlock fails
+      ([False, False, False, False], UploadStatusValues.Error.name, "persistent_id_mock", True, None),
+      # File upload fails
+    ], ids=["success-path", "cancelled_before_eln_generation", "cancelled_before_dataset_creation",
+            "cancelled_before_dataset_unlock", "cancelled_before_eln_upload", "dataset-creation-fails",
+            "dataset-unlock-fails", "file-upload-fails"])
+  def test_start_task(self, mocker, setup_task, cancel_status, expected_final_status, create_dataset_return,
+                      check_dataset_unlocked_return, upload_file_return):
+    # Arrange
+    mocker.patch('pasta_eln.dataverse.data_upload_task.super')
+    setup_task.finalize_upload_task = mocker.MagicMock()
+    setup_task.check_if_dataset_is_unlocked = mocker.MagicMock(return_value=check_dataset_unlocked_return)
+    setup_task.check_if_cancelled = mocker.MagicMock(side_effect=cancel_status)
+    if any(cancel_status):
+      setup_task.finalize_upload_task(UploadStatusValues.Cancelled.name)
+    setup_task.create_dataset_for_pasta_project = mocker.MagicMock(return_value=create_dataset_return)
+    setup_task.upload_generated_eln_file_to_dataset = mocker.MagicMock(return_value=upload_file_return)
+
+    # Act
+    setup_task.start_task()
+
+    # Assert
+    setup_task.status_changed.emit.assert_called_with(UploadStatusValues.Uploading.name)
+    setup_task.upload_model_created.emit.assert_called_with("1234567890abcdef1234567890abcdef")
+    setup_task.progress_thread.start.assert_called_once()
+    if create_dataset_return is None or not check_dataset_unlocked_return or upload_file_return is None:
+      setup_task.finalize_upload_task.assert_called_with(UploadStatusValues.Error.name)
+    else:
+      setup_task.finalize_upload_task.assert_called_with(expected_final_status)
 
   @pytest.mark.parametrize("persistent_id, eln_file_path, upload_result, expected", [
     # Success path tests

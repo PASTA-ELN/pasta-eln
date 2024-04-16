@@ -85,6 +85,42 @@ class TestDataverseBaseDatabaseApi:
       if exists_return_value:
         mock_logger_error.assert_called_once_with(expected_error_message)
 
+  @pytest.mark.parametrize("config, db_name, expected_username, expected_password, test_id", [
+    ({"projectGroups": {"test_db": {"local": {"user": "test_user", "password": "test_pass"}}}}, "test_db", "test_user",
+     "test_pass", "success_path"),
+    ({"projectGroups": {"test_db": {"local": {"user": "user1", "password": "pass1"}}}}, "test_db", "user1", "pass1",
+     "alternate_credentials"),
+    # Add more test cases for different realistic values
+  ])
+  def test_set_username_password_success_path(self, mocker, mock_database_api, config, db_name, expected_username,
+                                              expected_password, test_id):
+    # Arrange
+    mock_database_api.db_name = db_name
+
+    # Act
+    mock_database_api.set_username_password(config)
+
+    # Assert
+    assert mock_database_api.username == expected_username, f"Test ID: {test_id} - Expected username to be {expected_username}"
+    assert mock_database_api.password == expected_password, f"Test ID: {test_id} - Expected password to be {expected_password}"
+
+  @pytest.mark.parametrize("config, db_name, expected_exception, test_id", [
+    ({}, "test_db", ConfigError, "empty_config"),
+    ({"projectGroups": {}}, "test_db", ConfigError, "missing_project_groups"),
+    ({"projectGroups": {"test_db": {}}}, "test_db", ConfigError, "missing_local_info"),
+    ({"projectGroups": {"test_db": {"local": {}}}}, "test_db", ConfigError, "missing_user_password"),
+    # Add more test cases for different error scenarios
+  ])
+  def test_set_username_password_error_cases(self, mocker, mock_database_api, config, db_name, expected_exception,
+                                             test_id):
+    # Arrange
+    mock_database_api.db_name = db_name
+
+    # Act & Assert
+    with pytest.raises(expected_exception) as exc_info:
+      mock_database_api.set_username_password(config)
+    assert exc_info, f"Test ID: {test_id} - Expected exception {expected_exception.__name__} was not raised"
+
   @pytest.mark.parametrize("test_id, data, expected_document",
                            [  # Success path tests with various realistic test values
                              ("Success-1", {"name": "Spaghetti", "type": "Pasta"},
