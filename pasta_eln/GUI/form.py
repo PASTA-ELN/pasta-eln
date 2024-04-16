@@ -70,9 +70,9 @@ class Form(QDialog):
 
     # create full data set
     if self.doc['-type'][0] in self.db.dataHierarchy:
-      dataHierarchyNode = self.db.dataHierarchy[self.doc['-type'][0]]['meta']
+      dataHierarchyNode = copy.deepcopy(self.db.dataHierarchy[self.doc['-type'][0]]['meta'])
     else:
-      dataHierarchyNode = defaultDataHierarchyNode
+      dataHierarchyNode = copy.deepcopy(defaultDataHierarchyNode)
     keysDataHierarchy = [i['name'] for group in dataHierarchyNode for i in dataHierarchyNode[group]]
     for keyInDocNotHierarchy in set(self.doc.keys()).difference(keysDataHierarchy ):
       dataHierarchyNode['default'].append({'name':keyInDocNotHierarchy})
