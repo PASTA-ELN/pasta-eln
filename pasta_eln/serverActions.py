@@ -488,6 +488,9 @@ def restoreCouchDB(location:str='', userName:str='', password:str='', fileName:s
       fileParts = fileI.split('/')[1:]
       if fileParts==['pastaELN.json']: #do not recreate file, it is only there for manual recovery
         continue
+      if len(fileParts)!=2 or fileParts[-1]=='':
+        print(f"**ERROR-Attachment: Cannot process file {fileI}: does not have 1+2 parts")
+        continue
       database = fileParts[0]
       docID = fileParts[1]
       if not docID.endswith('_attach'):
