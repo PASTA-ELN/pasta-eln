@@ -2,7 +2,28 @@
 
 ## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
 
-[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.1...HEAD)
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.2b1...HEAD)
+
+**Implemented enhancements:**
+
+- Closing the "You will loose all new data..." warning pop-up [\#224](https://github.com/PASTA-ELN/pasta-eln/issues/224)
+
+**Fixed bugs:**
+
+- Changing item type to "Unidentified" [\#255](https://github.com/PASTA-ELN/pasta-eln/issues/255)
+- Using “enter” to add a tag opens the extended comment field [\#254](https://github.com/PASTA-ELN/pasta-eln/issues/254)
+- Autosave functionality [\#236](https://github.com/PASTA-ELN/pasta-eln/issues/236)
+- Issues during the corrosion data import [\#232](https://github.com/PASTA-ELN/pasta-eln/issues/232)
+
+**Merged pull requests:**
+
+- Sb 236 autosave fix [\#266](https://github.com/PASTA-ELN/pasta-eln/pull/266) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Sb 232 fix also second run [\#265](https://github.com/PASTA-ELN/pasta-eln/pull/265) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Bugs and features that SB found [\#263](https://github.com/PASTA-ELN/pasta-eln/pull/263) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+
+## [v2.5.2b1](https://github.com/PASTA-ELN/pasta-eln/tree/v2.5.2b1) (2024-04-12)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.1...v2.5.2b1)
 
 **Merged pull requests:**
 

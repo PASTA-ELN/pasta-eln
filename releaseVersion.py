@@ -2,6 +2,7 @@
 import sys, os, subprocess, shutil, json
 from pathlib import Path
 from unittest import main as mainTest
+from urllib.request import urlopen
 import configparser
 try:
   import requests
@@ -64,6 +65,16 @@ def newVersion(level=2):
   Args:
     level (int): which number of the version to increase 0=mayor,1=minor,2=sub
   """
+  # last 10 releases from pypi
+  url = 'https://pypi.python.org/pypi/pasta-eln/json'
+  response = urlopen(url)
+  data_json = json.loads(response.read())
+  labels, dates = [], []
+  for release in data_json['releases']:
+    labels.append(release)
+    dates.append(data_json['releases'][release][0]['upload_time'])
+  print('Latest versions on Pypi')
+  print(', '.join([x for _, x in sorted(zip(dates, labels))][-10:]))
   print('Create new version...')
   #get old version number
   version = [int(i) for i in getVersion()[1:].replace('b','.').split('.')]
