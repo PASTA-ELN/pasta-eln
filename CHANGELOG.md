@@ -2,7 +2,15 @@
 
 ## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
 
-[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.2b1...HEAD)
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.2b2...HEAD)
+
+**Closed issues:**
+
+- Measurements in Unidentified table [\#264](https://github.com/PASTA-ELN/pasta-eln/issues/264)
+
+## [v2.5.2b2](https://github.com/PASTA-ELN/pasta-eln/tree/v2.5.2b2) (2024-04-16)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.2b1...v2.5.2b2)
 
 **Implemented enhancements:**
 

@@ -74,7 +74,7 @@ def newVersion(level=2):
     labels.append(release)
     dates.append(data_json['releases'][release][0]['upload_time'])
   print('Latest versions on Pypi')
-  print(', '.join([x for _, x in sorted(zip(dates, labels))][-10:]))
+  print('  '+', '.join([x for _, x in sorted(zip(dates, labels))][-10:]))
   print('Create new version...')
   #get old version number
   version = [int(i) for i in getVersion()[1:].replace('b','.').split('.')]
