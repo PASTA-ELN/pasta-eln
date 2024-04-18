@@ -191,6 +191,13 @@ def check_if_minimal_metadata_exists(logger: Logger,
 
   Returns:
       dict[str, list[str]] | None: The missing information dictionary or None if metadata is empty.
+      missing_information = {
+                              'title': [],
+                              'author': [],
+                              'datasetContact': [],
+                              'dsDescription': [],
+                              'subject': []
+                            }
 
   """
   if not metadata:

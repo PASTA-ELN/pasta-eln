@@ -13,7 +13,6 @@ import textwrap
 import time
 from typing import Any
 
-import qtawesome as qta
 from PySide6 import QtWidgets
 from PySide6.QtWidgets import QDialog, QFrame, QLabel, QMessageBox, QWidget
 
@@ -34,8 +33,7 @@ from pasta_eln.dataverse.upload_model import UploadModel
 from pasta_eln.dataverse.upload_queue_manager import UploadQueueManager
 from pasta_eln.dataverse.upload_status_values import UploadStatusValues
 from pasta_eln.dataverse.utils import check_if_dataverse_exists, check_if_minimal_metadata_exists, \
-  check_login_credentials, decrypt_data, \
-  get_encrypt_key, get_formatted_message, update_status
+  check_login_credentials, get_formatted_message, update_status
 
 
 class MainDialog(Ui_MainDialogBase):
@@ -121,7 +119,7 @@ class MainDialog(Ui_MainDialogBase):
 
   def get_upload_widget(self, project_name: str = "") -> dict[str, QFrame | Ui_UploadWidgetFrame]:
     """
-    Retrieves the upload widget for a project.
+    Creates the upload widget for a project.
 
     Explanation:
         This method retrieves the upload widget for a specific project.
@@ -133,9 +131,9 @@ class MainDialog(Ui_MainDialogBase):
     Returns:
         dict[str, QFrame | Ui_UploadWidgetFrame]: The upload widget.
     """
-    upload_widget_frame = QtWidgets.QFrame()
+    base_frame = QtWidgets.QFrame()
     upload_widget_ui = Ui_UploadWidgetFrame()
-    upload_widget_ui.setupUi(upload_widget_frame)
+    upload_widget_ui.setupUi(base_frame)
     upload_widget_ui.uploadProjectLabel.setText(textwrap.fill(project_name, 45, max_lines=1))
     upload_widget_ui.uploadProjectLabel.setToolTip(project_name)
     update_status(UploadStatusValues.Queued.name,
@@ -144,11 +142,11 @@ class MainDialog(Ui_MainDialogBase):
     upload_widget_ui.logConsoleTextEdit.hide()
     upload_widget_ui.showLogPushButton.clicked.connect(lambda: self.show_hide_log(upload_widget_ui.showLogPushButton))
     upload_widget_ui.modelIdLabel.hide()
-    return {"base": upload_widget_frame, "widget": upload_widget_ui}
+    return {"base": base_frame, "widget": upload_widget_ui}
 
   def get_project_widget(self, project: ProjectModel) -> QWidget:
     """
-    Retrieves the project widget.
+    Creates the project widget.
 
     Explanation:
         This method retrieves the project widget for a specific project.
@@ -159,7 +157,13 @@ class MainDialog(Ui_MainDialogBase):
 
     Returns:
         QWidget: The project widget.
+
+    Raises:
+        ValueError: If the project model is not an instance of ProjectModel.
+                    If the project model date is not in expected ISO format.
     """
+    if not isinstance(project, ProjectModel):
+      raise ValueError("Project model must be an instance of ProjectModel!")
     project_widget_frame = QtWidgets.QFrame()
     project_widget_ui = Ui_ProjectItemFrame()
     project_widget_ui.setupUi(project_widget_frame)
@@ -203,13 +207,24 @@ class MainDialog(Ui_MainDialogBase):
   def clear_finished(self) -> None:
     """
     Clears the finished upload widgets.
+    Upload activity finishes in the following scenarios:
+      Upload status is Finished, Error, Warning, or Canceled
 
     Explanation:
         This method clears the finished upload widgets from the upload queue.
 
     """
     for widget_pos in reversed(range(self.uploadQueueVerticalLayout.count())):
-      self.uploadQueueVerticalLayout.itemAt(widget_pos).widget().setParent(None)
+      project_widget = self.uploadQueueVerticalLayout.itemAt(widget_pos).widget()
+      progress_value = project_widget.findChild(QtWidgets.QProgressBar, name="uploadProgressBar").value()
+      status_text = project_widget.findChild(QtWidgets.QLabel, name="statusLabel").text()
+      if progress_value == 100 and status_text in [
+        UploadStatusValues.Finished.name,
+        UploadStatusValues.Error.name,
+        UploadStatusValues.Warning.name,
+        UploadStatusValues.Cancelled.name,
+      ]:
+        project_widget.setParent(None)
 
   def select_deselect_all_projects(self, checked: bool) -> None:
     """
@@ -317,6 +332,7 @@ class MainDialog(Ui_MainDialogBase):
         It returns True if minimal metadata is present, and False otherwise.
         If minimal metadata is missing, it displays a warning message to the user.
     """
+    self.logger.info("Checking if minimal metadata is present...")
     config_model = self.db_api.get_config_model()
     metadata_exists = False
     if config_model is None:
@@ -338,9 +354,9 @@ class MainDialog(Ui_MainDialogBase):
     if config_model is None or config_model.dataverse_login_info is None:
       self.logger.error("Failed to load config model!")
       return False, "Failed to load config model!"
-    server_url = config_model.dataverse_login_info.get("server_url")
-    api_token = config_model.dataverse_login_info.get("api_token")
-    dataverse_id = config_model.dataverse_login_info.get("dataverse_id")
+    server_url = config_model.dataverse_login_info["server_url"]
+    api_token = config_model.dataverse_login_info["api_token"]
+    dataverse_id = config_model.dataverse_login_info["dataverse_id"]
     success, _ = check_login_credentials(self.logger, api_token, server_url)
     if not success:
       return False, "Please re-enter the correct API token / server URL via the configuration dialog."

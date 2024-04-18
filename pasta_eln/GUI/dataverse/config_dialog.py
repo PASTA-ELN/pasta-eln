@@ -20,9 +20,9 @@ from PySide6.QtWidgets import QDialog, QMessageBox
 
 from pasta_eln.GUI.dataverse.config_dialog_base import Ui_ConfigDialogBase
 from pasta_eln.dataverse.client import DataverseClient
-from pasta_eln.dataverse.config_model import ConfigModel
+from pasta_eln.dataverse.config_error import ConfigError
 from pasta_eln.dataverse.database_api import DatabaseAPI
-from pasta_eln.dataverse.utils import check_login_credentials
+from pasta_eln.dataverse.utils import check_login_credentials, log_and_create_error
 
 
 class ConfigDialog(Ui_ConfigDialogBase):
@@ -89,7 +89,9 @@ class ConfigDialog(Ui_ConfigDialogBase):
     self.instance: QDialog = QDialog()
     super().setupUi(self.instance)
     self.db_api = DatabaseAPI()
-    self.config_model: ConfigModel = self.db_api.get_config_model()
+    self.config_model = self.db_api.get_config_model()
+    if self.config_model is None:
+      raise log_and_create_error(self.logger, ConfigError, "Config not found, Corrupt installation!")
     self.config_model.dataverse_login_info = self.config_model.dataverse_login_info or {}
     self.dataverseServerLineEdit.setValidator(QRegularExpressionValidator(QRegularExpression("\\S*")))
 

@@ -315,10 +315,10 @@ class UploadModel(BaseModel):
         IncorrectParameterError: If the value is not of type str.
 
     """
-    if isinstance(value, str):
-      self._log += value if value.endswith('\n') else f"{value}\n"
-    else:
+    if not isinstance(value, str):
       raise IncorrectParameterError(f"Expected string type for log but got {type(value)}")
+    if value != "":
+      self._log += value if value.endswith('\n') else f"{value}\n"
 
   @log.deleter
   def log(self) -> None:
