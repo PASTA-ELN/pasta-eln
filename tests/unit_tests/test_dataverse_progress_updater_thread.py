@@ -27,22 +27,22 @@ class TestDataverseProgressUpdaterThread:
 
     # Assert
     mock_super.assert_called_once()
-    assert instance.finished == False, "Instance variable 'finished' should be initialized to False"
+    assert instance.cancelled == False, "Instance variable 'cancelled' should be initialized to False"
     instance.cancel.connect.assert_called_with(
       instance.cancel_progress), "cancel.connect should be called with cancel_progress method"
 
-  @pytest.mark.parametrize("finished_at, expected_progress, randint_values, test_id", [
+  @pytest.mark.parametrize("cancelled_at, expected_progress, randint_values, test_id", [
     (None, list(range(1, 98, 4)) + [100], [4], "success_path_no_early_finish"),
     (0, [1], [4], "edge_case_finish_immediately"),
-    (50, list(range(1, 54, 4)) + [100], [4], "success_path_finish_midway"),
-    (60, list(range(1, 62, 2)) + [100], [2], "success_path_finish_in_between"),
-    (99, list(range(1, 97, 5)) + [100], [5], "edge_case_finish_just_before_end"),
+    (50, list(range(1, 54, 4)), [4], "success_path_finish_midway"),
+    (60, list(range(1, 62, 2)), [2], "success_path_finish_in_between"),
+    (95, list(range(1, 95, 3)), [3], "edge_case_finish_just_before_end"),
   ], ids=["success_path_no_early_finish",
           "edge_case_finish_immediately",
           "success_path_finish_midway",
           "success_path_finish_in_between",
           "edge_case_finish_just_before_end"])
-  def test_run(self, mocker, finished_at, expected_progress, randint_values, test_id):
+  def test_run(self, mocker, cancelled_at, expected_progress, randint_values, test_id):
     # Arrange
     mocker.patch("pasta_eln.dataverse.progress_updater_thread.time.sleep")
     mock_randint = mocker.patch("pasta_eln.dataverse.progress_updater_thread.random.randint")
@@ -50,13 +50,13 @@ class TestDataverseProgressUpdaterThread:
     progress_updater = ProgressUpdaterThread()
     progress_updater.progress_update = mocker.MagicMock()
     progress_updater.exit = mocker.MagicMock()
-    if finished_at is not None:
-      progress_updater.finished = False
+    if cancelled_at is not None:
+      progress_updater.cancelled = False
 
-      def set_finished(value):
-        progress_updater.finished = value >= finished_at
+      def set_cancelled(value):
+        progress_updater.cancelled = value >= cancelled_at
 
-      progress_updater.progress_update.emit.side_effect = set_finished
+      progress_updater.progress_update.emit.side_effect = set_cancelled
 
     # Act
     progress_updater.run()
@@ -73,10 +73,10 @@ class TestDataverseProgressUpdaterThread:
   def test_cancel_progress(self, initial_state, expected_state):
     # Arrange
     progress_updater = ProgressUpdaterThread()
-    progress_updater.finished = initial_state
+    progress_updater.cancelled = initial_state
 
     # Act
     progress_updater.cancel_progress()
 
     # Assert
-    assert progress_updater.finished == expected_state, "The finished flag should be set to True"
+    assert progress_updater.cancelled == expected_state, "The cancelled flag should be set to True"

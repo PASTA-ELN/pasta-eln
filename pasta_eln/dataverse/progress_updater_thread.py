@@ -33,7 +33,7 @@ class ProgressUpdaterThread(QThread):
         Sets the 'finished' attribute to False and connects the 'cancel' signal to the 'cancel_progress' method.
     """
     super().__init__()
-    self.finished = False
+    self.cancelled = False
     self.cancel.connect(self.cancel_progress)
 
   def run(self) -> None:
@@ -46,17 +46,18 @@ class ProgressUpdaterThread(QThread):
     """
     # Simulate progress updates in the background for around 20 seconds
     for progress in range(1, 98, random.randint(1, 5)):
-      if self.finished:
+      if self.cancelled:
         break
       self.progress_update.emit(progress)
       time.sleep(1)
 
     # Wait for 100 seconds more before emitting the final progress
     for _ in range(1, 100):
-      if self.finished:
+      if self.cancelled:
         break
       time.sleep(1)
-    self.progress_update.emit(100)
+    if not self.cancelled:
+      self.progress_update.emit(100)
     self.exit()
 
   def cancel_progress(self) -> None:
@@ -66,4 +67,4 @@ class ProgressUpdaterThread(QThread):
     Explanation:
         This method sets the 'finished' flag to True, indicating that the progress should be terminated.
     """
-    self.finished = True
+    self.cancelled = True
