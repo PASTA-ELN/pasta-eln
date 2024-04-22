@@ -15,14 +15,14 @@
 
 ---
 
-## Developers: notes on windows installation
+## Developers: Windows
 
 ### How to start Pasta ELN
 - Anaconda
   - python -m pasta_eln.gui
   - DOES NOT WORK "pastaELN"
 
-### Installation location windows:
+### Installation location:
 - Default installation
   - C:\Users\...\AppData\Local\Programs\Python\Python311\Scripts
   - C:\Users\...\AppData\Local\Programs\Python\Python311\Lib\site-packages\pasta_eln
@@ -44,14 +44,22 @@
 - after restart go to System->Configuration (ctrl-0) ->Setup-> start again
   - or have a separate button for that
 
+### Create an installer using pyInstaller
+- Anacoda -> new environment and install "pip install pyinstaller" and dependencies
+- In terminal
+  - cd Documents\PastaELN_src: all files in pasta-eln
+  - pyinstaller pastaELN.py -F
+- File is in /dist/ folder
+
+
 ---
 
-## Developers: notes on linux installation
+## Developers: Linux
 ### Installation location:
 - Default
   - /usr/local/lib/python3.10/dist-packages/pasta_eln
 
-### Restart installation on linux / ubuntu
+### Restart installation
 ``` bash
 rm .pastaELN.json pastaELN.log
 rm -rf pastaELN/PastasExampleProject pastaELN/StandardOperatingProcedures
@@ -60,6 +68,7 @@ sudo snap remove couchdb
 ```
 
 ---
+
 ## Test couchDB running
 - CouchDB at HTTP! [http://127.0.0.1:5984/_utils/#login](http://127.0.0.1:5984/_utils/#login)
 - curl -f http://127.0.0.1:5984/
@@ -129,16 +138,26 @@ sys.exit(app.exec())
 ```
 and execute "python -m pasta_eln.test"
 
-#### Profiling
+---
+
+### Profiling
 Begin...
+
       from cProfile import Profile
       from pstats import SortKey, Stats
       with Profile() as profile:
 
 End...
+
       (Stats(profile).strip_dirs().sort_stats(SortKey.CUMULATIVE).print_stats()) #end cProfile
 
+### Debugging on a conventional install: linux
+- 'sudo apt install python3-pudb' (not pip install)
+- create small 'temp.py' into any folder, with this content
+  from pasta_eln.gui import startMain
+  startMain()
+- start with 'pudb3 temp.py'
 
-#### General notes
+### General notes
 - Find qt-awesome icons: qta-browser
 - print works great in frondend and backend

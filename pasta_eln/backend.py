@@ -191,7 +191,7 @@ class Backend(CLI_Mixin):
                   str(edit))
 
     # collect structure-doc and prepare
-    if doc['-type'][0][0]=='x' and doc['-type'][0]!='x0' and childNum is None:
+    if doc['-type'][0] and doc['-type'][0][0]=='x' and doc['-type'][0]!='x0' and childNum is None:
       #should not have childnumber in other cases
       thisStack = ' '.join(hierStack)
       view = self.db.getView('viewHierarchy/viewHierarchy', startKey=thisStack) #not faster with cT.getChildren
@@ -204,7 +204,7 @@ class Backend(CLI_Mixin):
 
     # find path name on local file system; name can be anything
     if self.cwd is not None and '-name' in doc:
-      if doc['-type'][0][0]=='x':
+      if doc['-type'][0] and doc['-type'][0][0]=='x':
         #project, step, task
         if doc['-type'][0]=='x0':
           childNum = 0
@@ -256,8 +256,6 @@ class Backend(CLI_Mixin):
           if len(view)==1:  #measurement is already in database
             doc['_id'] = view[0]['id']
             doc['shasum'] = shasum
-            if doc['-type'] == ['-']:  #don't overwrite identified type, without going through extractor
-              del doc['-type']
             edit = True
     # assemble branch information
     if childNum is None:
@@ -419,7 +417,7 @@ class Backend(CLI_Mixin):
           pathsInDB_data.remove(path)
         else:
           logging.info('Scan: add file to DB: %s',path)
-          self.addData('-', {'-name':path}, hierStack)
+          self.addData('', {'-name':path}, hierStack)
     #finish method
     self.cwd = self.basePath/projPath
     orphans = [
@@ -507,7 +505,7 @@ class Backend(CLI_Mixin):
             except:
               doc[meta][item] = str(doc[meta][item])
               print('**Warning -> stringified  ',meta, item)
-        if doc['-type'][0] in [doc['recipe'].split('/')[0], '-']:
+        if doc['recipe'].startswith(doc['-type'][0]):
           doc['-type']     = doc['recipe'].split('/')
         else:
           #user has strange wish: trust him/her

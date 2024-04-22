@@ -3,8 +3,8 @@ import subprocess, os, platform, logging, shutil
 from enum import Enum
 from pathlib import Path
 from typing import Any
-from PySide6.QtWidgets import QWidget, QTreeView, QAbstractItemView, QMenu, QMessageBox # pylint: disable=no-name-in-module
-from PySide6.QtGui import QStandardItemModel, QStandardItem  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QWidget, QTreeView, QMenu, QMessageBox # pylint: disable=no-name-in-module
+from PySide6.QtGui import QStandardItemModel, QStandardItem, QMouseEvent # pylint: disable=no-name-in-module
 from PySide6.QtCore import QPoint, Qt  # pylint: disable=no-name-in-module
 from .projectLeafRenderer import ProjectLeafRenderer
 from ..guiStyle import Action, showMessage
@@ -21,7 +21,11 @@ class TreeView(QTreeView):
     self.setIndentation(40)
     self.renderer = ProjectLeafRenderer(self.comm)
     self.setItemDelegate(self.renderer)
-    self.setDragDropMode(QAbstractItemView.InternalMove)
+    self.setExpandsOnDoubleClick(False)
+    self.setAcceptDrops(True)
+    self.setDropIndicatorShown(True)
+    self.setDefaultDropAction(Qt.MoveAction)
+    self.setDragDropMode(QTreeView.InternalMove)
     self.doubleClicked.connect(self.tree2Clicked)
 
 
@@ -106,7 +110,9 @@ class TreeView(QTreeView):
             if (oldPath.parent/newFileName).exists():  #ensure target does not exist
               endText = ' was marked for deletion. Save it or its content now to some place on harddisk. It will be deleted now!!!'
               showMessage(self, 'Warning', f'Warning! \nThe folder {oldPath.parent/newFileName}{endText}')
-              if (oldPath.parent/newFileName).exists():
+              if (oldPath.parent/newFileName).is_file():
+                (oldPath.parent/newFileName).unlink()
+              elif (oldPath.parent/newFileName).is_dir():
                 shutil.rmtree(oldPath.parent/newFileName)
             oldPath.rename( oldPath.parent/newFileName)
         # go through children
@@ -130,9 +136,7 @@ class TreeView(QTreeView):
       logging.debug('hide stack %s',str(hierStack))
       self.comm.backend.db.hideShow(hierStack)
       # self.comm.changeProject.emit('','') #refresh project
-      # after hide, not immediately hidden but on next refresh
-      # TODO Comment out for now to keep consistent with hide via context menu directly or form (which does
-      # not know it is a project )
+      # after hide, do not hide immediately but wait on next refresh
     elif command[0] is Command.OPEN_EXTERNAL or command[0] is Command.OPEN_FILEBROWSER:
       # depending if non-folder / folder; address different item in hierstack
       docID = hierStack[-2] \
@@ -167,6 +171,62 @@ class TreeView(QTreeView):
     item.setText(docNew['-name'])
     item.setData(item.data() | {"docType":docNew['-type'], "gui":docNew['-gui']})
     item.emitDataChanged()  #force redraw (resizing and repainting) of this item only
+    return
+
+
+  def dragEnterEvent(self, event:QMouseEvent) -> None:
+    """
+    Override default: what happens if you drag an item
+
+    Args:
+      event (QMouseEvent): event
+    """
+    event.acceptProposedAction()
+    return
+
+
+  def dropEvent(self, event:QMouseEvent) -> None:
+    """
+    Override default: what happens at end of drag&drop
+
+    Args:
+      event (QMouseEvent): event
+    """
+    if event.mimeData().hasUrls():
+      item = self.model().itemFromIndex(self.indexAt(event.pos()))
+      if item.data()['docType'][0][0]!='x':
+        showMessage(self, 'Error', 'You cannot drop files on non folders.')
+        return
+      # create a list of all files
+      files, folders = [], []
+      for url in event.mimeData().urls():
+        path = url.toLocalFile()
+        if Path(path).is_file():
+          files.append(path)
+        else:
+          files +=   list(Path(path).rglob("*"))
+          folders += [x[0] for x in os.walk(path)]
+      docID = item.data()['hierStack'].split('/')[-1]
+      doc = self.comm.backend.db.getDoc(docID)
+      targetFolder = Path(self.comm.backend.cwd/doc['-branch'][0]['path'])
+      commonBase   = os.path.commonpath(folders+[str(i) for i in files])
+      # create folders and copy files
+      for folder in folders:
+        (targetFolder/(Path(folder).relative_to(commonBase))).mkdir(parents=True, exist_ok=True)
+      for fileStr in files:
+        file = Path(fileStr)
+        if file.is_file():
+          shutil.copy(file, targetFolder/(file.relative_to(commonBase)))
+      # scan
+      for _ in range(2):  #scan twice: convert, extract
+        self.comm.backend.scanProject(self.comm.progressBar, docID, str(targetFolder) )
+      self.comm.changeProject.emit(item.data()['hierStack'].split('/')[0],'')
+      showMessage(self, 'Information','Drag & drop is finished')
+      event.ignore()
+    elif 'application/x-qstandarditemmodeldatalist' in event.mimeData().formats():
+      super().dropEvent(event)
+    else:
+      logging.error('Drop unknown data: %s', event.mimeData().formats())
     return
 
 

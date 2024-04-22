@@ -55,6 +55,8 @@ class TextButton(QPushButton):
     self.setText(label)
     self.setCheckable(checkable)
     self.setChecked(checkable)
+    self.setAutoDefault(False)
+    self.setDefault(False)
     self.clicked.connect(lambda: widget.execute(command))
     if tooltip:
       self.setToolTip(tooltip)

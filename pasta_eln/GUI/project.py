@@ -119,6 +119,7 @@ class Project(QWidget):
     commentL.addWidget(self.commentTE)
     return
 
+
   def commentResize(self, _:Any) -> None:
     """ called if comment is resized because widget initially/finally knows its size
     - comment widget is hard coded size it depends on the rendered size
@@ -167,12 +168,7 @@ class Project(QWidget):
     # collapse / expand depending on stored value
     # by iterating each leaf, and converting item and index
     root = self.model.invisibleRootItem()
-    for iRow in range(root.rowCount()):
-      item = self.model.item(iRow,0)
-      data = item.data(role=Qt.UserRole+1)         # type: ignore[operator]
-      if data['hierStack'].split('/')[-1][0]=='x':
-        index = self.model.indexFromItem(item)
-        self.tree.setExpanded(index, data['gui'][1])
+    self.setExpandedState(root)
     if selectedIndex is not None:
       self.tree.selectionModel().select(selectedIndex, QItemSelectionModel.Select)
       self.tree.setCurrentIndex(selectedIndex)# Item(selectedItem)
@@ -182,6 +178,24 @@ class Project(QWidget):
       self.btnAddSubfolder.setVisible(False)
     self.tree.expanded.connect(lambda index: self.actionExpandCollapse(index, True))
     self.tree.collapsed.connect(lambda index: self.actionExpandCollapse(index, False))
+    return
+
+
+  def setExpandedState(self, node:QStandardItem) -> None:
+    """ Recursive function to set the expanded state of nodes
+
+    Args:
+      node (QStandardItem): node to process
+    """
+    if self.model is None or self.tree is None:
+      return
+    for iRow in range(node.rowCount()):
+      item = node.child(iRow)
+      data = item.data(role=Qt.UserRole+1)         # type: ignore[operator]
+      if data['hierStack'].split('/')[-1][0]=='x':
+        index = self.model.indexFromItem(item)
+        self.tree.setExpanded(index, data['gui'][1])
+      self.setExpandedState(item)
     return
 
 
@@ -216,6 +230,7 @@ class Project(QWidget):
       if oldPath.is_dir():
         newPath = self.comm.backend.basePath/createDirName(self.docProj['-name'],'x0',0)
         oldPath.rename(newPath)
+      self.comm.changeSidebar.emit('redraw')
     elif command[0] is Command.DELETE:
       ret = QMessageBox.critical(self, 'Warning', 'Are you sure you want to delete project?', \
                       QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,  # type: ignore[operator]
@@ -239,8 +254,9 @@ class Project(QWidget):
         self.comm.changeSidebar.emit('redraw')
         self.comm.changeTable.emit('x0','')
     elif command[0] is Command.SCAN:
-      self.comm.backend.scanProject(self.comm.progressBar, self.projID, self.docProj['-branch'][0]['path'])
-      self.comm.changeSidebar.emit('redraw')
+      for _ in range(2):  #scan twice: convert, extract
+        self.comm.backend.scanProject(self.comm.progressBar, self.projID, self.docProj['-branch'][0]['path'])
+      self.comm.changeProject.emit(self.projID,'')
       showMessage(self, 'Information','Scanning finished')
     elif command[0] is Command.SHOW_PROJ_DETAILS:
       self.docProj['-gui'][0] = not self.docProj['-gui'][0]

@@ -37,7 +37,7 @@ class Form(QDialog):
       self.setWindowTitle('Create new entry')
       self.doc['-name'] = ''
     else:
-      self.setWindowTitle('Edit content')
+      self.setWindowTitle('Edit information')
     self.skipKeys = ['image','metaVendor','metaUser','shasum']
     self.skipKeys0= ['_','-', '#']
     self.allHidden = False
@@ -70,13 +70,14 @@ class Form(QDialog):
 
     # create full data set
     if self.doc['-type'][0] in self.db.dataHierarchy:
-      dataHierarchyNode = self.db.dataHierarchy[self.doc['-type'][0]]['meta']
+      dataHierarchyNode = copy.deepcopy(self.db.dataHierarchy[self.doc['-type'][0]]['meta'])
     else:
-      dataHierarchyNode = defaultDataHierarchyNode
+      dataHierarchyNode = copy.deepcopy(defaultDataHierarchyNode)
     keysDataHierarchy = [i['name'] for group in dataHierarchyNode for i in dataHierarchyNode[group]]
     for keyInDocNotHierarchy in set(self.doc.keys()).difference(keysDataHierarchy ):
       dataHierarchyNode['default'].append({'name':keyInDocNotHierarchy})
-    self.allKeys = [i['name'] for group in dataHierarchyNode for i in dataHierarchyNode[group]]
+    self.allKeys = {i['name'] for group in dataHierarchyNode for i in dataHierarchyNode[group]}
+    self.allKeys = self.allKeys.union(self.doc.keys())
 
     # create tabs or not: depending on the number of groups
     if '-tags' not in self.doc:
@@ -159,7 +160,7 @@ class Form(QDialog):
             setattr(self, f'key_{key}', QLineEdit(' '.join(value)))
             formL.addRow(QLabel(key.capitalize()), getattr(self, f'key_{key}'))
           else:
-            logging.info('Cannot display value of key=%s: %s. Write unknown content for docID=%s',
+            logging.info('Cannot display value of key=%s: %s. Write unknown value for docID=%s',
                          key, str(value), self.doc['_id'])
         elif isinstance(value, str):    #string
           dataHierarchyItem = [i for group in dataHierarchyNode for i in dataHierarchyNode[group] if i['name']==key]
@@ -229,14 +230,26 @@ class Form(QDialog):
     if (Path.home()/'.pastaELN.temp').is_file():
       with open(Path.home()/'.pastaELN.temp', 'r', encoding='utf-8') as fTemp:
         content = json.loads(fTemp.read())
-        for key in self.doc.keys():
-          if key[0] in self.skipKeys0 or key in self.skipKeys or key not in content:
-            continue
-          if key in ['comment','content']:
-            getattr(self, f'textEdit_{key}').setPlainText(content[key])
-          elif isinstance(getattr(self, f'key_{key}'), QLineEdit):
-            getattr(self, f'key_{key}').setText(content[key])
-          # skip QCombobox items since cannot be sure that next from has them and they are easy to recreate
+        if self.doc.get('_id', '') in content:
+          ret = QMessageBox.information(self, 'Information', 'There is unsaved information from a prematurely '+
+                    'closed form. Do you want to restore it?\n If you decline, the unsaved information will be'+
+                    ' removed.',
+                  QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,      # type: ignore[operator]
+                  QMessageBox.StandardButton.Yes)
+          if ret==QMessageBox.StandardButton.Yes:
+            subContent = content[self.doc.get('_id', '')]
+            for key in subContent.keys():
+              if key in ('comment', 'content'):
+                getattr(self, f'textEdit_{key}').setPlainText(subContent[key])
+              elif key in ('-tags'):
+                self.doc[key] = subContent[key]
+                self.updateTagsBar()
+              elif isinstance(getattr(self, f'key_{key}'), QLineEdit):
+                getattr(self, f'key_{key}').setText(subContent[key])
+              # skip QCombobox items since cannot be sure that next from has them and they are easy to recreate
+          del content[self.doc.get('_id', '')]
+      with open(Path.home()/'.pastaELN.temp', 'w', encoding='utf-8') as fTemp:
+        fTemp.write(json.dumps(content))
     self.checkThreadTimer = QTimer(self)
     self.checkThreadTimer.setInterval(1*60*1000) #1 min
     self.checkThreadTimer.timeout.connect(self.autosave)
@@ -247,15 +260,21 @@ class Form(QDialog):
     """ Autosave comment to file """
     if self.comm.backend.configuration['GUI']['autosave'] == 'No':
       return
-    content = {'-name': getattr(self, 'key_-name').text().strip()}
-    for key in self.doc.keys():
-      if key[0] in self.skipKeys0 or key in self.skipKeys or not hasattr(self, f'key_{key}'):
-        continue
+    subContent = {'-name':getattr(self, 'key_-name').text().strip(), '-tags':self.doc['-tags']}
+    for key in self.allKeys:
       if key in ['comment','content']:
-        content[key] = getattr(self, f'textEdit_{key}').toPlainText().strip()
+        subContent[key] = getattr(self, f'textEdit_{key}').toPlainText().strip()
+      elif key[0] in self.skipKeys0 or key in self.skipKeys or not hasattr(self, f'key_{key}'):
+        continue
       elif isinstance(getattr(self, f'key_{key}'), QLineEdit):
-        content[key] = getattr(self, f'key_{key}').text().strip()
+        subContent[key] = getattr(self, f'key_{key}').text().strip()
       # skip QCombobox items since cannot be sure that next from has them and they are easy to recreate
+    if (Path.home()/'.pastaELN.temp').is_file():
+      with open(Path.home()/'.pastaELN.temp', 'r', encoding='utf-8') as fTemp:
+        content = json.loads(fTemp.read())
+    else:
+      content = {}
+    content[self.doc.get('_id', '')] = subContent
     with open(Path.home()/'.pastaELN.temp', 'w', encoding='utf-8') as fTemp:
       fTemp.write(json.dumps(content))
     return
@@ -328,22 +347,25 @@ class Form(QDialog):
       self.allHidden = not self.allHidden
     elif command[0] is Command.FORM_CANCEL:
       if self.comm.backend.configuration['GUI']['autosave'] == 'Yes':
-        ret = QMessageBox.critical(self, 'Warning', 'You will loose all new data. Do you want to save it '+\
-                                   'for next time?',
-                                   QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,  # type: ignore[operator]
-                                   QMessageBox.StandardButton.No)
+        ret = QMessageBox.critical(self, 'Warning', 'You will lose the entered information. Do you want to '+
+          'save everything to a temporary location?',
+          QMessageBox.StandardButton.Cancel | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,  # type: ignore[operator]
+          QMessageBox.StandardButton.No)
+        if ret==QMessageBox.StandardButton.Cancel:
+          return
         if ret==QMessageBox.StandardButton.Yes:
           self.autosave()
-        else:
-          self.checkThreadTimer.stop()
-          if (Path.home()/'.pastaELN.temp').is_file():
-            (Path.home()/'.pastaELN.temp').unlink()
+      self.checkThreadTimer.stop()
       self.reject()
     elif command[0] in (Command.FORM_SAVE, Command.FORM_SAVE_NEXT):
       # create the data that has to be saved
       self.checkThreadTimer.stop()
-      if (Path.home()/'.pastaELN.temp').is_file():
-        (Path.home()/'.pastaELN.temp').unlink()
+      with open(Path.home()/'.pastaELN.temp', 'r', encoding='utf-8') as fTemp:
+        content = json.loads(fTemp.read())
+        if self.doc.get('_id', '') in content:
+          del content[self.doc.get('_id', '')]
+      with open(Path.home()/'.pastaELN.temp', 'w', encoding='utf-8') as fTemp:
+        fTemp.write(json.dumps(content))
       if hasattr(self, 'key_-name'):
         self.doc['-name'] = getattr(self, 'key_-name').text().strip()
         if self.doc['-name'] == '':
@@ -361,8 +383,9 @@ class Form(QDialog):
             else:
               self.doc['-name'] = '_'.join(self.doc['-name'].split('_')[:-1])+'_'+str(int(self.doc['-name'].split('_')[-1])+1)
       # loop through all the subitems
-      for key, valueOld in self.doc.items():
-        if (key[0] in ['_', '-'] or key in ['image', 'metaVendor', 'metaUser']
+      for key in self.allKeys:
+        valueOld = self.doc.get(key, '')
+        if (key[0] in ['_', '-'] or key in ['image', 'metaVendor', 'metaUser']  #tags are already saved
             or not hasattr(self, f'key_{key}') and not hasattr(self, f'textEdit_{key}')):
           continue
         if key in ['comment','content']:

@@ -2,11 +2,94 @@
 
 ## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
 
-[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.0b8...HEAD)
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.2b2...HEAD)
+
+**Closed issues:**
+
+- Measurements in Unidentified table [\#264](https://github.com/PASTA-ELN/pasta-eln/issues/264)
+
+## [v2.5.2b2](https://github.com/PASTA-ELN/pasta-eln/tree/v2.5.2b2) (2024-04-16)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.2b1...v2.5.2b2)
+
+**Implemented enhancements:**
+
+- Closing the "You will loose all new data..." warning pop-up [\#224](https://github.com/PASTA-ELN/pasta-eln/issues/224)
 
 **Fixed bugs:**
 
+- Changing item type to "Unidentified" [\#255](https://github.com/PASTA-ELN/pasta-eln/issues/255)
+- Using “enter” to add a tag opens the extended comment field [\#254](https://github.com/PASTA-ELN/pasta-eln/issues/254)
+- Autosave functionality [\#236](https://github.com/PASTA-ELN/pasta-eln/issues/236)
+- Issues during the corrosion data import [\#232](https://github.com/PASTA-ELN/pasta-eln/issues/232)
+
+**Merged pull requests:**
+
+- Sb 236 autosave fix [\#266](https://github.com/PASTA-ELN/pasta-eln/pull/266) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Sb 232 fix also second run [\#265](https://github.com/PASTA-ELN/pasta-eln/pull/265) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Bugs and features that SB found [\#263](https://github.com/PASTA-ELN/pasta-eln/pull/263) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+
+## [v2.5.2b1](https://github.com/PASTA-ELN/pasta-eln/tree/v2.5.2b1) (2024-04-12)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.1...v2.5.2b1)
+
+**Merged pull requests:**
+
+- Drag drop [\#262](https://github.com/PASTA-ELN/pasta-eln/pull/262) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Fix issue \#255 [\#259](https://github.com/PASTA-ELN/pasta-eln/pull/259) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- fix the issue \#254 [\#258](https://github.com/PASTA-ELN/pasta-eln/pull/258) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Sb 236 make autosave more logical [\#257](https://github.com/PASTA-ELN/pasta-eln/pull/257) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+
+## [v2.5.1](https://github.com/PASTA-ELN/pasta-eln/tree/v2.5.1) (2024-04-05)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.1b1...v2.5.1)
+
+**Fixed bugs:**
+
+- Right click on the empty project view [\#227](https://github.com/PASTA-ELN/pasta-eln/issues/227)
+- "Rerun extractors" removes shasum  [\#220](https://github.com/PASTA-ELN/pasta-eln/issues/220)
+- Metadata not saved in forms [\#208](https://github.com/PASTA-ELN/pasta-eln/issues/208)
+
+**Closed issues:**
+
+- Slow code if change of project details [\#144](https://github.com/PASTA-ELN/pasta-eln/issues/144)
+
+**Merged pull requests:**
+
+- Sb 232 corrosion import2 [\#252](https://github.com/PASTA-ELN/pasta-eln/pull/252) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+
+## [v2.5.1b1](https://github.com/PASTA-ELN/pasta-eln/tree/v2.5.1b1) (2024-04-05)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.0...v2.5.1b1)
+
+**Fixed bugs:**
+
+- CouchDB not installed on Windows [\#241](https://github.com/PASTA-ELN/pasta-eln/issues/241)
 - Removing the organization from "Author" configuration [\#222](https://github.com/PASTA-ELN/pasta-eln/issues/222)
+- ProjectView -\> Edit Project -\> Change name: new name not represented in left side bar [\#193](https://github.com/PASTA-ELN/pasta-eln/issues/193)
+- Project view -\> edit: after form closes, the corresponding item is expanded / collapsed [\#191](https://github.com/PASTA-ELN/pasta-eln/issues/191)
+- Display of comments in views [\#98](https://github.com/PASTA-ELN/pasta-eln/issues/98)
+
+**Closed issues:**
+
+- Check capilization in GUI: no "All Measurements" [\#185](https://github.com/PASTA-ELN/pasta-eln/issues/185)
+
+**Merged pull requests:**
+
+- Fix \#241: WIndows installation [\#250](https://github.com/PASTA-ELN/pasta-eln/pull/250) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Fix \#193 [\#249](https://github.com/PASTA-ELN/pasta-eln/pull/249) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Fix issue \#191 [\#248](https://github.com/PASTA-ELN/pasta-eln/pull/248) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- fix bug \#208 [\#246](https://github.com/PASTA-ELN/pasta-eln/pull/246) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Ignore configuration .pastaELN.json when restoring [\#245](https://github.com/PASTA-ELN/pasta-eln/pull/245) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Rescale all text documents in details, when the splitter changes size [\#244](https://github.com/PASTA-ELN/pasta-eln/pull/244) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- debug issue \#236 [\#243](https://github.com/PASTA-ELN/pasta-eln/pull/243) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- User prompt improvements [\#242](https://github.com/PASTA-ELN/pasta-eln/pull/242) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- speed up edit of project [\#240](https://github.com/PASTA-ELN/pasta-eln/pull/240) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Fix \#185 \#227 \#220 in one PR since ... [\#239](https://github.com/PASTA-ELN/pasta-eln/pull/239) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+
+## [v2.5.0](https://github.com/PASTA-ELN/pasta-eln/tree/v2.5.0) (2024-03-25)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.0b8...v2.5.0)
 
 ## [v2.5.0b8](https://github.com/PASTA-ELN/pasta-eln/tree/v2.5.0b8) (2024-03-25)
 
