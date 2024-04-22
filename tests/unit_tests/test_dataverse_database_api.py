@@ -43,6 +43,7 @@ def mock_config_model(api_token=None, dataverse_login_info_valid=True):
 def mock_database_api(mocker) -> DatabaseAPI:
   mocker.patch('pasta_eln.dataverse.database_api.logging.getLogger')
   mocker.patch('pasta_eln.dataverse.database_api.BaseDatabaseAPI')
+  mocker.patch('pasta_eln.dataverse.database_api.get_encrypt_key', return_value=(True, "test_key"))
   api = DatabaseAPI()
   mocker.resetall()
   return api
@@ -55,6 +56,8 @@ class TestDataverseDatabaseAPI:
     # Arrange
     log_mock = mocker.MagicMock(spec=Logger)
     base_db_api_mock = mocker.MagicMock(spec=BaseDatabaseAPI)
+    mocker.patch('pasta_eln.dataverse.database_api.get_encrypt_key', return_value=(True, "test_key"))
+    mocker.patch('pasta_eln.dataverse.utils.exists', return_value=True)
     logger_mock = mocker.patch('pasta_eln.dataverse.database_api.logging.getLogger', return_value=log_mock)
     if test_id == "success_case_default_values":
       base_db_api_constructor_mock = mocker.patch('pasta_eln.dataverse.database_api.BaseDatabaseAPI',
