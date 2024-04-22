@@ -486,7 +486,7 @@ def restoreCouchDB(location:str='', userName:str='', password:str='', fileName:s
     #second run through: create attachments
     for fileI in files:
       fileParts = fileI.split('/')[1:]
-      if fileParts==['pastaELN.json']: #do not recreate file, it is only there for manual recovery
+      if fileParts==['pastaELN.json'] or fileParts[-1]=='' or fileParts[-2]=='_design': #do not recreate file, it is only there for manual recovery
         continue
       if len(fileParts)!=2 or fileParts[-1]=='':
         print(f"**ERROR-Attachment: Cannot process file {fileI}: does not have 1+2 parts")
