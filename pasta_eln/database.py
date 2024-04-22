@@ -3,7 +3,6 @@ import traceback, logging, time, json, os, re, base64, io
 from typing import Any, Optional, Union
 from pathlib import Path
 from anytree import Node
-from anytree.search import find_by_attr
 from PIL import Image
 from cloudant.client import CouchDB
 from cloudant.replicator import Replicator
@@ -609,36 +608,38 @@ class Database:
       view = self.getView('viewHierarchy/viewHierarchy',    startKey=start)
     if allItems or len(view)==0:
       view = self.getView('viewHierarchy/viewHierarchyAll', startKey=start)
-    # for item in view:
-    #   print(item)
-    # Reorganize data into lists
-    childNum = {i['id']:i['value'][0] for i in view}
-    # ids = [i['id'] for i in view]
-    keys = [i['key'] for i in view]
-    values = [i['value'] for i in view]
-    for k,v in childNum.items():
-      keys = [i.replace(k,f'{v} {k}') for i in keys]
-    values = [x for _, x in sorted(zip(keys, values))]
-    keys   = sorted(keys)
+    # create tree of folders: these are the only ones that have children
+    startTime = time.time()
     dataTree = None
-    hierarchy = []
-    for idx, value in enumerate(values):
-      docType = value[1]
-      name    = value[2]
-      gui     = value[3]
-      _id     = keys[idx].split()[-1]
-      level   = int(len(keys[idx].split())/2)
-      if idx==0:
-        dataTree = Node(id=_id, docType=docType, name=name, gui=gui)
-        hierarchy.append(dataTree)
+    nonFolders = []
+    id2Node = {}
+    for item in view:
+      docType = item['value'][1]
+      if docType[0][0] != 'x':
+        nonFolders.append(item)
+        continue
+      _id     = item['id']
+      childNum, docType, name, gui, _ = item['value']
+      if dataTree is None:
+        dataTree = Node(id=_id, docType=docType, name=name, gui=gui, childNum=childNum)
+        id2Node[_id] = dataTree
       else:
-        parentNode = hierarchy[level-2]
-        subNode = Node(id=_id, parent=parentNode, docType=docType, name=name, gui=gui)
-        if len(hierarchy)<level:
-          hierarchy.append('')
-        elif len(hierarchy)>level:
-          hierarchy.pop()
-        hierarchy[-1] = subNode
+        parent = item['key'].split()[-2]
+        subNode = Node(id=_id, parent=id2Node[parent], docType=docType, name=name, gui=gui, childNum=childNum)
+        id2Node[_id] = subNode
+    # add non-folders into tree
+    print(len(nonFolders),'length: crop if too long')
+    for item in nonFolders:
+      _id     = item['id']
+      childNum, docType, name, gui, _ = item['value']
+      parentId = item['key'].split()[-2]
+      Node(id=_id, parent=id2Node[parentId], docType=docType, name=name, gui=gui, childNum=childNum)
+    # sort children
+    for parentNode in id2Node.values():
+      children = parentNode.children
+      childNums= [f'{i.childNum}{i.id}' for i in children]
+      parentNode.children = [x for _, x in sorted(zip(childNums, children))]
+    print(f'  Duration={str(time.time() - startTime)} sec')
     return dataTree
 
 
