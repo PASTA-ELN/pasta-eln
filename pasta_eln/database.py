@@ -609,7 +609,6 @@ class Database:
     if allItems or len(view)==0:
       view = self.getView('viewHierarchy/viewHierarchyAll', startKey=start)
     # create tree of folders: these are the only ones that have children
-    startTime = time.time()
     dataTree = None
     nonFolders = []
     id2Node = {}
@@ -628,7 +627,7 @@ class Database:
         subNode = Node(id=_id, parent=id2Node[parent], docType=docType, name=name, gui=gui, childNum=childNum)
         id2Node[_id] = subNode
     # add non-folders into tree
-    print(len(nonFolders),'length: crop if too long')
+    # print(len(nonFolders),'length: crop if too long')
     for item in nonFolders:
       _id     = item['id']
       childNum, docType, name, gui, _ = item['value']
@@ -639,7 +638,6 @@ class Database:
       children = parentNode.children
       childNums= [f'{i.childNum}{i.id}' for i in children]
       parentNode.children = [x for _, x in sorted(zip(childNums, children))]
-    print(f'  Duration={str(time.time() - startTime)} sec')
     return dataTree
 
 
