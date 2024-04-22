@@ -333,7 +333,7 @@ class TestDataverseDataUploadTask:
     setup_task.finalize_upload_task(status)
 
     # Assert
-    setup_task.progress_thread.cancel.emit.assert_called_once()
+    setup_task.progress_thread.finalize.emit.assert_called_once()
     setup_task.finished.emit.assert_called_once()
     setup_task.status_changed.emit.assert_called_once_with(expected_status)
 
@@ -424,10 +424,12 @@ class TestDataverseDataUploadTask:
       assert expected_log_contains in setup_task.upload_model.log
       mock_super.return_value.cancel_task.assert_called_once()
       setup_task.update_changed_status.assert_called_with(expected_status)
+      setup_task.progress_thread.cancel.emit.assert_called_once()
 
     else:
       mock_super.return_value.cancel_task.assert_not_called()
       setup_task.update_changed_status.assert_not_called()
+      setup_task.progress_thread.cancel.emit.assert_not_called()
 
   @pytest.mark.parametrize("status, expected_status", [
     # Success path tests with various realistic test values

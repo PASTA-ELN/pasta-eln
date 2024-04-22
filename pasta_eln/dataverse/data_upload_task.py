@@ -159,7 +159,7 @@ class DataUploadTask(GenericTaskObject):
     Args:
         status (str): The status to be emitted.
     """
-    self.progress_thread.cancel.emit()
+    self.progress_thread.finalize.emit()
     self.finished.emit()
     self.upload_model.finished_date_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     self.update_changed_status(status)
@@ -276,6 +276,7 @@ class DataUploadTask(GenericTaskObject):
       return
     super().cancel_task()
     self.upload_model.log = f"Cancelled at {datetime.now().isoformat()}"
+    self.progress_thread.cancel.emit()
     self.update_changed_status(UploadStatusValues.Cancelled.name)
 
   def update_changed_status(self, status: str = UploadStatusValues.Queued.name) -> None:

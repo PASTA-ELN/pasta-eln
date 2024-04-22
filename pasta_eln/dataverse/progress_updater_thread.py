@@ -24,6 +24,7 @@ class ProgressUpdaterThread(QThread):
    """
   progress_update = QtCore.Signal(int)
   cancel = QtCore.Signal()
+  finalize = QtCore.Signal()
 
   def __init__(self) -> None:
     """
@@ -34,7 +35,9 @@ class ProgressUpdaterThread(QThread):
     """
     super().__init__()
     self.cancelled = False
+    self.finalized = False
     self.cancel.connect(self.cancel_progress)
+    self.finalize.connect(self.finalize_progress)
 
   def run(self) -> None:
     """
@@ -42,18 +45,19 @@ class ProgressUpdaterThread(QThread):
 
     Explanation:
         This method simulates progress updates in the background, emitting signals for each progress step.
+        It emits progress updates until the task is cancelled or finalized.
         It waits for a total of 120 seconds before emitting the final progress signal and exiting.
     """
     # Simulate progress updates in the background for around 20 seconds
     for progress in range(1, 98, random.randint(1, 5)):
-      if self.cancelled:
+      if self.cancelled or self.finalized:
         break
       self.progress_update.emit(progress)
       time.sleep(1)
 
     # Wait for 100 seconds more before emitting the final progress
     for _ in range(1, 100):
-      if self.cancelled:
+      if self.cancelled or self.finalized:
         break
       time.sleep(1)
     if not self.cancelled:
@@ -68,3 +72,12 @@ class ProgressUpdaterThread(QThread):
         This method sets the 'finished' flag to True, indicating that the progress should be terminated.
     """
     self.cancelled = True
+
+  def finalize_progress(self) -> None:
+    """
+    Finalizes the progress update.
+
+    Explanation:
+        This function sets the 'finalized' attribute to True, indicating that the progress update is complete.
+    """
+    self.finalized = True

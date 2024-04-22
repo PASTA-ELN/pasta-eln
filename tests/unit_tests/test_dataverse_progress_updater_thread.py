@@ -20,6 +20,7 @@ class TestDataverseProgressUpdaterThread:
   def test_ProgressThread_init(self, mocker, test_id):
     # Arrange
     ProgressUpdaterThread.cancel = mocker.MagicMock()
+    ProgressUpdaterThread.finalize = mocker.MagicMock()
     mock_super = mocker.patch("pasta_eln.dataverse.progress_updater_thread.super")
 
     # Act
@@ -28,6 +29,9 @@ class TestDataverseProgressUpdaterThread:
     # Assert
     mock_super.assert_called_once()
     assert instance.cancelled == False, "Instance variable 'cancelled' should be initialized to False"
+    assert instance.finalized == False, "Instance variable 'finalized' should be initialized to False"
+    instance.finalize.connect.assert_called_with(
+      instance.finalize_progress), "finalize.connect should be called with finalize_progress method"
     instance.cancel.connect.assert_called_with(
       instance.cancel_progress), "cancel.connect should be called with cancel_progress method"
 
@@ -80,3 +84,18 @@ class TestDataverseProgressUpdaterThread:
 
     # Assert
     assert progress_updater.cancelled == expected_state, "The cancelled flag should be set to True"
+
+  @pytest.mark.parametrize("initial_finalized_state, expected_finalized_state", [
+    (False, True),  # Test ID: 01 - Success path, attribute changes from False to True
+    (True, True),  # Test ID: 02 - Edge case, attribute already True, should remain True
+  ])
+  def test_finalize_progress(self, initial_finalized_state, expected_finalized_state):
+    # Arrange
+    progress_updater = ProgressUpdaterThread()
+    progress_updater.finalized = initial_finalized_state
+
+    # Act
+    progress_updater.finalize_progress()
+
+    # Assert
+    assert progress_updater.finalized == expected_finalized_state, "finalize_progress should set finalized to True"
