@@ -273,9 +273,6 @@ class DatabaseAPI:
     Args:
         self: The DatabaseAPI instance.
         config_model (ConfigModel): The config model to save.
-
-    Returns:
-        None
     """
     self.logger.info("Saving config model...")
     if (not config_model

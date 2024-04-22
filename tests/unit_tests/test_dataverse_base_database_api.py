@@ -36,6 +36,7 @@ def create_mock_config(default_project_group_exists=True, user_and_password_exis
 @pytest.fixture
 def mock_database_api(mocker) -> BaseDatabaseAPI:
   mocker.patch('pasta_eln.dataverse.base_database_api.logging.getLogger')
+  mocker.patch('pasta_eln.dataverse.base_database_api.Lock')
   with patch('pasta_eln.dataverse.base_database_api.read_pasta_config_file', return_value=create_mock_config()), patch(
       'pasta_eln.dataverse.base_database_api.logging.Logger.error'):
     return BaseDatabaseAPI()
@@ -47,9 +48,10 @@ class TestDataverseBaseDatabaseApi:
                            [(create_mock_config(), DEFAULT_PROJECT_GROUP, USER, PASSWORD),
                             # Add more test cases with different realistic values if necessary
                             ], ids=["success_path_default"])
-  def test_base_database_api_init_success_path(self, config_content, expected_db_name, expected_username,
+  def test_base_database_api_init_success_path(self, mocker, config_content, expected_db_name, expected_username,
                                                expected_password):
     # Arrange
+    mock_lock = mocker.patch('pasta_eln.dataverse.base_database_api.Lock')
     with patch('pasta_eln.dataverse.base_database_api.read_pasta_config_file',
                return_value=config_content) as read_config_mock, patch('logging.Logger.error') as mock_logger_error:
       # Act
@@ -61,6 +63,7 @@ class TestDataverseBaseDatabaseApi:
       assert compare_digest(base_db_api.password, expected_password)
       read_config_mock.assert_called_once()
       mock_logger_error.assert_not_called()
+      assert base_db_api.update_lock == mock_lock.return_value, "Expected update_lock to be a mock Lock object"
 
   # Parametrized test for various error cases
   @pytest.mark.parametrize("config_content, exists_return_value, expected_error_message",
@@ -254,6 +257,7 @@ class TestDataverseBaseDatabaseApi:
     doc_constructor.assert_called_once_with(mock_db, input_data['_id'])
     couchdb_constructor.assert_called_once_with(mock_database_api.username, mock_database_api.password,
                                                 url=mock_database_api.url, connect=True)
+    mock_database_api.update_lock.__enter__.assert_called_once()
 
   @pytest.mark.parametrize("test_id, design_document_name, view_name, map_func, reduce_func, expected_call",
                            [  # Success path tests

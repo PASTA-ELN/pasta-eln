@@ -126,7 +126,7 @@ class TestDataverseDataUploadTask:
                                               log=f"Upload initiated for project {project_name} at {datetime_mock.now.return_value.isoformat.return_value}\n")
     db_api_mock.return_value.create_model_document.assert_called_once_with(upload_model_mock.return_value)
     assert task.upload_model == db_api_mock.return_value.create_model_document.return_value, "Upload model should be set"
-    mock_get_logger.return_value.info.assert_called_once_with(f"Upload model created: {task.upload_model}")
+    mock_get_logger.return_value.info.assert_called_once_with("Upload model created: %s", task.upload_model)
     db_api_mock.return_value.get_config_model.assert_called_once()
     assert task.config_model == db_api_mock.return_value.get_config_model.return_value, "Config model should be set"
     task.config_model.dataverse_login_info.get.assert_any_call("server_url", "")
@@ -401,38 +401,54 @@ class TestDataverseDataUploadTask:
     setup_task.db_api.update_model_document.assert_called_once_with(
       mock_upload_model), f"DB update not called: {test_id}"
 
-  @pytest.mark.parametrize("finished,expected_log,expected_status,expected_emission", [
-    (False, "Cancelled at 2023-01-01T00:00:00\n", UploadStatusValues.Cancelled.name, UploadStatusValues.Cancelled.name),
-    (True, "Cancelled at 2023-01-01T00:00:00\n", UploadStatusValues.Cancelled.name, UploadStatusValues.Cancelled.name),
-    # Add more test cases if there are other realistic values or edge cases for the `finished` attribute
-  ], ids=["success_path_1", "success_path_2"])
-  def test_cancel_task(self, mocker, setup_task, finished, expected_log, expected_status, expected_emission):
+  @pytest.mark.parametrize("already_cancelled, expected_log_contains, expected_status", [
+    pytest.param(False, "Cancelled at 2023-01-01T00:00:00", UploadStatusValues.Cancelled.name,
+                 id="test_success_path_not_previously_cancelled"),
+    pytest.param(True, "", "", id="test_edge_case_already_cancelled"),
+  ])
+  def test_cancel_task(self, mocker, setup_task, already_cancelled, expected_log_contains, expected_status):
     # Arrange
+    setup_task.cancelled = already_cancelled
+    setup_task.upload_model = MagicMock()
+    setup_task.update_changed_status = MagicMock()
     mock_datetime = mocker.patch('pasta_eln.dataverse.data_upload_task.datetime')
     mock_super = mocker.patch('pasta_eln.dataverse.data_upload_task.super')
     mock_datetime.now.return_value.isoformat.return_value = "2023-01-01T00:00:00"
-    setup_task.finished = finished
+    setup_task.cancelled = already_cancelled
 
     # Act
     setup_task.cancel_task()
 
     # Assert
-    if not finished:
-      assert (setup_task.upload_model.log == expected_log
-              ), "Expected log message not set"
-      assert (setup_task.upload_model.status == expected_status
-              ), "Expected status not set"
-      setup_task.status_changed.emit.assert_called_once_with(expected_emission)
-      mock_super.assert_called_once()
+    if not already_cancelled:
+      assert expected_log_contains in setup_task.upload_model.log
       mock_super.return_value.cancel_task.assert_called_once()
-    else:
-      assert setup_task.upload_model.log == "", "Expected log message not set"
-      setup_task.status_changed.emit.assert_not_called()
-      mock_super.assert_not_called()
-      mock_super.return_value.cancel_task.assert_not_called()
+      setup_task.update_changed_status.assert_called_with(expected_status)
 
-  # Test IDs for clarity and traceability
-  # ID Format: Test[HappyPath/EdgeCase/ErrorCase]_[Condition]
+    else:
+      mock_super.return_value.cancel_task.assert_not_called()
+      setup_task.update_changed_status.assert_not_called()
+
+  @pytest.mark.parametrize("status, expected_status", [
+    # Success path tests with various realistic test values
+    pytest.param(UploadStatusValues.Queued.name, UploadStatusValues.Queued.name, id="default-queued"),
+    pytest.param(UploadStatusValues.Uploading.name, UploadStatusValues.Uploading.name, id="processing"),
+    pytest.param(UploadStatusValues.Finished.name, UploadStatusValues.Finished.name, id="completed"),
+    pytest.param(UploadStatusValues.Error.name, UploadStatusValues.Error.name, id="failed"),
+    # Edge cases
+    pytest.param("", "", id="empty-string"),
+  ])
+  def test_update_changed_status(self, setup_task, status, expected_status):
+    # Arrange
+    setup_task.upload_model = MagicMock()
+
+    # Act
+    setup_task.update_changed_status(status)
+
+    # Assert
+    setup_task.db_api.update_model_document.assert_called_once()
+    setup_task.status_changed.emit.assert_called_with(expected_status)
+    assert setup_task.upload_model.status == expected_status, f"Expected status to be '{expected_status}' but got '{setup_task.upload_model.status}'"
 
   @pytest.mark.parametrize(
     "test_id, get_dataset_locks_return_value, expected_result, expected_log_messages, sleep_call_count", [

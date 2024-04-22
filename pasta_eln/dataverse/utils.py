@@ -38,11 +38,7 @@ def update_status(status: str,
   Args:
       status (str): The status value.
       status_label_set_text_callback (Callable[[str], None]): The callback function to set the status label text.
-      status_icon_set_pixmap_callback (Callable[[QPixmap | QImage | str], None]):
-      The callback function to set the status icon pixmap.
-
-  Returns:
-      None
+      status_icon_set_pixmap_callback (Callable[[QPixmap | QImage | str], None]): The callback function to set the status icon pixmap.
 
   Explanation:
       This function updates the status with the corresponding label and icon based on the given status value.

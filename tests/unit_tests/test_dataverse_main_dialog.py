@@ -11,7 +11,7 @@ from unittest.mock import MagicMock
 
 import pytest
 from PySide6 import QtWidgets
-from PySide6.QtWidgets import QApplication, QCheckBox, QLabel
+from PySide6.QtWidgets import QCheckBox, QLabel, QMessageBox
 
 from pasta_eln.GUI.dataverse.main_dialog import MainDialog
 from pasta_eln.dataverse.config_model import ConfigModel
@@ -19,11 +19,7 @@ from pasta_eln.dataverse.project_model import ProjectModel
 from pasta_eln.dataverse.upload_model import UploadModel
 from pasta_eln.dataverse.upload_status_values import UploadStatusValues
 
-
-# Ensure QApplication instance exists for QWidget creation in tests
-@pytest.fixture(scope="session", autouse=True)
-def app():
-  return QApplication([])
+actual_check_if_dataverse_is_configured = MainDialog.check_if_dataverse_is_configured
 
 
 @pytest.fixture
@@ -122,7 +118,8 @@ class TestDataverseMainDialog(object):
       dialog.editFullMetadataPushButton.clicked.connect.assert_called_once_with(dialog.show_edit_metadata)
       dialog.config_upload_dialog.config_reloaded.connect.assert_called_once_with(
         dialog.upload_manager_task.set_concurrent_uploads)
-      dialog.cancelAllPushButton.clicked.connect.assert_called_once_with(dialog.upload_manager_task.cancel.emit)
+      dialog.cancelAllPushButton.clicked.connect.assert_called_once_with(
+        dialog.upload_manager_task.cancel_all_tasks.emit)
       dialog.buttonBox.button.assert_called_once_with(QtWidgets.QDialogButtonBox.Cancel)
       dialog.buttonBox.button.return_value.clicked.connect.assert_called_once_with(dialog.close_ui)
       dialog.instance.closed.connect.assert_called_once_with(dialog.close_ui)
@@ -243,6 +240,19 @@ class TestDataverseMainDialog(object):
       mock_project_item_frame.return_value.modifiedDateTimeLabel.setText.assert_called_once_with(expected_date)
       mock_project_item_frame.return_value.projectNameLabel.setToolTip.assert_called_once_with(name)
 
+  @pytest.mark.parametrize("project, expected_exception", [
+    # ID: ErrorCase-1 (invalid project type)
+    (MagicMock(), ValueError),
+    # ID: ErrorCase-2 (invalid date format)
+    ({"name": "Test Project", "date": "Invalid Date Format"}, ValueError),
+  ])
+  def test_get_project_widget_error_cases(self, project, mock_main_dialog, expected_exception):
+    # No Arrange section needed as input values are provided via test parameters
+
+    # Act & Assert
+    with pytest.raises(expected_exception):
+      mock_main_dialog.get_project_widget(project)
+
   @pytest.mark.parametrize("metadata_present, project_checked, expected_warning, expected_upload", [
     (True, True, None, True),  # Success path: metadata present, project checked
     (True, False, None, False),  # Edge case: metadata present, project not checked
@@ -263,7 +273,7 @@ class TestDataverseMainDialog(object):
     mock_main_dialog.projectsScrollAreaVerticalLayout.count.return_value = 1 if project_checked else 0
     mock_project_widget = MagicMock()
     mock_main_dialog.projectsScrollAreaVerticalLayout.itemAt.return_value.widget.return_value = mock_project_widget
-    mock_checkbox = mocker.MagicMock(spec=QtWidgets.QCheckBox())
+    mock_checkbox = mocker.MagicMock()
     mock_checkbox.isChecked.return_value = project_checked
     mock_project_widget.findChild.return_value = mock_checkbox if project_checked else None
     mock_main_dialog.uploadQueueVerticalLayout = MagicMock()
@@ -308,9 +318,13 @@ class TestDataverseMainDialog(object):
 
   @pytest.mark.parametrize("progress_value,status_text,expected_removal", [
     # ID: SuccessPath-1
-    pytest.param(100, UploadStatusValues.Finished.name, True, id="SuccessPath-1"),
+    pytest.param(100, UploadStatusValues.Finished.name, True, id="SuccessPath-1-finished-with-100-progress"),
     # ID: SuccessPath-2
-    pytest.param(100, UploadStatusValues.Error.name, True, id="SuccessPath-2"),
+    pytest.param(100, UploadStatusValues.Error.name, True, id="SuccessPath-2-error-with-100-progress"),
+    # ID: SuccessPath-3
+    pytest.param(0, UploadStatusValues.Cancelled.name, True, id="SuccessPath-3-cancelled-with-0-progress"),
+    # ID: SuccessPath-4
+    pytest.param(100, UploadStatusValues.Cancelled.name, True, id="SuccessPath-4-cancelled-with-100-progress"),
     # ID: EdgeCase-1 (Progress not 100)
     pytest.param(99, UploadStatusValues.Finished.name, False, id="EdgeCase-1"),
     # ID: EdgeCase-2 (Status not in specified list)
@@ -322,9 +336,9 @@ class TestDataverseMainDialog(object):
     # Arrange
     mock_main_dialog.uploadQueueVerticalLayout = MagicMock()
     widget = MagicMock()
-    progress_bar = mocker.MagicMock(spec=QtWidgets.QProgressBar())
+    progress_bar = mocker.MagicMock()
     progress_bar.value.return_value = progress_value
-    status_label = mocker.MagicMock(spec=QtWidgets.QLabel())
+    status_label = mocker.MagicMock()
     status_label.text.return_value = status_text
     widget.findChild.side_effect = lambda x, name: progress_bar if x == QtWidgets.QProgressBar else status_label
     mock_main_dialog.uploadQueueVerticalLayout.count.return_value = 1
@@ -356,8 +370,8 @@ class TestDataverseMainDialog(object):
   ])
   def test_select_deselect_all_projects(self, mocker, mock_main_dialog, checked, test_id, monkeypatch):
     # Arrange
-    mock_layout = mocker.MagicMock(spec=QtWidgets.QVBoxLayout())
-    mock_checkbox = mocker.MagicMock(spec=QtWidgets.QCheckBox())
+    mock_layout = mocker.MagicMock()
+    mock_checkbox = mocker.MagicMock()
     mock_widget = MagicMock()
     mock_widget.findChild.return_value = mock_checkbox
     mock_layout.count.return_value = 1 if test_id != 'edge_case_no_projects' else 0
@@ -574,3 +588,140 @@ class TestDataverseMainDialog(object):
                                                               mock_get_formatted_message.return_value)
     else:
       mock_main_dialog.show_message.assert_not_called()
+
+  @pytest.mark.parametrize(
+    "test_id, expected_success, expected_message, dataverse_id, login_success, dataverse_exists, config_exists", [
+      # Success path tests
+      ("success_path_valid", True, "Dataverse configured successfully!", None, True, True, True),
+      # Edge cases
+      ("edge_case_no_dataverse_id", False,
+       "Please re-enter the correct dataverse ID via the configuration dialog, Saved id: None is incorrect!", None,
+       True, False, True),
+      # Error cases
+      ("error_case_invalid_login", False,
+       "Please re-enter the correct API token / server URL via the configuration dialog.", None, False, True, True),
+      ("error_case_no_config_model", False, "Failed to load config model!", None, True, True, False),
+    ])
+  def test_check_if_dataverse_is_configured(self, mocker, mock_main_dialog, test_id, expected_success, expected_message,
+                                            dataverse_id, login_success, dataverse_exists, config_exists):
+    # Arrange
+    mock_check_if_dataverse_exists = mocker.patch("pasta_eln.GUI.dataverse.main_dialog.check_if_dataverse_exists")
+    mock_check_login_credentials = mocker.patch("pasta_eln.GUI.dataverse.main_dialog.check_login_credentials")
+    mock_check_login_credentials.return_value = (login_success, "")
+    mock_check_if_dataverse_exists.return_value = dataverse_exists
+    config_model = MagicMock() if config_exists else None
+    if config_model:
+      config_model.dataverse_login_info = {
+        "server_url": "http://example.com",
+        "api_token": "valid_token",
+        "dataverse_id": dataverse_id
+      }
+    mock_main_dialog.db_api.get_config_model.return_value = config_model
+
+    # Act
+    success, message = actual_check_if_dataverse_is_configured(mock_main_dialog)
+
+    # Assert
+    mock_main_dialog.db_api.get_config_model.assert_called_once()
+    assert success == expected_success
+    assert message == expected_message
+    mock_main_dialog.logger.info.assert_called_once_with("Checking if dataverse is configured..")
+    if not config_exists:
+      mock_main_dialog.logger.error.assert_called_once_with("Failed to load config model!")
+    else:
+      mock_check_login_credentials.assert_called_once_with(mock_main_dialog.logger, "valid_token", "http://example.com")
+    if test_id not in ["error_case_no_config_model", "error_case_invalid_login"]:
+      mock_check_if_dataverse_exists.assert_called_once_with(mock_main_dialog.logger, "valid_token",
+                                                             "http://example.com", dataverse_id)
+
+  @pytest.mark.parametrize("is_configured, message, expected_call", [
+    pytest.param((True, ""), "", True, id="success-path-configured"),
+    pytest.param((False, "Error message"), "Dataverse Not Configured", False, id="edge-case-not-configured"),
+    # Add more cases as needed
+  ])
+  def test_show(self, mocker, mock_main_dialog, is_configured, message, expected_call):
+    # Arrange
+    mock_config_dialog = mocker.patch('pasta_eln.GUI.dataverse.main_dialog.ConfigDialog')
+    instance_mock = MagicMock()
+    mock_main_dialog.instance = instance_mock
+    mock_main_dialog.is_dataverse_configured = is_configured
+    mock_main_dialog.show_message = mocker.MagicMock()
+
+    # Act
+    mock_main_dialog.show()
+
+    # Assert
+    mock_main_dialog.logger.info.assert_called_once_with("Show MainDialog UI..")
+    if expected_call:
+      instance_mock.show.assert_called_once()
+      mock_config_dialog.assert_not_called()
+    else:
+      instance_mock.show.assert_not_called()
+      mock_config_dialog.return_value.show.assert_called_once()
+      mock_main_dialog.show_message.assert_called_once_with(instance_mock, "Dataverse Not Configured", is_configured[1])
+
+  @pytest.mark.parametrize("title,message,icon,expected_width", [
+    pytest.param("Info", "This is an information message.", QMessageBox.Information, 200, id="info_message"),
+    pytest.param("Warning", "This is a warning message.", QMessageBox.Warning, 150, id="warning_message"),
+    pytest.param("Error", "This is an error message.", QMessageBox.Critical, 100, id="error_message"),
+  ])
+  def test_show_message_happy_path(self, mocker, mock_main_dialog, title, message, icon, expected_width):
+    # Arrange
+    parent = MagicMock()
+    mock_msg_box = MagicMock()
+    mock_label = MagicMock()
+    mock_label.fontMetrics.return_value.boundingRect.return_value.width.return_value = expected_width
+    mock_isinstance = mocker.patch("pasta_eln.GUI.dataverse.main_dialog.isinstance", return_value=True)
+    mock_msgbox_constructor = mocker.patch("pasta_eln.GUI.dataverse.main_dialog.QMessageBox", return_value=mock_msg_box)
+    mock_msg_box.findChild.return_value = mock_label
+    # Act
+    mock_main_dialog.show_message(parent, title, message, icon)
+    # Assert
+    mock_msgbox_constructor.assert_called_once_with(parent)
+    mock_msg_box.setWindowTitle.assert_called_once_with(title)
+    mock_msg_box.setIcon.assert_called_once_with(icon)
+    mock_msg_box.setText.assert_called_once_with(message)
+    mock_label.setFixedWidth.assert_called_once_with(expected_width)
+    mock_msg_box.findChild.assert_called_once_with(QLabel, "qt_msgbox_label")
+    mock_isinstance.assert_called_once_with(mock_label, QLabel)
+    mock_label.fontMetrics.assert_called_once()
+    mock_label.text.assert_called_once()
+    mock_label.fontMetrics.return_value.boundingRect.assert_called_once_with(mock_label.text.return_value)
+    mock_label.fontMetrics.return_value.boundingRect.return_value.width.assert_called_once()
+    mock_msg_box.exec.assert_called_once()
+
+  @pytest.mark.parametrize("title,message,icon", [
+    pytest.param("No Icon", "This message has no icon specified.", None, id="no_icon_specified"),
+  ])
+  def test_show_message_edge_cases(self, mocker, mock_main_dialog, title, message, icon):
+    # Arrange
+    parent = MagicMock()
+    mock_msg_box = MagicMock()
+    mock_label = MagicMock()
+    mocker.patch("pasta_eln.GUI.dataverse.main_dialog.isinstance", return_value=True)
+    mock_msgbox_constructor = mocker.patch("pasta_eln.GUI.dataverse.main_dialog.QMessageBox", return_value=mock_msg_box)
+    mock_msg_box.findChild.return_value = mock_label
+    # Act
+    mock_main_dialog.show_message(parent, title, message, icon)
+    # Assert
+    mock_msgbox_constructor.assert_called_once_with(parent)
+    mock_msg_box.setIcon.assert_called_once_with(mock_msgbox_constructor.Warning)  # Default to Warning if None
+
+  @pytest.mark.parametrize("title,message", [
+    pytest.param("Error", "This is an error message with no label found.", id="label_not_found"),
+  ])
+  def test_show_message_error_cases(self, mocker, mock_main_dialog, title, message):
+    # Arrange
+    parent = MagicMock()
+    mock_msg_box = MagicMock()
+    mock_msgbox_constructor = mocker.patch("pasta_eln.GUI.dataverse.main_dialog.QMessageBox", return_value=mock_msg_box)
+    mock_msg_box.findChild.return_value = None  # Simulate label not found
+    # Act
+    mock_main_dialog.show_message(parent, title, message)
+    # Assert
+    mock_msgbox_constructor.assert_called_once_with(parent)
+    mock_msg_box.setWindowTitle.assert_called_once_with(title)
+    mock_msg_box.setIcon.assert_called_once_with(QMessageBox.Warning)
+    mock_msg_box.setText.assert_called_once_with(message)
+    mock_msg_box.findChild.assert_called_once_with(QLabel, "qt_msgbox_label")
+    mock_main_dialog.logger.error.assert_called_once_with("Failed to find message box label!")

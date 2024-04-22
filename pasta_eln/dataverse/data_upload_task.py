@@ -65,7 +65,7 @@ class DataUploadTask(GenericTaskObject):
                                     status=UploadStatusValues.Queued.name,
                                     log=f"Upload initiated for project {self.project_name} at {datetime.now().isoformat()}\n")
     self.upload_model = self.db_api.create_model_document(self.upload_model)  # type: ignore[assignment]
-    self.logger.info(f"Upload model created: {self.upload_model}")
+    self.logger.info("Upload model created: %s", self.upload_model)
 
     # Read config and get the login information along with the metadata
     self.config_model = self.db_api.get_config_model()
@@ -99,7 +99,7 @@ class DataUploadTask(GenericTaskObject):
     super().start_task()
 
     # Emitting signals to update initial status
-    self.status_changed.emit(UploadStatusValues.Uploading.name)
+    self.update_changed_status(UploadStatusValues.Uploading.name)
     # Emit the upload model id
     # so that the parent thread can retrieve the model
     self.upload_model_created.emit(self.upload_model.id)
@@ -145,9 +145,11 @@ class DataUploadTask(GenericTaskObject):
       return
 
     # Final step: Update the log and finalize the upload task
+    upload_url = f"{self.dataverse_server_url}/dataset.xhtml?persistentId={persistent_id}"
     self.update_log(
-      f"Successfully uploaded ELN file, URL: {self.dataverse_server_url}/dataset.xhtml?persistentId={persistent_id}",
+      f"Successfully uploaded ELN file, URL: {upload_url}",
       self.logger.info)
+    self.upload_model.dataverse_url = upload_url
     self.finalize_upload_task(UploadStatusValues.Cancelled.name if self.cancelled else UploadStatusValues.Finished.name)
 
   def finalize_upload_task(self, status: str = UploadStatusValues.Finished.name) -> None:
@@ -159,7 +161,8 @@ class DataUploadTask(GenericTaskObject):
     """
     self.progress_thread.cancel.emit()
     self.finished.emit()
-    self.status_changed.emit(status)
+    self.upload_model.finished_date_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    self.update_changed_status(status)
 
   def create_dataset_for_pasta_project(self) -> str | None:
     """
@@ -255,7 +258,8 @@ class DataUploadTask(GenericTaskObject):
         log (str): The log message to be updated.
         logger_method (Callable[[str], None] | None): The method to handle logging.
     """
-    logger_method(log) if logger_method is not None else None
+    if logger_method:
+      logger_method(log)
     self.upload_model.log = log
     self.db_api.update_model_document(self.upload_model)
 
@@ -268,12 +272,26 @@ class DataUploadTask(GenericTaskObject):
         It updates the upload model log and status accordingly, and emits the status_changed signal.
 
     """
-    if self.finished:
+    if self.cancelled:
       return
     super().cancel_task()
     self.upload_model.log = f"Cancelled at {datetime.now().isoformat()}"
-    self.upload_model.status = UploadStatusValues.Cancelled.name
-    self.status_changed.emit(UploadStatusValues.Cancelled.name)
+    self.update_changed_status(UploadStatusValues.Cancelled.name)
+
+  def update_changed_status(self, status: str = UploadStatusValues.Queued.name) -> None:
+    """
+    Updates the status of the upload task.
+
+    Explanation:
+        This function updates the status of the upload task to the specified status value.
+        It then updates the model document in the database and emits a signal for the status change.
+
+    Args:
+        status (str): The status value to update the upload task to. Defaults to 'Queued'.
+    """
+    self.upload_model.status = status
+    self.db_api.update_model_document(self.upload_model)
+    self.status_changed.emit(status)
 
   def check_if_cancelled(self) -> bool:
     """

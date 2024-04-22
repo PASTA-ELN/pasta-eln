@@ -15,7 +15,7 @@ from typing import Type
 from unittest.mock import AsyncMock, mock_open
 
 import pytest
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, InvalidToken
 
 from pasta_eln.dataverse.config_error import ConfigError
 from pasta_eln.dataverse.upload_status_values import UploadStatusValues
@@ -764,6 +764,58 @@ class TestDataverseUtils:
       assert fernet.decrypt(result.encode('ascii')).decode('ascii') == fernet.decrypt(expected.encode('ascii')).decode(
         'ascii')
 
+  @pytest.mark.parametrize("encrypt_key, data, expected", [
+    # Happy path tests
+    pytest.param(VALID_KEY, "test_data", "encrypted", id="success_path_valid_data"),
+    pytest.param(VALID_KEY, "123456", "encrypted", id="success_path_numeric_data"),
+    pytest.param(VALID_KEY, "!@#$%^&*()", "encrypted", id="success_path_special_char_data"),
+
+    # Edge cases
+    pytest.param(VALID_KEY, "",
+                 "gAAAAABmJlW4UG-J2AIlziPekpaZENRwA7QKFEU2GU5RMZx5vk5Vp1JCd8fqnBBwv5EgPMCR31nIXeKu1PHuuOqU5DTKplW6Lw==",
+                 id="edge_case_empty_string"),
+    pytest.param(VALID_KEY, " " * 5, "encrypted", id="edge_case_spaces"),
+
+    # Error cases
+    pytest.param(None, "test_data", None, id="error_case_no_key"),
+    pytest.param(VALID_KEY, None, None, id="error_case_no_data"),
+    pytest.param(b"invalid_key", "test_data", None, id="error_case_invalid_key"),
+  ])
+  def test_encrypt_data_2(self, mocker, encrypt_key, data, expected):
+    logger = mocker.MagicMock()
+
+    # Act
+    result = encrypt_data(logger, encrypt_key, data)
+
+    # Assert
+    if expected is None:
+      assert result is None, f"Expected None, got {result}"
+    else:
+      assert result is not None and result != data, "Expected encrypted data, got original or None"
+
+    if encrypt_key is None or data is None:
+      logger.warning.assert_called_with("encrypt_key/data cannot be None")
+    elif encrypt_key == b"invalid_key":
+      logger.error.assert_called_once_with('Value error: %s', mocker.ANY)
+    else:
+      assert not logger.error.called, "Expected no error logs"
+
+  def test_encrypt_data_throws_error(self, mocker):
+    # Arrange
+    error = InvalidToken("InvalidToken Error")
+    mock_fernet = mocker.patch("pasta_eln.dataverse.utils.Fernet")
+    mock_fernet.return_value.encrypt.side_effect = error
+    logger = mocker.MagicMock(spec=logging.Logger)
+
+    # Act
+    result = encrypt_data(logger, VALID_KEY, "data")
+
+    # Assert
+    assert result is None, f"Expected None, got {result}"
+    logger.error.assert_called_once_with("Invalid token: %s", error)
+    mock_fernet.assert_called_once_with(VALID_KEY)
+    mock_fernet.return_value.encrypt.assert_called_once_with(b"data")
+
   @pytest.mark.parametrize("test_id, encrypt_key, data, expected",
                            [  # Happy path tests with various realistic test values
                              ("happy-path-valid", VALID_KEY, Fernet(VALID_KEY).encrypt(b"valid_data").decode('ascii'),
@@ -796,6 +848,22 @@ class TestDataverseUtils:
       logger.error.assert_called_once()
     else:
       assert result == expected
+
+  def test_decrypt_data_throws_error(self, mocker):
+    # Arrange
+    error = AttributeError("Wrong Attribute Error")
+    mock_fernet = mocker.patch("pasta_eln.dataverse.utils.Fernet")
+    mock_fernet.return_value.decrypt.side_effect = error
+    logger = mocker.MagicMock(spec=logging.Logger)
+
+    # Act
+    result = decrypt_data(logger, VALID_KEY, "data")
+
+    # Assert
+    assert result is None, f"Expected None, got {result}"
+    logger.error.assert_called_once_with("AttributeError: %s", error)
+    mock_fernet.assert_called_once_with(VALID_KEY)
+    mock_fernet.return_value.decrypt.assert_called_once_with(b"data")
 
   @pytest.mark.parametrize("test_id, metadata, expected_warning, expected_result", [
     # Happy path with various realistic test values
@@ -1564,9 +1632,10 @@ class TestDataverseUtils:
   @pytest.mark.parametrize(
     "test_id, num_widgets",
     [
-      ("success_path_1_widget", 1),  # ID: happy_path_1_widget
-      ("success_path_multiple_widgets", 3),  # ID: happy_path_multiple_widgets
-      ("success_path_no_widgets", 0),  # ID: happy_path_no_widgets
+      ("success_path_1_widget", 1),  # ID: success_path_1_widget
+      ("success_path_multiple_widgets", 3),  # ID: success_path_multiple_widgets
+      ("success_path_no_widgets", 0),  # ID: success_path_no_widgets
+      ("edge_case_no_layout", 0),  # ID: edge_case_no_layout
     ]
   )
   def test_delete_layout_and_contents(self, mocker, test_id, num_widgets):
@@ -1575,15 +1644,20 @@ class TestDataverseUtils:
     widgets = [mocker.MagicMock() for _ in range(num_widgets)]
     layout.itemAt = lambda pos: widgets[pos]
     layout.count.return_value = len(widgets)
+    layout = None if test_id == "edge_case_no_layout" else layout
 
     # Act
     delete_layout_and_contents(layout)
 
     # Assert
-    layout.count.assert_called_once()
-    layout.setParent.assert_called_once_with(None)
-    for widget in widgets:
-      widget.widget.return_value.setParent.assert_called_once_with(None)
+    if test_id == "edge_case_no_layout":
+      for widget in widgets:
+        widget.widget.return_value.setParent.assert_not_called()
+    else:
+      layout.count.assert_called_once()
+      layout.setParent.assert_called_once_with(None)
+      for widget in widgets:
+        widget.widget.return_value.setParent.assert_called_once_with(None)
 
   # Parametrized test cases for happy path, edge cases, and error cases
   @pytest.mark.parametrize("missing_metadata, expected_output, test_id", [

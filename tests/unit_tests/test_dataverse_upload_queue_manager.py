@@ -248,44 +248,37 @@ class TestDataverseUploadQueueManager:
     assert str(exc_info.value) == "Task quit failed", "Exception message should match the expected one"
     mock_manager.logger.info.assert_called_with("Emptying upload queue..")
 
-  @pytest.mark.parametrize("test_id, running_queue_count, expected_log, super_method_exists",
-                           [  # Success path test with various realistic test values
-                             ("success_path_1", 2, "Cancelling upload queue..", True),
-
-                             # Edge case with an empty running queue
-                             ("edge_case_empty_queue_id", 0, "Cancelling upload queue..", True),
-
-                             # Error case where the super class does not have cancel_task method
-                             ("error_case_no_super_method_id", 1, "Cancelling upload queue..", False), ])
-  def test_cancel_task(self, mocker, mock_manager, test_id, running_queue_count, expected_log, super_method_exists):
+  @pytest.mark.parametrize("test_id", [
+    ("success_path"),
+    ("super_method_failure"),
+    ("cancel_all_failure")
+  ])
+  def test_cancel_task(self, mocker, mock_manager, test_id):
     # Arrange
-    mock_manager.running_queue = [get_mock_task_thread(mocker) for _ in range(running_queue_count)]
-    mock_manager.empty_upload_queue = mocker.MagicMock()
+    mock_manager.cancel_all_queued_tasks_and_empty_queue = MagicMock()
+    mocker.patch('pasta_eln.dataverse.upload_queue_manager.super')
 
-    if super_method_exists:
-      mock_super = mocker.MagicMock()
-      mocker.patch('pasta_eln.dataverse.upload_queue_manager.super', return_value=mock_super)
-      mock_super.cancel_task = mocker.MagicMock()
-
+    if test_id == "super_method_failure":
+      with mocker.patch.object(UploadQueueManager, "cancel_task", side_effect=Exception("Super method failure")):
+        # Act
+        with pytest.raises(Exception) as exc_info:
+          mock_manager.cancel_task()
+        # Assert
+        assert "Super method failure" in str(exc_info.value), "Exception message should be 'Super method failure'"
+    elif test_id == "cancel_all_failure":
+      mock_manager.cancel_all_queued_tasks_and_empty_queue.side_effect = Exception("Cancel all failure")
+      # Act
+      with pytest.raises(Exception) as exc_info:
+        mock_manager.cancel_task()
+      # Assert
+      mock_manager.logger.info.assert_called_once_with("Cancelling upload manager..")
+      assert "Cancel all failure" in str(exc_info.value), "Exception message should be 'Cancel all failure'"
+    else:
       # Act
       mock_manager.cancel_task()
-
       # Assert
-      # Check if the log message is correct
-      mock_manager.logger.info.assert_called_with(expected_log)
-      # Check if super's cancel_task was called
-      mock_super.cancel_task.assert_called_once()
-      # Check if empty_upload_queue was called
-      mock_manager.empty_upload_queue.assert_called_once()
-      # Check if cancel.emit was called for each task in the running queue
-      for task_thread in mock_manager.running_queue:
-        task_thread.task.cancel.emit.assert_called_once()
-    else:
-      mocker.patch('pasta_eln.dataverse.upload_queue_manager.super',
-                   side_effect=AttributeError("No cancel_task method in super class"))
-      with pytest.raises(AttributeError):
-        # Act & Assert
-        mock_manager.cancel_task()
+      mock_manager.logger.info.assert_called_once_with("Cancelling upload manager..")
+      assert mock_manager.cancel_all_queued_tasks_and_empty_queue.called, "Expected cancel_all_queued_tasks_and_empty_queue to be called"
 
   @pytest.mark.parametrize("test_id, parallel_uploads_count, expected",
                            [  # Success path tests with various realistic test values
@@ -315,3 +308,48 @@ class TestDataverseUploadQueueManager:
     mock_db_api.get_config_model.assert_called_once()
     mock_logger.info.assert_called_once_with("Resetting number of concurrent uploads..")
     assert upload_queue_manager.number_of_concurrent_uploads == expected, f"Test ID {test_id}: Expected number_of_concurrent_uploads to be {expected}, got {upload_queue_manager.number_of_concurrent_uploads}"
+
+  @pytest.mark.parametrize("test_id, upload_queue_size", [
+    ("success_path_single_task", 1),  # Testing with a single task in the queue
+    ("success_path_multiple_tasks", 5),  # Testing with multiple tasks in the queue
+    ("edge_case_empty_queue", 0),  # Testing with an empty queue
+  ], ids=str)
+  def test_cancel_all_queued_tasks_and_empty_queue(self, mocker, mock_manager, test_id, upload_queue_size):
+    # Arrange
+    mock_manager.upload_queue = [mocker.MagicMock() for _ in range(upload_queue_size)]
+    mock_manager.empty_upload_queue = mocker.MagicMock()
+    mock_manager.logger = mocker.MagicMock()
+
+    # Act
+    mock_manager.cancel_all_queued_tasks_and_empty_queue()
+
+    # Assert
+    # Verify that each task's cancel method was called once for each task in the queue
+    for task in mock_manager.upload_queue:
+      task.task.cancel.emit.assert_called_once()
+    # Verify that the empty_upload_queue method was called once
+    mock_manager.empty_upload_queue.assert_called_once()
+    # Verify that a log message was emitted
+    mock_manager.logger.info.assert_called_once_with("Cancelling upload queue and the empty the upload queue..")
+
+  @pytest.mark.parametrize("test_id, exception, expected_log_message", [
+    ("error_case_exception_during_cancel", RuntimeError("Task cancel failed"), "Task cancel failed"),
+  ], ids=str)
+  def test_cancel_all_queued_tasks_and_empty_queue_with_errors(self, mocker, mock_manager, test_id, exception,
+                                                               expected_log_message):
+    # Arrange
+    task_mock = mocker.MagicMock()
+    task_mock.task.cancel.emit.side_effect = exception  # Simulate an exception when cancel is called
+    mock_manager.upload_queue = [task_mock]
+    mock_manager.empty_upload_queue = mocker.MagicMock()
+    mock_manager.logger = mocker.MagicMock()
+
+    # Act
+    with pytest.raises(RuntimeError) as exc_info:
+      mock_manager.cancel_all_queued_tasks_and_empty_queue()
+
+    # Assert
+    assert str(exc_info.value) == expected_log_message
+    mock_manager.empty_upload_queue.assert_not_called()
+    # Verify that a log message was emitted before the exception
+    mock_manager.logger.info.assert_called_once_with("Cancelling upload queue and the empty the upload queue..")

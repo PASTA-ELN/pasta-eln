@@ -10,6 +10,8 @@
 import logging
 from time import sleep
 
+from PySide6 import QtCore
+
 from pasta_eln.dataverse.config_model import ConfigModel
 from pasta_eln.dataverse.database_api import DatabaseAPI
 from pasta_eln.dataverse.generic_task_object import GenericTaskObject
@@ -26,6 +28,7 @@ class UploadQueueManager(GenericTaskObject):
       start the task execution, clean up resources, and cancel the task.
 
   """
+  cancel_all_tasks = QtCore.Signal()
 
   def __init__(self) -> None:
     """
@@ -50,6 +53,8 @@ class UploadQueueManager(GenericTaskObject):
     self.upload_queue: list[TaskThreadExtension] = []
     self.running_queue: list[TaskThreadExtension] = []
     self.db_api: DatabaseAPI = DatabaseAPI()
+    self.cancel_all_tasks.connect(
+      lambda: self.cancel_all_queued_tasks_and_empty_queue())  # pylint: disable=unnecessary-lambda
     self.set_concurrent_uploads()
 
   def set_concurrent_uploads(self) -> None:
@@ -167,13 +172,25 @@ class UploadQueueManager(GenericTaskObject):
     Explanation:
         This method cancels the upload queue by calling the super-class's cancel_task method.
         It emits the cancel signal for each task in the running queue and empties the upload queue.
+    """
+    self.logger.info("Cancelling upload manager..")
+    super().cancel_task()
+    # Cancel all the tasks in the pool and remove them all from the queue
+    self.cancel_all_queued_tasks_and_empty_queue()
+
+  def cancel_all_queued_tasks_and_empty_queue(self) -> None:
+    """
+    Cancels all queued tasks and empties the upload queue.
+
+    Explanation:
+        This function iterates through the upload queue, cancelling each task thread by emitting a cancel signal.
+        It then empties the upload queue.
 
     Args:
-        None
-
+        self: The instance of the class.
     """
-    self.logger.info("Cancelling upload queue..")
-    super().cancel_task()
-    for upload_task_thread in self.running_queue:
+
+    self.logger.info("Cancelling upload queue and the empty the upload queue..")
+    for upload_task_thread in self.upload_queue:
       upload_task_thread.task.cancel.emit()
     self.empty_upload_queue()

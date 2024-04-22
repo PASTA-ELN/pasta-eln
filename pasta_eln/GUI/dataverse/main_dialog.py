@@ -94,7 +94,7 @@ class MainDialog(Ui_MainDialogBase):
       self.showCompletedPushButton.clicked.connect(self.show_completed_uploads)
       self.editFullMetadataPushButton.clicked.connect(self.show_edit_metadata)
       self.config_upload_dialog.config_reloaded.connect(self.upload_manager_task.set_concurrent_uploads)
-      self.cancelAllPushButton.clicked.connect(self.upload_manager_task.cancel.emit)
+      self.cancelAllPushButton.clicked.connect(self.upload_manager_task.cancel_all_tasks.emit)
       self.buttonBox.button(QtWidgets.QDialogButtonBox.Cancel).clicked.connect(self.close_ui)
       self.instance.closed.connect(self.close_ui)
 
@@ -225,6 +225,8 @@ class MainDialog(Ui_MainDialogBase):
         UploadStatusValues.Cancelled.name,
       ]:
         project_widget.setParent(None)
+      elif progress_value == 0 and status_text == UploadStatusValues.Cancelled.name:
+        project_widget.setParent(None)
 
   def select_deselect_all_projects(self, checked: bool) -> None:
     """
@@ -349,6 +351,16 @@ class MainDialog(Ui_MainDialogBase):
     return metadata_exists
 
   def check_if_dataverse_is_configured(self) -> tuple[bool, str]:
+    """
+    Checks if dataverse is configured.
+
+    Explanation:
+        This function checks if the dataverse is configured by retrieving configuration details from the database.
+        It validates the configuration, including the server URL, API token, and dataverse ID, and returns a success status.
+
+    Returns:
+        tuple[bool, str]: A tuple containing a boolean indicating success and a message string.
+    """
     self.logger.info("Checking if dataverse is configured..")
     config_model = self.db_api.get_config_model()
     if config_model is None or config_model.dataverse_login_info is None:
@@ -371,8 +383,13 @@ class MainDialog(Ui_MainDialogBase):
     Shows the instance.
 
     Explanation:
-        This method shows the instance by calling its show method.
+        This method shows the instance by calling its show method if the dataverse is configured.
+        If the dataverse is not configured, it displays a message and shows the ConfigDialog.
+
+    Args:
+        self: The instance of the class.
     """
+    self.logger.info("Show MainDialog UI..")
     if self.is_dataverse_configured[0]:
       self.instance.show()
     else:
@@ -385,9 +402,24 @@ class MainDialog(Ui_MainDialogBase):
                    title: str,
                    message: str,
                    icon: QMessageBox.Icon = QMessageBox.Warning) -> None:
+    """
+    Shows a message box with the specified title, message, and icon.
+
+    Explanation:
+        This function creates a message box with the provided title, message, and icon, and displays it to the user.
+        It also adjusts the width of the message box label to fit the content properly.
+
+    Args:
+        self: The instance of the class.
+        parent (QDialog): The parent dialog for the message box.
+        title (str): The title of the message box.
+        message (str): The message content to display.
+        icon (QMessageBox.Icon, optional): The icon to display in the message box (default is QMessageBox.Warning).
+    """
+
     msg_box = QMessageBox(parent)
     msg_box.setWindowTitle(title)
-    msg_box.setIcon(icon)
+    msg_box.setIcon(icon or QMessageBox.Warning)
     msg_box.setText(message)
     qt_msgbox_label: QLabel | object = msg_box.findChild(QLabel, "qt_msgbox_label")
     if not isinstance(qt_msgbox_label, QLabel):
