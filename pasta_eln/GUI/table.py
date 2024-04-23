@@ -213,7 +213,7 @@ class Table(QWidget):
       command (list): list of commands
     """
     if command[0] is Command.ADD_ITEM:
-      self.comm.formDoc.emit({'-type':[self.docType]})
+      self.comm.formDoc.emit({'-type':[self.docType], '_projectID':self.projID})
       self.comm.changeTable.emit(self.docType, self.projID)
       if self.docType=='x0':
         self.comm.changeSidebar.emit('redraw')
