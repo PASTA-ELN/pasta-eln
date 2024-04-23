@@ -205,7 +205,8 @@ class Form(QDialog):
               if self.doc.get('_projectID','') == line['id']:
                 self.projectComboBox.setCurrentIndex(self.projectComboBox.count()-1)
           formL.addRow(QLabel('Project'), self.projectComboBox)
-          del self.doc['_projectID']
+          if '_projectID' in self.doc:
+            del self.doc['_projectID']
         if allowProjectAndDocTypeChange: #if not-new and non-folder
           self.docTypeComboBox = QComboBox()
           self.docTypeComboBox.addItem(label, userData='')
