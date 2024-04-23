@@ -12,21 +12,23 @@ import os
 from base64 import b64decode, b64encode
 from os.path import dirname, join, realpath
 from typing import Type
-from unittest.mock import mock_open
+from unittest.mock import AsyncMock, mock_open
 
 import pytest
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, InvalidToken
 
 from pasta_eln.dataverse.config_error import ConfigError
 from pasta_eln.dataverse.upload_status_values import UploadStatusValues
 from pasta_eln.dataverse.utils import adjust_type_name, check_if_compound_field_value_is_missing, \
-  check_if_field_value_is_missing, check_if_field_value_not_null, \
+  check_if_dataverse_exists, check_if_field_value_is_missing, check_if_field_value_not_null, \
   check_if_minimal_metadata_exists, \
   check_login_credentials, \
   clear_value, decrypt_data, \
   delete_layout_and_contents, encrypt_data, \
   get_citation_field, get_encrypt_key, \
-  is_date_time_type, log_and_create_error, read_pasta_config_file, set_authors, set_template_values, update_status, \
+  get_flattened_metadata, get_formatted_message, is_date_time_type, log_and_create_error, read_pasta_config_file, \
+  set_authors, \
+  set_template_values, update_status, \
   write_pasta_config_file
 
 # Constants for test
@@ -147,34 +149,31 @@ def valid_metadata():
 
 class TestDataverseUtils:
 
-  # Parametrized test cases for happy path, edge cases, and error cases
-  @pytest.mark.parametrize("status, expected_icon_name, test_id",
-                           [(UploadStatusValues.Queued.name, 'ph.queue-bold', 'happy_path_queued'),
-                            (UploadStatusValues.Uploading.name, 'mdi6.progress-upload', 'happy_path_uploading'),
-                            (UploadStatusValues.Cancelled.name, 'mdi.cancel', 'happy_path_cancelled'),
-                            (UploadStatusValues.Finished.name, 'fa.check-circle-o', 'happy_path_finished'),
-                            (UploadStatusValues.Error.name, 'msc.error-small', 'happy_path_error'),
-                            (UploadStatusValues.Warning.name, 'fa.warning', 'happy_path_warning'),
-                            # Add edge cases here
-                            # Add error cases here
-                            ])
+  # Assuming qtawesome.icon function is patched to return a simple mock object
+  # that can produce a QPixmap when its pixmap method is called.
+  @pytest.mark.parametrize("status, expected_icon_name, test_id", [
+    (UploadStatusValues.Queued.name, 'fa.circle-o-notch', 'queued_status'),
+    (UploadStatusValues.Uploading.name, 'fa.cloud-upload', 'uploading_status'),
+    (UploadStatusValues.Cancelled.name, 'fa.minus-circle', 'cancelled_status'),
+    (UploadStatusValues.Finished.name, 'fa.check-circle-o', 'finished_status'),
+    (UploadStatusValues.Error.name, 'fa.times-circle-o', 'error_status'),
+    (UploadStatusValues.Warning.name, 'fa.warning', 'warning_status'),
+    ('UnknownStatus', 'fa.times-circle-o', 'default_case'),
+  ])
   def test_update_status(self, mocker, status, expected_icon_name, test_id):
     # Arrange
-    status_icon_label = mocker.MagicMock()
-    status_label = mocker.MagicMock()
-    mock_icon = mocker.MagicMock()
-    mock_icon.constructor = mocker.patch('pasta_eln.dataverse.utils.icon', return_value=mock_icon)
+    mock_icon = mocker.patch('pasta_eln.dataverse.utils.icon', return_value=mocker.MagicMock(pixmap=mocker.MagicMock()))
+    mocker.patch('pasta_eln.dataverse.utils.QSize')
+    status_label_set_text_callback = mocker.MagicMock()
+    status_icon_set_pixmap_callback = mocker.MagicMock()
 
     # Act
-    update_status(status, status_icon_label, status_label)
+    update_status(status, status_label_set_text_callback, status_icon_set_pixmap_callback)
 
     # Assert
-    status_label.setText.assert_called_once_with(status)
-    # Check if the correct icon is set for the given status
-    mock_icon.constructor.assert_called_once_with(expected_icon_name)
-    status_icon_label.size.assert_called_once()
-    status_icon_label.setPixmap.assert_called_once_with(mock_icon.pixmap.return_value)
-    mock_icon.pixmap.assert_called_once_with(status_icon_label.size())
+    status_label_set_text_callback.assert_called_once_with(status)
+    mock_icon.assert_called_once_with(expected_icon_name)
+    status_icon_set_pixmap_callback.assert_called_once_with(mock_icon.return_value.pixmap.return_value)
 
   @pytest.mark.parametrize("test_id, config_data",
                            [("SuccessCase-1", {"key": "value", "number": 42}), ("SuccessCase-2", {"empty_dict": {}}),
@@ -765,6 +764,58 @@ class TestDataverseUtils:
       assert fernet.decrypt(result.encode('ascii')).decode('ascii') == fernet.decrypt(expected.encode('ascii')).decode(
         'ascii')
 
+  @pytest.mark.parametrize("encrypt_key, data, expected", [
+    # Happy path tests
+    pytest.param(VALID_KEY, "test_data", "encrypted", id="success_path_valid_data"),
+    pytest.param(VALID_KEY, "123456", "encrypted", id="success_path_numeric_data"),
+    pytest.param(VALID_KEY, "!@#$%^&*()", "encrypted", id="success_path_special_char_data"),
+
+    # Edge cases
+    pytest.param(VALID_KEY, "",
+                 "gAAAAABmJlW4UG-J2AIlziPekpaZENRwA7QKFEU2GU5RMZx5vk5Vp1JCd8fqnBBwv5EgPMCR31nIXeKu1PHuuOqU5DTKplW6Lw==",
+                 id="edge_case_empty_string"),
+    pytest.param(VALID_KEY, " " * 5, "encrypted", id="edge_case_spaces"),
+
+    # Error cases
+    pytest.param(None, "test_data", None, id="error_case_no_key"),
+    pytest.param(VALID_KEY, None, None, id="error_case_no_data"),
+    pytest.param(b"invalid_key", "test_data", None, id="error_case_invalid_key"),
+  ])
+  def test_encrypt_data_2(self, mocker, encrypt_key, data, expected):
+    logger = mocker.MagicMock()
+
+    # Act
+    result = encrypt_data(logger, encrypt_key, data)
+
+    # Assert
+    if expected is None:
+      assert result is None, f"Expected None, got {result}"
+    else:
+      assert result is not None and result != data, "Expected encrypted data, got original or None"
+
+    if encrypt_key is None or data is None:
+      logger.warning.assert_called_with("encrypt_key/data cannot be None")
+    elif encrypt_key == b"invalid_key":
+      logger.error.assert_called_once_with('Value error: %s', mocker.ANY)
+    else:
+      assert not logger.error.called, "Expected no error logs"
+
+  def test_encrypt_data_throws_error(self, mocker):
+    # Arrange
+    error = InvalidToken("InvalidToken Error")
+    mock_fernet = mocker.patch("pasta_eln.dataverse.utils.Fernet")
+    mock_fernet.return_value.encrypt.side_effect = error
+    logger = mocker.MagicMock(spec=logging.Logger)
+
+    # Act
+    result = encrypt_data(logger, VALID_KEY, "data")
+
+    # Assert
+    assert result is None, f"Expected None, got {result}"
+    logger.error.assert_called_once_with("Invalid token: %s", error)
+    mock_fernet.assert_called_once_with(VALID_KEY)
+    mock_fernet.return_value.encrypt.assert_called_once_with(b"data")
+
   @pytest.mark.parametrize("test_id, encrypt_key, data, expected",
                            [  # Happy path tests with various realistic test values
                              ("happy-path-valid", VALID_KEY, Fernet(VALID_KEY).encrypt(b"valid_data").decode('ascii'),
@@ -797,6 +848,22 @@ class TestDataverseUtils:
       logger.error.assert_called_once()
     else:
       assert result == expected
+
+  def test_decrypt_data_throws_error(self, mocker):
+    # Arrange
+    error = AttributeError("Wrong Attribute Error")
+    mock_fernet = mocker.patch("pasta_eln.dataverse.utils.Fernet")
+    mock_fernet.return_value.decrypt.side_effect = error
+    logger = mocker.MagicMock(spec=logging.Logger)
+
+    # Act
+    result = decrypt_data(logger, VALID_KEY, "data")
+
+    # Assert
+    assert result is None, f"Expected None, got {result}"
+    logger.error.assert_called_once_with("AttributeError: %s", error)
+    mock_fernet.assert_called_once_with(VALID_KEY)
+    mock_fernet.return_value.decrypt.assert_called_once_with(b"data")
 
   @pytest.mark.parametrize("test_id, metadata, expected_warning, expected_result", [
     # Happy path with various realistic test values
@@ -998,7 +1065,7 @@ class TestDataverseUtils:
           {'empty_string': []},
           'empty_string',
           True,
-          {'empty_string': ['Empty_string field is missing!']}
+          {'empty_string': ['Add at-least a single entry for Empty_string!']}
       ),
       # Test ID: EC-2
       (
@@ -1006,7 +1073,7 @@ class TestDataverseUtils:
           {'none_field': []},
           'none_field',
           True,
-          {'none_field': ['None_field field is missing!']}
+          {'none_field': ['Add at-least a single entry for None_field!']}
       ),
       # Test ID: EC-3
       (
@@ -1565,9 +1632,10 @@ class TestDataverseUtils:
   @pytest.mark.parametrize(
     "test_id, num_widgets",
     [
-      ("success_path_1_widget", 1),  # ID: happy_path_1_widget
-      ("success_path_multiple_widgets", 3),  # ID: happy_path_multiple_widgets
-      ("success_path_no_widgets", 0),  # ID: happy_path_no_widgets
+      ("success_path_1_widget", 1),  # ID: success_path_1_widget
+      ("success_path_multiple_widgets", 3),  # ID: success_path_multiple_widgets
+      ("success_path_no_widgets", 0),  # ID: success_path_no_widgets
+      ("edge_case_no_layout", 0),  # ID: edge_case_no_layout
     ]
   )
   def test_delete_layout_and_contents(self, mocker, test_id, num_widgets):
@@ -1576,12 +1644,240 @@ class TestDataverseUtils:
     widgets = [mocker.MagicMock() for _ in range(num_widgets)]
     layout.itemAt = lambda pos: widgets[pos]
     layout.count.return_value = len(widgets)
+    layout = None if test_id == "edge_case_no_layout" else layout
 
     # Act
     delete_layout_and_contents(layout)
 
     # Assert
-    layout.count.assert_called_once()
-    layout.setParent.assert_called_once_with(None)
-    for widget in widgets:
-      widget.widget.return_value.setParent.assert_called_once_with(None)
+    if test_id == "edge_case_no_layout":
+      for widget in widgets:
+        widget.widget.return_value.setParent.assert_not_called()
+    else:
+      layout.count.assert_called_once()
+      layout.setParent.assert_called_once_with(None)
+      for widget in widgets:
+        widget.widget.return_value.setParent.assert_called_once_with(None)
+
+  # Parametrized test cases for happy path, edge cases, and error cases
+  @pytest.mark.parametrize("missing_metadata, expected_output, test_id", [
+    # Success path tests with various realistic test values
+    (
+        {'author': ['Name', 'Email'], 'datasetContact': ['Phone']},
+        "<html><p><i>Goto 'Edit Metadata' dialog, enter the below given missing information and retry the upload!"
+        '</i></p><br></br><b><i>Author:</i></b><ul><i '
+        'style="color:Crimson"><li>Name</li></i><i '
+        'style="color:Crimson"><li>Email</li></i></ul><br></br><b><i>Dataset '
+        'Contact:</i></b><ul><i style="color:Crimson"><li>Phone</li></i></ul></html>',
+        "success_path_multiple_fields1"
+    ),
+    (
+        {'author': ['Name']},
+        "<html><p><i>Goto 'Edit Metadata' dialog, enter the below given missing information and retry the upload!"
+        '</i></p><br></br><b><i>Author:</i></b><ul><i '
+        'style="color:Crimson"><li>Name</li></i></ul></html>',
+        "success_path_single_field"
+    ),
+    (
+        {
+          'author': ['Author1 Missing!', 'Author2 Missing!'],
+          'datasetContact': ['Dataset Contact 1 Missing!', 'Dataset Contact 2 Missing!'],
+          'dsDescription': ['Dataset Description 1 Missing!', 'Dataset Description 2 Missing!'],
+          'subject': ['Subject 1 Missing!', 'Subject 2 Missing!']
+        },
+        "<html><p><i>Goto 'Edit Metadata' dialog, enter the below given missing information and retry the upload!"
+        '</i></p><br></br><b><i>Author:</i></b><ul><i '
+        'style="color:Crimson"><li>Author1 Missing!</li></i><i '
+        'style="color:Crimson"><li>Author2 '
+        'Missing!</li></i></ul><br></br><b><i>Dataset Contact:</i></b><ul><i '
+        'style="color:Crimson"><li>Dataset Contact 1 Missing!</li></i><i '
+        'style="color:Crimson"><li>Dataset Contact 2 '
+        'Missing!</li></i></ul><br></br><b><i>Dataset Description:</i></b><ul><i '
+        'style="color:Crimson"><li>Dataset Description 1 Missing!</li></i><i '
+        'style="color:Crimson"><li>Dataset Description 2 '
+        'Missing!</li></i></ul><br></br><b><i>Subject:</i></b><ul><i '
+        'style="color:Crimson"><li>Subject 1 Missing!</li></i><i '
+        'style="color:Crimson"><li>Subject 2 Missing!</li></i></ul></html>',
+        "success_path_multiple_fields2"
+    ),
+    (
+        {
+          'author': [],
+          'datasetContact': [],
+          'dsDescription': [],
+          'subject': []
+        },
+        "",
+        "success_path_empty_fields"
+    ),
+
+    # Edge cases
+    (
+        {},
+        "",
+        "edge_case_empty_input"
+    ),
+    (
+        {'author': [], 'datasetContact': []},
+        "",
+        "edge_case_empty_lists"
+    ),
+
+    # Error cases
+    (
+        {'unknownField': ['Unknown']},
+        KeyError("dict object has no attribute 'unknownField'"),
+        "error_case_unknown_field"
+    ),
+  ])
+  def test_get_formatted_message(self, missing_metadata, expected_output, test_id):
+    # Arrange
+    result = None
+    # Act
+    if isinstance(expected_output, Exception):
+      with pytest.raises(type(expected_output)):
+        result = get_formatted_message(missing_metadata)
+    else:
+      result = get_formatted_message(missing_metadata)
+    # Assert
+    if isinstance(expected_output, Exception):
+      assert result is None, f"Test failed for {test_id}"
+    else:
+      assert result == expected_output, f"Test failed for {test_id}"
+
+  # Test cases for happy path scenarios
+  @pytest.mark.parametrize("metadata,expected_output", [
+    # Test ID: SuccessCase-1
+    (
+        {
+          "datasetVersion": {
+            "license": "CC0",
+            "metadataBlocks": {
+              "citation": {
+                "fields": [
+                  {"typeName": "title", "value": "Test Dataset"},
+                  {"typeName": "author", "value": ["Author 1", "Author 2"]},
+                ]
+              }
+            }
+          }
+        },
+        {"license": "CC0", "title": "Test Dataset", "author": ["Author 1", "Author 2"]}
+    ),
+    # Test ID: SuccessCase-2
+    (
+        {
+          "datasetVersion": {
+            "license": None,
+            "metadataBlocks": {
+              "citation": {
+                "fields": [
+                  {"typeName": "title", "value": "No License Dataset"},
+                ]
+              }
+            }
+          }
+        },
+        {"title": "No License Dataset"}
+    ),
+  ], ids=["SuccessCase-1", "SuccessCase-2"])
+  def test_get_flattened_metadata_happy_path(self, metadata, expected_output):
+    # Act
+    result = get_flattened_metadata(metadata)
+
+    # Assert
+    assert result == expected_output, "The flattened metadata does not match the expected output."
+
+  # Test cases for edge cases
+  @pytest.mark.parametrize("metadata,expected_output", [
+    # Test ID: EdgeCase-1
+    (
+        {"datasetVersion": {"license": "CC0", "metadataBlocks": {}}},
+        {"license": "CC0"}
+    ),
+    # Test ID: EdgeCase-2
+    (
+        {
+          "datasetVersion": {
+            "license": "CC0",
+            "metadataBlocks": {
+              "citation": {
+                "fields": []
+              }
+            }
+          }
+        },
+        {"license": "CC0"}
+    ),
+  ], ids=["EdgeCase-1", "EdgeCase-2"])
+  def test_get_flattened_metadata_edge_cases(self, metadata, expected_output):
+    # Act
+    result = get_flattened_metadata(metadata)
+
+    # Assert
+    assert result == expected_output, "The flattened metadata does not match the expected output for edge cases."
+
+  # Test cases for error scenarios
+  @pytest.mark.parametrize("metadata,error_type", [
+    # Test ID: ErrorCase-1
+    ({}, KeyError),
+    # Test ID: ErrorCase-2
+    ({"datasetVersion": {}}, KeyError),
+    # Test ID: ErrorCase-3
+    (
+        {
+          "datasetVersion": {
+            "license": "CC0",
+            "metadataBlocks": {
+              "citation": {
+                "fields": [
+                  {"typeName": "title"},  # Missing 'value' key
+                ]
+              }
+            }
+          }
+        },
+        KeyError
+    ),
+  ], ids=["ErrorCase-1", "ErrorCase-2", "ErrorCase-3"])
+  def test_get_flattened_metadata_error_cases(self, metadata, error_type):
+    # Act & Assert
+    with pytest.raises(error_type):
+      get_flattened_metadata(metadata)
+
+  @pytest.mark.parametrize("server_url,api_token,dataverse_id,expected_message", [
+    ("valid_server_url_1", "valid_api_token_1", "valid_dataverse_id_1", "100 bytes"),
+    ("valid_server_url_2", "valid_api_token_2", "valid_dataverse_id_2", "2048 bytes"),
+    ("valid_server_url_3", "valid_api_token_2", "valid_dataverse_id_2", "0 bytes")
+  ], ids=["success_path_1", "success_path_2", "success_path_3"])
+  def test_check_if_dataverse_exists_success_path(self, mocker, server_url, api_token, dataverse_id,
+                                                  expected_message):
+    # Arrange
+    logger = mocker.MagicMock()
+    client_mock = mocker.patch("pasta_eln.dataverse.utils.DataverseClient")
+    client_mock.return_value.get_dataverse_size = AsyncMock(return_value=expected_message)
+
+    # Act
+    result = check_if_dataverse_exists(logger, api_token, server_url, dataverse_id)
+
+    # Assert
+    logger.info.assert_called_with("Checking if login info is valid, server_url: %s", server_url)
+    assert result == True, "Expected True for valid dataverse size message"
+
+  @pytest.mark.parametrize("server_url,api_token,dataverse_id,expected_message", [
+    ("invalid_server_url", "invalid_api_token", "invalid_dataverse_id", [
+      'Client session InvalidURL for url (invalid_server_url/api/dataverses/invalid_dataverse_id/storagesize) with error: invalid_server_url/api/dataverses/invalid_dataverse_id/storagesize']),
+  ], ids=["error_case_not_found"])
+  def test_check_if_dataverse_exists_error_cases(self, mocker, server_url, api_token, dataverse_id,
+                                                 expected_message):
+    # Arrange
+    logger = mocker.MagicMock()
+    client_mock = mocker.patch("pasta_eln.dataverse.utils.DataverseClient")
+    client_mock.return_value.get_dataverse_size = AsyncMock(return_value=expected_message)
+
+    # Act
+    result = check_if_dataverse_exists(logger, api_token, server_url, dataverse_id)
+
+    # Assert
+    logger.info.assert_called_with("Checking if login info is valid, server_url: %s", server_url)
+    assert result == False, "Expected False for invalid or empty server messages"

@@ -33,7 +33,7 @@ def mock_database_api(mocker):
                                'Unidentified': False
                              },
                              metadata=mocker.MagicMock(spec=dict))
-  mock_instance.get_model.return_value = config_model
+  mock_instance.get_config_model.return_value = config_model
   mock_instance.get_data_hierarchy.return_value = {
     "x0": {},
     "x1": {},
@@ -114,7 +114,7 @@ class TestDataverseUploadConfigDialog:
     qtbot.mouseClick(upload_config_dialog.buttonBox.button(upload_config_dialog.buttonBox.Save), Qt.LeftButton)
     assert not upload_config_dialog.instance.isVisible(), "UploadConfigDialog instance should be closed!"
     assert upload_config_dialog.config_model.parallel_uploads_count == expected_num_parallel, f"UploadConfigDialog model should be updated with {expected_num_parallel}!"
-    mock_database_api.update_model_document.assert_called_once_with(upload_config_dialog.config_model)
+    mock_database_api.save_config_model.assert_called_once_with(upload_config_dialog.config_model)
 
   @pytest.mark.parametrize("test_id, num_parallel, expected_num_parallel", [
     ("success_case_with_in_range_num_parallel_1", "3", 3),
@@ -188,7 +188,7 @@ class TestDataverseUploadConfigDialog:
     qtbot.mouseClick(upload_config_dialog.buttonBox.button(upload_config_dialog.buttonBox.Save), Qt.LeftButton)
     assert not upload_config_dialog.instance.isVisible(), "UploadConfigDialog instance should be closed!"
     assert upload_config_dialog.config_model.project_upload_items == set_items, f"UploadConfigDialog model project_upload_items should be updated with {set_items}!"
-    mock_database_api.update_model_document.assert_called_once_with(upload_config_dialog.config_model)
+    mock_database_api.save_config_model.assert_called_once_with(upload_config_dialog.config_model)
 
   def test_set_upload_items_and_save_cancel_should_not_set_right_values(self, qtbot, upload_config_dialog,
                                                                         mock_database_api):

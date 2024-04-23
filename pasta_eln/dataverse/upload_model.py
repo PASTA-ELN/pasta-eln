@@ -92,7 +92,7 @@ class UploadModel(BaseModel):
     else:
       raise IncorrectParameterError(f"Expected string type for finished_date_time but got {type(finished_date_time)}")
     if isinstance(log, str):
-      self._log: str = log
+      self._log: str = f"{log}\n" if log and not log.endswith('\n') else log
     else:
       raise IncorrectParameterError(f"Expected string type for log but got {type(log)}")
     if isinstance(dataverse_url, str | None):
@@ -315,10 +315,10 @@ class UploadModel(BaseModel):
         IncorrectParameterError: If the value is not of type str.
 
     """
-    if isinstance(value, str):
-      self._log += f"{value}\n"
-    else:
+    if not isinstance(value, str):
       raise IncorrectParameterError(f"Expected string type for log but got {type(value)}")
+    if value != "":
+      self._log += value if value.endswith('\n') else f"{value}\n"
 
   @log.deleter
   def log(self) -> None:

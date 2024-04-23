@@ -14,13 +14,16 @@ from asyncio import get_event_loop
 from typing import Any
 
 from PySide6 import QtCore, QtWidgets
+from PySide6.QtCore import QRegularExpression
+from PySide6.QtGui import QRegularExpressionValidator
 from PySide6.QtWidgets import QDialog, QMessageBox
 
 from pasta_eln.GUI.dataverse.config_dialog_base import Ui_ConfigDialogBase
 from pasta_eln.dataverse.client import DataverseClient
+from pasta_eln.dataverse.config_error import ConfigError
 from pasta_eln.dataverse.config_model import ConfigModel
 from pasta_eln.dataverse.database_api import DatabaseAPI
-from pasta_eln.dataverse.utils import check_login_credentials, decrypt_data, encrypt_data, get_encrypt_key
+from pasta_eln.dataverse.utils import check_login_credentials, log_and_create_error
 
 
 class ConfigDialog(Ui_ConfigDialogBase):
@@ -83,15 +86,15 @@ class ConfigDialog(Ui_ConfigDialogBase):
         It sets up the logger and creates an instance of QDialog.
 
     """
-    self.encrypt_key: bytes | None = None
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
     self.instance: QDialog = QDialog()
     super().setupUi(self.instance)
     self.db_api = DatabaseAPI()
-    self.config_model: ConfigModel = self.db_api.get_model(self.db_api.config_doc_id,
-                                                           ConfigModel)  # type: ignore[assignment]
+    self.config_model = self.db_api.get_config_model() or ConfigModel()
+    if self.config_model.id is None:
+      raise log_and_create_error(self.logger, ConfigError, "Config not found, Corrupt installation!")
     self.config_model.dataverse_login_info = self.config_model.dataverse_login_info or {}
-    self.decrypt_api_token()
+    self.dataverseServerLineEdit.setValidator(QRegularExpressionValidator(QRegularExpression("\\S*")))
 
     # Initialize UI elements
     self.dataverseServerLineEdit.setText(self.config_model.dataverse_login_info.get("server_url", ""))
@@ -113,31 +116,6 @@ class ConfigDialog(Ui_ConfigDialogBase):
     # Load dataverse list
     if self.dataverseServerLineEdit.text() and self.apiTokenLineEdit.text():
       self.dataverseLoadPushButton.click()
-
-  def decrypt_api_token(self) -> None:
-    """
-    Decrypts the API token using the encryption key.
-
-    Explanation:
-        This method decrypts the API token using the encryption key.
-        If the encryption key is not found, it removes the API token and dataverse ID from the configuration.
-
-    Args:
-        self: The instance of the class.
-    """
-    key_exists, self.encrypt_key = get_encrypt_key(self.logger)
-    if key_exists:
-      self.config_model.dataverse_login_info["api_token"] = decrypt_data(self.logger,  # type: ignore[index]
-                                                                         self.encrypt_key,
-                                                                         self.config_model.dataverse_login_info[
-                                                                           # type: ignore[index]
-                                                                           "api_token"])
-    else:
-      self.logger.warning(
-        "No encryption key found. Hence if any API key exists, it will be removed and the user needs to re-enter it.")
-      self.config_model.dataverse_login_info["api_token"] = None  # type: ignore[index]
-      self.config_model.dataverse_login_info["dataverse_id"] = None  # type: ignore[index]
-      self.save_config()
 
   def update_dataverse_server(self, new_value: str) -> None:
     """
@@ -193,13 +171,7 @@ class ConfigDialog(Ui_ConfigDialogBase):
         This method saves the configuration by encrypting the API token.
     """
     self.logger.info("Saving config..")
-    self.config_model.dataverse_login_info["api_token"] = encrypt_data(  # type:ignore[index]
-      self.logger,
-      self.encrypt_key,
-      self.config_model.dataverse_login_info[
-        # type: ignore[index]
-        "api_token"])
-    self.db_api.update_model_document(self.config_model)
+    self.db_api.save_config_model(self.config_model)
 
   def verify_server_url_and_api_token(self) -> None:
     """

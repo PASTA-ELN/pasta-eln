@@ -16,9 +16,11 @@ from json import dump, load
 from logging import Logger
 from os.path import exists, join
 from pathlib import Path
-from typing import Any, Type
+from typing import Any, Callable, Type
 
-from PySide6.QtWidgets import QBoxLayout, QLabel
+from PySide6.QtCore import QSize
+from PySide6.QtGui import QImage, QPixmap
+from PySide6.QtWidgets import QBoxLayout
 from cryptography.fernet import Fernet, InvalidToken
 from qtawesome import icon
 
@@ -27,33 +29,38 @@ from pasta_eln.dataverse.config_error import ConfigError
 from pasta_eln.dataverse.upload_status_values import UploadStatusValues
 
 
-def update_status(status: str, statusIconLabel: QLabel, statusLabel: QLabel) -> None:
+def update_status(status: str,
+                  status_label_set_text_callback: Callable[[str], None],
+                  status_icon_set_pixmap_callback: Callable[[QPixmap | QImage | str], None]) -> None:
   """
-  Updates the status and status icon of the upload.
-
-  Explanation:
-      This function updates the status and status icon of the upload based on the given status.
-      It sets the text of the statusLabel and the pixmap of the statusIconLabel based on the status value.
+  Updates the status with the corresponding label and icon.
 
   Args:
-      status (str): The status of the upload.
-      statusIconLabel (QLabel): The label to display the status icon.
-      statusLabel (QLabel): The label to display the status text.
+      status (str): The status value.
+      status_label_set_text_callback (Callable[[str], None]): The callback function to set the status label text.
+      status_icon_set_pixmap_callback (Callable[[QPixmap | QImage | str], None]): The callback function to set the status icon pixmap.
+
+  Explanation:
+      This function updates the status with the corresponding label and icon based on the given status value.
+      It uses the provided callback functions to set the status label text and status icon pixmap.
   """
-  statusLabel.setText(status)
   match status:
     case UploadStatusValues.Queued.name:
-      statusIconLabel.setPixmap(icon('ph.queue-bold').pixmap(statusIconLabel.size()))
+      icon_name = 'fa.circle-o-notch'
     case UploadStatusValues.Uploading.name:
-      statusIconLabel.setPixmap(icon('mdi6.progress-upload').pixmap(statusIconLabel.size()))
+      icon_name = 'fa.cloud-upload'
     case UploadStatusValues.Cancelled.name:
-      statusIconLabel.setPixmap(icon('mdi.cancel').pixmap(statusIconLabel.size()))
+      icon_name = 'fa.minus-circle'
     case UploadStatusValues.Finished.name:
-      statusIconLabel.setPixmap(icon('fa.check-circle-o').pixmap(statusIconLabel.size()))
+      icon_name = 'fa.check-circle-o'
     case UploadStatusValues.Error.name:
-      statusIconLabel.setPixmap(icon('msc.error-small').pixmap(statusIconLabel.size()))
+      icon_name = 'fa.times-circle-o'
     case UploadStatusValues.Warning.name:
-      statusIconLabel.setPixmap(icon('fa.warning').pixmap(statusIconLabel.size()))
+      icon_name = 'fa.warning'
+    case _:
+      icon_name = 'fa.times-circle-o'
+  status_label_set_text_callback(status)
+  status_icon_set_pixmap_callback(icon(icon_name).pixmap(QSize(30, 30)))
 
 
 def set_authors(logger: Logger, metadata: dict[str, Any]) -> None:
@@ -88,6 +95,34 @@ def set_authors(logger: Logger, metadata: dict[str, Any]) -> None:
     author_copy['authorIdentifier']['value'] = author['orcid']
     author_copy['authorAffiliation']['value'] = ', '.join([o['organization'] for o in author['organizations']])
     authors_list.append(author_copy)
+
+
+def get_flattened_metadata(metadata: dict[str, Any]) -> dict[str, Any]:
+  """
+  Returns a flattened version of the metadata.
+
+  Args:
+      metadata (dict[str, Any]): The metadata to be flattened.
+
+  Returns:
+      dict[str, Any]: The flattened metadata.
+
+  Explanation:
+      This function takes a nested metadata dictionary and returns a flattened version of the metadata.
+      It extracts the values from the nested structure and creates a new dictionary with a flattened structure.
+      The resulting dictionary contains the field names as keys and their corresponding values.
+
+  Exceptions:
+      KeyError: If a field name is not found in the metadata dictionary.
+  """
+  adjusted_metadata = {}
+  if metadata['datasetVersion']['license']:
+    adjusted_metadata['license'] = metadata['datasetVersion']['license']
+  for _, metablock in metadata['datasetVersion']['metadataBlocks'].items():
+    for field in metablock['fields']:
+      if field['value']:
+        adjusted_metadata[field['typeName']] = field['value']
+  return adjusted_metadata
 
 
 def set_template_values(logger: Logger, metadata: dict[str, Any]) -> None:
@@ -152,6 +187,13 @@ def check_if_minimal_metadata_exists(logger: Logger,
 
   Returns:
       dict[str, list[str]] | None: The missing information dictionary or None if metadata is empty.
+      missing_information = {
+                              'title': [],
+                              'author': [],
+                              'datasetContact': [],
+                              'dsDescription': [],
+                              'subject': []
+                            }
 
   """
   if not metadata:
@@ -269,7 +311,7 @@ def check_if_field_value_not_null(field: dict[str, Any],
 
   """
   if check and not field.get('value'):
-    missing_message = f"{missing_field_name.capitalize()} field is missing!"
+    missing_message = f"Add at-least a single entry for {missing_field_name.capitalize()}!"
     if missing_message not in missing_information[missing_field_name]:
       missing_information[missing_field_name].append(missing_message)
 
@@ -470,6 +512,35 @@ def check_login_credentials(logger: Logger, api_token: str, server_url: str) -> 
   return result
 
 
+def check_if_dataverse_exists(logger: Logger, api_token: str, server_url: str, dataverse_id: str) -> bool:
+  """
+  Checks if a dataverse exists by querying its size.
+
+  Explanation:
+      This function queries the dataverse size using the provided server URL, API token, and dataverse ID.
+      It returns True if the dataverse size message ends with 'bytes', indicating the dataverse exists.
+
+  Args:
+      logger (Logger): The logger instance for logging information.
+      api_token (str): The API token for authentication.
+      server_url (str): The URL of the server hosting the dataverse.
+      dataverse_id (str): The ID of the dataverse to check.
+
+  Returns:
+      bool: True if the dataverse exists, False otherwise.
+  """
+  logger.info("Checking if login info is valid, server_url: %s", server_url)
+  dataverse_client = DataverseClient(server_url, api_token)
+  event_loop = get_event_loop()
+  message = event_loop.run_until_complete(dataverse_client.get_dataverse_size(dataverse_id))
+  result = False
+  if isinstance(message, str):
+    result = bool(message.endswith("bytes"))
+  else:
+    logger.warning("Data verse with id %s does not exist, Server message: %s", dataverse_id, message)
+  return result
+
+
 def adjust_type_name(camel_case_string: str) -> str:
   """
   Adjusts the type name from camel case to title case.
@@ -546,3 +617,39 @@ def delete_layout_and_contents(layout: QBoxLayout) -> None:
     if item := layout.itemAt(widget_pos):
       item.widget().setParent(None)  # type: ignore[call-overload]
   layout.setParent(None)  # type: ignore[arg-type]
+
+
+def get_formatted_message(missing_metadata: dict[str, list[str]]) -> str:
+  """
+  Returns a formatted message with missing metadata information.
+
+  Args:
+      missing_metadata (dict[str, list[str]]): A dictionary containing missing metadata information.
+
+  Returns:
+      str: A formatted message with the missing metadata information.
+
+  Explanation:
+      This function takes a dictionary of missing metadata information and returns a formatted message
+      with the missing information. The message is formatted as an HTML string and includes a list of missing
+      metadata items grouped by their corresponding metadata names.
+  """
+  if not any(missing_metadata.values()):
+    return ""
+  name_mapping = {
+    'author': 'Author',
+    'datasetContact': "Dataset Contact",
+    'dsDescription': "Dataset Description",
+    'subject': "Subject"
+  }
+  message = (
+    "<html><p><i>Goto 'Edit Metadata' dialog, enter the below given missing information and retry the upload!</i></p>"
+  )
+  for metadata_name, missing_list in missing_metadata.items():
+    if missing_list:
+      message += f"<br></br><b><i>{name_mapping[metadata_name]}:</i></b><ul>"
+      for missing in missing_list:
+        message += f"<i style=\"color:Crimson\"><li>{missing}</li></i>"
+      message += "</ul>"
+  message += "</html>"
+  return message
