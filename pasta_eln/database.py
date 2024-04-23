@@ -53,15 +53,6 @@ class Database:
       self.db.create_document(self.dataHierarchy)
       if '-ontology-' in self.db:
         self.db['-ontology-'].delete()
-    # temporary changes for version 2.5: remove afterwards: code does not harm but would be legacy then
-    testDocIDs = [doc['_id'] for doc in self.db if doc['_id'].startswith('x-')]
-    if testDocIDs and '-gui' not in self.db[testDocIDs[0]]:
-      for doc in self.db:
-        if doc['_id'].startswith('_') or doc['_id'].endswith('-'):
-          continue
-        if '-gui' not in doc:
-          doc['-gui'] = [True, True]
-          doc.save()
     if '-version' not in self.dataHierarchy or self.dataHierarchy['-version']!=4:
       print(F"**ERROR wrong dataHierarchy version: {self.dataHierarchy['-version']}")
       raise ValueError(f"Wrong dataHierarchy version {self.dataHierarchy['-version']}")

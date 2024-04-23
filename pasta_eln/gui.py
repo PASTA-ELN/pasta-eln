@@ -190,7 +190,6 @@ class MainWindow(QMainWindow):
       showMessage(self, 'Report of database verification', report, style='QLabel {min-width: 800px}')
     elif command[0] is Command.SHORTCUTS:
       showMessage(self, 'Keyboard shortcuts', shortcuts)
-
     elif command[0] is Command.RESTART:
       restart()
     else:
