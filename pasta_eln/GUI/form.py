@@ -173,8 +173,8 @@ class Form(QDialog):
               getattr(self, f'key_{key}').addItem('- no link -', userData='')
               for line in self.db.getView(f'viewDocType/{listDocType}'):
                 getattr(self, f'key_{key}').addItem(line['value'][0], userData=line['id'])
-                if line['value'][0] == value:
-                  getattr(self, f'key_{key}').setCurrentText(line['value'][0])
+                if line['id'] == value:
+                  getattr(self, f'key_{key}').setCurrentIndex(getattr(self, f'key_{key}').count()-1)
           else:                                   #text area
             setattr(self, f'key_{key}', QLineEdit(value))
           formL.addRow(QLabel(key.capitalize()), getattr(self, f'key_{key}'))
@@ -412,15 +412,12 @@ class Form(QDialog):
         elif isinstance(valueOld, str):
           if isinstance(getattr(self, f'key_{key}'), QComboBox):
             valueNew = getattr(self, f'key_{key}').currentText()
-            if (valueNew != '- no link -'
-                and getattr(self, f'key_{key}').currentData() is not None
-                and re.search(
-                    r"^[a-z\-]-[a-z0-9]{32}$",
-                    getattr(self, f'key_{key}').currentData(),
-                ) is not None):
+            dataNew  = getattr(self,f'key_{key}').currentData()
+            if ((dataNew is not None and re.search(r"^[a-z\-]-[a-z0-9]{32}$",dataNew) is not None)
+                or dataNew==''):
               #if docID is stored in currentData
-              self.doc[key] = getattr(self, f'key_{key}').currentData()
-            elif valueNew!='- no link -' :
+              self.doc[key] = dataNew
+            elif valueNew!='- no link -' or dataNew is None:
               self.doc[key] = valueNew
           else:                          #normal text field
             self.doc[key] = getattr(self, f'key_{key}').text().strip()

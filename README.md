@@ -149,7 +149,23 @@ Begin...
 
 End...
 
-      (Stats(profile).strip_dirs().sort_stats(SortKey.CUMULATIVE).print_stats()) #end cProfile
+      (Stats(profile).strip_dirs().sort_stats(SortKey.CUMULATIVE).print_stats(100)) #end cProfile
+
+For example: to profile the start of the program
+
+      def startMain() -> None:
+        """
+        Main function to start GUI. Extra function is required to allow starting in module fashion
+        """
+        from cProfile import Profile
+        from pstats import SortKey, Stats
+        with Profile() as profile:
+          app, window = mainGUI()
+          window.show()
+        (Stats(profile).strip_dirs().sort_stats(SortKey.CUMULATIVE).print_stats(100)) #end cProfile
+        # if app:
+        #   app.exec()
+
 
 ### Debugging on a conventional install: linux
 - 'sudo apt install python3-pudb' (not pip install)

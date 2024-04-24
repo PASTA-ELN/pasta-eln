@@ -173,13 +173,13 @@ class Details(QScrollArea):
           text.setReadOnly(True)
           labelL.addWidget(text, stretch=1) # type: ignore[call-arg]
         else:
-          if len(dataHierarchyItem)==1 and 'list' in dataHierarchyItem[0]:
-            if not isinstance(dataHierarchyItem[0]['list'], list):                #choice among docType
-              table  = self.comm.backend.db.getView('viewDocType/'+dataHierarchyItem[0]['list'])
-              choices= [i for i in table if i['id']==self.doc[key]]
-              if len(choices)==1:
-                value = '\u260D '+choices[0]['value'][0]
-                link = True
+          if len(dataHierarchyItem)==1 and 'list' in dataHierarchyItem[0] and \
+              not isinstance(dataHierarchyItem[0]['list'], list):                #choice among docType
+            table  = self.comm.backend.db.getView('viewDocType/'+dataHierarchyItem[0]['list'])
+            choices= [i for i in table if i['id']==self.doc[key]]
+            if len(choices)==1:
+              value = '\u260D '+choices[0]['value'][0]
+              link = True
           elif isinstance(self.doc[key], list):
             value = ', '.join(self.doc[key])
           else:

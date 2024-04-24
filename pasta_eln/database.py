@@ -52,15 +52,6 @@ class Database:
       self.db.create_document(self.dataHierarchy)
       if '-ontology-' in self.db:
         self.db['-ontology-'].delete()
-    # temporary changes for version 2.5: remove afterwards: code does not harm but would be legacy then
-    testDocIDs = [doc['_id'] for doc in self.db if doc['_id'].startswith('x-')]
-    if testDocIDs and '-gui' not in self.db[testDocIDs[0]]:
-      for doc in self.db:
-        if doc['_id'].startswith('_') or doc['_id'].endswith('-'):
-          continue
-        if '-gui' not in doc:
-          doc['-gui'] = [True, True]
-          doc.save()
     if '-version' not in self.dataHierarchy or self.dataHierarchy['-version']!=4:
       print(F"**ERROR wrong dataHierarchy version: {self.dataHierarchy['-version']}")
       raise ValueError(f"Wrong dataHierarchy version {self.dataHierarchy['-version']}")
@@ -283,6 +274,10 @@ class Database:
     - create a docID for oldDoc
     - Bonus: save '_rev' from newDoc to oldDoc in order to track that updates cannot happen by accident
 
+    Key:Value
+    - if value is None: do not change it;
+    - if key does not exist: change it to empty, aka remove it
+
     Args:
         change (dict): item to update
         docID (string):  id of document to change
@@ -339,7 +334,9 @@ class Database:
           else:
             logging.warning('database.update.1: unknown branch op: '+newDoc['_id']+' '+newDoc['-name'])
             return newDoc
-      #handle other items
+      #handle other items: remove those that disappeared, aka were set as ''
+      for key in [i for i in set(newDoc.keys()).difference(change) if not i.startswith('_')]:
+        del newDoc[key]
       # change has to be dict, not Document
       for item in change:
         if item in ['_id','_rev','-branch']:                #skip items cannot do not result in change
