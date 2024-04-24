@@ -448,13 +448,13 @@ def restoreCouchDB(location:str='', userName:str='', password:str='', fileName:s
   # use information
   authUser = requests.auth.HTTPBasicAuth(userName, password)
   with ZipFile(fileName, 'r', compression=ZIP_DEFLATED) as zipFile:
-    files = zipFile.namelist()
+    files = [i for i in zipFile.namelist() if not i.endswith('/')]  #only files, no folders
     #first run through: create documents and design documents
     for fileI in files:
       fileParts = fileI.split('/')[1:]
       if fileParts==['pastaELN.json']: #do not recreate file, it is only there for manual recovery
         continue
-      if len(fileParts)!=2 or fileParts[-1]=='':
+      if len(fileParts)!=2:
         print(f"**ERROR: Cannot process file {fileI}: does not have 1+2 parts")
         continue
       database = fileParts[0]
@@ -486,9 +486,9 @@ def restoreCouchDB(location:str='', userName:str='', password:str='', fileName:s
     #second run through: create attachments
     for fileI in files:
       fileParts = fileI.split('/')[1:]
-      if fileParts==['pastaELN.json']: #do not recreate file, it is only there for manual recovery
+      if fileParts==['pastaELN.json'] or fileParts[-1]=='' or fileParts[-2]=='_design': #do not recreate file, it is only there for manual recovery
         continue
-      if len(fileParts)!=2 or fileParts[-1]=='':
+      if len(fileParts)!=2:
         print(f"**ERROR-Attachment: Cannot process file {fileI}: does not have 1+2 parts")
         continue
       database = fileParts[0]
