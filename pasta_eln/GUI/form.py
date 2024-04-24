@@ -202,7 +202,11 @@ class Form(QDialog):
             if '-branch' not in self.doc or all( not(len(branch['stack'])>0 and line['id']==branch['stack'][0])
                                                 for branch in self.doc['-branch']):
               self.projectComboBox.addItem(line['value'][0], userData=line['id'])
+              if self.doc.get('_projectID','') == line['id']:
+                self.projectComboBox.setCurrentIndex(self.projectComboBox.count()-1)
           formL.addRow(QLabel('Project'), self.projectComboBox)
+          if '_projectID' in self.doc:
+            del self.doc['_projectID']
         if allowProjectAndDocTypeChange: #if not-new and non-folder
           self.docTypeComboBox = QComboBox()
           self.docTypeComboBox.addItem(label, userData='')
@@ -211,6 +215,8 @@ class Form(QDialog):
               self.docTypeComboBox.addItem(value, userData=key)
           self.docTypeComboBox.addItem('_UNIDENTIFIED_', userData='-')
           formL.addRow(QLabel('Data type'), self.docTypeComboBox)
+    if [i for i in self.doc.keys() if i.startswith('_')]:
+      logging.error('There should not be "_" in a doc: '+str(self.doc))
     # final button box
     _, buttonLineL = widgetAndLayout('H', mainL, 'm')
     if '-branch' in self.doc:
@@ -226,7 +232,7 @@ class Form(QDialog):
     TextButton('Cancel',           self, [Command.FORM_CANCEL],   buttonLineL, 'Discard changes')
     if self.flagNewDoc: #new dataset
       TextButton('Save && Next', self, [Command.FORM_SAVE_NEXT], buttonLineL, 'Save this and handle next')
-    # autosave
+    # end of creating form autosave
     if (Path.home()/'.pastaELN.temp').is_file():
       with open(Path.home()/'.pastaELN.temp', 'r', encoding='utf-8') as fTemp:
         content = json.loads(fTemp.read())
