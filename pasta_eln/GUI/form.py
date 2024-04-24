@@ -216,7 +216,7 @@ class Form(QDialog):
           self.docTypeComboBox.addItem('_UNIDENTIFIED_', userData='-')
           formL.addRow(QLabel('Data type'), self.docTypeComboBox)
     if [i for i in self.doc.keys() if i.startswith('_')]:
-      logging.error('There should not be "_" in a doc',self.doc)
+      logging.error('There should not be "_" in a doc: '+str(self.doc))
     # final button box
     _, buttonLineL = widgetAndLayout('H', mainL, 'm')
     if '-branch' in self.doc:
