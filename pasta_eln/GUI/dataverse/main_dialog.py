@@ -75,6 +75,7 @@ class MainDialog(Ui_MainDialogBase):
     self.instance = DialogExtension()
     super().setupUi(self.instance)
     self.db_api = DatabaseAPI()
+    self.db_api.initialize_database()
     self.is_dataverse_configured: tuple[bool, str] = self.check_if_dataverse_is_configured()
     self.config_dialog: ConfigDialog | None = None
 
@@ -112,7 +113,9 @@ class MainDialog(Ui_MainDialogBase):
     Args:
         self: The instance of the class.
     """
-    for project in self.db_api.get_models(ProjectModel):
+    models = self.db_api.get_models(ProjectModel)
+    models = models * 30
+    for project in models:
       if isinstance(project, ProjectModel):
         widget = self.get_project_widget(project)
         self.projectsScrollAreaVerticalLayout.addWidget(widget)
