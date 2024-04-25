@@ -1,4 +1,5 @@
 """ Represents the main dialog for dataverse integration. """
+import asyncio
 #  PASTA-ELN and all its sub-parts are covered by the MIT license.
 #
 #  Copyright (c) 2023
@@ -10,10 +11,13 @@
 import datetime
 import logging
 import textwrap
+import threading
 import time
 from typing import Any
 
-from PySide6 import QtWidgets
+from PySide6 import QtCore, QtWidgets
+from PySide6.QtCore import QObject, QTimer
+from PySide6.QtGui import Qt
 from PySide6.QtWidgets import QDialog, QFrame, QLabel, QMessageBox, QWidget
 
 from pasta_eln.GUI.dataverse.completed_uploads import CompletedUploads
@@ -36,7 +40,7 @@ from pasta_eln.dataverse.utils import check_if_dataverse_exists, check_if_minima
   check_login_credentials, get_formatted_message, update_status
 
 
-class MainDialog(Ui_MainDialogBase):
+class MainDialog(Ui_MainDialogBase, QObject):
   """
   Represents the main dialog.
 
@@ -45,6 +49,7 @@ class MainDialog(Ui_MainDialogBase):
       It provides methods to handle UI events and manage the upload process.
 
   """
+  upload_finished = QtCore.Signal()
 
   def __new__(cls, *_: Any, **__: Any) -> Any:
     """
@@ -71,10 +76,15 @@ class MainDialog(Ui_MainDialogBase):
         It also initializes the database and populates the project widgets.
 
     """
+    super().__init__()
+    self.task_thread_extensions = []
+    self.processing_thread: threading.Thread = None
+    self.upload_widgets: list[QWidget] = []
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
     self.instance = DialogExtension()
     super().setupUi(self.instance)
     self.db_api = DatabaseAPI()
+    self.db_api.initialize_database()
     self.is_dataverse_configured: tuple[bool, str] = self.check_if_dataverse_is_configured()
     self.config_dialog: ConfigDialog | None = None
 
@@ -86,7 +96,7 @@ class MainDialog(Ui_MainDialogBase):
       self.upload_manager_task_thread = TaskThreadExtension(self.upload_manager_task)
 
       # Connect signals and slots
-      self.uploadPushButton.clicked.connect(self.start_upload)
+      self.uploadPushButton.clicked.connect(self.start_upload_clicked)
       self.clearFinishedPushButton.clicked.connect(self.clear_finished)
       self.selectAllPushButton.clicked.connect(lambda: self.select_deselect_all_projects(True))
       self.deselectAllPushButton.clicked.connect(lambda: self.select_deselect_all_projects(False))
@@ -97,6 +107,7 @@ class MainDialog(Ui_MainDialogBase):
       self.cancelAllPushButton.clicked.connect(self.upload_manager_task.cancel_all_tasks.emit)
       self.buttonBox.button(QtWidgets.QDialogButtonBox.Cancel).clicked.connect(self.close_ui)
       self.instance.closed.connect(self.close_ui)
+      self.upload_finished.connect(self.start_upload_final)
 
       # Load UI
       self.load_ui()
@@ -112,7 +123,9 @@ class MainDialog(Ui_MainDialogBase):
     Args:
         self: The instance of the class.
     """
-    for project in self.db_api.get_models(ProjectModel):
+    test = self.db_api.get_models(ProjectModel)
+    test = test * 100
+    for project in test:
       if isinstance(project, ProjectModel):
         widget = self.get_project_widget(project)
         self.projectsScrollAreaVerticalLayout.addWidget(widget)
@@ -173,6 +186,7 @@ class MainDialog(Ui_MainDialogBase):
       datetime.datetime.fromisoformat(project.date or "").strftime("%Y-%m-%d %H:%M:%S"))
     return project_widget_frame
 
+
   def start_upload(self) -> None:
     """
     Starts the upload process.
@@ -203,6 +217,74 @@ class MainDialog(Ui_MainDialogBase):
         if isinstance(task_thread.task, DataUploadTask):
           task_thread.task.upload_model_created.connect(widget.modelIdLabel.setText)
     self.upload_manager_task_thread.task.start.emit()
+
+
+  def get_upload_widgets(self) -> None:
+    """
+    Starts the upload process.
+
+    Explanation:
+        This method starts the upload process for the selected projects.
+        It retrieves the selected projects, creates upload widgets, and adds them to the upload queue.
+        It also starts the upload manager task to process the upload queue.
+
+    """
+    if not self.check_if_minimal_metadata_present():
+      self.logger.warning("Minimum metadata not present. Please add all needed metadata and then retry!")
+      return
+    for widget_pos in range(self.projectsScrollAreaVerticalLayout.count()):
+      project_widget = self.projectsScrollAreaVerticalLayout.itemAt(widget_pos).widget()
+      if project_widget.findChild(QtWidgets.QCheckBox, name="projectCheckBox").isChecked():
+        upload_widget = self.get_upload_widget(
+          project_widget.findChild(QtWidgets.QLabel, name="projectNameLabel").toolTip())
+        self.upload_widgets.append(upload_widget["base"])
+        widget = upload_widget["widget"]
+        task_thread = TaskThreadExtension(
+          DataUploadTask(widget.uploadProjectLabel.text(),
+                         widget.uploadProgressBar.setValue,
+                         widget.statusLabel.setText,
+                         widget.statusIconLabel.setPixmap,
+                         widget.uploadCancelPushButton.clicked))
+        self.upload_manager_task.add_to_queue(task_thread)
+        if isinstance(task_thread.task, DataUploadTask):
+          task_thread.task.upload_model_created.connect(widget.modelIdLabel.setText)
+    self.upload_finished.emit()
+  def populate_upload_widgets(self, indices: list[int]):
+    for widget_pos in indices:
+      project_widget = self.projectsScrollAreaVerticalLayout.itemAt(widget_pos).widget()
+      if project_widget.findChild(QtWidgets.QCheckBox, name="projectCheckBox").isChecked():
+        upload_widget = self.get_upload_widget(
+          project_widget.findChild(QtWidgets.QLabel, name="projectNameLabel").toolTip())
+        self.uploadQueueVerticalLayout.addWidget(upload_widget["base"])
+        widget = upload_widget["widget"]
+        task_thread = TaskThreadExtension(
+          DataUploadTask(widget.uploadProjectLabel.text(),
+                         widget.uploadProgressBar.setValue,
+                         widget.statusLabel.setText,
+                         widget.statusIconLabel.setPixmap,
+                         widget.uploadCancelPushButton.clicked))
+        self.upload_manager_task.add_to_queue(task_thread)
+        if isinstance(task_thread.task, DataUploadTask):
+          task_thread.task.upload_model_created.connect(widget.modelIdLabel.setText)
+  def start_upload1(self) -> None:
+    """
+    Starts the upload process.
+
+    Explanation:
+        This method starts the upload process for the selected projects.
+        It retrieves the selected projects, creates upload widgets, and adds them to the upload queue.
+        It also starts the upload manager task to process the upload queue.
+
+    """
+    if not self.check_if_minimal_metadata_present():
+      self.logger.warning("Minimum metadata not present. Please add all needed metadata and then retry!")
+      return
+    positions = list(range(self.projectsScrollAreaVerticalLayout.count()))
+    timer = QTimer(self)
+    timer.setSingleShot(False)
+    timer.setInterval(300)  # in milliseconds, so 5000 = 5 seconds
+    timer.timeout.connect(lambda indices: self.populate_upload_widgets(indices))
+    timer.start()
 
   def clear_finished(self) -> None:
     """
@@ -425,6 +507,88 @@ class MainDialog(Ui_MainDialogBase):
     width = qt_msgbox_label.fontMetrics().boundingRect(qt_msgbox_label.text()).width()
     qt_msgbox_label.setFixedWidth(width)
     msg_box.exec()
+
+  def test_1(self) -> list[QWidget] | None:
+    """
+    Starts the upload process.
+
+    Explanation:
+        This method starts the upload process for the selected projects.
+        It retrieves the selected projects, creates upload widgets, and adds them to the upload queue.
+        It also starts the upload manager task to process the upload queue.
+
+    """
+    widgets = []
+    if not self.check_if_minimal_metadata_present():
+      self.logger.warning("Minimum metadata not present. Please add all needed metadata and then retry!")
+      return None
+    for widget_pos in range(self.projectsScrollAreaVerticalLayout.count()):
+      project_widget = self.projectsScrollAreaVerticalLayout.itemAt(widget_pos).widget()
+      if project_widget.findChild(QtWidgets.QCheckBox, name="projectCheckBox").isChecked():
+        upload_widget = self.get_upload_widget(
+          project_widget.findChild(QtWidgets.QLabel, name="projectNameLabel").toolTip())
+        self.uploadQueueVerticalLayout.addWidget(upload_widget["base"])
+        widgets.append(upload_widget["widget"])
+    return widgets
+
+  def test_2(self, widgets: list[Ui_UploadWidgetFrame], task_thread_extensions: list[dict]) -> None:
+    """
+    Starts the upload process.
+
+    Explanation:
+        This method starts the upload process for the selected projects.
+        It retrieves the selected projects, creates upload widgets, and adds them to the upload queue.
+        It also starts the upload manager task to process the upload queue.
+
+    """
+    test = threading.current_thread().name
+    # for widget in widgets:
+    #   task_thread = TaskThreadExtension(
+    #     DataUploadTask(widget.uploadProjectLabel.text(),
+    #                    widget.uploadProgressBar.setValue,
+    #                    widget.statusLabel.setText,
+    #                    widget.statusIconLabel.setPixmap,
+    #                    widget.uploadCancelPushButton.clicked))
+    #   self.upload_manager_task.add_to_queue(task_thread)
+    #   if isinstance(task_thread.task, DataUploadTask):
+    #     task_thread.task.upload_model_created.connect(widget.modelIdLabel.setText)
+    for widget in widgets:
+      task_thread = TaskThreadExtension(
+        DataUploadTask(widget.uploadProjectLabel.text(),
+                       widget.uploadProgressBar.setValue,
+                       widget.statusLabel.setText,
+                       widget.statusIconLabel.setPixmap,
+                       widget.uploadCancelPushButton.clicked))
+      self.task_thread_extensions.append({"task_thread": task_thread, "set_text": widget.modelIdLabel.setText, "cancel_signal": widget.uploadCancelPushButton.clicked})
+    self.upload_finished.emit()
+
+  def start_upload_clicked(self):
+    # timer = QTimer(self)
+    # timer.setSingleShot(True)
+    # timer.setInterval(1000)  # in milliseconds, so 5000 = 5 seconds
+    # timer.timeout.connect(self.start_upload1)
+    # timer.start()
+    # t = threading.Thread(target=self.get_upload_widgets)
+    # t.start()
+    widgets = self.test_1()
+    test = threading.current_thread().name
+    self.processing_thread = threading.Thread(target=self.test_2, args=(widgets, self.task_thread_extensions))
+    self.processing_thread.start()
+
+  def start_upload_final(self):
+    # for item in self.upload_manager_task.upload_queue:
+    #   item.moveToThread(self.thread())
+    self.logger.error("Start upload final...")
+    for task_thread_set_text in self.task_thread_extensions:
+      task_thread = task_thread_set_text["task_thread"]
+      set_text = task_thread_set_text["set_text"]
+      cancel_signal = task_thread_set_text["cancel_signal"]
+      self.upload_manager_task.add_to_queue(task_thread)
+      task_thread.task.upload_model_created.connect(set_text)
+      cancel_signal.connect(task_thread.task.cancel.emit, Qt.DirectConnection)
+      cancel_signal.connect(lambda : task_thread.task.cancel_task(), Qt.DirectConnection)
+      task_thread.task.cancel.connect(lambda : task_thread.task.cancel_task(), Qt.DirectConnection)
+    self.upload_manager_task_thread.task.start.emit()
 
 
 if __name__ == "__main__":

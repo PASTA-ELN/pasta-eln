@@ -10,11 +10,13 @@
 
 import asyncio
 import logging
+import threading
 import time
 from datetime import datetime
 from typing import Callable
 
 from PySide6 import QtCore
+from PySide6.QtCore import QObject, Qt
 from PySide6.QtGui import QImage, QPixmap
 
 from pasta_eln.dataverse.client import DataverseClient
@@ -56,6 +58,7 @@ class DataUploadTask(GenericTaskObject):
         upload_cancel_clicked_signal_callback (QtCore.Signal): Signal for upload cancellation.
     """
     super().__init__()
+    self.progress_thread = None
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
     self.project_name = project_name
     self.db_api = DatabaseAPI()
@@ -82,11 +85,17 @@ class DataUploadTask(GenericTaskObject):
     self.progress_changed.connect(progress_update_callback)
     self.status_changed.connect(
       lambda status: update_status(status, status_label_set_text_callback, status_icon_set_pixmap_callback))
-    upload_cancel_clicked_signal_callback.connect(self.cancel.emit)  # type: ignore[attr-defined]
+    test = threading.current_thread().name
+    self.status_changed.connect(lambda: self.test2, Qt.QueuedConnection)
+    test = self.receivers(QtCore.SIGNAL("status_changed(str)"))
+    self.upload_cancel_clicked_signal_callback = upload_cancel_clicked_signal_callback
+    self.status_label_set_text_callback = status_label_set_text_callback
+    self.status_icon_set_pixmap_callback = status_icon_set_pixmap_callback
+    #upload_cancel_clicked_signal_callback.connect(self.cancel.emit)  # type: ignore[attr-defined]
 
     # Create progress thread to update the progress
-    self.progress_thread = ProgressUpdaterThread()
-    self.progress_thread.progress_update = self.progress_changed
+    # self.progress_thread = ProgressUpdaterThread()
+    # self.progress_thread.progress_update = self.progress_changed
 
   def start_task(self) -> None:
     """
@@ -96,6 +105,15 @@ class DataUploadTask(GenericTaskObject):
     Args:
         self: Instance of the data upload task.
     """
+    test = threading.current_thread().name
+    self.cancel.connect(lambda: self.cancel_task())
+    self.status_changed.connect(
+      lambda status: update_status(status, self.status_label_set_text_callback, self.status_icon_set_pixmap_callback))
+    self.upload_cancel_clicked_signal_callback.connect(self.cancel.emit)  # type: ignore[attr-defined]
+    self.upload_cancel_clicked_signal_callback.connect(lambda : self.test2())
+    self.upload_cancel_clicked_signal_callback.connect(self.test2)
+    self.progress_thread = ProgressUpdaterThread()
+    self.progress_thread.progress_update = self.progress_changed
     super().start_task()
 
     # Emitting signals to update initial status
@@ -276,7 +294,8 @@ class DataUploadTask(GenericTaskObject):
       return
     super().cancel_task()
     self.upload_model.log = f"Cancelled at {datetime.now().isoformat()}"
-    self.progress_thread.cancel.emit()
+    if self.progress_thread:
+      self.progress_thread.cancel.emit()
     self.update_changed_status(UploadStatusValues.Cancelled.name)
 
   def update_changed_status(self, status: str = UploadStatusValues.Queued.name) -> None:
@@ -308,3 +327,11 @@ class DataUploadTask(GenericTaskObject):
       )
       self.finalize_upload_task(UploadStatusValues.Cancelled.name)
     return self.cancelled
+
+  def test1(self):
+    test = threading.current_thread().name
+    self.logger.info("Testing data upload task")
+    pass
+  def test2(self):
+    self.logger.error("Testing data upload task")
+    pass
