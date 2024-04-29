@@ -96,7 +96,7 @@ class GenericTaskObject(QObject):
     self.logger.info("Cleaning up task, id: %s", self.id)
     self.cleaned = True
 
-  def finish_task(self):
+  def finish_task(self) -> None:
     """
     Finish up the task.
 
