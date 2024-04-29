@@ -83,7 +83,7 @@ def setup_task(mocker, mock_db_api, mock_dataverse_client, mock_progress_thread,
   task.upload_model_created = mocker.MagicMock()
   task.cancel = mocker.MagicMock()
   task.start = mocker.MagicMock()
-  task.finished = mocker.MagicMock()
+  task.finish = mocker.MagicMock()
   task.id_iterator = mocker.MagicMock()
   return task
 
@@ -334,7 +334,7 @@ class TestDataverseDataUploadTask:
 
     # Assert
     setup_task.progress_thread.finalize.emit.assert_called_once()
-    setup_task.finished.emit.assert_called_once()
+    setup_task.finish.emit.assert_called_once()
     setup_task.status_changed.emit.assert_called_once_with(expected_status)
 
   # Parametrized test cases

@@ -78,6 +78,7 @@ class DataUploadTask(GenericTaskObject):
     # Create progress thread to update the progress
     self.progress_thread = ProgressUpdaterThread()
     self.progress_thread.progress_update = self.progress_changed
+    self.progress_thread.end.connect(self.progress_thread.deleteLater)
 
   def start_task(self) -> None:
     """
@@ -176,16 +177,16 @@ class DataUploadTask(GenericTaskObject):
 
   def finalize_upload_task(self, status: str = UploadStatusValues.Finished.name) -> None:
     """
-    Finalizes the upload task by emitting signals to cancel progress, mark as finished, and update the UI status.
+    Finalizes the upload task by emitting signals to cancel progress, mark as finish, and update the UI status.
 
     Args:
         status (str): The status to be emitted.
     """
     self.progress_thread.finalize.emit()
-    self.finished.emit()
     if self.upload_model:
       self.upload_model.finished_date_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     self.update_changed_status(status)
+    self.finish.emit()
 
   def create_dataset_for_pasta_project(self) -> str | None:
     """
@@ -302,7 +303,7 @@ class DataUploadTask(GenericTaskObject):
         It updates the upload model log and status accordingly, and emits the status_changed signal.
 
     """
-    if self.cancelled:
+    if self.cancelled or self.finished:
       return
     super().cancel_task()
     if self.upload_model:

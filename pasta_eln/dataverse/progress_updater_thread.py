@@ -25,13 +25,14 @@ class ProgressUpdaterThread(QThread):
   progress_update = QtCore.Signal(int)
   cancel = QtCore.Signal()
   finalize = QtCore.Signal()
+  end = QtCore.Signal()
 
   def __init__(self) -> None:
     """
-    Initializes the ProgressUpdaterThread instance with default values and connects the cancel signal.
+    Initialize the progress updater thread.
 
-    Explanation:
-        Sets the 'finished' attribute to False and connects the 'cancel' signal to the 'cancel_progress' method.
+    Args:
+        self: The instance of the progress updater thread.
     """
     super().__init__()
     self.cancelled = False
@@ -62,14 +63,14 @@ class ProgressUpdaterThread(QThread):
       time.sleep(1)
     if not self.cancelled:
       self.progress_update.emit(100)
-    self.exit()
+    self.end.emit()
 
   def cancel_progress(self) -> None:
     """
     Sets the flag to indicate that the progress should be cancelled.
 
     Explanation:
-        This method sets the 'finished' flag to True, indicating that the progress should be terminated.
+        This method sets the 'finish' flag to True, indicating that the progress should be terminated.
     """
     self.cancelled = True
 
@@ -81,3 +82,13 @@ class ProgressUpdaterThread(QThread):
         This function sets the 'finalized' attribute to True, indicating that the progress update is complete.
     """
     self.finalized = True
+
+  def cleanup(self) -> None:
+    """
+    Finalizes the progress update.
+
+    Explanation:
+        This function sets the 'finalized' attribute to True, indicating that the progress update is complete.
+    """
+    self.cancel.disconnect()
+    self.finalize.disconnect()
