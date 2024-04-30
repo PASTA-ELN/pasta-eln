@@ -82,13 +82,3 @@ class ProgressUpdaterThread(QThread):
         This function sets the 'finalized' attribute to True, indicating that the progress update is complete.
     """
     self.finalized = True
-
-  def cleanup(self) -> None:
-    """
-    Finalizes the progress update.
-
-    Explanation:
-        This function sets the 'finalized' attribute to True, indicating that the progress update is complete.
-    """
-    self.cancel.disconnect()
-    self.finalize.disconnect()

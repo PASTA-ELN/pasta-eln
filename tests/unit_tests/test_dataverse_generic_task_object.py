@@ -116,3 +116,27 @@ class TestDataverseGenericTaskObject:
     # Assert
     assert task.cleaned == expected_cleaned
     mock_logger.info.assert_called_once_with('Cleaning up task, id: %s', 'test_id')
+
+  @pytest.mark.parametrize("test_id, initial_finished, expected_finished", [# Success path tests
+    ("success_case_1", False, True),  # Cleaning up task from non-cleaned state
+
+    # Edge case tests
+    ("edge_case_1", True, True),  # Cleaning up task when it's already cleaned
+
+    # Error case tests
+    # No error cases identified for cleanup as it does not raise exceptions or handle erroneous input
+  ])
+  def test_finish_task(self, mocker, test_id, initial_finished, expected_finished):
+    # Arrange
+    mocker.patch('pasta_eln.dataverse.generic_task_object.next', return_value="test_id")
+    mock_logger = mocker.MagicMock(spec=Logger)
+    mocker.patch('pasta_eln.dataverse.task_thread_extension.logging.getLogger', return_value=mock_logger)
+    task = GenericTaskObject()
+    task.finished = initial_finished
+
+    # Act
+    task.finish_task()
+
+    # Assert
+    assert task.finished == expected_finished
+    mock_logger.info.assert_called_once_with("Finishing up the task, id: %s", "test_id")

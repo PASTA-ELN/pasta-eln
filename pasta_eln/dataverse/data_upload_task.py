@@ -42,6 +42,7 @@ class DataUploadTask(GenericTaskObject):
 
   def __init__(self,
                project_name: str,
+               project_doc_id: str,
                progress_update_callback: Callable[[int], None],
                status_label_set_text_callback: Callable[[str], None],
                status_icon_set_pixmap_callback: Callable[[QPixmap | QImage | str], None],
@@ -68,6 +69,7 @@ class DataUploadTask(GenericTaskObject):
 
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
     self.project_name = project_name
+    self.project_doc_id = project_doc_id
 
     # Connect slots
     self.progress_changed.connect(progress_update_callback)
@@ -161,7 +163,8 @@ class DataUploadTask(GenericTaskObject):
     # Create upload model in database
     self.upload_model = UploadModel(project_name=self.project_name,
                                     status=UploadStatusValues.Queued.name,
-                                    log=f"Upload initiated for project {self.project_name} at {datetime.now().isoformat()}\n")
+                                    log=f"Upload initiated for project {self.project_name} at {datetime.now().isoformat()}\n",
+                                    project_doc_id=self.project_doc_id)
     self.upload_model = self.db_api.create_model_document(self.upload_model)  # type: ignore[assignment]
     self.logger.info("Upload model created: %s", self.upload_model)
     # Read config and get the login information along with the metadata

@@ -197,4 +197,3 @@ class UploadQueueManager(GenericTaskObject):
     self.logger.info("Cancelling upload queue and the empty the upload queue..")
     for upload_task_thread in self.upload_queue:
       upload_task_thread.task.cancel.emit()
-    # self.empty_upload_queue()

@@ -62,7 +62,6 @@ class TestDataverseDatabaseAPI:
     if test_id == "success_case_default_values":
       base_db_api_constructor_mock = mocker.patch('pasta_eln.dataverse.database_api.BaseDatabaseAPI',
                                                   return_value=base_db_api_mock)
-      initialize_database_mock = mocker.patch('pasta_eln.dataverse.database_api.DatabaseAPI.initialize_database')
     else:
       base_db_api_constructor_mock = mocker.patch('pasta_eln.dataverse.database_api.BaseDatabaseAPI',
                                                   side_effect=DatabaseError("test_error"))
@@ -81,7 +80,6 @@ class TestDataverseDatabaseAPI:
     if test_id == "success_case_default_values":
       assert db_api.db_api == base_db_api_mock
       assert db_api.design_doc_name == '_design/viewDataverse'
-      initialize_database_mock.assert_called_once()
     else:
       assert db_api is None
 

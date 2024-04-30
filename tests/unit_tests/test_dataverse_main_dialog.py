@@ -296,6 +296,7 @@ class TestDataverseMainDialog(object):
         mock_main_dialog.projectsScrollAreaVerticalLayout.itemAt.return_value.widget.assert_called_once()
         mock_project_widget.findChild.assert_any_call(QCheckBox, name="projectCheckBox")
         mock_project_widget.findChild.assert_any_call(QLabel, name="projectNameLabel")
+        mock_project_widget.findChild.assert_any_call(QLabel, name="projectDocIdLabel")
         mock_project_widget.findChild.return_value.isChecked.assert_called_once()
         mock_project_widget.findChild.return_value.toolTip.assert_called_once()
         mock_main_dialog.get_upload_widget.assert_called_once_with(
@@ -304,6 +305,7 @@ class TestDataverseMainDialog(object):
           mock_main_dialog.get_upload_widget.return_value["base"])
         mock_data_upload_task.assert_called_once_with(
           mock_main_dialog.get_upload_widget.return_value["widget"].uploadProjectLabel.text(),
+          mock_project_widget.findChild.return_value.text(),
           mock_main_dialog.get_upload_widget.return_value["widget"].uploadProgressBar.setValue,
           mock_main_dialog.get_upload_widget.return_value["widget"].statusLabel.setText,
           mock_main_dialog.get_upload_widget.return_value["widget"].statusIconLabel.setPixmap,

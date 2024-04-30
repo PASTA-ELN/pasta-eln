@@ -113,9 +113,7 @@ class MainDialog(Ui_MainDialogBase):
     Args:
         self: The instance of the class.
     """
-    models = self.db_api.get_models(ProjectModel)
-    models = models * 30
-    for project in models:
+    for project in self.db_api.get_models(ProjectModel):
       if isinstance(project, ProjectModel):
         widget = self.get_project_widget(project)
         self.projectsScrollAreaVerticalLayout.addWidget(widget)
@@ -151,6 +149,7 @@ class MainDialog(Ui_MainDialogBase):
     """
     Creates the project widget.
 
+
     Explanation:
         This method retrieves the project widget for a specific project.
         It creates a QWidget instance and sets up the UI for the project widget.
@@ -174,6 +173,8 @@ class MainDialog(Ui_MainDialogBase):
     project_widget_ui.projectNameLabel.setToolTip(project.name)
     project_widget_ui.modifiedDateTimeLabel.setText(
       datetime.datetime.fromisoformat(project.date or "").strftime("%Y-%m-%d %H:%M:%S"))
+    project_widget_ui.projectDocIdLabel.hide()
+    project_widget_ui.projectDocIdLabel.setText(project.id)
     return project_widget_frame
 
   def start_upload(self) -> None:
@@ -196,8 +197,10 @@ class MainDialog(Ui_MainDialogBase):
           project_widget.findChild(QtWidgets.QLabel, name="projectNameLabel").toolTip())
         self.uploadQueueVerticalLayout.addWidget(upload_widget["base"])
         widget = upload_widget["widget"]
+        project_id = project_widget.findChild(QtWidgets.QLabel, name="projectDocIdLabel").text()
         task_thread = TaskThreadExtension(
           DataUploadTask(widget.uploadProjectLabel.text(),
+                         project_id,
                          widget.uploadProgressBar.setValue,
                          widget.statusLabel.setText,
                          widget.statusIconLabel.setPixmap,
