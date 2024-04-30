@@ -366,12 +366,13 @@ class Form(QDialog):
     elif command[0] in (Command.FORM_SAVE, Command.FORM_SAVE_NEXT):
       # create the data that has to be saved
       self.checkThreadTimer.stop()
-      with open(Path.home()/'.pastaELN.temp', 'r', encoding='utf-8') as fTemp:
-        content = json.loads(fTemp.read())
-        if self.doc.get('_id', '') in content:
-          del content[self.doc.get('_id', '')]
-      with open(Path.home()/'.pastaELN.temp', 'w', encoding='utf-8') as fTemp:
-        fTemp.write(json.dumps(content))
+      if (Path.home()/'.pastaELN.temp').is_file():
+        with open(Path.home()/'.pastaELN.temp', 'r', encoding='utf-8') as fTemp:
+          content = json.loads(fTemp.read())
+          if self.doc.get('_id', '') in content:
+            del content[self.doc.get('_id', '')]
+        with open(Path.home()/'.pastaELN.temp', 'w', encoding='utf-8') as fTemp:
+          fTemp.write(json.dumps(content))
       if hasattr(self, 'key_-name'):
         self.doc['-name'] = getattr(self, 'key_-name').text().strip()
         if self.doc['-name'] == '':
