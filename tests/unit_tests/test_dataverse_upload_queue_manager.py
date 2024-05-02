@@ -73,6 +73,7 @@ class TestDataverseUploadQueueManager:
     assert mock_manager.upload_queue == task_threads
     for task_thread in task_threads:
       task_thread.task.finish.connect.assert_called_once()
+      task_thread.task.cancel.connect.assert_called_once()
 
   # Edge cases tests
   @pytest.mark.parametrize("test_id, concurrent_uploads, tasks_to_add, tasks_to_remove, expected_upload_queue_length",

@@ -222,6 +222,7 @@ class TestDataverseMainDialog(object):
     project = ProjectModel()
     project.name = name
     project.date = date
+    project.id = "Test"
 
     if expected_name is ValueError or expected_date is ValueError:
       # Assert
@@ -239,6 +240,8 @@ class TestDataverseMainDialog(object):
       mock_project_item_frame.return_value.projectNameLabel.setText.assert_called_once_with(expected_name or '')
       mock_project_item_frame.return_value.modifiedDateTimeLabel.setText.assert_called_once_with(expected_date)
       mock_project_item_frame.return_value.projectNameLabel.setToolTip.assert_called_once_with(name)
+      mock_project_item_frame.return_value.projectDocIdLabel.hide.assert_called_once()
+      mock_project_item_frame.return_value.projectDocIdLabel.setText.assert_called_once_with(project.id)
 
   @pytest.mark.parametrize("project, expected_exception", [
     # ID: ErrorCase-1 (invalid project type)
