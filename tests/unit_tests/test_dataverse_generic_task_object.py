@@ -16,7 +16,7 @@ from pasta_eln.dataverse.generic_task_object import GenericTaskObject
 class TestDataverseGenericTaskObject:
   @pytest.mark.parametrize(
     "test_id, initial_cancelled, initial_started, initial_cleaned, expected_cancelled, expected_started, expected_cleaned",
-    [# Success path tests
+    [  # Success path tests
       ("success_case_1", False, False, False, False, True, False),  # Starting task from initial state
       ("success_case_2", True, False, False, False, True, False),  # Starting task from cancelled state
 
@@ -43,7 +43,7 @@ class TestDataverseGenericTaskObject:
     assert task.started == expected_started
     assert task.cleaned == expected_cleaned
 
-  @pytest.mark.parametrize("test_id, initial_cancelled, expected_cancelled", [# Success path tests
+  @pytest.mark.parametrize("test_id, initial_cancelled, expected_cancelled", [  # Success path tests
     ("success_case_1", False, True),  # Cancelling task from non-cancelled state
 
     # Edge case tests
@@ -68,7 +68,7 @@ class TestDataverseGenericTaskObject:
     mock_logger.info.assert_called_once_with('Cancelling task, id: %s', 'test_id')
 
   @pytest.mark.parametrize("initial_cancelled, initial_started, expected_cancelled, expected_started",
-                           [# Test ID: #1 - Success path test where task is not started or cancelled
+                           [  # Test ID: #1 - Success path test where task is not started or cancelled
                              (False, False, False, True),
                              # Test ID: #2 - Success path test where task is already started but not cancelled
                              (False, True, False, True),
@@ -93,31 +93,37 @@ class TestDataverseGenericTaskObject:
     assert task.started == expected_started, "The task's started state did not match the expected value."
     mock_logger.info.assert_called_once_with('Starting task, id: %s', 'test_id')
 
-  @pytest.mark.parametrize("test_id, initial_cleaned, expected_cleaned", [# Success path tests
-    ("success_case_1", False, True),  # Cleaning up task from non-cleaned state
+  @pytest.mark.parametrize("test_id, setup_id, expected_cleaned_state", [
+    # Success path tests
+    ("success_path_valid_id", "123", True),
+    ("success_path_different_id", "abc", True),
 
-    # Edge case tests
-    ("edge_case_1", True, True),  # Cleaning up task when it's already cleaned
-
-    # Error case tests
-    # No error cases identified for cleanup as it does not raise exceptions or handle erroneous input
+    # Edge cases
+    ("edge_case_no_id", None, True),  # Assuming self.id can be None
+    ("edge_case_empty_id", "", True),  # Assuming self.id can be empty
   ])
-  def test_cleanup(self, mocker, test_id, initial_cleaned, expected_cleaned):
+  def test_cleanup(self, mocker, test_id, setup_id, expected_cleaned_state, monkeypatch):
     # Arrange
-    mocker.patch('pasta_eln.dataverse.generic_task_object.next', return_value="test_id")
+    mocker.patch('pasta_eln.dataverse.generic_task_object.next', return_value=setup_id)
     mock_logger = mocker.MagicMock(spec=Logger)
     mocker.patch('pasta_eln.dataverse.task_thread_extension.logging.getLogger', return_value=mock_logger)
     task = GenericTaskObject()
-    task.cleaned = initial_cleaned
+    task.cleaned = False
+    task.cancel = mocker.MagicMock()
+    task.finish = mocker.MagicMock()
+    task.start = mocker.MagicMock()
 
     # Act
     task.cleanup()
 
     # Assert
-    assert task.cleaned == expected_cleaned
-    mock_logger.info.assert_called_once_with('Cleaning up task, id: %s', 'test_id')
+    assert task.cleaned == expected_cleaned_state, f"Test ID {test_id}: Expected cleaned state to be {expected_cleaned_state}"
+    mock_logger.info.assert_called_once_with('Cleaning up task, id: %s', setup_id)
+    task.cancel.disconnect.assert_called_once()
+    task.finish.disconnect.assert_called_once()
+    task.start.disconnect.assert_called_once()
 
-  @pytest.mark.parametrize("test_id, initial_finished, expected_finished", [# Success path tests
+  @pytest.mark.parametrize("test_id, initial_finished, expected_finished", [  # Success path tests
     ("success_case_1", False, True),  # Cleaning up task from non-cleaned state
 
     # Edge case tests

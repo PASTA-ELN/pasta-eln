@@ -17,7 +17,7 @@
 
 ## Developers: Windows
 
-### How to start Pasta ELN
+### How to start Pasta ELN~~~~
 - Anaconda
   - python -m pasta_eln.gui
   - DOES NOT WORK "pastaELN"

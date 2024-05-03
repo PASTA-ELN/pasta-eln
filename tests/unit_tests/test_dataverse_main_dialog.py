@@ -330,10 +330,8 @@ class TestDataverseMainDialog(object):
     pytest.param(0, UploadStatusValues.Cancelled.name, True, id="SuccessPath-3-cancelled-with-0-progress"),
     # ID: SuccessPath-4
     pytest.param(100, UploadStatusValues.Cancelled.name, True, id="SuccessPath-4-cancelled-with-100-progress"),
-    # ID: EdgeCase-1 (Progress not 100)
-    pytest.param(99, UploadStatusValues.Finished.name, False, id="EdgeCase-1"),
-    # ID: EdgeCase-2 (Status not in specified list)
-    pytest.param(100, "InProgress", False, id="EdgeCase-2"),
+    # ID: EdgeCase-1 (Status not in a specified list)
+    pytest.param(100, "InProgress", False, id="EdgeCase-1"),
     # ID: ErrorCase-1 (Invalid status value)
     pytest.param(100, "InvalidStatus", False, id="ErrorCase-1"),
   ])
@@ -341,11 +339,9 @@ class TestDataverseMainDialog(object):
     # Arrange
     mock_main_dialog.uploadQueueVerticalLayout = MagicMock()
     widget = MagicMock()
-    progress_bar = mocker.MagicMock()
-    progress_bar.value.return_value = progress_value
     status_label = mocker.MagicMock()
     status_label.text.return_value = status_text
-    widget.findChild.side_effect = lambda x, name: progress_bar if x == QtWidgets.QProgressBar else status_label
+    widget.findChild.side_effect = lambda x, name: status_label
     mock_main_dialog.uploadQueueVerticalLayout.count.return_value = 1
     mock_main_dialog.uploadQueueVerticalLayout.itemAt.return_value = MagicMock(widget=MagicMock(return_value=widget))
 
@@ -357,9 +353,7 @@ class TestDataverseMainDialog(object):
     if expected_removal:
       mock_main_dialog.uploadQueueVerticalLayout.itemAt.assert_called_once_with(0)
       mock_main_dialog.uploadQueueVerticalLayout.itemAt.return_value.widget.assert_called_once()
-      widget.findChild.assert_any_call(QtWidgets.QProgressBar, name="uploadProgressBar")
       widget.findChild.assert_any_call(QtWidgets.QLabel, name="statusLabel")
-      progress_bar.value.assert_called_once()
       status_label.text.assert_called_once()
       widget.setParent.assert_called_once_with(None)
     else:

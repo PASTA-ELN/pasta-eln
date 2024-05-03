@@ -222,13 +222,13 @@ class MainDialog(Ui_MainDialogBase):
     """
     for widget_pos in reversed(range(self.uploadQueueVerticalLayout.count())):
       project_widget = self.uploadQueueVerticalLayout.itemAt(widget_pos).widget()
-      progress_value = project_widget.findChild(QtWidgets.QProgressBar, name="uploadProgressBar").value()
       status_text = project_widget.findChild(QtWidgets.QLabel, name="statusLabel").text()
-      if (progress_value == 100 and status_text in [
+      if (status_text in [
         UploadStatusValues.Finished.name,
         UploadStatusValues.Error.name,
-        UploadStatusValues.Warning.name
-      ]) or status_text == UploadStatusValues.Cancelled.name:
+        UploadStatusValues.Warning.name,
+        UploadStatusValues.Cancelled.name
+      ]):
         project_widget.setParent(None)
 
   def select_deselect_all_projects(self, checked: bool) -> None:
