@@ -53,9 +53,8 @@ class DatabaseAPI:
     self.design_doc_name = '_design/viewDataverse'
     self.config_doc_id = '-dataverseConfig-'
     self.data_hierarchy_doc_id = '-dataHierarchy-'
-    self.upload_model_view_name = "dvUploadView"
-    self.project_model_view_name = "dvProjectsView"
-    self.initialize_database()
+    self.upload_model_view_name = 'dvUploadView'
+    self.project_model_view_name = 'dvProjectsView'
     _, self.encrypt_key = get_encrypt_key(self.logger)
 
   def create_dataverse_design_document(self) -> Document:
