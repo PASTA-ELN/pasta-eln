@@ -116,8 +116,6 @@ class TestDataverseMainDialog(object):
       dialog.configureUploadPushButton.clicked.connect.assert_called_once_with(dialog.show_configure_upload)
       dialog.showCompletedPushButton.clicked.connect.assert_called_once_with(dialog.show_completed_uploads)
       dialog.editFullMetadataPushButton.clicked.connect.assert_called_once_with(dialog.show_edit_metadata)
-      dialog.config_upload_dialog.config_reloaded.connect.assert_called_once_with(
-        dialog.upload_manager_task.set_concurrent_uploads)
       dialog.cancelAllPushButton.clicked.connect.assert_called_once_with(
         dialog.upload_manager_task.cancel_all_tasks.emit)
       dialog.buttonBox.button.assert_called_once_with(QtWidgets.QDialogButtonBox.Cancel)
@@ -138,7 +136,6 @@ class TestDataverseMainDialog(object):
       dialog.configureUploadPushButton.clicked.connect.assert_not_called()
       dialog.showCompletedPushButton.clicked.connect.assert_not_called()
       dialog.editFullMetadataPushButton.clicked.connect.assert_not_called()
-      dialog.config_upload_dialog.config_reloaded.connect.assert_not_called()
       dialog.cancelAllPushButton.clicked.connect.assert_not_called()
       dialog.buttonBox.button.assert_not_called()
       dialog.buttonBox.button.return_value.clicked.connect.assert_not_called()

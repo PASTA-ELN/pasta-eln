@@ -80,10 +80,10 @@ class MainDialog(Ui_MainDialogBase):
     self.config_dialog: ConfigDialog | None = None
 
     if self.is_dataverse_configured[0]:
-      self.config_upload_dialog = UploadConfigDialog()
       self.completed_uploads_dialog = CompletedUploads()
       self.edit_metadata_dialog = EditMetadataDialog()
       self.upload_manager_task = UploadQueueManager()
+      self.config_upload_dialog = UploadConfigDialog(self.upload_manager_task.set_concurrent_uploads)
       self.upload_manager_task_thread = TaskThreadExtension(self.upload_manager_task)
 
       # Connect signals and slots
@@ -94,7 +94,6 @@ class MainDialog(Ui_MainDialogBase):
       self.configureUploadPushButton.clicked.connect(self.show_configure_upload)
       self.showCompletedPushButton.clicked.connect(self.show_completed_uploads)
       self.editFullMetadataPushButton.clicked.connect(self.show_edit_metadata)
-      self.config_upload_dialog.config_reloaded.connect(self.upload_manager_task.set_concurrent_uploads)
       self.cancelAllPushButton.clicked.connect(self.upload_manager_task.cancel_all_tasks.emit)
       self.buttonBox.button(QtWidgets.QDialogButtonBox.Cancel).clicked.connect(self.close_ui)
       self.instance.closed.connect(self.close_ui)

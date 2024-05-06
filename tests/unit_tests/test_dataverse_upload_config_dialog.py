@@ -37,7 +37,6 @@ def mock_dialog(mocker, mock_database_api, mock_config_model):
   mocker.patch('pasta_eln.GUI.dataverse.upload_config_dialog_base.Ui_UploadConfigDialog.__init__')
   mocker.patch('pasta_eln.GUI.dataverse.upload_config_dialog.DatabaseAPI',
                return_value=mock_database_api)
-  mocker.patch.object(UploadConfigDialog, 'config_reloaded', new_callable=mocker.PropertyMock)
   mocker.patch.object(UploadConfigDialog, 'numParallelComboBox', create=True)
   mocker.patch.object(UploadConfigDialog, 'data_hierarchy_types', create=True)
   mocker.patch.object(UploadConfigDialog, 'buttonBox', create=True)
@@ -46,7 +45,8 @@ def mock_dialog(mocker, mock_database_api, mock_config_model):
   mocker.patch.object(UploadConfigDialog, 'set_data_hierarchy_types')
   actual_load_ui = UploadConfigDialog.load_ui
   mocker.patch.object(UploadConfigDialog, 'load_ui')
-  dialog = UploadConfigDialog()
+  mock_callback = mocker.MagicMock()
+  dialog = UploadConfigDialog(mock_callback)
   dialog.set_data_hierarchy_types = actual_set_data_hierarchy_types
   dialog.load_ui = actual_load_ui
   dialog.db_api.get_config_model.return_value = mock_config_model
@@ -63,16 +63,16 @@ class TestUploadConfigDialog:
     mock_super_init = mocker.patch('pasta_eln.GUI.dataverse.upload_config_dialog_base.Ui_UploadConfigDialog.__init__')
     mock_db_api = mocker.patch('pasta_eln.GUI.dataverse.upload_config_dialog.DatabaseAPI',
                                return_value=mock_database_api)
-    mocker.patch.object(UploadConfigDialog, 'config_reloaded', new_callable=mocker.PropertyMock)
     mocker.patch.object(UploadConfigDialog, 'numParallelComboBox', create=True)
     mocker.patch.object(UploadConfigDialog, 'data_hierarchy_types', create=True)
     mocker.patch.object(UploadConfigDialog, 'buttonBox', create=True)
     mock_set_data_hierarchy_types = mocker.patch(
       'pasta_eln.GUI.dataverse.upload_config_dialog.UploadConfigDialog.set_data_hierarchy_types')
     mock_load_ui = mocker.patch('pasta_eln.GUI.dataverse.upload_config_dialog.UploadConfigDialog.load_ui')
+    mock_callback = mocker.MagicMock()
 
     # Act
-    dialog = UploadConfigDialog()
+    dialog = UploadConfigDialog(mock_callback)
 
     # Assert
     # Assertions to verify that the dialog has been initialized correctly
@@ -202,7 +202,7 @@ class TestUploadConfigDialog:
             ), "Test failed for check_box_changed_callback"
 
   @pytest.mark.parametrize(
-    "test_id, setup_logger, expected_log_info, expected_log_error, expect_emit", [
+    "test_id, setup_logger, expected_log_info, expected_log_error, expect_callback", [
       # Success path test with realistic test values
       ("success_case_1", "Saving config model...", "Saving config model...", None, True),
 
@@ -211,7 +211,7 @@ class TestUploadConfigDialog:
           "error_no_config_model", "Failed to load config model!", None, "Failed to load config model!", False),
     ])
   def test_save_ui(self, mock_dialog, mock_config_model, test_id, setup_logger, expected_log_info, expected_log_error,
-                   expect_emit):
+                   expect_callback):
     # Arrange
     mock_dialog.config_model = None if test_id == "error_no_config_model" else mock_config_model
 
@@ -224,10 +224,10 @@ class TestUploadConfigDialog:
       mock_dialog.logger.info.assert_called_with(expected_log_info)
     if expected_log_error:
       mock_dialog.logger.error.assert_called_with(expected_log_error)
-    if expect_emit:
-      mock_dialog.config_reloaded.emit.assert_called_once()
+    if expect_callback:
+      mock_dialog.config_reloaded_callback.assert_called_once()
     else:
-      mock_dialog.config_reloaded.emit.assert_not_called()
+      mock_dialog.config_reloaded_callback.assert_not_called()
     if mock_dialog.config_model:
       mock_dialog.db_api.save_config_model.assert_called_with(mock_dialog.config_model)
     else:
