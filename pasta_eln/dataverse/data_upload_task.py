@@ -10,13 +10,17 @@
 
 import asyncio
 import logging
+import tempfile
 import time
 from datetime import datetime
+from os.path import join
+from pathlib import Path
 from typing import Any, Callable
 
 from PySide6 import QtCore
 from PySide6.QtGui import QImage, QPixmap
 
+from pasta_eln.backend import Backend
 from pasta_eln.dataverse.client import DataverseClient
 from pasta_eln.dataverse.config_error import ConfigError
 from pasta_eln.dataverse.config_model import ConfigModel
@@ -26,6 +30,7 @@ from pasta_eln.dataverse.progress_updater_thread import ProgressUpdaterThread
 from pasta_eln.dataverse.upload_model import UploadModel
 from pasta_eln.dataverse.upload_status_values import UploadStatusValues
 from pasta_eln.dataverse.utils import get_flattened_metadata, update_status
+from pasta_eln.inputOutput import exportELN
 
 
 class DataUploadTask(GenericTaskObject):
@@ -46,7 +51,8 @@ class DataUploadTask(GenericTaskObject):
                progress_update_callback: Callable[[int], None],
                status_label_set_text_callback: Callable[[str], None],
                status_icon_set_pixmap_callback: Callable[[QPixmap | QImage | str], None],
-               upload_cancel_clicked_signal_callback: QtCore.Signal) -> None:
+               upload_cancel_clicked_signal_callback: QtCore.Signal,
+               backend: Backend) -> None:
     """
     Initializes the DataUploadTask with necessary callbacks and information.
 
@@ -59,6 +65,7 @@ class DataUploadTask(GenericTaskObject):
     """
     super().__init__()
     self.db_api: DatabaseAPI | None = None
+    self.backend = backend
     self.dataverse_client: DataverseClient | None = None
     self.upload_model: UploadModel | None = None
     self.config_model: ConfigModel | None = None
@@ -106,48 +113,53 @@ class DataUploadTask(GenericTaskObject):
     # Step 1: Generate ELN file for the project
     if self.check_if_cancelled():
       return
-    self.update_log(f"Step 1: Generating ELN file for project: {self.project_name}", self.logger.info)
-    # Add logic to generate ELN file for the project
-    eln_file_path = "/home/jmurugan/Artefacts/10/Text File1.txt"
-    self.update_log(f"Successfully generated ELN file: {eln_file_path}", self.logger.info)
+    with tempfile.TemporaryDirectory() as tmp_dir:
+      eln_file_path = self.generate_eln_file(tmp_dir)
+      if eln_file_path is None:
+        self.logger.warning("Failed to generate ELN file for project: %s, hence finalizing the upload",
+                            self.project_name)
+        self.finalize_upload_task(UploadStatusValues.Error.name)
+        return
+      self.update_log(f"Successfully generated ELN file: {eln_file_path}", self.logger.info)
 
-    # Step 2: Create dataset for the project in dataverse
-    if self.check_if_cancelled():
-      return
-    persistent_id = self.create_dataset_for_pasta_project()
-    if persistent_id is None:
-      self.logger.warning("Failed to create dataset for project: %s, hence finalizing the upload",
-                          self.project_name)
-      self.finalize_upload_task(UploadStatusValues.Error.name)
-      return
+      # Step 2: Create dataset for the project in dataverse
+      if self.check_if_cancelled():
+        return
+      persistent_id = self.create_dataset_for_pasta_project()
+      if persistent_id is None:
+        self.logger.warning("Failed to create dataset for project: %s, hence finalizing the upload",
+                            self.project_name)
+        self.finalize_upload_task(UploadStatusValues.Error.name)
+        return
 
-    # Step 3: Check if the dataset is unlocked post the creation
-    if self.check_if_cancelled():
-      return
-    if not self.check_if_dataset_is_unlocked(persistent_id):
-      self.logger.warning("Failed to unlock dataset for project: %s, hence finalizing the upload",
-                          self.project_name)
-      self.finalize_upload_task(UploadStatusValues.Error.name)
-      return
+      # Step 3: Check if the dataset is unlocked post the creation
+      if self.check_if_cancelled():
+        return
+      if not self.check_if_dataset_is_unlocked(persistent_id):
+        self.logger.warning("Failed to unlock dataset for project: %s, hence finalizing the upload",
+                            self.project_name)
+        self.finalize_upload_task(UploadStatusValues.Error.name)
+        return
 
-    # Step 4: Upload the generated ELN file to the dataset
-    if self.check_if_cancelled():
-      return
-    file_pid = self.upload_generated_eln_file_to_dataset(persistent_id, eln_file_path)
-    if file_pid is None:
-      self.logger.warning("Failed to upload eln file to dataset for project: %s, hence finalizing the upload",
-                          self.project_name)
-      self.finalize_upload_task(UploadStatusValues.Error.name)
-      return
+      # Step 4: Upload the generated ELN file to the dataset
+      if self.check_if_cancelled():
+        return
+      file_pid = self.upload_generated_eln_file_to_dataset(persistent_id, eln_file_path)
+      if file_pid is None:
+        self.logger.warning("Failed to upload eln file to dataset for project: %s, hence finalizing the upload",
+                            self.project_name)
+        self.finalize_upload_task(UploadStatusValues.Error.name)
+        return
 
-    # Final step: Update the log and finalize the upload task
-    upload_url = f"{self.dataverse_server_url}/dataset.xhtml?persistentId={persistent_id}"
-    self.update_log(
-      f"Successfully uploaded ELN file, URL: {upload_url}",
-      self.logger.info)
-    if self.upload_model:
-      self.upload_model.dataverse_url = upload_url
-    self.finalize_upload_task(UploadStatusValues.Cancelled.name if self.cancelled else UploadStatusValues.Finished.name)
+      # Final step: Update the log and finalize the upload task
+      upload_url = f"{self.dataverse_server_url}/dataset.xhtml?persistentId={persistent_id}"
+      self.update_log(
+        f"Successfully uploaded ELN file, URL: {upload_url}",
+        self.logger.info)
+      if self.upload_model:
+        self.upload_model.dataverse_url = upload_url
+      self.finalize_upload_task(
+        UploadStatusValues.Cancelled.name if self.cancelled else UploadStatusValues.Finished.name)
 
   def initialize(self) -> None:
     """
@@ -344,3 +356,33 @@ class DataUploadTask(GenericTaskObject):
       )
       self.finalize_upload_task(UploadStatusValues.Cancelled.name)
     return self.cancelled
+
+  def generate_eln_file(self, tmp_dir: str) -> str:
+    """
+    Generates an ELN file based on the configuration model and project upload items.
+
+    Args:
+        tmp_dir (str): The temporary directory path to store the ELN file.
+
+    Returns:
+        str: The path to the generated ELN file.
+        If an error occurs during export, an empty string is returned.
+    """
+    self.update_log(f"Step 1: Generating ELN file for project: {self.project_name}", self.logger.info)
+    if self.config_model is None or self.config_model.project_upload_items is None:
+      self.update_log("Config model or project_upload_items is not set!", self.logger.error)
+      return ""
+    eln_file = join(tmp_dir, f"{''.join(x for x in self.project_name if x.isalnum())}_eln_file.eln")
+    Path(eln_file).touch()
+    data_types = [
+      data_type.lower()
+      for data_type, value in self.config_model.project_upload_items.items()
+      if value
+    ]
+    try:
+      exportELN(self.backend, self.project_doc_id, eln_file, data_types)
+    except Exception as e:
+      self.update_log(f"Error while exporting ELN file for project:"
+                      f" {self.project_name}, error: {e}", self.logger.error)
+      eln_file = ""
+    return eln_file

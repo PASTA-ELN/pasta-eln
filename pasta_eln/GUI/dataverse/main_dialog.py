@@ -24,6 +24,7 @@ from pasta_eln.GUI.dataverse.main_dialog_base import Ui_MainDialogBase
 from pasta_eln.GUI.dataverse.project_item_frame_base import Ui_ProjectItemFrame
 from pasta_eln.GUI.dataverse.upload_config_dialog import UploadConfigDialog
 from pasta_eln.GUI.dataverse.upload_widget_base import Ui_UploadWidgetFrame
+from pasta_eln.backend import Backend
 from pasta_eln.dataverse.config_model import ConfigModel
 from pasta_eln.dataverse.data_upload_task import DataUploadTask
 from pasta_eln.dataverse.database_api import DatabaseAPI
@@ -62,7 +63,7 @@ class MainDialog(Ui_MainDialogBase):
     """
     return super(MainDialog, cls).__new__(cls)
 
-  def __init__(self) -> None:
+  def __init__(self, backend: Backend) -> None:
     """
     Initializes the MainDialog.
 
@@ -74,6 +75,7 @@ class MainDialog(Ui_MainDialogBase):
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
     self.instance = DialogExtension()
     super().setupUi(self.instance)
+    self.backend = backend
     self.db_api = DatabaseAPI()
     self.db_api.initialize_database()
     self.is_dataverse_configured: tuple[bool, str] = self.check_if_dataverse_is_configured()
@@ -203,7 +205,8 @@ class MainDialog(Ui_MainDialogBase):
                          widget.uploadProgressBar.setValue,
                          widget.statusLabel.setText,
                          widget.statusIconLabel.setPixmap,
-                         widget.uploadCancelPushButton.clicked))
+                         widget.uploadCancelPushButton.clicked,
+                         self.backend))
         self.upload_manager_task.add_to_queue(task_thread)
         if isinstance(task_thread.task, DataUploadTask):
           task_thread.task.upload_model_created.connect(widget.modelIdLabel.setText)
@@ -430,13 +433,3 @@ class MainDialog(Ui_MainDialogBase):
     width = qt_msgbox_label.fontMetrics().boundingRect(qt_msgbox_label.text()).width()
     qt_msgbox_label.setFixedWidth(width)
     msg_box.exec()
-
-
-if __name__ == "__main__":
-  import sys
-
-  app = QtWidgets.QApplication(sys.argv)
-
-  ui = MainDialog()
-  ui.show()
-  sys.exit(app.exec())

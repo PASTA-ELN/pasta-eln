@@ -14,6 +14,8 @@ from PySide6.QtWidgets import QMainWindow, QApplication, QFileDialog, QMessageBo
 from qt_material import apply_stylesheet  # of https://github.com/UN-GCPDS/qt-material
 
 from pasta_eln import __version__
+from pasta_eln.GUI.dataverse.config_dialog import ConfigDialog
+from pasta_eln.GUI.dataverse.main_dialog import MainDialog
 from .GUI.body import Body
 from .GUI.config import Configuration
 from .GUI.form import Form
@@ -76,6 +78,8 @@ class MainWindow(QMainWindow):
         Action(name,                         self, [Command.CHANGE_PG, name], changeProjectGroups)
     Action('&Synchronize',                   self, [Command.SYNC],            systemMenu, shortcut='F5')
     Action('&Data hierarchy editor',         self, [Command.DATAHIERARCHY],        systemMenu, shortcut='F8')
+    Action('&Dataverse Configuration',         self, [Command.DATAVERSE_CONFIG],        systemMenu, shortcut='F10')
+    Action('&Upload to Dataverse',         self, [Command.DATAVERSE_MAIN],        systemMenu, shortcut='F11')
     systemMenu.addSeparator()
     Action('&Test extraction from a file',   self, [Command.TEST1],           systemMenu)
     Action('Test &selected item extraction', self, [Command.TEST2],           systemMenu, shortcut='F2')
@@ -167,6 +171,12 @@ class MainWindow(QMainWindow):
       dataHierarchyForm = DataHierarchyEditorDialog(self.comm.backend.db)
       dataHierarchyForm.instance.exec()
       restart()
+    elif command[0] is Command.DATAVERSE_CONFIG:
+      dataverseConfig = ConfigDialog()
+      dataverseConfig.instance.exec()
+    elif command[0] is Command.DATAVERSE_MAIN:
+      dataverseMainDialog = MainDialog(self.comm.backend)
+      dataverseMainDialog.instance.exec()
     elif command[0] is Command.TEST1:
       fileName = QFileDialog.getOpenFileName(self, 'Open file for extractor test', str(Path.home()), '*.*')[0]
       report = self.comm.backend.testExtractor(fileName, outputStyle='html')
@@ -250,6 +260,8 @@ class Command(Enum):
   VERIFY_DB = 14
   SHORTCUTS = 15
   RESTART   = 16
+  DATAVERSE_CONFIG = 17
+  DATAVERSE_MAIN = 18
 
 
 def startMain() -> None:
