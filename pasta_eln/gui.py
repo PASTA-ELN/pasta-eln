@@ -47,8 +47,8 @@ class MainWindow(QMainWindow):
     self.backend = Backend()
     self.comm = Communicate(self.backend)
     self.comm.formDoc.connect(self.formDoc)
-    self.dataverseMainDialog = None
-    self.dataverseConfig = None
+    self.dataverseMainDialog: MainDialog | None = None
+    self.dataverseConfig: ConfigDialog | None = None
 
     # Menubar
     menu = self.menuBar()
