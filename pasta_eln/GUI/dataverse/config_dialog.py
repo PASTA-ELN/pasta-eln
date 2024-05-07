@@ -108,14 +108,9 @@ class ConfigDialog(Ui_ConfigDialogBase):
     self.dataverseLineEdit.textChanged[str].connect(self.update_dataverse_id)
     self.dataverseListComboBox.currentTextChanged.connect(self.update_dataverse_line_edit)
     self.buttonBox.button(QtWidgets.QDialogButtonBox.Save).clicked.connect(self.save_config)
-    self.apiTokenVerifyPushButton.clicked.connect(self.verify_server_url_and_api_token)
-    self.dataverseLoadPushButton.clicked.connect(self.load_dataverse_list)
+    self.dataverseVerifyLoadPushButton.clicked.connect(self.verify_and_load_dataverse_list)
     self.apiTokenHelpPushButton.clicked.connect(
       lambda: webbrowser.open("https://data.fz-juelich.de/guide/api/auth.html"))
-
-    # Load dataverse list
-    if self.dataverseServerLineEdit.text() and self.apiTokenLineEdit.text():
-      self.dataverseLoadPushButton.click()
 
   def update_dataverse_server(self, new_value: str) -> None:
     """
@@ -173,27 +168,32 @@ class ConfigDialog(Ui_ConfigDialogBase):
     self.logger.info("Saving config..")
     self.db_api.save_config_model(self.config_model)
 
-  def verify_server_url_and_api_token(self) -> None:
+  def verify_server_url_and_api_token(self) -> bool:
     """
     Verifies the server URL and API token.
 
     Explanation:
         This method verifies the server URL and API token by checking if they are both provided.
         If they are not provided, it shows a warning message.
+
+    Returns:
+        bool: True if the server URL and API token are valid, False otherwise.
     """
     self.logger.info("Verifying server URL and API token..")
     server_url = self.dataverseServerLineEdit.text()
     api_token = self.apiTokenLineEdit.text()
     if not (server_url and api_token):
       QMessageBox.warning(self.instance, "Error", "Please enter both server URL and API token")
-      return
+      return False
     success, message = check_login_credentials(self.logger, api_token, server_url)
     if success:
       QMessageBox.information(self.instance, "Credentials Valid", message)
+      return True
     else:
       QMessageBox.warning(self.instance, "Credentials Invalid", message)
+      return False
 
-  def load_dataverse_list(self) -> None:
+  def verify_and_load_dataverse_list(self) -> None:
     """
     Loads the dataverse list.
 
@@ -205,6 +205,8 @@ class ConfigDialog(Ui_ConfigDialogBase):
     self.dataverseListComboBox.clear()
     server_url = self.dataverseServerLineEdit.text()
     api_token = self.apiTokenLineEdit.text()
+    if not self.verify_server_url_and_api_token():
+      return
     if not (server_url and api_token):
       QMessageBox.warning(self.instance, "Error", "Please enter both server URL and API token")
       return
@@ -233,6 +235,9 @@ class ConfigDialog(Ui_ConfigDialogBase):
         This method shows the instance by calling its show method.
     """
     self.instance.show()
+    # Load dataverse list
+    if self.dataverseServerLineEdit.text() and self.apiTokenLineEdit.text():
+      self.dataverseVerifyLoadPushButton.click()
 
 
 if __name__ == "__main__":

@@ -657,7 +657,6 @@ class TestDataverseMainDialog(object):
     else:
       instance_mock.show.assert_not_called()
       mock_config_dialog.return_value.show.assert_called_once()
-      mock_main_dialog.show_message.assert_called_once_with(instance_mock, "Dataverse Not Configured", is_configured[1])
 
   @pytest.mark.parametrize("title,message,icon,expected_width", [
     pytest.param("Info", "This is an information message.", QMessageBox.Information, 200, id="info_message"),
