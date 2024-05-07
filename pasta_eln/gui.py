@@ -47,6 +47,8 @@ class MainWindow(QMainWindow):
     self.backend = Backend()
     self.comm = Communicate(self.backend)
     self.comm.formDoc.connect(self.formDoc)
+    self.dataverseMainDialog = None
+    self.dataverseConfig = None
 
     # Menubar
     menu = self.menuBar()
@@ -172,11 +174,11 @@ class MainWindow(QMainWindow):
       dataHierarchyForm.instance.exec()
       restart()
     elif command[0] is Command.DATAVERSE_CONFIG:
-      dataverseConfig = ConfigDialog()
-      dataverseConfig.instance.exec()
+      self.dataverseConfig = ConfigDialog()
+      self.dataverseConfig.show()
     elif command[0] is Command.DATAVERSE_MAIN:
-      dataverseMainDialog = MainDialog(self.comm.backend)
-      dataverseMainDialog.instance.exec()
+      self.dataverseMainDialog = MainDialog(self.comm.backend)
+      self.dataverseMainDialog.show()
     elif command[0] is Command.TEST1:
       fileName = QFileDialog.getOpenFileName(self, 'Open file for extractor test', str(Path.home()), '*.*')[0]
       report = self.comm.backend.testExtractor(fileName, outputStyle='html')
