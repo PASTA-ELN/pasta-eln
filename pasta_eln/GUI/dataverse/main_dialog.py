@@ -398,7 +398,6 @@ class MainDialog(Ui_MainDialogBase):
     if self.is_dataverse_configured[0]:
       self.instance.show()
     else:
-      self.show_message(self.instance, "Dataverse Not Configured", self.is_dataverse_configured[1])
       self.config_dialog = ConfigDialog()
       self.config_dialog.show()
 

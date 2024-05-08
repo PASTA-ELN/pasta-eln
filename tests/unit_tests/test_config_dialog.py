@@ -65,7 +65,7 @@ def mock_config_dialog(qtbot, mocker, mock_message_box, mock_webbrowser, mock_da
 
 class TestConfigDialog:
 
-  # Happy path test
+  # Success path test
   @pytest.mark.parametrize("server_url,api_token,dataverse_id", [
     ('http://valid.url', "test_token", "test_dataverse_id"),
   ])
@@ -86,8 +86,7 @@ class TestConfigDialog:
     mocker.patch.object(ConfigDialog, 'dataverseListComboBox', create=True)
     mocker.patch.object(ConfigDialog, 'dataverseLineEdit', create=True)
     mocker.patch.object(ConfigDialog, 'buttonBox', create=True)
-    mocker.patch.object(ConfigDialog, 'apiTokenVerifyPushButton', create=True)
-    mocker.patch.object(ConfigDialog, 'dataverseLoadPushButton', create=True)
+    mocker.patch.object(ConfigDialog, 'dataverseVerifyLoadPushButton', create=True)
     mocker.patch.object(ConfigDialog, 'apiTokenHelpPushButton', create=True)
 
     # Act
@@ -119,15 +118,9 @@ class TestConfigDialog:
     config_dialog.buttonBox.button.assert_called_once_with(QtWidgets.QDialogButtonBox.Save)
     config_dialog.buttonBox.button.return_value.clicked.connect.assert_called_once_with(
       config_dialog.save_config)
-    config_dialog.apiTokenVerifyPushButton.clicked.connect.assert_called_once_with(
-      config_dialog.verify_server_url_and_api_token)
-    config_dialog.dataverseLoadPushButton.clicked.connect.assert_called_once_with(
-      config_dialog.load_dataverse_list)
+    config_dialog.dataverseVerifyLoadPushButton.clicked.connect.assert_called_once_with(
+      config_dialog.verify_and_load_dataverse_list)
     config_dialog.apiTokenHelpPushButton.clicked.connect.assert_called_once()
-
-    config_dialog.dataverseServerLineEdit.text.assert_called_once()
-    config_dialog.apiTokenLineEdit.text.assert_called_once()
-    config_dialog.dataverseLoadPushButton.click.assert_called_once()
 
   # Error case: Config not found
   def test_config_dialog_init_error_no_config(self, mocker, mock_database_api, mock_dataverse_client, mock_message_box):
@@ -165,8 +158,7 @@ class TestConfigDialog:
     mocker.patch.object(ConfigDialog, 'dataverseListComboBox', create=True)
     mocker.patch.object(ConfigDialog, 'dataverseLineEdit', create=True)
     mocker.patch.object(ConfigDialog, 'buttonBox', create=True)
-    mocker.patch.object(ConfigDialog, 'apiTokenVerifyPushButton', create=True)
-    mocker.patch.object(ConfigDialog, 'dataverseLoadPushButton', create=True)
+    mocker.patch.object(ConfigDialog, 'dataverseVerifyLoadPushButton', create=True)
     mocker.patch.object(ConfigDialog, 'apiTokenHelpPushButton', create=True)
     mock_database_api.get_config_model.return_value.dataverse_login_info = {}  # Empty login info
 
@@ -288,12 +280,13 @@ class TestConfigDialog:
     mock_dataverse_client.get_dataverse_list.side_effect = mocker.AsyncMock(return_value=dataverse_list)
     mock_config_dialog.dataverseServerLineEdit.setText(server_url)
     mock_config_dialog.apiTokenLineEdit.setText(api_token)
+    mock_config_dialog.verify_server_url_and_api_token = mocker.MagicMock(return_value=True)
 
     # Act
-    mock_config_dialog.load_dataverse_list()
+    mock_config_dialog.verify_and_load_dataverse_list()
 
     # Assert
-    mock_config_dialog.logger.info.assert_called_once_with("Loading dataverse list..")
+    mock_config_dialog.logger.info.assert_has_calls([mocker.call('Loading dataverse list..')])
     if not server_url or not api_token:
       mock_message_box.warning.assert_called_once_with(mock_config_dialog.instance, "Error",
                                                        "Please enter both server URL and API token")
@@ -309,24 +302,32 @@ class TestConfigDialog:
       mock_message_box.warning.assert_called_once_with(mock_config_dialog.instance, "Error",
                                                        "Failed to load dataverse list")
 
-  @pytest.mark.parametrize("test_id, show_exception", [  # Success tests with various realistic test values
-    ("success_case", None),
+  # Parametrized test cases
+  @pytest.mark.parametrize("server_text, token_text, expected_click, test_id", [
+    # Happy path tests
+    ("http://example.com", "valid_token", True, "success_path_valid_inputs"),
+    ("https://dataverse.org", "another_valid_token", True, "success_path_different_inputs"),
 
-    # Error cases could include scenarios where instance.show() raises an exception.
-    ("error_case", Exception("Error during show")), ])
-  def test_show(self, test_id, mock_config_dialog, show_exception):
+    # Edge cases
+    ("", "token_without_server", False, "edge_case_no_server"),
+    ("http://example.com", "", False, "edge_case_no_token"),
+    ("", "", False, "edge_case_no_inputs"),
+  ])
+  def test_show1(self, mocker, mock_config_dialog, server_text, token_text, expected_click, test_id):
     # Arrange
-    mock_config_dialog.instance = MagicMock()
-    if show_exception:
-      mock_config_dialog.instance.show.side_effect = show_exception
+    mock_config_dialog.instance = mocker.MagicMock()
+    mock_config_dialog.dataverseServerLineEdit = mocker.MagicMock()
+    mock_config_dialog.dataverseServerLineEdit.text.return_value = server_text
+    mock_config_dialog.apiTokenLineEdit = mocker.MagicMock()
+    mock_config_dialog.apiTokenLineEdit.text.return_value = token_text
+    mock_config_dialog.dataverseVerifyLoadPushButton = mocker.MagicMock()
 
     # Act
-    if test_id == "error_case":
-      with pytest.raises(Exception) as exc_info:
-        mock_config_dialog.show()
-      # Assert
-      assert str(exc_info.value) == "Error during show"
+    mock_config_dialog.show()
+
+    # Assert
+    mock_config_dialog.instance.show.assert_called_once()
+    if expected_click:
+      mock_config_dialog.dataverseVerifyLoadPushButton.click.assert_called_once()
     else:
-      mock_config_dialog.show()
-      # Assert
-      mock_config_dialog.instance.show.assert_called_once()
+      mock_config_dialog.dataverseVerifyLoadPushButton.click.assert_not_called()
