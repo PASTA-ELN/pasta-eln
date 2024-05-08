@@ -133,15 +133,16 @@ class TestDataverseDataUploadTask:
     upload_cancel_clicked_signal_callback.connect.assert_called_once()
     assert task.progress_thread == progress_thread_mock.return_value, "Progress thread should be set"
     assert task.progress_thread.progress_update == task.progress_changed, "Progress thread update signal should be set"
-    task.progress_thread.end.connect.assert_called_once_with(task.progress_thread.deleteLater)
+    task.progress_thread.end.connect.assert_called_once_with(task.progress_thread.quit)
 
   @pytest.mark.parametrize("project_name, project_doc_id, dataverse_login_info, metadata, expected_log_contains", [
     # Success path test cases
     ("Project1", "doc123", {"server_url": "http://example.com", "api_token": "token123", "dataverse_id": "dv123"},
      {"key": "value"}, "Upload initiated for project Project1"),
   ], ids=["success-path"])
-  def test_initialize_success_path(self, mocker, setup_task, mock_upload_model, mock_db_api, project_name, project_doc_id,
-                                 dataverse_login_info, metadata, expected_log_contains):
+  def test_initialize_success_path(self, mocker, setup_task, mock_upload_model, mock_db_api, project_name,
+                                   project_doc_id,
+                                   dataverse_login_info, metadata, expected_log_contains):
     # Arrange
     setup_task.project_name = project_name
     setup_task.project_doc_id = project_doc_id
@@ -416,7 +417,8 @@ class TestDataverseDataUploadTask:
       assert persistent_id is None, "Expected None, got: {}".format(persistent_id)
     else:
       setup_task.dataverse_client.create_and_publish_dataset.assert_called_once_with(dataverse_id,
-                                                                                     {"title": project_name, **metadata})
+                                                                                     {"title": project_name,
+                                                                                      **metadata})
       mock_run.assert_called_once_with(setup_task.dataverse_client.create_and_publish_dataset.return_value)
       if expected_pid:
         setup_task.update_log.assert_called_with(log_message, setup_task.logger.info)

@@ -11,6 +11,7 @@ import logging
 from time import sleep
 
 from PySide6 import QtCore
+from PySide6.QtCore import QTimer
 
 from pasta_eln.dataverse.config_model import ConfigModel
 from pasta_eln.dataverse.database_api import DatabaseAPI
@@ -88,7 +89,6 @@ class UploadQueueManager(GenericTaskObject):
     self.logger.info("Adding thread task to upload queue, id: %s", upload_task_thread.task.id)
     self.upload_queue.append(upload_task_thread)
     upload_task_thread.task.finish.connect(lambda: self.remove_from_queue(upload_task_thread))
-    upload_task_thread.task.cancel.connect(lambda: self.remove_from_queue(upload_task_thread))
 
   def remove_from_queue(self, upload_task_thread: TaskThreadExtension) -> None:
     """
@@ -108,6 +108,7 @@ class UploadQueueManager(GenericTaskObject):
     if upload_task_thread in self.running_queue:
       self.running_queue.remove(upload_task_thread)
     upload_task_thread.worker_thread.quit()
+    upload_task_thread.task.cleanup()
 
   def start_task(self) -> None:
     """
@@ -159,15 +160,28 @@ class UploadQueueManager(GenericTaskObject):
 
     Explanation:
         This method empties the upload queue by quitting each upload task thread and clearing the upload queue.
-
-    Args:
-        None
-
     """
     self.logger.info("Emptying upload queue..")
     for upload_task_thread in self.upload_queue:
-      upload_task_thread.task.deleteLater()
+      upload_task_thread.worker_thread.quit()
     self.upload_queue.clear()
+
+  def remove_cancelled_tasks(self) -> None:
+    """
+    Removes cancelled tasks from the upload queue.
+
+    Explanation:
+        This method identifies tasks in the upload queue that have been cancelled and removes them from the queue.
+        It also logs the removal of each cancelled task.
+
+    Args:
+        self: The instance of the UploadQueueManager.
+    """
+    self.logger.info("Removing cancelled tasks from the queue..")
+    cancelled_tasks = [upload_task_thread for upload_task_thread in self.upload_queue if
+                       upload_task_thread.task.cancelled]
+    for upload_task_thread in cancelled_tasks:
+      self.remove_from_queue(upload_task_thread)
 
   def cancel_task(self) -> None:
     """
@@ -193,7 +207,8 @@ class UploadQueueManager(GenericTaskObject):
     Args:
         self: The instance of the class.
     """
-
     self.logger.info("Cancelling upload queue and the empty the upload queue..")
     for upload_task_thread in self.upload_queue:
       upload_task_thread.task.cancel.emit()
+    if self.upload_queue:
+      QTimer.singleShot(500, lambda: self.remove_cancelled_tasks())  # pylint: disable=unnecessary-lambda

@@ -80,7 +80,7 @@ class DataUploadTask(GenericTaskObject):
     # Create progress thread to update the progress
     self.progress_thread = ProgressUpdaterThread()
     self.progress_thread.progress_update = self.progress_changed
-    self.progress_thread.end.connect(self.progress_thread.deleteLater)
+    self.progress_thread.end.connect(self.progress_thread.quit)
 
   def start_task(self) -> None:
     """
