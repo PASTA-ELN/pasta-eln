@@ -72,6 +72,7 @@ def setup_task(mocker, mock_db_api, mock_dataverse_client, mock_progress_thread,
   status_label_set_text_callback = MagicMock()
   status_icon_set_pixmap_callback = MagicMock()
   upload_cancel_clicked_signal_callback = MagicMock()
+  backend_mock = MagicMock()
   task = DataUploadTask(
     project_name,
     project_id,
@@ -79,6 +80,7 @@ def setup_task(mocker, mock_db_api, mock_dataverse_client, mock_progress_thread,
     status_label_set_text_callback,
     status_icon_set_pixmap_callback,
     upload_cancel_clicked_signal_callback,
+    backend_mock
   )
   task.db_api = mock_db_api
   task.dataverse_client = mock_dataverse_client
@@ -108,6 +110,7 @@ class TestDataverseDataUploadTask:
     status_label_set_text_callback = MagicMock()
     status_icon_set_pixmap_callback = MagicMock()
     upload_cancel_clicked_signal_callback = MagicMock()
+    backend_mock = MagicMock()
     project_name = "Test Project"
     project_id = "Test ID"
 
@@ -118,7 +121,8 @@ class TestDataverseDataUploadTask:
       progress_update_callback,
       status_label_set_text_callback,
       status_icon_set_pixmap_callback,
-      upload_cancel_clicked_signal_callback
+      upload_cancel_clicked_signal_callback,
+      backend_mock
     )
 
     # Assert
@@ -195,8 +199,8 @@ class TestDataverseDataUploadTask:
 
   # Happy path tests with various realistic test values
   @pytest.mark.parametrize("project_name,eln_file_path,persistent_id,file_pid,cancelled", [
-    ("Project A", "/home/jmurugan/Artefacts/10/Text File1.txt", "doi:10.5072/FK2/XYZ123", "file_pid_A", False),
-    ("Project B", "/home/jmurugan/Artefacts/10/Text File1.txt", "doi:10.5072/FK2/XYZ456", "file_pid_B", True),
+    ("Project A", "/tmp/4567rtzre/Text File1.eln", "doi:10.5072/FK2/XYZ123", "file_pid_A", False),
+    ("Project B", "/tmp/345tgert34/Text File1.eln", "doi:10.5072/FK2/XYZ456", "file_pid_B", True),
   ], ids=["Success-path-A", "Success-path-B"])
   def test_start_task_success_path(self, mocker, setup_task, project_name, eln_file_path, persistent_id, file_pid,
                                    cancelled):
@@ -205,12 +209,16 @@ class TestDataverseDataUploadTask:
     mocker.patch('pasta_eln.dataverse.data_upload_task.DataUploadTask.check_if_cancelled', return_value=cancelled)
     mocker.patch('pasta_eln.dataverse.data_upload_task.DataUploadTask.update_log')
     mocker.patch('pasta_eln.dataverse.data_upload_task.DataUploadTask.finalize_upload_task')
+    mock_temp_dir = mocker.MagicMock()
+    mock_temp_dir.__enter__.return_value = "tempdir"
+    mocker.patch('pasta_eln.dataverse.data_upload_task.tempfile.TemporaryDirectory', return_value=mock_temp_dir)
     setup_task.project_name = project_name
     setup_task.cancelled = cancelled
     setup_task.check_if_cancelled = MagicMock(side_effect=[False, False, False, False, cancelled])
     setup_task.create_dataset_for_pasta_project = MagicMock(return_value=persistent_id)
     setup_task.check_if_dataset_is_unlocked = MagicMock(return_value=True)
     setup_task.upload_generated_eln_file_to_dataset = MagicMock(return_value=file_pid)
+    setup_task.generate_eln_file = MagicMock(return_value=eln_file_path)
 
     # Act
     setup_task.start_task()
@@ -227,19 +235,21 @@ class TestDataverseDataUploadTask:
     final_status = UploadStatusValues.Cancelled.name if cancelled else UploadStatusValues.Finished.name
     setup_task.finalize_upload_task.assert_called_with(final_status)
     setup_task.check_if_cancelled.assert_has_calls([mocker.call(), mocker.call(), mocker.call(), mocker.call()])
+    mock_temp_dir.__enter__.assert_called_once()
+    setup_task.generate_eln_file.assert_called_once_with("tempdir")
     setup_task.update_log.assert_has_calls(
-      [mocker.call(f'Step 1: Generating ELN file for project: {project_name}', setup_task.logger.info),
-       mocker.call('Successfully generated ELN file: /home/jmurugan/Artefacts/10/Text File1.txt',
+      [mocker.call(f'Successfully generated ELN file: {eln_file_path}',
                    setup_task.logger.info),
        mocker.call(f'Successfully uploaded ELN file, URL: dataverse_url/dataset.xhtml?persistentId={persistent_id}',
                    setup_task.logger.info)])
 
   # Various error cases
   @pytest.mark.parametrize("error_step,log_message", [
+    ("generate_eln_file", "Failed to generate ELN file for project: %s, hence finalizing the upload"),
     ("create_dataset", "Failed to create dataset for project: %s, hence finalizing the upload"),
     ("unlock_dataset", "Failed to unlock dataset for project: %s, hence finalizing the upload"),
     ("upload_eln_file", "Failed to upload eln file to dataset for project: %s, hence finalizing the upload"),
-  ], ids=["error-create-dataset", "error-unlock-dataset", "error-upload-eln-file"])
+  ], ids=["generate_eln_file", "error-create-dataset", "error-unlock-dataset", "error-upload-eln-file"])
   def test_start_task_error_cases(self, mocker, setup_task, error_step, log_message):
     # Arrange
     mock_super_start_task = mocker.patch('pasta_eln.dataverse.data_upload_task.super')
@@ -248,7 +258,9 @@ class TestDataverseDataUploadTask:
     mocker.patch('pasta_eln.dataverse.data_upload_task.DataUploadTask.finalize_upload_task')
     setup_task.project_name = "Project A"
     setup_task.check_if_cancelled = MagicMock(return_value=False)
-    if error_step == "create_dataset":
+    if error_step == "generate_eln_file":
+      setup_task.generate_eln_file = MagicMock(return_value=None)
+    elif error_step == "create_dataset":
       setup_task.create_dataset_for_pasta_project = MagicMock(return_value=None)
     else:
       setup_task.create_dataset_for_pasta_project = MagicMock(return_value="doi:10.5072/FK2/XYZ123")
@@ -588,3 +600,64 @@ class TestDataverseDataUploadTask:
     else:
       setup_task.update_log.assert_not_called()
       setup_task.finalize_upload_task.assert_not_called()
+
+  @pytest.mark.parametrize("tmp_dir, project_name, config_model, expected_file_path, dtypes, test_id", [
+    ("/tmp", "TestProject", ConfigModel(project_upload_items={"Text": True}), "/tmp/TestProject_eln_file.eln",
+     ["text"], "success_path"),
+    ("/var/tmp", "Another-Project", ConfigModel(project_upload_items={"Image": True, "Text": False}),
+     "/var/tmp/AnotherProject_eln_file.eln", ["image"], "success_path_with_special_chars_in_project_name"),
+    ("/tmp", "Data123", ConfigModel(project_upload_items={}), "/tmp/Data123_eln_file.eln",
+     [], "success_path_with_empty_upload_items"),
+    # Edge cases
+    ("/tmp", "", ConfigModel(project_upload_items={"Text": True}), "/tmp/_eln_file.eln", ["text"],
+     "edge_case_empty_project_name"),
+    ("/tmp", "§$&/§? Pasta Project", ConfigModel(project_upload_items={"Text": True}), "/tmp/PastaProject_eln_file.eln",
+     ["text"], "edge_case_invalid_project_name1"),
+    ("/tmp", "Pasta Project 1234 Ü sfß", ConfigModel(project_upload_items={"Text": True}),
+     "/tmp/PastaProject1234Üsfß_eln_file.eln", ["text"], "edge_case_invalid_project_name2"),
+    # Error cases
+    ("/tmp", "TestProject", None, "", [], "error_no_config_model"),
+    ("/tmp", "TestProject", ConfigModel(project_upload_items=None), "", [], "error_no_project_upload_items"),
+  ])
+  def test_generate_eln_file(self, mocker, setup_task, tmp_dir, project_name, config_model, expected_file_path,
+                             dtypes, test_id):
+    # Arrange
+    setup_task.project_name = project_name
+    setup_task.config_model = config_model
+    setup_task.update_log = mocker.MagicMock()
+    mock_path = mocker.patch('pasta_eln.dataverse.data_upload_task.Path')
+
+    # Act
+    with patch("pasta_eln.dataverse.data_upload_task.exportELN") as mock_exportELN:
+      result = setup_task.generate_eln_file(tmp_dir)
+
+    # Assert
+    if expected_file_path:
+      mock_exportELN.assert_any_call(setup_task.backend, setup_task.project_doc_id, expected_file_path, dtypes)
+      assert result == expected_file_path, f"Test ID: {test_id} - Expected file path does not match."
+      mock_path.assert_called_once_with(expected_file_path)
+      mock_path.return_value.touch.assert_called_once()
+    else:
+      assert result == expected_file_path, f"Test ID: {test_id} - Expected an empty string due to error."
+      if "error" in test_id:
+        setup_task.update_log.assert_called_with("Config model or project_upload_items is not set!",
+                                                 setup_task.logger.error)
+
+  @pytest.mark.parametrize("tmp_dir, exception, test_id", [
+    ("tmp_dir", Exception("File write error"), "exception_during_export"),
+  ])
+  def test_generate_eln_file_with_exceptions(self, mocker, setup_task, tmp_dir, exception, test_id):
+    # Arrange
+    setup_task.config_model = ConfigModel(project_upload_items={"Text": True})
+    setup_task.update_log = mocker.MagicMock()
+    mocker.patch('pasta_eln.dataverse.data_upload_task.Path')
+
+    # Act
+    with patch("pasta_eln.dataverse.data_upload_task.exportELN", side_effect=exception):
+      result = setup_task.generate_eln_file(tmp_dir)
+
+    # Assert
+    assert result == "", f"Test ID: {test_id} - Expected an empty string due to exception."
+    setup_task.update_log.assert_called_with(
+      f"Error while exporting ELN file for project: {setup_task.project_name}, error: {exception}",
+      setup_task.logger.error)

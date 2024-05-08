@@ -47,7 +47,8 @@ def mock_main_dialog(mocker):
   mocker.patch(
     "pasta_eln.GUI.dataverse.main_dialog.MainDialog.check_if_dataverse_is_configured",
     return_value=(True, "Configured"))
-  return MainDialog()
+  mock_backed = mocker.MagicMock()
+  return MainDialog(mock_backed)
 
 
 class TestDataverseMainDialog(object):
@@ -82,9 +83,10 @@ class TestDataverseMainDialog(object):
     mock_check_if_dataverse_is_configured = mocker.patch(
       "pasta_eln.GUI.dataverse.main_dialog.MainDialog.check_if_dataverse_is_configured",
       return_value=is_configured)
+    mock_backed = mocker.MagicMock()
 
     # Act
-    dialog = MainDialog()
+    dialog = MainDialog(mock_backed)
 
     # Assert
     mock_log.getLogger.assert_called_once_with("pasta_eln.GUI.dataverse.main_dialog.MainDialog")
@@ -309,7 +311,8 @@ class TestDataverseMainDialog(object):
           mock_main_dialog.get_upload_widget.return_value["widget"].uploadProgressBar.setValue,
           mock_main_dialog.get_upload_widget.return_value["widget"].statusLabel.setText,
           mock_main_dialog.get_upload_widget.return_value["widget"].statusIconLabel.setPixmap,
-          mock_main_dialog.get_upload_widget.return_value["widget"].uploadCancelPushButton.clicked
+          mock_main_dialog.get_upload_widget.return_value["widget"].uploadCancelPushButton.clicked,
+          mock_main_dialog.backend
         )
         mock_task_thread.assert_called_once_with(mock_data_upload_task.return_value)
         mock_main_dialog.upload_manager_task.add_to_queue.assert_called_once_with(mock_task_thread.return_value)

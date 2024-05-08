@@ -62,9 +62,6 @@ def config_dialog(qtbot, mocker, mock_message_box, mock_webbrowser, mock_dataver
   mocker.patch('pasta_eln.GUI.dataverse.config_dialog.QMessageBox', new=mock_message_box)
   mocker.patch('pasta_eln.GUI.dataverse.config_dialog.logging')
   mocker.patch('pasta_eln.GUI.dataverse.config_dialog.webbrowser', mock_webbrowser)
-  # mocker.patch('pasta_eln.GUI.dataverse.config_dialog.get_encrypt_key', return_value=(True, b"test_encrypt_key"))
-  # mocker.patch('pasta_eln.GUI.dataverse.config_dialog.decrypt_data', return_value='decrypted_api_token')
-  # mocker.patch('pasta_eln.GUI.dataverse.config_dialog.encrypt_data', return_value='encrypted_api_token')
   mocker.patch('pasta_eln.GUI.dataverse.config_dialog.check_login_credentials',
                side_effect=mock_check_login_credentials)
   dialog = ConfigDialog()
