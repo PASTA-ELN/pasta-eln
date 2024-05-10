@@ -318,7 +318,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
 
   Args:
     backend (backend): PASTA backend instance
-    projectID (str): docId of project
+    projectIDs (list): list of docIds of projects
     fileName (str): fileName which to use for saving
     dTypes (list): list of strings which should be included in the output, alongside folders x0 & x1; empty list=everything is exported
     verbose (bool): verbose
@@ -326,6 +326,112 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
   Returns:
     str: report of exportation
   """
+  def separate(doc: dict[str,Any], dirNameProject_: str) -> tuple[str, dict[str,Any]]:
+    """ separate document into
+    - main information (for all elns) and
+    - supplemental information (specific to PastaELN)
+    """
+    path =  f"{doc['-branch'][0]['path']}/" if doc['-type'][0][0]=='x' else doc['-branch'][0]['path']
+    docMain= {}
+    docSupp = {}
+    if path is None:
+      path = dirNameProject_+'/'+doc['_id']
+    elif not path.startswith(dirNameProject_) and not path.startswith('http'):
+      filesNotInProject.append(path)  # files elsewhere, standardOperatingProcedures
+    if not path.startswith('http'):
+      docMain['@id'] = f'./{dirNameGlobal}/{path}'
+    else:
+      docMain['@id'] = path
+    for key, value in doc.items():
+      if key in pasta2json and pasta2json[key] is not None:
+        docMain[pasta2json[key]] = value
+      else:
+        docSupp[key] = value
+    # clean individual entries of docSupp: remove personal data
+    for k in ['-user', '-client', 'image', '_attachments']:
+      if 'image' in docSupp:
+        del docSupp[k]
+    # clean individual entries of docMain
+    if 'keywords' in docMain:
+      docMain['keywords'] = ','.join(docMain['keywords'])
+    if docMain['genre'][0] == '-' or docMain['genre'][0][0]=='x':
+      del docMain['genre']
+    else:
+      docMain['genre'] = '/'.join(docMain['genre'])
+    docMain = {k:v for k,v in docMain.items() if v}
+    # move docSupp into docMain
+    variableMeasured = []
+    for k, v in flatten(docSupp).items():
+      name = ' \u2192 '.join([i.replace('_','').replace('-','').capitalize() for i in k.split('.')])
+      name = pastaNameTranslation[name] if name in pastaNameTranslation else name
+      variableMeasured.append({'value':v, 'propertyID':k, 'name':name})
+    docMain['variableMeasured'] = variableMeasured
+    return path, docMain
+
+  def appendDocToGraph(graph: list[dict[str,Any]], doc: dict[str,Any]) -> None:
+    """
+    Append a document / dictionary to a graph
+
+    Args:
+      graph (list): graph to be appended to
+      doc   (dict): document to append to graph
+    """
+    idsInGraph = [i['@id'] for i in graph]
+    if doc['@id'] not in idsInGraph:
+      graph.append(doc)
+    return
+
+
+  def iterateTree(nodeHier:Node, graph:list[dict[str,Any]], dirNameProject:str) -> Optional[str]:
+    """
+    Recursive function to translate the hierarchical node into a tree-node
+
+    Args:
+      nodeHier (Anytree.Node): anytree node
+      graph    (list): list of nodes
+      dirNameProject (str): name of the project
+
+    Returns:
+      str: tree node
+    """
+    # separate into main and supplemental information
+    doc = backend.db.getDoc(nodeHier.id)
+    path, docMain = separate(doc, dirNameProject)
+    hasPart = []
+    if (nodeHier.docType[0] not in dTypes) and nodeHier.docType[0][0]!='x' and len(dTypes)>0:
+      return None
+    for child in nodeHier.children:
+      res = iterateTree(child, graph, dirNameProject)
+      if res is not None:
+        hasPart.append( res )
+    if nodeHier.id[0]=='x':
+      parts = []
+      if hasPart:
+        parts += [{'@id':i} for i in hasPart]
+      if parts:
+        docMain['hasPart'] = parts
+    fullPath = backend.basePath/path
+    if path is not None and fullPath.exists() and fullPath.is_file():
+      with open(fullPath, 'rb') as fIn:
+        fileContent = fIn.read()
+        docMain['contentSize'] = str(len(fileContent))
+        docMain['sha256']      = hashlib.sha256(fileContent).hexdigest()
+      docMain['@type'] = 'File'
+    elif path.startswith('http'):
+      response = requests.get(path.replace(':/','://'), timeout=10)
+      if response.ok:
+        docMain['contentSize'] = str(response.headers['content-length'])
+        docMain['sha256']      = hashlib.sha256(response.content).hexdigest()
+      else:
+        print(f'Info: could not get file {path}')
+      docMain['@type'] = 'File'
+    elif '@type' not in docMain:  #samples will be here
+      docMain['@type'] = 'Dataset'
+      docMain['@id'] = docMain['@id'] if docMain['@id'].endswith('/') else f"{docMain['@id']}/"
+    appendDocToGraph(graph, docMain)
+    return docMain['@id']
+
+
   # define initial information
   fileName = fileName if fileName.endswith('.eln') else f'{fileName}.eln'
   filesNotInProject = []
@@ -334,122 +440,16 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
   logging.info('Create eln file %s',fileName)
   with ZipFile(fileName, 'w', compression=ZIP_DEFLATED) as elnFile:
     graph: list[dict[str,Any]] = []
-
-    #for each project
     dirNameProjects = []
-    for projectID in projectIDs:
+    for projectID in projectIDs:       #for each project
       docProject = backend.db.getDoc(projectID)
       dirNameProject = docProject['-branch'][0]['path']
       dirNameProjects.append(dirNameProject)
 
-      def separate(doc: dict[str,Any]) -> tuple[str, dict[str,Any]]:
-        """ separate document into
-        - main information (for all elns) and
-        - supplemental information (specific to PastaELN)
-        """
-        path =  f"{doc['-branch'][0]['path']}/" if doc['-type'][0][0]=='x' else doc['-branch'][0]['path']
-        docMain= {}
-        docSupp = {}
-        if path is None:
-          path = dirNameProject+'/'+doc['_id']
-        elif not path.startswith(dirNameProject) and not path.startswith('http'):
-          filesNotInProject.append(path)  # files elsewhere, standardOperatingProcedures
-        if not path.startswith('http'):
-          docMain['@id'] = f'./{dirNameGlobal}/{path}'
-        else:
-          docMain['@id'] = path
-        for key, value in doc.items():
-          if key in pasta2json and pasta2json[key] is not None:
-            docMain[pasta2json[key]] = value
-          else:
-            docSupp[key] = value
-        # clean individual entries of docSupp: remove personal data
-        for k in ['-user', '-client', 'image', '_attachments']:
-          if 'image' in docSupp:
-            del docSupp[k]
-        # clean individual entries of docMain
-        if 'keywords' in docMain:
-          docMain['keywords'] = ','.join(docMain['keywords'])
-        if docMain['genre'][0] == '-' or docMain['genre'][0][0]=='x':
-          del docMain['genre']
-        else:
-          docMain['genre'] = '/'.join(docMain['genre'])
-        docMain = {k:v for k,v in docMain.items() if v}
-        # move docSupp into docMain
-        variableMeasured = []
-        for k, v in flatten(docSupp).items():
-          name = ' \u2192 '.join([i.replace('_','').replace('-','').capitalize() for i in k.split('.')])
-          name = pastaNameTranslation[name] if name in pastaNameTranslation else name
-          variableMeasured.append({'value':v, 'propertyID':k, 'name':name})
-        docMain['variableMeasured'] = variableMeasured
-        return path, docMain
-
-
-      def appendDocToGraph(graph: list[dict[str,Any]], doc: dict[str,Any]) -> None:
-        """
-        Append a document / dictionary to a graph
-
-        Args:
-          graph (list): graph to be appended to
-          doc   (dict): document to append to graph
-        """
-        idsInGraph = [i['@id'] for i in graph]
-        if doc['@id'] not in idsInGraph:
-          graph.append(doc)
-        return
-
-
-      def iterateTree(nodeHier:Node, graph:list[dict[str,Any]]) -> Optional[str]:
-        """
-        Recursive function to translate the hierarchical node into a tree-node
-
-        Args:
-          nodeHier (Anytree.Node): anytree node
-          graph    (list): list of nodes
-
-        Returns:
-          str: tree node
-        """
-        # separate into main and supplemental information
-        doc = backend.db.getDoc(nodeHier.id)
-        path, docMain = separate(doc)
-        hasPart = []
-        if (nodeHier.docType[0] not in dTypes) and nodeHier.docType[0][0]!='x' and len(dTypes)>0:
-          return None
-        for child in nodeHier.children:
-          res = iterateTree(child, graph)
-          if res is not None:
-            hasPart.append( res )
-        if nodeHier.id[0]=='x':
-          parts = []
-          if hasPart:
-            parts += [{'@id':i} for i in hasPart]
-          if parts:
-            docMain['hasPart'] = parts
-        fullPath = backend.basePath/path
-        if path is not None and fullPath.exists() and fullPath.is_file():
-          with open(fullPath, 'rb') as fIn:
-            fileContent = fIn.read()
-            docMain['contentSize'] = str(len(fileContent))
-            docMain['sha256']      = hashlib.sha256(fileContent).hexdigest()
-          docMain['@type'] = 'File'
-        elif path.startswith('http'):
-          response = requests.get(path.replace(':/','://'))
-          if response.ok:
-            docMain['contentSize'] = str(response.headers['content-length'])
-            docMain['sha256']      = hashlib.sha256(response.content).hexdigest()
-          else:
-            print(f'Info: could not get file {path}')
-          docMain['@type'] = 'File'
-        elif '@type' not in docMain:  #samples will be here
-          docMain['@type'] = 'Dataset'
-          docMain['@id'] = docMain['@id'] if docMain['@id'].endswith('/') else f"{docMain['@id']}/"
-        appendDocToGraph(graph, docMain)
-        return docMain['@id']
 
       # ------- Create main graph -------------------
       listHier = backend.db.getHierarchy(projectID, allItems=False)
-      iterateTree(listHier, graph)  # create json object from anytree
+      iterateTree(listHier, graph, dirNameProject)  # create json object from anytree
 
       # ------------------ copy data-files --------------------------
       # datafiles are already in the graph-graph: only copy and no addition to graph

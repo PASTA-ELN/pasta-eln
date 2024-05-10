@@ -370,7 +370,6 @@ def backupCouchDB(location:str='', userName:str='', password:str='') -> None:
   timestamp = datetime.now().isoformat().split('.')[0].replace('-','').replace(':','')
   zipFileName = 'couchDB_backup_'+location.replace('.','')+'_'+timestamp
   print(f'Create zip-file {zipFileName}.zip')
-  databases = resp.json()
   with ZipFile(f'{zipFileName}.zip', 'w', compression=ZIP_DEFLATED) as zipFile:
     for database in ['pasta_tutorial2']: #databases:
       if database.startswith('_'):
