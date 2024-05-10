@@ -377,7 +377,7 @@ def flatten(d:Optional[dict[str,Any]]) -> dict[Optional[str], Any]:
       return k2
     return f"{k1}.{k2}"
 
-  def _flatten(_d:Union[Mapping[Any, Any], list[Any]], depth:int, parent:Optional[str]=None) -> bool:
+  def _flatten(_d:Union[dict[str, Any], list[Any]], depth:int, parent:Optional[str]=None) -> bool:
     """ Recursive function """
     key_value_iterable = (enumerate(_d) if isinstance(_d, enumerate_types) else _d.items())
     has_item = False

@@ -12,7 +12,7 @@ from .miscTools import createDirName, generic_hash, flatten, hierarchy
 
 # to discuss
 # - genre:docType, simulation, experiment/measurement;  status = Done, finished
-# - cathegory: project
+# - category: project
 # - root entry: authors list, single: @id; multiple authors
 #    - add several authors
 #    - one creator, multiple authors
@@ -440,7 +440,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
 
   # define initial information
   fileName = fileName if fileName.endswith('.eln') else f'{fileName}.eln'
-  filesNotInProject = []
+  filesNotInProject:list[str] = []
   dirNameGlobal = fileName.split('/')[-1][:-4]
   # == MAIN FUNCTION ==
   logging.info('Create eln file %s',fileName)
