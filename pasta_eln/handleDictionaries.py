@@ -205,7 +205,7 @@ def diffDicts(dict1:dict[str,Any], dict2:dict[str,Any]) -> str:
   Returns:
     str: output with \\n
   """
-  ignoreKeys = ['-client','_rev','-gui']
+  ignoreKeys = ['-client', '_rev', '-gui', '_attachments']
   outString = ''
   dict2Copy = dict(dict2)
   for key,value in dict1.items():
