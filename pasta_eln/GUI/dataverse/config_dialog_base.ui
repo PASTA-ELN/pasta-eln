@@ -55,7 +55,7 @@
         </widget>
        </item>
        <item>
-        <spacer name="horizontalSpacer_3">
+        <spacer name="dataverseUrlHorizontalSpacer">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
          </property>
@@ -64,7 +64,7 @@
          </property>
          <property name="sizeHint" stdset="0">
           <size>
-           <width>213</width>
+           <width>155</width>
            <height>20</height>
           </size>
          </property>
@@ -73,7 +73,7 @@
       </layout>
      </item>
      <item>
-      <spacer name="verticalSpacer">
+      <spacer name="verticalSpacer_1">
        <property name="orientation">
         <enum>Qt::Vertical</enum>
        </property>
@@ -120,26 +120,10 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="apiTokenVerifyPushButton">
-         <property name="minimumSize">
-          <size>
-           <width>100</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="toolTip">
-          <string>Verify if the given dataverse server and api token are reachable.</string>
-         </property>
-         <property name="text">
-          <string>Verify</string>
-         </property>
-        </widget>
-       </item>
-       <item>
         <widget class="QPushButton" name="apiTokenHelpPushButton">
          <property name="minimumSize">
           <size>
-           <width>100</width>
+           <width>150</width>
            <height>0</height>
           </size>
          </property>
@@ -208,39 +192,26 @@
          <property name="placeholderText">
           <string>Selected Dataverse ID</string>
          </property>
+         <property name="clearButtonEnabled">
+          <bool>true</bool>
+         </property>
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="dataverseLoadPushButton">
+        <widget class="QPushButton" name="dataverseVerifyLoadPushButton">
          <property name="minimumSize">
           <size>
-           <width>100</width>
+           <width>150</width>
            <height>0</height>
           </size>
          </property>
          <property name="toolTip">
-          <string>Loads available dataverse list from the server.</string>
+          <string>Verify API credentials and load available dataverse list from the server.</string>
          </property>
          <property name="text">
-          <string>Load</string>
+          <string>Verify &amp;&amp; Load</string>
          </property>
         </widget>
-       </item>
-       <item>
-        <spacer name="dataverserListhorizontalSpacer">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeType">
-          <enum>QSizePolicy::Preferred</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>105</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
        </item>
       </layout>
      </item>

@@ -1,5 +1,6 @@
 """ Python Backend: all operations with the filesystem are here """
 import json, sys, os, importlib, tempfile, logging, traceback
+from threading import Thread
 from pathlib import Path
 from typing import Any, Optional, Union
 from urllib import request
@@ -119,19 +120,30 @@ class Backend(CLI_Mixin):
     self.addData('-edit-', doc)
     # change folder-name in database of all children
     if doc['-type'][0][0]=='x' and self.cwd is not None:
-      items = self.db.getView(
-          'viewHierarchy/viewPaths',
-          startKey=f'{self.cwd.relative_to(self.basePath).as_posix()}/',
-      )
+      items = self.db.getView('viewHierarchy/viewPaths',
+                              startKey=f'{self.cwd.relative_to(self.basePath).as_posix()}/')
       for item in items:
-        oldPathparts = item['key'].split('/')
-        newPathParts = doc['-branch']['path'].split('/')
-        newPath = '/'.join(newPathParts+oldPathparts[len(newPathParts):]  )
-        # print(item['id']+'  old='+item['key']+'  branch='+str(item['value'][-1])+\
-        #      '  child='+str(item['value'][-3])+'  new='+newPath)
-        self.db.updateBranch(item['id'], item['value'][-1], item['value'][-3], path=newPath)
+        t = Thread(target=self.threadParallel, args=(item, doc))
+        t.start()
     self.cwd = self.basePath #reset to sensible before continuing
     self.hierStack = []
+    return
+
+
+  def threadParallel(self, item:dict[str,Any], doc:dict[str,Any]) -> None:
+    """ internal function to process items and documents in parallel: rename folders on the disk
+
+    Args:
+      item (dict): item of current item to process
+      doc (dict):  parents documents
+    """
+    oldPathParts = item['key'].split('/')
+    newPathParts = doc['-branch']['path'].split('/')
+    newPath = '/'.join(newPathParts+oldPathParts[len(newPathParts):]  )
+    if newPath != item['key']:  # for-loop could also be implemented in parallel
+      # print(item['id']+'  old='+item['key']+'  branch='+str(item['value'][-1])+\
+      #      '  child='+str(item['value'][-3])+'  new='+newPath)
+      self.db.updateBranch(item['id'], item['value'][-1], item['value'][-3], path=newPath)
     return
 
 
@@ -179,7 +191,7 @@ class Backend(CLI_Mixin):
                   str(edit))
 
     # collect structure-doc and prepare
-    if doc['-type'][0][0]=='x' and doc['-type'][0]!='x0' and childNum is None:
+    if doc['-type'][0] and doc['-type'][0][0]=='x' and doc['-type'][0]!='x0' and childNum is None:
       #should not have childnumber in other cases
       thisStack = ' '.join(hierStack)
       view = self.db.getView('viewHierarchy/viewHierarchy', startKey=thisStack) #not faster with cT.getChildren
@@ -192,7 +204,7 @@ class Backend(CLI_Mixin):
 
     # find path name on local file system; name can be anything
     if self.cwd is not None and '-name' in doc:
-      if doc['-type'][0][0]=='x':
+      if doc['-type'][0] and doc['-type'][0][0]=='x':
         #project, step, task
         if doc['-type'][0]=='x0':
           childNum = 0
@@ -244,8 +256,6 @@ class Backend(CLI_Mixin):
           if len(view)==1:  #measurement is already in database
             doc['_id'] = view[0]['id']
             doc['shasum'] = shasum
-            if doc['-type'] == ['-']:  #don't overwrite identified type, without going through extractor
-              del doc['-type']
             edit = True
     # assemble branch information
     if childNum is None:
@@ -407,7 +417,7 @@ class Backend(CLI_Mixin):
           pathsInDB_data.remove(path)
         else:
           logging.info('Scan: add file to DB: %s',path)
-          self.addData('-', {'-name':path}, hierStack)
+          self.addData('', {'-name':path}, hierStack)
     #finish method
     self.cwd = self.basePath/projPath
     orphans = [
@@ -495,7 +505,7 @@ class Backend(CLI_Mixin):
             except:
               doc[meta][item] = str(doc[meta][item])
               print('**Warning -> stringified  ',meta, item)
-        if doc['-type'][0] in [doc['recipe'].split('/')[0], '-']:
+        if doc['recipe'].startswith(doc['-type'][0]):
           doc['-type']     = doc['recipe'].split('/')
         else:
           #user has strange wish: trust him/her

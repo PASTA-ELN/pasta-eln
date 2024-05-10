@@ -18,7 +18,7 @@ from json import JSONDecodeError
 from logging import Logger
 from os import getcwd
 from os.path import dirname, join, realpath
-from unittest.mock import mock_open, patch
+from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
 
@@ -30,10 +30,20 @@ from pasta_eln.dataverse.project_model import ProjectModel
 from pasta_eln.dataverse.upload_model import UploadModel
 
 
+def mock_config_model(api_token=None, dataverse_login_info_valid=True):
+  config_model = ConfigModel()
+  if dataverse_login_info_valid:
+    config_model.dataverse_login_info = {"api_token": api_token, "dataverse_id": "some_id"} if api_token else {}
+  else:
+    config_model.dataverse_login_info = None
+  return config_model
+
+
 @pytest.fixture
 def mock_database_api(mocker) -> DatabaseAPI:
   mocker.patch('pasta_eln.dataverse.database_api.logging.getLogger')
   mocker.patch('pasta_eln.dataverse.database_api.BaseDatabaseAPI')
+  mocker.patch('pasta_eln.dataverse.database_api.get_encrypt_key', return_value=(True, "test_key"))
   api = DatabaseAPI()
   mocker.resetall()
   return api
@@ -46,11 +56,12 @@ class TestDataverseDatabaseAPI:
     # Arrange
     log_mock = mocker.MagicMock(spec=Logger)
     base_db_api_mock = mocker.MagicMock(spec=BaseDatabaseAPI)
+    mocker.patch('pasta_eln.dataverse.database_api.get_encrypt_key', return_value=(True, "test_key"))
+    mocker.patch('pasta_eln.dataverse.utils.exists', return_value=True)
     logger_mock = mocker.patch('pasta_eln.dataverse.database_api.logging.getLogger', return_value=log_mock)
     if test_id == "success_case_default_values":
       base_db_api_constructor_mock = mocker.patch('pasta_eln.dataverse.database_api.BaseDatabaseAPI',
                                                   return_value=base_db_api_mock)
-      initialize_database_mock = mocker.patch('pasta_eln.dataverse.database_api.DatabaseAPI.initialize_database')
     else:
       base_db_api_constructor_mock = mocker.patch('pasta_eln.dataverse.database_api.BaseDatabaseAPI',
                                                   side_effect=DatabaseError("test_error"))
@@ -69,7 +80,6 @@ class TestDataverseDatabaseAPI:
     if test_id == "success_case_default_values":
       assert db_api.db_api == base_db_api_mock
       assert db_api.design_doc_name == '_design/viewDataverse'
-      initialize_database_mock.assert_called_once()
     else:
       assert db_api is None
 
@@ -500,3 +510,104 @@ class TestDataverseDatabaseAPI:
       mock_dirname.return_value = '/pasta_eln/src/pasta_eln/dataverse'
       with pytest.raises(type(side_effect)):
         mock_database_api.initialize_config_document()
+
+  # Parametrized test covering happy paths, edge cases, and error cases
+  @pytest.mark.parametrize(
+    "encrypt_key,api_token,dataverse_login_info_valid,expected_api_token,expected_warning,expected_error", [
+      # ID: Happy Path with encryption
+      (True, "encrypted_token", True, "decrypted_token", None, None),
+      # ID: Happy Path without encryption
+      (False, "plain_token", True, None,
+       "No encryption key found. Hence if any API key exists, it will be removed and the user needs to re-enter it.",
+       None),
+      # ID: Error case with invalid dataverse_login_info
+      (True, None, False, None, None, "Fatal Error, Invalid dataverse login info!"),
+      # ID: Error case with no config model found
+      (True, None, True, None, None, "Fatal error, Failed to load config model!"),
+    ])
+  def test_get_config_model(self, mocker, mock_database_api, encrypt_key, api_token, dataverse_login_info_valid,
+                            expected_api_token,
+                            expected_warning,
+                            expected_error):
+    # Arrange
+    mock_database_api.encrypt_key = "fake_key" if encrypt_key else None
+    mock_database_api.config_doc_id = "config_doc_id"
+    mock_config = None if expected_error == "Fatal error, Failed to load config model!" else mock_config_model(
+      api_token, dataverse_login_info_valid)
+    mocker.patch.object(mock_database_api, 'get_model', return_value=mock_config)
+    mocker.patch('pasta_eln.dataverse.database_api.decrypt_data', return_value="decrypted_token" if api_token else None)
+
+    # Act
+    result = mock_database_api.get_config_model()
+
+    # Assert
+    mock_database_api.logger.info.assert_any_call("Getting config model...")
+    if expected_error:
+      mock_database_api.logger.error.assert_called_with(expected_error)
+      assert result is None
+    elif expected_warning:
+      mock_database_api.logger.warning.assert_any_call(expected_warning)
+      assert result.dataverse_login_info["api_token"] is None
+      assert result.dataverse_login_info["dataverse_id"] is None
+    else:
+      assert result.dataverse_login_info["api_token"] == expected_api_token
+
+  # Parametrized test cases for happy path, edge cases, and error cases
+  @pytest.mark.parametrize("api_token, server_url, expected_api_token, expected_server_url, test_id", [
+    ("token123", "http://example.com/", "encrypted_token123", "http://example.com", "success_path"),
+    ("", "http://example.com/", "", "http://example.com", "empty_api_token"),
+    ("token123", "", "encrypted_token123", "", "empty_server_url"),
+    ("token123", "http://example.com//", "encrypted_token123", "http://example.com", "server_url_with_trailing_slash"),
+    ("token123", "http://example.com\\", "encrypted_token123", "http://example.com", "server_url_with_backslash"),
+  ], ids=["happy_path", "empty_api_token", "empty_server_url", "server_url_with_trailing_slash",
+          "server_url_with_backslash"])
+  def test_save_config_model_success_path_and_edge_cases(self, mocker, mock_database_api, api_token, server_url,
+                                                         expected_api_token, expected_server_url, test_id):
+    # Arrange
+    mock_config = mocker.MagicMock(spec=ConfigModel)
+    mock_database_api.update_model_document = mocker.MagicMock()
+    mock_config.dataverse_login_info = {"api_token": api_token, "server_url": server_url}
+    mock_encrypt = mocker.patch('pasta_eln.dataverse.database_api.encrypt_data', return_value=expected_api_token)
+    # Act
+    mock_database_api.save_config_model(mock_config)
+
+    # Assert
+    mock_database_api.logger.info.assert_any_call("Saving config model...")
+    if api_token:
+      mock_encrypt.assert_called_once_with(mock_database_api.logger, mock_database_api.encrypt_key, api_token)
+    assert mock_config.dataverse_login_info["api_token"] == expected_api_token
+    assert mock_config.dataverse_login_info["server_url"] == expected_server_url
+    mock_database_api.update_model_document.assert_called_once_with(mock_config)
+
+  @pytest.mark.parametrize("config_model, test_id", [
+    (None, "none_config_model"),
+    ("not_a_config_model", "invalid_type_config_model"),
+    (MagicMock(spec=ConfigModel, dataverse_login_info="not_a_dict"), "invalid_dataverse_login_info_type"),
+  ], ids=["none_config_model", "invalid_type_config_model", "invalid_dataverse_login_info_type"])
+  def test_save_config_model_error_cases(self, mocker, mock_database_api, config_model, test_id):
+    # Arrange
+    mock_database_api.update_model_document = mocker.MagicMock()
+    original_update_model_document_call_count = mock_database_api.update_model_document.call_count
+
+    # Act
+    mock_database_api.save_config_model(config_model)
+
+    # Assert
+    mock_database_api.logger.info.assert_any_call("Saving config model...")
+    mock_database_api.logger.error.assert_called_once()
+    assert mock_database_api.update_model_document.call_count == original_update_model_document_call_count
+
+  @pytest.mark.parametrize("encrypt_key, test_id", [
+    (None, "no_encrypt_key"),
+  ], ids=["no_encrypt_key"])
+  def test_save_config_model_fatal_error_cases(self, mock_database_api, encrypt_key, test_id):
+    # Arrange
+    mock_database_api.encrypt_key = encrypt_key
+    mock_config = MagicMock(spec=ConfigModel)
+    mock_config.dataverse_login_info = {"api_token": "token123", "server_url": "http://example.com/"}
+
+    # Act & Assert
+    with pytest.raises(ValueError) as exc_info:
+      mock_database_api.save_config_model(mock_config)
+    mock_database_api.logger.info.assert_any_call("Saving config model...")
+    assert "Fatal Error, No encryption key found!" in str(exc_info.value)

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>PrimitiveCompoundFrame</class>
- <widget class="QFrame" name="PrimitiveCompoundFrame">
+ <class>PrimitiveCompoundControlledFrameBase</class>
+ <widget class="QFrame" name="PrimitiveCompoundControlledFrameBase">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -43,9 +43,6 @@
         <string>Add</string>
        </property>
       </widget>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="compoundHorizontalLayout"/>
      </item>
     </layout>
    </item>

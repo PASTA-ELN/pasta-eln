@@ -10,6 +10,9 @@
 import logging
 from time import sleep
 
+from PySide6 import QtCore
+from PySide6.QtCore import QTimer
+
 from pasta_eln.dataverse.config_model import ConfigModel
 from pasta_eln.dataverse.database_api import DatabaseAPI
 from pasta_eln.dataverse.generic_task_object import GenericTaskObject
@@ -26,6 +29,7 @@ class UploadQueueManager(GenericTaskObject):
       start the task execution, clean up resources, and cancel the task.
 
   """
+  cancel_all_tasks = QtCore.Signal()
 
   def __init__(self) -> None:
     """
@@ -50,6 +54,8 @@ class UploadQueueManager(GenericTaskObject):
     self.upload_queue: list[TaskThreadExtension] = []
     self.running_queue: list[TaskThreadExtension] = []
     self.db_api: DatabaseAPI = DatabaseAPI()
+    self.cancel_all_tasks.connect(
+      lambda: self.cancel_all_queued_tasks_and_empty_queue())  # pylint: disable=unnecessary-lambda
     self.set_concurrent_uploads()
 
   def set_concurrent_uploads(self) -> None:
@@ -65,8 +71,7 @@ class UploadQueueManager(GenericTaskObject):
 
     """
     self.logger.info("Resetting number of concurrent uploads..")
-    model = self.db_api.get_model(self.db_api.config_doc_id, ConfigModel)
-    self.config_model = model if isinstance(model, ConfigModel) else None
+    self.config_model = self.db_api.get_config_model()
     self.number_of_concurrent_uploads = self.config_model.parallel_uploads_count if self.config_model else None
 
   def add_to_queue(self, upload_task_thread: TaskThreadExtension) -> None:
@@ -75,7 +80,7 @@ class UploadQueueManager(GenericTaskObject):
 
     Explanation:
         This method adds the given upload_task_thread to the upload queue.
-        It also connects the finished signal of the task to the remove_from_queue method.
+        It also connects the finish signal of the task to the remove_from_queue method.
 
     Args:
         upload_task_thread (TaskThreadExtension): The thread task to be added to the upload queue.
@@ -83,7 +88,7 @@ class UploadQueueManager(GenericTaskObject):
     """
     self.logger.info("Adding thread task to upload queue, id: %s", upload_task_thread.task.id)
     self.upload_queue.append(upload_task_thread)
-    upload_task_thread.task.finished.connect(lambda: self.remove_from_queue(upload_task_thread))
+    upload_task_thread.task.finish.connect(lambda: self.remove_from_queue(upload_task_thread))
 
   def remove_from_queue(self, upload_task_thread: TaskThreadExtension) -> None:
     """
@@ -103,6 +108,7 @@ class UploadQueueManager(GenericTaskObject):
     if upload_task_thread in self.running_queue:
       self.running_queue.remove(upload_task_thread)
     upload_task_thread.worker_thread.quit()
+    upload_task_thread.task.cleanup()
 
   def start_task(self) -> None:
     """
@@ -124,7 +130,10 @@ class UploadQueueManager(GenericTaskObject):
         for upload_task_thread in self.upload_queue:
           if self.cancelled or len(self.running_queue) >= self.number_of_concurrent_uploads:
             break
-          if not upload_task_thread.task.started and not upload_task_thread.task.cancelled:
+          if (not upload_task_thread.task.started
+              and not upload_task_thread.task.cancelled
+              and not upload_task_thread.task.finished
+              and upload_task_thread not in self.running_queue):
             self.running_queue.append(upload_task_thread)
             upload_task_thread.task.start.emit()
       sleep(0.5)
@@ -151,15 +160,28 @@ class UploadQueueManager(GenericTaskObject):
 
     Explanation:
         This method empties the upload queue by quitting each upload task thread and clearing the upload queue.
-
-    Args:
-        None
-
     """
     self.logger.info("Emptying upload queue..")
     for upload_task_thread in self.upload_queue:
-      upload_task_thread.quit()
+      upload_task_thread.worker_thread.quit()
     self.upload_queue.clear()
+
+  def remove_cancelled_tasks(self) -> None:
+    """
+    Removes cancelled tasks from the upload queue.
+
+    Explanation:
+        This method identifies tasks in the upload queue that have been cancelled and removes them from the queue.
+        It also logs the removal of each cancelled task.
+
+    Args:
+        self: The instance of the UploadQueueManager.
+    """
+    self.logger.info("Removing cancelled tasks from the queue..")
+    cancelled_tasks = [upload_task_thread for upload_task_thread in self.upload_queue if
+                       upload_task_thread.task.cancelled]
+    for upload_task_thread in cancelled_tasks:
+      self.remove_from_queue(upload_task_thread)
 
   def cancel_task(self) -> None:
     """
@@ -168,13 +190,25 @@ class UploadQueueManager(GenericTaskObject):
     Explanation:
         This method cancels the upload queue by calling the super-class's cancel_task method.
         It emits the cancel signal for each task in the running queue and empties the upload queue.
+    """
+    self.logger.info("Cancelling upload manager..")
+    super().cancel_task()
+    # Cancel all the tasks in the pool and remove them all from the queue
+    self.cancel_all_queued_tasks_and_empty_queue()
+
+  def cancel_all_queued_tasks_and_empty_queue(self) -> None:
+    """
+    Cancels all queued tasks and empties the upload queue.
+
+    Explanation:
+        This function iterates through the upload queue, cancelling each task thread by emitting a cancel signal.
+        It then empties the upload queue.
 
     Args:
-        None
-
+        self: The instance of the class.
     """
-    self.logger.info("Cancelling upload queue..")
-    super().cancel_task()
-    for upload_task_thread in self.running_queue:
+    self.logger.info("Cancelling upload queue and the empty the upload queue..")
+    for upload_task_thread in self.upload_queue:
       upload_task_thread.task.cancel.emit()
-    self.empty_upload_queue()
+    if self.upload_queue:
+      QTimer.singleShot(500, lambda: self.remove_cancelled_tasks())  # pylint: disable=unnecessary-lambda

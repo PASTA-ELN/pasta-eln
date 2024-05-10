@@ -176,7 +176,8 @@ class Sidebar(QWidget):
             projWidget.setStyleSheet("background-color:"+ getColor(self.comm.backend, 'secondaryDark'))
       self.comm.changeProject.emit(projID, item)
     elif command[0] is Command.SCAN_PROJECT:
-      self.comm.backend.scanProject(self.progress, self.openProjectId, '')
+      for _ in range(2):  #scan twice: convert, extract
+        self.comm.backend.scanProject(self.progress, self.openProjectId, '')
       self.comm.changeProject.emit(self.openProjectId,'')
       showMessage(self, 'Information','Scanning finished')
     elif command[0] is Command.SHOW_FOLDER:

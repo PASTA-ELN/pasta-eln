@@ -41,6 +41,10 @@ class Ui_ProjectItemFrame(object):
     self.modifiedDateTimeLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignLeading|QtCore.Qt.AlignmentFlag.AlignLeft|QtCore.Qt.AlignmentFlag.AlignVCenter)
     self.modifiedDateTimeLabel.setObjectName("modifiedDateTimeLabel")
     self.horizontalLayout.addWidget(self.modifiedDateTimeLabel)
+    self.projectDocIdLabel = QtWidgets.QLabel(parent=ProjectItemFrame)
+    self.projectDocIdLabel.setText("")
+    self.projectDocIdLabel.setObjectName("projectDocIdLabel")
+    self.horizontalLayout.addWidget(self.projectDocIdLabel)
     self.horizontalLayout_2.addLayout(self.horizontalLayout)
 
     self.retranslateUi(ProjectItemFrame)

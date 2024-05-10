@@ -343,7 +343,7 @@ def backupCouchDB(location:str='', userName:str='', password:str='') -> None:
   if location=='local':
     location = '127.0.0.1'
     if not userName:
-      userName = input('Enter username: ').strip()
+      userName = input('Enter local admin username: ').strip()
     if not password:
       password = input('Enter password: ').strip()
   elif location=='remote':
@@ -442,15 +442,20 @@ def restoreCouchDB(location:str='', userName:str='', password:str='', fileName:s
     possFiles = [i for i in os.listdir('.') if i.startswith('couchDB') and i.endswith('.zip')]
     for idx, i in enumerate(possFiles):
       print(f'[{str(idx + 1)}] {i}')
-    fileName = input(f'Which file to use for restored? (1-{len(possFiles)}) ')
-    fileName = possFiles[int(fileName)-1]
+    fileChoice = input(f'Which file to use for restored? (1-{len(possFiles)}) ')
+    fileName = possFiles[int(fileChoice)-1] if fileChoice else possFiles[0]
   # use information
   authUser = requests.auth.HTTPBasicAuth(userName, password)
   with ZipFile(fileName, 'r', compression=ZIP_DEFLATED) as zipFile:
-    files = zipFile.namelist()
+    files = [i for i in zipFile.namelist() if not i.endswith('/')]  #only files, no folders
     #first run through: create documents and design documents
     for fileI in files:
       fileParts = fileI.split('/')[1:]
+      if fileParts==['pastaELN.json']: #do not recreate file, it is only there for manual recovery
+        continue
+      if len(fileParts)!=2:
+        print(f"**ERROR: Cannot process file {fileI}: does not have 1+2 parts")
+        continue
       database = fileParts[0]
       docID = fileParts[1]
       if docID.endswith('_attach'):
@@ -480,6 +485,11 @@ def restoreCouchDB(location:str='', userName:str='', password:str='', fileName:s
     #second run through: create attachments
     for fileI in files:
       fileParts = fileI.split('/')[1:]
+      if fileParts==['pastaELN.json'] or fileParts[-1]=='' or fileParts[-2]=='_design': #do not recreate file, it is only there for manual recovery
+        continue
+      if len(fileParts)!=2:
+        print(f"**ERROR-Attachment: Cannot process file {fileI}: does not have 1+2 parts")
+        continue
       database = fileParts[0]
       docID = fileParts[1]
       if not docID.endswith('_attach'):
@@ -517,7 +527,7 @@ def main() -> None:
     url, administrator, password = myString.split(':')
     print("URL and credentials successfully read from keyring")
   except Exception:
-    print("Could not get credentials from keyring.")
+    print("Could not get credentials for the remote server from keyring.")
     ## URL
     url = input('Enter the URL without http and without port: ')
     if len(url)<2:

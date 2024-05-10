@@ -14,6 +14,8 @@ from PySide6.QtWidgets import QMainWindow, QApplication, QFileDialog, QMessageBo
 from qt_material import apply_stylesheet  # of https://github.com/UN-GCPDS/qt-material
 
 from pasta_eln import __version__
+from pasta_eln.GUI.dataverse.config_dialog import ConfigDialog
+from pasta_eln.GUI.dataverse.main_dialog import MainDialog
 from .GUI.body import Body
 from .GUI.config import Configuration
 from .GUI.form import Form
@@ -45,6 +47,8 @@ class MainWindow(QMainWindow):
     self.backend = Backend()
     self.comm = Communicate(self.backend)
     self.comm.formDoc.connect(self.formDoc)
+    self.dataverseMainDialog: MainDialog | None = None
+    self.dataverseConfig: ConfigDialog | None = None
 
     # Menubar
     menu = self.menuBar()
@@ -77,6 +81,8 @@ class MainWindow(QMainWindow):
         Action(name,                         self, [Command.CHANGE_PG, name], changeProjectGroups)
     Action('&Synchronize',                   self, [Command.SYNC],            systemMenu, shortcut='F5')
     Action('&Data hierarchy editor',         self, [Command.DATAHIERARCHY],        systemMenu, shortcut='F8')
+    Action('&Dataverse Configuration',         self, [Command.DATAVERSE_CONFIG],        systemMenu, shortcut='F10')
+    Action('&Upload to Dataverse',         self, [Command.DATAVERSE_MAIN],        systemMenu, shortcut='F11')
     systemMenu.addSeparator()
     Action('&Test extraction from a file',   self, [Command.TEST1],           systemMenu)
     Action('Test &selected item extraction', self, [Command.TEST2],           systemMenu, shortcut='F2')
@@ -104,16 +110,6 @@ class MainWindow(QMainWindow):
     mainLayout.addWidget(self.sidebar)
     mainLayout.addWidget(body)
     self.comm.changeTable.emit('x0', '')
-
-    #check if temporary save exist: warn user
-    if (Path.home()/'.pastaELN.temp').is_file():
-      ret = QMessageBox.information(self, 'Information', 'There is data from a prematurely closed form. '+
-              'Do you want to use it? \n\n- If you choose yes, please reopen that form and content will' +
-              'be reloaded.\n\n- If you choose no, this temporary data will be removed now.',
-              QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,      # type: ignore[operator]
-              QMessageBox.StandardButton.Yes)
-      if ret==QMessageBox.StandardButton.No:
-        (Path.home()/'.pastaELN.temp').unlink()
 
 
   @Slot(str)
@@ -185,6 +181,12 @@ class MainWindow(QMainWindow):
       dataHierarchyForm = DataHierarchyEditorDialog(self.comm.backend.db)
       dataHierarchyForm.instance.exec()
       restart()
+    elif command[0] is Command.DATAVERSE_CONFIG:
+      self.dataverseConfig = ConfigDialog()
+      self.dataverseConfig.show()
+    elif command[0] is Command.DATAVERSE_MAIN:
+      self.dataverseMainDialog = MainDialog(self.comm.backend)
+      self.dataverseMainDialog.show()
     elif command[0] is Command.TEST1:
       fileName = QFileDialog.getOpenFileName(self, 'Open file for extractor test', str(Path.home()), '*.*')[0]
       report = self.comm.backend.testExtractor(fileName, outputStyle='html')
@@ -208,7 +210,6 @@ class MainWindow(QMainWindow):
       showMessage(self, 'Report of database verification', report, style='QLabel {min-width: 800px}')
     elif command[0] is Command.SHORTCUTS:
       showMessage(self, 'Keyboard shortcuts', shortcuts)
-
     elif command[0] is Command.RESTART:
       restart()
     else:
@@ -270,6 +271,8 @@ class Command(Enum):
   SHORTCUTS = 15
   RESTART   = 16
   EXPORT_ALL= 17
+  DATAVERSE_CONFIG = 18
+  DATAVERSE_MAIN = 19
 
 
 def startMain() -> None:

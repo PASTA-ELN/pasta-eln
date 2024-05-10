@@ -37,11 +37,12 @@ def mock_dataverse_client(mocker, dataverse_list_mock: dataverse_list_mock):
 def mock_database_api(mocker):
   mock = mocker.patch('pasta_eln.dataverse.database_api.DatabaseAPI')
   mock_instance = mock.return_value
-  mock_instance.get_model.return_value = ConfigModel(_id="test_id", _rev="test_rev",
-                                                     dataverse_login_info={"server_url": "http://valid.url",
-                                                                           "api_token": "encrypted_api_token",
-                                                                           "dataverse_id": "test_dataverse_id"},
-                                                     parallel_uploads_count=1, project_upload_items={}, metadata={})
+  mock_instance.get_config_model.return_value = ConfigModel(_id="test_id", _rev="test_rev",
+                                                            dataverse_login_info={"server_url": "http://valid.url",
+                                                                                  "api_token": "decrypted_api_token",
+                                                                                  "dataverse_id": "test_dataverse_id"},
+                                                            parallel_uploads_count=1, project_upload_items={},
+                                                            metadata={})
   return mock_instance
 
 
@@ -61,9 +62,6 @@ def config_dialog(qtbot, mocker, mock_message_box, mock_webbrowser, mock_dataver
   mocker.patch('pasta_eln.GUI.dataverse.config_dialog.QMessageBox', new=mock_message_box)
   mocker.patch('pasta_eln.GUI.dataverse.config_dialog.logging')
   mocker.patch('pasta_eln.GUI.dataverse.config_dialog.webbrowser', mock_webbrowser)
-  mocker.patch('pasta_eln.GUI.dataverse.config_dialog.get_encrypt_key', return_value=(True, b"test_encrypt_key"))
-  mocker.patch('pasta_eln.GUI.dataverse.config_dialog.decrypt_data', return_value='decrypted_api_token')
-  mocker.patch('pasta_eln.GUI.dataverse.config_dialog.encrypt_data', return_value='encrypted_api_token')
   mocker.patch('pasta_eln.GUI.dataverse.config_dialog.check_login_credentials',
                side_effect=mock_check_login_credentials)
   dialog = ConfigDialog()
@@ -79,12 +77,11 @@ class TestDataverseConfigDialog:
     with qtbot.waitExposed(config_dialog.instance, timeout=500):
       assert config_dialog.instance.isVisible() is True, "Dataverse config dialog should be shown!"
       assert config_dialog.buttonBox.isVisible() is True, "Dataverse config dialog button box not shown!"
-      assert config_dialog.dataverseLoadPushButton.isVisible(), "Dataverse load push button not found"
+      assert config_dialog.dataverseVerifyLoadPushButton.isVisible(), "Dataverse load verify push button not found"
       assert config_dialog.dataverseServerLineEdit.isVisible() is not None, "Dataverse server line edit not found"
       assert config_dialog.apiTokenLineEdit.isVisible() is not None, "API token line edit not found"
       assert config_dialog.dataverseListComboBox.isVisible() is not None, "Dataverse list combo box not found"
       assert config_dialog.dataverseLineEdit.isVisible() is not None, "Dataverse line edit not found"
-      assert config_dialog.apiTokenVerifyPushButton.isVisible() is not None, "API token verify button not found"
       assert config_dialog.apiTokenHelpPushButton.isVisible() is not None, "API token help button not found"
       assert config_dialog.dataverseServerLabel.isVisible() is not None, "Dataverse server label not found"
       assert config_dialog.apiTokenLabel.isVisible() is not None, "API token label not found"
@@ -94,9 +91,8 @@ class TestDataverseConfigDialog:
       assert config_dialog.apiTokenLabel.text() == "API token", "API token label text not found"
       assert config_dialog.dataverseListLabel.text() == "Dataverse list", "Dataverse list label text not found"
 
-      assert config_dialog.apiTokenVerifyPushButton.text() == "Verify", "API token verify button text not found"
       assert config_dialog.apiTokenHelpPushButton.text() == "Help", "API token help button text not found"
-      assert config_dialog.dataverseLoadPushButton.text() == "Load", "Dataverse load push button text not found"
+      assert config_dialog.dataverseVerifyLoadPushButton.text() == "Verify && Load", "Dataverse load verify push button text not found"
     qtbot.mouseClick(config_dialog.buttonBox.button(config_dialog.buttonBox.Cancel), Qt.LeftButton)
 
   def test_component_launch_all_ui_elements_should_display_data(self, qtbot, config_dialog):
@@ -147,13 +143,13 @@ class TestDataverseConfigDialog:
       assert config_dialog.instance.isVisible() is True, "Dataverse config dialog should be shown!"
       config_dialog.dataverseServerLineEdit.setText(server_url)
       config_dialog.apiTokenLineEdit.setText(api_token)
-      qtbot.mouseClick(config_dialog.apiTokenVerifyPushButton, Qt.LeftButton)
+      qtbot.mouseClick(config_dialog.dataverseVerifyLoadPushButton, Qt.LeftButton)
       if expected_msg_box_heading == "Credentials Valid":
-        mock_message_box.information.assert_called_once_with(config_dialog.instance, expected_msg_box_heading,
-                                                             expected_msg_box_output)
+        mock_message_box.information.assert_any_call(config_dialog.instance, expected_msg_box_heading,
+                                                     expected_msg_box_output)
       else:
-        mock_message_box.warning.assert_called_once_with(config_dialog.instance, expected_msg_box_heading,
-                                                         expected_msg_box_output)
+        mock_message_box.warning.assert_any_call(config_dialog.instance, expected_msg_box_heading,
+                                                 expected_msg_box_output)
     qtbot.mouseClick(config_dialog.buttonBox.button(config_dialog.buttonBox.Cancel), Qt.LeftButton)
 
   def test_help_button_click_should_open_help_url(self, qtbot, config_dialog, mock_webbrowser):
@@ -194,7 +190,7 @@ class TestDataverseConfigDialog:
       assert config_dialog.instance.isVisible() is True, "Dataverse config dialog should be shown!"
       qtbot.keyClicks(config_dialog.dataverseListComboBox, "Harvard Datavers-DASH Integration Demo Site", delay=1)
       assert config_dialog.dataverseLineEdit.text() == "HDV_DASH"
-      qtbot.mouseClick(config_dialog.dataverseLoadPushButton, Qt.LeftButton, delay=1)
+      qtbot.mouseClick(config_dialog.dataverseVerifyLoadPushButton, Qt.LeftButton, delay=1)
       assert config_dialog.dataverseLineEdit.text() == "HDV_DASH"
       assert config_dialog.dataverseListComboBox.currentText() == "Harvard Datavers-DASH Integration Demo Site", "Dataverse list combo box should be reset with mock data"
       assert config_dialog.dataverseListComboBox.count() == 115, "Dataverse list combo box should have 115 items"
@@ -205,7 +201,7 @@ class TestDataverseConfigDialog:
     with qtbot.waitExposed(config_dialog.instance, timeout=500):
       assert config_dialog.instance.isVisible() is True, "Dataverse config dialog should be shown!"
       config_dialog.config_model.dataverse_login_info["dataverse_id"] = "datafest2021"
-      qtbot.mouseClick(config_dialog.dataverseLoadPushButton, Qt.LeftButton, delay=1)
+      qtbot.mouseClick(config_dialog.dataverseVerifyLoadPushButton, Qt.LeftButton, delay=1)
       assert config_dialog.dataverseLineEdit.text() == "datafest2021"
       assert config_dialog.dataverseListComboBox.currentText() == "Datafest 2021, Demo Dataverse", "Dataverse list combo box should be reset with mock data"
       assert config_dialog.dataverseListComboBox.count() == 115, "Dataverse list combo box should have 115 items"
@@ -216,7 +212,7 @@ class TestDataverseConfigDialog:
                                                                                             mock_message_box):
     # Arrange
     mock_dataverse_client.get_dataverse_list.side_effect = mocker.AsyncMock(return_value="Invalid URL or API token")
-
+    config_dialog.verify_server_url_and_api_token = mocker.MagicMock(return_value=True)
     # Act
     config_dialog.show()
     with qtbot.waitExposed(config_dialog.instance, timeout=500):
@@ -224,12 +220,11 @@ class TestDataverseConfigDialog:
       config_dialog.dataverseServerLineEdit.setText("InvalidURL")
       config_dialog.apiTokenLineEdit.setText("InvalidToken")
       config_dialog.config_model.dataverse_login_info["dataverse_id"] = "datafest2021"
-      qtbot.mouseClick(config_dialog.dataverseLoadPushButton, Qt.LeftButton, delay=1)
-      assert config_dialog.dataverseLineEdit.text() == ""
+      qtbot.mouseClick(config_dialog.dataverseVerifyLoadPushButton, Qt.LeftButton, delay=2)
       assert config_dialog.dataverseListComboBox.currentText() == ""
       assert config_dialog.dataverseListComboBox.count() == 0, "Dataverse list combo box should have 0 items"
       config_dialog.logger.error("Failed to load dataverse list, error: %s", "Invalid URL or API token")
-      mock_message_box.warning.assert_called_once_with(config_dialog.instance, "Error", "Failed to load dataverse list")
+      mock_message_box.warning.assert_any_call(config_dialog.instance, "Error", "Failed to load dataverse list")
 
   def test_save_button_click_should_save_the_config(self, qtbot, config_dialog, mock_database_api):
     config_dialog.show()
@@ -242,7 +237,5 @@ class TestDataverseConfigDialog:
       assert config_dialog.config_model.dataverse_login_info[
                "api_token"] == '123456789', "API token should not be encrypted before save"
       qtbot.mouseClick(config_dialog.buttonBox.button(config_dialog.buttonBox.Save), Qt.LeftButton, delay=1)
-      assert config_dialog.config_model.dataverse_login_info[
-               "api_token"] == 'encrypted_api_token', "API token should be encrypted"
-      mock_database_api.update_model_document.assert_called_once_with(config_dialog.config_model)
+      mock_database_api.save_config_model.assert_called_once_with(config_dialog.config_model)
       assert config_dialog.instance.isVisible() is False, "Dataverse config dialog should be closed!"

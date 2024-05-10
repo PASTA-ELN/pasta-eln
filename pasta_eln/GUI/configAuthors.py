@@ -15,7 +15,7 @@ class ConfigurationAuthors(QWidget):
 
   FOR NOW: only one author (one self) can be added to align with GDPR
   """
-  def __init__(self, comm:Communicate, callbackFinished:Callable[[],None]):
+  def __init__(self, comm:Communicate, callbackFinished:Callable[[bool],None]):
     """
     Initialization
 
@@ -25,6 +25,7 @@ class ConfigurationAuthors(QWidget):
     """
     super().__init__()
     self.comm = comm
+    self.callbackFinished = callbackFinished
 
     #GUI elements
     if hasattr(self.comm.backend, 'configuration'):
@@ -35,21 +36,24 @@ class ConfigurationAuthors(QWidget):
       self.userFirst = self.addRowText('first','First name')
       self.userLast  = self.addRowText('last', 'Surname')
       self.userEmail = self.addRowText('email','Email address')
+      #headline of organizations
       orgaW, orgaL = widgetAndLayout('H', None, spacing='s', top='l')
       self.orgaCB = QComboBox()
       self.orgaCB.addItems([i['organization'] for i in self.author['organizations']])
       orgaL.addStretch(1)
-      orgaL.addWidget(self.orgaCB)
+      orgaL.addWidget(self.orgaCB, stretch=2)                       # type: ignore[call-arg]
       IconButton('fa5s.plus-circle', self, [Command.ADD], orgaL, 'Add organization')
       IconButton('fa5s.minus-circle', self, [Command.DELETE], orgaL, 'Delete organization')
       self.tabAuthorL.addRow(orgaW)
+
       self.userRorid = self.addRowText('rorid','RORID')
       self.userOrg   = self.addRowText('organization','Organization')
       buttonBarW, buttonBarL = widgetAndLayout('H', None, top='l')
       buttonBarL.addStretch(1)
       TextButton('Save changes', self, [Command.SAVE], buttonBarL)
       self.tabAuthorL.addRow(buttonBarW)
-      self.orgaCB_lastIndex = 0
+      self.orgaCB.previousIndex = 0
+      self.lockSelfAuthor = False
       self.orgaCB.currentIndexChanged.connect(lambda: self.execute([Command.CHANGE])) #connect to slot only after all painting is done
 
 
@@ -66,11 +70,11 @@ class ConfigurationAuthors(QWidget):
     """
     rightW = QLineEdit()
     if item in {'organization','rorid'}:
-      rightW.setText(self.author['organizations'][0][item])
+      rightW.setText(self.author['organizations'][0][item] if self.author['organizations'] else '')
     else:
       rightW.setText(self.author[item])
     rightW.setAccessibleName(item)
-    if item in {'rorid','orcid'}:
+    if item in {'organization', 'rorid','orcid'}:
       rightW.editingFinished.connect(self.changedID)
     self.tabAuthorL.addRow(QLabel(label), rightW)
     return rightW
@@ -85,6 +89,7 @@ class ConfigurationAuthors(QWidget):
       if re.match(r'^\w{9}$', self.userRorid.text().strip() ) is not None:
         reply = requests.get(f'https://api.ror.org/organizations/{self.userRorid.text().strip()}', timeout=10)
         self.userOrg.setText(reply.json()['name'])
+        self.orgaCB.setItemText(self.orgaCB.currentIndex(), reply.json()['name'])
     elif sender == 'orcid':
       if re.match(r'^\w{4}-\w{4}-\w{4}-\w{4}$', self.userOrcid.text().strip() ) is not None:
         reply = requests.get(f'https://pub.orcid.org/v3.0/{self.userOrcid.text().strip()}', timeout=10)
@@ -93,8 +98,10 @@ class ConfigurationAuthors(QWidget):
         last = text.split('<personal-details:family-name>')[1].split('</personal-details:family-name>')[0]
         self.userFirst.setText(first)
         self.userLast.setText(last)
+    elif sender == 'organization':
+      self.orgaCB.setItemText(self.orgaCB.currentIndex(), self.userOrg.text())
     else:
-      print('**ERROR: did not understand sender')
+      print('**ERROR: did not understand sender:',sender)
     return
 
 
@@ -108,30 +115,42 @@ class ConfigurationAuthors(QWidget):
       self.author['title'] = self.userTitle.text().strip()
       self.author['email'] = self.userEmail.text().strip()
       self.author['orcid'] = self.userOrcid.text().strip()
-      j = self.orgaCB_lastIndex
-      self.author['organizations'][j]['organization'] = self.userOrg.text().strip()
-      self.author['organizations'][j]['rorid']        = self.userRorid.text().strip()
+      j = self.orgaCB.currentIndex()
+      if j>-1:
+        self.author['organizations'][j]['organization'] = self.userOrg.text().strip()
+        self.author['organizations'][j]['rorid']        = self.userRorid.text().strip()
+      self.comm.backend.configuration['authors'][0] = self.author
       with open(Path.home()/'.pastaELN.json', 'w', encoding='utf-8') as fConf:
-        fConf.write(json.dumps(self.configuration,indent=2))
-      restart()
+        fConf.write(json.dumps(self.comm.backend.configuration,indent=2))
+      self.callbackFinished(False)
     elif command[0] is Command.ADD:
-      self.author['organizations'].append({'rorid':'', 'organization':''})
       self.orgaCB.addItem('- new -')
+      if len(self.author['organizations'])<self.orgaCB.count():
+        self.author['organizations'].append({'rorid':'', 'organization':''})
       self.orgaCB.setCurrentText('- new -')
+      self.userRorid.setEnabled(True)
+      self.userRorid.setText('')
+      self.userOrg.setEnabled(True)
+      self.userOrg.setText('')
     elif command[0] is Command.DELETE:
       k = self.orgaCB.currentIndex()
-      j = 0 if k>0 else -1
-      self.orgaCB.setCurrentIndex(j)
-      self.author['organizations'].pop(k)
-      self.orgaCB.removeItem(k)
-    elif command[0] is Command.CHANGE:
-      j = self.orgaCB_lastIndex
-      self.author['organizations'][j]['organization'] = self.userOrg.text().strip()
-      self.author['organizations'][j]['rorid']        = self.userRorid.text().strip()
+      if k>-1:
+        self.author['organizations'].pop(k)
+        self.lockSelfAuthor = True
+        self.orgaCB.removeItem(k)
+      if self.orgaCB.currentIndex()==-1:
+        self.userRorid.setEnabled(False)
+        self.userOrg.setEnabled(False)
+      self.lockSelfAuthor = False
+    elif command[0] is Command.CHANGE and self.author['organizations']:
+      j = self.orgaCB.previousIndex
+      if j<len(self.author['organizations']) and not self.lockSelfAuthor:
+        self.author['organizations'][j]['organization'] = self.userOrg.text().strip()
+        self.author['organizations'][j]['rorid']        = self.userRorid.text().strip()
       k = self.orgaCB.currentIndex()
       self.userRorid.setText(self.author['organizations'][k]['rorid'])
       self.userOrg.setText(self.author['organizations'][k]['organization'])
-      self.orgaCB_lastIndex = k
+    self.orgaCB.previousIndex = self.orgaCB.currentIndex()
     return
 
 

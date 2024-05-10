@@ -30,6 +30,14 @@ class DataverseClient:
                server_url: str,
                api_token: str,
                client_session_timeout: int = 10) -> None:
+    """
+    Initializes the dataverse client.
+
+    Args:
+        server_url (str): The URL of the server.
+        api_token (str): The API token for authentication.
+        client_session_timeout (int): The timeout value for the client session in seconds.
+    """
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
     self.api_token = api_token
     self.server_url = server_url
@@ -392,7 +400,7 @@ class DataverseClient:
                      self.server_url)
     filename = basename(df_file_path)
     metadata = dumps({"description": df_description, "categories": df_categories})
-    data = FormData()
+    data = FormData(quote_fields=False)
     with open(df_file_path, 'rb') as file_stream:
       data.add_field('file',
                      file_stream,
@@ -493,6 +501,39 @@ class DataverseClient:
     if resp["status"] == 200 and resp["reason"] == 'OK':
       return resp.get('result').get('data')
     error = (f"Error fetching version list for dataset: {ds_persistent_id} "
+             f"on server: {self.server_url}, "
+             f"Reason: {resp['reason']}, "
+             f"Info: {resp['result']}")
+    self.logger.error(error)
+    return error
+
+  @handle_dataverse_exception_async
+  async def get_dataset_locks(self,
+                              ds_persistent_id: str) -> dict[Any, Any] | Any:
+    """
+    Fetches locks for a dataset.
+
+    Explanation:
+        This method fetches the locks for a dataset identified by the persistent ID.
+        It makes an asynchronous HTTP GET request to retrieve the locks information and handles exceptions.
+
+    Args:
+        ds_persistent_id (str): The persistent ID of the dataset to fetch locks for.
+
+    Returns:
+        dict[Any, Any] | Any: A dictionary containing the locks information if successful, or an error message.
+    """
+    self.logger.info("Fetching locks for dataset: %s for server: %s", ds_persistent_id,
+                     self.server_url)
+    resp = await self.http_client.get(
+      f"{self.server_url}/api/datasets/:persistentId/locks?persistentId={ds_persistent_id}",
+      request_params={'Accept': 'application/json'},
+      request_headers={'Content-Type': 'application/json', 'X-Dataverse-key': self.api_token})
+    if not resp and self.http_client.session_request_errors:
+      return self.http_client.session_request_errors
+    if resp["status"] == 200 and resp["reason"] == 'OK':
+      return {'locks': resp.get('result').get('data')}
+    error = (f"Error fetching locks for dataset: {ds_persistent_id} "
              f"on server: {self.server_url}, "
              f"Reason: {resp['reason']}, "
              f"Info: {resp['result']}")

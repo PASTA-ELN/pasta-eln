@@ -202,10 +202,10 @@
               </size>
              </property>
              <property name="toolTip">
-              <string>Clear all finished uploads.</string>
+              <string>Clear all finished/cancelled/error uploads.</string>
              </property>
              <property name="text">
-              <string>Clear finished</string>
+              <string>Clear</string>
              </property>
             </widget>
            </item>

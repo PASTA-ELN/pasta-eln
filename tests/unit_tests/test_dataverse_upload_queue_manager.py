@@ -8,6 +8,7 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import time
 from threading import Thread
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -30,12 +31,13 @@ def mock_manager(mocker):
   return UploadQueueManager()
 
 
-def get_mock_task_thread(mocker, cancelled=False):
+def get_mock_task_thread(mocker, cancelled=False, finished=False):
   mock = mocker.MagicMock(spec=TaskThreadExtension)
   mock.task = mocker.MagicMock()
   mock.task.id = mocker.MagicMock()
   mock.task.started = False
   mock.task.cancelled = cancelled
+  mock.task.finished = finished
 
   def set_started():
     mock.task.started = True
@@ -70,7 +72,7 @@ class TestDataverseUploadQueueManager:
     # Assert
     assert mock_manager.upload_queue == task_threads
     for task_thread in task_threads:
-      task_thread.task.finished.connect.assert_called_once()
+      task_thread.task.finish.connect.assert_called_once()
 
   # Edge cases tests
   @pytest.mark.parametrize("test_id, concurrent_uploads, tasks_to_add, tasks_to_remove, expected_upload_queue_length",
@@ -93,7 +95,7 @@ class TestDataverseUploadQueueManager:
 
   # Error cases tests
   @pytest.mark.parametrize("test_id, concurrent_uploads, tasks_to_add, expected_upload_queue_length",
-    [("error_01", 2, 2, 2), ("error_02", 2, 5, 5), ("error_03", 5, 10, 10), ])
+                           [("error_01", 2, 2, 2), ("error_02", 2, 5, 5), ("error_03", 5, 10, 10), ])
   def test_remove_from_queue_error_cases(self, mocker, mock_manager, test_id, concurrent_uploads, tasks_to_add,
                                          expected_upload_queue_length):
     # Arrange
@@ -109,26 +111,55 @@ class TestDataverseUploadQueueManager:
     assert len(mock_manager.upload_queue) == expected_upload_queue_length
     thread_task_to_remove.worker_thread.quit.assert_called_once()
 
+  @pytest.mark.parametrize("test_id, in_upload_queue, in_running_queue, expected_quit_call", [
+    ("happy_path_both_queues", True, True, 1),
+    ("happy_path_upload_only", True, False, 1),
+    ("happy_path_running_only", False, True, 1),
+    ("edge_case_neither_queue", False, False, 1),
+  ])
+  def test_remove_from_queue(self, mock_manager, test_id, in_upload_queue, in_running_queue, expected_quit_call):
+    # Arrange
+    mock_manager.upload_queue = []
+    mock_manager.running_queue = []
+    upload_task_thread = MagicMock()
+    upload_task_thread.worker_thread.quit = MagicMock()
+
+    if in_upload_queue:
+      mock_manager.upload_queue.append(upload_task_thread)
+    if in_running_queue:
+      mock_manager.running_queue.append(upload_task_thread)
+
+    # Act
+    mock_manager.remove_from_queue(upload_task_thread)
+
+    # Assert
+    if in_upload_queue:
+      assert upload_task_thread not in mock_manager.upload_queue
+    if in_running_queue:
+      assert upload_task_thread not in mock_manager.running_queue
+    assert upload_task_thread.worker_thread.quit.call_count == expected_quit_call
+
   @pytest.mark.parametrize(
-    "test_id, number_of_concurrent_uploads, upload_queue_size, cancelled, expected_started_count", [# Success path tests
-      ("SuccessCase-1", 2, 3, False, 2),  # Test with queue larger than concurrent uploads
-      ("SuccessCase-2", 3, 3, False, 3),  # Test with queue equal to concurrent uploads
-      ("SuccessCase-3", 4, 1, False, 1),  # Test with queue smaller than concurrent uploads
+    "test_id, number_of_concurrent_uploads, upload_queue_size, cancelled, finished, expected_started_count",
+    [  # Success path tests
+      ("SuccessCase-1", 2, 3, False, False, 2),  # Test with queue larger than concurrent uploads
+      ("SuccessCase-2", 3, 3, False, False, 3),  # Test with queue equal to concurrent uploads
+      ("SuccessCase-3", 4, 1, False, False, 1),  # Test with queue smaller than concurrent uploads
 
       # Edge cases
-      ("EdgeCase-1", 1, 0, False, 0),  # Test with empty queue
-      ("EdgeCase-2", 0, 3, False, 0),  # Test with zero concurrent uploads
+      ("EdgeCase-1", 1, 0, False, False, 0),  # Test with empty queue
+      ("EdgeCase-2", 0, 3, False, False, 0),  # Test with zero concurrent uploads
 
       # Error cases
-      ("ErrorCase-1", 2, 3, True, 0),  # Test with task cancelled immediately
+      ("ErrorCase-1", 2, 3, True, False, 0),  # Test with task cancelled immediately
     ])
   def test_start_task(self, mocker, mock_manager, test_id, number_of_concurrent_uploads, upload_queue_size, cancelled,
-                      expected_started_count):
+                      finished, expected_started_count):
     # Arrange
     mock_manager.cancelled = cancelled
     mock_manager.number_of_concurrent_uploads = number_of_concurrent_uploads
     mock_manager.running_queue = []
-    mock_manager.upload_queue = [get_mock_task_thread(mocker, test_id == "ErrorCase-1") for _ in
+    mock_manager.upload_queue = [get_mock_task_thread(mocker, test_id == "ErrorCase-1", finished) for _ in
                                  range(upload_queue_size)]
 
     # Act
@@ -136,12 +167,12 @@ class TestDataverseUploadQueueManager:
       start_task = Thread(target=mock_manager.start_task, args=())
 
       def cancel_queue_manager():
-        time.sleep(2)
+        time.sleep(0.5)
         mock_manager.cancelled = True
 
       cancel_task = Thread(target=lambda: cancel_queue_manager(), args=())
       start_task.start()
-      time.sleep(1)
+      time.sleep(0.1)
       cancel_task.start()
       start_task.join()
 
@@ -152,6 +183,51 @@ class TestDataverseUploadQueueManager:
         task_thread.task.start.emit.assert_called_once()
       else:
         task_thread.task.start.emit.assert_not_called()
+
+  @pytest.mark.parametrize(
+    "test_id, number_of_concurrent_uploads, upload_queue_state, expected_running_queue_length, expected_start_calls", [
+      ("success_path_basic", 2, [(False, False, False)], 1, 1),
+      ("success_path_multiple", 3, [(False, False, False), (False, False, False)], 2, 2),
+      ("edge_case_full_queue", 1, [(False, False, False), (False, False, False)], 1, 1),
+      ("edge_case_task_already_started", 2, [(True, False, False)], 0, 0),
+      ("edge_case_task_cancelled", 2, [(False, True, False)], 0, 0),
+      ("error_case_no_concurrent_uploads", 0, [(False, False, False)], 0, 0),
+    ])
+  def test_start_task_v(self, mocker, mock_manager, test_id, number_of_concurrent_uploads, upload_queue_state,
+                        expected_running_queue_length,
+                        expected_start_calls):
+    # Arrange
+    mock_manager.logger = mocker.MagicMock()
+    mock_manager.cancelled = False
+    mock_manager.number_of_concurrent_uploads = number_of_concurrent_uploads
+    mock_manager.running_queue = []
+    mock_super_start = mocker.patch('pasta_eln.dataverse.upload_queue_manager.super')
+    mock_sleep = mocker.patch('pasta_eln.dataverse.upload_queue_manager.sleep')
+    sleep_count = 0
+
+    def test(time, mock_manager):
+      nonlocal sleep_count
+      sleep_count += time
+      mock_manager.cancelled = sleep_count >= 2
+
+    mock_sleep.side_effect = lambda time: test(time, mock_manager)
+
+    class MockUploadTaskThread:
+      def __init__(self, started, cancelled, finished):
+        self.task = MagicMock(started=started, cancelled=cancelled, finished=finished)
+        self.task.start = MagicMock()
+
+    mock_manager.upload_queue = [MockUploadTaskThread(started, cancelled, finished) for started, cancelled, finished in
+                                 upload_queue_state]
+    # Act
+    mock_manager.start_task()
+
+    # Assert
+    assert len(
+      mock_manager.running_queue) == expected_running_queue_length, f"Test ID {test_id}: Running queue length mismatch"
+    assert sum(task.task.start.emit.call_count for task in
+               mock_manager.upload_queue) == expected_start_calls, f"Test ID {test_id}: Start method call count mismatch"
+    mock_super_start.assert_called_once()
 
   @pytest.mark.parametrize("test_id", [("success_path_1")])
   def test_cleanup_success_path(self, mocker, mock_manager, test_id):
@@ -169,7 +245,7 @@ class TestDataverseUploadQueueManager:
     mock_base_cleanup.assert_called_once()
 
   @pytest.mark.parametrize("test_id, exception, expected_call_count",
-    [("error_case_exception_in_super_cleanup", Exception, 0), ])
+                           [("error_case_exception_in_super_cleanup", Exception, 0), ])
   def test_cleanup_error_cases(self, mocker, mock_manager, test_id, exception, expected_call_count):
     # Arrange
     mock_manager.empty_upload_queue = mocker.MagicMock()
@@ -181,21 +257,31 @@ class TestDataverseUploadQueueManager:
     mock_manager.logger.info.assert_called_with("Cleaning up upload manager..")
     assert mock_manager.empty_upload_queue.call_count == expected_call_count
 
-  @pytest.mark.parametrize("test_id, upload_tasks_count",
-                           [("happy_path_single_task", 1), ("happy_path_multiple_tasks", 3),
-                             ("happy_path_no_tasks", 0), ], ids=str)
-  def test_empty_upload_queue_happy_path(self, mocker, mock_manager, test_id, upload_tasks_count):
+  @pytest.mark.parametrize("test_id, setup_queue, expected_log_call_count, exception_to_raise", [
+    ("success_path", ["task1", "task2"], 1, None),  # Success path with multiple tasks
+    ("empty_queue", [], 1, None),  # Edge case with an empty queue
+    ("delete_failure", ["task1"], 1, Exception("Delete failed")),  # Error case with delete failure
+  ])
+  def test_empty_upload_queue(self, mock_manager, test_id, setup_queue, expected_log_call_count, exception_to_raise):
     # Arrange
-    mock_manager.upload_queue = [get_mock_task_thread(mocker) for _ in range(upload_tasks_count)]
+    mock_manager.logger = MagicMock()
+    mock_manager.upload_queue = [
+      MagicMock(worker_thread=MagicMock(quit=MagicMock(side_effect=exception_to_raise))) for _ in setup_queue]
 
     # Act
-    mock_manager.empty_upload_queue()
+    if exception_to_raise:
+      with pytest.raises(Exception) as exc_info:
+        mock_manager.empty_upload_queue()
+      assert str(exc_info.value) == "Delete failed", "Exception message should match expected"
+    else:
+      mock_manager.empty_upload_queue()
 
     # Assert
-    assert len(mock_manager.upload_queue) == 0, "Upload queue should be empty after emptying"
-    for task in mock_manager.upload_queue:
-      task.quit.assert_called_once()
     mock_manager.logger.info.assert_called_once_with("Emptying upload queue..")
+    if not exception_to_raise:
+      assert len(mock_manager.upload_queue) == 0, "Upload queue should be empty after method call"
+      for task in mock_manager.upload_queue:
+        task.task.deleteLater.assert_called_once(), "deleteLater should be called once for each task"
 
   # Edge cases
   # No edge cases are identified for this function as it handles the queue regardless of its state
@@ -204,13 +290,13 @@ class TestDataverseUploadQueueManager:
   # Assuming that quit() method could raise an exception
   @pytest.mark.parametrize("test_id, upload_tasks_count, exception, call_count",
                            [("error_quit_exception_single_task", 1, Exception("Task quit failed"), 1),
-                             ("error_quit_exception_multiple_tasks", 3, Exception("Task quit failed"), 3), ], ids=str)
+                            ("error_quit_exception_multiple_tasks", 3, Exception("Task quit failed"), 3), ], ids=str)
   def test_empty_upload_queue_error_cases(self, mocker, mock_manager, test_id, upload_tasks_count, exception,
                                           call_count):
     # Arrange
     mock_manager.upload_queue = [get_mock_task_thread(mocker) for _ in range(upload_tasks_count)]
-    for task in mock_manager.upload_queue:
-      task.quit.side_effect = exception
+    for task_thread in mock_manager.upload_queue:
+      task_thread.worker_thread.quit.side_effect = exception
 
     # Act & Assert
     with pytest.raises(Exception) as exc_info:
@@ -218,47 +304,40 @@ class TestDataverseUploadQueueManager:
     assert str(exc_info.value) == "Task quit failed", "Exception message should match the expected one"
     mock_manager.logger.info.assert_called_with("Emptying upload queue..")
 
-  @pytest.mark.parametrize("test_id, running_queue_count, expected_log, super_method_exists",
-                           [# Success path test with various realistic test values
-                             ("success_path_1", 2, "Cancelling upload queue..", True),
-
-                             # Edge case with an empty running queue
-                             ("edge_case_empty_queue_id", 0, "Cancelling upload queue..", True),
-
-                             # Error case where the super class does not have cancel_task method
-                             ("error_case_no_super_method_id", 1, "Cancelling upload queue..", False), ])
-  def test_cancel_task(self, mocker, mock_manager, test_id, running_queue_count, expected_log, super_method_exists):
+  @pytest.mark.parametrize("test_id", [
+    ("success_path"),
+    ("super_method_failure"),
+    ("cancel_all_failure")
+  ])
+  def test_cancel_task(self, mocker, mock_manager, test_id):
     # Arrange
-    mock_manager.running_queue = [get_mock_task_thread(mocker) for _ in range(running_queue_count)]
-    mock_manager.empty_upload_queue = mocker.MagicMock()
+    mock_manager.cancel_all_queued_tasks_and_empty_queue = MagicMock()
+    mocker.patch('pasta_eln.dataverse.upload_queue_manager.super')
 
-    if super_method_exists:
-      mock_super = mocker.MagicMock()
-      mocker.patch('pasta_eln.dataverse.upload_queue_manager.super', return_value=mock_super)
-      mock_super.cancel_task = mocker.MagicMock()
-
+    if test_id == "super_method_failure":
+      with mocker.patch.object(UploadQueueManager, "cancel_task", side_effect=Exception("Super method failure")):
+        # Act
+        with pytest.raises(Exception) as exc_info:
+          mock_manager.cancel_task()
+        # Assert
+        assert "Super method failure" in str(exc_info.value), "Exception message should be 'Super method failure'"
+    elif test_id == "cancel_all_failure":
+      mock_manager.cancel_all_queued_tasks_and_empty_queue.side_effect = Exception("Cancel all failure")
+      # Act
+      with pytest.raises(Exception) as exc_info:
+        mock_manager.cancel_task()
+      # Assert
+      mock_manager.logger.info.assert_called_once_with("Cancelling upload manager..")
+      assert "Cancel all failure" in str(exc_info.value), "Exception message should be 'Cancel all failure'"
+    else:
       # Act
       mock_manager.cancel_task()
-
       # Assert
-      # Check if the log message is correct
-      mock_manager.logger.info.assert_called_with(expected_log)
-      # Check if super's cancel_task was called
-      mock_super.cancel_task.assert_called_once()
-      # Check if empty_upload_queue was called
-      mock_manager.empty_upload_queue.assert_called_once()
-      # Check if cancel.emit was called for each task in the running queue
-      for task_thread in mock_manager.running_queue:
-        task_thread.task.cancel.emit.assert_called_once()
-    else:
-      mocker.patch('pasta_eln.dataverse.upload_queue_manager.super',
-                   side_effect=AttributeError("No cancel_task method in super class"))
-      with pytest.raises(AttributeError):
-        # Act & Assert
-        mock_manager.cancel_task()
+      mock_manager.logger.info.assert_called_once_with("Cancelling upload manager..")
+      assert mock_manager.cancel_all_queued_tasks_and_empty_queue.called, "Expected cancel_all_queued_tasks_and_empty_queue to be called"
 
   @pytest.mark.parametrize("test_id, parallel_uploads_count, expected",
-                           [# Success path tests with various realistic test values
+                           [  # Success path tests with various realistic test values
                              ("SuccessCase-1", 1, 1), ("SuccessCase-2", 5, 5), ("SuccessCase-3", 10, 10),
 
                              # Edge cases
@@ -271,17 +350,106 @@ class TestDataverseUploadQueueManager:
     mock_logger = mocker.MagicMock()
     mock_config_model = ConfigModel()
     mock_config_model.parallel_uploads_count = parallel_uploads_count
-    mock_db_api.get_model.return_value = mock_config_model
+    mock_db_api.get_config_model.return_value = mock_config_model
     mocker.patch('pasta_eln.dataverse.upload_queue_manager.DatabaseAPI', return_value=mock_db_api)
     upload_queue_manager = UploadQueueManager()
     upload_queue_manager.db_api = mock_db_api
     upload_queue_manager.logger = mock_logger
-    mock_db_api.get_model.reset_mock()
+    mock_db_api.get_config_model.reset_mock()
 
     # Act
     upload_queue_manager.set_concurrent_uploads()
 
     # Assert
-    mock_db_api.get_model.assert_called_once_with(mock_db_api.config_doc_id, ConfigModel)
+    mock_db_api.get_config_model.assert_called_once()
     mock_logger.info.assert_called_once_with("Resetting number of concurrent uploads..")
     assert upload_queue_manager.number_of_concurrent_uploads == expected, f"Test ID {test_id}: Expected number_of_concurrent_uploads to be {expected}, got {upload_queue_manager.number_of_concurrent_uploads}"
+
+  @pytest.mark.parametrize("test_id, upload_queue_size", [
+    ("success_path_single_task", 1),  # Testing with a single task in the queue
+    ("success_path_multiple_tasks", 5),  # Testing with multiple tasks in the queue
+    ("edge_case_empty_queue", 0),  # Testing with an empty queue
+  ], ids=str)
+  def test_cancel_all_queued_tasks_and_empty_queue(self, mocker, mock_manager, test_id, upload_queue_size):
+    # Arrange
+    mock_manager.upload_queue = [mocker.MagicMock() for _ in range(upload_queue_size)]
+    mock_manager.empty_upload_queue = mocker.MagicMock()
+    mock_manager.logger = mocker.MagicMock()
+
+    # Act
+    mock_manager.cancel_all_queued_tasks_and_empty_queue()
+
+    # Assert
+    # Verify that each task's cancel method was called once for each task in the queue
+    for task in mock_manager.upload_queue:
+      task.task.cancel.emit.assert_called_once()
+    # Verify that the empty_upload_queue method was called once
+    mock_manager.empty_upload_queue.assert_called_once()
+    # Verify that a log message was emitted
+    mock_manager.logger.info.assert_called_once_with("Cancelling upload queue and the empty the upload queue..")
+
+  @pytest.mark.parametrize("test_id, upload_queue_size", [
+    ("success_path_single_task", 1),  # Testing with a single task in the queue
+    ("success_path_multiple_tasks", 3),  # Testing with multiple tasks in the queue
+    ("edge_case_empty_queue", 0),  # Testing with an empty queue
+  ])
+  def test_cancel_all_queued_tasks_and_empty_queue(self, mocker, mock_manager, test_id, upload_queue_size):
+    # Arrange
+    mock_manager.upload_queue = [mocker.MagicMock() for _ in range(upload_queue_size)]
+
+    # Act
+    mock_manager.cancel_all_queued_tasks_and_empty_queue()
+
+    # Assert
+    # Verify all tasks in the queue received the cancel signal
+    for task in mock_manager.upload_queue:
+      task.task.cancel.emit.assert_called_once()
+    # Verify logging was called
+    mock_manager.logger.info.assert_called_once_with("Cancelling upload queue and the empty the upload queue..")
+
+  @pytest.mark.parametrize("test_id, setup_queue, expected_removal_count", [
+    ("success_path_single_cancelled", [False, True, False], 1),
+    ("success_path_multiple_cancelled", [True, True, False], 2),
+    ("edge_case_all_cancelled", [True, True, True], 3),
+    ("edge_case_none_cancelled", [False, False, False], 0),
+    ("error_case_empty_queue", [], 0),
+  ])
+  def test_remove_cancelled_tasks(self, mock_manager, test_id, setup_queue, expected_removal_count):
+    # Arrange
+    mock_manager.upload_queue = []
+    for is_cancelled in setup_queue:
+      task_mock = MagicMock(cancelled=is_cancelled)
+      upload_task_thread_mock = MagicMock(task=task_mock)
+      mock_manager.upload_queue.append(upload_task_thread_mock)
+    mock_manager.remove_from_queue = MagicMock()
+
+    # Act
+    mock_manager.remove_cancelled_tasks()
+
+    # Assert
+    assert mock_manager.remove_from_queue.call_count == expected_removal_count
+    mock_manager.logger.info.assert_called_with("Removing cancelled tasks from the queue..")
+
+  @pytest.mark.parametrize("test_id, upload_queue_size", [
+    ("success_path_single_task", 1),
+    ("success_path_multiple_tasks", 3),
+    ("edge_case_empty_queue", 0),
+    # Add more test cases as needed
+  ])
+  def test_cancel_all_queued_tasks_and_empty_queue(self, mocker, mock_manager, test_id, upload_queue_size):
+    # Arrange
+    mock_manager.upload_queue = [MagicMock() for _ in range(upload_queue_size)]
+    mock_manager.remove_cancelled_tasks = MagicMock()
+    mocked_timer = mocker.patch('pasta_eln.dataverse.upload_queue_manager.QTimer.singleShot')
+    # Act
+    mock_manager.cancel_all_queued_tasks_and_empty_queue()
+
+    # Assert
+    assert len(mock_manager.upload_queue) == upload_queue_size  # Assuming the queue is emptied elsewhere
+    for task in mock_manager.upload_queue:
+      task.task.cancel.emit.assert_called_once()
+    if upload_queue_size > 0:
+      mocked_timer.assert_called_once_with(500, mocker.ANY)
+    else:
+      mocked_timer.assert_not_called()
+    mock_manager.logger.info.assert_called_once()

@@ -20,7 +20,8 @@ from pasta_eln.dataverse.base_database_api import BaseDatabaseAPI
 from pasta_eln.dataverse.config_model import ConfigModel
 from pasta_eln.dataverse.project_model import ProjectModel
 from pasta_eln.dataverse.upload_model import UploadModel
-from pasta_eln.dataverse.utils import log_and_create_error, set_authors
+from pasta_eln.dataverse.utils import decrypt_data, encrypt_data, get_encrypt_key, log_and_create_error, set_authors, \
+  set_template_values
 
 
 class DatabaseAPI:
@@ -52,9 +53,9 @@ class DatabaseAPI:
     self.design_doc_name = '_design/viewDataverse'
     self.config_doc_id = '-dataverseConfig-'
     self.data_hierarchy_doc_id = '-dataHierarchy-'
-    self.upload_model_view_name = "dvUploadView"
-    self.project_model_view_name = "dvProjectsView"
-    self.initialize_database()
+    self.upload_model_view_name = 'dvUploadView'
+    self.project_model_view_name = 'dvProjectsView'
+    _, self.encrypt_key = get_encrypt_key(self.logger)
 
   def create_dataverse_design_document(self) -> Document:
     """
@@ -228,6 +229,65 @@ class DatabaseAPI:
       raise log_and_create_error(self.logger, ValueError, "model_id cannot be None")
     return model_type(**self.db_api.get_document(model_id))
 
+  def get_config_model(self) -> ConfigModel | None:
+    """
+    Retrieves the config model from the database.
+
+    Explanation:
+        This method retrieves the config model from the database using the appropriate document ID.
+        It performs the necessary validations and returns the retrieved config model.
+
+    Args:
+        self: The DatabaseAPI instance.
+
+    Returns:
+        ConfigModel: The retrieved config model.dataverse_login_info = {dict: 2} {'api_token': 'encrypted_token', 'dataverse_id': 'some_id'}
+    """
+    self.logger.info("Getting config model...")
+    config_model = self.get_model(self.config_doc_id, ConfigModel)
+    if config_model is None or not isinstance(config_model, ConfigModel):
+      self.logger.error("Fatal error, Failed to load config model!")
+      return None
+    if not isinstance(config_model.dataverse_login_info, dict):
+      self.logger.error("Fatal Error, Invalid dataverse login info!")
+      return None
+    api_token = config_model.dataverse_login_info.get("api_token")
+    if self.encrypt_key and api_token:
+      config_model.dataverse_login_info["api_token"] = decrypt_data(self.logger, self.encrypt_key, api_token)
+    if not self.encrypt_key and api_token:
+      self.logger.warning(
+        "No encryption key found. Hence if any API key exists, it will be removed and the user needs to re-enter it.")
+      config_model.dataverse_login_info["api_token"] = None
+      config_model.dataverse_login_info["dataverse_id"] = None
+      self.update_model_document(config_model)
+    return config_model
+
+  def save_config_model(self, config_model: ConfigModel) -> None:
+    """
+    Saves the config model to the database.
+
+    Explanation:
+        This method saves the config model to the database using the appropriate document ID.
+
+    Args:
+        self: The DatabaseAPI instance.
+        config_model (ConfigModel): The config model to save.
+    """
+    self.logger.info("Saving config model...")
+    if (not config_model
+        or not isinstance(config_model, ConfigModel)
+        or not isinstance(config_model.dataverse_login_info, dict)):
+      self.logger.error("Invalid config model!")
+      return
+    if not self.encrypt_key:
+      raise log_and_create_error(self.logger, ValueError,
+                                 "Fatal Error, No encryption key found! Make sure to initialize the database!")
+    if api_token := config_model.dataverse_login_info["api_token"]:
+      config_model.dataverse_login_info["api_token"] = encrypt_data(self.logger, self.encrypt_key, api_token)
+    if server_url := config_model.dataverse_login_info["server_url"]:
+      config_model.dataverse_login_info["server_url"] = server_url.strip("/").strip("\\")
+    self.update_model_document(config_model)
+
   def get_data_hierarchy(self) -> dict[str, Any] | None:
     """
     Retrieves the data hierarchy from the database.
@@ -293,5 +353,6 @@ class DatabaseAPI:
     current_path = realpath(join(getcwd(), dirname(__file__)))
     with open(join(current_path, "dataset-create-new-all-default-fields.json"), encoding="utf-8") as config_file:
       model.metadata = load(config_file)
+    set_template_values(self.logger, model.metadata or {})
     set_authors(self.logger, model.metadata or {})
     self.create_model_document(model)

@@ -1,4 +1,4 @@
-'''  Methods that check, repair, the local PASTA-ELN installation '''
+'''  Methods that check, repair, the local PASTA-ELN installation: no Qt-here '''
 import os, platform, sys, json, shutil, random, string, logging, uuid
 from typing import Optional, Any, Callable
 import urllib.request
@@ -91,6 +91,21 @@ def runAsAdminWindows(cmdLine:list[str]) -> None:
   return
 
 
+def checkForDotNetVersion() -> bool:
+  ''' check if .NET version 3.5 is installed (only on windows)
+  '''
+  import subprocess
+  command = ['reg','query','HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\NET Framework Setup\\NDP','/s']
+  result = subprocess.run(command, stdout=subprocess.PIPE, check=True)
+  #### For reference: code to show all installed versions
+  # lines = [str(i).strip() for i in result.stdout.split(b'\n')]
+  # lines = [i.split()[3][:-3] for i in lines if 'Version' in i]
+  # versions = set(lines)
+  # count3_5 = len([i for i in versions if i.startswith('3.5.')])
+  # return count3_5>0
+  return b'Version    REG_SZ    3.5' in result.stdout
+
+
 def couchdb(command:str='test') -> str:
   '''
   test couchDB installation or (install it on Windows-only)
@@ -114,7 +129,7 @@ def couchdb(command:str='test') -> str:
   elif command == 'install':
     if platform.system()=='Linux':
       return '**ERROR should not be called'
-    elif platform.system()=='Windows':
+    if platform.system()=='Windows':
       logging.info('CouchDB starting ...')
       url = 'https://couchdb.neighbourhood.ie/downloads/3.1.1/win/apache-couchdb-3.1.1.msi'
       path = Path.home()/'Downloads'/'apache-couchdb-3.1.1.msi'

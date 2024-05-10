@@ -1,4 +1,5 @@
 """ Represents QT dialog extension. """
+
 #  PASTA-ELN and all its sub-parts are covered by the MIT license.
 #
 #  Copyright (c) 2024
@@ -27,7 +28,6 @@ class DialogExtension(QDialog):
       None
   """
   closed = QtCore.Signal()
-
 
   def closeEvent(self, close_event: QCloseEvent) -> None:
     """

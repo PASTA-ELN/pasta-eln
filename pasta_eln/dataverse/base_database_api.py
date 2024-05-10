@@ -8,6 +8,7 @@
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import logging
+from threading import Lock
 from typing import Any
 
 from cloudant import couchdb
@@ -60,6 +61,7 @@ class BaseDatabaseAPI:
     else:
       raise log_and_create_error(self.logger, ConfigError, "Incorrect config file, defaultProjectGroup not found!")
     self.set_username_password(config)
+    self.update_lock = Lock()
 
   def set_username_password(self, config: dict[str, Any]) -> None:
     """
@@ -150,15 +152,16 @@ class BaseDatabaseAPI:
 
     """
     self.logger.info("Updating document with data: %s", data)
-    with couchdb(self.username,
-                 self.password,
-                 url=self.url,
-                 connect=True) as client:
-      pasta_db = client[self.db_name]
-      with Document(pasta_db, data['_id']) as document:
-        for key, value in data.items():
-          if key not in ['_id', '_rev']:
-            document[key] = value
+    with self.update_lock:
+      with couchdb(self.username,
+                   self.password,
+                   url=self.url,
+                   connect=True) as client:
+        pasta_db = client[self.db_name]
+        with Document(pasta_db, data['_id']) as document:
+          for key, value in data.items():
+            if key not in ['_id', '_rev']:
+              document[key] = value
 
   def add_view(self,
                design_document_name: str,
