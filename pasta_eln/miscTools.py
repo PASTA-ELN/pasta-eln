@@ -357,7 +357,7 @@ class DummyProgressBar():
 # adapted from flatten-dict https://github.com/ianlini/flatten-dict
 # - reduce dependencies and only have python 3 code
 # - add conversion of dict to list if applicable
-def flatten(d:dict[str,Any]) -> dict[Optional[str], Any]:
+def flatten(d:Optional[dict[str,Any]]) -> dict[Optional[str], Any]:
   """Flatten `Mapping` object.
 
   Args:

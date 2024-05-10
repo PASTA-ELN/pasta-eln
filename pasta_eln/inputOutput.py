@@ -326,10 +326,15 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
   Returns:
     str: report of exportation
   """
-  def separate(doc: dict[str,Any], dirNameProject_: str) -> tuple[str, dict[str,Any]]:
+  def separate(doc: dict[str,Any], dirNameProject_: str, filesNotInProject:list[str]) -> tuple[str, dict[str,Any]]:
     """ separate document into
     - main information (for all elns) and
     - supplemental information (specific to PastaELN)
+
+    Args:
+      doc (dict): document to separate into main and supplemental information
+      dirNameProject_ (str): name of the project directory
+      filesNotInProject (list): list of path-strings of files that are not in project folder hierarchy
     """
     path =  f"{doc['-branch'][0]['path']}/" if doc['-type'][0][0]=='x' else doc['-branch'][0]['path']
     docMain= {}
@@ -382,7 +387,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
     return
 
 
-  def iterateTree(nodeHier:Node, graph:list[dict[str,Any]], dirNameProject:str) -> Optional[str]:
+  def iterateTree(nodeHier:Node, graph:list[dict[str,Any]], dirNameProject:str, filesNotInProject:list[str]) -> Optional[str]:
     """
     Recursive function to translate the hierarchical node into a tree-node
 
@@ -390,18 +395,19 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
       nodeHier (Anytree.Node): anytree node
       graph    (list): list of nodes
       dirNameProject (str): name of the project
+      filesNotInProject (list): list of path-strings of files that are not in project folder hierarchy
 
     Returns:
       str: tree node
     """
     # separate into main and supplemental information
     doc = backend.db.getDoc(nodeHier.id)
-    path, docMain = separate(doc, dirNameProject)
+    path, docMain = separate(doc, dirNameProject, filesNotInProject)
     hasPart = []
     if (nodeHier.docType[0] not in dTypes) and nodeHier.docType[0][0]!='x' and len(dTypes)>0:
       return None
     for child in nodeHier.children:
-      res = iterateTree(child, graph, dirNameProject)
+      res = iterateTree(child, graph, dirNameProject, filesNotInProject)
       if res is not None:
         hasPart.append( res )
     if nodeHier.id[0]=='x':
@@ -449,7 +455,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
 
       # ------- Create main graph -------------------
       listHier = backend.db.getHierarchy(projectID, allItems=False)
-      iterateTree(listHier, graph, dirNameProject)  # create json object from anytree
+      iterateTree(listHier, graph, dirNameProject, filesNotInProject)  # create json object from anytree
 
       # ------------------ copy data-files --------------------------
       # datafiles are already in the graph-graph: only copy and no addition to graph
