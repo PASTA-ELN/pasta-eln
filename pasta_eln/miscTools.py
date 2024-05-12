@@ -1,7 +1,7 @@
 """ Misc functions that do not require instances """
 import os, uuid, logging, traceback, json, sys, re
 from collections.abc import Mapping
-from typing import Any, Union, Mapping
+from typing import Any, Union
 from io import BufferedReader
 from urllib import request
 from pathlib import Path

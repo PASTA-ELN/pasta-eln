@@ -31,7 +31,7 @@ def createQRcodeSheet(fileName:str="../qrCodes.pdf") -> None:
       #   data[:,:,:][mask.T]=(255,255,0)
       #   img = Image.fromarray(data)
       # new_im.paste(img, (i, j))
-      pass
+      print(i,j)
   new_im.save(fileName)
   return
 
@@ -58,7 +58,7 @@ def printQRcodeSticker(codes:list[list[str]]=[],
   import qrcode, tempfile
   import numpy as np
   from PIL import Image, ImageDraw, ImageFont
-  fnt = ImageFont.truetype("arial.ttf", page['font'])
+  # fnt = ImageFont.truetype("arial.ttf", page['font'])
   offset    = int((page['size'][0]+page['margin'])/page['tiles'])
   qrCodeSize= min(offset-page['font']-page['margin'], page['size'][1])
   print("Effective label size",page['size'], "offset",offset, 'qrCodeSize',qrCodeSize)
@@ -66,6 +66,7 @@ def printQRcodeSticker(codes:list[list[str]]=[],
   image = Image.new('RGBA', page['size'], color=(255,255,255,255) )
   for numCodes, idx in enumerate(range(page['tiles'])):
     codeI, text = codes[idx] if idx<len(codes) else ('', '')
+    print(text)
     if len(codeI)==0:
       codeI = uuid.uuid4().hex
     # add text: temporary comment out since library updated and functions changed
