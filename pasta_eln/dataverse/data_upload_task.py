@@ -380,7 +380,7 @@ class DataUploadTask(GenericTaskObject):
       if value
     ]
     try:
-      exportELN(self.backend, self.project_doc_id, eln_file, data_types)
+      exportELN(self.backend, [self.project_doc_id], eln_file, data_types)
     except Exception as e:
       self.update_log(f"Error while exporting ELN file for project:"
                       f" {self.project_name}, error: {e}", self.logger.error)

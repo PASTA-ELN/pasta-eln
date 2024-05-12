@@ -337,8 +337,8 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
       filesNotInProject (list): list of path-strings of files that are not in project folder hierarchy
     """
     path =  f"{doc['-branch'][0]['path']}/" if doc['-type'][0][0]=='x' else doc['-branch'][0]['path']
-    docMain= {}
-    docSupp = {}
+    docMain:dict[str,Any] = {}
+    docSupp:dict[str,Any] = {}
     if path is None:
       path = dirNameProject_+'/'+doc['_id']
     elif not path.startswith(dirNameProject_) and not path.startswith('http'):
@@ -366,10 +366,10 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
     docMain = {k:v for k,v in docMain.items() if v}
     # move docSupp into docMain
     variableMeasured = []
-    for k, v in flatten(docSupp).items():
-      name = ' \u2192 '.join([i.replace('_','').replace('-','').capitalize() for i in k.split('.')])
+    for kObject, v in flatten(docSupp).items():
+      name = ' \u2192 '.join([i.replace('_','').replace('-','').capitalize() for i in str(kObject).split('.')])
       name = pastaNameTranslation[name] if name in pastaNameTranslation else name
-      variableMeasured.append({'value':v, 'propertyID':k, 'name':name})
+      variableMeasured.append({'value':v, 'propertyID':kObject, 'name':name})
     docMain['variableMeasured'] = variableMeasured
     return path, docMain
 

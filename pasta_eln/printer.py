@@ -15,24 +15,23 @@ def createQRcodeSheet(fileName:str="../qrCodes.pdf") -> None:
   import qrcode
   import numpy as np
   from PIL import Image
-  from commonTools import commonTools as cT  # don't import globally since it disturbs translation
-  img = qrcode.make(cT.uuidv4(),
-                    error_correction=qrcode.constants.ERROR_CORRECT_M)
-  size = img.size[0]
+  #from commonTools import commonTools as cT  # don't import globally since it disturbs translation
+  #img = qrcode.make(cT.uuidv4(), error_correction=qrcode.constants.ERROR_CORRECT_M)
+  size = -1 # img.size[0]
   hSize = 6*size
   vSize = 9*size
   new_im = Image.new('RGB', (hSize, vSize))
   for i in np.arange(0, hSize, size):
     for j in np.arange(0, vSize, size):
-      img = qrcode.make(cT.uuidv4(),
-                        error_correction=qrcode.constants.ERROR_CORRECT_M)
+      #img = qrcode.make(cT.uuidv4(), error_correction=qrcode.constants.ERROR_CORRECT_M)
       # if j==0:  #make top row yellow
       #   data = np.array(img.convert("RGB"))
       #   red, green, blue = data.T
       #   mask = (red==255) & (green==255) & (blue==255)
       #   data[:,:,:][mask.T]=(255,255,0)
       #   img = Image.fromarray(data)
-      new_im.paste(img, (i, j))
+      # new_im.paste(img, (i, j))
+      pass
   new_im.save(fileName)
   return
 
@@ -69,15 +68,15 @@ def printQRcodeSticker(codes:list[list[str]]=[],
     codeI, text = codes[idx] if idx<len(codes) else ('', '')
     if len(codeI)==0:
       codeI = uuid.uuid4().hex
-    # add text
-    width, height = fnt.getsize(text)
-    txtImage = Image.new('L', (width, height), color=255)
-    d = ImageDraw.Draw(txtImage)
-    d.text( (0, 0), text,  font=fnt, fill=0)
-    txtImage=txtImage.rotate(90, expand=1)
-    if width>page['size'][1]:  #shorten it to fit into height
-      txtImage=txtImage.crop((0,width-page['size'][1],height,width))
-    image.paste(txtImage, (numCodes*offset+qrCodeSize-4, int((page['size'][1]-txtImage.size[1])/2)   ))
+    # add text: temporary comment out since library updated and functions changed
+    # width, height = fnt.getsize(text)
+    # txtImage = Image.new('L', (width, height), color=255)
+    # d = ImageDraw.Draw(txtImage)
+    # d.text( (0, 0), text,  font=fnt, fill=0)
+    # txtImage=txtImage.rotate(90, expand=1)
+    # if width>page['size'][1]:  #shorten it to fit into height
+    #   txtImage=txtImage.crop((0,width-page['size'][1],height,width))
+    # image.paste(txtImage, (numCodes*offset+qrCodeSize-4, int((page['size'][1]-txtImage.size[1])/2)   ))
     # add qrcode
     qrCode = qrcode.make(codeI, error_correction=qrcode.constants.ERROR_CORRECT_M)
     qrCode = qrCode.crop((cropQRCode, cropQRCode, qrCode.size[0]-cropQRCode, qrCode.size[0]-cropQRCode))

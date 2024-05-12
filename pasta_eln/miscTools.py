@@ -1,7 +1,7 @@
 """ Misc functions that do not require instances """
 import os, uuid, logging, traceback, json, sys, re
 from collections.abc import Mapping
-from typing import Any, Union, Optional
+from typing import Any, Union, Mapping
 from io import BufferedReader
 from urllib import request
 from pathlib import Path
@@ -357,7 +357,7 @@ class DummyProgressBar():
 # adapted from flatten-dict https://github.com/ianlini/flatten-dict
 # - reduce dependencies and only have python 3 code
 # - add conversion of dict to list if applicable
-def flatten(d:Optional[dict[str,Any]]) -> dict[Optional[str], Any]:
+def flatten(d:Mapping[Any,Any]) -> dict[object, Any]:
   """Flatten `Mapping` object.
 
   Args:
@@ -371,13 +371,13 @@ def flatten(d:Optional[dict[str,Any]]) -> dict[Optional[str], Any]:
   flatten_types = (Mapping,) + enumerate_types
   flat_dict = {}
 
-  def dot_reducer(k1:Optional[str], k2:Optional[str]) -> Optional[str]:
+  def dot_reducer(k1:object, k2:object) -> Union[str, object]:
     """ Reducer function """
     if k1 is None:
       return k2
     return f"{k1}.{k2}"
 
-  def _flatten(_d:Union[dict[str, Any], list[Any]], depth:int, parent:Optional[str]=None) -> bool:
+  def _flatten(_d:Union[Mapping[Any, Any], list[Any]], depth:int, parent:object=None) -> bool:
     """ Recursive function """
     key_value_iterable = (enumerate(_d) if isinstance(_d, enumerate_types) else _d.items())
     has_item = False
