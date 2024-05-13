@@ -395,7 +395,6 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
       nodeHier (Anytree.Node): anytree node
       graph    (list): list of nodes
       dirNameProject (str): name of the project
-      filesNotInProject (list): list of path-strings of files that are not in project folder hierarchy
 
     Returns:
       str: tree node
@@ -487,8 +486,15 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
             'slogan': 'The favorite ELN for experimental scientists',
             'url': 'https://github.com/PASTA-ELN/', 'description': f'Version {__version__}'}}
     graphMaster.append(masterNodeInfo)
+    zipContent = json.dumps(backend.db.getDoc('-dataHierarchy-'))
+    dataHierarchyInfo = {'@id':  f'./{dirNameGlobal}/data_hierarchy.json', '@type': 'File',
+        'name':  'data structure', 'description': 'data structure / schema of the stored data',
+        'contentSize':str(len(zipContent)), 'sha256':hashlib.sha256(zipContent.encode()).hexdigest(),
+        'datePublished': datetime.now().isoformat()}
+    graphMisc.append(dataHierarchyInfo)
+    elnFile.writestr(f'{dirNameGlobal}/{dirNameGlobal}/data_hierarchy.json', zipContent)
     authors = backend.configuration['authors']
-    masterParts = [{'@id': f'./{dirNameGlobal}/{i}/'} for i in dirNameProjects]
+    masterParts = [{'@id': f'./{dirNameGlobal}/{i}/'} for i in dirNameProjects] + [{'@id': f'./{dirNameGlobal}/data_hierarchy.json'}]
     masterNodeRoot = {'@id': './', '@type': 'Dataset', 'hasPart': masterParts,
         'name': 'Exported from PASTA ELN', 'description': 'Exported content from PASTA ELN',
         'license':'CC BY 4.0', 'datePublished':datetime.now().isoformat(),
@@ -499,14 +505,6 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
                 'RORID': authors[0]['organizations'][0]['rorid']}]
         }]}
     graphMaster.append(masterNodeRoot)
-    zipContent = json.dumps(backend.db.getDoc('-dataHierarchy-'))
-    dataHierarchyInfo = {'@id':  f'./{dirNameGlobal}/data_hierarchy.json', '@type': 'File',
-        'name':  'data structure', 'description': 'data structure / schema of the stored data',
-        'contentSize':str(len(zipContent)), 'sha256':hashlib.sha256(zipContent.encode()).hexdigest(),
-        'datePublished': datetime.now().isoformat()}
-    graphMisc.append(dataHierarchyInfo)
-    graph[-1]['hasPart'] += [{'@id': f'./{dirNameGlobal}/data_hierarchy.json'}]
-    elnFile.writestr(f'{dirNameGlobal}/{dirNameGlobal}/data_hierarchy.json', zipContent)
 
     #finalize file
     index['@graph'] = graphMaster+graph+graphMisc
@@ -521,9 +519,12 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
   return f'Success: exported {len(graph)} graph-nodes into file {fileName}'
 
 
-def testELNFile(fileName):
+def testELNFile(fileName:str) -> None:
   """
   main function
+
+  Args:
+    fileName (str): file name of .eln to test
   """
   # global variables worth discussion
   ROCRATE_NOTE_MANDATORY = ['version','sdPublisher']
@@ -539,7 +540,7 @@ def testELNFile(fileName):
   KNOWN_KEYS = DATASET_MANDATORY+DATASET_SUGGESTED+FILE_MANDATORY+FILE_SUGGESTED+['@id', '@type']
 
   logJson = {}
-  def processNode(graph, nodeID):
+  def processNode(graph: list[dict[str,Any]], nodeID:str) -> bool:
     """
     recursive function call to process each node
 
@@ -548,10 +549,10 @@ def testELNFile(fileName):
     nodeID: id of node in graph
     """
     globalSuccess = True
-    nodes = [ i for i in graph if '@id' in i and i['@id'] == nodeID]
+    nodes = [i for i in graph if '@id' in i and i['@id'] == nodeID]
     if len(nodes)!=1:
       print('**ERROR: all entries must only occur once in crate. check:', nodeID)
-      return
+      return False
     node = nodes[0]
     # CHECK IF MANDATORY AND SUGGESTED KEYWORDS ARE PRESENT
     if '@type' not in node:
@@ -573,7 +574,7 @@ def testELNFile(fileName):
         if not key in node and OUTPUT_INFO:
           print(f'**INFO for file: "{key}" not in @id={node["@id"]}')
     # CHECK PROPERTIES FOR ALL KEYS
-    if any([str(i).strip()=='' for i in node.values()]):
+    if any(str(i).strip()=='' for i in node.values()):
       print(f'**WARNING: {nodeID} contains empty values in the key-value pairs', node)
     # SPECIFIC CHECKS ON CERTAIN KEYS
     if isinstance(node.get('keywords', ''), list):
@@ -588,10 +589,9 @@ def testELNFile(fileName):
   print(f'\n\nParse: {fileName}')
   with ZipFile(fileName, 'r', compression=ZIP_DEFLATED) as elnFile:
     success = True
-    p = ZPath(elnFile)
-    dirName = sorted(p.iterdir())[0]
-    metadataJsonFile = dirName.joinpath(METADATA_FILE)
-    metadataContent = json.loads(metadataJsonFile.read_bytes())
+    metadataJsonFile = [i for i in elnFile.namelist() if i.endswith(METADATA_FILE)][0]
+    with elnFile.open(metadataJsonFile) as roCrateFile:
+      metadataContent = json.loads(roCrateFile.read())
     graph = metadataContent["@graph"]
     # find information from master node
     ro_crate_nodes = [i for i in graph if i["@id"] == METADATA_FILE]
@@ -613,7 +613,7 @@ def testELNFile(fileName):
       logJson[fileName] = logJson[fileName] | {'params_metadata_json':success}
 
     # count occurrences of all keys
-    counts = {}
+    counts:dict[str,int] = {}
     for node in graph:
       if node['@id'] in ['./',METADATA_FILE]:
         continue
