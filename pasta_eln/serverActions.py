@@ -381,7 +381,7 @@ def backupCouchDB(location:str='', userName:str='', password:str='') -> None:
         for item in resp.json()['rows']:
           docID = item['id']
           doc   = requests.get(f'http://{location}:5984/{database}/{docID}', headers=headers, auth=authUser, timeout=10).json()
-          zipFile.writestr(f'{zipFileName}/{database}/{docID}', json.dumps(doc))
+          zipFile.writestr(f'{zipFileName}/research/{docID}', json.dumps(doc))
           if '_attachments' in doc:
             for att in doc['_attachments']:
               docAttach = requests.get(f'http://{location}:5984/{database}/{docID}/{att}',

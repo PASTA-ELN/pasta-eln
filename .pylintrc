@@ -80,7 +80,6 @@ disable=raw-checker-failed,
         dangerous-default-value,
         missing-raises-doc,
         no-else-return,
-        no-self-use,
         condition-evals-to-constant,
         broad-except
 
@@ -493,4 +492,4 @@ known-third-party=enchant
 
 # Exceptions that will emit a warning when being caught. Defaults to
 # "Exception"
-overgeneral-exceptions=Exception
+overgeneral-exceptions=builtins.Exception
