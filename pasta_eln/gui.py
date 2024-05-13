@@ -41,7 +41,7 @@ class MainWindow(QMainWindow):
     super().__init__()
     venv = ' without venv' if sys.prefix == sys.base_prefix and 'CONDA_PREFIX' not in os.environ else ' in venv'
     self.setWindowTitle(f"PASTA-ELN {__version__}{venv}")
-    self.setWindowState(Qt.WindowMaximized)  # type: ignore
+    # self.setWindowState(Qt.WindowMaximized)  # type: ignore
     resourcesDir = Path(__file__).parent / 'Resources'
     self.setWindowIcon(QIcon(QPixmap(resourcesDir / 'Icons' / 'favicon64.png')))
     self.backend = Backend()
@@ -143,14 +143,16 @@ class MainWindow(QMainWindow):
         showMessage(self, 'Error', 'You have to open a project to export', 'Warning')
         return
       fileName = QFileDialog.getSaveFileName(self, 'Save project into .eln file', str(Path.home()), '*.eln')[0]
-      if fileName != '':
-        status = exportELN(self.comm.backend, [self.comm.projectID], fileName)
+      if fileName != '' and hasattr(self.backend, 'db'):
+        docTypes = [i for i in self.comm.backend.db.dataLabels.keys() if i[0]!='x']
+        status = exportELN(self.comm.backend, [self.comm.projectID], fileName, docTypes)
         showMessage(self, 'Finished', status, 'Information')
     elif command[0] is Command.EXPORT_ALL:
       fileName = QFileDialog.getSaveFileName(self, 'Save everything to .eln file', str(Path.home()), '*.eln')[0]
-      if fileName != '':
+      if fileName != '' and hasattr(self.backend, 'db'):
+        docTypes = [i for i in self.comm.backend.db.dataLabels.keys() if i[0]!='x']
         allProjects = [i['id'] for i in self.comm.backend.db.getView('viewDocType/x0')]
-        status = exportELN(self.comm.backend, allProjects, fileName)
+        status = exportELN(self.comm.backend, allProjects, fileName, docTypes)
         showMessage(self, 'Finished', status, 'Information')
     elif command[0] is Command.IMPORT:
       fileName = QFileDialog.getOpenFileName(self, 'Load data from .eln file', str(Path.home()), '*.eln')[0]

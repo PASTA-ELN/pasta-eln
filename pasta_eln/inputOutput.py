@@ -312,7 +312,7 @@ def importELN(backend:Backend, elnFileName:str) -> str:
 ##########################################
 ###               EXPORT               ###
 ##########################################
-def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[str]=[], verbose:bool=False) -> str:
+def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[str], verbose:bool=False) -> str:
   """
   export eln to file
 
@@ -320,7 +320,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
     backend (backend): PASTA backend instance
     projectIDs (list): list of docIds of projects
     fileName (str): fileName which to use for saving
-    dTypes (list): list of strings which should be included in the output, alongside folders x0 & x1; empty list=everything is exported
+    dTypes (list): list of strings which should be included in the output, alongside folders x0 & x1
     verbose (bool): verbose
 
   Returns:
@@ -404,7 +404,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
     path, docMain, filesNotInBranch = separate(doc, dirNameProject)
     filesNotInProject:list[str] = [] if filesNotInBranch is None else [filesNotInBranch]
     hasPart = []
-    if (nodeHier.docType[0] not in dTypes) and nodeHier.docType[0][0]!='x' and len(dTypes)>0:
+    if (nodeHier.docType[0] not in dTypes) and nodeHier.docType[0][0]!='x':
       return (None, [])
     for child in nodeHier.children:
       res, filesNotInSubbranch = iterateTree(child, graph, dirNameProject)
@@ -492,7 +492,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
         'contentSize':str(len(zipContent)), 'sha256':hashlib.sha256(zipContent.encode()).hexdigest(),
         'datePublished': datetime.now().isoformat()}
     graphMisc.append(dataHierarchyInfo)
-    elnFile.writestr(f'{dirNameGlobal}/{dirNameGlobal}/data_hierarchy.json', zipContent)
+    elnFile.writestr(f'{dirNameGlobal}/data_hierarchy.json', zipContent)
     authors = backend.configuration['authors']
     masterParts = [{'@id': f'./{dirNameGlobal}/{i}/'} for i in dirNameProjects] + [{'@id': f'./{dirNameGlobal}/data_hierarchy.json'}]
     masterNodeRoot = {'@id': './', '@type': 'Dataset', 'hasPart': masterParts,
@@ -509,8 +509,8 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
     #finalize file
     index['@graph'] = graphMaster+graph+graphMisc
     elnFile.writestr(f'{dirNameGlobal}/ro-crate-metadata.json', json.dumps(index))
-    # if verbose:
-    #   print(json.dumps(index, indent=3))
+    if verbose:
+      print(json.dumps(index, indent=3))
   # end writing zip file
 
   # temporary json output
@@ -526,6 +526,17 @@ def testELNFile(fileName:str) -> None:
   Args:
     fileName (str): file name of .eln to test
   """
+  import sys
+  try:
+    sys.path.append('/home/steffen/FZJ/DataScience/Repositories/TheELNConsortium/TheELNFileFormat/tests/')
+    from test_00_pypi_rocrate         import testFile as roCrateTest
+    from test_01_params_metadata_json import testFile as metadataTest
+    result = list(list(roCrateTest(fileName).values())[0].values())[0]
+    print('ro-crate test:', result)
+    result = metadataTest(fileName)[0]
+    print('metadata test:', result)
+  except:
+    print('**Info: no testing with the The-ELN-Consortium tests')
   # global variables worth discussion
   ROCRATE_NOTE_MANDATORY = ['version','sdPublisher']
   DATASET_MANDATORY = ['name']
