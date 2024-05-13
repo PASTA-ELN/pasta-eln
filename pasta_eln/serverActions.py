@@ -371,7 +371,7 @@ def backupCouchDB(location:str='', userName:str='', password:str='') -> None:
   zipFileName = 'couchDB_backup_'+location.replace('.','')+'_'+timestamp
   print(f'Create zip-file {zipFileName}.zip')
   with ZipFile(f'{zipFileName}.zip', 'w', compression=ZIP_DEFLATED) as zipFile:
-    for database in ['pasta_tutorial2']: #databases:
+    for database in databases:
       if database.startswith('_'):
         print('Special database', database, ': Nothing to do')
       else:

@@ -150,7 +150,6 @@ class MainWindow(QMainWindow):
       fileName = QFileDialog.getSaveFileName(self, 'Save everything to .eln file', str(Path.home()), '*.eln')[0]
       if fileName != '':
         allProjects = [i['id'] for i in self.comm.backend.db.getView('viewDocType/x0')]
-        print(allProjects)
         status = exportELN(self.comm.backend, allProjects, fileName)
         showMessage(self, 'Finished', status, 'Information')
     elif command[0] is Command.IMPORT:
