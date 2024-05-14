@@ -633,7 +633,7 @@ class TestDataverseDataUploadTask:
 
     # Assert
     if expected_file_path:
-      mock_exportELN.assert_any_call(setup_task.backend, setup_task.project_doc_id, expected_file_path, dtypes)
+      mock_exportELN.assert_any_call(setup_task.backend, [setup_task.project_doc_id], expected_file_path, dtypes)
       assert result == expected_file_path, f"Test ID: {test_id} - Expected file path does not match."
       mock_path.assert_called_once_with(expected_file_path)
       mock_path.return_value.touch.assert_called_once()
