@@ -1,7 +1,5 @@
-"""
-https://jedisct1.github.io/minisign
-"""
-
+# pylint: skip-file
+# mypy: ignore-errors
 from __future__ import annotations
 
 import base64

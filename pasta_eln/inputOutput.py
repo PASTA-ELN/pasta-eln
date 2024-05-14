@@ -1,5 +1,5 @@
 """Input and output functions towards the .eln file-format"""
-import os, json, shutil, logging, hashlib, copy
+import os, json, shutil, logging, hashlib, copy, uuid
 from typing import Any, Optional
 from pathlib import Path
 from datetime import datetime
@@ -7,10 +7,9 @@ from zipfile import ZipFile, ZIP_DEFLATED
 from urllib import request
 import requests
 from anytree import Node
-from pasta_eln import __version__
+from pasta_eln import __version__, minisign
 from .backend import Backend
 from .miscTools import createDirName, generic_hash, flatten, hierarchy
-from pasta_eln import minisign
 # to discuss
 # - genre:docType, simulation, experiment/measurement;  status = Done, finished
 # - category: project
@@ -516,8 +515,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
     #sign file
     if 'signingKeyPair' not in backend.configuration:  #create a key-pair of secret and public key and save it locally
       keyPairRaw = minisign.KeyPair.generate()
-      keyPair['secret'] = bytes(keyPairRaw.secret_key).decode()
-      keyPair['public'] = bytes(keyPairRaw.public_key).decode()
+      keyPair    = {'id':str(uuid.uuid4()), 'secret':bytes(keyPairRaw.secret_key).decode(), 'public':bytes(keyPairRaw.public_key).decode()}
       backend.configuration['signingKeyPair'] = keyPair
       with open(Path.home()/'.pastaELN.json', 'w', encoding='utf-8') as fConf:
         fConf.write(json.dumps(backend.configuration,indent=2))

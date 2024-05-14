@@ -1,3 +1,5 @@
+# pylint: skip-file
+# mypy: ignore-errors
 import hashlib
 import io
 from typing import (

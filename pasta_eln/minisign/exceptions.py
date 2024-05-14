@@ -1,3 +1,4 @@
+# pylint: skip-file
 class Error(ValueError):
     pass
 
