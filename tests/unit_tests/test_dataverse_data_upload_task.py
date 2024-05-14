@@ -602,19 +602,19 @@ class TestDataverseDataUploadTask:
       setup_task.finalize_upload_task.assert_not_called()
 
   @pytest.mark.parametrize("tmp_dir, project_name, config_model, expected_file_path, dtypes, test_id", [
-    ("/tmp", "TestProject", ConfigModel(project_upload_items={"Text": True}), "/tmp/TestProject_eln_file.eln",
+    ("/tmp", "TestProject", ConfigModel(project_upload_items={"Text": True}), "/tmp/TestProject.eln",
      ["text"], "success_path"),
     ("/var/tmp", "Another-Project", ConfigModel(project_upload_items={"Image": True, "Text": False}),
-     "/var/tmp/AnotherProject_eln_file.eln", ["image"], "success_path_with_special_chars_in_project_name"),
-    ("/tmp", "Data123", ConfigModel(project_upload_items={}), "/tmp/Data123_eln_file.eln",
+     "/var/tmp/AnotherProject.eln", ["image"], "success_path_with_special_chars_in_project_name"),
+    ("/tmp", "Data123", ConfigModel(project_upload_items={}), "/tmp/Data123.eln",
      [], "success_path_with_empty_upload_items"),
     # Edge cases
-    ("/tmp", "", ConfigModel(project_upload_items={"Text": True}), "/tmp/_eln_file.eln", ["text"],
+    ("/tmp", "", ConfigModel(project_upload_items={"Text": True}), "/tmp/.eln", ["text"],
      "edge_case_empty_project_name"),
-    ("/tmp", "§$&/§? Pasta Project", ConfigModel(project_upload_items={"Text": True}), "/tmp/PastaProject_eln_file.eln",
+    ("/tmp", "§$&/§? Pasta Project", ConfigModel(project_upload_items={"Text": True}), "/tmp/PastaProject.eln",
      ["text"], "edge_case_invalid_project_name1"),
     ("/tmp", "Pasta Project 1234 Ü sfß", ConfigModel(project_upload_items={"Text": True}),
-     "/tmp/PastaProject1234Üsfß_eln_file.eln", ["text"], "edge_case_invalid_project_name2"),
+     "/tmp/PastaProject1234Üsfß.eln", ["text"], "edge_case_invalid_project_name2"),
     # Error cases
     ("/tmp", "TestProject", None, "", [], "error_no_config_model"),
     ("/tmp", "TestProject", ConfigModel(project_upload_items=None), "", [], "error_no_project_upload_items"),
@@ -633,7 +633,7 @@ class TestDataverseDataUploadTask:
 
     # Assert
     if expected_file_path:
-      mock_exportELN.assert_any_call(setup_task.backend, setup_task.project_doc_id, expected_file_path, dtypes)
+      mock_exportELN.assert_any_call(setup_task.backend, [setup_task.project_doc_id], expected_file_path, dtypes)
       assert result == expected_file_path, f"Test ID: {test_id} - Expected file path does not match."
       mock_path.assert_called_once_with(expected_file_path)
       mock_path.return_value.touch.assert_called_once()
