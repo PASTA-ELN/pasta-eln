@@ -444,6 +444,8 @@ class TestDataverseEditMetadataDialog:
 
       line_edit.setText("test data...")
     qtbot.mouseClick(edit_metadata_dialog.buttonBox.button(QDialogButtonBox.Save), Qt.LeftButton)
+    assert edit_metadata_dialog.metadata_summary_dialog.instance.isVisible(), "EditMetadataDialogSummary should be visible!"
+    qtbot.mouseClick(edit_metadata_dialog.metadata_summary_dialog.buttonBox.button(QDialogButtonBox.Yes), Qt.LeftButton)
     assert not edit_metadata_dialog.instance.isVisible(), "EditMetadataDialog instance should be closed!"
     assert edit_metadata_dialog.metadata['datasetVersion']['metadataBlocks']['citation']['fields'][32][
              'value'] == 'test data...'
@@ -496,6 +498,8 @@ class TestDataverseEditMetadataDialog:
         line_edit.setText(test_data[pos])
 
     qtbot.mouseClick(edit_metadata_dialog.buttonBox.button(QDialogButtonBox.Save), Qt.LeftButton)
+    assert edit_metadata_dialog.metadata_summary_dialog.instance.isVisible(), "EditMetadataDialogSummary should be visible!"
+    qtbot.mouseClick(edit_metadata_dialog.metadata_summary_dialog.buttonBox.button(QDialogButtonBox.Yes), Qt.LeftButton)
     assert not edit_metadata_dialog.instance.isVisible(), "EditMetadataDialog instance should be closed!"
     assert edit_metadata_dialog.metadata['datasetVersion']['metadataBlocks']['citation']['fields'][25][
              'value'] == expected_data
@@ -542,6 +546,8 @@ class TestDataverseEditMetadataDialog:
       assert primitive_vertical_layout.count() == 2, "EditMetadataDialog primitive_vertical_layout should have 2 children!"
 
     qtbot.mouseClick(edit_metadata_dialog.buttonBox.button(QDialogButtonBox.Save), Qt.LeftButton)
+    assert edit_metadata_dialog.metadata_summary_dialog.instance.isVisible(), "EditMetadataDialogSummary should be visible!"
+    qtbot.mouseClick(edit_metadata_dialog.metadata_summary_dialog.buttonBox.button(QDialogButtonBox.Yes), Qt.LeftButton)
     assert not edit_metadata_dialog.instance.isVisible(), "EditMetadataDialog instance should be closed!"
     assert edit_metadata_dialog.metadata['datasetVersion']['metadataBlocks']['citation']['fields'][25][
              'value'] == ["KindOfData1", "KindOfData3"]
@@ -581,6 +587,8 @@ class TestDataverseEditMetadataDialog:
       line_edit2.setText("targetSampleSizeFormula")
 
     qtbot.mouseClick(edit_metadata_dialog.buttonBox.button(QDialogButtonBox.Save), Qt.LeftButton)
+    assert edit_metadata_dialog.metadata_summary_dialog.instance.isVisible(), "EditMetadataDialogSummary should be visible!"
+    qtbot.mouseClick(edit_metadata_dialog.metadata_summary_dialog.buttonBox.button(QDialogButtonBox.Yes), Qt.LeftButton)
     assert not edit_metadata_dialog.instance.isVisible(), "EditMetadataDialog instance should be closed!"
     assert edit_metadata_dialog.metadata['datasetVersion']['metadataBlocks']['socialscience']['fields'][7][
              'value']['targetSampleActualSize']['value'] == "targetSampleSize"
@@ -644,6 +652,8 @@ class TestDataverseEditMetadataDialog:
         date_time_edit.setDateTime(QDateTime.fromString(test_data[pos - 1][1], 'yyyy-MM-dd'))
 
     qtbot.mouseClick(edit_metadata_dialog.buttonBox.button(QDialogButtonBox.Save), Qt.LeftButton)
+    assert edit_metadata_dialog.metadata_summary_dialog.instance.isVisible(), "EditMetadataDialogSummary should be visible!"
+    qtbot.mouseClick(edit_metadata_dialog.metadata_summary_dialog.buttonBox.button(QDialogButtonBox.Yes), Qt.LeftButton)
     assert not edit_metadata_dialog.instance.isVisible(), "EditMetadataDialog instance should be closed!"
     for pos in range(len(expected_data)):
       assert edit_metadata_dialog.metadata['datasetVersion']['metadataBlocks']['citation']['fields'][7][
@@ -698,6 +708,8 @@ class TestDataverseEditMetadataDialog:
       assert edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.count() == 3, "EditMetadataDialog primitive_vertical_layout should have 3 children!"
 
     qtbot.mouseClick(edit_metadata_dialog.buttonBox.button(QDialogButtonBox.Save), Qt.LeftButton)
+    assert edit_metadata_dialog.metadata_summary_dialog.instance.isVisible(), "EditMetadataDialogSummary should be visible!"
+    qtbot.mouseClick(edit_metadata_dialog.metadata_summary_dialog.buttonBox.button(QDialogButtonBox.Yes), Qt.LeftButton)
     assert not edit_metadata_dialog.instance.isVisible(), "EditMetadataDialog instance should be closed!"
     for pos in range(len(expected_data)):
       assert edit_metadata_dialog.metadata['datasetVersion']['metadataBlocks']['citation']['fields'][7][
@@ -761,6 +773,8 @@ class TestDataverseEditMetadataDialog:
           pos - 1], "EditMetadataDialog controlled_vocab_frame combo_box should have right default value!"
 
     qtbot.mouseClick(edit_metadata_dialog.buttonBox.button(QDialogButtonBox.Save), Qt.LeftButton)
+    assert edit_metadata_dialog.metadata_summary_dialog.instance.isVisible(), "EditMetadataDialogSummary should be visible!"
+    qtbot.mouseClick(edit_metadata_dialog.metadata_summary_dialog.buttonBox.button(QDialogButtonBox.Yes), Qt.LeftButton)
     assert not edit_metadata_dialog.instance.isVisible(), "EditMetadataDialog instance should be closed!"
     value = edit_metadata_dialog.metadata['datasetVersion']['metadataBlocks']['biomedical']['fields'][1]['value']
     value.sort()
@@ -803,6 +817,8 @@ class TestDataverseEditMetadataDialog:
       assert edit_metadata_dialog.controlled_vocab_frame.mainVerticalLayout.count() == 3, "EditMetadataDialog controlled_vocab_frame mainVerticalLayout should contain 3 children!"
 
     qtbot.mouseClick(edit_metadata_dialog.buttonBox.button(QDialogButtonBox.Save), Qt.LeftButton)
+    assert edit_metadata_dialog.metadata_summary_dialog.instance.isVisible(), "EditMetadataDialogSummary should be visible!"
+    qtbot.mouseClick(edit_metadata_dialog.metadata_summary_dialog.buttonBox.button(QDialogButtonBox.Yes), Qt.LeftButton)
     assert not edit_metadata_dialog.instance.isVisible(), "EditMetadataDialog instance should be closed!"
     value = edit_metadata_dialog.metadata['datasetVersion']['metadataBlocks']['biomedical']['fields'][1]['value']
     value.sort()
@@ -943,6 +959,8 @@ class TestDataverseEditMetadataDialog:
       edit_metadata_dialog.licenseNameLineEdit.setText("New License Name")
       edit_metadata_dialog.licenseURLLineEdit.setText("New License Url")
     qtbot.mouseClick(edit_metadata_dialog.buttonBox.button(QDialogButtonBox.Save), Qt.LeftButton)
+    assert edit_metadata_dialog.metadata_summary_dialog.instance.isVisible(), "EditMetadataDialogSummary should be visible!"
+    qtbot.mouseClick(edit_metadata_dialog.metadata_summary_dialog.buttonBox.button(QDialogButtonBox.Yes), Qt.LeftButton)
     assert not edit_metadata_dialog.instance.isVisible(), "EditMetadataDialog instance should be closed!"
     assert edit_metadata_dialog.metadata['datasetVersion']['license'][
              'name'] == "New License Name", "licenseName should have right text!"
@@ -959,6 +977,74 @@ class TestDataverseEditMetadataDialog:
       edit_metadata_dialog.licenseURLLineEdit.setText("New License Url")
     qtbot.mouseClick(edit_metadata_dialog.buttonBox.button(QDialogButtonBox.Cancel), Qt.LeftButton)
     assert not edit_metadata_dialog.instance.isVisible(), "EditMetadataDialog instance should be closed!"
+    assert edit_metadata_dialog.metadata['datasetVersion']['license'][
+             'name'] == "New License Name", "licenseName should have right text!"
+    assert edit_metadata_dialog.metadata['datasetVersion']['license'][
+             'uri'] == "New License Url", "licenseURL should have right text!"
+    mock_database_api.update_model_document.assert_not_called()
+
+  def test_save_click_should_display_summary_as_expected_and_yes_click_should_do_as_expected(self, qtbot,
+                                                                                             edit_metadata_dialog,
+                                                                                             mock_database_api):
+    edit_metadata_dialog.show()
+    with qtbot.waitExposed(edit_metadata_dialog.instance, timeout=500):
+      assert edit_metadata_dialog.minimalFullComboBox.currentText() == "Full", "minimalFullComboBox must be initialized with default full option"
+      edit_metadata_dialog.licenseNameLineEdit.setText("New License Name")
+      edit_metadata_dialog.licenseURLLineEdit.setText("New License Url")
+    qtbot.mouseClick(edit_metadata_dialog.buttonBox.button(QDialogButtonBox.Save), Qt.LeftButton)
+    assert edit_metadata_dialog.metadata_summary_dialog.instance.isVisible(), "EditMetadataDialogSummary should be visible!"
+    assert edit_metadata_dialog.metadata_summary_dialog.summaryTextEdit.toPlainText() == ('License Metadata:\n'
+                                                                                          'Name: New License Name\n'
+                                                                                          'URI: New License Url\n'
+                                                                                          'Citation Metadata:\n'
+                                                                                          'No value\n'
+                                                                                          'Geospatial Metadata:\n'
+                                                                                          'No value\n'
+                                                                                          'Social Science and Humanities Metadata:\n'
+                                                                                          'No value\n'
+                                                                                          'Astronomy and Astrophysics Metadata:\n'
+                                                                                          'No value\n'
+                                                                                          'Life Sciences Metadata:\n'
+                                                                                          'No value\n'
+                                                                                          'Journal Metadata:\n'
+                                                                                          'No value'), "EditMetadataDialogSummary should have right text!"
+    qtbot.mouseClick(edit_metadata_dialog.metadata_summary_dialog.buttonBox.button(QDialogButtonBox.Yes), Qt.LeftButton)
+    assert not edit_metadata_dialog.instance.isVisible(), "EditMetadataDialog instance should be closed!"
+    assert edit_metadata_dialog.metadata['datasetVersion']['license'][
+             'name'] == "New License Name", "licenseName should have right text!"
+    assert edit_metadata_dialog.metadata['datasetVersion']['license'][
+             'uri'] == "New License Url", "licenseURL should have right text!"
+    mock_database_api.update_model_document.assert_called_once_with(edit_metadata_dialog.config_model)
+
+  def test_save_click_should_display_summary_as_expected_and_no_click_should_do_as_expected(self, qtbot,
+                                                                                            edit_metadata_dialog,
+                                                                                            mock_database_api):
+    edit_metadata_dialog.show()
+    with qtbot.waitExposed(edit_metadata_dialog.instance, timeout=500):
+      assert edit_metadata_dialog.minimalFullComboBox.currentText() == "Full", "minimalFullComboBox must be initialized with default full option"
+      edit_metadata_dialog.licenseNameLineEdit.setText("New License Name")
+      edit_metadata_dialog.licenseURLLineEdit.setText("New License Url")
+    qtbot.mouseClick(edit_metadata_dialog.buttonBox.button(QDialogButtonBox.Save), Qt.LeftButton)
+    assert edit_metadata_dialog.metadata_summary_dialog.instance.isVisible(), "EditMetadataDialogSummary should be visible!"
+    assert edit_metadata_dialog.metadata_summary_dialog.summaryTextEdit.toPlainText() == ('License Metadata:\n'
+                                                                                          'Name: New License Name\n'
+                                                                                          'URI: New License Url\n'
+                                                                                          'Citation Metadata:\n'
+                                                                                          'No value\n'
+                                                                                          'Geospatial Metadata:\n'
+                                                                                          'No value\n'
+                                                                                          'Social Science and Humanities Metadata:\n'
+                                                                                          'No value\n'
+                                                                                          'Astronomy and Astrophysics Metadata:\n'
+                                                                                          'No value\n'
+                                                                                          'Life Sciences Metadata:\n'
+                                                                                          'No value\n'
+                                                                                          'Journal Metadata:\n'
+                                                                                          'No value'), "EditMetadataDialogSummary should have right text!"
+    qtbot.mouseClick(edit_metadata_dialog.metadata_summary_dialog.buttonBox.button(QDialogButtonBox.No), Qt.LeftButton)
+    assert edit_metadata_dialog.instance.isVisible(), "EditMetadataDialog instance should be visible!"
+    qtbot.mouseClick(edit_metadata_dialog.buttonBox.button(QDialogButtonBox.Cancel), Qt.LeftButton)
+    assert not edit_metadata_dialog.instance.isVisible(), "EditMetadataDialog instance should not be visible!"
     assert edit_metadata_dialog.metadata['datasetVersion']['license'][
              'name'] == "New License Name", "licenseName should have right text!"
     assert edit_metadata_dialog.metadata['datasetVersion']['license'][

@@ -26,7 +26,8 @@ from pasta_eln.dataverse.utils import adjust_type_name, check_if_compound_field_
   clear_value, decrypt_data, \
   delete_layout_and_contents, encrypt_data, \
   get_citation_field, get_encrypt_key, \
-  get_flattened_metadata, get_formatted_message, is_date_time_type, log_and_create_error, read_pasta_config_file, \
+  get_flattened_metadata, get_formatted_message, get_formatted_metadata_message, is_date_time_type, \
+  log_and_create_error, read_pasta_config_file, \
   set_authors, \
   set_template_values, update_status, \
   write_pasta_config_file
@@ -1881,3 +1882,57 @@ class TestDataverseUtils:
     # Assert
     logger.info.assert_called_with("Checking if login info is valid, server_url: %s", server_url)
     assert result == False, "Expected False for invalid or empty server messages"
+
+  @pytest.mark.parametrize("metadata, expected_output, test_id", [
+    # Happy path tests
+    ({"datasetVersion": {"license": {"name": "CC0", "uri": "https://creativecommons.org/publicdomain/zero/1.0/"},
+                         "metadataBlocks": {
+                           "citation": {
+                             "displayName": "Citation Metadata",
+                             "fields": [
+                               {"typeName": "title", "value": "Test Title", "multiple": False, "typeClass": "primitive"}
+                             ]
+                           }
+                         }}},
+     "<html><b style=\"color:Black\">License Metadata:</b><ul><li style=\"color:Gray\">Name: <i>CC0</i></li><li style=\"color:Gray\">URI: <i>https://creativecommons.org/publicdomain/zero/1.0/</i></li></ul><b style=\"color:Black\">Citation Metadata:</b><ul><b style=\"color:#737373\"><li>Title:</li></b><ul><i style=\"color:Gray\"><li>Test Title</li></i></ul></ul></html>",
+     "success_path_basic_metadata"),
+
+    # Edge case: Empty metadata
+    ({"datasetVersion": {"license": None, "metadataBlocks": {}}},
+     "<html></html>",
+     "edge_case_empty_metadata"),
+
+    # Complex nested metadata
+    ({"datasetVersion": {"license": {"name": "CC BY", "uri": "https://creativecommons.org/licenses/by/4.0/"},
+                         "metadataBlocks": {
+                           "citation": {
+                             "displayName": "Citation Metadata",
+                             "fields": [
+                               {"typeName": "author",
+                                "value": [{"authorName": {"typeName": "authorName", "value": "John Doe"}},
+                                          {"authorName": {"typeName": "authorName", "value": "Jane Doe"}}],
+                                "multiple": True, "typeClass": "compound"}
+                             ]
+                           }
+                         }}},
+     "<html><b style=\"color:Black\">License Metadata:</b><ul><li style=\"color:Gray\">Name: <i>CC BY</i></li><li style=\"color:Gray\">URI: <i>https://creativecommons.org/licenses/by/4.0/</i></li></ul><b style=\"color:Black\">Citation Metadata:</b><ul><b style=\"color:#737373\"><li>Author:</li></b><ul><li style=\"color:Gray\">Item 1:</li><ul><li style=\"color:Gray\">Author Name: <i>John Doe</li></i></ul><li style=\"color:Gray\">Item 2:</li><ul><li style=\"color:Gray\">Author Name: <i>Jane Doe</li></i></ul></ul></ul></html>",
+     "complex_nested_metadata")
+  ], ids=["success_path_basic_metadata", "edge_case_empty_metadata", "complex_nested_metadata"])
+  def test_get_formatted_metadata_message(self, test_id, metadata, expected_output):
+    # Act
+    result = get_formatted_metadata_message(metadata)
+
+    # Assert
+    assert result == expected_output
+
+  # Test data for error cases
+  @pytest.mark.parametrize("metadata,expected_exception, test_id", [
+    ({}, KeyError, "error_case_empty_metadata"),
+    ({"datasetVersion": {}}, KeyError, "error_case_missing_license_and_metadata_blocks"),
+  ])
+  def test_get_formatted_metadata_message_error_cases(self, metadata, expected_exception, test_id):
+    # Arrange - done via test parameters
+
+    # Act & Assert
+    with pytest.raises(expected_exception):
+      get_formatted_metadata_message(metadata)
