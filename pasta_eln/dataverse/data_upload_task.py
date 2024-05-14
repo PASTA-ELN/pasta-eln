@@ -372,7 +372,7 @@ class DataUploadTask(GenericTaskObject):
     if self.config_model is None or self.config_model.project_upload_items is None:
       self.update_log("Config model or project_upload_items is not set!", self.logger.error)
       return ""
-    eln_file = join(tmp_dir, f"{''.join(x for x in self.project_name if x.isalnum())}_eln_file.eln")
+    eln_file = join(tmp_dir, f"{''.join(x for x in self.project_name if x.isalnum())}.eln")
     Path(eln_file).touch()
     data_types = [
       data_type.lower()

@@ -653,3 +653,68 @@ def get_formatted_message(missing_metadata: dict[str, list[str]]) -> str:
       message += "</ul>"
   message += "</html>"
   return message
+
+
+def get_formatted_metadata_message(metadata: dict[str, Any]) -> str:
+  """
+  Formats metadata into an HTML message for display.
+
+  Args:
+      metadata (dict): A dictionary containing metadata information.
+
+  Returns:
+      str: An HTML-formatted message representing the metadata.
+
+  Examples:
+      >>> metadata = {
+      ...     'datasetVersion': {
+      ...         'license': {'name': 'CC0', 'uri': 'https://creativecommons.org/publicdomain/zero/1.0/'},
+      ...         'metadataBlocks': {
+      ...             'citation': {
+      ...                 'displayName': 'Citation Metadata',
+      ...                 'fields': [
+      ...                     {'typeName': 'title', 'value': 'Test Title', 'multiple': False, 'typeClass': 'primitive'}
+      ...                 ]
+      ...             }
+      ...         }
+      ...     }
+      ... }
+      >>> get_formatted_metadata_message(metadata)
+      '<html>...</html>'
+  """
+
+  message = "<html>"
+  if metadata['datasetVersion']['license']:
+    message += "<b style=\"color:Black\">License Metadata:</b><ul>"
+    message += f"<li style=\"color:Gray\">Name: <i>{metadata['datasetVersion']['license']['name']}</i></li>"
+    message += f"<li style=\"color:Gray\">URI: <i>{metadata['datasetVersion']['license']['uri']}</i></li>"
+    message += "</ul>"
+  for _, metablock in metadata['datasetVersion']['metadataBlocks'].items():
+    message += f"<b style=\"color:Black\">{metablock['displayName']}:</b><ul>"
+    has_value = False
+    for field in metablock['fields']:
+      if field['value']:
+        has_value = has_value or len(field['value']) > 0
+        message += f"<b style=\"color:#737373\"><li>{adjust_type_name(field['typeName'])}:</li></b><ul>"
+        if field["multiple"] and field["typeClass"] == "compound":
+          for index, field_value in enumerate(field['value']):
+            message += f"<li style=\"color:Gray\">Item {index + 1}:</li><ul>"
+            for _, value in field_value.items():
+              message += f"<li style=\"color:Gray\">{adjust_type_name(value['typeName'])}: <i>{value['value']}</li></i>"
+            message += "</ul>"
+          message += "</ul>"
+        elif field["multiple"] and field["typeClass"] == "controlledVocabulary":
+          for field_value in field['value']:
+            message += f"<i style=\"color:Gray\"><li>{field_value}</li></i>"
+          message += "</ul>"
+        elif field["multiple"] and field["typeClass"] == "primitive":
+          for field_value in field['value']:
+            message += f"<i style=\"color:Gray\"><li>{field_value}</li></i>"
+          message += "</ul>"
+        else:
+          message += f"<i style=\"color:Gray\"><li>{field['value']}</li></i></ul>"
+    if not has_value:
+      message += "<li style=\"color:#737373\">No value</li></ul>"
+    message += "</ul>"
+  message += "</html>"
+  return message
