@@ -1,6 +1,7 @@
 """ Misc functions that do not require instances """
 import os, uuid, logging, traceback, json, sys, re
-from typing import Any
+from collections.abc import Mapping
+from typing import Any, Union
 from io import BufferedReader
 from urllib import request
 from pathlib import Path
@@ -351,3 +352,100 @@ class DummyProgressBar():
   def hide(self) -> None:
     """ hide progress bar """
     return
+
+
+# adapted from flatten-dict https://github.com/ianlini/flatten-dict
+# - reduce dependencies and only have python 3 code
+# - add conversion of dict to list if applicable
+def flatten(d:Mapping[Any,Any]) -> dict[object, Any]:
+  """Flatten `Mapping` object.
+
+  Args:
+    d : dict-like object
+        The dict that will be flattened.
+
+  Returns:
+    flat_dict : dict
+  """
+  enumerate_types=(list,)
+  flatten_types = (Mapping,) + enumerate_types
+  flat_dict = {}
+
+  def dot_reducer(k1:object, k2:object) -> Union[str, object]:
+    """ Reducer function """
+    if k1 is None:
+      return k2
+    return f"{k1}.{k2}"
+
+  def _flatten(_d:Union[Mapping[Any, Any], list[Any]], depth:int, parent:object=None) -> bool:
+    """ Recursive function """
+    key_value_iterable = (enumerate(_d) if isinstance(_d, enumerate_types) else _d.items())
+    has_item = False
+    for key, value in key_value_iterable:
+      has_item = True
+      flat_key = dot_reducer(parent, key)
+      if isinstance(value, flatten_types):
+        # recursively build the result
+        has_child = _flatten(value, depth=depth + 1, parent=flat_key)
+        if has_child or not isinstance(value, ()): # ignore the key in this level because it already has child key or its value is empty
+          continue
+      # add an item to the result
+      if flat_key in flat_dict:
+        raise ValueError(f"duplicated key '{flat_key}'")
+      flat_dict[flat_key] = value
+    return has_item
+
+  # start recursive calling
+  _flatten(d, depth=1)
+  return flat_dict
+
+
+def hierarchy(d:dict[str,str]) -> dict[str,Any]:
+  """Reverse flattening of dict-like object
+
+  Args:
+    d : dict-like object
+      The dict that will be reversed
+
+  Returns
+    normalDict : dict
+  """
+  def dot_splitter(flat_key:str) -> tuple[str, ...]:
+    """ split using the . symbol """
+    keys = tuple(flat_key.split("."))
+    return keys
+
+  def nested_set_dict(d:dict[str,Any], keys:tuple[str, ...], value:Any) -> None:
+    """Set a value to a sequence of nested keys
+
+    Args:
+      d : Mapping
+      keys : Sequence[str]
+      value : Any
+    """
+    key = keys[0]
+    if len(keys) == 1:
+      if key in d:
+        raise ValueError(f"duplicated key '{key}'")
+      d[key] = value
+      return
+    d = d.setdefault(key, {})
+    nested_set_dict(d, keys[1:], value)
+    return
+
+  def dict2list(d:dict[str,Any]) -> Union[list[dict[str,Any]], dict[str,Any]]:
+    """ convert a dictionary to list if all keys are numbers """
+    for key in d.keys():
+      if isinstance(d[key], dict):
+        d[key] = dict2list(d[key])
+    if all(i.isdigit() for i in d.keys()):
+      d = list(d.values())                                                           # type: ignore[assignment]
+    return d
+
+  # start recursion
+  normalDict:dict[str,Any] = {}
+  for flat_key, value in d.items():
+    key_tuple = dot_splitter(flat_key)
+    nested_set_dict(normalDict, key_tuple, value)
+  normalDict =  dict2list(normalDict)                                                # type: ignore[assignment]
+  return normalDict

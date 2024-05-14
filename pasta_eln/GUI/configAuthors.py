@@ -87,14 +87,12 @@ class ConfigurationAuthors(QWidget):
     sender = self.sender().accessibleName()
     if sender == 'rorid':
       if re.match(r'^\w{9}$', self.userRorid.text().strip() ) is not None:
-        reply = requests.get(
-            f'https://api.ror.org/organizations/{self.userRorid.text().strip()}')
+        reply = requests.get(f'https://api.ror.org/organizations/{self.userRorid.text().strip()}', timeout=10)
         self.userOrg.setText(reply.json()['name'])
         self.orgaCB.setItemText(self.orgaCB.currentIndex(), reply.json()['name'])
     elif sender == 'orcid':
       if re.match(r'^\w{4}-\w{4}-\w{4}-\w{4}$', self.userOrcid.text().strip() ) is not None:
-        reply = requests.get(
-            f'https://pub.orcid.org/v3.0/{self.userOrcid.text().strip()}')
+        reply = requests.get(f'https://pub.orcid.org/v3.0/{self.userOrcid.text().strip()}', timeout=10)
         text = reply.content.decode()
         first = text.split('<personal-details:given-names>')[1].split('</personal-details:given-names>')[0]
         last = text.split('<personal-details:family-name>')[1].split('</personal-details:family-name>')[0]

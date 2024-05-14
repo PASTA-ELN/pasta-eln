@@ -174,6 +174,9 @@ For example: to profile the start of the program
   startMain()
 - start with 'pudb3 temp.py'
 
+### Running pytests (3.12)
+- python3 -m tests.test_01_3Projects
+
 ### General notes
 - Find qt-awesome icons: qta-browser
-- print works great in frondend and backend
+- print works great in frontend and backend
