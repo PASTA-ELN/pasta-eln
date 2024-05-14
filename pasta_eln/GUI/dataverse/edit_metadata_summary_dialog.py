@@ -17,6 +17,10 @@ from pasta_eln.GUI.dataverse.edit_metadata_summary_dialog_base import Ui_EditMet
 
 
 class EditMetadataSummaryDialog(Ui_EditMetadataSummaryDialog):
+  """
+  Creates a new instance of the EditMetadataSummaryDialog class.
+  """
+
   def __new__(cls, *_: Any, **__: Any) -> Any:
     """
     Creates a new instance of the EditMetadataSummaryDialog class.
