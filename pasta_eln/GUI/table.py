@@ -131,8 +131,8 @@ class Table(QWidget):
       # filter multiple lines of the same item: #https://stackoverflow.com/questions/11092511/list-of-unique-dictionaries
       self.data = list({v['id']:v for v in self.data}.values())
       self.showState.setText('(show all rows)' if self.showAll else '(hide hidden rows)')
+      docLabel = 'Unidentified'
       if self.docType=='-':
-        docLabel = 'Unidentified'
         self.actionChangeColums.setVisible(False)
       else:
         self.actionChangeColums.setVisible(True)

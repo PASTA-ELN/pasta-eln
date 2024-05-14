@@ -107,6 +107,7 @@ class ProjectGroup(QDialog):
       self.reject()
     elif 'Save' in btn.text() and self.checkEntries():
       name = self.projectGroupName.text() if self.selectGroup.isHidden() else self.selectGroup.currentText()
+      local = remote = {}
       if btn.text().endswith('Save'):
         localPath = self.pathL.text()
         if localPath.startswith('~'):
