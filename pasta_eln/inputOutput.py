@@ -4,12 +4,13 @@ from typing import Any, Optional
 from pathlib import Path
 from datetime import datetime
 from zipfile import ZipFile, ZIP_DEFLATED
-from zipfile import Path as ZPath
+from urllib import request
 import requests
 from anytree import Node
 from pasta_eln import __version__
 from .backend import Backend
 from .miscTools import createDirName, generic_hash, flatten, hierarchy
+from pasta_eln import minisign
 # to discuss
 # - genre:docType, simulation, experiment/measurement;  status = Done, finished
 # - category: project
@@ -75,6 +76,8 @@ renameELN = {
   'https://kadi.iam.kit.edu':'Kadi4Mat'
 }
 
+METADATA_FILE = 'ro-crate-metadata.json'
+
 
 def tree(graph:dict[Any,Any]) -> str:
   """
@@ -86,8 +89,6 @@ def tree(graph:dict[Any,Any]) -> str:
   Returns:
     str: output of graph as a nice tree
   """
-  METADATA_FILE = 'ro-crate-metadata.json'
-
   def process_part(part:dict[Any,Any], level:int) -> str:
     """
     recursive function call to process this node of the tree-graph
@@ -511,6 +512,24 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
     elnFile.writestr(f'{dirNameGlobal}/ro-crate-metadata.json', json.dumps(index))
     # if verbose:
     #   print(json.dumps(index, indent=3))
+
+    #sign file
+    if 'signingKeyPair' not in backend.configuration:  #create a key-pair of secret and public key and save it locally
+      keyPairRaw = minisign.KeyPair.generate()
+      keyPair['secret'] = bytes(keyPairRaw.secret_key).decode()
+      keyPair['public'] = bytes(keyPairRaw.public_key).decode()
+      backend.configuration['signingKeyPair'] = keyPair
+      with open(Path.home()/'.pastaELN.json', 'w', encoding='utf-8') as fConf:
+        fConf.write(json.dumps(backend.configuration,indent=2))
+    keyPair = backend.configuration['signingKeyPair']
+    secretKey = minisign.SecretKey.from_bytes(keyPair['secret'].encode())
+    comment   = {'pubkey_url':f'https://raw.githubusercontent.com/PASTA-ELN/Signatures/main/{keyPair["id"]}.pub',
+                 'name': f"{backend.configuration['authors'][0]['title']} {backend.configuration['authors'][0]['first']} {backend.configuration['authors'][0]['last']}",
+                 'email': backend.configuration['authors'][0]['email'],
+                 'orcid': backend.configuration['authors'][0]['orcid']}
+    signature = secretKey.sign(json.dumps(index).encode(), trusted_comment=json.dumps(comment))
+    elnFile.writestr(f'{dirNameGlobal}/ro-crate-metadata.json.minisig', bytes(signature).decode())
+    elnFile.writestr(f'{dirNameGlobal}/ro-crate.pubkey', keyPair['public'])
   # end writing zip file
 
   # temporary json output
@@ -534,7 +553,6 @@ def testELNFile(fileName:str) -> None:
   FILE_SUGGESTED = ['sha256', 'encodingFormat', 'contentSize', 'description']
 
   # runtime global variables
-  METADATA_FILE = 'ro-crate-metadata.json'
   OUTPUT_INFO = False
   OUTPUT_COUNTS = True
   KNOWN_KEYS = DATASET_MANDATORY+DATASET_SUGGESTED+FILE_MANDATORY+FILE_SUGGESTED+['@id', '@type']
@@ -631,3 +649,42 @@ def testELNFile(fileName:str) -> None:
         print(f'{prefix}{k:15}: {v}')
   print('\n\nSuccess:', success)
   return
+
+
+def testSignature(fileName:str) -> bool:
+  """ Test if signature is valid
+
+  Args:
+    fileName (str): file name to test against
+
+  Returns:
+    bool: success / failure of test
+  """
+  print(f'Test signature of : {fileName}')
+  with ZipFile(fileName, 'r', compression=ZIP_DEFLATED) as elnFile:
+    metadataJsonFile = [i for i in elnFile.namelist() if i.endswith(METADATA_FILE)][0]
+    with elnFile.open(metadataJsonFile) as fIn:
+      metadataData = fIn.read()
+    dirName          = metadataJsonFile.split('/')[0]
+    signatureFile    = f'{dirName}/{METADATA_FILE}.minisig'
+    with elnFile.open(signatureFile) as fIn:
+      signature = minisign.Signature.from_bytes(fIn.read())
+    publicKeyFile    = f'{dirName}/ro-crate.pubkey'
+    with elnFile.open(publicKeyFile) as fIn:
+      publicKey = minisign.PublicKey.from_bytes(fIn.read())
+    try:
+      publicKey.verify(metadataData, signature)
+      if 'pubkey_url' in signature.trusted_comment:
+        pubkey_url = json.loads(signature.trusted_comment)['pubkey_url']
+        with request.urlopen(pubkey_url, timeout=60) as urlRequest:
+          pubKeyRemote = urlRequest.read().strip()
+          if pubKeyRemote.decode() == str(bytes(publicKey))[2:-1]:
+            print('Success: remote and local key match')
+          else:
+            print('**ERROR remote and local key differ')
+            raise minisign.VerifyError
+      print('Signature is acceptable:\n', json.dumps(json.loads(signature.trusted_comment), indent=2))
+      return True
+    except minisign.VerifyError:
+      print('**ERROR VERIFICATION ERROR')
+    return False
