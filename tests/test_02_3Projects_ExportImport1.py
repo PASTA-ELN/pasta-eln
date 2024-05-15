@@ -20,6 +20,8 @@ class TestStringMethods(unittest.TestCase):
     self.be = None
     self.dirName = ''
 
+  @pytest.mark.skip(
+    reason="Disabled for github since cannot create couchdb instance during actions")
   def test_main(self):
     """
     main function
