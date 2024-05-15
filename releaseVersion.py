@@ -168,16 +168,26 @@ def runTests():
 
   Cannot be an action, since dependencies are partly private
   """
+  verbose = False
   print('Start running tests')
   tests = [i for i in os.listdir('tests') if i.endswith('.py') and i.startswith('test_')]
   for fileI in sorted(tests):
     result = subprocess.run(['pytest','-s','--no-skip','tests/'+fileI], stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE, check=False)
     success = result.stdout.decode('utf-8').count('*** DONE WITH VERIFY ***')
+    if verbose:
+      print("  Num. done with verify", success)
     if success==1:
       success += result.stdout.decode('utf-8').count('**ERROR')
+      if verbose:
+        print("  Num. error           ", success)
       success -= result.stdout.decode('utf-8').count('**ERROR Red: FAILURE and ERROR')
-      success -= result.stdout.decode('utf-8').count('**ERROR got a file')
+      if verbose:
+        print("  Num. error RED       ", success)
+      for badWord in ['**ERROR got a file', 'FAILED', 'ModuleNotFoundError']:
+        success += result.stdout.decode('utf-8').count(badWord)
+      if verbose:
+        print("  Num. error after bad word", success)
     if success==1:
       print("  success: Python unit test "+fileI)
     else:
@@ -190,10 +200,19 @@ def runTests():
     result = subprocess.run(['pytest','-s','--no-skip','testsComplicated/'+fileI],
                             stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
     success = result.stdout.decode('utf-8').count('*** DONE WITH VERIFY ***')
+    if verbose:
+      print("  Num. done with verify", success)
     if success==1:
       success += result.stdout.decode('utf-8').count('**ERROR')
+      if verbose:
+        print("  Num. error           ", success)
       success -= result.stdout.decode('utf-8').count('**ERROR Red: FAILURE and ERROR')
-      success -= result.stdout.decode('utf-8').count('**ERROR got a file')
+      if verbose:
+        print("  Num. error RED       ", success)
+      for badWord in ['**ERROR got a file', 'FAILED', 'ModuleNotFoundError']:
+        success += result.stdout.decode('utf-8').count(badWord)
+      if verbose:
+        print("  Num. error after bad word", success)
     if success==1:
       print("  success: Python unit test "+fileI)
     else:
