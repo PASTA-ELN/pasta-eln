@@ -41,7 +41,6 @@ class MainWindow(QMainWindow):
     super().__init__()
     venv = ' without venv' if sys.prefix == sys.base_prefix and 'CONDA_PREFIX' not in os.environ else ' in venv'
     self.setWindowTitle(f"PASTA-ELN {__version__}{venv}")
-    # self.setWindowState(Qt.WindowMaximized)  # type: ignore
     resourcesDir = Path(__file__).parent / 'Resources'
     self.setWindowIcon(QIcon(QPixmap(resourcesDir / 'Icons' / 'favicon64.png')))
     self.backend = Backend()
