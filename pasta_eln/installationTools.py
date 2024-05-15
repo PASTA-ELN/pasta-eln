@@ -388,6 +388,8 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
   backend.changeHierarchy(semStepID)
   if backend.cwd is not None:
     semDirName = backend.basePath/backend.cwd
+  else:
+    return "**ERROR: backend is incorrect"
   backend.changeHierarchy(None)
   outputString(outputFormat,'info',backend.outputHierarchy())
   if callbackPercent is not None:
