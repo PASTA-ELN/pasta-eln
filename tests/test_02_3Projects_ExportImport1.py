@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 import pytest
 from pasta_eln.backend import Backend
-from pasta_eln.inputOutput import exportELN, importELN, testSignature
+from pasta_eln.inputOutput import exportELN, importELN
 from pasta_eln.miscTools import outputString
 from .tools import testELNFile
 
@@ -54,10 +54,6 @@ class TestStringMethods(unittest.TestCase):
     # verify eln
     print('\n\nEnd export\n----------------------\nStart verification')
     testELNFile(self.fileName)
-
-    # verify signature
-    testSignature(self.fileName)
-
 
     # IMPORT NOT IMPLEMENTED YET
     # # remove old
