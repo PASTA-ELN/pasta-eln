@@ -137,6 +137,7 @@ def commands(getDocu:bool, args:argparse.Namespace) -> str:
             raise NameError('**ERROR pma01a: Wrong local server.') from None
 
     #open backend
+    be = None
     if not getDocu:
       try:
         be = Backend(defaultProjectGroup=args.database, initViews=initViews, initConfig=initConfig,
@@ -145,7 +146,7 @@ def commands(getDocu:bool, args:argparse.Namespace) -> str:
         print('**ERROR pma20: backend could not be started.\n'+traceback.format_exc()+'\n\n')
         return ''
 
-    if not getDocu and args.command.startswith('test') and be:
+    if not getDocu and args.command.startswith('test') and be is not None:
       #PART 2 of test: main test
       print('database server:',be.db.db.client.server_url)
       print('default project group:',be.configuration['defaultProjectGroup'])
@@ -168,7 +169,7 @@ def commands(getDocu:bool, args:argparse.Namespace) -> str:
       doc += '  verifyDB: test PASTA database\n'
       doc += '    example: pastaELN_CLI.py verifyDB\n'
       doc += '    example: pastaELN_CLI.py verifyDBdev (repair function)\n'
-    elif args.command.startswith('verifyDB'):
+    elif args.command.startswith('verifyDB') and be is not None:
       repair = args.command=='verifyDBdev'
       output = be.checkDB(outputStyle='', repair=repair)
       print(output)
@@ -186,11 +187,11 @@ def commands(getDocu:bool, args:argparse.Namespace) -> str:
     if getDocu:
       doc += '  syncLR / syncRL: synchronize with / from remote server\n'
       doc += '    example: pastaELN_CLI.py syncLR\n'
-    elif args.command=='syncLR':
+    elif args.command=='syncLR' and be is not None:
       progressBar = DummyProgressBar()
       success = be.replicateDB(progressBar)
       return '1' if success else '-1'
-    elif args.command=='syncRL':
+    elif args.command=='syncRL' and be is not None:
       be.exit()
       print('**ERROR pma03: syncRL not implemented yet')
       return '-1'
@@ -199,7 +200,7 @@ def commands(getDocu:bool, args:argparse.Namespace) -> str:
       doc += '  print: print overview\n'
       doc += "    label: possible docLabels 'Projects', 'Samples', 'Measurements', 'Procedures'\n"
       doc += "    example: pastaELN_CLI.py print -d instruments -l instrument\n"
-    elif args.command=='print':
+    elif args.command=='print' and be is not None:
       print(be.output(args.label,True))
       return '1'
 
@@ -222,7 +223,7 @@ def commands(getDocu:bool, args:argparse.Namespace) -> str:
     if getDocu:
       doc += '  extractorTest: test extractor on individual datafile\n'
       doc += '    example: pastaELN_CLI.py extractorTest -i ~/[long-path]/Zeiss.tif\n'
-    elif args.command=='extractorTest':
+    elif args.command=='extractorTest' and be is not None:
       be.testExtractor(args.docID)
       return '1'
 
@@ -272,7 +273,7 @@ def commands(getDocu:bool, args:argparse.Namespace) -> str:
     if getDocu:
       doc += '  redo: recreate thumbnail / use-extractor\n'
       doc += '    example: pastaELN_CLI.py redo -i m-1234567890abcdefghijklmnopqrstuv -c type/test/subtest\n'
-    elif args.command=='redo':
+    elif args.command=='redo' and be is not None:
       data = dict(be.db.getDoc(args.docID))
       if args.content is not None:
         data['-type'] = args.content.split('/')
@@ -287,7 +288,7 @@ def commands(getDocu:bool, args:argparse.Namespace) -> str:
     if getDocu:
       doc += '  scanProject: scan project with docID\n'
       doc += '    example: pastaELN_CLI.py scanProject -i ....\n'
-    elif args.command=='scanProject':
+    elif args.command=='scanProject' and be is not None:
       progressBar = DummyProgressBar()
       be.scanProject(progressBar, args.docID)
       return '1'
@@ -295,13 +296,13 @@ def commands(getDocu:bool, args:argparse.Namespace) -> str:
     ##################################################
     ## Commands that require open database and open project
     doc += '\n-- Commands that interact with a special project --\n'
-    if not getDocu and args.docID!='':
+    if not getDocu and args.docID!='' and be is not None:
       be.changeHierarchy(args.docID)
 
     if getDocu:
       doc += '  hierarchy: print document hierarchy\n'
       doc += '    example: pastaELN_CLI.py hierarchy -i x-1234567890abc'
-    elif args.command=='hierarchy':
+    elif args.command=='hierarchy' and be is not None:
       print(be.outputHierarchy(True,True))
       return '1'
 

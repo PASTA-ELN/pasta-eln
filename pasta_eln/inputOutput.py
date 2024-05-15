@@ -4,7 +4,6 @@ from typing import Any, Optional
 from pathlib import Path
 from datetime import datetime
 from zipfile import ZipFile, ZIP_DEFLATED
-from zipfile import Path as ZPath
 import requests
 from anytree import Node
 from pasta_eln import __version__
@@ -312,7 +311,7 @@ def importELN(backend:Backend, elnFileName:str) -> str:
 ##########################################
 ###               EXPORT               ###
 ##########################################
-def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[str]=[], verbose:bool=False) -> str:
+def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[str], verbose:bool=False) -> str:
   """
   export eln to file
 
@@ -320,7 +319,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
     backend (backend): PASTA backend instance
     projectIDs (list): list of docIds of projects
     fileName (str): fileName which to use for saving
-    dTypes (list): list of strings which should be included in the output, alongside folders x0 & x1; empty list=everything is exported
+    dTypes (list): list of strings which should be included in the output, alongside folders x0 & x1
     verbose (bool): verbose
 
   Returns:
@@ -404,7 +403,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
     path, docMain, filesNotInBranch = separate(doc, dirNameProject)
     filesNotInProject:list[str] = [] if filesNotInBranch is None else [filesNotInBranch]
     hasPart = []
-    if (nodeHier.docType[0] not in dTypes) and nodeHier.docType[0][0]!='x' and len(dTypes)>0:
+    if (nodeHier.docType[0] not in dTypes) and nodeHier.docType[0][0]!='x':
       return (None, [])
     for child in nodeHier.children:
       res, filesNotInSubbranch = iterateTree(child, graph, dirNameProject)
@@ -492,7 +491,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
         'contentSize':str(len(zipContent)), 'sha256':hashlib.sha256(zipContent.encode()).hexdigest(),
         'datePublished': datetime.now().isoformat()}
     graphMisc.append(dataHierarchyInfo)
-    elnFile.writestr(f'{dirNameGlobal}/{dirNameGlobal}/data_hierarchy.json', zipContent)
+    elnFile.writestr(f'{dirNameGlobal}/data_hierarchy.json', zipContent)
     authors = backend.configuration['authors']
     masterParts = [{'@id': f'./{dirNameGlobal}/{i}/'} for i in dirNameProjects] + [{'@id': f'./{dirNameGlobal}/data_hierarchy.json'}]
     masterNodeRoot = {'@id': './', '@type': 'Dataset', 'hasPart': masterParts,
@@ -509,125 +508,11 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
     #finalize file
     index['@graph'] = graphMaster+graph+graphMisc
     elnFile.writestr(f'{dirNameGlobal}/ro-crate-metadata.json', json.dumps(index))
-    # if verbose:
-    #   print(json.dumps(index, indent=3))
+    if verbose:
+      print(json.dumps(index, indent=3))
   # end writing zip file
 
   # temporary json output
   with open(fileName[:-3]+'json','w', encoding='utf-8') as fOut:
     fOut.write( json.dumps(index, indent=2) )
   return f'Success: exported {len(graph)} graph-nodes into file {fileName}'
-
-
-def testELNFile(fileName:str) -> None:
-  """
-  main function
-
-  Args:
-    fileName (str): file name of .eln to test
-  """
-  # global variables worth discussion
-  ROCRATE_NOTE_MANDATORY = ['version','sdPublisher']
-  DATASET_MANDATORY = ['name']
-  DATASET_SUGGESTED = ['author','mentions',  'dateCreated', 'dateModified', 'identifier', 'text', 'keywords']
-  FILE_MANDATORY = ['name']
-  FILE_SUGGESTED = ['sha256', 'encodingFormat', 'contentSize', 'description']
-
-  # runtime global variables
-  METADATA_FILE = 'ro-crate-metadata.json'
-  OUTPUT_INFO = False
-  OUTPUT_COUNTS = True
-  KNOWN_KEYS = DATASET_MANDATORY+DATASET_SUGGESTED+FILE_MANDATORY+FILE_SUGGESTED+['@id', '@type']
-
-  logJson = {}
-  def processNode(graph: list[dict[str,Any]], nodeID:str) -> bool:
-    """
-    recursive function call to process each node
-
-    Args:
-    graph: full graph
-    nodeID: id of node in graph
-    """
-    globalSuccess = True
-    nodes = [i for i in graph if '@id' in i and i['@id'] == nodeID]
-    if len(nodes)!=1:
-      print('**ERROR: all entries must only occur once in crate. check:', nodeID)
-      return False
-    node = nodes[0]
-    # CHECK IF MANDATORY AND SUGGESTED KEYWORDS ARE PRESENT
-    if '@type' not in node:
-      print('**ERROR: all nodes must have @type. check:', nodeID)
-    if node['@type'] == 'Dataset':
-      for key in DATASET_MANDATORY:
-        if not key in node:
-          print(f'**ERROR in dataset: "{key}" not in @id={node["@id"]}')
-          globalSuccess = False
-      for key in DATASET_SUGGESTED:
-        if not key in node and OUTPUT_INFO:
-          print(f'**INFO for dataset: "{key}" not in @id={node["@id"]}')
-    elif node['@type'] == 'File':
-      for key in FILE_MANDATORY:
-        if not key in node:
-          print(f'**ERROR in file: "{key}" not in @id={node["@id"]}')
-          globalSuccess = False
-      for key in FILE_SUGGESTED:
-        if not key in node and OUTPUT_INFO:
-          print(f'**INFO for file: "{key}" not in @id={node["@id"]}')
-    # CHECK PROPERTIES FOR ALL KEYS
-    if any(str(i).strip()=='' for i in node.values()):
-      print(f'**WARNING: {nodeID} contains empty values in the key-value pairs', node)
-    # SPECIFIC CHECKS ON CERTAIN KEYS
-    if isinstance(node.get('keywords', ''), list):
-      print(f'**ERROR: {nodeID} contains an array of keywords. Use comma or space separated string')
-      globalSuccess = False
-    # recurse to children
-    children = node.pop('hasPart') if 'hasPart' in node else []
-    for child in children:
-      globalSuccess = processNode(graph, child['@id']) and globalSuccess
-    return globalSuccess
-
-  print(f'\n\nParse: {fileName}')
-  with ZipFile(fileName, 'r', compression=ZIP_DEFLATED) as elnFile:
-    success = True
-    metadataJsonFile = [i for i in elnFile.namelist() if i.endswith(METADATA_FILE)][0]
-    with elnFile.open(metadataJsonFile) as roCrateFile:
-      metadataContent = json.loads(roCrateFile.read())
-    graph = metadataContent["@graph"]
-    # find information from master node
-    ro_crate_nodes = [i for i in graph if i["@id"] == METADATA_FILE]
-    if len(ro_crate_nodes) == 1:
-      for key in ROCRATE_NOTE_MANDATORY:
-        if not key in ro_crate_nodes[0]:
-          print(f'**ERROR: "{key}" not in @id={METADATA_FILE}')
-    else:
-      print(f'**ERROR: @id={METADATA_FILE} does not uniquely exist ')
-      success = False
-    main_node = [i for i in graph if i["@id"] == "./"][0]
-
-    # iteratively go through graph
-    for partI in main_node['hasPart']:
-      success = processNode(graph, partI['@id']) and success
-    if fileName not in logJson:
-      logJson[fileName] = {'params_metadata_json':success}
-    else:
-      logJson[fileName] = logJson[fileName] | {'params_metadata_json':success}
-
-    # count occurrences of all keys
-    counts:dict[str,int] = {}
-    for node in graph:
-      if node['@id'] in ['./',METADATA_FILE]:
-        continue
-      for key in node.keys():
-        if key in counts:
-          counts[key] += 1
-        else:
-          counts[key] = 1
-    view = [ (v,k) for k,v in counts.items() ]
-    view.sort(reverse=True)
-    if OUTPUT_COUNTS:
-      print('===== Counts (* unspecified)')
-      for v,k in view:
-        prefix = '   ' if k in KNOWN_KEYS else ' * '
-        print(f'{prefix}{k:15}: {v}')
-  print('\n\nSuccess:', success)
-  return

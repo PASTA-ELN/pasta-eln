@@ -9,6 +9,8 @@ from pasta_eln.backend import Backend
 from pasta_eln.inputOutput import exportELN, importELN
 from pasta_eln.miscTools import outputString
 from pasta_eln.miscTools import DummyProgressBar
+from .tools import testELNFile
+
 
 class TestStringMethods(unittest.TestCase):
   """
@@ -53,7 +55,7 @@ class TestStringMethods(unittest.TestCase):
 
     # verify eln
     print('\n\nEnd export\n----------------------\nStart verification')
-    #testELNFile(self.fileName)
+    testELNFile(self.fileName)
 
     # IMPORT NOT IMPLEMENTED YET
     # # remove old
