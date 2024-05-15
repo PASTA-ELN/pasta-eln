@@ -401,6 +401,58 @@ class DataverseClient:
       return error
 
   @handle_dataverse_exception_async
+  async def create_dataset(self,
+                                       parent_dataverse_id: str,
+                                       ds_metadata: dict[str, Any],
+                                       ds_validate_metadata: bool = False
+                                       ) -> dict[Any, Any] | Any:
+    """
+    Creates and publishes a dataset to the parent dataverse.
+    Args:
+      parent_dataverse_id (str): The identifier of the parent dataverse.
+      ds_metadata (dict[str, Any]): The dataset metadata.
+        Refer the https://guides.dataverse.org/en/latest/_downloads/4e04c8120d51efab20e480c6427f139c/dataset-create-new-all-default-fields.json for the default values to be used in the metadata.
+        The type names to be used in the metadata along with the values can be found in the metadata blocks and should correspond to the dataset-create-new-all-default-fields.json.
+      ds_validate_metadata (bool): Whether to validate the metadata.
+
+    Returns:
+      A dictionary of dataset metadata with the persistent identifier for successful request, otherwise the error message is returned.
+    """
+    self.logger.info("Creating dataset, Alias: %s on server: %s", ds_metadata["title"], self.server_url)
+    current_path = realpath(join(getcwd(), dirname(__file__)))
+    with open(join(current_path, "dataset-create-new-all-default-fields.json"), encoding="utf-8") as config_file:
+      metadata = load(config_file)
+      if 'license' in ds_metadata:
+        metadata['datasetVersion']['license'] = ds_metadata['license']
+      else:
+        del metadata['datasetVersion']['license']
+      for _, metablock in metadata['datasetVersion']['metadataBlocks'].items():
+        field_copy = metablock['fields'].copy()
+        del metablock['displayName']
+        metablock['fields'].clear()
+        for field in field_copy:
+          if field['typeName'] in ds_metadata:
+            field['value'] = ds_metadata[field['typeName']]
+            metablock['fields'].append(field)
+      # Request to create the dataset
+      resp = await self.http_client.post(
+        f"{self.server_url}/api/dataverses/{parent_dataverse_id}/datasets",
+        request_params={'doNotValidate': str(not ds_validate_metadata)},
+        request_headers={'Content-Type': 'application/json', 'X-Dataverse-key': self.api_token},
+        json=metadata)
+      if not resp and self.http_client.session_request_errors:
+        return self.http_client.session_request_errors
+      if resp["status"] == 201 and resp["reason"] == 'Created':
+        return resp.get("result").get("data")
+      error = (f"Error creating dataset, "
+               f"Alias: {ds_metadata['title']}, "
+               f"Server: {self.server_url},  "
+               f"Reason: {resp['reason']}, "
+               f"Info: {resp['result']}")
+      self.logger.error(error)
+      return error
+
+  @handle_dataverse_exception_async
   async def upload_file(self,
                         ds_pid: str,
                         df_file_path: str,
@@ -463,6 +515,62 @@ class DataverseClient:
                  f"Info: {pub_resp['result']}")
         self.logger.error(error)
         return error
+      error = (f"Error uploading file: {df_file_path} "
+               f"to dataset: {ds_pid} "
+               f"on server: {self.server_url}, "
+               f"Reason: {resp['reason']}, "
+               f"Info: {resp['result']}")
+      self.logger.error(error)
+      return error
+
+  @handle_dataverse_exception_async
+  async def upload_file_no_publish(self,
+                        ds_pid: str,
+                        df_file_path: str,
+                        df_description: str,
+                        df_categories: list[str]
+                        ) -> dict[Any, Any] | Any:
+    """
+    Uploads a file to a dataset.
+    Args:
+      ds_pid (str): The identifier of the dataset.
+      df_file_path (str): The absolute path to the file to be uploaded.
+      df_description (str): The description of the file.
+      df_categories (list[str]): The categories/tags for the file.
+
+    Returns:
+      {
+          'file_upload_result': file_upload_response,
+          'dataset_publish_result': dataset_publish_response
+      } for successful request, otherwise the error message is returned.
+    """
+
+    self.logger.info("Uploading file: %s to Dataset: %s on server: %s",
+                     df_file_path,
+                     ds_pid,
+                     self.server_url)
+    filename = basename(df_file_path)
+    metadata = dumps({"description": df_description, "categories": df_categories})
+    data = FormData(quote_fields=False)
+    with open(df_file_path, 'rb') as file_stream:
+      data.add_field('file',
+                     file_stream,
+                     filename=filename,
+                     content_type='multipart/form-data')
+      data.add_field('jsonData', metadata, content_type='application/json')
+      # Request to add the file to dataset
+      resp = await self.http_client.post(
+        f"{self.server_url}/api/datasets/:persistentId/add",
+        request_params={'persistentId': ds_pid},
+        request_headers={'X-Dataverse-key': self.api_token},
+        data=data,
+        timeout=0)
+      if not resp and self.http_client.session_request_errors:
+        return self.http_client.session_request_errors
+      if resp["status"] == 200 and resp["reason"] == 'OK':
+        return {
+          'file_upload_result': resp.get('result').get('data')
+        }
       error = (f"Error uploading file: {df_file_path} "
                f"to dataset: {ds_pid} "
                f"on server: {self.server_url}, "

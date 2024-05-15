@@ -219,12 +219,10 @@ class DataUploadTask(GenericTaskObject):
     # and adjust it to the required format for invoking the dataverse client method
     metadata_adjusted = get_flattened_metadata(self.metadata)
     metadata_adjusted["title"] = self.upload_model.project_name  # Set the title to the PASTA project name
-    result = asyncio.run(self.dataverse_client.create_and_publish_dataset(self.dataverse_id, metadata_adjusted))
+    result = asyncio.run(self.dataverse_client.create_dataset(self.dataverse_id, metadata_adjusted))
     if (isinstance(result, dict) and
-        'identifier' in result and
-        'authority' in result and
-        'protocol' in result):
-      persistent_id = f"{result.get('protocol')}:{result.get('authority')}/{result.get('identifier')}"
+        'persistentId' in result):
+      persistent_id = result.get('persistentId')
       log = f'Dataset creation succeeded with PID: {persistent_id}'
       self.update_log(log, self.logger.info)
       self.logger.info(log)
@@ -280,13 +278,12 @@ class DataUploadTask(GenericTaskObject):
                     self.logger.info)
     if self.upload_model is None or self.dataverse_client is None:
       return None
-    result = asyncio.run(self.dataverse_client.upload_file(persistent_id,
+    result = asyncio.run(self.dataverse_client.upload_file_no_publish(persistent_id,
                                                            eln_file_path,
                                                            f"Generated ELN file for the project: {self.upload_model.project_name}",
                                                            ["ELN"]))
     if (isinstance(result, dict)
-        and 'file_upload_result' in result
-        and 'dataset_publish_result' in result):
+        and 'file_upload_result' in result):
       dataset_publish_result = result["dataset_publish_result"]
       file_pid = f"{dataset_publish_result.get('protocol')}:{dataset_publish_result.get('authority')}/{dataset_publish_result.get('identifier')}"
       self.update_log(f'ELN File uploaded successfully, generated file PID: {file_pid}', self.logger.info)
