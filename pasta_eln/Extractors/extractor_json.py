@@ -2,7 +2,6 @@
 - javascript object notion
 """
 import json
-import os
 
 def use(filePath, recipe='', saveFileName=None):
   """
@@ -17,17 +16,13 @@ def use(filePath, recipe='', saveFileName=None):
   """
   # Extractor for fancy instrument
   content = ''
-  fileSize = os.stat(filePath).st_size / (1024*1024)  #in MB
-  if fileSize<0.3:
-    with open(filePath,'r', encoding='utf-8') as jsonFile:
-      jsonContent = jsonFile.read()
-      content = json.loads(jsonContent)
-      if not isinstance(content, dict):
-        content= {'content': json.loads(jsonContent)}
-    content= f'```json\n{json.dumps(content, indent=2)}\n```'
-  else:
-    content= 'Too large json file'
+  with open(filePath,'r', encoding='utf-8') as jsonFile:
+    jsonContent = jsonFile.read()
+    content = json.loads(jsonContent)
+    if not isinstance(content, dict):
+      content= {'content': json.loads(jsonContent)}
   recipe = 'procedure/json'
+  content= f'```json\n{json.dumps(content, indent=2)}\n```'
 
   # return everything
   return {'content':content, 'recipe':recipe, 'metaVendor':{}, 'metaUser':{}}
