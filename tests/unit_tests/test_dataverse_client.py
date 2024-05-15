@@ -10,6 +10,7 @@
 from asyncio import Future
 from datetime import datetime
 from json import dumps
+from unittest.mock import patch
 
 import pytest
 from aiohttp import InvalidURL
@@ -2358,3 +2359,32 @@ class TestDataverseClient(object):
   #     elif contents and contents[0].get("type") == "dataverse":
   #         dataverse_client_mock.delete_non_empty_dataverse.assert_awaited()
   #     dataverse_client_mock.http_client.delete.assert_awaited_with(f"{dataverse_client_mock.server_url}/api/dataverses/{dv_identifier}", request_headers={'Accept': 'application/json', 'X-Dataverse-key': dataverse_client_mock.api_token})
+  @pytest.mark.asyncio
+  @pytest.mark.parametrize("identifier, mock_response, expected", [
+    ("valid123", {"status": 200, "reason": "OK", "result": {"data": "Dataverse Info"}}, "Dataverse Info"),
+    ("", {"status": 404, "reason": "Not Found", "result": {"data": "No Dataverse found"}},
+     "Error retrieving the info for data verse, Id: , Reason: Not Found, Info: {'data': 'No Dataverse found'}"),
+    ("invalid123", {"status": 404, "reason": "Not Found", "result": {"data": "No Dataverse found"}},
+     "Error retrieving the info for data verse, Id: invalid123, Reason: Not Found, Info: {'data': 'No Dataverse found'}"),
+    ("error123", None, "HTTP request error")
+  ], ids=[
+    "success_path_valid_identifier",
+    "edge_case_empty_identifier",
+    "error_case_invalid_identifier",
+    "error_case_http_error"
+  ])
+  async def test_get_dataverse_info(self, mocker, dataverse_client_mock: dataverse_client_mock, identifier,
+                                    mock_response, expected):
+    # Arrange
+    dataverse_client_mock.server_url = "http://testserver.com"
+    dataverse_client_mock.api_token = "testtoken"
+    dataverse_client_mock.http_client.get = mocker.AsyncMock(return_value=mock_response)
+    if mock_response is None:
+      dataverse_client_mock.http_client.session_request_errors = "HTTP request error"
+
+    # Act
+    with patch('pasta_eln.dataverse.client.handle_dataverse_exception_async', lambda x: x):
+      result = await dataverse_client_mock.get_dataverse_info(identifier)
+
+    # Assert
+    assert result == expected

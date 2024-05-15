@@ -514,30 +514,27 @@ def check_login_credentials(logger: Logger, api_token: str, server_url: str) -> 
 
 def check_if_dataverse_exists(logger: Logger, api_token: str, server_url: str, dataverse_id: str) -> bool:
   """
-  Checks if a dataverse exists by querying its size.
-
-  Explanation:
-      This function queries the dataverse size using the provided server URL, API token, and dataverse ID.
-      It returns True if the dataverse size message ends with 'bytes', indicating the dataverse exists.
+  Checks if a Dataverse exists based on the provided server URL, API token, and Dataverse ID.
 
   Args:
-      logger (Logger): The logger instance for logging information.
+      logger (Logger): The logger object for logging information.
       api_token (str): The API token for authentication.
-      server_url (str): The URL of the server hosting the dataverse.
-      dataverse_id (str): The ID of the dataverse to check.
+      server_url (str): The URL of the Dataverse server.
+      dataverse_id (str): The ID of the Dataverse to check existence for.
 
   Returns:
-      bool: True if the dataverse exists, False otherwise.
+      bool: True if the Dataverse exists, False otherwise.
   """
   logger.info("Checking if login info is valid, server_url: %s", server_url)
   dataverse_client = DataverseClient(server_url, api_token)
   event_loop = get_event_loop()
-  message = event_loop.run_until_complete(dataverse_client.get_dataverse_size(dataverse_id))
+  info = event_loop.run_until_complete(dataverse_client.get_dataverse_info(dataverse_id))
   result = False
-  if isinstance(message, str):
-    result = bool(message.endswith("bytes"))
+  if isinstance(info, dict):
+    result = (info.get("id", None) is not None
+              and info.get("alias", None) == dataverse_id)
   else:
-    logger.warning("Data verse with id %s does not exist, Server message: %s", dataverse_id, message)
+    logger.warning("Data verse with id %s does not exist, Server message: %s", dataverse_id, info)
   return result
 
 
