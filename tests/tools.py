@@ -1,8 +1,10 @@
 import json
 from typing import Any
+import pytest
 from zipfile import ZipFile, ZIP_DEFLATED
 
-
+@pytest.mark.skip(
+    reason="Disabled for github since cannot create couchdb instance during actions")
 def testELNFile(fileName:str) -> None:
   """
   an test that is similar to the test of TheELNConsortium
