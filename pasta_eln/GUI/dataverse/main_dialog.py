@@ -24,6 +24,7 @@ from pasta_eln.GUI.dataverse.main_dialog_base import Ui_MainDialogBase
 from pasta_eln.GUI.dataverse.project_item_frame_base import Ui_ProjectItemFrame
 from pasta_eln.GUI.dataverse.upload_config_dialog import UploadConfigDialog
 from pasta_eln.GUI.dataverse.upload_widget_base import Ui_UploadWidgetFrame
+from pasta_eln.backend import Backend
 from pasta_eln.dataverse.config_model import ConfigModel
 from pasta_eln.dataverse.data_upload_task import DataUploadTask
 from pasta_eln.dataverse.database_api import DatabaseAPI
@@ -62,7 +63,7 @@ class MainDialog(Ui_MainDialogBase):
     """
     return super(MainDialog, cls).__new__(cls)
 
-  def __init__(self) -> None:
+  def __init__(self, backend: Backend) -> None:
     """
     Initializes the MainDialog.
 
@@ -74,15 +75,17 @@ class MainDialog(Ui_MainDialogBase):
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
     self.instance = DialogExtension()
     super().setupUi(self.instance)
+    self.backend = backend
     self.db_api = DatabaseAPI()
+    self.db_api.initialize_database()
     self.is_dataverse_configured: tuple[bool, str] = self.check_if_dataverse_is_configured()
     self.config_dialog: ConfigDialog | None = None
 
     if self.is_dataverse_configured[0]:
-      self.config_upload_dialog = UploadConfigDialog()
       self.completed_uploads_dialog = CompletedUploads()
       self.edit_metadata_dialog = EditMetadataDialog()
       self.upload_manager_task = UploadQueueManager()
+      self.config_upload_dialog = UploadConfigDialog(self.upload_manager_task.set_concurrent_uploads)
       self.upload_manager_task_thread = TaskThreadExtension(self.upload_manager_task)
 
       # Connect signals and slots
@@ -93,7 +96,6 @@ class MainDialog(Ui_MainDialogBase):
       self.configureUploadPushButton.clicked.connect(self.show_configure_upload)
       self.showCompletedPushButton.clicked.connect(self.show_completed_uploads)
       self.editFullMetadataPushButton.clicked.connect(self.show_edit_metadata)
-      self.config_upload_dialog.config_reloaded.connect(self.upload_manager_task.set_concurrent_uploads)
       self.cancelAllPushButton.clicked.connect(self.upload_manager_task.cancel_all_tasks.emit)
       self.buttonBox.button(QtWidgets.QDialogButtonBox.Cancel).clicked.connect(self.close_ui)
       self.instance.closed.connect(self.close_ui)
@@ -148,6 +150,7 @@ class MainDialog(Ui_MainDialogBase):
     """
     Creates the project widget.
 
+
     Explanation:
         This method retrieves the project widget for a specific project.
         It creates a QWidget instance and sets up the UI for the project widget.
@@ -171,6 +174,8 @@ class MainDialog(Ui_MainDialogBase):
     project_widget_ui.projectNameLabel.setToolTip(project.name)
     project_widget_ui.modifiedDateTimeLabel.setText(
       datetime.datetime.fromisoformat(project.date or "").strftime("%Y-%m-%d %H:%M:%S"))
+    project_widget_ui.projectDocIdLabel.hide()
+    project_widget_ui.projectDocIdLabel.setText(project.id)
     return project_widget_frame
 
   def start_upload(self) -> None:
@@ -193,12 +198,15 @@ class MainDialog(Ui_MainDialogBase):
           project_widget.findChild(QtWidgets.QLabel, name="projectNameLabel").toolTip())
         self.uploadQueueVerticalLayout.addWidget(upload_widget["base"])
         widget = upload_widget["widget"]
+        project_id = project_widget.findChild(QtWidgets.QLabel, name="projectDocIdLabel").text()
         task_thread = TaskThreadExtension(
           DataUploadTask(widget.uploadProjectLabel.text(),
+                         project_id,
                          widget.uploadProgressBar.setValue,
                          widget.statusLabel.setText,
                          widget.statusIconLabel.setPixmap,
-                         widget.uploadCancelPushButton.clicked))
+                         widget.uploadCancelPushButton.clicked,
+                         self.backend))
         self.upload_manager_task.add_to_queue(task_thread)
         if isinstance(task_thread.task, DataUploadTask):
           task_thread.task.upload_model_created.connect(widget.modelIdLabel.setText)
@@ -216,13 +224,13 @@ class MainDialog(Ui_MainDialogBase):
     """
     for widget_pos in reversed(range(self.uploadQueueVerticalLayout.count())):
       project_widget = self.uploadQueueVerticalLayout.itemAt(widget_pos).widget()
-      progress_value = project_widget.findChild(QtWidgets.QProgressBar, name="uploadProgressBar").value()
       status_text = project_widget.findChild(QtWidgets.QLabel, name="statusLabel").text()
-      if (progress_value == 100 and status_text in [
+      if (status_text in [
         UploadStatusValues.Finished.name,
         UploadStatusValues.Error.name,
-        UploadStatusValues.Warning.name
-      ]) or status_text == UploadStatusValues.Cancelled.name:
+        UploadStatusValues.Warning.name,
+        UploadStatusValues.Cancelled.name
+      ]):
         project_widget.setParent(None)
 
   def select_deselect_all_projects(self, checked: bool) -> None:
@@ -390,7 +398,6 @@ class MainDialog(Ui_MainDialogBase):
     if self.is_dataverse_configured[0]:
       self.instance.show()
     else:
-      self.show_message(self.instance, "Dataverse Not Configured", self.is_dataverse_configured[1])
       self.config_dialog = ConfigDialog()
       self.config_dialog.show()
 
@@ -425,13 +432,3 @@ class MainDialog(Ui_MainDialogBase):
     width = qt_msgbox_label.fontMetrics().boundingRect(qt_msgbox_label.text()).width()
     qt_msgbox_label.setFixedWidth(width)
     msg_box.exec()
-
-
-if __name__ == "__main__":
-  import sys
-
-  app = QtWidgets.QApplication(sys.argv)
-
-  ui = MainDialog()
-  ui.show()
-  sys.exit(app.exec())

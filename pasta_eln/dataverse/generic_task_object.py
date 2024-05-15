@@ -25,7 +25,7 @@ class GenericTaskObject(QObject):
   """
   cancel = QtCore.Signal()
   start = QtCore.Signal()
-  finished = QtCore.Signal()
+  finish = QtCore.Signal()
   id_iterator = itertools.count()
 
   def __init__(self) -> None:
@@ -48,7 +48,9 @@ class GenericTaskObject(QObject):
     self.cancelled = False
     self.started = False
     self.cleaned = False
+    self.finished = False
     self.cancel.connect(lambda: self.cancel_task())  # pylint: disable=unnecessary-lambda
+    self.finish.connect(lambda: self.finish_task())  # pylint: disable=unnecessary-lambda
     self.start.connect(self.start_task)
 
   def cancel_task(self) -> None:
@@ -93,3 +95,17 @@ class GenericTaskObject(QObject):
     """
     self.logger.info("Cleaning up task, id: %s", self.id)
     self.cleaned = True
+    self.cancel.disconnect()
+    self.finish.disconnect()
+    self.start.disconnect()
+
+  def finish_task(self) -> None:
+    """
+    Finish up the task.
+
+    Args:
+        self: The instance of the class.
+    """
+
+    self.logger.info("Finishing up the task, id: %s", self.id)
+    self.finished = True

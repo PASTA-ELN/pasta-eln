@@ -306,6 +306,34 @@ class DataverseClient:
     return error
 
   @handle_dataverse_exception_async
+  async def get_dataverse_info(self,
+                               identifier: str) -> str | Any:
+    """
+    Retrieves information about a dataverse.
+
+    Args:
+        identifier (str): The identifier of the dataverse.
+
+    Returns:
+        str | Any: The data associated with the dataverse if the request is successful, otherwise an error message.
+    """
+
+    self.logger.info("Retrieving dataverse info, Server: %s, Dataverse identifier: %s", self.server_url, identifier)
+    resp = await self.http_client.get(
+      f"{self.server_url}/api/dataverses/{identifier}",
+      request_headers={'Accept': 'application/json', 'X-Dataverse-key': self.api_token})
+    if not resp and self.http_client.session_request_errors:
+      return self.http_client.session_request_errors
+    if resp["status"] == 200 and resp["reason"] == 'OK':
+      return resp["result"].get("data")
+    error = (f"Error retrieving the info for data verse, "
+             f"Id: {identifier}, "
+             f"Reason: {resp['reason']}, "
+             f"Info: {resp['result']}")
+    self.logger.error(error)
+    return error
+
+  @handle_dataverse_exception_async
   async def create_and_publish_dataset(self,
                                        parent_dataverse_id: str,
                                        ds_metadata: dict[str, Any],

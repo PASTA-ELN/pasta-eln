@@ -12,7 +12,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 class Ui_EditMetadataDialog(object):
   def setupUi(self, EditMetadataDialog):
     EditMetadataDialog.setObjectName("EditMetadataDialog")
-    EditMetadataDialog.resize(950, 273)
+    EditMetadataDialog.resize(950, 428)
     self.verticalLayout = QtWidgets.QVBoxLayout(EditMetadataDialog)
     self.verticalLayout.setObjectName("verticalLayout")
     self.mainVerticalLayout = QtWidgets.QVBoxLayout()
@@ -50,7 +50,7 @@ class Ui_EditMetadataDialog(object):
     self.metadataScrollArea.setWidgetResizable(True)
     self.metadataScrollArea.setObjectName("metadataScrollArea")
     self.scrollAreaWidgetContents = QtWidgets.QWidget()
-    self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 928, 94))
+    self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 928, 249))
     self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
     self.verticalLayout_3 = QtWidgets.QVBoxLayout(self.scrollAreaWidgetContents)
     self.verticalLayout_3.setObjectName("verticalLayout_3")

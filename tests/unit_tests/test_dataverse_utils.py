@@ -26,7 +26,8 @@ from pasta_eln.dataverse.utils import adjust_type_name, check_if_compound_field_
   clear_value, decrypt_data, \
   delete_layout_and_contents, encrypt_data, \
   get_citation_field, get_encrypt_key, \
-  get_flattened_metadata, get_formatted_message, is_date_time_type, log_and_create_error, read_pasta_config_file, \
+  get_flattened_metadata, get_formatted_message, get_formatted_metadata_message, is_date_time_type, \
+  log_and_create_error, read_pasta_config_file, \
   set_authors, \
   set_template_values, update_status, \
   write_pasta_config_file
@@ -1845,39 +1846,90 @@ class TestDataverseUtils:
     with pytest.raises(error_type):
       get_flattened_metadata(metadata)
 
-  @pytest.mark.parametrize("server_url,api_token,dataverse_id,expected_message", [
-    ("valid_server_url_1", "valid_api_token_1", "valid_dataverse_id_1", "100 bytes"),
-    ("valid_server_url_2", "valid_api_token_2", "valid_dataverse_id_2", "2048 bytes"),
-    ("valid_server_url_3", "valid_api_token_2", "valid_dataverse_id_2", "0 bytes")
-  ], ids=["success_path_1", "success_path_2", "success_path_3"])
-  def test_check_if_dataverse_exists_success_path(self, mocker, server_url, api_token, dataverse_id,
-                                                  expected_message):
+  @pytest.mark.parametrize("api_token, server_url, dataverse_id, info_return, expected_result, test_id", [
+    # Success path tests
+    ("valid_token", "https://valid.server.com", "valid_id", {"id": "123", "alias": "valid_id"}, True,
+     "success_path_valid"),
+    ("valid_token", "https://valid.server.com", "another_valid_id", {"id": "456", "alias": "another_valid_id"}, True,
+     "success_path_another_valid"),
+
+    # Edge cases
+    ("", "https://valid.server.com", "valid_id", {"id": "123", "alias": "valid_id"}, True, "edge_case_empty_token"),
+    ("valid_token", "", "valid_id", {"id": "123", "alias": "valid_id"}, True, "edge_case_empty_server_url"),
+    ("valid_token", "https://valid.server.com", "", {"id": "123", "alias": ""}, True, "edge_case_empty_dataverse_id"),
+
+    # Error cases
+    ("invalid_token", "https://valid.server.com", "valid_id", "Unauthorized access", False, "error_case_unauthorized"),
+    ("valid_token", "https://invalid.server.com", "valid_id", "Server not found", False, "error_case_server_not_found"),
+    ("valid_token", "https://valid.server.com", "nonexistent_id", None, False, "error_case_nonexistent_id"),
+  ])
+  def test_check_if_dataverse_exists(self, mocker, api_token, server_url, dataverse_id,
+                                     info_return, expected_result, test_id):
     # Arrange
-    logger = mocker.MagicMock()
+    mock_logger = mocker.MagicMock()
     client_mock = mocker.patch("pasta_eln.dataverse.utils.DataverseClient")
-    client_mock.return_value.get_dataverse_size = AsyncMock(return_value=expected_message)
+    client_mock.return_value.get_dataverse_info = AsyncMock(return_value=info_return)
 
     # Act
-    result = check_if_dataverse_exists(logger, api_token, server_url, dataverse_id)
+    result = check_if_dataverse_exists(mock_logger, api_token, server_url, dataverse_id)
 
     # Assert
-    logger.info.assert_called_with("Checking if login info is valid, server_url: %s", server_url)
-    assert result == True, "Expected True for valid dataverse size message"
+    assert result == expected_result, f"Test ID: {test_id}"
+    if isinstance(info_return, dict):
+      mock_logger.info.assert_called_with("Checking if login info is valid, server_url: %s", server_url)
+    else:
+      mock_logger.warning.assert_called()
 
-  @pytest.mark.parametrize("server_url,api_token,dataverse_id,expected_message", [
-    ("invalid_server_url", "invalid_api_token", "invalid_dataverse_id", [
-      'Client session InvalidURL for url (invalid_server_url/api/dataverses/invalid_dataverse_id/storagesize) with error: invalid_server_url/api/dataverses/invalid_dataverse_id/storagesize']),
-  ], ids=["error_case_not_found"])
-  def test_check_if_dataverse_exists_error_cases(self, mocker, server_url, api_token, dataverse_id,
-                                                 expected_message):
-    # Arrange
-    logger = mocker.MagicMock()
-    client_mock = mocker.patch("pasta_eln.dataverse.utils.DataverseClient")
-    client_mock.return_value.get_dataverse_size = AsyncMock(return_value=expected_message)
+  @pytest.mark.parametrize("metadata, expected_output, test_id", [
+    # Happy path tests
+    ({"datasetVersion": {"license": {"name": "CC0", "uri": "https://creativecommons.org/publicdomain/zero/1.0/"},
+                         "metadataBlocks": {
+                           "citation": {
+                             "displayName": "Citation Metadata",
+                             "fields": [
+                               {"typeName": "title", "value": "Test Title", "multiple": False, "typeClass": "primitive"}
+                             ]
+                           }
+                         }}},
+     "<html><b style=\"color:Black\">License Metadata:</b><ul><li style=\"color:Gray\">Name: <i>CC0</i></li><li style=\"color:Gray\">URI: <i>https://creativecommons.org/publicdomain/zero/1.0/</i></li></ul><b style=\"color:Black\">Citation Metadata:</b><ul><b style=\"color:#737373\"><li>Title:</li></b><ul><i style=\"color:Gray\"><li>Test Title</li></i></ul></ul></html>",
+     "success_path_basic_metadata"),
 
+    # Edge case: Empty metadata
+    ({"datasetVersion": {"license": None, "metadataBlocks": {}}},
+     "<html></html>",
+     "edge_case_empty_metadata"),
+
+    # Complex nested metadata
+    ({"datasetVersion": {"license": {"name": "CC BY", "uri": "https://creativecommons.org/licenses/by/4.0/"},
+                         "metadataBlocks": {
+                           "citation": {
+                             "displayName": "Citation Metadata",
+                             "fields": [
+                               {"typeName": "author",
+                                "value": [{"authorName": {"typeName": "authorName", "value": "John Doe"}},
+                                          {"authorName": {"typeName": "authorName", "value": "Jane Doe"}}],
+                                "multiple": True, "typeClass": "compound"}
+                             ]
+                           }
+                         }}},
+     "<html><b style=\"color:Black\">License Metadata:</b><ul><li style=\"color:Gray\">Name: <i>CC BY</i></li><li style=\"color:Gray\">URI: <i>https://creativecommons.org/licenses/by/4.0/</i></li></ul><b style=\"color:Black\">Citation Metadata:</b><ul><b style=\"color:#737373\"><li>Author:</li></b><ul><li style=\"color:Gray\">Item 1:</li><ul><li style=\"color:Gray\">Author Name: <i>John Doe</li></i></ul><li style=\"color:Gray\">Item 2:</li><ul><li style=\"color:Gray\">Author Name: <i>Jane Doe</li></i></ul></ul></ul></html>",
+     "complex_nested_metadata")
+  ], ids=["success_path_basic_metadata", "edge_case_empty_metadata", "complex_nested_metadata"])
+  def test_get_formatted_metadata_message(self, test_id, metadata, expected_output):
     # Act
-    result = check_if_dataverse_exists(logger, api_token, server_url, dataverse_id)
+    result = get_formatted_metadata_message(metadata)
 
     # Assert
-    logger.info.assert_called_with("Checking if login info is valid, server_url: %s", server_url)
-    assert result == False, "Expected False for invalid or empty server messages"
+    assert result == expected_output
+
+  # Test data for error cases
+  @pytest.mark.parametrize("metadata,expected_exception, test_id", [
+    ({}, KeyError, "error_case_empty_metadata"),
+    ({"datasetVersion": {}}, KeyError, "error_case_missing_license_and_metadata_blocks"),
+  ])
+  def test_get_formatted_metadata_message_error_cases(self, metadata, expected_exception, test_id):
+    # Arrange - done via test parameters
+
+    # Act & Assert
+    with pytest.raises(expected_exception):
+      get_formatted_metadata_message(metadata)

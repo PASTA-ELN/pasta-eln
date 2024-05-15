@@ -50,7 +50,8 @@ def mock_database_api(mocker):
 def upload_config_dialog(qtbot, mocker, mock_database_api):
   mocker.patch('pasta_eln.GUI.dataverse.upload_config_dialog.DatabaseAPI', return_value=mock_database_api)
   mocker.patch('pasta_eln.GUI.dataverse.upload_config_dialog.logging')
-  dialog = UploadConfigDialog()
+  callback = mocker.MagicMock()
+  dialog = UploadConfigDialog(callback)
   mocker.resetall()
   qtbot.addWidget(dialog.instance)
   return dialog

@@ -8,7 +8,7 @@
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import logging
-from typing import Any
+from typing import Any, Callable
 
 from PySide6 import QtCore, QtWidgets
 from PySide6.QtCore import QObject
@@ -28,7 +28,6 @@ class UploadConfigDialog(Ui_UploadConfigDialog, QObject):
       It provides methods to load and save the configuration settings.
 
   """
-  config_reloaded = QtCore.Signal()
 
   def __new__(cls, *_: Any, **__: Any) -> Any:
     """
@@ -46,7 +45,7 @@ class UploadConfigDialog(Ui_UploadConfigDialog, QObject):
     """
     return super(UploadConfigDialog, cls).__new__(cls)
 
-  def __init__(self) -> None:
+  def __init__(self, config_reloaded_callback: Callable[[], None]) -> None:
     """
     Initializes the UploadConfigDialog.
 
@@ -59,6 +58,7 @@ class UploadConfigDialog(Ui_UploadConfigDialog, QObject):
     self.instance = QDialog()
     super().setupUi(self.instance)
     self.db_api = DatabaseAPI()
+    self.db_api.initialize_database()
     self.numParallelComboBox.addItems(map(str, range(2, 6)))
     self.numParallelComboBox.setCurrentIndex(2)
     self.instance.setWindowModality(QtCore.Qt.ApplicationModal)
@@ -68,6 +68,7 @@ class UploadConfigDialog(Ui_UploadConfigDialog, QObject):
     (self.numParallelComboBox.currentTextChanged[str]
      .connect(lambda num: setattr(self.config_model, "parallel_uploads_count", int(num))))
     self.set_data_hierarchy_types()
+    self.config_reloaded_callback = config_reloaded_callback
     self.load_ui()
 
   def load_ui(self) -> None:
@@ -148,7 +149,7 @@ class UploadConfigDialog(Ui_UploadConfigDialog, QObject):
       self.logger.error("Failed to load config model!")
       return
     self.db_api.save_config_model(self.config_model)
-    self.config_reloaded.emit()
+    self.config_reloaded_callback()
 
   def show(self) -> None:
     """
@@ -161,12 +162,3 @@ class UploadConfigDialog(Ui_UploadConfigDialog, QObject):
         self: The instance of the class.
     """
     self.instance.show()
-
-
-if __name__ == "__main__":
-  import sys
-
-  app = QtWidgets.QApplication(sys.argv)
-  ui = UploadConfigDialog()
-  ui.instance.show()
-  sys.exit(app.exec())

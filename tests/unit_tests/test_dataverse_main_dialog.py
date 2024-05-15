@@ -47,7 +47,8 @@ def mock_main_dialog(mocker):
   mocker.patch(
     "pasta_eln.GUI.dataverse.main_dialog.MainDialog.check_if_dataverse_is_configured",
     return_value=(True, "Configured"))
-  return MainDialog()
+  mock_backed = mocker.MagicMock()
+  return MainDialog(mock_backed)
 
 
 class TestDataverseMainDialog(object):
@@ -82,9 +83,10 @@ class TestDataverseMainDialog(object):
     mock_check_if_dataverse_is_configured = mocker.patch(
       "pasta_eln.GUI.dataverse.main_dialog.MainDialog.check_if_dataverse_is_configured",
       return_value=is_configured)
+    mock_backed = mocker.MagicMock()
 
     # Act
-    dialog = MainDialog()
+    dialog = MainDialog(mock_backed)
 
     # Assert
     mock_log.getLogger.assert_called_once_with("pasta_eln.GUI.dataverse.main_dialog.MainDialog")
@@ -116,8 +118,6 @@ class TestDataverseMainDialog(object):
       dialog.configureUploadPushButton.clicked.connect.assert_called_once_with(dialog.show_configure_upload)
       dialog.showCompletedPushButton.clicked.connect.assert_called_once_with(dialog.show_completed_uploads)
       dialog.editFullMetadataPushButton.clicked.connect.assert_called_once_with(dialog.show_edit_metadata)
-      dialog.config_upload_dialog.config_reloaded.connect.assert_called_once_with(
-        dialog.upload_manager_task.set_concurrent_uploads)
       dialog.cancelAllPushButton.clicked.connect.assert_called_once_with(
         dialog.upload_manager_task.cancel_all_tasks.emit)
       dialog.buttonBox.button.assert_called_once_with(QtWidgets.QDialogButtonBox.Cancel)
@@ -138,7 +138,6 @@ class TestDataverseMainDialog(object):
       dialog.configureUploadPushButton.clicked.connect.assert_not_called()
       dialog.showCompletedPushButton.clicked.connect.assert_not_called()
       dialog.editFullMetadataPushButton.clicked.connect.assert_not_called()
-      dialog.config_upload_dialog.config_reloaded.connect.assert_not_called()
       dialog.cancelAllPushButton.clicked.connect.assert_not_called()
       dialog.buttonBox.button.assert_not_called()
       dialog.buttonBox.button.return_value.clicked.connect.assert_not_called()
@@ -222,6 +221,7 @@ class TestDataverseMainDialog(object):
     project = ProjectModel()
     project.name = name
     project.date = date
+    project.id = "Test"
 
     if expected_name is ValueError or expected_date is ValueError:
       # Assert
@@ -239,6 +239,8 @@ class TestDataverseMainDialog(object):
       mock_project_item_frame.return_value.projectNameLabel.setText.assert_called_once_with(expected_name or '')
       mock_project_item_frame.return_value.modifiedDateTimeLabel.setText.assert_called_once_with(expected_date)
       mock_project_item_frame.return_value.projectNameLabel.setToolTip.assert_called_once_with(name)
+      mock_project_item_frame.return_value.projectDocIdLabel.hide.assert_called_once()
+      mock_project_item_frame.return_value.projectDocIdLabel.setText.assert_called_once_with(project.id)
 
   @pytest.mark.parametrize("project, expected_exception", [
     # ID: ErrorCase-1 (invalid project type)
@@ -296,6 +298,7 @@ class TestDataverseMainDialog(object):
         mock_main_dialog.projectsScrollAreaVerticalLayout.itemAt.return_value.widget.assert_called_once()
         mock_project_widget.findChild.assert_any_call(QCheckBox, name="projectCheckBox")
         mock_project_widget.findChild.assert_any_call(QLabel, name="projectNameLabel")
+        mock_project_widget.findChild.assert_any_call(QLabel, name="projectDocIdLabel")
         mock_project_widget.findChild.return_value.isChecked.assert_called_once()
         mock_project_widget.findChild.return_value.toolTip.assert_called_once()
         mock_main_dialog.get_upload_widget.assert_called_once_with(
@@ -304,10 +307,12 @@ class TestDataverseMainDialog(object):
           mock_main_dialog.get_upload_widget.return_value["base"])
         mock_data_upload_task.assert_called_once_with(
           mock_main_dialog.get_upload_widget.return_value["widget"].uploadProjectLabel.text(),
+          mock_project_widget.findChild.return_value.text(),
           mock_main_dialog.get_upload_widget.return_value["widget"].uploadProgressBar.setValue,
           mock_main_dialog.get_upload_widget.return_value["widget"].statusLabel.setText,
           mock_main_dialog.get_upload_widget.return_value["widget"].statusIconLabel.setPixmap,
-          mock_main_dialog.get_upload_widget.return_value["widget"].uploadCancelPushButton.clicked
+          mock_main_dialog.get_upload_widget.return_value["widget"].uploadCancelPushButton.clicked,
+          mock_main_dialog.backend
         )
         mock_task_thread.assert_called_once_with(mock_data_upload_task.return_value)
         mock_main_dialog.upload_manager_task.add_to_queue.assert_called_once_with(mock_task_thread.return_value)
@@ -325,10 +330,8 @@ class TestDataverseMainDialog(object):
     pytest.param(0, UploadStatusValues.Cancelled.name, True, id="SuccessPath-3-cancelled-with-0-progress"),
     # ID: SuccessPath-4
     pytest.param(100, UploadStatusValues.Cancelled.name, True, id="SuccessPath-4-cancelled-with-100-progress"),
-    # ID: EdgeCase-1 (Progress not 100)
-    pytest.param(99, UploadStatusValues.Finished.name, False, id="EdgeCase-1"),
-    # ID: EdgeCase-2 (Status not in specified list)
-    pytest.param(100, "InProgress", False, id="EdgeCase-2"),
+    # ID: EdgeCase-1 (Status not in a specified list)
+    pytest.param(100, "InProgress", False, id="EdgeCase-1"),
     # ID: ErrorCase-1 (Invalid status value)
     pytest.param(100, "InvalidStatus", False, id="ErrorCase-1"),
   ])
@@ -336,11 +339,9 @@ class TestDataverseMainDialog(object):
     # Arrange
     mock_main_dialog.uploadQueueVerticalLayout = MagicMock()
     widget = MagicMock()
-    progress_bar = mocker.MagicMock()
-    progress_bar.value.return_value = progress_value
     status_label = mocker.MagicMock()
     status_label.text.return_value = status_text
-    widget.findChild.side_effect = lambda x, name: progress_bar if x == QtWidgets.QProgressBar else status_label
+    widget.findChild.side_effect = lambda x, name: status_label
     mock_main_dialog.uploadQueueVerticalLayout.count.return_value = 1
     mock_main_dialog.uploadQueueVerticalLayout.itemAt.return_value = MagicMock(widget=MagicMock(return_value=widget))
 
@@ -352,9 +353,7 @@ class TestDataverseMainDialog(object):
     if expected_removal:
       mock_main_dialog.uploadQueueVerticalLayout.itemAt.assert_called_once_with(0)
       mock_main_dialog.uploadQueueVerticalLayout.itemAt.return_value.widget.assert_called_once()
-      widget.findChild.assert_any_call(QtWidgets.QProgressBar, name="uploadProgressBar")
       widget.findChild.assert_any_call(QtWidgets.QLabel, name="statusLabel")
-      progress_bar.value.assert_called_once()
       status_label.text.assert_called_once()
       widget.setParent.assert_called_once_with(None)
     else:
@@ -658,7 +657,6 @@ class TestDataverseMainDialog(object):
     else:
       instance_mock.show.assert_not_called()
       mock_config_dialog.return_value.show.assert_called_once()
-      mock_main_dialog.show_message.assert_called_once_with(instance_mock, "Dataverse Not Configured", is_configured[1])
 
   @pytest.mark.parametrize("title,message,icon,expected_width", [
     pytest.param("Info", "This is an information message.", QMessageBox.Information, 200, id="info_message"),

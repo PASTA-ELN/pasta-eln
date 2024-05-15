@@ -80,7 +80,7 @@ def runAsAdminWindows(cmdLine:list[str]) -> None:
   import win32con, win32event, win32process
   from win32com.shell.shell import ShellExecuteEx
   from win32com.shell import shellcon
-  procInfo = ShellExecuteEx(nShow=win32con.SW_SHOWNORMAL,
+  procInfo = ShellExecuteEx(nShow=win32con.SW_SHOWNORMAL,   # type: ignore[call-arg]
                             fMask=shellcon.SEE_MASK_NOCLOSEPROCESS,
                             lpVerb='runas',  # causes UAC elevation prompt.
                             lpFile= f'"{cmdLine[0]}"',
@@ -388,6 +388,8 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
   backend.changeHierarchy(semStepID)
   if backend.cwd is not None:
     semDirName = backend.basePath/backend.cwd
+  else:
+    return "**ERROR: backend is incorrect"
   backend.changeHierarchy(None)
   outputString(outputFormat,'info',backend.outputHierarchy())
   if callbackPercent is not None:

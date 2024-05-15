@@ -514,30 +514,27 @@ def check_login_credentials(logger: Logger, api_token: str, server_url: str) -> 
 
 def check_if_dataverse_exists(logger: Logger, api_token: str, server_url: str, dataverse_id: str) -> bool:
   """
-  Checks if a dataverse exists by querying its size.
-
-  Explanation:
-      This function queries the dataverse size using the provided server URL, API token, and dataverse ID.
-      It returns True if the dataverse size message ends with 'bytes', indicating the dataverse exists.
+  Checks if a Dataverse exists based on the provided server URL, API token, and Dataverse ID.
 
   Args:
-      logger (Logger): The logger instance for logging information.
+      logger (Logger): The logger object for logging information.
       api_token (str): The API token for authentication.
-      server_url (str): The URL of the server hosting the dataverse.
-      dataverse_id (str): The ID of the dataverse to check.
+      server_url (str): The URL of the Dataverse server.
+      dataverse_id (str): The ID of the Dataverse to check existence for.
 
   Returns:
-      bool: True if the dataverse exists, False otherwise.
+      bool: True if the Dataverse exists, False otherwise.
   """
   logger.info("Checking if login info is valid, server_url: %s", server_url)
   dataverse_client = DataverseClient(server_url, api_token)
   event_loop = get_event_loop()
-  message = event_loop.run_until_complete(dataverse_client.get_dataverse_size(dataverse_id))
+  info = event_loop.run_until_complete(dataverse_client.get_dataverse_info(dataverse_id))
   result = False
-  if isinstance(message, str):
-    result = bool(message.endswith("bytes"))
+  if isinstance(info, dict):
+    result = (info.get("id", None) is not None
+              and info.get("alias", None) == dataverse_id)
   else:
-    logger.warning("Data verse with id %s does not exist, Server message: %s", dataverse_id, message)
+    logger.warning("Data verse with id %s does not exist, Server message: %s", dataverse_id, info)
   return result
 
 
@@ -651,5 +648,70 @@ def get_formatted_message(missing_metadata: dict[str, list[str]]) -> str:
       for missing in missing_list:
         message += f"<i style=\"color:Crimson\"><li>{missing}</li></i>"
       message += "</ul>"
+  message += "</html>"
+  return message
+
+
+def get_formatted_metadata_message(metadata: dict[str, Any]) -> str:
+  """
+  Formats metadata into an HTML message for display.
+
+  Args:
+      metadata (dict): A dictionary containing metadata information.
+
+  Returns:
+      str: An HTML-formatted message representing the metadata.
+
+  Examples:
+      >>> metadata = {
+      ...     'datasetVersion': {
+      ...         'license': {'name': 'CC0', 'uri': 'https://creativecommons.org/publicdomain/zero/1.0/'},
+      ...         'metadataBlocks': {
+      ...             'citation': {
+      ...                 'displayName': 'Citation Metadata',
+      ...                 'fields': [
+      ...                     {'typeName': 'title', 'value': 'Test Title', 'multiple': False, 'typeClass': 'primitive'}
+      ...                 ]
+      ...             }
+      ...         }
+      ...     }
+      ... }
+      >>> get_formatted_metadata_message(metadata)
+      '<html>...</html>'
+  """
+
+  message = "<html>"
+  if metadata['datasetVersion']['license']:
+    message += "<b style=\"color:Black\">License Metadata:</b><ul>"
+    message += f"<li style=\"color:Gray\">Name: <i>{metadata['datasetVersion']['license']['name']}</i></li>"
+    message += f"<li style=\"color:Gray\">URI: <i>{metadata['datasetVersion']['license']['uri']}</i></li>"
+    message += "</ul>"
+  for _, metablock in metadata['datasetVersion']['metadataBlocks'].items():
+    message += f"<b style=\"color:Black\">{metablock['displayName']}:</b><ul>"
+    has_value = False
+    for field in metablock['fields']:
+      if field['value']:
+        has_value = has_value or len(field['value']) > 0
+        message += f"<b style=\"color:#737373\"><li>{adjust_type_name(field['typeName'])}:</li></b><ul>"
+        if field["multiple"] and field["typeClass"] == "compound":
+          for index, field_value in enumerate(field['value']):
+            message += f"<li style=\"color:Gray\">Item {index + 1}:</li><ul>"
+            for _, value in field_value.items():
+              message += f"<li style=\"color:Gray\">{adjust_type_name(value['typeName'])}: <i>{value['value']}</li></i>"
+            message += "</ul>"
+          message += "</ul>"
+        elif field["multiple"] and field["typeClass"] == "controlledVocabulary":
+          for field_value in field['value']:
+            message += f"<i style=\"color:Gray\"><li>{field_value}</li></i>"
+          message += "</ul>"
+        elif field["multiple"] and field["typeClass"] == "primitive":
+          for field_value in field['value']:
+            message += f"<i style=\"color:Gray\"><li>{field_value}</li></i>"
+          message += "</ul>"
+        else:
+          message += f"<i style=\"color:Gray\"><li>{field['value']}</li></i></ul>"
+    if not has_value:
+      message += "<li style=\"color:#737373\">No value</li></ul>"
+    message += "</ul>"
   message += "</html>"
   return message

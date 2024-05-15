@@ -53,7 +53,7 @@ class TestDataverseProgressUpdaterThread:
     mock_randint.side_effect = randint_values
     progress_updater = ProgressUpdaterThread()
     progress_updater.progress_update = mocker.MagicMock()
-    progress_updater.exit = mocker.MagicMock()
+    progress_updater.end = mocker.MagicMock()
     if cancelled_at is not None:
       progress_updater.cancelled = False
 
@@ -68,7 +68,7 @@ class TestDataverseProgressUpdaterThread:
     # Assert
     progress_call_list = [mocker.call(progress) for progress in expected_progress]
     progress_updater.progress_update.emit.assert_has_calls(progress_call_list)
-    progress_updater.exit.assert_called_once()
+    progress_updater.end.emit.assert_called_once()
 
   @pytest.mark.parametrize("initial_state, expected_state", [
     (False, True),  # ID: 01 - Test transitioning from False to True

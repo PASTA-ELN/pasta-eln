@@ -14,6 +14,8 @@ from PySide6.QtWidgets import QMainWindow, QApplication, QFileDialog, QMessageBo
 from qt_material import apply_stylesheet  # of https://github.com/UN-GCPDS/qt-material
 
 from pasta_eln import __version__
+from pasta_eln.GUI.dataverse.config_dialog import ConfigDialog
+from pasta_eln.GUI.dataverse.main_dialog import MainDialog
 from .GUI.body import Body
 from .GUI.config import Configuration
 from .GUI.form import Form
@@ -39,19 +41,22 @@ class MainWindow(QMainWindow):
     super().__init__()
     venv = ' without venv' if sys.prefix == sys.base_prefix and 'CONDA_PREFIX' not in os.environ else ' in venv'
     self.setWindowTitle(f"PASTA-ELN {__version__}{venv}")
-    self.resize(self.screen().size()) #self.setWindowState(Qt.Window Maximized) https://bugreports.qt.io/browse/PYSIDE-2706
+    self.resize(self.screen().size()) #self.setWindowState(Qt.Window Maximized) https://bugreports.qt.io/browse/PYSIDE-2706 https://bugreports.qt.io/browse/QTBUG-124892
     resourcesDir = Path(__file__).parent / 'Resources'
     self.setWindowIcon(QIcon(QPixmap(resourcesDir / 'Icons' / 'favicon64.png')))
     self.backend = Backend()
     self.comm = Communicate(self.backend)
     self.comm.formDoc.connect(self.formDoc)
+    self.dataverseMainDialog: MainDialog | None = None
+    self.dataverseConfig: ConfigDialog | None = None
 
     # Menubar
     menu = self.menuBar()
     projectMenu = menu.addMenu("&Project")
-    Action('&Export .eln',                   self, [Command.EXPORT],         projectMenu)
-    Action('&Import .eln',                   self, [Command.IMPORT],         projectMenu)
+    Action('&Export project to .eln',        self, [Command.EXPORT],         projectMenu)
+    Action('&Import .eln',                   self, [Command.IMPORT],         projectMenu, shortcut='Ctrl+A')
     projectMenu.addSeparator()
+    Action('&Export all projects to .eln',   self, [Command.EXPORT_ALL],     projectMenu)
     Action('&Exit',                          self, [Command.EXIT],           projectMenu)
 
     viewMenu = menu.addMenu("&Lists")
@@ -76,6 +81,8 @@ class MainWindow(QMainWindow):
         Action(name,                         self, [Command.CHANGE_PG, name], changeProjectGroups)
     Action('&Synchronize',                   self, [Command.SYNC],            systemMenu, shortcut='F5')
     Action('&Data hierarchy editor',         self, [Command.DATAHIERARCHY],        systemMenu, shortcut='F8')
+    Action('&Dataverse Configuration',         self, [Command.DATAVERSE_CONFIG],        systemMenu, shortcut='F10')
+    Action('&Upload to Dataverse',         self, [Command.DATAVERSE_MAIN],        systemMenu, shortcut='F11')
     systemMenu.addSeparator()
     Action('&Test extraction from a file',   self, [Command.TEST1],           systemMenu)
     Action('Test &selected item extraction', self, [Command.TEST2],           systemMenu, shortcut='F2')
@@ -135,9 +142,17 @@ class MainWindow(QMainWindow):
       if self.comm.projectID == '':
         showMessage(self, 'Error', 'You have to open a project to export', 'Warning')
         return
-      fileName = QFileDialog.getSaveFileName(self, 'Save data into .eln file', str(Path.home()), '*.eln')[0]
-      if fileName != '':
-        status = exportELN(self.comm.backend, self.comm.projectID, fileName)
+      fileName = QFileDialog.getSaveFileName(self, 'Save project into .eln file', str(Path.home()), '*.eln')[0]
+      if fileName != '' and hasattr(self.backend, 'db'):
+        docTypes = [i for i in self.comm.backend.db.dataLabels.keys() if i[0]!='x']
+        status = exportELN(self.comm.backend, [self.comm.projectID], fileName, docTypes)
+        showMessage(self, 'Finished', status, 'Information')
+    elif command[0] is Command.EXPORT_ALL:
+      fileName = QFileDialog.getSaveFileName(self, 'Save everything to .eln file', str(Path.home()), '*.eln')[0]
+      if fileName != '' and hasattr(self.backend, 'db'):
+        docTypes = [i for i in self.comm.backend.db.dataLabels.keys() if i[0]!='x']
+        allProjects = [i['id'] for i in self.comm.backend.db.getView('viewDocType/x0')]
+        status = exportELN(self.comm.backend, allProjects, fileName, docTypes)
         showMessage(self, 'Finished', status, 'Information')
     elif command[0] is Command.IMPORT:
       fileName = QFileDialog.getOpenFileName(self, 'Load data from .eln file', str(Path.home()), '*.eln')[0]
@@ -167,6 +182,12 @@ class MainWindow(QMainWindow):
       dataHierarchyForm = DataHierarchyEditorDialog(self.comm.backend.db)
       dataHierarchyForm.instance.exec()
       restart()
+    elif command[0] is Command.DATAVERSE_CONFIG:
+      self.dataverseConfig = ConfigDialog()
+      self.dataverseConfig.show()
+    elif command[0] is Command.DATAVERSE_MAIN:
+      self.dataverseMainDialog = MainDialog(self.comm.backend)
+      self.dataverseMainDialog.show()
     elif command[0] is Command.TEST1:
       fileName = QFileDialog.getOpenFileName(self, 'Open file for extractor test', str(Path.home()), '*.*')[0]
       report = self.comm.backend.testExtractor(fileName, outputStyle='html')
@@ -250,6 +271,9 @@ class Command(Enum):
   VERIFY_DB = 14
   SHORTCUTS = 15
   RESTART   = 16
+  EXPORT_ALL= 17
+  DATAVERSE_CONFIG = 18
+  DATAVERSE_MAIN = 19
 
 
 def startMain() -> None:
