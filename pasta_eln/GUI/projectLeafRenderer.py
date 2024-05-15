@@ -96,6 +96,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
         continue
       y += self.lineSep
       if isinstance(doc[key], str):
+        value = ''
         if re.match(r'^[a-z\-]-[a-z0-9]{32}$',doc[key]) is None:  #normal text
           value = doc[key]
         elif self.comm is not None:                     #link

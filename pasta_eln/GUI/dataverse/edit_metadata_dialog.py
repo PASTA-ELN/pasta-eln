@@ -4,10 +4,11 @@
 #  Copyright (c) 2024
 #
 #  Author: Jithu Murugan
-#  Filename: dataverse_edit_full_metadata.py
+#  Filename: edit_metadata_dialog.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
+import copy
 import logging
 from typing import Any
 
@@ -16,10 +17,11 @@ from PySide6.QtWidgets import QDialog
 
 from pasta_eln.GUI.dataverse.controlled_vocab_frame import ControlledVocabFrame
 from pasta_eln.GUI.dataverse.edit_metadata_dialog_base import Ui_EditMetadataDialog
+from pasta_eln.GUI.dataverse.edit_metadata_summary_dialog import EditMetadataSummaryDialog
 from pasta_eln.GUI.dataverse.primitive_compound_frame import PrimitiveCompoundFrame
 from pasta_eln.dataverse.config_model import ConfigModel
 from pasta_eln.dataverse.database_api import DatabaseAPI
-from pasta_eln.dataverse.utils import adjust_type_name
+from pasta_eln.dataverse.utils import adjust_type_name, get_formatted_metadata_message
 
 
 class EditMetadataDialog(Ui_EditMetadataDialog):
@@ -61,6 +63,7 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
     self.primitive_compound_frame: PrimitiveCompoundFrame | None = None
     self.controlled_vocab_frame: ControlledVocabFrame | None = None
+    self.metadata_summary_dialog: EditMetadataSummaryDialog = EditMetadataSummaryDialog(self.save_config)
     self.instance = QDialog()
     super().setupUi(self.instance)
     self.instance.setWindowModality(QtCore.Qt.ApplicationModal)
@@ -71,7 +74,7 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
                                                            ConfigModel)  # type: ignore[assignment]
 
     # Initialize metadata
-    self.metadata = self.config_model.metadata
+    self.metadata = copy.deepcopy(self.config_model.metadata)
     self.metadata_types = self.get_metadata_types()
     self.minimal_metadata = [
       {"name": "subject", "displayName": "Subject"},
@@ -85,14 +88,9 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
     self.typesComboBox.currentTextChanged.connect(self.change_metadata_type)
     self.minimalFullComboBox.currentTextChanged[str].connect(self.toggle_minimal_full)
     self.buttonBox.button(QtWidgets.QDialogButtonBox.Save).clicked.connect(self.save_ui)
-    self.licenseNameLineEdit.textChanged[str].connect(
-      lambda name: self.config_model.metadata['datasetVersion']['license'].update(  # type: ignore[index]
-        {"name": name}))
-    self.licenseURLLineEdit.textChanged[str].connect(
-      lambda uri: self.config_model.metadata['datasetVersion']['license'].update({"uri": uri}))  # type: ignore[index]
-
-    # Initialize UI elements
-    self.load_ui()
+    self.licenseNameLineEdit.textChanged[str].connect(self.update_license_name)
+    self.licenseURLLineEdit.textChanged[str].connect(self.update_license_uri)
+    self.buttonBox.accepted.disconnect()
 
   def get_metadata_types(self) -> dict[str, list[dict[str, str]]]:
     """Get the metadata types mapping.
@@ -213,9 +211,13 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
 
     """
     self.logger.info("Loading UI...")
-    self.metadataBlockComboBox.addItems(self.metadata_types.keys())
+    self.metadata = copy.deepcopy(self.config_model.metadata)
+    self.metadata_types = self.get_metadata_types()
+
+    self.metadataBlockComboBox.clear()
+    self.minimalFullComboBox.clear()
     self.minimalFullComboBox.addItems(["Full", "Minimal"])
-    dataset_version = self.config_model.metadata.get('datasetVersion', {})  # type: ignore[union-attr]
+    dataset_version = self.metadata.get('datasetVersion', {})  # type: ignore[union-attr]
     dataset_license = dataset_version.get('license', {})
     self.licenseNameLineEdit.setText(dataset_license.get('name', ''))
     self.licenseURLLineEdit.setText(dataset_license.get('uri', ''))
@@ -224,17 +226,28 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
     """
     Save the UI changes.
 
-    Saves the changes made in the UI to the metadata.
-    Updates the metadata in the config model and updates the model document in the database.
-
+    Saves the changes made in the UI to the metadata, updates the metadata in the config model,
+    and displays the updated metadata in the summary dialog.
     """
     self.logger.info("Saving Config Model...")
     if self.controlled_vocab_frame:
       self.controlled_vocab_frame.save_modifications()
     if self.primitive_compound_frame:
       self.primitive_compound_frame.save_modifications()
+    message = get_formatted_metadata_message(self.metadata or {})
+    self.metadata_summary_dialog.summaryTextEdit.setText(message)
+    self.metadata_summary_dialog.show()
+
+  def save_config(self) -> None:
+    """
+    Save the configuration changes.
+
+    Updates the metadata in the config model, updates the model document in the database, and closes the instance.
+    """
+
     self.config_model.metadata = self.metadata
     self.db_api.update_model_document(self.config_model)
+    self.instance.close()
 
   def show(self) -> None:
     """
@@ -243,7 +256,28 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
     Explanation:
         This method shows the instance by calling its show method.
     """
+    self.load_ui()
     self.instance.show()
+
+  def update_license_name(self, name: str) -> None:
+    """
+    Updates the license name in the metadata.
+
+    Args:
+        name (str): The new license name to update in the metadata.
+    """
+    if self.metadata:
+      self.metadata['datasetVersion']['license'].update({"name": name})
+
+  def update_license_uri(self, uri: str) -> None:
+    """
+    Updates the license URI in the metadata.
+
+    Args:
+        uri (str): The new license URI to update in the metadata.
+    """
+    if self.metadata:
+      self.metadata['datasetVersion']['license'].update({"uri": uri})
 
 
 if __name__ == "__main__":

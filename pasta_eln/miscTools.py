@@ -168,6 +168,7 @@ def generic_hash(path:Path, forceFile:bool=False) -> str:
     raise ValueError(f'This seems to be a directory {path.as_posix()}')
   if forceFile and path.is_symlink():
     path = path.resolve()
+  shasum = ''
   if path.is_symlink():    #if link, hash the link
     shasum = symlink_hash(path)
   elif path.is_file():  #Local file

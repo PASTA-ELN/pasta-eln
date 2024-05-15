@@ -210,7 +210,7 @@ def testUser(url:str, auth:AuthBase, userName:str, userPassword:str) -> None:
     # test if configuration corresponds to naming convention
     users     = listUsers(url, auth, False)
     userDB    = [i[:-2] for i in users[userName]]  #list
-    databases = listDB(url, auth, False)
+  databases = listDB(url, auth, False)
   for iDB in userDB:
     if auth is not None:
       write = databases[iDB][0][0]

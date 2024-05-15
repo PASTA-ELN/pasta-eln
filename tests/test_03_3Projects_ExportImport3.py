@@ -6,9 +6,11 @@ import unittest
 from pathlib import Path
 import pytest
 from pasta_eln.backend import Backend
-from pasta_eln.inputOutput import exportELN, importELN, testELNFile, testSignature
+from pasta_eln.inputOutput import exportELN, importELN, testSignature
 from pasta_eln.miscTools import outputString
 from pasta_eln.miscTools import DummyProgressBar
+from .tools import testELNFile
+
 
 class TestStringMethods(unittest.TestCase):
   """
