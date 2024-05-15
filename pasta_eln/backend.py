@@ -7,6 +7,7 @@ from urllib import request
 from datetime import datetime, timezone
 from .mixin_cli import CLI_Mixin
 from .database import Database
+from .sqlite import SqlLiteDB
 from .miscTools import upOut, createDirName, generic_hash, camelCase
 from .handleDictionaries import fillDocBeforeCreate, diffDicts
 from .miscTools import outputString
@@ -76,7 +77,10 @@ class Backend(CLI_Mixin):
     # decipher miscellaneous configuration and store
     self.userID   = self.configuration['userID']
     # start database
-    self.db = Database(n,s,databaseName, self.configuration, basePath=self.basePath)
+    if self.configuration.get('dbType','couchDB') and False:
+      self.db = Database(n,s,databaseName, self.configuration, basePath=self.basePath)
+    else:
+      self.db = SqlLiteDB(self.configuration, basePath=self.basePath)
     if not hasattr(self.db, 'databaseName'):  #not successful database creation
       return
     if kwargs.get('initViews', False):

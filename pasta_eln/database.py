@@ -23,6 +23,7 @@ class Database:
       databaseName (string): local database name
       configuration (dict): configuration of GUI elements
       resetDataHierarchy (bool): reset dataHierarchy
+      basePath (Path): path of project group
     """
     try:
       self.client = CouchDB(user, password, url='http://127.0.0.1:5984', connect=True)
