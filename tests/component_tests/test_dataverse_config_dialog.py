@@ -8,6 +8,7 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import pytest
 from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QDialogButtonBox
 
 from pasta_eln.GUI.dataverse.config_dialog import ConfigDialog
 from pasta_eln.dataverse.config_model import ConfigModel
@@ -93,7 +94,7 @@ class TestDataverseConfigDialog:
 
       assert config_dialog.apiTokenHelpPushButton.text() == "Help", "API token help button text not found"
       assert config_dialog.dataverseVerifyLoadPushButton.text() == "Verify && Load", "Dataverse load verify push button text not found"
-    qtbot.mouseClick(config_dialog.buttonBox.button(config_dialog.buttonBox.Cancel), Qt.LeftButton)
+    qtbot.mouseClick(config_dialog.buttonBox.button(QDialogButtonBox.Cancel), Qt.LeftButton)
 
   def test_component_launch_all_ui_elements_should_display_data(self, qtbot, config_dialog):
     config_dialog.show()
@@ -107,7 +108,7 @@ class TestDataverseConfigDialog:
         "panorama and perspectives\n                in Africa,\" Dataverse\n            "), "Dataverse list combo box should be set with mock data"
       assert config_dialog.dataverseLineEdit.text() == "opensciencesouth", "Dataverse line edit should be set with mock data"
       assert config_dialog.dataverseListComboBox.count() == 115, "Dataverse list combo box should have 115 items"
-    qtbot.mouseClick(config_dialog.buttonBox.button(config_dialog.buttonBox.Cancel), Qt.LeftButton)
+    qtbot.mouseClick(config_dialog.buttonBox.button(QDialogButtonBox.Cancel), Qt.LeftButton)
 
   @pytest.mark.parametrize("test_id, server_url, api_token, expected_msg_box_heading, expected_msg_box_output",
                            [  # Success tests with various realistic test values
@@ -150,7 +151,7 @@ class TestDataverseConfigDialog:
       else:
         mock_message_box.warning.assert_any_call(config_dialog.instance, expected_msg_box_heading,
                                                  expected_msg_box_output)
-    qtbot.mouseClick(config_dialog.buttonBox.button(config_dialog.buttonBox.Cancel), Qt.LeftButton)
+    qtbot.mouseClick(config_dialog.buttonBox.button(QDialogButtonBox.Cancel), Qt.LeftButton)
 
   def test_help_button_click_should_open_help_url(self, qtbot, config_dialog, mock_webbrowser):
     config_dialog.show()
@@ -163,7 +164,7 @@ class TestDataverseConfigDialog:
     config_dialog.show()
     with qtbot.waitExposed(config_dialog.instance, timeout=500):
       assert config_dialog.instance.isVisible() is True, "Dataverse config dialog should be shown!"
-    qtbot.mouseClick(config_dialog.buttonBox.button(config_dialog.buttonBox.Cancel), Qt.LeftButton)
+    qtbot.mouseClick(config_dialog.buttonBox.button(QDialogButtonBox.Cancel), Qt.LeftButton)
     assert config_dialog.instance.isVisible() is False, "Dataverse config dialog should be closed!"
 
   @pytest.mark.parametrize("test_id, dataverse_title, expected_dataverse_id",
@@ -228,7 +229,7 @@ class TestDataverseConfigDialog:
 
   def test_save_button_click_should_save_the_config(self, qtbot, config_dialog, mock_database_api):
     config_dialog.show()
-    with qtbot.waitExposed(config_dialog.instance, timeout=500):
+    with qtbot.waitExposed(config_dialog.instance, timeout=1000):
       assert config_dialog.instance.isVisible() is True, "Dataverse config dialog should be shown!"
       config_dialog.dataverseServerLineEdit.setText("https://dataverse.harvard.edu")
       config_dialog.apiTokenLineEdit.setText("123456789")
@@ -236,6 +237,6 @@ class TestDataverseConfigDialog:
       assert config_dialog.dataverseLineEdit.text() == "HDV_DASH"
       assert config_dialog.config_model.dataverse_login_info[
                "api_token"] == '123456789', "API token should not be encrypted before save"
-      qtbot.mouseClick(config_dialog.buttonBox.button(config_dialog.buttonBox.Save), Qt.LeftButton, delay=1)
+      qtbot.mouseClick(config_dialog.buttonBox.button(QDialogButtonBox.Save), Qt.LeftButton, delay=1)
       mock_database_api.save_config_model.assert_called_once_with(config_dialog.config_model)
       assert config_dialog.instance.isVisible() is False, "Dataverse config dialog should be closed!"

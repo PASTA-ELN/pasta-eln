@@ -8,6 +8,7 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import pytest
 from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QDialogButtonBox
 
 from pasta_eln.GUI.dataverse.upload_config_dialog import UploadConfigDialog
 from pasta_eln.dataverse.config_model import ConfigModel
@@ -66,9 +67,9 @@ class TestDataverseUploadConfigDialog:
       assert upload_config_dialog.numParallelComboBox.isVisible(), "UploadConfigDialog numParallelComboBox should be shown!"
       assert upload_config_dialog.numParallelLabel.isVisible(), "UploadConfigDialog numParallelComboBox should be shown!"
       assert upload_config_dialog.buttonBox.button(
-        upload_config_dialog.buttonBox.Save).isVisible(), "UploadConfigDialog Save button should be shown!"
+        QDialogButtonBox.Save).isVisible(), "UploadConfigDialog Save button should be shown!"
       assert upload_config_dialog.buttonBox.button(
-        upload_config_dialog.buttonBox.Cancel).isVisible(), "UploadConfigDialog Save button should be shown!"
+        QDialogButtonBox.Cancel).isVisible(), "UploadConfigDialog Save button should be shown!"
       assert upload_config_dialog.data_hierarchy_types == ['Measurement', 'Sample', 'Procedure', 'Instrument',
                                                            'Unidentified'], "UploadConfigDialog data_hierarchy_types should be populated with default values!"
 
@@ -112,7 +113,7 @@ class TestDataverseUploadConfigDialog:
       assert upload_config_dialog.numParallelComboBox.currentText() == str(
         expected_num_parallel), f"UploadConfigDialog numParallelComboBox should be set with {expected_num_parallel}!"
 
-    qtbot.mouseClick(upload_config_dialog.buttonBox.button(upload_config_dialog.buttonBox.Save), Qt.LeftButton)
+    qtbot.mouseClick(upload_config_dialog.buttonBox.button(QDialogButtonBox.Save), Qt.LeftButton)
     assert not upload_config_dialog.instance.isVisible(), "UploadConfigDialog instance should be closed!"
     assert upload_config_dialog.config_model.parallel_uploads_count == expected_num_parallel, f"UploadConfigDialog model should be updated with {expected_num_parallel}!"
     mock_database_api.save_config_model.assert_called_once_with(upload_config_dialog.config_model)
@@ -137,7 +138,7 @@ class TestDataverseUploadConfigDialog:
       assert upload_config_dialog.numParallelComboBox.currentText() == str(
         expected_num_parallel), f"UploadConfigDialog numParallelComboBox should be set with {expected_num_parallel}!"
 
-    qtbot.mouseClick(upload_config_dialog.buttonBox.button(upload_config_dialog.buttonBox.Cancel), Qt.LeftButton)
+    qtbot.mouseClick(upload_config_dialog.buttonBox.button(QDialogButtonBox.Cancel), Qt.LeftButton)
     assert not upload_config_dialog.instance.isVisible(), "UploadConfigDialog instance should be closed!"
     assert upload_config_dialog.config_model.parallel_uploads_count == expected_num_parallel, f"UploadConfigDialog model should be updated with {expected_num_parallel}!"
     mock_database_api.update_model_document.assert_not_called()
@@ -186,7 +187,7 @@ class TestDataverseUploadConfigDialog:
         widget = upload_config_dialog.projectItemsVerticalLayout.itemAt(pos).widget()
         widget.setChecked(set_items[widget.text()])
 
-    qtbot.mouseClick(upload_config_dialog.buttonBox.button(upload_config_dialog.buttonBox.Save), Qt.LeftButton)
+    qtbot.mouseClick(upload_config_dialog.buttonBox.button(QDialogButtonBox.Save), Qt.LeftButton)
     assert not upload_config_dialog.instance.isVisible(), "UploadConfigDialog instance should be closed!"
     assert upload_config_dialog.config_model.project_upload_items == set_items, f"UploadConfigDialog model project_upload_items should be updated with {set_items}!"
     mock_database_api.save_config_model.assert_called_once_with(upload_config_dialog.config_model)
@@ -210,7 +211,7 @@ class TestDataverseUploadConfigDialog:
         widget = upload_config_dialog.projectItemsVerticalLayout.itemAt(pos).widget()
         widget.setChecked(set_items[widget.text()])
 
-    qtbot.mouseClick(upload_config_dialog.buttonBox.button(upload_config_dialog.buttonBox.Cancel), Qt.LeftButton)
+    qtbot.mouseClick(upload_config_dialog.buttonBox.button(QDialogButtonBox.Cancel), Qt.LeftButton)
     assert not upload_config_dialog.instance.isVisible(), "UploadConfigDialog instance should be closed!"
     assert upload_config_dialog.config_model.project_upload_items == set_items, f"UploadConfigDialog model project_upload_items should be updated with {set_items}!"
     mock_database_api.update_model_document.assert_not_called()

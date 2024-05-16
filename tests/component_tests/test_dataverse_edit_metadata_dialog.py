@@ -62,9 +62,9 @@ class TestDataverseEditMetadataDialog:
       assert edit_metadata_dialog.licenseURLLineEdit.isVisible(), "EditMetadataDialog licenseURLLineEdit should be shown!"
       assert edit_metadata_dialog.licenseNameLineEdit.isVisible(), "EditMetadataDialog licenseNameLineEdit should be shown!"
       assert edit_metadata_dialog.buttonBox.button(
-        edit_metadata_dialog.buttonBox.Save).isVisible(), "EditMetadataDialog Save button should be shown!"
+        QDialogButtonBox.Save).isVisible(), "EditMetadataDialog Save button should be shown!"
       assert edit_metadata_dialog.buttonBox.button(
-        edit_metadata_dialog.buttonBox.Cancel).isVisible(), "EditMetadataDialog Cancel button should be shown!"
+        QDialogButtonBox.Cancel).isVisible(), "EditMetadataDialog Cancel button should be shown!"
       assert edit_metadata_dialog.primitive_compound_frame.instance.isVisible(), "EditMetadataDialog primitive_compound_frame should be shown!"
       assert edit_metadata_dialog.primitive_compound_frame.addPushButton.isVisible(), "EditMetadataDialog primitive_compound_frame addPushButton should be shown!"
       primitive_vertical_layout = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.findChild(
@@ -125,7 +125,7 @@ class TestDataverseEditMetadataDialog:
                              'Characteristic Of Sources',
                              'Access To Sources']
       assert metafield_items == default_field_items, "typesComboBox must be initialized with default options"
-    qtbot.mouseClick(edit_metadata_dialog.buttonBox.button(edit_metadata_dialog.buttonBox.Cancel), Qt.LeftButton)
+    qtbot.mouseClick(edit_metadata_dialog.buttonBox.button(QDialogButtonBox.Cancel), Qt.LeftButton)
 
   def test_change_to_minimal_should_list_only_minimal_fields(self, qtbot, edit_metadata_dialog):
     edit_metadata_dialog.show()
@@ -139,9 +139,9 @@ class TestDataverseEditMetadataDialog:
       assert edit_metadata_dialog.licenseURLLineEdit.isVisible(), "EditMetadataDialog licenseURLLineEdit should be shown!"
       assert edit_metadata_dialog.licenseNameLineEdit.isVisible(), "EditMetadataDialog licenseNameLineEdit should be shown!"
       assert edit_metadata_dialog.buttonBox.button(
-        edit_metadata_dialog.buttonBox.Save).isVisible(), "EditMetadataDialog Save button should be shown!"
+        QDialogButtonBox.Save).isVisible(), "EditMetadataDialog Save button should be shown!"
       assert edit_metadata_dialog.buttonBox.button(
-        edit_metadata_dialog.buttonBox.Cancel).isVisible(), "EditMetadataDialog Cancel button should be shown!"
+        QDialogButtonBox.Cancel).isVisible(), "EditMetadataDialog Cancel button should be shown!"
       assert edit_metadata_dialog.controlled_vocab_frame.instance.isVisible(), "EditMetadataDialog controlled_vocab_frame should be shown!"
       assert edit_metadata_dialog.controlled_vocab_frame.addPushButton.isVisible(), "EditMetadataDialog controlled_vocab_frame addPushButton should be shown!"
       vocab_horizontal_layout = edit_metadata_dialog.controlled_vocab_frame.mainVerticalLayout.findChild(
@@ -175,7 +175,7 @@ class TestDataverseEditMetadataDialog:
       minimal_full_comboBox_items = [edit_metadata_dialog.minimalFullComboBox.itemText(i) for i in
                                      range(edit_metadata_dialog.minimalFullComboBox.count())]
       assert minimal_full_comboBox_items == ['Full', 'Minimal'], "minimalFullComboBox should have right contents"
-    qtbot.mouseClick(edit_metadata_dialog.buttonBox.button(edit_metadata_dialog.buttonBox.Cancel), Qt.LeftButton)
+    qtbot.mouseClick(edit_metadata_dialog.buttonBox.button(QDialogButtonBox.Cancel), Qt.LeftButton)
 
   @pytest.mark.parametrize("test_id, metadata_block, expected_fields, selected_field, tooltips, placeholderTexts",
                            [  # Success tests with various realistic test values

@@ -9,7 +9,7 @@
 import pytest
 from PySide6 import QtWidgets
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QApplication, QCheckBox, QMessageBox
+from PySide6.QtWidgets import QApplication, QCheckBox, QDialogButtonBox, QMessageBox
 from pytestqt.qtbot import QtBot
 
 from pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog import DataHierarchyEditorDialog
@@ -200,7 +200,7 @@ class TestDataHierarchyEditorDialog(object):
       ui_form.create_type_dialog.displayedTitleLineEdit.setText("test")
       assert ui_form.create_type_dialog.titleLineEdit.text() == ui_form.create_type_dialog.next_struct_level.replace(
         'x', 'Structure level '), "title should be set to 'Structure level 3'"
-    qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(ui_form.create_type_dialog.buttonBox.Ok),
+    qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(QDialogButtonBox.Ok),
                      Qt.LeftButton)
     assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
     assert ui_form.typeComboBox.currentText() == "Structure level 3", "Data type combo box should be newly added structural item"
@@ -224,7 +224,7 @@ class TestDataHierarchyEditorDialog(object):
       assert ui_form.create_type_dialog.structuralLevelCheckBox.isChecked() is False, "structuralLevelCheckBox should be unchecked"
       ui_form.create_type_dialog.titleLineEdit.setText("Title")
       ui_form.create_type_dialog.displayedTitleLineEdit.setText("Displayed Title")
-    qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(ui_form.create_type_dialog.buttonBox.Ok),
+    qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(QDialogButtonBox.Ok),
                      Qt.LeftButton)
     assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
     assert ui_form.typeComboBox.currentText() == "Title", "Data type combo box should be newly added type title"
@@ -250,7 +250,7 @@ class TestDataHierarchyEditorDialog(object):
       assert ui_form.create_type_dialog.structuralLevelCheckBox.isChecked() is False, "structuralLevelCheckBox should be unchecked"
       ui_form.create_type_dialog.titleLineEdit.setText("")
       ui_form.create_type_dialog.displayedTitleLineEdit.setText("title")
-    qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(ui_form.create_type_dialog.buttonBox.Ok),
+    qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(QDialogButtonBox.Ok),
                      Qt.LeftButton)
     assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
     ui_form.logger.warning.assert_called_once_with("Enter non-null/valid title!!.....")
@@ -270,7 +270,7 @@ class TestDataHierarchyEditorDialog(object):
       assert ui_form.create_type_dialog.structuralLevelCheckBox.isChecked() is False, "structuralLevelCheckBox should be unchecked"
       ui_form.create_type_dialog.titleLineEdit.setText(None)
       ui_form.create_type_dialog.displayedTitleLineEdit.setText("displayedTitle")
-    qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(ui_form.create_type_dialog.buttonBox.Ok),
+    qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(QDialogButtonBox.Ok),
                      Qt.LeftButton)
     assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
     ui_form.logger.warning.assert_has_calls(
@@ -301,7 +301,7 @@ class TestDataHierarchyEditorDialog(object):
       assert ui_form.create_type_dialog.structuralLevelCheckBox.isChecked() is False, "structuralLevelCheckBox should be unchecked"
       ui_form.create_type_dialog.titleLineEdit.setText("title")
       ui_form.create_type_dialog.displayedTitleLineEdit.setText("displayedTitle")
-    qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(ui_form.create_type_dialog.buttonBox.Cancel),
+    qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(QDialogButtonBox.Cancel),
                      Qt.LeftButton)
     assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
     assert ui_form.typeComboBox.currentText() != "title", "Data type combo box should not be newly added type title"
@@ -343,7 +343,7 @@ class TestDataHierarchyEditorDialog(object):
       ui_form.create_type_dialog.displayedTitleLineEdit.setText("test")
       assert ui_form.create_type_dialog.titleLineEdit.text() == ui_form.create_type_dialog.next_struct_level.replace(
         'x', 'Structure level '), "title should be set to 'Structure level 3'"
-    qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(ui_form.create_type_dialog.buttonBox.Ok),
+    qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(QDialogButtonBox.Ok),
                      Qt.LeftButton)
     assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
     assert ui_form.typeComboBox.currentText() == "Structure level 3", "Data type combo box should be newly added structural item"
@@ -418,7 +418,7 @@ class TestDataHierarchyEditorDialog(object):
         assert check_box is not None and check_box.isChecked() is False, "Checkbox should not be checked"
         check_box.setChecked(True)
         assert check_box.isChecked() is True, "Checkbox should be checked"
-    qtbot.mouseClick(lookup_dialog.buttonBox.button(lookup_dialog.buttonBox.Ok), Qt.LeftButton)
+    qtbot.mouseClick(lookup_dialog.buttonBox.button(QDialogButtonBox.Ok), Qt.LeftButton)
     assert lookup_dialog.instance.isVisible() is False, "Data Hierarchy lookup dialog should be accepted and closed"
     assert len(lookup_dialog.selected_iris) >= 5, "IRIs should be set"
     assert ui_form.typeIriLineEdit.text() == " ".join(
@@ -450,7 +450,7 @@ class TestDataHierarchyEditorDialog(object):
         assert check_box is not None and check_box.isChecked() is False, "Checkbox should not be checked"
         check_box.setChecked(True)
         assert check_box.isChecked() is True, "Checkbox should be checked"
-    qtbot.mouseClick(lookup_dialog.buttonBox.button(lookup_dialog.buttonBox.Cancel), Qt.LeftButton)
+    qtbot.mouseClick(lookup_dialog.buttonBox.button(QDialogButtonBox.Cancel), Qt.LeftButton)
     assert lookup_dialog.instance.isVisible() is False, "data_hierarchy lookup dialog should be cancelled and closed"
     assert lookup_dialog.selected_iris == [], "IRIs should not be set"
     assert ui_form.typeIriLineEdit.text() == 'http://url.com', "typeIriLineEdit should be default test value after the cancellation"
@@ -484,7 +484,7 @@ class TestDataHierarchyEditorDialog(object):
     with qtbot.waitExposed(ui_form.create_type_dialog.instance, timeout=200):
       ui_form.create_type_dialog.structuralLevelCheckBox.setChecked(True)
       ui_form.create_type_dialog.displayedTitleLineEdit.setText("test")
-    qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(ui_form.create_type_dialog.buttonBox.Ok),
+    qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(QDialogButtonBox.Ok),
                      Qt.LeftButton)
     ui_form.typeComboBox.setCurrentText(enabled_structural_type)
     assert ui_form.deleteTypePushButton.isEnabled() is False, f"Delete type button must be disabled for only previously enabled structural type: '{enabled_structural_type}'"
@@ -509,7 +509,7 @@ class TestDataHierarchyEditorDialog(object):
     with qtbot.waitExposed(ui_form.create_type_dialog.instance, timeout=200):
       ui_form.create_type_dialog.titleLineEdit.setText("new type")
       ui_form.create_type_dialog.displayedTitleLineEdit.setText("test")
-    qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(ui_form.create_type_dialog.buttonBox.Ok),
+    qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(QDialogButtonBox.Ok),
                      Qt.LeftButton)
 
     # Reload the types and check after the addition of new type and check if the delete button is enabled/disabled
@@ -543,7 +543,7 @@ class TestDataHierarchyEditorDialog(object):
       with qtbot.waitExposed(ui_form.create_type_dialog.instance, timeout=300):
         ui_form.create_type_dialog.structuralLevelCheckBox.setChecked(True)
         ui_form.create_type_dialog.displayedTitleLineEdit.setText("test")
-      qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(ui_form.create_type_dialog.buttonBox.Ok),
+      qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(QDialogButtonBox.Ok),
                        Qt.LeftButton)
 
     loaded_types = [ui_form.typeComboBox.itemText(i) for i in range(ui_form.typeComboBox.count())]
