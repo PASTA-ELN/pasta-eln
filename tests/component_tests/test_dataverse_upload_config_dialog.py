@@ -174,9 +174,12 @@ class TestDataverseUploadConfigDialog:
     }),
 
   ])
-  def test_set_upload_items_and_save_cancel_should_set_right_values(self, qtbot, upload_config_dialog,
-                                                                    mock_database_api,
-                                                                    test_id, set_items):
+  def test_set_upload_items_and_save_should_set_right_values(self,
+                                                             qtbot,
+                                                             upload_config_dialog,
+                                                             mock_database_api,
+                                                             test_id,
+                                                             set_items):
     upload_config_dialog.show()
     with qtbot.waitExposed(upload_config_dialog.instance, timeout=500):
       assert upload_config_dialog.instance.isVisible() is True, "UploadConfigDialog should be shown!"
@@ -192,14 +195,14 @@ class TestDataverseUploadConfigDialog:
     assert upload_config_dialog.config_model.project_upload_items == set_items, f"UploadConfigDialog model project_upload_items should be updated with {set_items}!"
     mock_database_api.save_config_model.assert_called_once_with(upload_config_dialog.config_model)
 
-  def test_set_upload_items_and_save_cancel_should_not_set_right_values(self, qtbot, upload_config_dialog,
-                                                                        mock_database_api):
+  def test_set_upload_items_and_cancel_should_not_set_right_values(self, qtbot, upload_config_dialog,
+                                                                   mock_database_api):
     set_items = {
-      'Measurement': True,
-      'Sample': True,
-      'Procedure': True,
-      'Instrument': True,
-      'Unidentified': True
+      'Measurement': False,
+      'Sample': False,
+      'Procedure': False,
+      'Instrument': False,
+      'Unidentified': False
     }
     upload_config_dialog.show()
     with qtbot.waitExposed(upload_config_dialog.instance, timeout=500):

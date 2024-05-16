@@ -10,6 +10,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from PySide6 import QtCore
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDialogButtonBox
 
 from pasta_eln.GUI.dataverse.upload_config_dialog import UploadConfigDialog
@@ -174,12 +175,12 @@ class TestUploadConfigDialog:
   @pytest.mark.parametrize(
     "state, project_item_name, expected",
     [
-      (QtCore.Qt.Checked, "Item1", True),
-      (QtCore.Qt.Unchecked, "Item2", False),
-      (QtCore.Qt.Unchecked, "Item5", False),
+      (Qt.CheckState.Checked.value, "Item1", True),
+      (Qt.CheckState.Unchecked.value, "Item2", False),
+      (Qt.CheckState.Unchecked.value, "Item5", False),
       # Edge cases could include unusual but valid project item names
-      (QtCore.Qt.Checked, "", True),
-      (QtCore.Qt.Checked, " ", True),
+      (Qt.CheckState.Checked.value, "", True),
+      (Qt.CheckState.Checked.value, " ", True),
       # Error cases are not applicable here as the function does not handle errors
     ], ids=[
       "success-path-checked",

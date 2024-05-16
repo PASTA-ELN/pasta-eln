@@ -917,7 +917,7 @@ class TestDataverseEditMetadataDialog:
       }
     ]
     edit_metadata_dialog.show()
-    with qtbot.waitExposed(edit_metadata_dialog.instance, timeout=10000):
+    with qtbot.waitExposed(edit_metadata_dialog.instance, timeout=1000):
       assert edit_metadata_dialog.minimalFullComboBox.currentText() == "Full", "minimalFullComboBox must be initialized with default full option"
       qtbot.keyClicks(edit_metadata_dialog.metadataBlockComboBox, "Journal Metadata", delay=1)
       assert edit_metadata_dialog.metadataBlockComboBox.currentText() == "Journal Metadata", "metadataBlockComboBox must be initialized with Journal Metadata option"
@@ -949,7 +949,7 @@ class TestDataverseEditMetadataDialog:
         delete_button = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.itemAt(pos).itemAt(3).widget()
         assert delete_button.isEnabled(), "EditMetadataDialog primitive_compound_frame delete_button should be enabled!"
         assert delete_button.toolTip() == 'Delete this particular entry.', "EditMetadataDialog primitive_compound_frame delete_button should have right tooltip!"
-      qtbot.mouseClick(edit_metadata_dialog.buttonBox.button(QDialogButtonBox.Cancel), Qt.LeftButton)
+    qtbot.mouseClick(edit_metadata_dialog.buttonBox.button(QDialogButtonBox.Cancel), Qt.LeftButton)
 
   def test_update_license_information_and_save_should_do_as_expected(self, qtbot, edit_metadata_dialog,
                                                                      mock_database_api):

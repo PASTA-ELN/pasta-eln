@@ -237,6 +237,6 @@ class TestDataverseConfigDialog:
       assert config_dialog.dataverseLineEdit.text() == "HDV_DASH"
       assert config_dialog.config_model.dataverse_login_info[
                "api_token"] == '123456789', "API token should not be encrypted before save"
-      qtbot.mouseClick(config_dialog.buttonBox.button(QDialogButtonBox.Save), Qt.LeftButton, delay=1)
-      mock_database_api.save_config_model.assert_called_once_with(config_dialog.config_model)
-      assert config_dialog.instance.isVisible() is False, "Dataverse config dialog should be closed!"
+    qtbot.mouseClick(config_dialog.buttonBox.button(QDialogButtonBox.Save), Qt.LeftButton, delay=1)
+    mock_database_api.save_config_model.assert_called_once_with(config_dialog.config_model)
+    assert config_dialog.instance.isVisible() is False, "Dataverse config dialog should be closed!"

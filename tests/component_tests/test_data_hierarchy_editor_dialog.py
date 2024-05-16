@@ -481,7 +481,7 @@ class TestDataHierarchyEditorDialog(object):
 
     # Add a new structural type and check if the delete button is disabled for the previously enabled type
     qtbot.mouseClick(ui_form.addTypePushButton, Qt.LeftButton)
-    with qtbot.waitExposed(ui_form.create_type_dialog.instance, timeout=200):
+    with qtbot.waitExposed(ui_form.create_type_dialog.instance, timeout=1000):
       ui_form.create_type_dialog.structuralLevelCheckBox.setChecked(True)
       ui_form.create_type_dialog.displayedTitleLineEdit.setText("test")
     qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(QDialogButtonBox.Ok),

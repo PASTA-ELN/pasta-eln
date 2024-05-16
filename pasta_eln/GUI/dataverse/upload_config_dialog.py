@@ -11,7 +11,7 @@ import logging
 from typing import Any, Callable
 
 from PySide6 import QtCore, QtWidgets
-from PySide6.QtCore import QObject
+from PySide6.QtCore import QObject, Qt
 from PySide6.QtWidgets import QCheckBox, QDialog
 
 from pasta_eln.GUI.dataverse.upload_config_dialog_base import Ui_UploadConfigDialog
@@ -114,7 +114,7 @@ class UploadConfigDialog(Ui_UploadConfigDialog, QObject):
         to be checked or unchecked based on the state of the checkbox.
     """
     if self.config_model and self.config_model.project_upload_items is not None:
-      self.config_model.project_upload_items.update({project_item_name: state == QtCore.Qt.Checked})
+      self.config_model.project_upload_items.update({project_item_name: state == Qt.CheckState.Checked.value})
 
   def set_data_hierarchy_types(self) -> None:
     """
