@@ -7,6 +7,9 @@ from anytree import Node
 DO NOT WORK ON THIS IF THERE IS SOMETHING ON THE TODO LIST
 
 Notes:
+- investigate prehaps:
+  redis db
+  crateDB
 - try ID as uuid4 = integer (see if elabFTW does it too)
   - see if I use x-4523452345 anywhere
   - see if I use the first letter of the docID
