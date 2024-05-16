@@ -111,7 +111,7 @@ class Sidebar(QWidget):
         for idx, doctype in enumerate(db.dataLabels):
           if doctype[0]!='x':
             icon = self.comm.backend.db.dataHierarchy[doctype].get('icon','')
-            icon = 'fa.asterisk' if icon=='' else icon
+            icon = 'fa5s.asterisk' if icon=='' else icon
             btn = IconButton(icon, self, [Command.LIST_DOCTYPE,doctype,projID], None,db.dataLabels[doctype])
             listL.addWidget(btn, 0, idx)    # type: ignore
         btn = IconButton('fa5.file', self, [Command.LIST_DOCTYPE,'-',projID], None, 'Unidentified')
