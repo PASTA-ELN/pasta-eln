@@ -12,7 +12,8 @@ qrcode
 Pillow
 matplotlib
 cairosvg
+cryptography
+aiohttp
 win-unicode-console
 winshell
 pypiwin32
-aiohttp
