@@ -12,4 +12,5 @@ qrcode
 Pillow
 matplotlib
 cairosvg
+cryptography
 aiohttp
