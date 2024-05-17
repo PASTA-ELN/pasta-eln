@@ -343,7 +343,7 @@ class Project(QWidget):
       stackNew.append(docIDj)
     stackNew = [self.projID] + stackNew[::-1]  #add project id and reverse
     childNew = item.row()
-    if branchOld['path'] is not None and not branchOld['path'].startswith('http'):
+    if doc['-type'][0][0]=='x':
       dirNameNew= createDirName(doc['-name'],doc['-type'][0],childNew) # determine path: do not create yet
       parentDir = db.getDoc(stackNew[-1])['-branch'][0]['path']
       pathNew = f'{parentDir}/{dirNameNew}'
