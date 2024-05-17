@@ -1,16 +1,25 @@
 """ Python Backend: all operations with the filesystem are here """
-import json, sys, os, importlib, tempfile, logging, traceback
-from threading import Thread
+import importlib
+import json
+import logging
+import os
+import sys
+import tempfile
+import traceback
+from datetime import datetime, timezone
 from pathlib import Path
+from threading import Thread
 from typing import Any, Optional, Union
 from urllib import request
-from datetime import datetime, timezone
-from .mixin_cli import CLI_Mixin
+
 from .database import Database
-from .miscTools import upOut, createDirName, generic_hash, camelCase
-from .handleDictionaries import fillDocBeforeCreate, diffDicts
+from .dataverse.database_api import DatabaseAPI
+from .fixedStringsJson import configurationGUI, defaultConfiguration
+from .handleDictionaries import diffDicts, fillDocBeforeCreate
+from .miscTools import camelCase, createDirName, generic_hash, upOut
 from .miscTools import outputString
-from .fixedStringsJson import defaultConfiguration, configurationGUI
+from .mixin_cli import CLI_Mixin
+
 
 class Backend(CLI_Mixin):
   """
@@ -81,6 +90,8 @@ class Backend(CLI_Mixin):
       return
     if kwargs.get('initViews', False):
       self.db.initDocTypeViews(self.configuration['tableColumnsMax'])
+      db_api = DatabaseAPI()
+      db_api.initialize_database()
     # internal hierarchy structure
     self.hierStack = []
     self.alive     = True

@@ -9,7 +9,6 @@ from PySide6.QtWidgets import QFrame, QProgressBar, QTreeWidgetItem, QVBoxLayout
 from anytree import Node
 
 from .config import Configuration
-from ..dataverse.database_api import DatabaseAPI
 from ..guiCommunicate import Communicate
 from ..guiStyle import IconButton, TextButton, getColor, showMessage, space, widgetAndLayout
 
@@ -26,8 +25,6 @@ class Sidebar(QWidget):
     if not hasattr(comm.backend, 'db'):  #if no backend
       configWindow = Configuration(comm, 'setup')
       configWindow.exec()
-      db_api = DatabaseAPI()
-      db_api.initialize_database()
     self.openProjectId = ''
 
     # GUI elements
