@@ -1,14 +1,22 @@
 """ Widget: setup tab inside the configuration dialog window """
-import logging, os, ctypes
+import ctypes
+import logging
+import os
 from enum import Enum
 from pathlib import Path
-from typing import Callable, Any
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QMessageBox, QFileDialog, QProgressBar   # pylint: disable=no-name-in-module
-from ..guiStyle import TextButton, widgetAndLayout
-from ..installationTools import couchdb, configuration, dataHierarchy, exampleData, createShortcut, checkForDotNetVersion
-from ..fixedStringsJson import setupTextWindows, couchDBWindows, exampleDataWindows, restartPastaWindows
-from ..miscTools import restart
+from typing import Any, Callable
+
+from PySide6.QtWidgets import QFileDialog, QMessageBox, QProgressBar, QTextEdit, QVBoxLayout, \
+  QWidget  # pylint: disable=no-name-in-module
+
+from ..dataverse.database_api import DatabaseAPI
+from ..fixedStringsJson import couchDBWindows, exampleDataWindows, restartPastaWindows, setupTextWindows
 from ..guiCommunicate import Communicate
+from ..guiStyle import TextButton, widgetAndLayout
+from ..installationTools import checkForDotNetVersion, configuration, couchdb, createShortcut, dataHierarchy, \
+  exampleData
+from ..miscTools import restart
+
 
 class ConfigurationSetup(QWidget):
   """
@@ -175,6 +183,8 @@ class ConfigurationSetup(QWidget):
       self.button2.show()
       logging.info('Windows setup analyse end')
     elif command[0] is Command.FINISHED: # What do do when setup is finished: success or unsuccessfully
+      db_api = DatabaseAPI()
+      db_api.initialize_database()
       restart()
       # self.callbackFinished()
     return

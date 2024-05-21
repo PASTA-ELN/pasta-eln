@@ -13,7 +13,6 @@ from typing import Any, Optional, Union
 from urllib import request
 
 from .database import Database
-from .dataverse.database_api import DatabaseAPI
 from .fixedStringsJson import configurationGUI, defaultConfiguration
 from .handleDictionaries import diffDicts, fillDocBeforeCreate
 from .miscTools import camelCase, createDirName, generic_hash, upOut
@@ -90,8 +89,6 @@ class Backend(CLI_Mixin):
       return
     if kwargs.get('initViews', False):
       self.db.initDocTypeViews(self.configuration['tableColumnsMax'])
-      db_api = DatabaseAPI()
-      db_api.initialize_database()
     # internal hierarchy structure
     self.hierStack = []
     self.alive     = True
