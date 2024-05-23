@@ -1,13 +1,17 @@
 """ Sidebar widget that includes the navigation items """
 from enum import Enum
 from typing import Any
-from PySide6.QtGui import QResizeEvent                                                                 # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QTreeWidget, QTreeWidgetItem, QFrame, QProgressBar # pylint: disable=no-name-in-module
-from PySide6.QtCore import Slot                                                                        # pylint: disable=no-name-in-module
-from anytree import PreOrderIter, Node
+
+from PySide6.QtCore import Slot  # pylint: disable=no-name-in-module
+from PySide6.QtGui import QResizeEvent  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QFrame, QProgressBar, QTreeWidgetItem, QVBoxLayout, \
+  QWidget  # pylint: disable=no-name-in-module
+from anytree import Node
+
 from .config import Configuration
-from ..guiStyle import TextButton, IconButton, getColor, showMessage, widgetAndLayout, space
 from ..guiCommunicate import Communicate
+from ..guiStyle import IconButton, TextButton, getColor, showMessage, space, widgetAndLayout
+
 
 class Sidebar(QWidget):
   """ Sidebar widget that includes the navigation items """

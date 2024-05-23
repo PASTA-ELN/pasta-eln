@@ -77,7 +77,6 @@ class MainDialog(Ui_MainDialogBase):
     super().setupUi(self.instance)
     self.backend = backend
     self.db_api = DatabaseAPI()
-    self.db_api.initialize_database()
     self.is_dataverse_configured: tuple[bool, str] = self.check_if_dataverse_is_configured()
     self.config_dialog: ConfigDialog | None = None
 

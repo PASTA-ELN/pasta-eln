@@ -58,7 +58,6 @@ class UploadConfigDialog(Ui_UploadConfigDialog, QObject):
     self.instance = QDialog()
     super().setupUi(self.instance)
     self.db_api = DatabaseAPI()
-    self.db_api.initialize_database()
     self.numParallelComboBox.addItems(map(str, range(2, 6)))
     self.numParallelComboBox.setCurrentIndex(2)
     self.instance.setWindowModality(QtCore.Qt.ApplicationModal)
