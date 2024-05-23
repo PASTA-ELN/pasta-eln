@@ -23,6 +23,7 @@ class Ui_CompletedUploadTaskFrame(object):
     self.projectNameLabel.setObjectName("projectNameLabel")
     self.horizontalLayout.addWidget(self.projectNameLabel)
     self.dataverseUrlLabel = QtWidgets.QLabel(parent=CompletedUploadTaskFrame)
+    self.dataverseUrlLabel.setOpenExternalLinks(True)
     self.dataverseUrlLabel.setObjectName("dataverseUrlLabel")
     self.horizontalLayout.addWidget(self.dataverseUrlLabel)
     self.finishedDateTimeLabel = QtWidgets.QLabel(parent=CompletedUploadTaskFrame)

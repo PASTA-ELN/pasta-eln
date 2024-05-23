@@ -267,8 +267,7 @@ class MainDialog(Ui_MainDialogBase):
         This method shows the completed uploads dialog.
 
     """
-    self.completed_uploads_dialog.load_ui()
-    self.completed_uploads_dialog.instance.show()
+    self.completed_uploads_dialog.show()
 
   def show_edit_metadata(self) -> None:
     """

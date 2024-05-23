@@ -34,6 +34,7 @@ class CompletedUploads(Ui_CompletedUploadsForm):
   Returns:
       None
   """
+
   def __new__(cls, *_: Any, **__: Any) -> Any:
     """
     Creates a new instance of the CompletedUploads class.
@@ -50,7 +51,7 @@ class CompletedUploads(Ui_CompletedUploadsForm):
     """
     return super(CompletedUploads, cls).__new__(cls)
 
-  def __init__(self)  -> None:
+  def __init__(self) -> None:
     """
     Initializes a new instance of the CompletedUploads class.
 
@@ -89,7 +90,7 @@ class CompletedUploads(Ui_CompletedUploadsForm):
         widget = self.get_completed_upload_task_widget(upload)
         self.completedUploadsVerticalLayout.addWidget(widget)
 
-  def clear_ui(self)  -> None:
+  def clear_ui(self) -> None:
     """
     Clears the UI for completed uploads.
 
@@ -117,30 +118,45 @@ class CompletedUploads(Ui_CompletedUploadsForm):
     Returns:
         QFrame: The completed upload task widget.
     """
-    completedTaskFrame = QtWidgets.QFrame()
-    completedTaskUi = Ui_CompletedUploadTaskFrame()
-    completedTaskUi.setupUi(completedTaskFrame)
-    completedTaskUi.projectNameLabel.setText(upload.project_name)
+    completed_task_frame = QtWidgets.QFrame()
+    completed_task_ui = Ui_CompletedUploadTaskFrame()
+    completed_task_ui.setupUi(completed_task_frame)
+    completed_task_ui.projectNameLabel.setText(upload.project_name)
 
-    completedTaskUi.statusLabel.setText(upload.status)
+    completed_task_ui.statusLabel.setText(upload.status)
     match upload.status:
-      case "In progress":
-        completedTaskUi.dataverseUrlLabel.setText("Waiting..")
-        completedTaskUi.finishedDateTimeLabel.setText("Waiting..")
+      case "In progress" | "Queued":
+        completed_task_ui.dataverseUrlLabel.setText("Waiting..")
+        completed_task_ui.finishedDateTimeLabel.setText("Waiting..")
       case "Finished":
-        completedTaskUi.dataverseUrlLabel.setText(upload.dataverse_url)
-        completedTaskUi.finishedDateTimeLabel.setText(datetime.fromisoformat(upload.finished_date_time).strftime(
+        persistent_id = upload.dataverse_url.split("persistentId=", 1)[1]
+        url = (f"<html><head/><body><p>Dataverse URL: "
+               f"<a href='{upload.dataverse_url}'>"
+               f"<span style='font-style:italic; text-decoration: underline; color:#77767b;'>{persistent_id}</span>"
+               f"</a></p></body></html>")
+        completed_task_ui.dataverseUrlLabel.setText(url)
+        completed_task_ui.dataverseUrlLabel.setToolTip(
+          completed_task_ui.dataverseUrlLabel.toolTip() + "\n" + upload.dataverse_url)
+        completed_task_ui.finishedDateTimeLabel.setText(datetime.fromisoformat(upload.finished_date_time).strftime(
           "%Y-%m-%d %H:%M:%S") if upload.finished_date_time else "")
       case "Failed" | "Cancelled":
-        completedTaskUi.dataverseUrlLabel.setText("NA")
-        completedTaskUi.finishedDateTimeLabel.setText("NA")
-      case "Queued":
-        completedTaskUi.dataverseUrlLabel.setText("Waiting..")
-        completedTaskUi.finishedDateTimeLabel.setText("Waiting..")
+        completed_task_ui.dataverseUrlLabel.setText("NA")
+        completed_task_ui.finishedDateTimeLabel.setText("NA")
       case _:
-        completedTaskUi.dataverseUrlLabel.setText("Error state..")
-        completedTaskUi.finishedDateTimeLabel.setText("Error state..")
-    return completedTaskFrame
+        completed_task_ui.dataverseUrlLabel.setText("Error state..")
+        completed_task_ui.finishedDateTimeLabel.setText("Error state..")
+    return completed_task_frame
+
+  def show(self):
+    """
+    Shows the completed uploads dialog.
+
+    Explanation:
+        This method shows the completed uploads dialog.
+
+    """
+    self.load_ui()
+    self.instance.show()
 
 
 if __name__ == "__main__":
@@ -149,5 +165,5 @@ if __name__ == "__main__":
   app = QtWidgets.QApplication(sys.argv)
 
   ui = CompletedUploads()
-  ui.instance.show()
+  ui.show()
   sys.exit(app.exec())
