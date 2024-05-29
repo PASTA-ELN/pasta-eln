@@ -1,23 +1,19 @@
 """ Class for interaction with sqlite """
+import json, copy, sqlite3
 from typing import Any, Optional, Union
 from pathlib import Path
 from anytree import Node
+from .fixedStringsJson import defaultDataHierarchy, defaultDataHierarchyNode
 
 """
 DO NOT WORK ON THIS IF THERE IS SOMETHING ON THE TODO LIST
 
 Notes:
-- investigate prehaps:
-  redis db
-  crateDB
-- try ID as uuid4 = integer (see if elabFTW does it too)
-  - see if I use x-4523452345 anywhere
-  - see if I use the first letter of the docID
 - try to use sqlite style as much as possible and
   translate within this file into PASTA-document-style
   - KEEP THE REST OF THE CODE THE SAME
 - start with first test: run-fix-run-fix
-  pytest --no-skip tests/test_01_3Projects.py
+  pytest --no-skip --tb=short tests/test_01_3Projects.py
 - do not work on replicator
 - at the end: create a translator
 
@@ -26,7 +22,19 @@ Benefits:
 - test as github actions
 - read / backup database with many other tools
 - can switch between both databases by changing the config
+- investigate perhaps:
+  redis db: server that is similar to others; save to file is also a general location; not user-space
+  crateDB: server; not user space
+- try ID as uuid4 = integer (see if elabFTW does it too)
+  - see if I use x-4523452345 anywhere
+  - see if I use the first letter of the docID
+  -> such long integers are not supported by sqlite: stay with string/text
 """
+
+KEY_ORDER   = ['_id' ,            '_rev','-name','-user','-type','-branchStack','-branchChild','-branchPath','-branchShow','-date','-gui',      '-tags','-client']
+KEY_TYPE    = ['TEXT PRIMARY KEY','TEXT','TEXT', 'TEXT', 'TEXT', 'TEXT',        'TEXT',        'TEXT',       'TEXT',       'TEXT', 'varchar(2)','TEXT', 'TEXT']
+OTHER_ORDER = ['image', 'content', 'comment']
+DATAHIERARCHY=['IRI','attachments','title','icon','shortcut']
 
 class SqlLiteDB:
   """
@@ -39,7 +47,35 @@ class SqlLiteDB:
       resetDataHierarchy (bool): reset dataHierarchy
       basePath (Path): path of project group
     """
-    print('Start')
+    self.connection = sqlite3.connect(basePath/"pastaELN.db")
+    self.cursor     = self.connection.cursor()
+    tableString = ', '.join([f'{i[1:]} {j}' for i,j in zip(KEY_ORDER,KEY_TYPE)])+', '+', '.join([f'{i} TEXT' for i in OTHER_ORDER])+', meta TEXT, __history__ TEXT'
+    self.cursor.execute(f"CREATE TABLE IF NOT EXISTS main ({tableString})")
+    self.cursor.execute(f"CREATE TABLE IF NOT EXISTS dataHierarchy (docType TEXT PRIMARY KEY, iri TEXT, attachments TEXT, title TEXT, icon TEXT, shortcut varchar(1), meta TEXT)")
+    # check if default documents exist and create
+    self.cursor.execute("SELECT * FROM dataHierarchy")
+    if len(self.cursor.fetchall())<2 or resetDataHierarchy:
+      if len(self.cursor.fetchall())>1:
+        print('Info: remove old dataHierarchy')
+        self.db['-dataHierarchy-'].delete()
+      for k, v in defaultDataHierarchy.items():
+        if k[0] in ('_','-'):
+          continue
+        self.cursor.execute(f"INSERT INTO dataHierarchy VALUES (?, ?, ?, ?, ?, ?, ?)", [k]+[str(v[i]) for i in DATAHIERARCHY]+[json.dumps(v['meta'])])
+      self.initDocTypeViews( configuration['tableColumnsMax'] )
+      self.initGeneralViews()
+    self.dataHierarchy = {}
+    self.cursor.execute("SELECT * FROM dataHierarchy")
+    for row in self.cursor.fetchall():
+      self.dataHierarchy[row[0]] = {i:j for i,j in zip(DATAHIERARCHY+['meta'],row[1:])}
+    patternDB    = list(map(lambda x: x[0], self.cursor.description))[1:-1]
+    patternCode  = [i.lower() for i in DATAHIERARCHY]
+    if patternDB!= patternCode:
+      print(F"**ERROR wrong dataHierarchy version: {patternDB} {patternCode}")
+      raise ValueError(f"Wrong dataHierarchy version {patternDB} {patternCode}")
+    self.dataLabels = {k:v['title'] for k,v in self.dataHierarchy.items() if k[0] not in ['_','-']}
+    self.basePath   = basePath
+    print('**INFO END INIT')
     return
 
 
@@ -52,6 +88,7 @@ class SqlLiteDB:
       docTypeChange (str): if change columns for docType: give docType
       columnsChange (list): change table / view columns to these
     """
+    print('**START INITDOCTYPEVIEWS')
     return
 
 
@@ -61,6 +98,7 @@ class SqlLiteDB:
     Returns:
       dict: docType and ,-separated list of names as string
     """
+    print('**START GETCOLUMNSNAMES')
     return
 
 
@@ -68,6 +106,7 @@ class SqlLiteDB:
     """
     general views: Hierarchy, Identify
     """
+    print('**START INITVIEWSGENERAL')
     return
 
 
@@ -78,6 +117,7 @@ class SqlLiteDB:
     Args:
       deleteDB (bool): remove database
     """
+    self.connection.close()
     return
 
 
@@ -91,11 +131,15 @@ class SqlLiteDB:
     Returns:
         dict: json representation of document
     """
+    print('**START GETDOC')
     return
+
 
   def saveDoc(self, doc:dict[str,Any]) -> dict[str,Any]:
     """
     Wrapper for save to database function
+    - not helpful to convert _id to int since sqlite does not digest such long integer
+      doc['_id']  = int(doc['_id'][2:], 16)
 
     Discussion on -branch['path']:
     - full path (from basePath) allows to easily create a view of all paths and search through them
@@ -110,7 +154,23 @@ class SqlLiteDB:
     Returns:
         dict: json representation of submitted document
     """
-    return
+    docOrg = copy.deepcopy(doc)
+    doc['-type'] = '/'.join(doc['-type'])
+    doc['-tags'] = ' '.join(doc['-tags'])
+    doc['-gui']  = ''.join(['T' if i else 'F' for i in doc['-gui']])
+    doc['-branchStack'] = '/'.join(doc['-branch']['stack'])
+    doc['-branchChild'] = str(doc['-branch']['child'])
+    doc['-branchPath']  = doc['-branch']['path']
+    doc['-branchShow']  = ''.join(['T' if j else 'F' for j in doc['-branch']['show']])
+    del doc['-branch']
+    metadoc = {k:v for k,v in doc.items() if k not in KEY_ORDER+OTHER_ORDER}
+    docList = [doc.get(x,'') for x in KEY_ORDER]+[doc.get(i,'') for i in OTHER_ORDER]+[json.dumps(metadoc), '']
+    self.cursor.execute(f"INSERT INTO main VALUES ({', '.join(['?']*len(docList))})", docList)
+    self.connection.commit()
+    branch = copy.deepcopy(docOrg['-branch'])
+    del branch['op']
+    docOrg['-branch'] = [branch]
+    return docOrg
 
 
   def updateDoc(self, change:dict[str,Any], docID:str) -> dict[str,Any]:
@@ -132,6 +192,7 @@ class SqlLiteDB:
     Returns:
         dict: json representation of updated document
     """
+    print('**START UPDATEDOC')
     return
 
 
@@ -150,6 +211,7 @@ class SqlLiteDB:
     Returns:
       str, str: old path, new path
     """
+    print('**START UPDATEBRANCH')
     return
 
 
@@ -166,6 +228,7 @@ class SqlLiteDB:
     Returns:
       list: list of show = list of bool
     """
+    print('**START CREATE SHOW FROM STACK')
     return
 
 
@@ -179,6 +242,7 @@ class SqlLiteDB:
     Returns:
       dict: document that was removed
     """
+    print('**START REMOVE')
     return
 
 
@@ -194,6 +258,7 @@ class SqlLiteDB:
     Returns:
         bool: success of method
     """
+    print('**START ATTACHMENT')
     return
 
 
@@ -209,6 +274,7 @@ class SqlLiteDB:
     Returns:
         list: list of documents in this view
     """
+    print('**START GETVIEW')
     return
 
 
@@ -220,6 +286,7 @@ class SqlLiteDB:
         designName (string): name of the design
         viewCode (dict): viewName: js-code
     """
+    print('**START SAVE VIEW')
     return
 
 
@@ -234,6 +301,7 @@ class SqlLiteDB:
     Returns:
       Node: hierarchy in an anytree
     """
+    print('**START GET HIERARCHY')
     return
 
 
@@ -244,6 +312,7 @@ class SqlLiteDB:
     Args:
       stack (list, str): stack of docID; docID (str)
     """
+    print('**START HIDE/SHOW')
     return
 
 
@@ -257,6 +326,7 @@ class SqlLiteDB:
       docID (str): docID
       guiState (list): list of bool that show if document is shown
     """
+    print('**START SET GUI')
     return
 
 
@@ -276,6 +346,7 @@ class SqlLiteDB:
     Returns:
         str: report
     """
+    print('**START REPLICATE')
     return
 
 
@@ -283,6 +354,7 @@ class SqlLiteDB:
     """
     Collect last modification days of documents
     """
+    print('**START HISTORY')
     return
 
 
@@ -303,4 +375,5 @@ class SqlLiteDB:
     Returns:
         str: output
     """
+    print('**START CHECKDB')
     return
