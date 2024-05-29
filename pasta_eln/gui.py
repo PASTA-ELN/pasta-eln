@@ -168,8 +168,8 @@ class MainWindow(QMainWindow):
       self.comm.changeTable.emit(command[1], '')
     # system menu
     elif command[0] is Command.PROJECT_GROUP:
-      dialog = ProjectGroup(self.comm)
-      dialog.exec()
+      dialogPG = ProjectGroup(self.comm)
+      dialogPG.exec()
     elif command[0] is Command.CHANGE_PG:
       self.backend.configuration['defaultProjectGroup'] = command[1]
       with open(Path.home() / '.pastaELN.json', 'w', encoding='utf-8') as fConf:
@@ -201,8 +201,8 @@ class MainWindow(QMainWindow):
       messageWindow.exec()
       restart()
     elif command[0] is Command.CONFIG:
-      dialog = Configuration(self.comm)
-      dialog.exec()
+      dialogC = Configuration(self.comm)
+      dialogC.exec()
     # remainder
     elif command[0] is Command.WEBSITE:
       webbrowser.open('https://pasta-eln.github.io/pasta-eln/')
