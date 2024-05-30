@@ -9,6 +9,7 @@ from .config import Configuration
 from ..guiStyle import TextButton, IconButton, getColor, showMessage, widgetAndLayout, widgetAndLayout2D, space
 from ..guiCommunicate import Communicate
 
+
 class Sidebar(QWidget):
   """ Sidebar widget that includes the navigation items """
   def __init__(self, comm:Communicate):
