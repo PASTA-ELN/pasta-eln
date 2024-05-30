@@ -1,7 +1,7 @@
 """ all styling of buttons and other general widgets, some defined colors... """
 from typing import Callable, Optional, Any
 from PySide6.QtWidgets import QPushButton, QLabel, QSizePolicy, QMessageBox, QLayout, QWidget, QMenu, \
-                              QVBoxLayout, QHBoxLayout, QGridLayout, QFormLayout, QComboBox, QScrollArea # pylint: disable=no-name-in-module
+                              QVBoxLayout, QHBoxLayout, QGridLayout, QFormLayout, QBoxLayout, QComboBox, QScrollArea # pylint: disable=no-name-in-module
 from PySide6.QtGui import QImage, QPixmap, QAction, QKeySequence, QMouseEvent               # pylint: disable=no-name-in-module
 from PySide6.QtCore import QByteArray, Qt           # pylint: disable=no-name-in-module
 from PySide6.QtSvgWidgets import QSvgWidget         # pylint: disable=no-name-in-module
@@ -277,6 +277,44 @@ class ScrollMessageBox(QMessageBox):
 
 
 def widgetAndLayout(direction:str='V', parentLayout:Optional[QLayout]=None, spacing:str='0', left:str='0',
+                    top:str='0', right:str='0', bottom:str='0') -> tuple[QWidget, QBoxLayout]:
+  """
+  Convenient function for widget and a boxLayout
+
+  Spacings and margins:
+  - different than in css/html
+  - spacing is the space between elements in the orientation of the BoxLayout
+  - is the padding that surrounds the content in the layout
+
+  Distances are given in
+  - '0': zero distance
+  - 's': small distance used as padding round elements, or vertical spacings
+  - 'm': medium used as space between horizontal elements
+  - 'l': large used when things need to be separated
+  - 'xl': extra large indentations, frames
+
+  Args:
+    direction (str): type of layout [H,V]
+    parentLayout (QLayout): to which layout should the widget be added. If none, no adding
+    spacing (str): spacing
+    left (str): padding on left
+    top (str): padding on top
+    right (str): padding on right
+    bottom (str): padding on bottom
+  """
+  widget = QWidget()
+  if direction=='V':
+    layout = QVBoxLayout(widget)
+  else:
+    layout = QHBoxLayout(widget)
+  layout.setSpacing(space[spacing])
+  layout.setContentsMargins(space[left], space[top], space[right], space[bottom])
+  if parentLayout is not None:
+    parentLayout.addWidget(widget)
+  return widget, layout
+
+
+def widgetAndLayout2D(direction:str='Form', parentLayout:Optional[QLayout]=None, spacing:str='0', left:str='0',
                     top:str='0', right:str='0', bottom:str='0') -> tuple[QWidget, QLayout]:
   """
   Convenient function for widget and a boxLayout
@@ -294,7 +332,7 @@ def widgetAndLayout(direction:str='V', parentLayout:Optional[QLayout]=None, spac
   - 'xl': extra large indentations, frames
 
   Args:
-    direction (str): type of layout [H,V,Grid,Form]
+    direction (str): type of layout [Grid,Form]
     parentLayout (QLayout): to which layout should the widget be added. If none, no adding
     spacing (str): spacing
     left (str): padding on left
@@ -303,11 +341,7 @@ def widgetAndLayout(direction:str='V', parentLayout:Optional[QLayout]=None, spac
     bottom (str): padding on bottom
   """
   widget = QWidget()
-  if direction=='V':
-    layout = QVBoxLayout(widget)
-  elif direction=='H':
-    layout = QHBoxLayout(widget)
-  elif direction=='Form':
+  if direction=='Form':
     layout = QFormLayout(widget)
   else:
     layout = QGridLayout(widget)

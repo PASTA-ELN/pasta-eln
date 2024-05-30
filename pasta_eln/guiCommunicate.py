@@ -10,6 +10,7 @@ class Communicate(QObject):
     self.backend = backend
     self.dbInfo:dict[str,Any]  = {}
     self.projectID = ''
+    self.progressBar = None
 
   # Signals: specify emitter and receiver
   # BE SPECIFIC ABOUT WHAT THIS ACTION DOES

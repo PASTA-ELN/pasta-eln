@@ -8,7 +8,7 @@ from PySide6.QtWidgets import QLabel, QTextEdit, QTabWidget, QPlainTextEdit, QCo
 from PySide6.QtWidgets import QSizePolicy, QMessageBox# pylint: disable=no-name-in-module
 from PySide6.QtGui import QRegularExpressionValidator # pylint: disable=no-name-in-module
 from PySide6.QtCore import QSize, Qt, QTimer          # pylint: disable=no-name-in-module
-from ..guiStyle import Image, TextButton, IconButton, Label, showMessage, widgetAndLayout, ScrollMessageBox
+from ..guiStyle import Image, TextButton, IconButton, Label, showMessage, widgetAndLayout, widgetAndLayout2D, ScrollMessageBox
 from ._contextMenu import initContextMenu, executeContextMenu, CommandMenu
 from ..fixedStringsJson import defaultDataHierarchyNode
 from ..miscTools import createDirName, markdownStyler
@@ -92,9 +92,9 @@ class Form(QDialog):
     self.formsL = []
     for group in dataHierarchyNode:
       if len(dataHierarchyNode)==1:
-        _, formL = widgetAndLayout('Form', splitter, 's')
+        _, formL = widgetAndLayout2D('Form', splitter, 's')
       else:
-        formW, formL = widgetAndLayout('Form', None, 's', top='m')
+        formW, formL = widgetAndLayout2D('Form', None, 's', top='m')
         self.tabW.addTab(formW, group if group!='default' else 'Home')
       self.formsL.append(formL)
       for key in [i['name'] for i in dataHierarchyNode[group]]:
@@ -182,7 +182,7 @@ class Form(QDialog):
           print(f"**WARNING dialogForm: unknown value type. key:{key}, type:{type(value)}")
       if group == 'default':
         # individual key-value items
-        self.keyValueListW, self.keyValueListL = widgetAndLayout('Form', None, 's')
+        self.keyValueListW, self.keyValueListL = widgetAndLayout2D('Form', None, 's')
         self.keyValueListW.hide()
         self.keyValueLabel = QLabel('Key - values')
         self.keyValueLabel.hide()

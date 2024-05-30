@@ -2,11 +2,11 @@
 from enum import Enum
 from typing import Any
 from PySide6.QtGui import QResizeEvent                                                                 # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QTreeWidget, QTreeWidgetItem, QFrame, QProgressBar # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QTreeWidgetItem, QFrame, QProgressBar # pylint: disable=no-name-in-module
 from PySide6.QtCore import Slot                                                                        # pylint: disable=no-name-in-module
-from anytree import PreOrderIter, Node
+from anytree import Node
 from .config import Configuration
-from ..guiStyle import TextButton, IconButton, getColor, showMessage, widgetAndLayout, space
+from ..guiStyle import TextButton, IconButton, getColor, showMessage, widgetAndLayout, widgetAndLayout2D, space
 from ..guiCommunicate import Communicate
 
 class Sidebar(QWidget):
@@ -58,7 +58,7 @@ class Sidebar(QWidget):
     """
     # Delete old widgets from layout and create storage
     for i in reversed(range(self.projectsListL.count())):
-      self.projectsListL.itemAt(i).widget().setParent(None) # type: ignore
+      self.projectsListL.itemAt(i).widget().setParent(None)
     if projectChoice != 'redraw':
       self.openProjectId = projectChoice
     self.widgetsAction = {}
@@ -88,7 +88,7 @@ class Sidebar(QWidget):
         self.widgetsProject[projID] = [btnProj, projectW]
 
         # actions: scan, curate, ...
-        actionW, actionL = widgetAndLayout('Grid', projectL)
+        actionW, actionL = widgetAndLayout2D('Grid', projectL)
         if self.openProjectId != projID: #depending which project is open
           actionW.hide()
           projectW.setStyleSheet("background-color:"+ getColor(backend, 'secondaryDark'))
@@ -105,7 +105,7 @@ class Sidebar(QWidget):
         btnCurate.setStyleSheet("border-width:0")
 
         # lists: view list of measurements, ... of this project
-        listW, listL = widgetAndLayout('Grid', projectL)
+        listW, listL = widgetAndLayout2D('Grid', projectL)
         if self.openProjectId != projID:
           listW.hide()
         for idx, doctype in enumerate(db.dataLabels):

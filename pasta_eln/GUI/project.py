@@ -45,7 +45,7 @@ class Project(QWidget):
     self.docProj = self.comm.backend.db.getDoc(self.projID)
     # remove if still there
     for i in reversed(range(self.mainL.count())): #remove old
-      self.mainL.itemAt(i).widget().setParent(None)  # type: ignore
+      self.mainL.itemAt(i).widget().setParent(None)
     logging.debug('ProjectView elements at 2: %i',self.mainL.count())
     # TOP LINE includes name on left, buttons on right
     _, topLineL       = widgetAndLayout('H',self.mainL,'m')
@@ -85,7 +85,7 @@ class Project(QWidget):
 
     # Details section
     self.infoWSA = QScrollArea()
-    self.infoWSA.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+    self.infoWSA.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
     self.infoWSA.setWidgetResizable(True)
     self.infoW_, infoL = widgetAndLayout('V')
     self.infoWSA.setWidget(self.infoW_)
@@ -108,7 +108,7 @@ class Project(QWidget):
     commentW.resizeEvent = self.commentResize # type: ignore
     labelW = QLabel('Comment:')
     # labelW.setStyleSheet('padding-top: 5px') #make "Comment:" text aligned with other content, not with text-edit
-    commentL.addWidget(labelW, alignment=Qt.AlignTop)   # type: ignore[call-arg]
+    commentL.addWidget(labelW, alignment=Qt.AlignmentFlag.AlignTop)   # type: ignore[call-arg]
     self.commentTE = QTextEdit()
     self.commentTE.setMarkdown(markdownStyler(self.docProj.get('comment', '')))
     bgColor = getColor(self.comm.backend, 'secondaryDark')
@@ -145,7 +145,7 @@ class Project(QWidget):
     logging.debug('project:changeProject |%s|%s|',projID,docID)
     #initialize
     for i in reversed(range(self.mainL.count())): #remove old
-      self.mainL.itemAt(i).widget().setParent(None)  # type: ignore
+      self.mainL.itemAt(i).widget().setParent(None)
     logging.debug('ProjectView elements at 1: %i',self.mainL.count())
     if projID!='':
       self.projID         = projID
@@ -191,7 +191,7 @@ class Project(QWidget):
       return
     for iRow in range(node.rowCount()):
       item = node.child(iRow)
-      data = item.data(role=Qt.UserRole+1)         # type: ignore[operator]
+      data = item.data(role=Qt.ItemDataRole.UserRole+1)
       if data['hierStack'].split('/')[-1][0]=='x':
         index = self.model.indexFromItem(item)
         self.tree.setExpanded(index, data['gui'][1])
@@ -208,9 +208,9 @@ class Project(QWidget):
     """
     if self.model is None:
       return
-    gui  = [index.data(Qt.UserRole+1)['gui'][0]]+[flag]                                   # type: ignore[operator]
-    docID = index.data(Qt.UserRole+1)['hierStack'].split('/')[-1]                         # type: ignore[operator]
-    self.model.itemFromIndex(index).setData({ **index.data(Qt.UserRole+1), **{'gui':gui}})# type: ignore[operator]
+    gui  = [index.data(Qt.ItemDataRole.UserRole+1)['gui'][0]]+[flag]
+    docID = index.data(Qt.ItemDataRole.UserRole+1)['hierStack'].split('/')[-1]
+    self.model.itemFromIndex(index).setData({ **index.data(Qt.ItemDataRole.UserRole+1), **{'gui':gui}})
     self.comm.backend.db.setGUI(docID, gui)
     return
 
@@ -233,7 +233,7 @@ class Project(QWidget):
       self.comm.changeSidebar.emit('redraw')
     elif command[0] is Command.DELETE:
       ret = QMessageBox.critical(self, 'Warning', 'Are you sure you want to delete project?', \
-                      QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,  # type: ignore[operator]
+                      QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
                       QMessageBox.StandardButton.No)
       if ret==QMessageBox.StandardButton.Yes:
         #delete database and rename folder
