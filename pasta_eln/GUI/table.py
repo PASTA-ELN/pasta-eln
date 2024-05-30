@@ -8,7 +8,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QTableView, QFileDialog, QMe
 from PySide6.QtCore import Qt, Slot, QSortFilterProxyModel, QModelIndex       # pylint: disable=no-name-in-module
 from PySide6.QtGui import QStandardItemModel, QStandardItem            # pylint: disable=no-name-in-module
 from .tableHeader import TableHeader
-from ..guiStyle import IconButton, Action, TextButton, Label, widgetAndLayout, widgetAndLayout2D, space
+from ..guiStyle import IconButton, Action, TextButton, Label, widgetAndLayout, widgetAndLayoutGrid, space
 from ..guiCommunicate import Communicate
 
 #Scan button to more button
@@ -69,7 +69,7 @@ class Table(QWidget):
     more.setMenu(self.moreMenu)
 
     # filter
-    _, self.filterL = widgetAndLayout2D('Grid', mainL, top='s', bottom='s')
+    _, self.filterL = widgetAndLayout2DGrid(mainL, top='s', bottom='s')
     # table
     self.table = QTableView(self)
     self.table.verticalHeader().hide()

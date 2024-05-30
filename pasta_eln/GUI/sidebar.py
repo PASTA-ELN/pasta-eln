@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QTreeWidgetItem, QFrame, QPr
 from PySide6.QtCore import Slot                                                                        # pylint: disable=no-name-in-module
 from anytree import Node
 from .config import Configuration
-from ..guiStyle import TextButton, IconButton, getColor, showMessage, widgetAndLayout, widgetAndLayout2D, space
+from ..guiStyle import TextButton, IconButton, getColor, showMessage, widgetAndLayout, widgetAndLayoutGrid, space
 from ..guiCommunicate import Communicate
 
 
@@ -89,7 +89,7 @@ class Sidebar(QWidget):
         self.widgetsProject[projID] = [btnProj, projectW]
 
         # actions: scan, curate, ...
-        actionW, actionL = widgetAndLayout2D('Grid', projectL)
+        actionW, actionL = widgetAndLayout2DGrid(projectL)
         if self.openProjectId != projID: #depending which project is open
           actionW.hide()
           projectW.setStyleSheet("background-color:"+ getColor(backend, 'secondaryDark'))
@@ -106,7 +106,7 @@ class Sidebar(QWidget):
         btnCurate.setStyleSheet("border-width:0")
 
         # lists: view list of measurements, ... of this project
-        listW, listL = widgetAndLayout2D('Grid', projectL)
+        listW, listL = widgetAndLayoutGrid(projectL)
         if self.openProjectId != projID:
           listW.hide()
         for idx, doctype in enumerate(db.dataLabels):

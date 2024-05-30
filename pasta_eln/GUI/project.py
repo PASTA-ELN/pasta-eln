@@ -127,7 +127,7 @@ class Project(QWidget):
     if self.commentTE is None or self.infoWSA is None or self.infoW_ is None:
       return
     self.commentTE.document().setTextWidth(self.infoWSA.width())
-    height:int = self.commentTE.document().size().toTuple()[1]
+    height:int = self.commentTE.document().size().toTuple()[1]  # type: ignore[index]
     self.infoW_.setMaximumHeight(height + (self.countLines+1)*self.lineSep     -12)
     self.infoWSA.setMaximumHeight(height + (self.countLines+1)*self.lineSep  -10)
     return

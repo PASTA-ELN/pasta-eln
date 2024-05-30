@@ -314,25 +314,13 @@ def widgetAndLayout(direction:str='V', parentLayout:Optional[QLayout]=None, spac
   return widget, layout
 
 
-def widgetAndLayout2D(direction:str='Form', parentLayout:Optional[QLayout]=None, spacing:str='0', left:str='0',
+def widgetAndLayoutForm(parentLayout:Optional[QLayout]=None, spacing:str='0', left:str='0',
                     top:str='0', right:str='0', bottom:str='0') -> tuple[QWidget, QLayout]:
   """
-  Convenient function for widget and a boxLayout
-
-  Spacings and margins:
-  - different than in css/html
-  - spacing is the space between elements in the orientation of the BoxLayout
-  - is the padding that surrounds the content in the layout
-
-  Distances are given in
-  - '0': zero distance
-  - 's': small distance used as padding round elements, or vertical spacings
-  - 'm': medium used as space between horizontal elements
-  - 'l': large used when things need to be separated
-  - 'xl': extra large indentations, frames
+  Convenient function for widget and a form layout
+  - comment see above
 
   Args:
-    direction (str): type of layout [Grid,Form]
     parentLayout (QLayout): to which layout should the widget be added. If none, no adding
     spacing (str): spacing
     left (str): padding on left
@@ -341,10 +329,30 @@ def widgetAndLayout2D(direction:str='Form', parentLayout:Optional[QLayout]=None,
     bottom (str): padding on bottom
   """
   widget = QWidget()
-  if direction=='Form':
-    layout = QFormLayout(widget)
-  else:
-    layout = QGridLayout(widget)
+  layout = QFormLayout(widget)
+  layout.setSpacing(space[spacing])
+  layout.setContentsMargins(space[left], space[top], space[right], space[bottom])
+  if parentLayout is not None:
+    parentLayout.addWidget(widget)
+  return widget, layout
+
+
+def widgetAndLayoutGrid(parentLayout:Optional[QLayout]=None, spacing:str='0', left:str='0',
+                    top:str='0', right:str='0', bottom:str='0') -> tuple[QWidget, QLayout]:
+  """
+  Convenient function for widget and a grid layout
+  - comment see above
+
+  Args:
+    parentLayout (QLayout): to which layout should the widget be added. If none, no adding
+    spacing (str): spacing
+    left (str): padding on left
+    top (str): padding on top
+    right (str): padding on right
+    bottom (str): padding on bottom
+  """
+  widget = QWidget()
+  layout = QGridLayout(widget)
   layout.setSpacing(space[spacing])
   layout.setContentsMargins(space[left], space[top], space[right], space[bottom])
   if parentLayout is not None:
