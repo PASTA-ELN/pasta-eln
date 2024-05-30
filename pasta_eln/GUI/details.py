@@ -159,7 +159,7 @@ class Details(QScrollArea):
         dataHierarchyItem = [i for group in dataHierarchyNode for i in dataHierarchyNode[group] if i['name']==key]
         if (isinstance(self.doc[key],str) and '\n' in self.doc[key]) or key=='comment':
           labelW, labelL = widgetAndLayout('H', self.metaDetailsL, top='s', bottom='s')
-          labelL.addWidget(QLabel(f'{key}: '), alignment=Qt.AlignTop)
+          labelL.addWidget(QLabel(f'{key}: '), alignment=Qt.AlignmentFlag.AlignTop)
           text = QTextEdit()
           text.setMarkdown(markdownStyler(self.doc[key]))
           bgColor = getColor(self.comm.backend, 'secondaryDark')
@@ -168,7 +168,7 @@ class Details(QScrollArea):
                                 f"color: {fgColor} }}")
           text.document().setTextWidth(labelW.width())
           self.rescaleTexts.append(text)
-          height:int = text.document().size().toTuple()[1]
+          height:int = text.document().size().toTuple()[1]    # type:ignore[index]
           text.setFixedHeight(height)
           text.setReadOnly(True)
           labelL.addWidget(text, stretch=1)
@@ -249,7 +249,7 @@ class Details(QScrollArea):
     self.metaDetailsW.setFixedWidth(width)
     for text in self.rescaleTexts:
       text.document().setTextWidth(width)
-      height:int = text.document().size().toTuple()[1]
+      height:int = text.document().size().toTuple()[1] # type:ignore[index]
       text.setFixedHeight(height)
     return
 

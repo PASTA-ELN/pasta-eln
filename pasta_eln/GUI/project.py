@@ -23,7 +23,7 @@ class Project(QWidget):
     self.model:Optional[QStandardItemModel]  = None
     self.infoWSA:Optional[QWidget]           = None
     self.infoW_:Optional[QWidget]            = None
-    self.commentTE:Optional[QWidget]         = None
+    self.commentTE:Optional[QTextEdit]       = None
     self.actHideDetail = QAction()
     self.actionHideItems   = QAction()
     self.actionHideProject = QAction()
@@ -108,7 +108,7 @@ class Project(QWidget):
     commentW.resizeEvent = self.commentResize # type: ignore
     labelW = QLabel('Comment:')
     # labelW.setStyleSheet('padding-top: 5px') #make "Comment:" text aligned with other content, not with text-edit
-    commentL.addWidget(labelW, alignment=Qt.AlignmentFlag.AlignTop)   # type: ignore[call-arg]
+    commentL.addWidget(labelW, alignment=Qt.AlignmentFlag.AlignTop)
     self.commentTE = QTextEdit()
     self.commentTE.setMarkdown(markdownStyler(self.docProj.get('comment', '')))
     bgColor = getColor(self.comm.backend, 'secondaryDark')

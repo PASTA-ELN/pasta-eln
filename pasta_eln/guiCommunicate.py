@@ -1,6 +1,7 @@
 """ Communication class that sends signals between widgets, incl. backend"""
-from typing import Any
+from typing import Any, Optional
 from PySide6.QtCore import QObject, Signal   # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QProgressBar # pylint: disable=no-name-in-module
 from .backend import Backend
 
 class Communicate(QObject):
@@ -10,7 +11,7 @@ class Communicate(QObject):
     self.backend = backend
     self.dbInfo:dict[str,Any]  = {}
     self.projectID = ''
-    self.progressBar = None
+    self.progressBar:Optional[QProgressBar] = None
 
   # Signals: specify emitter and receiver
   # BE SPECIFIC ABOUT WHAT THIS ACTION DOES

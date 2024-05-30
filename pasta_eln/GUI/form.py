@@ -44,7 +44,7 @@ class Form(QDialog):
 
     # GUI elements
     mainL = QVBoxLayout(self)
-    splitter = QSplitter(Qt.Horizontal)
+    splitter = QSplitter(Qt.Orientation.Horizontal)
     splitter.setHandleWidth(10)
     splitter.setContentsMargins(0,0,0,0)
     mainL.addWidget(splitter, stretch=2)
@@ -52,7 +52,6 @@ class Form(QDialog):
     # image
     if 'image' in self.doc:
       imageWSA = QScrollArea()
-      self.imageL = QVBoxLayout(imageWSA)
       imageWSA.setWidgetResizable(True)
       imageW, self.imageL = widgetAndLayout('V', splitter)
       width = self.comm.backend.configuration['GUI']['imageSizeDetails'] \
@@ -60,7 +59,7 @@ class Form(QDialog):
       Image(self.doc['image'], self.imageL, anyDimension=width)
       if '_id' in self.doc:
         self.docID= doc['_id']  #required for hide to work
-        imageW.setContextMenuPolicy(Qt.CustomContextMenu)
+        imageW.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         imageW.customContextMenuRequested.connect(lambda pos: initContextMenu(self, pos))
       imageWSA.setWidget(imageW)
       splitter.addWidget(imageWSA)
@@ -240,7 +239,7 @@ class Form(QDialog):
           ret = QMessageBox.information(self, 'Information', 'There is unsaved information from a prematurely '+
                     'closed form. Do you want to restore it?\n If you decline, the unsaved information will be'+
                     ' removed.',
-                  QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,      # type: ignore[operator]
+                  QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
                   QMessageBox.StandardButton.Yes)
           if ret==QMessageBox.StandardButton.Yes:
             subContent = content[self.doc.get('_id', '')]
@@ -295,7 +294,7 @@ class Form(QDialog):
     """
     if isinstance(command[0], CommandMenu):
       if executeContextMenu(self, command):
-        self.imageL.itemAt(0).widget().setParent(None)   # type: ignore
+        self.imageL.itemAt(0).widget().setParent(None)
         width = self.comm.backend.configuration['GUI']['imageSizeDetails'] \
                 if hasattr(self.comm.backend, 'configuration') else 300
         Image(self.doc['image'], self.imageL, anyDimension=width)
@@ -355,7 +354,7 @@ class Form(QDialog):
       if self.comm.backend.configuration['GUI']['autosave'] == 'Yes':
         ret = QMessageBox.critical(self, 'Warning', 'You will lose the entered information. Do you want to '+
           'save everything to a temporary location?',
-          QMessageBox.StandardButton.Cancel | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,  # type: ignore[operator]
+          QMessageBox.StandardButton.Cancel | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
           QMessageBox.StandardButton.No)
         if ret==QMessageBox.StandardButton.Cancel:
           return
@@ -548,7 +547,7 @@ class Form(QDialog):
     """
     #update tags
     for i in reversed(range(self.tagsBarSubL.count())):
-      self.tagsBarSubL.itemAt(i).widget().setParent(None)  # type: ignore
+      self.tagsBarSubL.itemAt(i).widget().setParent(None)
     for tag in self.doc['-tags']:
       if tag in ['_curated']:
         continue
@@ -556,7 +555,7 @@ class Form(QDialog):
         Label('\u2605'*int(tag[1]), 'h3', self.tagsBarSubL, self.delTag, tag, 'click to remove')
       else:
         Label(tag, 'h3', self.tagsBarSubL, self.delTag, tag, 'click to remove')
-    self.tagsBarSubL.addWidget(QWidget(), stretch=2)  # type: ignore
+    self.tagsBarSubL.addWidget(QWidget(), stretch=2)
     #update choices in combobox
     tagsAllList = self.comm.backend.db.getView('viewIdentify/viewTagsAll')
     tagsSet = {i['key'] for i in tagsAllList if i['key'][0]!='_'}

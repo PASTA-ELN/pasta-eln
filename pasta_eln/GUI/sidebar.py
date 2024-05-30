@@ -140,7 +140,7 @@ class Sidebar(QWidget):
         self.projectsListL.addWidget(projectW)
     # Other buttons
     stretch = QWidget()
-    self.projectsListL.addWidget(stretch, stretch=2)  # type: ignore
+    self.projectsListL.addWidget(stretch, stretch=2)
     return
 
 
