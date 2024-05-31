@@ -52,7 +52,7 @@ class TreeView(QTreeView):
     if not folder:
       Action('Open file with another application', self, [Command.OPEN_EXTERNAL],    context)
     Action('Open folder in file browser',          self, [Command.OPEN_FILEBROWSER], context)
-    context.exec(p.globalPos())
+    context.exec(p.globalPosition())
     return
 
 
@@ -174,7 +174,7 @@ class TreeView(QTreeView):
     return
 
 
-  def dragEnterEvent(self, event:QMouseEvent) -> None:                                                       # type: ignore[override]
+  def dragEnterEvent(self, event:QDropEvent) -> None:                                                       # type: ignore[override]
     """
     Override default: what happens if you drag an item
 
@@ -185,7 +185,7 @@ class TreeView(QTreeView):
     return
 
 
-  def dropEvent(self, event:QDropEvent) -> None:                                                            # type: ignore[override]
+  def dropEvent(self, event:QDropEvent) -> None:
     """
     Override default: what happens at end of drag&drop
 
@@ -204,7 +204,7 @@ class TreeView(QTreeView):
         if Path(path).is_file():
           files.append(path)
         else:
-          files +=   list(Path(path).rglob("*"))
+          files +=   list(Path(path).rglob("*"))                                                             # type: ignore[arg-type]
           folders += [x[0] for x in os.walk(path)]
       docID = item.data()['hierStack'].split('/')[-1]
       doc = self.comm.backend.db.getDoc(docID)
