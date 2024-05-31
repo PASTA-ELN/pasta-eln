@@ -29,14 +29,14 @@ class TreeView(QTreeView):
     self.doubleClicked.connect(self.tree2Clicked)
 
 
-  def contextMenuEvent(self, p:QPoint) -> None:
+  def contextMenuEvent(self, p:QPoint) -> None:                                                              # type: ignore[[override]]
     """
     create context menu
 
     Args:
       p (QPoint): point of clicking
     """
-    item = self.model().itemFromIndex(self.currentIndex())
+    item = self.model().itemFromIndex(self.currentIndex())                                                   # type: ignore[attr-defined]
     if item is None:  #clicked outside any leaf
       return
     folder = item.data()['hierStack'].split('/')[-1][0]=='x'
@@ -63,7 +63,7 @@ class TreeView(QTreeView):
     Args:
       command (list): list of commands
     """
-    item = self.model().itemFromIndex(self.currentIndex())
+    item = self.model().itemFromIndex(self.currentIndex())                                                   # type: ignore[attr-defined]
     hierStack = item.data()['hierStack'].split('/')
     if command[0] is Command.ADD_CHILD:
       docType= f'x{len(hierStack)}'
@@ -72,7 +72,7 @@ class TreeView(QTreeView):
       label = self.comm.backend.db.dataHierarchy['x1']['title'].lower()[:-1]
       docID = self.comm.backend.addData(docType, {'-name':f'new {label}'}, hierStack)
       # append item to the GUI
-      item  = self.model().itemFromIndex(self.currentIndex())
+      item  = self.model().itemFromIndex(self.currentIndex())                                                # type: ignore[attr-defined]
       child = QStandardItem('/'.join(hierStack+[docID]))
       child.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled) # type: ignore
       item.appendRow(child)
@@ -90,8 +90,8 @@ class TreeView(QTreeView):
       label = self.comm.backend.db.dataHierarchy['x1']['title'].lower()[:-1]
       docID = self.comm.backend.addData(docType, {'-name':f'new {label}'}, hierStack)
       # append item to the GUI
-      item  = self.model().itemFromIndex(self.currentIndex())
-      parent = item.parent() if item.parent() is not None else self.model().invisibleRootItem()
+      item  = self.model().itemFromIndex(self.currentIndex())                                                # type: ignore[attr-defined]
+      parent = item.parent() if item.parent() is not None else self.model().invisibleRootItem()              # type: ignore[attr-defined]
       child = QStandardItem('/'.join(hierStack+[docID]))
       child.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled) # type: ignore
       parent.appendRow(child)
@@ -120,13 +120,13 @@ class TreeView(QTreeView):
         for line in children:
           self.comm.backend.db.remove(line['id'])
         # remove leaf from GUI
-        item  = self.model().itemFromIndex(self.currentIndex())
+        item  = self.model().itemFromIndex(self.currentIndex())                                              # type: ignore[attr-defined]
         parent = item.parent()
         if parent is None: #top level
-          parent = self.model().invisibleRootItem()
+          parent = self.model().invisibleRootItem()                                                           # type: ignore[attr-defined]
         parent.removeRow(item.row())
     elif command[0] is Command.SHOW_DETAILS:
-      item = self.model().itemFromIndex(self.currentIndex())
+      item = self.model().itemFromIndex(self.currentIndex())                                                 # type: ignore[attr-defined]
       gui  = item.data()['gui']
       docID = item.data()['hierStack'].split('/')[-1]
       gui[0] = not gui[0]
@@ -163,7 +163,7 @@ class TreeView(QTreeView):
     after double-click on tree leaf: open form
     - no redraw required since renderer asks automatically for update
     """
-    item = self.model().itemFromIndex(self.currentIndex())
+    item = self.model().itemFromIndex(self.currentIndex())                                                   # type: ignore[attr-defined]
     docID = item.data()['hierStack'].split('/')[-1]
     doc   = self.comm.backend.db.getDoc(docID)
     self.comm.formDoc.emit(doc)
@@ -174,7 +174,7 @@ class TreeView(QTreeView):
     return
 
 
-  def dragEnterEvent(self, event:QMouseEvent) -> None:
+  def dragEnterEvent(self, event:QMouseEvent) -> None:                                                       # type: ignore[override]
     """
     Override default: what happens if you drag an item
 
@@ -185,7 +185,7 @@ class TreeView(QTreeView):
     return
 
 
-  def dropEvent(self, event:QMouseEvent) -> None:
+  def dropEvent(self, event:QMouseEvent) -> None:                                                            # type: ignore[override]
     """
     Override default: what happens at end of drag&drop
 
@@ -193,7 +193,7 @@ class TreeView(QTreeView):
       event (QMouseEvent): event
     """
     if event.mimeData().hasUrls():
-      item = self.model().itemFromIndex(self.indexAt(event.pos()))
+      item = self.model().itemFromIndex(self.indexAt(event.pos()))                                           # type: ignore[attr-defined]
       if item.data()['docType'][0][0]!='x':
         showMessage(self, 'Error', 'You cannot drop files on non folders.')
         return
