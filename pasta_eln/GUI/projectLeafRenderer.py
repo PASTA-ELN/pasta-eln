@@ -3,7 +3,7 @@ import base64, logging, re
 from typing import Optional, Any
 from PySide6.QtCore import Qt, QSize, QPoint, QMargins, QRectF, QModelIndex# pylint: disable=no-name-in-module
 from PySide6.QtGui import QStaticText, QPixmap, QTextDocument, QPainter, QColor, QPen # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QStyledItemDelegate, QStyleOption # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QStyledItemDelegate, QStyle # pylint: disable=no-name-in-module
 from PySide6.QtSvg import QSvgRenderer                        # pylint: disable=no-name-in-module
 from ..guiCommunicate import Communicate
 from ..guiStyle import getColor
@@ -30,7 +30,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     self.colorMargin2 = QColor(getColor(self.comm.backend, 'secondaryLight'))
 
 
-  def paint(self, painter:QPainter, option:QStyleOption, index:QModelIndex) -> None:
+  def paint(self, painter:QPainter, option:QStyle, index:QModelIndex) -> None:
     """
     Paint this item
     - coordinates: left, top
@@ -148,7 +148,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     return
 
 
-  def sizeHint(self, option:QStyleOptionViewItem, index:QModelIndex) -> QSize:
+  def sizeHint(self, option:QStyle, index:QModelIndex) -> QSize:
     """
     determine size of this leaf
     """
