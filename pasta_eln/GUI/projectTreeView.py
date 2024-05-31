@@ -4,8 +4,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 from PySide6.QtWidgets import QWidget, QTreeView, QMenu, QMessageBox, QAbstractItemView # pylint: disable=no-name-in-module
-from PySide6.QtGui import QStandardItemModel, QStandardItem, QMouseEvent # pylint: disable=no-name-in-module
-from PySide6.QtCore import QPoint, Qt  # pylint: disable=no-name-in-module
+from PySide6.QtGui import QStandardItemModel, QStandardItem, QMouseEvent, QDropEvent, QEventPoint # pylint: disable=no-name-in-module
+from PySide6.QtCore import Qt  # pylint: disable=no-name-in-module
 from .projectLeafRenderer import ProjectLeafRenderer
 from ..guiStyle import Action, showMessage
 from ..guiCommunicate import Communicate
@@ -29,7 +29,7 @@ class TreeView(QTreeView):
     self.doubleClicked.connect(self.tree2Clicked)
 
 
-  def contextMenuEvent(self, p:QPoint) -> None:                                                              # type: ignore[[override]]
+  def contextMenuEvent(self, p:QEventPoint) -> None:                                                         # type: ignore[override]
     """
     create context menu
 
@@ -185,12 +185,12 @@ class TreeView(QTreeView):
     return
 
 
-  def dropEvent(self, event:QMouseEvent) -> None:                                                            # type: ignore[override]
+  def dropEvent(self, event:QDropEvent) -> None:                                                            # type: ignore[override]
     """
     Override default: what happens at end of drag&drop
 
     Args:
-      event (QMouseEvent): event
+      event (QDropEvent): event
     """
     if event.mimeData().hasUrls():
       item = self.model().itemFromIndex(self.indexAt(event.pos()))                                           # type: ignore[attr-defined]
