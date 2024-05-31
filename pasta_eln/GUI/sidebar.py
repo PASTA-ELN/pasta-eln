@@ -97,10 +97,10 @@ class Sidebar(QWidget):
           projectW.setStyleSheet("background-color:"+ getColor(backend, 'secondaryLight'))
         btnScan = TextButton('Scan', self, [Command.SCAN_PROJECT, projID], None, 'Scan', \
                              iconName='mdi.clipboard-search-outline')
-        actionL.addWidget(btnScan, 0,0)  # type: ignore
+        actionL.addWidget(btnScan, 0,0)
         btnCurate = TextButton('Special', self, [projID], None)
         btnCurate.hide()
-        actionL.addWidget(btnCurate, 0,1)         # type: ignore
+        actionL.addWidget(btnCurate, 0,1)
         self.widgetsAction[projID] = actionW
         btnScan.setStyleSheet("border-width:0")
         btnCurate.setStyleSheet("border-width:0")
@@ -114,9 +114,9 @@ class Sidebar(QWidget):
             icon = self.comm.backend.db.dataHierarchy[doctype].get('icon','')
             icon = 'fa5s.asterisk' if icon=='' else icon
             btn = IconButton(icon, self, [Command.LIST_DOCTYPE,doctype,projID], None,db.dataLabels[doctype])
-            listL.addWidget(btn, 0, idx)    # type: ignore
+            listL.addWidget(btn, 0, idx)
         btn = IconButton('fa5.file', self, [Command.LIST_DOCTYPE,'-',projID], None, 'Unidentified')
-        listL.addWidget(btn, 0, len(db.dataLabels)+1)  # type: ignore
+        listL.addWidget(btn, 0, len(db.dataLabels)+1)
         self.widgetsList[projID] = listW
 
         # show folders as hierarchy

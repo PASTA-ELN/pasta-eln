@@ -1,5 +1,5 @@
 """ all styling of buttons and other general widgets, some defined colors... """
-from typing import Callable, Optional, Any
+from typing import Callable, Optional, Any, Union
 from PySide6.QtWidgets import QPushButton, QLabel, QSizePolicy, QMessageBox, QLayout, QWidget, QMenu, \
                               QVBoxLayout, QHBoxLayout, QGridLayout, QFormLayout, QBoxLayout, QComboBox, QScrollArea # pylint: disable=no-name-in-module
 from PySide6.QtGui import QImage, QPixmap, QAction, QKeySequence, QMouseEvent               # pylint: disable=no-name-in-module
@@ -276,7 +276,7 @@ class ScrollMessageBox(QMessageBox):
     self.layout().addWidget(scroll, 0, 0, 1, self.layout().columnCount()) # type: ignore[call-arg]
 
 
-def widgetAndLayout(direction:str='V', parentLayout:Optional[QLayout]=None, spacing:str='0', left:str='0',
+def widgetAndLayout(direction:str='V', parentLayout:Optional[Union[QLayout,QLayout]]=None, spacing:str='0', left:str='0',
                     top:str='0', right:str='0', bottom:str='0') -> tuple[QWidget, QBoxLayout]:
   """
   Convenient function for widget and a boxLayout
