@@ -89,7 +89,7 @@ class Sidebar(QWidget):
         self.widgetsProject[projID] = [btnProj, projectW]
 
         # actions: scan, curate, ...
-        actionW, actionL = widgetAndLayout2DGrid(projectL)
+        actionW, actionL = widgetAndLayoutGrid(projectL)
         if self.openProjectId != projID: #depending which project is open
           actionW.hide()
           projectW.setStyleSheet("background-color:"+ getColor(backend, 'secondaryDark'))

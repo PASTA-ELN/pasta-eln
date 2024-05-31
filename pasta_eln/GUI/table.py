@@ -69,7 +69,7 @@ class Table(QWidget):
     more.setMenu(self.moreMenu)
 
     # filter
-    _, self.filterL = widgetAndLayout2DGrid(mainL, top='s', bottom='s')
+    _, self.filterL = widgetAndLayoutGrid(mainL, top='s', bottom='s')
     # table
     self.table = QTableView(self)
     self.table.verticalHeader().hide()
