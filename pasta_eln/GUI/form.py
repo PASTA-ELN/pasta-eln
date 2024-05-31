@@ -426,7 +426,7 @@ class Form(QDialog):
         else:
           print("**ERROR dialogForm unknown value type",key, valueOld)
       # new key-value pairs
-      keyValueList = [self.keyValueListL.itemAt(i).widget().text() for i in range(self.keyValueListL.count()) if isinstance(self.keyValueListL.itemAt(i).widget(), QLineEdit)]
+      keyValueList = [self.keyValueListL.itemAt(i).widget().text() for i in range(self.keyValueListL.count())]# type: ignore[attr-defined]
       keyValueDict = dict(zip(keyValueList[::2],keyValueList[1::2] ))
       keyValueDict = {k:v for k,v in keyValueDict.items() if k}
       self.doc = keyValueDict | self.doc
@@ -505,10 +505,9 @@ class Form(QDialog):
     """
     Text changed in editor -> update the display on the right
     """
-    if isinstance(self.sender(), QWidget):
-      key = self.sender().accessibleName()
-      getattr(self, f'textShow_{key}').setMarkdown(markdownStyler(
-          getattr(self, f'textEdit_{key}').toPlainText()))
+    key = self.sender().accessibleName()                                                                     # type: ignore
+    getattr(self, f'textShow_{key}').setMarkdown(markdownStyler(
+        getattr(self, f'textEdit_{key}').toPlainText()))
     return
 
   def delTag(self, _:str, tag:str) -> None:

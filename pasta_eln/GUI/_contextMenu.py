@@ -37,7 +37,7 @@ def initContextMenu(widget:Union[Details,Form], pos:QPoint) -> None:
   return
 
 
-def executeContextMenu(widget:QWidget, command:list[Any]) -> bool:
+def executeContextMenu(widget:Union[Details,Form], command:list[Any]) -> bool:
   """
   Execute context menu command
 
