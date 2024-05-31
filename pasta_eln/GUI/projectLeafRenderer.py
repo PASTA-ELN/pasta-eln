@@ -30,7 +30,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     self.colorMargin2 = QColor(getColor(self.comm.backend, 'secondaryLight'))
 
 
-  def paint(self, painter:QPainter, option:QStyleOptionViewItem, index:QModelIndex) -> None:
+  def paint(self, painter:QPainter, option:QStyleOptionViewItem, index:QModelIndex) -> None:                 # type: ignore
     """
     Paint this item
     - coordinates: left, top
@@ -148,7 +148,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     return
 
 
-  def sizeHint(self, option:QStyleOptionViewItem, index:QModelIndex) -> QSize:
+  def sizeHint(self, option:QStyleOptionViewItem, index:QModelIndex) -> QSize:                               # type: ignore
     """
     determine size of this leaf
     """

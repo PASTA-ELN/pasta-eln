@@ -83,7 +83,7 @@ class ConfigurationSetup(QWidget):
           self.text1.setMarkdown(self.mainText)
         else:
           button = QMessageBox.question(self, "CouchDB installation", couchDBWindows)
-          if button == QMessageBox.Yes:
+          if button == QMessageBox.StandardButton.Yes:
             try:
               isAdmin = os.getuid() == 0
             except AttributeError:
@@ -120,7 +120,7 @@ class ConfigurationSetup(QWidget):
           self.text1.setMarkdown(self.mainText)
         else:
           button = QMessageBox.question(self, "PASTA-ELN configuration", "Do you want to create/repain the configuration.")
-          if button == QMessageBox.Yes:
+          if button == QMessageBox.StandardButton.Yes:
             dirName = QFileDialog.getExistingDirectory(self,'Create and select directory for scientific data',str(Path.home()/'Documents'))
             configuration('repair','admin', password, Path(dirName))
             flagInstalledSoftware = True
@@ -147,7 +147,7 @@ class ConfigurationSetup(QWidget):
       #Shortcut
       if flagContinue:
         button = QMessageBox.question(self, "Create shortcut", "Do you want to create the shortcut for PASTA-ELN on desktop?")
-        if button == QMessageBox.Yes:
+        if button == QMessageBox.StandardButton.Yes:
           createShortcut()
           self.mainText = self.mainText.replace('- Shortcut creation', '- User selected to add a shortcut' )
         else:
@@ -162,11 +162,11 @@ class ConfigurationSetup(QWidget):
       #Example data
       if flagContinue:
         button = QMessageBox.question(self, "Example data", exampleDataWindows)
-        if button == QMessageBox.Yes:
+        if button == QMessageBox.StandardButton.Yes:
           self.progress1.show()
           if (self.comm.backend.basePath/'pastasExampleProject').exists():
             button1 = QMessageBox.question(self, "Example data", 'Data exists. Should I reset?')
-            if button1 == QMessageBox.Yes:
+            if button1 == QMessageBox.StandardButton.Yes:
               exampleData(True, self.callbackProgress)
             else:
               self.mainText = self.mainText.replace('- Example data', '- Example data exists and should not be deleted.')
