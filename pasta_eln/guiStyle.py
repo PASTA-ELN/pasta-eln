@@ -273,7 +273,7 @@ class ScrollMessageBox(QMessageBox):
     self.content.setText(cssStyle+dict2ul(content))
     self.content.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
     scroll.setWidget(self.content)
-    self.layout().addWidget(scroll, 0, 0, 1, self.layout().columnCount()) # type: ignore[call-arg]
+    self.layout().addWidget(scroll, 0, 0, 1, self.layout().columnCount()) # type: ignore[attr-defined]
 
 
 def widgetAndLayout(direction:str='V', parentLayout:Optional[Union[QLayout,QSplitter]]=None, spacing:str='0', left:str='0',
@@ -304,7 +304,7 @@ def widgetAndLayout(direction:str='V', parentLayout:Optional[Union[QLayout,QSpli
   """
   widget = QWidget()
   if direction=='V':
-    layout = QVBoxLayout(widget)
+    layout:QBoxLayout = QVBoxLayout(widget)
   else:
     layout = QHBoxLayout(widget)
   layout.setSpacing(space[spacing])
@@ -360,7 +360,7 @@ def widgetAndLayoutGrid(parentLayout:Optional[QLayout]=None, spacing:str='0', le
   return widget, layout
 
 
-def addRowList(layout:QLayout, label:str, default:str, itemList:list[str]) -> QComboBox:
+def addRowList(layout:QFormLayout, label:str, default:str, itemList:list[str]) -> QComboBox:
   """
   Add a row with a combo-box to the form
 
