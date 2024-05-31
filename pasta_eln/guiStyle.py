@@ -315,7 +315,7 @@ def widgetAndLayout(direction:str='V', parentLayout:Optional[QLayout]=None, spac
 
 
 def widgetAndLayoutForm(parentLayout:Optional[QLayout]=None, spacing:str='0', left:str='0',
-                    top:str='0', right:str='0', bottom:str='0') -> tuple[QWidget, QLayout]:
+                    top:str='0', right:str='0', bottom:str='0') -> tuple[QWidget, QFormLayout]:
   """
   Convenient function for widget and a form layout
   - comment see above
@@ -338,7 +338,7 @@ def widgetAndLayoutForm(parentLayout:Optional[QLayout]=None, spacing:str='0', le
 
 
 def widgetAndLayoutGrid(parentLayout:Optional[QLayout]=None, spacing:str='0', left:str='0',
-                    top:str='0', right:str='0', bottom:str='0') -> tuple[QWidget, QLayout]:
+                    top:str='0', right:str='0', bottom:str='0') -> tuple[QWidget, QGridLayout]:
   """
   Convenient function for widget and a grid layout
   - comment see above
