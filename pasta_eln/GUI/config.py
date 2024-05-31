@@ -28,17 +28,17 @@ class Configuration(QDialog):
     mainL.addWidget(tabW)
 
     # Misc configuration: e.g. theming...
-    tabGUI = ConfigurationGUI(self.comm, self.finished)
+    tabGUI = ConfigurationGUI(self.comm, self.closeWidget)
     tabW.addTab(tabGUI, 'Appearance')
-    tabAuthors = ConfigurationAuthors(self.comm, self.finished)
+    tabAuthors = ConfigurationAuthors(self.comm, self.closeWidget)
     tabW.addTab(tabAuthors, 'Author')
 
     # Setup / Troubleshoot Pasta: main widget
     tabSetup:Optional[Union[ConfigSetupWindows,ConfigSetupLinux]] = None
     if platform.system()=='Windows':
-      tabSetup = ConfigSetupWindows(self.comm, self.finished)
+      tabSetup = ConfigSetupWindows(self.comm, self.closeWidget)
     else:
-      tabSetup = ConfigSetupLinux(self.comm, self.finished)
+      tabSetup = ConfigSetupLinux(self.comm, self.closeWidget)
     tabW.addTab(tabSetup, 'Setup')
 
     if startTab=='setup':
@@ -47,7 +47,7 @@ class Configuration(QDialog):
       tabW.setTabEnabled(1, False)
 
 
-  def finished(self, restart:bool=True) -> None:
+  def closeWidget(self, restart:bool=True) -> None:
     """
     callback function to close widget
 

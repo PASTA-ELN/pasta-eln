@@ -199,7 +199,7 @@ class Table(QWidget):
       else:
         item.setFlags(Qt.ItemFlag.ItemIsEnabled)
       model.setItem(i, j, item)
-    self.models.append(model)
+    self.models.append(model)                                                                                # type: ignore[arg-type]
     self.table.setModel(self.models[-1])
     self.table.show()
     return
@@ -430,18 +430,18 @@ class Table(QWidget):
     index = self.models[-1].index(row,0)
     for idxModel in range(len(self.models)-1,0,-1):
       index = self.models[idxModel].mapToSource(index)
-    item = self.models[0].itemFromIndex(index)
+    item = self.models[0].itemFromIndex(index)                                                               # type: ignore[attr-defined]
     return item, item.accessibleText()
 
 
-  def filterChoice(self, item:QStandardItem) -> None:
+  def filterChoice(self, item:int) -> None:
     """
     Change the column which is used for filtering
 
     Args:
        item (int): column number to filter by
     """
-    row = self.sender().accessibleName()
+    row = self.sender().accessibleName()                                                                     # type: ignore[attr-defined]
     self.models[int(row)].setFilterKeyColumn(item)
     return
 
