@@ -3,7 +3,7 @@ import base64, logging, re
 from typing import Optional, Any
 from PySide6.QtCore import Qt, QSize, QPoint, QMargins, QRectF, QModelIndex# pylint: disable=no-name-in-module
 from PySide6.QtGui import QStaticText, QPixmap, QTextDocument, QPainter, QColor, QPen # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QStyledItemDelegate, QStyle # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QStyledItemDelegate, QStyleOptionViewItem # pylint: disable=no-name-in-module
 from PySide6.QtSvg import QSvgRenderer                        # pylint: disable=no-name-in-module
 from ..guiCommunicate import Communicate
 from ..guiStyle import getColor
@@ -30,7 +30,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     self.colorMargin2 = QColor(getColor(self.comm.backend, 'secondaryLight'))
 
 
-  def paint(self, painter:QPainter, option:QStyle, index:QModelIndex) -> None:
+  def paint(self, painter:QPainter, option:QStyleOptionViewItem, index:QModelIndex) -> None:
     """
     Paint this item
     - coordinates: left, top
@@ -49,17 +49,17 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     # GUI
     if self.penDefault is None:
       self.penDefault = QPen(painter.pen())
-    x0, y0 = option.rect.topLeft().toTuple()
+    x0, y0 = option.rect.topLeft().toTuple()                                                                  # type: ignore[attr-defined]
     widthContent = min(self.widthContent,  \
-                       int((option.rect.bottomRight()-option.rect.topLeft()).toTuple()[0]/2) )
+                       int((option.rect.bottomRight()-option.rect.topLeft()).toTuple()[0]/2) )                # type: ignore[attr-defined]
     docTypeOffset = min(self.docTypeOffset, \
-                        int((option.rect.bottomRight()-option.rect.topLeft()).toTuple()[0]/3.5) )
-    bottomRight2nd = option.rect.bottomRight()- QPoint(self.frameSize+1,self.frameSize)
-    painter.fillRect(option.rect.marginsRemoved(QMargins(2,6,4,0)),  self.colorMargin1)
+                        int((option.rect.bottomRight()-option.rect.topLeft()).toTuple()[0]/3.5) )             # type: ignore[attr-defined]
+    bottomRight2nd = option.rect.bottomRight()- QPoint(self.frameSize+1,self.frameSize)                       # type: ignore[attr-defined]
+    painter.fillRect(option.rect.marginsRemoved(QMargins(2,6,4,0)),  self.colorMargin1)                       # type: ignore[attr-defined]
     if data['docType'][0][0]=='x':
-      painter.fillRect(option.rect.marginsRemoved(QMargins(-2,3,8,5)), self.colorMargin2.darker(102))
+      painter.fillRect(option.rect.marginsRemoved(QMargins(-2,3,8,5)), self.colorMargin2.darker(102))         # type: ignore[attr-defined]
     else:
-      painter.fillRect(option.rect.marginsRemoved(QMargins(-2,3,8,5)), self.colorMargin2.lighter(210))
+      painter.fillRect(option.rect.marginsRemoved(QMargins(-2,3,8,5)), self.colorMargin2.lighter(210))        # type: ignore[attr-defined]
     # header
     y = self.lineSep/2
     docTypeText= '/'.join(data['docType'])
@@ -121,7 +121,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
         else:
           textDoc.setTextWidth(widthContent)
           width, height = textDoc.size().toTuple() # type: ignore
-          topLeftContent = option.rect.topRight() - QPoint(width+self.frameSize-2,-self.frameSize)
+          topLeftContent = option.rect.topRight() - QPoint(width+self.frameSize-2,-self.frameSize)           # type: ignore[attr-defined]
           painter.translate(topLeftContent)
           yMax = int(self.maxHeight-3*self.frameSize)
           y = 0
@@ -133,31 +133,31 @@ class ProjectLeafRenderer(QStyledItemDelegate):
         if textType == 'comment':
           painter.translate(-QPoint(x0-3, y0+y+15))
         else:
-          topLeftContent = option.rect.topRight() - QPoint(width+self.frameSize-2,-self.frameSize)
+          topLeftContent = option.rect.topRight() - QPoint(width+self.frameSize-2,-self.frameSize)           # type: ignore[attr-defined]
           painter.translate(-topLeftContent)
     if 'image' in doc and doc['image']!='':
       if doc['image'].startswith('data:image/'):
         pixmap = self.imageFromDoc(doc)
         width2nd = min(self.widthImage, pixmap.width()+self.frameSize)
-        topLeft2nd     = option.rect.topRight()   - QPoint(width2nd+self.frameSize+1,-self.frameSize)
+        topLeft2nd     = option.rect.topRight()   - QPoint(width2nd+self.frameSize+1,-self.frameSize)        # type: ignore[attr-defined]
         painter.drawPixmap(topLeft2nd, pixmap)
       elif doc['image'].startswith('<?xml'):
-        topLeft2nd     = option.rect.topRight()   - QPoint(self.widthImage+self.frameSize+1,-self.frameSize)
+        topLeft2nd     = option.rect.topRight()   - QPoint(self.widthImage+self.frameSize+1,-self.frameSize) # type: ignore[attr-defined]
         image = QSvgRenderer(bytearray(doc['image'], encoding='utf-8'))
         image.render(painter,    QRectF(topLeft2nd, bottomRight2nd))
     return
 
 
-  def sizeHint(self, option:QStyle, index:QModelIndex) -> QSize:
+  def sizeHint(self, option:QStyleOptionViewItem, index:QModelIndex) -> QSize:
     """
     determine size of this leaf
     """
-    if not index or not index.data(Qt.UserRole+1):      # type: ignore[operator]
+    if not index or not index.data(Qt.ItemDataRole.UserRole+1):
       return QSize()
-    hierStack = index.data(Qt.UserRole+1)['hierStack']  # type: ignore[operator]
+    hierStack = index.data(Qt.ItemDataRole.UserRole+1)['hierStack']
     if hierStack is None or self.comm is None:
       return QSize()
-    if not index.data(Qt.UserRole+1)['gui'][0]:         # type: ignore[operator]
+    if not index.data(Qt.ItemDataRole.UserRole+1)['gui'][0]:
       return QSize(400, self.lineSep*2)
     docID   = hierStack.split('/')[-1]
     doc = self.comm.backend.db.getDoc(docID)
@@ -167,7 +167,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       return QSize()
     docKeys = doc.keys()
     widthContent = min(self.widthContent,  \
-                       int((option.rect.bottomRight()-option.rect.topLeft()).toTuple()[0]/2) )
+                       int((option.rect.bottomRight()-option.rect.topLeft()).toTuple()[0]/2) )               # type: ignore[attr-defined]
     height  = len([i for i in docKeys if not i in _DO_NOT_RENDER_ and i[0] not in ['-','_'] ])  #height in text lines
     height += 1 if '-tags' in docKeys and len(doc['-tags']) > 0 else 0
     height  = (height+3) * self.lineSep
