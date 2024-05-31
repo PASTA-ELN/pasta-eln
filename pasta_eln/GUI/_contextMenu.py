@@ -2,13 +2,15 @@
 import platform, subprocess, os
 from enum import Enum
 from pathlib import Path
-from typing import Any
+from typing import Any, Union
 from PySide6.QtWidgets import QMenu, QWidget  # pylint: disable=no-name-in-module
 from PySide6.QtCore import     QPoint # pylint: disable=no-name-in-module
 from ..guiStyle import Action
+from .details import Details
+from .form import Form
 
 
-def initContextMenu(widget:QWidget, pos:QPoint) -> None:
+def initContextMenu(widget:Union[Details,Form], pos:QPoint) -> None:
   """
   Create a context menu
 
@@ -23,8 +25,7 @@ def initContextMenu(widget:QWidget, pos:QPoint) -> None:
   if extension.lower() in extractors:
     extractors = extractors[extension.lower()]
     baseDocType= widget.doc['-type'][0]
-    choices= {key:value for key,value in extractors.items() \
-                if key.startswith(baseDocType)}
+    choices= {key:value for key,value in extractors.items() if key.startswith(baseDocType)}
     for key,value in choices.items():
       Action(value,                     widget, [CommandMenu.CHANGE_EXTRACTOR, key], context)
     context.addSeparator()
@@ -73,7 +74,8 @@ def executeContextMenu(widget:QWidget, command:list[Any]) -> bool:
     widget.doc = widget.comm.backend.db.getDoc(widget.docID)
   elif command[0] is CommandMenu.CHANGE_EXTRACTOR:
     widget.doc['-type'] = command[1].split('/')
-    widget.comm.backend.useExtractors(filePath, widget.doc['shasum'], widget.doc)  #any path is good since the file is the same everywhere; data-changed by reference
+    #any path is good since the file is the same everywhere; data-changed by reference
+    widget.comm.backend.useExtractors(filePath, widget.doc['shasum'], widget.doc)
     if len(widget.doc['-type'])>1 and len(widget.doc['image'])>1:
       widget.doc = widget.comm.backend.db.updateDoc({'image':widget.doc['image'], '-type':widget.doc['-type']}, widget.doc['_id'])
     else:

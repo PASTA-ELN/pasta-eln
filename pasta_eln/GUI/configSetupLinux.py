@@ -86,7 +86,7 @@ class ConfigurationSetup(QWidget):
       #Install couchdb
       if not existsCouchDB:
         button = QMessageBox.question(self, "Root installations", rootInstallLinux)
-        if button == QMessageBox.Yes:
+        if button == QMessageBox.StandardButton.Yes:
           dirName = QFileDialog.getExistingDirectory(self,'Create and select directory for scientific data',str(Path.home()))
           installLinuxRoot(existsCouchDB, Path(dirName))
           logging.info('Install linux root finished')
@@ -102,7 +102,7 @@ class ConfigurationSetup(QWidget):
           self.text1.setMarkdown(self.mainText)
         else:
           button = QMessageBox.question(self, "PASTA-ELN configuration", "Do you want to create/repair the configuration.")
-          if button == QMessageBox.Yes:
+          if button == QMessageBox.StandardButton.Yes:
             configuration('repair')
           else:
             self.mainText = self.mainText.replace('- Configuration of preferences','- Configuration: user chose to NOT install' )
@@ -121,7 +121,7 @@ class ConfigurationSetup(QWidget):
       #Shortcut
       if flagContinue:
         button = QMessageBox.question(self, "Create shortcut", "Do you want to create the shortcut for PASTA-ELN on desktop?")
-        if button == QMessageBox.Yes:
+        if button == QMessageBox.StandardButton.Yes:
           createShortcut()
           self.mainText = self.mainText.replace('- Shortcut creation', '- User selected to add a shortcut' )
         else:
@@ -131,7 +131,7 @@ class ConfigurationSetup(QWidget):
       #Example data
       if flagContinue:
         button = QMessageBox.question(self, "Example data", exampleDataLinux)
-        if button == QMessageBox.Yes:
+        if button == QMessageBox.StandardButton.Yes:
           self.progress1.show()
           exampleData(True, self.callbackProgress)
           self.mainText = self.mainText.replace('- Example data', '- Example data was added')
