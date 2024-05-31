@@ -273,7 +273,7 @@ class ScrollMessageBox(QMessageBox):
     self.content.setText(cssStyle+dict2ul(content))
     self.content.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
     scroll.setWidget(self.content)
-    self.layout().addWidget(scroll, 0, 0, 1, self.layout().columnCount()) # type: ignore[attr-defined]
+    self.layout().addWidget(scroll, 0, 0, 1, self.layout().columnCount()) # type: ignore
 
 
 def widgetAndLayout(direction:str='V', parentLayout:Optional[Union[QLayout,QSplitter]]=None, spacing:str='0', left:str='0',
