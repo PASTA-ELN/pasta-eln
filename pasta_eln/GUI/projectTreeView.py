@@ -52,7 +52,7 @@ class TreeView(QTreeView):
     if not folder:
       Action('Open file with another application', self, [Command.OPEN_EXTERNAL],    context)
     Action('Open folder in file browser',          self, [Command.OPEN_FILEBROWSER], context)
-    context.exec(p.globalPosition())
+    context.exec(p.globalPosition().toPoint())
     return
 
 
@@ -174,7 +174,7 @@ class TreeView(QTreeView):
     return
 
 
-  def dragEnterEvent(self, event:QDropEvent) -> None:                                                       # type: ignore[override]
+  def dragEnterEvent(self, event:QDropEvent) -> None:
     """
     Override default: what happens if you drag an item
 
