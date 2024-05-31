@@ -314,7 +314,7 @@ def widgetAndLayout(direction:str='V', parentLayout:Optional[Union[QLayout,QSpli
   return widget, layout
 
 
-def widgetAndLayoutForm(parentLayout:Optional[QLayout]=None, spacing:str='0', left:str='0',
+def widgetAndLayoutForm(parentLayout:Optional[Union[QLayout,QSplitter]]=None, spacing:str='0', left:str='0',
                     top:str='0', right:str='0', bottom:str='0') -> tuple[QWidget, QFormLayout]:
   """
   Convenient function for widget and a form layout

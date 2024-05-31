@@ -112,7 +112,7 @@ class Form(QDialog):
           self.otherChoices.setMaximumWidth(100)
           self.otherChoices.setValidator(QRegularExpressionValidator("[a-z]\\w+"))
           self.otherChoices.setIconSize(QSize(0,0))
-          self.otherChoices.setInsertPolicy(QComboBox.InsertAtBottom)
+          self.otherChoices.setInsertPolicy(QComboBox.InsertPolicy.InsertAtBottom)
           tagsBarMainL.addWidget(self.otherChoices)
           self.gradeChoices = QComboBox()   #part/combobox that shows grades
           self.gradeChoices.setMaximumWidth(80)
@@ -147,7 +147,7 @@ class Form(QDialog):
           getattr(self, f'textShow_{key}').setReadOnly(True)
           getattr(self, f'textShow_{key}').hide()
           splitter= QSplitter()
-          splitter.setSizePolicy(QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding))
+          splitter.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding))
           splitter.addWidget(getattr(self, f'textEdit_{key}'))
           splitter.addWidget(getattr(self, f'textShow_{key}'))
           rightSideL.addWidget(splitter)
@@ -426,7 +426,7 @@ class Form(QDialog):
         else:
           print("**ERROR dialogForm unknown value type",key, valueOld)
       # new key-value pairs
-      keyValueList = [self.keyValueListL.itemAt(i).widget().text() for i in range(self.keyValueListL.count())]
+      keyValueList = [self.keyValueListL.itemAt(i).widget().text() for i in range(self.keyValueListL.count()) if isinstance(self.keyValueListL.itemAt(i).widget(), QLineEdit)]
       keyValueDict = dict(zip(keyValueList[::2],keyValueList[1::2] ))
       keyValueDict = {k:v for k,v in keyValueDict.items() if k}
       self.doc = keyValueDict | self.doc
@@ -505,9 +505,10 @@ class Form(QDialog):
     """
     Text changed in editor -> update the display on the right
     """
-    key = self.sender().accessibleName()
-    getattr(self, f'textShow_{key}').setMarkdown(markdownStyler(
-        getattr(self, f'textEdit_{key}').toPlainText()))
+    if isinstance(self.sender(), QWidget):
+      key = self.sender().accessibleName()
+      getattr(self, f'textShow_{key}').setMarkdown(markdownStyler(
+          getattr(self, f'textEdit_{key}').toPlainText()))
     return
 
   def delTag(self, _:str, tag:str) -> None:
