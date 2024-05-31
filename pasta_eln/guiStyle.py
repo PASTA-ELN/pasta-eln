@@ -57,19 +57,19 @@ class TextButton(QPushButton):
     self.setChecked(checkable)
     self.setAutoDefault(False)
     self.setDefault(False)
-    self.clicked.connect(lambda: widget.execute(command))
+    self.clicked.connect(lambda: widget.execute(command))                                                    # type: ignore[attr-defined]
     if tooltip:
       self.setToolTip(tooltip)
     if style:
       self.setStyleSheet(style)
     else:
-      primaryColor   = getColor(widget.comm.backend, 'primary')
-      secondaryColor = getColor(widget.comm.backend, 'secondary')
+      primaryColor   = getColor(widget.comm.backend, 'primary')                                              # type: ignore[attr-defined]
+      secondaryColor = getColor(widget.comm.backend, 'secondary')                                            # type: ignore[attr-defined]
       self.setStyleSheet(f'border-width: 0px; background-color: {primaryColor}; color: {secondaryColor}')
     if hide:
       self.hide()
     if iconName:
-      color = 'black' if widget is None else getColor(widget.comm.backend, 'primary')
+      color = 'black' if widget is None else getColor(widget.comm.backend, 'primary')                        # type: ignore[attr-defined]
       icon = qta.icon(iconName, color=color, scale_factor=1)
       self.setIcon(icon)
     if layout is not None:
@@ -91,10 +91,10 @@ class IconButton(QPushButton):
       hide (bool): hidden or shown initially
     """
     super().__init__()
-    color = 'black' if widget is None else getColor(widget.comm.backend, 'primary')
+    color = 'black' if widget is None else getColor(widget.comm.backend, 'primary')                          # type: ignore[attr-defined]
     icon = qta.icon(iconName, color=color, scale_factor=1)  #color change here
     self.setIcon(icon)
-    self.clicked.connect(lambda: widget.execute(command))
+    self.clicked.connect(lambda: widget.execute(command))                                                    # type: ignore[attr-defined]
     self.setFixedHeight(30)
     if tooltip:
       self.setToolTip(tooltip)
@@ -124,9 +124,9 @@ class Action(QAction):
     super().__init__()
     self.setParent(widget)
     self.setText(label)
-    self.triggered.connect(lambda : widget.execute(command))
+    self.triggered.connect(lambda : widget.execute(command))                                                 # type: ignore[attr-defined]
     if icon:
-      color = 'black' if widget is None else getColor(widget.comm.backend, 'secondaryText')
+      color = 'black' if widget is None else getColor(widget.comm.backend, 'secondaryText')                  # type: ignore[attr-defined]
       self.setIcon(qta.icon(icon, color=color, scale_factor=1))
     if shortcut is not None:
       self.setShortcut(QKeySequence(shortcut))
@@ -148,7 +148,7 @@ class Image():
       byteArr = QByteArray.fromBase64(bytearray(data[22:] if data[21]==',' else data[23:], encoding='utf-8'))
       imageW = QImage()
       imageType = data[11:15].upper()
-      imageW.loadFromData(byteArr, format=imageType[:-1] if imageType.endswith(';') else imageType)   # type: ignore
+      imageW.loadFromData(byteArr, format=imageType[:-1] if imageType.endswith(';') else imageType)
       pixmap = QPixmap.fromImage(imageW)
       if height>0:
         pixmap = pixmap.scaledToHeight(height)
@@ -165,23 +165,23 @@ class Image():
       if layout is not None:
         layout.addWidget(label, alignment=Qt.AlignHCenter)  # type: ignore
     elif data.startswith('<?xml'): #svg image
-      imageW = QSvgWidget()
-      policy = imageW.sizePolicy()
-      policy.setHorizontalPolicy(QSizePolicy.Fixed)
-      policy.setVerticalPolicy(QSizePolicy.Fixed)
-      imageW.setSizePolicy(policy)
-      imageW.renderer().load(bytearray(data, encoding='utf-8'))
+      imageSVG = QSvgWidget()
+      policy = imageSVG.sizePolicy()
+      policy.setHorizontalPolicy(QSizePolicy.Policy.Fixed)
+      policy.setVerticalPolicy(QSizePolicy.Policy.Fixed)
+      imageSVG.setSizePolicy(policy)
+      imageSVG.renderer().load(bytearray(data, encoding='utf-8'))
       if height>0:
-        imageW.setMaximumSize(int(float(imageW.width())/float(imageW.height())*height) ,height)
+        imageSVG.setMaximumSize(int(float(imageSVG.width())/float(imageSVG.height())*height) ,height)
       if width>0:
-        imageW.setMaximumSize(width, int(float(imageW.height())/float(imageW.width())*width))
+        imageSVG.setMaximumSize(width, int(float(imageSVG.height())/float(imageSVG.width())*width))
       if anyDimension>0:
-        if imageW.height()>imageW.width():
-          imageW.setMaximumSize(int(float(imageW.width())/float(imageW.height())*anyDimension) ,anyDimension)
+        if imageSVG.height()>imageSVG.width():
+          imageSVG.setMaximumSize(int(float(imageSVG.width())/float(imageSVG.height())*anyDimension) ,anyDimension)
         else:
-          imageW.setMaximumSize(anyDimension, int(float(imageW.height())/float(imageW.width())*anyDimension))
+          imageSVG.setMaximumSize(anyDimension, int(float(imageSVG.height())/float(imageSVG.width())*anyDimension))
       if layout is not None:
-        layout.addWidget(imageW, alignment=Qt.AlignHCenter) # type: ignore
+        layout.addWidget(imageSVG, alignment=Qt.AlignHCenter) # type: ignore
     elif len(data)>2:
       print(f'WidgetProjectLeaf:What is this image |{data[:50]}|')
     return
@@ -241,7 +241,7 @@ def showMessage(parent:QWidget, title:str, text:str, icon:str='', style:str='') 
   dialog.setWindowTitle(title)
   dialog.setText(text)
   if not (text.startswith('<') and text.endswith('>')):
-    dialog.setTextFormat(Qt.MarkdownText)
+    dialog.setTextFormat(Qt.TextFormat.MarkdownText)
   if icon in {'Information', 'Warning', 'Critical'}:
     dialog.setIcon(getattr(QMessageBox, icon))
   if style!='':
@@ -271,7 +271,7 @@ class ScrollMessageBox(QMessageBox):
     self.content = QLabel()
     self.content.setWordWrap(True)
     self.content.setText(cssStyle+dict2ul(content))
-    self.content.setTextInteractionFlags(Qt.TextSelectableByMouse)        # type: ignore[arg-type]
+    self.content.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
     scroll.setWidget(self.content)
     self.layout().addWidget(scroll, 0, 0, 1, self.layout().columnCount()) # type: ignore[call-arg]
 

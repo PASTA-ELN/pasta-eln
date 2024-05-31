@@ -3,7 +3,7 @@ import subprocess, os, platform, logging, shutil
 from enum import Enum
 from pathlib import Path
 from typing import Any
-from PySide6.QtWidgets import QWidget, QTreeView, QMenu, QMessageBox # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QWidget, QTreeView, QMenu, QMessageBox, QAbstractItemView # pylint: disable=no-name-in-module
 from PySide6.QtGui import QStandardItemModel, QStandardItem, QMouseEvent # pylint: disable=no-name-in-module
 from PySide6.QtCore import QPoint, Qt  # pylint: disable=no-name-in-module
 from .projectLeafRenderer import ProjectLeafRenderer
@@ -24,8 +24,8 @@ class TreeView(QTreeView):
     self.setExpandsOnDoubleClick(False)
     self.setAcceptDrops(True)
     self.setDropIndicatorShown(True)
-    self.setDefaultDropAction(Qt.MoveAction)
-    self.setDragDropMode(QTreeView.InternalMove)
+    self.setDefaultDropAction(Qt.DropAction.MoveAction)
+    self.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
     self.doubleClicked.connect(self.tree2Clicked)
 
 
