@@ -49,30 +49,38 @@ class SqlLiteDB:
     """
     self.connection = sqlite3.connect(basePath/"pastaELN.db")
     self.cursor     = self.connection.cursor()
-    tableString = ', '.join([f'{i[1:]} {j}' for i,j in zip(KEY_ORDER,KEY_TYPE)])+', '+', '.join([f'{i} TEXT' for i in OTHER_ORDER])+', meta TEXT, __history__ TEXT'
-    self.cursor.execute(f"CREATE TABLE IF NOT EXISTS main ({tableString})")
-    self.cursor.execute(f"CREATE TABLE IF NOT EXISTS dataHierarchy (docType TEXT PRIMARY KEY, iri TEXT, attachments TEXT, title TEXT, icon TEXT, shortcut varchar(1), meta TEXT)")
+    self.cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+    tables = [i[0] for i in self.cursor.fetchall()]
+    self.connection.commit()
     # check if default documents exist and create
-    self.cursor.execute("SELECT * FROM dataHierarchy")
-    if len(self.cursor.fetchall())<2 or resetDataHierarchy:
-      if len(self.cursor.fetchall())>1:
+    if 'dataHierarchy' not in tables or resetDataHierarchy:
+      if 'dataHierarchy' in tables:
         print('Info: remove old dataHierarchy')
-        self.db['-dataHierarchy-'].delete()
+        self.cursor.execute("DROP TABLE dataHierarchy")
+      self.cursor.execute(f"CREATE TABLE IF NOT EXISTS dataHierarchy (docType TEXT PRIMARY KEY, iri TEXT, attachments TEXT, title TEXT, icon TEXT, shortcut varchar(1), meta TEXT)")
       for k, v in defaultDataHierarchy.items():
         if k[0] in ('_','-'):
           continue
         self.cursor.execute(f"INSERT INTO dataHierarchy VALUES (?, ?, ?, ?, ?, ?, ?)", [k]+[str(v[i]) for i in DATAHIERARCHY]+[json.dumps(v['meta'])])
       self.initDocTypeViews( configuration['tableColumnsMax'] )
       self.initGeneralViews()
+    # refill old-style dictionary
     self.dataHierarchy = {}
     self.cursor.execute("SELECT * FROM dataHierarchy")
     for row in self.cursor.fetchall():
-      self.dataHierarchy[row[0]] = {i:j for i,j in zip(DATAHIERARCHY+['meta'],row[1:])}
-    patternDB    = list(map(lambda x: x[0], self.cursor.description))[1:-1]
+      rowList     = list(row)
+      rowList[-1] = json.loads(row[-1])
+      self.dataHierarchy[row[0]] = {i:j for i,j in zip(DATAHIERARCHY+['meta'],rowList[1:])}
+    patternDB    = list(map(lambda x: x[0], self.cursor.description))[1:-1]  #TODO: do not substract but add for comparison
     patternCode  = [i.lower() for i in DATAHIERARCHY]
     if patternDB!= patternCode:
       print(F"**ERROR wrong dataHierarchy version: {patternDB} {patternCode}")
       raise ValueError(f"Wrong dataHierarchy version {patternDB} {patternCode}")
+    # create if not exists, main table and check its colums
+    tableString = ', '.join([f'{i[1:]} {j}' for i,j in zip(KEY_ORDER,KEY_TYPE)])+', '+', '.join([f'{i} TEXT' for i in OTHER_ORDER])+', meta TEXT, __history__ TEXT'
+    self.cursor.execute(f"CREATE TABLE IF NOT EXISTS main ({tableString})")
+    print('TODO: check code vs. data-colums')
+
     self.dataLabels = {k:v['title'] for k,v in self.dataHierarchy.items() if k[0] not in ['_','-']}
     self.basePath   = basePath
     print('**INFO END INIT')
@@ -274,7 +282,13 @@ class SqlLiteDB:
     Returns:
         list: list of documents in this view
     """
-    print('**START GETVIEW')
+    print('**START GETVIEW', thePath.split('/')[1], startKey)
+    self.cursor.execute("SELECT * FROM main WHERE type LIKE '"+thePath.split('/')[1]+"%'")
+    if startKey is not None or preciseKey is not None:
+      print("***TODO: do this 645p.ueoi")
+    results = self.cursor.fetchall()
+    print(results)
+    a = 4/0
     return
 
 
