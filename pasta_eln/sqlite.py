@@ -79,6 +79,9 @@ class SqlLiteDB:
     # create if not exists, main table and check its colums
     tableString = ', '.join([f'{i[1:]} {j}' for i,j in zip(KEY_ORDER,KEY_TYPE)])+', '+', '.join([f'{i} TEXT' for i in OTHER_ORDER])+', meta TEXT, __history__ TEXT'
     self.cursor.execute(f"CREATE TABLE IF NOT EXISTS main ({tableString})")
+    self.cursor.execute("SELECT * FROM main")
+    self.mainColumnNames = list(map(lambda x: x[0], self.cursor.description))
+
     print('TODO: check code vs. data-colums')
 
     self.dataLabels = {k:v['title'] for k,v in self.dataHierarchy.items() if k[0] not in ['_','-']}
@@ -96,7 +99,25 @@ class SqlLiteDB:
       docTypeChange (str): if change columns for docType: give docType
       columnsChange (list): change table / view columns to these
     """
-    print('**START INITDOCTYPEVIEWS')
+    print('**START INITDOCTYPEVIEWS: add to db:datahierarchy and all datahierarchy functions here, long content in procedure')
+    self.viewColumns = {'x0':['-name','-tags','status','objective','comment'],
+                        'procedure':['-name','-tags','comment','content'],
+                        'sample':['-name', '-tags', 'chemistry', 'comment' ,'qrCode'],
+                        'measurement':['-name', '-tags', 'comment', '-type', 'image', 'sample', 'procedure'],
+                        'instrument':['-name', '-tags', 'comment', 'vendor']}
+    """
+    SB: initDocViews newColumns {}
+    {'x0': '// x0 : -name,-tags,status,objective,comment\n
+    if (doc[\'-type\']==\'x0\' && (doc[\'-branch\'][0].show.every(function(i) {return i;})))
+        {doc["-branch"].forEach(function(branch){emit(doc._id, [doc["-name"],doc[\'-tags\'].join(\' \'),doc["status"],doc["objective"],doc["comment"]]);});}',
+    'x0All': '// x0 : -name,-tags,status,objective,comment\n
+    if (doc[\'-type\']==\'x0\')
+        {doc["-branch"].forEach(function(branch){emit(doc._id, [doc["-name"],doc[\'-tags\'].join(\' \'),doc["status"],doc["objective"],doc["comment"]]);});}',
+
+    'measurement': '// measurement : -name,-tags,comment,-type,image,#_curated,sample,procedure\nif (doc[\'-type\'].join(\'/\').substring(0,11)==\'measurement\' && (doc[\'-branch\'][0].show.every(function(i) {return i;}))) {doc["-branch"].forEach(function(branch){emit(branch.stack[0], [doc["-name"],doc[\'-tags\'].join(\' \'),doc["comment"],doc["-type"].slice(1).join("/"),doc.image?doc.image.length>3:false,doc["-tags"].indexOf("_curated")>-1,doc["sample"],doc["procedure"]]);});}', 'measurementAll': '// measurement : -name,-tags,comment,-type,image,#_curated,sample,procedure\nif (doc[\'-type\'].join(\'/\').substring(0, 11)==\'measurement\') {doc["-branch"].forEach(function(branch){emit(branch.stack[0], [doc["-name"],doc[\'-tags\'].join(\' \'),doc["comment"],doc["-type"].slice(1).join("/"),doc.image?doc.image.length>3:false,doc["-tags"].indexOf("_curated")>-1,doc["sample"],doc["procedure"]]);});}', 'sample': '// sample : -name,-tags,chemistry,comment,qrCode\nif (doc[\'-type\'].join(\'/\').substring(0,6)==\'sample\' && (doc[\'-branch\'][0].show.every(function(i) {return i;}))) {doc["-branch"].forEach(function(branch){emit(branch.stack[0], [doc["-name"],doc[\'-tags\'].join(\' \'),doc["chemistry"],doc["comment"],doc["qrCode"]]);});}', 'sampleAll': '// sample : -name,-tags,chemistry,comment,qrCode\nif (doc[\'-type\'].join(\'/\').substring(0, 6)==\'sample\') {doc["-branch"].forEach(function(branch){emit(branch.stack[0], [doc["-name"],doc[\'-tags\'].join(\' \'),doc["chemistry"],doc["comment"],doc["qrCode"]]);});}', 'procedure': '// procedure : -name,-tags,comment,content\nif (doc[\'-type\'].join(\'/\').substring(0,9)==\'procedure\' && (doc[\'-branch\'][0].show.every(function(i) {return i;}))) {doc["-branch"].forEach(function(branch){emit(branch.stack[0], [doc["-name"],doc[\'-tags\'].join(\' \'),doc["comment"],doc.content?doc.content.slice(0, 100):""]);});}', 'procedureAll': '// procedure : -name,-tags,comment,content\nif (doc[\'-type\'].join(\'/\').substring(0, 9)==\'procedure\') {doc["-branch"].forEach(function(branch){emit(branch.stack[0], [doc["-name"],doc[\'-tags\'].join(\' \'),doc["comment"],doc.content?doc.content.slice(0, 100):""]);});}', 'instrument': '// instrument : -name,-tags,comment,vendor\nif (doc[\'-type\'].join(\'/\').substring(0,10)==\'instrument\' && (doc[\'-branch\'][0].show.every(function(i) {return i;}))) {doc["-branch"].forEach(function(branch){emit(branch.stack[0], [doc["-name"],doc[\'-tags\'].join(\' \'),doc["comment"],doc["vendor"]]);});}', 'instrumentAll': '// instrument : -name,-tags,comment,vendor\nif (doc[\'-type\'].join(\'/\').substring(0, 10)==\'instrument\') {doc["-branch"].forEach(function(branch){emit(branch.stack[0], [doc["-name"],doc[\'-tags\'].join(\' \'),doc["comment"],doc["vendor"]]);});}', '-': '// - : -name,-tags,comment,-type\nif (doc[\'-type\'].join(\'/\').substring(0,2)!=\'x0\' && doc[\'-type\'].join(\'/\').substring(0,2)!=\'x1\' && doc[\'-type\'].join(\'/\').substring(0,2)!=\'x2\' && doc[\'-type\'].join(\'/\').substring(0,11)!=\'measurement\' && doc[\'-type\'].join(\'/\').substring(0,6)!=\'sample\' && doc[\'-type\'].join(\'/\').substring(0,9)!=\'procedure\' && doc[\'-type\'].join(\'/\').substring(0,10)!=\'instrument\' && (doc[\'-branch\'][0].show.every(function(i) {return i;}))) {doc["-branch"].forEach(function(branch){emit(branch.stack[0], [doc["-name"],doc[\'-tags\'].join(\' \'),doc["comment"],doc["-type"].slice(1).join("/")]);});}', '-All': '// - : -name,-tags,comment,-type\nif (doc[\'-type\'].join(\'/\').substring(0,2)!=\'x0\' && doc[\'-type\'].join(\'/\').substring(0,2)!=\'x1\' && doc[\'-type\'].join(\'/\').substring(0,2)!=\'x2\' && doc[\'-type\'].join(\'/\').substring(0,11)!=\'measurement\' && doc[\'-type\'].join(\'/\').substring(0,6)!=\'sample\' && doc[\'-type\'].join(\'/\').substring(0,9)!=\'procedure\' && doc[\'-type\'].join(\'/\').substring(0,10)!=\'instrument\') {doc["-branch"].forEach(function(branch){emit(branch.stack[0], [doc["-name"],doc[\'-tags\'].join(\' \'),doc["comment"],doc["-type"].slice(1).join("/")]);});}'} sssssSSSSSSSSSS
+    SB: initDocViews newColumns {'x0': '-name,-tags,status,objective,comment', 'measurement': '-name,-tags,comment,-type,image,#_curated,sample,procedure', 'sample': '-name,-tags,chemistry,comment,qrCode', 'procedure': '-name,-tags,comment,content', 'instrument': '-name,-tags,comment,vendor', '-': '-name,-tags,comment,-type'}
+    {'x0': '// x0 : -name,-tags,status,objective,comment\nif (doc[\'-type\']==\'x0\' && (doc[\'-branch\'][0].show.every(function(i) {return i;}))) {doc["-branch"].forEach(function(branch){emit(doc._id, [doc["-name"],doc[\'-tags\'].join(\' \'),doc["status"],doc["objective"],doc["comment"]]);});}', 'x0All': '// x0 : -name,-tags,status,objective,comment\nif (doc[\'-type\']==\'x0\') {doc["-branch"].forEach(function(branch){emit(doc._id, [doc["-name"],doc[\'-tags\'].join(\' \'),doc["status"],doc["objective"],doc["comment"]]);});}', 'measurement': '// measurement : -name,-tags,comment,-type,image,#_curated,sample,procedure\nif (doc[\'-type\'].join(\'/\').substring(0,11)==\'measurement\' && (doc[\'-branch\'][0].show.every(function(i) {return i;}))) {doc["-branch"].forEach(function(branch){emit(branch.stack[0], [doc["-name"],doc[\'-tags\'].join(\' \'),doc["comment"],doc["-type"].slice(1).join("/"),doc.image?doc.image.length>3:false,doc["-tags"].indexOf("_curated")>-1,doc["sample"],doc["procedure"]]);});}', 'measurementAll': '// measurement : -name,-tags,comment,-type,image,#_curated,sample,procedure\nif (doc[\'-type\'].join(\'/\').substring(0, 11)==\'measurement\') {doc["-branch"].forEach(function(branch){emit(branch.stack[0], [doc["-name"],doc[\'-tags\'].join(\' \'),doc["comment"],doc["-type"].slice(1).join("/"),doc.image?doc.image.length>3:false,doc["-tags"].indexOf("_curated")>-1,doc["sample"],doc["procedure"]]);});}', 'sample': '// sample : -name,-tags,chemistry,comment,qrCode\nif (doc[\'-type\'].join(\'/\').substring(0,6)==\'sample\' && (doc[\'-branch\'][0].show.every(function(i) {return i;}))) {doc["-branch"].forEach(function(branch){emit(branch.stack[0], [doc["-name"],doc[\'-tags\'].join(\' \'),doc["chemistry"],doc["comment"],doc["qrCode"]]);});}', 'sampleAll': '// sample : -name,-tags,chemistry,comment,qrCode\nif (doc[\'-type\'].join(\'/\').substring(0, 6)==\'sample\') {doc["-branch"].forEach(function(branch){emit(branch.stack[0], [doc["-name"],doc[\'-tags\'].join(\' \'),doc["chemistry"],doc["comment"],doc["qrCode"]]);});}', 'procedure': '// procedure : -name,-tags,comment,content\nif (doc[\'-type\'].join(\'/\').substring(0,9)==\'procedure\' && (doc[\'-branch\'][0].show.every(function(i) {return i;}))) {doc["-branch"].forEach(function(branch){emit(branch.stack[0], [doc["-name"],doc[\'-tags\'].join(\' \'),doc["comment"],doc.content?doc.content.slice(0, 100):""]);});}', 'procedureAll': '// procedure : -name,-tags,comment,content\nif (doc[\'-type\'].join(\'/\').substring(0, 9)==\'procedure\') {doc["-branch"].forEach(function(branch){emit(branch.stack[0], [doc["-name"],doc[\'-tags\'].join(\' \'),doc["comment"],doc.content?doc.content.slice(0, 100):""]);});}', 'instrument': '// instrument : -name,-tags,comment,vendor\nif (doc[\'-type\'].join(\'/\').substring(0,10)==\'instrument\' && (doc[\'-branch\'][0].show.every(function(i) {return i;}))) {doc["-branch"].forEach(function(branch){emit(branch.stack[0], [doc["-name"],doc[\'-tags\'].join(\' \'),doc["comment"],doc["vendor"]]);});}', 'instrumentAll': '// instrument : -name,-tags,comment,vendor\nif (doc[\'-type\'].join(\'/\').substring(0, 10)==\'instrument\') {doc["-branch"].forEach(function(branch){emit(branch.stack[0], [doc["-name"],doc[\'-tags\'].join(\' \'),doc["comment"],doc["vendor"]]);});}', '-': '// - : -name,-tags,comment,-type\nif (doc[\'-type\'].join(\'/\').substring(0,2)!=\'x0\' && doc[\'-type\'].join(\'/\').substring(0,2)!=\'x1\' && doc[\'-type\'].join(\'/\').substring(0,2)!=\'x2\' && doc[\'-type\'].join(\'/\').substring(0,11)!=\'measurement\' && doc[\'-type\'].join(\'/\').substring(0,6)!=\'sample\' && doc[\'-type\'].join(\'/\').substring(0,9)!=\'procedure\' && doc[\'-type\'].join(\'/\').substring(0,10)!=\'instrument\' && (doc[\'-branch\'][0].show.every(function(i) {return i;}))) {doc["-branch"].forEach(function(branch){emit(branch.stack[0], [doc["-name"],doc[\'-tags\'].join(\' \'),doc["comment"],doc["-type"].slice(1).join("/")]);});}', '-All': '// - : -name,-tags,comment,-type\nif (doc[\'-type\'].join(\'/\').substring(0,2)!=\'x0\' && doc[\'-type\'].join(\'/\').substring(0,2)!=\'x1\' && doc[\'-type\'].join(\'/\').substring(0,2)!=\'x2\' && doc[\'-type\'].join(\'/\').substring(0,11)!=\'measurement\' && doc[\'-type\'].join(\'/\').substring(0,6)!=\'sample\' && doc[\'-type\'].join(\'/\').substring(0,9)!=\'procedure\' && doc[\'-type\'].join(\'/\').substring(0,10)!=\'instrument\') {doc["-branch"].forEach(function(branch){emit(branch.stack[0], [doc["-name"],doc[\'-tags\'].join(\' \'),doc["comment"],doc["-type"].slice(1).join("/")]);});}'} sssssSSSSSSSSSS
+    """
     return
 
 
@@ -139,8 +160,29 @@ class SqlLiteDB:
     Returns:
         dict: json representation of document
     """
-    print('**START GETDOC')
-    return
+    self.cursor.execute(f"SELECT * FROM main WHERE id == '{docID}'")
+    data = self.cursor.fetchone()
+    # CONVERT SQLITE STYLE INTO PASTA-DICT
+    doc = {'-'+k:v for k,v in zip(self.mainColumnNames,data)}
+    doc['_id'] = doc.pop('-id')
+    doc['_rev'] = doc.pop('-rev')
+    doc['image']= doc.pop('-image')
+    doc['-type']= doc['-type'].split('/')
+    doc['-tags']= doc['-tags'].split('/') if doc['-tags'] else []
+    doc['-gui'] = [i=='T' for i in doc['-gui']]
+    doc['-branch'] = []
+    for idx, stack in enumerate(doc['-branchStack'].split(' ')):
+      doc['-branch'].append({'stack':stack.split('/')[:-1],
+                            'child':int(doc['-branchChild'].split(' ')[idx]),
+                            'path':doc['-branchPath'].split(' ')[idx],
+                            'show':[i=='T' for i in doc['-branchShow'].split(' ')[idx]]})
+    del doc['-branchStack']
+    del doc['-branchChild']
+    del doc['-branchPath']
+    del doc['-branchShow']
+    meta = json.loads(doc.pop('-meta'))
+    doc |= meta
+    return doc
 
 
   def saveDoc(self, doc:dict[str,Any]) -> dict[str,Any]:
@@ -166,7 +208,7 @@ class SqlLiteDB:
     doc['-type'] = '/'.join(doc['-type'])
     doc['-tags'] = ' '.join(doc['-tags'])
     doc['-gui']  = ''.join(['T' if i else 'F' for i in doc['-gui']])
-    doc['-branchStack'] = '/'.join(doc['-branch']['stack'])
+    doc['-branchStack'] = '/'.join(doc['-branch']['stack']+[doc['_id']])
     doc['-branchChild'] = str(doc['-branch']['child'])
     doc['-branchPath']  = doc['-branch']['path']
     doc['-branchShow']  = ''.join(['T' if j else 'F' for j in doc['-branch']['show']])
@@ -282,14 +324,35 @@ class SqlLiteDB:
     Returns:
         list: list of documents in this view
     """
-    print('**START GETVIEW', thePath.split('/')[1], startKey)
-    self.cursor.execute("SELECT * FROM main WHERE type LIKE '"+thePath.split('/')[1]+"%'")
-    if startKey is not None or preciseKey is not None:
-      print("***TODO: do this 645p.ueoi")
-    results = self.cursor.fetchall()
-    print(results)
-    a = 4/0
-    return
+    viewType, docType = thePath.split('/')
+    if viewType=='viewDocType':
+      columns = ', '.join(['id'] + [i[1:] if i[0] in ('-','_') else f"JSON_EXTRACT(meta, '$.{i}')" for i in self.viewColumns[docType]])
+      self.cursor.execute("SELECT "+columns+" FROM main WHERE type LIKE '"+docType+"%'")
+      if startKey is not None or preciseKey is not None:
+        print("***TODO: do this 645p.ueoi")
+      results = self.cursor.fetchall()
+      results = [{'id':i[0], 'key':i[0], 'value':list(i[1:])} for i in results]
+      print('**TODO Comments are not saved??')
+    elif thePath=='viewHierarchy/viewHierarchy':
+      self.cursor.execute("SELECT id, branchStack, branchChild, type, name, gui FROM main WHERE branchStack LIKE '"+startKey+"%'")
+      results = self.cursor.fetchall()
+      results = [{'id':i[0], 'key':i[1].replace('/',' '), 'value':[i[2], i[3].split('/'), i[4], [j=='T' for j in i[5]]]} for i in results]
+    elif thePath=='viewHierarchy/viewPaths':
+      self.cursor.execute("SELECT id, branchPath, branchStack, type, branchChild, JSON_EXTRACT(meta, '$.shasum') FROM main")
+      results = self.cursor.fetchall()
+      results = [{'id':i[0], 'key':i[1], 'value':[i[2].replace('/',' '), i[3].split('/'), i[4], i[5]]} for i in results if i[1] is not None]
+    elif viewType=='viewIdentify':
+      key = 'qrCode' if docType=='viewQR' else 'shasum'
+      if startKey is None:
+        self.cursor.execute(f"SELECT id, JSON_EXTRACT(meta, '$.{key}'), name FROM main")
+      else:
+        self.cursor.execute(f"SELECT id, JSON_EXTRACT(meta, '$.{key}'), name FROM main WHERE JSON_EXTRACT(meta, '$.{key}')='{startKey}'")
+      results = self.cursor.fetchall()
+      results = [{'id':i[0], 'key':i[1].replace('/',' '), 'value':i[2]} for i in results if i[1] is not None]
+    else:
+      print('continue here with view', thePath, startKey, preciseKey)
+      a = 4/0
+    return results
 
 
   def saveView(self, designName:str, viewCode:dict[str,str]) -> None:
@@ -315,8 +378,38 @@ class SqlLiteDB:
     Returns:
       Node: hierarchy in an anytree
     """
-    print('**START GET HIERARCHY')
-    return
+    view = self.getView('viewHierarchy/viewHierarchy',    startKey=start)
+    # create tree of folders: these are the only ones that have children
+    dataTree = None
+    nonFolders = []
+    id2Node = {}
+    for item in view:
+      docType = item['value'][1]
+      if docType[0][0] != 'x':
+        nonFolders.append(item)
+        continue
+      _id     = item['id']
+      childNum, docType, name, gui = item['value']
+      if dataTree is None:
+        dataTree = Node(id=_id, docType=docType, name=name, gui=gui, childNum=childNum)
+        id2Node[_id] = dataTree
+      else:
+        parent = item['key'].split()[-2]
+        subNode = Node(id=_id, parent=id2Node[parent], docType=docType, name=name, gui=gui, childNum=childNum)
+        id2Node[_id] = subNode
+    # add non-folders into tree
+    # print(len(nonFolders),'length: crop if too long')
+    for item in nonFolders:
+      _id     = item['id']
+      childNum, docType, name, gui, _ = item['value']
+      parentId = item['key'].split()[-2]
+      Node(id=_id, parent=id2Node[parentId], docType=docType, name=name, gui=gui, childNum=childNum)
+    # sort children
+    for parentNode in id2Node.values():
+      children = parentNode.children
+      childNums= [f'{i.childNum}{i.id}' for i in children]
+      parentNode.children = [x for _, x in sorted(zip(childNums, children))]
+    return dataTree
 
 
   def hideShow(self, stack:Union[str,list[str]]) -> None:
