@@ -2,10 +2,8 @@
 from typing import Any
 
 defaultDataHierarchy: dict[str, Any] = {
-  "_id": "-dataHierarchy-",
-  "-version": 4,
-
   "x0": {"IRI": "", "attachments": [], "title": "Projects", "icon": "", "shortcut": "space",
+         "view":"-name,-tags,status,objective,comment",
          "meta": {"default": [
            {"name": "-name", "query": "What is the name of the project?", "mandatory": True},
            {"name": "-tags", "query": "What are the tags associated with the project?", "mandatory": True},
@@ -14,21 +12,15 @@ defaultDataHierarchy: dict[str, Any] = {
            {"name": "objective", "query": "What is the objective?"},
            {"name": "comment", "query": "#tags comments remarks :field:value:"}
          ]}},
-  "x1": {"IRI": "", "attachments": [], "title": "Folders", "icon": "", "shortcut": "",
+  "x1": {"IRI": "", "attachments": [], "title": "Folders", "icon": "", "shortcut": "", "view":"",
          "meta": {"default": [
            {"name": "-name", "query": "What is the name of task?", "mandatory": True},
            {"name": "-tags", "query": "What are the tags associated with the task?", "mandatory": True},
            {"name": "comment", "query": "#tags comments remarks :field:value:"}
          ]}},
-  "x2": {"IRI": "", "attachments": [], "title": "Folders", "icon": "", "shortcut": "",
-         "meta": {"default": [
-           {"name": "-name", "query": "What is the name of subtask?", "mandatory": True},
-           {"name": "-tags", "query": "What are the tags associated with the subtask?", "mandatory": True},
-           {"name": "comment", "query": "#tags comments remarks :field:value:"}
-         ]}},
 
   "measurement": {"IRI": "", "attachments": [], "title": "Measurements", "icon": "fa5s.thermometer-half",
-                  "shortcut": "m",
+                  "shortcut": "m", "view":"-name,-tags,comment,-type,image,sample,procedure",
                   "meta": {"default": [
                     {"name": "-name", "query": "What is the name of file name?", "mandatory": True},
                     {"name": "-tags", "query": "What are the tags associated with the file name?", "mandatory": True},
@@ -40,6 +32,7 @@ defaultDataHierarchy: dict[str, Any] = {
                     {"name": "procedure", "query": "Which procedure was used?", "list": "procedure"}
                   ]}},
   "sample": {"IRI": "", "attachments": [], "title": "Samples", "icon": "fa5s.vial", "shortcut": "s",
+             "view":"-name,-tags,chemistry,comment,qrCode",
              "meta": {"default": [
                {"name": "-name", "query": "What is the name / identifier of the sample?", "mandatory": True},
                {"name": "-tags", "query": "What are the tags associated with the sample?", "mandatory": True},
@@ -48,6 +41,7 @@ defaultDataHierarchy: dict[str, Any] = {
                {"name": "qrCode"}
              ]}},
   "procedure": {"IRI": "", "attachments": [], "title": "Procedures", "icon": "fa5s.list-ol", "shortcut": "p",
+                "view":"-name,-tags,comment,content",
                 "meta": {"default": [
                   {"name": "-name", "query": "What is the name / path of the procedure?", "mandatory": True},
                   {"name": "-tags", "query": "What are the tags associated with the procedure?", "mandatory": True},
@@ -55,6 +49,7 @@ defaultDataHierarchy: dict[str, Any] = {
                   {"name": "content", "query": "What is procedure (Markdown possible; autofill if file given)?"}
                 ]}},
   "instrument": {"IRI": "", "attachments": [], "title": "Instruments", "icon": "ri.scales-2-line", "shortcut": "i",
+                 "view":"-name,-tags,comment,vendor",
                  "meta": {"default": [
                    {"name": "-name", "query": "What is the name / path of the instrument?", "mandatory": True},
                    {"name": "-tags", "query": "What are the tags associated with the instrument?", "mandatory": True},

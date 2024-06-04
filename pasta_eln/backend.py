@@ -711,8 +711,6 @@ class Backend(CLI_Mixin):
     """
     ### check database itself for consistency
     output = self.db.checkDB(outputStyle=outputStyle, repair=repair, minimal=minimal)
-    if repair:
-      self.db.initGeneralViews()
     ### compare with file system
     output += outputString(outputStyle,'h2','File status')
     viewProjects   = self.db.getView('viewDocType/x0All')

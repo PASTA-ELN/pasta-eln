@@ -20,8 +20,8 @@ class CLI_Mixin:
     """
     outString = []
     widthArray = [25,25,25,25]
-    for idx,item in enumerate(i for group in self.db.dataHierarchy[docType]['meta']
-                              for i in self.db.dataHierarchy[docType]['meta'][group]):
+    for idx,item in enumerate(i for group in self.db.dataHierarchy('meta')[docType]
+                              for i in self.db.dataHierarchy('meta')[docType][group]):
       width = widthArray[idx] if idx<len(widthArray) else 0
       if width!=0:
         formatString = '{0: <'+str(abs(width))+'}'
@@ -34,8 +34,8 @@ class CLI_Mixin:
       if lineNum>20:
         outString += f'... continued for {len(dataList)} items in total\n'
         break
-      for idx, item in enumerate(i for group in self.db.dataHierarchy[docType]['meta']
-                                 for i in self.db.dataHierarchy[docType]['meta'][group]):
+      for idx, item in enumerate(i for group in self.db.dataHierarchy('meta')[docType]
+                                 for i in self.db.dataHierarchy('meta')[docType][group]):
         width = widthArray[idx] if idx<len(widthArray) else 0
         if width!=0:
           formatString = '{0: <'+str(abs(width))+'}'

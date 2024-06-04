@@ -3,7 +3,8 @@ import json, copy, sqlite3
 from typing import Any, Optional, Union
 from pathlib import Path
 from anytree import Node
-from .fixedStringsJson import defaultDataHierarchy, defaultDataHierarchyNode
+from .fixedStringsJson import defaultDataHierarchy
+from .miscTools import outputString
 
 """
 DO NOT WORK ON THIS IF THERE IS SOMETHING ON THE TODO LIST
@@ -34,7 +35,7 @@ Benefits:
 KEY_ORDER   = ['_id' ,            '_rev','-name','-user','-type','-branchStack','-branchChild','-branchPath','-branchShow','-date','-gui',      '-tags','-client']
 KEY_TYPE    = ['TEXT PRIMARY KEY','TEXT','TEXT', 'TEXT', 'TEXT', 'TEXT',        'TEXT',        'TEXT',       'TEXT',       'TEXT', 'varchar(2)','TEXT', 'TEXT']
 OTHER_ORDER = ['image', 'content', 'comment']
-DATAHIERARCHY=['IRI','attachments','title','icon','shortcut']
+DATA_HIERARCHY=['IRI','attachments','title','icon','shortcut','view']
 
 class SqlLiteDB:
   """
@@ -49,76 +50,55 @@ class SqlLiteDB:
     """
     self.connection = sqlite3.connect(basePath/"pastaELN.db")
     self.cursor     = self.connection.cursor()
-    self.cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
-    tables = [i[0] for i in self.cursor.fetchall()]
-    self.connection.commit()
-    # check if default documents exist and create
-    if 'dataHierarchy' not in tables or resetDataHierarchy:
-      if 'dataHierarchy' in tables:
-        print('Info: remove old dataHierarchy')
-        self.cursor.execute("DROP TABLE dataHierarchy")
-      self.cursor.execute(f"CREATE TABLE IF NOT EXISTS dataHierarchy (docType TEXT PRIMARY KEY, iri TEXT, attachments TEXT, title TEXT, icon TEXT, shortcut varchar(1), meta TEXT)")
-      for k, v in defaultDataHierarchy.items():
-        if k[0] in ('_','-'):
-          continue
-        self.cursor.execute(f"INSERT INTO dataHierarchy VALUES (?, ?, ?, ?, ?, ?, ?)", [k]+[str(v[i]) for i in DATAHIERARCHY]+[json.dumps(v['meta'])])
-      self.initDocTypeViews( configuration['tableColumnsMax'] )
-      self.initGeneralViews()
-    # refill old-style dictionary
-    self.dataHierarchy = {}
-    self.cursor.execute("SELECT * FROM dataHierarchy")
-    for row in self.cursor.fetchall():
-      rowList     = list(row)
-      rowList[-1] = json.loads(row[-1])
-      self.dataHierarchy[row[0]] = {i:j for i,j in zip(DATAHIERARCHY+['meta'],rowList[1:])}
-    patternDB    = list(map(lambda x: x[0], self.cursor.description))[1:-1]  #TODO: do not substract but add for comparison
-    patternCode  = [i.lower() for i in DATAHIERARCHY]
-    if patternDB!= patternCode:
-      print(F"**ERROR wrong dataHierarchy version: {patternDB} {patternCode}")
-      raise ValueError(f"Wrong dataHierarchy version {patternDB} {patternCode}")
+    self.dataHierarchy('', resetDataHierarchy)
     # create if not exists, main table and check its colums
     tableString = ', '.join([f'{i[1:]} {j}' for i,j in zip(KEY_ORDER,KEY_TYPE)])+', '+', '.join([f'{i} TEXT' for i in OTHER_ORDER])+', meta TEXT, __history__ TEXT'
     self.cursor.execute(f"CREATE TABLE IF NOT EXISTS main ({tableString})")
     self.cursor.execute("SELECT * FROM main")
     self.mainColumnNames = list(map(lambda x: x[0], self.cursor.description))
-
     print('TODO: check code vs. data-colums')
-
-    self.dataLabels = {k:v['title'] for k,v in self.dataHierarchy.items() if k[0] not in ['_','-']}
-    self.basePath   = basePath
-    print('**INFO END INIT')
     return
 
 
-  def initDocTypeViews(self, tableColumnsMax:int, docTypeChange:str='', columnsChange:list[str]=[]) -> None:
+  def dataHierarchy(self, column:str='', resetDataHierarchy:bool=False) -> dict[str,Any]:
     """
-    for the individual docTypes
+    prepare / return data hierarchy
 
     Args:
-      tableColumnsMax (int): max. number of columns in the docType tables
-      docTypeChange (str): if change columns for docType: give docType
-      columnsChange (list): change table / view columns to these
+      column (str): if '', initialize it; else return that column
     """
-    print('**START INITDOCTYPEVIEWS: add to db:datahierarchy and all datahierarchy functions here, long content in procedure')
-    self.viewColumns = {'x0':['-name','-tags','status','objective','comment'],
-                        'procedure':['-name','-tags','comment','content'],
-                        'sample':['-name', '-tags', 'chemistry', 'comment' ,'qrCode'],
-                        'measurement':['-name', '-tags', 'comment', '-type', 'image', 'sample', 'procedure'],
-                        'instrument':['-name', '-tags', 'comment', 'vendor']}
-    """
-    SB: initDocViews newColumns {}
-    {'x0': '// x0 : -name,-tags,status,objective,comment\n
-    if (doc[\'-type\']==\'x0\' && (doc[\'-branch\'][0].show.every(function(i) {return i;})))
-        {doc["-branch"].forEach(function(branch){emit(doc._id, [doc["-name"],doc[\'-tags\'].join(\' \'),doc["status"],doc["objective"],doc["comment"]]);});}',
-    'x0All': '// x0 : -name,-tags,status,objective,comment\n
-    if (doc[\'-type\']==\'x0\')
-        {doc["-branch"].forEach(function(branch){emit(doc._id, [doc["-name"],doc[\'-tags\'].join(\' \'),doc["status"],doc["objective"],doc["comment"]]);});}',
-
-    'measurement': '// measurement : -name,-tags,comment,-type,image,#_curated,sample,procedure\nif (doc[\'-type\'].join(\'/\').substring(0,11)==\'measurement\' && (doc[\'-branch\'][0].show.every(function(i) {return i;}))) {doc["-branch"].forEach(function(branch){emit(branch.stack[0], [doc["-name"],doc[\'-tags\'].join(\' \'),doc["comment"],doc["-type"].slice(1).join("/"),doc.image?doc.image.length>3:false,doc["-tags"].indexOf("_curated")>-1,doc["sample"],doc["procedure"]]);});}', 'measurementAll': '// measurement : -name,-tags,comment,-type,image,#_curated,sample,procedure\nif (doc[\'-type\'].join(\'/\').substring(0, 11)==\'measurement\') {doc["-branch"].forEach(function(branch){emit(branch.stack[0], [doc["-name"],doc[\'-tags\'].join(\' \'),doc["comment"],doc["-type"].slice(1).join("/"),doc.image?doc.image.length>3:false,doc["-tags"].indexOf("_curated")>-1,doc["sample"],doc["procedure"]]);});}', 'sample': '// sample : -name,-tags,chemistry,comment,qrCode\nif (doc[\'-type\'].join(\'/\').substring(0,6)==\'sample\' && (doc[\'-branch\'][0].show.every(function(i) {return i;}))) {doc["-branch"].forEach(function(branch){emit(branch.stack[0], [doc["-name"],doc[\'-tags\'].join(\' \'),doc["chemistry"],doc["comment"],doc["qrCode"]]);});}', 'sampleAll': '// sample : -name,-tags,chemistry,comment,qrCode\nif (doc[\'-type\'].join(\'/\').substring(0, 6)==\'sample\') {doc["-branch"].forEach(function(branch){emit(branch.stack[0], [doc["-name"],doc[\'-tags\'].join(\' \'),doc["chemistry"],doc["comment"],doc["qrCode"]]);});}', 'procedure': '// procedure : -name,-tags,comment,content\nif (doc[\'-type\'].join(\'/\').substring(0,9)==\'procedure\' && (doc[\'-branch\'][0].show.every(function(i) {return i;}))) {doc["-branch"].forEach(function(branch){emit(branch.stack[0], [doc["-name"],doc[\'-tags\'].join(\' \'),doc["comment"],doc.content?doc.content.slice(0, 100):""]);});}', 'procedureAll': '// procedure : -name,-tags,comment,content\nif (doc[\'-type\'].join(\'/\').substring(0, 9)==\'procedure\') {doc["-branch"].forEach(function(branch){emit(branch.stack[0], [doc["-name"],doc[\'-tags\'].join(\' \'),doc["comment"],doc.content?doc.content.slice(0, 100):""]);});}', 'instrument': '// instrument : -name,-tags,comment,vendor\nif (doc[\'-type\'].join(\'/\').substring(0,10)==\'instrument\' && (doc[\'-branch\'][0].show.every(function(i) {return i;}))) {doc["-branch"].forEach(function(branch){emit(branch.stack[0], [doc["-name"],doc[\'-tags\'].join(\' \'),doc["comment"],doc["vendor"]]);});}', 'instrumentAll': '// instrument : -name,-tags,comment,vendor\nif (doc[\'-type\'].join(\'/\').substring(0, 10)==\'instrument\') {doc["-branch"].forEach(function(branch){emit(branch.stack[0], [doc["-name"],doc[\'-tags\'].join(\' \'),doc["comment"],doc["vendor"]]);});}', '-': '// - : -name,-tags,comment,-type\nif (doc[\'-type\'].join(\'/\').substring(0,2)!=\'x0\' && doc[\'-type\'].join(\'/\').substring(0,2)!=\'x1\' && doc[\'-type\'].join(\'/\').substring(0,2)!=\'x2\' && doc[\'-type\'].join(\'/\').substring(0,11)!=\'measurement\' && doc[\'-type\'].join(\'/\').substring(0,6)!=\'sample\' && doc[\'-type\'].join(\'/\').substring(0,9)!=\'procedure\' && doc[\'-type\'].join(\'/\').substring(0,10)!=\'instrument\' && (doc[\'-branch\'][0].show.every(function(i) {return i;}))) {doc["-branch"].forEach(function(branch){emit(branch.stack[0], [doc["-name"],doc[\'-tags\'].join(\' \'),doc["comment"],doc["-type"].slice(1).join("/")]);});}', '-All': '// - : -name,-tags,comment,-type\nif (doc[\'-type\'].join(\'/\').substring(0,2)!=\'x0\' && doc[\'-type\'].join(\'/\').substring(0,2)!=\'x1\' && doc[\'-type\'].join(\'/\').substring(0,2)!=\'x2\' && doc[\'-type\'].join(\'/\').substring(0,11)!=\'measurement\' && doc[\'-type\'].join(\'/\').substring(0,6)!=\'sample\' && doc[\'-type\'].join(\'/\').substring(0,9)!=\'procedure\' && doc[\'-type\'].join(\'/\').substring(0,10)!=\'instrument\') {doc["-branch"].forEach(function(branch){emit(branch.stack[0], [doc["-name"],doc[\'-tags\'].join(\' \'),doc["comment"],doc["-type"].slice(1).join("/")]);});}'} sssssSSSSSSSSSS
-    SB: initDocViews newColumns {'x0': '-name,-tags,status,objective,comment', 'measurement': '-name,-tags,comment,-type,image,#_curated,sample,procedure', 'sample': '-name,-tags,chemistry,comment,qrCode', 'procedure': '-name,-tags,comment,content', 'instrument': '-name,-tags,comment,vendor', '-': '-name,-tags,comment,-type'}
-    {'x0': '// x0 : -name,-tags,status,objective,comment\nif (doc[\'-type\']==\'x0\' && (doc[\'-branch\'][0].show.every(function(i) {return i;}))) {doc["-branch"].forEach(function(branch){emit(doc._id, [doc["-name"],doc[\'-tags\'].join(\' \'),doc["status"],doc["objective"],doc["comment"]]);});}', 'x0All': '// x0 : -name,-tags,status,objective,comment\nif (doc[\'-type\']==\'x0\') {doc["-branch"].forEach(function(branch){emit(doc._id, [doc["-name"],doc[\'-tags\'].join(\' \'),doc["status"],doc["objective"],doc["comment"]]);});}', 'measurement': '// measurement : -name,-tags,comment,-type,image,#_curated,sample,procedure\nif (doc[\'-type\'].join(\'/\').substring(0,11)==\'measurement\' && (doc[\'-branch\'][0].show.every(function(i) {return i;}))) {doc["-branch"].forEach(function(branch){emit(branch.stack[0], [doc["-name"],doc[\'-tags\'].join(\' \'),doc["comment"],doc["-type"].slice(1).join("/"),doc.image?doc.image.length>3:false,doc["-tags"].indexOf("_curated")>-1,doc["sample"],doc["procedure"]]);});}', 'measurementAll': '// measurement : -name,-tags,comment,-type,image,#_curated,sample,procedure\nif (doc[\'-type\'].join(\'/\').substring(0, 11)==\'measurement\') {doc["-branch"].forEach(function(branch){emit(branch.stack[0], [doc["-name"],doc[\'-tags\'].join(\' \'),doc["comment"],doc["-type"].slice(1).join("/"),doc.image?doc.image.length>3:false,doc["-tags"].indexOf("_curated")>-1,doc["sample"],doc["procedure"]]);});}', 'sample': '// sample : -name,-tags,chemistry,comment,qrCode\nif (doc[\'-type\'].join(\'/\').substring(0,6)==\'sample\' && (doc[\'-branch\'][0].show.every(function(i) {return i;}))) {doc["-branch"].forEach(function(branch){emit(branch.stack[0], [doc["-name"],doc[\'-tags\'].join(\' \'),doc["chemistry"],doc["comment"],doc["qrCode"]]);});}', 'sampleAll': '// sample : -name,-tags,chemistry,comment,qrCode\nif (doc[\'-type\'].join(\'/\').substring(0, 6)==\'sample\') {doc["-branch"].forEach(function(branch){emit(branch.stack[0], [doc["-name"],doc[\'-tags\'].join(\' \'),doc["chemistry"],doc["comment"],doc["qrCode"]]);});}', 'procedure': '// procedure : -name,-tags,comment,content\nif (doc[\'-type\'].join(\'/\').substring(0,9)==\'procedure\' && (doc[\'-branch\'][0].show.every(function(i) {return i;}))) {doc["-branch"].forEach(function(branch){emit(branch.stack[0], [doc["-name"],doc[\'-tags\'].join(\' \'),doc["comment"],doc.content?doc.content.slice(0, 100):""]);});}', 'procedureAll': '// procedure : -name,-tags,comment,content\nif (doc[\'-type\'].join(\'/\').substring(0, 9)==\'procedure\') {doc["-branch"].forEach(function(branch){emit(branch.stack[0], [doc["-name"],doc[\'-tags\'].join(\' \'),doc["comment"],doc.content?doc.content.slice(0, 100):""]);});}', 'instrument': '// instrument : -name,-tags,comment,vendor\nif (doc[\'-type\'].join(\'/\').substring(0,10)==\'instrument\' && (doc[\'-branch\'][0].show.every(function(i) {return i;}))) {doc["-branch"].forEach(function(branch){emit(branch.stack[0], [doc["-name"],doc[\'-tags\'].join(\' \'),doc["comment"],doc["vendor"]]);});}', 'instrumentAll': '// instrument : -name,-tags,comment,vendor\nif (doc[\'-type\'].join(\'/\').substring(0, 10)==\'instrument\') {doc["-branch"].forEach(function(branch){emit(branch.stack[0], [doc["-name"],doc[\'-tags\'].join(\' \'),doc["comment"],doc["vendor"]]);});}', '-': '// - : -name,-tags,comment,-type\nif (doc[\'-type\'].join(\'/\').substring(0,2)!=\'x0\' && doc[\'-type\'].join(\'/\').substring(0,2)!=\'x1\' && doc[\'-type\'].join(\'/\').substring(0,2)!=\'x2\' && doc[\'-type\'].join(\'/\').substring(0,11)!=\'measurement\' && doc[\'-type\'].join(\'/\').substring(0,6)!=\'sample\' && doc[\'-type\'].join(\'/\').substring(0,9)!=\'procedure\' && doc[\'-type\'].join(\'/\').substring(0,10)!=\'instrument\' && (doc[\'-branch\'][0].show.every(function(i) {return i;}))) {doc["-branch"].forEach(function(branch){emit(branch.stack[0], [doc["-name"],doc[\'-tags\'].join(\' \'),doc["comment"],doc["-type"].slice(1).join("/")]);});}', '-All': '// - : -name,-tags,comment,-type\nif (doc[\'-type\'].join(\'/\').substring(0,2)!=\'x0\' && doc[\'-type\'].join(\'/\').substring(0,2)!=\'x1\' && doc[\'-type\'].join(\'/\').substring(0,2)!=\'x2\' && doc[\'-type\'].join(\'/\').substring(0,11)!=\'measurement\' && doc[\'-type\'].join(\'/\').substring(0,6)!=\'sample\' && doc[\'-type\'].join(\'/\').substring(0,9)!=\'procedure\' && doc[\'-type\'].join(\'/\').substring(0,10)!=\'instrument\') {doc["-branch"].forEach(function(branch){emit(branch.stack[0], [doc["-name"],doc[\'-tags\'].join(\' \'),doc["comment"],doc["-type"].slice(1).join("/")]);});}'} sssssSSSSSSSSSS
-    """
-    return
+    if column=='':
+      self.cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+      tables = [i[0] for i in self.cursor.fetchall()] # all tables
+      self.connection.commit()
+      # check if default documents exist and create
+      if 'dataHierarchy' not in tables or resetDataHierarchy:
+        if 'dataHierarchy' in tables:
+          print('Info: remove old dataHierarchy')
+          self.cursor.execute("DROP TABLE dataHierarchy")
+        tableString = 'docType TEXT PRIMARY KEY, '+' TEXT, '.join(DATA_HIERARCHY)+' TEXT, meta TEXT'
+        self.cursor.execute(f"CREATE TABLE IF NOT EXISTS dataHierarchy ({tableString})")
+        for k, v in defaultDataHierarchy.items():
+          self.cursor.execute("INSERT INTO dataHierarchy VALUES (?, ?, ?, ?, ?, ?, ?, ?)", [k]+[str(v[i]) for i in DATA_HIERARCHY]+[json.dumps(v['meta'])])
+        self.connection.commit()
+      # refill old-style dictionary
+      self.cursor = self.connection.execute('select * from dataHierarchy')
+      patternDB    = list(map(lambda x: x[0], self.cursor.description))
+      patternCode  = ['docType']+DATA_HIERARCHY+['meta']
+      if patternDB!= patternCode:
+        print(F"**ERROR wrong dataHierarchy version: {patternDB} {patternCode}")
+        raise ValueError(f"Wrong dataHierarchy version {patternDB} {patternCode}")
+      print('**TODO long content in procedure')
+      return {}
+    ### return column information
+    self.cursor.execute(f"SELECT docType, {column} FROM dataHierarchy")
+    results = self.cursor.fetchall()
+    resultsDict = {i[0]:i[1] for i in results}
+    if column=='meta':
+      resultsDict = {k:json.loads(v) for k,v in resultsDict.items()}
+    elif column=='view':
+      resultsDict = {k:v.split(',') for k,v in resultsDict.items()}
+    return resultsDict
 
 
   def getColumnNames(self) -> dict[str,str]:
@@ -127,16 +107,7 @@ class SqlLiteDB:
     Returns:
       dict: docType and ,-separated list of names as string
     """
-    print('**START GETCOLUMNSNAMES')
-    return
-
-
-  def initGeneralViews(self) -> None:
-    """
-    general views: Hierarchy, Identify
-    """
-    print('**START INITVIEWSGENERAL')
-    return
+    return self.viewColumns
 
 
   def exit(self, deleteDB:bool=False) -> None:
@@ -324,9 +295,15 @@ class SqlLiteDB:
     Returns:
         list: list of documents in this view
     """
+    allFlag = False
+    if thePath.endswith('All'):
+        thePath = thePath[:-3]
+        allFlag = True
+        print('**info do something with all flag')
     viewType, docType = thePath.split('/')
     if viewType=='viewDocType':
-      columns = ', '.join(['id'] + [i[1:] if i[0] in ('-','_') else f"JSON_EXTRACT(meta, '$.{i}')" for i in self.viewColumns[docType]])
+      viewColumns = self.dataHierarchy('view')[docType]
+      columns = ', '.join(['id'] + [i[1:] if i[0] in ('-','_') else f"JSON_EXTRACT(meta, '$.{i}')" for i in viewColumns])
       self.cursor.execute("SELECT "+columns+" FROM main WHERE type LIKE '"+docType+"%'")
       if startKey is not None or preciseKey is not None:
         print("***TODO: do this 645p.ueoi")
@@ -353,18 +330,6 @@ class SqlLiteDB:
       print('continue here with view', thePath, startKey, preciseKey)
       a = 4/0
     return results
-
-
-  def saveView(self, designName:str, viewCode:dict[str,str]) -> None:
-    """
-    Adopt the view by defining a new jsCode
-
-    Args:
-        designName (string): name of the design
-        viewCode (dict): viewName: js-code
-    """
-    print('**START SAVE VIEW')
-    return
 
 
   def getHierarchy(self, start:str, allItems:bool=False) -> Node:
@@ -482,5 +447,19 @@ class SqlLiteDB:
     Returns:
         str: output
     """
-    print('**START CHECKDB')
-    return
+    outstring = ''
+    if outputStyle=='html':
+      outstring += '<div align="right">'
+    outstring+= outputString(outputStyle,'h2','LEGEND')
+    if not minimal:
+      outstring+= outputString(outputStyle,'ok','Green: perfect and as intended')
+      outstring+= outputString(outputStyle,'okish', 'Blue: ok-ish, can happen: empty files for testing, strange path for measurements')
+    outstring+= outputString(outputStyle,'unsure', 'Dark magenta: unsure if bug or desired (e.g. move step to random path-name)')
+    outstring+= outputString(outputStyle,'warning','Orange-red: WARNING should not happen (e.g. procedures without project)')
+    outstring+= outputString(outputStyle,'error',  'Red: FAILURE and ERROR: NOT ALLOWED AT ANY TIME')
+    if outputStyle=='html':
+      outstring += '</div>'
+    outstring+= outputString(outputStyle,'h2','List all database entries')
+    if repair:
+      print('REPAIR MODE IS ON: afterwards, full-reload and create views')
+    return outstring
