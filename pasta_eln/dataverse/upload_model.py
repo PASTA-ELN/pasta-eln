@@ -7,6 +7,7 @@
 #  Filename: upload_model.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
+
 from pasta_eln.dataverse.base_model import BaseModel
 from pasta_eln.dataverse.incorrect_parameter_error import IncorrectParameterError
 
@@ -35,6 +36,7 @@ class UploadModel(BaseModel):
       project_name (str | None): The name of the project.
       project_doc_id (str | None): The document ID of the project.
       status (str | None): The status of the upload.
+      created_date_time (str | None): The date and time when the upload created.
       finished_date_time (str | None): The date and time when the upload finished.
       log (str): The log associated with the upload.
       dataverse_url (str | None): The URL of the Dataverse.
@@ -48,6 +50,7 @@ class UploadModel(BaseModel):
                project_name: str | None = None,
                project_doc_id: str | None = None,
                status: str | None = None,
+               created_date_time: str | None = None,
                finished_date_time: str | None = None,
                log: str = "",
                dataverse_url: str | None = None):
@@ -61,6 +64,7 @@ class UploadModel(BaseModel):
         project_name (str | None): The name of the project. Defaults to None.
         project_doc_id (str | None): The document ID of the project. Defaults to None.
         status (str | None): The status of the upload. Defaults to None.
+        created_date_time (str | None): The date and time when the upload created. Defaults to None.
         finished_date_time (str | None): The date and time when the upload finished. Defaults to None.
         log (str): The log associated with the upload. Defaults to empty string.
         dataverse_url (str | None): The URL of the Dataverse. Defaults to None.
@@ -91,6 +95,10 @@ class UploadModel(BaseModel):
       self._finished_date_time: str | None = finished_date_time
     else:
       raise IncorrectParameterError(f"Expected string type for finished_date_time but got {type(finished_date_time)}")
+    if isinstance(created_date_time, str | None):
+      self._created_date_time: str | None = created_date_time
+    else:
+      raise IncorrectParameterError(f"Expected string type for created_date_time but got {type(created_date_time)}")
     if isinstance(log, str):
       self._log: str = f"{log}\n" if log and not log.endswith('\n') else log
     else:
@@ -255,6 +263,42 @@ class UploadModel(BaseModel):
 
     """
     del self._status
+
+  @property
+  def created_date_time(self) -> str | None:
+    """
+    Returns the created date and time of the upload.
+
+    Returns:
+        str | None: The created date and time of the upload.
+
+    """
+    return self._created_date_time
+
+  @created_date_time.setter
+  def created_date_time(self, value: str | None) -> None:
+    """
+    Sets the created date and time of the upload.
+
+    Args:
+        value (str | None): The created date and time value to be set.
+
+    Raises:
+        IncorrectParameterError: If the value is not of type str.
+
+    """
+    if isinstance(value, str | None):
+      self._created_date_time = value
+    else:
+      raise IncorrectParameterError(f"Expected string type for created_date_time but got {type(value)}")
+
+  @created_date_time.deleter
+  def created_date_time(self) -> None:
+    """
+    Deletes the created date and time of the upload.
+
+    """
+    del self._created_date_time
 
   @property
   def finished_date_time(self) -> str | None:

@@ -65,11 +65,15 @@ class CompletedUploads(Ui_CompletedUploadsForm):
     Returns:
         None
     """
+    self.latest_bookmark: str | None = None
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
     self.instance = QDialog()
     super().setupUi(self.instance)
     self.db_api = DatabaseAPI()
     self.instance.setWindowModality(QtCore.Qt.ApplicationModal)
+    self.completedUploadsScrollArea.verticalScrollBar().valueChanged.connect(
+      lambda value: self.scrolled(self.completedUploadsScrollArea.verticalScrollBar(), value))
+    self.filterTermLineEdit.textChanged.connect(self.load_ui)
 
   def load_ui(self) -> None:
     """
@@ -85,7 +89,9 @@ class CompletedUploads(Ui_CompletedUploadsForm):
 
     """
     self.clear_ui()
-    for upload in self.db_api.get_models(UploadModel):
+    result = self.db_api.get_paginated_models(UploadModel, filter_term=self.filterTermLineEdit.text())
+    self.latest_bookmark = result["bookmark"]
+    for upload in result["models"]:
       if isinstance(upload, UploadModel):
         widget = self.get_completed_upload_task_widget(upload)
         self.completedUploadsVerticalLayout.addWidget(widget)
@@ -139,11 +145,15 @@ class CompletedUploads(Ui_CompletedUploadsForm):
           completed_task_ui.dataverseUrlLabel.toolTip() + "\n" + upload.dataverse_url)
         completed_task_ui.finishedDateTimeLabel.setText(datetime.fromisoformat(upload.finished_date_time).strftime(
           "%Y-%m-%d %H:%M:%S") if upload.finished_date_time else "")
+        completed_task_ui.startedDateTimeLabel.setText(datetime.fromisoformat(upload.created_date_time).strftime(
+          "%Y-%m-%d %H:%M:%S") if upload.created_date_time else "")
       case "Failed" | "Cancelled":
         completed_task_ui.dataverseUrlLabel.setText("NA")
+        completed_task_ui.startedDateTimeLabel.setText("NA")
         completed_task_ui.finishedDateTimeLabel.setText("NA")
       case _:
         completed_task_ui.dataverseUrlLabel.setText("Error state..")
+        completed_task_ui.startedDateTimeLabel.setText("Error state..")
         completed_task_ui.finishedDateTimeLabel.setText("Error state..")
     return completed_task_frame
 
@@ -157,6 +167,18 @@ class CompletedUploads(Ui_CompletedUploadsForm):
     """
     self.load_ui()
     self.instance.show()
+
+  def scrolled(self, scrollbar, value):
+    if value == scrollbar.maximum() and self.latest_bookmark:
+      result = self.db_api.get_paginated_models(UploadModel,
+                                                filter_term=self.filterTermLineEdit.text(),
+                                                bookmark=self.latest_bookmark)
+      if self.latest_bookmark != result["bookmark"]:
+        self.latest_bookmark = result["bookmark"]
+        for upload in result["models"]:
+          if isinstance(upload, UploadModel):
+            widget = self.get_completed_upload_task_widget(upload)
+            self.completedUploadsVerticalLayout.addWidget(widget)
 
 
 if __name__ == "__main__":

@@ -46,9 +46,19 @@
       </widget>
      </item>
      <item>
+      <widget class="QLabel" name="startedDateTimeLabel">
+       <property name="toolTip">
+        <string>Dataverse upload start time.</string>
+       </property>
+       <property name="text">
+        <string>01-16-2024 10:52:15</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QLabel" name="finishedDateTimeLabel">
        <property name="toolTip">
-        <string>Dataverse upload time.</string>
+        <string>Dataverse upload finish time.</string>
        </property>
        <property name="text">
         <string>01-16-2024 10:52:15</string>

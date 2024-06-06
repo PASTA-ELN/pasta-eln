@@ -80,6 +80,12 @@ class TestDataverseDatabaseAPI:
     if test_id == "success_case_default_values":
       assert db_api.db_api == base_db_api_mock
       assert db_api.design_doc_name == '_design/viewDataverse'
+      assert db_api.config_doc_id == '-dataverseConfig-'
+      assert db_api.data_hierarchy_doc_id == '-dataHierarchy-'
+      assert db_api.upload_model_view_name == 'dvUploadView'
+      assert db_api.project_model_view_name == 'dvProjectsView'
+      assert db_api.upload_models_query_index_name == "uploadModelsQuery"
+      assert db_api.upload_models_query_index_fields == ["finished_date_time"]
     else:
       assert db_api is None
 
@@ -385,6 +391,7 @@ class TestDataverseDatabaseAPI:
     mock_database_api.db_api.get_document.return_value = design_doc_exists
     mock_database_api.db_api.get_view.side_effect = [upload_model_view_exists, project_model_view_exists]
     mock_database_api.create_dataverse_design_document = mocker.MagicMock()
+    mock_database_api.create_query_index = mocker.MagicMock()
     mock_database_api.create_upload_model_view = mocker.MagicMock()
     mock_database_api.create_projects_view = mocker.MagicMock()
     mock_database_api.initialize_config_document = mocker.MagicMock()
@@ -398,6 +405,9 @@ class TestDataverseDatabaseAPI:
       mock_database_api.db_api.get_view.assert_not_called()
     else:
       mock_database_api.db_api.get_document.assert_called_with(mock_database_api.design_doc_name)
+      mock_database_api.create_query_index.assert_called_with(mock_database_api.upload_models_query_index_name,
+                                                              "json",
+                                                              mock_database_api.upload_models_query_index_fields)
       if not design_doc_exists:
         mock_database_api.create_dataverse_design_document.assert_called_once()
       if not upload_model_view_exists:
@@ -611,3 +621,57 @@ class TestDataverseDatabaseAPI:
       mock_database_api.save_config_model(mock_config)
     mock_database_api.logger.info.assert_any_call("Saving config model...")
     assert "Fatal Error, No encryption key found!" in str(exc_info.value)
+
+  @pytest.mark.parametrize("model_type, filter_term, bookmark, limit, expected_output, test_id", [
+    # Happy path tests
+    (UploadModel, None, None, 10, {"bookmark": "next_page_token", "models": [
+      UploadModel(project_name="Project1", dataverse_url="http://example.com", finished_date_time="2023-01-01",
+                  status="completed")]}, "HP-1"),
+    (UploadModel, "filter", "page1", 5, {"bookmark": "next_page_token", "models": [
+      UploadModel(project_name="Project1", dataverse_url="http://example.com", finished_date_time="2023-01-01",
+                  status="completed")]}, "HP-2"),
+
+    # Error cases
+    (ConfigModel, None, None, 10, TypeError, "EC-1"),
+    (ProjectModel, None, None, 10, TypeError, "EC-2"),
+  ])
+  def test_get_paginated_models(self, mock_database_api, mocker, model_type, filter_term, bookmark, limit,
+                                expected_output, test_id):
+    # Arrange
+    mock_database_api.db_api.get_paginated_upload_model_query_results = mocker.MagicMock(
+      return_value={
+        "bookmark": "next_page_token",
+        "docs": [
+          {"project_name": "Project1", "dataverse_url": "http://example.com", "finished_date_time": "2023-01-01",
+           "status": "completed"}
+        ]
+      }
+    )
+
+    # Act
+    if isinstance(expected_output, type) and issubclass(expected_output, Exception):
+      with pytest.raises(expected_output):
+        mock_database_api.get_paginated_models(model_type, filter_term, bookmark, limit)
+    else:
+      result = mock_database_api.get_paginated_models(model_type, filter_term, bookmark, limit)
+
+    # Assert
+    mock_database_api.logger.info("Getting paginated models of type: %s, filter_term: %s, bookmark: %s, limit: %s",
+                                  model_type,
+                                  filter_term,
+                                  bookmark,
+                                  limit)
+    if not isinstance(expected_output, type):
+      mock_database_api.db_api.get_paginated_upload_model_query_results.assert_called_once_with(filter_term,
+                                                                                                ["project_name",
+                                                                                                 "dataverse_url",
+                                                                                                 "finished_date_time",
+                                                                                                 "status"],
+                                                                                                bookmark,
+                                                                                                limit)
+      assert result['bookmark'] == expected_output[
+        'bookmark'], f"Test ID: {test_id}, Expected: {expected_output['bookmark']}, Actual: {result['bookmark']}"
+      assert len(result['models']) == len(expected_output[
+                                            'models']), f"Test ID: {test_id}, Expected: {len(expected_output['models'])}, Actual: {len(result['models'])}"
+      assert result['models'][0].__dict__ == expected_output['models'][
+        0].__dict__, f"Test ID: {test_id}, Expected: {expected_output['models'][0].__dict__}, Actual: {result['models'][0].__dict__}"

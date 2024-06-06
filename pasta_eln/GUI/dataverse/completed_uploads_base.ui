@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1106</width>
-    <height>482</height>
+    <width>1300</width>
+    <height>475</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -35,7 +35,7 @@
      <item>
       <layout class="QHBoxLayout" name="filterHorizontalLayout">
        <item>
-        <widget class="QLineEdit" name="historyFilterLineEdit">
+        <widget class="QLineEdit" name="filterTermLineEdit">
          <property name="toolTip">
           <string>Enter project name / dataverse URL / finished time to filter the below listed tasks.</string>
          </property>
@@ -44,16 +44,6 @@
          </property>
          <property name="clearButtonEnabled">
           <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="filterPushButton">
-         <property name="toolTip">
-          <string>Click to filter the dataverse uploads done in the past.</string>
-         </property>
-         <property name="text">
-          <string>Filter</string>
          </property>
         </widget>
        </item>
@@ -72,8 +62,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>1084</width>
-          <height>411</height>
+          <width>1278</width>
+          <height>404</height>
          </rect>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_3">

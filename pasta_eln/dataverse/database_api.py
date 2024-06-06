@@ -55,6 +55,8 @@ class DatabaseAPI:
     self.data_hierarchy_doc_id = '-dataHierarchy-'
     self.upload_model_view_name = 'dvUploadView'
     self.project_model_view_name = 'dvProjectsView'
+    self.upload_models_query_index_name = "uploadModelsQuery"
+    self.upload_models_query_index_fields = ["finished_date_time"]
     _, self.encrypt_key = get_encrypt_key(self.logger)
 
   def create_dataverse_design_document(self) -> Document:
@@ -202,6 +204,49 @@ class DatabaseAPI:
       case _:
         raise log_and_create_error(self.logger, TypeError, f"Unsupported model type {model_type}")
 
+  def get_paginated_models(self,
+                           model_type: Type[Union[UploadModel, ProjectModel]],
+                           filter_term: str | None = None,
+                           bookmark: str | None = None,
+                           limit: int = 10) -> dict[str, str | list[UploadModel]] | dict[str, str | list[ProjectModel]]:
+    """
+    Gets paginated models of the specified type based on the provided filter criteria.
+
+    Args:
+        model_type (Type[Union[UploadModel, ProjectModel]]): The type of model to retrieve.
+        filter_term (str | None, optional): The filter term to search for. Defaults to None.
+        Filter term is applied on following filter fields:  ["project_name", "dataverse_url", "finished_date_time", "status"]
+        bookmark (str | None, optional): The bookmark for pagination. Defaults to None.
+        limit (int, optional): The maximum number of results to retrieve. Defaults to 10.
+
+    Returns:
+        dict[str, str | list[UploadModel]] | dict[str, str | list[ProjectModel]]: A dictionary containing the paginated models or an error message.
+
+    Raises:
+        TypeError: If an unsupported model type is provided.
+    """
+
+    self.logger.info("Getting paginated models of type: %s, filter_term: %s, bookmark: %s, limit: %s",
+                     model_type,
+                     filter_term,
+                     bookmark,
+                     limit)
+    match model_type():
+      case UploadModel():
+        result = self.db_api.get_paginated_upload_model_query_results(filter_term,
+                                                                      ["project_name",
+                                                                       "dataverse_url",
+                                                                       "finished_date_time",
+                                                                       "status"],
+                                                                      bookmark,
+                                                                      limit)
+        return {
+          "bookmark": result["bookmark"],
+          "models": [UploadModel(**doc) for doc in result["docs"]]
+        }
+      case _:
+        raise log_and_create_error(self.logger, TypeError, f"Unsupported model type {model_type}")
+
   def get_model(self, model_id: str, model_type: Type[UploadModel | ConfigModel | ProjectModel]) -> Union[
     UploadModel, ProjectModel, ConfigModel]:
     """
@@ -333,6 +378,9 @@ class DatabaseAPI:
       self.create_projects_view()
     if self.db_api.get_document(self.config_doc_id) is None:
       self.initialize_config_document()
+    self.db_api.create_query_index(self.upload_models_query_index_name,
+                                   "json",
+                                   self.upload_models_query_index_fields)
 
   def initialize_config_document(self) -> None:
     """

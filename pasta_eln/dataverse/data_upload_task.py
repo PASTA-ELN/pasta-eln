@@ -176,6 +176,7 @@ class DataUploadTask(GenericTaskObject):
     self.upload_model = UploadModel(project_name=self.project_name,
                                     status=UploadStatusValues.Queued.name,
                                     log=f"Upload initiated for project {self.project_name} at {datetime.now().isoformat()}\n",
+                                    created_date_time=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                                     project_doc_id=self.project_doc_id)
     self.upload_model = self.db_api.create_model_document(self.upload_model)  # type: ignore[assignment]
     self.logger.info("Upload model created: %s", self.upload_model)

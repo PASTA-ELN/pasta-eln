@@ -43,6 +43,7 @@ def mock_database_api(mocker) -> BaseDatabaseAPI:
 
 
 class TestDataverseBaseDatabaseApi:
+
   # Parametrized test for a success path
   @pytest.mark.parametrize("config_content, expected_db_name, expected_username, expected_password",
                            [(create_mock_config(), DEFAULT_PROJECT_GROUP, USER, PASSWORD),
@@ -503,3 +504,153 @@ class TestDataverseBaseDatabaseApi:
       assert result == expected_result
       mock_database_api.logger.info.assert_called_with("Retrieving view: %s from design document: %s", view_name,
                                                        design_document_name)
+
+  # Parametrized test cases for various scenarios
+  @pytest.mark.parametrize(
+    "design_document_name, view_name, limit, start_key, start_key_doc_id, expected_result, test_id", [
+      ("design1", "view1", 10, None, None, [{"id": "1"}], "happy_path_no_start_keys"),
+      ("design1", "view1", 5, 100, "doc100", [{"id": "100"}], "happy_path_with_start_keys"),
+      ("design1", "view1", 0, None, None, [], "edge_case_zero_limit"),
+      (None, "view1", 10, None, None, DatabaseError, "error_case_no_design_document"),
+      ("design1", None, 10, None, None, DatabaseError, "error_case_no_view_name"),
+    ])
+  def test_get_paginated_view_results(self, mock_database_api, mocker,
+                                      design_document_name, view_name, limit, start_key, start_key_doc_id,
+                                      expected_result, test_id):
+    # Arrange
+    mock_client = mocker.MagicMock()
+    mock_couch = mocker.MagicMock()
+    mock_design_doc = mocker.MagicMock()
+    mock_db = mocker.MagicMock()
+    mock_couch.__enter__.return_value = mock_client
+    mock_design_doc.__enter__.return_value = mock_design_doc
+    mock_client.__getitem__.return_value = mock_db
+    mock_result = mocker.patch('pasta_eln.dataverse.base_database_api.Result')
+    mock_result.return_value = expected_result if not isinstance(expected_result, type) else MagicMock()
+    mocker.patch('pasta_eln.dataverse.base_database_api.couchdb', return_value=mock_couch)
+    mocker.patch('pasta_eln.dataverse.base_database_api.DesignDocument', return_value=mock_design_doc)
+
+    # Act
+    if isinstance(expected_result, type) and issubclass(expected_result, Exception):
+      with pytest.raises(expected_result):
+        mock_database_api.get_paginated_view_results(design_document_name, view_name, limit, start_key,
+                                                     start_key_doc_id)
+    else:
+      result = mock_database_api.get_paginated_view_results(design_document_name, view_name, limit, start_key,
+                                                            start_key_doc_id)
+
+    # Assert
+    if not isinstance(expected_result, type):
+      assert result == expected_result
+      mock_database_api.logger.info.assert_called_once_with(
+        "Retrieving paginated view results, View: %s from design document: %s, limit: %s, start_key_doc_id: %s, start_key: %s",
+        view_name,
+        design_document_name,
+        limit,
+        start_key_doc_id,
+        start_key)
+      mock_result.assert_called_once()
+      mock_design_doc.get_view.assert_called_once_with(view_name)
+
+  @pytest.mark.parametrize("test_id, index_name, index_type, fields, expected_exception, expected_log", [
+    # Happy path tests
+    ("HP-1", "test_index", "json", [{"name": "field1", "type": "asc"}], None, "Creating query index"),
+    ("HP-2", "unique_index", "text", [{"name": "field2", "type": "desc"}], None, "Creating query index"),
+
+    # Edge cases
+    ("EC-1", "test_index", "json", [], None, "Creating query index"),  # Empty fields list
+
+    # Error cases
+    (
+        "ER-1", None, "json", [{"name": "field1", "type": "asc"}], DatabaseError,
+        "Index name and fields cannot be empty!"),
+    ("ER-2", "test_index", "json", None, DatabaseError, "Index name and fields cannot be empty!"),
+    ("ER-3", "test_index", "json", [{"name": "field1", "type": "asc"}], None, "Index already exists"),
+  ])
+  def test_create_query_index(self, mock_database_api, mocker, test_id, index_name, index_type, fields,
+                              expected_exception, expected_log):
+    # Arrange
+    mock_client = mocker.MagicMock()
+    mock_couch = mocker.MagicMock()
+    mock_db = mocker.MagicMock()
+    mock_couch.__enter__.return_value = mock_client
+    mock_client.__getitem__.return_value = mock_db
+    mocker.patch('pasta_eln.dataverse.base_database_api.couchdb', return_value=mock_couch)
+    property_mock = mocker.PropertyMock()
+    property_mock.name = index_name
+    mock_db.get_query_indexes.return_value = [] if test_id != "ER-3" else [property_mock]
+
+    # Act
+    if expected_exception:
+      with pytest.raises(expected_exception) as exc_info:
+        mock_database_api.create_query_index(index_name, index_type, fields)
+    else:
+      mock_database_api.create_query_index(index_name, index_type, fields)
+
+    # Assert
+    mock_database_api.logger.info.assert_called_once_with("Creating query index, name: %s, index_type: %s, fields: %s",
+                                                          index_name,
+                                                          index_type,
+                                                          fields)
+    if test_id == "ER-3":
+      mock_database_api.logger.warning.assert_called_with("Index already exists: %s", index_name)
+    elif not expected_exception:
+      mock_db.create_query_index.assert_called_with(index_name=index_name, index_type=index_type, fields=fields)
+
+  @pytest.mark.parametrize("filter_term, filter_fields, bookmark, limit, expected_selector, expected_bookmark, test_id",
+                           [
+                             # Happy path tests
+                             (None, None, None, 10, {"data_type": "dataverse_upload"}, None, "HP-1"),
+                             ("test", ["field1", "field2"], None, 10, {"$and": [{"data_type": "dataverse_upload"}, {
+                               "$or": [{"field1": {"$regex": "(?i).*test.*"}},
+                                       {"field2": {"$regex": "(?i).*test.*"}}]}]}, None, "HP-2"),
+                             ("test", ["field1"], "bookmark123", 10, {"$and": [{"data_type": "dataverse_upload"}, {
+                               "$or": [{"field1": {"$regex": "(?i).*test.*"}}]}]}, "bookmark123", "HP-3"),
+
+                             # Edge cases
+                             ("", ["field1"], None, 10, {"data_type": "dataverse_upload"}, None, "EC-1"),
+                             # Empty filter term
+                             ("test", [], None, 10, {"data_type": "dataverse_upload"}, None, "EC-2"),
+                             # Empty filter fields
+                             ("test", None, None, 10, {"data_type": "dataverse_upload"}, None, "EC-3"),
+                             # None filter fields
+
+                             # Error cases
+                             (None, ["field1"], None, 10, {"data_type": "dataverse_upload"}, None, "ER-1"),
+                             # None filter term with non-empty filter fields
+                           ])
+  def test_get_paginated_upload_model_query_results(self, mock_database_api, mocker, filter_term, filter_fields,
+                                                    bookmark, limit, expected_selector, expected_bookmark, test_id):
+    # Arrange
+    mock_client = mocker.MagicMock()
+    mock_couch = mocker.MagicMock()
+    mock_query = mocker.MagicMock()
+    mock_db = mocker.MagicMock()
+    mock_couch.__enter__.return_value = mock_client
+    mock_client.__getitem__.return_value = mock_db
+    mock_couch_db_ctr = mocker.patch('pasta_eln.dataverse.base_database_api.couchdb', return_value=mock_couch)
+    mock_query_ctr = mocker.patch('pasta_eln.dataverse.base_database_api.Query', return_value=mock_query)
+    mock_query.return_value = {"docs": [], "bookmark": "new_bookmark"}
+
+    # Act
+    result = mock_database_api.get_paginated_upload_model_query_results(filter_term=filter_term,
+                                                                        filter_fields=filter_fields, bookmark=bookmark,
+                                                                        limit=limit)
+
+    # Assert
+    mock_database_api.logger.info.assert_called_once_with(
+      "Getting paginated upload model query results: filter_term: %s, filter_fields: %s, bookmark: %s, limit: %s",
+      filter_term,
+      ",".join(filter_fields) if filter_fields else None,
+      bookmark,
+      limit)
+    mock_couch_db_ctr.assert_called_with(mock_database_api.username, mock_database_api.password,
+                                         url=mock_database_api.url, connect=True)
+    mock_client.__getitem__.assert_called_with(mock_database_api.db_name)
+    mock_query_ctr.assert_called_with(mock_db, selector=expected_selector, sort=[{'finished_date_time': 'desc'}],
+                                      limit=limit)
+    if expected_bookmark:
+      mock_query.assert_called_with(bookmark=expected_bookmark)
+    else:
+      mock_query.assert_called_with()
+    assert result == {"docs": [], "bookmark": "new_bookmark"}, f"Failed test ID: {test_id}"
