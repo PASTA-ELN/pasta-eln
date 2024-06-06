@@ -136,8 +136,7 @@ class Table(QWidget):
         self.actionChangeColums.setVisible(False)
       else:
         self.actionChangeColums.setVisible(True)
-        if self.docType in self.comm.backend.db.dataLabels:
-          docLabel = self.comm.backend.db.dataLabels[self.docType]
+        docLabel = self.comm.backend.db.dataHierarchy(self.docType,'title')
       if self.projID:
         self.headline.setText(docLabel)
         self.showHidden.setText(f'Show/hide hidden {docLabel.lower()}')
@@ -145,7 +144,7 @@ class Table(QWidget):
         self.comm.changeSidebar.emit('')  #close the project in sidebar
         self.headline.setText(f'All {docLabel.lower()}')
         self.showHidden.setText(f'Show/hide all hidden {docLabel.lower()}')
-      self.filterHeader = self.comm.backend.db.getColumnNames()[self.docType].split(',')
+      self.filterHeader = self.comm.backend.db.dataHierarchy(self.docType, 'view')
       self.filterHeader = [i[1:] if i[0]=='-'   else i for i in self.filterHeader]  #change -something to something
       self.filterHeader = [i[2:] if i[:2]=='#_' else i for i in self.filterHeader]  #change #_something to something
     self.headerW.show()

@@ -108,14 +108,15 @@ class Sidebar(QWidget):
         listW, listL = widgetAndLayout('Grid', projectL)
         if self.openProjectId != projID:
           listW.hide()
-        for idx, doctype in enumerate(db.dataLabels):
+        docTypes = db.dataHierarchy('', '')
+        for idx, doctype in enumerate(docTypes):
           if doctype[0]!='x':
-            icon = self.comm.backend.db.dataHierarchy[doctype].get('icon','')
+            icon = self.comm.backend.db.dataHierarchy(doctype,'icon')
             icon = 'fa.asterisk' if icon=='' else icon
-            btn = IconButton(icon, self, [Command.LIST_DOCTYPE,doctype,projID], None,db.dataLabels[doctype])
+            btn = IconButton(icon, self, [Command.LIST_DOCTYPE,doctype,projID], None,db.dataHierarchy(doctype,'title'))
             listL.addWidget(btn, 0, idx)    # type: ignore
         btn = IconButton('fa5.file', self, [Command.LIST_DOCTYPE,'-',projID], None, 'Unidentified')
-        listL.addWidget(btn, 0, len(db.dataLabels)+1)  # type: ignore
+        listL.addWidget(btn, 0, len(docTypes)+1)  # type: ignore
         self.widgetsList[projID] = listW
 
         # show folders as hierarchy

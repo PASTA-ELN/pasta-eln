@@ -4,10 +4,7 @@ from PySide6.QtWidgets import QDialog, QVBoxLayout, QTabWidget  # pylint: disabl
 from ..guiCommunicate import Communicate
 from .configGUI import ConfigurationGUI
 from .configAuthors import ConfigurationAuthors
-if platform.system()=='Windows':
-  from .configSetupWindows import ConfigurationSetup
-else:
-  from .configSetupLinux import ConfigurationSetup
+from .configSetup import ConfigurationSetup
 
 class Configuration(QDialog):
   """ Main class of entire config dialog """

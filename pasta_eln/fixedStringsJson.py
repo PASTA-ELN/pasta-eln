@@ -105,54 +105,17 @@ configurationGUI: dict[str, Any] = {
   }
 }
 
-setupTextLinux = """
-### Welcome to the PASTA-ELN setup for Linux
+setupText = """
+### Welcome to the PASTA-ELN setup
 Three components are needed for proper functioning of PASTA-ELN:
-- CouchDB
-- Configuration of preferences / default data hierarchy
-- Example project creation
-
-This setup will analyse and (possibly) correct these items.
-
-If the installation is successful, manually and permanently remove the 'pastaELN.log' logfile that is in your home-directory.
-"""
-
-setupTextWindows = """
-### Welcome to the PASTA-ELN setup for Windows
-Four components are needed for proper functioning of PASTA-ELN:
-- CouchDB
-- Configuration of preferences / default data hierarchy
+- Configuration of preferences
 - Shortcut creation
 - Example project creation
 
 This setup will analyse and (possibly) correct these items.
-
-If the installation is successful, manually and permanently remove the 'pastaELN.log' logfile that is in your home-directory (folder above "My Documents").
-
 If an attempt fails: please follow to this [website](https://pasta-eln.github.io/pasta-eln/install.html).
 """
 
-gitWindows = """
-Do you want to install git?
-
-Be aware, downloading the installer requires some time, depending on the internet connection.
-"""
-
-rootInstallLinux = """
-Do you want to install Apache CouchDB (TM)?
-If you choose yes, you will be first asked to
-
-- choose a directory to store the data
-- enter the super-user password in the new terminal that will open automatically
-
-Be aware that downloading the installer requires time, depending on the internet connection.
-"""
-
-couchDBWindows = """
-Do you want to install CouchDB?
-
-Be aware that downloading the installer requires time, depending on the internet connection.
-"""
 
 restartPastaWindows = """
 Close software now (will be done automatically in the future)
@@ -162,7 +125,7 @@ Please restart the software by
 - executing the command in a new cmd.exe window
 """
 
-exampleDataLinux = """
+exampleData = """
 Do you want to create an example project?
 
 This step helps to verify the installation and provides an helpful example for new users.
@@ -173,18 +136,8 @@ This step usually takes up to 20sec, so please be patient. Sometimes, Linux ment
 is not responding and asks if to close/wait. Please WAIT.
 """
 
-exampleDataWindows = """
-Do you want to create an example project?
-
-This step helps to verify the installation and provides an helpful example for new users.
-
-!WARNING! This process will RESET everything and thereby DELETE EVERYTHING since you installed pastaELN.
-
-This step usually takes up to 1min, so please be patient.
-"""
-
 shortcuts = """
-### Shortcuts:
+### Default shortcuts:
 
 **Ctrl+Space**: List projects
 

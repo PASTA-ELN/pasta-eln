@@ -60,10 +60,10 @@ class MainWindow(QMainWindow):
 
     viewMenu = menu.addMenu("&Lists")
     if hasattr(self.backend, 'db'):
-      for docType, docLabel in self.comm.backend.db.dataLabels.items():
+      for docType, docLabel in self.comm.backend.db.dataHierarchy('', 'title').items():
         if docType[0] == 'x' and docType[1] != '0':
           continue
-        shortcut = self.comm.backend.db.dataHierarchy[docType].get('shortcut','')
+        shortcut = self.comm.backend.db.dataHierarchy(docType,'shortcut')
         shortcut = None if shortcut=='' else f"Ctrl+{shortcut}"
         Action(docLabel,                     self, [Command.VIEW, docType],  viewMenu, shortcut=shortcut)
         if docType == 'x0':

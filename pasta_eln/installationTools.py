@@ -1,12 +1,9 @@
 '''  Methods that check, repair, the local PASTA-ELN installation: no Qt-here '''
-import os, platform, sys, json, shutil, random, string, logging, uuid
+import os, platform, sys, json, shutil, logging
 from typing import Optional, Any, Callable
-import urllib.request
 from pathlib import Path
-from cloudant.client import CouchDB
-
 from .backend import Backend
-from .fixedStringsJson import defaultDataHierarchy, defaultConfiguration, configurationGUI
+from .fixedStringsJson import defaultConfiguration, configurationGUI
 from .miscTools import outputString, DummyProgressBar
 
 
@@ -66,175 +63,6 @@ def createDefaultConfiguration(user:str, password:str, pathPasta:Optional[Path]=
   return conf
 
 
-def runAsAdminWindows(cmdLine:list[str]) -> None:
-  '''
-  Run a command as admin in windows
-  - (C) COPYRIGHT © Preston Landers 2010
-  - https://stackoverflow.com/questions/19672352/how-to-run-script-with-elevated-privilege-on-windows
-  - asks user for approval
-  - waits for commands to end
-
-  Args:
-    cmdLine (list): list of command line sections runAsAdmin(["c:\\Windows\\notepad.exe"])
-  '''
-  import win32con, win32event, win32process
-  from win32com.shell.shell import ShellExecuteEx
-  from win32com.shell import shellcon
-  procInfo = ShellExecuteEx(nShow=win32con.SW_SHOWNORMAL,   # type: ignore[call-arg]
-                            fMask=shellcon.SEE_MASK_NOCLOSEPROCESS,
-                            lpVerb='runas',  # causes UAC elevation prompt.
-                            lpFile= f'"{cmdLine[0]}"',
-                            lpParameters=" ".join(cmdLine[1:]))
-  procHandle = procInfo['hProcess']
-  _ = win32event.WaitForSingleObject(procHandle, win32event.INFINITE)
-  _   = win32process.GetExitCodeProcess(procHandle)
-  return
-
-
-def checkForDotNetVersion() -> bool:
-  ''' check if .NET version 3.5 is installed (only on windows)
-  '''
-  import subprocess
-  command = ['reg','query','HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\NET Framework Setup\\NDP','/s']
-  result = subprocess.run(command, stdout=subprocess.PIPE, check=True)
-  #### For reference: code to show all installed versions
-  # lines = [str(i).strip() for i in result.stdout.split(b'\n')]
-  # lines = [i.split()[3][:-3] for i in lines if 'Version' in i]
-  # versions = set(lines)
-  # count3_5 = len([i for i in versions if i.startswith('3.5.')])
-  # return count3_5>0
-  return b'Version    REG_SZ    3.5' in result.stdout
-
-
-def couchdb(command:str='test') -> str:
-  '''
-  test couchDB installation or (install it on Windows-only)
-
-  Args:
-    command (string): 'test' or 'install'
-
-  Returns:
-    string: '' for success, filled with errors
-  '''
-  if command == 'test':
-    try:
-      with urllib.request.urlopen('http://127.0.0.1:5984') as package:
-        contents = package.read()
-        if json.loads(contents)['couchdb'] == 'Welcome':
-          return ''
-    except Exception:
-      pass
-    return '**ERROR**'
-
-  elif command == 'install':
-    if platform.system()=='Linux':
-      return '**ERROR should not be called'
-    if platform.system()=='Windows':
-      logging.info('CouchDB starting ...')
-      url = 'https://couchdb.neighbourhood.ie/downloads/3.1.1/win/apache-couchdb-3.1.1.msi'
-      path = Path.home()/'Downloads'/'apache-couchdb-3.1.1.msi'
-      logging.info('Start download of couchdb')
-      _, _ = urllib.request.urlretrieve(url, path)
-      ## Old version with installer
-      # cmd = ['cmd.exe','/K ',str(resultFilePath)]
-      # _ = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)
-      ## New version without questions
-      password = ''.join(random.choice(string.ascii_letters) for _ in range(12))
-      logging.info('PASSWORD: %s',password)
-      pathS = str(path).replace('\\','\\\\')
-      cmd = ['msiexec','/i',pathS,'/quiet','COOKIEVALUE=abcdefghijklmo','INSTALLSERVICE=1','ADMINUSER=admin',\
-             f'ADMINPASSWORD={password}','/norestart','/l*','log.txt']
-      logging.info('COMMAND: '+' '.join(cmd))
-      runAsAdminWindows(cmd)
-      logging.info('CouchDB ending')
-      return f'Installed couchDB with password |{password}|'
-    return f'**ERROR: Unknown operating system {platform.system()}'
-  return '**ERROR: Unknown command'
-
-
-def couchdbUserPassword(username:str, password:str) -> bool:
-  '''
-  test if username and password are correct
-
-  Args:
-    username (string): user name
-    password (string): password
-
-  Returns:
-    bool: True if success, False if failure
-  '''
-  try:
-    _ = CouchDB(username, password, url='http://127.0.0.1:5984', connect=True)
-    return True
-  except Exception:
-    return False
-
-
-def installLinuxRoot(couchDBExists:bool, pathPasta:Path=Path(''), password:str='') -> str:
-  '''
-  Install all packages in linux using the root-password
-
-  Args:
-    couchDBExists (bool): does the couchDB installation exist
-    pathPasta (Path): path to install pasta in (Linux)
-    password (str): password for couchDB installation
-
-  Returns:
-    string: ''=success, else error messages
-  '''
-  logging.info('InstallLinuxRoot starting ...')
-  bashCommand = []
-  password = ''
-  if not couchDBExists:
-    if not password:
-      password = uuid.uuid4().hex
-      logging.info('PASSWORD: %s',password)
-    #create or adopt .pastaELN.json
-    path = Path.home()/'.pastaELN.json'
-    if path.is_file():
-      with open(path,'r', encoding='utf-8') as fConf:
-        conf = json.load(fConf)
-      logging.info('.pastaELN.json exists, do not change it')
-    else:
-      conf = createDefaultConfiguration('admin', password, pathPasta)
-      with open(path,'w', encoding='utf-8') as fConf:
-        fConf.write(json.dumps(conf, indent=2) )
-    bashCommand = [
-      'sudo apt-get install -y libegl1',
-      'sudo snap install couchdb',
-      f'sudo snap set couchdb admin={password} setcookie={uuid.uuid4().hex}',
-      'sudo snap start couchdb',
-      'sudo snap connect couchdb:mount-observe',
-      'sleep 5',
-      f'curl -X PUT http://admin:{password}@127.0.0.1:5984/_users',
-      f'curl -X PUT http://admin:{password}@127.0.0.1:5984/_replicator',
-      f'curl -X PUT http://admin:{password}@127.0.0.1:5984/_global_changes',
-      f'curl -X PUT http://admin:{password}@127.0.0.1:5984/_node/_local/_config/couch_httpd_auth/timeout/ -d \'"60000"\'',
-      'sleep 10']
-  #Try all terminals
-  scriptFile = Path.home()/'pastaELN_Install.sh'
-  with open(scriptFile,'w', encoding='utf-8') as shell:
-    shell.write('\n'.join(bashCommand))
-  os.chmod(scriptFile, 0o0777)
-  terminals = ['xterm -e bash -c ','qterminal -e bash -c ','gnome-terminal -- ']
-  logging.info('Command: %s',str(bashCommand))
-  resultString = f'Password: {password}'
-  for term in terminals:
-    # _ = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)
-    res = os.system(term+scriptFile.as_posix())
-    logging.info('Linux install terminal %s  %s',term,str(res))
-    if res == 0:
-      break
-    if terminals.index(term)==len(terminals)-1:
-      logging.error('**ERROR: Last terminal failed')
-      res = os.system('\n'.join(bashCommand[:-2]))
-      logging.info('Finished using straight Bash command result=%s',str(res))
-      resultString = '**ERROR: Last terminal failed'
-  success = 'CouchDB works' if couchdbUserPassword('admin',password) else 'CouchDB FAILED'
-  logging.info('InstallLinuxRoot ending. %s',success)
-  return resultString
-
-
 def configuration(command:str='test', user:str='', password:str='', pathPasta:Path=Path('')) -> str:
   '''
   Check configuration file .pastaELN.json for consistencies
@@ -287,43 +115,6 @@ def configuration(command:str='test', user:str='', password:str='', pathPasta:Pa
       f.write(json.dumps(conf,indent=2))
   logging.info('Configuration ending')
   return output
-
-
-
-def dataHierarchy(command:str='test') -> str:
-  '''
-  Check configuration file .pastaELN.json for consistencies
-
-  Args:
-    command (string): 'test' or 'install'
-
-  Returns:
-    string: ''=success, else error messages
-  '''
-  backend = Backend()
-  if command == 'test':
-    if not hasattr(backend.db, 'db'):
-      return '**ERROR: couchDB not initialized'
-    output = 'database name: {backend.db.db.database_name}\nDesign documents\n'
-    for item in backend.db.db.design_documents():
-      numViews = len(item['doc']['views']) if 'views' in item['doc'] else 0
-      output += '  '+item['id']+'   Num. of views:'+str(numViews)+'\n'
-    try:
-      _ = backend.db.getDoc('-dataHierarchy-')
-      output += 'DataHierarchy exists on server'+'\n'
-    except Exception:
-      output += '**ERROR: DataHierarchy does NOT exist on server'+'\n'
-    return output
-  elif command == 'install':
-    logging.info('dataHierarchy starting ...')
-    doc = defaultDataHierarchy
-    logging.info(str(doc))
-    logging.info('dataHierarchy ending ...')
-    # _ = backend.db.create_document(doc)
-    return ''
-
-  return '**ERROR: Unknown command'
-
 
 
 def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]=None) -> str:
@@ -532,41 +323,15 @@ def main() -> None:
   print('---- Test PASTA-ELN installation----')
   print('--   if nothing reported: it is ok.')
   print('getOS        :', getOS())
-  res = couchdb()
-  existsCouchDB = res==''
-  print('chouchDB     :', res)
   res = configuration()
   flagConfiguration = 'ERROR' in res
   print('configuration:', res)
-  try:
-    res = '\n'+dataHierarchy()
-  except Exception:
-    res = ' **ERROR**'
-    #No new 'raise' so that it install-script continues its path
-  flagDataHierarchy = 'ERROR' in res
-  print(f'dataHierarchy     :{res}')
 
   print('Add "install" argument to install PASTA-ELN.')
   if len(sys.argv)>1 and 'install' in sys.argv:
-    if platform.system()=='Linux':
-      print('---- Create PASTA-ELN installation Linux ----')
-      if not existsCouchDB:
-        print('install with root credentials...')
-        installLinuxRoot(existsCouchDB, Path.home()/'pastaELN')
-      if flagConfiguration:
-        print('repair  configuration:', configuration('repair'))
-      if flagDataHierarchy and existsCouchDB:
-        print('install dataHierarchy     :', dataHierarchy('install'))
-
-    elif platform.system()=='Windows':
-      print('---- Create PASTA-ELN installation Windows ----')
-      if not existsCouchDB:
-        print('install couchDB      :', couchdb('install'))
-      if flagConfiguration:
-        print('repair  configuration:', configuration('repair'))
-      if flagDataHierarchy and existsCouchDB:
-        print('install dataHierarchy     :', dataHierarchy('install'))
-
+    print('---- Create PASTA-ELN installation ----')
+    if flagConfiguration:
+      print('repair  configuration:', configuration('repair'))
   print('Add "example" argument to create example data.')
   if len(sys.argv)>1 and 'example' in sys.argv:
     print('---- Create Example data ----')
@@ -574,7 +339,6 @@ def main() -> None:
 
   logging.info('End PASTA Install')
   return
-
 
 # called by python3 -m pasta_eln.installTools
 if __name__ == '__main__':

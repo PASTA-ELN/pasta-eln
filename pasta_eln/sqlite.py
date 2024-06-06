@@ -50,7 +50,7 @@ class SqlLiteDB:
     """
     self.connection = sqlite3.connect(basePath/"pastaELN.db")
     self.cursor     = self.connection.cursor()
-    self.dataHierarchy('', resetDataHierarchy)
+    self.dataHierarchyInit(resetDataHierarchy)
     # create if not exists, main table and check its colums
     tableString = ', '.join([f'{i[1:]} {j}' for i,j in zip(KEY_ORDER,KEY_TYPE)])+', '+', '.join([f'{i} TEXT' for i in OTHER_ORDER])+', meta TEXT, __history__ TEXT'
     self.cursor.execute(f"CREATE TABLE IF NOT EXISTS main ({tableString})")
@@ -60,45 +60,60 @@ class SqlLiteDB:
     return
 
 
-  def dataHierarchy(self, column:str='', resetDataHierarchy:bool=False) -> dict[str,Any]:
+  def dataHierarchyInit(self, resetDataHierarchy:bool=False) -> None:
     """
     prepare / return data hierarchy
 
     Args:
-      column (str): if '', initialize it; else return that column
     """
-    if column=='':
-      self.cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
-      tables = [i[0] for i in self.cursor.fetchall()] # all tables
+    self.cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+    tables = [i[0] for i in self.cursor.fetchall()] # all tables
+    self.connection.commit()
+    # check if default documents exist and create
+    if 'dataHierarchy' not in tables or resetDataHierarchy:
+      if 'dataHierarchy' in tables:
+        print('Info: remove old dataHierarchy')
+        self.cursor.execute("DROP TABLE dataHierarchy")
+      tableString = 'docType TEXT PRIMARY KEY, '+' TEXT, '.join(DATA_HIERARCHY)+' TEXT, meta TEXT'
+      self.cursor.execute(f"CREATE TABLE IF NOT EXISTS dataHierarchy ({tableString})")
+      for k, v in defaultDataHierarchy.items():
+        self.cursor.execute("INSERT INTO dataHierarchy VALUES (?, ?, ?, ?, ?, ?, ?, ?)", [k]+[str(v[i]) for i in DATA_HIERARCHY]+[json.dumps(v['meta'])])
       self.connection.commit()
-      # check if default documents exist and create
-      if 'dataHierarchy' not in tables or resetDataHierarchy:
-        if 'dataHierarchy' in tables:
-          print('Info: remove old dataHierarchy')
-          self.cursor.execute("DROP TABLE dataHierarchy")
-        tableString = 'docType TEXT PRIMARY KEY, '+' TEXT, '.join(DATA_HIERARCHY)+' TEXT, meta TEXT'
-        self.cursor.execute(f"CREATE TABLE IF NOT EXISTS dataHierarchy ({tableString})")
-        for k, v in defaultDataHierarchy.items():
-          self.cursor.execute("INSERT INTO dataHierarchy VALUES (?, ?, ?, ?, ?, ?, ?, ?)", [k]+[str(v[i]) for i in DATA_HIERARCHY]+[json.dumps(v['meta'])])
-        self.connection.commit()
-      # refill old-style dictionary
-      self.cursor = self.connection.execute('select * from dataHierarchy')
-      patternDB    = list(map(lambda x: x[0], self.cursor.description))
-      patternCode  = ['docType']+DATA_HIERARCHY+['meta']
-      if patternDB!= patternCode:
-        print(F"**ERROR wrong dataHierarchy version: {patternDB} {patternCode}")
-        raise ValueError(f"Wrong dataHierarchy version {patternDB} {patternCode}")
-      print('**TODO long content in procedure')
-      return {}
+    # refill old-style dictionary
+    self.cursor = self.connection.execute('select * from dataHierarchy')
+    patternDB    = list(map(lambda x: x[0], self.cursor.description))
+    patternCode  = ['docType']+DATA_HIERARCHY+['meta']
+    if patternDB!= patternCode:
+      print(F"**ERROR wrong dataHierarchy version: {patternDB} {patternCode}")
+      raise ValueError(f"Wrong dataHierarchy version {patternDB} {patternCode}")
+    print('**TODO long content in procedure')
+    return
+
+
+  def dataHierarchy(self, docType:str, column:str) -> dict[str,Any]:
+    """
+    """
     ### return column information
-    self.cursor.execute(f"SELECT docType, {column} FROM dataHierarchy")
-    results = self.cursor.fetchall()
-    resultsDict = {i[0]:i[1] for i in results}
+    if docType=='': #if all docTypes
+      column = f', {column}' if column else ''
+      self.cursor.execute(f"SELECT docType {column} FROM dataHierarchy")
+      results = self.cursor.fetchall()
+      if column=='':
+        return [i[0] for i in results]
+      resultsDict = {i[0]:i[1] for i in results}
+      if column!=', title':
+        raise ValueError('Not tested')
+        #   resultsDict = {k:json.loads(v) for k,v in resultsDict.items()}
+        #   resultsDict = {k:v.split(',') for k,v in resultsDict.items()}
+      return resultsDict
+    # if specific docType
+    self.cursor.execute(f"SELECT {column} FROM dataHierarchy WHERE docType == '{docType}'")
+    result = self.cursor.fetchone()
     if column=='meta':
-      resultsDict = {k:json.loads(v) for k,v in resultsDict.items()}
+      return json.loads(result[0])
     elif column=='view':
-      resultsDict = {k:v.split(',') for k,v in resultsDict.items()}
-    return resultsDict
+      return result[0].split(',')
+    return result[0]
 
 
   def getColumnNames(self) -> dict[str,str]:
@@ -302,7 +317,7 @@ class SqlLiteDB:
         print('**info do something with all flag')
     viewType, docType = thePath.split('/')
     if viewType=='viewDocType':
-      viewColumns = self.dataHierarchy('view')[docType]
+      viewColumns = self.dataHierarchy(docType, 'view')
       columns = ', '.join(['id'] + [i[1:] if i[0] in ('-','_') else f"JSON_EXTRACT(meta, '$.{i}')" for i in viewColumns])
       self.cursor.execute("SELECT "+columns+" FROM main WHERE type LIKE '"+docType+"%'")
       if startKey is not None or preciseKey is not None:
