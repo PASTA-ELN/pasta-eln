@@ -64,7 +64,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     y = self.lineSep/2
     docTypeText= '/'.join(data['docType'])
     if data['docType'][0][0]=='x':
-      docTypeText = self.comm.backend.db.dataHierarchy['x1']['title'].lower()[:-1]
+      docTypeText = self.comm.backend.db.dataHierarchy('x1', 'title').lower()[:-1]
     nameText = name if len(name)<55 else '...'+name[-50:]
     if not data['gui'][0]:  #Only draw first line
       staticText = QStaticText(f'<strong>{nameText}</strong>')

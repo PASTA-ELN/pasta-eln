@@ -73,9 +73,9 @@ class Project(QWidget):
     more = TextButton('More',           self, [], buttonL)
     moreMenu = QMenu(self)
     Action('Scan',                      self, [Command.SCAN], moreMenu)
-    for doctype in self.comm.backend.db.dataLabels:
+    for doctype in self.comm.backend.db.dataHierarchy('', ''):
       if doctype[0]!='x':
-        icon = self.comm.backend.db.dataHierarchy[doctype].get('icon','')
+        icon = self.comm.backend.db.dataHierarchy(doctype, 'icon')
         icon = 'fa.asterisk' if icon=='' else icon
         Action(f'table of {doctype}',   self, [Command.SHOW_TABLE, doctype], moreMenu, icon=icon)
     Action('table of unidentified',     self, [Command.SHOW_TABLE, '-'],     moreMenu, icon='fa5.file')

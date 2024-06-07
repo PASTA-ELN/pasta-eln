@@ -1,4 +1,4 @@
-""" Class for interaction with couchDB """
+""" JUST FOR REFERENCE: Class for interaction with couchDB """
 import traceback, logging, time, json, os, re, base64, io
 from typing import Any, Optional, Union
 from pathlib import Path
@@ -25,6 +25,7 @@ class Database:
       resetDataHierarchy (bool): reset dataHierarchy
       basePath (Path): path of project group
     """
+    raise ValueError("DEPRECATED")
     try:
       self.client = CouchDB(user, password, url='http://127.0.0.1:5984', connect=True)
     except Exception:

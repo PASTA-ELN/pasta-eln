@@ -99,10 +99,10 @@ class Details(QScrollArea):
     if '-name' not in self.doc:  #keep empty details and wait for user to click
       self.comm.changeTable.emit('','')
       return
-    if self.doc['-type'][0]=='-' or self.doc['-type'][0] not in self.comm.backend.db.dataHierarchy:
+    if self.doc['-type'][0]=='-' or self.doc['-type'][0] not in self.comm.backend.db.dataHierarchy('', ''):
       dataHierarchyNode = defaultDataHierarchyNode
     else:
-      dataHierarchyNode = self.comm.backend.db.dataHierarchy[self.doc['-type'][0]]['meta']
+      dataHierarchyNode = self.comm.backend.db.dataHierarchy(self.doc['-type'][0], 'meta')
     label = self.doc['-name'] if len(self.doc['-name'])<80 else self.doc['-name'][:77]+'...'
     Label(label,'h1', self.headerL)
     if 'metaVendor' not in self.doc:

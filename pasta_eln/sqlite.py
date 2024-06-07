@@ -1,5 +1,5 @@
 """ Class for interaction with sqlite """
-import json, copy, sqlite3
+import json, copy, sqlite3, logging
 from typing import Any, Optional, Union
 from pathlib import Path
 from anytree import Node
@@ -39,7 +39,7 @@ DATA_HIERARCHY=['IRI','attachments','title','icon','shortcut','view']
 
 class SqlLiteDB:
   """
-  Class for interaction with couchDB
+  Class for interaction with sqlite
   """
   def __init__(self, configuration:dict[str,Any], resetDataHierarchy:bool=False, basePath:Path=Path()):
     """
@@ -56,9 +56,12 @@ class SqlLiteDB:
     self.cursor.execute(f"CREATE TABLE IF NOT EXISTS main ({tableString})")
     self.cursor.execute("SELECT * FROM main")
     self.mainColumnNames = list(map(lambda x: x[0], self.cursor.description))
-    print('TODO: check code vs. data-colums')
+    if self.mainColumnNames != [i[1:] if i[0] in ('_','-') else i for i in KEY_ORDER]+OTHER_ORDER+['meta','__history__']:
+      logging.error("Difference in sqlite-table and code")
+      logging.error(self.mainColumnNames)
+      logging.error([i[1:] if i[0] in ('_','-') else i for i in KEY_ORDER]+OTHER_ORDER+['meta','__history__'])
+      raise ValueError('SQLite table difference')
     return
-
 
   def dataHierarchyInit(self, resetDataHierarchy:bool=False) -> None:
     """
@@ -86,7 +89,6 @@ class SqlLiteDB:
     if patternDB!= patternCode:
       print(F"**ERROR wrong dataHierarchy version: {patternDB} {patternCode}")
       raise ValueError(f"Wrong dataHierarchy version {patternDB} {patternCode}")
-    print('**TODO long content in procedure')
     return
 
 
@@ -114,15 +116,6 @@ class SqlLiteDB:
     elif column=='view':
       return result[0].split(',')
     return result[0]
-
-
-  def getColumnNames(self) -> dict[str,str]:
-    """ get names of table columns from design documents
-
-    Returns:
-      dict: docType and ,-separated list of names as string
-    """
-    return self.viewColumns
 
 
   def exit(self, deleteDB:bool=False) -> None:
@@ -160,7 +153,7 @@ class SqlLiteDB:
     for idx, stack in enumerate(doc['-branchStack'].split(' ')):
       doc['-branch'].append({'stack':stack.split('/')[:-1],
                             'child':int(doc['-branchChild'].split(' ')[idx]),
-                            'path':doc['-branchPath'].split(' ')[idx],
+                            'path':doc['-branchPath'].split(' ')[idx] if doc['-branchPath'] is not None else None,
                             'show':[i=='T' for i in doc['-branchShow'].split(' ')[idx]]})
     del doc['-branchStack']
     del doc['-branchChild']
@@ -191,6 +184,8 @@ class SqlLiteDB:
         dict: json representation of submitted document
     """
     docOrg = copy.deepcopy(doc)
+    if 'content' in doc and len(doc['content'])>200:
+      doc['content'] = doc['content'][:200]
     doc['-type'] = '/'.join(doc['-type'])
     doc['-tags'] = ' '.join(doc['-tags'])
     doc['-gui']  = ''.join(['T' if i else 'F' for i in doc['-gui']])
@@ -228,7 +223,7 @@ class SqlLiteDB:
     Returns:
         dict: json representation of updated document
     """
-    print('**START UPDATEDOC')
+    raise ValueError('Not implemented UPDATEDOC')
     return
 
 
@@ -247,7 +242,7 @@ class SqlLiteDB:
     Returns:
       str, str: old path, new path
     """
-    print('**START UPDATEBRANCH')
+    raise ValueError('Not implemented UPDATEBRANCH')
     return
 
 
@@ -264,7 +259,7 @@ class SqlLiteDB:
     Returns:
       list: list of show = list of bool
     """
-    print('**START CREATE SHOW FROM STACK')
+    raise ValueError('Not implemented CREATE SHOW FROM STACK')
     return
 
 
@@ -278,7 +273,7 @@ class SqlLiteDB:
     Returns:
       dict: document that was removed
     """
-    print('**START REMOVE')
+    raise ValueError('Not implemented REMOVE')
     return
 
 
@@ -294,7 +289,7 @@ class SqlLiteDB:
     Returns:
         bool: success of method
     """
-    print('**START ATTACHMENT')
+    print('Not implemented ATTACHMENT')
     return
 
 
@@ -318,17 +313,18 @@ class SqlLiteDB:
     viewType, docType = thePath.split('/')
     if viewType=='viewDocType':
       viewColumns = self.dataHierarchy(docType, 'view')
-      columns = ', '.join(['id'] + [i[1:] if i[0] in ('-','_') else f"JSON_EXTRACT(meta, '$.{i}')" for i in viewColumns])
+      columns = ', '.join(['id'] + [i[1:] if i[0] in ('-','_')   else
+                                    i     if i    in OTHER_ORDER else
+                                    f"JSON_EXTRACT(meta, '$.{i}')"    for i in viewColumns])
       self.cursor.execute("SELECT "+columns+" FROM main WHERE type LIKE '"+docType+"%'")
       if startKey is not None or preciseKey is not None:
         print("***TODO: do this 645p.ueoi")
       results = self.cursor.fetchall()
       results = [{'id':i[0], 'key':i[0], 'value':list(i[1:])} for i in results]
-      print('**TODO Comments are not saved??')
     elif thePath=='viewHierarchy/viewHierarchy':
       self.cursor.execute("SELECT id, branchStack, branchChild, type, name, gui FROM main WHERE branchStack LIKE '"+startKey+"%'")
       results = self.cursor.fetchall()
-      results = [{'id':i[0], 'key':i[1].replace('/',' '), 'value':[i[2], i[3].split('/'), i[4], [j=='T' for j in i[5]]]} for i in results]
+      results = [{'id':i[0], 'key':i[1].replace('/',' '), 'value':[int(i[2]), i[3].split('/'), i[4], [j=='T' for j in i[5]]]} for i in results]
     elif thePath=='viewHierarchy/viewPaths':
       self.cursor.execute("SELECT id, branchPath, branchStack, type, branchChild, JSON_EXTRACT(meta, '$.shasum') FROM main")
       results = self.cursor.fetchall()
@@ -381,7 +377,7 @@ class SqlLiteDB:
     # print(len(nonFolders),'length: crop if too long')
     for item in nonFolders:
       _id     = item['id']
-      childNum, docType, name, gui, _ = item['value']
+      childNum, docType, name, gui = item['value']
       parentId = item['key'].split()[-2]
       Node(id=_id, parent=id2Node[parentId], docType=docType, name=name, gui=gui, childNum=childNum)
     # sort children
@@ -399,7 +395,7 @@ class SqlLiteDB:
     Args:
       stack (list, str): stack of docID; docID (str)
     """
-    print('**START HIDE/SHOW')
+    raise ValueError('Not implemented HIDE/SHOW')
     return
 
 
@@ -413,7 +409,7 @@ class SqlLiteDB:
       docID (str): docID
       guiState (list): list of bool that show if document is shown
     """
-    print('**START SET GUI')
+    raise ValueError('Not implemented SET GUI')
     return
 
 
@@ -433,7 +429,7 @@ class SqlLiteDB:
     Returns:
         str: report
     """
-    print('**START REPLICATE')
+    raise ValueError('Not implemented REPLICATE')
     return
 
 
@@ -441,7 +437,7 @@ class SqlLiteDB:
     """
     Collect last modification days of documents
     """
-    print('**START HISTORY')
+    raise ValueError('Not implemented HISTORY')
     return
 
 

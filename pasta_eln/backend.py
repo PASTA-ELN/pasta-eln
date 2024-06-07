@@ -77,14 +77,7 @@ class Backend(CLI_Mixin):
     # decipher miscellaneous configuration and store
     self.userID   = self.configuration['userID']
     # start database
-    if self.configuration.get('dbType','couchDB') and False:
-      self.db = Database(n,s,databaseName, self.configuration, basePath=self.basePath)
-    else:
-      self.db = SqlLiteDB(self.configuration, basePath=self.basePath)
-    if not hasattr(self.db, 'databaseName'):  #not successful database creation
-      return
-    if kwargs.get('initViews', False):
-      self.db.initDocTypeViews(self.configuration['tableColumnsMax'])
+    self.db = SqlLiteDB(self.configuration, basePath=self.basePath)
     # internal hierarchy structure
     self.hierStack = []
     self.alive     = True

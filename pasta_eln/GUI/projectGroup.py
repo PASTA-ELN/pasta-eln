@@ -10,7 +10,7 @@ from PySide6.QtGui import QPixmap, QRegularExpressionValidator # pylint: disable
 from cloudant.client import CouchDB
 from ..guiStyle import Label, TextButton, IconButton, showMessage, widgetAndLayout
 from ..miscTools import upOut, restart, upIn
-from ..serverActions import testLocal, testRemote, passwordDecrypt
+from ..serverActions import passwordDecrypt
 from ..guiCommunicate import Communicate
 
 class ProjectGroup(QDialog):
@@ -193,7 +193,7 @@ class ProjectGroup(QDialog):
       bool: success
     """
     # local
-    localTest = testLocal(self.userNameL.text(), self.passwordL.text(), self.databaseL.text())
+    localTest = '' # testLocal(self.userNameL.text(), self.passwordL.text(), self.databaseL.text())
     if 'Error: Local database does not exist' in localTest and \
        'success: Local username and password ok' in localTest and self.databaseL.text():
       button = QMessageBox.question(self, "Question", "Local database does not exist. Should I create it?")
@@ -219,8 +219,7 @@ class ProjectGroup(QDialog):
     remoteTest = ''
     if self.userNameR.text()!='' and self.passwordR.text()!='' and self.databaseR.text()!='' and \
         self.serverR.text()!='':
-      remoteTest = testRemote(self.serverR.text(), self.userNameR.text(), self.passwordR.text(), \
-        self.databaseR.text())
+      remoteTest = '' # testRemote(self.serverR.text(), self.userNameR.text(), self.passwordR.text(), self.databaseR.text())
     # give output
     if 'ERROR' in localTest or 'ERROR' in remoteTest:
       showMessage(self, 'ERROR occurred', localTest+remoteTest, 'Critical')

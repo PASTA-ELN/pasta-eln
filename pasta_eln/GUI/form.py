@@ -69,8 +69,8 @@ class Form(QDialog):
       self.setMinimumWidth(600)
 
     # create full data set
-    if self.doc['-type'][0] in self.db.dataHierarchy:
-      dataHierarchyNode = copy.deepcopy(self.db.dataHierarchy[self.doc['-type'][0]]['meta'])
+    if self.doc['-type'][0] in self.db.dataHierarchy('', ''):
+      dataHierarchyNode = copy.deepcopy(self.db.dataHierarchy(self.doc['-type'][0], 'meta'))
     else:
       dataHierarchyNode = copy.deepcopy(defaultDataHierarchyNode)
     keysDataHierarchy = [i['name'] for group in dataHierarchyNode for i in dataHierarchyNode[group]]
@@ -210,7 +210,7 @@ class Form(QDialog):
         if allowProjectAndDocTypeChange: #if not-new and non-folder
           self.docTypeComboBox = QComboBox()
           self.docTypeComboBox.addItem(label, userData='')
-          for key, value in self.db.dataLabels.items():
+          for key, value in self.db.dataHierarchy('', 'title').items():
             if key[0]!='x':
               self.docTypeComboBox.addItem(value, userData=key)
           self.docTypeComboBox.addItem('_UNIDENTIFIED_', userData='-')
