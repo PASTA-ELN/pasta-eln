@@ -703,7 +703,7 @@ class Backend(CLI_Mixin):
         string: output incl. \n
     """
     ### check database itself for consistency
-    output = self.db.checkDB(outputStyle=outputStyle, repair=repair, minimal=minimal)
+    output = self.db.checkDB(outputStyle=outputStyle, minimal=minimal)
     ### compare with file system
     output += outputString(outputStyle,'h2','File status')
     viewProjects   = self.db.getView('viewDocType/x0All')
@@ -761,7 +761,7 @@ class Backend(CLI_Mixin):
               #     docDB   = self.db.getDoc( docDisk['_id'] )
               #     json.dump(docDB, fOut)
     output += outputString(outputStyle, 'info', f'Number of files on disk that are not in database {str(count)}')
-    orphans = [i for i in pathsInDB_data   if not (self.basePath/i).exists() and ":/" not in i]  #paths can be files or directories
+    orphans = [i for i in pathsInDB_data   if not (self.basePath/i).exists() and ":/" not in i and i!='*']  #paths can be files or directories
     orphans+= [i for i in pathsInDB_folder if not (self.basePath/i).exists() ]
     if orphans:
       output += outputString(outputStyle,'error','bch01: These files of database not on filesystem:\n- '+'\n- '.join(orphans))
