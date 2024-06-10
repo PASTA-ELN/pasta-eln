@@ -26,7 +26,8 @@ from pasta_eln.dataverse.utils import adjust_type_name, check_if_compound_field_
   clear_value, decrypt_data, \
   delete_layout_and_contents, encrypt_data, \
   get_citation_field, get_encrypt_key, \
-  get_flattened_metadata, get_formatted_message, get_formatted_metadata_message, is_date_time_type, \
+  get_flattened_metadata, get_formatted_dataverse_url, get_formatted_message, get_formatted_metadata_message, \
+  is_date_time_type, \
   log_and_create_error, read_pasta_config_file, \
   set_authors, \
   set_template_values, update_status, \
@@ -1933,3 +1934,35 @@ class TestDataverseUtils:
     # Act & Assert
     with pytest.raises(expected_exception):
       get_formatted_metadata_message(metadata)
+
+  @pytest.mark.parametrize(
+    "dataverse_url, expected_output",
+    [
+      # Happy path tests
+      pytest.param("http://example.com?persistentId=12345",
+                   "<html><head/><body><p>Dataverse URL: <a href='http://example.com?persistentId=12345'><span style='font-style:italic; text-decoration: underline; color:#77767b;'>12345</span></a></p></body></html>",
+                   id="success_path_1"),
+      pytest.param("https://dataverse.org?persistentId=abcde",
+                   "<html><head/><body><p>Dataverse URL: <a href='https://dataverse.org?persistentId=abcde'><span style='font-style:italic; text-decoration: underline; color:#77767b;'>abcde</span></a></p></body></html>",
+                   id="success_path_2"),
+
+      # Edge cases
+      pytest.param("http://example.com?persistentId=",
+                   "<html><head/><body><p>Dataverse URL: <a href='http://example.com?persistentId='><span style='font-style:italic; text-decoration: underline; color:#77767b;'></span></a></p></body></html>",
+                   id="edge_case_empty_persistent_id"),
+      pytest.param("http://example.com?persistentId=12345&otherParam=value",
+                   "<html><head/><body><p>Dataverse URL: <a href='http://example.com?persistentId=12345&otherParam=value'><span style='font-style:italic; text-decoration: underline; color:#77767b;'>12345&otherParam=value</span></a></p></body></html>",
+                   id="edge_case_additional_params"),
+
+      # Error cases
+      pytest.param("", "", id="error_case_empty_url"),
+      pytest.param(None, "", id="error_case_none_url"),
+      pytest.param("http://example.com", "", id="error_case_no_persistent_id"),
+    ]
+  )
+  def test_get_formatted_dataverse_url(self, dataverse_url, expected_output):
+    # Act
+    result = get_formatted_dataverse_url(dataverse_url)
+
+    # Assert
+    assert result == expected_output

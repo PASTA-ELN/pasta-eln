@@ -715,3 +715,31 @@ def get_formatted_metadata_message(metadata: dict[str, Any]) -> str:
     message += "</ul>"
   message += "</html>"
   return message
+
+
+def get_formatted_dataverse_url(dataverse_url: str) -> str:
+  """
+  Formats a Dataverse URL.
+
+  Explanation:
+      This function takes a Dataverse URL as input and extracts the persistent ID from it.
+      It then formats the URL with the persistent ID in an HTML structure for display.
+
+  Args:
+      dataverse_url (str): The Dataverse URL to be formatted.
+
+  Returns:
+      str: The formatted Dataverse URL in HTML structure.
+  """
+
+  formatted_dataverse_url = ""
+  if dataverse_url:
+    if "persistentId=" not in dataverse_url:
+      return formatted_dataverse_url
+    persistent_id = dataverse_url.split("persistentId=", 1)[1]
+    formatted_dataverse_url = (
+      f"<html><head/><body><p>Dataverse URL: "
+      f"<a href='{dataverse_url}'>"
+      f"<span style='font-style:italic; text-decoration: underline; color:#77767b;'>{persistent_id}</span>"
+      f"</a></p></body></html>")
+  return formatted_dataverse_url
