@@ -115,9 +115,9 @@ class DataUploadTask(GenericTaskObject):
       return
     with tempfile.TemporaryDirectory() as tmp_dir:
       eln_file_path = self.generate_eln_file(tmp_dir)
-      if eln_file_path is None:
-        self.logger.warning("Failed to generate ELN file for project: %s, hence finalizing the upload",
-                            self.project_name)
+      if not eln_file_path:
+        self.update_log(f"Failed to generate ELN file for project: {self.project_name}, hence finalizing the upload",
+                        self.logger.warning)
         self.finalize_upload_task(UploadStatusValues.Error.name)
         return
       self.update_log(f"Successfully generated ELN file: {eln_file_path}", self.logger.info)
@@ -127,8 +127,8 @@ class DataUploadTask(GenericTaskObject):
         return
       persistent_id = self.create_dataset_for_pasta_project()
       if persistent_id is None:
-        self.logger.warning("Failed to create dataset for project: %s, hence finalizing the upload",
-                            self.project_name)
+        self.update_log(f"Failed to create dataset for project: {self.project_name}, hence finalizing the upload",
+                        self.logger.warning)
         self.finalize_upload_task(UploadStatusValues.Error.name)
         return
 
@@ -136,8 +136,8 @@ class DataUploadTask(GenericTaskObject):
       if self.check_if_cancelled():
         return
       if not self.check_if_dataset_is_unlocked(persistent_id):
-        self.logger.warning("Failed to unlock dataset for project: %s, hence finalizing the upload",
-                            self.project_name)
+        self.update_log(f"Failed to unlock dataset for project: {self.project_name}, hence finalizing the upload",
+                        self.logger.warning)
         self.finalize_upload_task(UploadStatusValues.Error.name)
         return
 
@@ -146,8 +146,9 @@ class DataUploadTask(GenericTaskObject):
         return
       file_pid = self.upload_generated_eln_file_to_dataset(persistent_id, eln_file_path)
       if file_pid is None:
-        self.logger.warning("Failed to upload eln file to dataset for project: %s, hence finalizing the upload",
-                            self.project_name)
+        self.update_log(
+          f"Failed to upload eln file to dataset for project: {self.project_name}, hence finalizing the upload",
+          self.logger.warning)
         self.finalize_upload_task(UploadStatusValues.Error.name)
         return
 
