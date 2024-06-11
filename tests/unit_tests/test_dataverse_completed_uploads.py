@@ -12,6 +12,7 @@ from PySide6 import QtCore
 
 from pasta_eln.GUI.dataverse.completed_uploads import CompletedUploads
 from pasta_eln.dataverse.upload_model import UploadModel
+from pasta_eln.dataverse.upload_status_values import UploadStatusValues
 
 
 @pytest.fixture
@@ -131,32 +132,37 @@ class TestDataverseCompletedUploads:
     "upload, expected_project_name, expected_status, expected_url, expected_tooltip, expected_created_date, expected_finished_date",
     [
       pytest.param(
-        UploadModel(project_name="Project A", status="In progress", dataverse_url="", created_date_time="",
+        UploadModel(project_name="Project A", status=UploadStatusValues.Uploading.name, dataverse_url="",
+                    created_date_time="",
                     finished_date_time=""),
         "Project A", "Waiting..", "Waiting..", "", "Waiting..", "Waiting..",
         id="in_progress"
       ),
       pytest.param(
-        UploadModel(project_name="Project B", status="Queued", dataverse_url="", created_date_time="",
+        UploadModel(project_name="Project B", status=UploadStatusValues.Queued.name, dataverse_url="",
+                    created_date_time="",
                     finished_date_time=""),
         "Project B", "Waiting..", "Waiting..", "", "Waiting..", "Waiting..",
         id="queued"
       ),
       pytest.param(
-        UploadModel(project_name="Project C", status="Finished", dataverse_url="http://example.com",
+        UploadModel(project_name="Project C", status=UploadStatusValues.Finished.name,
+                    dataverse_url="http://example.com",
                     created_date_time="2023-01-01", finished_date_time="2023-01-02"),
         "Project C", "Finished", "http://formatted_url/example.com", "Dataverse URL\nhttp://example.com", "2023-01-01",
         "2023-01-02",
         id="finished"
       ),
       pytest.param(
-        UploadModel(project_name="Project D", status="Failed", dataverse_url="", created_date_time="",
+        UploadModel(project_name="Project D", status=UploadStatusValues.Error.name, dataverse_url="",
+                    created_date_time="",
                     finished_date_time=""),
-        "Project D", "NA", "NA", "", "NA", "NA",
+        "Project D", "Error state..", "Error state..", "", "Error state..", "Error state..",
         id="failed"
       ),
       pytest.param(
-        UploadModel(project_name="Project E", status="Cancelled", dataverse_url="", created_date_time="",
+        UploadModel(project_name="Project E", status=UploadStatusValues.Cancelled.name, dataverse_url="",
+                    created_date_time="",
                     finished_date_time=""),
         "Project E", "NA", "NA", "", "NA", "NA",
         id="cancelled"

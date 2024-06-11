@@ -17,6 +17,7 @@ from pasta_eln.GUI.dataverse.completed_upload_task import Ui_CompletedUploadTask
 from pasta_eln.GUI.dataverse.completed_uploads_base import Ui_CompletedUploadsForm
 from pasta_eln.dataverse.database_api import DatabaseAPI
 from pasta_eln.dataverse.upload_model import UploadModel
+from pasta_eln.dataverse.upload_status_values import UploadStatusValues
 from pasta_eln.dataverse.utils import get_formatted_dataverse_url
 
 
@@ -119,14 +120,14 @@ class CompletedUploads(Ui_CompletedUploadsForm):
     completed_task_ui.statusLabel.setText(upload.status)
 
     match upload.status:
-      case "In progress" | "Queued":
+      case UploadStatusValues.Queued.name | UploadStatusValues.Uploading.name:
         self.set_completed_task_properties(
           completed_task_ui,
           "Waiting..",
           "",
           "Waiting..",
           "Waiting..")
-      case "Finished":
+      case UploadStatusValues.Finished.name:
         url_tooltip = f"{completed_task_ui.dataverseUrlLabel.toolTip()}\n{upload.dataverse_url}"
 
         self.set_completed_task_properties(
@@ -135,14 +136,14 @@ class CompletedUploads(Ui_CompletedUploadsForm):
           url_tooltip,
           upload.created_date_time or "",
           upload.finished_date_time or "")
-      case "Failed" | "Cancelled":
+      case UploadStatusValues.Cancelled.name:
         self.set_completed_task_properties(
           completed_task_ui,
           "NA",
           "",
           "NA",
           "NA")
-      case _:
+      case _:  # Error or Warning
         self.set_completed_task_properties(
           completed_task_ui,
           "Error state..",

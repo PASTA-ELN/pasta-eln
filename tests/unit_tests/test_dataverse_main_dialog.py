@@ -418,8 +418,7 @@ class TestDataverseMainDialog(object):
     mock_main_dialog.show_completed_uploads()
 
     # Assert
-    mock_main_dialog.completed_uploads_dialog.load_ui.assert_called_once()
-    mock_main_dialog.completed_uploads_dialog.instance.show.assert_called_once()
+    mock_main_dialog.completed_uploads_dialog.show.assert_called_once()
 
   @pytest.mark.parametrize("test_id", ["success_path", "show_called_once"])
   def test_show_edit_metadata(self, mock_main_dialog, test_id):
