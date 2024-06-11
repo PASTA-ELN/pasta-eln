@@ -280,6 +280,7 @@ class TestDataverseCompletedUploads:
 
     # Assert
     if not expected_exception:
+      assert mock_completed_upload.load_complete is False
       mock_completed_upload.logger.info.assert_called_once_with("Showing completed uploads..")
       mock_completed_upload.load_ui.assert_called_once()
       mock_completed_upload.instance.show.assert_called_once()

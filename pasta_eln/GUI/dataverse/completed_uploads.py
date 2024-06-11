@@ -194,6 +194,7 @@ class CompletedUploads(Ui_CompletedUploadsForm):
     """
 
     self.logger.info("Showing completed uploads..")
+    self.load_complete = False
     self.load_ui()
     self.instance.show()
 
