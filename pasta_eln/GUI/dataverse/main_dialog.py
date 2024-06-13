@@ -199,7 +199,8 @@ class MainDialog(Ui_MainDialogBase):
         widget = upload_widget["widget"]
         project_id = project_widget.findChild(QtWidgets.QLabel, name="projectDocIdLabel").text()
         task_thread = TaskThreadExtension(
-          DataUploadTask(widget.uploadProjectLabel.text(),
+          DataUploadTask(widget.uploadProjectLabel.toolTip(), # label text may be truncated,
+                         #  but the tooltip contains the full project name
                          project_id,
                          widget.uploadProgressBar.setValue,
                          widget.statusLabel.setText,

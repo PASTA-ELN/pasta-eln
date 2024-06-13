@@ -306,7 +306,7 @@ class TestDataverseMainDialog(object):
         mock_main_dialog.uploadQueueVerticalLayout.addWidget.assert_called_once_with(
           mock_main_dialog.get_upload_widget.return_value["base"])
         mock_data_upload_task.assert_called_once_with(
-          mock_main_dialog.get_upload_widget.return_value["widget"].uploadProjectLabel.text(),
+          mock_main_dialog.get_upload_widget.return_value["widget"].uploadProjectLabel.toolTip(),
           mock_project_widget.findChild.return_value.text(),
           mock_main_dialog.get_upload_widget.return_value["widget"].uploadProgressBar.setValue,
           mock_main_dialog.get_upload_widget.return_value["widget"].statusLabel.setText,

@@ -232,7 +232,7 @@ class TestDataverseCompletedUploads:
         assert frame.findChild(QLabel,
                                "projectNameLabel").text() == 'PASTAs Example Project', "CompletedUploadsDialog completedUploadsVerticalLayout should contain a visible project name label!"
         assert frame.findChild(QLabel,
-                               "projectNameLabel").toolTip() == 'PASTA project name which was uploaded to dataverse.', "CompletedUploadsDialog projectNameLabel tooltip should be set correctly!"
+                               "projectNameLabel").toolTip() == 'PASTA project name which was uploaded to dataverse.\nPASTAs Example Project', "CompletedUploadsDialog projectNameLabel tooltip should be set correctly!"
         assert frame.findChild(QLabel,
                                "dataverseUrlLabel").isVisible() is True, "CompletedUploadsDialog completedUploadsVerticalLayout should contain a visible dataverseUrlLabel!"
         assert frame.findChild(QLabel, "dataverseUrlLabel").text() == '<html><head/><body><p>Dataverse URL: <a ' \
@@ -263,7 +263,8 @@ class TestDataverseCompletedUploads:
                                "statusLabel").toolTip() == 'Displays the status of the upload.', "CompletedUploadsDialog statusLabel tooltip should be set correctly!"
 
   @pytest.mark.parametrize('model_status', [UploadStatusValues.Finished.name])
-  @pytest.mark.skip(reason="scrolling the vertical layout doesn't work offscreen, hence disabled! Run manually to test!")
+  @pytest.mark.skip(
+    reason="scrolling the vertical layout doesn't work offscreen, hence disabled! Run manually to test!")
   def test_vertical_scroll_bar_scrolled_event_to_maximum_should_load_more_content(self, qtbot,
                                                                                   completed_uploads_dialog):
     completed_uploads_dialog.show()
@@ -303,7 +304,8 @@ class TestDataverseCompletedUploads:
       assert completed_uploads_dialog.completedUploadsVerticalLayout.count() == 10, "CompletedUploadsDialog completedUploadsVerticalLayout should contain 10 items!"
 
   @pytest.mark.parametrize('model_status', [UploadStatusValues.Finished.name])
-  @pytest.mark.skip(reason="scrolling the vertical layout doesn't work offscreen, hence disabled! Run manually to test!")
+  @pytest.mark.skip(
+    reason="scrolling the vertical layout doesn't work offscreen, hence disabled! Run manually to test!")
   def test_vertical_scroll_bar_scrolled_event_to_maximum_should_do_nothing_if_already_full_content_loaded(self, qtbot,
                                                                                                           completed_uploads_dialog):
     completed_uploads_dialog.show()
@@ -342,7 +344,7 @@ class TestDataverseCompletedUploads:
         assert frame.findChild(QLabel,
                                "projectNameLabel").text() == 'PASTAs Example Project', "CompletedUploadsDialog completedUploadsVerticalLayout should contain a visible project name label!"
         assert frame.findChild(QLabel,
-                               "projectNameLabel").toolTip() == 'PASTA project name which was uploaded to dataverse.', "CompletedUploadsDialog projectNameLabel tooltip should be set correctly!"
+                               "projectNameLabel").toolTip() == 'PASTA project name which was uploaded to dataverse.\nPASTAs Example Project', "CompletedUploadsDialog projectNameLabel tooltip should be set correctly!"
         assert frame.findChild(QLabel,
                                "dataverseUrlLabel").isVisible() is True, "CompletedUploadsDialog completedUploadsVerticalLayout should contain a visible dataverseUrlLabel!"
         assert frame.findChild(QLabel,

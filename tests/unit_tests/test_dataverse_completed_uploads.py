@@ -181,6 +181,8 @@ class TestDataverseCompletedUploads:
     # Arrange
     mock_frame = mocker.patch("pasta_eln.GUI.dataverse.completed_uploads.QFrame")
     mock_completed_upload_frame = mocker.patch("pasta_eln.GUI.dataverse.completed_uploads.Ui_CompletedUploadTaskFrame")
+    mock_textwrap = mocker.patch(
+      "pasta_eln.GUI.dataverse.completed_uploads.textwrap")
     mock_get_formatted_dataverse_url = mocker.patch(
       "pasta_eln.GUI.dataverse.completed_uploads.get_formatted_dataverse_url", return_value=expected_url)
     mock_completed_upload_frame.return_value.dataverseUrlLabel.toolTip.return_value = "Dataverse URL"
@@ -193,8 +195,12 @@ class TestDataverseCompletedUploads:
     mock_frame.assert_called_once()
     mock_completed_upload_frame.assert_called_once()
     mock_completed_upload_frame.return_value.setupUi.assert_called_once_with(result)
-    mock_completed_upload_frame.return_value.projectNameLabel.setText(upload.project_name)
-    mock_completed_upload_frame.return_value.statusLabel.setText(upload.status)
+    mock_textwrap.fill.assert_called_once_with(upload.project_name or "", 45, max_lines=1)
+    mock_completed_upload_frame.return_value.projectNameLabel.setText.assert_called_once_with(
+      mock_textwrap.fill.return_value)
+    mock_completed_upload_frame.return_value.projectNameLabel.setToolTip.assert_called_once_with(
+      f"{mock_completed_upload_frame.return_value.projectNameLabel.toolTip()}\n{upload.project_name}")
+    mock_completed_upload_frame.return_value.statusLabel.setText.assert_called_once_with(upload.status)
     assert result is mock_frame.return_value, "Expected return value to be a QFrame"
     if expected_status == "Finished":
       mock_get_formatted_dataverse_url.assert_called_once_with("http://example.com")

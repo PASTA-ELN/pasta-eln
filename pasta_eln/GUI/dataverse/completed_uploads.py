@@ -8,6 +8,7 @@
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import logging
+import textwrap
 from typing import Any
 
 from PySide6 import QtCore
@@ -116,7 +117,9 @@ class CompletedUploads(Ui_CompletedUploadsForm):
     completed_task_frame = QFrame()
     completed_task_ui = Ui_CompletedUploadTaskFrame()
     completed_task_ui.setupUi(completed_task_frame)
-    completed_task_ui.projectNameLabel.setText(upload.project_name)
+    completed_task_ui.projectNameLabel.setText(textwrap.fill(upload.project_name or "", 45, max_lines=1))
+    completed_task_ui.projectNameLabel.setToolTip(
+      f"{completed_task_ui.projectNameLabel.toolTip()}\n{upload.project_name}")
     completed_task_ui.statusLabel.setText(upload.status)
 
     match upload.status:
