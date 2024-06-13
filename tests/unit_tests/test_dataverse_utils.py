@@ -25,7 +25,7 @@ from pasta_eln.dataverse.utils import adjust_type_name, check_if_compound_field_
   check_login_credentials, \
   clear_value, decrypt_data, \
   delete_layout_and_contents, encrypt_data, \
-  get_citation_field, get_encrypt_key, \
+  get_citation_field, get_data_hierarchy_types, get_encrypt_key, \
   get_flattened_metadata, get_formatted_dataverse_url, get_formatted_message, get_formatted_metadata_message, \
   is_date_time_type, \
   log_and_create_error, read_pasta_config_file, \
@@ -679,7 +679,6 @@ class TestDataverseUtils:
       mock_write_config.assert_not_called()
     mock_read_config.assert_called_once_with(logger)
 
-  # Parametrized test cases for happy path, edge cases, and error cases
   @pytest.mark.parametrize("test_id, config_data, file_exists, expected_call_count, expected_info_log",
                            [  # success path tests with various realistic test values
                              ("success-1", {"key": "value"}, True, 1, ["Writing config file: %s", str(CONFIG_PATH)]),
@@ -1966,3 +1965,35 @@ class TestDataverseUtils:
 
     # Assert
     assert result == expected_output
+
+  @pytest.mark.parametrize(
+    "data_hierarchy, expected_result",
+    [
+      # Success path tests
+      pytest.param({"type1": "value1", "type2": "value2"}, ["Type1", "Type2", "Unidentified"],
+                   id="multiple_valid_types"),
+      pytest.param({"type1": "value1"}, ["Type1", "Unidentified"], id="single_valid_type"),
+      pytest.param({"x0": "value1", "x1": "value2", "x2": "value3"}, ["Unidentified"], id="all_filtered_types"),
+
+      # Edge cases
+      pytest.param(None, [], id="none_input"),
+      pytest.param({}, ["Unidentified"], id="empty_dict"),
+      pytest.param({"": "value1", " ": "value2"}, ["Unidentified"], id="empty_and_whitespace_keys"),
+      pytest.param({"type1": "value1", "type1": "value2"}, ["Type1", "Unidentified"], id="duplicate_keys"),
+      pytest.param({"type1": "value1", "type1": "value2", "type2": "value3"}, ["Type1", "Type2", "Unidentified"],
+                   id="duplicate_and_unique_keys"),
+
+      # Error cases
+      pytest.param({"type1": "value1", "x0": "value2"}, ["Type1", "Unidentified"],
+                   id="mixed_valid_and_filtered_types"),
+      pytest.param({"type1": "value1", "type2": "value2", "x0": "value3"}, ["Type1", "Type2", "Unidentified"],
+                   id="valid_and_filtered_types"),
+    ],
+    ids=lambda val: val[2]
+  )
+  def test_get_data_hierarchy_types(self, data_hierarchy, expected_result):
+    # Act
+    result = get_data_hierarchy_types(data_hierarchy)
+
+    # Assert
+    assert result == expected_result

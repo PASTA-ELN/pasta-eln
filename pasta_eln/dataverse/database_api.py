@@ -20,7 +20,8 @@ from pasta_eln.dataverse.base_database_api import BaseDatabaseAPI
 from pasta_eln.dataverse.config_model import ConfigModel
 from pasta_eln.dataverse.project_model import ProjectModel
 from pasta_eln.dataverse.upload_model import UploadModel
-from pasta_eln.dataverse.utils import decrypt_data, encrypt_data, get_encrypt_key, log_and_create_error, set_authors, \
+from pasta_eln.dataverse.utils import decrypt_data, encrypt_data, get_data_hierarchy_types, get_encrypt_key, \
+  log_and_create_error, set_authors, \
   set_template_values
 
 
@@ -395,9 +396,10 @@ class DatabaseAPI:
 
     """
     self.logger.info("Initializing config document...")
+    data_hierarchy_types: list[str] = get_data_hierarchy_types(self.get_data_hierarchy())
     model = ConfigModel(_id=self.config_doc_id, parallel_uploads_count=3,
                         dataverse_login_info={"server_url": "", "api_token": "", "dataverse_id": ""},
-                        project_upload_items={})
+                        project_upload_items={data_type: True for data_type in data_hierarchy_types})
     current_path = realpath(join(getcwd(), dirname(__file__)))
     with open(join(current_path, "dataset-create-new-all-default-fields.json"), encoding="utf-8") as config_file:
       model.metadata = load(config_file)

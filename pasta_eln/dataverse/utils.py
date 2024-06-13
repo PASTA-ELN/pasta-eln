@@ -743,3 +743,30 @@ def get_formatted_dataverse_url(dataverse_url: str) -> str:
       f"<span style='font-style:italic; text-decoration: underline; color:#77767b;'>{persistent_id}</span>"
       f"</a></p></body></html>")
   return formatted_dataverse_url
+
+
+def get_data_hierarchy_types(data_hierarchy: dict[str, Any] | None) -> list[str | Any]:
+  """
+  Gets the types of data hierarchy.
+
+  Explanation:
+      This function extracts the types of data hierarchy from the provided data hierarchy dictionary.
+      It filters out specific types and appends 'Unidentified' to the list of data hierarchy types.
+
+  Args:
+      data_hierarchy (dict[str, Any] | None): The data hierarchy dictionary.
+
+  Returns:
+      list[str | Any]: The list of data hierarchy types.
+  """
+  if data_hierarchy is None:
+    return []
+  data_hierarchy_types = []
+  for data_type in data_hierarchy:
+    if (data_type and not data_type.isspace()
+        and data_type not in ("x0", "x1", "x2")):
+      type_capitalized = data_type.capitalize()
+      if type_capitalized not in data_hierarchy_types:
+        data_hierarchy_types.append(type_capitalized)
+  data_hierarchy_types.append("Unidentified")
+  return data_hierarchy_types
