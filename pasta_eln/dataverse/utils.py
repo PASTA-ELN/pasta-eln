@@ -715,3 +715,58 @@ def get_formatted_metadata_message(metadata: dict[str, Any]) -> str:
     message += "</ul>"
   message += "</html>"
   return message
+
+
+def get_formatted_dataverse_url(dataverse_url: str) -> str:
+  """
+  Formats a Dataverse URL.
+
+  Explanation:
+      This function takes a Dataverse URL as input and extracts the persistent ID from it.
+      It then formats the URL with the persistent ID in an HTML structure for display.
+
+  Args:
+      dataverse_url (str): The Dataverse URL to be formatted.
+
+  Returns:
+      str: The formatted Dataverse URL in HTML structure.
+  """
+
+  formatted_dataverse_url = ""
+  if dataverse_url:
+    if "persistentId=" not in dataverse_url:
+      return formatted_dataverse_url
+    persistent_id = dataverse_url.split("persistentId=", 1)[1]
+    formatted_dataverse_url = (
+      f"<html><head/><body><p>Dataverse URL: "
+      f"<a href='{dataverse_url}'>"
+      f"<span style='font-style:italic; text-decoration: underline; color:#77767b;'>{persistent_id}</span>"
+      f"</a></p></body></html>")
+  return formatted_dataverse_url
+
+
+def get_data_hierarchy_types(data_hierarchy: dict[str, Any] | None) -> list[str | Any]:
+  """
+  Gets the types of data hierarchy.
+
+  Explanation:
+      This function extracts the types of data hierarchy from the provided data hierarchy dictionary.
+      It filters out specific types and appends 'Unidentified' to the list of data hierarchy types.
+
+  Args:
+      data_hierarchy (dict[str, Any] | None): The data hierarchy dictionary.
+
+  Returns:
+      list[str | Any]: The list of data hierarchy types.
+  """
+  if data_hierarchy is None:
+    return []
+  data_hierarchy_types = []
+  for data_type in data_hierarchy:
+    if (data_type and not data_type.isspace()
+        and data_type not in ("x0", "x1", "x2")):
+      type_capitalized = data_type.capitalize()
+      if type_capitalized not in data_hierarchy_types:
+        data_hierarchy_types.append(type_capitalized)
+  data_hierarchy_types.append("Unidentified")
+  return data_hierarchy_types

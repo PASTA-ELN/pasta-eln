@@ -306,7 +306,7 @@ class TestDataverseMainDialog(object):
         mock_main_dialog.uploadQueueVerticalLayout.addWidget.assert_called_once_with(
           mock_main_dialog.get_upload_widget.return_value["base"])
         mock_data_upload_task.assert_called_once_with(
-          mock_main_dialog.get_upload_widget.return_value["widget"].uploadProjectLabel.text(),
+          mock_main_dialog.get_upload_widget.return_value["widget"].uploadProjectLabel.toolTip(),
           mock_project_widget.findChild.return_value.text(),
           mock_main_dialog.get_upload_widget.return_value["widget"].uploadProgressBar.setValue,
           mock_main_dialog.get_upload_widget.return_value["widget"].statusLabel.setText,
@@ -418,8 +418,7 @@ class TestDataverseMainDialog(object):
     mock_main_dialog.show_completed_uploads()
 
     # Assert
-    mock_main_dialog.completed_uploads_dialog.load_ui.assert_called_once()
-    mock_main_dialog.completed_uploads_dialog.instance.show.assert_called_once()
+    mock_main_dialog.completed_uploads_dialog.show.assert_called_once()
 
   @pytest.mark.parametrize("test_id", ["success_path", "show_called_once"])
   def test_show_edit_metadata(self, mock_main_dialog, test_id):

@@ -15,6 +15,8 @@ from cloudant import couchdb
 from cloudant.design_document import DesignDocument
 from cloudant.document import Document
 from cloudant.error import CloudantDatabaseException
+from cloudant.query import Query
+from cloudant.result import Result
 from cloudant.view import View
 
 from pasta_eln.dataverse.config_error import ConfigError
@@ -282,6 +284,148 @@ class BaseDatabaseAPI:
         view = View(design_doc, view_name, map_func, reduce_func)
         results.extend(result['value'] for result in view.result)
         return results
+
+  def get_paginated_view_results(self,
+                                 design_document_name: str,
+                                 view_name: str,
+                                 limit: int = 10,
+                                 start_key: int | None = None,
+                                 start_key_doc_id: str | None = None) -> list[dict[str, Any]]:
+    """
+    Retrieves paginated view results.
+
+    Args:
+        self: The instance of the class.
+        design_document_name (str): The name of the design document.
+        view_name (str): The name of the view.
+        limit (int, optional): The maximum number of results to retrieve. Defaults to 10.
+        start_key (int | None, optional): The starting key for pagination. Defaults to None.
+        start_key_doc_id (str | None, optional): The starting key document ID for pagination. Defaults to None.
+
+    Raises:
+        DatabaseError: If design_document_name or view_name is None.
+
+    Returns:
+        list[dict[str, Any]]: The paginated view results.
+    """
+    self.logger.info(
+      "Retrieving paginated view results, View: %s from design document: %s, limit: %s, start_key_doc_id: %s, start_key: %s",
+      view_name,
+      design_document_name,
+      limit,
+      start_key_doc_id,
+      start_key)
+    params: dict[str, Any] = {
+      "limit": limit,
+      "descending": True,
+    }
+    if start_key_doc_id:
+      params["startkey_docid"] = start_key_doc_id
+    if start_key:
+      params["startkey"] = start_key
+    if design_document_name is None or view_name is None:
+      raise log_and_create_error(self.logger, DatabaseError, "Design document name and view name cannot be empty!")
+    with couchdb(self.username,
+                 self.password,
+                 url=self.url,
+                 connect=True) as client:
+      pasta_db = client[self.db_name]
+      with DesignDocument(pasta_db, design_document_name) as design_doc:
+        result = Result(
+          design_doc.get_view(view_name),
+          **params
+        )
+        return result[:limit]
+
+  def create_query_index(self,
+                         index_name: str,
+                         index_type: str = "json",
+                         fields: list[dict[str, str]] | list[str] | None = None) -> None:
+    """
+    Creates a query index in database with the specified name, type, and fields.
+
+    Args:
+        index_name (str): The name of the index to be created.
+        index_type (str, optional): The type of the index. Defaults to "json".
+        fields (list[dict[str, str]] | list[str] | None, optional): The fields to be included in the index. Defaults to None.
+
+    Raises:
+        DatabaseError: If index_name or fields are None.
+
+    Examples:
+        create_query_index("index1", "json", [{"name": "field1", "type": "asc"}])
+    """
+
+    self.logger.info("Creating query index, name: %s, index_type: %s, fields: %s",
+                     index_name,
+                     index_type,
+                     fields)
+    if index_name is None or fields is None:
+      raise log_and_create_error(self.logger, DatabaseError,
+                                 "Index name and fields cannot be empty!")
+    with couchdb(self.username,
+                 self.password,
+                 url=self.url,
+                 connect=True) as client:
+      pasta_db = client[self.db_name]
+      if index_name in [index.name for index in pasta_db.get_query_indexes()]:
+        self.logger.warning("Index already exists: %s", index_name)
+        return
+      pasta_db.create_query_index(index_name=index_name,
+                                  index_type=index_type,
+                                  fields=fields)
+
+  def get_paginated_upload_model_query_results(self,
+                                               filter_term: str | None = None,
+                                               filter_fields: list[str] | None = None,
+                                               bookmark: str | None = None,
+                                               limit: int = 10) -> dict[str, Any]:
+    """
+    Gets paginated upload model query results based on the provided filter criteria.
+
+    Args:
+        filter_term (str | None, optional): The filter term to search for. Defaults to None.
+        filter_fields (list[str] | None, optional): The list of fields to apply the filter on. Defaults to None.
+        bookmark (str | None, optional): The bookmark for pagination. Defaults to None.
+        limit (int, optional): The maximum number of results to retrieve. Defaults to 10.
+
+    Returns:
+        dict[str, Any]: A dictionary containing the paginated query results. Contains the following keys: bookmark, docs. docs is a list of dictionaries representing the retrieved documents.
+
+    Raises:
+        DatabaseError: If filter_term or filter_fields is None.
+
+    Examples:
+        get_paginated_upload_model_query_results(filter_term="test", filter_fields=["project_name", "dataverse_url"])
+
+    Raises:
+        No specific exceptions are raised by this function.
+    """
+
+    self.logger.info(
+      "Getting paginated upload model query results: filter_term: %s, filter_fields: %s, bookmark: %s, limit: %s",
+      filter_term,
+      ",".join(filter_fields) if filter_fields else None,
+      bookmark,
+      limit)
+    selector: dict[str, Any] = {"data_type": "dataverse_upload"}
+    if filter_term and filter_fields:
+      filter_criteria = {"$or": [{field: {"$regex": f"(?i).*{filter_term}.*"}} for field in filter_fields]}
+      selector = {
+        "$and": [selector, filter_criteria]
+      }
+    with couchdb(self.username,
+                 self.password,
+                 url=self.url,
+                 connect=True) as client:
+      pasta_db = client[self.db_name]
+      query = Query(pasta_db,
+                    selector=selector,
+                    sort=[{
+                      "finished_date_time": "desc"
+                    }],
+                    limit=limit)
+      return query(bookmark=bookmark) if bookmark else query()
 
   def get_view_results_by_id(self,
                              design_document_name: str,

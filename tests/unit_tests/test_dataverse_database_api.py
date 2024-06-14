@@ -80,6 +80,12 @@ class TestDataverseDatabaseAPI:
     if test_id == "success_case_default_values":
       assert db_api.db_api == base_db_api_mock
       assert db_api.design_doc_name == '_design/viewDataverse'
+      assert db_api.config_doc_id == '-dataverseConfig-'
+      assert db_api.data_hierarchy_doc_id == '-dataHierarchy-'
+      assert db_api.upload_model_view_name == 'dvUploadView'
+      assert db_api.project_model_view_name == 'dvProjectsView'
+      assert db_api.upload_models_query_index_name == "uploadModelsQuery"
+      assert db_api.upload_models_query_index_fields == ["finished_date_time"]
     else:
       assert db_api is None
 
@@ -385,6 +391,7 @@ class TestDataverseDatabaseAPI:
     mock_database_api.db_api.get_document.return_value = design_doc_exists
     mock_database_api.db_api.get_view.side_effect = [upload_model_view_exists, project_model_view_exists]
     mock_database_api.create_dataverse_design_document = mocker.MagicMock()
+    mock_database_api.create_query_index = mocker.MagicMock()
     mock_database_api.create_upload_model_view = mocker.MagicMock()
     mock_database_api.create_projects_view = mocker.MagicMock()
     mock_database_api.initialize_config_document = mocker.MagicMock()
@@ -398,6 +405,9 @@ class TestDataverseDatabaseAPI:
       mock_database_api.db_api.get_view.assert_not_called()
     else:
       mock_database_api.db_api.get_document.assert_called_with(mock_database_api.design_doc_name)
+      mock_database_api.create_query_index.assert_called_with(mock_database_api.upload_models_query_index_name,
+                                                              "json",
+                                                              mock_database_api.upload_models_query_index_fields)
       if not design_doc_exists:
         mock_database_api.create_dataverse_design_document.assert_called_once()
       if not upload_model_view_exists:
@@ -457,12 +467,68 @@ class TestDataverseDatabaseAPI:
     else:
       mock_database_api.db_api.get_document.assert_called_with(mock_database_api.design_doc_name)
 
+  @pytest.mark.parametrize(
+    "data_hierarchy, data_hierarchy_types,config_file_content, expected_metadata, exception",
+    [
+      pytest.param(["type1", "type2"], ["Type1", "Type2", "Undefined"], '{"key": "value"}', {"key": "value"}, None,
+                   id="success_path"),
+      pytest.param([], ["Undefined"], '{}', {}, None, id="empty_hierarchy"),
+      pytest.param(["type1"], ["Type1", "Undefined"], '{"key": "value"}', {"key": "value"}, None,
+                   id="single_hierarchy_type"),
+      pytest.param(["type1"], ["Type1", "Undefined"], '', None, JSONDecodeError, id="invalid_json"),
+      pytest.param(["type1"], ["Type1", "Undefined"], '{"key": "value"}', {"key": "value"}, FileNotFoundError,
+                   id="missing_file"),
+    ],
+    ids=lambda x: x[-1]
+  )
+  def test_initialize_config_document(self, mocker, mock_database_api, data_hierarchy, data_hierarchy_types,
+                                      config_file_content, expected_metadata,
+                                      exception):
+    # Arrange
+    mock_get_data_hierarchy_types = mocker.patch('pasta_eln.dataverse.database_api.get_data_hierarchy_types',
+                                                 return_value=data_hierarchy_types)
+    mock_set_template_values = mocker.patch('pasta_eln.dataverse.database_api.set_template_values')
+    mock_set_authors = mocker.patch('pasta_eln.dataverse.database_api.set_authors')
+    mock_database_api.create_model_document = mocker.MagicMock()
+    mock_database_api.get_data_hierarchy = mocker.MagicMock()
+    mock_database_api.get_data_hierarchy.return_value = data_hierarchy
+    mock_open = mocker.patch("pasta_eln.dataverse.database_api.open", mock_open=True)
+    mock_open.return_value.__enter__.return_value.read.return_value = config_file_content
+
+    if exception is FileNotFoundError:
+      mock_open.side_effect = exception
+    if exception is JSONDecodeError:
+      mocker.patch('pasta_eln.dataverse.database_api.load', side_effect=JSONDecodeError("", "", 0))
+
+    # Act
+    if exception:
+      with pytest.raises(exception):
+        mock_database_api.initialize_config_document()
+    else:
+      mock_database_api.initialize_config_document()
+
+    # Assert
+    if not exception:
+      mock_get_data_hierarchy_types.assert_called_once_with(mock_database_api.get_data_hierarchy.return_value)
+      mock_database_api.get_data_hierarchy.assert_called_once()
+      mock_database_api.create_model_document.assert_called_once()
+      created_model = mock_database_api.create_model_document.call_args[0][0]
+      assert isinstance(created_model, ConfigModel)
+      assert created_model._id == '-dataverseConfig-'
+      assert created_model.parallel_uploads_count == 3
+      assert created_model.metadata == expected_metadata
+      assert created_model.project_upload_items == {data_type: True for data_type in data_hierarchy_types}
+      mock_set_template_values.assert_called_once_with(mock_database_api.logger, expected_metadata or {})
+      mock_set_authors.assert_called_once_with(mock_database_api.logger, expected_metadata or {})
+
   @pytest.mark.parametrize("test_id", [("success_path_default_values")])
   def test_initialize_config_document_success_path(self, mocker, test_id, mock_database_api):
     # Arrange
     mock_database_api.create_model_document = mocker.MagicMock()
+    mock_database_api.get_data_hierarchy = mocker.MagicMock()
+    mocker.patch('pasta_eln.dataverse.database_api.get_data_hierarchy_types')
     current_path = realpath(join(getcwd(), dirname(__file__)))
-    with open(join(current_path, "..//..//pasta_eln//dataverse", "dataset-create-new-all-default-fields.json"),
+    with open(join(current_path, "../../pasta_eln/dataverse", "dataset-create-new-all-default-fields.json"),
               encoding="utf-8") as config_file:
       file_data = config_file.read()
 
@@ -477,6 +543,7 @@ class TestDataverseDatabaseAPI:
       mock_realpath.return_value = '/fakepath'
       mock_getcwd.return_value = '/home/jmurugan'
       mock_dirname.return_value = '/pasta_eln/src/pasta_eln/dataverse'
+
       mock_database_api.initialize_config_document()
       mock_set_authors.assert_called_once()
 
@@ -498,6 +565,8 @@ class TestDataverseDatabaseAPI:
   def test_initialize_config_document_error_cases(self, mocker, side_effect, test_id, mock_database_api):
     # Arrange
     mock_database_api.create_model_document = mocker.MagicMock()
+    mocker.patch('pasta_eln.dataverse.database_api.get_data_hierarchy_types', return_value=['data_type1', 'data_type2'])
+    mock_database_api.get_data_hierarchy = mocker.MagicMock()
 
     # Act & Assert
     with patch('pasta_eln.dataverse.database_api.realpath') as mock_realpath, patch(
@@ -611,3 +680,57 @@ class TestDataverseDatabaseAPI:
       mock_database_api.save_config_model(mock_config)
     mock_database_api.logger.info.assert_any_call("Saving config model...")
     assert "Fatal Error, No encryption key found!" in str(exc_info.value)
+
+  @pytest.mark.parametrize("model_type, filter_term, bookmark, limit, expected_output, test_id", [
+    # Happy path tests
+    (UploadModel, None, None, 10, {"bookmark": "next_page_token", "models": [
+      UploadModel(project_name="Project1", dataverse_url="http://example.com", finished_date_time="2023-01-01",
+                  status="completed")]}, "HP-1"),
+    (UploadModel, "filter", "page1", 5, {"bookmark": "next_page_token", "models": [
+      UploadModel(project_name="Project1", dataverse_url="http://example.com", finished_date_time="2023-01-01",
+                  status="completed")]}, "HP-2"),
+
+    # Error cases
+    (ConfigModel, None, None, 10, TypeError, "EC-1"),
+    (ProjectModel, None, None, 10, TypeError, "EC-2"),
+  ])
+  def test_get_paginated_models(self, mock_database_api, mocker, model_type, filter_term, bookmark, limit,
+                                expected_output, test_id):
+    # Arrange
+    mock_database_api.db_api.get_paginated_upload_model_query_results = mocker.MagicMock(
+      return_value={
+        "bookmark": "next_page_token",
+        "docs": [
+          {"project_name": "Project1", "dataverse_url": "http://example.com", "finished_date_time": "2023-01-01",
+           "status": "completed"}
+        ]
+      }
+    )
+
+    # Act
+    if isinstance(expected_output, type) and issubclass(expected_output, Exception):
+      with pytest.raises(expected_output):
+        mock_database_api.get_paginated_models(model_type, filter_term, bookmark, limit)
+    else:
+      result = mock_database_api.get_paginated_models(model_type, filter_term, bookmark, limit)
+
+    # Assert
+    mock_database_api.logger.info("Getting paginated models of type: %s, filter_term: %s, bookmark: %s, limit: %s",
+                                  model_type,
+                                  filter_term,
+                                  bookmark,
+                                  limit)
+    if not isinstance(expected_output, type):
+      mock_database_api.db_api.get_paginated_upload_model_query_results.assert_called_once_with(filter_term,
+                                                                                                ["project_name",
+                                                                                                 "dataverse_url",
+                                                                                                 "finished_date_time",
+                                                                                                 "status"],
+                                                                                                bookmark,
+                                                                                                limit)
+      assert result['bookmark'] == expected_output[
+        'bookmark'], f"Test ID: {test_id}, Expected: {expected_output['bookmark']}, Actual: {result['bookmark']}"
+      assert len(result['models']) == len(expected_output[
+                                            'models']), f"Test ID: {test_id}, Expected: {len(expected_output['models'])}, Actual: {len(result['models'])}"
+      assert result['models'][0].__dict__ == expected_output['models'][
+        0].__dict__, f"Test ID: {test_id}, Expected: {expected_output['models'][0].__dict__}, Actual: {result['models'][0].__dict__}"

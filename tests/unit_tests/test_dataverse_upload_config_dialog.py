@@ -41,13 +41,11 @@ def mock_dialog(mocker, mock_database_api, mock_config_model):
   mocker.patch.object(UploadConfigDialog, 'data_hierarchy_types', create=True)
   mocker.patch.object(UploadConfigDialog, 'buttonBox', create=True)
   mocker.patch.object(UploadConfigDialog, 'projectItemsVerticalLayout', create=True)
-  actual_set_data_hierarchy_types = UploadConfigDialog.set_data_hierarchy_types
-  mocker.patch.object(UploadConfigDialog, 'set_data_hierarchy_types')
+  mocker.patch('pasta_eln.GUI.dataverse.upload_config_dialog.get_data_hierarchy_types')
   actual_load_ui = UploadConfigDialog.load_ui
   mocker.patch.object(UploadConfigDialog, 'load_ui')
   mock_callback = mocker.MagicMock()
   dialog = UploadConfigDialog(mock_callback)
-  dialog.set_data_hierarchy_types = actual_set_data_hierarchy_types
   dialog.load_ui = actual_load_ui
   dialog.db_api.get_config_model.return_value = mock_config_model
   return dialog
@@ -63,11 +61,11 @@ class TestUploadConfigDialog:
     mock_super_init = mocker.patch('pasta_eln.GUI.dataverse.upload_config_dialog_base.Ui_UploadConfigDialog.__init__')
     mock_db_api = mocker.patch('pasta_eln.GUI.dataverse.upload_config_dialog.DatabaseAPI',
                                return_value=mock_database_api)
+    mock_get_data_hierarchy_types = mocker.patch(
+      'pasta_eln.GUI.dataverse.upload_config_dialog.get_data_hierarchy_types')
     mocker.patch.object(UploadConfigDialog, 'numParallelComboBox', create=True)
     mocker.patch.object(UploadConfigDialog, 'data_hierarchy_types', create=True)
     mocker.patch.object(UploadConfigDialog, 'buttonBox', create=True)
-    mock_set_data_hierarchy_types = mocker.patch(
-      'pasta_eln.GUI.dataverse.upload_config_dialog.UploadConfigDialog.set_data_hierarchy_types')
     mock_load_ui = mocker.patch('pasta_eln.GUI.dataverse.upload_config_dialog.UploadConfigDialog.load_ui')
     mock_callback = mocker.MagicMock()
 
@@ -81,9 +79,10 @@ class TestUploadConfigDialog:
     mock_dialog.assert_called_once_with()
     assert dialog.instance == mock_dialog.return_value, "Dialog instance should be set to the mock dialog"
     mock_setup_ui.assert_called_once_with(dialog.instance)
-    mock_db_api.assert_called_once_with()
-    mock_set_data_hierarchy_types.assert_called_once_with()
-    mock_load_ui.assert_called_once_with()
+    mock_db_api.assert_called_once()
+    mock_load_ui.assert_called_once()
+    mock_get_data_hierarchy_types.assert_called_once_with(mock_database_api.get_data_hierarchy.return_value)
+    assert dialog.data_hierarchy_types == mock_get_data_hierarchy_types.return_value
     dialog.instance.setWindowModality.assert_called_once_with(QtCore.Qt.ApplicationModal)
     dialog.numParallelComboBox.addItems.assert_called_once()  # Mock the addItems
     dialog.numParallelComboBox.setCurrentIndex.assert_called_once_with(2)
@@ -144,32 +143,6 @@ class TestUploadConfigDialog:
     # Assert
     mock_dialog.db_api.get_config_model.assert_called_once()
     mock_dialog.logger.error.assert_called_once_with(error_message)
-
-  # Parametrized test cases
-  @pytest.mark.parametrize("test_id, data_hierarchy, expected_result", [
-    # Success path tests
-    ("SuccessCase_1", ["x0", "x3", "x4"], ["X3", "X4", "Unidentified"]),
-    ("SuccessCase_2", ["x1", "x5", "x6"], ["X5", "X6", "Unidentified"]),
-    ("SuccessCase_3", ["x2", "x7", "x8"], ["X7", "X8", "Unidentified"]),
-
-    # Edge cases
-    ("EdgeCase_1", [], ["Unidentified"]),  # Empty data hierarchy
-    ("EdgeCase_2", ["x0", "x1", "x2"], ["Unidentified"]),  # Only excluded types
-    ("EdgeCase_3", None, []),  # None as data hierarchy
-
-    # Error cases
-    # Assuming that the method should handle unexpected data types
-    ("ErrorCase_1", ["", "  ", None], ["Unidentified"]),  # Empty strings and None in data hierarchy
-  ])
-  def test_set_data_hierarchy_types(self, mock_dialog, test_id, data_hierarchy, expected_result):
-    # Arrange
-    mock_dialog.db_api.get_data_hierarchy.return_value = data_hierarchy
-
-    # Act
-    mock_dialog.set_data_hierarchy_types(mock_dialog)
-
-    # Assert
-    assert mock_dialog.data_hierarchy_types == expected_result, f"Failed test case {test_id}"
 
   @pytest.mark.parametrize(
     "state, project_item_name, expected",

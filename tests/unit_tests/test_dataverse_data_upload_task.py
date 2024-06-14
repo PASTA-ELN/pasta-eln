@@ -158,10 +158,12 @@ class TestDataverseDataUploadTask:
 
     # Assert
     mock_db_api.assert_called_once()
-    mock_upload_model.assert_called_once_with(project_name=setup_task.project_name,
-                                              status=UploadStatusValues.Queued.name,
-                                              log=f"Upload initiated for project {setup_task.project_name} at {datetime_mock.now.return_value.isoformat()}\n",
-                                              project_doc_id=setup_task.project_doc_id)
+    mock_upload_model.assert_called_once_with(
+      created_date_time=datetime_mock.now.return_value.strftime("%Y-%m-%d %H:%M:%S"),
+      project_name=setup_task.project_name,
+      status=UploadStatusValues.Queued.name,
+      log=f"Upload initiated for project {setup_task.project_name} at {datetime_mock.now.return_value.isoformat()}\n",
+      project_doc_id=setup_task.project_doc_id)
     mock_db_api.return_value.create_model_document.assert_called_once_with(mock_upload_model.return_value)
     setup_task.upload_model = mock_db_api.return_value.create_model_document.return_value
     setup_task.logger.info.assert_called_with("Upload model created: %s", setup_task.upload_model)
@@ -188,10 +190,12 @@ class TestDataverseDataUploadTask:
       setup_task.initialize()
     assert str(exc_info.value) == expected_exception_message
     mock_db_api.assert_called_once()
-    mock_upload_model.assert_called_once_with(project_name=setup_task.project_name,
-                                              status=UploadStatusValues.Queued.name,
-                                              log=f"Upload initiated for project {setup_task.project_name} at {datetime_mock.now.return_value.isoformat()}\n",
-                                              project_doc_id=setup_task.project_doc_id)
+    mock_upload_model.assert_called_once_with(
+      created_date_time=datetime_mock.now.return_value.strftime("%Y-%m-%d %H:%M:%S"),
+      project_name=setup_task.project_name,
+      status=UploadStatusValues.Queued.name,
+      log=f"Upload initiated for project {setup_task.project_name} at {datetime_mock.now.return_value.isoformat()}\n",
+      project_doc_id=setup_task.project_doc_id)
     mock_db_api.return_value.create_model_document.assert_called_once_with(mock_upload_model.return_value)
     setup_task.upload_model = mock_db_api.return_value.create_model_document.return_value
     setup_task.logger.info.assert_called_with("Upload model created: %s", setup_task.upload_model)
@@ -245,10 +249,10 @@ class TestDataverseDataUploadTask:
 
   # Various error cases
   @pytest.mark.parametrize("error_step,log_message", [
-    ("generate_eln_file", "Failed to generate ELN file for project: %s, hence finalizing the upload"),
-    ("create_dataset", "Failed to create dataset for project: %s, hence finalizing the upload"),
-    ("unlock_dataset", "Failed to unlock dataset for project: %s, hence finalizing the upload"),
-    ("upload_eln_file", "Failed to upload eln file to dataset for project: %s, hence finalizing the upload"),
+    ("generate_eln_file", "Failed to generate ELN file for project: Project A, hence finalizing the upload"),
+    ("create_dataset", "Failed to create dataset for project: Project A, hence finalizing the upload"),
+    ("unlock_dataset", "Failed to unlock dataset for project: Project A, hence finalizing the upload"),
+    ("upload_eln_file", "Failed to upload eln file to dataset for project: Project A, hence finalizing the upload"),
   ], ids=["generate_eln_file", "error-create-dataset", "error-unlock-dataset", "error-upload-eln-file"])
   def test_start_task_error_cases(self, mocker, setup_task, error_step, log_message):
     # Arrange
@@ -258,6 +262,8 @@ class TestDataverseDataUploadTask:
     mocker.patch('pasta_eln.dataverse.data_upload_task.DataUploadTask.finalize_upload_task')
     setup_task.project_name = "Project A"
     setup_task.check_if_cancelled = MagicMock(return_value=False)
+    setup_task.update_log = MagicMock()
+    setup_task.generate_eln_file = MagicMock()
     if error_step == "generate_eln_file":
       setup_task.generate_eln_file = MagicMock(return_value=None)
     elif error_step == "create_dataset":
@@ -276,7 +282,7 @@ class TestDataverseDataUploadTask:
     # Assert
     mock_super_start_task.assert_called_once()
     mock_super_start_task.return_value.start_task.assert_called_once_with()
-    setup_task.logger.warning.assert_called_with(log_message, "Project A")
+    setup_task.update_log.assert_called_with(log_message, setup_task.logger.warning)
     setup_task.finalize_upload_task.assert_called_with(UploadStatusValues.Error.name)
 
   @pytest.mark.parametrize(
@@ -304,6 +310,8 @@ class TestDataverseDataUploadTask:
                       check_dataset_unlocked_return, upload_file_return):
     # Arrange
     mocker.patch('pasta_eln.dataverse.data_upload_task.super')
+    setup_task.generate_eln_file = mocker.MagicMock()
+    setup_task.update_log = mocker.MagicMock()
     setup_task.finalize_upload_task = mocker.MagicMock()
     setup_task.check_if_dataset_is_unlocked = mocker.MagicMock(return_value=check_dataset_unlocked_return)
     setup_task.check_if_cancelled = mocker.MagicMock(side_effect=cancel_status)

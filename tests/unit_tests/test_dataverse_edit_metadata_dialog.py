@@ -74,7 +74,7 @@ def mock_dependencies(mocker):
 
 
 @pytest.fixture
-def mock_edit_metadata_dialog(mocker, mock_dependencies):
+def mock_edit_metadata_dialog(mock_dependencies):
   current_path = realpath(join(getcwd(), dirname(__file__)))
   with open(join(current_path, "..//..//pasta_eln//dataverse", "dataset-create-new-all-default-fields.json"),
             encoding="utf-8") as config_file:
