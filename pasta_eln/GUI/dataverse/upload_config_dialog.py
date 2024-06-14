@@ -17,6 +17,7 @@ from PySide6.QtWidgets import QCheckBox, QDialog
 from pasta_eln.GUI.dataverse.upload_config_dialog_base import Ui_UploadConfigDialog
 from pasta_eln.dataverse.config_model import ConfigModel
 from pasta_eln.dataverse.database_api import DatabaseAPI
+from pasta_eln.dataverse.utils import get_data_hierarchy_types
 
 
 class UploadConfigDialog(Ui_UploadConfigDialog, QObject):
@@ -62,11 +63,10 @@ class UploadConfigDialog(Ui_UploadConfigDialog, QObject):
     self.numParallelComboBox.setCurrentIndex(2)
     self.instance.setWindowModality(QtCore.Qt.ApplicationModal)
     self.config_model: ConfigModel | None = None
-    self.data_hierarchy_types: list[str] = []
+    self.data_hierarchy_types: list[str] = get_data_hierarchy_types(self.db_api.get_data_hierarchy())
     self.buttonBox.button(QtWidgets.QDialogButtonBox.Save).clicked.connect(self.save_ui)
     (self.numParallelComboBox.currentTextChanged[str]
      .connect(lambda num: setattr(self.config_model, "parallel_uploads_count", int(num))))
-    self.set_data_hierarchy_types()
     self.config_reloaded_callback = config_reloaded_callback
     self.load_ui()
 
@@ -114,25 +114,6 @@ class UploadConfigDialog(Ui_UploadConfigDialog, QObject):
     """
     if self.config_model and self.config_model.project_upload_items is not None:
       self.config_model.project_upload_items.update({project_item_name: state == Qt.CheckState.Checked.value})
-
-  def set_data_hierarchy_types(self) -> None:
-    """
-    Sets the data hierarchy types.
-
-    Explanation:
-        This method sets the data hierarchy types based on the data hierarchy retrieved from the database.
-    """
-    self.logger.info("Setting data hierarchy types...")
-    data_hierarchy = self.db_api.get_data_hierarchy()
-    if data_hierarchy is None:
-      return
-    for data_type in data_hierarchy:
-      if (data_type and not data_type.isspace()
-          and data_type not in ("x0", "x1", "x2")):
-        type_capitalized = data_type.capitalize()
-        if type_capitalized not in self.data_hierarchy_types:
-          self.data_hierarchy_types.append(type_capitalized)
-    self.data_hierarchy_types.append("Unidentified")
 
   def save_ui(self) -> None:
     """

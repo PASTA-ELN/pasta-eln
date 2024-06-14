@@ -12,7 +12,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 class Ui_CompletedUploadsForm(object):
   def setupUi(self, CompletedUploadsForm):
     CompletedUploadsForm.setObjectName("CompletedUploadsForm")
-    CompletedUploadsForm.resize(1106, 482)
+    CompletedUploadsForm.resize(1300, 475)
     self.gridLayout = QtWidgets.QGridLayout(CompletedUploadsForm)
     self.gridLayout.setObjectName("gridLayout")
     spacerItem = QtWidgets.QSpacerItem(20, 10, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Fixed)
@@ -21,19 +21,16 @@ class Ui_CompletedUploadsForm(object):
     self.mainVerticalLayout.setObjectName("mainVerticalLayout")
     self.filterHorizontalLayout = QtWidgets.QHBoxLayout()
     self.filterHorizontalLayout.setObjectName("filterHorizontalLayout")
-    self.historyFilterLineEdit = QtWidgets.QLineEdit(parent=CompletedUploadsForm)
-    self.historyFilterLineEdit.setClearButtonEnabled(True)
-    self.historyFilterLineEdit.setObjectName("historyFilterLineEdit")
-    self.filterHorizontalLayout.addWidget(self.historyFilterLineEdit)
-    self.filterPushButton = QtWidgets.QPushButton(parent=CompletedUploadsForm)
-    self.filterPushButton.setObjectName("filterPushButton")
-    self.filterHorizontalLayout.addWidget(self.filterPushButton)
+    self.filterTermLineEdit = QtWidgets.QLineEdit(parent=CompletedUploadsForm)
+    self.filterTermLineEdit.setClearButtonEnabled(True)
+    self.filterTermLineEdit.setObjectName("filterTermLineEdit")
+    self.filterHorizontalLayout.addWidget(self.filterTermLineEdit)
     self.mainVerticalLayout.addLayout(self.filterHorizontalLayout)
     self.completedUploadsScrollArea = QtWidgets.QScrollArea(parent=CompletedUploadsForm)
     self.completedUploadsScrollArea.setWidgetResizable(True)
     self.completedUploadsScrollArea.setObjectName("completedUploadsScrollArea")
     self.scrollAreaWidgetContents = QtWidgets.QWidget()
-    self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 1084, 411))
+    self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 1278, 404))
     self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
     self.verticalLayout_3 = QtWidgets.QVBoxLayout(self.scrollAreaWidgetContents)
     self.verticalLayout_3.setObjectName("verticalLayout_3")
@@ -50,10 +47,8 @@ class Ui_CompletedUploadsForm(object):
   def retranslateUi(self, CompletedUploadsForm):
     _translate = QtCore.QCoreApplication.translate
     CompletedUploadsForm.setWindowTitle(_translate("CompletedUploadsForm", "Dataverse upload history"))
-    self.historyFilterLineEdit.setToolTip(_translate("CompletedUploadsForm", "Enter project name / dataverse URL / finished time to filter the below listed tasks."))
-    self.historyFilterLineEdit.setPlaceholderText(_translate("CompletedUploadsForm", "Enter the information to filter the tasks."))
-    self.filterPushButton.setToolTip(_translate("CompletedUploadsForm", "Click to filter the dataverse uploads done in the past."))
-    self.filterPushButton.setText(_translate("CompletedUploadsForm", "Filter"))
+    self.filterTermLineEdit.setToolTip(_translate("CompletedUploadsForm", "Enter project name / dataverse URL / finished time to filter the below listed tasks."))
+    self.filterTermLineEdit.setPlaceholderText(_translate("CompletedUploadsForm", "Enter the information to filter the tasks."))
     self.completedUploadsScrollArea.setToolTip(_translate("CompletedUploadsForm", "<html><head/><body><p><span style=\" font-style:italic;\">Displays the history of finished dataverse uploads done in the past.</span></p></body></html>"))
 
 
