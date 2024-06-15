@@ -33,10 +33,11 @@ Benefits:
   -> such long integers are not supported by sqlite: stay with string/text
 """
 
-KEY_ORDER   = ['_id' ,            '_rev','-name','-user','-type','-branchStack','-branchChild','-branchPath','-branchShow','-date','-gui',      '-tags','-client']
-KEY_TYPE    = ['TEXT PRIMARY KEY','TEXT','TEXT', 'TEXT', 'TEXT', 'TEXT',        'TEXT',        'TEXT',       'TEXT',       'TEXT', 'varchar(2)','TEXT', 'TEXT']
+KEY_ORDER   = ['_id' ,            '_rev','-name','-user','-type','-dateCreated','-gui',      '-tags','-client']
+KEY_TYPE    = ['TEXT PRIMARY KEY','TEXT','TEXT', 'TEXT', 'TEXT', 'TEXT', 'varchar(2)','TEXT', 'TEXT']
 OTHER_ORDER = ['image', 'content', 'comment']
 DATA_HIERARCHY=['IRI','attachments','title','icon','shortcut','view']
+# '-branchStack','-branchChild','-branchPath','-branchShow',
 
 class SqlLiteDB:
   """
@@ -62,7 +63,16 @@ class SqlLiteDB:
       logging.error(self.mainColumnNames)
       logging.error([i[1:] if i[0] in ('_','-') else i for i in KEY_ORDER]+OTHER_ORDER+['meta','__history__'])
       raise ValueError('SQLite table difference')
+    tableString = 'id TEXT, stack TEXT, child INTEGER, path TEXT, show TEXT, dateChanged TEXT, PRIMARY KEY (id, stack)'
+    self.cursor.execute(f"CREATE TABLE IF NOT EXISTS branches ({tableString})")
+    self.cursor.execute("SELECT * FROM branches")
+    branchesColumnNames = list(map(lambda x: x[0], self.cursor.description))
+    if branchesColumnNames != ['id', 'stack', 'child', 'path', 'show', 'dateChanged']:
+      logging.error("Difference in sqlite-branch-table and code")
+      logging.error(branchesColumnNames)
+      raise ValueError('SQLite table difference')
     return
+
 
   def dataHierarchyInit(self, resetDataHierarchy:bool=False) -> None:
     """
@@ -140,13 +150,13 @@ class SqlLiteDB:
     Returns:
         dict: json representation of document
     """
-    self.cursor.execute(f"SELECT * FROM main WHERE id == '{docID}'")
-    data = self.cursor.fetchone()
+    self.cursor.execute(f"SELECT * FROM main INNER JOIN branches USING(id) WHERE main.id == '{docID}'")
+    data = self.cursor.fetchall()
     # CONVERT SQLITE STYLE INTO PASTA-DICT
     if data is None:
       logging.error('Could not find id in database: '+docID)
       return {}
-    doc = {'-'+k:v for k,v in zip(self.mainColumnNames,data)}
+    doc = {'-'+k:v for k,v in zip(self.mainColumnNames,data[0])}
     doc['_id'] = doc.pop('-id')
     doc['_rev'] = doc.pop('-rev')
     doc['comment']= doc.pop('-comment')
@@ -160,16 +170,12 @@ class SqlLiteDB:
     doc['-tags']= doc['-tags'].split(' ') if doc['-tags'] else []
     doc['-gui'] = [i=='T' for i in doc['-gui']]
     doc['-branch'] = []
-    for idx, stack in enumerate(doc['-branchStack'].split(' ')):
-      iPath = doc['-branchPath'].split(' ')[idx]
-      doc['-branch'].append({'stack': stack.split('/')[:-1],
-                            'child':  int(doc['-branchChild'].split(' ')[idx]),
-                            'path':   None if iPath == '*' else iPath,
-                            'show':   [i=='T' for i in doc['-branchShow'].split(' ')[idx]]})
-    del doc['-branchStack']
-    del doc['-branchChild']
-    del doc['-branchPath']
-    del doc['-branchShow']
+    # data ends with ... 'stack', 'child', 'path', 'show', 'dateChanged'
+    for dataI in data:
+      doc['-branch'].append({'stack': dataI[-5].split('/')[:-1],
+                             'child': dataI[-4],
+                             'path':  None if dataI[-3] == '*' else dataI[-3],
+                             'show':   [i=='T' for i in dataI[-2]]})
     del doc['-__history__']
     meta = json.loads(doc.pop('-meta'))
     doc |= meta
@@ -196,16 +202,20 @@ class SqlLiteDB:
         dict: json representation of submitted document
     """
     docOrg = copy.deepcopy(doc)
+    self.cursor.execute(f"INSERT INTO branches VALUES ({', '.join(['?']*6)})",
+                        [doc['_id'],
+                         '/'.join(doc['-branch']['stack']+[doc['_id']]),
+                         str(doc['-branch']['child']),
+                         '*' if doc['-branch']['path'] is None else doc['-branch']['path'],
+                         ''.join(['T' if j else 'F' for j in doc['-branch']['show']]),
+                         doc['-date']])
+    del doc['-branch']
     if 'content' in doc and len(doc['content'])>200:
       doc['content'] = doc['content'][:200]
     doc['-type'] = '/'.join(doc['-type'])
     doc['-tags'] = ' '.join(doc['-tags'])
     doc['-gui']  = ''.join(['T' if i else 'F' for i in doc['-gui']])
-    doc['-branchStack'] = '/'.join(doc['-branch']['stack']+[doc['_id']])
-    doc['-branchChild'] = str(doc['-branch']['child'])
-    doc['-branchPath']  = '*' if doc['-branch']['path'] is None else doc['-branch']['path']
-    doc['-branchShow']  = ''.join(['T' if j else 'F' for j in doc['-branch']['show']])
-    del doc['-branch']
+    doc['-dateCreated'] = doc.pop('-date')
     metaDoc = {k:v for k,v in doc.items() if k not in KEY_ORDER+OTHER_ORDER}
     docList = [doc.get(x,'') for x in KEY_ORDER]+[doc.get(i,'') for i in OTHER_ORDER]+[json.dumps(metaDoc), '']
     self.cursor.execute(f"INSERT INTO main VALUES ({', '.join(['?']*len(docList))})", docList)
@@ -334,17 +344,20 @@ class SqlLiteDB:
       results = self.cursor.fetchall()
       results = [{'id':i[0], 'key':i[0], 'value':list(i[1:])} for i in results]
     elif thePath=='viewHierarchy/viewHierarchy':
-      self.cursor.execute("SELECT id, branchStack, branchChild, type, name, gui FROM main WHERE branchStack LIKE '"+startKey+"%'")
+      self.cursor.execute("SELECT branches.id, branches.stack, branches.child, main.type, main.name, main.gui FROM branches INNER JOIN main USING(id) WHERE branches.stack LIKE '"+startKey+"%'")
       results = self.cursor.fetchall()
-      results = [{'id':i[0], 'key':i[1].replace('/',' '), 'value':[int(i[2]), i[3].split('/'), i[4], [j=='T' for j in i[5]]]} for i in results]
+      # value: [child, doc['-type'], doc['-name'], doc['-gui']]
+      results = [{'id':i[0], 'key':i[1].replace('/',' '), 'value':[i[2], i[3].split('/'), i[4], [j=='T' for j in i[5]]]} for i in results]
     elif thePath=='viewHierarchy/viewPaths':
+      # JOIN and get type
       if startKey is not None:
         print('**ERROR NOT IMPLEMENTED')
       elif preciseKey is not None:
-        self.cursor.execute("SELECT id, branchPath, branchStack, type, branchChild, JSON_EXTRACT(meta, '$.shasum') FROM main WHERE branchPath LIKE '"+preciseKey+"'")
+        self.cursor.execute("SELECT branches.id, branches.path, branches.stack, main.type, branches.child, JSON_EXTRACT(main.meta, '$.shasum') FROM branches INNER JOIN main USING(id) WHERE branches.path LIKE '"+preciseKey+"'")
       else:
-        self.cursor.execute("SELECT id, branchPath, branchStack, type, branchChild, JSON_EXTRACT(meta, '$.shasum') FROM main")
+        self.cursor.execute("SELECT branches.id, branches.path, branches.stack, main.type, branches.child, JSON_EXTRACT(main.meta, '$.shasum') FROM branches INNER JOIN main USING(id)")
       results = self.cursor.fetchall()
+      # value: [branch.stack, doc['-type'], branch.child, doc.shasum,idx]
       results = [{'id':i[0], 'key':i[1], 'value':[i[2].replace('/',' '), i[3].split('/'), i[4], i[5]]} for i in results if i[1] is not None]
     elif viewType=='viewIdentify':
       key = 'qrCode' if docType=='viewQR' else 'shasum'
@@ -489,57 +502,52 @@ class SqlLiteDB:
       outstring += '</div>'
     outstring+= outputString(outputStyle,'h2','List all database entries')
     # tests
-    self.cursor.execute("SELECT id, type, branchStack, branchPath, branchChild, branchShow FROM main")
+    self.cursor.execute("SELECT id, main.type, branches.stack, branches.path, branches.child, branches.show FROM branches INNER JOIN main USING(id)")
     res = self.cursor.fetchall()
     for row in res:
       try:
-        id, docType, stack, path, child, show = row[0], row[1], row[2].split(' '), row[3].split(' '), row[4].split(' '), row[5].split(' ')
+        id, docType, stack, path, child, show = row[0], row[1], row[2], row[3], row[4], row[5]
       except:
         outstring+= outputString(outputStyle,'error',f"dch03a: branch data has strange list {id}")
         continue
       if len(docType.split('/'))==0:
         outstring+= outputString(outputStyle,'unsure',f"dch04: no type in (removed data?) {id}")
         continue
-      if  len(stack)>1 and docType.startswith('x'):
-        outstring+= outputString(outputStyle,'error',f"dch02: branch length >1 for text id: {id}")
-      if not all([all([k.startswith('x-') for k in j.split('/')[:-1]]) for j in stack]):
+      if not all([k.startswith('x-') for k in stack.split('/')[:-1]]):
         outstring+= outputString(outputStyle,'error',f"dch03: non-text in stack in id: {id}")
-      if not (len(stack)==len(path)==len(child)==len(show)):
-        outstring+= outputString(outputStyle,'error',f"length of branch items not identical id: {id}")
       if any([len(i)==0 for i in stack]) and not docType.startswith('x0'): #if no inheritance
         if docType.startswith(('measurement','x')):
           outstring+= outputString(outputStyle,'warning',f"branch stack length = 0: no parent {id}")
         elif not minimal:
           outstring+= outputString(outputStyle,'okish',f"branch stack length = 0: no parent for procedure/sample {id}")
-      for idx in range(len(path)):
-        try:
-          dirNamePrefix = path[idx].split(os.sep)[-1].split('_')[0]
-          if dirNamePrefix.isdigit() and int(child[idx])!=int(dirNamePrefix): #compare child-number to start of directory name
-            outstring+= outputString(outputStyle,'error',f"dch05: child-number and dirName dont match {id}")
-        except Exception:
-          pass  #handled next lines
-        if path[idx] is None:
-          if docType.startswith('x'):
-            outstring+= outputString(outputStyle,'error',f"dch06: branch path is None {id}")
-          elif docType.startswith('measurement'):
+      try:
+        dirNamePrefix = path.split(os.sep)[-1].split('_')[0]
+        if dirNamePrefix.isdigit() and child!=int(dirNamePrefix): #compare child-number to start of directory name
+          outstring+= outputString(outputStyle,'error',f"dch05: child-number and dirName dont match {id}")
+      except Exception:
+        pass  #handled next lines
+      if path is None:
+        if docType.startswith('x'):
+          outstring+= outputString(outputStyle,'error',f"dch06: branch path is None {id}")
+        elif docType.startswith('measurement'):
+          if not minimal:
+            outstring+= outputString(outputStyle,'okish', f'measurement branch path is None=no data {id}')
+        elif not minimal:
+          outstring+= outputString(outputStyle,'ok',f"procedure/sample with empty path {id}")
+      else:                                                    #if sensible path
+        if len(stack.split('/')) != len(path.split(os.sep)) and path!='*' and not path.startswith('http'): #check if length of path and stack coincide; ignore path=None=*
+          if docType.startswith('procedure'):
             if not minimal:
-              outstring+= outputString(outputStyle,'okish', f'measurement branch path is None=no data {id}')
-          elif not minimal:
-            outstring+= outputString(outputStyle,'ok',f"procedure/sample with empty path {id}")
-        else:                                                    #if sensible path
-          if len(stack[idx].split('/')) != len(path[idx].split(os.sep)) and path[idx]!='*' and not path[idx].startswith('http'): #check if length of path and stack coincide; ignore path=None=*
-            if docType.startswith('procedure'):
-              if not minimal:
-                outstring+= outputString(outputStyle,'ok',f"procedure: branch stack and path lengths not equal: {id}")
-            else:
-              outstring+= outputString(outputStyle,'unsure',f"branch stack and path lengths not equal: {id}")
-          if path[idx]!='*' and not path[idx].startswith('http'):
-            for parentID in stack[idx].split('/')[:-1]:            #check if all parents in doc have a corresponding path
-              parentDoc = self.getDoc(parentID)
-              parentDocBranches = parentDoc['-branch']
-              onePathFound = any(path[idx].startswith(parentBranch['path']) for parentBranch in parentDocBranches)
-              if not onePathFound and (not docType.startswith('procedure') or not minimal):
-                outstring+= outputString(outputStyle,'unsure',f"dch08: parent does not have corresponding path (remote content) {id} | parentID {parentID}")
+              outstring+= outputString(outputStyle,'ok',f"procedure: branch stack and path lengths not equal: {id}")
+          else:
+            outstring+= outputString(outputStyle,'unsure',f"branch stack and path lengths not equal: {id}")
+        if path!='*' and not path.startswith('http'):
+          for parentID in stack.split('/')[:-1]:            #check if all parents in doc have a corresponding path
+            parentDoc = self.getDoc(parentID)
+            parentDocBranches = parentDoc['-branch']
+            onePathFound = any(path.startswith(parentBranch['path']) for parentBranch in parentDocBranches)
+            if not onePathFound and (not docType.startswith('procedure') or not minimal):
+              outstring+= outputString(outputStyle,'unsure',f"dch08: parent does not have corresponding path (remote content) {id} | parentID {parentID}")
 
     #doc-type specific tests
     self.cursor.execute("SELECT id, JSON_EXTRACT(meta, '$.qrCode') FROM main WHERE  type LIKE 'sample%'")

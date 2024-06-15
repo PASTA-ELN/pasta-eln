@@ -745,6 +745,7 @@ class Backend(CLI_Mixin):
                 if len(listDocs)!=1:
                   output += outputString(outputStyle, 'error', f'Path of folder is non-unique: {path}')
                 docDB   = self.db.getDoc(listDocs[0]['id'])
+                docDB['-date'] = docDB.pop('-dateCreated')
                 difference = diffDicts(docDisk,docDB)
                 if len(difference)>1:
                   output += outputString(outputStyle,'error','disk(1) and db(2) content do not match:'+docDisk['_id'])
