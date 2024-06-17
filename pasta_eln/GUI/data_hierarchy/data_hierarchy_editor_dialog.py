@@ -108,7 +108,7 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
     for column_index, width in self.metadata_table_data_model.column_widths.items():
       self.typeMetadataTableView.setColumnWidth(column_index, width)
     # When resized, only stretch the query column of typeMetadataTableView
-    self.typeMetadataTableView.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+    self.typeMetadataTableView.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeMode.Stretch)
 
     self.typeAttachmentsTableView.setItemDelegateForColumn(
       ATTACHMENT_TABLE_DELETE_COLUMN_INDEX,
@@ -121,7 +121,7 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
     for column_index, width in self.attachments_table_data_model.column_widths.items():
       self.typeAttachmentsTableView.setColumnWidth(column_index, width)
     # When resized, only stretch the type column of typeAttachmentsTableView
-    self.typeAttachmentsTableView.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+    self.typeAttachmentsTableView.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeMode.Stretch)
 
     # Create the dialog for new type creation
     self.create_type_dialog = CreateTypeDialog(self.create_type_accepted_callback, self.create_type_rejected_callback)
@@ -189,7 +189,7 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
         act.deleteLater()
     self.typeIriLineEdit.addAction(
       LookupIriAction(parent_line_edit=self.typeIriLineEdit, lookup_term=lookup_term),
-      QLineEdit.TrailingPosition)
+      QLineEdit.ActionPosition.TrailingPosition)
 
   def metadata_group_combo_box_changed(self,
                                        new_selected_metadata_group: Any) -> None:
@@ -212,13 +212,13 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
     """
     new_group = self.addMetadataGroupLineEdit.text()
     if not new_group:
-      show_message("Enter non-null/valid metadata group name!!.....", QMessageBox.Warning)
+      show_message("Enter non-null/valid metadata group name!!.....", QMessageBox.Icon.Warning)
       return None
     if not self.data_hierarchy_loaded or self.data_hierarchy_types is None:
-      show_message("Load the data hierarchy data first....", QMessageBox.Warning)
+      show_message("Load the data hierarchy data first....", QMessageBox.Icon.Warning)
       return None
     if new_group in self.selected_type_metadata.keys():
-      show_message("Metadata group already exists....", QMessageBox.Warning)
+      show_message("Metadata group already exists....", QMessageBox.Icon.Warning)
       return None
     # Add the new group to the metadata list and refresh the group combo box
     self.logger.info("User added new metadata group: {%s}", new_group)
@@ -235,7 +235,7 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
     """
     selected_group = self.metadataGroupComboBox.currentText()
     if self.selected_type_metadata is None:
-      show_message("Load the data hierarchy data first....", QMessageBox.Warning)
+      show_message("Load the data hierarchy data first....", QMessageBox.Icon.Warning)
       return None
     if selected_group and selected_group in self.selected_type_metadata.keys():
       self.logger.info("User deleted the selected metadata group: {%s}", selected_group)
@@ -286,10 +286,10 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
     selected_type = self.typeComboBox.currentText()
     selected_type = adapt_type(selected_type)
     if not self.data_hierarchy_loaded:
-      show_message("Load the data hierarchy data first....", QMessageBox.Warning)
+      show_message("Load the data hierarchy data first....", QMessageBox.Icon.Warning)
       return
     if self.data_hierarchy_types is None or self.data_hierarchy_document is None:
-      show_message("Load the data hierarchy data first....", QMessageBox.Warning)
+      show_message("Load the data hierarchy data first....", QMessageBox.Icon.Warning)
       return
     if selected_type and selected_type in self.data_hierarchy_types:
       self.logger.info("User deleted the selected type: {%s}", selected_type)
@@ -350,7 +350,7 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
       self.create_type_dialog.set_structural_level_title(structural_title)
       self.create_type_dialog.show()
     else:
-      show_message("Load the data hierarchy data first...", QMessageBox.Warning)
+      show_message("Load the data hierarchy data first...", QMessageBox.Icon.Warning)
 
   def setup_slots(self) -> None:
     """
@@ -422,16 +422,16 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
       message = get_missing_metadata_message(types_with_missing_metadata,
                                              types_with_null_name_metadata,
                                              types_with_duplicate_metadata)
-      show_message(message, QMessageBox.Warning)
+      show_message(message, QMessageBox.Icon.Warning)
       self.logger.warning(message)
       return
 
     result = show_message("Save will close the tool and restart the Pasta Application (Yes/No?)",
-                          QMessageBox.Question,
-                          QMessageBox.No | QMessageBox.Yes,
-                          QMessageBox.Yes)
+                          QMessageBox.Icon.Question,
+                          QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
+                          QMessageBox.StandardButton.Yes)
 
-    if result == QMessageBox.Yes:
+    if result == QMessageBox.StandardButton.Yes:
       # Clear all the data from the data_hierarchy_document
       for data in list(self.data_hierarchy_document.keys()):
         if isinstance(self.data_hierarchy_document[data], dict):
@@ -463,11 +463,11 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
     if title in self.data_hierarchy_types:
       show_message(
         f"Type (title: {title} displayed title: {displayed_title}) cannot be added since it exists in DB already....",
-        QMessageBox.Warning)
+        QMessageBox.Icon.Warning)
     else:
       if not title:
         self.logger.warning("Enter non-null/valid title!!.....")
-        show_message("Enter non-null/valid title!!.....", QMessageBox.Warning)
+        show_message("Enter non-null/valid title!!.....", QMessageBox.Icon.Warning)
         return
       self.logger.info("User created a new type and added "
                        "to the data_hierarchy document: Title: {%s}, Displayed Title: {%s}", title, displayed_title)

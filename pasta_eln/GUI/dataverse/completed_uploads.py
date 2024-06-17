@@ -61,7 +61,7 @@ class CompletedUploads(Ui_CompletedUploadsForm):
     self.instance = QDialog()
     super().setupUi(self.instance)
     self.db_api = DatabaseAPI()
-    self.instance.setWindowModality(QtCore.Qt.ApplicationModal)
+    self.instance.setWindowModality(QtCore.Qt.WindowModality.ApplicationModal)
     self.completedUploadsScrollArea.verticalScrollBar().valueChanged.connect(self.scrolled)
     self.filterTermLineEdit.textChanged.connect(self.load_ui)
 

@@ -13,7 +13,7 @@ from typing import Union
 
 from PySide6.QtCore import QAbstractItemModel, QEvent, QModelIndex, QPersistentModelIndex, QSize, Signal
 from PySide6.QtGui import QPainter
-from PySide6.QtWidgets import QApplication, QPushButton, QStyle, QStyleOptionButton, QStyleOptionViewItem, \
+from PySide6.QtWidgets import QApplication, QPushButton, QStyle, QStyleOption, QStyleOptionButton, QStyleOptionViewItem, \
   QStyledItemDelegate, QWidget
 
 from .utility_functions import is_click_within_bounds
@@ -35,7 +35,7 @@ class DeleteColumnDelegate(QStyledItemDelegate):
 
   def paint(self,
             painter: QPainter,
-            option: QStyleOptionViewItem,
+            option: QStyleOption,
             index: Union[QModelIndex, QPersistentModelIndex]) -> None:
     """
     Draws the delete button within the cell represented by index
@@ -49,11 +49,12 @@ class DeleteColumnDelegate(QStyledItemDelegate):
     """
     button = QPushButton()
     opt = QStyleOptionButton()
-    opt.state = QStyle.State_Active | QStyle.State_Enabled  # type: ignore[operator]
-    opt.rect = option.rect
-    opt.icon = QApplication.style().standardIcon(QStyle.StandardPixmap.SP_DialogDiscardButton)
-    opt.iconSize = QSize(15, 15)
-    QApplication.style().drawControl(QStyle.CE_PushButton, opt, painter, button)
+    opt.state = QStyle.StateFlag.State_Active | QStyle.StateFlag.State_Enabled  # type: ignore[attr-defined]
+    opt.rect = option.rect  # type: ignore[attr-defined]
+    opt.icon = QApplication.style().standardIcon(  # type: ignore[attr-defined]
+      QStyle.StandardPixmap.SP_DialogDiscardButton)
+    opt.iconSize = QSize(15, 15)  # type: ignore[attr-defined]
+    QApplication.style().drawControl(QStyle.ControlElement.CE_PushButton, opt, painter, button)
 
   def createEditor(self,
                    parent: QWidget,

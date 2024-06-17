@@ -108,7 +108,7 @@ class ConfigDialog(Ui_ConfigDialogBase):
     self.apiTokenLineEdit.textChanged[str].connect(self.update_api_token)
     self.dataverseLineEdit.textChanged[str].connect(self.update_dataverse_id)
     self.dataverseListComboBox.currentTextChanged.connect(self.update_dataverse_line_edit)
-    self.buttonBox.button(QtWidgets.QDialogButtonBox.Save).clicked.connect(self.save_config)
+    self.buttonBox.button(QtWidgets.QDialogButtonBox.StandardButton.Save).clicked.connect(self.save_config)
     self.dataverseVerifyLoadPushButton.clicked.connect(self.verify_and_load_dataverse_list)
     self.apiTokenHelpPushButton.clicked.connect(
       lambda: webbrowser.open("https://data.fz-juelich.de/guide/api/auth.html"))

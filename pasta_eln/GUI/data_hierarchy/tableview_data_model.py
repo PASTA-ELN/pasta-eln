@@ -59,7 +59,7 @@ class TableViewModel(QAbstractTableModel):
     Returns (Any): The header name for the column represented by the section index
 
     """
-    if orientation == Qt.Horizontal and role == Qt.DisplayRole:
+    if orientation == Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
       return self.header_values[section].capitalize()
     return super().headerData(section, orientation, role)
 
@@ -119,7 +119,7 @@ class TableViewModel(QAbstractTableModel):
     Returns (bool): True when data is set, otherwise false
 
     """
-    if index.isValid() and role in (Qt.EditRole, Qt.UserRole):
+    if index.isValid() and role in (Qt.ItemDataRole.EditRole, Qt.ItemDataRole.UserRole):
       row_index = index.row()
       column = self.data_name_map.get(index.column())
       self.data_set[row_index][column] = value
@@ -143,7 +143,7 @@ class TableViewModel(QAbstractTableModel):
 
     """
     if (index.isValid() and
-        role in (Qt.DisplayRole, Qt.EditRole, Qt.UserRole)):
+        role in (Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.EditRole, Qt.ItemDataRole.UserRole)):
       row = index.row()
       column = index.column()
       return self.data_set[row].get(self.data_name_map.get(column))
@@ -151,20 +151,20 @@ class TableViewModel(QAbstractTableModel):
       return None
 
   def flags(self,
-            index: Union[QModelIndex, QPersistentModelIndex]) -> Qt.ItemFlags:
+            index: Union[QModelIndex, QPersistentModelIndex]) -> Qt.ItemFlag:
     """
     Flags required for the table cell
     Args:
       index (Union[QModelIndex, QPersistentModelIndex]): Table cell index
 
-    Returns (Qt.ItemFlags): The combinations of flags for the cell represented by the index
+    Returns (Qt.ItemFlag): The combinations of flags for the cell represented by the index
 
     """
     if index.isValid():
-      return (Qt.ItemIsEditable  # type: ignore[operator]
-              | Qt.ItemIsSelectable
-              | Qt.ItemIsEnabled)
-    return Qt.NoItemFlags  # type: ignore[return-value]
+      return (Qt.ItemFlag.ItemIsEditable
+              | Qt.ItemFlag.ItemIsSelectable
+              | Qt.ItemFlag.ItemIsEnabled)
+    return Qt.ItemFlag.NoItemFlags
 
   @Slot(int)
   def delete_data(self, position: int) -> None:

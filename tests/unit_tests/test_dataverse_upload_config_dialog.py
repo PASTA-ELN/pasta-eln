@@ -117,7 +117,7 @@ class TestUploadConfigDialog:
     # Assert
     mock_dialog.logger.info.assert_called_once_with("Loading data and initializing UI...")
     mock_dialog.db_api.get_config_model.assert_called_once()
-    assert mock_dialog.numParallelComboBox.setCurrentText.called_once_with(str(parallel_uploads_count))
+    mock_dialog.numParallelComboBox.setCurrentText.assert_called_once_with(str(parallel_uploads_count))
     for pos in range(projects_items_layout_count):
       mock_dialog.projectItemsVerticalLayout.itemAt.assert_any_call(pos)
       mock_dialog.projectItemsVerticalLayout.itemAt.return_value.widget.return_value.setParent.assert_any_call(None)

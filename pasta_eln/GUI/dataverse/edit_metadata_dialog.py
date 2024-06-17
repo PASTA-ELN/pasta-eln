@@ -66,7 +66,7 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
     self.metadata_summary_dialog: EditMetadataSummaryDialog = EditMetadataSummaryDialog(self.save_config)
     self.instance = QDialog()
     super().setupUi(self.instance)
-    self.instance.setWindowModality(QtCore.Qt.ApplicationModal)
+    self.instance.setWindowModality(QtCore.Qt.WindowModality.ApplicationModal)
 
     # Database API instance
     self.db_api = DatabaseAPI()
@@ -87,7 +87,7 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
     self.metadataBlockComboBox.currentTextChanged.connect(self.change_metadata_block)
     self.typesComboBox.currentTextChanged.connect(self.change_metadata_type)
     self.minimalFullComboBox.currentTextChanged[str].connect(self.toggle_minimal_full)
-    self.buttonBox.button(QtWidgets.QDialogButtonBox.Save).clicked.connect(self.save_ui)
+    self.buttonBox.button(QtWidgets.QDialogButtonBox.StandardButton.Save).clicked.connect(self.save_ui)
     self.licenseNameLineEdit.textChanged[str].connect(self.update_license_name)
     self.licenseURLLineEdit.textChanged[str].connect(self.update_license_uri)
     self.buttonBox.accepted.disconnect()

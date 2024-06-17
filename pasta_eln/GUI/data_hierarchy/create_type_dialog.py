@@ -86,7 +86,7 @@ class CreateTypeDialog(Ui_CreateTypeDialogBase):
     Returns: None
 
     """
-    self.instance.setWindowModality(QtCore.Qt.ApplicationModal)
+    self.instance.setWindowModality(QtCore.Qt.WindowModality.ApplicationModal)
     self.instance.show()
 
   def clear_ui(self) -> None:

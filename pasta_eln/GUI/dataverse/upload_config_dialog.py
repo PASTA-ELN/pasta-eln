@@ -61,10 +61,10 @@ class UploadConfigDialog(Ui_UploadConfigDialog, QObject):
     self.db_api = DatabaseAPI()
     self.numParallelComboBox.addItems(map(str, range(2, 6)))
     self.numParallelComboBox.setCurrentIndex(2)
-    self.instance.setWindowModality(QtCore.Qt.ApplicationModal)
+    self.instance.setWindowModality(QtCore.Qt.WindowModality.ApplicationModal)
     self.config_model: ConfigModel | None = None
     self.data_hierarchy_types: list[str] = get_data_hierarchy_types(self.db_api.get_data_hierarchy())
-    self.buttonBox.button(QtWidgets.QDialogButtonBox.Save).clicked.connect(self.save_ui)
+    self.buttonBox.button(QtWidgets.QDialogButtonBox.StandardButton.Save).clicked.connect(self.save_ui)
     (self.numParallelComboBox.currentTextChanged[str]
      .connect(lambda num: setattr(self.config_model, "parallel_uploads_count", int(num))))
     self.config_reloaded_callback = config_reloaded_callback
@@ -89,8 +89,8 @@ class UploadConfigDialog(Ui_UploadConfigDialog, QObject):
       is_set = self.config_model.project_upload_items and self.config_model.project_upload_items.get(data_type, False)
       check_box = QCheckBox(text=data_type,  # type: ignore[call-overload]
                             parent=self.instance,
-                            checkState=QtCore.Qt.Checked
-                            if is_set else QtCore.Qt.Unchecked)
+                            checkState=QtCore.Qt.CheckState.Checked
+                            if is_set else QtCore.Qt.CheckState.Unchecked)
       self.projectItemsVerticalLayout.addWidget(check_box)
       check_box.stateChanged.connect(lambda state, item_name=check_box.text().capitalize():
                                      self.check_box_changed_callback(state, item_name))

@@ -48,11 +48,11 @@ class ReorderColumnDelegate(QStyledItemDelegate):
     """
     button = QPushButton()
     opt = QStyleOptionButton()
-    opt.state = QStyle.State_Active | QStyle.State_Enabled  # type: ignore[operator]
-    opt.rect = option.rect
-    opt.icon = QApplication.style().standardIcon(QStyle.StandardPixmap.SP_ArrowUp)
-    opt.iconSize = QSize(15, 15)
-    QApplication.style().drawControl(QStyle.CE_PushButton, opt, painter, button)
+    opt.state = QStyle.StateFlag.State_Active | QStyle.StateFlag.State_Enabled  # type: ignore[attr-defined]
+    opt.rect = option.rect  # type: ignore[attr-defined]
+    opt.icon = QApplication.style().standardIcon(QStyle.StandardPixmap.SP_ArrowUp)  # type: ignore[attr-defined]
+    opt.iconSize = QSize(15, 15)  # type: ignore[attr-defined]
+    QApplication.style().drawControl(QStyle.ControlElement.CE_PushButton, opt, painter, button)
 
   def createEditor(self,
                    parent: QWidget,

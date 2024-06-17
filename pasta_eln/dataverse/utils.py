@@ -612,8 +612,8 @@ def delete_layout_and_contents(layout: QBoxLayout) -> None:
     return
   for widget_pos in reversed(range(layout.count())):
     if item := layout.itemAt(widget_pos):
-      item.widget().setParent(None)  # type: ignore[call-overload]
-  layout.setParent(None)  # type: ignore[arg-type]
+      item.widget().setParent(None)
+  layout.setParent(None)
 
 
 def get_formatted_message(missing_metadata: dict[str, list[str]]) -> str:
