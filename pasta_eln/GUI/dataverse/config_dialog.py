@@ -90,7 +90,6 @@ class ConfigDialog(Ui_ConfigDialogBase):
     self.instance: QDialog = QDialog()
     super().setupUi(self.instance)
     self.db_api = DatabaseAPI()
-    self.db_api.initialize_database()
     self.config_model = self.db_api.get_config_model() or ConfigModel()
     if self.config_model.id is None:
       raise log_and_create_error(self.logger, ConfigError, "Config not found, Corrupt installation!")

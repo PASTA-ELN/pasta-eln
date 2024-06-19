@@ -8,26 +8,27 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Union
 
-from PySide6.QtCore import Slot, QCoreApplication  # pylint: disable=no-name-in-module
+from PySide6.QtCore import QCoreApplication, Slot  # pylint: disable=no-name-in-module
 from PySide6.QtGui import QIcon, QPixmap, QShortcut  # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QMainWindow, QApplication, QFileDialog, QMessageBox  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QApplication, QFileDialog, QMainWindow  # pylint: disable=no-name-in-module
 from qt_material import apply_stylesheet  # of https://github.com/UN-GCPDS/qt-material
 
 from pasta_eln import __version__
 from pasta_eln.GUI.dataverse.config_dialog import ConfigDialog
 from pasta_eln.GUI.dataverse.main_dialog import MainDialog
+from pasta_eln.dataverse.database_api import DatabaseAPI
 from .GUI.body import Body
 from .GUI.config import Configuration
+from .GUI.data_hierarchy.data_hierarchy_editor_dialog import DataHierarchyEditorDialog
 from .GUI.form import Form
 from .GUI.projectGroup import ProjectGroup
 from .GUI.sidebar import Sidebar
 from .backend import Backend
 from .fixedStringsJson import shortcuts
 from .guiCommunicate import Communicate
-from .guiStyle import Action, showMessage, widgetAndLayout, ScrollMessageBox
-from .inputOutput import exportELN, importELN
-from .GUI.data_hierarchy.data_hierarchy_editor_dialog import DataHierarchyEditorDialog
-from .miscTools import updateExtractorList, restart
+from .guiStyle import Action, ScrollMessageBox, showMessage, widgetAndLayout
+from .inputOutput import exportELN
+from .miscTools import restart, updateExtractorList
 
 os.environ['QT_API'] = 'pyside6'
 
@@ -176,6 +177,8 @@ class MainWindow(QMainWindow):
       self.backend.configuration['defaultProjectGroup'] = command[1]
       with open(Path.home() / '.pastaELN.json', 'w', encoding='utf-8') as fConf:
         fConf.write(json.dumps(self.backend.configuration, indent=2))
+      db_api = DatabaseAPI()
+      db_api.initialize_database()
       restart()
     elif command[0] is Command.SYNC:
       report = self.comm.backend.replicateDB(progressBar=self.sidebar.progress)

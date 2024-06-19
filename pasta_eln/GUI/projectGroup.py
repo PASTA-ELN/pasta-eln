@@ -1,17 +1,23 @@
 """ Table Header dialog: change which columns are shown and in which order """
-import json, platform
+import json
+import platform
 from enum import Enum
 from pathlib import Path
 from typing import Any
+
 import qrcode
 from PIL.ImageQt import ImageQt
-from PySide6.QtWidgets import QDialog, QVBoxLayout, QLabel, QGroupBox, QLineEdit, QDialogButtonBox, QFormLayout, QComboBox, QFileDialog, QMessageBox  # pylint: disable=no-name-in-module
-from PySide6.QtGui import QPixmap, QRegularExpressionValidator # pylint: disable=no-name-in-module
+from PySide6.QtGui import QPixmap, QRegularExpressionValidator  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QFileDialog, QFormLayout, QGroupBox, QLabel, \
+  QLineEdit, QMessageBox, QVBoxLayout  # pylint: disable=no-name-in-module
 from cloudant.client import CouchDB
-from ..guiStyle import Label, TextButton, IconButton, showMessage, widgetAndLayout
-from ..miscTools import upOut, restart, upIn
-from ..serverActions import testLocal, testRemote, passwordDecrypt
+
+from ..dataverse.database_api import DatabaseAPI
 from ..guiCommunicate import Communicate
+from ..guiStyle import IconButton, Label, TextButton, showMessage, widgetAndLayout
+from ..miscTools import restart, upIn, upOut
+from ..serverActions import passwordDecrypt, testLocal, testRemote
+
 
 class ProjectGroup(QDialog):
   """ Table Header dialog: change which columns are shown and in which order """
@@ -126,6 +132,8 @@ class ProjectGroup(QDialog):
       self.configuration['defaultProjectGroup'] = name
       with open(Path.home()/'.pastaELN.json', 'w', encoding='utf-8') as fConf:
         fConf.write(json.dumps(self.configuration,indent=2))
+      db_api = DatabaseAPI()
+      db_api.initialize_database()
       restart()
     else:
       print('dialogProjectGroup: did not get a fitting btn ',btn.text())

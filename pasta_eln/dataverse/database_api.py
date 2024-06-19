@@ -20,9 +20,14 @@ from pasta_eln.dataverse.base_database_api import BaseDatabaseAPI
 from pasta_eln.dataverse.config_model import ConfigModel
 from pasta_eln.dataverse.project_model import ProjectModel
 from pasta_eln.dataverse.upload_model import UploadModel
-from pasta_eln.dataverse.utils import decrypt_data, encrypt_data, get_data_hierarchy_types, get_encrypt_key, \
-  log_and_create_error, set_authors, \
-  set_template_values
+from pasta_eln.dataverse.utils import (decrypt_data,
+                                       encrypt_data,
+                                       get_data_hierarchy_types,
+                                       get_db_credentials,
+                                       get_encrypt_key,
+                                       log_and_create_error,
+                                       set_authors,
+                                       set_template_values)
 
 
 class DatabaseAPI:
@@ -49,18 +54,25 @@ class DatabaseAPI:
         None
     """
     super().__init__()
-    self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
-    self.db_api = BaseDatabaseAPI()
-    self.design_doc_name = '_design/viewDataverse'
-    self.config_doc_id = '-dataverseConfig-'
-    self.data_hierarchy_doc_id = '-dataHierarchy-'
-    self.upload_model_view_name = 'dvUploadView'
-    self.project_model_view_name = 'dvProjectsView'
-    self.upload_models_query_index_name = "uploadModelsQuery"
-    self.upload_models_query_index_fields = ["finished_date_time"]
+    self.logger: logging.Logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
+    cred: dict[str, str] = get_db_credentials(self.logger)
+    self.db_api: BaseDatabaseAPI = BaseDatabaseAPI(
+      'localhost',
+      5984,
+      cred.get('username') or "",
+      cred.get('password') or "")
+    self.dataverse_db_name: str = "dataverse"
+    self.default_project_group_db_name: str = cred.get('db_name') or ""
+    self.design_doc_name: str = '_design/viewDataverse'
+    self.config_doc_id: str = '-dataverseConfig-'
+    self.data_hierarchy_doc_id: str = '-dataHierarchy-'
+    self.upload_model_view_name: str = 'dvUploadView'
+    self.project_model_view_name: str = 'dvProjectsView'
+    self.upload_models_query_index_name: str = "uploadModelsQuery"
+    self.upload_models_query_index_fields: list[str] = ["finished_date_time"]
     _, self.encrypt_key = get_encrypt_key(self.logger)
 
-  def create_dataverse_design_document(self) -> Document:
+  def create_dataverse_design_document(self, db_name: str) -> Document:
     """
     Creates a design document for the dataverse in the database.
 
@@ -69,6 +81,7 @@ class DatabaseAPI:
         using the provided design document name.
 
     Args:
+        db_name (str): The name of the database.
         self: The DatabaseAPI instance.
 
     Returns:
@@ -76,7 +89,7 @@ class DatabaseAPI:
 
     """
     self.logger.info("Creating design document: %s", self.design_doc_name)
-    return self.db_api.create_document({"_id": self.design_doc_name})
+    return self.db_api.create_document({"_id": self.design_doc_name}, db_name)
 
   def create_upload_model_view(self) -> None:
     """
@@ -90,7 +103,9 @@ class DatabaseAPI:
 
     """
     self.logger.info("Creating dvUploadView as part of design document: %s", self.design_doc_name)
-    self.db_api.add_view(self.design_doc_name, self.upload_model_view_name,
+    self.db_api.add_view(self.dataverse_db_name,
+                         self.design_doc_name,
+                         self.upload_model_view_name,
                          "function (doc) { if (doc.data_type === 'dataverse_upload') { emit(doc._id, doc); } }", None)
 
   def create_projects_view(self) -> None:
@@ -105,7 +120,8 @@ class DatabaseAPI:
 
     """
     self.logger.info("Creating dvProjectsView as part of design document: %s", self.design_doc_name)
-    self.db_api.add_view(self.design_doc_name,
+    self.db_api.add_view(self.default_project_group_db_name,
+                         self.design_doc_name,
                          self.project_model_view_name,
                          "function (doc) { "
                          "if (doc['-type'].includes('x0')) {"
@@ -152,7 +168,10 @@ class DatabaseAPI:
     if data_dict['_id'] is None:
       del data_dict['_id']
     del data_dict['_rev']
-    return type(data)(**self.db_api.create_document(data_dict))
+    return type(data)(**self.db_api.create_document(data_dict,
+                                                    self.default_project_group_db_name
+                                                    if data is ProjectModel
+                                                    else self.dataverse_db_name))
 
   def update_model_document(self, data: UploadModel | ConfigModel | ProjectModel) -> None:
     """
@@ -175,7 +194,7 @@ class DatabaseAPI:
       raise log_and_create_error(self.logger, ValueError, "Data cannot be None!")
     if not isinstance(data, (UploadModel, ConfigModel, ProjectModel)):
       raise log_and_create_error(self.logger, TypeError, "Data must be an UploadModel, ConfigModel, or ProjectModel!")
-    self.db_api.update_document(dict(data))
+    self.db_api.update_document(dict(data), self.dataverse_db_name)
 
   def get_models(self, model_type: Type[Union[UploadModel, ConfigModel, ProjectModel]]) -> list[
     Union[UploadModel, ConfigModel, ProjectModel]]:
@@ -198,10 +217,15 @@ class DatabaseAPI:
     self.logger.info("Getting models of type: %s", model_type)
     match model_type():
       case UploadModel():
-        return [UploadModel(**result) for result in self.db_api.get_view_results(self.design_doc_name, "dvUploadView")]
+        return [UploadModel(**result) for result in
+                self.db_api.get_view_results(self.dataverse_db_name,
+                                             self.design_doc_name,
+                                             "dvUploadView")]
       case ProjectModel():
         return [ProjectModel(**result) for result in
-                self.db_api.get_view_results(self.design_doc_name, "dvProjectsView")]
+                self.db_api.get_view_results(self.default_project_group_db_name,
+                                             self.design_doc_name,
+                                             "dvProjectsView")]
       case _:
         raise log_and_create_error(self.logger, TypeError, f"Unsupported model type {model_type}")
 
@@ -234,7 +258,8 @@ class DatabaseAPI:
                      limit)
     match model_type():
       case UploadModel():
-        result = self.db_api.get_paginated_upload_model_query_results(filter_term,
+        result = self.db_api.get_paginated_upload_model_query_results(self.dataverse_db_name,
+                                                                      filter_term,
                                                                       ["project_name",
                                                                        "dataverse_url",
                                                                        "finished_date_time",
@@ -273,7 +298,10 @@ class DatabaseAPI:
       raise log_and_create_error(self.logger, TypeError, f"Unsupported model type {model_type}")
     if model_id is None:
       raise log_and_create_error(self.logger, ValueError, "model_id cannot be None")
-    return model_type(**self.db_api.get_document(model_id))
+    return model_type(**self.db_api.get_document(model_id,
+                                                 self.default_project_group_db_name
+                                                 if model_type is ProjectModel
+                                                 else self.dataverse_db_name))
 
   def get_config_model(self) -> ConfigModel | None:
     """
@@ -349,7 +377,7 @@ class DatabaseAPI:
         dict[str, Any] | None: The retrieved data hierarchy, or None if the document is not found.
     """
     self.logger.info("Getting data hierarchy...")
-    document = self.db_api.get_document(self.data_hierarchy_doc_id)
+    document = self.db_api.get_document(self.data_hierarchy_doc_id, self.default_project_group_db_name)
     if document is None:
       self.logger.warning("Data hierarchy document not found!")
       return document
@@ -371,15 +399,20 @@ class DatabaseAPI:
 
     """
     self.logger.info("Initializing database for dataverse module...")
-    if self.db_api.get_document(self.design_doc_name) is None:
-      self.create_dataverse_design_document()
-    if self.db_api.get_view(self.design_doc_name, self.upload_model_view_name) is None:
+    self.db_api.create_database(self.dataverse_db_name)
+    if self.db_api.get_document(self.design_doc_name, self.default_project_group_db_name) is None:
+      self.create_dataverse_design_document(self.default_project_group_db_name)
+    if self.db_api.get_document(self.design_doc_name, self.dataverse_db_name) is None:
+      self.create_dataverse_design_document(self.dataverse_db_name)
+    if self.db_api.get_view(self.dataverse_db_name, self.design_doc_name, self.upload_model_view_name) is None:
       self.create_upload_model_view()
-    if self.db_api.get_view(self.design_doc_name, self.project_model_view_name) is None:
+    if self.db_api.get_view(self.default_project_group_db_name, self.design_doc_name,
+                            self.project_model_view_name) is None:
       self.create_projects_view()
-    if self.db_api.get_document(self.config_doc_id) is None:
+    if self.db_api.get_document(self.config_doc_id, self.dataverse_db_name) is None:
       self.initialize_config_document()
-    self.db_api.create_query_index(self.upload_models_query_index_name,
+    self.db_api.create_query_index(self.dataverse_db_name,
+                                   self.upload_models_query_index_name,
                                    "json",
                                    self.upload_models_query_index_fields)
 
