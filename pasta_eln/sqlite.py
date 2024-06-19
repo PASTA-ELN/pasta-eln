@@ -4,7 +4,7 @@ from typing import Any, Optional, Union
 from pathlib import Path
 from anytree import Node
 from PIL import Image
-from .fixedStringsJson import defaultDataHierarchy
+from .fixedStringsJson import defaultDataHierarchy, defaultDefinitions
 from .miscTools import outputString
 
 """
@@ -33,11 +33,12 @@ Benefits:
   -> such long integers are not supported by sqlite: stay with string/text
 """
 
-KEY_ORDER   = ['_id' ,            '_rev','-name','-user','-type','-dateCreated','-gui',      '-tags','-client']
-KEY_TYPE    = ['TEXT PRIMARY KEY','TEXT','TEXT', 'TEXT', 'TEXT', 'TEXT', 'varchar(2)','TEXT', 'TEXT']
-OTHER_ORDER = ['image', 'content', 'comment']
-DATA_HIERARCHY=['IRI','attachments','title','icon','shortcut','view']
-# '-branchStack','-branchChild','-branchPath','-branchShow',
+KEY_ORDER   =    ['_id' , '-name','-user','-type','-dateCreated','-gui',      '-client']
+KEY_TYPE    =    ['TEXT', 'TEXT', 'TEXT', 'TEXT', 'TEXT',        'varchar(2)', 'TEXT']
+OTHER_ORDER =    ['image', 'content', 'comment']
+DATA_HIERARCHY = ['docType', 'IRI','attachments','title','icon','shortcut','view']
+DEFINITIONS =    ['docType','class','idx', 'name', 'query', 'unit', 'IRI', 'mandatory', 'list']
+
 
 class SqlLiteDB:
   """
@@ -53,24 +54,23 @@ class SqlLiteDB:
     self.connection = sqlite3.connect(basePath/"pastaELN.db")
     self.cursor     = self.connection.cursor()
     self.dataHierarchyInit(resetDataHierarchy)
-    # create if not exists, main table and check its colums
-    tableString = ', '.join([f'{i[1:]} {j}' for i,j in zip(KEY_ORDER,KEY_TYPE)])+', '+', '.join([f'{i} TEXT' for i in OTHER_ORDER])+', meta TEXT, __history__ TEXT'
-    self.cursor.execute(f"CREATE TABLE IF NOT EXISTS main ({tableString})")
-    self.cursor.execute("SELECT * FROM main")
-    self.mainColumnNames = list(map(lambda x: x[0], self.cursor.description))
-    if self.mainColumnNames != [i[1:] if i[0] in ('_','-') else i for i in KEY_ORDER]+OTHER_ORDER+['meta','__history__']:
-      logging.error("Difference in sqlite-table and code")
-      logging.error(self.mainColumnNames)
-      logging.error([i[1:] if i[0] in ('_','-') else i for i in KEY_ORDER]+OTHER_ORDER+['meta','__history__'])
-      raise ValueError('SQLite table difference')
-    tableString = 'id TEXT, stack TEXT, child INTEGER, path TEXT, show TEXT, dateChanged TEXT, PRIMARY KEY (id, stack)'
-    self.cursor.execute(f"CREATE TABLE IF NOT EXISTS branches ({tableString})")
-    self.cursor.execute("SELECT * FROM branches")
-    branchesColumnNames = list(map(lambda x: x[0], self.cursor.description))
-    if branchesColumnNames != ['id', 'stack', 'child', 'path', 'show', 'dateChanged']:
-      logging.error("Difference in sqlite-branch-table and code")
-      logging.error(branchesColumnNames)
-      raise ValueError('SQLite table difference')
+    # main table
+    self.createSQLTable('main',    [i[1:] if i[0] in ('-','_') else i for i in KEY_ORDER]+OTHER_ORDER,                    'id', KEY_TYPE+['TEXT']*len(OTHER_ORDER))
+    # branches table
+    self.createSQLTable('branches',    ['id','stack','child','path','show','dateChanged'],  'id, stack', ['TEXT']*2+['INTEGER']+["TEXT"]*3)
+    # metadata table
+    # - contains metadata of specific item
+    # - key is generally not shown to user
+    # - flattened key
+    # - can be adopted by adv. user
+    self.createSQLTable('metadata',    ['id','key','value','unit'],                    'id, key')
+    # definitions table (see below)
+    # tags of items
+    self.createSQLTable('tags',        ['id','tag'],                                   'id, tag')
+    # list of changes to attachments
+    self.createSQLTable('attachments', ['id','attachment','date','doc','description'], 'id, attachment, date')
+    # list of changes to all documents: gives history
+    self.createSQLTable('changes',     ['id','date','change'],                         'id, date')
     return
 
 
@@ -88,22 +88,34 @@ class SqlLiteDB:
       if 'dataHierarchy' in tables:
         print('Info: remove old dataHierarchy')
         self.cursor.execute("DROP TABLE dataHierarchy")
-      tableString = 'docType TEXT PRIMARY KEY, '+' TEXT, '.join(DATA_HIERARCHY)+' TEXT, meta TEXT'
-      self.cursor.execute(f"CREATE TABLE IF NOT EXISTS dataHierarchy ({tableString})")
-      for k, v in defaultDataHierarchy.items():
-        self.cursor.execute("INSERT INTO dataHierarchy VALUES (?, ?, ?, ?, ?, ?, ?, ?)", [k]+[str(v[i]) for i in DATA_HIERARCHY]+[json.dumps(v['meta'])])
+      self.createSQLTable('dataHierarchy',  DATA_HIERARCHY,    'docType')
+      command = f"INSERT INTO dataHierarchy ({', '.join(DATA_HIERARCHY)}) VALUES ({', '.join(['?']*len(DATA_HIERARCHY))});"
+      self.cursor.executemany(command, defaultDataHierarchy)
+      # definitions table (see below)
+      # - define the key of the metadata table, give long description, IRI, ...
+      self.createSQLTable('definitions', DEFINITIONS,  'docType, class, idx')
+      command = f"INSERT INTO definitions ({', '.join(DEFINITIONS)}) VALUES ({', '.join(['?']*len(DEFINITIONS))});"
+      self.cursor.executemany(command, defaultDefinitions)
       self.connection.commit()
-    # refill old-style dictionary
-    self.cursor = self.connection.execute('select * from dataHierarchy')
-    patternDB    = list(map(lambda x: x[0], self.cursor.description))
-    patternCode  = ['docType']+DATA_HIERARCHY+['meta']
-    if patternDB!= patternCode:
-      print(F"**ERROR wrong dataHierarchy version: {patternDB} {patternCode}")
-      raise ValueError(f"Wrong dataHierarchy version {patternDB} {patternCode}")
     return
 
 
-  def dataHierarchy(self, docType:str, column:str) -> dict[str,Any]:
+  def createSQLTable(self, name, columns, primary, colTypes=None):
+    if colTypes is None:
+      colTypes = ['TEXT']*len(columns)
+    colText = ', '.join(f'{i} {j}' for i,j in zip(columns, colTypes))
+    self.cursor.execute(f"CREATE TABLE IF NOT EXISTS {name} ({colText}, PRIMARY KEY ({primary}))")
+    self.cursor.execute(f"SELECT * FROM {name}")
+    columnNames = list(map(lambda x: x[0], self.cursor.description))
+    if columnNames != columns:
+      logging.error(f"Difference in sqlite table: {name}")
+      logging.error(columnNames)
+      logging.error(columns)
+      raise ValueError('SQLite table difference')
+    return columnNames
+
+
+  def dataHierarchy(self, docType:str, column:str, group:str='') -> dict[str,Any]:
     """
     """
     ### return column information
@@ -119,6 +131,19 @@ class SqlLiteDB:
         #   resultsDict = {k:json.loads(v) for k,v in resultsDict.items()}
         #   resultsDict = {k:v.split(',') for k,v in resultsDict.items()}
       return resultsDict
+    ### if metadata = definitions of data
+    if column == 'meta':
+      self.connection.row_factory = sqlite3.Row  #default None
+      cursor = self.connection.cursor()
+      if group == '':
+        cursor.execute(f"SELECT * FROM definitions WHERE docType == '{docType}'")
+      else:
+        cursor.execute(f"SELECT * FROM definitions WHERE docType == '{docType}' and class == '{group}'")
+      return cursor.fetchall()
+    if column == 'metaColumns':
+      self.cursor.execute(f"SELECT DISTINCT class FROM definitions WHERE docType == '{docType}'")
+      result = [i[0] for i in self.cursor.fetchall()]
+      return result
     # if specific docType
     self.cursor.execute(f"SELECT {column} FROM dataHierarchy WHERE docType == '{docType}'")
     result = self.cursor.fetchone()
@@ -210,15 +235,20 @@ class SqlLiteDB:
                          ''.join(['T' if j else 'F' for j in doc['-branch']['show']]),
                          doc['-date']])
     del doc['-branch']
+    self.cursor.executemany(f"INSERT INTO tags VALUES (?, ?);", zip([doc['_id']]*len(doc['-tags']), doc['-tags']))
+    del doc['-tags']
     if 'content' in doc and len(doc['content'])>200:
       doc['content'] = doc['content'][:200]
     doc['-type'] = '/'.join(doc['-type'])
-    doc['-tags'] = ' '.join(doc['-tags'])
     doc['-gui']  = ''.join(['T' if i else 'F' for i in doc['-gui']])
     doc['-dateCreated'] = doc.pop('-date')
     metaDoc = {k:v for k,v in doc.items() if k not in KEY_ORDER+OTHER_ORDER}
-    docList = [doc.get(x,'') for x in KEY_ORDER]+[doc.get(i,'') for i in OTHER_ORDER]+[json.dumps(metaDoc), '']
+    docList = [doc.get(x,'') for x in KEY_ORDER]+[doc.get(i,'') for i in OTHER_ORDER]
     self.cursor.execute(f"INSERT INTO main VALUES ({', '.join(['?']*len(docList))})", docList)
+    self.cursor.executemany(f"INSERT INTO metadata VALUES (?, ?, ?, ?);", zip([doc['_id']]*len(metaDoc),
+                                                                              [i.split('_')[0] for i in metaDoc.keys()],
+                                                                              metaDoc.values(),
+                                                                              [i.split('_')[1] if '_' in i else '' for i in metaDoc.keys()]))
     self.connection.commit()
     branch = copy.deepcopy(docOrg['-branch'])
     del branch['op']
