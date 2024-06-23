@@ -3,49 +3,49 @@ from typing import Any
 
 defaultDataHierarchy: list[list[str]] = [
   #docType,       IRI, attachments, title,          icon,                   shortcut, view
-  ["x0",          "",  "",          "Projects",     "",                     "space", "-name,-tags,status,objective,comment"],
+  ["x0",          "",  "",          "Projects",     "",                     "space", "name,tags,status,objective,comment"],
   ["x1",          "",  "",          "Folders",      "",                      "",     ""],
-  ["measurement", "",  "",          "Measurements", "fa5s.thermometer-half", "m",    "-name,-tags,comment,-type,image,sample,procedure"],
-  ["sample",      "",  "",          "Samples",      "fa5s.vial",             "s",    "-name,-tags,chemistry,comment,qrCode"],
-  ["procedure",   "",  "",          "Procedures",   "fa5s.list-ol",          "p",    "-name,-tags,comment,content"],
-  ["instrument",  "",  "",          "Instruments",  "ri.scales-2-line",      "i",    "-name,-tags,comment,vendor"]]
+  ["measurement", "",  "",          "Measurements", "fa5s.thermometer-half", "m",    "name,tags,comment,type,image,sample,procedure"],
+  ["sample",      "",  "",          "Samples",      "fa5s.vial",             "s",    "name,tags,chemistry,comment,qrCode"],
+  ["procedure",   "",  "",          "Procedures",   "fa5s.list-ol",          "p",    "name,tags,comment,content"],
+  ["instrument",  "",  "",          "Instruments",  "ri.scales-2-line",      "i",    "name,tags,comment,vendor"]]
 
 defaultDefinitions: list[list[str]] = [
   #docType, group,     index, key,     description,                                      unit, IRI, mandatory, list
-  ["x0",    "default", 0,     "-name", "What is the name of the project?",               "",   "",  "T",       ""],
-  ["x0",    "default", 1,     "-tags", "What are the tags associated with the project?", "",   "",  "",        ""],
+  ["x0",    "default", 0,     "name", "What is the name of the project?",                "",   "",  "T",       ""],
+  ["x0",    "default", 1,     "tags", "What are the tags associated with the project?",  "",   "",  "",        ""],
   ["x0",    "default", 2,     "status","What is the project status",                     "",   "",  "",        "active,paused,passive,finished"],
   ["x0",    "default", 3,     "objective", "What is the objective?",                     "",   "",  "",        ""],
   ["x0",    "default", 4,     "comment", "#tags comments remarks :field:value:",         "",   "",  "",        ""],
-  ["x1",    "default", 0,     "-name",   "What is the name of task?",                    "",   "",  "T",       ""],
-  ["x1",    "default", 1,     "-tags", "What are the tags associated with the task?",    "",   "",  "",        ""],
+  ["x1",    "default", 0,     "name",   "What is the name of task?",                     "",   "",  "T",       ""],
+  ["x1",    "default", 1,     "tags", "What are the tags associated with the task?",     "",   "",  "",        ""],
   ["x1",    "default", 2,     "comment", "#tags comments remarks :field:value:",         "",   "",  "",        ""],
-  ["measurement","default",0, "-name", "What is the name of file name?",                 "",   "",  "T",       ""],
-  ["measurement","default",1, "-tags", "What are the tags associated with the file name?", "", "",  "",        ""],
+  ["measurement","default",0, "name", "What is the name of file name?",                  "",   "",  "T",       ""],
+  ["measurement","default",1, "tags", "What are the tags associated with the file name?","",   "",  "",        ""],
   ["measurement","default",2, "comment", "#tags comments remarks :field:value:",         "",   "",  "",        ""],
   ["measurement","default",3, "sample", "Which sample was used?",                        "",   "",  "",        "sample"],
   ["measurement","default",4, "procedure", "Which procedure was used?",                  "",   "",  "",        "procedure"],
-  ["sample","default", 0,     "-name", "What is the name / identifier of the sample?",   "",   "",  "T",       ""],
-  ["sample","default", 1,     "-tags", "What are the tags associated with the sample?",  "",   "",  "",        ""],
+  ["sample","default", 0,     "name", "What is the name / identifier of the sample?",    "",   "",  "T",       ""],
+  ["sample","default", 1,     "tags", "What are the tags associated with the sample?",   "",   "",  "",        ""],
   ["sample","default", 2,     "chemistry", "What is its chemical composition?",          "",   "",  "",        ""],
   ["sample","default", 3,     "comment", "#tags comments remarks :field:value:",         "",   "",  "",        ""],
   ["sample","default", 4,     "qrCode",  "",                                             "",   "",  "",        ""],
-  ["procedure","default", 0,  "-name", "What is the name / path of the procedure?",      "",   "",  "T",       ""],
-  ["procedure","default", 1,  "-tags", "What are the tags associated with the procedure?","",  "",  "",        ""],
+  ["procedure","default", 0,  "name", "What is the name / path of the procedure?",       "",   "",  "T",       ""],
+  ["procedure","default", 1,  "tags", "What are the tags associated with the procedure?","",   "",  "",        ""],
   ["procedure","default", 2,  "comment", "#tags comments :field:value: e.g. #SOP_v1",    "",   "",  "",        ""],
   ["procedure","default", 3,  "content", "What is procedure (Markdown possible; autofill if file given)?","","","",""],
-  ["instrument","default",0,  "-name", "What is the name / path of the instrument?",     "",   "",  "T",       ""],
-  ["instrument","default",1,  "-tags", "What are the tags associated with the instrument?","", "",  "",        ""],
+  ["instrument","default",0,  "name", "What is the name / path of the instrument?",      "",   "",  "T",       ""],
+  ["instrument","default",1,  "tags", "What are the tags associated with the instrument?","",  "",  "",        ""],
   ["instrument","default",2,  "comment", "#tags comments :field:value: e.g. #SOP_v1",    "",   "",  "",        ""],
   ["instrument","default",3,  "vendor", "Who is the vendor?",                            "",   "",  "",        ""],
 ]
 
 defaultDataHierarchyNode: dict[str, list[dict[str, str]]] = {
   "default": [
-    {"name": "-name", "query": "What is the file name?"},
-    {"name": "-tags"},
+    {"name": "name", "query": "What is the file name?"},
+    {"name": "tags"},
     {"name": "comment", "query": "#tags comments remarks :field:value:"},
-    {"name": "-type"}
+    {"name": "type"}
   ]}
 
 defaultConfiguration: dict[str, Any] = {

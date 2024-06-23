@@ -3,9 +3,10 @@ import base64, copy, io, json, logging, os, re, sqlite3
 from typing import Any, Optional, Union
 from pathlib import Path
 from anytree import Node
+import pandas as pd
 from PIL import Image
 from .fixedStringsJson import defaultDataHierarchy, defaultDefinitions
-from .miscTools import outputString
+from .miscTools import outputString, flatten
 
 """
 DO NOT WORK ON THIS IF THERE IS SOMETHING ON THE TODO LIST
@@ -33,11 +34,11 @@ Benefits:
   -> such long integers are not supported by sqlite: stay with string/text
 """
 
-KEY_ORDER   =    ['_id' , '-name','-user','-type','-dateCreated','-gui',      '-client']
-KEY_TYPE    =    ['TEXT', 'TEXT', 'TEXT', 'TEXT', 'TEXT',        'varchar(2)', 'TEXT']
-OTHER_ORDER =    ['image', 'content', 'comment']
+KEY_ORDER   =    ['id' , 'name','user','type','dateCreated','gui',       'client','shasum','image','content','comment']
+KEY_TYPE    =    ['TEXT','TEXT','TEXT','TEXT','TEXT',       'varchar(2)','TEXT',  'TEXT',  'TEXT', 'TEXT',   'TEXT']
 DATA_HIERARCHY = ['docType', 'IRI','attachments','title','icon','shortcut','view']
 DEFINITIONS =    ['docType','class','idx', 'name', 'query', 'unit', 'IRI', 'mandatory', 'list']
+VALUE_UNIT_SEP = '__'
 
 
 class SqlLiteDB:
@@ -55,20 +56,20 @@ class SqlLiteDB:
     self.cursor     = self.connection.cursor()
     self.dataHierarchyInit(resetDataHierarchy)
     # main table
-    self.createSQLTable('main',    [i[1:] if i[0] in ('-','_') else i for i in KEY_ORDER]+OTHER_ORDER,                    'id', KEY_TYPE+['TEXT']*len(OTHER_ORDER))
+    self.createSQLTable('main',     KEY_ORDER,                                         'id',        KEY_TYPE)
     # branches table
-    self.createSQLTable('branches',    ['id','stack','child','path','show','dateChanged'],  'id, stack', ['TEXT']*2+['INTEGER']+["TEXT"]*3)
+    self.createSQLTable('branches', ['id','stack','child','path','show','dateChanged'],'id, stack', ['TEXT']*2+['INTEGER']+["TEXT"]*3)
     # metadata table
     # - contains metadata of specific item
     # - key is generally not shown to user
     # - flattened key
     # - can be adopted by adv. user
     self.createSQLTable('metadata',    ['id','key','value','unit'],                    'id, key')
-    # definitions table (see below)
-    # tags of items
+    # tables: each item can have multiple of these: tags, qrCodes
     self.createSQLTable('tags',        ['id','tag'],                                   'id, tag')
+    self.createSQLTable('qrCodes',     ['id','qrCode'],                                'id, qrCode')
     # list of changes to attachments
-    self.createSQLTable('attachments', ['id','attachment','date','doc','description'], 'id, attachment, date')
+    self.createSQLTable('attachments', ['id','attachment','date','docID','remark','user'], 'id, attachment, date')
     # list of changes to all documents: gives history
     self.createSQLTable('changes',     ['id','date','change'],                         'id, date')
     return
@@ -101,6 +102,9 @@ class SqlLiteDB:
 
 
   def createSQLTable(self, name, columns, primary, colTypes=None):
+    """
+    Create a table in the sqlite system
+    """
     if colTypes is None:
       colTypes = ['TEXT']*len(columns)
     colText = ', '.join(f'{i} {j}' for i,j in zip(columns, colTypes))
@@ -175,35 +179,33 @@ class SqlLiteDB:
     Returns:
         dict: json representation of document
     """
-    self.cursor.execute(f"SELECT * FROM main INNER JOIN branches USING(id) WHERE main.id == '{docID}'")
-    data = self.cursor.fetchall()
+    self.connection.row_factory = sqlite3.Row  #default None
+    cursor = self.connection.cursor()
+    cursor.execute(f"SELECT * FROM main WHERE id == '{docID}'")
+    doc = dict(cursor.fetchone())
+    self.cursor.execute(f"SELECT tag FROM tags WHERE id == '{docID}'")
+    doc['-tags'] = [i[0] for i in self.cursor.fetchall()]
     # CONVERT SQLITE STYLE INTO PASTA-DICT
-    if data is None:
-      logging.error('Could not find id in database: '+docID)
-      return {}
-    doc = {'-'+k:v for k,v in zip(self.mainColumnNames,data[0])}
-    doc['_id'] = doc.pop('-id')
-    doc['_rev'] = doc.pop('-rev')
-    doc['comment']= doc.pop('-comment')
-    image = doc.pop('-image')
-    if len(image)>3:
-      doc['image'] = image
-    content = doc.pop('-content')
-    if len(content)>3:
-      doc['content'] = content
-    doc['-type']= doc['-type'].split('/')
-    doc['-tags']= doc['-tags'].split(' ') if doc['-tags'] else []
-    doc['-gui'] = [i=='T' for i in doc['-gui']]
+    doc['_id'] = doc.pop('id')
+    for key in ['user', 'name','dateCreated']:
+      doc[f'-{key}'] = doc.pop(key)
+    for key in ['image', 'content','shasum','client']:
+      if len(doc[key])==0:
+        del doc[key]
+    doc['-type']= doc['type'].split('/')
+    doc['-gui'] = [i=='T' for i in doc['gui']]
+    for key in ['type','gui']:
+      del doc[key]
     doc['-branch'] = []
-    # data ends with ... 'stack', 'child', 'path', 'show', 'dateChanged'
-    for dataI in data:
-      doc['-branch'].append({'stack': dataI[-5].split('/')[:-1],
-                             'child': dataI[-4],
-                             'path':  None if dataI[-3] == '*' else dataI[-3],
-                             'show':   [i=='T' for i in dataI[-2]]})
-    del doc['-__history__']
-    meta = json.loads(doc.pop('-meta'))
-    doc |= meta
+    # data ends with 'id' 'stack', 'child', 'path', 'show', 'dateChanged'
+    self.cursor.execute(f"SELECT * FROM branches WHERE id == '{docID}'")
+    for dataI in self.cursor.fetchall():
+      doc['-branch'].append({'stack': dataI[1].split('/')[:-1],
+                             'child': dataI[2],
+                             'path':  None if dataI[3] == '*' else dataI[3],
+                             'show':   [i=='T' for i in dataI[4]]})
+    self.cursor.execute(f"SELECT * FROM metadata WHERE id == '{docID}'")
+    doc |= { (f'{i[1]}_{i[3]}' if len(i[3])>0 else i[1]) : i[2] for i in self.cursor.fetchall()}
     return doc
 
 
@@ -237,18 +239,23 @@ class SqlLiteDB:
     del doc['-branch']
     self.cursor.executemany(f"INSERT INTO tags VALUES (?, ?);", zip([doc['_id']]*len(doc['-tags']), doc['-tags']))
     del doc['-tags']
+    if 'qrCode' in doc:
+      self.cursor.executemany(f"INSERT INTO qrCodes VALUES (?, ?);", zip([doc['_id']]*len(doc['qrCode']), doc['qrCode']))
+      del doc['qrCode']
     if 'content' in doc and len(doc['content'])>200:
       doc['content'] = doc['content'][:200]
-    doc['-type'] = '/'.join(doc['-type'])
-    doc['-gui']  = ''.join(['T' if i else 'F' for i in doc['-gui']])
-    doc['-dateCreated'] = doc.pop('-date')
-    metaDoc = {k:v for k,v in doc.items() if k not in KEY_ORDER+OTHER_ORDER}
-    docList = [doc.get(x,'') for x in KEY_ORDER]+[doc.get(i,'') for i in OTHER_ORDER]
+    doc['type'] = '/'.join(doc.pop('-type'))
+    doc['gui']  = ''.join(['T' if i else 'F' for i in doc.pop('-gui')])
+    doc['dateCreated'] = doc.pop('-date')
+    for key_ in ['_id','-name','-user']:
+      doc[key_[1:]] = doc.pop(key_)
+    metaDoc = flatten({k:v for k,v in doc.items() if k not in KEY_ORDER})
+    docList = [doc.get(x,'') for x in KEY_ORDER]
     self.cursor.execute(f"INSERT INTO main VALUES ({', '.join(['?']*len(docList))})", docList)
-    self.cursor.executemany(f"INSERT INTO metadata VALUES (?, ?, ?, ?);", zip([doc['_id']]*len(metaDoc),
-                                                                              [i.split('_')[0] for i in metaDoc.keys()],
+    self.cursor.executemany(f"INSERT INTO metadata VALUES (?, ?, ?, ?);", zip([doc['id']]*len(metaDoc),
+                                                                              [i.split(VALUE_UNIT_SEP)[0] for i in metaDoc.keys()],
                                                                               metaDoc.values(),
-                                                                              [i.split('_')[1] if '_' in i else '' for i in metaDoc.keys()]))
+                                                                              [i.split(VALUE_UNIT_SEP)[1] if VALUE_UNIT_SEP in i else '' for i in metaDoc.keys()]))
     self.connection.commit()
     branch = copy.deepcopy(docOrg['-branch'])
     del branch['op']
@@ -341,7 +348,8 @@ class SqlLiteDB:
     Returns:
         bool: success of method
     """
-    print('Not implemented ATTACHMENT')
+    self.cursor.execute(f"INSERT INTO attachments VALUES (?,?,?,?,?,?)", [docID, name, content['date'], content['docID'], content['remark'], content['user']])
+    self.connection.commit()
     return
 
 
@@ -364,15 +372,28 @@ class SqlLiteDB:
         print('**info do something with all flag')
     viewType, docType = thePath.split('/')
     if viewType=='viewDocType':
-      viewColumns = self.dataHierarchy(docType, 'view')
-      columns = ', '.join(['id'] + [i[1:] if i[0] in ('-','_')   else
-                                    i     if i    in OTHER_ORDER else
-                                    f"JSON_EXTRACT(meta, '$.{i}')"    for i in viewColumns])
-      self.cursor.execute("SELECT "+columns+" FROM main WHERE type LIKE '"+docType+"%'")
-      if startKey is not None or preciseKey is not None:
-        print("***TODO: do this 645p.ueoi")
-      results = self.cursor.fetchall()
-      results = [{'id':i[0], 'key':i[0], 'value':list(i[1:])} for i in results]
+      viewColumns = self.dataHierarchy(docType, 'view')+['id']
+      textSelect = ', '.join([f'main.{i}' for i in viewColumns if i in KEY_ORDER])
+      if 'tags' in viewColumns:
+        textSelect += ', tags.tag'
+      metadataKeys  = [f'metadata.key == "{i}"' for i in viewColumns if i not in KEY_ORDER+['tags']]
+      if metadataKeys:
+        textSelect += ', metadata.key, metadata.value'
+      text    = f'SELECT {textSelect} from main LEFT JOIN tags USING(id) INNER JOIN branches USING(id) LEFT JOIN metadata USING(id) WHERE main.type LIKE "{docType}%"'
+      df      = pd.read_sql_query(text, self.connection)
+      allCols = list(df.columns)
+      if 'image' in viewColumns:
+        df['image'] = str(len(df['image'])>1)
+      if 'tags' in viewColumns:
+        allCols.remove('tag')
+        df   = df.groupby(allCols)['tag'].apply(lambda x: ', '.join(x.astype(str))).reset_index()
+      if metadataKeys:
+        columnNames = [i for i in df.columns if i not in ('key','value')]
+        df = df.pivot(index=columnNames, columns='key', values='value').reset_index()  # Pivot the DataFrame
+        df.columns.name = None                                                         # Flatten the columns
+      df = df.reindex(['tag' if i=='tags' else i for i in viewColumns], axis=1)
+      df.fillna('', inplace=True)
+      return df
     elif thePath=='viewHierarchy/viewHierarchy':
       self.cursor.execute("SELECT branches.id, branches.stack, branches.child, main.type, main.name, main.gui FROM branches INNER JOIN main USING(id) WHERE branches.stack LIKE '"+startKey+"%'")
       results = self.cursor.fetchall()
@@ -383,18 +404,24 @@ class SqlLiteDB:
       if startKey is not None:
         print('**ERROR NOT IMPLEMENTED')
       elif preciseKey is not None:
-        self.cursor.execute("SELECT branches.id, branches.path, branches.stack, main.type, branches.child, JSON_EXTRACT(main.meta, '$.shasum') FROM branches INNER JOIN main USING(id) WHERE branches.path LIKE '"+preciseKey+"'")
+        self.cursor.execute("SELECT branches.id, branches.path, branches.stack, main.type, branches.child, main.shasum FROM branches INNER JOIN main USING(id) WHERE branches.path LIKE '"+preciseKey+"'")
       else:
-        self.cursor.execute("SELECT branches.id, branches.path, branches.stack, main.type, branches.child, JSON_EXTRACT(main.meta, '$.shasum') FROM branches INNER JOIN main USING(id)")
+        self.cursor.execute("SELECT branches.id, branches.path, branches.stack, main.type, branches.child, main.shasum FROM branches INNER JOIN main USING(id)")
       results = self.cursor.fetchall()
       # value: [branch.stack, doc['-type'], branch.child, doc.shasum,idx]
       results = [{'id':i[0], 'key':i[1], 'value':[i[2].replace('/',' '), i[3].split('/'), i[4], i[5]]} for i in results if i[1] is not None]
     elif viewType=='viewIdentify':
-      key = 'qrCode' if docType=='viewQR' else 'shasum'
-      if startKey is None:
-        self.cursor.execute(f"SELECT id, JSON_EXTRACT(meta, '$.{key}'), name FROM main")
+      if docType=='viewQR':
+        if startKey is None:
+          self.cursor.execute(f"SELECT qrCodes.id, qrCodes.qrCode, main.name from qrCodes INNER JOIN main USING(id)")
+        else:
+          print("HHEUOEUOU")
+          a = 77/0
       else:
-        self.cursor.execute(f"SELECT id, JSON_EXTRACT(meta, '$.{key}'), name FROM main WHERE JSON_EXTRACT(meta, '$.{key}')='{startKey}'")
+        if startKey is None:
+          self.cursor.execute(f"SELECT id, shasum, name FROM main")
+        else:
+          self.cursor.execute(f"SELECT id, shasum, name FROM main WHERE shasum='{startKey}'")
       results = self.cursor.fetchall()
       results = [{'id':i[0], 'key':i[1].replace('/',' '), 'value':i[2]} for i in results if i[1] is not None]
     else:
@@ -580,11 +607,11 @@ class SqlLiteDB:
               outstring+= outputString(outputStyle,'unsure',f"dch08: parent does not have corresponding path (remote content) {id} | parentID {parentID}")
 
     #doc-type specific tests
-    self.cursor.execute("SELECT id, JSON_EXTRACT(meta, '$.qrCode') FROM main WHERE  type LIKE 'sample%'")
+    self.cursor.execute("SELECT qrCodes.id, qrCodes.qrCode FROM qrCodes JOIN main USING(id) WHERE  main.type LIKE 'sample%'")
     res = [i[0] for i in self.cursor.fetchall() if i[1] is None]
     if res:
       outstring+= outputString(outputStyle,'warning',f"dch09: qrCode not in samples {res}")
-    self.cursor.execute("SELECT id, JSON_EXTRACT(meta, '$.shasum'), image FROM main WHERE  type LIKE 'measurement%'")
+    self.cursor.execute("SELECT id, shasum, image FROM main WHERE  type LIKE 'measurement%'")
     for row in self.cursor.fetchall():
       id, shasum, image = row
       if shasum is None:

@@ -228,6 +228,9 @@ def diffDicts(dict1:dict[str,Any], dict2:dict[str,Any]) -> str:
               del branch2['show']
             if branch1!=branch2:
               outString += 'branches differ\n   '+str(value)+'\n   '+str(dict2Copy[key])+'\n'
+      elif isinstance(value, list):
+        if set(value).difference(set(dict2Copy[key])):
+          outString += (f'lists differ for key: {key}\n   {str(value)}\n   {str(dict2Copy[key])}\n')
       else:
         outString += (f'values differ for key: {key}\n   {str(value)}\n   {str(dict2Copy[key])}\n')
     del dict2Copy[key]

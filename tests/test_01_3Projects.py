@@ -62,9 +62,9 @@ class TestStringMethods(unittest.TestCase):
 
       ### TEST PROJECT PLANING
       outputString(outputFormat,'h2','TEST PROJECT PLANING')
-      viewProj = self.be.db.getView('viewDocType/x0')
-      projID1  = [i['id'] for i in viewProj if i['value'][0]=='Intermetals at interfaces'][0]
-      projID2  = [i['id'] for i in viewProj if i['value'][0]=='Steel'][0]
+      dfProj  = self.be.db.getView('viewDocType/x0')
+      projID1 = list(dfProj[dfProj['name']=='Intermetals at interfaces']['id'])[0]
+      projID2 = list(dfProj[dfProj['name']=='Steel']['id'])[0]
 
       self.be.changeHierarchy(projID2)
       self.be.addData('x1',    {'comment': 'Random text', '-name': 'Task 1'})

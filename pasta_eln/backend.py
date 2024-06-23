@@ -711,8 +711,8 @@ class Backend(CLI_Mixin):
     pathsInDB_data = [i['key'] for i in inDB_all if i['value'][1][0][0]!='x']
     pathsInDB_folder = [i['key'] for i in inDB_all if i['value'][1][0][0]=='x']
     count = 0
-    for projI in viewProjects:
-      projDoc = self.db.getDoc(projI['id'])
+    for projI in viewProjects['id']:
+      projDoc = self.db.getDoc(projI)
       if len(projDoc['-branch'])==0:
         output += outputString(outputStyle,'error','project view got screwed up')
         continue

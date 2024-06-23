@@ -18,51 +18,18 @@ class CLI_Mixin:
     Returns:
         string: output incl. \n
     """
-    outString = []
-    widthArray = [25,25,25,25]
-    for idx,item in enumerate(i for group in self.db.dataHierarchy(docType, 'metaColumns')
-                              for i in self.db.dataHierarchy(docType, 'meta', group)):
-      width = widthArray[idx] if idx<len(widthArray) else 0
-      if width!=0:
-        formatString = '{0: <'+str(abs(width))+'}'
-        outString.append(formatString.format(item['name'].replace('-','')) )
-    outString = '|'.join(outString)+'\n'
-    outString += '-'*104+'\n'
-    dataList  = self.db.getView(f'viewDocType/{docType}')
-    for lineNum, lineItem in enumerate(dataList):
-      rowString = []
-      if lineNum>20:
-        outString += f'... continued for {len(dataList)} items in total\n'
-        break
-      for idx, item in enumerate(i for group in self.db.dataHierarchy(docType, 'meta',)
-                                 for i in self.db.dataHierarchy(docType, 'meta')[group]):
-        width = widthArray[idx] if idx<len(widthArray) else 0
-        if width!=0:
-          formatString = '{0: <'+str(abs(width))+'}'
-          if isinstance(lineItem['value'][idx], str ):
-            contentString = lineItem['value'][idx]
-          elif isinstance(lineItem['value'][idx], (bool,int)):
-            contentString = str(lineItem['value'][idx])
-          elif lineItem['value'][idx] is None:
-            contentString = '--'
-          else: #list
-            contentString = ' '.join(lineItem['value'][idx])
-          contentString = contentString.replace('\n',' ')
-          if width<0:  #test if value as non-trivial length
-            if lineItem['value'][idx] in ['true', 'false']:
-              contentString = lineItem['value'][idx]
-            elif isinstance(lineItem['value'][idx], bool ) or lineItem['value'][idx] is None:
-              contentString = str(lineItem['value'][idx])
-            elif len(lineItem['value'][idx])>1 and len(lineItem['value'][idx][0])>3:
-              contentString = 'true'
-            else:
-              contentString = 'false'
-                    # contentString = True if contentString=='true' else False
-          rowString.append(formatString.format(contentString)[:abs(width)] )
-      if printID:
-        rowString.append(' '+lineItem['id'])
-      outString += '|'.join(rowString)+'\n'
-    return outString
+    df = self.db.getView(f'viewDocType/{docType}')
+    if not printID:
+      df.drop('id', axis=1)
+    output = df.to_string(index=False, justify='left')
+    outputList = output.split('\n')
+    for colName in df.columns[1:]:
+      idx = outputList[0].find(colName)
+      outputList = [i[:idx] + '| ' + i[idx:] for i in outputList]
+    outputList.insert(1, '-'*len(max(outputList, key = len)) )
+    output = '\n'.join(outputList)
+    return output
+
 
 
   def outputTags(self, tag='', **kwargs):
