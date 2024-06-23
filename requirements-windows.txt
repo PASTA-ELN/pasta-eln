@@ -2,7 +2,6 @@
 pyside6==6.2.4
 qt-material
 QtAwesome
-cloudant
 pandas
 numpy
 keyring
