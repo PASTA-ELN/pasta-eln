@@ -2,11 +2,70 @@
 
 ## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
 
-[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.2b2...HEAD)
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.3...HEAD)
+
+**Implemented enhancements:**
+
+- Auto-filling the "Project" field [\#153](https://github.com/PASTA-ELN/pasta-eln/issues/153)
+- Auto-filling the "link" fields [\#152](https://github.com/PASTA-ELN/pasta-eln/issues/152)
+- feat\(dataverse\): implement data upload history module [\#303](https://github.com/PASTA-ELN/pasta-eln/pull/303) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
+- refactor\(dataverse\): move initialize\_database to backend.py  [\#299](https://github.com/PASTA-ELN/pasta-eln/pull/299) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
+
+**Fixed bugs:**
+
+- Add new projects throws errors [\#274](https://github.com/PASTA-ELN/pasta-eln/issues/274)
+- Removing information from metadata fields [\#268](https://github.com/PASTA-ELN/pasta-eln/issues/268)
+
+**Merged pull requests:**
+
+- Temporarily block import to not cause errors [\#300](https://github.com/PASTA-ELN/pasta-eln/pull/300) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Repair issue that occurs if author's organization... [\#298](https://github.com/PASTA-ELN/pasta-eln/pull/298) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Changes in form do not change the filename on the disk [\#297](https://github.com/PASTA-ELN/pasta-eln/pull/297) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Add cryptography to requirements [\#291](https://github.com/PASTA-ELN/pasta-eln/pull/291) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Sb python3.12 [\#284](https://github.com/PASTA-ELN/pasta-eln/pull/284) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+
+## [v2.5.3](https://github.com/PASTA-ELN/pasta-eln/tree/v2.5.3) (2024-05-15)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.3b1...v2.5.3)
+
+## [v2.5.3b1](https://github.com/PASTA-ELN/pasta-eln/tree/v2.5.3b1) (2024-05-15)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.2...v2.5.3b1)
+
+**Implemented enhancements:**
+
+- feat\(dataverse\): extend metadata editor to show a save summary [\#287](https://github.com/PASTA-ELN/pasta-eln/pull/287) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
+- refactor\(dataverse\): restructure login configuration [\#283](https://github.com/PASTA-ELN/pasta-eln/pull/283) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
+- feat\(dataverse\): integrate actual ELN generation functionality [\#282](https://github.com/PASTA-ELN/pasta-eln/pull/282) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
+- perf\(dataverse\): implement changes to improve multiple uploads [\#280](https://github.com/PASTA-ELN/pasta-eln/pull/280) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
+- feat\(dataverse\): implement data upload feature [\#273](https://github.com/PASTA-ELN/pasta-eln/pull/273) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
+
+**Fixed bugs:**
+
+- Scan Project with new folder and directories, does not create folder but unidentified item [\#270](https://github.com/PASTA-ELN/pasta-eln/issues/270)
+- Issues during the corrosion data import [\#232](https://github.com/PASTA-ELN/pasta-eln/issues/232)
+- fix\(dataverse\): fix for check\_if\_dataverse\_exists method failures [\#288](https://github.com/PASTA-ELN/pasta-eln/pull/288) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
+- fix\(dataverse\): implement fix for the cancellation logic issue [\#281](https://github.com/PASTA-ELN/pasta-eln/pull/281) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
 
 **Closed issues:**
 
 - Measurements in Unidentified table [\#264](https://github.com/PASTA-ELN/pasta-eln/issues/264)
+
+**Merged pull requests:**
+
+- clean the pytests such that my releaseScript runs successfully [\#289](https://github.com/PASTA-ELN/pasta-eln/pull/289) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- sign eln file [\#286](https://github.com/PASTA-ELN/pasta-eln/pull/286) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Export: you have to specify what you want to export [\#285](https://github.com/PASTA-ELN/pasta-eln/pull/285) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Sb eln export multiple projects [\#279](https://github.com/PASTA-ELN/pasta-eln/pull/279) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Safeguard against fast form filling that does not create an autosave [\#277](https://github.com/PASTA-ELN/pasta-eln/pull/277) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Sb 268 remove entries during editing [\#276](https://github.com/PASTA-ELN/pasta-eln/pull/276) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Fix issue 153 [\#275](https://github.com/PASTA-ELN/pasta-eln/pull/275) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Skip things that have been done before and skip folders [\#272](https://github.com/PASTA-ELN/pasta-eln/pull/272) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Speed up database:getHierarchy: factor \>30 [\#271](https://github.com/PASTA-ELN/pasta-eln/pull/271) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+
+## [v2.5.2](https://github.com/PASTA-ELN/pasta-eln/tree/v2.5.2) (2024-04-17)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.2b2...v2.5.2)
 
 ## [v2.5.2b2](https://github.com/PASTA-ELN/pasta-eln/tree/v2.5.2b2) (2024-04-16)
 
@@ -20,8 +79,6 @@
 
 - Changing item type to "Unidentified" [\#255](https://github.com/PASTA-ELN/pasta-eln/issues/255)
 - Using “enter” to add a tag opens the extended comment field [\#254](https://github.com/PASTA-ELN/pasta-eln/issues/254)
-- Autosave functionality [\#236](https://github.com/PASTA-ELN/pasta-eln/issues/236)
-- Issues during the corrosion data import [\#232](https://github.com/PASTA-ELN/pasta-eln/issues/232)
 
 **Merged pull requests:**
 
