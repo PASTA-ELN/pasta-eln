@@ -43,19 +43,18 @@ class MandatoryColumnDelegate(QStyledItemDelegate):
     Returns: None
 
     """
-    widget = option.widget
+    widget = option.widget  # type: ignore[attr-defined]
     style = widget.style() if widget else QApplication.style()
     opt = QStyleOptionButton()
     radio_button = QRadioButton()
-    opt.rect = QRect(option.rect.left() + option.rect.width() / 2 - 10,
-                     option.rect.top(),
-                     option.rect.width(),
-                     option.rect.height())
-    is_mandatory = bool(index.data(Qt.UserRole))  # type: ignore[arg-type]
-    opt.state = QStyle.State_On \
-      if is_mandatory \
-      else QStyle.State_Off
-    style.drawControl(QStyle.CE_RadioButton, opt, painter, radio_button)
+    option_rect = option.rect  # type: ignore[attr-defined]
+    opt.rect = QRect(option_rect.left() + option_rect.width() / 2 - 10,  # type: ignore[attr-defined]
+                     option_rect.top(),
+                     option_rect.width(),
+                     option_rect.height())
+    is_mandatory = bool(index.data(Qt.ItemDataRole.UserRole))
+    opt.state = QStyle.StateFlag.State_On if is_mandatory else QStyle.StateFlag.State_Off  # type: ignore[attr-defined]
+    style.drawControl(QStyle.ControlElement.CE_RadioButton, opt, painter, radio_button)
 
   def editorEvent(self,
                   event: QEvent,
@@ -73,8 +72,8 @@ class MandatoryColumnDelegate(QStyledItemDelegate):
     Returns (bool): True/False
 
     """
-    if event.type() == QEvent.MouseButtonRelease:
-      model.setData(index, not bool(index.data(Qt.UserRole)), Qt.UserRole)  # type: ignore[arg-type]
+    if event.type() == QEvent.Type.MouseButtonRelease:
+      model.setData(index, not bool(index.data(Qt.ItemDataRole.UserRole)), Qt.ItemDataRole.UserRole)
     return super().editorEvent(event, model, option, index)
 
   def createEditor(self,

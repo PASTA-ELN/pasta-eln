@@ -438,7 +438,7 @@ class PrimitiveCompoundFrame(Ui_PrimitiveCompoundControlledFrameBase):
       widget = compound_horizontal_layout.itemAt(widget_pos).widget()
       name = widget.objectName().removesuffix("LineEdit").removesuffix("DateTimeEdit")
       if name in empty_entry:
-        text = widget.text()
+        text = widget.text()  # type: ignore[attr-defined]
         empty_entry[name]['value'] = text
         update_needed = update_needed or (text != "" and text is not None)
     if update_needed:

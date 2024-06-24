@@ -1,13 +1,12 @@
 """ Entire config dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""
+from typing import Union, Optional
 import platform
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QTabWidget  # pylint: disable=no-name-in-module
 from ..guiCommunicate import Communicate
 from .configGUI import ConfigurationGUI
 from .configAuthors import ConfigurationAuthors
-if platform.system()=='Windows':
-  from .configSetupWindows import ConfigurationSetup
-else:
-  from .configSetupLinux import ConfigurationSetup
+from .configSetupWindows import ConfigurationSetup as ConfigSetupWindows
+from .configSetupLinux import ConfigurationSetup as ConfigSetupLinux
 
 class Configuration(QDialog):
   """ Main class of entire config dialog """
@@ -29,13 +28,17 @@ class Configuration(QDialog):
     mainL.addWidget(tabW)
 
     # Misc configuration: e.g. theming...
-    tabGUI = ConfigurationGUI(self.comm, self.finished)
+    tabGUI = ConfigurationGUI(self.comm, self.closeWidget)
     tabW.addTab(tabGUI, 'Appearance')
-    tabGUI = ConfigurationAuthors(self.comm, self.finished)
-    tabW.addTab(tabGUI, 'Author')
+    tabAuthors = ConfigurationAuthors(self.comm, self.closeWidget)
+    tabW.addTab(tabAuthors, 'Author')
 
     # Setup / Troubleshoot Pasta: main widget
-    tabSetup = ConfigurationSetup(self.comm, self.finished)
+    tabSetup:Optional[Union[ConfigSetupWindows,ConfigSetupLinux]] = None
+    if platform.system()=='Windows':
+      tabSetup = ConfigSetupWindows(self.comm, self.closeWidget)
+    else:
+      tabSetup = ConfigSetupLinux(self.comm, self.closeWidget)
     tabW.addTab(tabSetup, 'Setup')
 
     if startTab=='setup':
@@ -44,7 +47,7 @@ class Configuration(QDialog):
       tabW.setTabEnabled(1, False)
 
 
-  def finished(self, restart:bool=True) -> None:
+  def closeWidget(self, restart:bool=True) -> None:
     """
     callback function to close widget
 

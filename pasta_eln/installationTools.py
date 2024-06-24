@@ -80,7 +80,7 @@ def runAsAdminWindows(cmdLine:list[str]) -> None:
   import win32con, win32event, win32process
   from win32com.shell.shell import ShellExecuteEx
   from win32com.shell import shellcon
-  procInfo = ShellExecuteEx(nShow=win32con.SW_SHOWNORMAL,   # type: ignore[call-arg]
+  procInfo = ShellExecuteEx(nShow=win32con.SW_SHOWNORMAL,
                             fMask=shellcon.SEE_MASK_NOCLOSEPROCESS,
                             lpVerb='runas',  # causes UAC elevation prompt.
                             lpFile= f'"{cmdLine[0]}"',

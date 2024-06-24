@@ -10,6 +10,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from PySide6 import QtCore
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDialogButtonBox
 
 from pasta_eln.GUI.dataverse.upload_config_dialog import UploadConfigDialog
@@ -116,7 +117,7 @@ class TestUploadConfigDialog:
     # Assert
     mock_dialog.logger.info.assert_called_once_with("Loading data and initializing UI...")
     mock_dialog.db_api.get_config_model.assert_called_once()
-    assert mock_dialog.numParallelComboBox.setCurrentText.called_once_with(str(parallel_uploads_count))
+    mock_dialog.numParallelComboBox.setCurrentText.assert_called_once_with(str(parallel_uploads_count))
     for pos in range(projects_items_layout_count):
       mock_dialog.projectItemsVerticalLayout.itemAt.assert_any_call(pos)
       mock_dialog.projectItemsVerticalLayout.itemAt.return_value.widget.return_value.setParent.assert_any_call(None)
@@ -147,12 +148,12 @@ class TestUploadConfigDialog:
   @pytest.mark.parametrize(
     "state, project_item_name, expected",
     [
-      (QtCore.Qt.Checked, "Item1", True),
-      (QtCore.Qt.Unchecked, "Item2", False),
-      (QtCore.Qt.Unchecked, "Item5", False),
+      (Qt.CheckState.Checked.value, "Item1", True),
+      (Qt.CheckState.Unchecked.value, "Item2", False),
+      (Qt.CheckState.Unchecked.value, "Item5", False),
       # Edge cases could include unusual but valid project item names
-      (QtCore.Qt.Checked, "", True),
-      (QtCore.Qt.Checked, " ", True),
+      (Qt.CheckState.Checked.value, "", True),
+      (Qt.CheckState.Checked.value, " ", True),
       # Error cases are not applicable here as the function does not handle errors
     ], ids=[
       "success-path-checked",

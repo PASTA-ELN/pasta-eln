@@ -105,11 +105,12 @@ class TestDataversePrimitiveCompoundFrame:
      "error_compound_value_value_template_none"),
     ({"typeClass": "compound", "multiple": False}, True, "compound_entry_single",
      "error_compound_value_value_template_missing"),
-    ({}, True, "empty_meta_field",
+    ({}, False, "empty_meta_field",
      "error_empty_meta_field"),
   ])
   def test_load_ui(self, mocker, primitive_compound_frame, meta_field, expected_disabled, expected_calls, test_id):
     # Arrange
+    mocker.resetall()
     primitive_compound_frame.meta_field = meta_field
     mocker.patch('pasta_eln.GUI.dataverse.primitive_compound_frame.PrimitiveCompoundFrame.populate_primitive_entry')
     mocker.patch('pasta_eln.GUI.dataverse.primitive_compound_frame.PrimitiveCompoundFrame.populate_compound_entry')
@@ -119,19 +120,19 @@ class TestDataversePrimitiveCompoundFrame:
 
     # Assert
     primitive_compound_frame.logger.info.assert_called_with("Loading UI for %s", meta_field)
-    if expected_disabled is not None:
-      assert primitive_compound_frame.addPushButton.setDisabled.called_with(expected_disabled)
+    if expected_disabled is not None and expected_disabled:
+      primitive_compound_frame.addPushButton.setDisabled.assert_called_with(expected_disabled)
     if "primitive_entry" in expected_calls:
-      assert primitive_compound_frame.populate_primitive_entry.called
+      primitive_compound_frame.populate_primitive_entry.assert_called
     if "compound_entry_empty" in expected_calls:
-      assert primitive_compound_frame.populate_compound_entry.called_with({}, {})
+      primitive_compound_frame.populate_compound_entry.assert_called_with({}, {})
     if "compound_entry_filled" in expected_calls:
-      assert primitive_compound_frame.populate_compound_entry.called_with({}, {})
+      primitive_compound_frame.populate_compound_entry.assert_called_with({}, {})
     if "compound_entry_single" in expected_calls:
-      assert primitive_compound_frame.populate_compound_entry.called_with(meta_field.get('value'),
-                                                                          meta_field.get('valueTemplate'))
+      primitive_compound_frame.populate_compound_entry.assert_called_with(meta_field.get('value'),
+                                                                          meta_field.get('valueTemplate'), False)
     if "error" in expected_calls:
-      assert primitive_compound_frame.logger.error.called_with("Unknown type class: unknown")
+      primitive_compound_frame.logger.error.assert_called_with("Unknown typeClass: %s", 'unknown')
 
   # Parametrized test for the add_new_entry method
   @pytest.mark.parametrize("meta_field, expected_error_log", [

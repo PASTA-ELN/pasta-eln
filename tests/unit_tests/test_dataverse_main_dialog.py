@@ -14,6 +14,7 @@ from PySide6 import QtWidgets
 from PySide6.QtWidgets import QCheckBox, QLabel, QMessageBox
 
 from pasta_eln.GUI.dataverse.main_dialog import MainDialog
+from pasta_eln.GUI.dataverse.upload_widget_base import Ui_UploadWidgetFrame
 from pasta_eln.dataverse.config_model import ConfigModel
 from pasta_eln.dataverse.project_model import ProjectModel
 from pasta_eln.dataverse.upload_model import UploadModel
@@ -316,7 +317,9 @@ class TestDataverseMainDialog(object):
         )
         mock_task_thread.assert_called_once_with(mock_data_upload_task.return_value)
         mock_main_dialog.upload_manager_task.add_to_queue.assert_called_once_with(mock_task_thread.return_value)
-        mock_is_instance.assert_called_once_with(mock_task_thread.return_value.task, mock_data_upload_task)
+        mock_is_instance.assert_any_call(mock_task_thread.return_value.task, mock_data_upload_task)
+        mock_is_instance.assert_any_call(mock_main_dialog.get_upload_widget.return_value["widget"],
+                                         Ui_UploadWidgetFrame)
         mock_task_thread.return_value.task.upload_model_created.connectassert_called_once_with(
           mock_main_dialog.get_upload_widget.return_value["widget"].modelIdLabel.setText)
         mock_main_dialog.upload_manager_task_thread.task.start.emit.assert_called_once()
@@ -702,7 +705,7 @@ class TestDataverseMainDialog(object):
     mock_main_dialog.show_message(parent, title, message, icon)
     # Assert
     mock_msgbox_constructor.assert_called_once_with(parent)
-    mock_msg_box.setIcon.assert_called_once_with(mock_msgbox_constructor.Warning)  # Default to Warning if None
+    mock_msg_box.setIcon.assert_called_once_with(mock_msgbox_constructor.Icon.Warning)  # Default to Warning if None
 
   @pytest.mark.parametrize("title,message", [
     pytest.param("Error", "This is an error message with no label found.", id="label_not_found"),

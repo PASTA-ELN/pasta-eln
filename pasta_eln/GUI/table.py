@@ -8,7 +8,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QTableView, QFileDialog, QMe
 from PySide6.QtCore import Qt, Slot, QSortFilterProxyModel, QModelIndex       # pylint: disable=no-name-in-module
 from PySide6.QtGui import QStandardItemModel, QStandardItem            # pylint: disable=no-name-in-module
 from .tableHeader import TableHeader
-from ..guiStyle import IconButton, Action, TextButton, Label, widgetAndLayout, space
+from ..guiStyle import IconButton, Action, TextButton, Label, widgetAndLayout, widgetAndLayoutGrid, space
 from ..guiCommunicate import Communicate
 
 #Scan button to more button
@@ -27,7 +27,7 @@ class Table(QWidget):
     comm.stopSequentialEdit.connect(self.stopSequentialEditFunction)
     self.stopSequentialEdit = False
     self.data:list[dict[str,Any]] = []
-    self.models:list[QStandardItemModel] = []
+    self.models:list[QSortFilterProxyModel] = []
     self.docType = ''
     self.projID = ''
     self.filterHeader:list[str] = []
@@ -69,7 +69,7 @@ class Table(QWidget):
     more.setMenu(self.moreMenu)
 
     # filter
-    _, self.filterL = widgetAndLayout('Grid', mainL, top='s', bottom='s')
+    _, self.filterL = widgetAndLayoutGrid(mainL, top='s', bottom='s')
     # table
     self.table = QTableView(self)
     self.table.verticalHeader().hide()
@@ -81,7 +81,7 @@ class Table(QWidget):
     header.setSectionsMovable(True)
     header.setSortIndicatorShown(True)
     header.setMaximumSectionSize(self.comm.backend.configuration['GUI']['maxTableColumnWidth'])
-    header.resizeSections(QHeaderView.ResizeToContents)
+    header.resizeSections(QHeaderView.ResizeMode.ResizeToContents)
     header.setStretchLastSection(True)
     mainL.addWidget(self.table)
     self.setLayout(mainL)
@@ -102,7 +102,7 @@ class Table(QWidget):
     #if not docType:  #only remove old filters, when docType changes
     #   make sure internal updates are accounted for: i.e. comment
     for i in reversed(range(self.filterL.count())):
-      self.filterL.itemAt(i).widget().setParent(None)   # type: ignore
+      self.filterL.itemAt(i).widget().setParent(None)
     if docType!='':
       self.docType = docType
       self.projID  = projID
@@ -194,12 +194,12 @@ class Table(QWidget):
           item.setText( item.text()+'  \U0001F441' )
         item.setAccessibleText(doc['_id'])
         if self.docType!='x0':
-          item.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)   # type: ignore[operator]
+          item.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)
           item.setCheckState(Qt.CheckState.Unchecked)
       else:
-        item.setFlags(Qt.ItemIsEnabled) # type: ignore[arg-type]
+        item.setFlags(Qt.ItemFlag.ItemIsEnabled)
       model.setItem(i, j, item)
-    self.models.append(model)
+    self.models.append(model)                                                                                # type: ignore[arg-type]
     self.table.setModel(self.models[-1])
     self.table.show()
     return
@@ -233,7 +233,7 @@ class Table(QWidget):
       filterModel = QSortFilterProxyModel()
       text.textChanged.connect(filterModel.setFilterRegularExpression)
       filterModel.setSourceModel(self.models[-1])
-      filterModel.setFilterCaseSensitivity(Qt.CaseInsensitive)
+      filterModel.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
       filterModel.setFilterKeyColumn(0)
       self.models.append(filterModel)
       self.table.setModel(self.models[-1])
@@ -300,7 +300,7 @@ class Table(QWidget):
         for row in range(self.models[-1].rowCount()):
           rowContent = []
           for col in range(self.models[-1].columnCount()):
-            value = self.models[-1].index( row, col, QModelIndex() ).data( Qt.DisplayRole )  # type: ignore[arg-type]
+            value = self.models[-1].index( row, col, QModelIndex() ).data( Qt.ItemDataRole.DisplayRole )
             rowContent.append(f'"{value}"')
           fOut.write(','.join(rowContent)+'\n')
     elif command[0] is Command.TOGGLE_HIDE:
@@ -356,7 +356,7 @@ class Table(QWidget):
         minusBtnW = self.filterL.itemAt(i).widget().layout().itemAt(2).widget()
         minusBtnW.setAccessibleName( str(int(minusBtnW.accessibleName())-1) )  #rename: -1 from accessibleName
       del self.models[row]
-      self.filterL.itemAt(row-1).widget().setParent(None) # type: ignore # e.g. model 1 is in row=0 for deletion
+      self.filterL.itemAt(row-1).widget().setParent(None) # e.g. model 1 is in row=0 for deletion
       for i in range(1, len(self.models)):
         self.models[i].setSourceModel(self.models[i-1])
       self.table.setModel(self.models[-1])
@@ -430,18 +430,18 @@ class Table(QWidget):
     index = self.models[-1].index(row,0)
     for idxModel in range(len(self.models)-1,0,-1):
       index = self.models[idxModel].mapToSource(index)
-    item = self.models[0].itemFromIndex(index)
+    item = self.models[0].itemFromIndex(index)                                                               # type: ignore[attr-defined]
     return item, item.accessibleText()
 
 
-  def filterChoice(self, item:QStandardItem) -> None:
+  def filterChoice(self, item:int) -> None:
     """
     Change the column which is used for filtering
 
     Args:
        item (int): column number to filter by
     """
-    row = self.sender().accessibleName()
+    row = self.sender().accessibleName()                                                                     # type: ignore[attr-defined]
     self.models[int(row)].setFilterKeyColumn(item)
     return
 

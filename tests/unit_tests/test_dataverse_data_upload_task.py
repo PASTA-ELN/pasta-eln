@@ -88,9 +88,6 @@ def setup_task(mocker, mock_db_api, mock_dataverse_client, mock_progress_thread,
   task.progress_changed = mocker.MagicMock()
   task.status_changed = mocker.MagicMock()
   task.upload_model_created = mocker.MagicMock()
-  task.cancel = mocker.MagicMock()
-  task.start = mocker.MagicMock()
-  task.finish = mocker.MagicMock()
   task.id_iterator = mocker.MagicMock()
   return task
 
@@ -386,8 +383,10 @@ class TestDataverseDataUploadTask:
     # Edge cases could involve unexpected status values not defined in UploadStatusValues
     pytest.param("NonExistentStatus", "NonExistentStatus", id="edge_case_nonexistent_status"),
   ])
-  def test_finalize_upload_task(self, setup_task, status, expected_status):
+  def test_finalize_upload_task(self, mocker, setup_task, status, expected_status):
     # Arrange
+    setup_task.finish.disconnect()
+    setup_task.finish = mocker.MagicMock()
 
     # Act
     setup_task.finalize_upload_task(status)

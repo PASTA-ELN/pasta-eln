@@ -454,7 +454,7 @@ def restoreCouchDB(location:str='', userName:str='', password:str='', fileName:s
       fileParts = fileI.split('/')[1:]
       if fileParts==['pastaELN.json']: #do not recreate file, it is only there for manual recovery
         continue
-      if len(fileParts)!=2:
+      if len(fileParts)<2:
         print(f"**ERROR: Cannot process file {fileI}: does not have 1+2 parts")
         continue
       database = fileParts[0]
@@ -479,16 +479,15 @@ def restoreCouchDB(location:str='', userName:str='', password:str='', fileName:s
           if '_attachments' in doc:
             del doc['_attachments']
           resp = requests.put(f'http://{location}:5984/{database}/{docID}', data=json.dumps(doc), headers=headers, auth=authUser, timeout=10)
-          if resp.ok:
-            print('Saved document:', database, docID)
-          else:
+          if not resp.ok:
             print("**ERROR: could not save document:",resp.reason, database, docID, '\n', doc)
+            # don't print on success: reduce output
     #second run through: create attachments
     for fileI in files:
       fileParts = fileI.split('/')[1:]
       if fileParts==['pastaELN.json'] or fileParts[-1]=='' or fileParts[-2]=='_design': #do not recreate file, it is only there for manual recovery
         continue
-      if len(fileParts)!=2:
+      if len(fileParts)<2:
         print(f"**ERROR-Attachment: Cannot process file {fileI}: does not have 1+2 parts")
         continue
       database = fileParts[0]
@@ -504,9 +503,7 @@ def restoreCouchDB(location:str='', userName:str='', password:str='', fileName:s
           resp = requests.get(f'http://{location}:5984/{database}/{docID[:-7]}', headers=headers, auth=authUser, timeout=10)
           headers['If-Match'] = resp.json()['_rev'] #will be overwritten each time
           resp = requests.put(f'http://{location}:5984/{database}/{attachPath}', data=attachDoc, headers=headers, auth=authUser, timeout=10)
-          if resp.ok:
-            print('Saved attachment:', database, attachPath)
-          else:
+          if not resp.ok:
             print('\n**ERROR: could not save attachment:',resp.reason, database, attachPath,'\n', doc)
   return
 

@@ -46,12 +46,12 @@ class IriColumnDelegate(QStyledItemDelegate):
     lookup_term = None
     if index.isValid():
       # The first column value is taken as the default lookup term
-      lookup_term = index.siblingAtColumn(0).data(Qt.UserRole)  # type: ignore[arg-type]
+      lookup_term = index.siblingAtColumn(0).data(Qt.ItemDataRole.UserRole)  # type: ignore[union-attr]
       lookup_term = lookup_term[1:] if (lookup_term
                                         and lookup_term.startswith('-')) else lookup_term
     line_edit.addAction(
       LookupIriAction(cell_index=index,
                       lookup_term=lookup_term),
-      QLineEdit.TrailingPosition)
+      QLineEdit.ActionPosition.TrailingPosition)
     line_edit.setClearButtonEnabled(True)
     return line_edit

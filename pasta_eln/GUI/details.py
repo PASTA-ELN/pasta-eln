@@ -26,16 +26,16 @@ class Details(QScrollArea):
 
     # GUI elements
     self.mainW, self.mainL = widgetAndLayout('V', None)
-    self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
-    self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+    self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+    self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
     self.setWidgetResizable(True)
     self.setWidget(self.mainW)
 
     headerW, self.headerL = widgetAndLayout('H', self.mainL, top='s')
-    headerW.setContextMenuPolicy(Qt.CustomContextMenu)
+    headerW.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
     headerW.customContextMenuRequested.connect(lambda pos: initContextMenu(self, pos))
     self.specialW, self.specialL = widgetAndLayout('V', self.mainL, top='s')
-    self.specialW.setContextMenuPolicy(Qt.CustomContextMenu)
+    self.specialW.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
     self.specialW.customContextMenuRequested.connect(lambda pos: initContextMenu(self, pos))
     self.btnDetails = TextButton('Details', self, [Command.SHOW, 'Details'], self.mainL, \
                                  'Show / hide details', checkable=True, style='margin-top: 3px')
@@ -67,17 +67,17 @@ class Details(QScrollArea):
     logging.debug('details:changeDetails |%s|',docID)
     # Delete old widgets from layout
     for i in reversed(range(self.headerL.count())):
-      self.headerL.itemAt(i).widget().setParent(None)       # type: ignore
+      self.headerL.itemAt(i).widget().setParent(None)
     for i in reversed(range(self.metaDetailsL.count())):
-      self.metaDetailsL.itemAt(i).widget().setParent(None)  # type: ignore
+      self.metaDetailsL.itemAt(i).widget().setParent(None)
     if self.metaVendorL.itemAt(0) is not None:
-      self.metaVendorL.itemAt(0).widget().setParent(None)   # type: ignore
+      self.metaVendorL.itemAt(0).widget().setParent(None)
     if self.metaUserL.itemAt(0) is not None:
-      self.metaUserL.itemAt(0).widget().setParent(None)     # type: ignore
+      self.metaUserL.itemAt(0).widget().setParent(None)
     for i in reversed(range(self.metaDatabaseL.count())):
-      self.metaDatabaseL.itemAt(i).widget().setParent(None) # type: ignore
+      self.metaDatabaseL.itemAt(i).widget().setParent(None)
     for i in reversed(range(self.specialL.count())):
-      self.specialL.itemAt(i).widget().setParent(None) # type: ignore
+      self.specialL.itemAt(i).widget().setParent(None)
     self.specialW.hide()
     self.metaDetailsW.hide()
     self.metaVendorW.hide()
@@ -126,14 +126,14 @@ class Details(QScrollArea):
         tags = ['_curated_' if i=='_curated' else f'#{i}' for i in self.doc[key]]
         tags = ['\u2605'*int(i[2]) if i[:2]=='#_' else i for i in tags]
         label = QLabel('Tags: '+' '.join(tags))
-        label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         self.metaDetailsL.addWidget(label)
       elif key[0] in ['_','-'] or key in ['shasum']:
         if key in ['_attachments']:
           continue
         label = QLabel(f'{key}: {str(self.doc[key])}')
         label.setWordWrap(True)
-        label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         self.metaDatabaseL.addWidget(label)
         self.btnDatabase.setChecked(False)
       elif key=='metaVendor':
@@ -142,7 +142,7 @@ class Details(QScrollArea):
         label.setWordWrap(True)
         cssStyle = '<style> ul {list-style-type: none; padding-left: 0; margin: 0;} </style>'
         label.setText(cssStyle+dict2ul(self.doc[key]))
-        label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         self.metaVendorL.addWidget(label)
         self.metaVendorW.show()
       elif key=='metaUser':
@@ -151,7 +151,7 @@ class Details(QScrollArea):
         label.setWordWrap(True)
         cssStyle = '<style> ul {list-style-type: none; padding-left: 0; margin: 0;} </style>'
         label.setText(cssStyle+dict2ul(self.doc[key]))
-        label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         self.metaUserL.addWidget(label)
         self.metaUserW.show()
       else:
@@ -159,7 +159,7 @@ class Details(QScrollArea):
         dataHierarchyItem = [i for group in dataHierarchyNode for i in dataHierarchyNode[group] if i['name']==key]
         if (isinstance(self.doc[key],str) and '\n' in self.doc[key]) or key=='comment':
           labelW, labelL = widgetAndLayout('H', self.metaDetailsL, top='s', bottom='s')
-          labelL.addWidget(QLabel(f'{key}: '), alignment=Qt.AlignTop) # type: ignore
+          labelL.addWidget(QLabel(f'{key}: '), alignment=Qt.AlignmentFlag.AlignTop)
           text = QTextEdit()
           text.setMarkdown(markdownStyler(self.doc[key]))
           bgColor = getColor(self.comm.backend, 'secondaryDark')
@@ -168,10 +168,10 @@ class Details(QScrollArea):
                                 f"color: {fgColor} }}")
           text.document().setTextWidth(labelW.width())
           self.rescaleTexts.append(text)
-          height:int = text.document().size().toTuple()[1] # type: ignore[index]
+          height:int = text.document().size().toTuple()[1]    # type:ignore[index]
           text.setFixedHeight(height)
           text.setReadOnly(True)
-          labelL.addWidget(text, stretch=1) # type: ignore[call-arg]
+          labelL.addWidget(text, stretch=1)
         else:
           if len(dataHierarchyItem)==1 and 'list' in dataHierarchyItem[0] and \
               not isinstance(dataHierarchyItem[0]['list'], list):                #choice among docType
@@ -185,7 +185,7 @@ class Details(QScrollArea):
           else:
             value = self.doc[key]
           label = Label(f'{key.capitalize()}: {value}', function=self.clickLink if link else None, docID=self.doc[key])
-          label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+          label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
           self.metaDetailsL.addWidget(label)
         self.metaDetailsW.show()
     return
@@ -249,7 +249,7 @@ class Details(QScrollArea):
     self.metaDetailsW.setFixedWidth(width)
     for text in self.rescaleTexts:
       text.document().setTextWidth(width)
-      height:int = text.document().size().toTuple()[1] #type: ignore[index]
+      height:int = text.document().size().toTuple()[1] # type:ignore[index]
       text.setFixedHeight(height)
     return
 

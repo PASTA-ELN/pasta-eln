@@ -61,4 +61,4 @@ class LookupIriAction(QAction):
     if self.parent_line_edit:
       self.parent_line_edit.setText(iris)
     if self.cell_index and self.cell_index.isValid():
-      self.cell_index.model().setData(self.cell_index, iris, Qt.UserRole)  # type: ignore[arg-type]
+      self.cell_index.model().setData(self.cell_index, iris, Qt.ItemDataRole.UserRole)

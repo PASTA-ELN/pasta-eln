@@ -8,7 +8,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Union
 
-from PySide6.QtCore import Qt, Slot, QCoreApplication  # pylint: disable=no-name-in-module
+from PySide6.QtCore import Slot, QCoreApplication  # pylint: disable=no-name-in-module
 from PySide6.QtGui import QIcon, QPixmap, QShortcut  # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QMainWindow, QApplication, QFileDialog, QMessageBox  # pylint: disable=no-name-in-module
 from qt_material import apply_stylesheet  # of https://github.com/UN-GCPDS/qt-material
@@ -41,6 +41,7 @@ class MainWindow(QMainWindow):
     super().__init__()
     venv = ' without venv' if sys.prefix == sys.base_prefix and 'CONDA_PREFIX' not in os.environ else ' in venv'
     self.setWindowTitle(f"PASTA-ELN {__version__}{venv}")
+    self.resize(self.screen().size()) #self.setWindowState(Qt.Window Maximized) https://bugreports.qt.io/browse/PYSIDE-2706 https://bugreports.qt.io/browse/QTBUG-124892
     resourcesDir = Path(__file__).parent / 'Resources'
     self.setWindowIcon(QIcon(QPixmap(resourcesDir / 'Icons' / 'favicon64.png')))
     self.backend = Backend()
@@ -169,8 +170,8 @@ class MainWindow(QMainWindow):
       self.comm.changeTable.emit(command[1], '')
     # system menu
     elif command[0] is Command.PROJECT_GROUP:
-      dialog = ProjectGroup(self.comm)
-      dialog.exec()
+      dialogPG = ProjectGroup(self.comm)
+      dialogPG.exec()
     elif command[0] is Command.CHANGE_PG:
       self.backend.configuration['defaultProjectGroup'] = command[1]
       with open(Path.home() / '.pastaELN.json', 'w', encoding='utf-8') as fConf:
@@ -202,8 +203,8 @@ class MainWindow(QMainWindow):
       messageWindow.exec()
       restart()
     elif command[0] is Command.CONFIG:
-      dialog = Configuration(self.comm)
-      dialog.exec()
+      dialogC = Configuration(self.comm)
+      dialogC.exec()
     # remainder
     elif command[0] is Command.WEBSITE:
       webbrowser.open('https://pasta-eln.github.io/pasta-eln/')

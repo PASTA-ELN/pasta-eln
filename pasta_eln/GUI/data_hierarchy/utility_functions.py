@@ -30,14 +30,15 @@ def is_click_within_bounds(event: QEvent,
   Returns (bool): True/False
 
   """
-  if event and option:
-    if event.type() == QEvent.MouseButtonRelease:
-      e = QMouseEvent(event)
-      click_x = e.x()
-      click_y = e.y()
-      r = option.rect
-      return (r.left() < click_x < r.left() + r.width()
-              and r.top() < click_y < r.top() + r.height())
+  if (event and option
+      and event.type() == QEvent.Type.MouseButtonRelease
+      and isinstance(event, QMouseEvent)):
+    e = QMouseEvent(event)
+    click_x = e.x()
+    click_y = e.y()
+    r = option.rect  # type: ignore[attr-defined]
+    return (r.left() < click_x < r.left() + r.width()
+            and r.top() < click_y < r.top() + r.height())
   return False
 
 
@@ -73,9 +74,9 @@ def adjust_data_hierarchy_data_to_v4(data_hierarchy_types: dict[str, Any]) -> No
 
 
 def show_message(message: str,
-                 icon: Any = QMessageBox.Information,
-                 standard_buttons: Any = QMessageBox.Ok,
-                 default_button: Any = QMessageBox.Ok) -> Any:
+                 icon: Any = QMessageBox.Icon.Information,
+                 standard_buttons: Any = QMessageBox.StandardButton.Ok,
+                 default_button: Any = QMessageBox.StandardButton.Ok) -> Any:
   """
   Displays a message to the user using QMessageBox
   Args:
@@ -91,7 +92,7 @@ def show_message(message: str,
   if message:
     msg_box = QMessageBox()
     msg_box.setWindowTitle("Data Hierarchy Editor")
-    msg_box.setTextFormat(Qt.RichText)
+    msg_box.setTextFormat(Qt.TextFormat.RichText)
     msg_box.setIcon(icon)
     msg_box.setText(message)
     msg_box.setStandardButtons(standard_buttons)
