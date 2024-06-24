@@ -123,7 +123,7 @@ class SqlLiteDB:
     """
     """
     ### return column information
-    if docType=='': #if all docTypes
+    if not docType: #if all docTypes
       column = f', {column}' if column else ''
       self.cursor.execute(f"SELECT docType {column} FROM dataHierarchy")
       results = self.cursor.fetchall()
@@ -139,15 +139,14 @@ class SqlLiteDB:
     if column == 'meta':
       self.connection.row_factory = sqlite3.Row  #default None
       cursor = self.connection.cursor()
-      if group == '':
-        cursor.execute(f"SELECT * FROM definitions WHERE docType == '{docType}'")
-      else:
+      if group:
         cursor.execute(f"SELECT * FROM definitions WHERE docType == '{docType}' and class == '{group}'")
+      else:
+        cursor.execute(f"SELECT * FROM definitions WHERE docType == '{docType}'")
       return cursor.fetchall()
     if column == 'metaColumns':
       self.cursor.execute(f"SELECT DISTINCT class FROM definitions WHERE docType == '{docType}'")
-      result = [i[0] for i in self.cursor.fetchall()]
-      return result
+      return [i[0] for i in self.cursor.fetchall()]
     # if specific docType
     self.cursor.execute(f"SELECT {column} FROM dataHierarchy WHERE docType == '{docType}'")
     result = self.cursor.fetchone()
@@ -237,10 +236,10 @@ class SqlLiteDB:
                          ''.join(['T' if j else 'F' for j in doc['-branch']['show']]),
                          doc['-date']])
     del doc['-branch']
-    self.cursor.executemany(f"INSERT INTO tags VALUES (?, ?);", zip([doc['_id']]*len(doc['-tags']), doc['-tags']))
+    self.cursor.executemany("INSERT INTO tags VALUES (?, ?);", zip([doc['_id']]*len(doc['-tags']), doc['-tags']))
     del doc['-tags']
     if 'qrCode' in doc:
-      self.cursor.executemany(f"INSERT INTO qrCodes VALUES (?, ?);", zip([doc['_id']]*len(doc['qrCode']), doc['qrCode']))
+      self.cursor.executemany("INSERT INTO qrCodes VALUES (?, ?);", zip([doc['_id']]*len(doc['qrCode']), doc['qrCode']))
       del doc['qrCode']
     if 'content' in doc and len(doc['content'])>200:
       doc['content'] = doc['content'][:200]
@@ -252,7 +251,7 @@ class SqlLiteDB:
     metaDoc = flatten({k:v for k,v in doc.items() if k not in KEY_ORDER})
     docList = [doc.get(x,'') for x in KEY_ORDER]
     self.cursor.execute(f"INSERT INTO main VALUES ({', '.join(['?']*len(docList))})", docList)
-    self.cursor.executemany(f"INSERT INTO metadata VALUES (?, ?, ?, ?);", zip([doc['id']]*len(metaDoc),
+    self.cursor.executemany("INSERT INTO metadata VALUES (?, ?, ?, ?);", zip([doc['id']]*len(metaDoc),
                                                                               [i.split(VALUE_UNIT_SEP)[0] for i in metaDoc.keys()],
                                                                               metaDoc.values(),
                                                                               [i.split(VALUE_UNIT_SEP)[1] if VALUE_UNIT_SEP in i else '' for i in metaDoc.keys()]))
@@ -283,7 +282,6 @@ class SqlLiteDB:
         dict: json representation of updated document
     """
     raise ValueError('Not implemented UPDATEDOC')
-    return
 
 
   def updateBranch(self, docID:str, branch:int, child:int, stack:Optional[list[str]]=None,
@@ -302,7 +300,6 @@ class SqlLiteDB:
       str, str: old path, new path
     """
     raise ValueError('Not implemented UPDATEBRANCH')
-    return
 
 
   def createShowFromStack(self, stack:list[str], currentShow:bool=True) -> list[bool]:
@@ -319,7 +316,6 @@ class SqlLiteDB:
       list: list of show = list of bool
     """
     raise ValueError('Not implemented CREATE SHOW FROM STACK')
-    return
 
 
   def remove(self, docID:str) -> dict[str,Any]:
@@ -333,7 +329,6 @@ class SqlLiteDB:
       dict: document that was removed
     """
     raise ValueError('Not implemented REMOVE')
-    return
 
 
   def addAttachment(self, docID:str, name:str, content:dict[str,Any]) -> bool:
@@ -348,7 +343,7 @@ class SqlLiteDB:
     Returns:
         bool: success of method
     """
-    self.cursor.execute(f"INSERT INTO attachments VALUES (?,?,?,?,?,?)", [docID, name, content['date'], content['docID'], content['remark'], content['user']])
+    self.cursor.execute("INSERT INTO attachments VALUES (?,?,?,?,?,?)", [docID, name, content['date'], content['docID'], content['remark'], content['user']])
     self.connection.commit()
     return
 
@@ -392,7 +387,7 @@ class SqlLiteDB:
         df = df.pivot(index=columnNames, columns='key', values='value').reset_index()  # Pivot the DataFrame
         df.columns.name = None                                                         # Flatten the columns
       df = df.reindex(['tag' if i=='tags' else i for i in viewColumns], axis=1)
-      df.fillna('', inplace=True)
+      df = df.astype('str').fillna('')
       return df
     elif thePath=='viewHierarchy/viewHierarchy':
       self.cursor.execute("SELECT branches.id, branches.stack, branches.child, main.type, main.name, main.gui FROM branches INNER JOIN main USING(id) WHERE branches.stack LIKE '"+startKey+"%'")
@@ -413,15 +408,14 @@ class SqlLiteDB:
     elif viewType=='viewIdentify':
       if docType=='viewQR':
         if startKey is None:
-          self.cursor.execute(f"SELECT qrCodes.id, qrCodes.qrCode, main.name from qrCodes INNER JOIN main USING(id)")
+          self.cursor.execute("SELECT qrCodes.id, qrCodes.qrCode, main.name from qrCodes INNER JOIN main USING(id)")
         else:
           print("HHEUOEUOU")
           a = 77/0
+      elif startKey is None:
+        self.cursor.execute("SELECT id, shasum, name FROM main")
       else:
-        if startKey is None:
-          self.cursor.execute(f"SELECT id, shasum, name FROM main")
-        else:
-          self.cursor.execute(f"SELECT id, shasum, name FROM main WHERE shasum='{startKey}'")
+        self.cursor.execute(f"SELECT id, shasum, name FROM main WHERE shasum='{startKey}'")
       results = self.cursor.fetchall()
       results = [{'id':i[0], 'key':i[1].replace('/',' '), 'value':i[2]} for i in results if i[1] is not None]
     else:
@@ -483,7 +477,6 @@ class SqlLiteDB:
       stack (list, str): stack of docID; docID (str)
     """
     raise ValueError('Not implemented HIDE/SHOW')
-    return
 
 
   def setGUI(self, docID:str, guiState:list[bool]) -> None:
@@ -497,7 +490,6 @@ class SqlLiteDB:
       guiState (list): list of bool that show if document is shown
     """
     raise ValueError('Not implemented SET GUI')
-    return
 
 
   def replicateDB(self, dbInfo:dict[str,Any], progressBar:Any, removeAtStart:bool=False) -> str:
@@ -517,7 +509,6 @@ class SqlLiteDB:
         str: report
     """
     raise ValueError('Not implemented REPLICATE')
-    return
 
 
   def historyDB(self) -> dict[str,Any]:
@@ -525,7 +516,6 @@ class SqlLiteDB:
     Collect last modification days of documents
     """
     raise ValueError('Not implemented HISTORY')
-    return
 
 
   def checkDB(self, outputStyle:str='text', minimal:bool=False) -> str:
@@ -563,16 +553,16 @@ class SqlLiteDB:
     res = self.cursor.fetchall()
     for row in res:
       try:
-        id, docType, stack, path, child, show = row[0], row[1], row[2], row[3], row[4], row[5]
-      except:
+        id, docType, stack, path, child, _ = row[0], row[1], row[2], row[3], row[4], row[5]
+      except ValueError:
         outstring+= outputString(outputStyle,'error',f"dch03a: branch data has strange list {id}")
         continue
       if len(docType.split('/'))==0:
         outstring+= outputString(outputStyle,'unsure',f"dch04: no type in (removed data?) {id}")
         continue
-      if not all([k.startswith('x-') for k in stack.split('/')[:-1]]):
+      if not all(k.startswith('x-') for k in stack.split('/')[:-1]):
         outstring+= outputString(outputStyle,'error',f"dch03: non-text in stack in id: {id}")
-      if any([len(i)==0 for i in stack]) and not docType.startswith('x0'): #if no inheritance
+      if any(len(i)==0 for i in stack) and not docType.startswith('x0'): #if no inheritance
         if docType.startswith(('measurement','x')):
           outstring+= outputString(outputStyle,'warning',f"branch stack length = 0: no parent {id}")
         elif not minimal:
@@ -608,8 +598,7 @@ class SqlLiteDB:
 
     #doc-type specific tests
     self.cursor.execute("SELECT qrCodes.id, qrCodes.qrCode FROM qrCodes JOIN main USING(id) WHERE  main.type LIKE 'sample%'")
-    res = [i[0] for i in self.cursor.fetchall() if i[1] is None]
-    if res:
+    if res:= [i[0] for i in self.cursor.fetchall() if i[1] is None]:
       outstring+= outputString(outputStyle,'warning',f"dch09: qrCode not in samples {res}")
     self.cursor.execute("SELECT id, shasum, image FROM main WHERE  type LIKE 'measurement%'")
     for row in self.cursor.fetchall():
