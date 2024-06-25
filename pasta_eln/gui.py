@@ -16,7 +16,6 @@ from qt_material import apply_stylesheet  # of https://github.com/UN-GCPDS/qt-ma
 from pasta_eln import __version__
 from pasta_eln.GUI.dataverse.config_dialog import ConfigDialog
 from pasta_eln.GUI.dataverse.main_dialog import MainDialog
-from pasta_eln.dataverse.database_api import DatabaseAPI
 from .GUI.body import Body
 from .GUI.config import Configuration
 from .GUI.data_hierarchy.data_hierarchy_editor_dialog import DataHierarchyEditorDialog
@@ -177,8 +176,6 @@ class MainWindow(QMainWindow):
       self.backend.configuration['defaultProjectGroup'] = command[1]
       with open(Path.home() / '.pastaELN.json', 'w', encoding='utf-8') as fConf:
         fConf.write(json.dumps(self.backend.configuration, indent=2))
-      db_api = DatabaseAPI()
-      db_api.initialize_database()
       restart()
     elif command[0] is Command.SYNC:
       report = self.comm.backend.replicateDB(progressBar=self.sidebar.progress)

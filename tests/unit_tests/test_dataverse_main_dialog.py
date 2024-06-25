@@ -98,6 +98,7 @@ class TestDataverseMainDialog(object):
     mock_database_api.assert_called_once()
     assert dialog.db_api == mock_database_api.return_value, "Database API is not set correctly"
     assert dialog.is_dataverse_configured == is_configured
+    dialog.db_api.initialize_database.assert_called_once()
     mock_check_if_dataverse_is_configured.assert_called_once()
     assert dialog.is_dataverse_configured == mock_check_if_dataverse_is_configured.return_value
     if is_configured[0]:
