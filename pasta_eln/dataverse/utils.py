@@ -27,6 +27,7 @@ from qtawesome import icon
 from pasta_eln.dataverse.client import DataverseClient
 from pasta_eln.dataverse.config_error import ConfigError
 from pasta_eln.dataverse.upload_status_values import UploadStatusValues
+from pasta_eln.miscTools import upOut
 
 
 def update_status(status: str,
@@ -640,7 +641,7 @@ def get_formatted_message(missing_metadata: dict[str, list[str]]) -> str:
     'subject': "Subject"
   }
   message = (
-    "<html><p><i>Goto 'Edit Metadata' dialog, enter the below given missing information and retry the upload!</i></p>"
+    "<html><p><i>Goto 'Edit Metadata' dialog, select 'Minimal' metadata list, enter the below given missing information and retry the upload!</i></p>"
   )
   for metadata_name, missing_list in missing_metadata.items():
     if missing_list:
@@ -770,3 +771,84 @@ def get_data_hierarchy_types(data_hierarchy: dict[str, Any] | None) -> list[str 
         data_hierarchy_types.append(type_capitalized)
   data_hierarchy_types.append("Unidentified")
   return data_hierarchy_types
+
+
+def get_db_credentials(logger: Logger) -> dict[str, str]:
+  """
+  Gets the database credentials.
+
+  Explanation:
+      This function retrieves the database credentials from the configuration file based on the default project group.
+      It validates the configuration and returns the database credentials if found.
+
+  Args:
+      logger (Logger): The logger instance for logging messages.
+
+  Returns:
+      dict[str, str]: A dictionary containing the database credentials for the default project group.
+      {
+        'db_name': db_name,
+        'username': username,
+        'password': password,
+      }
+
+  Raises:
+      ConfigError: If the configuration file is missing or incorrect entries in the config file.
+  """
+
+  config = read_pasta_config_file(logger)
+  def_project_group_name = config['defaultProjectGroup']
+  project_groups = config.get('projectGroups')
+  if not def_project_group_name or not project_groups:
+    raise log_and_create_error(logger, ConfigError,
+                               "Incorrect config file, defaultProjectGroup/projectGroups not found!")
+  main_group = project_groups.get(def_project_group_name)
+  if not main_group:
+    raise log_and_create_error(logger, ConfigError,
+                               "Incorrect config file, defaultProjectGroup not found in projectGroups!")
+  local_info = main_group.get('local')
+  if not local_info:
+    raise log_and_create_error(logger, ConfigError,
+                               "Incorrect config file, user or password not found!")
+  db_name = local_info.get('database')
+  cred = local_info.get('cred')
+  if not db_name:
+    raise log_and_create_error(logger, ConfigError,
+                               "Incorrect config file, database name not found!")
+  if cred:
+    username, password = decrypt_credentials(cred)
+  else:
+    username = local_info.get('user')
+    password = local_info.get('password')
+  if username and password:
+    return {
+      'username': username,
+      'password': password,
+      'db_name': db_name
+    }
+  else:
+    raise log_and_create_error(logger, ConfigError,
+                               "Incorrect config file, user/password/cred not found for the default project group!")
+
+
+def decrypt_credentials(cred: str) -> tuple[str, str]:
+  """
+  Decrypts credentials.
+
+  Explanation:
+      This function decrypts the provided credentials and extracts the username and password.
+      It splits the decrypted credentials by ':' and returns the username and password as a tuple.
+
+  Args:
+      cred (str): The encrypted credentials to decrypt.
+
+  Returns:
+      tuple[str, str]: A tuple containing the decrypted username and password.
+  """
+  user_name = ''
+  pass_word = ''
+  if cred:
+    decrypted_creds = upOut(cred)[0].split(':')
+    user_name = decrypted_creds[0]
+    pass_word = decrypted_creds[1]
+  return user_name, pass_word

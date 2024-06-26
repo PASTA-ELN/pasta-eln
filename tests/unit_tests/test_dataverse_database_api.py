@@ -44,6 +44,12 @@ def mock_database_api(mocker) -> DatabaseAPI:
   mocker.patch('pasta_eln.dataverse.database_api.logging.getLogger')
   mocker.patch('pasta_eln.dataverse.database_api.BaseDatabaseAPI')
   mocker.patch('pasta_eln.dataverse.database_api.get_encrypt_key', return_value=(True, "test_key"))
+  mocker.patch('pasta_eln.dataverse.database_api.get_db_credentials', return_value={
+    "db_name": "pasta_project_group_db",
+    "username": "admin",
+    "password": "admin",
+    "cred": "cred"
+  })
   api = DatabaseAPI()
   mocker.resetall()
   return api
@@ -56,6 +62,12 @@ class TestDataverseDatabaseAPI:
     # Arrange
     log_mock = mocker.MagicMock(spec=Logger)
     base_db_api_mock = mocker.MagicMock(spec=BaseDatabaseAPI)
+    mocker.patch('pasta_eln.dataverse.database_api.get_db_credentials', return_value={
+      "db_name": "pasta_project_group_db",
+      "username": "admin",
+      "password": "admin",
+      "cred": "cred"
+    })
     mocker.patch('pasta_eln.dataverse.database_api.get_encrypt_key', return_value=(True, "test_key"))
     mocker.patch('pasta_eln.dataverse.utils.exists', return_value=True)
     logger_mock = mocker.patch('pasta_eln.dataverse.database_api.logging.getLogger', return_value=log_mock)
@@ -99,7 +111,7 @@ class TestDataverseDatabaseAPI:
     mock_database_api.db_api.create_document = mock_create_document
 
     # Act
-    result = mock_database_api.create_dataverse_design_document()
+    result = mock_database_api.create_dataverse_design_document("test_db_name")
 
     # Assert
     assert result["_id"] == expected_id, f"Test {test_id}: The Document ID should be '{expected_id}'."
@@ -116,7 +128,7 @@ class TestDataverseDatabaseAPI:
 
     # Act / Assert
     with pytest.raises(DatabaseError) as exc_info:
-      mock_database_api.create_dataverse_design_document()
+      mock_database_api.create_dataverse_design_document("test_db_name")
     assert str(
       exc_info.value) == "Document must have an _id", f"Test {test_id}: Expected ValueError with message 'Document must have an _id'."
 
@@ -124,6 +136,7 @@ class TestDataverseDatabaseAPI:
                            [  # Success path tests with various realistic test values
                              ("design_doc_1", "dvUploadView",
                               "function (doc) { if (doc.data_type === 'dataverse_upload') { emit(doc._id, doc); } }", (
+                                  "dataverse",
                                   '_design/viewDataverse', "dvUploadView",
                                   "function (doc) { if (doc.data_type === 'dataverse_upload') { emit(doc._id, doc); } }",
                                   None), None, "SuccessCase-1"),
@@ -131,6 +144,7 @@ class TestDataverseDatabaseAPI:
                              # Error cases could include scenarios where db_api.add_view raises an exception
                              ("design_doc_1", "dvUploadView",
                               "function (doc) { if (doc.data_type === 'dataverse_upload') { emit(doc._id, doc); } }", (
+                                  "dataverse",
                                   '_design/viewDataverse', "dvUploadView",
                                   "function (doc) { if (doc.data_type === 'dataverse_upload') { emit(doc._id, doc); } }",
                                   None), DatabaseError("test_error"), "ErrorCase-1"), ])
@@ -201,7 +215,8 @@ class TestDataverseDatabaseAPI:
     # Check if logger.info was called with the expected message
     mock_database_api.logger.info.assert_called_once_with(*expected_info_log)
     # Check if db_api.add_view was called with the expected parameters
-    mock_database_api.db_api.add_view.assert_called_once_with(mock_database_api.design_doc_name, expected_view_name,
+    mock_database_api.db_api.add_view.assert_called_once_with(mock_database_api.default_project_group_db_name,
+                                                              mock_database_api.design_doc_name, expected_view_name,
                                                               expected_map_func, None)
 
   @pytest.mark.parametrize("input_model, expected_output, test_id, exception",
@@ -255,7 +270,7 @@ class TestDataverseDatabaseAPI:
       del data['_rev']
       if data['_id'] is None:
         del data['_id']
-      mock_database_api.db_api.create_document.assert_called_once_with(data)
+      mock_database_api.db_api.create_document.assert_called_once_with(data, mock_database_api.dataverse_db_name)
     else:
       assert result is None
 
@@ -284,7 +299,7 @@ class TestDataverseDatabaseAPI:
     # Assert
     mock_database_api.logger.info.assert_called_once_with("Updating model document: %s", data)
     if isinstance(data, (UploadModel, ConfigModel, ProjectModel)):
-      mock_database_api.db_api.update_document.assert_called_once_with(dict(data))
+      mock_database_api.db_api.update_document.assert_called_once_with(dict(data), mock_database_api.dataverse_db_name)
       mock_database_api.logger.info.assert_called_once()
     else:
       mock_database_api.db_api.update_document.assert_not_called()
@@ -317,7 +332,9 @@ class TestDataverseDatabaseAPI:
     # Assert
     mock_database_api.logger.info.assert_called_once_with("Getting models of type: %s", model_type)
     if not expected_exception:
-      mock_database_api.db_api.get_view_results.assert_called_with(mock_database_api.design_doc_name, view_name)
+      mock_database_api.db_api.get_view_results.assert_called_with(
+        mock_database_api.default_project_group_db_name if model_type is ProjectModel else mock_database_api.dataverse_db_name,
+        mock_database_api.design_doc_name, view_name)
       assert type(results) == type(expected_results)
       assert [dict(result) for result in results] == [dict(result) for result in expected_results]
     else:
@@ -372,7 +389,8 @@ class TestDataverseDatabaseAPI:
 
     # Assert
     if document is not None:
-      mock_database_api.db_api.get_document.assert_called_once_with(mock_database_api.data_hierarchy_doc_id)
+      mock_database_api.db_api.get_document.assert_called_once_with(mock_database_api.data_hierarchy_doc_id,
+                                                                    mock_database_api.default_project_group_db_name)
       assert result == expected, f"Test failed for {test_id}"
     else:
       mock_database_api.logger.warning.assert_called_once_with("Data hierarchy document not found!")
@@ -439,7 +457,7 @@ class TestDataverseDatabaseAPI:
   def test_initialize_database(self, mocker, test_id, design_doc_exists, upload_view_exists, project_view_exists,
                                config_doc_exists, expected_calls, mock_database_api):
     # Arrange
-    mock_database_api.db_api.get_document.side_effect = [design_doc_exists, config_doc_exists]
+    mock_database_api.db_api.get_document.side_effect = [design_doc_exists, design_doc_exists, config_doc_exists]
     mock_database_api.db_api.get_view.side_effect = [upload_view_exists, project_view_exists]
     mock_database_api.create_dataverse_design_document = mocker.MagicMock()
     mock_database_api.create_upload_model_view = mocker.MagicMock()
@@ -456,16 +474,23 @@ class TestDataverseDatabaseAPI:
     # Assert
     mock_database_api.logger.info.assert_called_with("Initializing database for dataverse module...")
     if not isinstance(design_doc_exists, DatabaseError):
-      if design_doc_exists:
-        mock_database_api.create_dataverse_design_document.assert_called_with(mock_database_api.design_doc_name)
-      if upload_view_exists:
-        mock_database_api.create_upload_model_view.assert_called_with(mock_database_api.upload_model_view_name)
-      if project_view_exists:
-        mock_database_api.create_projects_view.assert_called_with(mock_database_api.project_model_view_name)
-      if config_doc_exists:
+      if design_doc_exists is None:
+        mock_database_api.create_dataverse_design_document.assert_any_call(
+          mock_database_api.default_project_group_db_name)
+        mock_database_api.create_dataverse_design_document.assert_any_call(mock_database_api.dataverse_db_name)
+      if upload_view_exists is None:
+        mock_database_api.create_upload_model_view.assert_called_once()
+      if project_view_exists is None:
+        mock_database_api.create_projects_view.assert_called_once()
+      if config_doc_exists is None:
         mock_database_api.initialize_config_document.assert_called_once()
+      mock_database_api.db_api.create_query_index.assert_called_with(mock_database_api.dataverse_db_name,
+                                                                     mock_database_api.upload_models_query_index_name,
+                                                                     "json",
+                                                                     mock_database_api.upload_models_query_index_fields)
     else:
-      mock_database_api.db_api.get_document.assert_called_with(mock_database_api.design_doc_name)
+      mock_database_api.db_api.get_document.assert_called_with(mock_database_api.design_doc_name,
+                                                               mock_database_api.default_project_group_db_name)
 
   @pytest.mark.parametrize(
     "data_hierarchy, data_hierarchy_types,config_file_content, expected_metadata, exception",
@@ -721,13 +746,15 @@ class TestDataverseDatabaseAPI:
                                   bookmark,
                                   limit)
     if not isinstance(expected_output, type):
-      mock_database_api.db_api.get_paginated_upload_model_query_results.assert_called_once_with(filter_term,
-                                                                                                ["project_name",
-                                                                                                 "dataverse_url",
-                                                                                                 "finished_date_time",
-                                                                                                 "status"],
-                                                                                                bookmark,
-                                                                                                limit)
+      mock_database_api.db_api.get_paginated_upload_model_query_results.assert_called_once_with(
+        mock_database_api.dataverse_db_name,
+        filter_term,
+        ["project_name",
+         "dataverse_url",
+         "finished_date_time",
+         "status"],
+        bookmark,
+        limit)
       assert result['bookmark'] == expected_output[
         'bookmark'], f"Test ID: {test_id}, Expected: {expected_output['bookmark']}, Actual: {result['bookmark']}"
       assert len(result['models']) == len(expected_output[
