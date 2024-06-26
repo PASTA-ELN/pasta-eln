@@ -1665,7 +1665,7 @@ class TestDataverseUtils:
     # Success path tests with various realistic test values
     (
         {'author': ['Name', 'Email'], 'datasetContact': ['Phone']},
-        "<html><p><i>Goto 'Edit Metadata' dialog, enter the below given missing information and retry the upload!"
+        "<html><p><i>Goto 'Edit Metadata' dialog, select 'Minimal' metadata list, enter the below given missing information and retry the upload!"
         '</i></p><br></br><b><i>Author:</i></b><ul><i '
         'style="color:Crimson"><li>Name</li></i><i '
         'style="color:Crimson"><li>Email</li></i></ul><br></br><b><i>Dataset '
@@ -1674,7 +1674,7 @@ class TestDataverseUtils:
     ),
     (
         {'author': ['Name']},
-        "<html><p><i>Goto 'Edit Metadata' dialog, enter the below given missing information and retry the upload!"
+        "<html><p><i>Goto 'Edit Metadata' dialog, select 'Minimal' metadata list, enter the below given missing information and retry the upload!"
         '</i></p><br></br><b><i>Author:</i></b><ul><i '
         'style="color:Crimson"><li>Name</li></i></ul></html>',
         "success_path_single_field"
@@ -1686,7 +1686,7 @@ class TestDataverseUtils:
           'dsDescription': ['Dataset Description 1 Missing!', 'Dataset Description 2 Missing!'],
           'subject': ['Subject 1 Missing!', 'Subject 2 Missing!']
         },
-        "<html><p><i>Goto 'Edit Metadata' dialog, enter the below given missing information and retry the upload!"
+        "<html><p><i>Goto 'Edit Metadata' dialog, select 'Minimal' metadata list, enter the below given missing information and retry the upload!"
         '</i></p><br></br><b><i>Author:</i></b><ul><i '
         'style="color:Crimson"><li>Author1 Missing!</li></i><i '
         'style="color:Crimson"><li>Author2 '

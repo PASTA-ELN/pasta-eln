@@ -641,7 +641,7 @@ def get_formatted_message(missing_metadata: dict[str, list[str]]) -> str:
     'subject': "Subject"
   }
   message = (
-    "<html><p><i>Goto 'Edit Metadata' dialog, enter the below given missing information and retry the upload!</i></p>"
+    "<html><p><i>Goto 'Edit Metadata' dialog, select 'Minimal' metadata list, enter the below given missing information and retry the upload!</i></p>"
   )
   for metadata_name, missing_list in missing_metadata.items():
     if missing_list:
