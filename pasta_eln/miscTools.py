@@ -374,9 +374,7 @@ def flatten(d:Mapping[Any,Any]) -> dict[object, Any]:
 
   def dot_reducer(k1:object, k2:object) -> Union[str, object]:
     """ Reducer function """
-    if k1 is None:
-      return k2
-    return f"{k1}.{k2}"
+    return k2 if k1 is None else f"{k1}.{k2}"
 
   def _flatten(_d:Union[Mapping[Any, Any], list[Any]], depth:int, parent:object=None) -> bool:
     """ Recursive function """
@@ -436,10 +434,10 @@ def hierarchy(d:dict[str,str]) -> dict[str,Any]:
 
   def dict2list(d:dict[str,Any]) -> Union[list[dict[str,Any]], dict[str,Any]]:
     """ convert a dictionary to list if all keys are numbers """
-    for key in d.keys():
+    for key in d:
       if isinstance(d[key], dict):
         d[key] = dict2list(d[key])
-    if all(i.isdigit() for i in d.keys()):
+    if all(i.isdigit() for i in d):
       d = list(d.values())                                                           # type: ignore[assignment]
     return d
 

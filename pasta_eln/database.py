@@ -4,8 +4,8 @@ from typing import Any, Optional, Union
 from pathlib import Path
 from anytree import Node
 from PIL import Image
-from cloudant.client import CouchDB
-from cloudant.replicator import Replicator
+# from cloudant.client import CouchDB
+# from cloudant.replicator import Replicator
 from .fixedStringsJson import defaultDataHierarchy, defaultDataHierarchyNode
 from .handleDictionaries import dataHierarchy_pre_to_V4
 from .miscTools import tracebackString, outputString

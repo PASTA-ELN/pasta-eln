@@ -156,7 +156,6 @@ class Details(QScrollArea):
         self.metaUserW.show()
       else:
         link = False
-        dataHierarchyItem = [i for group in dataHierarchyNode for i in dataHierarchyNode[group] if i['name']==key]
         if (isinstance(self.doc[key],str) and '\n' in self.doc[key]) or key=='comment':
           labelW, labelL = widgetAndLayout('H', self.metaDetailsL, top='s', bottom='s')
           labelL.addWidget(QLabel(f'{key}: '), alignment=Qt.AlignTop) # type: ignore
@@ -173,6 +172,8 @@ class Details(QScrollArea):
           text.setReadOnly(True)
           labelL.addWidget(text, stretch=1) # type: ignore[call-arg]
         else:
+          a = 5/0 #to implement next row
+          dataHierarchyItem = dict([i for i in dataHierarchyNode if i['name']==key][0])
           if len(dataHierarchyItem)==1 and 'list' in dataHierarchyItem[0] and \
               not isinstance(dataHierarchyItem[0]['list'], list):                #choice among docType
             table  = self.comm.backend.db.getView('viewDocType/'+dataHierarchyItem[0]['list'])

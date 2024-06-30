@@ -2,13 +2,13 @@
 from typing import Any
 
 defaultDataHierarchy: list[list[str]] = [
-  #docType,       IRI, attachments, title,          icon,                   shortcut, view
-  ["x0",          "",  "",          "Projects",     "",                     "space", "name,tags,status,objective,comment"],
-  ["x1",          "",  "",          "Folders",      "",                      "",     ""],
-  ["measurement", "",  "",          "Measurements", "fa5s.thermometer-half", "m",    "name,tags,comment,type,image,sample,procedure"],
-  ["sample",      "",  "",          "Samples",      "fa5s.vial",             "s",    "name,tags,chemistry,comment,qrCode"],
-  ["procedure",   "",  "",          "Procedures",   "fa5s.list-ol",          "p",    "name,tags,comment,content"],
-  ["instrument",  "",  "",          "Instruments",  "ri.scales-2-line",      "i",    "name,tags,comment,vendor"]]
+  #docType,       IRI, title,          icon,                   shortcut, view
+  ["x0",          "",  "Projects",     "",                     "space", "name,tags,status,objective,comment"],
+  ["x1",          "",  "Folders",      "",                      "",     ""],
+  ["measurement", "",  "Measurements", "fa5s.thermometer-half", "m",    "name,tags,comment,type,image,sample,procedure"],
+  ["sample",      "",  "Samples",      "fa5s.vial",             "s",    "name,tags,chemistry,comment,qrCode"],
+  ["procedure",   "",  "Procedures",   "fa5s.list-ol",          "p",    "name,tags,comment,content"],
+  ["instrument",  "",  "Instruments",  "ri.scales-2-line",      "i",    "name,tags,comment,vendor"]]
 
 defaultDefinitions: list[list[str]] = [
   #docType, group,     index, key,     description,                                      unit, IRI, mandatory, list

@@ -6,7 +6,7 @@ from anytree import Node
 import pandas as pd
 from PIL import Image
 from .fixedStringsJson import defaultDataHierarchy, defaultDefinitions
-from .miscTools import outputString, flatten
+from .miscTools import outputString, flatten, hierarchy
 
 """
 DO NOT WORK ON THIS IF THERE IS SOMETHING ON THE TODO LIST
@@ -14,11 +14,17 @@ DO NOT WORK ON THIS IF THERE IS SOMETHING ON THE TODO LIST
 Notes:
 - try to use sqlite style as much as possible and
   translate within this file into PASTA-document-style
-  - KEEP THE REST OF THE CODE THE SAME
+  - KEEP THE REST OF THE CODE THE SAME FOR NOW
+  - ONCE WE ARE GETTING TO BETA: change _id, -name, ...
 - start with first test: run-fix-run-fix
-  pytest --no-skip --tb=short tests/test_01_3Projects.py
-- do not work on replicator
-- at the end: create a translator
+  - pytest --no-skip --tb=short tests/test_01_3Projects.py
+  - start pasta with pudb
+  - TODO change configuration to sqlite
+  - do an unit example for the sin-curve
+  - give an example for attachment in datahierarchy: separate table?
+  - why are metadata numbers = string?
+- do not work on replicator: use eln file there
+- at the end: create a translator: old save doc
 
 Benefits:
 - easy installation
@@ -34,9 +40,9 @@ Benefits:
   -> such long integers are not supported by sqlite: stay with string/text
 """
 
-KEY_ORDER   =    ['id' , 'name','user','type','dateCreated','gui',       'client','shasum','image','content','comment']
-KEY_TYPE    =    ['TEXT','TEXT','TEXT','TEXT','TEXT',       'varchar(2)','TEXT',  'TEXT',  'TEXT', 'TEXT',   'TEXT']
-DATA_HIERARCHY = ['docType', 'IRI','attachments','title','icon','shortcut','view']
+KEY_ORDER   =    ['id' , 'name','user','type','dateCreated','dateModfied','gui',       'client','shasum','image','content','comment']
+KEY_TYPE    =    ['TEXT','TEXT','TEXT','TEXT','TEXT',       'TExT',       'varchar(2)','TEXT',  'TEXT',  'TEXT', 'TEXT',   'TEXT']
+DATA_HIERARCHY = ['docType', 'IRI','title','icon','shortcut','view']
 DEFINITIONS =    ['docType','class','idx', 'name', 'query', 'unit', 'IRI', 'mandatory', 'list']
 VALUE_UNIT_SEP = '__'
 
@@ -58,7 +64,7 @@ class SqlLiteDB:
     # main table
     self.createSQLTable('main',     KEY_ORDER,                                         'id',        KEY_TYPE)
     # branches table
-    self.createSQLTable('branches', ['id','stack','child','path','show','dateChanged'],'id, stack', ['TEXT']*2+['INTEGER']+["TEXT"]*3)
+    self.createSQLTable('branches', ['id','stack','child','path','show'],'id, stack', ['TEXT']*2+['INTEGER']+["TEXT"]*2)
     # metadata table
     # - contains metadata of specific item
     # - key is generally not shown to user
@@ -69,7 +75,7 @@ class SqlLiteDB:
     self.createSQLTable('tags',        ['id','tag'],                                   'id, tag')
     self.createSQLTable('qrCodes',     ['id','qrCode'],                                'id, qrCode')
     # list of changes to attachments
-    self.createSQLTable('attachments', ['id','attachment','date','docID','remark','user'], 'id, attachment, date')
+    self.createSQLTable('attachments', ['id','location','date','guest','remark','user'], 'id, location, date')
     # list of changes to all documents: gives history
     self.createSQLTable('changes',     ['id','date','change'],                         'id, date')
     return
@@ -121,6 +127,7 @@ class SqlLiteDB:
 
   def dataHierarchy(self, docType:str, column:str, group:str='') -> dict[str,Any]:
     """
+    if group not given: return all
     """
     ### return column information
     if not docType: #if all docTypes
@@ -193,10 +200,10 @@ class SqlLiteDB:
         del doc[key]
     doc['-type']= doc['type'].split('/')
     doc['-gui'] = [i=='T' for i in doc['gui']]
-    for key in ['type','gui']:
+    for key in ['type','gui','dateModfied']:
       del doc[key]
     doc['-branch'] = []
-    # data ends with 'id' 'stack', 'child', 'path', 'show', 'dateChanged'
+    # data ends with 'id' 'stack', 'child', 'path', 'show', 'dateModfied'
     self.cursor.execute(f"SELECT * FROM branches WHERE id == '{docID}'")
     for dataI in self.cursor.fetchall():
       doc['-branch'].append({'stack': dataI[1].split('/')[:-1],
@@ -204,7 +211,8 @@ class SqlLiteDB:
                              'path':  None if dataI[3] == '*' else dataI[3],
                              'show':   [i=='T' for i in dataI[4]]})
     self.cursor.execute(f"SELECT * FROM metadata WHERE id == '{docID}'")
-    doc |= { (f'{i[1]}_{i[3]}' if len(i[3])>0 else i[1]) : i[2] for i in self.cursor.fetchall()}
+    metadataFlat = { (f'{i[1]}_{i[3]}' if len(i[3])>0 else i[1]) : i[2] for i in self.cursor.fetchall()}
+    doc |= hierarchy(metadataFlat)
     return doc
 
 
@@ -228,13 +236,12 @@ class SqlLiteDB:
         dict: json representation of submitted document
     """
     docOrg = copy.deepcopy(doc)
-    self.cursor.execute(f"INSERT INTO branches VALUES ({', '.join(['?']*6)})",
+    self.cursor.execute(f"INSERT INTO branches VALUES ({', '.join(['?']*5)})",
                         [doc['_id'],
                          '/'.join(doc['-branch']['stack']+[doc['_id']]),
                          str(doc['-branch']['child']),
                          '*' if doc['-branch']['path'] is None else doc['-branch']['path'],
-                         ''.join(['T' if j else 'F' for j in doc['-branch']['show']]),
-                         doc['-date']])
+                         ''.join(['T' if j else 'F' for j in doc['-branch']['show']])])
     del doc['-branch']
     self.cursor.executemany("INSERT INTO tags VALUES (?, ?);", zip([doc['_id']]*len(doc['-tags']), doc['-tags']))
     del doc['-tags']
@@ -246,6 +253,7 @@ class SqlLiteDB:
     doc['type'] = '/'.join(doc.pop('-type'))
     doc['gui']  = ''.join(['T' if i else 'F' for i in doc.pop('-gui')])
     doc['dateCreated'] = doc.pop('-date')
+    doc['dateModfied'] = doc['dateCreated']
     for key_ in ['_id','-name','-user']:
       doc[key_[1:]] = doc.pop(key_)
     metaDoc = flatten({k:v for k,v in doc.items() if k not in KEY_ORDER})

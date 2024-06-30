@@ -128,8 +128,6 @@ class Table(QWidget):
         self.data = self.comm.backend.db.getView(path)
       else:
         self.data = self.comm.backend.db.getView(path, preciseKey=self.projID)
-      # filter multiple lines of the same item: #https://stackoverflow.com/questions/11092511/list-of-unique-dictionaries
-      self.data = list({v['id']:v for v in self.data}.values())
       self.showState.setText('(show all rows)' if self.showAll else '(hide hidden rows)')
       docLabel = 'Unidentified'
       if self.docType=='-':
@@ -144,14 +142,13 @@ class Table(QWidget):
         self.comm.changeSidebar.emit('')  #close the project in sidebar
         self.headline.setText(f'All {docLabel.lower()}')
         self.showHidden.setText(f'Show/hide all hidden {docLabel.lower()}')
-      self.filterHeader = self.comm.backend.db.dataHierarchy(self.docType, 'view')
-      self.filterHeader = [i[1:] if i[0]=='-'   else i for i in self.filterHeader]  #change -something to something
-      self.filterHeader = [i[2:] if i[:2]=='#_' else i for i in self.filterHeader]  #change #_something to something
+      self.filterHeader = list(self.data.columns)[:-1]
     self.headerW.show()
-    nrows, ncols = len(self.data), len(self.filterHeader)
-    model = QStandardItemModel(nrows, ncols)
+    nRows, nCols = self.data.shape
+    model = QStandardItemModel(nRows, nCols-1)
     model.setHorizontalHeaderLabels(self.filterHeader)
-    for i, j in itertools.product(range(nrows), range(ncols)):
+    for i, j in itertools.product(range(nRows), range(nCols-1)):
+      value = self.data.iloc[i,j]
       if self.docType=='_tags_':  #tags list
         if j==0:
           if self.data[i]['key']=='_curated':
@@ -162,22 +159,18 @@ class Table(QWidget):
             item = QStandardItem(self.data[i]['key'])
         else:
           item = QStandardItem(self.data[i]['value'][j-1])
-      elif self.data[i]['value'][j] is None or not self.data[i]['value'][j]:  #None, False
+      elif value in ('None','','nan'):  #None, False
         item = QStandardItem('-') # if you want to add nice glyphs, see also below \u00D7')
         # item.setFont(QFont("Helvetica [Cronyx]", 16))
-      elif isinstance(self.data[i]['value'][j], bool): #True
+      elif value=='True': #True
         item = QStandardItem('Y') # \u2713')
         # item.setFont(QFont("Helvetica [Cronyx]", 16))
-      elif isinstance(self.data[i]['value'][j], list):                  #list, e.g. qrCodes
-        item = (QStandardItem(', '.join(self.data[i]['value'][j])) if isinstance(
-            self.data[i]['value'][j][0], str) else QStandardItem(', '.join(
-                [str(i) for i in self.data[i]['value'][j]])))
-      elif isinstance(self.data[i]['value'][j], str) and re.match(r'^[a-z\-]-[a-z0-9]{32}$',self.data[i]['value'][j]):      #Link
+      elif isinstance(value, str) and re.match(r'^[a-z\-]-[a-z0-9]{32}$',value):      #Link
         item = QStandardItem('oo') # \u260D')
         # item.setFont(QFont("Helvetica [Cronyx]", 16))
       else:
         if self.filterHeader[j]=='tags':
-          tags = self.data[i]['value'][j].split(' ')
+          tags = value[j].split(' ')
           if '_curated' in tags:
             tags[tags.index('_curated')] = '_curated_'
           for iStar in range(1,6):
@@ -185,10 +178,10 @@ class Table(QWidget):
               tags[tags.index(f'_{str(iStar)}')] = '*'*iStar
           text = ' '.join(tags)
         else:
-          text = str(self.data[i]['value'][j])  #could be a number
+          text = value
         item = QStandardItem(text)
       if j==0:
-        doc = self.comm.backend.db.getDoc(self.data[i]['id'])
+        doc = self.comm.backend.db.getDoc(self.data['id'][i])
         if [b for b in doc['-branch'] if False in b['show']]:
           item.setText( item.text()+'  \U0001F441' )
         item.setAccessibleText(doc['_id'])

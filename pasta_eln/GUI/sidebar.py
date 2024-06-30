@@ -69,13 +69,14 @@ class Sidebar(QWidget):
     if hasattr(backend, 'db'):
       db = self.comm.backend.db
       hierarchy = db.getView('viewDocType/x0')
-      lastChangeDate = [db.getDoc(project['id'])['-dateCreated'] for project in hierarchy]
+      hierarchy['dateCreated'] = [db.getDoc(id_)['-dateCreated'] for id_ in hierarchy['id']]
+      hierarchy.sort_values('dateCreated',axis=0, ascending=False, inplace=True)
       maxProjects = int((self.height()-120)/50)-1
-      for index, project in enumerate(x for _, x in sorted(zip(lastChangeDate, hierarchy), reverse=True)):
+      for index, project in hierarchy.iterrows():
         if index>maxProjects:
           break
         projID = project['id']
-        projName = project['value'][0]
+        projName = project['name']
         #head: show project name as button
         projectW = QFrame()
         # projectW.setMinimumHeight(300) #convenience: allow scroll in sidebar
