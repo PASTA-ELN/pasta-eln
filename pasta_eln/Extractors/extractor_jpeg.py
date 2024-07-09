@@ -1,17 +1,19 @@
 """extract data from vendor
 - default jpeg image
+For tutorials, see extractor_csv.py and extractor_png.py
 """
-import base64, json
+import base64, re
 from io import BytesIO
 import numpy as np
 from PIL import Image
 
-def use(filePath, recipe='', saveFileName=None):
+def use(filePath, style={'main':''}, saveFileName=None):
   """
   Args:
     filePath (Path): full path file name
-    recipe (string): supplied to guide recipes
-                     recipe is / separated hierarchical elements parent->child
+    style    (dict): supplied to guide the display / extraction style = recipe
+                     main is / separated hierarchical elements parent->child
+                     can contain more elements
     saveFileName (string): if given, save the image to this file-name
 
   Returns:
@@ -19,7 +21,13 @@ def use(filePath, recipe='', saveFileName=None):
   """
   # Extractor
   image = Image.open(filePath)
+  maxSize = 400
+  if max(image.size)>maxSize:
+    scale = max(image.size)/maxSize
+    image = image.resize( (np.array(image.size)/scale).astype(int) )
   metaVendor = image.info
+  if 'exif' in metaVendor:
+    metaVendor['exif'] = re.sub(r'[^\x20-\x7F]','', metaVendor['exif'].decode('utf-8', errors='ignore'))
   imgArr = np.array(image)
   metaUser   = {'number pixel': imgArr.size,
                 'dimension': imgArr.shape}
@@ -33,12 +41,7 @@ def use(filePath, recipe='', saveFileName=None):
   figfile = BytesIO()
   imageData.save(figfile, format="JPEG")
   imageData = base64.b64encode(figfile.getvalue()).decode()
-  imageData = "data:image/jpeg;base64," + imageData
+  imageData = f"data:image/jpg;base64,{imageData}"
 
   # return everything
-  return {'image':imageData, 'recipe':'measurement/image', 'metaVendor':metaVendor, 'metaUser':metaUser}
-
-  #other datatypes could follow here if statements are used
-  #...
-  #final return if nothing successful
-  #return {'recipe': '-', 'metaVendor':{}, 'metaUser':{}}
+  return {'image':imageData, 'style': {'main':'measurement/image'}, 'metaVendor':metaVendor, 'metaUser':metaUser}

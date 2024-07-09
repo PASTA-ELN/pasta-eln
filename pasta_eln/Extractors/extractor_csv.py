@@ -1,20 +1,30 @@
 """extract data from vendor
 - comma and semicolon separated table
+
+THIS IS THE BASIC EXTRACTOR TUTORIAL, WHICH TEACHES
+- how to use style recipes:
+  - in the code these are lines which have an if-statement and this is followed by a comment "#:" which is then used for the human readable part
+  - the default case is with "elif True and" which is a little strange but follows above rule of if-statement and ....
+  - please use this way of writing code and the extractors should work
+- how to create metadata conveniently using "Long name [Unit]" nomenclature
+- how to create images
 """
 from io import StringIO
 import pandas as pd
 import matplotlib.pyplot as plt
 
-def use(filePath, recipe='', saveFileName=None):
+def use(filePath, style={'main':''}, saveFileName=None):
   """
   Args:
     filePath (string): full path file name
-    recipe (string): supplied to guide recipes
-                     recipe is / separated hierarchical elements parent->child
+    style    (dict): supplied to guide the display / extraction style = recipe
+                     main is / separated hierarchical elements parent->child
+                     can contain more elements
     saveFileName (string): if given, save the image to this file-name
   Returns:
-    dict: containing image, metaVendor, metaUser, recipe
+    dict: containing image, metaVendor, metaUser, style
   """
+  # this part identifies how the csv-file is formatted: whether it uses , or ; to separate; you can skip this part when learning extractors
   producer = 'comma separated'
   delimiter = ','
   lines = []
@@ -35,29 +45,32 @@ def use(filePath, recipe='', saveFileName=None):
                                                    lines[0].count(',')==lines[2].count(','): #Separate by , not ' '
       producer = 'comma separated'
       delimiter = ','
-  print('Producer ', producer)
 
-  data = pd.read_csv(filePath, delimiter=delimiter, skiprows=skipRows-1)
-  plt.plot(data.iloc[:,0], data.iloc[:,1],'o-')
-  metaUser = {}
-  metaVendor = {}
-  links = []
-  recipe = 'measurement/csv'
+  # THIS IS THE IMPORTANT PART OF THE EXTRACTOR
+  data = pd.read_csv(filePath, delimiter=delimiter, skiprows=skipRows-1)     # use pandas to get data
+  if style['main'] == 'measurement/csv/lines':    #: draw curve with lines
+    plt.plot(data.iloc[:,0], data.iloc[:,1],'-')                             # plot data using matplotlib: check the differences in plotting
+  elif style['main'] == 'measurement/csv/dots':     #: draw curve with dots
+    plt.plot(data.iloc[:,0], data.iloc[:,1],'o')
+  elif True or style['main'] == 'measurement/csv/linesAndDots': #: Default | uncropped
+    style['main'] = 'measurement/csv/linesAndDots'                           # for the default case: set the main-style
+    plt.plot(data.iloc[:,0], data.iloc[:,1],'o-')
+  plt.xlabel('time [sec]')
+  plt.ylabel('value [m]')                                                    # the units are an example for this tutorial and should be changed
+  sampleFrequency = 1.0 / (data.iloc[1,0]-data.iloc[0,0])                    # a simple equation to calculate the sample frequency
+  maxYData        = data.iloc[:,1].max()
+  metaUser = {'Sample frequency [Hz]':sampleFrequency,                       # this is the easy way to denote metadata as scientists often use. Internally it is converted appropriately
+              'Maximum y-data [m]':   maxYData}
+  metaVendor = {}                                                            # this is translated metadata from the vendor of the instrument: since we don't know anything, leave it blank
 
-  #save to file
+  #Save to file: each extractor should have this as it allows the user to create a high quality image
   if saveFileName is not None:
     plt.savefig(saveFileName, dpi=150, bbox_inches='tight')
 
-  #convert axes to svg image
+  #convert image to svg image: 2d graphs are good examples of svg files
   figfile = StringIO()
   plt.savefig(figfile, format='svg')
   image = figfile.getvalue()
 
   # return everything
-  return {'image':image, 'recipe':recipe, 'metaVendor':metaVendor, 'metaUser':metaUser, 'links':links}
-
-  #other datatypes follow here
-  #...
-
-  #final return if nothing successful
-  # return {}
+  return {'image':image, 'style':style, 'metaVendor':metaVendor, 'metaUser':metaUser}

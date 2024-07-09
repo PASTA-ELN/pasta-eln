@@ -1,22 +1,18 @@
 """extract data from vendor
 - Markdown .md for procedures
+For tutorials, see extractor_csv.py and extractor_png.py
 """
 
-def use(filePath, recipe='', saveFileName=None):
+def use(filePath, style={'main':''}, saveFileName=None):
   """
   Args:
     filePath (Path): full path file name
-    recipe (string): supplied to guide recipes
-                     recipe is / separated hierarchical elements parent->child
+    style    (dict): supplied to guide the display / extraction style = recipe
+                     main is / separated hierarchical elements parent->child
+                     can contain more elements
     saveFileName (string): if given, save the image to this file-name
   Returns:
     dict: containing image, metaVendor, metaUser, recipe
   """
   with open(filePath,'r', encoding='utf-8') as fIn:
-    return {'content':fIn.read(), 'recipe': 'procedure/markdown', 'metaVendor':{}, 'metaUser':{}}
-
-  #other datatypes follow here
-  #...
-
-  #final return if nothing successful
-  # return {'recipe': '-', 'metaVendor':{}, 'metaUser':{}}
+    return {'content':fIn.read(), 'style': {'main':'procedure/markdown'}, 'metaVendor':{}, 'metaUser':{}}

@@ -235,6 +235,7 @@ class SqlLiteDB:
     Returns:
         dict: json representation of submitted document
     """
+    TODO: debugger: save accordingly
     docOrg = copy.deepcopy(doc)
     self.cursor.execute(f"INSERT INTO branches VALUES ({', '.join(['?']*5)})",
                         [doc['_id'],

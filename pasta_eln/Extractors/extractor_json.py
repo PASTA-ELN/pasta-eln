@@ -1,14 +1,16 @@
 """extract data from vendor
 - javascript object notion
+For tutorials, see extractor_csv.py and extractor_png.py
 """
 import json
 
-def use(filePath, recipe='', saveFileName=None):
+def use(filePath, style={'main':''}, saveFileName=None):
   """
   Args:
     filePath (Path): full path file name
-    recipe (string): supplied to guide recipes
-                     recipe is / separated hierarchical elements parent->child
+    style    (dict): supplied to guide the display / extraction style = recipe
+                     main is / separated hierarchical elements parent->child
+                     can contain more elements
     saveFileName (string): if given, save the image to this file-name
 
   Returns:
@@ -21,13 +23,8 @@ def use(filePath, recipe='', saveFileName=None):
     content = json.loads(jsonContent)
     if not isinstance(content, dict):
       content= {'content': json.loads(jsonContent)}
-  recipe = 'procedure/json'
+  style['main'] = 'procedure/json'
   content= f'```json\n{json.dumps(content, indent=2)}\n```'
 
   # return everything
-  return {'content':content, 'recipe':recipe, 'metaVendor':{}, 'metaUser':{}}
-
-  #other datatypes follow here
-  #...
-  #final return if nothing successful
-  #return {'recipe': '-', 'metaVendor':{}, 'metaUser':{}}
+  return {'content':content, 'style':style, 'metaVendor':{}, 'metaUser':{}}

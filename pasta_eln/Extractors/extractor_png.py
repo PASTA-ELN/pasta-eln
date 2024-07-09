@@ -1,55 +1,76 @@
 """extract data from vendor
 - default png file
+
+THIS IS THE ADVANCED EXTRACTOR TUTORIAL, READ THE BASIC TUTORIAL (_csv.py) FIRST.
+This tutorial teaches
+- how to use style recipes with choices
+  - you can specify sub-choices with the dict, as shown.
+  - what you from the calling function is a string
+  - for getting the value from the string, you might have to use split / strip, as shown
+  - you can use as many dictionary entries as you want
+  - just make sure dictionary entries are correct
+  - please use this way of writing code and the extractors should work
+  - for debugging: print / debuggers are working as normal
+- how to create metadata data-scientifically using a list of dictionaries
+- how to create images and scale them down to save space in the meta-data-base
 """
 import base64
 from io import BytesIO
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageFilter
 
-def use(filePath, recipe='', saveFileName=None):
+def use(filePath, style={'main':''}, saveFileName=None):
   """
   Args:
     filePath (Path): full path file name
-    recipe (string): supplied to guide recipes
-                     recipe is / separated hierarchical elements parent->child
+    style    (dict): supplied to guide the display / extraction style = recipe
+                     main is / separated hierarchical elements parent->child
+                     can contain more elements
     saveFileName (string): if given, save the image to this file-name
 
   Returns:
-    dict: containing image, metaVendor, metaUser, recipe
+    dict: containing image, metaVendor, metaUser, style
   """
-  # Extractor
+  # THIS IS THE IMPORTANT PART OF THE EXTRACTOR
   image = Image.open(filePath)
   metaVendor = image.info
-  toDelete = []
-  for key,value in metaVendor.items():
-    if not isinstance(value, (str, int, float, list)):
-      toDelete.append(key)
+  toDelete = [key for key, value in metaVendor.items() if not isinstance(value, (str, int, float, list))]
   for key in toDelete:
     del metaVendor[key]
-  imgArr = np.array(image)
-  if recipe == 'measurement/image/crop':    #: Crop 3/4 of the image
+  if style['main'] == 'measurement/image/crop':    #: Crop 3/4 of the image
+    imgArr = np.array(image)
     newHeight = int(imgArr.shape[0]/2)
     newWidth  = int(imgArr.shape[1]/2)
     imgArr = imgArr[:newHeight, :newWidth, :]
-  elif True or recipe == 'measurement/image': #: Default | uncropped
-    recipe = 'measurement/image'
-  metaUser   = {'number all pixel': int(np.prod(image.size[:2])) }
+    image = Image.fromarray(imgArr)
+  elif style['main'] == 'measurement/image/gaussian':    #: Gaussian blur {'blur radius':['r = 1','r = 5','r = 10','r = 100']}
+    radius = int(style.get('blur radius','r = 1').split('=')[-1].strip())
+    image = image.filter(ImageFilter.GaussianBlur(radius = radius))
+  elif True or style['main'] == 'measurement/image': #: Default | uncropped
+    style['main'] = 'measurement/image'
+  metaUser   = [{'key':'imageWidth',  'value':image.size[0], 'unit':'mm', 'label':'Image width', 'IRI':'http://purl.allotrope.org/ontologies/result#AFR_0002468'},
+                {'key':'imageHeight', 'value':image.size[1], 'unit':'mm', 'label':'Image height','IRI':'http://purl.allotrope.org/ontologies/result#AFR_0002467'}
+               ]
 
-  #save to file
-  imageData = Image.fromarray(imgArr)
+  # save to file: this is the high quality image
   if saveFileName is not None:
-    imageData.save(saveFileName)
+    image.save(saveFileName)
 
-  # convert PIL image to base64
+  # convert PIL image to base64: here one should downscale
+  maxSize = 400
+  if max(image.size)>maxSize:
+    scale = max(image.size)/maxSize
+    image = image.resize( (np.array(image.size)/scale).astype(int) )
   figfile = BytesIO()
-  imageData.save(figfile, format="PNG")
-  imageData = base64.b64encode(figfile.getvalue()).decode()
-  imageData = "data:image/png;base64," + imageData
+  image.save(figfile, format="PNG")
+  imageB64 = base64.b64encode(figfile.getvalue()).decode()
+  imageB64 = f"data:image/png;base64,{imageB64}"
 
   # return everything
-  return {'image':imageData, 'recipe':recipe, 'metaVendor':metaVendor, 'metaUser':metaUser}
+  return {'image':imageB64, 'style':style, 'metaVendor':metaVendor, 'metaUser':metaUser}
 
   #other datatypes could follow here if statements are used
   #...
+
   #final return if nothing successful
-  #return {'recipe': '-', 'metaVendor':{}, 'metaUser':{}}
+  #return {'style': '-', 'metaVendor':{}, 'metaUser':{}}

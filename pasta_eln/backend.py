@@ -45,7 +45,7 @@ class Backend(CLI_Mixin):
           - initViews (bool): initialize views at startup
           - resetDataHierarchy (bool): reset dataHierarchy on database from one on file
     """
-    configFileName = Path.home()/'.pastaELN.json'
+    configFileName = Path.home()/'.pastaELN_v3.json'
     self.configuration = defaultConfiguration
     if configFileName.is_file():
       with open(configFileName,'r', encoding='utf-8') as confFile:
@@ -54,7 +54,7 @@ class Backend(CLI_Mixin):
       for k,v in items.items():
         if k not in self.configuration['GUI']:
           self.configuration['GUI'][k] = v[1]
-    if self.configuration['version']!=2:
+    if self.configuration['version']!=3:
       print('**ERROR Configuration file does not exist or version is not 2')
       return
     if not defaultProjectGroup:
@@ -482,8 +482,9 @@ class Backend(CLI_Mixin):
       import matplotlib.pyplot as plt  #IMPORTANT: NO PYPLOT OUTSIDE THIS QT_API BLOCK
       plt.clf()
       try:
+        print(pyFile, absFilePath)
         module  = importlib.import_module(pyFile[:-3])
-        content = module.use(absFilePath, '/'.join(doc['-type']) )
+        content = module.use(absFilePath, {'main':'/'.join(doc['-type'])} )
       except Exception:
         logging.error(f'ERROR with extractor {pyFile}' + '\n' + traceback.format_exc())
         success = False
@@ -494,20 +495,26 @@ class Backend(CLI_Mixin):
         for meta in ['metaVendor','metaUser']:
           if meta not in doc:
             doc[meta] = {}
-          for item in doc[meta]:
-            if isinstance(doc[meta][item], tuple):
-              doc[meta][item] = list(doc[meta][item])
-            try:
-              _ = json.dumps(doc[meta][item])
-            except:
-              doc[meta][item] = str(doc[meta][item])
-              print('**Warning -> stringified  ',meta, item)
-        if doc['recipe'].startswith(doc['-type'][0]):
-          doc['-type']     = doc['recipe'].split('/')
+          if isinstance(doc[meta], dict):  #convenient type
+            for item in doc[meta]:
+              if isinstance(doc[meta][item], tuple):
+                doc[meta][item] = list(doc[meta][item])
+              try:
+                _ = json.dumps(doc[meta][item])
+              except:
+                doc[meta][item] = str(doc[meta][item])
+                print('**Warning -> stringified  ',meta, item)
+          else:
+            for item in doc[meta]:
+              if not (isinstance(item, dict) and 'key' in item and 'value' in item and 'unit' in item):
+                logging.error('Complicated extractor return wrong')
+                print('Complicated extractor return wrong')
+        if doc['style']['main'].startswith(doc['-type'][0]):
+          doc['-type']     = doc['style']['main'].split('/')
         else:
           #user has strange wish: trust him/her
-          logging.info('user has strange wish: trust him/her: '+'/'.join(doc['-type'])+'  '+doc['recipe'])
-        del doc['recipe']
+          logging.info('user has strange wish: trust him/her: '+'/'.join(doc['-type'])+'  '+doc['style']['main'])
+        del doc['style']
         if 'fileExtension' not in doc['metaVendor']:
           doc['metaVendor']['fileExtension'] = extension.lower()
         if 'links' in doc and len(doc['links'])==0:
