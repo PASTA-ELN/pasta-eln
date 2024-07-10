@@ -20,8 +20,8 @@ Notes:
   - pytest --no-skip --tb=short tests/test_01_3Projects.py
   - start pasta with pudb
   - do an unit example for the sin-curve
-  - TODO give an example for attachment in datahierarchy: separate table?
-  - test gui and extend functions
+  - give an example for attachment in datahierarchy: same table
+  - TODO test gui and extend functions
 - LATER change configuration to sqlite
 - do not work on replicator: use eln file there
 - at the end: create a translator: old save doc
@@ -362,7 +362,13 @@ class SqlLiteDB:
     raise ValueError('Not implemented REMOVE')
 
 
-  def addAttachment(self, docID:str, name:str, content:dict[str,Any]) -> bool:
+  def initAttachment(self, docID:str, name:str, docType:str) -> None:
+    self.cursor.execute("INSERT INTO attachments VALUES (?,?,?,?,?,?)", [docID, name, '', docType, '', ''])
+    self.connection.commit()
+    return
+
+
+  def addAttachment(self, docID:str, name:str, content:dict[str,Any]) -> None:
     """
     Update document by adding attachment (no new revision)
 
@@ -371,8 +377,6 @@ class SqlLiteDB:
         name (string): attachment name to add to
         content (dict): dictionary of content to be added (should include user,date,docID,remark)
 
-    Returns:
-        bool: success of method
     """
     self.cursor.execute("INSERT INTO attachments VALUES (?,?,?,?,?,?)", [docID, name, content['date'], content['docID'], content['remark'], content['user']])
     self.connection.commit()

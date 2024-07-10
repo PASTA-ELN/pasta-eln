@@ -132,6 +132,7 @@ class TestStringMethods(unittest.TestCase):
           idKLA = line.split('|')[-1].strip()
         if 'Synthon'  in line:
           idSynthon = line.split('|')[-1].strip()
+      self.be.db.initAttachment(idKLA, "Right side of instrument", 'instrument')
       self.be.db.addAttachment(idKLA, "Right side of instrument",
         {'date':datetime.now().isoformat(),'remark':'Worked well','docID':idSynthon,'user':'nobody'})
       self.be.db.addAttachment(idKLA, "Right side of instrument",
