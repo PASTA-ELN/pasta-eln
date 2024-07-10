@@ -33,11 +33,7 @@ class Configuration(QDialog):
     tabW.addTab(tabAuthors, 'Author')
 
     # Setup / Troubleshoot Pasta: main widget
-    tabSetup:Optional[Union[ConfigSetupWindows,ConfigSetupLinux]] = None
-    if platform.system()=='Windows':
-      tabSetup = ConfigSetupWindows(self.comm, self.closeWidget)
-    else:
-      tabSetup = ConfigSetupLinux(self.comm, self.closeWidget)
+    tabSetup = ConfigurationSetup(self.comm, self.closeWidget)
     tabW.addTab(tabSetup, 'Setup')
 
     if startTab=='setup':

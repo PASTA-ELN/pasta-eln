@@ -1,5 +1,5 @@
 """ Long strings and dictionaries/JSON that would obfuscate code """
-from typing import Any
+from typing import Any, Union
 
 defaultDataHierarchy: list[list[str]] = [
   #docType,       IRI, title,          icon,                   shortcut, view
@@ -10,7 +10,7 @@ defaultDataHierarchy: list[list[str]] = [
   ["procedure",   "",  "Procedures",   "fa5s.list-ol",          "p",    "name,tags,comment,content"],
   ["instrument",  "",  "Instruments",  "ri.scales-2-line",      "i",    "name,tags,comment,vendor"]]
 
-defaultDefinitions: list[list[str]] = [
+defaultDefinitions: list[list[Union[str,int]]] = [
   #docType, group,     index, key,     description,                                      unit, IRI, mandatory, list
   ["x0",    "default", 0,     "name", "What is the name of the project?",                "",   "",  "T",       ""],
   ["x0",    "default", 1,     "tags", "What are the tags associated with the project?",  "",   "",  "",        ""],

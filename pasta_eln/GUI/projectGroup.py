@@ -14,7 +14,7 @@ from cloudant.client import CouchDB
 from ..guiCommunicate import Communicate
 from ..guiStyle import IconButton, Label, TextButton, showMessage, widgetAndLayout
 from ..miscTools import restart, upIn, upOut
-from ..serverActions import passwordDecrypt, testLocal, testRemote
+from ..serverActions import passwordDecrypt
 
 
 class ProjectGroup(QDialog):

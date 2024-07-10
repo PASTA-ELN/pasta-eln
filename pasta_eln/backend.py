@@ -61,11 +61,6 @@ class Backend(CLI_Mixin):
     if defaultProjectGroup not in self.configuration['projectGroups']:
       raise ValueError('BadConfigurationFileError')
     projectGroup = self.configuration['projectGroups'][defaultProjectGroup]
-    if 'user' in projectGroup['local']:
-      n,s = projectGroup['local']['user'], projectGroup['local']['password']
-    else:
-      n,s = upOut(projectGroup['local']['cred'])[0].split(':')
-    databaseName = projectGroup['local']['database']
     # directories
     #    self.basePath (root of directory tree) is root of all projects
     #    self.cwd changes during program but is similarly the full path from root

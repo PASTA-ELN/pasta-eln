@@ -1,12 +1,11 @@
 """ Widget: setup tab inside the configuration dialog window """
 import logging
 from enum import Enum
-from pathlib import Path
 from typing import Callable, Any
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QMessageBox, QFileDialog, QProgressBar    # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QMessageBox, QProgressBar    # pylint: disable=no-name-in-module
 from ..guiStyle import TextButton, widgetAndLayout
 from ..installationTools import configuration, exampleData, createShortcut
-from ..fixedStringsJson import setupText, exampleData
+from ..fixedStringsJson import setupText
 from ..miscTools import restart
 from ..guiCommunicate import Communicate
 from ..dataverse.database_api import DatabaseAPI

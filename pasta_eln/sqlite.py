@@ -8,37 +8,35 @@ from PIL import Image
 from .fixedStringsJson import defaultDataHierarchy, defaultDefinitions
 from .miscTools import outputString, flatten, hierarchy, camelCase
 
-"""
-DO NOT WORK ON THIS IF THERE IS SOMETHING ON THE TODO LIST
+# DO NOT WORK ON THIS IF THERE IS SOMETHING ON THE TODO LIST
 
-Notes:
-- try to use sqlite style as much as possible and
-  translate within this file into PASTA-document-style
-  - KEEP THE REST OF THE CODE THE SAME FOR NOW
-  - ONCE WE ARE GETTING TO BETA: change _id, -name, ...
-- start with first test: run-fix-run-fix
-  - pytest --no-skip --tb=short tests/test_01_3Projects.py
-  - start pasta with pudb
-  - do an unit example for the sin-curve
-  - give an example for attachment in datahierarchy: same table
-  - TODO test gui and extend functions
-- LATER change configuration to sqlite
-- do not work on replicator: use eln file there
-- at the end: create a translator: old save doc
+# Notes:
+# - try to use sqlite style as much as possible and
+#   translate within this file into PASTA-document-style
+#   - KEEP THE REST OF THE CODE THE SAME FOR NOW
+#   - ONCE WE ARE GETTING TO BETA: change _id, -name, ...
+# - start with first test: run-fix-run-fix
+#   - pytest --no-skip --tb=short tests/test_01_3Projects.py
+#   - start pasta with pudb
+#   - do an unit example for the sin-curve
+#   - give an example for attachment in datahierarchy: same table
+#   - TODO test gui and extend functions
+# - LATER change configuration to sqlite
+# - do not work on replicator: use eln file there
+# - at the end: create a translator: old save doc
 
-Benefits:
-- easy installation
-- test as github actions
-- read / backup database with many other tools
-- can switch between both databases by changing the config
-- investigate perhaps:
-  redis db: server that is similar to others; save to file is also a general location; not user-space
-  crateDB: server; not user space
-- try ID as uuid4 = integer (see if elabFTW does it too)
-  - see if I use x-4523452345 anywhere
-  - see if I use the first letter of the docID
-  -> such long integers are not supported by sqlite: stay with string/text
-"""
+# Benefits:
+# - easy installation
+# - test as github actions
+# - read / backup database with many other tools
+# - can switch between both databases by changing the config
+# - investigate perhaps:
+#   redis db: server that is similar to others; save to file is also a general location; not user-space
+#   crateDB: server; not user space
+# - try ID as uuid4 = integer (see if elabFTW does it too)
+#   - see if I use x-4523452345 anywhere
+#   - see if I use the first letter of the docID
+#   -> such long integers are not supported by sqlite: stay with string/text
 
 KEY_ORDER   =    ['id' , 'name','user','type','dateCreated','dateModfied','gui',       'client','shasum','image','content','comment']
 KEY_TYPE    =    ['TEXT','TEXT','TEXT','TEXT','TEXT',       'TExT',       'varchar(2)','TEXT',  'TEXT',  'TEXT', 'TEXT',   'TEXT']
@@ -119,7 +117,7 @@ class SqlLiteDB:
     self.cursor.execute(f"SELECT * FROM {name}")
     columnNames = list(map(lambda x: x[0], self.cursor.description))
     if columnNames != columns:
-      logging.error(f"Difference in sqlite table: {name}")
+      logging.error("Difference in sqlite table: %s", name)
       logging.error(columnNames)
       logging.error(columns)
       raise ValueError('SQLite table difference')
@@ -397,9 +395,9 @@ class SqlLiteDB:
     """
     allFlag = False
     if thePath.endswith('All'):
-        thePath = thePath[:-3]
-        allFlag = True
-        print('**info do something with all flag')
+      thePath = thePath[:-3]
+      allFlag = True
+      print('**info do something with all flag')
     viewType, docType = thePath.split('/')
     if viewType=='viewDocType':
       viewColumns = self.dataHierarchy(docType, 'view')+['id']
@@ -409,7 +407,8 @@ class SqlLiteDB:
       metadataKeys  = [f'properties.key == "{i}"' for i in viewColumns if i not in KEY_ORDER+['tags']]
       if metadataKeys:
         textSelect += ', properties.key, properties.value'
-      text    = f'SELECT {textSelect} from main LEFT JOIN tags USING(id) INNER JOIN branches USING(id) LEFT JOIN properties USING(id) WHERE main.type LIKE "{docType}%"'
+      text    = f'SELECT {textSelect} from main LEFT JOIN tags USING(id) INNER JOIN branches USING(id) LEFT JOIN properties USING(id) '\
+                f'WHERE main.type LIKE "{docType}%"'
       df      = pd.read_sql_query(text, self.connection)
       allCols = list(df.columns)
       if 'image' in viewColumns:
@@ -425,7 +424,8 @@ class SqlLiteDB:
       df = df.astype('str').fillna('')
       return df
     elif thePath=='viewHierarchy/viewHierarchy':
-      self.cursor.execute("SELECT branches.id, branches.stack, branches.child, main.type, main.name, main.gui FROM branches INNER JOIN main USING(id) WHERE branches.stack LIKE '"+startKey+"%'")
+      self.cursor.execute(f"SELECT branches.id, branches.stack, branches.child, main.type, main.name, main.gui "\
+                          f"FROM branches INNER JOIN main USING(id) WHERE branches.stack LIKE '{startKey}%'")
       results = self.cursor.fetchall()
       # value: [child, doc['-type'], doc['-name'], doc['-gui']]
       results = [{'id':i[0], 'key':i[1].replace('/',' '), 'value':[i[2], i[3].split('/'), i[4], [j=='T' for j in i[5]]]} for i in results]
@@ -434,9 +434,11 @@ class SqlLiteDB:
       if startKey is not None:
         print('**ERROR NOT IMPLEMENTED')
       elif preciseKey is not None:
-        self.cursor.execute("SELECT branches.id, branches.path, branches.stack, main.type, branches.child, main.shasum FROM branches INNER JOIN main USING(id) WHERE branches.path LIKE '"+preciseKey+"'")
+        self.cursor.execute(f"SELECT branches.id, branches.path, branches.stack, main.type, branches.child, main.shasum "\
+                            f"FROM branches INNER JOIN main USING(id) WHERE branches.path LIKE '{preciseKey}'")
       else:
-        self.cursor.execute("SELECT branches.id, branches.path, branches.stack, main.type, branches.child, main.shasum FROM branches INNER JOIN main USING(id)")
+        self.cursor.execute(f"SELECT branches.id, branches.path, branches.stack, main.type, branches.child, main.shasum "\
+                            f"FROM branches INNER JOIN main USING(id)")
       results = self.cursor.fetchall()
       # value: [branch.stack, doc['-type'], branch.child, doc.shasum,idx]
       results = [{'id':i[0], 'key':i[1], 'value':[i[2].replace('/',' '), i[3].split('/'), i[4], i[5]]} for i in results if i[1] is not None]

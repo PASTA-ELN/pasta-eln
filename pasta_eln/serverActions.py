@@ -182,35 +182,13 @@ def main() -> None:
   '''
   Main function
   '''
-  print("Could not get credentials for the remote server from keyring.")
-  ## URL
-  url = input('Enter the URL without http and without port: ')
-  if len(url)<2:
-    print('* No legit URL entered: exit')
-    sys.exit(1)
-  ## User-name, password
-  administrator = input('Enter the administrator username: ')
-  password =      input('Enter the administrator password: ')
-  #assemble information
-  url = f'http://{url}:5984'
-  auth = requests.auth.HTTPBasicAuth(administrator, password)
-
   print('\n-------------------------------------------------------------------------')
   print(  'Manage users and databases for PASTA-ELN on a local couchDB installation')
   print(  '-------------------------------------------------------------------------')
   while True:
     print('\nCommands: [q]uit; [b]ackup data; [r]estore data')
     command = input('> ')
-    userName, userPassword = '', ''
-    if command == 'q':
-      break
-    # ask questions for parameters
-    if command in ['n', 't', 'l']:
-      userName =      input('Enter the user-name, e.g. m.miller: ')
-    if command in ['t', 'l']:
-      userPassword =  input('Enter the user-password: ')
-    # execute command
-    elif command == 'b':
+    if command == 'b':
       backupCouchDB()
     elif command == 'r':
       restoreCouchDB()
