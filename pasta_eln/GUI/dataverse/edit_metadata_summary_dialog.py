@@ -53,7 +53,7 @@ class EditMetadataSummaryDialog(Ui_EditMetadataSummaryDialog):
       raise TypeError("save_config_callback must be callable.")
     self.instance = QDialog()
     super().setupUi(self.instance)
-    self.instance.setWindowModality(QtCore.Qt.ApplicationModal)
+    self.instance.setWindowModality(QtCore.Qt.WindowModality.ApplicationModal)
     self.summaryTextEdit.setReadOnly(True)
     self.buttonBox.accepted.connect(save_config_callback)
 

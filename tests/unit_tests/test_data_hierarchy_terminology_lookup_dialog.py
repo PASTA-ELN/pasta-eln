@@ -192,7 +192,7 @@ class TestDataHierarchyTerminologyLookupDialog(object):
     mock_scroll_area_layout_count.assert_called_once_with()
     mock_item_at.assert_has_calls(
       [mocker.call(4), mocker.call(3), mocker.call(2), mocker.call(1), mocker.call(0)])
-    assert mock_get_widget.has_calls(
+    mock_get_widget.assert_has_calls(
       [mocker.call(), mocker.call(), mocker.call(), mocker.call(), mocker.call()])
     mock_set_parent.assert_has_calls(
       [mocker.call(None), mocker.call(None), mocker.call(None), mocker.call(None), mocker.call(None)])

@@ -72,7 +72,7 @@ class TerminologyLookupDialog(Ui_TerminologyLookupDialogBase):
     Returns: None
 
     """
-    self.instance.setWindowModality(QtCore.Qt.ApplicationModal)
+    self.instance.setWindowModality(QtCore.Qt.WindowModality.ApplicationModal)
     self.instance.show()
 
   def add_scroll_area_entry(self,

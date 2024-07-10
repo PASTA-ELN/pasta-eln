@@ -50,7 +50,7 @@ class TableHeader(QDialog):
     self.selectW.addItems(self.selectedList)
     bodyL.addWidget(self.selectW)
     #final button box
-    buttonBox = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel | QDialogButtonBox.Help)
+    buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel | QDialogButtonBox.StandardButton.Help)
     buttonBox.clicked.connect(self.closeDialog)
     mainL.addWidget(buttonBox)
 

@@ -97,6 +97,7 @@ class TestConfigDialog:
     mock_qdialog.assert_called_once()
     mock_setup_ui.assert_called_once_with(mock_qdialog.return_value)
     mock_db_ctor.assert_called_once()
+    config_dialog.db_api.initialize_database.assert_called_once()
     mock_database_api.get_config_model.assert_called_once()
     mock_regex.assert_called_once_with("\\S*")
     mock_validator.assert_called_once_with(mock_regex.return_value)

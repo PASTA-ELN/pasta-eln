@@ -97,7 +97,7 @@ class MainDialog(Ui_MainDialogBase):
       self.showCompletedPushButton.clicked.connect(self.show_completed_uploads)
       self.editFullMetadataPushButton.clicked.connect(self.show_edit_metadata)
       self.cancelAllPushButton.clicked.connect(self.upload_manager_task.cancel_all_tasks.emit)
-      self.buttonBox.button(QtWidgets.QDialogButtonBox.Cancel).clicked.connect(self.close_ui)
+      self.buttonBox.button(QtWidgets.QDialogButtonBox.StandardButton.Cancel).clicked.connect(self.close_ui)
       self.instance.closed.connect(self.close_ui)
 
       # Load UI
@@ -198,9 +198,12 @@ class MainDialog(Ui_MainDialogBase):
           project_widget.findChild(QtWidgets.QLabel, name="projectNameLabel").toolTip())
         self.uploadQueueVerticalLayout.addWidget(upload_widget["base"])
         widget = upload_widget["widget"]
+        if not isinstance(widget, Ui_UploadWidgetFrame):
+          continue
         project_id = project_widget.findChild(QtWidgets.QLabel, name="projectDocIdLabel").text()
         task_thread = TaskThreadExtension(
-          DataUploadTask(widget.uploadProjectLabel.text(),
+          DataUploadTask(widget.uploadProjectLabel.toolTip(),  # label text may be truncated,
+                         #  but the tooltip contains the full project name
                          project_id,
                          widget.uploadProgressBar.setValue,
                          widget.statusLabel.setText,
@@ -268,8 +271,7 @@ class MainDialog(Ui_MainDialogBase):
         This method shows the completed uploads dialog.
 
     """
-    self.completed_uploads_dialog.load_ui()
-    self.completed_uploads_dialog.instance.show()
+    self.completed_uploads_dialog.show()
 
   def show_edit_metadata(self) -> None:
     """
@@ -405,7 +407,7 @@ class MainDialog(Ui_MainDialogBase):
                    parent: QDialog,
                    title: str,
                    message: str,
-                   icon: QMessageBox.Icon = QMessageBox.Warning) -> None:
+                   icon: QMessageBox.Icon = QMessageBox.Icon.Warning) -> None:
     """
     Shows a message box with the specified title, message, and icon.
 
@@ -423,7 +425,7 @@ class MainDialog(Ui_MainDialogBase):
 
     msg_box = QMessageBox(parent)
     msg_box.setWindowTitle(title)
-    msg_box.setIcon(icon or QMessageBox.Warning)
+    msg_box.setIcon(icon or QMessageBox.Icon.Warning)
     msg_box.setText(message)
     qt_msgbox_label: QLabel | object = msg_box.findChild(QLabel, "qt_msgbox_label")
     if not isinstance(qt_msgbox_label, QLabel):

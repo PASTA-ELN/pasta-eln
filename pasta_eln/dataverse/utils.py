@@ -27,6 +27,7 @@ from qtawesome import icon
 from pasta_eln.dataverse.client import DataverseClient
 from pasta_eln.dataverse.config_error import ConfigError
 from pasta_eln.dataverse.upload_status_values import UploadStatusValues
+from pasta_eln.miscTools import upOut
 
 
 def update_status(status: str,
@@ -612,8 +613,8 @@ def delete_layout_and_contents(layout: QBoxLayout) -> None:
     return
   for widget_pos in reversed(range(layout.count())):
     if item := layout.itemAt(widget_pos):
-      item.widget().setParent(None)  # type: ignore[call-overload]
-  layout.setParent(None)  # type: ignore[arg-type]
+      item.widget().setParent(None)
+  layout.setParent(None)
 
 
 def get_formatted_message(missing_metadata: dict[str, list[str]]) -> str:
@@ -640,7 +641,7 @@ def get_formatted_message(missing_metadata: dict[str, list[str]]) -> str:
     'subject': "Subject"
   }
   message = (
-    "<html><p><i>Goto 'Edit Metadata' dialog, enter the below given missing information and retry the upload!</i></p>"
+    "<html><p><i>Goto 'Edit Metadata' dialog, select 'Minimal' metadata list, enter the below given missing information and retry the upload!</i></p>"
   )
   for metadata_name, missing_list in missing_metadata.items():
     if missing_list:
@@ -715,3 +716,139 @@ def get_formatted_metadata_message(metadata: dict[str, Any]) -> str:
     message += "</ul>"
   message += "</html>"
   return message
+
+
+def get_formatted_dataverse_url(dataverse_url: str) -> str:
+  """
+  Formats a Dataverse URL.
+
+  Explanation:
+      This function takes a Dataverse URL as input and extracts the persistent ID from it.
+      It then formats the URL with the persistent ID in an HTML structure for display.
+
+  Args:
+      dataverse_url (str): The Dataverse URL to be formatted.
+
+  Returns:
+      str: The formatted Dataverse URL in HTML structure.
+  """
+
+  formatted_dataverse_url = ""
+  if dataverse_url:
+    if "persistentId=" not in dataverse_url:
+      return formatted_dataverse_url
+    persistent_id = dataverse_url.split("persistentId=", 1)[1]
+    formatted_dataverse_url = (
+      f"<html><head/><body><p>Dataverse URL: "
+      f"<a href='{dataverse_url}'>"
+      f"<span style='font-style:italic; text-decoration: underline; color:#77767b;'>{persistent_id}</span>"
+      f"</a></p></body></html>")
+  return formatted_dataverse_url
+
+
+def get_data_hierarchy_types(data_hierarchy: dict[str, Any] | None) -> list[str | Any]:
+  """
+  Gets the types of data hierarchy.
+
+  Explanation:
+      This function extracts the types of data hierarchy from the provided data hierarchy dictionary.
+      It filters out specific types and appends 'Unidentified' to the list of data hierarchy types.
+
+  Args:
+      data_hierarchy (dict[str, Any] | None): The data hierarchy dictionary.
+
+  Returns:
+      list[str | Any]: The list of data hierarchy types.
+  """
+  if data_hierarchy is None:
+    return []
+  data_hierarchy_types = []
+  for data_type in data_hierarchy:
+    if (data_type and not data_type.isspace()
+        and data_type not in ("x0", "x1", "x2")):
+      type_capitalized = data_type.capitalize()
+      if type_capitalized not in data_hierarchy_types:
+        data_hierarchy_types.append(type_capitalized)
+  data_hierarchy_types.append("Unidentified")
+  return data_hierarchy_types
+
+
+def get_db_credentials(logger: Logger) -> dict[str, str]:
+  """
+  Gets the database credentials.
+
+  Explanation:
+      This function retrieves the database credentials from the configuration file based on the default project group.
+      It validates the configuration and returns the database credentials if found.
+
+  Args:
+      logger (Logger): The logger instance for logging messages.
+
+  Returns:
+      dict[str, str]: A dictionary containing the database credentials for the default project group.
+      {
+        'db_name': db_name,
+        'username': username,
+        'password': password,
+      }
+
+  Raises:
+      ConfigError: If the configuration file is missing or incorrect entries in the config file.
+  """
+
+  config = read_pasta_config_file(logger)
+  def_project_group_name = config['defaultProjectGroup']
+  project_groups = config.get('projectGroups')
+  if not def_project_group_name or not project_groups:
+    raise log_and_create_error(logger, ConfigError,
+                               "Incorrect config file, defaultProjectGroup/projectGroups not found!")
+  main_group = project_groups.get(def_project_group_name)
+  if not main_group:
+    raise log_and_create_error(logger, ConfigError,
+                               "Incorrect config file, defaultProjectGroup not found in projectGroups!")
+  local_info = main_group.get('local')
+  if not local_info:
+    raise log_and_create_error(logger, ConfigError,
+                               "Incorrect config file, user or password not found!")
+  db_name = local_info.get('database')
+  cred = local_info.get('cred')
+  if not db_name:
+    raise log_and_create_error(logger, ConfigError,
+                               "Incorrect config file, database name not found!")
+  if cred:
+    username, password = decrypt_credentials(cred)
+  else:
+    username = local_info.get('user')
+    password = local_info.get('password')
+  if username and password:
+    return {
+      'username': username,
+      'password': password,
+      'db_name': db_name
+    }
+  else:
+    raise log_and_create_error(logger, ConfigError,
+                               "Incorrect config file, user/password/cred not found for the default project group!")
+
+
+def decrypt_credentials(cred: str) -> tuple[str, str]:
+  """
+  Decrypts credentials.
+
+  Explanation:
+      This function decrypts the provided credentials and extracts the username and password.
+      It splits the decrypted credentials by ':' and returns the username and password as a tuple.
+
+  Args:
+      cred (str): The encrypted credentials to decrypt.
+
+  Returns:
+      tuple[str, str]: A tuple containing the decrypted username and password.
+  """
+  user_name = ''
+  pass_word = ''
+  if cred:
+    decrypted_creds = upOut(cred)[0].split(':')
+    user_name = decrypted_creds[0]
+    pass_word = decrypted_creds[1]
+  return user_name, pass_word

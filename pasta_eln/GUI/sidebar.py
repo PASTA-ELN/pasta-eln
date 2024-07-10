@@ -2,12 +2,13 @@
 from enum import Enum
 from typing import Any
 from PySide6.QtGui import QResizeEvent                                                                 # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QTreeWidget, QTreeWidgetItem, QFrame, QProgressBar # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QTreeWidgetItem, QFrame, QProgressBar # pylint: disable=no-name-in-module
 from PySide6.QtCore import Slot                                                                        # pylint: disable=no-name-in-module
-from anytree import PreOrderIter, Node
+from anytree import Node
 from .config import Configuration
-from ..guiStyle import TextButton, IconButton, getColor, showMessage, widgetAndLayout, space
+from ..guiStyle import TextButton, IconButton, getColor, showMessage, widgetAndLayout, widgetAndLayoutGrid, space
 from ..guiCommunicate import Communicate
+
 
 class Sidebar(QWidget):
   """ Sidebar widget that includes the navigation items """
@@ -58,7 +59,7 @@ class Sidebar(QWidget):
     """
     # Delete old widgets from layout and create storage
     for i in reversed(range(self.projectsListL.count())):
-      self.projectsListL.itemAt(i).widget().setParent(None) # type: ignore
+      self.projectsListL.itemAt(i).widget().setParent(None)
     if projectChoice != 'redraw':
       self.openProjectId = projectChoice
     self.widgetsAction = {}
@@ -89,7 +90,7 @@ class Sidebar(QWidget):
         self.widgetsProject[projID] = [btnProj, projectW]
 
         # actions: scan, curate, ...
-        actionW, actionL = widgetAndLayout('Grid', projectL)
+        actionW, actionL = widgetAndLayoutGrid(projectL)
         if self.openProjectId != projID: #depending which project is open
           actionW.hide()
           projectW.setStyleSheet("background-color:"+ getColor(backend, 'secondaryDark'))
@@ -97,27 +98,27 @@ class Sidebar(QWidget):
           projectW.setStyleSheet("background-color:"+ getColor(backend, 'secondaryLight'))
         btnScan = TextButton('Scan', self, [Command.SCAN_PROJECT, projID], None, 'Scan', \
                              iconName='mdi.clipboard-search-outline')
-        actionL.addWidget(btnScan, 0,0)  # type: ignore
+        actionL.addWidget(btnScan, 0,0)
         btnCurate = TextButton('Special', self, [projID], None)
         btnCurate.hide()
-        actionL.addWidget(btnCurate, 0,1)         # type: ignore
+        actionL.addWidget(btnCurate, 0,1)
         self.widgetsAction[projID] = actionW
         btnScan.setStyleSheet("border-width:0")
         btnCurate.setStyleSheet("border-width:0")
 
         # lists: view list of measurements, ... of this project
-        listW, listL = widgetAndLayout('Grid', projectL)
+        listW, listL = widgetAndLayoutGrid(projectL)
         if self.openProjectId != projID:
           listW.hide()
         docTypes = db.dataHierarchy('', '')
         for idx, doctype in enumerate(docTypes):
           if doctype[0]!='x':
             icon = self.comm.backend.db.dataHierarchy(doctype,'icon')
-            icon = 'fa.asterisk' if icon=='' else icon
+            icon = 'fa5s.asterisk' if icon=='' else icon
             btn = IconButton(icon, self, [Command.LIST_DOCTYPE,doctype,projID], None,db.dataHierarchy(doctype,'title'))
-            listL.addWidget(btn, 0, idx)    # type: ignore
+            listL.addWidget(btn, 0, idx)
         btn = IconButton('fa5.file', self, [Command.LIST_DOCTYPE,'-',projID], None, 'Unidentified')
-        listL.addWidget(btn, 0, len(docTypes)+1)  # type: ignore
+        listL.addWidget(btn, 0, len(docTypes)+1)
         self.widgetsList[projID] = listW
 
         # show folders as hierarchy
@@ -141,7 +142,7 @@ class Sidebar(QWidget):
         self.projectsListL.addWidget(projectW)
     # Other buttons
     stretch = QWidget()
-    self.projectsListL.addWidget(stretch, stretch=2)  # type: ignore
+    self.projectsListL.addWidget(stretch, stretch=2)
     return
 
 

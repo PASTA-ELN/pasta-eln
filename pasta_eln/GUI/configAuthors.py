@@ -41,7 +41,7 @@ class ConfigurationAuthors(QWidget):
       self.orgaCB = QComboBox()
       self.orgaCB.addItems([i['organization'] for i in self.author['organizations']])
       orgaL.addStretch(1)
-      orgaL.addWidget(self.orgaCB, stretch=2)                       # type: ignore[call-arg]
+      orgaL.addWidget(self.orgaCB, stretch=2)
       IconButton('fa5s.plus-circle', self, [Command.ADD], orgaL, 'Add organization')
       IconButton('fa5s.minus-circle', self, [Command.DELETE], orgaL, 'Delete organization')
       self.tabAuthorL.addRow(orgaW)
@@ -52,7 +52,7 @@ class ConfigurationAuthors(QWidget):
       buttonBarL.addStretch(1)
       TextButton('Save changes', self, [Command.SAVE], buttonBarL)
       self.tabAuthorL.addRow(buttonBarW)
-      self.orgaCB.previousIndex = 0
+      self.orgaCB_previousIndex = 0
       self.lockSelfAuthor = False
       self.orgaCB.currentIndexChanged.connect(lambda: self.execute([Command.CHANGE])) #connect to slot only after all painting is done
 
@@ -84,7 +84,7 @@ class ConfigurationAuthors(QWidget):
     """
     Autofill based on orcid and rorid
     """
-    sender = self.sender().accessibleName()
+    sender = self.sender().accessibleName()                                                                  # type: ignore[attr-defined]
     if sender == 'rorid':
       if re.match(r'^\w{9}$', self.userRorid.text().strip() ) is not None:
         reply = requests.get(f'https://api.ror.org/organizations/{self.userRorid.text().strip()}', timeout=10)
@@ -143,14 +143,14 @@ class ConfigurationAuthors(QWidget):
         self.userOrg.setEnabled(False)
       self.lockSelfAuthor = False
     elif command[0] is Command.CHANGE and self.author['organizations']:
-      j = self.orgaCB.previousIndex
+      j = self.orgaCB_previousIndex
       if j<len(self.author['organizations']) and not self.lockSelfAuthor:
         self.author['organizations'][j]['organization'] = self.userOrg.text().strip()
         self.author['organizations'][j]['rorid']        = self.userRorid.text().strip()
       k = self.orgaCB.currentIndex()
       self.userRorid.setText(self.author['organizations'][k]['rorid'])
       self.userOrg.setText(self.author['organizations'][k]['organization'])
-    self.orgaCB.previousIndex = self.orgaCB.currentIndex()
+    self.orgaCB_previousIndex = self.orgaCB.currentIndex()
     return
 
 

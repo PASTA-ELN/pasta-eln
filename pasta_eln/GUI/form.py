@@ -8,7 +8,7 @@ from PySide6.QtWidgets import QLabel, QTextEdit, QTabWidget, QPlainTextEdit, QCo
 from PySide6.QtWidgets import QSizePolicy, QMessageBox# pylint: disable=no-name-in-module
 from PySide6.QtGui import QRegularExpressionValidator # pylint: disable=no-name-in-module
 from PySide6.QtCore import QSize, Qt, QTimer          # pylint: disable=no-name-in-module
-from ..guiStyle import Image, TextButton, IconButton, Label, showMessage, widgetAndLayout, ScrollMessageBox
+from ..guiStyle import Image, TextButton, IconButton, Label, showMessage, widgetAndLayout, widgetAndLayoutForm, ScrollMessageBox
 from ._contextMenu import initContextMenu, executeContextMenu, CommandMenu
 from ..fixedStringsJson import defaultDataHierarchyNode
 from ..miscTools import createDirName, markdownStyler
@@ -44,7 +44,7 @@ class Form(QDialog):
 
     # GUI elements
     mainL = QVBoxLayout(self)
-    splitter = QSplitter(Qt.Horizontal)
+    splitter = QSplitter(Qt.Orientation.Horizontal)
     splitter.setHandleWidth(10)
     splitter.setContentsMargins(0,0,0,0)
     mainL.addWidget(splitter, stretch=2)
@@ -52,7 +52,6 @@ class Form(QDialog):
     # image
     if 'image' in self.doc:
       imageWSA = QScrollArea()
-      self.imageL = QVBoxLayout(imageWSA)
       imageWSA.setWidgetResizable(True)
       imageW, self.imageL = widgetAndLayout('V', splitter)
       width = self.comm.backend.configuration['GUI']['imageSizeDetails'] \
@@ -60,7 +59,7 @@ class Form(QDialog):
       Image(self.doc['image'], self.imageL, anyDimension=width)
       if '_id' in self.doc:
         self.docID= doc['_id']  #required for hide to work
-        imageW.setContextMenuPolicy(Qt.CustomContextMenu)
+        imageW.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         imageW.customContextMenuRequested.connect(lambda pos: initContextMenu(self, pos))
       imageWSA.setWidget(imageW)
       splitter.addWidget(imageWSA)
@@ -92,9 +91,9 @@ class Form(QDialog):
     self.formsL = []
     for group in dataHierarchyNode:
       if len(dataHierarchyNode)==1:
-        _, formL = widgetAndLayout('Form', splitter, 's')
+        _, formL = widgetAndLayoutForm(splitter, 's')
       else:
-        formW, formL = widgetAndLayout('Form', None, 's', top='m')
+        formW, formL = widgetAndLayoutForm(None, 's', top='m')
         self.tabW.addTab(formW, group if group!='default' else 'Home')
       self.formsL.append(formL)
       for key in [i['name'] for i in dataHierarchyNode[group]]:
@@ -113,7 +112,7 @@ class Form(QDialog):
           self.otherChoices.setMaximumWidth(100)
           self.otherChoices.setValidator(QRegularExpressionValidator("[a-z]\\w+"))
           self.otherChoices.setIconSize(QSize(0,0))
-          self.otherChoices.setInsertPolicy(QComboBox.InsertAtBottom)
+          self.otherChoices.setInsertPolicy(QComboBox.InsertPolicy.InsertAtBottom)
           tagsBarMainL.addWidget(self.otherChoices)
           self.gradeChoices = QComboBox()   #part/combobox that shows grades
           self.gradeChoices.setMaximumWidth(80)
@@ -148,7 +147,7 @@ class Form(QDialog):
           getattr(self, f'textShow_{key}').setReadOnly(True)
           getattr(self, f'textShow_{key}').hide()
           splitter= QSplitter()
-          splitter.setSizePolicy(QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding))
+          splitter.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding))
           splitter.addWidget(getattr(self, f'textEdit_{key}'))
           splitter.addWidget(getattr(self, f'textShow_{key}'))
           rightSideL.addWidget(splitter)
@@ -182,7 +181,7 @@ class Form(QDialog):
           print(f"**WARNING dialogForm: unknown value type. key:{key}, type:{type(value)}")
       if group == 'default':
         # individual key-value items
-        self.keyValueListW, self.keyValueListL = widgetAndLayout('Form', None, 's')
+        self.keyValueListW, self.keyValueListL = widgetAndLayoutForm(None, 's')
         self.keyValueListW.hide()
         self.keyValueLabel = QLabel('Key - values')
         self.keyValueLabel.hide()
@@ -240,7 +239,7 @@ class Form(QDialog):
           ret = QMessageBox.information(self, 'Information', 'There is unsaved information from a prematurely '+
                     'closed form. Do you want to restore it?\n If you decline, the unsaved information will be'+
                     ' removed.',
-                  QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,      # type: ignore[operator]
+                  QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
                   QMessageBox.StandardButton.Yes)
           if ret==QMessageBox.StandardButton.Yes:
             subContent = content[self.doc.get('_id', '')]
@@ -295,7 +294,7 @@ class Form(QDialog):
     """
     if isinstance(command[0], CommandMenu):
       if executeContextMenu(self, command):
-        self.imageL.itemAt(0).widget().setParent(None)   # type: ignore
+        self.imageL.itemAt(0).widget().setParent(None)
         width = self.comm.backend.configuration['GUI']['imageSizeDetails'] \
                 if hasattr(self.comm.backend, 'configuration') else 300
         Image(self.doc['image'], self.imageL, anyDimension=width)
@@ -355,7 +354,7 @@ class Form(QDialog):
       if self.comm.backend.configuration['GUI']['autosave'] == 'Yes':
         ret = QMessageBox.critical(self, 'Warning', 'You will lose the entered information. Do you want to '+
           'save everything to a temporary location?',
-          QMessageBox.StandardButton.Cancel | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,  # type: ignore[operator]
+          QMessageBox.StandardButton.Cancel | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
           QMessageBox.StandardButton.No)
         if ret==QMessageBox.StandardButton.Cancel:
           return
@@ -427,7 +426,7 @@ class Form(QDialog):
         else:
           print("**ERROR dialogForm unknown value type",key, valueOld)
       # new key-value pairs
-      keyValueList = [self.keyValueListL.itemAt(i).widget().text() for i in range(self.keyValueListL.count())]
+      keyValueList = [self.keyValueListL.itemAt(i).widget().text() for i in range(self.keyValueListL.count())]# type: ignore[attr-defined]
       keyValueDict = dict(zip(keyValueList[::2],keyValueList[1::2] ))
       keyValueDict = {k:v for k,v in keyValueDict.items() if k}
       self.doc = keyValueDict | self.doc
@@ -506,7 +505,7 @@ class Form(QDialog):
     """
     Text changed in editor -> update the display on the right
     """
-    key = self.sender().accessibleName()
+    key = self.sender().accessibleName()                                                                     # type: ignore
     getattr(self, f'textShow_{key}').setMarkdown(markdownStyler(
         getattr(self, f'textEdit_{key}').toPlainText()))
     return
@@ -548,7 +547,7 @@ class Form(QDialog):
     """
     #update tags
     for i in reversed(range(self.tagsBarSubL.count())):
-      self.tagsBarSubL.itemAt(i).widget().setParent(None)  # type: ignore
+      self.tagsBarSubL.itemAt(i).widget().setParent(None)
     for tag in self.doc['-tags']:
       if tag in ['_curated']:
         continue
@@ -556,7 +555,7 @@ class Form(QDialog):
         Label('\u2605'*int(tag[1]), 'h3', self.tagsBarSubL, self.delTag, tag, 'click to remove')
       else:
         Label(tag, 'h3', self.tagsBarSubL, self.delTag, tag, 'click to remove')
-    self.tagsBarSubL.addWidget(QWidget(), stretch=2)  # type: ignore
+    self.tagsBarSubL.addWidget(QWidget(), stretch=2)
     #update choices in combobox
     tagsAllList = self.comm.backend.db.getView('viewIdentify/viewTagsAll')
     tagsSet = {i['key'] for i in tagsAllList if i['key'][0]!='_'}

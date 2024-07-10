@@ -8,9 +8,9 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Union
 
-from PySide6.QtCore import Qt, Slot, QCoreApplication  # pylint: disable=no-name-in-module
+from PySide6.QtCore import QCoreApplication, Slot  # pylint: disable=no-name-in-module
 from PySide6.QtGui import QIcon, QPixmap, QShortcut  # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QMainWindow, QApplication, QFileDialog, QMessageBox  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QApplication, QFileDialog, QMainWindow  # pylint: disable=no-name-in-module
 from qt_material import apply_stylesheet  # of https://github.com/UN-GCPDS/qt-material
 
 from pasta_eln import __version__
@@ -18,16 +18,16 @@ from pasta_eln.GUI.dataverse.config_dialog import ConfigDialog
 from pasta_eln.GUI.dataverse.main_dialog import MainDialog
 from .GUI.body import Body
 from .GUI.config import Configuration
+from .GUI.data_hierarchy.data_hierarchy_editor_dialog import DataHierarchyEditorDialog
 from .GUI.form import Form
 from .GUI.projectGroup import ProjectGroup
 from .GUI.sidebar import Sidebar
 from .backend import Backend
 from .fixedStringsJson import shortcuts
 from .guiCommunicate import Communicate
-from .guiStyle import Action, showMessage, widgetAndLayout, ScrollMessageBox
-from .inputOutput import exportELN, importELN
-from .GUI.data_hierarchy.data_hierarchy_editor_dialog import DataHierarchyEditorDialog
-from .miscTools import updateExtractorList, restart
+from .guiStyle import Action, ScrollMessageBox, showMessage, widgetAndLayout
+from .inputOutput import exportELN
+from .miscTools import restart, updateExtractorList
 
 os.environ['QT_API'] = 'pyside6'
 
@@ -41,6 +41,7 @@ class MainWindow(QMainWindow):
     super().__init__()
     venv = ' without venv' if sys.prefix == sys.base_prefix and 'CONDA_PREFIX' not in os.environ else ' in venv'
     self.setWindowTitle(f"PASTA-ELN {__version__}{venv}")
+    self.resize(self.screen().size()) #self.setWindowState(Qt.Window Maximized) https://bugreports.qt.io/browse/PYSIDE-2706 https://bugreports.qt.io/browse/QTBUG-124892
     resourcesDir = Path(__file__).parent / 'Resources'
     self.setWindowIcon(QIcon(QPixmap(resourcesDir / 'Icons' / 'favicon64.png')))
     self.backend = Backend()
@@ -154,12 +155,14 @@ class MainWindow(QMainWindow):
         status = exportELN(self.comm.backend, allProjects, fileName, docTypes)
         showMessage(self, 'Finished', status, 'Information')
     elif command[0] is Command.IMPORT:
-      fileName = QFileDialog.getOpenFileName(self, 'Load data from .eln file', str(Path.home()), '*.eln')[0]
-      if fileName != '':
-        status = importELN(self.comm.backend, fileName)
-        showMessage(self, 'Finished', status, 'Information')
-        self.comm.changeSidebar.emit('redraw')
-        self.comm.changeTable.emit('x0', '')
+      showMessage(self, 'Not fully implemented', 'The eln-file definition develops rapidly. We cannot adopt the import'+\
+                        'in the same speed; hence it is disabled currently.', 'Warning')
+      # fileName = QFileDialog.getOpenFileName(self, 'Load data from .eln file', str(Path.home()), '*.eln')[0]
+      # if fileName != '':
+      #   status = importELN(self.comm.backend, fileName)
+      #   showMessage(self, 'Finished', status, 'Information')
+      #   self.comm.changeSidebar.emit('redraw')
+      #   self.comm.changeTable.emit('x0', '')
     elif command[0] is Command.EXIT:
       self.close()
     # view menu
@@ -167,8 +170,8 @@ class MainWindow(QMainWindow):
       self.comm.changeTable.emit(command[1], '')
     # system menu
     elif command[0] is Command.PROJECT_GROUP:
-      dialog = ProjectGroup(self.comm)
-      dialog.exec()
+      dialogPG = ProjectGroup(self.comm)
+      dialogPG.exec()
     elif command[0] is Command.CHANGE_PG:
       self.backend.configuration['defaultProjectGroup'] = command[1]
       with open(Path.home() / '.pastaELN.json', 'w', encoding='utf-8') as fConf:
@@ -200,8 +203,8 @@ class MainWindow(QMainWindow):
       messageWindow.exec()
       restart()
     elif command[0] is Command.CONFIG:
-      dialog = Configuration(self.comm)
-      dialog.exec()
+      dialogC = Configuration(self.comm)
+      dialogC.exec()
     # remainder
     elif command[0] is Command.WEBSITE:
       webbrowser.open('https://pasta-eln.github.io/pasta-eln/')

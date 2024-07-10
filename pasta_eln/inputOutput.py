@@ -500,8 +500,8 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
         'author': [{'firstName': authors[0]['first'], 'surname': authors[0]['last'],
             'title': authors[0]['title'], 'emailAddress': authors[0]['email'],
             'ORCID': authors[0]['orcid'],
-            'affiliation': [{'organization': authors[0]['organizations'][0]['organization'],
-                'RORID': authors[0]['organizations'][0]['rorid']}]
+            'affiliation': [{'organization': authors[0]['organizations'][0]['organization'] if len(authors[0]['organizations'])>0 else '',
+                             'RORID':        authors[0]['organizations'][0]['rorid']}       if len(authors[0]['organizations'])>0 else '']
         }]}
     graphMaster.append(masterNodeRoot)
 

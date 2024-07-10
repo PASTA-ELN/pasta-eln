@@ -1,17 +1,21 @@
 """ Table Header dialog: change which columns are shown and in which order """
-import json, platform
+import json
+import platform
 from enum import Enum
 from pathlib import Path
 from typing import Any
+
 import qrcode
 from PIL.ImageQt import ImageQt
-from PySide6.QtWidgets import QDialog, QVBoxLayout, QLabel, QGroupBox, QLineEdit, QDialogButtonBox, QFormLayout, QComboBox, QFileDialog, QMessageBox  # pylint: disable=no-name-in-module
-from PySide6.QtGui import QPixmap, QRegularExpressionValidator # pylint: disable=no-name-in-module
+from PySide6.QtGui import QPixmap, QRegularExpressionValidator  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QFileDialog, QFormLayout, QGroupBox, QLabel, \
+  QLineEdit, QMessageBox, QVBoxLayout  # pylint: disable=no-name-in-module
 from cloudant.client import CouchDB
-from ..guiStyle import Label, TextButton, IconButton, showMessage, widgetAndLayout
-from ..miscTools import upOut, restart, upIn
-from ..serverActions import passwordDecrypt
 from ..guiCommunicate import Communicate
+from ..guiStyle import IconButton, Label, TextButton, showMessage, widgetAndLayout
+from ..miscTools import restart, upIn, upOut
+from ..serverActions import passwordDecrypt, testLocal, testRemote
+
 
 class ProjectGroup(QDialog):
   """ Table Header dialog: change which columns are shown and in which order """
@@ -52,14 +56,14 @@ class ProjectGroup(QDialog):
     localL.addRow('User name', self.userNameL)
     self.passwordL = QLineEdit('')
     self.passwordL.setValidator(QRegularExpressionValidator("\\S{5,}"))
-    self.passwordL.setEchoMode(QLineEdit.PasswordEchoOnEdit)
+    self.passwordL.setEchoMode(QLineEdit.EchoMode.PasswordEchoOnEdit)
     localL.addRow('Password', self.passwordL)
     self.databaseL = QLineEdit('')
     self.databaseL.setValidator(QRegularExpressionValidator("\\w{5,}"))
     localL.addRow('Database', self.databaseL)
     pathW, pathL = widgetAndLayout('H', spacing='s')
     self.pathL = QLineEdit('')
-    pathL.addWidget(self.pathL, stretch=5) # type: ignore[call-arg]
+    pathL.addWidget(self.pathL, stretch=5)
     if platform.system()=='Windows':
       self.pathL.setValidator(QRegularExpressionValidator(r"[\\/~][\\w\\\\\\/:\.~]{5,}"))
     else:
@@ -75,7 +79,7 @@ class ProjectGroup(QDialog):
     remoteL.addRow('User name', self.userNameR)
     self.passwordR = QLineEdit('')
     self.passwordR.setValidator(QRegularExpressionValidator("\\S{5,}"))
-    self.passwordR.setEchoMode(QLineEdit.PasswordEchoOnEdit)
+    self.passwordR.setEchoMode(QLineEdit.EchoMode.PasswordEchoOnEdit)
     remoteL.addRow('Password', self.passwordR)
     self.databaseR = QLineEdit('')
     self.databaseR.setValidator(QRegularExpressionValidator("\\w{5,}"))
@@ -89,8 +93,8 @@ class ProjectGroup(QDialog):
     bodyL.addWidget(self.image)
 
     #final button box
-    buttonBox = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
-    buttonBox.addButton('Save encrypted', QDialogButtonBox.AcceptRole)
+    buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)
+    buttonBox.addButton('Save encrypted', QDialogButtonBox.ButtonRole.AcceptRole)
     buttonBox.clicked.connect(self.closeDialog)
     mainL.addWidget(buttonBox)
     self.selectGroup.currentTextChanged.emit(self.configuration['defaultProjectGroup']) #emit to fill initially
@@ -158,8 +162,8 @@ class ProjectGroup(QDialog):
       self.pathL.setText('')
       self.serverR.setText('')
     elif command[0] is Command.FILL:
-      content = QFileDialog.getOpenFileName(self, "Load remote credentials", str(Path.home()), '*.key')[0]
-      with open(content, encoding='utf-8') as fIn:
+      contentFile = QFileDialog.getOpenFileName(self, "Load remote credentials", str(Path.home()), '*.key')[0]
+      with open(contentFile, encoding='utf-8') as fIn:
         content = json.loads( passwordDecrypt(bytes(fIn.read(), 'UTF-8')) )
         self.userNameR.setText(content['user-name'])
         self.passwordR.setText(content['password'])
@@ -197,7 +201,7 @@ class ProjectGroup(QDialog):
     if 'Error: Local database does not exist' in localTest and \
        'success: Local username and password ok' in localTest and self.databaseL.text():
       button = QMessageBox.question(self, "Question", "Local database does not exist. Should I create it?")
-      if button == QMessageBox.Yes:
+      if button == QMessageBox.StandardButton.Yes:
         localTest += '  Local data was created\n'
         client = CouchDB(self.userNameL.text(), self.passwordL.text(), url='http://127.0.0.1:5984', connect=True)
         client.create_database(self.databaseL.text())
@@ -211,7 +215,7 @@ class ProjectGroup(QDialog):
         localTest += 'success: Local path exists\n'
       else:
         button = QMessageBox.question(self, "Question", "Local folder does not exist. Should I create it?")
-        if button == QMessageBox.Yes:
+        if button == QMessageBox.StandardButton.Yes:
           fullLocalPath.mkdir()
         else:
           localTest += 'ERROR: Local path does not exist\n'

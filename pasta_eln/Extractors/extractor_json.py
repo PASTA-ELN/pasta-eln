@@ -3,6 +3,7 @@
 For tutorials, see extractor_csv.py and extractor_png.py
 """
 import json
+import os
 
 def use(filePath, style={'main':''}, saveFileName=None):
   """
@@ -18,11 +19,15 @@ def use(filePath, style={'main':''}, saveFileName=None):
   """
   # Extractor for fancy instrument
   content = ''
-  with open(filePath,'r', encoding='utf-8') as jsonFile:
-    jsonContent = jsonFile.read()
-    content = json.loads(jsonContent)
-    if not isinstance(content, dict):
-      content= {'content': json.loads(jsonContent)}
+  fileSize = os.stat(filePath).st_size / (1024*1024)  #in MB
+  if fileSize<0.3:
+    with open(filePath,'r', encoding='utf-8') as jsonFile:
+      jsonContent = jsonFile.read()
+      content = json.loads(jsonContent)
+      if not isinstance(content, dict):
+        content= {'content': json.loads(jsonContent)}
+  else:
+    content= 'Too large json file'
   style['main'] = 'procedure/json'
   content= f'```json\n{json.dumps(content, indent=2)}\n```'
 

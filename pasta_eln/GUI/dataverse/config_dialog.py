@@ -90,6 +90,7 @@ class ConfigDialog(Ui_ConfigDialogBase):
     self.instance: QDialog = QDialog()
     super().setupUi(self.instance)
     self.db_api = DatabaseAPI()
+    self.db_api.initialize_database()
     self.config_model = self.db_api.get_config_model() or ConfigModel()
     if self.config_model.id is None:
       raise log_and_create_error(self.logger, ConfigError, "Config not found, Corrupt installation!")
@@ -107,7 +108,7 @@ class ConfigDialog(Ui_ConfigDialogBase):
     self.apiTokenLineEdit.textChanged[str].connect(self.update_api_token)
     self.dataverseLineEdit.textChanged[str].connect(self.update_dataverse_id)
     self.dataverseListComboBox.currentTextChanged.connect(self.update_dataverse_line_edit)
-    self.buttonBox.button(QtWidgets.QDialogButtonBox.Save).clicked.connect(self.save_config)
+    self.buttonBox.button(QtWidgets.QDialogButtonBox.StandardButton.Save).clicked.connect(self.save_config)
     self.dataverseVerifyLoadPushButton.clicked.connect(self.verify_and_load_dataverse_list)
     self.apiTokenHelpPushButton.clicked.connect(
       lambda: webbrowser.open("https://data.fz-juelich.de/guide/api/auth.html"))

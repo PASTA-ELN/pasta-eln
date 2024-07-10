@@ -10,6 +10,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from PySide6 import QtCore
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDialogButtonBox
 
 from pasta_eln.GUI.dataverse.upload_config_dialog import UploadConfigDialog
@@ -41,13 +42,11 @@ def mock_dialog(mocker, mock_database_api, mock_config_model):
   mocker.patch.object(UploadConfigDialog, 'data_hierarchy_types', create=True)
   mocker.patch.object(UploadConfigDialog, 'buttonBox', create=True)
   mocker.patch.object(UploadConfigDialog, 'projectItemsVerticalLayout', create=True)
-  actual_set_data_hierarchy_types = UploadConfigDialog.set_data_hierarchy_types
-  mocker.patch.object(UploadConfigDialog, 'set_data_hierarchy_types')
+  mocker.patch('pasta_eln.GUI.dataverse.upload_config_dialog.get_data_hierarchy_types')
   actual_load_ui = UploadConfigDialog.load_ui
   mocker.patch.object(UploadConfigDialog, 'load_ui')
   mock_callback = mocker.MagicMock()
   dialog = UploadConfigDialog(mock_callback)
-  dialog.set_data_hierarchy_types = actual_set_data_hierarchy_types
   dialog.load_ui = actual_load_ui
   dialog.db_api.get_config_model.return_value = mock_config_model
   return dialog
@@ -63,11 +62,11 @@ class TestUploadConfigDialog:
     mock_super_init = mocker.patch('pasta_eln.GUI.dataverse.upload_config_dialog_base.Ui_UploadConfigDialog.__init__')
     mock_db_api = mocker.patch('pasta_eln.GUI.dataverse.upload_config_dialog.DatabaseAPI',
                                return_value=mock_database_api)
+    mock_get_data_hierarchy_types = mocker.patch(
+      'pasta_eln.GUI.dataverse.upload_config_dialog.get_data_hierarchy_types')
     mocker.patch.object(UploadConfigDialog, 'numParallelComboBox', create=True)
     mocker.patch.object(UploadConfigDialog, 'data_hierarchy_types', create=True)
     mocker.patch.object(UploadConfigDialog, 'buttonBox', create=True)
-    mock_set_data_hierarchy_types = mocker.patch(
-      'pasta_eln.GUI.dataverse.upload_config_dialog.UploadConfigDialog.set_data_hierarchy_types')
     mock_load_ui = mocker.patch('pasta_eln.GUI.dataverse.upload_config_dialog.UploadConfigDialog.load_ui')
     mock_callback = mocker.MagicMock()
 
@@ -81,9 +80,10 @@ class TestUploadConfigDialog:
     mock_dialog.assert_called_once_with()
     assert dialog.instance == mock_dialog.return_value, "Dialog instance should be set to the mock dialog"
     mock_setup_ui.assert_called_once_with(dialog.instance)
-    mock_db_api.assert_called_once_with()
-    mock_set_data_hierarchy_types.assert_called_once_with()
-    mock_load_ui.assert_called_once_with()
+    mock_db_api.assert_called_once()
+    mock_load_ui.assert_called_once()
+    mock_get_data_hierarchy_types.assert_called_once_with(mock_database_api.get_data_hierarchy.return_value)
+    assert dialog.data_hierarchy_types == mock_get_data_hierarchy_types.return_value
     dialog.instance.setWindowModality.assert_called_once_with(QtCore.Qt.ApplicationModal)
     dialog.numParallelComboBox.addItems.assert_called_once()  # Mock the addItems
     dialog.numParallelComboBox.setCurrentIndex.assert_called_once_with(2)
@@ -117,7 +117,7 @@ class TestUploadConfigDialog:
     # Assert
     mock_dialog.logger.info.assert_called_once_with("Loading data and initializing UI...")
     mock_dialog.db_api.get_config_model.assert_called_once()
-    assert mock_dialog.numParallelComboBox.setCurrentText.called_once_with(str(parallel_uploads_count))
+    mock_dialog.numParallelComboBox.setCurrentText.assert_called_once_with(str(parallel_uploads_count))
     for pos in range(projects_items_layout_count):
       mock_dialog.projectItemsVerticalLayout.itemAt.assert_any_call(pos)
       mock_dialog.projectItemsVerticalLayout.itemAt.return_value.widget.return_value.setParent.assert_any_call(None)
@@ -145,41 +145,15 @@ class TestUploadConfigDialog:
     mock_dialog.db_api.get_config_model.assert_called_once()
     mock_dialog.logger.error.assert_called_once_with(error_message)
 
-  # Parametrized test cases
-  @pytest.mark.parametrize("test_id, data_hierarchy, expected_result", [
-    # Success path tests
-    ("SuccessCase_1", ["x0", "x3", "x4"], ["X3", "X4", "Unidentified"]),
-    ("SuccessCase_2", ["x1", "x5", "x6"], ["X5", "X6", "Unidentified"]),
-    ("SuccessCase_3", ["x2", "x7", "x8"], ["X7", "X8", "Unidentified"]),
-
-    # Edge cases
-    ("EdgeCase_1", [], ["Unidentified"]),  # Empty data hierarchy
-    ("EdgeCase_2", ["x0", "x1", "x2"], ["Unidentified"]),  # Only excluded types
-    ("EdgeCase_3", None, []),  # None as data hierarchy
-
-    # Error cases
-    # Assuming that the method should handle unexpected data types
-    ("ErrorCase_1", ["", "  ", None], ["Unidentified"]),  # Empty strings and None in data hierarchy
-  ])
-  def test_set_data_hierarchy_types(self, mock_dialog, test_id, data_hierarchy, expected_result):
-    # Arrange
-    mock_dialog.db_api.get_data_hierarchy.return_value = data_hierarchy
-
-    # Act
-    mock_dialog.set_data_hierarchy_types(mock_dialog)
-
-    # Assert
-    assert mock_dialog.data_hierarchy_types == expected_result, f"Failed test case {test_id}"
-
   @pytest.mark.parametrize(
     "state, project_item_name, expected",
     [
-      (QtCore.Qt.Checked, "Item1", True),
-      (QtCore.Qt.Unchecked, "Item2", False),
-      (QtCore.Qt.Unchecked, "Item5", False),
+      (Qt.CheckState.Checked.value, "Item1", True),
+      (Qt.CheckState.Unchecked.value, "Item2", False),
+      (Qt.CheckState.Unchecked.value, "Item5", False),
       # Edge cases could include unusual but valid project item names
-      (QtCore.Qt.Checked, "", True),
-      (QtCore.Qt.Checked, " ", True),
+      (Qt.CheckState.Checked.value, "", True),
+      (Qt.CheckState.Checked.value, " ", True),
       # Error cases are not applicable here as the function does not handle errors
     ], ids=[
       "success-path-checked",

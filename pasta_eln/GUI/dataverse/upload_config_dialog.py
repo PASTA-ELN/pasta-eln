@@ -11,12 +11,13 @@ import logging
 from typing import Any, Callable
 
 from PySide6 import QtCore, QtWidgets
-from PySide6.QtCore import QObject
+from PySide6.QtCore import QObject, Qt
 from PySide6.QtWidgets import QCheckBox, QDialog
 
 from pasta_eln.GUI.dataverse.upload_config_dialog_base import Ui_UploadConfigDialog
 from pasta_eln.dataverse.config_model import ConfigModel
 from pasta_eln.dataverse.database_api import DatabaseAPI
+from pasta_eln.dataverse.utils import get_data_hierarchy_types
 
 
 class UploadConfigDialog(Ui_UploadConfigDialog, QObject):
@@ -58,16 +59,14 @@ class UploadConfigDialog(Ui_UploadConfigDialog, QObject):
     self.instance = QDialog()
     super().setupUi(self.instance)
     self.db_api = DatabaseAPI()
-    self.db_api.initialize_database()
     self.numParallelComboBox.addItems(map(str, range(2, 6)))
     self.numParallelComboBox.setCurrentIndex(2)
-    self.instance.setWindowModality(QtCore.Qt.ApplicationModal)
+    self.instance.setWindowModality(QtCore.Qt.WindowModality.ApplicationModal)
     self.config_model: ConfigModel | None = None
-    self.data_hierarchy_types: list[str] = []
-    self.buttonBox.button(QtWidgets.QDialogButtonBox.Save).clicked.connect(self.save_ui)
+    self.data_hierarchy_types: list[str] = get_data_hierarchy_types(self.db_api.get_data_hierarchy())
+    self.buttonBox.button(QtWidgets.QDialogButtonBox.StandardButton.Save).clicked.connect(self.save_ui)
     (self.numParallelComboBox.currentTextChanged[str]
      .connect(lambda num: setattr(self.config_model, "parallel_uploads_count", int(num))))
-    self.set_data_hierarchy_types()
     self.config_reloaded_callback = config_reloaded_callback
     self.load_ui()
 
@@ -90,8 +89,8 @@ class UploadConfigDialog(Ui_UploadConfigDialog, QObject):
       is_set = self.config_model.project_upload_items and self.config_model.project_upload_items.get(data_type, False)
       check_box = QCheckBox(text=data_type,  # type: ignore[call-overload]
                             parent=self.instance,
-                            checkState=QtCore.Qt.Checked
-                            if is_set else QtCore.Qt.Unchecked)
+                            checkState=QtCore.Qt.CheckState.Checked
+                            if is_set else QtCore.Qt.CheckState.Unchecked)
       self.projectItemsVerticalLayout.addWidget(check_box)
       check_box.stateChanged.connect(lambda state, item_name=check_box.text().capitalize():
                                      self.check_box_changed_callback(state, item_name))
@@ -114,26 +113,7 @@ class UploadConfigDialog(Ui_UploadConfigDialog, QObject):
         to be checked or unchecked based on the state of the checkbox.
     """
     if self.config_model and self.config_model.project_upload_items is not None:
-      self.config_model.project_upload_items.update({project_item_name: state == QtCore.Qt.Checked})
-
-  def set_data_hierarchy_types(self) -> None:
-    """
-    Sets the data hierarchy types.
-
-    Explanation:
-        This method sets the data hierarchy types based on the data hierarchy retrieved from the database.
-    """
-    self.logger.info("Setting data hierarchy types...")
-    data_hierarchy = self.db_api.get_data_hierarchy()
-    if data_hierarchy is None:
-      return
-    for data_type in data_hierarchy:
-      if (data_type and not data_type.isspace()
-          and data_type not in ("x0", "x1", "x2")):
-        type_capitalized = data_type.capitalize()
-        if type_capitalized not in self.data_hierarchy_types:
-          self.data_hierarchy_types.append(type_capitalized)
-    self.data_hierarchy_types.append("Unidentified")
+      self.config_model.project_upload_items.update({project_item_name: state == Qt.CheckState.Checked.value})
 
   def save_ui(self) -> None:
     """
