@@ -9,6 +9,7 @@ from ..installationTools import configuration, exampleData, createShortcut
 from ..fixedStringsJson import setupText, exampleData
 from ..miscTools import restart
 from ..guiCommunicate import Communicate
+from ..dataverse.database_api import DatabaseAPI
 
 class ConfigurationSetup(QWidget):
   """
@@ -72,14 +73,14 @@ class ConfigurationSetup(QWidget):
         self.text1.setMarkdown(self.mainText)
       else:
         button = QMessageBox.question(self, "PASTA-ELN configuration", "Do you want to create/repair the configuration.")
-        if button == QMessageBox.Yes:
+        if button == QMessageBox.StandardButton.Yes:
           configuration('repair')
         else:
           self.mainText = self.mainText.replace('- Configuration of preferences','- Configuration: user chose to NOT install' )
           self.text1.setMarkdown(self.mainText)
       #Shortcut
       button = QMessageBox.question(self, "Create shortcut", "Do you want to create the shortcut for PASTA-ELN on desktop?")
-      if button == QMessageBox.Yes:
+      if button == QMessageBox.StandardButton.Yes:
         createShortcut()
         self.mainText = self.mainText.replace('- Shortcut creation', '- User selected to add a shortcut' )
       else:
@@ -87,7 +88,7 @@ class ConfigurationSetup(QWidget):
       self.text1.setMarkdown(self.mainText)
       #Example data
       button = QMessageBox.question(self, "Example data", exampleData)
-      if button == QMessageBox.Yes:
+      if button == QMessageBox.StandardButton.Yes:
         self.progress1.show()
         exampleData(True, self.callbackProgress)
         self.mainText = self.mainText.replace('- Example data', '- Example data was added')
@@ -99,6 +100,8 @@ class ConfigurationSetup(QWidget):
       self.button2.show()
       logging.info('Setup analyse end')
     elif command[0] is Command.FINISHED: # What do do when setup is finished: success or unsuccessfully
+      db_api = DatabaseAPI()
+      db_api.initialize_database()
       restart()
       # self.callbackFinished()
     return

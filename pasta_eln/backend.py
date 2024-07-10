@@ -1,17 +1,10 @@
 """ Python Backend: all operations with the filesystem are here """
-import importlib
-import json
-import logging
-import os
-import sys
-import tempfile
-import traceback
+import importlib, json, logging, os, sys, tempfile, traceback
 from datetime import datetime, timezone
 from pathlib import Path
 from threading import Thread
 from typing import Any, Optional, Union
 from urllib import request
-
 from .sqlite import SqlLiteDB
 from .fixedStringsJson import configurationGUI, defaultConfiguration
 from .handleDictionaries import diffDicts, fillDocBeforeCreate
