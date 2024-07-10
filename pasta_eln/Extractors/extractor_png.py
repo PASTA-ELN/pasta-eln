@@ -48,8 +48,8 @@ def use(filePath, style={'main':''}, saveFileName=None):
     image = image.filter(ImageFilter.GaussianBlur(radius = radius))
   elif True or style['main'] == 'measurement/image': #: Default | uncropped
     style['main'] = 'measurement/image'
-  metaUser   = [{'key':'imageWidth',  'value':image.size[0], 'unit':'mm', 'label':'Image width', 'IRI':'http://purl.allotrope.org/ontologies/result#AFR_0002468'},
-                {'key':'imageHeight', 'value':image.size[1], 'unit':'mm', 'label':'Image height','IRI':'http://purl.allotrope.org/ontologies/result#AFR_0002467'}
+  metaUser   = [{'key':'imageWidth',  'value':image.size[0], 'unit':'mm', 'label':'Breite des Bildes', 'IRI':'http://purl.allotrope.org/ontologies/result#AFR_0002468'},
+                {'key':'imageHeight', 'value':image.size[1], 'unit':'mm', 'label':'Höhe des Bildes','IRI':'http://purl.allotrope.org/ontologies/result#AFR_0002467'}
                ]
 
   # save to file: this is the high quality image

@@ -6,7 +6,7 @@ from anytree import Node
 import pandas as pd
 from PIL import Image
 from .fixedStringsJson import defaultDataHierarchy, defaultDefinitions
-from .miscTools import outputString, flatten, hierarchy
+from .miscTools import outputString, flatten, hierarchy, camelCase
 
 """
 DO NOT WORK ON THIS IF THERE IS SOMETHING ON THE TODO LIST
@@ -19,10 +19,10 @@ Notes:
 - start with first test: run-fix-run-fix
   - pytest --no-skip --tb=short tests/test_01_3Projects.py
   - start pasta with pudb
-  - TODO change configuration to sqlite
   - do an unit example for the sin-curve
-  - give an example for attachment in datahierarchy: separate table?
-  - why are metadata numbers = string?
+  - TODO give an example for attachment in datahierarchy: separate table?
+  - test gui and extend functions
+- LATER change configuration to sqlite
 - do not work on replicator: use eln file there
 - at the end: create a translator: old save doc
 
@@ -70,7 +70,8 @@ class SqlLiteDB:
     # - key is generally not shown to user
     # - flattened key
     # - can be adopted by adv. user
-    self.createSQLTable('metadata',    ['id','key','value','unit'],                    'id, key')
+    self.createSQLTable('properties',      ['id','key','value','unit'],                'id, key')
+    self.createSQLTable('propDefinitions', ['key','long','IRI'],                       'key')
     # tables: each item can have multiple of these: tags, qrCodes
     self.createSQLTable('tags',        ['id','tag'],                                   'id, tag')
     self.createSQLTable('qrCodes',     ['id','qrCode'],                                'id, qrCode')
@@ -210,7 +211,7 @@ class SqlLiteDB:
                              'child': dataI[2],
                              'path':  None if dataI[3] == '*' else dataI[3],
                              'show':   [i=='T' for i in dataI[4]]})
-    self.cursor.execute(f"SELECT * FROM metadata WHERE id == '{docID}'")
+    self.cursor.execute(f"SELECT * FROM properties WHERE id == '{docID}'")
     metadataFlat = { (f'{i[1]}_{i[3]}' if len(i[3])>0 else i[1]) : i[2] for i in self.cursor.fetchall()}
     doc |= hierarchy(metadataFlat)
     return doc
@@ -235,7 +236,6 @@ class SqlLiteDB:
     Returns:
         dict: json representation of submitted document
     """
-    TODO: debugger: save accordingly
     docOrg = copy.deepcopy(doc)
     self.cursor.execute(f"INSERT INTO branches VALUES ({', '.join(['?']*5)})",
                         [doc['_id'],
@@ -257,13 +257,35 @@ class SqlLiteDB:
     doc['dateModfied'] = doc['dateCreated']
     for key_ in ['_id','-name','-user']:
       doc[key_[1:]] = doc.pop(key_)
-    metaDoc = flatten({k:v for k,v in doc.items() if k not in KEY_ORDER})
     docList = [doc.get(x,'') for x in KEY_ORDER]
     self.cursor.execute(f"INSERT INTO main VALUES ({', '.join(['?']*len(docList))})", docList)
-    self.cursor.executemany("INSERT INTO metadata VALUES (?, ?, ?, ?);", zip([doc['id']]*len(metaDoc),
-                                                                              [i.split(VALUE_UNIT_SEP)[0] for i in metaDoc.keys()],
-                                                                              metaDoc.values(),
-                                                                              [i.split(VALUE_UNIT_SEP)[1] if VALUE_UNIT_SEP in i else '' for i in metaDoc.keys()]))
+    # properties
+    def insertMetadata(data, parentKeys):
+      parentKeys = f'{parentKeys}.' if parentKeys else ''
+      for key,value in data.items():
+        if isinstance(value, dict):
+          insertMetadata(value, f'{parentKeys}{key}')
+        elif key.endswith(']') and ('[') in key:
+          unit   = re.findall(r'\[\S+\]', key)[-1][1:-1]
+          label  = key[:-len(unit)-2].strip()
+          key    = camelCase(label)
+          key    = key[0].lower()+key[1:]
+          self.cursor.execute("INSERT INTO properties VALUES (?, ?, ?, ?);", [doc['id'], parentKeys+key, str(value), unit])
+          self.cursor.execute("INSERT INTO propDefinitions VALUES (?, ?, ?);", [parentKeys+key, label, ''])
+        elif isinstance(value, list) and isinstance(value[0], dict) and value[0].keys() >= {"key", "value", "unit"}:
+          self.cursor.executemany("INSERT INTO properties VALUES (?, ?, ?, ?);", zip([doc['id']]*len(value),
+                                                                                   [parentKeys+key+'.'+i['key'] for i in value],
+                                                                                   [i['value'] for i in value],
+                                                                                   [i['unit'] for i in value]  ))
+          self.cursor.executemany("INSERT INTO propDefinitions VALUES (?, ?, ?);", zip([parentKeys+key+'.'+i['key'] for i in value],
+                                                                                   [i['label'] for i in value],
+                                                                                   [i['IRI'] for i in value]  ))
+        else:
+          self.cursor.execute("INSERT INTO properties VALUES (?, ?, ?, ?);", [doc['id'], parentKeys+key, str(value), ''])
+      return
+    metaDoc = {k:v for k,v in doc.items() if k not in KEY_ORDER}
+    insertMetadata(metaDoc, '')
+    # save changes
     self.connection.commit()
     branch = copy.deepcopy(docOrg['-branch'])
     del branch['op']
@@ -380,10 +402,10 @@ class SqlLiteDB:
       textSelect = ', '.join([f'main.{i}' for i in viewColumns if i in KEY_ORDER])
       if 'tags' in viewColumns:
         textSelect += ', tags.tag'
-      metadataKeys  = [f'metadata.key == "{i}"' for i in viewColumns if i not in KEY_ORDER+['tags']]
+      metadataKeys  = [f'properties.key == "{i}"' for i in viewColumns if i not in KEY_ORDER+['tags']]
       if metadataKeys:
-        textSelect += ', metadata.key, metadata.value'
-      text    = f'SELECT {textSelect} from main LEFT JOIN tags USING(id) INNER JOIN branches USING(id) LEFT JOIN metadata USING(id) WHERE main.type LIKE "{docType}%"'
+        textSelect += ', properties.key, properties.value'
+      text    = f'SELECT {textSelect} from main LEFT JOIN tags USING(id) INNER JOIN branches USING(id) LEFT JOIN properties USING(id) WHERE main.type LIKE "{docType}%"'
       df      = pd.read_sql_query(text, self.connection)
       allCols = list(df.columns)
       if 'image' in viewColumns:
