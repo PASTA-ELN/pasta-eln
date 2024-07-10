@@ -836,6 +836,8 @@ class Database:
           if not minimal:
             outstring+= outputString(outputStyle,'ok','..info: dataHierarchy exists')
           continue
+        if doc['_id'] == '-dataverseConfig-' or re.compile("^[a-f0-9]{32}$").match(doc['_id']):  #skip items that belong to dataverse
+          continue
         #only normal documents after this line
 
         ###custom temporary changes: keep few as examples;
