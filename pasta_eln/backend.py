@@ -86,7 +86,7 @@ class Backend(CLI_Mixin):
     # start database
     self.db = Database(n,s,databaseName, self.configuration, basePath=self.basePath)
     if not hasattr(self.db, 'databaseName'):  #not successful database creation
-      return
+      raise SystemError('Bad couchdb setup')
     if kwargs.get('initViews', False):
       self.db.initDocTypeViews(self.configuration['tableColumnsMax'])
     # internal hierarchy structure

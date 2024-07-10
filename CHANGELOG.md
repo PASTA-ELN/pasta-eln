@@ -2,7 +2,22 @@
 
 ## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
 
-[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.3...HEAD)
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.6.0b1...HEAD)
+
+**Fixed bugs:**
+
+- Double-clicking on the "list" metadata field in Data Hierarchy [\#306](https://github.com/PASTA-ELN/pasta-eln/issues/306)
+- Data-verse fails to support upload in multiple user configured project groups [\#301](https://github.com/PASTA-ELN/pasta-eln/issues/301)
+- Error during eln file export when the organization list is empty [\#294](https://github.com/PASTA-ELN/pasta-eln/issues/294)
+- Opening "Dataverse Configuration" throws errors [\#292](https://github.com/PASTA-ELN/pasta-eln/issues/292)
+- Cryptography module not found  [\#290](https://github.com/PASTA-ELN/pasta-eln/issues/290)
+- Changing file names [\#269](https://github.com/PASTA-ELN/pasta-eln/issues/269)
+- fix\(data-hierarchy\): implement fix for edit-error with empty list values [\#313](https://github.com/PASTA-ELN/pasta-eln/pull/313) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
+- fix\(dataverse\): integrated changes for handling multiple project groups [\#304](https://github.com/PASTA-ELN/pasta-eln/pull/304) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
+
+## [v2.6.0b1](https://github.com/PASTA-ELN/pasta-eln/tree/v2.6.0b1) (2024-06-24)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.5.3...v2.6.0b1)
 
 **Implemented enhancements:**
 
