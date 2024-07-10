@@ -32,7 +32,7 @@ class TestDataHierarchyTableViewDataModel(object):
 
   def test_data_models_attachments_table_model(self, attachments_table_model: attachments_table_model, qtmodeltester):
     attachments = [{"location": "location"}, {"location": "location"}, {"location": "location"},
-      {"location": "location"}]
+                   {"location": "location"}]
     attachments_table_model.update(attachments)
     with pytest.raises(AssertionError):
       qtmodeltester.check(attachments_table_model, force_py=True)
@@ -42,7 +42,8 @@ class TestDataHierarchyTableViewDataModel(object):
       mocker.MagicMock(spec="PySide6.QtCore.QModelIndex")) is False, "hasChildren() should return False"
 
   @pytest.mark.parametrize("is_valid, flag_combination",
-    [(False, Qt.NoItemFlags), (True, Qt.ItemIsEditable | Qt.ItemIsSelectable | Qt.ItemIsEnabled)])
+                           [(False, Qt.NoItemFlags),
+                            (True, Qt.ItemIsEditable | Qt.ItemIsSelectable | Qt.ItemIsEnabled)])
   def test_data_models_basic_get_flags_returns_expected(self, table_model: table_model, mocker, is_valid,
                                                         flag_combination):
     mock_index = mocker.patch("PySide6.QtCore.QModelIndex")
@@ -52,11 +53,11 @@ class TestDataHierarchyTableViewDataModel(object):
   @pytest.mark.parametrize(
     "is_valid, data_to_be_set, display_role, index_data, data_name_map, data_set, data_set_success",
     [(False, 23233, Qt.EditRole, (0, 0), {0: "name", 1: "query"}, [{"name": "name", "query": "query"}] * 35, False),
-      (False, 43432, Qt.UserRole, (1, 1), {0: "name", 1: "query"}, [{"name": "name", "query": "query"}] * 35, False),
-      (True, 562332, Qt.EditRole, (34, 1), {0: "name", 1: "query"}, [{"name": "name", "query": "query"}] * 35, True),
-      (True, 765322, Qt.UserRole, (4, 0), {0: "name", 1: "query"}, [{"name": "name", "query": "query"}] * 35, True),
-      (True, "as12", Qt.UserRole, (6, 1), {0: "name", 1: "query"}, [{"name": "name", "query": "query"}] * 35, True),
-      (True, "test", Qt.EditRole, (9, 0), {0: "name", 1: "query"}, [{"name": "name", "query": "query"}] * 35, True)])
+     (False, 43432, Qt.UserRole, (1, 1), {0: "name", 1: "query"}, [{"name": "name", "query": "query"}] * 35, False),
+     (True, 562332, Qt.EditRole, (34, 1), {0: "name", 1: "query"}, [{"name": "name", "query": "query"}] * 35, True),
+     (True, 765322, Qt.UserRole, (4, 0), {0: "name", 1: "query"}, [{"name": "name", "query": "query"}] * 35, True),
+     (True, "as12", Qt.UserRole, (6, 1), {0: "name", 1: "query"}, [{"name": "name", "query": "query"}] * 35, True),
+     (True, "test", Qt.EditRole, (9, 0), {0: "name", 1: "query"}, [{"name": "name", "query": "query"}] * 35, True)])
   def test_data_models_basic_set_data_should_return_expected(self, table_model: table_model, mocker, is_valid,
                                                              data_to_be_set, display_role, index_data, data_name_map,
                                                              data_set, data_set_success):
@@ -122,11 +123,12 @@ class TestDataHierarchyTableViewDataModel(object):
 
   @pytest.mark.parametrize("data_set, data_set_modified",
                            [([{"name": "name", "query": "query"}] * 4, [{"name": "name", "query": "query"}] * 4 + [{}]),
-                             ([{"name": "name", "query": "query"}] * 10,
-                              [{"name": "name", "query": "query"}] * 10 + [{}]), (
-                           [{"name": "name", "query": "query"}] * 33, [{"name": "name", "query": "query"}] * 33 + [{}]),
-                             ([{"name": "name", "query": "query"}] * 41,
-                              [{"name": "name", "query": "query"}] * 41 + [{}])])
+                            ([{"name": "name", "query": "query"}] * 10,
+                             [{"name": "name", "query": "query"}] * 10 + [{}]), (
+                                [{"name": "name", "query": "query"}] * 33,
+                                [{"name": "name", "query": "query"}] * 33 + [{}]),
+                            ([{"name": "name", "query": "query"}] * 41,
+                             [{"name": "name", "query": "query"}] * 41 + [{}])])
   def test_data_models_basic_slot_add_data_should_do_expected(self, table_model: table_model, mocker, data_set,
                                                               data_set_modified):
 
@@ -146,22 +148,22 @@ class TestDataHierarchyTableViewDataModel(object):
     assert layout_changed_emit_spy.call_count == 1, "layout_changed_emit() should be called once"
 
   @pytest.mark.parametrize("data_set, delete_position, data_set_modified", [(
-  [{"name": "name", "query": "query"}] * 4 + [{"name": "delete", "query": "delete"}] + [
-    {"name": "name", "query": "query"}] * 4, 4, [{"name": "name", "query": "query"}] * 8), (
-  [{"name": "name", "query": "query"}] * 7 + [{"name": "delete", "query": "delete"}] + [
-    {"name": "name", "query": "query"}] * 3, 7, [{"name": "name", "query": "query"}] * 10), (
-  [{"name": "name", "query": "query"}] * 27 + [{"name": "delete", "query": "delete"}] + [
-    {"name": "name", "query": "query"}] * 6, 27, [{"name": "name", "query": "query"}] * 33), (
-  [{"name": "name", "query": "query"}] * 40 + [{"name": "delete", "query": "delete"}], 40,
-  [{"name": "name", "query": "query"}] * 40), (
-  [{"name": "delete", "query": "delete"}] + [{"name": "name", "query": "query"}] * 27, 0,
-  [{"name": "name", "query": "query"}] * 27), (
-  [{"name": "delete", "query": "delete"}] + [{"name": "name", "query": "query"}] * 27, -40,
-  # Out of range delete position
-  [{"name": "delete", "query": "delete"}] + [{"name": "name", "query": "query"}] * 27), (
-  [{"name": "delete", "query": "delete"}] + [{"name": "name", "query": "query"}] * 27, 30,
-  # Out of range delete position
-  [{"name": "delete", "query": "delete"}] + [{"name": "name", "query": "query"}] * 27)])
+      [{"name": "name", "query": "query"}] * 4 + [{"name": "delete", "query": "delete"}] + [
+        {"name": "name", "query": "query"}] * 4, 4, [{"name": "name", "query": "query"}] * 8), (
+      [{"name": "name", "query": "query"}] * 7 + [{"name": "delete", "query": "delete"}] + [
+        {"name": "name", "query": "query"}] * 3, 7, [{"name": "name", "query": "query"}] * 10), (
+      [{"name": "name", "query": "query"}] * 27 + [{"name": "delete", "query": "delete"}] + [
+        {"name": "name", "query": "query"}] * 6, 27, [{"name": "name", "query": "query"}] * 33), (
+      [{"name": "name", "query": "query"}] * 40 + [{"name": "delete", "query": "delete"}], 40,
+      [{"name": "name", "query": "query"}] * 40), (
+      [{"name": "delete", "query": "delete"}] + [{"name": "name", "query": "query"}] * 27, 0,
+      [{"name": "name", "query": "query"}] * 27), (
+      [{"name": "delete", "query": "delete"}] + [{"name": "name", "query": "query"}] * 27, -40,
+      # Out of range delete position
+      [{"name": "delete", "query": "delete"}] + [{"name": "name", "query": "query"}] * 27), (
+      [{"name": "delete", "query": "delete"}] + [{"name": "name", "query": "query"}] * 27, 30,
+      # Out of range delete position
+      [{"name": "delete", "query": "delete"}] + [{"name": "name", "query": "query"}] * 27)])
   def test_data_models_basic_slot_delete_data_should_do_expected(self, table_model: table_model, mocker, data_set,
                                                                  delete_position, data_set_modified):
 
@@ -190,29 +192,29 @@ class TestDataHierarchyTableViewDataModel(object):
       logger_warning_spy.assert_called_once_with("Invalid position: {%s}", delete_position)
 
   @pytest.mark.parametrize("data_set, re_order_position, data_set_modified", [(
-  [{"name": "name", "query": "query"}] * 4 + [{"name": "reorder", "query": "reorder"}] + [
-    {"name": "name", "query": "query"}] * 4, 4,
-  [{"name": "name", "query": "query"}] * 3 + [{"name": "reorder", "query": "reorder"}] + [
-    {"name": "name", "query": "query"}] * 5), (
-  [{"name": "name", "query": "query"}] * 7 + [{"name": "reorder", "query": "reorder"}] + [
-    {"name": "name", "query": "query"}] * 3, 7,
-  [{"name": "name", "query": "query"}] * 6 + [{"name": "reorder", "query": "reorder"}] + [
-    {"name": "name", "query": "query"}] * 4), (
-  [{"name": "name", "query": "query"}] * 27 + [{"name": "reorder", "query": "reorder"}] + [
-    {"name": "name", "query": "query"}] * 6, 27,
-  [{"name": "name", "query": "query"}] * 26 + [{"name": "reorder", "query": "reorder"}] + [
-    {"name": "name", "query": "query"}] * 7), (
-  [{"name": "name", "query": "query"}] * 40 + [{"name": "reorder", "query": "reorder"}], 40,
-  [{"name": "name", "query": "query"}] * 39 + [{"name": "reorder", "query": "reorder"}] + [
-    {"name": "name", "query": "query"}] * 1), (
-  [{"name": "reorder", "query": "reorder"}] + [{"name": "name", "query": "query"}] * 27, 0,
-  [{"name": "reorder", "query": "reorder"}] + [{"name": "name", "query": "query"}] * 27), (
-  [{"name": "reorder", "query": "reorder"}] + [{"name": "name", "query": "query"}] * 27, -40,
-  # Out of range re-order position
-  [{"name": "reorder", "query": "reorder"}] + [{"name": "name", "query": "query"}] * 27), (
-  [{"name": "reorder", "query": "reorder"}] + [{"name": "name", "query": "query"}] * 27, 30,
-  # Out of range re-order position
-  [{"name": "reorder", "query": "reorder"}] + [{"name": "name", "query": "query"}] * 27)])
+      [{"name": "name", "query": "query"}] * 4 + [{"name": "reorder", "query": "reorder"}] + [
+        {"name": "name", "query": "query"}] * 4, 4,
+      [{"name": "name", "query": "query"}] * 3 + [{"name": "reorder", "query": "reorder"}] + [
+        {"name": "name", "query": "query"}] * 5), (
+      [{"name": "name", "query": "query"}] * 7 + [{"name": "reorder", "query": "reorder"}] + [
+        {"name": "name", "query": "query"}] * 3, 7,
+      [{"name": "name", "query": "query"}] * 6 + [{"name": "reorder", "query": "reorder"}] + [
+        {"name": "name", "query": "query"}] * 4), (
+      [{"name": "name", "query": "query"}] * 27 + [{"name": "reorder", "query": "reorder"}] + [
+        {"name": "name", "query": "query"}] * 6, 27,
+      [{"name": "name", "query": "query"}] * 26 + [{"name": "reorder", "query": "reorder"}] + [
+        {"name": "name", "query": "query"}] * 7), (
+      [{"name": "name", "query": "query"}] * 40 + [{"name": "reorder", "query": "reorder"}], 40,
+      [{"name": "name", "query": "query"}] * 39 + [{"name": "reorder", "query": "reorder"}] + [
+        {"name": "name", "query": "query"}] * 1), (
+      [{"name": "reorder", "query": "reorder"}] + [{"name": "name", "query": "query"}] * 27, 0,
+      [{"name": "reorder", "query": "reorder"}] + [{"name": "name", "query": "query"}] * 27), (
+      [{"name": "reorder", "query": "reorder"}] + [{"name": "name", "query": "query"}] * 27, -40,
+      # Out of range re-order position
+      [{"name": "reorder", "query": "reorder"}] + [{"name": "name", "query": "query"}] * 27), (
+      [{"name": "reorder", "query": "reorder"}] + [{"name": "name", "query": "query"}] * 27, 30,
+      # Out of range re-order position
+      [{"name": "reorder", "query": "reorder"}] + [{"name": "name", "query": "query"}] * 27)])
   def test_data_models_basic_slot_re_order_data_should_do_expected(self, table_model: table_model, mocker, data_set,
                                                                    re_order_position, data_set_modified):
 
@@ -247,13 +249,19 @@ class TestDataHierarchyTableViewDataModel(object):
 
   @pytest.mark.parametrize("column_index, set_value, convert_value, is_valid, role, set_success",
                            [(None, None, None, False, Qt.DisplayRole, True),
-                             (0, None, None, False, Qt.DisplayRole, True), (0, None, None, True, Qt.UserRole, True),
-                             (METADATA_TABLE_LIST_COLUMN_INDEX, 'test', 'test', True, Qt.UserRole, True),
-                             (METADATA_TABLE_LIST_COLUMN_INDEX, 'test test1', 'test test1', True, Qt.UserRole, True),
-                             (METADATA_TABLE_LIST_COLUMN_INDEX, '1, 2', ['1', '2'], True, Qt.UserRole, True), (
-                           METADATA_TABLE_LIST_COLUMN_INDEX, 'test, 12312', ['test', '12312'], True, Qt.UserRole, True),
-                             (METADATA_TABLE_LIST_COLUMN_INDEX, ' test,    12312 12, 112', ['test', '12312 12', '112'],
-                              True, Qt.UserRole, True), (None, None, None, False, Qt.EditRole, True), ])
+                            (0, None, None, False, Qt.DisplayRole, True), (0, None, None, True, Qt.UserRole, True),
+                            (METADATA_TABLE_LIST_COLUMN_INDEX, 'test', 'test', True, Qt.UserRole, True),
+                            (METADATA_TABLE_LIST_COLUMN_INDEX, 'test test1', 'test test1', True, Qt.UserRole, True),
+                            (METADATA_TABLE_LIST_COLUMN_INDEX, '1, 2', ['1', '2'], True, Qt.UserRole, True),
+                            (METADATA_TABLE_LIST_COLUMN_INDEX, 'test, 12312', ['test', '12312'], True, Qt.UserRole,
+                             True),
+                            (METADATA_TABLE_LIST_COLUMN_INDEX, '', [], True, Qt.UserRole,
+                             True),
+                            (METADATA_TABLE_LIST_COLUMN_INDEX, None, [], True, Qt.UserRole,
+                             True),
+                            (METADATA_TABLE_LIST_COLUMN_INDEX, ' test,    12312 12, 112', ['test', '12312 12', '112'],
+                             True, Qt.UserRole, True),
+                            (None, None, None, False, Qt.EditRole, True), ])
   def test_metadata_table_data_model_set_data_should_do_expected(self, metadata_table_model: metadata_table_model,
                                                                  mocker, column_index, set_value, convert_value,
                                                                  is_valid, role, set_success):
@@ -262,7 +270,7 @@ class TestDataHierarchyTableViewDataModel(object):
     mock_is_valid_spy = mocker.patch.object(mock_index, "isValid", return_value=is_valid)
     mock_column_spy = mocker.patch.object(mock_index, "column", return_value=column_index)
     mock_data_set_spy = mocker.patch("pasta_eln.GUI.data_hierarchy.tableview_data_model.TableViewModel.setData",
-      return_value=set_success)
+                                     return_value=set_success)
     assert metadata_table_model.setData(mock_index, set_value,
                                         role) is set_success, "set_data() should return expected value"
     mock_is_valid_spy.assert_called_once_with()
@@ -272,15 +280,15 @@ class TestDataHierarchyTableViewDataModel(object):
 
   @pytest.mark.parametrize("column_index, is_valid, role, base_return_data, return_value",
                            [(None, False, Qt.DisplayRole, '', ''), (0, False, Qt.DisplayRole, 'True', 'True'),
-                             (0, True, Qt.UserRole, '', ''),
-                             (METADATA_TABLE_LIST_COLUMN_INDEX, True, Qt.UserRole, [], ''),
-                             (METADATA_TABLE_LIST_COLUMN_INDEX, True, Qt.UserRole, ['23', '56'], '23,56'),
-                             (METADATA_TABLE_LIST_COLUMN_INDEX, True, Qt.UserRole, ['test 23', 'test'], 'test 23,test'),
-                             (METADATA_TABLE_LIST_COLUMN_INDEX, True, Qt.UserRole, ['test 2334'] * 20,
-                              ('test 2334,test 2334,' * 10)[:-1]),
-                             (METADATA_TABLE_LIST_COLUMN_INDEX, True, Qt.UserRole, '', ''),
-                             (METADATA_TABLE_LIST_COLUMN_INDEX, True, Qt.UserRole, 'testsdfsdf', 'testsdfsdf'),
-                             (None, None, Qt.EditRole, False, False)])
+                            (0, True, Qt.UserRole, '', ''),
+                            (METADATA_TABLE_LIST_COLUMN_INDEX, True, Qt.UserRole, [], ''),
+                            (METADATA_TABLE_LIST_COLUMN_INDEX, True, Qt.UserRole, ['23', '56'], '23,56'),
+                            (METADATA_TABLE_LIST_COLUMN_INDEX, True, Qt.UserRole, ['test 23', 'test'], 'test 23,test'),
+                            (METADATA_TABLE_LIST_COLUMN_INDEX, True, Qt.UserRole, ['test 2334'] * 20,
+                             ('test 2334,test 2334,' * 10)[:-1]),
+                            (METADATA_TABLE_LIST_COLUMN_INDEX, True, Qt.UserRole, '', ''),
+                            (METADATA_TABLE_LIST_COLUMN_INDEX, True, Qt.UserRole, 'testsdfsdf', 'testsdfsdf'),
+                            (None, None, Qt.EditRole, False, False)])
   def test_metadata_table_data_model_get_data_should_do_expected(self, metadata_table_model: metadata_table_model,
                                                                  mocker, column_index, is_valid, role, base_return_data,
                                                                  return_value):
@@ -289,7 +297,7 @@ class TestDataHierarchyTableViewDataModel(object):
     mock_is_valid_spy = mocker.patch.object(mock_index, "isValid", return_value=is_valid)
     mock_column_spy = mocker.patch.object(mock_index, "column", return_value=column_index)
     mock_data_get_spy = mocker.patch("pasta_eln.GUI.data_hierarchy.tableview_data_model.TableViewModel.data",
-      return_value=base_return_data)
+                                     return_value=base_return_data)
     assert metadata_table_model.data(mock_index, role) == return_value, "data() should return expected value"
     mock_is_valid_spy.assert_called_once_with()
     if is_valid:
