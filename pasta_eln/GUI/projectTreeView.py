@@ -52,7 +52,7 @@ class TreeView(QTreeView):
     if not folder:
       Action('Open file with another application', self, [Command.OPEN_EXTERNAL],    context)
     Action('Open folder in file browser',          self, [Command.OPEN_FILEBROWSER], context)
-    context.exec(p.globalPos())
+    context.exec(p.globalPos())                                                                              # type: ignore[attr-defined]
     return
 
 
