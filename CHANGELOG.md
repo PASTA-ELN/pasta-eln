@@ -2,11 +2,19 @@
 
 ## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
 
-[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.6.0b1...HEAD)
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.6.0b2...HEAD)
 
 **Fixed bugs:**
 
 - Double-clicking on the "list" metadata field in Data Hierarchy [\#306](https://github.com/PASTA-ELN/pasta-eln/issues/306)
+- fix\(data-hierarchy\): implement fix for edit-error with single list values [\#317](https://github.com/PASTA-ELN/pasta-eln/pull/317) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
+
+## [v2.6.0b2](https://github.com/PASTA-ELN/pasta-eln/tree/v2.6.0b2) (2024-07-10)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.6.0b1...v2.6.0b2)
+
+**Fixed bugs:**
+
 - Data-verse fails to support upload in multiple user configured project groups [\#301](https://github.com/PASTA-ELN/pasta-eln/issues/301)
 - Error during eln file export when the organization list is empty [\#294](https://github.com/PASTA-ELN/pasta-eln/issues/294)
 - Opening "Dataverse Configuration" throws errors [\#292](https://github.com/PASTA-ELN/pasta-eln/issues/292)
