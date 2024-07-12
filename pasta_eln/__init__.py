@@ -1,2 +1,2 @@
 """ EMPTY INIT FILE """
-__version__ = "2.6.0b3"
+__version__ = "2.6.0"
