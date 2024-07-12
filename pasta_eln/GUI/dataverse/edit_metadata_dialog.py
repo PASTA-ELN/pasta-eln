@@ -279,12 +279,13 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
     if self.metadata:
       self.metadata['datasetVersion']['license'].update({"uri": uri})
 
+  def reload_config(self) -> None:
+    """
+    Reloads the config model from the database.
 
-if __name__ == "__main__":
-  import sys
-
-  app = QtWidgets.QApplication(sys.argv)
-
-  ui = EditMetadataDialog()
-  ui.show()
-  sys.exit(app.exec())
+    Explanation:
+        This method reloads the config model from the database.
+    """
+    self.logger.info("Reloading config model...")
+    self.config_model = self.db_api.get_model(self.db_api.config_doc_id,
+                                              ConfigModel)  # type: ignore[assignment]

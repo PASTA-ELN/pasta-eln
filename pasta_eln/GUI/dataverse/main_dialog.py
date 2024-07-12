@@ -85,10 +85,12 @@ class MainDialog(Ui_MainDialogBase):
       self.completed_uploads_dialog = CompletedUploads()
       self.edit_metadata_dialog = EditMetadataDialog()
       self.upload_manager_task = UploadQueueManager()
-      self.config_upload_dialog = UploadConfigDialog(self.upload_manager_task.set_concurrent_uploads)
+      self.config_upload_dialog = UploadConfigDialog()
       self.upload_manager_task_thread = TaskThreadExtension(self.upload_manager_task)
 
       # Connect signals and slots
+      self.config_upload_dialog.config_reloaded.connect(self.upload_manager_task.set_concurrent_uploads)
+      self.config_upload_dialog.config_reloaded.connect(self.edit_metadata_dialog.reload_config)
       self.uploadPushButton.clicked.connect(self.start_upload)
       self.clearFinishedPushButton.clicked.connect(self.clear_finished)
       self.selectAllPushButton.clicked.connect(lambda: self.select_deselect_all_projects(True))

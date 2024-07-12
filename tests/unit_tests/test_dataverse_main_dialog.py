@@ -113,6 +113,9 @@ class TestDataverseMainDialog(object):
       mock_task_thread_extension.assert_called_once_with(mock_upload_queue_manager.return_value)
       assert dialog.upload_manager_task_thread == mock_task_thread_extension.return_value, "Upload queue manager thread is not set correctly"
 
+      dialog.config_upload_dialog.config_reloaded.connect.assert_any_call(
+        dialog.upload_manager_task.set_concurrent_uploads)
+      dialog.config_upload_dialog.config_reloaded.connect.assert_any_call(dialog.edit_metadata_dialog.reload_config)
       dialog.uploadPushButton.clicked.connect.assert_called_once_with(dialog.start_upload)
       dialog.clearFinishedPushButton.clicked.connect.assert_called_once_with(dialog.clear_finished)
       dialog.selectAllPushButton.clicked.connect.assert_called_once()
@@ -133,6 +136,8 @@ class TestDataverseMainDialog(object):
       mock_edit_metadata_dialog.assert_not_called()
       mock_upload_queue_manager.assert_not_called()
       mock_task_thread_extension.assert_not_called()
+      dialog.config_upload_dialog.config_reloaded.connect.assert_not_called()
+      dialog.config_upload_dialog.config_reloaded.connect.assert_not_called()
       dialog.uploadPushButton.clicked.connect.assert_not_called()
       dialog.clearFinishedPushButton.clicked.connect.assert_not_called()
       dialog.selectAllPushButton.clicked.connect.assert_not_called()
