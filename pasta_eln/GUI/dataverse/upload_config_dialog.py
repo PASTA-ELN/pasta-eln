@@ -8,7 +8,7 @@
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from PySide6 import QtCore, QtWidgets
 from PySide6.QtCore import QObject, Qt
@@ -29,6 +29,7 @@ class UploadConfigDialog(Ui_UploadConfigDialog, QObject):
       It provides methods to load and save the configuration settings.
 
   """
+  config_reloaded = QtCore.Signal()
 
   def __new__(cls, *_: Any, **__: Any) -> Any:
     """
@@ -46,7 +47,7 @@ class UploadConfigDialog(Ui_UploadConfigDialog, QObject):
     """
     return super(UploadConfigDialog, cls).__new__(cls)
 
-  def __init__(self, config_reloaded_callback: Callable[[], None]) -> None:
+  def __init__(self) -> None:
     """
     Initializes the UploadConfigDialog.
 
@@ -67,7 +68,6 @@ class UploadConfigDialog(Ui_UploadConfigDialog, QObject):
     self.buttonBox.button(QtWidgets.QDialogButtonBox.StandardButton.Save).clicked.connect(self.save_ui)
     (self.numParallelComboBox.currentTextChanged[str]
      .connect(lambda num: setattr(self.config_model, "parallel_uploads_count", int(num))))
-    self.config_reloaded_callback = config_reloaded_callback
     self.load_ui()
 
   def load_ui(self) -> None:
@@ -129,7 +129,7 @@ class UploadConfigDialog(Ui_UploadConfigDialog, QObject):
       self.logger.error("Failed to load config model!")
       return
     self.db_api.save_config_model(self.config_model)
-    self.config_reloaded_callback()
+    self.config_reloaded.emit()
 
   def show(self) -> None:
     """
