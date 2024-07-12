@@ -6,10 +6,9 @@ from anytree import Node
 import pandas as pd
 from PIL import Image
 from .fixedStringsJson import defaultDataHierarchy, defaultDefinitions
-from .miscTools import outputString, flatten, hierarchy, camelCase
+from .miscTools import outputString, hierarchy, camelCase
 
 # DO NOT WORK ON THIS IF THERE IS SOMETHING ON THE TODO LIST
-
 # Notes:
 # - try to use sqlite style as much as possible and
 #   translate within this file into PASTA-document-style
@@ -209,8 +208,9 @@ class SqlLiteDB:
                              'child': dataI[2],
                              'path':  None if dataI[3] == '*' else dataI[3],
                              'show':   [i=='T' for i in dataI[4]]})
-    self.cursor.execute(f"SELECT * FROM properties WHERE id == '{docID}'")
-    metadataFlat = { (f'{i[1]}_{i[3]}' if len(i[3])>0 else i[1]) : i[2] for i in self.cursor.fetchall()}
+    self.cursor.execute(f"SELECT properties.key, properties.value, properties.unit, propDefinitions.long, propDefinitions.IRI "
+                        f"FROM properties LEFT JOIN propDefinitions USING(key) WHERE properties.id == '{docID}'")
+    metadataFlat = {i[0]:i[1:] for i in self.cursor.fetchall()}
     doc |= hierarchy(metadataFlat)
     return doc
 

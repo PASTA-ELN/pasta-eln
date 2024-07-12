@@ -68,8 +68,10 @@ class Form(QDialog):
       self.setMinimumWidth(600)
 
     # create full data set
+    print('TODO 2: continue here using pd.dataframe')
     if self.doc['-type'][0] in self.db.dataHierarchy('', ''):
-      dataHierarchyNode = copy.deepcopy(self.db.dataHierarchy(self.doc['-type'][0], 'meta'))
+      rawData = self.db.dataHierarchy(self.doc['-type'][0], 'meta')
+      dataHierarchyNode = copy.deepcopy([dict(i) for i in rawData])
     else:
       dataHierarchyNode = copy.deepcopy(defaultDataHierarchyNode)
     keysDataHierarchy = [i['name'] for group in dataHierarchyNode for i in dataHierarchyNode[group]]

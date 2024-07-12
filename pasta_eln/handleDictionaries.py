@@ -183,16 +183,21 @@ def dict2ul(aDict:dict[str,Any]) -> str:
     if isinstance(value,str) and value.startswith('{') and value.endswith('}'):
       try:
         value = json.loads(value.replace("'",'"'))
-      except:
+      except Exception:
         pass
     if isinstance(value, dict):
       valueString = dict2ul(value)
-    elif isinstance(value, list):
+    elif isinstance(value, tuple) and len(value)==4:  #tuple of value, unit, label, IRI
+      print('value', value)
+      key = key if value[2] is None or value[2]=='' else value[2]
+      valueString = f'{value[0]} {value[1]}'
+      valueString = valueString if value[3] is None or value[3]=='' else f'{valueString}<a href="{value[3]}">&rarr;</a>'
+    elif isinstance(value, (list, tuple)):
       valueString = ',&nbsp;&nbsp;&nbsp;'.join([str(i) for i in value])
     else:
       valueString = str(value)
     text += f'<li>{key}: {valueString}</li>\n'
-  return text+'</ul>'
+  return f'{text}</ul>'
 
 
 def diffDicts(dict1:dict[str,Any], dict2:dict[str,Any]) -> str:

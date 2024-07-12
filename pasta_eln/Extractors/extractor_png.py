@@ -12,7 +12,10 @@ This tutorial teaches
   - please use this way of writing code and the extractors should work
   - for debugging: print / debuggers are working as normal
 - how to create metadata data-scientifically using a list of dictionaries
+  - here you can also use your language specific symbols
+  - here you can also add uncertainty. If you need your uncertainty in a separate section, do so by creating a separate entry
 - how to create images and scale them down to save space in the meta-data-base
+- since this is a tutorial, it might not make scientific sense. The goal is teaching!
 """
 import base64
 from io import BytesIO
@@ -48,8 +51,8 @@ def use(filePath, style={'main':''}, saveFileName=None):
     image = image.filter(ImageFilter.GaussianBlur(radius = radius))
   elif True or style['main'] == 'measurement/image': #: Default | uncropped
     style['main'] = 'measurement/image'
-  metaUser   = [{'key':'imageWidth',  'value':image.size[0], 'unit':'mm', 'label':'Breite des Bildes', 'IRI':'http://purl.allotrope.org/ontologies/result#AFR_0002468'},
-                {'key':'imageHeight', 'value':image.size[1], 'unit':'mm', 'label':'Höhe des Bildes','IRI':'http://purl.allotrope.org/ontologies/result#AFR_0002467'}
+  metaUser   = [{'key':'imageWidth',  'value':image.size[0], 'unit':'mm', 'label':'Largeur de l`image', 'IRI':'http://purl.allotrope.org/ontologies/result#AFR_0002468'},
+                {'key':'imageHeight', 'value':f'{image.size[1]}+/- 3', 'unit':'mm', 'label':'Höhe des Bildes','IRI':'http://purl.allotrope.org/ontologies/result#AFR_0002467'}
                ]
 
   # save to file: this is the high quality image

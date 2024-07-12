@@ -1,6 +1,9 @@
 """extract data from vendor
 - javascript object notion
-For tutorials, see extractor_csv.py and extractor_png.py
+
+Tutorial:
+- make sure the content is not to large: here 0.3MB is the cutoff for the content
+- for other tutorials, see extractor_csv.py and extractor_png.py
 """
 import json
 import os

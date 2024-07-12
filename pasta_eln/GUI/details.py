@@ -3,6 +3,7 @@ import logging
 from enum import Enum
 from pathlib import Path
 from typing import Any
+
 from PySide6.QtWidgets import QScrollArea, QLabel, QTextEdit  # pylint: disable=no-name-in-module
 from PySide6.QtCore import Qt, Slot # pylint: disable=no-name-in-module
 from ..guiStyle import TextButton, Image, Label, showMessage, widgetAndLayout, getColor
@@ -240,6 +241,18 @@ class Details(QScrollArea):
     self.comm.changeDetails.emit(docID)
     return
 
+  def mousePressEvent(self, e):
+      print('here1')
+      # self.anchor = self.anchorAt(e.pos())
+      # if self.anchor:
+      #     # QApplication.setOverrideCursor(Qt.PointingHandCursor)
+
+  def mouseReleaseEvent(self, e):
+      print('here2')
+      # if self.anchor:
+      #     # QDesktopServices.openUrl(QUrl(self.anchor))
+      #     # QApplication.setOverrideCursor(Qt.ArrowCursor)
+      #     self.anchor = None
 
   def resizeWidth(self, width:int) -> None:
     """ called if details is resized by splitter at the parent widget
