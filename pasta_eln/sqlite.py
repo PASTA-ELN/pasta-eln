@@ -397,7 +397,7 @@ class SqlLiteDB:
     if thePath.endswith('All'):
       thePath = thePath[:-3]
       allFlag = True
-      print('**info do something with all flag')
+      #TODO print('**info do something with all flag')
     viewType, docType = thePath.split('/')
     if viewType=='viewDocType':
       viewColumns = self.dataHierarchy(docType, 'view')+['id']

@@ -102,7 +102,8 @@ class TestStringMethods(unittest.TestCase):
 
       ### TEST SAMPLES
       outputString(outputFormat,'h2','TEST SAMPLES')
-      self.be.addData('sample',    {'-name': 'AlFe cross-section', 'chemistry': 'Al99.9; FeMnCr ', 'qrCode': '13214124 99698708', 'comment': 'after OPS polishing'})
+      self.be.addData('sample',    {'-name': 'AlFe cross-section', 'chemistry': 'Al99.9; FeMnCr ', 'qrCode': '13214124 99698708', 'comment': 'after OPS polishing',
+                                    'geometry.height':4, 'geometry.width':2, 'weight.initial':6})
       outputString(outputFormat,'info',self.be.output('sample'))
       outputString(outputFormat,'info',self.be.outputQR())
 
@@ -124,7 +125,7 @@ class TestStringMethods(unittest.TestCase):
       ### ADD INSTRUMENTS AND THEIR ATTACHMENTS
       outputString(outputFormat,'h2','ADD INSTRUMENTS AND ATTACHMENTS')
       self.be.addData('instrument', {'-name': 'G200X', 'vendor':'KLA', 'model':'KLA G200X'})
-      self.be.addData('instrument', {'-name': 'B1', 'vendor':'Synthon', 'model':'Berkovich tip'})
+      self.be.addData('instrument/extension', {'-name': 'B1', 'vendor':'Synthon', 'model':'Berkovich tip'})
       output = self.be.output('instrument',True)
       idKLA, idSynthon = None, None
       for line in output.split('\n'):
@@ -132,7 +133,7 @@ class TestStringMethods(unittest.TestCase):
           idKLA = line.split('|')[-1].strip()
         if 'Synthon'  in line:
           idSynthon = line.split('|')[-1].strip()
-      self.be.db.initAttachment(idKLA, "Right side of instrument", 'instrument')
+      self.be.db.initAttachment(idKLA, "Right side of instrument", 'instrument/extension')
       self.be.db.addAttachment(idKLA, "Right side of instrument",
         {'date':datetime.now().isoformat(),'remark':'Worked well','docID':idSynthon,'user':'nobody'})
       self.be.db.addAttachment(idKLA, "Right side of instrument",

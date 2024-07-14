@@ -188,7 +188,6 @@ def dict2ul(aDict:dict[str,Any]) -> str:
     if isinstance(value, dict):
       valueString = dict2ul(value)
     elif isinstance(value, tuple) and len(value)==4:  #tuple of value, unit, label, IRI
-      print('value', value)
       key = key if value[2] is None or value[2]=='' else value[2]
       valueString = f'{value[0]} {value[1]}'
       valueString = valueString if value[3] is None or value[3]=='' else f'{valueString}<a href="{value[3]}">&rarr;</a>'
@@ -236,6 +235,9 @@ def diffDicts(dict1:dict[str,Any], dict2:dict[str,Any]) -> str:
       elif isinstance(value, list):
         if set(value).difference(set(dict2Copy[key])):
           outString += (f'lists differ for key: {key}\n   {str(value)}\n   {str(dict2Copy[key])}\n')
+      elif isinstance(dict2Copy[key], tuple) and len(dict2Copy[key])==4:
+        if value != dict2Copy[key][0]:
+          outString += (f'property values differ for key: {key}\n   {str(value)}\n   {str(dict2Copy[key])}\n')
       else:
         outString += (f'values differ for key: {key}\n   {str(value)}\n   {str(dict2Copy[key])}\n')
     del dict2Copy[key]
