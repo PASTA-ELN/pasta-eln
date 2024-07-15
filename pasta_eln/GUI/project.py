@@ -1,6 +1,7 @@
 """ Widget that shows the content of project in a electronic labnotebook """
 import logging
 from enum import Enum
+from pathlib import Path
 from typing import Optional, Any
 from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget, QMenu, QMessageBox, QTextEdit, QScrollArea # pylint: disable=no-name-in-module
 from PySide6.QtGui import QStandardItemModel, QStandardItem, QAction                                   # pylint: disable=no-name-in-module
@@ -343,8 +344,11 @@ class Project(QWidget):
       stackNew.append(docIDj)
     stackNew = [self.projID] + stackNew[::-1]  #add project id and reverse
     childNew = item.row()
-    if doc['-type'][0][0]=='x':
-      dirNameNew= createDirName(doc['-name'],doc['-type'][0],childNew) # determine path: do not create yet
+    if branchOld['path'] is not None and not branchOld['path'].startswith('http'):
+      if doc['-type'][0][0]=='x':
+        dirNameNew= createDirName(doc['-name'],doc['-type'][0],childNew) # create path name: do not create directory on storage yet
+      else:
+        dirNameNew= Path(branchOld['path']).name                         # use old name
       parentDir = db.getDoc(stackNew[-1])['-branch'][0]['path']
       pathNew = f'{parentDir}/{dirNameNew}'
     else:
