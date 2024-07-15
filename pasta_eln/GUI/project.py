@@ -346,7 +346,7 @@ class Project(QWidget):
     childNew = item.row()
     if branchOld['path'] is not None and not branchOld['path'].startswith('http'):
       if doc['-type'][0][0]=='x':
-        dirNameNew= createDirName(doc['-name'],doc['-type'][0],childNew) # determine path: do not create yet
+        dirNameNew= createDirName(doc['-name'],doc['-type'][0],childNew) # create path name: do not create directory on storage yet
       else:
         dirNameNew= Path(branchOld['path']).name                         # use old name
       parentDir = db.getDoc(stackNew[-1])['-branch'][0]['path']
