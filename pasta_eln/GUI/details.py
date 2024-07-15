@@ -4,7 +4,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
-from PySide6.QtWidgets import QScrollArea, QLabel, QTextEdit  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QScrollArea, QLabel, QTextEdit, QTextBrowser  # pylint: disable=no-name-in-module
 from PySide6.QtCore import Qt, Slot # pylint: disable=no-name-in-module
 from ..guiStyle import TextButton, Image, Label, showMessage, widgetAndLayout, getColor
 from ._contextMenu import initContextMenu, executeContextMenu, CommandMenu
@@ -13,6 +13,7 @@ from ..guiCommunicate import Communicate
 from ..handleDictionaries import dict2ul
 from ..miscTools import markdownStyler
 
+CSS_STYLE = '<style> ul {list-style-type: none; padding-left: 0; margin: 0;} a:link {text-decoration: none;} a:visited {text-decoration: none;} a:hover {text-decoration: none;} a:active {text-decoration: none;} </style>'
 
 class Details(QScrollArea):
   """ widget that shows the details of the items """
@@ -141,18 +142,18 @@ class Details(QScrollArea):
         self.btnVendor.show()
         label = QLabel()
         label.setWordWrap(True)
-        cssStyle = '<style> ul {list-style-type: none; padding-left: 0; margin: 0;} </style>'
-        label.setText(cssStyle+dict2ul(self.doc[key]))
-        label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        label.setText(CSS_STYLE+dict2ul(self.doc[key]))
+        label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse | Qt.TextInteractionFlag.LinksAccessibleByMouse)
+        label.setOpenExternalLinks(True)
         self.metaVendorL.addWidget(label)
         self.metaVendorW.show()
       elif key=='metaUser':
         self.btnUser.show()
         label = QLabel()
         label.setWordWrap(True)
-        cssStyle = '<style> ul {list-style-type: none; padding-left: 0; margin: 0;} </style>'
-        label.setText(cssStyle+dict2ul(self.doc[key]))
-        label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        label.setText(CSS_STYLE+dict2ul(self.doc[key]))
+        label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse | Qt.TextInteractionFlag.LinksAccessibleByMouse)
+        label.setOpenExternalLinks(True)
         self.metaUserL.addWidget(label)
         self.metaUserW.show()
       else:
@@ -173,14 +174,13 @@ class Details(QScrollArea):
           text.setReadOnly(True)
           labelL.addWidget(text, stretch=1)
         else:
-          a = 5/0 #to implement next row
-          dataHierarchyItem = dict([i for i in dataHierarchyNode if i['name']==key][0])
-          if len(dataHierarchyItem)==1 and 'list' in dataHierarchyItem[0] and \
-              not isinstance(dataHierarchyItem[0]['list'], list):                #choice among docType
-            table  = self.comm.backend.db.getView('viewDocType/'+dataHierarchyItem[0]['list'])
-            choices= [i for i in table if i['id']==self.doc[key]]
-            if len(choices)==1:
-              value = '\u260D '+choices[0]['value'][0]
+          dataHierarchyItems = [dict(i) for i in dataHierarchyNode if i['name']==key]
+          if len(dataHierarchyItems)==1 and 'list' in dataHierarchyItems[0] and \
+              not isinstance(dataHierarchyItems[0]['list'], list):                #choice among docType
+            table  = self.comm.backend.db.getView('viewDocType/'+dataHierarchyItems[0]['list'])
+            names= list(table[table.id==self.doc[key][0]]['name'])
+            if len(names)==1:
+              value = '\u260D '+names[0]
               link = True
           elif isinstance(self.doc[key], list):
             value = ', '.join(self.doc[key])

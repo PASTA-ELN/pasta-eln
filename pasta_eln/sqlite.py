@@ -19,7 +19,8 @@ from .miscTools import outputString, hierarchy, camelCase
 #   - start pasta with pudb
 #   - do an unit example for the sin-curve
 #   - give an example for attachment in datahierarchy: same table
-#   - TODO test gui and extend functions
+#   - TODO test gui, with now all requirements implemented
+#   -   if required extend functions in this file
 # - LATER change configuration to sqlite
 # - do not work on replicator: use eln file there
 # - at the end: create a translator: old save doc

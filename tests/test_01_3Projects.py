@@ -83,9 +83,6 @@ class TestStringMethods(unittest.TestCase):
       semDirName = self.be.basePath/self.be.cwd
       self.be.changeHierarchy(None)
       currentID = self.be.addData('x1',    {'-name': 'Nanoindentation'})
-      self.be.changeHierarchy(currentID)
-      indentDirName = self.be.basePath/self.be.cwd
-      self.be.changeHierarchy(None)
       outputString(outputFormat,'info',self.be.outputHierarchy())
 
       ### TEST PROCEDURES
@@ -99,6 +96,11 @@ class TestStringMethods(unittest.TestCase):
       self.be.addData('procedure', {'-name': 'StandardOperatingProcedures/SEM.md', 'comment': '#v1'})
       self.be.addData('procedure', {'-name': 'StandardOperatingProcedures/Nanoindentation.md', 'comment': '#v1'})
       outputString(outputFormat,'info',self.be.output('procedure'))
+      output = self.be.output('procedure',True)
+      idSEM = None
+      for line in output.split('\n'):
+        if 'SEM' in line:
+          idSEM = line.split('|')[-1].strip()
 
       ### TEST SAMPLES
       outputString(outputFormat,'h2','TEST SAMPLES')
@@ -119,7 +121,7 @@ class TestStringMethods(unittest.TestCase):
       ### USE GLOBAL FILES
       outputString(outputFormat,'h2','USE GLOBAL FILES')
       self.be.changeHierarchy(semStepID)
-      self.be.addData('measurement', {'-name': 'https://upload.wikimedia.org/wikipedia/commons/a/a4/Misc_pollen.jpg'})
+      self.be.addData('measurement', {'-name': 'https://upload.wikimedia.org/wikipedia/commons/a/a4/Misc_pollen.jpg', 'procedure':idSEM})
       outputString(outputFormat,'info',self.be.output('measurement'))
 
       ### ADD INSTRUMENTS AND THEIR ATTACHMENTS
