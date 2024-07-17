@@ -175,7 +175,7 @@ class Details(QScrollArea):
           labelL.addWidget(text, stretch=1)
         else:
           dataHierarchyItems = [dict(i) for i in dataHierarchyNode if i['name']==key]
-          if len(dataHierarchyItems)==1 and 'list' in dataHierarchyItems[0] and \
+          if len(dataHierarchyItems)==1 and 'list' in dataHierarchyItems[0] and dataHierarchyItems[0]['list'] and \
               not isinstance(dataHierarchyItems[0]['list'], list):                #choice among docType
             table  = self.comm.backend.db.getView('viewDocType/'+dataHierarchyItems[0]['list'])
             names= list(table[table.id==self.doc[key][0]]['name'])
@@ -184,6 +184,10 @@ class Details(QScrollArea):
               link = True
           elif isinstance(self.doc[key], list):
             value = ', '.join(self.doc[key])
+          elif isinstance(self.doc[key], tuple) and len(self.doc[key])==4:
+            value = self.doc[key][0]
+          elif isinstance(self.doc[key], dict):
+            value = dict2ul({k:v[0] for k,v in self.doc[key].items()})
           else:
             value = self.doc[key]
           label = Label(f'{key.capitalize()}: {value}', function=self.clickLink if link else None, docID=self.doc[key])

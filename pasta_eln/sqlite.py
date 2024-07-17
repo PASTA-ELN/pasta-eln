@@ -136,10 +136,10 @@ class SqlLiteDB:
       if column=='':
         return [i[0] for i in results]
       resultsDict = {i[0]:i[1] for i in results}
-      if column!=', title':
-        raise ValueError('Not tested')
-        #   resultsDict = {k:json.loads(v) for k,v in resultsDict.items()}
-        #   resultsDict = {k:v.split(',') for k,v in resultsDict.items()}
+      # if column!=', title':
+      #   raise ValueError('Not tested')
+      #   #   resultsDict = {k:json.loads(v) for k,v in resultsDict.items()}
+      #   #   resultsDict = {k:v.split(',') for k,v in resultsDict.items()}
       return resultsDict
     ### if metadata = definitions of data
     if column == 'meta':
@@ -209,9 +209,15 @@ class SqlLiteDB:
                              'child': dataI[2],
                              'path':  None if dataI[3] == '*' else dataI[3],
                              'show':   [i=='T' for i in dataI[4]]})
-    self.cursor.execute(f"SELECT properties.key, properties.value, properties.unit, propDefinitions.long, propDefinitions.IRI "
-                        f"FROM properties LEFT JOIN propDefinitions USING(key) WHERE properties.id == '{docID}'")
-    metadataFlat = {i[0]:i[1:] for i in self.cursor.fetchall()}
+    self.cursor.execute(f"SELECT properties.key, properties.value, properties.unit, propDefinitions.long, propDefinitions.IRI, "
+                        f"definitions.unit, definitions.query, definitions.IRI FROM properties LEFT JOIN propDefinitions USING(key) "
+                        f"LEFT JOIN definitions ON properties.key = (concat(definitions.class,'.',definitions.name)) "
+                        f"WHERE properties.id == '{docID}'")
+    res = self.cursor.fetchall()
+    metadataFlat = {i[0]:(i[1],
+                          ('' if i[2] is None else i[2])+('' if i[5] is None else i[5]),
+                          ('' if i[3] is None else i[3])+('' if i[6] is None else i[6]),
+                          ('' if i[4] is None else i[4])+('' if i[7] is None else i[7])) for i in res}
     doc |= hierarchy(metadataFlat)
     return doc
 
