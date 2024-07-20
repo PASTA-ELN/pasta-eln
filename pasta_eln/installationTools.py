@@ -142,7 +142,7 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
     callbackPercent(2)
   ### CREATE PROJECTS AND SHOW
   outputString(outputFormat,'h2','CREATE EXAMPLE PROJECT AND SHOW')
-  backend.addData('x0', {'-name': 'PASTAs Example Project', 'objective': 'Test if everything is working as intended.', 'status': 'active', 'comment': '#Important Can be used as reference or deleted'})
+  backend.addData('x0', {'name': 'PASTAs Example Project', '.objective': 'Test if everything is working as intended.', '.status': 'active', 'comment': '#Important Can be used as reference or deleted'})
   if callbackPercent is not None:
     callbackPercent(3)
   outputString(outputFormat,'info', backend.output('x0'))
@@ -152,28 +152,28 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
 
   ### TEST PROJECT PLANING
   outputString(outputFormat,'h2','TEST PROJECT PLANING')
-  viewProj = backend.db.getView('viewDocType/x0')
-  projID1  = [i['id'] for i in viewProj if 'PASTA' in i['value'][0]][0]
+  dfProj  = backend.db.getView('viewDocType/x0')
+  projID1 = list(dfProj['PASTA' in dfProj['name']]['id'])[0]
   if callbackPercent is not None:
     callbackPercent(5)
   backend.changeHierarchy(projID1)
   if callbackPercent is not None:
     callbackPercent(6)
-  backend.addData('x1',    {'comment': 'This is hard! #TODO', '-name': 'This is an example task'})
+  backend.addData('x1',    {'comment': 'This is hard! #TODO', 'name': 'This is an example task'})
   if callbackPercent is not None:
     callbackPercent(7)
-  currentID = backend.addData('x1',    {'comment': 'This will take a long time. #WAIT', '-name': 'This is another example task'})
+  currentID = backend.addData('x1',    {'comment': 'This will take a long time. #WAIT', 'name': 'This is another example task'})
   if callbackPercent is not None:
     callbackPercent(8)
   backend.changeHierarchy(currentID)
-  backend.addData('x2',    {'-name': 'This is an example subtask',     'comment': 'Random comment 1'})
+  backend.addData('x2',    {'name': 'This is an example subtask',     'comment': 'Random comment 1'})
   if callbackPercent is not None:
     callbackPercent(9)
-  backend.addData('x2',    {'-name': 'This is another example subtask','comment': 'Random comment 2'})
+  backend.addData('x2',    {'name': 'This is another example subtask','comment': 'Random comment 2'})
   if callbackPercent is not None:
     callbackPercent(10)
   backend.changeHierarchy(None)
-  semStepID = backend.addData('x1',    {'-name': 'Data files'})
+  semStepID = backend.addData('x1',    {'name': 'Data files'})
   if callbackPercent is not None:
     callbackPercent(11)
   backend.changeHierarchy(semStepID)
@@ -196,7 +196,7 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
     fOut.write('# Put sample in instrument\n# Do something\nDo not forget to\n- not do anything wrong\n- **USE BOLD LETTERS**\n')
   if callbackPercent is not None:
     callbackPercent(13)
-  backend.addData('procedure', {'-name': 'StandardOperatingProcedures/Example_SOP.md', 'comment': '#v1'})
+  backend.addData('procedure', {'name': 'StandardOperatingProcedures/Example_SOP.md', 'comment': '#v1'})
   if callbackPercent is not None:
     callbackPercent(14)
   outputString(outputFormat,'info',backend.output('procedure'))
@@ -206,7 +206,7 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
 
   ### TEST SAMPLES
   outputString(outputFormat,'h2','TEST SAMPLES')
-  backend.addData('sample',    {'-name': 'Example sample', 'chemistry': 'A2B2C3', 'qrCode': '13214124 99698708', 'comment': 'can be used as example or removed'})
+  backend.addData('sample',    {'name': 'Example sample', '.chemistry': 'A2B2C3', 'qrCode': '13214124 99698708', 'comment': 'can be used as example or removed'})
   if callbackPercent is not None:
     callbackPercent(16)
   outputString(outputFormat,'info',backend.output('sample'))
@@ -236,7 +236,7 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
   if callbackPercent is not None:
     callbackPercent(21)
   backend.addData('measurement', {
-    '-name': 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Misc_pollen.jpg/315px-Misc_pollen.jpg',\
+    'name': 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Misc_pollen.jpg/315px-Misc_pollen.jpg',\
     'comment':'remote image from wikipedia. Used for testing and reference. Can be deleted.'})
   if callbackPercent is not None:
     callbackPercent(22)
