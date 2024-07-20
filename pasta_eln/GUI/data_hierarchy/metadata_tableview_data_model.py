@@ -70,9 +70,12 @@ class MetadataTableViewModel(TableViewModel):
     """
     if (index.isValid() and
         index.column() == METADATA_TABLE_LIST_COLUMN_INDEX):
-      value = [i.strip() for i in value.split(',')] \
-        if value and ',' in value \
-        else value or []
+      if value:
+        value = [i.strip() for i in value.split(',')] \
+          if ',' in value \
+          else [value]
+      else:
+        value = []
     return super().setData(index, value, role)
 
   def data(self,

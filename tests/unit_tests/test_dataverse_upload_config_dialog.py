@@ -45,8 +45,7 @@ def mock_dialog(mocker, mock_database_api, mock_config_model):
   mocker.patch('pasta_eln.GUI.dataverse.upload_config_dialog.get_data_hierarchy_types')
   actual_load_ui = UploadConfigDialog.load_ui
   mocker.patch.object(UploadConfigDialog, 'load_ui')
-  mock_callback = mocker.MagicMock()
-  dialog = UploadConfigDialog(mock_callback)
+  dialog = UploadConfigDialog()
   dialog.load_ui = actual_load_ui
   dialog.db_api.get_config_model.return_value = mock_config_model
   return dialog
@@ -68,10 +67,9 @@ class TestUploadConfigDialog:
     mocker.patch.object(UploadConfigDialog, 'data_hierarchy_types', create=True)
     mocker.patch.object(UploadConfigDialog, 'buttonBox', create=True)
     mock_load_ui = mocker.patch('pasta_eln.GUI.dataverse.upload_config_dialog.UploadConfigDialog.load_ui')
-    mock_callback = mocker.MagicMock()
 
     # Act
-    dialog = UploadConfigDialog(mock_callback)
+    dialog = UploadConfigDialog()
 
     # Assert
     # Assertions to verify that the dialog has been initialized correctly
@@ -184,9 +182,11 @@ class TestUploadConfigDialog:
       (
           "error_no_config_model", "Failed to load config model!", None, "Failed to load config model!", False),
     ])
-  def test_save_ui(self, mock_dialog, mock_config_model, test_id, setup_logger, expected_log_info, expected_log_error,
+  def test_save_ui(self, mocker, mock_dialog, mock_config_model, test_id, setup_logger, expected_log_info,
+                   expected_log_error,
                    expect_callback):
     # Arrange
+    mock_dialog.config_reloaded = mocker.MagicMock()
     mock_dialog.config_model = None if test_id == "error_no_config_model" else mock_config_model
 
     # Act
@@ -199,9 +199,9 @@ class TestUploadConfigDialog:
     if expected_log_error:
       mock_dialog.logger.error.assert_called_with(expected_log_error)
     if expect_callback:
-      mock_dialog.config_reloaded_callback.assert_called_once()
+      mock_dialog.config_reloaded.emit.assert_called_once()
     else:
-      mock_dialog.config_reloaded_callback.assert_not_called()
+      mock_dialog.config_reloaded.emit.assert_not_called()
     if mock_dialog.config_model:
       mock_dialog.db_api.save_config_model.assert_called_with(mock_dialog.config_model)
     else:
