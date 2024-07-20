@@ -182,9 +182,9 @@ class Table(QWidget):
         item = QStandardItem(text)
       if j==0:
         doc = self.comm.backend.db.getDoc(self.data['id'][i])
-        if [b for b in doc['-branch'] if False in b['show']]:
+        if [b for b in doc['branch'] if False in b['show']]:
           item.setText( item.text()+'  \U0001F441' )
-        item.setAccessibleText(doc['_id'])
+        item.setAccessibleText(doc['id'])
         if self.docType!='x0':
           item.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)
           item.setCheckState(Qt.CheckState.Unchecked)
@@ -205,7 +205,7 @@ class Table(QWidget):
       command (list): list of commands
     """
     if command[0] is Command.ADD_ITEM:
-      self.comm.formDoc.emit({'-type':[self.docType], '_projectID':self.projID})
+      self.comm.formDoc.emit({'type':[self.docType], '_projectID':self.projID})
       self.comm.changeTable.emit(self.docType, self.projID)
       if self.docType=='x0':
         self.comm.changeSidebar.emit('redraw')
@@ -243,11 +243,11 @@ class Table(QWidget):
             intersection = intersection.intersection(thisKeys)
       #remove keys that should not be group edited and build dict
       if intersection is not None:
-        intersection = intersection.difference({'-branch', '-user', '-client', 'metaVendor', 'shasum', \
-            '_id', 'metaUser', '_rev', '-name', '-date', 'image', '_attachments','links'})
+        intersection = intersection.difference({'branch', 'user', 'client', 'metaVendor', 'shasum', \
+            'id', 'metaUser', 'rev', 'name', 'dateCreated', 'dateModified', 'image', 'links'})
         intersectionDict:dict[str,Any] = {i:'' for i in intersection}
-        intersectionDict['-tags'] = []
-        intersectionDict['-type'] = [self.docType]
+        intersectionDict['tags'] = []
+        intersectionDict['type'] = [self.docType]
         intersectionDict['_ids'] = docIDs
         self.comm.formDoc.emit(intersectionDict)
         self.comm.changeDetails.emit('redraw')
@@ -271,7 +271,7 @@ class Table(QWidget):
                 QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.No)
           if ret==QMessageBox.StandardButton.Yes:
             doc = self.comm.backend.db.getDoc(docID)
-            for branch in doc['-branch']:
+            for branch in doc['branch']:
               if branch['path'] is not None:
                 oldPath = self.comm.backend.basePath/branch['path']
                 if oldPath.exists():
@@ -319,25 +319,24 @@ class Table(QWidget):
         item, docID = self.itemFromRow(row)
         if item.checkState() == Qt.CheckState.Checked:
           doc = self.comm.backend.db.getDoc(docID)
-          if doc['-branch'][0]['path'] is None:
+          if doc['branch'][0]['path'] is None:
             continue
           redraw = True
-          oldDocType = doc['-type']
-          doc['-type'] = ['']
-          if doc['-branch'][0]['path'].startswith('http'):
-            path = Path(doc['-branch'][0]['path'])
+          oldDocType = doc['type']
+          doc['type'] = ['']
+          if doc['branch'][0]['path'].startswith('http'):
+            path = Path(doc['branch'][0]['path'])
           else:
-            path = self.comm.backend.basePath/doc['-branch'][0]['path']
+            path = self.comm.backend.basePath/doc['branch'][0]['path']
           self.comm.backend.useExtractors(path, doc.get('shasum',''), doc)
-          if doc['-type'][0] == oldDocType[0]:
-            del doc['-branch']  #don't update
+          if doc['type'][0] == oldDocType[0]:
+            del doc['branch']  #don't update
             self.comm.backend.db.updateDoc(doc, self.data[row]['id'])
           else:
             self.comm.backend.db.remove( self.data[row]['id'] )
-            del doc['_id']
-            del doc['_rev']
-            doc['-name'] = doc['-branch'][0]['path']
-            self.comm.backend.addData('/'.join(doc['-type']), doc, doc['-branch'][0]['stack'])
+            del doc['id']
+            doc['name'] = doc['branch'][0]['path']
+            self.comm.backend.addData('/'.join(doc['type']), doc, doc['branch'][0]['stack'])
       if redraw:
         self.change('','')  # redraw table
         self.comm.changeDetails.emit('redraw')
@@ -370,11 +369,11 @@ class Table(QWidget):
     # column = item.column()
     if docID[0]=='x': #only show items for non-folders
       doc = self.comm.backend.db.getDoc(docID)
-      if doc['-type'][0]=='x0':
+      if doc['type'][0]=='x0':
         self.comm.changeProject.emit(docID,'')
         self.comm.changeSidebar.emit(docID)
       else:
-        projID = doc['-branch'][0]['stack'][0]
+        projID = doc['branch'][0]['stack'][0]
         self.comm.changeProject.emit(projID, docID)
         self.comm.changeSidebar.emit(projID)
     else:

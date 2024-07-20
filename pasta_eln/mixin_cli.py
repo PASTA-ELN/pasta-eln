@@ -21,7 +21,7 @@ class CLI_Mixin:
     df = self.db.getView(f'viewDocType/{docType}')
     if not printID:
       df.drop('id', axis=1)
-    output = df.to_string(index=False, justify='left')
+    output = df.to_string(index=False, justify='left', max_colwidth=40)
     outputList = output.split('\n')
     for colName in df.columns[1:]:
       idx = outputList[0].find(colName)

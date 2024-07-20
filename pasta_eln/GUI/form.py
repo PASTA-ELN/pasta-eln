@@ -35,11 +35,10 @@ class Form(QDialog):
       self.flagNewDoc = False
     if self.flagNewDoc:
       self.setWindowTitle('Create new entry')
-      self.doc['-name'] = ''
+      self.doc['name'] = ''
     else:
       self.setWindowTitle('Edit information')
     self.skipKeys = ['image','metaVendor','metaUser','shasum']
-    self.skipKeys0= ['_','-', '#']
     self.allHidden = False
 
     # GUI elements
@@ -69,8 +68,8 @@ class Form(QDialog):
 
     # create full data set
     #TODO 2 test with sample print('TODO 2: continue here using pd.dataframe')
-    if self.doc['-type'][0] in self.db.dataHierarchy('', ''):
-      rawData = self.db.dataHierarchy(self.doc['-type'][0], 'meta')
+    if self.doc['type'][0] in self.db.dataHierarchy('', ''):
+      rawData = self.db.dataHierarchy(self.doc['type'][0], 'meta')
       dataHierarchyNode = copy.deepcopy([dict(i) for i in rawData])
     else:
       dataHierarchyNode = copy.deepcopy(defaultDataHierarchyNode)
@@ -81,8 +80,8 @@ class Form(QDialog):
     self.allKeys = self.allKeys.union(self.doc.keys())
 
     # create tabs or not: depending on the number of groups
-    if '-tags' not in self.doc:
-      self.doc['-tags'] = []
+    if 'tags' not in self.doc:
+      self.doc['tags'] = []
     self.tabW = QTabWidget() #has count=0 if not connected
     if len(dataHierarchyNode)>1:
       self.tabW.setParent(self)
@@ -102,11 +101,11 @@ class Form(QDialog):
         value = self.doc.get(key, '')
 
         # case list
-        if key == '-name' and '_ids' not in self.doc:
-          setattr(self, 'key_-name', QLineEdit(self.doc['-name']))
+        if key == 'name' and '_ids' not in self.doc:
+          setattr(self, 'key_-name', QLineEdit(self.doc['name']))
           getattr(self, 'key_-name').setValidator(QRegularExpressionValidator("[\\w\\ .-]+"))
           formL.addRow('Name', getattr(self, 'key_-name'))
-        elif key == '-tags':
+        elif key == 'tags':
           self.tagsBarMainW, tagsBarMainL = widgetAndLayout('H', spacing='s')
           _, self.tagsBarSubL = widgetAndLayout('H', tagsBarMainL, spacing='s', right='m') #part which shows all the tags
           self.otherChoices = QComboBox()   #part/combobox that allow user to select
@@ -154,7 +153,7 @@ class Form(QDialog):
           splitter.addWidget(getattr(self, f'textShow_{key}'))
           rightSideL.addWidget(splitter)
           formL.addRow(labelW, rightSideW)
-        elif (key[0] in self.skipKeys0) or key in self.skipKeys:  #skip non desired ones
+        elif key in self.skipKeys:  #skip non desired ones
           continue
         elif isinstance(value, list):   #list of items, qrCodes in sample
           if len(value)>0 and isinstance(value[0], str):
@@ -189,19 +188,19 @@ class Form(QDialog):
         self.keyValueLabel.hide()
         formL.addRow(self.keyValueLabel, self.keyValueListW)
         # add extra questions at bottom of form
-        allowProjectAndDocTypeChange = '_id' in self.doc and self.doc['-type'][0][0]!='x'
+        allowProjectAndDocTypeChange = '_id' in self.doc and self.doc['type'][0][0]!='x'
         if '_ids' in self.doc: #if group edit
           allowProjectAndDocTypeChange = all(docID[0] != 'x' for docID in self.doc['_ids'])
         if allowProjectAndDocTypeChange: #if not-new and non-folder
           formL.addRow(QLabel('Special properties:'), QLabel('') )
         label = '- unassigned -' if self.flagNewDoc else '- no change -'
-        if allowProjectAndDocTypeChange or ('_id' not in self.doc and self.doc['-type'][0][0]!='x'): #if new and non-folder
+        if allowProjectAndDocTypeChange or ('_id' not in self.doc and self.doc['type'][0][0]!='x'): #if new and non-folder
           self.projectComboBox = QComboBox()
           self.projectComboBox.addItem(label, userData='')
           for line in self.db.getView('viewDocType/x0'):
             # add all projects but the one that is present
-            if '-branch' not in self.doc or all( not(len(branch['stack'])>0 and line['id']==branch['stack'][0])
-                                                for branch in self.doc['-branch']):
+            if 'branch' not in self.doc or all( not(len(branch['stack'])>0 and line['id']==branch['stack'][0])
+                                                for branch in self.doc['branch']):
               self.projectComboBox.addItem(line['value'][0], userData=line['id'])
               if self.doc.get('_projectID','') == line['id']:
                 self.projectComboBox.setCurrentIndex(self.projectComboBox.count()-1)
@@ -220,8 +219,8 @@ class Form(QDialog):
       logging.error('There should not be "_" in a doc: '+str(self.doc))
     # final button box
     _, buttonLineL = widgetAndLayout('H', mainL, 'm')
-    if '-branch' in self.doc:
-      visibilityIcon = all(all(branch['show']) for branch in self.doc['-branch'])
+    if 'branch' in self.doc:
+      visibilityIcon = all(all(branch['show']) for branch in self.doc['branch'])
       self.visibilityText = QLabel('' if visibilityIcon else 'HIDDEN     \U0001F441')
       buttonLineL.addWidget(self.visibilityText)
     buttonLineL.addStretch(1)
@@ -248,7 +247,7 @@ class Form(QDialog):
             for key in subContent.keys():
               if key in ('comment', 'content'):
                 getattr(self, f'textEdit_{key}').setPlainText(subContent[key])
-              elif key in ('-tags'):
+              elif key in ('tags'):
                 self.doc[key] = subContent[key]
                 self.updateTagsBar()
               elif isinstance(getattr(self, f'key_{key}'), QLineEdit):
@@ -267,11 +266,11 @@ class Form(QDialog):
     """ Autosave comment to file """
     if self.comm.backend.configuration['GUI']['autosave'] == 'No':
       return
-    subContent = {'-name':getattr(self, 'key_-name').text().strip(), '-tags':self.doc['-tags']}
+    subContent = {'name':getattr(self, 'key_-name').text().strip(), 'tags':self.doc['tags']}
     for key in self.allKeys:
       if key in ['comment','content']:
         subContent[key] = getattr(self, f'textEdit_{key}').toPlainText().strip()
-      elif key[0] in self.skipKeys0 or key in self.skipKeys or not hasattr(self, f'key_{key}'):
+      elif key in self.skipKeys or not hasattr(self, f'key_{key}'):
         continue
       elif isinstance(getattr(self, f'key_{key}'), QLineEdit):
         subContent[key] = getattr(self, f'key_{key}').text().strip()
@@ -300,7 +299,7 @@ class Form(QDialog):
         width = self.comm.backend.configuration['GUI']['imageSizeDetails'] \
                 if hasattr(self.comm.backend, 'configuration') else 300
         Image(self.doc['image'], self.imageL, anyDimension=width)
-        visibilityIcon = all(all(branch['show']) for branch in self.doc['-branch'])
+        visibilityIcon = all(all(branch['show']) for branch in self.doc['branch'])
         self.visibilityText.setText('' if visibilityIcon else 'HIDDEN     \U0001F441')
     elif command[0] is Command.BUTTON_BAR:
       if command[1]=='bold':
@@ -375,33 +374,33 @@ class Form(QDialog):
         with open(Path.home()/'.pastaELN.temp', 'w', encoding='utf-8') as fTemp:
           fTemp.write(json.dumps(content))
       if hasattr(self, 'key_-name'):
-        self.doc['-name'] = getattr(self, 'key_-name').text().strip()
-        if self.doc['-name'] == '':
+        self.doc['name'] = getattr(self, 'key_-name').text().strip()
+        if self.doc['name'] == '':
           showMessage(self, 'Error', 'A created item has to have a valid name')
           return
-        if self.doc['-type'][0]=='x0':  #prevent project-directory names that are identical
+        if self.doc['type'][0]=='x0':  #prevent project-directory names that are identical
           others = self.comm.backend.db.getView('viewDocType/x0All')
           if '_id' in self.doc:
             others = [i for i in others if i['id']!=self.doc['_id']] # create list of names but filter own name
           others = [i['value'][0] for i in others]
           othersList = [createDirName(str(i),'x0', 0) for i in others] #create names
-          while createDirName(self.doc['-name'],'x0', 0) in othersList:
-            if re.search(r"_\d+$", self.doc['-name']) is None:
-              self.doc['-name'] += '_1'
+          while createDirName(self.doc['name'],'x0', 0) in othersList:
+            if re.search(r"_\d+$", self.doc['name']) is None:
+              self.doc['name'] += '_1'
             else:
-              self.doc['-name'] = '_'.join(self.doc['-name'].split('_')[:-1])+'_'+str(int(self.doc['-name'].split('_')[-1])+1)
+              self.doc['name'] = '_'.join(self.doc['name'].split('_')[:-1])+'_'+str(int(self.doc['name'].split('_')[-1])+1)
       # loop through all the subitems
       for key in self.allKeys:
         valueOld = self.doc.get(key, '')
-        if (key[0] in ['_', '-'] or key in ['image', 'metaVendor', 'metaUser']  #tags are already saved
+        if (key in ['image', 'metaVendor', 'metaUser']  #tags are already saved
             or not hasattr(self, f'key_{key}') and not hasattr(self, f'textEdit_{key}')):
           continue
         if key in ['comment','content']:
           text = getattr(self, f'textEdit_{key}').toPlainText().strip()
           if '_ids' not in self.doc or text:  #if group edit, text has to have text
             self.doc[key] = text
-            if key == 'content' and '-branch' in self.doc:
-              for branch in self.doc['-branch']:
+            if key == 'content' and 'branch' in self.doc:
+              for branch in self.doc['branch']:
                 if branch['path'] is not None:
                   if branch['path'].endswith('.md'):
                     with open(self.comm.backend.basePath/branch['path'], 'w', encoding='utf-8') as fOut:
@@ -435,35 +434,35 @@ class Form(QDialog):
       # ---- if project changed: only branch save; remaining data still needs saving
       newProjID = []
       if hasattr(self, 'projectComboBox') and self.projectComboBox.currentData() != '':
-        parentPath = self.db.getDoc(self.projectComboBox.currentData())['-branch'][0]['path']
+        parentPath = self.db.getDoc(self.projectComboBox.currentData())['branch'][0]['path']
         if '_ids' in self.doc:  # group update
           for docID in self.doc['_ids']:
             doc = self.db.getDoc(docID)
-            if doc['-branch'][0]['stack']!=self.projectComboBox.currentData(): #only if project changed
-              if doc['-branch'][0]['path'] is None:
+            if doc['branch'][0]['stack']!=self.projectComboBox.currentData(): #only if project changed
+              if doc['branch'][0]['path'] is None:
                 newPath    = ''
               else:
-                oldPath    = self.comm.backend.basePath/doc['-branch'][0]['path']
+                oldPath    = self.comm.backend.basePath/doc['branch'][0]['path']
                 newPath = f'{parentPath}/{oldPath.name}'
                 oldPath.rename(self.comm.backend.basePath/newPath)
               self.db.updateBranch( doc['_id'], 0, 9999, [self.projectComboBox.currentData()], newPath)
-        elif '-branch' in self.doc:             # sequential or single update
-          if self.doc['-branch'][0]['stack']!=self.projectComboBox.currentData(): #only if project changed
-            if self.doc['-branch'][0]['path'] is None:
+        elif 'branch' in self.doc:             # sequential or single update
+          if self.doc['branch'][0]['stack']!=self.projectComboBox.currentData(): #only if project changed
+            if self.doc['branch'][0]['path'] is None:
               newPath    = ''
             else:
-              oldPath = self.comm.backend.basePath/self.doc['-branch'][0]['path']
+              oldPath = self.comm.backend.basePath/self.doc['branch'][0]['path']
               newPath = f'{parentPath}/{oldPath.name}'
             self.db.updateBranch( self.doc['_id'], 0, 9999, [self.projectComboBox.currentData()], newPath)
-            self.doc['-branch'][0] = {'stack':[self.projectComboBox.currentData()], 'path':newPath or None, 'child':9999, 'show':[True,True]}
+            self.doc['branch'][0] = {'stack':[self.projectComboBox.currentData()], 'path':newPath or None, 'child':9999, 'show':[True,True]}
         else:
           newProjID = [self.projectComboBox.currentData()]
       # ---- if docType changed: save; no further save to db required ----
       if hasattr(self, 'docTypeComboBox') and self.docTypeComboBox.currentData() != '':
-        self.doc['-type'] = [self.docTypeComboBox.currentData()]
+        self.doc['type'] = [self.docTypeComboBox.currentData()]
       if '_ids' in self.doc:                              # group update
-        if '-name' in self.doc:
-          del self.doc['-name']
+        if 'name' in self.doc:
+          del self.doc['name']
         self.doc = {k:v for k,v in self.doc.items() if v} # filter out empty items
         for docID in self.doc.pop('_ids'):
           doc = self.db.getDoc(docID)
@@ -472,11 +471,11 @@ class Form(QDialog):
       elif '_id' in self.doc:                             # default update on item
         self.comm.backend.editData(self.doc)
       else:                                               # create new dataset
-        self.comm.backend.addData(self.doc['-type'][0], copy.deepcopy(self.doc), newProjID)
+        self.comm.backend.addData(self.doc['type'][0], copy.deepcopy(self.doc), newProjID)
       #!!! NO updates / redraw here since one does not know from where form came
       # e.g. sequential edit cannot have redraw here
       if command[0] is Command.FORM_SAVE_NEXT:
-        for delKey in [i for i in self.doc.keys() if i[0] in ['-','_'] and i not in ['-name','-type','-tags']]:
+        for delKey in [i for i in self.doc.keys() if i not in ['name','type','tags']]:
           del self.doc[delKey]
         self.comm.changeTable.emit('', '')
       else:
@@ -516,7 +515,7 @@ class Form(QDialog):
     """
     Clicked button to delete tag
     """
-    self.doc['-tags'].remove(tag)
+    self.doc['tags'].remove(tag)
     self.updateTagsBar()
     return
 
@@ -530,15 +529,15 @@ class Form(QDialog):
     """
     if isinstance(tag, str):#text from grades
       if tag!='':
-        self.doc['-tags'] = [i for i in self.doc['-tags'] if i[0]!='_']
-        self.doc['-tags'] += [f'_{len(tag)}']
+        self.doc['tags'] = [i for i in self.doc['tags'] if i[0]!='_']
+        self.doc['tags'] += [f'_{len(tag)}']
         self.gradeChoices.setCurrentText('')
     elif tag<1:               #zero index from other-tags
       return
     else:
       tag = self.otherChoices.currentText()
-      if tag not in self.doc['-tags']:
-        self.doc['-tags'] += [tag]
+      if tag not in self.doc['tags']:
+        self.doc['tags'] += [tag]
       self.otherChoices.setCurrentText('')
     self.updateTagsBar()
     return
@@ -550,7 +549,7 @@ class Form(QDialog):
     #update tags
     for i in reversed(range(self.tagsBarSubL.count())):
       self.tagsBarSubL.itemAt(i).widget().setParent(None)
-    for tag in self.doc['-tags']:
+    for tag in self.doc['tags']:
       if tag in ['_curated']:
         continue
       if tag[0]=='_':
@@ -561,7 +560,7 @@ class Form(QDialog):
     #update choices in combobox
     tagsAllList = self.comm.backend.db.getView('viewIdentify/viewTagsAll')
     tagsSet = {i['key'] for i in tagsAllList if i['key'][0]!='_'}
-    newChoicesList = ['']+list(tagsSet.difference([i for i in self.doc['-tags'] if i[0]!='_']))
+    newChoicesList = ['']+list(tagsSet.difference([i for i in self.doc['tags'] if i[0]!='_']))
     self.otherChoices.clear()
     self.otherChoices.addItems(newChoicesList)
     return

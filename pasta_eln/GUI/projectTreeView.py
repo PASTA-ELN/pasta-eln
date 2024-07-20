@@ -68,9 +68,9 @@ class TreeView(QTreeView):
     if command[0] is Command.ADD_CHILD:
       docType= f'x{len(hierStack)}'
       docID = hierStack[-1]
-      self.comm.backend.cwd = Path(self.comm.backend.db.getDoc(docID)['-branch'][0]['path'])
+      self.comm.backend.cwd = Path(self.comm.backend.db.getDoc(docID)['branch'][0]['path'])
       label = self.comm.backend.db.dataHierarchy['x1']['title'].lower()[:-1]
-      docID = self.comm.backend.addData(docType, {'-name':f'new {label}'}, hierStack)
+      docID = self.comm.backend.addData(docType, {'name':f'new {label}'}, hierStack)
       # append item to the GUI
       item  = self.model().itemFromIndex(self.currentIndex())                                                # type: ignore[attr-defined]
       child = QStandardItem('/'.join(hierStack+[docID]))
@@ -86,9 +86,9 @@ class TreeView(QTreeView):
       hierStack= hierStack[:-1]
       docType= f'x{len(hierStack)}'
       docID  = hierStack[-1]
-      self.comm.backend.cwd = Path(self.comm.backend.db.getDoc(docID)['-branch'][0]['path'])
+      self.comm.backend.cwd = Path(self.comm.backend.db.getDoc(docID)['branch'][0]['path'])
       label = self.comm.backend.db.dataHierarchy['x1']['title'].lower()[:-1]
-      docID = self.comm.backend.addData(docType, {'-name':f'new {label}'}, hierStack)
+      docID = self.comm.backend.addData(docType, {'name':f'new {label}'}, hierStack)
       # append item to the GUI
       item  = self.model().itemFromIndex(self.currentIndex())                                                # type: ignore[attr-defined]
       parent = item.parent() if item.parent() is not None else self.model().invisibleRootItem()              # type: ignore[attr-defined]
@@ -103,7 +103,7 @@ class TreeView(QTreeView):
       if ret==QMessageBox.StandardButton.Yes:
         docID = hierStack[-1]
         doc = self.comm.backend.db.remove(docID)
-        for branch in doc['-branch']:
+        for branch in doc['branch']:
           oldPath = Path(self.comm.backend.basePath)/branch['path']
           if oldPath.exists():
             newFileName = f'trash_{oldPath.name}'
@@ -116,7 +116,7 @@ class TreeView(QTreeView):
                 shutil.rmtree(oldPath.parent/newFileName)
             oldPath.rename( oldPath.parent/newFileName)
         # go through children
-        children = self.comm.backend.db.getView('viewHierarchy/viewHierarchy', startKey=' '.join(doc['-branch'][0]['stack']+[docID,'']))
+        children = self.comm.backend.db.getView('viewHierarchy/viewHierarchy', startKey=' '.join(doc['branch'][0]['stack']+[docID,'']))
         for line in children:
           self.comm.backend.db.remove(line['id'])
         # remove leaf from GUI
@@ -143,10 +143,10 @@ class TreeView(QTreeView):
         if command[0] is Command.OPEN_FILEBROWSER and hierStack[-1][0]!='x' \
         else hierStack[-1]
       doc   = self.comm.backend.db.getDoc(docID)
-      if doc['-branch'][0]['path'] is None:
+      if doc['branch'][0]['path'] is None:
         showMessage(self, 'ERROR', 'Cannot open file that is only in the database','Warning')
       else:
-        path  = Path(self.comm.backend.basePath)/doc['-branch'][0]['path']
+        path  = Path(self.comm.backend.basePath)/doc['branch'][0]['path']
         if platform.system() == 'Darwin':       # macOS
           subprocess.call(('open', path))
         elif platform.system() == 'Windows':    # Windows
@@ -168,8 +168,8 @@ class TreeView(QTreeView):
     doc   = self.comm.backend.db.getDoc(docID)
     self.comm.formDoc.emit(doc)
     docNew = self.comm.backend.db.getDoc(docID)
-    item.setText(docNew['-name'])
-    item.setData(item.data() | {"docType":docNew['-type'], "gui":docNew['-gui']})
+    item.setText(docNew['name'])
+    item.setData(item.data() | {"docType":docNew['type'], "gui":docNew['gui']})
     item.emitDataChanged()  #force redraw (resizing and repainting) of this item only
     return
 
@@ -208,7 +208,7 @@ class TreeView(QTreeView):
           folders += [x[0] for x in os.walk(path)]
       docID = item.data()['hierStack'].split('/')[-1]
       doc = self.comm.backend.db.getDoc(docID)
-      targetFolder = Path(self.comm.backend.cwd/doc['-branch'][0]['path'])
+      targetFolder = Path(self.comm.backend.cwd/doc['branch'][0]['path'])
       commonBase   = os.path.commonpath(folders+[str(i) for i in files])
       # create folders and copy files
       for folder in folders:

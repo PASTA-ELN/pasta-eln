@@ -50,13 +50,13 @@ class TestStringMethods(unittest.TestCase):
     try:
       ### CREATE PROJECTS AND SHOW
       outputString(outputFormat,'h2','CREATE PROJECTS AND SHOW')
-      self.be.addData('x0', {'-name': 'Intermetals at interfaces', \
-        'objective': 'Does spray coating lead to intermetalic phase?', 'status': 'active', \
+      self.be.addData('x0', {'name': 'Intermetals at interfaces', \
+        '.objective': 'Does spray coating lead to intermetalic phase?', '.status': 'active', \
         'comment': '#intermetal #Fe #Al This is a test project'})
-      self.be.addData('x0', {'-name': 'Surface evolution in tribology', \
-        'objective': 'Why does the surface get rough during tribology?', 'status': 'passive', \
+      self.be.addData('x0', {'name': 'Surface evolution in tribology', \
+        '.objective': 'Why does the surface get rough during tribology?', '.status': 'passive', \
         'comment': '#tribology The answer is obvious'})
-      self.be.addData('x0', {'-name': 'Steel', 'objective': 'Test strength of steel', 'status': 'paused', \
+      self.be.addData('x0', {'name': 'Steel', '.objective': 'Test strength of steel', '.status': 'paused', \
         'comment': '#Fe Obvious example without answer'})
       outputString(outputFormat, 'info', self.be.output('x0'))
 
@@ -67,22 +67,22 @@ class TestStringMethods(unittest.TestCase):
       projID2 = list(dfProj[dfProj['name']=='Steel']['id'])[0]
 
       self.be.changeHierarchy(projID2)
-      self.be.addData('x1',    {'comment': 'Random text', '-name': 'Task 1'})
-      self.be.addData('x1',    {'-name': 'Task2'})
+      self.be.addData('x1',    {'comment': 'Random text', 'name': 'Task 1'})
+      self.be.addData('x1',    {'name': 'Task2'})
       self.be.changeHierarchy(None)
 
       self.be.changeHierarchy(projID1)
-      self.be.addData('x1',    {'comment': 'This is hard! #TODO ', '-name': 'Get steel and Al-powder'})
-      currentID = self.be.addData('x1',    {'comment': 'This will take a long time. #WAIT #_curated', '-name': 'Get spray machine'})
+      self.be.addData('x1',    {'comment': 'This is hard! #TODO ', 'name': 'Get steel and Al-powder'})
+      currentID = self.be.addData('x1',    {'comment': 'This will take a long time. #WAIT #_curated', 'name': 'Get spray machine'})
       self.be.changeHierarchy(currentID)
-      self.be.addData('x2',    {'-name': 'Get quotes', 'comment': 'Dont forget company-A #_1 ', 'procedure': 'Guidelines of procurement'})
-      self.be.addData('x2',    {'-name': 'Buy machine','comment': 'Delivery time will be 6month #_3 '})
+      self.be.addData('x2',    {'name': 'Get quotes', 'comment': 'Dont forget company-A #_1 '})
+      self.be.addData('x2',    {'name': 'Buy machine','comment': 'Delivery time will be 6month #_3 '})
       self.be.changeHierarchy(None)
-      semStepID = self.be.addData('x1',    {'-name': 'SEM images'})
+      semStepID = self.be.addData('x1',    {'name': 'SEM images'})
       self.be.changeHierarchy(semStepID)
       semDirName = self.be.basePath/self.be.cwd
       self.be.changeHierarchy(None)
-      currentID = self.be.addData('x1',    {'-name': 'Nanoindentation'})
+      currentID = self.be.addData('x1',    {'name': 'Nanoindentation'})
       outputString(outputFormat,'info',self.be.outputHierarchy())
 
       ### TEST PROCEDURES
@@ -93,8 +93,8 @@ class TestStringMethods(unittest.TestCase):
         fOut.write('# Put sample in nanoindenter\n# Do indentation\nDo not forget to\n- calibrate tip\n- *calibrate stiffness*\n')
       with open(sopDir/'SEM.md','w', encoding='utf-8') as fOut:
         fOut.write('# Put sample in SEM\n# Do scanning\nDo not forget to\n- contact the pole-piece\n- **USE GLOVES**\n')
-      self.be.addData('procedure', {'-name': 'StandardOperatingProcedures/SEM.md', 'comment': '#v1'})
-      self.be.addData('procedure', {'-name': 'StandardOperatingProcedures/Nanoindentation.md', 'comment': '#v1'})
+      self.be.addData('procedure', {'name': 'StandardOperatingProcedures/SEM.md', 'comment': '#v1'})
+      self.be.addData('procedure', {'name': 'StandardOperatingProcedures/Nanoindentation.md', 'comment': '#v1'})
       outputString(outputFormat,'info',self.be.output('procedure'))
       output = self.be.output('procedure',True)
       idSEM = None
@@ -104,7 +104,7 @@ class TestStringMethods(unittest.TestCase):
 
       ### TEST SAMPLES
       outputString(outputFormat,'h2','TEST SAMPLES')
-      self.be.addData('sample',    {'-name': 'AlFe cross-section', 'chemistry': 'Al99.9; FeMnCr ', 'qrCode': '13214124 99698708', 'comment': 'after OPS polishing',
+      self.be.addData('sample',    {'name': 'AlFe cross-section', '.chemistry': 'Al99.9; FeMnCr ', 'qrCode': '13214124 99698708', 'comment': 'after OPS polishing',
                                     'geometry.height':4, 'geometry.width':2, 'weight.initial':6})
       outputString(outputFormat,'info',self.be.output('sample'))
       outputString(outputFormat,'info',self.be.outputQR())
@@ -121,13 +121,13 @@ class TestStringMethods(unittest.TestCase):
       ### USE GLOBAL FILES
       outputString(outputFormat,'h2','USE GLOBAL FILES')
       self.be.changeHierarchy(semStepID)
-      self.be.addData('measurement', {'-name': 'https://upload.wikimedia.org/wikipedia/commons/a/a4/Misc_pollen.jpg', 'procedure':idSEM})
+      self.be.addData('measurement', {'name': 'https://upload.wikimedia.org/wikipedia/commons/a/a4/Misc_pollen.jpg', '.procedure':idSEM})
       outputString(outputFormat,'info',self.be.output('measurement'))
 
       ### ADD INSTRUMENTS AND THEIR ATTACHMENTS
       outputString(outputFormat,'h2','ADD INSTRUMENTS AND ATTACHMENTS')
-      self.be.addData('instrument', {'-name': 'G200X', 'vendor':'KLA', 'model':'KLA G200X'})
-      self.be.addData('instrument/extension', {'-name': 'B1', 'vendor':'Synthon', 'model':'Berkovich tip'})
+      self.be.addData('instrument', {'name': 'G200X', '.vendor':'KLA', '.model':'KLA G200X'})
+      self.be.addData('instrument/extension', {'name': 'B1', '.vendor':'Synthon', '.model':'Berkovich tip'})
       output = self.be.output('instrument',True)
       idKLA, idSynthon = None, None
       for line in output.split('\n'):

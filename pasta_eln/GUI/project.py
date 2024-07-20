@@ -10,6 +10,7 @@ from .projectTreeView import TreeView
 from ..guiStyle import TextButton, Action, Label, showMessage, widgetAndLayout, getColor
 from ..miscTools import createDirName, markdownStyler
 from ..guiCommunicate import Communicate
+from .projectLeafRenderer import DO_NOT_RENDER
 
 class Project(QWidget):
   """ Widget that shows the content of project in a electronic labnotebook """
@@ -50,9 +51,9 @@ class Project(QWidget):
     # TOP LINE includes name on left, buttons on right
     _, topLineL       = widgetAndLayout('H',self.mainL,'m')
     hidden, menuTextHidden = ('     \U0001F441', 'Mark project as shown') \
-                       if [b for b in self.docProj['-branch'] if False in b['show']] else \
+                       if [b for b in self.docProj['branch'] if False in b['show']] else \
                        ('', 'Mark project as hidden')
-    topLineL.addWidget(Label(self.docProj['-name']+hidden, 'h2'))
+    topLineL.addWidget(Label(self.docProj['name']+hidden, 'h2'))
     showStatus = '(Show all items)' if self.showAll else '(Hide hidden items)'
     topLineL.addWidget(QLabel(showStatus))
     topLineL.addStretch(1)
@@ -90,15 +91,15 @@ class Project(QWidget):
     self.infoW_, infoL = widgetAndLayout('V')
     self.infoWSA.setWidget(self.infoW_)
     self.mainL.addWidget(self.infoWSA)
-    if not self.docProj['-gui'][0]:
+    if not self.docProj['gui'][0]:
       self.infoWSA.hide()
       self.actHideDetail.setText('Show project details')
     # details
-    tags = ', '.join([f'#{i}' for i in self.docProj['-tags']]) if '-tags' in self.docProj else ''
+    tags = ', '.join([f'#{i}' for i in self.docProj['tags']]) if 'tags' in self.docProj else ''
     infoL.addWidget(QLabel(f'Tags: {tags}'))
     self.countLines = 0
     for key,value in self.docProj.items():
-      if key[0] in {'_','-'} or 'from ' in key or key in {'comment'}:
+      if 'from ' in key or key in DO_NOT_RENDER:
         continue
       labelW = QLabel(f'{key.title()}: {str(value)}')
       infoL.addWidget(labelW)
@@ -226,9 +227,9 @@ class Project(QWidget):
       self.comm.formDoc.emit(self.docProj)
       self.change(self.projID,'')
       #collect information and then change
-      oldPath = self.comm.backend.basePath/self.docProj['-branch'][0]['path']
+      oldPath = self.comm.backend.basePath/self.docProj['branch'][0]['path']
       if oldPath.is_dir():
-        newPath = self.comm.backend.basePath/createDirName(self.docProj['-name'],'x0',0)
+        newPath = self.comm.backend.basePath/createDirName(self.docProj['name'],'x0',0)
         oldPath.rename(newPath)
       self.comm.changeSidebar.emit('redraw')
     elif command[0] is Command.DELETE:
@@ -238,12 +239,12 @@ class Project(QWidget):
       if ret==QMessageBox.StandardButton.Yes:
         #delete database and rename folder
         doc = self.comm.backend.db.remove(self.projID)
-        if '-branch' in doc and len(doc['-branch'])>0 and 'path' in doc['-branch'][0]:
-          oldPath = self.comm.backend.basePath/doc['-branch'][0]['path']
-          newPath = self.comm.backend.basePath/('trash_'+doc['-branch'][0]['path'])
+        if 'branch' in doc and len(doc['branch'])>0 and 'path' in doc['branch'][0]:
+          oldPath = self.comm.backend.basePath/doc['branch'][0]['path']
+          newPath = self.comm.backend.basePath/('trash_'+doc['branch'][0]['path'])
           nextIteration = 1
           while newPath.is_dir():
-            newPath = self.comm.backend.basePath/(f"trash_{doc['-branch'][0]['path']}_{nextIteration}")
+            newPath = self.comm.backend.basePath/(f"trash_{doc['branch'][0]['path']}_{nextIteration}")
             nextIteration += 1
           oldPath.rename(newPath)
         # go through children, remove from DB
@@ -255,12 +256,12 @@ class Project(QWidget):
         self.comm.changeTable.emit('x0','')
     elif command[0] is Command.SCAN:
       for _ in range(2):  #scan twice: convert, extract
-        self.comm.backend.scanProject(self.comm.progressBar, self.projID, self.docProj['-branch'][0]['path'])
+        self.comm.backend.scanProject(self.comm.progressBar, self.projID, self.docProj['branch'][0]['path'])
       self.comm.changeProject.emit(self.projID,'')
       showMessage(self, 'Information','Scanning finished')
     elif command[0] is Command.SHOW_PROJ_DETAILS:
-      self.docProj['-gui'][0] = not self.docProj['-gui'][0]
-      self.comm.backend.db.setGUI(self.projID, self.docProj['-gui'])
+      self.docProj['gui'][0] = not self.docProj['gui'][0]
+      self.comm.backend.db.setGUI(self.projID, self.docProj['gui'])
       if self.infoWSA is not None and self.infoWSA.isHidden():
         self.infoWSA.show()
         self.actHideDetail.setText('Hide project details')
@@ -270,7 +271,7 @@ class Project(QWidget):
     elif command[0] is Command.HIDE:
       self.comm.backend.db.hideShow(self.projID)
       self.docProj = self.comm.backend.db.getDoc(self.projID)
-      if [b for b in self.docProj['-branch'] if False in b['show']]: # hidden->go back to project table
+      if [b for b in self.docProj['branch'] if False in b['show']]: # hidden->go back to project table
         self.comm.changeSidebar.emit('')
         self.comm.changeTable.emit('x0','') # go back to project table
       else:
@@ -297,9 +298,9 @@ class Project(QWidget):
       self.showAll = not self.showAll
       self.change('','')
     elif command[0] is Command.ADD_CHILD:
-      self.comm.backend.cwd = self.comm.backend.basePath/self.docProj['-branch'][0]['path']
+      self.comm.backend.cwd = self.comm.backend.basePath/self.docProj['branch'][0]['path']
       title = self.comm.backend.db.dataHierarchy['x1']['title'].lower()[:-1]
-      self.comm.backend.addData('x1', {'-name':f'new {title}'}, [self.projID])
+      self.comm.backend.addData('x1', {'name':f'new {title}'}, [self.projID])
       self.change('','') #refresh project
     elif command[0] is Command.SHOW_TABLE:
       self.comm.changeTable.emit(command[1], self.projID)
@@ -322,15 +323,15 @@ class Project(QWidget):
     stackOld = item.data()['hierStack'].split('/')[:-1]
     docID    = item.data()['hierStack'].split('/')[-1]
     doc      = db.getDoc(docID)
-    if '-branch' not in doc or not stackOld: #skip everything if project or not contain branch
+    if 'branch' not in doc or not stackOld: #skip everything if project or not contain branch
       return
-    branchOldList= [i for i in doc['-branch'] if i['stack']==stackOld]
+    branchOldList= [i for i in doc['branch'] if i['stack']==stackOld]
     if len(branchOldList)!=1:
       self.change('','')
       return
     branchOld = branchOldList[0]
     childOld = branchOld['child']
-    branchIdx= doc['-branch'].index(branchOld)
+    branchIdx= doc['branch'].index(branchOld)
     siblingsOld = db.getView('viewHierarchy/viewHierarchy', startKey=' '.join(stackOld))
     siblingsOld = [i for i in siblingsOld if len(i['key'].split(' '))==len(stackOld)+1 and \
                                                   i['value'][0]>branchOld['child'] and i['value'][0]<9999]
@@ -343,9 +344,9 @@ class Project(QWidget):
       stackNew.append(docIDj)
     stackNew = [self.projID] + stackNew[::-1]  #add project id and reverse
     childNew = item.row()
-    if doc['-type'][0][0]=='x':
-      dirNameNew= createDirName(doc['-name'],doc['-type'][0],childNew) # determine path: do not create yet
-      parentDir = db.getDoc(stackNew[-1])['-branch'][0]['path']
+    if doc['type'][0][0]=='x':
+      dirNameNew= createDirName(doc['name'],doc['type'][0],childNew) # determine path: do not create yet
+      parentDir = db.getDoc(stackNew[-1])['branch'][0]['path']
       pathNew = f'{parentDir}/{dirNameNew}'
     else:
       pathNew = branchOld['path']

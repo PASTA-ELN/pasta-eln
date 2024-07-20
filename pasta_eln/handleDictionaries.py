@@ -21,7 +21,7 @@ def dataHierarchy2Labels(dataHierarchy:dict[str,Any], tableFormat:dict[str,Any])
   dataDict = {}
   hierarchyDict = {}
   for key in dataHierarchy:
-    if key in ['_id', '_rev']:
+    if key in ['id', '_rev']:
       continue
     label = None
     if key in tableFormat and '-label-' in tableFormat[key]:  #use label from tableFormat
@@ -93,30 +93,31 @@ def fillDocBeforeCreate(data:dict[str,Any], docType:list[str]) -> dict[str,Any]:
   Returns:
     str: document
   """
-  protectedKeys = ['comment','-tags','image']
-  # Handle the important entries: -type, _id, -date, -branch, -gui
-  if '-type' not in data:
-    data['-type'] = docType
-  if data['-type']==['']:
-    data['-type']=['-']
-  if isinstance(data['-type'], str):
-    data['-type'] = data['-type'].split('/')
-  if '_id' not in data:  # if new (if not update): create new id
-    data['_id'] = data['-type'][0][0]+'-'+uuid.uuid4().hex
-  data['-date']   = datetime.now().isoformat()
-  if '-branch' not in data:
+  protectedKeys = ['comment','tags','image']
+  # Handle the important entries: type, id, dateCreated, branch, gui
+  if 'type' not in data:
+    data['type'] = docType
+  if data['type']==['']:
+    data['type']=['-']
+  if isinstance(data['type'], str):
+    data['type'] = data['type'].split('/')
+  if 'id' not in data:  # if new (if not update): create new id
+    data['id'] = data['type'][0][0]+'-'+uuid.uuid4().hex
+  data['dateCreated']   = datetime.now().isoformat()
+  data['dateModified']  = datetime.now().isoformat()
+  if 'branch' not in data:
     print('Empty branch in data')
-    data['-branch'] = [{'stack':[], 'path':None, 'child':-1, 'show':[]}]
-  if 'show' not in data['-branch'] and isinstance(data['-branch'], dict):
-    data['-branch']['show'] = [True]*(len(data['-branch']['stack'])+1)
-  if '-gui' not in data:
-    data['-gui'] = [True, True]
+    data['branch'] = [{'stack':[], 'path':None, 'child':-1, 'show':[]}]
+  if 'show' not in data['branch'] and isinstance(data['branch'], dict):
+    data['branch']['show'] = [True]*(len(data['branch']['stack'])+1)
+  if 'gui' not in data:
+    data['gui'] = [True, True]
   # separate comment into tags and fields
   # these tags are lost: '#d': too short; '#3tag': starts with number
   if 'comment' not in data:
     data['comment'] =''
-  if '-tags' not in data:
-    data['-tags'] = []
+  if 'tags' not in data:
+    data['tags'] = []
   #always do regex expressions twice: if #lala at beginning or in middle of comment
   curated = re.findall(r'(?:^|\s)#_curated(?:\s|$)', data['comment']) # #_curated
   rating  = re.findall(r'(?:^|\s)#_\d(?:\s|$)',      data['comment']) # #_number
@@ -125,11 +126,11 @@ def fillDocBeforeCreate(data:dict[str,Any], docType:list[str]) -> dict[str,Any]:
   if len(rating)>1:  #prevent multiple new ratings
     rating=rating[:1]
   if len(rating)==1: #remove ratings that exist already
-    data['-tags'] = [i for i in data['-tags'] if not re.compile(r'^_\d$').match(i)]
+    data['tags'] = [i for i in data['tags'] if not re.compile(r'^_\d$').match(i)]
   otherTags = re.findall(r'(?:^|\s)#[a-zA-Z]\w+(?=\s|$)', data['comment'])
   if otherTags is None:
     otherTags=[]
-  data['-tags'] = rating + data['-tags'] + otherTags + curated
+  data['tags'] = rating + data['tags'] + otherTags + curated
   data['comment'] = re.sub(r'(?:^|\s)#\w+(?=\s|$)', '', data['comment']).strip()
   fields = re.findall(r':[\S]+:[\S]+:', data['comment'])
   if fields is not None:
@@ -139,21 +140,21 @@ def fillDocBeforeCreate(data:dict[str,Any], docType:list[str]) -> dict[str,Any]:
         continue
       data[aList[1]] = aList[2]
   data['comment'] = re.sub(r':[\S]+:[\S]+:','',data['comment'])  #remove :field:data: information
-  if isinstance(data['-tags'], str):
-    data['-tags'] = data['-tags'].split(' ')
-  data['-tags'] = [i.strip()[1:] if i.strip()[0]=='#' else i.strip() for i in data['-tags']]
-  data['-tags'] = list(set(data['-tags']))  #ensure only one is inside
+  if isinstance(data['tags'], str):
+    data['tags'] = data['tags'].split(' ')
+  data['tags'] = [i.strip()[1:] if i.strip()[0]=='#' else i.strip() for i in data['tags']]
+  data['tags'] = list(set(data['tags']))  #ensure only one is inside
   #other cleaning
   if ('links' in data and isinstance(data['links'], list)) and \
      (len(data['links'])==0 or (len(data['links'])==1 and data['links'][0]=='')):
     del data['links']
   #individual verification of documents
-  if data['-type'][0]=='sample':
+  if data['type'][0]=='sample':
     if 'qrCode' not in data:
       data['qrCode']=[]
     if isinstance(data['qrCode'], str):
       data['qrCode'] = data['qrCode'].split(' ')
-  if data['-type'][0] == 'measurement':
+  if data['type'][0] == 'measurement':
     if 'image' not in data:
       data['image'] = ''
     if 'shasum' not in data:
@@ -209,7 +210,7 @@ def diffDicts(dict1:dict[str,Any], dict2:dict[str,Any]) -> str:
   Returns:
     str: output with \\n
   """
-  ignoreKeys = ['-client', '_rev', '-gui', '_attachments']
+  ignoreKeys = ['client', '_rev', 'gui', '_attachments']
   outString = ''
   dict2Copy = dict(dict2)
   for key,value in dict1.items():
@@ -219,13 +220,13 @@ def diffDicts(dict1:dict[str,Any], dict2:dict[str,Any]) -> str:
       outString += f'key not in dictionary 2: {key}' + '\n'
       continue
     if value != dict2Copy[key]:
-      if key=='-branch':
+      if key=='branch':
         if len(value) != len(dict2Copy[key]):
           outString += 'branches have different lengths\n   '+str(value)+'\n   '+str(dict2Copy[key])+'\n'
         else:
           for idx,_ in enumerate(value):
             branch1 = value[idx]
-            branch2 = dict2Copy['-branch'][idx]
+            branch2 = dict2Copy['branch'][idx]
             if 'show' in branch1:
               del branch1['show']
             if 'show' in branch2:

@@ -38,7 +38,7 @@ from .miscTools import outputString, hierarchy, camelCase
 #   - see if I use the first letter of the docID
 #   -> such long integers are not supported by sqlite: stay with string/text
 
-KEY_ORDER   =    ['id' , 'name','user','type','dateCreated','dateModfied','gui',       'client','shasum','image','content','comment']
+KEY_ORDER   =    ['id' , 'name','user','type','dateCreated','dateModified','gui',       'client','shasum','image','content','comment']
 KEY_TYPE    =    ['TEXT','TEXT','TEXT','TEXT','TEXT',       'TExT',       'varchar(2)','TEXT',  'TEXT',  'TEXT', 'TEXT',   'TEXT']
 DATA_HIERARCHY = ['docType', 'IRI','title','icon','shortcut','view']
 DEFINITIONS =    ['docType','class','idx', 'name', 'query', 'unit', 'IRI', 'mandatory', 'list']
@@ -189,23 +189,19 @@ class SqlLiteDB:
     cursor.execute(f"SELECT * FROM main WHERE id == '{docID}'")
     doc = dict(cursor.fetchone())
     self.cursor.execute(f"SELECT tag FROM tags WHERE id == '{docID}'")
-    doc['-tags'] = [i[0] for i in self.cursor.fetchall()]
-    # CONVERT SQLITE STYLE INTO PASTA-DICT
-    doc['_id'] = doc.pop('id')
-    for key in ['user', 'name','dateCreated']:
-      doc[f'-{key}'] = doc.pop(key)
-    for key in ['image', 'content','shasum','client']:
+    doc['tags'] = [i[0] for i in self.cursor.fetchall()]
+    self.cursor.execute(f"SELECT qrCode FROM qrCodes WHERE id == '{docID}'")
+    doc['qrCodes'] = [i[0] for i in self.cursor.fetchall()]
+    for key in ['image', 'content','shasum','client','qrCodes']:
       if len(doc[key])==0:
         del doc[key]
-    doc['-type']= doc['type'].split('/')
-    doc['-gui'] = [i=='T' for i in doc['gui']]
-    for key in ['type','gui','dateModfied']:
-      del doc[key]
-    doc['-branch'] = []
-    # data ends with 'id' 'stack', 'child', 'path', 'show', 'dateModfied'
+    doc['type']= doc['type'].split('/')
+    doc['gui'] = [i=='T' for i in doc['gui']]
+    doc['branch'] = []
+    # data ends with 'id' 'stack', 'child', 'path', 'show', 'dateModified'
     self.cursor.execute(f"SELECT * FROM branches WHERE id == '{docID}'")
     for dataI in self.cursor.fetchall():
-      doc['-branch'].append({'stack': dataI[1].split('/')[:-1],
+      doc['branch'].append({'stack': dataI[1].split('/')[:-1],
                              'child': dataI[2],
                              'path':  None if dataI[3] == '*' else dataI[3],
                              'show':   [i=='T' for i in dataI[4]]})
@@ -226,7 +222,7 @@ class SqlLiteDB:
     """
     Wrapper for save to database function
     - not helpful to convert _id to int since sqlite does not digest such long integer
-      doc['_id']  = int(doc['_id'][2:], 16)
+      doc['id']  = int(doc['id'][2:], 16)
 
     Discussion on -branch['path']:
     - full path (from basePath) allows to easily create a view of all paths and search through them
@@ -241,29 +237,30 @@ class SqlLiteDB:
     Returns:
         dict: json representation of submitted document
     """
+    # print('\nsave\n'+'\n'.join([f'{k}: {v}' for k,v in doc.items()]))
     docOrg = copy.deepcopy(doc)
+    # save into branch table
     self.cursor.execute(f"INSERT INTO branches VALUES ({', '.join(['?']*5)})",
-                        [doc['_id'],
-                         '/'.join(doc['-branch']['stack']+[doc['_id']]),
-                         str(doc['-branch']['child']),
-                         '*' if doc['-branch']['path'] is None else doc['-branch']['path'],
-                         ''.join(['T' if j else 'F' for j in doc['-branch']['show']])])
-    del doc['-branch']
-    self.cursor.executemany("INSERT INTO tags VALUES (?, ?);", zip([doc['_id']]*len(doc['-tags']), doc['-tags']))
-    del doc['-tags']
+                        [doc['id'],
+                         '/'.join(doc['branch']['stack']+[doc['id']]),
+                         str(doc['branch']['child']),
+                         '*' if doc['branch']['path'] is None else doc['branch']['path'],
+                         ''.join(['T' if j else 'F' for j in doc['branch']['show']])])
+    del doc['branch']
+    # save into tags table
+    self.cursor.executemany("INSERT INTO tags VALUES (?, ?);", zip([doc['id']]*len(doc['tags']), doc['tags']))
+    del doc['tags']
     if 'qrCode' in doc:
-      self.cursor.executemany("INSERT INTO qrCodes VALUES (?, ?);", zip([doc['_id']]*len(doc['qrCode']), doc['qrCode']))
+      self.cursor.executemany("INSERT INTO qrCodes VALUES (?, ?);", zip([doc['id']]*len(doc['qrCode']), doc['qrCode']))
       del doc['qrCode']
     if 'content' in doc and len(doc['content'])>200:
       doc['content'] = doc['content'][:200]
-    doc['type'] = '/'.join(doc.pop('-type'))
-    doc['gui']  = ''.join(['T' if i else 'F' for i in doc.pop('-gui')])
-    doc['dateCreated'] = doc.pop('-date')
-    doc['dateModfied'] = doc['dateCreated']
-    for key_ in ['_id','-name','-user']:
-      doc[key_[1:]] = doc.pop(key_)
-    docList = [doc.get(x,'') for x in KEY_ORDER]
+    doc['type'] = '/'.join(doc['type'])
+    doc['gui']  = ''.join(['T' if i else 'F' for i in doc['gui']])
+    docList = [doc[x] if x in doc else doc.get(f'.{x}','') for x in KEY_ORDER]
     self.cursor.execute(f"INSERT INTO main VALUES ({', '.join(['?']*len(docList))})", docList)
+    doc = {k:v for k,v in doc.items() if (k not in KEY_ORDER and k[1:] not in KEY_ORDER) or k == 'id'}
+
     # properties
     def insertMetadata(data, parentKeys):
       parentKeys = f'{parentKeys}.' if parentKeys else ''
@@ -292,9 +289,9 @@ class SqlLiteDB:
     insertMetadata(metaDoc, '')
     # save changes
     self.connection.commit()
-    branch = copy.deepcopy(docOrg['-branch'])
+    branch = copy.deepcopy(docOrg['branch'])
     del branch['op']
-    docOrg['-branch'] = [branch]
+    docOrg['branch'] = [branch]
     return docOrg
 
 
@@ -398,7 +395,7 @@ class SqlLiteDB:
         preciseKey (string): if given, use to filter output. Match precisely
 
     Returns:
-        list: list of documents in this view
+        df: data-frame with human-readable column names
     """
     allFlag = False
     if thePath.endswith('All'):
@@ -408,13 +405,16 @@ class SqlLiteDB:
     viewType, docType = thePath.split('/')
     if viewType=='viewDocType':
       viewColumns = self.dataHierarchy(docType, 'view')+['id']
-      textSelect = ', '.join([f'main.{i}' for i in viewColumns if i in KEY_ORDER])
+      textSelect = ', '.join([f'main.{i}' for i in viewColumns if i in KEY_ORDER or i[1:] in KEY_ORDER])
       if 'tags' in viewColumns:
         textSelect += ', tags.tag'
+      if 'qrCodes' in viewColumns:
+        textSelect += ', qrCodes.qrCode'
       metadataKeys  = [f'properties.key == "{i}"' for i in viewColumns if i not in KEY_ORDER+['tags']]
       if metadataKeys:
         textSelect += ', properties.key, properties.value'
-      text    = f'SELECT {textSelect} from main LEFT JOIN tags USING(id) INNER JOIN branches USING(id) LEFT JOIN properties USING(id) '\
+      text    = f'SELECT {textSelect} from main LEFT JOIN tags USING(id) LEFT JOIN qrCodes USING(id) '\
+                f'INNER JOIN branches USING(id) LEFT JOIN properties USING(id) '\
                 f'WHERE main.type LIKE "{docType}%"'
       df      = pd.read_sql_query(text, self.connection)
       allCols = list(df.columns)
@@ -423,18 +423,23 @@ class SqlLiteDB:
       if 'tags' in viewColumns:
         allCols.remove('tag')
         df   = df.groupby(allCols)['tag'].apply(lambda x: ', '.join(x.astype(str))).reset_index()
+      if 'qrCodes' in viewColumns:
+        allCols.remove('qrCode')
+        df   = df.groupby(allCols)['qrCode'].apply(lambda x: ', '.join(x.astype(str))).reset_index()
       if metadataKeys:
         columnNames = [i for i in df.columns if i not in ('key','value')]
         df = df.pivot(index=columnNames, columns='key', values='value').reset_index()  # Pivot the DataFrame
         df.columns.name = None                                                         # Flatten the columns
-      df = df.reindex(['tag' if i=='tags' else i for i in viewColumns], axis=1)
+      columnOrder = ['tag' if i=='tags' else 'qrCode' if i=='qrCodes' else i[1:] if i.startswith('.') and i[1:] in KEY_ORDER else i for i in viewColumns]
+      df = df.reindex(columnOrder, axis=1)
+      df = df.rename(columns={i:i[1:] for i in columnOrder if i.startswith('.') })
       df = df.astype('str').fillna('')
       return df
     elif thePath=='viewHierarchy/viewHierarchy':
       self.cursor.execute(f"SELECT branches.id, branches.stack, branches.child, main.type, main.name, main.gui "\
                           f"FROM branches INNER JOIN main USING(id) WHERE branches.stack LIKE '{startKey}%'")
       results = self.cursor.fetchall()
-      # value: [child, doc['-type'], doc['-name'], doc['-gui']]
+      # value: [child, doc['-type'], doc['.name'], doc['-gui']]
       results = [{'id':i[0], 'key':i[1].replace('/',' '), 'value':[i[2], i[3].split('/'), i[4], [j=='T' for j in i[5]]]} for i in results]
     elif thePath=='viewHierarchy/viewPaths':
       # JOIN and get type
@@ -635,7 +640,7 @@ class SqlLiteDB:
         if path!='*' and not path.startswith('http'):
           for parentID in stack.split('/')[:-1]:            #check if all parents in doc have a corresponding path
             parentDoc = self.getDoc(parentID)
-            parentDocBranches = parentDoc['-branch']
+            parentDocBranches = parentDoc['branch']
             onePathFound = any(path.startswith(parentBranch['path']) for parentBranch in parentDocBranches)
             if not onePathFound and (not docType.startswith('procedure') or not minimal):
               outstring+= outputString(outputStyle,'unsure',f"dch08: parent does not have corresponding path (remote content) {id} | parentID {parentID}")

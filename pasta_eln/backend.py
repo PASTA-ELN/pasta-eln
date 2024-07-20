@@ -101,16 +101,16 @@ class Backend(CLI_Mixin):
       doc (dict): dict to save
     """
     doc = dict(doc)
-    if doc['-branch'][0]['path'] is None:
+    if doc['branch'][0]['path'] is None:
       self.cwd     = None
     else:
-      self.cwd     = self.basePath/doc['-branch'][0]['path']
-    self.hierStack = doc['-branch'][0]['stack']+[doc['_id']]
-    doc['childNum']= doc['-branch'][0]['child']
+      self.cwd     = self.basePath/doc['branch'][0]['path']
+    self.hierStack = doc['branch'][0]['stack']+[doc['id']]
+    doc['childNum']= doc['branch'][0]['child']
     # change content
     self.addData('-edit-', doc)
     # change folder-name in database of all children
-    if doc['-type'][0][0]=='x' and self.cwd is not None:
+    if doc['type'][0][0]=='x' and self.cwd is not None:
       items = self.db.getView('viewHierarchy/viewPaths',
                               startKey=f'{self.cwd.relative_to(self.basePath).as_posix()}/')
       for item in items:
@@ -129,7 +129,7 @@ class Backend(CLI_Mixin):
       doc (dict):  parents documents
     """
     oldPathParts = item['key'].split('/')
-    newPathParts = doc['-branch']['path'].split('/')
+    newPathParts = doc['branch']['path'].split('/')
     newPath = '/'.join(newPathParts+oldPathParts[len(newPathParts):]  )
     if newPath != item['key']:  # for-loop could also be implemented in parallel
       # print(item['id']+'  old='+item['key']+'  branch='+str(item['value'][-1])+\
@@ -153,36 +153,36 @@ class Backend(CLI_Mixin):
     Returns:
         str: docID, empty string if failure
     """
-    doc['-user']  = self.userID
+    doc['user']  = self.userID
     childNum     = doc.pop('childNum',None)
     path         = None
     oldPath      = None
     operation    = 'c'  #operation of branch/path
     if docType == '-edit-':
       edit = True
-      if '-type' not in doc:
-        doc['-type'] = [f'x{len(self.hierStack)}']
+      if 'type' not in doc:
+        doc['type'] = [f'x{len(self.hierStack)}']
       if not hierStack:
         hierStack = self.hierStack
-      if '_id' not in doc:
-        doc['_id'] = hierStack[-1]
-      if len(hierStack)>0 and doc['-type'][0][0]=='x':
+      if 'id' not in doc:
+        doc['id'] = hierStack[-1]
+      if len(hierStack)>0 and doc['type'][0][0]=='x':
         hierStack  = hierStack[:-1]
-        oldPath    =  doc['-branch'][0]['path']
-      elif '-branch' in doc:
-        hierStack   = doc['-branch'][0]['stack']
+        oldPath    =  doc['branch'][0]['path']
+      elif 'branch' in doc:
+        hierStack   = doc['branch'][0]['stack']
     else:  #new doc
       edit = False
-      doc['-type'] = docType.split('/')
+      doc['type'] = docType.split('/')
       if len(hierStack) == 0:
         hierStack = self.hierStack
     logging.debug((((
         f'Add/edit data in cwd:{str(self.cwd)} with stack:{str(hierStack)} and name: '
-        + doc['-name']) + ' type:') + str(doc['-type']) + ' and edit: ') +
+        + doc['name']) + ' type:') + str(doc['type']) + ' and edit: ') +
                   str(edit))
 
     # collect structure-doc and prepare
-    if doc['-type'][0] and doc['-type'][0][0]=='x' and doc['-type'][0]!='x0' and childNum is None:
+    if doc['type'][0] and doc['type'][0][0]=='x' and doc['type'][0]!='x0' and childNum is None:
       #should not have childnumber in other cases
       thisStack = ' '.join(hierStack)
       view = self.db.getView('viewHierarchy/viewHierarchy', startKey=thisStack) #not faster with cT.getChildren
@@ -194,45 +194,45 @@ class Backend(CLI_Mixin):
           childNum += 1
 
     # find path name on local file system; name can be anything
-    if self.cwd is not None and '-name' in doc:
-      if doc['-type'][0] and doc['-type'][0][0]=='x':
+    if self.cwd is not None and 'name' in doc:
+      if doc['type'][0] and doc['type'][0][0]=='x':
         #project, step, task
-        if doc['-type'][0]=='x0':
+        if doc['type'][0]=='x0':
           childNum = 0
         #parentDir
         #  edit: cwd of the project/step/task: remove last directory from cwd (since cwd contains a / at end: remove two)
         #  new: below the current project/step/task
         parentDirectory = self.cwd.parent if edit else self.cwd
-        path = parentDirectory/createDirName(doc['-name'],doc['-type'][0],childNum) #update,or create (if new doc, update ignored anyhow)
+        path = parentDirectory/createDirName(doc['name'],doc['type'][0],childNum) #update,or create (if new doc, update ignored anyhow)
         operation = 'u'
       else:
         #measurement, sample, procedure
         shasum = ''
-        if '://' in doc['-name']:                           #make up name
+        if '://' in doc['name']:                           #make up name
           if localCopy:
-            baseName  = Path(doc['-name']).stem
-            extension = Path(doc['-name']).suffix
+            baseName  = Path(doc['name']).stem
+            extension = Path(doc['name']).suffix
             path = self.cwd/(camelCase(baseName)+extension)
-            request.urlretrieve(doc['-name'], path)
-            doc['-name'] = camelCase(baseName)+extension
+            request.urlretrieve(doc['name'], path)
+            doc['name'] = camelCase(baseName)+extension
           else:
-            path = Path(doc['-name'])
+            path = Path(doc['name'])
             try:
               shasum  = generic_hash(path)
             except Exception:
               print('**ERROR bad01: fetch remote content failed. Data not added')
               return ''
-        elif doc['-name']!='' and (self.basePath/doc['-name']).is_file():          #file exists
-          path = self.basePath/doc['-name']
-          doc['-name'] = Path(doc['-name']).name
-        elif doc['-name']!='' and (self.cwd/doc['-name']).is_file():               #file exists
-          path = self.cwd/doc['-name']
-        elif '-branch' in doc:
-          if len(doc['-branch'])==1:
-            if doc['-branch'][0]['path'] is not None and (self.basePath/doc['-branch'][0]['path']).is_file():
-              path = self.basePath/doc['-branch'][0]['path']
+        elif doc['name']!='' and (self.basePath/doc['name']).is_file():          #file exists
+          path = self.basePath/doc['name']
+          doc['name'] = Path(doc['name']).name
+        elif doc['name']!='' and (self.cwd/doc['name']).is_file():               #file exists
+          path = self.cwd/doc['name']
+        elif 'branch' in doc:
+          if len(doc['branch'])==1:
+            if doc['branch'][0]['path'] is not None and (self.basePath/doc['branch'][0]['path']).is_file():
+              path = self.basePath/doc['branch'][0]['path']
           else:
-            logging.warning('backend: add document with multiple branches'+str(doc['-branch']) )
+            logging.warning('backend: add document with multiple branches'+str(doc['branch']) )
         else:                                                                     #make up name
           shasum  = '-'
         if shasum!='-' and path is not None:
@@ -245,7 +245,7 @@ class Backend(CLI_Mixin):
             # if not 'image' in doc and not 'content' in doc and not 'otherELNName' in doc:  #did not get valuable data: extractor does not exit
             #   return ''
           if len(view)==1:  #measurement is already in database
-            doc['_id'] = view[0]['id']
+            doc['id'] = view[0]['id']
             doc['shasum'] = shasum
             edit = True
     # assemble branch information
@@ -255,25 +255,25 @@ class Backend(CLI_Mixin):
       path = path.relative_to(self.basePath)
     pathStr = None if path is None else path.as_posix()
     show = [True]*(len(hierStack)+1)
-    if '-branch' in doc and len(hierStack)+1==len(doc['-branch'][0]['show']):
-      show = doc['-branch'][0]['show']
-    doc['-branch'] = {'stack':hierStack,'child':childNum,'path':pathStr, 'show':show, 'op':operation}
+    if 'branch' in doc and len(hierStack)+1==len(doc['branch'][0]['show']):
+      show = doc['branch'][0]['show']
+    doc['branch'] = {'stack':hierStack,'child':childNum,'path':pathStr, 'show':show, 'op':operation}
     if edit:
       #update document
       keysNone = [key for key in doc if doc[key] is None]
       doc = fillDocBeforeCreate(doc, ['--'])  #store None entries and save back since js2py gets equalizes undefined and null
       for key in keysNone:
         doc[key]=None
-      doc = self.db.updateDoc(doc, doc['_id'])
+      doc = self.db.updateDoc(doc, doc['id'])
     else:
       # add doc to database
-      doc = fillDocBeforeCreate(doc, doc['-type'])
+      doc = fillDocBeforeCreate(doc, doc['type'])
       doc = self.db.saveDoc(doc)
 
     ## adaptation of directory tree, information on disk: documentID is required
-    if self.cwd is not None and doc['-type'][0][0]=='x':
+    if self.cwd is not None and doc['type'][0][0]=='x':
       #project, step, task
-      path = Path(doc['-branch'][0]['path'])
+      path = Path(doc['branch'][0]['path'])
       if edit and oldPath is not None:
         if not (self.basePath/oldPath).is_dir():
           print(f'**WARNING: addData edit of folder should have oldPath and that should exist:{oldPath}'
@@ -284,7 +284,7 @@ class Backend(CLI_Mixin):
         (self.basePath/path).mkdir(exist_ok=True)   #if exist, create again; moving not necessary since directory moved in changeHierarchy
       with open(self.basePath/path/'.id_pastaELN.json','w', encoding='utf-8') as f:  #local path, update in any case
         f.write(json.dumps(doc))
-    return doc['_id']
+    return doc['id']
 
 
   ######################################################
@@ -307,8 +307,8 @@ class Backend(CLI_Mixin):
       self.cwd = self.cwd.parent
     elif dirName is None:  # existing ID is given: open that
       doc = self.db.getDoc(docID)
-      self.cwd = self.basePath/doc['-branch'][0]['path']
-      self.hierStack = doc['-branch'][0]['stack']+[docID]
+      self.cwd = self.basePath/doc['branch'][0]['path']
+      self.hierStack = doc['branch'][0]['stack']+[docID]
     else:
       self.cwd = dirName
       self.hierStack.append(docID)
@@ -335,7 +335,7 @@ class Backend(CLI_Mixin):
     progressBar.show()
     self.hierStack = [projID]
     if not projPath:
-      projPath = self.db.getDoc(projID)['-branch'][0]['path']
+      projPath = self.db.getDoc(projID)['branch'][0]['path']
     self.cwd = self.basePath/projPath
     rerunScanTree = False
     #prepare lists and start iterating
@@ -356,7 +356,7 @@ class Backend(CLI_Mixin):
         continue
       parentID = parentIDs[0]['id']
       parentDoc = self.db.getDoc(parentID)
-      hierStack = parentDoc['-branch'][0]['stack']+[parentID]
+      hierStack = parentDoc['branch'][0]['stack']+[parentID]
       # handle directories
       for dirName in dirs[::-1]: #sorted forward in Linux
         if dirName.startswith('.') or dirName.startswith('trash_'):
@@ -368,10 +368,10 @@ class Backend(CLI_Mixin):
         if (self.basePath/path/'.id_pastaELN.json').is_file(): # update branch: path and stack
           with open(self.basePath/path/'.id_pastaELN.json', 'r', encoding='utf-8') as fIn:
             doc = json.loads(fIn.read())
-          if (self.basePath/doc['-branch'][0]['path']).parent.as_posix()  == root and \
-               doc['-branch'][0]['stack']==hierStack:
+          if (self.basePath/doc['branch'][0]['path']).parent.as_posix()  == root and \
+               doc['branch'][0]['stack']==hierStack:
             # special case: user wants to have a different directory name in same folder: then the child-number should not change
-            childNum = doc['-branch'][0]['child']
+            childNum = doc['branch'][0]['child']
             newPath = path
           else:
             #determine childNumber
@@ -383,15 +383,15 @@ class Backend(CLI_Mixin):
                 continue
               if thisStack == ' '.join(item['key'].split(' ')[:-1]): #remove last item from string
                 childNum += 1
-            newPath = '/'.join(path.split('/')[:-1])+'/'+createDirName(doc['-name'],doc['-type'][0],childNum) #update,or create (if new doc, update ignored anyhow)
+            newPath = '/'.join(path.split('/')[:-1])+'/'+createDirName(doc['name'],doc['type'][0],childNum) #update,or create (if new doc, update ignored anyhow)
             if (self.basePath/newPath).exists():                     #can be either file or directory
               print("**ERROR new path should not exist",newPath)
             else:
               (self.basePath/path).rename(self.basePath/newPath)
-          self.db.updateBranch(doc['_id'], 0, childNum, hierStack, newPath)
+          self.db.updateBranch(doc['id'], 0, childNum, hierStack, newPath)
         else:
-          currentID = self.addData(f'x{len(hierStack)}', {'-name': dirName}, hierStack)
-          newDir = self.basePath/self.db.getDoc(currentID)['-branch'][0]['path']
+          currentID = self.addData(f'x{len(hierStack)}', {'name': dirName}, hierStack)
+          newDir = self.basePath/self.db.getDoc(currentID)['branch'][0]['path']
           (newDir/'.id_pastaELN.json').rename(self.basePath/root/dirName/'.id_pastaELN.json') #move index file into old folder
           newDir.rmdir()                     #remove created path
           (self.basePath/root/dirName).rename(newDir) #move old to new path
@@ -408,7 +408,7 @@ class Backend(CLI_Mixin):
           pathsInDB_data.remove(path)
         else:
           logging.info('Scan: add file to DB: %s',path)
-          self.addData('', {'-name':path}, hierStack)
+          self.addData('', {'name':path}, hierStack)
     #finish method
     self.cwd = self.basePath/projPath
     orphans = [
@@ -426,9 +426,9 @@ class Backend(CLI_Mixin):
       docID = [i for i in inDB_all if i['key']==orphan][0]['id']
       doc   = dict(self.db.getDoc(docID))
       change = None
-      for branch in doc['-branch']:
+      for branch in doc['branch']:
         if branch['path']==orphan:
-          change = {'-branch': {'op':'d', 'oldpath':branch['path'], 'path':branch['path'], 'stack':branch['stack'] }}
+          change = {'branch': {'op':'d', 'oldpath':branch['path'], 'path':branch['path'], 'stack':branch['stack'] }}
           break
       if change is None:
         logging.warning('Tried to remove orphan in database but could not; that can happen if user renames folder: %s', orphan)
@@ -478,7 +478,7 @@ class Backend(CLI_Mixin):
       try:
         print(pyFile, absFilePath)
         module  = importlib.import_module(pyFile[:-3])
-        content = module.use(absFilePath, {'main':'/'.join(doc['-type'])} )
+        content = module.use(absFilePath, {'main':'/'.join(doc['type'])} )
       except Exception:
         logging.error(f'ERROR with extractor {pyFile}' + '\n' + traceback.format_exc())
         success = False
@@ -503,11 +503,11 @@ class Backend(CLI_Mixin):
               if not (isinstance(item, dict) and 'key' in item and 'value' in item and 'unit' in item):
                 logging.error('Complicated extractor return wrong')
                 print('Complicated extractor return wrong')
-        if doc['style']['main'].startswith(doc['-type'][0]):
-          doc['-type']     = doc['style']['main'].split('/')
+        if doc['style']['main'].startswith(doc['type'][0]):
+          doc['type']     = doc['style']['main'].split('/')
         else:
           #user has strange wish: trust him/her
-          logging.info('user has strange wish: trust him/her: '+'/'.join(doc['-type'])+'  '+doc['style']['main'])
+          logging.info('user has strange wish: trust him/her: '+'/'.join(doc['type'])+'  '+doc['style']['main'])
         del doc['style']
         if 'fileExtension' not in doc['metaVendor']:
           doc['metaVendor']['fileExtension'] = extension.lower()
@@ -714,10 +714,10 @@ class Backend(CLI_Mixin):
     count = 0
     for projI in viewProjects['id']:
       projDoc = self.db.getDoc(projI)
-      if len(projDoc['-branch'])==0:
+      if len(projDoc['branch'])==0:
         output += outputString(outputStyle,'error','project view got screwed up')
         continue
-      for root, dirs, files in os.walk(self.basePath/projDoc['-branch'][0]['path']):
+      for root, dirs, files in os.walk(self.basePath/projDoc['branch'][0]['path']):
         if Path(root).name[0]=='.' or Path(root).name.startswith('trash_'):
           del dirs
           continue
@@ -746,10 +746,9 @@ class Backend(CLI_Mixin):
                 if len(listDocs)!=1:
                   output += outputString(outputStyle, 'error', f'Path of folder is non-unique: {path}')
                 docDB   = self.db.getDoc(listDocs[0]['id'])
-                docDB['-date'] = docDB.pop('-dateCreated')
                 difference = diffDicts(docDisk,docDB)
                 if len(difference)>1:
-                  output += outputString(outputStyle,'error','disk(1) and db(2) content do not match:'+docDisk['_id'])
+                  output += outputString(outputStyle,'error','disk(1) and db(2) content do not match:'+docDisk['id'])
                   output += outputString(outputStyle,'error',difference)
                   if repair:
                     with open(self.basePath/root/dirName/'.id_pastaELN.json','w',encoding='utf-8') as fOut:
@@ -760,7 +759,7 @@ class Backend(CLI_Mixin):
               count += 1
               # if True:  #use only for resetting the content in the .id_pastaELN.json
               #   with open(self.basePath/root/dirName/'.id_pastaELN.json','w',encoding='utf-8') as fOut:
-              #     docDB   = self.db.getDoc( docDisk['_id'] )
+              #     docDB   = self.db.getDoc( docDisk['id'] )
               #     json.dump(docDB, fOut)
     output += outputString(outputStyle, 'info', f'Number of files on disk that are not in database {str(count)}')
     orphans = [i for i in pathsInDB_data   if not (self.basePath/i).exists() and ":/" not in i and i!='*']  #paths can be files or directories

@@ -9,7 +9,7 @@ from ..guiCommunicate import Communicate
 from ..guiStyle import getColor
 from ..miscTools import markdownStyler
 
-_DO_NOT_RENDER_ = ['image','content','metaVendor','metaUser','shasum','comment']
+DO_NOT_RENDER = ['image','content','metaVendor','metaUser','shasum','type','branch','gui','dateCreated','dateModified','id','user','tags','name','comment']
 
 class ProjectLeafRenderer(QStyledItemDelegate):
   """ renders each leaf of project tree using QPaint """
@@ -78,7 +78,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       print(f'**ERROR cannot read docID: {docID}')
       logging.error('LeafRenderer: Cannot read docID %s',docID)
       return
-    hiddenText = ('     \U0001F441' if [b for b in doc['-branch'] if False in b['show']] else '')
+    hiddenText = ('     \U0001F441' if [b for b in doc['branch'] if False in b['show']] else '')
     staticText = QStaticText(f'<strong>{nameText} {hiddenText}</strong>')
     staticText.setTextWidth(docTypeOffset)
     painter.drawStaticText(x0, y0+y, staticText)
@@ -86,13 +86,13 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     if self.debugMode:
       painter.drawStaticText(x0+700, y0+y, QStaticText(data['hierStack']))
     width, height = -1, -1
-    if doc['-tags']:
+    if doc['tags']:
       y += self.lineSep
-      tags = ['_curated_' if i=='_curated' else f'#{i}' for i in doc['-tags']]
+      tags = ['_curated_' if i=='_curated' else f'#{i}' for i in doc['tags']]
       tags = ['\u2605'*int(i[2]) if i[:2]=='#_' else i for i in tags]
       painter.drawStaticText(x0, y0+y, QStaticText(f'Tags: {" ".join(tags)}'))
     for key in doc:
-      if key in _DO_NOT_RENDER_ or key[0] in ['-','_']:
+      if key in DO_NOT_RENDER:
         continue
       y += self.lineSep
       if isinstance(doc[key], str):
@@ -168,8 +168,8 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     docKeys = doc.keys()
     widthContent = min(self.widthContent,  \
                        int((option.rect.bottomRight()-option.rect.topLeft()).toTuple()[0]/2) )               # type: ignore[attr-defined]
-    height  = len([i for i in docKeys if not i in _DO_NOT_RENDER_ and i[0] not in ['-','_'] ])  #height in text lines
-    height += 1 if '-tags' in docKeys and len(doc['-tags']) > 0 else 0
+    height  = len([i for i in docKeys if not i in DO_NOT_RENDER])  #height in text lines
+    height += 1 if 'tags' in docKeys and len(doc['tags']) > 0 else 0
     height  = (height+3) * self.lineSep
     if 'content' in docKeys:
       text = QTextDocument()

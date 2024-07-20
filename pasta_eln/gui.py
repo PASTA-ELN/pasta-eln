@@ -121,11 +121,11 @@ class MainWindow(QMainWindow):
       doc (dict): document
     """
     if '_id' in doc:
-      logging.debug('gui:formdoc ' + str(doc['_id']))
+      logging.debug('gui:formdoc ' + str(doc['id']))
     elif '_ids' in doc:
       logging.debug('gui:formdoc ' + str(doc['_ids']))
     else:
-      logging.debug('gui:formdoc of type ' + str(doc['-type']))
+      logging.debug('gui:formdoc of type ' + str(doc['type']))
     formWindow = Form(self.comm, doc)
     ret = formWindow.exec()
     if ret == 0:
