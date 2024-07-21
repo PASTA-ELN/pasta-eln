@@ -156,6 +156,7 @@ class Details(QScrollArea):
         self.metaUserL.addWidget(label)
         self.metaUserW.show()
       else:
+        #TODO create one function to render "'':lalala" into correct shape and use that function here and in project...
         link = False
         if (isinstance(self.doc[key],str) and '\n' in self.doc[key]) or key=='comment':
           labelW, labelL = widgetAndLayout('H', self.metaDetailsL, top='s', bottom='s')

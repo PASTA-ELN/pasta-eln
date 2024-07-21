@@ -1,6 +1,7 @@
 """ Class for interaction with sqlite """
 import base64, copy, io, json, logging, os, re, sqlite3
 from typing import Any, Optional, Union
+from datetime import datetime
 from pathlib import Path
 from anytree import Node
 import pandas as pd
@@ -135,12 +136,7 @@ class SqlLiteDB:
       results = self.cursor.fetchall()
       if column=='':
         return [i[0] for i in results]
-      resultsDict = {i[0]:i[1] for i in results}
-      # if column!=', title':
-      #   raise ValueError('Not tested')
-      #   #   resultsDict = {k:json.loads(v) for k,v in resultsDict.items()}
-      #   #   resultsDict = {k:v.split(',') for k,v in resultsDict.items()}
-      return resultsDict
+      return {i[0]:i[1] for i in results}
     ### if metadata = definitions of data
     if column == 'meta':
       self.connection.row_factory = sqlite3.Row  #default None
@@ -361,7 +357,16 @@ class SqlLiteDB:
     Returns:
       dict: document that was removed
     """
-    raise ValueError('Not implemented REMOVE')
+    doc = self.getDoc(docID)
+    self.cursor.execute(f"DELETE FROM main WHERE id == '{docID}'")
+    self.cursor.execute(f"DELETE FROM branches WHERE id == '{docID}'")
+    self.cursor.execute(f"DELETE FROM properties WHERE id == '{docID}'")
+    self.cursor.execute(f"DELETE FROM tags WHERE id == '{docID}'")
+    self.cursor.execute(f"DELETE FROM qrCodes WHERE id == '{docID}'")
+    self.cursor.execute(f"DELETE FROM attachments WHERE id == '{docID}'")
+    self.cursor.execute("INSERT INTO changes VALUES (?,?,?)", [docID, datetime.now().isoformat(), json.dumps(doc)])
+    self.connection.commit()
+    return doc
 
 
   def initAttachment(self, docID:str, name:str, docType:str) -> None:
@@ -413,7 +418,7 @@ class SqlLiteDB:
       metadataKeys  = [f'properties.key == "{i}"' for i in viewColumns if i not in KEY_ORDER+['tags']]
       if metadataKeys:
         textSelect += ', properties.key, properties.value'
-      text    = f'SELECT {textSelect} from main LEFT JOIN tags USING(id) LEFT JOIN qrCodes USING(id) '\
+      text    = f'SELECT {textSelect} FROM main LEFT JOIN tags USING(id) LEFT JOIN qrCodes USING(id) '\
                 f'INNER JOIN branches USING(id) LEFT JOIN properties USING(id) '\
                 f'WHERE main.type LIKE "{docType}%"'
       df      = pd.read_sql_query(text, self.connection)
@@ -457,7 +462,7 @@ class SqlLiteDB:
     elif viewType=='viewIdentify':
       if docType=='viewQR':
         if startKey is None:
-          self.cursor.execute("SELECT qrCodes.id, qrCodes.qrCode, main.name from qrCodes INNER JOIN main USING(id)")
+          self.cursor.execute("SELECT qrCodes.id, qrCodes.qrCode, main.name FROM qrCodes INNER JOIN main USING(id)")
         else:
           print("HHEUOEUOU")
           a = 77/0

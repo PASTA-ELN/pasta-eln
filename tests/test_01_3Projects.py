@@ -19,12 +19,11 @@ class TestStringMethods(unittest.TestCase):
     self.be = None
     self.dirName = ''
 
-  @pytest.mark.skip(
-    reason="Disabled for github since cannot create couchdb instance during actions")
   def test_main(self):
     """
     main function
     """
+    #TODO check if test successful
     dummyProgressBar = DummyProgressBar()
     outputFormat = 'print'
     # initialization: create database, destroy on filesystem and database and then create new one
