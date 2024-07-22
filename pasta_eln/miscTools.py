@@ -399,7 +399,7 @@ def flatten(d:Mapping[Any,Any]) -> dict[object, Any]:
   return flat_dict
 
 
-def hierarchy(d:dict[str,str]) -> dict[str,Any]:
+def hierarchy(d:dict[str,Any]) -> dict[str,Any]:
   """Reverse flattening of dict-like object
 
   Args:

@@ -54,7 +54,7 @@ class Backend(CLI_Mixin):
         if k not in self.configuration['GUI']:
           self.configuration['GUI'][k] = v[1]
     if self.configuration['version']!=3:
-      print('**ERROR Configuration file does not exist or version is not 2')
+      print('**Info: configuration file does not exist or version is < 3')
       return
     if not defaultProjectGroup:
       defaultProjectGroup = self.configuration['defaultProjectGroup']

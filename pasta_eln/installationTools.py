@@ -22,7 +22,7 @@ def getOS() -> str:
   return f'{operatingSys} {environment}'
 
 
-def createDefaultConfiguration(user:str, password:str, pathPasta:Optional[Path]=None) -> dict[str,Any]:
+def createDefaultConfiguration(pathPasta:Optional[Path]=None) -> dict[str,Any]:
   '''
   Create base of configuration file .pastaELN.json
   - basic project group
@@ -37,10 +37,6 @@ def createDefaultConfiguration(user:str, password:str, pathPasta:Optional[Path]=
   Returns:
     dict: dictionary of configuration
   '''
-  if not user:
-    user = input('Enter user name: ')
-  if not password:
-    password = input('Enter password: ')
   if pathPasta is None:
     if platform.system()=='Windows':
       pathPasta = Path.home()/'Documents'/'PASTA_ELN'
@@ -50,7 +46,7 @@ def createDefaultConfiguration(user:str, password:str, pathPasta:Optional[Path]=
       'defaultProjectGroup': 'research',
       'projectGroups': {
           'research': {
-              'local': {'user': user, 'password': password, 'database': 'research', 'path': str(pathPasta)},
+              'local': {'database': 'research', 'path': str(pathPasta)},
               'remote': {},
           }}, 'version': 2}
   try:
@@ -63,14 +59,12 @@ def createDefaultConfiguration(user:str, password:str, pathPasta:Optional[Path]=
   return conf
 
 
-def configuration(command:str='test', user:str='', password:str='', pathPasta:Path=Path('')) -> str:
+def configuration(command:str='test', pathPasta:Path=Path('')) -> str:
   '''
   Check configuration file .pastaELN.json for consistencies
 
   Args:
     command (str): 'test' or 'repair'
-    user (str): user name (for windows)
-    password (str): password (for windows)
     pathPasta (Path): path to install pasta in (Windows)
 
   Returns:
@@ -85,7 +79,7 @@ def configuration(command:str='test', user:str='', password:str='', pathPasta:Pa
     output += '**ERROR configuration file does not exist\n'
     conf = {}
     if command == 'repair':
-      conf = createDefaultConfiguration(user, password, pathPasta)
+      conf = createDefaultConfiguration(pathPasta)
   logging.info(json.dumps(conf, indent=2))
 
   #check normal items
@@ -142,7 +136,8 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
     callbackPercent(2)
   ### CREATE PROJECTS AND SHOW
   outputString(outputFormat,'h2','CREATE EXAMPLE PROJECT AND SHOW')
-  backend.addData('x0', {'name': 'PASTAs Example Project', '.objective': 'Test if everything is working as intended.', '.status': 'active', 'comment': '#Important Can be used as reference or deleted'})
+  backend.addData('x0', {'name': 'PASTAs Example Project', '.objective': 'Test if everything is working as intended.',
+                         '.status': 'active', 'comment': '#Important Can be used as reference or deleted'})
   if callbackPercent is not None:
     callbackPercent(3)
   outputString(outputFormat,'info', backend.output('x0'))

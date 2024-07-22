@@ -107,9 +107,15 @@ class SqlLiteDB:
     return
 
 
-  def createSQLTable(self, name, columns, primary, colTypes=None):
+  def createSQLTable(self, name:str, columns:list[str], primary:str, colTypes:Optional[list[Any]]=None) -> list[str]:
     """
     Create a table in the sqlite system
+
+    Args:
+      name (str): name of table
+      columns (list): list of column names
+      primary (str): primary keys as comma-separated
+      colTypes (list): optional list of data-types of the columns
     """
     if colTypes is None:
       colTypes = ['TEXT']*len(columns)
@@ -206,7 +212,7 @@ class SqlLiteDB:
                         f"LEFT JOIN definitions ON properties.key = (concat(definitions.class,'.',definitions.name)) "
                         f"WHERE properties.id == '{docID}'")
     res = self.cursor.fetchall()
-    metadataFlat = {i[0]:(i[1],
+    metadataFlat:dict[str, tuple[str,str,str,str]] = {i[0]:(i[1],
                           ('' if i[2] is None else i[2])+('' if i[5] is None else i[5]),
                           ('' if i[3] is None else i[3])+('' if i[6] is None else i[6]),
                           ('' if i[4] is None else i[4])+('' if i[7] is None else i[7])) for i in res}
@@ -258,7 +264,7 @@ class SqlLiteDB:
     doc = {k:v for k,v in doc.items() if (k not in KEY_ORDER and k[1:] not in KEY_ORDER) or k == 'id'}
 
     # properties
-    def insertMetadata(data, parentKeys):
+    def insertMetadata(data:dict[str,Any], parentKeys:str) -> None:
       parentKeys = f'{parentKeys}.' if parentKeys else ''
       for key,value in data.items():
         if isinstance(value, dict):

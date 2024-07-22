@@ -5,7 +5,7 @@ from typing import Callable, Any
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QMessageBox, QProgressBar    # pylint: disable=no-name-in-module
 from ..guiStyle import TextButton, widgetAndLayout
 from ..installationTools import configuration, exampleData, createShortcut
-from ..fixedStringsJson import setupText
+from ..fixedStringsJson import setupText, exampleDataString
 from ..miscTools import restart
 from ..guiCommunicate import Communicate
 from ..dataverse.database_api import DatabaseAPI
@@ -86,7 +86,7 @@ class ConfigurationSetup(QWidget):
         self.mainText = self.mainText.replace('- Shortcut creation', '- User selected to NOT add a shortcut' )
       self.text1.setMarkdown(self.mainText)
       #Example data
-      button = QMessageBox.question(self, "Example data", exampleData)
+      button = QMessageBox.question(self, "Example data", exampleDataString)
       if button == QMessageBox.StandardButton.Yes:
         self.progress1.show()
         exampleData(True, self.callbackProgress)

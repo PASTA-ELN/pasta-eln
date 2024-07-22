@@ -120,7 +120,7 @@ class MainWindow(QMainWindow):
     Args:
       doc (dict): document
     """
-    if '_id' in doc:
+    if 'id' in doc:
       logging.debug('gui:formdoc ' + str(doc['id']))
     elif '_ids' in doc:
       logging.debug('gui:formdoc ' + str(doc['_ids']))

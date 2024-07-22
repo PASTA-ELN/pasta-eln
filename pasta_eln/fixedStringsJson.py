@@ -114,7 +114,7 @@ Please restart the software by
 - executing the command in a new cmd.exe window
 """
 
-exampleData = """
+exampleDataString = """
 Do you want to create an example project?
 
 This step helps to verify the installation and provides an helpful example for new users.
