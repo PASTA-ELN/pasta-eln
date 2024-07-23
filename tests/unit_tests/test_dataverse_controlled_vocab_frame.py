@@ -15,10 +15,7 @@ from pasta_eln.GUI.dataverse.controlled_vocab_frame import ControlledVocabFrame
 @pytest.fixture
 def qtbot(mocker):
   mocker.patch('pasta_eln.GUI.dataverse.controlled_vocab_frame.QFrame')
-  mocker.patch('pasta_eln.GUI.dataverse.controlled_vocab_frame.QPushButton')
   mocker.patch('pasta_eln.GUI.dataverse.controlled_vocab_frame.QHBoxLayout')
-  mocker.patch('pasta_eln.GUI.dataverse.controlled_vocab_frame.QSizePolicy')
-  mocker.patch('pasta_eln.GUI.dataverse.controlled_vocab_frame.QSize')
   mocker.patch(
     'pasta_eln.GUI.dataverse.primitive_compound_controlled_frame_base.Ui_PrimitiveCompoundControlledFrameBase.setupUi')
   mocker.patch('pasta_eln.GUI.dataverse.controlled_vocab_frame.logging.getLogger')
@@ -73,13 +70,15 @@ class TestControlledVocabFrame:
     # Happy path tests with various realistic test values
     ({"multiple": True, "value": ["entry1", "entry2"], "valueTemplate": "template"},
      [("template", "entry1"), ("template", "entry2")], "success_multiple_values"),
-    ({"multiple": False, "value": "single_entry", "valueTemplate": "template"}, [(["template"], "single_entry")],
+    ({"multiple": False, "value": "single_entry", "valueTemplate": "template"},
+     [(['No Value', 'template'], 'single_entry')],
      "success_single_value"),
 
     # Edge cases
     ({"multiple": True, "value": [], "valueTemplate": "template"}, [("template", None)], "edge_no_values"),
     ({"multiple": True, "value": None, "valueTemplate": "template"}, [("template", None)], "edge_none_value"),
-    ({"multiple": False, "value": None, "valueTemplate": "template"}, [(["template"], None)], "edge_single_none_value"),
+    ({"multiple": False, "value": None, "valueTemplate": "template"}, [(['No Value', 'template'], 'No Value')],
+     "edge_single_none_value"),
 
     # Error cases are not defined as the function does not handle any exceptions or error conditions.
     # If there are specific error conditions that should be tested, they need to be defined.
@@ -100,17 +99,17 @@ class TestControlledVocabFrame:
     controlled_vocab_frame.logger.info.assert_called_once_with("Loading controlled vocabulary frame ui..")
 
   @pytest.mark.parametrize("meta_field, expected_entry, expected_value, test_id", [
-    # Happy path tests
-    ({"multiple": True, "valueTemplate": ["term1", "term2"]}, ["term1", "term2"], "term1", "happy_multiple_true"),
-    ({"multiple": False, "valueTemplate": "term"}, ["term"], "term", "happy_multiple_false"),
+    # Success path tests
+    ({"multiple": True, "valueTemplate": ["term1", "term2"]}, ["term1", "term2"], "term1", "success_multiple_true"),
+    ({"multiple": False, "valueTemplate": "term"}, ['No Value', 'term'], "term", "success_multiple_false"),
 
     # Edge cases
     ({"multiple": True, "valueTemplate": []}, [], None, "edge_empty_list"),
-    ({"multiple": False, "valueTemplate": ""}, [], '', "edge_empty_string"),
+    ({"multiple": False, "valueTemplate": ""}, ['No Value'], 'No Value', "edge_empty_string"),
 
     # Error cases
     ({"multiple": True}, None, None, "error_no_valueTemplate_multiple"),
-    ({"multiple": False}, [], None, "error_no_valueTemplate_single"),
+    ({"multiple": False}, ['No Value'], 'No Value', "error_no_valueTemplate_single"),
   ])
   def test_add_button_callback(self, mocker, controlled_vocab_frame, meta_field, expected_entry, expected_value,
                                test_id):
@@ -127,7 +126,7 @@ class TestControlledVocabFrame:
     controlled_vocab_frame.add_new_vocab_entry.assert_called_with(expected_entry, expected_value)
 
   @pytest.mark.parametrize("controlled_vocabulary, value, test_id", [
-    (['term1', 'term2', 'term3'], 'term2', 'happy_path'),
+    (['term1', 'term2', 'term3'], 'term2', 'success_path'),
     ([], None, 'empty_list'),
     (None, None, 'none_vocabulary'),
     (['single_term'], 'single_term', 'single_item'),
@@ -136,11 +135,12 @@ class TestControlledVocabFrame:
   ], ids=lambda test_id: test_id)
   def test_add_new_vocab_entry(self, mocker, controlled_vocab_frame, controlled_vocabulary, value, test_id):
     # Arrange
-    mock_button = mocker.patch('pasta_eln.GUI.dataverse.controlled_vocab_frame.QPushButton')
     mock_h_layout = mocker.patch('pasta_eln.GUI.dataverse.controlled_vocab_frame.QHBoxLayout')
     mock_combobox = mocker.patch('pasta_eln.GUI.dataverse.controlled_vocab_frame.QComboBox')
-    mock_size_policy = mocker.patch('pasta_eln.GUI.dataverse.controlled_vocab_frame.QSizePolicy')
-    mock_size = mocker.patch('pasta_eln.GUI.dataverse.controlled_vocab_frame.QSize')
+    mock_add_delete_button = mocker.patch('pasta_eln.GUI.dataverse.controlled_vocab_frame.add_delete_button')
+    mock_add_clear_button = mocker.patch('pasta_eln.GUI.dataverse.controlled_vocab_frame.add_clear_button')
+    controlled_vocab_frame.add_clear_button = mocker.MagicMock()
+    controlled_vocab_frame.add_delete_button = mocker.MagicMock()
 
     # Act
     controlled_vocab_frame.add_new_vocab_entry(controlled_vocabulary, value)
@@ -154,21 +154,8 @@ class TestControlledVocabFrame:
     mock_combobox.return_value.addItems.assert_called_once_with(controlled_vocabulary or [])
     mock_combobox.return_value.setCurrentText.assert_called_once_with(value or "")
     mock_h_layout.return_value.addWidget.assert_any_call(mock_combobox.return_value)
-    mock_button.assert_called_once_with(parent=controlled_vocab_frame.instance)
-    delete_push_button = mock_button.return_value
-    delete_push_button.setText.assert_called_once_with("Delete")
-    delete_push_button.setToolTip.assert_called_once_with("Delete this particular vocabulary entry.")
-    mock_size_policy.assert_called_once_with(mock_size_policy.Policy.Fixed, mock_size_policy.Policy.Fixed)
-    size_policy = mock_size_policy.return_value
-    size_policy.setHorizontalStretch.assert_called_once_with(0)
-    size_policy.setVerticalStretch.assert_called_once_with(0)
-    size_policy.setHeightForWidth.assert_called_once_with(delete_push_button.sizePolicy().hasHeightForWidth())
-    delete_push_button.setSizePolicy.assert_called_once_with(size_policy)
-    mock_size.assert_called_once_with(100, 0)
-    delete_push_button.setMinimumSize.assert_called_once_with(mock_size.return_value)
-    delete_push_button.setObjectName.assert_called_once_with("deletePushButton")
-    mock_h_layout.return_value.addWidget.assert_any_call(delete_push_button)
-    delete_push_button.clicked.connect.assert_called_once()
+    mock_add_clear_button.assert_called_once_with(controlled_vocab_frame.instance, mock_h_layout.return_value)
+    mock_add_delete_button.assert_called_once_with(controlled_vocab_frame.instance, mock_h_layout.return_value)
     controlled_vocab_frame.mainVerticalLayout.addLayout.assert_called_once_with(mock_h_layout.return_value)
 
   @pytest.mark.parametrize("test_id, multiple, layout_count, combo_texts, expected", [

@@ -10,11 +10,10 @@
 import logging
 from typing import Any
 
-from PySide6.QtCore import QSize
-from PySide6.QtWidgets import QComboBox, QFrame, QHBoxLayout, QPushButton, QSizePolicy
+from PySide6.QtWidgets import QComboBox, QFrame, QHBoxLayout
 
 from pasta_eln.GUI.dataverse.primitive_compound_controlled_frame_base import Ui_PrimitiveCompoundControlledFrameBase
-from pasta_eln.dataverse.utils import delete_layout_and_contents
+from pasta_eln.GUI.dataverse.utility_functions import add_clear_button, add_delete_button
 
 
 class ControlledVocabFrame(Ui_PrimitiveCompoundControlledFrameBase):
@@ -74,18 +73,19 @@ class ControlledVocabFrame(Ui_PrimitiveCompoundControlledFrameBase):
         self: The instance of the class.
     """
     self.logger.info("Loading controlled vocabulary frame ui..")
-    value = self.meta_field.get('value')
+    value_block = self.meta_field.get('value')
     value_template = self.meta_field.get("valueTemplate")
     if self.meta_field.get('multiple'):
-      if value:
-        for value in value:
+      if value_block:
+        for value in value_block:
           self.add_new_vocab_entry(value_template, value)
       else:
         self.add_new_vocab_entry(value_template, None)
     else:
       self.add_new_vocab_entry(
-        [value_template or ""],
-        value)
+        ["No Value", value_template]
+        if value_template and len(value_template) > 0 else ["No Value"],
+        value_block or "No Value")
 
   def add_button_callback(self) -> None:
     """
@@ -104,9 +104,9 @@ class ControlledVocabFrame(Ui_PrimitiveCompoundControlledFrameBase):
       self.add_new_vocab_entry(value_template, value_template[0]
       if value_template and len(value_template) > 0 else None)
     else:
-      self.add_new_vocab_entry([value_template]
+      self.add_new_vocab_entry(["No Value", value_template]
                                if value_template and len(value_template) > 0
-                               else [], value_template)
+                               else ["No Value"], value_template or "No Value")
 
   def add_new_vocab_entry(self,
                           controlled_vocabulary: list[str] | None = None,
@@ -132,18 +132,8 @@ class ControlledVocabFrame(Ui_PrimitiveCompoundControlledFrameBase):
     combo_box.addItems(controlled_vocabulary or [])
     combo_box.setCurrentText(value or "")
     new_vocab_entry_layout.addWidget(combo_box)
-    delete_push_button = QPushButton(parent=self.instance)
-    delete_push_button.setText("Delete")
-    delete_push_button.setToolTip("Delete this particular vocabulary entry.")
-    size_policy = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
-    size_policy.setHorizontalStretch(0)
-    size_policy.setVerticalStretch(0)
-    size_policy.setHeightForWidth(delete_push_button.sizePolicy().hasHeightForWidth())
-    delete_push_button.setSizePolicy(size_policy)
-    delete_push_button.setMinimumSize(QSize(100, 0))
-    delete_push_button.setObjectName("deletePushButton")
-    new_vocab_entry_layout.addWidget(delete_push_button)
-    delete_push_button.clicked.connect(lambda _: delete_layout_and_contents(new_vocab_entry_layout))
+    add_clear_button(self.instance, new_vocab_entry_layout)
+    add_delete_button(self.instance, new_vocab_entry_layout)
     self.mainVerticalLayout.addLayout(new_vocab_entry_layout)
 
   def save_modifications(self) -> None:
@@ -164,13 +154,15 @@ class ControlledVocabFrame(Ui_PrimitiveCompoundControlledFrameBase):
       for layout_pos in reversed(range(self.mainVerticalLayout.count())):
         if vocab_horizontal_layout := self.mainVerticalLayout.itemAt(layout_pos).layout():
           combo_box = vocab_horizontal_layout.itemAt(0).widget()
-          if text := combo_box.currentText():
+          text = combo_box.currentText()
+          if text and text != 'No Value':
             value.append(text)
       self.meta_field['value'] = list(set(value))
     elif layout := self.mainVerticalLayout.findChild(QHBoxLayout,
                                                      "vocabHorizontalLayout"):
       if combo_box := layout.itemAt(0).widget():
-        self.meta_field['value'] = combo_box.currentText()
+        current_text = combo_box.currentText()
+        self.meta_field['value'] = current_text if current_text and current_text != 'No Value' else None
     else:
       self.logger.warning("Failed to save modifications, no layout found.")
     self.logger.info("Saved modifications successfully, value: %s", self.meta_field)

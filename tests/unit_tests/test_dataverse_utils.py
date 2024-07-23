@@ -24,13 +24,13 @@ from pasta_eln.dataverse.utils import adjust_type_name, check_if_compound_field_
   check_if_minimal_metadata_exists, \
   check_login_credentials, \
   clear_value, decrypt_credentials, decrypt_data, \
-  delete_layout_and_contents, encrypt_data, \
+  encrypt_data, \
   get_citation_field, get_data_hierarchy_types, get_db_credentials, get_encrypt_key, \
   get_flattened_metadata, get_formatted_dataverse_url, get_formatted_message, get_formatted_metadata_message, \
   is_date_time_type, \
   log_and_create_error, read_pasta_config_file, \
   set_authors, \
-  set_template_values, update_status, \
+  set_field_template_value, set_template_values, update_status, \
   write_pasta_config_file
 
 # Constants for test
@@ -940,7 +940,7 @@ class TestDataverseUtils:
                {
                  "typeClass": "controlledVocabulary",
                  "value": [],
-                 "valueTemplate": ["Option1", "Option2"],
+                 "valueTemplate": ["No Value", "Option1", "Option2"],
                  "multiple": True
                },
                {
@@ -1021,6 +1021,74 @@ class TestDataverseUtils:
       assert metadata == expected_result, f"Test failed for {test_id}"
     if not (isinstance(expected_result, Type) and issubclass(expected_result, Exception)):
       assert metadata == expected_result, f"Test failed for {test_id}"
+
+  @pytest.mark.parametrize(
+    "field, expected",
+    [
+      # Happy path tests
+      pytest.param(
+        {'typeClass': 'primitive', 'multiple': False, 'value': 'Example'},
+        {'typeClass': 'primitive', 'multiple': False, 'value': '', 'valueTemplate': 'Example'},
+        id="single_primitive"
+      ),
+      pytest.param(
+        {'typeClass': 'primitive', 'multiple': True, 'value': ['Example1', 'Example2']},
+        {'typeClass': 'primitive', 'multiple': True, 'value': [], 'valueTemplate': ['Example1', 'Example2']},
+        id="multiple_primitive"
+      ),
+      pytest.param(
+        {'typeClass': 'complex', 'multiple': False, 'value': {'key': 'value'}},
+        {'typeClass': 'complex', 'multiple': False, 'value': '', 'valueTemplate': {'key': 'value'}},
+        id="single_complex"
+      ),
+      pytest.param(
+        {'typeClass': 'complex', 'multiple': True, 'value': [{'key1': 'value1'}, {'key2': 'value2'}]},
+        {'typeClass': 'complex', 'multiple': True, 'value': [],
+         'valueTemplate': [{'key1': 'value1'}, {'key2': 'value2'}]},
+        id="multiple_complex"
+      ),
+      # Edge cases
+      pytest.param(
+        {'typeClass': 'primitive', 'multiple': False, 'value': ''},
+        {'typeClass': 'primitive', 'multiple': False, 'value': '', 'valueTemplate': ''},
+        id="single_empty_string"
+      ),
+      pytest.param(
+        {'typeClass': 'primitive', 'multiple': True, 'value': []},
+        {'typeClass': 'primitive', 'multiple': True, 'value': [], 'valueTemplate': []},
+        id="multiple_empty_list"
+      ),
+      pytest.param(
+        {'typeClass': 'complex', 'multiple': False, 'value': {}},
+        {'typeClass': 'complex', 'multiple': False, 'value': '', 'valueTemplate': {}},
+        id="single_empty_dict"
+      ),
+      pytest.param(
+        {'typeClass': 'complex', 'multiple': True, 'value': [{}]},
+        {'typeClass': 'complex', 'multiple': True, 'value': [], 'valueTemplate': [{}]},
+        id="multiple_empty_dict_list"
+      ),
+      # Error cases
+      pytest.param(
+        {'typeClass': 'primitive', 'multiple': False},
+        {'typeClass': 'primitive', 'multiple': False, 'valueTemplate': None},
+        id="missing_value_key",
+        marks=pytest.mark.xfail(raises=KeyError)
+      ),
+      pytest.param(
+        {'typeClass': 'primitive', 'multiple': True, 'value': None},
+        {'typeClass': 'primitive', 'multiple': True, 'value': [], 'valueTemplate': []},
+        id="value_none",
+        marks=pytest.mark.xfail(raises=AttributeError)
+      ),
+    ]
+  )
+  def test_set_field_template_value(self, field, expected):
+    # Act
+    set_field_template_value(field)
+
+    # Assert
+    assert field == expected
 
   @pytest.mark.parametrize(
     "field, missing_information, missing_field_name, check, expected",
@@ -1629,36 +1697,6 @@ class TestDataverseUtils:
     # Act and Assert
     with pytest.raises(expected_exception):
       _ = is_date_time_type(type_name)
-
-  @pytest.mark.parametrize(
-    "test_id, num_widgets",
-    [
-      ("success_path_1_widget", 1),  # ID: success_path_1_widget
-      ("success_path_multiple_widgets", 3),  # ID: success_path_multiple_widgets
-      ("success_path_no_widgets", 0),  # ID: success_path_no_widgets
-      ("edge_case_no_layout", 0),  # ID: edge_case_no_layout
-    ]
-  )
-  def test_delete_layout_and_contents(self, mocker, test_id, num_widgets):
-    # Arrange
-    layout = mocker.MagicMock()
-    widgets = [mocker.MagicMock() for _ in range(num_widgets)]
-    layout.itemAt = lambda pos: widgets[pos]
-    layout.count.return_value = len(widgets)
-    layout = None if test_id == "edge_case_no_layout" else layout
-
-    # Act
-    delete_layout_and_contents(layout)
-
-    # Assert
-    if test_id == "edge_case_no_layout":
-      for widget in widgets:
-        widget.widget.return_value.setParent.assert_not_called()
-    else:
-      layout.count.assert_called_once()
-      layout.setParent.assert_called_once_with(None)
-      for widget in widgets:
-        widget.widget.return_value.setParent.assert_called_once_with(None)
 
   # Parametrized test cases for happy path, edge cases, and error cases
   @pytest.mark.parametrize("missing_metadata, expected_output, test_id", [

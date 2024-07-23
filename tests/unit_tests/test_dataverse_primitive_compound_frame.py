@@ -9,7 +9,8 @@
 from unittest.mock import patch
 
 import pytest
-from PySide6.QtWidgets import QBoxLayout, QVBoxLayout
+from PySide6.QtCore import QDate
+from PySide6.QtWidgets import QBoxLayout
 
 from pasta_eln.GUI.dataverse.primitive_compound_frame import PrimitiveCompoundFrame
 
@@ -18,14 +19,10 @@ from pasta_eln.GUI.dataverse.primitive_compound_frame import PrimitiveCompoundFr
 @pytest.fixture
 def qtbot(mocker):
   mocker.patch('pasta_eln.GUI.dataverse.primitive_compound_frame.QFrame')
-  mocker.patch('pasta_eln.GUI.dataverse.primitive_compound_frame.QPushButton')
   mocker.patch('pasta_eln.GUI.dataverse.primitive_compound_frame.QLineEdit')
   mocker.patch('pasta_eln.GUI.dataverse.primitive_compound_frame.QDateTimeEdit')
   mocker.patch('pasta_eln.GUI.dataverse.primitive_compound_frame.QVBoxLayout')
   mocker.patch('pasta_eln.GUI.dataverse.primitive_compound_frame.QHBoxLayout')
-  mocker.patch('pasta_eln.GUI.dataverse.primitive_compound_frame.QSizePolicy')
-  mocker.patch('pasta_eln.GUI.dataverse.primitive_compound_frame.QDateTime')
-  mocker.patch('pasta_eln.GUI.dataverse.primitive_compound_frame.QSize')
   mocker.patch.object(PrimitiveCompoundFrame, 'addPushButton', create=True)
   mocker.patch.object(PrimitiveCompoundFrame, 'mainVerticalLayout', create=True)
 
@@ -36,6 +33,8 @@ def primitive_compound_frame(qtbot, mocker):
   mocker.patch(
     'pasta_eln.GUI.dataverse.primitive_compound_controlled_frame_base.Ui_PrimitiveCompoundControlledFrameBase.setupUi')
   mocker.patch('pasta_eln.GUI.dataverse.primitive_compound_frame.logging.getLogger')
+  mocker.patch('pasta_eln.GUI.dataverse.primitive_compound_frame.add_clear_button')
+  mocker.patch('pasta_eln.GUI.dataverse.primitive_compound_frame.add_delete_button')
   type_field = {
     'typeClass': 'primitive',
     'multiple': False,
@@ -162,37 +161,24 @@ class TestDataversePrimitiveCompoundFrame:
     else:
       primitive_compound_frame.logger.error.assert_called_with(*expected_error_log)
 
-  # Parametrized test cases
-  @pytest.mark.parametrize("enabled, expected_enabled", [
-    pytest.param(True, True, id='enabled-true'),
-    pytest.param(False, False, id='enabled-false'),
-  ])
-  def test_create_delete_button(self, mocker, primitive_compound_frame, qtbot, enabled, expected_enabled):
+  # Parametrized test case for the add_delete_button method
+
+  @pytest.mark.parametrize(
+    "parent_layout, expected_exception",
+    [
+      (None, AttributeError),  # error case: parent is None
+    ],
+    ids=["parent_none"]
+  )
+  def test_add_delete_button_with_invalid_parent(self, primitive_compound_frame, qtbot, mocker, parent_layout,
+                                                 expected_exception):
     # Arrange
-    mocker.resetall()
-    mock_button = mocker.patch('pasta_eln.GUI.dataverse.primitive_compound_frame.QPushButton')
-    mock_size = mocker.patch('pasta_eln.GUI.dataverse.primitive_compound_frame.QSize')
-    mock_size_policy = mocker.patch('pasta_eln.GUI.dataverse.primitive_compound_frame.QSizePolicy')
-    parent_layout = QVBoxLayout()
+    mock_self = mocker.MagicMock()
+    mock_self.instance = mocker.MagicMock()
 
-    # Act
-    delete_button = primitive_compound_frame.create_delete_button(parent_layout, enabled)
-
-    # Assert
-    mock_button.assert_called_once_with(parent=primitive_compound_frame.instance)
-    delete_button.setText.assert_called_once_with("Delete")
-    delete_button.setEnabled.assert_called_once_with(enabled)
-    delete_button.setObjectName.assert_called_once_with("deletePushButton")
-    delete_button.setToolTip.assert_called_once_with("Delete this particular entry.")
-    mock_size_policy.assert_called_once_with(mock_size_policy.Policy.Fixed, mock_size_policy.Policy.Fixed)
-    mock_size_policy.return_value.setHorizontalStretch.assert_called_once_with(0)
-    mock_size_policy.return_value.setVerticalStretch.assert_called_once_with(0)
-    mock_size_policy.return_value.setHeightForWidth.assert_called_once_with(
-      delete_button.sizePolicy().hasHeightForWidth())
-    mock_size.assert_called_once_with(100, 0)
-    delete_button.setSizePolicy.assert_called_once_with(mock_size_policy.return_value)
-    delete_button.setMinimumSize.assert_called_once_with(mock_size.return_value)
-    delete_button.clicked.connect.assert_called_once()
+    # Act / Assert
+    with pytest.raises(expected_exception):
+      primitive_compound_frame.add_delete_button(parent_layout)
 
   @pytest.mark.parametrize(
     "test_id, type_name, type_value, template_value, expected_placeholder, expected_tooltip, expected_object_name", [
@@ -244,40 +230,58 @@ class TestDataversePrimitiveCompoundFrame:
     assert line_edit is not None
     line_edit.setObjectName.assert_called_once_with(f"{type_name}LineEdit")
 
-  # Parametrized test cases
-  @pytest.mark.parametrize("test_id, type_name, type_value, template_value, expected_tool_tip, expected_object_name", [
-    # Success path tests
-    ("success-1", "DateCreated", "2023-01-01", "2023-01-01", "Enter the DateCreated value here. e.g. 2023-01-01",
-     "DateCreatedDateTimeEdit"),
-    ("success-2", "DateModified", "2021-12-31", "YYYY-MM-DD", "Enter the DateModified value here. e.g. YYYY-MM-DD",
-     "DateModifiedDateTimeEdit"),
-    # Edge cases
-    ("edge-1", "Date", "0001-01-01", "YYYY-MM-DD", "Enter the Date value here. e.g. YYYY-MM-DD", "DateDateTimeEdit"),
-    # Error cases
-    # Assuming that the function should handle invalid date formats by setting a default or null QDateTime
-    ("error-1", "InvalidDate", "not-a-date", "YYYY-MM-DD", "Enter the InvalidDate value here. e.g. YYYY-MM-DD",
-     "InvalidDateDateTimeEdit"),
-  ])
-  def test_create_date_time_widget(self, mocker, primitive_compound_frame, test_id, type_name, type_value,
-                                   template_value, expected_tool_tip, expected_object_name):
+  # Parametrized test cases for create_date_time_widget
+  @pytest.mark.parametrize(
+    "type_name, type_value, template_value, expected_date, expected_tooltip, expected_object_name",
+    [
+      # Success path tests
+      ("birthdate", "1990-01-01", "2000-01-01", QDate(1990, 1, 1),
+       "Enter the birthdate value here. e.g. 2000-01-01, Minimum possible date is 0100-01-02", "birthdateDateTimeEdit"),
+      ("eventdate", "2023-10-10", "2023-01-01", QDate(2023, 10, 10),
+       "Enter the eventdate value here. e.g. 2023-01-01, Minimum possible date is 0100-01-02", "eventdateDateTimeEdit"),
+
+      # Edge cases
+      ("startdate", "0100-01-02", None, QDate(100, 1, 2),
+       "Enter the startdate value here. e.g. None, Minimum possible date is 0100-01-02", "startdateDateTimeEdit"),
+      ("enddate", "No Value", "2022-12-31", QDate(1, 1, 1),
+       "Enter the enddate value here. e.g. 2022-12-31, Minimum possible date is 0100-01-02", "enddateDateTimeEdit"),
+
+      # Error cases
+      ("invaliddate", "invalid", None, QDate(1, 1, 1),
+       "Enter the invaliddate value here. e.g. None, Minimum possible date is 0100-01-02", "invaliddateDateTimeEdit"),
+    ],
+    ids=[
+      "success_path_birthdate",
+      "success_path_eventdate",
+      "edge_case_startdate",
+      "edge_case_enddate",
+      "error_case_invaliddate",
+    ]
+  )
+  def test_create_date_time_widget(self, mocker, primitive_compound_frame, type_name, type_value, template_value,
+                                   expected_date, expected_tooltip,
+                                   expected_object_name):
     # Arrange
-    mocker.resetall()
-    mock_date_time = mocker.patch('pasta_eln.GUI.dataverse.primitive_compound_frame.QDateTime')
-    mock_date_time_edit = mocker.patch('pasta_eln.GUI.dataverse.primitive_compound_frame.QDateTimeEdit')
+    mock_qdate_time_edit = mocker.patch('pasta_eln.GUI.dataverse.primitive_compound_frame.QDateTimeEdit')
     adjust_type_name = mocker.patch('pasta_eln.GUI.dataverse.primitive_compound_frame.adjust_type_name',
                                     return_value=type_name)
 
     # Act
-    date_time_edit = primitive_compound_frame.create_date_time_widget(type_name, type_value, template_value)
+    date_time_widget = primitive_compound_frame.create_date_time_widget(type_name, type_value, template_value)
 
     # Assert
+    mock_qdate_time_edit.assert_called_once_with(parent=primitive_compound_frame.instance)
+    assert date_time_widget == mock_qdate_time_edit.return_value
+    date_time_widget.setSpecialValueText.assert_called_once_with("No Value")
+    date_time_widget.setMinimumDate.assert_called_once_with(QDate.fromString("0100-01-01", 'yyyy-MM-dd'))
     adjust_type_name.assert_called_once_with(type_name)
-    mock_date_time_edit.assert_called_once_with(parent=primitive_compound_frame.instance)
-    mock_date_time.fromString.assert_called_once_with(type_value, 'yyyy-MM-dd')
-    date_time_edit.setToolTip.assert_called_once_with(expected_tool_tip)
-    date_time_edit.setObjectName.assert_called_once_with(expected_object_name)
-    date_time_edit.setDateTime.assert_called_once_with(mock_date_time.fromString.return_value)
-    date_time_edit.setDisplayFormat.assert_called_once_with('yyyy-MM-dd')
+    date_time_widget.setToolTip.assert_called_once_with(
+      f"Enter the {type_name} value here. e.g. {template_value}, Minimum possible date is 0100-01-02")
+    date_time_widget.setObjectName.assert_called_once_with(f"{type_name}DateTimeEdit")
+    date_time_widget.setDate.assert_called_once_with(QDate.fromString(type_value, 'yyyy-MM-dd')
+                                                     if type_value and type_value != 'No Value'
+                                                     else QDate.fromString("0001-01-01", 'yyyy-MM-dd'))
+    date_time_widget.setDisplayFormat.assert_called_once_with('yyyy-MM-dd')
 
   # Parametrized test for error cases
   @pytest.mark.parametrize("meta_field, test_id", [
@@ -323,8 +327,10 @@ class TestDataversePrimitiveCompoundFrame:
       'pasta_eln.GUI.dataverse.primitive_compound_frame.PrimitiveCompoundFrame.create_date_time_widget')
     create_line_edit = mocker.patch(
       'pasta_eln.GUI.dataverse.primitive_compound_frame.PrimitiveCompoundFrame.create_line_edit')
-    create_delete_button = mocker.patch(
-      'pasta_eln.GUI.dataverse.primitive_compound_frame.PrimitiveCompoundFrame.create_delete_button')
+    add_delete_button = mocker.patch(
+      'pasta_eln.GUI.dataverse.primitive_compound_frame.add_delete_button')
+    add_clear_button = mocker.patch(
+      'pasta_eln.GUI.dataverse.primitive_compound_frame.add_clear_button')
 
     # Act
     primitive_compound_frame.add_new_entry()
@@ -346,11 +352,11 @@ class TestDataversePrimitiveCompoundFrame:
       mock_qhbox_layout.return_value.setObjectName.assert_called_once_with("compoundHorizontalLayout")
       create_date_time_widget.assert_called_once()
       create_line_edit.assert_called_once()
-      create_delete_button.assert_called_once_with(mock_qhbox_layout.return_value)
+      add_clear_button.assert_called_once_with(primitive_compound_frame.instance, mock_qhbox_layout.return_value)
+      add_delete_button.assert_called_once_with(primitive_compound_frame.instance, mock_qhbox_layout.return_value)
       primitive_compound_frame.mainVerticalLayout.addLayout.assert_called_once_with(mock_qhbox_layout.return_value)
       mock_qhbox_layout.return_value.addWidget.assert_has_calls(
-        [mocker.call(create_date_time_widget.return_value), mocker.call(create_line_edit.return_value),
-         mocker.call(create_delete_button.return_value)])
+        [mocker.call(create_date_time_widget.return_value), mocker.call(create_line_edit.return_value)])
     if expected_log:
       primitive_compound_frame.logger.info.assert_called_with(expected_log[0], expected_log[1], expected_log[2])
     if expected_error:
@@ -368,18 +374,18 @@ class TestDataversePrimitiveCompoundFrame:
        {"date": {"value": "2021-01-01"}},
        {"date": {"value": "2020-01-01"}},
        True,
-       [('create_date_time_widget', 1), ('create_line_edit', 0), ('create_delete_button', 1)]),
+       [('create_date_time_widget', 1), ('create_line_edit', 0)]),
       ("SuccessCase-2",
        {"text": {"value": "Sample Text"}},
        {"text": {"value": "Default Text"}},
        False,
-       [('create_date_time_widget', 0), ('create_line_edit', 1), ('create_delete_button', 1)]),
+       [('create_date_time_widget', 0), ('create_line_edit', 1)]),
       # Edge cases
       ("EdgeCase-1",
        {},
        {},
        False,
-       [('create_delete_button', 0)]),  # No compound entries, no delete button should be created
+       []),
 
       # Error cases
       # Assuming that an error case would be when template_entry is missing a key present in compound_entry
@@ -400,7 +406,10 @@ class TestDataversePrimitiveCompoundFrame:
     mock_qhbox_layout = mocker.patch('pasta_eln.GUI.dataverse.primitive_compound_frame.QHBoxLayout')
     mocker.patch('pasta_eln.GUI.dataverse.primitive_compound_frame.PrimitiveCompoundFrame.create_date_time_widget')
     mocker.patch('pasta_eln.GUI.dataverse.primitive_compound_frame.PrimitiveCompoundFrame.create_line_edit')
-    mocker.patch('pasta_eln.GUI.dataverse.primitive_compound_frame.PrimitiveCompoundFrame.create_delete_button')
+    mock_add_delete_button = mocker.patch(
+      'pasta_eln.GUI.dataverse.primitive_compound_frame.add_delete_button')
+    mock_add_clear_button = mocker.patch(
+      'pasta_eln.GUI.dataverse.primitive_compound_frame.add_clear_button')
     mock_qhbox_layout.return_value.count.return_value = len(compound_entry)
 
     # Act
@@ -410,13 +419,15 @@ class TestDataversePrimitiveCompoundFrame:
     for widget_name, call_count in expected_widget_calls:
       assert getattr(primitive_compound_frame, widget_name).call_count == call_count
     if test_id == "EdgeCase-1":
-      primitive_compound_frame.create_delete_button.assert_not_called()
+      mock_add_delete_button.assert_not_called()
     if compound_entry:
       is_date_time_type.assert_called_once()
+      mock_add_delete_button.assert_called_once_with(primitive_compound_frame.instance, mock_qhbox_layout.return_value,
+                                                     True)
+      mock_add_clear_button.assert_called_once_with(primitive_compound_frame.instance, mock_qhbox_layout.return_value)
       mock_qhbox_layout.return_value.addWidget.assert_has_calls(
         [mocker.call(primitive_compound_frame.create_date_time_widget.return_value) if is_date_time_type_return else
-         mocker.call(primitive_compound_frame.create_line_edit.return_value),
-         mocker.call(primitive_compound_frame.create_delete_button.return_value)]
+         mocker.call(primitive_compound_frame.create_line_edit.return_value)]
       )
       primitive_compound_frame.mainVerticalLayout.addLayout.assert_called_once_with(mock_qhbox_layout.return_value)
 
@@ -494,7 +505,10 @@ class TestDataversePrimitiveCompoundFrame:
     mock_qhbox_layout = mocker.patch('pasta_eln.GUI.dataverse.primitive_compound_frame.QHBoxLayout')
     mocker.patch('pasta_eln.GUI.dataverse.primitive_compound_frame.PrimitiveCompoundFrame.create_date_time_widget')
     mocker.patch('pasta_eln.GUI.dataverse.primitive_compound_frame.PrimitiveCompoundFrame.create_line_edit')
-    mocker.patch('pasta_eln.GUI.dataverse.primitive_compound_frame.PrimitiveCompoundFrame.create_delete_button')
+    mock_add_delete_button = mocker.patch(
+      'pasta_eln.GUI.dataverse.primitive_compound_frame.add_delete_button')
+    mock_add_clear_button = mocker.patch(
+      'pasta_eln.GUI.dataverse.primitive_compound_frame.add_clear_button')
     is_date_time_type_mock = mocker.patch('pasta_eln.GUI.dataverse.primitive_compound_frame.is_date_time_type',
                                           return_value=is_date_time)
 
@@ -514,9 +528,9 @@ class TestDataversePrimitiveCompoundFrame:
       primitive_compound_frame.create_line_edit.assert_called_once_with(type_name, type_value, type_value_template)
       mock_qhbox_layout.return_value.addWidget.assert_has_calls(
         primitive_compound_frame.create_line_edit.return_value)
-    primitive_compound_frame.create_delete_button.assert_called_once()
-    mock_qhbox_layout.return_value.addWidget.assert_called_with(
-      primitive_compound_frame.create_delete_button.return_value)
+    mock_add_delete_button.assert_called_once_with(primitive_compound_frame.instance, mock_qhbox_layout.return_value,
+                                                   True)
+    mock_add_clear_button.assert_called_once_with(primitive_compound_frame.instance, mock_qhbox_layout.return_value)
     mock_layout.addLayout.assert_called_once_with(mock_qhbox_layout.return_value)
 
   @pytest.mark.parametrize("type_class, multiple, expected_value, test_id", [

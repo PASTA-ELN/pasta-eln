@@ -20,7 +20,6 @@ from typing import Any, Callable, Type
 
 from PySide6.QtCore import QSize
 from PySide6.QtGui import QImage, QPixmap
-from PySide6.QtWidgets import QBoxLayout
 from cryptography.fernet import Fernet, InvalidToken
 from qtawesome import icon
 
@@ -158,20 +157,47 @@ def set_template_values(logger: Logger, metadata: dict[str, Any]) -> None:
   for _, metablock in metadata['datasetVersion']['metadataBlocks'].items():
     for field in metablock['fields']:
       match field['typeClass']:
-        case "primitive" | "controlledVocabulary":
-          # Array of primitive types
+        case "primitive":
+          set_field_template_value(field)
+        case "controlledVocabulary":
+          set_field_template_value(field)
           if field['multiple']:
-            field['valueTemplate'] = field['value'].copy()
-            field['value'].clear()
-          # Single primitive type, set to empty string
-          else:
-            field['valueTemplate'] = field['value']
-            field['value'] = ""
+            field['valueTemplate'].insert(0, "No Value")
         case "compound":
           field['valueTemplate'] = field['value'].copy()
           field['value'].clear()
         case _:
           logger.warning(f"Unsupported type class: {field['typeClass']}")
+
+
+def set_field_template_value(field: dict[str, Any]) -> None:
+  """
+  Set template values in the field.
+
+  This function sets template values in the field based on the type of the field.
+  If the field is a multiple type, the value template is set to a copy of the value, and the value is cleared.
+  If the field is a single type, the value template is set to the value, and the value is set to an empty string.
+
+  Args:
+      field (dict[str, Any]): The field dictionary to update.
+
+  Examples:
+      >>> field = {'typeClass': 'primitive', 'multiple': False, 'value': 'Example'}
+      >>> set_field_template_value(field)
+      >>> field
+      {'typeClass': 'primitive', 'multiple': False, 'value': '', 'valueTemplate': 'Example'}
+  """
+  if field.get('multiple'):
+    if 'value' in field and field['value']:
+      field['valueTemplate'] = field['value'].copy()
+      field['value'].clear()
+    else:
+      field['value'] = []
+      field['valueTemplate'] = []
+  else:
+    field['valueTemplate'] = field.get('value')
+    if 'value' in field:
+      field['value'] = ""
 
 
 def check_if_minimal_metadata_exists(logger: Logger,
@@ -596,27 +622,6 @@ def is_date_time_type(type_name: str) -> bool:
     map(type_name.lower().__contains__, ["date", "time"]))
 
 
-def delete_layout_and_contents(layout: QBoxLayout) -> None:
-  """
-  Deletes the layout and its contents.
-
-  Args:
-      layout (QBoxLayout): The layout to delete.
-
-  Explanation:
-      This function deletes the given layout and its contents.
-      It iterates over the widgets in the layout and removes them from their parent.
-      Finally, it sets the layout's parent to None.
-
-  """
-  if layout is None:
-    return
-  for widget_pos in reversed(range(layout.count())):
-    if item := layout.itemAt(widget_pos):
-      item.widget().setParent(None)
-  layout.setParent(None)
-
-
 def get_formatted_message(missing_metadata: dict[str, list[str]]) -> str:
   """
   Returns a formatted message with missing metadata information.
@@ -712,7 +717,7 @@ def get_formatted_metadata_message(metadata: dict[str, Any]) -> str:
         else:
           message += f"<i style=\"color:Gray\"><li>{field['value']}</li></i></ul>"
     if not has_value:
-      message += "<li style=\"color:#737373\">No value</li></ul>"
+      message += "<li style=\"color:#737373\">No Value</li></ul>"
     message += "</ul>"
   message += "</html>"
   return message

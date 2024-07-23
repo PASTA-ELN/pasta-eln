@@ -12,13 +12,12 @@ import copy
 import logging
 from typing import Any
 
-from PySide6.QtCore import QDateTime, QSize
-from PySide6.QtWidgets import QBoxLayout, QDateTimeEdit, QFrame, QHBoxLayout, QLineEdit, QPushButton, \
-  QSizePolicy, \
-  QVBoxLayout
+from PySide6.QtCore import QDate
+from PySide6.QtWidgets import QBoxLayout, QDateTimeEdit, QFrame, QHBoxLayout, QLineEdit, QVBoxLayout
 
 from pasta_eln.GUI.dataverse.primitive_compound_controlled_frame_base import Ui_PrimitiveCompoundControlledFrameBase
-from pasta_eln.dataverse.utils import adjust_type_name, clear_value, delete_layout_and_contents, is_date_time_type
+from pasta_eln.GUI.dataverse.utility_functions import add_clear_button, add_delete_button
+from pasta_eln.dataverse.utils import adjust_type_name, clear_value, is_date_time_type
 
 
 class PrimitiveCompoundFrame(Ui_PrimitiveCompoundControlledFrameBase):
@@ -113,40 +112,6 @@ class PrimitiveCompoundFrame(Ui_PrimitiveCompoundControlledFrameBase):
       case _:
         self.logger.error("Unknown typeClass: %s", self.meta_field.get('typeClass'))
 
-  def create_delete_button(self,
-                           parent: QBoxLayout,
-                           enabled: bool = True) -> QPushButton:
-    """
-    Creates a delete button widget.
-
-    Args:
-        parent (QBoxLayout): The parent QBoxLayout object.
-        enabled (bool, optional): Whether the button should be enabled or disabled.
-        Defaults to True.
-
-    Returns:
-        QPushButton: The created delete button widget.
-
-    Explanation:
-        This function creates a QPushButton widget with the specified properties.
-        The button is labeled as "Delete" and can be enabled or disabled based on the 'enabled' parameter.
-        It is connected to a lambda function that calls the 'delete' function with the parent QBoxLayout as an argument.
-
-    """
-    delete_push_button = QPushButton(parent=self.instance)
-    delete_push_button.setText("Delete")
-    delete_push_button.setEnabled(enabled)
-    delete_push_button.setObjectName("deletePushButton")
-    delete_push_button.setToolTip("Delete this particular entry.")
-    size_policy = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
-    size_policy.setHorizontalStretch(0)
-    size_policy.setVerticalStretch(0)
-    size_policy.setHeightForWidth(delete_push_button.sizePolicy().hasHeightForWidth())
-    delete_push_button.setSizePolicy(size_policy)
-    delete_push_button.setMinimumSize(QSize(100, 0))
-    delete_push_button.clicked.connect(lambda _: delete_layout_and_contents(parent))
-    return delete_push_button
-
   def create_line_edit(self,
                        type_name: str,
                        type_value: str,
@@ -201,10 +166,15 @@ class PrimitiveCompoundFrame(Ui_PrimitiveCompoundControlledFrameBase):
 
     """
     date_time_edit = QDateTimeEdit(parent=self.instance)
+    date_time_edit.setSpecialValueText("No Value")
+    date_time_edit.setMinimumDate(QDate.fromString("0100-01-01", 'yyyy-MM-dd'))
     adjusted_name = adjust_type_name(type_name)
-    date_time_edit.setToolTip(f"Enter the {adjusted_name} value here. e.g. {template_value}")
+    date_time_edit.setToolTip(
+      f"Enter the {adjusted_name} value here. e.g. {template_value}, Minimum possible date is 0100-01-02")
     date_time_edit.setObjectName(f"{type_name}DateTimeEdit")
-    date_time_edit.setDateTime(QDateTime.fromString(type_value, 'yyyy-MM-dd'))
+    date_time_edit.setDate(QDate.fromString(type_value, 'yyyy-MM-dd')
+                           if type_value and type_value != 'No Value'
+                           else QDate.fromString("0001-01-01", 'yyyy-MM-dd'))
     date_time_edit.setDisplayFormat('yyyy-MM-dd')
     return date_time_edit
 
@@ -247,7 +217,8 @@ class PrimitiveCompoundFrame(Ui_PrimitiveCompoundControlledFrameBase):
             self.create_date_time_widget(type_name, '', type_value)
             if is_date_time_type(type_name) else
             self.create_line_edit(type_name, '', type_value))
-        new_compound_entry_layout.addWidget(self.create_delete_button(new_compound_entry_layout))
+        add_clear_button(self.instance, new_compound_entry_layout)
+        add_delete_button(self.instance, new_compound_entry_layout)
         self.mainVerticalLayout.addLayout(new_compound_entry_layout)
       case _:
         self.logger.error("Unknown type class: %s", type_class)
@@ -282,8 +253,9 @@ class PrimitiveCompoundFrame(Ui_PrimitiveCompoundControlledFrameBase):
         if is_date_time_type(compound_type_name)
         else self.create_line_edit(compound_type_name, compound_type['value'], template_value))
     if new_compound_entry_layout.count() > 0:
-      new_compound_entry_layout.addWidget(self.create_delete_button(new_compound_entry_layout,
-                                                                    enable_delete_button))
+      add_clear_button(self.instance, new_compound_entry_layout)
+      add_delete_button(self.instance, new_compound_entry_layout,
+                        enable_delete_button)
       self.mainVerticalLayout.addLayout(new_compound_entry_layout)
 
   def populate_primitive_entry(self) -> None:
@@ -358,8 +330,8 @@ class PrimitiveCompoundFrame(Ui_PrimitiveCompoundControlledFrameBase):
       self.create_date_time_widget(type_name, type_value, type_value_template)
       if is_date_time_type(type_name) else
       self.create_line_edit(type_name, type_value, type_value_template))
-    new_primitive_entry_horizontal_layout.addWidget(
-      self.create_delete_button(new_primitive_entry_horizontal_layout, enable_delete_button))
+    add_clear_button(self.instance, new_primitive_entry_horizontal_layout)
+    add_delete_button(self.instance, new_primitive_entry_horizontal_layout, enable_delete_button)
     new_primitive_entry_layout.addLayout(new_primitive_entry_horizontal_layout)
 
   def save_modifications(self) -> None:
@@ -386,10 +358,12 @@ class PrimitiveCompoundFrame(Ui_PrimitiveCompoundControlledFrameBase):
         if self.meta_field.get('multiple'):
           self.meta_field['value'].clear()
           for widget_pos in range(primitive_vertical_layout.count()):
-            if text := primitive_vertical_layout.itemAt(widget_pos).itemAt(0).widget().text():
+            text = primitive_vertical_layout.itemAt(widget_pos).itemAt(0).widget().text()
+            if text and text != "No Value":
               self.meta_field['value'].append(text)
         else:
-          self.meta_field['value'] = primitive_vertical_layout.itemAt(0).itemAt(0).widget().text()
+          text = primitive_vertical_layout.itemAt(0).itemAt(0).widget().text()
+          self.meta_field['value'] = text if text != "No Value" else ""
       case "compound":
         if self.meta_field.get('multiple'):
           self.meta_field['value'].clear()
@@ -439,8 +413,8 @@ class PrimitiveCompoundFrame(Ui_PrimitiveCompoundControlledFrameBase):
       name = widget.objectName().removesuffix("LineEdit").removesuffix("DateTimeEdit")
       if name in empty_entry:
         text = widget.text()  # type: ignore[attr-defined]
-        empty_entry[name]['value'] = text
-        update_needed = update_needed or (text != "" and text is not None)
+        empty_entry[name]['value'] = text if text and text != 'No Value' else ""
+        update_needed = update_needed or empty_entry[name]['value']
     if update_needed:
       if isinstance(self.meta_field['value'], dict):
         self.meta_field['value'] = {**self.meta_field['value'], **empty_entry}
