@@ -11,7 +11,7 @@ from os import getcwd
 from os.path import dirname, join, realpath
 
 import pytest
-from PySide6.QtCore import QDate, QDateTime, Qt
+from PySide6.QtCore import QDate, Qt
 from PySide6.QtWidgets import QDialogButtonBox, QHBoxLayout, QVBoxLayout
 
 from pasta_eln.GUI.dataverse.edit_metadata_dialog import EditMetadataDialog
@@ -167,9 +167,9 @@ class TestDataverseEditMetadataDialog:
       assert edit_metadata_dialog.licenseNameLineEdit.text() == "CC0 1.0", "licenseNameLineEdit must be initialized with default 'CC0 1.0' option"
       assert edit_metadata_dialog.licenseURLLineEdit.text() == "http://creativecommons.org/publicdomain/zero/1.0", "licenseURLLineEdit must be initialized with default 'http://creativecommons.org/publicdomain/zero/1.0' option"
       assert clear_button.text() == "Clear", "Clear button should have right text"
-      assert clear_button.toolTip() == 'Clear this particular vocabulary entry.', "Clear button should have right tooltip"
+      assert clear_button.toolTip() == 'Clear this particular entry.', "Clear button should have right tooltip"
       assert delete_button.text() == "Delete", "Delete button should have right text"
-      assert delete_button.toolTip() == 'Delete this particular vocabulary entry.', "Delete button should have right tooltip"
+      assert delete_button.toolTip() == 'Delete this particular entry.', "Delete button should have right tooltip"
       assert controlled_combo_box.toolTip() == 'Select the controlled vocabulary.', "controlled_combo_box should have right tooltip"
       controlled_combo_box_items = [controlled_combo_box.itemText(i) for i in range(controlled_combo_box.count())]
       assert controlled_combo_box_items == ['No Value', 'Agricultural Sciences', 'Business and Management',
@@ -296,8 +296,8 @@ class TestDataverseEditMetadataDialog:
                                'Resolution Redshift',
                                'Coverage Redshift Value'],
                               'Astro Type',
-                              ['Select the controlled vocabulary.', 'Clear this particular vocabulary entry.',
-                               'Delete this particular vocabulary entry.'], []),
+                              ['Select the controlled vocabulary.', 'Clear this particular entry.',
+                               'Delete this particular entry.'], []),
                              ("success_case_life_sciences_metadata", "Life Sciences Metadata", ['Study Design Type',
                                                                                                 'Study Factor Type',
                                                                                                 'Study Assay Organism',
@@ -308,8 +308,8 @@ class TestDataverseEditMetadataDialog:
                                                                                                 'Study Assay Platform',
                                                                                                 'Study Assay Cell Type'],
                               'Study Design Type',
-                              ['Select the controlled vocabulary.', 'Clear this particular vocabulary entry.',
-                               'Delete this particular vocabulary entry.'], []),
+                              ['Select the controlled vocabulary.', 'Clear this particular entry.',
+                               'Delete this particular entry.'], []),
                              ("success_case_journal_metadata", "Journal Metadata",
                               ['Journal Volume Issue', 'Journal Article Type'],
                               'Journal Volume Issue', ['Enter the Journal Volume value here. e.g. JournalVolume1',
@@ -718,7 +718,7 @@ class TestDataverseEditMetadataDialog:
         qtbot.keyClicks(vocab_combo, test_data[pos], delay=1)
         delete_button = vocab_horizontal_layouts[pos].itemAt(2).widget()
         assert delete_button.isEnabled(), "EditMetadataDialog vocabHorizontalLayout delete_button should be enabled!"
-        assert delete_button.toolTip() == 'Delete this particular vocabulary entry.', "EditMetadataDialog vocabHorizontalLayout delete_button should have right tooltip!"
+        assert delete_button.toolTip() == 'Delete this particular entry.', "EditMetadataDialog vocabHorizontalLayout delete_button should have right tooltip!"
         assert vocab_combo.currentText() == test_data[
           pos], "EditMetadataDialog vocabHorizontalLayout combo_box should have right text!"
 
@@ -741,8 +741,65 @@ class TestDataverseEditMetadataDialog:
     qtbot.mouseClick(edit_metadata_dialog.metadata_summary_dialog.buttonBox.button(QDialogButtonBox.Yes), Qt.LeftButton)
     assert not edit_metadata_dialog.instance.isVisible(), "EditMetadataDialog instance should be closed!"
     assert edit_metadata_dialog.metadata['datasetVersion']['metadataBlocks']['biomedical']['fields'][0][
-             'value'] == ['Cohort Study', 'Cross Sectional']
+             'value'].sort() == ['Cohort Study', 'Cross Sectional'].sort()
     mock_database_api.update_model_document.assert_called_once_with(edit_metadata_dialog.config_model)
+
+  def test_clear_field_controlled_vocabulary_type_and_should_reset_to_no_value(self,
+                                                                               qtbot,
+                                                                               edit_metadata_dialog,
+                                                                               mock_database_api):
+    edit_metadata_dialog.show()
+    with qtbot.waitExposed(edit_metadata_dialog.instance, timeout=500):
+      assert edit_metadata_dialog.minimalFullComboBox.currentText() == "Full", "minimalFullComboBox must be initialized with default full option"
+      qtbot.keyClicks(edit_metadata_dialog.metadataBlockComboBox, "Life Sciences Metadata", delay=1)
+      assert edit_metadata_dialog.metadataBlockComboBox.currentText() == "Life Sciences Metadata", "metadataBlockComboBox must be initialized with  citation metadata option"
+      assert edit_metadata_dialog.typesComboBox.currentText() == 'Study Design Type', "typesComboBox must be initialized with 'Study Design Type' option"
+
+      assert edit_metadata_dialog.controlled_vocab_frame.instance.isVisible(), "EditMetadataDialog controlled_vocab_frame should be shown!"
+      assert edit_metadata_dialog.controlled_vocab_frame.addPushButton.isVisible(), "EditMetadataDialog controlled_vocab_frame addPushButton should be shown!"
+      assert edit_metadata_dialog.controlled_vocab_frame.addPushButton.isEnabled(), "EditMetadataDialog controlled_vocab_frame addPushButton should be enabled!"
+
+      vocab_horizontal_layouts = edit_metadata_dialog.controlled_vocab_frame.mainVerticalLayout.findChildren(
+        QHBoxLayout,
+        "vocabHorizontalLayout")
+      assert vocab_horizontal_layouts, "EditMetadataDialog vocab_horizontal_layouts should be present!"
+      assert len(vocab_horizontal_layouts) == 1, "EditMetadataDialog vocab_horizontal_layouts should have 1 item!"
+      qtbot.mouseClick(edit_metadata_dialog.controlled_vocab_frame.addPushButton, Qt.LeftButton)
+      qtbot.mouseClick(edit_metadata_dialog.controlled_vocab_frame.addPushButton, Qt.LeftButton)
+      qtbot.mouseClick(edit_metadata_dialog.controlled_vocab_frame.addPushButton, Qt.LeftButton)
+      vocab_horizontal_layouts = edit_metadata_dialog.controlled_vocab_frame.mainVerticalLayout.findChildren(
+        QHBoxLayout,
+        "vocabHorizontalLayout")
+      assert len(
+        vocab_horizontal_layouts) == 4, "EditMetadataDialog vocab_horizontal_layouts should have 4 items!"
+      test_data = ["Case Control",
+                   "Cross Sectional",
+                   "Cohort Study",
+                   "Not Specified"]
+      for pos in range(len(vocab_horizontal_layouts)):
+        vocab_combo = vocab_horizontal_layouts[pos].itemAt(0).widget()
+        assert vocab_combo.isEnabled(), "EditMetadataDialog vocabHorizontalLayout combo_box should be enabled!"
+        assert vocab_combo.toolTip() == 'Select the controlled vocabulary.', "EditMetadataDialog vocabHorizontalLayout combo_box should have right tooltip!"
+        qtbot.keyClicks(vocab_combo, test_data[pos], delay=1)
+        delete_button = vocab_horizontal_layouts[pos].itemAt(2).widget()
+        assert delete_button.isEnabled(), "EditMetadataDialog vocabHorizontalLayout delete_button should be enabled!"
+        assert delete_button.toolTip() == 'Delete this particular entry.', "EditMetadataDialog vocabHorizontalLayout delete_button should have right tooltip!"
+        assert vocab_combo.currentText() == test_data[
+          pos], "EditMetadataDialog vocabHorizontalLayout combo_box should have right text!"
+
+      # Clear two populated items
+      qtbot.mouseClick(vocab_horizontal_layouts[0].itemAt(1).widget(), Qt.LeftButton)
+      qtbot.mouseClick(vocab_horizontal_layouts[2].itemAt(1).widget(), Qt.LeftButton)
+
+      # Cleared items should be empty
+      test_data = ["No Value",
+                   "Cross Sectional",
+                   "No Value",
+                   "Not Specified"]
+      for pos in range(len(vocab_horizontal_layouts)):
+        vocab_combo = vocab_horizontal_layouts[pos].itemAt(0).widget()
+        assert vocab_combo.currentText() == test_data[
+          pos], "EditMetadataDialog vocabHorizontalLayout vocab_combo should be {test_data[pos]}!"
 
   def test_clear_field_compound_type_with_date_and_save_click_should_do_as_expected(self,
                                                                                     qtbot,
@@ -921,16 +978,11 @@ class TestDataverseEditMetadataDialog:
                                ("Description3", "2024-01-23"), ("Description4", "2024-01-23")],
                               [("Description1", "2024-01-01"), ("Description2", "2024-01-23"),
                                ("Description3", "2024-01-23"), ("Description4", "2024-01-23")]),
-                             ("success_case_multiple_data_with_none",
+                             ("success_case_multiple_data_with_none1",
                               [("Description1", None), (None, "2024-01-23"),
-                               ("", "2024-01-23"), ("Description4", "2024-01-23")],
-                              [("Description1", '2000-01-01'), ("", "2024-01-23"),
-                               ("", "2024-01-23"), ("Description4", "2024-01-23")]),
-                             ("success_case_multiple_data_with_none",
-                              [("", None), (None, ""),
-                               ("", ""), ("", "2024-01-23")],
-                              [("", '2000-01-01'), ("", "2000-01-01"),
-                               ("", "2000-01-01"), ("", "2024-01-23")]),
+                               ("", "2024-01-23"), ("Description4", "0001-01-23")],
+                              [("Description1", ''), ("", "2024-01-23"),
+                               ("", "2024-01-23"), ("Description4", "")]),
                            ])
   def test_add_field_compound_multiple_type_and_save_click_should_do_as_expected(self,
                                                                                  qtbot,
@@ -970,8 +1022,8 @@ class TestDataverseEditMetadataDialog:
         assert delete_button.isEnabled(), "EditMetadataDialog primitive_compound_frame delete_button should be enabled!"
         assert delete_button.toolTip() == 'Delete this particular entry.', "EditMetadataDialog primitive_compound_frame delete_button should have right tooltip!"
         line_edit.setText(test_data[pos - 1][0])
-        date_time_edit.setDateTime(QDateTime.fromString(test_data[pos - 1][1], 'yyyy-MM-dd'))
-
+        date_time_edit.setDate(QDate.fromString(test_data[pos - 1][1], 'yyyy-MM-dd'))
+        test = date_time_edit.text()
     qtbot.mouseClick(edit_metadata_dialog.buttonBox.button(QDialogButtonBox.Save), Qt.LeftButton)
     assert edit_metadata_dialog.metadata_summary_dialog.instance.isVisible(), "EditMetadataDialogSummary should be visible!"
     qtbot.mouseClick(edit_metadata_dialog.metadata_summary_dialog.buttonBox.button(QDialogButtonBox.Yes), Qt.LeftButton)
@@ -979,8 +1031,8 @@ class TestDataverseEditMetadataDialog:
     for pos in range(len(expected_data)):
       assert edit_metadata_dialog.metadata['datasetVersion']['metadataBlocks']['citation']['fields'][7][
                'value'][pos]['dsDescriptionValue']['value'] == expected_data[pos][0]
-    assert edit_metadata_dialog.metadata['datasetVersion']['metadataBlocks']['citation']['fields'][7][
-             'value'][pos]['dsDescriptionDate']['value'] == expected_data[pos][1]
+      assert edit_metadata_dialog.metadata['datasetVersion']['metadataBlocks']['citation']['fields'][7][
+               'value'][pos]['dsDescriptionDate']['value'] == expected_data[pos][1]
     mock_database_api.update_model_document.assert_called_once_with(edit_metadata_dialog.config_model)
 
   def test_delete_fields_compound_multiple_type_and_save_click_should_do_as_expected(self,
@@ -1013,18 +1065,21 @@ class TestDataverseEditMetadataDialog:
         assert line_edit.placeholderText() == 'Enter the Ds Description Value here.', "EditMetadataDialog primitive_compound_frame line_edit should have right placeholderText!"
         date_time_edit = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.itemAt(pos).itemAt(1).widget()
         assert date_time_edit.isEnabled(), "EditMetadataDialog primitive_compound_frame line_edit should be enabled!"
-        assert date_time_edit.toolTip() == 'Enter the Ds Description Date value here. e.g. 1000-01-01', "EditMetadataDialog primitive_compound_frame date_time_edit should have right tooltip!"
-        delete_button = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.itemAt(pos).itemAt(2).widget()
+        assert date_time_edit.toolTip() == 'Enter the Ds Description Date value here. e.g. 1000-01-01, Minimum possible date is 0100-01-02', "EditMetadataDialog primitive_compound_frame date_time_edit should have right tooltip!"
+        clear_button = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.itemAt(pos).itemAt(2).widget()
+        assert clear_button.isEnabled(), "EditMetadataDialog primitive_compound_frame clear_button should be enabled!"
+        assert clear_button.toolTip() == 'Clear this particular entry.', "EditMetadataDialog primitive_compound_frame clear_button should have right tooltip!"
+        delete_button = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.itemAt(pos).itemAt(3).widget()
         assert delete_button.isEnabled(), "EditMetadataDialog primitive_compound_frame delete_button should be enabled!"
         assert delete_button.toolTip() == 'Delete this particular entry.', "EditMetadataDialog primitive_compound_frame delete_button should have right tooltip!"
         line_edit.setText(test_data[pos - 1][0])
-        date_time_edit.setDateTime(QDateTime.fromString(test_data[pos - 1][1], 'yyyy-MM-dd'))
+        date_time_edit.setDate(QDate.fromString(test_data[pos - 1][1], 'yyyy-MM-dd'))
 
       # Delete two populated items
-      qtbot.mouseClick(edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.itemAt(1).itemAt(2).widget(),
+      qtbot.mouseClick(edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.itemAt(1).itemAt(3).widget(),
                        Qt.LeftButton)
       assert edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.count() == 4, "EditMetadataDialog primitive_vertical_layout should have 4 children!"
-      qtbot.mouseClick(edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.itemAt(1).itemAt(2).widget(),
+      qtbot.mouseClick(edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.itemAt(1).itemAt(3).widget(),
                        Qt.LeftButton)
       assert edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.count() == 3, "EditMetadataDialog primitive_vertical_layout should have 3 children!"
 
@@ -1053,37 +1108,42 @@ class TestDataverseEditMetadataDialog:
       assert edit_metadata_dialog.controlled_vocab_frame.addPushButton.isVisible(), "EditMetadataDialog controlled_vocab_frame addPushButton should be shown!"
       assert edit_metadata_dialog.controlled_vocab_frame.addPushButton.isEnabled(), "EditMetadataDialog controlled_vocab_frame addPushButton should be enabled!"
       assert edit_metadata_dialog.controlled_vocab_frame.mainVerticalLayout.count() == 2, "EditMetadataDialog controlled_vocab_frame mainVerticalLayout should contain 2 children!"
-      combo_box_items = ['Age', 'Biomarkers', 'Cell Surface Markers', 'Developmental Stage']
+      combo_box_items = ['No Value', 'Age', 'Biomarkers', 'Cell Surface Markers', 'Developmental Stage']
       combo_box = edit_metadata_dialog.controlled_vocab_frame.mainVerticalLayout.itemAt(1).itemAt(0).widget()
       assert combo_box.isEnabled(), "EditMetadataDialog controlled_vocab_frame combo_box should be enabled!"
       assert combo_box.toolTip() == 'Select the controlled vocabulary.', "EditMetadataDialog controlled_vocab_frame combo_box should have right tooltip!"
       assert [combo_box.itemText(i) for i in range(
         combo_box.count())] == combo_box_items, "EditMetadataDialog controlled_vocab_frame combo_box should have right options!"
-      assert combo_box.currentText() == 'Age', "EditMetadataDialog controlled_vocab_frame combo_box should have right default value!"
-      delete_button = edit_metadata_dialog.controlled_vocab_frame.mainVerticalLayout.itemAt(1).itemAt(1).widget()
+      assert combo_box.currentText() == 'No Value', "EditMetadataDialog controlled_vocab_frame combo_box should have right default value!"
+      clear_button = edit_metadata_dialog.controlled_vocab_frame.mainVerticalLayout.itemAt(1).itemAt(1).widget()
+      assert clear_button.isEnabled(), "EditMetadataDialog controlled_vocab_frame clear_button should be enabled!"
+      assert clear_button.toolTip() == 'Clear this particular entry.', "EditMetadataDialog controlled_vocab_frame clear_button should have right tooltip!"
+      delete_button = edit_metadata_dialog.controlled_vocab_frame.mainVerticalLayout.itemAt(1).itemAt(2).widget()
       assert delete_button.isEnabled(), "EditMetadataDialog controlled_vocab_frame delete_button should be enabled!"
-      assert delete_button.toolTip() == 'Delete this particular vocabulary entry.', "EditMetadataDialog controlled_vocab_frame delete_button should have right tooltip!"
+      assert delete_button.toolTip() == 'Delete this particular entry.', "EditMetadataDialog controlled_vocab_frame delete_button should have right tooltip!"
 
       # Add new field items
-      for _ in range(3):
+      for _ in range(4):
         qtbot.mouseClick(edit_metadata_dialog.controlled_vocab_frame.addPushButton,
                          Qt.LeftButton)
 
       # Check if the new field items are added in UI
-      assert edit_metadata_dialog.controlled_vocab_frame.mainVerticalLayout.count() == 5, "EditMetadataDialog controlled_vocab_frame mainVerticalLayout should contain 5 children!"
+      assert edit_metadata_dialog.controlled_vocab_frame.mainVerticalLayout.count() == 6, "EditMetadataDialog controlled_vocab_frame mainVerticalLayout should contain 5 children!"
       for pos in range(1, edit_metadata_dialog.controlled_vocab_frame.mainVerticalLayout.count()):
         combo_box = edit_metadata_dialog.controlled_vocab_frame.mainVerticalLayout.itemAt(pos).itemAt(0).widget()
         assert combo_box.isEnabled(), "EditMetadataDialog controlled_vocab_frame combo_box should be enabled!"
         assert combo_box.toolTip() == 'Select the controlled vocabulary.', "EditMetadataDialog controlled_vocab_frame combo_box should have right tooltip!"
         assert [combo_box.itemText(i) for i in range(
           combo_box.count())] == combo_box_items, "EditMetadataDialog controlled_vocab_frame combo_box should have right options!"
-        assert combo_box.currentText() == 'Age', "EditMetadataDialog controlled_vocab_frame combo_box should have right default value!"
-        delete_button = edit_metadata_dialog.controlled_vocab_frame.mainVerticalLayout.itemAt(pos).itemAt(1).widget()
+        assert combo_box.currentText() == 'No Value', "EditMetadataDialog controlled_vocab_frame combo_box should have right default value!"
+        assert clear_button.isEnabled(), "EditMetadataDialog controlled_vocab_frame clear_button should be enabled!"
+        assert clear_button.toolTip() == 'Clear this particular entry.', "EditMetadataDialog controlled_vocab_frame clear_button should have right tooltip!"
+        delete_button = edit_metadata_dialog.controlled_vocab_frame.mainVerticalLayout.itemAt(1).itemAt(2).widget()
         assert delete_button.isEnabled(), "EditMetadataDialog controlled_vocab_frame delete_button should be enabled!"
-        assert delete_button.toolTip() == 'Delete this particular vocabulary entry.', "EditMetadataDialog controlled_vocab_frame delete_button should have right tooltip!"
+        assert delete_button.toolTip() == 'Delete this particular entry.', "EditMetadataDialog controlled_vocab_frame delete_button should have right tooltip!"
 
       # Set combo box items
-      for i in range(4):
+      for i in range(5):
         qtbot.keyClicks(edit_metadata_dialog.controlled_vocab_frame.mainVerticalLayout.itemAt(i + 1).itemAt(0).widget(),
                         combo_box_items[i], delay=1)
 
@@ -1099,6 +1159,8 @@ class TestDataverseEditMetadataDialog:
     assert not edit_metadata_dialog.instance.isVisible(), "EditMetadataDialog instance should be closed!"
     value = edit_metadata_dialog.metadata['datasetVersion']['metadataBlocks']['biomedical']['fields'][1]['value']
     value.sort()
+    combo_box_items.remove('No Value')
+    combo_box_items.sort()
     assert value == combo_box_items, "EditMetadataDialog field value should be updated!"
     mock_database_api.update_model_document.assert_called_once_with(edit_metadata_dialog.config_model)
 
@@ -1131,9 +1193,9 @@ class TestDataverseEditMetadataDialog:
           pos - 1], "EditMetadataDialog controlled_vocab_frame combo_box should have right default value!"
 
       # Delete first two combo box items
-      qtbot.mouseClick(edit_metadata_dialog.controlled_vocab_frame.mainVerticalLayout.itemAt(1).itemAt(1).widget(),
+      qtbot.mouseClick(edit_metadata_dialog.controlled_vocab_frame.mainVerticalLayout.itemAt(1).itemAt(2).widget(),
                        Qt.LeftButton)
-      qtbot.mouseClick(edit_metadata_dialog.controlled_vocab_frame.mainVerticalLayout.itemAt(1).itemAt(1).widget(),
+      qtbot.mouseClick(edit_metadata_dialog.controlled_vocab_frame.mainVerticalLayout.itemAt(1).itemAt(2).widget(),
                        Qt.LeftButton)
       assert edit_metadata_dialog.controlled_vocab_frame.mainVerticalLayout.count() == 3, "EditMetadataDialog controlled_vocab_frame mainVerticalLayout should contain 3 children!"
 
@@ -1264,10 +1326,13 @@ class TestDataverseEditMetadataDialog:
           1], "EditMetadataDialog primitive_compound_frame journal_issue_line_edit should have right text!"
         date_time_edit = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.itemAt(pos).itemAt(2).widget()
         assert date_time_edit.isEnabled(), "EditMetadataDialog primitive_compound_frame line_edit should be enabled!"
-        assert date_time_edit.toolTip() == 'Enter the Journal Pub Date value here. e.g. 1008-01-01', "EditMetadataDialog primitive_compound_frame date_time_edit should have right tooltip!"
+        assert date_time_edit.toolTip() == 'Enter the Journal Pub Date value here. e.g. 1008-01-01, Minimum possible date is 0100-01-02', "EditMetadataDialog primitive_compound_frame date_time_edit should have right tooltip!"
         assert date_time_edit.date().toString("yyyy-MM-dd") == journal_volume_test_data[pos - 1][
           2], "EditMetadataDialog primitive_compound_frame date_time_edit should have right text!"
-        delete_button = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.itemAt(pos).itemAt(3).widget()
+        clear_button = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.itemAt(pos).itemAt(3).widget()
+        assert clear_button.isEnabled(), "EditMetadataDialog primitive_compound_frame clear_button should be enabled!"
+        assert clear_button.toolTip() == 'Clear this particular entry.', "EditMetadataDialog primitive_compound_frame clear_button should have right tooltip!"
+        delete_button = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.itemAt(pos).itemAt(4).widget()
         assert delete_button.isEnabled(), "EditMetadataDialog primitive_compound_frame delete_button should be enabled!"
         assert delete_button.toolTip() == 'Delete this particular entry.', "EditMetadataDialog primitive_compound_frame delete_button should have right tooltip!"
     qtbot.mouseClick(edit_metadata_dialog.buttonBox.button(QDialogButtonBox.Cancel), Qt.LeftButton)

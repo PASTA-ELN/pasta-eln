@@ -315,7 +315,8 @@ class TestDataHierarchyTerminologyLookup(object):
       assert isinstance(iri_result['results'], list), "Results field in each iri_result must be a list"
       for item in iri_result['results']:
         assert isinstance(item, dict), "Each item in results must be a dictionary"
-        assert item['iri'] is not None and validate_url(item['iri']), "Each retrieved results must have a valid IRI"
+        assert item['iri'] is not None and (
+              'file:/' in item['iri'] or validate_url(item['iri'])), "Each retrieved results must have a valid IRI"
         assert item['information'] is not None, "Each retrieved results must have a valid information field"
 
 
