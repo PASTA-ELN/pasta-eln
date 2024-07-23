@@ -54,20 +54,17 @@ def add_delete_button(parent_frame: QFrame,
                       enabled: bool = True) -> None:
   """
   Adds a delete button to the layout.
+
   Args:
       parent_frame (QFrame): The parent QFrame object.
       parent (QBoxLayout): The parent QBoxLayout object.
       enabled (bool, optional): Whether the button should be enabled or disabled.
       Defaults to True.
 
-  Returns:
-      QPushButton: The created delete button widget.
-
   Explanation:
       This function creates a QPushButton widget with the specified properties and adds it to the parent layout.
       The button is labeled as "Delete" and can be enabled or disabled based on the 'enabled' parameter.
       It is connected to a lambda function that calls the 'delete' function with the parent QBoxLayout as an argument.
-
   """
   delete_push_button = create_push_button(
     "Delete",
@@ -82,6 +79,18 @@ def add_delete_button(parent_frame: QFrame,
 
 def add_clear_button(parent_frame: QFrame,
                      parent: QBoxLayout) -> None:
+  """
+  Adds a clear button to the layout.
+
+  Args:
+      parent_frame (QFrame): The parent QFrame object.
+      parent (QBoxLayout): The parent QBoxLayout object.
+
+  Explanation:
+      This function creates a QPushButton widget with the specified properties and adds it to the parent layout.
+      The button is labeled as "Clear" and can be connected to a lambda function that calls the 'clear' function
+      with the parent QBoxLayout as an argument.
+  """
   button = create_push_button(
     "Clear",
     "clearPushButton",
