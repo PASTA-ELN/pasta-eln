@@ -63,7 +63,7 @@ class SqlLiteDB:
     # main table
     self.createSQLTable('main',     KEY_ORDER,                                         'id',        KEY_TYPE)
     # branches table
-    self.createSQLTable('branches', ['id','stack','child','path','show'],'id, stack', ['TEXT']*2+['INTEGER']+["TEXT"]*2)
+    self.createSQLTable('branches', ['id','idx','stack','child','path','show'],'id, idx', ['TEXT','INTEGER']*2+["TEXT"]*2)
     # metadata table
     # - contains metadata of specific item
     # - key is generally not shown to user
@@ -203,10 +203,10 @@ class SqlLiteDB:
     # data ends with 'id' 'stack', 'child', 'path', 'show', 'dateModified'
     self.cursor.execute(f"SELECT * FROM branches WHERE id == '{docID}'")
     for dataI in self.cursor.fetchall():
-      doc['branch'].append({'stack': dataI[1].split('/')[:-1],
-                             'child': dataI[2],
-                             'path':  None if dataI[3] == '*' else dataI[3],
-                             'show':   [i=='T' for i in dataI[4]]})
+      doc['branch'].append({'stack': dataI[2].split('/')[:-1],
+                             'child': dataI[3],
+                             'path':  None if dataI[4] == '*' else dataI[4],
+                             'show':   [i=='T' for i in dataI[5]]})
     self.cursor.execute(f"SELECT properties.key, properties.value, properties.unit, propDefinitions.long, propDefinitions.IRI, "
                         f"definitions.unit, definitions.query, definitions.IRI FROM properties LEFT JOIN propDefinitions USING(key) "
                         f"LEFT JOIN definitions ON properties.key = (concat(definitions.class,'.',definitions.name)) "
@@ -242,8 +242,9 @@ class SqlLiteDB:
     # print('\nsave\n'+'\n'.join([f'{k}: {v}' for k,v in doc.items()]))
     docOrg = copy.deepcopy(doc)
     # save into branch table
-    self.cursor.execute(f"INSERT INTO branches VALUES ({', '.join(['?']*5)})",
+    self.cursor.execute(f"INSERT INTO branches VALUES ({', '.join(['?']*6)})",
                         [doc['id'],
+                         0,
                          '/'.join(doc['branch']['stack']+[doc['id']]),
                          str(doc['branch']['child']),
                          '*' if doc['branch']['path'] is None else doc['branch']['path'],
@@ -334,23 +335,14 @@ class SqlLiteDB:
     Returns:
       str, str: old path, new path
     """
-    raise ValueError('Not implemented UPDATEBRANCH')
-
-
-  def createShowFromStack(self, stack:list[str], currentShow:bool=True) -> list[bool]:
-    """
-    For branches: create show entry in the branches by using the stack
-    - should be 1 longer than stack
-    - check parents if hidden, then this child is hidden too
-
-    Args:
-      stack (list): list of ancestor docIDs
-      currentShow (bool): current show-indicator of this item
-
-    Returns:
-      list: list of show = list of bool
-    """
-    raise ValueError('Not implemented CREATE SHOW FROM STACK')
+    #convert into db style
+    path = '*' if path is None else path
+    #use
+    self.cursor.execute(f"SELECT path FROM branches WHERE id == '{docID}' and idx == {branch}")
+    pathOld = self.cursor.fetchone()[0]
+    self.cursor.execute(f"UPDATE branches SET stack='{'/'.join(stack+[docID])}', child={child}, path='{path}' WHERE id = '{docID}' and idx = {branch}")
+    self.connection.commit()
+    return (None if pathOld=='*' else pathOld, None if path=='*' else path)
 
 
   def remove(self, docID:str) -> dict[str,Any]:
@@ -364,6 +356,8 @@ class SqlLiteDB:
       dict: document that was removed
     """
     doc = self.getDoc(docID)
+    del doc['image']
+    del doc['content']
     self.cursor.execute(f"DELETE FROM main WHERE id == '{docID}'")
     self.cursor.execute(f"DELETE FROM branches WHERE id == '{docID}'")
     self.cursor.execute(f"DELETE FROM properties WHERE id == '{docID}'")
@@ -552,40 +546,12 @@ class SqlLiteDB:
     raise ValueError('Not implemented SET GUI')
 
 
-  def replicateDB(self, dbInfo:dict[str,Any], progressBar:Any, removeAtStart:bool=False) -> str:
-    """
-    Replication to another instance
-
-    One cannot simply create the document no the other server...
-    - because then the _rev do not match and will never sync
-    - issues arise if the documents in a database are deleted. Better remove the entire database and recreate it
-
-    Args:
-        dbInfo (dict): info on the remote database
-        progressBar (QProgressBar): gui - qt progress bar
-        removeAtStart (bool): remove remote DB before starting new
-
-    Returns:
-        str: report
-    """
-    raise ValueError('Not implemented REPLICATE')
-
-
-  def historyDB(self) -> dict[str,Any]:
-    """
-    Collect last modification days of documents
-    """
-    raise ValueError('Not implemented HISTORY')
-
-
   def checkDB(self, outputStyle:str='text', minimal:bool=False) -> str:
     """
     Check database for consistencies by iterating through all documents
-    - slow since no views used
-    - check views
     - only reporting, no repair
     - custom changes are possible with normal scan
-    - no interaction with harddisk
+    - no interaction with hard disk
 
     Args:
         outputStyle (str): output using a given style: see outputString
@@ -595,19 +561,19 @@ class SqlLiteDB:
     Returns:
         str: output
     """
-    outstring = ''
+    outString = ''
     if outputStyle=='html':
-      outstring += '<div align="right">'
-    outstring+= outputString(outputStyle,'h2','LEGEND')
+      outString += '<div align="right">'
+    outString+= outputString(outputStyle,'h2','LEGEND')
     if not minimal:
-      outstring+= outputString(outputStyle,'ok','Green: perfect and as intended')
-      outstring+= outputString(outputStyle,'okish', 'Blue: ok-ish, can happen: empty files for testing, strange path for measurements')
-    outstring+= outputString(outputStyle,'unsure', 'Dark magenta: unsure if bug or desired (e.g. move step to random path-name)')
-    outstring+= outputString(outputStyle,'warning','Orange-red: WARNING should not happen (e.g. procedures without project)')
-    outstring+= outputString(outputStyle,'error',  'Red: FAILURE and ERROR: NOT ALLOWED AT ANY TIME')
+      outString+= outputString(outputStyle,'perfect','Green: perfect and as intended')
+      outString+= outputString(outputStyle,'ok', 'Blue: ok, can happen: empty files for testing, strange path for measurements')
+    outString+= outputString(outputStyle,'unsure', 'Dark magenta: unsure if bug or desired (e.g. move step to random path-name)')
+    outString+= outputString(outputStyle,'warning','Orange-red: WARNING should not happen (e.g. procedures without project)')
+    outString+= outputString(outputStyle,'error',  'Red: FAILURE and ERROR: NOT ALLOWED AT ANY TIME')
     if outputStyle=='html':
-      outstring += '</div>'
-    outstring+= outputString(outputStyle,'h2','List all database entries')
+      outString += '</div>'
+    outString+= outputString(outputStyle,'h2','List all database entries')
     # tests
     self.cursor.execute("SELECT id, main.type, branches.stack, branches.path, branches.child, branches.show FROM branches INNER JOIN main USING(id)")
     res = self.cursor.fetchall()
@@ -615,70 +581,70 @@ class SqlLiteDB:
       try:
         id, docType, stack, path, child, _ = row[0], row[1], row[2], row[3], row[4], row[5]
       except ValueError:
-        outstring+= outputString(outputStyle,'error',f"dch03a: branch data has strange list {id}")
+        outString+= outputString(outputStyle,'error',f"dch03a: branch data has strange list {id}")
         continue
       if len(docType.split('/'))==0:
-        outstring+= outputString(outputStyle,'unsure',f"dch04: no type in (removed data?) {id}")
+        outString+= outputString(outputStyle,'unsure',f"dch04: no type in (removed data?) {id}")
         continue
       if not all(k.startswith('x-') for k in stack.split('/')[:-1]):
-        outstring+= outputString(outputStyle,'error',f"dch03: non-text in stack in id: {id}")
+        outString+= outputString(outputStyle,'error',f"dch03: non-text in stack in id: {id}")
       if any(len(i)==0 for i in stack) and not docType.startswith('x0'): #if no inheritance
         if docType.startswith(('measurement','x')):
-          outstring+= outputString(outputStyle,'warning',f"branch stack length = 0: no parent {id}")
+          outString+= outputString(outputStyle,'warning',f"branch stack length = 0: no parent {id}")
         elif not minimal:
-          outstring+= outputString(outputStyle,'okish',f"branch stack length = 0: no parent for procedure/sample {id}")
+          outString+= outputString(outputStyle,'ok',f"branch stack length = 0: no parent for procedure/sample {id}")
       try:
         dirNamePrefix = path.split(os.sep)[-1].split('_')[0]
         if dirNamePrefix.isdigit() and child!=int(dirNamePrefix): #compare child-number to start of directory name
-          outstring+= outputString(outputStyle,'error',f"dch05: child-number and dirName dont match {id}")
+          outString+= outputString(outputStyle,'error',f"dch05: child-number and dirName dont match {id}")
       except Exception:
         pass  #handled next lines
       if path is None:
         if docType.startswith('x'):
-          outstring+= outputString(outputStyle,'error',f"dch06: branch path is None {id}")
+          outString+= outputString(outputStyle,'error',f"dch06: branch path is None {id}")
         elif docType.startswith('measurement'):
           if not minimal:
-            outstring+= outputString(outputStyle,'okish', f'measurement branch path is None=no data {id}')
+            outString+= outputString(outputStyle,'ok', f'measurement branch path is None=no data {id}')
         elif not minimal:
-          outstring+= outputString(outputStyle,'ok',f"procedure/sample with empty path {id}")
+          outString+= outputString(outputStyle,'perfect',f"procedure/sample with empty path {id}")
       else:                                                    #if sensible path
         if len(stack.split('/')) != len(path.split(os.sep)) and path!='*' and not path.startswith('http'): #check if length of path and stack coincide; ignore path=None=*
           if docType.startswith('procedure'):
             if not minimal:
-              outstring+= outputString(outputStyle,'ok',f"procedure: branch stack and path lengths not equal: {id}")
+              outString+= outputString(outputStyle,'perfect',f"procedure: branch stack and path lengths not equal: {id}")
           else:
-            outstring+= outputString(outputStyle,'unsure',f"branch stack and path lengths not equal: {id}")
+            outString+= outputString(outputStyle,'unsure',f"branch stack and path lengths not equal: {id}")
         if path!='*' and not path.startswith('http'):
           for parentID in stack.split('/')[:-1]:            #check if all parents in doc have a corresponding path
             parentDoc = self.getDoc(parentID)
             parentDocBranches = parentDoc['branch']
             onePathFound = any(path.startswith(parentBranch['path']) for parentBranch in parentDocBranches)
             if not onePathFound and (not docType.startswith('procedure') or not minimal):
-              outstring+= outputString(outputStyle,'unsure',f"dch08: parent does not have corresponding path (remote content) {id} | parentID {parentID}")
+              outString+= outputString(outputStyle,'unsure',f"dch08: parent does not have corresponding path (remote content) {id} | parentID {parentID}")
 
     #doc-type specific tests
     self.cursor.execute("SELECT qrCodes.id, qrCodes.qrCode FROM qrCodes JOIN main USING(id) WHERE  main.type LIKE 'sample%'")
     if res:= [i[0] for i in self.cursor.fetchall() if i[1] is None]:
-      outstring+= outputString(outputStyle,'warning',f"dch09: qrCode not in samples {res}")
+      outString+= outputString(outputStyle,'warning',f"dch09: qrCode not in samples {res}")
     self.cursor.execute("SELECT id, shasum, image FROM main WHERE  type LIKE 'measurement%'")
     for row in self.cursor.fetchall():
       id, shasum, image = row
       if shasum is None:
-        outstring+= outputString(outputStyle,'warning',f"dch10: shasum not in measurement {id}")
+        outString+= outputString(outputStyle,'warning',f"dch10: shasum not in measurement {id}")
       if image.startswith('data:image'):  #for jpg and png
         try:
-          imgdata = base64.b64decode(image[22:])
-          Image.open(io.BytesIO(imgdata))  #can convert, that is all that needs to be tested
+          imgData = base64.b64decode(image[22:])
+          Image.open(io.BytesIO(imgData))  #can convert, that is all that needs to be tested
         except Exception:
-          outstring+= outputString(outputStyle,'error',f"dch12: jpg-image not valid {id}")
+          outString+= outputString(outputStyle,'error',f"dch12: jpg-image not valid {id}")
       elif image.startswith('<?xml'):
         #from https://stackoverflow.com/questions/63419010/check-if-an-image-file-is-a-valid-svg-file-in-python
         SVG_R = r'(?:<\?xml\b[^>]*>[^<]*)?(?:<!--.*?-->[^<]*)*(?:<svg|<!DOCTYPE svg)\b'
         SVG_RE = re.compile(SVG_R, re.DOTALL)
         if SVG_RE.match(image) is None:
-          outstring+= outputString(outputStyle,'error',f"dch13: svg-image not valid {id}")
+          outString+= outputString(outputStyle,'error',f"dch13: svg-image not valid {id}")
       elif image in ('', None):
-        outstring+= outputString(outputStyle,'unsure',f"image not valid {id} {image}")
+        outString+= outputString(outputStyle,'unsure',f"image not valid {id} {image}")
       else:
-        outstring+= outputString(outputStyle,'error',f"dch14: image not valid {id} {image}")
-    return outstring
+        outString+= outputString(outputStyle,'error',f"dch14: image not valid {id} {image}")
+    return outString

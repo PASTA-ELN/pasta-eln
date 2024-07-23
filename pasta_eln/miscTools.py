@@ -42,7 +42,7 @@ def outputString(fmt:str='print', level:str='info', message:str='') -> str:
     - formats can be union ('print,text')
   """
   prefixes = {'h2':f'{Bcolors.UNDERLINE}\n*** ','bold':f'{Bcolors.BOLD}\n*** ', \
-              'ok':f'{Bcolors.OKGREEN}', 'okish':f'{Bcolors.OKBLUE}', 'unsure':f'{Bcolors.HEADER}',\
+              'perfect':f'{Bcolors.OKGREEN}', 'ok':f'{Bcolors.OKBLUE}', 'unsure':f'{Bcolors.HEADER}',\
               'warning':f'{Bcolors.WARNING}**Warning','error':f'{Bcolors.FAIL}**ERROR '}
   if level=='info':
     txtOutput = message.strip()+'\n'
@@ -60,7 +60,7 @@ def outputString(fmt:str='print', level:str='info', message:str='') -> str:
   if 'text' in fmt:
     return txtOutput
   if fmt=='html':
-    colors = {'info':'black','error':'red','warning':'orangered','ok':'green','okish':'blue','unsure':'darkmagenta'}
+    colors = {'info':'black','error':'red','warning':'orangered','perfect':'green','ok':'blue','unsure':'darkmagenta'}
     if level[0]=='h':
       return f'<{level}>{message}</{level}>'
     if level not in colors:
