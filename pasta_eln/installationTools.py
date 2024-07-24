@@ -24,7 +24,7 @@ def getOS() -> str:
 
 def createDefaultConfiguration(pathPasta:Optional[Path]=None) -> dict[str,Any]:
   '''
-  Create base of configuration file .pastaELN.json
+  Create base of configuration file .pastaELN_v3.json
   - basic project group
   - defaultProjectGroup
   - userID
@@ -48,7 +48,7 @@ def createDefaultConfiguration(pathPasta:Optional[Path]=None) -> dict[str,Any]:
           'research': {
               'local': {'database': 'research', 'path': str(pathPasta)},
               'remote': {},
-          }}, 'version': 2}
+          }}, 'version': 3}
   try:
     conf['userID']      = os.getlogin()
   except Exception:   #github action
@@ -61,7 +61,7 @@ def createDefaultConfiguration(pathPasta:Optional[Path]=None) -> dict[str,Any]:
 
 def configuration(command:str='test', pathPasta:Path=Path('')) -> str:
   '''
-  Check configuration file .pastaELN.json for consistencies
+  Check configuration file .pastaELN_v3.json for consistencies
 
   Args:
     command (str): 'test' or 'repair'
@@ -73,13 +73,11 @@ def configuration(command:str='test', pathPasta:Path=Path('')) -> str:
   logging.info('Configuration starting ...')
   output = ''
   try:
-    with open(Path.home()/'.pastaELN.json','r', encoding='utf-8') as fConf:
+    with open(Path.home()/'.pastaELN_v3.json','r', encoding='utf-8') as fConf:
       conf = json.load(fConf)
   except Exception:
-    output += '**ERROR configuration file does not exist\n'
-    conf = {}
-    if command == 'repair':
-      conf = createDefaultConfiguration(pathPasta)
+    output += '**INFO configuration file does not exist\n'
+    conf = createDefaultConfiguration(pathPasta) if command == 'repair' else {}
   logging.info(json.dumps(conf, indent=2))
 
   #check normal items
@@ -105,7 +103,7 @@ def configuration(command:str='test', pathPasta:Path=Path('')) -> str:
         else:
           output += outputString('text','error', f'No {k} in GUI part of config file')
   if command == 'repair':
-    with open(Path.home()/'.pastaELN.json','w', encoding='utf-8') as f:
+    with open(Path.home()/'.pastaELN_v3.json','w', encoding='utf-8') as f:
       f.write(json.dumps(conf,indent=2))
   logging.info('Configuration ending')
   return output
@@ -148,7 +146,7 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
   ### TEST PROJECT PLANING
   outputString(outputFormat,'h2','TEST PROJECT PLANING')
   dfProj  = backend.db.getView('viewDocType/x0')
-  projID1 = list(dfProj['PASTA' in dfProj['name']]['id'])[0]
+  projID1 = list(dfProj['id'])[0]
   if callbackPercent is not None:
     callbackPercent(5)
   backend.changeHierarchy(projID1)

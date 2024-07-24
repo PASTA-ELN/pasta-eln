@@ -1,8 +1,9 @@
 """ Widget: setup tab inside the configuration dialog window """
 import logging
 from enum import Enum
+from pathlib import Path
 from typing import Callable, Any
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QMessageBox, QProgressBar    # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QMessageBox, QProgressBar, QFileDialog  # pylint: disable=no-name-in-module
 from ..guiStyle import TextButton, widgetAndLayout
 from ..installationTools import configuration, exampleData, createShortcut
 from ..fixedStringsJson import setupText, exampleDataString
@@ -73,7 +74,12 @@ class ConfigurationSetup(QWidget):
       else:
         button = QMessageBox.question(self, "PASTA-ELN configuration", "Do you want to create/repair the configuration.")
         if button == QMessageBox.StandardButton.Yes:
-          configuration('repair')
+          dirName = QFileDialog.getExistingDirectory(self,'Create and select directory for scientific data',str(Path.home()))
+          if dirName is None:
+            self.mainText = self.mainText.replace('- Configuration of preferences','- Configuration: user chose to INVALID folder' )
+            self.text1.setMarkdown(self.mainText)
+          else:
+            configuration('repair', Path(dirName))
         else:
           self.mainText = self.mainText.replace('- Configuration of preferences','- Configuration: user chose to NOT install' )
           self.text1.setMarkdown(self.mainText)
@@ -99,8 +105,9 @@ class ConfigurationSetup(QWidget):
       self.button2.show()
       logging.info('Setup analyse end')
     elif command[0] is Command.FINISHED: # What do do when setup is finished: success or unsuccessfully
-      db_api = DatabaseAPI()
-      db_api.initialize_database()
+      # Jithu's code: comment out for now
+      # db_api = DatabaseAPI()
+      # db_api.initialize_database()
       restart()
       # self.callbackFinished()
     return
