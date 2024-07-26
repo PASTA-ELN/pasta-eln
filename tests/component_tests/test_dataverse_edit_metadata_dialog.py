@@ -65,9 +65,9 @@ class TestDataverseEditMetadataDialog:
         QDialogButtonBox.Save).isVisible(), "EditMetadataDialog Save button should be shown!"
       assert edit_metadata_dialog.buttonBox.button(
         QDialogButtonBox.Cancel).isVisible(), "EditMetadataDialog Cancel button should be shown!"
-      assert edit_metadata_dialog.primitive_compound_frame.instance.isVisible(), "EditMetadataDialog primitive_compound_frame should be shown!"
-      assert edit_metadata_dialog.primitive_compound_frame.addPushButton.isVisible(), "EditMetadataDialog primitive_compound_frame addPushButton should be shown!"
-      primitive_vertical_layout = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.findChild(
+      assert edit_metadata_dialog.metadata_frame.instance.isVisible(), "EditMetadataDialog primitive_compound_frame should be shown!"
+      assert edit_metadata_dialog.metadata_frame.addPushButton.isVisible(), "EditMetadataDialog primitive_compound_frame addPushButton should be shown!"
+      primitive_vertical_layout = edit_metadata_dialog.metadata_frame.mainVerticalLayout.findChild(
         QVBoxLayout,
         "primitiveVerticalLayout")
       assert primitive_vertical_layout, "EditMetadataDialog primitive_compound_frame should be present!"
@@ -77,7 +77,7 @@ class TestDataverseEditMetadataDialog:
       delete_button = primitive_vertical_layout.itemAt(0).itemAt(2).widget()
       assert delete_button.isVisible(), "EditMetadataDialog primitive_compound_frame delete button should be shown!"
       assert not delete_button.isEnabled(), "EditMetadataDialog primitive_compound_frame delete button should be disabled!"
-      assert not edit_metadata_dialog.primitive_compound_frame.addPushButton.isEnabled(), "EditMetadataDialog primitive_compound_frame addPushButton should be disabled!"
+      assert not edit_metadata_dialog.metadata_frame.addPushButton.isEnabled(), "EditMetadataDialog primitive_compound_frame addPushButton should be disabled!"
 
       assert edit_metadata_dialog.minimalFullComboBox.currentText() == "Full", "minimalFullComboBox must be initialized with default full option"
       assert edit_metadata_dialog.metadataBlockComboBox.currentText() == "Citation Metadata", "metadataBlockComboBox must be initialized with default 'Citation Metadata' option"
@@ -345,9 +345,9 @@ class TestDataverseEditMetadataDialog:
       assert meta_field_items == expected_fields, "typesComboBox should have right contents"
       assert edit_metadata_dialog.typesComboBox.currentText() == selected_field, f"typesComboBox must be initialized with default '{selected_field}' option"
       if test_id == "success_case_select_geospatial_metadata":
-        assert edit_metadata_dialog.primitive_compound_frame.instance.isVisible(), "EditMetadataDialog primitive_compound_frame should be shown!"
-        assert edit_metadata_dialog.primitive_compound_frame.addPushButton.isVisible(), "EditMetadataDialog primitive_compound_frame addPushButton should be shown!"
-        compound_Horizontal_Layout = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.findChild(
+        assert edit_metadata_dialog.metadata_frame.instance.isVisible(), "EditMetadataDialog primitive_compound_frame should be shown!"
+        assert edit_metadata_dialog.metadata_frame.addPushButton.isVisible(), "EditMetadataDialog primitive_compound_frame addPushButton should be shown!"
+        compound_Horizontal_Layout = edit_metadata_dialog.metadata_frame.mainVerticalLayout.findChild(
           QHBoxLayout,
           "compoundHorizontalLayout")
         assert compound_Horizontal_Layout, "EditMetadataDialog compound_Horizontal_Layout should be present!"
@@ -361,12 +361,12 @@ class TestDataverseEditMetadataDialog:
             assert widget.placeholderText() == placeholderTexts[
               i], f"EditMetadataDialog primitive_compound_frame {widget.objectName()} should have right placeholderText!"
         assert widget.text() == "Delete", "EditMetadataDialog compound_Horizontal_Layout widget should have right text!"
-        assert edit_metadata_dialog.primitive_compound_frame.addPushButton.isEnabled(), "EditMetadataDialog compound_Horizontal_Layout addPushButton should be disabled!"
+        assert edit_metadata_dialog.metadata_frame.addPushButton.isEnabled(), "EditMetadataDialog compound_Horizontal_Layout addPushButton should be disabled!"
       elif test_id == "success_case_select_citation_metadata":
-        assert edit_metadata_dialog.primitive_compound_frame.instance.isVisible(), "EditMetadataDialog primitive_compound_frame should be shown!"
-        assert edit_metadata_dialog.primitive_compound_frame.addPushButton.isVisible(), "EditMetadataDialog primitive_compound_frame addPushButton should be shown!"
-        assert not edit_metadata_dialog.primitive_compound_frame.addPushButton.isEnabled(), "EditMetadataDialog primitive_compound_frame addPushButton should not be enabled!"
-        primitive_horizontal_layout = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.findChild(
+        assert edit_metadata_dialog.metadata_frame.instance.isVisible(), "EditMetadataDialog primitive_compound_frame should be shown!"
+        assert edit_metadata_dialog.metadata_frame.addPushButton.isVisible(), "EditMetadataDialog primitive_compound_frame addPushButton should be shown!"
+        assert not edit_metadata_dialog.metadata_frame.addPushButton.isEnabled(), "EditMetadataDialog primitive_compound_frame addPushButton should not be enabled!"
+        primitive_horizontal_layout = edit_metadata_dialog.metadata_frame.mainVerticalLayout.findChild(
           QHBoxLayout,
           "primitiveHorizontalLayout")
         for i in range(primitive_horizontal_layout.count()):
@@ -380,10 +380,10 @@ class TestDataverseEditMetadataDialog:
             assert widget.placeholderText() == placeholderTexts[
               i], f"EditMetadataDialog primitive_compound_frame {widget.objectName()} should have right placeholderText!"
       elif test_id == "success_case_select_social_science_metadata":
-        assert edit_metadata_dialog.primitive_compound_frame.instance.isVisible(), "EditMetadataDialog primitive_compound_frame should be shown!"
-        assert edit_metadata_dialog.primitive_compound_frame.addPushButton.isVisible(), "EditMetadataDialog primitive_compound_frame addPushButton should be shown!"
-        assert edit_metadata_dialog.primitive_compound_frame.addPushButton.isEnabled(), "EditMetadataDialog primitive_compound_frame addPushButton should be enabled!"
-        primitive_horizontal_layout = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.findChild(
+        assert edit_metadata_dialog.metadata_frame.instance.isVisible(), "EditMetadataDialog primitive_compound_frame should be shown!"
+        assert edit_metadata_dialog.metadata_frame.addPushButton.isVisible(), "EditMetadataDialog primitive_compound_frame addPushButton should be shown!"
+        assert edit_metadata_dialog.metadata_frame.addPushButton.isEnabled(), "EditMetadataDialog primitive_compound_frame addPushButton should be enabled!"
+        primitive_horizontal_layout = edit_metadata_dialog.metadata_frame.mainVerticalLayout.findChild(
           QHBoxLayout,
           "primitiveHorizontalLayout")
         for i in range(primitive_horizontal_layout.count()):
@@ -416,10 +416,10 @@ class TestDataverseEditMetadataDialog:
               'Case Control', 'Cross Sectional', 'Cohort Study',
               'Not Specified'], f"EditMetadataDialog primitive_compound_frame {widget.objectName()} should have right contents!"
       elif test_id == "success_case_journal_metadata":
-        assert edit_metadata_dialog.primitive_compound_frame.instance.isVisible(), "EditMetadataDialog primitive_compound_frame should be shown!"
-        assert edit_metadata_dialog.primitive_compound_frame.addPushButton.isVisible(), "EditMetadataDialog primitive_compound_frame addPushButton should be shown!"
-        assert edit_metadata_dialog.primitive_compound_frame.addPushButton.isEnabled(), "EditMetadataDialog primitive_compound_frame addPushButton should be enabled!"
-        primitive_horizontal_layout = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.findChild(
+        assert edit_metadata_dialog.metadata_frame.instance.isVisible(), "EditMetadataDialog primitive_compound_frame should be shown!"
+        assert edit_metadata_dialog.metadata_frame.addPushButton.isVisible(), "EditMetadataDialog primitive_compound_frame addPushButton should be shown!"
+        assert edit_metadata_dialog.metadata_frame.addPushButton.isEnabled(), "EditMetadataDialog primitive_compound_frame addPushButton should be enabled!"
+        primitive_horizontal_layout = edit_metadata_dialog.metadata_frame.mainVerticalLayout.findChild(
           QHBoxLayout,
           "compoundHorizontalLayout")
         assert primitive_horizontal_layout, "EditMetadataDialog primitive_horizontal_layout should be present!"
@@ -442,10 +442,10 @@ class TestDataverseEditMetadataDialog:
       assert edit_metadata_dialog.metadataBlockComboBox.currentText() == "Citation Metadata", "metadataBlockComboBox must be initialized with  citation metadata option"
       qtbot.keyClicks(edit_metadata_dialog.typesComboBox, 'Origin Of Sources', delay=1)
       assert edit_metadata_dialog.typesComboBox.currentText() == "Origin Of Sources", "typesComboBox must be initialized with Origin Of Sources option"
-      assert edit_metadata_dialog.primitive_compound_frame.instance.isVisible(), "EditMetadataDialog primitive_compound_frame should be shown!"
-      assert edit_metadata_dialog.primitive_compound_frame.addPushButton.isVisible(), "EditMetadataDialog primitive_compound_frame addPushButton should be shown!"
-      assert not edit_metadata_dialog.primitive_compound_frame.addPushButton.isEnabled(), "EditMetadataDialog primitive_compound_frame addPushButton should not be enabled!"
-      primitive_horizontal_layout = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.findChild(
+      assert edit_metadata_dialog.metadata_frame.instance.isVisible(), "EditMetadataDialog primitive_compound_frame should be shown!"
+      assert edit_metadata_dialog.metadata_frame.addPushButton.isVisible(), "EditMetadataDialog primitive_compound_frame addPushButton should be shown!"
+      assert not edit_metadata_dialog.metadata_frame.addPushButton.isEnabled(), "EditMetadataDialog primitive_compound_frame addPushButton should not be enabled!"
+      primitive_horizontal_layout = edit_metadata_dialog.metadata_frame.mainVerticalLayout.findChild(
         QHBoxLayout,
         "primitiveHorizontalLayout")
       assert primitive_horizontal_layout, "EditMetadataDialog primitive_horizontal_layout should be present!"
@@ -494,18 +494,18 @@ class TestDataverseEditMetadataDialog:
       assert edit_metadata_dialog.metadataBlockComboBox.currentText() == "Citation Metadata", "metadataBlockComboBox must be initialized with  citation metadata option"
       qtbot.keyClicks(edit_metadata_dialog.typesComboBox, 'Kind Of Data', delay=1)
       assert edit_metadata_dialog.typesComboBox.currentText() == 'Kind Of Data', "typesComboBox must be initialized with 'Kind Of Data' option"
-      assert edit_metadata_dialog.primitive_compound_frame.instance.isVisible(), "EditMetadataDialog primitive_compound_frame should be shown!"
-      assert edit_metadata_dialog.primitive_compound_frame.addPushButton.isVisible(), "EditMetadataDialog primitive_compound_frame addPushButton should be shown!"
-      assert edit_metadata_dialog.primitive_compound_frame.addPushButton.isEnabled(), "EditMetadataDialog primitive_compound_frame addPushButton should be enabled!"
+      assert edit_metadata_dialog.metadata_frame.instance.isVisible(), "EditMetadataDialog primitive_compound_frame should be shown!"
+      assert edit_metadata_dialog.metadata_frame.addPushButton.isVisible(), "EditMetadataDialog primitive_compound_frame addPushButton should be shown!"
+      assert edit_metadata_dialog.metadata_frame.addPushButton.isEnabled(), "EditMetadataDialog primitive_compound_frame addPushButton should be enabled!"
 
-      primitive_vertical_layout = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.findChild(
+      primitive_vertical_layout = edit_metadata_dialog.metadata_frame.mainVerticalLayout.findChild(
         QVBoxLayout,
         "primitiveVerticalLayout")
       assert primitive_vertical_layout, "EditMetadataDialog primitive_vertical_layout should be present!"
       assert primitive_vertical_layout.count() == 1, "EditMetadataDialog primitive_vertical_layout should have 1 child!"
-      qtbot.mouseClick(edit_metadata_dialog.primitive_compound_frame.addPushButton, Qt.LeftButton)
-      qtbot.mouseClick(edit_metadata_dialog.primitive_compound_frame.addPushButton, Qt.LeftButton)
-      qtbot.mouseClick(edit_metadata_dialog.primitive_compound_frame.addPushButton, Qt.LeftButton)
+      qtbot.mouseClick(edit_metadata_dialog.metadata_frame.addPushButton, Qt.LeftButton)
+      qtbot.mouseClick(edit_metadata_dialog.metadata_frame.addPushButton, Qt.LeftButton)
+      qtbot.mouseClick(edit_metadata_dialog.metadata_frame.addPushButton, Qt.LeftButton)
       assert primitive_vertical_layout.count() == 4, "EditMetadataDialog primitive_vertical_layout should have 4 children!"
       for pos in range(primitive_vertical_layout.count()):
         line_edit = primitive_vertical_layout.itemAt(pos).itemAt(0).widget()
@@ -541,18 +541,18 @@ class TestDataverseEditMetadataDialog:
       assert edit_metadata_dialog.metadataBlockComboBox.currentText() == "Citation Metadata", "metadataBlockComboBox must be initialized with  citation metadata option"
       qtbot.keyClicks(edit_metadata_dialog.typesComboBox, 'Kind Of Data', delay=1)
       assert edit_metadata_dialog.typesComboBox.currentText() == 'Kind Of Data', "typesComboBox must be initialized with 'Kind Of Data' option"
-      assert edit_metadata_dialog.primitive_compound_frame.instance.isVisible(), "EditMetadataDialog primitive_compound_frame should be shown!"
-      assert edit_metadata_dialog.primitive_compound_frame.addPushButton.isVisible(), "EditMetadataDialog primitive_compound_frame addPushButton should be shown!"
-      assert edit_metadata_dialog.primitive_compound_frame.addPushButton.isEnabled(), "EditMetadataDialog primitive_compound_frame addPushButton should be enabled!"
+      assert edit_metadata_dialog.metadata_frame.instance.isVisible(), "EditMetadataDialog primitive_compound_frame should be shown!"
+      assert edit_metadata_dialog.metadata_frame.addPushButton.isVisible(), "EditMetadataDialog primitive_compound_frame addPushButton should be shown!"
+      assert edit_metadata_dialog.metadata_frame.addPushButton.isEnabled(), "EditMetadataDialog primitive_compound_frame addPushButton should be enabled!"
 
-      primitive_vertical_layout = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.findChild(
+      primitive_vertical_layout = edit_metadata_dialog.metadata_frame.mainVerticalLayout.findChild(
         QVBoxLayout,
         "primitiveVerticalLayout")
       assert primitive_vertical_layout, "EditMetadataDialog primitive_vertical_layout should be present!"
       assert primitive_vertical_layout.count() == 1, "EditMetadataDialog primitive_vertical_layout should have 1 child!"
-      qtbot.mouseClick(edit_metadata_dialog.primitive_compound_frame.addPushButton, Qt.LeftButton)
-      qtbot.mouseClick(edit_metadata_dialog.primitive_compound_frame.addPushButton, Qt.LeftButton)
-      qtbot.mouseClick(edit_metadata_dialog.primitive_compound_frame.addPushButton, Qt.LeftButton)
+      qtbot.mouseClick(edit_metadata_dialog.metadata_frame.addPushButton, Qt.LeftButton)
+      qtbot.mouseClick(edit_metadata_dialog.metadata_frame.addPushButton, Qt.LeftButton)
+      qtbot.mouseClick(edit_metadata_dialog.metadata_frame.addPushButton, Qt.LeftButton)
       assert primitive_vertical_layout.count() == 4, "EditMetadataDialog primitive_vertical_layout should have 4 children!"
       test_data = ["KindOfData1", "KindOfData2", "KindOfData3", "KindOfData4"]
       for pos in range(primitive_vertical_layout.count()):
@@ -589,19 +589,19 @@ class TestDataverseEditMetadataDialog:
       assert edit_metadata_dialog.metadataBlockComboBox.currentText() == "Citation Metadata", "metadataBlockComboBox must be initialized with  citation metadata option"
       qtbot.keyClicks(edit_metadata_dialog.typesComboBox, 'Topic Classification', delay=1)
       assert edit_metadata_dialog.typesComboBox.currentText() == 'Topic Classification', "typesComboBox must be initialized with 'Topic Classification' option"
-      assert edit_metadata_dialog.primitive_compound_frame.instance.isVisible(), "EditMetadataDialog primitive_compound_frame should be shown!"
-      assert edit_metadata_dialog.primitive_compound_frame.addPushButton.isVisible(), "EditMetadataDialog primitive_compound_frame addPushButton should be shown!"
-      assert edit_metadata_dialog.primitive_compound_frame.addPushButton.isEnabled(), "EditMetadataDialog primitive_compound_frame addPushButton should be enabled!"
+      assert edit_metadata_dialog.metadata_frame.instance.isVisible(), "EditMetadataDialog primitive_compound_frame should be shown!"
+      assert edit_metadata_dialog.metadata_frame.addPushButton.isVisible(), "EditMetadataDialog primitive_compound_frame addPushButton should be shown!"
+      assert edit_metadata_dialog.metadata_frame.addPushButton.isEnabled(), "EditMetadataDialog primitive_compound_frame addPushButton should be enabled!"
 
-      compound_horizontal_layouts = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.findChildren(
+      compound_horizontal_layouts = edit_metadata_dialog.metadata_frame.mainVerticalLayout.findChildren(
         QHBoxLayout,
         "compoundHorizontalLayout")
       assert compound_horizontal_layouts, "EditMetadataDialog compoundHorizontalLayout should be present!"
       assert len(compound_horizontal_layouts) == 1, "EditMetadataDialog compound_horizontal_layouts should have 1 item!"
-      qtbot.mouseClick(edit_metadata_dialog.primitive_compound_frame.addPushButton, Qt.LeftButton)
-      qtbot.mouseClick(edit_metadata_dialog.primitive_compound_frame.addPushButton, Qt.LeftButton)
-      qtbot.mouseClick(edit_metadata_dialog.primitive_compound_frame.addPushButton, Qt.LeftButton)
-      compound_horizontal_layouts = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.findChildren(
+      qtbot.mouseClick(edit_metadata_dialog.metadata_frame.addPushButton, Qt.LeftButton)
+      qtbot.mouseClick(edit_metadata_dialog.metadata_frame.addPushButton, Qt.LeftButton)
+      qtbot.mouseClick(edit_metadata_dialog.metadata_frame.addPushButton, Qt.LeftButton)
+      compound_horizontal_layouts = edit_metadata_dialog.metadata_frame.mainVerticalLayout.findChildren(
         QHBoxLayout,
         "compoundHorizontalLayout")
       assert len(
@@ -813,19 +813,19 @@ class TestDataverseEditMetadataDialog:
       qtbot.keyClicks(edit_metadata_dialog.typesComboBox, "Time Period Covered", delay=1)
       assert edit_metadata_dialog.typesComboBox.currentText() == 'Time Period Covered', "typesComboBox must be initialized with 'Time Period Covered' option"
 
-      assert edit_metadata_dialog.primitive_compound_frame.instance.isVisible(), "EditMetadataDialog primitive_compound_frame should be shown!"
-      assert edit_metadata_dialog.primitive_compound_frame.addPushButton.isVisible(), "EditMetadataDialog primitive_compound_frame addPushButton should be shown!"
-      assert edit_metadata_dialog.primitive_compound_frame.addPushButton.isEnabled(), "EditMetadataDialog primitive_compound_frame addPushButton should be enabled!"
+      assert edit_metadata_dialog.metadata_frame.instance.isVisible(), "EditMetadataDialog primitive_compound_frame should be shown!"
+      assert edit_metadata_dialog.metadata_frame.addPushButton.isVisible(), "EditMetadataDialog primitive_compound_frame addPushButton should be shown!"
+      assert edit_metadata_dialog.metadata_frame.addPushButton.isEnabled(), "EditMetadataDialog primitive_compound_frame addPushButton should be enabled!"
 
-      compound_horizontal_layouts = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.findChildren(
+      compound_horizontal_layouts = edit_metadata_dialog.metadata_frame.mainVerticalLayout.findChildren(
         QHBoxLayout,
         "compoundHorizontalLayout")
       assert compound_horizontal_layouts, "EditMetadataDialog compound_horizontal_layouts should be present!"
       assert len(compound_horizontal_layouts) == 1, "EditMetadataDialog compound_horizontal_layouts should have 1 item!"
-      qtbot.mouseClick(edit_metadata_dialog.primitive_compound_frame.addPushButton, Qt.LeftButton)
-      qtbot.mouseClick(edit_metadata_dialog.primitive_compound_frame.addPushButton, Qt.LeftButton)
-      qtbot.mouseClick(edit_metadata_dialog.primitive_compound_frame.addPushButton, Qt.LeftButton)
-      compound_horizontal_layouts = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.findChildren(
+      qtbot.mouseClick(edit_metadata_dialog.metadata_frame.addPushButton, Qt.LeftButton)
+      qtbot.mouseClick(edit_metadata_dialog.metadata_frame.addPushButton, Qt.LeftButton)
+      qtbot.mouseClick(edit_metadata_dialog.metadata_frame.addPushButton, Qt.LeftButton)
+      compound_horizontal_layouts = edit_metadata_dialog.metadata_frame.mainVerticalLayout.findChildren(
         QHBoxLayout,
         "compoundHorizontalLayout")
       assert len(
@@ -936,11 +936,11 @@ class TestDataverseEditMetadataDialog:
       assert edit_metadata_dialog.metadataBlockComboBox.currentText() == "Social Science and Humanities Metadata", "metadataBlockComboBox must be initialized with  Social Science and Humanities Metadata option"
       qtbot.keyClicks(edit_metadata_dialog.typesComboBox, 'Target Sample Size', delay=1)
       assert edit_metadata_dialog.typesComboBox.currentText() == 'Target Sample Size', "typesComboBox must be initialized with 'Target Sample Size' option"
-      assert edit_metadata_dialog.primitive_compound_frame.instance.isVisible(), "EditMetadataDialog primitive_compound_frame should be shown!"
-      assert edit_metadata_dialog.primitive_compound_frame.addPushButton.isVisible(), "EditMetadataDialog primitive_compound_frame addPushButton should be shown!"
-      assert not edit_metadata_dialog.primitive_compound_frame.addPushButton.isEnabled(), "EditMetadataDialog primitive_compound_frame addPushButton should not be enabled!"
+      assert edit_metadata_dialog.metadata_frame.instance.isVisible(), "EditMetadataDialog primitive_compound_frame should be shown!"
+      assert edit_metadata_dialog.metadata_frame.addPushButton.isVisible(), "EditMetadataDialog primitive_compound_frame addPushButton should be shown!"
+      assert not edit_metadata_dialog.metadata_frame.addPushButton.isEnabled(), "EditMetadataDialog primitive_compound_frame addPushButton should not be enabled!"
 
-      compound_horizontal_layout = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.findChild(
+      compound_horizontal_layout = edit_metadata_dialog.metadata_frame.mainVerticalLayout.findChild(
         QHBoxLayout,
         "compoundHorizontalLayout")
       assert compound_horizontal_layout, "EditMetadataDialog compound_horizontal_layout should be present!"
@@ -998,27 +998,27 @@ class TestDataverseEditMetadataDialog:
       assert edit_metadata_dialog.metadataBlockComboBox.currentText() == "Citation Metadata", "metadataBlockComboBox must be initialized with  citation metadata option"
       qtbot.keyClicks(edit_metadata_dialog.typesComboBox, 'Ds Description', delay=1)
       assert edit_metadata_dialog.typesComboBox.currentText() == 'Ds Description', "typesComboBox must be initialized with 'Ds Description' option"
-      assert edit_metadata_dialog.primitive_compound_frame.instance.isVisible(), "EditMetadataDialog primitive_compound_frame should be shown!"
-      assert edit_metadata_dialog.primitive_compound_frame.addPushButton.isVisible(), "EditMetadataDialog primitive_compound_frame addPushButton should be shown!"
-      assert edit_metadata_dialog.primitive_compound_frame.addPushButton.isEnabled(), "EditMetadataDialog primitive_compound_frame addPushButton should be enabled!"
+      assert edit_metadata_dialog.metadata_frame.instance.isVisible(), "EditMetadataDialog primitive_compound_frame should be shown!"
+      assert edit_metadata_dialog.metadata_frame.addPushButton.isVisible(), "EditMetadataDialog primitive_compound_frame addPushButton should be shown!"
+      assert edit_metadata_dialog.metadata_frame.addPushButton.isEnabled(), "EditMetadataDialog primitive_compound_frame addPushButton should be enabled!"
 
-      assert edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.count() == 2, "EditMetadataDialog primitive_vertical_layout should have 2 children!"
-      qtbot.mouseClick(edit_metadata_dialog.primitive_compound_frame.addPushButton, Qt.LeftButton)
-      qtbot.mouseClick(edit_metadata_dialog.primitive_compound_frame.addPushButton, Qt.LeftButton)
-      qtbot.mouseClick(edit_metadata_dialog.primitive_compound_frame.addPushButton, Qt.LeftButton)
-      assert edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.count() == 5, "EditMetadataDialog primitive_vertical_layout should have 5 children!"
-      for pos in range(1, edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.count()):
-        line_edit = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.itemAt(pos).itemAt(0).widget()
+      assert edit_metadata_dialog.metadata_frame.mainVerticalLayout.count() == 2, "EditMetadataDialog primitive_vertical_layout should have 2 children!"
+      qtbot.mouseClick(edit_metadata_dialog.metadata_frame.addPushButton, Qt.LeftButton)
+      qtbot.mouseClick(edit_metadata_dialog.metadata_frame.addPushButton, Qt.LeftButton)
+      qtbot.mouseClick(edit_metadata_dialog.metadata_frame.addPushButton, Qt.LeftButton)
+      assert edit_metadata_dialog.metadata_frame.mainVerticalLayout.count() == 5, "EditMetadataDialog primitive_vertical_layout should have 5 children!"
+      for pos in range(1, edit_metadata_dialog.metadata_frame.mainVerticalLayout.count()):
+        line_edit = edit_metadata_dialog.metadata_frame.mainVerticalLayout.itemAt(pos).itemAt(0).widget()
         assert line_edit.isEnabled(), "EditMetadataDialog primitive_compound_frame line_edit should be enabled!"
         assert line_edit.toolTip() == 'Enter the Ds Description Value value here. e.g. DescriptionText1', "EditMetadataDialog primitive_compound_frame line_edit should have right tooltip!"
         assert line_edit.placeholderText() == 'Enter the Ds Description Value here.', "EditMetadataDialog primitive_compound_frame line_edit should have right placeholderText!"
-        date_time_edit = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.itemAt(pos).itemAt(1).widget()
+        date_time_edit = edit_metadata_dialog.metadata_frame.mainVerticalLayout.itemAt(pos).itemAt(1).widget()
         assert date_time_edit.isEnabled(), "EditMetadataDialog primitive_compound_frame line_edit should be enabled!"
         assert date_time_edit.toolTip() == 'Enter the Ds Description Date value here. e.g. 1000-01-01, Minimum possible date is 0100-01-02', "EditMetadataDialog primitive_compound_frame date_time_edit should have right tooltip!"
-        clear_button = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.itemAt(pos).itemAt(2).widget()
+        clear_button = edit_metadata_dialog.metadata_frame.mainVerticalLayout.itemAt(pos).itemAt(2).widget()
         assert clear_button.isEnabled(), "EditMetadataDialog primitive_compound_frame clear_button should be enabled!"
         assert clear_button.toolTip() == 'Clear this particular entry.', "EditMetadataDialog primitive_compound_frame clear_button should have right tooltip!"
-        delete_button = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.itemAt(pos).itemAt(3).widget()
+        delete_button = edit_metadata_dialog.metadata_frame.mainVerticalLayout.itemAt(pos).itemAt(3).widget()
         assert delete_button.isEnabled(), "EditMetadataDialog primitive_compound_frame delete_button should be enabled!"
         assert delete_button.toolTip() == 'Delete this particular entry.', "EditMetadataDialog primitive_compound_frame delete_button should have right tooltip!"
         line_edit.setText(test_data[pos - 1][0])
@@ -1049,39 +1049,39 @@ class TestDataverseEditMetadataDialog:
       assert edit_metadata_dialog.metadataBlockComboBox.currentText() == "Citation Metadata", "metadataBlockComboBox must be initialized with  citation metadata option"
       qtbot.keyClicks(edit_metadata_dialog.typesComboBox, 'Ds Description', delay=1)
       assert edit_metadata_dialog.typesComboBox.currentText() == 'Ds Description', "typesComboBox must be initialized with 'Ds Description' option"
-      assert edit_metadata_dialog.primitive_compound_frame.instance.isVisible(), "EditMetadataDialog primitive_compound_frame should be shown!"
-      assert edit_metadata_dialog.primitive_compound_frame.addPushButton.isVisible(), "EditMetadataDialog primitive_compound_frame addPushButton should be shown!"
-      assert edit_metadata_dialog.primitive_compound_frame.addPushButton.isEnabled(), "EditMetadataDialog primitive_compound_frame addPushButton should be enabled!"
+      assert edit_metadata_dialog.metadata_frame.instance.isVisible(), "EditMetadataDialog primitive_compound_frame should be shown!"
+      assert edit_metadata_dialog.metadata_frame.addPushButton.isVisible(), "EditMetadataDialog primitive_compound_frame addPushButton should be shown!"
+      assert edit_metadata_dialog.metadata_frame.addPushButton.isEnabled(), "EditMetadataDialog primitive_compound_frame addPushButton should be enabled!"
 
-      assert edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.count() == 2, "EditMetadataDialog primitive_vertical_layout should have 2 children!"
+      assert edit_metadata_dialog.metadata_frame.mainVerticalLayout.count() == 2, "EditMetadataDialog primitive_vertical_layout should have 2 children!"
       # Add three entries
       for _ in range(3):
-        qtbot.mouseClick(edit_metadata_dialog.primitive_compound_frame.addPushButton, Qt.LeftButton)
-      assert edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.count() == 5, "EditMetadataDialog primitive_vertical_layout should have 5 children!"
-      for pos in range(1, edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.count()):
-        line_edit = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.itemAt(pos).itemAt(0).widget()
+        qtbot.mouseClick(edit_metadata_dialog.metadata_frame.addPushButton, Qt.LeftButton)
+      assert edit_metadata_dialog.metadata_frame.mainVerticalLayout.count() == 5, "EditMetadataDialog primitive_vertical_layout should have 5 children!"
+      for pos in range(1, edit_metadata_dialog.metadata_frame.mainVerticalLayout.count()):
+        line_edit = edit_metadata_dialog.metadata_frame.mainVerticalLayout.itemAt(pos).itemAt(0).widget()
         assert line_edit.isEnabled(), "EditMetadataDialog primitive_compound_frame line_edit should be enabled!"
         assert line_edit.toolTip() == 'Enter the Ds Description Value value here. e.g. DescriptionText1', "EditMetadataDialog primitive_compound_frame line_edit should have right tooltip!"
         assert line_edit.placeholderText() == 'Enter the Ds Description Value here.', "EditMetadataDialog primitive_compound_frame line_edit should have right placeholderText!"
-        date_time_edit = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.itemAt(pos).itemAt(1).widget()
+        date_time_edit = edit_metadata_dialog.metadata_frame.mainVerticalLayout.itemAt(pos).itemAt(1).widget()
         assert date_time_edit.isEnabled(), "EditMetadataDialog primitive_compound_frame line_edit should be enabled!"
         assert date_time_edit.toolTip() == 'Enter the Ds Description Date value here. e.g. 1000-01-01, Minimum possible date is 0100-01-02', "EditMetadataDialog primitive_compound_frame date_time_edit should have right tooltip!"
-        clear_button = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.itemAt(pos).itemAt(2).widget()
+        clear_button = edit_metadata_dialog.metadata_frame.mainVerticalLayout.itemAt(pos).itemAt(2).widget()
         assert clear_button.isEnabled(), "EditMetadataDialog primitive_compound_frame clear_button should be enabled!"
         assert clear_button.toolTip() == 'Clear this particular entry.', "EditMetadataDialog primitive_compound_frame clear_button should have right tooltip!"
-        delete_button = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.itemAt(pos).itemAt(3).widget()
+        delete_button = edit_metadata_dialog.metadata_frame.mainVerticalLayout.itemAt(pos).itemAt(3).widget()
         assert delete_button.isEnabled(), "EditMetadataDialog primitive_compound_frame delete_button should be enabled!"
         assert delete_button.toolTip() == 'Delete this particular entry.', "EditMetadataDialog primitive_compound_frame delete_button should have right tooltip!"
         line_edit.setText(test_data[pos - 1][0])
         date_time_edit.setDate(QDate.fromString(test_data[pos - 1][1], 'yyyy-MM-dd'))
 
       # Delete two populated items
-      qtbot.mouseClick(edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.itemAt(1).itemAt(3).widget(),
+      qtbot.mouseClick(edit_metadata_dialog.metadata_frame.mainVerticalLayout.itemAt(1).itemAt(3).widget(),
                        Qt.LeftButton)
-      assert edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.count() == 4, "EditMetadataDialog primitive_vertical_layout should have 4 children!"
-      qtbot.mouseClick(edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.itemAt(1).itemAt(3).widget(),
+      assert edit_metadata_dialog.metadata_frame.mainVerticalLayout.count() == 4, "EditMetadataDialog primitive_vertical_layout should have 4 children!"
+      qtbot.mouseClick(edit_metadata_dialog.metadata_frame.mainVerticalLayout.itemAt(1).itemAt(3).widget(),
                        Qt.LeftButton)
-      assert edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.count() == 3, "EditMetadataDialog primitive_vertical_layout should have 3 children!"
+      assert edit_metadata_dialog.metadata_frame.mainVerticalLayout.count() == 3, "EditMetadataDialog primitive_vertical_layout should have 3 children!"
 
     qtbot.mouseClick(edit_metadata_dialog.buttonBox.button(QDialogButtonBox.Save), Qt.LeftButton)
     assert edit_metadata_dialog.metadata_summary_dialog.instance.isVisible(), "EditMetadataDialogSummary should be visible!"
@@ -1103,7 +1103,7 @@ class TestDataverseEditMetadataDialog:
       assert edit_metadata_dialog.metadataBlockComboBox.currentText() == "Life Sciences Metadata", "metadataBlockComboBox must be initialized with Life Sciences Metadata option"
       qtbot.keyClicks(edit_metadata_dialog.typesComboBox, 'Study Factor Type', delay=10)
       assert edit_metadata_dialog.typesComboBox.currentText() == 'Study Factor Type', "typesComboBox must be initialized with Study Factor Type option"
-      assert not edit_metadata_dialog.primitive_compound_frame.instance.isVisible(), "EditMetadataDialog primitive_compound_frame should not be shown!"
+      assert not edit_metadata_dialog.metadata_frame.instance.isVisible(), "EditMetadataDialog primitive_compound_frame should not be shown!"
       assert edit_metadata_dialog.controlled_vocab_frame.instance.isVisible(), "EditMetadataDialog controlled_vocab_frame should be shown!"
       assert edit_metadata_dialog.controlled_vocab_frame.addPushButton.isVisible(), "EditMetadataDialog controlled_vocab_frame addPushButton should be shown!"
       assert edit_metadata_dialog.controlled_vocab_frame.addPushButton.isEnabled(), "EditMetadataDialog controlled_vocab_frame addPushButton should be enabled!"
@@ -1305,34 +1305,34 @@ class TestDataverseEditMetadataDialog:
       qtbot.keyClicks(edit_metadata_dialog.metadataBlockComboBox, "Journal Metadata", delay=1)
       assert edit_metadata_dialog.metadataBlockComboBox.currentText() == "Journal Metadata", "metadataBlockComboBox must be initialized with Journal Metadata option"
       assert edit_metadata_dialog.typesComboBox.currentText() == 'Journal Volume Issue', "typesComboBox must be initialized with Journal Volume Issue option"
-      assert edit_metadata_dialog.primitive_compound_frame.instance.isVisible(), "EditMetadataDialog primitive_compound_frame should be shown!"
-      assert edit_metadata_dialog.primitive_compound_frame.addPushButton.isVisible(), "EditMetadataDialog primitive_compound_frame addPushButton should be shown!"
-      assert edit_metadata_dialog.primitive_compound_frame.addPushButton.isEnabled(), "EditMetadataDialog primitive_compound_frame addPushButton should be enabled!"
-      assert edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.count() == 5, "EditMetadataDialog primitive_vertical_layout should have 5 children!"
-      for pos in range(1, edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.count()):
-        journal_volume_line_edit = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.itemAt(pos).itemAt(
+      assert edit_metadata_dialog.metadata_frame.instance.isVisible(), "EditMetadataDialog primitive_compound_frame should be shown!"
+      assert edit_metadata_dialog.metadata_frame.addPushButton.isVisible(), "EditMetadataDialog primitive_compound_frame addPushButton should be shown!"
+      assert edit_metadata_dialog.metadata_frame.addPushButton.isEnabled(), "EditMetadataDialog primitive_compound_frame addPushButton should be enabled!"
+      assert edit_metadata_dialog.metadata_frame.mainVerticalLayout.count() == 5, "EditMetadataDialog primitive_vertical_layout should have 5 children!"
+      for pos in range(1, edit_metadata_dialog.metadata_frame.mainVerticalLayout.count()):
+        journal_volume_line_edit = edit_metadata_dialog.metadata_frame.mainVerticalLayout.itemAt(pos).itemAt(
           0).widget()
         assert journal_volume_line_edit.isEnabled(), "EditMetadataDialog primitive_compound_frame line_edit should be enabled!"
         assert journal_volume_line_edit.toolTip() == 'Enter the Journal Volume value here. e.g. JournalVolume1', "EditMetadataDialog primitive_compound_frame journal_volume_line_edit should have right tooltip!"
         assert journal_volume_line_edit.placeholderText() == 'Enter the Journal Volume here.', "EditMetadataDialog primitive_compound_frame journal_volume_line_edit should have right placeholderText!"
         assert journal_volume_line_edit.text() == journal_volume_test_data[pos - 1][
           0], "EditMetadataDialog primitive_compound_frame journal_volume_line_edit should have right text!"
-        journal_issue_line_edit = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.itemAt(pos).itemAt(
+        journal_issue_line_edit = edit_metadata_dialog.metadata_frame.mainVerticalLayout.itemAt(pos).itemAt(
           1).widget()
         assert journal_issue_line_edit.isEnabled(), "EditMetadataDialog primitive_compound_frame journal_issue_line_edit should be enabled!"
         assert journal_issue_line_edit.toolTip() == 'Enter the Journal Issue value here. e.g. JournalIssue1', "EditMetadataDialog primitive_compound_frame journal_issue_line_edit should have right tooltip!"
         assert journal_issue_line_edit.placeholderText() == 'Enter the Journal Issue here.', "EditMetadataDialog primitive_compound_frame journal_issue_line_edit should have right placeholderText!"
         assert journal_issue_line_edit.text() == journal_volume_test_data[pos - 1][
           1], "EditMetadataDialog primitive_compound_frame journal_issue_line_edit should have right text!"
-        date_time_edit = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.itemAt(pos).itemAt(2).widget()
+        date_time_edit = edit_metadata_dialog.metadata_frame.mainVerticalLayout.itemAt(pos).itemAt(2).widget()
         assert date_time_edit.isEnabled(), "EditMetadataDialog primitive_compound_frame line_edit should be enabled!"
         assert date_time_edit.toolTip() == 'Enter the Journal Pub Date value here. e.g. 1008-01-01, Minimum possible date is 0100-01-02', "EditMetadataDialog primitive_compound_frame date_time_edit should have right tooltip!"
         assert date_time_edit.date().toString("yyyy-MM-dd") == journal_volume_test_data[pos - 1][
           2], "EditMetadataDialog primitive_compound_frame date_time_edit should have right text!"
-        clear_button = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.itemAt(pos).itemAt(3).widget()
+        clear_button = edit_metadata_dialog.metadata_frame.mainVerticalLayout.itemAt(pos).itemAt(3).widget()
         assert clear_button.isEnabled(), "EditMetadataDialog primitive_compound_frame clear_button should be enabled!"
         assert clear_button.toolTip() == 'Clear this particular entry.', "EditMetadataDialog primitive_compound_frame clear_button should have right tooltip!"
-        delete_button = edit_metadata_dialog.primitive_compound_frame.mainVerticalLayout.itemAt(pos).itemAt(4).widget()
+        delete_button = edit_metadata_dialog.metadata_frame.mainVerticalLayout.itemAt(pos).itemAt(4).widget()
         assert delete_button.isEnabled(), "EditMetadataDialog primitive_compound_frame delete_button should be enabled!"
         assert delete_button.toolTip() == 'Delete this particular entry.', "EditMetadataDialog primitive_compound_frame delete_button should have right tooltip!"
     qtbot.mouseClick(edit_metadata_dialog.buttonBox.button(QDialogButtonBox.Cancel), Qt.LeftButton)

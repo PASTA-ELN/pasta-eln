@@ -154,7 +154,7 @@ class TestDataversePrimitiveCompoundFrame:
     primitive_compound_frame.logger.error = mocker.MagicMock()
 
     # Act
-    primitive_compound_frame.add_new_entry()
+    primitive_compound_frame.add_button_click_handler()
     # Assert
     if isinstance(expected_error_log, str):
       primitive_compound_frame.logger.error.assert_called_with(expected_error_log)
@@ -294,7 +294,7 @@ class TestDataversePrimitiveCompoundFrame:
     primitive_compound_frame.meta_field = meta_field
 
     # Act
-    primitive_compound_frame.add_new_entry()
+    primitive_compound_frame.add_button_click_handler()
 
     # Assert
     assert primitive_compound_frame.logger.error.called
@@ -333,7 +333,7 @@ class TestDataversePrimitiveCompoundFrame:
       'pasta_eln.GUI.dataverse.primitive_compound_frame.add_clear_button')
 
     # Act
-    primitive_compound_frame.add_new_entry()
+    primitive_compound_frame.add_button_click_handler()
 
     # Assert
     if meta_field['typeClass'] == "primitive" and not expected_error:

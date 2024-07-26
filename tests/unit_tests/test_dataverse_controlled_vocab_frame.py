@@ -118,7 +118,7 @@ class TestControlledVocabFrame:
     controlled_vocab_frame.add_new_vocab_entry = mocker.MagicMock()
 
     # Act
-    controlled_vocab_frame.add_button_callback()
+    controlled_vocab_frame.add_button_click_handler()
 
     # Assert
     controlled_vocab_frame.logger.info.assert_called_once_with("Adding new vocabulary entry, value: %s",

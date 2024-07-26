@@ -10,7 +10,10 @@
 from typing import Callable
 
 from PySide6.QtCore import QDate, QSize
-from PySide6.QtWidgets import QBoxLayout, QComboBox, QDateTimeEdit, QFrame, QLineEdit, QPushButton, QSizePolicy
+from PySide6.QtWidgets import QBoxLayout, QComboBox, QDateTimeEdit, QFrame, QHBoxLayout, QLineEdit, QPushButton, \
+  QSizePolicy, QVBoxLayout
+
+from pasta_eln.dataverse.utils import adjust_type_name
 
 
 def create_push_button(button_display_text: str,
@@ -101,6 +104,82 @@ def add_clear_button(parent_frame: QFrame,
   )
   parent.addWidget(button)
 
+
+def create_date_time_widget(type_name: str,
+                            type_value: str,
+                            parent_frame: QFrame,
+                            template_value: str | None = None) -> QDateTimeEdit:
+  """
+  Creates a date-time edit widget.
+
+  Args:
+      parent_frame (QFrame): The parent QFrame object.
+      type_name (str): The name of the type.
+      type_value (str): The initial value for the date-time edit.
+      template_value (str | None, optional): The template value for the date-time edit. Defaults to None.
+
+  Returns:
+      QDateTimeEdit: The created date-time edit widget.
+
+  Explanation:
+      This function creates a QDateTimeEdit widget with the specified properties.
+      The widget is set with a tooltip based on the type name and template value.
+      It is assigned an object name based on the type name.
+      The initial value is set for the date-time edit, and the display format is set to 'yyyy-MM-dd'.
+
+  """
+  date_time_edit = QDateTimeEdit(parent=parent_frame)
+  date_time_edit.setSpecialValueText("No Value")
+  date_time_edit.setMinimumDate(QDate.fromString("0100-01-01", 'yyyy-MM-dd'))
+  adjusted_name = adjust_type_name(type_name)
+  date_time_edit.setToolTip(
+    f"Enter the {adjusted_name} value here. e.g. {template_value}, Minimum possible date is 0100-01-02")
+  date_time_edit.setObjectName(f"{type_name}DateTimeEdit")
+  date_time_edit.setDate(QDate.fromString(type_value, 'yyyy-MM-dd')
+                         if type_value and type_value != 'No Value'
+                         else QDate.fromString("0001-01-01", 'yyyy-MM-dd'))
+  date_time_edit.setDisplayFormat('yyyy-MM-dd')
+  return date_time_edit
+
+
+def create_line_edit(type_name: str,
+                     type_value: str,
+                     parent_frame: QFrame,
+                     template_value: str | None = None) -> QLineEdit:
+  """
+  Creates a line edit widget.
+
+  Args:
+      parent_frame (QFrame): The parent QFrame object.
+      type_name (str): The name of the type.
+      type_value (str): The initial value for the line edit.
+      template_value (str | None, optional): The template value for the line edit. Defaults to None.
+
+  Returns:
+      QLineEdit: The created line edit widget.
+
+  Explanation:
+      This function creates a QLineEdit widget with the specified properties.
+      The line edit is set with a placeholder text and a tooltip based on the type name and template value.
+      It has a clear button enabled and is assigned an object name based on the type name.
+      The initial value is set for the line edit.
+
+  """
+  entry_line_edit = QLineEdit(parent=parent_frame)
+  adjusted_name = adjust_type_name(type_name)
+  entry_line_edit.setPlaceholderText(f"Enter the {adjusted_name} here.")
+  entry_line_edit.setToolTip(f"Enter the {adjusted_name} value here. e.g. {template_value}")
+  entry_line_edit.setClearButtonEnabled(True)
+  entry_line_edit.setObjectName(f"{type_name}LineEdit")
+  entry_line_edit.setText(type_value)
+  return entry_line_edit
+
+def get_primitive_line_edit_text_value(primitive_vertical_layout: QVBoxLayout, widget_pos: int) -> str:
+  primitive_horizontal_layout = primitive_vertical_layout.itemAt(widget_pos).widget()
+  if isinstance(primitive_horizontal_layout, QHBoxLayout):
+    line_edit = primitive_horizontal_layout.itemAt(0).widget()
+    if isinstance(line_edit, QLineEdit):
+      return line_edit.text()
 
 def clear_layout_widgets(layout: QBoxLayout) -> None:
   """

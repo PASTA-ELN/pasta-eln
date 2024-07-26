@@ -183,7 +183,7 @@ class TestDataverseEditMetadataDialog:
     mock_edit_metadata_dialog.metadata_summary_dialog.summaryTextEdit = mocker.MagicMock()
     mock_edit_metadata_dialog.metadata_summary_dialog.summaryTextEdit.setText = mocker.MagicMock()
     mock_edit_metadata_dialog.controlled_vocab_frame = mocker.MagicMock() if has_vocab_frame else None
-    mock_edit_metadata_dialog.primitive_compound_frame = mocker.MagicMock() if has_primitive_frame else None
+    mock_edit_metadata_dialog.metadata_frame = mocker.MagicMock() if has_primitive_frame else None
     mock_get_formatted = mocker.patch("pasta_eln.GUI.dataverse.edit_metadata_dialog.get_formatted_metadata_message",
                                       return_value=expected_message)
 
@@ -197,7 +197,7 @@ class TestDataverseEditMetadataDialog:
     if has_vocab_frame:
       mock_edit_metadata_dialog.controlled_vocab_frame.save_modifications.assert_called_once()
     if has_primitive_frame:
-      mock_edit_metadata_dialog.primitive_compound_frame.save_modifications.assert_called_once()
+      mock_edit_metadata_dialog.metadata_frame.save_modifications.assert_called_once()
     mock_edit_metadata_dialog.logger.info.assert_called_with("Saving Config Model...")
 
   # Success path tests with various realistic test values
@@ -226,7 +226,7 @@ class TestDataverseEditMetadataDialog:
     mock_edit_metadata_dialog.typesComboBox.currentData.return_value = new_metadata_type
     mock_edit_metadata_dialog.metadataScrollVerticalLayout.count.return_value = 2
     if test_id == 'success_primitive_pre_exists':
-      mock_edit_metadata_dialog.primitive_compound_frame = mock_dependencies['primitive_compound_frame'].return_value
+      mock_edit_metadata_dialog.metadata_frame = mock_dependencies['primitive_compound_frame'].return_value
       mock_edit_metadata_dialog.controlled_vocab_frame = mock_dependencies['controlled_vocab_frame'].return_value
 
     # Act
@@ -249,8 +249,8 @@ class TestDataverseEditMetadataDialog:
       mock_edit_metadata_dialog.metadataScrollVerticalLayout.addWidget.assert_called_once_with(
         controlled_vocab_frame.return_value.instance)
     if test_id == 'success_primitive_pre_exists':
-      mock_edit_metadata_dialog.primitive_compound_frame.save_modifications.assert_called_once()
-      mock_edit_metadata_dialog.primitive_compound_frame.instance.close.assert_called_once()
+      mock_edit_metadata_dialog.metadata_frame.save_modifications.assert_called_once()
+      mock_edit_metadata_dialog.metadata_frame.instance.close.assert_called_once()
       mock_edit_metadata_dialog.controlled_vocab_frame.save_modifications.assert_called_once()
       mock_edit_metadata_dialog.controlled_vocab_frame.instance.close.assert_called_once()
 
