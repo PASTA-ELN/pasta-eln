@@ -29,7 +29,7 @@ defaultDefinitions: list[list[Union[str,int]]] = [
   ["sample","", 1,     "tags", "What are the tags associated with the sample?",   "",   "",  "",        ""],
   ["sample","", 2,     "chemistry", "What is its chemical composition?",          "",   "",  "",        ""],
   ["sample","", 3,     "comment", "What are the comments?",                       "",   "",  "",        ""],
-  ["sample","", 4,     "qrCode",  "",                                             "",   "",  "",        ""],
+  ["sample","", 4,     "qrCodes", "",                                             "",   "",  "",        ""],
   ["sample","geometry", 0,    "height",  "Sample height",                                "mm", "",  "",        ""],
   ["sample","geometry", 1,    "width",   "Sample width",                                 "mm", "",  "",        ""],
   ["sample","geometry", 2,    "length",  "Sample length",                                "mm", "",  "",        ""],

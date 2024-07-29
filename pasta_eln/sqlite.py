@@ -459,6 +459,9 @@ class SqlLiteDB:
       results = self.cursor.fetchall()
       # value: [branch.stack, doc['-type'], branch.child, doc.shasum,idx]
       results = [{'id':i[0], 'key':i[1], 'value':[i[2].replace('/',' '), i[3].split('/'), i[4], i[5]]} for i in results if i[1] is not None]
+    elif viewType=='viewIdentify' and docType=='viewTags':
+      self.cursor.execute("SELECT * FROM tags")
+      results = self.cursor.fetchall()
     elif viewType=='viewIdentify':
       if docType=='viewQR':
         if startKey is None:
@@ -466,10 +469,13 @@ class SqlLiteDB:
         else:
           print("HHEUOEUOU")
           a = 77/0
-      elif startKey is None:
-        self.cursor.execute("SELECT id, shasum, name FROM main")
+      elif docType=='viewSHASUM':
+        if startKey is None:
+          self.cursor.execute("SELECT id, shasum, name FROM main")
+        else:
+          self.cursor.execute(f"SELECT id, shasum, name FROM main WHERE shasum='{startKey}'")
       else:
-        self.cursor.execute(f"SELECT id, shasum, name FROM main WHERE shasum='{startKey}'")
+        print('strange docType')
       results = self.cursor.fetchall()
       results = [{'id':i[0], 'key':i[1].replace('/',' '), 'value':i[2]} for i in results if i[1] is not None]
     else:

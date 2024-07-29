@@ -11,8 +11,9 @@ from PySide6.QtCore import QSize, Qt, QTimer          # pylint: disable=no-name-
 from ..guiStyle import Image, TextButton, IconButton, Label, showMessage, widgetAndLayout, widgetAndLayoutForm, ScrollMessageBox
 from ._contextMenu import initContextMenu, executeContextMenu, CommandMenu
 from ..fixedStringsJson import defaultDataHierarchyNode
-from ..miscTools import createDirName, markdownStyler
+from ..miscTools import createDirName, markdownStyler, flatten
 from ..guiCommunicate import Communicate
+from ..sqlite import KEY_ORDER
 
 class Form(QDialog):
   """ New/Edit dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""
@@ -31,7 +32,7 @@ class Form(QDialog):
     if '_attachments' in self.doc:
       del self.doc['_attachments']
     self.flagNewDoc = True
-    if '_id' in self.doc or '_ids' in self.doc:
+    if 'id' in self.doc or '_ids' in self.doc:
       self.flagNewDoc = False
     if self.flagNewDoc:
       self.setWindowTitle('Create new entry')
@@ -66,48 +67,53 @@ class Form(QDialog):
     else:
       self.setMinimumWidth(600)
 
-    # create full data set
-    #TODO use pandas table to collect and manage all data here
-    #  class,order,name,value,unit,IRI, textfield/choices, variable to that GUI element
-    # during save, use this pandas table
+    # create data hierarchy node: data structure
     if self.doc['type'][0] in self.db.dataHierarchy('', ''):
       rawData = self.db.dataHierarchy(self.doc['type'][0], 'meta')
       dataHierarchyNode = copy.deepcopy([dict(i) for i in rawData])
     else:
       dataHierarchyNode = copy.deepcopy(defaultDataHierarchyNode)
-    keysDataHierarchy = [i['name'] for group in dataHierarchyNode for i in dataHierarchyNode[group]]
-    for keyInDocNotHierarchy in set(self.doc.keys()).difference(keysDataHierarchy ):
-      dataHierarchyNode['default'].append({'name':keyInDocNotHierarchy})
-    self.allKeys = {i['name'] for group in dataHierarchyNode for i in dataHierarchyNode[group]}
-    self.allKeys = self.allKeys.union(self.doc.keys())
-
+    keysDataHierarchy = [f"{i['class']}.{i['name']}" for i in dataHierarchyNode]
+    keysDoc = [[str(x) for x in (f'{k}.{k1}' for k1 in self.doc[k].keys())] if isinstance(self.doc[k], dict) else [f'.{k}']
+               for k in self.doc.keys() if k not in KEY_ORDER+['branch','qrCodes','tags']]
+    keysDoc = [i for row in keysDoc for i in row]   #flatten
+    for keyInDocNotHierarchy in set(keysDoc).difference(keysDataHierarchy):
+      group = keyInDocNotHierarchy.split('.')[0]
+      key = keyInDocNotHierarchy.split('.')[1]
+      idx = len([1 for i in dataHierarchyNode if i['class']==group])
+      dataHierarchyNode.append({'docType': self.doc['type'][0], 'class':group, 'idx':idx, 'name':key, 'list':''})
+    groups = {i['class'] for i in dataHierarchyNode}
     # create tabs or not: depending on the number of groups
-    if 'tags' not in self.doc:
-      self.doc['tags'] = []
     self.tabW = QTabWidget() #has count=0 if not connected
-    if len(dataHierarchyNode)>1:
+    if len(groups)>1:
       self.tabW.setParent(self)
       self.tabW.tabBarClicked.connect(self.changeTabs)
       splitter.addWidget(self.tabW)
 
     # create forms by looping
     self.formsL = []
-    for group in dataHierarchyNode:
-      if len(dataHierarchyNode)==1:
+    self.allUserElements = []
+    for group in groups:
+      if len(groups)==1:
         _, formL = widgetAndLayoutForm(splitter, 's')
       else:
         formW, formL = widgetAndLayoutForm(None, 's', top='m')
-        self.tabW.addTab(formW, group if group!='default' else 'Home')
+        self.tabW.addTab(formW, 'Home' if group=='' else group)
       self.formsL.append(formL)
-      for key in [i['name'] for i in dataHierarchyNode[group]]:
-        value = self.doc.get(key, '')
+      for name in [i['name'] for i in dataHierarchyNode if i['class']==group]:
+        key = f"{group}.{name}"
+        defaultValue = self.doc['qrCodes'] if key=='.qrCodes' else \
+                       self.doc.get(group, {}).get(name, ('','','','')) #tags, name, comment are handled separately
+        elementName = f"key_{len(self.allUserElements)}"
 
         # case list
-        if key == 'name' and '_ids' not in self.doc:
-          setattr(self, 'key_-name', QLineEdit(self.doc['name']))
-          getattr(self, 'key_-name').setValidator(QRegularExpressionValidator("[\\w\\ .-]+"))
-          formL.addRow('Name', getattr(self, 'key_-name'))
-        elif key == 'tags':
+        #TODO change to system with units and IRI in label
+        if key == '.name' and '_ids' not in self.doc:
+          setattr(self, elementName, QLineEdit(self.doc['name']))
+          getattr(self, elementName).setValidator(QRegularExpressionValidator("[\\w\\ .-]+"))
+          formL.addRow('Name', getattr(self, elementName))
+          self.allUserElements.append(('name','LineEdit'))
+        elif key == '.tags':
           self.tagsBarMainW, tagsBarMainL = widgetAndLayout('H', spacing='s')
           _, self.tagsBarSubL = widgetAndLayout('H', tagsBarMainL, spacing='s', right='m') #part which shows all the tags
           self.otherChoices = QComboBox()   #part/combobox that allow user to select
@@ -117,6 +123,7 @@ class Form(QDialog):
           self.otherChoices.setIconSize(QSize(0,0))
           self.otherChoices.setInsertPolicy(QComboBox.InsertPolicy.InsertAtBottom)
           tagsBarMainL.addWidget(self.otherChoices)
+          #TODO gradeChoice to button that changes text 0=uncommitted
           self.gradeChoices = QComboBox()   #part/combobox that shows grades
           self.gradeChoices.setMaximumWidth(80)
           self.gradeChoices.setIconSize(QSize(0,0))
@@ -124,9 +131,11 @@ class Form(QDialog):
           self.gradeChoices.currentTextChanged.connect(self.addTag)
           tagsBarMainL.addWidget(self.gradeChoices)
           formL.addRow(QLabel('Tags:'), self.tagsBarMainW)
+          self.allUserElements.append(('tags',''))
           self.updateTagsBar()
           self.otherChoices.currentIndexChanged.connect(self.addTag) #connect to slot only after all painting is done
-        elif key in ['comment','content']:
+        elif key in ['.comment', '.content']:
+          key = key[1:]
           labelW, labelL = widgetAndLayout('V')
           labelL.addWidget(QLabel(key.capitalize()))
           TextButton('More', self, [Command.FOCUS_AREA, key], labelL, checkable=True)
@@ -141,12 +150,12 @@ class Form(QDialog):
             icon = f'mdi.format-header-{str(i)}'
             IconButton(icon, self, [Command.BUTTON_BAR, f'heading{str(i)}', key], buttonBarL, f'Heading {str(i)}')
           rightSideL.addWidget(getattr(self, f'buttonBarW_{key}'))
-          setattr(self, f'textEdit_{key}', QPlainTextEdit(value))
+          setattr(self, f'textEdit_{key}', QPlainTextEdit(self.doc[key]))
           getattr(self, f'textEdit_{key}').setAccessibleName(key)
           getattr(self, f'textEdit_{key}').setTabStopDistance(20)
           getattr(self, f'textEdit_{key}').textChanged.connect(self.textChanged)
           setattr(self, f'textShow_{key}', QTextEdit())
-          getattr(self, f'textShow_{key}').setMarkdown(markdownStyler(value))
+          getattr(self, f'textShow_{key}').setMarkdown(markdownStyler(self.doc[key]))
           getattr(self, f'textShow_{key}').setReadOnly(True)
           getattr(self, f'textShow_{key}').hide()
           splitter= QSplitter()
@@ -157,31 +166,38 @@ class Form(QDialog):
           formL.addRow(labelW, rightSideW)
         elif key in self.skipKeys:  #skip non desired ones
           continue
-        elif isinstance(value, list):   #list of items, qrCodes in sample
-          if len(value)>0 and isinstance(value[0], str):
-            setattr(self, f'key_{key}', QLineEdit(' '.join(value)))
-            formL.addRow(QLabel(key.capitalize()), getattr(self, f'key_{key}'))
+        elif isinstance(defaultValue, list):   #list of items, qrCodes in sample
+          if len(defaultValue)>0 and isinstance(defaultValue[0], str):
+            setattr(self, elementName, QLineEdit(' '.join(defaultValue)))
+            self.allUserElements.append((key,'LineEdit'))
+            formL.addRow(QLabel(key.capitalize()), getattr(self, elementName))
           else:
             logging.info('Cannot display value of key=%s: %s. Write unknown value for docID=%s',
-                         key, str(value), self.doc['_id'])
-        elif isinstance(value, str):    #string
-          dataHierarchyItem = [i for group in dataHierarchyNode for i in dataHierarchyNode[group] if i['name']==key]
-          if len(dataHierarchyItem)==1 and 'list' in dataHierarchyItem[0]:       #choice dropdown
-            setattr(self, f'key_{key}', QComboBox())
-            if isinstance(dataHierarchyItem[0]['list'], list):            #dataHierarchy-defined choices
-              getattr(self, f'key_{key}').addItems(dataHierarchyItem[0]['list'])
-            else:                                                    #choice among docType
-              listDocType = dataHierarchyItem[0]['list']
-              getattr(self, f'key_{key}').addItem('- no link -', userData='')
-              for line in self.db.getView(f'viewDocType/{listDocType}'):
-                getattr(self, f'key_{key}').addItem(line['value'][0], userData=line['id'])
-                if line['id'] == value:
-                  getattr(self, f'key_{key}').setCurrentIndex(getattr(self, f'key_{key}').count()-1)
-          else:                                   #text area
-            setattr(self, f'key_{key}', QLineEdit(value))
-          formL.addRow(QLabel(key.capitalize()), getattr(self, f'key_{key}'))
+                         key, str(defaultValue), self.doc['_id'])
+        elif isinstance(defaultValue, tuple) and len(defaultValue)==4 and isinstance(defaultValue[0], str):    #string
+          dataHierarchyItem = [i for i in dataHierarchyNode if i['class']==group and f"{i['class']}.{i['name']}"==key]
+          if len(dataHierarchyItem)==1:
+            if dataHierarchyItem[0]['list']: #choice dropdown
+              setattr(self, elementName, QComboBox())
+              if isinstance(dataHierarchyItem[0]['list'], list):            #dataHierarchy-defined choices
+                getattr(self, elementName).addItems(dataHierarchyItem[0]['list'])
+              else:                                                    #choice among docType
+                listDocType = dataHierarchyItem[0]['list']
+                getattr(self, elementName).addItem('- no link -', userData='')
+                for line in self.db.getView(f'viewDocType/{listDocType}'):
+                  getattr(self, elementName).addItem(line['value'][0], userData=line['id'])
+                  if line['id'] == defaultValue[0]:
+                    getattr(self, elementName).setCurrentIndex(getattr(self, elementName).count()-1)
+              self.allUserElements.append((key,'ComboBox'))
+            else:                                   #text area
+              setattr(self, elementName, QLineEdit(defaultValue[0]))
+              self.allUserElements.append((key,'LineEdit'))
+            label = dataHierarchyItem[0]['name'].capitalize()
+          else:
+            print('**ERROR')
+          formL.addRow(QLabel(label), getattr(self, elementName))
         else:
-          print(f"**WARNING dialogForm: unknown value type. key:{key}, type:{type(value)}")
+          print(f"**WARNING dialogForm: unknown value type. key:{key}, type:{type(defaultValue)}")
       if group == 'default':
         # individual key-value items
         self.keyValueListW, self.keyValueListL = widgetAndLayoutForm(None, 's')
@@ -561,7 +577,7 @@ class Form(QDialog):
     self.tagsBarSubL.addWidget(QWidget(), stretch=2)
     #update choices in combobox
     tagsAllList = self.comm.backend.db.getView('viewIdentify/viewTagsAll')
-    tagsSet = {i['key'] for i in tagsAllList if i['key'][0]!='_'}
+    tagsSet = {i[1] for i in tagsAllList if i[1][0]!='_'}
     newChoicesList = ['']+list(tagsSet.difference([i for i in self.doc['tags'] if i[0]!='_']))
     self.otherChoices.clear()
     self.otherChoices.addItems(newChoicesList)
