@@ -209,7 +209,7 @@ class SqlLiteDB:
                              'show':   [i=='T' for i in dataI[5]]})
     self.cursor.execute(f"SELECT properties.key, properties.value, properties.unit, propDefinitions.long, propDefinitions.IRI, "
                         f"definitions.unit, definitions.query, definitions.IRI FROM properties LEFT JOIN propDefinitions USING(key) "
-                        f"LEFT JOIN definitions ON properties.key = (concat(definitions.class,'.',definitions.name)) "
+                        f"LEFT JOIN definitions ON properties.key = (definitions.class || '.' || definitions.name) "
                         f"WHERE properties.id == '{docID}'")
     res = self.cursor.fetchall()
     metadataFlat:dict[str, tuple[str,str,str,str]] = {i[0]:(i[1],
