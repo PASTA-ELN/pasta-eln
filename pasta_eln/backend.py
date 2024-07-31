@@ -71,7 +71,7 @@ class Backend(CLI_Mixin):
     # decipher miscellaneous configuration and store
     self.userID   = self.configuration['userID']
     # start database
-    self.db = SqlLiteDB(self.configuration, basePath=self.basePath)
+    self.db = SqlLiteDB(basePath=self.basePath)
     # internal hierarchy structure
     self.hierStack = []
     self.alive     = True

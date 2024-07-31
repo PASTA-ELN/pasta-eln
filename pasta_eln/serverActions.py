@@ -24,29 +24,27 @@ headers:CaseInsensitiveDict[str]= CaseInsensitiveDict()
 headers["Content-Type"] = "application/json"
 
 
-def backupCouchDB(location:str='', userName:str='', password:str='') -> None:
+def couchDB2SQLite(userName:str='', password:str='', database:str='', path:str='') -> None:
   """
   Backup everything of the CouchDB installation across all databases and all configurations
   - remote location uses username/password combo in local keystore
   - local location requires username and password
 
   Args:
-    location (str): 'local', 'remote', else: ask user via CLI
     userName (str): username
     password (str): password
   """
+  from .sqlite import SqlLiteDB
+  from .handleDictionaries import fillDocBeforeCreate
   # get username and password
-  if not location:
-    location = 'remote' if input('Enter location: [r] remote; else local: ')=='r' else 'local'
-  if location=='local':
-    location = '127.0.0.1'
-    if not userName:
-      userName = input('Enter local admin username: ').strip()
-    if not password:
-      password = input('Enter password: ').strip()
-  else:
-    print('**ERROR: wrong location given.')
-    return
+  location = '127.0.0.1'
+  if not userName:
+    userName = input('Enter local admin username: ').strip()
+  if not password:
+    password = input('Enter password: ').strip()
+  if not path:
+    path = input('Enter path to data: ').strip()
+  db = SqlLiteDB(basePath=Path(path))
   # use information
   authUser = requests.auth.HTTPBasicAuth(userName, password)
   resp = requests.get(f'http://{location}:5984/_all_dbs', headers=headers, auth=authUser, timeout=10)
@@ -54,127 +52,34 @@ def backupCouchDB(location:str='', userName:str='', password:str='') -> None:
     print('**ERROR response for _all_dbs wrong', resp.text)
     print('Username and password', userName, password)
     return
-  timestamp = datetime.now().isoformat().split('.')[0].replace('-','').replace(':','')
-  zipFileName = 'couchDB_backup_'+location.replace('.','')+'_'+timestamp
-  print(f'Create zip-file {zipFileName}.zip')
   databases = resp.json()
-  with ZipFile(f'{zipFileName}.zip', 'w', compression=ZIP_DEFLATED) as zipFile:
-    for database in databases:
-      if database.startswith('_'):
-        print('Special database', database, ': Nothing to do')
-      else:
-        print('Backup normal database ',database)
-        resp = requests.get(f'http://{location}:5984/{database}/_all_docs', headers=headers, auth=authUser, timeout=10)
-        for item in resp.json()['rows']:
-          docID = item['id']
-          doc   = requests.get(f'http://{location}:5984/{database}/{docID}', headers=headers, auth=authUser, timeout=10).json()
-          zipFile.writestr(f'{zipFileName}/research/{docID}', json.dumps(doc))
-          if '_attachments' in doc:
-            for att in doc['_attachments']:
-              docAttach = requests.get(f'http://{location}:5984/{database}/{docID}/{att}',
-                                        headers=headers, auth=authUser, timeout=10).json()
-              zipFile.writestr(f'{zipFileName}/{database}/{docID}_attach/{att}', json.dumps(docAttach))
-        #_design/authentication is automatically included
-        #_security
-        doc   = requests.get(f'http://{location}:5984/{database}/_security',
-                              headers=headers, auth=authUser, timeout=10).json()
-        zipFile.writestr(f'{zipFileName}/{database}/_security', json.dumps(doc))
-    with open(Path.home()/'.pastaELN.json', encoding='utf-8') as fIn:
-      configuration = json.loads(fIn.read())
-      zipFile.writestr(f'{zipFileName}/pastaELN.json', json.dumps(configuration))
-  return
+  print('Databases:',databases)
+  if not database:
+    database = input('Enter database: ').strip()
+  # big loop over all documents
+  resp = requests.get(f'http://{location}:5984/{database}/_all_docs', headers=headers, auth=authUser, timeout=10)
+  for item in resp.json()['rows']:
+    docID = item['id']
+    if docID in ('-dataHierarchy-') or docID.startswith('_design/'):
+      continue
+    print(f'DocID: {docID}')
+    doc   = requests.get(f'http://{location}:5984/{database}/{docID}', headers=headers, auth=authUser, timeout=10).json()
+    # translate to new style
+    doc['id'] = doc.pop('_id')
+    for key in ('name','user','type','gui','tags','client'):
+      doc[key] = doc.pop(f'-{key}')
+    doc['dateCreated']  = doc['-date']
+    doc['dateModified'] = doc.pop('-date')
+    doc['branch'] = doc.pop('-branch')[0] | {'op':'c'}
+    del doc['_rev']
 
-
-def restoreCouchDB(location:str='', userName:str='', password:str='', fileName:str='') -> None:
-  """
-  restore everything to the CouchDB installation across all databases and all configurations
-  - remote location uses username/password combo in local keystore
-  - local location requires username and password
-
-  Args:
-    location (str): 'local', 'remote', else: ask user via CLI
-    userName (str): username
-    password (str): password
-    fileName (str): file used for restoration
-  """
-  # get username and password
-  if not location:
-    location = 'remote' if input('Enter location: [r]emote; else local: ')=='r' else 'local'
-  if location=='local':
-    location = '127.0.0.1'
-    if not userName:
-      userName = input('Enter username: ').strip()
-    if not password:
-      password = input('Enter password: ').strip()
-  else:
-    print('**ERROR: wrong location given.')
-    return
-  if not fileName:
-    possFiles = [i for i in os.listdir('.') if i.startswith('couchDB') and i.endswith('.zip')]
-    for idx, i in enumerate(possFiles):
-      print(f'[{str(idx + 1)}] {i}')
-    fileChoice = input(f'Which file to use for restored? (1-{len(possFiles)}) ')
-    fileName = possFiles[int(fileChoice)-1] if fileChoice else possFiles[0]
-  # use information
-  authUser = requests.auth.HTTPBasicAuth(userName, password)
-  with ZipFile(fileName, 'r', compression=ZIP_DEFLATED) as zipFile:
-    files = [i for i in zipFile.namelist() if not i.endswith('/')]  #only files, no folders
-    #first run through: create documents and design documents
-    for fileI in files:
-      fileParts = fileI.split('/')[1:]
-      if fileParts==['pastaELN.json']: #do not recreate file, it is only there for manual recovery
-        continue
-      if len(fileParts)<2:
-        print(f"**ERROR: Cannot process file {fileI}: does not have 1+2 parts")
-        continue
-      database = fileParts[0]
-      docID = fileParts[1]
-      if docID.endswith('_attach'):
-        continue #Do in second loop
-      #test if database is exists: create otherwise
-      resp = requests.get(f'http://{location}:5984/{database}/_all_docs', headers=headers, auth=authUser, timeout=10)
-      if resp.status_code != 200 and resp.json()['reason']=='Database does not exist.':
-        resp = requests.put(f'http://{location}:5984/{database}', headers=headers, auth=authUser, timeout=10)
-        if not resp.ok:
-          print("**ERROR: could not create database",resp.reason)
-          return
-      #test if document is exists: create otherwise
-      if docID=='_design':
-        docID = '/'.join(fileParts[1:])
-      resp = requests.get(f'http://{location}:5984/{database}/{docID}', headers=headers, auth=authUser, timeout=10)
-      if resp.status_code != 200 and resp.json()['reason']=='missing':
-        with zipFile.open(fileI) as dataIn:
-          doc = json.loads( dataIn.read() )  #need doc conversion since deleted from it
-          del doc['_rev']
-          if '_attachments' in doc:
-            del doc['_attachments']
-          resp = requests.put(f'http://{location}:5984/{database}/{docID}', data=json.dumps(doc), headers=headers, auth=authUser, timeout=10)
-          if not resp.ok:
-            print("**ERROR: could not save document:",resp.reason, database, docID, '\n', doc)
-            # don't print on success: reduce output
-    #second run through: create attachments
-    for fileI in files:
-      fileParts = fileI.split('/')[1:]
-      if fileParts==['pastaELN.json'] or fileParts[-1]=='' or fileParts[-2]=='_design': #do not recreate file, it is only there for manual recovery
-        continue
-      if len(fileParts)<2:
-        print(f"**ERROR-Attachment: Cannot process file {fileI}: does not have 1+2 parts")
-        continue
-      database = fileParts[0]
-      docID = fileParts[1]
-      if not docID.endswith('_attach'):
-        continue #Did already in the first loop
-      #test if attachment exists: create otherwise
-      attachPath = f'{docID[:-7]}/{fileParts[-1]}'
-      resp = requests.get(f'http://{location}:5984/{database}/{attachPath}', headers=headers, auth=authUser, timeout=10)
-      if resp.status_code == 404 and 'missing' in resp.json()['reason']:
-        with zipFile.open(fileI) as dataIn:
-          attachDoc = dataIn.read()
-          resp = requests.get(f'http://{location}:5984/{database}/{docID[:-7]}', headers=headers, auth=authUser, timeout=10)
-          headers['If-Match'] = resp.json()['_rev'] #will be overwritten each time
-          resp = requests.put(f'http://{location}:5984/{database}/{attachPath}', data=attachDoc, headers=headers, auth=authUser, timeout=10)
-          if not resp.ok:
-            print('\n**ERROR: could not save attachment:',resp.reason, database, attachPath,'\n', doc)
+    doc = fillDocBeforeCreate(doc, doc['type'])
+    db.saveDoc(doc)
+    if '_attachments' in doc:
+      for att in doc['_attachments']:
+        docAttach = requests.get(f'http://{location}:5984/{database}/{docID}/{att}',
+                                  headers=headers, auth=authUser, timeout=10).json()
+        print(docAttach)
   return
 
 
@@ -186,12 +91,12 @@ def main() -> None:
   print(  'Manage users and databases for PASTA-ELN on a local couchDB installation')
   print(  '-------------------------------------------------------------------------')
   while True:
-    print('\nCommands: [q]uit; [b]ackup data; [r]estore data')
+    print('\nCommands: [q]uit; [c]onvert couchDB to SQLite')
     command = input('> ')
-    if command == 'b':
-      backupCouchDB()
-    elif command == 'r':
-      restoreCouchDB()
+    if command == 'c':
+      couchDB2SQLite()
+    if command == 'q':
+      break
     else:
       print("Unknown command or incomplete entries.")
 

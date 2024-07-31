@@ -49,7 +49,7 @@ class SqlLiteDB:
   """
   Class for interaction with sqlite
   """
-  def __init__(self, configuration:dict[str,Any], resetDataHierarchy:bool=False, basePath:Path=Path()):
+  def __init__(self, resetDataHierarchy:bool=False, basePath:Path=Path()):
     """
     Args:
       configuration (dict): configuration of GUI elements
@@ -221,9 +221,24 @@ class SqlLiteDB:
 
   def saveDoc(self, doc:dict[str,Any]) -> dict[str,Any]:
     """
-    Wrapper for save to database function
+    Save to database
     - not helpful to convert _id to int since sqlite does not digest such long integer
       doc['id']  = int(doc['id'][2:], 16)
+    - Example{
+        'name': 'G200X',
+        'user': 'somebody',
+        'type': ['instrument'],
+        'branch': {'stack': ['x-9f74f79c96754d4c9065435ddd466c56', 'x-04b5e323d3ae4364bcd310a3e5fd653e'], 'child': 9999, 'path': None, 'show': [True, True, True], 'op': 'c'},
+        'id': 'i-180212be6c7d4365ac647f266c5698f1',
+        'externalId': '',
+        'dateCreated': '2024-07-31T22:03:39.530666',
+        'dateModified': '2024-07-31T22:03:39.530727',
+        'gui': [True, True],
+        'comment': '',
+        '.vendor': 'KLA',
+        '.model': 'KLA G200X',
+        'metaVendor': {'j': 258},
+        'tags': []}
 
     Discussion on -branch['path']:
     - full path (from basePath) allows to easily create a view of all paths and search through them

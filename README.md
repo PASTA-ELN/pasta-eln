@@ -82,6 +82,9 @@ rm -rf venvPastaTest/ pastaTEST/
 ```
 
 ---
+## Convert couchdb to sqlite version
+- python -m pasta_eln.serverActions
+---
 
 ## Notes on all systems
 Run Pasta-ELN directly from commandline without installation
