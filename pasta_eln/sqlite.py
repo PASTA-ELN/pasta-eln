@@ -7,7 +7,7 @@ from anytree import Node
 import pandas as pd
 from PIL import Image
 from .fixedStringsJson import defaultDataHierarchy, defaultDefinitions
-from .miscTools import outputString, hierarchy, camelCase
+from .miscTools import outputString, hierarchy, camelCase, tracebackString
 
 # DO NOT WORK ON THIS IF THERE IS SOMETHING ON THE TODO LIST
 # Notes:
@@ -39,11 +39,10 @@ from .miscTools import outputString, hierarchy, camelCase
 #   - see if I use the first letter of the docID
 #   -> such long integers are not supported by sqlite: stay with string/text
 
-KEY_ORDER   =    ['id' , 'name','user','type','dateCreated','dateModified','gui',       'client','shasum','image','content','comment']
-KEY_TYPE    =    ['TEXT','TEXT','TEXT','TEXT','TEXT',       'TExT',       'varchar(2)','TEXT',  'TEXT',  'TEXT', 'TEXT',   'TEXT']
+KEY_ORDER   =    ['id' , 'name','user','type','dateCreated','dateModified','gui',       'client','shasum','image','content','comment','externalId']
+KEY_TYPE    =    ['TEXT','TEXT','TEXT','TEXT','TEXT',       'TExT',       'varchar(2)','TEXT',  'TEXT',  'TEXT', 'TEXT',   'TEXT',    'TEXT']
 DATA_HIERARCHY = ['docType', 'IRI','title','icon','shortcut','view']
 DEFINITIONS =    ['docType','class','idx', 'name', 'query', 'unit', 'IRI', 'mandatory', 'list']
-VALUE_UNIT_SEP = '__'
 
 
 class SqlLiteDB:
@@ -61,7 +60,7 @@ class SqlLiteDB:
     self.cursor     = self.connection.cursor()
     self.dataHierarchyInit(resetDataHierarchy)
     # main table
-    self.createSQLTable('main',     KEY_ORDER,                                         'id',        KEY_TYPE)
+    self.createSQLTable('main',            KEY_ORDER,                                  'id', KEY_TYPE)
     # branches table
     self.createSQLTable('branches', ['id','idx','stack','child','path','show'],'id, idx', ['TEXT','INTEGER']*2+["TEXT"]*2)
     # metadata table
@@ -72,12 +71,12 @@ class SqlLiteDB:
     self.createSQLTable('properties',      ['id','key','value','unit'],                'id, key')
     self.createSQLTable('propDefinitions', ['key','long','IRI'],                       'key')
     # tables: each item can have multiple of these: tags, qrCodes
-    self.createSQLTable('tags',        ['id','tag'],                                   'id, tag')
-    self.createSQLTable('qrCodes',     ['id','qrCode'],                                'id, qrCode')
+    self.createSQLTable('tags',            ['id','tag'],                               'id, tag')
+    self.createSQLTable('qrCodes',         ['id','qrCode'],                            'id, qrCode')
     # list of changes to attachments
-    self.createSQLTable('attachments', ['id','location','date','guest','remark','user'], 'id, location, date')
+    self.createSQLTable('attachments',     ['id','location','date','guest','remark','user'], 'id, location, date')
     # list of changes to all documents: gives history
-    self.createSQLTable('changes',     ['id','date','change'],                         'id, date')
+    self.createSQLTable('changes',         ['id','date','change'],                     'id, date')
     return
 
 
@@ -260,6 +259,7 @@ class SqlLiteDB:
       doc['content'] = doc['content'][:200]
     doc['type'] = '/'.join(doc['type'])
     doc['gui']  = ''.join(['T' if i else 'F' for i in doc['gui']])
+    doc['client'] = tracebackString(False, 'save:'+doc['id'])
     docList = [doc[x] if x in doc else doc.get(f'.{x}','') for x in KEY_ORDER]
     self.cursor.execute(f"INSERT INTO main VALUES ({', '.join(['?']*len(docList))})", docList)
     doc = {k:v for k,v in doc.items() if (k not in KEY_ORDER and k[1:] not in KEY_ORDER) or k == 'id'}
@@ -298,26 +298,67 @@ class SqlLiteDB:
     return docOrg
 
 
-  def updateDoc(self, change:dict[str,Any], docID:str) -> dict[str,Any]:
+  def updateDoc(self, dataNew:dict[str,Any], docID:str) -> dict[str,Any]:
     """
     Update document by
     - saving changes to oldDoc (revision document)
     - updating new-document concurrently
     - create a docID for oldDoc
-    - Bonus: save '_rev' from newDoc to oldDoc in order to track that updates cannot happen by accident
 
     Key:Value
     - if value is None: do not change it;
     - if key does not exist: change it to empty, aka remove it
 
     Args:
-        change (dict): item to update
+        dataNew (dict): item to update
         docID (string):  id of document to change
 
     Returns:
         dict: json representation of updated document
     """
-    raise ValueError('Not implemented UPDATEDOC')
+    dataNew['client'] = tracebackString(False, f'updateDoc:{docID}')
+    changesDB = {}
+    changesDict = {}
+
+    # tags and qrCodes
+    tagsNew= set(dataNew.pop('tags'))
+    self.cursor.execute(f"SELECT tag FROM tags WHERE id == '{docID}'")
+    tagsOld= {i[0] for i in self.cursor.fetchall()}
+    for tag in tagsOld.difference(tagsNew):
+      self.cursor.execute(f"DELETE FROM tags WHERE id == '{docID}' and tag == '{tag}'")
+    tagsNew = tagsNew.difference(tagsOld)
+    self.cursor.executemany("INSERT INTO tags VALUES (?, ?);", zip([docID]*len(tagsNew), tagsNew))
+    qrCodesNew= set(dataNew.pop('qrCodes'))
+    self.cursor.execute(f"SELECT qrCode FROM qrCodes WHERE id == '{docID}'")
+    qrCodesOld= {i[0] for i in self.cursor.fetchall()}
+    for qrCode in qrCodesOld.difference(qrCodesNew):
+      self.cursor.execute(f"DELETE FROM qrCodes WHERE id == '{docID}' and qrCode == '{qrCode}'")
+    qrCodesNew = qrCodesNew.difference(qrCodesOld)
+    self.cursor.executemany("INSERT INTO qrCodes VALUES (?, ?);", zip([docID]*len(qrCodesNew), qrCodesNew))
+    # separate into main and properties
+    mainNew = {key: dataNew.pop(key) for key in KEY_ORDER if key in dataNew}
+    # handle properties
+    print(dataNew, 'still to implement: handle')
+    # handle main
+    self.connection.row_factory = sqlite3.Row  #default None
+    cursor = self.connection.cursor()
+    cursor.execute(f"SELECT * FROM main WHERE id == '{docID}'")
+    mainOld = dict(cursor.fetchone())
+    mainOld['type']= mainOld['type'].split('/')
+    changesDB['main'] = {}
+    for key in ('name','user','type','dateModified','client','image','content','comment'):
+      if key in mainNew and mainOld[key]!=mainNew[key]:
+        changesDB['main'][key] = mainNew[key]
+        changesDict[key] = mainOld[key]
+
+    # change content in database
+    if set(changesDict.keys()).difference(('dateModified','client','user')):
+      changeString = ', '.join([f"{k}='{v}'" for k,v in changesDB['main'].items()])
+      self.cursor.execute(f"UPDATE main SET {changeString} WHERE id = '{docID}'")
+      self.cursor.execute("INSERT INTO changes VALUES (?,?,?)", [docID, datetime.now().isoformat(), json.dumps(changesDict)])
+      self.connection.commit()
+
+    return mainOld | mainNew
 
 
   def updateBranch(self, docID:str, branch:int, child:int, stack:Optional[list[str]]=None,

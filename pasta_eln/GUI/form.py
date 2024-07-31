@@ -57,8 +57,8 @@ class Form(QDialog):
       width = self.comm.backend.configuration['GUI']['imageSizeDetails'] \
                 if hasattr(self.comm.backend, 'configuration') else 300
       Image(self.doc['image'], self.imageL, anyDimension=width)
-      if '_id' in self.doc:
-        self.docID= doc['_id']  #required for hide to work
+      if 'id' in self.doc:
+        self.docID= doc['id']  #required for hide to work
         imageW.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         imageW.customContextMenuRequested.connect(lambda pos: initContextMenu(self, pos))
       imageWSA.setWidget(imageW)
@@ -173,7 +173,7 @@ class Form(QDialog):
             formL.addRow(QLabel(key.capitalize()), getattr(self, elementName))
           else:
             logging.info('Cannot display value of key=%s: %s. Write unknown value for docID=%s',
-                         key, str(defaultValue), self.doc['_id'])
+                         key, str(defaultValue), self.doc['id'])
         elif isinstance(defaultValue, tuple) and len(defaultValue)==4 and isinstance(defaultValue[0], str):    #string
           dataHierarchyItem = [i for i in dataHierarchyNode if i['class']==group and f"{i['class']}.{i['name']}"==key]
           if len(dataHierarchyItem)==1:
@@ -198,7 +198,7 @@ class Form(QDialog):
           formL.addRow(QLabel(label), getattr(self, elementName))
         else:
           print(f"**WARNING dialogForm: unknown value type. key:{key}, type:{type(defaultValue)}")
-      if group == 'default':
+      if group == '':
         # individual key-value items
         self.keyValueListW, self.keyValueListL = widgetAndLayoutForm(None, 's')
         self.keyValueListW.hide()
@@ -206,20 +206,20 @@ class Form(QDialog):
         self.keyValueLabel.hide()
         formL.addRow(self.keyValueLabel, self.keyValueListW)
         # add extra questions at bottom of form
-        allowProjectAndDocTypeChange = '_id' in self.doc and self.doc['type'][0][0]!='x'
+        allowProjectAndDocTypeChange = 'id' in self.doc and self.doc['type'][0][0]!='x'
         if '_ids' in self.doc: #if group edit
           allowProjectAndDocTypeChange = all(docID[0] != 'x' for docID in self.doc['_ids'])
         if allowProjectAndDocTypeChange: #if not-new and non-folder
           formL.addRow(QLabel('Special properties:'), QLabel('') )
         label = '- unassigned -' if self.flagNewDoc else '- no change -'
-        if allowProjectAndDocTypeChange or ('_id' not in self.doc and self.doc['type'][0][0]!='x'): #if new and non-folder
+        if allowProjectAndDocTypeChange or ('id' not in self.doc and self.doc['type'][0][0]!='x'): #if new and non-folder
           self.projectComboBox = QComboBox()
           self.projectComboBox.addItem(label, userData='')
-          for line in self.db.getView('viewDocType/x0'):
+          for _, line in self.db.getView('viewDocType/x0').iterrows():
             # add all projects but the one that is present
             if 'branch' not in self.doc or all( not(len(branch['stack'])>0 and line['id']==branch['stack'][0])
                                                 for branch in self.doc['branch']):
-              self.projectComboBox.addItem(line['value'][0], userData=line['id'])
+              self.projectComboBox.addItem(line['name'], userData=line['id'])
               if self.doc.get('_projectID','') == line['id']:
                 self.projectComboBox.setCurrentIndex(self.projectComboBox.count()-1)
           formL.addRow(QLabel('Project'), self.projectComboBox)
@@ -254,14 +254,14 @@ class Form(QDialog):
     if (Path.home()/'.pastaELN.temp').is_file():
       with open(Path.home()/'.pastaELN.temp', 'r', encoding='utf-8') as fTemp:
         content = json.loads(fTemp.read())
-        if self.doc.get('_id', '') in content:
+        if self.doc.get('id', '') in content:
           ret = QMessageBox.information(self, 'Information', 'There is unsaved information from a prematurely '+
                     'closed form. Do you want to restore it?\n If you decline, the unsaved information will be'+
                     ' removed.',
                   QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
                   QMessageBox.StandardButton.Yes)
           if ret==QMessageBox.StandardButton.Yes:
-            subContent = content[self.doc.get('_id', '')]
+            subContent = content[self.doc.get('id', '')]
             for key in subContent.keys():
               if key in ('comment', 'content'):
                 getattr(self, f'textEdit_{key}').setPlainText(subContent[key])
@@ -271,7 +271,7 @@ class Form(QDialog):
               elif isinstance(getattr(self, f'key_{key}'), QLineEdit):
                 getattr(self, f'key_{key}').setText(subContent[key])
               # skip QCombobox items since cannot be sure that next from has them and they are easy to recreate
-          del content[self.doc.get('_id', '')]
+          del content[self.doc.get('id', '')]
       with open(Path.home()/'.pastaELN.temp', 'w', encoding='utf-8') as fTemp:
         fTemp.write(json.dumps(content))
     self.checkThreadTimer = QTimer(self)
@@ -298,7 +298,7 @@ class Form(QDialog):
         content = json.loads(fTemp.read())
     else:
       content = {}
-    content[self.doc.get('_id', '')] = subContent
+    content[self.doc.get('id', '')] = subContent
     with open(Path.home()/'.pastaELN.temp', 'w', encoding='utf-8') as fTemp:
       fTemp.write(json.dumps(content))
     return
@@ -387,33 +387,37 @@ class Form(QDialog):
       if (Path.home()/'.pastaELN.temp').is_file():
         with open(Path.home()/'.pastaELN.temp', 'r', encoding='utf-8') as fTemp:
           content = json.loads(fTemp.read())
-          if self.doc.get('_id', '') in content:
-            del content[self.doc.get('_id', '')]
+          if self.doc.get('id', '') in content:
+            del content[self.doc.get('id', '')]
         with open(Path.home()/'.pastaELN.temp', 'w', encoding='utf-8') as fTemp:
           fTemp.write(json.dumps(content))
-      if hasattr(self, 'key_-name'):
-        self.doc['name'] = getattr(self, 'key_-name').text().strip()
-        if self.doc['name'] == '':
-          showMessage(self, 'Error', 'A created item has to have a valid name')
-          return
-        if self.doc['type'][0]=='x0':  #prevent project-directory names that are identical
-          others = self.comm.backend.db.getView('viewDocType/x0All')
-          if '_id' in self.doc:
-            others = [i for i in others if i['id']!=self.doc['_id']] # create list of names but filter own name
-          others = [i['value'][0] for i in others]
-          othersList = [createDirName(str(i),'x0', 0) for i in others] #create names
-          while createDirName(self.doc['name'],'x0', 0) in othersList:
-            if re.search(r"_\d+$", self.doc['name']) is None:
-              self.doc['name'] += '_1'
-            else:
-              self.doc['name'] = '_'.join(self.doc['name'].split('_')[:-1])+'_'+str(int(self.doc['name'].split('_')[-1])+1)
+
       # loop through all the subitems
-      for key in self.allKeys:
+      for idx, (key, guiType) in enumerate(self.allUserElements):
+        elementName = f"key_{idx}"
         valueOld = self.doc.get(key, '')
-        if (key in ['image', 'metaVendor', 'metaUser']  #tags are already saved
-            or not hasattr(self, f'key_{key}') and not hasattr(self, f'textEdit_{key}')):
+        if key=='name':
+          self.doc['name'] = getattr(self, elementName).text().strip()
+          if self.doc['name'] == '':
+            showMessage(self, 'Error', 'A created item has to have a valid name')
+            return
+          if self.doc['type'][0]=='x0':  #prevent project-directory names that are identical
+            others = self.comm.backend.db.getView('viewDocType/x0All')
+            if 'id' in self.doc:
+              others = [i for i in others if i['id']!=self.doc['id']] # create list of names but filter own name
+            others = [i['value'][0] for i in others]
+            othersList = [createDirName(str(i),'x0', 0) for i in others] #create names
+            while createDirName(self.doc['name'],'x0', 0) in othersList:
+              if re.search(r"_\d+$", self.doc['name']) is None:
+                self.doc['name'] += '_1'
+              else:
+                self.doc['name'] = '_'.join(self.doc['name'].split('_')[:-1])+'_'+str(int(self.doc['name'].split('_')[-1])+1)
+        elif key in ('tags'):  #tags are already saved
+        #     'image', 'metaVendor', 'metaUser' or not hasattr(self, f'key_{key}') and not hasattr(self, f'textEdit_{key}')):
           continue
-        if key in ['comment','content']:
+        elif key == '.qrCodes':
+          self.doc['qrCodes'] = getattr(self, elementName).text().strip().split('/')
+        elif key in ('comment','content'):
           text = getattr(self, f'textEdit_{key}').toPlainText().strip()
           if '_ids' not in self.doc or text:  #if group edit, text has to have text
             self.doc[key] = text
@@ -427,11 +431,11 @@ class Form(QDialog):
                   else:
                     showMessage(self, 'Information', 'Did update the database but not the file on harddisk, since PASTA-ELN cannot write this format')
         elif isinstance(valueOld, list):  #items that are comma separated in the text-field
-          self.doc[key] = getattr(self, f'key_{key}').text().strip().split(' ')
+          self.doc[key] = getattr(self, elementName).text().strip().split(' ')
         elif isinstance(valueOld, str):
-          if isinstance(getattr(self, f'key_{key}'), QComboBox):
-            valueNew = getattr(self, f'key_{key}').currentText()
-            dataNew  = getattr(self,f'key_{key}').currentData()
+          if guiType=='ComboBox':
+            valueNew = getattr(self, elementName).currentText()
+            dataNew  = getattr(self, elementName).currentData()
             if ((dataNew is not None and re.search(r"^[a-z\-]-[a-z0-9]{32}$",dataNew) is not None)
                 or dataNew==''):
               #if docID is stored in currentData
@@ -439,7 +443,7 @@ class Form(QDialog):
             elif valueNew!='- no link -' or dataNew is None:
               self.doc[key] = valueNew
           else:                          #normal text field
-            self.doc[key] = getattr(self, f'key_{key}').text().strip()
+            self.doc[key] = getattr(self, elementName).text().strip()
         elif valueOld is None and key in self.doc:  #important entry, set to empty string
           self.doc[key]=''
         else:
@@ -463,7 +467,7 @@ class Form(QDialog):
                 oldPath    = self.comm.backend.basePath/doc['branch'][0]['path']
                 newPath = f'{parentPath}/{oldPath.name}'
                 oldPath.rename(self.comm.backend.basePath/newPath)
-              self.db.updateBranch( doc['_id'], 0, 9999, [self.projectComboBox.currentData()], newPath)
+              self.db.updateBranch( doc['id'], 0, 9999, [self.projectComboBox.currentData()], newPath)
         elif 'branch' in self.doc:             # sequential or single update
           if self.doc['branch'][0]['stack']!=self.projectComboBox.currentData(): #only if project changed
             if self.doc['branch'][0]['path'] is None:
@@ -471,7 +475,7 @@ class Form(QDialog):
             else:
               oldPath = self.comm.backend.basePath/self.doc['branch'][0]['path']
               newPath = f'{parentPath}/{oldPath.name}'
-            self.db.updateBranch( self.doc['_id'], 0, 9999, [self.projectComboBox.currentData()], newPath)
+            self.db.updateBranch( self.doc['id'], 0, 9999, [self.projectComboBox.currentData()], newPath)
             self.doc['branch'][0] = {'stack':[self.projectComboBox.currentData()], 'path':newPath or None, 'child':9999, 'show':[True,True]}
         else:
           newProjID = [self.projectComboBox.currentData()]
@@ -486,7 +490,8 @@ class Form(QDialog):
           doc = self.db.getDoc(docID)
           doc.update( self.doc )
           self.comm.backend.editData(doc)
-      elif '_id' in self.doc:                             # default update on item
+      elif 'id' in self.doc:                             # default update on item
+        print(self.doc, 'make sure type included and clean') #TODO
         self.comm.backend.editData(self.doc)
       else:                                               # create new dataset
         self.comm.backend.addData(self.doc['type'][0], copy.deepcopy(self.doc), newProjID)

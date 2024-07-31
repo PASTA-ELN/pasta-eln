@@ -269,7 +269,6 @@ class Backend(CLI_Mixin):
       # add doc to database
       doc = fillDocBeforeCreate(doc, doc['type'])
       doc = self.db.saveDoc(doc)
-
     ## adaptation of directory tree, information on disk: documentID is required
     if self.cwd is not None and doc['type'][0][0]=='x':
       #project, step, task

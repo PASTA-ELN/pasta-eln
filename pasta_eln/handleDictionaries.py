@@ -93,7 +93,7 @@ def fillDocBeforeCreate(data:dict[str,Any], docType:list[str]) -> dict[str,Any]:
   Returns:
     str: document
   """
-  protectedKeys = ['comment','tags','image']
+  protectedKeys = ['comment','tags','image','externalId']
   # Handle the important entries: type, id, dateCreated, branch, gui
   if 'type' not in data:
     data['type'] = docType
@@ -103,7 +103,10 @@ def fillDocBeforeCreate(data:dict[str,Any], docType:list[str]) -> dict[str,Any]:
     data['type'] = data['type'].split('/')
   if 'id' not in data:  # if new (if not update): create new id
     data['id'] = data['type'][0][0]+'-'+uuid.uuid4().hex
-  data['dateCreated']   = datetime.now().isoformat()
+  if 'externalId' not in data:
+    data['externalId'] = ''
+  if 'dateCreated' not in data:
+    data['dateCreated']   = datetime.now().isoformat()
   data['dateModified']  = datetime.now().isoformat()
   if 'branch' not in data:
     print('Empty branch in data')

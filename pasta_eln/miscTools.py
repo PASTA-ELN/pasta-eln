@@ -80,8 +80,9 @@ def tracebackString(log:bool=False, docID:str='') -> str:
   Returns:
     str: | separated string of call functions
   """
-  tracebackList = [i for i in traceback.format_stack()[2:-2] if 'pasta_eln' in i] #skip first and last and then filter only things with pasta_eln
-  reply = '|'.join([item.split('\n')[1].strip() for item in tracebackList])  #| separated list of stack excluding last
+  tracebackList = [i.split('\n')[0] for i in traceback.format_stack()[2:-2] if 'pasta_eln' in i] #skip first and last and then filter only things with pasta_eln
+  reply = '|'.join([item.split('/')[-1].strip() for item in tracebackList])  #| separated list of stack excluding last
+  reply = reply.replace('",','')
   if log:
     logging.info(' traceback %s %s', docID, reply)
   return reply
