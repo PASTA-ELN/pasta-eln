@@ -14,11 +14,11 @@ from PySide6.QtWidgets import QApplication, QFileDialog, QMainWindow  # pylint: 
 from qt_material import apply_stylesheet  # of https://github.com/UN-GCPDS/qt-material
 
 from pasta_eln import __version__
-from pasta_eln.GUI.dataverse.config_dialog import ConfigDialog
-from pasta_eln.GUI.dataverse.main_dialog import MainDialog
+# from pasta_eln.GUI.dataverse.config_dialog import ConfigDialog
+# from pasta_eln.GUI.dataverse.main_dialog import MainDialog
 from .GUI.body import Body
 from .GUI.config import Configuration
-from .GUI.data_hierarchy.data_hierarchy_editor_dialog import DataHierarchyEditorDialog
+# from .GUI.data_hierarchy.data_hierarchy_editor_dialog import DataHierarchyEditorDialog
 from .GUI.form import Form
 from .GUI.projectGroup import ProjectGroup
 from .GUI.sidebar import Sidebar
@@ -47,8 +47,8 @@ class MainWindow(QMainWindow):
     self.backend = Backend()
     self.comm = Communicate(self.backend)
     self.comm.formDoc.connect(self.formDoc)
-    self.dataverseMainDialog: MainDialog | None = None
-    self.dataverseConfig: ConfigDialog | None = None
+    # self.dataverseMainDialog: MainDialog | None = None
+    # self.dataverseConfig: ConfigDialog | None = None
 
     # Menubar
     menu = self.menuBar()
@@ -181,15 +181,20 @@ class MainWindow(QMainWindow):
       report = self.comm.backend.replicateDB(progressBar=self.sidebar.progress)
       showMessage(self, 'Report of syncronization', report, style='QLabel {min-width: 450px}')
     elif command[0] is Command.DATAHIERARCHY:
-      dataHierarchyForm = DataHierarchyEditorDialog(self.comm.backend.db)
-      dataHierarchyForm.instance.exec()
+      # Jithu's code: comment out for now
+      # dataHierarchyForm = DataHierarchyEditorDialog(self.comm.backend.db)
+      # dataHierarchyForm.instance.exec()
       restart()
     elif command[0] is Command.DATAVERSE_CONFIG:
-      self.dataverseConfig = ConfigDialog()
-      self.dataverseConfig.show()
+      # Jithu's code: comment out for now
+      # self.dataverseConfig = ConfigDialog()
+      # self.dataverseConfig.show()
+      pass
     elif command[0] is Command.DATAVERSE_MAIN:
-      self.dataverseMainDialog = MainDialog(self.comm.backend)
-      self.dataverseMainDialog.show()
+      # Jithu's code: comment out for now
+      # self.dataverseMainDialog = MainDialog(self.comm.backend)
+      # self.dataverseMainDialog.show()
+      pass
     elif command[0] is Command.TEST1:
       fileName = QFileDialog.getOpenFileName(self, 'Open file for extractor test', str(Path.home()), '*.*')[0]
       report = self.comm.backend.testExtractor(fileName, outputStyle='html')

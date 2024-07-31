@@ -184,8 +184,8 @@ class Form(QDialog):
               else:                                                    #choice among docType
                 listDocType = dataHierarchyItem[0]['list']
                 getattr(self, elementName).addItem('- no link -', userData='')
-                for line in self.db.getView(f'viewDocType/{listDocType}'):
-                  getattr(self, elementName).addItem(line['value'][0], userData=line['id'])
+                for _, line in self.db.getView(f'viewDocType/{listDocType}').iterrows():
+                  getattr(self, elementName).addItem(line['name'], userData=line['id'])
                   if line['id'] == defaultValue[0]:
                     getattr(self, elementName).setCurrentIndex(getattr(self, elementName).count()-1)
               self.allUserElements.append((key,'ComboBox'))

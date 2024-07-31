@@ -10,7 +10,7 @@ from PIL.ImageQt import ImageQt
 from PySide6.QtGui import QPixmap, QRegularExpressionValidator  # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QFileDialog, QFormLayout, QGroupBox, QLabel, \
   QLineEdit, QMessageBox, QVBoxLayout  # pylint: disable=no-name-in-module
-from cloudant.client import CouchDB
+# from cloudant.client import CouchDB
 from ..guiCommunicate import Communicate
 from ..guiStyle import IconButton, Label, TextButton, showMessage, widgetAndLayout
 from ..miscTools import restart, upIn, upOut
@@ -203,8 +203,8 @@ class ProjectGroup(QDialog):
       button = QMessageBox.question(self, "Question", "Local database does not exist. Should I create it?")
       if button == QMessageBox.StandardButton.Yes:
         localTest += '  Local data was created\n'
-        client = CouchDB(self.userNameL.text(), self.passwordL.text(), url='http://127.0.0.1:5984', connect=True)
-        client.create_database(self.databaseL.text())
+        # client = CouchDB(self.userNameL.text(), self.passwordL.text(), url='http://127.0.0.1:5984', connect=True)
+        # client.create_database(self.databaseL.text())
       else:
         localTest += '  Local data was NOT created\n'
     if not self.pathL.text():

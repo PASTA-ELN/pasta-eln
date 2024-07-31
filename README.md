@@ -59,21 +59,29 @@
 - Default
   - /usr/local/lib/python3.10/dist-packages/pasta_eln
 
-### Restart installation
+### Installation - Test - Removal
+!! Be sure to have an additional backup of your previous ~/.pastaELN_v3.json !!
+Installation:
 ``` bash
-rm .pastaELN.json pastaELN.log
-rm -rf pastaELN/PastasExampleProject pastaELN/StandardOperatingProcedures
-sudo snap stop couchdb
-sudo snap remove couchdb
+python -m venv venvPastaTest
+. venvPastaTest/bin/activate
+mv ~/.pastaELN_v3.json ~/.pastaELN_v3.backup.json
+pip install git+https://github.com/PASTA-ELN/pasta-eln@sb_sqlite
+```
+
+Test (you can edit the code in venvPastaTest/lib/python3.12/site-packages/pasta_eln):
+``` bash
+python -m pasta_eln.gui
+```
+
+Removal:
+``` bash
+mv ~/.pastaELN_v3.backup.json ~/.pastaELN_v3.json
+deactivate
+rm -rf venvPastaTest/ pastaTEST/
 ```
 
 ---
-
-## Test couchDB running
-- CouchDB at HTTP! [http://127.0.0.1:5984/_utils/#login](http://127.0.0.1:5984/_utils/#login)
-- curl -f http://127.0.0.1:5984/
-- curl -X POST -H "Content-Type: application/json; charset=utf-8" -d '{"name": "*+*", "password": "*+*"}' http://127.0.0.1:5984/_session
-
 
 ## Notes on all systems
 Run Pasta-ELN directly from commandline without installation
