@@ -14,7 +14,6 @@ from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QFileDialog,
 from ..guiCommunicate import Communicate
 from ..guiStyle import IconButton, Label, TextButton, showMessage, widgetAndLayout
 from ..miscTools import restart, upIn, upOut
-from ..serverActions import passwordDecrypt
 
 
 class ProjectGroup(QDialog):
@@ -164,7 +163,7 @@ class ProjectGroup(QDialog):
     elif command[0] is Command.FILL:
       contentFile = QFileDialog.getOpenFileName(self, "Load remote credentials", str(Path.home()), '*.key')[0]
       with open(contentFile, encoding='utf-8') as fIn:
-        content = json.loads( passwordDecrypt(bytes(fIn.read(), 'UTF-8')) )
+        content = '' #json.loads( passwordDecrypt(bytes(fIn.read(), 'UTF-8')) )
         self.userNameR.setText(content['user-name'])
         self.passwordR.setText(content['password'])
         self.databaseR.setText(content['database'])

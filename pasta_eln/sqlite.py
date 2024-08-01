@@ -130,7 +130,7 @@ class SqlLiteDB:
     return columnNames
 
 
-  def dataHierarchy(self, docType:str, column:str, group:str='') -> dict[str,Any]:
+  def dataHierarchy(self, docType:str, column:str, group:str='') -> list[Any]:
     """
     if group not given: return all
     """
@@ -139,9 +139,7 @@ class SqlLiteDB:
       column = f', {column}' if column else ''
       self.cursor.execute(f"SELECT docType {column} FROM dataHierarchy")
       results = self.cursor.fetchall()
-      if column=='':
-        return [i[0] for i in results]
-      return {i[0]:i[1] for i in results}
+      return [i[0] for i in results] if column=='' else results
     ### if metadata = definitions of data
     if column == 'meta':
       self.connection.row_factory = sqlite3.Row  #default None
@@ -332,8 +330,8 @@ class SqlLiteDB:
         dict: json representation of updated document
     """
     dataNew['client'] = tracebackString(False, f'updateDoc:{docID}')
-    changesDB = {}
-    changesDict = {}
+    changesDB:dict[str,dict[str,str]] = {}
+    changesDict:dict[str,str]         = {}
 
     # tags and qrCodes
     tagsNew= set(dataNew.pop('tags'))
@@ -366,6 +364,7 @@ class SqlLiteDB:
         changesDB['main'][key] = mainNew[key]
         changesDict[key] = mainOld[key]
 
+    #TODO: do not save changes if name='new folder'
     # change content in database
     if set(changesDict.keys()).difference(('dateModified','client','user')):
       changeString = ', '.join([f"{k}='{v}'" for k,v in changesDB['main'].items()])
@@ -377,7 +376,7 @@ class SqlLiteDB:
 
 
   def updateBranch(self, docID:str, branch:int, child:int, stack:Optional[list[str]]=None,
-                   path:Optional[str]='') -> tuple[str, Optional[str]]:
+                   path:Optional[str]='') -> tuple[Optional[str], Optional[str]]:
     """
     Update document by updating the branch
 
@@ -393,10 +392,13 @@ class SqlLiteDB:
     """
     #convert into db style
     path = '*' if path is None else path
+    stack = [] if stack is None else stack
     #use
     self.cursor.execute(f"SELECT path FROM branches WHERE id == '{docID}' and idx == {branch}")
     pathOld = self.cursor.fetchone()[0]
-    self.cursor.execute(f"UPDATE branches SET stack='{'/'.join(stack+[docID])}', child={child}, path='{path}' WHERE id = '{docID}' and idx = {branch}")
+    cmd = f"UPDATE branches SET stack='{'/'.join(stack+[docID])}', child={child}, path='{path}' "\
+          f"WHERE id = '{docID}' and idx = {branch}"
+    self.cursor.execute(cmd)
     self.connection.commit()
     return (None if pathOld=='*' else pathOld, None if path=='*' else path)
 

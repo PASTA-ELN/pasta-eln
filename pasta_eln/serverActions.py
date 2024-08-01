@@ -1,42 +1,28 @@
 #!/usr/bin/python3
 """Commandline utility to admin the remote server"""
-import sys, json, base64, os
+import json
 from typing import Any
-from datetime import datetime
 from pathlib import Path
-from zipfile import ZipFile, ZIP_DEFLATED
 import requests
 from requests.structures import CaseInsensitiveDict
-
-def passwordEncrypt(message:str) -> bytes:
-  """
-  obfuscate message
-  """
-  return base64.b64encode(bytearray(message, encoding='utf-8'))
-def passwordDecrypt(message:bytes) -> str:
-  """
-  de-obfuscate message
-  """
-  return base64.b64decode(message).decode('utf-8')
+from .sqlite import SqlLiteDB
+from .handleDictionaries import fillDocBeforeCreate
 
 #global variables
 headers:CaseInsensitiveDict[str]= CaseInsensitiveDict()
 headers["Content-Type"] = "application/json"
 
-
 def couchDB2SQLite(userName:str='', password:str='', database:str='', path:str='') -> None:
   """
-  Backup everything of the CouchDB installation across all databases and all configurations
-  - remote location uses username/password combo in local keystore
-  - local location requires username and password
+  Backup everything of the CouchDB installation (local couchdb instance)
 
   Args:
     userName (str): username
     password (str): password
+    database (str): database
+    path     (str): path to location of sqlite file
   """
-  from .sqlite import SqlLiteDB
-  from .handleDictionaries import fillDocBeforeCreate
-  # get username and password
+  # get arguments if not given
   location = '127.0.0.1'
   if not userName:
     userName = input('Enter local admin username: ').strip()
@@ -62,24 +48,34 @@ def couchDB2SQLite(userName:str='', password:str='', database:str='', path:str='
     docID = item['id']
     if docID in ('-dataHierarchy-') or docID.startswith('_design/'):
       continue
-    print(f'DocID: {docID}')
+    # print(f'DocID: {docID}')
     doc   = requests.get(f'http://{location}:5984/{database}/{docID}', headers=headers, auth=authUser, timeout=10).json()
     # translate to new style
     doc['id'] = doc.pop('_id')
-    for key in ('name','user','type','gui','tags','client'):
+    for key in ('name','user','type','gui','tags','client','branch'):
       doc[key] = doc.pop(f'-{key}')
     doc['dateCreated']  = doc['-date']
     doc['dateModified'] = doc.pop('-date')
-    doc['branch'] = doc.pop('-branch')[0] | {'op':'c'}
+    doc['branch'] = doc['branch'][0] | {'op':'c'} if doc['branch'] else \
+                    {'stack':[], 'child':9999, 'path':None, 'show':[True], 'op':'c'}
     del doc['_rev']
-
+    # save
     doc = fillDocBeforeCreate(doc, doc['type'])
     db.saveDoc(doc)
     if '_attachments' in doc:
       for att in doc['_attachments']:
         docAttach = requests.get(f'http://{location}:5984/{database}/{docID}/{att}',
                                   headers=headers, auth=authUser, timeout=10).json()
-        print(docAttach)
+        setAll = set(docAttach.keys())
+        setImportant  = setAll.difference({'-date','date','-client','image','type','-type','client','-name','-branch','branch'})
+        if not setImportant or ('-name' in docAttach and docAttach['-name']=='new folder'):
+          continue
+        print(setImportant)
+        date = docAttach['-date'] if '-date' in docAttach else docAttach['date'] if 'date' in docAttach else att
+        if '-client' in docAttach:
+          del docAttach['-client']
+        db.cursor.execute("INSERT INTO changes VALUES (?,?,?)", [docID, date, json.dumps(docAttach)])
+      db.connection.commit()
   return
 
 
@@ -95,7 +91,7 @@ def main() -> None:
     command = input('> ')
     if command == 'c':
       couchDB2SQLite()
-    if command == 'q':
+    elif command == 'q':
       break
     else:
       print("Unknown command or incomplete entries.")
