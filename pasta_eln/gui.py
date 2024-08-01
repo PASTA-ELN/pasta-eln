@@ -23,7 +23,7 @@ from .GUI.form import Form
 from .GUI.projectGroup import ProjectGroup
 from .GUI.sidebar import Sidebar
 from .backend import Backend
-from .fixedStringsJson import shortcuts
+from .fixedStringsJson import shortcuts, CONF_FILE_NAME
 from .guiCommunicate import Communicate
 from .guiStyle import Action, ScrollMessageBox, showMessage, widgetAndLayout
 from .inputOutput import exportELN
@@ -174,7 +174,7 @@ class MainWindow(QMainWindow):
       dialogPG.exec()
     elif command[0] is Command.CHANGE_PG:
       self.backend.configuration['defaultProjectGroup'] = command[1]
-      with open(Path.home() / '.pastaELN.json', 'w', encoding='utf-8') as fConf:
+      with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as fConf:
         fConf.write(json.dumps(self.backend.configuration, indent=2))
       restart()
     elif command[0] is Command.SYNC:

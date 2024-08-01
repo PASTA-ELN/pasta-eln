@@ -9,6 +9,7 @@ from anytree import Node
 from pasta_eln import __version__, minisign
 from .backend import Backend
 from .miscTools import createDirName, generic_hash, flatten, hierarchy
+from .fixedStringsJson import CONF_FILE_NAME
 # to discuss
 # - genre:docType, simulation, experiment/measurement;  status = Done, finished
 # - category: project
@@ -516,7 +517,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
       keyPairRaw = minisign.KeyPair.generate()
       keyPair    = {'id':str(uuid.uuid4()), 'secret':bytes(keyPairRaw.secret_key).decode(), 'public':bytes(keyPairRaw.public_key).decode()}
       backend.configuration['signingKeyPair'] = keyPair
-      with open(Path.home()/'.pastaELN.json', 'w', encoding='utf-8') as fConf:
+      with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as fConf:
         fConf.write(json.dumps(backend.configuration,indent=2))
     keyPair = backend.configuration['signingKeyPair']
     secretKey = minisign.SecretKey.from_bytes(keyPair['secret'].encode())

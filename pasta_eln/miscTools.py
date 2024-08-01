@@ -8,6 +8,7 @@ from pathlib import Path
 from re import sub, match
 import platform
 from .handleDictionaries import dict2ul
+from .fixedStringsJson import CONF_FILE_NAME
 
 class Bcolors:
   """
@@ -318,10 +319,10 @@ def updateExtractorList(directory:Path) -> dict[str, Any]:
         extractorsAll[ending]=extractorsThis
                     #header not used for now
   #update configuration file
-  with open(Path.home()/'.pastaELN.json','r', encoding='utf-8') as f:
+  with open(Path.home()/CONF_FILE_NAME,'r', encoding='utf-8') as f:
     configuration = json.load(f)
   configuration['extractors'] = extractorsAll
-  with open(Path.home()/'.pastaELN.json','w', encoding='utf-8') as f:
+  with open(Path.home()/CONF_FILE_NAME,'w', encoding='utf-8') as f:
     f.write(json.dumps(configuration, indent=2))
   return extractorsAll
 

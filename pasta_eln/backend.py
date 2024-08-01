@@ -6,11 +6,10 @@ from threading import Thread
 from typing import Any, Optional, Union
 from urllib import request
 from .sqlite import SqlLiteDB
-from .fixedStringsJson import configurationGUI, defaultConfiguration
+from .fixedStringsJson import configurationGUI, defaultConfiguration, CONF_FILE_NAME
 from .handleDictionaries import diffDicts, fillDocBeforeCreate
 from .miscTools import camelCase, createDirName, generic_hash, upOut, outputString
 from .mixin_cli import CLI_Mixin
-
 
 class Backend(CLI_Mixin):
   """
@@ -44,7 +43,7 @@ class Backend(CLI_Mixin):
           - initViews (bool): initialize views at startup
           - resetDataHierarchy (bool): reset dataHierarchy on database from one on file
     """
-    configFileName = Path.home()/'.pastaELN_v3.json'
+    configFileName = Path.home()/CONF_FILE_NAME
     self.configuration = defaultConfiguration
     if configFileName.is_file():
       with open(configFileName,'r', encoding='utf-8') as confFile:

@@ -3,7 +3,7 @@ import os, platform, sys, json, shutil, logging
 from typing import Optional, Any, Callable
 from pathlib import Path
 from .backend import Backend
-from .fixedStringsJson import defaultConfiguration, configurationGUI
+from .fixedStringsJson import defaultConfiguration, configurationGUI, CONF_FILE_NAME
 from .miscTools import outputString, DummyProgressBar
 
 
@@ -24,7 +24,7 @@ def getOS() -> str:
 
 def createDefaultConfiguration(pathPasta:Optional[Path]=None) -> dict[str,Any]:
   '''
-  Create base of configuration file .pastaELN_v3.json
+  Create base of configuration file
   - basic project group
   - defaultProjectGroup
   - userID
@@ -61,7 +61,7 @@ def createDefaultConfiguration(pathPasta:Optional[Path]=None) -> dict[str,Any]:
 
 def configuration(command:str='test', pathPasta:Path=Path('')) -> str:
   '''
-  Check configuration file .pastaELN_v3.json for consistencies
+  Check configuration file for consistencies
 
   Args:
     command (str): 'test' or 'repair'
@@ -73,7 +73,7 @@ def configuration(command:str='test', pathPasta:Path=Path('')) -> str:
   logging.info('Configuration starting ...')
   output = ''
   try:
-    with open(Path.home()/'.pastaELN_v3.json','r', encoding='utf-8') as fConf:
+    with open(Path.home()/CONF_FILE_NAME,'r', encoding='utf-8') as fConf:
       conf = json.load(fConf)
   except Exception:
     output += '**INFO configuration file does not exist\n'
@@ -103,7 +103,7 @@ def configuration(command:str='test', pathPasta:Path=Path('')) -> str:
         else:
           output += outputString('text','error', f'No {k} in GUI part of config file')
   if command == 'repair':
-    with open(Path.home()/'.pastaELN_v3.json','w', encoding='utf-8') as f:
+    with open(Path.home()/CONF_FILE_NAME,'w', encoding='utf-8') as f:
       f.write(json.dumps(conf,indent=2))
   logging.info('Configuration ending')
   return output

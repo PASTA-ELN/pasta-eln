@@ -55,6 +55,8 @@ defaultDataHierarchyNode: dict[str, list[dict[str, str]]] = {
     {"name": "type"}
   ]}
 
+CONF_FILE_NAME = '.pastaELN_v3.json'
+
 defaultConfiguration: dict[str, Any] = {
   "defaultProjectGroup": "research",
   "userID": "$os.getlogin()$",

@@ -13,7 +13,7 @@ def dataHierarchy2Labels(dataHierarchy:dict[str,Any], tableFormat:dict[str,Any])
 
   Args:
      dataHierarchy (dict): data hierarchy
-     tableFormat (dict): tableFormat branch from .pastaELN.json
+     tableFormat (dict): tableFormat branch
 
   Returns:
      dict: dictionary
