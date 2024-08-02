@@ -319,13 +319,12 @@ def main() -> None:
   print('getOS        :', getOS())
   res = configuration()
   flagConfiguration = 'ERROR' in res
-  print('configuration:', res)
 
   print('Add "install" argument to install PASTA-ELN.')
   if len(sys.argv)>1 and 'install' in sys.argv:
     print('---- Create PASTA-ELN installation ----')
     if flagConfiguration:
-      print('repair  configuration:', configuration('repair'))
+      print('repair  configuration:', configuration('repair', 'pasta_data'))
   print('Add "example" argument to create example data.')
   if len(sys.argv)>1 and 'example' in sys.argv:
     print('---- Create Example data ----')
