@@ -2,6 +2,8 @@ name: PyTest&Coverage
 
 on:
   push:
+    branches:
+    - main
   pull_request:
     branches:
     - main
@@ -32,7 +34,7 @@ jobs:
       - name: Test with pytest
         run: |
           mkdir -p htmlcov
-          coverage run -m pytest -s --tb=short tests && coverage html -i -d htmlcov
+          coverage run -m pytest -s --tb=short testsAdvanced && coverage html -i -d htmlcov
         shell: bash
         env:
           QT_QPA_PLATFORM: "offscreen"
