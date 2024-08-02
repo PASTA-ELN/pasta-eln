@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [ "3.11" ]
+        python-version: [ "3.10", "3.11", "3.12" ]
 
     steps:
       - uses: actions/checkout@v3
@@ -32,7 +32,7 @@ jobs:
       - name: Test with pytest
         run: |
           mkdir -p htmlcov
-          coverage run -m pytest . && coverage html -i -d htmlcov
+          coverage run -m pytest -s --tb=short tests && coverage html -i -d htmlcov
         shell: bash
         env:
           QT_QPA_PLATFORM: "offscreen"

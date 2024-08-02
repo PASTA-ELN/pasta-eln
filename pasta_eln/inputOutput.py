@@ -537,7 +537,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
   return f'Success: exported {len(graph)} graph-nodes into file {fileName}'
 
 
-def testSignature(fileName:str) -> bool:
+def validateSignature(fileName:str) -> bool:
   """ Test if signature is valid
 
   Args:

@@ -526,7 +526,7 @@ class SqlLiteDB:
           self.cursor.execute("SELECT qrCodes.id, qrCodes.qrCode, main.name FROM qrCodes INNER JOIN main USING(id)")
         else:
           raise ValueError('Not implemented')
-      elif docType=='viewSHASUM':
+      elif docType=='viewSHAsum':
         if startKey is None:
           self.cursor.execute("SELECT id, shasum, name FROM main")
         else:
