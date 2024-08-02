@@ -324,7 +324,7 @@ def main() -> None:
   if len(sys.argv)>1 and 'install' in sys.argv:
     print('---- Create PASTA-ELN installation ----')
     if flagConfiguration:
-      print('repair  configuration:', configuration('repair', Path('pasta_data')))
+      print('repair  configuration:', configuration('repair'))
   print('Add "example" argument to create example data.')
   if len(sys.argv)>1 and 'example' in sys.argv:
     print('---- Create Example data ----')
