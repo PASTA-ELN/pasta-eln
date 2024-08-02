@@ -322,7 +322,7 @@ def main() -> None:
   print('---- Test PASTA-ELN installation----')
   print('--   if nothing reported: it is ok.')
   print('getOS        :', getOS())
-  res = configuration('test')
+  res = configuration('test','.')
   flagConfiguration = 'ERROR' in res
   print(res)
 
