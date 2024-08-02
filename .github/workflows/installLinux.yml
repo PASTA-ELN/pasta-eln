@@ -30,10 +30,11 @@ jobs:
         python3 -m pasta_eln.installationTools
     - name: Installation
       run: |
-        mkdir 'pasta_data'
         python3 -m pasta_eln.installationTools install pasta_data
         ls *
-        more .pastaELN_v3.json
+        echo '----------'
+        ls ~
+        more ~/.pastaELN_v3.json
     - name: Check installation - should NOT fail
       run: |
         python3 -m pasta_eln.installationTools
