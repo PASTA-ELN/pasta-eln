@@ -31,7 +31,6 @@ jobs:
     - name: Installation
       run: |
         python3 -m pasta_eln.installationTools install pasta_data
-        mkdir ~/pasta_data
         ls ~
         echo '----------'
         ls ~/pasta_data

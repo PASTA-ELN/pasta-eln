@@ -59,7 +59,7 @@ def createDefaultConfiguration(pathPasta:Optional[Path]=None) -> dict[str,Any]:
   return conf
 
 
-def configuration(command:str='test', pathPasta:Path=Path('')) -> str:
+def configuration(command:str, pathPasta:Path) -> str:
   '''
   Check configuration file for consistencies
 
@@ -72,6 +72,11 @@ def configuration(command:str='test', pathPasta:Path=Path('')) -> str:
   '''
   logging.info('Configuration starting ...')
   output = ''
+  if pathPasta.is_dir():
+    pathPasta = pathPasta.absolute()
+  else:
+    pathPasta = Path.home()/pathPasta
+    pathPasta.mkdir(exist_ok=True)
   try:
     with open(Path.home()/CONF_FILE_NAME,'r', encoding='utf-8') as fConf:
       conf = json.load(fConf)
@@ -317,7 +322,7 @@ def main() -> None:
   print('---- Test PASTA-ELN installation----')
   print('--   if nothing reported: it is ok.')
   print('getOS        :', getOS())
-  res = configuration()
+  res = configuration('test')
   flagConfiguration = 'ERROR' in res
   print(res)
 
