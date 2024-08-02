@@ -62,8 +62,8 @@ def use(filePath, style={'main':''}, saveFileName=None):
   maxSize = 400
   if max(image.size)>maxSize:
     scale = max(image.size)/maxSize
-    newSize = (np.array(image.size)/scale).astype(int)
-    logging.info('Scaling %s %s', scale, newSize)
+    newSize = tuple((np.array(image.size)/scale).astype(int))
+    logging.info('Scaling %s %s', scale, newSize, type(newSize))
     image = image.resize(newSize)
   figfile = BytesIO()
   image.save(figfile, format="PNG")
