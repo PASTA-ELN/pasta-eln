@@ -330,7 +330,6 @@ class SqlLiteDB:
         dict: json representation of updated document
     """
     dataNew['client'] = tracebackString(False, f'updateDoc:{docID}')
-    changesDB:dict[str,dict[str,str]] = {}
     changesDict:dict[str,str]         = {}
 
     # tags and qrCodes
@@ -358,7 +357,7 @@ class SqlLiteDB:
     cursor.execute(f"SELECT * FROM main WHERE id == '{docID}'")
     mainOld = dict(cursor.fetchone())
     mainOld['type']= mainOld['type'].split('/')
-    changesDB['main'] = {}
+    changesDB: dict[str,dict[str,str]] = {'main': {}}
     for key in ('name','user','type','dateModified','client','image','content','comment'):
       if key in mainNew and mainOld[key]!=mainNew[key]:
         changesDB['main'][key] = mainNew[key]
@@ -500,7 +499,7 @@ class SqlLiteDB:
       return df
     elif thePath=='viewHierarchy/viewHierarchy':
       self.cursor.execute(f"SELECT branches.id, branches.stack, branches.child, main.type, main.name, main.gui "\
-                          f"FROM branches INNER JOIN main USING(id) WHERE branches.stack LIKE '{startKey}%'")
+                          f"FROM branches INNER JOIN main USING(id) WHERE branches.stack LIKE '{startKey}%'   ORDER BY branches.stack")
       results = self.cursor.fetchall()
       # value: [child, doc['-type'], doc['.name'], doc['-gui']]
       results = [{'id':i[0], 'key':i[1].replace('/',' '), 'value':[i[2], i[3].split('/'), i[4], [j=='T' for j in i[5]]]} for i in results]
@@ -525,8 +524,7 @@ class SqlLiteDB:
         if startKey is None:
           self.cursor.execute("SELECT qrCodes.id, qrCodes.qrCode, main.name FROM qrCodes INNER JOIN main USING(id)")
         else:
-          print("HHEUOEUOU")
-          a = 77/0
+          raise ValueError('Not implemented')
       elif docType=='viewSHASUM':
         if startKey is None:
           self.cursor.execute("SELECT id, shasum, name FROM main")
@@ -538,7 +536,7 @@ class SqlLiteDB:
       results = [{'id':i[0], 'key':i[1].replace('/',' '), 'value':i[2]} for i in results if i[1] is not None]
     else:
       print('continue here with view', thePath, startKey, preciseKey)
-      a = 4/0
+      raise ValueError('Not implemented')
     return results
 
 
@@ -554,6 +552,7 @@ class SqlLiteDB:
       Node: hierarchy in an anytree
     """
     view = self.getView('viewHierarchy/viewHierarchy',    startKey=start)
+    print('\n'.join([i['key'] for i in view]))
     # create tree of folders: these are the only ones that have children
     dataTree = None
     nonFolders = []
