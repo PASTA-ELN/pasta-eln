@@ -41,9 +41,10 @@ jobs:
     - name: Create example data
       run: |
         python3 -m pasta_eln.installationTools example
-    # - name: Run tests
-    #   run: |
-    #     coverage run -m pytest -s --tb=short tests && coverage html -i -d htmlcov
+        ls ~/pasta_data/*
+    - name: Run tests
+      run: |
+        coverage run -m pytest -s --tb=short tests && coverage html -i -d htmlcov
     - name: Upload log
       uses: actions/upload-artifact@v3
       with:
