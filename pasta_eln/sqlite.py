@@ -25,6 +25,7 @@ from .miscTools import outputString, hierarchy, camelCase, tracebackString
 # - LATER change configuration to sqlite
 # - do not work on replicator: use eln file there
 # - at the end: create a translator: old save doc
+# TODO: check branches in db: why are some stacks so short?
 
 # Benefits:
 # - easy installation
