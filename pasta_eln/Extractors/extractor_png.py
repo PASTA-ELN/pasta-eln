@@ -17,7 +17,7 @@ This tutorial teaches
 - how to create images and scale them down to save space in the meta-data-base
 - since this is a tutorial, it might not make scientific sense. The goal is teaching!
 """
-import base64
+import base64, logging
 from io import BytesIO
 import numpy as np
 from PIL import Image, ImageFilter
@@ -54,7 +54,6 @@ def use(filePath, style={'main':''}, saveFileName=None):
   metaUser   = [{'key':'imageWidth',  'value':image.size[0], 'unit':'mm', 'label':'Largeur de l`image', 'IRI':'http://purl.allotrope.org/ontologies/result#AFR_0002468'},
                 {'key':'imageHeight', 'value':f'{image.size[1]}+/- 3', 'unit':'mm', 'label':'Höhe des Bildes','IRI':'http://purl.allotrope.org/ontologies/result#AFR_0002467'}
                ]
-
   # save to file: this is the high quality image
   if saveFileName is not None:
     image.save(saveFileName)
@@ -63,11 +62,23 @@ def use(filePath, style={'main':''}, saveFileName=None):
   maxSize = 400
   if max(image.size)>maxSize:
     scale = max(image.size)/maxSize
-    image = image.resize( (np.array(image.size)/scale).astype(int) )
+    newSize = (np.array(image.size)/scale).astype(int)
+    logging.info('Scaling %s %s', scale, newSize)
+    image = image.resize(newSize)
   figfile = BytesIO()
   image.save(figfile, format="PNG")
   imageB64 = base64.b64encode(figfile.getvalue()).decode()
   imageB64 = f"data:image/png;base64,{imageB64}"
+
+# TODO
+# Traceback (most recent call last):
+#   File "/home/runner/work/pasta-eln/pasta-eln/pasta_eln/backend.py", line 479, in useExtractors
+#     content = module.use(absFilePath, {'main':'/'.join(doc['type'])} )
+#   File "/home/runner/work/pasta-eln/pasta-eln/pasta_eln/Extractors/extractor_png.py", line 66, in use
+#     image = image.resize( (np.array(image.size)/scale).astype(int) )
+#   File "/opt/hostedtoolcache/Python/3.10.14/x64/lib/python3.10/site-packages/PIL/Image.py", line 2297, in resize
+#     if self.size == size and box == (0, 0) + self.size:
+# ValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()
 
   # return everything
   return {'image':imageB64, 'style':style, 'metaVendor':metaVendor, 'metaUser':metaUser}
