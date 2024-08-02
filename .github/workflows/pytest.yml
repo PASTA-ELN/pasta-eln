@@ -28,7 +28,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements-linux.txt
-          pip install pytest pytest-asyncio pytest-qt pytest-qt-app pytest-mock coverage aiohttp
+          pip install pytest pytest-asyncio pytest-qt pytest-qt-app pytest-mock coverage aiohttp cloudant
       - name: Test with pytest
         run: |
           mkdir -p htmlcov
