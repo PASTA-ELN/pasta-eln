@@ -41,7 +41,7 @@ jobs:
     - name: Create example data
       run: |
         python3 -m pasta_eln.installationTools example
-        ls ~/pasta_data/*
+        tree ~/pasta_data
     - name: Run tests
       run: |
         coverage run -m pytest -s --tb=short tests && coverage html -i -d htmlcov

@@ -24,7 +24,8 @@ def use(filePath, style={'main':''}, saveFileName=None):
   maxSize = 400
   if max(image.size)>maxSize:
     scale = max(image.size)/maxSize
-    image = image.resize( (np.array(image.size)/scale).astype(int) )
+    newSize = (int(image.size[0]/scale), int(image.size[1]/scale))
+    image = image.resize(newSize)
   metaVendor = image.info
   if 'exif' in metaVendor:
     metaVendor['exif'] = re.sub(r'[^\x20-\x7F]','', metaVendor['exif'].decode('utf-8', errors='ignore'))
