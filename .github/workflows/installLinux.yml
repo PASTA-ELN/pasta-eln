@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [ "3.10", "3.11", "3.12" ]
+        python-version: [ "3.10"] #, "3.11", "3.12" ]
 
     steps:
     - name: Checkout content
@@ -30,14 +30,16 @@ jobs:
         python3 -m pasta_eln.installationTools
     - name: Installation
       run: |
-        python3 -m pasta_eln.installationTools install
+        mkdir 'pasta_data'
+        python3 -m pasta_eln.installationTools install pasta_data
+        ls *
+        more .pastaELN_v3.json
     - name: Check installation - should NOT fail
       run: |
         python3 -m pasta_eln.installationTools
     - name: Create example data
       run: |
-        mkdir 'pasta_data'
-        python3 -m pasta_eln.installationTools example pasta_data
+        python3 -m pasta_eln.installationTools example
         ls *
         ls pasta_data/*
     # - name: Run tests

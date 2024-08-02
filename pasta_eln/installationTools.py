@@ -319,6 +319,7 @@ def main() -> None:
   print('getOS        :', getOS())
   res = configuration()
   flagConfiguration = 'ERROR' in res
+  print(res)
 
   print('Add "install" argument to install PASTA-ELN.')
   if len(sys.argv)>2 and 'install' in sys.argv:
