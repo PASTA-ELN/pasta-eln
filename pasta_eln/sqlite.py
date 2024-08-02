@@ -531,7 +531,7 @@ class SqlLiteDB:
         else:
           self.cursor.execute(f"SELECT id, shasum, name FROM main WHERE shasum='{startKey}'")
       else:
-        print('strange docType')
+        raise ValueError('Invalid docType')
       results = self.cursor.fetchall()
       results = [{'id':i[0], 'key':i[1].replace('/',' '), 'value':i[2]} for i in results if i[1] is not None]
     else:
