@@ -32,8 +32,7 @@ jobs:
       - name: Test with pytest
         run: |
           mkdir -p htmlcov
-          chmod +x ./run_tests.sh
-          ./run_tests.sh
+          coverage run -m pytest . && coverage html -i -d htmlcov
         shell: bash
         env:
           QT_QPA_PLATFORM: "offscreen"
