@@ -27,20 +27,20 @@ jobs:
         pip install coverage pytest
     - name: Check installation - should fail
       run: |
-        python3 -m pasta_eln.installationTools
+        coverage run -m pasta_eln.installationTools
     - name: Installation
       run: |
-        python3 -m pasta_eln.installationTools install pasta_data
+        coverage run -a -m pasta_eln.installationTools install pasta_data
         ls ~
         echo '----------'
         ls ~/pasta_data
         more ~/.pastaELN_v3.json
     - name: Check installation - should NOT fail
       run: |
-        python3 -m pasta_eln.installationTools
+        coverage run -a -m pasta_eln.installationTools
     - name: Create example data
       run: |
-        coverage run -m pasta_eln.installationTools example
+        coverage run -a -m pasta_eln.installationTools example
         tree ~/pasta_data
     - name: Run tests
       run: |
