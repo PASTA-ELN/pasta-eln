@@ -1,4 +1,4 @@
-name: Verify Linux install
+name: Install and verify
 
 on:
   push:
@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [ "3.10"] #, "3.11", "3.12" ]
+        python-version: [ "3.10", "3.11", "3.12" ]
 
     steps:
     - name: Checkout content
@@ -44,10 +44,12 @@ jobs:
         tree ~/pasta_data
     - name: Run tests
       run: |
-        coverage run -m pytest -s --tb=short tests && coverage html -i -d htmlcov
+        coverage run -m pytest -s --tb=short tests
     - name: Upload log
       uses: actions/upload-artifact@v3
       with:
-        name: pastaELN.log
-        path: ~/pastaELN.log
+        name: artifact
+        path: |
+          ~/pastaELN.log
+          .coverage
       if: ${{ always() }}

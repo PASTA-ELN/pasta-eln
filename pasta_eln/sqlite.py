@@ -14,14 +14,13 @@ from .miscTools import outputString, hierarchy, camelCase, tracebackString
 # - try to use sqlite style as much as possible and
 #   translate within this file into PASTA-document-style
 #   - KEEP THE REST OF THE CODE THE SAME FOR NOW
-#   - ONCE WE ARE GETTING TO BETA: change _id, -name, ...
 # - start with first test: run-fix-run-fix
 #   - pytest --no-skip --tb=short tests/test_01_3Projects.py
 #   - start pasta with pudb
 #   - do an unit example for the sin-curve
 #   - give an example for attachment in datahierarchy: same table
-#   - TODO test gui, with now all requirements implemented
-#   -   if required extend functions in this file
+#   - TODO test and use gui, with now all requirements implemented
+#   - pyInstaller for windows
 # - LATER change configuration to sqlite
 # - do not work on replicator: use eln file there
 # - at the end: create a translator: old save doc
