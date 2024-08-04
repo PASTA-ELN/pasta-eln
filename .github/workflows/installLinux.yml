@@ -44,12 +44,12 @@ jobs:
         tree ~/pasta_data
     - name: Run tests
       run: |
-        coverage run -m pytest -s --tb=short tests
+        coverage run -m pytest -s --tb=short tests && coverage html -i -d htmlcov
     - name: Upload log
       uses: actions/upload-artifact@v3
       with:
         name: artifact
         path: |
           ~/pastaELN.log
-          .coverage
+          htmlcov/
       if: ${{ always() }}
