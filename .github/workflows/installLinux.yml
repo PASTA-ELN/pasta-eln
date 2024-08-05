@@ -50,6 +50,9 @@ jobs:
       run: |
         coverage run -a -m pytest -s --tb=short tests
         coverage html -i
+      shell: bash
+      env:
+        QT_QPA_PLATFORM: "offscreen"
     - name: Upload log
       uses: actions/upload-artifact@v3
       with:
