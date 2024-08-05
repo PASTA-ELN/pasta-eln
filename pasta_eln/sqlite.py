@@ -355,7 +355,7 @@ class SqlLiteDB:
     self.cursor.executemany("INSERT INTO qrCodes VALUES (?, ?);", zip([docID]*len(qrCodesNew), qrCodesNew))
     # separate into main and properties
     mainNew = {key: dataNew.pop(key) for key in KEY_ORDER if key in dataNew}
-    # handle properties
+    # TODO handle properties and branch
     print(dataNew, 'still to implement: handle')
     # handle main
     self.connection.row_factory = sqlite3.Row  #default None
