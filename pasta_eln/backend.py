@@ -577,7 +577,7 @@ class Backend(CLI_Mixin):
         report += outputString(outputStyle, 'error', traceback.format_exc(limit=3))
     if success:
       if 'recipe' in content:
-        possibleDocTypes = [i for i in self.db.dataLabels.keys() if i[0]!='x']
+        possibleDocTypes = [i for i in self.db.dataHierarchy('', '') if i[0]!='x']
         matches = [i for i in possibleDocTypes if content['recipe'].startswith(i)]
         if matches or content['recipe'] == '' or content['recipe'] == '-':
           report += outputString(outputStyle, 'info', 'Recipe is good: '+content['recipe'])
@@ -679,14 +679,15 @@ class Backend(CLI_Mixin):
     Returns:
         str: replication report
     """
-    defaultProjectGroup = self.configuration['defaultProjectGroup']
-    remoteConf = self.configuration['projectGroups'][defaultProjectGroup]['remote']
-    if not remoteConf: #empty entry: fails
-      print("**ERROR brp01: You tried to replicate although, remote is not defined")
-      return 'ERROR'
-    if 'cred' in remoteConf:
-      remoteConf['user'], remoteConf['password'] = upOut(remoteConf['cred'])[0].split(':')
-    return self.db.replicateDB(remoteConf, progressBar, removeAtStart)
+    # defaultProjectGroup = self.configuration['defaultProjectGroup']
+    # remoteConf = self.configuration['projectGroups'][defaultProjectGroup]['remote']
+    # if not remoteConf: #empty entry: fails
+    #   print("**ERROR brp01: You tried to replicate although, remote is not defined")
+    #   return 'ERROR'
+    # if 'cred' in remoteConf:
+    #   remoteConf['user'], remoteConf['password'] = upOut(remoteConf['cred'])[0].split(':')
+    # return self.db.replicateDB(remoteConf, progressBar, removeAtStart)
+    return 'NOT IMPLEMENTED YET'
 
 
   def checkDB(self, outputStyle:str='text', repair:bool=False, minimal:bool=False) -> str:

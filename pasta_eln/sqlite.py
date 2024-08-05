@@ -161,7 +161,7 @@ class SqlLiteDB:
       return json.loads(result[0])
     elif column=='view':
       return result[0].split(',')
-    return result[0]
+    return result
 
 
   def exit(self, deleteDB:bool=False) -> None:
@@ -456,7 +456,7 @@ class SqlLiteDB:
     return
 
 
-  def getView(self, thePath:str, startKey:Optional[str]=None, preciseKey:Optional[str]=None) -> list[dict[str,Any]]:
+  def getView(self, thePath:str, startKey:Optional[str]=None, preciseKey:Optional[str]=None) -> pd.DataFrame:
     """
     Wrapper for getting view function
 
@@ -470,7 +470,7 @@ class SqlLiteDB:
     """
     # allFlag = False
     if thePath.endswith('All'):
-      thePath = thePath[:-3]
+      thePath = thePath.removesuffix('All')
       # allFlag = True
       #TODO print('**info do something with all flag')
     viewType, docType = thePath.split('/')
@@ -614,8 +614,8 @@ class SqlLiteDB:
       docID (str): docID
       guiState (list): list of bool that show if document is shown
     """
-    guiState = ''.join(['T' if i else 'F' for i in guiState])
-    cmd = f"UPDATE main SET gui='{guiState}' WHERE id = '{docID}'"
+    guiList = ''.join(['T' if i else 'F' for i in guiState])
+    cmd = f"UPDATE main SET gui='{guiList}' WHERE id = '{docID}'"
     self.cursor.execute(cmd)
     self.connection.commit()
     return

@@ -77,7 +77,7 @@ class Project(QWidget):
     Action('Scan',                      self, [Command.SCAN], moreMenu)
     for doctype in self.comm.backend.db.dataHierarchy('', ''):
       if doctype[0]!='x':
-        icon = self.comm.backend.db.dataHierarchy(doctype, 'icon')
+        icon = self.comm.backend.db.dataHierarchy(doctype, 'icon')[0]
         icon = 'fa5s.asterisk' if icon=='' else icon
         Action(f'table of {doctype}',   self, [Command.SHOW_TABLE, doctype], moreMenu, icon=icon)
     Action('table of unidentified',     self, [Command.SHOW_TABLE, '-'],     moreMenu, icon='fa5.file')
@@ -300,7 +300,7 @@ class Project(QWidget):
       self.change('','')
     elif command[0] is Command.ADD_CHILD:
       self.comm.backend.cwd = self.comm.backend.basePath/self.docProj['branch'][0]['path']
-      title = self.comm.backend.db.dataHierarchy['x1']['title'].lower()[:-1]
+      title = self.comm.backend.db.dataHierarchy('x1','title')[0].lower()[:-1]
       self.comm.backend.addData('x1', {'name':f'new {title}'}, [self.projID])
       self.change('','') #refresh project
     elif command[0] is Command.SHOW_TABLE:

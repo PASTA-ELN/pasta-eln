@@ -69,7 +69,7 @@ class TreeView(QTreeView):
       docType= f'x{len(hierStack)}'
       docID = hierStack[-1]
       self.comm.backend.cwd = Path(self.comm.backend.db.getDoc(docID)['branch'][0]['path'])
-      label = self.comm.backend.db.dataHierarchy['x1']['title'].lower()[:-1]
+      label = self.comm.backend.db.dataHierarchy('x1','title')[0].lower()[:-1]
       docID = self.comm.backend.addData(docType, {'name':f'new {label}'}, hierStack)
       # append item to the GUI
       item  = self.model().itemFromIndex(self.currentIndex())                                                # type: ignore[attr-defined]
@@ -87,7 +87,7 @@ class TreeView(QTreeView):
       docType= f'x{len(hierStack)}'
       docID  = hierStack[-1]
       self.comm.backend.cwd = Path(self.comm.backend.db.getDoc(docID)['branch'][0]['path'])
-      label = self.comm.backend.db.dataHierarchy['x1']['title'].lower()[:-1]
+      label = self.comm.backend.db.dataHierarchy('x1','title')[0].lower()[:-1]
       docID = self.comm.backend.addData(docType, {'name':f'new {label}'}, hierStack)
       # append item to the GUI
       item  = self.model().itemFromIndex(self.currentIndex())                                                # type: ignore[attr-defined]

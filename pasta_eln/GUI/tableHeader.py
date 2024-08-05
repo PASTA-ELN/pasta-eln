@@ -21,10 +21,12 @@ class TableHeader(QDialog):
     self.comm = comm
     self.docType = docType
     self.db = self.comm.backend.db
-    self.selectedList = self.db.getColumnNames()[docType].split(',')
-    self.allSet = {i['name'] for group in self.db.dataHierarchy[docType]['meta']
-                   for i in self.db.dataHierarchy[docType]['meta'][group]}
-    self.allSet = self.allSet.union({'date','#_curated', 'type', 'name', 'comment', 'tags', 'image'})
+    self.selectedList = self.db.dataHierarchy(docType,'view')
+    # TODO get all keys connected to this docType
+    # self.allSet = {i['name'] for group in self.db.dataHierarchy(docType, [docType]['meta']
+    #                for i in self.db.dataHierarchy[docType]['meta'][group]}
+    # self.allSet = self.allSet.union({'date','#_curated', 'type', 'name', 'comment', 'tags', 'image'})
+    self.allSet = {'date','#_curated', 'type', 'name', 'comment', 'tags', 'image'} #for now
     #clean it
     self.allSet       = {i[1:] if i[0] in ['-','_'] else i for i in self.allSet}  #change -something to something
     self.selectedList = [i[1:] if i[0] in ['-','_'] else i for i in self.selectedList]  #change -something to something
@@ -101,8 +103,9 @@ class TableHeader(QDialog):
     elif btn.text().endswith('Save'):
       specialFields = ['name', 'type', 'tags', 'user', 'date']
       self.selectedList = [f'-{i}' if i in specialFields else i for i in self.selectedList]
-      self.db.initDocTypeViews(self.comm.backend.configuration['tableColumnsMax'], docTypeChange=self.docType,
-                               columnsChange=self.selectedList)
+      #TODO set new selectedList
+      # self.db.initDocTypeViews(self.comm.backend.configuration['tableColumnsMax'], docTypeChange=self.docType,
+      #                          columnsChange=self.selectedList)
       restart()
     elif btn.text().endswith('Help'):
       showMessage(self, 'Help on individual entry', tableHeaderHelp)

@@ -79,7 +79,7 @@ class ConfigurationSetup(QWidget):
             self.mainText = self.mainText.replace('- Configuration of preferences','- Configuration: user chose to INVALID folder' )
             self.text1.setMarkdown(self.mainText)
           else:
-            configuration('repair', Path(dirName))
+            configuration('repair', dirName)
         else:
           self.mainText = self.mainText.replace('- Configuration of preferences','- Configuration: user chose to NOT install' )
           self.text1.setMarkdown(self.mainText)

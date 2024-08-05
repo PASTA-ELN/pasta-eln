@@ -64,7 +64,7 @@ class MainWindow(QMainWindow):
       for docType, docLabel in self.comm.backend.db.dataHierarchy('', 'title'):
         if docType[0] == 'x' and docType[1] != '0':
           continue
-        shortcut = self.comm.backend.db.dataHierarchy(docType,'shortcut')
+        shortcut = self.comm.backend.db.dataHierarchy(docType,'shortcut')[0]
         shortcut = None if shortcut=='' else f"Ctrl+{shortcut}"
         Action(docLabel,                     self, [Command.VIEW, docType],  viewMenu, shortcut=shortcut)
         if docType == 'x0':
@@ -144,13 +144,13 @@ class MainWindow(QMainWindow):
         return
       fileName = QFileDialog.getSaveFileName(self, 'Save project into .eln file', str(Path.home()), '*.eln')[0]
       if fileName != '' and hasattr(self.backend, 'db'):
-        docTypes = [i for i in self.comm.backend.db.dataLabels.keys() if i[0]!='x']
+        docTypes = [i for i in self.comm.backend.db.dataHierarchy('','') if i[0]!='x']
         status = exportELN(self.comm.backend, [self.comm.projectID], fileName, docTypes)
         showMessage(self, 'Finished', status, 'Information')
     elif command[0] is Command.EXPORT_ALL:
       fileName = QFileDialog.getSaveFileName(self, 'Save everything to .eln file', str(Path.home()), '*.eln')[0]
       if fileName != '' and hasattr(self.backend, 'db'):
-        docTypes = [i for i in self.comm.backend.db.dataLabels.keys() if i[0]!='x']
+        docTypes = [i for i in self.comm.backend.db.dataHierarchy('','') if i[0]!='x']
         allProjects = [i['id'] for i in self.comm.backend.db.getView('viewDocType/x0')]
         status = exportELN(self.comm.backend, allProjects, fileName, docTypes)
         showMessage(self, 'Finished', status, 'Information')

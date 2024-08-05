@@ -74,9 +74,9 @@ class Form(QDialog):
     else:
       dataHierarchyNode = copy.deepcopy(defaultDataHierarchyNode)
     keysDataHierarchy = [f"{i['class']}.{i['name']}" for i in dataHierarchyNode]
-    keysDoc = [[str(x) for x in (f'{k}.{k1}' for k1 in self.doc[k].keys())] if isinstance(self.doc[k], dict) else [f'.{k}']
+    keysDocOrg = [[str(x) for x in (f'{k}.{k1}' for k1 in self.doc[k].keys())] if isinstance(self.doc[k], dict) else [f'.{k}']
                for k in self.doc.keys() if k not in KEY_ORDER+['branch','qrCodes','tags']]
-    keysDoc = [i for row in keysDoc for i in row]   #flatten
+    keysDoc = [i for row in keysDocOrg for i in row]   #flatten
     for keyInDocNotHierarchy in set(keysDoc).difference(keysDataHierarchy):
       group = keyInDocNotHierarchy.split('.')[0]
       key = keyInDocNotHierarchy.split('.')[1]
@@ -92,7 +92,7 @@ class Form(QDialog):
 
     # create forms by looping
     self.formsL = []
-    self.allUserElements = []
+    self.allUserElements:list[tuple[str,str]] = []
     for group in groups:
       if len(groups)==1:
         _, formL = widgetAndLayoutForm(splitter, 's')
@@ -228,7 +228,7 @@ class Form(QDialog):
         if allowProjectAndDocTypeChange: #if not-new and non-folder
           self.docTypeComboBox = QComboBox()
           self.docTypeComboBox.addItem(label, userData='')
-          for key, value in self.db.dataHierarchy('', 'title').items():
+          for key, value in self.db.dataHierarchy('', 'title'):
             if key[0]!='x':
               self.docTypeComboBox.addItem(value, userData=key)
           self.docTypeComboBox.addItem('_UNIDENTIFIED_', userData='-')
@@ -507,13 +507,13 @@ class Form(QDialog):
     elif command[0] is Command.FORM_ADD_KV:
       self.keyValueLabel.show()
       self.keyValueListW.show()
-      key = QLineEdit('')
-      key.setPlaceholderText('key')
-      key.setToolTip('Key (leave empty to delete key-value pair)')
-      key.setValidator(QRegularExpressionValidator("[a-zA-Z0-9]\\S+"))
+      keyLabel = QLineEdit('')
+      keyLabel.setPlaceholderText('key')
+      keyLabel.setToolTip('Key (leave empty to delete key-value pair)')
+      keyLabel.setValidator(QRegularExpressionValidator("[a-zA-Z0-9]\\S+"))
       value = QLineEdit('')
       value.setPlaceholderText('value')
-      self.keyValueListL.addRow(key, value)
+      self.keyValueListL.addRow(keyLabel, value)
     elif command[0] is Command.FORM_SHOW_DOC:
       doc = copy.deepcopy(self.doc)
       if 'image' in doc:

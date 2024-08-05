@@ -4,6 +4,7 @@ import re, logging
 from enum import Enum
 from pathlib import Path
 from typing import Any
+import pandas as pd
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QTableView, QFileDialog, QMessageBox, QHeaderView, QLineEdit, QComboBox, QMenu # pylint: disable=no-name-in-module
 from PySide6.QtCore import Qt, Slot, QSortFilterProxyModel, QModelIndex       # pylint: disable=no-name-in-module
 from PySide6.QtGui import QStandardItemModel, QStandardItem            # pylint: disable=no-name-in-module
@@ -26,7 +27,7 @@ class Table(QWidget):
     comm.changeTable.connect(self.change)
     comm.stopSequentialEdit.connect(self.stopSequentialEditFunction)
     self.stopSequentialEdit = False
-    self.data:list[dict[str,Any]] = []
+    self.data:pd.DataFrame = pd.DataFrame()
     self.models:list[QSortFilterProxyModel] = []
     self.docType = ''
     self.projID = ''
@@ -134,7 +135,7 @@ class Table(QWidget):
         self.actionChangeColums.setVisible(False)
       else:
         self.actionChangeColums.setVisible(True)
-        docLabel = self.comm.backend.db.dataHierarchy(self.docType,'title')
+        docLabel = self.comm.backend.db.dataHierarchy(self.docType,'title')[0]
       if self.projID:
         self.headline.setText(docLabel)
         self.showHidden.setText(f'Show/hide hidden {docLabel.lower()}')

@@ -47,13 +47,12 @@ defaultDefinitions: list[list[Union[str,int]]] = [
   ["instrument/extension","",3,  "vendor", "Who is the vendor?",                  "",   "",  "",        ""],
 ]
 
-defaultDataHierarchyNode: dict[str, list[dict[str, str]]] = {
-  "default": [
+defaultDataHierarchyNode: list[dict[str, str]] = [
     {"name": "name", "query": "What is the file name?"},
     {"name": "tags"},
     {"name": "comment", "query": "What are the comments?"},
     {"name": "type"}
-  ]}
+  ]
 
 CONF_FILE_NAME = '.pastaELN_v3.json'
 

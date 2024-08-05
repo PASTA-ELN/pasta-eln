@@ -57,23 +57,23 @@ def createDefaultConfiguration(pathPasta:Optional[Path]=None) -> dict[str,Any]:
   return conf
 
 
-def configuration(command:str, pathPasta:Path) -> str:
+def configuration(command:str, pathData:str) -> str:
   '''
   Check configuration file for consistencies
 
   Args:
     command (str): 'test' or 'repair'
-    pathPasta (Path): path to install pasta in (Windows)
+    pathPasta (Path): path to use for data
 
   Returns:
     string: ''=success, else error messages
   '''
   logging.info('Configuration starting ...')
   output = ''
-  if Path(pathPasta).is_dir():
-    pathPasta = Path(pathPasta).absolute()
+  if Path(pathData).is_dir():
+    pathPasta = Path(pathData).absolute()
   else:
-    pathPasta = Path.home()/pathPasta
+    pathPasta = Path.home()/pathData
     pathPasta.mkdir(exist_ok=True)
   try:
     with open(Path.home()/CONF_FILE_NAME,'r', encoding='utf-8') as fConf:
@@ -329,7 +329,7 @@ def main() -> None:
     print('---- Create PASTA-ELN installation ----')
     print(sys.argv)
     if flagConfiguration:
-      print('repair  configuration:', configuration('repair', Path(sys.argv[2]) ))
+      print('repair  configuration:', configuration('repair', sys.argv[2] ))
   print('Add "example" argument to create example data.')
   if len(sys.argv)>1 and 'example' in sys.argv:
     print('---- Create Example data ----')
