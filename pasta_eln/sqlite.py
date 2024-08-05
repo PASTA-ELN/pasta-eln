@@ -25,7 +25,6 @@ from .miscTools import outputString, hierarchy, camelCase, tracebackString
 #   - do more tests and more coverage
 # - LATER change configuration to sqlite
 # - do not work on replicator: use eln file there
-# - clean this code by using cmd to sql-commands
 # TODO: check branches in db: why are some stacks so short?
 
 # Benefits:
@@ -41,8 +40,8 @@ from .miscTools import outputString, hierarchy, camelCase, tracebackString
 #   - see if I use the first letter of the docID
 #   -> such long integers are not supported by sqlite: stay with string/text
 
-KEY_ORDER   =    ['id' , 'name','user','type','dateCreated','dateModified','gui',       'client','shasum','image','content','comment','externalId']
-KEY_TYPE    =    ['TEXT','TEXT','TEXT','TEXT','TEXT',       'TExT',       'varchar(2)','TEXT',  'TEXT',  'TEXT', 'TEXT',   'TEXT',    'TEXT']
+KEY_ORDER=['id'  ,'name','user','type','dateCreated','dateModified','gui',      'client','shasum','image','content','comment','externalId']
+KEY_TYPE =['TEXT','TEXT','TEXT','TEXT','TEXT',       'TEXT',        'varchar(2)','TEXT',  'TEXT',  'TEXT', 'TEXT',   'TEXT',   'TEXT']
 DATA_HIERARCHY = ['docType', 'IRI','title','icon','shortcut','view']
 DEFINITIONS =    ['docType','class','idx', 'name', 'query', 'unit', 'IRI', 'mandatory', 'list']
 
@@ -206,10 +205,11 @@ class SqlLiteDB:
                              'child': dataI[3],
                              'path':  None if dataI[4] == '*' else dataI[4],
                              'show':   [i=='T' for i in dataI[5]]})
-    self.cursor.execute(f"SELECT properties.key, properties.value, properties.unit, propDefinitions.long, propDefinitions.IRI, "
-                        f"definitions.unit, definitions.query, definitions.IRI FROM properties LEFT JOIN propDefinitions USING(key) "
-                        f"LEFT JOIN definitions ON properties.key = (definitions.class || '.' || definitions.name) "
-                        f"WHERE properties.id == '{docID}'")
+    cmd = "SELECT properties.key, properties.value, properties.unit, propDefinitions.long, propDefinitions.IRI, " \
+          "definitions.unit, definitions.query, definitions.IRI FROM properties LEFT JOIN propDefinitions USING(key) "\
+          "LEFT JOIN definitions ON properties.key = (definitions.class || '.' || definitions.name) "\
+          f"WHERE properties.id == '{docID}'"
+    self.cursor.execute(cmd)
     res = self.cursor.fetchall()
     metadataFlat:dict[str, tuple[str,str,str,str]] = {i[0]:(i[1],
                           ('' if i[2] is None else i[2])+('' if i[5] is None else i[5]),
@@ -228,7 +228,8 @@ class SqlLiteDB:
         'name': 'G200X',
         'user': 'somebody',
         'type': ['instrument'],
-        'branch': {'stack': ['x-9f74f79c96754d4c9065435ddd466c56', 'x-04b5e323d3ae4364bcd310a3e5fd653e'], 'child': 9999, 'path': None, 'show': [True, True, True], 'op': 'c'},
+        'branch': {'stack': ['x-9f74f79c96754d4c9065435ddd466c56', 'x-04b5e323d3ae4364bcd310a3e5fd653e'],
+                  'child': 9999, 'path': None, 'show': [True, True, True], 'op': 'c'},
         'id': 'i-180212be6c7d4365ac647f266c5698f1',
         'externalId': '',
         'dateCreated': '2024-07-31T22:03:39.530666',
@@ -268,7 +269,8 @@ class SqlLiteDB:
     self.cursor.executemany("INSERT INTO tags VALUES (?, ?);", zip([doc['id']]*len(doc['tags']), doc['tags']))
     del doc['tags']
     if 'qrCode' in doc:
-      self.cursor.executemany("INSERT INTO qrCodes VALUES (?, ?);", zip([doc['id']]*len(doc['qrCode']), doc['qrCode']))
+      cmd = "INSERT INTO qrCodes VALUES (?, ?);"
+      self.cursor.executemany(cmd, zip([doc['id']]*len(doc['qrCode']), doc['qrCode']))
       del doc['qrCode']
     if 'content' in doc and len(doc['content'])>200:
       doc['content'] = doc['content'][:200]
@@ -290,18 +292,20 @@ class SqlLiteDB:
           label  = key[:-len(unit)-2].strip()
           key    = camelCase(label)
           key    = key[0].lower()+key[1:]
-          self.cursor.execute("INSERT INTO properties VALUES (?, ?, ?, ?);", [doc['id'], parentKeys+key, str(value), unit])
-          self.cursor.execute("INSERT INTO propDefinitions VALUES (?, ?, ?);", [parentKeys+key, label, ''])
+          cmd = "INSERT INTO properties VALUES (?, ?, ?, ?);"
+          self.cursor.execute(cmd, [doc['id'], parentKeys+key, str(value), unit])
+          cmd = "INSERT INTO propDefinitions VALUES (?, ?, ?);"
+          self.cursor.execute(cmd, [parentKeys+key, label, ''])
         elif isinstance(value, list) and isinstance(value[0], dict) and value[0].keys() >= {"key", "value", "unit"}:
-          self.cursor.executemany("INSERT INTO properties VALUES (?, ?, ?, ?);", zip([doc['id']]*len(value),
-                                                                                   [parentKeys+key+'.'+i['key'] for i in value],
-                                                                                   [i['value'] for i in value],
-                                                                                   [i['unit'] for i in value]  ))
-          self.cursor.executemany("INSERT INTO propDefinitions VALUES (?, ?, ?);", zip([parentKeys+key+'.'+i['key'] for i in value],
-                                                                                   [i['label'] for i in value],
-                                                                                   [i['IRI'] for i in value]  ))
+          cmd = "INSERT INTO properties VALUES (?, ?, ?, ?);"
+          self.cursor.executemany(cmd, zip([doc['id']]*len(value),      [parentKeys+key+'.'+i['key'] for i in value],
+                                           [i['value'] for i in value], [i['unit'] for i in value]  ))
+          cmd = "INSERT INTO propDefinitions VALUES (?, ?, ?);"
+          self.cursor.executemany(cmd, zip([parentKeys+key+'.'+i['key'] for i in value],
+                                           [i['label'] for i in value], [i['IRI'] for i in value]  ))
         else:
-          self.cursor.execute("INSERT INTO properties VALUES (?, ?, ?, ?);", [doc['id'], parentKeys+key, str(value), ''])
+          cmd = "INSERT INTO properties VALUES (?, ?, ?, ?);"
+          self.cursor.execute(cmd, [doc['id'], parentKeys+key, str(value), ''])
       return
     metaDoc = {k:v for k,v in doc.items() if k not in KEY_ORDER}
     insertMetadata(metaDoc, '')
@@ -342,7 +346,7 @@ class SqlLiteDB:
       self.cursor.execute(f"DELETE FROM tags WHERE id == '{docID}' and tag == '{tag}'")
     tagsNew = tagsNew.difference(tagsOld)
     self.cursor.executemany("INSERT INTO tags VALUES (?, ?);", zip([docID]*len(tagsNew), tagsNew))
-    qrCodesNew= set(dataNew.pop('qrCodes'))
+    qrCodesNew= set(dataNew.pop('qrCodes', []))
     self.cursor.execute(f"SELECT qrCode FROM qrCodes WHERE id == '{docID}'")
     qrCodesOld= {i[0] for i in self.cursor.fetchall()}
     for qrCode in qrCodesOld.difference(qrCodesNew):
@@ -436,7 +440,8 @@ class SqlLiteDB:
       name (str): description of attachment location
       docType (str): document type what can be attached. Use empty string if these are remarks, i.e. no items are attached
     """
-    self.cursor.execute("INSERT INTO attachments VALUES (?,?,?,?,?,?)", [docID, name, '', docType, '', ''])
+    cmd = "INSERT INTO attachments VALUES (?,?,?,?,?,?)"
+    self.cursor.execute(cmd, [docID, name, '', docType, '', ''])
     self.connection.commit()
     return
 
@@ -451,7 +456,8 @@ class SqlLiteDB:
         content (dict): dictionary of content to be added (should include user,date,docID,remark)
 
     """
-    self.cursor.execute("INSERT INTO attachments VALUES (?,?,?,?,?,?)", [docID, name, content['date'], content['docID'], content['remark'], content['user']])
+    cmd = "INSERT INTO attachments VALUES (?,?,?,?,?,?)"
+    self.cursor.execute(cmd, [docID, name, content['date'], content['docID'], content['remark'], content['user']])
     self.connection.commit()
     return
 
@@ -484,10 +490,9 @@ class SqlLiteDB:
       metadataKeys  = [f'properties.key == "{i}"' for i in viewColumns if i not in KEY_ORDER+['tags']]
       if metadataKeys:
         textSelect += ', properties.key, properties.value'
-      text    = f'SELECT {textSelect} FROM main LEFT JOIN tags USING(id) LEFT JOIN qrCodes USING(id) '\
-                f'INNER JOIN branches USING(id) LEFT JOIN properties USING(id) '\
-                f'WHERE main.type LIKE "{docType}%"'
-      df      = pd.read_sql_query(text, self.connection)
+      cmd = f"SELECT {textSelect} FROM main LEFT JOIN tags USING(id) LEFT JOIN qrCodes USING(id) "\
+            f"INNER JOIN branches USING(id) LEFT JOIN properties USING(id) WHERE main.type LIKE '{docType}%'"
+      df      = pd.read_sql_query(cmd, self.connection)
       allCols = list(df.columns)
       if 'image' in viewColumns:
         df['image'] = str(len(df['image'])>1)
@@ -501,37 +506,44 @@ class SqlLiteDB:
         columnNames = [i for i in df.columns if i not in ('key','value')]
         df = df.pivot(index=columnNames, columns='key', values='value').reset_index()  # Pivot the DataFrame
         df.columns.name = None                                                         # Flatten the columns
-      columnOrder = ['tag' if i=='tags' else 'qrCode' if i=='qrCodes' else i[1:] if i.startswith('.') and i[1:] in KEY_ORDER else i for i in viewColumns]
+      columnOrder = ['tag' if i=='tags' else 'qrCode' if i=='qrCodes'
+                     else i[1:] if i.startswith('.') and i[1:] in KEY_ORDER else i for i in viewColumns]
       df = df.reindex(columnOrder, axis=1)
       df = df.rename(columns={i:i[1:] for i in columnOrder if i.startswith('.') })
       df = df.astype('str').fillna('')
       return df
     elif thePath=='viewHierarchy/viewHierarchy':
-      self.cursor.execute(f"SELECT branches.id, branches.stack, branches.child, main.type, main.name, main.gui "\
-                          f"FROM branches INNER JOIN main USING(id) WHERE branches.stack LIKE '{startKey}%'   ORDER BY branches.stack")
+      cmd = "SELECT branches.id, branches.stack, branches.child, main.type, main.name, main.gui "\
+            f"FROM branches INNER JOIN main USING(id) WHERE branches.stack LIKE '{startKey}%' ORDER BY branches.stack"
+      self.cursor.execute(cmd)
       results = self.cursor.fetchall()
       # value: [child, doc['-type'], doc['.name'], doc['-gui']]
-      results = [{'id':i[0], 'key':i[1].replace('/',' '), 'value':[i[2], i[3].split('/'), i[4], [j=='T' for j in i[5]]]} for i in results]
+      results = [{'id':i[0], 'key':i[1].replace('/',' '),
+                  'value':[i[2], i[3].split('/'), i[4], [j=='T' for j in i[5]]]} for i in results]
     elif thePath=='viewHierarchy/viewPaths':
       # JOIN and get type
       if startKey is not None:
         print('**ERROR NOT IMPLEMENTED')
       elif preciseKey is not None:
-        self.cursor.execute(f"SELECT branches.id, branches.path, branches.stack, main.type, branches.child, main.shasum "\
-                            f"FROM branches INNER JOIN main USING(id) WHERE branches.path LIKE '{preciseKey}'")
+        cmd = "SELECT branches.id, branches.path, branches.stack, main.type, branches.child, main.shasum "\
+              f"FROM branches INNER JOIN main USING(id) WHERE branches.path LIKE '{preciseKey}'"
+        self.cursor.execute(cmd)
       else:
-        cmd = "SELECT branches.id, branches.path, branches.stack, main.type, branches.child, main.shasum FROM branches INNER JOIN main USING(id)"
+        cmd = "SELECT branches.id, branches.path, branches.stack, main.type, branches.child, main.shasum "\
+              "FROM branches INNER JOIN main USING(id)"
         self.cursor.execute(cmd)
       results = self.cursor.fetchall()
       # value: [branch.stack, doc['-type'], branch.child, doc.shasum,idx]
-      results = [{'id':i[0], 'key':i[1], 'value':[i[2].replace('/',' '), i[3].split('/'), i[4], i[5]]} for i in results if i[1] is not None]
+      results = [{'id':i[0], 'key':i[1],
+                  'value':[i[2].replace('/',' '), i[3].split('/'), i[4], i[5]]} for i in results if i[1] is not None]
     elif viewType=='viewIdentify' and docType=='viewTags':
       self.cursor.execute("SELECT * FROM tags")
       results = self.cursor.fetchall()
     elif viewType=='viewIdentify':
       if docType=='viewQR':
         if startKey is None:
-          self.cursor.execute("SELECT qrCodes.id, qrCodes.qrCode, main.name FROM qrCodes INNER JOIN main USING(id)")
+          cmd = "SELECT qrCodes.id, qrCodes.qrCode, main.name FROM qrCodes INNER JOIN main USING(id)"
+          self.cursor.execute(cmd)
         else:
           raise ValueError('Not implemented')
       elif docType=='viewSHAsum':
@@ -649,7 +661,9 @@ class SqlLiteDB:
       outString += '</div>'
     outString+= outputString(outputStyle,'h2','List all database entries')
     # tests
-    self.cursor.execute("SELECT id, main.type, branches.stack, branches.path, branches.child, branches.show FROM branches INNER JOIN main USING(id)")
+    cmd = "SELECT id, main.type, branches.stack, branches.path, branches.child, branches.show "\
+          "FROM branches INNER JOIN main USING(id)"
+    self.cursor.execute(cmd)
     res = self.cursor.fetchall()
     for row in res:
       try:
@@ -682,7 +696,8 @@ class SqlLiteDB:
         elif not minimal:
           outString+= outputString(outputStyle,'perfect',f"procedure/sample with empty path {docID}")
       else:                                                    #if sensible path
-        if len(stack.split('/')) != len(path.split(os.sep)) and path!='*' and not path.startswith('http'): #check if length of path and stack coincide; ignore path=None=*
+        if len(stack.split('/')) != len(path.split(os.sep)) and path!='*' and not path.startswith('http'):
+          #check if length of path and stack coincide; ignore path=None=*
           if docType.startswith('procedure'):
             if not minimal:
               outString+= outputString(outputStyle,'perfect',f"procedure: branch stack and path lengths not equal: {docID}")
@@ -694,7 +709,7 @@ class SqlLiteDB:
             parentDocBranches = parentDoc['branch']
             onePathFound = any(path.startswith(parentBranch['path']) for parentBranch in parentDocBranches)
             if not onePathFound and (not docType.startswith('procedure') or not minimal):
-              outString+= outputString(outputStyle,'unsure',f"dch08: parent does not have corresponding path (remote content) {docID} | parentID {parentID}")
+              outString+= outputString(outputStyle,'unsure',f"dch08: parent does not have corresponding path (remote) {docID} | parentID {parentID}")
 
     #doc-type specific tests
     self.cursor.execute("SELECT qrCodes.id, qrCodes.qrCode FROM qrCodes JOIN main USING(id) WHERE  main.type LIKE 'sample%'")

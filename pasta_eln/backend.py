@@ -107,7 +107,7 @@ class Backend(CLI_Mixin):
     self.hierStack = doc['branch'][0]['stack']+[doc['id']]
     doc['childNum']= doc['branch'][0]['child']
     # change content
-    self.addData('-edit-', doc)
+    doc = self.addData('-edit-', doc)
     # change folder-name in database of all children
     if doc['type'][0][0]=='x' and self.cwd is not None:
       items = self.db.getView('viewHierarchy/viewPaths',
@@ -138,7 +138,7 @@ class Backend(CLI_Mixin):
 
 
   def addData(self, docType:str, doc:dict[str,Any], hierStack:list[str]=[], localCopy:bool=False,
-              forceNewImage:bool=False) -> str:
+              forceNewImage:bool=False) -> dict[str,Any]:
     """
     Save doc to database, also after edit
 
@@ -282,7 +282,7 @@ class Backend(CLI_Mixin):
         (self.basePath/path).mkdir(exist_ok=True)   #if exist, create again; moving not necessary since directory moved in changeHierarchy
       with open(self.basePath/path/'.id_pastaELN.json','w', encoding='utf-8') as f:  #local path, update in any case
         f.write(json.dumps(doc))
-    return doc['id']
+    return doc
 
 
   ######################################################
@@ -388,7 +388,7 @@ class Backend(CLI_Mixin):
               (self.basePath/path).rename(self.basePath/newPath)
           self.db.updateBranch(doc['id'], 0, childNum, hierStack, newPath)
         else:
-          currentID = self.addData(f'x{len(hierStack)}', {'name': dirName}, hierStack)
+          currentID = self.addData(f'x{len(hierStack)}', {'name': dirName}, hierStack)['id']
           newDir = self.basePath/self.db.getDoc(currentID)['branch'][0]['path']
           (newDir/'.id_pastaELN.json').rename(self.basePath/root/dirName/'.id_pastaELN.json') #move index file into old folder
           newDir.rmdir()                     #remove created path

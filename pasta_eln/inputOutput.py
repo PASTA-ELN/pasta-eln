@@ -262,7 +262,7 @@ def importELN(backend:Backend, elnFileName:str) -> str:
           nonlocal projPWD
           if docType == 'x1' and projID == '':
             print(f'  Want to created project name:{renameELN.get(elnName, elnName)}')
-            projID = backend.addData('x0', {'-name':f'Imported project of {renameELN.get(elnName, elnName)} '})
+            projID = backend.addData('x0', {'-name':f'Imported project of {renameELN.get(elnName, elnName)} '})['id']
             backend.changeHierarchy(projID)
             projPWD= Path(backend.cwd)
             backend.hierStack = [projID]
@@ -279,7 +279,7 @@ def importELN(backend:Backend, elnFileName:str) -> str:
         if '_id' in doc:
           doc['externalID'] = doc.pop('_id')
         print(f'Want to add doc:{doc} with type:{docType} and cwd:{backend.cwd}')
-        docID = backend.addData(docType, doc)
+        docID = backend.addData(docType, doc)['id']
         if docID[0]=='x':
           backend.hierStack += [docID]
           backend.cwd        = backend.basePath/ backend.db.getDoc(docID)['-branch'][0]['path']

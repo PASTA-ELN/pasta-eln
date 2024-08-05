@@ -72,16 +72,17 @@ class TestStringMethods(unittest.TestCase):
 
       self.be.changeHierarchy(projID1)
       self.be.addData('x1',    {'comment': 'This is hard! #TODO ', 'name': 'Get steel and Al-powder'})
-      currentID = self.be.addData('x1',    {'comment': 'This will take a long time. #WAIT #_curated', 'name': 'Get spray machine'})
+      currentID = self.be.addData('x1',    {'comment': 'This will take a long time. #WAIT #_curated',
+                                            'name': 'Get spray machine'})['id']
       self.be.changeHierarchy(currentID)
       self.be.addData('x2',    {'name': 'Get quotes', 'comment': 'Dont forget company-A #_1 '})
       self.be.addData('x2',    {'name': 'Buy machine','comment': 'Delivery time will be 6month #_3 '})
       self.be.changeHierarchy(None)
-      semStepID = self.be.addData('x1',    {'name': 'SEM images'})
+      semStepID = self.be.addData('x1',    {'name': 'SEM images'})['id']
       self.be.changeHierarchy(semStepID)
       semDirName = self.be.basePath/self.be.cwd
       self.be.changeHierarchy(None)
-      currentID = self.be.addData('x1',    {'name': 'Nanoindentation'})
+      currentID = self.be.addData('x1',    {'name': 'Nanoindentation'})['id']
       outputString(outputFormat,'info',self.be.outputHierarchy())
 
       ### TEST PROCEDURES

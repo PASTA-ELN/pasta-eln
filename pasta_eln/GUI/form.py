@@ -82,7 +82,7 @@ class Form(QDialog):
       key = keyInDocNotHierarchy.split('.')[1]
       idx = len([1 for i in dataHierarchyNode if i['class']==group])
       dataHierarchyNode.append({'docType': self.doc['type'][0], 'class':group, 'idx':idx, 'name':key, 'list':''})
-    groups = {i['class'] for i in dataHierarchyNode}
+    groups = {i['class'] for i in dataHierarchyNode}.difference({'metaVendor','metaUser'})
     # create tabs or not: depending on the number of groups
     self.tabW = QTabWidget() #has count=0 if not connected
     if len(groups)>1:
@@ -491,7 +491,6 @@ class Form(QDialog):
           doc.update( self.doc )
           self.comm.backend.editData(doc)
       elif 'id' in self.doc:                             # default update on item
-        print(self.doc, 'make sure type included and clean') #TODO
         self.comm.backend.editData(self.doc)
       else:                                               # create new dataset
         self.comm.backend.addData(self.doc['type'][0], copy.deepcopy(self.doc), newProjID)
