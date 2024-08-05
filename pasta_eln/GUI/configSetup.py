@@ -67,7 +67,7 @@ class ConfigurationSetup(QWidget):
     """
     if command[0] is Command.ANALYSE:
       #Configuration
-      res = configuration('test')
+      res = configuration('test', '')
       if res =='':
         self.mainText = self.mainText.replace('- Configuration of preferences','- Configuration of preferences is acceptable' )
         self.text1.setMarkdown(self.mainText)

@@ -9,7 +9,8 @@ from ..guiCommunicate import Communicate
 from ..guiStyle import getColor
 from ..miscTools import markdownStyler
 
-DO_NOT_RENDER = ['image','content','metaVendor','metaUser','shasum','type','branch','gui','dateCreated','dateModified','id','user','tags','name','comment']
+DO_NOT_RENDER = ['image','content','metaVendor','metaUser','shasum','type','branch','gui','dateCreated',
+                 'dateModified','id','user','tags','name','comment','externalId','client']
 
 class ProjectLeafRenderer(QStyledItemDelegate):
   """ renders each leaf of project tree using QPaint """

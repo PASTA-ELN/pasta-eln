@@ -59,22 +59,21 @@ def couchDB2SQLite(userName:str='', password:str='', database:str='', path:str='
     doc['branch'] = doc['branch'][0] | {'op':'c'} if doc['branch'] else \
                     {'stack':[], 'child':9999, 'path':None, 'show':[True], 'op':'c'}
     del doc['_rev']
+    attachments = doc.pop('_attachments',[])
     # save
     doc = fillDocBeforeCreate(doc, doc['type'])
     db.saveDoc(doc)
-    if '_attachments' in doc:
-      for att in doc['_attachments']:
-        docAttach = requests.get(f'http://{location}:5984/{database}/{docID}/{att}',
-                                  headers=headers, auth=authUser, timeout=10).json()
-        setAll = set(docAttach.keys())
-        setImportant  = setAll.difference({'-date','date','-client','image','type','-type','client','-name','-branch','branch'})
-        if not setImportant or ('-name' in docAttach and docAttach['-name']=='new folder'):
-          continue
-        print(setImportant)
-        date = docAttach['-date'] if '-date' in docAttach else docAttach['date'] if 'date' in docAttach else att
-        if '-client' in docAttach:
-          del docAttach['-client']
-        db.cursor.execute("INSERT INTO changes VALUES (?,?,?)", [docID, date, json.dumps(docAttach)])
+    for att in attachments:
+      docAttach = requests.get(f'http://{location}:5984/{database}/{docID}/{att}',
+                                headers=headers, auth=authUser, timeout=10).json()
+      setAll = set(docAttach.keys())
+      setImportant  = setAll.difference({'-date','date','-client','image','type','-type','client','-name','-branch','branch'})
+      if not setImportant or ('-name' in docAttach and docAttach['-name']=='new folder'):
+        continue
+      date = docAttach['-date'] if '-date' in docAttach else docAttach['date'] if 'date' in docAttach else att
+      if '-client' in docAttach:
+        del docAttach['-client']
+      db.cursor.execute("INSERT INTO changes VALUES (?,?,?)", [docID, date, json.dumps(docAttach)])
       db.connection.commit()
   return
 

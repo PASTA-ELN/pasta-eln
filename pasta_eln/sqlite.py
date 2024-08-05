@@ -21,9 +21,11 @@ from .miscTools import outputString, hierarchy, camelCase, tracebackString
 #   - give an example for attachment in datahierarchy: same table
 #   - TODO test and use gui, with now all requirements implemented
 #   - pyInstaller for windows
+#   - write a better default example
+#   - do more tests and more coverage
 # - LATER change configuration to sqlite
 # - do not work on replicator: use eln file there
-# - at the end: create a translator: old save doc
+# - clean this code by using cmd to sql-commands
 # TODO: check branches in db: why are some stacks so short?
 
 # Benefits:
@@ -427,6 +429,13 @@ class SqlLiteDB:
 
 
   def initAttachment(self, docID:str, name:str, docType:str) -> None:
+    """ initialize an attachment by defining its name and type
+
+    Args:
+      docID (str): document / instrument on which attachments are installed
+      name (str): description of attachment location
+      docType (str): document type what can be attached. Use empty string if these are remarks, i.e. no items are attached
+    """
     self.cursor.execute("INSERT INTO attachments VALUES (?,?,?,?,?,?)", [docID, name, '', docType, '', ''])
     self.connection.commit()
     return
@@ -459,10 +468,10 @@ class SqlLiteDB:
     Returns:
         df: data-frame with human-readable column names
     """
-    allFlag = False
+    # allFlag = False
     if thePath.endswith('All'):
       thePath = thePath[:-3]
-      allFlag = True
+      # allFlag = True
       #TODO print('**info do something with all flag')
     viewType, docType = thePath.split('/')
     if viewType=='viewDocType':
@@ -511,8 +520,8 @@ class SqlLiteDB:
         self.cursor.execute(f"SELECT branches.id, branches.path, branches.stack, main.type, branches.child, main.shasum "\
                             f"FROM branches INNER JOIN main USING(id) WHERE branches.path LIKE '{preciseKey}'")
       else:
-        self.cursor.execute(f"SELECT branches.id, branches.path, branches.stack, main.type, branches.child, main.shasum "\
-                            f"FROM branches INNER JOIN main USING(id)")
+        cmd = "SELECT branches.id, branches.path, branches.stack, main.type, branches.child, main.shasum FROM branches INNER JOIN main USING(id)"
+        self.cursor.execute(cmd)
       results = self.cursor.fetchall()
       # value: [branch.stack, doc['-type'], branch.child, doc.shasum,idx]
       results = [{'id':i[0], 'key':i[1], 'value':[i[2].replace('/',' '), i[3].split('/'), i[4], i[5]]} for i in results if i[1] is not None]
@@ -552,7 +561,6 @@ class SqlLiteDB:
       Node: hierarchy in an anytree
     """
     view = self.getView('viewHierarchy/viewHierarchy',    startKey=start)
-    print('\n'.join([i['key'] for i in view]))
     # create tree of folders: these are the only ones that have children
     dataTree = None
     nonFolders = []
@@ -606,7 +614,11 @@ class SqlLiteDB:
       docID (str): docID
       guiState (list): list of bool that show if document is shown
     """
-    raise ValueError('Not implemented SET GUI')
+    guiState = ''.join(['T' if i else 'F' for i in guiState])
+    cmd = f"UPDATE main SET gui='{guiState}' WHERE id = '{docID}'"
+    self.cursor.execute(cmd)
+    self.connection.commit()
+    return
 
 
   def checkDB(self, outputStyle:str='text', minimal:bool=False) -> str:
@@ -618,7 +630,6 @@ class SqlLiteDB:
 
     Args:
         outputStyle (str): output using a given style: see outputString
-        repair (bool): repair database
         minimal (bool): true=only show warnings and errors; else=also show information
 
     Returns:
@@ -642,48 +653,48 @@ class SqlLiteDB:
     res = self.cursor.fetchall()
     for row in res:
       try:
-        id, docType, stack, path, child, _ = row[0], row[1], row[2], row[3], row[4], row[5]
+        docID, docType, stack, path, child, _ = row[0], row[1], row[2], row[3], row[4], row[5]
       except ValueError:
-        outString+= outputString(outputStyle,'error',f"dch03a: branch data has strange list {id}")
+        outString+= outputString(outputStyle,'error',f"dch03a: branch data has strange list {docID}")
         continue
       if len(docType.split('/'))==0:
-        outString+= outputString(outputStyle,'unsure',f"dch04: no type in (removed data?) {id}")
+        outString+= outputString(outputStyle,'unsure',f"dch04: no type in (removed data?) {docID}")
         continue
       if not all(k.startswith('x-') for k in stack.split('/')[:-1]):
-        outString+= outputString(outputStyle,'error',f"dch03: non-text in stack in id: {id}")
+        outString+= outputString(outputStyle,'error',f"dch03: non-text in stack in id: {docID}")
       if any(len(i)==0 for i in stack) and not docType.startswith('x0'): #if no inheritance
         if docType.startswith(('measurement','x')):
-          outString+= outputString(outputStyle,'warning',f"branch stack length = 0: no parent {id}")
+          outString+= outputString(outputStyle,'warning',f"branch stack length = 0: no parent {docID}")
         elif not minimal:
-          outString+= outputString(outputStyle,'ok',f"branch stack length = 0: no parent for procedure/sample {id}")
+          outString+= outputString(outputStyle,'ok',f"branch stack length = 0: no parent for procedure/sample {docID}")
       try:
         dirNamePrefix = path.split(os.sep)[-1].split('_')[0]
         if dirNamePrefix.isdigit() and child!=int(dirNamePrefix): #compare child-number to start of directory name
-          outString+= outputString(outputStyle,'error',f"dch05: child-number and dirName dont match {id}")
+          outString+= outputString(outputStyle,'error',f"dch05: child-number and dirName dont match {docID}")
       except Exception:
         pass  #handled next lines
       if path is None:
         if docType.startswith('x'):
-          outString+= outputString(outputStyle,'error',f"dch06: branch path is None {id}")
+          outString+= outputString(outputStyle,'error',f"dch06: branch path is None {docID}")
         elif docType.startswith('measurement'):
           if not minimal:
-            outString+= outputString(outputStyle,'ok', f'measurement branch path is None=no data {id}')
+            outString+= outputString(outputStyle,'ok', f'measurement branch path is None=no data {docID}')
         elif not minimal:
-          outString+= outputString(outputStyle,'perfect',f"procedure/sample with empty path {id}")
+          outString+= outputString(outputStyle,'perfect',f"procedure/sample with empty path {docID}")
       else:                                                    #if sensible path
         if len(stack.split('/')) != len(path.split(os.sep)) and path!='*' and not path.startswith('http'): #check if length of path and stack coincide; ignore path=None=*
           if docType.startswith('procedure'):
             if not minimal:
-              outString+= outputString(outputStyle,'perfect',f"procedure: branch stack and path lengths not equal: {id}")
+              outString+= outputString(outputStyle,'perfect',f"procedure: branch stack and path lengths not equal: {docID}")
           else:
-            outString+= outputString(outputStyle,'unsure',f"branch stack and path lengths not equal: {id}")
+            outString+= outputString(outputStyle,'unsure',f"branch stack and path lengths not equal: {docID}")
         if path!='*' and not path.startswith('http'):
           for parentID in stack.split('/')[:-1]:            #check if all parents in doc have a corresponding path
             parentDoc = self.getDoc(parentID)
             parentDocBranches = parentDoc['branch']
             onePathFound = any(path.startswith(parentBranch['path']) for parentBranch in parentDocBranches)
             if not onePathFound and (not docType.startswith('procedure') or not minimal):
-              outString+= outputString(outputStyle,'unsure',f"dch08: parent does not have corresponding path (remote content) {id} | parentID {parentID}")
+              outString+= outputString(outputStyle,'unsure',f"dch08: parent does not have corresponding path (remote content) {docID} | parentID {parentID}")
 
     #doc-type specific tests
     self.cursor.execute("SELECT qrCodes.id, qrCodes.qrCode FROM qrCodes JOIN main USING(id) WHERE  main.type LIKE 'sample%'")
@@ -691,23 +702,23 @@ class SqlLiteDB:
       outString+= outputString(outputStyle,'warning',f"dch09: qrCode not in samples {res}")
     self.cursor.execute("SELECT id, shasum, image FROM main WHERE  type LIKE 'measurement%'")
     for row in self.cursor.fetchall():
-      id, shasum, image = row
+      docID, shasum, image = row
       if shasum is None:
-        outString+= outputString(outputStyle,'warning',f"dch10: shasum not in measurement {id}")
+        outString+= outputString(outputStyle,'warning',f"dch10: shasum not in measurement {docID}")
       if image.startswith('data:image'):  #for jpg and png
         try:
           imgData = base64.b64decode(image[22:])
           Image.open(io.BytesIO(imgData))  #can convert, that is all that needs to be tested
         except Exception:
-          outString+= outputString(outputStyle,'error',f"dch12: jpg-image not valid {id}")
+          outString+= outputString(outputStyle,'error',f"dch12: jpg-image not valid {docID}")
       elif image.startswith('<?xml'):
         #from https://stackoverflow.com/questions/63419010/check-if-an-image-file-is-a-valid-svg-file-in-python
         SVG_R = r'(?:<\?xml\b[^>]*>[^<]*)?(?:<!--.*?-->[^<]*)*(?:<svg|<!DOCTYPE svg)\b'
         SVG_RE = re.compile(SVG_R, re.DOTALL)
         if SVG_RE.match(image) is None:
-          outString+= outputString(outputStyle,'error',f"dch13: svg-image not valid {id}")
+          outString+= outputString(outputStyle,'error',f"dch13: svg-image not valid {docID}")
       elif image in ('', None):
-        outString+= outputString(outputStyle,'unsure',f"image not valid {id} {image}")
+        outString+= outputString(outputStyle,'unsure',f"image not valid {docID} {image}")
       else:
-        outString+= outputString(outputStyle,'error',f"dch14: image not valid {id} {image}")
+        outString+= outputString(outputStyle,'error',f"dch14: image not valid {docID} {image}")
     return outString

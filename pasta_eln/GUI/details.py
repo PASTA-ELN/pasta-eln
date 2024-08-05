@@ -3,9 +3,8 @@ import logging
 from enum import Enum
 from pathlib import Path
 from typing import Any
-
-from PySide6.QtWidgets import QScrollArea, QLabel, QTextEdit, QTextBrowser  # pylint: disable=no-name-in-module
-from PySide6.QtCore import Qt, Slot # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QScrollArea, QLabel, QTextEdit  # pylint: disable=no-name-in-module
+from PySide6.QtCore import Qt, Slot                           # pylint: disable=no-name-in-module
 from ..guiStyle import TextButton, Image, Label, showMessage, widgetAndLayout, getColor
 from ._contextMenu import initContextMenu, executeContextMenu, CommandMenu
 from ..fixedStringsJson import defaultDataHierarchyNode
@@ -13,7 +12,10 @@ from ..guiCommunicate import Communicate
 from ..handleDictionaries import dict2ul
 from ..miscTools import markdownStyler
 
-CSS_STYLE = '<style> ul {list-style-type: none; padding-left: 0; margin: 0;} a:link {text-decoration: none;} a:visited {text-decoration: none;} a:hover {text-decoration: none;} a:active {text-decoration: none;} </style>'
+CSS_STYLE = """
+<style> ul {list-style-type: none; padding-left: 0; margin: 0;} a:link {text-decoration: none;}
+a:visited {text-decoration: none;} a:hover {text-decoration: none;} a:active {text-decoration: none;} </style>
+"""
 PASTA_DETAILS = ['shasum','type','branch','gui','dateCreated','dateModified','id','user']
 
 class Details(QScrollArea):
@@ -245,18 +247,6 @@ class Details(QScrollArea):
     self.comm.changeDetails.emit(docID)
     return
 
-  def mousePressEvent(self, e):
-      print('here1')
-      # self.anchor = self.anchorAt(e.pos())
-      # if self.anchor:
-      #     # QApplication.setOverrideCursor(Qt.PointingHandCursor)
-
-  def mouseReleaseEvent(self, e):
-      print('here2')
-      # if self.anchor:
-      #     # QDesktopServices.openUrl(QUrl(self.anchor))
-      #     # QApplication.setOverrideCursor(Qt.ArrowCursor)
-      #     self.anchor = None
 
   def resizeWidth(self, width:int) -> None:
     """ called if details is resized by splitter at the parent widget

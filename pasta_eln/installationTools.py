@@ -30,8 +30,6 @@ def createDefaultConfiguration(pathPasta:Optional[Path]=None) -> dict[str,Any]:
   - userID
 
   Args:
-    user (str): user name (for windows)
-    password (str): password (for windows)
     pathPasta (Path): place to store pasta data
 
   Returns:

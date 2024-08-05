@@ -179,8 +179,8 @@ class Form(QDialog):
           if len(dataHierarchyItem)==1:
             if dataHierarchyItem[0]['list']: #choice dropdown
               setattr(self, elementName, QComboBox())
-              if isinstance(dataHierarchyItem[0]['list'], list):            #dataHierarchy-defined choices
-                getattr(self, elementName).addItems(dataHierarchyItem[0]['list'])
+              if ',' in dataHierarchyItem[0]['list']:                  #dataHierarchy-defined choices
+                getattr(self, elementName).addItems(dataHierarchyItem[0]['list'].split(','))
               else:                                                    #choice among docType
                 listDocType = dataHierarchyItem[0]['list']
                 getattr(self, elementName).addItem('- no link -', userData='')
