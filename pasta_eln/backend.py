@@ -220,7 +220,7 @@ class Backend(CLI_Mixin):
               shasum  = generic_hash(path)
             except Exception:
               print('**ERROR bad01: fetch remote content failed. Data not added')
-              return ''
+              return {'id':''}
         elif doc['name']!='' and (self.basePath/doc['name']).is_file():          #file exists
           path = self.basePath/doc['name']
           doc['name'] = Path(doc['name']).name
@@ -276,7 +276,7 @@ class Backend(CLI_Mixin):
         if not (self.basePath/oldPath).is_dir():
           print(f'**WARNING: addData edit of folder should have oldPath and that should exist:{oldPath}'
                 f'\n This can be triggered if user moved the folder.')
-          return ''
+          return  {'id':''}
         (self.basePath/oldPath).rename(self.basePath/path)
       else:
         (self.basePath/path).mkdir(exist_ok=True)   #if exist, create again; moving not necessary since directory moved in changeHierarchy

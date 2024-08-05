@@ -63,7 +63,7 @@ def configuration(command:str, pathData:str) -> str:
 
   Args:
     command (str): 'test' or 'repair'
-    pathPasta (Path): path to use for data
+    pathData (Path): path to use for data
 
   Returns:
     string: ''=success, else error messages
