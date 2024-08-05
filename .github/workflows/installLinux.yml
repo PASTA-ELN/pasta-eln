@@ -53,11 +53,6 @@ jobs:
       shell: bash
       env:
         QT_QPA_PLATFORM: "offscreen"
-    - name: Find files
-      run: |
-        tree .
-        tree ~
-        tree \tmp\
     - name: Upload log
       uses: actions/upload-artifact@v3
       with:

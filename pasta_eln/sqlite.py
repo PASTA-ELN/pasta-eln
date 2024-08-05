@@ -25,7 +25,7 @@ from .miscTools import outputString, hierarchy, camelCase, tracebackString
 #   - do more tests and more coverage
 # - LATER change configuration to sqlite
 # - do not work on replicator: use eln file there
-# TODO: check branches in db: why are some stacks so short?
+# TODO: check branches in db: why are some stacks so short in main project group
 
 # Benefits:
 # - easy installation
@@ -612,6 +612,33 @@ class SqlLiteDB:
 
     Args:
       stack (list, str): stack of docID; docID (str)
+    """
+    #TODO
+    """
+    flippedOnce = False #prevent forward-backward flipping
+    if isinstance(stack, str):  #do first document itself
+      doc = self.db[stack]
+      for idx, _ in enumerate(doc['-branch']):  #check all branches
+        doc['-branch'][idx]['show'][-1] = not doc['-branch'][idx]['show'][-1]
+        logging.debug('flipped str: %s',str(stack))
+      doc.save()
+      if stack[0]=='x':
+        stack = doc['-branch'][0]['stack']+[stack]  #create full stack of children
+      flippedOnce = True
+    if isinstance(stack, list):
+      iFlip = len(stack)-1
+      logging.debug('  database list %s %s',str(stack),str(iFlip))
+      for item in self.getView('viewHierarchy/viewHierarchyAll', startKey=' '.join(stack)):
+        logging.debug('  docID: %s',item['id'])
+        doc = self.db[item['id']]
+        for idx, branch in enumerate(doc['-branch']):
+          if not flippedOnce or iFlip!=len(branch['stack']):
+            doc['-branch'][idx]['show'][iFlip] = not doc['-branch'][idx]['show'][iFlip]
+        doc.save()
+    # not sure this is needed anymore
+    if doc['-type'][0][0]=='x':
+      with open(self.basePath/doc['-branch'][0]['path']/'.id_pastaELN.json','w', encoding='utf-8') as fOut:
+        fOut.write(json.dumps(doc))
     """
     raise ValueError('Not implemented HIDE/SHOW')
 

@@ -23,7 +23,6 @@ class TestStringMethods(unittest.TestCase):
     """
     main function
     """
-    #TODO check if test successful
     dummyProgressBar = DummyProgressBar()
     outputFormat = 'print'
     # initialization: create database, destroy on filesystem and database and then create new one

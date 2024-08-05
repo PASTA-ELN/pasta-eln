@@ -69,16 +69,6 @@ def use(filePath, style={'main':''}, saveFileName=None):
   imageB64 = base64.b64encode(figfile.getvalue()).decode()
   imageB64 = f"data:image/png;base64,{imageB64}"
 
-# TODO
-# Traceback (most recent call last):
-#   File "/home/runner/work/pasta-eln/pasta-eln/pasta_eln/backend.py", line 479, in useExtractors
-#     content = module.use(absFilePath, {'main':'/'.join(doc['type'])} )
-#   File "/home/runner/work/pasta-eln/pasta-eln/pasta_eln/Extractors/extractor_png.py", line 66, in use
-#     image = image.resize( (np.array(image.size)/scale).astype(int) )
-#   File "/opt/hostedtoolcache/Python/3.10.14/x64/lib/python3.10/site-packages/PIL/Image.py", line 2297, in resize
-#     if self.size == size and box == (0, 0) + self.size:
-# ValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()
-
   # return everything
   return {'image':imageB64, 'style':style, 'metaVendor':metaVendor, 'metaUser':metaUser}
 
