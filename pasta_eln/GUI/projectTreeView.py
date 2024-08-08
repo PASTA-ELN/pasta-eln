@@ -133,8 +133,8 @@ class TreeView(QTreeView):
       item.setData({ **item.data(), **{'gui':gui}})
       self.comm.backend.db.setGUI(docID, gui)
     elif command[0] is Command.HIDE:
-      logging.debug('hide stack %s',str(hierStack))
-      self.comm.backend.db.hideShow(hierStack)
+      logging.debug('hide document %s',hierStack[-1])
+      self.comm.backend.db.hideShow(hierStack[-1])
       # self.comm.changeProject.emit('','') #refresh project
       # after hide, do not hide immediately but wait on next refresh
     elif command[0] is Command.OPEN_EXTERNAL or command[0] is Command.OPEN_FILEBROWSER:

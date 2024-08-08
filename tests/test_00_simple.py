@@ -10,8 +10,12 @@ def test_simple(qtbot):
   # click in the Greet button and make sure it updates the appropriate label
   qtbot.mouseClick(window.sidebar, Qt.LeftButton)
   #
-  path = qtbot.screenshot(window) # saved in /tmp/pytest-of-steffen/pytest-0/test_simple0/
+  path = qtbot.screenshot(window)
+  # saved in
+  #   /tmp/pytest-of-steffen/pytest-0/test_simple0/
+  #   /tmp/pytest-of-runner/pytest-0/test_simple0/screenshot_MainWindow.png
   print(path)
   # lximage-qt /tmp/pytest-of-steffen/pytest-1/test_simple0/screenshot_MainWindow.png
+
 
   # assert widget.greet_label.text() == "Hello!"

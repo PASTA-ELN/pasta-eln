@@ -138,7 +138,7 @@ def dataHierarchy_pre_to_V4(dataHierarchy: dict[str, Any]) -> None:
   """ Translate old dataHierarchy version to version 4
 
   Based on work of Jithu Murugan
-  # TODO remove
+  # TODO remove since not required anymore
 
   Args:
       dataHierarchy (dict[str, Any]): dataHierarchy

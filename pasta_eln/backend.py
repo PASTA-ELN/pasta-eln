@@ -128,7 +128,7 @@ class Backend(CLI_Mixin):
       doc (dict):  parents documents
     """
     oldPathParts = item['key'].split('/')
-    newPathParts = doc['branch']['path'].split('/')
+    newPathParts = doc['branch'][0]['path'].split('/')
     newPath = '/'.join(newPathParts+oldPathParts[len(newPathParts):]  )
     if newPath != item['key']:  # for-loop could also be implemented in parallel
       # print(item['id']+'  old='+item['key']+'  branch='+str(item['value'][-1])+\

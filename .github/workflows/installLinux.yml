@@ -60,4 +60,5 @@ jobs:
         path: |
           ~/pastaELN.log
           htmlcov/
+          /tmp/pytest-of-runner/pytest-0/
       if: ${{ always() }}

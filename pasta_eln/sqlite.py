@@ -10,7 +10,15 @@ from .fixedStringsJson import defaultDataHierarchy, defaultDefinitions
 from .miscTools import outputString, hierarchy, camelCase, tracebackString
 
 # DO NOT WORK ON THIS IF THERE IS SOMETHING ON THE TODO LIST
-# Notes:
+# List:
+# 1. use Yourself: verify CW33
+# 2. create final example data: attachments, two branches, history CW34
+# 3. do GUI work CW35
+# 4. pyInstaller for windows CW36
+# 5. .eln-file  CW37/38
+# 6. sync elabFTW CW39/40
+#
+# OLD NOTES
 # - try to use sqlite style as much as possible and
 #   translate within this file into PASTA-document-style
 #   - KEEP THE REST OF THE CODE THE SAME FOR NOW
@@ -19,12 +27,13 @@ from .miscTools import outputString, hierarchy, camelCase, tracebackString
 #   - start pasta with pudb
 #   - do an unit example for the sin-curve
 #   - give an example for attachment in datahierarchy: same table
-#   - TODO test and use gui, with now all requirements implemented
+#   - test and use gui, with now all requirements implemented
 #   - pyInstaller for windows
 #   - write a better default example
 #   - do more tests and more coverage
 # - LATER change configuration to sqlite
 # - do not work on replicator: use eln file there
+# - think about more mapping
 # TODO: check branches in db: why are some stacks so short in main project group
 
 # Benefits:
@@ -218,7 +227,6 @@ class SqlLiteDB:
     doc |= hierarchy(metadataFlat)
     return doc
 
-
   def saveDoc(self, doc:dict[str,Any]) -> dict[str,Any]:
     """
     Save to database
@@ -281,7 +289,6 @@ class SqlLiteDB:
     self.cursor.execute(f"INSERT INTO main VALUES ({', '.join(['?']*len(docList))})", docList)
     doc = {k:v for k,v in doc.items() if (k not in KEY_ORDER and k[1:] not in KEY_ORDER) or k == 'id'}
 
-    # properties
     def insertMetadata(data:dict[str,Any], parentKeys:str) -> None:
       parentKeys = f'{parentKeys}.' if parentKeys else ''
       for key,value in data.items():
@@ -299,14 +306,15 @@ class SqlLiteDB:
         elif isinstance(value, list) and isinstance(value[0], dict) and value[0].keys() >= {"key", "value", "unit"}:
           cmd = "INSERT INTO properties VALUES (?, ?, ?, ?);"
           self.cursor.executemany(cmd, zip([doc['id']]*len(value),      [parentKeys+key+'.'+i['key'] for i in value],
-                                           [i['value'] for i in value], [i['unit'] for i in value]  ))
+                                            [i['value'] for i in value], [i['unit'] for i in value]  ))
           cmd = "INSERT INTO propDefinitions VALUES (?, ?, ?);"
           self.cursor.executemany(cmd, zip([parentKeys+key+'.'+i['key'] for i in value],
-                                           [i['label'] for i in value], [i['IRI'] for i in value]  ))
+                                            [i['label'] for i in value], [i['IRI'] for i in value]  ))
         else:
           cmd = "INSERT INTO properties VALUES (?, ?, ?, ?);"
           self.cursor.execute(cmd, [doc['id'], parentKeys+key, str(value), ''])
       return
+    # properties
     metaDoc = {k:v for k,v in doc.items() if k not in KEY_ORDER}
     insertMetadata(metaDoc, '')
     # save changes
@@ -337,29 +345,62 @@ class SqlLiteDB:
     """
     dataNew['client'] = tracebackString(False, f'updateDoc:{docID}')
     changesDict:dict[str,str]         = {}
+    self.connection.row_factory = sqlite3.Row  #default None
+    cursor = self.connection.cursor()
 
     # tags and qrCodes
     tagsNew= set(dataNew.pop('tags'))
     self.cursor.execute(f"SELECT tag FROM tags WHERE id == '{docID}'")
     tagsOld= {i[0] for i in self.cursor.fetchall()}
-    for tag in tagsOld.difference(tagsNew):
-      self.cursor.execute(f"DELETE FROM tags WHERE id == '{docID}' and tag == '{tag}'")
-    tagsNew = tagsNew.difference(tagsOld)
-    self.cursor.executemany("INSERT INTO tags VALUES (?, ?);", zip([docID]*len(tagsNew), tagsNew))
+    if tagsOld.difference(tagsNew):
+      cmd = f"DELETE FROM tags WHERE id == '{docID}' and tag == ?"
+      self.cursor.executemany(cmd, tagsOld.difference(tagsNew))
+      changesDict['tags'] = ','.join(tagsOld)
+    if tagsNew.difference(tagsOld):
+      change = tagsNew.difference(tagsOld)
+      self.cursor.executemany("INSERT INTO tags VALUES (?, ?);", zip([docID]*len(change), change))
+      changesDict['tags'] = ','.join(tagsOld)
     qrCodesNew= set(dataNew.pop('qrCodes', []))
     self.cursor.execute(f"SELECT qrCode FROM qrCodes WHERE id == '{docID}'")
     qrCodesOld= {i[0] for i in self.cursor.fetchall()}
-    for qrCode in qrCodesOld.difference(qrCodesNew):
-      self.cursor.execute(f"DELETE FROM qrCodes WHERE id == '{docID}' and qrCode == '{qrCode}'")
-    qrCodesNew = qrCodesNew.difference(qrCodesOld)
-    self.cursor.executemany("INSERT INTO qrCodes VALUES (?, ?);", zip([docID]*len(qrCodesNew), qrCodesNew))
+    if qrCodesOld.difference(qrCodesNew):
+      cmd = f"DELETE FROM qrCodes WHERE id == '{docID}' and qrCode == ?"
+      self.cursor.executemany(cmd, qrCodesOld.difference(qrCodesNew))
+      changesDict['qrCodes'] = ','.join(qrCodesOld)
+    if qrCodesNew.difference(qrCodesOld):
+      change = qrCodesNew.difference(qrCodesOld)
+      self.cursor.executemany("INSERT INTO qrCodes VALUES (?, ?);", zip([docID]*len(change), change))
+      changesDict['qrCodes'] = ','.join(qrCodesOld)
     # separate into main and properties
-    mainNew = {key: dataNew.pop(key) for key in KEY_ORDER if key in dataNew}
-    # TODO handle properties and branch
-    print(dataNew, 'still to implement: handle')
-    # handle main
-    self.connection.row_factory = sqlite3.Row  #default None
-    cursor = self.connection.cursor()
+    mainNew    = {key: dataNew.pop(key) for key in KEY_ORDER if key in dataNew}
+    branchNew  = dataNew.pop('branch',{})
+    # read branches and identify changes
+    cursor.execute(f"SELECT * FROM branches WHERE id == '{docID}'")
+    branchOld = cursor.fetchall()
+    print(f'do something with branch: new {branchNew} old: {"\n".join([str(i) for i in branchOld])}')
+    #TODO: use example with two branches
+    # read properties and identify changes
+    self.cursor.execute(f"SELECT key, value FROM properties WHERE id == '{docID}'")
+    dataOld = {i[0]:i[1] for i in self.cursor.fetchall()}
+    for key,value in dataNew.items():
+      if isinstance(value, dict):
+        for subKey, subValue in value.items():
+          longKey = f'{key}.{subKey}'
+          if longKey in dataOld and subValue!=dataOld[longKey]:
+            self.cursor.execute(f"UPDATE properties SET value='{subValue}' WHERE id = '{docID}' and key = '{longKey}'")
+            changesDict[longKey] = dataOld[longKey]
+          elif longKey not in dataOld:
+            cmd = "INSERT INTO properties VALUES (?, ?, ?, ?);"
+            self.cursor.execute(cmd ,[docID, longKey, subValue, ''])
+          if longKey in dataOld:
+            del dataOld[longKey]
+      else:
+        logging.error('Property is not a dict, ERROR')
+    if set(dataOld.keys()).difference(dataNew.keys()):
+      cmd = f"DELETE FROM properties WHERE id == '{docID}' and key == ?"
+      self.cursor.executemany(cmd, set(dataOld.keys()).difference(dataNew.keys()))
+      changesDict |= dataOld
+    # read main and identify if something changed
     cursor.execute(f"SELECT * FROM main WHERE id == '{docID}'")
     mainOld = dict(cursor.fetchone())
     mainOld['type']= mainOld['type'].split('/')
@@ -368,16 +409,14 @@ class SqlLiteDB:
       if key in mainNew and mainOld[key]!=mainNew[key]:
         changesDB['main'][key] = mainNew[key]
         changesDict[key] = mainOld[key]
-
-    #TODO: do not save changes if name='new folder'
-    # change content in database
+    # change content in database: main and changes are updated
     if set(changesDict.keys()).difference(('dateModified','client','user')):
       changeString = ', '.join([f"{k}='{v}'" for k,v in changesDB['main'].items()])
       self.cursor.execute(f"UPDATE main SET {changeString} WHERE id = '{docID}'")
-      self.cursor.execute("INSERT INTO changes VALUES (?,?,?)", [docID, datetime.now().isoformat(), json.dumps(changesDict)])
+      if 'name' not in changesDict or changesDict['name']!='new folder':  #do not save initial change from new folder
+        self.cursor.execute("INSERT INTO changes VALUES (?,?,?)", [docID, datetime.now().isoformat(), json.dumps(changesDict)])
       self.connection.commit()
-
-    return mainOld | mainNew
+    return mainOld | mainNew | {'branch':[branchNew]}
 
 
   def updateBranch(self, docID:str, branch:int, child:int, stack:Optional[list[str]]=None,
@@ -474,11 +513,10 @@ class SqlLiteDB:
     Returns:
         df: data-frame with human-readable column names
     """
-    # allFlag = False
+    allFlag = False
     if thePath.endswith('All'):
       thePath = thePath.removesuffix('All')
-      # allFlag = True
-      #TODO print('**info do something with all flag')
+      allFlag = True
     viewType, docType = thePath.split('/')
     if viewType=='viewDocType':
       viewColumns = self.dataHierarchy(docType, 'view')+['id']
@@ -491,7 +529,9 @@ class SqlLiteDB:
       if metadataKeys:
         textSelect += ', properties.key, properties.value'
       cmd = f"SELECT {textSelect} FROM main LEFT JOIN tags USING(id) LEFT JOIN qrCodes USING(id) "\
-            f"INNER JOIN branches USING(id) LEFT JOIN properties USING(id) WHERE main.type LIKE '{docType}%'"
+              f"INNER JOIN branches USING(id) LEFT JOIN properties USING(id) WHERE main.type LIKE '{docType}%'"
+      if not allFlag:
+        cmd += r" and NOT branches.show LIKE '%F%'"
       df      = pd.read_sql_query(cmd, self.connection)
       allCols = list(df.columns)
       if 'image' in viewColumns:
@@ -514,7 +554,10 @@ class SqlLiteDB:
       return df
     elif thePath=='viewHierarchy/viewHierarchy':
       cmd = "SELECT branches.id, branches.stack, branches.child, main.type, main.name, main.gui "\
-            f"FROM branches INNER JOIN main USING(id) WHERE branches.stack LIKE '{startKey}%' ORDER BY branches.stack"
+            f"FROM branches INNER JOIN main USING(id) WHERE branches.stack LIKE '{startKey}%'"
+      if not allFlag:
+        cmd += r" and NOT branches.show LIKE '%F%'"
+      cmd += " ORDER BY branches.stack"
       self.cursor.execute(cmd)
       results = self.cursor.fetchall()
       # value: [child, doc['-type'], doc['.name'], doc['-gui']]
@@ -523,15 +566,22 @@ class SqlLiteDB:
     elif thePath=='viewHierarchy/viewPaths':
       # JOIN and get type
       if startKey is not None:
-        print('**ERROR NOT IMPLEMENTED')
+        if startKey.endswith('/'):
+          startKey = startKey.removesuffix('/')
+        cmd = "SELECT branches.id, branches.path, branches.stack, main.type, branches.child, main.shasum "\
+              f"FROM branches INNER JOIN main USING(id) WHERE branches.path LIKE '{startKey}%'"
       elif preciseKey is not None:
         cmd = "SELECT branches.id, branches.path, branches.stack, main.type, branches.child, main.shasum "\
               f"FROM branches INNER JOIN main USING(id) WHERE branches.path LIKE '{preciseKey}'"
-        self.cursor.execute(cmd)
       else:
         cmd = "SELECT branches.id, branches.path, branches.stack, main.type, branches.child, main.shasum "\
               "FROM branches INNER JOIN main USING(id)"
-        self.cursor.execute(cmd)
+      if not allFlag:
+        if "WHERE" in cmd:
+          cmd += r" AND NOT branches.show LIKE '%F%'"
+        else:
+          cmd += r" WHERE NOT branches.show LIKE '%F%'"
+      self.cursor.execute(cmd)
       results = self.cursor.fetchall()
       # value: [branch.stack, doc['-type'], branch.child, doc.shasum,idx]
       results = [{'id':i[0], 'key':i[1],
@@ -543,14 +593,22 @@ class SqlLiteDB:
       if docType=='viewQR':
         if startKey is None:
           cmd = "SELECT qrCodes.id, qrCodes.qrCode, main.name FROM qrCodes INNER JOIN main USING(id)"
+          if not allFlag:
+            cmd += r" INNER JOIN branches USING(id) WHERE NOT branches.show LIKE '%F%'"
           self.cursor.execute(cmd)
         else:
           raise ValueError('Not implemented')
       elif docType=='viewSHAsum':
         if startKey is None:
-          self.cursor.execute("SELECT id, shasum, name FROM main")
+          cmd = "SELECT main.id, main.shasum, main.name FROM main"
+          if not allFlag:
+            cmd += r" INNER JOIN branches USING(id) WHERE NOT branches.show LIKE '%F%'"
+          self.cursor.execute(cmd)
         else:
-          self.cursor.execute(f"SELECT id, shasum, name FROM main WHERE shasum='{startKey}'")
+          cmd = f"SELECT main.id, main.shasum, main.name FROM main INNER JOIN branches USING(id) WHERE shasum='{startKey}'"
+          if not allFlag:
+            cmd += r" and NOT branches.show LIKE '%F%'"
+          self.cursor.execute(cmd)
       else:
         raise ValueError('Invalid docType')
       results = self.cursor.fetchall()
@@ -606,41 +664,34 @@ class SqlLiteDB:
     return dataTree
 
 
-  def hideShow(self, stack:Union[str,list[str]]) -> None:
+  def hideShow(self, docID:str) -> None:
     """
     Toggle hide/show indicator of branch
 
     Args:
       stack (list, str): stack of docID; docID (str)
     """
-    #TODO
-    """
-    flippedOnce = False #prevent forward-backward flipping
-    if isinstance(stack, str):  #do first document itself
-      doc = self.db[stack]
-      for idx, _ in enumerate(doc['-branch']):  #check all branches
-        doc['-branch'][idx]['show'][-1] = not doc['-branch'][idx]['show'][-1]
-        logging.debug('flipped str: %s',str(stack))
-      doc.save()
-      if stack[0]=='x':
-        stack = doc['-branch'][0]['stack']+[stack]  #create full stack of children
-      flippedOnce = True
-    if isinstance(stack, list):
-      iFlip = len(stack)-1
-      logging.debug('  database list %s %s',str(stack),str(iFlip))
-      for item in self.getView('viewHierarchy/viewHierarchyAll', startKey=' '.join(stack)):
-        logging.debug('  docID: %s',item['id'])
-        doc = self.db[item['id']]
-        for idx, branch in enumerate(doc['-branch']):
-          if not flippedOnce or iFlip!=len(branch['stack']):
-            doc['-branch'][idx]['show'][iFlip] = not doc['-branch'][idx]['show'][iFlip]
-        doc.save()
-    # not sure this is needed anymore
-    if doc['-type'][0][0]=='x':
-      with open(self.basePath/doc['-branch'][0]['path']/'.id_pastaELN.json','w', encoding='utf-8') as fOut:
-        fOut.write(json.dumps(doc))
-    """
-    raise ValueError('Not implemented HIDE/SHOW')
+    def adoptShow(item:tuple[str,str,str,str]) -> tuple[str,str,str]:
+      """ Adopt show string, internal mapping function
+
+      Args:
+        item (tuple): id, idx, stack, show
+
+      Returns:
+        tuple: show, id, idx
+      """
+      id, idx, stack, show = item
+      j = stack.split('/').index(docID)
+      showL = list(show)
+      showL[j] = 'T' if showL[j]=='F' else 'F'
+      return (''.join(showL), id, idx)
+    cmd = f"SELECT id, idx, stack, show FROM branches WHERE stack LIKE '%{docID}%'"
+    self.cursor.execute(cmd)
+    changed = map(adoptShow, self.cursor.fetchall())
+    cmd = "UPDATE branches SET show=? WHERE id = ? and idx= ?"
+    self.cursor.executemany(cmd, changed)
+    self.connection.commit()
+    return
 
 
   def setGUI(self, docID:str, guiState:list[bool]) -> None:

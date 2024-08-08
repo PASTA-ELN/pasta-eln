@@ -164,6 +164,7 @@ class Form(QDialog):
           splitter.addWidget(getattr(self, f'textShow_{key}'))
           rightSideL.addWidget(splitter)
           formL.addRow(labelW, rightSideW)
+          self.allUserElements.append((key, 'comment'))
         elif key in self.skipKeys:  #skip non desired ones
           continue
         elif isinstance(defaultValue, list):   #list of items, qrCodes in sample
@@ -180,7 +181,7 @@ class Form(QDialog):
             if dataHierarchyItem[0]['list']: #choice dropdown
               setattr(self, elementName, QComboBox())
               if ',' in dataHierarchyItem[0]['list']:                  #dataHierarchy-defined choices
-                getattr(self, elementName).addItems(dataHierarchyItem[0]['list'].split(','))
+                getattr(self, elementName).addItems(dataHierarchyItem[0]['list'].split(',')) #TODO choice on database not used, always first
               else:                                                    #choice among docType
                 listDocType = dataHierarchyItem[0]['list']
                 getattr(self, elementName).addItem('- no link -', userData='')
@@ -396,6 +397,8 @@ class Form(QDialog):
       for idx, (key, guiType) in enumerate(self.allUserElements):
         elementName = f"key_{idx}"
         valueOld = self.doc.get(key, '')
+        if '.' in key:
+          group, subKey = key.split('.')
         if key=='name':
           self.doc['name'] = getattr(self, elementName).text().strip()
           if self.doc['name'] == '':
@@ -404,9 +407,8 @@ class Form(QDialog):
           if self.doc['type'][0]=='x0':  #prevent project-directory names that are identical
             others = self.comm.backend.db.getView('viewDocType/x0All')
             if 'id' in self.doc:
-              others = [i for i in others if i['id']!=self.doc['id']] # create list of names but filter own name
-            others = [i['value'][0] for i in others]
-            othersList = [createDirName(str(i),'x0', 0) for i in others] #create names
+              others = others[others['id']!=self.doc['id']] # filter data frame by own id
+            othersList = [createDirName(str(i),'x0', 0) for i in others['name']] #create names
             while createDirName(self.doc['name'],'x0', 0) in othersList:
               if re.search(r"_\d+$", self.doc['name']) is None:
                 self.doc['name'] += '_1'
@@ -439,13 +441,14 @@ class Form(QDialog):
             if ((dataNew is not None and re.search(r"^[a-z\-]-[a-z0-9]{32}$",dataNew) is not None)
                 or dataNew==''):
               #if docID is stored in currentData
-              self.doc[key] = dataNew
+              self.doc[group][subKey] = dataNew
             elif valueNew!='- no link -' or dataNew is None:
-              self.doc[key] = valueNew
+              self.doc[group][subKey] = valueNew
           else:                          #normal text field
-            self.doc[key] = getattr(self, elementName).text().strip()
+            self.doc[group][subKey] = getattr(self, elementName).text().strip()
         elif valueOld is None and key in self.doc:  #important entry, set to empty string
           self.doc[key]=''
+          print('Is this really needed?')
         else:
           print("**ERROR dialogForm unknown value type",key, valueOld)
       # new key-value pairs
