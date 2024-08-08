@@ -377,7 +377,7 @@ class SqlLiteDB:
     # read branches and identify changes
     cursor.execute(f"SELECT * FROM branches WHERE id == '{docID}'")
     branchOld = cursor.fetchall()
-    print(f'do something with branch: new {branchNew} old: {"\n".join([str(i) for i in branchOld])}')
+    print(f'do something with branch: new {branchNew} old: {branchOld}')
     #TODO: use example with two branches
     # read properties and identify changes
     self.cursor.execute(f"SELECT key, value FROM properties WHERE id == '{docID}'")
@@ -669,7 +669,7 @@ class SqlLiteDB:
     Toggle hide/show indicator of branch
 
     Args:
-      stack (list, str): stack of docID; docID (str)
+      docID (str): document id
     """
     def adoptShow(item:tuple[str,str,str,str]) -> tuple[str,str,str]:
       """ Adopt show string, internal mapping function
@@ -680,11 +680,11 @@ class SqlLiteDB:
       Returns:
         tuple: show, id, idx
       """
-      id, idx, stack, show = item
+      docID, idx, stack, show = item
       j = stack.split('/').index(docID)
       showL = list(show)
       showL[j] = 'T' if showL[j]=='F' else 'F'
-      return (''.join(showL), id, idx)
+      return (''.join(showL), docID, idx)
     cmd = f"SELECT id, idx, stack, show FROM branches WHERE stack LIKE '%{docID}%'"
     self.cursor.execute(cmd)
     changed = map(adoptShow, self.cursor.fetchall())
