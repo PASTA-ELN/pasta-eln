@@ -13,8 +13,11 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from PySide6 import QtCore, QtWidgets
+from PySide6.QtWidgets import QFrame
 
+from pasta_eln.GUI.dataverse.data_type_class_names import DataTypeClassName
 from pasta_eln.GUI.dataverse.edit_metadata_dialog import EditMetadataDialog
+from pasta_eln.GUI.dataverse.metadata_frame_base import MetadataFrame
 from pasta_eln.dataverse.config_model import ConfigModel
 
 
@@ -44,8 +47,6 @@ class MockComboBox:
 @pytest.fixture
 def mock_dependencies(mocker):
   with patch("pasta_eln.GUI.dataverse.edit_metadata_dialog.DatabaseAPI") as mock_db_api, \
-      patch("pasta_eln.GUI.dataverse.edit_metadata_dialog.ControlledVocabFrame") as mock_vocab_frame, \
-      patch("pasta_eln.GUI.dataverse.edit_metadata_dialog.PrimitiveCompoundFrame") as mock_primitive_frame, \
       patch("pasta_eln.GUI.dataverse.edit_metadata_dialog.QDialog") as mock_qdialog, \
       patch(
         "pasta_eln.GUI.dataverse.edit_metadata_dialog.EditMetadataSummaryDialog") as mock_edit_metadata_summary_dialog, \
@@ -65,8 +66,6 @@ def mock_dependencies(mocker):
       metadata={'datasetVersion': {'metadataBlocks': {}, 'license': {'name': '', 'uri': ''}}})
     yield {
       "db_api": mock_db_api_instance,
-      "controlled_vocab_frame": mock_vocab_frame,
-      "primitive_compound_frame": mock_primitive_frame,
       "qdialog": mock_qdialog,
       "setup_ui": mock_setup_ui,
       "edit_metadata_summary_dialog": mock_edit_metadata_summary_dialog
@@ -164,17 +163,17 @@ class TestDataverseEditMetadataDialog:
       assert add_item_calls == expected_items
 
   # Parametrized test for the save_ui method
-  @pytest.mark.parametrize("metadata, expected_message, has_vocab_frame, has_primitive_frame, test_id", [
+  @pytest.mark.parametrize("metadata, expected_message, test_id", [
     # Test ID: #1 - Success path with both frames and metadata
-    ({"key": "value"}, "Formatted message", True, True, "Test message with both frames and metadata"),
+    ({"key": "value"}, "Formatted message", "Test message with both frames and metadata"),
     # Test ID: #2 - Success path with no frames but with metadata
-    ({"key": "value"}, "Formatted message", False, False, "Test message with metadata but no frames"),
+    ({"key": "value"}, "Formatted message", "Test message with metadata but no frames"),
     # Test ID: #3 - Edge case with empty metadata and both frames
-    ({}, "Empty metadata message", True, True, "Test message with empty metadata and both frames"),
+    ({}, "Empty metadata message", "Test message with empty metadata and both frames"),
     # Test ID: #4 - Error case with None as metadata (assuming get_formatted_metadata_message handles None gracefully)
-    (None, "None metadata message", True, True, "Test message with None as metadata"),
+    (None, "None metadata message", "Test message with None as metadata"),
   ])
-  def test_save_ui(self, mocker, metadata, expected_message, has_vocab_frame, has_primitive_frame, test_id,
+  def test_save_ui(self, mocker, metadata, expected_message, test_id,
                    mock_dependencies,
                    mock_edit_metadata_dialog):
     # Arrange
@@ -182,8 +181,7 @@ class TestDataverseEditMetadataDialog:
     mock_edit_metadata_dialog.metadata_summary_dialog = mocker.MagicMock()
     mock_edit_metadata_dialog.metadata_summary_dialog.summaryTextEdit = mocker.MagicMock()
     mock_edit_metadata_dialog.metadata_summary_dialog.summaryTextEdit.setText = mocker.MagicMock()
-    mock_edit_metadata_dialog.controlled_vocab_frame = mocker.MagicMock() if has_vocab_frame else None
-    mock_edit_metadata_dialog.metadata_frame = mocker.MagicMock() if has_primitive_frame else None
+    mock_edit_metadata_dialog.metadata_frame = mocker.MagicMock(spec=MetadataFrame)
     mock_get_formatted = mocker.patch("pasta_eln.GUI.dataverse.edit_metadata_dialog.get_formatted_metadata_message",
                                       return_value=expected_message)
 
@@ -194,10 +192,7 @@ class TestDataverseEditMetadataDialog:
     mock_get_formatted.assert_called_once_with(metadata or {})
     mock_edit_metadata_dialog.metadata_summary_dialog.summaryTextEdit.setText.assert_called_once_with(expected_message)
     mock_edit_metadata_dialog.metadata_summary_dialog.show.assert_called_once()
-    if has_vocab_frame:
-      mock_edit_metadata_dialog.controlled_vocab_frame.save_modifications.assert_called_once()
-    if has_primitive_frame:
-      mock_edit_metadata_dialog.metadata_frame.save_modifications.assert_called_once()
+    mock_edit_metadata_dialog.metadata_frame.save_modifications.assert_called_once()
     mock_edit_metadata_dialog.logger.info.assert_called_with("Saving Config Model...")
 
   # Success path tests with various realistic test values
@@ -210,6 +205,10 @@ class TestDataverseEditMetadataDialog:
   def test_change_metadata_type_success_path(self, mocker, mock_edit_metadata_dialog, mock_dependencies,
                                              new_metadata_type, type_class, test_id):
     # Arrange
+    pre_metadata_frame = MagicMock(spec=MetadataFrame)
+    pre_metadata_frame_instance = MagicMock(spec=QFrame)
+    mock_edit_metadata_dialog.metadata_frame = pre_metadata_frame
+    mock_edit_metadata_dialog.metadata_frame.instance = pre_metadata_frame_instance
     mock_edit_metadata_dialog.metadata = {
       'datasetVersion': {
         'metadataBlocks': {
@@ -225,9 +224,7 @@ class TestDataverseEditMetadataDialog:
     }
     mock_edit_metadata_dialog.typesComboBox.currentData.return_value = new_metadata_type
     mock_edit_metadata_dialog.metadataScrollVerticalLayout.count.return_value = 2
-    if test_id == 'success_primitive_pre_exists':
-      mock_edit_metadata_dialog.metadata_frame = mock_dependencies['primitive_compound_frame'].return_value
-      mock_edit_metadata_dialog.controlled_vocab_frame = mock_dependencies['controlled_vocab_frame'].return_value
+    mock_edit_metadata_dialog.metadata_frame_factory = mocker.MagicMock()
 
     # Act
     mock_edit_metadata_dialog.change_metadata_type()
@@ -238,21 +235,18 @@ class TestDataverseEditMetadataDialog:
        mocker.call().widget(), mocker.call().widget().setParent(None)])
     mock_edit_metadata_dialog.logger.info.assert_has_calls(
       [mocker.call("Loading %s metadata type of class: %s...", new_metadata_type, type_class)])
-    if type_class in ['primitive', 'compound']:
-      primitive_compound_frame = mock_dependencies['primitive_compound_frame']
-      primitive_compound_frame.assert_called_once()
-      mock_edit_metadata_dialog.metadataScrollVerticalLayout.addWidget.assert_called_once_with(
-        primitive_compound_frame.return_value.instance)
-    elif type_class == 'controlledVocabulary':
-      controlled_vocab_frame = mock_dependencies['controlled_vocab_frame']
-      controlled_vocab_frame.assert_called_once()
-      mock_edit_metadata_dialog.metadataScrollVerticalLayout.addWidget.assert_called_once_with(
-        controlled_vocab_frame.return_value.instance)
-    if test_id == 'success_primitive_pre_exists':
-      mock_edit_metadata_dialog.metadata_frame.save_modifications.assert_called_once()
-      mock_edit_metadata_dialog.metadata_frame.instance.close.assert_called_once()
-      mock_edit_metadata_dialog.controlled_vocab_frame.save_modifications.assert_called_once()
-      mock_edit_metadata_dialog.controlled_vocab_frame.instance.close.assert_called_once()
+    pre_metadata_frame_instance.setParent.assert_called_once_with(None)
+    mock_edit_metadata_dialog.metadata_frame_factory.make_metadata_frame.assert_called_once_with(
+      DataTypeClassName(type_class),
+      next(f for f in mock_edit_metadata_dialog
+           .metadata['datasetVersion']['metadataBlocks']['citation']['fields']
+           if f['typeName'] == new_metadata_type)
+    )
+    assert mock_edit_metadata_dialog.metadata_frame == mock_edit_metadata_dialog.metadata_frame_factory.make_metadata_frame.return_value
+    mock_edit_metadata_dialog.metadataScrollVerticalLayout.addWidget.assert_called_once_with(
+      mock_edit_metadata_dialog.metadata_frame.instance)
+    pre_metadata_frame.save_modifications.assert_called_once()
+    pre_metadata_frame_instance.close.assert_called_once()
 
   # Edge cases
   @pytest.mark.parametrize("new_metadata_type, test_id", [

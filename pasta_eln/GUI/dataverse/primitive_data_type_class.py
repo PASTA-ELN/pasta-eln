@@ -1,3 +1,4 @@
+""" Primitive data type class. """
 #  PASTA-ELN and all its sub-parts are covered by the MIT license.
 #
 #  Copyright (c) 2024
@@ -20,6 +21,10 @@ from pasta_eln.dataverse.utils import is_date_time_type
 
 
 class PrimitiveDataTypeClass(DataTypeClass):
+  """
+  Represents the primitive data type class.
+  """
+
   def __new__(cls, *_: Any, **__: Any) -> Any:
     """
     Creates a new instance of the PrimitiveDataTypeClass class.
@@ -38,28 +43,62 @@ class PrimitiveDataTypeClass(DataTypeClass):
     return super(PrimitiveDataTypeClass, cls).__new__(cls)
 
   def __init__(self, context: DataTypeClassContext) -> None:
+    """
+    Initializes a new instance of the PrimitiveDataTypeClass.
+
+    Args:
+        context (DataTypeClassContext): The context for the PrimitiveDataTypeClass.
+
+    Explanation:
+        This method initializes a new instance of the PrimitiveDataTypeClass with the provided context.
+    """
     super().__init__(context)
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
 
   def add_new_entry(self) -> None:
+    """
+    Adds a new entry to the primitive data type class.
+
+    Explanation:
+        This method attempts to find the primitiveVerticalLayout in the main vertical layout.
+        If the layout is found, it populates the horizontal layout with the provided type information.
+        If the layout is not found, it logs an error message.
+
+    """
     new_primitive_entry_layout = self.context.main_vertical_layout.findChild(QVBoxLayout,
                                                                              "primitiveVerticalLayout")
     if not isinstance(new_primitive_entry_layout, QVBoxLayout):
       self.logger.error("Failed to find primitiveVerticalLayout!")
       return
-    value_template = self.context.meta_field.get('valueTemplate', [""])[0]
+    value_template = self.context.meta_field.get('valueTemplate')
+    first_value = str(value_template[0]) if value_template else ""
     self.populate_primitive_horizontal_layout(
       new_primitive_entry_layout,
       self.context.meta_field.get('typeName', ''),
       "",
-      value_template)
+      first_value)
 
   def populate_entry(self) -> None:
+    """
+    Populates the entry based on the meta_field information.
+
+    Explanation:
+        This method populates the entry based on the meta_field information.
+        It disables the add push button if the meta_field does not have multiple entries.
+        It then calls the populate_primitive_entry method to populate the entry.
+    """
     if not self.context.meta_field.get('multiple'):
       self.context.add_push_button.setDisabled(True)
     self.populate_primitive_entry()
 
   def save_modifications(self) -> None:
+    """
+    Saves modifications to the meta_field based on the type and class.
+
+    Explanation:
+        This method saves changes to the meta_field based on the type and class information.
+        It retrieves the primitiveVerticalLayout and updates the meta_field value accordingly.
+    """
     self.logger.info("Saving changes to meta_field for type, name: %s, class: %s",
                      self.context.meta_field.get('typeName'),
                      self.context.meta_field.get('typeClass'))
@@ -77,6 +116,8 @@ class PrimitiveDataTypeClass(DataTypeClass):
       else:
         text = get_primitive_line_edit_text_value(primitive_vertical_layout, 0)
         self.context.meta_field['value'] = text if text != "No Value" else ""
+    else:
+      self.logger.error("Failed to find primitiveVerticalLayout!")
 
   def populate_primitive_entry(self) -> None:
     """

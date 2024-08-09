@@ -15,6 +15,7 @@ from typing import Type
 from unittest.mock import AsyncMock, mock_open
 
 import pytest
+from _pytest.mark import param
 from cryptography.fernet import Fernet, InvalidToken
 
 from pasta_eln.dataverse.config_error import ConfigError
@@ -1953,12 +1954,218 @@ class TestDataverseUtils:
      "<html><b style=\"color:Black\">License Metadata:</b><ul><li style=\"color:Gray\">Name: <i>CC BY</i></li><li style=\"color:Gray\">URI: <i>https://creativecommons.org/licenses/by/4.0/</i></li></ul><b style=\"color:Black\">Citation Metadata:</b><ul><b style=\"color:#737373\"><li>Author:</li></b><ul><li style=\"color:Gray\">Item 1:</li><ul><li style=\"color:Gray\">Author Name: <i>John Doe</li></i></ul><li style=\"color:Gray\">Item 2:</li><ul><li style=\"color:Gray\">Author Name: <i>Jane Doe</li></i></ul></ul></ul></html>",
      "complex_nested_metadata")
   ], ids=["success_path_basic_metadata", "edge_case_empty_metadata", "complex_nested_metadata"])
-  def test_get_formatted_metadata_message(self, test_id, metadata, expected_output):
+  def test_get_formatted_metadata_message_version_1(self, test_id, metadata, expected_output):
     # Act
     result = get_formatted_metadata_message(metadata)
 
     # Assert
     assert result == expected_output
+
+  @pytest.mark.parametrize(
+    "metadata, expected_output",
+    [
+      # Success path test case
+      param(
+        {
+          'datasetVersion': {
+            'license': {'name': 'CC0', 'uri': 'https://creativecommons.org/publicdomain/zero/1.0/'},
+            'metadataBlocks': {
+              'citation': {
+                'displayName': 'Citation Metadata',
+                'fields': [
+                  {'typeName': 'title', 'value': 'Test Title', 'multiple': False, 'typeClass': 'primitive'}
+                ]
+              }
+            }
+          }
+        },
+        '<html><b style="color:Black">License Metadata:</b><ul>'
+        '<li style="color:Gray">Name: <i>CC0</i></li>'
+        '<li style="color:Gray">URI: <i>https://creativecommons.org/publicdomain/zero/1.0/</i></li>'
+        '</ul><b style="color:Black">Citation Metadata:</b><ul>'
+        '<b style="color:#737373"><li>Title:</li></b><ul>'
+        '<i style="color:Gray"><li>Test Title</li></i></ul></ul></html>',
+        id="success_path_single_field"
+      ),
+      # Success path test case
+      param(
+        {
+          'datasetVersion': {
+            'license': {'name': 'CC0', 'uri': 'https://creativecommons.org/publicdomain/zero/1.0/'},
+            'metadataBlocks': {
+              'citation': {
+                'displayName': 'Citation Metadata',
+                'fields': [
+                  {'typeName': "coverage.Spectral.Wavelength", 'value': [
+                    {
+                      "coverage.Spectral.MinimumWavelength": {
+                        "typeName": "coverage.Spectral.MinimumWavelength",
+                        "multiple": False,
+                        "typeClass": "primitive",
+                        "value": "4001"
+                      },
+                      "coverage.Spectral.MaximumWavelength": {
+                        "typeName": "coverage.Spectral.MaximumWavelength",
+                        "multiple": False,
+                        "typeClass": "primitive",
+                        "value": "4002"
+                      }
+                    },
+                    {
+                      "coverage.Spectral.MinimumWavelength": {
+                        "typeName": "coverage.Spectral.MinimumWavelength",
+                        "multiple": False,
+                        "typeClass": "primitive",
+                        "value": "4003"
+                      },
+                      "coverage.Spectral.MaximumWavelength": {
+                        "typeName": "coverage.Spectral.MaximumWavelength",
+                        "multiple": False,
+                        "typeClass": "primitive",
+                        "value": "4004"
+                      }
+                    }
+                  ], 'multiple': True, 'typeClass': 'compound'}
+                ]
+              }
+            }
+          }
+        },
+        '<html><b style="color:Black">License Metadata:</b><ul><li '
+        'style="color:Gray">Name: <i>CC0</i></li><li style="color:Gray">URI: '
+        '<i>https://creativecommons.org/publicdomain/zero/1.0/</i></li></ul><b '
+        'style="color:Black">Citation Metadata:</b><ul><b '
+        'style="color:#737373"><li>Coverage Spectral Wavelength:</li></b><ul><li '
+        'style="color:Gray">Item 1:</li><ul><li style="color:Gray">Coverage Spectral '
+        'Minimum Wavelength: <i>4001</li></i><li style="color:Gray">Coverage Spectral '
+        'Maximum Wavelength: <i>4002</li></i></ul><li style="color:Gray">Item '
+        '2:</li><ul><li style="color:Gray">Coverage Spectral Minimum Wavelength: '
+        '<i>4003</li></i><li style="color:Gray">Coverage Spectral Maximum Wavelength: '
+        '<i>4004</li></i></ul></ul></ul></html>',
+        id="success_path_multiple_compound_field"
+      ),
+      # Success path test case
+      param(
+        {
+          'datasetVersion': {
+            'license': {'name': 'CC0', 'uri': 'https://creativecommons.org/publicdomain/zero/1.0/'},
+            'metadataBlocks': {
+              'citation': {
+                'displayName': 'Citation Metadata',
+                'fields': [
+                  {
+                    "typeName": "targetSampleSize",
+                    "multiple": False,
+                    "typeClass": "compound",
+                    "value": {
+                      "targetSampleActualSize": {
+                        "typeName": "targetSampleActualSize",
+                        "multiple": False,
+                        "typeClass": "primitive",
+                        "value": "100"
+                      },
+                      "targetSampleSizeFormula": {
+                        "typeName": "targetSampleSizeFormula",
+                        "multiple": False,
+                        "typeClass": "primitive",
+                        "value": "TargetSampleSizeFormula"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        '<html><b style="color:Black">License Metadata:</b><ul><li '
+        'style="color:Gray">Name: <i>CC0</i></li><li style="color:Gray">URI: '
+        '<i>https://creativecommons.org/publicdomain/zero/1.0/</i></li></ul><b '
+        'style="color:Black">Citation Metadata:</b><ul><b '
+        'style="color:#737373"><li>Target Sample Size:</li></b><ul><li '
+        'style="color:Gray">Target Sample Actual Size: <i>100</li></i><li '
+        'style="color:Gray">Target Sample Size Formula: '
+        '<i>TargetSampleSizeFormula</li></i></ul></ul></html>',
+        id="success_path_single_compound_field"
+      ),
+      # Edge case: Empty metadata
+      param(
+        {
+          'datasetVersion': {
+            'license': None,
+            'metadataBlocks': {}
+          }
+        },
+        '<html></html>',
+        id="empty_metadata"
+      ),
+      # Edge case: No license
+      param(
+        {
+          'datasetVersion': {
+            'license': None,
+            'metadataBlocks': {
+              'citation': {
+                'displayName': 'Citation Metadata',
+                'fields': [
+                  {'typeName': 'title', 'value': 'Test Title', 'multiple': False, 'typeClass': 'primitive'}
+                ]
+              }
+            }
+          }
+        },
+        '<html><b style="color:Black">Citation Metadata:</b><ul>'
+        '<b style="color:#737373"><li>Title:</li></b><ul>'
+        '<i style="color:Gray"><li>Test Title</li></i></ul></ul></html>',
+        id="no_license"
+      ),
+      # Edge case: No fields in metadata block
+      param(
+        {
+          'datasetVersion': {
+            'license': {'name': 'CC0', 'uri': 'https://creativecommons.org/publicdomain/zero/1.0/'},
+            'metadataBlocks': {
+              'citation': {
+                'displayName': 'Citation Metadata',
+                'fields': []
+              }
+            }
+          }
+        },
+        '<html><b style="color:Black">License Metadata:</b><ul>'
+        '<li style="color:Gray">Name: <i>CC0</i></li>'
+        '<li style="color:Gray">URI: <i>https://creativecommons.org/publicdomain/zero/1.0/</i></li>'
+        '</ul><b style="color:Black">Citation Metadata:</b><ul>'
+        '<li style="color:#737373">No Value</li></ul></ul></html>',
+        id="no_fields_in_metadata_block"
+      ),
+      # Error case: Missing datasetVersion key
+      param(
+        {},
+        KeyError,
+        id="missing_datasetVersion_key"
+      ),
+      # Error case: Missing metadataBlocks key
+      param(
+        {
+          'datasetVersion': {
+            'license': {'name': 'CC0', 'uri': 'https://creativecommons.org/publicdomain/zero/1.0/'}
+          }
+        },
+        KeyError,
+        id="missing_metadataBlocks_key"
+      ),
+    ]
+  )
+  def test_get_formatted_metadata_message_version_2(self, metadata, expected_output):
+    # Act
+    if isinstance(expected_output, type) and issubclass(expected_output, Exception):
+      with pytest.raises(expected_output):
+        get_formatted_metadata_message(metadata)
+    else:
+      result = get_formatted_metadata_message(metadata)
+
+      # Assert
+      assert result == expected_output
 
   # Test data for error cases
   @pytest.mark.parametrize("metadata,expected_exception, test_id", [

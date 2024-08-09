@@ -8,14 +8,15 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
 import pytest
+from _pytest.mark import param
 
 from pasta_eln.GUI.dataverse.controlled_vocab_frame import ControlledVocabFrame
+from pasta_eln.GUI.dataverse.data_type_class_names import DataTypeClassName
 
 
 @pytest.fixture
 def qtbot(mocker):
   mocker.patch('pasta_eln.GUI.dataverse.controlled_vocab_frame.QFrame')
-  mocker.patch('pasta_eln.GUI.dataverse.controlled_vocab_frame.QHBoxLayout')
   mocker.patch(
     'pasta_eln.GUI.dataverse.primitive_compound_controlled_frame_base.Ui_PrimitiveCompoundControlledFrameBase.setupUi')
   mocker.patch('pasta_eln.GUI.dataverse.controlled_vocab_frame.logging.getLogger')
@@ -36,6 +37,8 @@ def controlled_vocab_frame(qtbot, mocker):
     'value': 'testValue',
     'valueTemplate': 'testTemplate'
   }
+  mocker.patch('pasta_eln.GUI.dataverse.controlled_vocab_frame.DataTypeClassFactory')
+  mocker.patch('pasta_eln.GUI.dataverse.controlled_vocab_frame.DataTypeClassContext')
   frame = ControlledVocabFrame(type_field)
   ControlledVocabFrame.load_ui = actual_load_ui
   return frame
@@ -44,15 +47,23 @@ def controlled_vocab_frame(qtbot, mocker):
 class TestControlledVocabFrame:
   @pytest.mark.parametrize("test_id, meta_field", [
     (
-        "success_multiple_values_init",
-        {"multiple": True, "value": ["entry1", "entry2"], "valueTemplate": ["entry1", "entry2", "entry3"]})
+        "success_multiple_values_init_primitve",
+        {"multiple": True, 'typeClass': 'primitive', "typeName": "testType", "value": ["entry1", "entry2"],
+         "valueTemplate": ["entry1", "entry2", "entry3"]}),
+    (
+        "success_multiple_values_init_compound",
+        {"multiple": True, 'typeClass': 'compound', "typeName": "testType", "value": ["entry1", "entry2"],
+         "valueTemplate": ["entry1", "entry2", "entry3"]})
   ])
-  def test_ControlledVocabFrame_init(self, mocker, qtbot, test_id, meta_field):
+  def test_init(self, mocker, qtbot, test_id, meta_field):
     # Arrange
     mock_load_ui = mocker.patch('pasta_eln.GUI.dataverse.controlled_vocab_frame.ControlledVocabFrame.load_ui')
+    mock_data_type_class_factory = mocker.patch('pasta_eln.GUI.dataverse.controlled_vocab_frame.DataTypeClassFactory')
+    mock_data_type_class_context = mocker.patch('pasta_eln.GUI.dataverse.controlled_vocab_frame.DataTypeClassContext')
     mock_super_setup_ui = mocker.patch(
       'pasta_eln.GUI.dataverse.primitive_compound_controlled_frame_base.Ui_PrimitiveCompoundControlledFrameBase.setupUi')
     mock_get_logger = mocker.patch('pasta_eln.GUI.dataverse.controlled_vocab_frame.logging.getLogger')
+    mock_meta_frame_constructor = mocker.patch('pasta_eln.GUI.dataverse.metadata_frame_base.MetadataFrame.__init__')
     mock_frame_constructor = mocker.patch('pasta_eln.GUI.dataverse.controlled_vocab_frame.QFrame')
 
     # Act
@@ -62,60 +73,60 @@ class TestControlledVocabFrame:
     assert frame is not None
     mock_get_logger.assert_called_once_with("pasta_eln.GUI.dataverse.controlled_vocab_frame.ControlledVocabFrame")
     mock_frame_constructor.assert_called_once_with()
+    mock_meta_frame_constructor.assert_called_once_with(frame.instance)
     mock_super_setup_ui.assert_called_once_with(frame.instance)
+    mock_data_type_class_context.assert_called_once_with(frame.mainVerticalLayout, frame.addPushButton, frame.instance,
+                                                         meta_field)
+    mock_data_type_class_factory.assert_called_once_with(mock_data_type_class_context.return_value)
+    mock_data_type_class_factory.return_value.make_data_type_class.assert_called_once_with(
+      DataTypeClassName(meta_field['typeClass']))
     assert frame.meta_field == meta_field
+    assert frame.data_type_class_factory == mock_data_type_class_factory.return_value
+    assert frame.data_type == mock_data_type_class_factory.return_value.make_data_type_class.return_value
+    frame.addPushButton.clicked.connect.assert_called_once_with(frame.add_button_click_handler)
     mock_load_ui.assert_called_once()
 
-  @pytest.mark.parametrize("meta_field, expected_calls, test_id", [
-    # Happy path tests with various realistic test values
-    ({"multiple": True, "value": ["entry1", "entry2"], "valueTemplate": "template"},
-     [("template", "entry1"), ("template", "entry2")], "success_multiple_values"),
-    ({"multiple": False, "value": "single_entry", "valueTemplate": "template"},
-     [(['No Value', 'template'], 'single_entry')],
-     "success_single_value"),
-
-    # Edge cases
-    ({"multiple": True, "value": [], "valueTemplate": "template"}, [("template", None)], "edge_no_values"),
-    ({"multiple": True, "value": None, "valueTemplate": "template"}, [("template", None)], "edge_none_value"),
-    ({"multiple": False, "value": None, "valueTemplate": "template"}, [(['No Value', 'template'], 'No Value')],
-     "edge_single_none_value"),
-
-    # Error cases are not defined as the function does not handle any exceptions or error conditions.
-    # If there are specific error conditions that should be tested, they need to be defined.
-  ])
-  def test_load_ui(self, mocker, controlled_vocab_frame, meta_field, expected_calls, test_id):
+  @pytest.mark.parametrize(
+    "logger_info_call_count, data_type_call_count",
+    [
+      param(1, 1, id="success_path_single_entry"),
+      param(1, 1, id="success_path_multiple_entries"),
+      param(1, 0, id="error_case_logger_fails"),
+      param(1, 1, id="error_case_data_type_fails"),
+    ],
+    ids=lambda param: param[2]
+  )
+  def test_load_ui(self, controlled_vocab_frame, logger_info_call_count, data_type_call_count, request):
     # Arrange
-    controlled_vocab_frame.meta_field = meta_field
-    controlled_vocab_frame.add_new_vocab_entry = mocker.MagicMock()
+    if request.node.callspec.id == "error_case_logger_fails":
+      controlled_vocab_frame.logger.info.side_effect = Exception("Logger failed")
+    elif request.node.callspec.id == "error_case_data_type_fails":
+      controlled_vocab_frame.data_type.populate_entry.side_effect = Exception("Data type failed")
 
     # Act
-    controlled_vocab_frame.load_ui()
+    if "error_case" in request.node.callspec.id:
+      with pytest.raises(Exception):
+        controlled_vocab_frame.load_ui()
+    else:
+      controlled_vocab_frame.load_ui()
 
     # Assert
-    assert controlled_vocab_frame.add_new_vocab_entry.call_count == len(
-      expected_calls), f"Test ID: {test_id} - Incorrect number of calls to add_new_vocab_entry"
-    controlled_vocab_frame.add_new_vocab_entry.assert_has_calls([mocker.call(*call) for call in expected_calls],
-                                                                any_order=True)
     controlled_vocab_frame.logger.info.assert_called_once_with("Loading controlled vocabulary frame ui..")
+    assert controlled_vocab_frame.logger.info.call_count == logger_info_call_count
+    assert controlled_vocab_frame.data_type.populate_entry.call_count == data_type_call_count
 
-  @pytest.mark.parametrize("meta_field, expected_entry, expected_value, test_id", [
-    # Success path tests
-    ({"multiple": True, "valueTemplate": ["term1", "term2"]}, ["term1", "term2"], "term1", "success_multiple_true"),
-    ({"multiple": False, "valueTemplate": "term"}, ['No Value', 'term'], "term", "success_multiple_false"),
-
-    # Edge cases
-    ({"multiple": True, "valueTemplate": []}, [], None, "edge_empty_list"),
-    ({"multiple": False, "valueTemplate": ""}, ['No Value'], 'No Value', "edge_empty_string"),
-
-    # Error cases
-    ({"multiple": True}, None, None, "error_no_valueTemplate_multiple"),
-    ({"multiple": False}, ['No Value'], 'No Value', "error_no_valueTemplate_single"),
-  ])
-  def test_add_button_callback(self, mocker, controlled_vocab_frame, meta_field, expected_entry, expected_value,
-                               test_id):
+  @pytest.mark.parametrize(
+    "meta_field",
+    [
+      ("test_value"),  # success path
+      (""),  # edge case: empty string
+      (None),  # edge case: None value
+    ],
+    ids=["success_path", "empty_string", "none_value"]
+  )
+  def test_add_button_click_handler(self, controlled_vocab_frame, meta_field):
     # Arrange
     controlled_vocab_frame.meta_field = meta_field
-    controlled_vocab_frame.add_new_vocab_entry = mocker.MagicMock()
 
     # Act
     controlled_vocab_frame.add_button_click_handler()
@@ -123,88 +134,11 @@ class TestControlledVocabFrame:
     # Assert
     controlled_vocab_frame.logger.info.assert_called_once_with("Adding new vocabulary entry, value: %s",
                                                                controlled_vocab_frame.meta_field)
-    controlled_vocab_frame.add_new_vocab_entry.assert_called_with(expected_entry, expected_value)
+    controlled_vocab_frame.data_type.add_new_entry.assert_called_once()
 
-  @pytest.mark.parametrize("controlled_vocabulary, value, test_id", [
-    (['term1', 'term2', 'term3'], 'term2', 'success_path'),
-    ([], None, 'empty_list'),
-    (None, None, 'none_vocabulary'),
-    (['single_term'], 'single_term', 'single_item'),
-    (['term1', 'term2'], None, 'no_value_provided'),
-    (['term1', 'term2'], 'non_existent_term', 'value_not_in_list'),
-  ], ids=lambda test_id: test_id)
-  def test_add_new_vocab_entry(self, mocker, controlled_vocab_frame, controlled_vocabulary, value, test_id):
-    # Arrange
-    mock_h_layout = mocker.patch('pasta_eln.GUI.dataverse.controlled_vocab_frame.QHBoxLayout')
-    mock_combobox = mocker.patch('pasta_eln.GUI.dataverse.controlled_vocab_frame.QComboBox')
-    mock_add_delete_button = mocker.patch('pasta_eln.GUI.dataverse.controlled_vocab_frame.add_delete_button')
-    mock_add_clear_button = mocker.patch('pasta_eln.GUI.dataverse.controlled_vocab_frame.add_clear_button')
-    controlled_vocab_frame.add_clear_button = mocker.MagicMock()
-    controlled_vocab_frame.add_delete_button = mocker.MagicMock()
-
-    # Act
-    controlled_vocab_frame.add_new_vocab_entry(controlled_vocabulary, value)
-
-    # Assert
-    mock_h_layout.assert_called_once()
-    mock_h_layout.return_value.setObjectName.assert_called_once_with("vocabHorizontalLayout")
-    mock_combobox.assert_called_once_with(parent=controlled_vocab_frame.instance)
-    mock_combobox.return_value.setObjectName.assert_called_once_with("vocabComboBox")
-    mock_combobox.return_value.setToolTip.assert_called_once_with("Select the controlled vocabulary.")
-    mock_combobox.return_value.addItems.assert_called_once_with(controlled_vocabulary or [])
-    mock_combobox.return_value.setCurrentText.assert_called_once_with(value or "")
-    mock_h_layout.return_value.addWidget.assert_any_call(mock_combobox.return_value)
-    mock_add_clear_button.assert_called_once_with(controlled_vocab_frame.instance, mock_h_layout.return_value)
-    mock_add_delete_button.assert_called_once_with(controlled_vocab_frame.instance, mock_h_layout.return_value)
-    controlled_vocab_frame.mainVerticalLayout.addLayout.assert_called_once_with(mock_h_layout.return_value)
-
-  @pytest.mark.parametrize("test_id, multiple, layout_count, combo_texts, expected", [
-    # ID: SuccessPath-SingleValue
-    ("SuccessPath-SingleValue", False, 1, ["Value1"], "Value1"),
-    # ID: SuccessPath-MultipleValues
-    ("SuccessPath-MultipleValues", True, 2, ["Value1", "Value2"], ["Value1", "Value2"]),
-    # ID: EdgeCase-EmptyValues
-    ("EdgeCase-EmptyValues", True, 3, ["", "", ""], []),
-    # ID: EdgeCase-DuplicateValues
-    ("EdgeCase-DuplicateValues", True, 3, ["Value1", "Value1", "Value1"], ["Value1"]),
-    # ID: ErrorCase-NoLayout
-    ("ErrorCase-NoLayout", False, 0, [], []),
-    # ID: ErrorCase-NoComboBox
-    ("ErrorCase-NoComboBox", False, 1, None, []),
-  ])
-  def test_save_modifications(self, mocker, controlled_vocab_frame, test_id, multiple, layout_count, combo_texts,
-                              expected):
-    # Arrange
-    controlled_vocab_frame.meta_field = {'multiple': multiple, 'value': []}
-    controlled_vocab_frame.mainVerticalLayout.count.return_value = layout_count
-    combo_boxes = [mocker.MagicMock() for _ in range(layout_count)]
-    layouts = [mocker.MagicMock() for _ in range(layout_count)]
-    for i, combo_box in enumerate(combo_boxes):
-      if combo_texts is not None:
-        combo_box.currentText.return_value = combo_texts[i]
-        layouts[i].itemAt(0).widget.return_value = combo_box
-        layouts[i].layout.return_value = layouts[i]
-    if controlled_vocab_frame.meta_field['multiple']:
-      controlled_vocab_frame.mainVerticalLayout.itemAt = lambda pos: layouts[pos]
-    elif test_id == "ErrorCase-NoLayout":
-      controlled_vocab_frame.mainVerticalLayout.findChild.return_value = None
-    elif test_id == "ErrorCase-NoComboBox":
-      controlled_vocab_frame.mainVerticalLayout.findChild.return_value.itemAt(
-        0).widget.return_value = None
-    else:
-      controlled_vocab_frame.mainVerticalLayout.findChild.return_value.itemAt(
-        0).widget.return_value = combo_boxes[0] if layout_count else None
-
+  def test_save_modifications(self, controlled_vocab_frame):
     # Act
     controlled_vocab_frame.save_modifications()
 
     # Assert
-    if isinstance(expected, list):
-      controlled_vocab_frame.meta_field['value'].sort()
-      expected.sort()
-    assert controlled_vocab_frame.meta_field['value'] == expected
-    controlled_vocab_frame.logger.info.assert_called_once_with("Saved modifications successfully, value: %s",
-                                                               controlled_vocab_frame.meta_field)
-    if test_id == "ErrorCase-NoLayout":
-      controlled_vocab_frame.mainVerticalLayout.addLayout.assert_not_called()
-      controlled_vocab_frame.logger.warning.assert_called_once_with("Failed to save modifications, no layout found.")
+    controlled_vocab_frame.data_type.save_modifications.assert_called_once()

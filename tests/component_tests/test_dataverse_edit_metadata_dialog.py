@@ -145,9 +145,9 @@ class TestDataverseEditMetadataDialog:
         QDialogButtonBox.Save).isVisible(), "EditMetadataDialog Save button should be shown!"
       assert edit_metadata_dialog.buttonBox.button(
         QDialogButtonBox.Cancel).isVisible(), "EditMetadataDialog Cancel button should be shown!"
-      assert edit_metadata_dialog.controlled_vocab_frame.instance.isVisible(), "EditMetadataDialog controlled_vocab_frame should be shown!"
-      assert edit_metadata_dialog.controlled_vocab_frame.addPushButton.isVisible(), "EditMetadataDialog controlled_vocab_frame addPushButton should be shown!"
-      vocab_horizontal_layout = edit_metadata_dialog.controlled_vocab_frame.mainVerticalLayout.findChild(
+      assert edit_metadata_dialog.metadata_frame.instance.isVisible(), "EditMetadataDialog controlled_vocab_frame should be shown!"
+      assert edit_metadata_dialog.metadata_frame.addPushButton.isVisible(), "EditMetadataDialog controlled_vocab_frame addPushButton should be shown!"
+      vocab_horizontal_layout = edit_metadata_dialog.metadata_frame.mainVerticalLayout.findChild(
         QHBoxLayout,
         "vocabHorizontalLayout")
       assert vocab_horizontal_layout, "EditMetadataDialog vocab_horizontal_layout should be present in mainVerticalLayout!"
@@ -160,7 +160,7 @@ class TestDataverseEditMetadataDialog:
       delete_button = vocab_horizontal_layout.itemAt(2).widget()
       assert delete_button.isVisible(), "EditMetadataDialog controlled_vocab_frame delete button should be shown!"
       assert delete_button.isEnabled(), "EditMetadataDialog controlled_vocab_frame delete button should be enabled!"
-      assert edit_metadata_dialog.controlled_vocab_frame.addPushButton.isEnabled(), "EditMetadataDialog controlled_vocab_frame addPushButton should be enabled!"
+      assert edit_metadata_dialog.metadata_frame.addPushButton.isEnabled(), "EditMetadataDialog controlled_vocab_frame addPushButton should be enabled!"
 
       assert edit_metadata_dialog.minimalFullComboBox.currentText() == "Minimal", "minimalFullComboBox must be initialized with default Minimal option"
       assert edit_metadata_dialog.typesComboBox.currentText() == "Subject", "typesComboBox must be initialized with default 'Title' option"
@@ -396,10 +396,10 @@ class TestDataverseEditMetadataDialog:
             assert widget.placeholderText() == placeholderTexts[
               i], f"EditMetadataDialog primitive_compound_frame {widget.objectName()} should have right placeholderText!"
       elif test_id == "success_case_select_astronomy_metadata" or test_id == "success_case_life_sciences_metadata":
-        assert edit_metadata_dialog.controlled_vocab_frame, "EditMetadataDialog controlled_vocab_frame should be present!"
-        assert edit_metadata_dialog.controlled_vocab_frame.addPushButton.isVisible(), "EditMetadataDialog controlled_vocab_frame addPushButton should be shown!"
-        assert edit_metadata_dialog.controlled_vocab_frame.addPushButton.isEnabled(), "EditMetadataDialog controlled_vocab_frame addPushButton should be enabled!"
-        vocab_horizontal_layout = edit_metadata_dialog.controlled_vocab_frame.mainVerticalLayout.findChild(
+        assert edit_metadata_dialog.metadata_frame, "EditMetadataDialog controlled_vocab_frame should be present!"
+        assert edit_metadata_dialog.metadata_frame.addPushButton.isVisible(), "EditMetadataDialog controlled_vocab_frame addPushButton should be shown!"
+        assert edit_metadata_dialog.metadata_frame.addPushButton.isEnabled(), "EditMetadataDialog controlled_vocab_frame addPushButton should be enabled!"
+        vocab_horizontal_layout = edit_metadata_dialog.metadata_frame.mainVerticalLayout.findChild(
           QHBoxLayout,
           "vocabHorizontalLayout")
         assert vocab_horizontal_layout, "EditMetadataDialog vocab_horizontal_layout should be present!"
@@ -521,7 +521,6 @@ class TestDataverseEditMetadataDialog:
         assert delete_button.isEnabled(), "EditMetadataDialog primitive_compound_frame delete_button should be enabled!"
         assert delete_button.toolTip() == 'Delete this particular entry.', "EditMetadataDialog primitive_compound_frame delete_button should have right tooltip!"
         line_edit.setText(test_data[pos])
-
     qtbot.mouseClick(edit_metadata_dialog.buttonBox.button(QDialogButtonBox.Save), Qt.LeftButton)
     assert edit_metadata_dialog.metadata_summary_dialog.instance.isVisible(), "EditMetadataDialogSummary should be visible!"
     qtbot.mouseClick(edit_metadata_dialog.metadata_summary_dialog.buttonBox.button(QDialogButtonBox.Yes), Qt.LeftButton)
@@ -690,19 +689,19 @@ class TestDataverseEditMetadataDialog:
       assert edit_metadata_dialog.metadataBlockComboBox.currentText() == "Life Sciences Metadata", "metadataBlockComboBox must be initialized with  citation metadata option"
       assert edit_metadata_dialog.typesComboBox.currentText() == 'Study Design Type', "typesComboBox must be initialized with 'Study Design Type' option"
 
-      assert edit_metadata_dialog.controlled_vocab_frame.instance.isVisible(), "EditMetadataDialog controlled_vocab_frame should be shown!"
-      assert edit_metadata_dialog.controlled_vocab_frame.addPushButton.isVisible(), "EditMetadataDialog controlled_vocab_frame addPushButton should be shown!"
-      assert edit_metadata_dialog.controlled_vocab_frame.addPushButton.isEnabled(), "EditMetadataDialog controlled_vocab_frame addPushButton should be enabled!"
+      assert edit_metadata_dialog.metadata_frame.instance.isVisible(), "EditMetadataDialog controlled_vocab_frame should be shown!"
+      assert edit_metadata_dialog.metadata_frame.addPushButton.isVisible(), "EditMetadataDialog controlled_vocab_frame addPushButton should be shown!"
+      assert edit_metadata_dialog.metadata_frame.addPushButton.isEnabled(), "EditMetadataDialog controlled_vocab_frame addPushButton should be enabled!"
 
-      vocab_horizontal_layouts = edit_metadata_dialog.controlled_vocab_frame.mainVerticalLayout.findChildren(
+      vocab_horizontal_layouts = edit_metadata_dialog.metadata_frame.mainVerticalLayout.findChildren(
         QHBoxLayout,
         "vocabHorizontalLayout")
       assert vocab_horizontal_layouts, "EditMetadataDialog vocab_horizontal_layouts should be present!"
       assert len(vocab_horizontal_layouts) == 1, "EditMetadataDialog vocab_horizontal_layouts should have 1 item!"
-      qtbot.mouseClick(edit_metadata_dialog.controlled_vocab_frame.addPushButton, Qt.LeftButton)
-      qtbot.mouseClick(edit_metadata_dialog.controlled_vocab_frame.addPushButton, Qt.LeftButton)
-      qtbot.mouseClick(edit_metadata_dialog.controlled_vocab_frame.addPushButton, Qt.LeftButton)
-      vocab_horizontal_layouts = edit_metadata_dialog.controlled_vocab_frame.mainVerticalLayout.findChildren(
+      qtbot.mouseClick(edit_metadata_dialog.metadata_frame.addPushButton, Qt.LeftButton)
+      qtbot.mouseClick(edit_metadata_dialog.metadata_frame.addPushButton, Qt.LeftButton)
+      qtbot.mouseClick(edit_metadata_dialog.metadata_frame.addPushButton, Qt.LeftButton)
+      vocab_horizontal_layouts = edit_metadata_dialog.metadata_frame.mainVerticalLayout.findChildren(
         QHBoxLayout,
         "vocabHorizontalLayout")
       assert len(
@@ -755,19 +754,19 @@ class TestDataverseEditMetadataDialog:
       assert edit_metadata_dialog.metadataBlockComboBox.currentText() == "Life Sciences Metadata", "metadataBlockComboBox must be initialized with  citation metadata option"
       assert edit_metadata_dialog.typesComboBox.currentText() == 'Study Design Type', "typesComboBox must be initialized with 'Study Design Type' option"
 
-      assert edit_metadata_dialog.controlled_vocab_frame.instance.isVisible(), "EditMetadataDialog controlled_vocab_frame should be shown!"
-      assert edit_metadata_dialog.controlled_vocab_frame.addPushButton.isVisible(), "EditMetadataDialog controlled_vocab_frame addPushButton should be shown!"
-      assert edit_metadata_dialog.controlled_vocab_frame.addPushButton.isEnabled(), "EditMetadataDialog controlled_vocab_frame addPushButton should be enabled!"
+      assert edit_metadata_dialog.metadata_frame.instance.isVisible(), "EditMetadataDialog controlled_vocab_frame should be shown!"
+      assert edit_metadata_dialog.metadata_frame.addPushButton.isVisible(), "EditMetadataDialog controlled_vocab_frame addPushButton should be shown!"
+      assert edit_metadata_dialog.metadata_frame.addPushButton.isEnabled(), "EditMetadataDialog controlled_vocab_frame addPushButton should be enabled!"
 
-      vocab_horizontal_layouts = edit_metadata_dialog.controlled_vocab_frame.mainVerticalLayout.findChildren(
+      vocab_horizontal_layouts = edit_metadata_dialog.metadata_frame.mainVerticalLayout.findChildren(
         QHBoxLayout,
         "vocabHorizontalLayout")
       assert vocab_horizontal_layouts, "EditMetadataDialog vocab_horizontal_layouts should be present!"
       assert len(vocab_horizontal_layouts) == 1, "EditMetadataDialog vocab_horizontal_layouts should have 1 item!"
-      qtbot.mouseClick(edit_metadata_dialog.controlled_vocab_frame.addPushButton, Qt.LeftButton)
-      qtbot.mouseClick(edit_metadata_dialog.controlled_vocab_frame.addPushButton, Qt.LeftButton)
-      qtbot.mouseClick(edit_metadata_dialog.controlled_vocab_frame.addPushButton, Qt.LeftButton)
-      vocab_horizontal_layouts = edit_metadata_dialog.controlled_vocab_frame.mainVerticalLayout.findChildren(
+      qtbot.mouseClick(edit_metadata_dialog.metadata_frame.addPushButton, Qt.LeftButton)
+      qtbot.mouseClick(edit_metadata_dialog.metadata_frame.addPushButton, Qt.LeftButton)
+      qtbot.mouseClick(edit_metadata_dialog.metadata_frame.addPushButton, Qt.LeftButton)
+      vocab_horizontal_layouts = edit_metadata_dialog.metadata_frame.mainVerticalLayout.findChildren(
         QHBoxLayout,
         "vocabHorizontalLayout")
       assert len(
@@ -1103,34 +1102,33 @@ class TestDataverseEditMetadataDialog:
       assert edit_metadata_dialog.metadataBlockComboBox.currentText() == "Life Sciences Metadata", "metadataBlockComboBox must be initialized with Life Sciences Metadata option"
       qtbot.keyClicks(edit_metadata_dialog.typesComboBox, 'Study Factor Type', delay=10)
       assert edit_metadata_dialog.typesComboBox.currentText() == 'Study Factor Type', "typesComboBox must be initialized with Study Factor Type option"
-      assert not edit_metadata_dialog.metadata_frame.instance.isVisible(), "EditMetadataDialog primitive_compound_frame should not be shown!"
-      assert edit_metadata_dialog.controlled_vocab_frame.instance.isVisible(), "EditMetadataDialog controlled_vocab_frame should be shown!"
-      assert edit_metadata_dialog.controlled_vocab_frame.addPushButton.isVisible(), "EditMetadataDialog controlled_vocab_frame addPushButton should be shown!"
-      assert edit_metadata_dialog.controlled_vocab_frame.addPushButton.isEnabled(), "EditMetadataDialog controlled_vocab_frame addPushButton should be enabled!"
-      assert edit_metadata_dialog.controlled_vocab_frame.mainVerticalLayout.count() == 2, "EditMetadataDialog controlled_vocab_frame mainVerticalLayout should contain 2 children!"
+      assert edit_metadata_dialog.metadata_frame.instance.isVisible(), "EditMetadataDialog controlled_vocab_frame should be shown!"
+      assert edit_metadata_dialog.metadata_frame.addPushButton.isVisible(), "EditMetadataDialog controlled_vocab_frame addPushButton should be shown!"
+      assert edit_metadata_dialog.metadata_frame.addPushButton.isEnabled(), "EditMetadataDialog controlled_vocab_frame addPushButton should be enabled!"
+      assert edit_metadata_dialog.metadata_frame.mainVerticalLayout.count() == 2, "EditMetadataDialog controlled_vocab_frame mainVerticalLayout should contain 2 children!"
       combo_box_items = ['No Value', 'Age', 'Biomarkers', 'Cell Surface Markers', 'Developmental Stage']
-      combo_box = edit_metadata_dialog.controlled_vocab_frame.mainVerticalLayout.itemAt(1).itemAt(0).widget()
+      combo_box = edit_metadata_dialog.metadata_frame.mainVerticalLayout.itemAt(1).itemAt(0).widget()
       assert combo_box.isEnabled(), "EditMetadataDialog controlled_vocab_frame combo_box should be enabled!"
       assert combo_box.toolTip() == 'Select the controlled vocabulary.', "EditMetadataDialog controlled_vocab_frame combo_box should have right tooltip!"
       assert [combo_box.itemText(i) for i in range(
         combo_box.count())] == combo_box_items, "EditMetadataDialog controlled_vocab_frame combo_box should have right options!"
       assert combo_box.currentText() == 'No Value', "EditMetadataDialog controlled_vocab_frame combo_box should have right default value!"
-      clear_button = edit_metadata_dialog.controlled_vocab_frame.mainVerticalLayout.itemAt(1).itemAt(1).widget()
+      clear_button = edit_metadata_dialog.metadata_frame.mainVerticalLayout.itemAt(1).itemAt(1).widget()
       assert clear_button.isEnabled(), "EditMetadataDialog controlled_vocab_frame clear_button should be enabled!"
       assert clear_button.toolTip() == 'Clear this particular entry.', "EditMetadataDialog controlled_vocab_frame clear_button should have right tooltip!"
-      delete_button = edit_metadata_dialog.controlled_vocab_frame.mainVerticalLayout.itemAt(1).itemAt(2).widget()
+      delete_button = edit_metadata_dialog.metadata_frame.mainVerticalLayout.itemAt(1).itemAt(2).widget()
       assert delete_button.isEnabled(), "EditMetadataDialog controlled_vocab_frame delete_button should be enabled!"
       assert delete_button.toolTip() == 'Delete this particular entry.', "EditMetadataDialog controlled_vocab_frame delete_button should have right tooltip!"
 
       # Add new field items
       for _ in range(4):
-        qtbot.mouseClick(edit_metadata_dialog.controlled_vocab_frame.addPushButton,
+        qtbot.mouseClick(edit_metadata_dialog.metadata_frame.addPushButton,
                          Qt.LeftButton)
 
       # Check if the new field items are added in UI
-      assert edit_metadata_dialog.controlled_vocab_frame.mainVerticalLayout.count() == 6, "EditMetadataDialog controlled_vocab_frame mainVerticalLayout should contain 5 children!"
-      for pos in range(1, edit_metadata_dialog.controlled_vocab_frame.mainVerticalLayout.count()):
-        combo_box = edit_metadata_dialog.controlled_vocab_frame.mainVerticalLayout.itemAt(pos).itemAt(0).widget()
+      assert edit_metadata_dialog.metadata_frame.mainVerticalLayout.count() == 6, "EditMetadataDialog controlled_vocab_frame mainVerticalLayout should contain 5 children!"
+      for pos in range(1, edit_metadata_dialog.metadata_frame.mainVerticalLayout.count()):
+        combo_box = edit_metadata_dialog.metadata_frame.mainVerticalLayout.itemAt(pos).itemAt(0).widget()
         assert combo_box.isEnabled(), "EditMetadataDialog controlled_vocab_frame combo_box should be enabled!"
         assert combo_box.toolTip() == 'Select the controlled vocabulary.', "EditMetadataDialog controlled_vocab_frame combo_box should have right tooltip!"
         assert [combo_box.itemText(i) for i in range(
@@ -1138,18 +1136,18 @@ class TestDataverseEditMetadataDialog:
         assert combo_box.currentText() == 'No Value', "EditMetadataDialog controlled_vocab_frame combo_box should have right default value!"
         assert clear_button.isEnabled(), "EditMetadataDialog controlled_vocab_frame clear_button should be enabled!"
         assert clear_button.toolTip() == 'Clear this particular entry.', "EditMetadataDialog controlled_vocab_frame clear_button should have right tooltip!"
-        delete_button = edit_metadata_dialog.controlled_vocab_frame.mainVerticalLayout.itemAt(1).itemAt(2).widget()
+        delete_button = edit_metadata_dialog.metadata_frame.mainVerticalLayout.itemAt(1).itemAt(2).widget()
         assert delete_button.isEnabled(), "EditMetadataDialog controlled_vocab_frame delete_button should be enabled!"
         assert delete_button.toolTip() == 'Delete this particular entry.', "EditMetadataDialog controlled_vocab_frame delete_button should have right tooltip!"
 
       # Set combo box items
       for i in range(5):
-        qtbot.keyClicks(edit_metadata_dialog.controlled_vocab_frame.mainVerticalLayout.itemAt(i + 1).itemAt(0).widget(),
+        qtbot.keyClicks(edit_metadata_dialog.metadata_frame.mainVerticalLayout.itemAt(i + 1).itemAt(0).widget(),
                         combo_box_items[i], delay=1)
 
       # Check if combo box items are updated in UI
-      for pos in range(1, edit_metadata_dialog.controlled_vocab_frame.mainVerticalLayout.count()):
-        combo_box = edit_metadata_dialog.controlled_vocab_frame.mainVerticalLayout.itemAt(pos).itemAt(0).widget()
+      for pos in range(1, edit_metadata_dialog.metadata_frame.mainVerticalLayout.count()):
+        combo_box = edit_metadata_dialog.metadata_frame.mainVerticalLayout.itemAt(pos).itemAt(0).widget()
         assert combo_box.currentText() == combo_box_items[
           pos - 1], "EditMetadataDialog controlled_vocab_frame combo_box should have right default value!"
 
@@ -1173,31 +1171,31 @@ class TestDataverseEditMetadataDialog:
       assert edit_metadata_dialog.metadataBlockComboBox.currentText() == "Life Sciences Metadata", "metadataBlockComboBox must be initialized with Life Sciences Metadata option"
       qtbot.keyClicks(edit_metadata_dialog.typesComboBox, 'Study Factor Type', delay=10)
       assert edit_metadata_dialog.typesComboBox.currentText() == 'Study Factor Type', "typesComboBox must be initialized with Study Factor Type option"
-      assert edit_metadata_dialog.controlled_vocab_frame.mainVerticalLayout.count() == 2, "EditMetadataDialog controlled_vocab_frame mainVerticalLayout should contain 2 children!"
+      assert edit_metadata_dialog.metadata_frame.mainVerticalLayout.count() == 2, "EditMetadataDialog controlled_vocab_frame mainVerticalLayout should contain 2 children!"
       combo_box_items = ['Age', 'Biomarkers', 'Cell Surface Markers', 'Developmental Stage']
 
       # Add new field items
       for _ in range(3):
-        qtbot.mouseClick(edit_metadata_dialog.controlled_vocab_frame.addPushButton,
+        qtbot.mouseClick(edit_metadata_dialog.metadata_frame.addPushButton,
                          Qt.LeftButton)
 
-      assert edit_metadata_dialog.controlled_vocab_frame.mainVerticalLayout.count() == 5, "EditMetadataDialog controlled_vocab_frame mainVerticalLayout should contain 5 children!"
+      assert edit_metadata_dialog.metadata_frame.mainVerticalLayout.count() == 5, "EditMetadataDialog controlled_vocab_frame mainVerticalLayout should contain 5 children!"
 
       # Set combo box items
       for i in range(4):
-        qtbot.keyClicks(edit_metadata_dialog.controlled_vocab_frame.mainVerticalLayout.itemAt(i + 1).itemAt(0).widget(),
+        qtbot.keyClicks(edit_metadata_dialog.metadata_frame.mainVerticalLayout.itemAt(i + 1).itemAt(0).widget(),
                         combo_box_items[i], delay=1)
-      for pos in range(1, edit_metadata_dialog.controlled_vocab_frame.mainVerticalLayout.count()):
-        combo_box = edit_metadata_dialog.controlled_vocab_frame.mainVerticalLayout.itemAt(pos).itemAt(0).widget()
+      for pos in range(1, edit_metadata_dialog.metadata_frame.mainVerticalLayout.count()):
+        combo_box = edit_metadata_dialog.metadata_frame.mainVerticalLayout.itemAt(pos).itemAt(0).widget()
         assert combo_box.currentText() == combo_box_items[
           pos - 1], "EditMetadataDialog controlled_vocab_frame combo_box should have right default value!"
 
       # Delete first two combo box items
-      qtbot.mouseClick(edit_metadata_dialog.controlled_vocab_frame.mainVerticalLayout.itemAt(1).itemAt(2).widget(),
+      qtbot.mouseClick(edit_metadata_dialog.metadata_frame.mainVerticalLayout.itemAt(1).itemAt(2).widget(),
                        Qt.LeftButton)
-      qtbot.mouseClick(edit_metadata_dialog.controlled_vocab_frame.mainVerticalLayout.itemAt(1).itemAt(2).widget(),
+      qtbot.mouseClick(edit_metadata_dialog.metadata_frame.mainVerticalLayout.itemAt(1).itemAt(2).widget(),
                        Qt.LeftButton)
-      assert edit_metadata_dialog.controlled_vocab_frame.mainVerticalLayout.count() == 3, "EditMetadataDialog controlled_vocab_frame mainVerticalLayout should contain 3 children!"
+      assert edit_metadata_dialog.metadata_frame.mainVerticalLayout.count() == 3, "EditMetadataDialog controlled_vocab_frame mainVerticalLayout should contain 3 children!"
 
     qtbot.mouseClick(edit_metadata_dialog.buttonBox.button(QDialogButtonBox.Save), Qt.LeftButton)
     assert edit_metadata_dialog.metadata_summary_dialog.instance.isVisible(), "EditMetadataDialogSummary should be visible!"

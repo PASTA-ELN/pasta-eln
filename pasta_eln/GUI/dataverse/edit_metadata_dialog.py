@@ -150,7 +150,10 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
             self.logger.info("Loading %s metadata type of class: %s...",
                              field['typeName'],
                              field['typeClass'])
-            self.metadata_frame = self.metadata_frame_factory.make_metadata_frame(DataTypeClassName(field['typeClass']), field)
+            if self.metadata_frame:
+              self.metadata_frame.instance.setParent(None)
+            self.metadata_frame = (self.metadata_frame_factory
+                                   .make_metadata_frame(DataTypeClassName(field['typeClass']), field))
             self.metadataScrollVerticalLayout.addWidget(self.metadata_frame.instance)
 
   def change_metadata_block(self, new_metadata_block: str | None = None) -> None:

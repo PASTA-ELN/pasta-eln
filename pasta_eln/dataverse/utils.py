@@ -706,6 +706,10 @@ def get_formatted_metadata_message(metadata: dict[str, Any]) -> str:
               message += f"<li style=\"color:Gray\">{adjust_type_name(value['typeName'])}: <i>{value['value']}</li></i>"
             message += "</ul>"
           message += "</ul>"
+        elif not field["multiple"] and field["typeClass"] == "compound":
+          for _, value in field['value'].items():
+            message += f"<li style=\"color:Gray\">{adjust_type_name(value['typeName'])}: <i>{value['value']}</li></i>"
+          message += "</ul>"
         elif field["multiple"] and field["typeClass"] == "controlledVocabulary":
           for field_value in field['value']:
             message += f"<i style=\"color:Gray\"><li>{field_value}</li></i>"

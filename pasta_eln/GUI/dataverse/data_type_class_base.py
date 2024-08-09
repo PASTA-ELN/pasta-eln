@@ -1,5 +1,4 @@
 """ Represents the data type class. """
-
 #  PASTA-ELN and all its sub-parts are covered by the MIT license.
 #
 #  Copyright (c) 2024
@@ -15,9 +14,26 @@ from typing import Any
 from pasta_eln.GUI.dataverse.data_type_class_context import DataTypeClassContext
 
 
-class DataTypeClass(object):
+class DataTypeClass:
+  """
+  Represents the base data type class.
+  """
 
   def __init__(self, context: DataTypeClassContext) -> None:
+    """
+    Initializes a new instance of the DataTypeClass class.
+
+    Explanation:
+        This method initializes a new instance of the DataTypeClass class.
+
+    Args:
+      context (DataTypeClassContext): The context of the data type class.
+
+    Raises:
+      TypeError: If the provided context is not of type DataTypeClassContext.
+    """
+    if not isinstance(context, DataTypeClassContext):
+      raise TypeError("context must be of type DataTypeClassContext")
     self.context: DataTypeClassContext = context
 
   def __new__(cls, *_: Any, **__: Any) -> Any:

@@ -1,3 +1,4 @@
+""" Represents the compound data type class. """
 #  PASTA-ELN and all its sub-parts are covered by the MIT license.
 #
 #  Copyright (c) 2024
@@ -20,6 +21,9 @@ from pasta_eln.dataverse.utils import clear_value, is_date_time_type
 
 
 class CompoundDataTypeClass(DataTypeClass):
+  """
+  Represents the compound data type class.
+  """
 
   def __new__(cls, *_: Any, **__: Any) -> Any:
     """
@@ -39,16 +43,34 @@ class CompoundDataTypeClass(DataTypeClass):
     return super(CompoundDataTypeClass, cls).__new__(cls)
 
   def __init__(self, context: DataTypeClassContext) -> None:
+    """
+    Initializes the CompoundDataTypeClass instance with the provided context.
+
+    Args:
+      context (DataTypeClassContext): The context for the CompoundDataTypeClass instance.
+    """
+
     super().__init__(context)
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
 
   def add_new_entry(self) -> None:
+    """
+    Adds a new entry to the compound data type layout based on the provided value template.
+
+    Args:
+      self: The instance of the compound data type class.
+    """
     new_compound_entry_layout = QHBoxLayout()
     new_compound_entry_layout.setObjectName("compoundHorizontalLayout")
     value_template = self.context.meta_field.get('valueTemplate', [{}])[0]
     for type_val in value_template.values():
-      type_name = type_val.get('typeName')
-      type_value = type_val.get('value')
+      if (not isinstance(type_val, dict)
+          or 'typeName' not in type_val
+          or 'value' not in type_val):
+        self.logger.warning("Invalid type value in valueTemplate: %s", type_val)
+        continue
+      type_name = type_val['typeName']
+      type_value = type_val['value']
       new_compound_entry_layout.addWidget(
         create_date_time_widget(type_name, '', self.context.parent_frame, type_value)
         if is_date_time_type(type_name) else
@@ -58,6 +80,9 @@ class CompoundDataTypeClass(DataTypeClass):
     self.context.main_vertical_layout.addLayout(new_compound_entry_layout)
 
   def populate_entry(self) -> None:
+    """
+    Populates the entry based on the provided value template and value.
+    """
     value_template = self.context.meta_field.get('valueTemplate')
     value = self.context.meta_field.get('value')
     if self.context.meta_field['multiple']:
@@ -79,14 +104,18 @@ class CompoundDataTypeClass(DataTypeClass):
         self.populate_compound_entry(empty_entry, value_template, False)
 
   def save_modifications(self) -> None:
+    """
+    Saves modifications based on the context's meta-field values.
+    """
+
     if self.context.meta_field.get('multiple'):
       self.context.meta_field['value'].clear()
       for layout_pos in range(self.context.main_vertical_layout.count()):
-        compound_horizontal_layout = self.context.main_vertical_layout.itemAt(layout_pos)
-        if isinstance(compound_horizontal_layout, QHBoxLayout):
+        compound_horizontal_layout_item = self.context.main_vertical_layout.itemAt(layout_pos)
+        if isinstance(compound_horizontal_layout_item, QHBoxLayout):
           value_template = self.context.meta_field.get('valueTemplate', [{}])[0]
           self.save_compound_horizontal_layout_values(
-            compound_horizontal_layout,
+            compound_horizontal_layout_item,
             value_template)
     else:
       self.context.meta_field['value'] = {}
@@ -130,7 +159,7 @@ class CompoundDataTypeClass(DataTypeClass):
       if name in empty_entry:
         text = widget.text()  # type: ignore[attr-defined]
         empty_entry[name]['value'] = text if text and text != 'No Value' else ""
-        update_needed = update_needed or empty_entry[name]['value']
+        update_needed = bool(update_needed or empty_entry[name]['value'])
     if update_needed:
       if isinstance(self.context.meta_field['value'], dict):
         self.context.meta_field['value'] = {**self.context.meta_field['value'], **empty_entry}

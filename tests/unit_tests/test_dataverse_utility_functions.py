@@ -6,14 +6,31 @@
 #  Filename: test_dataverse_utility_functions.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
+from unittest.mock import MagicMock
 
 import pytest
 from PySide6.QtCore import QDate
-from PySide6.QtWidgets import QComboBox, QDateTimeEdit, QLineEdit, QVBoxLayout
+from PySide6.QtWidgets import QBoxLayout, QComboBox, QDateTimeEdit, QFrame, QHBoxLayout, QLineEdit, QVBoxLayout
+from _pytest.mark import param
 
 from pasta_eln.GUI.dataverse.utility_functions import add_clear_button, add_delete_button, clear_layout_widgets, \
-  create_push_button, \
-  delete_layout_and_contents
+  create_date_time_widget, create_line_edit, create_push_button, \
+  delete_layout_and_contents, get_primitive_line_edit_text_value
+
+
+@pytest.fixture
+def create_layout():
+  def _create_layout(text_value, widget_pos, layout_type, is_widget_valid=True):
+    v_layout = MagicMock(spec=QVBoxLayout)
+    h_layout = MagicMock(spec=QHBoxLayout) if layout_type == 'QHBoxLayout' else MagicMock(spec=QBoxLayout)
+    line_edit = MagicMock(spec=QLineEdit)
+    line_edit.text.return_value = str(text_value)
+    v_layout.itemAt.side_effect = lambda x: h_layout
+    h_layout.itemAt.return_value.widget.return_value = line_edit if is_widget_valid else None
+    h_layout.layout.return_value = h_layout
+    return v_layout, widget_pos
+
+  return _create_layout
 
 
 class TestDataverseUtilityFunctions:
@@ -207,3 +224,135 @@ class TestDataverseUtilityFunctions:
       layout.setParent.assert_called_once_with(None)
       for widget in widgets:
         widget.widget.return_value.setParent.assert_called_once_with(None)
+
+  @pytest.mark.parametrize(
+    "type_name, type_value, template_value, expected_date, expected_tooltip, expected_object_name",
+    [
+      # Success path tests
+      ("start", "2023-01-01", "2023-01-01", QDate(2023, 1, 1),
+       "Enter the start value here. e.g. 2023-01-01, Minimum possible date is 0100-01-02", "startDateTimeEdit"),
+      ("end", "2022-12-31", "2022-12-31", QDate(2022, 12, 31),
+       "Enter the end value here. e.g. 2022-12-31, Minimum possible date is 0100-01-02", "endDateTimeEdit"),
+
+      # Edge cases
+      ("start", "0100-01-02", None, QDate(100, 1, 2),
+       "Enter the start value here. e.g. None, Minimum possible date is 0100-01-02", "startDateTimeEdit"),
+      (
+          "end", "No Value", None, QDate(1, 1, 1),
+          "Enter the end value here. e.g. None, Minimum possible date is 0100-01-02",
+          "endDateTimeEdit"),
+
+      # Error cases
+      ("start", "", None, QDate(1, 1, 1), "Enter the start value here. e.g. None, Minimum possible date is 0100-01-02",
+       "startDateTimeEdit"),
+      ("end", "invalid-date", None, QDate(1, 1, 1),
+       "Enter the end value here. e.g. None, Minimum possible date is 0100-01-02", "endDateTimeEdit"),
+    ],
+    ids=[
+      "success_path_start_date",
+      "success_path_end_date",
+      "edge_case_min_date",
+      "edge_case_no_value",
+      "error_case_empty_string",
+      "error_case_invalid_date",
+    ]
+  )
+  def test_create_date_time_widget(self, mocker, type_name, type_value, template_value, expected_date, expected_tooltip,
+                                   expected_object_name):
+    # Arrange
+    mock_adjust_type_name = mocker.patch('pasta_eln.GUI.dataverse.utility_functions.adjust_type_name',
+                                         return_value=type_name)
+    mock_date_time_edit = mocker.patch('pasta_eln.GUI.dataverse.utility_functions.QDateTimeEdit')
+    parent_frame = mocker.MagicMock(spec=QFrame)
+
+    # Act
+    date_time_edit = create_date_time_widget(type_name, type_value, parent_frame, template_value)
+
+    # Assert
+    mock_date_time_edit.assert_called_once_with(parent=parent_frame)
+    mock_date_time_edit.return_value.setSpecialValueText.assert_called_once_with("No Value")
+    mock_date_time_edit.return_value.setMinimumDate.assert_called_once_with(
+      QDate.fromString("0100-01-01", 'yyyy-MM-dd'))
+    mock_adjust_type_name.assert_called_once_with(type_name)
+    mock_date_time_edit.return_value.setToolTip.assert_called_once_with(
+      f"Enter the {mock_adjust_type_name.return_value} value here. e.g. {template_value}, Minimum possible date is 0100-01-02"
+    )
+    mock_date_time_edit.return_value.setObjectName.assert_called_once_with(f"{type_name}DateTimeEdit")
+    mock_date_time_edit.return_value.setDate.assert_called_once_with(
+      QDate.fromString(type_value, 'yyyy-MM-dd')
+      if type_value and type_value != 'No Value'
+      else QDate.fromString("0001-01-01", 'yyyy-MM-dd')
+    )
+    mock_date_time_edit.return_value.setDisplayFormat.assert_called_once_with('yyyy-MM-dd')
+    assert date_time_edit == mock_date_time_edit.return_value
+
+  @pytest.mark.parametrize(
+    "type_name, type_value, template_value, expected_placeholder, expected_tooltip, expected_object_name, expected_text",
+    [
+      # Success path tests
+      ("username", "john_doe", "example_user", "Enter the username here.",
+       "Enter the username value here. e.g. example_user", "usernameLineEdit", "john_doe"),
+      ("email", "john@example.com", "example@example.com", "Enter the email here.",
+       "Enter the email value here. e.g. example@example.com", "emailLineEdit", "john@example.com"),
+
+      # Edge cases
+      ("", "", "", "Enter the  here.", "Enter the  value here. e.g. ", "LineEdit", ""),
+      ("a" * 100, "b" * 100, "c" * 100, "Enter the " + "a" * 100 + " here.",
+       "Enter the " + "a" * 100 + " value here. e.g. " + "c" * 100, "a" * 100 + "LineEdit", "b" * 100),
+
+      # Error cases
+      ("username", None, "example_user", "Enter the username here.", "Enter the username value here. e.g. example_user",
+       "usernameLineEdit", ""),  # type_value is None
+      (None, "john_doe", "example_user", "Enter the None here.", "Enter the None value here. e.g. example_user",
+       "NoneLineEdit", "john_doe"),  # type_name is None
+    ],
+    ids=[
+      "success_path_username",
+      "success_path_email",
+      "edge_case_empty_strings",
+      "edge_case_long_strings",
+      "error_case_type_value_none",
+      "error_case_type_name_none",
+    ]
+  )
+  def test_create_line_edit(self, mocker, type_name, type_value, template_value, expected_placeholder, expected_tooltip,
+                            expected_object_name, expected_text):
+    # Arrange
+    mock_adjust_type_name = mocker.patch('pasta_eln.GUI.dataverse.utility_functions.adjust_type_name',
+                                         return_value=type_name)
+    mock_line_edit = mocker.patch('pasta_eln.GUI.dataverse.utility_functions.QLineEdit',
+                                  return_value=mocker.MagicMock(spec=QLineEdit))
+    parent_frame = mocker.MagicMock(spec=QFrame)
+
+    # Act
+    line_edit = create_line_edit(type_name, type_value, parent_frame, template_value)
+
+    # Assert
+    assert isinstance(line_edit, QLineEdit)
+    assert line_edit == mock_line_edit.return_value
+    mock_line_edit.assert_called_once_with(parent=parent_frame)
+    mock_line_edit.return_value.setPlaceholderText.assert_called_once_with(expected_placeholder)
+    mock_line_edit.return_value.setToolTip.assert_called_once_with(expected_tooltip)
+    mock_line_edit.return_value.setClearButtonEnabled.assert_called_once_with(True)
+    mock_adjust_type_name.assert_called_once_with(type_name)
+    mock_line_edit.return_value.setObjectName.assert_called_once_with(f"{type_name}LineEdit")
+    mock_line_edit.return_value.setText.assert_called_once_with(expected_text)
+
+  @pytest.mark.parametrize("text_value, widget_pos, layout_type, expected", [
+    param("test", 0, 'QHBoxLayout', "test", id="success_path_1"),
+    param("another test", 0, 'QHBoxLayout', "another test", id="success_path_2"),
+    param("", 0, 'QHBoxLayout', "", id="empty_string"),
+    param("edge case", 1, 'QHBoxLayout', "", id="invalid_widget_pos"),
+    param("wrong layout", 0, 'QBoxLayout', "", id="wrong_layout_type"),
+    param("no widget", 0, 'QHBoxLayout', "", id="no_widget_in_layout"),
+  ], ids=lambda x: x[-1])
+  def test_get_primitive_line_edit_text_value(self, create_layout, text_value, widget_pos, layout_type, expected):
+    # Arrange
+    v_layout, widget_pos = create_layout(text_value, widget_pos, layout_type,
+                                         is_widget_valid=text_value not in ["edge case", "no widget"])
+
+    # Act
+    result = get_primitive_line_edit_text_value(v_layout, widget_pos)
+
+    # Assert
+    assert result == expected

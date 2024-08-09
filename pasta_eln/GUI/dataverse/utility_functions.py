@@ -171,15 +171,32 @@ def create_line_edit(type_name: str,
   entry_line_edit.setToolTip(f"Enter the {adjusted_name} value here. e.g. {template_value}")
   entry_line_edit.setClearButtonEnabled(True)
   entry_line_edit.setObjectName(f"{type_name}LineEdit")
-  entry_line_edit.setText(type_value)
+  entry_line_edit.setText(type_value or '')
   return entry_line_edit
 
+
 def get_primitive_line_edit_text_value(primitive_vertical_layout: QVBoxLayout, widget_pos: int) -> str:
-  primitive_horizontal_layout = primitive_vertical_layout.itemAt(widget_pos).widget()
+  """
+  Retrieves the text value of a QLineEdit widget in a primitive vertical layout.
+
+  Args:
+      primitive_vertical_layout (QVBoxLayout): The vertical layout containing the QLineEdit widget.
+      widget_pos (int): The position of the widget in the layout.
+
+  Returns:
+      str: The text value of the QLineEdit widget if found, otherwise None.
+
+  Explanation:
+      This function retrieves the text value of a QLineEdit widget located at the specified position in a primitive vertical layout.
+      It first accesses the horizontal layout at the given position and then checks if the widget is a QLineEdit before returning its text value.
+  """
+  primitive_horizontal_layout = primitive_vertical_layout.itemAt(widget_pos).layout()
   if isinstance(primitive_horizontal_layout, QHBoxLayout):
     line_edit = primitive_horizontal_layout.itemAt(0).widget()
     if isinstance(line_edit, QLineEdit):
       return line_edit.text()
+  return ''
+
 
 def clear_layout_widgets(layout: QBoxLayout) -> None:
   """

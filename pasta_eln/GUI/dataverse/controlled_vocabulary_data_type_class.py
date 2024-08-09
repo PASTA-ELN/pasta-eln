@@ -1,3 +1,4 @@
+""" Represents the controlled vocabulary data type class. """
 #  PASTA-ELN and all its sub-parts are covered by the MIT license.
 #
 #  Copyright (c) 2024
@@ -17,6 +18,9 @@ from pasta_eln.GUI.dataverse.utility_functions import add_clear_button, add_dele
 
 
 class ControlledVocabularyDataTypeClass(DataTypeClass):
+  """
+  Represents the controlled vocabulary data type class.
+  """
 
   def __new__(cls, *_: Any, **__: Any) -> Any:
     """
@@ -36,20 +40,40 @@ class ControlledVocabularyDataTypeClass(DataTypeClass):
     return super(ControlledVocabularyDataTypeClass, cls).__new__(cls)
 
   def __init__(self, context: DataTypeClassContext) -> None:
+    """
+    Initializes a new instance of the ControlledVocabularyDataTypeClass class.
+
+    Explanation:
+        This method initializes a new instance of the ControlledVocabularyDataTypeClass class.
+    Args:
+      context (DataTypeClassContext): The context of the data type class.
+    """
     super().__init__(context)
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
 
   def add_new_entry(self) -> None:
+    """
+    Adds a new entry to the controlled vocabulary.
+
+    Explanation:
+        This method adds a new entry to the controlled vocabulary.
+    """
     value_template = self.context.meta_field.get('valueTemplate')
     if self.context.meta_field.get('multiple'):
-      self.add_new_vocab_entry(value_template, value_template[0]
-      if value_template and len(value_template) > 0 else None)
+      self.add_new_vocab_entry(value_template, value_template[0] if value_template else None)
     else:
-      self.add_new_vocab_entry(["No Value", value_template]
-                               if value_template and len(value_template) > 0
-                               else ["No Value"], value_template or "No Value")
+      self.add_new_vocab_entry(
+        ["No Value", value_template] if value_template else ["No Value"],
+        value_template or "No Value"
+      )
 
   def populate_entry(self) -> None:
+    """
+    Populates the entry with the current value of the controlled vocabulary.
+
+    Explanation:
+        This method populates the entry with the current value of the controlled vocabulary.
+    """
     value_block = self.context.meta_field.get('value')
     value_template = self.context.meta_field.get("valueTemplate")
     if self.context.meta_field.get('multiple'):
@@ -60,32 +84,56 @@ class ControlledVocabularyDataTypeClass(DataTypeClass):
         self.add_new_vocab_entry(value_template, None)
     else:
       self.add_new_vocab_entry(
-        ["No Value", value_template]
-        if value_template and len(value_template) > 0 else ["No Value"],
-        value_block or "No Value")
+        ["No Value", value_template] if value_template else ["No Value"],
+        value_block or "No Value"
+      )
 
   def save_modifications(self) -> None:
-    if self.context.meta_field['multiple']:
+    """
+    Saves the modifications to the controlled vocabulary.
+
+    Explanation:
+        This method saves the modifications to the controlled vocabulary.
+    """
+    if self.context.meta_field.get('multiple'):
       self.save_multiple_entries()
+      self.logger.info("Saved multiple entry modifications successfully, value: %s", self.context.meta_field)
     elif layout := self.context.main_vertical_layout.findChild(QHBoxLayout,
                                                                "vocabHorizontalLayout"):
       if not isinstance(layout, QHBoxLayout):
         self.logger.error("vocabHorizontalLayout not found!")
         return
       self.save_single_entry(layout)
+      self.logger.info("Saved single entry modification successfully, value: %s", self.context.meta_field)
     else:
       self.logger.warning("Failed to save modifications, no layout found.")
-    self.logger.info("Saved modifications successfully, value: %s", self.context.meta_field)
 
   def save_single_entry(self, layout: QHBoxLayout) -> None:
+    """
+    Saves the single entry to the controlled vocabulary.
+
+    Explanation:
+        This method saves the single entry to the controlled vocabulary.
+    Args:
+      layout (QHBoxLayout): The layout of the single entry.
+    """
     if combo_box := layout.itemAt(0).widget():
       if not isinstance(combo_box, QComboBox):
         self.logger.error("Combo box not found!")
         return
       current_text = combo_box.currentText()
       self.context.meta_field['value'] = current_text if current_text and current_text != 'No Value' else None
+    else:
+      self.context.meta_field['value'] = None
+      self.logger.error("Combo box not found!")
 
-  def save_multiple_entries(self):
+  def save_multiple_entries(self) -> None:
+    """
+    Saves the multiple entries to the controlled vocabulary.
+
+    Explanation:
+        This method saves the multiple entries to the controlled vocabulary.
+    """
     value = self.context.meta_field.get('value')
     if not isinstance(value, list):
       self.logger.error("Value is not a list")

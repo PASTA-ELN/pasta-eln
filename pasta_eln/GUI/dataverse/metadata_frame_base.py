@@ -1,18 +1,28 @@
+""" Represents the metadata frame. """
 #  PASTA-ELN and all its sub-parts are covered by the MIT license.
 #
 #  Copyright (c) 2024
 #
 #  Author: Jithu Murugan
-#  Filename: metadata_frame.py
+#  Filename: metadata_frame_base.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
+
 from abc import abstractmethod
 from typing import Any
 
 from PySide6.QtWidgets import QFrame
 
 
-class MetadataFrame(object):
+class MetadataFrame:
+  """
+  Represents a metadata frame.
+
+  Explanation:
+      This class represents a metadata frame.
+      It provides methods for loading and saving modifications.
+
+  """
 
   def __new__(cls, *_: Any, **__: Any) -> Any:
     """
@@ -44,21 +54,21 @@ class MetadataFrame(object):
   @abstractmethod
   def load_ui(self) -> None:
     """
-    Loads the UI for the metadata frame.
+    Abstract method to load the UI for the metadata frame.
 
     Explanation:
         This method loads the UI for the metadata frame.
 
     """
-    pass
+    return
 
   @abstractmethod
   def save_modifications(self) -> None:
     """
-    Loads the UI for the metadata frame.
+    Abstract method to load the UI for the metadata frame.
 
     Explanation:
         This method loads the UI for the metadata frame.
 
     """
-    pass
+    return
