@@ -163,7 +163,7 @@ class Form(QDialog):
                          key, str(value), self.doc['_id'])
         elif isinstance(value, str):    #string
           dataHierarchyItem = [i for group in dataHierarchyNode for i in dataHierarchyNode[group] if i['name']==key]
-          if len(dataHierarchyItem)==1 and 'list' in dataHierarchyItem[0]:       #choice dropdown
+          if len(dataHierarchyItem)==1 and 'list' in dataHierarchyItem[0] and dataHierarchyItem[0]['list']:       #choice dropdown
             setattr(self, f'key_{key}', QComboBox())
             if isinstance(dataHierarchyItem[0]['list'], list):            #dataHierarchy-defined choices
               getattr(self, f'key_{key}').addItems(dataHierarchyItem[0]['list'])
