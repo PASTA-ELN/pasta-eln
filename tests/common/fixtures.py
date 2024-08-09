@@ -74,6 +74,7 @@ def terminology_lookup_mock(mocker) -> TerminologyLookupService:
 @fixture()
 def http_client_mock(mocker) -> AsyncHttpClient:
   mocker.patch('pasta_eln.webclient.http_client.logging.getLogger')
+  mocker.patch('pasta_eln.webclient.http_client.ClientTimeout')
   return AsyncHttpClient()
 
 
@@ -205,7 +206,7 @@ def data_hierarchy_doc_mock(mocker) -> Document:
   mock_doc.pop.side_effect = mock_doc_content.pop
   mock_doc.keys.side_effect = mock_doc_content.keys
   mock_doc.types.side_effect = lambda: {data: mock_doc_content[data] for data in mock_doc_content if
-    type(mock_doc_content[data]) is dict}
+                                        type(mock_doc_content[data]) is dict}
   mock_doc.types_list.side_effect = mocker.MagicMock(
     return_value=[data for data in mock_doc_content if type(mock_doc_content[data]) is dict])
   return mock_doc

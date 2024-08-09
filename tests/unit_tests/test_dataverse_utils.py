@@ -15,6 +15,7 @@ from typing import Type
 from unittest.mock import AsyncMock, mock_open
 
 import pytest
+from _pytest.mark import param
 from cryptography.fernet import Fernet, InvalidToken
 
 from pasta_eln.dataverse.config_error import ConfigError
@@ -24,13 +25,13 @@ from pasta_eln.dataverse.utils import adjust_type_name, check_if_compound_field_
   check_if_minimal_metadata_exists, \
   check_login_credentials, \
   clear_value, decrypt_credentials, decrypt_data, \
-  delete_layout_and_contents, encrypt_data, \
+  encrypt_data, \
   get_citation_field, get_data_hierarchy_types, get_db_credentials, get_encrypt_key, \
   get_flattened_metadata, get_formatted_dataverse_url, get_formatted_message, get_formatted_metadata_message, \
   is_date_time_type, \
   log_and_create_error, read_pasta_config_file, \
   set_authors, \
-  set_template_values, update_status, \
+  set_field_template_value, set_template_values, update_status, \
   write_pasta_config_file
 
 # Constants for test
@@ -940,7 +941,7 @@ class TestDataverseUtils:
                {
                  "typeClass": "controlledVocabulary",
                  "value": [],
-                 "valueTemplate": ["Option1", "Option2"],
+                 "valueTemplate": ["No Value", "Option1", "Option2"],
                  "multiple": True
                },
                {
@@ -1021,6 +1022,74 @@ class TestDataverseUtils:
       assert metadata == expected_result, f"Test failed for {test_id}"
     if not (isinstance(expected_result, Type) and issubclass(expected_result, Exception)):
       assert metadata == expected_result, f"Test failed for {test_id}"
+
+  @pytest.mark.parametrize(
+    "field, expected",
+    [
+      # Happy path tests
+      pytest.param(
+        {'typeClass': 'primitive', 'multiple': False, 'value': 'Example'},
+        {'typeClass': 'primitive', 'multiple': False, 'value': '', 'valueTemplate': 'Example'},
+        id="single_primitive"
+      ),
+      pytest.param(
+        {'typeClass': 'primitive', 'multiple': True, 'value': ['Example1', 'Example2']},
+        {'typeClass': 'primitive', 'multiple': True, 'value': [], 'valueTemplate': ['Example1', 'Example2']},
+        id="multiple_primitive"
+      ),
+      pytest.param(
+        {'typeClass': 'complex', 'multiple': False, 'value': {'key': 'value'}},
+        {'typeClass': 'complex', 'multiple': False, 'value': '', 'valueTemplate': {'key': 'value'}},
+        id="single_complex"
+      ),
+      pytest.param(
+        {'typeClass': 'complex', 'multiple': True, 'value': [{'key1': 'value1'}, {'key2': 'value2'}]},
+        {'typeClass': 'complex', 'multiple': True, 'value': [],
+         'valueTemplate': [{'key1': 'value1'}, {'key2': 'value2'}]},
+        id="multiple_complex"
+      ),
+      # Edge cases
+      pytest.param(
+        {'typeClass': 'primitive', 'multiple': False, 'value': ''},
+        {'typeClass': 'primitive', 'multiple': False, 'value': '', 'valueTemplate': ''},
+        id="single_empty_string"
+      ),
+      pytest.param(
+        {'typeClass': 'primitive', 'multiple': True, 'value': []},
+        {'typeClass': 'primitive', 'multiple': True, 'value': [], 'valueTemplate': []},
+        id="multiple_empty_list"
+      ),
+      pytest.param(
+        {'typeClass': 'complex', 'multiple': False, 'value': {}},
+        {'typeClass': 'complex', 'multiple': False, 'value': '', 'valueTemplate': {}},
+        id="single_empty_dict"
+      ),
+      pytest.param(
+        {'typeClass': 'complex', 'multiple': True, 'value': [{}]},
+        {'typeClass': 'complex', 'multiple': True, 'value': [], 'valueTemplate': [{}]},
+        id="multiple_empty_dict_list"
+      ),
+      # Error cases
+      pytest.param(
+        {'typeClass': 'primitive', 'multiple': False},
+        {'typeClass': 'primitive', 'multiple': False, 'valueTemplate': None},
+        id="missing_value_key",
+        marks=pytest.mark.xfail(raises=KeyError)
+      ),
+      pytest.param(
+        {'typeClass': 'primitive', 'multiple': True, 'value': None},
+        {'typeClass': 'primitive', 'multiple': True, 'value': [], 'valueTemplate': []},
+        id="value_none",
+        marks=pytest.mark.xfail(raises=AttributeError)
+      ),
+    ]
+  )
+  def test_set_field_template_value(self, field, expected):
+    # Act
+    set_field_template_value(field)
+
+    # Assert
+    assert field == expected
 
   @pytest.mark.parametrize(
     "field, missing_information, missing_field_name, check, expected",
@@ -1630,36 +1699,6 @@ class TestDataverseUtils:
     with pytest.raises(expected_exception):
       _ = is_date_time_type(type_name)
 
-  @pytest.mark.parametrize(
-    "test_id, num_widgets",
-    [
-      ("success_path_1_widget", 1),  # ID: success_path_1_widget
-      ("success_path_multiple_widgets", 3),  # ID: success_path_multiple_widgets
-      ("success_path_no_widgets", 0),  # ID: success_path_no_widgets
-      ("edge_case_no_layout", 0),  # ID: edge_case_no_layout
-    ]
-  )
-  def test_delete_layout_and_contents(self, mocker, test_id, num_widgets):
-    # Arrange
-    layout = mocker.MagicMock()
-    widgets = [mocker.MagicMock() for _ in range(num_widgets)]
-    layout.itemAt = lambda pos: widgets[pos]
-    layout.count.return_value = len(widgets)
-    layout = None if test_id == "edge_case_no_layout" else layout
-
-    # Act
-    delete_layout_and_contents(layout)
-
-    # Assert
-    if test_id == "edge_case_no_layout":
-      for widget in widgets:
-        widget.widget.return_value.setParent.assert_not_called()
-    else:
-      layout.count.assert_called_once()
-      layout.setParent.assert_called_once_with(None)
-      for widget in widgets:
-        widget.widget.return_value.setParent.assert_called_once_with(None)
-
   # Parametrized test cases for happy path, edge cases, and error cases
   @pytest.mark.parametrize("missing_metadata, expected_output, test_id", [
     # Success path tests with various realistic test values
@@ -1915,12 +1954,218 @@ class TestDataverseUtils:
      "<html><b style=\"color:Black\">License Metadata:</b><ul><li style=\"color:Gray\">Name: <i>CC BY</i></li><li style=\"color:Gray\">URI: <i>https://creativecommons.org/licenses/by/4.0/</i></li></ul><b style=\"color:Black\">Citation Metadata:</b><ul><b style=\"color:#737373\"><li>Author:</li></b><ul><li style=\"color:Gray\">Item 1:</li><ul><li style=\"color:Gray\">Author Name: <i>John Doe</li></i></ul><li style=\"color:Gray\">Item 2:</li><ul><li style=\"color:Gray\">Author Name: <i>Jane Doe</li></i></ul></ul></ul></html>",
      "complex_nested_metadata")
   ], ids=["success_path_basic_metadata", "edge_case_empty_metadata", "complex_nested_metadata"])
-  def test_get_formatted_metadata_message(self, test_id, metadata, expected_output):
+  def test_get_formatted_metadata_message_version_1(self, test_id, metadata, expected_output):
     # Act
     result = get_formatted_metadata_message(metadata)
 
     # Assert
     assert result == expected_output
+
+  @pytest.mark.parametrize(
+    "metadata, expected_output",
+    [
+      # Success path test case
+      param(
+        {
+          'datasetVersion': {
+            'license': {'name': 'CC0', 'uri': 'https://creativecommons.org/publicdomain/zero/1.0/'},
+            'metadataBlocks': {
+              'citation': {
+                'displayName': 'Citation Metadata',
+                'fields': [
+                  {'typeName': 'title', 'value': 'Test Title', 'multiple': False, 'typeClass': 'primitive'}
+                ]
+              }
+            }
+          }
+        },
+        '<html><b style="color:Black">License Metadata:</b><ul>'
+        '<li style="color:Gray">Name: <i>CC0</i></li>'
+        '<li style="color:Gray">URI: <i>https://creativecommons.org/publicdomain/zero/1.0/</i></li>'
+        '</ul><b style="color:Black">Citation Metadata:</b><ul>'
+        '<b style="color:#737373"><li>Title:</li></b><ul>'
+        '<i style="color:Gray"><li>Test Title</li></i></ul></ul></html>',
+        id="success_path_single_field"
+      ),
+      # Success path test case
+      param(
+        {
+          'datasetVersion': {
+            'license': {'name': 'CC0', 'uri': 'https://creativecommons.org/publicdomain/zero/1.0/'},
+            'metadataBlocks': {
+              'citation': {
+                'displayName': 'Citation Metadata',
+                'fields': [
+                  {'typeName': "coverage.Spectral.Wavelength", 'value': [
+                    {
+                      "coverage.Spectral.MinimumWavelength": {
+                        "typeName": "coverage.Spectral.MinimumWavelength",
+                        "multiple": False,
+                        "typeClass": "primitive",
+                        "value": "4001"
+                      },
+                      "coverage.Spectral.MaximumWavelength": {
+                        "typeName": "coverage.Spectral.MaximumWavelength",
+                        "multiple": False,
+                        "typeClass": "primitive",
+                        "value": "4002"
+                      }
+                    },
+                    {
+                      "coverage.Spectral.MinimumWavelength": {
+                        "typeName": "coverage.Spectral.MinimumWavelength",
+                        "multiple": False,
+                        "typeClass": "primitive",
+                        "value": "4003"
+                      },
+                      "coverage.Spectral.MaximumWavelength": {
+                        "typeName": "coverage.Spectral.MaximumWavelength",
+                        "multiple": False,
+                        "typeClass": "primitive",
+                        "value": "4004"
+                      }
+                    }
+                  ], 'multiple': True, 'typeClass': 'compound'}
+                ]
+              }
+            }
+          }
+        },
+        '<html><b style="color:Black">License Metadata:</b><ul><li '
+        'style="color:Gray">Name: <i>CC0</i></li><li style="color:Gray">URI: '
+        '<i>https://creativecommons.org/publicdomain/zero/1.0/</i></li></ul><b '
+        'style="color:Black">Citation Metadata:</b><ul><b '
+        'style="color:#737373"><li>Coverage Spectral Wavelength:</li></b><ul><li '
+        'style="color:Gray">Item 1:</li><ul><li style="color:Gray">Coverage Spectral '
+        'Minimum Wavelength: <i>4001</li></i><li style="color:Gray">Coverage Spectral '
+        'Maximum Wavelength: <i>4002</li></i></ul><li style="color:Gray">Item '
+        '2:</li><ul><li style="color:Gray">Coverage Spectral Minimum Wavelength: '
+        '<i>4003</li></i><li style="color:Gray">Coverage Spectral Maximum Wavelength: '
+        '<i>4004</li></i></ul></ul></ul></html>',
+        id="success_path_multiple_compound_field"
+      ),
+      # Success path test case
+      param(
+        {
+          'datasetVersion': {
+            'license': {'name': 'CC0', 'uri': 'https://creativecommons.org/publicdomain/zero/1.0/'},
+            'metadataBlocks': {
+              'citation': {
+                'displayName': 'Citation Metadata',
+                'fields': [
+                  {
+                    "typeName": "targetSampleSize",
+                    "multiple": False,
+                    "typeClass": "compound",
+                    "value": {
+                      "targetSampleActualSize": {
+                        "typeName": "targetSampleActualSize",
+                        "multiple": False,
+                        "typeClass": "primitive",
+                        "value": "100"
+                      },
+                      "targetSampleSizeFormula": {
+                        "typeName": "targetSampleSizeFormula",
+                        "multiple": False,
+                        "typeClass": "primitive",
+                        "value": "TargetSampleSizeFormula"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        '<html><b style="color:Black">License Metadata:</b><ul><li '
+        'style="color:Gray">Name: <i>CC0</i></li><li style="color:Gray">URI: '
+        '<i>https://creativecommons.org/publicdomain/zero/1.0/</i></li></ul><b '
+        'style="color:Black">Citation Metadata:</b><ul><b '
+        'style="color:#737373"><li>Target Sample Size:</li></b><ul><li '
+        'style="color:Gray">Target Sample Actual Size: <i>100</li></i><li '
+        'style="color:Gray">Target Sample Size Formula: '
+        '<i>TargetSampleSizeFormula</li></i></ul></ul></html>',
+        id="success_path_single_compound_field"
+      ),
+      # Edge case: Empty metadata
+      param(
+        {
+          'datasetVersion': {
+            'license': None,
+            'metadataBlocks': {}
+          }
+        },
+        '<html></html>',
+        id="empty_metadata"
+      ),
+      # Edge case: No license
+      param(
+        {
+          'datasetVersion': {
+            'license': None,
+            'metadataBlocks': {
+              'citation': {
+                'displayName': 'Citation Metadata',
+                'fields': [
+                  {'typeName': 'title', 'value': 'Test Title', 'multiple': False, 'typeClass': 'primitive'}
+                ]
+              }
+            }
+          }
+        },
+        '<html><b style="color:Black">Citation Metadata:</b><ul>'
+        '<b style="color:#737373"><li>Title:</li></b><ul>'
+        '<i style="color:Gray"><li>Test Title</li></i></ul></ul></html>',
+        id="no_license"
+      ),
+      # Edge case: No fields in metadata block
+      param(
+        {
+          'datasetVersion': {
+            'license': {'name': 'CC0', 'uri': 'https://creativecommons.org/publicdomain/zero/1.0/'},
+            'metadataBlocks': {
+              'citation': {
+                'displayName': 'Citation Metadata',
+                'fields': []
+              }
+            }
+          }
+        },
+        '<html><b style="color:Black">License Metadata:</b><ul>'
+        '<li style="color:Gray">Name: <i>CC0</i></li>'
+        '<li style="color:Gray">URI: <i>https://creativecommons.org/publicdomain/zero/1.0/</i></li>'
+        '</ul><b style="color:Black">Citation Metadata:</b><ul>'
+        '<li style="color:#737373">No Value</li></ul></ul></html>',
+        id="no_fields_in_metadata_block"
+      ),
+      # Error case: Missing datasetVersion key
+      param(
+        {},
+        KeyError,
+        id="missing_datasetVersion_key"
+      ),
+      # Error case: Missing metadataBlocks key
+      param(
+        {
+          'datasetVersion': {
+            'license': {'name': 'CC0', 'uri': 'https://creativecommons.org/publicdomain/zero/1.0/'}
+          }
+        },
+        KeyError,
+        id="missing_metadataBlocks_key"
+      ),
+    ]
+  )
+  def test_get_formatted_metadata_message_version_2(self, metadata, expected_output):
+    # Act
+    if isinstance(expected_output, type) and issubclass(expected_output, Exception):
+      with pytest.raises(expected_output):
+        get_formatted_metadata_message(metadata)
+    else:
+      result = get_formatted_metadata_message(metadata)
+
+      # Assert
+      assert result == expected_output
 
   # Test data for error cases
   @pytest.mark.parametrize("metadata,expected_exception, test_id", [
