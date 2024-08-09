@@ -34,7 +34,6 @@ from .miscTools import outputString, hierarchy, camelCase, tracebackString
 # - LATER change configuration to sqlite
 # - do not work on replicator: use eln file there
 # - think about more mapping
-# TODO: check branches in db: why are some stacks so short in main project group
 
 # Benefits:
 # - easy installation
@@ -458,8 +457,8 @@ class SqlLiteDB:
       dict: document that was removed
     """
     doc = self.getDoc(docID)
-    del doc['image']
-    del doc['content']
+    doc.pop('image','')
+    doc.pop('content','')
     self.cursor.execute(f"DELETE FROM main WHERE id == '{docID}'")
     self.cursor.execute(f"DELETE FROM branches WHERE id == '{docID}'")
     self.cursor.execute(f"DELETE FROM properties WHERE id == '{docID}'")
@@ -595,22 +594,20 @@ class SqlLiteDB:
           cmd = "SELECT qrCodes.id, qrCodes.qrCode, main.name FROM qrCodes INNER JOIN main USING(id)"
           if not allFlag:
             cmd += r" INNER JOIN branches USING(id) WHERE NOT branches.show LIKE '%F%'"
-          self.cursor.execute(cmd)
         else:
-          raise ValueError('Not implemented')
+          raise ValueError('Not implemented sqlite l 599')
       elif docType=='viewSHAsum':
         if startKey is None:
           cmd = "SELECT main.id, main.shasum, main.name FROM main"
           if not allFlag:
             cmd += r" INNER JOIN branches USING(id) WHERE NOT branches.show LIKE '%F%'"
-          self.cursor.execute(cmd)
         else:
           cmd = f"SELECT main.id, main.shasum, main.name FROM main INNER JOIN branches USING(id) WHERE shasum='{startKey}'"
           if not allFlag:
             cmd += r" and NOT branches.show LIKE '%F%'"
-          self.cursor.execute(cmd)
       else:
         raise ValueError('Invalid docType')
+      self.cursor.execute(cmd)
       results = self.cursor.fetchall()
       results = [{'id':i[0], 'key':i[1].replace('/',' '), 'value':i[2]} for i in results if i[1] is not None]
     else:
@@ -783,11 +780,19 @@ class SqlLiteDB:
             outString+= outputString(outputStyle,'unsure',f"branch stack and path lengths not equal: {docID}")
         if path!='*' and not path.startswith('http'):
           for parentID in stack.split('/')[:-1]:            #check if all parents in doc have a corresponding path
-            parentDoc = self.getDoc(parentID)
+            try:
+              parentDoc = self.getDoc(parentID)
+            except Exception:
+              outString+= outputString(outputStyle,'error',f"branch stack parent is bad: {docID}")
+              continue
             parentDocBranches = parentDoc['branch']
             onePathFound = any(path.startswith(parentBranch['path']) for parentBranch in parentDocBranches)
-            if not onePathFound and (not docType.startswith('procedure') or not minimal):
-              outString+= outputString(outputStyle,'unsure',f"dch08: parent does not have corresponding path (remote) {docID} | parentID {parentID}")
+            if not onePathFound:
+              if docType.startswith('procedure') and not minimal:
+                outString+= outputString(outputStyle,'perfect',f"dch08: parent of procedure does not have corresponding path {docID} | parentID {parentID}")
+              else:
+                outString+= outputString(outputStyle,'unsure',f"dch08: parent does not have corresponding path {docID} | parentID {parentID}")
+
 
     #doc-type specific tests
     self.cursor.execute("SELECT qrCodes.id, qrCodes.qrCode FROM qrCodes JOIN main USING(id) WHERE  main.type LIKE 'sample%'")

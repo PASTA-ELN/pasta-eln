@@ -696,7 +696,7 @@ class Backend(CLI_Mixin):
 
     Args:
         outputStyle (str): output using a given style: see outputString
-        repair (bool): repair database
+        repair (bool): repair id files in file tree by copying from DB
         minimal (bool): true=only show warnings and errors; else=also show information
 
     Returns:
@@ -725,7 +725,7 @@ class Backend(CLI_Mixin):
             continue
           path = (Path(root).relative_to(self.basePath) /fileName).as_posix()
           if path not in pathsInDB_data:
-            output += outputString(outputStyle, 'error', f'File on harddisk but not DB: {path}')
+            output += outputString(outputStyle, 'error', f'File on harddisk but not DB (2): {path}')
             count += 1
           else:
             pathsInDB_data.remove(path)
@@ -743,11 +743,12 @@ class Backend(CLI_Mixin):
                 docDisk = json.loads(fIn.read())
                 listDocs = self.db.getView('viewHierarchy/viewPathsAll', preciseKey=path)
                 if len(listDocs)!=1:
-                  output += outputString(outputStyle, 'error', f'Path of folder is non-unique: {path}')
+                  output += outputString(outputStyle, 'error', f'Path of folder is non-unique (1): {path} in '\
+                                         f'{" ".join([i['id'] for i in listDocs])}')
                 docDB   = self.db.getDoc(listDocs[0]['id'])
                 difference = diffDicts(docDisk,docDB)
                 if len(difference)>1:
-                  output += outputString(outputStyle,'error','disk(1) and db(2) content do not match:'+docDisk['id'])
+                  output += outputString(outputStyle,'error','disk(1) and db(2) content do not match:'+docDB['id'])
                   output += outputString(outputStyle,'error',difference)
                   if repair:
                     with open(self.basePath/root/dirName/'.id_pastaELN.json','w',encoding='utf-8') as fOut:
@@ -760,11 +761,10 @@ class Backend(CLI_Mixin):
               #   with open(self.basePath/root/dirName/'.id_pastaELN.json','w',encoding='utf-8') as fOut:
               #     docDB   = self.db.getDoc( docDisk['id'] )
               #     json.dump(docDB, fOut)
-    output += outputString(outputStyle, 'info', f'Number of files on disk that are not in database {str(count)}')
     orphans = [i for i in pathsInDB_data   if not (self.basePath/i).exists() and ":/" not in i and i!='*']  #paths can be files or directories
     orphans+= [i for i in pathsInDB_folder if not (self.basePath/i).exists() ]
     if orphans:
-      output += outputString(outputStyle,'error','bch01: These files of database not on filesystem:\n- '+'\n- '.join(orphans))
+      output += outputString(outputStyle,'error','bch01: These files of database not on filesystem(3):\n  - '+'\n  - '.join(orphans))
     output += outputString(outputStyle,'h2','File summary')
     if outputStyle == 'text':
       output += "Success\n" if not orphans and count==0 else "Failure\n"
