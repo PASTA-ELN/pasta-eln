@@ -48,10 +48,9 @@ defaultDefinitions: list[list[Union[str,int]]] = [
 ]
 
 defaultDataHierarchyNode: list[dict[str, str]] = [
-    {"name": "name", "query": "What is the file name?"},
-    {"name": "tags"},
-    {"name": "comment", "query": "What are the comments?"},
-    {"name": "type"}
+  {'docType':'-','class':'','idx':'0','name':'name',   'query':'What is the name?',     'unit':'','IRI':'','mandatory':'T','list':''},
+  {'docType':'-','class':'','idx':'1','name':'tags',   'query':'What are the tags?',    'unit':'','IRI':'','mandatory':'','list':''},
+  {'docType':'-','class':'','idx':'2','name':'comment','query':'What are the comments?','unit':'','IRI':'','mandatory':'','list':''}
   ]
 
 CONF_FILE_NAME = '.pastaELN_v3.json'

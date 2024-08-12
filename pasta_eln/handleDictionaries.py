@@ -207,20 +207,23 @@ def diffDicts(dict1:dict[str,Any], dict2:dict[str,Any]) -> str:
   """ Check if two dictionaries differ. Just compare the lowest level keys/values and output string
 
   Args:
-    dict1 (dict): dictionary 1
-    dict2 (dict): dictionary 2
+    dict1 (dict): dictionary 1 - disk
+    dict2 (dict): dictionary 2 - database
 
   Returns:
     str: output with \\n
   """
   ignoreKeys = ['client', '_rev', 'gui', '_attachments']
+  shortVersion = '__version__' in dict1 and dict1['__version__'] == 'short'
   outString = ''
   dict2Copy = dict(dict2)
   for key,value in dict1.items():
     if key in ignoreKeys:
       continue
     if key not in dict2Copy:
-      outString += f'key not in dictionary 2: {key}' + '\n'
+      if not shortVersion or key not in ('__version__','content','image','shasum'):
+        print(shortVersion, key)
+        outString += f'key not in dictionary 2: {key}' + '\n'
       continue
     if value != dict2Copy[key]:
       if key=='branch':
@@ -246,7 +249,7 @@ def diffDicts(dict1:dict[str,Any], dict2:dict[str,Any]) -> str:
         outString += (f'values differ for key: {key}\n   {str(value)}\n   {str(dict2Copy[key])}\n')
     del dict2Copy[key]
   for key in dict2Copy:
-    if key in ignoreKeys:
+    if key in ignoreKeys or (shortVersion and key in ('tags')):
       continue
     outString += f'key not in dictionary 1: {key}\n'
   return outString

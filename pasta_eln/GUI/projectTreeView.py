@@ -84,11 +84,11 @@ class TreeView(QTreeView):
       # -  not sure this will be important
     elif command[0] is Command.ADD_SIBLING:
       hierStack= hierStack[:-1]
-      docType= f'x{len(hierStack)}'
+      docType= 'x1'
       docID  = hierStack[-1]
       self.comm.backend.cwd = Path(self.comm.backend.db.getDoc(docID)['branch'][0]['path'])
       label = self.comm.backend.db.dataHierarchy('x1','title')[0].lower()[:-1]
-      docID = self.comm.backend.addData(docType, {'name':f'new {label}'}, hierStack)
+      docID = self.comm.backend.addData(docType, {'name':f'new {label}'}, hierStack)['id']
       # append item to the GUI
       item  = self.model().itemFromIndex(self.currentIndex())                                                # type: ignore[attr-defined]
       parent = item.parent() if item.parent() is not None else self.model().invisibleRootItem()              # type: ignore[attr-defined]

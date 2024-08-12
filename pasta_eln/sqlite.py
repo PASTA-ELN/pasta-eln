@@ -1,6 +1,6 @@
 """ Class for interaction with sqlite """
 import base64, copy, io, json, logging, os, re, sqlite3
-from typing import Any, Optional, Union
+from typing import Any, Optional
 from datetime import datetime
 from pathlib import Path
 from anytree import Node
@@ -10,10 +10,18 @@ from .fixedStringsJson import defaultDataHierarchy, defaultDefinitions
 from .miscTools import outputString, hierarchy, camelCase, tracebackString
 
 # DO NOT WORK ON THIS IF THERE IS SOMETHING ON THE TODO LIST
+# - Why subfolder list has no incremented 000_
+# - Why doc looses type at end of addData?
 # List:
-# 1. use Yourself: verify CW33
+# 1. use Yourself: verify CW33 TRY ON TEST FIRST
+#    - edit new item: save sept. homework
+#  File "/home/steffen/FZJ/PASTA/pasta-eln/pasta_eln/sqlite.py", line 417, in updateDoc
+#    self.cursor.execute(f"UPDATE main SET {changeString} WHERE id = '{docID}'")
+#sqlite3.OperationalError: near "x1": syntax error
 # 2. create final example data: attachments, two branches, history CW34
+#    - not all exists in GUI jet (attachments, history create todos)
 # 3. do GUI work CW35
+#    fix color issues when using themes and bright/dark screen
 # 4. pyInstaller for windows CW36
 # 5. .eln-file  CW37/38
 # 6. sync elabFTW CW39/40
@@ -65,7 +73,7 @@ class SqlLiteDB:
       resetDataHierarchy (bool): reset dataHierarchy
       basePath (Path): path of project group
     """
-    self.connection = sqlite3.connect(basePath/"pastaELN.db")
+    self.connection = sqlite3.connect(basePath/"pastaELN.db", check_same_thread=False)
     self.cursor     = self.connection.cursor()
     self.dataHierarchyInit(resetDataHierarchy)
     # main table
@@ -400,13 +408,14 @@ class SqlLiteDB:
       self.cursor.executemany(cmd, set(dataOld.keys()).difference(dataNew.keys()))
       changesDict |= dataOld
     # read main and identify if something changed
+    translation = str.maketrans({"'":"/'"})  #TODO External
     cursor.execute(f"SELECT * FROM main WHERE id == '{docID}'")
     mainOld = dict(cursor.fetchone())
     mainOld['type']= mainOld['type'].split('/')
     changesDB: dict[str,dict[str,str]] = {'main': {}}
     for key in ('name','user','type','dateModified','client','image','content','comment'):
       if key in mainNew and mainOld[key]!=mainNew[key]:
-        changesDB['main'][key] = mainNew[key]
+        changesDB['main'][key] = '/'.join(mainNew[key]) if key=='type' else mainNew[key].translate(translation)
         changesDict[key] = mainOld[key]
     # change content in database: main and changes are updated
     if set(changesDict.keys()).difference(('dateModified','client','user')):
@@ -415,7 +424,8 @@ class SqlLiteDB:
       if 'name' not in changesDict or changesDict['name']!='new folder':  #do not save initial change from new folder
         self.cursor.execute("INSERT INTO changes VALUES (?,?,?)", [docID, datetime.now().isoformat(), json.dumps(changesDict)])
       self.connection.commit()
-    return mainOld | mainNew | {'branch':[branchNew]}
+    branchNew.pop('op')
+    return mainOld | mainNew | {'branch':[branchNew], '__version__':'short'}
 
 
   def updateBranch(self, docID:str, branch:int, child:int, stack:Optional[list[str]]=None,
@@ -560,7 +570,7 @@ class SqlLiteDB:
       self.cursor.execute(cmd)
       results = self.cursor.fetchall()
       # value: [child, doc['-type'], doc['.name'], doc['-gui']]
-      results = [{'id':i[0], 'key':i[1].replace('/',' '),
+      results = [{'id':i[0], 'key':i[1],
                   'value':[i[2], i[3].split('/'), i[4], [j=='T' for j in i[5]]]} for i in results]
     elif thePath=='viewHierarchy/viewPaths':
       # JOIN and get type
@@ -643,7 +653,7 @@ class SqlLiteDB:
         dataTree = Node(id=_id, docType=docType, name=name, gui=gui, childNum=childNum)
         id2Node[_id] = dataTree
       else:
-        parent = item['key'].split()[-2]
+        parent = item['key'].split('/')[-2]
         subNode = Node(id=_id, parent=id2Node[parent], docType=docType, name=name, gui=gui, childNum=childNum)
         id2Node[_id] = subNode
     # add non-folders into tree
@@ -651,7 +661,7 @@ class SqlLiteDB:
     for item in nonFolders:
       _id     = item['id']
       childNum, docType, name, gui = item['value']
-      parentId = item['key'].split()[-2]
+      parentId = item['key'].split('/')[-2]
       Node(id=_id, parent=id2Node[parentId], docType=docType, name=name, gui=gui, childNum=childNum)
     # sort children
     for parentNode in id2Node.values():

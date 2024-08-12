@@ -68,6 +68,8 @@ class Form(QDialog):
       self.setMinimumWidth(600)
 
     # create data hierarchy node: data structure
+    if self.doc['type']==['x2']:
+      self.doc['type'] = ['x1']
     if self.doc['type'][0] in self.db.dataHierarchy('', ''):
       rawData = self.db.dataHierarchy(self.doc['type'][0], 'meta')
       dataHierarchyNode = copy.deepcopy([dict(i) for i in rawData])

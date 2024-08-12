@@ -44,7 +44,7 @@ class ConfigurationGUI(QWidget):
           self.comm.backend.configuration['GUI'][k] = int(getattr(self, k).currentText())
         except Exception:
           self.comm.backend.configuration['GUI'][k] = getattr(self, k).currentText()
-    with open(Path.home()/'.pastaELN.json', 'w', encoding='utf-8') as fConf:
+    with open(Path.home()/'.pastaELN_v3.json', 'w', encoding='utf-8') as fConf:
       fConf.write(json.dumps(self.comm.backend.configuration,indent=2))
     restart()
     return

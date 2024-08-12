@@ -183,13 +183,13 @@ class Backend(CLI_Mixin):
     # collect structure-doc and prepare
     if doc['type'][0] and doc['type'][0][0]=='x' and doc['type'][0]!='x0' and childNum is None:
       #should not have childnumber in other cases
-      thisStack = ' '.join(hierStack)
+      thisStack = '/'.join(hierStack)+'/'
       view = self.db.getView('viewHierarchy/viewHierarchy', startKey=thisStack) #not faster with cT.getChildren
       childNum = 0
       for item in view:
-        if item['value'][1][0]=='x0' or item['value'][1][0][0]!='x':
+        if item['value'][1][0][0]!='x':
           continue
-        if thisStack == ' '.join(item['key'].split(' ')[:-1]): #remove last item from string
+        if thisStack == '/'.join(item['key'].split('/')[:-1])+'/': #remove last item from string  #TODO BUG HERE
           childNum += 1
 
     # find path name on local file system; name can be anything

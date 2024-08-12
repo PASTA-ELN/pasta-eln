@@ -74,8 +74,8 @@ class TestStringMethods(unittest.TestCase):
       currentID = self.be.addData('x1',    {'comment': 'This will take a long time. #WAIT #_curated',
                                             'name': 'Get spray machine'})['id']
       self.be.changeHierarchy(currentID)
-      self.be.addData('x2',    {'name': 'Get quotes', 'comment': 'Dont forget company-A #_1 '})
-      self.be.addData('x2',    {'name': 'Buy machine','comment': 'Delivery time will be 6month #_3 '})
+      self.be.addData('x1',    {'name': 'Get quotes', 'comment': 'Dont forget company-A #_1 '})
+      self.be.addData('x1',    {'name': 'Buy machine','comment': 'Delivery time will be 6month #_3 '})
       self.be.changeHierarchy(None)
       semStepID = self.be.addData('x1',    {'name': 'SEM images'})['id']
       self.be.changeHierarchy(semStepID)
