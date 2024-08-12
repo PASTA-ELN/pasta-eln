@@ -112,9 +112,7 @@ class Backend(CLI_Mixin):
     if doc['type'][0][0]=='x' and self.cwd is not None:
       items = self.db.getView('viewHierarchy/viewPaths',
                               startKey=f'{self.cwd.relative_to(self.basePath).as_posix()}/')
-      for item in items:
-        t = Thread(target=self.threadParallel, args=(item, doc))
-        t.start()
+      [self.threadParallel(item, doc) for item in items]
     self.cwd = self.basePath #reset to sensible before continuing
     self.hierStack = []
     return
@@ -131,8 +129,7 @@ class Backend(CLI_Mixin):
     newPathParts = doc['branch'][0]['path'].split('/')
     newPath = '/'.join(newPathParts+oldPathParts[len(newPathParts):]  )
     if newPath != item['key']:  # for-loop could also be implemented in parallel
-      # print(item['id']+'  old='+item['key']+'  branch='+str(item['value'][-1])+\
-      #      '  child='+str(item['value'][-3])+'  new='+newPath)
+      #item.value: stack, type, childNum, shasum
       self.db.updateBranch(item['id'], item['value'][-1], item['value'][-3], path=newPath)
     return
 

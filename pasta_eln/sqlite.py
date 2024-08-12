@@ -573,18 +573,15 @@ class SqlLiteDB:
       results = [{'id':i[0], 'key':i[1],
                   'value':[i[2], i[3].split('/'), i[4], [j=='T' for j in i[5]]]} for i in results]
     elif thePath=='viewHierarchy/viewPaths':
+      cmd = "SELECT branches.id, branches.path, branches.stack, main.type, branches.child, main.shasum, branches.idx "\
+            "FROM branches INNER JOIN main USING(id)"
       # JOIN and get type
       if startKey is not None:
         if startKey.endswith('/'):
           startKey = startKey.removesuffix('/')
-        cmd = "SELECT branches.id, branches.path, branches.stack, main.type, branches.child, main.shasum "\
-              f"FROM branches INNER JOIN main USING(id) WHERE branches.path LIKE '{startKey}%'"
+        cmd += f" WHERE branches.path LIKE '{startKey}%'"
       elif preciseKey is not None:
-        cmd = "SELECT branches.id, branches.path, branches.stack, main.type, branches.child, main.shasum "\
-              f"FROM branches INNER JOIN main USING(id) WHERE branches.path LIKE '{preciseKey}'"
-      else:
-        cmd = "SELECT branches.id, branches.path, branches.stack, main.type, branches.child, main.shasum "\
-              "FROM branches INNER JOIN main USING(id)"
+        cmd = f" WHERE branches.path LIKE '{preciseKey}'"
       if not allFlag:
         if "WHERE" in cmd:
           cmd += r" AND NOT branches.show LIKE '%F%'"
@@ -592,9 +589,9 @@ class SqlLiteDB:
           cmd += r" WHERE NOT branches.show LIKE '%F%'"
       self.cursor.execute(cmd)
       results = self.cursor.fetchall()
-      # value: [branch.stack, doc['-type'], branch.child, doc.shasum,idx]
+      # value: [branch.stack, doc['-type'], branch.child, doc.shasum, idx]
       results = [{'id':i[0], 'key':i[1],
-                  'value':[i[2].replace('/',' '), i[3].split('/'), i[4], i[5]]} for i in results if i[1] is not None]
+                  'value':[i[2], i[3].split('/')]+list(i[4:])} for i in results if i[1] is not None]
     elif viewType=='viewIdentify' and docType=='viewTags':
       self.cursor.execute("SELECT * FROM tags")
       results = self.cursor.fetchall()
