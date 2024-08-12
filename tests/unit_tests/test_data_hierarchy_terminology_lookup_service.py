@@ -99,6 +99,7 @@ class TestDataHierarchyTerminologyLookup(object):
     mock_log_error = mocker.patch.object(terminology_lookup_mock.logger, 'error')
     mock_client_session = mocker.patch('aiohttp.client.ClientSession')
     mock_client_response = mocker.patch('aiohttp.client.ClientResponse')
+    mock_client_timeout = mocker.patch('pasta_eln.webclient.http_client.ClientTimeout')
     mock_client_session_constructor = mocker.patch.object(ClientSession, '__aenter__', return_value=mock_client_session)
     mocker.patch.object(mock_client_response, '__aenter__', return_value=mock_client_response)
     mock_client_session_get_response = mocker.patch.object(mock_client_session, 'get', side_effect=exception)
@@ -107,11 +108,12 @@ class TestDataHierarchyTerminologyLookup(object):
     assert await terminology_lookup_mock.http_client.get(url, "request_params") == {}, "Valid results must be returned"
     mock_log_info.assert_any_call('Get url: %s', url)
     mock_client_session_constructor.assert_called_once_with()
+    mock_client_timeout.assert_called_once_with(total=terminology_lookup_mock.session_timeout)
     mock_client_session_get_response.assert_called_once_with(url,
                                                              auth=None,
                                                              headers=None,
                                                              params='request_params',
-                                                             timeout=terminology_lookup_mock.session_timeout)
+                                                             timeout=mock_client_timeout.return_value)
     mock_log_error.assert_called_once_with(error_message)
     assert terminology_lookup_mock.http_client.session_request_errors[
              0] == error_message, "session_request_error message must be set!"
@@ -316,7 +318,7 @@ class TestDataHierarchyTerminologyLookup(object):
       for item in iri_result['results']:
         assert isinstance(item, dict), "Each item in results must be a dictionary"
         assert item['iri'] is not None and (
-              'file:/' in item['iri'] or validate_url(item['iri'])), "Each retrieved results must have a valid IRI"
+            'file:/' in item['iri'] or validate_url(item['iri'])), "Each retrieved results must have a valid IRI"
         assert item['information'] is not None, "Each retrieved results must have a valid information field"
 
 
