@@ -421,10 +421,11 @@ class SqlLiteDB:
     if set(changesDict.keys()).difference(('dateModified','client','user')):
       changeString = ', '.join([f"{k}='{v}'" for k,v in changesDB['main'].items()])
       self.cursor.execute(f"UPDATE main SET {changeString} WHERE id = '{docID}'")
-      if 'name' not in changesDict or changesDict['name']!='new folder':  #do not save initial change from new folder
+      if 'name' not in changesDict or changesDict['name']!='new item':  #do not save initial change from new item
         self.cursor.execute("INSERT INTO changes VALUES (?,?,?)", [docID, datetime.now().isoformat(), json.dumps(changesDict)])
       self.connection.commit()
     branchNew.pop('op')
+    # TODO adopt path on harddrive see old version
     return mainOld | mainNew | {'branch':[branchNew], '__version__':'short'}
 
 
@@ -445,16 +446,38 @@ class SqlLiteDB:
     """
     #convert into db style
     path = '*' if path is None else path
-    stack = [] if stack is None else stack
     #use
-    self.cursor.execute(f"SELECT path FROM branches WHERE id == '{docID}' and idx == {branch}")
-    pathOld = self.cursor.fetchone()[0]
-    cmd = f"UPDATE branches SET stack='{'/'.join(stack+[docID])}', child={child}, path='{path}' "\
+    self.cursor.execute(f"SELECT path, stack, show FROM branches WHERE id == '{docID}' and idx == {branch}")
+    pathOld, stackOld, showOld = self.cursor.fetchone()
+    stack = stack if stack is not None else stackOld.split('/')[:-1]  # stack without current id
+    show  = self.createShowFromStack(stack, showOld[-1])
+    cmd = f"UPDATE branches SET stack='{'/'.join(stack+[docID])}', child={child}, path='{path}', show='{show}' "\
           f"WHERE id = '{docID}' and idx = {branch}"
     self.cursor.execute(cmd)
     self.connection.commit()
+    # TODO adopt path on harddrive see old version
     return (None if pathOld=='*' else pathOld, None if path=='*' else path)
 
+
+  def createShowFromStack(self, stack:str, currentShow:str='T') -> list[bool]:
+    """
+    For branches: create show entry in the branches by using the stack
+    - should be 1 longer than stack
+    - check parents if hidden, then this child is hidden too
+
+    Args:
+      stack (str): list of ancestor docIDs '/' separated
+      currentShow (str): current show-indicator of this item
+
+    Returns:
+      list: list of show = list of bool
+    """
+    show = len(stack)*['T'] + [currentShow]
+    for idx, docID in enumerate(stack):
+      self.cursor.execute(f"SELECT show FROM branches WHERE id == '{docID}'")
+      if self.cursor.fetchone()[0][-1] == 'F':
+        show[idx] = 'F'
+    return ''.join(show)
 
   def remove(self, docID:str) -> dict[str,Any]:
     """
@@ -581,7 +604,7 @@ class SqlLiteDB:
           startKey = startKey.removesuffix('/')
         cmd += f" WHERE branches.path LIKE '{startKey}%'"
       elif preciseKey is not None:
-        cmd = f" WHERE branches.path LIKE '{preciseKey}'"
+        cmd += f" WHERE branches.path LIKE '{preciseKey}'"
       if not allFlag:
         if "WHERE" in cmd:
           cmd += r" AND NOT branches.show LIKE '%F%'"

@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 """TEST using the FULL set of python-requirements: create 3 projects; simplified form of testTutorialComplex """
-import os, shutil, traceback, logging
+import os, shutil, traceback, logging, subprocess
 from datetime import datetime
 import warnings
 import unittest
@@ -23,8 +23,8 @@ class TestStringMethods(unittest.TestCase):
     """
     main function
     """
+    outputFormat = ''  #change to 'print' for human usage, '' for less output
     dummyProgressBar = DummyProgressBar()
-    outputFormat = 'print'
     # initialization: create database, destroy on filesystem and database and then create new one
     warnings.filterwarnings('ignore', message='numpy.ufunc size changed')
     warnings.filterwarnings('ignore', message='invalid escape sequence')
@@ -56,7 +56,16 @@ class TestStringMethods(unittest.TestCase):
         'comment': '#tribology The answer is obvious'})
       self.be.addData('x0', {'name': 'Steel', '.objective': 'Test strength of steel', '.status': 'paused', \
         'comment': '#Fe Obvious example without answer'})
-      outputString(outputFormat, 'info', self.be.output('x0'))
+      output = self.be.output('x0')
+      self.assertEqual(output.split('\n')[0][:139],
+                       'name                           | tag                | status  | objective                                | comment                        |')
+      self.assertEqual(output.split('\n')[2][:139],
+                       '     Intermetals at interfaces | Al, Fe, intermetal |  active | Does spray coating lead to intermetal... |         This is a test project |')
+      self.assertEqual(output.split('\n')[3][:139],
+                       '                         Steel |                 Fe |  paused |                   Test strength of steel | Obvious example without answer |')
+      self.assertEqual(output.split('\n')[4][:139],
+                       'Surface evolution in tribology |          tribology | passive | Why does the surface get rough during... |          The answer is obvious |')
+      outputString(outputFormat, 'info', output)
 
       ### TEST PROJECT PLANING
       outputString(outputFormat,'h2','TEST PROJECT PLANING')
@@ -82,7 +91,10 @@ class TestStringMethods(unittest.TestCase):
       semDirName = self.be.basePath/self.be.cwd
       self.be.changeHierarchy(None)
       currentID = self.be.addData('x1',    {'name': 'Nanoindentation'})['id']
-      outputString(outputFormat,'info',self.be.outputHierarchy())
+      output = self.be.outputHierarchy()
+      toCompare = '\n'.join(['|'.join(i.split(' | ')[:-1]) for i in output.split('\n')])
+      self.assertEqual(toCompare,"Intermetals at interfaces|x0\n  Get steel and Al-powder|x1\n  Get spray machine|x1\n    Get quotes|x1\n    Buy machine|x1\n  SEM images|x1\n  Nanoindentation|x1\n")
+      outputString(outputFormat,'info',output)
 
       ### TEST PROCEDURES
       outputString(outputFormat,'h2','TEST PROCEDURES')
@@ -94,8 +106,14 @@ class TestStringMethods(unittest.TestCase):
         fOut.write('# Put sample in SEM\n# Do scanning\nDo not forget to\n- contact the pole-piece\n- **USE GLOVES**\n')
       self.be.addData('procedure', {'name': 'StandardOperatingProcedures/SEM.md', 'comment': '#v1'})
       self.be.addData('procedure', {'name': 'StandardOperatingProcedures/Nanoindentation.md', 'comment': '#v1'})
-      outputString(outputFormat,'info',self.be.output('procedure'))
-      output = self.be.output('procedure',True)
+      output = self.be.output('procedure')
+      self.assertEqual(output.split('\n')[0][:79],
+                       'name               | tag | comment | content                                  |')
+      self.assertEqual(output.split('\n')[2][:81],
+                       'Nanoindentation.md | v1  |         | # Put sample in nanoindenter\\n# Do in... | p')
+      self.assertEqual(output.split('\n')[3][:81],
+                       '            SEM.md | v1  |         | # Put sample in SEM\\n# Do scanning\\nD... | p')
+      outputString(outputFormat,'info', output)
       idSEM = None
       for line in output.split('\n'):
         if 'SEM' in line:
@@ -105,8 +123,16 @@ class TestStringMethods(unittest.TestCase):
       outputString(outputFormat,'h2','TEST SAMPLES')
       self.be.addData('sample',    {'name': 'AlFe cross-section', '.chemistry': 'Al99.9; FeMnCr ', 'qrCode': '13214124 99698708', 'comment': 'after OPS polishing',
                                     'geometry.height':4, 'geometry.width':2, 'weight.initial':6})
-      outputString(outputFormat,'info',self.be.output('sample'))
-      outputString(outputFormat,'info',self.be.outputQR())
+      output = self.be.output('sample')
+      self.assertEqual(output.split('\n')[2][:89],
+                      'AlFe cross-section | nan | Al99.9; FeMnCr | after OPS polishing | 13214124, 99698708 | s-')
+      outputString(outputFormat,'info',output)
+      output = self.be.outputQR()
+      self.assertEqual(output.split('\n')[2][:75],
+                      '13214124                            |AlFe cross-section                  |s')
+      self.assertEqual(output.split('\n')[3][:75],
+                      '99698708                            |AlFe cross-section                  |s')
+      outputString(outputFormat,'info',output)
 
       ###  TEST MEASUREMENTS AND SCANNING
       outputString(outputFormat,'h2','TEST MEASUREMENTS AND SCANNING')
@@ -121,7 +147,14 @@ class TestStringMethods(unittest.TestCase):
       outputString(outputFormat,'h2','USE GLOBAL FILES')
       self.be.changeHierarchy(semStepID)
       self.be.addData('measurement', {'name': 'https://upload.wikimedia.org/wikipedia/commons/a/a4/Misc_pollen.jpg', '.procedure':idSEM})
-      outputString(outputFormat,'info',self.be.output('measurement'))
+      output = self.be.output('measurement')
+      self.assertEqual(output.split('\n')[2][:110],
+                      'https://upload.wikimedia.org/wikipedi... | None |         |            measurement/image | True  | nan    | p-')
+      self.assertEqual(output.split('\n')[3][:146],
+                      '                              simple.csv | None |         | measurement/csv/linesAndDots | True  | nan    |                                nan | m')
+      self.assertEqual(output.split('\n')[4][:146],
+                      '                              simple.png | None |         |            measurement/image | True  | nan    |                                nan | m')
+      outputString(outputFormat,'info',output)
 
       ### ADD INSTRUMENTS AND THEIR ATTACHMENTS
       outputString(outputFormat,'h2','ADD INSTRUMENTS AND ATTACHMENTS')
@@ -139,12 +172,25 @@ class TestStringMethods(unittest.TestCase):
         {'date':datetime.now().isoformat(),'remark':'Worked well','docID':idSynthon,'user':'nobody'})
       self.be.db.addAttachment(idKLA, "Right side of instrument",
         {'date':datetime.now().isoformat(),'remark':'Service','docID':'','user':'nobody'})
-      outputString(outputFormat,'info',self.be.output('instrument'))
+      output = self.be.output('instrument')
+      self.assertEqual(output.split('\n')[2][:36], '   B1 | None |         | Synthon | i')
+      self.assertEqual(output.split('\n')[3][:36], 'G200X | None |         |     KLA | i')
+      outputString(outputFormat,'info',output)
 
 
       ### VERIFY DATABASE INTEGRITY
       outputString(outputFormat,'h2','VERIFY DATABASE INTEGRITY')
-      outputString(outputFormat,'info', self.be.checkDB(outputStyle='text'))
+      output = self.be.checkDB(outputStyle='text')
+      self.assertEqual(len(output), 800, 'Verification changed')
+      outputString(outputFormat,'info', output)
+      output = subprocess.check_output(['tree', str(self.be.basePath) ])
+      toCompare = [i.replace(b'\x94',b'').replace(b'\x80',b'').replace(b'\xe2',b'').replace(b'\x82',b'')\
+                   .replace(b'\xc2',b' ').replace(b'\xa0',b'').replace(b'\x9c',b'').decode('utf-8') for i in output.split(b'\n')][1:-3]
+      res = ' IntermetalsAtInterfaces\n    000_GetSteelAndAlPowder\n    001_GetSprayMachine\n       000_GetQuotes\n       001_BuyMachine\n'\
+            '    002_SemImages\n       simple.csv\n       simple.png\n       story.odt\n    003_Nanoindentation\n pastaELN.db\n StandardOperatingProcedures\n'\
+            '    Nanoindentation.md\n    SEM.md\n Steel\n    000_Task1\n    001_Task2\n SurfaceEvolutionInTribology'
+      self.assertEqual('\n'.join(toCompare), res)
+      outputString(outputFormat,'info', '\n'.join(toCompare))
       outputString(outputFormat,'h2','DONE WITH VERIFY')
     except:
       outputString(outputFormat,'h2','ERROR OCCURRED IN VERIFY TESTING\n'+ traceback.format_exc() )
