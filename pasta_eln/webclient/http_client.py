@@ -10,7 +10,7 @@
 import logging
 from typing import Any, Union
 
-from aiohttp import BasicAuth, ClientResponse, ClientSession
+from aiohttp import BasicAuth, ClientResponse, ClientSession, ClientTimeout
 
 from pasta_eln.utils import handle_http_client_exception
 
@@ -85,7 +85,7 @@ class AsyncHttpClient:
       async with session.get(base_url,
                              params=request_params,
                              headers=request_headers,
-                             timeout=timeout if timeout is not None else self.session_timeout,
+                             timeout=ClientTimeout(total=timeout if timeout is not None else self.session_timeout),
                              auth=auth) as response:
         result = await prepare_result(response)
     return result
@@ -125,7 +125,7 @@ class AsyncHttpClient:
       async with session.post(base_url,
                               headers=request_headers,
                               params=request_params,
-                              timeout=timeout if timeout is not None else self.session_timeout,
+                              timeout=ClientTimeout(total=timeout if timeout is not None else self.session_timeout),
                               json=json,
                               data=data,
                               auth=auth) as response:
@@ -167,7 +167,7 @@ class AsyncHttpClient:
       async with session.delete(base_url,
                                 headers=request_headers,
                                 params=request_params,
-                                timeout=timeout if timeout is not None else self.session_timeout,
+                                timeout=ClientTimeout(total=timeout if timeout is not None else self.session_timeout),
                                 json=json,
                                 data=data,
                                 auth=auth) as response:

@@ -92,6 +92,7 @@ class TestAsyncHttpClient(object):
     mock_log_info = mocker.patch.object(http_client_mock.logger, 'info')
     mock_client_session = mocker.patch('aiohttp.client.ClientSession')
     mock_client_response = mocker.patch('aiohttp.client.ClientResponse')
+    mock_client_timeout = mocker.patch('pasta_eln.webclient.http_client.ClientTimeout')
     mock_authorization = mocker.MagicMock()
     mock_client_session_constructor = mocker.patch.object(ClientSession, '__aenter__', return_value=mock_client_session)
     mocker.patch.object(mock_client_response, '__aenter__', return_value=mock_client_response)
@@ -112,10 +113,11 @@ class TestAsyncHttpClient(object):
                                       mock_authorization) == response, "Valid results must be returned"
     mock_log_info.assert_any_call("Get url: %s", base_url)
     mock_client_session_constructor.assert_called_once_with()
+    mock_client_timeout.assert_called_once_with(total=http_client_mock.session_timeout)
     mock_client_session_get_response.assert_called_once_with(base_url,
                                                              params=request_params,
                                                              headers=request_headers,
-                                                             timeout=http_client_mock.session_timeout,
+                                                             timeout=mock_client_timeout.return_value,
                                                              auth=mock_authorization)
     mock_client_session_get_response_json.assert_called_once_with()
     mock_client_response.headers.get.assert_called_once_with('Content-Type')
@@ -170,6 +172,7 @@ class TestAsyncHttpClient(object):
     mock_log_error = mocker.patch.object(http_client_mock.logger, 'error')
     mock_client_session = mocker.patch('aiohttp.client.ClientSession')
     mock_client_response = mocker.patch('aiohttp.client.ClientResponse')
+    mock_client_timeout = mocker.patch('pasta_eln.webclient.http_client.ClientTimeout')
     mock_auth = mocker.MagicMock()
     mock_client_session_constructor = mocker.patch.object(ClientSession, '__aenter__', return_value=mock_client_session)
     mocker.patch.object(mock_client_response, '__aenter__', return_value=mock_client_response)
@@ -181,13 +184,13 @@ class TestAsyncHttpClient(object):
                                       request_params="request_params",
                                       request_headers="request_headers",
                                       auth=mock_auth,
-                                      timeout=http_client_mock.session_timeout) == {}, "Valid results must be returned"
+                                      timeout=mock_client_timeout.return_value) == {}, "Valid results must be returned"
     http_client_mock.logger.info.assert_any_call("Get url: %s", url)
     mock_client_session_constructor.assert_called_once_with()
     mock_client_session_get_response.assert_called_once_with(url,
                                                              params="request_params",
                                                              headers="request_headers",
-                                                             timeout=http_client_mock.session_timeout,
+                                                             timeout=mock_client_timeout.return_value,
                                                              auth=mock_auth)
     mock_log_error.assert_called_once_with(error_message)
     assert http_client_mock.session_request_errors[
@@ -249,6 +252,7 @@ class TestAsyncHttpClient(object):
     mock_log_error = mocker.patch.object(http_client_mock.logger, 'error')
     mock_client_session = mocker.patch('aiohttp.client.ClientSession')
     mock_client_response = mocker.patch('aiohttp.client.ClientResponse')
+    mock_client_timeout = mocker.patch('pasta_eln.webclient.http_client.ClientTimeout')
     mock_client_session_constructor = mocker.patch.object(ClientSession, '__aenter__', return_value=mock_client_session)
     mocker.patch.object(mock_client_response, '__aenter__', return_value=mock_client_response)
     mock_client_session_get_response = mocker.patch.object(mock_client_session, 'post',
@@ -260,13 +264,13 @@ class TestAsyncHttpClient(object):
                                        data=mock_data,
                                        auth=mock_auth,
                                        request_headers=mock_headers,
-                                       timeout=http_client_mock.session_timeout) == {}, "Valid results must be returned"
+                                       timeout=mock_client_timeout.return_value) == {}, "Valid results must be returned"
     mock_log_info.assert_any_call('Post url: %s', url)
     mock_client_session_constructor.assert_called_once_with()
     mock_client_session_get_response.assert_called_once_with(url,
                                                              headers=mock_headers,
                                                              params=mock_params,
-                                                             timeout=http_client_mock.session_timeout,
+                                                             timeout=mock_client_timeout.return_value,
                                                              json=mock_json,
                                                              data=mock_data,
                                                              auth=mock_auth)
@@ -287,6 +291,7 @@ class TestAsyncHttpClient(object):
     mock_log_info = mocker.patch.object(http_client_mock.logger, 'info')
     mock_client_session = mocker.patch('aiohttp.client.ClientSession')
     mock_client_response = mocker.patch('aiohttp.client.ClientResponse')
+    mock_client_timeout = mocker.patch('pasta_eln.webclient.http_client.ClientTimeout')
     mock_client_session_constructor = mocker.patch.object(ClientSession, '__aenter__', return_value=mock_client_session)
     mocker.patch.object(mock_client_response, '__aenter__', return_value=mock_client_response)
     mock_client_session_post_response = mocker.patch.object(mock_client_session, 'post',
@@ -305,7 +310,7 @@ class TestAsyncHttpClient(object):
                                       data=mock_data,
                                       auth=mock_auth,
                                       request_headers=mock_headers,
-                                      timeout=http_client_mock.session_timeout)
+                                      timeout=mock_client_timeout.return_value)
     assert ret, "Valid results must be returned"
     assert ret.get("status") == 200, "Response status should be as expected"
     assert ret.get("headers") == mock_client_response.headers, "Response headers should not be none"
@@ -317,7 +322,7 @@ class TestAsyncHttpClient(object):
     mock_client_session_post_response.assert_called_once_with("base_url",
                                                               headers=mock_headers,
                                                               params=mock_params,
-                                                              timeout=http_client_mock.session_timeout,
+                                                              timeout=mock_client_timeout.return_value,
                                                               json=mock_json,
                                                               data=mock_data,
                                                               auth=mock_auth)
@@ -336,6 +341,7 @@ class TestAsyncHttpClient(object):
     mock_auth = mocker.MagicMock()
     mock_client_session = mocker.patch('aiohttp.client.ClientSession')
     mock_client_response = mocker.patch('aiohttp.client.ClientResponse')
+    mock_client_timeout = mocker.patch('pasta_eln.webclient.http_client.ClientTimeout')
     mock_client_session_constructor = mocker.patch.object(ClientSession, '__aenter__', return_value=mock_client_session)
     mocker.patch.object(mock_client_response, '__aenter__', return_value=mock_client_response)
     mock_client_session_delete_response = mocker.patch.object(mock_client_session, 'delete',
@@ -354,7 +360,7 @@ class TestAsyncHttpClient(object):
                                         data=mock_data,
                                         auth=mock_auth,
                                         request_headers=mock_headers,
-                                        timeout=http_client_mock.session_timeout)
+                                        timeout=mock_client_timeout.return_value)
     assert ret, "Valid results must be returned"
     assert ret.get("status") == 200, "Response status should be as expected"
     assert ret.get("headers") == mock_client_response.headers, "Response headers should not be none"
@@ -366,7 +372,7 @@ class TestAsyncHttpClient(object):
     mock_client_session_delete_response.assert_called_once_with("base_url",
                                                                 headers=mock_headers,
                                                                 params=mock_params,
-                                                                timeout=http_client_mock.session_timeout,
+                                                                timeout=mock_client_timeout.return_value,
                                                                 json=mock_json,
                                                                 data=mock_data,
                                                                 auth=mock_auth)
