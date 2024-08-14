@@ -1,7 +1,8 @@
 """Change the format of dictionaries"""
-import re, uuid, json
+import re, uuid, json, difflib
 from typing import Any
 from datetime import datetime
+from .sqlite import SQLiteTranslation
 
 def dataHierarchy2Labels(dataHierarchy:dict[str,Any], tableFormat:dict[str,Any]) -> dict[str,Any]:
   """
@@ -245,6 +246,10 @@ def diffDicts(dict1:dict[str,Any], dict2:dict[str,Any]) -> str:
       elif isinstance(dict2Copy[key], tuple) and len(dict2Copy[key])==4:
         if value != dict2Copy[key][0]:
           outString += (f'property values differ for key: {key}\n   {str(value)}\n   {str(dict2Copy[key])}\n')
+      elif isinstance(value,str):
+        if value!=dict2Copy[key] and value.translate(SQLiteTranslation)!=dict2Copy[key]:
+          diff = difflib.unified_diff(value.splitlines(), dict2Copy[key].splitlines(), fromfile='disk', tofile='database', n=0, lineterm='')
+          outString += f'key:{key}\n'+'\n'.join(list(diff))
       else:
         outString += (f'values differ for key: {key}\n   {str(value)}\n   {str(dict2Copy[key])}\n')
     del dict2Copy[key]

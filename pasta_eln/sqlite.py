@@ -6,7 +6,7 @@ from pathlib import Path
 from anytree import Node
 import pandas as pd
 from PIL import Image
-from .fixedStringsJson import defaultDataHierarchy, defaultDefinitions
+from .fixedStringsJson import defaultDataHierarchy, defaultDefinitions, SQLiteTranslation
 from .miscTools import outputString, hierarchy, camelCase, tracebackString
 
 # DO NOT WORK ON THIS IF THERE IS SOMETHING ON THE TODO LIST
@@ -60,7 +60,6 @@ KEY_ORDER=['id'  ,'name','user','type','dateCreated','dateModified','gui',      
 KEY_TYPE =['TEXT','TEXT','TEXT','TEXT','TEXT',       'TEXT',        'varchar(2)','TEXT',  'TEXT',  'TEXT', 'TEXT',   'TEXT',   'TEXT']
 DATA_HIERARCHY = ['docType', 'IRI','title','icon','shortcut','view']
 DEFINITIONS =    ['docType','class','idx', 'name', 'query', 'unit', 'IRI', 'mandatory', 'list']
-
 
 class SqlLiteDB:
   """
@@ -149,6 +148,7 @@ class SqlLiteDB:
 
   def dataHierarchy(self, docType:str, column:str, group:str='') -> list[Any]:
     """
+    #TODO text here
     if group not given: return all
     """
     ### return column information
@@ -172,6 +172,8 @@ class SqlLiteDB:
     # if specific docType
     self.cursor.execute(f"SELECT {column} FROM dataHierarchy WHERE docType == '{docType}'")
     result = self.cursor.fetchone()
+    if result is None:
+      return []
     if column=='meta':
       return json.loads(result[0])
     elif column=='view':
@@ -408,14 +410,13 @@ class SqlLiteDB:
       self.cursor.executemany(cmd, set(dataOld.keys()).difference(dataNew.keys()))
       changesDict |= dataOld
     # read main and identify if something changed
-    translation = str.maketrans({"'":"/'"})  #TODO External
     cursor.execute(f"SELECT * FROM main WHERE id == '{docID}'")
     mainOld = dict(cursor.fetchone())
     mainOld['type']= mainOld['type'].split('/')
     changesDB: dict[str,dict[str,str]] = {'main': {}}
     for key in ('name','user','type','dateModified','client','image','content','comment'):
       if key in mainNew and mainOld[key]!=mainNew[key]:
-        changesDB['main'][key] = '/'.join(mainNew[key]) if key=='type' else mainNew[key].translate(translation)
+        changesDB['main'][key] = '/'.join(mainNew[key]) if key=='type' else mainNew[key].translate(SQLiteTranslation)
         changesDict[key] = mainOld[key]
     # change content in database: main and changes are updated
     if set(changesDict.keys()).difference(('dateModified','client','user')):
@@ -551,7 +552,8 @@ class SqlLiteDB:
       allFlag = True
     viewType, docType = thePath.split('/')
     if viewType=='viewDocType':
-      viewColumns = self.dataHierarchy(docType, 'view')+['id']
+      viewColumns = self.dataHierarchy(docType, 'view')
+      viewColumns = viewColumns+['id'] if viewColumns else ['name','tags','comment','id']
       textSelect = ', '.join([f'main.{i}' for i in viewColumns if i in KEY_ORDER or i[1:] in KEY_ORDER])
       if 'tags' in viewColumns:
         textSelect += ', tags.tag'
@@ -564,6 +566,8 @@ class SqlLiteDB:
               f"INNER JOIN branches USING(id) LEFT JOIN properties USING(id) WHERE main.type LIKE '{docType}%'"
       if not allFlag:
         cmd += r" and NOT branches.show LIKE '%F%'"
+      if startKey:
+        cmd += f" and branches.stack LIKE '{startKey}%'"
       df      = pd.read_sql_query(cmd, self.connection)
       allCols = list(df.columns)
       if 'image' in viewColumns:
