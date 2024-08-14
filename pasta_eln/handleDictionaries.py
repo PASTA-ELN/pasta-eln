@@ -2,7 +2,7 @@
 import re, uuid, json, difflib
 from typing import Any
 from datetime import datetime
-from .sqlite import SQLiteTranslation
+from .fixedStringsJson import SQLiteTranslation
 
 def dataHierarchy2Labels(dataHierarchy:dict[str,Any], tableFormat:dict[str,Any]) -> dict[str,Any]:
   """

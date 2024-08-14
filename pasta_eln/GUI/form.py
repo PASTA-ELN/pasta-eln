@@ -109,7 +109,7 @@ class Form(QDialog):
         elementName = f"key_{len(self.allUserElements)}"
 
         # case list
-        #TODO change to system with units and IRI in label
+        #TODO GUI change to system with units and IRI in label
         if key == '.name' and '_ids' not in self.doc:
           setattr(self, elementName, QLineEdit(self.doc['name']))
           getattr(self, elementName).setValidator(QRegularExpressionValidator("[\\w\\ .-]+"))
@@ -125,7 +125,7 @@ class Form(QDialog):
           self.otherChoices.setIconSize(QSize(0,0))
           self.otherChoices.setInsertPolicy(QComboBox.InsertPolicy.InsertAtBottom)
           tagsBarMainL.addWidget(self.otherChoices)
-          #TODO gradeChoice to button that changes text 0=uncommitted
+          #TODO GUI gradeChoice to button that changes text 0=uncommitted
           self.gradeChoices = QComboBox()   #part/combobox that shows grades
           self.gradeChoices.setMaximumWidth(80)
           self.gradeChoices.setIconSize(QSize(0,0))
@@ -136,7 +136,7 @@ class Form(QDialog):
           self.allUserElements.append(('tags',''))
           self.updateTagsBar()
           self.otherChoices.currentIndexChanged.connect(self.addTag) #connect to slot only after all painting is done
-        elif key in ['.comment', '.content']:  #TODO replace html symbols by the ascii
+        elif key in ['.comment', '.content']:  #TODO GUI replace html symbols by the ascii
           key = key[1:]
           labelW, labelL = widgetAndLayout('V')
           labelL.addWidget(QLabel(key.capitalize()))
@@ -183,7 +183,7 @@ class Form(QDialog):
             if dataHierarchyItem[0]['list']: #choice dropdown
               setattr(self, elementName, QComboBox())
               if ',' in dataHierarchyItem[0]['list']:                  #dataHierarchy-defined choices
-                getattr(self, elementName).addItems(dataHierarchyItem[0]['list'].split(',')) #TODO choice on database not used, always first
+                getattr(self, elementName).addItems(dataHierarchyItem[0]['list'].split(',')) #TODO FUNCTION choice saved in database not used, always first
               else:                                                    #choice among docType
                 listDocType = dataHierarchyItem[0]['list']
                 getattr(self, elementName).addItem('- no link -', userData='')

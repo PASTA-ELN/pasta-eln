@@ -148,8 +148,14 @@ class SqlLiteDB:
 
   def dataHierarchy(self, docType:str, column:str, group:str='') -> list[Any]:
     """
-    #TODO text here
-    if group not given: return all
+    get data hierarchy information, old name 'ontology', from database
+
+    Args:
+      docType (str): document typ
+      column (str): column name as in meta, label, shortcut, ...
+      group (str): group of metadata rows; if group not given: return all
+    Returns:
+      list: information inquired
     """
     ### return column information
     if not docType: #if all docTypes
@@ -426,7 +432,7 @@ class SqlLiteDB:
         self.cursor.execute("INSERT INTO changes VALUES (?,?,?)", [docID, datetime.now().isoformat(), json.dumps(changesDict)])
       self.connection.commit()
     branchNew.pop('op')
-    # TODO adopt path on harddrive see old version
+    # TODO FUNCTION adopt path on harddrive see old version
     return mainOld | mainNew | {'branch':[branchNew], '__version__':'short'}
 
 
@@ -456,18 +462,18 @@ class SqlLiteDB:
           f"WHERE id = '{docID}' and idx = {branch}"
     self.cursor.execute(cmd)
     self.connection.commit()
-    # TODO adopt path on harddrive see old version
+    # TODO FUNCTION adopt path on harddrive see old version
     return (None if pathOld=='*' else pathOld, None if path=='*' else path)
 
 
-  def createShowFromStack(self, stack:str, currentShow:str='T') -> list[bool]:
+  def createShowFromStack(self, stack:list[str], currentShow:str='T') -> str:
     """
     For branches: create show entry in the branches by using the stack
     - should be 1 longer than stack
     - check parents if hidden, then this child is hidden too
 
     Args:
-      stack (str): list of ancestor docIDs '/' separated
+      stack (list): list of ancestor docIDs '/' separated
       currentShow (str): current show-indicator of this item
 
     Returns:

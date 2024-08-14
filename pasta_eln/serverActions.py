@@ -122,7 +122,7 @@ def translateV2_V3(path:str='') -> None:
   return
 
 
-def verifyPasta(projectGroup:str) -> None:
+def verifyPasta(projectGroup:str='') -> None:
   """ Do the default verification of PastaELN. Adopted to CLI """
   from pasta_eln.backend import Backend
   from pasta_eln.miscTools import outputString

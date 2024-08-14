@@ -184,7 +184,7 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
     callbackPercent(12)
   logging.info('Finished project planning')
 
-  #TODO copy the entire test-01 to here once finished
+  #TODO 2-branches copy the entire test-01 to here once finished
   ### TEST PROCEDURES
   outputString(outputFormat,'h2','TEST PROCEDURES')
   sopDir = backend.basePath/'StandardOperatingProcedures'

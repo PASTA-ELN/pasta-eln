@@ -112,7 +112,7 @@ class Backend(CLI_Mixin):
     if doc['type'][0][0]=='x' and self.cwd is not None:
       items = self.db.getView('viewHierarchy/viewPaths',
                               startKey=f'{self.cwd.relative_to(self.basePath).as_posix()}/')
-      [self.threadParallel(item, doc) for item in items]
+      _ = [self.threadParallel(item, doc) for item in items]      # type: ignore[func-returns-value]
     self.cwd = self.basePath #reset to sensible before continuing
     self.hierStack = []
     return
@@ -186,7 +186,7 @@ class Backend(CLI_Mixin):
       for item in view:
         if item['value'][1][0][0]!='x':
           continue
-        if thisStack == '/'.join(item['key'].split('/')[:-1])+'/': #remove last item from string  #TODO BUG HERE
+        if thisStack == '/'.join(item['key'].split('/')[:-1])+'/': #remove last item from string
           childNum += 1
 
     # find path name on local file system; name can be anything

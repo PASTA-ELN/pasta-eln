@@ -66,11 +66,10 @@ class TreeView(QTreeView):
     item = self.model().itemFromIndex(self.currentIndex())                                                   # type: ignore[attr-defined]
     hierStack = item.data()['hierStack'].split('/')
     if command[0] is Command.ADD_CHILD:
-      docType= f'x{len(hierStack)}'
+      docType= 'x1'
       docID = hierStack[-1]
       self.comm.backend.cwd = Path(self.comm.backend.db.getDoc(docID)['branch'][0]['path'])
-      label = self.comm.backend.db.dataHierarchy('x1','title')[0].lower()[:-1]
-      docID = self.comm.backend.addData(docType, {'name':f'new {label}'}, hierStack)
+      docID = self.comm.backend.addData(docType, {'name':'new item'}, hierStack)['id']
       # append item to the GUI
       item  = self.model().itemFromIndex(self.currentIndex())                                                # type: ignore[attr-defined]
       child = QStandardItem('/'.join(hierStack+[docID]))
