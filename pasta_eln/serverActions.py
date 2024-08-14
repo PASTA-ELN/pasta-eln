@@ -122,14 +122,15 @@ def translateV2_V3(path:str='') -> None:
   return
 
 
-def verifyPasta() -> None:
+def verifyPasta(projectGroup:str) -> None:
   """ Do the default verification of PastaELN. Adopted to CLI """
   from pasta_eln.backend import Backend
   from pasta_eln.miscTools import outputString
-  with open(Path.home()/'.pastaELN.json','r', encoding='utf-8') as fIn:
-    config = json.load(fIn)
-    print('Possible project groups:','  '.join(config['projectGroups'].keys()))
-  projectGroup = input('Enter project group: ').strip()
+  if not projectGroup:
+    with open(Path.home()/'.pastaELN.json','r', encoding='utf-8') as fIn:
+      config = json.load(fIn)
+      print('Possible project groups:','  '.join(config['projectGroups'].keys()))
+    projectGroup = input('Enter project group: ').strip()
   be = Backend(projectGroup, initConfig=False)
   print('\n\nOUTPUT:')
   outputString('print','info', be.checkDB(outputStyle='text'))

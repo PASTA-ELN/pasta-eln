@@ -16,7 +16,7 @@ CSS_STYLE = """
 <style> ul {list-style-type: none; padding-left: 0; margin: 0;} a:link {text-decoration: none;}
 a:visited {text-decoration: none;} a:hover {text-decoration: none;} a:active {text-decoration: none;} </style>
 """
-PASTA_DETAILS = ['shasum','type','branch','gui','dateCreated','dateModified','id','user']
+PASTA_DETAILS = ['shasum','type','branch','gui','dateCreated','dateModified','id','user','client','externalId']
 
 class Details(QScrollArea):
   """ widget that shows the details of the items """

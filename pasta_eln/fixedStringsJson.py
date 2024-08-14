@@ -94,6 +94,8 @@ configurationGUI: dict[str, Any] = {
   }
 }
 
+SQLiteTranslation = str.maketrans({"'":"&prime;"})
+
 setupText = """
 ### Welcome to the PASTA-ELN setup
 Three components are needed for proper functioning of PASTA-ELN:

@@ -128,7 +128,7 @@ class Table(QWidget):
       if self.projID=='':
         self.data = self.comm.backend.db.getView(path)
       else:
-        self.data = self.comm.backend.db.getView(path, preciseKey=self.projID)
+        self.data = self.comm.backend.db.getView(path, startKey=self.projID)
       self.showState.setText('(show all rows)' if self.showAll else '(hide hidden rows)')
       docLabel = 'Unidentified'
       if self.docType=='-':

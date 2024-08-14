@@ -745,8 +745,7 @@ class Backend(CLI_Mixin):
                 docDB   = self.db.getDoc(listDocs[0]['id'])
                 difference = diffDicts(docDisk,docDB)
                 if len(difference)>1:
-                  output += outputString(outputStyle,'error','disk(1) and db(2) content do not match:'+docDB['id'])
-                  output += outputString(outputStyle,'error',difference)
+                  output += outputString(outputStyle,'error',f'disk(1) and db(2) content do not match: {docDB['id']}\n{difference}')
                   if repair:
                     with open(self.basePath/root/dirName/'.id_pastaELN.json','w',encoding='utf-8') as fOut:
                       json.dump(docDB, fOut)

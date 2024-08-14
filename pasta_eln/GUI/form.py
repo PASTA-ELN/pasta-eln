@@ -136,7 +136,7 @@ class Form(QDialog):
           self.allUserElements.append(('tags',''))
           self.updateTagsBar()
           self.otherChoices.currentIndexChanged.connect(self.addTag) #connect to slot only after all painting is done
-        elif key in ['.comment', '.content']:
+        elif key in ['.comment', '.content']:  #TODO replace html symbols by the ascii
           key = key[1:]
           labelW, labelL = widgetAndLayout('V')
           labelL.addWidget(QLabel(key.capitalize()))
