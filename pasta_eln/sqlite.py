@@ -9,53 +9,6 @@ from PIL import Image
 from .fixedStringsJson import defaultDataHierarchy, defaultDefinitions, SQLiteTranslation
 from .miscTools import outputString, hierarchy, camelCase, tracebackString
 
-# DO NOT WORK ON THIS IF THERE IS SOMETHING ON THE TODO LIST
-# - Why subfolder list has no incremented 000_
-# - Why doc looses type at end of addData?
-# List:
-# 1. use Yourself: verify CW33 TRY ON TEST FIRST
-#    - edit new item: save sept. homework
-#  File "/home/steffen/FZJ/PASTA/pasta-eln/pasta_eln/sqlite.py", line 417, in updateDoc
-#    self.cursor.execute(f"UPDATE main SET {changeString} WHERE id = '{docID}'")
-#sqlite3.OperationalError: near "x1": syntax error
-# 2. create final example data: attachments, two branches, history CW34
-#    - not all exists in GUI jet (attachments, history create todos)
-# 3. do GUI work CW35
-#    fix color issues when using themes and bright/dark screen
-# 4. pyInstaller for windows CW36
-# 5. .eln-file  CW37/38
-# 6. sync elabFTW CW39/40
-#
-# OLD NOTES
-# - try to use sqlite style as much as possible and
-#   translate within this file into PASTA-document-style
-#   - KEEP THE REST OF THE CODE THE SAME FOR NOW
-# - start with first test: run-fix-run-fix
-#   - pytest --no-skip --tb=short tests/test_01_3Projects.py
-#   - start pasta with pudb
-#   - do an unit example for the sin-curve
-#   - give an example for attachment in datahierarchy: same table
-#   - test and use gui, with now all requirements implemented
-#   - pyInstaller for windows
-#   - write a better default example
-#   - do more tests and more coverage
-# - LATER change configuration to sqlite
-# - do not work on replicator: use eln file there
-# - think about more mapping
-
-# Benefits:
-# - easy installation
-# - test as github actions
-# - read / backup database with many other tools
-# - can switch between both databases by changing the config
-# - investigate perhaps:
-#   redis db: server that is similar to others; save to file is also a general location; not user-space
-#   crateDB: server; not user space
-# - try ID as uuid4 = integer (see if elabFTW does it too)
-#   - see if I use x-4523452345 anywhere
-#   - see if I use the first letter of the docID
-#   -> such long integers are not supported by sqlite: stay with string/text
-
 KEY_ORDER=['id'  ,'name','user','type','dateCreated','dateModified','gui',      'client','shasum','image','content','comment','externalId']
 KEY_TYPE =['TEXT','TEXT','TEXT','TEXT','TEXT',       'TEXT',        'varchar(2)','TEXT',  'TEXT',  'TEXT', 'TEXT',   'TEXT',   'TEXT']
 DATA_HIERARCHY = ['docType', 'IRI','title','icon','shortcut','view']
@@ -73,6 +26,7 @@ class SqlLiteDB:
       basePath (Path): path of project group
     """
     self.connection = sqlite3.connect(basePath/"pastaELN.db", check_same_thread=False)
+    self.basePath   = basePath
     self.cursor     = self.connection.cursor()
     self.dataHierarchyInit(resetDataHierarchy)
     # main table
@@ -432,7 +386,7 @@ class SqlLiteDB:
         self.cursor.execute("INSERT INTO changes VALUES (?,?,?)", [docID, datetime.now().isoformat(), json.dumps(changesDict)])
       self.connection.commit()
     branchNew.pop('op')
-    # TODO FUNCTION adopt path on harddrive see old version
+    # TODO: FUNCTION  adopt path on harddrive see old version
     return mainOld | mainNew | {'branch':[branchNew], '__version__':'short'}
 
 
@@ -462,8 +416,53 @@ class SqlLiteDB:
           f"WHERE id = '{docID}' and idx = {branch}"
     self.cursor.execute(cmd)
     self.connection.commit()
-    # TODO FUNCTION adopt path on harddrive see old version
+    # move content: folder and data and write .json to disk
+    if pathOld!='*' and path!='*' and ':/' not in pathOld:
+      if not (self.basePath/pathOld).exists() and (self.basePath/path).exists():
+        logging.debug('sqlite:updateBranch: dont move since already good')
+      else:
+        (self.basePath/pathOld).rename(self.basePath/path)
+    if docID[0]=='x' and path is not None:
+      with open(self.basePath/path/'.id_pastaELN.json', 'w', encoding='utf-8') as fOut:
+        fOut.write(json.dumps(self.getDoc(docID)))
+      self.updateChildrenOfParentsChanges(pathOld,path,  stackOld,'/'.join(stack+[docID]))
     return (None if pathOld=='*' else pathOld, None if path=='*' else path)
+
+
+  def updateChildrenOfParentsChanges(self, pathOld:str, pathNew:str, stackOld:str, stackNew:str) -> None:
+    """
+    update children's paths
+
+    Args:
+      pathOld (str): old path of parent
+      pathNew (str): new path of parent
+      stackOld (str): old stack of parent
+      stackNew (str): new stack of parent
+    """
+    cmd = f"SELECT path, stack, show, id, idx FROM branches WHERE stack LIKE '{stackOld}/%'"
+    self.cursor.execute(cmd)
+    children = self.cursor.fetchall()
+    updatedInfo = []
+    for (pathIOld, stackIOld, showIOld, docID, idx) in children:
+      pathINew  = pathNew+pathIOld[len(pathOld):] if pathIOld!='*' and pathIOld.startswith(pathOld) else pathIOld
+      stackINew = stackNew+stackIOld[len(stackOld):]                           if stackNew else stackIOld
+      showINew  = self.createShowFromStack(stackIOld.split('/'), showIOld[-1]) if stackNew else showIOld
+      updatedInfo.append((pathINew, stackINew, showINew, docID, idx))
+      # update .json on disk
+      if stackINew.split('/')[-1][0]=='x' and (self.basePath/pathINew).is_dir():
+        with open(self.basePath/pathINew/'.id_pastaELN.json', 'r', encoding='utf-8') as fIn:
+          doc = json.load(fIn)
+        doc['branch'] = [{'stack':stackINew.split('/')[:-1],
+                          'show':[i=='T' for i in showINew],
+                          'path':pathINew,
+                          'child':i['child']}
+                         for i in doc['branch'] if i['stack']==stackIOld.split('/')[:-1]]
+        with open(self.basePath/pathINew/'.id_pastaELN.json', 'w', encoding='utf-8') as fOut:
+          fOut.write(json.dumps(doc))
+    cmd = "UPDATE branches SET path=?, stack=?, show=? WHERE id == ? and idx == ?"
+    self.cursor.executemany(cmd, updatedInfo)
+    self.connection.commit()
+    return
 
 
   def createShowFromStack(self, stack:list[str], currentShow:str='T') -> str:

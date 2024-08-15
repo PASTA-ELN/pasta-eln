@@ -99,7 +99,6 @@ class Backend(CLI_Mixin):
     Args:
       doc (dict): dict to save
     """
-    doc = dict(doc)
     if doc['branch'][0]['path'] is None:
       self.cwd     = None
     else:
@@ -108,29 +107,10 @@ class Backend(CLI_Mixin):
     doc['childNum']= doc['branch'][0]['child']
     # change content
     doc = self.addData('-edit-', doc)
-    # change folder-name in database of all children
-    if doc['type'][0][0]=='x' and self.cwd is not None:
-      items = self.db.getView('viewHierarchy/viewPaths',
-                              startKey=f'{self.cwd.relative_to(self.basePath).as_posix()}/')
-      _ = [self.threadParallel(item, doc) for item in items]      # type: ignore[func-returns-value]
+    if doc['id'].startswith('x'):
+      self.db.updateChildrenOfParentsChanges(str(self.cwd),doc['branch'][0]['path'], '','')
     self.cwd = self.basePath #reset to sensible before continuing
     self.hierStack = []
-    return
-
-
-  def threadParallel(self, item:dict[str,Any], doc:dict[str,Any]) -> None:
-    """ internal function to process items and documents in parallel: rename folders on the disk
-
-    Args:
-      item (dict): item of current item to process
-      doc (dict):  parents documents
-    """
-    oldPathParts = item['key'].split('/')
-    newPathParts = doc['branch'][0]['path'].split('/')
-    newPath = '/'.join(newPathParts+oldPathParts[len(newPathParts):]  )
-    if newPath != item['key']:  # for-loop could also be implemented in parallel
-      #item.value: stack, type, childNum, shasum
-      self.db.updateBranch(item['id'], item['value'][-1], item['value'][-3], path=newPath)
     return
 
 

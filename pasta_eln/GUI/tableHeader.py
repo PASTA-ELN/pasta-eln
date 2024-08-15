@@ -103,7 +103,6 @@ class TableHeader(QDialog):
     elif btn.text().endswith('Save'):
       specialFields = ['name', 'type', 'tags', 'user', 'date']
       self.selectedList = [f'-{i}' if i in specialFields else i for i in self.selectedList]
-      #TODO set new selectedList
       # self.db.initDocTypeViews(self.comm.backend.configuration['tableColumnsMax'], docTypeChange=self.docType,
       #                          columnsChange=self.selectedList)
       restart()
