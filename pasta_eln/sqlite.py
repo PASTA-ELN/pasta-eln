@@ -387,7 +387,8 @@ class SqlLiteDB:
           raise ValueError(f'sqlite.2: idx unset: {mainNew["id"]} {mainNew["name"]}')
         self.cursor.execute(f"UPDATE branches SET stack='{'/'.join(branchOld[idx]['stack']+[docID])}', "
                             f"path='{branchOld[idx]['path']}', child='{branchOld[idx]['child']}', "
-                            f"show='{branchOld[idx]['show']}' WHERE id = '{docID}' and idx = {idx}")
+                            f"show='{''.join(['T' if j else 'F' for j in branchOld[idx]['show']])}' "
+                            f"WHERE id = '{docID}' and idx = {idx}")
     #TODO: use example with two branches
 
     # read properties and identify changes
