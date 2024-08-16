@@ -108,7 +108,7 @@ class Backend(CLI_Mixin):
     # change content
     doc = self.addData('-edit-', doc)
     if doc['id'].startswith('x'):
-      self.db.updateChildrenOfParentsChanges(str(self.cwd),doc['branch'][0]['path'], '','')
+      self.db.updateChildrenOfParentsChanges(str(self.cwd.relative_to(self.basePath)),doc['branch'][0]['path'], '/'.join(self.hierStack),'')
     self.cwd = self.basePath #reset to sensible before continuing
     self.hierStack = []
     return

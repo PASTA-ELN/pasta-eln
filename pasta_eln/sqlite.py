@@ -313,6 +313,8 @@ class SqlLiteDB:
         dict: json representation of updated document
     """
     dataNew['client'] = tracebackString(False, f'updateDoc:{docID}')
+    if 'edit' in dataNew:     #if delete
+      dataNew = {'id':dataNew['id'], 'branch':dataNew['branch'], 'user':dataNew['user'], 'externalId':dataNew['externalId'], 'name':''}
     changesDict:dict[str,str]         = {}
     self.connection.row_factory = sqlite3.Row  #default None
     cursor = self.connection.cursor()
@@ -345,9 +347,49 @@ class SqlLiteDB:
     branchNew  = dataNew.pop('branch',{})
     # read branches and identify changes
     cursor.execute(f"SELECT * FROM branches WHERE id == '{docID}'")
-    branchOld = cursor.fetchall()
-    print(f'do something with branch: new {branchNew} old: {branchOld}')
+    branchOld = [dict(i) for i in cursor.fetchall()]
+    branchOld[0]['show'] = [i=='T' for i in branchOld[0]['show']]
+    branchOld[0]['stack'] = branchOld[0]['stack'].split('/')[:-1]
+    # print(f'do something with branch: \nnew {branchNew} \nold: {branchOld}')
+    if branchNew:
+      op      = branchNew.pop('op')             #operation
+      oldPath = branchNew.pop('oldPath',None)
+      if not branchNew['path']:
+        branchNew['path'] = branchOld[0]['path']
+      if branchNew not in branchOld:            #only do things if the newBranch is not already in oldBranch
+        changesDict['branch'] = branchOld.copy()
+        idx = None
+        for branch in branchOld:                #check if the path is already exist, then it is only an update
+          if op=='c' and branch['path']==branchNew['path']:
+            op='u'
+        if op=='c':    #create, append
+          branchNew['show'] = self.createShowFromStack(branchNew['stack'].split('/'))
+          branchOld += [branchNew]
+        elif op=='u':  #update
+          if oldPath is not None:              # search by using old path
+            for branch in branchOld:
+              if branch['path'].startswith(oldPath):
+                if   os.path.basename(branch['path']) == mainNew['name'] and \
+                     os.path.basename(str(branchNew['path']))!='':
+                  mainNew['name'] = os.path.basename(str(branchNew['path']))
+                branch['path'] = branch['path'].replace(oldPath ,branchNew['path'])
+                branch['stack']= branchNew['stack']
+                branch['show'] = self.createShowFromStack(branchNew['stack'], branch['show'][-1])
+                break
+          else:
+            idx = 0
+            branchOld[idx] = branchNew           #change branch 0 aka the default
+        elif op=='d':  #delete
+          branchOld = [branch for branch in branchOld if branch['path']!=branchNew['path']]
+        else:
+          raise ValueError(f'sqlite.1: unknown branch op: {mainNew["id"]} {mainNew["name"]}')
+        if idx is None:
+          raise ValueError(f'sqlite.2: idx unset: {mainNew["id"]} {mainNew["name"]}')
+        self.cursor.execute(f"UPDATE branches SET stack='{'/'.join(branchOld[idx]['stack']+[docID])}', "
+                            f"path='{branchOld[idx]['path']}', child='{branchOld[idx]['child']}', "
+                            f"show='{branchOld[idx]['show']}' WHERE id = '{docID}' and idx = {idx}")
     #TODO: use example with two branches
+
     # read properties and identify changes
     self.cursor.execute(f"SELECT key, value FROM properties WHERE id == '{docID}'")
     dataOld = {i[0]:i[1] for i in self.cursor.fetchall()}
@@ -378,16 +420,15 @@ class SqlLiteDB:
       if key in mainNew and mainOld[key]!=mainNew[key]:
         changesDB['main'][key] = '/'.join(mainNew[key]) if key=='type' else mainNew[key].translate(SQLiteTranslation)
         changesDict[key] = mainOld[key]
-    # change content in database: main and changes are updated
+    # save change content in database: main and changes are updated
     if set(changesDict.keys()).difference(('dateModified','client','user')):
       changeString = ', '.join([f"{k}='{v}'" for k,v in changesDB['main'].items()])
       self.cursor.execute(f"UPDATE main SET {changeString} WHERE id = '{docID}'")
       if 'name' not in changesDict or changesDict['name']!='new item':  #do not save initial change from new item
         self.cursor.execute("INSERT INTO changes VALUES (?,?,?)", [docID, datetime.now().isoformat(), json.dumps(changesDict)])
       self.connection.commit()
-    branchNew.pop('op')
     # TODO: FUNCTION  adopt path on harddrive see old version
-    return mainOld | mainNew | {'branch':[branchNew], '__version__':'short'}
+    return mainOld | mainNew | {'branch':branchOld, '__version__':'short'}
 
 
   def updateBranch(self, docID:str, branch:int, child:int, stack:Optional[list[str]]=None,
