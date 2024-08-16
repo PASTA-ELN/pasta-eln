@@ -353,7 +353,7 @@ class SqlLiteDB:
     # print(f'do something with branch: \nnew {branchNew} \nold: {branchOld}')
     if branchNew:
       op      = branchNew.pop('op')             #operation
-      oldPath = branchNew.pop('oldPath',None)
+      oldPath = branchNew.pop('oldPath',None)   #TODO more functions use this ability: backend.py and table.py, which are called by other functions
       if not branchNew['path']:
         branchNew['path'] = branchOld[0]['path']
       if branchNew not in branchOld:            #only do things if the newBranch is not already in oldBranch
@@ -428,7 +428,6 @@ class SqlLiteDB:
       if 'name' not in changesDict or changesDict['name']!='new item':  #do not save initial change from new item
         self.cursor.execute("INSERT INTO changes VALUES (?,?,?)", [docID, datetime.now().isoformat(), json.dumps(changesDict)])
       self.connection.commit()
-    # TODO: FUNCTION  adopt path on harddrive see old version
     return mainOld | mainNew | {'branch':branchOld, '__version__':'short'}
 
 

@@ -183,7 +183,7 @@ class Form(QDialog):
             if dataHierarchyItem[0]['list']: #choice dropdown
               setattr(self, elementName, QComboBox())
               if ',' in dataHierarchyItem[0]['list']:                  #dataHierarchy-defined choices
-                getattr(self, elementName).addItems(dataHierarchyItem[0]['list'].split(',')) #TODO FUNCTION choice saved in database not used, always first
+                getattr(self, elementName).addItems(dataHierarchyItem[0]['list'].split(',')) #TODO GUI choice saved in database not used, always first
               else:                                                    #choice among docType
                 listDocType = dataHierarchyItem[0]['list']
                 getattr(self, elementName).addItem('- no link -', userData='')
