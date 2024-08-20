@@ -149,15 +149,15 @@ def dataHierarchy_pre_to_V4(dataHierarchy: dict[str, Any]) -> None:
            'instrument': 'ri.scales-2-line'}
   shortcuts = {'measurement':'m', 'sample':'s', 'procedure':'p', 'instrument':'i', 'x0':'space'}
   dataHierarchy["-version"] = 4
-  typeStructures = {}
-  for key in dataHierarchy:
-    if key[0] not in {'-', '_'}:
-      typeStructures[key] = dataHierarchy[key]
+  typeStructures = {
+      key: dataHierarchy[key]
+      for key in dataHierarchy if key[0] not in {'-', '_'}
+  }
   for docType, typeStructure in typeStructures.items():
     # Adjustments previous versions <= v3.0
     typeStructure.setdefault("attachments", [])
-    typeStructure.setdefault("icon", icons[docType] if docType in icons else "")
-    typeStructure.setdefault("shortcut", shortcuts[docType] if docType in shortcuts else "")
+    typeStructure.setdefault("icon", icons.get(docType, ""))
+    typeStructure.setdefault("shortcut", shortcuts.get(docType, ""))
     properties = typeStructure.get("prop")
     if properties is None:
       properties = {"default": []}

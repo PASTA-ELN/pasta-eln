@@ -28,10 +28,7 @@ def getColor(backend:Backend, color:str) -> str:
     str: #123456 color code
   """
   if not hasattr(backend, 'configuration') or backend.configuration['GUI']['theme']=='none':
-    if color=='primary':
-      return '#000000'
-    else:
-      return '#BBBBBB'
+    return '#000000' if color=='primary' else '#BBBBBB'
   themeName = backend.configuration['GUI']['theme']
   return get_theme(f'{themeName}.xml')[f'{color}Color']
 
@@ -216,7 +213,7 @@ class Label(QLabel):
       self.setToolTip(tooltip)
     return
 
-  def mousePressEvent(self, e:QMouseEvent) -> None:
+  def mousePressEvent(self, _:QMouseEvent) -> None:
     """
     Event after mouse press: only use internal members, not the event itself
     """
@@ -262,7 +259,7 @@ class ScrollMessageBox(QMessageBox):
     cssStyle = '<style> ul {list-style-type: none; padding-left: 0; margin: 0; text-indent: -20px; padding-left: -20px;} </style>'
     QMessageBox.__init__(self)
     self.setWindowTitle(title)
-    if style == '':
+    if not style:
       self.setStyleSheet('QScrollArea{min-width:300 px; min-height: 400px}')
     else:
       self.setStyleSheet(style)
@@ -303,10 +300,7 @@ def widgetAndLayout(direction:str='V', parentLayout:Optional[Union[QLayout,QSpli
     bottom (str): padding on bottom
   """
   widget = QWidget()
-  if direction=='V':
-    layout:QBoxLayout = QVBoxLayout(widget)
-  else:
-    layout = QHBoxLayout(widget)
+  layout = QVBoxLayout(widget) if direction=='V' else QHBoxLayout(widget)
   layout.setSpacing(space[spacing])
   layout.setContentsMargins(space[left], space[top], space[right], space[bottom])
   if parentLayout is not None:

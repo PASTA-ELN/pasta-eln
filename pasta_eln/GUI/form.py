@@ -76,8 +76,8 @@ class Form(QDialog):
     else:
       dataHierarchyNode = copy.deepcopy(defaultDataHierarchyNode)
     keysDataHierarchy = [f"{i['class']}.{i['name']}" for i in dataHierarchyNode]
-    keysDocOrg = [[str(x) for x in (f'{k}.{k1}' for k1 in self.doc[k].keys())] if isinstance(self.doc[k], dict) else [f'.{k}']
-               for k in self.doc.keys() if k not in KEY_ORDER+['branch','qrCodes','tags']]
+    keysDocOrg = [[str(x) for x in (f'{k}.{k1}' for k1 in self.doc[k])] if isinstance(self.doc[k], dict) else [f'.{k}']
+               for k in self.doc if k not in KEY_ORDER+['branch','qrCodes','tags']]
     keysDoc = [i for row in keysDocOrg for i in row]   #flatten
     for keyInDocNotHierarchy in set(keysDoc).difference(keysDataHierarchy):
       group = keyInDocNotHierarchy.split('.')[0]
@@ -220,8 +220,8 @@ class Form(QDialog):
           self.projectComboBox.addItem(label, userData='')
           for _, line in self.db.getView('viewDocType/x0').iterrows():
             # add all projects but the one that is present
-            if 'branch' not in self.doc or all( not(len(branch['stack'])>0 and line['id']==branch['stack'][0])
-                                                for branch in self.doc['branch']):
+            if 'branch' not in self.doc or \
+               all( len(branch['stack']) <= 0 or line['id'] != branch['stack'][0] for branch in self.doc['branch']):
               self.projectComboBox.addItem(line['name'], userData=line['id'])
               if self.doc.get('_projectID','') == line['id']:
                 self.projectComboBox.setCurrentIndex(self.projectComboBox.count()-1)
@@ -236,8 +236,8 @@ class Form(QDialog):
               self.docTypeComboBox.addItem(value, userData=key)
           self.docTypeComboBox.addItem('_UNIDENTIFIED_', userData='-')
           formL.addRow(QLabel('Data type'), self.docTypeComboBox)
-    if [i for i in self.doc.keys() if i.startswith('_')]:
-      logging.error('There should not be "_" in a doc: '+str(self.doc))
+    if [i for i in self.doc if i.startswith('_')]:
+      logging.error('There should not be "_" in a doc: %s', str(self.doc))
     # final button box
     _, buttonLineL = widgetAndLayout('H', mainL, 'm')
     if 'branch' in self.doc:
@@ -427,12 +427,11 @@ class Form(QDialog):
             self.doc[key] = text
             if key == 'content' and 'branch' in self.doc:
               for branch in self.doc['branch']:
-                if branch['path'] is not None:
-                  if branch['path'].endswith('.md'):
+                if branch['path'] is not None and branch['path'].endswith('.md'):
                     with open(self.comm.backend.basePath/branch['path'], 'w', encoding='utf-8') as fOut:
                       fOut.write(self.doc['content'])
                     logging.debug('Wrote new content to '+branch['path'])
-                  else:
+                elif branch['path'] is not None:
                     showMessage(self, 'Information', 'Did update the database but not the file on harddisk, since PASTA-ELN cannot write this format')
         elif isinstance(valueOld, list):  #items that are comma separated in the text-field
           self.doc[key] = getattr(self, elementName).text().strip().split(' ')
@@ -443,6 +442,7 @@ class Form(QDialog):
             if ((dataNew is not None and re.search(r"^[a-z\-]-[a-z0-9]{32}$",dataNew) is not None)
                 or dataNew==''):
               #if docID is stored in currentData
+              #TODO BUG edit simple.csv from table
               self.doc[group][subKey] = dataNew
             elif valueNew!='- no link -' or dataNew is None:
               self.doc[group][subKey] = valueNew

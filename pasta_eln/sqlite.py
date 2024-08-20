@@ -141,12 +141,9 @@ class SqlLiteDB:
     return result
 
 
-  def exit(self, deleteDB:bool=False) -> None:
+  def exit(self) -> None:
     """
     Shutting down things
-
-    Args:
-      deleteDB (bool): remove database
     """
     self.connection.close()
     return
@@ -707,7 +704,8 @@ class SqlLiteDB:
     Returns:
       Node: hierarchy in an anytree
     """
-    view = self.getView('viewHierarchy/viewHierarchy',    startKey=start)
+    path = 'viewHierarchy/viewHierarchyAll' if allItems else 'viewHierarchy/viewHierarchy'
+    view = self.getView(path,    startKey=start)
     # create tree of folders: these are the only ones that have children
     dataTree = None
     nonFolders = []
@@ -757,11 +755,11 @@ class SqlLiteDB:
       Returns:
         tuple: show, id, idx
       """
-      docID, idx, stack, show = item
+      localDocID, idx, stack, show = item
       j = stack.split('/').index(docID)
       showL = list(show)
       showL[j] = 'T' if showL[j]=='F' else 'F'
-      return (''.join(showL), docID, idx)
+      return (''.join(showL), localDocID, idx)
     cmd = f"SELECT id, idx, stack, show FROM branches WHERE stack LIKE '%{docID}%'"
     self.cursor.execute(cmd)
     changed = map(adoptShow, self.cursor.fetchall())

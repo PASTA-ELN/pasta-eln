@@ -25,7 +25,7 @@ class CLI_Mixin:
     outputList = output.split('\n')
     for colName in df.columns[1:]:
       idx = outputList[0].find(colName)
-      outputList = [i[:idx] + '| ' + i[idx:] for i in outputList]
+      outputList = [f'{i[:idx]}| {i[idx:]}' for i in outputList]
     outputList.insert(1, '-'*len(max(outputList, key = len)) )
     output = '\n'.join(outputList)
     return output
@@ -78,10 +78,8 @@ class CLI_Mixin:
       return 'Warning: pasta.outputHierarchy No project selected'
     hierString = ' '.join(self.hierStack)
     hierarchy = self.db.getHierarchy(hierString)
-    output = ""
-    for node in PreOrderIter(hierarchy):
-      output +='  '*node.depth+node.name+' | '+'/'.join(node.docType)+' | '+node.id+'\n'
-    return output
+    return "".join('  '*node.depth + node.name + ' | ' + '/'.join(node.docType) + ' | ' + node.id +'\n'
+                   for node in PreOrderIter(hierarchy))
 
 
   def getEditString(self):

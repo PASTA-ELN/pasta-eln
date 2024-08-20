@@ -8,7 +8,7 @@ import requests
 from anytree import Node
 from pasta_eln import __version__, minisign
 from .backend import Backend
-from .miscTools import createDirName, generic_hash, flatten, hierarchy
+from .miscTools import flatten
 from .fixedStringsJson import CONF_FILE_NAME
 # to discuss
 # - genre:docType, simulation, experiment/measurement;  status = Done, finished
@@ -145,7 +145,7 @@ def importELN(backend:Backend, elnFileName:str) -> str:
   projID, projPWD= '', Path('')
   with ZipFile(elnFileName, 'r', compression=ZIP_DEFLATED) as elnFile:
     files = elnFile.namelist()
-    logging.info('All files '+', '.join(files))
+    logging.info('All files %s',', '.join(files))
     dirName=Path(files[0]).parts[0]
     if f'{dirName}/ro-crate-metadata.json' not in files:
       print('**ERROR: ro-crate does not exist in folder. EXIT')
@@ -285,7 +285,7 @@ def importELN(backend:Backend, elnFileName:str) -> str:
           backend.cwd        = backend.basePath/ backend.db.getDoc(docID)['-branch'][0]['path']
 
       # children, aka recursive part
-      logging.info('subparts:'+', '.join(['  '+i['@id'] for i in children]))
+      logging.info('subparts: %s',', '.join(['  '+i['@id'] for i in children]))
       for child in children:
         if child['@id'].endswith('/metadata.json') or child['@id'].endswith('_metadata.json'):  #skip own metadata
           continue

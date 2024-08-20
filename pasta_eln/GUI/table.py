@@ -342,6 +342,7 @@ class Table(QWidget):
         self.change('','')  # redraw table
         self.comm.changeDetails.emit('redraw')
     elif command[0] is Command.DELETE_FILTER: # Remove filter from list of filters
+      #TODO bug when delete first one
       row = command[1]
       #print('Delete filter row', row)
       for i in range(row, self.filterL.count()):        #e.g. model 1 is in row=0, so start in 1 for renumbering

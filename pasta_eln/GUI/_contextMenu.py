@@ -2,7 +2,7 @@
 import platform, subprocess, os
 from enum import Enum
 from pathlib import Path
-from typing import Any, Union
+from typing import Any
 from PySide6.QtWidgets import QMenu, QWidget  # pylint: disable=no-name-in-module
 from PySide6.QtCore import     QPoint # pylint: disable=no-name-in-module
 from ..guiStyle import Action
@@ -18,6 +18,7 @@ def initContextMenu(widget:QWidget, pos:QPoint) -> None:
   """
   context = QMenu(widget)
   # for extractors
+  #TODO Bug when initatiated
   extractors = widget.comm.backend.configuration['extractors']                                               # type: ignore[attr-defined]
   extension = Path(widget.doc['-branch'][0]['path']).suffix[1:]                                              # type: ignore[attr-defined]
   if extension.lower() in extractors:
