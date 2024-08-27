@@ -77,14 +77,11 @@ class Backend(CLI_Mixin):
     return
 
 
-  def exit(self, deleteDB:bool=False) -> None:
+  def exit(self) -> None:
     """
     Shutting down things
-
-    Args:
-      deleteDB (bool): remove database
     """
-    self.db.exit(deleteDB)
+    self.db.exit()
     self.alive     = False
     return
 

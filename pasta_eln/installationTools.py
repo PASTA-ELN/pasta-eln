@@ -127,7 +127,6 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
   if force:
     backend = Backend(initConfig=False)
     dirName = backend.basePath
-    backend.exit(deleteDB=True)
     shutil.rmtree(dirName)
     os.makedirs(dirName)
   if callbackPercent is not None:
@@ -163,6 +162,10 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
   if callbackPercent is not None:
     callbackPercent(8)
   backend.changeHierarchy(currentID)
+  if backend.cwd is not None:
+    data2DirName = backend.basePath/backend.cwd
+  else:
+    return "**ERROR: backend is incorrect"
   backend.addData('x2',    {'name': 'This is an example subtask',     'comment': 'Random comment 1'})
   if callbackPercent is not None:
     callbackPercent(9)
@@ -175,7 +178,7 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
     callbackPercent(11)
   backend.changeHierarchy(semStepID)
   if backend.cwd is not None:
-    semDirName = backend.basePath/backend.cwd
+    dataDirName = backend.basePath/backend.cwd
   else:
     return "**ERROR: backend is incorrect"
   backend.changeHierarchy(None)
@@ -216,8 +219,8 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
 
   ###  TEST MEASUREMENTS AND SCANNING/CURATION
   outputString(outputFormat,'h2','TEST MEASUREMENTS AND SCANNING')
-  shutil.copy(Path(__file__).parent/'Resources'/'ExampleMeasurements'/'simple.png', semDirName)
-  shutil.copy(Path(__file__).parent/'Resources'/'ExampleMeasurements'/'simple.csv', semDirName)
+  shutil.copy(Path(__file__).parent/'Resources'/'ExampleMeasurements'/'simple.png', dataDirName)
+  shutil.copy(Path(__file__).parent/'Resources'/'ExampleMeasurements'/'simple.csv', dataDirName)
   if callbackPercent is not None:
     callbackPercent(19)
   logging.info('Finished copy files')
@@ -241,6 +244,17 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
   if callbackPercent is not None:
     callbackPercent(23)
   logging.info('Finished global files additions')
+
+
+  ###  TEST MEASUREMENTS AND SCANNING/CURATION
+  outputString(outputFormat,'h2','TEST MEASUREMENTS AND SCANNING 2')
+  shutil.copy(Path(__file__).parent/'Resources'/'ExampleMeasurements'/'simple.png', data2DirName)
+  logging.info('Finished copy files 2')
+  progressBar = DummyProgressBar()
+  backend.scanProject(progressBar, projID1)
+  logging.info('Finished scan tree 2')
+  outputString(outputFormat,'info',backend.output('measurement'))
+
 
   ### VERIFY DATABASE INTEGRITY
   outputString(outputFormat,'h2','VERIFY DATABASE INTEGRITY')

@@ -360,8 +360,9 @@ class SqlLiteDB:
           if op=='c' and branch['path']==branchNew['path']:
             op='u'
         if op=='c':    #create, append
-          branchNew['show'] = self.createShowFromStack(branchNew['stack'].split('/'))
-          branchOld += [branchNew]
+          if isinstance(branchNew['stack'], str):
+            raise ValueError('Should be list')
+          branchNew['show'] = self.createShowFromStack(branchNew['stack'])
         elif op=='u':  #update
           if oldPath is not None:              # search by using old path
             for branch in branchOld:
@@ -380,13 +381,12 @@ class SqlLiteDB:
           branchOld = [branch for branch in branchOld if branch['path']!=branchNew['path']]
         else:
           raise ValueError(f'sqlite.1: unknown branch op: {mainNew["id"]} {mainNew["name"]}')
-        if idx is None:
+        if idx is None:                          # create new branch: should not happen here
           raise ValueError(f'sqlite.2: idx unset: {mainNew["id"]} {mainNew["name"]}')
         self.cursor.execute(f"UPDATE branches SET stack='{'/'.join(branchOld[idx]['stack']+[docID])}', "
                             f"path='{branchOld[idx]['path']}', child='{branchOld[idx]['child']}', "
                             f"show='{''.join(['T' if j else 'F' for j in branchOld[idx]['show']])}' "
                             f"WHERE id = '{docID}' and idx = {idx}")
-    #TODO: use example with two branches
 
     # read properties and identify changes
     self.cursor.execute(f"SELECT key, value FROM properties WHERE id == '{docID}'")
@@ -404,10 +404,11 @@ class SqlLiteDB:
           if longKey in dataOld:
             del dataOld[longKey]
       else:
-        logging.error('Property is not a dict, ERROR')
+        logging.error('Property is not a dict, ERROR %s %s',key, value)
     if set(dataOld.keys()).difference(dataNew.keys()):
       cmd = f"DELETE FROM properties WHERE id == '{docID}' and key == ?"
-      self.cursor.executemany(cmd, set(dataOld.keys()).difference(dataNew.keys()))
+      properties = [(i,) for i in set(dataOld.keys()).difference(dataNew.keys())]
+      self.cursor.executemany(cmd, properties)
       changesDict |= dataOld
     # read main and identify if something changed
     cursor.execute(f"SELECT * FROM main WHERE id == '{docID}'")

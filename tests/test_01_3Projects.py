@@ -5,7 +5,6 @@ from datetime import datetime
 import warnings
 import unittest
 from pathlib import Path
-import pytest
 from pasta_eln.backend import Backend
 from pasta_eln.miscTools import outputString
 from pasta_eln.miscTools import DummyProgressBar
@@ -40,7 +39,7 @@ class TestStringMethods(unittest.TestCase):
     projectGroup = 'research'
     self.be = Backend('research', initConfig=False)
     self.dirName = self.be.basePath
-    self.be.exit(deleteDB=True)
+    self.be.exit()
     shutil.rmtree(self.dirName)
     os.makedirs(self.dirName)
     self.be = Backend(projectGroup, initViews=True, initConfig=False)

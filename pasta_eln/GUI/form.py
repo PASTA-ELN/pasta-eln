@@ -442,7 +442,6 @@ class Form(QDialog):
             if ((dataNew is not None and re.search(r"^[a-z\-]-[a-z0-9]{32}$",dataNew) is not None)
                 or dataNew==''):
               #if docID is stored in currentData
-              #TODO BUG edit simple.csv from table
               self.doc[group][subKey] = dataNew
             elif valueNew!='- no link -' or dataNew is None:
               self.doc[group][subKey] = valueNew
