@@ -246,14 +246,20 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
   logging.info('Finished global files additions')
 
 
-  ###  TEST MEASUREMENTS AND SCANNING/CURATION
+  ###  TEST MEASUREMENTS AND SCANNING/CURATION 2
   outputString(outputFormat,'h2','TEST MEASUREMENTS AND SCANNING 2')
   shutil.copy(Path(__file__).parent/'Resources'/'ExampleMeasurements'/'simple.png', data2DirName)
   logging.info('Finished copy files 2')
   progressBar = DummyProgressBar()
   backend.scanProject(progressBar, projID1)
   logging.info('Finished scan tree 2')
+  df = backend.db.getView('viewDocType/measurement')
+  docID = df[df['name']=='simple.png']['id'].values[0]
+  doc   = backend.db.getDoc(docID)
+  doc['comment'] = '# File with two locations\n - The same file can be located in different locations across different projects within one project group.\n - Since it is the same file, they share the same metadata: same comment, same tags, ...'
+  backend.editData(doc)
   outputString(outputFormat,'info',backend.output('measurement'))
+
 
 
   ### VERIFY DATABASE INTEGRITY

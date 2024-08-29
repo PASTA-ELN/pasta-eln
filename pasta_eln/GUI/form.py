@@ -438,10 +438,11 @@ class Form(QDialog):
         elif isinstance(valueOld, str):
           if guiType=='ComboBox':
             valueNew = getattr(self, elementName).currentText()
-            dataNew  = getattr(self, elementName).currentData()
+            dataNew  = getattr(self, elementName).currentData()  #if docID is stored in currentData
             if ((dataNew is not None and re.search(r"^[a-z\-]-[a-z0-9]{32}$",dataNew) is not None)
                 or dataNew==''):
-              #if docID is stored in currentData
+              if group not in self.doc:
+                self.doc[group] = {}
               self.doc[group][subKey] = dataNew
             elif valueNew!='- no link -' or dataNew is None:
               self.doc[group][subKey] = valueNew

@@ -395,6 +395,8 @@ class SqlLiteDB:
       if isinstance(value, dict):
         for subKey, subValue in value.items():
           longKey = f'{key}.{subKey}'
+          if isinstance(subValue, tuple):
+            subValue = subValue[0]
           if longKey in dataOld and subValue!=dataOld[longKey]:
             self.cursor.execute(f"UPDATE properties SET value='{subValue}' WHERE id = '{docID}' and key = '{longKey}'")
             changesDict[longKey] = dataOld[longKey]
@@ -446,7 +448,17 @@ class SqlLiteDB:
     """
     #convert into db style
     path = '*' if path is None else path
-    #use
+    if branch == -1: #append a new branch
+      self.cursor.execute(f"SELECT idx FROM branches WHERE id == '{docID}'")
+      idxOld = [i[0] for i in self.cursor.fetchall()]
+      if max(idxOld)+1 != len(idxOld):
+        raise ValueError('Branch length and content do not correlate', idxOld)
+      show  = self.createShowFromStack(stack)
+      self.cursor.execute(f"INSERT INTO branches VALUES ({', '.join(['?']*6)})",
+                  [docID, len(idxOld), '/'.join(stack+[docID]), str(child), path, show])
+      self.connection.commit()
+      return (None, None if path=='*' else path)
+    # modify existing branch
     self.cursor.execute(f"SELECT path, stack, show FROM branches WHERE id == '{docID}' and idx == {branch}")
     pathOld, stackOld, showOld = self.cursor.fetchone()
     stack = stack if stack is not None else stackOld.split('/')[:-1]  # stack without current id
@@ -515,7 +527,7 @@ class SqlLiteDB:
       currentShow (str): current show-indicator of this item
 
     Returns:
-      list: list of show = list of bool
+      str: string of show = list of bool
     """
     show = len(stack)*['T'] + [currentShow]
     for idx, docID in enumerate(stack):

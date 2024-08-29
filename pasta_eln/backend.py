@@ -331,7 +331,7 @@ class Backend(CLI_Mixin):
       hierStack = parentDoc['branch'][0]['stack']+[parentID]
       # handle directories
       for dirName in dirs[::-1]: #sorted forward in Linux
-        if dirName.startswith('.') or dirName.startswith('trash_'):
+        if dirName.startswith(('.','trash_')) or dirName in ('.git', '__pycache__'):            # ignore directories
           continue
         path = (Path(root)/dirName).relative_to(self.basePath).as_posix()
         if path in pathsInDB_x: #path already in database
@@ -372,7 +372,7 @@ class Backend(CLI_Mixin):
       for fileName in files:
         filesCount += 1
         progressBar.setValue(int(100*filesCount/filesCountSum))
-        if fileName.startswith('.') or fileName.startswith('trash_') or '_PastaExport' in fileName:
+        if fileName.startswith(('.', 'trash_')) or '_PastaExport' in fileName:  #ignore files
           continue
         path = (Path(root).relative_to(self.basePath) /fileName).as_posix()
         if path in pathsInDB_data:
@@ -380,7 +380,14 @@ class Backend(CLI_Mixin):
           pathsInDB_data.remove(path)
         else:
           logging.info('Scan: add file to DB: %s',path)
-          self.addData('', {'name':path}, hierStack)
+          shasum = generic_hash(self.basePath/path, forceFile=True)
+          if not shasum:
+            raise NameError(f'Filepath does not exist {self.basePath/path}')
+          view = self.db.getView('viewIdentify/viewSHAsum',shasum)
+          if len(view)==0:                             #not in database: create doc
+            self.addData('', {'name':path}, hierStack)
+          else:
+            self.db.updateBranch(view[0]['id'], -1, 9999, hierStack, path)
     #finish method
     self.cwd = self.basePath/projPath
     orphans = [

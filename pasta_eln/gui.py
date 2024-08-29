@@ -237,7 +237,7 @@ def mainGUI() -> tuple[Union[QCoreApplication, None], MainWindow]:
   #  old versions of basicConfig do not know "encoding='utf-8'"
   logging.basicConfig(filename=log_path, level=logging.INFO, format='%(asctime)s|%(levelname)s:%(message)s',
                       datefmt='%m-%d %H:%M:%S')
-  for package in ['urllib3', 'requests', 'asyncio', 'PIL', 'matplotlib']:
+  for package in ['urllib3', 'requests', 'asyncio', 'PIL', 'matplotlib','pudb']:
     logging.getLogger(package).setLevel(logging.WARNING)
   logging.info('Start PASTA GUI')
   # remainder
