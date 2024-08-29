@@ -2,6 +2,7 @@
 import os, platform, sys, json, shutil, logging
 from typing import Optional, Any, Callable
 from pathlib import Path
+from datetime import datetime
 from .backend import Backend
 from .fixedStringsJson import defaultConfiguration, configurationGUI, CONF_FILE_NAME
 from .miscTools import outputString, DummyProgressBar
@@ -187,7 +188,6 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
     callbackPercent(12)
   logging.info('Finished project planning')
 
-  #TODO 2-branches copy the entire test-01 to here once finished
   ### TEST PROCEDURES
   outputString(outputFormat,'h2','TEST PROCEDURES')
   sopDir = backend.basePath/'StandardOperatingProcedures'
@@ -200,6 +200,8 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
   if callbackPercent is not None:
     callbackPercent(14)
   outputString(outputFormat,'info',backend.output('procedure'))
+  df = backend.db.getView('viewDocType/procedure')
+  procedureID = df[df['name']=='Example_SOP.md']['id'].values[0]
   if callbackPercent is not None:
     callbackPercent(15)
   logging.info('Finished procedures creating')
@@ -216,6 +218,20 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
   if callbackPercent is not None:
     callbackPercent(18)
   logging.info('Finished samples creating')
+
+  ### ADD INSTRUMENTS AND THEIR ATTACHMENTS
+  outputString(outputFormat,'h2','ADD INSTRUMENTS AND ATTACHMENTS')
+  backend.addData('instrument', {'name': 'Big instrument', '.vendor':'Company A', '.model':'ABC-123', 'comment':'Instrument onto which attachments can be added'})
+  backend.addData('instrument/extension', {'name': 'Sensor', '.vendor':'Company B', '.model':'org.comp.98765', 'comment':'Attachment that increases functionality of big instrument'})
+  df = backend.db.getView('viewDocType/instrument')
+  idInstrument = df[df['name']=='Big instrument']['id'].values[0]
+  idSensor = df[df['name']=='Sensor']['id'].values[0]
+  backend.db.initAttachment(idInstrument, "Right side of instrument", 'instrument/extension')
+  backend.db.addAttachment(idInstrument, "Right side of instrument",
+         {'date':datetime.now().isoformat(),'remark':'Worked well','docID':idSensor,'user':'nobody'})
+  backend.db.addAttachment(idInstrument, "Right side of instrument",
+         {'date':datetime.now().isoformat(),'remark':'Service','docID':'','user':'nobody'})
+  outputString(outputFormat,'info',backend.output('instrument'))
 
   ###  TEST MEASUREMENTS AND SCANNING/CURATION
   outputString(outputFormat,'h2','TEST MEASUREMENTS AND SCANNING')
@@ -237,14 +253,14 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
     callbackPercent(21)
   backend.addData('measurement', {
     'name': 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Misc_pollen.jpg/315px-Misc_pollen.jpg',\
-    'comment':'remote image from wikipedia. Used for testing and reference. Can be deleted.'})
+    'comment':'- Remote image from wikipedia. Used for testing and reference\n- This item links to a procedure that was used for its creation.\n- One can link to samples, etc. to create complex metadata',
+    '.procedure':procedureID })
   if callbackPercent is not None:
     callbackPercent(22)
   outputString(outputFormat,'info',backend.output('measurement'))
   if callbackPercent is not None:
     callbackPercent(23)
   logging.info('Finished global files additions')
-
 
   ###  TEST MEASUREMENTS AND SCANNING/CURATION 2
   outputString(outputFormat,'h2','TEST MEASUREMENTS AND SCANNING 2')
@@ -259,8 +275,6 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
   doc['comment'] = '# File with two locations\n - The same file can be located in different locations across different projects within one project group.\n - Since it is the same file, they share the same metadata: same comment, same tags, ...'
   backend.editData(doc)
   outputString(outputFormat,'info',backend.output('measurement'))
-
-
 
   ### VERIFY DATABASE INTEGRITY
   outputString(outputFormat,'h2','VERIFY DATABASE INTEGRITY')
