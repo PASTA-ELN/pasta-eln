@@ -120,12 +120,6 @@ class MainWindow(QMainWindow):
     Args:
       doc (dict): document
     """
-    if 'id' in doc:
-      logging.debug('gui:formdoc ' + str(doc['id']))
-    elif '_ids' in doc:
-      logging.debug('gui:formdoc ' + str(doc['_ids']))
-    else:
-      logging.debug('gui:formdoc of type ' + str(doc['type']))
     formWindow = Form(self.comm, doc)
     ret = formWindow.exec()
     if ret == 0:
@@ -178,7 +172,7 @@ class MainWindow(QMainWindow):
         fConf.write(json.dumps(self.backend.configuration, indent=2))
       restart()
     elif command[0] is Command.SYNC:
-      report = self.comm.backend.replicateDB(progressBar=self.sidebar.progress)
+      report = self.comm.backend.replicateDB()
       showMessage(self, 'Report of syncronization', report, style='QLabel {min-width: 450px}')
     elif command[0] is Command.DATAHIERARCHY:
       # Jithu's code: comment out for now

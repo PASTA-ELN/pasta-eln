@@ -1,11 +1,10 @@
 """ PYTHON MIXIN FOR BACKEND containing all the functions that output to CLI """
 # mypy: ignore-errors
-from .miscTools import createDirName
 
 class CLI_Mixin:
   """ Python Mixin for backend containing all the functions that output to CLI """
 
-  def output(self, docType, printID=False, **kwargs):
+  def output(self, docType, printID=False):
     """
     output view to screen
     - length of output 100 character
@@ -13,7 +12,6 @@ class CLI_Mixin:
     Args:
       docType (string): document type to output
       printID (bool):  include docID in output string
-      **kwargs (dict): additional parameter
 
     Returns:
         string: output incl. \n
@@ -32,14 +30,13 @@ class CLI_Mixin:
 
 
 
-  def outputTags(self, tag='', **kwargs):
+  def outputTags(self, tag=''):
     """
     output view to screen
     - length of output 100 character
 
     Args:
       tag (string): tag to be listed, if empty: print all
-      **kwargs (dict): additional parameter
 
     Returns:
         string: output incl. \n
@@ -58,7 +55,7 @@ class CLI_Mixin:
     return outString
 
 
-  def outputHierarchy(self, onlyHierarchy=True, addID=False, addTags=None, **kwargs):
+  def outputHierarchy(self, onlyHierarchy=True, addID=False):
     """
     output hierarchical structure in database
     - convert view into native dictionary
@@ -67,8 +64,6 @@ class CLI_Mixin:
     Args:
        onlyHierarchy (bool): only print project,steps,tasks or print all (incl. measurements...)[default print all]
        addID (bool): add docID to output
-       addTags (string): add tags, comments, objective to output ['all','tags',None]
-       **kwargs (dict): additional parameter, i.e. callback
 
     Returns:
         string: output incl. \n
@@ -80,17 +75,6 @@ class CLI_Mixin:
     hierarchy = self.db.getHierarchy(hierString)
     return "".join('  '*node.depth + node.name + ' | ' + '/'.join(node.docType) + (f' | {node.id}' if addID else '') +'\n'
                    for node in PreOrderIter(hierarchy) if node.docType[0].startswith('x') or not onlyHierarchy)
-
-
-  def getEditString(self):
-    """
-    Return org-mode markdown string of hierarchy tree
-      complicated style: this document and all its children and grandchildren...
-
-    Returns:
-        string: output incl. \n
-    """
-    return self.outputHierarchy(True,True,'tags')
 
 
   def outputQR(self):

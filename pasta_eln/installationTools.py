@@ -121,18 +121,19 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
     force (bool): force creation by removing content before creation
     callbackPercent (function): callback function given to exampleData, such that exampleData can report progress back
     projectGroup (str): project group to create example data in
+    outputFormat (str): output of the example data creation, see miscTools.outputString()
   '''
   logging.info('Start example data creation')
   if callbackPercent is not None:
     callbackPercent(0)
   if force:
-    backend = Backend(projectGroup, initConfig=False)
+    backend = Backend(projectGroup)
     dirName = backend.basePath
     shutil.rmtree(dirName)
     os.makedirs(dirName)
   if callbackPercent is not None:
     callbackPercent(1)
-  backend = Backend(projectGroup, initViews=True, initConfig=False)
+  backend = Backend(projectGroup)
   if callbackPercent is not None:
     callbackPercent(2)
   ### CREATE PROJECTS AND SHOW
@@ -253,7 +254,8 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
     callbackPercent(21)
   backend.addData('measurement', {
     'name': 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Misc_pollen.jpg/315px-Misc_pollen.jpg',\
-    'comment':'- Remote image from wikipedia. Used for testing and reference\n- This item links to a procedure that was used for its creation.\n- One can link to samples, etc. to create complex metadata',
+    'comment':'- Remote image from wikipedia. Used for testing and reference\n- This item links to a procedure that was used for its creation.'
+              '\n- One can link to samples, etc. to create complex metadata',
     '.procedure':procedureID })
   if callbackPercent is not None:
     callbackPercent(22)
@@ -272,7 +274,8 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
   df = backend.db.getView('viewDocType/measurement')
   docID = df[df['name']=='simple.png']['id'].values[0]
   doc   = backend.db.getDoc(docID)
-  doc['comment'] = '# File with two locations\n - The same file can be located in different locations across different projects within one project group.\n - Since it is the same file, they share the same metadata: same comment, same tags, ...'
+  doc['comment'] = '# File with two locations\n - The same file can be located in different locations across different projects within one project group.'\
+                   '\n - Since it is the same file, they share the same metadata: same comment, same tags, ...'
   backend.editData(doc)
   outputString(outputFormat,'info',backend.output('measurement'))
 

@@ -131,7 +131,7 @@ def verifyPasta(projectGroup:str='') -> None:
       config = json.load(fIn)
       print('Possible project groups:','  '.join(config['projectGroups'].keys()))
     projectGroup = input('Enter project group: ').strip()
-  be = Backend(projectGroup, initConfig=False)
+  be = Backend(projectGroup)
   print('\n\nOUTPUT:')
   outputString('print','info', be.checkDB(outputStyle='text'))
   return
@@ -148,7 +148,7 @@ def delete(projectGroup:str='', docID:str='') -> None:
       config = json.load(fIn)
       print('Possible project groups:','  '.join(config['projectGroups'].keys()))
     projectGroup = input('Enter project group: ').strip()
-  be = Backend(projectGroup, initConfig=False)
+  be = Backend(projectGroup)
   if not docID:
     docID = input('Enter docID: ').strip()
   be.db.remove(docID)

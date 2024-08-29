@@ -1,8 +1,6 @@
 """ Misc PRINTER functions that do not require instances """
-import os, uuid
-from typing import Any
 
-def createQRcodeSheet(fileName:str="../qrCodes.pdf") -> None:
+def createQRcodeSheet() -> None:
   """
   Documentation QR-codes
   - img = qrcode.make("testString",error_correction=qrcode.constants.ERROR_CORRECT_M)
@@ -12,8 +10,8 @@ def createQRcodeSheet(fileName:str="../qrCodes.pdf") -> None:
   - with frame 2.25-3cm
   - Page size 18x27cm; 6x9 = 54
   """
+  # fileName:str="../qrCodes.pdf"
   # this code currently does not work, but not used anyhow. Have to fix it in the future
-
   # import qrcode
   # import numpy as np
   # from PIL import Image
@@ -38,10 +36,11 @@ def createQRcodeSheet(fileName:str="../qrCodes.pdf") -> None:
   return
 
 
-def printQRcodeSticker(codes:list[list[str]]=[],
+def printQRcodeSticker() -> None:
+  """
+  codes:list[list[str]]=[],
                        page:dict[str,Any]={'size':[991,306], 'tiles':2, 'margin': 60, 'font':40},
                        printer:dict[str,str]={'model':'QL-700', 'dev':'0x04f9:0x2042/3', 'size':'29x90'}) -> None:
-  """
   Codes: key-value pairs of qr-code and label
    - filled to achieve tiles
 

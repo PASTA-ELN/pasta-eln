@@ -1,8 +1,8 @@
 """ Main class of config tab on GUI elements """
 import json
 from pathlib import Path
-from typing import Callable, Any
-from PySide6.QtWidgets import QWidget, QFormLayout, QVBoxLayout, QGroupBox, QLabel  # pylint: disable=no-name-in-module
+from typing import Any
+from PySide6.QtWidgets import QWidget, QFormLayout, QVBoxLayout, QGroupBox  # pylint: disable=no-name-in-module
 from ..miscTools import restart
 from ..guiStyle import TextButton, addRowList
 from ..guiCommunicate import Communicate
@@ -10,13 +10,12 @@ from ..fixedStringsJson import configurationGUI
 
 class ConfigurationGUI(QWidget):
   """ Main class of config tab on GUI elements """
-  def __init__(self, comm:Communicate, callbackFinished:Callable[[],None]):
+  def __init__(self, comm:Communicate):
     """
     Initialization
 
     Args:
       comm (Communicate): communication
-      callbackFinished (function): callback function to call upon end
     """
     super().__init__()
     self.comm = comm

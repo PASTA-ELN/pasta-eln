@@ -7,7 +7,6 @@ from urllib import request
 from pathlib import Path
 from re import sub, match
 import platform
-from .handleDictionaries import dict2ul
 from .fixedStringsJson import CONF_FILE_NAME
 
 class Bcolors:
@@ -163,8 +162,7 @@ def generic_hash(path:Path, forceFile:bool=False) -> str:
         size = int(meta.get_all('Content-Length')[0])
         return blob_hash(site, size)
     except Exception:
-      logging.error('Could not download content / hashing issue '+path.as_posix().replace(':/','://')+'\n'+\
-        traceback.format_exc())
+      logging.error('Could not download content / hashing issue %s \n%s',path.as_posix().replace(':/','://'),traceback.format_exc())
       return ''
   if path.is_dir():
     raise ValueError(f'This seems to be a directory {path.as_posix()}')
@@ -341,14 +339,14 @@ def restart() -> None:
 class DummyProgressBar():
   """ Class representing a progressbar that does not do anything
   """
-  def setValue(self, value:int) -> None:
+  def setValue(self, value:int) -> int:
     """
     Set value
 
     Args:
       value (int): value to be set
     """
-    return
+    return value
   def show(self) -> None:
     """ show progress bar """
     return

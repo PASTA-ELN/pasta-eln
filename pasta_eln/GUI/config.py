@@ -25,7 +25,7 @@ class Configuration(QDialog):
     mainL.addWidget(tabW)
 
     # Misc configuration: e.g. theming...
-    tabGUI = ConfigurationGUI(self.comm, self.closeWidget)
+    tabGUI = ConfigurationGUI(self.comm)
     tabW.addTab(tabGUI, 'Appearance')
     tabAuthors = ConfigurationAuthors(self.comm, self.closeWidget)
     tabW.addTab(tabAuthors, 'Author')

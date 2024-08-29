@@ -4,14 +4,14 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Union
 from PySide6.QtWidgets import QDialog, QWidget, QVBoxLayout, QHBoxLayout, QScrollArea, QSplitter  # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QLabel, QTextEdit, QTabWidget, QPlainTextEdit, QComboBox, QLineEdit     # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QSizePolicy, QMessageBox# pylint: disable=no-name-in-module
-from PySide6.QtGui import QRegularExpressionValidator # pylint: disable=no-name-in-module
-from PySide6.QtCore import QSize, Qt, QTimer          # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QLabel, QTextEdit, QTabWidget, QPlainTextEdit, QComboBox, QLineEdit # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QSizePolicy, QMessageBox                                            # pylint: disable=no-name-in-module
+from PySide6.QtGui import QRegularExpressionValidator                                             # pylint: disable=no-name-in-module
+from PySide6.QtCore import QSize, Qt, QTimer                                                      # pylint: disable=no-name-in-module
 from ..guiStyle import Image, TextButton, IconButton, Label, showMessage, widgetAndLayout, widgetAndLayoutForm, ScrollMessageBox
 from ._contextMenu import initContextMenu, executeContextMenu, CommandMenu
 from ..fixedStringsJson import defaultDataHierarchyNode
-from ..miscTools import createDirName, markdownStyler, flatten
+from ..miscTools import createDirName, markdownStyler
 from ..guiCommunicate import Communicate
 from ..sqlite import KEY_ORDER
 
@@ -428,11 +428,11 @@ class Form(QDialog):
             if key == 'content' and 'branch' in self.doc:
               for branch in self.doc['branch']:
                 if branch['path'] is not None and branch['path'].endswith('.md'):
-                    with open(self.comm.backend.basePath/branch['path'], 'w', encoding='utf-8') as fOut:
-                      fOut.write(self.doc['content'])
-                    logging.debug('Wrote new content to '+branch['path'])
+                  with open(self.comm.backend.basePath/branch['path'], 'w', encoding='utf-8') as fOut:
+                    fOut.write(self.doc['content'])
+                  logging.debug('Wrote new content to %s',branch['path'])
                 elif branch['path'] is not None:
-                    showMessage(self, 'Information', 'Did update the database but not the file on harddisk, since PASTA-ELN cannot write this format')
+                  showMessage(self, 'Information', 'Did update the database but not the file on harddisk, since PASTA-ELN cannot write this format')
         elif isinstance(valueOld, list):  #items that are comma separated in the text-field
           self.doc[key] = getattr(self, elementName).text().strip().split(' ')
         elif isinstance(valueOld, str):

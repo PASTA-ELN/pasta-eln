@@ -2,13 +2,12 @@
 import importlib, json, logging, os, sys, tempfile, traceback
 from datetime import datetime, timezone
 from pathlib import Path
-from threading import Thread
 from typing import Any, Optional, Union
 from urllib import request
 from .sqlite import SqlLiteDB
 from .fixedStringsJson import configurationGUI, defaultConfiguration, CONF_FILE_NAME
 from .handleDictionaries import diffDicts, fillDocBeforeCreate
-from .miscTools import camelCase, createDirName, generic_hash, upOut, outputString
+from .miscTools import camelCase, createDirName, generic_hash, outputString
 from .mixin_cli import CLI_Mixin
 
 class Backend(CLI_Mixin):
@@ -16,32 +15,26 @@ class Backend(CLI_Mixin):
   PYTHON BACKEND
   """
 
-  def __init__(self, defaultProjectGroup:str='', **kwargs:int):
+  def __init__(self, defaultProjectGroup:str=''):
     """
     open server and define database
 
     Args:
         defaultProjectGroup (string): name of configuration / project-group used; if not given, use the one defined by 'defaultProjectGroup' in config file
-        **kwargs (dict): additional parameters
-          - initViews (bool): initialize views at startup
-          - resetDataHierarchy (bool): reset dataHierarchy on database from one on file
     """
     #initialize basic values
     self.hierStack:list[str] = []
     self.alive               = True
     self.cwd:Optional[Path]  = Path('.')
-    self.initialize(defaultProjectGroup, **kwargs)
+    self.initialize(defaultProjectGroup)
 
 
-  def initialize(self, defaultProjectGroup:str="", **kwargs:int) -> None:
+  def initialize(self, defaultProjectGroup:str="") -> None:
     """
     initialize or reinitialize server and define database
 
     Args:
         defaultProjectGroup (string): name of configuration / project-group used; if not given, use the one defined by 'defaultProjectGroup' in config file
-        **kwargs (dict): additional parameters
-          - initViews (bool): initialize views at startup
-          - resetDataHierarchy (bool): reset dataHierarchy on database from one on file
     """
     configFileName = Path.home()/CONF_FILE_NAME
     self.configuration = defaultConfiguration
@@ -105,7 +98,8 @@ class Backend(CLI_Mixin):
     # change content
     doc = self.addData('-edit-', doc)
     if doc['id'].startswith('x'):
-      self.db.updateChildrenOfParentsChanges(str(self.cwd.relative_to(self.basePath)),doc['branch'][0]['path'], '/'.join(self.hierStack),'')
+      pathStr = '' if self.cwd is None else str(self.cwd.relative_to(self.basePath))
+      self.db.updateChildrenOfParentsChanges(pathStr, doc['branch'][0]['path'], '/'.join(self.hierStack),'')
     self.cwd = self.basePath #reset to sensible before continuing
     self.hierStack = []
     return
@@ -149,11 +143,7 @@ class Backend(CLI_Mixin):
       doc['type'] = docType.split('/')
       if len(hierStack) == 0:
         hierStack = self.hierStack
-    logging.debug((((
-        f'Add/edit data in cwd:{str(self.cwd)} with stack:{str(hierStack)} and name: '
-        + doc['name']) + ' type:') + str(doc['type']) + ' and edit: ') +
-                  str(edit))
-
+    logging.debug('Add/edit data in cwd:%s with stack:%s and name: %s and type: %s and edit: %s',self.cwd, hierStack, doc['name'], doc['type'], edit)
     # collect structure-doc and prepare
     if doc['type'][0] and doc['type'][0][0]=='x' and doc['type'][0]!='x0' and childNum is None:
       #should not have childnumber in other cases
@@ -205,7 +195,7 @@ class Backend(CLI_Mixin):
             if doc['branch'][0]['path'] is not None and (self.basePath/doc['branch'][0]['path']).is_file():
               path = self.basePath/doc['branch'][0]['path']
           else:
-            logging.warning('backend: add document with multiple branches'+str(doc['branch']) )
+            logging.warning('backend: add document with multiple branches %s', doc['branch'])
         else:                                                                     #make up name
           shasum  = '-'
         if shasum!='-' and path is not None:
@@ -394,13 +384,13 @@ class Backend(CLI_Mixin):
         i for i in pathsInDB_data
         if i.startswith(f'{self.cwd.relative_to(self.basePath).as_posix()}/')
     ]
-    logging.info('Scan: these files are on DB but not hard disk\n'+'\n  '.join(orphans))
+    logging.info('Scan: these files are on DB but not hard disk\n%s','\n  '.join(orphans))
     orphanDirs = [
         i for i in pathsInDB_x
         if i.startswith(f'{self.cwd.relative_to(self.basePath).as_posix()}/')
         and i != projPath
     ]
-    logging.info('Scan: these directories are on DB but not hard disk\n'+'\n  '.join(orphanDirs))
+    logging.info('Scan: these directories are on DB but not hard disk\n%s','\n  '.join(orphanDirs))
     for orphan in orphans+orphanDirs:
       docID = [i for i in inDB_all if i['key']==orphan][0]['id']
       doc   = dict(self.db.getDoc(docID))
@@ -459,7 +449,7 @@ class Backend(CLI_Mixin):
         module  = importlib.import_module(pyFile[:-3])
         content = module.use(absFilePath, {'main':'/'.join(doc['type'])} )
       except Exception:
-        logging.error(f'ERROR with extractor {pyFile}' + '\n' + traceback.format_exc())
+        logging.error('ERROR with extractor %s\n %s', pyFile, traceback.format_exc())
         success = False
       os.environ['QT_API'] = 'pyside6'
       #combine into document
@@ -486,7 +476,7 @@ class Backend(CLI_Mixin):
           doc['type']     = doc['style']['main'].split('/')
         else:
           #user has strange wish: trust him/her
-          logging.info('user has strange wish: trust him/her: '+'/'.join(doc['type'])+'  '+doc['style']['main'])
+          logging.info('user has strange wish: trust him/her: %s  %s','/'.join(doc['type']),'  '+doc['style']['main'])
         del doc['style']
         if 'fileExtension' not in doc['metaVendor']:
           doc['metaVendor']['fileExtension'] = extension.lower()
@@ -649,17 +639,16 @@ class Backend(CLI_Mixin):
   ######################################################
   ### Wrapper for database functions
   ######################################################
-  def replicateDB(self, progressBar:Any, removeAtStart:bool=False) -> str:
+  def replicateDB(self) -> str:
     """
     Replicate local database to remote database
 
     Args:
-        removeAtStart (bool): remove remote DB before starting new
-        progressBar (QProgressBar): gui - qt progress bar
 
     Returns:
         str: replication report
     """
+    #def replicateDB(self, progressBar:Any, removeAtStart:bool=False) -> str:
     # defaultProjectGroup = self.configuration['defaultProjectGroup']
     # remoteConf = self.configuration['projectGroups'][defaultProjectGroup]['remote']
     # if not remoteConf: #empty entry: fails

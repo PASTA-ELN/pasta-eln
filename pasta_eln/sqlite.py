@@ -312,7 +312,7 @@ class SqlLiteDB:
     dataNew['client'] = tracebackString(False, f'updateDoc:{docID}')
     if 'edit' in dataNew:     #if delete
       dataNew = {'id':dataNew['id'], 'branch':dataNew['branch'], 'user':dataNew['user'], 'externalId':dataNew['externalId'], 'name':''}
-    changesDict:dict[str,str]         = {}
+    changesDict:dict[str,Any]         = {}
     self.connection.row_factory = sqlite3.Row  #default None
     cursor = self.connection.cursor()
 
@@ -431,7 +431,7 @@ class SqlLiteDB:
     return mainOld | mainNew | {'branch':branchOld, '__version__':'short'}
 
 
-  def updateBranch(self, docID:str, branch:int, child:int, stack:Optional[list[str]]=None,
+  def updateBranch(self, docID:str, branch:int, child:int, stack:list[str]=[],
                    path:Optional[str]='') -> tuple[Optional[str], Optional[str]]:
     """
     Update document by updating the branch
@@ -461,7 +461,7 @@ class SqlLiteDB:
     # modify existing branch
     self.cursor.execute(f"SELECT path, stack, show FROM branches WHERE id == '{docID}' and idx == {branch}")
     pathOld, stackOld, showOld = self.cursor.fetchone()
-    stack = stack if stack is not None else stackOld.split('/')[:-1]  # stack without current id
+    stack = stack if stack else stackOld.split('/')[:-1]  # stack without current id
     show  = self.createShowFromStack(stack, showOld[-1])
     cmd = f"UPDATE branches SET stack='{'/'.join(stack+[docID])}', child={child}, path='{path}', show='{show}' "\
           f"WHERE id = '{docID}' and idx = {branch}"

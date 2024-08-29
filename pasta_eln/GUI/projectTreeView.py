@@ -4,7 +4,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 from PySide6.QtWidgets import QWidget, QTreeView, QMenu, QMessageBox, QAbstractItemView # pylint: disable=no-name-in-module
-from PySide6.QtGui import QStandardItemModel, QStandardItem, QMouseEvent, QDropEvent, QEventPoint # pylint: disable=no-name-in-module
+from PySide6.QtGui import QStandardItemModel, QStandardItem, QDropEvent, QEventPoint # pylint: disable=no-name-in-module
 from PySide6.QtCore import Qt  # pylint: disable=no-name-in-module
 from .projectLeafRenderer import ProjectLeafRenderer
 from ..guiStyle import Action, showMessage
