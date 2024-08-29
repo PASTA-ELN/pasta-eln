@@ -113,26 +113,26 @@ def configuration(command:str, pathData:str) -> str:
   return output
 
 
-def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]=None) -> str:
+def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]=None, projectGroup:str='', outputFormat:str='print') -> str:
   '''
   Create example data after installation
 
   Args:
     force (bool): force creation by removing content before creation
     callbackPercent (function): callback function given to exampleData, such that exampleData can report progress back
+    projectGroup (str): project group to create example data in
   '''
   logging.info('Start example data creation')
-  outputFormat = 'print'
   if callbackPercent is not None:
     callbackPercent(0)
   if force:
-    backend = Backend(initConfig=False)
+    backend = Backend(projectGroup, initConfig=False)
     dirName = backend.basePath
     shutil.rmtree(dirName)
     os.makedirs(dirName)
   if callbackPercent is not None:
     callbackPercent(1)
-  backend = Backend(initViews=True, initConfig=False)
+  backend = Backend(projectGroup, initViews=True, initConfig=False)
   if callbackPercent is not None:
     callbackPercent(2)
   ### CREATE PROJECTS AND SHOW
@@ -167,10 +167,10 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
     data2DirName = backend.basePath/backend.cwd
   else:
     return "**ERROR: backend is incorrect"
-  backend.addData('x2',    {'name': 'This is an example subtask',     'comment': 'Random comment 1'})
+  backend.addData('x1',    {'name': 'This is an example subtask',     'comment': 'Random comment 1'})
   if callbackPercent is not None:
     callbackPercent(9)
-  backend.addData('x2',    {'name': 'This is another example subtask','comment': 'Random comment 2'})
+  backend.addData('x1',    {'name': 'This is another example subtask','comment': 'Random comment 2'})
   if callbackPercent is not None:
     callbackPercent(10)
   backend.changeHierarchy(None)
