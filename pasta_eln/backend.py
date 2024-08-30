@@ -393,16 +393,7 @@ class Backend(CLI_Mixin):
     logging.info('Scan: these directories are on DB but not hard disk\n%s','\n  '.join(orphanDirs))
     for orphan in orphans+orphanDirs:
       docID = [i for i in inDB_all if i['key']==orphan][0]['id']
-      doc   = dict(self.db.getDoc(docID))
-      change = None
-      for branch in doc['branch']:
-        if branch['path']==orphan:
-          change = {'branch': {'op':'d', 'oldpath':branch['path'], 'path':branch['path'], 'stack':branch['stack'] }}
-          break
-      if change is None:
-        logging.warning('Tried to remove orphan in database but could not; that can happen if user renames folder: %s', orphan)
-      else:
-        self.db.updateDoc(change, docID)
+      self.db.updateBranch(docID, -2, 9999, [], orphan)
     #reset to initial values
     self.hierStack = []
     self.cwd = Path(self.basePath)

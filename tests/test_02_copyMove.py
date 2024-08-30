@@ -43,7 +43,8 @@ class TestStringMethods(unittest.TestCase):
 
     progressBar = DummyProgressBar()
     choices = random.choices(range(100), k=100)
-    print(f'Current choice: {choices}')
+    # choices =  [60,70,90,45,20,39,12,90,11,59,73,47,73,45,58,38,93,55,96,60,19,68,42,12,16,60,38,55,36,59,91,99,46,84,34,71,97,87,18,61,42,67,53,75,35,48,38,65,65,71,74,88,48,65,47,70,49,16,67,51,14,68,12,26,44,80,83,38,90,16,77,12,18,75,38,45,92,68,34,20,30,85,21,38,53,33,20,84,59,82,66,68,59,71,48,93,61,90,63,69]
+    print(f'Current choice: [{','.join([str(i) for i in choices])}]')
     for epoch in range(5):
       print(f'\nStart epoch: {epoch}')
       allDirs = []
@@ -54,19 +55,23 @@ class TestStringMethods(unittest.TestCase):
         allDirs.append(root)
         allFiles += [f'{root}{os.sep}{i}' for i in files if i not in ('.id_pastaELN.json','pastaELN.db')]
       for iFile in allFiles:
-        op = ['keep','copy','move','delete'][choices.pop(0)%4]
+        op = ['keep','copy','copy','move','move','delete'][choices.pop(0)%6]
         parent = Path(iFile).parent
         possTargets = [i for i in allDirs if Path(i)!=parent]
         target = possTargets[choices.pop(0)%len(possTargets)]
         if choices.pop(0)%4==0:
-          target += '/NewDirectory'
+          target += f'/NewDirectory/{Path(iFile).name}'
         print(iFile, op,target)
         try:
           if op=='keep':
             continue
           elif op=='copy':
+            if not Path(target).parent.is_dir():
+              Path(target).parent.mkdir()
             shutil.copy(iFile, target)
           elif op=='move':
+            if not Path(target).parent.is_dir():
+              Path(target).parent.mkdir()
             shutil.move(iFile, target)
           elif op=='delete':
             os.unlink(iFile)
@@ -78,7 +83,7 @@ class TestStringMethods(unittest.TestCase):
       if choices.pop(0)%2==1:
         print('Start scanning')
         self.be.scanProject(progressBar, projID)
-
+    print('Final verification')
     self.verify()
     return
 

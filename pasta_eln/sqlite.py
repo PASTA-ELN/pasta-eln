@@ -438,7 +438,7 @@ class SqlLiteDB:
 
     Args:
       docID (string):  id of document to change
-      branch (int):  index of branch to change
+      branch (int):  index of branch to change. If -1, then append to end. If -2, then delete
       child (int):  new number of child
       stack (list):  new list of ids
       path (str): new path; None is acceptable
@@ -448,20 +448,23 @@ class SqlLiteDB:
     """
     #convert into db style
     path = '*' if path is None else path
+    if branch == -2: #delete this path
+      self.cursor.execute(f"DELETE FROM branches WHERE id == '{docID}' and path == '{path}'")
+      self.connection.commit()
+      return [path, None]
     if branch == -1: #append a new branch
       self.cursor.execute(f"SELECT idx FROM branches WHERE id == '{docID}'")
       idxOld = [i[0] for i in self.cursor.fetchall()]
-      if max(idxOld)+1 != len(idxOld):
-        raise ValueError('Branch length and content do not correlate', idxOld)
+      idxNew  = min(set(range(max(idxOld)+2)).difference(idxOld))
       show  = self.createShowFromStack(stack)
       self.cursor.execute(f"INSERT INTO branches VALUES ({', '.join(['?']*6)})",
-                  [docID, len(idxOld), '/'.join(stack+[docID]), str(child), path, show])
+                  [docID, idxNew, '/'.join(stack+[docID]), str(child), path, show])
       self.connection.commit()
       return (None, None if path=='*' else path)
     # modify existing branch
     self.cursor.execute(f"SELECT path, stack, show FROM branches WHERE id == '{docID}' and idx == {branch}")
     pathOld, stackOld, showOld = self.cursor.fetchone()
-    stack = stack if stack else stackOld.split('/')[:-1]  # stack without current id
+    stack = stack or stackOld.split('/')[:-1]           # stack without current id
     show  = self.createShowFromStack(stack, showOld[-1])
     cmd = f"UPDATE branches SET stack='{'/'.join(stack+[docID])}', child={child}, path='{path}', show='{show}' "\
           f"WHERE id = '{docID}' and idx = {branch}"

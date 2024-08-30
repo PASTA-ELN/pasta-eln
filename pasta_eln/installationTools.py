@@ -124,6 +124,7 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
     outputFormat (str): output of the example data creation, see miscTools.outputString()
   '''
   logging.info('Start example data creation')
+  progressBar = DummyProgressBar()
   if callbackPercent is not None:
     callbackPercent(0)
   if force:
@@ -241,7 +242,6 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
   if callbackPercent is not None:
     callbackPercent(19)
   logging.info('Finished copy files')
-  progressBar = DummyProgressBar()
   backend.scanProject(progressBar, projID1)
   logging.info('Finished scan tree')
   if callbackPercent is not None:
@@ -268,7 +268,6 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
   outputString(outputFormat,'h2','TEST MEASUREMENTS AND SCANNING 2')
   shutil.copy(Path(__file__).parent/'Resources'/'ExampleMeasurements'/'simple.png', data2DirName)
   logging.info('Finished copy files 2')
-  progressBar = DummyProgressBar()
   backend.scanProject(progressBar, projID1)
   logging.info('Finished scan tree 2')
   df = backend.db.getView('viewDocType/measurement')
