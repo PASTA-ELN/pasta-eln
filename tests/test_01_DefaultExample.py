@@ -1,7 +1,6 @@
 #!/usr/bin/python3
-"""TEST using the FULL set of python-requirements: create 3 projects; simplified form of testTutorialComplex """
-import os, shutil, traceback, logging, subprocess
-from datetime import datetime
+"""TEST using the FULL set of python-requirements: create the default example that all installations create and verify it thoroughly """
+import logging
 import warnings
 import unittest
 from pathlib import Path
@@ -35,10 +34,10 @@ class TestStringMethods(unittest.TestCase):
                         datefmt='%m-%d %H:%M:%S')   #This logging is always info, since for installation only
     for package in ['urllib3', 'requests', 'asyncio', 'PIL', 'matplotlib.font_manager']:
       logging.getLogger(package).setLevel(logging.WARNING)
-    logging.info('Start 3Projects test')
+    logging.info('Start 01 test')
 
     exampleData(True, None, 'research', '')
-    self.be = Backend('research', initViews=True, initConfig=False)
+    self.be = Backend('research')
     output = self.be.output('x0')
     self.assertEqual(output.split('\n')[0][:129],
                       'name                   | tag       | status | objective                                | comment                             | id')
