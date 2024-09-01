@@ -352,7 +352,7 @@ class Backend(CLI_Mixin):
               (self.basePath/path).rename(self.basePath/newPath)
           self.db.updateBranch(doc['id'], 0, childNum, hierStack, newPath)
         else:
-          currentID = self.addData(f'x{len(hierStack)}', {'name': dirName}, hierStack)['id']
+          currentID = self.addData('x1', {'name': dirName}, hierStack)['id']
           newDir = self.basePath/self.db.getDoc(currentID)['branch'][0]['path']
           (newDir/'.id_pastaELN.json').rename(self.basePath/root/dirName/'.id_pastaELN.json') #move index file into old folder
           newDir.rmdir()                     #remove created path

@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 """TEST using the FULL set of python-requirements: randomly move,copy,delete files to check resistance of scanning """
-import os, shutil, traceback, logging, random
-from datetime import datetime
+import os, shutil, logging, random
 import warnings
 import unittest
 from pathlib import Path
@@ -37,20 +36,19 @@ class TestStringMethods(unittest.TestCase):
       logging.getLogger(package).setLevel(logging.WARNING)
     logging.info('Start 02 test')
     self.be = Backend('research')
-    output = self.be.output('x0')
-    projID = output.split('|')[-1].strip()
+    projID = self.be.output('x0').split('|')[-1].strip()
     self.be.changeHierarchy(projID)
 
     progressBar = DummyProgressBar()
-    choices = random.choices(range(100), k=100)
-    # choices =  [60,70,90,45,20,39,12,90,11,59,73,47,73,45,58,38,93,55,96,60,19,68,42,12,16,60,38,55,36,59,91,99,46,84,34,71,97,87,18,61,42,67,53,75,35,48,38,65,65,71,74,88,48,65,47,70,49,16,67,51,14,68,12,26,44,80,83,38,90,16,77,12,18,75,38,45,92,68,34,20,30,85,21,38,53,33,20,84,59,82,66,68,59,71,48,93,61,90,63,69]
+    choices = random.choices(range(100), k=150)
+    # choices =  [95,89,38,97,82,55,39,66,52,17,96,32,8,65,45,26,46,60,76,44,70,80,46,24,18,9,26,69,88,37,26,45,82,50,89,58,55,1,62,15,41,13,84,8,15,86,37,69,84,74,63,47,31,59,76,96,42,81,3,1,25,82,15,90,6,28,30,17,72,46,2,35,57,27,80,5,50,54,54,41,49,86,62,79,47,22,49,27,25,20,29,14,35,67,5,83,11,63,32,75,26,33,3,8,69,90,51,88,38,92,8,36,95,75,59,28,42,19,29,25,94,94,53,80,71,55,99,95,80,28,18,11,93,8,40,52,11,43,20,81,53,53,59,44,22,4,99,70,52,78]
     print(f'Current choice: [{','.join([str(i) for i in choices])}]')
     for epoch in range(5):
       print(f'\nStart epoch: {epoch}')
       allDirs = []
       allFiles = []
       for root, _, files in os.walk(self.be.basePath):
-        if root.endswith('StandardOperatingProcedures'):
+        if root.endswith('StandardOperatingProcedures') or root==str(self.be.basePath):
           continue
         allDirs.append(root)
         allFiles += [f'{root}{os.sep}{i}' for i in files if i not in ('.id_pastaELN.json','pastaELN.db')]
@@ -61,7 +59,7 @@ class TestStringMethods(unittest.TestCase):
         target = possTargets[choices.pop(0)%len(possTargets)]
         if choices.pop(0)%4==0:
           target += f'/NewDirectory/{Path(iFile).name}'
-        print(iFile, op,target)
+        print(iFile[len(str(self.be.basePath))+1:], op, target[len(str(self.be.basePath))+1:])
         try:
           if op=='keep':
             continue
@@ -83,7 +81,8 @@ class TestStringMethods(unittest.TestCase):
       if choices.pop(0)%2==1:
         print('Start scanning')
         self.be.scanProject(progressBar, projID)
-    print('Final verification')
+    print('Final scanning and verification')
+    self.be.scanProject(progressBar, projID)
     self.verify()
     return
 

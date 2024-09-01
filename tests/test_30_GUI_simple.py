@@ -1,7 +1,8 @@
-import time
-from PySide6.QtCore import Qt # pylint: disable=no-name-in-module
+import pytest
 from pasta_eln.gui import MainWindow
 
+@pytest.mark.skip(
+    reason="Disabled for github since cannot create couchdb instance during actions")
 def test_simple(qtbot):
   window = MainWindow()
   window.setMinimumSize(1024,800)

@@ -267,13 +267,13 @@ class SqlLiteDB:
           key    = key[0].lower()+key[1:]
           cmd = "INSERT INTO properties VALUES (?, ?, ?, ?);"
           self.cursor.execute(cmd, [doc['id'], parentKeys+key, str(value), unit])
-          cmd = "INSERT INTO propDefinitions VALUES (?, ?, ?);"
+          cmd = "INSERT OR REPLACE INTO propDefinitions VALUES (?, ?, ?);"
           self.cursor.execute(cmd, [parentKeys+key, label, ''])
         elif isinstance(value, list) and isinstance(value[0], dict) and value[0].keys() >= {"key", "value", "unit"}:
           cmd = "INSERT INTO properties VALUES (?, ?, ?, ?);"
           self.cursor.executemany(cmd, zip([doc['id']]*len(value),      [parentKeys+key+'.'+i['key'] for i in value],
                                             [i['value'] for i in value], [i['unit'] for i in value]  ))
-          cmd = "INSERT INTO propDefinitions VALUES (?, ?, ?);"
+          cmd = "INSERT OR REPLACE INTO propDefinitions VALUES (?, ?, ?);"
           self.cursor.executemany(cmd, zip([parentKeys+key+'.'+i['key'] for i in value],
                                             [i['label'] for i in value], [i['IRI'] for i in value]  ))
         else:
@@ -843,6 +843,8 @@ class SqlLiteDB:
       if len(docType.split('/'))==0:
         outString+= outputString(outputStyle,'unsure',f"dch04: no type in (removed data?) {docID}")
         continue
+      if docType.startswith('x') and not (docType.startswith(('x0','x1'))):
+        outString+= outputString(outputStyle,'error',f"dch04b: bad type {docID}  {docType}")
       if not all(k.startswith('x-') for k in stack.split('/')[:-1]):
         outString+= outputString(outputStyle,'error',f"dch03: non-text in stack in id: {docID}")
       if any(len(i)==0 for i in stack) and not docType.startswith('x0'): #if no inheritance
