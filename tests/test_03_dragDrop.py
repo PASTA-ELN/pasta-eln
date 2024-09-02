@@ -34,7 +34,7 @@ def test_simple(qtbot):
 
   choices = random.choices(range(100), k=16)
   # choices = [51,96,50,55,85,56,95,4,14,20,95,99,2,32,28,53]
-  print(f'Current choice: [{','.join([str(i) for i in choices])}]')
+  print(f'Current choice: [{",".join([str(i) for i in choices])}]')
 
   # start iteration
   for epoch in range(4):
