@@ -7,9 +7,7 @@ def test_simple(qtbot):
   window.show()
   qtbot.addWidget(window)
 
-
-  dfProj = window.comm.backend.db.getView('viewDocType/x0')
-  projID1 = list(dfProj[dfProj['name']=='Intermetals at interfaces']['id'])[0]
+  projID1 = window.comm.backend.output('x0').split('|')[-1].strip()
   window.comm.changeProject.emit(projID1, '')
   # click in the Greet button and make sure it updates the appropriate label
   # projectBtn = window.sidebar.projectsListL.itemAt(2).widget().layout().itemAt(0).widget()
