@@ -46,7 +46,6 @@ class TestStringMethods(unittest.TestCase):
     os.makedirs(self.dirName)
     self.be = Backend(projectGroup, initViews=True, initConfig=False)
 
-    #TODO P1: run example here and then verify output
     try:
       ### CREATE PROJECTS AND SHOW
       outputString(outputFormat,'h2','CREATE PROJECTS AND SHOW')

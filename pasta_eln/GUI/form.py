@@ -39,8 +39,11 @@ class Form(QDialog):
       self.doc['name'] = ''
     else:
       self.setWindowTitle('Edit information')
-    self.skipKeys = ['image','metaVendor','metaUser','shasum']
+    self.skipKeys = ['image','metaVendor','metaUser','shasum','._projectID']
     self.allHidden = False
+    for key,value in (('tags',[]),('comment',''),('',{})):  #create full document initially
+      if key not in self.doc:
+        self.doc[key]=value
 
     # GUI elements
     mainL = QVBoxLayout(self)
@@ -576,7 +579,7 @@ class Form(QDialog):
     #update tags
     for i in reversed(range(self.tagsBarSubL.count())):
       self.tagsBarSubL.itemAt(i).widget().setParent(None)
-    for tag in self.doc['tags']:
+    for tag in (self.doc['tags'] if 'tags' in self.doc else []):
       if tag in ['_curated']:
         continue
       if tag[0]=='_':

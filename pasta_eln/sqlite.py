@@ -432,7 +432,7 @@ class SqlLiteDB:
 
 
   def updateBranch(self, docID:str, branch:int, child:int, stack:list[str]=[],
-                   path:Optional[str]='') -> tuple[Optional[str], Optional[str]]:
+                   path:Optional[str]='', **kwargs:object) -> tuple[Optional[str], Optional[str]]:
     """
     Update document by updating the branch
 
@@ -462,15 +462,23 @@ class SqlLiteDB:
       self.connection.commit()
       return (None, None if path=='*' else path)
     # modify existing branch
-    self.cursor.execute(f"SELECT path, stack, show FROM branches WHERE id == '{docID}' and idx == {branch}")
+    if 'pathOld' in kwargs:
+      pathOld = kwargs['pathOld']
+      cmd = f"SELECT path, stack, show FROM branches WHERE path == '{pathOld}'"
+    elif 'stackOld' in kwargs:
+      stackOld = '/'.join(kwargs['stackOld'])
+      cmd = f"SELECT path, stack, show FROM branches WHERE stack == '{stackOld}'"
+    else:
+      cmd = f"SELECT path, stack, show FROM branches WHERE id == '{docID}' and idx == {branch}"
+    self.cursor.execute(cmd)
     reply = self.cursor.fetchone()
     if reply is None:
-      raise ValueError(f"FAILED AT: SELECT path, stack, show FROM branches WHERE id == '{docID}' and idx == {branch}")
+      raise ValueError(f"FAILED AT: {cmd}'")
     pathOld, stackOld, showOld = reply
     stack = stack or stackOld.split('/')[:-1]           # stack without current id
     show  = self.createShowFromStack(stack, showOld[-1])
     cmd = f"UPDATE branches SET stack='{'/'.join(stack+[docID])}', child={child}, path='{path}', show='{show}' "\
-          f"WHERE id = '{docID}' and idx = {branch}"
+          f"WHERE path = '{pathOld}' and stack = '{stackOld}'"
     self.cursor.execute(cmd)
     self.connection.commit()
     # move content: folder and data and write .json to disk
@@ -892,6 +900,10 @@ class SqlLiteDB:
               else:
                 outString+= outputString(outputStyle,'unsure',f"dch08: parent does not have corresponding path {docID} | parentID {parentID}")
 
+    self.cursor.execute("SELECT id, idx FROM branches WHERE idx<0")
+    res = self.cursor.fetchall()
+    for docID, idx in res:
+      outString+= outputString(outputStyle,'error',f"branch idx is bad: {docID} idx: {idx}")
 
     #doc-type specific tests
     self.cursor.execute("SELECT qrCodes.id, qrCodes.qrCode FROM qrCodes JOIN main USING(id) WHERE  main.type LIKE 'sample%'")

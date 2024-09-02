@@ -332,7 +332,6 @@ class Project(QWidget):
       return
     branchOld = branchOldList[0]
     childOld = branchOld['child']
-    branchIdx= doc['branch'].index(branchOld)
     siblingsOld = db.getView('viewHierarchy/viewHierarchy', startKey=' '.join(stackOld))
     siblingsOld = [i for i in siblingsOld if len(i['key'].split(' '))==len(stackOld)+1 and \
                                                   i['value'][0]>branchOld['child'] and i['value'][0]<9999]
@@ -357,12 +356,12 @@ class Project(QWidget):
     siblingsNew = db.getView('viewHierarchy/viewHierarchy', startKey=' '.join(stackNew))
     siblingsNew = [i for i in siblingsNew if len(i['key'].split(' '))==len(stackNew)+1 and \
                                                    i['value'][0]>=childNew and i['value'][0]<9999]
-    logging.debug('Change project: docID %s branch %i | old stack %s child %i | new stack %s child %i path %s'\
-                  , docID, branchIdx, str(stackOld), childOld, str(stackNew), childNew, pathNew)
+    logging.debug('Change project: docID %s | old stack %s child %i | new stack %s child %i path %s'\
+                  , docID, str(stackOld), childOld, str(stackNew), childNew, pathNew)
     if stackOld==stackNew and childOld==childNew:  #nothing changed, just redraw
       return
     # change item in question
-    db.updateBranch(docID=docID, branch=branchIdx, stack=stackNew, path=pathNew, child=childNew)
+    db.updateBranch(docID=docID, branch=-99, stack=stackNew, path=pathNew, child=childNew, stackOld=stackOld+[docID])
     item.setData(item.data() | {'hierStack': '/'.join(stackNew+[docID])})
     # change siblings
     for line in siblingsOld:
