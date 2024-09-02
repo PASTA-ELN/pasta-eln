@@ -59,6 +59,7 @@ jobs:
         name: artifact
         path: |
           ~/pastaELN.log
+          ~/pasta_data/pastaELN.db
           htmlcov/
           /tmp/pytest-of-runner/pytest-0/
       if: ${{ always() }}

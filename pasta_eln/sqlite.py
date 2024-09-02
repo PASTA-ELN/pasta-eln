@@ -463,7 +463,10 @@ class SqlLiteDB:
       return (None, None if path=='*' else path)
     # modify existing branch
     self.cursor.execute(f"SELECT path, stack, show FROM branches WHERE id == '{docID}' and idx == {branch}")
-    pathOld, stackOld, showOld = self.cursor.fetchone()
+    reply = self.cursor.fetchone()
+    if reply is None:
+      raise ValueError(f"FAILED AT: SELECT path, stack, show FROM branches WHERE id == '{docID}' and idx == {branch}")
+    pathOld, stackOld, showOld = reply
     stack = stack or stackOld.split('/')[:-1]           # stack without current id
     show  = self.createShowFromStack(stack, showOld[-1])
     cmd = f"UPDATE branches SET stack='{'/'.join(stack+[docID])}', child={child}, path='{path}', show='{show}' "\
