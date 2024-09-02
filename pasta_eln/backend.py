@@ -705,7 +705,7 @@ class Backend(CLI_Mixin):
                 listDocs = self.db.getView('viewHierarchy/viewPathsAll', preciseKey=path)
                 if len(listDocs)!=1:
                   output += outputString(outputStyle, 'error', f'Path of folder is non-unique (1): {path} in '\
-                                         f'{" ".join([i['id'] for i in listDocs])}')
+                                         f'{" ".join([i["id"] for i in listDocs])}')
                 docDB   = self.db.getDoc(listDocs[0]['id'])
                 difference = diffDicts(docDisk,docDB)
                 if len(difference)>1:
