@@ -133,7 +133,7 @@ def verifyPasta(projectGroup:str='', repair:bool=False) -> None:
     projectGroup = input('Enter project group: ').strip()
   be = Backend(projectGroup)
   print('\n\nOUTPUT:')
-  outputString('print','info', be.checkDB(outputStyle='text'))
+  outputString('print','info', be.checkDB(outputStyle='text', repair=repair))
   return
 
 def delete(projectGroup:str='', docID:str='') -> None:

@@ -432,7 +432,7 @@ class SqlLiteDB:
 
 
   def updateBranch(self, docID:str, branch:int, child:int, stack:list[str]=[],
-                   path:Optional[str]='', **kwargs:object) -> tuple[Optional[str], Optional[str]]:
+                   path:Optional[str]='', **kwargs:str) -> tuple[Optional[str], Optional[str]]:
     """
     Update document by updating the branch
 
@@ -442,6 +442,7 @@ class SqlLiteDB:
       child (int):  new number of child
       stack (list):  new list of ids
       path (str): new path; None is acceptable
+      kwargs (str): pathOld and stackOld can be used to identify branch to be updated
 
     Returns:
       str, str: old path, new path
@@ -451,7 +452,7 @@ class SqlLiteDB:
     if branch == -2: #delete this path
       self.cursor.execute(f"DELETE FROM branches WHERE id == '{docID}' and path == '{path}'")
       self.connection.commit()
-      return [path, None]
+      return (path, None)
     if branch == -1: #append a new branch
       self.cursor.execute(f"SELECT idx FROM branches WHERE id == '{docID}'")
       idxOld = [i[0] for i in self.cursor.fetchall()]
@@ -490,7 +491,7 @@ class SqlLiteDB:
     if docID[0]=='x' and path is not None:
       with open(self.basePath/path/'.id_pastaELN.json', 'w', encoding='utf-8') as fOut:
         fOut.write(json.dumps(self.getDoc(docID)))
-      self.updateChildrenOfParentsChanges(pathOld,path,  stackOld,'/'.join(stack+[docID]))
+      self.updateChildrenOfParentsChanges(pathOld, path,  stackOld,'/'.join(stack+[docID]))
     return (None if pathOld=='*' else pathOld, None if path=='*' else path)
 
 
@@ -855,7 +856,7 @@ class SqlLiteDB:
       if len(docType.split('/'))==0:
         outString+= outputString(outputStyle,'unsure',f"dch04: no type in (removed data?) {docID}")
         continue
-      if docType.startswith('x') and not (docType.startswith(('x0','x1'))):
+      if docType.startswith('x') and not docType.startswith(('x0','x1')):
         outString+= outputString(outputStyle,'error',f"dch04b: bad data type*: {docID} {docType}")
         if repair:
           self.cursor.execute(f"UPDATE main SET type='x1' WHERE id = '{docID}'")

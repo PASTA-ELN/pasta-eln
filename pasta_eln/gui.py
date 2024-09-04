@@ -36,7 +36,12 @@ os.environ['QT_API'] = 'pyside6'
 class MainWindow(QMainWindow):
   """ Graphical user interface includes all widgets """
 
-  def __init__(self) -> None:
+  def __init__(self, projectGroup:str='') -> None:
+    """ Init main window
+
+    Args:
+      projectGroup (str): project group to load
+    """
     # global setting
     super().__init__()
     venv = ' without venv' if sys.prefix == sys.base_prefix and 'CONDA_PREFIX' not in os.environ else ' in venv'
@@ -44,7 +49,7 @@ class MainWindow(QMainWindow):
     self.resize(self.screen().size()) #self.setWindowState(Qt.Window Maximized) https://bugreports.qt.io/browse/PYSIDE-2706 https://bugreports.qt.io/browse/QTBUG-124892
     resourcesDir = Path(__file__).parent / 'Resources'
     self.setWindowIcon(QIcon(QPixmap(resourcesDir / 'Icons' / 'favicon64.png')))
-    self.backend = Backend()
+    self.backend = Backend(defaultProjectGroup=projectGroup)
     self.comm = Communicate(self.backend)
     self.comm.formDoc.connect(self.formDoc)
     # self.dataverseMainDialog: MainDialog | None = None
@@ -219,9 +224,11 @@ class MainWindow(QMainWindow):
     return
 
 
-def mainGUI() -> tuple[Union[QCoreApplication, None], MainWindow]:
-  """
-    Main method and entry point for commands
+def mainGUI(projectGroup:str='') -> tuple[Union[QCoreApplication, None], MainWindow]:
+  """  Main method and entry point for commands
+
+  Args:
+      projectGroup (str): project group to load
 
   Returns:
     MainWindow: main window
@@ -239,7 +246,7 @@ def mainGUI() -> tuple[Union[QCoreApplication, None], MainWindow]:
     application = QApplication().instance()
   else:
     application = QApplication.instance()
-  main_window = MainWindow()
+  main_window = MainWindow(projectGroup=projectGroup)
   logging.getLogger().setLevel(getattr(logging, main_window.backend.configuration['GUI']['loggingLevel']))
   theme = main_window.backend.configuration['GUI']['theme']
   if theme != 'none':
@@ -277,11 +284,14 @@ class Command(Enum):
   DATAVERSE_MAIN = 19
 
 
-def startMain() -> None:
+def startMain(projectGroup:str='') -> None:
   """
   Main function to start GUI. Extra function is required to allow starting in module fashion
+
+  Args:
+    projectGroup (str): project group to load
   """
-  app, window = mainGUI()
+  app, window = mainGUI(projectGroup=projectGroup)
   window.show()
   if app:
     app.exec()
