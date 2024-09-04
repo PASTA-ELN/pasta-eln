@@ -96,6 +96,8 @@ configurationGUI: dict[str, Any] = {
 
 SQLiteTranslation = str.maketrans({"'":"&prime;"})
 
+minimalDocInForm = {'tags':[], 'comment':'', '':{}}
+
 setupText = """
 ### Welcome to the PASTA-ELN setup
 Three components are needed for proper functioning of PASTA-ELN:

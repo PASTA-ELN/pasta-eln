@@ -2,7 +2,6 @@
 """TEST the project view: drag drop randomly items around """
 import logging, warnings, random
 from pathlib import Path
-import unittest
 from PySide6.QtCore import QModelIndex                                  # pylint: disable=no-name-in-module
 from pasta_eln.backend import Backend
 from pasta_eln.GUI.project import Project

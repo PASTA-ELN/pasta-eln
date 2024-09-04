@@ -114,9 +114,9 @@ class Details(QScrollArea):
       self.btnVendor.hide()
     if 'metUser' not in self.doc:
       self.btnUser.hide()
+    size = self.comm.backend.configuration['GUI']['imageSizeDetails'] \
+                      if hasattr(self.comm.backend, 'configuration') else 300
     for key in self.doc:
-      size = self.comm.backend.configuration['GUI']['imageSizeDetails'] \
-                        if hasattr(self.comm.backend, 'configuration') else 300
       if key=='image':
         Image(self.doc['image'], self.specialL, anyDimension=size)
         self.specialW.show()
@@ -158,7 +158,7 @@ class Details(QScrollArea):
         self.metaUserL.addWidget(label)
         self.metaUserW.show()
       else:
-        #TODO GUI create one function to render "'':lalala" into correct shape and use that function here and in project...
+        #TODO GUI create one function to render "'':lalala" into correct shape and use that function here and in project... allow to pass self.doc[key]
         link = False
         if (isinstance(self.doc[key],str) and '\n' in self.doc[key]) or key=='comment':
           labelW, labelL = widgetAndLayout('H', self.metaDetailsL, top='s', bottom='s')
@@ -181,9 +181,13 @@ class Details(QScrollArea):
               not isinstance(dataHierarchyItems[0]['list'], list):                #choice among docType
             table  = self.comm.backend.db.getView('viewDocType/'+dataHierarchyItems[0]['list'])
             names= list(table[table.id==self.doc[key][0]]['name'])
-            if len(names)==1:
+            if len(names)==1:    # default find one item that we link to
               value = '\u260D '+names[0]
               link = True
+            elif not names:      # likely empty link because the value was not yet defined: just print to show
+              value = self.doc[key][0] if isinstance(self.doc[key],tuple) else self.doc[key]
+            else:
+              raise ValueError(f'list target exists multiple times. Key: {key}')
           elif isinstance(self.doc[key], list):
             value = ', '.join(self.doc[key])
           elif isinstance(self.doc[key], tuple) and len(self.doc[key])==4:

@@ -300,8 +300,7 @@ class Project(QWidget):
       self.change('','')
     elif command[0] is Command.ADD_CHILD:
       self.comm.backend.cwd = self.comm.backend.basePath/self.docProj['branch'][0]['path']
-      title = self.comm.backend.db.dataHierarchy('x1','title')[0].lower()[:-1]
-      self.comm.backend.addData('x1', {'name':f'new {title}'}, [self.projID])
+      self.comm.backend.addData('x1', {'name':f'new item'}, [self.projID])
       self.change('','') #refresh project
     elif command[0] is Command.SHOW_TABLE:
       self.comm.changeTable.emit(command[1], self.projID)

@@ -276,7 +276,7 @@ class SqlLiteDB:
           cmd = "INSERT OR REPLACE INTO propDefinitions VALUES (?, ?, ?);"
           self.cursor.executemany(cmd, zip([parentKeys+key+'.'+i['key'] for i in value],
                                             [i['label'] for i in value], [i['IRI'] for i in value]  ))
-        else:
+        elif str(value)!='':
           cmd = "INSERT INTO properties VALUES (?, ?, ?, ?);"
           self.cursor.execute(cmd, [doc['id'], parentKeys+key, str(value), ''])
       return
@@ -350,7 +350,7 @@ class SqlLiteDB:
     # print(f'do something with branch: \nnew {branchNew} \nold: {branchOld}')
     if branchNew:
       op      = branchNew.pop('op')             #operation
-      oldPath = branchNew.pop('oldPath',None)   #TODO more functions use this ability: backend.py and table.py, which are called by other functions
+      oldPath = branchNew.pop('oldPath',None)
       if not branchNew['path']:
         branchNew['path'] = branchOld[0]['path']
       if branchNew not in branchOld:            #only do things if the newBranch is not already in oldBranch
@@ -638,7 +638,7 @@ class SqlLiteDB:
         cmd += r" and NOT branches.show LIKE '%F%'"
       if startKey:
         cmd += f" and branches.stack LIKE '{startKey}%'"
-      df      = pd.read_sql_query(cmd, self.connection)
+      df      = pd.read_sql_query(cmd, self.connection).fillna('')
       allCols = list(df.columns)
       if 'image' in viewColumns:
         df['image'] = str(len(df['image'])>1)

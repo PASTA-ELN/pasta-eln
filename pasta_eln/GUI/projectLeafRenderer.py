@@ -111,7 +111,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
         painter.drawStaticText(x0, y0+y, QStaticText(f'{key}: {value}'))
       elif isinstance(doc[key], list):                     #list of qrCodes
         painter.drawStaticText(x0, y0+y, QStaticText(f'{key}: ' + ', '.join([str(i) for i in doc[key]])))
-    for textType in ('comment', 'content'):  #TODO: GUI text color is white, not good
+    for textType in ('comment', 'content'):  #TODO GUI text color is white, not good
       if textType in doc and (textType != 'content' or 'image' not in doc or doc['image'] == ''):
         textDoc = QTextDocument()
         textDoc.setMarkdown(markdownStyler(doc[textType]))

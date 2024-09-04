@@ -10,7 +10,7 @@ from PySide6.QtGui import QRegularExpressionValidator                           
 from PySide6.QtCore import QSize, Qt, QTimer                                                      # pylint: disable=no-name-in-module
 from ..guiStyle import Image, TextButton, IconButton, Label, showMessage, widgetAndLayout, widgetAndLayoutForm, ScrollMessageBox
 from ._contextMenu import initContextMenu, executeContextMenu, CommandMenu
-from ..fixedStringsJson import defaultDataHierarchyNode
+from ..fixedStringsJson import defaultDataHierarchyNode, minimalDocInForm
 from ..miscTools import createDirName, markdownStyler
 from ..guiCommunicate import Communicate
 from ..sqlite import KEY_ORDER
@@ -41,9 +41,7 @@ class Form(QDialog):
       self.setWindowTitle('Edit information')
     self.skipKeys = ['image','metaVendor','metaUser','shasum','._projectID']
     self.allHidden = False
-    for key,value in (('tags',[]),('comment',''),('',{})):  #create full document initially
-      if key not in self.doc:
-        self.doc[key]=value
+    self.doc = minimalDocInForm | self.doc
 
     # GUI elements
     mainL = QVBoxLayout(self)
@@ -107,7 +105,7 @@ class Form(QDialog):
       self.formsL.append(formL)
       for name in [i['name'] for i in dataHierarchyNode if i['class']==group]:
         key = f"{group}.{name}"
-        defaultValue = self.doc['qrCodes'] if key=='.qrCodes' else \
+        defaultValue = self.doc['qrCodes'] if key=='.qrCodes' and 'qrCodes' in self.doc else \
                        self.doc.get(group, {}).get(name, ('','','','')) #tags, name, comment are handled separately
         elementName = f"key_{len(self.allUserElements)}"
 
@@ -239,7 +237,7 @@ class Form(QDialog):
               self.docTypeComboBox.addItem(value, userData=key)
           self.docTypeComboBox.addItem('_UNIDENTIFIED_', userData='-')
           formL.addRow(QLabel('Data type'), self.docTypeComboBox)
-    if [i for i in self.doc if i.startswith('_')]:
+    if [i for i in self.doc if i.startswith('_') and i!='_projectID']:
       logging.error('There should not be "_" in a doc: %s', str(self.doc))
     # final button box
     _, buttonLineL = widgetAndLayout('H', mainL, 'm')
@@ -439,13 +437,13 @@ class Form(QDialog):
         elif isinstance(valueOld, list):  #items that are comma separated in the text-field
           self.doc[key] = getattr(self, elementName).text().strip().split(' ')
         elif isinstance(valueOld, str):
+          if group not in self.doc:
+            self.doc[group] = {}
           if guiType=='ComboBox':
             valueNew = getattr(self, elementName).currentText()
             dataNew  = getattr(self, elementName).currentData()  #if docID is stored in currentData
             if ((dataNew is not None and re.search(r"^[a-z\-]-[a-z0-9]{32}$",dataNew) is not None)
                 or dataNew==''):
-              if group not in self.doc:
-                self.doc[group] = {}
               self.doc[group][subKey] = dataNew
             elif valueNew!='- no link -' or dataNew is None:
               self.doc[group][subKey] = valueNew
