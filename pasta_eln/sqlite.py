@@ -813,7 +813,7 @@ class SqlLiteDB:
     return
 
 
-  def checkDB(self, outputStyle:str='text', minimal:bool=False) -> str:
+  def checkDB(self, outputStyle:str='text', minimal:bool=False, repair:bool=False) -> str:
     """
     Check database for consistencies by iterating through all documents
     - only reporting, no repair
@@ -823,6 +823,7 @@ class SqlLiteDB:
     Args:
         outputStyle (str): output using a given style: see outputString
         minimal (bool): true=only show warnings and errors; else=also show information
+        repair (bool): auto-repair
 
     Returns:
         str: output
@@ -855,7 +856,9 @@ class SqlLiteDB:
         outString+= outputString(outputStyle,'unsure',f"dch04: no type in (removed data?) {docID}")
         continue
       if docType.startswith('x') and not (docType.startswith(('x0','x1'))):
-        outString+= outputString(outputStyle,'error',f"dch04b: bad type {docID}  {docType}")
+        outString+= outputString(outputStyle,'error',f"dch04b: bad data type*: {docID} {docType}")
+        if repair:
+          self.cursor.execute(f"UPDATE main SET type='x1' WHERE id = '{docID}'")
       if not all(k.startswith('x-') for k in stack.split('/')[:-1]):
         outString+= outputString(outputStyle,'error',f"dch03: non-text in stack in id: {docID}")
       if any(len(i)==0 for i in stack) and not docType.startswith('x0'): #if no inheritance
@@ -930,4 +933,6 @@ class SqlLiteDB:
         outString+= outputString(outputStyle,'unsure',f"image not valid {docID} {image}")
       else:
         outString+= outputString(outputStyle,'error',f"dch14: image not valid {docID} {image}")
+    if repair:
+      self.connection.commit()
     return outString

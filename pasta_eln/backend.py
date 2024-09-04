@@ -664,7 +664,7 @@ class Backend(CLI_Mixin):
         string: output incl. \n
     """
     ### check database itself for consistency
-    output = self.db.checkDB(outputStyle=outputStyle, minimal=minimal)
+    output = self.db.checkDB(outputStyle=outputStyle, minimal=minimal, repair=repair)
     ### compare with file system
     output += outputString(outputStyle,'h2','File status')
     viewProjects   = self.db.getView('viewDocType/x0All')
@@ -709,7 +709,7 @@ class Backend(CLI_Mixin):
                 docDB   = self.db.getDoc(listDocs[0]['id'])
                 difference = diffDicts(docDisk,docDB)
                 if len(difference)>1:
-                  output += outputString(outputStyle,'error',f'disk(1) and db(2) content do not match: {docDB["id"]}\n{difference}')
+                  output += outputString(outputStyle,'error',f'disk(1) and db(2) content do not match*: {docDB["id"]}\n{difference}')
                   if repair:
                     with open(self.basePath/root/dirName/'.id_pastaELN.json','w',encoding='utf-8') as fOut:
                       json.dump(docDB, fOut)
@@ -727,5 +727,5 @@ class Backend(CLI_Mixin):
       output += outputString(outputStyle,'error','bch01: These files of database not on filesystem(3):\n  - '+'\n  - '.join(orphans))
     output += outputString(outputStyle,'h2','File summary')
     if outputStyle == 'text':
-      output += "Success\n" if not orphans and count==0 else "Failure\n"
+      output += "Success\n" if not orphans and count==0 else "Failure (* can be auto-repaired)\n"
     return output

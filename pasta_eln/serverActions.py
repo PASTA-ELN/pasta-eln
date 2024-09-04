@@ -122,7 +122,7 @@ def translateV2_V3(path:str='') -> None:
   return
 
 
-def verifyPasta(projectGroup:str='') -> None:
+def verifyPasta(projectGroup:str='', repair:bool=False) -> None:
   """ Do the default verification of PastaELN. Adopted to CLI """
   from pasta_eln.backend import Backend
   from pasta_eln.miscTools import outputString
@@ -163,15 +163,17 @@ def main() -> None:
   print(  'Manage users and databases for PASTA-ELN on a local couchDB installation')
   print(  '-------------------------------------------------------------------------')
   while True:
-    print('\nCommands: [q]uit; [c]onvert couchDB to SQLite; [v]erify PastaDB; [t]ranslate disk structure from Pasta V2 -> v3')
+    print('\nCommands - general: [q]uit; [d]elete a document\n - update: [c]onvert couchDB to SQLite; [t]ranslate disk structure from V2->v3\n - database integrity: [v]erify; [r]epair')
     command = input('> ')
     if command == 'c':
       couchDB2SQLite()
-    if command == 'v':
-      verifyPasta()
-    if command == 't':
+    elif command == 't':
       translateV2_V3()
-    if command == 'd':
+    elif command == 'v':
+      verifyPasta()
+    elif command == 'r':
+      verifyPasta(repair=True)
+    elif command == 'd':
       delete()
     elif command == 'q':
       break
