@@ -645,7 +645,7 @@ class SqlLiteDB:
         df['image'] = str(len(df['image'])>1)
       if 'tags' in viewColumns:
         allCols.remove('tag')
-        df   = df.groupby(allCols)['tag'].apply(lambda x: ', '.join(x.astype(str))).reset_index()
+        df   = df.groupby(allCols)['tag'].apply(lambda x: ', '.join(set(x.astype(str)))).reset_index()
       if 'qrCodes' in viewColumns:
         allCols.remove('qrCode')
         df   = df.groupby(allCols)['qrCode'].apply(lambda x: ', '.join(x.astype(str))).reset_index()
@@ -836,9 +836,6 @@ class SqlLiteDB:
     if not minimal:
       outString+= outputString(outputStyle,'perfect','Green: perfect and as intended')
       outString+= outputString(outputStyle,'ok', 'Blue: ok, can happen: empty files for testing, strange path for measurements')
-    outString+= outputString(outputStyle,'unsure', 'Dark magenta: unsure if bug or desired (e.g. move step to random path-name)')
-    outString+= outputString(outputStyle,'warning','Orange-red: WARNING should not happen (e.g. procedures without project)')
-    outString+= outputString(outputStyle,'error',  'Red: FAILURE and ERROR: NOT ALLOWED AT ANY TIME')
     if outputStyle=='html':
       outString += '</div>'
     outString+= outputString(outputStyle,'h2','List all database entries')

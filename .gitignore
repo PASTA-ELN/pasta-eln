@@ -6,6 +6,6 @@ testsComplicated/
 htmlcov/
 
 pasta_eln/test.py
-pastaELN*.py
+pasta*.py
 .coverage
 profile.out

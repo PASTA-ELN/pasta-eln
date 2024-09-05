@@ -247,8 +247,9 @@ class Table(QWidget):
       #remove keys that should not be group edited and build dict
       if intersection is not None:
         intersection = intersection.difference({'branch', 'user', 'client', 'metaVendor', 'shasum', \
-            'id', 'metaUser', 'rev', 'name', 'dateCreated', 'dateModified', 'image', 'links'})
+            'id', 'metaUser', 'rev', 'name', 'dateCreated', 'dateModified', 'image', 'links', 'gui'})
         intersectionDict:dict[str,Any] = {i:'' for i in intersection}
+        intersectionDict |= {k:v for k,v in self.comm.backend.db.getDoc(docID).items() if isinstance(v,dict) and k not in ('metaUser','metaVendor')}
         intersectionDict['tags'] = []
         intersectionDict['type'] = [self.docType]
         intersectionDict['_ids'] = docIDs

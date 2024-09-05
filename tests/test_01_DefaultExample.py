@@ -82,14 +82,14 @@ class TestStringMethods(unittest.TestCase):
     self.assertEqual(output.split('\n')[0][:179], "name                                     | tag | comment                                  | type                         | image | sample | procedure                          | id")
     self.assertIn('https://upload.wikimedia.org/wikipedi... |     | - Remote image from wikipedia. Used f... |            measurement/image | True  | nan    | p-', output)
     self.assertIn('simple.csv |     |                                          | measurement/csv/linesAndDots | True  | nan    |                                nan | m-', output)
-    self.assertIn('simple.png | ,   | # File with two locations', output)
+    self.assertIn('simple.png |     | # File with two locations', output)
     self.assertIn(' - The sam... |            measurement/image | True  | nan    |                                nan | m-', output)
 
     #Verify DB
     output = self.be.checkDB(outputStyle='text')
     output = '\n'.join(output.split('\n')[8:])
     self.assertNotIn('**ERROR', output, 'Error in checkDB')
-    self.assertEqual(len(output.split('\n')), 8, 'Check db should have 8 more-less empty lines')
+    self.assertEqual(len(output.split('\n')), 5, 'Check db should have 5 more-less empty lines')
     return
 
 

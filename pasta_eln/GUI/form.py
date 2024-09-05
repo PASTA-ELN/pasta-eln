@@ -39,7 +39,7 @@ class Form(QDialog):
       self.doc['name'] = ''
     else:
       self.setWindowTitle('Edit information')
-    self.skipKeys = ['image','metaVendor','metaUser','shasum','._projectID']
+    self.skipKeys = ['image','metaVendor','metaUser','shasum','._projectID','._ids','.name']
     self.allHidden = False
     self.doc = minimalDocInForm | self.doc
 
