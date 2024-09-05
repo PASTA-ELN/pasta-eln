@@ -195,7 +195,8 @@ class Backend(CLI_Mixin):
             if doc['branch'][0]['path'] is not None and (self.basePath/doc['branch'][0]['path']).is_file():
               path = self.basePath/doc['branch'][0]['path']
           else:
-            logging.warning('backend: add document with multiple branches %s', doc['branch'])
+            logging.warning('backend - known issue: add/edit document with multiple branches %s.', doc['id'])
+            # I might change the wrong one if I change the branch, but there is nothing in table that can distinguish which branch to change
         else:                                                                     #make up name
           shasum  = '-'
         if shasum!='-' and path is not None:

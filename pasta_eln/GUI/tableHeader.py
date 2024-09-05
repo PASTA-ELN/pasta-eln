@@ -6,6 +6,7 @@ from ..guiStyle import IconButton, widgetAndLayout, showMessage
 from ..miscTools import restart
 from ..guiCommunicate import Communicate
 from ..fixedStringsJson import tableHeaderHelp
+from ..sqlite import KEY_ORDER
 
 class TableHeader(QDialog):
   """ Table Header dialog: change which columns are shown and in which order """
@@ -26,10 +27,11 @@ class TableHeader(QDialog):
     # self.allSet = {i['name'] for group in self.db.dataHierarchy(docType, [docType]['meta']
     #                for i in self.db.dataHierarchy[docType]['meta'][group]}
     # self.allSet = self.allSet.union({'date','#_curated', 'type', 'name', 'comment', 'tags', 'image'})
-    self.allSet = {'date','#_curated', 'type', 'name', 'comment', 'tags', 'image'} #for now
+    self.allSet = set(KEY_ORDER)
     #clean it
-    self.allSet       = {i[1:] if i[0] in ['-','_'] else i for i in self.allSet}  #change -something to something
-    self.selectedList = [i[1:] if i[0] in ['-','_'] else i for i in self.selectedList]  #change -something to something
+    self.allSet       = {i[1:] if i[0]=='.' else i for i in self.allSet}
+    self.selectedList = [i[1:] if i[0]=='.' else i for i in self.selectedList]
+    self.allSet       = self.allSet.union(self.selectedList)
 
     # GUI elements
     self.setWindowTitle('Select table headers')
@@ -101,10 +103,8 @@ class TableHeader(QDialog):
     if btn.text().endswith('Cancel'):
       self.reject()
     elif btn.text().endswith('Save'):
-      specialFields = ['name', 'type', 'tags', 'user', 'date']
-      self.selectedList = [f'-{i}' if i in specialFields else i for i in self.selectedList]
-      # self.db.initDocTypeViews(self.comm.backend.configuration['tableColumnsMax'], docTypeChange=self.docType,
-      #                          columnsChange=self.selectedList)
+      self.selectedList = [f'.{i}' if i not in KEY_ORDER else i for i in self.selectedList]
+      self.db.dataHierarchyChangeView(self.docType, self.selectedList)
       restart()
     elif btn.text().endswith('Help'):
       showMessage(self, 'Help on individual entry', tableHeaderHelp)

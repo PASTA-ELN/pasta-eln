@@ -52,9 +52,10 @@ class SqlLiteDB:
 
   def dataHierarchyInit(self, resetDataHierarchy:bool=False) -> None:
     """
-    prepare / return data hierarchy
+    create data hierarchy in sqlite database
 
     Args:
+      resetDataHierarchy (bool): recreate the data hierarchy from default state
     """
     self.cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
     tables = [i[0] for i in self.cursor.fetchall()] # all tables
@@ -73,6 +74,17 @@ class SqlLiteDB:
       command = f"INSERT INTO definitions ({', '.join(DEFINITIONS)}) VALUES ({', '.join(['?']*len(DEFINITIONS))});"
       self.cursor.executemany(command, defaultDefinitions)
       self.connection.commit()
+    return
+
+  def dataHierarchyChangeView(self, docType:str, columns:list[str]) -> None:
+    """ Set different view of docType in data hierarchy
+
+    Args:
+      docType (str): docType
+      columns (list): list of columns
+    """
+    self.cursor.execute(f"UPDATE dataHierarchy SET view='{','.join(columns)}' WHERE docType = '{docType}'")
+    self.connection.commit()
     return
 
 
@@ -322,7 +334,7 @@ class SqlLiteDB:
     tagsOld= {i[0] for i in self.cursor.fetchall()}
     if tagsOld.difference(tagsNew):
       cmd = f"DELETE FROM tags WHERE id == '{docID}' and tag == ?"
-      self.cursor.executemany(cmd, tagsOld.difference(tagsNew))
+      self.cursor.executemany(cmd, [(i,) for i in tagsOld.difference(tagsNew)])
       changesDict['tags'] = ','.join(tagsOld)
     if tagsNew.difference(tagsOld):
       change = tagsNew.difference(tagsOld)
@@ -333,7 +345,7 @@ class SqlLiteDB:
     qrCodesOld= {i[0] for i in self.cursor.fetchall()}
     if qrCodesOld.difference(qrCodesNew):
       cmd = f"DELETE FROM qrCodes WHERE id == '{docID}' and qrCode == ?"
-      self.cursor.executemany(cmd, qrCodesOld.difference(qrCodesNew))
+      self.cursor.executemany(cmd, [(i,) for i in qrCodesOld.difference(qrCodesNew)])
       changesDict['qrCodes'] = ','.join(qrCodesOld)
     if qrCodesNew.difference(qrCodesOld):
       change = qrCodesNew.difference(qrCodesOld)

@@ -337,7 +337,7 @@ class Table(QWidget):
             del doc['branch']  #don't update
             self.comm.backend.db.updateDoc(doc, self.data[row]['id'])
           else:
-            self.comm.backend.db.remove( self.data[row]['id'] )
+            self.comm.backend.db.remove( docID )
             del doc['id']
             doc['name'] = doc['branch'][0]['path']
             self.comm.backend.addData('/'.join(doc['type']), doc, doc['branch'][0]['stack'])
