@@ -429,9 +429,7 @@ class Backend(CLI_Mixin):
       absFilePath = self.basePath/filePath
     pyFile = f'extractor_{extension.lower()}.py'
     pyPath = self.extractorPath/pyFile
-    success = False
     if pyPath.is_file():
-      success = True
       # import module and use to get data
       os.environ['QT_API'] = 'pyside2'
       import matplotlib.pyplot as plt  #IMPORTANT: NO PYPLOT OUTSIDE THIS QT_API BLOCK
@@ -440,12 +438,6 @@ class Backend(CLI_Mixin):
         print(pyFile, absFilePath)
         module  = importlib.import_module(pyFile[:-3])
         content = module.use(absFilePath, {'main':'/'.join(doc['type'])} )
-      except Exception:
-        logging.error('ERROR with extractor %s\n %s', pyFile, traceback.format_exc())
-        success = False
-      os.environ['QT_API'] = 'pyside6'
-      #combine into document
-      if success:
         doc |= content
         for meta in ['metaVendor','metaUser']:
           if meta not in doc:
@@ -474,13 +466,16 @@ class Backend(CLI_Mixin):
           doc['metaVendor']['fileExtension'] = extension.lower()
         if 'links' in doc and len(doc['links'])==0:
           del doc['links']
-    if not success:
-      print('  **Warning, issue with extractor', pyFile)
-      logging.warning('Issue with extractor %s', pyFile)
-      doc['metaUser'] = {'filename':absFilePath.name, 'extension':absFilePath.suffix,
-        'filesize':absFilePath.stat().st_size,
-        'created at':datetime.fromtimestamp(absFilePath.stat().st_ctime, tz=timezone.utc).isoformat(),
-        'modified at':datetime.fromtimestamp(absFilePath.stat().st_mtime, tz=timezone.utc).isoformat()}
+      except Exception:
+        print('  **Warning, issue with extractor', pyFile)
+        logging.error('ERROR with extractor %s\n %s', pyFile, traceback.format_exc())
+        success = False
+        doc['metaUser'] = {'filename':absFilePath.name, 'extension':absFilePath.suffix,
+          'filesize':absFilePath.stat().st_size,
+          'created at':datetime.fromtimestamp(absFilePath.stat().st_ctime, tz=timezone.utc).isoformat(),
+          'modified at':datetime.fromtimestamp(absFilePath.stat().st_mtime, tz=timezone.utc).isoformat()}
+    #combine into document
+    os.environ['QT_API'] = 'pyside6'
     doc['shasum']=shasum  #essential for logic, always save, unlike image
     return
 

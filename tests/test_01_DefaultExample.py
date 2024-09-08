@@ -81,7 +81,7 @@ class TestStringMethods(unittest.TestCase):
     output = self.be.output('measurement')
     self.assertEqual(output.split('\n')[0][:179], "name                                     | tag | comment                                  | type                         | image | sample | procedure                          | id")
     self.assertIn('https://upload.wikimedia.org/wikipedi... |     | - Remote image from wikipedia. Used f... |            measurement/image | True  | nan    | p-', output)
-    self.assertIn('simple.csv |     |                                          | measurement/csv/linesAndDots | True  | nan    |                                nan | m-', output)
+    self.assertIn('simple.csv |     | # These .csv files use the simple con... | measurement/csv/linesAndDots | True  | nan    |                                nan | m-', output)
     self.assertIn('simple.png |     | # File with two locations', output)
     self.assertIn(' - The sam... |            measurement/image | True  | nan    |                                nan | m-', output)
 

@@ -274,7 +274,13 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
   docID = df[df['name']=='simple.png']['id'].values[0]
   doc   = backend.db.getDoc(docID)
   doc['comment'] = '# File with two locations\n - The same file can be located in different locations across different projects within one project group.'\
-                   '\n - Since it is the same file, they share the same metadata: same comment, same tags, ...'
+                   '\n - Since it is the same file, they share the same metadata: same comment, same tags, ...'\
+                   '\n# These .png files use the data-science concept of schemata and ontology\n - The files have a agreed upon name and a custom convenience name (i.e. in german or french)'\
+                   '\n - The also have a PID / IRI to an ontology node.\n - Units are also supported, obviously.'
+  backend.editData(doc)
+  docID = df[df['name']=='simple.csv']['id'].values[0]
+  doc   = backend.db.getDoc(docID)
+  doc['comment'] = '# These .csv files use the simple concept of units for metadata entries'
   backend.editData(doc)
   outputString(outputFormat,'info',backend.output('measurement'))
 
