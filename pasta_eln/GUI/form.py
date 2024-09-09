@@ -178,7 +178,9 @@ class Form(QDialog):
           else:
             logging.info('Cannot display value of key=%s: %s. Write unknown value for docID=%s',
                          key, str(defaultValue), self.doc['id'])
-        elif isinstance(defaultValue, tuple) and len(defaultValue)==4 and isinstance(defaultValue[0], str):    #string
+        elif (isinstance(defaultValue, tuple) and len(defaultValue)==4 and isinstance(defaultValue[0], str)) or \
+              isinstance(defaultValue, str):    #string or tuple
+          value = defaultValue if isinstance(defaultValue, str) else defaultValue[0]
           dataHierarchyItem = [i for i in dataHierarchyNode if i['class']==group and f"{i['class']}.{i['name']}"==key]
           if len(dataHierarchyItem)==1:
             if dataHierarchyItem[0]['list']: #choice dropdown
@@ -190,11 +192,11 @@ class Form(QDialog):
                 getattr(self, elementName).addItem('- no link -', userData='')
                 for _, line in self.db.getView(f'viewDocType/{listDocType}').iterrows():
                   getattr(self, elementName).addItem(line['name'], userData=line['id'])
-                  if line['id'] == defaultValue[0]:
+                  if line['id'] == value:
                     getattr(self, elementName).setCurrentIndex(getattr(self, elementName).count()-1)
               self.allUserElements.append((key,'ComboBox'))
             else:                                   #text area
-              setattr(self, elementName, QLineEdit(defaultValue[0]))
+              setattr(self, elementName, QLineEdit(value))
               self.allUserElements.append((key,'LineEdit'))
             label = dataHierarchyItem[0]['name'].capitalize()
           else:
