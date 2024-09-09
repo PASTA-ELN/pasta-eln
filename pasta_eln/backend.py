@@ -469,7 +469,6 @@ class Backend(CLI_Mixin):
       except Exception:
         print('  **Warning, issue with extractor', pyFile)
         logging.error('ERROR with extractor %s\n %s', pyFile, traceback.format_exc())
-        success = False
         doc['metaUser'] = {'filename':absFilePath.name, 'extension':absFilePath.suffix,
           'filesize':absFilePath.stat().st_size,
           'created at':datetime.fromtimestamp(absFilePath.stat().st_ctime, tz=timezone.utc).isoformat(),
