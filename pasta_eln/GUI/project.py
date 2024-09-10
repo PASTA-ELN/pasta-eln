@@ -9,7 +9,7 @@ from PySide6.QtCore import Slot, Qt, QItemSelectionModel, QModelIndex           
 from anytree import PreOrderIter, Node
 from .projectTreeView import TreeView
 from ..guiStyle import TextButton, Action, Label, showMessage, widgetAndLayout, getColor
-from ..miscTools import createDirName, markdownStyler
+from ..stringChanges import createDirName, markdownEqualizer
 from ..guiCommunicate import Communicate
 from .projectLeafRenderer import DO_NOT_RENDER
 
@@ -112,7 +112,7 @@ class Project(QWidget):
     # labelW.setStyleSheet('padding-top: 5px') #make "Comment:" text aligned with other content, not with text-edit
     commentL.addWidget(labelW, alignment=Qt.AlignmentFlag.AlignTop)
     self.commentTE = QTextEdit()
-    self.commentTE.setMarkdown(markdownStyler(self.docProj.get('comment', '')))
+    self.commentTE.setMarkdown(markdownEqualizer(self.docProj.get('comment', '')))
     bgColor = getColor(self.comm.backend, 'secondaryDark')
     fgColor = getColor(self.comm.backend, 'primaryText')
     self.commentTE.setStyleSheet(f"border: none; padding: 0px; background-color: {bgColor}; color: {fgColor}")

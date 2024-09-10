@@ -7,7 +7,8 @@ from anytree import Node
 import pandas as pd
 from PIL import Image
 from .fixedStringsJson import defaultDataHierarchy, defaultDefinitions, SQLiteTranslation
-from .miscTools import outputString, hierarchy, camelCase, tracebackString
+from .stringChanges import outputString, camelCase, tracebackString
+from .miscTools import hierarchy
 
 KEY_ORDER=['id'  ,'name','user','type','dateCreated','dateModified','gui',      'client','shasum','image','content','comment','externalId']
 KEY_TYPE =['TEXT','TEXT','TEXT','TEXT','TEXT',       'TEXT',        'varchar(2)','TEXT',  'TEXT',  'TEXT', 'TEXT',   'TEXT',   'TEXT']

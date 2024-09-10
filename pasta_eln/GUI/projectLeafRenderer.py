@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QStyledItemDelegate, QStyleOptionViewItem # pylint
 from PySide6.QtSvg import QSvgRenderer                        # pylint: disable=no-name-in-module
 from ..guiCommunicate import Communicate
 from ..guiStyle import getColor
-from ..miscTools import markdownStyler
+from ..stringChanges import markdownEqualizer
 
 DO_NOT_RENDER = ['image','content','metaVendor','metaUser','shasum','type','branch','gui','dateCreated',
                  'dateModified','id','user','tags','name','comment','externalId','client']
@@ -114,7 +114,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     for textType in ('comment', 'content'):  #TODO GUI text color is white, not good
       if textType in doc and (textType != 'content' or 'image' not in doc or doc['image'] == ''):
         textDoc = QTextDocument()
-        textDoc.setMarkdown(markdownStyler(doc[textType]))
+        textDoc.setMarkdown(markdownEqualizer(doc[textType]))
         if textType == 'comment':
           textDoc.setTextWidth(bottomRight2nd.toTuple()[0]-x0-widthContent-2*self.frameSize)
           width, height = textDoc.size().toTuple() # type: ignore

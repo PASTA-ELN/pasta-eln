@@ -10,7 +10,7 @@ from ._contextMenu import initContextMenu, executeContextMenu, CommandMenu
 from ..fixedStringsJson import defaultDataHierarchyNode
 from ..guiCommunicate import Communicate
 from ..handleDictionaries import dict2ul
-from ..miscTools import markdownStyler
+from ..stringChanges import markdownEqualizer
 
 CSS_STYLE = """
 <style> ul {list-style-type: none; padding-left: 0; margin: 0;} a:link {text-decoration: none;}
@@ -164,7 +164,7 @@ class Details(QScrollArea):
           labelW, labelL = widgetAndLayout('H', self.metaDetailsL, top='s', bottom='s')
           labelL.addWidget(QLabel(f'{key}: '), alignment=Qt.AlignmentFlag.AlignTop)
           text = QTextEdit()
-          text.setMarkdown(markdownStyler(self.doc[key]))
+          text.setMarkdown(markdownEqualizer(self.doc[key]))
           bgColor = getColor(self.comm.backend, 'secondaryDark')
           fgColor = getColor(self.comm.backend, 'primaryText')
           text.setStyleSheet(f"QTextEdit {{ border: none; padding: 0px; background-color: {bgColor}; "\

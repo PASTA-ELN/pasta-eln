@@ -11,7 +11,7 @@ from PySide6.QtCore import QSize, Qt, QTimer                                    
 from ..guiStyle import Image, TextButton, IconButton, Label, showMessage, widgetAndLayout, widgetAndLayoutForm, ScrollMessageBox
 from ._contextMenu import initContextMenu, executeContextMenu, CommandMenu
 from ..fixedStringsJson import defaultDataHierarchyNode, minimalDocInForm
-from ..miscTools import createDirName, markdownStyler
+from ..stringChanges import createDirName, markdownEqualizer
 from ..guiCommunicate import Communicate
 from ..sqlite import KEY_ORDER
 
@@ -158,7 +158,7 @@ class Form(QDialog):
           getattr(self, f'textEdit_{key}').setTabStopDistance(20)
           getattr(self, f'textEdit_{key}').textChanged.connect(self.textChanged)
           setattr(self, f'textShow_{key}', QTextEdit())
-          getattr(self, f'textShow_{key}').setMarkdown(markdownStyler(self.doc.get(key, '')))
+          getattr(self, f'textShow_{key}').setMarkdown(markdownEqualizer(self.doc.get(key, '')))
           getattr(self, f'textShow_{key}').setReadOnly(True)
           getattr(self, f'textShow_{key}').hide()
           splitter= QSplitter()
@@ -537,8 +537,7 @@ class Form(QDialog):
     Text changed in editor -> update the display on the right
     """
     key = self.sender().accessibleName()                                                                     # type: ignore
-    getattr(self, f'textShow_{key}').setMarkdown(markdownStyler(
-        getattr(self, f'textEdit_{key}').toPlainText()))
+    getattr(self, f'textShow_{key}').setMarkdown(markdownEqualizer(getattr(self, f'textEdit_{key}').toPlainText()))
     return
 
   def delTag(self, _:str, tag:str) -> None:

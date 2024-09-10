@@ -7,7 +7,8 @@ from urllib import request
 from .sqlite import SqlLiteDB
 from .fixedStringsJson import configurationGUI, defaultConfiguration, CONF_FILE_NAME
 from .handleDictionaries import diffDicts, fillDocBeforeCreate
-from .miscTools import camelCase, createDirName, generic_hash, outputString
+from .miscTools import generic_hash
+from .stringChanges import camelCase, createDirName, outputString
 from .mixin_cli import CLI_Mixin
 
 class Backend(CLI_Mixin):

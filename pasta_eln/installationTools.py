@@ -5,7 +5,8 @@ from pathlib import Path
 from datetime import datetime
 from .backend import Backend
 from .fixedStringsJson import defaultConfiguration, configurationGUI, CONF_FILE_NAME
-from .miscTools import outputString, DummyProgressBar
+from .miscTools import DummyProgressBar
+from .stringChanges import outputString
 
 
 def getOS() -> str:

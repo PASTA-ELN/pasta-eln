@@ -1,11 +1,10 @@
 """ Misc functions that do not require instances """
-import os, uuid, logging, traceback, json, sys, re
+import os, logging, traceback, json, sys
 from collections.abc import Mapping
 from typing import Any, Union
 from io import BufferedReader
 from urllib import request
 from pathlib import Path
-from re import sub, match
 import platform
 from .fixedStringsJson import CONF_FILE_NAME
 
@@ -31,107 +30,6 @@ class Bcolors:
     ENDC = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
-
-def outputString(fmt:str='print', level:str='info', message:str='') -> str:
-  """ Output a message into different formats:
-    - print: print to stdout
-    - logging; log to file
-    - text: return text string (supersedes html)
-    - html: return html string https://doc.qt.io/qtforpython/overviews/richtext-html-subset.html#supported-html-subset
-    - else: no output
-    - formats can be union ('print,text')
-  """
-  prefixes = {'h2':f'{Bcolors.UNDERLINE}\n*** ','bold':f'{Bcolors.BOLD}\n*** ', \
-              'perfect':f'{Bcolors.OKGREEN}', 'ok':f'{Bcolors.OKBLUE}', 'unsure':f'{Bcolors.HEADER}',\
-              'warning':f'{Bcolors.WARNING}**Warning','error':f'{Bcolors.FAIL}**ERROR '}
-  if level=='info':
-    txtOutput = message.strip()+'\n'
-  elif level in prefixes:
-    txtOutput = prefixes[level]+message
-    txtOutput+= ' ***' if '***' in prefixes[level] else ''
-    txtOutput+= f'{Bcolors.ENDC}\n'
-  else:
-    print('ERROR level not in prefixes ',level)
-  # depend on format
-  if 'print' in fmt:
-    print(txtOutput)
-  if 'logging' in fmt and level in {'info', 'warning', 'error'}:
-    getattr(logging,level)(message)
-  if 'text' in fmt:
-    return txtOutput
-  if fmt=='html':
-    colors = {'info':'black','error':'red','warning':'orangered','perfect':'green','ok':'blue','unsure':'darkmagenta'}
-    if level[0]=='h':
-      return f'<{level}>{message}</{level}>'
-    if level not in colors:
-      print(f'**ERROR: wrong level {level}')
-      return ''
-    return f'<font color="{colors[level]}">' + message.replace('\n', '<br>') + '</font><br>'
-  return ''
-
-
-def tracebackString(log:bool=False, docID:str='') -> str:
-  """ Create a formatted string of traceback
-
-  Args:
-    log (bool): write to logging
-    docID (str): docID used in comment
-
-  Returns:
-    str: | separated string of call functions
-  """
-  tracebackList = [i.split('\n')[0] for i in traceback.format_stack()[2:-2] if 'pasta_eln' in i] #skip first and last and then filter only things with pasta_eln
-  reply = '|'.join([item.split('/')[-1].strip() for item in tracebackList])  #| separated list of stack excluding last
-  reply = reply.replace('",','')
-  if log:
-    logging.info(' traceback %s %s', docID, reply)
-  return reply
-
-
-def markdownStyler(text:str) -> str:
-  """
-  Create a markdown that well balanced with regard to font size, etc.
-
-  Args:
-    text (str): input string
-
-  Returns:
-    str: output str
-  """
-  return re.sub(r'(^|\n)(#+)', r'\1##\2', text.strip())
-
-
-def camelCase(text:str) -> str:
-  """
-  Produce camelCase from normal string
-  - file names abcdefg.hij are only replaced spaces
-
-  Args:
-     text (str): string
-
-  Returns:
-    str: camel case of that string: CamelCaseString
-  """
-  if match(r"^[\w-]+\.[\w]+$", text):
-    return text.replace(' ','_')
-  return sub(r"(_|-)+", ' ', text).title().replace(' ','').replace('*','')
-
-
-def createDirName(name:str, docType:str, thisChildNumber:int) -> str:
-  """ create directory-name by using camelCase and a prefix
-
-  Args:
-      name (string): name with spaces etc.
-      docType (string): document type used for prefix
-      thisChildNumber (int): number of myself
-
-  Returns:
-    string: directory name with leading number
-  """
-  if docType == 'x0':
-    return camelCase(name)
-  #steps, tasks
-  return f'{thisChildNumber:03d}_{camelCase(name)}'
 
 
 def generic_hash(path:Path, forceFile:bool=False) -> str:
@@ -175,31 +73,6 @@ def generic_hash(path:Path, forceFile:bool=False) -> str:
     with open(path, 'rb') as stream:
       shasum = blob_hash(stream, path.stat().st_size)
   return shasum
-
-
-def upOut(key:str) -> list[str]:
-  """
-  key (str): key
-  """
-  import keyring as cred
-  keys = key.split() if ' ' in key else [key]
-  keys_ = []
-  for keyI in keys:
-    key_ = cred.get_password('pastaDB',keyI)
-    key_ = ':' if key_ is None else ':'.join(key_.split('bcA:Maw'))
-    keys_.append(key_)
-  return keys_
-
-
-def upIn(key:str) -> str:
-  """
-  key (str): key
-  """
-  import keyring as cred
-  key = 'bcA:Maw'.join(key.split(':'))
-  id_  = uuid.uuid4().hex
-  cred.set_password('pastaDB',id_,key)
-  return id_
 
 
 def symlink_hash(path:Path) -> str:

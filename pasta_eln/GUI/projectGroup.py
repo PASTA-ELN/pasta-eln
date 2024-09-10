@@ -13,7 +13,7 @@ from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QFileDialog,
 # from cloudant.client import CouchDB
 from ..guiCommunicate import Communicate
 from ..guiStyle import IconButton, Label, TextButton, showMessage, widgetAndLayout
-from ..miscTools import restart, upIn, upOut
+from ..miscTools import restart
 
 
 class ProjectGroup(QDialog):
@@ -120,8 +120,8 @@ class ProjectGroup(QDialog):
         remote = {'user':self.userNameR.text(), 'password':self.passwordR.text(), \
                   'database':self.databaseR.text(), 'url':self.serverR.text()}
       elif btn.text().endswith('Save encrypted'):
-        credL = upIn(f'{self.userNameL.text()}:{self.passwordL.text()}')
-        credR = upIn(f'{self.userNameR.text()}:{self.passwordR.text()}')
+        credL = ''
+        credR = ''
         local = {'cred':credL, 'database':self.databaseL.text(), 'path':self.pathL.text()}
         remote = {'cred':credR, 'database':self.databaseR.text(), 'url':self.serverR.text()}
       newGroup = {'local':local, 'remote':remote}
@@ -148,10 +148,7 @@ class ProjectGroup(QDialog):
       self.projectGroupName.setText('my_project_group_name')
       defaultProjectGroup = self.configuration['defaultProjectGroup']
       config = self.configuration['projectGroups'][defaultProjectGroup]
-      if 'cred' in config['local']:
-        u,p = upOut(config['local']['cred'])[0].split(':')
-      else:
-        u,p = config['local']['user'], config['local']['password']
+      u,p = config['local']['user'], config['local']['password']
       self.userNameL.setText(u)
       self.userNameR.setText('')
       self.passwordL.setText(p)
@@ -241,19 +238,13 @@ class ProjectGroup(QDialog):
       item (str): name of project group
     """
     config = self.configuration['projectGroups'][item]
-    if 'cred' in config['local']:
-      u,p = upOut(config['local']['cred'])[0].split(':')
-    else:
-      u,p = config['local']['user'], config['local']['password']
+    u,p = config['local']['user'], config['local']['password']
     self.userNameL.setText(u)
     self.passwordL.setText(p)
     self.databaseL.setText(config['local']['database'])
     self.pathL.setText(config['local']['path'])
     if 'url' in config['remote']:
-      if 'cred' in config['remote']:
-        u,p = upOut(config['remote']['cred'])[0].split(':')
-      else:
-        u,p = config['remote']['user'], config['remote']['password']
+      u,p = config['remote']['user'], config['remote']['password']
       self.userNameR.setText(u)
       self.passwordR.setText(p)
       self.databaseR.setText(config['remote']['database'])
