@@ -154,14 +154,14 @@ class Table(QWidget):
       value = self.data.iloc[i,j]
       if self.docType=='_tags_':  #tags list
         if j==0:
-          if self.data[i]['key']=='_curated':
+          if value=='_curated':          # curated
             item = QStandardItem('_curated_')
-          elif re.match(r'_\d', self.data[i]['key']):
-            item = QStandardItem('\u2605'*int(self.data[i]['key'][1]))
+          elif re.match(r'_\d', value):  # star
+            item = QStandardItem('\u2605'*int(value[1]))
           else:
-            item = QStandardItem(self.data[i]['key'])
+            item = QStandardItem(value)
         else:
-          item = QStandardItem(self.data[i]['value'][j-1])
+          item = QStandardItem(value)
       elif value in ('None','','nan'):  #None, False
         item = QStandardItem('-') # if you want to add nice glyphs, see also below \u00D7')
         # item.setFont(QFont("Helvetica [Cronyx]", 16))
