@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 """Create a GUI slide show of all widgets """
 from PySide6.QtWidgets import QApplication, QMainWindow
+from PySide6.QtGui import QPalette
 from qt_material import apply_stylesheet  # of https://github.com/UN-GCPDS/qt-material
 from pasta_eln.backend import Backend
 from pasta_eln.installationTools import exampleData
@@ -8,6 +9,7 @@ from pasta_eln.guiCommunicate import Communicate
 from pasta_eln.GUI.details import Details
 from pasta_eln.GUI.table import Table
 from pasta_eln.GUI.project import Project
+from pasta_eln.GUI.sidebar import Sidebar
 
 class SlideShow(QMainWindow):
   def __init__(self, createData=False):
@@ -39,6 +41,18 @@ class SlideShow(QMainWindow):
     self.comm.changeTable.emit(docType,'')
     return
 
+  def testSidebar(self, docID):
+    """
+    table
+    """
+    self.setWindowTitle('Test sidebar')
+    widget = Sidebar(self.comm)
+    widget.setMinimumHeight(800)
+    widget.setMinimumWidth(800)
+    self.setCentralWidget(widget)
+    self.comm.changeSidebar.emit(docID)
+    return
+
   def testProject(self, docID):
     """
     project view
@@ -52,15 +66,16 @@ class SlideShow(QMainWindow):
     return
 
 
-def main(tasks=['detail'], theme='dark_blue'):
+def main(tasks=['detail'], theme='none'):
   """ Main function
   Args:
-    tasks: project, table, detail
+    tasks: project, table, detail, sidebar
     theme: theme without xml
   """
   app = QApplication()
   apply_stylesheet(app, theme=f'{theme}.xml')
   window = SlideShow(createData=False)
+  print(window.palette().button().color())
   if 'project' in tasks:           # project views
     allProjects = window.backend.db.getView('viewDocType/x0All')['id'].values
     for docID in allProjects:
@@ -70,6 +85,12 @@ def main(tasks=['detail'], theme='dark_blue'):
   if 'table' in tasks:             # all tables
     for docType in ['_tags_']: #,'x0','measurement','procedure','sample','instrument','-']:
       window.testTable(docType)
+      window.show()
+      app.exec()
+  if 'sidebar' in tasks:           # sidebar
+    allProjects = window.backend.db.getView('viewDocType/x0All')['id'].values
+    for docID in allProjects:
+      window.testSidebar(docID)
       window.show()
       app.exec()
   if 'detail' in tasks:           # all measurements
@@ -82,7 +103,14 @@ def main(tasks=['detail'], theme='dark_blue'):
       app.exec()
   return
 
+# TODO: GUI color improvement:
+#       theme none: sidebar group by spacing; comment in details; left-right margin
 
+# Color issues:
+# none-dark: none
+# none-light: leafs too dark
+# dark: title line of leafs; comment font and bg; buttons could be move visible bg like detail buttons;
+# light: title line leafs; background leafs; buttons as before;
 if __name__ == '__main__':
-  main()
+  main(['detail','sidebar','detail','table','project'])
   # main(['table'], "dark_blue")

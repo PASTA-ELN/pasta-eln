@@ -919,6 +919,15 @@ class SqlLiteDB:
     for docID, idx in res:
       outString+= outputString(outputStyle,'error',f"branch idx is bad: {docID} idx: {idx}")
 
+    self.cursor.execute("SELECT id, key FROM properties where key NOT LIKE '%.%'")
+    res = self.cursor.fetchall()
+    for docID, key in res:
+      outString+= outputString(outputStyle,'error',f"key is bad: {docID} idx: {key}")
+      # TODO this part should go into the transfer v2->v3
+      #   self.cursor.execute(f"SELECT * FROM properties WHERE id =='{docID}' and key == '.{key}'")
+      #   resRepair = self.cursor.fetchone()
+      #   print(resRepair)
+
     #doc-type specific tests
     self.cursor.execute("SELECT qrCodes.id, qrCodes.qrCode FROM qrCodes JOIN main USING(id) WHERE  main.type LIKE 'sample%'")
     if res:= [i[0] for i in self.cursor.fetchall() if i[1] is None]:

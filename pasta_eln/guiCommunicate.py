@@ -9,7 +9,7 @@ class Communicate(QObject):
   def __init__(self, backend:Backend):
     super().__init__()
     self.backend               = backend
-    self.dbInfo:dict[str,Any]  = {}
+    self.palette:dict[str,str] = {}
     self.projectID             = ''
     self.progressBar:Optional[QProgressBar] = None
 

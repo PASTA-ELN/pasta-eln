@@ -212,25 +212,28 @@ class Form(QDialog):
         self.keyValueLabel.hide()
         formL.addRow(self.keyValueLabel, self.keyValueListW)
         # add extra questions at bottom of form
-        formL.addRow(QLabel('Special properties:'), QLabel('') )
-        label = '- unassigned -' if self.flagNewDoc else '- no change -'
-        # project change
-        self.projectComboBox = QComboBox()
-        self.projectComboBox.addItem(label, userData='')
-        for _, line in self.db.getView('viewDocType/x0').iterrows():
-          # add all projects but the one that is present
-          if 'branch' not in self.doc or \
-              all( len(branch['stack']) <= 0 or line['id'] != branch['stack'][0] for branch in self.doc['branch']):
-            self.projectComboBox.addItem(line['name'], userData=line['id'])
-            if self.doc.get('_projectID','') == line['id']:
-              self.projectComboBox.setCurrentIndex(self.projectComboBox.count()-1)
-        formL.addRow(QLabel('Project'), self.projectComboBox)
-        if '_projectID' in self.doc:
-          del self.doc['_projectID']
-        # docType change
         allowDocTypeChange = 'id' in self.doc and self.doc['type'][0][0]!='x'
         if '_ids' in self.doc: #if group edit
           allowDocTypeChange = all(docID[0] != 'x' for docID in self.doc['_ids'])
+        allowProjectChange = self.doc['type'][0]!='x0'
+        if allowProjectChange or allowDocTypeChange:
+          formL.addRow(QLabel('Special properties:'), QLabel('') )
+          label = '- unassigned -' if self.flagNewDoc else '- no change -'
+        # project change
+        if allowProjectChange:
+          self.projectComboBox = QComboBox()
+          self.projectComboBox.addItem(label, userData='')
+          for _, line in self.db.getView('viewDocType/x0').iterrows():
+            # add all projects but the one that is present
+            if 'branch' not in self.doc or \
+                all( len(branch['stack']) <= 0 or line['id'] != branch['stack'][0] for branch in self.doc['branch']):
+              self.projectComboBox.addItem(line['name'], userData=line['id'])
+              if self.doc.get('_projectID','') == line['id']:
+                self.projectComboBox.setCurrentIndex(self.projectComboBox.count()-1)
+          formL.addRow(QLabel('Project'), self.projectComboBox)
+        if '_projectID' in self.doc:
+          del self.doc['_projectID']
+        # docType change
         if allowDocTypeChange: #if not-new and non-folder
           self.docTypeComboBox = QComboBox()
           self.docTypeComboBox.addItem(label, userData='')
