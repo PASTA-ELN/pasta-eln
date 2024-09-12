@@ -28,7 +28,7 @@ from .guiCommunicate import Communicate
 from .guiStyle import Action, ScrollMessageBox, showMessage, widgetAndLayout
 from .inputOutput import exportELN
 from .miscTools import restart, updateExtractorList
-
+from .GUI.palette import Palette
 os.environ['QT_API'] = 'pyside6'
 
 
@@ -50,7 +50,9 @@ class MainWindow(QMainWindow):
     resourcesDir = Path(__file__).parent / 'Resources'
     self.setWindowIcon(QIcon(QPixmap(resourcesDir / 'Icons' / 'favicon64.png')))
     self.backend = Backend(defaultProjectGroup=projectGroup)
-    self.comm = Communicate(self.backend)
+    theme = self.backend.configuration['GUI']['theme']
+    palette      = Palette(self, theme)
+    self.comm = Communicate(self.backend, palette)
     self.comm.formDoc.connect(self.formDoc)
     # self.dataverseMainDialog: MainDialog | None = None
     # self.dataverseConfig: ConfigDialog | None = None
@@ -251,8 +253,7 @@ def mainGUI(projectGroup:str='') -> tuple[Union[QCoreApplication, None], MainWin
   theme = main_window.backend.configuration['GUI']['theme']
   if theme != 'none':
     apply_stylesheet(application, theme=f'{theme}.xml')
-  # qtawesome and matplot cannot coexist
-  import qtawesome as qta
+  import qtawesome as qta                       # qtawesome and matplot cannot coexist
   if not isinstance(qta.icon('fa5s.times'), QIcon):
     logging.error('qtawesome: could not load. Likely matplotlib is included and can not coexist.')
     print('qtawesome: could not load. Likely matplotlib is included and can not coexist.')

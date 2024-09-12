@@ -6,7 +6,6 @@ from PySide6.QtGui import QStaticText, QPixmap, QTextDocument, QPainter, QColor,
 from PySide6.QtWidgets import QStyledItemDelegate, QStyleOptionViewItem # pylint: disable=no-name-in-module
 from PySide6.QtSvg import QSvgRenderer                        # pylint: disable=no-name-in-module
 from ..guiCommunicate import Communicate
-from ..guiStyle import getColor
 from ..stringChanges import markdownEqualizer
 
 DO_NOT_RENDER = ['image','content','metaVendor','metaUser','shasum','type','branch','gui','dateCreated',
@@ -25,11 +24,8 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     self.maxHeight = self.comm.backend.configuration['GUI']['maxProjectLeafHeight']
     self.lineSep = 20
     self.penDefault:Optional[QPen] = None
-    self.penHighlight              = QPen(QColor(getColor(self.comm.backend, 'primary')))
+    self.penHighlight              = QPen(QColor(self.comm.palette.primary))
     self.penHighlight.setWidth(2)
-    self.colorMargin1 = QColor(getColor(self.comm.backend, 'secondary')).darker(110)
-    self.colorMargin2 = QColor(getColor(self.comm.backend, 'secondaryLight'))
-
 
   def paint(self, painter:QPainter, option:QStyleOptionViewItem, index:QModelIndex) -> None:                 # type: ignore
     """
@@ -56,11 +52,11 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     docTypeOffset = min(self.docTypeOffset, \
                         int((option.rect.bottomRight()-option.rect.topLeft()).toTuple()[0]/3.5) )             # type: ignore[attr-defined]
     bottomRight2nd = option.rect.bottomRight()- QPoint(self.frameSize+1,self.frameSize)                       # type: ignore[attr-defined]
-    painter.fillRect(option.rect.marginsRemoved(QMargins(2,6,4,0)),  self.colorMargin1)                       # type: ignore[attr-defined]
+    painter.fillRect(option.rect.marginsRemoved(QMargins(2,6,4,0)),  self.comm.palette.leafShadow)            # type: ignore[attr-defined]
     if data['docType'][0][0]=='x':
-      painter.fillRect(option.rect.marginsRemoved(QMargins(-2,3,8,5)), self.colorMargin2.darker(102))         # type: ignore[attr-defined]
+      painter.fillRect(option.rect.marginsRemoved(QMargins(-2,3,8,5)), self.comm.palette.leafX)         # type: ignore[attr-defined]
     else:
-      painter.fillRect(option.rect.marginsRemoved(QMargins(-2,3,8,5)), self.colorMargin2.lighter(210))        # type: ignore[attr-defined]
+      painter.fillRect(option.rect.marginsRemoved(QMargins(-2,3,8,5)), self.comm.palette.leafO)        # type: ignore[attr-defined]
     # header
     y = self.lineSep/2
     docTypeText= '/'.join(data['docType'])

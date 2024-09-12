@@ -6,10 +6,10 @@ from .backend import Backend
 
 class Communicate(QObject):
   """ Communication class that sends signals between widgets, incl. backend"""
-  def __init__(self, backend:Backend):
+  def __init__(self, backend:Backend, palette:Any):
     super().__init__()
     self.backend               = backend
-    self.palette:dict[str,str] = {}
+    self.palette               = palette
     self.projectID             = ''
     self.progressBar:Optional[QProgressBar] = None
 

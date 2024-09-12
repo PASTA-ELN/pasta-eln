@@ -6,32 +6,10 @@ from PySide6.QtGui import QImage, QPixmap, QAction, QKeySequence, QMouseEvent   
 from PySide6.QtCore import QByteArray, Qt           # pylint: disable=no-name-in-module
 from PySide6.QtSvgWidgets import QSvgWidget         # pylint: disable=no-name-in-module
 import qtawesome as qta
-from qt_material import get_theme
 from .backend import Backend
 from .handleDictionaries import dict2ul
 
 space = {'0':0, 's':5, 'm':10, 'l':20, 'xl':200} #spaces: padding and margin
-
-def getColor(backend:Backend, color:str) -> str:
-  """
-  get color from theme
-  - Python access: theme = get_theme(themeName)
-  - For dark-blue:
-     - {'primaryColor': '#448aff', 'primaryLightColor': '#83b9ff', 'secondaryColor': '#232629', 'secondaryLightColor': '#4f5b62',
-     - 'secondaryDarkColor': '#31363b', 'primaryTextColor': '#000000', 'secondaryTextColor': '#ffffff'}
-
-  Args:
-    backend (Pasta): backend instance
-    color (str): color to get [primary, primaryLight, secondary, secondaryLight, secondaryDark, primaryText, secondaryText]
-
-  Returns:
-    str: #123456 color code
-  """
-  if not hasattr(backend, 'configuration') or backend.configuration['GUI']['theme']=='none':
-    return '#000000' if color=='primary' else '#BBBBBB'
-  themeName = backend.configuration['GUI']['theme']
-  return get_theme(f'{themeName}.xml')[f'{color}Color']
-
 
 class TextButton(QPushButton):
   """ Button that has only text"""
@@ -60,14 +38,13 @@ class TextButton(QPushButton):
     if style:
       self.setStyleSheet(style)
     else:
-      primaryColor   = getColor(widget.comm.backend, 'primary')                                              # type: ignore[attr-defined]
-      secondaryColor = getColor(widget.comm.backend, 'secondary')                                            # type: ignore[attr-defined]
-      self.setStyleSheet(f'border-width: 0px; background-color: {primaryColor}; color: {secondaryColor}')
+      primaryColor   = widget.comm.palette.get('primary',  'background-color')                          # type: ignore[attr-defined]
+      secondaryColor = widget.comm.palette.get('secondary','color')                                    # type: ignore[attr-defined]
+      self.setStyleSheet(f'border-width: 0px; {primaryColor} {secondaryColor}')
     if hide:
       self.hide()
     if iconName:
-      color = 'black' if widget is None else getColor(widget.comm.backend, 'primary')                        # type: ignore[attr-defined]
-      icon = qta.icon(iconName, color=color, scale_factor=1)
+      icon = qta.icon(iconName, scale_factor=1)
       self.setIcon(icon)
     if layout is not None:
       layout.addWidget(self)
@@ -88,8 +65,7 @@ class IconButton(QPushButton):
       hide (bool): hidden or shown initially
     """
     super().__init__()
-    color = 'black' if widget is None else getColor(widget.comm.backend, 'primary')                          # type: ignore[attr-defined]
-    icon = qta.icon(iconName, color=color, scale_factor=1)  #color change here
+    icon = qta.icon(iconName, scale_factor=1)  #color change here
     self.setIcon(icon)
     self.clicked.connect(lambda: widget.execute(command))                                                    # type: ignore[attr-defined]
     self.setFixedHeight(30)
@@ -98,7 +74,9 @@ class IconButton(QPushButton):
     if style:
       self.setStyleSheet(style)
     else:
-      self.setStyleSheet("border-width:0")
+      primaryColor   = widget.comm.palette.get('primary', 'background-color')                          # type: ignore[attr-defined]
+      secondaryColor = widget.comm.palette.get('secondary','color')                                    # type: ignore[attr-defined]
+      self.setStyleSheet(f'border-width: 0px; {primaryColor} {secondaryColor}')
     if hide:
       self.hide()
     if layout is not None:
@@ -123,7 +101,7 @@ class Action(QAction):
     self.setText(label)
     self.triggered.connect(lambda : widget.execute(command))                                                 # type: ignore[attr-defined]
     if icon:
-      color = 'black' if widget is None else getColor(widget.comm.backend, 'secondaryText')                  # type: ignore[attr-defined]
+      color = 'black' if widget is None else widget.comm.palette.secondaryText                  # type: ignore[attr-defined]
       self.setIcon(qta.icon(icon, color=color, scale_factor=1))
     if shortcut is not None:
       self.setShortcut(QKeySequence(shortcut))

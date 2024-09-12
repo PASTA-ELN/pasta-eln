@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 """Create a GUI slide show of all widgets """
 from PySide6.QtWidgets import QApplication, QMainWindow
-from PySide6.QtGui import QPalette
 from qt_material import apply_stylesheet  # of https://github.com/UN-GCPDS/qt-material
 from pasta_eln.backend import Backend
 from pasta_eln.installationTools import exampleData
@@ -10,14 +9,16 @@ from pasta_eln.GUI.details import Details
 from pasta_eln.GUI.table import Table
 from pasta_eln.GUI.project import Project
 from pasta_eln.GUI.sidebar import Sidebar
+from pasta_eln.GUI.palette import Palette
 
 class SlideShow(QMainWindow):
-  def __init__(self, createData=False):
+  def __init__(self, createData=False, theme='none'):
     super().__init__()
     if createData:
       exampleData(True, None, 'research', '')
     self.backend = Backend('research')
-    self.comm = Communicate(self.backend)
+    palette      = Palette(self, theme)
+    self.comm    = Communicate(self.backend, palette)
 
   def testDetails(self, docID):
     """
@@ -74,8 +75,7 @@ def main(tasks=['detail'], theme='none'):
   """
   app = QApplication()
   apply_stylesheet(app, theme=f'{theme}.xml')
-  window = SlideShow(createData=False)
-  print(window.palette().button().color())
+  window = SlideShow(createData=False, theme=theme)
   if 'project' in tasks:           # project views
     allProjects = window.backend.db.getView('viewDocType/x0All')['id'].values
     for docID in allProjects:
@@ -103,14 +103,7 @@ def main(tasks=['detail'], theme='none'):
       app.exec()
   return
 
-# TODO: GUI color improvement:
-#       theme none: sidebar group by spacing; comment in details; left-right margin
-
-# Color issues:
-# none-dark: none
-# none-light: leafs too dark
-# dark: title line of leafs; comment font and bg; buttons could be move visible bg like detail buttons;
-# light: title line leafs; background leafs; buttons as before;
+# TODO: none themes are nice; others leaf text has back text color
 if __name__ == '__main__':
-  main(['detail','sidebar','detail','table','project'])
-  # main(['table'], "dark_blue")
+  # main(['detail','sidebar','detail','table','project'],'dark_blue')
+  main(['project'],'dark_blue')

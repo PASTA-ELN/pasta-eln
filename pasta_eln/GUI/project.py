@@ -8,7 +8,7 @@ from PySide6.QtGui import QStandardItemModel, QStandardItem, QAction            
 from PySide6.QtCore import Slot, Qt, QItemSelectionModel, QModelIndex                                  # pylint: disable=no-name-in-module
 from anytree import PreOrderIter, Node
 from .projectTreeView import TreeView
-from ..guiStyle import TextButton, Action, Label, showMessage, widgetAndLayout, getColor
+from ..guiStyle import TextButton, Action, Label, showMessage, widgetAndLayout
 from ..stringChanges import createDirName, markdownEqualizer
 from ..guiCommunicate import Communicate
 from .projectLeafRenderer import DO_NOT_RENDER
@@ -113,9 +113,9 @@ class Project(QWidget):
     commentL.addWidget(labelW, alignment=Qt.AlignmentFlag.AlignTop)
     self.commentTE = QTextEdit()
     self.commentTE.setMarkdown(markdownEqualizer(self.docProj.get('comment', '')))
-    bgColor = getColor(self.comm.backend, 'secondaryDark')
-    fgColor = getColor(self.comm.backend, 'primaryText')
-    self.commentTE.setStyleSheet(f"border: none; padding: 0px; background-color: {bgColor}; color: {fgColor}")
+    bgColor = self.comm.palette.get('secondaryDark', 'background-color')
+    fgColor = self.comm.palette.get('primaryText', 'color')
+    self.commentTE.setStyleSheet(f"border: none; padding: 0px; {bgColor} {fgColor}")
     self.commentTE.setReadOnly(True)
     self.commentResize(None)
     commentL.addWidget(self.commentTE)

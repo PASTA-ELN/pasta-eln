@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any
 from PySide6.QtWidgets import QScrollArea, QLabel, QTextEdit  # pylint: disable=no-name-in-module
 from PySide6.QtCore import Qt, Slot                           # pylint: disable=no-name-in-module
-from ..guiStyle import TextButton, Image, Label, showMessage, widgetAndLayout, getColor
+from ..guiStyle import TextButton, Image, Label, showMessage, widgetAndLayout
 from ._contextMenu import initContextMenu, executeContextMenu, CommandMenu
 from ..fixedStringsJson import defaultDataHierarchyNode
 from ..guiCommunicate import Communicate
@@ -165,10 +165,9 @@ class Details(QScrollArea):
           labelL.addWidget(QLabel(f'{key}: '), alignment=Qt.AlignmentFlag.AlignTop)
           text = QTextEdit()
           text.setMarkdown(markdownEqualizer(self.doc[key]))
-          bgColor = getColor(self.comm.backend, 'secondaryDark')
-          fgColor = getColor(self.comm.backend, 'primaryText')
-          text.setStyleSheet(f"QTextEdit {{ border: none; padding: 0px; background-color: {bgColor}; "\
-                                f"color: {fgColor} }}")
+          bgColor = self.comm.palette.get('secondaryDark', 'background-color')
+          fgColor = self.comm.palette.get('primaryText'  ,'color')
+          text.setStyleSheet(f"QTextEdit {{ border: none; padding: 0px; {bgColor} {fgColor}}}")
           text.document().setTextWidth(labelW.width())
           self.rescaleTexts.append(text)
           height:int = text.document().size().toTuple()[1]    # type:ignore[index]
