@@ -10,6 +10,7 @@ from pasta_eln.GUI.table import Table
 from pasta_eln.GUI.project import Project
 from pasta_eln.GUI.sidebar import Sidebar
 from pasta_eln.GUI.palette import Palette
+from pasta_eln.GUI.form import Form
 
 class SlideShow(QMainWindow):
   def __init__(self, createData=False, theme='none'):
@@ -67,6 +68,16 @@ class SlideShow(QMainWindow):
     return
 
 
+  def testForm(self, docID):
+    """
+    form view
+    """
+    doc = self.comm.backend.db.getDoc(docID)
+    dialog = Form(self.comm, doc)
+    dialog.show()
+    return
+
+
 def main(tasks=['detail'], theme='none'):
   """ Main function
   Args:
@@ -76,8 +87,8 @@ def main(tasks=['detail'], theme='none'):
   app = QApplication()
   apply_stylesheet(app, theme=f'{theme}.xml')
   window = SlideShow(createData=False, theme=theme)
+  allProjects = window.backend.db.getView('viewDocType/x0All')['id'].values
   if 'project' in tasks:           # project views
-    allProjects = window.backend.db.getView('viewDocType/x0All')['id'].values
     for docID in allProjects:
       window.testProject(docID)
       window.show()
@@ -88,11 +99,13 @@ def main(tasks=['detail'], theme='none'):
       window.show()
       app.exec()
   if 'sidebar' in tasks:           # sidebar
-    allProjects = window.backend.db.getView('viewDocType/x0All')['id'].values
     for docID in allProjects:
       window.testSidebar(docID)
       window.show()
       app.exec()
+  if 'form' in tasks:             # form
+    window.testForm(allProjects[0])
+    app.exec()
   if 'detail' in tasks:           # all measurements
     allTasks =  window.backend.db.getView('viewDocType/measurementAll')['id'].to_list()
     allTasks += window.backend.db.getView('viewDocType/sampleAll')['id'].to_list()
@@ -103,6 +116,8 @@ def main(tasks=['detail'], theme='none'):
       app.exec()
   return
 
+# all widgets: are good for all themes and both none
+#   _amber: button text color could be changed : #TODO later
 if __name__ == '__main__':
-  #main(['detail','sidebar','detail','table','project'],'none')  # to test all colors everywhere
-  main(['detail'],'dark_blue')
+  main(['detail','sidebar','detail','table','project','form'],'none')  # to test all colors everywhere
+  # main(['form'],'none')

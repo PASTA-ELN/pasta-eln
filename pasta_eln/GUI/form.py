@@ -113,6 +113,7 @@ class Form(QDialog):
         #TODO GUI change to system with units and IRI in label
         if key == '.name' and '_ids' not in self.doc:
           setattr(self, elementName, QLineEdit(self.doc['name']))
+          getattr(self, elementName).setStyleSheet(self.comm.palette.get('secondaryText','color'))
           getattr(self, elementName).setValidator(QRegularExpressionValidator("[\\w\\ .-]+"))
           formL.addRow('Name', getattr(self, elementName))
           self.allUserElements.append(('name','LineEdit'))
@@ -199,8 +200,9 @@ class Form(QDialog):
               setattr(self, elementName, QLineEdit(value))
               self.allUserElements.append((key,'LineEdit'))
             label = dataHierarchyItem[0]['name'].capitalize()
+            getattr(self, elementName).setStyleSheet(self.comm.palette.get('secondaryText','color'))
           else:
-            print('**ERROR')
+            raise ValueError(f'more than one dataHierarchyItem')
           formL.addRow(QLabel(label), getattr(self, elementName))
         else:
           print(f"**WARNING dialogForm: unknown value type. key:{key}, type:{type(defaultValue)}")
