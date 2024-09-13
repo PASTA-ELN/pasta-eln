@@ -117,7 +117,6 @@ def main(tasks=['detail'], theme='none'):
   return
 
 # all widgets: are good for all themes and both none
-#   _amber: button text color could be changed : #TODO later
 if __name__ == '__main__':
   main(['detail','sidebar','detail','table','project','form'],'none')  # to test all colors everywhere
   # main(['form'],'none')
