@@ -1,5 +1,5 @@
 """ renders each leaf of project tree using QPaint """
-import base64, logging, re
+import base64, logging
 from typing import Any
 from PySide6.QtCore import Qt, QSize, QPoint, QMargins, QRectF, QModelIndex# pylint: disable=no-name-in-module
 from PySide6.QtGui import QStaticText, QPixmap, QTextDocument, QPainter, QColor, QPen # pylint: disable=no-name-in-module
@@ -7,9 +7,11 @@ from PySide6.QtWidgets import QStyledItemDelegate, QStyleOptionViewItem # pylint
 from PySide6.QtSvg import QSvgRenderer                        # pylint: disable=no-name-in-module
 from ..guiCommunicate import Communicate
 from ..stringChanges import markdownEqualizer
+from ..guiStyle import addDocDetails
+from ..fixedStringsJson import defaultDataHierarchyNode
 
 DO_NOT_RENDER = ['image','content','metaVendor','metaUser','shasum','type','branch','gui','dateCreated',
-                 'dateModified','id','user','tags','name','comment','externalId','client']
+                 'dateModified','id','user','name','comment','externalId','client']
 
 class ProjectLeafRenderer(QStyledItemDelegate):
   """ renders each leaf of project tree using QPaint """
@@ -60,7 +62,8 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     docTypeText= '/'.join(data['docType'])
     if data['docType'][0][0]=='x':
       docTypeText = self.comm.backend.db.dataHierarchy('x1', 'title')[0].lower()[:-1]
-    nameText = name if len(name)<55 else f'...{name[-50:]}'
+    maxCharacter = int(docTypeOffset/7.5)
+    nameText = name if len(name)<maxCharacter else f'...{name[-maxCharacter+3:]}'
     if not data['gui'][0]:  #Only draw first line
       staticText = QStaticText(f'<strong>{nameText}</strong>')
       #TODO GUI add quick get hidden from database: add show to sqlite.getView/hierarchy then to getHierarchy an then project and then it should appear here as true/false
@@ -70,6 +73,10 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       return
     # details = body
     doc     = self.comm.backend.db.getDoc(docID)
+    if doc['type'][0] not in self.comm.backend.db.dataHierarchy('', ''):
+      dataHierarchyNode = defaultDataHierarchyNode
+    else:
+      dataHierarchyNode = self.comm.backend.db.dataHierarchy(doc['type'][0], 'meta')
     if len(doc)<2:
       print(f'**ERROR cannot read docID: {docID}')
       logging.error('LeafRenderer: Cannot read docID %s',docID)
@@ -88,24 +95,14 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       tags = ['\u2605'*int(i[2]) if i[:2]=='#_' else i for i in tags]
       painter.drawStaticText(x0, y0+y, QStaticText(f'Tags: {" ".join(tags)}'))
     for key in doc:
-      if key in DO_NOT_RENDER:
+      if key in DO_NOT_RENDER+['tags']:
         continue
+      text = addDocDetails(self, None, key, doc[key], dataHierarchyNode)
       y += self.lineSep
-      if isinstance(doc[key], str):
-        value = ''
-        if re.match(r'^[a-z\-]-[a-z0-9]{32}$',doc[key]) is None:  #normal text
-          value = doc[key]
-        elif self.comm is not None:                     #link
-          table = self.comm.backend.db.getView(f'viewDocType/{key}All')
-          choices= [i for i in table if i['id']==doc[key]]
-          if len(choices)==1:
-            value = '\u260D '+choices[0]['value'][0]
-          else:
-            value = 'ERROR WITH LINK'
-        painter.drawStaticText(x0, y0+y, QStaticText(f'{key}: {value}'))
-      elif isinstance(doc[key], list):                     #list of qrCodes
-        painter.drawStaticText(x0, y0+y, QStaticText(f'{key}: ' + ', '.join([str(i) for i in doc[key]])))
-    for textType in ('comment', 'content'):  #TODO GUI text color is white, not good
+      painter.drawStaticText(x0, y0+y, QStaticText(text))
+    for textType in ('comment', 'content'):
+      if textType in doc and not doc[textType]:
+        continue
       if textType in doc and (textType != 'content' or 'image' not in doc or doc['image'] == ''):
         textDoc = QTextDocument()
         textDoc.setMarkdown(markdownEqualizer(doc[textType]))
@@ -164,7 +161,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     docKeys = doc.keys()
     widthContent = min(self.widthContent,  \
                        int((option.rect.bottomRight()-option.rect.topLeft()).toTuple()[0]/2) )               # type: ignore[attr-defined]
-    height  = len([i for i in docKeys if not i in DO_NOT_RENDER])  #height in text lines
+    height  = len([i for i in docKeys if not i in DO_NOT_RENDER+['tags']])  #height in text lines
     height += 1 if 'tags' in docKeys and len(doc['tags']) > 0 else 0
     height  = (height+3) * self.lineSep
     if 'content' in docKeys:
@@ -178,7 +175,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
         height = max(height, pixmap.height())+2*self.frameSize
       else:
         height = max(height, int(self.widthImage*3/4))+2*self.frameSize
-    elif 'comment' in doc.keys() and len(doc['comment'])>0:
+    elif 'comment' in doc.keys() and doc['comment']:
       text = QTextDocument()
       comment = doc['comment']
       text.setMarkdown(comment.strip())

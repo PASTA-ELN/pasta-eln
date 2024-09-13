@@ -1,12 +1,15 @@
 """ all styling of buttons and other general widgets, some defined colors... """
+import logging
 from typing import Callable, Optional, Any, Union
 from PySide6.QtWidgets import QPushButton, QLabel, QSizePolicy, QMessageBox, QLayout, QWidget, QMenu, QSplitter, \
-                              QVBoxLayout, QHBoxLayout, QGridLayout, QFormLayout, QBoxLayout, QComboBox, QScrollArea # pylint: disable=no-name-in-module
+                              QVBoxLayout, QHBoxLayout, QGridLayout, QFormLayout, QBoxLayout, QComboBox, \
+                              QScrollArea, QTextEdit # pylint: disable=no-name-in-module
 from PySide6.QtGui import QImage, QPixmap, QAction, QKeySequence, QMouseEvent               # pylint: disable=no-name-in-module
 from PySide6.QtCore import QByteArray, Qt           # pylint: disable=no-name-in-module
 from PySide6.QtSvgWidgets import QSvgWidget         # pylint: disable=no-name-in-module
 import qtawesome as qta
 from .handleDictionaries import dict2ul
+from .stringChanges import markdownEqualizer
 
 space = {'0':0, 's':5, 'm':10, 'l':20, 'xl':200} #spaces: padding and margin
 
@@ -349,3 +352,92 @@ def addRowList(layout:QFormLayout, label:str, default:str, itemList:list[str]) -
   widget.setCurrentText(default)
   layout.addRow(QLabel(label), widget)
   return widget
+
+CSS_STYLE = """
+<style> ul {list-style-type: none; padding-left: 0; margin: 0;} a:link {text-decoration: none;}
+a:visited {text-decoration: none;} a:hover {text-decoration: none;} a:active {text-decoration: none;} </style>
+"""
+
+def addDocDetails(widget:QWidget, layout:QLayout, key:str, value:Any, dataHierarchyNode:list[dict[str,Any]]) -> str:
+  """ add document details to a widget's layout: take care of all the formatting
+
+  Args:
+    widget (QWidget): widget from which to get the communication
+    layout (QLayout): layout to which to add
+    key    (str): key/label to add
+    value  (Any): information
+    dataHierarchyNode (list): information on data-structure
+
+  Returns:
+    str: /n separated lines of text
+  """
+  if not key and isinstance(value,dict):
+    return '\n'.join([addDocDetails(widget, layout, k, v, dataHierarchyNode) for k, v in value.items()])
+  link = False
+  if not value:
+    return ''
+  labelStr = ''
+  if key=='tags':
+    tags = ['_curated_' if i=='_curated' else f'#{i}' for i in value]
+    tags = ['\u2605'*int(i[2]) if i[:2]=='#_' else i for i in tags]
+    label = QLabel('Tags: '+' '.join(tags))
+    label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+    layout.addWidget(label)
+  elif (isinstance(value,str) and '\n' in value) or key=='comment':                 # long values with /s or comments
+    labelW, labelL = widgetAndLayout('H', layout, top='s', bottom='s')
+    labelL.addWidget(QLabel(f'{key}: '), alignment=Qt.AlignmentFlag.AlignTop)
+    text = QTextEdit()
+    text.setMarkdown(markdownEqualizer(value))
+    bgColor = widget.comm.palette.get('secondaryDark', 'background-color')
+    fgColor = widget.comm.palette.get('secondaryText', 'color')
+    text.setStyleSheet(f"QTextEdit {{ border: none; padding: 0px; {bgColor} {fgColor}}}")
+    text.document().setTextWidth(labelW.width())
+    if hasattr(widget, 'rescaleTexts'):
+      widget.rescaleTexts.append(text)
+    height:int = text.document().size().toTuple()[1]    # type:ignore[index]
+    text.setFixedHeight(height)
+    text.setReadOnly(True)
+    labelL.addWidget(text, stretch=1)
+  else:
+    dataHierarchyItems = [dict(i) for i in dataHierarchyNode if i['name']==key]
+    if len(dataHierarchyItems)==1 and 'list' in dataHierarchyItems[0] and dataHierarchyItems[0]['list'] and \
+        not isinstance(dataHierarchyItems[0]['list'], list):                #choice among docType
+      table  = widget.comm.backend.db.getView('viewDocType/'+dataHierarchyItems[0]['list'])
+      names= list(table[table.id==value[0]]['name'])
+      if len(names)==1:    # default find one item that we link to
+        value = '\u260D '+names[0]
+        link = True
+      elif not names:      # likely empty link because the value was not yet defined: just print to show
+        value = value[0] if isinstance(value,tuple) else value
+      else:
+        raise ValueError(f'list target exists multiple times. Key: {key}')
+    elif isinstance(value, list):
+      value = ', '.join([str(i) for i in value])
+    labelStr = f'{key.capitalize()}: {value}'
+    if isinstance(value, tuple) and len(value)==4:
+      key = key if value[2] is None or value[2]=='' else value[2]
+      valueString = f'{value[0]} {value[1]}'
+      valueString = valueString if value[3] is None or value[3]=='' else f'{valueString}&nbsp;<b><a href="{value[3]}">&uArr;</a></b>'
+      labelStr = f'{key.capitalize()}: {valueString}'
+    if isinstance(value, dict):
+      value = dict2ul({k:v[0] for k,v in value.items()})
+      labelStr = f'{CSS_STYLE}{key.capitalize()}: {value}'
+    if layout is not None:
+      label = Label(labelStr, function=lambda x,y: clickLink(widget,x,y) if link else None, docID=value)
+      label.setOpenExternalLinks(True)
+      label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse | Qt.TextInteractionFlag.LinksAccessibleByMouse)
+      layout.addWidget(label)
+  return labelStr
+
+def clickLink(widget:QWidget, label:str, docID:str) -> None:
+  """
+  Click link in details
+
+  Args:
+    widget (QWidget): widget to expose the communication
+    label (str): label on link
+    docID (str): docID to which to link
+  """
+  logging.debug('used link on %s|%s',label,docID)
+  widget.comm.changeDetails.emit(docID)
+  return

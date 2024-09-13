@@ -202,7 +202,7 @@ class Form(QDialog):
             label = dataHierarchyItem[0]['name'].capitalize()
             getattr(self, elementName).setStyleSheet(self.comm.palette.get('secondaryText','color'))
           else:
-            raise ValueError(f'more than one dataHierarchyItem')
+            raise ValueError('more than one dataHierarchyItem')
           formL.addRow(QLabel(label), getattr(self, elementName))
         else:
           print(f"**WARNING dialogForm: unknown value type. key:{key}, type:{type(defaultValue)}")

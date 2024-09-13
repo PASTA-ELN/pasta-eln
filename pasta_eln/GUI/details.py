@@ -3,19 +3,13 @@ import logging
 from enum import Enum
 from pathlib import Path
 from typing import Any
-from PySide6.QtWidgets import QScrollArea, QLabel, QTextEdit  # pylint: disable=no-name-in-module
-from PySide6.QtCore import Qt, Slot                           # pylint: disable=no-name-in-module
-from ..guiStyle import TextButton, Image, Label, showMessage, widgetAndLayout
+from PySide6.QtWidgets import QScrollArea, QTextEdit  # pylint: disable=no-name-in-module
+from PySide6.QtCore import Qt, Slot                   # pylint: disable=no-name-in-module
+from ..guiStyle import TextButton, Image, Label, showMessage, widgetAndLayout, addDocDetails
 from ._contextMenu import initContextMenu, executeContextMenu, CommandMenu
 from ..fixedStringsJson import defaultDataHierarchyNode
 from ..guiCommunicate import Communicate
-from ..handleDictionaries import dict2ul
-from ..stringChanges import markdownEqualizer
 
-CSS_STYLE = """
-<style> ul {list-style-type: none; padding-left: 0; margin: 0;} a:link {text-decoration: none;}
-a:visited {text-decoration: none;} a:hover {text-decoration: none;} a:active {text-decoration: none;} </style>
-"""
 PASTA_DETAILS = ['shasum','type','branch','gui','dateCreated','dateModified','id','user','client','externalId']
 
 class Details(QScrollArea):
@@ -127,77 +121,21 @@ class Details(QScrollArea):
         text.setReadOnly(True)
         self.specialL.addWidget(text)
         self.specialW.show()
-      elif key=='tags':
-        tags = ['_curated_' if i=='_curated' else f'#{i}' for i in self.doc[key]]
-        tags = ['\u2605'*int(i[2]) if i[:2]=='#_' else i for i in tags]
-        label = QLabel('Tags: '+' '.join(tags))
-        label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-        self.metaDetailsL.addWidget(label)
+      elif key in ['name']:  #skip
+        continue
       elif key in PASTA_DETAILS:
-        label = QLabel(f'{key}: {str(self.doc[key])}')
-        label.setWordWrap(True)
-        label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-        self.metaDatabaseL.addWidget(label)
+        addDocDetails(self, self.metaDatabaseL, key, self.doc[key], dataHierarchyNode)
         self.btnDatabase.setChecked(False)
       elif key=='metaVendor':
         self.btnVendor.show()
-        label = QLabel()
-        label.setWordWrap(True)
-        label.setText(CSS_STYLE+dict2ul(self.doc[key]))
-        label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse | Qt.TextInteractionFlag.LinksAccessibleByMouse)
-        label.setOpenExternalLinks(True)
-        self.metaVendorL.addWidget(label)
+        addDocDetails(self, self.metaVendorL,   '',  self.doc[key], dataHierarchyNode)
         self.metaVendorW.show()
       elif key=='metaUser':
         self.btnUser.show()
-        label = QLabel()
-        label.setWordWrap(True)
-        label.setText(CSS_STYLE+dict2ul(self.doc[key]))
-        label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse | Qt.TextInteractionFlag.LinksAccessibleByMouse)
-        label.setOpenExternalLinks(True)
-        self.metaUserL.addWidget(label)
+        addDocDetails(self, self.metaUserL,     '',  self.doc[key], dataHierarchyNode)
         self.metaUserW.show()
       else:
-        #TODO GUI create one function to render "'':lalala" into correct shape and use that function here and in project... allow to pass self.doc[key]
-        link = False
-        if (isinstance(self.doc[key],str) and '\n' in self.doc[key]) or key=='comment':
-          labelW, labelL = widgetAndLayout('H', self.metaDetailsL, top='s', bottom='s')
-          labelL.addWidget(QLabel(f'{key}: '), alignment=Qt.AlignmentFlag.AlignTop)
-          text = QTextEdit()
-          text.setMarkdown(markdownEqualizer(self.doc[key]))
-          bgColor = self.comm.palette.get('secondaryDark', 'background-color')
-          fgColor = self.comm.palette.get('secondaryText', 'color')
-          text.setStyleSheet(f"QTextEdit {{ border: none; padding: 0px; {bgColor} {fgColor}}}")
-          text.document().setTextWidth(labelW.width())
-          self.rescaleTexts.append(text)
-          height:int = text.document().size().toTuple()[1]    # type:ignore[index]
-          text.setFixedHeight(height)
-          text.setReadOnly(True)
-          labelL.addWidget(text, stretch=1)
-        else:
-          dataHierarchyItems = [dict(i) for i in dataHierarchyNode if i['name']==key]
-          if len(dataHierarchyItems)==1 and 'list' in dataHierarchyItems[0] and dataHierarchyItems[0]['list'] and \
-              not isinstance(dataHierarchyItems[0]['list'], list):                #choice among docType
-            table  = self.comm.backend.db.getView('viewDocType/'+dataHierarchyItems[0]['list'])
-            names= list(table[table.id==self.doc[key][0]]['name'])
-            if len(names)==1:    # default find one item that we link to
-              value = '\u260D '+names[0]
-              link = True
-            elif not names:      # likely empty link because the value was not yet defined: just print to show
-              value = self.doc[key][0] if isinstance(self.doc[key],tuple) else self.doc[key]
-            else:
-              raise ValueError(f'list target exists multiple times. Key: {key}')
-          elif isinstance(self.doc[key], list):
-            value = ', '.join(self.doc[key])
-          elif isinstance(self.doc[key], tuple) and len(self.doc[key])==4:
-            value = self.doc[key][0]
-          elif isinstance(self.doc[key], dict):
-            value = dict2ul({k:v[0] for k,v in self.doc[key].items()})
-          else:
-            value = self.doc[key]
-          label = Label(f'{key.capitalize()}: {value}', function=self.clickLink if link else None, docID=self.doc[key])
-          label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-          self.metaDetailsL.addWidget(label)
+        addDocDetails(self, self.metaDetailsL,  key, self.doc[key], dataHierarchyNode)
         self.metaDetailsW.show()
     return
 
@@ -235,19 +173,6 @@ class Details(QScrollArea):
         path = self.comm.backend.basePath/path
       report = self.comm.backend.testExtractor(path, outputStyle='html', recipe='/'.join(self.doc['type']))
       showMessage(self, 'Report of extractor test', report, style='QLabel {min-width: 800px}')
-    return
-
-
-  def clickLink(self, label:str, docID:str) -> None:
-    """
-    Click link in details
-
-    Args:
-      label (str): label on link
-      docID (str): docID to which to link
-    """
-    logging.debug('used link on %s|%s',label,docID)
-    self.comm.changeDetails.emit(docID)
     return
 
 

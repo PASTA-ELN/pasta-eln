@@ -8,7 +8,7 @@ from PySide6.QtGui import QStandardItemModel, QStandardItem, QAction            
 from PySide6.QtCore import Slot, Qt, QItemSelectionModel, QModelIndex                                  # pylint: disable=no-name-in-module
 from anytree import PreOrderIter, Node
 from .projectTreeView import TreeView
-from ..guiStyle import TextButton, Action, Label, showMessage, widgetAndLayout
+from ..guiStyle import TextButton, Action, Label, showMessage, widgetAndLayout, addDocDetails
 from ..stringChanges import createDirName, markdownEqualizer
 from ..guiCommunicate import Communicate
 from .projectLeafRenderer import DO_NOT_RENDER
@@ -37,7 +37,7 @@ class Project(QWidget):
     self.showDetailsAll = False
     self.btnAddSubfolder:Optional[TextButton] = None
     self.lineSep = 20
-    self.countLines = -1
+    self.countLines = 0
 
 
   def projHeader(self) -> None:
@@ -45,6 +45,7 @@ class Project(QWidget):
     Initialize / Create header of page
     """
     self.docProj = self.comm.backend.db.getDoc(self.projID)
+    dataHierarchyNode = self.comm.backend.db.dataHierarchy('x0', 'meta')
     # remove if still there
     for i in reversed(range(self.mainL.count())): #remove old
       self.mainL.itemAt(i).widget().setParent(None)
@@ -96,15 +97,11 @@ class Project(QWidget):
       self.infoWSA.hide()
       self.actHideDetail.setText('Show project details')
     # details
-    tags = ', '.join([f'#{i}' for i in self.docProj['tags']]) if 'tags' in self.docProj else ''
-    infoL.addWidget(QLabel(f'Tags: {tags}'))
-    self.countLines = 0
     for key,value in self.docProj.items():
       if 'from ' in key or key in DO_NOT_RENDER:
         continue
-      labelW = QLabel(f'{key.title()}: {str(value)}')
-      infoL.addWidget(labelW)
-      self.countLines += 1
+      text = addDocDetails(self, infoL, key, value, dataHierarchyNode)
+      self.countLines += text.count('/n')+1
     # comment
     commentW, commentL   = widgetAndLayout('H', infoL, 's')
     commentW.resizeEvent = self.commentResize # type: ignore

@@ -109,8 +109,8 @@ def main(tasks=['detail'], theme='none'):
   if 'detail' in tasks:           # all measurements
     allTasks =  window.backend.db.getView('viewDocType/measurementAll')['id'].to_list()
     allTasks += window.backend.db.getView('viewDocType/sampleAll')['id'].to_list()
-    print(allTasks)
     for docID in allTasks:
+      print()
       window.testDetails(docID)
       window.show()
       app.exec()
@@ -118,5 +118,5 @@ def main(tasks=['detail'], theme='none'):
 
 # all widgets: are good for all themes and both none
 if __name__ == '__main__':
-  main(['detail','sidebar','detail','table','project','form'],'none')  # to test all colors everywhere
-  # main(['form'],'none')
+  # main(['detail','sidebar','detail','table','project','form'],'none')  # to test all colors everywhere
+  main(['project'],'none')

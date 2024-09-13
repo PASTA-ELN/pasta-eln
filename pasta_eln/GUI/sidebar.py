@@ -87,7 +87,6 @@ class Sidebar(QWidget):
         maxLabelCharacters = int((self.sideBarWidth-50)/7.1)
         label = (projName if len(projName) < maxLabelCharacters else f'{projName[:maxLabelCharacters - 3]}...')
         btnProj = TextButton(label, self, [Command.SHOW_PROJECT, projID, ''], projectL)
-        # btnProj.setStyleSheet("border-width:0") #TODO GUI theme not none
         self.widgetsProject[projID] = [btnProj, projectW]
 
         # actions: scan, curate, ...
@@ -104,8 +103,6 @@ class Sidebar(QWidget):
         btnCurate.hide()
         actionL.addWidget(btnCurate, 0,1)
         self.widgetsAction[projID] = actionW
-        # btnScan.setStyleSheet("border-width:0") #TODO GUI theme not none
-        # btnCurate.setStyleSheet("border-width:0")
 
         # lists: view list of measurements, ... of this project
         listW, listL = widgetAndLayoutGrid(projectL,  spacing='s')
