@@ -6,7 +6,6 @@ from PySide6.QtGui import QImage, QPixmap, QAction, QKeySequence, QMouseEvent   
 from PySide6.QtCore import QByteArray, Qt           # pylint: disable=no-name-in-module
 from PySide6.QtSvgWidgets import QSvgWidget         # pylint: disable=no-name-in-module
 import qtawesome as qta
-from .backend import Backend
 from .handleDictionaries import dict2ul
 
 space = {'0':0, 's':5, 'm':10, 'l':20, 'xl':200} #spaces: padding and margin
@@ -39,7 +38,7 @@ class TextButton(QPushButton):
       self.setStyleSheet(style)
     else:
       primaryColor   = widget.comm.palette.get('primary',  'background-color')                          # type: ignore[attr-defined]
-      secondaryColor = widget.comm.palette.get('secondary','color')                                    # type: ignore[attr-defined]
+      secondaryColor = widget.comm.palette.get('buttonText','color')                                    # type: ignore[attr-defined]
       self.setStyleSheet(f'border-width: 0px; {primaryColor} {secondaryColor}')
     if hide:
       self.hide()

@@ -1,6 +1,6 @@
 """ renders each leaf of project tree using QPaint """
 import base64, logging, re
-from typing import Optional, Any
+from typing import Any
 from PySide6.QtCore import Qt, QSize, QPoint, QMargins, QRectF, QModelIndex# pylint: disable=no-name-in-module
 from PySide6.QtGui import QStaticText, QPixmap, QTextDocument, QPainter, QColor, QPen # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QStyledItemDelegate, QStyleOptionViewItem # pylint: disable=no-name-in-module
@@ -15,16 +15,16 @@ class ProjectLeafRenderer(QStyledItemDelegate):
   """ renders each leaf of project tree using QPaint """
   def __init__(self, comm:Communicate) -> None:
     super().__init__()
-    self.comm = comm
-    self.debugMode = logging.root.level<logging.INFO
-    self.widthImage = self.comm.backend.configuration['GUI']['imageWidthProject']
-    self.widthContent = self.comm.backend.configuration['GUI']['widthContent']
+    self.comm          = comm
+    self.debugMode     = logging.root.level<logging.INFO
+    self.widthImage    = self.comm.backend.configuration['GUI']['imageWidthProject']
+    self.widthContent  = self.comm.backend.configuration['GUI']['widthContent']
     self.docTypeOffset = self.comm.backend.configuration['GUI']['docTypeOffset']
-    self.frameSize = self.comm.backend.configuration['GUI']['frameSize']
-    self.maxHeight = self.comm.backend.configuration['GUI']['maxProjectLeafHeight']
-    self.lineSep = 20
-    self.penDefault:Optional[QPen] = None
-    self.penHighlight              = QPen(QColor(self.comm.palette.primary))
+    self.frameSize     = self.comm.backend.configuration['GUI']['frameSize']
+    self.maxHeight     = self.comm.backend.configuration['GUI']['maxProjectLeafHeight']
+    self.lineSep       = 20
+    self.penDefault    = QPen(QColor(self.comm.palette.text))
+    self.penHighlight  = QPen(QColor(self.comm.palette.primary))
     self.penHighlight.setWidth(2)
 
   def paint(self, painter:QPainter, option:QStyleOptionViewItem, index:QModelIndex) -> None:                 # type: ignore
@@ -43,9 +43,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     if not data or data['hierStack'] is None or self.comm is None:
       return
     docID   = data['hierStack'].split('/')[-1]
-    # GUI
-    if self.penDefault is None:
-      self.penDefault = QPen(painter.pen())
+    painter.setPen(self.penDefault)
     x0, y0 = option.rect.topLeft().toTuple()                                                                  # type: ignore[attr-defined]
     widthContent = min(self.widthContent,  \
                        int((option.rect.bottomRight()-option.rect.topLeft()).toTuple()[0]/2) )                # type: ignore[attr-defined]

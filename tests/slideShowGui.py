@@ -103,7 +103,6 @@ def main(tasks=['detail'], theme='none'):
       app.exec()
   return
 
-# TODO: none themes are nice; others leaf text has back text color
 if __name__ == '__main__':
-  # main(['detail','sidebar','detail','table','project'],'dark_blue')
-  main(['project'],'dark_blue')
+  #main(['detail','sidebar','detail','table','project'],'none')  # to test all colors everywhere
+  main(['detail'],'dark_blue')

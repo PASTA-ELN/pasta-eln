@@ -166,7 +166,7 @@ class Details(QScrollArea):
           text = QTextEdit()
           text.setMarkdown(markdownEqualizer(self.doc[key]))
           bgColor = self.comm.palette.get('secondaryDark', 'background-color')
-          fgColor = self.comm.palette.get('primaryText'  ,'color')
+          fgColor = self.comm.palette.get('secondaryText', 'color')
           text.setStyleSheet(f"QTextEdit {{ border: none; padding: 0px; {bgColor} {fgColor}}}")
           text.document().setTextWidth(labelW.width())
           self.rescaleTexts.append(text)

@@ -114,7 +114,7 @@ class Project(QWidget):
     self.commentTE = QTextEdit()
     self.commentTE.setMarkdown(markdownEqualizer(self.docProj.get('comment', '')))
     bgColor = self.comm.palette.get('secondaryDark', 'background-color')
-    fgColor = self.comm.palette.get('primaryText', 'color')
+    fgColor = self.comm.palette.get('secondaryText', 'color')
     self.commentTE.setStyleSheet(f"border: none; padding: 0px; {bgColor} {fgColor}")
     self.commentTE.setReadOnly(True)
     self.commentResize(None)
