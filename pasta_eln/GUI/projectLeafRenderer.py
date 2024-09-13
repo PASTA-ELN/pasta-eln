@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QStyledItemDelegate, QStyleOptionViewItem # pylint
 from PySide6.QtSvg import QSvgRenderer                        # pylint: disable=no-name-in-module
 from ..guiCommunicate import Communicate
 from ..stringChanges import markdownEqualizer
-from ..guiStyle import addDocDetails
+from ..guiStyle import addDocDetails, CSS_STYLE
 from ..fixedStringsJson import defaultDataHierarchyNode
 
 DO_NOT_RENDER = ['image','content','metaVendor','metaUser','shasum','type','branch','gui','dateCreated',
@@ -89,17 +89,23 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     if self.debugMode:
       painter.drawStaticText(x0+700, y0+y, QStaticText(data['hierStack']))
     width, height = -1, -1
-    if doc['tags']:
-      y += self.lineSep
-      tags = ['_curated_' if i=='_curated' else f'#{i}' for i in doc['tags']]
-      tags = ['\u2605'*int(i[2]) if i[:2]=='#_' else i for i in tags]
-      painter.drawStaticText(x0, y0+y, QStaticText(f'Tags: {" ".join(tags)}'))
     for key in doc:
-      if key in DO_NOT_RENDER+['tags']:
+      if key in DO_NOT_RENDER:
         continue
       text = addDocDetails(self, None, key, doc[key], dataHierarchyNode)
-      y += self.lineSep
-      painter.drawStaticText(x0, y0+y, QStaticText(text))
+      if text.startswith(CSS_STYLE):
+        textDoc = QTextDocument()
+        textDoc.setHtml(text)
+        _, height = textDoc.size().toTuple() # type: ignore
+        painter.translate(QPoint(x0-3, y0+y+15))
+        textDoc.drawContents(painter)
+        painter.translate(-QPoint(x0-3, y0+y+15))
+        y += height
+      else:
+        for line in text.split('\n'):
+          if line:
+            y += self.lineSep
+            painter.drawStaticText(x0, y0+y, QStaticText(line))
     for textType in ('comment', 'content'):
       if textType in doc and not doc[textType]:
         continue
@@ -158,18 +164,31 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       if len(self.comm.backend.db.getDoc(hierStack.split('/')[0]))>2: #only refresh when project still exists
         self.comm.changeProject.emit('','')
       return QSize()
-    docKeys = doc.keys()
     widthContent = min(self.widthContent,  \
                        int((option.rect.bottomRight()-option.rect.topLeft()).toTuple()[0]/2) )               # type: ignore[attr-defined]
-    height  = len([i for i in docKeys if not i in DO_NOT_RENDER+['tags']])  #height in text lines
-    height += 1 if 'tags' in docKeys and len(doc['tags']) > 0 else 0
+    height = 0
+    if doc['type'][0] not in self.comm.backend.db.dataHierarchy('', ''):
+      dataHierarchyNode = defaultDataHierarchyNode
+    else:
+      dataHierarchyNode = self.comm.backend.db.dataHierarchy(doc['type'][0], 'meta')
+    for key in doc:
+      if key in DO_NOT_RENDER:
+        continue
+      text = addDocDetails(self, None, key, doc[key], dataHierarchyNode)
+      if text.startswith(CSS_STYLE):
+        textDoc = QTextDocument()
+        textDoc.setHtml(text)
+        _, heightDoc = textDoc.size().toTuple() # type: ignore
+        height += int(heightDoc/self.lineSep)
+      elif text:
+        height += text.count('\n')+1
     height  = (height+3) * self.lineSep
-    if 'content' in docKeys:
+    if 'content' in doc:
       text = QTextDocument()
       text.setMarkdown(doc['content'])
       text.setTextWidth(widthContent)
       height = max(height, text.size().toTuple()[1]) +2*self.frameSize # type: ignore
-    elif 'image' in docKeys:
+    elif 'image' in doc:
       if doc['image'].startswith('data:image/'):
         pixmap = self.imageFromDoc(doc)
         height = max(height, pixmap.height())+2*self.frameSize

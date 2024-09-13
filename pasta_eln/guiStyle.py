@@ -380,9 +380,11 @@ def addDocDetails(widget:QWidget, layout:QLayout, key:str, value:Any, dataHierar
   if key=='tags':
     tags = ['_curated_' if i=='_curated' else f'#{i}' for i in value]
     tags = ['\u2605'*int(i[2]) if i[:2]=='#_' else i for i in tags]
-    label = QLabel('Tags: '+' '.join(tags))
-    label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-    layout.addWidget(label)
+    labelStr = 'Tags: '+' '.join(tags)
+    if layout is not None:
+      label = QLabel(labelStr)
+      label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+      layout.addWidget(label)
   elif (isinstance(value,str) and '\n' in value) or key=='comment':                 # long values with /s or comments
     labelW, labelL = widgetAndLayout('H', layout, top='s', bottom='s')
     labelL.addWidget(QLabel(f'{key}: '), alignment=Qt.AlignmentFlag.AlignTop)
