@@ -23,10 +23,6 @@ class TableHeader(QDialog):
     self.docType = docType
     self.db = self.comm.backend.db
     self.selectedList = self.db.dataHierarchy(docType,'view')
-    # TODO FUTURE get all keys connected to this docType
-    # self.allSet = {i['name'] for group in self.db.dataHierarchy(docType, [docType]['meta']
-    #                for i in self.db.dataHierarchy[docType]['meta'][group]}
-    # self.allSet = self.allSet.union({'date','#_curated', 'type', 'name', 'comment', 'tags', 'image'})
     self.allSet = set(KEY_ORDER)
     #clean it
     self.allSet       = {i[1:] if i[0]=='.' else i for i in self.allSet}

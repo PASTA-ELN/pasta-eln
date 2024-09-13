@@ -98,7 +98,6 @@ class Table(QWidget):
       docType (str): document type; leave empty for redraw
       projID (str): id of project
     """
-    #TODO GUI all columns same width
     if docType!=self.docType or projID!=self.projID:
       logging.debug('table:changeTable |%s|%s|',docType, projID)
     self.models = []

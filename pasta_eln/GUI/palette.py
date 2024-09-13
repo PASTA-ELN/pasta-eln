@@ -14,18 +14,6 @@ class Palette():
       self.subtheme = 'light' if 'light' in theme else 'dark'
       self.primary       = get_theme(f'{theme}.xml')['primaryColor']
       self.secondaryText =  get_theme(f'{theme}.xml')['primaryTextColor']
-      #  qt_material - dark-blue:
-      # - {'primaryColor': '#448aff', 'primaryLightColor': '#83b9ff', 'secondaryColor': '#232629', 'secondaryLightColor': '#4f5b62',
-      # - 'secondaryDarkColor': '#31363b', 'primaryTextColor': '#000000', 'secondaryTextColor': '#ffffff'}
-      #   _amber: button text color could be changed : #TODO later
-      # - get table of all colors
-      # - test with slideShowGui
-      #  from docu: apply_stylesheet(
-      #         app,
-      #         theme + '.xml',
-      #         invert_secondary=('light' in theme and 'dark' not in theme),
-      #         extra=extra,
-      #     )
     # for all themes
     if self.subtheme == 'dark':
       self.text       = '#EEEEEE'

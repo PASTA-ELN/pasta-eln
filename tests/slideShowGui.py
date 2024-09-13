@@ -94,7 +94,7 @@ def main(tasks=['detail'], theme='none'):
       window.show()
       app.exec()
   if 'table' in tasks:             # all tables
-    for docType in ['_tags_']: #,'x0','measurement','procedure','sample','instrument','-']:
+    for docType in ['_tags_','x0','measurement','procedure','sample','instrument','-']:
       window.testTable(docType)
       window.show()
       app.exec()
@@ -119,4 +119,4 @@ def main(tasks=['detail'], theme='none'):
 # all widgets: are good for all themes and both none
 if __name__ == '__main__':
   # main(['detail','sidebar','detail','table','project','form'],'none')  # to test all colors everywhere
-  main(['project'],'none')
+  main(['table'],'none')

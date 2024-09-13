@@ -135,46 +135,6 @@ def fillDocBeforeCreate(data:dict[str,Any], docType:list[str]) -> dict[str,Any]:
     del data[key]
   return data
 
-def dataHierarchy_pre_to_V4(dataHierarchy: dict[str, Any]) -> None:
-  """ Translate old dataHierarchy version to version 4
-
-  Based on work of Jithu Murugan
-  # TODO remove since not required anymore
-
-  Args:
-      dataHierarchy (dict[str, Any]): dataHierarchy
-
-  """
-  icons = {'measurement':'fa5s.thermometer-half', 'sample':'fa5s.vial', 'procedure':'fa5s.list-ol',
-           'instrument': 'ri.scales-2-line'}
-  shortcuts = {'measurement':'m', 'sample':'s', 'procedure':'p', 'instrument':'i', 'x0':'space'}
-  dataHierarchy["-version"] = 4
-  typeStructures = {
-      key: dataHierarchy[key]
-      for key in dataHierarchy if key[0] not in {'-', '_'}
-  }
-  for docType, typeStructure in typeStructures.items():
-    # Adjustments previous versions <= v3.0
-    typeStructure.setdefault("attachments", [])
-    typeStructure.setdefault("icon", icons.get(docType, ""))
-    typeStructure.setdefault("shortcut", shortcuts.get(docType, ""))
-    properties = typeStructure.get("prop")
-    if properties is None:
-      properties = {"default": []}
-      typeStructure["prop"] = properties
-    if not isinstance(properties, dict):
-      typeStructure["prop"] = {"default": properties}
-    # Adjustments for v4.0
-    if "prop" in typeStructure:
-      # replace "meta" with "prop" only if it does not exist
-      typeStructure.setdefault("meta", typeStructure["prop"])
-      del typeStructure["prop"]
-    if "label" in typeStructure:
-      typeStructure.setdefault("title", typeStructure["label"])
-      del typeStructure["label"]
-    typeStructure.setdefault("title", "")
-  return
-
 
 def dict2ul(aDict:dict[str,Any]) -> str:
   """
