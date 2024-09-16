@@ -203,6 +203,9 @@ def diffDicts(dict1:dict[str,Any], dict2:dict[str,Any]) -> str:
       elif isinstance(value, list):
         if set(value).difference(set(dict2Copy[key])):
           outString += (f'lists differ for key: {key}\n   {str(value)}\n   {str(dict2Copy[key])}\n')
+      elif isinstance(value, dict):
+        if json.dumps(value) != json.dumps(dict2Copy[key]):
+          outString += (f'dicts differ for key: {key}\n   {str(value)}\n   {str(dict2Copy[key])}\n')
       elif isinstance(dict2Copy[key], tuple) and len(dict2Copy[key])==4:
         if value != dict2Copy[key][0]:
           outString += (f'property values differ for key: {key}\n   {str(value)}\n   {str(dict2Copy[key])}\n')

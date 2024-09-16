@@ -1,11 +1,13 @@
 #!/usr/bin/python3
 """Commandline utility to admin the remote server"""
-import json, os
+import json, os, traceback
 from typing import Any
 from pathlib import Path
 import requests
 from requests.structures import CaseInsensitiveDict
 from .sqlite import SqlLiteDB
+from pasta_eln.backend import Backend
+from pasta_eln.stringChanges import outputString
 
 #global variables
 headers:CaseInsensitiveDict[str]= CaseInsensitiveDict()
@@ -121,19 +123,50 @@ def translateV2_V3(path:str='') -> None:
       fOut.write(json.dumps(docNew))
   return
 
-
-def verifyPasta(projectGroup:str='', repair:bool=False) -> None:
-  """ Do the default verification of PastaELN. Adopted to CLI """
-  from pasta_eln.backend import Backend
-  from pasta_eln.stringChanges import outputString
+def __returnBackend__(projectGroup:str='') -> Backend:
+  """ Internal function: return backend based on project group
+  Args:
+    projectGroup (str): name of project group
+  """
   if not projectGroup:
     with open(Path.home()/'.pastaELN.json','r', encoding='utf-8') as fIn:
       config = json.load(fIn)
       print('Possible project groups:','  '.join(config['projectGroups'].keys()))
     projectGroup = input('Enter project group: ').strip()
-  be = Backend(projectGroup)
+  return Backend(projectGroup)
+
+
+def verifyPasta(projectGroup:str='', repair:bool=False) -> None:
+  """ Do the default verification of PastaELN. Adopted to CLI
+    Args:
+    projectGroup (str): name of project group
+    repair (bool): repair
+  """
+  be = __returnBackend__(projectGroup)
   print('\n\nOUTPUT:')
   outputString('print','info', be.checkDB(outputStyle='text', repair=repair))
+  return
+
+
+def repairPropertiesDot(projectGroup:str='') -> None:
+  """ Repair sqlite database by changing properties table: if key does not have a ., prepend it
+  Args:
+    projectGroup (str): name of project group
+  """
+  db = __returnBackend__(projectGroup).db
+  key= input('Which key to repair, e.g. "chemistry" will become .chemistry? ')
+  db.cursor.execute(f"SELECT id FROM properties where key == '{key}'")
+  res = db.cursor.fetchall()
+  for idx, docID in enumerate(res):
+    docID = docID[0]
+    try:
+      db.cursor.execute(f"UPDATE properties SET key='.{key}' WHERE id == '{docID}' and  key=='{key}'")
+    except:
+      print(f"Error, could not change {docID} and {key}. Likely that combination exists already in properties. Repair manually")
+      if idx==0:
+        print(traceback.format_exc())
+  db.connection.commit()
+  print("Done")
   return
 
 def delete(projectGroup:str='', docID:str='') -> None:
@@ -163,7 +196,8 @@ def main() -> None:
   print(  'Manage users and databases for PASTA-ELN on a local couchDB installation')
   print(  '-------------------------------------------------------------------------')
   while True:
-    print('\nCommands - general: [q]uit; [d]elete a document\n - update: [c]onvert couchDB to SQLite; [t]ranslate disk structure from V2->v3\n - database integrity: [v]erify; [r]epair')
+    print('\nCommands - general: [q]uit; [d]elete a document\n - update: [c]onvert couchDB to SQLite; [t]ranslate disk structure from V2->v3'
+          '\n - database integrity: [v]erify; [r]epair\n - repair sql: [rp1] repair properties: add missing .')
     command = input('> ')
     if command == 'c':
       couchDB2SQLite()
@@ -173,6 +207,8 @@ def main() -> None:
       verifyPasta()
     elif command == 'r':
       verifyPasta(repair=True)
+    elif command == 'rp1':
+      repairPropertiesDot()
     elif command == 'd':
       delete()
     elif command == 'q':
