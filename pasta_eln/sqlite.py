@@ -922,11 +922,11 @@ class SqlLiteDB:
     self.cursor.execute("SELECT id, key FROM properties where key NOT LIKE '%.%'")
     res = self.cursor.fetchall()
     for docID, key in res:
-      outString+= outputString(outputStyle,'error',f"key is bad: {docID} idx: {key}")
-      # TODO this part should go into the transfer v2->v3
-      #   self.cursor.execute(f"SELECT * FROM properties WHERE id =='{docID}' and key == '.{key}'")
-      #   resRepair = self.cursor.fetchone()
-      #   print(resRepair)
+      outString+= outputString(outputStyle,'error',f"key is bad, miss .: {docID} idx: {key}")
+    self.cursor.execute("SELECT id, key FROM properties where value LIKE ''")
+    res = self.cursor.fetchall()
+    for docID, key in res:
+      outString+= outputString(outputStyle,'error',f"key is bad as value is  missing: {docID} idx: {key}")
 
     #doc-type specific tests
     self.cursor.execute("SELECT qrCodes.id, qrCodes.qrCode FROM qrCodes JOIN main USING(id) WHERE  main.type LIKE 'sample%'")
