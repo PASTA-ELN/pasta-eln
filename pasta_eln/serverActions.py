@@ -5,9 +5,9 @@ from typing import Any
 from pathlib import Path
 import requests
 from requests.structures import CaseInsensitiveDict
-from .sqlite import SqlLiteDB
 from pasta_eln.backend import Backend
 from pasta_eln.stringChanges import outputString
+from pasta_eln.sqlite import SqlLiteDB
 
 #global variables
 headers:CaseInsensitiveDict[str]= CaseInsensitiveDict()
@@ -161,7 +161,7 @@ def repairPropertiesDot(projectGroup:str='') -> None:
     docID = docID[0]
     try:
       db.cursor.execute(f"UPDATE properties SET key='.{key}' WHERE id == '{docID}' and  key=='{key}'")
-    except:
+    except Exception:
       print(f"Error, could not change {docID} and {key}. Likely that combination exists already in properties. Repair manually")
       if idx==0:
         print(traceback.format_exc())
@@ -175,7 +175,6 @@ def delete(projectGroup:str='', docID:str='') -> None:
     projectGroup (str): from which project group to delete
     docID (str): which ID to delete
   """
-  from pasta_eln.backend import Backend
   if not projectGroup:
     with open(Path.home()/'.pastaELN.json','r', encoding='utf-8') as fIn:
       config = json.load(fIn)

@@ -184,9 +184,9 @@ class ProjectLeafRenderer(QStyledItemDelegate):
         height += text.count('\n')+1
     height  = (height+3) * self.lineSep
     if 'content' in doc:
-      text = QTextDocument()
-      text.setMarkdown(doc['content'])
-      text.setTextWidth(widthContent)
+      textDoc = QTextDocument()
+      textDoc.setMarkdown(doc['content'])
+      textDoc.setTextWidth(widthContent)
       height = max(height, text.size().toTuple()[1]) +2*self.frameSize # type: ignore
     elif 'image' in doc:
       if doc['image'].startswith('data:image/'):
@@ -195,10 +195,10 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       else:
         height = max(height, int(self.widthImage*3/4))+2*self.frameSize
     elif 'comment' in doc.keys() and doc['comment']:
-      text = QTextDocument()
+      textDoc = QTextDocument()
       comment = doc['comment']
-      text.setMarkdown(comment.strip())
-      text.setTextWidth(widthContent)
+      textDoc.setMarkdown(comment.strip())
+      textDoc.setTextWidth(widthContent)
       height += text.size().toTuple()[1] # type: ignore
       height -= 25
     else:
