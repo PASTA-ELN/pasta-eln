@@ -1,4 +1,5 @@
 """ Color pallette allows easy color access """
+import platform
 from PySide6.QtWidgets import QMainWindow
 from qt_material import get_theme
 
@@ -7,7 +8,10 @@ class Palette():
   def __init__(self, mainWindow:QMainWindow, theme:str) -> None:
     self.theme = theme
     if theme=='none':
-      self.subtheme = 'light' if mainWindow.palette().button().color().red()>128 else 'dark'
+      if platform.system() == 'Linux':
+        self.subtheme = 'light' if mainWindow.palette().button().color().red()>128 else 'dark'
+      else:
+        self.subtheme = 'light'
       self.primary       = '#222222'
       self.secondaryText = '#000000'
     else:

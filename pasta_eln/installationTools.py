@@ -131,8 +131,14 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
   if force:
     backend = Backend(projectGroup)
     dirName = backend.basePath
-    shutil.rmtree(dirName)
-    os.makedirs(dirName)
+    backend.exit()
+    try:
+      shutil.rmtree(dirName)
+      os.makedirs(dirName)
+      if platform.system()=='Windows':
+        print('Try-Except unnecessary')
+    except Exception:
+      pass
   if callbackPercent is not None:
     callbackPercent(1)
   backend = Backend(projectGroup)

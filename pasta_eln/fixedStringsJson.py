@@ -74,7 +74,7 @@ defaultConfiguration: dict[str, Any] = {
 configurationGUI: dict[str, Any] = {
   "general": {
     "theme": ["Theme",
-              "light_blue",
+              "none",
               ["dark_amber", "dark_blue", "dark_cyan", "dark_lightgreen", "dark_pink", "dark_purple", "dark_red", \
                "dark_teal", "dark_yellow", "light_amber", "light_blue", "light_cyan", "light_lightgreen", \
                "light_pink", "light_purple", "light_red", "light_teal", "light_yellow", "none"]],
