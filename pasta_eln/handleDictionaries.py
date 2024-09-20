@@ -212,7 +212,7 @@ def diffDicts(dict1:dict[str,Any], dict2:dict[str,Any]) -> str:
       elif isinstance(value,str):
         if value!=dict2Copy[key] and value.translate(SQLiteTranslation)!=dict2Copy[key]:
           diff = difflib.unified_diff(value.splitlines(), dict2Copy[key].splitlines(), fromfile='disk', tofile='database', n=0, lineterm='')
-          outString += f'key:{key}\n'+'\n'.join(list(diff))
+          outString += f'key:{key}\n'+'\n'.join(list(diff))+'\n'
       else:
         outString += (f'values differ for key: {key}\n   {str(value)}\n   {str(dict2Copy[key])}\n')
     del dict2Copy[key]

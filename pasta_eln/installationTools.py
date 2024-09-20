@@ -192,7 +192,7 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
   else:
     return "**ERROR: backend is incorrect"
   backend.changeHierarchy(None)
-  outputString(outputFormat,'info',backend.outputHierarchy())
+  outputString(outputFormat,'info',backend.outputHierarchy(addID=True))
   if callbackPercent is not None:
     callbackPercent(12)
   logging.info('Finished project planning')
