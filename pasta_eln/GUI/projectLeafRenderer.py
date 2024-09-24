@@ -187,7 +187,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       textDoc = QTextDocument()
       textDoc.setMarkdown(doc['content'])
       textDoc.setTextWidth(widthContent)
-      height = max(height, text.size().toTuple()[1]) +2*self.frameSize # type: ignore
+      height = max(height, textDoc.size().toTuple()[1]) +2*self.frameSize # type: ignore
     elif 'image' in doc:
       if doc['image'].startswith('data:image/'):
         pixmap = self.imageFromDoc(doc)
@@ -199,7 +199,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       comment = doc['comment']
       textDoc.setMarkdown(comment.strip())
       textDoc.setTextWidth(widthContent)
-      height += text.size().toTuple()[1] # type: ignore
+      height += textDoc.size().toTuple()[1] # type: ignore
       height -= 25
     else:
       height -= 25

@@ -418,6 +418,13 @@ class SqlLiteDB:
             self.cursor.execute(cmd ,[docID, longKey, subValue, ''])
           if longKey in dataOld:
             del dataOld[longKey]
+      elif isinstance(value, str) and '.' in key:
+        if key in dataOld and value!=dataOld[key]:
+          self.cursor.execute(f"UPDATE properties SET value='{value}' WHERE id = '{docID}' and key = '{key}'")
+          changesDict[key] = dataOld[key]
+        elif key not in dataOld:
+          cmd = "INSERT INTO properties VALUES (?, ?, ?, ?);"
+          self.cursor.execute(cmd ,[docID, key, value, ''])
       else:
         logging.error('Property is not a dict, ERROR %s %s',key, value)
     if set(dataOld.keys()).difference(dataNew.keys()):

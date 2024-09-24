@@ -44,6 +44,7 @@ class Project(QWidget):
     """
     Initialize / Create header of page
     """
+    self.countLines = 0
     self.docProj = self.comm.backend.db.getDoc(self.projID)
     dataHierarchyNode = self.comm.backend.db.dataHierarchy('x0', 'meta')
     # remove if still there

@@ -186,6 +186,7 @@ class Form(QDialog):
               setattr(self, elementName, QComboBox())
               if ',' in dataHierarchyItem[0]['list']:                  #dataHierarchy-defined choices
                 getattr(self, elementName).addItems(dataHierarchyItem[0]['list'].split(','))
+                getattr(self, elementName).setCurrentText(value)
               else:                                                    #choice among docType
                 listDocType = dataHierarchyItem[0]['list']
                 getattr(self, elementName).addItem('- no link -', userData='')
@@ -204,6 +205,10 @@ class Form(QDialog):
           formL.addRow(QLabel(label), getattr(self, elementName))
         else:
           print(f"**WARNING dialogForm: unknown value type. key:{key}, type:{type(defaultValue)}")
+        if group in self.doc and name in self.doc[group]:
+          del self.doc[group][name]
+          if not self.doc[group]:
+            del self.doc[group]
       if group == '':
         # individual key-value items
         self.keyValueListW, self.keyValueListL = widgetAndLayoutForm(None, 's')
@@ -442,18 +447,16 @@ class Form(QDialog):
         elif isinstance(valueOld, list):  #items that are comma separated in the text-field
           self.doc[key] = getattr(self, elementName).text().strip().split(' ')
         elif isinstance(valueOld, str):
-          if group not in self.doc:
-            self.doc[group] = {}
           if guiType=='ComboBox':
             valueNew = getattr(self, elementName).currentText()
             dataNew  = getattr(self, elementName).currentData()  #if docID is stored in currentData
             if ((dataNew is not None and re.search(r"^[a-z\-]-[a-z0-9]{32}$",dataNew) is not None)
                 or dataNew==''):
-              self.doc[group][subKey] = dataNew
+              self.doc[key] = dataNew
             elif valueNew!='- no link -' or dataNew is None:
-              self.doc[group][subKey] = valueNew
+              self.doc[key] = valueNew
           else:                          #normal text field
-            self.doc[group][subKey] = getattr(self, elementName).text().strip()
+            self.doc[key] = getattr(self, elementName).text().strip()
         elif valueOld is None and key in self.doc:  #important entry, set to empty string
           self.doc[key]=''
           print('Is this really needed?')
