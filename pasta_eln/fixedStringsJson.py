@@ -94,7 +94,8 @@ configurationGUI: dict[str, Any] = {
   }
 }
 
-SQLiteTranslation = str.maketrans({"'":"&prime;"})
+SQLiteTranslationDict = {"'":"&prime;"}
+SQLiteTranslation     = str.maketrans(SQLiteTranslationDict)
 
 minimalDocInForm = {'tags':[], 'comment':'', '':{}}
 

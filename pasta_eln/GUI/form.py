@@ -10,7 +10,7 @@ from PySide6.QtGui import QRegularExpressionValidator                           
 from PySide6.QtCore import QSize, Qt, QTimer                                                      # pylint: disable=no-name-in-module
 from ..guiStyle import Image, TextButton, IconButton, Label, showMessage, widgetAndLayout, widgetAndLayoutForm, ScrollMessageBox
 from ._contextMenu import initContextMenu, executeContextMenu, CommandMenu
-from ..fixedStringsJson import defaultDataHierarchyNode, minimalDocInForm
+from ..fixedStringsJson import defaultDataHierarchyNode, minimalDocInForm, SQLiteTranslationDict
 from ..stringChanges import createDirName, markdownEqualizer
 from ..guiCommunicate import Communicate
 from ..sqlite import KEY_ORDER
@@ -154,7 +154,10 @@ class Form(QDialog):
             icon = f'mdi.format-header-{str(i)}'
             IconButton(icon, self, [Command.BUTTON_BAR, f'heading{str(i)}', key], buttonBarL, f'Heading {str(i)}')
           rightSideL.addWidget(getattr(self, f'buttonBarW_{key}'))
-          setattr(self, f'textEdit_{key}', QPlainTextEdit(self.doc.get(key, '')))
+          textStr = self.doc.get(key, '')
+          for k,v in SQLiteTranslationDict.items():
+            textStr = textStr.replace(v,k)
+          setattr(self, f'textEdit_{key}', QPlainTextEdit(textStr))
           getattr(self, f'textEdit_{key}').setAccessibleName(key)
           getattr(self, f'textEdit_{key}').setTabStopDistance(20)
           getattr(self, f'textEdit_{key}').textChanged.connect(self.textChanged)
