@@ -70,8 +70,8 @@ class TestStringMethods(unittest.TestCase):
     self.assertEqual(output.split('\n')[2][:59], "Example_SOP.md | v1  |         | # Put sample in instrument")
 
     output = self.be.output('sample')
-    self.assertEqual(output.split('\n')[0][:94], "name           | tag | chemistry | comment                           | qrCode             | id")
-    self.assertEqual(output.split('\n')[2][:94], "Example sample | nan | A2B2C3    | can be used as example or removed | 13214124, 99698708 | s-")
+    self.assertEqual(output.split('\n')[0][:101], "name           | tag | chemistry | comment                                  | qrCode             | id")
+    self.assertEqual(output.split('\n')[2][:101], "Example sample | nan | A2B2C3    | this sample has multiple groups of me... | 13214124, 99698708 | s-")
 
     output = self.be.output('instrument')
     self.assertEqual(output.split('\n')[0][:81], "name           | tag | comment                                  | vendor    | id ")
