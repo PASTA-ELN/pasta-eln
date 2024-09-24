@@ -181,9 +181,16 @@ class Form(QDialog):
                          key, str(defaultValue), self.doc['id'])
         elif (isinstance(defaultValue, tuple) and len(defaultValue)==4 and isinstance(defaultValue[0], str)) or \
               isinstance(defaultValue, str):    #string or tuple
-          value = defaultValue if isinstance(defaultValue, str) else defaultValue[0]
           dataHierarchyItem = [i for i in dataHierarchyNode if i['class']==group and f"{i['class']}.{i['name']}"==key]
           if len(dataHierarchyItem)==1:
+            label = dataHierarchyItem[0]['name'].capitalize()
+            if isinstance(defaultValue, str):
+              value = defaultValue
+            else:  #tuple
+              value = defaultValue[0]
+              label += '' if defaultValue[1] is None or defaultValue[1]=='' else f' [{defaultValue[1]}]'
+              label += '' if defaultValue[3] is None or defaultValue[3]=='' else f'&nbsp;<b><a href="{defaultValue[3]}">&uArr;</a></b>'
+              print(defaultValue, value, label)
             if dataHierarchyItem[0]['list']: #choice dropdown
               setattr(self, elementName, QComboBox())
               if ',' in dataHierarchyItem[0]['list']:                  #dataHierarchy-defined choices
@@ -200,11 +207,13 @@ class Form(QDialog):
             else:                                   #text area
               setattr(self, elementName, QLineEdit(value))
               self.allUserElements.append((key,'LineEdit'))
-            label = dataHierarchyItem[0]['name'].capitalize()
             getattr(self, elementName).setStyleSheet(self.comm.palette.get('secondaryText','color'))
           else:
             raise ValueError('more than one dataHierarchyItem')
-          formL.addRow(QLabel(label), getattr(self, elementName))
+          formLabelW = QLabel(label)
+          formLabelW.setOpenExternalLinks(True)
+          formLabelW.setTextInteractionFlags(Qt.TextInteractionFlag.LinksAccessibleByMouse)
+          formL.addRow(formLabelW, getattr(self, elementName))
         else:
           print(f"**WARNING dialogForm: unknown value type. key:{key}, type:{type(defaultValue)}")
         if group in self.doc and name in self.doc[group]:

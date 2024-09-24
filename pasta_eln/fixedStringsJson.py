@@ -11,7 +11,7 @@ defaultDataHierarchy: list[list[str]] = [
   ["instrument",  "",  "Instruments",  "ri.scales-2-line",      "i",    "name,tags,comment,.vendor"]]
 
 defaultDefinitions: list[list[Union[str,int]]] = [
-  #docType, group,     index, key,     description,                                      unit, IRI, mandatory, list
+  #docType, group,index, key,  description,                                      unit, IRI, mandatory, list
   ["x0",    "", 0,     "name", "What is the name of the project?",                "",   "",  "T",       ""],
   ["x0",    "", 1,     "tags", "What are the tags associated with the project?",  "",   "",  "",        ""],
   ["x0",    "", 2,     "status","What is the project status",                     "",   "",  "",        "active,paused,passive,finished"],
@@ -30,9 +30,9 @@ defaultDefinitions: list[list[Union[str,int]]] = [
   ["sample","", 2,     "chemistry", "What is its chemical composition?",          "",   "",  "",        ""],
   ["sample","", 3,     "comment", "What are the comments?",                       "",   "",  "",        ""],
   ["sample","", 4,     "qrCodes", "",                                             "",   "",  "",        ""],
-  ["sample","geometry", 0,    "height",  "Sample height",                                "mm", "",  "",        ""],
-  ["sample","geometry", 1,    "width",   "Sample width",                                 "mm", "",  "",        ""],
-  ["sample","geometry", 2,    "length",  "Sample length",                                "mm", "",  "",        ""],
+  ["sample","geometry", 0,    "height",  "Sample height",                         "mm", "https://schema.org/height",  "",        ""],
+  ["sample","geometry", 1,    "width",   "Sample width",                          "mm", "",  "",        ""],
+  ["sample","geometry", 2,    "length",  "Sample length",                         "mm", "",  "",        ""],
   ["procedure","", 0,  "name", "What is the name / path of the procedure?",       "",   "",  "T",       ""],
   ["procedure","", 1,  "tags", "What are the tags associated with the procedure?","",   "",  "",        ""],
   ["procedure","", 2,  "comment", "#tags comments :field:value: e.g. #SOP_v1",    "",   "",  "",        ""],
