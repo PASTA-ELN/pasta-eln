@@ -118,6 +118,14 @@ class Form(QDialog):
           self.allUserElements.append(('name','LineEdit'))
         elif key == '.tags':
           self.tagsBarMainW, tagsBarMainL = widgetAndLayout('H', spacing='s')
+          self.gradeChoices = QComboBox()   #part/combobox that shows grades
+          self.gradeChoices.setMaximumWidth(80)
+          self.gradeChoices.setIconSize(QSize(0,0))
+          self.gradeChoices.addItems(['','\u2605','\u2605'*2,'\u2605'*3,'\u2605'*4,'\u2605'*5])
+          gradeTag = [i for i in self.doc['tags'] if i.startswith('_')]
+          gradeTagStr = '\u2605'*int(gradeTag[0][1]) if gradeTag else ''
+          self.gradeChoices.setCurrentText(gradeTagStr)
+          tagsBarMainL.addWidget(self.gradeChoices)
           _, self.tagsBarSubL = widgetAndLayout('H', tagsBarMainL, spacing='s', right='m') #part which shows all the tags
           self.otherChoices = QComboBox()   #part/combobox that allow user to select
           self.otherChoices.setEditable(True)
@@ -126,12 +134,6 @@ class Form(QDialog):
           self.otherChoices.setIconSize(QSize(0,0))
           self.otherChoices.setInsertPolicy(QComboBox.InsertPolicy.InsertAtBottom)
           tagsBarMainL.addWidget(self.otherChoices)
-          self.gradeChoices = QComboBox()   #part/combobox that shows grades
-          self.gradeChoices.setMaximumWidth(80)
-          self.gradeChoices.setIconSize(QSize(0,0))
-          self.gradeChoices.addItems(['','\u2605','\u2605'*2,'\u2605'*3,'\u2605'*4,'\u2605'*5])
-          self.gradeChoices.currentTextChanged.connect(self.addTag)
-          tagsBarMainL.addWidget(self.gradeChoices)
           formL.addRow(QLabel('Tags:'), self.tagsBarMainW)
           self.allUserElements.append(('tags',''))
           self.updateTagsBar()
@@ -407,6 +409,9 @@ class Form(QDialog):
           fTemp.write(json.dumps(content))
 
       # loop through all the subitems
+      if self.gradeChoices.currentText():
+        self.doc['tags'] = [i for i in self.doc['tags'] if not i.startswith('_')]
+        self.doc['tags'].append(f'_{len(self.gradeChoices.currentText())}')
       for idx, (key, guiType) in enumerate(self.allUserElements):
         elementName = f"key_{idx}"
         valueOld = self.doc.get(key, '')
@@ -585,11 +590,7 @@ class Form(QDialog):
     for i in reversed(range(self.tagsBarSubL.count())):
       self.tagsBarSubL.itemAt(i).widget().setParent(None)
     for tag in (self.doc['tags'] if 'tags' in self.doc else []):
-      if tag in ['_curated']:
-        continue
-      if tag[0]=='_':
-        Label('\u2605'*int(tag[1]), 'h3', self.tagsBarSubL, self.delTag, tag, 'click to remove')
-      else:
+      if re.match(r'^_\dS', tag):
         Label(tag, 'h3', self.tagsBarSubL, self.delTag, tag, 'click to remove')
     self.tagsBarSubL.addWidget(QWidget(), stretch=2)
     #update choices in combobox
