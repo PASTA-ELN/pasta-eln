@@ -7,6 +7,7 @@ from pasta_eln.backend import Backend
 from pasta_eln.installationTools import exampleData
 from pasta_eln.GUI.form import Form
 from pasta_eln.guiCommunicate import Communicate
+from pasta_eln.GUI.palette import Palette
 
 def test_simple(qtbot):
   """
@@ -27,7 +28,8 @@ def test_simple(qtbot):
   # start app and load project
   exampleData(True, None, 'research', '')
   backend = Backend('research')
-  comm = Communicate(backend)
+  palette = Palette(None, 'light_blue')
+  comm = Communicate(backend, palette)
   window = Form(comm, {'_projectID': '', 'type': ['x0']})
   qtbot.addWidget(window)
 

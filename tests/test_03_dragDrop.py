@@ -6,6 +6,7 @@ from PySide6.QtCore import QModelIndex                                  # pylint
 from pasta_eln.backend import Backend
 from pasta_eln.GUI.project import Project
 from pasta_eln.guiCommunicate import Communicate
+from pasta_eln.GUI.palette import Palette
 
 def test_simple(qtbot):
   """
@@ -25,7 +26,8 @@ def test_simple(qtbot):
 
   # start app and load project
   backend = Backend('research')
-  comm = Communicate(backend)
+  palette = Palette(None, 'light_blue')
+  comm = Communicate(backend, palette)
   window = Project(comm)
   qtbot.addWidget(window)
   projID = backend.output('x0').split('|')[-1].strip()

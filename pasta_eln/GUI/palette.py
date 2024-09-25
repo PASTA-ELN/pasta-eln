@@ -5,11 +5,11 @@ from qt_material import get_theme
 
 class Palette():
   """ Color pallette allows easy color access """
-  def __init__(self, mainWindow:QMainWindow, theme:str) -> None:
+  def __init__(self, mainWindow:QMainWindow|None, theme:str) -> None:
     self.theme = theme
     if theme=='none':
       if platform.system() == 'Linux':
-        self.subtheme = 'light' if mainWindow.palette().button().color().red()>128 else 'dark'
+        self.subtheme = 'light' if mainWindow is None or mainWindow.palette().button().color().red()>128 else 'dark'
       else:
         self.subtheme = 'light'
       self.primary       = '#222222'
