@@ -79,8 +79,7 @@ class Form(QDialog):
     keysDataHierarchy = [f"{i['class']}.{i['name']}" for i in dataHierarchyNode]
     keysDocOrg = [[str(x) for x in (f'{k}.{k1}' for k1 in self.doc[k])] if isinstance(self.doc[k], dict) else [f'.{k}']
                for k in self.doc if k not in KEY_ORDER+['branch','qrCodes','tags']]
-    keysDoc = [i for row in keysDocOrg for i in row]   #flatten
-    for keyInDocNotHierarchy in set(keysDoc).difference(keysDataHierarchy):
+    for keyInDocNotHierarchy in set(i for row in keysDocOrg for i in row).difference(keysDataHierarchy):
       group = keyInDocNotHierarchy.split('.')[0]
       key = keyInDocNotHierarchy.split('.')[1]
       idx = len([1 for i in dataHierarchyNode if i['class']==group])
@@ -426,8 +425,6 @@ class Form(QDialog):
       for idx, (key, guiType) in enumerate(self.allUserElements):
         elementName = f"key_{idx}"
         valueOld = self.doc.get(key, '')
-        if '.' in key:
-          group, subKey = key.split('.')
         if key=='name':
           self.doc['name'] = getattr(self, elementName).text().strip()
           if self.doc['name'] == '':
