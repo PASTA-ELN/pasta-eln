@@ -9,7 +9,7 @@ import pytest
 from pathlib import Path
 from pasta_eln.backend import Backend
 from pasta_eln.inputOutput import exportELN, importELN
-from pasta_eln.miscTools import outputString
+from pasta_eln.stringChanges import outputString
 from pasta_eln.miscTools import DummyProgressBar
 try:
   from eln_validator import checkFile
