@@ -126,7 +126,7 @@ class Form(QDialog):
           gradeTagStr = '\u2605'*int(gradeTag[0][1]) if gradeTag else ''
           self.gradeChoices.setCurrentText(gradeTagStr)
           tagsBarMainL.addWidget(self.gradeChoices)
-          _, self.tagsBarSubL = widgetAndLayout('H', tagsBarMainL, spacing='s', right='m') #part which shows all the tags
+          _, self.tagsBarSubL = widgetAndLayout('H', tagsBarMainL, spacing='s', right='m', left='m') #part which shows all the tags
           self.otherChoices = QComboBox()   #part/combobox that allow user to select
           self.otherChoices.setEditable(True)
           self.otherChoices.setMaximumWidth(100)
@@ -193,7 +193,6 @@ class Form(QDialog):
               value = defaultValue[0]
               label += '' if defaultValue[1] is None or defaultValue[1]=='' else f' [{defaultValue[1]}]'
               label += '' if defaultValue[3] is None or defaultValue[3]=='' else f'&nbsp;<b><a href="{defaultValue[3]}">&uArr;</a></b>'
-              print(defaultValue, value, label)
             if dataHierarchyItem[0]['list']: #choice dropdown
               setattr(self, elementName, QComboBox())
               if ',' in dataHierarchyItem[0]['list']:                  #dataHierarchy-defined choices
@@ -602,12 +601,12 @@ class Form(QDialog):
     for i in reversed(range(self.tagsBarSubL.count())):
       self.tagsBarSubL.itemAt(i).widget().setParent(None)
     for tag in (self.doc['tags'] if 'tags' in self.doc else []):
-      if re.match(r'^_\dS', tag):
+      if not re.match(r'^_\dS', tag):
         Label(tag, 'h3', self.tagsBarSubL, self.delTag, tag, 'click to remove')
     self.tagsBarSubL.addWidget(QWidget(), stretch=2)
     #update choices in combobox
-    tagsAllList = self.comm.backend.db.getView('viewIdentify/viewTagsAll')
-    tagsSet = {i[1] for i in tagsAllList if i[1][0]!='_'}
+    tagsAllList = self.comm.backend.db.getView('viewIdentify/viewTagsAll')['tag'].unique()
+    tagsSet = {i for i in tagsAllList if i[0]!='_'}
     newChoicesList = ['']+list(tagsSet.difference([i for i in self.doc['tags'] if i[0]!='_']))
     self.otherChoices.clear()
     self.otherChoices.addItems(newChoicesList)
