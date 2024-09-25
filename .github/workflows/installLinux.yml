@@ -54,7 +54,7 @@ jobs:
       env:
         QT_QPA_PLATFORM: "offscreen"
     - name: Upload log
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: artifact_${{ matrix.python-version }}
         path: |
