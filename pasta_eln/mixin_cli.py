@@ -29,32 +29,6 @@ class CLI_Mixin:
     return output
 
 
-
-  def outputTags(self, tag=''):
-    """
-    output view to screen
-    - length of output 100 character
-
-    Args:
-      tag (string): tag to be listed, if empty: print all
-
-    Returns:
-        string: output incl. \n
-    """
-    outString = [f'{0: <10}'.format('Tags'), f'{0: <60}'.format('Name'), f'{0: <10}'.format('ID')]
-    outString = '|'.join(outString)+'\n'
-    outString += '-'*106+'\n'
-    view = None
-    if tag=='':
-      view = self.db.getView('viewIdentify/viewTags')
-    else:
-      view = self.db.getView('viewIdentify/viewTags', preciseKey=f'#{tag}')
-    for lineItem in view:
-      rowString = [f'{0: <10}'.format(lineItem['key']), f'{0: <60}'.format(lineItem['value']), f'{0: <10}'.format(lineItem['id'])]
-      outString += '|'.join(rowString)+'\n'
-    return outString
-
-
   def outputHierarchy(self, onlyHierarchy=True, addID=False):
     """
     output hierarchical structure in database
@@ -88,19 +62,4 @@ class CLI_Mixin:
     outString += '-'*110+'\n'
     for item in self.db.getView('viewIdentify/viewQR'):
       outString += f"{item['key'][:36]: <36}|{item['value'][:36]: <36}|{item['id'][:36]: <36}\n"
-    return outString
-
-
-  def outputSHAsum(self):
-    """
-    output list of measurement SHA-sums of files
-
-    Returns:
-        string: output incl. \n
-    """
-    outString = f"{'SHAsum': <32}|{'Name': <40}|{'ID': <25}\n"
-    outString += '-'*110+'\n'
-    for item in self.db.getView('viewIdentify/viewSHAsum'):
-      key = item['key'] or '-empty-'
-      outString += f"{key[:32]: <32}|{item['value'][:40]: <40}|{item['id']: <25}\n"
     return outString

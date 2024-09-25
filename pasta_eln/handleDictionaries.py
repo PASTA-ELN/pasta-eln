@@ -4,40 +4,6 @@ from typing import Any
 from datetime import datetime
 from .fixedStringsJson import SQLiteTranslation
 
-def dataHierarchy2Labels(dataHierarchy:dict[str,Any], tableFormat:dict[str,Any]) -> dict[str,Any]:
-  """
-  Extract labels and create lists of docType,docLabel pair
-  - docLabel is the plural human-readable form of the docType
-  - docType is the single-case noun
-
-  Not sure if separation into datalabels and hierarchy labels is still needed. Join
-
-  Args:
-     dataHierarchy (dict): data hierarchy
-     tableFormat (dict): tableFormat branch
-
-  Returns:
-     dict: dictionary
-  """
-  dataDict = {}
-  hierarchyDict = {}
-  for key in dataHierarchy:
-    if key in ['id', '_rev']:
-      continue
-    label = None
-    if key in tableFormat and '-label-' in tableFormat[key]:  #use label from tableFormat
-      label = tableFormat[key]['-label-']
-    elif key[0]=='x':                                         #use default structural elements
-      label = ['Projects','Tasks','Subtasks','Subsubtasks'][int(key[1])]
-    else:                                                     #default system  sample->Samples
-      label = key[0].upper()+key[1:]+'s'
-    if key[0]=='x':
-      hierarchyDict[key] = label
-    else:
-      dataDict[key] = label
-  dataDict |= hierarchyDict
-  return dataDict
-
 
 def fillDocBeforeCreate(data:dict[str,Any], docType:list[str]) -> dict[str,Any]:
   """ Fill the data before submission to database with common data

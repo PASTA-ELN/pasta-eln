@@ -28,7 +28,7 @@ def test_simple(qtbot):
   # start app and load project
   exampleData(True, None, 'research', '')
   backend = Backend('research')
-  palette = Palette(None, 'light_blue')
+  palette = Palette(None, 'dark_blue')
   comm = Communicate(backend, palette)
   window = Form(comm, {'_projectID': '', 'type': ['x0']})
   qtbot.addWidget(window)
