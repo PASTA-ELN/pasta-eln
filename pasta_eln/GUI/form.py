@@ -239,6 +239,7 @@ class Form(QDialog):
         # project change
         if allowProjectChange:
           self.projectComboBox = QComboBox()
+          self.projectComboBox.setStyleSheet(self.comm.palette.get('secondaryText','color'))
           self.projectComboBox.addItem(label, userData='')
           for _, line in self.db.getView('viewDocType/x0').iterrows():
             # add all projects but the one that is present
@@ -253,6 +254,7 @@ class Form(QDialog):
         # docType change
         if allowDocTypeChange: #if not-new and non-folder
           self.docTypeComboBox = QComboBox()
+          self.docTypeComboBox.setStyleSheet(self.comm.palette.get('secondaryText','color'))
           self.docTypeComboBox.addItem(label, userData='')
           for key, value in self.db.dataHierarchy('', 'title'):
             if key[0]!='x':
