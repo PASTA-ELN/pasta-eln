@@ -175,7 +175,12 @@ class SqlLiteDB:
     self.connection.row_factory = sqlite3.Row  #default None
     cursor = self.connection.cursor()
     cursor.execute(f"SELECT * FROM main WHERE id == '{docID}'")
-    doc = dict(cursor.fetchone())
+    res = cursor.fetchone()
+    if res is None:
+      print(f'**ERROR sqlite: could not get docID:{docID}')
+      logging.error(f'could not get docID: {docID}')
+      return {}
+    doc = dict(res)
     self.cursor.execute(f"SELECT tag FROM tags WHERE id == '{docID}'")
     doc['tags'] = [i[0] for i in self.cursor.fetchall()]
     self.cursor.execute(f"SELECT qrCode FROM qrCodes WHERE id == '{docID}'")
