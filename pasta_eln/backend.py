@@ -439,6 +439,8 @@ class Backend(CLI_Mixin):
         print(pyFile, absFilePath)
         module  = importlib.import_module(pyFile[:-3])
         content = module.use(absFilePath, {'main':'/'.join(doc['type'])} )
+        for key in [i for i in content if i not in ['metaVendor','metaUser','image','style']]:  #only allow accepted keys
+          del content[key]
         doc |= content
         for meta in ['metaVendor','metaUser']:
           if meta not in doc:
@@ -469,7 +471,7 @@ class Backend(CLI_Mixin):
           del doc['links']
       except Exception:
         print('  **Warning, issue with extractor', pyFile)
-        logging.error('ERROR with extractor %s\n %s', pyFile, traceback.format_exc())
+        logging.warning('Issue with extractor %s\n %s', pyFile, traceback.format_exc())
         doc['metaUser'] = {'filename':absFilePath.name, 'extension':absFilePath.suffix,
           'filesize':absFilePath.stat().st_size,
           'created at':datetime.fromtimestamp(absFilePath.stat().st_ctime, tz=timezone.utc).isoformat(),

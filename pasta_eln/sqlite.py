@@ -886,7 +886,7 @@ class SqlLiteDB:
           outString+= outputString(outputStyle,'ok',f"branch stack length = 0: no parent for procedure/sample {docID}")
       try:
         dirNamePrefix = path.split(os.sep)[-1].split('_')[0]
-        if dirNamePrefix.isdigit() and child!=int(dirNamePrefix): #compare child-number to start of directory name
+        if dirNamePrefix.isdigit() and child!=int(dirNamePrefix) and docType.startswith('x'): #compare child-number to start of directory name
           outString+= outputString(outputStyle,'error',f"dch05: child-number and dirName dont match {docID}")
       except Exception:
         pass  #handled next lines
