@@ -204,6 +204,7 @@ class Backend(CLI_Mixin):
           if shasum == '':
             shasum = generic_hash(path, forceFile=True)
           view = self.db.getView('viewIdentify/viewSHAsum',shasum)
+          print('path',path)
           if len(view)==0 or forceNewImage:  #measurement not in database: create doc
             self.useExtractors(path,shasum,doc)  #create image/content
             # All files should appear in database
@@ -416,6 +417,7 @@ class Backend(CLI_Mixin):
         shasum (string): shasum (git-style hash) to store in database (not used here)
         doc (dict): pass known data/measurement type, can be used to create image; This doc is altered
     """
+    print(filePath, 'STEFFEN')
     extension = filePath.suffix[1:]  #cut off initial . of .jpg
     if str(filePath).startswith('http'):
       absFilePath = Path(tempfile.gettempdir())/filePath.name
