@@ -39,7 +39,8 @@ jobs:
         echo '----------'
         ls ~/pasta_data
         more ~/.pastaELN_v3.json
-    - name: Check installation - should NOT fail
+        tree .
+    - name: Check installation
       run: |
         coverage run -a -m pasta_eln.installationTools
     - name: Create example data

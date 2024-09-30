@@ -334,8 +334,9 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
       dirNameProject (str): name of the project directory
     """
     path =  f"{doc['branch'][0]['path']}/" if doc['type'][0][0]=='x' else doc['branch'][0]['path']
-    docMain:dict[str,Any] = {}
-    docSupp:dict[str,Any] = {}
+    docMain:dict[str,Any]  = {}  # items that go into the main node
+    docSupp:dict[str,Any]  = {}  # properties, etc
+    docPasta:dict[str,Any] = {}  # items that are only relevant for Pasta
     filesNotInData = None
     if path is None:
       path = dirNameProject+'/'+doc['id']
@@ -370,6 +371,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
       variableMeasured.append({'value':v, 'propertyID':kObject, 'name':name})
     docMain['variableMeasured'] = variableMeasured
     return path, docMain, filesNotInData
+
 
   def appendDocToGraph(graph: list[dict[str,Any]], doc: dict[str,Any]) -> None:
     """
