@@ -59,6 +59,7 @@ jobs:
         name: artifact_${{ matrix.python-version }}
         path: |
           ~/pastaELN.log
+          ~/.pastaELN*.json
           ~/pasta_data/pastaELN.db
           htmlcov/
           /tmp/pytest-of-runner/pytest-0/
