@@ -433,6 +433,7 @@ class Backend(CLI_Mixin):
       absFilePath = self.basePath/filePath
     pyFile = f'extractor_{extension.lower()}.py'
     pyPath = self.addOnPath/pyFile
+    print('HHHHH ',pyPath, pyPath.is_file())
     if pyPath.is_file():
       # import module and use to get data
       os.environ['QT_API'] = 'pyside2'
