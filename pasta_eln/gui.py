@@ -27,7 +27,7 @@ from .fixedStringsJson import shortcuts, CONF_FILE_NAME
 from .guiCommunicate import Communicate
 from .guiStyle import Action, ScrollMessageBox, showMessage, widgetAndLayout
 from .inputOutput import exportELN
-from .miscTools import restart, updateExtractorList
+from .miscTools import restart, updateAddOnList
 from .GUI.palette import Palette
 os.environ['QT_API'] = 'pyside6'
 
@@ -93,7 +93,7 @@ class MainWindow(QMainWindow):
     systemMenu.addSeparator()
     Action('&Test extraction from a file',   self, [Command.TEST1],           systemMenu)
     Action('Test &selected item extraction', self, [Command.TEST2],           systemMenu, shortcut='F2')
-    Action('Update &Extractor list',         self, [Command.UPDATE],          systemMenu)
+    Action('Update &Add-on list',            self, [Command.UPDATE],          systemMenu)
     systemMenu.addSeparator()
     Action('&Configuration',                 self, [Command.CONFIG],          systemMenu, shortcut='Ctrl+0')
 
@@ -203,7 +203,7 @@ class MainWindow(QMainWindow):
     elif command[0] is Command.TEST2:
       self.comm.testExtractor.emit()
     elif command[0] is Command.UPDATE:
-      reportDict = updateExtractorList(self.backend.extractorPath)
+      reportDict = updateAddOnList(self.backend.addOnPath)
       messageWindow = ScrollMessageBox('Extractor list updated', reportDict,
                                        style='QScrollArea{min-width:600 px; min-height:400px}')
       messageWindow.exec()

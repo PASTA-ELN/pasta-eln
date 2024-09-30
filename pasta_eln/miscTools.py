@@ -1,5 +1,5 @@
 """ Misc functions that do not require instances """
-import os, logging, traceback, json, sys
+import os, logging, traceback, json, sys, importlib
 from collections.abc import Mapping
 from typing import Any, Union
 from io import BufferedReader
@@ -125,7 +125,7 @@ def blob_hash(stream:BufferedReader, size:int) -> str:
   return hasher.hexdigest()
 
 
-def updateExtractorList(directory:Path|None=None) -> dict[str, Any]:
+def updateAddOnList(directory:Path|None=None) -> dict[str, Any]:
   """
   Rules:
   - each data-type in its own try-except
@@ -138,16 +138,19 @@ def updateExtractorList(directory:Path|None=None) -> dict[str, Any]:
     directory (str): relative directory to scan
 
   Returns:
-    dict: dict with all extractors
+    dict: dict with all add-ons
   """
   if directory is None:
     with open(Path.home()/CONF_FILE_NAME,'r', encoding='utf-8') as f:
       configuration = json.load(f)
-      directory = Path(configuration["extractorDir"])
+      directory = Path(configuration["addOnDir"])
+  sys.path.append(str(directory))  #allow add-ons
+  # Extractors
   verboseDebug = False
   extractorsAll = {}
+  projectAll    = {}
   for fileName in os.listdir(directory):
-    if fileName.endswith('.py') and fileName not in {'testExtractor.py','tutorial.py','commit.py'}:
+    if fileName.endswith('.py') and fileName.startswith('extractor_'):
       #start with file
       with open(directory/fileName,'r', encoding='utf-8') as fIn:
         if verboseDebug: print('\n'+fileName)
@@ -193,13 +196,19 @@ def updateExtractorList(directory:Path|None=None) -> dict[str, Any]:
         ending = fileName.split('_')[1].split('.')[0]
         extractorsAll[ending]=extractorsThis
                     #header not used for now
+    if fileName.endswith('.py') and fileName.startswith('project_'):
+      name        = fileName[:-3]
+      module      = importlib.import_module(fileName[:-3])
+      description = module.description
+      projectAll[name] = description
   #update configuration file
   with open(Path.home()/CONF_FILE_NAME,'r', encoding='utf-8') as f:
     configuration = json.load(f)
   configuration['extractors'] = extractorsAll
+  configuration['projectAddOns'] = projectAll
   with open(Path.home()/CONF_FILE_NAME,'w', encoding='utf-8') as f:
     f.write(json.dumps(configuration, indent=2))
-  return extractorsAll
+  return extractorsAll | projectAll
 
 
 def restart() -> None:

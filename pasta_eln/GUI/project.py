@@ -1,11 +1,11 @@
 """ Widget that shows the content of project in a electronic labnotebook """
-import logging
+import logging, importlib
 from enum import Enum
 from pathlib import Path
 from typing import Optional, Any
-from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget, QMenu, QMessageBox, QTextEdit, QScrollArea # pylint: disable=no-name-in-module
-from PySide6.QtGui import QStandardItemModel, QStandardItem, QAction                                   # pylint: disable=no-name-in-module
-from PySide6.QtCore import Slot, Qt, QItemSelectionModel, QModelIndex                                  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget, QMenu, QMessageBox, QTextEdit, QScrollArea, QFileDialog # pylint: disable=no-name-in-module
+from PySide6.QtGui import QStandardItemModel, QStandardItem, QAction                                                # pylint: disable=no-name-in-module
+from PySide6.QtCore import Slot, Qt, QItemSelectionModel, QModelIndex                                               # pylint: disable=no-name-in-module
 from anytree import PreOrderIter, Node
 from .projectTreeView import TreeView
 from ..guiStyle import TextButton, Action, Label, showMessage, widgetAndLayout, addDocDetails
@@ -72,7 +72,7 @@ class Project(QWidget):
     minimizeItems = 'Show all item details' if self.showDetailsAll else 'Hide all item details'
     self.actionHideItems   = Action( menuTextItems,    self, [Command.HIDE_SHOW_ITEMS],  visibilityMenu)
     self.actionHideProject = Action( menuTextHidden,   self, [Command.HIDE],             visibilityMenu)
-    self.actionFoldAll     = Action( minimizeItems,    self, [Command.SHOW_DETAILS],   visibilityMenu)
+    self.actionFoldAll     = Action( minimizeItems,    self, [Command.SHOW_DETAILS],     visibilityMenu)
     visibility.setMenu(visibilityMenu)
     more = TextButton('More',           self, [], buttonL)
     moreMenu = QMenu(self)
@@ -84,6 +84,10 @@ class Project(QWidget):
         Action(f'table of {doctype}',   self, [Command.SHOW_TABLE, doctype], moreMenu, icon=icon)
     Action('table of unidentified',     self, [Command.SHOW_TABLE, '-'],     moreMenu, icon='fa5.file')
     moreMenu.addSeparator()
+    if projectAddOns := self.comm.backend.configuration.get('projectAddOns',''):
+      moreMenu.addSeparator()
+      for label, description in projectAddOns.items():
+        Action(description, self, [Command.ADD_ON, label], moreMenu)
     Action('Delete project',            self, [Command.DELETE], moreMenu)
     more.setMenu(moreMenu)
 
@@ -302,9 +306,16 @@ class Project(QWidget):
       self.change('','') #refresh project
     elif command[0] is Command.SHOW_TABLE:
       self.comm.changeTable.emit(command[1], self.projID)
+    elif command[0] is Command.ADD_ON:
+      module      = importlib.import_module(command[1])
+      module.main(self.comm.backend, self.projID, self.callbackFileName)
     else:
       print("**ERROR project menu unknown:",command)
     return
+
+  def callbackFileName(self):
+    res = QFileDialog.getSaveFileName(self,'Use this file for output', str(Path.home()))
+    return None if res is None else res[0]
 
 
   def modelChanged(self, item:QStandardItem) -> None:
@@ -404,7 +415,8 @@ class Command(Enum):
   SCAN   = 3
   HIDE   = 4
   SHOW_PROJ_DETAILS = 5
-  HIDE_SHOW_ITEMS    = 6
-  SHOW_DETAILS     = 7
-  ADD_CHILD          = 8
-  SHOW_TABLE         = 9
+  HIDE_SHOW_ITEMS   = 6
+  SHOW_DETAILS      = 7
+  ADD_CHILD         = 8
+  SHOW_TABLE        = 9
+  ADD_ON            = 10

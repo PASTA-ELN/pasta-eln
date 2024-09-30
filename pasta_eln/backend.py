@@ -57,10 +57,10 @@ class Backend(CLI_Mixin):
     # directories
     #    self.basePath (root of directory tree) is root of all projects
     #    self.cwd changes during program but is similarly the full path from root
-    self.basePath      = Path(projectGroup['local']['path'])
-    self.cwd           = Path(projectGroup['local']['path'])
-    self.extractorPath = Path(self.configuration['extractorDir'])
-    sys.path.append(str(self.extractorPath))  #allow extractors
+    self.basePath   = Path(projectGroup['local']['path'])
+    self.cwd        = Path(projectGroup['local']['path'])
+    self.addOnPath  = Path(self.configuration['addOnDir'])
+    sys.path.append(str(self.addOnPath))  #allow add-ons
     # decipher miscellaneous configuration and store
     self.userID   = self.configuration['userID']
     # start database
@@ -429,7 +429,7 @@ class Backend(CLI_Mixin):
         filePath = filePath.relative_to(self.basePath)
       absFilePath = self.basePath/filePath
     pyFile = f'extractor_{extension.lower()}.py'
-    pyPath = self.extractorPath/pyFile
+    pyPath = self.addOnPath/pyFile
     if pyPath.is_file():
       # import module and use to get data
       os.environ['QT_API'] = 'pyside2'
@@ -516,7 +516,7 @@ class Backend(CLI_Mixin):
     extension = filePath.suffix[1:]
     pyFile = f'extractor_{extension.lower()}.py'
     if extractorPath is None:
-      extractorPath = self.extractorPath
+      extractorPath = self.addOnPath
     #start testing
     if (extractorPath/pyFile).is_file():
       report += outputString(outputStyle, 'info', f'use extractor: {str(extractorPath / pyFile)}')

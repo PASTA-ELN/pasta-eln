@@ -48,7 +48,8 @@ def createDefaultConfiguration(pathPasta:Optional[Path]=None) -> dict[str,Any]:
           'research': {
               'local': {'database': 'research', 'path': str(pathPasta)},
               'remote': {},
-          }}, 'version': 3}
+          }},
+      'version': 3}
   try:
     conf['userID']      = os.getlogin()
   except Exception:   #github action
