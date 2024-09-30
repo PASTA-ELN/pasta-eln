@@ -251,6 +251,8 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
   if callbackPercent is not None:
     callbackPercent(19)
   logging.info('Finished copy files')
+  print(dataDirName, 'DEBUG')
+  os.system(f'tree {dataDirName}')
   backend.scanProject(progressBar, projID1)
   logging.info('Finished scan tree')
   if callbackPercent is not None:
