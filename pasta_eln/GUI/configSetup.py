@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QMessageBox, QPro
 from ..guiStyle import TextButton, widgetAndLayout
 from ..installationTools import configuration, exampleData, createShortcut
 from ..fixedStringsJson import setupText, exampleDataString
-from ..miscTools import restart
+from ..miscTools import restart, updateExtractorList
 from ..guiCommunicate import Communicate
 # from ..dataverse.database_api import DatabaseAPI
 
@@ -80,6 +80,7 @@ class ConfigurationSetup(QWidget):
             self.text1.setMarkdown(self.mainText)
           else:
             configuration('repair', dirName)
+            updateExtractorList()
         else:
           self.mainText = self.mainText.replace('- Configuration of preferences','- Configuration: user chose to NOT install' )
           self.text1.setMarkdown(self.mainText)

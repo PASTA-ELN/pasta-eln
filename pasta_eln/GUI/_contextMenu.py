@@ -18,12 +18,11 @@ def initContextMenu(widget:QWidget, pos:QPoint) -> None:
   """
   context = QMenu(widget)
   # for extractors
-  #TODO Bug when initatiated
   extractors = widget.comm.backend.configuration['extractors']                                               # type: ignore[attr-defined]
   extension = Path(widget.doc['branch'][0]['path']).suffix[1:]                                              # type: ignore[attr-defined]
   if extension.lower() in extractors:
     extractors = extractors[extension.lower()]
-    baseDocType= widget.doc['-type'][0]                                                                      # type: ignore[attr-defined]
+    baseDocType= widget.doc['type'][0]                                                                      # type: ignore[attr-defined]
     choices= {key:value for key,value in extractors.items() if key.startswith(baseDocType)}
     for key,value in choices.items():
       Action(value,                     widget, [CommandMenu.CHANGE_EXTRACTOR, key], context)

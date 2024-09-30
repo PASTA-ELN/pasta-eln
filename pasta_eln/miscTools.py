@@ -125,7 +125,7 @@ def blob_hash(stream:BufferedReader, size:int) -> str:
   return hasher.hexdigest()
 
 
-def updateExtractorList(directory:Path) -> dict[str, Any]:
+def updateExtractorList(directory:Path|None=None) -> dict[str, Any]:
   """
   Rules:
   - each data-type in its own try-except
@@ -138,8 +138,12 @@ def updateExtractorList(directory:Path) -> dict[str, Any]:
     directory (str): relative directory to scan
 
   Returns:
-    bool: success
+    dict: dict with all extractors
   """
+  if directory is None:
+    with open(Path.home()/CONF_FILE_NAME,'r', encoding='utf-8') as f:
+      configuration = json.load(f)
+      directory = Path(configuration["extractorDir"])
   verboseDebug = False
   extractorsAll = {}
   for fileName in os.listdir(directory):
