@@ -439,7 +439,7 @@ class Backend(CLI_Mixin):
         print(pyFile, absFilePath)
         module  = importlib.import_module(pyFile[:-3])
         content = module.use(absFilePath, {'main':'/'.join(doc['type'])} )
-        for key in [i for i in content if i not in ['metaVendor','metaUser','image','style']]:  #only allow accepted keys
+        for key in [i for i in content if i not in ['metaVendor','metaUser','image','content','links','style']]:  #only allow accepted keys
           del content[key]
         doc |= content
         for meta in ['metaVendor','metaUser']:

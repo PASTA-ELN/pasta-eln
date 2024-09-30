@@ -177,7 +177,7 @@ class SqlLiteDB:
     cursor.execute(f"SELECT * FROM main WHERE id == '{docID}'")
     res = cursor.fetchone()
     if res is None:
-      print(f'**ERROR sqlite: could not get docID:{docID}')
+      print(f'**ERROR sqlite: could not get docID: {docID}')
       logging.error(f'could not get docID: {docID}')
       return {}
     doc = dict(res)

@@ -31,16 +31,14 @@ from .fixedStringsJson import CONF_FILE_NAME
 # Always use RO-crate names
 # GENERAL TERMS IN ro-crate-metadata.json (None implies definitely should not be saved)
 pasta2json:dict[str,Any] = {
-  '_id'         : 'identifier',
-  '_rev'        : None,
-  '_attachments': None,
-  '-attachment' : None,
-  '-branch'     : None,
-  '-client'     : None,
-  '-date'       : 'dateModified',
-  '-name'       : 'name',
-  '-tags'       : 'keywords',
-  '-type'       : 'genre',
+  'id'         : 'identifier',
+  'attachments': None,
+  'branch'     : None,
+  'client'     : None,
+  'date'       : 'dateModified',
+  'name'       : 'name',
+  'tags'       : 'keywords',
+  'type'       : 'genre',
   'image'       : None,
   'comment'     : 'description',
   'content'     : 'text',
@@ -230,13 +228,13 @@ def importELN(backend:Backend, elnFileName:str) -> str:
           with source, target:  #extract one file to its target directly
             shutil.copyfileobj(source, target)
       # ALL ELNS
-      if '-tags' not in doc:
-        doc['-tags'] = []
+      if 'tags' not in doc:
+        doc['tags'] = []
       else:
-        doc['-tags'] = [i.strip() for i in doc['-tags'].split(',')]
+        doc['tags'] = [i.strip() for i in doc['tags'].split(',')]
       # PASTA_ELN
       if elnName == 'PASTA ELN':
-        doc['-user'] = '_'
+        doc['user'] = '_'
         if fullPath is not None:
           fullPath.mkdir(exist_ok=True)
           with open(fullPath/'.id_pastaELN.json', 'w', encoding='utf-8') as fOut:
@@ -276,13 +274,13 @@ def importELN(backend:Backend, elnFileName:str) -> str:
           docType = '-'
         if docType=='x0':
           backend.hierStack = []
-        if '_id' in doc:
-          doc['externalID'] = doc.pop('_id')
+        if 'id' in doc:
+          doc['externalID'] = doc.pop('id')
         print(f'Want to add doc:{doc} with type:{docType} and cwd:{backend.cwd}')
         docID = backend.addData(docType, doc)['id']
         if docID[0]=='x':
           backend.hierStack += [docID]
-          backend.cwd        = backend.basePath/ backend.db.getDoc(docID)['-branch'][0]['path']
+          backend.cwd        = backend.basePath/ backend.db.getDoc(docID)['branch'][0]['path']
 
       # children, aka recursive part
       logging.info('subparts: %s',', '.join(['  '+i['@id'] for i in children]))
@@ -335,12 +333,12 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
       doc (dict): document to separate into main and supplemental information
       dirNameProject (str): name of the project directory
     """
-    path =  f"{doc['-branch'][0]['path']}/" if doc['-type'][0][0]=='x' else doc['-branch'][0]['path']
+    path =  f"{doc['branch'][0]['path']}/" if doc['type'][0][0]=='x' else doc['branch'][0]['path']
     docMain:dict[str,Any] = {}
     docSupp:dict[str,Any] = {}
     filesNotInData = None
     if path is None:
-      path = dirNameProject+'/'+doc['_id']
+      path = dirNameProject+'/'+doc['id']
     elif not path.startswith(dirNameProject) and not path.startswith('http'):
       filesNotInData = path  # files elsewhere, standardOperatingProcedures
     if not path.startswith('http'):
@@ -353,8 +351,8 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
       else:
         docSupp[key] = value
     # clean individual entries of docSupp: remove personal data
-    for k in ['-user', '-client', 'image', '_attachments']:
-      if 'image' in docSupp:
+    for k in ['user', 'client', 'image']:
+      if k in docSupp:
         del docSupp[k]
     # clean individual entries of docMain
     if 'keywords' in docMain:
@@ -450,7 +448,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
     dirNameProjects = []
     for projectID in projectIDs:       #for each project
       docProject = backend.db.getDoc(projectID)
-      dirNameProject = docProject['-branch'][0]['path']
+      dirNameProject = docProject['branch'][0]['path']
       dirNameProjects.append(dirNameProject)
 
 
@@ -486,13 +484,6 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
             'slogan': 'The favorite ELN for experimental scientists',
             'url': 'https://github.com/PASTA-ELN/', 'description': f'Version {__version__}'}}
     graphMaster.append(masterNodeInfo)
-    zipContent = json.dumps(backend.db.getDoc('-dataHierarchy-'))
-    dataHierarchyInfo = {'@id':  f'./{dirNameGlobal}/data_hierarchy.json', '@type': 'File',
-        'name':  'data structure', 'description': 'data structure / schema of the stored data',
-        'contentSize':str(len(zipContent)), 'sha256':hashlib.sha256(zipContent.encode()).hexdigest(),
-        'datePublished': datetime.now().isoformat()}
-    graphMisc.append(dataHierarchyInfo)
-    elnFile.writestr(f'{dirNameGlobal}/data_hierarchy.json', zipContent)
     authors = backend.configuration['authors']
     masterParts = [{'@id': f'./{dirNameGlobal}/{i}/'} for i in dirNameProjects] + [{'@id': f'./{dirNameGlobal}/data_hierarchy.json'}]
     masterNodeRoot = {'@id': './', '@type': 'Dataset', 'hasPart': masterParts,
@@ -508,9 +499,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
 
     #finalize file
     index['@graph'] = graphMaster+graph+graphMisc
-    elnFile.writestr(f'{dirNameGlobal}/ro-crate-metadata.json', json.dumps(index))
-    # if verbose:
-    #   print(json.dumps(index, indent=3))
+    elnFile.writestr(f'{dirNameGlobal}/ro-crate-metadata.json', json.dumps(index, indent=2))
 
     #sign file
     if 'signingKeyPair' not in backend.configuration:  #create a key-pair of secret and public key and save it locally
