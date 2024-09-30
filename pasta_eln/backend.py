@@ -204,7 +204,6 @@ class Backend(CLI_Mixin):
           if shasum == '':
             shasum = generic_hash(path, forceFile=True)
           view = self.db.getView('viewIdentify/viewSHAsum',shasum)
-          print('path',path)
           if len(view)==0 or forceNewImage:  #measurement not in database: create doc
             self.useExtractors(path,shasum,doc)  #create image/content
             # All files should appear in database
@@ -377,7 +376,6 @@ class Backend(CLI_Mixin):
           if not shasum:
             raise NameError(f'Filepath does not exist {self.basePath/path}')
           view = self.db.getView('viewIdentify/viewSHAsum',shasum)
-          print(path)
           if len(view)==0:                             #not in database: create doc
             self.addData('', {'name':path}, hierStack)
           else:
@@ -417,7 +415,6 @@ class Backend(CLI_Mixin):
         shasum (string): shasum (git-style hash) to store in database (not used here)
         doc (dict): pass known data/measurement type, can be used to create image; This doc is altered
     """
-    print(filePath, 'STEFFEN')
     extension = filePath.suffix[1:]  #cut off initial . of .jpg
     if str(filePath).startswith('http'):
       absFilePath = Path(tempfile.gettempdir())/filePath.name
@@ -433,7 +430,6 @@ class Backend(CLI_Mixin):
       absFilePath = self.basePath/filePath
     pyFile = f'extractor_{extension.lower()}.py'
     pyPath = self.addOnPath/pyFile
-    print('HHHHH ',pyPath, pyPath.is_file())
     if pyPath.is_file():
       # import module and use to get data
       os.environ['QT_API'] = 'pyside2'
@@ -442,7 +438,6 @@ class Backend(CLI_Mixin):
       try:
         print(pyFile, absFilePath)
         module  = importlib.import_module(pyFile[:-3])
-        print('TRy ',pyFile, absFilePath)
         content = module.use(absFilePath, {'main':'/'.join(doc['type'])} )
         for key in [i for i in content if i not in ['metaVendor','metaUser','image','content','links','style']]:  #only allow accepted keys
           del content[key]
