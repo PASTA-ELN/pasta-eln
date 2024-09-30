@@ -362,6 +362,7 @@ class Backend(CLI_Mixin):
         rerunScanTree = True
       # handle files
       for fileName in files:
+        print(fileName)
         filesCount += 1
         progressBar.setValue(int(100*filesCount/filesCountSum))
         if fileName.startswith(('.', 'trash_')) or '_PastaExport' in fileName:  #ignore files
