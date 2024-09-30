@@ -313,9 +313,10 @@ class Project(QWidget):
       print("**ERROR project menu unknown:",command)
     return
 
-  def callbackFileName(self):
+  def callbackFileName(self) -> str:
+    """ callback function to return a filename after asking the user for a file name to export to """
     res = QFileDialog.getSaveFileName(self,'Use this file for output', str(Path.home()))
-    return None if res is None else res[0]
+    return '' if res is None else res[0]
 
 
   def modelChanged(self, item:QStandardItem) -> None:
