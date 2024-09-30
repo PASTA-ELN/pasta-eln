@@ -61,7 +61,7 @@ defaultConfiguration: dict[str, Any] = {
   "version": 0,
   "tableColumnsMax": 16,
   "qrPrinter": {},
-  "extractorDir": "$(Path(__file__).parent/'Extractors').as_posix()$",
+  "addOnDir": "$(Path(__file__).parent/'Extractors').as_posix()$",
   "extractors": {},
   "authors": [{"first": "", "last": "", "title": "", "email": "", "orcid": "",
                "organizations": [{"organization": "", "rorid": ""}]}],
