@@ -20,7 +20,7 @@ def initContextMenu(widget:QWidget, pos:QPoint) -> None:
   # for extractors
   #TODO Bug when initatiated
   extractors = widget.comm.backend.configuration['extractors']                                               # type: ignore[attr-defined]
-  extension = Path(widget.doc['-branch'][0]['path']).suffix[1:]                                              # type: ignore[attr-defined]
+  extension = Path(widget.doc['branch'][0]['path']).suffix[1:]                                              # type: ignore[attr-defined]
   if extension.lower() in extractors:
     extractors = extractors[extension.lower()]
     baseDocType= widget.doc['-type'][0]                                                                      # type: ignore[attr-defined]
@@ -47,7 +47,7 @@ def executeContextMenu(widget:QWidget, command:list[Any]) -> bool:
   Returns:
     bool: success
   """
-  filePath = Path(widget.doc['-branch'][0]['path'])                                                          # type: ignore[attr-defined]
+  filePath = Path(widget.doc['branch'][0]['path'])                                                          # type: ignore[attr-defined]
   if command[0] is CommandMenu.OPEN_FILEBROWSER or command[0] is CommandMenu.OPEN_EXTERNAL:
     filePath = widget.comm.backend.basePath/filePath                                                         # type: ignore[attr-defined]
     filePath = filePath if command[0] is CommandMenu.OPEN_EXTERNAL else filePath.parent
