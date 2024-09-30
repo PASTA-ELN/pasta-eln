@@ -362,7 +362,6 @@ class Backend(CLI_Mixin):
         rerunScanTree = True
       # handle files
       for fileName in files:
-        print(fileName)
         filesCount += 1
         progressBar.setValue(int(100*filesCount/filesCountSum))
         if fileName.startswith(('.', 'trash_')) or '_PastaExport' in fileName:  #ignore files
@@ -377,6 +376,7 @@ class Backend(CLI_Mixin):
           if not shasum:
             raise NameError(f'Filepath does not exist {self.basePath/path}')
           view = self.db.getView('viewIdentify/viewSHAsum',shasum)
+          print(path)
           if len(view)==0:                             #not in database: create doc
             self.addData('', {'name':path}, hierStack)
           else:
@@ -439,6 +439,7 @@ class Backend(CLI_Mixin):
       try:
         print(pyFile, absFilePath)
         module  = importlib.import_module(pyFile[:-3])
+        print('TRy ',pyFile, absFilePath)
         content = module.use(absFilePath, {'main':'/'.join(doc['type'])} )
         for key in [i for i in content if i not in ['metaVendor','metaUser','image','content','links','style']]:  #only allow accepted keys
           del content[key]
