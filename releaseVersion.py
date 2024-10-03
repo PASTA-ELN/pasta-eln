@@ -111,8 +111,7 @@ def newVersion(level=2):
   print('======== Version '+version+' =======')
   #update python files
   filesToUpdate = {'pasta_eln/__init__.py':'__version__ = ',
-                   'docs/source/conf.py':'version = ',
-                   'pasta_eln/AddOns/project_html_report.py':'pastaVersion = '}
+                   'docs/source/conf.py':'version = '}
   for path in filesToUpdate:
     with open(path, encoding='utf-8') as fIn:
       fileOld = fIn.readlines()
