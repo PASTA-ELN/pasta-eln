@@ -110,7 +110,9 @@ def newVersion(level=2):
   version = version if not reply or len(reply.split('.'))<2 else reply
   print('======== Version '+version+' =======')
   #update python files
-  filesToUpdate = {'pasta_eln/__init__.py':'__version__ = ', 'docs/source/conf.py':'version = '}
+  filesToUpdate = {'pasta_eln/__init__.py':'__version__ = ',
+                   'docs/source/conf.py':'version = ',
+                   'pasta_eln/AddOns/project_html_report.py':'pastaVersion = '}
   for path in filesToUpdate:
     with open(path, encoding='utf-8') as fIn:
       fileOld = fIn.readlines()

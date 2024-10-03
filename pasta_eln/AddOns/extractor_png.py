@@ -17,7 +17,7 @@ This tutorial teaches
 - how to create images and scale them down to save space in the meta-data-base
 - since this is a tutorial, it might not make scientific sense. The goal is teaching!
 """
-import base64, logging
+import base64
 from io import BytesIO
 import numpy as np
 from PIL import Image, ImageFilter

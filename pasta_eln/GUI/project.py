@@ -3,9 +3,9 @@ import logging, importlib
 from enum import Enum
 from pathlib import Path
 from typing import Optional, Any
-from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget, QMenu, QMessageBox, QTextEdit, QScrollArea, QFileDialog # pylint: disable=no-name-in-module
-from PySide6.QtGui import QStandardItemModel, QStandardItem, QAction                                                # pylint: disable=no-name-in-module
-from PySide6.QtCore import Slot, Qt, QItemSelectionModel, QModelIndex                                               # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget, QMenu, QMessageBox, QTextEdit, QScrollArea # pylint: disable=no-name-in-module
+from PySide6.QtGui import QStandardItemModel, QStandardItem, QAction                                   # pylint: disable=no-name-in-module
+from PySide6.QtCore import Slot, Qt, QItemSelectionModel, QModelIndex                                  # pylint: disable=no-name-in-module
 from anytree import PreOrderIter, Node
 from .projectTreeView import TreeView
 from ..guiStyle import TextButton, Action, Label, showMessage, widgetAndLayout, addDocDetails
@@ -85,9 +85,9 @@ class Project(QWidget):
     Action('table of unidentified',     self, [Command.SHOW_TABLE, '-'],     moreMenu, icon='fa5.file')
     moreMenu.addSeparator()
     if projectAddOns := self.comm.backend.configuration.get('projectAddOns',''):
-      moreMenu.addSeparator()
       for label, description in projectAddOns.items():
         Action(description, self, [Command.ADD_ON, label], moreMenu)
+      moreMenu.addSeparator()
     Action('Delete project',            self, [Command.DELETE], moreMenu)
     more.setMenu(moreMenu)
 
@@ -308,15 +308,10 @@ class Project(QWidget):
       self.comm.changeTable.emit(command[1], self.projID)
     elif command[0] is Command.ADD_ON:
       module      = importlib.import_module(command[1])
-      module.main(self.comm.backend, self.projID, self.callbackFileName)
+      module.main(self.comm.backend, self.projID, self)
     else:
       print("**ERROR project menu unknown:",command)
     return
-
-  def callbackFileName(self) -> str:
-    """ callback function to return a filename after asking the user for a file name to export to """
-    res = QFileDialog.getSaveFileName(self,'Use this file for output', str(Path.home()))
-    return '' if res is None else res[0]
 
 
   def modelChanged(self, item:QStandardItem) -> None:
