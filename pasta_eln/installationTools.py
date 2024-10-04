@@ -248,6 +248,7 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
   outputString(outputFormat,'h2','TEST MEASUREMENTS AND SCANNING')
   shutil.copy(Path(__file__).parent/'Resources'/'ExampleMeasurements'/'simple.png', dataDirName)
   shutil.copy(Path(__file__).parent/'Resources'/'ExampleMeasurements'/'simple.csv', dataDirName)
+  shutil.copy(Path(__file__).parent/'Resources'/'ExampleMeasurements'/'story.odt',  dataDirName)
   if callbackPercent is not None:
     callbackPercent(19)
   logging.info('Finished copy files')

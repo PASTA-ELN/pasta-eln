@@ -36,7 +36,7 @@ class TestStringMethods(unittest.TestCase):
     projID = self.be.output('x0').split('|')[-1].strip()
     tempDir = tempfile.gettempdir()
     fileName = f'{tempDir}/temp.eln'
-    allDocTypes = self.be.db.dataHierarchy('','')
+    allDocTypes = self.be.db.dataHierarchy('','')+['-']
     print(f'Filename {fileName}: docTypes: {", ".join(allDocTypes)}')
     exportELN(self.be, [projID], fileName, allDocTypes)
 
@@ -44,6 +44,23 @@ class TestStringMethods(unittest.TestCase):
     with ZipFile(fileName, 'r') as zObject:
       zObject.extractall(path=tempDir)
     os.system(f'tree {tempDir}/temp')
+    print("""
+Data on disk:
+├── pastaELN.db
+├── PastasExampleProject
+│   ├── 000_ThisIsAnExampleTask
+│   ├── 001_ThisIsAnotherExampleTask
+│   │   ├── 000_ThisIsAnExampleSubtask
+│   │   ├── 001_ThisIsAnotherExampleSubtask
+│   │   └── simple.png
+│   └── 002_DataFiles
+│       ├── simple.csv
+│       ├── simple.png
+│       └── story.odt
+└── StandardOperatingProcedures
+    └── Example_SOP.md
+""")
+
     try:
       os.system(f'code {tempDir}/temp/ro-crate-metadata.json')
     except Exception:
