@@ -400,7 +400,10 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
         elnFile.write(str(fullPath), f'{dirNameGlobal}/{path}')
         docELN['@type'] = 'File'
       elif path is not None and fullPath.exists() and fullPath.is_dir():
-        elnFile.mkdir(f'{dirNameGlobal}/{path}')
+        try:
+          elnFile.mkdir(f'{dirNameGlobal}/{path}')
+        except Exception:
+          logging.warning('Cannot create directory in zipfile: likely python <3.11')
         docELN['@type'] = 'Dataset'
       elif path.startswith('http'):
         response = requests.get(path.replace(':/','://'), timeout=10)
