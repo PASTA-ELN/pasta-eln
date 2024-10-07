@@ -416,7 +416,10 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
       elif '@type' not in docELN:  #samples will be here
         docELN['@type'] = 'Dataset'
         docELN['@id'] = docELN['@id'] if docELN['@id'].endswith('/') else f"{docELN['@id']}/"
-        elnFile.mkdir(docELN['@id'][:-1])
+        try:
+          elnFile.mkdir(docELN['@id'][:-1])
+        except Exception:
+          pass
       graph.append(docELN)
       return docELN['@id']
 
