@@ -9,3 +9,4 @@ pasta_eln/test.py
 pasta*.py
 .coverage
 profile.out
+venvPASTA/
