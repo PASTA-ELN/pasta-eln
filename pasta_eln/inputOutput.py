@@ -449,11 +449,11 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
       # first do affiliations, then use them
       affiliationNodes = []
       for affiliation in author['organizations']:
-        affiliationId    = f'affiliation_{affiliation['organization']}'
+        affiliationId    = f"affiliation_{affiliation['organization']}"
         if affiliationId not in graphMaster:
           graphMaster.append({'@id':affiliationId, '@type':'organization', 'name':affiliation['organization'], 'RODID':affiliation['rorid']})
           affiliationNodes.append({'@id':affiliationId})
-      authorID = f'author_{author['first']}_{author['last']}'
+      authorID = f"author_{author['first']}_{author['last']}"
       graphMaster.append({'@id':authorID, '@type':'author', 'firstName': author['first'], 'surname': author['last'],
                           'title': author['title'], 'emailAddress': author['email'], 'identifier': f"https://orcid.org/{author['orcid']}",
                           'affiliation': affiliationNodes})
