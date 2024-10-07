@@ -10,12 +10,16 @@ from pasta_eln import __version__, minisign
 from .backend import Backend
 from .miscTools import flatten
 from .fixedStringsJson import CONF_FILE_NAME
-# Import: ask user to import in existing project, new project or as project(s)
-# Schema: add as file into main folder: the schema can test this files properties, since the file is json
+# .eln file: common between all ELNs
+# - can be exported / imported generally; not a 1:1 backup (just zip it)
+# - should be able to recreate the exported -> imported data (using the common addDoc)
+# - externalID is the only content that cannot be recreated
+#   - not sure how important this information is: different groups have different externalIDs
+#   - if every it becomes important: just add json (that maps identifier to externalID) as additional file
 
 # GENERAL TERMS IN ro-crate-metadata.json (None: this entry is not saved and will be recreated upon import)
 pasta2json:dict[str,Any] = {
-  'id'          : None,
+  'id'          : 'identifier',
   'branch'      : None,
   'client'      : None,
   'dateModified': 'dateModified',
@@ -330,7 +334,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
       """
       # create node properties
       docDB = backend.db.getDoc(node.id)
-      docELN= {}
+      docELN= {"encodingFormat": "text/markdown",}
       docSupp = {}
       for key, value in docDB.items():
         if key in pasta2json:
@@ -338,7 +342,6 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
             docELN[pasta2json[key]] = value
         else:
           docSupp[key] = value
-      docELN['identifier'] = f'{docDB["id"]}&{docDB["externalId"]}'
       # clean individual entries of docELN
       if 'keywords' in docELN:
         docELN['keywords'] = ','.join(docELN['keywords'])
@@ -396,17 +399,21 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
         # copy data-files
         elnFile.write(str(fullPath), f'{dirNameGlobal}/{path}')
         docELN['@type'] = 'File'
+      elif path is not None and fullPath.exists() and fullPath.is_dir():
+        elnFile.mkdir(f'{dirNameGlobal}/{path}')
+        docELN['@type'] = 'Dataset'
       elif path.startswith('http'):
         response = requests.get(path.replace(':/','://'), timeout=10)
         if response.ok:
           docELN['contentSize'] = str(response.headers['content-length'])
           docELN['sha256']      = hashlib.sha256(response.content).hexdigest()
         else:
-          print(f'Info: could not get file {path}')
+          print(f"Info: could not get file {path.replace(':/','://')}")
         docELN['@type'] = 'File'
       elif '@type' not in docELN:  #samples will be here
         docELN['@type'] = 'Dataset'
         docELN['@id'] = docELN['@id'] if docELN['@id'].endswith('/') else f"{docELN['@id']}/"
+        elnFile.mkdir(docELN['@id'][:-1])
       graph.append(docELN)
       return docELN['@id']
 
@@ -442,13 +449,13 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
       # first do affiliations, then use them
       affiliationNodes = []
       for affiliation in author['organizations']:
-        affiliationId    = f'affiliation:{affiliation['organization']}'
+        affiliationId    = f'affiliation_{affiliation['organization']}'
         if affiliationId not in graphMaster:
           graphMaster.append({'@id':affiliationId, '@type':'organization', 'name':affiliation['organization'], 'RODID':affiliation['rorid']})
           affiliationNodes.append({'@id':affiliationId})
-      authorID = f'author:{author['first']}_{author['last']}'
+      authorID = f'author_{author['first']}_{author['last']}'
       graphMaster.append({'@id':authorID, '@type':'author', 'firstName': author['first'], 'surname': author['last'],
-                          'title': author['title'], 'emailAddress': author['email'], 'ORCID': author['orcid'],
+                          'title': author['title'], 'emailAddress': author['email'], 'identifier': f"https://orcid.org/{author['orcid']}",
                           'affiliation': affiliationNodes})
       authorNodes.append({'@id':authorID})
     masterNodeRoot = {'@id': './', '@type': 'Dataset', 'hasPart': masterParts,

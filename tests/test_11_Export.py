@@ -35,7 +35,7 @@ class TestStringMethods(unittest.TestCase):
     self.be = Backend('research')
     projID = self.be.output('x0').split('|')[-1].strip()
     tempDir = tempfile.gettempdir()
-    fileName = f'{tempDir}/temp.eln'
+    fileName = f'{tempDir}/PASTA.eln'
     allDocTypes = self.be.db.dataHierarchy('','')+['-']
     print(f'Filename {fileName}: docTypes: {", ".join(allDocTypes)}')
     exportELN(self.be, [projID], fileName, allDocTypes)
@@ -43,7 +43,7 @@ class TestStringMethods(unittest.TestCase):
     # test file
     with ZipFile(fileName, 'r') as zObject:
       zObject.extractall(path=tempDir)
-    os.system(f'tree {tempDir}/temp')
+    os.system(f'tree {tempDir}/PASTA')
     print("""
 Data on disk:
 ├── pastaELN.db
@@ -62,7 +62,7 @@ Data on disk:
 """)
 
     try:
-      os.system(f'code {tempDir}/temp/ro-crate-metadata.json')
+      os.system(f'code {tempDir}/PASTA/ro-crate-metadata.json')
     except Exception:
       pass
     return

@@ -28,7 +28,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements-linux.txt
-        pip install coverage pytest pytest-qt pytest-qt-app pytest-mock coverage
+        pip install coverage pytest pytest-qt pytest-qt-app pytest-mock coverage typing-extensions
     - name: Check installation
       run: |
         coverage run -m pasta_eln.installationTools
