@@ -402,11 +402,13 @@ def addDocDetails(widget:QWidget, layout:QLayout, key:str, value:Any, dataHierar
     labelL.addWidget(text, stretch=1)
   else:
     dataHierarchyItems = [dict(i) for i in dataHierarchyNode if i['name']==key]
+    docID = ""
     if len(dataHierarchyItems)==1 and 'list' in dataHierarchyItems[0] and dataHierarchyItems[0]['list'] and \
         not isinstance(dataHierarchyItems[0]['list'], list):                #choice among docType
       table  = widget.comm.backend.db.getView('viewDocType/'+dataHierarchyItems[0]['list'])
       names= list(table[table.id==value[0]]['name'])
       if len(names)==1:    # default find one item that we link to
+        docID = value[0]
         value = '\u260D '+names[0]
         link = True
       elif not names:      # likely empty link because the value was not yet defined: just print to show
@@ -425,7 +427,7 @@ def addDocDetails(widget:QWidget, layout:QLayout, key:str, value:Any, dataHierar
       value = dict2ul({k:v[0] for k,v in value.items()})
       labelStr = f'{CSS_STYLE}{key.capitalize()}: {value}'
     if layout is not None:
-      label = Label(labelStr, function=lambda x,y: clickLink(widget,x,y) if link else None, docID=value)
+      label = Label(labelStr, function=lambda x,y: clickLink(widget,x,y) if link else None, docID=docID)
       label.setOpenExternalLinks(True)
       label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse | Qt.TextInteractionFlag.LinksAccessibleByMouse)
       layout.addWidget(label)
