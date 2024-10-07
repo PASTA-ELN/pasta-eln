@@ -46,7 +46,7 @@ def main(backend, projID, widget, parameter={}):
         if node.depth<4 and node.docType[0][0]=='x':
             output += f'<h{node.depth+1}>{node.name}</h{node.depth+1}>'
         else:
-            output += f'{node.name}&nbsp;&nbsp;{'/'.join(node.docType)}<br>\n'
+            output += f"{node.name}&nbsp;&nbsp;{'/'.join(node.docType)}<br>\n"
         if node.docType[0]=='x0':
             output += f"<b>Objective: {doc.get('',{}).get('objective',[''])[0]}</b>"
         # create a two column table: left side: tags and comments; right side: image, content
