@@ -1,6 +1,6 @@
 """Input and output functions towards the .eln file-format"""
-import os, json, shutil, logging, hashlib, copy, uuid
-from typing import Any, Optional
+import json, shutil, logging, hashlib, copy, uuid
+from typing import Any
 from pathlib import Path
 from datetime import datetime
 from zipfile import ZipFile, ZIP_DEFLATED
@@ -152,7 +152,7 @@ def importELN(backend:Backend, elnFileName:str) -> str:
     elnVersion = rocrateNode['version'] if 'version' in rocrateNode else ''
     logging.info('Import %s %s', elnName, elnVersion)
     if elnName!='PASTA ELN' and elnName in specialTerms:
-        json2pasta.update(specialTerms[elnName])
+      json2pasta.update(specialTerms[elnName])
     logging.info('ELN and translator: %s %s', elnName, str(json2pasta))
     mainNode    = [i for i in graph if i["@id"]=="./"][0]
 
@@ -215,10 +215,10 @@ def importELN(backend:Backend, elnFileName:str) -> str:
       else:
         fullPath = backend.basePath/backend.cwd/elnID.split('/')[-1]
       if fullPath is not None and f'{dirName}/{elnID}' in elnFile.namelist():  #could be directory, nothing to copy then
-          target = open(fullPath, "wb")
-          source = elnFile.open(f'{dirName}/{elnID}')
-          with source, target:  #extract one file to its target directly
-            shutil.copyfileobj(source, target)
+        target = open(fullPath, "wb")
+        source = elnFile.open(f'{dirName}/{elnID}')
+        with source, target:  #extract one file to its target directly
+          shutil.copyfileobj(source, target)
       # ALL ELNS
       if 'tags' not in doc:
         doc['tags'] = []
@@ -337,7 +337,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
       """
       # create node properties
       docDB = backend.db.getDoc(node.id)
-      docELN= {"encodingFormat": "text/markdown",}
+      docELN:dict[str,Any] = {"encodingFormat": "text/markdown"}
       docSupp = {}
       for key, value in docDB.items():
         if key in pasta2json:
