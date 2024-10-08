@@ -10,6 +10,10 @@ from pasta_eln import __version__, minisign
 from .backend import Backend
 from .miscTools import flatten
 from .fixedStringsJson import CONF_FILE_NAME
+
+# TODO
+# - folder should not start with PASTA
+
 # .eln file: common between all ELNs
 # - can be exported / imported generally; not a 1:1 backup (just zip it)
 # - should be able to recreate the exported -> imported data (using the common addDoc)
@@ -102,10 +106,10 @@ def tree(graph:dict[Any,Any]) -> str:
   # main tree-function
   #   find information from master node
   ro_crate_node = [i for i in graph if i["@id"] == METADATA_FILE][0]
-  output = '- '+METADATA_FILE+'\n'
+  output = f'- {METADATA_FILE}' + '\n'
   if 'sdPublisher' in ro_crate_node:
     name = ro_crate_node['sdPublisher'].get('name','---')
-    output += '    - publisher: ' + name  + '\n'
+    output += f'    - publisher: {name}' + '\n'
   if 'version' in ro_crate_node:
     output += '    - version: ' + ro_crate_node['version'] + '\n'
   main_node = [i for i in graph if i["@id"] == "./"][0]
@@ -127,6 +131,7 @@ def importELN(backend:Backend, elnFileName:str) -> str:
   Returns:
     str: success message
   '''
+  print("Import: ask user to import in existing project, new project or as project(s)")
   elnName = ''
   elnVersion = ''
   projID, projPWD= '', Path('')
@@ -146,8 +151,7 @@ def importELN(backend:Backend, elnFileName:str) -> str:
         elnName     = rocrateNode['sdPublisher'].get('@id', '')
     elnVersion = rocrateNode['version'] if 'version' in rocrateNode else ''
     logging.info('Import %s %s', elnName, elnVersion)
-    if elnName!='PASTA ELN':
-      if elnName in specialTerms:
+    if elnName!='PASTA ELN' and elnName in specialTerms:
         json2pasta.update(specialTerms[elnName])
     logging.info('ELN and translator: %s %s', elnName, str(json2pasta))
     mainNode    = [i for i in graph if i["@id"]=="./"][0]
@@ -210,8 +214,7 @@ def importELN(backend:Backend, elnFileName:str) -> str:
         fullPath = backend.basePath/( '/'.join(elnID.split('/')[1:]) )
       else:
         fullPath = backend.basePath/backend.cwd/elnID.split('/')[-1]
-      if fullPath is not None:
-        if f'{dirName}/{elnID}' in elnFile.namelist():  #could be directory, nothing to copy then
+      if fullPath is not None and f'{dirName}/{elnID}' in elnFile.namelist():  #could be directory, nothing to copy then
           target = open(fullPath, "wb")
           source = elnFile.open(f'{dirName}/{elnID}')
           with source, target:  #extract one file to its target directly
@@ -385,10 +388,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
       path =  f"{branch['path']}/" if docDB['type'][0][0]=='x' else branch['path']
       if path is None:
         path = f"{dirNameProject}/{docDB['id']}"
-      if not path.startswith('http'):
-        docELN['@id'] = f'./{dirNameGlobal}/{path}'
-      else:
-        docELN['@id'] = path
+      docELN['@id'] = path if path.startswith('http') else f'./{path}'
       # include content size, etc.
       fullPath = backend.basePath/path
       if path is not None and fullPath.exists() and fullPath.is_file():
@@ -400,10 +400,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
         elnFile.write(str(fullPath), f'{dirNameGlobal}/{path}')
         docELN['@type'] = 'File'
       elif path is not None and fullPath.exists() and fullPath.is_dir():
-        try:
-          elnFile.mkdir(f'{dirNameGlobal}/{path}')
-        except Exception:
-          logging.warning('Cannot create directory in zipfile: likely python <3.11')
+        # elnFile.mkdir(docELN['@id'][:-1]) #NOT REQUIRED for standard and does not work in python 3.10
         docELN['@type'] = 'Dataset'
       elif path.startswith('http'):
         response = requests.get(path.replace(':/','://'), timeout=10)
@@ -416,10 +413,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
       elif '@type' not in docELN:  #samples will be here
         docELN['@type'] = 'Dataset'
         docELN['@id'] = docELN['@id'] if docELN['@id'].endswith('/') else f"{docELN['@id']}/"
-        try:
-          elnFile.mkdir(docELN['@id'][:-1])
-        except Exception:
-          pass
+        # elnFile.mkdir(docELN['@id'][:-1]) #NOT REQUIRED for standard and does not work in python 3.10
       graph.append(docELN)
       return docELN['@id']
 
@@ -449,7 +443,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
             'url': 'https://github.com/PASTA-ELN/', 'description': f'Version {__version__}'
     }
     graphMaster.append(masterNodeInfo2)
-    masterParts = [{'@id': f'./{dirNameGlobal}/{i}/'} for i in dirNameProjects]
+    masterParts = [{'@id': f'./{i}/'} for i in dirNameProjects]
     authorNodes = []
     for author in backend.configuration['authors']:
       # first do affiliations, then use them
