@@ -490,17 +490,9 @@ def get_gui(database: Database) -> tuple[
   Returns:
 
   """
+  import sys
   instance = QApplication.instance()
   application = QApplication(sys.argv) if instance is None else instance
   data_hierarchy_form: DataHierarchyEditorDialog = DataHierarchyEditorDialog(database)
 
   return application, data_hierarchy_form.instance, data_hierarchy_form
-
-
-if __name__ == "__main__":
-  import sys
-
-  app = QtWidgets.QApplication(sys.argv)
-  ui = DataHierarchyEditorDialog(database={})
-  ui.instance.show()
-  sys.exit(app.exec())
