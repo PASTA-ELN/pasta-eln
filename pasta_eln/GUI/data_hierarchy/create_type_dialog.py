@@ -48,7 +48,7 @@ class CreateTypeDialog(TypeDialog):
     self.data_hierarchy_types: dict[str, Any] = {}
     self.instance.setWindowTitle("Create new type")
 
-  def accepted_callback(self):
+  def accepted_callback(self) -> None:
     """
     Handles the acceptance of a new data type by validating input and updating the data hierarchy.
 
@@ -87,7 +87,7 @@ class CreateTypeDialog(TypeDialog):
      """
     self.rejected_callback_parent()
 
-  def set_data_hierarchy_types(self, data_hierarchy_types: dict[str, Any]):
+  def set_data_hierarchy_types(self, data_hierarchy_types: dict[str, Any]) -> None:
     """
     Sets the data hierarchy types for the instance.
 

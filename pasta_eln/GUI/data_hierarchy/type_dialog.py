@@ -93,7 +93,7 @@ class TypeDialog(Ui_TypeDialogBase):
     self.iconComboBox.completer().setCompletionMode(QtWidgets.QCompleter.CompletionMode.PopupCompletion)
     self.set_iri_lookup_action("")
 
-  def accepted_callback(self):
+  def accepted_callback(self) -> None:
     """
     Callback function to be executed when the dialog is accepted.
 
@@ -103,7 +103,7 @@ class TypeDialog(Ui_TypeDialogBase):
     """
     return
 
-  def rejected_callback(self):
+  def rejected_callback(self) -> None:
     """
     Callback function to be executed when the dialog is rejected.
 
@@ -113,7 +113,7 @@ class TypeDialog(Ui_TypeDialogBase):
     """
     return
 
-  def setup_slots(self):
+  def setup_slots(self) -> None:
     """
     Connects UI elements to their respective callback functions.
 

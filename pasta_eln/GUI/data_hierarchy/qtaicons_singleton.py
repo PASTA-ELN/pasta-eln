@@ -8,6 +8,7 @@
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import logging
+from typing import Any
 
 import qtawesome as qta
 
@@ -25,9 +26,9 @@ class SingletonMeta(type):
   Returns:
       The single instance of the class.
   """
-  _instances = {}
+  _instances: Any = {}
 
-  def __call__(cls, *args, **kwargs):
+  def __call__(cls, *args: Any, **kwargs: Any) -> Any:
     """
     Creates or retrieves the singleton instance of the class.
 
@@ -36,8 +37,8 @@ class SingletonMeta(type):
         It checks if an instance already exists; if not, it creates a new instance and stores it for future requests.
 
     Args:
-        *args: Variable length argument list for the class constructor.
-        **kwargs: Arbitrary keyword arguments for the class constructor.
+        *args (Any): Variable length argument list for the class constructor.
+        **kwargs (Any): Arbitrary keyword arguments for the class constructor.
 
     Returns:
         The single instance of the class.
