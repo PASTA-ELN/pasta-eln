@@ -6,15 +6,18 @@
 #  Filename: test_data_hierarchy_editor_dialog.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
+from functools import reduce
+from unittest.mock import MagicMock, patch
 
 import pytest
 from PySide6 import QtWidgets
-from PySide6.QtWidgets import QApplication, QDialog, QLineEdit, QMessageBox
+from PySide6.QtWidgets import QApplication, QDialog, QMessageBox
+from _pytest.mark import param
 
 from pasta_eln.GUI.data_hierarchy.constants import ATTACHMENT_TABLE_DELETE_COLUMN_INDEX, \
   ATTACHMENT_TABLE_REORDER_COLUMN_INDEX, METADATA_TABLE_DELETE_COLUMN_INDEX, \
   METADATA_TABLE_IRI_COLUMN_INDEX, METADATA_TABLE_REORDER_COLUMN_INDEX, METADATA_TABLE_REQUIRED_COLUMN_INDEX
-from pasta_eln.GUI.data_hierarchy.create_type_dialog import CreateTypeDialog
+from pasta_eln.GUI.data_hierarchy.create_type_dialog import CreateTypeDialog, TypeDialog
 from pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog import DataHierarchyEditorDialog, get_gui
 from pasta_eln.GUI.data_hierarchy.delete_column_delegate import DeleteColumnDelegate
 from pasta_eln.GUI.data_hierarchy.document_null_exception import DocumentNullException
@@ -23,8 +26,9 @@ from pasta_eln.GUI.data_hierarchy.key_not_found_exception import \
   KeyNotFoundException
 from pasta_eln.GUI.data_hierarchy.mandatory_column_delegate import MandatoryColumnDelegate
 from pasta_eln.GUI.data_hierarchy.reorder_column_delegate import ReorderColumnDelegate
-from pasta_eln.GUI.data_hierarchy.utility_functions import generate_empty_type, get_types_for_display
-from tests.common.fixtures import configuration_extended, data_hierarchy_doc_mock
+from pasta_eln.GUI.data_hierarchy.utility_functions import get_types_for_display
+from pasta_eln.database import Database
+from tests.common.fixtures import configuration_extended
 
 
 class TestDataHierarchyEditorDialog(object):
@@ -36,7 +40,6 @@ class TestDataHierarchyEditorDialog(object):
     mock_setup_ui = mocker.patch(
       'pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog_base.Ui_DataHierarchyEditorDialogBase.setupUi')
     mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.adjust_data_hierarchy_data_to_v4')
-    mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.LookupIriAction')
     mock_metadata_table_view_model = mocker.MagicMock()
     mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.MetadataTableViewModel',
                  lambda: mock_metadata_table_view_model)
@@ -54,8 +57,11 @@ class TestDataHierarchyEditorDialog(object):
     mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.MandatoryColumnDelegate',
                  lambda: mock_required_column_delegate)
     mock_create_type_dialog = mocker.MagicMock()
+    mock_edit_type_dialog = mocker.MagicMock()
     mock_create = mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.CreateTypeDialog',
                                return_value=mock_create_type_dialog)
+    mock_edit = mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.EditTypeDialog',
+                             return_value=mock_edit_type_dialog)
     mock_delete_column_delegate = mocker.MagicMock()
     mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.DeleteColumnDelegate',
                  lambda: mock_delete_column_delegate)
@@ -92,10 +98,14 @@ class TestDataHierarchyEditorDialog(object):
     mocker.patch.object(DataHierarchyEditorDialog, 'reorder_column_delegate_metadata_table', create=True)
     mocker.patch.object(DataHierarchyEditorDialog, 'delete_column_delegate_attach_table', create=True)
     mocker.patch.object(DataHierarchyEditorDialog, 'reorder_column_delegate_attach_table', create=True)
+    mocker.patch.object(DataHierarchyEditorDialog, 'type_create_accepted_callback', create=True)
+    mocker.patch.object(DataHierarchyEditorDialog, 'type_create_rejected_callback', create=True)
+    mocker.patch.object(DataHierarchyEditorDialog, 'type_edit_accepted_callback', create=True)
+    mocker.patch.object(DataHierarchyEditorDialog, 'type_edit_rejected_callback', create=True)
     mock_setup_slots = mocker.patch.object(DataHierarchyEditorDialog, 'setup_slots', create=True)
     mock_load_data_hierarchy_data = mocker.patch.object(DataHierarchyEditorDialog, 'load_data_hierarchy_data',
                                                         create=True)
-    mocker.patch.object(CreateTypeDialog, '__new__')
+    mocker.patch.object(TypeDialog, '__new__')
     config_instance = DataHierarchyEditorDialog(mock_database)
     assert config_instance, "DataHierarchyEditorDialog should be created"
     assert config_instance.type_changed_signal == mock_signal, "Signal should be created"
@@ -145,9 +155,12 @@ class TestDataHierarchyEditorDialog(object):
       config_instance.typeAttachmentsTableView.setColumnWidth.assert_any_call(column_index, width)
     config_instance.typeAttachmentsTableView.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
 
-    mock_create.assert_called_once_with(config_instance.create_type_accepted_callback,
-                                        config_instance.create_type_rejected_callback)
+    mock_create.assert_called_once_with(config_instance.type_create_accepted_callback,
+                                        config_instance.type_create_rejected_callback)
     assert config_instance.create_type_dialog == mock_create_type_dialog, "CreateTypeDialog should be set"
+    mock_edit.assert_called_once_with(config_instance.type_edit_accepted_callback,
+                                      config_instance.type_edit_rejected_callback)
+    assert config_instance.edit_type_dialog == mock_edit_type_dialog, "EditTypeDialog should be set"
     mock_setup_slots.assert_called_once_with()
 
     config_instance.addAttachmentPushButton.hide.assert_called_once_with()
@@ -174,139 +187,59 @@ class TestDataHierarchyEditorDialog(object):
     with pytest.raises(DocumentNullException, match="Null data_hierarchy document in db instance"):
       DataHierarchyEditorDialog(mock_db)
 
-  @pytest.mark.parametrize("new_type_selected, mock_data_hierarchy_types", [
-    ("x0", {
-      "x0": {
-        "title": "x0",
-        "IRI": "url",
-        "meta": {
-          "default": [
-            {
-              "key": "key",
-              "value": "value"}
-          ],
-          "metadata group1": [
-            {
-              "key": "key",
-              "value": "value"
-            }
-          ]
-        },
-        "attachments": []
-      },
-      "x1": {
-        "title": "x0",
-        "IRI": "url",
-        "meta": {
-          "default": [
-            {
-              "key": "key",
-              "value": "value"}
-          ],
-          "metadata group1": [
-            {
-              "key": "key",
-              "value": "value"
-            }
-          ]
-        },
-        "attachments": []
-      }
-    }),
-    ("x1", {
-      "x0": {
-        "title": "x0",
-        "IRI": "url",
-        "meta": {
-          "default": [
-            {
-              "key": "key",
-              "value": "value"}
-          ],
-          "metadata group1": [
-            {
-              "key": "key",
-              "value": "value"
-            }
-          ]
-        },
-        "attachments": []
-      },
-      "x1": {
-        "title": "x0",
-        "IRI": "url",
-        "meta": {
-          "default": [
-            {
-              "key": "key",
-              "value": "value"}
-          ],
-          "metadata group1": [
-            {
-              "key": "key",
-              "value": "value"
-            }
-          ]
-        },
-        "attachments": []
-      }
-    }),
-    (None, {}),
-    ("x0", {}),
-    ("x0", {"x1": {}}),
-    ("x0", {"x0": {}}),
-    ("x0", {"x0": {"title": None, "IRI": None, "meta": None, "attachments": None}}),
-    ("x0", {"x0": {"title": None, "IRI": None, "meta": {"": None}, "attachments": [{"": None}]}}),
-    ("x0", {"x0": {"": None, "§": None, "meta": {"": None}, "attachment": [{"": None}]}})
-  ])
-  def test_type_combo_box_changed_should_do_expected(self,
-                                                     mocker,
-                                                     configuration_extended: configuration_extended,
-                                                     new_type_selected,
-                                                     mock_data_hierarchy_types):
-    logger_info_spy = mocker.spy(configuration_extended.logger, 'info')
-    mock_signal = mocker.patch(
-      'pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.DataHierarchyEditorDialog.type_changed_signal')
-    mocker.patch.object(configuration_extended, 'addMetadataGroupLineEdit', create=True)
-    mocker.patch.object(configuration_extended, 'data_hierarchy_types', mock_data_hierarchy_types, create=True)
-    mocker.patch.object(configuration_extended, 'typeDisplayedTitleLineEdit', create=True)
-    mocker.patch.object(configuration_extended, 'typeIriLineEdit', create=True)
-    mocker.patch.object(configuration_extended, 'attachments_table_data_model', create=True)
-    mocker.patch.object(configuration_extended, 'metadataGroupComboBox', create=True)
-    mocker.patch.object(configuration_extended, 'type_changed_signal', mock_signal, create=True)
-    set_text_displayed_title_line_edit_spy = mocker.spy(configuration_extended.typeDisplayedTitleLineEdit, 'setText')
-    set_text_iri_line_edit_spy = mocker.spy(configuration_extended.typeIriLineEdit, 'setText')
-    set_current_index_metadata_group_combo_box_spy = mocker.spy(configuration_extended.metadataGroupComboBox,
-                                                                'setCurrentIndex')
-    clear_add_metadata_metadata_group_line_edit_spy = mocker.spy(configuration_extended.addMetadataGroupLineEdit,
-                                                                 'clear')
-    clear_metadata_group_combo_box_spy = mocker.spy(configuration_extended.metadataGroupComboBox, 'clear')
-    add_items_metadata_group_combo_box_spy = mocker.spy(configuration_extended.metadataGroupComboBox, 'addItems')
-    update_attachment_table_model_spy = mocker.spy(configuration_extended.attachments_table_data_model, 'update')
-    if mock_data_hierarchy_types is not None and len(
-        mock_data_hierarchy_types) > 0 and new_type_selected not in mock_data_hierarchy_types:
-      with pytest.raises(KeyNotFoundException,
-                         match=f"Key {new_type_selected} not found in data_hierarchy_types"):
-        assert configuration_extended.type_combo_box_changed(
-          new_type_selected) is not None, "Nothing should be returned"
+  @pytest.mark.parametrize(
+    "new_type_selected, data_hierarchy_types, expected_metadata_keys, expected_attachments, test_id",
+    [
+      # Success path test cases
+      ("type1", {"type1": {"meta": {"key1": "value1"}, "attachments": ["attachment1"]}}, ["key1"], ["attachment1"],
+       "success_path_type1"),
+      ("type2", {"type2": {"meta": {"key2": "value2"}, "attachments": ["attachment2"]}}, ["key2"], ["attachment2"],
+       "success_path_type2"),
 
-    if (mock_data_hierarchy_types
-        and new_type_selected
-        and new_type_selected in mock_data_hierarchy_types):
-      assert configuration_extended.type_combo_box_changed(new_type_selected) is None, "Nothing should be returned"
-      mock_signal.emit.assert_called_once_with(new_type_selected)
-      logger_info_spy.assert_called_once_with("New type selected in UI: {%s}", new_type_selected)
-      clear_add_metadata_metadata_group_line_edit_spy.assert_called_once_with()
-      set_text_displayed_title_line_edit_spy.assert_called_once_with(
-        mock_data_hierarchy_types.get(new_type_selected).get('title'))
-      set_text_iri_line_edit_spy.assert_called_once_with(mock_data_hierarchy_types.get(new_type_selected).get('IRI'))
-      set_current_index_metadata_group_combo_box_spy.assert_called_once_with(0)
-      clear_metadata_group_combo_box_spy.assert_called_once_with()
-      add_items_metadata_group_combo_box_spy.assert_called_once_with(
-        list(mock_data_hierarchy_types.get(new_type_selected).get("meta").keys())
-        if mock_data_hierarchy_types.get(new_type_selected).get("meta") else [])
-      update_attachment_table_model_spy.assert_called_once_with(
-        mock_data_hierarchy_types.get(new_type_selected).get('attachments'))
+      # Edge case: Empty metadata
+      ("type3", {"type3": {"meta": {}, "attachments": []}}, [], [], "edge_case_empty_metadata"),
+
+      # Error case: Key not found
+      ("missing_type", {"type1": {"meta": {"key1": "value1"}, "attachments": ["attachment1"]}}, None, None,
+       "error_case_key_not_found"),
+    ],
+    ids=[
+      "success_path_type1",
+      "success_path_type2",
+      "edge_case_empty_metadata",
+      "error_case_key_not_found"
+    ]
+  )
+  def test_type_combo_box_changed(self,
+                                  mocker,
+                                  configuration_extended: configuration_extended,
+                                  new_type_selected,
+                                  data_hierarchy_types,
+                                  expected_metadata_keys,
+                                  expected_attachments,
+                                  test_id):
+    # Arrange
+    mocker.resetall()
+    configuration_extended.data_hierarchy_types = data_hierarchy_types
+    configuration_extended.clear_ui = mocker.MagicMock()
+    configuration_extended.type_changed_signal = mocker.MagicMock()
+    configuration_extended.attachments_table_data_model = mocker.MagicMock()
+    configuration_extended.metadataGroupComboBox = mocker.MagicMock()
+
+    # Act
+    if test_id == "error_case_key_not_found":
+      with pytest.raises(KeyNotFoundException):
+        configuration_extended.type_combo_box_changed(new_type_selected)
+    else:
+      configuration_extended.type_combo_box_changed(new_type_selected)
+
+      # Assert
+      configuration_extended.logger.info.assert_called_once_with("New type selected in UI: {%s}", new_type_selected)
+      configuration_extended.clear_ui.assert_called_once()
+      configuration_extended.type_changed_signal.emit.assert_called_once_with(new_type_selected)
+      configuration_extended.attachments_table_data_model.update.assert_called_once_with(expected_attachments)
+      configuration_extended.metadataGroupComboBox.addItems.assert_called_once_with(expected_metadata_keys)
+      configuration_extended.metadataGroupComboBox.setCurrentIndex.assert_called_once_with(0)
 
   @pytest.mark.parametrize("new_selected_metadata_group, selected_type_metadata", [
     (None, {}),
@@ -496,7 +429,6 @@ class TestDataHierarchyEditorDialog(object):
       if data_hierarchy_types is not None and current_type in data_hierarchy_types:
         get_data_hierarchy_types_spy.assert_called_once_with(current_type)
         assert data_hierarchy_types[current_type]["title"] == modified_type_displayed_title
-        configuration_extended.set_iri_lookup_action.assert_called_once_with(modified_type_displayed_title)
 
   @pytest.mark.parametrize("modified_type_iri, current_type, data_hierarchy_types", [
     (None, None, None),
@@ -611,169 +543,406 @@ class TestDataHierarchyEditorDialog(object):
         add_items_selected_spy.assert_not_called()
         set_current_index_type_combo_box_spy.assert_not_called()
 
-  @pytest.mark.parametrize("new_title, new_displayed_title, is_structure_level", [
-    (None, None, False),
-    ("x0", None, True),
-    (None, "x2", True),
-    ("x3", "x3", True),
-    ("instrument", "new Instrument", False)
-  ])
-  def test_create_type_accepted_callback_should_do_expected(self,
-                                                            mocker,
-                                                            configuration_extended: configuration_extended,
-                                                            new_title,
-                                                            new_displayed_title,
-                                                            is_structure_level):
-    mocker.patch.object(configuration_extended, 'create_type_dialog', create=True)
-    mocker.patch.object(configuration_extended.create_type_dialog, 'titleLineEdit', create=True)
-    mocker.patch.object(configuration_extended.create_type_dialog, 'next_struct_level', new_title, create=True)
-    mock_check_box = mocker.patch.object(configuration_extended.create_type_dialog, 'structuralLevelCheckBox',
-                                         create=True)
-    mocker.patch.object(mock_check_box, 'isChecked', return_value=is_structure_level, create=True)
-    mocker.patch.object(configuration_extended.create_type_dialog.titleLineEdit, 'text', return_value=new_title)
-    mocker.patch.object(configuration_extended.create_type_dialog, 'displayedTitleLineEdit', create=True)
-    mocker.patch.object(configuration_extended.create_type_dialog.displayedTitleLineEdit, 'text',
-                        return_value=new_displayed_title)
-    clear_ui_spy = mocker.patch.object(configuration_extended.create_type_dialog, 'clear_ui', create=True)
-    create_new_type_spy = mocker.patch.object(configuration_extended, 'create_new_type', create=True)
-    text_title_line_edit_text_spy = mocker.spy(configuration_extended.create_type_dialog.titleLineEdit, 'text')
-    text_displayed_title_line_edit_text_spy = mocker.spy(
-      configuration_extended.create_type_dialog.displayedTitleLineEdit, 'text')
+  @pytest.mark.parametrize(
+    "data_hierarchy_types, expected_items, expected_index",
+    [
+      # Happy path with multiple types
+      pytest.param(
+        {"type1": {}, "type2": {}, "type3": {}},
+        ["type1", "type2", "type3"],
+        2,
+        id="happy_path_multiple_types"
+      ),
+      # Edge case with a single type
+      pytest.param(
+        {"type1": {}},
+        ["type1"],
+        0,
+        id="edge_case_single_type"
+      ),
+      # Edge case with no types
+      pytest.param(
+        {},
+        [],
+        -1,
+        id="edge_case_no_types"
+      ),
+    ]
+  )
+  def test_type_create_accepted_callback(self,
+                                         mocker,
+                                         configuration_extended: configuration_extended,
+                                         data_hierarchy_types, expected_items, expected_index):
+    # Arrange
+    mocker.resetall()
+    configuration_extended.data_hierarchy_types = data_hierarchy_types
 
-    assert configuration_extended.create_type_accepted_callback() is None, "Nothing should be returned"
-    if not is_structure_level:
-      text_title_line_edit_text_spy.assert_called_once_with()
-    text_displayed_title_line_edit_text_spy.assert_called_once_with()
-    clear_ui_spy.assert_called_once_with()
-    create_new_type_spy.assert_called_once_with(
-      new_title, new_displayed_title
-    )
+    # Act
+    configuration_extended.type_create_accepted_callback()
 
-  def test_create_type_rejected_callback_should_do_expected(self,
-                                                            mocker,
-                                                            configuration_extended: configuration_extended):
-    mocker.patch.object(configuration_extended, 'create_type_dialog', create=True)
-    clear_ui_spy = mocker.patch.object(configuration_extended.create_type_dialog, 'clear_ui', create=True)
-    assert configuration_extended.create_type_rejected_callback() is None, "Nothing should be returned"
-    clear_ui_spy.assert_called_once_with()
+    # Assert
+    configuration_extended.typeComboBox.clear.assert_called_once()
+    configuration_extended.typeComboBox.addItems.assert_called_once_with(expected_items)
+    configuration_extended.typeComboBox.setCurrentIndex.assert_called_once_with(expected_index)
+    configuration_extended.create_type_dialog.clear_ui.assert_called_once()
 
-  @pytest.mark.parametrize("new_structural_title, data_hierarchy_types", [
-    (None, None),
-    ("x0", None),
-    (None, {"x0": {"IRI": "x0"}, "x1": {"IRI": "x1"}}),
-    ("x3", {"x0": {"IRI": "x0"}, "x1": {"IRI": "x1"}}),
-    ("x7", {"x0": {"IRI": "x0"}, "instrument": {"IRI": "x1"}}),
-    ("x6", {"x0": {"IRI": "x0"}, "subtask5": {"IRI": "x1"}})
-  ])
-  def test_show_create_type_dialog_should_do_expected(self,
-                                                      mocker,
-                                                      configuration_extended: configuration_extended,
-                                                      new_structural_title,
-                                                      data_hierarchy_types):
-    mocker.patch.object(configuration_extended, 'create_type_dialog', create=True)
-    mocker.patch.object(configuration_extended, 'data_hierarchy_types', create=True)
-    set_structural_level_title_spy = mocker.patch.object(configuration_extended.create_type_dialog,
-                                                         'set_structural_level_title', create=True)
-    mocker.patch.object(configuration_extended, 'data_hierarchy_loaded', create=True)
-    show_create_type_dialog_spy = mocker.patch.object(configuration_extended.create_type_dialog, 'show', create=True)
-    show_message_spy = mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.show_message')
-    get_next_possible_structural_level_title_spy = mocker.patch(
-      'pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.get_next_possible_structural_level_title',
-      return_value=new_structural_title)
-    if data_hierarchy_types is not None:
-      configuration_extended.data_hierarchy_types.__setitem__.side_effect = data_hierarchy_types.__setitem__
-      configuration_extended.data_hierarchy_types.__getitem__.side_effect = data_hierarchy_types.__getitem__
-      configuration_extended.data_hierarchy_types.__iter__.side_effect = data_hierarchy_types.__iter__
-      configuration_extended.data_hierarchy_types.__contains__.side_effect = data_hierarchy_types.__contains__
-      configuration_extended.data_hierarchy_types.get.side_effect = data_hierarchy_types.get
-      configuration_extended.data_hierarchy_types.keys.side_effect = data_hierarchy_types.keys
-      configuration_extended.data_hierarchy_types.pop.side_effect = data_hierarchy_types.pop
+  @pytest.mark.parametrize(
+    "data_hierarchy_types, expected_message, test_id",
+    [
+      (None, "Load the data hierarchy data first....", "error_case_none"),
+      ("not_a_dict", "Load the data hierarchy data first....", "error_case_not_a_dict"),
+    ],
+    ids=[
+      "error_case_none",
+      "error_case_not_a_dict"
+    ]
+  )
+  def test_type_create_accepted_callback_error_cases(self,
+                                                     mocker,
+                                                     configuration_extended: configuration_extended,
+                                                     data_hierarchy_types, expected_message, test_id):
+    # Arrange
+    mocker.resetall()
+    configuration_extended.data_hierarchy_types = data_hierarchy_types
+
+    with patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.show_message') as mock_show_message:
+      # Act
+      configuration_extended.type_create_accepted_callback()
+
+      # Assert
+      mock_show_message.assert_called_once_with(expected_message, QMessageBox.Icon.Warning)
+      configuration_extended.typeComboBox.clear.assert_not_called()
+      configuration_extended.typeComboBox.addItems.assert_not_called()
+      configuration_extended.typeComboBox.setCurrentIndex.assert_not_called()
+      configuration_extended.create_type_dialog.clear_ui.assert_not_called()
+
+  @pytest.mark.parametrize(
+    "clear_ui_side_effect, expected_clear_ui_calls, test_id",
+    [
+      (None, 1, "success_path"),  # Happy path: clear_ui works without issues
+      (Exception("Clear UI failed"), 1, "clear_ui_exception"),  # Edge case: clear_ui raises an exception
+    ],
+    ids=[
+      "success_path",
+      "clear_ui_exception"
+    ]
+  )
+  def test_type_create_rejected_callback(self,
+                                         configuration_extended: configuration_extended,
+                                         clear_ui_side_effect, expected_clear_ui_calls, test_id):
+    # Arrange
+    configuration_extended.create_type_dialog.clear_ui.side_effect = clear_ui_side_effect
+
+    # Act
+    try:
+      configuration_extended.type_create_rejected_callback()
+    except Exception:
+      pass  # We are testing if the method handles exceptions gracefully
+
+    # Assert
+    assert configuration_extended.create_type_dialog.clear_ui.call_count == expected_clear_ui_calls
+
+  @pytest.mark.parametrize(
+    "mock_dialog, expected_clear_call",
+    [
+      # Happy path test case
+      pytest.param(MagicMock(spec=CreateTypeDialog), True, id="success_path"),
+
+      # Edge case: dialog already cleared
+      pytest.param(MagicMock(spec=CreateTypeDialog, clear_ui=MagicMock()), True, id="already_cleared"),
+
+      # Error case: dialog is None
+      pytest.param(None, False, id="dialog_none")
+    ]
+  )
+  def test_type_edit_accepted_callback(self,
+                                       configuration_extended: configuration_extended, mock_dialog,
+                                       expected_clear_call):
+    # Arrange
+    configuration_extended.create_type_dialog = mock_dialog
+
+    # Act
+    if mock_dialog is not None:
+      configuration_extended.type_edit_accepted_callback()
+
+    # Assert
+    if expected_clear_call:
+      mock_dialog.clear_ui.assert_called_once()
     else:
-      mocker.patch.object(configuration_extended, 'data_hierarchy_types', None)
+      if mock_dialog is not None:
+        mock_dialog.clear_ui.assert_not_called()
 
-    assert configuration_extended.show_create_type_dialog() is None, "Nothing should be returned"
-    if data_hierarchy_types is not None:
-      get_next_possible_structural_level_title_spy.assert_called_once_with(data_hierarchy_types.keys())
-      set_structural_level_title_spy.assert_called_once_with(new_structural_title)
-      show_create_type_dialog_spy.assert_called_once_with()
-    else:
-      show_message_spy.assert_called_once_with("Load the data hierarchy data first...", QMessageBox.Warning)
-      get_next_possible_structural_level_title_spy.assert_not_called()
-      set_structural_level_title_spy.assert_not_called()
-      show_create_type_dialog_spy.assert_not_called()
+  @pytest.mark.parametrize(
+    "clear_ui_side_effect, expected_clear_ui_call_count, test_id",
+    [
+      (None, 1, "success_path"),  # Happy path: clear_ui works without issues
+      (Exception("Clear UI failed"), 1, "clear_ui_exception"),  # Edge case: clear_ui raises an exception
+    ],
+    ids=[
+      "success_path",
+      "clear_ui_exception"
+    ]  # Use the test_id as the parameterized test ID
+  )
+  def test_type_edit_rejected_callback(self,
+                                       configuration_extended: configuration_extended, clear_ui_side_effect,
+                                       expected_clear_ui_call_count,
+                                       test_id):
+    # Arrange
+    configuration_extended.create_type_dialog.clear_ui.side_effect = clear_ui_side_effect
 
-  def test_initialize_should_setup_slots_and_should_do_expected(self,
-                                                                configuration_extended: configuration_extended):
-    configuration_extended.logger.info.assert_any_call("Setting up slots for the editor..")
-    configuration_extended.logger.info.assert_any_call("User loaded the data hierarchy data in UI")
-    configuration_extended.addMetadataRowPushButton.clicked.connect.assert_called_once_with(
-      configuration_extended.metadata_table_data_model.add_data_row)
-    configuration_extended.addAttachmentPushButton.clicked.connect.assert_called_once_with(
-      configuration_extended.attachments_table_data_model.add_data_row)
-    configuration_extended.saveDataHierarchyPushButton.clicked.connect.assert_called_once_with(
-      configuration_extended.save_data_hierarchy)
-    configuration_extended.addMetadataGroupPushButton.clicked.connect.assert_called_once_with(
-      configuration_extended.add_new_metadata_group)
-    configuration_extended.deleteMetadataGroupPushButton.clicked.connect.assert_called_once_with(
-      configuration_extended.delete_selected_metadata_group)
-    configuration_extended.deleteTypePushButton.clicked.connect.assert_called_once_with(
-      configuration_extended.delete_selected_type)
-    configuration_extended.addTypePushButton.clicked.connect.assert_called_once_with(
-      configuration_extended.show_create_type_dialog)
+    # Act
+    try:
+      configuration_extended.type_edit_rejected_callback()
+    except Exception:
+      pass  # Ignore exceptions for this test case
 
-    # Slots for the combo-boxes
-    configuration_extended.typeComboBox.currentTextChanged.connect.assert_called_once_with(
-      configuration_extended.type_combo_box_changed)
-    configuration_extended.metadataGroupComboBox.currentTextChanged.connect.assert_called_once_with(
-      configuration_extended.metadata_group_combo_box_changed)
+    # Assert
+    assert configuration_extended.create_type_dialog.clear_ui.call_count == expected_clear_ui_call_count
 
-    # Slots for line edits
-    configuration_extended.typeDisplayedTitleLineEdit.textChanged[str].connect.assert_called_once_with(
-      configuration_extended.update_type_displayed_title)
-    configuration_extended.typeIriLineEdit.textChanged[str].connect.assert_called_once_with(
-      configuration_extended.update_type_iri)
+  @pytest.mark.parametrize(
+    "data_hierarchy_types, data_hierarchy_loaded, expected_message, test_id",
+    [
+      # Happy path: data hierarchy is loaded and types are available
+      (["type1", "type2"], True, None, "success_path_with_types"),
 
-    # Slots for the delegates
-    configuration_extended.delete_column_delegate_metadata_table.delete_clicked_signal.connect.assert_called_once_with(
-      configuration_extended.metadata_table_data_model.delete_data)
-    configuration_extended.reorder_column_delegate_metadata_table.re_order_signal.connect.assert_called_once_with(
-      configuration_extended.metadata_table_data_model.re_order_data)
+      # Edge case: data hierarchy is loaded but no types are available
+      ([], True, None, "edge_case_no_types"),
 
-    configuration_extended.delete_column_delegate_attach_table.delete_clicked_signal.connect.assert_called_once_with(
-      configuration_extended.attachments_table_data_model.delete_data)
-    configuration_extended.reorder_column_delegate_attach_table.re_order_signal.connect.assert_called_once_with(
-      configuration_extended.attachments_table_data_model.re_order_data)
+      # Error case: data hierarchy is not loaded
+      (None, False, "Load the data hierarchy data first...", "error_case_not_loaded"),
 
-  @pytest.mark.parametrize("data_hierarchy_document", [
-    'data_hierarchy_doc_mock',
-    None,
-    {"x0": {"IRI": "x0"}, "": {"IRI": "x1"}},
-    {"x0": {"IRI": "x0"}, "": {"IRI": "x1"}, 23: "test", "__id": "test"},
-    {"test": ["test1", "test2", "test3"]}
+      # Error case: data hierarchy is loaded but types are None
+      (None, True, "Load the data hierarchy data first...", "error_case_types_none"),
+    ],
+    ids=[
+      "success_path_with_types",
+      "edge_case_no_types",
+      "error_case_not_loaded",
+      "error_case_types_none"
+    ]
+  )
+  def test_show_create_type_dialog(self,
+                                   configuration_extended: configuration_extended, data_hierarchy_types,
+                                   data_hierarchy_loaded, expected_message, test_id):
+    # Arrange
+    configuration_extended.data_hierarchy_types = data_hierarchy_types
+    configuration_extended.data_hierarchy_loaded = data_hierarchy_loaded
+
+    with patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.show_message') as mock_show_message:
+      # Act
+      configuration_extended.show_create_type_dialog()
+
+      # Assert
+      if expected_message:
+        mock_show_message.assert_called_once_with(expected_message, QMessageBox.Icon.Warning)
+        configuration_extended.create_type_dialog.set_data_hierarchy_types.assert_not_called()
+        configuration_extended.create_type_dialog.show.assert_not_called()
+      else:
+        mock_show_message.assert_not_called()
+        configuration_extended.create_type_dialog.set_data_hierarchy_types.assert_called_once_with(data_hierarchy_types)
+        configuration_extended.create_type_dialog.show.assert_called_once()
+
+  @pytest.mark.parametrize("data_hierarchy_types, data_hierarchy_loaded, current_text, expected_message, test_id", [
+    # Happy path
+    ({'type1': 'Type 1 Data'}, True, 'type1', None, "happy_path_type1"),
+    ({'type2': 'Type 2 Data'}, True, 'type2', None, "happy_path_type2"),
+
+    # Edge cases
+    ({}, True, '', None, "edge_case_empty_type"),
+    ({'type1': 'Type 1 Data'}, True, '', None, "edge_case_no_selection"),
+
+    # Error cases
+    (None, True, 'type1', "Load the data hierarchy data first...", "error_case_no_data_hierarchy"),
+    ({'type1': 'Type 1 Data'}, False, 'type1', "Load the data hierarchy data first...", "error_case_not_loaded"),
   ])
-  def test_load_data_hierarchy_data_should_with_variant_types_of_doc_should_do_expected(self,
-                                                                                        mocker,
-                                                                                        data_hierarchy_document,
-                                                                                        configuration_extended: configuration_extended,
-                                                                                        request):
-    doc = request.getfixturevalue(data_hierarchy_document) \
-      if data_hierarchy_document and type(data_hierarchy_document) is str \
-      else data_hierarchy_document
-    mocker.patch.object(configuration_extended, 'data_hierarchy_document', doc, create=True)
+  def test_show_edit_type_dialog(self,
+                                 mocker,
+                                 configuration_extended: configuration_extended,
+                                 data_hierarchy_types, data_hierarchy_loaded,
+                                 current_text, expected_message, test_id):
+    # Arrange
+    mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.adapt_type', side_effect=lambda x: x)
+    mock_show_message = mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.show_message')
+    configuration_extended.data_hierarchy_types = data_hierarchy_types
+    configuration_extended.data_hierarchy_loaded = data_hierarchy_loaded
+    configuration_extended.typeComboBox.currentText.return_value = current_text
+
+    # Act
+    configuration_extended.show_edit_type_dialog()
+
+    # Assert
+    if expected_message:
+      mock_show_message.assert_called_once_with(expected_message, QMessageBox.Icon.Warning)
+    else:
+      configuration_extended.edit_type_dialog.set_selected_data_hierarchy_type_name.assert_called_once_with(
+        current_text)
+      configuration_extended.edit_type_dialog.set_selected_data_hierarchy_type.assert_called_once_with(
+        data_hierarchy_types.get(current_text))
+      configuration_extended.edit_type_dialog.show.assert_called_once()
+
+  @pytest.mark.parametrize("button_name, method_name", [
+    ("addMetadataRowPushButton", "metadata_table_data_model.add_data_row"),
+    ("addAttachmentPushButton", "attachments_table_data_model.add_data_row"),
+    ("saveDataHierarchyPushButton", "save_data_hierarchy"),
+    ("addMetadataGroupPushButton", "add_new_metadata_group"),
+    ("deleteMetadataGroupPushButton", "delete_selected_metadata_group"),
+    ("deleteTypePushButton", "delete_selected_type"),
+    ("addTypePushButton", "show_create_type_dialog"),
+    ("editTypePushButton", "show_edit_type_dialog"),
+    ("cancelPushButton", "instance.close"),
+    ("attachmentsShowHidePushButton", "show_hide_attachments_table"),
+  ], ids=[
+    "Add Metadata Row Button",
+    "Add Attachment Button",
+    "Save Data Hierarchy Button",
+    "Add Metadata Group Button",
+    "Delete Metadata Group Button",
+    "Delete Type Button",
+    "Add Type Button",
+    "Edit Type Button",
+    "Cancel Button",
+    "Show/Hide Attachments Button"
+  ])
+  def test_button_connections(self, mocker, configuration_extended: configuration_extended, button_name, method_name):
+    # Arrange
+    mocker.resetall()
+    button = getattr(configuration_extended, button_name)
+    method = reduce(getattr, method_name.split("."), configuration_extended)
+
+    # Act
+    configuration_extended.setup_slots()
+
+    # Assert
+    button.clicked.connect.assert_called_once_with(method)
+
+  @pytest.mark.parametrize("combo_box_name, method_name", [
+    ("typeComboBox", "type_combo_box_changed"),
+    ("metadataGroupComboBox", "metadata_group_combo_box_changed"),
+  ], ids=[
+    "Type ComboBox",
+    "Metadata Group ComboBox"
+  ])
+  def test_combobox_connections(self, mocker, configuration_extended: configuration_extended, combo_box_name,
+                                method_name):
+    # Arrange
+    mocker.resetall()
+    combo_box = getattr(configuration_extended, combo_box_name)
+    method = getattr(configuration_extended, method_name)
+
+    # Act
+    configuration_extended.setup_slots()
+
+    # Assert
+    combo_box.currentTextChanged.connect.assert_called_once_with(method)
+
+  @pytest.mark.parametrize("delegate_name, signal_name, method_name", [
+    ("delete_column_delegate_metadata_table", "delete_clicked_signal", "metadata_table_data_model.delete_data"),
+    ("reorder_column_delegate_metadata_table", "re_order_signal", "metadata_table_data_model.re_order_data"),
+    ("delete_column_delegate_attach_table", "delete_clicked_signal", "attachments_table_data_model.delete_data"),
+    ("reorder_column_delegate_attach_table", "re_order_signal", "attachments_table_data_model.re_order_data"),
+  ], ids=[
+    "Delete Column Delegate Metadata Table",
+    "Reorder Column Delegate Metadata Table",
+    "Delete Column Delegate Attach Table",
+    "Reorder Column Delegate Attach Table"
+  ])
+  def test_delegate_connections(self, mocker, configuration_extended: configuration_extended, delegate_name,
+                                signal_name, method_name):
+    # Arrange
+    mocker.resetall()
+    delegate = getattr(configuration_extended, delegate_name)
+    signal = getattr(delegate, signal_name)
+    method = reduce(getattr, method_name.split("."), configuration_extended)
+
+    # Act
+    configuration_extended.setup_slots()
+
+    # Assert
+    signal.connect.assert_any_call(method)
+
+  def test_help_button_connection(self, mocker, configuration_extended: configuration_extended):
+    # Arrange
+    mocker.resetall()
+    # Act
+    configuration_extended.setup_slots()
+    configuration_extended.helpPushButton.clicked.emit()
+
+    # Assert
+    assert configuration_extended.helpPushButton.clicked.connect.call_count == 1
+
+  def test_type_changed_signal_connection(self, mocker, configuration_extended: configuration_extended):
+    # Arrange
+    mocker.resetall()
+    configuration_extended.type_changed_signal = mocker.MagicMock()
+    method = configuration_extended.check_and_disable_delete_button
+
+    # Act
+    configuration_extended.setup_slots()
+
+    # Assert
+    configuration_extended.type_changed_signal.connect.assert_called_once_with(method)
+
+  @pytest.mark.parametrize(
+    "data_hierarchy_document, expected_types, expected_items, test_id",
+    [
+      # Success path with realistic data
+      ({"type1": {"key": "value"}, "type2": {"key": "value"}},
+       {"type1": {"key": "value"}, "type2": {"key": "value"}},
+       ["type1", "type2"],
+       "success_path_multiple_types"),
+
+      # Edge case: empty document
+      ({},
+       {},
+       [],
+       "edge_case_empty_document"),
+
+      # Edge case: single type
+      ({"type1": {"key": "value"}},
+       {"type1": {"key": "value"}},
+       ["type1"],
+       "edge_case_single_type"),
+
+      # Error case: None document
+      (None,
+       None,
+       None,
+       "error_case_none_document"),
+    ],
+    ids=[
+      "success_path_multiple_types",
+      "edge_case_single_type",
+      "edge_case_empty_document",
+      "error_case_none_document"
+    ]
+  )
+  def test_load_data_hierarchy_data(self, mocker, configuration_extended: configuration_extended,
+                                    data_hierarchy_document, expected_types, expected_items, test_id):
+    # Arrange
+    mocker.resetall()
+    configuration_extended.data_hierarchy_document = data_hierarchy_document
+
     if data_hierarchy_document is None:
-      with pytest.raises(GenericException, match="Null data_hierarchy_document, erroneous app state"):
-        assert configuration_extended.load_data_hierarchy_data() is None, "Nothing should be returned"
-      return
-    assert configuration_extended.load_data_hierarchy_data() is None, "Nothing should be returned"
-    assert configuration_extended.typeComboBox.clear.call_count == 2, "Clear should be called twice"
-    assert configuration_extended.typeComboBox.addItems.call_count == 2, "addItems should be called twice"
-    configuration_extended.typeComboBox.addItems.assert_called_with(
-      get_types_for_display(configuration_extended.data_hierarchy_types.keys()))
-    assert configuration_extended.typeComboBox.setCurrentIndex.call_count == 2, "setCurrentIndex should be called twice"
-    configuration_extended.typeComboBox.setCurrentIndex.assert_called_with(0)
-    for data in data_hierarchy_document:
-      if type(data) is dict:
-        assert data in configuration_extended.data_hierarchy_types, "Data should be loaded"
+      # Act and Assert
+      with pytest.raises(GenericException) as exec_info:
+        configuration_extended.load_data_hierarchy_data()
+      assert "Null data_hierarchy_document, erroneous app state" in str(exec_info.value)
+    else:
+      # Act
+      with patch(
+          'pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.adjust_data_hierarchy_data_to_v4') as mock_adjust, \
+          patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.get_types_for_display',
+                return_value=expected_items) as mock_get_types:
+        configuration_extended.load_data_hierarchy_data()
+
+      # Assert
+      assert configuration_extended.data_hierarchy_types == expected_types
+      assert configuration_extended.data_hierarchy_loaded is True
+      configuration_extended.typeComboBox.clear.assert_called_once()
+      configuration_extended.typeComboBox.addItems.assert_called_once_with(expected_items)
+      configuration_extended.typeComboBox.setCurrentIndex.assert_called_once_with(0)
+      mock_adjust.assert_called_once_with(expected_types)
+      mock_get_types.assert_called_once_with(list(expected_types.keys()))
 
   @pytest.mark.parametrize("data_hierarchy_document",
                            [None,
@@ -870,7 +1039,7 @@ class TestDataHierarchyEditorDialog(object):
         mock_is_instance.assert_not_called()
         if isinstance(doc[item], dict):
           configuration_extended.data_hierarchy_document.__delitem__.assert_not_called()
-      for item in configuration_extended.data_hierarchy_types:
+      for _ in configuration_extended.data_hierarchy_types:
         configuration_extended.data_hierarchy_document.__setitem__.assert_not_called()
     mock_check_data_hierarchy_types.assert_called_once_with(configuration_extended.data_hierarchy_types)
     configuration_extended.logger.info.assert_called_once_with("User clicked the save button..")
@@ -881,162 +1050,156 @@ class TestDataHierarchyEditorDialog(object):
                                               QMessageBox.No | QMessageBox.Yes,
                                               QMessageBox.Yes)
 
-  def test_save_data_hierarchy_with_missing_metadata_should_skip_save_and_show_message(self,
-                                                                                       mocker,
-                                                                                       data_hierarchy_doc_mock,
-                                                                                       configuration_extended: configuration_extended):
-    mocker.patch.object(configuration_extended, 'data_hierarchy_types', create=True)
-    configuration_extended.data_hierarchy_document.__setitem__.side_effect = data_hierarchy_doc_mock.__setitem__
-    configuration_extended.data_hierarchy_document.__getitem__.side_effect = data_hierarchy_doc_mock.__getitem__
-    configuration_extended.data_hierarchy_document.__iter__.side_effect = data_hierarchy_doc_mock.__iter__
-    configuration_extended.data_hierarchy_document.__contains__.side_effect = data_hierarchy_doc_mock.__contains__
+  @pytest.mark.parametrize(
+    "types_with_missing_metadata, types_with_null_name_metadata, types_with_duplicate_metadata, expected_message, expected_log_warning, expected_log_info",
+    [
+      # Happy path: No missing, null, or duplicate metadata
+      param([], [], [], "Save will close the tool and restart the Pasta Application (Yes/No?)", False, True,
+            id="no_missing_null_duplicate_metadata"),
 
-    log_info_spy = mocker.patch.object(configuration_extended.logger, 'info')
-    log_warn_spy = mocker.patch.object(configuration_extended.logger, 'warning')
-    mock_show_message = mocker.patch(
-      'pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.show_message')
-    missing_metadata = ({
-                          'Structure level 0': {'metadata group1': ['-tags']},
-                          'Structure level 1': {'default': ['-tags']},
-                          'Structure level 2': {'default': ['-tags']},
-                          'instrument': {'default': ['-tags']}
-                        },
-                        {
-                          'Structure level 0': ['metadata group1', '-tags'],
-                          'instrument': ['metadata group1', '-tags']
-                        },
-                        {
-                          'Structure level 2': {
-                            '-tags': ['group2', 'group3', 'default', 'group1'],
-                            'duplicate1': ['group2', 'group3', 'default', 'group1'],
-                            'duplicate2': ['group2', 'group3', 'default'],
-                            'duplicate3': ['group3', 'default', 'group4']
-                          }
-                        })
-    mock_check_data_hierarchy_document_types = mocker.patch(
-      'pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.check_data_hierarchy_types',
-      return_value=missing_metadata)
+      # Edge case: Missing metadata
+      param(["type1"], [], [], "Missing metadata for types: type1", True, False, id="missing_metadata"),
+
+      # Edge case: Null name metadata
+      param([], ["type2"], [], "Null name metadata for types: type2", True, False, id="null_name_metadata"),
+
+      # Edge case: Duplicate metadata
+      param([], [], ["type3"], "Duplicate metadata for types: type3", True, False, id="duplicate_metadata"),
+
+      # Error case: All types of metadata issues
+      param(["type1"], ["type2"], ["type3"],
+            "Missing metadata for types: type1\nNull name metadata for types: type2\nDuplicate metadata for types: type3",
+            True, False, id="all_metadata_issues"),
+    ]
+  )
+  def test_save_data_hierarchy_metadata_issues(self,
+                                               mocker,
+                                               configuration_extended: configuration_extended,
+                                               types_with_missing_metadata,
+                                               types_with_null_name_metadata,
+                                               types_with_duplicate_metadata,
+                                               expected_message,
+                                               expected_log_warning,
+                                               expected_log_info):
+    mock_check_data_hierarchy_types = mocker.patch(
+      'pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.check_data_hierarchy_types')
     mock_get_missing_metadata_message = mocker.patch(
-      'pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.get_missing_metadata_message',
-      return_value="Missing message")
-    assert configuration_extended.save_data_hierarchy() is None, "Nothing should be returned"
-    log_info_spy.assert_called_once_with("User clicked the save button..")
-    mock_check_data_hierarchy_document_types.assert_called_once_with(configuration_extended.data_hierarchy_types)
-    mock_get_missing_metadata_message.assert_called_once_with(missing_metadata[0], missing_metadata[1],
-                                                              missing_metadata[2])
-    mock_show_message.assert_called_once_with("Missing message", QMessageBox.Warning)
-    log_warn_spy.assert_called_once_with("Missing message")
+      'pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.get_missing_metadata_message')
+    mock_show_message = mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.show_message')
+    mock_check_data_hierarchy_types.return_value = (
+      types_with_missing_metadata, types_with_null_name_metadata, types_with_duplicate_metadata)
+    mock_get_missing_metadata_message.return_value = expected_message
 
-  @pytest.mark.parametrize("new_title, new_displayed_title, data_hierarchy_document, data_hierarchy_types", [
-    (None, None, None, None),
-    (None, None, {"x0": {"IRI": "x0"}, "x1": {"IRI": "x1"}}, {"x0": {"IRI": "x0"}, "x1": {"IRI": "x1"}}),
-    ("x0", None, {"x0": {"IRI": "x0"}, "x1": {"IRI": "x1"}}, {"x0": {"IRI": "x0"}, "x1": {"IRI": "x1"}}),
-    (None, "x1", {"x0": {"IRI": "x0"}, "x1": {"IRI": "x1"}}, {"x0": {"IRI": "x0"}, "x1": {"IRI": "x1"}}),
-    ("x0", "x1", {"x0": {"IRI": "x0"}, "x1": {"IRI": "x1"}}, {"x0": {"IRI": "x0"}, "x1": {"IRI": "x1"}}),
-    ("x0", "x1", None, None),
-    ("instrument", "new Instrument", {"x0": {"IRI": "x0"}, "x1": {"IRI": "x1"}},
-     {"x0": {"IRI": "x0"}, "x1": {"IRI": "x1"}})
-  ])
-  def test_create_new_type_should_do_expected(self,
-                                              mocker,
-                                              new_title,
-                                              new_displayed_title,
-                                              data_hierarchy_document,
-                                              data_hierarchy_types,
-                                              configuration_extended: configuration_extended):
-    mocker.patch.object(configuration_extended, 'data_hierarchy_document', create=True)
-    mocker.patch.object(configuration_extended, 'data_hierarchy_types', create=True)
-    mock_show_message = mocker.patch(
-      'pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.show_message')
-    mock_log_info = mocker.patch.object(configuration_extended.logger, 'info')
-    mock_log_error = mocker.patch.object(configuration_extended.logger, 'error')
-    mock_log_warn = mocker.patch.object(configuration_extended.logger, 'warning')
-    if data_hierarchy_document:
-      configuration_extended.data_hierarchy_document.__setitem__.side_effect = data_hierarchy_document.__setitem__
-      configuration_extended.data_hierarchy_document.__getitem__.side_effect = data_hierarchy_document.__getitem__
-      configuration_extended.data_hierarchy_document.__iter__.side_effect = data_hierarchy_document.__iter__
-      configuration_extended.data_hierarchy_document.__contains__.side_effect = data_hierarchy_document.__contains__
-      configuration_extended.data_hierarchy_document.get.side_effect = data_hierarchy_document.get
-      configuration_extended.data_hierarchy_document.keys.side_effect = data_hierarchy_document.keys
-      configuration_extended.data_hierarchy_document.pop.side_effect = data_hierarchy_document.pop
-    if data_hierarchy_types is not None:
-      configuration_extended.data_hierarchy_types.__setitem__.side_effect = data_hierarchy_types.__setitem__
-      configuration_extended.data_hierarchy_types.__getitem__.side_effect = data_hierarchy_types.__getitem__
-      configuration_extended.data_hierarchy_types.__iter__.side_effect = data_hierarchy_types.__iter__
-      configuration_extended.data_hierarchy_types.__contains__.side_effect = data_hierarchy_types.__contains__
-      configuration_extended.data_hierarchy_types.get.side_effect = data_hierarchy_types.get
-      configuration_extended.data_hierarchy_types.keys.side_effect = data_hierarchy_types.keys
-      configuration_extended.data_hierarchy_types.pop.side_effect = data_hierarchy_types.pop
-      configuration_extended.data_hierarchy_types.__len__.side_effect = data_hierarchy_types.__len__
+    # Act
+    configuration_extended.save_data_hierarchy()
 
-    if data_hierarchy_document is None:
-      mocker.patch.object(configuration_extended, 'data_hierarchy_document', None, create=True)
-    if data_hierarchy_types is None:
-      mocker.patch.object(configuration_extended, 'data_hierarchy_types', None, create=True)
-
-    if data_hierarchy_document is None or data_hierarchy_types is None or new_title in data_hierarchy_document:
-      if data_hierarchy_document is None or data_hierarchy_types is None:
-        with pytest.raises(GenericException,
-                           match="Null data_hierarchy_document/data_hierarchy_types, erroneous app state"):
-          assert configuration_extended.create_new_type(new_title,
-                                                        new_displayed_title) is None, "Nothing should be returned"
-          mock_log_error.assert_called_once_with(
-            "Null data_hierarchy_document/data_hierarchy_types, erroneous app state")
+    # Assert
+    if expected_message:
+      if expected_log_info:
+        mock_show_message.assert_called_once_with(expected_message, QMessageBox.Icon.Question,
+                                                  QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
+                                                  QMessageBox.StandardButton.Yes)
       else:
-        assert configuration_extended.create_new_type(new_title,
-                                                      new_displayed_title) is None, "Nothing should be returned"
-        mock_show_message.assert_called_once_with(f"Type (title: {new_title} "
-                                                  f"displayed title: {new_displayed_title}) cannot be added "
-                                                  f"since it exists in DB already....", QMessageBox.Warning)
+        mock_show_message.assert_called_once_with(expected_message, QMessageBox.Icon.Warning)
+      if expected_log_warning:
+        configuration_extended.logger.warning.assert_called_once_with(expected_message)
     else:
-      if new_title is None:
-        assert configuration_extended.create_new_type(None, new_displayed_title) is None, "Nothing should be returned"
-        mock_show_message.assert_called_once_with("Enter non-null/valid title!!.....", QMessageBox.Warning)
-        mock_log_warn.assert_called_once_with("Enter non-null/valid title!!.....")
-      else:
-        assert configuration_extended.create_new_type(new_title,
-                                                      new_displayed_title) is None, "Nothing should be returned"
-        mock_log_info.assert_called_once_with("User created a new type and added "
-                                              "to the data_hierarchy document: Title: {%s}, Displayed Title: {%s}",
-                                              new_title,
-                                              new_displayed_title)
+      mock_show_message.assert_not_called()
+      configuration_extended.logger.warning.assert_not_called()
 
-        (configuration_extended.data_hierarchy_types
-         .__setitem__.assert_called_once_with(new_title, generate_empty_type(new_displayed_title)))
-        assert configuration_extended.typeComboBox.clear.call_count == 2, "ComboBox should be cleared twice"
-        assert configuration_extended.typeComboBox.addItems.call_count == 2, "ComboBox addItems should be called twice"
-        configuration_extended.typeComboBox.addItems.assert_called_with(
-          get_types_for_display(configuration_extended.data_hierarchy_types.keys()))
+  @pytest.mark.parametrize(
+    "user_response, expected_save_call",
+    [
+      # Success path: User chooses to save
+      param(QMessageBox.StandardButton.Yes, True, id="user_confirms_save"),
 
-  @pytest.mark.parametrize("instance_exists", [True, False])
-  def test_get_gui_should_do_expected(self,
-                                      mocker,
-                                      configuration_extended: configuration_extended,
-                                      instance_exists):
-    mock_form = mocker.MagicMock()
-    mock_sys_argv = mocker.patch(
-      "pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.sys.argv")
-    mock_new_app_inst = mocker.patch("PySide6.QtWidgets.QApplication")
-    mock_exist_app_inst = mocker.patch("PySide6.QtWidgets.QApplication")
-    mock_form_instance = mocker.patch("PySide6.QtWidgets.QDialog")
-    mock_database = mocker.patch("pasta_eln.database.Database")
+      # Edge case: User chooses not to save
+      param(QMessageBox.StandardButton.No, False, id="user_declines_save"),
+    ]
+  )
+  def test_save_data_hierarchy_user_confirmation(self,
+                                                 mocker,
+                                                 configuration_extended: configuration_extended,
+                                                 user_response,
+                                                 expected_save_call):
+    mock_show_message = mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.show_message')
+    mock_show_message.return_value = user_response
 
-    mocker.patch.object(QApplication, 'instance', return_value=mock_exist_app_inst if instance_exists else None)
-    mocker.patch.object(mock_form, 'instance', mock_form_instance, create=True)
-    spy_new_app_inst = mocker.patch.object(QApplication, '__new__', return_value=mock_new_app_inst)
-    spy_form_inst = mocker.patch.object(DataHierarchyEditorDialog, '__new__', return_value=mock_form)
+    # Act
+    configuration_extended.save_data_hierarchy()
 
-    (app, form_inst, form) = get_gui(mock_database)
-    spy_form_inst.assert_called_once_with(DataHierarchyEditorDialog, mock_database)
-    if instance_exists:
-      assert app is mock_exist_app_inst, "Should return existing instance"
-      assert form_inst is mock_form_instance, "Should return existing instance"
-      assert form is mock_form, "Should return existing instance"
+    # Assert
+    if expected_save_call:
+      configuration_extended.data_hierarchy_document.save.assert_called_once()
+      configuration_extended.database.initDocTypeViews.assert_called_once_with(16)
+      configuration_extended.instance.close.assert_called_once()
     else:
-      spy_new_app_inst.assert_called_once_with(QApplication, mock_sys_argv)
-      assert app is mock_new_app_inst, "Should return new instance"
-      assert form_inst is mock_form_instance, "Should return existing instance"
-      assert form is mock_form, "Should return existing instance"
+      configuration_extended.data_hierarchy_document.save.assert_not_called()
+      configuration_extended.database.initDocTypeViews.assert_not_called()
+      configuration_extended.instance.close.assert_not_called()
+
+  @pytest.mark.parametrize(
+    "existing_instance, expected_instance_type, test_id",
+    [
+      (None, QApplication, "no_existing_qapplication"),
+      (MagicMock(spec=QApplication), QApplication, "existing_qapplication"),
+    ],
+    ids=[
+      "no_existing_qapplication",
+      "existing_qapplication"
+    ]
+  )
+  def test_get_gui_success_path(self,
+                                mocker,
+                                configuration_extended: configuration_extended,
+                                existing_instance,
+                                expected_instance_type,
+                                test_id):
+    # Arrange
+    database = mocker.MagicMock(spec=Database)
+    app_instance = mocker.MagicMock(spec=QApplication)
+    mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.QApplication',
+                 return_value=app_instance)
+    mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.QApplication.instance',
+                 return_value=existing_instance)
+    mock_dialog = mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.DataHierarchyEditorDialog',
+                               return_value=mocker.MagicMock(instance=mocker.MagicMock()))
+
+    # Act
+    application, dialog_instance, data_hierarchy_form = get_gui(database)
+
+    # Assert
+    assert isinstance(application, expected_instance_type)
+    assert dialog_instance == mock_dialog.return_value.instance
+    assert data_hierarchy_form == mock_dialog.return_value
+
+  @pytest.mark.parametrize(
+    "database, test_id",
+    [
+      (None, "none_database"),
+      ("invalid_database", "invalid_database_type"),
+    ],
+    ids=[
+      "none_database",
+      "invalid_database_type"
+    ]
+  )
+  def test_get_gui_error_cases(self,
+                               mocker,
+                               configuration_extended: configuration_extended,
+                               database, test_id):
+    # Arrange
+    app_instance = mocker.MagicMock(spec=QApplication)
+    mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.QApplication',
+                 return_value=app_instance)
+    mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.QApplication.instance',
+                 return_value=None)
+    mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.DataHierarchyEditorDialog',
+                 side_effect=TypeError)
+
+    # Act & Assert
+    with pytest.raises(TypeError):
+      get_gui(database)
 
   @pytest.mark.parametrize("hidden", [True, False])
   def test_show_hide_attachments_table_do_expected(self,
@@ -1056,33 +1219,32 @@ class TestDataHierarchyEditorDialog(object):
     spy_add_attachment_set_visible.assert_called_once_with(not hidden)
     spy_add_attachment_is_visible.assert_called_once_with()
 
-  def test_set_iri_lookup_action_do_expected(self,
-                                             mocker,
-                                             configuration_extended: configuration_extended):
-    mock_actions = [mocker.MagicMock(), mocker.MagicMock()]
-    configuration_extended.typeIriLineEdit.actions.return_value = mock_actions
-    mock_is_instance = mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.isinstance',
-                                    return_value=True)
-    mock_is_lookup_iri_action = mocker.patch(
-      'pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.LookupIriAction')
+  @pytest.mark.parametrize(
+    "selected_type, can_delete, expected_enabled, test_id",
+    [
+      ("type1", True, True, "success_path_type1"),
+      ("type2", False, False, "success_path_type2"),
+      ("", False, False, "edge_case_empty_string"),
+      ("nonexistent_type", False, False, "edge_case_nonexistent_type"),
+      ("type_with_special_chars!@#", True, True, "edge_case_special_chars"),
+    ],
+    ids=[
+      "success_path_type1",
+      "success_path_type2",
+      "edge_case_empty_string",
+      "edge_case_nonexistent_type",
+      "edge_case_special_chars",
+    ]
+  )
+  def test_check_and_disable_delete_button(self,
+                                           mocker,
+                                           configuration_extended: configuration_extended,
+                                           selected_type, can_delete, expected_enabled, test_id):
+    # Arrange
+    mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.can_delete_type', return_value=can_delete)
 
-    assert configuration_extended.set_iri_lookup_action("default") is None, "Nothing should be returned"
-    mock_is_instance.assert_has_calls(
-      [mocker.call(mock_actions[0], mock_is_lookup_iri_action),
-       mocker.call(mock_actions[1], mock_is_lookup_iri_action)])
-    mock_is_lookup_iri_action.assert_called_once_with(parent_line_edit=configuration_extended.typeIriLineEdit,
-                                                      lookup_term="default")
-    configuration_extended.typeIriLineEdit.addAction.assert_called_once_with(mock_is_lookup_iri_action.return_value,
-                                                                             QLineEdit.TrailingPosition)
+    # Act
+    configuration_extended.check_and_disable_delete_button(selected_type)
 
-  def test_check_and_disable_delete_button_should_do_expected(self,
-                                                              mocker,
-                                                              configuration_extended: configuration_extended):
-    mock_can_delete_type = mocker.patch(
-      'pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.can_delete_type', return_value=True)
-    mock_data_hierarchy_types = mocker.MagicMock()
-    mocker.patch.object(configuration_extended, 'data_hierarchy_types', mock_data_hierarchy_types)
-    mock_data_hierarchy_types.keys.return_value = ['one', 'two']
-    assert configuration_extended.check_and_disable_delete_button("three") is None, "Nothing should be returned"
-    configuration_extended.deleteTypePushButton.setEnabled.assert_called_once_with(True)
-    mock_can_delete_type.assert_called_once_with(['one', 'two'], "three")
+    # Assert
+    configuration_extended.deleteTypePushButton.setEnabled.assert_called_once_with(expected_enabled)

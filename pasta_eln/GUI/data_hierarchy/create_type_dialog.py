@@ -1,115 +1,110 @@
-""" CreateTypeDialog used for the create type dialog """
+"""A dialog for creating a new data type within the application."""
 #  PASTA-ELN and all its sub-parts are covered by the MIT license.
 #
-#  Copyright (c) 2023
+#  Copyright (c) 2024
 #
 #  Author: Jithu Murugan
 #  Filename: create_type_dialog.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
-
 import logging
-from collections.abc import Callable
-from typing import Any
+from typing import Any, Callable
 
-from PySide6 import QtCore
-from PySide6.QtCore import QRegularExpression
-from PySide6.QtGui import QRegularExpressionValidator
-from PySide6.QtWidgets import QDialog
+from PySide6 import QtWidgets
+from PySide6.QtWidgets import QMessageBox
 
-from pasta_eln.GUI.data_hierarchy.create_type_dialog_base import Ui_CreateTypeDialogBase
+from pasta_eln.GUI.data_hierarchy.generic_exception import GenericException
+from pasta_eln.GUI.data_hierarchy.type_dialog import TypeDialog
+from pasta_eln.GUI.data_hierarchy.utility_functions import generate_data_hierarchy_type, show_message
 
 
-class CreateTypeDialog(Ui_CreateTypeDialogBase):
+class CreateTypeDialog(TypeDialog):
   """
-  Abstracted dialog for the create type
-  """
+  A dialog for creating a new data type within the application.
 
-  def __new__(cls, *_: Any, **__: Any) -> Any:
-    """
-    Instantiates the create type dialog
-    """
-    return super(CreateTypeDialog, cls).__new__(cls)
+  This class extends the TypeDialog to provide functionality for adding new data types.
+  It initializes the dialog with specific UI elements and behavior tailored for creating new types.
+
+  Args:
+      accepted_callback (Callable[[], None]): A callback function to be executed when the action is accepted.
+      rejected_callback (Callable[[], None]): A callback function to be executed when the action is rejected.
+  """
 
   def __init__(self,
                accepted_callback: Callable[[], None],
-               rejected_callback: Callable[[], None]) -> None:
+               rejected_callback: Callable[[], None]):
     """
-    Initializes the create type dialog
+    Initializes a new instance of the class with specified callback functions.
+
+    This constructor sets up the instance by initializing the parent class and configuring the logger.
+    It also initializes an empty dictionary for data hierarchy types and sets the window title for the dialog.
+
     Args:
-      accepted_callback (Callable): Accepted button parent callback.
-      rejected_callback (Callable): Rejected button parent callback.
+        accepted_callback (Callable[[], None]): A callback function to be executed when the action is accepted.
+        rejected_callback (Callable[[], None]): A callback function to be executed when the action is rejected.
     """
+    super().__init__(accepted_callback, rejected_callback)
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
-    self.next_struct_level: str | None = ""
-    self.instance = QDialog()
-    super().setupUi(self.instance)
-    # Restricts the title input to allow anything except x or space
-    # as the first character which is reserved for structural level
-    self.titleLineEdit.setValidator(QRegularExpressionValidator(QRegularExpression("^[^ Ax].*")))
-    self.setup_slots(accepted_callback, rejected_callback)
+    self.data_hierarchy_types: dict[str, Any] = {}
+    self.instance.setWindowTitle("Create new type")
 
-  def setup_slots(self,
-                  accepted_callback: Callable[[], None],
-                  rejected_callback: Callable[[], None]) -> None:
+  def accepted_callback(self):
     """
-    Sets up the slots for the dialog
-    Args:
-      accepted_callback (Callable): Accepted button parent callback.
-      rejected_callback (Callable): Rejected button parent callback.
+    Handles the acceptance of a new data type by validating input and updating the data hierarchy.
 
-    Returns: None
+    This method checks if the type information is valid and whether the data type already exists in the hierarchy.
+    If the type is valid and does not exist, it logs the creation of the new type, updates the data hierarchy,
+    and closes the dialog. If the type already exists, it shows a warning message. If the data hierarchy types
+    are null, it logs an error and raises an exception.
 
+    Raises:
+        GenericException: If the data hierarchy types are null.
     """
-    self.buttonBox.accepted.connect(accepted_callback)
-    self.buttonBox.rejected.connect(rejected_callback)
-    self.structuralLevelCheckBox.stateChanged.connect(self.structural_level_checkbox_callback)
+    if self.validate_type_info():
+      if self.data_hierarchy_types is None:
+        self.logger.error("Null data_hierarchy_types, erroneous app state")
+        raise GenericException("Null data_hierarchy_types, erroneous app state", {})
+      if self.type_info.datatype in self.data_hierarchy_types:
+        show_message(
+          f"Type (datatype: {self.type_info.datatype} displayed title: {self.type_info.title}) cannot be added since it exists in DB already....",
+          QMessageBox.Icon.Warning)
+      else:
+        self.logger.info("User created a new type and added "
+                         "to the data_hierarchy document: Datatype: {%s}, Displayed Title: {%s}",
+                         self.type_info.datatype,
+                         self.type_info.title)
+        self.data_hierarchy_types[self.type_info.datatype] = generate_data_hierarchy_type(self.type_info)
+        self.instance.close()
+        self.accepted_callback_parent()
 
-  def structural_level_checkbox_callback(self) -> None:
+  def rejected_callback(self):
     """
-    Callback invoked when the state changes for structuralLevelCheckBox
+     Calls the parent rejection callback method.
 
-    Returns: Nothing
+     This method is intended to handle the rejection of a dialog or action by invoking
+     the corresponding parent method that manages the rejection behavior. It does not
+     perform any additional logic or checks.
+     """
+    self.rejected_callback_parent()
+
+  def set_data_hierarchy_types(self, data_hierarchy_types: dict[str, Any]):
     """
-    if self.structuralLevelCheckBox.isChecked():
-      self.titleLineEdit.setText(self.next_struct_level.replace("x", "Structure level ")
-                                 if self.next_struct_level else "")
-      self.titleLineEdit.setDisabled(True)
-    else:
-      self.titleLineEdit.clear()
-      self.titleLineEdit.setDisabled(False)
+    Sets the data hierarchy types for the instance.
 
-  def show(self) -> None:
-    """
-    Displays the dialog
-
-    Returns: None
-
-    """
-    self.instance.setWindowModality(QtCore.Qt.WindowModality.ApplicationModal)
-    self.instance.show()
-
-  def clear_ui(self) -> None:
-    """
-    Clear the Dialog UI
-
-    Returns: Nothing
-
-    """
-    self.displayedTitleLineEdit.clear()
-    self.titleLineEdit.clear()
-    self.structuralLevelCheckBox.setChecked(False)
-
-  def set_structural_level_title(self,
-                                 structural_level: str | None) -> None:
-    """
-    Set the next possible structural type level title
+    This method updates the internal state of the instance by assigning the provided dictionary of data hierarchy types.
+    It allows the instance to manage and utilize the specified types in its operations.
 
     Args:
-      structural_level (str): Passed in structural level of the format (x0, x1, x2 ...)
-
-    Returns: Nothing
-
+        self: The instance of the class.
+        data_hierarchy_types (dict[str, Any]): A dictionary containing data hierarchy types to be set.
     """
-    self.logger.info("Next structural level set: {%s}...", structural_level)
-    self.next_struct_level = structural_level
+    self.data_hierarchy_types = data_hierarchy_types
+
+
+if __name__ == "__main__":
+  import sys
+
+  app = QtWidgets.QApplication(sys.argv)
+  ui = CreateTypeDialog(lambda: None, lambda: None)
+  ui.show()
+  sys.exit(app.exec())

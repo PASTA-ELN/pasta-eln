@@ -10,36 +10,33 @@
 
 import copy
 import logging
-import sys
 import webbrowser
 from typing import Any
 
 from PySide6 import QtWidgets
 from PySide6.QtCore import QCoreApplication, QObject, Signal, Slot
-from PySide6.QtWidgets import QApplication, QLineEdit, QMessageBox
+from PySide6.QtWidgets import QApplication, QMessageBox
 from cloudant.document import Document
 
 from .attachments_tableview_data_model import AttachmentsTableViewModel
 from .constants import ATTACHMENT_TABLE_DELETE_COLUMN_INDEX, \
   ATTACHMENT_TABLE_REORDER_COLUMN_INDEX, DATA_HIERARCHY_HELP_PAGE_URL, METADATA_TABLE_DELETE_COLUMN_INDEX, \
   METADATA_TABLE_IRI_COLUMN_INDEX, METADATA_TABLE_REORDER_COLUMN_INDEX, METADATA_TABLE_REQUIRED_COLUMN_INDEX
-from .create_type_dialog import CreateTypeDialog
+from .create_type_dialog import CreateTypeDialog, TypeDialog
 from .data_hierarchy_editor_dialog_base import Ui_DataHierarchyEditorDialogBase
 from .delete_column_delegate import DeleteColumnDelegate
 from .document_null_exception import DocumentNullException
+from .edit_type_dialog import EditTypeDialog
 from .generic_exception import GenericException
 from .iri_column_delegate import IriColumnDelegate
 from .key_not_found_exception import \
   KeyNotFoundException
-from .lookup_iri_action import LookupIriAction
 from .mandatory_column_delegate import MandatoryColumnDelegate
 from .metadata_tableview_data_model import MetadataTableViewModel
 from .reorder_column_delegate import ReorderColumnDelegate
 from .utility_functions import adapt_type, adjust_data_hierarchy_data_to_v4, can_delete_type, \
   check_data_hierarchy_types, \
-  generate_empty_type, \
-  get_missing_metadata_message, get_next_possible_structural_level_title, \
-  get_types_for_display, show_message
+  get_missing_metadata_message, get_types_for_display, show_message
 from ...database import Database
 
 
@@ -68,7 +65,7 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
 
     self.data_hierarchy_loaded: bool = False
-    self.data_hierarchy_types: Any = {}
+    self.data_hierarchy_types: dict[str, Any] = {}
     self.selected_type_metadata: dict[str, list[dict[str, Any]]] | Any = {}
 
     # Set up the UI elements
@@ -124,7 +121,10 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
     self.typeAttachmentsTableView.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeMode.Stretch)
 
     # Create the dialog for new type creation
-    self.create_type_dialog = CreateTypeDialog(self.create_type_accepted_callback, self.create_type_rejected_callback)
+    self.create_type_dialog: TypeDialog = CreateTypeDialog(self.type_create_accepted_callback,
+                                                           self.type_create_rejected_callback)
+    self.edit_type_dialog: TypeDialog = EditTypeDialog(self.type_edit_accepted_callback,
+                                                       self.type_edit_rejected_callback)
 
     # Set up the slots for the UI items
     self.setup_slots()
@@ -160,12 +160,6 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
       # Get the metadata for the selected type and store the list in selected_type_metadata
       self.selected_type_metadata = selected_type.get("meta")
 
-      # Type displayed_title is set in a line edit
-      self.typeDisplayedTitleLineEdit.setText(selected_type.get('title'))
-
-      # Type IRI is set in a line edit
-      self.typeIriLineEdit.setText(selected_type.get('IRI'))
-
       # Gets the attachment data from selected type and set it in table view
       self.attachments_table_data_model.update(selected_type.get('attachments'))
 
@@ -173,23 +167,6 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
       self.metadataGroupComboBox.addItems(list(self.selected_type_metadata.keys())
                                           if self.selected_type_metadata else [])
       self.metadataGroupComboBox.setCurrentIndex(0)
-
-  def set_iri_lookup_action(self,
-                            lookup_term: str) -> None:
-    """
-    Sets the IRI lookup action for the IRI line edit
-    Args:
-      lookup_term (str): Default lookup term to be used by the lookup service
-
-    Returns: Nothing
-
-    """
-    for act in self.typeIriLineEdit.actions():
-      if isinstance(act, LookupIriAction):
-        act.deleteLater()
-    self.typeIriLineEdit.addAction(
-      LookupIriAction(parent_line_edit=self.typeIriLineEdit, lookup_term=lookup_term),
-      QLineEdit.ActionPosition.TrailingPosition)
 
   def metadata_group_combo_box_changed(self,
                                        new_selected_metadata_group: Any) -> None:
@@ -260,7 +237,6 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
     current_type = adapt_type(current_type)
     if modified_type_displayed_title is not None and current_type in self.data_hierarchy_types:
       self.data_hierarchy_types.get(current_type)["title"] = modified_type_displayed_title
-      self.set_iri_lookup_action(modified_type_displayed_title)
 
   def update_type_iri(self,
                       modified_iri: str) -> None:
@@ -295,7 +271,7 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
       self.logger.info("User deleted the selected type: {%s}", selected_type)
       self.data_hierarchy_types.pop(selected_type)
       self.typeComboBox.clear()
-      self.typeComboBox.addItems(get_types_for_display(self.data_hierarchy_types.keys()))
+      self.typeComboBox.addItems(get_types_for_display(list(self.data_hierarchy_types.keys())))
       self.typeComboBox.setCurrentIndex(0)
 
   def clear_ui(self) -> None:
@@ -305,38 +281,63 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
     Returns: None
 
     """
-    # Disable the signals for the line edits before clearing in order to avoid clearing the respective
-    # iri and displayed_titles for the selected type from data_hierarchy document
-    self.typeDisplayedTitleLineEdit.textChanged[str].disconnect()
-    self.typeIriLineEdit.textChanged[str].disconnect()
-    self.typeDisplayedTitleLineEdit.clear()
-    self.typeIriLineEdit.clear()
-    self.typeDisplayedTitleLineEdit.textChanged[str].connect(self.update_type_displayed_title)
-    self.typeIriLineEdit.textChanged[str].connect(self.update_type_iri)
-
     self.metadataGroupComboBox.clear()
     self.addMetadataGroupLineEdit.clear()
     self.typeMetadataTableView.model().update([])
     self.typeAttachmentsTableView.model().update([])
 
-  def create_type_accepted_callback(self) -> None:
+  def type_create_accepted_callback(self) -> None:
     """
-    Callback for the OK button of CreateTypeDialog to create a new type in the data_hierarchy data set
+    Handles the acceptance of a new type creation in the data hierarchy.
 
-    Returns: Nothing
+    This method is called when the user confirms the creation of a new type.
+    It checks if the data hierarchy types are loaded, updates the type combo box with the available types,
+    and clears the user interface of the create type dialog.
+
+    Args:
+        self: The instance of the class.
     """
-    title = self.create_type_dialog.next_struct_level \
-      if self.create_type_dialog.structuralLevelCheckBox.isChecked() \
-      else self.create_type_dialog.titleLineEdit.text()
-    displayed_title = self.create_type_dialog.displayedTitleLineEdit.text()
+    if not isinstance(self.data_hierarchy_types, dict):
+      show_message("Load the data hierarchy data first....", QMessageBox.Icon.Warning)
+      return
+    self.typeComboBox.clear()
+    self.typeComboBox.addItems(get_types_for_display(list(self.data_hierarchy_types.keys())))
+    self.typeComboBox.setCurrentIndex(len(self.data_hierarchy_types) - 1)
     self.create_type_dialog.clear_ui()
-    self.create_new_type(title, displayed_title)
 
-  def create_type_rejected_callback(self) -> None:
+  def type_create_rejected_callback(self) -> None:
     """
-    Callback for the cancel button of CreateTypeDialog
+    Handles the cancellation of the type creation process.
 
-    Returns: Nothing
+    This method is called when the user cancels the creation of a new type in the dialog.
+    It clears the user interface elements of the create type dialog to reset its state.
+
+    Args:
+        self: The instance of the class.
+    """
+    self.create_type_dialog.clear_ui()
+
+  def type_edit_accepted_callback(self) -> None:
+    """
+    Handles the acceptance of the type editing process.
+
+    This method is called when the user confirms the changes made to a type in the dialog.
+    It clears the user interface elements of the create type dialog to prepare for a new input.
+
+    Args:
+        self: The instance of the class.
+    """
+    self.create_type_dialog.clear_ui()
+
+  def type_edit_rejected_callback(self) -> None:
+    """
+    Handles the cancellation of the type editing process.
+
+    This method is called when the user cancels the editing of a type in the dialog.
+    It clears the user interface elements of the create type dialog to reset its state.
+
+    Args:
+        self: The instance of the class.
     """
     self.create_type_dialog.clear_ui()
 
@@ -345,12 +346,25 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
     Opens a dialog which allows the user to enter the details to create a new type (structural or normal)
     Returns: Nothing
     """
-    if self.data_hierarchy_types is not None and self.data_hierarchy_loaded:
-      structural_title = get_next_possible_structural_level_title(self.data_hierarchy_types.keys())
-      self.create_type_dialog.set_structural_level_title(structural_title)
-      self.create_type_dialog.show()
-    else:
+    if self.data_hierarchy_types is None or not self.data_hierarchy_loaded:
       show_message("Load the data hierarchy data first...", QMessageBox.Icon.Warning)
+      return
+    self.create_type_dialog.set_data_hierarchy_types(self.data_hierarchy_types)
+    self.create_type_dialog.show()
+
+  def show_edit_type_dialog(self) -> None:
+    """
+    Opens a dialog which allows the user to enter the details to create a new type (structural or normal)
+    Returns: Nothing
+    """
+    if self.data_hierarchy_types is None or not self.data_hierarchy_loaded:
+      show_message("Load the data hierarchy data first...", QMessageBox.Icon.Warning)
+      return
+    current_type = self.typeComboBox.currentText()
+    current_type = adapt_type(current_type)
+    self.edit_type_dialog.set_selected_data_hierarchy_type_name(current_type)
+    self.edit_type_dialog.set_selected_data_hierarchy_type(self.data_hierarchy_types.get(current_type))
+    self.edit_type_dialog.show()
 
   def setup_slots(self) -> None:
     """
@@ -366,6 +380,7 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
     self.deleteMetadataGroupPushButton.clicked.connect(self.delete_selected_metadata_group)
     self.deleteTypePushButton.clicked.connect(self.delete_selected_type)
     self.addTypePushButton.clicked.connect(self.show_create_type_dialog)
+    self.editTypePushButton.clicked.connect(self.show_edit_type_dialog)
     self.cancelPushButton.clicked.connect(self.instance.close)
     self.helpPushButton.clicked.connect(lambda: webbrowser.open(DATA_HIERARCHY_HELP_PAGE_URL))
     self.attachmentsShowHidePushButton.clicked.connect(self.show_hide_attachments_table)
@@ -374,17 +389,16 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
     self.typeComboBox.currentTextChanged.connect(self.type_combo_box_changed)
     self.metadataGroupComboBox.currentTextChanged.connect(self.metadata_group_combo_box_changed)
 
-    # Slots for line edits
-    self.typeDisplayedTitleLineEdit.textChanged[str].connect(self.update_type_displayed_title)
-    self.typeIriLineEdit.textChanged[str].connect(self.update_type_iri)
-
     # Slots for the delegates
-    self.delete_column_delegate_metadata_table.delete_clicked_signal.connect(self.metadata_table_data_model.delete_data)
-    self.reorder_column_delegate_metadata_table.re_order_signal.connect(self.metadata_table_data_model.re_order_data)
+    self.delete_column_delegate_metadata_table.delete_clicked_signal.connect(
+      self.metadata_table_data_model.delete_data)
+    self.reorder_column_delegate_metadata_table.re_order_signal.connect(
+      self.metadata_table_data_model.re_order_data)
 
     self.delete_column_delegate_attach_table.delete_clicked_signal.connect(
       self.attachments_table_data_model.delete_data)
-    self.reorder_column_delegate_attach_table.re_order_signal.connect(self.attachments_table_data_model.re_order_data)
+    self.reorder_column_delegate_attach_table.re_order_signal.connect(
+      self.attachments_table_data_model.re_order_data)
 
     self.type_changed_signal.connect(self.check_and_disable_delete_button)
 
@@ -406,7 +420,7 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
 
     # Set the types in the type selector combo-box
     self.typeComboBox.clear()
-    self.typeComboBox.addItems(get_types_for_display(self.data_hierarchy_types.keys()))
+    self.typeComboBox.addItems(get_types_for_display(list(self.data_hierarchy_types.keys())))
     self.typeComboBox.setCurrentIndex(0)
 
   def save_data_hierarchy(self) -> None:
@@ -445,38 +459,6 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
       self.database.initDocTypeViews(16)
       self.instance.close()
 
-  def create_new_type(self,
-                      title: str,
-                      displayed_title: str) -> None:
-    """
-    Add a new type to the loaded data_hierarchy_data from the db
-    Args:
-      title (str): The new key entry used for the data_hierarchy_data
-      displayed_title (str): The new displayed_title set for the new type entry in data_hierarchy_data
-
-    Returns:
-
-    """
-    if self.data_hierarchy_document is None or self.data_hierarchy_types is None:
-      self.logger.error("Null data_hierarchy_document/data_hierarchy_types, erroneous app state")
-      raise GenericException("Null data_hierarchy_document/data_hierarchy_types, erroneous app state", {})
-    if title in self.data_hierarchy_types:
-      show_message(
-        f"Type (title: {title} displayed title: {displayed_title}) cannot be added since it exists in DB already....",
-        QMessageBox.Icon.Warning)
-    else:
-      if not title:
-        self.logger.warning("Enter non-null/valid title!!.....")
-        show_message("Enter non-null/valid title!!.....", QMessageBox.Icon.Warning)
-        return
-      self.logger.info("User created a new type and added "
-                       "to the data_hierarchy document: Title: {%s}, Displayed Title: {%s}", title, displayed_title)
-      empty_type = generate_empty_type(displayed_title)
-      self.data_hierarchy_types[title] = empty_type
-      self.typeComboBox.clear()
-      self.typeComboBox.addItems(get_types_for_display(self.data_hierarchy_types.keys()))
-      self.typeComboBox.setCurrentIndex(len(self.data_hierarchy_types) - 1)
-
   def show_hide_attachments_table(self) -> None:
     """
     Show/hide the attachment table and the add attachment button
@@ -496,9 +478,7 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
     Returns: Nothing
 
     """
-    (self.deleteTypePushButton
-     .setEnabled(can_delete_type(self.data_hierarchy_types.keys(),
-                                 selected_type)))
+    self.deleteTypePushButton.setEnabled(can_delete_type(adapt_type(selected_type)))
 
 
 def get_gui(database: Database) -> tuple[
@@ -515,3 +495,12 @@ def get_gui(database: Database) -> tuple[
   data_hierarchy_form: DataHierarchyEditorDialog = DataHierarchyEditorDialog(database)
 
   return application, data_hierarchy_form.instance, data_hierarchy_form
+
+
+if __name__ == "__main__":
+  import sys
+
+  app = QtWidgets.QApplication(sys.argv)
+  ui = DataHierarchyEditorDialog(database={})
+  ui.instance.show()
+  sys.exit(app.exec())
