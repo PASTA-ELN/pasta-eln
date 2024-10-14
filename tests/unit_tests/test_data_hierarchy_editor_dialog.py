@@ -427,7 +427,7 @@ class TestDataHierarchyEditorDialog(object):
       assert configuration_extended.update_type_displayed_title(
         modified_type_displayed_title) is None, "Nothing should be returned"
       if data_hierarchy_types is not None and current_type in data_hierarchy_types:
-        get_data_hierarchy_types_spy.assert_called_once_with(current_type)
+        get_data_hierarchy_types_spy.assert_called_once_with(current_type, {})
         assert data_hierarchy_types[current_type]["title"] == modified_type_displayed_title
 
   @pytest.mark.parametrize("modified_type_iri, current_type, data_hierarchy_types", [
@@ -461,7 +461,7 @@ class TestDataHierarchyEditorDialog(object):
     if modified_type_iri:
       assert configuration_extended.update_type_iri(modified_type_iri) is None, "Nothing should be returned"
       if data_hierarchy_types is not None and current_type in data_hierarchy_types:
-        get_data_hierarchy_types_spy.assert_called_once_with(current_type)
+        get_data_hierarchy_types_spy.assert_called_once_with(current_type, {})
         assert data_hierarchy_types[current_type]["IRI"] == modified_type_iri
 
   @pytest.mark.parametrize("selected_type, data_hierarchy_types, data_hierarchy_document", [
@@ -777,7 +777,7 @@ class TestDataHierarchyEditorDialog(object):
       configuration_extended.edit_type_dialog.set_selected_data_hierarchy_type_name.assert_called_once_with(
         current_text)
       configuration_extended.edit_type_dialog.set_selected_data_hierarchy_type.assert_called_once_with(
-        data_hierarchy_types.get(current_text))
+        data_hierarchy_types.get(current_text, {}))
       configuration_extended.edit_type_dialog.show.assert_called_once()
 
   @pytest.mark.parametrize("button_name, method_name", [

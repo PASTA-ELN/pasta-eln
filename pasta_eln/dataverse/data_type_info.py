@@ -22,7 +22,7 @@ class DataTypeInfo:
       It provides properties to access and modify these attributes while ensuring type safety.
 
   Attributes:
-      datatype (str): The type of the data.
+      datatype (str | None): The type of the data.
       title (str | None): The title of the data type.
       iri (str | None): The Internationalized Resource Identifier for the data type.
       icon (str | None): The icon associated with the data type.
@@ -40,14 +40,14 @@ class DataTypeInfo:
         This constructor sets up the initial state of the DataTypeInfo instance by initializing its attributes.
         The attributes include datatype, title, IRI, icon, and shortcut, all set to their default values.
     """
-    self._datatype: str = ""
-    self._title: str = ""
-    self._iri: str = ""
-    self._icon: str = ""
-    self._shortcut: str = ""
+    self._datatype: str | None = ""
+    self._title: str | None = ""
+    self._iri: str | None = ""
+    self._icon: str | None = ""
+    self._shortcut: str | None = ""
 
   @property
-  def datatype(self) -> str:
+  def datatype(self) -> str | None:
     """
     Retrieves the data type of the information.
 
@@ -61,7 +61,7 @@ class DataTypeInfo:
     return self._datatype
 
   @datatype.setter
-  def datatype(self, datatype: str) -> None:
+  def datatype(self, datatype: str | None) -> None:
     """
     Sets the data type of the information.
 

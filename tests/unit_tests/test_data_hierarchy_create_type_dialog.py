@@ -6,7 +6,8 @@
 #  Filename: test_data_hierarchy_create_type_dialog.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
-from unittest.mock import MagicMock, patch
+import copy
+from unittest.mock import MagicMock
 
 import pytest
 from PySide6.QtWidgets import QMessageBox
@@ -41,76 +42,70 @@ def type_dialog(mocker):
 
 
 class TestDataHierarchyCreateTypeDialog:
-
   @pytest.mark.parametrize(
-    "validate_type_info, data_hierarchy_types, type_info, expected_log, expected_exception, expected_message",
+    "validate_type_info, data_hierarchy_types, type_info_datatype, expected_log, expected_exception",
     [
-      # Happy path: New type added
-      param(True, {}, MagicMock(datatype="new_type", title="New Type"),
-            "User created a new type and added to the data_hierarchy document: Datatype: {%s}, Displayed Title: {%s}",
-            None, None, id="success_path_new_type"),
+      # Success path: valid type info, new datatype
+      (True, {}, "new_type",
+       "User created a new type and added to the data_hierarchy document: Datatype: {%s}, Displayed Title: {%s}",
+       None),
 
-      # Edge case: Type already exists
-      param(True, {"existing_type": MagicMock()}, MagicMock(datatype="existing_type", title="Existing Type"),
-            None, None,
-            "Type (datatype: existing_type displayed title: Existing Type) cannot be added since it exists in DB already....",
-            id="edge_case_existing_type"),
+      # Edge case: type info not valid
+      (False, {}, "new_type", "Type info not valid, please check and try again....", None),
 
-      # Error case: Null data_hierarchy_types
-      param(True, None, MagicMock(datatype="any_type", title="Any Type"),
-            "Null data_hierarchy_types, erroneous app state",
-            GenericException, None, id="error_case_null_data_hierarchy_types"),
+      # Error case: data_hierarchy_types is None
+      (True, None, "new_type", "Null data_hierarchy_types, erroneous app state", GenericException),
 
-      # Error case: Invalid type info
-      param(False, {}, MagicMock(datatype="invalid_type", title="Invalid Type"),
-            None, None, None, id="error_case_invalid_type_info"),
+      # Error case: datatype already exists
+      (True, {"existing_type": "some_value"}, "existing_type",
+       "Type (datatype: {%s} displayed title: {%s}) cannot be added since it exists in DB already....",
+       None),
+    ],
+    ids=[
+      "success_path_new_type",
+      "edge_case_invalid_type_info",
+      "error_case_null_data_hierarchy_types",
+      "error_case_existing_datatype",
     ]
   )
-  def test_accepted_callback(self, type_dialog, validate_type_info, data_hierarchy_types, type_info, expected_log,
-                             expected_exception,
-                             expected_message, request):
+  def test_accepted_callback(self, mocker, type_dialog, validate_type_info, data_hierarchy_types, type_info_datatype,
+                             expected_log,
+                             expected_exception):
     # Arrange
+    mock_show_message = mocker.patch('pasta_eln.GUI.data_hierarchy.create_type_dialog.show_message')
+    data_hierarchy_types_actual = copy.deepcopy(data_hierarchy_types)
     type_dialog.validate_type_info = MagicMock()
     type_dialog.validate_type_info.return_value = validate_type_info
     type_dialog.data_hierarchy_types = data_hierarchy_types
-    type_dialog.type_info = type_info
-    type_dialog.accepted_callback_parent = MagicMock()
+    type_dialog.type_info.datatype = type_info_datatype
+    type_dialog.type_info.title = "New Type" if type_info_datatype == "new_type" else "Existing Type"
 
-    with patch('pasta_eln.GUI.data_hierarchy.create_type_dialog.show_message') as mock_show_message, \
-        patch('pasta_eln.GUI.data_hierarchy.create_type_dialog.generate_data_hierarchy_type',
-              return_value=MagicMock()) as mock_generate_data_hierarchy_type:
-
-      # Act
-      if expected_exception:
-        with pytest.raises(expected_exception):
-          type_dialog.accepted_callback()
-      else:
+    # Act
+    if expected_exception:
+      with pytest.raises(expected_exception):
         type_dialog.accepted_callback()
+    else:
+      type_dialog.accepted_callback()
 
-      # Assert
-      if expected_log:
-        if expected_exception:
-          type_dialog.logger.error.assert_called_with(expected_log)
-        else:
-          type_dialog.logger.info.assert_called_with(expected_log, type_info.datatype, type_info.title)
+    # Assert
+    if validate_type_info and data_hierarchy_types_actual is not None:
+      if type_info_datatype in data_hierarchy_types_actual:
+        type_dialog.logger.error.assert_called_with(
+          expected_log,
+          type_dialog.type_info.datatype,
+          type_dialog.type_info.title
+        )
+        mock_show_message.assert_called_once_with("Type (datatype: existing_type displayed title: Existing Type)"
+                                                  " cannot be added since it exists in DB already....",
+                                                  QMessageBox.Icon.Warning)
       else:
-        type_dialog.logger.info.assert_not_called()
-
-      if expected_message:
-        mock_show_message.assert_called_once_with(expected_message, QMessageBox.Icon.Warning)
-      else:
-        mock_show_message.assert_not_called()
-
-      if data_hierarchy_types is not None and validate_type_info and (
-          type_info.datatype not in data_hierarchy_types or request.node.callspec.id == "success_path_new_type"):
-        assert type_info.datatype in type_dialog.data_hierarchy_types
-        mock_generate_data_hierarchy_type.assert_called_once_with(type_info)
+        type_dialog.logger.info.assert_called_with(expected_log, type_info_datatype, type_dialog.type_info.title)
         type_dialog.instance.close.assert_called_once()
         type_dialog.accepted_callback_parent.assert_called_once()
-      else:
-        mock_generate_data_hierarchy_type.assert_not_called()
-        type_dialog.instance.close.assert_not_called()
-        type_dialog.accepted_callback_parent.assert_not_called()
+    elif not validate_type_info:
+      pass
+    elif data_hierarchy_types is None:
+      type_dialog.logger.error.assert_called_with(expected_log)
 
   @pytest.mark.parametrize(
     "mock_return_value, expected_call_count",

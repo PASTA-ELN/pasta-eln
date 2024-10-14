@@ -16,7 +16,7 @@ from pasta_eln.dataverse.incorrect_parameter_error import IncorrectParameterErro
 
 @pytest.fixture
 def qta_icons_singleton(mocker):
-  mocker.patch("pasta_eln.GUI.data_hierarchy.qtaicons_singleton.logging.getLogger")
+  mocker.patch("pasta_eln.GUI.data_hierarchy.qtaicons_singleton.logging")
   iconic_mock = mocker.MagicMock()
   iconic_mock.charmap = {
     'fa': ['value1', 'value2'],
@@ -37,12 +37,13 @@ def qta_icons_singleton(mocker):
 class TestDataHierarchyIconNames:
 
   def test_init(self, mocker):
-    mock_get_logger = mocker.patch("pasta_eln.GUI.data_hierarchy.qtaicons_singleton.logging.getLogger")
+    mocker.resetall()
+    mock_logging = mocker.patch("pasta_eln.GUI.data_hierarchy.qtaicons_singleton.logging")
     mock_set_icon_names = mocker.patch(
       "pasta_eln.GUI.data_hierarchy.qtaicons_singleton.QTAIconsSingleton.set_icon_names")
 
     instance = QTAIconsSingleton()
-    mock_get_logger.assert_called_once_with("pasta_eln.GUI.data_hierarchy.qtaicons_singleton.QTAIconsSingleton")
+    mock_logging.getLogger.assert_called_once_with("pasta_eln.GUI.data_hierarchy.qtaicons_singleton.QTAIconsSingleton")
     mock_set_icon_names.assert_called_once()
 
     assert instance.icon_names == {}

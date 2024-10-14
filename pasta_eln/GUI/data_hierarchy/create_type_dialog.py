@@ -60,24 +60,31 @@ class CreateTypeDialog(TypeDialog):
     Raises:
         GenericException: If the data hierarchy types are null.
     """
-    if self.validate_type_info():
-      if self.data_hierarchy_types is None:
-        self.logger.error("Null data_hierarchy_types, erroneous app state")
-        raise GenericException("Null data_hierarchy_types, erroneous app state", {})
-      if self.type_info.datatype in self.data_hierarchy_types:
-        show_message(
-          f"Type (datatype: {self.type_info.datatype} displayed title: {self.type_info.title}) cannot be added since it exists in DB already....",
-          QMessageBox.Icon.Warning)
-      else:
-        self.logger.info("User created a new type and added "
-                         "to the data_hierarchy document: Datatype: {%s}, Displayed Title: {%s}",
-                         self.type_info.datatype,
-                         self.type_info.title)
+    if not self.validate_type_info():
+      return
+    if self.data_hierarchy_types is None:
+      self.logger.error("Null data_hierarchy_types, erroneous app state")
+      raise GenericException("Null data_hierarchy_types, erroneous app state", {})
+    if self.type_info.datatype in self.data_hierarchy_types:
+      self.logger.error(
+        "Type (datatype: {%s} displayed title: {%s}) cannot be added since it exists in DB already....",
+        self.type_info.datatype,
+        self.type_info.title
+      )
+      show_message(
+        f"Type (datatype: {self.type_info.datatype} displayed title: {self.type_info.title}) cannot be added since it exists in DB already....",
+        QMessageBox.Icon.Warning)
+    else:
+      self.logger.info("User created a new type and added "
+                       "to the data_hierarchy document: Datatype: {%s}, Displayed Title: {%s}",
+                       self.type_info.datatype,
+                       self.type_info.title)
+      if isinstance(self.type_info.datatype, str):
         self.data_hierarchy_types[self.type_info.datatype] = generate_data_hierarchy_type(self.type_info)
-        self.instance.close()
-        self.accepted_callback_parent()
+      self.instance.close()
+      self.accepted_callback_parent()
 
-  def rejected_callback(self):
+  def rejected_callback(self) -> None:
     """
      Calls the parent rejection callback method.
 

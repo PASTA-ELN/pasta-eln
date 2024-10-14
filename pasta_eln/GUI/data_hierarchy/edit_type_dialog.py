@@ -74,9 +74,8 @@ class EditTypeDialog(TypeDialog):
     self.iriLineEdit.setText(self.selected_data_hierarchy_type.get("IRI") or "")
     self.typeDisplayedTitleLineEdit.setText(self.selected_data_hierarchy_type.get("title") or "")
     self.shortcutLineEdit.setText(self.selected_data_hierarchy_type.get("shortcut") or "")
-    self.iconFontCollectionComboBox.setCurrentText(
-      self.selected_data_hierarchy_type.get("icon").split(".")[0] if self.selected_data_hierarchy_type.get(
-        "icon") else "")
+    icon = self.selected_data_hierarchy_type.get("icon") or ""
+    self.iconFontCollectionComboBox.setCurrentText(icon.split(".")[0] if icon else "")
     self.iconComboBox.setCurrentText(self.selected_data_hierarchy_type.get("icon") or "No value")
 
   def accepted_callback(self) -> None:

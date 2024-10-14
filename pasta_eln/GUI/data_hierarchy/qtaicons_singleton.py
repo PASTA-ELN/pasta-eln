@@ -96,8 +96,8 @@ class QTAIconsSingleton(metaclass=SingletonMeta):
     if self._icons_initialized:
       self.logger.warning("Icons already initialized!")
       return
-    qta._instance()
-    font_maps = qta._resource['iconic'].charmap
+    qta._instance()  # pylint: disable=W0212
+    font_maps = qta._resource['iconic'].charmap  # pylint: disable=W0212
     if font_maps is None or not font_maps:
       self.logger.warning("font_maps could not be found!")
       return

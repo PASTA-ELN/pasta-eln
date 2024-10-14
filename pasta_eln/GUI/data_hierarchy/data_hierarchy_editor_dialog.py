@@ -156,12 +156,12 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
       if new_type_selected not in self.data_hierarchy_types:
         raise KeyNotFoundException(f"Key {new_type_selected} "
                                    f"not found in data_hierarchy_types", {})
-      selected_type = self.data_hierarchy_types.get(new_type_selected)
+      selected_type = self.data_hierarchy_types.get(new_type_selected, {})
       # Get the metadata for the selected type and store the list in selected_type_metadata
-      self.selected_type_metadata = selected_type.get("meta")
+      self.selected_type_metadata = selected_type.get("meta", {})
 
       # Gets the attachment data from selected type and set it in table view
-      self.attachments_table_data_model.update(selected_type.get('attachments'))
+      self.attachments_table_data_model.update(selected_type.get('attachments', {}))
 
       # Reset the metadata group combo-box
       self.metadataGroupComboBox.addItems(list(self.selected_type_metadata.keys())
@@ -236,7 +236,7 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
     current_type = self.typeComboBox.currentText()
     current_type = adapt_type(current_type)
     if modified_type_displayed_title is not None and current_type in self.data_hierarchy_types:
-      self.data_hierarchy_types.get(current_type)["title"] = modified_type_displayed_title
+      self.data_hierarchy_types.get(current_type, {})["title"] = modified_type_displayed_title
 
   def update_type_iri(self,
                       modified_iri: str) -> None:
@@ -251,7 +251,7 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
     current_type = self.typeComboBox.currentText()
     current_type = adapt_type(current_type)
     if modified_iri is not None and current_type in self.data_hierarchy_types:
-      self.data_hierarchy_types.get(current_type)["IRI"] = modified_iri
+      self.data_hierarchy_types.get(current_type, {})["IRI"] = modified_iri
 
   def delete_selected_type(self) -> None:
     """
@@ -363,7 +363,7 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
     current_type = self.typeComboBox.currentText()
     current_type = adapt_type(current_type)
     self.edit_type_dialog.set_selected_data_hierarchy_type_name(current_type)
-    self.edit_type_dialog.set_selected_data_hierarchy_type(self.data_hierarchy_types.get(current_type))
+    self.edit_type_dialog.set_selected_data_hierarchy_type(self.data_hierarchy_types.get(current_type, {}))
     self.edit_type_dialog.show()
 
   def setup_slots(self) -> None:
