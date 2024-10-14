@@ -105,7 +105,7 @@ class TerminologyLookupService:
     results = reduce(lambda d, key: d.get(key) if d else None, result_keys,  # type: ignore[arg-type, return-value]
                      web_result)
     for item in results or []:
-      description = reduce(lambda d, key: d.get(key) if d else "", desc_keys, item)  # type: ignore[attr-defined]
+      description = reduce(lambda d, key: d.get(key) if d else None, desc_keys, item)  # type: ignore[attr-defined]
       is_duplicate = (item[duplicate_ontology_key]  # type: ignore[operator]
                       in duplicate_ontology_names) if duplicate_ontology_key else False
       if (description

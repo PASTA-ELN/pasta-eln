@@ -31,7 +31,7 @@ def initContextMenu(widget:QWidget, pos:QPoint) -> None:
   # Action('Open file with another application', widget.changeExtractor, context, widget, name='_openExternal_')
   Action('Open folder in file browser', widget, [CommandMenu.OPEN_FILEBROWSER],      context)
   Action('Hide',                        widget, [CommandMenu.HIDE],                  context)
-  context.exec(widget.mapToGlobal(pos)) # type: ignore[call-overload]
+  context.exec(widget.mapToGlobal(pos))
   return
 
 
