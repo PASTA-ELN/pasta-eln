@@ -330,7 +330,7 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
       else self.create_type_dialog.titleLineEdit.text()
     displayed_title = self.create_type_dialog.displayedTitleLineEdit.text()
     self.create_type_dialog.clear_ui()
-    self.create_new_type(title, displayed_title)
+    self.create_new_type(title or "", displayed_title)
 
   def create_type_rejected_callback(self) -> None:
     """
