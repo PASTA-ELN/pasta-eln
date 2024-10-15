@@ -1,4 +1,4 @@
-"""Icon names for the data hierarchy."""
+""" QTAIconsFactory class. """
 #  PASTA-ELN and all its sub-parts are covered by the MIT license.
 #
 #  Copyright (c) 2024
@@ -15,47 +15,11 @@ import qtawesome as qta
 from pasta_eln.dataverse.incorrect_parameter_error import IncorrectParameterError
 
 
-class SingletonMeta(type):
-  """
-  A metaclass that implements the Singleton design pattern.
-
-  Explanation:
-      This metaclass ensures that a class has only one instance and provides a global point of access to it.
-      When a class is created using this metaclass, it checks if an instance already exists; if not, it creates one.
-
-  Returns:
-      The single instance of the class.
-  """
-  _instances: Any = {}
-
-  def __call__(cls, *args: Any, **kwargs: Any) -> Any:
-    """
-    Creates or retrieves the singleton instance of the class.
-
-    Explanation:
-        This method is called when an instance of the class is requested.
-        It checks if an instance already exists; if not, it creates a new instance and stores it for future requests.
-
-    Args:
-        *args (Any): Variable length argument list for the class constructor.
-        **kwargs (Any): Arbitrary keyword arguments for the class constructor.
-
-    Returns:
-        The single instance of the class.
-    """
-    if cls not in cls._instances:
-      instance = super().__call__(*args, **kwargs)
-      cls._instances[cls] = instance
-    return cls._instances[cls]
-
-
-class QTAIconsSingleton(metaclass=SingletonMeta):
+class QTAIconsFactory:
   """
   Singleton class for managing QTA icons.
 
-  Explanation:
-      This class ensures that there is only one instance of QTAIconsSingleton throughout the application.
-      It initializes and manages icon names and font collections for use in the UI.
+  This class ensures that there is only one instance of QTAIconsFactory throughout the application. It initializes and manages icon names and font collections for use in the UI.
 
   Attributes:
       logger (logging.Logger): Logger for the class.
@@ -64,14 +28,39 @@ class QTAIconsSingleton(metaclass=SingletonMeta):
       _icons_initialized (bool): Flag indicating whether the icons have been initialized.
 
   Methods:
+      get_instance(): Returns the singleton instance of the class.
       set_icon_names(): Initializes the icon names based on the available font collections.
       font_collections: Property to get or set the font collections.
       icon_names: Property to get or set the icon names.
   """
+  _instance: Any = None
+
+  @classmethod
+  def get_instance(cls) -> Any:
+    """
+    Returns the singleton instance of the class. This method ensures that only one instance of the class is created and returned.
+
+    This class method checks if an instance already exists. If not, it creates a new instance and stores it in a class attribute. Subsequent calls to this method will return the existing instance.
+
+    Args:
+        cls: The class itself.
+
+    Returns:
+        An instance of the class.
+
+    Examples:
+        instance1 = YourClassName.get_instance()
+        instance2 = YourClassName.get_instance()
+        assert instance1 is instance2  # Both calls return the same instance.
+    """
+    if (not hasattr(cls, '_instance')
+        or not getattr(cls, '_instance')):
+      cls._instance = cls()
+    return cls._instance
 
   def __init__(self) -> None:
     """
-    Initializes the QTAIconsSingleton instance.
+    Initializes the QTAIconsFactory instance.
 
     Explanation:
         This method sets up the logger for the class and initializes the icon names and font collections.

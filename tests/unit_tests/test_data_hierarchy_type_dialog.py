@@ -13,9 +13,9 @@ from PySide6 import QtWidgets
 from PySide6.QtWidgets import QDialogButtonBox, QLineEdit, QMessageBox
 from _pytest.mark import param
 
+from pasta_eln.GUI.data_hierarchy.data_type_info_validator import DataTypeInfoValidator
 from pasta_eln.GUI.data_hierarchy.lookup_iri_action import LookupIriAction
 from pasta_eln.GUI.data_hierarchy.type_dialog import TypeDialog
-from pasta_eln.dataverse.data_type_info_validator import DataTypeInfoValidator
 
 
 @pytest.fixture
@@ -31,13 +31,13 @@ def type_dialog(mocker):
   mocker.patch('pasta_eln.GUI.data_hierarchy.type_dialog.QDialog')
   mocker.patch('pasta_eln.GUI.data_hierarchy.type_dialog.LookupIriAction')
   mocker.patch('pasta_eln.GUI.data_hierarchy.type_dialog.show_message')
-  mocker.patch('pasta_eln.GUI.data_hierarchy.type_dialog.QTAIconsSingleton',
+  mocker.patch('pasta_eln.GUI.data_hierarchy.type_dialog.QTAIconsFactory',
                MagicMock(font_collections=['Font1', 'Font2']))
   mocker.patch('pasta_eln.GUI.data_hierarchy.type_dialog_base.Ui_TypeDialogBase.setupUi')
   mocker.patch('pasta_eln.GUI.data_hierarchy.type_dialog.DataTypeInfo')
   mocker.patch('pasta_eln.GUI.data_hierarchy.type_dialog.QRegularExpression')
   mocker.patch('pasta_eln.GUI.data_hierarchy.type_dialog.QRegularExpressionValidator')
-  mocker.patch('pasta_eln.GUI.data_hierarchy.type_dialog.QTAIconsSingleton',
+  mocker.patch('pasta_eln.GUI.data_hierarchy.type_dialog.QTAIconsFactory',
                MagicMock(font_collections=['Font1', 'Font2']))
   return TypeDialog(MagicMock(), MagicMock())
 
@@ -66,7 +66,7 @@ class TestDataHierarchyTypeDialog:
     mocker.patch('pasta_eln.GUI.data_hierarchy.type_dialog.show_message')
     mocker.patch('pasta_eln.GUI.data_hierarchy.type_dialog.TypeDialog.populate_icons')
     mocker.patch('pasta_eln.GUI.data_hierarchy.type_dialog.TypeDialog.set_iri_lookup_action')
-    mock_qta_icons_singleton = mocker.patch('pasta_eln.GUI.data_hierarchy.type_dialog.QTAIconsSingleton',
+    mock_qta_icons_singleton = mocker.patch('pasta_eln.GUI.data_hierarchy.type_dialog.QTAIconsFactory',
                                             MagicMock(font_collections=['Font1', 'Font2']))
     mock_setup_ui = mocker.patch('pasta_eln.GUI.data_hierarchy.type_dialog_base.Ui_TypeDialogBase.setupUi')
 
@@ -78,7 +78,7 @@ class TestDataHierarchyTypeDialog:
     mock_data_type_info.assert_called_once()
     mock_q_dialog.assert_called_once()
     mock_setup_ui.assert_called_once_with(mock_q_dialog.return_value)
-    mock_qta_icons_singleton.assert_called_once()
+    mock_qta_icons_singleton.get_instance.assert_called_once()
     mock_setup_slots.assert_called_once()
     assert type_dialog.accepted_callback_parent == accepted_callback
     assert type_dialog.rejected_callback_parent == rejected_callback

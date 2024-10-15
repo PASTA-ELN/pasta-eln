@@ -30,13 +30,13 @@ def type_dialog(mocker):
   mocker.patch('pasta_eln.GUI.data_hierarchy.type_dialog.QDialog')
   mocker.patch('pasta_eln.GUI.data_hierarchy.type_dialog.LookupIriAction')
   mocker.patch('pasta_eln.GUI.data_hierarchy.type_dialog.show_message')
-  mocker.patch('pasta_eln.GUI.data_hierarchy.type_dialog.QTAIconsSingleton',
+  mocker.patch('pasta_eln.GUI.data_hierarchy.type_dialog.QTAIconsFactory',
                MagicMock(font_collections=['Font1', 'Font2']))
   mocker.patch('pasta_eln.GUI.data_hierarchy.type_dialog_base.Ui_TypeDialogBase.setupUi')
   mocker.patch('pasta_eln.GUI.data_hierarchy.type_dialog.DataTypeInfo')
   mocker.patch('pasta_eln.GUI.data_hierarchy.type_dialog.QRegularExpression')
   mocker.patch('pasta_eln.GUI.data_hierarchy.type_dialog.QRegularExpressionValidator')
-  mocker.patch('pasta_eln.GUI.data_hierarchy.type_dialog.QTAIconsSingleton',
+  mocker.patch('pasta_eln.GUI.data_hierarchy.type_dialog.QTAIconsFactory',
                MagicMock(font_collections=['Font1', 'Font2']))
   return CreateTypeDialog(MagicMock(), MagicMock())
 

@@ -17,7 +17,7 @@ from PySide6.QtGui import QMouseEvent, Qt
 from PySide6.QtWidgets import QMessageBox, QStyleOptionViewItem
 from cloudant import CouchDB
 
-from pasta_eln.dataverse.data_type_info import DataTypeInfo
+from pasta_eln.GUI.data_hierarchy.data_type_info import DataTypeInfo
 
 
 def is_click_within_bounds(event: QEvent,

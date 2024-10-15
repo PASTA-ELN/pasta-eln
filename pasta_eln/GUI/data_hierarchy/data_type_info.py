@@ -7,6 +7,14 @@
 #  Filename: data_type_info.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
+
+#  PASTA-ELN and all its sub-parts are covered by the MIT license.
+#
+#
+#  Author: Jithu Murugan
+#  Filename: data_type_info.py
+#
+#  You should have received a copy of the license with this file. Please refer the license file for more information.
 from typing import Any, Generator
 
 from pasta_eln.dataverse.incorrect_parameter_error import IncorrectParameterError

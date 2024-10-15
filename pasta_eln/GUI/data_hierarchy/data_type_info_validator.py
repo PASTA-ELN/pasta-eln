@@ -7,7 +7,7 @@
 #  Filename: data_type_info_validator.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
-from pasta_eln.dataverse.data_type_info import DataTypeInfo
+from pasta_eln.GUI.data_hierarchy.data_type_info import DataTypeInfo
 
 
 class DataTypeInfoValidator:

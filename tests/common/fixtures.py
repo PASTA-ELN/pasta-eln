@@ -47,7 +47,7 @@ def create_type_dialog_mock(mocker) -> TypeDialog:
   mocker.patch('pasta_eln.GUI.data_hierarchy.create_type_dialog.logging.getLogger')
   mocker.patch('pasta_eln. GUI. data_hierarchy. type_dialog.DataTypeInfo')
   mocker.patch('pasta_eln.GUI.data_hierarchy.create_type_dialog.QDialog')
-  mocker.patch('pasta_eln.GUI.data_hierarchy.create_type_dialog.QTAIconsSingleton')
+  mocker.patch('pasta_eln.GUI.data_hierarchy.create_type_dialog.QTAIconsFactory')
   mocker.patch('pasta_eln.GUI.data_hierarchy.type_dialog_base.Ui_TypeDialogBase.setupUi')
   # mocker.patch.object(QDialog, '__new__')
   mocker.patch.object(TypeDialog, 'titleLineEdit', create=True)

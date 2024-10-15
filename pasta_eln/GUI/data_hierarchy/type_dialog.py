@@ -17,12 +17,12 @@ from PySide6.QtCore import QRegularExpression
 from PySide6.QtGui import QRegularExpressionValidator
 from PySide6.QtWidgets import QDialog, QLineEdit, QMessageBox
 
+from pasta_eln.GUI.data_hierarchy.data_type_info import DataTypeInfo
+from pasta_eln.GUI.data_hierarchy.data_type_info_validator import DataTypeInfoValidator
 from pasta_eln.GUI.data_hierarchy.lookup_iri_action import LookupIriAction
-from pasta_eln.GUI.data_hierarchy.qtaicons_singleton import QTAIconsSingleton
+from pasta_eln.GUI.data_hierarchy.qtaicons_factory import QTAIconsFactory
 from pasta_eln.GUI.data_hierarchy.type_dialog_base import Ui_TypeDialogBase
 from pasta_eln.GUI.data_hierarchy.utility_functions import show_message
-from pasta_eln.dataverse.data_type_info import DataTypeInfo
-from pasta_eln.dataverse.data_type_info_validator import DataTypeInfoValidator
 
 
 class TypeDialog(Ui_TypeDialogBase):
@@ -44,7 +44,7 @@ class TypeDialog(Ui_TypeDialogBase):
       rejected_callback_parent (Callable[[], None]): Parent callback for rejected action.
       type_info (DataTypeInfo): DataTypeInfo instance to hold the data type information.
       instance (QDialog): The dialog instance.
-      qta_icons (QTAIconsSingleton): Singleton instance for managing icons.
+      qta_icons (QTAIconsFactory): Singleton instance for managing icons.
 
   Methods:
       setup_slots(): Connects UI elements to their respective callback functions.
@@ -81,7 +81,7 @@ class TypeDialog(Ui_TypeDialogBase):
     self.instance = QDialog()
     super().setupUi(self.instance)
 
-    self.qta_icons = QTAIconsSingleton()
+    self.qta_icons = QTAIconsFactory.get_instance()
     self.iconFontCollectionComboBox.addItems(self.qta_icons.font_collections)
     self.populate_icons(self.qta_icons.font_collections[0])
 
