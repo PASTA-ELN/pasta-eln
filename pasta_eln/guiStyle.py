@@ -422,7 +422,7 @@ def addDocDetails(widget:QWidget, layout:QLayout, key:str, value:Any, dataHierar
       key = key if value[2] is None or value[2]=='' else value[2]
       valueString = f'{value[0]} {value[1]}'
       valueString = valueString if value[3] is None or value[3]=='' else f'{valueString}&nbsp;<b><a href="{value[3]}">&uArr;</a></b>'
-      labelStr = f'{key.capitalize()}: {valueString}'
+      labelStr = f'{key.capitalize()}: {valueString}<br>'
     if isinstance(value, dict):
       value = dict2ul({k:v[0] for k,v in value.items()})
       labelStr = f'{CSS_STYLE}{key.capitalize()}: {value}'

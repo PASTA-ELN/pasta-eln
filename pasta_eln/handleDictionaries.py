@@ -167,8 +167,11 @@ def diffDicts(dict1:dict[str,Any], dict2:dict[str,Any]) -> str:
             if branch1!=branch2:
               outString += 'branches differ\n   '+str(value)+'\n   '+str(dict2Copy[key])+'\n'
       elif isinstance(value, list):
-        if set(value).difference(set(dict2Copy[key])):
-          outString += (f'lists differ for key: {key}\n   {str(value)}\n   {str(dict2Copy[key])}\n')
+        try:
+          if set(value).difference(set(dict2Copy[key])):
+            outString += (f'lists differ for key: {key}\n   {str(value)}\n   {str(dict2Copy[key])}\n')
+        except:
+          outString += 'Exception 1 in handleDictionaries\n'
       elif isinstance(value, dict):
         if json.dumps(value) != json.dumps(dict2Copy[key]):
           outString += (f'dicts differ for key: {key}\n   {str(value)}\n   {str(dict2Copy[key])}\n')

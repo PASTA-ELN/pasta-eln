@@ -381,6 +381,13 @@ class SqlLiteDB:
           if isinstance(branchNew['stack'], str):
             raise ValueError('Should be list')
           branchNew['show'] = self.createShowFromStack(branchNew['stack'])
+          self.cursor.execute(f"INSERT INTO branches VALUES ({', '.join(['?']*6)})",
+                        [docID,
+                         len(branchOld),
+                         '/'.join(branchNew['stack']),
+                         branchNew['child'],
+                         '*' if branchNew['path'] is None else branchNew['path'],
+                         ''.join(['T' if j else 'F' for j in branchNew['show']])])
         elif op=='u':  #update
           if oldPath is not None:              # search by using old path
             for branch in branchOld:
@@ -395,16 +402,16 @@ class SqlLiteDB:
           else:
             idx = 0
             branchOld[idx] = branchNew           #change branch 0 aka the default
+          if idx is None:                          # create new branch: should not happen here
+            raise ValueError(f'sqlite.2: idx unset: {mainNew["id"]} {mainNew["name"]}')
+          self.cursor.execute(f"UPDATE branches SET stack='{'/'.join(branchOld[idx]['stack']+[docID])}', "
+                              f"path='{branchOld[idx]['path']}', child='{branchOld[idx]['child']}', "
+                              f"show='{''.join(['T' if j else 'F' for j in branchOld[idx]['show']])}' "
+                              f"WHERE id = '{docID}' and idx = {idx}")
         elif op=='d':  #delete
           branchOld = [branch for branch in branchOld if branch['path']!=branchNew['path']]
         else:
           raise ValueError(f'sqlite.1: unknown branch op: {mainNew["id"]} {mainNew["name"]}')
-        if idx is None:                          # create new branch: should not happen here
-          raise ValueError(f'sqlite.2: idx unset: {mainNew["id"]} {mainNew["name"]}')
-        self.cursor.execute(f"UPDATE branches SET stack='{'/'.join(branchOld[idx]['stack']+[docID])}', "
-                            f"path='{branchOld[idx]['path']}', child='{branchOld[idx]['child']}', "
-                            f"show='{''.join(['T' if j else 'F' for j in branchOld[idx]['show']])}' "
-                            f"WHERE id = '{docID}' and idx = {idx}")
 
     # read properties and identify changes
     self.cursor.execute(f"SELECT key, value FROM properties WHERE id == '{docID}'")
