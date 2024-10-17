@@ -216,9 +216,12 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> str:
         doc['type'] = ['x1']
       # change .variable measured into pastaSystem
       variableMeasured = doc.pop('.variableMeasured',[])
-      for data in variableMeasured:
-        doc[data['propertyID']] = (data['value'], data.get('unitText',''), data.get('description',''), data.get('mentions',''))
-      print(f'Node becomes: {json.dumps(doc, indent=2)}')
+      if variableMeasured is not None:
+        for data in variableMeasured:
+          propertyID = data['propertyID'] if elnName in {'PASTA ELN','Kadi4Mat'} else f"imported.{data['propertyID']}"
+          # print('propertyID', propertyID, elnName)
+          doc[propertyID] = (data['value'], data.get('unitText',''), data.get('description',''), data.get('mentions',''))
+      # print(f'Node becomes: {json.dumps(doc, indent=2)}')
       return doc, elnID, children, dataType
 
 
@@ -246,8 +249,6 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> str:
       # TESTED UNTIL HERE
       if elnName == 'PASTA ELN' and elnID.startswith('http') and ':/' in elnID:
         fullPath = None
-      elif elnName == 'PASTA ELN':
-        fullPath = backend.basePath/( '/'.join(elnID.split('/')[1:]) )
       else:
         fullPath = backend.basePath/backend.cwd/elnID.split('/')[-1]
       if fullPath is not None and f'{dirName}/{elnID}' in elnFile.namelist():  #Copy file onto hard disk
