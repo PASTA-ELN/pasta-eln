@@ -583,7 +583,7 @@ class SqlLiteDB:
         show[idx] = 'F'
     return ''.join(show)
 
-  def remove(self, docID:str) -> dict[str,Any]:
+  def remove(self, docID:str, stack:str='') -> dict[str,Any]:
     """
     remove doc from database: temporary for development and testing
 
@@ -594,15 +594,19 @@ class SqlLiteDB:
       dict: document that was removed
     """
     doc = self.getDoc(docID)
-    doc.pop('image','')
-    doc.pop('content','')
-    self.cursor.execute(f"DELETE FROM main WHERE id == '{docID}'")
-    self.cursor.execute(f"DELETE FROM branches WHERE id == '{docID}'")
-    self.cursor.execute(f"DELETE FROM properties WHERE id == '{docID}'")
-    self.cursor.execute(f"DELETE FROM tags WHERE id == '{docID}'")
-    self.cursor.execute(f"DELETE FROM qrCodes WHERE id == '{docID}'")
-    self.cursor.execute(f"DELETE FROM attachments WHERE id == '{docID}'")
-    self.cursor.execute("INSERT INTO changes VALUES (?,?,?)", [docID, datetime.now().isoformat(), json.dumps(doc)])
+    if len(doc['branch'])>1 and stack:  #only remove one branch
+      stack = stack[:-1] if stack.endswith('/') else stack
+      self.cursor.execute(f"DELETE FROM branches WHERE id == '{docID}' and stack LIKE '{stack}%'")
+    else:                               #remove everything
+      doc.pop('image','')
+      doc.pop('content','')
+      self.cursor.execute(f"DELETE FROM main WHERE id == '{docID}'")
+      self.cursor.execute(f"DELETE FROM branches WHERE id == '{docID}'")
+      self.cursor.execute(f"DELETE FROM properties WHERE id == '{docID}'")
+      self.cursor.execute(f"DELETE FROM tags WHERE id == '{docID}'")
+      self.cursor.execute(f"DELETE FROM qrCodes WHERE id == '{docID}'")
+      self.cursor.execute(f"DELETE FROM attachments WHERE id == '{docID}'")
+      self.cursor.execute("INSERT INTO changes VALUES (?,?,?)", [docID, datetime.now().isoformat(), json.dumps(doc)])
     self.connection.commit()
     return doc
 
@@ -643,7 +647,7 @@ class SqlLiteDB:
 
     Args:
         thePath (string): path to view
-        startKey (string): if given, use to filter output, everything that starts with this key
+        startKey (string): / separated; if given, use to filter output, everything that starts with this key
         preciseKey (string): if given, use to filter output. Match precisely
 
     Returns:
