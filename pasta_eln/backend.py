@@ -303,10 +303,10 @@ class Backend(CLI_Mixin):
     self.cwd = self.basePath/projPath
     rerunScanTree = False
     #prepare lists and start iterating
-    inDB_all = self.db.getView('viewHierarchy/viewPaths')
+    inDB_all = self.db.getView('viewHierarchy/viewPathsAll', startKey=projPath)
     pathsInDB_x    = [i['key'] for i in inDB_all if i['value'][1][0][0]=='x']  #all structure elements: task, subtasts
     pathsInDB_data = [i['key'] for i in inDB_all if i['value'][1][0][0]!='x']
-    filesCountSum = sum(len(files) for (r, d, files) in os.walk(self.cwd))
+    filesCountSum = sum(len(files) for (_, _, files) in os.walk(self.cwd))
     filesCount = 0
     for root, dirs, files in os.walk(self.cwd, topdown=True):
       #find parent-document
@@ -315,7 +315,7 @@ class Backend(CLI_Mixin):
         del dirs
         del files
         continue
-      parentIDs = [i for i in inDB_all if i['key']==self.cwd.as_posix()]
+      parentIDs = [i for i in inDB_all if i['key']==self.cwd.as_posix()]  #parent of this folder
       if not parentIDs: #skip newly moved folder, will be scanned upon re-scanning
         continue
       parentID = parentIDs[0]['id']
