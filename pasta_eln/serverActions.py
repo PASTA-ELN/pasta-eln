@@ -169,11 +169,13 @@ def repairPropertiesDot(projectGroup:str='') -> None:
   print("Done")
   return
 
-def delete(projectGroup:str='', docID:str='') -> None:
-  """ Delete a document
+
+def printOrDelete(projectGroup:str='', docID:str='', output:bool=True) -> None:
+  """ Print or delete a document
   Args:
     projectGroup (str): from which project group to delete
     docID (str): which ID to delete
+    output (bool): print=True or delete=False
   """
   if not projectGroup:
     with open(Path.home()/'.pastaELN.json','r', encoding='utf-8') as fIn:
@@ -183,7 +185,10 @@ def delete(projectGroup:str='', docID:str='') -> None:
   be = Backend(projectGroup)
   if not docID:
     docID = input('Enter docID: ').strip()
-  be.db.remove(docID)
+  if output:
+    print(json.dumps(be.db.getDoc(docID), indent=2))
+  else:
+    be.db.remove(docID)
   return
 
 

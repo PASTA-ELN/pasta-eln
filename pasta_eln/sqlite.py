@@ -920,9 +920,8 @@ class SqlLiteDB:
             outString+= outputString(outputStyle,'unsure',f"branch stack and path lengths not equal: {docID}")
         if path!='*' and not path.startswith('http'):
           for parentID in stack.split('/')[:-1]:            #check if all parents in doc have a corresponding path
-            try:
-              parentDoc = self.getDoc(parentID)
-            except Exception:
+            parentDoc = self.getDoc(parentID)
+            if not parentDoc:
               outString+= outputString(outputStyle,'error',f"branch stack parent is bad: {docID}")
               continue
             parentDocBranches = parentDoc['branch']
