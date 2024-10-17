@@ -19,6 +19,11 @@ from .fixedStringsJson import CONF_FILE_NAME
 #   - not sure how important this information is: different groups have different externalIDs
 #   - if every it becomes important: just add json (that maps identifier to externalID) as additional file
 
+# Idea: ELN from other vendor -> import -> export: should be the same
+# - not because some information is added (pasta's identifier)
+# - some information is changed (what I understand as measurement is not the same as elab's experiment which is more a folder in pasta
+# - some information is deleted (data privacy related)
+
 # GENERAL TERMS IN ro-crate-metadata.json (None: this entry is not saved and will be recreated upon import)
 pasta2json:dict[str,Any] = {
   'id'          : 'identifier',
@@ -209,7 +214,11 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> str:
         doc['.oldIdentifier'] = doc.pop('id')
       if children and ('type' not in doc or doc['type'][0]!='x1'):
         doc['type'] = ['x1']
-      # print(f'Node becomes: {json.dumps(doc, indent=2)}')
+      # change .variable measured into pastaSystem
+      variableMeasured = doc.pop('.variableMeasured',[])
+      for data in variableMeasured:
+        doc[data['propertyID']] = (data['value'], data.get('unitText',''), data.get('description',''), data.get('mentions',''))
+      print(f'Node becomes: {json.dumps(doc, indent=2)}')
       return doc, elnID, children, dataType
 
 

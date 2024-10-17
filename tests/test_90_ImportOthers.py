@@ -1,7 +1,6 @@
 #!/usr/bin/python3
-import logging, warnings, unittest, tempfile, os
+import logging, warnings, os, shutil
 from pathlib import Path
-from zipfile import ZipFile
 from pasta_eln.backend import Backend
 from pasta_eln.GUI.project import Project
 from pasta_eln.guiCommunicate import Communicate
@@ -30,18 +29,24 @@ def test_simple(qtbot):
   comm = Communicate(backend, palette)
   window = Project(comm)
   qtbot.addWidget(window)
-  projID = backend.output('x0').split('|')[-1].strip()
-  window.change(projID,'')
 
-  # create .eln
+  # remove old and recreate empty
+  dirName = backend.basePath
+  backend.exit()
+  try:
+    shutil.rmtree(dirName)
+    os.makedirs(dirName)
+  except Exception:
+    pass
   backend = Backend('research')
-  for eln in os.listdir('tests/otherELNs'):
+
+  for eln in os.listdir('tests/importELNs'):
     print(f'\nStart with {eln}')
-    projName = f'Import data from {eln}'
+    projName = f'{eln[:-4]} Import'
     backend.addData('x0', {'name': projName})
     df = backend.db.getView('viewDocType/x0')
     projID = df[df['name']==projName]['id'].values[0]
-    reply = importELN(backend, f'tests/otherELNs/{eln}', projID)
+    reply = importELN(backend, f'tests/importELNs/{eln}', projID)
     print(reply)
 
   return
