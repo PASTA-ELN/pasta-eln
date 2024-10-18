@@ -17,7 +17,7 @@ def use(filePath, style={'main':''}, saveFileName=None):
   # HERE MAIN PART OF EXTRACTOR
   metaVendor = {}
   metaUser   = {}
-  style      = 'procedure/python'
+  style      = {'main':'procedure/python'}
   content    = ''
   with open(filePath, 'r', encoding='utf-8') as fIn:
     content = '``` python\n'+fIn.read()+'```'

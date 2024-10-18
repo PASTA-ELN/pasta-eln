@@ -451,7 +451,7 @@ class Backend(CLI_Mixin):
                 doc[meta][item] = list(doc[meta][item])
               try:
                 _ = json.dumps(doc[meta][item])
-              except ValueError:
+              except (ValueError, TypeError):
                 doc[meta][item] = str(doc[meta][item])
                 print('**Warning -> stringified  ',meta, item)
           else:

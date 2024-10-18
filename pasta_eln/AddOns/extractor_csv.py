@@ -57,7 +57,10 @@ def use(filePath, style={'main':''}, saveFileName=None):
     plt.plot(data.iloc[:,0], data.iloc[:,1],'o-')
   plt.xlabel('time [sec]')
   plt.ylabel('value [m]')                                                    # the units are an example for this tutorial and should be changed
-  sampleFrequency = 1.0 / (data.iloc[1,0]-data.iloc[0,0])                    # a simple equation to calculate the sample frequency
+  if data.shape[0]>1:
+    sampleFrequency = 1.0 / (data.iloc[1,0]-data.iloc[0,0])                  # a simple equation to calculate the sample frequency
+  else: #if only one line in file
+    sampleFrequency = 1.0
   maxYData        = data.iloc[:,1].max()
   metaUser = {'Sample frequency [Hz]':sampleFrequency,                       # this is the easy way to denote metadata as scientists often use. Internally it is converted appropriately
               'Maximum y-data [m]':   maxYData}

@@ -123,7 +123,7 @@ METADATA_FILE = 'ro-crate-metadata.json'
 #   return output
 
 
-def importELN(backend:Backend, elnFileName:str, projID:str) -> str:
+def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[str,Any]]:
   '''
   import .eln file from other ELN or from PASTA
 
@@ -133,23 +133,22 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> str:
     projID (str): project to import data into. If '', create a new project (only available for PastaELN)
 
   Returns:
-    str: success message
+    str: success message, statistics
   '''
   elnName = ''
   qtDocument = QTextDocument()   #used for html -> markdown conversion
+  statistics = {}
   with ZipFile(elnFileName, 'r', compression=ZIP_DEFLATED) as elnFile:
     files = elnFile.namelist()
-    logging.info('All files \n  %s','\n  '.join(files))
     dirName=Path(files[0]).parts[0]
+    statistics['num. files'] = len([i for i in files if Path(i).parent!=Path(dirName)])
     if f'{dirName}/ro-crate-metadata.json' not in files:
       print('**ERROR: ro-crate does not exist in folder. EXIT')
       return '**ERROR: ro-crate does not exist in folder. EXIT'
     graph = json.loads(elnFile.read(f'{dirName}/ro-crate-metadata.json'))["@graph"]
-    knownDataTypes = ['Dataset','File','Person']
-    for item in knownDataTypes:
-      print(f"Items of type {item}: {len([i for i in graph if i['@type'] == item])}")
-    print('Other data types:')
-    print(' ','\n  '.join([f"{i['@id']} {i['@type']}" for i in graph if not isinstance(i['@type'],str) or i['@type'] not in knownDataTypes]))
+    listAllTypes = [i['@type'] for i in graph if isinstance(i['@type'],str)]
+    statistics['types'] = {i:listAllTypes.count(i) for i in listAllTypes}
+
     #find information from master node
     rocrateNode = [i for i in graph if i["@id"].endswith("ro-crate-metadata.json")][0]
     if 'sdPublisher' in rocrateNode:
@@ -260,7 +259,7 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> str:
       if dataType.lower()=='dataset':
         docType = 'x0' if not projID and len(elnID.split('/'))==0 else 'x1'
       else:
-        docType = 'measurement'
+        docType = ''
       if docType=='x0':
         backend.hierStack = []
       # print(f'Want to add doc:{doc} with type:{docType} and cwd:{backend.cwd}')
@@ -284,7 +283,7 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> str:
   #return to home stack and path
   backend.cwd = Path(backend.basePath)
   backend.hierStack = []
-  return f'Success: imported {str(addedDocuments)} documents from file {elnFileName} from ELN {elnName}'
+  return f'Success: imported {str(addedDocuments)} documents from file {elnFileName} from ELN {elnName}', statistics
 
 
 

@@ -48,5 +48,6 @@ def test_simple(qtbot):
     projID = df[df['name']==projName]['id'].values[0]
     reply = importELN(backend, f'tests/importELNs/{eln}', projID)
     print(reply)
+    #statistics type File can be larger than num.Files because there are remote files which are not Files but in the @type
 
   return
