@@ -11,6 +11,7 @@ from pasta_eln import __version__, minisign
 from .backend import Backend
 from .miscTools import flatten
 from .fixedStringsJson import CONF_FILE_NAME
+from .stringChanges import camelCase
 
 # .eln file: common between all ELNs
 # - can be exported / imported generally; not a 1:1 backup (just zip it)
@@ -18,6 +19,11 @@ from .fixedStringsJson import CONF_FILE_NAME
 # - externalID is the only content that cannot be recreated
 #   - not sure how important this information is: different groups have different externalIDs
 #   - if every it becomes important: just add json (that maps identifier to externalID) as additional file
+
+# Idea: ELN from other vendor -> import -> export: should be the same
+# - not because some information is added (pasta's identifier)
+# - some information is changed (what I understand as measurement is not the same as elab's experiment which is more a folder in pasta
+# - some information is deleted (data privacy related)
 
 # GENERAL TERMS IN ro-crate-metadata.json (None: this entry is not saved and will be recreated upon import)
 pasta2json:dict[str,Any] = {
@@ -32,7 +38,7 @@ pasta2json:dict[str,Any] = {
   'image'       : None,
   'comment'     : 'description',
   'content'     : 'text',
-  'links'       : 'mentions',
+  '.links'      : 'mentions',
   'shasum'      : None,
   'user'        : None,
   'externalId'  : None,
@@ -60,9 +66,7 @@ json2pasta:dict[str,Any] = {v:k for k,v in pasta2json.items() if v is not None}
 # }
 
 
-renameELN = {
-  'https://kadi.iam.kit.edu':'Kadi4Mat'
-}
+renameELN = {'https://kadi.iam.kit.edu':'Kadi4Mat'}
 
 METADATA_FILE = 'ro-crate-metadata.json'
 
@@ -118,7 +122,7 @@ METADATA_FILE = 'ro-crate-metadata.json'
 #   return output
 
 
-def importELN(backend:Backend, elnFileName:str, projID:str) -> str:
+def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[str,Any]]:
   '''
   import .eln file from other ELN or from PASTA
 
@@ -128,23 +132,22 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> str:
     projID (str): project to import data into. If '', create a new project (only available for PastaELN)
 
   Returns:
-    str: success message
+    str: success message, statistics
   '''
   elnName = ''
   qtDocument = QTextDocument()   #used for html -> markdown conversion
+  statistics = {}
   with ZipFile(elnFileName, 'r', compression=ZIP_DEFLATED) as elnFile:
     files = elnFile.namelist()
-    logging.info('All files \n  %s','\n  '.join(files))
     dirName=Path(files[0]).parts[0]
+    statistics['num. files'] = len([i for i in files if Path(i).parent!=Path(dirName)])
     if f'{dirName}/ro-crate-metadata.json' not in files:
       print('**ERROR: ro-crate does not exist in folder. EXIT')
       return '**ERROR: ro-crate does not exist in folder. EXIT'
     graph = json.loads(elnFile.read(f'{dirName}/ro-crate-metadata.json'))["@graph"]
-    knownDataTypes = ['Dataset','File','Person']
-    for item in knownDataTypes:
-      print(f"Items of type {item}: {len([i for i in graph if i['@type'] == item])}")
-    print('Other data types:')
-    print(' ','\n  '.join([f"{i['@id']} {i['@type']}" for i in graph if not isinstance(i['@type'],str) or i['@type'] not in knownDataTypes]))
+    listAllTypes = [i['@type'] for i in graph if isinstance(i['@type'],str)]
+    statistics['types'] = {i:listAllTypes.count(i) for i in listAllTypes}
+
     #find information from master node
     rocrateNode = [i for i in graph if i["@id"].endswith("ro-crate-metadata.json")][0]
     if 'sdPublisher' in rocrateNode:
@@ -207,8 +210,21 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> str:
         doc['tags'] = []
       if elnName!='PASTA ELN' and 'id' in doc:
         doc['.oldIdentifier'] = doc.pop('id')
-      if children and ('type' not in doc or doc['type'][0]!='x1'):
+      doc['.elnIdentifier'] = elnID
+      if (children and ('type' not in doc or doc['type'][0]!='x1')):
         doc['type'] = ['x1']
+      if 'type' not in doc:
+        doc['type'] = ''
+      if doc['type']=='folder':
+        doc['type'] = ['x1']
+      # change .variable measured into pastaSystem
+      variableMeasured = doc.pop('.variableMeasured',[])
+      if variableMeasured is not None:
+        for data in variableMeasured:
+
+          propertyID = data['propertyID'] if '.' in data['propertyID'] and ' ' not in data['propertyID'] else f"imported.{camelCase(data['propertyID'])}"
+          # print('propertyID', propertyID, elnName)
+          doc[propertyID] = (data['value'], data.get('unitText',''), data.get('description',''), data.get('mentions',''))
       # print(f'Node becomes: {json.dumps(doc, indent=2)}')
       return doc, elnID, children, dataType
 
@@ -237,8 +253,6 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> str:
       # TESTED UNTIL HERE
       if elnName == 'PASTA ELN' and elnID.startswith('http') and ':/' in elnID:
         fullPath = None
-      elif elnName == 'PASTA ELN':
-        fullPath = backend.basePath/( '/'.join(elnID.split('/')[1:]) )
       else:
         fullPath = backend.basePath/backend.cwd/elnID.split('/')[-1]
       if fullPath is not None and f'{dirName}/{elnID}' in elnFile.namelist():  #Copy file onto hard disk
@@ -247,16 +261,21 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> str:
         with source, target:  #extract one file to its target directly
           shutil.copyfileobj(source, target)
       # FOR ALL ELNs
-      if dataType.lower()=='dataset':
-        docType = 'x0' if not projID and len(elnID.split('/'))==0 else 'x1'
+      if elnName == "PASTA ELN":
+        docType = '/'.join(doc['type'])
       else:
-        docType = 'measurement'
+        if dataType.lower()=='dataset':
+          docType = 'x0' if not projID and len(elnID.split('/'))==0 else 'x1'
+        else:
+          docType = ''
       if docType=='x0':
         backend.hierStack = []
       # print(f'Want to add doc:{doc} with type:{docType} and cwd:{backend.cwd}')
       docID = backend.addData(docType, doc)['id']
       if docID[0]=='x':
         backend.changeHierarchy(docID)
+        with open(backend.basePath/backend.cwd/'.id_pastaELN.json','w', encoding='utf-8') as f:  #local path, update in any case
+          f.write(json.dumps(backend.db.getDoc(docID)))
         # children, aka recursive part
         for child in children:
           if child['@id'].endswith('/metadata.json') or child['@id'].endswith('_metadata.json'):  #skip own metadata
@@ -274,7 +293,7 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> str:
   #return to home stack and path
   backend.cwd = Path(backend.basePath)
   backend.hierStack = []
-  return f'Success: imported {str(addedDocuments)} documents from file {elnFileName} from ELN {elnName}'
+  return f'Success: imported {str(addedDocuments)} documents from file {elnFileName} from ELN {elnName}', statistics
 
 
 

@@ -4,7 +4,6 @@ from typing import Any
 from datetime import datetime
 from .fixedStringsJson import SQLiteTranslation
 
-
 def fillDocBeforeCreate(data:dict[str,Any], docType:list[str]) -> dict[str,Any]:
   """ Fill the data before submission to database with common data
   - type, project, children
@@ -171,7 +170,8 @@ def diffDicts(dict1:dict[str,Any], dict2:dict[str,Any]) -> str:
           if set(value).difference(set(dict2Copy[key])):
             outString += (f'lists differ for key: {key}\n   {str(value)}\n   {str(dict2Copy[key])}\n')
         except:
-          outString += 'Exception 1 in handleDictionaries\n'
+          if str(value)!= str(dict2Copy[key]).replace('(' ,'[').replace(')' ,']'):
+            outString += f'Difference in key: {key}\n{str(value)}\n{str(dict2Copy[key])}\n'
       elif isinstance(value, dict):
         if json.dumps(value) != json.dumps(dict2Copy[key]):
           outString += (f'dicts differ for key: {key}\n   {str(value)}\n   {str(dict2Copy[key])}\n')
