@@ -11,7 +11,7 @@ ignore=CVS
 
 # Add files or directories matching the regex patterns to the blacklist. The
 # regex matches against base names, not paths.
-ignore-patterns=data_hierarchy_editor_dialog_base.py,create_type_dialog_base.py,terminology_lookup_dialog_base.py,completed_upload_task.py,completed_uploads_base.py,config_dialog_base.py,edit_metadata_dialog_base.py,main_dialog_base.py,primitive_compound_controlled_frame_base.py,project_item_frame_base.py,upload_config_dialog_base.py,upload_widget_base.py,edit_metadata_summary_dialog_base.py,type_dialog_base.py extractor_*.py
+ignore-patterns=data_hierarchy_editor_dialog_base.py,create_type_dialog_base.py,terminology_lookup_dialog_base.py,completed_upload_task.py,completed_uploads_base.py,config_dialog_base.py,edit_metadata_dialog_base.py,main_dialog_base.py,primitive_compound_controlled_frame_base.py,project_item_frame_base.py,upload_config_dialog_base.py,upload_widget_base.py,edit_metadata_summary_dialog_base.py,type_dialog_base.py extractor_[a-z]+.py project_html_report.py
 
 # Python code to execute, usually for sys.path manipulation such as
 # pygtk.require().
