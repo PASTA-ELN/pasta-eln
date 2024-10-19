@@ -169,7 +169,7 @@ def diffDicts(dict1:dict[str,Any], dict2:dict[str,Any]) -> str:
         try:
           if set(value).difference(set(dict2Copy[key])):
             outString += (f'lists differ for key: {key}\n   {str(value)}\n   {str(dict2Copy[key])}\n')
-        except:
+        except Exception:
           if str(value)!= str(dict2Copy[key]).replace('(' ,'[').replace(')' ,']'):
             outString += f'Difference in key: {key}\n{str(value)}\n{str(dict2Copy[key])}\n'
       elif isinstance(value, dict):

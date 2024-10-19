@@ -200,7 +200,7 @@ def main() -> None:
   print(  'Manage users and databases for PASTA-ELN on a local couchDB installation')
   print(  '-------------------------------------------------------------------------')
   while True:
-    print('\nCommands - general: [q]uit; [d]elete a document\n - update: [c]onvert couchDB to SQLite; [t]ranslate disk structure from V2->v3'
+    print('\nCommands - general: [q]uit; [p]rint a document\n - update: [c]onvert couchDB to SQLite; [t]ranslate disk structure from V2->v3'
           '\n - database integrity: [v]erify; [r]epair\n - repair sql: [rp1] repair properties: add missing .')
     command = input('> ')
     if command == 'c':
@@ -213,8 +213,8 @@ def main() -> None:
       verifyPasta(repair=True)
     elif command == 'rp1':
       repairPropertiesDot()
-    elif command == 'd':
-      delete()
+    elif command == 'p':
+      printOrDelete()
     elif command == 'q':
       break
     else:

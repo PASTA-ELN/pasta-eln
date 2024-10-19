@@ -299,7 +299,7 @@ class SqlLiteDB:
         elif str(value)!='':
           try:
             self.cursor.execute(cmd, [doc['id'], parentKeys+key, str(value), ''])
-          except:
+          except Exception:
             print('**ERROR ', cmd, [doc['id'], parentKeys+key, str(value), ''])
       self.connection.commit()
       return
@@ -601,6 +601,7 @@ class SqlLiteDB:
 
     Args:
       docID (string): id of document to remove
+      stack (str): stack of branch to delete, if there are multiple branches
 
     Returns:
       dict: document that was removed

@@ -136,14 +136,14 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
   '''
   elnName = ''
   qtDocument = QTextDocument()   #used for html -> markdown conversion
-  statistics = {}
+  statistics:dict[str,Any] = {}
   with ZipFile(elnFileName, 'r', compression=ZIP_DEFLATED) as elnFile:
     files = elnFile.namelist()
     dirName=Path(files[0]).parts[0]
     statistics['num. files'] = len([i for i in files if Path(i).parent!=Path(dirName)])
     if f'{dirName}/ro-crate-metadata.json' not in files:
       print('**ERROR: ro-crate does not exist in folder. EXIT')
-      return '**ERROR: ro-crate does not exist in folder. EXIT'
+      return '**ERROR: ro-crate does not exist in folder. EXIT',{}
     graph = json.loads(elnFile.read(f'{dirName}/ro-crate-metadata.json'))["@graph"]
     listAllTypes = [i['@type'] for i in graph if isinstance(i['@type'],str)]
     statistics['types'] = {i:listAllTypes.count(i) for i in listAllTypes}
@@ -157,7 +157,7 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
       elnName = publisherNode['name']
     logging.info('Import %s', elnName)
     if not projID and elnName!='PASTA ELN':
-      return "FAILURE: YOU CANNOT IMPORT AS PROJECT IF NON PASTA-ELN FILE"
+      return "FAILURE: YOU CANNOT IMPORT AS PROJECT IF NON PASTA-ELN FILE",{}
     if projID:
       backend.changeHierarchy(projID)
     # if elnName!='PASTA ELN' and elnName in specialTerms:
@@ -461,7 +461,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
     else:
       print("**ERROR: ONLY ONE AUTHOR is allowed according to the schema.org/ro-crate nomenclature")
       logging.error('ONLY ONE AUTHOR is allowed according to the schema.org/ro-crate nomenclature')
-    masterNodeRoot = {'@id': './', '@type': 'Dataset', 'hasPart': masterParts,
+    masterNodeRoot:dict[str,Any] = {'@id': './', '@type': 'Dataset', 'hasPart': masterParts,
         'name': 'Exported from PASTA ELN', 'description': 'Exported content from PASTA ELN',
         'license':'CC BY 4.0', 'datePublished':datetime.now().isoformat()}
     if authorNodes:
