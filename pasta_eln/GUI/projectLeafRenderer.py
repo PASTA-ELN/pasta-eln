@@ -1,34 +1,33 @@
 """ renders each leaf of project tree using QPaint """
-import base64, logging, re
-from typing import Optional, Any
+import base64, logging
+from typing import Any
 from PySide6.QtCore import Qt, QSize, QPoint, QMargins, QRectF, QModelIndex# pylint: disable=no-name-in-module
 from PySide6.QtGui import QStaticText, QPixmap, QTextDocument, QPainter, QColor, QPen # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QStyledItemDelegate, QStyleOptionViewItem # pylint: disable=no-name-in-module
 from PySide6.QtSvg import QSvgRenderer                        # pylint: disable=no-name-in-module
 from ..guiCommunicate import Communicate
-from ..guiStyle import getColor
-from ..miscTools import markdownStyler
+from ..stringChanges import markdownEqualizer
+from ..guiStyle import addDocDetails, CSS_STYLE
+from ..fixedStringsJson import defaultDataHierarchyNode
 
-_DO_NOT_RENDER_ = ['image','content','metaVendor','metaUser','shasum','comment']
+DO_NOT_RENDER = ['image','content','metaVendor','metaUser','shasum','type','branch','gui','dateCreated',
+                 'dateModified','id','user','name','comment','externalId','client']
 
 class ProjectLeafRenderer(QStyledItemDelegate):
   """ renders each leaf of project tree using QPaint """
   def __init__(self, comm:Communicate) -> None:
     super().__init__()
-    self.comm = comm
-    self.debugMode = logging.root.level<logging.INFO
-    self.widthImage = self.comm.backend.configuration['GUI']['imageWidthProject']
-    self.widthContent = self.comm.backend.configuration['GUI']['widthContent']
+    self.comm          = comm
+    self.debugMode     = logging.root.level<logging.INFO
+    self.widthImage    = self.comm.backend.configuration['GUI']['imageWidthProject']
+    self.widthContent  = self.comm.backend.configuration['GUI']['widthContent']
     self.docTypeOffset = self.comm.backend.configuration['GUI']['docTypeOffset']
-    self.frameSize = self.comm.backend.configuration['GUI']['frameSize']
-    self.maxHeight = self.comm.backend.configuration['GUI']['maxProjectLeafHeight']
-    self.lineSep = 20
-    self.penDefault:Optional[QPen] = None
-    self.penHighlight              = QPen(QColor(getColor(self.comm.backend, 'primary')))
+    self.frameSize     = self.comm.backend.configuration['GUI']['frameSize']
+    self.maxHeight     = self.comm.backend.configuration['GUI']['maxProjectLeafHeight']
+    self.lineSep       = 20
+    self.penDefault    = QPen(QColor(self.comm.palette.text))
+    self.penHighlight  = QPen(QColor(self.comm.palette.primary))
     self.penHighlight.setWidth(2)
-    self.colorMargin1 = QColor(getColor(self.comm.backend, 'secondary')).darker(110)
-    self.colorMargin2 = QColor(getColor(self.comm.backend, 'secondaryLight'))
-
 
   def paint(self, painter:QPainter, option:QStyleOptionViewItem, index:QModelIndex) -> None:                 # type: ignore
     """
@@ -46,39 +45,43 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     if not data or data['hierStack'] is None or self.comm is None:
       return
     docID   = data['hierStack'].split('/')[-1]
-    # GUI
-    if self.penDefault is None:
-      self.penDefault = QPen(painter.pen())
+    painter.setPen(self.penDefault)
     x0, y0 = option.rect.topLeft().toTuple()                                                                  # type: ignore[attr-defined]
     widthContent = min(self.widthContent,  \
                        int((option.rect.bottomRight()-option.rect.topLeft()).toTuple()[0]/2) )                # type: ignore[attr-defined]
     docTypeOffset = min(self.docTypeOffset, \
                         int((option.rect.bottomRight()-option.rect.topLeft()).toTuple()[0]/3.5) )             # type: ignore[attr-defined]
     bottomRight2nd = option.rect.bottomRight()- QPoint(self.frameSize+1,self.frameSize)                       # type: ignore[attr-defined]
-    painter.fillRect(option.rect.marginsRemoved(QMargins(2,6,4,0)),  self.colorMargin1)                       # type: ignore[attr-defined]
+    painter.fillRect(option.rect.marginsRemoved(QMargins(2,6,4,0)),  self.comm.palette.leafShadow)            # type: ignore[attr-defined]
     if data['docType'][0][0]=='x':
-      painter.fillRect(option.rect.marginsRemoved(QMargins(-2,3,8,5)), self.colorMargin2.darker(102))         # type: ignore[attr-defined]
+      painter.fillRect(option.rect.marginsRemoved(QMargins(-2,3,8,5)), self.comm.palette.leafX)         # type: ignore[attr-defined]
     else:
-      painter.fillRect(option.rect.marginsRemoved(QMargins(-2,3,8,5)), self.colorMargin2.lighter(210))        # type: ignore[attr-defined]
+      painter.fillRect(option.rect.marginsRemoved(QMargins(-2,3,8,5)), self.comm.palette.leafO)        # type: ignore[attr-defined]
     # header
     y = self.lineSep/2
     docTypeText= '/'.join(data['docType'])
     if data['docType'][0][0]=='x':
-      docTypeText = self.comm.backend.db.dataHierarchy['x1']['title'].lower()[:-1]
-    nameText = name if len(name)<55 else '...'+name[-50:]
+      docTypeText = self.comm.backend.db.dataHierarchy('x1', 'title')[0].lower()[:-1]
+    maxCharacter = int(docTypeOffset/7.5)
+    nameText = name if len(name)<maxCharacter else f'...{name[-maxCharacter+3:]}'
     if not data['gui'][0]:  #Only draw first line
-      staticText = QStaticText(f'<strong>{nameText}</strong>')
+      staticText = QStaticText(f'<strong>{nameText} (...)</strong>')
+      #TODO GUI add quick get hidden from database: add show to sqlite.getView/hierarchy then to getHierarchy an then project and then it should appear here as true/false
       staticText.setTextWidth(docTypeOffset)
       painter.drawStaticText(x0, y0+y, staticText)
       painter.drawStaticText(x0+docTypeOffset, y0+y, QStaticText(docTypeText))
       return
     # details = body
     doc     = self.comm.backend.db.getDoc(docID)
+    if doc['type'][0] not in self.comm.backend.db.dataHierarchy('', ''):
+      dataHierarchyNode = defaultDataHierarchyNode
+    else:
+      dataHierarchyNode = self.comm.backend.db.dataHierarchy(doc['type'][0], 'meta')
     if len(doc)<2:
       print(f'**ERROR cannot read docID: {docID}')
       logging.error('LeafRenderer: Cannot read docID %s',docID)
       return
-    hiddenText = ('     \U0001F441' if [b for b in doc['-branch'] if False in b['show']] else '')
+    hiddenText = ('     \U0001F441' if [b for b in doc['branch'] if False in b['show']] else '')
     staticText = QStaticText(f'<strong>{nameText} {hiddenText}</strong>')
     staticText.setTextWidth(docTypeOffset)
     painter.drawStaticText(x0, y0+y, staticText)
@@ -86,33 +89,29 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     if self.debugMode:
       painter.drawStaticText(x0+700, y0+y, QStaticText(data['hierStack']))
     width, height = -1, -1
-    if doc['-tags']:
-      y += self.lineSep
-      tags = ['_curated_' if i=='_curated' else f'#{i}' for i in doc['-tags']]
-      tags = ['\u2605'*int(i[2]) if i[:2]=='#_' else i for i in tags]
-      painter.drawStaticText(x0, y0+y, QStaticText(f'Tags: {" ".join(tags)}'))
     for key in doc:
-      if key in _DO_NOT_RENDER_ or key[0] in ['-','_']:
+      if key in DO_NOT_RENDER:
         continue
-      y += self.lineSep
-      if isinstance(doc[key], str):
-        value = ''
-        if re.match(r'^[a-z\-]-[a-z0-9]{32}$',doc[key]) is None:  #normal text
-          value = doc[key]
-        elif self.comm is not None:                     #link
-          table = self.comm.backend.db.getView(f'viewDocType/{key}All')
-          choices= [i for i in table if i['id']==doc[key]]
-          if len(choices)==1:
-            value = '\u260D '+choices[0]['value'][0]
-          else:
-            value = 'ERROR WITH LINK'
-        painter.drawStaticText(x0, y0+y, QStaticText(f'{key}: {value}'))
-      elif isinstance(doc[key], list):                     #list of qrCodes
-        painter.drawStaticText(x0, y0+y, QStaticText(f'{key}: ' + ', '.join([str(i) for i in doc[key]])))
-    for textType in ['comment', 'content']:
+      text = addDocDetails(self, None, key, doc[key], dataHierarchyNode)
+      if text.startswith(CSS_STYLE):
+        textDoc = QTextDocument()
+        textDoc.setHtml(text)
+        _, height = textDoc.size().toTuple() # type: ignore
+        painter.translate(QPoint(x0-3, y0+y+15))
+        textDoc.drawContents(painter)
+        painter.translate(-QPoint(x0-3, y0+y+15))
+        y += height
+      else:
+        for line in text.split('\n'):
+          if line:
+            y += self.lineSep
+            painter.drawStaticText(x0, y0+y, QStaticText(line))
+    for textType in ('comment', 'content'):
+      if textType in doc and not doc[textType]:
+        continue
       if textType in doc and (textType != 'content' or 'image' not in doc or doc['image'] == ''):
         textDoc = QTextDocument()
-        textDoc.setMarkdown(markdownStyler(doc[textType]))
+        textDoc.setMarkdown(markdownEqualizer(doc[textType]))
         if textType == 'comment':
           textDoc.setTextWidth(bottomRight2nd.toTuple()[0]-x0-widthContent-2*self.frameSize)
           width, height = textDoc.size().toTuple() # type: ignore
@@ -165,29 +164,42 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       if len(self.comm.backend.db.getDoc(hierStack.split('/')[0]))>2: #only refresh when project still exists
         self.comm.changeProject.emit('','')
       return QSize()
-    docKeys = doc.keys()
     widthContent = min(self.widthContent,  \
                        int((option.rect.bottomRight()-option.rect.topLeft()).toTuple()[0]/2) )               # type: ignore[attr-defined]
-    height  = len([i for i in docKeys if not i in _DO_NOT_RENDER_ and i[0] not in ['-','_'] ])  #height in text lines
-    height += 1 if '-tags' in docKeys and len(doc['-tags']) > 0 else 0
+    height = 0
+    if doc['type'][0] not in self.comm.backend.db.dataHierarchy('', ''):
+      dataHierarchyNode = defaultDataHierarchyNode
+    else:
+      dataHierarchyNode = self.comm.backend.db.dataHierarchy(doc['type'][0], 'meta')
+    for key in doc:
+      if key in DO_NOT_RENDER:
+        continue
+      text = addDocDetails(self, None, key, doc[key], dataHierarchyNode)
+      if text.startswith(CSS_STYLE):
+        textDoc = QTextDocument()
+        textDoc.setHtml(text)
+        _, heightDoc = textDoc.size().toTuple() # type: ignore
+        height += int(heightDoc/self.lineSep)
+      elif text:
+        height += text.count('\n')+1
     height  = (height+3) * self.lineSep
-    if 'content' in docKeys:
-      text = QTextDocument()
-      text.setMarkdown(doc['content'])
-      text.setTextWidth(widthContent)
-      height = max(height, text.size().toTuple()[1]) +2*self.frameSize # type: ignore
-    elif 'image' in docKeys:
+    if 'content' in doc:
+      textDoc = QTextDocument()
+      textDoc.setMarkdown(doc['content'])
+      textDoc.setTextWidth(widthContent)
+      height = max(height, textDoc.size().toTuple()[1]) +2*self.frameSize # type: ignore
+    elif 'image' in doc:
       if doc['image'].startswith('data:image/'):
         pixmap = self.imageFromDoc(doc)
         height = max(height, pixmap.height())+2*self.frameSize
       else:
         height = max(height, int(self.widthImage*3/4))+2*self.frameSize
-    elif 'comment' in doc.keys() and len(doc['comment'])>0:
-      text = QTextDocument()
+    elif 'comment' in doc.keys() and doc['comment']:
+      textDoc = QTextDocument()
       comment = doc['comment']
-      text.setMarkdown(comment.strip())
-      text.setTextWidth(widthContent)
-      height += text.size().toTuple()[1] # type: ignore
+      textDoc.setMarkdown(comment.strip())
+      textDoc.setTextWidth(widthContent)
+      height += textDoc.size().toTuple()[1] # type: ignore
       height -= 25
     else:
       height -= 25

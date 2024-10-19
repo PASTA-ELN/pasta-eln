@@ -14,21 +14,21 @@ from PySide6.QtWidgets import QApplication, QFileDialog, QMainWindow  # pylint: 
 from qt_material import apply_stylesheet  # of https://github.com/UN-GCPDS/qt-material
 
 from pasta_eln import __version__
-from pasta_eln.GUI.dataverse.config_dialog import ConfigDialog
-from pasta_eln.GUI.dataverse.main_dialog import MainDialog
+# from pasta_eln.GUI.dataverse.config_dialog import ConfigDialog
+# from pasta_eln.GUI.dataverse.main_dialog import MainDialog
 from .GUI.body import Body
 from .GUI.config import Configuration
-from .GUI.data_hierarchy.data_hierarchy_editor_dialog import DataHierarchyEditorDialog
+# from .GUI.data_hierarchy.data_hierarchy_editor_dialog import DataHierarchyEditorDialog
 from .GUI.form import Form
 from .GUI.projectGroup import ProjectGroup
 from .GUI.sidebar import Sidebar
 from .backend import Backend
-from .fixedStringsJson import shortcuts
+from .fixedStringsJson import shortcuts, CONF_FILE_NAME
 from .guiCommunicate import Communicate
 from .guiStyle import Action, ScrollMessageBox, showMessage, widgetAndLayout
 from .inputOutput import exportELN
-from .miscTools import restart, updateExtractorList
-
+from .miscTools import restart, updateAddOnList
+from .GUI.palette import Palette
 os.environ['QT_API'] = 'pyside6'
 
 
@@ -36,7 +36,12 @@ os.environ['QT_API'] = 'pyside6'
 class MainWindow(QMainWindow):
   """ Graphical user interface includes all widgets """
 
-  def __init__(self) -> None:
+  def __init__(self, projectGroup:str='') -> None:
+    """ Init main window
+
+    Args:
+      projectGroup (str): project group to load
+    """
     # global setting
     super().__init__()
     venv = ' without venv' if sys.prefix == sys.base_prefix and 'CONDA_PREFIX' not in os.environ else ' in venv'
@@ -44,11 +49,13 @@ class MainWindow(QMainWindow):
     self.resize(self.screen().size()) #self.setWindowState(Qt.Window Maximized) https://bugreports.qt.io/browse/PYSIDE-2706 https://bugreports.qt.io/browse/QTBUG-124892
     resourcesDir = Path(__file__).parent / 'Resources'
     self.setWindowIcon(QIcon(QPixmap(resourcesDir / 'Icons' / 'favicon64.png')))
-    self.backend = Backend()
-    self.comm = Communicate(self.backend)
+    self.backend = Backend(defaultProjectGroup=projectGroup)
+    theme = self.backend.configuration['GUI']['theme']
+    palette      = Palette(self, theme)
+    self.comm = Communicate(self.backend, palette)
     self.comm.formDoc.connect(self.formDoc)
-    self.dataverseMainDialog: MainDialog | None = None
-    self.dataverseConfig: ConfigDialog | None = None
+    # self.dataverseMainDialog: MainDialog | None = None
+    # self.dataverseConfig: ConfigDialog | None = None
 
     # Menubar
     menu = self.menuBar()
@@ -61,10 +68,10 @@ class MainWindow(QMainWindow):
 
     viewMenu = menu.addMenu("&Lists")
     if hasattr(self.backend, 'db'):
-      for docType, docLabel in self.comm.backend.db.dataLabels.items():
+      for docType, docLabel in self.comm.backend.db.dataHierarchy('', 'title'):
         if docType[0] == 'x' and docType[1] != '0':
           continue
-        shortcut = self.comm.backend.db.dataHierarchy[docType].get('shortcut','')
+        shortcut = self.comm.backend.db.dataHierarchy(docType,'shortcut')[0]
         shortcut = None if shortcut=='' else f"Ctrl+{shortcut}"
         Action(docLabel,                     self, [Command.VIEW, docType],  viewMenu, shortcut=shortcut)
         if docType == 'x0':
@@ -86,7 +93,7 @@ class MainWindow(QMainWindow):
     systemMenu.addSeparator()
     Action('&Test extraction from a file',   self, [Command.TEST1],           systemMenu)
     Action('Test &selected item extraction', self, [Command.TEST2],           systemMenu, shortcut='F2')
-    Action('Update &Extractor list',         self, [Command.UPDATE],          systemMenu)
+    Action('Update &Add-on list',            self, [Command.UPDATE],          systemMenu)
     systemMenu.addSeparator()
     Action('&Configuration',                 self, [Command.CONFIG],          systemMenu, shortcut='Ctrl+0')
 
@@ -120,12 +127,6 @@ class MainWindow(QMainWindow):
     Args:
       doc (dict): document
     """
-    if '_id' in doc:
-      logging.debug('gui:formdoc ' + str(doc['_id']))
-    elif '_ids' in doc:
-      logging.debug('gui:formdoc ' + str(doc['_ids']))
-    else:
-      logging.debug('gui:formdoc of type ' + str(doc['-type']))
     formWindow = Form(self.comm, doc)
     ret = formWindow.exec()
     if ret == 0:
@@ -144,13 +145,13 @@ class MainWindow(QMainWindow):
         return
       fileName = QFileDialog.getSaveFileName(self, 'Save project into .eln file', str(Path.home()), '*.eln')[0]
       if fileName != '' and hasattr(self.backend, 'db'):
-        docTypes = [i for i in self.comm.backend.db.dataLabels.keys() if i[0]!='x']
+        docTypes = [i for i in self.comm.backend.db.dataHierarchy('','') if i[0]!='x']
         status = exportELN(self.comm.backend, [self.comm.projectID], fileName, docTypes)
         showMessage(self, 'Finished', status, 'Information')
     elif command[0] is Command.EXPORT_ALL:
       fileName = QFileDialog.getSaveFileName(self, 'Save everything to .eln file', str(Path.home()), '*.eln')[0]
       if fileName != '' and hasattr(self.backend, 'db'):
-        docTypes = [i for i in self.comm.backend.db.dataLabels.keys() if i[0]!='x']
+        docTypes = [i for i in self.comm.backend.db.dataHierarchy('','') if i[0]!='x']
         allProjects = [i['id'] for i in self.comm.backend.db.getView('viewDocType/x0')]
         status = exportELN(self.comm.backend, allProjects, fileName, docTypes)
         showMessage(self, 'Finished', status, 'Information')
@@ -174,22 +175,27 @@ class MainWindow(QMainWindow):
       dialogPG.exec()
     elif command[0] is Command.CHANGE_PG:
       self.backend.configuration['defaultProjectGroup'] = command[1]
-      with open(Path.home() / '.pastaELN.json', 'w', encoding='utf-8') as fConf:
+      with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as fConf:
         fConf.write(json.dumps(self.backend.configuration, indent=2))
       restart()
     elif command[0] is Command.SYNC:
-      report = self.comm.backend.replicateDB(progressBar=self.sidebar.progress)
+      report = self.comm.backend.replicateDB()
       showMessage(self, 'Report of syncronization', report, style='QLabel {min-width: 450px}')
     elif command[0] is Command.DATAHIERARCHY:
-      dataHierarchyForm = DataHierarchyEditorDialog(self.comm.backend.db)
-      dataHierarchyForm.instance.exec()
+      # Jithu's code: comment out for now
+      # dataHierarchyForm = DataHierarchyEditorDialog(self.comm.backend.db)
+      # dataHierarchyForm.instance.exec()
       restart()
     elif command[0] is Command.DATAVERSE_CONFIG:
-      self.dataverseConfig = ConfigDialog()
-      self.dataverseConfig.show()
+      # Jithu's code: comment out for now
+      # self.dataverseConfig = ConfigDialog()
+      # self.dataverseConfig.show()
+      pass
     elif command[0] is Command.DATAVERSE_MAIN:
-      self.dataverseMainDialog = MainDialog(self.comm.backend)
-      self.dataverseMainDialog.show()
+      # Jithu's code: comment out for now
+      # self.dataverseMainDialog = MainDialog(self.comm.backend)
+      # self.dataverseMainDialog.show()
+      pass
     elif command[0] is Command.TEST1:
       fileName = QFileDialog.getOpenFileName(self, 'Open file for extractor test', str(Path.home()), '*.*')[0]
       report = self.comm.backend.testExtractor(fileName, outputStyle='html')
@@ -197,7 +203,7 @@ class MainWindow(QMainWindow):
     elif command[0] is Command.TEST2:
       self.comm.testExtractor.emit()
     elif command[0] is Command.UPDATE:
-      reportDict = updateExtractorList(self.backend.extractorPath)
+      reportDict = updateAddOnList(self.backend.addOnPath)
       messageWindow = ScrollMessageBox('Extractor list updated', reportDict,
                                        style='QScrollArea{min-width:600 px; min-height:400px}')
       messageWindow.exec()
@@ -220,9 +226,11 @@ class MainWindow(QMainWindow):
     return
 
 
-def mainGUI() -> tuple[Union[QCoreApplication, None], MainWindow]:
-  """
-    Main method and entry point for commands
+def mainGUI(projectGroup:str='') -> tuple[Union[QCoreApplication, None], MainWindow]:
+  """  Main method and entry point for commands
+
+  Args:
+      projectGroup (str): project group to load
 
   Returns:
     MainWindow: main window
@@ -232,7 +240,7 @@ def mainGUI() -> tuple[Union[QCoreApplication, None], MainWindow]:
   #  old versions of basicConfig do not know "encoding='utf-8'"
   logging.basicConfig(filename=log_path, level=logging.INFO, format='%(asctime)s|%(levelname)s:%(message)s',
                       datefmt='%m-%d %H:%M:%S')
-  for package in ['urllib3', 'requests', 'asyncio', 'PIL', 'matplotlib']:
+  for package in ['urllib3', 'requests', 'asyncio', 'PIL', 'matplotlib','pudb']:
     logging.getLogger(package).setLevel(logging.WARNING)
   logging.info('Start PASTA GUI')
   # remainder
@@ -240,13 +248,12 @@ def mainGUI() -> tuple[Union[QCoreApplication, None], MainWindow]:
     application = QApplication().instance()
   else:
     application = QApplication.instance()
-  main_window = MainWindow()
+  main_window = MainWindow(projectGroup=projectGroup)
   logging.getLogger().setLevel(getattr(logging, main_window.backend.configuration['GUI']['loggingLevel']))
   theme = main_window.backend.configuration['GUI']['theme']
   if theme != 'none':
     apply_stylesheet(application, theme=f'{theme}.xml')
-  # qtawesome and matplot cannot coexist
-  import qtawesome as qta
+  import qtawesome as qta                       # qtawesome and matplot cannot coexist
   if not isinstance(qta.icon('fa5s.times'), QIcon):
     logging.error('qtawesome: could not load. Likely matplotlib is included and can not coexist.')
     print('qtawesome: could not load. Likely matplotlib is included and can not coexist.')
@@ -278,11 +285,14 @@ class Command(Enum):
   DATAVERSE_MAIN = 19
 
 
-def startMain() -> None:
+def startMain(projectGroup:str='') -> None:
   """
   Main function to start GUI. Extra function is required to allow starting in module fashion
+
+  Args:
+    projectGroup (str): project group to load
   """
-  app, window = mainGUI()
+  app, window = mainGUI(projectGroup=projectGroup)
   window.show()
   if app:
     app.exec()

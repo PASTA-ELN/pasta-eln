@@ -5,7 +5,6 @@ from pathlib import Path
 from typing import Callable, Any
 import requests
 from PySide6.QtWidgets import QWidget, QFormLayout, QLabel, QLineEdit, QComboBox  # pylint: disable=no-name-in-module
-from ..miscTools import restart
 from ..guiStyle import TextButton, IconButton, widgetAndLayout
 from ..guiCommunicate import Communicate
 

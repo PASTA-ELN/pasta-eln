@@ -1,7 +1,7 @@
 PASTA (adaPtive mAterials Science meTadatA) electronic lab notebook (ELN) | The favorite ELN for experimental scientists
 ************************************************************************************************************************
 
-PASTA-ELN makes it easy and convenient for an experimental scientist to organize raw data with metadata. PASTA-ELN applies the extractors - Python scripts that 'extract' thumbnails, data, and metadata from the raw measurement files and automatically enter them into the database. These little programs can be written/adopted by scientists and can be shared. :ref:`To read more ... for advanced users <extractors>`.
+PASTA-ELN makes it easy and convenient for an experimental scientist to organize raw data with metadata. PASTA-ELN applies the extractors that 'extract' thumbnails, data, and metadata from the raw measurement files and automatically enter them into the database. These little python programs can be written/adopted by scientists and can be shared by users. :ref:`To read more ... for advanced users <extractors>`.
 
 The raw data is the origin of scientific work and has to follow the FAIR (Findable, Accessible, Interoperable, and Reusable) principles which also support the individual researcher who has an easier time to find and organize the data, which PASTA-ELN supports. Additionally, PASTA-ELN encourages the user to follow research data management guidelines, :ref:`which are given ... <dodonts>`. Since adaptive software development has revolutionized software projects, we believe that agile project planning is also highly beneficial for scientific research projects and encourage agile workflows while using PASTA-ELN. :ref:`To read more ... for all useres <Agile Project Planning>`.
 

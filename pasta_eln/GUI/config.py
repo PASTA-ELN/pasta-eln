@@ -1,12 +1,9 @@
 """ Entire config dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""
-from typing import Union, Optional
-import platform
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QTabWidget  # pylint: disable=no-name-in-module
 from ..guiCommunicate import Communicate
 from .configGUI import ConfigurationGUI
 from .configAuthors import ConfigurationAuthors
-from .configSetupWindows import ConfigurationSetup as ConfigSetupWindows
-from .configSetupLinux import ConfigurationSetup as ConfigSetupLinux
+from .configSetup import ConfigurationSetup
 
 class Configuration(QDialog):
   """ Main class of entire config dialog """
@@ -28,17 +25,13 @@ class Configuration(QDialog):
     mainL.addWidget(tabW)
 
     # Misc configuration: e.g. theming...
-    tabGUI = ConfigurationGUI(self.comm, self.closeWidget)
+    tabGUI = ConfigurationGUI(self.comm)
     tabW.addTab(tabGUI, 'Appearance')
     tabAuthors = ConfigurationAuthors(self.comm, self.closeWidget)
     tabW.addTab(tabAuthors, 'Author')
 
     # Setup / Troubleshoot Pasta: main widget
-    tabSetup:Optional[Union[ConfigSetupWindows,ConfigSetupLinux]] = None
-    if platform.system()=='Windows':
-      tabSetup = ConfigSetupWindows(self.comm, self.closeWidget)
-    else:
-      tabSetup = ConfigSetupLinux(self.comm, self.closeWidget)
+    tabSetup = ConfigurationSetup(self.comm, self.closeWidget)
     tabW.addTab(tabSetup, 'Setup')
 
     if startTab=='setup':

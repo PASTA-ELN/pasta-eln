@@ -26,7 +26,6 @@ from qtawesome import icon
 from pasta_eln.dataverse.client import DataverseClient
 from pasta_eln.dataverse.config_error import ConfigError
 from pasta_eln.dataverse.upload_status_values import UploadStatusValues
-from pasta_eln.miscTools import upOut
 
 
 def update_status(status: str,
@@ -857,7 +856,8 @@ def decrypt_credentials(cred: str) -> tuple[str, str]:
   user_name = ''
   pass_word = ''
   if cred:
-    decrypted_creds = upOut(cred)[0].split(':')
-    user_name = decrypted_creds[0]
-    pass_word = decrypted_creds[1]
+    pass
+  #   decrypted_creds = upOut(cred)[0].split(':')  #not used and does not exist anymore
+  #   user_name = decrypted_creds[0]
+  #   pass_word = decrypted_creds[1]
   return user_name, pass_word

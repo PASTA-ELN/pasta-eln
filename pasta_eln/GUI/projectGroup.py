@@ -10,12 +10,10 @@ from PIL.ImageQt import ImageQt
 from PySide6.QtGui import QPixmap, QRegularExpressionValidator  # pylint: disable=no-name-in-module
 from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QFileDialog, QFormLayout, QGroupBox, QLabel, \
   QLineEdit, QMessageBox, QVBoxLayout  # pylint: disable=no-name-in-module
-from cloudant.client import CouchDB
-
+# from cloudant.client import CouchDB
 from ..guiCommunicate import Communicate
 from ..guiStyle import IconButton, Label, TextButton, showMessage, widgetAndLayout
-from ..miscTools import restart, upIn, upOut
-from ..serverActions import passwordDecrypt, testLocal, testRemote
+from ..miscTools import restart
 
 
 class ProjectGroup(QDialog):
@@ -122,8 +120,8 @@ class ProjectGroup(QDialog):
         remote = {'user':self.userNameR.text(), 'password':self.passwordR.text(), \
                   'database':self.databaseR.text(), 'url':self.serverR.text()}
       elif btn.text().endswith('Save encrypted'):
-        credL = upIn(f'{self.userNameL.text()}:{self.passwordL.text()}')
-        credR = upIn(f'{self.userNameR.text()}:{self.passwordR.text()}')
+        credL = ''
+        credR = ''
         local = {'cred':credL, 'database':self.databaseL.text(), 'path':self.pathL.text()}
         remote = {'cred':credR, 'database':self.databaseR.text(), 'url':self.serverR.text()}
       newGroup = {'local':local, 'remote':remote}
@@ -150,10 +148,7 @@ class ProjectGroup(QDialog):
       self.projectGroupName.setText('my_project_group_name')
       defaultProjectGroup = self.configuration['defaultProjectGroup']
       config = self.configuration['projectGroups'][defaultProjectGroup]
-      if 'cred' in config['local']:
-        u,p = upOut(config['local']['cred'])[0].split(':')
-      else:
-        u,p = config['local']['user'], config['local']['password']
+      u,p = config['local']['user'], config['local']['password']
       self.userNameL.setText(u)
       self.userNameR.setText('')
       self.passwordL.setText(p)
@@ -163,13 +158,14 @@ class ProjectGroup(QDialog):
       self.pathL.setText('')
       self.serverR.setText('')
     elif command[0] is Command.FILL:
-      contentFile = QFileDialog.getOpenFileName(self, "Load remote credentials", str(Path.home()), '*.key')[0]
-      with open(contentFile, encoding='utf-8') as fIn:
-        content = json.loads( passwordDecrypt(bytes(fIn.read(), 'UTF-8')) )
-        self.userNameR.setText(content['user-name'])
-        self.passwordR.setText(content['password'])
-        self.databaseR.setText(content['database'])
-        self.serverR.setText(content['Server'])
+      # contentFile = QFileDialog.getOpenFileName(self, "Load remote credentials", str(Path.home()), '*.key')[0]
+      # with open(contentFile, encoding='utf-8') as fIn:
+      #   content = json.loads( passwordDecrypt(bytes(fIn.read(), 'UTF-8')) )
+      #   self.userNameR.setText(content['user-name'])
+      #   self.passwordR.setText(content['password'])
+      #   self.databaseR.setText(content['database'])
+      #   self.serverR.setText(content['Server'])
+      pass
     elif command[0] is Command.CREATE_QR:
       if self.projectGroupName.isHidden():
         configname = self.selectGroup.currentText()
@@ -198,14 +194,14 @@ class ProjectGroup(QDialog):
       bool: success
     """
     # local
-    localTest = testLocal(self.userNameL.text(), self.passwordL.text(), self.databaseL.text())
+    localTest = '' # testLocal(self.userNameL.text(), self.passwordL.text(), self.databaseL.text())
     if 'Error: Local database does not exist' in localTest and \
        'success: Local username and password ok' in localTest and self.databaseL.text():
       button = QMessageBox.question(self, "Question", "Local database does not exist. Should I create it?")
       if button == QMessageBox.StandardButton.Yes:
         localTest += '  Local data was created\n'
-        client = CouchDB(self.userNameL.text(), self.passwordL.text(), url='http://127.0.0.1:5984', connect=True)
-        client.create_database(self.databaseL.text())
+        # client = CouchDB(self.userNameL.text(), self.passwordL.text(), url='http://127.0.0.1:5984', connect=True)
+        # client.create_database(self.databaseL.text())
       else:
         localTest += '  Local data was NOT created\n'
     if not self.pathL.text():
@@ -224,8 +220,7 @@ class ProjectGroup(QDialog):
     remoteTest = ''
     if self.userNameR.text()!='' and self.passwordR.text()!='' and self.databaseR.text()!='' and \
         self.serverR.text()!='':
-      remoteTest = testRemote(self.serverR.text(), self.userNameR.text(), self.passwordR.text(), \
-        self.databaseR.text())
+      remoteTest = '' # testRemote(self.serverR.text(), self.userNameR.text(), self.passwordR.text(), self.databaseR.text())
     # give output
     if 'ERROR' in localTest or 'ERROR' in remoteTest:
       showMessage(self, 'ERROR occurred', localTest+remoteTest, 'Critical')
@@ -243,19 +238,13 @@ class ProjectGroup(QDialog):
       item (str): name of project group
     """
     config = self.configuration['projectGroups'][item]
-    if 'cred' in config['local']:
-      u,p = upOut(config['local']['cred'])[0].split(':')
-    else:
-      u,p = config['local']['user'], config['local']['password']
+    u,p = config['local']['user'], config['local']['password']
     self.userNameL.setText(u)
     self.passwordL.setText(p)
     self.databaseL.setText(config['local']['database'])
     self.pathL.setText(config['local']['path'])
     if 'url' in config['remote']:
-      if 'cred' in config['remote']:
-        u,p = upOut(config['remote']['cred'])[0].split(':')
-      else:
-        u,p = config['remote']['user'], config['remote']['password']
+      u,p = config['remote']['user'], config['remote']['password']
       self.userNameR.setText(u)
       self.passwordR.setText(p)
       self.databaseR.setText(config['remote']['database'])

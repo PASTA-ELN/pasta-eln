@@ -9,7 +9,7 @@ from zipfile import ZipFile, ZIP_DEFLATED
 import pytest
 from pasta_eln.backend import Backend
 from pasta_eln.inputOutput import exportELN, importELN
-from pasta_eln.miscTools import outputString
+from pasta_eln.stringChanges import outputString
 
 
 class TestStringMethods(unittest.TestCase):
