@@ -125,7 +125,7 @@ class Image():
       byteArr = QByteArray.fromBase64(bytearray(data[22:] if data[21]==',' else data[23:], encoding='utf-8'))
       imageW = QImage()
       imageType = data[11:15].upper()
-      imageW.loadFromData(byteArr, format=imageType[:-1] if imageType.endswith(';') else imageType)
+      imageW.loadFromData(byteArr, format=imageType[:-1] if imageType.endswith(';') else imageType) #type: ignore[arg-type]
       pixmap = QPixmap.fromImage(imageW)
       if height>0:
         pixmap = pixmap.scaledToHeight(height)

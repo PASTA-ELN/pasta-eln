@@ -5,6 +5,8 @@
   "x0": {
     "IRI": "http://url.com",
     "title": "Projects",
+    "icon": "fa5s.align-center",
+    "shortcut": "space",
     "meta": {
       "default": [
         {
@@ -62,6 +64,8 @@
   "x1": {
     "IRI": "",
     "title": "Tasks",
+    "icon": "fa5s.bold",
+    "shortcut": "d+c",
     "meta": {
       "default": [
         {
@@ -80,30 +84,11 @@
     },
     "attachments": []
   },
-  "x2": {
-    "IRI": "",
-    "title": "Subtasks",
-    "meta": {
-      "default": [
-        {
-          "name": "-name",
-          "query": "What is the name of subtask?"
-        },
-        {
-          "name": "-tags",
-          "query": "What are the tags associated with this subtask?"
-        },
-        {
-          "name": "comment",
-          "query": "#tags comments remarks :field:value:"
-        }
-      ]
-    },
-    "attachments": []
-  },
   "measurement": {
     "IRI": "",
     "title": "Measurements",
+    "icon": "fa5s.save",
+    "shortcut": "d+m",
     "meta": {
       "default": [
         {
@@ -147,6 +132,8 @@
   "sample": {
     "IRI": "",
     "title": "Samples",
+    "icon": "mdi6.shopping-search-outline",
+    "shortcut": "d+s",
     "meta": {
       "default": [
         {
@@ -175,6 +162,8 @@
   "procedure": {
     "IRI": "",
     "title": "Procedures",
+    "icon": "fa5s.expand-arrows-alt",
+    "shortcut": "d+p",
     "meta": {
       "default": [
         {
@@ -200,6 +189,8 @@
   "instrument": {
     "IRI": "",
     "title": "Instruments",
+    "icon": "mdi6.abacus",
+    "shortcut": "d+i",
     "meta": {
       "default": [
         {

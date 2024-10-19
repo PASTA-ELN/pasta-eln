@@ -23,8 +23,7 @@ class TestDataHierarchyEditorDialog(object):
 
   def test_component_launch_should_display_all_ui_elements(self, pasta_db_mock: pasta_db_mock,
                                                            # Added to import fixture by other tests
-                                                           data_hierarchy_editor_gui: tuple[
-                                                             QApplication, QtWidgets.QDialog, DataHierarchyEditorDialog, QtBot]):
+                                                           data_hierarchy_editor_gui: data_hierarchy_editor_gui):
     app, ui_dialog, ui_form, qtbot = data_hierarchy_editor_gui
     assert ui_form.headerLabel is not None, "Header not loaded!"
     assert ui_form.typeLabel is not None, "Data type label not loaded!"
@@ -37,22 +36,28 @@ class TestDataHierarchyEditorDialog(object):
     assert ui_form.addMetadataRowPushButton is not None, "Add metadata row button not loaded!"
     assert ui_form.addMetadataGroupPushButton is not None, "Add metadata Group button not loaded!"
     assert ui_form.cancelPushButton is not None, "Cancel button not loaded!"
-    assert ui_form.typeDisplayedTitleLineEdit is not None, "Data type line edit not loaded!"
-    assert ui_form.typeIriLineEdit is not None, "Data type IRI line edit not loaded!"
     assert ui_form.addMetadataGroupLineEdit is not None, "metadata Group line edit not loaded!"
     assert ui_form.typeComboBox is not None, "Data type combo box not loaded!"
     assert ui_form.metadataGroupComboBox is not None, "metadata Group combo box not loaded!"
     assert ui_form.typeAttachmentsTableView.isHidden() is True, "Type attachments table view should not be shown!"
     assert ui_form.addAttachmentPushButton.isHidden() is True, "addAttachmentPushButton should not be shown!"
+    assert ui_form.addTypePushButton.isHidden() is False, "addTypePushButton should be shown!"
+    assert ui_form.addMetadataRowPushButton.isHidden() is False, "addMetadataRowPushButton should be shown!"
+    assert ui_form.addMetadataGroupPushButton.isHidden() is False, "addMetadataGroupPushButton should be shown!"
+    assert ui_form.addMetadataGroupLineEdit.isHidden() is False, "addMetadataGroupLineEdit should be shown!"
+    assert ui_form.typeComboBox.currentText() == 'Structure level 0', "Type combo box not selected!"
+    assert ui_form.metadataGroupComboBox.currentText() == 'default', "Metadata group combo box not selected!"
+    assert ui_form.typeMetadataTableView.model().rowCount() == 5, "metadata table should be filled!"
+    assert ui_form.typeAttachmentsTableView.model().rowCount() == 0, "Type attachments table should be empty!"
+    assert ui_form.addAttachmentPushButton.isEnabled() is True, "addAttachmentPushButton should be enabled!"
+    assert ui_form.editTypePushButton.isEnabled() is True, "editTypePushButton should be enabled!"
+    assert ui_form.editTypePushButton.isHidden() is False, "editTypePushButton should be shown!"
 
   @pytest.mark.parametrize("type_to_select, metadata_group_selected, metadata",
                            [('Structure level 0', 'default', ['-name', 'status', 'objective', '-tags', 'comment']),
                             ('Structure level 1', 'default', ['-name', '-tags', 'comment']),
-                            ('Structure level 2', 'default', ['-name', '-tags', 'comment']), ('measurement', 'default',
-                                                                                              ['-name', '-tags',
-                                                                                               'comment', '-type',
-                                                                                               'image', '#_curated',
-                                                                                               'sample', 'procedure']),
+                            ('measurement', 'default',
+                             ['-name', '-tags', 'comment', '-type', 'image', '#_curated', 'sample', 'procedure']),
                             ('sample', 'default', ['-name', 'chemistry', '-tags', 'comment', 'qrCode']),
                             ('procedure', 'default', ['-name', '-tags', 'comment', 'content']),
                             ('instrument', 'default', ['-name', '-tags', 'comment', 'vendor'])])
@@ -78,10 +83,7 @@ class TestDataHierarchyEditorDialog(object):
     assert (adapt_type(ui_form.typeComboBox.currentText()) == data_hierarchy_doc_mock.types_list()[
       0]), "Type combo box should be selected to first item"
     selected_type = data_hierarchy_doc_mock.types()[adapt_type(ui_form.typeComboBox.currentText())]
-    assert (ui_form.typeDisplayedTitleLineEdit.text() == selected_type[
-      "title"]), "Data type displayedTitle line edit not loaded!"
-    assert (ui_form.typeIriLineEdit.text() == selected_type["IRI"]), "Data type IRI line edit not loaded!"
-
+    assert (ui_form.editTypePushButton.text() == "* Edit"), "editTypePushButton text not loaded!"
     categories = list(selected_type["meta"].keys())
     assert ([ui_form.metadataGroupComboBox.itemText(i) for i in
              range(ui_form.metadataGroupComboBox.count())] == categories), "metadataGroupComboBox not loaded!"
@@ -159,10 +161,23 @@ class TestDataHierarchyEditorDialog(object):
     assert adapt_type(ui_form.typeComboBox.currentText()) == data_hierarchy_doc_mock.types_list()[
       0], "Type combo box should be selected to first structural item"
     selected_type = data_hierarchy_doc_mock.types()[adapt_type(ui_form.typeComboBox.currentText())]
-    assert ui_form.typeDisplayedTitleLineEdit.text() == selected_type[
-      "title"], "Type title line edit should be selected to first structural item"
-    assert ui_form.typeIriLineEdit.text() == selected_type[
-      "IRI"], "Type IRI line edit should be selected to selected type IRI"
+    qtbot.mouseClick(ui_form.editTypePushButton, Qt.LeftButton)
+    assert ui_form.edit_type_dialog.instance.isVisible() is True, "Create new type dialog should be shown!"
+    assert ui_form.edit_type_dialog.buttonBox.isVisible() is True, "Create new type dialog should be shown!"
+    assert ui_form.edit_type_dialog.typeLineEdit.text() == "x0", "Type title line edit should be selected to first structural item"
+    assert ui_form.edit_type_dialog.iriLineEdit.text() == selected_type.get("IRI",
+                                                                            ""), "Type IRI line edit should be selected to selected type IRI"
+    assert ui_form.edit_type_dialog.typeDisplayedTitleLineEdit.text() == selected_type.get("title",
+                                                                                           ""), "Type displayedTitle line edit should be selected to selected type displayedTitle"
+    assert ui_form.edit_type_dialog.shortcutLineEdit.text() == selected_type.get("shortcut",
+                                                                                 ""), "Type shortcut line edit should be selected to selected type shortcut"
+    assert ui_form.edit_type_dialog.iconFontCollectionComboBox.currentText() == \
+           selected_type.get("icon", "").split(".")[
+             0], "icon font collection combo box should be selected to selected type icon font collection"
+    assert ui_form.edit_type_dialog.iconComboBox.currentText() == selected_type.get("icon",
+                                                                                    ""), "icon combo box should be selected to selected type icon"
+    qtbot.mouseClick(ui_form.edit_type_dialog.buttonBox.button(QDialogButtonBox.Cancel), Qt.LeftButton)
+    assert ui_form.edit_type_dialog.instance.isVisible() is False, "Create new type dialog should be closed!"
     assert ui_form.metadataGroupComboBox.currentText() == list(selected_type["meta"].keys())[
       0], "Type metadata group combo box should be selected to first item in the selected type"
     self.check_table_contents(attachments_column_names, metadata_column_names, selected_type, ui_form)
@@ -181,13 +196,35 @@ class TestDataHierarchyEditorDialog(object):
       assert ui_form.create_type_dialog.instance.isVisible() is True, "Create new type dialog should be shown!"
       assert ui_form.create_type_dialog.buttonBox.isVisible() is True, "Create new type dialog not shown!"
 
-  def test_component_create_new_type_structural_type_should_add_new_type_with_displayed_title(self,
-                                                                                              data_hierarchy_editor_gui:
-                                                                                              tuple[
-                                                                                                QApplication, QtWidgets.QDialog, DataHierarchyEditorDialog, QtBot],
-                                                                                              data_hierarchy_doc_mock: data_hierarchy_doc_mock,
-                                                                                              metadata_column_names: metadata_column_names,
-                                                                                              attachments_column_names: attachments_column_names):
+  @pytest.mark.parametrize(
+    "new_type, new_title, expected_type, expected_title",
+    [
+      # Success path tests
+      ("x0", "Structure level 0", "0", "Structure level 0"),  # non-structural type
+      ("x 23", "Structure level 23", "23", "Structure level 23"),
+      ("      x 23       ", "Structure level 23", "23", "Structure level 23"),
+      ("x               %%", "Structure level %%", "%%", "Structure level %%"),
+      ("  x     §)(/$     x34     %% ", "Structure level §)(/$x34%%", "§)(/$x34%%", "Structure level §)(/$x34%%"),
+    ],
+    ids=[
+      "case_1",
+      "case_with_spaces",
+      "case_with_ending_spaces",
+      "case_with_special_characters",
+      "case_with_special_characters_and_spaces"
+    ]
+  )
+  def test_component_create_new_type_structural_type_should_do_expected(self,
+                                                                        data_hierarchy_editor_gui:
+                                                                        tuple[
+                                                                          QApplication, QtWidgets.QDialog, DataHierarchyEditorDialog, QtBot],
+                                                                        data_hierarchy_doc_mock: data_hierarchy_doc_mock,
+                                                                        metadata_column_names: metadata_column_names,
+                                                                        attachments_column_names: attachments_column_names,
+                                                                        new_type,
+                                                                        new_title,
+                                                                        expected_type,
+                                                                        expected_title):
 
     app, ui_dialog, ui_form, qtbot = data_hierarchy_editor_gui
     assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
@@ -196,15 +233,22 @@ class TestDataHierarchyEditorDialog(object):
     with qtbot.waitExposed(ui_form.create_type_dialog.instance, timeout=500):
       assert ui_form.create_type_dialog.instance.isVisible() is True, "Create new type dialog should be shown!"
       assert ui_form.create_type_dialog.buttonBox.isVisible() is True, "Create new type dialog button box should be shown!"
-      ui_form.create_type_dialog.structuralLevelCheckBox.setChecked(True)
-      ui_form.create_type_dialog.displayedTitleLineEdit.setText("test")
-      assert ui_form.create_type_dialog.titleLineEdit.text() == ui_form.create_type_dialog.next_struct_level.replace(
-        'x', 'Structure level '), "title should be set to 'Structure level 3'"
+      qtbot.keyClicks(ui_form.create_type_dialog.typeLineEdit, new_type)
+      qtbot.keyClicks(ui_form.create_type_dialog.typeDisplayedTitleLineEdit, new_title)
     qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(QDialogButtonBox.Ok),
                      Qt.LeftButton)
     assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
-    assert ui_form.typeComboBox.currentText() == "Structure level 3", "Data type combo box should be newly added structural item"
-    assert ui_form.typeDisplayedTitleLineEdit.text() == "test", "Data type displayedTitle should be newly added displayedTitle"
+    assert ui_form.typeComboBox.currentText() == expected_type, "Data type combo box should be newly added structural item"
+
+    qtbot.mouseClick(ui_form.editTypePushButton, Qt.LeftButton)
+    with qtbot.waitExposed(ui_form.edit_type_dialog.instance, timeout=500):
+      assert ui_form.edit_type_dialog.typeLineEdit.text() == expected_type, "Type title line edit should be selected to first structural item"
+      assert ui_form.edit_type_dialog.iriLineEdit.text() == "", "Type IRI line edit should be selected to selected type IRI"
+      assert ui_form.edit_type_dialog.typeDisplayedTitleLineEdit.text() == expected_title, "Type displayedTitle line edit should be selected to selected type displayedTitle"
+      assert ui_form.edit_type_dialog.shortcutLineEdit.text() == "", "Type shortcut line edit should be selected to selected type shortcut"
+      assert ui_form.edit_type_dialog.iconComboBox.currentText() == 'No value', "icon combo box should be selected to selected type icon"
+    qtbot.mouseClick(ui_form.edit_type_dialog.buttonBox.button(QDialogButtonBox.Cancel), Qt.LeftButton)
+    assert ui_form.edit_type_dialog.instance.isVisible() is False, "Create new type dialog should be closed!"
 
   def test_component_create_new_type_normal_type_should_add_new_type_with_displayed_title(self,
                                                                                           data_hierarchy_editor_gui:
@@ -221,24 +265,39 @@ class TestDataHierarchyEditorDialog(object):
     with qtbot.waitExposed(ui_form.create_type_dialog.instance, timeout=200):
       assert ui_form.create_type_dialog.instance.isVisible() is True, "Create new type dialog should be shown!"
       assert ui_form.create_type_dialog.buttonBox.isVisible() is True, "Create new type dialog button box should be shown!"
-      assert ui_form.create_type_dialog.structuralLevelCheckBox.isChecked() is False, "structuralLevelCheckBox should be unchecked"
-      ui_form.create_type_dialog.titleLineEdit.setText("Title")
-      ui_form.create_type_dialog.displayedTitleLineEdit.setText("Displayed Title")
+      qtbot.keyClicks(ui_form.create_type_dialog.typeLineEdit, "new_type")
+      qtbot.keyClicks(ui_form.create_type_dialog.typeDisplayedTitleLineEdit, "new_title")
+      qtbot.keyClicks(ui_form.create_type_dialog.iriLineEdit, "new_iri")
+      qtbot.keyClicks(ui_form.create_type_dialog.shortcutLineEdit, "new_shortcut")
+      ui_form.create_type_dialog.iconFontCollectionComboBox.setCurrentText("mdi6")
+      ui_form.create_type_dialog.iconComboBox.setCurrentText("mdi6.zodiac-sagittarius")
     qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(QDialogButtonBox.Ok),
                      Qt.LeftButton)
-    assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
-    assert ui_form.typeComboBox.currentText() == "Title", "Data type combo box should be newly added type title"
-    assert ui_form.typeDisplayedTitleLineEdit.text() == "Displayed Title", "Data type combo box should be newly added type displayedTitle"
 
-  def test_component_create_new_type_normal_type_with_empty_title_should_warn_user(self, mocker,
-                                                                                   data_hierarchy_editor_gui: tuple[
-                                                                                     QApplication, QtWidgets.QDialog, DataHierarchyEditorDialog, QtBot],
-                                                                                   data_hierarchy_doc_mock: data_hierarchy_doc_mock,
-                                                                                   metadata_column_names: metadata_column_names,
-                                                                                   attachments_column_names: attachments_column_names):
+    assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
+    assert ui_form.typeComboBox.currentText() == "new_type", "Data type combo box should be newly added type title"
+
+    qtbot.mouseClick(ui_form.editTypePushButton, Qt.LeftButton)
+    with qtbot.waitExposed(ui_form.edit_type_dialog.instance, timeout=500):
+      assert ui_form.edit_type_dialog.typeLineEdit.text() == "new_type", "Type title line edit should be selected to first structural item"
+      assert ui_form.edit_type_dialog.iriLineEdit.text() == "new_iri", "Type IRI line edit should be selected to selected type IRI"
+      assert ui_form.edit_type_dialog.typeDisplayedTitleLineEdit.text() == "new_title", "Type displayedTitle line edit should be selected to selected type displayedTitle"
+      assert ui_form.edit_type_dialog.shortcutLineEdit.text() == "new_shortcut", "Type shortcut line edit should be selected to selected type shortcut"
+      assert ui_form.edit_type_dialog.iconFontCollectionComboBox.currentText() == 'mdi6', "icon combo box should be selected to selected type icon"
+      assert ui_form.edit_type_dialog.iconComboBox.currentText() == 'mdi6.zodiac-sagittarius', "icon combo box should be selected to selected type icon"
+    qtbot.mouseClick(ui_form.edit_type_dialog.buttonBox.button(QDialogButtonBox.Cancel), Qt.LeftButton)
+    assert ui_form.edit_type_dialog.instance.isVisible() is False, "Create new type dialog should be closed!"
+
+  def test_component_create_new_type_with_empty_type_title_should_warn_user(self, mocker,
+                                                                            data_hierarchy_editor_gui: tuple[
+                                                                              QApplication, QtWidgets.QDialog, DataHierarchyEditorDialog, QtBot],
+                                                                            data_hierarchy_doc_mock: data_hierarchy_doc_mock,
+                                                                            metadata_column_names: metadata_column_names,
+                                                                            attachments_column_names: attachments_column_names):
 
     app, ui_dialog, ui_form, qtbot = data_hierarchy_editor_gui
-    mocker.patch.object(ui_form.logger, 'warning')
+    mocker.patch.object(ui_form.logger, 'error')
+    mocker.patch.object(ui_form.create_type_dialog.logger, 'error')
 
     # Checking with empty title
     assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
@@ -247,41 +306,37 @@ class TestDataHierarchyEditorDialog(object):
     with qtbot.waitExposed(ui_form.create_type_dialog.instance, timeout=200):
       assert ui_form.create_type_dialog.instance.isVisible() is True, "Create new type dialog should be shown!"
       assert ui_form.create_type_dialog.buttonBox.isVisible() is True, "Create new type dialog button box should be shown!"
-      assert ui_form.create_type_dialog.structuralLevelCheckBox.isChecked() is False, "structuralLevelCheckBox should be unchecked"
-      ui_form.create_type_dialog.titleLineEdit.setText("")
-      ui_form.create_type_dialog.displayedTitleLineEdit.setText("title")
+      qtbot.keyClicks(ui_form.create_type_dialog.typeLineEdit, "")
     qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(QDialogButtonBox.Ok),
                      Qt.LeftButton)
-    assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
-    ui_form.logger.warning.assert_called_once_with("Enter non-null/valid title!!.....")
-    ui_form.message_box.setText.assert_called_once_with('Enter non-null/valid title!!.....')
+    assert ui_form.create_type_dialog.instance.isVisible() is True, "Create new type dialog should still be shown!"
+    ui_form.create_type_dialog.logger.error.assert_called_once_with("Data type property is required!")
+    ui_form.message_box.setText.assert_called_once_with('Data type property is required!')
     ui_form.message_box.exec.assert_called_once_with()
     ui_form.message_box.setIcon.assert_called_once_with(QtWidgets.QMessageBox.Warning)
     assert ui_form.typeComboBox.currentText() != "", "Data type combo box should not be empty title"
-    assert ui_form.typeDisplayedTitleLineEdit.text() != "displayedTitle", "Data type combo box should not be newly added type displayedTitle"
+    qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(QDialogButtonBox.Cancel),
+                     Qt.LeftButton)
 
     # Checking with None title
+    mocker.resetall()
     assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
     assert ui_form.create_type_dialog.buttonBox.isVisible() is False, "Create new type dialog button box should not be shown!"
     qtbot.mouseClick(ui_form.addTypePushButton, Qt.LeftButton)
     with qtbot.waitExposed(ui_form.create_type_dialog.instance, timeout=200):
       assert ui_form.create_type_dialog.instance.isVisible() is True, "Create new type dialog should be shown!"
       assert ui_form.create_type_dialog.buttonBox.isVisible() is True, "Create new type dialog button box should be shown!"
-      assert ui_form.create_type_dialog.structuralLevelCheckBox.isChecked() is False, "structuralLevelCheckBox should be unchecked"
-      ui_form.create_type_dialog.titleLineEdit.setText(None)
-      ui_form.create_type_dialog.displayedTitleLineEdit.setText("displayedTitle")
+      qtbot.keyClicks(ui_form.create_type_dialog.typeLineEdit, "test")
+      qtbot.keyClicks(ui_form.create_type_dialog.typeDisplayedTitleLineEdit, "")
     qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(QDialogButtonBox.Ok),
                      Qt.LeftButton)
-    assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
-    ui_form.logger.warning.assert_has_calls(
-      [mocker.call("Enter non-null/valid title!!....."), mocker.call("Enter non-null/valid title!!.....")])
-    ui_form.message_box.setText.assert_has_calls(
-      [mocker.call("Enter non-null/valid title!!....."), mocker.call("Enter non-null/valid title!!.....")])
-    ui_form.message_box.exec.assert_has_calls([mocker.call(), mocker.call()])
-    ui_form.message_box.setIcon.assert_has_calls(
-      [mocker.call(QtWidgets.QMessageBox.Warning), mocker.call(QtWidgets.QMessageBox.Warning)])
-    assert ui_form.typeComboBox.currentText() != None, "Data type combo box should not be None"
-    assert ui_form.typeDisplayedTitleLineEdit.text() != "displayedTitle", "Data type combo box should not be newly added type displayedTitle"
+    assert ui_form.create_type_dialog.instance.isVisible() is True, "Create new type dialog should be shown!"
+    ui_form.create_type_dialog.logger.error.assert_called_once_with("Displayed title property is required!")
+    ui_form.message_box.setText.assert_called_once_with('Displayed title property is required!')
+    ui_form.message_box.exec.assert_called_once_with()
+    ui_form.message_box.setIcon.assert_called_once_with(QtWidgets.QMessageBox.Warning)
+    assert ui_form.typeComboBox.currentText() != "", "Data type combo box should not be empty title"
+    assert ui_form.create_type_dialog.typeDisplayedTitleLineEdit.text() == "", "Data type displayed title line edit should be empty"
 
   def test_component_create_new_type_reject_should_not_add_new_type_with_displayed_title(self,
                                                                                          data_hierarchy_editor_gui:
@@ -298,14 +353,88 @@ class TestDataHierarchyEditorDialog(object):
     with qtbot.waitExposed(ui_form.create_type_dialog.instance, timeout=300):
       assert ui_form.create_type_dialog.instance.isVisible() is True, "Create new type dialog should be shown!"
       assert ui_form.create_type_dialog.buttonBox.isVisible() is True, "Create new type dialog button box should be shown!"
-      assert ui_form.create_type_dialog.structuralLevelCheckBox.isChecked() is False, "structuralLevelCheckBox should be unchecked"
-      ui_form.create_type_dialog.titleLineEdit.setText("title")
-      ui_form.create_type_dialog.displayedTitleLineEdit.setText("displayedTitle")
+      qtbot.keyClicks(ui_form.create_type_dialog.typeLineEdit, "test")
+      qtbot.keyClicks(ui_form.create_type_dialog.typeDisplayedTitleLineEdit, "test")
+      qtbot.keyClicks(ui_form.create_type_dialog.iriLineEdit, "test")
+      qtbot.keyClicks(ui_form.create_type_dialog.shortcutLineEdit, "test")
+      ui_form.create_type_dialog.iconFontCollectionComboBox.setCurrentText("mdi6")
+      ui_form.create_type_dialog.iconComboBox.setCurrentText("mdi6.zodiac-sagittarius")
     qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(QDialogButtonBox.Cancel),
                      Qt.LeftButton)
     assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
-    assert ui_form.typeComboBox.currentText() != "title", "Data type combo box should not be newly added type title"
-    assert ui_form.typeDisplayedTitleLineEdit.text() != "displayedTitle", "Data type combo box should not be newly added type displayedTitle"
+    assert ui_form.typeComboBox.currentText() != "test", "Data type combo box should not be newly added type title"
+
+    # Check if the dialog is cleared
+    qtbot.mouseClick(ui_form.addTypePushButton, Qt.LeftButton)
+    with qtbot.waitExposed(ui_form.create_type_dialog.instance, timeout=300):
+      assert ui_form.create_type_dialog.instance.isVisible() is True, "Create new type dialog should be shown!"
+      assert ui_form.create_type_dialog.buttonBox.isVisible() is True, "Create new type dialog button box should be shown!"
+      assert ui_form.create_type_dialog.typeLineEdit.text() == ""
+      assert ui_form.create_type_dialog.typeDisplayedTitleLineEdit.text() == ""
+      assert ui_form.create_type_dialog.iriLineEdit.text() == ""
+      assert ui_form.create_type_dialog.shortcutLineEdit.text() == ""
+      assert ui_form.create_type_dialog.iconFontCollectionComboBox.currentText() == "fa"
+      assert ui_form.create_type_dialog.iconComboBox.currentText() == "No value"
+    qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(QDialogButtonBox.Cancel),
+                     Qt.LeftButton)
+
+  def test_component_edit_existing_type_should_save_edited_contents(self,
+                                                                    data_hierarchy_editor_gui:
+                                                                    tuple[
+                                                                      QApplication, QtWidgets.QDialog, DataHierarchyEditorDialog, QtBot],
+                                                                    data_hierarchy_doc_mock: data_hierarchy_doc_mock,
+                                                                    metadata_column_names: metadata_column_names,
+                                                                    attachments_column_names: attachments_column_names):
+
+    app, ui_dialog, ui_form, qtbot = data_hierarchy_editor_gui
+    assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
+    assert ui_form.create_type_dialog.buttonBox.isVisible() is False, "Create new type dialog button box should not be shown!"
+
+    # Add new type
+    qtbot.mouseClick(ui_form.addTypePushButton, Qt.LeftButton)
+    with qtbot.waitExposed(ui_form.create_type_dialog.instance, timeout=200):
+      assert ui_form.create_type_dialog.instance.isVisible() is True, "Create new type dialog should be shown!"
+      assert ui_form.create_type_dialog.buttonBox.isVisible() is True, "Create new type dialog button box should be shown!"
+      qtbot.keyClicks(ui_form.create_type_dialog.typeLineEdit, "new_type")
+      qtbot.keyClicks(ui_form.create_type_dialog.typeDisplayedTitleLineEdit, "new_title")
+      qtbot.keyClicks(ui_form.create_type_dialog.iriLineEdit, "new_iri")
+      qtbot.keyClicks(ui_form.create_type_dialog.shortcutLineEdit, "new_shortcut")
+      ui_form.create_type_dialog.iconFontCollectionComboBox.setCurrentText("mdi6")
+      ui_form.create_type_dialog.iconComboBox.setCurrentText("mdi6.zodiac-sagittarius")
+    qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(QDialogButtonBox.Ok),
+                     Qt.LeftButton)
+
+    assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
+    assert ui_form.typeComboBox.currentText() == "new_type", "Data type combo box should be newly added type title"
+
+    # Edit existing type
+    qtbot.mouseClick(ui_form.editTypePushButton, Qt.LeftButton)
+    with qtbot.waitExposed(ui_form.edit_type_dialog.instance, timeout=500):
+      assert ui_form.edit_type_dialog.typeLineEdit.text() == "new_type", "Type title line edit should be selected to first structural item"
+      assert ui_form.edit_type_dialog.iriLineEdit.text() == "new_iri", "Type IRI line edit should be selected to selected type IRI"
+      ui_form.edit_type_dialog.iriLineEdit.setText("new_iri_modified")
+      assert ui_form.edit_type_dialog.typeDisplayedTitleLineEdit.text() == "new_title", "Type displayedTitle line edit should be selected to selected type displayedTitle"
+      ui_form.edit_type_dialog.typeDisplayedTitleLineEdit.setText("new_title_modified")
+      assert ui_form.edit_type_dialog.shortcutLineEdit.text() == "new_shortcut", "Type shortcut line edit should be selected to selected type shortcut"
+      ui_form.edit_type_dialog.shortcutLineEdit.setText("new_shortcut_modified")
+      assert ui_form.edit_type_dialog.iconFontCollectionComboBox.currentText() == 'mdi6', "icon combo box should be selected to selected type icon"
+      assert ui_form.edit_type_dialog.iconComboBox.currentText() == 'mdi6.zodiac-sagittarius', "icon combo box should be selected to selected type icon"
+      ui_form.edit_type_dialog.iconFontCollectionComboBox.setCurrentText("ph")
+      ui_form.edit_type_dialog.iconComboBox.setCurrentText("ph.wifi-slash-light")
+    qtbot.mouseClick(ui_form.edit_type_dialog.buttonBox.button(QDialogButtonBox.Ok), Qt.LeftButton)
+    assert ui_form.edit_type_dialog.instance.isVisible() is False, "Create new type dialog should be closed!"
+
+    # Check if the edited contents are saved
+    qtbot.mouseClick(ui_form.editTypePushButton, Qt.LeftButton)
+    with qtbot.waitExposed(ui_form.edit_type_dialog.instance, timeout=500):
+      assert ui_form.edit_type_dialog.typeLineEdit.text() == "new_type", "Type title line edit should be selected to first structural item"
+      assert ui_form.edit_type_dialog.iriLineEdit.text() == "new_iri_modified", "Type IRI line edit should be selected to selected type IRI"
+      assert ui_form.edit_type_dialog.typeDisplayedTitleLineEdit.text() == "new_title_modified", "Type displayedTitle line edit should be selected to selected type displayedTitle"
+      assert ui_form.edit_type_dialog.shortcutLineEdit.text() == "new_shortcut_modified", "Type shortcut line edit should be selected to selected type shortcut"
+      assert ui_form.edit_type_dialog.iconFontCollectionComboBox.currentText() == 'ph', "icon combo box should be selected to selected type icon"
+      assert ui_form.edit_type_dialog.iconComboBox.currentText() == 'ph.wifi-slash-light', "icon combo box should be selected to selected type icon"
+    qtbot.mouseClick(ui_form.edit_type_dialog.buttonBox.button(QDialogButtonBox.Ok), Qt.LeftButton)
+    assert ui_form.edit_type_dialog.instance.isVisible() is False, "Create new type dialog should be closed!"
 
   def test_component_cancel_button_click_after_delete_group_should_not_modify_data_hierarchy_document_data(self,
                                                                                                            data_hierarchy_editor_gui:
@@ -325,46 +454,6 @@ class TestDataHierarchyEditorDialog(object):
         previous_types_metadata_group_count - 1 == ui_form.metadataGroupComboBox.count()), f"Combo list should have {previous_types_metadata_group_count - 1} items!"
     qtbot.mouseClick(ui_form.cancelPushButton, Qt.LeftButton)
     assert data_hierarchy_doc_mock.types() != ui_form.data_hierarchy_types, "Data Hierarchy Document should not be modified!"
-
-  def test_component_delete_type_after_creation_of_new_structural_type_should_succeed(self,
-                                                                                      data_hierarchy_editor_gui: tuple[
-                                                                                        QApplication, QtWidgets.QDialog, DataHierarchyEditorDialog, QtBot],
-                                                                                      data_hierarchy_doc_mock: data_hierarchy_doc_mock,
-                                                                                      metadata_column_names: metadata_column_names,
-                                                                                      attachments_column_names: attachments_column_names):
-    app, ui_dialog, ui_form, qtbot = data_hierarchy_editor_gui
-    assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
-    assert ui_form.create_type_dialog.buttonBox.isVisible() is False, "Create new type dialog button box should not be shown!"
-    qtbot.mouseClick(ui_form.addTypePushButton, Qt.LeftButton)
-    with qtbot.waitExposed(ui_form.create_type_dialog.instance, timeout=200):
-      assert ui_form.create_type_dialog.instance.isVisible() is True, "Create new type dialog should be shown!"
-      assert ui_form.create_type_dialog.buttonBox.isVisible() is True, "Create new type dialog button box should be shown!"
-      ui_form.create_type_dialog.structuralLevelCheckBox.setChecked(True)
-      ui_form.create_type_dialog.displayedTitleLineEdit.setText("test")
-      assert ui_form.create_type_dialog.titleLineEdit.text() == ui_form.create_type_dialog.next_struct_level.replace(
-        'x', 'Structure level '), "title should be set to 'Structure level 3'"
-    qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(QDialogButtonBox.Ok),
-                     Qt.LeftButton)
-    assert ui_form.create_type_dialog.instance.isVisible() is False, "Create new type dialog should not be shown!"
-    assert ui_form.typeComboBox.currentText() == "Structure level 3", "Data type combo box should be newly added structural item"
-    assert ui_form.typeDisplayedTitleLineEdit.text() == "test", "Data type displayedTitle should be newly added displayedTitle"
-    current_selected_type = ui_form.typeComboBox.currentText()
-    previous_types_count = ui_form.typeComboBox.count()
-    qtbot.mouseClick(ui_form.deleteTypePushButton, Qt.LeftButton)
-    assert (current_selected_type not in [ui_form.typeComboBox.itemText(i) for i in range(
-      ui_form.typeComboBox.count())]), f"Deleted type:{current_selected_type} should not exist in combo list!"
-    assert (
-        previous_types_count - 1 == ui_form.typeComboBox.count()), f"Combo list should have {previous_types_count - 1} items!"
-    assert adapt_type(ui_form.typeComboBox.currentText()) == data_hierarchy_doc_mock.types_list()[
-      0], "Type combo box should be selected to first structural item"
-    selected_type = data_hierarchy_doc_mock.types()[adapt_type(ui_form.typeComboBox.currentText())]
-    assert ui_form.typeDisplayedTitleLineEdit.text() == selected_type[
-      "title"], "Type displayedTitle line edit should be selected to first structural item"
-    assert ui_form.typeIriLineEdit.text() == selected_type[
-      "IRI"], "Type IRI line edit should be selected to IRI in selected type"
-    assert ui_form.metadataGroupComboBox.currentText() == list(selected_type["meta"].keys())[
-      0], "Type metadata group combo box should be selected to first metadata group"
-    self.check_table_contents(attachments_column_names, metadata_column_names, selected_type, ui_form)
 
   def test_component_save_button_click_after_delete_group_should_modify_data_hierarchy_document_data(self, mocker,
                                                                                                      data_hierarchy_editor_gui:
@@ -397,12 +486,13 @@ class TestDataHierarchyEditorDialog(object):
                                                                                                              metadata_column_names: metadata_column_names,
                                                                                                              attachments_column_names: attachments_column_names):
     app, ui_dialog, ui_form, qtbot = data_hierarchy_editor_gui
-    assert ui_form.typeIriLineEdit.text() == 'http://url.com', "typeIriLineEdit should be default test value"
+    qtbot.mouseClick(ui_form.editTypePushButton, Qt.LeftButton)
+    assert ui_form.edit_type_dialog.iriLineEdit.text() == 'http://url.com', "typeIriLineEdit should be default test value"
     iri_lookup_action = None
-    for act in ui_form.typeIriLineEdit.actions():
+    for act in ui_form.edit_type_dialog.iriLineEdit.actions():
       if isinstance(act, LookupIriAction):
         iri_lookup_action = act
-        act.trigger()
+        iri_lookup_action.trigger()
     lookup_dialog = iri_lookup_action.terminology_lookup_dialog
     assert lookup_dialog.selected_iris == [], "Selected IRIs should be empty"
     with qtbot.waitExposed(lookup_dialog.instance, timeout=500):
@@ -421,7 +511,7 @@ class TestDataHierarchyEditorDialog(object):
     qtbot.mouseClick(lookup_dialog.buttonBox.button(QDialogButtonBox.Ok), Qt.LeftButton)
     assert lookup_dialog.instance.isVisible() is False, "Data Hierarchy lookup dialog should be accepted and closed"
     assert len(lookup_dialog.selected_iris) >= 5, "IRIs should be set"
-    assert ui_form.typeIriLineEdit.text() == " ".join(
+    assert ui_form.edit_type_dialog.iriLineEdit.text() == " ".join(
       lookup_dialog.selected_iris), "typeIriLineEdit should contain all selected IRIs"
 
   def test_component_iri_lookup_button_click_should_show_data_hierarchy_lookup_dialog_and_should_not_set_iris_on_cancel(
@@ -429,12 +519,13 @@ class TestDataHierarchyEditorDialog(object):
       data_hierarchy_doc_mock: data_hierarchy_doc_mock, metadata_column_names: metadata_column_names,
       attachments_column_names: attachments_column_names):
     app, ui_dialog, ui_form, qtbot = data_hierarchy_editor_gui
-    assert ui_form.typeIriLineEdit.text() == 'http://url.com', "typeIriLineEdit should be default test value"
+    qtbot.mouseClick(ui_form.editTypePushButton, Qt.LeftButton)
+    assert ui_form.edit_type_dialog.iriLineEdit.text() == 'http://url.com', "typeIriLineEdit should be default test value"
     iri_lookup_action = None
-    for act in ui_form.typeIriLineEdit.actions():
+    for act in ui_form.edit_type_dialog.iriLineEdit.actions():
       if isinstance(act, LookupIriAction):
         iri_lookup_action = act
-        act.trigger()
+        iri_lookup_action.trigger()
     lookup_dialog = iri_lookup_action.terminology_lookup_dialog
     assert lookup_dialog.selected_iris == [], "Selected IRIs should be empty"
     with qtbot.waitExposed(lookup_dialog.instance, timeout=500):
@@ -453,7 +544,7 @@ class TestDataHierarchyEditorDialog(object):
     qtbot.mouseClick(lookup_dialog.buttonBox.button(QDialogButtonBox.Cancel), Qt.LeftButton)
     assert lookup_dialog.instance.isVisible() is False, "data_hierarchy lookup dialog should be cancelled and closed"
     assert lookup_dialog.selected_iris == [], "IRIs should not be set"
-    assert ui_form.typeIriLineEdit.text() == 'http://url.com', "typeIriLineEdit should be default test value after the cancellation"
+    assert ui_form.edit_type_dialog.iriLineEdit.text() == 'http://url.com', "typeIriLineEdit should be default test value after the cancellation"
 
   def test_delete_type_button_must_be_disabled_for_every_structural_level_except_the_last(self,
                                                                                           data_hierarchy_editor_gui:
@@ -470,7 +561,7 @@ class TestDataHierarchyEditorDialog(object):
       loaded_types.append(ui_form.typeComboBox.itemText(i))
     enabled_structural_type = max(filter(lambda k: 'Structure level' in k, loaded_types))
     ui_form.typeComboBox.setCurrentText(enabled_structural_type)
-    assert ui_form.deleteTypePushButton.isEnabled() is True, f"Delete type button must be enabled for only enabled structural type: '{enabled_structural_type}'"
+    assert ui_form.deleteTypePushButton.isEnabled() is False, f"Delete type button must be disabled for structural type: '{enabled_structural_type}'"
     loaded_types.remove(enabled_structural_type)
     for loaded_type in loaded_types:
       ui_form.typeComboBox.setCurrentText(loaded_type)
@@ -479,11 +570,11 @@ class TestDataHierarchyEditorDialog(object):
       else:
         assert ui_form.deleteTypePushButton.isEnabled() is True, "Delete type button must be enabled for normal types"
 
-    # Add a new structural type and check if the delete button is disabled for the previously enabled type
+    # Add a new type and check if the delete button is disabled for the previously enabled type
     qtbot.mouseClick(ui_form.addTypePushButton, Qt.LeftButton)
     with qtbot.waitExposed(ui_form.create_type_dialog.instance, timeout=1000):
-      ui_form.create_type_dialog.structuralLevelCheckBox.setChecked(True)
-      ui_form.create_type_dialog.displayedTitleLineEdit.setText("test")
+      ui_form.create_type_dialog.typeLineEdit.setText("test")
+      ui_form.create_type_dialog.typeDisplayedTitleLineEdit.setText("new type")
     qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(QDialogButtonBox.Ok),
                      Qt.LeftButton)
     ui_form.typeComboBox.setCurrentText(enabled_structural_type)
@@ -495,7 +586,7 @@ class TestDataHierarchyEditorDialog(object):
       loaded_types.append(ui_form.typeComboBox.itemText(i))
     enabled_structural_type = max(filter(lambda k: 'Structure level' in k, loaded_types))
     ui_form.typeComboBox.setCurrentText(enabled_structural_type)
-    assert ui_form.deleteTypePushButton.isEnabled() is True, f"Delete type button must be enabled for only enabled structural type: '{enabled_structural_type}'"
+    assert ui_form.deleteTypePushButton.isEnabled() is False, f"Delete type button must be disabled for structural type: '{enabled_structural_type}'"
     loaded_types.remove(enabled_structural_type)
     for loaded_type in loaded_types:
       ui_form.typeComboBox.setCurrentText(loaded_type)
@@ -507,8 +598,8 @@ class TestDataHierarchyEditorDialog(object):
     # Add a normal type and check if the delete button is disabled correctly for the structural types
     qtbot.mouseClick(ui_form.addTypePushButton, Qt.LeftButton)
     with qtbot.waitExposed(ui_form.create_type_dialog.instance, timeout=200):
-      ui_form.create_type_dialog.titleLineEdit.setText("new type")
-      ui_form.create_type_dialog.displayedTitleLineEdit.setText("test")
+      ui_form.create_type_dialog.typeLineEdit.setText("new type")
+      ui_form.create_type_dialog.typeDisplayedTitleLabel.setText("test")
     qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(QDialogButtonBox.Ok),
                      Qt.LeftButton)
 
@@ -516,10 +607,6 @@ class TestDataHierarchyEditorDialog(object):
     loaded_types.clear()
     for i in range(ui_form.typeComboBox.count()):
       loaded_types.append(ui_form.typeComboBox.itemText(i))
-    enabled_structural_type = max(filter(lambda k: 'Structure level' in k, loaded_types))
-    ui_form.typeComboBox.setCurrentText(enabled_structural_type)
-    assert ui_form.deleteTypePushButton.isEnabled() is True, f"Delete type button must be enabled for only enabled structural type: '{enabled_structural_type}'"
-    loaded_types.remove(enabled_structural_type)
     for loaded_type in loaded_types:
       ui_form.typeComboBox.setCurrentText(loaded_type)
       if "Structure level" in loaded_type:
@@ -527,22 +614,22 @@ class TestDataHierarchyEditorDialog(object):
       else:
         assert ui_form.deleteTypePushButton.isEnabled() is True, "Delete type button must be enabled for normal types'"
 
-  def test_delete_of_structural_type_possible_from_xn_to_x1_must_succeed_and_x0_delete_disabled(self,
-                                                                                                data_hierarchy_editor_gui:
-                                                                                                tuple[
-                                                                                                  QApplication, QtWidgets.QDialog, DataHierarchyEditorDialog, QtBot],
-                                                                                                data_hierarchy_doc_mock: data_hierarchy_doc_mock,
-                                                                                                metadata_column_names: metadata_column_names,
-                                                                                                attachments_column_names: attachments_column_names):
+  def test_delete_of_all_types_possible_except_structural_ones(self,
+                                                               data_hierarchy_editor_gui:
+                                                               tuple[
+                                                                 QApplication, QtWidgets.QDialog, DataHierarchyEditorDialog, QtBot],
+                                                               data_hierarchy_doc_mock: data_hierarchy_doc_mock,
+                                                               metadata_column_names: metadata_column_names,
+                                                               attachments_column_names: attachments_column_names):
     app, ui_dialog, ui_form, qtbot = data_hierarchy_editor_gui
     assert ui_form.typeComboBox.currentText() == "Structure level 0", "Initial loaded type must be 'Structure level 0'"
     assert ui_form.deleteTypePushButton.isEnabled() is False, "Delete type button must be disabled for 'Structure level 0'"
-    # Add 5 structural types
-    for _ in range(5):
+    # Add 5 types
+    for i in range(5):
       qtbot.mouseClick(ui_form.addTypePushButton, Qt.LeftButton)
       with qtbot.waitExposed(ui_form.create_type_dialog.instance, timeout=300):
-        ui_form.create_type_dialog.structuralLevelCheckBox.setChecked(True)
-        ui_form.create_type_dialog.displayedTitleLineEdit.setText("test")
+        ui_form.create_type_dialog.typeLineEdit.setText(f"test{i}")
+        ui_form.create_type_dialog.typeDisplayedTitleLineEdit.setText(f"test{i}")
       qtbot.mouseClick(ui_form.create_type_dialog.buttonBox.button(QDialogButtonBox.Ok),
                        Qt.LeftButton)
 
@@ -551,7 +638,7 @@ class TestDataHierarchyEditorDialog(object):
     normal_types = list(filter(lambda k: 'Structure level' not in k, loaded_types))
     for normal_type in normal_types:
       ui_form.typeComboBox.setCurrentText(normal_type)
-      assert ui_form.deleteTypePushButton.isEnabled() is True, f"Delete type button must be enabled for only enabled structural type: '{normal_type}'"
+      assert ui_form.deleteTypePushButton.isEnabled() is True, f"Delete type button must be enabled for type: '{normal_type}'"
       qtbot.mouseClick(ui_form.deleteTypePushButton, Qt.LeftButton)
       for i in range(ui_form.typeComboBox.count()):
         assert ui_form.typeComboBox.itemText(
@@ -560,25 +647,11 @@ class TestDataHierarchyEditorDialog(object):
 
     structural_types = sorted(filter(lambda k: 'Structure level' in k, loaded_types))
     assert structural_types == loaded_types, "All normal types must be deleted from UI, hence only structural types are left!"
-    for _ in range(len(structural_types)):
-      enabled_structural_type = max(structural_types)
-      if enabled_structural_type == 'Structure level 0':
-        break
-      for structural_type in list(structural_types):
-        if structural_type == enabled_structural_type:
-          ui_form.typeComboBox.setCurrentText(structural_type)
-          assert ui_form.deleteTypePushButton.isEnabled() is True, f"Delete type button must be enabled for only enabled structural type: '{structural_type}'"
-          qtbot.mouseClick(ui_form.deleteTypePushButton, Qt.LeftButton)
-          for j in range(ui_form.typeComboBox.count()):
-            assert ui_form.typeComboBox.itemText(
-              j) != structural_type, f"Deleted type:{structural_type} should not exist in combo list!"
-          structural_types.remove(structural_type)
-          loaded_types.remove(structural_type)
-        else:
-          ui_form.typeComboBox.setCurrentText(structural_type)
-          assert ui_form.deleteTypePushButton.isEnabled() is False, f"Delete type button must be disabled for '{structural_type}'"
-    assert structural_types == loaded_types == [
-      "Structure level 0"], "All structural types must be deleted from UI except 'Structure level 0'"
+    for structural_type in list(structural_types):
+      ui_form.typeComboBox.setCurrentText(structural_type)
+      assert ui_form.deleteTypePushButton.isEnabled() is False, f"Delete type button must be disabled for '{structural_type}'"
+    assert structural_types == loaded_types == ['Structure level 0', 'Structure level 1'], \
+      "All types must be deleted from UI except ['Structure level 0','Structure level 1']"
 
   def test_hide_show_attachments_table_should_do_as_expected(self, data_hierarchy_editor_gui: tuple[
     QApplication, QtWidgets.QDialog, DataHierarchyEditorDialog, QtBot],

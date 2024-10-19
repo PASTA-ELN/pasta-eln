@@ -10,13 +10,14 @@
 
 import copy
 import logging
-import re
 from typing import Any
 
 from PySide6.QtCore import QEvent
 from PySide6.QtGui import QMouseEvent, Qt
 from PySide6.QtWidgets import QMessageBox, QStyleOptionViewItem
 from cloudant import CouchDB
+
+from pasta_eln.GUI.data_hierarchy.data_type_info import DataTypeInfo
 
 
 def is_click_within_bounds(event: QEvent,
@@ -101,25 +102,6 @@ def show_message(message: str,
   return None
 
 
-def get_next_possible_structural_level_title(existing_type_titles: Any) -> str | None:
-  """
-  Get the title for the next possible structural type level
-  Args:
-    existing_type_titles (Any): The list of titles existing in the data hierarchy document
-
-  Returns (str|None):
-    The next possible name is returned with the decimal part greater than the existing largest one
-  """
-  if existing_type_titles is None:
-    return None
-  if len(existing_type_titles) <= 0:
-    return "x0"
-  titles = [int(title.replace('x', '').replace('X', ''))
-            for title in existing_type_titles if is_structural_level(title)]
-  new_level = max(titles, default=-1)
-  return f"x{new_level + 1}"
-
-
 def get_db(db_name: str,
            db_user: str,
            db_pass: str,
@@ -176,9 +158,7 @@ def adapt_type(title: str) -> str:
   Returns: Adapted title in the needed format
 
   """
-  return title.replace("Structure level ", "x") \
-    if title and title.startswith("Structure level ") \
-    else title
+  return {"Structure level 0": "x0", "Structure level 1": "x1"}.get(title, title)
 
 
 def is_structural_level(title: str) -> bool:
@@ -190,21 +170,23 @@ def is_structural_level(title: str) -> bool:
   Returns: True/False
 
   """
-  return re.compile(r'^[Xx][0-9]+$').match(title) is not None
+  return title in {"x0", "x1"}
 
 
-def generate_empty_type(displayed_title: str) -> dict[str, Any]:
+def generate_data_hierarchy_type(type_info: DataTypeInfo) -> dict[str, Any]:
   """
   Generate an empty type for creating a new data hierarchy type
   Args:
-    displayed_title (str): displayed_title of the new type
+    type_info (DataTypeInfo): type_info of the new type
 
   Returns: Dictionary representing a bare new type
 
   """
   return {
-    "IRI": "",
-    "title": displayed_title,
+    "IRI": type_info.iri,
+    "title": type_info.title,
+    "icon": type_info.icon,
+    "shortcut": type_info.shortcut,
     "meta": {
       "default": generate_required_metadata()
     },
@@ -481,26 +463,15 @@ def get_duplicate_metadata_formatted_message(message: str,
   return message
 
 
-def can_delete_type(existing_types: list[str],
-                    selected_type: str) -> bool:
+def can_delete_type(selected_type: str) -> bool:
   """
   Check if the selected type can be deleted
     - Non-structural types can be deleted always
     - Structural type 'x0' cannot be deleted at all, the other structural types can
     only be deleted if they are the last one in the hierarchy
   Args:
-    existing_types (list[str]): List of existing types
     selected_type (str): Selected type to be deleted
 
   Returns (bool): True/False depending on whether the selected type can be deleted
   """
-  if not selected_type:
-    return False
-  existing_types = [t for t in existing_types if t]
-  if not is_structural_level(selected_type):
-    return True
-  if selected_type == 'x0':
-    return False
-  structural_types = list(filter(is_structural_level, existing_types))
-  return (False if selected_type not in structural_types else
-          max(structural_types) == selected_type)
+  return not is_structural_level(selected_type) if selected_type else False
