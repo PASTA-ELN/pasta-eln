@@ -11,6 +11,7 @@ from pasta_eln import __version__, minisign
 from .backend import Backend
 from .miscTools import flatten
 from .fixedStringsJson import CONF_FILE_NAME
+from .stringChanges import camelCase
 
 # .eln file: common between all ELNs
 # - can be exported / imported generally; not a 1:1 backup (just zip it)
@@ -37,7 +38,7 @@ pasta2json:dict[str,Any] = {
   'image'       : None,
   'comment'     : 'description',
   'content'     : 'text',
-  'links'       : 'mentions',
+  '.links'      : 'mentions',
   'shasum'      : None,
   'user'        : None,
   'externalId'  : None,
@@ -65,9 +66,7 @@ json2pasta:dict[str,Any] = {v:k for k,v in pasta2json.items() if v is not None}
 # }
 
 
-renameELN = {
-  'https://kadi.iam.kit.edu':'Kadi4Mat'
-}
+renameELN = {'https://kadi.iam.kit.edu':'Kadi4Mat'}
 
 METADATA_FILE = 'ro-crate-metadata.json'
 
@@ -211,13 +210,19 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
         doc['tags'] = []
       if elnName!='PASTA ELN' and 'id' in doc:
         doc['.oldIdentifier'] = doc.pop('id')
-      if children and ('type' not in doc or doc['type'][0]!='x1'):
+      doc['.elnIdentifier'] = elnID
+      if (children and ('type' not in doc or doc['type'][0]!='x1')):
+        doc['type'] = ['x1']
+      if 'type' not in doc:
+        doc['type'] = ''
+      if doc['type']=='folder':
         doc['type'] = ['x1']
       # change .variable measured into pastaSystem
       variableMeasured = doc.pop('.variableMeasured',[])
       if variableMeasured is not None:
         for data in variableMeasured:
-          propertyID = data['propertyID'] if elnName in {'PASTA ELN','Kadi4Mat'} else f"imported.{data['propertyID']}"
+
+          propertyID = data['propertyID'] if '.' in data['propertyID'] and ' ' not in data['propertyID'] else f"imported.{camelCase(data['propertyID'])}"
           # print('propertyID', propertyID, elnName)
           doc[propertyID] = (data['value'], data.get('unitText',''), data.get('description',''), data.get('mentions',''))
       # print(f'Node becomes: {json.dumps(doc, indent=2)}')
@@ -256,16 +261,21 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
         with source, target:  #extract one file to its target directly
           shutil.copyfileobj(source, target)
       # FOR ALL ELNs
-      if dataType.lower()=='dataset':
-        docType = 'x0' if not projID and len(elnID.split('/'))==0 else 'x1'
+      if elnName == "PASTA ELN":
+        docType = '/'.join(doc['type'])
       else:
-        docType = ''
+        if dataType.lower()=='dataset':
+          docType = 'x0' if not projID and len(elnID.split('/'))==0 else 'x1'
+        else:
+          docType = ''
       if docType=='x0':
         backend.hierStack = []
       # print(f'Want to add doc:{doc} with type:{docType} and cwd:{backend.cwd}')
       docID = backend.addData(docType, doc)['id']
       if docID[0]=='x':
         backend.changeHierarchy(docID)
+        with open(backend.basePath/backend.cwd/'.id_pastaELN.json','w', encoding='utf-8') as f:  #local path, update in any case
+          f.write(json.dumps(backend.db.getDoc(docID)))
         # children, aka recursive part
         for child in children:
           if child['@id'].endswith('/metadata.json') or child['@id'].endswith('_metadata.json'):  #skip own metadata

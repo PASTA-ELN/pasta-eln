@@ -442,6 +442,13 @@ class SqlLiteDB:
         elif key not in dataOld:
           cmd = "INSERT INTO properties VALUES (?, ?, ?, ?);"
           self.cursor.execute(cmd ,[docID, key, value, ''])
+      elif isinstance(value, tuple) and len(value)==4:
+        if key in dataOld and value[0]!=dataOld[key]:
+          self.cursor.execute(f"UPDATE properties SET value='{value[0]}' WHERE id = '{docID}' and key = '{key}'")
+          changesDict[key] = dataOld[key]
+        elif key not in dataOld:
+          cmd = "INSERT INTO properties VALUES (?, ?, ?, ?);"
+          self.cursor.execute(cmd ,[docID, key, value[0], value[1]])
       else:
         logging.error('Property is not a dict, ERROR %s %s',key, value)
     if set(dataOld.keys()).difference(dataNew.keys()):
@@ -869,13 +876,14 @@ class SqlLiteDB:
     outString = ''
     if outputStyle=='html':
       outString += '<div align="right">'
-    outString+= outputString(outputStyle,'h2','LEGEND')
     if not minimal:
+      outString+= outputString(outputStyle,'h2','LEGEND')
       outString+= outputString(outputStyle,'perfect','Green: perfect and as intended')
       outString+= outputString(outputStyle,'ok', 'Blue: ok, can happen: empty files for testing, strange path for measurements')
+      outString+= outputString(outputStyle,'h2','List all database entries')
     if outputStyle=='html':
       outString += '</div>'
-    outString+= outputString(outputStyle,'h2','List all database entries')
+      outString+= outputString(outputStyle,'h2','List all database entries')
     # tests
     cmd = "SELECT id, main.type, branches.stack, branches.path, branches.child, branches.show "\
           "FROM branches INNER JOIN main USING(id)"
@@ -949,7 +957,7 @@ class SqlLiteDB:
     self.cursor.execute("SELECT id, key FROM properties where value LIKE ''")
     res = self.cursor.fetchall()
     for docID, key in res:
-      outString+= outputString(outputStyle,'error',f"key is bad as value is  missing: {docID} idx: {key}")
+      outString+= outputString(outputStyle,'ok',f"value of this key is missing: {docID} idx: {key}")
 
     #doc-type specific tests
     self.cursor.execute("SELECT qrCodes.id, qrCodes.qrCode FROM qrCodes JOIN main USING(id) WHERE  main.type LIKE 'sample%'")

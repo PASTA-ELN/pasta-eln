@@ -436,7 +436,6 @@ class Backend(CLI_Mixin):
       import matplotlib.pyplot as plt  #IMPORTANT: NO PYPLOT OUTSIDE THIS QT_API BLOCK
       plt.clf()
       try:
-        print(pyFile, absFilePath)
         module  = importlib.import_module(pyFile[:-3])
         content = module.use(absFilePath, {'main':'/'.join(doc['type'])} )
         for key in [i for i in content if i not in ['metaVendor','metaUser','image','content','links','style']]:  #only allow accepted keys
@@ -470,7 +469,7 @@ class Backend(CLI_Mixin):
         if 'links' in doc and len(doc['links'])==0:
           del doc['links']
       except Exception:
-        print('  **Warning, issue with extractor', pyFile)
+        print(f'  **Warning, issue with extractor {pyFile} {absFilePath}')
         logging.warning('Issue with extractor %s\n %s', pyFile, traceback.format_exc())
         doc['metaUser'] = {'filename':absFilePath.name, 'extension':absFilePath.suffix,
           'filesize':absFilePath.stat().st_size,
@@ -664,7 +663,8 @@ class Backend(CLI_Mixin):
     ### check database itself for consistency
     output = self.db.checkDB(outputStyle=outputStyle, minimal=minimal, repair=repair)
     ### compare with file system
-    output += outputString(outputStyle,'h2','File status')
+    if not minimal:
+      output += outputString(outputStyle,'h2','File status')
     viewProjects   = self.db.getView('viewDocType/x0All')
     inDB_all = self.db.getView('viewHierarchy/viewPathsAll')
     pathsInDB_data = [i['key'] for i in inDB_all if i['value'][1][0][0]!='x']
@@ -723,7 +723,8 @@ class Backend(CLI_Mixin):
     orphans+= [i for i in pathsInDB_folder if not (self.basePath/i).exists() ]
     if orphans:
       output += outputString(outputStyle,'error','bch01: These files of database not on filesystem(3):\n  - '+'\n  - '.join(orphans))
-    output += outputString(outputStyle,'h2','File summary')
+    if not minimal:
+      output += outputString(outputStyle,'h2','File summary')
     if outputStyle == 'text':
       output += "Success\n" if not orphans and count==0 else "Failure (* can be auto-repaired)\n"
     return output

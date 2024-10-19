@@ -46,8 +46,10 @@ def test_simple(qtbot):
     backend.addData('x0', {'name': projName})
     df = backend.db.getView('viewDocType/x0')
     projID = df[df['name']==projName]['id'].values[0]
-    reply = importELN(backend, f'tests/importELNs/{eln}', projID)
-    print(reply)
+    reply, statistics = importELN(backend, f'tests/importELNs/{eln}', projID)
+    print(reply,'\n',statistics)
+    assert statistics['num. files']<=statistics['types']['File'] ,'Files do not make sense'
     #statistics type File can be larger than num.Files because there are remote files which are not Files but in the @type
+    print(backend.checkDB(minimal=True))
 
   return
