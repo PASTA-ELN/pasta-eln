@@ -15,10 +15,11 @@ from typing import Any
 from PySide6 import QtCore, QtWidgets
 from PySide6.QtWidgets import QDialog
 
-from pasta_eln.GUI.dataverse.controlled_vocab_frame import ControlledVocabFrame
+from pasta_eln.GUI.dataverse.data_type_class_names import DataTypeClassName
 from pasta_eln.GUI.dataverse.edit_metadata_dialog_base import Ui_EditMetadataDialog
 from pasta_eln.GUI.dataverse.edit_metadata_summary_dialog import EditMetadataSummaryDialog
-from pasta_eln.GUI.dataverse.primitive_compound_frame import PrimitiveCompoundFrame
+from pasta_eln.GUI.dataverse.metadata_frame_base import MetadataFrame
+from pasta_eln.GUI.dataverse.metadata_frame_factory import MetadataFrameFactory
 from pasta_eln.dataverse.config_model import ConfigModel
 from pasta_eln.dataverse.database_api import DatabaseAPI
 from pasta_eln.dataverse.utils import adjust_type_name, get_formatted_metadata_message
@@ -61,8 +62,8 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
 
     """
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
-    self.primitive_compound_frame: PrimitiveCompoundFrame | None = None
-    self.controlled_vocab_frame: ControlledVocabFrame | None = None
+    self.metadata_frame: MetadataFrame | None = None
+    self.metadata_frame_factory: MetadataFrameFactory = MetadataFrameFactory()
     self.metadata_summary_dialog: EditMetadataSummaryDialog = EditMetadataSummaryDialog(self.save_config)
     self.instance = QDialog()
     super().setupUi(self.instance)
@@ -130,12 +131,9 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
 
     """
     # Save the current modifications
-    if self.primitive_compound_frame:
-      self.primitive_compound_frame.save_modifications()
-      self.primitive_compound_frame.instance.close()
-    if self.controlled_vocab_frame:
-      self.controlled_vocab_frame.save_modifications()
-      self.controlled_vocab_frame.instance.close()
+    if self.metadata_frame:
+      self.metadata_frame.save_modifications()
+      self.metadata_frame.instance.close()
     # Clear the contents of UI elements
     for widget_pos in reversed(range(self.metadataScrollVerticalLayout.count())):
       self.metadataScrollVerticalLayout.itemAt(widget_pos).widget().setParent(None)
@@ -152,13 +150,11 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
             self.logger.info("Loading %s metadata type of class: %s...",
                              field['typeName'],
                              field['typeClass'])
-            match field['typeClass']:
-              case "primitive" | "compound":
-                self.primitive_compound_frame = PrimitiveCompoundFrame(field)
-                self.metadataScrollVerticalLayout.addWidget(self.primitive_compound_frame.instance)
-              case "controlledVocabulary":
-                self.controlled_vocab_frame = ControlledVocabFrame(field)
-                self.metadataScrollVerticalLayout.addWidget(self.controlled_vocab_frame.instance)
+            if self.metadata_frame:
+              self.metadata_frame.instance.setParent(None)
+            self.metadata_frame = (self.metadata_frame_factory
+                                   .make_metadata_frame(DataTypeClassName(field['typeClass']), field))
+            self.metadataScrollVerticalLayout.addWidget(self.metadata_frame.instance)
 
   def change_metadata_block(self, new_metadata_block: str | None = None) -> None:
     """
@@ -230,10 +226,8 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
     and displays the updated metadata in the summary dialog.
     """
     self.logger.info("Saving Config Model...")
-    if self.controlled_vocab_frame:
-      self.controlled_vocab_frame.save_modifications()
-    if self.primitive_compound_frame:
-      self.primitive_compound_frame.save_modifications()
+    if self.metadata_frame:
+      self.metadata_frame.save_modifications()
     message = get_formatted_metadata_message(self.metadata or {})
     self.metadata_summary_dialog.summaryTextEdit.setText(message)
     self.metadata_summary_dialog.show()

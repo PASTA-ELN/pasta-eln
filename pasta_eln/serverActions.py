@@ -169,11 +169,13 @@ def repairPropertiesDot(projectGroup:str='') -> None:
   print("Done")
   return
 
-def delete(projectGroup:str='', docID:str='') -> None:
-  """ Delete a document
+
+def printOrDelete(projectGroup:str='', docID:str='', output:bool=True) -> None:
+  """ Print or delete a document
   Args:
     projectGroup (str): from which project group to delete
     docID (str): which ID to delete
+    output (bool): print=True or delete=False
   """
   if not projectGroup:
     with open(Path.home()/'.pastaELN.json','r', encoding='utf-8') as fIn:
@@ -183,7 +185,10 @@ def delete(projectGroup:str='', docID:str='') -> None:
   be = Backend(projectGroup)
   if not docID:
     docID = input('Enter docID: ').strip()
-  be.db.remove(docID)
+  if output:
+    print(json.dumps(be.db.getDoc(docID), indent=2))
+  else:
+    be.db.remove(docID)
   return
 
 
@@ -195,7 +200,7 @@ def main() -> None:
   print(  'Manage users and databases for PASTA-ELN on a local couchDB installation')
   print(  '-------------------------------------------------------------------------')
   while True:
-    print('\nCommands - general: [q]uit; [d]elete a document\n - update: [c]onvert couchDB to SQLite; [t]ranslate disk structure from V2->v3'
+    print('\nCommands - general: [q]uit; [p]rint a document\n - update: [c]onvert couchDB to SQLite; [t]ranslate disk structure from V2->v3'
           '\n - database integrity: [v]erify; [r]epair\n - repair sql: [rp1] repair properties: add missing .')
     command = input('> ')
     if command == 'c':
@@ -208,8 +213,8 @@ def main() -> None:
       verifyPasta(repair=True)
     elif command == 'rp1':
       repairPropertiesDot()
-    elif command == 'd':
-      delete()
+    elif command == 'p':
+      printOrDelete()
     elif command == 'q':
       break
     else:

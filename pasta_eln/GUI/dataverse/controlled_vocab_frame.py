@@ -10,14 +10,17 @@
 import logging
 from typing import Any
 
-from PySide6.QtCore import QSize
-from PySide6.QtWidgets import QComboBox, QFrame, QHBoxLayout, QPushButton, QSizePolicy
+from PySide6.QtWidgets import QFrame
 
+from pasta_eln.GUI.dataverse.data_type_class_base import DataTypeClass
+from pasta_eln.GUI.dataverse.data_type_class_context import DataTypeClassContext
+from pasta_eln.GUI.dataverse.data_type_class_factory import DataTypeClassFactory
+from pasta_eln.GUI.dataverse.data_type_class_names import DataTypeClassName
+from pasta_eln.GUI.dataverse.metadata_frame_base import MetadataFrame
 from pasta_eln.GUI.dataverse.primitive_compound_controlled_frame_base import Ui_PrimitiveCompoundControlledFrameBase
-from pasta_eln.dataverse.utils import delete_layout_and_contents
 
 
-class ControlledVocabFrame(Ui_PrimitiveCompoundControlledFrameBase):
+class ControlledVocabFrame(Ui_PrimitiveCompoundControlledFrameBase, MetadataFrame):
   """
   Represents a controlled vocabulary frame.
 
@@ -56,8 +59,15 @@ class ControlledVocabFrame(Ui_PrimitiveCompoundControlledFrameBase):
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
     self.instance = QFrame()
     super().setupUi(self.instance)
-    self.meta_field = meta_field
-    self.addPushButton.clicked.connect(self.add_button_callback)
+    super().__init__(self.instance)
+    self.meta_field: dict[str, Any] = meta_field
+    self.data_type_class_factory: DataTypeClassFactory = DataTypeClassFactory(
+      DataTypeClassContext(self.mainVerticalLayout, self.addPushButton, self.instance, meta_field)
+    )
+    self.data_type: DataTypeClass = self.data_type_class_factory.make_data_type_class(
+      DataTypeClassName(meta_field['typeClass'])
+    )
+    self.addPushButton.clicked.connect(self.add_button_click_handler)
     self.load_ui()
 
   def load_ui(self) -> None:
@@ -74,20 +84,9 @@ class ControlledVocabFrame(Ui_PrimitiveCompoundControlledFrameBase):
         self: The instance of the class.
     """
     self.logger.info("Loading controlled vocabulary frame ui..")
-    value = self.meta_field.get('value')
-    value_template = self.meta_field.get("valueTemplate")
-    if self.meta_field.get('multiple'):
-      if value:
-        for value in value:
-          self.add_new_vocab_entry(value_template, value)
-      else:
-        self.add_new_vocab_entry(value_template, None)
-    else:
-      self.add_new_vocab_entry(
-        [value_template or ""],
-        value)
+    self.data_type.populate_entry()
 
-  def add_button_callback(self) -> None:
+  def add_button_click_handler(self) -> None:
     """
     Handles the button callback for adding a new vocabulary entry.
 
@@ -99,52 +98,7 @@ class ControlledVocabFrame(Ui_PrimitiveCompoundControlledFrameBase):
         self: The instance of the class.
     """
     self.logger.info("Adding new vocabulary entry, value: %s", self.meta_field)
-    value_template = self.meta_field.get('valueTemplate')
-    if self.meta_field.get('multiple'):
-      self.add_new_vocab_entry(value_template, value_template[0]
-      if value_template and len(value_template) > 0 else None)
-    else:
-      self.add_new_vocab_entry([value_template]
-                               if value_template and len(value_template) > 0
-                               else [], value_template)
-
-  def add_new_vocab_entry(self,
-                          controlled_vocabulary: list[str] | None = None,
-                          value: str | None = None) -> None:
-    """
-    Adds a new vocabulary entry to the controlled vocabulary frame.
-
-    Args:
-        controlled_vocabulary (list[str] | None): The list of controlled vocabulary options.
-        value (str | None): The initial value for the vocabulary entry.
-
-    Explanation:
-        This method adds a new vocabulary entry to the controlled vocabulary frame.
-        It creates a new layout with a combo box and a delete button, and adds it to the main vertical layout.
-        The combo box is populated with the controlled vocabulary options, and the initial value is set if provided.
-        The delete button is connected to the delete_layout_and_contents function to handle deletion of the entry.
-    """
-    new_vocab_entry_layout = QHBoxLayout()
-    new_vocab_entry_layout.setObjectName("vocabHorizontalLayout")
-    combo_box = QComboBox(parent=self.instance)
-    combo_box.setObjectName("vocabComboBox")
-    combo_box.setToolTip("Select the controlled vocabulary.")
-    combo_box.addItems(controlled_vocabulary or [])
-    combo_box.setCurrentText(value or "")
-    new_vocab_entry_layout.addWidget(combo_box)
-    delete_push_button = QPushButton(parent=self.instance)
-    delete_push_button.setText("Delete")
-    delete_push_button.setToolTip("Delete this particular vocabulary entry.")
-    size_policy = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
-    size_policy.setHorizontalStretch(0)
-    size_policy.setVerticalStretch(0)
-    size_policy.setHeightForWidth(delete_push_button.sizePolicy().hasHeightForWidth())
-    delete_push_button.setSizePolicy(size_policy)
-    delete_push_button.setMinimumSize(QSize(100, 0))
-    delete_push_button.setObjectName("deletePushButton")
-    new_vocab_entry_layout.addWidget(delete_push_button)
-    delete_push_button.clicked.connect(lambda _: delete_layout_and_contents(new_vocab_entry_layout))
-    self.mainVerticalLayout.addLayout(new_vocab_entry_layout)
+    self.data_type.add_new_entry()
 
   def save_modifications(self) -> None:
     """
@@ -158,19 +112,4 @@ class ControlledVocabFrame(Ui_PrimitiveCompoundControlledFrameBase):
     Args:
         self: The instance of the class.
     """
-    value = self.meta_field.get('value')
-    if self.meta_field['multiple'] and isinstance(value, list):
-      value.clear()
-      for layout_pos in reversed(range(self.mainVerticalLayout.count())):
-        if vocab_horizontal_layout := self.mainVerticalLayout.itemAt(layout_pos).layout():
-          combo_box = vocab_horizontal_layout.itemAt(0).widget()
-          if text := combo_box.currentText():
-            value.append(text)
-      self.meta_field['value'] = list(set(value))
-    elif layout := self.mainVerticalLayout.findChild(QHBoxLayout,
-                                                     "vocabHorizontalLayout"):
-      if combo_box := layout.itemAt(0).widget():
-        self.meta_field['value'] = combo_box.currentText()
-    else:
-      self.logger.warning("Failed to save modifications, no layout found.")
-    self.logger.info("Saved modifications successfully, value: %s", self.meta_field)
+    self.data_type.save_modifications()

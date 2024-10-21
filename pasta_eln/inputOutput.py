@@ -1,18 +1,17 @@
 """Input and output functions towards the .eln file-format"""
-import json, shutil, logging, hashlib, copy, uuid
+import json, shutil, logging, hashlib, uuid
 from typing import Any
 from pathlib import Path
 from datetime import datetime
 from zipfile import ZipFile, ZIP_DEFLATED
 import requests
 from anytree import Node
+from PySide6.QtGui import QTextDocument
 from pasta_eln import __version__, minisign
 from .backend import Backend
 from .miscTools import flatten
 from .fixedStringsJson import CONF_FILE_NAME
-
-# TODO
-# - folder should not start with PASTA
+from .stringChanges import camelCase
 
 # .eln file: common between all ELNs
 # - can be exported / imported generally; not a 1:1 backup (just zip it)
@@ -20,6 +19,11 @@ from .fixedStringsJson import CONF_FILE_NAME
 # - externalID is the only content that cannot be recreated
 #   - not sure how important this information is: different groups have different externalIDs
 #   - if every it becomes important: just add json (that maps identifier to externalID) as additional file
+
+# Idea: ELN from other vendor -> import -> export: should be the same
+# - not because some information is added (pasta's identifier)
+# - some information is changed (what I understand as measurement is not the same as elab's experiment which is more a folder in pasta
+# - some information is deleted (data privacy related)
 
 # GENERAL TERMS IN ro-crate-metadata.json (None: this entry is not saved and will be recreated upon import)
 pasta2json:dict[str,Any] = {
@@ -34,7 +38,7 @@ pasta2json:dict[str,Any] = {
   'image'       : None,
   'comment'     : 'description',
   'content'     : 'text',
-  'links'       : 'mentions',
+  '.links'      : 'mentions',
   'shasum'      : None,
   'user'        : None,
   'externalId'  : None,
@@ -42,119 +46,125 @@ pasta2json:dict[str,Any] = {
 }
 json2pasta:dict[str,Any] = {v:k for k,v in pasta2json.items() if v is not None}
 
-# Special terms in other ELNs: only add the ones that are required for function for PASTA
-specialTerms:dict[str,dict[str,str]] = {
-    'elabFTW': {
-      # 'elabid':'_id',
-      # 'title':'-name',
-      # 'tags':'-tags',
-      # 'lastchange':'-date',
-      # 'userid':'-user',
-      # 'metadata':'metaUser',
-      # 'id':'_id',
-      # 'category': '-type',
-      # 'dateCreated': '-date'
-    },
-    'SampleDB':{
-      'comment':'userComment',
-      'genre': '-type'
-    }
-}
+# # Special terms in other ELNs: only add the ones that are required for function for PASTA
+# specialTerms:dict[str,dict[str,str]] = {
+#     'elabFTW': {
+#       # 'elabid':'_id',
+#       # 'title':'-name',
+#       # 'tags':'-tags',
+#       # 'lastchange':'-date',
+#       # 'userid':'-user',
+#       # 'metadata':'metaUser',
+#       # 'id':'_id',
+#       # 'category': '-type',
+#       # 'dateCreated': '-date'
+#     },
+#     'SampleDB':{
+#       'comment':'userComment',
+#       'genre': '-type'
+#     }
+# }
 
 
-renameELN = {
-  'https://kadi.iam.kit.edu':'Kadi4Mat'
-}
+renameELN = {'https://kadi.iam.kit.edu':'Kadi4Mat'}
 
 METADATA_FILE = 'ro-crate-metadata.json'
 
 
-def tree(graph:dict[Any,Any]) -> str:
-  """
-  use metadata to create hierarchical tree structure in ascii
+# def tree(graph:dict[Any,Any]) -> str:
+#   """
+#   use metadata to create hierarchical tree structure in ascii
 
-  Args:
-    graph (dict): tree-graph to be plotted
+#   Args:
+#     graph (dict): tree-graph to be plotted
 
-  Returns:
-    str: output of graph as a nice tree
-  """
-  def process_part(part:dict[Any,Any], level:int) -> str:
-    """
-    recursive function call to process this node of the tree-graph
+#   Returns:
+#     str: output of graph as a nice tree
+#   """
+#   def process_part(part:dict[Any,Any], level:int) -> str:
+#     """
+#     recursive function call to process this node of the tree-graph
 
-    Args:
-      part (dict): dictionary entry of this hasPart=part of a parent node; is a node by-itself
-      level (int): hierarchy level
+#     Args:
+#       part (dict): dictionary entry of this hasPart=part of a parent node; is a node by-itself
+#       level (int): hierarchy level
 
-    Returns:
-      str: one line in the tree
-    """
-    prefix = '    '*level + '- '
-    # find next node to process
-    newNode:list[Any] = [i for i in graph if '@id' in i and i['@id'] == part['@id']]
-    if len(newNode) == 1:
-      output = f'{prefix} {newNode[0]["@id"]} type:{newNode[0]["@type"]} items: {len(newNode[0])-1}\n'  # -1 because @id is not counted
-      subparts = newNode[0].pop('hasPart') if 'hasPart' in newNode[0] else []
-      if len(subparts) > 0:  # don't do if no subparts: measurements, ...
-        for subpart in subparts:
-          output += process_part(subpart, level + 1)
-    else:                                                       #not found
-      output = f'  items: {len(part) - 1}\n'      # -1 because @id is not counted
-    return output
+#     Returns:
+#       str: one line in the tree
+#     """
+#     prefix = '    '*level + '- '
+#     # find next node to process
+#     newNode:list[Any] = [i for i in graph if '@id' in i and i['@id'] == part['@id']]
+#     if len(newNode) == 1:
+#       output = f'{prefix} {newNode[0]["@id"]} type:{newNode[0]["@type"]} items: {len(newNode[0])-1}\n'  # -1 because @id is not counted
+#       subparts = newNode[0].pop('hasPart') if 'hasPart' in newNode[0] else []
+#       if len(subparts) > 0:  # don't do if no subparts: measurements, ...
+#         for subpart in subparts:
+#           output += process_part(subpart, level + 1)
+#     else:                                                       #not found
+#       output = f'  items: {len(part) - 1}\n'      # -1 because @id is not counted
+#     return output
 
-  # main tree-function
-  #   find information from master node
-  ro_crate_node = [i for i in graph if i["@id"] == METADATA_FILE][0]
-  output = f'- {METADATA_FILE}' + '\n'
-  if 'sdPublisher' in ro_crate_node:
-    name = ro_crate_node['sdPublisher'].get('name','---')
-    output += f'    - publisher: {name}' + '\n'
-  if 'version' in ro_crate_node:
-    output += '    - version: ' + ro_crate_node['version'] + '\n'
-  main_node = [i for i in graph if i["@id"] == "./"][0]
-  output += '- ./\n'
-  #   iteratively go through list
-  for part in main_node['hasPart']:
-    output += process_part(part, 1)
-  return output
+#   # main tree-function
+#   #   find information from master node
+#   ro_crate_node = [i for i in graph if i["@id"] == METADATA_FILE][0]
+#   output = f'- {METADATA_FILE}' + '\n'
+#   if 'sdPublisher' in ro_crate_node:
+#     name = ro_crate_node['sdPublisher'].get('name','---')
+#     output += f'    - publisher: {name}' + '\n'
+#   if 'version' in ro_crate_node:
+#     output += '    - version: ' + ro_crate_node['version'] + '\n'
+#   main_node = [i for i in graph if i["@id"] == "./"][0]
+#   output += '- ./\n'
+#   #   iteratively go through list
+#   for part in main_node['hasPart']:
+#     output += process_part(part, 1)
+#   return output
 
 
-def importELN(backend:Backend, elnFileName:str) -> str:
+def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[str,Any]]:
   '''
   import .eln file from other ELN or from PASTA
 
   Args:
     backend (backend): backend
     elnFileName (str): name of file
+    projID (str): project to import data into. If '', create a new project (only available for PastaELN)
 
   Returns:
-    str: success message
+    str: success message, statistics
   '''
-  print("Import: ask user to import in existing project, new project or as project(s)")
   elnName = ''
-  elnVersion = ''
-  projID, projPWD= '', Path('')
+  qtDocument = QTextDocument()   #used for html -> markdown conversion
+  statistics:dict[str,Any] = {}
   with ZipFile(elnFileName, 'r', compression=ZIP_DEFLATED) as elnFile:
     files = elnFile.namelist()
-    logging.info('All files %s',', '.join(files))
     dirName=Path(files[0]).parts[0]
+    statistics['num. files'] = len([i for i in files if Path(i).parent!=Path(dirName)])
     if f'{dirName}/ro-crate-metadata.json' not in files:
       print('**ERROR: ro-crate does not exist in folder. EXIT')
-      return '**ERROR: ro-crate does not exist in folder. EXIT'
+      return '**ERROR: ro-crate does not exist in folder. EXIT',{}
     graph = json.loads(elnFile.read(f'{dirName}/ro-crate-metadata.json'))["@graph"]
+    listAllTypes = [i['@type'] for i in graph if isinstance(i['@type'],str)]
+    statistics['types'] = {i:listAllTypes.count(i) for i in listAllTypes}
+
     #find information from master node
     rocrateNode = [i for i in graph if i["@id"].endswith("ro-crate-metadata.json")][0]
     if 'sdPublisher' in rocrateNode:
-      elnName     = rocrateNode['sdPublisher'].get('name', '')
-      if elnName == '':
-        elnName     = rocrateNode['sdPublisher'].get('@id', '')
-    elnVersion = rocrateNode['version'] if 'version' in rocrateNode else ''
-    logging.info('Import %s %s', elnName, elnVersion)
-    if elnName!='PASTA ELN' and elnName in specialTerms:
-      json2pasta.update(specialTerms[elnName])
-    logging.info('ELN and translator: %s %s', elnName, str(json2pasta))
+      publisherNode = rocrateNode['sdPublisher']
+      if 'name' not in publisherNode:
+        publisherNode = [i for i in graph if i["@id"]==rocrateNode['sdPublisher']['@id']][0]
+      elnName = publisherNode['name']
+    logging.info('Import %s', elnName)
+    if not projID and elnName!='PASTA ELN':
+      return "FAILURE: YOU CANNOT IMPORT AS PROJECT IF NON PASTA-ELN FILE",{}
+    if projID:
+      backend.changeHierarchy(projID)
+    # if elnName!='PASTA ELN' and elnName in specialTerms:
+    #   json2pasta.update(specialTerms[elnName])
+    # logging.info('ELN and translator: %s %s', elnName, str(json2pasta))
     mainNode    = [i for i in graph if i["@id"]=="./"][0]
+
 
     ################
     # subfunctions #
@@ -172,19 +182,51 @@ def importELN(backend:Backend, elnFileName:str) -> str:
         list: list of children
         str: data or dataset
       """
-      output = {}
+      doc = {}
       elnID = inputData['@id'][2:] if inputData['@id'][:2]=='./' else inputData['@id']
       children = inputData.pop('hasPart') if 'hasPart' in inputData else []
       dataType = inputData['@type']
+      encodingFormat = ''
       for key, value in inputData.items():
         if key in ['@id','@type','hasPart','author','contentSize', 'sha256']:
           continue
         if key in json2pasta:  #use known translation
-          output[json2pasta[key]] = value
+          doc[json2pasta[key]] = value
+        elif key == 'encodingFormat':
+          encodingFormat = inputData[key]
         else:                  #keep name, only prevent causes for errors
-          key = f'imported_{key}' if key.startswith(('-','_')) else key
-          output[key] = value
-      return output, elnID, children, dataType
+          doc[f'.{key}'] = value
+      # change into Pasta's native format
+      if encodingFormat=='text/html':
+        if 'comment' in doc:
+          qtDocument.setHtml(doc['comment'])
+          doc['comment'] = qtDocument.toMarkdown()
+        if 'content' in doc:
+          qtDocument.setHtml(doc['content'])
+          doc['content'] = qtDocument.toMarkdown()
+      if 'tags' in doc:
+        doc['tags'] = [i.strip() for i in doc['tags'].split(',')]
+      else:
+        doc['tags'] = []
+      if elnName!='PASTA ELN' and 'id' in doc:
+        doc['.oldIdentifier'] = doc.pop('id')
+      doc['.elnIdentifier'] = elnID
+      if (children and ('type' not in doc or doc['type'][0]!='x1')):
+        doc['type'] = ['x1']
+      if 'type' not in doc:
+        doc['type'] = ''
+      if doc['type']=='folder':
+        doc['type'] = ['x1']
+      # change .variable measured into pastaSystem
+      variableMeasured = doc.pop('.variableMeasured',[])
+      if variableMeasured is not None:
+        for data in variableMeasured:
+
+          propertyID = data['propertyID'] if '.' in data['propertyID'] and ' ' not in data['propertyID'] else f"imported.{camelCase(data['propertyID'])}"
+          # print('propertyID', propertyID, elnName)
+          doc[propertyID] = (data['value'], data.get('unitText',''), data.get('description',''), data.get('mentions',''))
+      # print(f'Node becomes: {json.dumps(doc, indent=2)}')
+      return doc, elnID, children, dataType
 
 
     def processPart(part:dict[str,str]) -> int:
@@ -195,92 +237,51 @@ def importELN(backend:Backend, elnFileName:str) -> str:
         part (dict): dictionary containing this data content
 
       Returns:
-        bool: success of this function
+        int: number of documents added
       """
       addedDocs = 1
       if not isinstance(part, dict): #leave these tests in since other .elns might do funky stuff
         print("**ERROR in part",part)
-        return False
-      print('\nProcess: '+part['@id'])
+        return 0
+      # print('\nProcess: '+part['@id'])
       # find next node to process
       docS = [i for i in graph if '@id' in i and i['@id']==part['@id']]
       if len(docS)!=1 or backend.cwd is None:
         print('**ERROR zero or multiple nodes with same id', docS,' or cwd is None in '+part['@id'])
         return -1
-      doc, elnID, children, dataType = json2pastaFunction(copy.deepcopy(docS[0]))
+      doc, elnID, children, dataType = json2pastaFunction(docS[0])
+      # TESTED UNTIL HERE
       if elnName == 'PASTA ELN' and elnID.startswith('http') and ':/' in elnID:
         fullPath = None
-      elif elnName == 'PASTA ELN':
-        fullPath = backend.basePath/( '/'.join(elnID.split('/')[1:]) )
       else:
         fullPath = backend.basePath/backend.cwd/elnID.split('/')[-1]
-      if fullPath is not None and f'{dirName}/{elnID}' in elnFile.namelist():  #could be directory, nothing to copy then
+      if fullPath is not None and f'{dirName}/{elnID}' in elnFile.namelist():  #Copy file onto hard disk
         target = open(fullPath, "wb")
         source = elnFile.open(f'{dirName}/{elnID}')
         with source, target:  #extract one file to its target directly
           shutil.copyfileobj(source, target)
-      # ALL ELNS
-      if 'tags' not in doc:
-        doc['tags'] = []
+      # FOR ALL ELNs
+      if elnName == "PASTA ELN":
+        docType = '/'.join(doc['type'])
       else:
-        doc['tags'] = [i.strip() for i in doc['tags'].split(',')]
-      # PASTA_ELN
-      if elnName == 'PASTA ELN':
-        doc['user'] = '_'
-        if fullPath is not None:
-          fullPath.mkdir(exist_ok=True)
-          with open(fullPath/'.id_pastaELN.json', 'w', encoding='utf-8') as fOut:
-            fOut.write(json.dumps(doc))
-        elif fullPath is not None:
-          if not fullPath.parent.is_dir():
-            fullPath.parent.mkdir()
-          if f'{dirName}/' + part['@id'][2:] in files:  #if a file is saved
-            target = open(fullPath, "wb")
-            source = elnFile.open(f'{dirName}/' + part['@id'][2:])
-            with source, target:  #extract one file to its target directly
-              shutil.copyfileobj(source, target)
-            backend.useExtractors(fullPath, doc['shasum'], doc)
-          else:
-            logging.warning('  could not read file from zip: %s',part['@id'])
-        else:
-          backend.useExtractors(Path(elnID), doc['shasum'], doc)
-        backend.db.saveDoc(doc)
-      else:  # OTHER VENDORS
         if dataType.lower()=='dataset':
-          docType = 'x'+str(len(elnID.split('/')) - 1)
-          nonlocal projID
-          nonlocal projPWD
-          if docType == 'x1' and projID == '':
-            print(f'  Want to created project name:{renameELN.get(elnName, elnName)}')
-            projID = backend.addData('x0', {'-name':f'Imported project of {renameELN.get(elnName, elnName)} '})['id']
-            backend.changeHierarchy(projID)
-            projPWD= Path(backend.cwd)
-            backend.hierStack = [projID]
-          elif docType == 'x1':
-            backend.cwd = Path(projPWD)
-            backend.hierStack = [projID]
-          # backend.cwd = backend.basePath / Path(elnID).parent
-          # if not backend.cwd.exists():
-          #   backend.cwd = backend.cwd.parent
+          docType = 'x0' if not projID and len(elnID.split('/'))==0 else 'x1'
         else:
-          docType = '-'
-        if docType=='x0':
-          backend.hierStack = []
-        if 'id' in doc:
-          doc['externalID'] = doc.pop('id')
-        print(f'Want to add doc:{doc} with type:{docType} and cwd:{backend.cwd}')
-        docID = backend.addData(docType, doc)['id']
-        if docID[0]=='x':
-          backend.hierStack += [docID]
-          backend.cwd        = backend.basePath/ backend.db.getDoc(docID)['branch'][0]['path']
-
-      # children, aka recursive part
-      logging.info('subparts: %s',', '.join(['  '+i['@id'] for i in children]))
-      for child in children:
-        if child['@id'].endswith('/metadata.json') or child['@id'].endswith('_metadata.json'):  #skip own metadata
-          continue
-        addedDocs += processPart(child)
-
+          docType = ''
+      if docType=='x0':
+        backend.hierStack = []
+      # print(f'Want to add doc:{doc} with type:{docType} and cwd:{backend.cwd}')
+      docID = backend.addData(docType, doc)['id']
+      if docID[0]=='x':
+        backend.changeHierarchy(docID)
+        with open(backend.basePath/backend.cwd/'.id_pastaELN.json','w', encoding='utf-8') as f:  #local path, update in any case
+          f.write(json.dumps(backend.db.getDoc(docID)))
+        # children, aka recursive part
+        for child in children:
+          if child['@id'].endswith('/metadata.json') or child['@id'].endswith('_metadata.json'):  #skip own metadata
+            continue
+          addedDocs += processPart(child)
+        backend.changeHierarchy(None)
       return addedDocs
 
     ######################
@@ -288,13 +289,11 @@ def importELN(backend:Backend, elnFileName:str) -> str:
     #iteratively go through list
     addedDocuments = 0
     for part in mainNode['hasPart']:
-      if not part['@id'].endswith('ro-crate-metadata.json'):
-        addedDocuments += processPart(part)
+      addedDocuments += processPart(part)
   #return to home stack and path
   backend.cwd = Path(backend.basePath)
   backend.hierStack = []
-  print(f'\n\nGraph in metadata file\n{tree(graph)}')
-  return f'Success: imported {str(addedDocuments)} documents from file {elnFileName} from ELN {elnName} {elnVersion}'
+  return f'Success: imported {str(addedDocuments)} documents from file {elnFileName} from ELN {elnName}', statistics
 
 
 
@@ -444,9 +443,10 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
     }
     graphMaster.append(masterNodeInfo2)
     masterParts = [{'@id': f'./{i}/'} for i in dirNameProjects]
-    authorNodes = []
-    for author in backend.configuration['authors']:
+    authorNodes = {}
+    if len(backend.configuration['authors'])==1:
       # first do affiliations, then use them
+      author = backend.configuration['authors'][0]
       affiliationNodes = []
       for affiliation in author['organizations']:
         affiliationId    = f"affiliation_{affiliation['organization']}"
@@ -454,14 +454,18 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
           graphMaster.append({'@id':affiliationId, '@type':'organization', 'name':affiliation['organization'], 'RODID':affiliation['rorid']})
           affiliationNodes.append({'@id':affiliationId})
       authorID = f"author_{author['first']}_{author['last']}"
-      graphMaster.append({'@id':authorID, '@type':'author', 'firstName': author['first'], 'surname': author['last'],
-                          'title': author['title'], 'emailAddress': author['email'], 'identifier': f"https://orcid.org/{author['orcid']}",
-                          'affiliation': affiliationNodes})
-      authorNodes.append({'@id':authorID})
-    masterNodeRoot = {'@id': './', '@type': 'Dataset', 'hasPart': masterParts,
+      graphMaster.append({'@id':authorID, '@type':'Person', 'givenName': author['first'], 'familyName': author['last'],
+                          'honorificPrefix': author['title'], 'email': author['email'], 'identifier': f"https://orcid.org/{author['orcid']}",
+                          'worksFor': affiliationNodes})
+      authorNodes = {'@id':authorID}
+    else:
+      print("**ERROR: ONLY ONE AUTHOR is allowed according to the schema.org/ro-crate nomenclature")
+      logging.error('ONLY ONE AUTHOR is allowed according to the schema.org/ro-crate nomenclature')
+    masterNodeRoot:dict[str,Any] = {'@id': './', '@type': 'Dataset', 'hasPart': masterParts,
         'name': 'Exported from PASTA ELN', 'description': 'Exported content from PASTA ELN',
-        'license':'CC BY 4.0', 'datePublished':datetime.now().isoformat(),
-        'author': authorNodes}
+        'license':'CC BY 4.0', 'datePublished':datetime.now().isoformat()}
+    if authorNodes:
+      masterNodeRoot = masterNodeRoot | {'author': authorNodes}
     graphMaster.append(masterNodeRoot)
 
     #finalize file

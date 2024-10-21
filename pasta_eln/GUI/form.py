@@ -543,7 +543,7 @@ class Form(QDialog):
       value.setPlaceholderText('value')
       self.keyValueListL.addRow(keyLabel, value)
     elif command[0] is Command.FORM_SHOW_DOC:
-      doc = copy.deepcopy(self.doc)
+      doc = self.comm.backend.db.getDoc(self.doc['id'])
       if 'image' in doc:
         del doc['image']
       messageWindow = ScrollMessageBox('Details', doc, style='QScrollArea{min-width:600 px; min-height:400px}')

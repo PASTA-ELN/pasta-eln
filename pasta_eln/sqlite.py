@@ -275,7 +275,10 @@ class SqlLiteDB:
 
     def insertMetadata(data:dict[str,Any], parentKeys:str) -> None:
       parentKeys = f'{parentKeys}.' if parentKeys else ''
+      cmd    = "INSERT OR REPLACE INTO properties VALUES (?, ?, ?, ?);"
+      cmdDef = "INSERT OR REPLACE INTO propDefinitions VALUES (?, ?, ?);"
       for key,value in data.items():
+        key = str(key) if isinstance(key, int) else key
         if isinstance(value, dict):
           insertMetadata(value, f'{parentKeys}{key}')
         elif key.endswith(']') and ('[') in key:
@@ -283,20 +286,22 @@ class SqlLiteDB:
           label  = key[:-len(unit)-2].strip()
           key    = camelCase(label)
           key    = key[0].lower()+key[1:]
-          cmd = "INSERT INTO properties VALUES (?, ?, ?, ?);"
           self.cursor.execute(cmd, [doc['id'], parentKeys+key, str(value), unit])
-          cmd = "INSERT OR REPLACE INTO propDefinitions VALUES (?, ?, ?);"
-          self.cursor.execute(cmd, [parentKeys+key, label, ''])
+          self.cursor.execute(cmdDef, [parentKeys+key, label, ''])
         elif isinstance(value, list) and isinstance(value[0], dict) and value[0].keys() >= {"key", "value", "unit"}:
-          cmd = "INSERT INTO properties VALUES (?, ?, ?, ?);"
           self.cursor.executemany(cmd, zip([doc['id']]*len(value),      [parentKeys+key+'.'+i['key'] for i in value],
                                             [i['value'] for i in value], [i['unit'] for i in value]  ))
-          cmd = "INSERT OR REPLACE INTO propDefinitions VALUES (?, ?, ?);"
-          self.cursor.executemany(cmd, zip([parentKeys+key+'.'+i['key'] for i in value],
+          self.cursor.executemany(cmdDef, zip([parentKeys+key+'.'+i['key'] for i in value],
                                             [i['label'] for i in value], [i['IRI'] for i in value]  ))
+        elif isinstance(value, tuple) and len(value)==4:
+          self.cursor.execute(cmd,    [doc['id'], parentKeys+key, value[0], value[1]])
+          self.cursor.execute(cmdDef, [parentKeys+key, value[2], value[3]])
         elif str(value)!='':
-          cmd = "INSERT INTO properties VALUES (?, ?, ?, ?);"
-          self.cursor.execute(cmd, [doc['id'], parentKeys+key, str(value), ''])
+          try:
+            self.cursor.execute(cmd, [doc['id'], parentKeys+key, str(value), ''])
+          except Exception:
+            print('**ERROR ', cmd, [doc['id'], parentKeys+key, str(value), ''])
+      self.connection.commit()
       return
     # properties
     metaDoc = {k:v for k,v in doc.items() if k not in KEY_ORDER}
@@ -381,6 +386,13 @@ class SqlLiteDB:
           if isinstance(branchNew['stack'], str):
             raise ValueError('Should be list')
           branchNew['show'] = self.createShowFromStack(branchNew['stack'])
+          self.cursor.execute(f"INSERT INTO branches VALUES ({', '.join(['?']*6)})",
+                        [docID,
+                         len(branchOld),
+                         '/'.join(branchNew['stack']),
+                         branchNew['child'],
+                         '*' if branchNew['path'] is None else branchNew['path'],
+                         ''.join(['T' if j else 'F' for j in branchNew['show']])])
         elif op=='u':  #update
           if oldPath is not None:              # search by using old path
             for branch in branchOld:
@@ -395,16 +407,16 @@ class SqlLiteDB:
           else:
             idx = 0
             branchOld[idx] = branchNew           #change branch 0 aka the default
+          if idx is None:                          # create new branch: should not happen here
+            raise ValueError(f'sqlite.2: idx unset: {mainNew["id"]} {mainNew["name"]}')
+          self.cursor.execute(f"UPDATE branches SET stack='{'/'.join(branchOld[idx]['stack']+[docID])}', "
+                              f"path='{branchOld[idx]['path']}', child='{branchOld[idx]['child']}', "
+                              f"show='{''.join(['T' if j else 'F' for j in branchOld[idx]['show']])}' "
+                              f"WHERE id = '{docID}' and idx = {idx}")
         elif op=='d':  #delete
           branchOld = [branch for branch in branchOld if branch['path']!=branchNew['path']]
         else:
           raise ValueError(f'sqlite.1: unknown branch op: {mainNew["id"]} {mainNew["name"]}')
-        if idx is None:                          # create new branch: should not happen here
-          raise ValueError(f'sqlite.2: idx unset: {mainNew["id"]} {mainNew["name"]}')
-        self.cursor.execute(f"UPDATE branches SET stack='{'/'.join(branchOld[idx]['stack']+[docID])}', "
-                            f"path='{branchOld[idx]['path']}', child='{branchOld[idx]['child']}', "
-                            f"show='{''.join(['T' if j else 'F' for j in branchOld[idx]['show']])}' "
-                            f"WHERE id = '{docID}' and idx = {idx}")
 
     # read properties and identify changes
     self.cursor.execute(f"SELECT key, value FROM properties WHERE id == '{docID}'")
@@ -430,6 +442,13 @@ class SqlLiteDB:
         elif key not in dataOld:
           cmd = "INSERT INTO properties VALUES (?, ?, ?, ?);"
           self.cursor.execute(cmd ,[docID, key, value, ''])
+      elif isinstance(value, tuple) and len(value)==4:
+        if key in dataOld and value[0]!=dataOld[key]:
+          self.cursor.execute(f"UPDATE properties SET value='{value[0]}' WHERE id = '{docID}' and key = '{key}'")
+          changesDict[key] = dataOld[key]
+        elif key not in dataOld:
+          cmd = "INSERT INTO properties VALUES (?, ?, ?, ?);"
+          self.cursor.execute(cmd ,[docID, key, value[0], value[1]])
       else:
         logging.error('Property is not a dict, ERROR %s %s',key, value)
     if set(dataOld.keys()).difference(dataNew.keys()):
@@ -576,26 +595,31 @@ class SqlLiteDB:
         show[idx] = 'F'
     return ''.join(show)
 
-  def remove(self, docID:str) -> dict[str,Any]:
+  def remove(self, docID:str, stack:str='') -> dict[str,Any]:
     """
     remove doc from database: temporary for development and testing
 
     Args:
       docID (string): id of document to remove
+      stack (str): stack of branch to delete, if there are multiple branches
 
     Returns:
       dict: document that was removed
     """
     doc = self.getDoc(docID)
-    doc.pop('image','')
-    doc.pop('content','')
-    self.cursor.execute(f"DELETE FROM main WHERE id == '{docID}'")
-    self.cursor.execute(f"DELETE FROM branches WHERE id == '{docID}'")
-    self.cursor.execute(f"DELETE FROM properties WHERE id == '{docID}'")
-    self.cursor.execute(f"DELETE FROM tags WHERE id == '{docID}'")
-    self.cursor.execute(f"DELETE FROM qrCodes WHERE id == '{docID}'")
-    self.cursor.execute(f"DELETE FROM attachments WHERE id == '{docID}'")
-    self.cursor.execute("INSERT INTO changes VALUES (?,?,?)", [docID, datetime.now().isoformat(), json.dumps(doc)])
+    if len(doc['branch'])>1 and stack:  #only remove one branch
+      stack = stack[:-1] if stack.endswith('/') else stack
+      self.cursor.execute(f"DELETE FROM branches WHERE id == '{docID}' and stack LIKE '{stack}%'")
+    else:                               #remove everything
+      doc.pop('image','')
+      doc.pop('content','')
+      self.cursor.execute(f"DELETE FROM main WHERE id == '{docID}'")
+      self.cursor.execute(f"DELETE FROM branches WHERE id == '{docID}'")
+      self.cursor.execute(f"DELETE FROM properties WHERE id == '{docID}'")
+      self.cursor.execute(f"DELETE FROM tags WHERE id == '{docID}'")
+      self.cursor.execute(f"DELETE FROM qrCodes WHERE id == '{docID}'")
+      self.cursor.execute(f"DELETE FROM attachments WHERE id == '{docID}'")
+      self.cursor.execute("INSERT INTO changes VALUES (?,?,?)", [docID, datetime.now().isoformat(), json.dumps(doc)])
     self.connection.commit()
     return doc
 
@@ -636,7 +660,7 @@ class SqlLiteDB:
 
     Args:
         thePath (string): path to view
-        startKey (string): if given, use to filter output, everything that starts with this key
+        startKey (string): / separated; if given, use to filter output, everything that starts with this key
         preciseKey (string): if given, use to filter output. Match precisely
 
     Returns:
@@ -857,13 +881,14 @@ class SqlLiteDB:
     outString = ''
     if outputStyle=='html':
       outString += '<div align="right">'
-    outString+= outputString(outputStyle,'h2','LEGEND')
     if not minimal:
+      outString+= outputString(outputStyle,'h2','LEGEND')
       outString+= outputString(outputStyle,'perfect','Green: perfect and as intended')
       outString+= outputString(outputStyle,'ok', 'Blue: ok, can happen: empty files for testing, strange path for measurements')
+      outString+= outputString(outputStyle,'h2','List all database entries')
     if outputStyle=='html':
       outString += '</div>'
-    outString+= outputString(outputStyle,'h2','List all database entries')
+      outString+= outputString(outputStyle,'h2','List all database entries')
     # tests
     cmd = "SELECT id, main.type, branches.stack, branches.path, branches.child, branches.show "\
           "FROM branches INNER JOIN main USING(id)"
@@ -913,9 +938,8 @@ class SqlLiteDB:
             outString+= outputString(outputStyle,'unsure',f"branch stack and path lengths not equal: {docID}")
         if path!='*' and not path.startswith('http'):
           for parentID in stack.split('/')[:-1]:            #check if all parents in doc have a corresponding path
-            try:
-              parentDoc = self.getDoc(parentID)
-            except Exception:
+            parentDoc = self.getDoc(parentID)
+            if not parentDoc:
               outString+= outputString(outputStyle,'error',f"branch stack parent is bad: {docID}")
               continue
             parentDocBranches = parentDoc['branch']
@@ -938,7 +962,7 @@ class SqlLiteDB:
     self.cursor.execute("SELECT id, key FROM properties where value LIKE ''")
     res = self.cursor.fetchall()
     for docID, key in res:
-      outString+= outputString(outputStyle,'error',f"key is bad as value is  missing: {docID} idx: {key}")
+      outString+= outputString(outputStyle,'ok',f"value of this key is missing: {docID} idx: {key}")
 
     #doc-type specific tests
     self.cursor.execute("SELECT qrCodes.id, qrCodes.qrCode FROM qrCodes JOIN main USING(id) WHERE  main.type LIKE 'sample%'")

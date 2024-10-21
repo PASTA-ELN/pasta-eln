@@ -8,6 +8,7 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
 import logging
+from typing import Any
 
 import pytest
 from PySide6.QtCore import QEvent, Qt
@@ -16,10 +17,21 @@ from PySide6.QtWidgets import QMessageBox
 from cloudant import CouchDB
 
 from pasta_eln.GUI.data_hierarchy.utility_functions import adjust_data_hierarchy_data_to_v4, can_delete_type, \
-  check_data_hierarchy_types, get_db, get_missing_metadata_message, get_next_possible_structural_level_title, \
+  check_data_hierarchy_types, get_db, get_missing_metadata_message, \
   is_click_within_bounds, set_types_missing_required_metadata, set_types_with_duplicate_metadata, \
   set_types_without_name_in_metadata, show_message
 from tests.common.test_utils import are_json_equal
+
+
+def get_db_with_right_arguments_returns_valid_db_instance(db_user: str,
+                                                          db_instances: dict,
+                                                          mock_client: Any,
+                                                          dbs_call_count: int):
+  assert (get_db(db_user, "test", "test", "test", None)
+          is db_instances[db_user]), "get_db should return valid db instance"
+  assert mock_client.all_dbs.call_count == dbs_call_count, "get_db should call all_dbs"
+  assert (mock_client.__getitem__.call_count == dbs_call_count
+          ), "get_db should call __getitem__"
 
 
 class TestDataHierarchyUtilityFunctions(object):
@@ -112,19 +124,6 @@ class TestDataHierarchyUtilityFunctions(object):
     mock_doc.__setitem__.side_effect = contents.__setitem__
     return mock_doc
 
-  def test_get_next_possible_structural_level_title_when_null_arg_returns_none(self):
-    assert get_next_possible_structural_level_title(
-      None) is None, "get_next_possible_structural_level_title should return True"
-
-  @pytest.mark.parametrize("existing_list, expected_next_level",
-                           [(None, None), ([], "x0"), (["x0", "x2"], "x3"), (["x0", "xa", "x3", "x-1", "x10"], "x11"),
-                            (["x0", "xa", "x3", "x-1", "a10", "X23"], "x24"), (["a"], "x0")])
-  def test_get_next_possible_structural_level_displayed_title_when_valid_list_arg_returns_right_result(self, mocker,
-                                                                                                       existing_list,
-                                                                                                       expected_next_level):
-    assert get_next_possible_structural_level_title(
-      existing_list) == expected_next_level, "get_next_possible_structural_level_displayed_title should return as expected"
-
   def test_get_db_with_right_arguments_returns_valid_db_instance(self, mocker):
     mock_client = mocker.MagicMock(spec=CouchDB)
     mock_client.all_dbs.return_value = ["db_name1", "db_name2"]
@@ -135,16 +134,10 @@ class TestDataHierarchyUtilityFunctions(object):
     mocker.patch.object(CouchDB, "__new__", lambda s, user, auth_token, url, connect: mock_client)
     mocker.patch.object(CouchDB, "__init__", lambda s, user, auth_token, url, connect: None)
 
-    assert get_db("db_name1", "test", "test", "test", None) is db_instances[
-      "db_name1"], "get_db should return valid db instance"
-    assert mock_client.all_dbs.call_count == 1, "get_db should call all_dbs"
-    assert mock_client.__getitem__.call_count == 1, "get_db should call __getitem__"
-
-    assert get_db("db_name2", "test", "test", "test", None) is db_instances[
-      "db_name2"], "get_db should return valid db instance"
-    assert mock_client.all_dbs.call_count == 2, "get_db should call all_dbs"
-    assert mock_client.__getitem__.call_count == 2, "get_db should call __getitem__"
-
+    get_db_with_right_arguments_returns_valid_db_instance(
+      "db_name1", db_instances, mock_client, 1)
+    get_db_with_right_arguments_returns_valid_db_instance(
+      "db_name2", db_instances, mock_client, 2)
     assert get_db("db_name3", "test", "test", "test",
                   None) is created_db_instance, "get_db should return created db instance"
     assert mock_client.all_dbs.call_count == 3, "get_db should call all_dbs"
@@ -621,19 +614,41 @@ class TestDataHierarchyUtilityFunctions(object):
     assert (get_missing_metadata_message(missing_metadata, missing_names,
                                          duplicate_metadata) == expected_message), "get_missing_metadata_message should return expected"
 
-  @pytest.mark.parametrize("existing_types, selected_type, expected_result",
-                           [(["x0", "x1", "x3", "samples", "instruments"], "test", True),
-                            (["x0", "x1", "x3", "x4", "instruments"], "x5", False),
-                            (["x0", "x1", "x3", "x4", "instruments"], "x0", False),
-                            (["x0", "x1", "x3", "x4", "instruments"], "x4", True),
-                            (["x0", "x1", "x3", "x4", "instruments"], "x3", False),
-                            (["x0", "x1", "x3", "x4", "instruments"], "x0", False),
-                            (["x0", "x1", "x3", "x4", "instruments"], "x1", False),
-                            (["x0", "x1", "x3", "x4", "instruments"], "instruments", True),
-                            (["x2", "x3", "x5", "x0", "instruments"], "x5", True),
-                            (["x2", "x3", "x5", "x0", "x7", "", "samples"], "x7", True),
-                            (["x2", "x3", "x5", "x0", "x7", "", "samples"], "x8", False),
-                            (["x2", "x3", "x5", "x0", "x7", "", None], "x8", False),
-                            (["x2", "x3", "x5", "x0", "x7", "", None], None, False)])
-  def test_can_delete_type_returns_expected(self, existing_types, selected_type, expected_result):
-    assert can_delete_type(existing_types, selected_type) == expected_result, "can_delete_type should return expected"
+  @pytest.mark.parametrize(
+    "selected_type, expected_result",
+    [
+      # Success path tests
+      ("non_structural", True),  # non-structural type
+      ("x1", False),  # structural type but not 'x0'
+      ("x0", False),  # structural type 'x0'
+
+      # Edge cases
+      ("", False),  # empty string
+      (None, False),  # None as input
+
+      # Error cases
+      ("x0", False),  # structural type 'x0'
+      ("x1", False),  # structural type 'x1'
+      ("non_structural", True),  # non-structural type
+    ],
+    ids=[
+      "non_structural_type",
+      "structural_type_x1",
+      "structural_type_x0",
+      "empty_string",
+      "none_input",
+      "structural_type_x0_error",
+      "structural_type_x1_error",
+      "non_structural_type_error",
+    ]
+  )
+  def test_can_delete_type(self, mocker, selected_type, expected_result, monkeypatch):
+    # Arrange
+    mocker.patch("pasta_eln.GUI.data_hierarchy.utility_functions.is_structural_level",
+                 side_effect=lambda title: title in {"x0", "x1"})
+
+    # Act
+    result = can_delete_type(selected_type)
+
+    # Assert
+    assert result == expected_result

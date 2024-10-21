@@ -303,10 +303,10 @@ class Backend(CLI_Mixin):
     self.cwd = self.basePath/projPath
     rerunScanTree = False
     #prepare lists and start iterating
-    inDB_all = self.db.getView('viewHierarchy/viewPaths')
+    inDB_all = self.db.getView('viewHierarchy/viewPathsAll', startKey=projPath)
     pathsInDB_x    = [i['key'] for i in inDB_all if i['value'][1][0][0]=='x']  #all structure elements: task, subtasts
     pathsInDB_data = [i['key'] for i in inDB_all if i['value'][1][0][0]!='x']
-    filesCountSum = sum(len(files) for (r, d, files) in os.walk(self.cwd))
+    filesCountSum = sum(len(files) for (_, _, files) in os.walk(self.cwd))
     filesCount = 0
     for root, dirs, files in os.walk(self.cwd, topdown=True):
       #find parent-document
@@ -315,7 +315,7 @@ class Backend(CLI_Mixin):
         del dirs
         del files
         continue
-      parentIDs = [i for i in inDB_all if i['key']==self.cwd.as_posix()]
+      parentIDs = [i for i in inDB_all if i['key']==self.cwd.as_posix()]  #parent of this folder
       if not parentIDs: #skip newly moved folder, will be scanned upon re-scanning
         continue
       parentID = parentIDs[0]['id']
@@ -436,7 +436,6 @@ class Backend(CLI_Mixin):
       import matplotlib.pyplot as plt  #IMPORTANT: NO PYPLOT OUTSIDE THIS QT_API BLOCK
       plt.clf()
       try:
-        print(pyFile, absFilePath)
         module  = importlib.import_module(pyFile[:-3])
         content = module.use(absFilePath, {'main':'/'.join(doc['type'])} )
         for key in [i for i in content if i not in ['metaVendor','metaUser','image','content','links','style']]:  #only allow accepted keys
@@ -451,7 +450,7 @@ class Backend(CLI_Mixin):
                 doc[meta][item] = list(doc[meta][item])
               try:
                 _ = json.dumps(doc[meta][item])
-              except ValueError:
+              except (ValueError, TypeError):
                 doc[meta][item] = str(doc[meta][item])
                 print('**Warning -> stringified  ',meta, item)
           else:
@@ -470,7 +469,7 @@ class Backend(CLI_Mixin):
         if 'links' in doc and len(doc['links'])==0:
           del doc['links']
       except Exception:
-        print('  **Warning, issue with extractor', pyFile)
+        print(f'  **Warning, issue with extractor {pyFile} {absFilePath}')
         logging.warning('Issue with extractor %s\n %s', pyFile, traceback.format_exc())
         doc['metaUser'] = {'filename':absFilePath.name, 'extension':absFilePath.suffix,
           'filesize':absFilePath.stat().st_size,
@@ -664,7 +663,8 @@ class Backend(CLI_Mixin):
     ### check database itself for consistency
     output = self.db.checkDB(outputStyle=outputStyle, minimal=minimal, repair=repair)
     ### compare with file system
-    output += outputString(outputStyle,'h2','File status')
+    if not minimal:
+      output += outputString(outputStyle,'h2','File status')
     viewProjects   = self.db.getView('viewDocType/x0All')
     inDB_all = self.db.getView('viewHierarchy/viewPathsAll')
     pathsInDB_data = [i['key'] for i in inDB_all if i['value'][1][0][0]!='x']
@@ -723,7 +723,8 @@ class Backend(CLI_Mixin):
     orphans+= [i for i in pathsInDB_folder if not (self.basePath/i).exists() ]
     if orphans:
       output += outputString(outputStyle,'error','bch01: These files of database not on filesystem(3):\n  - '+'\n  - '.join(orphans))
-    output += outputString(outputStyle,'h2','File summary')
+    if not minimal:
+      output += outputString(outputStyle,'h2','File summary')
     if outputStyle == 'text':
       output += "Success\n" if not orphans and count==0 else "Failure (* can be auto-repaired)\n"
     return output

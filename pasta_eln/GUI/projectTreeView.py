@@ -114,9 +114,9 @@ class TreeView(QTreeView):
                 shutil.rmtree(oldPath.parent/newFileName)
             oldPath.rename( oldPath.parent/newFileName)
         # go through children
-        children = self.comm.backend.db.getView('viewHierarchy/viewHierarchy', startKey=' '.join(doc['branch'][0]['stack']+[docID,'']))
+        children = self.comm.backend.db.getView('viewHierarchy/viewHierarchy', startKey='/'.join(doc['branch'][0]['stack']+[docID,'']))
         for line in children:
-          self.comm.backend.db.remove(line['id'])
+          self.comm.backend.db.remove(line['id'], stack='/'.join(doc['branch'][0]['stack']+[docID,'']))
         # remove leaf from GUI
         item  = self.model().itemFromIndex(self.currentIndex())                                              # type: ignore[attr-defined]
         parent = item.parent()

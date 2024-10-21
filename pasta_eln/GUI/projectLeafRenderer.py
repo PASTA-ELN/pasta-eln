@@ -65,7 +65,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     maxCharacter = int(docTypeOffset/7.5)
     nameText = name if len(name)<maxCharacter else f'...{name[-maxCharacter+3:]}'
     if not data['gui'][0]:  #Only draw first line
-      staticText = QStaticText(f'<strong>{nameText}</strong>')
+      staticText = QStaticText(f'<strong>{nameText} (...)</strong>')
       #TODO GUI add quick get hidden from database: add show to sqlite.getView/hierarchy then to getHierarchy an then project and then it should appear here as true/false
       staticText.setTextWidth(docTypeOffset)
       painter.drawStaticText(x0, y0+y, staticText)

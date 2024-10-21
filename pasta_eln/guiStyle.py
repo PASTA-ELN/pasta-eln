@@ -125,7 +125,7 @@ class Image():
       byteArr = QByteArray.fromBase64(bytearray(data[22:] if data[21]==',' else data[23:], encoding='utf-8'))
       imageW = QImage()
       imageType = data[11:15].upper()
-      imageW.loadFromData(byteArr, format=imageType[:-1] if imageType.endswith(';') else imageType)
+      imageW.loadFromData(byteArr, format=imageType[:-1] if imageType.endswith(';') else imageType) #type: ignore[arg-type]
       pixmap = QPixmap.fromImage(imageW)
       if height>0:
         pixmap = pixmap.scaledToHeight(height)
@@ -422,7 +422,7 @@ def addDocDetails(widget:QWidget, layout:QLayout, key:str, value:Any, dataHierar
       key = key if value[2] is None or value[2]=='' else value[2]
       valueString = f'{value[0]} {value[1]}'
       valueString = valueString if value[3] is None or value[3]=='' else f'{valueString}&nbsp;<b><a href="{value[3]}">&uArr;</a></b>'
-      labelStr = f'{key.capitalize()}: {valueString}'
+      labelStr = f'{key.capitalize()}: {valueString}<br>'
     if isinstance(value, dict):
       value = dict2ul({k:v[0] for k,v in value.items()})
       labelStr = f'{CSS_STYLE}{key.capitalize()}: {value}'
