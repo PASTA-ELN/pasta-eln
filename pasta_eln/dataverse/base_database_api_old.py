@@ -4,11 +4,26 @@
 #  Copyright (c) 2024
 #
 #  Author: Jithu Murugan
+#  Filename: base_database_api_old.py
+#
+#  You should have received a copy of the license with this file. Please refer the license file for more information.
+
+#  PASTA-ELN and all its sub-parts are covered by the MIT license.
+#
+#
+#  Author: Jithu Murugan
+#  Filename: base_database_api_old.py
+#
+#  You should have received a copy of the license with this file. Please refer the license file for more information.
+
+#  PASTA-ELN and all its sub-parts are covered by the MIT license.
+#
+#
+#  Author: Jithu Murugan
 #  Filename: base_database_api.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import logging
-import sqlite3
 from threading import Lock
 from typing import Any
 
@@ -20,60 +35,115 @@ from cloudant.error import CloudantClientException, CloudantDatabaseException
 from cloudant.query import Query
 from cloudant.result import Result
 from cloudant.view import View
-from sqlalchemy import create_engine
 
 from pasta_eln.dataverse.database_error import DatabaseError
-from pasta_eln.dataverse.database_sqlalchemy_base import DatabaseSqlAlchemyBase
 from pasta_eln.dataverse.incorrect_parameter_error import IncorrectParameterError
 from pasta_eln.dataverse.utils import log_and_create_error
 
 
-class BaseDatabaseApi:
+class BaseDatabaseAPI:
+  """
+  Provides an interface to interact with a database.
+
+  Explanation:
+      This class encapsulates the functionality to interact with a database, including creating, retrieving, and updating documents,
+      adding views to design documents, and getting view results.
+
+  """
+
   def __init__(self,
-               db_path: str) -> None:
+               hostname: str,
+               port: int,
+               username: str,
+               password: str) -> None:
+    """
+    Explanation:
+        This method initializes the instance with the provided attributes for database connection.
+        It sets up the logger, host, port, URL, password, username, and update lock for the database connection.
+
+    Args:
+        hostname (str): The hostname for the database connection.
+        port (int): The port number for the database connection.
+        username (str): The username for the database connection.
+        password (str): The password for the database connection.
+
+    Exceptions:
+        IncorrectParameterError: If any of the parameters are of the incorrect type.
+    """
+
     super().__init__()
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
-    if isinstance(db_path, str):
-      self.db_path: str = db_path
-      self.db_url: str = f"sqlite:///{db_path}"
+    if isinstance(hostname, str):
+      self.host: str = hostname
     else:
-      raise IncorrectParameterError("Database path must be a string")
+      raise IncorrectParameterError("Hostname must be a string")
+    if isinstance(port, int):
+      self.port: int = port
+    else:
+      raise IncorrectParameterError("Port must be an integer")
+    self.url = f'http://{self.host}:{self.port}'
+    if isinstance(password, str):
+      self.password = password
+    else:
+      raise IncorrectParameterError("Password must be a string")
+    if isinstance(username, str):
+      self.username = username
+    else:
+      raise IncorrectParameterError("Username must be a string")
     self.update_lock = Lock()
 
-  def create_and_init_database(self) -> None:
-    self.logger.info("Creating database at the path : %s", self.db_url)
-    engine = create_engine(self.db_url, echo=True)
-    DatabaseSqlAlchemyBase.metadata.create_all(engine)
-    # try:
-    #   with sqlite3.connect(db_path) as conn:
-    #     conn.commit()
-    #   self.logger.info("Database created successfully!")
-    # except sqlite3.Error as e:
-    #   self.logger.error("Error creating database: %s", e)
+  def create_database(self, db_name: str) -> CloudantDatabase:
+    """
+    Creates a database.
 
-  def insert_data(self, data: dict[str, Any], table_name: str) -> Document:
-    self.logger.info("Populating document with data: %s in database: %s",
+    Explanation:
+        This function creates a database with the provided name using the Cloudant client.
+        It logs the database creation process and handles exceptions if the database already exists.
+
+    Args:
+        db_name (str): The name of the database to be created.
+
+    Returns:
+        CloudantDatabase: The created database instance.
+    """
+    self.logger.info("Creating database with name : %s", db_name)
+    with couchdb(self.username,
+                 self.password,
+                 url=self.url,
+                 connect=True) as client:
+      try:
+        db = client.create_database(db_name, throw_on_exists=True)
+      except CloudantClientException as e:
+        self.logger.warning("Error creating database: %s", e)
+        db = client[db_name]  # DB exists already
+      return db
+
+  def create_document(self, data: dict[str, Any], db_name: str) -> Document:
+    """
+    Creates a document in the database with the provided data.
+
+    Args:
+        db_name (str): The name of the database.
+        data (dict[str, Any]): The data to be stored in the document.
+
+    Returns:
+        Document: The created document.
+
+    """
+    self.logger.info("Creating document with data: %s in database: %s",
                      data,
                      db_name)
-    # with couchdb(self.username,
-    #              self.password,
-    #              url=self.url,
-    #              connect=True) as client:
-    #   pasta_db = client[db_name]
-    #   document = None
-    #   try:
-    #     document = pasta_db.create_document(data, throw_on_exists=True)
-    #   except CloudantDatabaseException as e:
-    #     self.logger.error("Error creating document: %s", e)
-    #   return document
-    try:
-      with sqlite3.connect(self.db_path) as conn:
-        cur = conn.cursor()
-        query = "INSERT INTO movie(title, year, score) VALUES(?, ?, ?)"
-        cur.executemany(query, data)
-        conn.commit()
-    except sqlite3.Error as e:
-      print(e)
+    with couchdb(self.username,
+                 self.password,
+                 url=self.url,
+                 connect=True) as client:
+      pasta_db = client[db_name]
+      document = None
+      try:
+        document = pasta_db.create_document(data, throw_on_exists=True)
+      except CloudantDatabaseException as e:
+        self.logger.error("Error creating document: %s", e)
+      return document
 
   def get_document(self, document_id: str, db_name: str) -> Document:
     """

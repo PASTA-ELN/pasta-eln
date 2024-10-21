@@ -13,3 +13,4 @@ matplotlib
 cairosvg
 cryptography
 aiohttp
+sqlalchemy
