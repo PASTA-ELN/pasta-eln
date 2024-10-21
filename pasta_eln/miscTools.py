@@ -266,7 +266,7 @@ def flatten(d:Mapping[Any,Any]) -> dict[object, Any]:
     """ Recursive function """
     key_value_iterable = (enumerate(_d) if isinstance(_d, enumerate_types) else _d.items())
     has_item = False
-    for key, value in key_value_iterable: # type: ignore[union-attr]
+    for key, value in key_value_iterable:
       has_item = True
       flat_key = dot_reducer(parent, key)
       if isinstance(value, flatten_types):
