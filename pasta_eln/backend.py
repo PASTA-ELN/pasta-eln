@@ -627,27 +627,6 @@ class Backend(CLI_Mixin):
   ######################################################
   ### Wrapper for database functions
   ######################################################
-  def replicateDB(self) -> str:
-    """
-    Replicate local database to remote database
-
-    Args:
-
-    Returns:
-        str: replication report
-    """
-    #def replicateDB(self, progressBar:Any, removeAtStart:bool=False) -> str:
-    # defaultProjectGroup = self.configuration['defaultProjectGroup']
-    # remoteConf = self.configuration['projectGroups'][defaultProjectGroup]['remote']
-    # if not remoteConf: #empty entry: fails
-    #   print("**ERROR brp01: You tried to replicate although, remote is not defined")
-    #   return 'ERROR'
-    # if 'cred' in remoteConf:
-    #   remoteConf['user'], remoteConf['password'] = upOut(remoteConf['cred'])[0].split(':')
-    # return self.db.replicateDB(remoteConf, progressBar, removeAtStart)
-    return 'NOT IMPLEMENTED YET'
-
-
   def checkDB(self, outputStyle:str='text', repair:bool=False, minimal:bool=False) -> str:
     """
     Wrapper of check database for consistencies by iterating through all documents
