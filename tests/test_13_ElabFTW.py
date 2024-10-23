@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 """TEST using the FULL set of python-requirements: create the default example that all installations create and verify it thoroughly """
-import logging, warnings, unittest, tempfile, os
+import logging, warnings, unittest
 from pathlib import Path
 from pasta_eln.backend import Backend
-from pasta_eln.elabFTW import initElabFTW
+from pasta_eln.elabFTW import Pasta2Elab
 
 class TestStringMethods(unittest.TestCase):
   """
@@ -32,7 +32,8 @@ class TestStringMethods(unittest.TestCase):
 
     # do elab stuff
     self.be = Backend('research')
-    initElabFTW(self.be, 'research')
+    sync = Pasta2Elab(self.be, 'research')
+    sync.pasta2elab()
     return
 
 
