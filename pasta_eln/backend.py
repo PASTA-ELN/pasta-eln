@@ -59,7 +59,7 @@ class Backend(CLI_Mixin):
     #    self.cwd changes during program but is similarly the full path from root
     self.basePath   = Path(projectGroup['local']['path'])
     self.cwd        = Path(projectGroup['local']['path'])
-    self.addOnPath  = Path(self.configuration['addOnDir'])
+    self.addOnPath  = Path(projectGroup['addOnDir'])
     sys.path.append(str(self.addOnPath))  #allow add-ons
     # decipher miscellaneous configuration and store
     self.userID   = self.configuration['userID']

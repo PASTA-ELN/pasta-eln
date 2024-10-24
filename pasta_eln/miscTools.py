@@ -143,7 +143,9 @@ def updateAddOnList(directory:Path|None=None) -> dict[str, Any]:
   if directory is None:
     with open(Path.home()/CONF_FILE_NAME,'r', encoding='utf-8') as f:
       configuration = json.load(f)
-      directory = Path(configuration["addOnDir"])
+      defaultProjectGroup = configuration['defaultProjectGroup']
+      projectGroup = configuration['projectGroups'][defaultProjectGroup]
+      directory = Path(projectGroup['addOnDir'])
   sys.path.append(str(directory))  #allow add-ons
   # Extractors
   verboseDebug = False

@@ -3,6 +3,7 @@ from typing import Any
 from anytree import PostOrderIter
 import requests
 from .backend import Backend
+from .elabFTWapi import ElabFTWApi
 """
 # Pasta sync: Ask Nico
 1. feasible: create resources: instruments, samples, procedures, folders
@@ -17,8 +18,6 @@ from .backend import Backend
 
 https://doc.elabftw.net/api/elabapi-html/#api-Items-postItem
 """
-
-VERIFYSSL = False
 
 class Pasta2Elab:
 
@@ -37,116 +36,27 @@ class Pasta2Elab:
     '''
     self.backend = backend
     self.projectGroup = projectGroup
-    self.url = self.backend.configuration['projectGroups'][self.projectGroup]['remote']['url']
-    apiKey = self.backend.configuration['projectGroups'][self.projectGroup]['remote']['key']
-    self.headers = {'Content-type': 'application/json', 'Authorization': apiKey, 'Accept': 'text/plain'}
-    # test server
-    elabVersion = int(self.read('info').get('elabftw_version','0.0.0').split('.')[0])
-    if elabVersion<5:
-      print('**ERROR old elab-ftw version')
-      return
+    self.api = ElabFTWApi(self.backend.configuration['projectGroups'][self.projectGroup]['remote']['url'],
+                          self.backend.configuration['projectGroups'][self.projectGroup]['remote']['key'])
     #try body and metadata: compare, write
-    docTypesElab  = {i['title']:i['id'] for i in self.read('items_types')}
+    docTypesElab  = {i['title']:i['id'] for i in self.api.read('items_types')}
     docTypesPasta = {i.capitalize() for i in backend.db.dataHierarchy('','') if not i.startswith('x')} |{'Folder','Project','Pasta_Metadata'}
     for docType in docTypesPasta.difference({'Measurement'}|docTypesElab.keys()):  # do not create measurements, use 'experiments'
-      self.touch('items_types', {"title": docType})
+      self.api.touch('items_types', {"title": docType})
     #verify nothing extraneous
-    docTypesElab  = {i['title']:i['id'] for i in self.read('items_types')}
+    docTypesElab  = {i['title']:i['id'] for i in self.api.read('items_types')}
     if set(docTypesElab.keys()).difference(docTypesPasta|{'Default','Pasta_Metadata'}):
       print('**ERROR: some items exist that should not:', set(docTypesElab.keys()).difference(docTypesPasta|{'Default'}))
-    listMetadata = self.read('items?q=category%3APasta_Metadata')
+    listMetadata = self.api.read('items?q=category%3APasta_Metadata')
     dataHierarchy = []
     for docType in backend.db.dataHierarchy('',''):
         dataHierarchy += copy.deepcopy([dict(i) for i in backend.db.dataHierarchy(docType,'meta')])
     if not listMetadata:
-      itemId = self.touch('items', {"category_id":int(docTypesElab["Pasta_Metadata"])})
+      itemId = self.api.touch('items', {"category_id":int(docTypesElab["Pasta_Metadata"])})
     else:
       itemId = listMetadata[0]["id"]
-    self.update(f'items/{itemId}', {"title":"data hierarchy", "metadata":json.dumps(dataHierarchy), "body":"<p>DO NOT CHANGE ANYTHING</p>"})
+    self.api.update(f'items/{itemId}', {"title":"data hierarchy", "metadata":json.dumps(dataHierarchy), "body":"<p>DO NOT CHANGE ANYTHING</p>"})
     return
-
-
-  def create(self, urlSuffix:str, content:str='') -> bool:
-    """
-    create something
-
-    Args:
-      urlSuffix (str): suffix of url, e.g. starting with experiments
-      content (str): content to create
-
-    Returns:
-      bool: success of operation
-    """
-    response = requests.post(self.url+urlSuffix, headers=self.headers, verify=VERIFYSSL)
-    print("**TODO")
-    if response.status_code == 201:
-      return True
-    print(f"**ERROR occurred in create of url {urlSuffix}: {response.json}")
-    return False
-
-  def read(self, urlSuffix:str) -> dict[str,Any]:
-    """
-    read something
-
-    Args:
-      urlSuffix (str): suffix of url, e.g. starting with experiments
-
-    Returns:
-      dict: content read
-    """
-    response = requests.get(self.url+urlSuffix, headers=self.headers, verify=VERIFYSSL)
-    if response.status_code == 200:
-      return json.loads(response.content.decode('utf-8'))
-    print(f"**ERROR occurred in get of url {urlSuffix}")
-    return {}
-
-  def update(self, urlSuffix:str, content:dict[str,Any]={}) -> bool:
-    """
-    update something
-
-    Args:
-      urlSuffix (str): suffix of url, e.g. starting with experiments
-      content (dict): content to update
-
-    Returns:
-      bool: success of operation
-    """
-    response = requests.patch(self.url+urlSuffix, headers=self.headers, data=json.dumps(content), verify=VERIFYSSL)
-    return response.status_code == 200
-
-  def delete(self, urlSuffix:str) -> bool:
-    """
-    delete something
-
-    Args:
-      urlSuffix (str): suffix of url, e.g. starting with experiments
-
-    Returns:
-      bool: success of operation
-    """
-    response = requests.delete(self.url+urlSuffix, headers=self.headers, verify=VERIFYSSL)
-    if response.status_code == 204:
-      return True
-    print(f"**ERROR occurred in delete of url {urlSuffix}")
-    return False
-
-  def touch(self, urlSuffix:str, content:dict[str,str]={}) -> int:
-    """
-    create something, without much content
-
-    Args:
-      urlSuffix (str): suffix of url, e.g. starting with experiments
-      content (dict): content to create
-
-    Returns:
-      int: elabFTW id
-    """
-    response = requests.post(self.url+urlSuffix, headers=self.headers, data=json.dumps(content), verify=VERIFYSSL)
-    if response.status_code == 201:
-      return int(response.headers['Location'].split('/')[-1])
-    print(f"**ERROR occurred in create of url {self.url}: {response.content} {response.headers}")
-    return -1
-
 
   def pasta2elab(self) -> bool:
     '''
@@ -159,7 +69,19 @@ class Pasta2Elab:
     Returns:
       bool: success
     '''
-    print('\nItems',json.dumps(self.read('items'), indent=2))
+    elabDocTypes = {i['title']:i['id'] for i in self.api.read('items_types')}|{'Measurement':-1}
+    elabDocTypes |= {'x0':elabDocTypes.pop('Project'), 'x1':elabDocTypes.pop('Folder')}
+    print(elabDocTypes)
+    self.backend.db.cursor.execute("SELECT id, type, externalId FROM main")
+    idData = self.backend.db.cursor.fetchall()
+    for pastaId, docType in [[i[0],i[1]] for i in idData if i[2]=='']:
+      print(pastaId, docType)
+      itemsTypesId = elabDocTypes[docType.split('/')[0]]
+      print('   ',pastaId, docType, itemsTypesId)
+
+
+    # print(data)
+
     # for projID in self.backend.db.getView('viewDocType/x0')['id'].values:
     #   proj = self.backend.db.getHierarchy(projID)
     #   for node in PostOrderIter(proj):
@@ -167,8 +89,8 @@ class Pasta2Elab:
     return True
 
 # New that works
-# print('\nItems types',json.dumps(self.read('items_types'), indent=2))
-# self.delete('items_types/10')
+# print('\nItems types',json.dumps(self.api.read('items_types'), indent=2))
+# self.api.delete('items_types/10')
 
 # OLD ---
 # print(json.dumps(crud(backend, projectGroup, 'items_types/4'), indent=2))
