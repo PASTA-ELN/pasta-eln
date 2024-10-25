@@ -900,11 +900,13 @@ class SqlLiteDB:
       except ValueError:
         outString+= outputString(outputStyle,'error',f"dch03a: branch data has strange list {docID}")
         continue
+      if docType.count('/')>5:
+        outString+= outputString(outputStyle,'error',f"dch04a: type has too many / {docID}")
       if len(docType.split('/'))==0:
-        outString+= outputString(outputStyle,'unsure',f"dch04: no type in (removed data?) {docID}")
+        outString+= outputString(outputStyle,'unsure',f"dch04b: no type in (removed data?) {docID}")
         continue
       if docType.startswith('x') and not docType.startswith(('x0','x1')):
-        outString+= outputString(outputStyle,'error',f"dch04b: bad data type*: {docID} {docType}")
+        outString+= outputString(outputStyle,'error',f"dch04c: bad data type*: {docID} {docType}")
         if repair:
           self.cursor.execute(f"UPDATE main SET type='x1' WHERE id = '{docID}'")
       if not all(k.startswith('x-') for k in stack.split('/')[:-1]):

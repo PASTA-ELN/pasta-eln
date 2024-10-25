@@ -1,7 +1,7 @@
 import json, copy
 from typing import Any
-from anytree import PostOrderIter
-import requests
+from anytree import PreOrderIter
+from PySide6.QtGui import QTextDocument
 from .backend import Backend
 from .elabFTWapi import ElabFTWApi
 """
@@ -69,24 +69,53 @@ class Pasta2Elab:
     Returns:
       bool: success
     '''
-    elabTypes = {i['title']:i['id'] for i in self.api.read('items_types')}|{'Measurement':-1}
-    elabTypes |= {'x0':elabTypes.pop('Project'), 'x1':elabTypes.pop('Folder'), '-':elabTypes.pop('Default')}
-    print(elabTypes)
+    # create mapping of docIDs to elabIDs: if not exist, create elabIds
+    elabTypes = {i['title'].lower():i['id'] for i in self.api.read('items_types')}|{'measurement':-1}
+    elabTypes |= {'x0':elabTypes.pop('project'), 'x1':elabTypes.pop('folder'), '-':elabTypes.pop('default')}
     def getNewEntry(elabType:str) -> int:
-      urlSuffix = 'items'                  if int(elabType)>0 else 'experiment'
+      urlSuffix = 'items'                  if int(elabType)>0 else 'experiments'
       content   = {'category_id':elabType}
       return self.api.touch(urlSuffix, content)
     self.backend.db.cursor.execute("SELECT id, type, externalId FROM main")
     docID2elabID = {i[0]:(i[2] or getNewEntry(elabTypes[i[1].split('/')[0]]))
                     for i in self.backend.db.cursor.fetchall()}
-
-
-    # print(data)
-
-    # for projID in self.backend.db.getView('viewDocType/x0')['id'].values:
-    #   proj = self.backend.db.getHierarchy(projID)
-    #   for node in PostOrderIter(proj):
-    #     print(node.name)
+    # save to sqlite
+    self.backend.db.cursor.executemany("UPDATE main SET id=?, externalId=? WHERE id=?", [(k,v,k) for k, v in docID2elabID.items()])
+    self.backend.db.connection.commit()
+    # use map to update
+    qtDocument = QTextDocument()   #used
+    def updateEntry(node):
+      doc   = self.backend.db.getDoc(node.id)
+      image     = doc.pop('image') if 'image' in doc else ''
+      title     = doc.pop('name')
+      bodyMD    = doc.pop('comment')
+      if 'content' in doc:
+        bodyMD += '\n\n__DO NOT CHANGE THIS DELIMITER__\n\n'+doc.pop('content')
+      qtDocument.setMarkdown(bodyMD)
+      body      = qtDocument.toHtml()
+      created_at= doc.pop('dateCreated')
+      modified_at=doc.pop('dateModified')
+      tags       =doc.pop('tags')
+      pastaMeta = {'id':doc.pop('id'), 'user':doc.pop('user'), 'client':doc.pop('client'), 'externalId':doc.pop('externalId'),
+                   'type':doc.pop('type'), 'gui':doc.pop('gui'), 'branch':doc.pop('branch')}
+      if 'qrCodes' in doc:
+        pastaMeta['qrCodes'] = doc.pop('qrCodes')
+      if 'shasum' in doc:
+        pastaMeta['shasum']  = doc.pop('shasum')
+      metadata  = doc.pop('metaVendor') if 'metaVendor' in doc else {}
+      metadata |= doc.pop('metaUser')   if 'metaUser' in doc else {}
+      if doc:
+        metadata |= {'__':doc}
+      metadata |= {'DO NOT CHANGE':pastaMeta}
+      content = {'body':body, 'title':title, 'metadata':json.dumps(metadata), 'tags':tags, 'created_at':created_at, 'modified_at':modified_at}
+      entity_type = 'experiments' if pastaMeta['type'][0]=='measurement' else 'items'
+      self.api.update(entity_type, docID2elabID[node.id], content)
+      if image:
+        self.api.upload(entity_type, docID2elabID[node.id], image)
+      print('TODO create links to parents')
+    for projID in self.backend.db.getView('viewDocType/x0')['id'].values:
+      proj = self.backend.db.getHierarchy(projID)
+      [updateEntry(node) for node in PreOrderIter(proj)]
     return True
 
 # New that works

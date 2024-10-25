@@ -1,12 +1,11 @@
-import json
-import requests
+import base64, json, requests, copy
 from typing import Any
 
 VERIFYSSL = False
 
 class ElabFTWApi:
 
-  def __init__(self, url:str, apiKey:str):
+  def __init__(self, url:str='', apiKey:str=''):
     '''
     initiate an elab instance to allow for syncing
 
@@ -14,6 +13,13 @@ class ElabFTWApi:
       url (str): url
       apiKey (str): API key
     '''
+    if not url and not apiKey:
+      url = input('Please enter the url: ').strip()
+      url = url if url.startswith('htt') else f'https://{url}'
+      url = url if url.endswith('/')     else f'{url}/'
+      print('Log-in to elabFTW server.')
+      print(f'Go to website: {url}ucp.php?tab=4, enter a name and as permission: read/write. Create the API key')
+      apiKey = input('Copy-paste the api-key: ').strip()
     self.url = url
     self.headers = {'Content-type': 'application/json', 'Authorization': apiKey, 'Accept': 'text/plain'}
     # test server
@@ -24,83 +30,99 @@ class ElabFTWApi:
     return
 
 
-  def create(self, urlSuffix:str, content:str='') -> bool:
+  def create(self, entry:str, content:str='') -> bool:
     """
     create something
 
     Args:
-      urlSuffix (str): suffix of url, e.g. starting with experiments
+      entry (str): entry to create, e.g. experiments, items, items_types
       content (str): content to create
 
     Returns:
       bool: success of operation
     """
-    response = requests.post(self.url+urlSuffix, headers=self.headers, verify=VERIFYSSL)
+    response = requests.post(self.url+entry, headers=self.headers, verify=VERIFYSSL)
     print("**TODO")
     if response.status_code == 201:
       return True
-    print(f"**ERROR occurred in create of url {urlSuffix}: {response.json}")
+    print(f"**ERROR occurred in create of url {entry}: {response.json}")
     return False
 
-  def read(self, urlSuffix:str) -> dict[str,Any]:
+  def read(self, entry:str, identifier:int=-1) -> dict[str,Any]:
     """
     read something
 
     Args:
-      urlSuffix (str): suffix of url, e.g. starting with experiments
+      entry (str): entry to create, e.g. experiments, items, items_types
+      identifier (int): elabFTW's identifier
 
     Returns:
       dict: content read
     """
-    response = requests.get(self.url+urlSuffix, headers=self.headers, verify=VERIFYSSL)
+    url = f'{self.url}{entry}' if identifier==-1 else f'{self.url}{entry}/{identifier}'
+    response = requests.get(url, headers=self.headers, verify=VERIFYSSL)
     if response.status_code == 200:
       return json.loads(response.content.decode('utf-8'))
-    print(f"**ERROR occurred in get of url {urlSuffix}")
+    print(f"**ERROR occurred in get of url {entry} / {identifier}")
     return {}
 
-  def update(self, urlSuffix:str, content:dict[str,Any]={}) -> bool:
+  def update(self, entry:str, identifier:int, content:dict[str,Any]={}) -> bool:
     """
     update something
 
     Args:
-      urlSuffix (str): suffix of url, e.g. starting with experiments
+      entry (str): entry to create, e.g. experiments, items, items_types
+      identifier (int): elabFTW's identifier
       content (dict): content to update
 
     Returns:
       bool: success of operation
     """
-    response = requests.patch(self.url+urlSuffix, headers=self.headers, data=json.dumps(content), verify=VERIFYSSL)
+    response = requests.patch(f'{self.url}{entry}/{identifier}', headers=self.headers, data=json.dumps(content), verify=VERIFYSSL)
     return response.status_code == 200
 
-  def delete(self, urlSuffix:str) -> bool:
+  def delete(self, entry:str, identifier:int) -> bool:
     """
     delete something
 
     Args:
-      urlSuffix (str): suffix of url, e.g. starting with experiments
+      entry (str): entry to create, e.g. experiments, items, items_types
+      identifier (int): elabFTW's identifier
 
     Returns:
       bool: success of operation
     """
-    response = requests.delete(self.url+urlSuffix, headers=self.headers, verify=VERIFYSSL)
+    response = requests.delete(self.url+entry, headers=self.headers, verify=VERIFYSSL)
     if response.status_code == 204:
       return True
-    print(f"**ERROR occurred in delete of url {urlSuffix}")
+    print(f"**ERROR occurred in delete of url {entry}")
     return False
 
-  def touch(self, urlSuffix:str, content:dict[str,str]={}) -> int:
+  def touch(self, entry:str, content:dict[str,str]={}) -> int:
     """
     create something, without much content
 
     Args:
-      urlSuffix (str): suffix of url, e.g. starting with experiments
+      entry (str): entry to create, e.g. experiments, items, items_types
       content (dict): content to create
 
     Returns:
       int: elabFTW id
     """
-    response = requests.post(self.url+urlSuffix, headers=self.headers, data=json.dumps(content), verify=VERIFYSSL)
+    response = requests.post(self.url+entry, headers=self.headers, data=json.dumps(content), verify=VERIFYSSL)
     if response.status_code == 201:
       return int(response.headers['Location'].split('/')[-1])
-    print(f"**ERROR occurred in create of url {self.url}: {response.content} {response.headers}")
+    if response.status_code == 400:
+      print(f"**ERROR occurred in touch of url '{entry}': {json.loads(response.content.decode('utf-8'))['description']}")
     return -1
+
+  def upload(self, entry_type, identifier, content):
+    print(content[:25])
+    if content.startswith('<?xml'):
+      return
+    fIn = open('/home/steffen/Temporary/Ruomeng/region03.tif','rb')
+    data = fIn.read()
+    headers = copy.deepcopy(self.headers)
+    headers['Content-type'] = 'multipart/form-data'
+    response = requests.post(f'{self.url}{entry_type}/{identifier}/uploads', headers=headers, file=data, verify=VERIFYSSL)
+    print(response.content)
