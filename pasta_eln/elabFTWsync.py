@@ -69,15 +69,16 @@ class Pasta2Elab:
     Returns:
       bool: success
     '''
-    elabDocTypes = {i['title']:i['id'] for i in self.api.read('items_types')}|{'Measurement':-1}
-    elabDocTypes |= {'x0':elabDocTypes.pop('Project'), 'x1':elabDocTypes.pop('Folder')}
-    print(elabDocTypes)
+    elabTypes = {i['title']:i['id'] for i in self.api.read('items_types')}|{'Measurement':-1}
+    elabTypes |= {'x0':elabTypes.pop('Project'), 'x1':elabTypes.pop('Folder'), '-':elabTypes.pop('Default')}
+    print(elabTypes)
+    def getNewEntry(elabType:str) -> int:
+      urlSuffix = 'items'                  if int(elabType)>0 else 'experiment'
+      content   = {'category_id':elabType}
+      return self.api.touch(urlSuffix, content)
     self.backend.db.cursor.execute("SELECT id, type, externalId FROM main")
-    idData = self.backend.db.cursor.fetchall()
-    for pastaId, docType in [[i[0],i[1]] for i in idData if i[2]=='']:
-      print(pastaId, docType)
-      itemsTypesId = elabDocTypes[docType.split('/')[0]]
-      print('   ',pastaId, docType, itemsTypesId)
+    docID2elabID = {i[0]:(i[2] or getNewEntry(elabTypes[i[1].split('/')[0]]))
+                    for i in self.backend.db.cursor.fetchall()}
 
 
     # print(data)
