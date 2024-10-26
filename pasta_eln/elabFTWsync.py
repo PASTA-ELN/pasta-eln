@@ -1,25 +1,12 @@
+""" Allow syncing to elabFTW server """
 import json, copy
-from typing import Any
-from anytree import PreOrderIter
+from anytree import PreOrderIter, Node
 from PySide6.QtGui import QTextDocument
 from .backend import Backend
 from .elabFTWapi import ElabFTWApi
-"""
-# Pasta sync: Ask Nico
-1. feasible: create resources: instruments, samples, procedures, folders
-	- a project folder is first created and then references (as link) the content (experiments)
-1. info: reduce the experiment to measurement: attachment is the ONE measurement file and a thumbnail of the measurement
-1. question: samples have as one of their extra fields a qr-code: can I create a liist of all qr-codes: via API can I create a list of all extra-fileds of a specific resoruce type?
-	- or should I create another resource: list: which then includes the qr-code list
-	- go to search page as a API request q=parameter=%
-
-## Other topics
-- chatGPT-Scholar: only tool
-
-https://doc.elabftw.net/api/elabapi-html/#api-Items-postItem
-"""
 
 class Pasta2Elab:
+  """ Allow syncing to elabFTW server"""
 
   def __init__(self, backend:Backend, projectGroup:str):
     '''
@@ -50,25 +37,22 @@ class Pasta2Elab:
     listMetadata = self.api.read('items?q=category%3APasta_Metadata')
     dataHierarchy = []
     for docType in backend.db.dataHierarchy('',''):
-        dataHierarchy += copy.deepcopy([dict(i) for i in backend.db.dataHierarchy(docType,'meta')])
+      dataHierarchy += copy.deepcopy([dict(i) for i in backend.db.dataHierarchy(docType,'meta')])
     if not listMetadata:
       itemId = self.api.touch('items', {"category_id":int(docTypesElab["Pasta_Metadata"])})
     else:
       itemId = listMetadata[0]["id"]
-    self.api.update(f'items/{itemId}', {"title":"data hierarchy", "metadata":json.dumps(dataHierarchy), "body":"<p>DO NOT CHANGE ANYTHING</p>"})
+    self.api.update('items', itemId, {"title":"data hierarchy", "metadata":json.dumps(dataHierarchy), "body":"<p>DO NOT CHANGE ANYTHING</p>"})
     return
 
   def pasta2elab(self) -> bool:
     '''
     import .eln file from other ELN or from PASTA
 
-    Args:
-      backend (backend): backend
-      projectGroup (str): name of project group
-
     Returns:
       bool: success
     '''
+    print("LINK FROM PARENTS TO CHILDREN; TODO")
     # create mapping of docIDs to elabIDs: if not exist, create elabIds
     elabTypes = {i['title'].lower():i['id'] for i in self.api.read('items_types')}|{'measurement':-1}
     elabTypes |= {'x0':elabTypes.pop('project'), 'x1':elabTypes.pop('folder'), '-':elabTypes.pop('default')}
@@ -84,7 +68,7 @@ class Pasta2Elab:
     self.backend.db.connection.commit()
     # use map to update
     qtDocument = QTextDocument()   #used
-    def updateEntry(node):
+    def updateEntry(node:Node) -> bool:
       doc   = self.backend.db.getDoc(node.id)
       image     = doc.pop('image') if 'image' in doc else ''
       title     = doc.pop('name')
@@ -112,10 +96,15 @@ class Pasta2Elab:
       self.api.update(entity_type, docID2elabID[node.id], content)
       if image:
         self.api.upload(entity_type, docID2elabID[node.id], image)
-      print('TODO create links to parents')
+      if pastaMeta['branch'][0]['path'] is not None and \
+         pastaMeta['type'][0][0]!='x' and \
+         not pastaMeta['branch'][0]['path'].startswith('http'):
+        self.api.upload(entity_type, docID2elabID[node.id], fileName=self.backend.basePath/pastaMeta['branch'][0]['path'], comment='raw data')
+      return True
+
     for projID in self.backend.db.getView('viewDocType/x0')['id'].values:
       proj = self.backend.db.getHierarchy(projID)
-      [updateEntry(node) for node in PreOrderIter(proj)]
+      _ = [updateEntry(node) for node in PreOrderIter(proj)]
     return True
 
 # New that works
