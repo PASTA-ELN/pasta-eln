@@ -52,7 +52,6 @@ class Pasta2Elab:
     Returns:
       bool: success
     '''
-    print("LINK FROM PARENTS TO CHILDREN; TODO")
     # create mapping of docIDs to elabIDs: if not exist, create elabIds
     elabTypes = {i['title'].lower():i['id'] for i in self.api.read('items_types')}|{'measurement':-1}
     elabTypes |= {'x0':elabTypes.pop('project'), 'x1':elabTypes.pop('folder'), '-':elabTypes.pop('default')}
@@ -69,6 +68,14 @@ class Pasta2Elab:
     # use map to update
     qtDocument = QTextDocument()   #used
     def updateEntry(node:Node) -> bool:
+      """ update an entry in elabFTW
+
+      Args:
+        node (Node): node to process
+
+      Returns:
+        bool: success
+      """
       doc   = self.backend.db.getDoc(node.id)
       image     = doc.pop('image') if 'image' in doc else ''
       title     = doc.pop('name')
@@ -94,6 +101,9 @@ class Pasta2Elab:
       content = {'body':body, 'title':title, 'metadata':json.dumps(metadata), 'tags':tags, 'created_at':created_at, 'modified_at':modified_at}
       entity_type = 'experiments' if pastaMeta['type'][0]=='measurement' else 'items'
       self.api.update(entity_type, docID2elabID[node.id], content)
+      # create links
+      _ = [self.api.createLink(entity_type, docID2elabID[node.id], 'experiments' if i.docType[0]=='measurement' else 'items', docID2elabID[i.id])
+                              for i in node.children]
       if image:
         self.api.upload(entity_type, docID2elabID[node.id], image)
       if pastaMeta['branch'][0]['path'] is not None and \

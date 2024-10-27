@@ -55,6 +55,27 @@ class ElabFTWApi:
     print(f"**ERROR occurred in create of url {entry}: {response.json}")
     return False
 
+
+  def createLink(self, entryType:str, identifier:int, targetType:str, linkTarget:int) -> bool:
+    """
+    create a link
+
+    Args:
+      entryType (str): entry type to modify (items, experiments)
+      identifier (int): entry to change
+      targetType (str): entry type to link to (items, experiments)
+      linkTarget (int): target of the link
+
+    Returns:
+      bool: success of operation
+    """
+    response = requests.post(f'{self.url}{entryType}/{identifier}/{targetType}_links/{linkTarget}', headers=self.headers, verify=VERIFYSSL, timeout=60)
+    if response.status_code == 201:
+      return True
+    print(f"**ERROR occurred in create of url f'{self.url}{entryType}/{identifier}/{targetType}_links/{linkTarget}': {response.json}")
+    return False
+
+
   def read(self, entry:str, identifier:int=-1) -> list[dict[str,Any]]:
     """
     read something
@@ -124,12 +145,12 @@ class ElabFTWApi:
     return -1
 
 
-  def upload(self, entry_type:str, identifier:int, content:str='', fileName:str='', comment:str='') -> bool:
+  def upload(self, entryType:str, identifier:int, content:str='', fileName:str='', comment:str='') -> bool:
     """
     upload a file
 
     Args:
-      entry_type (str): entry_type to which to attach the upload
+      entryType (str): entryType to which to attach the upload
       identifier (int): elab's identifier
       content (str): base64 content, if given, it is used
       fileName (str): if content is not given, this filename is used
@@ -156,8 +177,8 @@ class ElabFTWApi:
       data = {'comment':comment, 'file': ('README.md', b'Read me!\n', 'text/markdown')}
     headers = copy.deepcopy(self.headers)
     del headers['Content-type'] #will automatically become 'multipart/form-data'
-    response = requests.post(f'{self.url}{entry_type}/{identifier}/uploads', headers=headers, files=data, verify=VERIFYSSL, timeout=60)
+    response = requests.post(f'{self.url}{entryType}/{identifier}/uploads', headers=headers, files=data, verify=VERIFYSSL, timeout=60)
     if response.status_code == 201:
       return True
-    print(f"**ERROR occurred in touch of url '{entry_type}/{identifier}': {json.loads(response.content.decode('utf-8'))['description']}")
+    print(f"**ERROR occurred in touch of url '{entryType}/{identifier}': {json.loads(response.content.decode('utf-8'))['description']}")
     return False
