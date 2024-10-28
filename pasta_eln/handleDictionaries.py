@@ -139,7 +139,7 @@ def diffDicts(dict1:dict[str,Any], dict2:dict[str,Any]) -> str:
   Returns:
     str: output with \\n
   """
-  ignoreKeys = ['client', '_rev', 'gui', '_attachments']
+  ignoreKeys = ['client', '_rev', 'gui', '_attachments','externalId']
   shortVersion = '__version__' in dict1 and dict1['__version__'] == 'short'
   outString = ''
   dict2Copy = dict(dict2)
