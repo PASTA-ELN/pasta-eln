@@ -27,13 +27,13 @@ class Pasta2Elab:
                           self.backend.configuration['projectGroups'][self.projectGroup]['remote']['key'])
     #try body and metadata: compare, write
     docTypesElab  = {i['title']:i['id'] for i in self.api.read('items_types')}
-    docTypesPasta = {i.capitalize() for i in backend.db.dataHierarchy('','') if not i.startswith('x')} |{'Folder','Project','Pasta_Metadata'}
+    docTypesPasta = {i.capitalize() for i in backend.db.dataHierarchy('','') if not i.startswith('x')} |{'Default','Folder','Project','Pasta_Metadata'}
     for docType in docTypesPasta.difference({'Measurement'}|docTypesElab.keys()):  # do not create measurements, use 'experiments'
       self.api.touch('items_types', {"title": docType})
     #verify nothing extraneous
     docTypesElab  = {i['title']:i['id'] for i in self.api.read('items_types')}
     if set(docTypesElab.keys()).difference(docTypesPasta|{'Default','Pasta_Metadata'}):
-      print('**ERROR: some items exist that should not:', set(docTypesElab.keys()).difference(docTypesPasta|{'Default'}))
+      print('**Info: some items exist that should not:', set(docTypesElab.keys()).difference(docTypesPasta|{'Default'}),'You can remove manually, but should not interfere since not used.')
     listMetadata = self.api.read('items?q=category%3APasta_Metadata')
     dataHierarchy = []
     for docType in backend.db.dataHierarchy('',''):

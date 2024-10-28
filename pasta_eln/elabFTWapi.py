@@ -4,8 +4,6 @@ from pathlib import Path
 from typing import Any
 import requests  # only requirement; could be replaced with urllib to eliminate requirements
 
-VERIFYSSL = False
-
 class ElabFTWApi:
   """ API for accessing an elabFTW server. That's API is inconvenient, complicated, ..."""
 
@@ -17,6 +15,7 @@ class ElabFTWApi:
       url (str): url
       apiKey (str): API key
     '''
+    self.verify_SSL = True
     if not url and not apiKey:
       url = input('Please enter the url: ').strip()
       url = url if url.startswith('htt') else f'https://{url}'
@@ -27,7 +26,7 @@ class ElabFTWApi:
     self.url = url
     self.headers = {'Content-type': 'application/json', 'Authorization': apiKey, 'Accept': 'text/plain'}
     # test server
-    response = requests.get(f'{self.url}info', headers=self.headers, verify=VERIFYSSL, timeout=60)
+    response = requests.get(f'{self.url}info', headers=self.headers, verify=self.verify_SSL, timeout=60)
     if response.status_code == 200:
       elabVersion = int(json.loads(response.content.decode('utf-8')).get('elabftw_version','0.0.0').split('.')[0])
       if elabVersion<5:
@@ -48,7 +47,7 @@ class ElabFTWApi:
     Returns:
       bool: success of operation
     """
-    response = requests.post(self.url+entry, headers=self.headers, verify=VERIFYSSL, timeout=60)
+    response = requests.post(self.url+entry, headers=self.headers, verify=self.verify_SSL, timeout=60)
     print("**TODO", content)
     if response.status_code == 201:
       return True
@@ -69,7 +68,8 @@ class ElabFTWApi:
     Returns:
       bool: success of operation
     """
-    response = requests.post(f'{self.url}{entryType}/{identifier}/{targetType}_links/{linkTarget}', headers=self.headers, verify=VERIFYSSL, timeout=60)
+    response = requests.post(f'{self.url}{entryType}/{identifier}/{targetType}_links/{linkTarget}',
+                             headers=self.headers, verify=self.verify_SSL, timeout=60)
     if response.status_code == 201:
       return True
     print(f"**ERROR occurred in create of url f'{self.url}{entryType}/{identifier}/{targetType}_links/{linkTarget}': {response.json}")
@@ -88,7 +88,7 @@ class ElabFTWApi:
       dict: content read
     """
     url = f'{self.url}{entry}' if identifier==-1 else f'{self.url}{entry}/{identifier}'
-    response = requests.get(url, headers=self.headers, verify=VERIFYSSL, timeout=60)
+    response = requests.get(url, headers=self.headers, verify=self.verify_SSL, timeout=60)
     if response.status_code == 200:
       return json.loads(response.content.decode('utf-8'))
     print(f"**ERROR occurred in get of url {entry} / {identifier}")
@@ -106,7 +106,8 @@ class ElabFTWApi:
     Returns:
       bool: success of operation
     """
-    response = requests.patch(f'{self.url}{entry}/{identifier}', headers=self.headers, data=json.dumps(content), verify=VERIFYSSL, timeout=60)
+    response = requests.patch(f'{self.url}{entry}/{identifier}', headers=self.headers,
+                              data=json.dumps(content), verify=self.verify_SSL, timeout=60)
     return response.status_code == 200
 
   def delete(self, entry:str, identifier:int) -> bool:
@@ -120,7 +121,7 @@ class ElabFTWApi:
     Returns:
       bool: success of operation
     """
-    response = requests.delete(f'{self.url}{entry}/{identifier}', headers=self.headers, verify=VERIFYSSL, timeout=60)
+    response = requests.delete(f'{self.url}{entry}/{identifier}', headers=self.headers, verify=self.verify_SSL, timeout=60)
     if response.status_code == 204:
       return True
     print(f"**ERROR occurred in delete of url {entry}")
@@ -137,7 +138,8 @@ class ElabFTWApi:
     Returns:
       int: elabFTW id
     """
-    response = requests.post(self.url+entry, headers=self.headers, data=json.dumps(content), verify=VERIFYSSL, timeout=60)
+    response = requests.post(self.url+entry, headers=self.headers,
+                             data=json.dumps(content), verify=self.verify_SSL, timeout=60)
     if response.status_code == 201:
       return int(response.headers['Location'].split('/')[-1])
     if response.status_code == 400:
@@ -177,7 +179,8 @@ class ElabFTWApi:
       data = {'comment':comment, 'file': ('README.md', b'Read me!\n', 'text/markdown')}
     headers = copy.deepcopy(self.headers)
     del headers['Content-type'] #will automatically become 'multipart/form-data'
-    response = requests.post(f'{self.url}{entryType}/{identifier}/uploads', headers=headers, files=data, verify=VERIFYSSL, timeout=60)
+    response = requests.post(f'{self.url}{entryType}/{identifier}/uploads', headers=headers,
+                             files=data, verify=self.verify_SSL, timeout=60)
     if response.status_code == 201:
       return True
     print(f"**ERROR occurred in touch of url '{entryType}/{identifier}': {json.loads(response.content.decode('utf-8'))['description']}")
