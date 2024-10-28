@@ -20,7 +20,17 @@ HTML_HEADER = "<!DOCTYPE html>\n<html>\n<head>\n<style>"\
     "</style>\n</head>\n<body>\n"
 HTML_FOOTER = "</body>\n</html>\n"
 
-def main(backend, projID, widget, parameter={}):
+def main(backend, hierStack, widget, parameter={}):
+    """
+    Args:
+        filePath (Path): full path file name
+        hierStack(str): stack of identifiers to this location, separated by /
+        widget (QWidget): pyside6 widget, allows you to create forms
+        parameters (dict): unused currently
+
+    Returns:
+        bool: success of function
+    """
     # Initialize variables
     if not parameter:
         res = QFileDialog.getSaveFileName(widget,'Use this file for output', str(Path.home()))
@@ -28,7 +38,8 @@ def main(backend, projID, widget, parameter={}):
             return False
     else:
         res = parameter['fileNames']
-    backend.changeHierarchy(projID)
+    for i in hierStack.split('/'): #not needed here; to be in the correct folder if one wants to save something
+        backend.changeHierarchy(i)
     qtDocument = QTextDocument()   #used for markdown -> html conversion
 
     def node2html(node):
@@ -65,7 +76,7 @@ def main(backend, projID, widget, parameter={}):
         return f'{output}</td></tr></table></div>\n\n'
 
     # main function that calls the render function
-    proj = backend.db.getHierarchy(projID)
+    proj = backend.db.getHierarchy(hierStack)
     out = "".join(node2html(node) for node in PreOrderIter(proj))
     # add footer line with pasta-eln icon (read and converted to base64 to be inline included in html)
     iconImg = Image.open(f'{icons.__path__[0]}/favicon64.ico')
