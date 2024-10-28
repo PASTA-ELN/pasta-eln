@@ -481,7 +481,7 @@ class Backend(CLI_Mixin):
     return
 
 
-  def testExtractor(self, filePath:Union[Path,str], extractorPath:Optional[Path]=None, recipe:str='',
+  def testExtractor(self, filePath:Union[Path,str], extractorPath:Optional[Path]=None, style:dict[str,Any]={'main':''},
                     outputStyle:str='text', saveFig:str='') -> str:
     """
     Args:
@@ -526,7 +526,7 @@ class Backend(CLI_Mixin):
       try:
         module  = importlib.import_module(pyFile[:-3])
         plt.clf()
-        content = module.use(filePath, recipe, saveFig or None)
+        content = module.use(filePath, {'main':''}, saveFig or None )
         if saveFig:
           return report
       except Exception:
@@ -535,17 +535,17 @@ class Backend(CLI_Mixin):
         report += outputString(outputStyle, 'error', f'{htmlStr}python-error">website</a>')
         report += outputString(outputStyle, 'error', traceback.format_exc(limit=3))
     if success:
-      if 'recipe' in content:
+      if 'style' in content:
         possibleDocTypes = [i for i in self.db.dataHierarchy('', '') if i[0]!='x']
-        matches = [i for i in possibleDocTypes if content['recipe'].startswith(i)]
-        if matches or content['recipe'] == '' or content['recipe'] == '-':
-          report += outputString(outputStyle, 'info', 'Recipe is good: '+content['recipe'])
+        matches = [i for i in possibleDocTypes if content['style']['main'].startswith(i)]
+        if matches or content['style']['main'] in {'', '-'}:
+          report += outputString(outputStyle, 'info', 'Style is good: '+content['style']['main'])
           size = len(str(content))
           report += outputString(outputStyle, 'info', f'Entire extracted size: {size // 1024}kB')
         else:
-          report += outputString(outputStyle, 'error', 'Recipe does not follow doctype in dataHierarchy.')
+          report += outputString(outputStyle, 'error', 'Style does not follow doctype in dataHierarchy.')
       else:
-        report += outputString(outputStyle,'error','Recipe not included in extractor.')
+        report += outputString(outputStyle,'error','Style not included in extractor.')
     if success:
       try:
         _ = json.dumps(content)

@@ -417,7 +417,7 @@ def addDocDetails(widget:QWidget, layout:QLayout, key:str, value:Any, dataHierar
         raise ValueError(f'list target exists multiple times. Key: {key}')
     elif isinstance(value, list):
       value = ', '.join([str(i) for i in value])
-    labelStr = f'{key.capitalize()}: {value}'
+    labelStr = f'<b>{key.capitalize()}</b>: {value}'
     if isinstance(value, tuple) and len(value)==4:
       key = key if value[2] is None or value[2]=='' else value[2]
       valueString = f'{value[0]} {value[1]}'
@@ -430,6 +430,7 @@ def addDocDetails(widget:QWidget, layout:QLayout, key:str, value:Any, dataHierar
       label = Label(labelStr, function=lambda x,y: clickLink(widget,x,y) if link else None, docID=docID)
       label.setOpenExternalLinks(True)
       label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse | Qt.TextInteractionFlag.LinksAccessibleByMouse)
+      label.setWordWrap(True)
       layout.addWidget(label)
   return labelStr
 
