@@ -44,8 +44,7 @@ class UploadModel(BaseModel):
   """
 
   def __init__(self,
-               _id: str | None = None,
-               _rev: str | None = None,
+               _id: int | None = None,
                data_type: str | None = None,
                project_name: str | None = None,
                project_doc_id: str | None = None,
@@ -74,7 +73,7 @@ class UploadModel(BaseModel):
 
     """
 
-    super().__init__(_id, _rev)
+    super().__init__(_id)
     if isinstance(data_type, str | None):
       self._data_type: str | None = 'dataverse_upload' if data_type is None else data_type
     else:

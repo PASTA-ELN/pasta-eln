@@ -26,19 +26,21 @@ from typing import Optional
 
 from sqlalchemy.orm import Mapped, mapped_column
 
-from pasta_eln.dataverse.database_sqlalchemy_base import DatabaseSqlAlchemyBase
+from pasta_eln.dataverse.database_sqlalchemy_base import DatabaseModelBase
 
 
-class DatabaseOrmProjectModel(DatabaseSqlAlchemyBase):
+class DatabaseOrmMainModel(DatabaseModelBase):
   """ Represents a project model object. """
 
-  __tablename__ = "dataverse_project"
+  __tablename__ = "main"
 
-  id: Mapped[int] = mapped_column(primary_key=True)
+  id: Mapped[str] = mapped_column(primary_key=True)
   name: Mapped[Optional[str]]
+  user: Mapped[Optional[str]]
+  type: Mapped[Optional[str]]
+  dateCreated: Mapped[Optional[str]]
+  dateModified: Mapped[Optional[str]]
   comment: Mapped[Optional[str]]
-  user: Mapped[Optional[str]]
-  user: Mapped[Optional[str]]
-  date: Mapped[Optional[str]]
-  status: Mapped[Optional[str]]
-  objective: Mapped[Optional[str]]
+
+  def get_table_columns(self) -> list[str]:
+    return ["id", "name", "user", "type", "dateCreated", "dateModified", "comment"]

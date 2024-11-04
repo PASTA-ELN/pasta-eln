@@ -44,11 +44,11 @@ class ProjectModel(BaseModel):
 
   def __init__(self,
                _id: str | None = None,
-               _rev: str | None = None,
                name: str | None = None,
                comment: str | None = None,
                user: str | None = None,
-               date: str | None = None,
+               date_created: str | None = None,
+               date_modified: str | None = None,
                status: str | None = None,
                objective: str | None = None) -> None:
     """
@@ -68,7 +68,7 @@ class ProjectModel(BaseModel):
         IncorrectParameterError: If any of the parameters are not of type str or None.
 
     """
-    super().__init__(_id, _rev)
+    super().__init__(_id)
     if isinstance(name, str | None):
       self._name: str | None = name
     else:
@@ -81,10 +81,14 @@ class ProjectModel(BaseModel):
       self._user: str | None = user
     else:
       raise IncorrectParameterError(f"Expected string type for user but got {type(user)}")
-    if isinstance(date, str | None):
-      self._date: str | None = date
+    if isinstance(date_created, str | None):
+      self._date_created: str | None = date_created
     else:
-      raise IncorrectParameterError(f"Expected string type for date but got {type(date)}")
+      raise IncorrectParameterError(f"Expected string type for date_created but got {type(date_created)}")
+    if isinstance(date_modified, str | None):
+      self._date_modified: str | None = date_modified
+    else:
+      raise IncorrectParameterError(f"Expected string type for date_modified but got {type(date_modified)}")
     if isinstance(status, str | None):
       self._status: str | None = status
     else:
@@ -203,40 +207,76 @@ class ProjectModel(BaseModel):
     del self._user
 
   @property
-  def date(self) -> str | None:
+  def date_created(self) -> str | None:
     """
-    Returns the date of the project.
+    Returns the date_created of the project.
 
     Returns:
-        str | None: The date of the project.
+        str | None: The date_created for the project.
 
     """
-    return self._date
+    return self._date_created
 
-  @date.setter
-  def date(self, value: str | None) -> None:
+  @date_created.setter
+  def date_created(self, value: str | None) -> None:
     """
-    Sets the date of the project.
+    Sets the date_created for the project.
 
     Args:
-        value (str | None): The date value to be set.
+        value (str | None): The date_created value to be set.
 
     Raises:
         IncorrectParameterError: If the value is not of type str.
 
     """
     if isinstance(value, str | None):
-      self._date = value
+      self._date_created = value
     else:
-      raise IncorrectParameterError(f"Expected string type for date but got {type(value)}")
+      raise IncorrectParameterError(f"Expected string type for date_created but got {type(value)}")
 
-  @date.deleter
-  def date(self) -> None:
+  @date_created.deleter
+  def date_created(self) -> None:
     """
-    Deletes the date of the project.
+    Deletes the date_created for the project.
 
     """
-    del self._date
+    del self._date_created
+
+  @property
+  def date_modified(self) -> str | None:
+    """
+    Returns the date_modified for the project.
+
+    Returns:
+        str | None: The date_modified for the project.
+
+    """
+    return self._date_modified
+
+  @date_modified.setter
+  def date_modified(self, value: str | None) -> None:
+    """
+    Sets the date_modified for the project.
+
+    Args:
+        value (str | None): The date_modified value to be set.
+
+    Raises:
+        IncorrectParameterError: If the value is not of type str.
+
+    """
+    if isinstance(value, str | None):
+      self._date_modified = value
+    else:
+      raise IncorrectParameterError(f"Expected string type for date_modified but got {type(value)}")
+
+  @date_modified.deleter
+  def date_modified(self) -> None:
+    """
+    Deletes the date_modified for the project.
+
+    """
+    del self._date_modified
 
   @property
   def status(self) -> str | None:

@@ -40,7 +40,6 @@ class ConfigModel(BaseModel):
 
   def __init__(self,
                _id: str | None = None,
-               _rev: str | None = None,
                project_upload_items: dict[str, Any] | None = None,
                parallel_uploads_count: int | None = None,
                dataverse_login_info: dict[str, Any] | None = None,
@@ -60,7 +59,7 @@ class ConfigModel(BaseModel):
         IncorrectParameterError: If any of the parameters have an invalid type.
 
     """
-    super().__init__(_id, _rev)
+    super().__init__(_id)
     if isinstance(project_upload_items, dict | None):
       self._project_upload_items: dict[str, Any] | None = project_upload_items
     else:

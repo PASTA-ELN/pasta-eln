@@ -6,15 +6,21 @@
 #  Filename: test_dataverse_base_database_api.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
+import random
+from itertools import groupby
 from secrets import compare_digest
 from unittest.mock import MagicMock, patch
 
 import pytest
 from cloudant.error import CloudantClientException, CloudantDatabaseException
+from future.backports.datetime import datetime
 
-from pasta_eln.dataverse.base_database_api import BaseDatabaseAPI
+from pasta_eln.dataverse.base_database_api import BaseDatabaseApi, DatabaseNames
+from pasta_eln.dataverse.config_model import ConfigModel
 from pasta_eln.dataverse.database_error import DatabaseError
 from pasta_eln.dataverse.incorrect_parameter_error import IncorrectParameterError
+from pasta_eln.dataverse.project_model import ProjectModel
+from pasta_eln.dataverse.upload_model import UploadModel
 
 # Constants for test cases
 CONFIG_FILE_PATH = '/home/user/.pastaELN.json'
@@ -33,10 +39,10 @@ def create_mock_config(default_project_group_exists=True, user_and_password_exis
 
 
 @pytest.fixture
-def mock_database_api(mocker) -> BaseDatabaseAPI:
-  mocker.patch('pasta_eln.dataverse.base_database_api.logging.getLogger')
+def mock_database_api(mocker) -> BaseDatabaseApi:
+  #mocker.patch('pasta_eln.dataverse.base_database_api.logging.getLogger')
   mocker.patch('pasta_eln.dataverse.base_database_api.Lock')
-  return BaseDatabaseAPI("host", 1234, "user", "pass")
+  return BaseDatabaseApi("/home/jmurugan/pasta-eln/data/dataverse.db", "/home/jmurugan/pasta-eln/data/pastaELN.db")
 
 
 class TestDataverseBaseDatabaseApi:
@@ -52,7 +58,7 @@ class TestDataverseBaseDatabaseApi:
     mock_lock = mocker.patch('pasta_eln.dataverse.base_database_api.Lock')
     with patch('logging.Logger.error') as mock_logger_error:
       # Act
-      base_db_api = BaseDatabaseAPI("host", 1234, expected_username, expected_password)
+      base_db_api = BaseDatabaseApi("host", 1234, expected_username, expected_password)
 
       # Assert
       assert base_db_api.username == expected_username
@@ -99,9 +105,9 @@ class TestDataverseBaseDatabaseApi:
     # Act
     if hostname is None or port is None or username is None or password is None:
       with pytest.raises(IncorrectParameterError):
-        BaseDatabaseAPI(hostname, port, username, password)
+        BaseDatabaseApi(hostname, port, username, password)
     else:
-      instance = BaseDatabaseAPI(hostname, port, username, password)
+      instance = BaseDatabaseApi(hostname, port, username, password)
 
       # Assert
       assert instance.host == hostname
@@ -715,3 +721,67 @@ class TestDataverseBaseDatabaseApi:
     else:
       mock_query.assert_called_with()
     assert result == {"docs": [], "bookmark": "new_bookmark"}, f"Failed test ID: {test_id}"
+
+  def test_add_config(self, mock_database_api):
+    config_model = ConfigModel()
+    config_model.dataverse_login_info = {"api_token": "test_api_token", "dataverse_id": "test_dataverse_id"}
+    config_model.project_upload_items = {"key2": "value2"}
+    config_model.metadata = {"key": "value"}
+    config_model.parallel_uploads_count = 66
+    mock_database_api.insert_model(config_model)
+
+  def test_add_upload(self, mock_database_api):
+    for i in range(0, 2):
+      upload_model = UploadModel()
+      upload_model.log = f"test_log {random.randint(0, 1000)}"
+      upload_model.project_name = f"test_project_name virtual {random.randint(0, 1000)}"
+      upload_model.status = f"test_status eln {random.randint(0, 1000)}"
+      upload_model.finished_date_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+      upload_model.data_type = f"test_data_type {random.randint(0, 1000)}"
+      upload_model.project_doc_id = f"test_project_doc_id {random.randint(0, 1000)}"
+      upload_model.created_date_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+      upload_model.dataverse_url = f"test_dataverse_url {random.randint(0, 1000)}"
+      mock_database_api.insert_model(upload_model)
+
+  def test_get_upload_model(self, mock_database_api):
+    model = mock_database_api.get_model(1, DatabaseNames.DataverseDatabase, UploadModel)
+    assert model
+
+  def test_get_config_model(self, mock_database_api):
+    model = mock_database_api.get_model(3, DatabaseNames.DataverseDatabase, ConfigModel)
+    assert model
+
+  def test_db_init(self, mock_database_api):
+    mock_database_api.create_and_init_database()
+
+  def test_update_config(self, mock_database_api):
+    config_model = ConfigModel()
+    config_model.id = 4
+    config_model.dataverse_login_info = {"api_token": "test_api_token", "dataverse_id": "12345"}
+    config_model.project_upload_items = {"key2": "value2"}
+    config_model.metadata = {"metadata": "wrong_metadata"}
+    config_model.parallel_uploads_count = 9999
+    mock_database_api.update_model(DatabaseNames.DataverseDatabase, config_model)
+
+  def test_update_upload(self, mock_database_api):
+    upload_model = UploadModel()
+    upload_model.id = 1
+    upload_model.log = "test_log"
+    upload_model.project_name = "test_project_name"
+    upload_model.status = "test_status"
+    upload_model.finished_date_time = "1000-01-01 00:00:00"
+    upload_model.data_type = "artifact"
+    upload_model.project_doc_id = "test_project_doc_id"
+    upload_model.created_date_time = "1000-01-01 00:00:03"
+    upload_model.dataverse_url = "http://example.com/dataverse"
+    mock_database_api.update_model(DatabaseNames.DataverseDatabase, upload_model)
+
+  def test_paginated_results(self, mock_database_api):
+    test = mock_database_api.get_paginated_results(DatabaseNames.DataverseDatabase, UploadModel, page_number=1, limit=10, filter_term="", filter_fields=["status", "project_name"])
+    assert test
+
+  def test_paginated_results_project(self, mock_database_api):
+
+    test = mock_database_api.get_projects(1,DatabaseNames.PastaProjectGroupDatabase)
+    assert test[0]
+    assert test[1]

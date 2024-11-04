@@ -8,449 +8,144 @@
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import logging
-import sqlite3
+from collections.abc import Callable
+from enum import Enum
+from itertools import groupby
 from threading import Lock
-from typing import Any
+from typing import Any, Sequence, Type, Union
 
-from cloudant import couchdb
-from cloudant.database import CloudantDatabase
-from cloudant.design_document import DesignDocument
-from cloudant.document import Document
-from cloudant.error import CloudantClientException, CloudantDatabaseException
-from cloudant.query import Query
-from cloudant.result import Result
-from cloudant.view import View
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, or_, select
+from sqlalchemy.orm import Session
 
+from pasta_eln.dataverse.base_model import BaseModel
+from pasta_eln.dataverse.config_model import ConfigModel
 from pasta_eln.dataverse.database_error import DatabaseError
-from pasta_eln.dataverse.database_sqlalchemy_base import DatabaseSqlAlchemyBase
+from pasta_eln.dataverse.database_orm_adapter import DatabaseOrmAdapter
+from pasta_eln.dataverse.database_orm_config_model import DatabaseOrmConfigModel
+from pasta_eln.dataverse.database_orm_main_model import DatabaseOrmMainModel
+from pasta_eln.dataverse.database_orm_properties_model import DatabaseOrmPropertiesModel
+from pasta_eln.dataverse.database_orm_upload_model import DatabaseOrmUploadModel
+from pasta_eln.dataverse.database_sqlalchemy_base import DatabaseModelBase
 from pasta_eln.dataverse.incorrect_parameter_error import IncorrectParameterError
+from pasta_eln.dataverse.project_model import ProjectModel
+from pasta_eln.dataverse.upload_model import UploadModel
 from pasta_eln.dataverse.utils import log_and_create_error
+
+
+class DatabaseNames(Enum):
+  DataverseDatabase = 1
+  PastaProjectGroupDatabase = 2
 
 
 class BaseDatabaseApi:
   def __init__(self,
-               db_path: str) -> None:
+               dataverse_db_path: str,
+               pasta_project_group_db_path: str) -> None:
     super().__init__()
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
-    if isinstance(db_path, str):
-      self.db_path: str = db_path
-      self.db_url: str = f"sqlite:///{db_path}"
+    self.db_url_map: dict[DatabaseNames, str] = {}
+
+    base_model_type = Type[UploadModel | ConfigModel | ProjectModel]
+    orm_model_type = Type[DatabaseOrmUploadModel | DatabaseOrmConfigModel]
+    self.model_mapping: dict[base_model_type, orm_model_type] = {
+      UploadModel: DatabaseOrmUploadModel,
+      ConfigModel: DatabaseOrmConfigModel,
+    }
+    self.to_orm_converter_map: dict[base_model_type, Callable[Type[UploadModel | ConfigModel | ProjectModel], Type[
+      DatabaseOrmUploadModel | DatabaseOrmConfigModel]]] = {
+      UploadModel: DatabaseOrmAdapter.get_orm_upload_model,
+      ConfigModel: DatabaseOrmAdapter.get_orm_config_model,
+      ProjectModel: DatabaseOrmAdapter.get_orm_project_model
+    }
+
+    self.to_base_model_converter_map: dict[orm_model_type, Callable[
+      Type[DatabaseOrmUploadModel | DatabaseOrmConfigModel], Type[
+        UploadModel | ConfigModel | ProjectModel]]] = {
+      DatabaseOrmUploadModel: DatabaseOrmAdapter.get_upload_model,
+      DatabaseOrmConfigModel: DatabaseOrmAdapter.get_config_model
+    }
+
+    if isinstance(dataverse_db_path, str):
+      self.db_url_map[DatabaseNames.DataverseDatabase] = f"sqlite:///{dataverse_db_path}"
     else:
-      raise IncorrectParameterError("Database path must be a string")
+      raise IncorrectParameterError(f"Database path must be a string: {dataverse_db_path}")
+    if isinstance(pasta_project_group_db_path, str):
+      self.db_url_map[DatabaseNames.PastaProjectGroupDatabase] = f"sqlite:///{pasta_project_group_db_path}"
+    else:
+      raise IncorrectParameterError(f"Database path must be a string: {pasta_project_group_db_path}")
     self.update_lock = Lock()
 
   def create_and_init_database(self) -> None:
-    self.logger.info("Creating database at the path : %s", self.db_url)
-    engine = create_engine(self.db_url, echo=True)
-    DatabaseSqlAlchemyBase.metadata.create_all(engine)
-    # try:
-    #   with sqlite3.connect(db_path) as conn:
-    #     conn.commit()
-    #   self.logger.info("Database created successfully!")
-    # except sqlite3.Error as e:
-    #   self.logger.error("Error creating database: %s", e)
+    self.logger.info("Creating database at the location : %s", self.db_url_map[DatabaseNames.DataverseDatabase])
+    engine = create_engine(self.db_url_map[DatabaseNames.DataverseDatabase], echo=True)
+    DatabaseModelBase.metadata.create_all(engine)
 
-  def insert_data(self, data: dict[str, Any], table_name: str) -> Document:
+  def insert_model(self, data_model: Type[UploadModel | ConfigModel | ProjectModel]) -> None:
     self.logger.info("Populating document with data: %s in database: %s",
-                     data,
-                     db_name)
-    # with couchdb(self.username,
-    #              self.password,
-    #              url=self.url,
-    #              connect=True) as client:
-    #   pasta_db = client[db_name]
-    #   document = None
-    #   try:
-    #     document = pasta_db.create_document(data, throw_on_exists=True)
-    #   except CloudantDatabaseException as e:
-    #     self.logger.error("Error creating document: %s", e)
-    #   return document
-    try:
-      with sqlite3.connect(self.db_path) as conn:
-        cur = conn.cursor()
-        query = "INSERT INTO movie(title, year, score) VALUES(?, ?, ?)"
-        cur.executemany(query, data)
-        conn.commit()
-    except sqlite3.Error as e:
-      print(e)
+                     data_model,
+                     "config")
+    engine = create_engine(self.db_url_map[DatabaseNames.DataverseDatabase], echo=True)
+    model = self.to_orm_converter_map[type(data_model)](data_model)
+    with Session(engine) as session:
+      session.add_all([model])
+      session.commit()
+    return
 
-  def get_document(self, document_id: str, db_name: str) -> Document:
-    """
-    Retrieves a document from the database based on the provided document ID.
+  def get_model(self, model_id: int, db_name: DatabaseNames,
+                model_type: Type[Union[UploadModel, ConfigModel, ProjectModel]]) -> BaseModel:
+    self.logger.info("Retrieving data model with id: %s from database: %s, type: %s", model_id, db_name, model_type)
+    if not model_id:
+      raise log_and_create_error(self.logger, DatabaseError, "Model ID cannot be empty!")
+    engine = create_engine(self.db_url_map[db_name], echo=True)
+    with Session(engine) as session:
+      if db_model := session.get(self.model_mapping[model_type], model_id):
+        return self.to_base_model_converter_map[type(db_model)](db_model)
+      else:
+        raise log_and_create_error(self.logger, DatabaseError, "Model not found!")
 
-    Args:
-        db_name (str): The name of the database.
-        document_id (str): The ID of the document to retrieve.
+  def get_projects(self, model_id: int, db_name: DatabaseNames) -> Sequence[Any]:
+    self.logger.info("Retrieving data model with id: %s from database: %s", model_id, db_name)
+    if not model_id:
+      raise log_and_create_error(self.logger, DatabaseError, "Model ID cannot be empty!")
+    engine = create_engine(self.db_url_map[db_name], echo=True)
+    statement = (select(DatabaseOrmMainModel, DatabaseOrmPropertiesModel)
+                 .join(DatabaseOrmPropertiesModel, DatabaseOrmMainModel.id == DatabaseOrmPropertiesModel.id)
+                 .where(DatabaseOrmMainModel.type == "x0"))
+    with Session(engine) as session:
+      results = [(x[0], x[1]) for x in session.execute(statement).fetchall()]
+      grouped_results = [(key, [i[1] for i in group]) for key, group in groupby(results, key=lambda x: x[0])]
+      return [DatabaseOrmAdapter.get_project_model(r) for r in grouped_results]
 
-    Returns:
-        Document: The retrieved document.
+  def update_model(self, db_name: DatabaseNames,
+                   data_model: Type[UploadModel, ConfigModel, ProjectModel]) -> None:
+    self.logger.info("Updating data model with id: %s in database: %s, type: %s", data_model.id, db_name,
+                     type(data_model))
+    if not data_model.id:
+      raise log_and_create_error(self.logger, DatabaseError, "Model ID cannot be empty!")
+    engine = create_engine(self.db_url_map[db_name], echo=True)
+    with Session(engine) as session:
+      db_model = self.to_orm_converter_map[type(data_model)](data_model)
+      if not (session.get(type(db_model),
+                          db_model.id)):
+        raise log_and_create_error(self.logger, DatabaseError, "Model does not exist in database!")
+      session.merge(db_model)
+      session.commit()
 
-    Raises:
-        DatabaseError: If the document ID is empty or if an error occurs during retrieval.
-
-    """
-    self.logger.info("Retrieving document with id: %s from database: %s", document_id, db_name)
-    if not document_id:
-      raise log_and_create_error(self.logger, DatabaseError, "Document ID cannot be empty!")
-    with couchdb(self.username,
-                 self.password,
-                 url=self.url,
-                 connect=True) as client:
-      pasta_db = client[db_name]
-      document = None
-      try:
-        document = pasta_db[document_id]
-      except KeyError as e:
-        self.logger.error("Error retrieving document: %s", e)
-      return document
-
-  def update_document(self, data: dict[str, Any], db_name: str) -> None:
-    """
-    Updates a document in the database with the provided data.
-    Make sure to use the `_id` and `_rev` keys in the data to identify the document to update otherwise a new document will be created.
-
-    Args:
-        db_name (str): The name of the database.
-        data (dict[str, Any]): The data to update the document with.
-    """
-    self.logger.info("Updating document with data: %s in database: %s", data, db_name)
-    with self.update_lock:
-      with couchdb(self.username,
-                   self.password,
-                   url=self.url,
-                   connect=True) as client:
-        pasta_db = client[db_name]
-        with Document(pasta_db, data['_id']) as document:
-          for key, value in data.items():
-            if key not in ['_id', '_rev']:
-              document[key] = value
-
-  def add_view(self,
-               db_name: str,
-               design_document_name: str,
-               view_name: str,
-               map_func: str,
-               reduce_func: str | None = None) -> None:
-    """
-    Adds a view to the specified design document in the database.
-
-    Args:
-        db_name (str): The name of the database.
-        design_document_name (str): The name of the design document.
-        view_name (str): The name of the view.
-        map_func (str): The map function for the view.
-        reduce_func (str, optional): The reduce function for the view. Defaults to None.
-
-    Raises:
-        ValueError: If design_document_name, view_name, or map_func is None.
-
-    Examples:
-        # Add a view with a map function
-        add_view("my_design_doc", "my_view", "function(doc) { emit(doc._id, 1); }")
-
-        # Add a view with a map and reduce function
-        add_view("my_design_doc", "my_view", "function(doc) { emit(doc.name, doc.age); }", "_count")
-    """
-    self.logger.info("Adding view: %s to design document: %s, map_func: %s, reduce_func: %s in database: %s",
-                     view_name,
-                     design_document_name,
-                     map_func,
-                     reduce_func,
-                     db_name)
-    if design_document_name is None or view_name is None or map_func is None:
-      raise log_and_create_error(self.logger, DatabaseError,
-                                 "Design document name, view name, and map function cannot be empty!")
-    with couchdb(self.username,
-                 self.password,
-                 url=self.url,
-                 connect=True) as client:
-      pasta_db = client[db_name]
-      with DesignDocument(pasta_db, design_document_name) as design_doc:
-        design_doc.add_view(view_name, map_func, reduce_func)
-
-  def get_view(self,
-               db_name: str,
-               design_document_name: str,
-               view_name: str) -> View:
-    """
-    Retrieves a view from the design document.
-
-    Explanation:
-        This method retrieves a view from the specified design document.
-        It connects to the CouchDB instance, selects the appropriate database,
-        and retrieves the view from the design document.
-
-    Args:
-        db_name (str): The name of the database.
-        design_document_name (str): The name of the design document.
-        view_name (str): The name of the view.
-
-    Raises:
-        ValueError: If the design document name or view name is empty.
-
-    Returns:
-        View: The retrieved view.
-    """
-    self.logger.info("Retrieving view: %s from design document: %s in database: %s",
-                     view_name,
-                     design_document_name,
-                     db_name)
-    if design_document_name is None or view_name is None:
-      raise log_and_create_error(self.logger, DatabaseError, "Design document name, view name cannot be empty!")
-    with couchdb(self.username,
-                 self.password,
-                 url=self.url,
-                 connect=True) as client:
-      pasta_db = client[db_name]
-      with DesignDocument(pasta_db, design_document_name) as design_doc:
-        return design_doc.get_view(view_name)
-
-  def get_view_results(self,
-                       db_name: str,
-                       design_document_name: str,
-                       view_name: str,
-                       map_func: str | None = None,
-                       reduce_func: str | None = None) -> list[dict[str, Any]]:
-    """
-    Gets the results of a view from the specified design document in the database.
-
-    Args:
-        db_name (str): The name of the database.
-        design_document_name (str): The name of the design document.
-        view_name (str): The name of the view.
-        map_func (str, optional): The map function for the view. Defaults to None.
-        reduce_func (str, optional): The reduce function for the view. Defaults to None.
-
-    Raises:
-        ValueError: If design_document_name or view_name is None.
-
-    Returns:
-        list[dict[str, Any]]: The results of the view as a list of dictionaries.
-
-    Examples:
-        # Get results from a view without map and reduce functions
-        results = get_view_results("my_design_doc", "my_view")
-
-        # Get results from a view with map and reduce functions
-        results = get_view_results("my_design_doc", "my_view", "function(doc) { emit(doc._id, 1); }", "_count")
-    """
-    self.logger.info("Getting view results: %s from design document: %s, map_func: %s, reduce_func: %s in database: %s",
-                     view_name,
-                     design_document_name,
-                     map_func,
-                     reduce_func,
-                     db_name)
-    if design_document_name is None or view_name is None:
-      raise log_and_create_error(self.logger, DatabaseError, "Design document name and view name cannot be empty!")
-    with couchdb(self.username,
-                 self.password,
-                 url=self.url,
-                 connect=True) as client:
-      pasta_db = client[db_name]
-      results: list[dict[str, Any]] = []
-      with DesignDocument(pasta_db, design_document_name) as design_doc:
-        view = View(design_doc, view_name, map_func, reduce_func)
-        results.extend(result['value'] for result in view.result)
-        return results
-
-  def get_paginated_view_results(self,
-                                 db_name: str,
-                                 design_document_name: str,
-                                 view_name: str,
-                                 limit: int = 10,
-                                 start_key: int | None = None,
-                                 start_key_doc_id: str | None = None) -> list[dict[str, Any]]:
-    """
-    Retrieves paginated view results.
-
-    Args:
-        db_name (str): The name of the database.
-        design_document_name (str): The name of the design document.
-        view_name (str): The name of the view.
-        limit (int, optional): The maximum number of results to retrieve. Defaults to 10.
-        start_key (int | None, optional): The starting key for pagination. Defaults to None.
-        start_key_doc_id (str | None, optional): The starting key document ID for pagination. Defaults to None.
-
-    Raises:
-        DatabaseError: If design_document_name or view_name is None.
-
-    Returns:
-        list[dict[str, Any]]: The paginated view results.
-    """
-    self.logger.info(
-      "Retrieving paginated view results, View: %s from design document: %s, limit: %s, start_key_doc_id: %s, start_key: %s in database: %s",
-      view_name,
-      design_document_name,
-      limit,
-      start_key_doc_id,
-      start_key,
-      db_name)
-    params: dict[str, Any] = {
-      "limit": limit,
-      "descending": True,
-    }
-    if start_key_doc_id:
-      params["startkey_docid"] = start_key_doc_id
-    if start_key:
-      params["startkey"] = start_key
-    if design_document_name is None or view_name is None:
-      raise log_and_create_error(self.logger, DatabaseError, "Design document name and view name cannot be empty!")
-    with couchdb(self.username,
-                 self.password,
-                 url=self.url,
-                 connect=True) as client:
-      pasta_db = client[db_name]
-      with DesignDocument(pasta_db, design_document_name) as design_doc:
-        result = Result(
-          design_doc.get_view(view_name),
-          **params
-        )
-        return result[:limit]
-
-  def create_query_index(self,
-                         db_name: str,
-                         index_name: str,
-                         index_type: str = "json",
-                         fields: list[dict[str, str]] | list[str] | None = None) -> None:
-    """
-    Creates a query index in database with the specified name, type, and fields.
-
-    Args:
-        db_name (str): The name of the database.
-        index_name (str): The name of the index to be created.
-        index_type (str, optional): The type of the index. Defaults to "json".
-        fields (list[dict[str, str]] | list[str] | None, optional): The fields to be included in the index. Defaults to None.
-
-    Raises:
-        DatabaseError: If index_name or fields are None.
-
-    Examples:
-        create_query_index("index1", "json", [{"name": "field1", "type": "asc"}])
-    """
-
-    self.logger.info("Creating query index, name: %s, index_type: %s, fields: %s in database: %s",
-                     index_name,
-                     index_type,
-                     fields,
-                     db_name)
-    if index_name is None or fields is None:
-      raise log_and_create_error(self.logger, DatabaseError,
-                                 "Index name and fields cannot be empty!")
-    with couchdb(self.username,
-                 self.password,
-                 url=self.url,
-                 connect=True) as client:
-      pasta_db = client[db_name]
-      if index_name in [index.name for index in pasta_db.get_query_indexes()]:
-        self.logger.warning("Index already exists: %s", index_name)
-        return
-      pasta_db.create_query_index(index_name=index_name,
-                                  index_type=index_type,
-                                  fields=fields)
-
-  def get_paginated_upload_model_query_results(self,
-                                               db_name: str,
-                                               filter_term: str | None = None,
-                                               filter_fields: list[str] | None = None,
-                                               bookmark: str | None = None,
-                                               limit: int = 10) -> dict[str, Any]:
-    """
-    Gets paginated upload model query results based on the provided filter criteria.
-
-    Args:
-        db_name (str): The name of the database.
-        filter_term (str | None, optional): The filter term to search for. Defaults to None.
-        filter_fields (list[str] | None, optional): The list of fields to apply the filter on. Defaults to None.
-        bookmark (str | None, optional): The bookmark for pagination. Defaults to None.
-        limit (int, optional): The maximum number of results to retrieve. Defaults to 10.
-
-    Returns:
-        dict[str, Any]: A dictionary containing the paginated query results. Contains the following keys: bookmark, docs. docs is a list of dictionaries representing the retrieved documents.
-
-    Raises:
-        DatabaseError: If filter_term or filter_fields is None.
-
-    Examples:
-        get_paginated_upload_model_query_results(filter_term="test", filter_fields=["project_name", "dataverse_url"])
-
-    Raises:
-        No specific exceptions are raised by this function.
-    """
-
-    self.logger.info(
-      "Getting paginated upload model query results: filter_term: %s, filter_fields: %s, bookmark: %s, limit: %s from database: %s",
-      filter_term,
-      ",".join(filter_fields) if filter_fields else None,
-      bookmark,
-      limit,
-      db_name)
-    selector: dict[str, Any] = {"data_type": "dataverse_upload"}
-    if filter_term and filter_fields:
-      filter_criteria = {"$or": [{field: {"$regex": f"(?i).*{filter_term}.*"}} for field in filter_fields]}
-      selector = {
-        "$and": [selector, filter_criteria]
-      }
-    with couchdb(self.username,
-                 self.password,
-                 url=self.url,
-                 connect=True) as client:
-      pasta_db = client[db_name]
-      query = Query(pasta_db,
-                    selector=selector,
-                    sort=[{
-                      "finished_date_time": "desc"
-                    }],
-                    limit=limit)
-      return query(bookmark=bookmark) if bookmark else query()
-
-  def get_view_results_by_id(self,
-                             db_name: str,
-                             design_document_name: str,
-                             view_name: str,
-                             document_id: str,
-                             map_func: str | None = None,
-                             reduce_func: str | None = None) -> Document | None:
-    """
-    Gets the result of a view for a specific document ID from the specified design document in the database.
-
-    Args:
-        db_name (str): The name of the database.
-        design_document_name (str): The name of the design document.
-        view_name (str): The name of the view.
-        document_id (str): The ID of the document.
-        map_func (str | None, optional): The map function for the view. Defaults to None.
-        reduce_func (str | None, optional): The reduce function for the view. Defaults to None.
-
-    Raises:
-        ValueError: If design_document_name, view_name, or document_id is None.
-
-    Returns:
-        Document | None: The result of the view for the specified document ID, or None if not found.
-
-    Examples:
-        # Get the result of a view for a specific document ID
-        result = get_view_results_by_id("my_design_doc", "my_view", "my_document_id")
-
-        # Get the result of a view for a specific document ID with map and reduce functions
-        result = get_view_results_by_id("my_design_doc", "my_view", "my_document_id", "function(doc) { emit(doc._id, 1); }", "_count")
-    """
-    self.logger.info(
-      "Getting view result: %s for id: %s from design document: %s, map_func: %s, reduce_func: %s from database: %s",
-      view_name,
-      document_id,
-      design_document_name,
-      map_func,
-      reduce_func,
-      db_name)
-    with couchdb(self.username,
-                 self.password,
-                 url=self.url,
-                 connect=True) as client:
-      if design_document_name is None or view_name is None or document_id is None:
-        raise log_and_create_error(self.logger, DatabaseError,
-                                   "Design document name, view name and document id cannot be empty!")
-      pasta_db = client[db_name]
-      with DesignDocument(pasta_db, design_document_name) as design_doc:
-        view = View(design_doc, view_name, map_func, reduce_func)
-        return view.result[document_id][0]['value']
+  def get_paginated_results(self, db_name: DatabaseNames,
+                            model_type: Type[Union[UploadModel, ConfigModel, ProjectModel]],
+                            filter_term: str | None = None,
+                            filter_fields: list[str] | None = None,
+                            page_number: int = 1,
+                            limit: int = 10) -> list[Type[Union[UploadModel, ConfigModel, ProjectModel]]]:
+    if page_number < 1:
+      raise log_and_create_error(self.logger, DatabaseError, "Page number cannot be less than 1!")
+    if limit < 1:
+      raise log_and_create_error(self.logger, DatabaseError, "Limit cannot be less than 1!")
+    engine = create_engine(self.db_url_map[db_name], echo=True)
+    query = select(self.model_mapping[model_type]).limit(limit).offset((page_number - 1) * limit)
+    with Session(engine) as session:
+      if filter_term:
+        query = query.filter(
+          or_(*[getattr(self.model_mapping[model_type], field).like(f"%{filter_term}%") for field in filter_fields]))
+      docs = session.execute(query).scalars().all()
+      return [self.to_base_model_converter_map[type(doc)](doc) for doc in docs]

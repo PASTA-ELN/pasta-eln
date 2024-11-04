@@ -3,7 +3,7 @@
 #  Copyright (c) 2024
 #
 #  Author: Jithu Murugan
-#  Filename: database_sqlalchemy_base.py
+#  Filename: database_orm_project_model.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
@@ -11,7 +11,7 @@
 #
 #
 #  Author: Jithu Murugan
-#  Filename: database_sqlalchemy_base.py
+#  Filename: database_orm_project_model.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
@@ -19,30 +19,25 @@
 #
 #
 #  Author: Jithu Murugan
-#  Filename: sqlalchemy_base.py
+#  Filename: database_orm_project_model.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
-from typing import Any, Generator
+from typing import Optional
 
-from sqlalchemy import JSON
-from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.orm import Mapped, mapped_column
+
+from pasta_eln.dataverse.database_sqlalchemy_base import DatabaseModelBase
 
 
-class DatabaseModelBase(DeclarativeBase):
-  type_annotation_map = {
-    dict[str, Any]: JSON
-  }
+class DatabaseOrmPropertiesModel(DatabaseModelBase):
+  """ Represents a project model object. """
 
-  def __iter__(self) -> Generator[tuple[str, Any], None, None]:
-    """
-    Iterates over the attributes of the object and yields key-value pairs.
+  __tablename__ = "properties"
 
-    Yields:
-        tuple[str, Any]: A tuple containing the attribute name and its corresponding value.
-
-    """
-    for key in self.get_table_columns():
-      yield key, getattr(self, key)
+  id: Mapped[str] = mapped_column(primary_key=True)
+  key: Mapped[str] = mapped_column(primary_key=True)
+  value: Mapped[Optional[str]]
+  unit: Mapped[Optional[str]]
 
   def get_table_columns(self) -> list[str]:
-    pass
+    return ["id", "key", "value", "unit"]
