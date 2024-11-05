@@ -487,7 +487,7 @@ class Backend(CLI_Mixin):
     Args:
       filePath (Path, str): path to the file to be tested
       extractorPath (Path, None): path to the directory with extractors
-      recipe (str): recipe in / separated
+      style (dict): style with a main-key that is / separated
       outputStyle (str): report in ['print','text','html'] including show images
       saveFig (str): save figure to...; if given stop testing after generating image
 
@@ -526,7 +526,7 @@ class Backend(CLI_Mixin):
       try:
         module  = importlib.import_module(pyFile[:-3])
         plt.clf()
-        content = module.use(filePath, {'main':''}, saveFig or None )
+        content = module.use(filePath, style, saveFig or None )
         if saveFig:
           return report
       except Exception:

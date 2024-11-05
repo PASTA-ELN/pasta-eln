@@ -26,13 +26,22 @@ class ElabFTWApi:
     self.url = url
     self.headers = {'Content-type': 'application/json', 'Authorization': apiKey, 'Accept': 'text/plain'}
     # test server
-    response = requests.get(f'{self.url}info', headers=self.headers, verify=self.verify_SSL, timeout=60)
-    if response.status_code == 200:
-      elabVersion = int(json.loads(response.content.decode('utf-8')).get('elabftw_version','0.0.0').split('.')[0])
-      if elabVersion<5:
-        print('**ERROR old elab-ftw version')
-    else:
-      print('**ERROR not an elab-ftw server')
+    try:
+      response = requests.get(f'{self.url}info', headers=self.headers, verify=self.verify_SSL, timeout=60)
+      if response.status_code == 200:
+        elabVersion = int(json.loads(response.content.decode('utf-8')).get('elabftw_version','0.0.0').split('.')[0])
+        if elabVersion<5:
+          print('**ERROR old elab-ftw version')
+      else:
+        print('**ERROR not an elab-ftw server')
+    except requests.ConnectionError:
+      try:
+        response = requests.get('https://www.google.com', headers={'Content-type': 'application/json'}, timeout=60)
+        print('**ERROR not an elab-ftw server')
+      except requests.ConnectionError:
+        print("**ERROR: cannot connect to google. You are not online")
+        self.url = ''
+        self.headers = {}
     return
 
 
@@ -90,7 +99,8 @@ class ElabFTWApi:
     url = f'{self.url}{entry}' if identifier==-1 else f'{self.url}{entry}/{identifier}'
     response = requests.get(url, headers=self.headers, verify=self.verify_SSL, timeout=60)
     if response.status_code == 200:
-      return json.loads(response.content.decode('utf-8'))
+      res = json.loads(response.content.decode('utf-8'))
+      return res if identifier == -1 else [res]
     print(f"**ERROR occurred in get of url {entry} / {identifier}")
     return [{}]
 
@@ -147,7 +157,7 @@ class ElabFTWApi:
     return -1
 
 
-  def upload(self, entryType:str, identifier:int, content:str='', fileName:str='', comment:str='') -> bool:
+  def upload(self, entryType:str, identifier:int, content:str='', fileName:str='', jsonContent:str='', comment:str='') -> int:
     """
     upload a file
 
@@ -156,10 +166,11 @@ class ElabFTWApi:
       identifier (int): elab's identifier
       content (str): base64 content, if given, it is used
       fileName (str): if content is not given, this filename is used
+      jsonContent (str): if given, this json is content is used to create a json file
       comment (str): optional comment
 
     Returns:
-      bool: success
+      int: id of upload; -1 on failure
     """
     data:dict[str,Any] = {}
     if content.startswith('<?xml'):
@@ -175,6 +186,8 @@ class ElabFTWApi:
         except Exception:
           mime = 'application/octet-stream'
         data = {'comment':comment, 'file': (Path(fileName).name, fIn.read(), mime)}
+    elif jsonContent:
+      data = {'comment':comment, 'file': ('do_not_change.json', jsonContent.encode(), 'text/json')}
     else:  #default for fast testing
       data = {'comment':comment, 'file': ('README.md', b'Read me!\n', 'text/markdown')}
     headers = copy.deepcopy(self.headers)
@@ -182,6 +195,65 @@ class ElabFTWApi:
     response = requests.post(f'{self.url}{entryType}/{identifier}/uploads', headers=headers,
                              files=data, verify=self.verify_SSL, timeout=60)
     if response.status_code == 201:
+      return int(response.headers['Location'].split('/')[-1])
+    print(f"**ERROR occurred in upload of url '{entryType}/{identifier}': {json.loads(response.content.decode('utf-8'))['description']}")
+    return -1
+
+
+  def upLoadUpdate(self, entryType:str, identifier:int, uploadID:int, content:dict[str,Any]={}) -> bool:
+    """
+    update something
+
+    Args:
+      entryType (str): entry to create, e.g. experiments, items, items_types
+      identifier (int): elabFTW's identifier
+      uploadID (int): identifier of the upload
+      content (dict): content to update
+
+    Returns:
+      bool: success of operation
+    """
+    print(f'{self.url}{entryType}/{identifier}/uploads/{uploadID}')
+    response = requests.patch(f'{self.url}{entryType}/{identifier}/uploads/{uploadID}', headers=self.headers,
+                              data=json.dumps(content), verify=self.verify_SSL, timeout=60)
+    return response.status_code == 200
+
+
+  def uploadDelete(self, entryType:str, identifier:int, uploadID:int) -> bool:
+    """
+    delete an upload
+
+    Args:
+      entryType (str): entryType to create, e.g. experiments, items, items_types
+      identifier (int): elabFTW's identifier
+      uploadID (int): identifier of the upload
+
+    Returns:
+      bool: success of operation
+    """
+    response = requests.delete(f'{self.url}{entryType}/{identifier}/uploads/{uploadID}', headers=self.headers, verify=self.verify_SSL, timeout=60)
+    if response.status_code == 204:
       return True
-    print(f"**ERROR occurred in touch of url '{entryType}/{identifier}': {json.loads(response.content.decode('utf-8'))['description']}")
+    print(f"**ERROR occurred in upload delete of url {entryType}/{identifier}/uploads/{uploadID}")
     return False
+
+
+  def download(self, entryType:str, identifier:int, elabData:dict[str,str]) -> str:
+    """ Download a file, aka previous upload
+
+    Args:
+      entryType (str): entryType to create, e.g. experiments, items, items_types
+      identifier (int): elabFTW's identifier
+      elabData (dict): elabFTW's data of the upload
+
+    Returns:
+      str: downloaded content str or byte-array
+    """
+    url = f"{self.url}{entryType}/{identifier}/uploads/{elabData['id']}?format='binary'"
+    response = requests.get(url, headers=self.headers, verify=self.verify_SSL, timeout=60)
+    if response.status_code == 200:
+      if elabData["real_name"]== "do_not_change.json":
+        return json.loads(response.content.decode('utf-8'))
+      print('**ERROR I do not know what to do')
+    print(elabData,response.status_code, url)
+    return ''

@@ -26,6 +26,7 @@ Overview
    install
    userstory
    dodonts
+   verify
    faqs
    extractors
    data_hierarchy_configuration

@@ -33,7 +33,7 @@ class TestStringMethods(unittest.TestCase):
     # do elab stuff
     self.be = Backend('research')
     sync = Pasta2Elab(self.be, 'research')
-    sync.pasta2elab()
+    sync.sync()
     return
 
 

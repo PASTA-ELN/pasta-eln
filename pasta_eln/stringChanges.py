@@ -68,7 +68,7 @@ def markdownEqualizer(text:str) -> str:
   Returns:
     str: output str
   """
-  if isinstance(text, tuple): 
+  if isinstance(text, tuple):
     text=text[0]
   return re.sub(r'(^|\n)(#+)', r'\1##\2', text.strip())
 

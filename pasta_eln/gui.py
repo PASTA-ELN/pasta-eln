@@ -14,6 +14,13 @@ from PySide6.QtWidgets import QApplication, QFileDialog, QMainWindow  # pylint: 
 from qt_material import apply_stylesheet  # of https://github.com/UN-GCPDS/qt-material
 
 from pasta_eln import __version__
+from .backend import Backend
+from .fixedStringsJson import shortcuts, CONF_FILE_NAME
+from .guiCommunicate import Communicate
+from .guiStyle import Action, ScrollMessageBox, showMessage, widgetAndLayout
+from .inputOutput import exportELN
+from .miscTools import restart, updateAddOnList
+from .elabFTWsync import Pasta2Elab
 # from pasta_eln.GUI.dataverse.config_dialog import ConfigDialog
 # from pasta_eln.GUI.dataverse.main_dialog import MainDialog
 from .GUI.body import Body
@@ -22,12 +29,6 @@ from .GUI.config import Configuration
 from .GUI.form import Form
 from .GUI.projectGroup import ProjectGroup
 from .GUI.sidebar import Sidebar
-from .backend import Backend
-from .fixedStringsJson import shortcuts, CONF_FILE_NAME
-from .guiCommunicate import Communicate
-from .guiStyle import Action, ScrollMessageBox, showMessage, widgetAndLayout
-from .inputOutput import exportELN
-from .miscTools import restart, updateAddOnList
 from .GUI.palette import Palette
 os.environ['QT_API'] = 'pyside6'
 
@@ -179,8 +180,8 @@ class MainWindow(QMainWindow):
         fConf.write(json.dumps(self.backend.configuration, indent=2))
       restart()
     elif command[0] is Command.SYNC:
-      report = self.comm.backend.replicateDB()
-      showMessage(self, 'Report of syncronization', report, style='QLabel {min-width: 450px}')
+      sync = Pasta2Elab(self.backend)
+      sync.sync()
     elif command[0] is Command.DATAHIERARCHY:
       # Jithu's code: comment out for now
       # dataHierarchyForm = DataHierarchyEditorDialog(self.comm.backend.db)

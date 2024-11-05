@@ -390,8 +390,8 @@ def addDocDetails(widget:QWidget, layout:QLayout, key:str, value:Any, dataHierar
     labelL.addWidget(QLabel(f'{key}: '), alignment=Qt.AlignmentFlag.AlignTop)
     text = QTextEdit()
     text.setMarkdown(markdownEqualizer(value))
-    bgColor = widget.comm.palette.get('secondaryDark', 'background-color')
-    fgColor = widget.comm.palette.get('secondaryText', 'color')
+    bgColor = widget.comm.palette.get('secondaryDark', 'background-color') # type: ignore[attr-defined]
+    fgColor = widget.comm.palette.get('secondaryText', 'color')             # type: ignore[attr-defined]
     text.setStyleSheet(f"QTextEdit {{ border: none; padding: 0px; {bgColor} {fgColor}}}")
     text.document().setTextWidth(labelW.width())
     if hasattr(widget, 'rescaleTexts'):
@@ -405,7 +405,7 @@ def addDocDetails(widget:QWidget, layout:QLayout, key:str, value:Any, dataHierar
     docID = ""
     if len(dataHierarchyItems)==1 and 'list' in dataHierarchyItems[0] and dataHierarchyItems[0]['list'] and \
         not isinstance(dataHierarchyItems[0]['list'], list):                #choice among docType
-      table  = widget.comm.backend.db.getView('viewDocType/'+dataHierarchyItems[0]['list'])
+      table  = widget.comm.backend.db.getView('viewDocType/'+dataHierarchyItems[0]['list']) # type: ignore[attr-defined]
       names= list(table[table.id==value[0]]['name'])
       if len(names)==1:    # default find one item that we link to
         docID = value[0]
@@ -444,5 +444,5 @@ def clickLink(widget:QWidget, label:str, docID:str) -> None:
     docID (str): docID to which to link
   """
   logging.debug('used link on %s|%s',label,docID)
-  widget.comm.changeDetails.emit(docID)
+  widget.comm.changeDetails.emit(docID)   # type: ignore[attr-defined]
   return

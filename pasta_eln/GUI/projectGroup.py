@@ -12,7 +12,7 @@ from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QFileDialog,
   QLineEdit, QMessageBox, QVBoxLayout  # pylint: disable=no-name-in-module
 # from cloudant.client import CouchDB
 from ..guiCommunicate import Communicate
-from ..guiStyle import IconButton, Label, TextButton, showMessage, widgetAndLayout
+from ..guiStyle import IconButton, Label, TextButton, showMessage, widgetAndLayout, widgetAndLayoutGrid
 from ..miscTools import restart
 
 
@@ -34,69 +34,103 @@ class ProjectGroup(QDialog):
     self.setMinimumWidth(1000)
     mainL = QVBoxLayout(self)
     Label('Project group', 'h1', mainL)
-    _, topbarL = widgetAndLayout('H', mainL, spacing='m')
+    contentW, contentL = widgetAndLayout('H', mainL, spacing='m')
+
+    formW, formL = widgetAndLayoutGrid(contentL, spacing='m')
     self.selectGroup = QComboBox()
     self.selectGroup.addItems(self.configuration['projectGroups'].keys())
     self.selectGroup.currentTextChanged.connect(self.changeProjectGroup)
-    topbarL.addWidget(self.selectGroup)
-    TextButton('New',         self, [Command.NEW],       topbarL)
-    TextButton('Fill remote', self, [Command.FILL],      topbarL)
-    TextButton('Create QR',   self, [Command.CREATE_QR], topbarL)
-    TextButton('Check All',   self, [Command.CHECK],     topbarL)
-    self.projectGroupName = QLineEdit('')
-    self.projectGroupName.hide()
-    mainL.addWidget(self.projectGroupName)
-    _, bodyL = widgetAndLayout('H', mainL)
-    #local
-    localW = QGroupBox('Local credentials')
-    localL = QFormLayout(localW)
-    self.userNameL = QLineEdit('')
-    self.userNameL.setValidator(QRegularExpressionValidator("[\\w.]{5,}"))
-    localL.addRow('User name', self.userNameL)
-    self.passwordL = QLineEdit('')
-    self.passwordL.setValidator(QRegularExpressionValidator("\\S{5,}"))
-    self.passwordL.setEchoMode(QLineEdit.EchoMode.PasswordEchoOnEdit)
-    localL.addRow('Password', self.passwordL)
-    self.databaseL = QLineEdit('')
-    self.databaseL.setValidator(QRegularExpressionValidator("\\w{5,}"))
-    localL.addRow('Database', self.databaseL)
-    pathW, pathL = widgetAndLayout('H', spacing='s')
-    self.pathL = QLineEdit('')
-    pathL.addWidget(self.pathL, stretch=5)
-    if platform.system()=='Windows':
-      self.pathL.setValidator(QRegularExpressionValidator(r"[\\/~][\\w\\\\\\/:\.~]{5,}"))
-    else:
-      self.pathL.setValidator(QRegularExpressionValidator(r"[\\/~][\\w\\/]{5,}"))
-    IconButton('fa5.folder-open', self, [Command.OPEN_DIR], pathL, 'Folder to save data in')
-    localL.addRow('Path', pathW)
-    bodyL.addWidget(localW)
-    #remote
-    remoteW = QGroupBox('Remote credentials')
-    remoteL = QFormLayout(remoteW)
-    self.userNameR = QLineEdit('')
-    self.userNameR.setValidator(QRegularExpressionValidator("[\\w.]{5,}"))
-    remoteL.addRow('User name', self.userNameR)
-    self.passwordR = QLineEdit('')
-    self.passwordR.setValidator(QRegularExpressionValidator("\\S{5,}"))
-    self.passwordR.setEchoMode(QLineEdit.EchoMode.PasswordEchoOnEdit)
-    remoteL.addRow('Password', self.passwordR)
-    self.databaseR = QLineEdit('')
-    self.databaseR.setValidator(QRegularExpressionValidator("\\w{5,}"))
-    remoteL.addRow('Database', self.databaseR)
-    self.serverR = QLineEdit('')
-    self.serverR.setValidator(QRegularExpressionValidator("http:\\/\\/(?:[0-9]{1,3}\\.){3}[0-9]{1,3}:5984"))
-    remoteL.addRow('Server', self.serverR)
-    bodyL.addWidget(remoteW)
+    formL.addWidget(self.selectGroup, 0, 0)
+    newButton = TextButton('New',      self, [Command.NEW])
+    formL.addWidget(newButton, 0, 1)
+    delButton = TextButton('Delete',   self, [Command.DEL])
+    formL.addWidget(delButton, 0, 2)
+
+    self.directoryLabel = QLabel('---')
+    formL.addWidget(self.directoryLabel, 1, 0)
+    row1Button = TextButton('Change',   self, [Command.CHANGE_DIR])
+    formL.addWidget(row1Button, 1, 2)
+
+    self.addOnLabel = QLabel('-*-')
+    formL.addWidget(self.addOnLabel, 2, 0)
+    row2Button = TextButton('Change',   self, [Command.CHANGE_ADDON])
+    formL.addWidget(row2Button, 2, 2)
+
+    self.serverLabel = QLineEdit('-eee--')
+    formL.addWidget(self.serverLabel, 3, 0)
+    row1Button = TextButton('Test',   self, [Command.TEST_SERVER])
+    formL.addWidget(row1Button, 3, 2)
+
+    # Add information on API KEY
+
+    self.apiKeyLabel = QLineEdit('-*aaaa-')
+    formL.addWidget(self.addOnLabel, 4, 0)
+    row2Button = TextButton('Test',   self, [Command.TEST_APIKEY])
+    formL.addWidget(row2Button, 4, 2)
+
+
+
+    # TextButton('New',         self, [Command.NEW],       topbarL)
+    # TextButton('Fill remote', self, [Command.FILL],      topbarL)
+    # TextButton('Create QR',   self, [Command.CREATE_QR], topbarL)
+    # TextButton('Check All',   self, [Command.CHECK],     topbarL)
+    # self.projectGroupName = QLineEdit('')
+    # self.projectGroupName.hide()
+    # mainL.addWidget(self.projectGroupName)
+    # _, bodyL = widgetAndLayout('H', mainL)
+    # #local
+    # localW = QGroupBox('Local credentials')
+    # localL = QFormLayout(localW)
+    # self.userNameL = QLineEdit('')
+    # self.userNameL.setValidator(QRegularExpressionValidator("[\\w.]{5,}"))
+    # localL.addRow('User name', self.userNameL)
+    # self.passwordL = QLineEdit('')
+    # self.passwordL.setValidator(QRegularExpressionValidator("\\S{5,}"))
+    # self.passwordL.setEchoMode(QLineEdit.EchoMode.PasswordEchoOnEdit)
+    # localL.addRow('Password', self.passwordL)
+    # self.databaseL = QLineEdit('')
+    # self.databaseL.setValidator(QRegularExpressionValidator("\\w{5,}"))
+    # localL.addRow('Database', self.databaseL)
+    # pathW, pathL = widgetAndLayout('H', spacing='s')
+    # self.pathL = QLineEdit('')
+    # pathL.addWidget(self.pathL, stretch=5)
+    # if platform.system()=='Windows':
+    #   self.pathL.setValidator(QRegularExpressionValidator(r"[\\/~][\\w\\\\\\/:\.~]{5,}"))
+    # else:
+    #   self.pathL.setValidator(QRegularExpressionValidator(r"[\\/~][\\w\\/]{5,}"))
+    # IconButton('fa5.folder-open', self, [Command.OPEN_DIR], pathL, 'Folder to save data in')
+    # localL.addRow('Path', pathW)
+    # bodyL.addWidget(localW)
+    # #remote
+    # remoteW = QGroupBox('Remote credentials')
+    # remoteL = QFormLayout(remoteW)
+    # self.userNameR = QLineEdit('')
+    # self.userNameR.setValidator(QRegularExpressionValidator("[\\w.]{5,}"))
+    # remoteL.addRow('User name', self.userNameR)
+    # self.passwordR = QLineEdit('')
+    # self.passwordR.setValidator(QRegularExpressionValidator("\\S{5,}"))
+    # self.passwordR.setEchoMode(QLineEdit.EchoMode.PasswordEchoOnEdit)
+    # remoteL.addRow('Password', self.passwordR)
+    # self.databaseR = QLineEdit('')
+    # self.databaseR.setValidator(QRegularExpressionValidator("\\w{5,}"))
+    # remoteL.addRow('Database', self.databaseR)
+    # self.serverR = QLineEdit('')
+    # self.serverR.setValidator(QRegularExpressionValidator("http:\\/\\/(?:[0-9]{1,3}\\.){3}[0-9]{1,3}:5984"))
+    # remoteL.addRow('Server', self.serverR)
+    # bodyL.addWidget(remoteW)
+
     #image
     self.image = QLabel()
-    bodyL.addWidget(self.image)
+    img = qrcode.make('Hello World!', error_correction=qrcode.constants.ERROR_CORRECT_M)
+    pixmap = QPixmap.fromImage(ImageQt(img).scaledToWidth(200))
+    self.image.setPixmap(pixmap)
+    contentL.addWidget(self.image)
 
     #final button box
     buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)
-    buttonBox.addButton('Save encrypted', QDialogButtonBox.ButtonRole.AcceptRole)
     buttonBox.clicked.connect(self.closeDialog)
     mainL.addWidget(buttonBox)
-    self.selectGroup.currentTextChanged.emit(self.configuration['defaultProjectGroup']) #emit to fill initially
+    # self.selectGroup.currentTextChanged.emit(self.configuration['defaultProjectGroup']) #emit to fill initially
 
 
   def closeDialog(self, btn:TextButton) -> None:
@@ -157,7 +191,7 @@ class ProjectGroup(QDialog):
       self.databaseR.setText('')
       self.pathL.setText('')
       self.serverR.setText('')
-    elif command[0] is Command.FILL:
+    # elif command[0] is Command.FILL:
       # contentFile = QFileDialog.getOpenFileName(self, "Load remote credentials", str(Path.home()), '*.key')[0]
       # with open(contentFile, encoding='utf-8') as fIn:
       #   content = json.loads( passwordDecrypt(bytes(fIn.read(), 'UTF-8')) )
@@ -165,22 +199,21 @@ class ProjectGroup(QDialog):
       #   self.passwordR.setText(content['password'])
       #   self.databaseR.setText(content['database'])
       #   self.serverR.setText(content['Server'])
-      pass
-    elif command[0] is Command.CREATE_QR:
-      if self.projectGroupName.isHidden():
-        configname = self.selectGroup.currentText()
-      else:
-        configname = self.projectGroupName.text()
-      qrCode = {"configname": configname, "credentials":{"server":self.serverR.text(), \
-          "username":self.userNameR.text(), "password":self.passwordR.text(), "database":self.databaseR.text()}}
-      img = qrcode.make(json.dumps(qrCode), error_correction=qrcode.constants.ERROR_CORRECT_M)
-      pixmap = QPixmap.fromImage(ImageQt(img).scaledToWidth(200))
-      self.image.setPixmap(pixmap)
-    elif command[0] is Command.CHECK:
-      self.checkEntries()
-    elif command[0] is Command.OPEN_DIR:
-      if dirName := QFileDialog.getExistingDirectory(self, 'Choose directory to save data', str(Path.home())):
-        self.pathL.setText(dirName)
+    # elif command[0] is Command.CREATE_QR:
+    #   if self.projectGroupName.isHidden():
+    #     configname = self.selectGroup.currentText()
+    #   else:
+    #     configname = self.projectGroupName.text()
+    #   qrCode = {"configname": configname, "credentials":{"server":self.serverR.text(), \
+    #       "username":self.userNameR.text(), "password":self.passwordR.text(), "database":self.databaseR.text()}}
+    #   img = qrcode.make(json.dumps(qrCode), error_correction=qrcode.constants.ERROR_CORRECT_M)
+    #   pixmap = QPixmap.fromImage(ImageQt(img).scaledToWidth(200))
+    #   self.image.setPixmap(pixmap)
+    # elif command[0] is Command.CHECK:
+    #   self.checkEntries()
+    # elif command[0] is Command.OPEN_DIR:
+    #   if dirName := QFileDialog.getExistingDirectory(self, 'Choose directory to save data', str(Path.home())):
+    #     self.pathL.setText(dirName)
     else:
       print("**ERROR projectGroup unknown:",command)
     return
@@ -254,8 +287,9 @@ class ProjectGroup(QDialog):
 
 class Command(Enum):
   """ Commands used in this file """
-  NEW       = 1
-  FILL      = 2
-  CREATE_QR = 3
-  CHECK     = 4
-  OPEN_DIR  = 5
+  NEW          = 1
+  DEL          = 2
+  CHANGE_DIR   = 3
+  CHANGE_ADDON = 4
+  TEST_SERVER  = 5
+  TEST_APIKEY  = 6
