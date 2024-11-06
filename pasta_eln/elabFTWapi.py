@@ -212,6 +212,17 @@ class ElabFTWApi:
     return -1
 
 
+  def purgeExperimentsItems(self) -> None:
+    """ Remove all documents and items on server """
+    for entityType in {'experiments','items'}:
+      response = requests.get(f'{self.url}{entityType}?archived=on', headers=self.headers, verify=self.verify_SSL, timeout=60)
+      for identifier in [i['id'] for i in json.loads(response.content.decode('utf-8'))]:
+        response = requests.delete(f'{self.url}{entityType}/{identifier}', headers=self.headers, verify=self.verify_SSL, timeout=60)
+        if response.status_code != 204:
+          print(f'**ERROR purge delete {entityType}: {identifier}')
+    return
+
+
   def upLoadUpdate(self, entryType:str, identifier:int, uploadID:int, content:dict[str,Any]={}) -> bool:
     """
     update something

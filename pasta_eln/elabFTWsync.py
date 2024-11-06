@@ -14,7 +14,7 @@ from .elabFTWapi import ElabFTWApi
 class Pasta2Elab:
   """ Allow syncing to elabFTW server"""
 
-  def __init__(self, backend:Backend, projectGroup:str=''):
+  def __init__(self, backend:Backend, projectGroup:str='', purge:bool=False):
     '''
     initiate an elab instance to allow for syncing: save data-hierarchy information
     - cannot save pasta's measurement data hierarchy in any other docTypes; hence, makes no sense to save any data hierarchy
@@ -33,6 +33,8 @@ class Pasta2Elab:
     self.projectGroup = projectGroup
     self.api = ElabFTWApi(self.backend.configuration['projectGroups'][self.projectGroup]['remote']['url'],
                           self.backend.configuration['projectGroups'][self.projectGroup]['remote']['key'])
+    if purge:
+      self.api.purgeExperimentsItems()
     self.docID2elabID:dict[str,tuple[int,bool]] = {}
     self.qtDocument = QTextDocument()   #used for converting html <-> md
     return
@@ -108,6 +110,7 @@ class Pasta2Elab:
     """
     # get this content: check if it changed
     docClient   = self.backend.db.getDoc(node.id)
+    docClient['dateSync'] = datetime.now().isoformat()
     print('>>>DOC_CLIENT sync&modified', docClient['dateSync'], docClient['dateModified'])
     # pull from server: content and other's client content
     entityType = 'experiments' if self.docID2elabID[node.id][1] else 'items'
@@ -117,8 +120,9 @@ class Pasta2Elab:
       docOther = self.api.download(entityType, self.docID2elabID[node.id][0],
                                    [i for i in uploads if i['real_name']=="do_not_change.json"][0])
     else:
-      docOther = {'name':'_', 'tags':[], 'comment':''}
-    print('>>>DOC_OTHER sync&modified', docOther.get('dateSync','-------'), docOther.get('dateModified','-------'))
+      docOther = {'name':'_', 'tags':[], 'comment':'', 'dateSync':datetime.fromisoformat('2000-01-02').isoformat()+'.0000',
+                  'dateModified':datetime.fromisoformat('2000-01-01').isoformat()+'.0000'}
+    print('>>>DOC_OTHER sync&modified', docOther.get('dateSync'), docOther.get('dateModified'))
 
     # merge 1: compare server content and doc and update later with changes
     flagServerChange = False
@@ -137,13 +141,46 @@ class Pasta2Elab:
         print('other change', k,v, docOther[k], type(v))
     if flagServerChange:
       docOther['dateModified'] = datetime.now().isoformat()
-    #  merge 2: gui    # TODO
-    # if docOther['dateModified'] != docClient['dateModified'] or \
-    #    docOther['dateSync']     != docClient['dateSync']:
-    #   #gui
-    flagUpdateServer = True
-    flagUpdateClient = False
-    docMerged = copy.deepcopy(docClient)
+    #  merge 2
+    pattern = '%Y-%m-%dT%H:%M:%S.%f'
+    # Case 1 straight update from client to server: only client updated and server not changed
+    if datetime.strptime(docClient['dateModified'], pattern) > datetime.strptime(docClient['dateSync'], pattern) and \
+       datetime.strptime(docOther['dateModified'], pattern)  < datetime.strptime(docOther['dateSync'], pattern):
+      print('** CASE 1 **')
+      flagUpdateServer = True
+      flagUpdateClient = False
+      docMerged = copy.deepcopy(docClient)
+    # Case 2 straight update from server to client: only others was updated / server itself was not updated, client not changed
+    if datetime.strptime(docClient['dateModified'], pattern) < datetime.strptime(docClient['dateSync'], pattern) and \
+         datetime.strptime(docOther['dateModified'], pattern) < datetime.strptime(docOther['dateSync'], pattern) and \
+         datetime.strptime(docOther['dateSync'], pattern)     < datetime.strptime(docOther['dateSync'], pattern):
+      print('** CASE 2 **')
+      flagUpdateServer = False
+      flagUpdateClient = True
+      docMerged = copy.deepcopy(docOther)
+    # Case 3 straight update from server to client: only server updated, client not changed
+    if datetime.strptime(docClient['dateModified'], pattern) < datetime.strptime(docClient['dateSync'], pattern) and \
+         datetime.strptime(docOther['dateModified'], pattern) > datetime.strptime(docOther['dateSync'], pattern):
+      print('** CASE 3 **')
+      flagUpdateServer = True
+      flagUpdateClient = True
+      docMerged = copy.deepcopy(docOther)
+    # Case 4 no change: nothing changed
+    if datetime.strptime(docClient['dateModified'], pattern) < datetime.strptime(docClient['dateSync'], pattern) and \
+         datetime.strptime(docOther['dateModified'], pattern) < datetime.strptime(docOther['dateSync'], pattern):
+      print('** CASE 4 **')
+      flagUpdateServer = False
+      flagUpdateClient = False
+      docMerged = {}
+    # Case 5 both are updated: merge: both changed -> GUI
+    if datetime.strptime(docClient['dateModified'], pattern) < datetime.strptime(docClient['dateSync'], pattern) and \
+         datetime.strptime(docOther['dateModified'], pattern) < datetime.strptime(docOther['dateSync'], pattern):
+      print('** CASE 5 **')
+
+    # Case X: else
+    # else:
+    #   #TODO more complicated
+    #   pass
     docMerged['dateSync'] = datetime.now().isoformat()
     print('>>>MERGE TIME', docMerged['dateSync'])
     # THE REST IS MOSTLY DONE
@@ -214,6 +251,8 @@ class Pasta2Elab:
     Returns:
       dict: elabFTW entry
     """
+    if not doc:
+      raise ValueError('Cannot convert / process empty document')
     image     = doc.pop('image') if 'image' in doc else ''
     title     = doc.pop('name')
     bodyMD    = ''
