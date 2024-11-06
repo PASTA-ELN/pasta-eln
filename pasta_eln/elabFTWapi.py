@@ -104,21 +104,32 @@ class ElabFTWApi:
     print(f"**ERROR occurred in get of url {entry} / {identifier}")
     return [{}]
 
-  def update(self, entry:str, identifier:int, content:dict[str,Any]={}) -> bool:
+  def update(self, entryType:str, identifier:int, content:dict[str,Any]={}) -> bool:
     """
     update something
 
     Args:
-      entry (str): entry to create, e.g. experiments, items, items_types
+      entryType (str): entryType to create, e.g. experiments, items, items_types
       identifier (int): elabFTW's identifier
       content (dict): content to update
 
     Returns:
       bool: success of operation
     """
-    response = requests.patch(f'{self.url}{entry}/{identifier}', headers=self.headers,
+    # tags = content.pop('tags',[])
+    #you can only create one tag at a time:
+    # curl -kv -X POST -H "Authorization: apiKey4Test" -H "Content-Type:application/json" -d '{"tag": "my tag"}' https://elab.local:3148/api/v2/experiments/509/tags
+    response = requests.patch(f'{self.url}{entryType}/{identifier}', headers=self.headers,
                               data=json.dumps(content), verify=self.verify_SSL, timeout=60)
-    return response.status_code == 200
+    if response.status_code != 200:
+      return False
+    # separate tags handling
+    # response = requests.get(f'{self.url}{entryType}/{identifier}/tags', headers=self.headers, verify=self.verify_SSL, timeout=60)
+    # for tag in tags:
+    #   response = requests.post(f'{self.url}{entryType}/{identifier}/tags', headers=self.headers,
+    #                             data=json.dumps({'tag':tag}), verify=self.verify_SSL, timeout=60)
+    return response.status_code == 201
+
 
   def delete(self, entry:str, identifier:int) -> bool:
     """
@@ -136,6 +147,7 @@ class ElabFTWApi:
       return True
     print(f"**ERROR occurred in delete of url {entry}")
     return False
+
 
   def touch(self, entry:str, content:dict[str,Any]={}) -> int:
     """
@@ -257,3 +269,27 @@ class ElabFTWApi:
       print('**ERROR I do not know what to do')
     print(elabData,response.status_code, url)
     return ''
+
+
+# TO TEST API
+
+# New that works
+# print('\nItems types',json.dumps(self.api.read('items_types'), indent=2))
+# self.api.delete('items_types/10')
+
+# OLD ---
+# print(json.dumps(crud(backend, projectGroup, 'items_types/4'), indent=2))
+# #print(crud(backend, projectGroup, 'items_types/4', 'update', {"body":"some json string"}))
+# url = 'experiments/1'  #full detail
+# print('\nExperiment1',json.dumps(crud(backend, projectGroup, url), indent=2))
+# url = 'info'  #version number
+# print('\nINFO',json.dumps(crud(backend, projectGroup, url), indent=2))
+# url = 'experiments'  #summary
+# print('\nExperiments',json.dumps(crud(backend, projectGroup, url), indent=2))
+# url = 'items'  #summary
+# print('\nItems',json.dumps(crud(backend, projectGroup, url), indent=2))
+# url = 'items_types'  #all types incl. default
+# crud(backend, projectGroup, url, 'create', {"title": "Go22Go"})
+# print(crud(backend, projectGroup, f'{url}/5', 'update', {"color":"#aabbaa"}))
+# print(json.dumps(crud(backend, projectGroup, f'{url}/5'), indent=2))
+# print('\nItemTypes',json.dumps(crud(backend, projectGroup, url), indent=2))

@@ -116,9 +116,23 @@ class Pasta2Elab:
     docOther = self.api.download(entityType, self.docID2elabID[node.id][0],
                                  [i for i in uploads if i['real_name']=="do_not_change.json"][0])
     print('>>>DOC_OTHER sync&modified', docOther.get('dateSync','-------'), docOther.get('dateModified','-------'))
-    # merge logic -> update client: maximum 2
-    # TODO
-    print(json.dumps(docClient, indent=2))
+
+    # merge 1: compare server content and doc and update later with changes
+    flagServerChange = False
+    for k,v in docServer.items():
+      if isinstance(v, (dict, str)):
+        if v!=docOther[k]:
+          flagServerChange = True
+          print('str change', k,v, docOther[k])
+          docOther[k] = docServer[k]
+      else:
+        print('other change', k,v, docOther[k], type(v))
+    if flagServerChange:
+      docOther['dateModified'] = datetime.now().isoformat()
+    #  merge 2: gui    # TODO
+    # if docOther['dateModified'] != docClient['dateModified'] or \
+    #    docOther['dateSync']     != docClient['dateSync']:
+    #   #gui
     flagUpdateServer = True
     flagUpdateClient = False
     docMerged = copy.deepcopy(docClient)
@@ -135,6 +149,7 @@ class Pasta2Elab:
     # send doc (merged version) to server everything
     if flagUpdateServer:
       content, image = self.doc2elab(copy.deepcopy(docMerged))
+      print(content['tags'],'STEFFEN TAGS')
       self.api.update(entityType, self.docID2elabID[node.id][0], content)
       # create links
       _ = [self.api.createLink(entityType, self.docID2elabID[node.id][0], 'experiments' if self.docID2elabID[node.id][1] else 'items', self.docID2elabID[i.id][0])
@@ -157,26 +172,36 @@ class Pasta2Elab:
         self.api.upload(entityType, self.docID2elabID[node.id][0], fileName=self.backend.basePath/docMerged['branch'][0]['path'], comment='raw data')
     return True
 
+
   def elab2doc(self,elab:dict[str,Any]) -> tuple[dict[str,Any], list[Any]]:
     """ Convert an elabFTW dict-html entry into a PASTA doc
+
     Args:
       elab (dict): elabFTW entry
+
     Returns:
       dict: PASTA doc
-
-    todo: metadata
     """
-    print(json.dumps(elab, indent=2))
+    # print(json.dumps(elab, indent=2))
     self.qtDocument.setHtml(elab.get('body',''))
-    doc = {'name': elab.get('title',''), 'tags':elab.get('tags',''), 'dateCreated':elab.get('created_at',''),
-           'dateModified':elab.get('modified_at',''), 'comment':self.qtDocument.toMarkdown()}
-    print(json.dumps(doc, indent=2))
+    comment = self.qtDocument.toMarkdown()
+    if comment.endswith('\n\n'):
+      comment = comment[:-2]  #also handle contents
+    # User is not allowed to change dates: ignore these dates from the server
+    doc = {'name': elab.get('title',''), 'tags':elab.get('tags','').split('|'), 'comment':comment}
+    metadata = json.loads(elab.get('metadata'))
+    # doc['metaVendor'] = metadata.get('metaVendor',{})  # USERS IS NOT ALLOWED TO CHANGE THESE
+    # doc['metaUser']   = metadata.get('metaUser',{})
+    doc |= metadata.get('__',{})                         # USERS CAN CHANGE THIS ON ELAB
     return doc, elab['uploads']
+
 
   def doc2elab(self, doc:dict[str,Any]) -> tuple[dict[str,Any], str]:
     """ Convert a PASTA doc into an elabFTW dict-html entry
+
     Args:
       doc (dict): PASTA doc
+
     Returns:
       dict: elabFTW entry
     """
@@ -192,32 +217,11 @@ class Pasta2Elab:
     modified_at=doc.pop('dateModified')
     tags       =doc.pop('tags')
     doc        = {k:v for k,v in doc.items() if k not in {'id','user','client','externalId','type','gui','branch','shasum','qrCodes'}}
-    metadata  = doc.pop('metaVendor') if 'metaVendor' in doc else {}
-    metadata |= doc.pop('metaUser')   if 'metaUser' in doc else {}
+    metadata = {'metaVendor': doc.pop('metaVendor') if 'metaVendor' in doc else {}}
+    metadata['metaUser']    = doc.pop('metaUser')   if 'metaUser' in doc else {}
     if doc:
+      doc.pop('dateSync')
       metadata |= {'__':doc}
+    #TODO clarify how tags should be encoded
     elab = {'body':body, 'title':title, 'metadata':json.dumps(metadata), 'tags':tags, 'created_at':created_at, 'modified_at':modified_at}
     return elab, image
-
-
-
-# New that works
-# print('\nItems types',json.dumps(self.api.read('items_types'), indent=2))
-# self.api.delete('items_types/10')
-
-# OLD ---
-# print(json.dumps(crud(backend, projectGroup, 'items_types/4'), indent=2))
-# #print(crud(backend, projectGroup, 'items_types/4', 'update', {"body":"some json string"}))
-# url = 'experiments/1'  #full detail
-# print('\nExperiment1',json.dumps(crud(backend, projectGroup, url), indent=2))
-# url = 'info'  #version number
-# print('\nINFO',json.dumps(crud(backend, projectGroup, url), indent=2))
-# url = 'experiments'  #summary
-# print('\nExperiments',json.dumps(crud(backend, projectGroup, url), indent=2))
-# url = 'items'  #summary
-# print('\nItems',json.dumps(crud(backend, projectGroup, url), indent=2))
-# url = 'items_types'  #all types incl. default
-# crud(backend, projectGroup, url, 'create', {"title": "Go22Go"})
-# print(crud(backend, projectGroup, f'{url}/5', 'update', {"color":"#aabbaa"}))
-# print(json.dumps(crud(backend, projectGroup, f'{url}/5'), indent=2))
-# print('\nItemTypes',json.dumps(crud(backend, projectGroup, url), indent=2))

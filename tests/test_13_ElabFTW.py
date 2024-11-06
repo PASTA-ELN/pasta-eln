@@ -2,6 +2,7 @@
 """TEST using the FULL set of python-requirements: create the default example that all installations create and verify it thoroughly """
 import logging, warnings, unittest
 from pathlib import Path
+from PySide6.QtWidgets import QApplication
 from pasta_eln.backend import Backend
 from pasta_eln.elabFTWsync import Pasta2Elab
 
@@ -31,6 +32,7 @@ class TestStringMethods(unittest.TestCase):
     logging.info('Start test')
 
     # do elab stuff
+    _ = QApplication()
     self.be = Backend('research')
     sync = Pasta2Elab(self.be, 'research')
     sync.sync()
