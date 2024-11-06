@@ -113,17 +113,25 @@ class Pasta2Elab:
     entityType = 'experiments' if self.docID2elabID[node.id][1] else 'items'
     docServer, uploads = self.elab2doc(self.api.read(entityType, self.docID2elabID[node.id][0])[0])
     print('>>>DOC_SERVER', docServer)
-    docOther = self.api.download(entityType, self.docID2elabID[node.id][0],
-                                 [i for i in uploads if i['real_name']=="do_not_change.json"][0])
+    if [i for i in uploads if i['real_name']=="do_not_change.json"]:
+      docOther = self.api.download(entityType, self.docID2elabID[node.id][0],
+                                   [i for i in uploads if i['real_name']=="do_not_change.json"][0])
+    else:
+      docOther = {'name':'_', 'tags':[], 'comment':''}
     print('>>>DOC_OTHER sync&modified', docOther.get('dateSync','-------'), docOther.get('dateModified','-------'))
 
     # merge 1: compare server content and doc and update later with changes
     flagServerChange = False
     for k,v in docServer.items():
       if isinstance(v, (dict, str)):
-        if v!=docOther[k]:
+        if v != docOther[k]:
           flagServerChange = True
           print('str change', k,v, docOther[k])
+          docOther[k] = docServer[k]
+      elif isinstance(v, list):
+        if set(v) != set(docOther[k]):
+          flagServerChange = True
+          print('list change', k,v, docOther[k])
           docOther[k] = docServer[k]
       else:
         print('other change', k,v, docOther[k], type(v))
@@ -149,7 +157,6 @@ class Pasta2Elab:
     # send doc (merged version) to server everything
     if flagUpdateServer:
       content, image = self.doc2elab(copy.deepcopy(docMerged))
-      print(content['tags'],'STEFFEN TAGS')
       self.api.update(entityType, self.docID2elabID[node.id][0], content)
       # create links
       _ = [self.api.createLink(entityType, self.docID2elabID[node.id][0], 'experiments' if self.docID2elabID[node.id][1] else 'items', self.docID2elabID[i.id][0])
@@ -188,12 +195,14 @@ class Pasta2Elab:
     if comment.endswith('\n\n'):
       comment = comment[:-2]  #also handle contents
     # User is not allowed to change dates: ignore these dates from the server
-    doc = {'name': elab.get('title',''), 'tags':elab.get('tags','').split('|'), 'comment':comment}
-    metadata = json.loads(elab.get('metadata'))
+    tags = [] if elab.get('tags','') is None else elab.get('tags','').split('|')
+    doc = {'name': elab.get('title',''), 'tags':tags, 'comment':comment}
+    metadata = {} if elab.get('metadata') is None else json.loads(elab.get('metadata'))
     # doc['metaVendor'] = metadata.get('metaVendor',{})  # USERS IS NOT ALLOWED TO CHANGE THESE
     # doc['metaUser']   = metadata.get('metaUser',{})
     doc |= metadata.get('__',{})                         # USERS CAN CHANGE THIS ON ELAB
-    return doc, elab['uploads']
+    return doc, \
+      elab['uploads'] if 'uploads' in elab else []
 
 
   def doc2elab(self, doc:dict[str,Any]) -> tuple[dict[str,Any], str]:

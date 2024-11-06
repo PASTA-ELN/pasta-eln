@@ -116,18 +116,18 @@ class ElabFTWApi:
     Returns:
       bool: success of operation
     """
-    # tags = content.pop('tags',[])
+    tags = content.pop('tags',[])
     #you can only create one tag at a time:
     # curl -kv -X POST -H "Authorization: apiKey4Test" -H "Content-Type:application/json" -d '{"tag": "my tag"}' https://elab.local:3148/api/v2/experiments/509/tags
     response = requests.patch(f'{self.url}{entryType}/{identifier}', headers=self.headers,
                               data=json.dumps(content), verify=self.verify_SSL, timeout=60)
-    if response.status_code != 200:
+    if response.status_code not in {200, 400}:
       return False
     # separate tags handling
-    # response = requests.get(f'{self.url}{entryType}/{identifier}/tags', headers=self.headers, verify=self.verify_SSL, timeout=60)
-    # for tag in tags:
-    #   response = requests.post(f'{self.url}{entryType}/{identifier}/tags', headers=self.headers,
-    #                             data=json.dumps({'tag':tag}), verify=self.verify_SSL, timeout=60)
+    response = requests.get(f'{self.url}{entryType}/{identifier}/tags', headers=self.headers, verify=self.verify_SSL, timeout=60)
+    for tag in tags:
+      response = requests.post(f'{self.url}{entryType}/{identifier}/tags', headers=self.headers,
+                                data=json.dumps({'tag':tag}), verify=self.verify_SSL, timeout=60)
     return response.status_code == 201
 
 
