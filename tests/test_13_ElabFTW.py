@@ -35,7 +35,8 @@ class TestStringMethods(unittest.TestCase):
     _ = QApplication()
     self.be = Backend('research')
     sync = Pasta2Elab(self.be, 'research')
-    sync.sync()
+    reports = sync.sync()
+    print(reports)
     return
 
 

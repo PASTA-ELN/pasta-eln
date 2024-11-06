@@ -40,17 +40,21 @@ class Pasta2Elab:
     return
 
 
-  def sync(self) -> None:
-    """ Main function """
+  def sync(self) -> list[tuple[str,int]]:
+    """ Main function
+
+    Returns:
+      list: list of merge cases
+    """
     if self.api.url:  #only when you are connected to web
       self.syncDocTypes()
       self.createIdDict()
       # sync nodes in parallel
+      reports = []
       for projID in self.backend.db.getView('viewDocType/x0')['id'].values:
         proj = self.backend.db.getHierarchy(projID)
-        # _ = [self.updateEntry(i) for i in PreOrderIter(proj)]
-        self.updateEntry(proj)
-    return
+        reports += [self.updateEntry(i) for i in PreOrderIter(proj)]
+    return reports
 
 
   def syncDocTypes(self) -> None:
@@ -95,7 +99,7 @@ class Pasta2Elab:
     return
 
 
-  def updateEntry(self, node:Node) -> bool:
+  def updateEntry(self, node:Node) -> tuple[str,int]:
     """ update an entry in elabFTW: all the logic goes here
         - myDesktop: sends content and the date when upload is made; if there is a change in modified time; the change is for real
         - server: gets document; if there is a difference between metadata.json and content: it was changed for real
@@ -106,9 +110,10 @@ class Pasta2Elab:
       node (Node): node to process
 
     Returns:
-      bool: success
+      tuple: node.id; merge case
     """
     # get this content: check if it changed
+    mergeCase = -1
     docClient   = self.backend.db.getDoc(node.id)
     if 'dateSync' not in docClient or not docClient['dateSync']:
       docClient['dateSync'] = datetime.fromisoformat('2000-01-03').isoformat()+'.0000'
@@ -148,7 +153,8 @@ class Pasta2Elab:
     # Case 1 straight update from client to server: only client updated and server not changed
     if datetime.strptime(docClient['dateModified'], pattern) > datetime.strptime(docClient['dateSync'], pattern) and \
        datetime.strptime(docOther['dateModified'], pattern)  < datetime.strptime(docOther['dateSync'], pattern):
-      print('** CASE 1 **')
+      mergeCase = 1
+      print(f'** MERGE CASE {mergeCase}')
       flagUpdateServer = True
       flagUpdateClient = False
       docMerged = copy.deepcopy(docClient)
@@ -156,28 +162,32 @@ class Pasta2Elab:
     if datetime.strptime(docClient['dateModified'], pattern) < datetime.strptime(docClient['dateSync'], pattern) and \
          datetime.strptime(docOther['dateModified'], pattern) < datetime.strptime(docOther['dateSync'], pattern) and \
          datetime.strptime(docOther['dateSync'], pattern)     < datetime.strptime(docOther['dateSync'], pattern):
-      print('** CASE 2 **')
+      mergeCase = 2
+      print(f'** MERGE CASE {mergeCase}')
       flagUpdateServer = False
       flagUpdateClient = True
       docMerged = copy.deepcopy(docOther)
     # Case 3 straight update from server to client: only server updated, client not changed
     if datetime.strptime(docClient['dateModified'], pattern) < datetime.strptime(docClient['dateSync'], pattern) and \
          datetime.strptime(docOther['dateModified'], pattern) > datetime.strptime(docOther['dateSync'], pattern):
-      print('** CASE 3 **')
+      mergeCase = 3
+      print(f'** MERGE CASE {mergeCase}')
       flagUpdateServer = True
       flagUpdateClient = True
       docMerged = copy.deepcopy(docOther)
     # Case 4 no change: nothing changed
     if datetime.strptime(docClient['dateModified'], pattern) < datetime.strptime(docClient['dateSync'], pattern) and \
          datetime.strptime(docOther['dateModified'], pattern) < datetime.strptime(docOther['dateSync'], pattern):
-      print('** CASE 4 **')
+      mergeCase = 4
+      print(f'** MERGE CASE {mergeCase}')
       flagUpdateServer = False
       flagUpdateClient = False
       docMerged = {}
     # Case 5 both are updated: merge: both changed -> GUI
     if datetime.strptime(docClient['dateModified'], pattern) > datetime.strptime(docClient['dateSync'], pattern) and \
        datetime.strptime(docOther['dateModified'], pattern) > datetime.strptime(docOther['dateSync'], pattern):
-      print('** CASE 5 **')
+      mergeCase = 5
+      print(f'** MERGE CASE {mergeCase}')
 
     # Case X: else
     # else:
@@ -216,7 +226,7 @@ class Pasta2Elab:
             and not docMerged['branch'][0]['path'].startswith('http') and \
             (self.backend.basePath/docMerged['branch'][0]['path']).name not in {i['real_name'] for i in existingUploads}:
         self.api.upload(entityType, self.docID2elabID[node.id][0], fileName=self.backend.basePath/docMerged['branch'][0]['path'], comment='raw data')
-    return True
+    return node.id, mergeCase
 
 
   def elab2doc(self,elab:dict[str,Any]) -> tuple[dict[str,Any], list[Any]]:
