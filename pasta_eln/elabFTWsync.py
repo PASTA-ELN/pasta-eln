@@ -110,7 +110,8 @@ class Pasta2Elab:
     """
     # get this content: check if it changed
     docClient   = self.backend.db.getDoc(node.id)
-    docClient['dateSync'] = datetime.now().isoformat()
+    if 'dateSync' not in docClient or not docClient['dateSync']:
+      docClient['dateSync'] = datetime.fromisoformat('2000-01-03').isoformat()+'.0000'
     print('>>>DOC_CLIENT sync&modified', docClient['dateSync'], docClient['dateModified'])
     # pull from server: content and other's client content
     entityType = 'experiments' if self.docID2elabID[node.id][1] else 'items'
@@ -120,7 +121,7 @@ class Pasta2Elab:
       docOther = self.api.download(entityType, self.docID2elabID[node.id][0],
                                    [i for i in uploads if i['real_name']=="do_not_change.json"][0])
     else:
-      docOther = {'name':'_', 'tags':[], 'comment':'', 'dateSync':datetime.fromisoformat('2000-01-02').isoformat()+'.0000',
+      docOther = {'name':'Untitled', 'tags':[], 'comment':'', 'dateSync':datetime.fromisoformat('2000-01-02').isoformat()+'.0000',
                   'dateModified':datetime.fromisoformat('2000-01-01').isoformat()+'.0000'}
     print('>>>DOC_OTHER sync&modified', docOther.get('dateSync'), docOther.get('dateModified'))
 
@@ -140,6 +141,7 @@ class Pasta2Elab:
       else:
         print('other change', k,v, docOther[k], type(v))
     if flagServerChange:
+      print('Server content changed from other')
       docOther['dateModified'] = datetime.now().isoformat()
     #  merge 2
     pattern = '%Y-%m-%dT%H:%M:%S.%f'
@@ -173,8 +175,8 @@ class Pasta2Elab:
       flagUpdateClient = False
       docMerged = {}
     # Case 5 both are updated: merge: both changed -> GUI
-    if datetime.strptime(docClient['dateModified'], pattern) < datetime.strptime(docClient['dateSync'], pattern) and \
-         datetime.strptime(docOther['dateModified'], pattern) < datetime.strptime(docOther['dateSync'], pattern):
+    if datetime.strptime(docClient['dateModified'], pattern) > datetime.strptime(docClient['dateSync'], pattern) and \
+       datetime.strptime(docOther['dateModified'], pattern) > datetime.strptime(docOther['dateSync'], pattern):
       print('** CASE 5 **')
 
     # Case X: else
