@@ -246,7 +246,7 @@ class Pasta2Elab:
     # User is not allowed to change dates: ignore these dates from the server
     tags = [] if elab.get('tags','') is None else elab.get('tags','').split('|')
     doc = {'name': elab.get('title',''), 'tags':tags, 'comment':comment}
-    metadata = {} if elab.get('metadata') is None else json.loads(elab.get('metadata'))
+    metadata = {} if elab.get('metadata') is None else json.loads(elab['metadata'])
     # doc['metaVendor'] = metadata.get('metaVendor',{})  # USERS IS NOT ALLOWED TO CHANGE THESE
     # doc['metaUser']   = metadata.get('metaUser',{})
     doc |= metadata.get('__',{})                         # USERS CAN CHANGE THIS ON ELAB

@@ -1,3 +1,4 @@
+# mypy: disable-error-code="arg-type"
 """ API for accessing an elabFTW server. That's API is inconvenient, complicated, ..."""
 import base64, json, copy, mimetypes
 from pathlib import Path
@@ -7,15 +8,15 @@ import requests  # only requirement; could be replaced with urllib to eliminate 
 class ElabFTWApi:
   """ API for accessing an elabFTW server. That's API is inconvenient, complicated, ..."""
 
-  def __init__(self, url:str='', apiKey:str=''):
+  def __init__(self, url:str='', apiKey:str='', verifySSL:bool=True):
     '''
     initiate an elab instance to allow for syncing
 
     Args:
       url (str): url
       apiKey (str): API key
+      veifySSL (bool): verify SSL certificate
     '''
-    self.verify_SSL = True
     if not url and not apiKey:
       url = input('Please enter the url: ').strip()
       url = url if url.startswith('htt') else f'https://{url}'
@@ -25,9 +26,10 @@ class ElabFTWApi:
       apiKey = input('Copy-paste the api-key: ').strip()
     self.url = url
     self.headers = {'Content-type': 'application/json', 'Authorization': apiKey, 'Accept': 'text/plain'}
+    self.param = {'headers':self.headers, 'verify':verifySSL, 'timeout':60}
     # test server
     try:
-      response = requests.get(f'{self.url}info', headers=self.headers, verify=self.verify_SSL, timeout=60)
+      response = requests.get(f'{self.url}info', **self.param)
       if response.status_code == 200:
         elabVersion = int(json.loads(response.content.decode('utf-8')).get('elabftw_version','0.0.0').split('.')[0])
         if elabVersion<5:
@@ -56,7 +58,7 @@ class ElabFTWApi:
     Returns:
       bool: success of operation
     """
-    response = requests.post(self.url+entry, headers=self.headers, verify=self.verify_SSL, timeout=60)
+    response = requests.post(self.url+entry, **self.param)
     print("**TODO", content)
     if response.status_code == 201:
       return True
@@ -77,8 +79,7 @@ class ElabFTWApi:
     Returns:
       bool: success of operation
     """
-    response = requests.post(f'{self.url}{entryType}/{identifier}/{targetType}_links/{linkTarget}',
-                             headers=self.headers, verify=self.verify_SSL, timeout=60)
+    response = requests.post(f'{self.url}{entryType}/{identifier}/{targetType}_links/{linkTarget}', **self.param)
     if response.status_code == 201:
       return True
     print(f"**ERROR occurred in create of url f'{self.url}{entryType}/{identifier}/{targetType}_links/{linkTarget}': {response.json}")
@@ -97,7 +98,7 @@ class ElabFTWApi:
       dict: content read
     """
     url = f'{self.url}{entry}' if identifier==-1 else f'{self.url}{entry}/{identifier}'
-    response = requests.get(url, headers=self.headers, verify=self.verify_SSL, timeout=60)
+    response = requests.get(url, **self.param)
     if response.status_code == 200:
       res = json.loads(response.content.decode('utf-8'))
       return res if identifier == -1 else [res]
@@ -117,17 +118,13 @@ class ElabFTWApi:
       bool: success of operation
     """
     tags = content.pop('tags',[])
-    #you can only create one tag at a time:
-    # curl -kv -X POST -H "Authorization: apiKey4Test" -H "Content-Type:application/json" -d '{"tag": "my tag"}' https://elab.local:3148/api/v2/experiments/509/tags
-    response = requests.patch(f'{self.url}{entryType}/{identifier}', headers=self.headers,
-                              data=json.dumps(content), verify=self.verify_SSL, timeout=60)
+    response = requests.patch(f'{self.url}{entryType}/{identifier}', data=json.dumps(content), **self.param)
     if response.status_code not in {200, 400}:
       return False
     # separate tags handling
-    response = requests.get(f'{self.url}{entryType}/{identifier}/tags', headers=self.headers, verify=self.verify_SSL, timeout=60)
+    response = requests.get(f'{self.url}{entryType}/{identifier}/tags', **self.param)
     for tag in tags:
-      response = requests.post(f'{self.url}{entryType}/{identifier}/tags', headers=self.headers,
-                                data=json.dumps({'tag':tag}), verify=self.verify_SSL, timeout=60)
+      response = requests.post(f'{self.url}{entryType}/{identifier}/tags', data=json.dumps({'tag':tag}), **self.param)
     return response.status_code == 201
 
 
@@ -142,7 +139,7 @@ class ElabFTWApi:
     Returns:
       bool: success of operation
     """
-    response = requests.delete(f'{self.url}{entry}/{identifier}', headers=self.headers, verify=self.verify_SSL, timeout=60)
+    response = requests.delete(f'{self.url}{entry}/{identifier}', **self.param)
     if response.status_code == 204:
       return True
     print(f"**ERROR occurred in delete of url {entry}")
@@ -160,8 +157,7 @@ class ElabFTWApi:
     Returns:
       int: elabFTW id
     """
-    response = requests.post(self.url+entry, headers=self.headers,
-                             data=json.dumps(content), verify=self.verify_SSL, timeout=60)
+    response = requests.post(self.url+entry, data=json.dumps(content), **self.param)
     if response.status_code == 201:
       return int(response.headers['Location'].split('/')[-1])
     if response.status_code == 400:
@@ -205,7 +201,7 @@ class ElabFTWApi:
     headers = copy.deepcopy(self.headers)
     del headers['Content-type'] #will automatically become 'multipart/form-data'
     response = requests.post(f'{self.url}{entryType}/{identifier}/uploads', headers=headers,
-                             files=data, verify=self.verify_SSL, timeout=60)
+                             files=data, verify=self.param['verify'], timeout=60)
     if response.status_code == 201:
       return int(response.headers['Location'].split('/')[-1])
     print(f"**ERROR occurred in upload of url '{entryType}/{identifier}': {json.loads(response.content.decode('utf-8'))['description']}")
@@ -215,9 +211,9 @@ class ElabFTWApi:
   def purgeExperimentsItems(self) -> None:
     """ Remove all documents and items on server """
     for entityType in {'experiments','items'}:
-      response = requests.get(f'{self.url}{entityType}?archived=on', headers=self.headers, verify=self.verify_SSL, timeout=60)
+      response = requests.get(f'{self.url}{entityType}?archived=on', **self.param)
       for identifier in [i['id'] for i in json.loads(response.content.decode('utf-8'))]:
-        response = requests.delete(f'{self.url}{entityType}/{identifier}', headers=self.headers, verify=self.verify_SSL, timeout=60)
+        response = requests.delete(f'{self.url}{entityType}/{identifier}', **self.param)
         if response.status_code != 204:
           print(f'**ERROR purge delete {entityType}: {identifier}')
     return
@@ -236,9 +232,9 @@ class ElabFTWApi:
     Returns:
       bool: success of operation
     """
-    print(f'{self.url}{entryType}/{identifier}/uploads/{uploadID}')
-    response = requests.patch(f'{self.url}{entryType}/{identifier}/uploads/{uploadID}', headers=self.headers,
-                              data=json.dumps(content), verify=self.verify_SSL, timeout=60)
+    url = f'{self.url}{entryType}/{identifier}/uploads/{uploadID}'
+    print(url)
+    response = requests.patch(url, data=json.dumps(content), **self.param)
     return response.status_code == 200
 
 
@@ -254,14 +250,14 @@ class ElabFTWApi:
     Returns:
       bool: success of operation
     """
-    response = requests.delete(f'{self.url}{entryType}/{identifier}/uploads/{uploadID}', headers=self.headers, verify=self.verify_SSL, timeout=60)
+    response = requests.delete(f'{self.url}{entryType}/{identifier}/uploads/{uploadID}', **self.param)
     if response.status_code == 204:
       return True
     print(f"**ERROR occurred in upload delete of url {entryType}/{identifier}/uploads/{uploadID}")
     return False
 
 
-  def download(self, entryType:str, identifier:int, elabData:dict[str,str]) -> str:
+  def download(self, entryType:str, identifier:int, elabData:dict[str,str]) -> dict[str,Any]:
     """ Download a file, aka previous upload
 
     Args:
@@ -273,13 +269,13 @@ class ElabFTWApi:
       str: downloaded content str or byte-array
     """
     url = f"{self.url}{entryType}/{identifier}/uploads/{elabData['id']}?format='binary'"
-    response = requests.get(url, headers=self.headers, verify=self.verify_SSL, timeout=60)
+    response = requests.get(url, **self.param)
     if response.status_code == 200:
       if elabData["real_name"]== "do_not_change.json":
         return json.loads(response.content.decode('utf-8'))
       print('**ERROR I do not know what to do')
     print(elabData,response.status_code, url)
-    return ''
+    return {}
 
 
 # TO TEST API
