@@ -1,175 +1,70 @@
 .. _install:
 
-Installation and Troubleshoot Instructions
-******************************************
+Installation and Troubleshooting Instructions
+=============================================
 
-WINDOWS
-=======
+Windows Installation
+--------------------
 
-Install python via Anaconda and then PASTA-ELN
-----------------------------------------------
+### Using Anaconda
 
-If you do not have Python installed, we recommend using Anaconda.
-1. Be sure that .NET version 3.5 is installed.
+1. Visit the Anaconda website at https://www.anaconda.com/download and download the installer.
+2. Run the installer and accept the default installation settings.
+3. Create a new environment named "PASTA-ELN" and select the Python 3.11 option.
+4. Click the "New" button to open the terminal and execute the following commands:
+   * `pip install pasta-eln`
+   * `pip install pasta-eln -U --no-dependencies` (if you encounter issues with 'aiohttp')
+   * `python -m pasta_eln.gui`
 
-   https://learn.microsoft.com/en-us/dotnet/framework/install/dotnet-35-windows
+### Using Default Python
 
-2. Go to https://www.anaconda.com/download
-3. Download installer and run install. Accept all defaults
-4. Create environment, e.g. PASTA-ELN and choose to install it with "Python 3.11..."
-5. Click on new green arrow button and open "Terminal"
-6. "pip install pasta-eln"
-7. "pip install pasta-eln -U --no-dependencies"
+If you prefer to install Python via the default installer:
 
-    - if it complains about 'aiohttp' missing "pip install aiohttp"
+1. Visit the Python website at https://www.python.org/downloads/windows/ and download the Windows installer for your architecture (likely 64-bit).
+2. Run the installer and select the option to "Add python.exe to PATH".
+3. Click "Install Now" to complete the installation.
 
-8. "python -m pasta_eln.gui" (make sure that you have administrator rights)
-
-
-Manual installation
-^^^^^^^^^^^^^^^^^^^
-
-If automatic installation fails
-1. Manually install couchdb https://docs.couchdb.org/en/stable/install/windows.html
-
-    - Version 3.3.3 was successfully tested
-    - During the setup use the username "admin" and remember to use a long password
-
-2. "pip install pasta-eln"
-3. Make sure that the configuration file is not present: Users\...\.pastaELN.json
-4. "python -m pasta_eln.installationTools install" and enter username and password
-5. "python -m pasta_eln.gui" and go to configuration-setup to test the installation
-    After the restart of the software, PASTA-ELN should be fully operational.
-
----
-
-Sometimes an older version of PASTA-ELN is being installed because of the child requirements not being correctly
-resolved. In this case you can force an update with
-
-.. code-block:: bash
-
-    pip install pasta-eln -U --no-dependencies
-
-
-CouchDB uninstallation
-^^^^^^^^^^^^^^^^^^^^^^^
-
-Sometimes, the couchdb installation can be quite persistent when removing
-1. Go to settings are remove CouchDB
-2. Go through the default places are remove CouchDB
-
-    - C:\Program Files\Apache CouchDB
-    - C:\Program Files 64\Apache CouchDB
-
-
-
-Install python via default python and then PASTA-ELN (not recommended)
-----------------------------------------------------------------------
-
-If you choose to install the default Python without Conda.
-1. Go to https://www.python.org/downloads/windows/
-2. Download "Windows installer" for your architecture, likely 64-bit.
-3. In the installer, click "Add python.exe to PATH" at the bottom of the window.
-4. Click "Install Now" in the middle of the window
-5. Close
-
-Recommendation
-^^^^^^^^^^^^^^
-
-Afterwards, we recommend that you install some nice-to-have packages and test these installations by using the command line tool CMD.exe:
+**Recommendation:** We recommend installing additional packages such as `matplotlib`, `pandas`, and `spyder` to enhance your Python environment. To test your installation, open the Command Prompt and execute the following commands:
 
 .. code-block:: bash
 
     pip install matplotlib pandas spyder
-    python.exe -c "import numpy as np;x = np.linspace(0,2*np.pi);y = np.sin(x);import matplotlib.pyplot as plt;plt.plot(x,y);plt.show()"
+    python -c "import numpy as np;x = np.linspace(0,2*np.pi);y = np.sin(x);import matplotlib.pyplot as plt;plt.plot(x,y);plt.show()"
 
+### Installing PASTA-ELN via Command Prompt
 
+1. Open the Command Prompt and execute the following commands:
+   * `pip install pasta-eln`
+   * `pip install pasta-eln -U --no-dependencies` (if you encounter issues with 'aiohttp')
+   * `python -m pasta_eln.gui`
 
+Linux Installation
+------------------
 
-LINUX
-=====
+1. Navigate to a folder of your choice (e.g., your home directory) and create a new virtual environment with the name `.venvPastaELN`.
+2. Activate the virtual environment by running `source .venvPastaELN/bin/activate`.
+3. Install PASTA-ELN by executing `pip install pasta-eln`.
+4. Run the PASTA-ELN graphical interface by executing `python -m pasta_eln.gui`.
 
-Requirement: add python packages
---------------------------------
+Troubleshooting
+---------------
 
-Generally, Python3 is installed in all Linux distributions. Sometimes, the package installer is missing. Hence, install it along with venv:
-
-.. code-block:: bash
-
-    sudo apt install python3-pip python3.10-venv
-
-Install PASTA-ELN
------------------
-
-You can install PASTA-ELN in your normal user-space, which is the easier path, or inside an environment, which is the safer path. If PASTA-ELN does not work in the normal user-space, install in in an environment.
-
-Install in user-space
-^^^^^^^^^^^^^^^^^^^^^
-In any folder,
+If the graphical interface does not open, you can execute the following command to determine the status:
 
 .. code-block:: bash
 
-    pip3 install pasta-eln
+    python -m pasta_eln.installationTools
 
-which typically can take some time. Afterwards, start PASTA-ELN with
-
-.. code-block:: bash
-
-    pastaELN
-
-which starts automatically the **setup** if no valid PASTA-ELN configuration is found. If the command does not start pastaELN, please use
+To start the setup of the requirements, execute:
 
 .. code-block:: bash
 
-    python -m pasta_eln.gui
+    python -m pasta_eln.installationTools install
 
-
-Install in environment
-^^^^^^^^^^^^^^^^^^^^^^
-
-Starting in a folder of your choice but we suggest the home-folder, create a virtual environment, for instance with the name .venvPasta. (The . will ensure that it is mostly hidden.)
+**Important:** Only execute the next step when setting up PASTA-ELN for the first time. To create the example dataset, execute:
 
 .. code-block:: bash
 
-    python3 -m venv .venvPastaELN
-    . .venvPastaELN/bin/activate
-    pip3 install pasta-eln
-    pastaELN
-    deactivate
+    python -m pasta_eln.installationTools example
 
-which typically can take some time and includes the **setup**. Afterwards, you can start pasta with
-
-.. code-block:: bash
-
-    pastaELN
-
-or
-
-.. code-block:: bash
-
-    python -m pasta_eln.gui
-
-Advanced notes if the normal setup did not succeed
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-If, for whatever reason, the graphical interface does not open, one can also execute
-
-.. code-block:: bash
-
-    pastaELN_Install
-
-to determine the status. To start the setup of the requirements, execute
-
-.. code-block:: bash
-
-    pastaELN_Install install
-
-**ONLY DO THE NEXT STEP WHEN YOU SETUP PASTA-ELN FOR THE FIRST TIME.**
-
-Finally, to create the example dataset, execute
-
-.. code-block:: bash
-
-    pastaELN_Install example
-
-Afterwards, the normal 'pastaELN' command should work and a desktop icon should be present.
+Afterwards, the normal 'pastaELN' command should work, and a desktop icon should be present.

@@ -1,51 +1,49 @@
 .. _dodonts:
 
-Guidelines for data management in PASTA-ELN
-*******************************************
+Guidelines for Data Management in Research
+******************************************
 
-There are a few guidelines that apply to research data management and storage. PASTA-ELN supports scientists in adhering to those ideas.
+Regardless of whether PASTA-ELN is used to manage ongoing research or to store existing data, it is crucial to establish a project structure during the planning stage. This involves defining and updating metadata definitions for the project, which may be inspired by agile project planning methodologies. By doing so, scientists can ensure that their data is organized in a logical and coherent manner, facilitating ease of access and comprehension.
 
-Plan and maintain a project structure
----------------------------------------
-Good research data management practices resemble those of the actual paper laboratory notebooks and aim to keep the entries structured and well-organized.
-
-Whether one uses PASTA-ELN with a task-based approach for ongoing research or to store existing data (:ref:`see user stories<Planning based research>`), it is helpful to decide on the project's structure during the planning stage. For this purpose, a scientist may update the metadata definitions of a project. The default project structure is inspired by agile project planning (:ref:`...<motivation>`).
-
-Data files and other entries should have self-explanatory names, comments and tags and possibly other metadata to describe their context. PASTA-ELN allows users to add tags to increase the search-ability of data. These practices make the data accessible and comprehensible for the author and other scientists in collaborative research projects.
-
-Do not delete data
-------------------
-
-Data should never be deleted because one could use that process to get to a particular result: if one deletes all data that show 'swans can be black', the result will be 'all swans are white'. Such deletion can cause misrepresentation of results and falsification of conclusions and, therefore, can be classified as scientific misconduct. Moreover, the deletion of data hinders the reproducibility of scientific studies.
-
-PASTA-ELN  has the "Hide" option, which only allows the user to hide data files and other items within the projects to achieve a better overview. As such, any data loss is prevented, as in any good ELN.
-
-Raw data is the source of truth
+Data Organization and Labelling
 -------------------------------
 
-Sometimes raw data is compressed to save disc space. For example, users convert Tif images to low-resolution Jpeg files because that saves storage. Those Jpeg files lack metadata that Tif images have - some vendors put 500 entries in Tif images. To omit such a drawback, one could separately save the Jpeg image and the associated metadata. However, the Jpeg format works with wavelets to save space, altering the image when zooming in. Compared to the original Tif images, Jpeg images do not allow for data analysis because the results are affected by those waves. To this end, PASTA-ELN extracts data, metadata, and image always from the raw images and discourages the use of jpeg.
+To ensure the accessibility and comprehensibility of data, files and entries should be assigned clear and descriptive names, accompanied by comments, tags, and other relevant metadata. PASTA-ELN enables users to add tags, thereby enhancing the searchability of data. By implementing these practices, scientists can guarantee that their data is easily understandable not only by themselves but also by their colleagues in collaborative research projects.
 
-Graphical output of the instrument software has little use
-----------------------------------------------------------
+Here is a rewritten version of the text:
 
-Software that is provided by the instrument manufacturer, and used during an experiment, often allows a scientist to save measurements as images or graphs. While this method is convenient for getting a fast overview of results, it is not helpful for publications, data analysis, etc., because it lacks the accuracy and 'provenance' of data. PASTA-ELN only extracts data and metadata from raw data files, not exported images.
+Retention of Data
+-----------------
 
-Exported data from instrument software is only the second-best option
----------------------------------------------------------------------
+It is essential to maintain data integrity by avoiding the deletion of research data. Deleting data can lead to the manipulation of results, falsification of conclusions, and ultimately, scientific misconduct. Furthermore, data deletion compromises the reproducibility of scientific studies, rendering them unreliable and unverifiable.
 
-Software that is provided by the instrument manufacturer also often allows a scientist to export data to the csv-format. Sometimes, there is no other option, and the scientist can only use that exported data that is still better than the output image or graph. However, one should always remember that the exported data files often contain pre-processed data instead of raw data, complicating data analysis. Moreover, the data files produced from an experiment often exclude the possibility of extracting and managing the corresponding metadata.
+PASTA-ELN offers a "Hide" function, which enables users to temporarily conceal data files and other items within a project, thereby maintaining a clear overview while preventing any loss of data. This approach adheres to the principles of a good Electronic Laboratory Notebook (ELN), ensuring the preservation of data and promoting transparent research practices.
 
-Reading and analyzing the raw binary files provides better input for the following data analysis because raw binary files contain the full accuracy of data, calibration, and other metadata settings. Thus, raw data allows the scientist to identify outliers, and trends, and have full freedom for its processing. PASTA aims to extract raw data from the data files, which is similar to MARBLE, the software for deciphering proprietary binary datafiles that scientists from IAS-9 and IEK-2 developed.
+Here is a rewritten version of the text with a more professional tone:
 
-Data in Excel files has advantages / disadvantages compared to .csv files
--------------------------------------------------------------------------
+Raw Data as the Foundation of Truth
+-----------------------------------
 
-Microsoft Excel is not scientific tool, however .xlsx and .csv are acceptable data formats as they use a high precision, compared to many .csv formats, that have less precision but allow the user to look into the file header. Moreover, .xls(x) files group experiments into different sheets which packages similar experiments into one file thereby increasing the context of each test resulting in convenience.
+In many cases, raw data is compressed or stored in formats that sacrifice metadata in order to conserve disk space. For example, images may be converted from high-resolution TIF files to lower-resolution JPEG files, which omit valuable metadata that TIF files contain. While this approach may seem efficient, it can lead to issues with data analysis, as the JPEG format alters the image when zoomed in, compromising its accuracy. To mitigate these problems, PASTA-ELN extracts data, metadata, and images from raw files, discouraging the use of compressed or secondary formats.
 
-Smaller topics:
----------------
+Limitations of Graphical Output
+-------------------------------
 
+Instrument software often provides a graphical interface for displaying measurements, which can be useful for gaining a quick overview of results. However, this approach has limitations when it comes to publications, data analysis, and other applications that require accurate and reliable data. Unlike raw data files, these graphical outputs lack the provenance and metadata necessary for rigorous analysis.
 
-- Note-taking apps like Microsoft One-Note are no replacements for ELNs: Note-taking apps do not lead to structured research data.
-- Personal information should not be inside public research data. European privacy legislation is pretty strict in that.
-- One should follow the simple rule: share as much as possible: procedures, metadata, etc.
+Exported Data: A Second-Best Option
+-----------------------------------
+
+While instrument software may allow researchers to export data in CSV format, this approach is not ideal. Exported data may contain pre-processed or modified data, which can complicate analysis and obscure the accuracy of the original measurements. Moreover, this approach often excludes the corresponding metadata, making it difficult to track the provenance of the data. In contrast, raw binary files contain the full accuracy of the data, along with calibration and metadata settings, providing a more reliable foundation for data analysis.
+
+Retaining Raw Data in Excel Files
+---------------------------------
+
+When it comes to data storage, Excel files (.xlsx and .xls) have both advantages and disadvantages compared to CSV files. While Excel files use high-precision data, they also group experiments into separate sheets, which can increase the context and convenience of the data. However, researchers should be aware that Excel is not a scientific tool, and data in Excel files should be treated with caution.
+
+Additional Considerations
+-------------------------
+
+* Note-taking apps, such as Microsoft OneNote, are not suitable substitutes for Electronic Laboratory Notebooks (ELNs). ELNs are designed to facilitate structured research data, while note-taking apps are better suited for personal notes and ideas.
+* Researchers should be mindful of the need to exclude personal information from public research data, ensuring compliance with European data protection legislation.
+* A key principle in data management is to **share as much as possible**: procedures, metadata, and other relevant information.

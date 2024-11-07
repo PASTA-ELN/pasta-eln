@@ -1,34 +1,30 @@
-How to fix errors that occur during verification
-************************************************
+Troubleshooting Verification Errors in PastaELN
+===============================================
 
-Obviously, verification errors should not occur. But bugs occur in all software. Since PastaELN is an open software, advanced users can repair the data structure of it. To do that, locate the pastaELN.db file in the root of your data structure and **make a backup**. Then open the .db file with a sqlite editor (for instance SQLiteBrowser)
+While PastaELN is designed to be reliable, errors can still occur. In such cases, advanced users can take steps to repair the data structure by modifying the underlying database file. **Before attempting any repairs, it is essential to create a backup of the pastaELN.db file** to prevent any potential data loss. The user can always manually inspect the database by opening the .db file with a sqlite editor (for instance SQLiteBrowser)
 
-For errors:
-===========
+Error Resolutions
+-----------------
 
-1. **ERROR Path of folder is non-unique" do the following**
+### 1. "ERROR: Path of folder is non-unique"
 
-    - open 'branches' table in database: use both ids to check if they indeed have same path
-    - open 'main' table in database: check if they are the same (you can use the name to filter both)
-    - choose worse document and delete it (see below), as there was likely a copy error.
-        to choose: check if data on harddisk can help determine which is better
-    - save deleted and remaining doc-ids in table as information might be helpful down the road
+1. Open the 'branches' table in the database using the sqlite editor (see above) and verify that the two affected IDs indeed point to the same path.
+2. Open the 'main' table and check if both IDs correspond to the same document, using the name as a filter.
+3. Identify the document with the lesser quality data and delete it. **Please note that this may require careful consideration to avoid data loss**.
+4. Record the deleted and remaining doc-IDs in the table, as this information may be useful for future reference.
 
-2. **ERROR File on harddisk but not DB**
+### 2. "ERROR: File on harddisk but not DB"
 
-    - Scan folder to find new data
+1. Perform a scan of the folder to locate any new data.
 
-3. **ERROR bch01: These files of database not on filesystem**
+### 3. "ERROR: bch01: These files of database not on filesystem"
 
-    - open 'branches' table and search for that path in branch:
-    - if indeed double AND if that docID is also present in other errors
+1. Open the 'branches' table and search for the affected path in the branch.
+2. If both IDs are affected and the docID is also present in other errors, delete the document.
 
-        - ERROR branch stack parent is bad:
-        - ERROR parent does not have corresponding path (remote)
+Deleting Documents
+------------------
 
-    - delete that document
+In most cases, errors occur due to document duplication. To resolve this, you can either use the serverActions API directly or write a small script to remove multiple documents.
 
-How to delete documents:
-========================
-
-Experience shows that the only error that occurs in Pasta is that documents got doubled. Hence, one has to be removed. To do that, use serverActions directly or write a small script to remove multiple.
+By following these guidelines, you can effectively troubleshoot and resolve verification errors in PastaELN, ensuring the accuracy and reliability of your results.
