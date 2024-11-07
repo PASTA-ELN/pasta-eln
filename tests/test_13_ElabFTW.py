@@ -32,7 +32,10 @@ class TestStringMethods(unittest.TestCase):
     logging.info('Start test')
 
     # do elab stuff
-    _ = QApplication()
+    try:
+      _ = QApplication()
+    except RuntimeError:
+      pass
     self.be = Backend('research')
     sync = Pasta2Elab(self.be, 'research')
     reports = sync.sync()
