@@ -177,7 +177,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       if text.startswith(CSS_STYLE):
         textDoc = QTextDocument()
         textDoc.setHtml(text)
-        _, heightDoc:int = textDoc.size().toTuple() # type: ignore
+        heightDoc:int = textDoc.size().toTuple()[1] # type: ignore
         height += int(heightDoc/self.lineSep)
       elif text:
         height += text.count('\n')+1
