@@ -1,7 +1,7 @@
-PASTA (adaPtive mAterials Science meTadatA) electronic lab notebook (ELN) | The favorite ELN for experimental scientists
-************************************************************************************************************************
+PASTA-ELN | The favorite ELN for experimental scientists
+********************************************************
 
-PASTA-ELN provides a streamlined and efficient solution for experimental scientists to manage and organize raw data alongside associated metadata. By leveraging extractors that automate the processing of raw measurement files, PASTA-ELN facilitates the seamless integration of thumbnails, data, and metadata into a centralized database. These extractors can be customized and shared by users, empowering researchers to tailor their workflows to their specific needs. :ref:`To read more ... for advanced users <addons>`.
+PASTA-ELN (adaPtive mAterials Science meTadatA - Electronic Lab Notebook) provides a streamlined and efficient solution for experimental scientists to manage and organize raw data alongside associated metadata. By leveraging extractors that automate the processing of raw measurement files, PASTA-ELN facilitates the seamless integration of thumbnails, data, and metadata into a centralized database. These extractors can be customized and shared by users, empowering researchers to tailor their workflows to their specific needs. :ref:`To read more ... for advanced users <addons>`.
 
 **Data Management Principles**: The raw data at the heart of scientific research must adhere to the FAIR principles (Findable, Accessible, Interoperable, and Reusable). By supporting these principles, PASTA-ELN enables researchers to efficiently locate and organize their data. Furthermore, PASTA-ELN encourages users to adhere to research data management guidelines, which are essential for ensuring the integrity and reproducibility of scientific findings. :ref:`which are given ... <dodonts>`.
 
