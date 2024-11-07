@@ -312,15 +312,15 @@ class Form(QDialog):
     """ Autosave comment to file """
     if self.comm.backend.configuration['GUI']['autosave'] == 'No':
       return
-    subContent = {'name':getattr(self, 'key_-name').text().strip(), 'tags':self.doc['tags']}
-    for key in self.allKeys:
-      if key in ['comment','content']:
-        subContent[key] = getattr(self, f'textEdit_{key}').toPlainText().strip()
-      elif key in self.skipKeys or not hasattr(self, f'key_{key}'):
-        continue
-      elif isinstance(getattr(self, f'key_{key}'), QLineEdit):
-        subContent[key] = getattr(self, f'key_{key}').text().strip()
-      # skip QCombobox items since cannot be sure that next from has them and they are easy to recreate
+    # subContent = {'name':getattr(self, 'key_-name').text().strip(), 'tags':self.doc['tags']}
+    # for key in self.allKeys:
+    #   if key in ['comment','content']:
+    #     subContent[key] = getattr(self, f'textEdit_{key}').toPlainText().strip()
+    #   elif key in self.skipKeys or not hasattr(self, f'key_{key}'):
+    #     continue
+    #   elif isinstance(getattr(self, f'key_{key}'), QLineEdit):
+    #     subContent[key] = getattr(self, f'key_{key}').text().strip()
+    # skip QCombobox items since cannot be sure that next from has them and they are easy to recreate
     if (Path.home()/'.pastaELN.temp').is_file():
       with open(Path.home()/'.pastaELN.temp', 'r', encoding='utf-8') as fTemp:
         content = json.loads(fTemp.read())

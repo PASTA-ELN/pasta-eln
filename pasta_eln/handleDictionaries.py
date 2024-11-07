@@ -1,5 +1,5 @@
 """Change the format of dictionaries"""
-import re, uuid, json, difflib, copy
+import re, uuid, json, difflib
 from typing import Any
 from datetime import datetime
 from .fixedStringsJson import SQLiteTranslation

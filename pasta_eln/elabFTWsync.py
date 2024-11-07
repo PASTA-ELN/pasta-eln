@@ -59,7 +59,7 @@ class Pasta2Elab:
 
 
   def syncDocTypes(self) -> None:
-    """ Syncronize document types between client and server; save datahierarchy to server """
+    """ Synchronize document types between client and server; save datahierarchy to server """
     #try body and metadata: compare, write
     docTypesElab  = {i['title']:i['id'] for i in self.api.read('items_types')}
     docTypesPasta = {i.capitalize() for i in self.backend.db.dataHierarchy('','') if not i.startswith('x')} | \
@@ -130,7 +130,8 @@ class Pasta2Elab:
       docOther = {'name':'Untitled', 'tags':[], 'comment':'', 'dateSync':datetime.fromisoformat('2000-01-02').isoformat()+'.0000',
                   'dateModified':datetime.fromisoformat('2000-01-01').isoformat()+'.0000'}
     print('>>>DOC_OTHER sync&modified', docOther.get('dateSync'), docOther.get('dateModified'))
-
+    docMerged:dict[str,Any] = {}
+    flagUpdateClient, flagUpdateServer = False, False
     # merge 1: compare server content and doc and update later with changes
     flagServerChange = False
     for k,v in docServer.items():

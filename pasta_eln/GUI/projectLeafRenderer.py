@@ -91,7 +91,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     for key in doc:
       if key in DO_NOT_RENDER:
         continue
-      text = addDocDetails(self, None, key, doc[key], dataHierarchyNode)
+      text = addDocDetails(self, None, key, doc[key], dataHierarchyNode)  # type: ignore[arg-type]
       if text.startswith(CSS_STYLE):
         textDoc = QTextDocument()
         textDoc.setHtml(text)
@@ -173,11 +173,11 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     for key in doc:
       if key in DO_NOT_RENDER:
         continue
-      text = addDocDetails(self, None, key, doc[key], dataHierarchyNode)
+      text = addDocDetails(self, None, key, doc[key], dataHierarchyNode)   # type: ignore[arg-type]
       if text.startswith(CSS_STYLE):
         textDoc = QTextDocument()
         textDoc.setHtml(text)
-        _, heightDoc = textDoc.size().toTuple() # type: ignore
+        _, heightDoc:int = textDoc.size().toTuple() # type: ignore
         height += int(heightDoc/self.lineSep)
       elif text:
         height += text.count('\n')+1
