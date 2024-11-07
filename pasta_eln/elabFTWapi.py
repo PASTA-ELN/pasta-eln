@@ -1,8 +1,7 @@
-# mypy: disable-error-code="arg-type"
 """ API for accessing an elabFTW server. That's API is inconvenient, complicated, ..."""
 import base64, json, copy, mimetypes
 from pathlib import Path
-from typing import Any
+from typing import Any, TypedDict
 import requests  # only requirement; could be replaced with urllib to eliminate requirements
 
 class ElabFTWApi:
@@ -24,9 +23,10 @@ class ElabFTWApi:
       print('Log-in to elabFTW server.')
       print(f'Go to website: {url}ucp.php?tab=4, enter a name and as permission: read/write. Create the API key')
       apiKey = input('Copy-paste the api-key: ').strip()
-    self.url = url
+    self.url     = url
     self.headers = {'Content-type': 'application/json', 'Authorization': apiKey, 'Accept': 'text/plain'}
-    self.param = {'headers':self.headers, 'verify':verifySSL, 'timeout':60}
+    Param        = TypedDict('Param', {'headers':dict[str,str], 'verify':bool, 'timeout':int})
+    self.param : Param = {'headers':self.headers, 'verify':verifySSL, 'timeout':60}
     # test server
     try:
       response = requests.get(f'{self.url}info', **self.param)
@@ -210,7 +210,7 @@ class ElabFTWApi:
 
   def purgeExperimentsItems(self) -> None:
     """ Remove all documents and items on server """
-    for entityType in {'experiments','items'}:
+    for entityType in ['experiments','items']:
       response = requests.get(f'{self.url}{entityType}?archived=on', **self.param)
       for identifier in [i['id'] for i in json.loads(response.content.decode('utf-8'))]:
         response = requests.delete(f'{self.url}{entityType}/{identifier}', **self.param)

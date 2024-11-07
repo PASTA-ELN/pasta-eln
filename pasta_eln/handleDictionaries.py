@@ -1,5 +1,5 @@
 """Change the format of dictionaries"""
-import re, uuid, json, difflib
+import re, uuid, json, difflib, copy
 from typing import Any
 from datetime import datetime
 from .fixedStringsJson import SQLiteTranslation
@@ -190,3 +190,19 @@ def diffDicts(dict1:dict[str,Any], dict2:dict[str,Any]) -> str:
       continue
     outString += f'key not in dictionary 1: {key}\n'
   return outString
+
+
+def squashTupleIntoValue(doc:dict[str,Any]) -> None:
+  """ Squash tuple/list into value
+  - if tuple is length 4, then it is a property tuple: (value, type, unit, description)
+  - if tuple is length 1, then it is a value
+
+  Args:
+    doc (dict[str,Any]): document
+  """
+  for meta in ['metaUser','metaVendor']:
+    if meta in doc:
+      for key,value in doc[meta].items():
+        if isinstance(value, (tuple,list)) and len(value)==4:
+          doc[meta][key] = value[0]
+  return

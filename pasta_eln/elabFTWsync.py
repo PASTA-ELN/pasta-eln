@@ -1,11 +1,12 @@
 """ Allow syncing to elabFTW server """
-import json, copy, hashlib
+import json, copy
 from typing import Any
 from datetime import datetime
 from anytree import PreOrderIter, Node
 from PySide6.QtGui import QTextDocument
 from .backend import Backend
 from .elabFTWapi import ElabFTWApi
+from .handleDictionaries import squashTupleIntoValue
 
 # - consider hiding metadata.json (requires hiding the upload (state=2) and ability to read (it is even hidden in the API-read))
 #   - hide an upload  api.upLoadUpdate('experiments', 66, 596, {'action':'update', 'state':'2'})
@@ -199,7 +200,11 @@ class Pasta2Elab:
 
     # update client
     if flagUpdateClient:
-      self.backend.db.updateDoc(docMerged, node.id)
+      docUpdate = copy.deepcopy(docMerged)
+      docUpdate['branch'] = docUpdate['branch'][0] | {'op':''}
+      del docUpdate['metaVendor']
+      squashTupleIntoValue(docUpdate)
+      self.backend.db.updateDoc(docUpdate, node.id)
     else:
       self.backend.db.cursor.execute(f"UPDATE main SET dateSync='{docMerged['dateSync']}' WHERE id = '{node.id}'")
       self.backend.db.connection.commit()

@@ -366,7 +366,7 @@ class SqlLiteDB:
     mainNew    = {key: dataNew.pop(key) for key in KEY_ORDER if key in dataNew}
     branchNew  = dataNew.pop('branch',{})
     # read branches and identify changes
-    cursor.execute(f"SELECT * FROM branches WHERE id == '{docID}'")
+    cursor.execute(f"SELECT stack, child, path, show FROM branches WHERE id == '{docID}'")
     branchOld = [dict(i) for i in cursor.fetchall()]
     branchOld[0]['show'] = [i=='T' for i in branchOld[0]['show']]
     branchOld[0]['stack'] = branchOld[0]['stack'].split('/')[:-1]
