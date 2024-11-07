@@ -42,13 +42,14 @@ def createDefaultConfiguration(pathPasta:Optional[Path]=None) -> dict[str,Any]:
       pathPasta = Path.home()/'Documents'/'PASTA_ELN'
     else:
       pathPasta = Path.home()/'PASTA_ELN'
+  addOnDir = Path(__file__).parent/'AddOns'
   conf: dict[str, Any] = {
       'defaultProjectGroup': 'research',
       'projectGroups': {
           'research': {
               'local': {'database': 'research', 'path': str(pathPasta)},
               'remote': {},
-              'addOnDir': "$(Path(__file__).parent/'AddOns').as_posix()$"
+              'addOnDir': str(addOnDir)
           }},
       'version': 3}
   try:
