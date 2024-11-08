@@ -326,7 +326,7 @@ class Form(QDialog):
         content = json.loads(fTemp.read())
     else:
       content = {}
-    content[self.doc.get('id', '')] = subContent
+    content[self.doc.get('id', '')] = '' #subContent
     with open(Path.home()/'.pastaELN.temp', 'w', encoding='utf-8') as fTemp:
       fTemp.write(json.dumps(content))
     return

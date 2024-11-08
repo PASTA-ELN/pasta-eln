@@ -140,32 +140,32 @@ class ProjectGroup(QDialog):
     Args:
       btn (QButton): save or cancel button
     """
-    if btn.text().endswith('Cancel'):
-      self.reject()
-    elif 'Save' in btn.text() and self.checkEntries():
-      name = self.projectGroupName.text() if self.selectGroup.isHidden() else self.selectGroup.currentText()
-      local = remote = {}
-      if btn.text().endswith('Save'):
-        localPath = self.pathL.text()
-        if localPath.startswith('~'):
-          localPath = (Path.home()/localPath[1:]).as_posix()
-        local = {'user':self.userNameL.text(), 'password':self.passwordL.text(), \
-                  'database':self.databaseL.text(), 'path':localPath}
-        remote = {'user':self.userNameR.text(), 'password':self.passwordR.text(), \
-                  'database':self.databaseR.text(), 'url':self.serverR.text()}
-      elif btn.text().endswith('Save encrypted'):
-        credL = ''
-        credR = ''
-        local = {'cred':credL, 'database':self.databaseL.text(), 'path':self.pathL.text()}
-        remote = {'cred':credR, 'database':self.databaseR.text(), 'url':self.serverR.text()}
-      newGroup = {'local':local, 'remote':remote}
-      self.configuration['projectGroups'][name] = newGroup
-      self.configuration['defaultProjectGroup'] = name
-      with open(Path.home()/'.pastaELN.json', 'w', encoding='utf-8') as fConf:
-        fConf.write(json.dumps(self.configuration,indent=2))
-      restart()
-    else:
-      print('dialogProjectGroup: did not get a fitting btn ',btn.text())
+    # if btn.text().endswith('Cancel'):
+    #   self.reject()
+    # elif 'Save' in btn.text() and self.checkEntries():
+    #   name = self.projectGroupName.text() if self.selectGroup.isHidden() else self.selectGroup.currentText()
+    #   local = remote = {}
+    #   if btn.text().endswith('Save'):
+    #     localPath = self.pathL.text()
+    #     if localPath.startswith('~'):
+    #       localPath = (Path.home()/localPath[1:]).as_posix()
+    #     local = {'user':self.userNameL.text(), 'password':self.passwordL.text(), \
+    #               'database':self.databaseL.text(), 'path':localPath}
+    #     remote = {'user':self.userNameR.text(), 'password':self.passwordR.text(), \
+    #               'database':self.databaseR.text(), 'url':self.serverR.text()}
+    #   elif btn.text().endswith('Save encrypted'):
+    #     credL = ''
+    #     credR = ''
+    #     local = {'cred':credL, 'database':self.databaseL.text(), 'path':self.pathL.text()}
+    #     remote = {'cred':credR, 'database':self.databaseR.text(), 'url':self.serverR.text()}
+    #   newGroup = {'local':local, 'remote':remote}
+    #   self.configuration['projectGroups'][name] = newGroup
+    #   self.configuration['defaultProjectGroup'] = name
+    #   with open(Path.home()/'.pastaELN.json', 'w', encoding='utf-8') as fConf:
+    #     fConf.write(json.dumps(self.configuration,indent=2))
+    #   restart()
+    # else:
+    #   print('dialogProjectGroup: did not get a fitting btn ',btn.text())
     return
 
 
@@ -176,29 +176,29 @@ class ProjectGroup(QDialog):
     Args:
       command (list): list of commands
     """
-    if command[0] is Command.NEW:
-      self.selectGroup.hide()
-      self.projectGroupName.show()
-      self.projectGroupName.setText('my_project_group_name')
-      defaultProjectGroup = self.configuration['defaultProjectGroup']
-      config = self.configuration['projectGroups'][defaultProjectGroup]
-      u,p = config['local']['user'], config['local']['password']
-      self.userNameL.setText(u)
-      self.userNameR.setText('')
-      self.passwordL.setText(p)
-      self.passwordR.setText('')
-      self.databaseL.setText('')
-      self.databaseR.setText('')
-      self.pathL.setText('')
-      self.serverR.setText('')
+    # if command[0] is Command.NEW:
+    #   self.selectGroup.hide()
+    #   self.projectGroupName.show()
+    #   self.projectGroupName.setText('my_project_group_name')
+    #   defaultProjectGroup = self.configuration['defaultProjectGroup']
+    #   config = self.configuration['projectGroups'][defaultProjectGroup]
+    #   u,p = config['local']['user'], config['local']['password']
+    #   self.userNameL.setText(u)
+    #   self.userNameR.setText('')
+    #   self.passwordL.setText(p)
+    #   self.passwordR.setText('')
+    #   self.databaseL.setText('')
+    #   self.databaseR.setText('')
+    #   self.pathL.setText('')
+    #   self.serverR.setText('')
     # elif command[0] is Command.FILL:
-      # contentFile = QFileDialog.getOpenFileName(self, "Load remote credentials", str(Path.home()), '*.key')[0]
-      # with open(contentFile, encoding='utf-8') as fIn:
-      #   content = json.loads( passwordDecrypt(bytes(fIn.read(), 'UTF-8')) )
-      #   self.userNameR.setText(content['user-name'])
-      #   self.passwordR.setText(content['password'])
-      #   self.databaseR.setText(content['database'])
-      #   self.serverR.setText(content['Server'])
+    #   contentFile = QFileDialog.getOpenFileName(self, "Load remote credentials", str(Path.home()), '*.key')[0]
+    #   with open(contentFile, encoding='utf-8') as fIn:
+    #     content = json.loads( passwordDecrypt(bytes(fIn.read(), 'UTF-8')) )
+    #     self.userNameR.setText(content['user-name'])
+    #     self.passwordR.setText(content['password'])
+    #     self.databaseR.setText(content['database'])
+    #     self.serverR.setText(content['Server'])
     # elif command[0] is Command.CREATE_QR:
     #   if self.projectGroupName.isHidden():
     #     configname = self.selectGroup.currentText()
@@ -214,8 +214,8 @@ class ProjectGroup(QDialog):
     # elif command[0] is Command.OPEN_DIR:
     #   if dirName := QFileDialog.getExistingDirectory(self, 'Choose directory to save data', str(Path.home())):
     #     self.pathL.setText(dirName)
-    else:
-      print("**ERROR projectGroup unknown:",command)
+    # else:
+    #   print("**ERROR projectGroup unknown:",command)
     return
 
 
@@ -226,40 +226,40 @@ class ProjectGroup(QDialog):
     Returns:
       bool: success
     """
-    # local
-    localTest = '' # testLocal(self.userNameL.text(), self.passwordL.text(), self.databaseL.text())
-    if 'Error: Local database does not exist' in localTest and \
-       'success: Local username and password ok' in localTest and self.databaseL.text():
-      button = QMessageBox.question(self, "Question", "Local database does not exist. Should I create it?")
-      if button == QMessageBox.StandardButton.Yes:
-        localTest += '  Local data was created\n'
-        # client = CouchDB(self.userNameL.text(), self.passwordL.text(), url='http://127.0.0.1:5984', connect=True)
-        # client.create_database(self.databaseL.text())
-      else:
-        localTest += '  Local data was NOT created\n'
-    if not self.pathL.text():
-      localTest += 'ERROR: Local path not given\n'
-    else:
-      fullLocalPath = self.comm.backend.basePath/self.pathL.text()
-      if fullLocalPath.is_dir():
-        localTest += 'success: Local path exists\n'
-      else:
-        button = QMessageBox.question(self, "Question", "Local folder does not exist. Should I create it?")
-        if button == QMessageBox.StandardButton.Yes:
-          fullLocalPath.mkdir()
-        else:
-          localTest += 'ERROR: Local path does not exist\n'
-    # remote
-    remoteTest = ''
-    if self.userNameR.text()!='' and self.passwordR.text()!='' and self.databaseR.text()!='' and \
-        self.serverR.text()!='':
-      remoteTest = '' # testRemote(self.serverR.text(), self.userNameR.text(), self.passwordR.text(), self.databaseR.text())
-    # give output
-    if 'ERROR' in localTest or 'ERROR' in remoteTest:
-      showMessage(self, 'ERROR occurred', localTest+remoteTest, 'Critical')
-      return False
-    #success
-    showMessage(self, 'Successful test', localTest+remoteTest, 'Information')
+    # # local
+    # localTest = '' # testLocal(self.userNameL.text(), self.passwordL.text(), self.databaseL.text())
+    # if 'Error: Local database does not exist' in localTest and \
+    #    'success: Local username and password ok' in localTest and self.databaseL.text():
+    #   button = QMessageBox.question(self, "Question", "Local database does not exist. Should I create it?")
+    #   if button == QMessageBox.StandardButton.Yes:
+    #     localTest += '  Local data was created\n'
+    #     # client = CouchDB(self.userNameL.text(), self.passwordL.text(), url='http://127.0.0.1:5984', connect=True)
+    #     # client.create_database(self.databaseL.text())
+    #   else:
+    #     localTest += '  Local data was NOT created\n'
+    # if not self.pathL.text():
+    #   localTest += 'ERROR: Local path not given\n'
+    # else:
+    #   fullLocalPath = self.comm.backend.basePath/self.pathL.text()
+    #   if fullLocalPath.is_dir():
+    #     localTest += 'success: Local path exists\n'
+    #   else:
+    #     button = QMessageBox.question(self, "Question", "Local folder does not exist. Should I create it?")
+    #     if button == QMessageBox.StandardButton.Yes:
+    #       fullLocalPath.mkdir()
+    #     else:
+    #       localTest += 'ERROR: Local path does not exist\n'
+    # # remote
+    # remoteTest = ''
+    # if self.userNameR.text()!='' and self.passwordR.text()!='' and self.databaseR.text()!='' and \
+    #     self.serverR.text()!='':
+    #   remoteTest = '' # testRemote(self.serverR.text(), self.userNameR.text(), self.passwordR.text(), self.databaseR.text())
+    # # give output
+    # if 'ERROR' in localTest or 'ERROR' in remoteTest:
+    #   showMessage(self, 'ERROR occurred', localTest+remoteTest, 'Critical')
+    #   return False
+    # #success
+    # showMessage(self, 'Successful test', localTest+remoteTest, 'Information')
     return True
 
 
@@ -270,18 +270,18 @@ class ProjectGroup(QDialog):
     Args:
       item (str): name of project group
     """
-    config = self.configuration['projectGroups'][item]
-    u,p = config['local']['user'], config['local']['password']
-    self.userNameL.setText(u)
-    self.passwordL.setText(p)
-    self.databaseL.setText(config['local']['database'])
-    self.pathL.setText(config['local']['path'])
-    if 'url' in config['remote']:
-      u,p = config['remote']['user'], config['remote']['password']
-      self.userNameR.setText(u)
-      self.passwordR.setText(p)
-      self.databaseR.setText(config['remote']['database'])
-      self.serverR.setText(config['remote']['url'])
+    # config = self.configuration['projectGroups'][item]
+    # u,p = config['local']['user'], config['local']['password']
+    # self.userNameL.setText(u)
+    # self.passwordL.setText(p)
+    # self.databaseL.setText(config['local']['database'])
+    # self.pathL.setText(config['local']['path'])
+    # if 'url' in config['remote']:
+    #   u,p = config['remote']['user'], config['remote']['password']
+    #   self.userNameR.setText(u)
+    #   self.passwordR.setText(p)
+    #   self.databaseR.setText(config['remote']['database'])
+    #   self.serverR.setText(config['remote']['url'])
     return
 
 
