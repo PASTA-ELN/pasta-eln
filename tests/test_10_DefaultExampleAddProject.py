@@ -8,7 +8,6 @@ from pasta_eln.installationTools import exampleData
 from pasta_eln.GUI.form import Form
 from pasta_eln.guiCommunicate import Communicate
 from pasta_eln.GUI.palette import Palette
-from pasta_eln.elabFTWsync import Pasta2Elab
 
 def test_simple(qtbot):
   """
@@ -33,7 +32,6 @@ def test_simple(qtbot):
   comm = Communicate(backend, palette)
   window = Form(comm, {'_projectID': '', 'type': ['x0']})
   qtbot.addWidget(window)
-  sync = Pasta2Elab(backend, 'research', purge=True)
 
   # projID = backend.output('x0').split('|')[-1].strip()
   # window.change(projID,'')
