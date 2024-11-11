@@ -14,17 +14,14 @@ from os import getcwd
 from os.path import dirname, join, realpath
 from typing import Any, Type, Union
 
-from cloudant.document import Document
-
-from pasta_eln.dataverse.base_database_api import BaseDatabaseAPI
+from pasta_eln.dataverse.base_database_api import BaseDatabaseApi
 from pasta_eln.dataverse.config_model import ConfigModel
 from pasta_eln.dataverse.project_model import ProjectModel
 from pasta_eln.dataverse.upload_model import UploadModel
 from pasta_eln.dataverse.utils import (decrypt_data,
                                        encrypt_data,
                                        get_data_hierarchy_types,
-                                       get_db_credentials,
-                                       get_encrypt_key,
+                                       get_db_info, get_encrypt_key,
                                        log_and_create_error,
                                        set_authors,
                                        set_template_values)
@@ -55,123 +52,96 @@ class DatabaseAPI:
     """
     super().__init__()
     self.logger: logging.Logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
-    cred: dict[str, str] = get_db_credentials(self.logger)
-    self.db_api: BaseDatabaseAPI = BaseDatabaseAPI(
-      'localhost',
-      5984,
-      cred.get('username') or "",
-      cred.get('password') or "")
     self.dataverse_db_name: str = "dataverse"
-    self.default_project_group_db_name: str = cred.get('db_name') or ""
-    self.design_doc_name: str = '_design/viewDataverse'
-    self.config_doc_id: str = '-dataverseConfig-'
-    self.data_hierarchy_doc_id: str = '-dataHierarchy-'
-    self.upload_model_view_name: str = 'dvUploadView'
-    self.project_model_view_name: str = 'dvProjectsView'
-    self.upload_models_query_index_name: str = "uploadModelsQuery"
-    self.upload_models_query_index_fields: list[str] = ["finished_date_time"]
+    db_info: dict[str, str] = get_db_info(self.logger)
+    self.db_api: BaseDatabaseApi = BaseDatabaseApi(
+      f"{db_info.get('database_path')}/{self.dataverse_db_name}.db",
+      #f"{db_info.get('database_path')}/{db_info.get('database_name')}.db",
+      f"{db_info.get('database_path')}/pastaELN.db"
+    )
+    # self.design_doc_name: str = '_design/viewDataverse'
+    # self.config_doc_id: str = '-dataverseConfig-'
+    # self.data_hierarchy_doc_id: str = '-dataHierarchy-'
+    # self.upload_model_view_name: str = 'dvUploadView'
+    # self.project_model_view_name: str = 'dvProjectsView'
+    # self.upload_models_query_index_name: str = "uploadModelsQuery"
+    # self.upload_models_query_index_fields: list[str] = ["finished_date_time"]
     _, self.encrypt_key = get_encrypt_key(self.logger)
 
-  def create_dataverse_design_document(self, db_name: str) -> Document:
-    """
-    Creates a design document for the dataverse in the database.
+  # def create_dataverse_design_document(self, db_name: str) -> Document:
+  #   """
+  #   Creates a design document for the dataverse in the database.
+  #
+  #   Explanation:
+  #       This method creates a design document for the dataverse in the database
+  #       using the provided design document name.
+  #
+  #   Args:
+  #       db_name (str): The name of the database.
+  #       self: The DatabaseAPI instance.
+  #
+  #   Returns:
+  #       Document: The created design document.
+  #
+  #   """
+  #   self.logger.info("Creating design document: %s", self.design_doc_name)
+  #   return self.db_api.create_document({"_id": self.design_doc_name}, db_name)
 
-    Explanation:
-        This method creates a design document for the dataverse in the database
-        using the provided design document name.
+  # def create_upload_model_view(self) -> None:
+  #   """
+  #   Creates the dvUploadView as part of the design document.
+  #
+  #   Explanation:
+  #       This method creates the dvUploadView as part of the design document, using the provided design document name.
+  #
+  #   Args:
+  #       self: The DatabaseAPI instance.
+  #
+  #   """
+  #   self.logger.info("Creating dvUploadView as part of design document: %s", self.design_doc_name)
+  #   self.db_api.add_view(self.dataverse_db_name,
+  #                        self.design_doc_name,
+  #                        self.upload_model_view_name,
+  #                        "function (doc) { if (doc.data_type === 'dataverse_upload') { emit(doc._id, doc); } }", None)
 
-    Args:
-        db_name (str): The name of the database.
-        self: The DatabaseAPI instance.
+  # def create_projects_view(self) -> None:
+  #   """
+  #   Creates the dvProjectsView as part of the design document.
+  #
+  #   Explanation:
+  #       This method creates the dvProjectsView as part of the design document, using the provided design document name.
+  #
+  #   Args:
+  #       self: The DatabaseAPI instance.
+  #
+  #   """
+  #   self.logger.info("Creating dvProjectsView as part of design document: %s", self.design_doc_name)
+  #   self.db_api.add_view(self.default_project_group_db_name,
+  #                        self.design_doc_name,
+  #                        self.project_model_view_name,
+  #                        "function (doc) { "
+  #                        "if (doc['-type'].includes('x0')) {"
+  #                        "emit(doc._id, {"
+  #                        "'name': doc['-name'], "
+  #                        "'_id': doc._id, "
+  #                        "'_rev': doc._rev, "
+  #                        "'objective': doc.objective, "
+  #                        "'status': doc.status, "
+  #                        "'comment': doc.comment, "
+  #                        "'user': doc['-user'], "
+  #                        "'date': doc['-date']});"
+  #                        "}}",
+  #                        None
+  #                        )
 
-    Returns:
-        Document: The created design document.
-
-    """
-    self.logger.info("Creating design document: %s", self.design_doc_name)
-    return self.db_api.create_document({"_id": self.design_doc_name}, db_name)
-
-  def create_upload_model_view(self) -> None:
-    """
-    Creates the dvUploadView as part of the design document.
-
-    Explanation:
-        This method creates the dvUploadView as part of the design document, using the provided design document name.
-
-    Args:
-        self: The DatabaseAPI instance.
-
-    """
-    self.logger.info("Creating dvUploadView as part of design document: %s", self.design_doc_name)
-    self.db_api.add_view(self.dataverse_db_name,
-                         self.design_doc_name,
-                         self.upload_model_view_name,
-                         "function (doc) { if (doc.data_type === 'dataverse_upload') { emit(doc._id, doc); } }", None)
-
-  def create_projects_view(self) -> None:
-    """
-    Creates the dvProjectsView as part of the design document.
-
-    Explanation:
-        This method creates the dvProjectsView as part of the design document, using the provided design document name.
-
-    Args:
-        self: The DatabaseAPI instance.
-
-    """
-    self.logger.info("Creating dvProjectsView as part of design document: %s", self.design_doc_name)
-    self.db_api.add_view(self.default_project_group_db_name,
-                         self.design_doc_name,
-                         self.project_model_view_name,
-                         "function (doc) { "
-                         "if (doc['-type'].includes('x0')) {"
-                         "emit(doc._id, {"
-                         "'name': doc['-name'], "
-                         "'_id': doc._id, "
-                         "'_rev': doc._rev, "
-                         "'objective': doc.objective, "
-                         "'status': doc.status, "
-                         "'comment': doc.comment, "
-                         "'user': doc['-user'], "
-                         "'date': doc['-date']});"
-                         "}}",
-                         None
-                         )
-
-  def create_model_document(self, data: UploadModel | ConfigModel | ProjectModel) -> Union[
-    UploadModel, ConfigModel, ProjectModel]:
-
-    """
-    Creates a model document in the database.
-
-    Explanation:
-        This method creates a model document in the database using the provided data.
-        It removes the '_id' and '_rev' fields from the data dictionary before creating the document.
-
-    Args:
-        self: The DatabaseAPI instance.
-        data (UploadModel | ConfigModel | ProjectModel): The data to be stored in the model document.
-
-    Raises:
-        ValueError: If the data parameter is None.
-
-    Returns:
-        Union[UploadModel, ConfigModel, ProjectModel]: The created model document.
-
-    """
-    self.logger.info("Creating model document: %s", data)
+  def create_model(self, data: Union[UploadModel, ConfigModel]) -> Union[
+    UploadModel, ConfigModel]:
+    self.logger.info("Creating model: %s", data)
     if data is None:
       raise log_and_create_error(self.logger, ValueError, "Data cannot be None!")
-    if not isinstance(data, (UploadModel, ConfigModel, ProjectModel)):
-      raise log_and_create_error(self.logger, TypeError, "Data must be an UploadModel, ConfigModel, or ProjectModel!")
-    data_dict = dict(data)
-    if data_dict['_id'] is None:
-      del data_dict['_id']
-    del data_dict['_rev']
-    return type(data)(**self.db_api.create_document(data_dict,
-                                                    self.default_project_group_db_name
-                                                    if data is ProjectModel
-                                                    else self.dataverse_db_name))
+    if not isinstance(data, (UploadModel, ConfigModel)):
+      raise log_and_create_error(self.logger, TypeError, "Data must be an UploadModel or ConfigModel!")
+    return self.db_api.insert_model(data)
 
   def update_model_document(self, data: UploadModel | ConfigModel | ProjectModel) -> None:
     """

@@ -10,12 +10,11 @@
 import logging
 from collections.abc import Callable
 from enum import Enum
-from itertools import groupby
 from threading import Lock
-from typing import Any, Sequence, Type, Union
+from typing import Sequence, Type, Union
 
-from sqlalchemy import create_engine, or_, select
-from sqlalchemy.orm import Session
+from sqlalchemy import and_, create_engine, or_, select
+from sqlalchemy.orm import Session, aliased
 
 from pasta_eln.dataverse.base_model import BaseModel
 from pasta_eln.dataverse.config_model import ConfigModel
@@ -80,16 +79,17 @@ class BaseDatabaseApi:
     engine = create_engine(self.db_url_map[DatabaseNames.DataverseDatabase], echo=True)
     DatabaseModelBase.metadata.create_all(engine)
 
-  def insert_model(self, data_model: Type[UploadModel | ConfigModel | ProjectModel]) -> None:
+  def insert_model(self, data_model: Union[UploadModel, ConfigModel]) -> Union[UploadModel, ConfigModel]:
     self.logger.info("Populating document with data: %s in database: %s",
                      data_model,
                      "config")
     engine = create_engine(self.db_url_map[DatabaseNames.DataverseDatabase], echo=True)
     model = self.to_orm_converter_map[type(data_model)](data_model)
     with Session(engine) as session:
-      session.add_all([model])
+      session.add(model)
       session.commit()
-    return
+      session.flush()
+      return self.to_base_model_converter_map[type(model)](model)
 
   def get_model(self, model_id: int, db_name: DatabaseNames,
                 model_type: Type[Union[UploadModel, ConfigModel, ProjectModel]]) -> BaseModel:
@@ -103,21 +103,26 @@ class BaseDatabaseApi:
       else:
         raise log_and_create_error(self.logger, DatabaseError, "Model not found!")
 
-  def get_projects(self, model_id: int, db_name: DatabaseNames) -> Sequence[Any]:
-    self.logger.info("Retrieving data model with id: %s from database: %s", model_id, db_name)
-    if not model_id:
-      raise log_and_create_error(self.logger, DatabaseError, "Model ID cannot be empty!")
+  def get_projects(self, db_name: DatabaseNames) -> Sequence[ProjectModel]:
+    self.logger.info("Retrieving projects from database: %s", db_name)
     engine = create_engine(self.db_url_map[db_name], echo=True)
-    statement = (select(DatabaseOrmMainModel, DatabaseOrmPropertiesModel)
-                 .join(DatabaseOrmPropertiesModel, DatabaseOrmMainModel.id == DatabaseOrmPropertiesModel.id)
-                 .where(DatabaseOrmMainModel.type == "x0"))
+    properties_objective_aliased = aliased(DatabaseOrmPropertiesModel)
+    properties_status_aliased = aliased(DatabaseOrmPropertiesModel)
+    statement = (select(DatabaseOrmMainModel, properties_status_aliased.value,
+                        properties_objective_aliased.value)
+                 .where(DatabaseOrmMainModel.type == "x0")
+                 .join_from(DatabaseOrmMainModel, properties_objective_aliased,
+                            and_(DatabaseOrmMainModel.id == properties_objective_aliased.id,
+                                 properties_objective_aliased.key == ".objective"), isouter=True)
+                 .join_from(DatabaseOrmMainModel, properties_status_aliased,
+                            and_(DatabaseOrmMainModel.id == properties_status_aliased.id,
+                                 properties_status_aliased.key == ".status"), isouter=True))
+
     with Session(engine) as session:
-      results = [(x[0], x[1]) for x in session.execute(statement).fetchall()]
-      grouped_results = [(key, [i[1] for i in group]) for key, group in groupby(results, key=lambda x: x[0])]
-      return [DatabaseOrmAdapter.get_project_model(r) for r in grouped_results]
+      return [DatabaseOrmAdapter.get_project_model(r.tuple()) for r in session.execute(statement).fetchall()]
 
   def update_model(self, db_name: DatabaseNames,
-                   data_model: Type[UploadModel, ConfigModel, ProjectModel]) -> None:
+                   data_model: Union[UploadModel, ConfigModel, ProjectModel]) -> None:
     self.logger.info("Updating data model with id: %s in database: %s, type: %s", data_model.id, db_name,
                      type(data_model))
     if not data_model.id:
@@ -132,11 +137,11 @@ class BaseDatabaseApi:
       session.commit()
 
   def get_paginated_results(self, db_name: DatabaseNames,
-                            model_type: Type[Union[UploadModel, ConfigModel, ProjectModel]],
+                            model_type: Type[Union[UploadModel, ConfigModel]],
                             filter_term: str | None = None,
                             filter_fields: list[str] | None = None,
                             page_number: int = 1,
-                            limit: int = 10) -> list[Type[Union[UploadModel, ConfigModel, ProjectModel]]]:
+                            limit: int = 10) -> list[Type[Union[UploadModel, ConfigModel]]]:
     if page_number < 1:
       raise log_and_create_error(self.logger, DatabaseError, "Page number cannot be less than 1!")
     if limit < 1:

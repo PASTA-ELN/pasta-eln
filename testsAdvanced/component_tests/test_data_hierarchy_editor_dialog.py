@@ -15,7 +15,7 @@ from pytestqt.qtbot import QtBot
 from pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog import DataHierarchyEditorDialog
 from pasta_eln.GUI.data_hierarchy.lookup_iri_action import LookupIriAction
 from pasta_eln.GUI.data_hierarchy.utility_functions import adapt_type, get_types_for_display
-from tests.common.fixtures import attachments_column_names, data_hierarchy_doc_mock, data_hierarchy_editor_gui, \
+from testsAdvanced.common.fixtures import attachments_column_names, data_hierarchy_doc_mock, data_hierarchy_editor_gui, \
   metadata_column_names, pasta_db_mock
 
 

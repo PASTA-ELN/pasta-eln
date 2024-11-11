@@ -49,12 +49,10 @@ class DatabaseOrmAdapter:
     return UploadModel(**model_dict)
 
   @staticmethod
-  def get_project_model(model: Tuple[DatabaseOrmMainModel, list[DatabaseOrmPropertiesModel]]) -> ProjectModel:
+  def get_project_model(model: Tuple[DatabaseOrmMainModel, str, str]) -> ProjectModel:
     main_model_dict = dict(model[0])
     main_model_dict['_id'] = main_model_dict.pop('id')
     main_model_dict['date_created'] = main_model_dict.pop('dateCreated')
     main_model_dict['date_modified'] = main_model_dict.pop('dateModified')
     main_model_dict.pop('type')
-    status = [m for m in model[1] if m.key == '.status'][0].value
-    objective = [m for m in model[1] if m.key == '.objective'][0].value
-    return ProjectModel(**main_model_dict, status=status, objective=objective)
+    return ProjectModel(**main_model_dict, status=model[1], objective=model[2])

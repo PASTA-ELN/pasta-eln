@@ -37,7 +37,7 @@ from .reorder_column_delegate import ReorderColumnDelegate
 from .utility_functions import adapt_type, adjust_data_hierarchy_data_to_v4, can_delete_type, \
   check_data_hierarchy_types, \
   get_missing_metadata_message, get_types_for_display, show_message
-from ...database import Database
+#from ...database import Database
 
 
 class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):

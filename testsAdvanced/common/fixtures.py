@@ -6,7 +6,7 @@
 #  Filename: fixtures.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
-from typing import Union
+from typing import Any, Union
 from xml.etree.ElementTree import Element
 
 from PySide6 import QtWidgets
@@ -32,11 +32,10 @@ from pasta_eln.GUI.data_hierarchy.tableview_data_model import TableViewModel
 from pasta_eln.GUI.data_hierarchy.terminology_lookup_dialog import TerminologyLookupDialog
 from pasta_eln.GUI.data_hierarchy.terminology_lookup_dialog_base import Ui_TerminologyLookupDialogBase
 from pasta_eln.GUI.data_hierarchy.terminology_lookup_service import TerminologyLookupService
-from pasta_eln.database import Database
 from pasta_eln.dataverse.client import DataverseClient
 from pasta_eln.gui import MainWindow, mainGUI
 from pasta_eln.webclient.http_client import AsyncHttpClient
-from tests.common.test_utils import read_json, read_xml
+from testsAdvanced.common.test_utils import read_json, read_xml
 
 
 @fixture()
@@ -254,7 +253,7 @@ def iri_lookup_web_results_name_mock() -> dict:
 
 
 @fixture()
-def pasta_db_mock(mocker, data_hierarchy_doc_mock) -> Database:
+def pasta_db_mock(mocker, data_hierarchy_doc_mock) -> Any:
   mock_db = mocker.patch('pasta_eln.database.Database')
   mock_couch_db = mocker.patch('cloudant.client.CouchDB')
   dbs = {'-dataHierarchy-': data_hierarchy_doc_mock}
