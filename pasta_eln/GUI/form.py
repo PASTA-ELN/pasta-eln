@@ -274,7 +274,8 @@ class Form(QDialog):
                                     'Add key-value pair', style='border-width:1')
     IconButton('fa5s.poll-h',      self, [Command.FORM_SHOW_DOC], buttonLineL, 'Show all information',
                style='border-width:1')
-    TextButton('Save',             self, [Command.FORM_SAVE],     buttonLineL, 'Save changes')
+    saveBtn = TextButton('Save',             self, [Command.FORM_SAVE],     buttonLineL, 'Save changes')
+    saveBtn.setShortcut("Ctrl+Return")
     TextButton('Cancel',           self, [Command.FORM_CANCEL],   buttonLineL, 'Discard changes')
     if self.flagNewDoc: #new dataset
       TextButton('Save && Next', self, [Command.FORM_SAVE_NEXT], buttonLineL, 'Save this and handle next')
