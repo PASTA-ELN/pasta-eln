@@ -119,9 +119,6 @@ class TestDataverseGenericTaskObject:
     # Assert
     assert task.cleaned == expected_cleaned_state, f"Test ID {test_id}: Expected cleaned state to be {expected_cleaned_state}"
     mock_logger.info.assert_called_once_with('Cleaning up task, id: %s', setup_id)
-    task.cancel.disconnect.assert_called_once()
-    task.finish.disconnect.assert_called_once()
-    task.start.disconnect.assert_called_once()
 
   @pytest.mark.parametrize("test_id, initial_finished, expected_finished", [  # Success path tests
     ("success_case_1", False, True),  # Cleaning up task from non-cleaned state

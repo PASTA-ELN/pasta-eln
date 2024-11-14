@@ -12,7 +12,7 @@ import itertools
 import logging
 
 from PySide6 import QtCore
-from PySide6.QtCore import QObject
+from PySide6.QtCore import QObject, Qt
 
 
 class GenericTaskObject(QObject):
@@ -49,8 +49,8 @@ class GenericTaskObject(QObject):
     self.started = False
     self.cleaned = False
     self.finished = False
-    self.cancel.connect(lambda: self.cancel_task())  # pylint: disable=unnecessary-lambda
-    self.finish.connect(lambda: self.finish_task())  # pylint: disable=unnecessary-lambda
+    self.cancel.connect(self.cancel_task, type=Qt.DirectConnection)  # type: ignore[attr-defined]
+    self.finish.connect(self.finish_task, type=Qt.DirectConnection)  # type: ignore[attr-defined]
     self.start.connect(self.start_task)
 
   def cancel_task(self) -> None:
@@ -95,9 +95,6 @@ class GenericTaskObject(QObject):
     """
     self.logger.info("Cleaning up task, id: %s", self.id)
     self.cleaned = True
-    self.cancel.disconnect()
-    self.finish.disconnect()
-    self.start.disconnect()
 
   def finish_task(self) -> None:
     """
