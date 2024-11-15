@@ -11,7 +11,7 @@ import logging
 from time import sleep
 
 from PySide6 import QtCore
-from PySide6.QtCore import QTimer
+from PySide6.QtCore import Qt
 
 from pasta_eln.dataverse.config_model import ConfigModel
 from pasta_eln.dataverse.database_api import DatabaseAPI
@@ -54,8 +54,8 @@ class UploadQueueManager(GenericTaskObject):
     self.upload_queue: list[TaskThreadExtension] = []
     self.running_queue: list[TaskThreadExtension] = []
     self.db_api: DatabaseAPI = DatabaseAPI()
-    self.cancel_all_tasks.connect(
-      lambda: self.cancel_all_queued_tasks_and_empty_queue())  # pylint: disable=unnecessary-lambda
+    self.cancel_all_tasks.connect(self.cancel_all_queued_tasks_and_empty_queue,
+                                  type=Qt.DirectConnection)  # type: ignore[attr-defined]
     self.set_concurrent_uploads()
 
   def set_concurrent_uploads(self) -> None:
@@ -65,10 +65,6 @@ class UploadQueueManager(GenericTaskObject):
     Explanation:
         This method retrieves the number of concurrent uploads from the database and sets it as the value for the
         number_of_concurrent_uploads attribute.
-
-    Args:
-        None
-
     """
     self.logger.info("Resetting number of concurrent uploads..")
     self.config_model = self.db_api.get_config_model()
@@ -211,4 +207,4 @@ class UploadQueueManager(GenericTaskObject):
     for upload_task_thread in self.upload_queue:
       upload_task_thread.task.cancel.emit()
     if self.upload_queue:
-      QTimer.singleShot(500, lambda: self.remove_cancelled_tasks())  # pylint: disable=unnecessary-lambda
+      self.remove_cancelled_tasks()
