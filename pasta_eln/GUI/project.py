@@ -9,9 +9,10 @@ from PySide6.QtCore import Slot, Qt, QItemSelectionModel, QModelIndex           
 from anytree import PreOrderIter, Node
 from .projectTreeView import TreeView
 from ..guiStyle import TextButton, Action, Label, showMessage, widgetAndLayout, addDocDetails
-from ..stringChanges import createDirName, markdownEqualizer
+from ..fixedStringsJson import SORTED_KEYS, DO_NOT_RENDER
+from ..stringChanges import createDirName
+from ..handleDictionaries import doc2markdown
 from ..guiCommunicate import Communicate
-from .projectLeafRenderer import DO_NOT_RENDER
 
 class Project(QWidget):
   """ Widget that shows the content of project in a electronic labnotebook """
@@ -92,35 +93,21 @@ class Project(QWidget):
     more.setMenu(moreMenu)
 
     # Details section
-    self.infoWSA = QScrollArea()
-    self.infoWSA.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-    self.infoWSA.setWidgetResizable(True)
-    self.infoW_, infoL = widgetAndLayout('V')
-    self.infoWSA.setWidget(self.infoW_)
-    self.mainL.addWidget(self.infoWSA)
+    # self.infoW = QScrollArea()
+    # self.infoW.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+    # self.infoW.setWidgetResizable(True)
+    self.allDetails = QTextEdit()
+    self.allDetails.setMarkdown(doc2markdown(self.docProj, DO_NOT_RENDER, dataHierarchyNode, self))
     if not self.docProj['gui'][0]:
-      self.infoWSA.hide()
+      self.allDetails.hide()
       self.actHideDetail.setText('Show project details')
-    # details
-    for key,value in self.docProj.items():
-      if 'from ' in key or key in DO_NOT_RENDER:
-        continue
-      text = addDocDetails(self, infoL, key, value, dataHierarchyNode)
-      self.countLines += text.count('/n')+1
-    # comment
-    commentW, commentL   = widgetAndLayout('H', infoL, 's')
-    commentW.resizeEvent = self.commentResize # type: ignore
-    labelW = QLabel('Comment:')
-    # labelW.setStyleSheet('padding-top: 5px') #make "Comment:" text aligned with other content, not with text-edit
-    commentL.addWidget(labelW, alignment=Qt.AlignmentFlag.AlignTop)
-    self.commentTE = QTextEdit()
-    self.commentTE.setMarkdown(markdownEqualizer(self.docProj.get('comment', '')))
+    self.allDetails.resizeEvent = self.commentResize # type: ignore
     bgColor = self.comm.palette.get('secondaryDark', 'background-color')
     fgColor = self.comm.palette.get('secondaryText', 'color')
-    self.commentTE.setStyleSheet(f"border: none; padding: 0px; {bgColor} {fgColor}")
-    self.commentTE.setReadOnly(True)
+    self.allDetails.setStyleSheet(f"border: none; padding: 0px; {bgColor} {fgColor}")
+    self.allDetails.setReadOnly(True)
+    self.mainL.addWidget(self.allDetails)
     self.commentResize(None)
-    commentL.addWidget(self.commentTE)
     return
 
 
@@ -128,12 +115,11 @@ class Project(QWidget):
     """ called if comment is resized because widget initially/finally knows its size
     - comment widget is hard coded size it depends on the rendered size
     """
-    if self.commentTE is None or self.infoWSA is None or self.infoW_ is None:
+    if self.allDetails is None:
       return
-    self.commentTE.document().setTextWidth(self.infoWSA.width())
-    height:int = self.commentTE.document().size().toTuple()[1]  # type: ignore[index]
-    self.infoW_.setMaximumHeight(height + (self.countLines+1)*self.lineSep     -12)
-    self.infoWSA.setMaximumHeight(height + (self.countLines+1)*self.lineSep  -10)
+    self.allDetails.document().setTextWidth(self.width())
+    height:int = self.allDetails.document().size().toTuple()[1]  # type: ignore[index]
+    self.allDetails.setMaximumHeight(height)
     return
 
 

@@ -8,10 +8,7 @@ from PySide6.QtSvg import QSvgRenderer                                          
 from ..guiCommunicate import Communicate
 from ..stringChanges import markdownEqualizer
 from ..handleDictionaries import doc2markdown
-from ..fixedStringsJson import defaultDataHierarchyNode
-
-DO_NOT_RENDER = ['image','content','metaVendor','shasum','type','branch','gui','dateCreated',
-                 'dateModified','id','user','name','externalId','client']
+from ..fixedStringsJson import defaultDataHierarchyNode, DO_NOT_RENDER
 
 class ProjectLeafRenderer(QStyledItemDelegate):
   """ renders each leaf of project tree using QPaint """
