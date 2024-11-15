@@ -4,7 +4,7 @@ from typing import Callable, Optional, Any, Union
 from PySide6.QtWidgets import QPushButton, QLabel, QSizePolicy, QMessageBox, QLayout, QWidget, QMenu, QSplitter, \
                               QVBoxLayout, QHBoxLayout, QGridLayout, QFormLayout, QBoxLayout, QComboBox, \
                               QScrollArea, QTextEdit # pylint: disable=no-name-in-module
-from PySide6.QtGui import QImage, QPixmap, QAction, QKeySequence, QMouseEvent               # pylint: disable=no-name-in-module
+from PySide6.QtGui import QImage, QPixmap, QAction, QKeySequence, QMouseEvent   # pylint: disable=no-name-in-module
 from PySide6.QtCore import QByteArray, Qt           # pylint: disable=no-name-in-module
 from PySide6.QtSvgWidgets import QSvgWidget         # pylint: disable=no-name-in-module
 import qtawesome as qta
@@ -433,6 +433,7 @@ def addDocDetails(widget:QWidget, layout:QLayout, key:str, value:Any, dataHierar
       label.setWordWrap(True)
       layout.addWidget(label)
   return labelStr
+
 
 def clickLink(widget:QWidget, label:str, docID:str) -> None:
   """

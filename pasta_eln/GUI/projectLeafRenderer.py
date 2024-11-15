@@ -1,17 +1,17 @@
 """ renders each leaf of project tree using QPaint """
 import base64, logging
 from typing import Any
-from PySide6.QtCore import Qt, QSize, QPoint, QMargins, QRectF, QModelIndex# pylint: disable=no-name-in-module
+from PySide6.QtCore import Qt, QSize, QPoint, QMargins, QRectF, QModelIndex           # pylint: disable=no-name-in-module
 from PySide6.QtGui import QStaticText, QPixmap, QTextDocument, QPainter, QColor, QPen # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QStyledItemDelegate, QStyleOptionViewItem # pylint: disable=no-name-in-module
-from PySide6.QtSvg import QSvgRenderer                        # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QStyledItemDelegate, QStyleOptionViewItem               # pylint: disable=no-name-in-module
+from PySide6.QtSvg import QSvgRenderer                                                # pylint: disable=no-name-in-module
 from ..guiCommunicate import Communicate
 from ..stringChanges import markdownEqualizer
-from ..guiStyle import addDocDetails, CSS_STYLE
+from ..handleDictionaries import doc2markdown
 from ..fixedStringsJson import defaultDataHierarchyNode
 
-DO_NOT_RENDER = ['image','content','metaVendor','metaUser','shasum','type','branch','gui','dateCreated',
-                 'dateModified','id','user','name','comment','externalId','client']
+DO_NOT_RENDER = ['image','content','metaVendor','shasum','type','branch','gui','dateCreated',
+                 'dateModified','id','user','name','externalId','client']
 
 class ProjectLeafRenderer(QStyledItemDelegate):
   """ renders each leaf of project tree using QPaint """
@@ -87,53 +87,23 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     painter.drawStaticText(x0+docTypeOffset, y0+y, QStaticText(docTypeText))
     if self.debugMode:
       painter.drawStaticText(x0+700, y0+y, QStaticText(data['hierStack']))
-    width, height = -1, -1
-    for key in doc:
-      if key in DO_NOT_RENDER:
-        continue
-      text = addDocDetails(self, None, key, doc[key], dataHierarchyNode)  # type: ignore[arg-type]
-      if text.startswith(CSS_STYLE):
-        textDoc = QTextDocument()
-        textDoc.setHtml(text)
-        _, height = textDoc.size().toTuple() # type: ignore
-        painter.translate(QPoint(x0-3, y0+y+15))
-        textDoc.drawContents(painter)
-        painter.translate(-QPoint(x0-3, y0+y+15))
-        y += height
-      else:
-        for line in text.split('\n'):
-          if line:
-            y += self.lineSep
-            painter.drawStaticText(x0, y0+y, QStaticText(line))
-    for textType in ('comment', 'content'):
-      if textType in doc and not doc[textType]:
-        continue
-      if textType in doc and (textType != 'content' or 'image' not in doc or doc['image'] == ''):
-        textDoc = QTextDocument()
-        textDoc.setMarkdown(markdownEqualizer(doc[textType]))
-        if textType == 'comment':
-          textDoc.setTextWidth(bottomRight2nd.toTuple()[0]-x0-widthContent-2*self.frameSize)
-          width, height = textDoc.size().toTuple() # type: ignore
-          painter.translate(QPoint(x0-3, y0+y+15))
-          yMax = int(self.maxHeight-2*self.frameSize-y-15)
-        else:
-          textDoc.setTextWidth(widthContent)
-          width, height = textDoc.size().toTuple() # type: ignore
-          topLeftContent = option.rect.topRight() - QPoint(width+self.frameSize-2,-self.frameSize)           # type: ignore[attr-defined]
-          painter.translate(topLeftContent)
-          yMax = int(self.maxHeight-3*self.frameSize)
-          y = 0
-        textDoc.drawContents(painter, QRectF(0, 0, width, yMax))
-        if y+height > self.maxHeight-2*self.frameSize:
-          painter.setPen(self.penHighlight)
-          painter.drawLine(self.frameSize, yMax+self.frameSize, width-self.frameSize, yMax+self.frameSize)
-          painter.setPen(self.penDefault)
-        if textType == 'comment':
-          painter.translate(-QPoint(x0-3, y0+y+15))
-        else:
-          topLeftContent = option.rect.topRight() - QPoint(width+self.frameSize-2,-self.frameSize)           # type: ignore[attr-defined]
-          painter.translate(-topLeftContent)
-    if 'image' in doc and doc['image']!='':
+    textDoc = QTextDocument()
+    textDoc.setMarkdown(doc2markdown(doc, DO_NOT_RENDER, dataHierarchyNode, self))
+    painter.translate(QPoint(x0-3, y0+y+15))
+    self.drawTextDocument(painter, textDoc, int(self.maxHeight-6*self.frameSize))
+    painter.translate(-QPoint(x0-3, y0+y+15))
+    # right side
+    if 'content' in doc and doc['content'] and ('image' not in doc or not doc['image']):
+      textDoc = QTextDocument()
+      textDoc.setMarkdown(markdownEqualizer(doc['content']))
+      textDoc.setTextWidth(widthContent)
+      width, _ = textDoc.size().toTuple() # type: ignore
+      topLeftContent = option.rect.topRight() - QPoint(width+self.frameSize-2,-self.frameSize)           # type: ignore[attr-defined]
+      painter.translate(topLeftContent)
+      self.drawTextDocument(painter, textDoc, int(self.maxHeight-3*self.frameSize))
+      topLeftContent = option.rect.topRight() - QPoint(width+self.frameSize-2,-self.frameSize)           # type: ignore[attr-defined]
+      painter.translate(-topLeftContent)
+    if 'image' in doc and doc['image']:
       if doc['image'].startswith('data:image/'):
         pixmap = self.imageFromDoc(doc)
         width2nd = min(self.widthImage, pixmap.width()+self.frameSize)
@@ -155,7 +125,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
     hierStack = index.data(Qt.ItemDataRole.UserRole+1)['hierStack']
     if hierStack is None or self.comm is None:
       return QSize()
-    if not index.data(Qt.ItemDataRole.UserRole+1)['gui'][0]:
+    if not index.data(Qt.ItemDataRole.UserRole+1)['gui'][0]:  # only show the headline, no details
       return QSize(400, self.lineSep*2)
     docID   = hierStack.split('/')[-1]
     doc = self.comm.backend.db.getDoc(docID)
@@ -165,44 +135,42 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       return QSize()
     widthContent = min(self.widthContent,  \
                        int((option.rect.bottomRight()-option.rect.topLeft()).toTuple()[0]/2) )               # type: ignore[attr-defined]
-    height = 0
     if doc['type'][0] not in self.comm.backend.db.dataHierarchy('', ''):
       dataHierarchyNode = defaultDataHierarchyNode
     else:
       dataHierarchyNode = self.comm.backend.db.dataHierarchy(doc['type'][0], 'meta')
-    for key in doc:
-      if key in DO_NOT_RENDER:
-        continue
-      text = addDocDetails(self, None, key, doc[key], dataHierarchyNode)   # type: ignore[arg-type]
-      if text.startswith(CSS_STYLE):
-        textDoc = QTextDocument()
-        textDoc.setHtml(text)
-        heightDoc:int = textDoc.size().toTuple()[1] # type: ignore
-        height += int(heightDoc/self.lineSep)
-      elif text:
-        height += text.count('\n')+1
-    height  = (height+3) * self.lineSep
+    textDoc = QTextDocument()
+    textDoc.setMarkdown(doc2markdown(doc, DO_NOT_RENDER, dataHierarchyNode, self))
+    textDoc.setTextWidth(widthContent)
+    heightDetails = int(textDoc.size().toTuple()[1])+self.frameSize+20 # type: ignore
+    heightRightSide = -1
     if 'content' in doc:
-      textDoc = QTextDocument()
       textDoc.setMarkdown(doc['content'])
-      textDoc.setTextWidth(widthContent)
-      height = max(height, textDoc.size().toTuple()[1]) +2*self.frameSize # type: ignore
-    elif 'image' in doc:
+      heightRightSide = int(textDoc.size().toTuple()[1]) # type: ignore
+    elif 'image' in doc and doc['image']:
       if doc['image'].startswith('data:image/'):
         pixmap = self.imageFromDoc(doc)
-        height = max(height, pixmap.height())+2*self.frameSize
+        heightRightSide = pixmap.height()+2*self.frameSize
       else:
-        height = max(height, int(self.widthImage*3/4))+2*self.frameSize
-    elif 'comment' in doc.keys() and doc['comment']:
-      textDoc = QTextDocument()
-      comment = doc['comment']
-      textDoc.setMarkdown(comment.strip())
-      textDoc.setTextWidth(widthContent)
-      height += textDoc.size().toTuple()[1] # type: ignore
-      height -= 25
-    else:
-      height -= 25
-    return QSize(400, min(height, self.maxHeight))
+        heightRightSide = int(self.widthImage*3/4+2*self.frameSize)
+    return QSize(400, min(max(heightDetails,heightRightSide), self.maxHeight))
+
+
+  def drawTextDocument(self, painter:QPainter, textDoc:QTextDocument, yMax:int) -> None:
+    """ Draw text document
+
+    Args:
+      painter (QPainter): painter
+      textDoc (QTextDocument): text document
+      yMax (int): maximum height of document in surrounding frame
+    """
+    width, height = textDoc.size().toTuple() # type: ignore
+    textDoc.drawContents(painter, QRectF(0, 0, width, yMax))
+    if height > yMax+self.frameSize:
+      painter.setPen(self.penHighlight)
+      painter.drawLine(self.frameSize, yMax+self.frameSize, width-self.frameSize, yMax+self.frameSize)
+      painter.setPen(self.penDefault)
+    return
 
 
   def imageFromDoc(self, doc:dict[str,Any]) -> QPixmap:

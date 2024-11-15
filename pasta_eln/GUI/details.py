@@ -7,10 +7,9 @@ from PySide6.QtWidgets import QScrollArea, QTextEdit  # pylint: disable=no-name-
 from PySide6.QtCore import Qt, Slot                   # pylint: disable=no-name-in-module
 from ..guiStyle import TextButton, Image, Label, showMessage, widgetAndLayout, addDocDetails
 from ._contextMenu import initContextMenu, executeContextMenu, CommandMenu
-from ..fixedStringsJson import defaultDataHierarchyNode
+from ..fixedStringsJson import defaultDataHierarchyNode, SORTED_DB_KEYS
 from ..guiCommunicate import Communicate
 
-PASTA_DETAILS = ['shasum','type','branch','gui','dateCreated','dateModified','id','user','client','externalId']
 
 class Details(QScrollArea):
   """ widget that shows the details of the items """
@@ -123,7 +122,7 @@ class Details(QScrollArea):
         self.specialW.show()
       elif key in ['name']:  #skip
         continue
-      elif key in PASTA_DETAILS:
+      elif key in SORTED_DB_KEYS:
         addDocDetails(self, self.metaDatabaseL, key, self.doc[key], dataHierarchyNode)
         self.btnDatabase.setChecked(False)
       elif key=='metaVendor':

@@ -98,6 +98,10 @@ SQLiteTranslation     = str.maketrans(SQLiteTranslationDict)
 
 minimalDocInForm = {'tags':[], 'comment':'', '':{}}
 
+SORTED_KEYS     = ['name', 'tags', 'comment', 'metaUser', '']
+SORTED_BIG_KEYS = ['content','metaVendor']
+SORTED_DB_KEYS  = ['id', 'type', 'dateCreated','dateModified','dateSync', 'user','branch','gui','client','externalId','shasum']
+
 setupText = """
 ### Welcome to the PASTA-ELN setup
 Three components are needed for proper functioning of PASTA-ELN:
