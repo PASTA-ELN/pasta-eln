@@ -125,7 +125,7 @@ class BaseDatabaseApi:
 
   def get_model(self, model_id: int | str,
                 model_type: Type[Union[UploadModel, ConfigModel, DataHierarchyModel, ProjectModel]]) -> Union[
-    UploadModel, ProjectModel, ConfigModel, DataHierarchyModel]:
+    UploadModel, ProjectModel, ConfigModel, DataHierarchyModel, None]:
     self.logger.info("Retrieving data model with id: %s, type: %s", model_id, model_type)
     if not model_id:
       raise log_and_create_error(self.logger, DatabaseError, "Model ID cannot be empty!")
@@ -138,10 +138,8 @@ class BaseDatabaseApi:
         engine = create_engine(self.db_url_map[db_name],
                                echo=True)
         with Session(engine) as session:
-          if db_model := session.get(self.model_mapping[model_type], model_id):
-            return self.to_base_model_converter_map[type(db_model)](db_model)
-          else:
-            raise log_and_create_error(self.logger, DatabaseError, "Model not found!")
+          db_model = session.get(self.model_mapping[model_type], model_id)
+          return self.to_base_model_converter_map[type(db_model)](db_model) if db_model else None
       case ProjectModel():
         return self.get_project(model_id)
       case _:

@@ -224,6 +224,8 @@ class DatabaseAPI:
     """
     self.logger.info("Initializing database for dataverse module...")
     self.db_api.create_and_init_database()
+    if self.db_api.get_model(self.config_model_id, ConfigModel) is None:
+      self.initialize_config_document()
 
   def initialize_config_document(self) -> None:
     """
@@ -239,7 +241,7 @@ class DatabaseAPI:
     """
     self.logger.info("Initializing config document...")
     data_hierarchy_types: list[str] = get_data_hierarchy_types(self.get_data_hierarchy_models())
-    model = ConfigModel(_id=1, parallel_uploads_count=3,
+    model = ConfigModel(_id=self.config_model_id, parallel_uploads_count=3,
                         dataverse_login_info={"server_url": "", "api_token": "", "dataverse_id": ""},
                         project_upload_items={data_type: True for data_type in data_hierarchy_types})
     current_path = realpath(join(getcwd(), dirname(__file__)))
