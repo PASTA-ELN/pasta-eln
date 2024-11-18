@@ -8,12 +8,11 @@
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, call
 
 import pytest
 from PySide6.QtWidgets import QBoxLayout, QDateTimeEdit, QFrame, QHBoxLayout, QLineEdit, QPushButton, QVBoxLayout
 from _pytest.mark import param
-from mock.mock import call
 
 from pasta_eln.GUI.dataverse.compound_data_type_class import CompoundDataTypeClass
 from pasta_eln.GUI.dataverse.data_type_class_context import DataTypeClassContext
