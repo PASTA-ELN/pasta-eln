@@ -64,7 +64,7 @@ class UploadConfigDialog(Ui_UploadConfigDialog, QObject):
     self.numParallelComboBox.setCurrentIndex(2)
     self.instance.setWindowModality(QtCore.Qt.WindowModality.ApplicationModal)
     self.config_model: ConfigModel | None = None
-    self.data_hierarchy_types: list[str] = get_data_hierarchy_types(self.db_api.get_data_hierarchy())
+    self.data_hierarchy_types: list[str] = get_data_hierarchy_types(self.db_api.get_data_hierarchy_models())
     self.buttonBox.button(QtWidgets.QDialogButtonBox.StandardButton.Save).clicked.connect(self.save_ui)
     (self.numParallelComboBox.currentTextChanged[str]
      .connect(lambda num: setattr(self.config_model, "parallel_uploads_count", int(num))))

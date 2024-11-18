@@ -22,7 +22,7 @@ from random import randint
 from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
-from sqlalchemy.sql.functions import random
+from mypy.metastore import random_string
 
 from pasta_eln.dataverse.base_database_api import BaseDatabaseApi
 from pasta_eln.dataverse.config_model import ConfigModel
@@ -293,10 +293,10 @@ class TestDataverseDatabaseAPI:
 
     # Act
     if exception is None:
-      mock_database_api.update_model_document(data)
+      mock_database_api.update_model(data)
     else:
       with pytest.raises(type(exception)):
-        mock_database_api.update_model_document(data)
+        mock_database_api.update_model(data)
 
     # Assert
     mock_database_api.logger.info.assert_called_once_with("Updating model document: %s", data)
@@ -661,7 +661,7 @@ class TestDataverseDatabaseAPI:
                                                          expected_api_token, expected_server_url, test_id):
     # Arrange
     mock_config = mocker.MagicMock(spec=ConfigModel)
-    mock_database_api.update_model_document = mocker.MagicMock()
+    mock_database_api.update_model = mocker.MagicMock()
     mock_config.dataverse_login_info = {"api_token": api_token, "server_url": server_url}
     mock_encrypt = mocker.patch('pasta_eln.dataverse.database_api.encrypt_data', return_value=expected_api_token)
     # Act
@@ -673,7 +673,7 @@ class TestDataverseDatabaseAPI:
       mock_encrypt.assert_called_once_with(mock_database_api.logger, mock_database_api.encrypt_key, api_token)
     assert mock_config.dataverse_login_info["api_token"] == expected_api_token
     assert mock_config.dataverse_login_info["server_url"] == expected_server_url
-    mock_database_api.update_model_document.assert_called_once_with(mock_config)
+    mock_database_api.update_model.assert_called_once_with(mock_config)
 
   @pytest.mark.parametrize("config_model, test_id", [
     (None, "none_config_model"),
@@ -682,8 +682,8 @@ class TestDataverseDatabaseAPI:
   ], ids=["none_config_model", "invalid_type_config_model", "invalid_dataverse_login_info_type"])
   def test_save_config_model_error_cases(self, mocker, mock_database_api, config_model, test_id):
     # Arrange
-    mock_database_api.update_model_document = mocker.MagicMock()
-    original_update_model_document_call_count = mock_database_api.update_model_document.call_count
+    mock_database_api.update_model = mocker.MagicMock()
+    original_update_model_document_call_count = mock_database_api.update_model.call_count
 
     # Act
     mock_database_api.save_config_model(config_model)
@@ -691,7 +691,7 @@ class TestDataverseDatabaseAPI:
     # Assert
     mock_database_api.logger.info.assert_any_call("Saving config model...")
     mock_database_api.logger.error.assert_called_once()
-    assert mock_database_api.update_model_document.call_count == original_update_model_document_call_count
+    assert mock_database_api.update_model.call_count == original_update_model_document_call_count
 
   @pytest.mark.parametrize("encrypt_key, test_id", [
     (None, "no_encrypt_key"),
@@ -764,14 +764,83 @@ class TestDataverseDatabaseAPI:
       assert result['models'][0].__dict__ == expected_output['models'][
         0].__dict__, f"Test ID: {test_id}, Expected: {expected_output['models'][0].__dict__}, Actual: {result['models'][0].__dict__}"
 
-
   @pytest.mark.parametrize("input_model",
                            [  # Success path tests with various realistic test values
-                             (UploadModel(_id=None, project_name='data1', dataverse_url='http://example.com', data_type='artifact', project_doc_id=str(randint(0, 1000)), created_date_time='1000-01-01 00:00:00', finished_date_time='1000-01-01 00:00:00', log='test_log', status='test_status'))
-                               #ConfigModel(_id=None, metadata={'value': 'value'})])
-  ], ids=['success_path_upload_model'])
+                             (UploadModel(_id=None, project_name='data1', dataverse_url='http://example.com',
+                                          data_type='artifact', project_doc_id=str(randint(0, 1000)),
+                                          created_date_time='1000-01-01 00:00:00',
+                                          finished_date_time='1000-01-01 00:00:00', log='test_log',
+                                          status='test_status')),
+                             ConfigModel(_id=None, metadata={'value': 'value'}, dataverse_login_info={'value': 'value'},
+                                         project_upload_items={'value': 'value'}, parallel_uploads_count=1),
+                           ])
   def test_create_model_document_1(self, input_model, mocker):
     db_api = DatabaseAPI()
+    db_api.initialize_database()
     test = db_api.create_model(input_model)
     assert test
+    if isinstance(test, ConfigModel):
+      test.dataverse_login_info["new_key"] = random_string()
+      test.metadata["new_key"] = random_string()
+      test.project_upload_items[random_string()] = randint(0, 1000)
+      test.parallel_uploads_count = randint(0, 1000)
+    else:
+      test.dataverse_url = f"{test.dataverse_url}_{randint(0, 1000)}"
+      test.project_name = f"{test.project_name}_{randint(0, 1000)}"
+    db_api.update_model(test)
     print(dict(test))
+
+  def test_get_models_1(self):
+    db_api = DatabaseAPI()
+    test = db_api.get_models(UploadModel)
+    assert test
+    test1 = db_api.get_models(ConfigModel)
+    assert test1
+    test2 = db_api.get_models(ProjectModel)
+    assert test2
+
+  def test_get_paginated_models_1(self):
+    db_api = DatabaseAPI()
+    test = db_api.get_paginated_models(UploadModel, "2", ["project_name"], 1)
+    assert test
+
+  def test_get_model_1(self):
+    db_api = DatabaseAPI()
+    test = db_api.get_model(6, ConfigModel)
+    assert test
+    test = db_api.get_model(1, ConfigModel)
+    assert test
+    test = db_api.get_model(11, UploadModel)
+    assert test
+    test = db_api.get_model(5, UploadModel)
+    assert test
+    test = db_api.get_model('x-03840b871c2342649d7f1ab7cd164883', ProjectModel)
+    assert test
+    test = db_api.get_model('x-142485a2c6d64c1e89ee0b8dabe0d012', ProjectModel)
+    assert test
+    test = db_api.get_model('x-f8019a70ec6748e38ac74040c3f47c89', ProjectModel)
+    assert test
+
+  def test_get_config_model_1(self):
+    db_api = DatabaseAPI()
+    test = db_api.get_config_model()
+    assert test
+
+  def test_save_config_model_1(self):
+    db_api = DatabaseAPI()
+    test = db_api.get_config_model()
+    test.dataverse_login_info["api_token"] = random_string()
+    test.dataverse_login_info["server_url"] = random_string()
+    test.project_upload_items[random_string()] = True
+    assert test
+    db_api.save_config_model(test)
+    assert test
+
+  def test_get_data_hierarchy_1(self):
+    db_api = DatabaseAPI()
+    test = db_api.get_data_hierarchy_models()
+    assert test
+
+  def test_initialize_config_document_1(self):
+    db_api = DatabaseAPI()
+    db_api.initialize_config_document()

@@ -9,9 +9,10 @@
 from typing import Tuple
 
 from pasta_eln.dataverse.config_model import ConfigModel
+from pasta_eln.dataverse.data_hierarchy_model import DataHierarchyModel
 from pasta_eln.dataverse.database_orm_config_model import DatabaseOrmConfigModel
+from pasta_eln.dataverse.database_orm_data_hierarchy_model import DatabaseOrmDataHierarchyModel
 from pasta_eln.dataverse.database_orm_main_model import DatabaseOrmMainModel
-from pasta_eln.dataverse.database_orm_properties_model import DatabaseOrmPropertiesModel
 from pasta_eln.dataverse.database_orm_upload_model import DatabaseOrmUploadModel
 from pasta_eln.dataverse.project_model import ProjectModel
 from pasta_eln.dataverse.upload_model import UploadModel
@@ -36,6 +37,11 @@ class DatabaseOrmAdapter:
     return DatabaseOrmMainModel(**model_dict)
 
   @staticmethod
+  def get_orm_data_hierarchy_model(model: DataHierarchyModel) -> DatabaseOrmDataHierarchyModel:
+    model_dict = dict(model)
+    return DatabaseOrmDataHierarchyModel(**model_dict)
+
+  @staticmethod
   def get_config_model(model: DatabaseOrmConfigModel) -> ConfigModel:
     model_dict = dict(model)
     model_dict['metadata'] = model_dict.pop('metadata_info')
@@ -56,3 +62,8 @@ class DatabaseOrmAdapter:
     main_model_dict['date_modified'] = main_model_dict.pop('dateModified')
     main_model_dict.pop('type')
     return ProjectModel(**main_model_dict, status=model[1], objective=model[2])
+
+  @staticmethod
+  def get_data_hierarchy_model(model: DatabaseOrmDataHierarchyModel) -> DataHierarchyModel:
+    model_dict = dict(model)
+    return DataHierarchyModel(**model_dict)

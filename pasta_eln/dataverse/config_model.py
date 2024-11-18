@@ -39,7 +39,7 @@ class ConfigModel(BaseModel):
   """
 
   def __init__(self,
-               _id: str | None = None,
+               _id: int | None = None,
                project_upload_items: dict[str, Any] | None = None,
                parallel_uploads_count: int | None = None,
                dataverse_login_info: dict[str, Any] | None = None,

@@ -468,7 +468,7 @@ class TestDataverseDataUploadTask:
 
     # Assert
     assert mock_upload_model.log == expected_log, f"Test Failed: {test_id}"
-    setup_task.db_api.update_model_document.assert_called_once_with(
+    setup_task.db_api.update_model.assert_called_once_with(
       mock_upload_model), f"DB update not called: {test_id}"
 
   @pytest.mark.parametrize("already_cancelled, expected_log_contains, expected_status", [
@@ -518,7 +518,7 @@ class TestDataverseDataUploadTask:
     setup_task.update_changed_status(status)
 
     # Assert
-    setup_task.db_api.update_model_document.assert_called_once()
+    setup_task.db_api.update_model.assert_called_once()
     setup_task.status_changed.emit.assert_called_with(expected_status)
     assert setup_task.upload_model.status == expected_status, f"Expected status to be '{expected_status}' but got '{setup_task.upload_model.status}'"
 

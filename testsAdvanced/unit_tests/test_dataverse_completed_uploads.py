@@ -50,7 +50,7 @@ class TestDataverseCompletedUploads:
     mock_setup_ui.assert_called_once_with(completed_upload_instance.instance)
     mock_database_api.assert_called_once()
     assert completed_upload_instance.load_complete is False
-    assert completed_upload_instance.next_bookmark is None
+    assert completed_upload_instance.next_page is None
     assert completed_upload_instance.logger is mock_get_logger.return_value, "Logger should be initialized"
     assert completed_upload_instance.db_api is mock_database_api.return_value, "DatabaseAPI should be initialized"
     assert completed_upload_instance.instance is mock_dialog.return_value, "completed_upload_instance should be initialized"
@@ -98,9 +98,9 @@ class TestDataverseCompletedUploads:
     if result is not None and isinstance(result, dict):
       assert mock_completed_upload.completedUploadsVerticalLayout.addWidget.call_count == expected_widget_count
       if "bookmark" in result and isinstance(result["bookmark"], str):
-        assert mock_completed_upload.next_bookmark == result["bookmark"]
+        assert mock_completed_upload.next_page == result["bookmark"]
       else:
-        assert mock_completed_upload.next_bookmark is None
+        assert mock_completed_upload.next_page is None
     if test_id == "error_with_incorrect_type_in_models":
       mock_completed_upload.logger.error.assert_called_once_with("Incorrect type in queried models!")
     if test_id == "error_with_incorrect_bookmark_in_models":
@@ -314,7 +314,7 @@ class TestDataverseCompletedUploads:
                     expected_load_complete
                     ):
     mock_completed_upload.load_complete = load_complete
-    mock_completed_upload.next_bookmark = next_bookmark
+    mock_completed_upload.next_page = next_bookmark
     mock_completed_upload.db_api.get_paginated_models.return_value = db_return_value
     mock_completed_upload.completedUploadsScrollArea.verticalScrollBar.return_value.maximum.return_value = 100
     mock_completed_upload.get_completed_upload_task_widget = mocker.MagicMock()

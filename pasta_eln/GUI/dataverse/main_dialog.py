@@ -175,7 +175,7 @@ class MainDialog(Ui_MainDialogBase):
     project_widget_ui.projectNameLabel.setText(textwrap.fill(project.name or "", width=80, max_lines=1))
     project_widget_ui.projectNameLabel.setToolTip(project.name)
     project_widget_ui.modifiedDateTimeLabel.setText(
-      datetime.datetime.fromisoformat(project.date or "").strftime("%Y-%m-%d %H:%M:%S"))
+      datetime.datetime.fromisoformat(project.date_modified or "").strftime("%Y-%m-%d %H:%M:%S"))
     project_widget_ui.projectDocIdLabel.hide()
     project_widget_ui.projectDocIdLabel.setText(project.id)
     return project_widget_frame

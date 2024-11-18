@@ -56,7 +56,7 @@ class CompletedUploads(Ui_CompletedUploadsForm):
         It sets up the logger, creates a QDialog instance, and sets the window modality.
     """
     self.load_complete: bool = False
-    self.next_bookmark: str | None = None
+    self.next_page: int = 1
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
     self.instance = QDialog()
     super().setupUi(self.instance)
@@ -78,12 +78,10 @@ class CompletedUploads(Ui_CompletedUploadsForm):
     """
     self.logger.info("Loading completed uploads..")
     self.clear_ui()
-    result = self.db_api.get_paginated_models(UploadModel, filter_term=self.filterTermLineEdit.text())
-    self.next_bookmark = result["bookmark"] if isinstance(result["bookmark"], str) else None
-    if self.next_bookmark is None:
-      self.logger.error("Unable to retrieve models, invalid bookmark returned!")
-      return
-    for upload in result["models"]:
+    result = self.db_api.get_paginated_models(UploadModel,
+                                              filter_term=self.filterTermLineEdit.text(),
+                                              page_number=self.next_page)
+    for upload in result:
       if isinstance(upload, UploadModel):
         widget = self.get_completed_upload_task_widget(upload)
         self.completedUploadsVerticalLayout.addWidget(widget)
@@ -216,16 +214,14 @@ class CompletedUploads(Ui_CompletedUploadsForm):
       self.logger.info("Data load completed, hence skipping..")
       return
     vertical_scroll_bar = self.completedUploadsScrollArea.verticalScrollBar()
-    if scroll_value == vertical_scroll_bar.maximum() and self.next_bookmark:
-      result = self.db_api.get_paginated_models(UploadModel,
+    if scroll_value == vertical_scroll_bar.maximum() and not self.load_complete:
+      self.next_page += 1
+      models = self.db_api.get_paginated_models(UploadModel,
                                                 filter_term=self.filterTermLineEdit.text(),
-                                                bookmark=self.next_bookmark)
-      bookmark = result["bookmark"] if isinstance(result["bookmark"], str) else None
-      if self.next_bookmark != bookmark:
-        self.next_bookmark = bookmark
-        for upload in result["models"]:
-          if isinstance(upload, UploadModel):
-            widget = self.get_completed_upload_task_widget(upload)
-            self.completedUploadsVerticalLayout.addWidget(widget)
-      else:
+                                                page_number=self.next_page)
+      for upload in models:
+        if isinstance(upload, UploadModel):
+          widget = self.get_completed_upload_task_widget(upload)
+          self.completedUploadsVerticalLayout.addWidget(widget)
+      if len(models) < 10:
         self.load_complete = True

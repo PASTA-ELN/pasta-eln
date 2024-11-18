@@ -469,7 +469,7 @@ class TestDataverseEditMetadataDialog:
     assert not edit_metadata_dialog.instance.isVisible(), "EditMetadataDialog instance should be closed!"
     assert edit_metadata_dialog.metadata['datasetVersion']['metadataBlocks']['citation']['fields'][32][
              'value'] == 'test data...'
-    mock_database_api.update_model_document.assert_called_once_with(edit_metadata_dialog.config_model)
+    mock_database_api.update_model.assert_called_once_with(edit_metadata_dialog.config_model)
 
   @pytest.mark.parametrize("test_id, test_data, expected_data",
                            [  # Success tests with various realistic test values
@@ -527,7 +527,7 @@ class TestDataverseEditMetadataDialog:
     assert not edit_metadata_dialog.instance.isVisible(), "EditMetadataDialog instance should be closed!"
     assert edit_metadata_dialog.metadata['datasetVersion']['metadataBlocks']['citation']['fields'][25][
              'value'] == expected_data
-    mock_database_api.update_model_document.assert_called_once_with(edit_metadata_dialog.config_model)
+    mock_database_api.update_model.assert_called_once_with(edit_metadata_dialog.config_model)
 
   def test_delete_field_primitive_multiple_type_and_save_click_should_do_as_expected(self,
                                                                                      qtbot,
@@ -575,7 +575,7 @@ class TestDataverseEditMetadataDialog:
     assert not edit_metadata_dialog.instance.isVisible(), "EditMetadataDialog instance should be closed!"
     assert edit_metadata_dialog.metadata['datasetVersion']['metadataBlocks']['citation']['fields'][25][
              'value'] == ["KindOfData1", "KindOfData3"]
-    mock_database_api.update_model_document.assert_called_once_with(edit_metadata_dialog.config_model)
+    mock_database_api.update_model.assert_called_once_with(edit_metadata_dialog.config_model)
 
   def test_clear_field_compound_type_and_save_click_should_do_as_expected(self,
                                                                           qtbot,
@@ -676,7 +676,7 @@ class TestDataverseEditMetadataDialog:
                                                   'typeClass': 'primitive',
                                                   'typeName': 'topicClassVocabURI',
                                                   'value': 'Top Class Url 3'}}]
-    mock_database_api.update_model_document.assert_called_once_with(edit_metadata_dialog.config_model)
+    mock_database_api.update_model.assert_called_once_with(edit_metadata_dialog.config_model)
 
   def test_clear_field_controlled_vocabulary_type_and_save_click_should_do_as_expected(self,
                                                                                        qtbot,
@@ -741,7 +741,7 @@ class TestDataverseEditMetadataDialog:
     assert not edit_metadata_dialog.instance.isVisible(), "EditMetadataDialog instance should be closed!"
     assert edit_metadata_dialog.metadata['datasetVersion']['metadataBlocks']['biomedical']['fields'][0][
              'value'].sort() == ['Cohort Study', 'Cross Sectional'].sort()
-    mock_database_api.update_model_document.assert_called_once_with(edit_metadata_dialog.config_model)
+    mock_database_api.update_model.assert_called_once_with(edit_metadata_dialog.config_model)
 
   def test_clear_field_controlled_vocabulary_type_and_should_reset_to_no_value(self,
                                                                                qtbot,
@@ -887,7 +887,7 @@ class TestDataverseEditMetadataDialog:
                                                       'typeClass': 'primitive',
                                                       'typeName': 'timePeriodCoveredStart',
                                                       'value': '2013-01-01'}}]
-    mock_database_api.update_model_document.assert_called_once_with(edit_metadata_dialog.config_model)
+    mock_database_api.update_model.assert_called_once_with(edit_metadata_dialog.config_model)
 
     # Clear start and end date of the two populated items
     test_data = [("No Value", "No Value"),
@@ -922,7 +922,7 @@ class TestDataverseEditMetadataDialog:
                                                       'typeClass': 'primitive',
                                                       'typeName': 'timePeriodCoveredStart',
                                                       'value': '2013-01-01'}}]
-    mock_database_api.update_model_document.assert_any_call(edit_metadata_dialog.config_model)
+    mock_database_api.update_model.assert_any_call(edit_metadata_dialog.config_model)
 
   def test_add_field_compound_single_type_and_save_click_should_do_as_expected(self,
                                                                                qtbot,
@@ -968,7 +968,7 @@ class TestDataverseEditMetadataDialog:
              'value']['targetSampleActualSize']['value'] == "targetSampleSize"
     assert edit_metadata_dialog.metadata['datasetVersion']['metadataBlocks']['socialscience']['fields'][7][
              'value']['targetSampleSizeFormula']['value'] == "targetSampleSizeFormula"
-    mock_database_api.update_model_document.assert_called_once_with(edit_metadata_dialog.config_model)
+    mock_database_api.update_model.assert_called_once_with(edit_metadata_dialog.config_model)
 
   @pytest.mark.parametrize("test_id, test_data, expected_data",
                            [  # Success tests with various realistic test values
@@ -1032,7 +1032,7 @@ class TestDataverseEditMetadataDialog:
                'value'][pos]['dsDescriptionValue']['value'] == expected_data[pos][0]
       assert edit_metadata_dialog.metadata['datasetVersion']['metadataBlocks']['citation']['fields'][7][
                'value'][pos]['dsDescriptionDate']['value'] == expected_data[pos][1]
-    mock_database_api.update_model_document.assert_called_once_with(edit_metadata_dialog.config_model)
+    mock_database_api.update_model.assert_called_once_with(edit_metadata_dialog.config_model)
 
   def test_delete_fields_compound_multiple_type_and_save_click_should_do_as_expected(self,
                                                                                      qtbot,
@@ -1091,7 +1091,7 @@ class TestDataverseEditMetadataDialog:
                'value'][pos]['dsDescriptionValue']['value'] == expected_data[pos][0]
     assert edit_metadata_dialog.metadata['datasetVersion']['metadataBlocks']['citation']['fields'][7][
              'value'][pos]['dsDescriptionDate']['value'] == expected_data[pos][1]
-    mock_database_api.update_model_document.assert_called_once_with(edit_metadata_dialog.config_model)
+    mock_database_api.update_model.assert_called_once_with(edit_metadata_dialog.config_model)
 
   def test_add_field_controlled_type_and_save_click_should_do_as_expected(self, qtbot, edit_metadata_dialog,
                                                                           mock_database_api):
@@ -1160,7 +1160,7 @@ class TestDataverseEditMetadataDialog:
     combo_box_items.remove('No Value')
     combo_box_items.sort()
     assert value == combo_box_items, "EditMetadataDialog field value should be updated!"
-    mock_database_api.update_model_document.assert_called_once_with(edit_metadata_dialog.config_model)
+    mock_database_api.update_model.assert_called_once_with(edit_metadata_dialog.config_model)
 
   def test_delete_field_controlled_type_and_save_click_should_do_as_expected(self, qtbot, edit_metadata_dialog,
                                                                              mock_database_api):
@@ -1204,7 +1204,7 @@ class TestDataverseEditMetadataDialog:
     value = edit_metadata_dialog.metadata['datasetVersion']['metadataBlocks']['biomedical']['fields'][1]['value']
     value.sort()
     assert value == combo_box_items[2:], "EditMetadataDialog field value should be updated!"
-    mock_database_api.update_model_document.assert_called_once_with(edit_metadata_dialog.config_model)
+    mock_database_api.update_model.assert_called_once_with(edit_metadata_dialog.config_model)
 
   def test_if_data_loaded_is_populated_as_expected(self, qtbot, edit_metadata_dialog,
                                                    mock_database_api):
@@ -1350,7 +1350,7 @@ class TestDataverseEditMetadataDialog:
              'name'] == "New License Name", "licenseName should have right text!"
     assert edit_metadata_dialog.metadata['datasetVersion']['license'][
              'uri'] == "New License Url", "licenseURL should have right text!"
-    mock_database_api.update_model_document.assert_called_once_with(edit_metadata_dialog.config_model)
+    mock_database_api.update_model.assert_called_once_with(edit_metadata_dialog.config_model)
 
   def test_update_license_information_and_cancel_should_do_as_expected(self, qtbot, edit_metadata_dialog,
                                                                        mock_database_api):
@@ -1365,7 +1365,7 @@ class TestDataverseEditMetadataDialog:
              'name'] == "New License Name", "licenseName should have right text!"
     assert edit_metadata_dialog.metadata['datasetVersion']['license'][
              'uri'] == "New License Url", "licenseURL should have right text!"
-    mock_database_api.update_model_document.assert_not_called()
+    mock_database_api.update_model.assert_not_called()
 
   def test_save_click_should_display_summary_as_expected_and_yes_click_should_do_as_expected(self, qtbot,
                                                                                              edit_metadata_dialog,
@@ -1398,7 +1398,7 @@ class TestDataverseEditMetadataDialog:
              'name'] == "New License Name", "licenseName should have right text!"
     assert edit_metadata_dialog.metadata['datasetVersion']['license'][
              'uri'] == "New License Url", "licenseURL should have right text!"
-    mock_database_api.update_model_document.assert_called_once_with(edit_metadata_dialog.config_model)
+    mock_database_api.update_model.assert_called_once_with(edit_metadata_dialog.config_model)
 
   def test_save_click_should_display_summary_as_expected_and_no_click_should_do_as_expected(self, qtbot,
                                                                                             edit_metadata_dialog,
@@ -1433,4 +1433,4 @@ class TestDataverseEditMetadataDialog:
              'name'] == "New License Name", "licenseName should have right text!"
     assert edit_metadata_dialog.metadata['datasetVersion']['license'][
              'uri'] == "New License Url", "licenseURL should have right text!"
-    mock_database_api.update_model_document.assert_not_called()
+    mock_database_api.update_model.assert_not_called()

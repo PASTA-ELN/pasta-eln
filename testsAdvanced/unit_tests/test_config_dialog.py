@@ -227,7 +227,7 @@ class TestConfigDialog:
   @pytest.mark.parametrize("test_id", [("success_path_save_config")])
   def test_save_config(self, mock_config_dialog, test_id, mock_message_box):
     # Arrange
-    mock_config_dialog.db_api.update_model_document = MagicMock()
+    mock_config_dialog.db_api.update_model = MagicMock()
 
     # Act
     mock_config_dialog.save_config()

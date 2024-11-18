@@ -12,11 +12,11 @@ import copy
 import re
 from asyncio import get_event_loop
 from base64 import b64decode, b64encode
-from json import dump, load
+from json import dump
 from logging import Logger
 from os.path import exists, join
 from pathlib import Path
-from typing import Any, Callable, Dict, Type
+from typing import Any, Callable, Type
 
 from PySide6.QtCore import QSize
 from PySide6.QtGui import QImage, QPixmap
@@ -25,6 +25,7 @@ from qtawesome import icon
 
 from pasta_eln.dataverse.client import DataverseClient
 from pasta_eln.dataverse.config_error import ConfigError
+from pasta_eln.dataverse.data_hierarchy_model import DataHierarchyModel
 from pasta_eln.dataverse.pasta_config_reader_factory import PastaConfigReaderFactory
 from pasta_eln.dataverse.upload_status_values import UploadStatusValues
 
@@ -732,31 +733,19 @@ def get_formatted_dataverse_url(dataverse_url: str) -> str:
   return formatted_dataverse_url
 
 
-def get_data_hierarchy_types(data_hierarchy: dict[str, Any] | None) -> list[str | Any]:
-  """
-  Gets the types of data hierarchy.
-
-  Explanation:
-      This function extracts the types of data hierarchy from the provided data hierarchy dictionary.
-      It filters out specific types and appends 'Unidentified' to the list of data hierarchy types.
-
-  Args:
-      data_hierarchy (dict[str, Any] | None): The data hierarchy dictionary.
-
-  Returns:
-      list[str | Any]: The list of data hierarchy types.
-  """
+def get_data_hierarchy_types(data_hierarchy: list[DataHierarchyModel] | None) -> list[str | Any]:
   if data_hierarchy is None:
     return []
   data_hierarchy_types = []
-  for data_type in data_hierarchy:
-    if (data_type and not data_type.isspace()
-        and data_type not in ("x0", "x1", "x2")):
-      type_capitalized = data_type.capitalize()
+  for data_model in data_hierarchy:
+    if (data_model and data_model.docType
+        and data_model.docType not in ("x0", "x1")):
+      type_capitalized = data_model.docType.capitalize()
       if type_capitalized not in data_hierarchy_types:
         data_hierarchy_types.append(type_capitalized)
   data_hierarchy_types.append("Unidentified")
   return data_hierarchy_types
+
 
 def get_db_info(logger: Logger) -> dict[str, str]:
   config = PastaConfigReaderFactory.get_instance().config
