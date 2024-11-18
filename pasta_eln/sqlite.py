@@ -10,8 +10,8 @@ from .fixedStringsJson import defaultDataHierarchy, defaultDefinitions, SQLiteTr
 from .stringChanges import outputString, camelCase, tracebackString
 from .miscTools import hierarchy
 
-KEY_ORDER=['id'  ,'name','user','type','dateCreated','dateModified','gui',      'client','shasum','image','content','comment','externalId']
-KEY_TYPE =['TEXT','TEXT','TEXT','TEXT','TEXT',       'TEXT',        'varchar(2)','TEXT',  'TEXT',  'TEXT', 'TEXT',   'TEXT',   'TEXT']
+KEY_ORDER=['id'  ,'name','user','type','dateCreated','dateModified','gui',      'client','shasum','image','content','comment','externalId','dateSync']
+KEY_TYPE =['TEXT','TEXT','TEXT','TEXT','TEXT',       'TEXT',        'varchar(2)','TEXT',  'TEXT',  'TEXT', 'TEXT',   'TEXT',   'TEXT',     'TEXT']
 DATA_HIERARCHY = ['docType', 'IRI','title','icon','shortcut','view']
 DEFINITIONS =    ['docType','class','idx', 'name', 'query', 'unit', 'IRI', 'mandatory', 'list']
 
@@ -366,7 +366,7 @@ class SqlLiteDB:
     mainNew    = {key: dataNew.pop(key) for key in KEY_ORDER if key in dataNew}
     branchNew  = dataNew.pop('branch',{})
     # read branches and identify changes
-    cursor.execute(f"SELECT * FROM branches WHERE id == '{docID}'")
+    cursor.execute(f"SELECT stack, child, path, show FROM branches WHERE id == '{docID}'")
     branchOld = [dict(i) for i in cursor.fetchall()]
     branchOld[0]['show'] = [i=='T' for i in branchOld[0]['show']]
     branchOld[0]['stack'] = branchOld[0]['stack'].split('/')[:-1]
@@ -900,11 +900,13 @@ class SqlLiteDB:
       except ValueError:
         outString+= outputString(outputStyle,'error',f"dch03a: branch data has strange list {docID}")
         continue
+      if docType.count('/')>5:
+        outString+= outputString(outputStyle,'error',f"dch04a: type has too many / {docID}")
       if len(docType.split('/'))==0:
-        outString+= outputString(outputStyle,'unsure',f"dch04: no type in (removed data?) {docID}")
+        outString+= outputString(outputStyle,'unsure',f"dch04b: no type in (removed data?) {docID}")
         continue
       if docType.startswith('x') and not docType.startswith(('x0','x1')):
-        outString+= outputString(outputStyle,'error',f"dch04b: bad data type*: {docID} {docType}")
+        outString+= outputString(outputStyle,'error',f"dch04c: bad data type*: {docID} {docType}")
         if repair:
           self.cursor.execute(f"UPDATE main SET type='x1' WHERE id = '{docID}'")
       if not all(k.startswith('x-') for k in stack.split('/')[:-1]):

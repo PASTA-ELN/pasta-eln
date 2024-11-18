@@ -138,10 +138,12 @@ from PySide6.QtWidgets import QApplication
 from .GUI.form import Form
 from .backend import Backend
 from .guiCommunicate import Communicate
+from .GUI.palette import Palette
 
 app = QApplication(sys.argv)
 backend = Backend()
-comm = Communicate(backend)
+palette = Palette(app,'none')
+comm = Communicate(backend,palette)
 doc = backend.db.getDoc("m-3a43570c4fd84b1ab81a8863ae058fb0")
 dialog = Form(comm, doc)
 dialog.show()

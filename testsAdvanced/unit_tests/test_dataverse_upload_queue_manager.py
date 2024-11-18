@@ -439,8 +439,8 @@ class TestDataverseUploadQueueManager:
   def test_cancel_all_queued_tasks_and_empty_queue(self, mocker, mock_manager, test_id, upload_queue_size):
     # Arrange
     mock_manager.upload_queue = [MagicMock() for _ in range(upload_queue_size)]
-    mock_manager.remove_cancelled_tasks = MagicMock()
-    mocked_timer = mocker.patch('pasta_eln.dataverse.upload_queue_manager.QTimer.singleShot')
+    mock_manager.remove_cancelled_tasks = mocker.MagicMock()
+    mock_manager.remove_cancelled_tasks = mocker.MagicMock()
     # Act
     mock_manager.cancel_all_queued_tasks_and_empty_queue()
 
@@ -449,7 +449,7 @@ class TestDataverseUploadQueueManager:
     for task in mock_manager.upload_queue:
       task.task.cancel.emit.assert_called_once()
     if upload_queue_size > 0:
-      mocked_timer.assert_called_once_with(500, mocker.ANY)
+      mock_manager.remove_cancelled_tasks.assert_called_once()
     else:
-      mocked_timer.assert_not_called()
+      mock_manager.remove_cancelled_tasks.assert_not_called()
     mock_manager.logger.info.assert_called_once()

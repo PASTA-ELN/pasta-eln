@@ -14,8 +14,13 @@ from PySide6.QtWidgets import QApplication, QFileDialog, QMainWindow  # pylint: 
 from qt_material import apply_stylesheet  # of https://github.com/UN-GCPDS/qt-material
 
 from pasta_eln import __version__
-from pasta_eln.GUI.dataverse.config_dialog import ConfigDialog
-from pasta_eln.GUI.dataverse.main_dialog import MainDialog
+from .backend import Backend
+from .fixedStringsJson import shortcuts, CONF_FILE_NAME
+from .guiCommunicate import Communicate
+from .guiStyle import Action, ScrollMessageBox, showMessage, widgetAndLayout
+from .inputOutput import exportELN
+from .miscTools import restart, updateAddOnList
+from .elabFTWsync import Pasta2Elab
 # from pasta_eln.GUI.dataverse.config_dialog import ConfigDialog
 # from pasta_eln.GUI.dataverse.main_dialog import MainDialog
 from .GUI.body import Body
@@ -24,12 +29,6 @@ from .GUI.config import Configuration
 from .GUI.form import Form
 from .GUI.projectGroup import ProjectGroup
 from .GUI.sidebar import Sidebar
-from .backend import Backend
-from .fixedStringsJson import shortcuts, CONF_FILE_NAME
-from .guiCommunicate import Communicate
-from .guiStyle import Action, ScrollMessageBox, showMessage, widgetAndLayout
-from .inputOutput import exportELN
-from .miscTools import restart, updateAddOnList
 from .GUI.palette import Palette
 os.environ['QT_API'] = 'pyside6'
 
@@ -56,8 +55,8 @@ class MainWindow(QMainWindow):
     palette      = Palette(self, theme)
     self.comm = Communicate(self.backend, palette)
     self.comm.formDoc.connect(self.formDoc)
-    self.dataverseMainDialog: MainDialog | None = None
-    self.dataverseConfig: ConfigDialog | None = None
+    # self.dataverseMainDialog: MainDialog | None = None
+    # self.dataverseConfig: ConfigDialog | None = None
 
     # Menubar
     menu = self.menuBar()
@@ -181,20 +180,22 @@ class MainWindow(QMainWindow):
         fConf.write(json.dumps(self.backend.configuration, indent=2))
       restart()
     elif command[0] is Command.SYNC:
-      report = self.comm.backend.replicateDB()
-      showMessage(self, 'Report of syncronization', report, style='QLabel {min-width: 450px}')
+      sync = Pasta2Elab(self.backend)
+      sync.sync()
     elif command[0] is Command.DATAHIERARCHY:
       # Jithu's code: comment out for now
       # dataHierarchyForm = DataHierarchyEditorDialog(self.comm.backend.db)
       # dataHierarchyForm.instance.exec()
       restart()
     elif command[0] is Command.DATAVERSE_CONFIG:
-      self.dataverseConfig = ConfigDialog()
-      self.dataverseConfig.show()
+      # Jithu's code: comment out for now
+      # self.dataverseConfig = ConfigDialog()
+      # self.dataverseConfig.show()
       pass
     elif command[0] is Command.DATAVERSE_MAIN:
-      self.dataverseMainDialog = MainDialog(self.comm.backend)
-      self.dataverseMainDialog.show()
+      # Jithu's code: comment out for now
+      # self.dataverseMainDialog = MainDialog(self.comm.backend)
+      # self.dataverseMainDialog.show()
       pass
     elif command[0] is Command.TEST1:
       fileName = QFileDialog.getOpenFileName(self, 'Open file for extractor test', str(Path.home()), '*.*')[0]

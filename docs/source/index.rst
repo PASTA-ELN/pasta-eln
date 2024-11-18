@@ -1,21 +1,17 @@
-PASTA (adaPtive mAterials Science meTadatA) electronic lab notebook (ELN) | The favorite ELN for experimental scientists
-************************************************************************************************************************
+PASTA-ELN | The favorite ELN for experimental scientists
+********************************************************
 
-PASTA-ELN makes it easy and convenient for an experimental scientist to organize raw data with metadata. PASTA-ELN applies the extractors that 'extract' thumbnails, data, and metadata from the raw measurement files and automatically enter them into the database. These little python programs can be written/adopted by scientists and can be shared by users. :ref:`To read more ... for advanced users <extractors>`.
+PASTA-ELN (adaPtive mAterials Science meTadatA - Electronic Lab Notebook) provides a streamlined and efficient solution for experimental scientists to manage and organize raw data alongside associated metadata. By leveraging extractors that automate the processing of raw measurement files, PASTA-ELN facilitates the seamless integration of thumbnails, data, and metadata into a centralized database. These extractors can be customized and shared by users, empowering researchers to tailor their workflows to their specific needs. :ref:`To read more ... for advanced users <addons>`.
 
-The raw data is the origin of scientific work and has to follow the FAIR (Findable, Accessible, Interoperable, and Reusable) principles which also support the individual researcher who has an easier time to find and organize the data, which PASTA-ELN supports. Additionally, PASTA-ELN encourages the user to follow research data management guidelines, :ref:`which are given ... <dodonts>`. Since adaptive software development has revolutionized software projects, we believe that agile project planning is also highly beneficial for scientific research projects and encourage agile workflows while using PASTA-ELN. :ref:`To read more ... for all useres <Agile Project Planning>`.
+**Data Management Principles**: The raw data at the heart of scientific research must adhere to the FAIR principles (Findable, Accessible, Interoperable, and Reusable). By supporting these principles, PASTA-ELN enables researchers to efficiently locate and organize their data. Furthermore, PASTA-ELN encourages users to adhere to research data management guidelines, which are essential for ensuring the integrity and reproducibility of scientific findings. :ref:`which are given ... <dodonts>`.
 
-Three (fictitious) user stories highlight different methods of using PASTA-ELN:
+**User-Centered Approaches**: Three distinct user stories illustrate the versatility of PASTA-ELN:
 
-- Andrew plans his research first and then executes the tasks. :ref:`Read on how you can follow this path.. <Planning based research>`.
+1.  **Planning-Based Research**: Andrew's approach involves planning his research and then executing tasks. Learn more about how to follow this path by consulting the :ref:`Planning Based Research <Planning-Based Research>` section.
+2.  **Importing Previous Data**: Brenda's workflow involves integrating data from previous research projects. Discover how to import and consolidate your existing data by reading the :ref:`Importing Previous Data <Importing previous data>` section.
+3.  **Recording Meeting Notes**: Claire's workflow focuses on structuring meeting notes and conference materials. Find out how to capture and organize your meeting notes by consulting the :ref:`Recording Meeting Notes <Recording meeting notes>` section.
 
-- Brenda has lots of data from her previous research in different folders and wants to integrate that data conveniently. :ref:`Read on how you can follow this path.. <Importing previous data>`.
-
-- Claire goes to many conferences and meetings and wants to structure her notes. :ref:`Read on how you can follow this path.. <Recording meeting notes>`.
-
-PASTA-ELN uses a local-first approach to store all data and metadata on user's storage devices and synchronize with a server upon user request. Thus, the data is always accessible through conventional software and its security and confidentiality are ensured. In addition, every researcher can fully adapt the metadata definitions to their personal taste and create an arbitrary folder structure in accordance with their typical workflows and research goals.
-
-In PASTA-ELN, the meta-data is stored in a document database called CouchDB. This non-SQL database is highly adaptive to different raw data sources and corresponding metadata. People that want to contribute to PASTA-ELN, :ref:`read more on the CouchDB implementation <CouchDB information>`. If CouchDB and local storage are the two legs on which PASTA-ELN is built (and agile project planning is its heart), then the Python backend and graphical user interfaces (GUI) are its torso, which links everything together. :ref:`Read more on the implementation <Python implementation>`. People that want to contribute to PASTA-ELN, please visit us at github.com. Questions are answered in the :ref:`FAQs <faqs>`.
+**Local-First Approach**: PASTA-ELN employs a local-first approach, storing all data and metadata on the user's storage device and synchronizing it with a server upon request. This ensures that data remains accessible through conventional software and maintains its security and confidentiality. Additionally, researchers can customize metadata definitions and create arbitrary folder structures to accommodate their unique workflows and research objectives. This flexibility allows users to easily transfer their data to other computers, collaborators, institutions, or archives by zipping the contents of their hard disk.
 
 Overview
 ========
@@ -26,17 +22,17 @@ Overview
    install
    userstory
    dodonts
-   faqs
-   extractors
+   addons
    data_hierarchy_configuration
-   motivation
-
+   verify
+   faqs
 
 Main contributors
 =================
 * Steffen Brinckmann: principal investigator, focuses on python backend
 * Thomas Düren: graphical user interfaces
 * Raphael Röske: graphical user interfaces
+* Enmar Al-Khafagi: backend and debugging
 * Velislava Yonkova: first extensive user
 * Hanna Tsybenko: testing
 * multiple colleagues that help with their valuable discussions

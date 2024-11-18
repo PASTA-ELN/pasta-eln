@@ -33,7 +33,6 @@ def test_simple(qtbot):
   window = Form(comm, {'_projectID': '', 'type': ['x0']})
   qtbot.addWidget(window)
 
-
   # projID = backend.output('x0').split('|')[-1].strip()
   # window.change(projID,'')
 

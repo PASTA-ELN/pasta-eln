@@ -59,7 +59,7 @@ class Backend(CLI_Mixin):
     #    self.cwd changes during program but is similarly the full path from root
     self.basePath   = Path(projectGroup['local']['path'])
     self.cwd        = Path(projectGroup['local']['path'])
-    self.addOnPath  = Path(self.configuration['addOnDir'])
+    self.addOnPath  = Path(projectGroup['addOnDir'])
     sys.path.append(str(self.addOnPath))  #allow add-ons
     # decipher miscellaneous configuration and store
     self.userID   = self.configuration['userID']
@@ -481,13 +481,13 @@ class Backend(CLI_Mixin):
     return
 
 
-  def testExtractor(self, filePath:Union[Path,str], extractorPath:Optional[Path]=None, recipe:str='',
+  def testExtractor(self, filePath:Union[Path,str], extractorPath:Optional[Path]=None, style:dict[str,Any]={'main':''},
                     outputStyle:str='text', saveFig:str='') -> str:
     """
     Args:
       filePath (Path, str): path to the file to be tested
       extractorPath (Path, None): path to the directory with extractors
-      recipe (str): recipe in / separated
+      style (dict): style with a main-key that is / separated
       outputStyle (str): report in ['print','text','html'] including show images
       saveFig (str): save figure to...; if given stop testing after generating image
 
@@ -526,7 +526,7 @@ class Backend(CLI_Mixin):
       try:
         module  = importlib.import_module(pyFile[:-3])
         plt.clf()
-        content = module.use(filePath, recipe, saveFig or None)
+        content = module.use(filePath, style, saveFig or None )
         if saveFig:
           return report
       except Exception:
@@ -535,17 +535,17 @@ class Backend(CLI_Mixin):
         report += outputString(outputStyle, 'error', f'{htmlStr}python-error">website</a>')
         report += outputString(outputStyle, 'error', traceback.format_exc(limit=3))
     if success:
-      if 'recipe' in content:
+      if 'style' in content:
         possibleDocTypes = [i for i in self.db.dataHierarchy('', '') if i[0]!='x']
-        matches = [i for i in possibleDocTypes if content['recipe'].startswith(i)]
-        if matches or content['recipe'] == '' or content['recipe'] == '-':
-          report += outputString(outputStyle, 'info', 'Recipe is good: '+content['recipe'])
+        matches = [i for i in possibleDocTypes if content['style']['main'].startswith(i)]
+        if matches or content['style']['main'] in {'', '-'}:
+          report += outputString(outputStyle, 'info', 'Style is good: '+content['style']['main'])
           size = len(str(content))
           report += outputString(outputStyle, 'info', f'Entire extracted size: {size // 1024}kB')
         else:
-          report += outputString(outputStyle, 'error', 'Recipe does not follow doctype in dataHierarchy.')
+          report += outputString(outputStyle, 'error', 'Style does not follow doctype in dataHierarchy.')
       else:
-        report += outputString(outputStyle,'error','Recipe not included in extractor.')
+        report += outputString(outputStyle,'error','Style not included in extractor.')
     if success:
       try:
         _ = json.dumps(content)
@@ -627,27 +627,6 @@ class Backend(CLI_Mixin):
   ######################################################
   ### Wrapper for database functions
   ######################################################
-  def replicateDB(self) -> str:
-    """
-    Replicate local database to remote database
-
-    Args:
-
-    Returns:
-        str: replication report
-    """
-    #def replicateDB(self, progressBar:Any, removeAtStart:bool=False) -> str:
-    # defaultProjectGroup = self.configuration['defaultProjectGroup']
-    # remoteConf = self.configuration['projectGroups'][defaultProjectGroup]['remote']
-    # if not remoteConf: #empty entry: fails
-    #   print("**ERROR brp01: You tried to replicate although, remote is not defined")
-    #   return 'ERROR'
-    # if 'cred' in remoteConf:
-    #   remoteConf['user'], remoteConf['password'] = upOut(remoteConf['cred'])[0].split(':')
-    # return self.db.replicateDB(remoteConf, progressBar, removeAtStart)
-    return 'NOT IMPLEMENTED YET'
-
-
   def checkDB(self, outputStyle:str='text', repair:bool=False, minimal:bool=False) -> str:
     """
     Wrapper of check database for consistencies by iterating through all documents

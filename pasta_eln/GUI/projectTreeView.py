@@ -1,5 +1,5 @@
 """ Custom tree view on data model """
-import subprocess, os, platform, logging, shutil
+import subprocess, os, platform, logging, shutil, importlib
 from enum import Enum
 from pathlib import Path
 from typing import Any
@@ -52,6 +52,11 @@ class TreeView(QTreeView):
     if not folder:
       Action('Open file with another application', self, [Command.OPEN_EXTERNAL],    context)
     Action('Open folder in file browser',          self, [Command.OPEN_FILEBROWSER], context)
+    if folder:
+      if projectAddOns := self.comm.backend.configuration.get('projectAddOns',''):
+        context.addSeparator()
+        for label, description in projectAddOns.items():
+          Action(description, self, [Command.ADD_ON, label], context)
     context.exec(p.globalPos())                                                                              # type: ignore[attr-defined]
     return
 
@@ -151,6 +156,9 @@ class TreeView(QTreeView):
           os.startfile(path) # type: ignore[attr-defined]
         else:                                   # linux variants
           subprocess.call(('xdg-open', path))
+    elif command[0] is Command.ADD_ON:
+      module      = importlib.import_module(command[1])
+      module.main(self.comm.backend, item.data()['hierStack'], self)
     else:
       print('**ERROR**: unknown context menu', command)
     return
@@ -233,7 +241,8 @@ class Command(Enum):
   ADD_CHILD        = 1
   ADD_SIBLING      = 2
   DELETE           = 3
-  SHOW_DETAILS   = 4
+  SHOW_DETAILS     = 4
   HIDE             = 5
   OPEN_EXTERNAL    = 6
   OPEN_FILEBROWSER = 7
+  ADD_ON           = 8

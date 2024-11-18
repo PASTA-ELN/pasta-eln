@@ -61,7 +61,6 @@ defaultConfiguration: dict[str, Any] = {
   "version": 0,
   "tableColumnsMax": 16,
   "qrPrinter": {},
-  "addOnDir": "$(Path(__file__).parent/'AddOns').as_posix()$",
   "extractors": {},
   "authors": [{"first": "", "last": "", "title": "", "email": "", "orcid": "",
                "organizations": [{"organization": "", "rorid": ""}]}],
@@ -98,6 +97,12 @@ SQLiteTranslationDict = {"'":"&prime;"}
 SQLiteTranslation     = str.maketrans(SQLiteTranslationDict)
 
 minimalDocInForm = {'tags':[], 'comment':'', '':{}}
+
+SORTED_KEYS     = ['name', 'tags', 'comment', 'metaUser', '']
+SORTED_BIG_KEYS = ['content','metaVendor']
+SORTED_DB_KEYS  = ['id', 'type', 'dateCreated','dateModified','dateSync', 'user','branch','gui','client','externalId','shasum']
+DO_NOT_RENDER   = ['image','content','metaVendor','shasum','type','branch','gui','dateCreated',
+                 'dateModified','id','user','name','externalId','client']
 
 setupText = """
 ### Welcome to the PASTA-ELN setup

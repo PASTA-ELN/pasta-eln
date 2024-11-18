@@ -2,7 +2,8 @@
 import re, uuid, json, difflib
 from typing import Any
 from datetime import datetime
-from .fixedStringsJson import SQLiteTranslation
+from .fixedStringsJson import SQLiteTranslation, SORTED_KEYS
+from .stringChanges import markdownEqualizer
 
 def fillDocBeforeCreate(data:dict[str,Any], docType:list[str]) -> dict[str,Any]:
   """ Fill the data before submission to database with common data
@@ -101,14 +102,18 @@ def fillDocBeforeCreate(data:dict[str,Any], docType:list[str]) -> dict[str,Any]:
   return data
 
 
-def dict2ul(aDict:dict[str,Any]) -> str:
+def dict2ul(aDict:dict[str,Any], fmt:str='html') -> str:
   """
   convert a dictionary into a corresponding <ul>-html list
 
   Args:
     aDict (dict): dictionary to be translated
+    fmt (str): 'html', 'markdown'
+
+  Returns:
+    str: string
   """
-  text = '<ul>'
+  text = '<ul>' if fmt=='html' else '\n'
   for key, value in aDict.items():
     if isinstance(value,str) and value.startswith('{') and value.endswith('}'):
       try:
@@ -125,8 +130,61 @@ def dict2ul(aDict:dict[str,Any]) -> str:
       valueString = ',&nbsp;&nbsp;&nbsp;'.join([str(i) for i in value])
     else:
       valueString = str(value)
-    text += f'<li>{key}: {valueString}</li>\n'
-  return f'{text}</ul>'
+    text += f'<li>{key}: {valueString}</li>\n' if fmt=='html' else f'- {key}: {valueString}\n'
+  return f'{text}</ul>' if fmt=='html' else f'{text}\n'
+
+
+def doc2markdown(doc:dict[str,Any], ignoreKeys:list[str], dataHierarchyNode:list[dict[str,str]], widget:Any) -> str:
+  """
+  Convert document to markdown representation
+
+  Args:
+    doc (dict): document to be converted
+    ignoreKeys (list): keys to be ignored
+    dataHierarchyNode (dict): data hierarchy node
+    widget (Any): widget to get comm and backend from
+
+  Returns:
+    str: markdown representation
+  """
+  markdown = ''
+  for key in [i for i in SORTED_KEYS if i in doc.keys()]+[i for i in doc.keys() if i not in SORTED_KEYS]:
+    value = doc[key]
+    if key == '' and isinstance(value,dict):
+      markdown += doc2markdown(value, ignoreKeys, dataHierarchyNode, widget)
+      continue
+    if key in ignoreKeys or not value:
+      continue
+    if key=='tags':
+      tags = ['_curated_' if i=='_curated' else f'#{i}' for i in value]
+      tags = ['\u2605'*int(i[2]) if i[:2]=='#_' else i for i in tags]
+      markdown += f'Tags: {" ".join(tags)} \n\n'
+    elif (isinstance(value,str) and '\n' in value) or key=='comment':                 # long values with /n or comments
+      markdown += markdownEqualizer(value)+'\n\n'
+    else:
+      dataHierarchyItems = [dict(i) for i in dataHierarchyNode if i['name']==key]
+      if len(dataHierarchyItems)==1 and 'list' in dataHierarchyItems[0] and dataHierarchyItems[0]['list'] and \
+          not isinstance(dataHierarchyItems[0]['list'], list):                #choice among docType
+        table  = widget.comm.backend.db.getView('viewDocType/'+dataHierarchyItems[0]['list']) # type: ignore[attr-defined]
+        names= list(table[table.id==value[0]]['name'])
+        if len(names)==1:    # default find one item that we link to
+          value = '\u260D '+names[0]
+        elif not names:      # likely empty link because the value was not yet defined: just print to show
+          value = value[0] if isinstance(value,tuple) else value
+        else:
+          raise ValueError(f'list target exists multiple times. Key: {key}')
+      elif isinstance(value, list):
+        value = ', '.join([str(i) for i in value])
+        markdown += f'{key.capitalize()}: {value}\n\n'
+      if isinstance(value, tuple) and len(value)==4:
+        key = key if value[2] is None or value[2]=='' else value[2]
+        valueString = f'{value[0]} {value[1]}'
+        valueString = valueString if value[3] is None or value[3]=='' else f'{valueString}&nbsp;**[&uArr;]({value[3]})**'
+        markdown += f'{key.capitalize()}: {valueString}\n\n'
+      if isinstance(value, dict):
+        value = dict2ul({k:v[0] for k,v in value.items()}, 'markdown')
+        markdown += f'{key.capitalize()}: {value}'
+  return markdown
 
 
 def diffDicts(dict1:dict[str,Any], dict2:dict[str,Any]) -> str:
@@ -139,7 +197,7 @@ def diffDicts(dict1:dict[str,Any], dict2:dict[str,Any]) -> str:
   Returns:
     str: output with \\n
   """
-  ignoreKeys = ['client', '_rev', 'gui', '_attachments']
+  ignoreKeys = ['client', '_rev', 'gui', '_attachments','externalId','dateSync']
   shortVersion = '__version__' in dict1 and dict1['__version__'] == 'short'
   outString = ''
   dict2Copy = dict(dict2)
@@ -190,3 +248,19 @@ def diffDicts(dict1:dict[str,Any], dict2:dict[str,Any]) -> str:
       continue
     outString += f'key not in dictionary 1: {key}\n'
   return outString
+
+
+def squashTupleIntoValue(doc:dict[str,Any]) -> None:
+  """ Squash tuple/list into value
+  - if tuple is length 4, then it is a property tuple: (value, type, unit, description)
+  - if tuple is length 1, then it is a value
+
+  Args:
+    doc (dict[str,Any]): document
+  """
+  for meta in ['metaUser','metaVendor']:
+    if meta in doc:
+      for key,value in doc[meta].items():
+        if isinstance(value, (tuple,list)) and len(value)==4:
+          doc[meta][key] = value[0]
+  return

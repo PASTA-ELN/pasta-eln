@@ -274,7 +274,8 @@ class Form(QDialog):
                                     'Add key-value pair', style='border-width:1')
     IconButton('fa5s.poll-h',      self, [Command.FORM_SHOW_DOC], buttonLineL, 'Show all information',
                style='border-width:1')
-    TextButton('Save',             self, [Command.FORM_SAVE],     buttonLineL, 'Save changes')
+    saveBtn = TextButton('Save',             self, [Command.FORM_SAVE],     buttonLineL, 'Save changes')
+    saveBtn.setShortcut("Ctrl+Return")
     TextButton('Cancel',           self, [Command.FORM_CANCEL],   buttonLineL, 'Discard changes')
     if self.flagNewDoc: #new dataset
       TextButton('Save && Next', self, [Command.FORM_SAVE_NEXT], buttonLineL, 'Save this and handle next')
@@ -312,21 +313,21 @@ class Form(QDialog):
     """ Autosave comment to file """
     if self.comm.backend.configuration['GUI']['autosave'] == 'No':
       return
-    subContent = {'name':getattr(self, 'key_-name').text().strip(), 'tags':self.doc['tags']}
-    for key in self.allKeys:
-      if key in ['comment','content']:
-        subContent[key] = getattr(self, f'textEdit_{key}').toPlainText().strip()
-      elif key in self.skipKeys or not hasattr(self, f'key_{key}'):
-        continue
-      elif isinstance(getattr(self, f'key_{key}'), QLineEdit):
-        subContent[key] = getattr(self, f'key_{key}').text().strip()
-      # skip QCombobox items since cannot be sure that next from has them and they are easy to recreate
+    # subContent = {'name':getattr(self, 'key_-name').text().strip(), 'tags':self.doc['tags']}
+    # for key in self.allKeys:
+    #   if key in ['comment','content']:
+    #     subContent[key] = getattr(self, f'textEdit_{key}').toPlainText().strip()
+    #   elif key in self.skipKeys or not hasattr(self, f'key_{key}'):
+    #     continue
+    #   elif isinstance(getattr(self, f'key_{key}'), QLineEdit):
+    #     subContent[key] = getattr(self, f'key_{key}').text().strip()
+    # skip QCombobox items since cannot be sure that next from has them and they are easy to recreate
     if (Path.home()/'.pastaELN.temp').is_file():
       with open(Path.home()/'.pastaELN.temp', 'r', encoding='utf-8') as fTemp:
         content = json.loads(fTemp.read())
     else:
       content = {}
-    content[self.doc.get('id', '')] = subContent
+    content[self.doc.get('id', '')] = '' #subContent
     with open(Path.home()/'.pastaELN.temp', 'w', encoding='utf-8') as fTemp:
       fTemp.write(json.dumps(content))
     return

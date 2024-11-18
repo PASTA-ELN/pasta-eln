@@ -42,7 +42,8 @@ pasta2json:dict[str,Any] = {
   'shasum'      : None,
   'user'        : None,
   'externalId'  : None,
-  'gui'         : None
+  'gui'         : None,
+  'dateSync'    : None
 }
 json2pasta:dict[str,Any] = {v:k for k,v in pasta2json.items() if v is not None}
 
@@ -354,21 +355,6 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
       else:
         docELN['genre'] = '/'.join(docELN['genre'])
       docELN = {k:v for k,v in docELN.items() if v}
-      # move docSupp into docELN
-      variableMeasured = []
-      for kObject, v in flatten(docSupp).items():
-        name = ' \u2192 '.join([i.replace('_','').replace('-','').capitalize() for i in str(kObject).split('.')])
-        varMeasured = {'value':v, 'propertyID':kObject, 'name':name, '@type': 'PropertyValue'}
-        if isinstance(v, tuple):
-          varMeasured['value'] = v[0]
-          if v[1]:
-            varMeasured['unitText'] = v[1]
-          if v[2]:
-            varMeasured['description'] = v[2]
-          if v[3]:
-            varMeasured['mentions'] = v[3]
-        variableMeasured.append(varMeasured)
-      docELN['variableMeasured'] = variableMeasured
       # include children, hasPart
       hasPart = []
       if (node.docType[0] not in dTypes) and node.docType[0][0]!='x':
@@ -413,6 +399,27 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
         docELN['@type'] = 'Dataset'
         docELN['@id'] = docELN['@id'] if docELN['@id'].endswith('/') else f"{docELN['@id']}/"
         # elnFile.mkdir(docELN['@id'][:-1]) #NOT REQUIRED for standard and does not work in python 3.10
+      # move docSupp into separate nodes
+      variableMeasuredIDs = []
+      for kObject, v in flatten(docSupp).items():
+        name = ' \u2192 '.join([i.replace('_','').replace('-','').capitalize() for i in str(kObject).split('.')])
+        varMeasured = {'value':v, 'propertyID':kObject, 'name':name, '@type': 'PropertyValue','@id':f'{docELN["@id"]}_{kObject}'}
+        if isinstance(v, tuple):
+          varMeasured['value'] = v[0]
+          if v[1]:
+            varMeasured['unitText'] = v[1]
+        if isinstance(v, tuple):
+          varMeasured['value'] = v[0]
+          if v[1]:
+            varMeasured['unitText'] = v[1]
+          if v[2]:
+            varMeasured['description'] = v[2]
+          if v[3]:
+            varMeasured['identifier'] = v[3]
+        graph.append(varMeasured)
+        variableMeasuredIDs.append({'@id':f'{docELN["@id"]}_{kObject}'})
+      if variableMeasuredIDs:
+        docELN['variableMeasured'] = variableMeasuredIDs
       graph.append(docELN)
       return docELN['@id']
 
@@ -432,7 +439,8 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
     graphMaster:list[dict[str,Any]] = []
     graphMisc:list[dict[str,Any]] = []
     masterNodeInfo = {'@id': 'ro-crate-metadata.json', '@type': 'CreativeWork', 'about': {'@id': './'},
-        'conformsTo': {'@id': 'https://w3id.org/ro/crate/1.1'}, 'schemaVersion': 'v1.0', 'version': '1.0',
+        'conformsTo': {'@id': 'https://w3id.org/ro/crate/1.1'}, 'version': '1.0',
+        'additionalType': 'https://purl.archive.org/purl/elnconsortium/eln-spec/1.1',
         'datePublished':datetime.now().isoformat(), 'dateCreated': datetime.now().isoformat(),
         'sdPublisher': {'@id': 'PASTA-ELN'}}
     graphMaster.append(masterNodeInfo)
@@ -443,10 +451,8 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
     }
     graphMaster.append(masterNodeInfo2)
     masterParts = [{'@id': f'./{i}/'} for i in dirNameProjects]
-    authorNodes = {}
-    if len(backend.configuration['authors'])==1:
-      # first do affiliations, then use them
-      author = backend.configuration['authors'][0]
+    authorNodes = []
+    for author in backend.configuration['authors']:
       affiliationNodes = []
       for affiliation in author['organizations']:
         affiliationId    = f"affiliation_{affiliation['organization']}"
@@ -457,15 +463,12 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
       graphMaster.append({'@id':authorID, '@type':'Person', 'givenName': author['first'], 'familyName': author['last'],
                           'honorificPrefix': author['title'], 'email': author['email'], 'identifier': f"https://orcid.org/{author['orcid']}",
                           'worksFor': affiliationNodes})
-      authorNodes = {'@id':authorID}
-    else:
-      print("**ERROR: ONLY ONE AUTHOR is allowed according to the schema.org/ro-crate nomenclature")
-      logging.error('ONLY ONE AUTHOR is allowed according to the schema.org/ro-crate nomenclature')
+      authorNodes.append({'@id':authorID})
     masterNodeRoot:dict[str,Any] = {'@id': './', '@type': 'Dataset', 'hasPart': masterParts,
         'name': 'Exported from PASTA ELN', 'description': 'Exported content from PASTA ELN',
         'license':'CC BY 4.0', 'datePublished':datetime.now().isoformat()}
     if authorNodes:
-      masterNodeRoot = masterNodeRoot | {'author': authorNodes}
+      masterNodeRoot = masterNodeRoot | {'creator': authorNodes}
     graphMaster.append(masterNodeRoot)
 
     #finalize file
