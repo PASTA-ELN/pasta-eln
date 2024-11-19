@@ -70,13 +70,13 @@ class DatabaseAPI:
     self.db_api.update_model(data)
 
   def get_models(self, model_type: Type[UploadModel | ConfigModel | DataHierarchyModel | ProjectModel]) -> list[
-    Type[UploadModel | ConfigModel | DataHierarchyModel | ProjectModel]]:
+    Union[UploadModel, ConfigModel, DataHierarchyModel, ProjectModel]]:
     self.logger.info("Getting models of type: %s", model_type)
     match model_type():
       case UploadModel() | ConfigModel() | DataHierarchyModel():
-        return self.db_api.get_models(model_type)
+        return self.db_api.get_models(model_type)  # type: ignore
       case ProjectModel():
-        return self.db_api.get_project_models()
+        return self.db_api.get_project_models()  # type: ignore
       case _:
         raise log_and_create_error(self.logger, TypeError, f"Unsupported model type {model_type}")
 
@@ -118,7 +118,7 @@ class DatabaseAPI:
 
   def get_model(self, model_id: int | str,
                 model_type: Type[UploadModel | ConfigModel | DataHierarchyModel | ProjectModel]) -> Union[
-    UploadModel, ConfigModel, DataHierarchyModel, ConfigModel]:
+    UploadModel, ConfigModel, DataHierarchyModel, ProjectModel, None]:
     self.logger.info("Getting model with id: %s, type: %s", model_id, model_type)
     if model_type not in (UploadModel, ProjectModel, ConfigModel):
       raise log_and_create_error(self.logger, TypeError, f"Unsupported model type {model_type}")
@@ -186,13 +186,13 @@ class DatabaseAPI:
       config_model.dataverse_login_info["server_url"] = server_url.strip("/").strip("\\")
     self.update_model(config_model)
 
-  def get_data_hierarchy_models(self) -> list[DataHierarchyModel]:
+  def get_data_hierarchy_models(self) -> list[DataHierarchyModel] | None:
     self.logger.info("Getting data hierarchy...")
     results = self.db_api.get_models(DataHierarchyModel)
     if not results:
       self.logger.warning("Data hierarchy items not found!")
-      return results
-    return results
+      return results  # type: ignore[return-value]
+    return results  # type: ignore[return-value]
 
   def initialize_database(self) -> None:
     self.logger.info("Initializing database for dataverse module...")
