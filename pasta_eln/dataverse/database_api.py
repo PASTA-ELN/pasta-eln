@@ -69,24 +69,8 @@ class DatabaseAPI:
       raise log_and_create_error(self.logger, TypeError, "Data must be an UploadModel, ConfigModel, or ProjectModel!")
     self.db_api.update_model(data)
 
-  def get_models(self, model_type: Type[Union[UploadModel, ConfigModel, DataHierarchyModel, ProjectModel]]) -> list[
-    Union[UploadModel, ConfigModel, DataHierarchyModel, ProjectModel]]:
-    """
-    Retrieves models of the specified type from the database.
-
-    Explanation:
-        This method retrieves models of the specified type from the database using the appropriate view.
-
-    Args:
-        self: The DatabaseAPI instance.
-        model_type (Type[Union[UploadModel, ConfigModel, ProjectModel]]): The type of models to retrieve.
-
-    Raises:
-        ValueError: If the model_type is not supported.
-
-    Returns:
-        list[Union[UploadModel, ConfigModel, ProjectModel]]: The retrieved models.
-    """
+  def get_models(self, model_type: Type[UploadModel | ConfigModel | DataHierarchyModel | ProjectModel]) -> list[
+    Type[UploadModel | ConfigModel | DataHierarchyModel | ProjectModel]]:
     self.logger.info("Getting models of type: %s", model_type)
     match model_type():
       case UploadModel() | ConfigModel() | DataHierarchyModel():
@@ -102,7 +86,7 @@ class DatabaseAPI:
                            filter_fields: list[str] | None = None,
                            order_by_column: str | None = None,
                            page_number: int = 1,
-                           limit: int = 10) -> list[Union[UploadModel, ConfigModel, DataHierarchyModel]]:
+                           limit: int = 10) -> list[Type[UploadModel | ConfigModel | DataHierarchyModel]]:
 
     self.logger.info("Getting paginated models of type: %s, filter_term: %s, bookmark: %s, limit: %s",
                      model_type,

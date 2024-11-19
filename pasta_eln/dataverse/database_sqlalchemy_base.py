@@ -7,21 +7,6 @@
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
-#  PASTA-ELN and all its sub-parts are covered by the MIT license.
-#
-#
-#  Author: Jithu Murugan
-#  Filename: database_sqlalchemy_base.py
-#
-#  You should have received a copy of the license with this file. Please refer the license file for more information.
-
-#  PASTA-ELN and all its sub-parts are covered by the MIT license.
-#
-#
-#  Author: Jithu Murugan
-#  Filename: sqlalchemy_base.py
-#
-#  You should have received a copy of the license with this file. Please refer the license file for more information.
 from typing import Any, Generator
 
 from sqlalchemy import JSON
@@ -45,4 +30,4 @@ class DatabaseModelBase(DeclarativeBase):
       yield key, getattr(self, key)
 
   def get_table_columns(self) -> list[str]:
-    pass
+    return []
