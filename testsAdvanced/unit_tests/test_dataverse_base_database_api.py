@@ -782,12 +782,12 @@ class TestDataverseBaseDatabaseApi:
 
   def test_paginated_results_project(self, mock_database_api):
 
-    test = mock_database_api.get_projects(1,DatabaseNames.PastaProjectGroupDatabase)
+    test = mock_database_api.get_project_models(1, DatabaseNames.PastaProjectGroupDatabase)
     assert test[0]
     assert test[1]
 
   def test_paginated_results_project_new(self, mock_database_api):
 
-    test = mock_database_api.get_projects(DatabaseNames.PastaProjectGroupDatabase)
+    test = mock_database_api.get_project_models(DatabaseNames.PastaProjectGroupDatabase)
     assert test[0]
     assert test[1]

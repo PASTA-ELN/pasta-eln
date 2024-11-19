@@ -22,10 +22,14 @@ from PySide6.QtCore import QSize
 from PySide6.QtGui import QImage, QPixmap
 from cryptography.fernet import Fernet, InvalidToken
 from qtawesome import icon
+from sqlalchemy import and_, select
+from sqlalchemy.orm import aliased
 
 from pasta_eln.dataverse.client import DataverseClient
 from pasta_eln.dataverse.config_error import ConfigError
 from pasta_eln.dataverse.data_hierarchy_model import DataHierarchyModel
+from pasta_eln.dataverse.database_orm_main_model import DatabaseOrmMainModel
+from pasta_eln.dataverse.database_orm_properties_model import DatabaseOrmPropertiesModel
 from pasta_eln.dataverse.pasta_config_reader_factory import PastaConfigReaderFactory
 from pasta_eln.dataverse.upload_status_values import UploadStatusValues
 
@@ -772,3 +776,31 @@ def get_db_info(logger: Logger) -> dict[str, str]:
   else:
     raise log_and_create_error(logger, ConfigError,
                                "Incorrect config file, database name/path not found!")
+
+
+def generate_project_join_statement(model_id: str | None):
+  properties_objective_aliased = aliased(DatabaseOrmPropertiesModel)
+  properties_status_aliased = aliased(DatabaseOrmPropertiesModel)
+  where_condition = and_(DatabaseOrmMainModel.type == "x0",
+                         DatabaseOrmMainModel.id == model_id) if model_id else DatabaseOrmMainModel.type == "x0"
+  return (select(
+    DatabaseOrmMainModel,
+    properties_status_aliased.value,
+    properties_objective_aliased.value,
+  ).where(where_condition).join_from(
+    DatabaseOrmMainModel,
+    properties_objective_aliased,
+    and_(
+      DatabaseOrmMainModel.id == properties_objective_aliased.id,
+      properties_objective_aliased.key == ".objective",
+    ),
+    isouter=True,
+  ).join_from(
+    DatabaseOrmMainModel,
+    properties_status_aliased,
+    and_(
+      DatabaseOrmMainModel.id == properties_status_aliased.id,
+      properties_status_aliased.key == ".status",
+    ),
+    isouter=True,
+  ))

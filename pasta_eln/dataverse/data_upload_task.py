@@ -105,7 +105,7 @@ class DataUploadTask(GenericTaskObject):
     # Emit the upload model id
     # so that the parent thread can retrieve the model
     if self.upload_model:
-      self.upload_model_created.emit(self.upload_model.id)
+      self.upload_model_created.emit(str(self.upload_model.id))
 
     # Start the progress updater thread
     self.progress_thread.start()

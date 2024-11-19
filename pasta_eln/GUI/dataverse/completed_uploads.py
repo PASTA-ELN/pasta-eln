@@ -78,9 +78,11 @@ class CompletedUploads(Ui_CompletedUploadsForm):
     """
     self.logger.info("Loading completed uploads..")
     self.clear_ui()
+    self.next_page = 1
     result = self.db_api.get_paginated_models(UploadModel,
                                               filter_term=self.filterTermLineEdit.text(),
-                                              page_number=self.next_page)
+                                              page_number=self.next_page,
+                                              order_by_column="finished_date_time")
     for upload in result:
       if isinstance(upload, UploadModel):
         widget = self.get_completed_upload_task_widget(upload)
@@ -210,18 +212,15 @@ class CompletedUploads(Ui_CompletedUploadsForm):
     Args:
         scroll_value (int): The value of the scroll position.
     """
-    if self.load_complete:
-      self.logger.info("Data load completed, hence skipping..")
-      return
     vertical_scroll_bar = self.completedUploadsScrollArea.verticalScrollBar()
-    if scroll_value == vertical_scroll_bar.maximum() and not self.load_complete:
+    last_page = self.db_api.get_last_page_number(UploadModel)
+    if scroll_value == vertical_scroll_bar.maximum() and self.next_page < last_page:
       self.next_page += 1
       models = self.db_api.get_paginated_models(UploadModel,
                                                 filter_term=self.filterTermLineEdit.text(),
-                                                page_number=self.next_page)
+                                                page_number=self.next_page,
+                                                order_by_column="finished_date_time")
       for upload in models:
         if isinstance(upload, UploadModel):
           widget = self.get_completed_upload_task_widget(upload)
           self.completedUploadsVerticalLayout.addWidget(widget)
-      if len(models) < 10:
-        self.load_complete = True

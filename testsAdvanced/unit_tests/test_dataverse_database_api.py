@@ -844,3 +844,8 @@ class TestDataverseDatabaseAPI:
   def test_initialize_config_document_1(self):
     db_api = DatabaseAPI()
     db_api.initialize_config_document()
+
+  def test_initialize_page_count(self):
+    db_api = DatabaseAPI()
+    test = db_api.get_last_page_number(UploadModel)
+    assert test

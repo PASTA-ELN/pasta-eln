@@ -9,13 +9,14 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
 import logging
+import math
 from json import load
 from os import getcwd
 from os.path import dirname, join, realpath
 from pathlib import Path
 from typing import Type, Union
 
-from pasta_eln.dataverse.base_database_api import BaseDatabaseApi, DatabaseNames
+from pasta_eln.dataverse.base_database_api import BaseDatabaseApi
 from pasta_eln.dataverse.config_model import ConfigModel
 from pasta_eln.dataverse.data_hierarchy_model import DataHierarchyModel
 from pasta_eln.dataverse.project_model import ProjectModel
@@ -39,19 +40,6 @@ class DatabaseAPI:
   """
 
   def __init__(self) -> None:
-    """
-    Initializes the DatabaseAPI instance.
-
-    Explanation:
-        This method initializes the DatabaseAPI instance
-        by setting up the necessary attributes and creating an instance of BaseDatabaseAPI.
-
-    Args:
-        None
-
-    Returns:
-        None
-    """
     super().__init__()
     self.config_model_id: int = 1
     self.logger: logging.Logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
@@ -79,7 +67,7 @@ class DatabaseAPI:
       raise log_and_create_error(self.logger, ValueError, "Data cannot be None!")
     if not isinstance(data, (UploadModel, ConfigModel)):
       raise log_and_create_error(self.logger, TypeError, "Data must be an UploadModel, ConfigModel, or ProjectModel!")
-    self.db_api.update_model(DatabaseNames.DataverseDatabase, data)
+    self.db_api.update_model(data)
 
   def get_models(self, model_type: Type[Union[UploadModel, ConfigModel, DataHierarchyModel, ProjectModel]]) -> list[
     Union[UploadModel, ConfigModel, DataHierarchyModel, ProjectModel]]:
@@ -104,7 +92,7 @@ class DatabaseAPI:
       case UploadModel() | ConfigModel() | DataHierarchyModel():
         return self.db_api.get_models(model_type)
       case ProjectModel():
-        return self.db_api.get_projects()
+        return self.db_api.get_project_models()
       case _:
         raise log_and_create_error(self.logger, TypeError, f"Unsupported model type {model_type}")
 
@@ -112,6 +100,7 @@ class DatabaseAPI:
                            model_type: Type[Union[UploadModel, ConfigModel, DataHierarchyModel]],
                            filter_term: str | None = None,
                            filter_fields: list[str] | None = None,
+                           order_by_column: str | None = None,
                            page_number: int = 1,
                            limit: int = 10) -> list[Union[UploadModel, ConfigModel, DataHierarchyModel]]:
 
@@ -122,14 +111,24 @@ class DatabaseAPI:
                      limit)
     match model_type():
       case UploadModel() | ConfigModel() | DataHierarchyModel():
-        db_name = DatabaseNames.PastaProjectGroupDatabase if isinstance(model_type(),
-                                                                        DataHierarchyModel) else DatabaseNames.DataverseDatabase
-        return self.db_api.get_paginated_models(db_name,
-                                                model_type,
+        return self.db_api.get_paginated_models(model_type,
                                                 filter_term,
                                                 filter_fields,
+                                                order_by_column,
                                                 page_number,
                                                 limit)
+      case _:
+        raise log_and_create_error(self.logger, TypeError, f"Unsupported model type {model_type}")
+
+  def get_last_page_number(self,
+                           model_type: Type[Union[UploadModel, ConfigModel, DataHierarchyModel]],
+                           limit: int = 10) -> int:
+
+    self.logger.info("Retrieving last page number of type: %s, limit: %s", model_type, limit)
+    match model_type():
+      case UploadModel() | ConfigModel() | DataHierarchyModel():
+        row_count = self.db_api.get_models_count(model_type)
+        return math.ceil(row_count / limit)
       case _:
         raise log_and_create_error(self.logger, TypeError, f"Unsupported model type {model_type}")
 
@@ -159,7 +158,7 @@ class DatabaseAPI:
         ConfigModel: The retrieved config model.dataverse_login_info = {dict: 2} {'api_token': 'encrypted_token', 'dataverse_id': 'some_id'}
     """
     self.logger.info("Retrieving config model...")
-    config_model = self.get_model(1, ConfigModel)
+    config_model = self.get_model(self.config_model_id, ConfigModel)
     if config_model is None or not isinstance(config_model, ConfigModel):
       self.logger.error("Fatal error, Failed to load config model!")
       return None
@@ -212,33 +211,12 @@ class DatabaseAPI:
     return results
 
   def initialize_database(self) -> None:
-    """
-    Initializes the database for the dataverse module.
-
-    Explanation:
-        This method initializes the database for the dataverse module by creating necessary documents and views if they do not exist.
-
-    Args:
-        self: The DatabaseAPI instance.
-
-    """
     self.logger.info("Initializing database for dataverse module...")
     self.db_api.create_and_init_database()
     if self.db_api.get_model(self.config_model_id, ConfigModel) is None:
       self.initialize_config_document()
 
   def initialize_config_document(self) -> None:
-    """
-    Initializes the config document.
-
-    Explanation:
-        This method initializes the config document by creating a ConfigModel instance with the provided attributes.
-        It loads the metadata from a JSON file and calls the create_model_document method to create the document.
-
-    Args:
-        self: The DatabaseAPI instance.
-
-    """
     self.logger.info("Initializing config document...")
     data_hierarchy_types: list[str] = get_data_hierarchy_types(self.get_data_hierarchy_models())
     model = ConfigModel(_id=self.config_model_id, parallel_uploads_count=3,
