@@ -18,11 +18,11 @@ from aiohttp.client_exceptions import ClientConnectorError, InvalidURL
 from aiohttp.client_reqrep import ConnectionKey
 
 from pasta_eln.GUI.data_hierarchy.terminology_lookup_service import TerminologyLookupService
-from tests.common.fixtures import iri_lookup_web_results_name_mock, iri_lookup_web_results_pasta_mock, \
+from testsAdvanced.common.fixtures import iri_lookup_web_results_name_mock, iri_lookup_web_results_pasta_mock, \
   iri_lookup_web_results_science_mock, retrieved_iri_results_name_mock, retrieved_iri_results_pasta_mock, \
   retrieved_iri_results_science_mock
-from tests.common.fixtures import terminology_lookup_config_mock, terminology_lookup_mock
-from tests.common.test_utils import are_json_equal
+from testsAdvanced.common.fixtures import terminology_lookup_config_mock, terminology_lookup_mock
+from testsAdvanced.common.test_utils import are_json_equal
 
 pytest_plugins = ('pytest_asyncio',)
 

@@ -9,8 +9,8 @@
 
 from PySide6.QtWidgets import QStyle
 
-from tests.common.fixtures import reorder_delegate
-from tests.common.test_delegate_funcs_common import delegate_editor_event_common, delegate_editor_method_common, \
+from testsAdvanced.common.fixtures import reorder_delegate
+from testsAdvanced.common.test_delegate_funcs_common import delegate_editor_event_common, delegate_editor_method_common, \
   delegate_paint_common
 
 

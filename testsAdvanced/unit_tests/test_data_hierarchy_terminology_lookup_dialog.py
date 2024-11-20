@@ -16,7 +16,7 @@ from PySide6.QtWidgets import QCheckBox, QLabel
 
 from pasta_eln.GUI.data_hierarchy.terminology_lookup_dialog import TerminologyLookupDialog
 from pasta_eln.GUI.data_hierarchy.terminology_lookup_dialog_base import Ui_TerminologyLookupDialogBase
-from tests.common.fixtures import retrieved_iri_results_name_mock, retrieved_iri_results_pasta_mock, \
+from testsAdvanced.common.fixtures import retrieved_iri_results_name_mock, retrieved_iri_results_pasta_mock, \
   retrieved_iri_results_science_mock, terminology_lookup_dialog_mock
 
 
