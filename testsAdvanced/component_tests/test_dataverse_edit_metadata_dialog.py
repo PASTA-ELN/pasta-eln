@@ -27,8 +27,7 @@ def mock_database_api(mocker):
   with open(join(current_path, "..//..//pasta_eln//dataverse", "dataset-create-new-all-default-fields.json"),
             encoding="utf-8") as config_file:
     file_data = config_file.read()
-    config_model = ConfigModel(_id="test_id",
-                               _rev="test_rev",
+    config_model = ConfigModel(_id=123456789,
                                dataverse_login_info={"server_url": "http://valid.url",
                                                      "api_token": "encrypted_api_token",
                                                      "dataverse_id": "test_dataverse_id"},

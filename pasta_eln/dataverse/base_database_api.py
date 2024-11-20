@@ -230,7 +230,7 @@ class BaseDatabaseApi:
     with Session(engine) as session:
       return [DatabaseOrmAdapter.get_project_model(r.tuple()) for r in session.execute(statement).fetchall()]
 
-  def get_project_model(self, model_id: str) -> ProjectModel:
+  def get_project_model(self, model_id: str) -> ProjectModel | None:
     """Retrieves a project model from the database using its ID.
 
     This function queries the database for a project model associated with the given
@@ -241,7 +241,7 @@ class BaseDatabaseApi:
         model_id (str): The ID of the project model to retrieve.
 
     Returns:
-        ProjectModel: The project model retrieved from the database.
+        ProjectModel | None: The project model retrieved from the database.
 
     Raises:
         DatabaseError: If the model ID is empty or if there is an error during
@@ -255,7 +255,9 @@ class BaseDatabaseApi:
     engine = create_engine(self.db_url_map[DatabaseNames.PastaProjectGroupDatabase])
     statement = generate_project_join_statement(model_id)
     with Session(engine) as session:
-      return DatabaseOrmAdapter.get_project_model(session.execute(statement).fetchone().tuple())
+      if first := session.execute(statement).fetchone():
+        return DatabaseOrmAdapter.get_project_model(first.tuple())
+      return None
 
   def update_model(self, data_model: Union[UploadModel, ConfigModel]) -> None:
     """Updates an existing data model in the database.

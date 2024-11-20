@@ -12,14 +12,14 @@ from PySide6.QtWidgets import QDialogButtonBox
 
 from pasta_eln.GUI.dataverse.upload_config_dialog import UploadConfigDialog
 from pasta_eln.dataverse.config_model import ConfigModel
+from pasta_eln.dataverse.data_hierarchy_model import DataHierarchyModel
 
 
 @pytest.fixture
 def mock_database_api(mocker):
   mock = mocker.patch('pasta_eln.dataverse.database_api.DatabaseAPI')
   mock_instance = mock.return_value
-  config_model = ConfigModel(_id="test_id",
-                             _rev="test_rev",
+  config_model = ConfigModel(_id=123456789,
                              dataverse_login_info={
                                "server_url": "http://valid.url",
                                "api_token": "encrypted_api_token",
@@ -38,12 +38,19 @@ def mock_database_api(mocker):
   mock_instance.get_data_hierarchy.return_value = {
     "x0": {},
     "x1": {},
-    "x2": {},
     "measurement": {},
     "sample": {},
     "procedure": {},
     "instrument": {}
   }
+  mock_instance.get_data_hierarchy_models.return_value = [
+    DataHierarchyModel(docType="x0"),
+    DataHierarchyModel(docType="x1"),
+    DataHierarchyModel(docType="measurement"),
+    DataHierarchyModel(docType="sample"),
+    DataHierarchyModel(docType="procedure"),
+    DataHierarchyModel(docType="instrument")
+  ]
   return mock_instance
 
 

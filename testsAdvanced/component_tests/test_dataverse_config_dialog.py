@@ -12,7 +12,12 @@ from PySide6.QtWidgets import QDialogButtonBox
 
 from pasta_eln.GUI.dataverse.config_dialog import ConfigDialog
 from pasta_eln.dataverse.config_model import ConfigModel
-from tests.common.fixtures import dataverse_list_mock
+from testsAdvanced.common.test_utils import read_json
+
+
+@pytest.fixture()
+def dataverse_list_mock() -> dict | None:
+  return read_json('dataverse_list.json')
 
 
 @pytest.fixture
@@ -38,7 +43,7 @@ def mock_dataverse_client(mocker, dataverse_list_mock: dataverse_list_mock):
 def mock_database_api(mocker):
   mock = mocker.patch('pasta_eln.dataverse.database_api.DatabaseAPI')
   mock_instance = mock.return_value
-  mock_instance.get_config_model.return_value = ConfigModel(_id="test_id", _rev="test_rev",
+  mock_instance.get_config_model.return_value = ConfigModel(_id=12345678,
                                                             dataverse_login_info={"server_url": "http://valid.url",
                                                                                   "api_token": "decrypted_api_token",
                                                                                   "dataverse_id": "test_dataverse_id"},

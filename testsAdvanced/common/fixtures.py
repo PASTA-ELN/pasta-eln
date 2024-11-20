@@ -7,13 +7,13 @@
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 from typing import Any, Union
+from unittest.mock import MagicMock
 from xml.etree.ElementTree import Element
 
 from PySide6 import QtWidgets
 from PySide6.QtCore import QCoreApplication
 from PySide6.QtGui import QAction, QIcon
 from PySide6.QtWidgets import QApplication, QDialog
-from cloudant.document import Document
 from pytest import fixture
 from pytestqt.qtbot import QtBot
 
@@ -94,11 +94,6 @@ def dataverse_tree_mock(mocker) -> Element | None:
   mocked_element_tree.getroot.return_value = mocked_element_tree_root
   mocked_element_tree_root.findall.side_effect = test_tree.getroot().findall
   return mocked_element_tree
-
-
-@fixture()
-def dataverse_list_mock() -> dict | None:
-  return read_json('dataverse_list.json')
 
 
 @fixture()
@@ -199,7 +194,7 @@ def iri_delegate() -> IriColumnDelegate:
 
 
 @fixture()
-def data_hierarchy_doc_mock(mocker) -> Document:
+def data_hierarchy_doc_mock(mocker) -> MagicMock:
   mock_doc = mocker.patch('cloudant.document.Document')
   mock_doc_content = read_json('data_hierarchy_document.json')
   mocker.patch.object(mock_doc, "__len__", lambda x, y: len(mock_doc_content))
