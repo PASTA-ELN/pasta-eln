@@ -22,7 +22,7 @@ from PySide6.QtCore import QSize
 from PySide6.QtGui import QImage, QPixmap
 from cryptography.fernet import Fernet, InvalidToken
 from qtawesome import icon
-from sqlalchemy import and_, select
+from sqlalchemy import Executable, and_, select
 from sqlalchemy.orm import aliased
 
 from pasta_eln.dataverse.client import DataverseClient
@@ -738,6 +738,21 @@ def get_formatted_dataverse_url(dataverse_url: str) -> str:
 
 
 def get_data_hierarchy_types(data_hierarchy: list[DataHierarchyModel] | None) -> list[str | Any]:
+  """Retrieves a list of unique data hierarchy types from the provided models.
+
+  This function processes a list of DataHierarchyModel instances and extracts
+  their document types, excluding specific types ("x0" and "x1"). It returns
+  a list of unique, capitalized document types along with an "Unidentified"
+  entry if no valid types are found.
+
+  Args:
+      data_hierarchy (list[DataHierarchyModel] | None): A list of data hierarchy models
+      to extract types from, or None to return an empty list.
+
+  Returns:
+      list[str | Any]: A list of unique document types from the data hierarchy models,
+      or an empty list if no models are provided.
+  """
   if data_hierarchy is None:
     return []
   data_hierarchy_types = []
@@ -752,8 +767,24 @@ def get_data_hierarchy_types(data_hierarchy: list[DataHierarchyModel] | None) ->
 
 
 def get_db_info(logger: Logger) -> dict[str, str]:
+  """Retrieves database information from the configuration.
+
+  This function reads the configuration to obtain the database path and name
+  associated with the default project group. It raises errors if the configuration
+  is missing required fields, ensuring that the application has the necessary
+  information to connect to the database.
+
+  Args:
+      logger (Logger): The logger instance used for logging errors and information.
+
+  Returns:
+      dict[str, str]: A dictionary containing the database path and name.
+
+  Raises:
+      ConfigError: If the configuration is missing required fields or contains invalid data.
+  """
   config = PastaConfigReaderFactory.get_instance().config
-  def_project_group_name = config['defaultProjectGroup']
+  def_project_group_name = config.get('defaultProjectGroup')
   project_groups = config.get('projectGroups')
   if not def_project_group_name or not project_groups:
     raise log_and_create_error(logger, ConfigError,
@@ -778,7 +809,25 @@ def get_db_info(logger: Logger) -> dict[str, str]:
                                "Incorrect config file, database name/path not found!")
 
 
-def generate_project_join_statement(model_id: str | None):
+def generate_project_join_statement(model_id: str | None) -> Executable:
+  """Generates a SQL join statement for project models.
+
+  This function constructs a SQL query to join the main project model with its
+  associated properties based on the provided model ID. It allows for flexible
+  querying of project data, including optional filtering based on the model ID.
+
+  Args:
+      model_id (str | None): The ID of the project model to filter by. If None,
+      the query will not filter by model ID.
+
+  Returns:
+      Executable: A SQLAlchemy Executable object representing the constructed
+      join statement.
+
+  Raises:
+      ValueError: If the model ID is invalid or if there is an error in the
+      SQL statement construction.
+  """
   properties_objective_aliased = aliased(DatabaseOrmPropertiesModel)
   properties_status_aliased = aliased(DatabaseOrmPropertiesModel)
   where_condition = and_(DatabaseOrmMainModel.type == "x0",

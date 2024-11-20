@@ -12,24 +12,26 @@ import os
 from base64 import b64decode, b64encode
 from os.path import dirname, join, realpath
 from typing import Type
-from unittest.mock import AsyncMock, mock_open
+from unittest.mock import AsyncMock, MagicMock, mock_open, patch
 
 import pytest
 from _pytest.mark import param
 from cryptography.fernet import Fernet, InvalidToken
+from sqlalchemy import Executable
 
 from pasta_eln.dataverse.config_error import ConfigError
+from pasta_eln.dataverse.data_hierarchy_model import DataHierarchyModel
 from pasta_eln.dataverse.upload_status_values import UploadStatusValues
 from pasta_eln.dataverse.utils import adjust_type_name, check_if_compound_field_value_is_missing, \
   check_if_dataverse_exists, check_if_field_value_is_missing, check_if_field_value_not_null, \
   check_if_minimal_metadata_exists, \
   check_login_credentials, \
-  clear_value, decrypt_credentials, decrypt_data, \
+  clear_value, decrypt_data, \
   encrypt_data, \
-  get_citation_field, get_data_hierarchy_types, get_db_credentials, get_encrypt_key, \
+  generate_project_join_statement, get_citation_field, get_data_hierarchy_types, get_db_info, get_encrypt_key, \
   get_flattened_metadata, get_formatted_dataverse_url, get_formatted_message, get_formatted_metadata_message, \
   is_date_time_type, \
-  log_and_create_error, read_pasta_config_file, \
+  log_and_create_error, \
   set_authors, \
   set_field_template_value, set_template_values, update_status, \
   write_pasta_config_file
@@ -178,35 +180,7 @@ class TestDataverseUtils:
     mock_icon.assert_called_once_with(expected_icon_name)
     status_icon_set_pixmap_callback.assert_called_once_with(mock_icon.return_value.pixmap.return_value)
 
-  @pytest.mark.parametrize("test_id, config_data",
-                           [("SuccessCase-1", {"key": "value", "number": 42}), ("SuccessCase-2", {"empty_dict": {}}),
-                            ("SuccessCase-3", {"list_key": [1, 2, 3]}), ], )
-  def test_read_pasta_config_file_happy_path(self, mocker, test_id, config_data, tmp_path):
-    # Arrange
-    mock_logger = mocker.MagicMock(spec=logging.Logger)
-    config_file = tmp_path / '.pastaELN.json'
-    config_file.write_text(json.dumps(config_data))
-    with mocker.patch('pasta_eln.dataverse.utils.Path.home', return_value=tmp_path):
-      # Act
-      result = read_pasta_config_file(mock_logger)
-
-    # Assert
-    assert result == config_data, f"Failed test ID: {test_id}"
-
   # Parametrized test for error scenarios
-  @pytest.mark.parametrize("test_id, exception, message",
-                           [("ErrorCase-1", ConfigError, "Config file not found, Corrupt installation!"), ], )
-  def test_read_pasta_config_file_error_path(self, mocker, test_id, exception, message, tmp_path):
-    # Arrange
-    mock_logger = mocker.MagicMock(spec=logging.Logger)
-    with mocker.patch('pasta_eln.dataverse.utils.Path.home', return_value=tmp_path), mocker.patch(
-        'pasta_eln.dataverse.utils.exists', return_value=False), pytest.raises(exception) as exc_info:
-      # Act
-      read_pasta_config_file(mock_logger)
-
-    # Assert
-    assert str(exc_info.value) == message, f"Failed test ID: {test_id}"
-    mock_logger.error.assert_called_with(message)
 
   # Parametrized test for happy path scenarios with various realistic test values
   @pytest.mark.parametrize("exception_type, error_message, test_id",
@@ -499,9 +473,9 @@ class TestDataverseUtils:
     # Arrange
     logger = mocker.MagicMock()
     mock_log_and_create_error = mocker.MagicMock()
-    mock_read_pasta_config_file = mocker.patch('pasta_eln.dataverse.utils.read_pasta_config_file')
+    mock_get_instance = mocker.patch('pasta_eln.dataverse.utils.PastaConfigReaderFactory.get_instance')
     mocker.patch('pasta_eln.dataverse.utils.log_and_create_error', return_value=mock_log_and_create_error)
-    mock_read_pasta_config_file.return_value = config_data
+    mock_get_instance.return_value.config = config_data
 
     # Act
     set_authors(logger, metadata)
@@ -580,9 +554,9 @@ class TestDataverseUtils:
     # Arrange
     logger = mocker.MagicMock()
     mock_log_and_create_error = mocker.MagicMock()
-    mock_read_pasta_config_file = mocker.patch('pasta_eln.dataverse.utils.read_pasta_config_file')
+    mock_get_instance = mocker.patch('pasta_eln.dataverse.utils.PastaConfigReaderFactory.get_instance')
     mocker.patch('pasta_eln.dataverse.utils.log_and_create_error', return_value=mock_log_and_create_error)
-    mock_read_pasta_config_file.return_value = config_data
+    mock_get_instance.return_value.config = config_data
 
     # Act
     set_authors(logger, metadata)
@@ -610,7 +584,8 @@ class TestDataverseUtils:
   def test_set_authors_error_cases(self, mocker, config_data, metadata, exception, test_id):
     # Arrange
     logger = mocker.MagicMock()
-    mocker.patch('pasta_eln.dataverse.utils.read_pasta_config_file', return_value=config_data)
+    mock_get_instance = mocker.patch('pasta_eln.dataverse.utils.PastaConfigReaderFactory.get_instance')
+    mock_get_instance.return_value.config = config_data
     mock_log_and_create_error = mocker.patch('pasta_eln.dataverse.utils.log_and_create_error', return_value=exception)
 
     # Act & Assert
@@ -662,7 +637,8 @@ class TestDataverseUtils:
   def test_get_encrypt_key(self, mocker, test_id, config, expected_key_exists, expected_key):
     # Arrange
     logger = mocker.MagicMock(spec=logging.Logger)
-    mock_read_config = mocker.patch('pasta_eln.dataverse.utils.read_pasta_config_file', return_value=config)
+    mock_get_instance = mocker.patch('pasta_eln.dataverse.utils.PastaConfigReaderFactory.get_instance')
+    mock_get_instance.return_value.config = config
     mock_write_config = mocker.patch('pasta_eln.dataverse.utils.write_pasta_config_file')
     mocker.patch('cryptography.fernet.Fernet.generate_key', return_value=b64decode(expected_key))
 
@@ -678,7 +654,7 @@ class TestDataverseUtils:
       logger.warning.assert_called_with("Dataverse encrypt key does not exist, hence generating a new key..")
     else:
       mock_write_config.assert_not_called()
-    mock_read_config.assert_called_once_with(logger)
+    mock_get_instance.assert_called_once()
 
   @pytest.mark.parametrize("test_id, config_data, file_exists, expected_call_count, expected_info_log",
                            [  # success path tests with various realistic test values
@@ -2212,120 +2188,128 @@ class TestDataverseUtils:
     assert result == expected_output
 
   @pytest.mark.parametrize(
-    "data_hierarchy, expected_result",
+    "data_hierarchy, expected",
     [
-      # Success path tests
-      pytest.param({"type1": "value1", "type2": "value2"}, ["Type1", "Type2", "Unidentified"],
-                   id="multiple_valid_types"),
-      pytest.param({"type1": "value1"}, ["Type1", "Unidentified"], id="single_valid_type"),
-      pytest.param({"x0": "value1", "x1": "value2", "x2": "value3"}, ["Unidentified"], id="all_filtered_types"),
+      # Happy path tests
+      param([DataHierarchyModel(docType="report"), DataHierarchyModel(docType="summary")],
+            ["Report", "Summary", "Unidentified"], id="happy_path_different_types"),
+      param([DataHierarchyModel(docType="report"), DataHierarchyModel(docType="report")], ["Report", "Unidentified"],
+            id="happy_path_duplicate_types"),
 
       # Edge cases
-      pytest.param(None, [], id="none_input"),
-      pytest.param({}, ["Unidentified"], id="empty_dict"),
-      pytest.param({"": "value1", " ": "value2"}, ["Unidentified"], id="empty_and_whitespace_keys"),
-      pytest.param({"type1": "value1", "type1": "value2"}, ["Type1", "Unidentified"], id="duplicate_keys"),
-      pytest.param({"type1": "value1", "type1": "value2", "type2": "value3"}, ["Type1", "Type2", "Unidentified"],
-                   id="duplicate_and_unique_keys"),
+      param(None, [], id="edge_case_none_input"),
+      param([], ["Unidentified"], id="edge_case_empty_list"),
+      param(
+        [DataHierarchyModel(docType="x0"), DataHierarchyModel(docType="x1")], ["Unidentified"],
+        id="edge_case_excluded_types"),
+      param([DataHierarchyModel(docType="")], ["Unidentified"], id="edge_case_empty_docType"),
+      param([DataHierarchyModel(docType=None)], ["Unidentified"], id="edge_case_none_docType"),
 
       # Error cases
-      pytest.param({"type1": "value1", "x0": "value2"}, ["Type1", "Unidentified"],
-                   id="mixed_valid_and_filtered_types"),
-      pytest.param({"type1": "value1", "type2": "value2", "x0": "value3"}, ["Type1", "Type2", "Unidentified"],
-                   id="valid_and_filtered_types"),
+      param([DataHierarchyModel(docType="report"), None], ["Report", "Unidentified"], id="error_case_none_in_list"),
+      param([None, DataHierarchyModel(docType="report")], ["Report", "Unidentified"],
+            id="error_case_none_first_in_list"),
     ],
-    ids=lambda val: val[2]
+    ids=lambda x: x[2]
   )
-  def test_get_data_hierarchy_types(self, data_hierarchy, expected_result):
+  def test_get_data_hierarchy_types(self, data_hierarchy, expected, request):
     # Act
     result = get_data_hierarchy_types(data_hierarchy)
 
     # Assert
-    assert result == expected_result
+    assert result == expected, f"Failed on test case: {request.node.callspec.id}"
 
   @pytest.mark.parametrize(
-    "config, expected_credentials, raises_exception",
+    "config, expected, exception",
     [
-      # Success path tests
-      pytest.param(
+      # Happy path test cases
+      param(
         {
           'defaultProjectGroup': 'group1',
           'projectGroups': {
             'group1': {
               'local': {
-                'database': 'test_db',
-                'user': 'test_user',
-                'password': 'test_pass'
+                'path': '/path/to/db',
+                'database': 'test_db'
               }
             }
           }
         },
-        {'db_name': 'test_db', 'username': 'test_user', 'password': 'test_pass'},
-        False,
-        id="success_path_with_user_password"
+        {"database_path": "/path/to/db", "database_name": "test_db"},
+        None,
+        id="happy_path_valid_config"
       ),
-      pytest.param(
-        {
-          'defaultProjectGroup': 'group1',
-          'projectGroups': {
-            'group1': {
-              'local': {
-                'database': 'test_db',
-                'cred': 'encrypted_cred'
-              }
-            }
-          }
-        },
-        {'db_name': 'test_db', 'username': 'decrypted_user', 'password': 'decrypted_pass'},
-        False,
-        id="success_path_with_encrypted_cred"
-      ),
-      # Edge cases
-      pytest.param(
+      # Edge case: Empty defaultProjectGroup
+      param(
         {
           'defaultProjectGroup': '',
           'projectGroups': {
             'group1': {
               'local': {
-                'database': 'test_db',
-                'user': 'test_user',
-                'password': 'test_pass'
+                'path': '/path/to/db',
+                'database': 'test_db'
               }
             }
           }
         },
         None,
-        True,
-        id="empty_default_project_group"
+        ConfigError,
+        id="edge_case_empty_defaultProjectGroup"
       ),
-      pytest.param(
+      # Edge case: Empty projectGroups
+      param(
         {
           'defaultProjectGroup': 'group1',
           'projectGroups': {}
         },
         None,
-        True,
-        id="empty_project_groups"
+        ConfigError,
+        id="edge_case_empty_projectGroups"
       ),
-      # Error cases
-      pytest.param(
+      # Error case: Missing defaultProjectGroup
+      param(
         {
-          'defaultProjectGroup': 'group1',
           'projectGroups': {
-            'group2': {
+            'group1': {
               'local': {
-                'database': 'test_db',
-                'user': 'test_user',
-                'password': 'test_pass'
+                'path': '/path/to/db',
+                'database': 'test_db'
               }
             }
           }
         },
         None,
-        True,
-        id="default_project_group_not_in_project_groups"
+        ConfigError,
+        id="error_case_missing_defaultProjectGroup"
       ),
-      pytest.param(
+      # Error case: Missing projectGroups
+      param(
+        {
+          'defaultProjectGroup': 'group1'
+        },
+        None,
+        ConfigError,
+        id="error_case_missing_projectGroups"
+      ),
+      # Error case: defaultProjectGroup not in projectGroups
+      param(
+        {
+          'defaultProjectGroup': 'group2',
+          'projectGroups': {
+            'group1': {
+              'local': {
+                'path': '/path/to/db',
+                'database': 'test_db'
+              }
+            }
+          }
+        },
+        None,
+        ConfigError,
+        id="error_case_defaultProjectGroup_not_in_projectGroups"
+      ),
+      # Error case: Missing local info
+      param(
         {
           'defaultProjectGroup': 'group1',
           'projectGroups': {
@@ -2333,26 +2317,11 @@ class TestDataverseUtils:
           }
         },
         None,
-        True,
-        id="missing_local_info"
+        ConfigError,
+        id="error_case_missing_local_info"
       ),
-      pytest.param(
-        {
-          'defaultProjectGroup': 'group1',
-          'projectGroups': {
-            'group1': {
-              'local': {
-                'user': 'test_user',
-                'password': 'test_pass'
-              }
-            }
-          }
-        },
-        None,
-        True,
-        id="missing_database_name"
-      ),
-      pytest.param(
+      # Error case: Missing database path
+      param(
         {
           'defaultProjectGroup': 'group1',
           'projectGroups': {
@@ -2364,74 +2333,77 @@ class TestDataverseUtils:
           }
         },
         None,
-        True,
-        id="missing_user_and_password_and_cred"
+        ConfigError,
+        id="error_case_missing_database_path"
+      ),
+      # Error case: Missing database name
+      param(
+        {
+          'defaultProjectGroup': 'group1',
+          'projectGroups': {
+            'group1': {
+              'local': {
+                'path': '/path/to/db'
+              }
+            }
+          }
+        },
+        None,
+        ConfigError,
+        id="error_case_missing_database_name"
       ),
     ],
     ids=lambda x: x[-1]
   )
-  def test_get_db_credentials1(self, mocker, config, expected_credentials, raises_exception):
+  def test_get_db_info(self, config, expected, exception):
     # Arrange
-    logger = mocker.MagicMock()
-    mock_read_pasta_config_file = mocker.patch('pasta_eln.dataverse.utils.read_pasta_config_file', return_value=config)
-    mock_decrypt_credentials = mocker.patch('pasta_eln.dataverse.utils.decrypt_credentials',
-                                            return_value=('decrypted_user', 'decrypted_pass'))
-    # Act
-    if raises_exception:
-      with pytest.raises(ConfigError):
-        get_db_credentials(logger)
-    else:
-      result = get_db_credentials(logger)
+    logger = MagicMock(spec=logging.Logger)
+    with patch(
+        'pasta_eln.dataverse.pasta_config_reader_factory.PastaConfigReaderFactory.get_instance') as mock_get_instance:
+      mock_get_instance.return_value.config = config
 
-    # Assert
-    if not raises_exception:
-      assert result == expected_credentials
-      mock_read_pasta_config_file.assert_called_once_with(logger)
-      if config.get("cred"):
-        mock_decrypt_credentials.assert_called_once_with('encrypted_cred')
-    else:
-      mock_decrypt_credentials.assert_not_called()
+      # Act
+      if exception:
+        with pytest.raises(exception):
+          get_db_info(logger)
+      else:
+        result = get_db_info(logger)
+
+        # Assert
+        assert result == expected
 
   @pytest.mark.parametrize(
-    "cred, expected_username, expected_password",
+    "model_id, expected_type, expected_id",
     [
-      # Success path tests
-      ("encrypted_user:encrypted_pass", "decrypted_user", "decrypted_pass"),
-      ("user1:pass1", "decrypted_user1", "decrypted_pass1"),
-      ("user2:pass2", "decrypted_user2", "decrypted_pass2"),
-
-      # Edge cases
-      ("", "", ""),
-      (None, "", ""),
-      ("user_only:", "decrypted_user_only", ""),
-      (":pass_only", "", "decrypted_pass_only"),
-
-      # Error cases
-      ("invalid_format", "decrypted_invalid_format", ""),
-      ("user:pass:extra", "decrypted_user", "decrypted_pass"),
+      # Happy path with a specific model_id
+      param("123", "x0", "123", id="happy_path_with_id"),
+      # Happy path with None model_id
+      param(None, "x0", None, id="happy_path_without_id"),
+      # Edge case with empty string model_id
+      param("", "x0", "", id="edge_case_empty_string_id"),
+      # Edge case with special characters in model_id
+      param("!@#$", "x0", "!@#$", id="edge_case_special_chars_id"),
+      # Edge case with very long model_id
+      param("a" * 256, "x0", "a" * 256, id="edge_case_long_id"),
     ],
-    ids=[
-      "success_path_1",
-      "success_path_2",
-      "success_path_3",
-      "empty_string",
-      "none_value",
-      "user_only",
-      "pass_only",
-      "invalid_format",
-      "extra_colon"
-    ]
+    ids=lambda x: x[-1]
   )
-  def test_decrypt_credentials(self, cred, expected_username, expected_password, mocker):
-    # Arrange
-    mocker.patch(
-      'pasta_eln.dataverse.utils.upOut',
-      return_value=[f"{expected_username}:{expected_password}"],
-    )
-
+  def test_generate_project_join_statement(self, model_id, expected_type, expected_id):
     # Act
-    user_name, pass_word = decrypt_credentials(cred)
+    join_statement = generate_project_join_statement(model_id)
 
     # Assert
-    assert user_name == expected_username
-    assert pass_word == expected_password
+    assert isinstance(join_statement, Executable)
+    assert join_statement.whereclause is not None
+    if model_id is not None:
+      assert str(join_statement.whereclause) == 'main.type = :type_1 AND main.id = :id_1' or 'main.type = :type_1'
+    else:
+      assert str(join_statement.whereclause) == "main.type = :type_1"
+
+    # Check if the join conditions are correct
+    assert any(
+      str(condition) == 'main.type = :type_1 AND main.id = :id_1'
+      or "main.type = :type_1 AND main.id = :id_2"
+      or 'main.type = :type_1'
+      for condition in join_statement._where_criteria
+    )

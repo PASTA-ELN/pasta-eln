@@ -18,27 +18,27 @@ class ProjectModel(BaseModel):
   This class inherits from the BaseModel class and provides additional properties and methods for managing project-related information.
 
   Args:
-      _id (str | None): The ID of the object. Defaults to None.
-      _rev (str | None): The revision of the object. Defaults to None.
-      name (str | None): The name of the project. Defaults to None.
-      comment (str | None): The comment associated with the project. Defaults to None.
-      user (str | None): The user associated with the project. Defaults to None.
-      date (str | None): The date of the project. Defaults to None.
-      status (str | None): The status of the project. Defaults to None.
-      objective (str | None): The objective of the project. Defaults to None.
+      _id (str | None): The unique identifier for the project.
+      name (str | None): The name of the project.
+      comment (str | None): A comment or description for the project.
+      user (str | None): The user associated with the project.
+      date_created (str | None): The creation date of the project.
+      date_modified (str | None): The last modified date of the project.
+      status (str | None): The current status of the project.
+      objective (str | None): The objective of the project.
 
   Raises:
       IncorrectParameterError: If any of the parameters are not of type str or None.
 
   Attributes:
-      id (str | None): The ID of the object.
-      rev (str | None): The revision of the object.
-      name (str | None): The name of the project.
-      comment (str | None): The comment associated with the project.
-      user (str | None): The user associated with the project.
-      date (str | None): The date of the project.
-      status (str | None): The status of the project.
-      objective (str | None): The objective of the project.
+      _id (str | None): The ID of the object.
+      _name (str | None): The name of the project.
+      _comment (str | None): The comment associated with the project.
+      _user (str | None): The user associated with the project.
+      _date_created (str | None): The creation date of the project.
+      :date_modified (str | None): The last modified date of the project.
+      _status (str | None): The status of the project.
+      _objective (str | None): The objective of the project.
 
   """
 
@@ -51,22 +51,24 @@ class ProjectModel(BaseModel):
                date_modified: str | None = None,
                status: str | None = None,
                objective: str | None = None) -> None:
-    """
-    Initializes a project model object.
+    """Initializes a new instance of the ProjectModel.
+
+    This constructor sets up the project model with the provided attributes,
+    ensuring that all values are of the expected type. It raises an error if
+    any of the parameters are not strings or None.
 
     Args:
-        _id (str | None): The ID of the object. Defaults to None.
-        _rev (str | None): The revision of the object. Defaults to None.
-        name (str | None): The name of the project. Defaults to None.
-        comment (str | None): The comment associated with the project. Defaults to None.
-        user (str | None): The user associated with the project. Defaults to None.
-        date (str | None): The date of the project. Defaults to None.
-        status (str | None): The status of the project. Defaults to None.
-        objective (str | None): The objective of the project. Defaults to None.
+        _id (str | None): The unique identifier for the project.
+        name (str | None): The name of the project.
+        comment (str | None): A comment or description for the project.
+        user (str | None): The user associated with the project.
+        date_created (str | None): The creation date of the project.
+        date_modified (str | None): The last modified date of the project.
+        status (str | None): The current status of the project.
+        objective (str | None): The objective of the project.
 
     Raises:
-        IncorrectParameterError: If any of the parameters are not of type str or None.
-
+        IncorrectParameterError: If any of the parameters are not of the expected type.
     """
     super().__init__(_id)
     if isinstance(name, str | None):

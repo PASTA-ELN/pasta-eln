@@ -14,25 +14,27 @@ from pasta_eln.dataverse.project_model import ProjectModel
 
 class TestDataverseProjectModel:
   # Success path tests with various realistic test values
-  @pytest.mark.parametrize("test_id, _id, _rev, name, comment, user, date, status, objective", [
-    ("Success-01", "123", "rev1", "Project Alpha", "Initial phase", "user1", "2023-01-01", "Active", "Research"),
+  @pytest.mark.parametrize("test_id, _id, name, comment, user, date_created, date_modified, status, objective", [
+    ("Success-01", "123", "Project Alpha", "Initial phase", "user1", "2023-01-01", "2023-01-01", "Active", "Research"),
     ("Success-02", None, None, None, None, None, None, None, None),  # Testing defaults
-    ("Success-03", "456", "rev2", "", "", "", "", "", ""),  # Testing empty strings
+    ("Success-03", "456", "", "", "", "", "", "", ""),  # Testing empty strings
   ])
-  def test_project_model_creation_happy_path(self, test_id, _id, _rev, name, comment, user, date, status, objective):
+  def test_project_model_creation_happy_path(self, test_id, _id, name, comment, user, date_created, date_modified,
+                                             status, objective):
     # Arrange - omitted as inputs are provided via test parameters
 
     # Act
-    project = ProjectModel(_id=_id, _rev=_rev, name=name, comment=comment, user=user, date=date, status=status,
+    project = ProjectModel(_id=_id, name=name, comment=comment, user=user, date_created=date_created,
+                           date_modified=date_modified, status=status,
                            objective=objective)
 
     # Assert
     assert project.id == _id
-    assert project.rev == _rev
     assert project.name == name
     assert project.comment == comment
     assert project.user == user
-    assert project.date == date
+    assert project.date_created == date_created
+    assert project.date_modified == date_modified
     assert project.status == status
     assert project.objective == objective
 
@@ -41,9 +43,10 @@ class TestDataverseProjectModel:
     ("EC-01", "name", 123),  # Non-string value
     ("EC-02", "comment", 456.78),  # Non-string value
     ("EC-03", "user", True),  # Non-string value
-    ("EC-04", "date", []),  # Non-string value
+    ("EC-04", "date_created", []),  # Non-string value
     ("EC-05", "status", {}),  # Non-string value
     ("EC-06", "objective", (lambda x: x)),  # Non-string value
+    ("EC-07", "date_modified", (lambda x: x)),  # Non-string value
   ])
   def test_project_model_setters_edge_cases(self, test_id, attribute, value):
     project = ProjectModel()
@@ -57,9 +60,10 @@ class TestDataverseProjectModel:
     ("ERR-01", {"name": 123}, "Expected string type for name but got <class 'int'>"),
     ("ERR-02", {"comment": 456.78}, "Expected string type for comment but got <class 'float'>"),
     ("ERR-03", {"user": True}, "Expected string type for user but got <class 'bool'>"),
-    ("ERR-04", {"date": []}, "Expected string type for date but got <class 'list'>"),
+    ("ERR-04", {"date_created": []}, "Expected string type for date_created but got <class 'list'>"),
     ("ERR-05", {"status": {}}, "Expected string type for status but got <class 'dict'>"),
     ("ERR-06", {"objective": lambda x: x}, "Expected string type for objective but got <class 'function'>"),
+    ("ERR-06", {"date_modified": lambda x: x}, "Expected string type for date_modified but got <class 'function'>"),
   ])
   def test_project_model_creation_error_cases(self, test_id, kwargs, expected_exception_message):
     # Arrange - omitted as inputs are provided via test parameters
@@ -186,11 +190,11 @@ class TestDataverseProjectModel:
     ([], "objective", "objective_empty_list"),
     ({}, "objective", "objective_empty_dict"),
     (True, "objective", "objective_boolean"),
-    (123, "date", "date_integer"),
-    (12.34, "date", "date_float"),
-    ([], "date", "date_empty_list"),
-    ({}, "date", "date_empty_dict"),
-    (True, "date", "date_boolean")
+    (123, "date_modified", "date_modified_integer"),
+    (12.34, "date_modified", "date_modified_float"),
+    ([], "date_modified", "date_modified_empty_list"),
+    ({}, "date_created", "date_created_empty_dict"),
+    (True, "date_created", "date_created_boolean")
   ])
   def test_setter_error_cases(self, test_input, attribute, test_id):
     # Arrange
