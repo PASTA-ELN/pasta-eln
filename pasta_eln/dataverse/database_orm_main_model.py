@@ -1,27 +1,13 @@
+""" Represents the ORM model for the main project table in the database. """
 #  PASTA-ELN and all its sub-parts are covered by the MIT license.
 #
 #  Copyright (c) 2024
 #
 #  Author: Jithu Murugan
-#  Filename: database_orm_project_model.py
+#  Filename: database_orm_main_model.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
-#  PASTA-ELN and all its sub-parts are covered by the MIT license.
-#
-#
-#  Author: Jithu Murugan
-#  Filename: database_orm_project_model.py
-#
-#  You should have received a copy of the license with this file. Please refer the license file for more information.
-
-#  PASTA-ELN and all its sub-parts are covered by the MIT license.
-#
-#
-#  Author: Jithu Murugan
-#  Filename: database_orm_project_model.py
-#
-#  You should have received a copy of the license with this file. Please refer the license file for more information.
 from typing import Optional
 
 from sqlalchemy.orm import Mapped, mapped_column
@@ -30,8 +16,12 @@ from pasta_eln.dataverse.database_sqlalchemy_base import DatabaseModelBase
 
 
 class DatabaseOrmMainModel(DatabaseModelBase):
-  """ Represents a project model object. """
+  """Represents the ORM model for the main project table in the database.
 
+  This class defines the structure of the main project model used in the application,
+  including fields for ID, name, user, type, creation date, modification date, and comments.
+  It provides a method to retrieve the names of the table columns for database operations.
+  """
   __tablename__ = "main"
 
   id: Mapped[str] = mapped_column(primary_key=True)
@@ -42,5 +32,15 @@ class DatabaseOrmMainModel(DatabaseModelBase):
   dateModified: Mapped[Optional[str]]
   comment: Mapped[Optional[str]]
 
-  def get_table_columns(self) -> list[str]:
+  @classmethod
+  def get_table_columns(cls) -> list[str]:
+    """Retrieves the list of column names for the main project table.
+
+    This method returns a list of strings representing the names of the columns
+    defined in the main project model. It is useful for database operations that
+    require knowledge of the table structure.
+
+    Returns:
+        list[str]: A list of column names for the main project table.
+    """
     return ["id", "name", "user", "type", "dateCreated", "dateModified", "comment"]
