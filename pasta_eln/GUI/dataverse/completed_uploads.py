@@ -55,7 +55,6 @@ class CompletedUploads(Ui_CompletedUploadsForm):
         This method initializes a new instance of the CompletedUploads class.
         It sets up the logger, creates a QDialog instance, and sets the window modality.
     """
-    self.load_complete: bool = False
     self.next_page: int = 1
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
     self.instance = QDialog()
@@ -197,20 +196,22 @@ class CompletedUploads(Ui_CompletedUploadsForm):
     """
 
     self.logger.info("Showing completed uploads..")
-    self.load_complete = False
     self.load_ui()
     self.instance.show()
 
   def scrolled(self, scroll_value: int) -> None:
-    """
-    Scrolled event handler for the completed uploads verticalScrollBar.
+    """Handles the scrolling event for the completed uploads vertical scrollbar.
 
-    Explanation:
-        This function handles scrolling through the completed uploads based on the scroll value provided.
-        It loads more data if the scroll reaches the maximum and there is a next bookmark available.
+    This function updates the current page of completed uploads when the scrollbar
+    reaches its maximum position and there are more pages available. It retrieves
+    additional models from the database and adds them to the layout for display.
 
     Args:
-        scroll_value (int): The value of the scroll position.
+        scroll_value (int): The current position of the scrollbar.
+
+    Raises:
+        DatabaseError: If there is an error retrieving the last page number or
+        paginated models from the database.
     """
     vertical_scroll_bar = self.completedUploadsScrollArea.verticalScrollBar()
     last_page = self.db_api.get_last_page_number(UploadModel)

@@ -9,6 +9,7 @@
 
 import pytest
 from PySide6 import QtCore
+from _pytest.mark import param
 
 from pasta_eln.GUI.dataverse.completed_uploads import CompletedUploads
 from pasta_eln.dataverse.upload_model import UploadModel
@@ -49,8 +50,7 @@ class TestDataverseCompletedUploads:
     mock_dialog.assert_called_once()
     mock_setup_ui.assert_called_once_with(completed_upload_instance.instance)
     mock_database_api.assert_called_once()
-    assert completed_upload_instance.load_complete is False
-    assert completed_upload_instance.next_page is None
+    assert completed_upload_instance.next_page == 1
     assert completed_upload_instance.logger is mock_get_logger.return_value, "Logger should be initialized"
     assert completed_upload_instance.db_api is mock_database_api.return_value, "DatabaseAPI should be initialized"
     assert completed_upload_instance.instance is mock_dialog.return_value, "completed_upload_instance should be initialized"
@@ -62,18 +62,15 @@ class TestDataverseCompletedUploads:
 
   @pytest.mark.parametrize("result, filter_text, expected_widget_count, expected_exception, test_id", [
     # Test ID: 1 - Success path with multiple uploads
-    ({"models": [UploadModel(), UploadModel()], "bookmark": "bookmark123"}, "text123", 2, None,
+    ([UploadModel(), UploadModel()], "text123", 2, None,
      "success_with_multiple_uploads"),
     # Test ID: 2 - Success path with no uploads
-    ({"models": [], "bookmark": None}, "text456", 0, None, "success_with_no_uploads"),
+    ([], "text456", 0, None, "success_with_no_uploads"),
     # Test ID: 3 - Edge case with None result
     (None, "text789", 0, TypeError, "edge_case_with_none_result"),
     # Test ID: 4 - Error case with incorrect type in models
-    ({"models": ["not_an_upload_model"], "bookmark": "bookmarkABC"}, "text000", 0, None,
+    (["not_an_upload_model"], "text000", 0, None,
      "error_with_incorrect_type_in_models"),
-    # Test ID: 4 - Error case with incorrect type in models
-    ({"models": ["not_an_upload_model"], "bookmark": None}, "text000", 0, None,
-     "error_with_incorrect_bookmark_in_models"),
   ])
   def test_load_ui(self, mocker, mock_completed_upload, result, filter_text,
                    expected_widget_count, expected_exception, test_id):
@@ -103,9 +100,6 @@ class TestDataverseCompletedUploads:
         assert mock_completed_upload.next_page is None
     if test_id == "error_with_incorrect_type_in_models":
       mock_completed_upload.logger.error.assert_called_once_with("Incorrect type in queried models!")
-    if test_id == "error_with_incorrect_bookmark_in_models":
-      mock_completed_upload.logger.error.assert_called_once_with(
-        "Unable to retrieve models, invalid bookmark returned!")
 
   @pytest.mark.parametrize("num_widgets, test_id", [
     (0, "success_no_widgets"),  # No widgets to remove
@@ -286,59 +280,43 @@ class TestDataverseCompletedUploads:
 
     # Assert
     if not expected_exception:
-      assert mock_completed_upload.load_complete is False
       mock_completed_upload.logger.info.assert_called_once_with("Showing completed uploads..")
       mock_completed_upload.load_ui.assert_called_once()
       mock_completed_upload.instance.show.assert_called_once()
 
   @pytest.mark.parametrize(
-    "scroll_value, load_complete, next_bookmark, db_return_value, expected_log_call, expected_load_complete",
+    "scroll_value, next_page, last_page, expected_next_page, models",
     [
-      pytest.param(100, False, "bookmark", {"bookmark": "new_bookmark", "models": [UploadModel()]}, False, False,
-                   id="success_path"),
-      pytest.param(50, False, "bookmark", {"bookmark": "new_bookmark", "models": [UploadModel()]}, False, False,
-                   id="scroll_not_at_max"),
-      pytest.param(100, True, "bookmark", {"bookmark": "new_bookmark", "models": [UploadModel()]}, True, True,
-                   id="load_complete_true"),
-      pytest.param(100, False, None, {"bookmark": "new_bookmark", "models": [UploadModel()]}, False, False,
-                   id="no_next_bookmark"),
-      pytest.param(100, False, "bookmark", {"bookmark": "bookmark", "models": [UploadModel()]}, False, True,
-                   id="same_bookmark"),
-      pytest.param(100, False, "bookmark", {"bookmark": "new_bookmark", "models": []}, False, False,
-                   id="no_models_returned"),
+      param(100, 1, 3, 2, [UploadModel()], id="happy_path_scroll_max"),
+      param(50, 1, 3, 1, [UploadModel()], id="scroll_not_max"),
+      param(100, 2, 2, 2, [UploadModel()], id="last_page_reached"),
+      param(100, 1, 3, 2, [], id="no_models_returned"),
     ],
-    ids=lambda val: val[-1]
+    ids=lambda x: x[-1]
   )
-  def test_scrolled(self, mock_completed_upload, mocker, scroll_value, load_complete, next_bookmark, db_return_value,
-                    expected_log_call,
-                    expected_load_complete
-                    ):
-    mock_completed_upload.load_complete = load_complete
-    mock_completed_upload.next_page = next_bookmark
-    mock_completed_upload.db_api.get_paginated_models.return_value = db_return_value
-    mock_completed_upload.completedUploadsScrollArea.verticalScrollBar.return_value.maximum.return_value = 100
+  def test_scrolled(self, mocker, mock_completed_upload, scroll_value, next_page, last_page, expected_next_page,
+                    models):
+    mock_completed_upload.completedUploadsScrollArea.verticalScrollBar().maximum.return_value = 100
+    mock_completed_upload.next_page = next_page
     mock_completed_upload.get_completed_upload_task_widget = mocker.MagicMock()
-    mock_completed_upload.filterTermLineEdit.text.return_value = "filter_term"
+    mock_completed_upload.db_api.get_last_page_number.return_value = last_page
+    mock_completed_upload.db_api.get_paginated_models.return_value = models
 
     # Act
     mock_completed_upload.scrolled(scroll_value)
 
     # Assert
-    if expected_log_call:
-      mock_completed_upload.logger.info.assert_called_once_with("Data load completed, hence skipping..")
-    else:
-      mock_completed_upload.logger.info.assert_not_called()
-    assert mock_completed_upload.load_complete == expected_load_complete
-    if scroll_value == 100 and not load_complete and next_bookmark:
+    if scroll_value == 100 and next_page < last_page:
+      assert mock_completed_upload.next_page == expected_next_page
       mock_completed_upload.db_api.get_paginated_models.assert_called_once_with(
-        UploadModel, filter_term="filter_term", bookmark=next_bookmark
+        UploadModel,
+        filter_term=mock_completed_upload.filterTermLineEdit.text(),
+        page_number=expected_next_page,
+        order_by_column="finished_date_time"
       )
-      if not expected_load_complete:
-        if db_return_value["models"]:
-          mock_completed_upload.get_completed_upload_task_widget.assert_called()
-          mock_completed_upload.completedUploadsVerticalLayout.addWidget.assert_called()
-        else:
-          mock_completed_upload.get_completed_upload_task_widget.assert_not_called()
-          mock_completed_upload.completedUploadsVerticalLayout.addWidget.assert_not_called()
+      for model in models:
+        mock_completed_upload.get_completed_upload_task_widget.assert_any_call(model)
+        mock_completed_upload.completedUploadsVerticalLayout.addWidget.assert_called()
     else:
+      assert mock_completed_upload.next_page == next_page
       mock_completed_upload.db_api.get_paginated_models.assert_not_called()

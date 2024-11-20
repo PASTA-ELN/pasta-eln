@@ -80,7 +80,7 @@ class TestUploadConfigDialog:
     mock_setup_ui.assert_called_once_with(dialog.instance)
     mock_db_api.assert_called_once()
     mock_load_ui.assert_called_once()
-    mock_get_data_hierarchy_types.assert_called_once_with(mock_database_api.get_data_hierarchy.return_value)
+    mock_get_data_hierarchy_types.assert_called_once_with(mock_database_api.get_data_hierarchy_models.return_value)
     assert dialog.data_hierarchy_types == mock_get_data_hierarchy_types.return_value
     dialog.instance.setWindowModality.assert_called_once_with(QtCore.Qt.ApplicationModal)
     dialog.numParallelComboBox.addItems.assert_called_once()  # Mock the addItems

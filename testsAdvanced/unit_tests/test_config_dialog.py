@@ -42,7 +42,7 @@ def mock_dataverse_client(mocker):
 def mock_database_api():
   with patch('pasta_eln.dataverse.database_api.DatabaseAPI') as mock:
     mock_instance = mock.return_value
-    mock_instance.get_config_model.return_value = ConfigModel(_id="test_id", _rev="test_rev",
+    mock_instance.get_config_model.return_value = ConfigModel(_id=12345678,
                                                               dataverse_login_info={"server_url": "http://valid.url",
                                                                                     "api_token": "test_token",
                                                                                     "dataverse_id": "test_dataverse_id"},
