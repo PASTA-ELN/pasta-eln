@@ -29,5 +29,6 @@ class DatabaseModelBase(DeclarativeBase):
     for key in self.get_table_columns():
       yield key, getattr(self, key)
 
-  def get_table_columns(self) -> list[str]:
+  @classmethod
+  def get_table_columns(cls) -> list[str]:
     return []

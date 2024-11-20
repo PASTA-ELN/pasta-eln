@@ -6,7 +6,7 @@
 #  Filename: test_dataverse_base_database_api.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 from _pytest.mark import param
@@ -177,21 +177,24 @@ class TestDataverseBaseDatabaseAPI:
     (UploadModel, None),
     (None, DatabaseError),
   ], ids=["valid_model_type", "none_model_type"])
-  def test_get_models(self, base_database_api, model_type, expected_exception):
+  def test_get_models(self, mocker, base_database_api, model_type, expected_exception):
     # Arrange
-    with patch("sqlalchemy.create_engine") as mock_create_engine:
-      mock_engine = MagicMock()
-      mock_create_engine.return_value = mock_engine
-      mock_session = MagicMock()
-      mock_engine.connect.return_value.__enter__.return_value = mock_session
+    mock_create_engine = mocker.patch("pasta_eln.dataverse.base_database_api.create_engine")
+    base_database_api.get_project_model = MagicMock()
+    mock_engine = MagicMock()
+    mock_create_engine.return_value = mock_engine
+    mock_session = MagicMock()
+    mocker.patch("pasta_eln.dataverse.base_database_api.Session", return_value=mock_session)
+    mock_session.__enter__.return_value = mock_session
+    mock_session.scalars.return_value.all.return_value = [DatabaseOrmUploadModel(), DatabaseOrmConfigModel()]
 
-      # Act & Assert
-      if expected_exception:
-        with pytest.raises(expected_exception):
-          base_database_api.get_models(model_type)
-      else:
-        result = base_database_api.get_models(model_type)
-        assert isinstance(result, list)
+    # Act & Assert
+    if expected_exception:
+      with pytest.raises(expected_exception):
+        base_database_api.get_models(model_type)
+    else:
+      result = base_database_api.get_models(model_type)
+      assert isinstance(result, list)
 
   @pytest.mark.parametrize("model_type, db_model, database, expected_count", [
     param(UploadModel, DatabaseOrmUploadModel, DatabaseNames.DataverseDatabase, 0, id="empty_upload_model"),

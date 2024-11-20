@@ -324,7 +324,7 @@ class BaseDatabaseApi:
     query = select(self.model_mapping[model_type]).limit(limit).offset((page_number - 1) * limit)
     with Session(engine) as session:
       if filter_fields is None:
-        filter_fields = self.model_mapping[model_type].get_table_columns()  # type: ignore[call-arg]
+        filter_fields = self.model_mapping[model_type].get_table_columns()
       if filter_term:
         query = query.filter(
           or_(*[getattr(self.model_mapping[model_type], field).like(f"%{filter_term}%") for field in filter_fields]))
