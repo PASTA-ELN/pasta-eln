@@ -20,7 +20,6 @@ class UploadModel(BaseModel):
 
   Args:
       _id (str | None): The ID of the object. Defaults to an empty string.
-      _rev (str | None): The revision of the object. Defaults to an empty string.
       data_type (str | None): The data type of the upload. Defaults to an empty string.
       project_name (str | None): The name of the project. Defaults to an empty string.
       status (str | None): The status of the upload. Defaults to an empty string.
@@ -32,14 +31,14 @@ class UploadModel(BaseModel):
       IncorrectParameterError: If any of the parameters are not of type str or None.
 
   Attributes:
-      data_type (str | None): The data type of the upload.
-      project_name (str | None): The name of the project.
-      project_doc_id (str | None): The document ID of the project.
-      status (str | None): The status of the upload.
-      created_date_time (str | None): The date and time when the upload created.
-      finished_date_time (str | None): The date and time when the upload finished.
-      log (str): The log associated with the upload.
-      dataverse_url (str | None): The URL of the Dataverse.
+      _data_type (str | None): The data type of the upload.
+      _project_name (str | None): The name of the project.
+      _project_doc_id (str | None): The document ID of the project.
+      _status (str | None): The status of the upload.
+      _created_date_time (str | None): The date and time when the upload created.
+      _finished_date_time (str | None): The date and time when the upload finished.
+      _log (str | None): The log associated with the upload.
+      _dataverse_url (str | None): The URL of the Dataverse.
 
   """
 
@@ -51,21 +50,20 @@ class UploadModel(BaseModel):
                status: str | None = None,
                created_date_time: str | None = None,
                finished_date_time: str | None = None,
-               log: str = "",
+               log: str | None = "",
                dataverse_url: str | None = None):
     """
     Initializes an upload model object.
 
     Args:
         _id (str | None): The ID of the object. Defaults to None.
-        _rev (str | None): The revision of the object. Defaults to None.
         data_type (str | None): The data type of the upload. Defaults to None.
         project_name (str | None): The name of the project. Defaults to None.
         project_doc_id (str | None): The document ID of the project. Defaults to None.
         status (str | None): The status of the upload. Defaults to None.
         created_date_time (str | None): The date and time when the upload created. Defaults to None.
         finished_date_time (str | None): The date and time when the upload finished. Defaults to None.
-        log (str): The log associated with the upload. Defaults to empty string.
+        log (str | None): The log associated with the upload. Defaults to empty string.
         dataverse_url (str | None): The URL of the Dataverse. Defaults to None.
 
     Raises:
@@ -98,8 +96,8 @@ class UploadModel(BaseModel):
       self._created_date_time: str | None = created_date_time
     else:
       raise IncorrectParameterError(f"Expected string type for created_date_time but got {type(created_date_time)}")
-    if isinstance(log, str):
-      self._log: str = f"{log}\n" if log and not log.endswith('\n') else log
+    if isinstance(log, str | None):
+      self._log: str | None = f"{log}\n" if log and not log.endswith('\n') else log
     else:
       raise IncorrectParameterError(f"Expected string type for log but got {type(log)}")
     if isinstance(dataverse_url, str | None):
@@ -336,7 +334,7 @@ class UploadModel(BaseModel):
     del self._finished_date_time
 
   @property
-  def log(self) -> str:
+  def log(self) -> str | None:
     """
     Returns the log of the upload.
 
@@ -347,21 +345,21 @@ class UploadModel(BaseModel):
     return self._log
 
   @log.setter
-  def log(self, value: str) -> None:
+  def log(self, value: str | None) -> None:
     """
     Appends a log message to the existing log associated with the upload.
 
     Args:
-        value (str): The log message to be appended.
+        value (str | None): The log message to be appended.
 
     Raises:
         IncorrectParameterError: If the value is not of type str.
 
     """
-    if not isinstance(value, str):
+    if not isinstance(value, str | None):
       raise IncorrectParameterError(f"Expected string type for log but got {type(value)}")
-    if value != "":
-      self._log += value if value.endswith('\n') else f"{value}\n"
+    if value != "" and self._log is not None:
+      self._log += value if isinstance(value, str) and value.endswith('\n') else f"{value}\n"
 
   @log.deleter
   def log(self) -> None:
