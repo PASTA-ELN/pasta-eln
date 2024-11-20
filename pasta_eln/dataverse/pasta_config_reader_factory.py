@@ -1,3 +1,4 @@
+""" PastaConfigReaderFactory is a singleton class responsible for managing the configuration of the application. """
 #  PASTA-ELN and all its sub-parts are covered by the MIT license.
 #
 #  Copyright (c) 2024
@@ -23,7 +24,9 @@ class PastaConfigReaderFactory:
   """
   PastaConfigReaderFactory is a singleton class responsible for managing the configuration of the application.
 
-  This class provides methods to read, update, and delete the configuration, as well as to monitor changes to the configuration file. It ensures that only one instance of the class exists and handles thread safety for configuration access.
+  This class provides methods to read, update, and delete the configuration,
+  as well as to monitor changes to the configuration file. It ensures that only one instance of the
+  class exists and handles thread safety for configuration access.
 
   Attributes:
       _instance (Any): The singleton instance of the class.
@@ -42,7 +45,8 @@ class PastaConfigReaderFactory:
   Note:
       This class is a singleton. It ensures that only one instance of the class exists.
       Make sure to use the get_instance() method to retrieve the singleton instance.
-      Make sure that this class is initialized only after the instantiation of QApplication.instance() in-order to ensure that the file system watcher is properly set up and the signal-slot connections works as expected.
+      Make sure that this class is initialized only after the instantiation of QApplication.instance() in-order to
+        ensure that the file system watcher is properly set up and the signal-slot connections works as expected.
   """
 
   _instance: Any = None
@@ -66,7 +70,9 @@ class PastaConfigReaderFactory:
     """
     Initialize the PastaConfigReaderFactory instance.
 
-    This constructor sets up the logging, initializes the configuration file path, and prepares the file system watcher to monitor changes to the configuration file. It also reads the initial configuration and sets up a mutex for thread safety.
+    This constructor sets up the logging, initializes the configuration file path, and prepares the file system
+    watcher to monitor changes to the configuration file. It also reads the initial configuration and sets up a
+    mutex for thread safety.
     """
     super().__init__()
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
@@ -118,7 +124,8 @@ class PastaConfigReaderFactory:
     """
     Get the current configuration.
 
-    This property retrieves the current configuration stored in the instance. It ensures thread safety by using a mutex and returns the configuration dictionary if it exists; otherwise, it returns None.
+    This property retrieves the current configuration stored in the instance. It ensures thread safety by using a
+    mutex and returns the configuration dictionary if it exists; otherwise, it returns None.
 
     Returns:
         dict[str, Any] | None: The current configuration dictionary or None if not set.
