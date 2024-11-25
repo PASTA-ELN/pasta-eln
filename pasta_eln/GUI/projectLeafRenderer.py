@@ -94,7 +94,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       textDoc = QTextDocument()
       textDoc.setMarkdown(markdownEqualizer(doc['content']))
       textDoc.setTextWidth(widthContent)
-      width, _ = textDoc.size().toTuple() # type: ignore
+      width:int = textDoc.size().toTuple()[0] # type: ignore
       topLeftContent = option.rect.topRight() - QPoint(width+self.frameSize-2,-self.frameSize)           # type: ignore[attr-defined]
       painter.translate(topLeftContent)
       self.drawTextDocument(painter, textDoc, int(self.maxHeight-3*self.frameSize))
