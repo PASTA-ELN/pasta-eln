@@ -14,7 +14,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDialogButtonBox
 
 from pasta_eln.GUI.dataverse.upload_config_dialog import UploadConfigDialog
-from pasta_eln.dataverse.config_model import ConfigModel
+from pasta_eln.database.models.config_model import ConfigModel
 
 
 # Mock the external dependencies

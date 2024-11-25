@@ -8,7 +8,7 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import pytest
 
-from pasta_eln.dataverse.database_orm_data_hierarchy_model import DatabaseOrmDataHierarchyModel
+from pasta_eln.database.models.database_orm_data_hierarchy_model import DataHierarchyOrmModel
 
 
 class TestDataverseDatabaseOrmDataHierarchyModel:
@@ -38,7 +38,7 @@ class TestDataverseDatabaseOrmDataHierarchyModel:
   )
   def test_get_table_columns(self, docType, IRI, title, icon, shortcut, view, expected_columns):
     # Act
-    columns = DatabaseOrmDataHierarchyModel.get_table_columns()
+    columns = DataHierarchyOrmModel.get_table_columns()
 
     # Assert
     assert columns == expected_columns

@@ -7,9 +7,17 @@
 #  Filename: config_model.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
+
+#  PASTA-ELN and all its sub-parts are covered by the MIT license.
+#
+#
+#  Author: Jithu Murugan
+#  Filename: config_model.py
+#
+#  You should have received a copy of the license with this file. Please refer the license file for more information.
 from typing import Any
 
-from pasta_eln.dataverse.base_model import BaseModel
+from pasta_eln.database.models.base_model import BaseModel
 from pasta_eln.dataverse.incorrect_parameter_error import IncorrectParameterError
 
 
@@ -220,3 +228,10 @@ class ConfigModel(BaseModel):
 
     """
     del self._metadata
+
+  def __repr__(self) -> str:
+    return (f"{self.__class__.__name__}"
+            f"(project_upload_items={self.project_upload_items}, "
+            f"parallel_uploads_count={self.parallel_uploads_count}, "
+            f"dataverse_login_info=********, "
+            f"metadata={self.metadata})")

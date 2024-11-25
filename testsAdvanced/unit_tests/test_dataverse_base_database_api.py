@@ -13,19 +13,19 @@ from _pytest.mark import param
 from sqlalchemy.exc import SQLAlchemyError
 
 from pasta_eln.dataverse.base_database_api import BaseDatabaseApi
-from pasta_eln.dataverse.config_model import ConfigModel
-from pasta_eln.dataverse.data_hierarchy_model import DataHierarchyModel
-from pasta_eln.dataverse.database_error import DatabaseError
+from pasta_eln.database.models.config_model import ConfigModel
+from pasta_eln.database.models.data_hierarchy_model import DataHierarchyModel
+from pasta_eln.database.error import Error
 from pasta_eln.dataverse.database_names import DatabaseNames
-from pasta_eln.dataverse.database_orm_config_model import DatabaseOrmConfigModel
-from pasta_eln.dataverse.database_orm_data_hierarchy_model import DatabaseOrmDataHierarchyModel
-from pasta_eln.dataverse.database_orm_main_model import DatabaseOrmMainModel
-from pasta_eln.dataverse.database_orm_properties_model import DatabaseOrmPropertiesModel
-from pasta_eln.dataverse.database_orm_upload_model import DatabaseOrmUploadModel
-from pasta_eln.dataverse.database_sqlalchemy_base import DatabaseModelBase
+from pasta_eln.database.models.database_orm_config_model import DatabaseOrmConfigModel
+from pasta_eln.database.models.database_orm_data_hierarchy_model import DataHierarchyOrmModel
+from pasta_eln.database.models.database_orm_main_model import DatabaseOrmMainModel
+from pasta_eln.database.models.database_orm_properties_model import DatabaseOrmPropertiesModel
+from pasta_eln.database.models.upload_orm_model import UploadOrmModel
+from pasta_eln.database.models.orm_model_base import OrmModelBase
 from pasta_eln.dataverse.incorrect_parameter_error import IncorrectParameterError
-from pasta_eln.dataverse.project_model import ProjectModel
-from pasta_eln.dataverse.upload_model import UploadModel
+from pasta_eln.database.models.project_model import ProjectModel
+from pasta_eln.database.models.upload_model import UploadModel
 
 
 @pytest.fixture
@@ -57,12 +57,12 @@ class TestDataverseBaseDatabaseAPI:
   ], ids=["success_path"])
   def test_create_and_init_database_success_path(self, mocker, base_database_api, db_url_map, expected_log_message):
     # Arrange
-    DatabaseModelBase.metadata = mocker.MagicMock()
-    DatabaseModelBase.metadata.tables = mocker.MagicMock()
-    DatabaseModelBase.metadata.tables = {
+    OrmModelBase.metadata = mocker.MagicMock()
+    OrmModelBase.metadata.tables = mocker.MagicMock()
+    OrmModelBase.metadata.tables = {
       DatabaseOrmConfigModel.__tablename__: mocker.MagicMock(),
-      DatabaseOrmUploadModel.__tablename__: mocker.MagicMock(),
-      DatabaseOrmDataHierarchyModel.__tablename__: mocker.MagicMock(),
+      UploadOrmModel.__tablename__: mocker.MagicMock(),
+      DataHierarchyOrmModel.__tablename__: mocker.MagicMock(),
       DatabaseOrmMainModel.__tablename__: mocker.MagicMock(),
       DatabaseOrmPropertiesModel.__tablename__: mocker.MagicMock(),
     }
@@ -75,15 +75,15 @@ class TestDataverseBaseDatabaseAPI:
     # Assert
     mock_create_engine.assert_called_with(db_url_map[DatabaseNames.DataverseDatabase])
     mock_create_engine.assert_called_with(db_url_map[DatabaseNames.PastaProjectGroupDatabase])
-    DatabaseModelBase.metadata.tables[DatabaseOrmConfigModel.__tablename__].create.assert_called_once_with(
+    OrmModelBase.metadata.tables[DatabaseOrmConfigModel.__tablename__].create.assert_called_once_with(
       bind=mock_create_engine.return_value, checkfirst=True)
-    DatabaseModelBase.metadata.tables[DatabaseOrmUploadModel.__tablename__].create.assert_called_once_with(
+    OrmModelBase.metadata.tables[UploadOrmModel.__tablename__].create.assert_called_once_with(
       bind=mock_create_engine.return_value, checkfirst=True)
-    DatabaseModelBase.metadata.tables[DatabaseOrmDataHierarchyModel.__tablename__].create.assert_called_once_with(
+    OrmModelBase.metadata.tables[DataHierarchyOrmModel.__tablename__].create.assert_called_once_with(
       bind=mock_create_engine.return_value, checkfirst=True)
-    DatabaseModelBase.metadata.tables[DatabaseOrmMainModel.__tablename__].create.assert_called_once_with(
+    OrmModelBase.metadata.tables[DatabaseOrmMainModel.__tablename__].create.assert_called_once_with(
       bind=mock_create_engine.return_value, checkfirst=True)
-    DatabaseModelBase.metadata.tables[DatabaseOrmPropertiesModel.__tablename__].create.assert_called_once_with(
+    OrmModelBase.metadata.tables[DatabaseOrmPropertiesModel.__tablename__].create.assert_called_once_with(
       bind=mock_create_engine.return_value, checkfirst=True)
     base_database_api.logger.info.assert_called_with(*expected_log_message)
 
@@ -136,12 +136,12 @@ class TestDataverseBaseDatabaseAPI:
     ("project_id", ProjectModel, ProjectModel(), "success_path_project"),
 
     # Edge cases
-    (None, UploadModel, DatabaseError, "edge_case_none_id"),
-    ("", UploadModel, DatabaseError, "edge_case_empty_string_id"),
+    (None, UploadModel, Error, "edge_case_none_id"),
+    ("", UploadModel, Error, "edge_case_empty_string_id"),
     (1, ProjectModel, None, "edge_case_int_id_for_project"),
 
     # Error cases
-    (1, MagicMock, DatabaseError, "error_case_invalid_model_type"),
+    (1, MagicMock, Error, "error_case_invalid_model_type"),
   ])
   def test_get_model(self, mocker, base_database_api, model_id, model_type, expected, test_id):
     # Arrange
@@ -154,9 +154,9 @@ class TestDataverseBaseDatabaseAPI:
     mock_session.__enter__.return_value = mock_session
     mock_session.get.return_value = model_type()
     base_database_api.get_project_model.return_value = expected
-    base_database_api.to_base_model_converter_map[DatabaseOrmUploadModel].return_value = expected
+    base_database_api.to_base_model_converter_map[UploadOrmModel].return_value = expected
     base_database_api.to_base_model_converter_map[DatabaseOrmConfigModel].return_value = expected
-    base_database_api.to_base_model_converter_map[DatabaseOrmDataHierarchyModel].return_value = expected
+    base_database_api.to_base_model_converter_map[DataHierarchyOrmModel].return_value = expected
 
     if isinstance(expected, type) and issubclass(expected, Exception):
       # Act & Assert
@@ -175,7 +175,7 @@ class TestDataverseBaseDatabaseAPI:
 
   @pytest.mark.parametrize("model_type, expected_exception", [
     (UploadModel, None),
-    (None, DatabaseError),
+    (None, Error),
   ], ids=["valid_model_type", "none_model_type"])
   def test_get_models(self, mocker, base_database_api, model_type, expected_exception):
     # Arrange
@@ -186,7 +186,7 @@ class TestDataverseBaseDatabaseAPI:
     mock_session = MagicMock()
     mocker.patch("pasta_eln.dataverse.base_database_api.Session", return_value=mock_session)
     mock_session.__enter__.return_value = mock_session
-    mock_session.scalars.return_value.all.return_value = [DatabaseOrmUploadModel(), DatabaseOrmConfigModel()]
+    mock_session.scalars.return_value.all.return_value = [UploadOrmModel(), DatabaseOrmConfigModel()]
 
     # Act & Assert
     if expected_exception:
@@ -197,11 +197,11 @@ class TestDataverseBaseDatabaseAPI:
       assert isinstance(result, list)
 
   @pytest.mark.parametrize("model_type, db_model, database, expected_count", [
-    param(UploadModel, DatabaseOrmUploadModel, DatabaseNames.DataverseDatabase, 0, id="empty_upload_model"),
-    param(UploadModel, DatabaseOrmUploadModel, DatabaseNames.DataverseDatabase, 2, id="non_empty_upload_model"),
+    param(UploadModel, UploadOrmModel, DatabaseNames.DataverseDatabase, 0, id="empty_upload_model"),
+    param(UploadModel, UploadOrmModel, DatabaseNames.DataverseDatabase, 2, id="non_empty_upload_model"),
     param(ConfigModel, DatabaseOrmConfigModel, DatabaseNames.DataverseDatabase, 0, id="empty_config_model"),
     param(ConfigModel, DatabaseOrmConfigModel, DatabaseNames.DataverseDatabase, 10, id="non_empty_config_model"),
-    param(DataHierarchyModel, DatabaseOrmDataHierarchyModel, DatabaseNames.PastaProjectGroupDatabase, 0,
+    param(DataHierarchyModel, DataHierarchyOrmModel, DatabaseNames.PastaProjectGroupDatabase, 0,
           id="empty_data_hierarchy_model"),
   ], ids=lambda x: x[2])
   def test_get_models_success_path(self, mocker, base_database_api, model_type, db_model, database, expected_count):
@@ -233,7 +233,7 @@ class TestDataverseBaseDatabaseAPI:
   ], ids=lambda x: x[1])
   def test_get_models_error_cases(self, base_database_api, model_type):
     # Act & Assert
-    with pytest.raises(DatabaseError):
+    with pytest.raises(Error):
       base_database_api.get_models(model_type)
     base_database_api.logger.info.assert_called_once_with("Retrieving models from database, type: %s", model_type)
 
@@ -352,7 +352,7 @@ class TestDataverseBaseDatabaseAPI:
 
   @pytest.mark.parametrize("model_id, expected_exception", [
     ("valid_id", None),
-    (None, DatabaseError),
+    (None, Error),
   ], ids=["valid_id", "none_id"])
   def test_get_project_model(self, mocker, base_database_api, model_id, expected_exception):
     # Arrange
@@ -385,10 +385,10 @@ class TestDataverseBaseDatabaseAPI:
   @pytest.mark.parametrize("data_model, expected_exception", [
     param(UploadModel(_id=1), None, id="success_path_upload_model"),
     param(ConfigModel(_id=2), None, id="success_path_config_model"),
-    param(UploadModel(_id=None), DatabaseError, id="error_no_id_upload_model"),
-    param(ConfigModel(_id=None), DatabaseError, id="error_no_id_config_model"),
-    param(UploadModel(_id=999), DatabaseError, id="error_nonexistent_id_upload_model"),
-    param(ConfigModel(_id=999), DatabaseError, id="error_nonexistent_id_config_model"),
+    param(UploadModel(_id=None), Error, id="error_no_id_upload_model"),
+    param(ConfigModel(_id=None), Error, id="error_no_id_config_model"),
+    param(UploadModel(_id=999), Error, id="error_nonexistent_id_upload_model"),
+    param(ConfigModel(_id=999), Error, id="error_nonexistent_id_config_model"),
   ], ids=lambda x: x[2])
   def test_update_model(self, mocker, base_database_api, data_model, expected_exception):
     # Arrange
@@ -452,8 +452,8 @@ class TestDataverseBaseDatabaseAPI:
     assert len(result) == expected_count
 
   @pytest.mark.parametrize("page_number, limit, expected_exception", [
-    (0, 10, DatabaseError),  # page_number less than 1
-    (1, 0, DatabaseError),  # limit less than 1
+    (0, 10, Error),  # page_number less than 1
+    (1, 0, Error),  # limit less than 1
   ], ids=["invalid_page_number", "invalid_limit"])
   def test_get_paginated_models_invalid_input(self, base_database_api, page_number, limit, expected_exception):
     # Act & Assert

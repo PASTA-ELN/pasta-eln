@@ -1,4 +1,5 @@
 """ Represents an upload model object. """
+
 #  PASTA-ELN and all its sub-parts are covered by the MIT license.
 #
 #  Copyright (c) 2024
@@ -8,7 +9,7 @@
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
-from pasta_eln.dataverse.base_model import BaseModel
+from pasta_eln.database.models.base_model import BaseModel
 from pasta_eln.dataverse.incorrect_parameter_error import IncorrectParameterError
 
 
@@ -404,3 +405,19 @@ class UploadModel(BaseModel):
 
     """
     del self._dataverse_url
+
+  def __repr__(self) -> str:
+    """
+    Returns a string representation of the object.
+
+    Returns:
+        str: A string representation of the object.
+
+    """
+    return (f"{self.__class__.__name__}"
+            f"(id={self.id}, "
+            f"status={self.status}, "
+            f"created_date_time={self.created_date_time}, "
+            f"finished_date_time={self.finished_date_time}, "
+            f"log={self.log}, "
+            f"dataverse_url={self.dataverse_url})")

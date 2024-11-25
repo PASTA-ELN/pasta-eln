@@ -11,7 +11,7 @@ import inspect
 import pytest
 
 from pasta_eln.dataverse.incorrect_parameter_error import IncorrectParameterError
-from pasta_eln.dataverse.upload_model import UploadModel
+from pasta_eln.database.models.upload_model import UploadModel
 
 
 # Success path tests with various realistic test values

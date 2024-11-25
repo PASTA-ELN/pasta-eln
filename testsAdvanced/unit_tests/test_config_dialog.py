@@ -14,7 +14,7 @@ from PySide6 import QtCore, QtWidgets
 
 from pasta_eln.GUI.dataverse.config_dialog import ConfigDialog
 from pasta_eln.dataverse.config_error import ConfigError
-from pasta_eln.dataverse.config_model import ConfigModel
+from pasta_eln.database.models.config_model import ConfigModel
 
 
 @pytest.fixture

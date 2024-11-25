@@ -9,7 +9,7 @@
 
 import pytest
 
-from pasta_eln.dataverse.database_orm_upload_model import DatabaseOrmUploadModel
+from pasta_eln.database.models.upload_orm_model import UploadOrmModel
 
 
 class TestDatabaseOrmUploadModel:
@@ -48,7 +48,7 @@ class TestDatabaseOrmUploadModel:
                              finished_date_time,
                              log, dataverse_url, expected_columns):
     # Act
-    columns = DatabaseOrmUploadModel.get_table_columns()
+    columns = UploadOrmModel.get_table_columns()
 
     # Assert
     assert columns == expected_columns

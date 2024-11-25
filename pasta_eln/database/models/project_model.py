@@ -7,7 +7,15 @@
 #  Filename: project_model.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
-from pasta_eln.dataverse.base_model import BaseModel
+
+#  PASTA-ELN and all its sub-parts are covered by the MIT license.
+#
+#
+#  Author: Jithu Murugan
+#  Filename: project_model.py
+#
+#  You should have received a copy of the license with this file. Please refer the license file for more information.
+from pasta_eln.database.models.base_model import BaseModel
 from pasta_eln.dataverse.incorrect_parameter_error import IncorrectParameterError
 
 
@@ -351,3 +359,13 @@ class ProjectModel(BaseModel):
 
     """
     del self._objective
+
+  def __str__(self) -> str:
+    return (f"{self.__class__.__name__}("
+            f"id={self.id}, "
+            f"name={self.name}, "
+            f"user={self.user}, "
+            f"date_created={self.date_created}, "
+            f"date_modified={self.date_modified}, "
+            f"status={self.status}, "
+            f"objective={self.objective})")

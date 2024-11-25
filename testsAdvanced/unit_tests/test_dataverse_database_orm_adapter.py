@@ -10,15 +10,15 @@
 import pytest
 from _pytest.mark import param
 
-from pasta_eln.dataverse.config_model import ConfigModel
-from pasta_eln.dataverse.data_hierarchy_model import DataHierarchyModel
-from pasta_eln.dataverse.database_orm_adapter import DatabaseOrmAdapter
-from pasta_eln.dataverse.database_orm_config_model import DatabaseOrmConfigModel
-from pasta_eln.dataverse.database_orm_data_hierarchy_model import DatabaseOrmDataHierarchyModel
-from pasta_eln.dataverse.database_orm_main_model import DatabaseOrmMainModel
-from pasta_eln.dataverse.database_orm_upload_model import DatabaseOrmUploadModel
-from pasta_eln.dataverse.project_model import ProjectModel
-from pasta_eln.dataverse.upload_model import UploadModel
+from pasta_eln.database.models.config_model import ConfigModel
+from pasta_eln.database.models.config_orm_model import ConfigOrmModel
+from pasta_eln.database.models.data_hierarchy_model import DataHierarchyModel
+from pasta_eln.database.models.data_hierarchy_orm_model import DataHierarchyOrmModel
+from pasta_eln.database.models.main_orm_model import MainOrmModel
+from pasta_eln.database.database_orm_adapter import DatabaseOrmAdapter
+from pasta_eln.database.models.upload_orm_model import UploadOrmModel
+from pasta_eln.database.models.project_model import ProjectModel
+from pasta_eln.database.models.upload_model import UploadModel
 
 
 class TestDataverseDatabaseORMAdapter:
@@ -60,7 +60,7 @@ class TestDataverseDatabaseORMAdapter:
       result = DatabaseOrmAdapter.get_orm_config_model(model)
 
       # Assert
-      for key, value in dict(DatabaseOrmConfigModel(**expected_output)).items():
+      for key, value in dict(ConfigOrmModel(**expected_output)).items():
         assert getattr(result, key) == value
     else:
       # Assert
@@ -112,7 +112,7 @@ class TestDataverseDatabaseORMAdapter:
       if "_id" in expected_orm_model_data:
         expected_orm_model_data["id"] = expected_orm_model_data.pop("_id")
       assert dict(orm_model) == dict(
-        DatabaseOrmUploadModel(**expected_orm_model_data)), f"Failed for {request.node.callspec.id}"
+        UploadOrmModel(**expected_orm_model_data)), f"Failed for {request.node.callspec.id}"
 
   @pytest.mark.parametrize(
     "model_data, expected_attributes",
@@ -155,8 +155,8 @@ class TestDataverseDatabaseORMAdapter:
     [
       # Happy path test cases
       pytest.param(
-        {"docType": "value1", "IRI": "value2"},
-        {"docType": "value1", "IRI": "value2"},
+        {"doc_type": "value1", "IRI": "value2"},
+        {"doc_type": "value1", "IRI": "value2"},
         id="happy_path_basic"
       ),
       # Edge case test cases
@@ -166,8 +166,8 @@ class TestDataverseDatabaseORMAdapter:
         id="edge_case_empty_model"
       ),
       pytest.param(
-        {"docType": None},
-        {"docType": None},
+        {"doc_type": None},
+        {"doc_type": None},
         id="edge_case_none_value"
       )
     ]
@@ -207,14 +207,14 @@ class TestDataverseDatabaseORMAdapter:
     # Act
     if isinstance(expected_output, ConfigModel):
       # Act
-      result = DatabaseOrmAdapter.get_config_model(DatabaseOrmConfigModel(**input_data))
+      result = DatabaseOrmAdapter.get_config_model(ConfigOrmModel(**input_data))
 
       # Assert
       assert dict(result) == dict(expected_output)
     else:
       # Act and Assert
       with expected_output:
-        DatabaseOrmAdapter.get_config_model(DatabaseOrmConfigModel(**input_data))
+        DatabaseOrmAdapter.get_config_model(ConfigOrmModel(**input_data))
 
   @pytest.mark.parametrize(
     "input_data, expected_output",
@@ -239,7 +239,7 @@ class TestDataverseDatabaseORMAdapter:
   def test_get_upload_model(self, input_data, expected_output):
     # Arrange
     if "id" in input_data:
-      model = DatabaseOrmUploadModel(**input_data)
+      model = UploadOrmModel(**input_data)
     else:
       model = None
 
@@ -261,14 +261,14 @@ class TestDataverseDatabaseORMAdapter:
     [
       # Happy path test cases
       param(
-        (DatabaseOrmMainModel(id=1, dateCreated="2023-01-01", dateModified="2023-01-02", type="example"), "active",
+        (MainOrmModel(id=1, dateCreated="2023-01-01", dateModified="2023-01-02", type="example"), "active",
          "Research"),
         ProjectModel(_id=1, date_created="2023-01-01", date_modified="2023-01-02", status="active",
                      objective="Research"),
         id="happy_path_1"
       ),
       param(
-        (DatabaseOrmMainModel(id=2, dateCreated="2023-02-01", dateModified="2023-02-02", type="example"), "completed",
+        (MainOrmModel(id=2, dateCreated="2023-02-01", dateModified="2023-02-02", type="example"), "completed",
          "Development"),
         ProjectModel(_id=2, date_created="2023-02-01", date_modified="2023-02-02", status="completed",
                      objective="Development"),
@@ -276,12 +276,12 @@ class TestDataverseDatabaseORMAdapter:
       ),
       # Edge case test cases
       param(
-        (DatabaseOrmMainModel(id=0, dateCreated="", dateModified="", type="example"), "", ""),
+        (MainOrmModel(id=0, dateCreated="", dateModified="", type="example"), "", ""),
         ProjectModel(_id=0, date_created="", date_modified="", status="", objective=""),
         id="edge_case_empty_strings"
       ),
       param(
-        (DatabaseOrmMainModel(id=-1, dateCreated="2023-01-01", dateModified="2023-01-02", type="example"), "inactive",
+        (MainOrmModel(id=-1, dateCreated="2023-01-01", dateModified="2023-01-02", type="example"), "inactive",
          "Testing"),
         ProjectModel(_id=-1, date_created="2023-01-01", date_modified="2023-01-02", status="inactive",
                      objective="Testing"),
@@ -306,7 +306,7 @@ class TestDataverseDatabaseORMAdapter:
     "model_data, expected",
     [
       # Happy path tests
-      param({"docType": "value1", "IRI": "value2"}, DataHierarchyModel(docType="value1", IRI="value2"),
+      param({"doc_type": "value1", "IRI": "value2"}, DataHierarchyModel(doc_type="value1", IRI="value2"),
             id="happy_path_1"),
       param({"title": "value3", "icon": "value4"}, DataHierarchyModel(title="value3", icon="value4"),
             id="happy_path_2"),
@@ -320,7 +320,7 @@ class TestDataverseDatabaseORMAdapter:
   )
   def test_get_data_hierarchy_model(self, model_data, expected, request):
     # Arrange
-    model = DatabaseOrmDataHierarchyModel(**model_data)
+    model = DataHierarchyOrmModel(**model_data)
 
     # Act
     if request.node.callspec.id == "unexpected_field":

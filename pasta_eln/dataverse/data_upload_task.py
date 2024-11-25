@@ -21,13 +21,13 @@ from PySide6 import QtCore
 from PySide6.QtGui import QImage, QPixmap
 
 from pasta_eln.backend import Backend
+from pasta_eln.database.models.config_model import ConfigModel
+from pasta_eln.database.models.upload_model import UploadModel
 from pasta_eln.dataverse.client import DataverseClient
 from pasta_eln.dataverse.config_error import ConfigError
-from pasta_eln.dataverse.config_model import ConfigModel
 from pasta_eln.dataverse.database_api import DatabaseAPI
 from pasta_eln.dataverse.generic_task_object import GenericTaskObject
 from pasta_eln.dataverse.progress_updater_thread import ProgressUpdaterThread
-from pasta_eln.dataverse.upload_model import UploadModel
 from pasta_eln.dataverse.upload_status_values import UploadStatusValues
 from pasta_eln.dataverse.utils import get_flattened_metadata, update_status
 from pasta_eln.inputOutput import exportELN

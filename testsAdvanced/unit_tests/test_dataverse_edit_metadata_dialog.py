@@ -18,7 +18,7 @@ from PySide6.QtWidgets import QFrame
 from pasta_eln.GUI.dataverse.data_type_class_names import DataTypeClassName
 from pasta_eln.GUI.dataverse.edit_metadata_dialog import EditMetadataDialog
 from pasta_eln.GUI.dataverse.metadata_frame_base import MetadataFrame
-from pasta_eln.dataverse.config_model import ConfigModel
+from pasta_eln.database.models.config_model import ConfigModel
 
 
 class MockComboBox:

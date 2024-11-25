@@ -15,7 +15,7 @@ from PySide6.QtCore import QDate, Qt
 from PySide6.QtWidgets import QDialogButtonBox, QHBoxLayout, QVBoxLayout
 
 from pasta_eln.GUI.dataverse.edit_metadata_dialog import EditMetadataDialog
-from pasta_eln.dataverse.config_model import ConfigModel
+from pasta_eln.database.models.config_model import ConfigModel
 from pasta_eln.dataverse.utils import set_template_values
 
 

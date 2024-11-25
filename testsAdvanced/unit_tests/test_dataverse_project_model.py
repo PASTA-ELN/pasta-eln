@@ -9,7 +9,7 @@
 import pytest
 
 from pasta_eln.dataverse.incorrect_parameter_error import IncorrectParameterError
-from pasta_eln.dataverse.project_model import ProjectModel
+from pasta_eln.database.models.project_model import ProjectModel
 
 
 class TestDataverseProjectModel:

@@ -4,7 +4,7 @@
 #  Copyright (c) 2024
 #
 #  Author: Jithu Murugan
-#  Filename: database_orm_upload_model.py
+#  Filename: upload_orm_model.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
@@ -12,10 +12,10 @@ from typing import Optional
 
 from sqlalchemy.orm import Mapped, mapped_column
 
-from pasta_eln.dataverse.database_sqlalchemy_base import DatabaseModelBase
+from pasta_eln.database.models.orm_model_base import OrmModelBase
 
 
-class DatabaseOrmUploadModel(DatabaseModelBase):
+class UploadOrmModel(OrmModelBase):
   """Represents the ORM model for the upload table in the database.
 
   This class defines the structure of the upload model used in the application,

@@ -4,7 +4,7 @@
 #  Copyright (c) 2024
 #
 #  Author: Jithu Murugan
-#  Filename: database_sqlalchemy_base.py
+#  Filename: orm_model_base.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
@@ -14,8 +14,8 @@ from sqlalchemy import JSON
 from sqlalchemy.orm import DeclarativeBase
 
 
-class DatabaseModelBase(DeclarativeBase):
-  """Base class for all database models in the application.
+class OrmModelBase(DeclarativeBase):
+  """Base class for all ORM based database models in the application.
 
   This class provides a foundation for ORM models, including methods for
   iterating over model attributes and retrieving table column names. It also

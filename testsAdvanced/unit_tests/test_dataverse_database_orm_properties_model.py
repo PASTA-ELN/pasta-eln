@@ -8,7 +8,7 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import pytest
 
-from pasta_eln.dataverse.database_orm_properties_model import DatabaseOrmPropertiesModel
+from pasta_eln.database.models.database_orm_properties_model import DatabaseOrmPropertiesModel
 
 
 class TestDatabaseOrmPropertiesModel:

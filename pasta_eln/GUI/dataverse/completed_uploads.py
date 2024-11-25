@@ -16,8 +16,8 @@ from PySide6.QtWidgets import QDialog, QFrame
 
 from pasta_eln.GUI.dataverse.completed_upload_task import Ui_CompletedUploadTaskFrame
 from pasta_eln.GUI.dataverse.completed_uploads_base import Ui_CompletedUploadsForm
+from pasta_eln.database.models.upload_model import UploadModel
 from pasta_eln.dataverse.database_api import DatabaseAPI
-from pasta_eln.dataverse.upload_model import UploadModel
 from pasta_eln.dataverse.upload_status_values import UploadStatusValues
 from pasta_eln.dataverse.utils import get_formatted_dataverse_url
 

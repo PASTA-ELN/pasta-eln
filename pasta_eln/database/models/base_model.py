@@ -7,6 +7,14 @@
 #  Filename: base_model.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
+
+#  PASTA-ELN and all its sub-parts are covered by the MIT license.
+#
+#
+#  Author: Jithu Murugan
+#  Filename: base_model.py
+#
+#  You should have received a copy of the license with this file. Please refer the license file for more information.
 from collections.abc import Generator
 from typing import Any
 
@@ -81,3 +89,14 @@ class BaseModel:
 
     """
     del self._id
+
+  def __repr__(self) -> str:
+    """
+    Returns a string representation of the object.
+
+    Returns:
+        str: A string representation of the object.
+
+    """
+    return (f"{self.__class__.__name__}"
+            f"(id={self.id})")

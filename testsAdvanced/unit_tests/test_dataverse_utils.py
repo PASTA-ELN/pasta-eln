@@ -20,7 +20,7 @@ from cryptography.fernet import Fernet, InvalidToken
 from sqlalchemy import Executable
 
 from pasta_eln.dataverse.config_error import ConfigError
-from pasta_eln.dataverse.data_hierarchy_model import DataHierarchyModel
+from pasta_eln.database.models.data_hierarchy_model import DataHierarchyModel
 from pasta_eln.dataverse.upload_status_values import UploadStatusValues
 from pasta_eln.dataverse.utils import adjust_type_name, check_if_compound_field_value_is_missing, \
   check_if_dataverse_exists, check_if_field_value_is_missing, check_if_field_value_not_null, \

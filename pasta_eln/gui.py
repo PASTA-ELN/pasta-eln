@@ -14,6 +14,7 @@ from PySide6.QtWidgets import QApplication, QFileDialog, QMainWindow  # pylint: 
 from qt_material import apply_stylesheet  # of https://github.com/UN-GCPDS/qt-material
 
 from pasta_eln import __version__
+from pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog import DataHierarchyEditorDialog
 from pasta_eln.GUI.dataverse.config_dialog import ConfigDialog
 from pasta_eln.GUI.dataverse.main_dialog import MainDialog
 from .backend import Backend
@@ -185,10 +186,8 @@ class MainWindow(QMainWindow):
       sync = Pasta2Elab(self.backend)
       sync.sync()
     elif command[0] is Command.DATAHIERARCHY:
-      # Jithu's code: comment out for now
-      # dataHierarchyForm = DataHierarchyEditorDialog(self.comm.backend.db)
-      # dataHierarchyForm.instance.exec()
-      restart()
+      dataHierarchyForm = DataHierarchyEditorDialog()
+      dataHierarchyForm.instance.exec()
     elif command[0] is Command.DATAVERSE_CONFIG:
       self.dataverseConfig = ConfigDialog()
       self.dataverseConfig.show()

@@ -12,11 +12,11 @@ import pytest
 from sqlalchemy import JSON
 from sqlalchemy.orm import Mapped, mapped_column
 
-from pasta_eln.dataverse.database_sqlalchemy_base import DatabaseModelBase
+from pasta_eln.database.models.orm_model_base import OrmModelBase
 
 
 # Mock class to test DatabaseModelBase
-class MockDatabaseModel(DatabaseModelBase):
+class MockOrmModel(OrmModelBase):
   __tablename__ = "mock_table"
   id: Mapped[int] = mapped_column(primary_key=True)
   name: Mapped[Optional[str]]
@@ -37,10 +37,10 @@ class TestDatabaseModelBase:
   @pytest.mark.parametrize(
     "instance, expected_output",
     [
-      pytest.param(MockDatabaseModel(1, "Test", {"key": "value"}),
+      pytest.param(MockOrmModel(1, "Test", {"key": "value"}),
                    [("id", 1), ("name", "Test"), ("data", {"key": "value"})],
                    id="happy_path_with_valid_data"),
-      pytest.param(MockDatabaseModel(0, "", {}),
+      pytest.param(MockOrmModel(0, "", {}),
                    [("id", 0), ("name", ""), ("data", {})],
                    id="edge_case_with_empty_values"),
     ]
@@ -55,8 +55,8 @@ class TestDatabaseModelBase:
   @pytest.mark.parametrize(
     "cls, expected_columns",
     [
-      pytest.param(MockDatabaseModel, ["id", "name", "data"], id="happy_path_with_mock_class"),
-      pytest.param(DatabaseModelBase, [], id="base_class_with_no_columns"),
+      pytest.param(MockOrmModel, ["id", "name", "data"], id="happy_path_with_mock_class"),
+      pytest.param(OrmModelBase, [], id="base_class_with_no_columns"),
     ]
   )
   def test_get_table_columns(self, cls, expected_columns):
@@ -71,7 +71,7 @@ class TestDatabaseModelBase:
     expected_map = {dict[str, Any]: JSON}
 
     # Act
-    actual_map = DatabaseModelBase.type_annotation_map
+    actual_map = OrmModelBase.type_annotation_map
 
     # Assert
     assert actual_map == expected_map

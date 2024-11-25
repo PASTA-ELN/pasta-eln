@@ -8,7 +8,7 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import pytest
 
-from pasta_eln.dataverse.config_model import ConfigModel
+from pasta_eln.database.models.config_model import ConfigModel
 from pasta_eln.dataverse.incorrect_parameter_error import IncorrectParameterError
 
 

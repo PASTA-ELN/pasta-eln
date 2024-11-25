@@ -8,7 +8,16 @@
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
-from pasta_eln.dataverse.base_model import BaseModel
+#  PASTA-ELN and all its sub-parts are covered by the MIT license.
+#
+#
+#  Author: Jithu Murugan
+#  Filename: data_hierarchy_model.py
+#
+#  You should have received a copy of the license with this file. Please refer the license file for more information.
+
+from pasta_eln.database.models.base_model import BaseModel
+from pasta_eln.database.models.data_hierarchy_definition_model import DataHierarchyDefinitionModel
 from pasta_eln.dataverse.incorrect_parameter_error import IncorrectParameterError
 
 
@@ -21,29 +30,31 @@ class DataHierarchyModel(BaseModel):
   errors if invalid types are provided.
 
   Args:
-      docType (str | None): The type of document.
+      doc_type (str | None): The type of document.
       IRI (str | None): The Internationalized Resource Identifier.
       title (str | None): The title of the model.
       icon (str | None): The icon associated with the model.
       shortcut (str | None): A shortcut key for the model.
       view (str | None): The view associated with the model.
+      definitions (list[DataHierarchyDefinitionModel] | None): A list of data hierarchy definitions.
 
   Raises:
       IncorrectParameterError: If any of the parameters are not of the expected type.
   """
 
   def __init__(self,
-               docType: str | None = None,
+               doc_type: str | None = None,
                IRI: str | None = None,
                title: str | None = None,
                icon: str | None = None,
                shortcut: str | None = None,
-               view: str | None = None):
+               view: str | None = None,
+               definitions: list[DataHierarchyDefinitionModel] | None = None):
     super().__init__(None)
-    if isinstance(docType, str | None):
-      self._docType: str | None = docType
+    if isinstance(doc_type, str | None):
+      self._doc_type: str | None = doc_type
     else:
-      raise IncorrectParameterError(f"Expected string type for docType but got {type(docType)}")
+      raise IncorrectParameterError(f"Expected string type for doc_type but got {type(doc_type)}")
     if isinstance(IRI, str | None):
       self._IRI: str | None = IRI
     else:
@@ -64,9 +75,13 @@ class DataHierarchyModel(BaseModel):
       self._view: str | None = view
     else:
       raise IncorrectParameterError(f"Expected string type for view but got {type(view)}")
+    if isinstance(definitions, list | None):
+      self._definitions: list[DataHierarchyDefinitionModel] | None = definitions
+    else:
+      raise IncorrectParameterError(f"Expected list type for definitions but got {type(definitions)}")
 
   @property
-  def docType(self) -> str | None:
+  def doc_type(self) -> str | None:
     """Gets the document type of the data hierarchy model.
 
     This property retrieves the current document type associated with the
@@ -76,10 +91,10 @@ class DataHierarchyModel(BaseModel):
     Returns:
         str | None: The document type of the model, or None if not set.
     """
-    return self._docType
+    return self._doc_type
 
-  @docType.setter
-  def docType(self, value: str | None) -> None:
+  @doc_type.setter
+  def doc_type(self, value: str | None) -> None:
     """Sets the document type of the data hierarchy model.
 
     This setter allows the assignment of a document type to the data hierarchy model.
@@ -93,12 +108,12 @@ class DataHierarchyModel(BaseModel):
         IncorrectParameterError: If the value is not a string or None.
     """
     if isinstance(value, str | None):
-      self._docType = value
+      self._doc_type = value
     else:
-      raise IncorrectParameterError(f"Expected string type for docType but got {type(value)}")
+      raise IncorrectParameterError(f"Expected string type for doc_type but got {type(value)}")
 
-  @docType.deleter
-  def docType(self) -> None:
+  @doc_type.deleter
+  def doc_type(self) -> None:
     """Deletes the document type of the data hierarchy model.
 
     This deleter removes the current document type from the data hierarchy model,
@@ -108,7 +123,7 @@ class DataHierarchyModel(BaseModel):
     Raises:
         AttributeError: If the document type has already been deleted.
     """
-    del self._docType
+    del self._doc_type
 
   @property
   def IRI(self) -> str | None:
@@ -329,3 +344,58 @@ class DataHierarchyModel(BaseModel):
         AttributeError: If the view has already been deleted.
     """
     del self._view
+
+  @property
+  def definitions(self) -> list[DataHierarchyDefinitionModel] | None:
+    """Gets the definitions of the data hierarchy model.
+
+    This property retrieves the current definitions associated with the data hierarchy model.
+    It returns the definitions as a list of DataHierarchyDefinitionsModel objects or None
+    if it has not been set.
+
+    Returns:
+        list[DataHierarchyDefinitionModel] | None: The definitions of the model, or None if not set.
+    """
+    return self._definitions
+
+  @definitions.setter
+  def definitions(self, value: list[DataHierarchyDefinitionModel] | None) -> None:
+    """Sets the definitions of the data hierarchy model.
+
+    This setter allows the assignment of a list of definitions to the data hierarchy model.
+    It ensures that the value being set is either a list of DataHierarchyDefinitionsModel
+    objects or None, raising an error if the value is of an incorrect type.
+
+    Args:
+        value (list[DataHierarchyDefinitionModel] | None): The definitions to set for the model.
+
+    Raises:
+        IncorrectParameterError: If the value is not a list of DataHierarchyDefinitionsModel objects or None.
+    """
+    if isinstance(value, list | None):
+      self._definitions = value
+    else:
+      raise IncorrectParameterError(f"Expected list type for definitions but got {type(value)}")
+
+  @definitions.deleter
+  def definitions(self) -> None:
+    """Deletes the definitions of the data hierarchy model.
+
+    This deleter removes the current definitions associated with the data hierarchy model,
+    effectively setting it to None. It allows for the clearing of the definitions when it
+    is no longer needed.
+
+    Raises:
+        AttributeError: If the definitions have already been deleted.
+    """
+    del self._definitions
+
+  def __repr__(self) -> str:
+    return (f"{self.__class__.__name__}"
+            f"(doc_type={self.doc_type}, "
+            f"IRI={self.IRI}, "
+            f"title={self.title}, "
+            f"icon={self.icon}, "
+            f"shortcut={self.shortcut}, "
+            f"view={self.view}, "
+            f"definitions={self.definitions})")

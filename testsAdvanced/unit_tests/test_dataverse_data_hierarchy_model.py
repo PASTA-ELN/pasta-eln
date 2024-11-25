@@ -9,7 +9,7 @@
 
 import pytest
 
-from pasta_eln.dataverse.data_hierarchy_model import DataHierarchyModel
+from pasta_eln.database.models.data_hierarchy_model import DataHierarchyModel
 from pasta_eln.dataverse.incorrect_parameter_error import IncorrectParameterError
 
 
