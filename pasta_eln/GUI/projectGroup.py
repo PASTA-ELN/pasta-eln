@@ -1,18 +1,15 @@
 """ Table Header dialog: change which columns are shown and in which order """
 import json
-import platform
 from enum import Enum
 from pathlib import Path
 from typing import Any
-
 import qrcode
 from PIL.ImageQt import ImageQt
-from PySide6.QtGui import QPixmap, QRegularExpressionValidator  # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QFileDialog, QFormLayout, QGroupBox, QLabel, \
-  QLineEdit, QMessageBox, QVBoxLayout, QTextEdit  # pylint: disable=no-name-in-module
-# from cloudant.client import CouchDB
+from PySide6.QtGui import QPixmap, QRegularExpressionValidator                 # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QFileDialog, QLabel, \
+                              QLineEdit, QMessageBox, QVBoxLayout, QTextEdit   # pylint: disable=no-name-in-module
 from ..guiCommunicate import Communicate
-from ..guiStyle import IconButton, Label, TextButton, showMessage, widgetAndLayout, widgetAndLayoutGrid
+from ..guiStyle import IconButton, Label, TextButton, showMessage, widgetAndLayoutGrid
 from ..miscTools import restart
 
 
@@ -119,15 +116,15 @@ class ProjectGroup(QDialog):
       config['local']['path'] = answer
       self.directoryLabel.setText('Data directory: ' + answer)
     if command[0] is Command.CHANGE_ADDON:
-      # frag nach neuem Verzeichnis: wie oben
-      # egal ob leer
-      # frag ob alte add-ons reincopiert werden sollen
+      # ask for new directory: as above
+      # don't worry if empty
+      # ask if old add-ons should be copied into it
       pass
     if command[0] is Command.TEST_SERVER:
-      # teste Verbindung
+      # test connection
       pass
     if command[0] is Command.TEST_APIKEY:
-      # teste Verbindung
+      # test connection
       pass
     if command[0] is Command.CREATE_QRCODE:
       text = ''
@@ -138,8 +135,8 @@ class ProjectGroup(QDialog):
       # new project group name and empty all other fields
       pass
     if command[0] is Command.DEL:
-      # lösche aus config
-      # nimm erste aus der Liste als aktuell
+      # delete from config
+      # take first from list
       pass
     print(json.dumps(self.configuration['projectGroups'], indent=2))
     return

@@ -165,7 +165,7 @@ def doc2markdown(doc:dict[str,Any], ignoreKeys:list[str], dataHierarchyNode:list
       dataHierarchyItems = [dict(i) for i in dataHierarchyNode if i['name']==key]
       if len(dataHierarchyItems)==1 and 'list' in dataHierarchyItems[0] and dataHierarchyItems[0]['list'] and \
           not isinstance(dataHierarchyItems[0]['list'], list):                #choice among docType
-        table  = widget.comm.backend.db.getView('viewDocType/'+dataHierarchyItems[0]['list']) # type: ignore[attr-defined]
+        table  = widget.comm.backend.db.getView('viewDocType/'+dataHierarchyItems[0]['list'])
         names= list(table[table.id==value[0]]['name'])
         if len(names)==1:    # default find one item that we link to
           value = '\u260D '+names[0]
