@@ -80,6 +80,7 @@ class ProjectGroup(QDialog):
     self.formL.addWidget(self.image, 1, 6, 4, 1)
 
     #final button box
+    mainL.addStretch(1)
     buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)
     buttonBox.clicked.connect(self.closeDialog)
     mainL.addWidget(buttonBox)

@@ -4,8 +4,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Callable, Any
 import requests
-from PySide6.QtWidgets import QWidget, QFormLayout, QLabel, QLineEdit, QComboBox, QDialogButtonBox  # pylint: disable=no-name-in-module
-from ..guiStyle import TextButton, IconButton, widgetAndLayout
+from PySide6.QtWidgets import QWidget, QFormLayout, QLabel, QLineEdit, QComboBox, QDialogButtonBox, QVBoxLayout  # pylint: disable=no-name-in-module
+from ..guiStyle import TextButton, IconButton, widgetAndLayout, widgetAndLayoutForm
 from ..guiCommunicate import Communicate
 from ..fixedStringsJson import CONF_FILE_NAME
 
@@ -26,11 +26,13 @@ class ConfigurationAuthors(QWidget):
     super().__init__()
     self.comm = comm
     self.callbackFinished = callbackFinished
+    mainL = QVBoxLayout(self)
+
 
     #GUI elements
     if hasattr(self.comm.backend, 'configuration'):
       self.author = self.comm.backend.configuration['authors'][0]
-      self.tabAuthorL = QFormLayout(self)
+      _, self.tabAuthorL = widgetAndLayoutForm(mainL, 's')
       self.userOrcid = self.addRowText('orcid','ORCID')
       self.userTitle = self.addRowText('title','Title')
       self.userFirst = self.addRowText('first','First name')
@@ -48,16 +50,17 @@ class ConfigurationAuthors(QWidget):
 
       self.userRorid = self.addRowText('rorid','RORID')
       self.userOrg   = self.addRowText('organization','Organization')
-      buttonBarW, buttonBarL = widgetAndLayout('H', None, top='l')
-      buttonBarL.addStretch(1)
-      self.tabAuthorL.addRow(buttonBarW)
-      #final button box
-      buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)
-      buttonBox.clicked.connect(self.closeDialog)
-      self.tabAuthorL.addWidget(buttonBox)
-      self.orgaCB_previousIndex = 0
-      self.lockSelfAuthor = False
-      self.orgaCB.currentIndexChanged.connect(lambda: self.execute([Command.CHANGE])) #connect to slot only after all painting is done
+
+    #final button box
+    mainL.addStretch(1)
+    buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)
+    buttonBox.clicked.connect(self.closeDialog)
+    mainL.addWidget(buttonBox)
+
+    #initialize
+    self.orgaCB_previousIndex = 0
+    self.lockSelfAuthor = False
+    self.orgaCB.currentIndexChanged.connect(lambda: self.execute([Command.CHANGE])) #connect to slot only after all painting is done
 
 
   def addRowText(self, item:str, label:str) -> QLineEdit:
