@@ -9,7 +9,7 @@
 
 import pytest
 
-from tests.common.fixtures import doc_null_exception
+from testsAdvanced.common.fixtures import doc_null_exception
 
 
 class TestDataHierarchyDocumentNullException(object):

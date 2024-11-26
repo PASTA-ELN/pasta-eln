@@ -17,9 +17,15 @@ from aiohttp import InvalidURL
 from requests.exceptions import ConnectionError, MissingSchema
 
 from pasta_eln.dataverse.client import DataverseClient
-from tests.common.fixtures import dataverse_client_mock, dataverse_list_mock, dataverse_tree_mock
+from testsAdvanced.common.fixtures import dataverse_client_mock, dataverse_tree_mock
+from testsAdvanced.common.test_utils import read_json
 
 pytest_plugins = ('pytest_asyncio',)
+
+
+@pytest.fixture()
+def dataverse_list_mock() -> dict | None:
+  return read_json('dataverse_list.json')
 
 
 class TestDataverseClient(object):

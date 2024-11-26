@@ -18,28 +18,27 @@ from pasta_eln.dataverse.upload_model import UploadModel
 class TestDataverseUploadModel:
   # Success path tests with various realistic test values
   @pytest.mark.parametrize(
-    "test_id, _id, _rev, data_type, project_name, project_doc_id, status, created_date_time, finished_date_time, log, dataverse_url",
+    "test_id, _id, data_type, project_name, project_doc_id, status, created_date_time, finished_date_time, log, dataverse_url",
     [
-      ("Success01", "123", "1-a", "dataset", "Project X", "doc-456", "completed", "2023-01-01T12:00:00",
+      ("Success01", "123", "dataset", "Project X", "doc-456", "completed", "2023-01-01T12:00:00",
        "2023-01-01T12:00:00",
        "Upload successful\n", "http://example.com/dataverse"),
-      ("Success02", None, None, None, None, None, None, None, None, "", None),  # Testing defaults
-      ("Success03", "124", "2-b", "image", "Project Y", "doc-789", "in progress", "2023-01-01T12:00:00",
+      ("Success02", None, None, None, None, None, None, None, "", None),  # Testing defaults
+      ("Success03", "124", "image", "Project Y", "doc-789", "in progress", "2023-01-01T12:00:00",
        "2023-01-02T13:00:00", "Uploading\n",
        "http://example.com/dataverse2"),
     ])
-  def test_upload_model_success_path(self, test_id, _id, _rev, data_type, project_name, project_doc_id, status,
+  def test_upload_model_success_path(self, test_id, _id, data_type, project_name, project_doc_id, status,
                                      created_date_time, finished_date_time, log, dataverse_url):
     # Arrange
 
     # Act
-    upload_model = UploadModel(_id, _rev, data_type, project_name, project_doc_id, status, created_date_time,
+    upload_model = UploadModel(_id, data_type, project_name, project_doc_id, status, created_date_time,
                                finished_date_time, log,
                                dataverse_url)
 
     # Assert
     assert upload_model._id == _id
-    assert upload_model._rev == _rev
     assert upload_model.data_type == (data_type if data_type is not None else 'dataverse_upload')
     assert upload_model.project_name == project_name
     assert upload_model.project_doc_id == project_doc_id
@@ -77,33 +76,41 @@ class TestDataverseUploadModel:
   ])
   def test_upload_model_init_error_cases(self, test_id, param, value):
     # Arrange
-    kwargs = {"_id": None, "_rev": None, "data_type": None, "project_name": None, "project_doc_id": None,
-              "status": None, "finished_date_time": None, "log": "", "dataverse_url": None}
-    kwargs[param] = value
-
+    kwargs = {
+      "_id": None,
+      "data_type": None,
+      "project_name": None,
+      "project_doc_id": None,
+      "status": None,
+      "finished_date_time": None,
+      "log": "",
+      "dataverse_url": None,
+      param: value,
+    }
     # Act / Assert
     with pytest.raises(IncorrectParameterError):
       UploadModel(**kwargs)
 
   @pytest.mark.parametrize("test_id, attributes, expected", [  # Success path tests with various realistic test values
     ("Success-1",
-     {"id": "value1", "rev": "value2", "data_type": "value3", "project_name": "value4", "project_doc_id": "value5",
+     {"id": "value1", "data_type": "value3", "project_name": "value4", "project_doc_id": "value5",
       "status": "value6", "finished_date_time": "value7", "created_date_time": "value8", "log": "value9",
       "dataverse_url": "value10"},
-     [("_id", "value1"), ("_rev", "value2"), ("data_type", "value3"), ("project_name", "value4"),
+     [("id", "value1"), ("data_type", "value3"), ("project_name", "value4"),
       ("project_doc_id", "value5"), ("status", "value6"), ("finished_date_time", "value7"),
       ("created_date_time", "value8"), ("log", "value9\n"),
-      ("dataverse_url", "value10")]), ("Success-2", {},
-                                       [('_id', None), ('_rev', None), ('data_type', 'dataverse_upload'),
-                                        ('project_name', None), ('project_doc_id', None), ('status', None),
-                                        ('finished_date_time', None), ('created_date_time', None), ('log', ''),
-                                        ('dataverse_url', None)]),
+      ("dataverse_url", "value10")]),
+    ("Success-2", {},
+     [('id', None), ('data_type', 'dataverse_upload'),
+      ('project_name', None), ('project_doc_id', None), ('status', None),
+      ('finished_date_time', None), ('created_date_time', None), ('log', ''),
+      ('dataverse_url', None)]),
     # Testing with an empty object
 
     # Edge cases
     # Assuming edge cases for this function might involve special attribute types or large numbers of attributes
-    ("EdgeCase-1", {"id": None, "rev": True},
-     [('_id', None), ('_rev', True), ('data_type', 'dataverse_upload'), ('project_name', None),
+    ("EdgeCase-1", {"id": None},
+     [('id', None), ('data_type', 'dataverse_upload'), ('project_name', None),
       ('project_doc_id', None), ('status', None), ('finished_date_time', None), ('created_date_time', None),
       ('log', ''),
       ('dataverse_url', None)]), ])
@@ -121,10 +128,10 @@ class TestDataverseUploadModel:
 
   @pytest.mark.parametrize("test_id, attributes, expected", [  # Success path tests with various realistic test values
     ("Success-1",
-     {"id": "value1", "rev": "value2", "data_type": "value3", "project_name": "value4", "project_doc_id": "value5",
+     {"id": "value1", "data_type": "value3", "project_name": "value4", "project_doc_id": "value5",
       "status": "value6", "finished_date_time": "value7", "created_date_time": "value8", "log": "value9",
       "dataverse_url": "value10"},
-     {'_id': 'value1', '_rev': 'value2', 'data_type': 'value3', 'project_name': 'value4', "project_doc_id": "value5",
+     {'id': 'value1', 'data_type': 'value3', 'project_name': 'value4', "project_doc_id": "value5",
       'status': 'value6', 'finished_date_time': 'value7', "created_date_time": "value8", 'log': 'value9\n',
       'dataverse_url': 'value10'})])
   def test_dict_method(self, test_id, attributes, expected):

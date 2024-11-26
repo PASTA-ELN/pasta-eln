@@ -209,28 +209,36 @@ class TestDataverseMainDialog(object):
                                                mock_upload_widget_frame.return_value.statusIconLabel.setPixmap)
     mock_upload_widget_frame.return_value.showLogPushButton.clicked.connect.assert_called_once()
 
-  @pytest.mark.parametrize("test_id, name, date, expected_name, expected_date", [
-    # Happy path tests
-    ("success-1", "Test Project", "2023-01-01T00:00:00", "Test Project", "2023-01-01 00:00:00"),
-    ("success-2", "A" * 100, "2023-12-31T23:59:59", textwrap.fill("A" * 100, width=80, max_lines=1),
-     "2023-12-31 23:59:59"),  # Test text wrapping
-    # Edge cases
-    ("edge-1", "", "2023-01-01T00:00:00", "", "2023-01-01 00:00:00"),  # Empty project name
-    ("edge-2", "Test Project", "", ValueError, ValueError),  # Empty date
-    # Error cases
-    ("error-1", None, "2023-01-01T00:00:00", None, "2023-01-01 00:00:00"),  # None as project name
-    ("error-2", "Test Project", "InvalidDate", ValueError, ValueError),  # Invalid date format
-  ])
-  def test_get_project_widget(self, mocker, mock_main_dialog, test_id, name, date, expected_name, expected_date):
+  @pytest.mark.parametrize(
+    "test_id, name, date_created, date_modified, expected_name, expected_date_created, expected_date_modified", [
+      # Happy path tests
+      ("success-1", "Test Project", "2023-01-01T00:00:00", "2023-01-01T00:00:00", "Test Project", "2023-01-01 00:00:00",
+       "2023-01-01 00:00:00"),
+      ("success-2", "A" * 100, "2023-12-31T23:59:59", "2023-12-31T23:59:59",
+       textwrap.fill("A" * 100, width=80, max_lines=1),
+       "2023-12-31 23:59:59", "2023-12-31 23:59:59"),  # Test text wrapping
+      # Edge cases
+      ("edge-1", "", "2023-01-01T00:00:00", "2023-01-01T00:00:00", "", "2023-01-01 00:00:00", "2023-01-01 00:00:00"),
+      # Empty project name
+      ("edge-2", "Test Project", "", "", ValueError, ValueError, ValueError),  # Empty date
+      # Error cases
+      ("error-1", None, "2023-01-01T00:00:00", "2023-01-01T00:00:00", None, '2023-01-01 00:00:00',
+       '2023-01-01 00:00:00'),  # None as project name
+      ("error-2", "Test Project", "InvalidDate", "InvalidDate", ValueError, ValueError, ValueError),
+      # Invalid date format
+    ])
+  def test_get_project_widget(self, mocker, mock_main_dialog, test_id, name, date_created, date_modified, expected_name,
+                              expected_date_created, expected_date_modified):
     # Arrange
     mock_frame = mocker.patch("pasta_eln.GUI.dataverse.main_dialog.QtWidgets.QFrame")
     mock_project_item_frame = mocker.patch("pasta_eln.GUI.dataverse.main_dialog.Ui_ProjectItemFrame")
     project = ProjectModel()
     project.name = name
-    project.date = date
+    project.date_created = date_created
+    project.date_modified = date_modified
     project.id = "Test"
 
-    if expected_name is ValueError or expected_date is ValueError:
+    if expected_name is ValueError or expected_date_created is ValueError:
       # Assert
       with pytest.raises(expected_name):
         mock_main_dialog.get_project_widget(project)
@@ -244,7 +252,7 @@ class TestDataverseMainDialog(object):
       mock_project_item_frame.assert_called_once()
       mock_project_item_frame.return_value.setupUi.assert_called_once_with(widget)
       mock_project_item_frame.return_value.projectNameLabel.setText.assert_called_once_with(expected_name or '')
-      mock_project_item_frame.return_value.modifiedDateTimeLabel.setText.assert_called_once_with(expected_date)
+      mock_project_item_frame.return_value.modifiedDateTimeLabel.setText.assert_called_once_with(expected_date_modified)
       mock_project_item_frame.return_value.projectNameLabel.setToolTip.assert_called_once_with(name)
       mock_project_item_frame.return_value.projectDocIdLabel.hide.assert_called_once()
       mock_project_item_frame.return_value.projectDocIdLabel.setText.assert_called_once_with(project.id)

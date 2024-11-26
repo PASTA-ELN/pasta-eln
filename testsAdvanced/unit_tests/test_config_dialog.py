@@ -6,7 +6,6 @@
 #  Filename: test_config_dialog.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
-
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -42,7 +41,7 @@ def mock_dataverse_client(mocker):
 def mock_database_api():
   with patch('pasta_eln.dataverse.database_api.DatabaseAPI') as mock:
     mock_instance = mock.return_value
-    mock_instance.get_config_model.return_value = ConfigModel(_id="test_id", _rev="test_rev",
+    mock_instance.get_config_model.return_value = ConfigModel(_id=12345678,
                                                               dataverse_login_info={"server_url": "http://valid.url",
                                                                                     "api_token": "test_token",
                                                                                     "dataverse_id": "test_dataverse_id"},
@@ -227,7 +226,7 @@ class TestConfigDialog:
   @pytest.mark.parametrize("test_id", [("success_path_save_config")])
   def test_save_config(self, mock_config_dialog, test_id, mock_message_box):
     # Arrange
-    mock_config_dialog.db_api.update_model_document = MagicMock()
+    mock_config_dialog.db_api.update_model = MagicMock()
 
     # Act
     mock_config_dialog.save_config()
@@ -303,6 +302,73 @@ class TestConfigDialog:
       mock_message_box.warning.assert_called_once_with(mock_config_dialog.instance, "Error",
                                                        "Failed to load dataverse list")
 
+  @pytest.mark.parametrize(
+    "server_url, api_token, dataverses, expected_log, expected_warning, expected_combo_items, expected_current_text",
+    [
+      # Happy path with valid dataverses
+      ("http://validserver.com", "validtoken", [{"title": "Dataverse1", "id": "1"}, {"title": "Dataverse2", "id": "2"}],
+       None, None, ["Dataverse1", "Dataverse2"], ""),
+      # Edge case: Empty dataverse list
+      ("http://validserver.com", "validtoken", [], ('Failed to load dataverse list, error: %s', []),
+       "Failed to load dataverse list", [], ""),
+      # Error case: Invalid dataverse structure
+      ("http://validserver.com", "validtoken", [[{"name": "Dataverse1"}]],
+       ('Failed to load dataverse list, error: %s', [[{'name': 'Dataverse1'}]]), "Failed to load dataverse list", [],
+       ""),
+      # Error case: No server URL
+      ("", "validtoken", None, None, "Please enter both server URL and API token", [], ""),
+      # Error case: No API token
+      ("http://validserver.com", "", None, None, "Please enter both server URL and API token", [], ""),
+    ],
+    ids=[
+      "happy_path_valid_dataverses",
+      "edge_case_empty_dataverse_list",
+      "error_case_invalid_dataverse_structure",
+      "error_case_no_server_url",
+      "error_case_no_api_token",
+    ]
+  )
+  def test_verify_and_load_dataverse_list(self, mocker, mock_config_dialog, server_url, api_token, dataverses,
+                                          expected_log,
+                                          expected_warning, expected_combo_items, expected_current_text):
+    # Arrange
+    mock_config_dialog.dataverseServerLineEdit.text = mocker.MagicMock()
+    mock_config_dialog.verify_server_url_and_api_token = mocker.MagicMock()
+    mock_config_dialog.verify_server_url_and_api_token.return_value = True
+    mock_config_dialog.dataverseListComboBox = mocker.MagicMock()
+    mock_config_dialog.dataverseServerLineEdit.text.return_value = server_url
+    mock_config_dialog.apiTokenLineEdit.text = mocker.MagicMock()
+    mock_config_dialog.apiTokenLineEdit.text.return_value = api_token
+    mock_config_dialog.config_model.dataverse_login_info = mocker.MagicMock(spec=dict)
+    mock_config_dialog.config_model.dataverse_login_info.get.return_value = ""
+
+    with patch('pasta_eln.GUI.dataverse.config_dialog.get_event_loop') as mock_get_event_loop:
+      mock_get_event_loop.return_value.run_until_complete.return_value = dataverses
+      with patch('pasta_eln.GUI.dataverse.config_dialog.QMessageBox.warning') as mock_warning:
+
+        # Act
+        mock_config_dialog.verify_and_load_dataverse_list()
+
+        # Assert
+        if expected_log:
+          mock_config_dialog.logger.error.assert_called_with(*expected_log)
+        else:
+          mock_config_dialog.logger.error.assert_not_called()
+
+        if expected_warning:
+          mock_warning.assert_called_once_with(mock_config_dialog.instance, "Error", expected_warning)
+        else:
+          mock_warning.assert_not_called()
+
+        if expected_combo_items:
+          mock_config_dialog.dataverseListComboBox.addItem.assert_any_call(expected_combo_items[0], userData="1")
+          if len(expected_combo_items) > 1:
+            mock_config_dialog.dataverseListComboBox.addItem.assert_any_call(expected_combo_items[1], userData="2")
+        else:
+          mock_config_dialog.dataverseListComboBox.addItem.assert_not_called()
+        if not expected_log and not expected_warning:
+          mock_config_dialog.dataverseListComboBox.setCurrentText.assert_called_once_with(expected_current_text)
+
   # Parametrized test cases
   @pytest.mark.parametrize("server_text, token_text, expected_click, test_id", [
     # Happy path tests
@@ -314,7 +380,7 @@ class TestConfigDialog:
     ("http://example.com", "", False, "edge_case_no_token"),
     ("", "", False, "edge_case_no_inputs"),
   ])
-  def test_show1(self, mocker, mock_config_dialog, server_text, token_text, expected_click, test_id):
+  def test_show(self, mocker, mock_config_dialog, server_text, token_text, expected_click, test_id):
     # Arrange
     mock_config_dialog.instance = mocker.MagicMock()
     mock_config_dialog.dataverseServerLineEdit = mocker.MagicMock()

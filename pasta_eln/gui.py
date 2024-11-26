@@ -14,6 +14,8 @@ from PySide6.QtWidgets import QApplication, QFileDialog, QMainWindow  # pylint: 
 from qt_material import apply_stylesheet  # of https://github.com/UN-GCPDS/qt-material
 
 from pasta_eln import __version__
+from pasta_eln.GUI.dataverse.config_dialog import ConfigDialog
+from pasta_eln.GUI.dataverse.main_dialog import MainDialog
 from .backend import Backend
 from .fixedStringsJson import shortcuts, CONF_FILE_NAME
 from .guiCommunicate import Communicate
@@ -54,8 +56,8 @@ class MainWindow(QMainWindow):
     palette      = Palette(self, theme)
     self.comm = Communicate(self.backend, palette)
     self.comm.formDoc.connect(self.formDoc)
-    # self.dataverseMainDialog: MainDialog | None = None
-    # self.dataverseConfig: ConfigDialog | None = None
+    self.dataverseMainDialog: MainDialog | None = None
+    self.dataverseConfig: ConfigDialog | None = None
 
     # Menubar
     menu = self.menuBar()
@@ -185,15 +187,11 @@ class MainWindow(QMainWindow):
       # dataHierarchyForm.instance.exec()
       restart()
     elif command[0] is Command.DATAVERSE_CONFIG:
-      # Jithu's code: comment out for now
-      # self.dataverseConfig = ConfigDialog()
-      # self.dataverseConfig.show()
-      pass
+      self.dataverseConfig = ConfigDialog()
+      self.dataverseConfig.show()
     elif command[0] is Command.DATAVERSE_MAIN:
-      # Jithu's code: comment out for now
-      # self.dataverseMainDialog = MainDialog(self.comm.backend)
-      # self.dataverseMainDialog.show()
-      pass
+      self.dataverseMainDialog = MainDialog(self.comm.backend)
+      self.dataverseMainDialog.show()
     elif command[0] is Command.TEST1:
       fileName = QFileDialog.getOpenFileName(self, 'Open file for extractor test', str(Path.home()), '*.*')[0]
       report = self.comm.backend.testExtractor(fileName, outputStyle='html')

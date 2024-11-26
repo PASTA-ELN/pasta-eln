@@ -12,7 +12,7 @@ import copy
 import re
 from asyncio import get_event_loop
 from base64 import b64decode, b64encode
-from json import dump, load
+from json import dump
 from logging import Logger
 from os.path import exists, join
 from pathlib import Path
@@ -22,9 +22,15 @@ from PySide6.QtCore import QSize
 from PySide6.QtGui import QImage, QPixmap
 from cryptography.fernet import Fernet, InvalidToken
 from qtawesome import icon
+from sqlalchemy import Executable, and_, select
+from sqlalchemy.orm import aliased
 
 from pasta_eln.dataverse.client import DataverseClient
 from pasta_eln.dataverse.config_error import ConfigError
+from pasta_eln.dataverse.data_hierarchy_model import DataHierarchyModel
+from pasta_eln.dataverse.database_orm_main_model import DatabaseOrmMainModel
+from pasta_eln.dataverse.database_orm_properties_model import DatabaseOrmPropertiesModel
+from pasta_eln.dataverse.pasta_config_reader_factory import PastaConfigReaderFactory
 from pasta_eln.dataverse.upload_status_values import UploadStatusValues
 
 
@@ -74,7 +80,7 @@ def set_authors(logger: Logger, metadata: dict[str, Any]) -> None:
       logger (Logger): The logger instance for logging errors.
       metadata (dict[str, Any]): The metadata dictionary to update.
   """
-  config = read_pasta_config_file(logger)
+  config = PastaConfigReaderFactory.get_instance().config
   if config is None:
     raise log_and_create_error(logger, ConfigError, "Config file not found, Corrupt installation!")
   if 'authors' not in config:
@@ -359,7 +365,7 @@ def get_encrypt_key(logger: Logger) -> tuple[bool, bytes]:
       tuple[bool, bytes]: A tuple containing a boolean indicating whether the key exists and the encryption key itself.
   """
   logger.info("Getting dataverse encrypt key..")
-  config = read_pasta_config_file(logger)
+  config = PastaConfigReaderFactory.get_instance().config
   key_exists = False
   if 'dataverseEncryptKey' not in config:
     logger.warning("Dataverse encrypt key does not exist, hence generating a new key..")
@@ -439,29 +445,6 @@ def decrypt_data(logger: Logger, encrypt_key: bytes | None, data: str | None) ->
   return data
 
 
-def read_pasta_config_file(logger: Logger) -> dict[str, Any]:
-  """
-  Reads the PASTA configuration file.
-
-  Explanation:
-      This function reads the PASTA configuration file and returns the configuration as a dictionary.
-      If the configuration file is not found, it raises a DatabaseError.
-
-  Args:
-      logger (Logger): The logger instance for logging errors.
-
-  Returns:
-      dict[str, Any] | None: The configuration dictionary, or None if the configuration file is not found.
-  """
-  config_file_name = join(Path.home(), '.pastaELN.json')
-  if not exists(config_file_name):
-    raise log_and_create_error(logger, ConfigError, "Config file not found, Corrupt installation!")
-  logger.info("Reading config file: %s", config_file_name)
-  with open(config_file_name, 'r', encoding='utf-8') as confFile:
-    config = load(confFile)
-  return config
-
-
 def write_pasta_config_file(logger: Logger, config_data: dict[str, Any]) -> None:
   """
   Writes the PASTA config file with the provided configuration data.
@@ -474,12 +457,12 @@ def write_pasta_config_file(logger: Logger, config_data: dict[str, Any]) -> None
       logger (Logger): The logger instance for logging information.
       config_data (dict[str, Any]): The configuration data to be written to the config file.
   """
-  config_file_name = join(Path.home(), '.pastaELN.json')
+  config_file_name = join(Path.home(), '.pastaELN_v3.json')
   if not exists(config_file_name):
     raise log_and_create_error(logger, ConfigError, "Config file not found, Corrupt installation!")
   logger.info("Writing config file: %s", config_file_name)
-  with open(config_file_name, 'w', encoding='utf-8') as confFile:
-    dump(config_data, confFile, ensure_ascii=False, indent=4)
+  with open(config_file_name, 'w', encoding='utf-8') as conf_file:
+    dump(config_data, conf_file, ensure_ascii=False, indent=4)
 
 
 def log_and_create_error(logger: Logger, exception_type: Type[Exception], error_message: str) -> Exception:
@@ -754,58 +737,54 @@ def get_formatted_dataverse_url(dataverse_url: str) -> str:
   return formatted_dataverse_url
 
 
-def get_data_hierarchy_types(data_hierarchy: dict[str, Any] | None) -> list[str | Any]:
-  """
-  Gets the types of data hierarchy.
+def get_data_hierarchy_types(data_hierarchy: list[DataHierarchyModel] | None) -> list[str | Any]:
+  """Retrieves a list of unique data hierarchy types from the provided models.
 
-  Explanation:
-      This function extracts the types of data hierarchy from the provided data hierarchy dictionary.
-      It filters out specific types and appends 'Unidentified' to the list of data hierarchy types.
+  This function processes a list of DataHierarchyModel instances and extracts
+  their document types, excluding specific types ("x0" and "x1"). It returns
+  a list of unique, capitalized document types along with an "Unidentified"
+  entry if no valid types are found.
 
   Args:
-      data_hierarchy (dict[str, Any] | None): The data hierarchy dictionary.
+      data_hierarchy (list[DataHierarchyModel] | None): A list of data hierarchy models
+      to extract types from, or None to return an empty list.
 
   Returns:
-      list[str | Any]: The list of data hierarchy types.
+      list[str | Any]: A list of unique document types from the data hierarchy models,
+      or an empty list if no models are provided.
   """
   if data_hierarchy is None:
     return []
   data_hierarchy_types = []
-  for data_type in data_hierarchy:
-    if (data_type and not data_type.isspace()
-        and data_type not in ("x0", "x1", "x2")):
-      type_capitalized = data_type.capitalize()
+  for data_model in data_hierarchy:
+    if (data_model and data_model.docType
+        and data_model.docType not in ("x0", "x1")):
+      type_capitalized = data_model.docType.capitalize()
       if type_capitalized not in data_hierarchy_types:
         data_hierarchy_types.append(type_capitalized)
   data_hierarchy_types.append("Unidentified")
   return data_hierarchy_types
 
 
-def get_db_credentials(logger: Logger) -> dict[str, str]:
-  """
-  Gets the database credentials.
+def get_db_info(logger: Logger) -> dict[str, str]:
+  """Retrieves database information from the configuration.
 
-  Explanation:
-      This function retrieves the database credentials from the configuration file based on the default project group.
-      It validates the configuration and returns the database credentials if found.
+  This function reads the configuration to obtain the database path and name
+  associated with the default project group. It raises errors if the configuration
+  is missing required fields, ensuring that the application has the necessary
+  information to connect to the database.
 
   Args:
-      logger (Logger): The logger instance for logging messages.
+      logger (Logger): The logger instance used for logging errors and information.
 
   Returns:
-      dict[str, str]: A dictionary containing the database credentials for the default project group.
-      {
-        'db_name': db_name,
-        'username': username,
-        'password': password,
-      }
+      dict[str, str]: A dictionary containing the database path and name.
 
   Raises:
-      ConfigError: If the configuration file is missing or incorrect entries in the config file.
+      ConfigError: If the configuration is missing required fields or contains invalid data.
   """
-
-  config = read_pasta_config_file(logger)
-  def_project_group_name = config['defaultProjectGroup']
+  config = PastaConfigReaderFactory.get_instance().config
+  def_project_group_name = config.get('defaultProjectGroup')
   project_groups = config.get('projectGroups')
   if not def_project_group_name or not project_groups:
     raise log_and_create_error(logger, ConfigError,
@@ -818,46 +797,59 @@ def get_db_credentials(logger: Logger) -> dict[str, str]:
   if not local_info:
     raise log_and_create_error(logger, ConfigError,
                                "Incorrect config file, user or password not found!")
+  db_path = local_info.get('path')
   db_name = local_info.get('database')
-  cred = local_info.get('cred')
-  if not db_name:
-    raise log_and_create_error(logger, ConfigError,
-                               "Incorrect config file, database name not found!")
-  if cred:
-    username, password = decrypt_credentials(cred)
-  else:
-    username = local_info.get('user')
-    password = local_info.get('password')
-  if username and password:
+  if db_name and db_path:
     return {
-      'username': username,
-      'password': password,
-      'db_name': db_name
+      "database_path": db_path,
+      "database_name": db_name
     }
   else:
     raise log_and_create_error(logger, ConfigError,
-                               "Incorrect config file, user/password/cred not found for the default project group!")
+                               "Incorrect config file, database name/path not found!")
 
 
-def decrypt_credentials(cred: str) -> tuple[str, str]:
-  """
-  Decrypts credentials.
+def generate_project_join_statement(model_id: str | None) -> Executable:
+  """Generates a SQL join statement for project models.
 
-  Explanation:
-      This function decrypts the provided credentials and extracts the username and password.
-      It splits the decrypted credentials by ':' and returns the username and password as a tuple.
+  This function constructs a SQL query to join the main project model with its
+  associated properties based on the provided model ID. It allows for flexible
+  querying of project data, including optional filtering based on the model ID.
 
   Args:
-      cred (str): The encrypted credentials to decrypt.
+      model_id (str | None): The ID of the project model to filter by. If None,
+      the query will not filter by model ID.
 
   Returns:
-      tuple[str, str]: A tuple containing the decrypted username and password.
+      Executable: A SQLAlchemy Executable object representing the constructed
+      join statement.
+
+  Raises:
+      ValueError: If the model ID is invalid or if there is an error in the
+      SQL statement construction.
   """
-  user_name = ''
-  pass_word = ''
-  if cred:
-    pass
-  #   decrypted_creds = upOut(cred)[0].split(':')  #not used and does not exist anymore
-  #   user_name = decrypted_creds[0]
-  #   pass_word = decrypted_creds[1]
-  return user_name, pass_word
+  properties_objective_aliased = aliased(DatabaseOrmPropertiesModel)
+  properties_status_aliased = aliased(DatabaseOrmPropertiesModel)
+  where_condition = and_(DatabaseOrmMainModel.type == "x0",
+                         DatabaseOrmMainModel.id == model_id) if model_id else DatabaseOrmMainModel.type == "x0"
+  return (select(
+    DatabaseOrmMainModel,
+    properties_status_aliased.value,
+    properties_objective_aliased.value,
+  ).where(where_condition).join_from(
+    DatabaseOrmMainModel,
+    properties_objective_aliased,
+    and_(
+      DatabaseOrmMainModel.id == properties_objective_aliased.id,
+      properties_objective_aliased.key == ".objective",
+    ),
+    isouter=True,
+  ).join_from(
+    DatabaseOrmMainModel,
+    properties_status_aliased,
+    and_(
+      DatabaseOrmMainModel.id == properties_status_aliased.id,
+      properties_status_aliased.key == ".status",
+    ),
+    isouter=True,
+  ))

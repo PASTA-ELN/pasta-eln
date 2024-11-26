@@ -13,7 +13,7 @@ from PySide6.QtWidgets import QApplication, QPushButton, QStyle, QStyleOptionBut
 
 from pasta_eln.GUI.data_hierarchy.delete_column_delegate import DeleteColumnDelegate
 from pasta_eln.GUI.data_hierarchy.reorder_column_delegate import ReorderColumnDelegate
-from tests.common.fixtures import delete_delegate, reorder_delegate
+from testsAdvanced.common.fixtures import delete_delegate, reorder_delegate
 
 
 def delegate_paint_common(mocker, delegate: Union[delete_delegate, reorder_delegate], button_icon):

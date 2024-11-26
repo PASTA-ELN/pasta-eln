@@ -15,55 +15,53 @@ from pasta_eln.dataverse.incorrect_parameter_error import IncorrectParameterErro
 
 class TestDataverseBaseModel:
   # Success path tests with various realistic test values
-  @pytest.mark.parametrize("test_id, _id, _rev", [
-    ("Success01", "123", "abc"),
-    ("Success02", None, None),
-    ("Success03", "unique-id", "rev-001"),
+  @pytest.mark.parametrize("test_id, _id", [
+    ("Success01", "123"),
+    ("Success02", None),
+    ("Success03", "unique-id"),
   ])
-  def test_base_model_init_success_path(self, test_id, _id, _rev):
+  def test_base_model_init_success_path(self, test_id, _id):
     # Arrange
 
     # Act
-    model = BaseModel(_id=_id, _rev=_rev)
+    model = BaseModel(_id=_id)
 
     # Assert
     assert model._id == _id
-    assert model._rev == _rev
 
   # Various edge cases
-  @pytest.mark.parametrize("test_id, _id, _rev", [
-    ("EC01", "", ""),  # Empty strings
+  @pytest.mark.parametrize("test_id, _id", [
+    ("EC01", "",),  # Empty strings
   ])
-  def test_base_model_init_edge_cases(self, test_id, _id, _rev):
+  def test_base_model_init_edge_cases(self, test_id, _id):
     # Arrange
 
     # Act
-    model = BaseModel(_id=_id, _rev=_rev)
+    model = BaseModel(_id=_id)
 
     # Assert
     assert model._id == _id
-    assert model._rev == _rev
 
   # Various error cases
-  @pytest.mark.parametrize("test_id, _id, _rev, expected_exception", [
-    ("ERR01", 123, "abc", IncorrectParameterError),
-    ("ERR02", "123", 456, IncorrectParameterError),
+  @pytest.mark.parametrize("test_id, _id, expected_exception", [
+    ("ERR01", object(), IncorrectParameterError),
+    ("ERR02", ["123"], IncorrectParameterError),
   ])
-  def test_base_model_init_error_cases(self, test_id, _id, _rev, expected_exception):
+  def test_base_model_init_error_cases(self, test_id, _id, expected_exception):
     # Arrange
 
     # Act / Assert
     with pytest.raises(expected_exception):
-      BaseModel(_id=_id, _rev=_rev)
+      BaseModel(_id=_id)
 
   # Test __iter__ method
-  @pytest.mark.parametrize("test_id, _id, _rev, expected_output", [
-    ("ITER01", "123", "abc", [('_id', '123'), ('_rev', 'abc')]),
-    ("ITER02", None, None, [('_id', None), ('_rev', None)]),
+  @pytest.mark.parametrize("test_id, _id, expected_output", [
+    ("ITER01", "123", [('id', '123')]),
+    ("ITER02", None, [('id', None)]),
   ])
-  def test_base_model_iter(self, test_id, _id, _rev, expected_output):
+  def test_base_model_iter(self, test_id, _id, expected_output):
     # Arrange
-    model = BaseModel(_id=_id, _rev=_rev)
+    model = BaseModel(_id=_id)
 
     # Act
     output = list(model.__iter__())
@@ -100,33 +98,3 @@ class TestDataverseBaseModel:
 
     # Assert
     assert not hasattr(model, 'id')
-
-  # Test property and setter for rev
-  @pytest.mark.parametrize("test_id, initial_rev, new_rev", [
-    ("PROP_REV01", "abc", "def"),
-    ("PROP_REV02", None, "new-rev"),
-  ])
-  def test_base_model_rev_property_and_setter(self, test_id, initial_rev, new_rev):
-    # Arrange
-    model = BaseModel(_rev=initial_rev)
-
-    # Act
-    model.rev = new_rev
-
-    # Assert
-    assert model.rev == new_rev
-
-  # Test deleter for rev
-  @pytest.mark.parametrize("test_id, initial_rev", [
-    ("DEL_REV01", "abc"),
-    ("DEL_REV02", "delete-rev"),
-  ])
-  def test_base_model_rev_deleter(self, test_id, initial_rev):
-    # Arrange
-    model = BaseModel(_rev=initial_rev)
-
-    # Act
-    del model.rev
-
-    # Assert
-    assert not hasattr(model, 'rev')

@@ -11,7 +11,7 @@ import pytest
 from PySide6.QtCore import Qt
 
 from pasta_eln.GUI.data_hierarchy.constants import METADATA_TABLE_LIST_COLUMN_INDEX
-from tests.common.fixtures import attachments_table_model, metadata_table_model, table_model
+from testsAdvanced.common.fixtures import attachments_table_model, metadata_table_model, table_model
 
 
 class TestDataHierarchyTableViewDataModel(object):

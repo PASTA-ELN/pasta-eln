@@ -6,712 +6,518 @@
 #  Filename: test_dataverse_base_database_api.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
-from secrets import compare_digest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
-from cloudant.error import CloudantClientException, CloudantDatabaseException
+from _pytest.mark import param
+from sqlalchemy.exc import SQLAlchemyError
 
-from pasta_eln.dataverse.base_database_api import BaseDatabaseAPI
+from pasta_eln.dataverse.base_database_api import BaseDatabaseApi
+from pasta_eln.dataverse.config_model import ConfigModel
+from pasta_eln.dataverse.data_hierarchy_model import DataHierarchyModel
 from pasta_eln.dataverse.database_error import DatabaseError
+from pasta_eln.dataverse.database_names import DatabaseNames
+from pasta_eln.dataverse.database_orm_config_model import DatabaseOrmConfigModel
+from pasta_eln.dataverse.database_orm_data_hierarchy_model import DatabaseOrmDataHierarchyModel
+from pasta_eln.dataverse.database_orm_main_model import DatabaseOrmMainModel
+from pasta_eln.dataverse.database_orm_properties_model import DatabaseOrmPropertiesModel
+from pasta_eln.dataverse.database_orm_upload_model import DatabaseOrmUploadModel
+from pasta_eln.dataverse.database_sqlalchemy_base import DatabaseModelBase
 from pasta_eln.dataverse.incorrect_parameter_error import IncorrectParameterError
-
-# Constants for test cases
-CONFIG_FILE_PATH = '/home/user/.pastaELN.json'
-DEFAULT_PROJECT_GROUP = 'my_project_group'
-USER = 'test_user'
-PASSWORD = 'test_password'
-
-
-def create_mock_config(default_project_group_exists=True, user_and_password_exists=True):
-  config = {}
-  if default_project_group_exists:
-    config['defaultProjectGroup'] = DEFAULT_PROJECT_GROUP
-    if user_and_password_exists:
-      config['projectGroups'] = {DEFAULT_PROJECT_GROUP: {'local': {'user': USER, 'password': PASSWORD}}}
-  return config
+from pasta_eln.dataverse.project_model import ProjectModel
+from pasta_eln.dataverse.upload_model import UploadModel
 
 
 @pytest.fixture
-def mock_database_api(mocker) -> BaseDatabaseAPI:
-  mocker.patch('pasta_eln.dataverse.base_database_api.logging.getLogger')
-  mocker.patch('pasta_eln.dataverse.base_database_api.Lock')
-  return BaseDatabaseAPI("host", 1234, "user", "pass")
+def base_database_api(mocker):
+  mocker.patch("pasta_eln.dataverse.base_database_api.logging.getLogger")
+  mocker.patch("pasta_eln.dataverse.base_database_api.DatabaseOrmAdapter")
+  return BaseDatabaseApi("dataverse.db", "pasta_project_group.db")
 
 
-class TestDataverseBaseDatabaseApi:
-
-  # Parametrized test for a success path
-  @pytest.mark.parametrize("config_content, expected_username, expected_password",
-                           [(create_mock_config(), USER, PASSWORD),
-                            # Add more test cases with different realistic values if necessary
-                            ], ids=["success_path_default"])
-  def test_base_database_api_init_success_path(self, mocker, config_content, expected_username,
-                                               expected_password):
-    # Arrange
-    mock_lock = mocker.patch('pasta_eln.dataverse.base_database_api.Lock')
-    with patch('logging.Logger.error') as mock_logger_error:
-      # Act
-      base_db_api = BaseDatabaseAPI("host", 1234, expected_username, expected_password)
-
-      # Assert
-      assert base_db_api.username == expected_username
-      assert compare_digest(base_db_api.password, expected_password)
-      mock_logger_error.assert_not_called()
-      assert base_db_api.update_lock == mock_lock.return_value, "Expected update_lock to be a mock Lock object"
-
-  @pytest.mark.parametrize(
-    "hostname, port, username, password",
-    [
-      ("localhost", 8080, "admin", "admin123"),  # happy path
-      ("127.0.0.1", 5432, "user", "pass"),  # happy path
-      ("db.example.com", 3306, "root", "root"),  # happy path
-      ("", 8080, "admin", "admin123"),  # edge case: empty hostname
-      ("localhost", 0, "admin", "admin123"),  # edge case: port 0
-      ("localhost", 65535, "admin", "admin123"),  # edge case: max port number
-      ("localhost", 8080, "", "admin123"),  # edge case: empty username
-      ("localhost", 8080, "admin", ""),  # edge case: empty password
-      (None, 8080, "admin", "admin123"),  # error case: None hostname
-      ("localhost", None, "admin", "admin123"),  # error case: None port
-      ("localhost", 8080, None, "admin123"),  # error case: None username
-      ("localhost", 8080, "admin", None),  # error case: None password
-    ],
-    ids=[
-      "success_path_localhost_8080",
-      "success_path_127.0.0.1_5432",
-      "success_path_db_example_com_3306",
-      "edge_case_empty_hostname",
-      "edge_case_port_0",
-      "edge_case_max_port_number",
-      "edge_case_empty_username",
-      "edge_case_empty_password",
-      "error_case_none_hostname",
-      "error_case_none_port",
-      "error_case_none_username",
-      "error_case_none_password",
-    ]
-  )
-  def test_base_database_api_init(self, mocker, hostname, port, username, password):
-    # Arrange
-    mock_logger = mocker.patch('pasta_eln.dataverse.base_database_api.logging.getLogger')
-    mock_lock = mocker.patch('pasta_eln.dataverse.base_database_api.Lock')
-
-    # Act
-    if hostname is None or port is None or username is None or password is None:
-      with pytest.raises(IncorrectParameterError):
-        BaseDatabaseAPI(hostname, port, username, password)
+class TestDataverseBaseDatabaseAPI:
+  @pytest.mark.parametrize("dataverse_db_path, pasta_project_group_db_path, expected_exception", [
+    ("valid_path.db", "valid_path.db", None),
+    (123, "valid_path.db", IncorrectParameterError),
+    ("valid_path.db", 123, IncorrectParameterError),
+  ], ids=["valid_paths", "invalid_dataverse_path", "invalid_project_group_path"])
+  def test_init(self, dataverse_db_path, pasta_project_group_db_path, expected_exception):
+    # Act & Assert
+    if expected_exception:
+      with pytest.raises(expected_exception):
+        BaseDatabaseApi(dataverse_db_path, pasta_project_group_db_path)
     else:
-      instance = BaseDatabaseAPI(hostname, port, username, password)
+      api = BaseDatabaseApi(dataverse_db_path, pasta_project_group_db_path)
+      assert api.db_url_map
 
-      # Assert
-      assert instance.host == hostname
-      assert instance.port == port
-      assert instance.url == f'http://{hostname}:{port}'
-      assert instance.username == username
-      assert instance.password == password
-      assert instance.update_lock == mock_lock.return_value
-      mock_lock.assert_called_once()
-      mock_logger.assert_called_once_with('pasta_eln.dataverse.base_database_api.BaseDatabaseAPI')
-      assert instance.logger == mock_logger.return_value
-
-  @pytest.mark.parametrize(
-    "db_name, client_create_db_side_effect, expected_warning, expected_db_name",
-    [
-      ("test_db", None, None, "test_db"),  # happy path
-      ("edge_case_db", None, None, "edge_case_db"),  # another happy path
-      ("existing_db", CloudantClientException("Database exists"), 'Error creating database: %s',
-       "existing_db"),  # database exists
-      ("", None, None, ""),  # edge case: empty database name
-      ("special_chars_!@#", None, None, "special_chars_!@#"),  # edge case: special characters in name
-    ],
-    ids=[
-      "success_path_test_db",
-      "success_path_edge_case_db",
-      "error_existing_db",
-      "edge_case_empty_db_name",
-      "edge_case_special_chars_db_name",
-    ]
-  )
-  def test_create_database(self, mocker, mock_database_api, db_name, client_create_db_side_effect, expected_warning,
-                           expected_db_name):
+  @pytest.mark.parametrize("db_url_map, expected_log_message", [
+    ({DatabaseNames.DataverseDatabase: "sqlite:///:memory:",
+      DatabaseNames.PastaProjectGroupDatabase: "sqlite:///:memory:"},
+     ('Creating database at the location : %s', 'sqlite:///:memory:')),
+  ], ids=["success_path"])
+  def test_create_and_init_database_success_path(self, mocker, base_database_api, db_url_map, expected_log_message):
     # Arrange
-    mock_database_api.username = "username"
-    mock_database_api.password = "password"
-    mock_database_api.url = "http://localhost:5984"
-
-    mock_client = mocker.MagicMock()
-    mock_couch = mocker.MagicMock()
-    mock_couch.__enter__.return_value = mock_client
-    if client_create_db_side_effect:
-      mock_client.create_database.side_effect = client_create_db_side_effect
-    mock_client.create_database.return_value = db_name
-    mock_client.__getitem__.return_value = expected_db_name
-    mock_couchdb_call = mocker.patch('pasta_eln.dataverse.base_database_api.couchdb', return_value=mock_couch)
+    DatabaseModelBase.metadata = mocker.MagicMock()
+    DatabaseModelBase.metadata.tables = mocker.MagicMock()
+    DatabaseModelBase.metadata.tables = {
+      DatabaseOrmConfigModel.__tablename__: mocker.MagicMock(),
+      DatabaseOrmUploadModel.__tablename__: mocker.MagicMock(),
+      DatabaseOrmDataHierarchyModel.__tablename__: mocker.MagicMock(),
+      DatabaseOrmMainModel.__tablename__: mocker.MagicMock(),
+      DatabaseOrmPropertiesModel.__tablename__: mocker.MagicMock(),
+    }
+    mock_create_engine = mocker.patch("pasta_eln.dataverse.base_database_api.create_engine")
+    base_database_api.db_url_map = db_url_map
 
     # Act
-    db = mock_database_api.create_database(db_name)
+    base_database_api.create_and_init_database()
 
     # Assert
-    if expected_warning:
-      mock_database_api.logger.warning.assert_called_once_with(expected_warning, client_create_db_side_effect)
-      mock_client.__getitem__.assert_called_once_with(db_name)
-    else:
-      mock_database_api.logger.warning.assert_not_called()
-    assert db == expected_db_name
-    mock_client.create_database.assert_called_once_with(db_name, throw_on_exists=True)
-    mock_couchdb_call.assert_called_once_with("username", "password", url="http://localhost:5984", connect=True)
-    mock_database_api.logger.info.assert_called_once_with("Creating database with name : %s", db_name)
+    mock_create_engine.assert_called_with(db_url_map[DatabaseNames.DataverseDatabase])
+    mock_create_engine.assert_called_with(db_url_map[DatabaseNames.PastaProjectGroupDatabase])
+    DatabaseModelBase.metadata.tables[DatabaseOrmConfigModel.__tablename__].create.assert_called_once_with(
+      bind=mock_create_engine.return_value, checkfirst=True)
+    DatabaseModelBase.metadata.tables[DatabaseOrmUploadModel.__tablename__].create.assert_called_once_with(
+      bind=mock_create_engine.return_value, checkfirst=True)
+    DatabaseModelBase.metadata.tables[DatabaseOrmDataHierarchyModel.__tablename__].create.assert_called_once_with(
+      bind=mock_create_engine.return_value, checkfirst=True)
+    DatabaseModelBase.metadata.tables[DatabaseOrmMainModel.__tablename__].create.assert_called_once_with(
+      bind=mock_create_engine.return_value, checkfirst=True)
+    DatabaseModelBase.metadata.tables[DatabaseOrmPropertiesModel.__tablename__].create.assert_called_once_with(
+      bind=mock_create_engine.return_value, checkfirst=True)
+    base_database_api.logger.info.assert_called_with(*expected_log_message)
 
-  @pytest.mark.parametrize("test_id, data, expected_document",
-                           [  # Success path tests with various realistic test values
-                             ("Success-1", {"name": "Spaghetti", "type": "Pasta"},
-                              {"name": "Spaghetti", "type": "Pasta"}),
-                             ("Success-2", {"name": "Fusilli", "quantity": 100}, {"name": "Fusilli", "quantity": 100}),
-
-                             # Edge cases
-                             ("EdgeCase-1", {}, {}),  # Empty document data
-
-                             # Error cases
-                             ("ErrorCase-1", {"name": "Macaroni"}, None), ])
-  def test_create_document(self, mocker, test_id, data, expected_document, mock_database_api):
+  @pytest.mark.parametrize("db_url_map", [
+    ({"DataverseDatabase": "invalid_url", "PastaProjectGroupDatabase": "sqlite:///:memory:"}),
+    ({"DataverseDatabase": "sqlite:///:memory:", "PastaProjectGroupDatabase": "invalid_url"}),
+  ], ids=["invalid_dataverse_url", "invalid_pasta_project_group_url"])
+  def test_create_and_init_database_error_cases(self, base_database_api, db_url_map):
     # Arrange
-    mock_client = mocker.MagicMock()
-    mock_couch = mocker.MagicMock()
-    mock_db = mocker.MagicMock()
-    mock_couch.__enter__.return_value = mock_client
-    mock_client.__getitem__.return_value = mock_db
-    mock_db.create_document.return_value = expected_document
-    exception = CloudantDatabaseException(409, "docid")
-    if expected_document is None:
-      mock_db.create_document.side_effect = exception
-    mock_couchdb_call = mocker.patch('pasta_eln.dataverse.base_database_api.couchdb', return_value=mock_couch)
+    base_database_api.db_url_map = db_url_map
 
     # Act
-    actual_document = mock_database_api.create_document(data, "test_db")
+    with pytest.raises(KeyError):
+      base_database_api.create_and_init_database()
 
-    # Assert
-    mock_database_api.logger.info.assert_called_with(f"Creating document with data: %s in database: %s", data,
-                                                     "test_db")
-    mock_client.__getitem__.assert_called_with("test_db")
-    mock_db.create_document.assert_called_with(data, throw_on_exists=True)
-    mock_couch.__enter__.assert_called_once()
-    mock_couchdb_call.assert_called_once_with(mock_database_api.username, mock_database_api.password,
-                                              url=mock_database_api.url, connect=True)
-    assert actual_document == expected_document
-    if expected_document is None:
-      mock_database_api.logger.error.assert_called_once_with('Error creating document: %s', exception)
-    else:
-      mock_database_api.logger.error.assert_not_called()
-
-  # Happy path tests with various realistic test values
-  @pytest.mark.parametrize("document_id, expected_doc",
-                           [pytest.param("12345", {'_id': '12345', 'data': 'value'}, id="valid_id_with_data"),
-                            pytest.param("67890", {'_id': '67890', 'data': 'value'},
-                                         id="valid_id_with_different_data"), ], ids=str)
-  def test_get_document_success_path(self, mocker, document_id, expected_doc, mock_database_api):
+  @pytest.mark.parametrize("data_model, expected_exception", [
+    (UploadModel(), None),
+    (ConfigModel(), None),
+    (None, KeyError),
+  ], ids=["valid_upload_model", "valid_config_model", "invalid_none_model"])
+  def test_insert_model(self, mocker, base_database_api, data_model, expected_exception):
     # Arrange
-    mock_client = mocker.MagicMock()
-    mock_couch = mocker.MagicMock()
-    mock_db = mocker.MagicMock()
-    mock_couch.__enter__.return_value = mock_client
-    mock_client.__getitem__.return_value = mock_db
-    mock_db.__getitem__.return_value = expected_doc
-    mock_couchdb_call = mocker.patch('pasta_eln.dataverse.base_database_api.couchdb', return_value=mock_couch)
-
-    # Act
-    result = mock_database_api.get_document(document_id, "test_db")
-
-    # Assert
-    assert result == expected_doc
-    mock_db.__getitem__.assert_called_with(document_id)
-    mock_database_api.logger.info.assert_called_with('Retrieving document with id: %s from database: %s', document_id,
-                                                     "test_db")
-    mock_client.__getitem__.assert_called_with("test_db")
-    mock_couch.__enter__.assert_called_once()
-    mock_couchdb_call.assert_called_once_with(mock_database_api.username, mock_database_api.password,
-                                              url=mock_database_api.url, connect=True)
-
-  # Edge cases
-  # (No edge cases identified for this function as it has a straightforward behavior)
-
-  # Error cases
-  @pytest.mark.parametrize("document_id, exception",
-                           [pytest.param("nonexistent_id", KeyError, id="nonexistent_document"),
-                            pytest.param(None, DatabaseError, id="none_as_document_id"), ], ids=str)
-  def test_get_document_error_cases(self, mocker, document_id, exception, mock_database_api):
-    # Arrange
-    mock_client = mocker.MagicMock()
-    mock_couch = mocker.MagicMock()
-    mock_db = mocker.MagicMock()
-    mock_couch.__enter__.return_value = mock_client
-    mock_client.__getitem__.return_value = mock_db
-    mock_db.__getitem__.side_effect = exception
-    mocker.patch('pasta_eln.dataverse.base_database_api.couchdb', return_value=mock_couch)
-    if document_id is None:
-      mock_database_api.log_and_raise_error = mocker.MagicMock(
-        side_effect=DatabaseError("Document ID cannot be empty!"))
+    mock_create_engine = mocker.patch("pasta_eln.dataverse.base_database_api.create_engine")
+    mock_engine = MagicMock()
+    mock_create_engine.return_value = mock_engine
+    mock_session = MagicMock()
+    mocker.patch("pasta_eln.dataverse.base_database_api.Session", return_value=mock_session)
+    mock_session.__enter__.return_value = mock_session
+    if data_model is not None:
+      base_database_api.to_orm_converter_map[type(data_model)] = lambda x: x
+      base_database_api.to_base_model_converter_map[type(data_model)] = lambda x: x
 
     # Act & Assert
-    if document_id is not None:
-      assert (mock_database_api.get_document(
-        document_id, "test_db") is None), f"Expected None, got {mock_database_api.get_document(document_id)}"
-      mock_database_api.logger.error("Error retrieving document: %s", exception)
+    if expected_exception:
+      with pytest.raises(expected_exception):
+        base_database_api.insert_model(data_model)
     else:
-      with pytest.raises(exception):
-        mock_database_api.get_document(document_id, "test_db")
-        mock_database_api.logger.error("Document ID cannot be empty!")
+      result = base_database_api.insert_model(data_model)
+      mock_session.commit.assert_called_once()
+      mock_session.add.assert_called_once()
+      mock_session.flush.assert_called_once()
+      for key, value in data_model.__dict__.items():
+        assert getattr(result, key) == value
 
-  # Parametrized test cases
-  @pytest.mark.parametrize("test_id, input_data, expected_data",
-                           [  # Success path tests with various realistic test values
-                             ("SuccessCase_01", {'_id': '123', 'name': 'Spaghetti', 'type': 'Pasta'},
-                              {'name': 'Spaghetti', 'type': 'Pasta'}), (
-                               "SuccessCase_02", {'_id': '456', 'color': 'Yellow', 'texture': 'Smooth'},
-                               {'color': 'Yellow', 'texture': 'Smooth'}),
-
-                             # Edge cases
-                             ("EdgeCase_01", {'_id': '789', '_rev': '1-abc', 'name': ''}, {'name': ''}),
-                             # Empty string value
-                             ("EdgeCase_02", {'_id': '101', '_rev': '2-def'}, {}),  # No fields other than _id and _rev
-                           ])
-  def test_update_document(self, mocker, test_id, input_data, expected_data, mock_database_api):
-    # Arrange
-    mock_client = mocker.MagicMock()
-    mock_couch = mocker.MagicMock()
-    mock_doc = mocker.MagicMock()
-    mock_db = mocker.MagicMock()
-    mock_couch.__enter__.return_value = mock_client
-    mock_client.__getitem__.return_value = mock_db
-    mock_db.__getitem__.side_effect = expected_data
-    couchdb_constructor = mocker.patch('pasta_eln.dataverse.base_database_api.couchdb', return_value=mock_couch)
-    mock_doc.__enter__.return_value = mock_doc
-    mock_dock_dict = {}
-    mock_doc.__setitem__.side_effect = mock_dock_dict.__setitem__
-    doc_constructor = mocker.patch('pasta_eln.dataverse.base_database_api.Document', return_value=mock_doc)
-    # Act
-    mock_database_api.update_document(input_data, "test_db")
-
-    # Assert
-    assert mock_dock_dict == expected_data
-    mock_database_api.logger.info.assert_called_with('Updating document with data: %s in database: %s', input_data,
-                                                     "test_db")
-    doc_constructor.assert_called_once_with(mock_db, input_data['_id'])
-    couchdb_constructor.assert_called_once_with(mock_database_api.username, mock_database_api.password,
-                                                url=mock_database_api.url, connect=True)
-    mock_database_api.update_lock.__enter__.assert_called_once()
-
-  @pytest.mark.parametrize("test_id, design_document_name, view_name, map_func, reduce_func, expected_call",
-                           [  # Success path tests
-                             ("SuccessCase-1", "design_doc_1", "view_1", "function(doc) { emit(doc._id, 1); }", None,
-                              True), (
-                               "SuccessCase-2", "design_doc_2", "view_2", "function(doc) { emit(doc.name, doc.age); }",
-                               "_sum", True),  # Edge cases
-                             ("EdgeCase-1", "", "view", "function(doc) { emit(doc._id, 1); }", None, True),
-                             # Empty design document name
-                             ("EdgeCase-2", "design_doc", "", "function(doc) { emit(doc._id, 1); }", None, True),
-                             # Empty view name
-                             # Error cases
-                             ("ErrorCase-1", None, "view", "function(doc) { emit(doc._id, 1); }", None, False),
-                             # None as design document name
-                             ("ErrorCase-2", "design_doc", None, "function(doc) { emit(doc._id, 1); }", None, False),
-                             # None as view name
-                           ])
-  def test_add_view(self, mocker, test_id, design_document_name, view_name, map_func, reduce_func, expected_call,
-                    mock_database_api):
-    # Arrange
-    mock_client = mocker.MagicMock()
-    mock_couch = mocker.MagicMock()
-    mock_design_doc = mocker.MagicMock()
-    mock_db = mocker.MagicMock()
-    mock_add_view = mocker.MagicMock()
-    mock_couch.__enter__.return_value = mock_client
-    mock_design_doc.__enter__.return_value = mock_design_doc
-    mock_design_doc.add_view = mock_add_view
-    mock_client.__getitem__.return_value = mock_db
-    couchdb_constructor = mocker.patch('pasta_eln.dataverse.base_database_api.couchdb', return_value=mock_couch)
-    doc_constructor = mocker.patch('pasta_eln.dataverse.base_database_api.DesignDocument', return_value=mock_design_doc)
-
-    # Act
-    try:
-      mock_database_api.add_view("test_db", design_document_name, view_name, map_func, reduce_func)
-      call_success = True
-    except Exception:
-      call_success = False
-
-    # Assert
-    assert call_success == expected_call
-    couchdb_constructor.assert_called_once_with(mock_database_api.username, mock_database_api.password,
-                                                url=mock_database_api.url, connect=True)
-    doc_constructor.assert_called_once_with(mock_db, design_document_name)
-    mock_database_api.logger.info.assert_called_with('Adding view: %s to design document: %s, map_func: %s, '
-                                                     'reduce_func: %s', view_name, design_document_name, map_func,
-                                                     reduce_func)
-    if expected_call:
-      mock_design_doc.add_view.assert_called_with(view_name, map_func, reduce_func)
-    else:
-      mock_design_doc.add_view.assert_not_called()
-
-  @pytest.mark.parametrize("design_document_name, view_name, map_func, reduce_func, test_id", [  # Success path tests
-    ("design_doc_1", "view_1", "function(doc) { emit(doc._id, 1); }", "_count", "success_case_1"),
-    ("design_doc_2", "view_2", "function(doc) { emit(doc.name, doc.age); }", None, "success_case_2"),
-
-    # Edge cases
-    ("design_doc_3", "view_3", "function(doc) { emit(doc._id, 1); }", "", "edge_case_empty_reduce"),
-
-    # Error cases
-    (None, "view_4", "function(doc) { emit(doc._id, 1); }", None, "error_case_no_design_doc"),
-    ("design_doc_5", None, "function(doc) { emit(doc._id, 1); }", None, "error_case_no_view_name"),
-    ("design_doc_6", "view_6", None, None, "error_case_no_map_func"), ])
-  def test_add_view(self, mocker, design_document_name, view_name, map_func, reduce_func, test_id, mock_database_api):
-    # Arrange
-    mock_client = mocker.MagicMock()
-    mock_couch = mocker.MagicMock()
-    mock_design_doc = mocker.MagicMock()
-    mock_db = mocker.MagicMock()
-    mock_add_view = mocker.MagicMock()
-    mock_couch.__enter__.return_value = mock_client
-    mock_design_doc.__enter__.return_value = mock_design_doc
-    mock_design_doc.add_view = mock_add_view
-    mock_client.__getitem__.return_value = mock_db
-    couchdb_constructor = mocker.patch('pasta_eln.dataverse.base_database_api.couchdb', return_value=mock_couch)
-    doc_constructor = mocker.patch('pasta_eln.dataverse.base_database_api.DesignDocument', return_value=mock_design_doc)
-
-    # Act
-    if test_id.startswith("error_case"):
-      with pytest.raises(DatabaseError):
-        mock_database_api.add_view("test_db", design_document_name, view_name, map_func, reduce_func)
-    else:
-      mock_database_api.add_view("test_db", design_document_name, view_name, map_func, reduce_func)
-
-    # Assert
-    mock_database_api.logger.info.assert_called_with(
-      "Adding view: %s to design document: %s, map_func: %s, reduce_func: %s in database: %s",
-      view_name,
-      design_document_name,
-      map_func,
-      reduce_func,
-      "test_db")
-    if test_id.startswith("success_case"):
-      mock_database_api.logger.info.assert_called()
-      mock_add_view.assert_called_with(view_name, map_func, reduce_func)
-      couchdb_constructor.assert_called_once_with(mock_database_api.username, mock_database_api.password,
-                                                  url=mock_database_api.url, connect=True)
-      doc_constructor.assert_called_once_with(mock_db, design_document_name)
-    elif test_id.startswith("edge_case"):
-      mock_database_api.logger.info.assert_called()
-      mock_add_view.assert_called_with(view_name, map_func, reduce_func)
-      couchdb_constructor.assert_called_once_with(mock_database_api.username, mock_database_api.password,
-                                                  url=mock_database_api.url, connect=True)
-      doc_constructor.assert_called_once_with(mock_db, design_document_name)
-    elif test_id.startswith("error_case"):
-      mock_add_view.assert_not_called()
-      mock_database_api.logger.error.assert_called_with(
-        "Design document name, view name, and map function cannot be empty!")
-
-  @pytest.mark.parametrize(
-    "design_document_name, view_name, map_func, reduce_func, view_result, expected_results, test_id",
-    [  # Success case tests
-      ("design_doc_1", "view_1", None, None, [{"value": {'key': 'value'}}], [{'key': 'value'}],
-       "success_case_no_map_reduce"), ("design_doc_2", "view_2", "function(doc) { emit(doc._id, 1); }", "_count",
-                                       [{"value": {'key': 'value'}}, {"value": {'key': 'value'}}],
-                                       [{'key': 'value'}, {'key': 'value'}], "success_case_with_map_reduce"),
-
-      # Edge cases
-      # Assuming empty map_func and reduce_func are valid and treated as None
-      ("design_doc_3", "view_3", "", "", [{"value": {'key': 'value'}}], [{'key': 'value'}],
-       "edge_case_empty_map_reduce"),
-
-      # Error cases
-      # None values for design_document_name and view_name should raise an error
-      (None, "view_4", None, None, None, DatabaseError, "error_case_no_design_doc"),
-      ("design_doc_5", None, None, None, None, DatabaseError, "error_case_no_view_name"), ])
-  def test_get_view_results(self, mocker, design_document_name, view_name, map_func, reduce_func, view_result,
-                            expected_results, test_id, mock_database_api):
-    # Arrange
-    mock_client = mocker.MagicMock()
-    mock_couch = mocker.MagicMock()
-    mock_design_doc = mocker.MagicMock()
-    mock_db = mocker.MagicMock()
-    mock_view = mocker.MagicMock()
-    mock_view.result = view_result
-    mock_add_view = mocker.MagicMock()
-    mock_couch.__enter__.return_value = mock_client
-    mock_design_doc.__enter__.return_value = mock_design_doc
-    mock_design_doc.add_view = mock_add_view
-    mock_client.__getitem__.return_value = mock_db
-    couchdb_constructor = mocker.patch('pasta_eln.dataverse.base_database_api.couchdb', return_value=mock_couch)
-    doc_constructor = mocker.patch('pasta_eln.dataverse.base_database_api.DesignDocument', return_value=mock_design_doc)
-    view_constructor = mocker.patch('pasta_eln.dataverse.base_database_api.View', return_value=mock_view)
-
-    # Act
-    if isinstance(expected_results, type) and issubclass(expected_results, Exception):
-      with pytest.raises(expected_results):
-        mock_database_api.get_view_results("test_db", design_document_name, view_name, map_func, reduce_func)
-    else:
-      results = mock_database_api.get_view_results("test_db", design_document_name, view_name, map_func, reduce_func)
-
-    # Assert
-    mock_database_api.logger.info.assert_called_once_with(
-      "Getting view results: %s from design document: %s, map_func: %s, reduce_func: %s in database: %s", view_name,
-      design_document_name, map_func, reduce_func, "test_db")
-    if not isinstance(expected_results, type):
-      assert results == expected_results
-
-      couchdb_constructor.assert_called_once_with(mock_database_api.username, mock_database_api.password,
-                                                  url=mock_database_api.url, connect=True)
-      doc_constructor.assert_called_once_with(mock_db, design_document_name)
-      view_constructor.assert_called_once_with(mock_design_doc, view_name, map_func, reduce_func)
-    else:
-      couchdb_constructor.assert_not_called()
-      doc_constructor.assert_not_called()
-      view_constructor.assert_not_called()
-      mock_database_api.logger.error.assert_called_with("Design document name and view name cannot be empty!")
-
-  @pytest.mark.parametrize(
-    "design_document_name, view_name, document_id, map_func, reduce_func, view_result, expected_result, test_id",
-    [  # Success path tests
-      ("design_doc_1", "view_1", "doc_1", None, None, {"doc_1": [{"value": {'key': 'value'}}]}, {'key': 'value'},
-       "success_path_1"), (
-        "design_doc_2", "view_2", "doc_2", "map_func_2", "reduce_func_2", {"doc_2": [{"value": {'key': 'value'}}]},
-        {'key': 'value'}, "success_path_2"),
-
-      # Error cases
-      (None, "view_1", "doc_1", None, None, None, None, "error_missing_design_document"),
-      ("design_doc_1", None, "doc_1", None, None, None, None, "error_missing_view_name"),
-      ("design_doc_1", "view_1", None, None, None, None, None, "error_missing_document_id"), ])
-  def test_get_view_results_by_id(self, mocker, design_document_name, view_name, document_id, map_func, reduce_func,
-                                  view_result, expected_result, test_id, mock_database_api):
-    # Arrange
-    mock_client = mocker.MagicMock()
-    mock_couch = mocker.MagicMock()
-    mock_design_doc = mocker.MagicMock()
-    mock_db = mocker.MagicMock()
-    mock_view = mocker.MagicMock()
-    mock_view.result = view_result
-    mock_add_view = mocker.MagicMock()
-    mock_couch.__enter__.return_value = mock_client
-    mock_design_doc.__enter__.return_value = mock_design_doc
-    mock_design_doc.add_view = mock_add_view
-    mock_client.__getitem__.return_value = mock_db
-    couchdb_constructor = mocker.patch('pasta_eln.dataverse.base_database_api.couchdb', return_value=mock_couch)
-    doc_constructor = mocker.patch('pasta_eln.dataverse.base_database_api.DesignDocument', return_value=mock_design_doc)
-    view_constructor = mocker.patch('pasta_eln.dataverse.base_database_api.View', return_value=mock_view)
-
-    # Act
-    if expected_result is not None:
-      result = mock_database_api.get_view_results_by_id("test_db",
-                                                        design_document_name,
-                                                        view_name,
-                                                        document_id,
-                                                        map_func,
-                                                        reduce_func)
-      # Assert
-      assert result == expected_result
-      mock_database_api.logger.info.assert_called()
-      couchdb_constructor.assert_called_once_with(mock_database_api.username, mock_database_api.password,
-                                                  url=mock_database_api.url, connect=True)
-      doc_constructor.assert_called_once_with(mock_db, design_document_name)
-      view_constructor.assert_called_once_with(mock_design_doc, view_name, map_func, reduce_func)
-    else:
-      with pytest.raises(DatabaseError):
-        mock_database_api.get_view_results_by_id(design_document_name, view_name, document_id, map_func, reduce_func)
-        # Assert
-        mock_database_api.logger.info.assert_called()
-        mock_database_api.logger.error.assert_called_with(
-          "Design document name, view name and document id cannot be empty!")
-
-  @pytest.mark.parametrize("test_id, design_document_name, view_name, expected_result", [  # Success path tests
-    ("SuccessCase-1", "design_doc_1", "view_1", MagicMock()), ("SuccessCase-2", "design_doc_2", "view_2", MagicMock()),
-    # Edge cases
-    ("EdgeCase-1", "", "view", None),  # Empty design document name
-    ("EdgeCase-2", "design_doc", "", None),  # Empty view name
-    # Error cases
-    ("ErrorCase-1", None, "view", DatabaseError("Design document name and view name cannot be empty")),
-    # None design document name
-    ("ErrorCase-2", "design_doc", None, DatabaseError("Design document name and view name cannot be empty")),
-    # None view name
-  ])
-  def test_get_view(self, mocker, test_id, design_document_name, view_name, expected_result, mock_database_api):
-    # Arrange
-    mock_client = mocker.MagicMock()
-    mock_couch = mocker.MagicMock()
-    mock_design_doc = mocker.MagicMock()
-    mock_db = mocker.MagicMock()
-    mock_design_doc.get_view.return_value = expected_result
-    mock_add_view = mocker.MagicMock()
-    mock_couch.__enter__.return_value = mock_client
-    mock_design_doc.__enter__.return_value = mock_design_doc
-    mock_design_doc.add_view = mock_add_view
-    mock_client.__getitem__.return_value = mock_db
-    mocker.patch('pasta_eln.dataverse.base_database_api.couchdb', return_value=mock_couch)
-    mocker.patch('pasta_eln.dataverse.base_database_api.DesignDocument', return_value=mock_design_doc)
-
-    # Act
-    if isinstance(expected_result, Exception):
-      with pytest.raises(type(expected_result)):
-        mock_database_api.get_view("test_db", design_document_name, view_name)
-    else:
-      result = mock_database_api.get_view("test_db", design_document_name, view_name)
-
-    # Assert
-    if not isinstance(expected_result, Exception):
-      assert result == expected_result
-      mock_database_api.logger.info.assert_called_with("Retrieving view: %s from design document: %s in database: %s",
-                                                       view_name,
-                                                       design_document_name, "test_db")
-
-  # Parametrized test cases for various scenarios
-  @pytest.mark.parametrize(
-    "design_document_name, view_name, limit, start_key, start_key_doc_id, expected_result, test_id", [
-      ("design1", "view1", 10, None, None, [{"id": "1"}], "happy_path_no_start_keys"),
-      ("design1", "view1", 5, 100, "doc100", [{"id": "100"}], "happy_path_with_start_keys"),
-      ("design1", "view1", 0, None, None, [], "edge_case_zero_limit"),
-      (None, "view1", 10, None, None, DatabaseError, "error_case_no_design_document"),
-      ("design1", None, 10, None, None, DatabaseError, "error_case_no_view_name"),
-    ])
-  def test_get_paginated_view_results(self, mock_database_api, mocker,
-                                      design_document_name, view_name, limit, start_key, start_key_doc_id,
-                                      expected_result, test_id):
-    # Arrange
-    mock_client = mocker.MagicMock()
-    mock_couch = mocker.MagicMock()
-    mock_design_doc = mocker.MagicMock()
-    mock_db = mocker.MagicMock()
-    mock_couch.__enter__.return_value = mock_client
-    mock_design_doc.__enter__.return_value = mock_design_doc
-    mock_client.__getitem__.return_value = mock_db
-    mock_result = mocker.patch('pasta_eln.dataverse.base_database_api.Result')
-    mock_result.return_value = expected_result if not isinstance(expected_result, type) else MagicMock()
-    mocker.patch('pasta_eln.dataverse.base_database_api.couchdb', return_value=mock_couch)
-    mocker.patch('pasta_eln.dataverse.base_database_api.DesignDocument', return_value=mock_design_doc)
-
-    # Act
-    if isinstance(expected_result, type) and issubclass(expected_result, Exception):
-      with pytest.raises(expected_result):
-        mock_database_api.get_paginated_view_results("test_db", design_document_name, view_name, limit, start_key,
-                                                     start_key_doc_id)
-    else:
-      result = mock_database_api.get_paginated_view_results("test_db", design_document_name, view_name, limit,
-                                                            start_key,
-                                                            start_key_doc_id)
-
-    # Assert
-    if not isinstance(expected_result, type):
-      assert result == expected_result
-      mock_database_api.logger.info.assert_called_once_with(
-        "Retrieving paginated view results, View: %s from design document: %s, limit: %s, start_key_doc_id: %s, start_key: %s in database: %s",
-        view_name,
-        design_document_name,
-        limit,
-        start_key_doc_id,
-        start_key,
-        "test_db")
-      mock_result.assert_called_once()
-      mock_design_doc.get_view.assert_called_once_with(view_name)
-
-  @pytest.mark.parametrize("test_id, index_name, index_type, fields, expected_exception, expected_log", [
+  @pytest.mark.parametrize("model_id, model_type, expected, test_id", [
     # Happy path tests
-    ("HP-1", "test_index", "json", [{"name": "field1", "type": "asc"}], None, "Creating query index"),
-    ("HP-2", "unique_index", "text", [{"name": "field2", "type": "desc"}], None, "Creating query index"),
+    (1, UploadModel, UploadModel(), "success_path_upload"),
+    (2, ConfigModel, ConfigModel(), "success_path_config"),
+    (3, DataHierarchyModel, DataHierarchyModel(), "success_path_data_hierarchy"),
+    ("project_id", ProjectModel, ProjectModel(), "success_path_project"),
 
     # Edge cases
-    ("EC-1", "test_index", "json", [], None, "Creating query index"),  # Empty fields list
+    (None, UploadModel, DatabaseError, "edge_case_none_id"),
+    ("", UploadModel, DatabaseError, "edge_case_empty_string_id"),
+    (1, ProjectModel, None, "edge_case_int_id_for_project"),
 
     # Error cases
-    (
-        "ER-1", None, "json", [{"name": "field1", "type": "asc"}], DatabaseError,
-        "Index name and fields cannot be empty!"),
-    ("ER-2", "test_index", "json", None, DatabaseError, "Index name and fields cannot be empty!"),
-    ("ER-3", "test_index", "json", [{"name": "field1", "type": "asc"}], None, "Index already exists"),
+    (1, MagicMock, DatabaseError, "error_case_invalid_model_type"),
   ])
-  def test_create_query_index(self, mock_database_api, mocker, test_id, index_name, index_type, fields,
-                              expected_exception, expected_log):
+  def test_get_model(self, mocker, base_database_api, model_id, model_type, expected, test_id):
     # Arrange
-    mock_client = mocker.MagicMock()
-    mock_couch = mocker.MagicMock()
-    mock_db = mocker.MagicMock()
-    mock_couch.__enter__.return_value = mock_client
-    mock_client.__getitem__.return_value = mock_db
-    mocker.patch('pasta_eln.dataverse.base_database_api.couchdb', return_value=mock_couch)
-    property_mock = mocker.PropertyMock()
-    property_mock.name = index_name
-    mock_db.get_query_indexes.return_value = [] if test_id != "ER-3" else [property_mock]
+    mock_create_engine = mocker.patch("pasta_eln.dataverse.base_database_api.create_engine")
+    base_database_api.get_project_model = MagicMock()
+    mock_engine = MagicMock()
+    mock_create_engine.return_value = mock_engine
+    mock_session = MagicMock()
+    mocker.patch("pasta_eln.dataverse.base_database_api.Session", return_value=mock_session)
+    mock_session.__enter__.return_value = mock_session
+    mock_session.get.return_value = model_type()
+    base_database_api.get_project_model.return_value = expected
+    base_database_api.to_base_model_converter_map[DatabaseOrmUploadModel].return_value = expected
+    base_database_api.to_base_model_converter_map[DatabaseOrmConfigModel].return_value = expected
+    base_database_api.to_base_model_converter_map[DatabaseOrmDataHierarchyModel].return_value = expected
+
+    if isinstance(expected, type) and issubclass(expected, Exception):
+      # Act & Assert
+      with pytest.raises(expected):
+        base_database_api.get_model(model_id, model_type)
+    else:
+      # Act
+      result = base_database_api.get_model(model_id, model_type)
+
+      # Assert
+      base_database_api.logger.info.assert_called_with("Retrieving data model with id: %s, type: %s", model_id,
+                                                       model_type)
+      assert result == expected
+      if model_type in [UploadModel, ConfigModel, DataHierarchyModel]:
+        mock_session.get.assert_called_once_with(base_database_api.model_mapping[model_type], model_id)
+
+  @pytest.mark.parametrize("model_type, expected_exception", [
+    (UploadModel, None),
+    (None, DatabaseError),
+  ], ids=["valid_model_type", "none_model_type"])
+  def test_get_models(self, mocker, base_database_api, model_type, expected_exception):
+    # Arrange
+    mock_create_engine = mocker.patch("pasta_eln.dataverse.base_database_api.create_engine")
+    base_database_api.get_project_model = MagicMock()
+    mock_engine = MagicMock()
+    mock_create_engine.return_value = mock_engine
+    mock_session = MagicMock()
+    mocker.patch("pasta_eln.dataverse.base_database_api.Session", return_value=mock_session)
+    mock_session.__enter__.return_value = mock_session
+    mock_session.scalars.return_value.all.return_value = [DatabaseOrmUploadModel(), DatabaseOrmConfigModel()]
+
+    # Act & Assert
+    if expected_exception:
+      with pytest.raises(expected_exception):
+        base_database_api.get_models(model_type)
+    else:
+      result = base_database_api.get_models(model_type)
+      assert isinstance(result, list)
+
+  @pytest.mark.parametrize("model_type, db_model, database, expected_count", [
+    param(UploadModel, DatabaseOrmUploadModel, DatabaseNames.DataverseDatabase, 0, id="empty_upload_model"),
+    param(UploadModel, DatabaseOrmUploadModel, DatabaseNames.DataverseDatabase, 2, id="non_empty_upload_model"),
+    param(ConfigModel, DatabaseOrmConfigModel, DatabaseNames.DataverseDatabase, 0, id="empty_config_model"),
+    param(ConfigModel, DatabaseOrmConfigModel, DatabaseNames.DataverseDatabase, 10, id="non_empty_config_model"),
+    param(DataHierarchyModel, DatabaseOrmDataHierarchyModel, DatabaseNames.PastaProjectGroupDatabase, 0,
+          id="empty_data_hierarchy_model"),
+  ], ids=lambda x: x[2])
+  def test_get_models_success_path(self, mocker, base_database_api, model_type, db_model, database, expected_count):
+    # Arrange
+    mock_create_engine = mocker.patch("pasta_eln.dataverse.base_database_api.create_engine")
+    mock_select = mocker.patch("pasta_eln.dataverse.base_database_api.select")
+    base_database_api.get_project_model = MagicMock()
+    mock_engine = MagicMock()
+    mock_create_engine.return_value = mock_engine
+    mock_session = MagicMock()
+    mocker.patch("pasta_eln.dataverse.base_database_api.Session", return_value=mock_session)
+    mock_session.__enter__.return_value = mock_session
+    mock_session.scalars.return_value.all.return_value = [db_model() for _ in range(expected_count)]
+
+    # Act
+    result = base_database_api.get_models(model_type)
+
+    # Assert
+    mock_select.assert_called_once_with(base_database_api.model_mapping[model_type])
+    mock_create_engine.assert_called_once_with(base_database_api.db_url_map[database])
+    assert len(result) == expected_count
+    mock_session.scalars.assert_called_once_with(mock_select.return_value)
+    mock_session.scalars.return_value.all.assert_called_once()
+    assert base_database_api.to_base_model_converter_map[db_model].call_count == expected_count
+    base_database_api.logger.info.assert_called_once_with("Retrieving models from database, type: %s", model_type)
+
+  @pytest.mark.parametrize("model_type", [
+    param(None, id="none_model_type"),
+  ], ids=lambda x: x[1])
+  def test_get_models_error_cases(self, base_database_api, model_type):
+    # Act & Assert
+    with pytest.raises(DatabaseError):
+      base_database_api.get_models(model_type)
+    base_database_api.logger.info.assert_called_once_with("Retrieving models from database, type: %s", model_type)
+
+  @pytest.mark.parametrize("model_type", [
+    param(UploadModel, id="sqlalchemy_error"),
+  ], ids=lambda x: x[1])
+  def test_get_models_sqlalchemy_error(self, mocker, base_database_api, model_type):
+    # Arrange
+    mock_create_engine = mocker.patch("pasta_eln.dataverse.base_database_api.create_engine")
+    base_database_api.get_project_model = MagicMock()
+    mock_engine = MagicMock()
+    mock_create_engine.return_value = mock_engine
+    mock_session = MagicMock()
+    mocker.patch("pasta_eln.dataverse.base_database_api.Session", return_value=mock_session)
+    mock_session.__enter__.return_value = mock_session
+    mock_session.scalars.side_effect = SQLAlchemyError
+
+    # Act & Assert
+    with pytest.raises(SQLAlchemyError):
+      base_database_api.get_models(model_type)
+    base_database_api.logger.info.assert_called_once_with("Retrieving models from database, type: %s", model_type)
+
+  @pytest.mark.parametrize(
+    "mock_data, expected_count",
+    [
+      param([(1, "Project A"), (2, "Project B")], 2, id="success_path_two_projects"),
+      param([], 0, id="success_path_no_projects"),
+    ],
+    ids=lambda x: x[2]
+  )
+  def test_get_project_models_success_path(self, mocker, base_database_api, mock_data, expected_count):
+    # Arrange
+    mock_create_engine = mocker.patch("pasta_eln.dataverse.base_database_api.create_engine")
+    mock_get_project_model = mocker.patch("pasta_eln.dataverse.base_database_api.DatabaseOrmAdapter.get_project_model")
+    mock_get_project_model.return_value = MagicMock(spec=ProjectModel)
+    mock_engine = MagicMock()
+    mock_create_engine.return_value = mock_engine
+    mock_session = MagicMock()
+    mocker.patch("pasta_eln.dataverse.base_database_api.Session", return_value=mock_session)
+    mock_session.__enter__.return_value = mock_session
+    all_items = [mocker.MagicMock() for _ in range(expected_count)]
+    for i in range(expected_count):
+      all_items[i].tuple.return_value = mock_data[i]
+    mock_session.execute.return_value.fetchall.return_value = all_items
+    mock_generate_project_join_statement = mocker.patch(
+      "pasta_eln.dataverse.base_database_api.generate_project_join_statement")
+
+    # Act
+    result = base_database_api.get_project_models()
+
+    # Assert
+    mock_create_engine.assert_called_once_with(base_database_api.db_url_map[DatabaseNames.PastaProjectGroupDatabase])
+    mock_generate_project_join_statement.assert_called_once_with(None)
+    if expected_count != 0:
+      mock_session.execute.assert_called_once_with(mock_generate_project_join_statement.return_value)
+      mock_session.execute.return_value.fetchall.assert_called_once()
+    assert len(result) == expected_count
+    assert all(isinstance(proj, ProjectModel) for proj in result)
+
+  @pytest.mark.parametrize(
+    "mock_data",
+    [
+      param([(None, "Project C")], id="edge_case_null_id"),
+      param([(1, None)], id="edge_case_null_name"),
+    ],
+    ids=lambda x: x[1]
+  )
+  def test_get_project_models_edge_cases(self, mocker, base_database_api, mock_data):
+    # Arrange
+    mock_create_engine = mocker.patch("pasta_eln.dataverse.base_database_api.create_engine")
+    mock_get_project_model = mocker.patch("pasta_eln.dataverse.base_database_api.DatabaseOrmAdapter.get_project_model")
+    mock_get_project_model.return_value = MagicMock(spec=ProjectModel)
+    mock_engine = MagicMock()
+    mock_create_engine.return_value = mock_engine
+    mock_session = MagicMock()
+    mocker.patch("pasta_eln.dataverse.base_database_api.Session", return_value=mock_session)
+    mock_session.__enter__.return_value = mock_session
+    all_items = [mocker.MagicMock() for _ in range(len(mock_data))]
+    for i in range(len(mock_data)):
+      all_items[i].tuple.return_value = mock_data[i]
+    mock_session.execute.return_value.fetchall.return_value = all_items
+    mock_generate_project_join_statement = mocker.patch(
+      "pasta_eln.dataverse.base_database_api.generate_project_join_statement")
+
+    # Act
+    result = base_database_api.get_project_models()
+
+    # Assert
+    mock_generate_project_join_statement.assert_called_once_with(None)
+    assert len(result) == 1
+    assert isinstance(result[0], ProjectModel)
+
+  @pytest.mark.parametrize(
+    "exception",
+    [
+      param(SQLAlchemyError("Database error"), id="error_case_sqlalchemy_error"),
+    ],
+    ids=lambda x: x[1]
+  )
+  def test_get_project_models_error_cases(self, mocker, base_database_api, exception):
+    # Arrange
+    mock_create_engine = mocker.patch("pasta_eln.dataverse.base_database_api.create_engine")
+    mock_get_project_model = mocker.patch("pasta_eln.dataverse.base_database_api.DatabaseOrmAdapter.get_project_model")
+    mock_get_project_model.return_value = MagicMock(spec=ProjectModel)
+    mock_engine = MagicMock()
+    mock_create_engine.return_value = mock_engine
+    mock_session = MagicMock()
+    mocker.patch("pasta_eln.dataverse.base_database_api.Session", return_value=mock_session)
+    mock_session.__enter__.side_effect = exception
+    mocker.patch(
+      "pasta_eln.dataverse.base_database_api.generate_project_join_statement")
+
+    # Act & Assert
+    with pytest.raises(SQLAlchemyError):
+      base_database_api.get_project_models()
+
+  @pytest.mark.parametrize("model_id, expected_exception", [
+    ("valid_id", None),
+    (None, DatabaseError),
+  ], ids=["valid_id", "none_id"])
+  def test_get_project_model(self, mocker, base_database_api, model_id, expected_exception):
+    # Arrange
+    mock_create_engine = mocker.patch("pasta_eln.dataverse.base_database_api.create_engine")
+    mock_get_project_model = mocker.patch("pasta_eln.dataverse.base_database_api.DatabaseOrmAdapter.get_project_model")
+    mock_generate_project_join_statement = mocker.patch(
+      "pasta_eln.dataverse.base_database_api.generate_project_join_statement")
+    mock_engine = MagicMock()
+    mock_create_engine.return_value = mock_engine
+    mock_session = MagicMock()
+    mocker.patch("pasta_eln.dataverse.base_database_api.Session", return_value=mock_session)
+    mock_session.__enter__.return_value = mock_session
+
+    # Act & Assert
+    if expected_exception:
+      with pytest.raises(expected_exception):
+        base_database_api.get_project_model(model_id)
+    else:
+      result = base_database_api.get_project_model(model_id)
+      base_database_api.logger.info.assert_called_once_with("Retrieving project from database: %s, model id: %s",
+                                                            DatabaseNames.PastaProjectGroupDatabase, model_id)
+      mock_generate_project_join_statement.assert_called_once_with(model_id)
+      mock_session.execute.assert_called_once_with(mock_generate_project_join_statement.return_value)
+      mock_session.execute.return_value.fetchone.assert_called_once()
+      mock_session.execute.return_value.fetchone.return_value.tuple.assert_called_once()
+      mock_get_project_model.assert_any_call(mock_session.execute.return_value.fetchone.return_value.tuple.return_value)
+
+      assert result is not None
+
+  @pytest.mark.parametrize("data_model, expected_exception", [
+    param(UploadModel(_id=1), None, id="success_path_upload_model"),
+    param(ConfigModel(_id=2), None, id="success_path_config_model"),
+    param(UploadModel(_id=None), DatabaseError, id="error_no_id_upload_model"),
+    param(ConfigModel(_id=None), DatabaseError, id="error_no_id_config_model"),
+    param(UploadModel(_id=999), DatabaseError, id="error_nonexistent_id_upload_model"),
+    param(ConfigModel(_id=999), DatabaseError, id="error_nonexistent_id_config_model"),
+  ], ids=lambda x: x[2])
+  def test_update_model(self, mocker, base_database_api, data_model, expected_exception):
+    # Arrange
+    mock_create_engine = mocker.patch("pasta_eln.dataverse.base_database_api.create_engine")
+    mock_engine = MagicMock()
+    mock_create_engine.return_value = mock_engine
+    mock_session = MagicMock()
+    mocker.patch("pasta_eln.dataverse.base_database_api.Session", return_value=mock_session)
+    mock_session.__enter__.return_value = mock_session
+    mock_session.get.return_value = (data_model if data_model.id in [1, 2] else None)
+    base_database_api.to_orm_converter_map[type(data_model)] = lambda x: x
 
     # Act
     if expected_exception:
-      with pytest.raises(expected_exception) as exc_info:
-        mock_database_api.create_query_index("test_db", index_name, index_type, fields)
+      with pytest.raises(expected_exception):
+        base_database_api.update_model(data_model)
     else:
-      mock_database_api.create_query_index("test_db", index_name, index_type, fields)
+      base_database_api.update_model(data_model)
 
     # Assert
-    mock_database_api.logger.info.assert_called_once_with(
-      "Creating query index, name: %s, index_type: %s, fields: %s in database: %s",
-      index_name,
-      index_type,
-      fields,
-      "test_db")
-    if test_id == "ER-3":
-      mock_database_api.logger.warning.assert_called_with("Index already exists: %s", index_name)
-    elif not expected_exception:
-      mock_db.create_query_index.assert_called_with(index_name=index_name, index_type=index_type, fields=fields)
+    if not expected_exception:
+      mock_session.merge.assert_called_once_with(data_model)
+      mock_session.commit.assert_called_once()
+      base_database_api.logger.info.assert_called_once_with("Updating data model with id: %s, type: %s",
+                                                            data_model.id,
+                                                            type(data_model))
+    else:
+      base_database_api.logger.error.assert_called()
 
-  @pytest.mark.parametrize("filter_term, filter_fields, bookmark, limit, expected_selector, expected_bookmark, test_id",
-                           [
-                             # Happy path tests
-                             (None, None, None, 10, {"data_type": "dataverse_upload"}, None, "HP-1"),
-                             ("test", ["field1", "field2"], None, 10, {"$and": [{"data_type": "dataverse_upload"}, {
-                               "$or": [{"field1": {"$regex": "(?i).*test.*"}},
-                                       {"field2": {"$regex": "(?i).*test.*"}}]}]}, None, "HP-2"),
-                             ("test", ["field1"], "bookmark123", 10, {"$and": [{"data_type": "dataverse_upload"}, {
-                               "$or": [{"field1": {"$regex": "(?i).*test.*"}}]}]}, "bookmark123", "HP-3"),
-
-                             # Edge cases
-                             ("", ["field1"], None, 10, {"data_type": "dataverse_upload"}, None, "EC-1"),
-                             # Empty filter term
-                             ("test", [], None, 10, {"data_type": "dataverse_upload"}, None, "EC-2"),
-                             # Empty filter fields
-                             ("test", None, None, 10, {"data_type": "dataverse_upload"}, None, "EC-3"),
-                             # None filter fields
-
-                             # Error cases
-                             (None, ["field1"], None, 10, {"data_type": "dataverse_upload"}, None, "ER-1"),
-                             # None filter term with non-empty filter fields
-                           ])
-  def test_get_paginated_upload_model_query_results(self, mock_database_api, mocker, filter_term, filter_fields,
-                                                    bookmark, limit, expected_selector, expected_bookmark, test_id):
+  @pytest.mark.parametrize(
+    "model_type, filter_term, filter_fields, order_by_column, page_number, limit, expected_count", [
+      (UploadModel, None, None, None, 1, 10, 0),  # happy path, no filters
+      (ConfigModel, "test", ["metadata"], None, 1, 10, 0),  # happy path, with filter
+      (DataHierarchyModel, None, None, "name", 1, 10, 0),  # happy path, with order
+    ], ids=["no_filters", "with_filter", "with_order"])
+  def test_get_paginated_models_happy_path(self, mocker, base_database_api, model_type, filter_term, filter_fields,
+                                           order_by_column,
+                                           page_number, limit, expected_count):
     # Arrange
-    mock_client = mocker.MagicMock()
-    mock_couch = mocker.MagicMock()
-    mock_query = mocker.MagicMock()
-    mock_db = mocker.MagicMock()
-    mock_couch.__enter__.return_value = mock_client
-    mock_client.__getitem__.return_value = mock_db
-    mock_couch_db_ctr = mocker.patch('pasta_eln.dataverse.base_database_api.couchdb', return_value=mock_couch)
-    mock_query_ctr = mocker.patch('pasta_eln.dataverse.base_database_api.Query', return_value=mock_query)
-    mock_query.return_value = {"docs": [], "bookmark": "new_bookmark"}
-
+    mock_create_engine = mocker.patch("pasta_eln.dataverse.base_database_api.create_engine")
+    mock_select = mocker.patch("pasta_eln.dataverse.base_database_api.select")
+    mock_getattr = mocker.patch("pasta_eln.dataverse.base_database_api.getattr")
+    mock_or_ = mocker.patch("pasta_eln.dataverse.base_database_api.or_")
+    mock_engine = MagicMock()
+    mock_create_engine.return_value = mock_engine
+    mock_session = MagicMock()
+    mocker.patch("pasta_eln.dataverse.base_database_api.Session", return_value=mock_session)
+    mock_session.__enter__.return_value = mock_session
     # Act
-    result = mock_database_api.get_paginated_upload_model_query_results("test_db",
-                                                                        filter_term=filter_term,
-                                                                        filter_fields=filter_fields, bookmark=bookmark,
-                                                                        limit=limit)
+    result = base_database_api.get_paginated_models(model_type, filter_term, filter_fields, order_by_column,
+                                                    page_number,
+                                                    limit)
 
     # Assert
-    mock_database_api.logger.info.assert_called_once_with(
-      "Getting paginated upload model query results: filter_term: %s, filter_fields: %s, bookmark: %s, limit: %s from database: %s",
-      filter_term,
-      ",".join(filter_fields) if filter_fields else None,
-      bookmark,
-      limit,
-      "test_db")
-    mock_couch_db_ctr.assert_called_with(mock_database_api.username, mock_database_api.password,
-                                         url=mock_database_api.url, connect=True)
-    mock_client.__getitem__.assert_called_with("test_db")
-    mock_query_ctr.assert_called_with(mock_db, selector=expected_selector, sort=[{'finished_date_time': 'desc'}],
-                                      limit=limit)
-    if expected_bookmark:
-      mock_query.assert_called_with(bookmark=expected_bookmark)
+    mock_select.assert_called_once_with(base_database_api.model_mapping[model_type])
+    mock_select.return_value.limit.assert_called_once_with(limit)
+    mock_select.return_value.limit.return_value.offset.assert_called_once_with((page_number - 1) * limit)
+    mock_create_engine.assert_called_once()
+    mock_session.execute.assert_called_once()
+    mock_session.execute.return_value.scalars.return_value.all.assert_called_once()
+    assert len(result) == expected_count
+
+  @pytest.mark.parametrize("page_number, limit, expected_exception", [
+    (0, 10, DatabaseError),  # page_number less than 1
+    (1, 0, DatabaseError),  # limit less than 1
+  ], ids=["invalid_page_number", "invalid_limit"])
+  def test_get_paginated_models_invalid_input(self, base_database_api, page_number, limit, expected_exception):
+    # Act & Assert
+    with pytest.raises(expected_exception):
+      base_database_api.get_paginated_models(UploadModel, None, None, None, page_number, limit)
+
+  @pytest.mark.parametrize(
+    "model_type, filter_term, filter_fields, order_by_column, page_number, limit, expected_exception", [
+      (UploadModel, None, None, "invalid_column", 1, 10, AttributeError),  # invalid order_by_column
+    ], ids=["invalid_order_by_column"])
+  def test_get_paginated_models_invalid_order_by(self, base_database_api, model_type, filter_term,
+                                                 filter_fields, order_by_column,
+                                                 page_number, limit, expected_exception):
+    # Act & Assert
+    with pytest.raises(expected_exception):
+      base_database_api.get_paginated_models(model_type, filter_term, filter_fields, order_by_column, page_number,
+                                             limit)
+
+  @pytest.mark.parametrize("model_type, filter_term, filter_fields, order_by_column, page_number, limit", [
+    (UploadModel, None, None, None, 1, 10),  # simulate SQLAlchemy error
+  ], ids=["sqlalchemy_error"])
+  def test_get_paginated_models_sqlalchemy_error(self, mocker, base_database_api, model_type, filter_term,
+                                                 filter_fields, order_by_column,
+                                                 page_number, limit):
+    # Arrange
+    mock_create_engine = mocker.patch("pasta_eln.dataverse.base_database_api.create_engine")
+    mock_engine = MagicMock()
+    mock_create_engine.return_value = mock_engine
+    mock_session = MagicMock()
+    mocker.patch("pasta_eln.dataverse.base_database_api.Session", return_value=mock_session)
+    mock_session.__enter__.return_value = mock_session
+    mock_session.execute.side_effect = SQLAlchemyError
+    # Act & Assert
+    with pytest.raises(SQLAlchemyError):
+      base_database_api.get_paginated_models(model_type, filter_term, filter_fields, order_by_column, page_number,
+                                             limit)
+
+  @pytest.mark.parametrize(
+    "model_type, expected_count, mock_count",
+    [
+      param(UploadModel, 5, 5, id="happy_path_upload_model"),
+      param(ConfigModel, 0, 0, id="happy_path_config_model_empty"),
+      param(DataHierarchyModel, 10, 10, id="happy_path_data_hierarchy_model"),
+      param(UploadModel, 0, 0, id="edge_case_no_records"),
+      param(ConfigModel, 1, 1, id="edge_case_single_record"),
+      param(None, None, None, id="error_case_invalid_model_type"),
+    ],
+    ids=lambda x: x[-1]
+  )
+  def test_get_models_count(self, mocker, base_database_api, model_type, expected_count, mock_count):
+    # Arrange
+    if model_type is not None:
+      mock_session = MagicMock()
+      mocker.patch("pasta_eln.dataverse.base_database_api.Session", return_value=mock_session)
+      mock_session.__enter__.return_value = mock_session
+      mock_session.query.return_value.count.return_value = mock_count
+
+      # Act
+      result = base_database_api.get_models_count(model_type)
+
+      # Assert
+      assert result == expected_count
     else:
-      mock_query.assert_called_with()
-    assert result == {"docs": [], "bookmark": "new_bookmark"}, f"Failed test ID: {test_id}"
+
+      # Act & Assert
+      with pytest.raises(KeyError):
+        base_database_api.get_models_count(model_type)

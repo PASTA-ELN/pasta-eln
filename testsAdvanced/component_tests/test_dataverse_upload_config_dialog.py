@@ -12,14 +12,14 @@ from PySide6.QtWidgets import QDialogButtonBox
 
 from pasta_eln.GUI.dataverse.upload_config_dialog import UploadConfigDialog
 from pasta_eln.dataverse.config_model import ConfigModel
+from pasta_eln.dataverse.data_hierarchy_model import DataHierarchyModel
 
 
 @pytest.fixture
 def mock_database_api(mocker):
   mock = mocker.patch('pasta_eln.dataverse.database_api.DatabaseAPI')
   mock_instance = mock.return_value
-  config_model = ConfigModel(_id="test_id",
-                             _rev="test_rev",
+  config_model = ConfigModel(_id=123456789,
                              dataverse_login_info={
                                "server_url": "http://valid.url",
                                "api_token": "encrypted_api_token",
@@ -38,12 +38,19 @@ def mock_database_api(mocker):
   mock_instance.get_data_hierarchy.return_value = {
     "x0": {},
     "x1": {},
-    "x2": {},
     "measurement": {},
     "sample": {},
     "procedure": {},
     "instrument": {}
   }
+  mock_instance.get_data_hierarchy_models.return_value = [
+    DataHierarchyModel(docType="x0"),
+    DataHierarchyModel(docType="x1"),
+    DataHierarchyModel(docType="measurement"),
+    DataHierarchyModel(docType="sample"),
+    DataHierarchyModel(docType="procedure"),
+    DataHierarchyModel(docType="instrument")
+  ]
   return mock_instance
 
 
@@ -140,7 +147,7 @@ class TestDataverseUploadConfigDialog:
     qtbot.mouseClick(upload_config_dialog.buttonBox.button(QDialogButtonBox.Cancel), Qt.LeftButton)
     assert not upload_config_dialog.instance.isVisible(), "UploadConfigDialog instance should be closed!"
     assert upload_config_dialog.config_model.parallel_uploads_count == expected_num_parallel, f"UploadConfigDialog model should be updated with {expected_num_parallel}!"
-    mock_database_api.update_model_document.assert_not_called()
+    mock_database_api.update_model.assert_not_called()
 
   @pytest.mark.parametrize("test_id, set_items", [
     ("success_case_set_all", {
@@ -216,4 +223,4 @@ class TestDataverseUploadConfigDialog:
     qtbot.mouseClick(upload_config_dialog.buttonBox.button(QDialogButtonBox.Cancel), Qt.LeftButton)
     assert not upload_config_dialog.instance.isVisible(), "UploadConfigDialog instance should be closed!"
     assert upload_config_dialog.config_model.project_upload_items == set_items, f"UploadConfigDialog model project_upload_items should be updated with {set_items}!"
-    mock_database_api.update_model_document.assert_not_called()
+    mock_database_api.update_model.assert_not_called()

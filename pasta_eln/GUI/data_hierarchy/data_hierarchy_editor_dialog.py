@@ -16,7 +16,6 @@ from typing import Any
 from PySide6 import QtWidgets
 from PySide6.QtCore import QCoreApplication, QObject, Signal, Slot
 from PySide6.QtWidgets import QApplication, QMessageBox
-from cloudant.document import Document
 
 from .attachments_tableview_data_model import AttachmentsTableViewModel
 from .constants import ATTACHMENT_TABLE_DELETE_COLUMN_INDEX, \
@@ -37,7 +36,12 @@ from .reorder_column_delegate import ReorderColumnDelegate
 from .utility_functions import adapt_type, adjust_data_hierarchy_data_to_v4, can_delete_type, \
   check_data_hierarchy_types, \
   get_missing_metadata_message, get_types_for_display, show_message
-from ...database import Database
+
+
+# from cloudant.document import Document
+
+
+# from ...database import Database
 
 
 class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
@@ -51,7 +55,7 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
     """
     return super(DataHierarchyEditorDialog, cls).__new__(cls)
 
-  def __init__(self, database: Database) -> None:
+  def __init__(self, database: Any) -> None:
     """
     Constructs the data hierarchy data editor
 
@@ -76,8 +80,8 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
     if database is None:
       raise GenericException("Null database instance passed to the initializer", {})
 
-    self.database: Database = database
-    self.data_hierarchy_document: Document = self.database.db['-dataHierarchy-']
+    self.database: Any = database
+    self.data_hierarchy_document: Any = self.database.db['-dataHierarchy-']
     if not self.data_hierarchy_document:
       raise DocumentNullException("Null data_hierarchy document in db instance", {})
 
@@ -481,7 +485,7 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
     self.deleteTypePushButton.setEnabled(can_delete_type(adapt_type(selected_type)))
 
 
-def get_gui(database: Database) -> tuple[
+def get_gui(database: Any) -> tuple[
   QCoreApplication | QApplication, QtWidgets.QDialog, DataHierarchyEditorDialog]:
   """
   Creates the editor UI and return it

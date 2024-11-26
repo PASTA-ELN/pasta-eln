@@ -40,12 +40,6 @@ class UploadQueueManager(GenericTaskObject):
         attributes for concurrent uploads,
         the upload and running queues, and the database API.
         It also calls the set_concurrent_uploads method to retrieve the number of concurrent uploads from the database.
-
-    Args:
-        None
-
-    Returns:
-        None
     """
     super().__init__()
     self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
@@ -114,10 +108,6 @@ class UploadQueueManager(GenericTaskObject):
         This method starts the upload queue task by calling the super-class's start_task method.
         It iterates over the upload queue
         and starts the tasks if the running queue is not full and the task is not canceled.
-
-    Args:
-        None
-
     """
     self.logger.info("Starting upload queue..")
     super().start_task()
@@ -141,10 +131,6 @@ class UploadQueueManager(GenericTaskObject):
     Explanation:
         This method performs the cleanup of the upload manager by calling the super-class's cleanup method
         and emptying the upload queue.
-
-    Args:
-        None
-
     """
     self.logger.info("Cleaning up upload manager..")
     super().cleanup()

@@ -7,31 +7,27 @@
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
-import logging
-from typing import Any
-
 import pytest
 from PySide6.QtCore import QEvent, Qt
 from PySide6.QtGui import QMouseEvent
 from PySide6.QtWidgets import QMessageBox
-from cloudant import CouchDB
 
 from pasta_eln.GUI.data_hierarchy.utility_functions import adjust_data_hierarchy_data_to_v4, can_delete_type, \
-  check_data_hierarchy_types, get_db, get_missing_metadata_message, \
+  check_data_hierarchy_types, get_missing_metadata_message, \
   is_click_within_bounds, set_types_missing_required_metadata, set_types_with_duplicate_metadata, \
   set_types_without_name_in_metadata, show_message
-from tests.common.test_utils import are_json_equal
+from testsAdvanced.common.test_utils import are_json_equal
 
 
-def get_db_with_right_arguments_returns_valid_db_instance(db_user: str,
-                                                          db_instances: dict,
-                                                          mock_client: Any,
-                                                          dbs_call_count: int):
-  assert (get_db(db_user, "test", "test", "test", None)
-          is db_instances[db_user]), "get_db should return valid db instance"
-  assert mock_client.all_dbs.call_count == dbs_call_count, "get_db should call all_dbs"
-  assert (mock_client.__getitem__.call_count == dbs_call_count
-          ), "get_db should call __getitem__"
+# def get_db_with_right_arguments_returns_valid_db_instance(db_user: str,
+#                                                           db_instances: dict,
+#                                                           mock_client: Any,
+#                                                           dbs_call_count: int):
+#   assert (get_db(db_user, "test", "test", "test", None)
+#           is db_instances[db_user]), "get_db should return valid db instance"
+#   assert mock_client.all_dbs.call_count == dbs_call_count, "get_db should call all_dbs"
+#   assert (mock_client.__getitem__.call_count == dbs_call_count
+#           ), "get_db should call __getitem__"
 
 
 class TestDataHierarchyUtilityFunctions(object):
@@ -124,37 +120,37 @@ class TestDataHierarchyUtilityFunctions(object):
     mock_doc.__setitem__.side_effect = contents.__setitem__
     return mock_doc
 
-  def test_get_db_with_right_arguments_returns_valid_db_instance(self, mocker):
-    mock_client = mocker.MagicMock(spec=CouchDB)
-    mock_client.all_dbs.return_value = ["db_name1", "db_name2"]
-    db_instances = {"db_name1": mocker.MagicMock(spec=CouchDB), "db_name2": mocker.MagicMock(spec=CouchDB)}
-    created_db_instance = mocker.MagicMock(spec=CouchDB)
-    mock_client.__getitem__.side_effect = db_instances.__getitem__
-    mock_client.create_database.side_effect = mocker.MagicMock(side_effect=(lambda name: created_db_instance))
-    mocker.patch.object(CouchDB, "__new__", lambda s, user, auth_token, url, connect: mock_client)
-    mocker.patch.object(CouchDB, "__init__", lambda s, user, auth_token, url, connect: None)
+  # def test_get_db_with_right_arguments_returns_valid_db_instance(self, mocker):
+  #   mock_client = mocker.MagicMock(spec=CouchDB)
+  #   mock_client.all_dbs.return_value = ["db_name1", "db_name2"]
+  #   db_instances = {"db_name1": mocker.MagicMock(spec=CouchDB), "db_name2": mocker.MagicMock(spec=CouchDB)}
+  #   created_db_instance = mocker.MagicMock(spec=CouchDB)
+  #   mock_client.__getitem__.side_effect = db_instances.__getitem__
+  #   mock_client.create_database.side_effect = mocker.MagicMock(side_effect=(lambda name: created_db_instance))
+  #   mocker.patch.object(CouchDB, "__new__", lambda s, user, auth_token, url, connect: mock_client)
+  #   mocker.patch.object(CouchDB, "__init__", lambda s, user, auth_token, url, connect: None)
+  #
+  #   get_db_with_right_arguments_returns_valid_db_instance(
+  #     "db_name1", db_instances, mock_client, 1)
+  #   get_db_with_right_arguments_returns_valid_db_instance(
+  #     "db_name2", db_instances, mock_client, 2)
+  #   assert get_db("db_name3", "test", "test", "test",
+  #                 None) is created_db_instance, "get_db should return created db instance"
+  #   assert mock_client.all_dbs.call_count == 3, "get_db should call all_dbs"
+  #   assert mock_client.create_database.call_count == 1, "get_db should call create_database"
 
-    get_db_with_right_arguments_returns_valid_db_instance(
-      "db_name1", db_instances, mock_client, 1)
-    get_db_with_right_arguments_returns_valid_db_instance(
-      "db_name2", db_instances, mock_client, 2)
-    assert get_db("db_name3", "test", "test", "test",
-                  None) is created_db_instance, "get_db should return created db instance"
-    assert mock_client.all_dbs.call_count == 3, "get_db should call all_dbs"
-    assert mock_client.create_database.call_count == 1, "get_db should call create_database"
-
-  def test_get_db_with_wrong_arguments_throws_exception(self, mocker):
-    mock_logger = mocker.MagicMock(spec=logging)
-    logger_spy = mocker.spy(mock_logger, 'error')
-    mocker.patch.object(CouchDB, "__new__", mocker.MagicMock(side_effect=Exception('Database error')))
-    mocker.patch.object(CouchDB, "__init__", lambda s, user, auth_token, url, connect: None)
-    assert get_db("db_name1", "test", "test", "test", None) is None, "get_db should return None"
-    assert mock_logger.error.call_count == 0, "get_db should not call log.error"
-
-    assert get_db("db_name1", "test", "test", "test", mock_logger) is None, "get_db should return None"
-    assert mock_logger.error.call_count == 1, "get_db should call log.error"
-    logger_spy.assert_called_once_with(
-      "Could not connect with username+password to local server, error: Database error")
+  # def test_get_db_with_wrong_arguments_throws_exception(self, mocker):
+  #   mock_logger = mocker.MagicMock(spec=logging)
+  #   logger_spy = mocker.spy(mock_logger, 'error')
+  #   mocker.patch.object(CouchDB, "__new__", mocker.MagicMock(side_effect=Exception('Database error')))
+  #   mocker.patch.object(CouchDB, "__init__", lambda s, user, auth_token, url, connect: None)
+  #   assert get_db("db_name1", "test", "test", "test", None) is None, "get_db should return None"
+  #   assert mock_logger.error.call_count == 0, "get_db should not call log.error"
+  #
+  #   assert get_db("db_name1", "test", "test", "test", mock_logger) is None, "get_db should return None"
+  #   assert mock_logger.error.call_count == 1, "get_db should call log.error"
+  #   logger_spy.assert_called_once_with(
+  #     "Could not connect with username+password to local server, error: Database error")
 
   def test_show_message_with_none_argument_does_nothing(self):
     assert show_message(None) is None, "show_message should return None"

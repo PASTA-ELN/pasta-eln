@@ -6,14 +6,14 @@
 #  Filename: fixtures.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
-from typing import Union
+from typing import Any, Union
+from unittest.mock import MagicMock
 from xml.etree.ElementTree import Element
 
 from PySide6 import QtWidgets
 from PySide6.QtCore import QCoreApplication
 from PySide6.QtGui import QAction, QIcon
 from PySide6.QtWidgets import QApplication, QDialog
-from cloudant.document import Document
 from pytest import fixture
 from pytestqt.qtbot import QtBot
 
@@ -32,11 +32,10 @@ from pasta_eln.GUI.data_hierarchy.tableview_data_model import TableViewModel
 from pasta_eln.GUI.data_hierarchy.terminology_lookup_dialog import TerminologyLookupDialog
 from pasta_eln.GUI.data_hierarchy.terminology_lookup_dialog_base import Ui_TerminologyLookupDialogBase
 from pasta_eln.GUI.data_hierarchy.terminology_lookup_service import TerminologyLookupService
-from pasta_eln.database import Database
 from pasta_eln.dataverse.client import DataverseClient
 from pasta_eln.gui import MainWindow, mainGUI
 from pasta_eln.webclient.http_client import AsyncHttpClient
-from tests.common.test_utils import read_json, read_xml
+from testsAdvanced.common.test_utils import read_json, read_xml
 
 
 @fixture()
@@ -95,11 +94,6 @@ def dataverse_tree_mock(mocker) -> Element | None:
   mocked_element_tree.getroot.return_value = mocked_element_tree_root
   mocked_element_tree_root.findall.side_effect = test_tree.getroot().findall
   return mocked_element_tree
-
-
-@fixture()
-def dataverse_list_mock() -> dict | None:
-  return read_json('dataverse_list.json')
 
 
 @fixture()
@@ -200,7 +194,7 @@ def iri_delegate() -> IriColumnDelegate:
 
 
 @fixture()
-def data_hierarchy_doc_mock(mocker) -> Document:
+def data_hierarchy_doc_mock(mocker) -> MagicMock:
   mock_doc = mocker.patch('cloudant.document.Document')
   mock_doc_content = read_json('data_hierarchy_document.json')
   mocker.patch.object(mock_doc, "__len__", lambda x, y: len(mock_doc_content))
@@ -254,7 +248,7 @@ def iri_lookup_web_results_name_mock() -> dict:
 
 
 @fixture()
-def pasta_db_mock(mocker, data_hierarchy_doc_mock) -> Database:
+def pasta_db_mock(mocker, data_hierarchy_doc_mock) -> Any:
   mock_db = mocker.patch('pasta_eln.database.Database')
   mock_couch_db = mocker.patch('cloudant.client.CouchDB')
   dbs = {'-dataHierarchy-': data_hierarchy_doc_mock}
