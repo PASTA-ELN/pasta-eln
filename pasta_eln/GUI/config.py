@@ -25,10 +25,10 @@ class Configuration(QDialog):
     tabW = QTabWidget(self)
     mainL.addWidget(tabW)
 
-    tabProjectGroup = ProjectGroup(self.comm)                       # Project group. Restart app
+    tabProjectGroup = ProjectGroup(self.comm, self.closeWidget)     # Project group. Restart app
     tabW.addTab(tabProjectGroup, 'Project group')
 
-    tabGUI = ConfigurationGUI(self.comm)                            # Misc configuration: e.g. theming. Restart app
+    tabGUI = ConfigurationGUI(self.comm, self.closeWidget)          # Misc configuration: e.g. theming. Restart app
     tabW.addTab(tabGUI, 'Appearance')
 
     tabAuthors = ConfigurationAuthors(self.comm, self.closeWidget)  # Author(s)
@@ -37,10 +37,12 @@ class Configuration(QDialog):
     tabSetup = ConfigurationSetup(self.comm, self.closeWidget)      # Setup / Troubleshoot Pasta
     tabW.addTab(tabSetup, 'Setup')
 
+    # initialize when setup is called
     if startTab=='setup':
       tabW.setCurrentWidget(tabSetup)
       tabW.setTabEnabled(0, False)
       tabW.setTabEnabled(1, False)
+      tabW.setTabEnabled(2, False)
 
 
   def closeWidget(self, restart:bool=True) -> None:

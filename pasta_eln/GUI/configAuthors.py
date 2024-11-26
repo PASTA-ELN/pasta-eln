@@ -4,13 +4,13 @@ from enum import Enum
 from pathlib import Path
 from typing import Callable, Any
 import requests
-from PySide6.QtWidgets import QWidget, QFormLayout, QLabel, QLineEdit, QComboBox, QDialogButtonBox, QVBoxLayout  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QDialog, QLabel, QLineEdit, QComboBox, QDialogButtonBox, QVBoxLayout  # pylint: disable=no-name-in-module
 from ..guiStyle import TextButton, IconButton, widgetAndLayout, widgetAndLayoutForm
 from ..guiCommunicate import Communicate
 from ..fixedStringsJson import CONF_FILE_NAME
 
 
-class ConfigurationAuthors(QWidget):
+class ConfigurationAuthors(QDialog):
   """ Main class of config tab on authors
 
   FOR NOW: only one author (one self) can be added to align with GDPR
@@ -27,7 +27,6 @@ class ConfigurationAuthors(QWidget):
     self.comm = comm
     self.callbackFinished = callbackFinished
     mainL = QVBoxLayout(self)
-
 
     #GUI elements
     if hasattr(self.comm.backend, 'configuration'):
@@ -133,7 +132,7 @@ class ConfigurationAuthors(QWidget):
       self.comm.backend.configuration['authors'][0] = self.author
       with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as fConf:
         fConf.write(json.dumps(self.comm.backend.configuration,indent=2))
-      self.callbackFinished(False)
+    self.callbackFinished(False)
     return
 
 

@@ -2,7 +2,7 @@
 import json, shutil
 from enum import Enum
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 import qrcode, requests
 from PIL.ImageQt import ImageQt
 from PySide6.QtGui import QPixmap, QRegularExpressionValidator                 # pylint: disable=no-name-in-module
@@ -16,15 +16,17 @@ from ..fixedStringsJson import CONF_FILE_NAME
 
 class ProjectGroup(QDialog):
   """ Table Header dialog: change which columns are shown and in which order """
-  def __init__(self, comm:Communicate):
+  def __init__(self, comm:Communicate, callbackFinished:Callable[[bool],None]):
     """
     Initialization
 
     Args:
       backend (Backend): PASTA-ELN backend
+      callbackFinished (function): callback function to call upon end
     """
     super().__init__()
     self.comm    = comm
+    self.callbackFinished = callbackFinished
     self.configuration = self.comm.backend.configuration
     self.emptyConfig:dict[str,Any] = {'local':{},'remote':{}}
 
@@ -96,6 +98,7 @@ class ProjectGroup(QDialog):
     """
     if btn.text().endswith('Cancel'):
       self.reject()
+      self.callbackFinished(False)
     elif 'Save' in btn.text() and not self.selectGroup.isHidden():
       key      = self.selectGroup.currentText()
       config   = self.configuration['projectGroups'][key]

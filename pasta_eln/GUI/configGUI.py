@@ -1,24 +1,26 @@
 """ Main class of config tab on GUI elements """
 import json
+from typing import Callable
 from pathlib import Path
-from typing import Any
-from PySide6.QtWidgets import QWidget, QFormLayout, QVBoxLayout, QGroupBox, QDialogButtonBox  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QDialog, QFormLayout, QVBoxLayout, QGroupBox, QDialogButtonBox  # pylint: disable=no-name-in-module
 from ..miscTools import restart
 from ..guiStyle import TextButton, addRowList
 from ..guiCommunicate import Communicate
 from ..fixedStringsJson import configurationGUI
 
-class ConfigurationGUI(QWidget):
+class ConfigurationGUI(QDialog):
   """ Main class of config tab on GUI elements """
-  def __init__(self, comm:Communicate):
+  def __init__(self, comm:Communicate, callbackFinished:Callable[[bool],None]):
     """
     Initialization
 
     Args:
       comm (Communicate): communication
+      callbackFinished (function): callback function to call upon end
     """
     super().__init__()
     self.comm = comm
+    self.callbackFinished = callbackFinished
     #GUI elements
     if hasattr(self.comm.backend, 'configuration'):
       onDisk = self.comm.backend.configuration['GUI']
@@ -42,6 +44,7 @@ class ConfigurationGUI(QWidget):
     """
     if btn.text().endswith('Cancel'):
       self.reject()
+      self.callbackFinished(False)
     else:
       for items in configurationGUI.values():
         for k in items.keys():
