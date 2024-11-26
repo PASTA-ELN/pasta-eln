@@ -1,19 +1,17 @@
 """ Table Header dialog: change which columns are shown and in which order """
-import json
-import platform
+import json, shutil
 from enum import Enum
 from pathlib import Path
 from typing import Any
-
-import qrcode
+import qrcode, requests
 from PIL.ImageQt import ImageQt
-from PySide6.QtGui import QPixmap, QRegularExpressionValidator  # pylint: disable=no-name-in-module
-from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QFileDialog, QFormLayout, QGroupBox, QLabel, \
-  QLineEdit, QMessageBox, QVBoxLayout, QTextEdit  # pylint: disable=no-name-in-module
-# from cloudant.client import CouchDB
+from PySide6.QtGui import QPixmap, QRegularExpressionValidator                 # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QFileDialog, QLabel, \
+                              QLineEdit, QMessageBox, QVBoxLayout, QTextEdit   # pylint: disable=no-name-in-module
 from ..guiCommunicate import Communicate
-from ..guiStyle import IconButton, Label, TextButton, showMessage, widgetAndLayout, widgetAndLayoutGrid
+from ..guiStyle import IconButton, Label, TextButton, showMessage, widgetAndLayoutGrid
 from ..miscTools import restart
+from ..fixedStringsJson import CONF_FILE_NAME
 
 
 class ProjectGroup(QDialog):
@@ -28,6 +26,7 @@ class ProjectGroup(QDialog):
     super().__init__()
     self.comm    = comm
     self.configuration = self.comm.backend.configuration
+    self.emptyConfig:dict[str,Any] = {'local':{},'remote':{}}
 
     # GUI elements
     self.setWindowTitle('Define and use project groups')
@@ -36,44 +35,50 @@ class ProjectGroup(QDialog):
     Label('Project group editor', 'h1', mainL)
 
     # LEFT SIDE: form
-    formW, formL = widgetAndLayoutGrid(mainL, spacing='m')  #TODO TALK ABOUT WIDGET
+    _, self.formL = widgetAndLayoutGrid(mainL, spacing='m')
     self.selectGroup = QComboBox()
     self.selectGroup.addItems(self.configuration['projectGroups'].keys())
     self.selectGroup.currentTextChanged.connect(self.changeProjectGroup)
-    formL.addWidget(self.selectGroup, 0, 0)
-    newButton = TextButton('New',      self, [Command.NEW])
-    formL.addWidget(newButton, 0, 1)
-    delButton = TextButton('Delete',   self, [Command.DEL])
-    formL.addWidget(delButton, 0, 2)
+    self.formL.addWidget(self.selectGroup, 0, 0)
+    self.groupTextField = QLineEdit()
+    self.groupTextField.hide()
+    self.groupTextField.setValidator(QRegularExpressionValidator("\\w{3,}"))
+    self.formL.addWidget(self.selectGroup, 0, 1)
+
+    newButton = IconButton('fa5s.plus',    self, [Command.NEW], tooltip='New project group')
+    self.formL.addWidget(newButton, 0, 2)
+    delButton = IconButton('fa5s.trash',   self, [Command.DEL], tooltip='Delete project group')
+    self.formL.addWidget(delButton, 0, 3)
 
     self.directoryLabel = QLabel('label')
-    formL.addWidget(self.directoryLabel, 1, 0)
-    row1Button = TextButton('Change',   self, [Command.CHANGE_DIR])
-    formL.addWidget(row1Button, 1, 2)
+    self.formL.addWidget(self.directoryLabel, 1, 0)
+    row1Button = IconButton('fa5.edit',   self, [Command.CHANGE_DIR], tooltip='Edit data path')
+    self.formL.addWidget(row1Button, 1, 3)
 
     self.addOnLabel = QLabel('addon')
-    formL.addWidget(self.addOnLabel, 2, 0)
-    row2Button = TextButton('Change',   self, [Command.CHANGE_ADDON])
-    formL.addWidget(row2Button, 2, 2)
+    self.formL.addWidget(self.addOnLabel, 3, 0)
+    row2Button = IconButton('fa5.edit',   self, [Command.CHANGE_ADDON], tooltip='Edit add-on path')
+    self.formL.addWidget(row2Button, 2, 3)
 
     self.serverLabel = QLineEdit('server')
-    formL.addWidget(self.serverLabel, 3, 0)
-    row3Button = TextButton('Test',   self, [Command.TEST_SERVER])
-    formL.addWidget(row3Button, 3, 2)
+    self.formL.addWidget(self.serverLabel, 3, 0)
+    self.row3Button = IconButton('fa5s.check-square',   self, [Command.TEST_SERVER], tooltip='Check server')
+    self.formL.addWidget(self.row3Button, 3, 3)
 
     self.apiKeyLabel = QTextEdit()
     self.apiKeyLabel.setFixedHeight(48)
-    formL.addWidget(self.apiKeyLabel, 4, 0)
-    row4Button1 = TextButton('Help',   self, [Command.TEST_API_HELP])
-    formL.addWidget(row4Button1, 4, 1)
-    row4Button2 = TextButton('Test',   self, [Command.TEST_APIKEY])
-    formL.addWidget(row4Button2, 4, 2)
+    # self.apiKeyLabel.setValidator(QRegularExpressionValidator(r"\d+-[0-9a-f]{85}"))
+    self.formL.addWidget(self.apiKeyLabel, 4, 0)
+    row4Button1 = IconButton('fa5s.question-circle', self,      [Command.TEST_API_HELP], tooltip='Help on obtaining API key')
+    self.formL.addWidget(row4Button1, 4, 2)
+    self.row4Button2 = IconButton('fa5s.check-square',   self, [Command.TEST_APIKEY], tooltip='Check API-key')
+    self.formL.addWidget(self.row4Button2, 4, 3)
 
     # RIGHT SIDE: button and image
     qrButton = TextButton('Create QR code', self, [Command.CREATE_QRCODE])
-    formL.addWidget(qrButton, 0, 5)
+    self.formL.addWidget(qrButton, 0, 6)
     self.image = QLabel()
-    formL.addWidget(self.image, 1, 5, 4, 1)
+    self.formL.addWidget(self.image, 1, 6, 4, 1)
 
     #final button box
     buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)
@@ -91,8 +96,23 @@ class ProjectGroup(QDialog):
     """
     if btn.text().endswith('Cancel'):
       self.reject()
-    elif 'Save' in btn.text():
-      # TEST SERVER and API KEY -> save config
+    elif 'Save' in btn.text() and not self.selectGroup.isHidden():
+      key      = self.selectGroup.currentText()
+      config   = self.configuration['projectGroups'][key]
+      headers  = {'Content-type': 'application/json', 'Accept': 'text/plain', 'Authorization':config['remote']['key']}
+      url      = config['remote']['url']
+      response = requests.get(f'{url}info', headers=headers, verify=True, timeout=60)
+      if response.status_code!=200:
+        showMessage(self, 'Error', 'Error: server address or api key are incorrect.')
+        return
+      if not config['local']['path']:
+        showMessage(self, 'Error', 'Error: path to data directory is not set.')
+        return
+      if not config['addOnDir']:
+        showMessage(self, 'Error', 'Error: add-on directory not set.')
+        return
+      with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as confFile:
+        confFile.write(json.dumps(self.configuration, indent=2))
       restart()
     return
 
@@ -104,44 +124,102 @@ class ProjectGroup(QDialog):
     Args:
       command (list): list of commands
     """
+    if self.selectGroup.isHidden():  #first button press after entering a new group name
+      newKey = self.groupTextField.text()
+      self.selectGroup.addItem(newKey)
+      self.selectGroup.setCurrentText(newKey)
+      self.configuration['projectGroups'][newKey] = self.emptyConfig
+      self.formL.addWidget(self.selectGroup, 0,0)
+      self.groupTextField.setHidden(True)
+      self.selectGroup.setHidden(False)
+    key = self.selectGroup.currentText()
+    if not key:
+      return
+    config = self.configuration['projectGroups'][key]
+
+    #cases
     if command[0] is Command.CHANGE_DIR:
       answer = QFileDialog.getExistingDirectory(self, "Specify new data directory")
+      if not answer:
+        return
       if [i for i in Path(answer).iterdir() if i.name=='pastaELN.db']:
         button = QMessageBox.question(self, "Question", "Do you want to use existing PASTA ELN data?")
         if button == QMessageBox.StandardButton.No:
           return
-      elif len([i for i in Path(answer).iterdir()]) > 0:
+      elif list(Path(answer).iterdir()):
         button = QMessageBox.question(self, "Question", "Do you want to use folder, which is not empty? This is not recommended.")
         if button == QMessageBox.StandardButton.No:
           return
-      key = self.selectGroup.currentText()
-      config = self.configuration['projectGroups'][key]
       config['local']['path'] = answer
       self.directoryLabel.setText('Data directory: ' + answer)
-    if command[0] is Command.CHANGE_ADDON:
-      # frag nach neuem Verzeichnis: wie oben
-      # egal ob leer
-      # frag ob alte add-ons reincopiert werden sollen
-      pass
-    if command[0] is Command.TEST_SERVER:
-      # teste Verbindung
-      pass
-    if command[0] is Command.TEST_APIKEY:
-      # teste Verbindung
-      pass
-    if command[0] is Command.CREATE_QRCODE:
-      text = ''
+
+    elif command[0] is Command.CHANGE_ADDON:
+      answer = QFileDialog.getExistingDirectory(self, "Specify new add-on directory")
+      if not answer:
+        return
+      button = QMessageBox.question(self, "Question", "Do you want to copy the add-ons from the old directory (recommended)?")
+      if button == QMessageBox.StandardButton.Yes:
+        print(config['addOnDir'] ,answer)
+        shutil.copytree(config['addOnDir'], answer, dirs_exist_ok=True)
+      config['addOnDir'] = answer
+      self.addOnLabel.setText('Add on directory: ' + config['addOnDir'])
+
+    elif command[0] is Command.TEST_SERVER:
+      headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+      url = config['remote']['url']
+      if not url.endswith('/'):
+        url += '/'
+      if not url.endswith('api/v2/'):
+        url += 'api/v2/'
+      if not url.startswith('https'):
+        url = 'https://' + url
+      config['remote']['url'] = url
+      try:
+        requests.get(f'{url}info', headers=headers, verify=True, timeout=60)
+        self.row3Button.setStyleSheet('color: #00FF00')
+      except Exception:
+        showMessage(self, 'Error', 'Wrong server address')
+        self.row3Button.setStyleSheet('color: #FF0000')
+
+    elif command[0] is Command.TEST_API_HELP:
+      showMessage(self, 'Help', '### How to get an api key to access the server:\nOn the elabFTW server:\n1. go to the USER SYMBOL\n2. User-(Control) panel\n3. API KEYS\n\n'\
+                  f'OR go to {config["remote"]["url"][:-7]}ucp.php?tab=4\n\n'\
+                  '1. Specify a name: e.g. "pasta_eln"\n2. change the permissions to "Read/Write"\n3. click "Generate new API key"\n\nCopy-paste that key into the text box on the right-hand-side')
+
+    elif command[0] is Command.TEST_APIKEY:
+      headers = {'Content-type': 'application/json', 'Accept': 'text/plain', 'Authorization':config['remote']['key']}
+      url = config['remote']['url']
+      response = requests.get(f'{url}info', headers=headers, verify=True, timeout=60)
+      if response.status_code==200:
+        elabVersion = int(json.loads(response.content.decode('utf-8')).get('elabftw_version','0.0.0').split('.')[0])
+        if elabVersion<5:
+          showMessage(self, 'Error', 'Old elabFTW server installation')
+        self.row4Button2.setStyleSheet('color: #00FF00')
+      else:
+        showMessage(self, 'Error', 'Wrong API address')
+        self.row4Button2.setStyleSheet('color: #FF0000')
+
+    elif command[0] is Command.CREATE_QRCODE:
+      text = json.dumps(config['remote'])
       img = qrcode.make(text, error_correction=qrcode.constants.ERROR_CORRECT_M)
-      pixmap = QPixmap.fromImage(ImageQt(img).scaledToWidth(200))
+      pixmap = QPixmap.fromImage(ImageQt(img).scaledToWidth(350))
       self.image.setPixmap(pixmap)
-    if command[0] is Command.NEW:
-      # new project group name and empty all other fields
-      pass
-    if command[0] is Command.DEL:
-      # lösche aus config
-      # nimm erste aus der Liste als aktuell
-      pass
-    print(json.dumps(self.configuration['projectGroups'], indent=2))
+
+    elif command[0] is Command.NEW:
+      self.selectGroup.hide()
+      self.directoryLabel.setText('Data directory: ')
+      self.addOnLabel.setText('Add on directory: ')
+      self.serverLabel.setText('')
+      self.apiKeyLabel.setText('')
+      self.image.setPixmap(QPixmap())
+
+    elif command[0] is Command.DEL:
+      del self.configuration['projectGroups'][key]
+      self.selectGroup.removeItem(self.selectGroup.currentIndex())
+      self.selectGroup.setCurrentIndex(0)
+
+    else:
+      print("Got some button, without definition", command)
     return
 
 
@@ -152,11 +230,11 @@ class ProjectGroup(QDialog):
     Args:
       item (str): name of project group
     """
-    config = self.configuration['projectGroups'][item]
-    self.directoryLabel.setText('Data directory: ' + config['local']['path'])
-    self.addOnLabel.setText('Add on directory: ' + config['addOnDir'])
-    self.serverLabel.setText(config['remote']['url'])
-    self.apiKeyLabel.setText(config['remote']['key'])
+    config = self.configuration['projectGroups'].get(item, self.emptyConfig)
+    self.directoryLabel.setText('Data directory: ' + config['local'].get('path',''))
+    self.addOnLabel.setText('Add on directory: ' + config.get('addOnDir',''))
+    self.serverLabel.setText(config['remote'].get('url', ''))
+    self.apiKeyLabel.setText(config['remote'].get('key', ''))
     return
 
 
