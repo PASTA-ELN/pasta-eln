@@ -4,9 +4,10 @@ from enum import Enum
 from pathlib import Path
 from typing import Callable, Any
 import requests
-from PySide6.QtWidgets import QWidget, QFormLayout, QLabel, QLineEdit, QComboBox  # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QWidget, QFormLayout, QLabel, QLineEdit, QComboBox, QDialogButtonBox  # pylint: disable=no-name-in-module
 from ..guiStyle import TextButton, IconButton, widgetAndLayout
 from ..guiCommunicate import Communicate
+from ..fixedStringsJson import CONF_FILE_NAME
 
 
 class ConfigurationAuthors(QWidget):
@@ -41,16 +42,19 @@ class ConfigurationAuthors(QWidget):
       self.orgaCB.addItems([i['organization'] for i in self.author['organizations']])
       orgaL.addStretch(1)
       orgaL.addWidget(self.orgaCB, stretch=2)
-      IconButton('fa5s.plus-circle', self, [Command.ADD], orgaL, 'Add organization')
-      IconButton('fa5s.minus-circle', self, [Command.DELETE], orgaL, 'Delete organization')
+      IconButton('fa5s.plus',  self, [Command.ADD],    orgaL, 'Add organization')
+      IconButton('fa5s.trash', self, [Command.DELETE], orgaL, 'Delete organization')
       self.tabAuthorL.addRow(orgaW)
 
       self.userRorid = self.addRowText('rorid','RORID')
       self.userOrg   = self.addRowText('organization','Organization')
       buttonBarW, buttonBarL = widgetAndLayout('H', None, top='l')
       buttonBarL.addStretch(1)
-      TextButton('Save changes', self, [Command.SAVE], buttonBarL)
       self.tabAuthorL.addRow(buttonBarW)
+      #final button box
+      buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)
+      buttonBox.clicked.connect(self.closeDialog)
+      self.tabAuthorL.addWidget(buttonBox)
       self.orgaCB_previousIndex = 0
       self.lockSelfAuthor = False
       self.orgaCB.currentIndexChanged.connect(lambda: self.execute([Command.CHANGE])) #connect to slot only after all painting is done
@@ -104,11 +108,16 @@ class ConfigurationAuthors(QWidget):
     return
 
 
-  def execute(self, command:list[Any]) -> None:
+  def closeDialog(self, btn:TextButton) -> None:
     """
-    Save changes to hard-disk
+    cancel or save entered data
+
+    Args:
+      btn (QButton): save or cancel button
     """
-    if command[0] is Command.SAVE:
+    if btn.text().endswith('Cancel'):
+      self.reject()
+    else:
       self.author['first'] = self.userFirst.text().strip()
       self.author['last']  = self.userLast.text().strip()
       self.author['title'] = self.userTitle.text().strip()
@@ -119,10 +128,17 @@ class ConfigurationAuthors(QWidget):
         self.author['organizations'][j]['organization'] = self.userOrg.text().strip()
         self.author['organizations'][j]['rorid']        = self.userRorid.text().strip()
       self.comm.backend.configuration['authors'][0] = self.author
-      with open(Path.home()/'.pastaELN.json', 'w', encoding='utf-8') as fConf:
+      with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as fConf:
         fConf.write(json.dumps(self.comm.backend.configuration,indent=2))
       self.callbackFinished(False)
-    elif command[0] is Command.ADD:
+    return
+
+
+  def execute(self, command:list[Any]) -> None:
+    """
+    Save changes to hard-disk
+    """
+    if command[0] is Command.ADD:
       self.orgaCB.addItem('- new -')
       if len(self.author['organizations'])<self.orgaCB.count():
         self.author['organizations'].append({'rorid':'', 'organization':''})
@@ -155,7 +171,6 @@ class ConfigurationAuthors(QWidget):
 
 class Command(Enum):
   """ Commands used in this file """
-  SAVE   = 1
-  ADD    = 2
-  DELETE = 3
-  CHANGE = 4
+  ADD    = 1
+  DELETE = 2
+  CHANGE = 3

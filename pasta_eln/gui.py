@@ -27,7 +27,6 @@ from .GUI.body import Body
 from .GUI.config import Configuration
 # from .GUI.data_hierarchy.data_hierarchy_editor_dialog import DataHierarchyEditorDialog
 from .GUI.form import Form
-from .GUI.projectGroup import ProjectGroup
 from .GUI.sidebar import Sidebar
 from .GUI.palette import Palette
 os.environ['QT_API'] = 'pyside6'
@@ -81,27 +80,28 @@ class MainWindow(QMainWindow):
       Action('&Tags',                        self, [Command.VIEW, '_tags_'], viewMenu, shortcut='Ctrl+T')
       Action('&Unidentified',                self, [Command.VIEW, '-'],      viewMenu, shortcut='Ctrl+U')
 
-    systemMenu = menu.addMenu("&System")
-    Action('&Project groups',                self, [Command.PROJECT_GROUP],   systemMenu)
+    systemMenu = menu.addMenu("Project &group")
     changeProjectGroups = systemMenu.addMenu("&Change project group")
     if hasattr(self.backend, 'configuration'):                            # not case in fresh install
       for name in self.backend.configuration['projectGroups'].keys():
         Action(name,                         self, [Command.CHANGE_PG, name], changeProjectGroups)
     Action('&Synchronize',                   self, [Command.SYNC],            systemMenu, shortcut='F5')
     Action('&Data hierarchy editor',         self, [Command.DATAHIERARCHY],        systemMenu, shortcut='F8')
-    Action('&Dataverse Configuration',         self, [Command.DATAVERSE_CONFIG],        systemMenu, shortcut='F10')
-    Action('&Upload to Dataverse',         self, [Command.DATAVERSE_MAIN],        systemMenu, shortcut='F11')
+    Action('&Dataverse Configuration',       self, [Command.DATAVERSE_CONFIG],        systemMenu, shortcut='F10')
+    Action('&Upload to Dataverse',           self, [Command.DATAVERSE_MAIN],        systemMenu, shortcut='F11')
     systemMenu.addSeparator()
     Action('&Test extraction from a file',   self, [Command.TEST1],           systemMenu)
     Action('Test &selected item extraction', self, [Command.TEST2],           systemMenu, shortcut='F2')
     Action('Update &Add-on list',            self, [Command.UPDATE],          systemMenu)
     systemMenu.addSeparator()
-    Action('&Configuration',                 self, [Command.CONFIG],          systemMenu, shortcut='Ctrl+0')
+    Action('&Verify database',               self, [Command.VERIFY_DB],       systemMenu, shortcut='Ctrl+?')
 
     helpMenu = menu.addMenu("&Help")
     Action('&Website',                       self, [Command.WEBSITE],         helpMenu)
-    Action('&Verify database',               self, [Command.VERIFY_DB],       helpMenu, shortcut='Ctrl+?')
     Action('Shortcuts',                      self, [Command.SHORTCUTS],       helpMenu)
+    systemMenu.addSeparator()
+    Action('&Configuration',                 self, [Command.CONFIG],          helpMenu, shortcut='Ctrl+0')
+
     # shortcuts for advanced usage (user should not need)
     QShortcut('F9', self, lambda: self.execute([Command.RESTART]))
 
@@ -171,9 +171,6 @@ class MainWindow(QMainWindow):
     elif command[0] is Command.VIEW:
       self.comm.changeTable.emit(command[1], '')
     # system menu
-    elif command[0] is Command.PROJECT_GROUP:
-      dialogPG = ProjectGroup(self.comm)
-      dialogPG.exec()
     elif command[0] is Command.CHANGE_PG:
       self.backend.configuration['defaultProjectGroup'] = command[1]
       with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as fConf:
@@ -269,7 +266,6 @@ class Command(Enum):
   IMPORT    = 2
   EXIT      = 3
   VIEW      = 4
-  PROJECT_GROUP = 5
   CHANGE_PG = 6
   SYNC      = 7
   DATAHIERARCHY = 8

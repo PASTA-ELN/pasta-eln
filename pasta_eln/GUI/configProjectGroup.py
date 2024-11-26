@@ -227,7 +227,6 @@ class ProjectGroup(QDialog):
 
     else:
       print("Got some button, without definition", command)
-    print(json.dumps(self.configuration['projectGroups'], indent=2))
     return
 
 
