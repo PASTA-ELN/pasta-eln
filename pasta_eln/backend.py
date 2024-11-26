@@ -25,7 +25,6 @@ class Backend(CLI_Mixin):
     """
     #initialize basic values
     self.hierStack:list[str] = []
-    self.alive               = True
     self.cwd:Optional[Path]  = Path('.')
     self.initialize(defaultProjectGroup)
 
@@ -67,7 +66,6 @@ class Backend(CLI_Mixin):
     self.db = SqlLiteDB(basePath=self.basePath)
     # internal hierarchy structure
     self.hierStack = []
-    self.alive     = True
     return
 
 
@@ -76,7 +74,6 @@ class Backend(CLI_Mixin):
     Shutting down things
     """
     self.db.exit()
-    self.alive     = False
     return
 
 

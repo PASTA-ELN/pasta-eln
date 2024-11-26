@@ -28,20 +28,17 @@ class Project(QWidget):
     self.actHideDetail                       = QAction()
     self.actionFoldAll                       = QAction()
     self.projID = ''
-    self.taskID = ''
     self.docProj:dict[str,Any]= {}
     self.showAll= True
     self.showDetailsAll = False
     self.btnAddSubfolder:Optional[TextButton] = None
     self.lineSep = 20
-    self.countLines = 0
 
 
   def projHeader(self) -> None:
     """
     Initialize / Create header of page
     """
-    self.countLines = 0
     self.docProj = self.comm.backend.db.getDoc(self.projID)
     dataHierarchyNode = self.comm.backend.db.dataHierarchy('x0', 'meta')
     # remove if still there
@@ -134,7 +131,6 @@ class Project(QWidget):
     logging.debug('ProjectView elements at 1: %i',self.mainL.count())
     if projID!='':
       self.projID         = projID
-      self.taskID         = docID
       self.comm.projectID = projID
     selectedIndex = None
     self.model = QStandardItemModel()

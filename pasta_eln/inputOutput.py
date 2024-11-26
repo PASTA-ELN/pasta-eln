@@ -67,8 +67,6 @@ json2pasta:dict[str,Any] = {v:k for k,v in pasta2json.items() if v is not None}
 # }
 
 
-renameELN = {'https://kadi.iam.kit.edu':'Kadi4Mat'}
-
 METADATA_FILE = 'ro-crate-metadata.json'
 
 

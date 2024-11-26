@@ -25,7 +25,7 @@ def use(filePath, style={'main':''}, saveFileName=None):
     dict: containing image, metaVendor, metaUser, style
   """
   # this part identifies how the csv-file is formatted: whether it uses , or ; to separate; you can skip this part when learning extractors
-  producer = 'comma separated'
+  # producer = 'comma separated'
   delimiter = ','
   lines = []
   skipRows = 0
@@ -39,11 +39,11 @@ def use(filePath, style={'main':''}, saveFileName=None):
     # files with some form of header: try 3 criteria
     if lines[0].count(';')>lines[0].count(' ') and lines[0].count(';')==lines[1].count(';') and \
                                                    lines[0].count(';')==lines[2].count(';'): #Separate by ; not ' '
-      producer = 'semicolon separated'
+      # producer = 'semicolon separated'
       delimiter = ';'
     if lines[0].count(',')>lines[0].count(' ') and lines[0].count(',')==lines[1].count(',') and \
                                                    lines[0].count(',')==lines[2].count(','): #Separate by , not ' '
-      producer = 'comma separated'
+      # producer = 'comma separated'
       delimiter = ','
 
   # THIS IS THE IMPORTANT PART OF THE EXTRACTOR
