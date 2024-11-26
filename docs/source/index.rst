@@ -29,12 +29,14 @@ Overview
    faqs
    extractors
    data_hierarchy_configuration
+   dataverse_integration
    motivation
 
 
 Main contributors
 =================
 * Steffen Brinckmann: principal investigator, focuses on python backend
+* Jithu Murugan: developer, focuses on front-end and back-end
 * Thomas Düren: graphical user interfaces
 * Raphael Röske: graphical user interfaces
 * Velislava Yonkova: first extensive user
