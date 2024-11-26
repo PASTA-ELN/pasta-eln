@@ -56,12 +56,8 @@ Upload Usage
 
 Inorder to open the dataverse upload tool, follow the below given steps:
 
-Run the PASTA Application
-
-Go to System | Upload to dataverse or press F11
-
 - Run the PASTA Application
-- Go to **Project group | Data Hierarchy Editor** or press **F8**
+- Go to **Project group | Upload to dataverse** or press **F11**
 - An upload dialog will be opened with the loaded PASTA projects
 
 |DataverseUploadUI|
