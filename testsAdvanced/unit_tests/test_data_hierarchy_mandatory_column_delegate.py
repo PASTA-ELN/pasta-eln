@@ -11,8 +11,8 @@ import pytest
 from PySide6.QtCore import QEvent, QRect, Qt
 from PySide6.QtWidgets import QApplication, QRadioButton, QStyle, QStyleOptionButton, QStyledItemDelegate
 
-from tests.common.fixtures import mandatory_delegate
-from tests.common.test_delegate_funcs_common import delegate_editor_method_common
+from testsAdvanced.common.fixtures import mandatory_delegate
+from testsAdvanced.common.test_delegate_funcs_common import delegate_editor_method_common
 
 
 class TestDataHierarchyMandatoryColumnDelegate(object):

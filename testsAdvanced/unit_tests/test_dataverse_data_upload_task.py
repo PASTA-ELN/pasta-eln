@@ -49,18 +49,16 @@ def setup_task(mocker, mock_db_api, mock_dataverse_client, mock_progress_thread,
   project_name = "Test Project"
   project_id = "Test ID"
   mocker.patch('pasta_eln.dataverse.data_upload_task.logging.getLogger')
-  mock_db_api.return_value.create_model_document.return_value = UploadModel(_id="1234567890abcdef1234567890abcdef",
-                                                                            _rev="1-1234567890abcdef1234567890abcdef",
-                                                                            data_type="Test Data Type",
-                                                                            project_name="project_name",
-                                                                            project_doc_id="1234567890abcdef1234567890abcdef",
-                                                                            status=UploadStatusValues.Queued.name,
-                                                                            finished_date_time=datetime.datetime.now().strftime(
-                                                                              "%Y-%m-%d %H:%M:%S"),
-                                                                            log="",
-                                                                            dataverse_url="dataverse_url")
-  mock_db_api.return_value.get_config_model.return_value = ConfigModel(_id="1234567890abcdef1234567890abcdef",
-                                                                       _rev="1-1234567890abcdef1234567890abcdef",
+  mock_db_api.return_value.create_model.return_value = UploadModel(_id=1234567890,
+                                                                   data_type="Test Data Type",
+                                                                   project_name="project_name",
+                                                                   project_doc_id="1234567890abcdef1234567890abcdef",
+                                                                   status=UploadStatusValues.Queued.name,
+                                                                   finished_date_time=datetime.datetime.now().strftime(
+                                                                     "%Y-%m-%d %H:%M:%S"),
+                                                                   log="",
+                                                                   dataverse_url="dataverse_url")
+  mock_db_api.return_value.get_config_model.return_value = ConfigModel(_id=1234567890,
                                                                        project_upload_items={"Test Item": "Test Value"},
                                                                        parallel_uploads_count=2,
                                                                        dataverse_login_info={
@@ -161,8 +159,8 @@ class TestDataverseDataUploadTask:
       status=UploadStatusValues.Queued.name,
       log=f"Upload initiated for project {setup_task.project_name} at {datetime_mock.now.return_value.isoformat()}\n",
       project_doc_id=setup_task.project_doc_id)
-    mock_db_api.return_value.create_model_document.assert_called_once_with(mock_upload_model.return_value)
-    setup_task.upload_model = mock_db_api.return_value.create_model_document.return_value
+    mock_db_api.return_value.create_model.assert_called_once_with(mock_upload_model.return_value)
+    setup_task.upload_model = mock_db_api.return_value.create_model.return_value
     setup_task.logger.info.assert_called_with("Upload model created: %s", setup_task.upload_model)
     mock_db_api.return_value.get_config_model.assert_called_once()
     assert setup_task.dataverse_server_url == "dataverse_url", "Dataverse server URL should be set"
@@ -193,8 +191,8 @@ class TestDataverseDataUploadTask:
       status=UploadStatusValues.Queued.name,
       log=f"Upload initiated for project {setup_task.project_name} at {datetime_mock.now.return_value.isoformat()}\n",
       project_doc_id=setup_task.project_doc_id)
-    mock_db_api.return_value.create_model_document.assert_called_once_with(mock_upload_model.return_value)
-    setup_task.upload_model = mock_db_api.return_value.create_model_document.return_value
+    mock_db_api.return_value.create_model.assert_called_once_with(mock_upload_model.return_value)
+    setup_task.upload_model = mock_db_api.return_value.create_model.return_value
     setup_task.logger.info.assert_called_with("Upload model created: %s", setup_task.upload_model)
     mock_db_api.return_value.get_config_model.assert_called_once()
 
@@ -228,7 +226,7 @@ class TestDataverseDataUploadTask:
     mock_super_start_task.assert_called_once()
     mock_super_start_task.return_value.start_task.assert_called_once_with()
     setup_task.status_changed.emit.assert_any_call(UploadStatusValues.Uploading.name)
-    setup_task.upload_model_created.emit.assert_called_with("1234567890abcdef1234567890abcdef")
+    setup_task.upload_model_created.emit.assert_called_with('1234567890')
     setup_task.progress_thread.start.assert_called_once()
     setup_task.create_dataset_for_pasta_project.assert_called_once()
     setup_task.check_if_dataset_is_unlocked.assert_called_once_with(persistent_id)
@@ -322,7 +320,7 @@ class TestDataverseDataUploadTask:
 
     # Assert
     setup_task.status_changed.emit.assert_called_with(UploadStatusValues.Uploading.name)
-    setup_task.upload_model_created.emit.assert_called_with("1234567890abcdef1234567890abcdef")
+    setup_task.upload_model_created.emit.assert_called_with("1234567890")
     setup_task.progress_thread.start.assert_called_once()
     if create_dataset_return is None or not check_dataset_unlocked_return or upload_file_return is None:
       setup_task.finalize_upload_task.assert_called_with(UploadStatusValues.Error.name)
@@ -468,7 +466,7 @@ class TestDataverseDataUploadTask:
 
     # Assert
     assert mock_upload_model.log == expected_log, f"Test Failed: {test_id}"
-    setup_task.db_api.update_model_document.assert_called_once_with(
+    setup_task.db_api.update_model.assert_called_once_with(
       mock_upload_model), f"DB update not called: {test_id}"
 
   @pytest.mark.parametrize("already_cancelled, expected_log_contains, expected_status", [
@@ -518,7 +516,7 @@ class TestDataverseDataUploadTask:
     setup_task.update_changed_status(status)
 
     # Assert
-    setup_task.db_api.update_model_document.assert_called_once()
+    setup_task.db_api.update_model.assert_called_once()
     setup_task.status_changed.emit.assert_called_with(expected_status)
     assert setup_task.upload_model.status == expected_status, f"Expected status to be '{expected_status}' but got '{setup_task.upload_model.status}'"
 

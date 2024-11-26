@@ -21,7 +21,6 @@ class ConfigModel(BaseModel):
 
   Args:
       _id (str | None): The ID of the object. Defaults to None.
-      _rev (str | None): The revision of the object. Defaults to None.
       project_upload_items (dict[str, Any] | None): A dictionary containing upload items of the project. Defaults to None.
       parallel_uploads_count (int): The number of parallel uploads configured. Defaults to None.
       dataverse_login_info (dict[str, Any]): A dictionary containing Dataverse login information. Defaults to None.
@@ -31,16 +30,15 @@ class ConfigModel(BaseModel):
       IncorrectParameterError: If any of the arguments have an invalid type.
 
   Attributes:
-      project_upload_items (dict[str, Any] | None): The upload items of the PASTA project.
-      parallel_uploads_count (int | None): The number of parallel uploads configured.
-      dataverse_login_info (dict[str, Any] | None): The Dataverse login information.
-      metadata (dict[str, Any] | None): The metadata for the dataset in Dataverse.
+      _project_upload_items (dict[str, Any] | None): The upload items of the PASTA project.
+      _parallel_uploads_count (int | None): The number of parallel uploads configured.
+      _dataverse_login_info (dict[str, Any] | None): The Dataverse login information.
+      _metadata (dict[str, Any] | None): The metadata for the dataset in Dataverse.
 
   """
 
   def __init__(self,
-               _id: str | None = None,
-               _rev: str | None = None,
+               _id: int | None = None,
                project_upload_items: dict[str, Any] | None = None,
                parallel_uploads_count: int | None = None,
                dataverse_login_info: dict[str, Any] | None = None,
@@ -50,7 +48,6 @@ class ConfigModel(BaseModel):
 
     Args:
         _id (str | None): The ID of the object. Defaults to None.
-        _rev (str | None): The revision of the object. Defaults to None.
         project_upload_items (dict[str, Any] | None): A dictionary containing upload items of the project. Defaults to None.
         parallel_uploads_count (int): The number of parallel uploads configured. Defaults to None.
         dataverse_login_info (dict[str, Any]): A dictionary containing Dataverse login information. Defaults to None.
@@ -60,7 +57,7 @@ class ConfigModel(BaseModel):
         IncorrectParameterError: If any of the parameters have an invalid type.
 
     """
-    super().__init__(_id, _rev)
+    super().__init__(_id)
     if isinstance(project_upload_items, dict | None):
       self._project_upload_items: dict[str, Any] | None = project_upload_items
     else:

@@ -78,7 +78,7 @@ def mock_edit_metadata_dialog(mock_dependencies):
   with open(join(current_path, "..//..//pasta_eln//dataverse", "dataset-create-new-all-default-fields.json"),
             encoding="utf-8") as config_file:
     file_data = config_file.read()
-    config = ConfigModel(_id="test_id", _rev="test_rev", metadata=json.loads(file_data))
+    config = ConfigModel(_id=123456789, metadata=json.loads(file_data))
   mock_dependencies['db_api'].get_model.return_value = config
   return EditMetadataDialog()
 
@@ -109,7 +109,7 @@ class TestDataverseEditMetadataDialog:
     mock_get_metadata_types.assert_called_once()
     mock_copy.deepcopy.assert_called_once_with(mock_dependencies['db_api'].get_model.return_value.metadata)
     dialog.instance.setWindowModality.assert_called_once_with(QtCore.Qt.ApplicationModal)
-    mock_dependencies['db_api'].get_model.assert_called_once_with(dialog.db_api.config_doc_id, ConfigModel)
+    mock_dependencies['db_api'].get_model.assert_called_once_with(dialog.db_api.config_model_id, ConfigModel)
     dialog.typesComboBox.currentTextChanged.connect.assert_called_once_with(dialog.change_metadata_type)
     dialog.metadataBlockComboBox.currentTextChanged.connect.assert_called_once_with(dialog.change_metadata_block)
     dialog.minimalFullComboBox.currentTextChanged[str].connect.assert_called_once_with(dialog.toggle_minimal_full)

@@ -13,7 +13,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction
 
 from pasta_eln.GUI.data_hierarchy.lookup_iri_action import LookupIriAction
-from tests.common.fixtures import lookup_iri_action
+from testsAdvanced.common.fixtures import lookup_iri_action
 
 
 class TestDataHierarchyLookupIriAction(object):

@@ -1,15 +1,27 @@
 """ Python Backend: all operations with the filesystem are here """
-import importlib, json, logging, os, sys, tempfile, traceback
+import importlib
+import json
+import logging
+import os
+import sys
+import tempfile
+import traceback
 from datetime import datetime, timezone
+from os.path import exists, join
 from pathlib import Path
 from typing import Any, Optional, Union
 from urllib import request
-from .sqlite import SqlLiteDB
-from .fixedStringsJson import configurationGUI, defaultConfiguration, CONF_FILE_NAME
+
+from PySide6 import QtCore
+from PySide6.QtCore import QFileSystemWatcher
+
+from .fixedStringsJson import CONF_FILE_NAME, configurationGUI, defaultConfiguration
 from .handleDictionaries import diffDicts, fillDocBeforeCreate
 from .miscTools import generic_hash
-from .stringChanges import camelCase, createDirName, outputString
 from .mixin_cli import CLI_Mixin
+from .sqlite import SqlLiteDB
+from .stringChanges import camelCase, createDirName, outputString
+
 
 class Backend(CLI_Mixin):
   """
@@ -24,10 +36,46 @@ class Backend(CLI_Mixin):
         defaultProjectGroup (string): name of configuration / project-group used; if not given, use the one defined by 'defaultProjectGroup' in config file
     """
     #initialize basic values
+    self.configFileName = Path.home() / CONF_FILE_NAME
+    self.configuration: dict[str, Any] = {}
     self.hierStack:list[str] = []
     self.cwd:Optional[Path]  = Path('.')
     self.initialize(defaultProjectGroup)
+    self.fsWatcher = QFileSystemWatcher()
+    self.fsWatcher.addPath(join(Path.home(), CONF_FILE_NAME))
+    if exists(self.configFileName):
+      self.fsWatcher.fileChanged.connect(self.configFileChanged)
 
+  def readPastaConfig(self) -> None:
+    """
+    Read the configuration file and update the internal configuration.
+
+    This method logs the action of reading the configuration file and attempts to load its contents into the internal configuration dictionary.
+    If the configuration file does not exist, it raises a ConfigError to indicate an issue with the installation.
+
+    Raises:
+        ConfigError: If the configuration file does not exist.
+    """
+    if not exists(self.configFileName):
+      raise TypeError("Config file not found, Corrupt installation!")
+    with open(self.configFileName, 'r', encoding='utf-8') as confFile:
+      self.configuration = json.load(confFile)
+
+  @QtCore.Slot()
+  def configFileChanged(self, configFilePath: str) -> None:
+    """
+    Handle changes to the configuration file.
+
+    This method is triggered when the configuration file changes. It reads the updated configuration and refreshes the file system watcher to ensure it continues to monitor the correct file path.
+
+    Args:
+        configFilePath (str): The path to the configuration file that has changed.
+    """
+
+    self.readPastaConfig()
+    if exists(configFilePath):
+      self.fsWatcher.removePath(configFilePath)
+      self.fsWatcher.addPath(configFilePath)
 
   def initialize(self, defaultProjectGroup:str="") -> None:
     """
@@ -36,10 +84,9 @@ class Backend(CLI_Mixin):
     Args:
         defaultProjectGroup (string): name of configuration / project-group used; if not given, use the one defined by 'defaultProjectGroup' in config file
     """
-    configFileName = Path.home()/CONF_FILE_NAME
     self.configuration = defaultConfiguration
-    if configFileName.is_file():
-      with open(configFileName,'r', encoding='utf-8') as confFile:
+    if self.configFileName.is_file():
+      with open(self.configFileName,'r', encoding='utf-8') as confFile:
         self.configuration |= json.load(confFile)
     for _, items in configurationGUI.items():
       for k,v in items.items():

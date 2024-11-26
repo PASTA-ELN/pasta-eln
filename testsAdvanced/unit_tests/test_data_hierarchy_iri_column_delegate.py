@@ -14,7 +14,7 @@ from PySide6.QtWidgets import QLineEdit, QStyledItemDelegate
 
 from pasta_eln.GUI.data_hierarchy.iri_column_delegate import IriColumnDelegate
 from pasta_eln.GUI.data_hierarchy.lookup_iri_action import LookupIriAction
-from tests.common.fixtures import iri_delegate
+from testsAdvanced.common.fixtures import iri_delegate
 
 
 class TestDataHierarchyIriColumnDelegate(object):

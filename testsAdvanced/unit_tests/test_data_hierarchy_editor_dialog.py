@@ -27,8 +27,8 @@ from pasta_eln.GUI.data_hierarchy.key_not_found_exception import \
 from pasta_eln.GUI.data_hierarchy.mandatory_column_delegate import MandatoryColumnDelegate
 from pasta_eln.GUI.data_hierarchy.reorder_column_delegate import ReorderColumnDelegate
 from pasta_eln.GUI.data_hierarchy.utility_functions import get_types_for_display
-from pasta_eln.database import Database
-from tests.common.fixtures import configuration_extended
+# from pasta_eln.database import Database
+from testsAdvanced.common.fixtures import configuration_extended
 
 
 class TestDataHierarchyEditorDialog(object):

@@ -16,22 +16,21 @@ class TestDataverseConfigModel:
 
   # Success path tests with various realistic test values
   @pytest.mark.parametrize(
-    "test_id, _id, _rev, project_upload_items, parallel_uploads_count, dataverse_login_info, metadata", [
-      ("Success1", "123", "rev1", {"item1": "value1"}, 5, {"user": "test", "password": "test"},
+    "test_id, _id, project_upload_items, parallel_uploads_count, dataverse_login_info, metadata", [
+      ("Success1", "123", {"item1": "value1"}, 5, {"user": "test", "password": "test"},
        {"title": "Test Dataset"}),
-      ("Success2", None, None, None, None, None, None),
-      ("Success3", "456", "rev2", {}, 0, {}, {}),
+      ("Success2", None, None, None, None, None),
+      ("Success3", "456", {}, 0, {}, {}),
     ])
-  def test_config_model_init_happy_path(self, test_id, _id, _rev, project_upload_items, parallel_uploads_count,
+  def test_config_model_init_happy_path(self, test_id, _id, project_upload_items, parallel_uploads_count,
                                         dataverse_login_info, metadata):
     # Arrange - omitted as all input values are provided via test parameters
 
     # Act
-    config_model = ConfigModel(_id, _rev, project_upload_items, parallel_uploads_count, dataverse_login_info, metadata)
+    config_model = ConfigModel(_id, project_upload_items, parallel_uploads_count, dataverse_login_info, metadata)
 
     # Assert
     assert config_model._id == _id
-    assert config_model._rev == _rev
     assert config_model.project_upload_items == project_upload_items
     assert config_model.parallel_uploads_count == parallel_uploads_count
     assert config_model.dataverse_login_info == dataverse_login_info
@@ -44,10 +43,10 @@ class TestDataverseConfigModel:
   ])
   def test_config_model_parallel_uploads_edge_cases(self, test_id, parallel_uploads_count):
     # Arrange
-    _id, _rev, project_upload_items, dataverse_login_info, metadata = None, None, None, None, None
+    _id, project_upload_items, dataverse_login_info, metadata = None, None, None, None
 
     # Act
-    config_model = ConfigModel(_id, _rev, project_upload_items, parallel_uploads_count, dataverse_login_info, metadata)
+    config_model = ConfigModel(_id, project_upload_items, parallel_uploads_count, dataverse_login_info, metadata)
 
     # Assert
     assert config_model.parallel_uploads_count == parallel_uploads_count
@@ -64,11 +63,11 @@ class TestDataverseConfigModel:
                                          dataverse_login_info,
                                          metadata, expected_exception):
     # Arrange
-    _id, _rev = None, None
+    _id = None
 
     # Act & Assert
     with pytest.raises(expected_exception):
-      ConfigModel(_id, _rev, project_upload_items, parallel_uploads_count, dataverse_login_info, metadata)
+      ConfigModel(_id, project_upload_items, parallel_uploads_count, dataverse_login_info, metadata)
 
   @pytest.mark.parametrize("input_value, expected, test_id", [
     ({"key": "value"}, {"key": "value"}, "dict_with_string"),

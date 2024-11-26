@@ -23,28 +23,22 @@ class BaseModel:
   """
 
   def __init__(self,
-               _id: str | None = None,
-               _rev: str | None = None):
+               _id: int | str | None = None):
     """
     Initializes a base model object.
 
     Args:
-        _id (str | None): The ID of the object. Defaults to None.
-        _rev (str | None): The revision of the object. Defaults to None.
+        _id (int| str | None): The ID of the object. Defaults to None.
 
     Raises:
         IncorrectParameterError: If the _id or _rev parameter is not of type str.
 
     """
     super().__init__()
-    if isinstance(_id, str | None):
-      self._id: str | None = _id
+    if isinstance(_id, int | str | None):
+      self._id: int | str | None = _id
     else:
-      raise IncorrectParameterError(f"Expected string type for id but got {type(_id)}")
-    if isinstance(_rev, str | None):
-      self._rev: str | None = _rev
-    else:
-      raise IncorrectParameterError(f"Expected string type for rev but got {type(_rev)}")
+      raise IncorrectParameterError(f"Expected int | str | None type for id but got {type(_id)}")
 
   def __iter__(self) -> Generator[tuple[str, Any], None, None]:
     """
@@ -55,30 +49,27 @@ class BaseModel:
 
     """
     for key in self.__dict__:
-      if key in ['_id', '_rev']:
-        yield key, getattr(self, key)
-      else:
-        yield key[1:], getattr(self, key)
+      yield key[1:], getattr(self, key)
 
   @property
-  def id(self) -> str | None:
+  def id(self) -> int | str | None:
     """
     Returns the ID of the object.
 
     Returns:
-        str | None: The ID of the object.
+        int | str | None: The ID of the object.
 
     """
 
     return self._id
 
   @id.setter
-  def id(self, value: str | None) -> None:
+  def id(self, value: int | str | None) -> None:
     """
     Sets the ID of the object.
 
     Args:
-        value (str | None): The ID value to be set.
+        value (int | str | None): The ID value to be set.
 
     """
     self._id = value
@@ -90,33 +81,3 @@ class BaseModel:
 
     """
     del self._id
-
-  @property
-  def rev(self) -> str | None:
-    """
-    Returns the revision of the object.
-
-    Returns:
-        str | None: The revision of the object.
-
-    """
-    return self._rev
-
-  @rev.setter
-  def rev(self, value: str | None) -> None:
-    """
-    Sets the revision of the object.
-
-    Args:
-        value (str | None): The revision value to be set.
-
-    """
-    self._rev = value
-
-  @rev.deleter
-  def rev(self) -> None:
-    """
-    Deletes the revision of the object.
-
-    """
-    del self._rev

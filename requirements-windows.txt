@@ -16,3 +16,4 @@ aiohttp
 win-unicode-console
 winshell
 pypiwin32
+sqlalchemy

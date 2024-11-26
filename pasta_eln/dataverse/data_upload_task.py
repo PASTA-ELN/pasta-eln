@@ -105,7 +105,7 @@ class DataUploadTask(GenericTaskObject):
     # Emit the upload model id
     # so that the parent thread can retrieve the model
     if self.upload_model:
-      self.upload_model_created.emit(self.upload_model.id)
+      self.upload_model_created.emit(str(self.upload_model.id))
 
     # Start the progress updater thread
     self.progress_thread.start()
@@ -179,7 +179,7 @@ class DataUploadTask(GenericTaskObject):
                                     log=f"Upload initiated for project {self.project_name} at {datetime.now().isoformat()}\n",
                                     created_date_time=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                                     project_doc_id=self.project_doc_id)
-    self.upload_model = self.db_api.create_model_document(self.upload_model)  # type: ignore[assignment]
+    self.upload_model = self.db_api.create_model(self.upload_model)  # type: ignore[assignment]
     self.logger.info("Upload model created: %s", self.upload_model)
     # Read config and get the login information along with the metadata
     self.config_model = self.db_api.get_config_model()
@@ -309,7 +309,7 @@ class DataUploadTask(GenericTaskObject):
       logger_method(log)
     if self.upload_model and self.db_api:
       self.upload_model.log = log
-      self.db_api.update_model_document(self.upload_model)
+      self.db_api.update_model(self.upload_model)
 
   def cancel_task(self) -> None:
     """
@@ -341,7 +341,7 @@ class DataUploadTask(GenericTaskObject):
     """
     if self.upload_model and self.db_api:
       self.upload_model.status = status
-      self.db_api.update_model_document(self.upload_model)
+      self.db_api.update_model(self.upload_model)
     self.status_changed.emit(status)
 
   def check_if_cancelled(self) -> bool:

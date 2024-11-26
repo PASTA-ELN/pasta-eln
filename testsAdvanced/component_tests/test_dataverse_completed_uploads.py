@@ -19,173 +19,140 @@ def mock_database_api(mocker, model_status):
   mock = mocker.patch('pasta_eln.dataverse.database_api.DatabaseAPI')
   mock_instance = mock.return_value
   if model_status == UploadStatusValues.Finished.name:
-    mock_instance.get_paginated_models.side_effect = [{
-      'bookmark': 'g1AAAABpeJw1yzkOgCAQAECksrLxA3yAZHcDeHzGgGA8MCZK4--FwnaSiYwxvnLPmifZOx3hnfw1b_7MLmbtgkbX-8UobdWAlpyjsAQCgM7o8ur_xTyq0loCUhKMRBCII8EIZt8_u2waSg',
-      'models': [UploadModel(_id='c5be51b8df645a491a2bb2efe2000765',
-                             _rev='14-026dfba5b05f0bd9f9245388c7b16909',
-                             project_name='PASTAs Example Project',
-                             project_doc_id='x-a882764386da489c9912db5deed02a86',
-                             created_date_time='2024-06-10 11:20:01',
-                             finished_date_time='2024-06-10 11:20:06',
-                             data_type='dataverse_upload',
-                             status=UploadStatusValues.Finished.name,
-                             dataverse_url='http://localhost:8080/dataset.xhtml?persistentId=doi:10.5072/FK2/FP9ZBK',
-                             log="test_log")] * 10
-    }, {
-      'bookmark': 'fkghjdlkghqjeprjjwqeorowqetggggggggggggjewqotjotjo',
-      'models': [UploadModel(_id='c5be51b8df645a491a2bb2efe2000765',
-                             _rev='14-026dfba5b05f0bd9f9245388c7b16909',
-                             project_name='PASTAs Scrolled Project',
-                             project_doc_id='x-a882764386da489c9912db5deed02a86',
-                             created_date_time='2024-06-10 11:20:01',
-                             finished_date_time='2024-06-10 11:20:06',
-                             data_type='dataverse_upload',
-                             status=UploadStatusValues.Finished.name,
-                             dataverse_url='http://localhost:8080/dataset.xhtml?persistentId=doi:10.5072/FK2/FP9ZBK',
-                             log="test_log")] * 10
-    }, {
-      'bookmark': 'fkghjdlkghqjeprjjwqeorowqetggggggggggggjewqotjotjo',
-      'models': [UploadModel(_id='c5be51b8df645a491a2bb2efe2000765',
-                             _rev='14-026dfba5b05f0bd9f9245388c7b16909',
-                             project_name='PASTAs Scrolled Project',
-                             project_doc_id='x-a882764386da489c9912db5deed02a86',
-                             created_date_time='2024-06-10 11:20:01',
-                             finished_date_time='2024-06-10 11:20:06',
-                             data_type='dataverse_upload',
-                             status=UploadStatusValues.Finished.name,
-                             dataverse_url='http://localhost:8080/dataset.xhtml?persistentId=doi:10.5072/FK2/FP9ZBK',
-                             log="test_log")]
-    }]
+    mock_instance.get_paginated_models.side_effect = [[UploadModel(_id=1234567890,
+                                                                   project_name='PASTAs Example Project',
+                                                                   project_doc_id='x-a882764386da489c9912db5deed02a86',
+                                                                   created_date_time='2024-06-10 11:20:01',
+                                                                   finished_date_time='2024-06-10 11:20:06',
+                                                                   data_type='dataverse_upload',
+                                                                   status=UploadStatusValues.Finished.name,
+                                                                   dataverse_url='http://localhost:8080/dataset.xhtml?persistentId=doi:10.5072/FK2/FP9ZBK',
+                                                                   log="test_log")] * 10,
+                                                      [UploadModel(_id=1234567890,
+                                                                   project_name='PASTAs Scrolled Project',
+                                                                   project_doc_id='x-a882764386da489c9912db5deed02a86',
+                                                                   created_date_time='2024-06-10 11:20:01',
+                                                                   finished_date_time='2024-06-10 11:20:06',
+                                                                   data_type='dataverse_upload',
+                                                                   status=UploadStatusValues.Finished.name,
+                                                                   dataverse_url='http://localhost:8080/dataset.xhtml?persistentId=doi:10.5072/FK2/FP9ZBK',
+                                                                   log="test_log")] * 10,
+                                                      [UploadModel(_id=1234567890,
+                                                                   project_name='PASTAs Scrolled Project',
+                                                                   project_doc_id='x-a882764386da489c9912db5deed02a86',
+                                                                   created_date_time='2024-06-10 11:20:01',
+                                                                   finished_date_time='2024-06-10 11:20:06',
+                                                                   data_type='dataverse_upload',
+                                                                   status=UploadStatusValues.Finished.name,
+                                                                   dataverse_url='http://localhost:8080/dataset.xhtml?persistentId=doi:10.5072/FK2/FP9ZBK',
+                                                                   log="test_log")]]
+    mock_instance.get_last_page_number.return_value = 1
   elif model_status == UploadStatusValues.Uploading.name:
-    mock_instance.get_paginated_models.side_effect = [{
-      'bookmark': 'g1AAAABpeJw1yzkOgCAQAECksrLxA3yAZHcDeHzGgGA8MCZK4--FwnaSiYwxvnLPmifZOx3hnfw1b_7MLmbtgkbX-8UobdWAlpyjsAQCgM7o8ur_xTyq0loCUhKMRBCII8EIZt8_u2waSg',
-      'models': [UploadModel(_id='c5be51b8df645a491a2bb2efe2000765',
-                             _rev='14-026dfba5b05f0bd9f9245388c7b16909',
-                             project_name='PASTAs Example Project',
-                             project_doc_id='x-a882764386da489c9912db5deed02a86',
-                             created_date_time='2024-06-10 11:20:01',
-                             finished_date_time='2024-06-10 11:20:06',
-                             data_type='dataverse_upload',
-                             status=UploadStatusValues.Uploading.name,
-                             dataverse_url='http://localhost:8080/dataset.xhtml?persistentId=doi:10.5072/FK2/FP9ZBK',
-                             log="test_log")] * 10
-    }, {
-      'bookmark': 'g1AAAABpeJw1yzkOgCAQAECksrLxA3yAZHcDeHzGgGA8MCZK4--FwnaSiYwxvnLPmifZOx3hnfw1b_7MLmbtgkbX-8UobdWAlpyjsAQCgM7o8ur_xTyq0loCUhKMRBCII8EIZt8_u2waSg',
-      'models': [UploadModel(_id='c5be51b8df645a491a2bb2efe2000765',
-                             _rev='14-026dfba5b05f0bd9f9245388c7b16909',
-                             project_name='PASTAs Example Project',
-                             project_doc_id='x-a882764386da489c9912db5deed02a86',
-                             created_date_time='2024-06-10 11:20:01',
-                             finished_date_time='2024-06-10 11:20:06',
-                             data_type='dataverse_upload',
-                             status=UploadStatusValues.Uploading.name,
-                             dataverse_url='http://localhost:8080/dataset.xhtml?persistentId=doi:10.5072/FK2/FP9ZBK',
-                             log="test_log")]
-    }]
+    mock_instance.get_paginated_models.side_effect = [
+      [UploadModel(_id=1234567890,
+                   project_name='PASTAs Example Project',
+                   project_doc_id='x-a882764386da489c9912db5deed02a86',
+                   created_date_time='2024-06-10 11:20:01',
+                   finished_date_time='2024-06-10 11:20:06',
+                   data_type='dataverse_upload',
+                   status=UploadStatusValues.Uploading.name,
+                   dataverse_url='http://localhost:8080/dataset.xhtml?persistentId=doi:10.5072/FK2/FP9ZBK',
+                   log="test_log")] * 10,
+      [UploadModel(_id=1234567890,
+                   project_name='PASTAs Example Project',
+                   project_doc_id='x-a882764386da489c9912db5deed02a86',
+                   created_date_time='2024-06-10 11:20:01',
+                   finished_date_time='2024-06-10 11:20:06',
+                   data_type='dataverse_upload',
+                   status=UploadStatusValues.Uploading.name,
+                   dataverse_url='http://localhost:8080/dataset.xhtml?persistentId=doi:10.5072/FK2/FP9ZBK',
+                   log="test_log")]]
+    mock_instance.get_last_page_number.return_value = 1
   elif model_status == UploadStatusValues.Queued.name:
-    mock_instance.get_paginated_models.side_effect = [{
-      'bookmark': 'g1AAAABpeJw1yzkOgCAQAECksrLxA3yAZHcDeHzGgGA8MCZK4--FwnaSiYwxvnLPmifZOx3hnfw1b_7MLmbtgkbX-8UobdWAlpyjsAQCgM7o8ur_xTyq0loCUhKMRBCII8EIZt8_u2waSg',
-      'models': [UploadModel(_id='c5be51b8df645a491a2bb2efe2000765',
-                             _rev='14-026dfba5b05f0bd9f9245388c7b16909',
-                             project_name='PASTAs Example Project',
-                             project_doc_id='x-a882764386da489c9912db5deed02a86',
-                             created_date_time='2024-06-10 11:20:01',
-                             finished_date_time='2024-06-10 11:20:06',
-                             data_type='dataverse_upload',
-                             status=UploadStatusValues.Queued.name,
-                             dataverse_url='http://localhost:8080/dataset.xhtml?persistentId=doi:10.5072/FK2/FP9ZBK',
-                             log="test_log")] * 10
-    }, {
-      'bookmark': 'g1AAAABpeJw1yzkOgCAQAECksrLxA3yAZHcDeHzGgGA8MCZK4--FwnaSiYwxvnLPmifZOx3hnfw1b_7MLmbtgkbX-8UobdWAlpyjsAQCgM7o8ur_xTyq0loCUhKMRBCII8EIZt8_u2waSg',
-      'models': [UploadModel(_id='c5be51b8df645a491a2bb2efe2000765',
-                             _rev='14-026dfba5b05f0bd9f9245388c7b16909',
-                             project_name='PASTAs Example Project',
-                             project_doc_id='x-a882764386da489c9912db5deed02a86',
-                             created_date_time='2024-06-10 11:20:01',
-                             finished_date_time='2024-06-10 11:20:06',
-                             data_type='dataverse_upload',
-                             status=UploadStatusValues.Queued.name,
-                             dataverse_url='http://localhost:8080/dataset.xhtml?persistentId=doi:10.5072/FK2/FP9ZBK',
-                             log="test_log")]
-    }]
+    mock_instance.get_paginated_models.side_effect = [
+      [UploadModel(_id=1234567890,
+                   project_name='PASTAs Example Project',
+                   project_doc_id='x-a882764386da489c9912db5deed02a86',
+                   created_date_time='2024-06-10 11:20:01',
+                   finished_date_time='2024-06-10 11:20:06',
+                   data_type='dataverse_upload',
+                   status=UploadStatusValues.Queued.name,
+                   dataverse_url='http://localhost:8080/dataset.xhtml?persistentId=doi:10.5072/FK2/FP9ZBK',
+                   log="test_log")] * 10,
+      [UploadModel(_id=1234567890,
+                   project_name='PASTAs Example Project',
+                   project_doc_id='x-a882764386da489c9912db5deed02a86',
+                   created_date_time='2024-06-10 11:20:01',
+                   finished_date_time='2024-06-10 11:20:06',
+                   data_type='dataverse_upload',
+                   status=UploadStatusValues.Queued.name,
+                   dataverse_url='http://localhost:8080/dataset.xhtml?persistentId=doi:10.5072/FK2/FP9ZBK',
+                   log="test_log")]]
+    mock_instance.get_last_page_number.return_value = 1
   elif model_status == UploadStatusValues.Cancelled.name:
-    mock_instance.get_paginated_models.side_effect = [{
-      'bookmark': 'g1AAAABpeJw1yzkOgCAQAECksrLxA3yAZHcDeHzGgGA8MCZK4--FwnaSiYwxvnLPmifZOx3hnfw1b_7MLmbtgkbX-8UobdWAlpyjsAQCgM7o8ur_xTyq0loCUhKMRBCII8EIZt8_u2waSg',
-      'models': [UploadModel(_id='c5be51b8df645a491a2bb2efe2000765',
-                             _rev='14-026dfba5b05f0bd9f9245388c7b16909',
-                             project_name='PASTAs Example Project',
-                             project_doc_id='x-a882764386da489c9912db5deed02a86',
-                             created_date_time='2024-06-10 11:20:01',
-                             finished_date_time='2024-06-10 11:20:06',
-                             data_type='dataverse_upload',
-                             status=UploadStatusValues.Cancelled.name,
-                             dataverse_url='http://localhost:8080/dataset.xhtml?persistentId=doi:10.5072/FK2/FP9ZBK',
-                             log="test_log")] * 10
-    }, {
-      'bookmark': 'g1AAAABpeJw1yzkOgCAQAECksrLxA3yAZHcDeHzGgGA8MCZK4--FwnaSiYwxvnLPmifZOx3hnfw1b_7MLmbtgkbX-8UobdWAlpyjsAQCgM7o8ur_xTyq0loCUhKMRBCII8EIZt8_u2waSg',
-      'models': [UploadModel(_id='c5be51b8df645a491a2bb2efe2000765',
-                             _rev='14-026dfba5b05f0bd9f9245388c7b16909',
-                             project_name='PASTAs Example Project',
-                             project_doc_id='x-a882764386da489c9912db5deed02a86',
-                             created_date_time='2024-06-10 11:20:01',
-                             finished_date_time='2024-06-10 11:20:06',
-                             data_type='dataverse_upload',
-                             status=UploadStatusValues.Cancelled.name,
-                             dataverse_url='http://localhost:8080/dataset.xhtml?persistentId=doi:10.5072/FK2/FP9ZBK',
-                             log="test_log")]
-    }]
+    mock_instance.get_paginated_models.side_effect = [
+      [UploadModel(_id=1234567890,
+                   project_name='PASTAs Example Project',
+                   project_doc_id='x-a882764386da489c9912db5deed02a86',
+                   created_date_time='2024-06-10 11:20:01',
+                   finished_date_time='2024-06-10 11:20:06',
+                   data_type='dataverse_upload',
+                   status=UploadStatusValues.Cancelled.name,
+                   dataverse_url='http://localhost:8080/dataset.xhtml?persistentId=doi:10.5072/FK2/FP9ZBK',
+                   log="test_log")] * 10,
+      [UploadModel(_id=1234567890,
+                   project_name='PASTAs Example Project',
+                   project_doc_id='x-a882764386da489c9912db5deed02a86',
+                   created_date_time='2024-06-10 11:20:01',
+                   finished_date_time='2024-06-10 11:20:06',
+                   data_type='dataverse_upload',
+                   status=UploadStatusValues.Cancelled.name,
+                   dataverse_url='http://localhost:8080/dataset.xhtml?persistentId=doi:10.5072/FK2/FP9ZBK',
+                   log="test_log")]]
+    mock_instance.get_last_page_number.return_value = 1
   elif model_status == UploadStatusValues.Error.name:
-    mock_instance.get_paginated_models.side_effect = [{
-      'bookmark': 'g1AAAABpeJw1yzkOgCAQAECksrLxA3yAZHcDeHzGgGA8MCZK4--FwnaSiYwxvnLPmifZOx3hnfw1b_7MLmbtgkbX-8UobdWAlpyjsAQCgM7o8ur_xTyq0loCUhKMRBCII8EIZt8_u2waSg',
-      'models': [UploadModel(_id='c5be51b8df645a491a2bb2efe2000765',
-                             _rev='14-026dfba5b05f0bd9f9245388c7b16909',
-                             project_name='PASTAs Example Project',
-                             project_doc_id='x-a882764386da489c9912db5deed02a86',
-                             created_date_time='2024-06-10 11:20:01',
-                             finished_date_time='2024-06-10 11:20:06',
-                             data_type='dataverse_upload',
-                             status=UploadStatusValues.Error.name,
-                             dataverse_url='http://localhost:8080/dataset.xhtml?persistentId=doi:10.5072/FK2/FP9ZBK',
-                             log="test_log")] * 10
-    }, {
-      'bookmark': 'g1AAAABpeJw1yzkOgCAQAECksrLxA3yAZHcDeHzGgGA8MCZK4--FwnaSiYwxvnLPmifZOx3hnfw1b_7MLmbtgkbX-8UobdWAlpyjsAQCgM7o8ur_xTyq0loCUhKMRBCII8EIZt8_u2waSg',
-      'models': [UploadModel(_id='c5be51b8df645a491a2bb2efe2000765',
-                             _rev='14-026dfba5b05f0bd9f9245388c7b16909',
-                             project_name='PASTAs Example Project',
-                             project_doc_id='x-a882764386da489c9912db5deed02a86',
-                             created_date_time='2024-06-10 11:20:01',
-                             finished_date_time='2024-06-10 11:20:06',
-                             data_type='dataverse_upload',
-                             status=UploadStatusValues.Error.name,
-                             dataverse_url='http://localhost:8080/dataset.xhtml?persistentId=doi:10.5072/FK2/FP9ZBK',
-                             log="test_log")]
-    }]
+    mock_instance.get_paginated_models.side_effect = [
+      [UploadModel(_id=1234567890,
+                   project_name='PASTAs Example Project',
+                   project_doc_id='x-a882764386da489c9912db5deed02a86',
+                   created_date_time='2024-06-10 11:20:01',
+                   finished_date_time='2024-06-10 11:20:06',
+                   data_type='dataverse_upload',
+                   status=UploadStatusValues.Error.name,
+                   dataverse_url='http://localhost:8080/dataset.xhtml?persistentId=doi:10.5072/FK2/FP9ZBK',
+                   log="test_log")] * 10,
+      [UploadModel(_id=1234567890,
+                   project_name='PASTAs Example Project',
+                   project_doc_id='x-a882764386da489c9912db5deed02a86',
+                   created_date_time='2024-06-10 11:20:01',
+                   finished_date_time='2024-06-10 11:20:06',
+                   data_type='dataverse_upload',
+                   status=UploadStatusValues.Error.name,
+                   dataverse_url='http://localhost:8080/dataset.xhtml?persistentId=doi:10.5072/FK2/FP9ZBK',
+                   log="test_log")]]
+    mock_instance.get_last_page_number.return_value = 1
   elif model_status == UploadStatusValues.Warning.name:
-    mock_instance.get_paginated_models.side_effect = [{
-      'bookmark': 'g1AAAABpeJw1yzkOgCAQAECksrLxA3yAZHcDeHzGgGA8MCZK4--FwnaSiYwxvnLPmifZOx3hnfw1b_7MLmbtgkbX-8UobdWAlpyjsAQCgM7o8ur_xTyq0loCUhKMRBCII8EIZt8_u2waSg',
-      'models': [UploadModel(_id='c5be51b8df645a491a2bb2efe2000765',
-                             _rev='14-026dfba5b05f0bd9f9245388c7b16909',
-                             project_name='PASTAs Example Project',
-                             project_doc_id='x-a882764386da489c9912db5deed02a86',
-                             created_date_time='2024-06-10 11:20:01',
-                             finished_date_time='2024-06-10 11:20:06',
-                             data_type='dataverse_upload',
-                             status=UploadStatusValues.Warning.name,
-                             dataverse_url='http://localhost:8080/dataset.xhtml?persistentId=doi:10.5072/FK2/FP9ZBK',
-                             log="test_log")] * 10
-    }, {
-      'bookmark': 'g1AAAABpeJw1yzkOgCAQAECksrLxA3yAZHcDeHzGgGA8MCZK4--FwnaSiYwxvnLPmifZOx3hnfw1b_7MLmbtgkbX-8UobdWAlpyjsAQCgM7o8ur_xTyq0loCUhKMRBCII8EIZt8_u2waSg',
-      'models': [UploadModel(_id='c5be51b8df645a491a2bb2efe2000765',
-                             _rev='14-026dfba5b05f0bd9f9245388c7b16909',
-                             project_name='PASTAs Example Project',
-                             project_doc_id='x-a882764386da489c9912db5deed02a86',
-                             created_date_time='2024-06-10 11:20:01',
-                             finished_date_time='2024-06-10 11:20:06',
-                             data_type='dataverse_upload',
-                             status=UploadStatusValues.Warning.name,
-                             dataverse_url='http://localhost:8080/dataset.xhtml?persistentId=doi:10.5072/FK2/FP9ZBK',
-                             log="test_log")]
-    }]
+    mock_instance.get_paginated_models.side_effect = [
+      [UploadModel(_id=1234567890,
+                   project_name='PASTAs Example Project',
+                   project_doc_id='x-a882764386da489c9912db5deed02a86',
+                   created_date_time='2024-06-10 11:20:01',
+                   finished_date_time='2024-06-10 11:20:06',
+                   data_type='dataverse_upload',
+                   status=UploadStatusValues.Warning.name,
+                   dataverse_url='http://localhost:8080/dataset.xhtml?persistentId=doi:10.5072/FK2/FP9ZBK',
+                   log="test_log")] * 10
+      ,
+      [UploadModel(_id=1234567890,
+                   project_name='PASTAs Example Project',
+                   project_doc_id='x-a882764386da489c9912db5deed02a86',
+                   created_date_time='2024-06-10 11:20:01',
+                   finished_date_time='2024-06-10 11:20:06',
+                   data_type='dataverse_upload',
+                   status=UploadStatusValues.Warning.name,
+                   dataverse_url='http://localhost:8080/dataset.xhtml?persistentId=doi:10.5072/FK2/FP9ZBK',
+                   log="test_log")]]
+    mock_instance.get_last_page_number.return_value = 1
   return mock_instance
 
 

@@ -16,8 +16,8 @@ from aiohttp import ClientConnectorError, ClientSession, InvalidURL
 from aiohttp.client_reqrep import ConnectionKey
 
 from pasta_eln.webclient.http_client import AsyncHttpClient, prepare_result
-from tests.common.fixtures import http_client_mock
-from tests.common.test_utils import are_json_equal
+from testsAdvanced.common.fixtures import http_client_mock
+from testsAdvanced.common.test_utils import are_json_equal
 
 pytest_plugins = ('pytest_asyncio',)
 

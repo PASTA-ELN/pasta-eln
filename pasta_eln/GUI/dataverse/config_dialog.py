@@ -227,6 +227,9 @@ class ConfigDialog(Ui_ConfigDialogBase):
       else:
         self.logger.error("Failed to load dataverse list, error: %s", dataverses)
         QMessageBox.warning(self.instance, "Error", "Failed to load dataverse list")
+    else:
+      self.logger.error("Failed to load dataverse list, error: %s", dataverses)
+      QMessageBox.warning(self.instance, "Error", "Failed to load dataverse list")
 
   def show(self) -> None:
     """

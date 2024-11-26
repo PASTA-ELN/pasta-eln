@@ -9,13 +9,11 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
 import copy
-import logging
 from typing import Any
 
 from PySide6.QtCore import QEvent
 from PySide6.QtGui import QMouseEvent, Qt
 from PySide6.QtWidgets import QMessageBox, QStyleOptionViewItem
-from cloudant import CouchDB
 
 from pasta_eln.GUI.data_hierarchy.data_type_info import DataTypeInfo
 
@@ -102,35 +100,35 @@ def show_message(message: str,
   return None
 
 
-def get_db(db_name: str,
-           db_user: str,
-           db_pass: str,
-           db_url: str,
-           logger: logging.Logger) -> CouchDB | None:
-  """
-  Get the db instance for the test purpose
-  Args:
-    logger (logging): Logger instance
-    db_name (str): Database instance name in CouchDB
-    db_user (str): Database user-name used for CouchDB access.
-    db_pass (str): Database password used for CouchDB access.
-    db_url (str): Database connection URL.
-
-  Returns (CouchDB | None):
-    Connected DB instance
-
-  """
-  try:
-    client = CouchDB(user=db_user,
-                     auth_token=db_pass,
-                     url=db_url,
-                     connect=True)
-  except Exception as ex:
-    if logger:
-      logger.error(f'Could not connect with username+password to local server, error: {ex}')
-    return None
-  return (client[db_name]
-          if db_name in client.all_dbs() else client.create_database(db_name))
+# def get_db(db_name: str,
+#            db_user: str,
+#            db_pass: str,
+#            db_url: str,
+#            logger: logging.Logger) -> CouchDB | None:
+#   """
+#   Get the db instance for the test purpose
+#   Args:
+#     logger (logging): Logger instance
+#     db_name (str): Database instance name in CouchDB
+#     db_user (str): Database user-name used for CouchDB access.
+#     db_pass (str): Database password used for CouchDB access.
+#     db_url (str): Database connection URL.
+#
+#   Returns (CouchDB | None):
+#     Connected DB instance
+#
+#   """
+#   try:
+#     client = CouchDB(user=db_user,
+#                      auth_token=db_pass,
+#                      url=db_url,
+#                      connect=True)
+#   except Exception as ex:
+#     if logger:
+#       logger.error(f'Could not connect with username+password to local server, error: {ex}')
+#     return None
+#   return (client[db_name]
+#           if db_name in client.all_dbs() else client.create_database(db_name))
 
 
 def get_types_for_display(types: list[str]) -> list[str]:

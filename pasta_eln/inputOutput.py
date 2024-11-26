@@ -479,7 +479,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
       keyPair    = {'id':str(uuid.uuid4()), 'secret':bytes(keyPairRaw.secret_key).decode(), 'public':bytes(keyPairRaw.public_key).decode()}
       backend.configuration['signingKeyPair'] = keyPair
       with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as fConf:
-        fConf.write(json.dumps(backend.configuration,indent=2))
+        json.dump(backend.configuration, fConf, ensure_ascii=False, indent=2)
     keyPair = backend.configuration['signingKeyPair']
     secretKey = minisign.SecretKey.from_bytes(keyPair['secret'].encode())
     comment   = {'pubkey_url':f'https://raw.githubusercontent.com/PASTA-ELN/Signatures/main/{keyPair["id"]}.pub',
