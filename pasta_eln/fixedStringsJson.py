@@ -99,7 +99,6 @@ SQLiteTranslation     = str.maketrans(SQLiteTranslationDict)
 minimalDocInForm = {'tags':[], 'comment':'', '':{}}
 
 SORTED_KEYS     = ['name', 'tags', 'comment', 'metaUser', '']
-SORTED_BIG_KEYS = ['content','metaVendor']
 SORTED_DB_KEYS  = ['id', 'type', 'dateCreated','dateModified','dateSync', 'user','branch','gui','client','externalId','shasum']
 DO_NOT_RENDER   = ['image','content','metaVendor','shasum','type','branch','gui','dateCreated',
                  'dateModified','id','user','name','externalId','client']
@@ -115,14 +114,6 @@ This setup will analyse and (possibly) correct these items.
 If an attempt fails: please follow to this [website](https://pasta-eln.github.io/pasta-eln/install.html).
 """
 
-
-restartPastaWindows = """
-Close software now (will be done automatically in the future)
-
-Please restart the software by
-- clicking on the shortcut OR
-- executing the command in a new cmd.exe window
-"""
 
 exampleDataString = """
 Do you want to create an example project?

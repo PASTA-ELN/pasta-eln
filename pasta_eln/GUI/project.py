@@ -3,13 +3,13 @@ import logging, importlib
 from enum import Enum
 from pathlib import Path
 from typing import Optional, Any
-from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget, QMenu, QMessageBox, QTextEdit, QScrollArea # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget, QMenu, QMessageBox, QTextEdit              # pylint: disable=no-name-in-module
 from PySide6.QtGui import QStandardItemModel, QStandardItem, QAction                                   # pylint: disable=no-name-in-module
 from PySide6.QtCore import Slot, Qt, QItemSelectionModel, QModelIndex                                  # pylint: disable=no-name-in-module
 from anytree import PreOrderIter, Node
 from .projectTreeView import TreeView
-from ..guiStyle import TextButton, Action, Label, showMessage, widgetAndLayout, addDocDetails
-from ..fixedStringsJson import SORTED_KEYS, DO_NOT_RENDER
+from ..guiStyle import TextButton, Action, Label, showMessage, widgetAndLayout
+from ..fixedStringsJson import DO_NOT_RENDER
 from ..stringChanges import createDirName
 from ..handleDictionaries import doc2markdown
 from ..guiCommunicate import Communicate
@@ -24,28 +24,21 @@ class Project(QWidget):
     self.setLayout(self.mainL)
     self.tree:Optional[TreeView]             = None
     self.model:Optional[QStandardItemModel]  = None
-    self.infoWSA:Optional[QWidget]           = None
-    self.infoW_:Optional[QWidget]            = None
-    self.commentTE:Optional[QTextEdit]       = None
-    self.actHideDetail = QAction()
-    self.actionHideItems   = QAction()
-    self.actionHideProject = QAction()
-    self.actionFoldAll     = QAction()
+    self.allDetails                          = QTextEdit()
+    self.actHideDetail                       = QAction()
+    self.actionFoldAll                       = QAction()
     self.projID = ''
-    self.taskID = ''
     self.docProj:dict[str,Any]= {}
     self.showAll= True
     self.showDetailsAll = False
     self.btnAddSubfolder:Optional[TextButton] = None
     self.lineSep = 20
-    self.countLines = 0
 
 
   def projHeader(self) -> None:
     """
     Initialize / Create header of page
     """
-    self.countLines = 0
     self.docProj = self.comm.backend.db.getDoc(self.projID)
     dataHierarchyNode = self.comm.backend.db.dataHierarchy('x0', 'meta')
     # remove if still there
@@ -71,8 +64,8 @@ class Project(QWidget):
     self.actHideDetail = Action('Hide project details',self, [Command.SHOW_PROJ_DETAILS],visibilityMenu)
     menuTextItems = 'Hide hidden items' if self.showAll else 'Show hidden items'
     minimizeItems = 'Show all item details' if self.showDetailsAll else 'Hide all item details'
-    self.actionHideItems   = Action( menuTextItems,    self, [Command.HIDE_SHOW_ITEMS],  visibilityMenu)
-    self.actionHideProject = Action( menuTextHidden,   self, [Command.HIDE],             visibilityMenu)
+    Action( menuTextItems,    self, [Command.HIDE_SHOW_ITEMS],  visibilityMenu)
+    Action( menuTextHidden,   self, [Command.HIDE],             visibilityMenu)
     self.actionFoldAll     = Action( minimizeItems,    self, [Command.SHOW_DETAILS],     visibilityMenu)
     visibility.setMenu(visibilityMenu)
     more = TextButton('More',           self, [], buttonL)
@@ -96,7 +89,6 @@ class Project(QWidget):
     # self.infoW = QScrollArea()
     # self.infoW.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
     # self.infoW.setWidgetResizable(True)
-    self.allDetails = QTextEdit()
     self.allDetails.setMarkdown(doc2markdown(self.docProj, DO_NOT_RENDER, dataHierarchyNode, self))
     if not self.docProj['gui'][0]:
       self.allDetails.hide()
@@ -139,7 +131,6 @@ class Project(QWidget):
     logging.debug('ProjectView elements at 1: %i',self.mainL.count())
     if projID!='':
       self.projID         = projID
-      self.taskID         = docID
       self.comm.projectID = projID
     selectedIndex = None
     self.model = QStandardItemModel()
@@ -251,11 +242,11 @@ class Project(QWidget):
     elif command[0] is Command.SHOW_PROJ_DETAILS:
       self.docProj['gui'][0] = not self.docProj['gui'][0]
       self.comm.backend.db.setGUI(self.projID, self.docProj['gui'])
-      if self.infoWSA is not None and self.infoWSA.isHidden():
-        self.infoWSA.show()
+      if self.allDetails is not None and self.allDetails.isHidden():
+        self.allDetails.show()
         self.actHideDetail.setText('Hide project details')
-      elif self.infoWSA is not None:
-        self.infoWSA.hide()
+      elif self.allDetails is not None:
+        self.allDetails.hide()
         self.actHideDetail.setText('Show project details')
     elif command[0] is Command.HIDE:
       self.comm.backend.db.hideShow(self.projID)

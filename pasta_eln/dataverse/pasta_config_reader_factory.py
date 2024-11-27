@@ -95,11 +95,10 @@ class PastaConfigReaderFactory:
     Raises:
         ConfigError: If the configuration file does not exist.
     """
-    from pasta_eln.dataverse.utils import log_and_create_error
     self.logger.info("Reading config file: %s", self.config_file_name)
     with self.mutex:
       if not exists(self.config_file_name):
-        raise log_and_create_error(self.logger, ConfigError, "Config file not found, Corrupt installation!")
+        raise ConfigError("Config file not found, Corrupt installation!")
       with open(self.config_file_name, 'r', encoding='utf-8') as confFile:
         self.config = load(confFile)
 

@@ -39,7 +39,6 @@ class Backend(CLI_Mixin):
     self.configFileName = Path.home() / CONF_FILE_NAME
     self.configuration: dict[str, Any] = {}
     self.hierStack:list[str] = []
-    self.alive               = True
     self.cwd:Optional[Path]  = Path('.')
     self.initialize(defaultProjectGroup)
     self.fsWatcher = QFileSystemWatcher()
@@ -114,7 +113,6 @@ class Backend(CLI_Mixin):
     self.db = SqlLiteDB(basePath=self.basePath)
     # internal hierarchy structure
     self.hierStack = []
-    self.alive     = True
     return
 
 
@@ -123,7 +121,6 @@ class Backend(CLI_Mixin):
     Shutting down things
     """
     self.db.exit()
-    self.alive     = False
     return
 
 

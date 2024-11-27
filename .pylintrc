@@ -32,7 +32,6 @@ ignore-patterns=data_hierarchy_editor_dialog_base.py,
                 lookup_iri_action.py,
                 iri_column_delegate.py,
                 delete_column_delegate.py,
-                projectGroup.py,
                 extractor_[a-z]+.py,
                 project_html_report.py
 

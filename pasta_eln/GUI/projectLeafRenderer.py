@@ -94,7 +94,7 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       textDoc = QTextDocument()
       textDoc.setMarkdown(markdownEqualizer(doc['content']))
       textDoc.setTextWidth(widthContent)
-      width, _ = textDoc.size().toTuple() # type: ignore
+      width:int = textDoc.size().toTuple()[0] # type: ignore
       topLeftContent = option.rect.topRight() - QPoint(width+self.frameSize-2,-self.frameSize)           # type: ignore[attr-defined]
       painter.translate(topLeftContent)
       self.drawTextDocument(painter, textDoc, int(self.maxHeight-3*self.frameSize))
@@ -161,7 +161,8 @@ class ProjectLeafRenderer(QStyledItemDelegate):
       textDoc (QTextDocument): text document
       yMax (int): maximum height of document in surrounding frame
     """
-    width, height = textDoc.size().toTuple() # type: ignore
+    width:int  = textDoc.size().toTuple()[0] # type: ignore
+    height:int = textDoc.size().toTuple()[1] # type: ignore
     textDoc.drawContents(painter, QRectF(0, 0, width, yMax))
     if height > yMax+self.frameSize:
       painter.setPen(self.penHighlight)
