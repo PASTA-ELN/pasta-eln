@@ -10,7 +10,7 @@
     "meta": {
       "default": [
         {
-          "name": "-name",
+          "name": "name",
           "query": "What is the name of the project?",
           "IRI": "http://url.com",
           "mandatory": "True"
@@ -30,7 +30,7 @@
           "query": "What is the objective?"
         },
         {
-          "name": "-tags",
+          "name": "tags",
           "query": "What are the tags associated with this project?"
         },
         {
@@ -40,14 +40,14 @@
       ],
       "metadata_group1": [
         {
-          "name": "-name",
+          "name": "name",
           "query": "What is the name of the metadata?",
           "mandatory": "True",
           "IRI": "http://url.com",
           "unit": ""
         },
         {
-          "name": "-tags",
+          "name": "tags",
           "query": "What are the tags associated with this project?"
         },
         {
@@ -69,11 +69,11 @@
     "meta": {
       "default": [
         {
-          "name": "-name",
+          "name": "name",
           "query": "What is the name of task?"
         },
         {
-          "name": "-tags",
+          "name": "tags",
           "query": "What are the tags associated with this task?"
         },
         {
@@ -92,11 +92,11 @@
     "meta": {
       "default": [
         {
-          "name": "-name",
+          "name": "name",
           "query": "What is the file name?"
         },
         {
-          "name": "-tags",
+          "name": "tags",
           "query": "What are the tags associated with this file name?"
         },
         {
@@ -137,7 +137,7 @@
     "meta": {
       "default": [
         {
-          "name": "-name",
+          "name": "name",
           "query": "What is the name / identifier of the sample?"
         },
         {
@@ -145,7 +145,7 @@
           "query": "What is its chemical composition?"
         },
         {
-          "name": "-tags",
+          "name": "tags",
           "query": "What are the tags associated with this sample?"
         },
         {
@@ -167,11 +167,11 @@
     "meta": {
       "default": [
         {
-          "name": "-name",
+          "name": "name",
           "query": "What is the name / path?"
         },
         {
-          "name": "-tags",
+          "name": "tags",
           "query": "What are the tags associated with this procedure?"
         },
         {
@@ -194,12 +194,12 @@
     "meta": {
       "default": [
         {
-          "name": "-name",
+          "name": "name",
           "query": "What is the name / path?",
           "mandatory": "True"
         },
         {
-          "name": "-tags",
+          "name": "tags",
           "query": "What are the tags associated with this instruments?"
         },
         {

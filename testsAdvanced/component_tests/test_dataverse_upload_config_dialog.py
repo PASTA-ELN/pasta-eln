@@ -44,12 +44,12 @@ def mock_database_api(mocker):
     "instrument": {}
   }
   mock_instance.get_data_hierarchy_models.return_value = [
-    DataHierarchyModel(docType="x0"),
-    DataHierarchyModel(docType="x1"),
-    DataHierarchyModel(docType="measurement"),
-    DataHierarchyModel(docType="sample"),
-    DataHierarchyModel(docType="procedure"),
-    DataHierarchyModel(docType="instrument")
+    DataHierarchyModel(doc_type="x0"),
+    DataHierarchyModel(doc_type="x1"),
+    DataHierarchyModel(doc_type="measurement"),
+    DataHierarchyModel(doc_type="sample"),
+    DataHierarchyModel(doc_type="procedure"),
+    DataHierarchyModel(doc_type="instrument")
   ]
   return mock_instance
 

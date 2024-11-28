@@ -14,8 +14,8 @@ from typing import Type, Union
 from sqlalchemy import create_engine, or_, select
 from sqlalchemy.orm import Session
 
-from pasta_eln.database.database_orm_adapter import DatabaseOrmAdapter
 from pasta_eln.database.error import Error
+from pasta_eln.database.incorrect_parameter_error import IncorrectParameterError
 from pasta_eln.database.models.base_model import BaseModel
 from pasta_eln.database.models.config_model import ConfigModel
 from pasta_eln.database.models.config_orm_model import ConfigOrmModel
@@ -27,8 +27,8 @@ from pasta_eln.database.models.project_model import ProjectModel
 from pasta_eln.database.models.properties_orm_model import PropertiesOrmModel
 from pasta_eln.database.models.upload_model import UploadModel
 from pasta_eln.database.models.upload_orm_model import UploadOrmModel
+from pasta_eln.database.orm_model_adapter import OrmModelAdapter
 from pasta_eln.dataverse.database_names import DatabaseNames
-from pasta_eln.dataverse.incorrect_parameter_error import IncorrectParameterError
 from pasta_eln.dataverse.utils import generate_project_join_statement, log_and_create_error
 
 
@@ -60,17 +60,17 @@ class BaseDatabaseApi:
     }
     self.to_orm_converter_map: dict[base_model_type,  # type: ignore[valid-type, misc]
     Callable[base_model_type, orm_model_type]] = {
-      UploadModel: DatabaseOrmAdapter.get_orm_upload_model,
-      ConfigModel: DatabaseOrmAdapter.get_orm_config_model,
-      ProjectModel: DatabaseOrmAdapter.get_orm_project_model,
-      DataHierarchyModel: DatabaseOrmAdapter.get_orm_data_hierarchy_model
+      UploadModel: OrmModelAdapter.get_orm_upload_model,
+      ConfigModel: OrmModelAdapter.get_orm_config_model,
+      ProjectModel: OrmModelAdapter.get_orm_project_model,
+      DataHierarchyModel: OrmModelAdapter.get_orm_data_hierarchy_model
     }
 
     self.to_base_model_converter_map: dict[orm_model_type,  # type: ignore[valid-type, misc]
     Callable[orm_model_type, base_model_type]] = {
-      UploadOrmModel: DatabaseOrmAdapter.get_upload_model,
-      ConfigOrmModel: DatabaseOrmAdapter.get_config_model,
-      DataHierarchyOrmModel: DatabaseOrmAdapter.get_data_hierarchy_model
+      UploadOrmModel: OrmModelAdapter.get_upload_model,
+      ConfigOrmModel: OrmModelAdapter.get_config_model,
+      DataHierarchyOrmModel: OrmModelAdapter.get_data_hierarchy_model
     }
 
     if isinstance(dataverse_db_path, str):
@@ -228,7 +228,7 @@ class BaseDatabaseApi:
     engine = create_engine(self.db_url_map[DatabaseNames.PastaProjectGroupDatabase])
     statement = generate_project_join_statement(None)
     with Session(engine) as session:
-      return [DatabaseOrmAdapter.get_project_model(r.tuple()) for r in session.execute(statement).fetchall()]
+      return [OrmModelAdapter.get_project_model(r.tuple()) for r in session.execute(statement).fetchall()]
 
   def get_project_model(self, model_id: str) -> ProjectModel | None:
     """Retrieves a project model from the database using its ID.
@@ -256,7 +256,7 @@ class BaseDatabaseApi:
     statement = generate_project_join_statement(model_id)
     with Session(engine) as session:
       if first := session.execute(statement).fetchone():
-        return DatabaseOrmAdapter.get_project_model(first.tuple())
+        return OrmModelAdapter.get_project_model(first.tuple())
       return None
 
   def update_model(self, data_model: Union[UploadModel, ConfigModel]) -> None:

@@ -16,6 +16,12 @@ from pasta_eln.database.models.orm_model_base import OrmModelBase
 
 
 class DataHierarchyDefinitionOrmModel(OrmModelBase):
+  """Represents a data hierarchy definition model in the database.
+
+  This class defines the structure of the data hierarchy definition, including
+  its properties and their mappings to the database columns. It provides a method
+  to retrieve the names of the table columns for easy reference.
+  """
   __tablename__ = "definitions"
   doc_type: Mapped[str] = mapped_column("docType", primary_key=True)
   doc_class: Mapped[Optional[str]] = mapped_column("class", primary_key=True)
@@ -29,6 +35,14 @@ class DataHierarchyDefinitionOrmModel(OrmModelBase):
 
   @classmethod
   def get_table_columns(cls) -> list[str]:
+    """Retrieves the names of the table columns for the data hierarchy definition model.
+
+    This method returns a list of strings representing the column names in the
+    definitions table, which can be useful for database operations and schema
+    inspections.
+    Returns:
+        list[str]: A list of column names for the data hierarchy definition model.
+    """
     return [
       "doc_type",
       "doc_class",

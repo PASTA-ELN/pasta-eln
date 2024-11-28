@@ -114,7 +114,7 @@ class TestDataHierarchyUtilityFunctions(object):
 
   @staticmethod
   def create_mock_doc(contents, mocker):
-    mock_doc = mocker.patch('cloudant.document.Document')
+    mock_doc = mocker.MagicMock()
     mock_doc.__iter__ = mocker.Mock(return_value=iter(contents))
     mock_doc.__getitem__.side_effect = contents.__getitem__
     mock_doc.__setitem__.side_effect = contents.__setitem__
@@ -190,99 +190,107 @@ class TestDataHierarchyUtilityFunctions(object):
                 {"name": "tags", "query": "What is the name of task?"}],
     "metadata_group2": [{"name": "name", "query": "What is the name of task?"},
                         {"name": "tags", "query": "What is the name of task?"}]}}}, ({'Structure level 0': {
-    'default': ['-name', '-tags']}, 'Structure level 1': {'default': ['-name', '-tags']}}, {}, {'Structure level 0': {
+    'default': ['name', 'tags']}, 'Structure level 1': {'default': ['name', 'tags']}}, {}, {'Structure level 0': {
     'name': ['default', 'metadata_group1'], 'tags': ['default', 'metadata_group1']}, 'Structure level 1': {
-    'name': ['default', 'metadata_group2'], 'tags': ['default', 'metadata_group2']}})), ({"x0": {"meta": {
-    "default": [{"name": "name", "query": "What is the name of task?"},
-                {"name": "-tags", "query": "What is the name of task?"},
-                {"name": "    ", "query": "What is the name of task?"},
-                {"name": None, "query": "What is the name of task?"}],
-    "metadata_group1": [{"name": "-name", "query": "What is the name of task?"},
-                        {"name": "tags", "query": "What is the name of task?"},
-                        {"name": "", "query": "What is the name of task?"}]}},
-                                                                                           "x1": {"meta": {"default": [
-                                                                                             {"name": "-name",
-                                                                                              "query": "What is the name of task?"},
-                                                                                             {"name": "-tags",
-                                                                                              "query": "What is the name of task?"}],
-                                                                                             "metadata_group2": [
-                                                                                               {"name": "name",
-                                                                                                "query": "What is the name of task?"},
-                                                                                               {"name": "-tags",
-                                                                                                "query": "What is the name of task?"}],
-                                                                                             "metadata_group3": [
-                                                                                               {"name": "name",
-                                                                                                "query": "What is the name of task?"},
-                                                                                               {"name": "-tags",
-                                                                                                "query": "What is the name of task?"},
-                                                                                               {"name": "   ",
-                                                                                                "query": "What is the name of task?"}]}}},
-                                                                                         ({'Structure level 0': {
-                                                                                           'default': ['-name']}}, {
-                                                                                            'Structure level 0': [
-                                                                                              'default',
-                                                                                              'metadata_group1'],
-                                                                                            'Structure level 1': [
-                                                                                              'metadata_group3']},
+    'name': ['default', 'metadata_group2'], 'tags': ['default', 'metadata_group2']}})),
+                                                                     ({"x0": {"meta": {
+                                                                       "default": [{"name": "name",
+                                                                                    "query": "What is the name of task?"},
+                                                                                   {"name": "tags",
+                                                                                    "query": "What is the name of task?"},
+                                                                                   {"name": "    ",
+                                                                                    "query": "What is the name of task?"},
+                                                                                   {"name": None,
+                                                                                    "query": "What is the name of task?"}],
+                                                                       "metadata_group1": [{"name": "name",
+                                                                                            "query": "What is the name of task?"},
+                                                                                           {"name": "tags",
+                                                                                            "query": "What is the name of task?"},
+                                                                                           {"name": "",
+                                                                                            "query": "What is the name of task?"}]}},
+                                                                        "x1": {"meta": {"default": [
+                                                                          {"name": "name",
+                                                                           "query": "What is the name of task?"},
+                                                                          {"name": "tags",
+                                                                           "query": "What is the name of task?"}],
+                                                                          "metadata_group2": [
+                                                                            {"name": "name",
+                                                                             "query": "What is the name of task?"},
+                                                                            {"name": "tags",
+                                                                             "query": "What is the name of task?"}],
+                                                                          "metadata_group3": [
+                                                                            {"name": "name",
+                                                                             "query": "What is the name of task?"},
+                                                                            {"name": "tags",
+                                                                             "query": "What is the name of task?"},
+                                                                            {"name": "   ",
+                                                                             "query": "What is the name of task?"}]}}},
+                                                                      ({'Structure level 0': {
+                                                                        'default': ['name']}}, {
+                                                                         'Structure level 0': [
+                                                                           'default',
+                                                                           'metadata_group1'],
+                                                                         'Structure level 1': [
+                                                                           'metadata_group3']},
 
-                                                                                          {'Structure level 1': {
-                                                                                            '-tags': ['default',
-                                                                                                      'metadata_group2',
-                                                                                                      'metadata_group3'],
-                                                                                            'name': ['metadata_group2',
-                                                                                                     'metadata_group3']}})),
-                                                                     ({"x0": {"meta": {"default": [{"name": "-name",
+                                                                       {'Structure level 1': {
+                                                                         'tags': ['default',
+                                                                                  'metadata_group2',
+                                                                                  'metadata_group3'],
+                                                                         'name': ['metadata_group2',
+                                                                                  'metadata_group3']}})),
+                                                                     ({"x0": {"meta": {"default": [{"name": "name",
                                                                                                     "query": "What is the name of task?"},
-                                                                                                   {"name": "-tags",
+                                                                                                   {"name": "tags",
                                                                                                     "query": "What is the name of task?"}],
                                                                                        "metadata_group1": [
-                                                                                         {"name": "-name",
+                                                                                         {"name": "name",
                                                                                           "query": "What is the name of task?"},
-                                                                                         {"name": "-tags",
+                                                                                         {"name": "tags",
                                                                                           "query": "What is the name of task?"}],
                                                                                        "metadata_group2": []}},
                                                                        "x1": {"meta": {
-                                                                         "default": [{"name": "-name",
+                                                                         "default": [{"name": "name",
                                                                                       "query": "What is the name of task?"},
-                                                                                     {"name": "-tags",
+                                                                                     {"name": "tags",
                                                                                       "query": "What is the name of task?"}],
-                                                                         "metadata_group2": [{"name": "-name",
+                                                                         "metadata_group2": [{"name": "name",
                                                                                               "query": "What is the name of task?"},
-                                                                                             {"name": "-tags",
+                                                                                             {"name": "tags",
                                                                                               "query": "What is the name of task?"}]}}},
                                                                       ({}, {}, {
                                                                         'Structure level 0': {
-                                                                          '-name': ['default', 'metadata_group1'],
-                                                                          '-tags': ['default', 'metadata_group1']},
+                                                                          'name': ['default', 'metadata_group1'],
+                                                                          'tags': ['default', 'metadata_group1']},
                                                                         'Structure level 1': {
-                                                                          '-name': ['default', 'metadata_group2'],
-                                                                          '-tags': ['default', 'metadata_group2']}})),
+                                                                          'name': ['default', 'metadata_group2'],
+                                                                          'tags': ['default', 'metadata_group2']}})),
 
-                                                                     ({"x0": {"meta": {"default": [{"name": "-name",
+                                                                     ({"x0": {"meta": {"default": [{"name": "name",
                                                                                                     "query": "What is the name of task?"},
-                                                                                                   {"name": "-tags",
+                                                                                                   {"name": "tags",
                                                                                                     "query": "What is the name of task?"},
                                                                                                    {"name": None,
                                                                                                     "query": "What is the name of task?"}
 
                                                                                                    ],
                                                                                        "metadata_group1": [
-                                                                                         {"name": "-name",
+                                                                                         {"name": "name",
                                                                                           "query": "What is the name of task?"},
-                                                                                         {"name": "-tags",
+                                                                                         {"name": "tags",
                                                                                           "query": "What is the name of task?"},
                                                                                          {"name": None,
                                                                                           "query": "What is the name of task?"}]}},
-                                                                       "x1": {"meta": {"default": [{"name": "-name",
+                                                                       "x1": {"meta": {"default": [{"name": "name",
                                                                                                     "query": "What is the name of task?"},
-                                                                                                   {"name": "-tags",
+                                                                                                   {"name": "tags",
                                                                                                     "query": "What is the name of task?"},
                                                                                                    {"name": "",
                                                                                                     "query": "What is the name of task?"}],
                                                                                        "metadata_group2": [
-                                                                                         {"name": "-name",
+                                                                                         {"name": "name",
                                                                                           "query": "What is the name of task?"},
-                                                                                         {"name": "-tags",
+                                                                                         {"name": "tags",
                                                                                           "query": "What is the name of task?"},
                                                                                          {"name": " ",
                                                                                           "query": "What is the name of task?"}]}}},
@@ -292,56 +300,56 @@ class TestDataHierarchyUtilityFunctions(object):
                                                                                'Structure level 1': ['default',
                                                                                                      'metadata_group2']},
                                                                           {'Structure level 0': {
-                                                                            '-name': ['default', 'metadata_group1'],
-                                                                            '-tags': ['default', 'metadata_group1']},
+                                                                            'name': ['default', 'metadata_group1'],
+                                                                            'tags': ['default', 'metadata_group1']},
                                                                             'Structure level 1': {
-                                                                              '-name': ['default', 'metadata_group2'],
-                                                                              '-tags': ['default',
-                                                                                        'metadata_group2']}})), (
+                                                                              'name': ['default', 'metadata_group2'],
+                                                                              'tags': ['default',
+                                                                                       'metadata_group2']}})), (
                                                                          {"x0": {}, "x1": {"meta": {"default": [
                                                                            {"name": "name",
                                                                             "query": "What is the name of task?"},
-                                                                           {"name": "-tags",
+                                                                           {"name": "tags",
                                                                             "query": "What is the name of task?"}],
                                                                            "metadata_group2": [
-                                                                             {"name": "-name",
+                                                                             {"name": "name",
                                                                               "query": "What is the name of task?"},
-                                                                             {"name": "-tags",
+                                                                             {"name": "tags",
                                                                               "query": "What is the name of task?"}]}},
                                                                           "test": {"meta": {
-                                                                            "default": [{"name": "-name",
+                                                                            "default": [{"name": "name",
                                                                                          "query": "What is the name of task?"},
                                                                                         {"name": "",
                                                                                          "query": "What is the name of task?"}, ]}}},
                                                                          (
                                                                              {'Structure level 1': {
-                                                                               'default': ['-name']},
-                                                                               'test': {'default': ['-tags']}},
+                                                                               'default': ['name']},
+                                                                               'test': {'default': ['tags']}},
                                                                              {'test': ['default']},
-                                                                             {'Structure level 1': {'-tags': ['default',
-                                                                                                              'metadata_group2']}})),
+                                                                             {'Structure level 1': {'tags': ['default',
+                                                                                                             'metadata_group2']}})),
                                                                      ({"x0": {}, "x1": {"meta": {
                                                                        "default": [{"name": "name",
                                                                                     "query": "What is the name of task?"},
-                                                                                   {"name": "-tags",
+                                                                                   {"name": "tags",
                                                                                     "query": "What is the name of task?"},
                                                                                    {}, {}],
-                                                                       "metadata_group2": [{"name": "-name",
+                                                                       "metadata_group2": [{"name": "name",
                                                                                             "query": "What is the name of task?"},
-                                                                                           {"name": "-tags",
+                                                                                           {"name": "tags",
                                                                                             "query": "What is the name of task?"},
                                                                                            {
                                                                                              "query": "What is the name of task?"}]}},
                                                                        "test": {
-                                                                         "meta": {"default": [{"name": "-name",
+                                                                         "meta": {"default": [{"name": "name",
                                                                                                "query": "What is the name of task?"}, ]}}},
                                                                       (
-                                                                          {'Structure level 1': {'default': ['-name']},
-                                                                           'test': {'default': ['-tags']}}, {
+                                                                          {'Structure level 1': {'default': ['name']},
+                                                                           'test': {'default': ['tags']}}, {
                                                                             'Structure level 1': ['default',
                                                                                                   'metadata_group2']}, {
-                                                                            'Structure level 1': {'-tags': ['default',
-                                                                                                            'metadata_group2']}})), ])
+                                                                            'Structure level 1': {'tags': ['default',
+                                                                                                           'metadata_group2']}})), ])
   def test_check_data_hierarchy_document_with_full_and_missing_metadata_returns_expected_result(self,
                                                                                                 data_hierarchy_types,
                                                                                                 expected_result):
@@ -366,12 +374,12 @@ class TestDataHierarchyUtilityFunctions(object):
                 {'name': 'tags', 'query': 'What is the name of task?'}],
     'metadata_group1': [{'name': 'name', 'query': 'What is the name of task?'},
                         {'name': 'tags', 'query': 'What is the name of task?'}]}}, {'Structure Level 0': {
-    'default': ['-name', '-tags']}}), ("test", {'meta': {'default': []}}, {}),
+    'default': ['name', 'tags']}}), ("test", {'meta': {'default': []}}, {}),
                                                                       ("test1", {'meta': {'default': None}}, {}),
                                                                       ("Structure Level 0", {'meta': {
-                                                                        'default': [{'name': '-name',
+                                                                        'default': [{'name': 'name',
                                                                                      'query': 'What is the name of task?'},
-                                                                                    {'name': '-tags',
+                                                                                    {'name': 'tags',
                                                                                      'query': 'What is the name of task?'}],
                                                                         'metadata_group1': [{'name': 'name',
                                                                                              'query': 'What is the name of task?'},
@@ -392,40 +400,40 @@ class TestDataHierarchyUtilityFunctions(object):
                                                                       ("test", {'meta': {'default': []}}, {}),
                                                                       ("test1", {'meta': {'default': None}}, {}),
                                                                       ("Structure Level 0", {
-                                                                        'meta': {'default': [{'name': '-name',
+                                                                        'meta': {'default': [{'name': 'name',
                                                                                               'query': 'What is the name of task?'},
                                                                                              {'name': None,
                                                                                               'query': 'What is the name of task?'},
-                                                                                             {'name': '-tags',
+                                                                                             {'name': 'tags',
                                                                                               'query': 'What is the name of task?'}],
                                                                                  'metadata_group1': []}},
                                                                        {'Structure Level 0': ['default']}),
                                                                       ("test", {'meta': {
-                                                                        'default': [{'name': '-name',
+                                                                        'default': [{'name': 'name',
                                                                                      'query': 'What is the name of task?'},
                                                                                     {'name': None,
                                                                                      'query': 'What is the name of task?'},
-                                                                                    {'name': '-tags',
+                                                                                    {'name': 'tags',
                                                                                      'query': 'What is the name of task?'}],
                                                                         'metadata_group1': [{'name': '',
                                                                                              'query': 'What is the name of task?'},
                                                                                             {'name': None,
                                                                                              'query': 'What is the name of task?'},
-                                                                                            {'name': '-tags',
+                                                                                            {'name': 'tags',
                                                                                              'query': 'What is the name of task?'}], }},
                                                                        {'test': ['default', 'metadata_group1']}), (
                                                                           "test1", {'meta': {'default': [
-                                                                            {'name': '-name',
+                                                                            {'name': 'name',
                                                                              'query': 'What is the name of task?'},
                                                                             {'name': None,
                                                                              'query': 'What is the name of task?'},
-                                                                            {'name': '-tags',
+                                                                            {'name': 'tags',
                                                                              'query': 'What is the name of task?'}],
                                                                             None: [{'name': '',
                                                                                     'query': 'What is the name of task?'},
                                                                                    {'name': None,
                                                                                     'query': 'What is the name of task?'},
-                                                                                   {'name': '-tags',
+                                                                                   {'name': 'tags',
                                                                                     'query': 'What is the name of task?'}], }},
                                                                           {'test1': ['default', None]})])
   def test_set_types_without_name_in_metadata_returns_expected_result(self, type_name, type_value, expected_result):
@@ -444,78 +452,78 @@ class TestDataHierarchyUtilityFunctions(object):
                                                                                                'metadata_group1']}}),
                             ("test", {'meta': {'default': []}}, {}),
                             ("test1", {'meta': {'default': None}}, {}), ("Structure Level 0", {'meta': {
-                             'default': [{'name': '-name', 'query': 'What is the name of task?'},
+                             'default': [{'name': 'name', 'query': 'What is the name of task?'},
                                          {'name': None, 'query': 'What is the name of task?'},
-                                         {'name': '-tags', 'query': 'What is the name of task?'}],
+                                         {'name': 'tags', 'query': 'What is the name of task?'}],
                              'metadata_group1': []}}, {}), (
-                                "test", {'meta': {'default': [{'name': '-name', 'query': 'What is the name of task?'},
+                                "test", {'meta': {'default': [{'name': 'name', 'query': 'What is the name of task?'},
                                                               {'name': None, 'query': 'What is the name of task?'},
-                                                              {'name': '-tags', 'query': 'What is the name of task?'}],
+                                                              {'name': 'tags', 'query': 'What is the name of task?'}],
                                                   'metadata_group1': [
                                                     {'name': '', 'query': 'What is the name of task?'},
                                                     {'name': None, 'query': 'What is the name of task?'},
-                                                    {'name': '-tags', 'query': 'What is the name of task?'}], }},
-                                {'test': {'-tags': ['default', 'metadata_group1']}}), ("test1", {'meta': {
-                             'default': [{'name': '-name', 'query': 'What is the name of task?'},
+                                                    {'name': 'tags', 'query': 'What is the name of task?'}], }},
+                                {'test': {'tags': ['default', 'metadata_group1']}}), ("test1", {'meta': {
+                             'default': [{'name': 'name', 'query': 'What is the name of task?'},
                                          {'name': None, 'query': 'What is the name of task?'},
-                                         {'name': '-tags', 'query': 'What is the name of task?'}],
+                                         {'name': 'tags', 'query': 'What is the name of task?'}],
                              'test': [{'name': '', 'query': 'What is the name of task?'},
                                       {'name': None, 'query': 'What is the name of task?'},
-                                      {'name': '-tags', 'query': 'What is the name of task?'}], }}, {'test1': {
-                             '-tags': ['default', 'test']}}), ("test2", {'meta': {
-                             'default': [{'name': '-name', 'query': 'What is the name of task?'},
+                                      {'name': 'tags', 'query': 'What is the name of task?'}], }}, {'test1': {
+                             'tags': ['default', 'test']}}), ("test2", {'meta': {
+                             'default': [{'name': 'name', 'query': 'What is the name of task?'},
                                          {'name': 'duplicate1', 'query': 'What is the name of task?'},
                                          {'name': 'duplicate3', 'query': 'What is the name of task?'},
                                          {'name': 'duplicate2', 'query': 'What is the name of task?'},
-                                         {'name': '-tags', 'query': 'What is the name of task?'}],
+                                         {'name': 'tags', 'query': 'What is the name of task?'}],
                              'group1': [{'name': '', 'query': 'What is the name of task?'},
                                         {'name': 'duplicate1', 'query': 'What is the name of task?'},
-                                        {'name': '-tags', 'query': 'What is the name of task?'}],
+                                        {'name': 'tags', 'query': 'What is the name of task?'}],
                              'group2': [{'name': '', 'query': 'What is the name of task?'},
                                         {'name': 'duplicate1', 'query': 'What is the name of task?'},
                                         {'name': 'duplicate2', 'query': 'What is the name of task?'},
-                                        {'name': '-tags', 'query': 'What is the name of task?'}],
+                                        {'name': 'tags', 'query': 'What is the name of task?'}],
                              'group3': [{'name': '', 'query': 'What is the name of task?'},
                                         {'name': 'duplicate1', 'query': 'What is the name of task?'},
                                         {'name': 'duplicate2', 'query': 'What is the name of task?'},
                                         {'name': 'duplicate3', 'query': 'What is the name of task?'},
-                                        {'name': '-tags', 'query': 'What is the name of task?'}],
+                                        {'name': 'tags', 'query': 'What is the name of task?'}],
                              'group4': [{'name': '', 'query': 'What is the name of task?'},
                                         {'name': 'duplicate3', 'query': 'What is the name of task?'}]}}, {'test2': {
-                             '-tags': ['group2', 'group3', 'default', 'group1'],
+                             'tags': ['group2', 'group3', 'default', 'group1'],
                              'duplicate1': ['group2', 'group3', 'default', 'group1'],
                              'duplicate2': ['group2', 'group3', 'default'],
                              'duplicate3': ['group3', 'default', 'group4']}}), ("test", {'meta': {
-                             'default': [{'name': '-name', 'query': 'What is the name of task?'},
-                                         {'name': '-name', 'query': 'What is the name of task?'},
+                             'default': [{'name': 'name', 'query': 'What is the name of task?'},
+                                         {'name': 'name', 'query': 'What is the name of task?'},
                                          {'name': None, 'query': 'What is the name of task?'},
-                                         {'name': '-tags', 'query': 'What is the name of task?'},
-                                         {'name': '-tags', 'query': 'What is the name of task?'}],
+                                         {'name': 'tags', 'query': 'What is the name of task?'},
+                                         {'name': 'tags', 'query': 'What is the name of task?'}],
                              'metadata_group1': [{'name': '', 'query': 'What is the name of task?'},
                                                  {'name': None, 'query': 'What is the name of task?'},
-                                                 {'name': '-tags', 'query': 'What is the name of task?'}], }}, {
-                                                                                  'test': {'-name': ['default'],
-                                                                                           '-tags': ['default',
-                                                                                                     'metadata_group1']}}),
-                            ("test", {'meta': {'default': [{'name': '-name', 'query': 'What is the name of task?'},
-                                                           {'name': '-name', 'query': 'What is the name of task?'},
+                                                 {'name': 'tags', 'query': 'What is the name of task?'}], }}, {
+                                                                                  'test': {'name': ['default'],
+                                                                                           'tags': ['default',
+                                                                                                    'metadata_group1']}}),
+                            ("test", {'meta': {'default': [{'name': 'name', 'query': 'What is the name of task?'},
+                                                           {'name': 'name', 'query': 'What is the name of task?'},
                                                            {'name': None, 'query': 'What is the name of task?'},
-                                                           {'name': '-tags', 'query': 'What is the name of task?'},
-                                                           {'name': '-tags', 'query': 'What is the name of task?'},
+                                                           {'name': 'tags', 'query': 'What is the name of task?'},
+                                                           {'name': 'tags', 'query': 'What is the name of task?'},
                                                            {'name': 'new', 'query': 'What is the name of task?'},
                                                            {'name': 'new', 'query': 'What is the name of task?'},
                                                            {'name': 'new', 'query': 'What is the name of task?'}],
                                                'metadata_group1': [{'name': '', 'query': 'What is the name of task?'},
                                                                    {'name': None, 'query': 'What is the name of task?'},
-                                                                   {'name': '-tags',
+                                                                   {'name': 'tags',
                                                                     'query': 'What is the name of task?'}], }}, {
-                               'test': {'new': ['default'], '-name': ['default'],
-                                        '-tags': ['default', 'metadata_group1']}}), ("test", {'meta': {
-                             'default': [{'name': '-name', 'query': 'What is the name of task?'},
-                                         {'name': '-name', 'query': 'What is the name of task?'},
+                               'test': {'new': ['default'], 'name': ['default'],
+                                        'tags': ['default', 'metadata_group1']}}), ("test", {'meta': {
+                             'default': [{'name': 'name', 'query': 'What is the name of task?'},
+                                         {'name': 'name', 'query': 'What is the name of task?'},
                                          {'name': None, 'query': 'What is the name of task?'},
-                                         {'name': '-tags', 'query': 'What is the name of task?'},
-                                         {'name': '-tags', 'query': 'What is the name of task?'},
+                                         {'name': 'tags', 'query': 'What is the name of task?'},
+                                         {'name': 'tags', 'query': 'What is the name of task?'},
                                          {'name': 'new', 'query': 'What is the name of task?'},
                                          {'name': 'new', 'query': 'What is the name of task?'},
                                          {'name': 'new', 'query': 'What is the name of task?'}],
@@ -523,20 +531,20 @@ class TestDataHierarchyUtilityFunctions(object):
                                                  {'name': None, 'query': 'What is the name of task?'},
                                                  {'name': 'test', 'query': 'What is the name of task?'},
                                                  {'name': 'test', 'query': 'What is the name of task?'},
-                                                 {'name': '-tags', 'query': 'What is the name of task?'}],
+                                                 {'name': 'tags', 'query': 'What is the name of task?'}],
                              'metadata_group2': [{'name': '', 'query': 'What is the name of task?'},
                                                  {'name': None, 'query': 'What is the name of task?'},
                                                  {'name': 'test', 'query': 'What is the name of task?'},
                                                  {'name': 'test', 'query': 'What is the name of task?'},
-                                                 {'name': '-tags', 'query': 'What is the name of task?'}], }}, {
-                                                                                       'test': {'new': ['default'],
-                                                                                                '-name': ['default'],
-                                                                                                '-tags': ['default',
-                                                                                                          'metadata_group1',
-                                                                                                          'metadata_group2'],
-                                                                                                'test': [
-                                                                                                  'metadata_group1',
-                                                                                                  'metadata_group2']}})])
+                                                 {'name': 'tags', 'query': 'What is the name of task?'}], }}, {
+                                                                                      'test': {'new': ['default'],
+                                                                                               'name': ['default'],
+                                                                                               'tags': ['default',
+                                                                                                        'metadata_group1',
+                                                                                                        'metadata_group2'],
+                                                                                               'test': [
+                                                                                                 'metadata_group1',
+                                                                                                 'metadata_group2']}})])
   def test_set_types_with_duplicate_metadata_returns_expected_result(self, type_name, type_value, expected_result):
     types_with_duplicate_metadata = {}
     assert set_types_with_duplicate_metadata(type_name, type_value, types_with_duplicate_metadata) is None
@@ -554,36 +562,36 @@ class TestDataHierarchyUtilityFunctions(object):
     assert check_data_hierarchy_types(None) == ({}, {}, {}), "check_data_hierarchy_document should return empty tuple"
 
   @pytest.mark.parametrize("missing_metadata, missing_names, duplicate_metadata, expected_message", [({}, {}, {}, ""), (
-      {'Structure level 0': {'metadata_group1': ['-name', '-tags'], 'default': ['-name', '-tags']},
-       'Structure level 1': {'metadata_group2': ['-name', '-tags'], 'default': ['-name', '-tags']}},
+      {'Structure level 0': {'metadata_group1': ['name', 'tags'], 'default': ['name', 'tags']},
+       'Structure level 1': {'metadata_group2': ['name', 'tags'], 'default': ['name', 'tags']}},
       {'Structure level 0': ['default', 'metadata_group1'], 'Structure level 1': ['default', 'metadata_group2']}, {
-        'Structure level 0': {'-tags': ['group2', 'group3', 'default', 'group1'],
+        'Structure level 0': {'tags': ['group2', 'group3', 'default', 'group1'],
                               'duplicate1': ['group2', 'group3', 'default', 'group1'],
                               'duplicate2': ['group2', 'group3', 'default'],
                               'duplicate3': ['group3', 'default', 'group4']}},
-      "<html><b>Missing required metadata: </b><ul><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">metadata_group1</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">metadata_group1</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-tags</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-tags</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">metadata_group2</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">metadata_group2</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-tags</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-tags</i></li></ul><b>Duplicate metadata found: </b><ul><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">group2</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-tags</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">group3</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-tags</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-tags</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">group1</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-tags</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">group2</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">duplicate1</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">group3</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">duplicate1</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">duplicate1</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">group1</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">duplicate1</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">group2</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">duplicate2</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">group3</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">duplicate2</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">duplicate2</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">group3</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">duplicate3</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">duplicate3</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">group4</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">duplicate3</i></li></ul><b>Missing metadata names:</b><ul><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">metadata_group1</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">metadata_group2</i></li></ul></html>"),
+      "<html><b>Missing required metadata: </b><ul><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">metadata_group1</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">metadata_group1</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">tags</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">tags</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">metadata_group2</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">metadata_group2</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">tags</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">tags</i></li></ul><b>Duplicate metadata found: </b><ul><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">group2</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">tags</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">group3</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">tags</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">tags</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">group1</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">tags</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">group2</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">duplicate1</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">group3</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">duplicate1</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">duplicate1</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">group1</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">duplicate1</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">group2</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">duplicate2</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">group3</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">duplicate2</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">duplicate2</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">group3</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">duplicate3</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">duplicate3</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">group4</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">duplicate3</i></li></ul><b>Missing metadata names:</b><ul><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">metadata_group1</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">metadata_group2</i></li></ul></html>"),
                                                                                                      ({
                                                                                                         'Structure level 0': {
                                                                                                           'metadata_group1': [
-                                                                                                            '-name',
-                                                                                                            '-tags'],
+                                                                                                            'name',
+                                                                                                            'tags'],
                                                                                                           'default': [
-                                                                                                            '-name',
-                                                                                                            '-tags']},
+                                                                                                            'name',
+                                                                                                            'tags']},
                                                                                                         'Structure level 1': {
                                                                                                           'metadata_group2': [
-                                                                                                            '-name',
-                                                                                                            '-tags'],
+                                                                                                            'name',
+                                                                                                            'tags'],
                                                                                                           'default': [
-                                                                                                            '-name',
-                                                                                                            '-tags']}},
+                                                                                                            'name',
+                                                                                                            'tags']}},
                                                                                                       {},
                                                                                                       {'NewType': {
                                                                                                         'duplicate3': [
                                                                                                           'group3',
                                                                                                           'default',
                                                                                                           'group4']}},
-                                                                                                      "<html><b>Missing required metadata: </b><ul><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">metadata_group1</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">metadata_group1</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-tags</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-tags</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">metadata_group2</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">metadata_group2</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-tags</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">-tags</i></li></ul><b>Duplicate metadata found: </b><ul><li>Type: <i style=\"color:Crimson\">NewType</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">group3</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">duplicate3</i></li><li>Type: <i style=\"color:Crimson\">NewType</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">duplicate3</i></li><li>Type: <i style=\"color:Crimson\">NewType</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">group4</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">duplicate3</i></li></ul></html>"),
+                                                                                                      "<html><b>Missing required metadata: </b><ul><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">metadata_group1</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">metadata_group1</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">tags</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 0</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">tags</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">metadata_group2</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">metadata_group2</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">tags</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">name</i></li><li>Type: <i style=\"color:Crimson\">Structure level 1</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">tags</i></li></ul><b>Duplicate metadata found: </b><ul><li>Type: <i style=\"color:Crimson\">NewType</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">group3</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">duplicate3</i></li><li>Type: <i style=\"color:Crimson\">NewType</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">default</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">duplicate3</i></li><li>Type: <i style=\"color:Crimson\">NewType</i>&nbsp;&nbsp;Metadata Group: <i style=\"color:Crimson\">group4</i>&nbsp;&nbsp;Metadata Name: <i style=\"color:Crimson\">duplicate3</i></li></ul></html>"),
                                                                                                      ({}, {
                                                                                                        'Structure level 0': [
                                                                                                          'default',

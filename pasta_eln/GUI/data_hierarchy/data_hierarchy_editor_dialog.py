@@ -60,9 +60,6 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
     """
     Constructs the data hierarchy data editor
 
-    Args:
-      database (Database): Pasta ELN database instance
-
     Raises:
       DocumentNullException: Raised when passed in argument database has null data_hierarchy_document.
     """
@@ -450,6 +447,7 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
       self.data_hierarchy_document[type_name] = type_structure
     # Save the modified document
     self.database.save_data_hierarchy_document(self.data_hierarchy_document)
+    show_message("Data hierarchy saved successfully...", QMessageBox.Icon.Information)
 
   def show_hide_attachments_table(self) -> None:
     """

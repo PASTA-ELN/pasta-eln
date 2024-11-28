@@ -3,7 +3,7 @@
 #  Copyright (c) 2024
 #
 #  Author: Jithu Murugan
-#  Filename: test_dataverse_database_orm_upload_model.py
+#  Filename: test_database_upload_orm_model.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 

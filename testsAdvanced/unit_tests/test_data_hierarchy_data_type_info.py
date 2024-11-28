@@ -9,7 +9,7 @@
 import pytest
 
 from pasta_eln.GUI.data_hierarchy.data_type_info import DataTypeInfo
-from pasta_eln.dataverse.incorrect_parameter_error import IncorrectParameterError
+from pasta_eln.database.incorrect_parameter_error import IncorrectParameterError
 
 
 class TestDataHierarchyDataTypeInfo:

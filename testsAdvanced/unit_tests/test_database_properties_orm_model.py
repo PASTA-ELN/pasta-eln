@@ -3,12 +3,12 @@
 #  Copyright (c) 2024
 #
 #  Author: Jithu Murugan
-#  Filename: test_dataverse_database_orm_properties_model.py
+#  Filename: test_database_properties_orm_model.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import pytest
 
-from pasta_eln.database.models.database_orm_properties_model import DatabaseOrmPropertiesModel
+from pasta_eln.database.models.properties_orm_model import PropertiesOrmModel
 
 
 class TestDatabaseOrmPropertiesModel:
@@ -36,7 +36,7 @@ class TestDatabaseOrmPropertiesModel:
   )
   def test_get_table_columns(self, id_value, key_value, value_value, unit_value, expected_columns):
     # Act
-    columns = DatabaseOrmPropertiesModel.get_table_columns()
+    columns = PropertiesOrmModel.get_table_columns()
 
     # Assert
     assert columns == expected_columns

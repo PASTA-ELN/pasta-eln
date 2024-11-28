@@ -14,6 +14,7 @@ from PySide6 import QtWidgets
 from PySide6.QtWidgets import QApplication, QDialog, QMessageBox
 from _pytest.mark import param
 
+from pasta_eln.GUI.data_hierarchy.attachments_tableview_data_model import AttachmentsTableViewModel
 from pasta_eln.GUI.data_hierarchy.constants import ATTACHMENT_TABLE_DELETE_COLUMN_INDEX, \
   ATTACHMENT_TABLE_REORDER_COLUMN_INDEX, METADATA_TABLE_DELETE_COLUMN_INDEX, \
   METADATA_TABLE_IRI_COLUMN_INDEX, METADATA_TABLE_REORDER_COLUMN_INDEX, METADATA_TABLE_REQUIRED_COLUMN_INDEX
@@ -25,17 +26,59 @@ from pasta_eln.GUI.data_hierarchy.generic_exception import GenericException
 from pasta_eln.GUI.data_hierarchy.key_not_found_exception import \
   KeyNotFoundException
 from pasta_eln.GUI.data_hierarchy.mandatory_column_delegate import MandatoryColumnDelegate
+from pasta_eln.GUI.data_hierarchy.metadata_tableview_data_model import MetadataTableViewModel
 from pasta_eln.GUI.data_hierarchy.reorder_column_delegate import ReorderColumnDelegate
 from pasta_eln.GUI.data_hierarchy.utility_functions import get_types_for_display
-# from pasta_eln.database import Database
-from testsAdvanced.common.fixtures import configuration_extended
+
+
+@pytest.fixture
+def configuration_extended(mocker) -> DataHierarchyEditorDialog:
+  mock_pasta_db = mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.DatabaseAPI')
+  mock_pasta_db.return_value.get_data_hierarchy_document.return_value = MagicMock()
+  mocker.patch('pasta_eln.GUI.data_hierarchy.create_type_dialog.logging.getLogger')
+  mocker.patch(
+    'pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog_base.Ui_DataHierarchyEditorDialogBase.setupUi')
+  mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.adjust_data_hierarchy_data_to_v4')
+  mocker.patch.object(QDialog, '__new__')
+  mocker.patch.object(MetadataTableViewModel, '__new__')
+  mocker.patch.object(AttachmentsTableViewModel, '__new__')
+  mocker.patch.object(MandatoryColumnDelegate, '__new__', lambda _: mocker.MagicMock())
+  mocker.patch.object(DeleteColumnDelegate, '__new__', lambda _: mocker.MagicMock())
+  mocker.patch.object(ReorderColumnDelegate, '__new__', lambda _: mocker.MagicMock())
+  mocker.patch.object(DataHierarchyEditorDialog, 'typeMetadataTableView', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'typeAttachmentsTableView', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'addMetadataRowPushButton', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'addAttachmentPushButton', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'saveDataHierarchyPushButton', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'addMetadataGroupPushButton', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'deleteMetadataGroupPushButton', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'deleteTypePushButton', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'addTypePushButton', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'editTypePushButton', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'cancelPushButton', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'helpPushButton', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'attachmentsShowHidePushButton', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'typeComboBox', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'metadataGroupComboBox', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'metadata_table_data_model', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'attachments_table_data_model', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'webbrowser', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'instance', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'typeDisplayedTitleLineEdit', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'typeIriLineEdit', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'delete_column_delegate_metadata_table', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'reorder_column_delegate_metadata_table', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'delete_column_delegate_attach_table', create=True)
+  mocker.patch.object(DataHierarchyEditorDialog, 'reorder_column_delegate_attach_table', create=True)
+  mocker.patch.object(TypeDialog, '__new__')
+  return DataHierarchyEditorDialog()
 
 
 class TestDataHierarchyEditorDialog(object):
 
   def test_instantiation_should_succeed(self,
                                         mocker):
-    mock_database = mocker.patch('pasta_eln.database.Database')
+    mock_pasta_db = mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.DatabaseAPI')
     mocker.patch('pasta_eln.GUI.data_hierarchy.create_type_dialog.logging.getLogger')
     mock_setup_ui = mocker.patch(
       'pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog_base.Ui_DataHierarchyEditorDialogBase.setupUi')
@@ -106,13 +149,12 @@ class TestDataHierarchyEditorDialog(object):
     mock_load_data_hierarchy_data = mocker.patch.object(DataHierarchyEditorDialog, 'load_data_hierarchy_data',
                                                         create=True)
     mocker.patch.object(TypeDialog, '__new__')
-    config_instance = DataHierarchyEditorDialog(mock_database)
+    config_instance = DataHierarchyEditorDialog()
     assert config_instance, "DataHierarchyEditorDialog should be created"
     assert config_instance.type_changed_signal == mock_signal, "Signal should be created"
     mock_setup_ui.assert_called_once_with(mock_dialog)
-    assert config_instance.database is mock_database, "Database should be set"
-    config_instance.database.db.__getitem__.assert_called_once_with('-dataHierarchy-')
-    assert config_instance.data_hierarchy_document is config_instance.database.db.__getitem__.return_value, "Data Hierarchy document should be set"
+    assert config_instance.database is mock_pasta_db.return_value, "Database should be set"
+    config_instance.database.get_data_hierarchy_document.assert_called_once()
     assert config_instance.metadata_table_data_model == mock_metadata_table_view_model, "Metadata table data model should be set"
     assert config_instance.attachments_table_data_model == mock_attachments_table_view_model, "Attachments table data model should be set"
     assert config_instance.required_column_delegate_metadata_table == mock_required_column_delegate, "Required column delegate should be set"
@@ -167,25 +209,16 @@ class TestDataHierarchyEditorDialog(object):
     config_instance.typeAttachmentsTableView.hide.assert_called_once_with()
     mock_load_data_hierarchy_data.assert_called_once_with()
 
-  def test_instantiation_with_null_database_should_throw_exception(self,
-                                                                   mocker):
-    mocker.patch('pasta_eln.GUI.data_hierarchy.create_type_dialog.logging.getLogger')
-    mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.Ui_DataHierarchyEditorDialogBase.setupUi')
-    mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.adjust_data_hierarchy_data_to_v4')
-    mocker.patch.object(QDialog, '__new__')
-    with pytest.raises(GenericException, match="Null database instance passed to the initializer"):
-      DataHierarchyEditorDialog(None)
-
   def test_instantiation_with_database_with_null_document_should_throw_exception(self,
                                                                                  mocker):
+    mock_pasta_db = mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.DatabaseAPI')
     mocker.patch('pasta_eln.GUI.data_hierarchy.create_type_dialog.logging.getLogger')
     mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.Ui_DataHierarchyEditorDialogBase.setupUi')
     mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.adjust_data_hierarchy_data_to_v4')
     mocker.patch.object(QDialog, '__new__')
-    mock_db = mocker.patch('pasta_eln.database.Database')
-    mocker.patch.object(mock_db, 'db', {'-dataHierarchy-': None}, create=True)
+    mock_pasta_db.return_value.get_data_hierarchy_document.return_value = None
     with pytest.raises(DocumentNullException, match="Null data_hierarchy document in db instance"):
-      DataHierarchyEditorDialog(mock_db)
+      DataHierarchyEditorDialog()
 
   @pytest.mark.parametrize(
     "new_type_selected, data_hierarchy_types, expected_metadata_keys, expected_attachments, test_id",
@@ -976,8 +1009,6 @@ class TestDataHierarchyEditorDialog(object):
     mock_check_data_hierarchy_types = mocker.patch(
       'pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.check_data_hierarchy_types',
       return_value=(None, None, None))
-    mock_db_init_views = mocker.patch.object(configuration_extended.database,
-                                             'initDocTypeViews', return_value=None)
     assert configuration_extended.save_data_hierarchy() is None, "Nothing should be returned"
 
     if doc:
@@ -991,70 +1022,15 @@ class TestDataHierarchyEditorDialog(object):
                                                                                      item])
     mock_check_data_hierarchy_types.assert_called_once_with(configuration_extended.data_hierarchy_types)
     configuration_extended.logger.info.assert_called_once_with("User clicked the save button..")
-    configuration_extended.data_hierarchy_document.save.assert_called_once()
-    mock_db_init_views.assert_called_once_with(16)
-    mock_show_message.assert_called_once_with('Save will close the tool and restart the Pasta Application (Yes/No?)',
-                                              QMessageBox.Question,
-                                              QMessageBox.No | QMessageBox.Yes,
-                                              QMessageBox.Yes)
-
-  @pytest.mark.parametrize("data_hierarchy_document",
-                           [None,
-                            {"x0": {"IRI": "x0"}, "": {"IRI": "x1"}},
-                            {"x0": {"IRI": "x0"}, "": {"IRI": "x1"}, 23: "test", "__id": "test"},
-                            {"test": ["test1", "test2", "test3"]}
-                            ])
-  def test_cancel_save_data_hierarchy_should_do_expected(self,
-                                                         mocker,
-                                                         data_hierarchy_document,
-                                                         configuration_extended: configuration_extended,
-                                                         request):
-    doc = request.getfixturevalue(data_hierarchy_document) \
-      if data_hierarchy_document and type(data_hierarchy_document) is str \
-      else data_hierarchy_document
-    mocker.patch.object(configuration_extended, 'data_hierarchy_document', create=True)
-    if doc:
-      mocker.patch.object(configuration_extended, 'data_hierarchy_types', dict(data_hierarchy_document), create=True)
-      configuration_extended.data_hierarchy_document.__setitem__.side_effect = doc.__setitem__
-      configuration_extended.data_hierarchy_document.__getitem__.side_effect = doc.__getitem__
-      configuration_extended.data_hierarchy_document.__iter__.side_effect = doc.__iter__
-      configuration_extended.data_hierarchy_document.__contains__.side_effect = doc.__contains__
-      configuration_extended.data_hierarchy_document.__delitem__.side_effect = doc.__delitem__
-      configuration_extended.data_hierarchy_document.keys.side_effect = doc.keys
-
-    mocker.patch.object(configuration_extended.logger, 'info')
-    mock_show_message = mocker.patch(
-      'pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.show_message', return_value=QMessageBox.No)
-    mock_is_instance = mocker.patch(
-      'pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.isinstance')
-    mock_check_data_hierarchy_types = mocker.patch(
-      'pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.check_data_hierarchy_types',
-      return_value=(None, None, None))
-    mock_db_init_views = mocker.patch.object(configuration_extended.database,
-                                             'initDocTypeViews', return_value=None)
-    assert configuration_extended.save_data_hierarchy() is None, "Nothing should be returned"
-
-    if doc:
-      for item in doc:
-        mock_is_instance.assert_not_called()
-        if isinstance(doc[item], dict):
-          configuration_extended.data_hierarchy_document.__delitem__.assert_not_called()
-      for _ in configuration_extended.data_hierarchy_types:
-        configuration_extended.data_hierarchy_document.__setitem__.assert_not_called()
-    mock_check_data_hierarchy_types.assert_called_once_with(configuration_extended.data_hierarchy_types)
-    configuration_extended.logger.info.assert_called_once_with("User clicked the save button..")
-    configuration_extended.data_hierarchy_document.save.assert_not_called()
-    mock_db_init_views.assert_not_called()
-    mock_show_message.assert_called_once_with('Save will close the tool and restart the Pasta Application (Yes/No?)',
-                                              QMessageBox.Question,
-                                              QMessageBox.No | QMessageBox.Yes,
-                                              QMessageBox.Yes)
+    configuration_extended.database.save_data_hierarchy_document.assert_called_once_with(
+      configuration_extended.data_hierarchy_document)
+    mock_show_message.assert_called_once_with("Data hierarchy saved successfully...", QMessageBox.Icon.Information)
 
   @pytest.mark.parametrize(
     "types_with_missing_metadata, types_with_null_name_metadata, types_with_duplicate_metadata, expected_message, expected_log_warning, expected_log_info",
     [
       # Happy path: No missing, null, or duplicate metadata
-      param([], [], [], "Save will close the tool and restart the Pasta Application (Yes/No?)", False, True,
+      param([], [], [], 'Data hierarchy saved successfully...', False, True,
             id="no_missing_null_duplicate_metadata"),
 
       # Edge case: Missing metadata
@@ -1080,7 +1056,8 @@ class TestDataHierarchyEditorDialog(object):
                                                types_with_duplicate_metadata,
                                                expected_message,
                                                expected_log_warning,
-                                               expected_log_info):
+                                               expected_log_info,
+                                               request):
     mock_check_data_hierarchy_types = mocker.patch(
       'pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.check_data_hierarchy_types')
     mock_get_missing_metadata_message = mocker.patch(
@@ -1096,9 +1073,12 @@ class TestDataHierarchyEditorDialog(object):
     # Assert
     if expected_message:
       if expected_log_info:
-        mock_show_message.assert_called_once_with(expected_message, QMessageBox.Icon.Question,
-                                                  QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
-                                                  QMessageBox.StandardButton.Yes)
+        if request.node.callspec.id == "no_missing_null_duplicate_metadata":
+          mock_show_message.assert_called_once_with(expected_message, QMessageBox.Icon.Information)
+        else:
+          mock_show_message.assert_called_once_with(expected_message, QMessageBox.Icon.Question,
+                                                    QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
+                                                    QMessageBox.StandardButton.Yes)
       else:
         mock_show_message.assert_called_once_with(expected_message, QMessageBox.Icon.Warning)
       if expected_log_warning:
@@ -1106,37 +1086,6 @@ class TestDataHierarchyEditorDialog(object):
     else:
       mock_show_message.assert_not_called()
       configuration_extended.logger.warning.assert_not_called()
-
-  @pytest.mark.parametrize(
-    "user_response, expected_save_call",
-    [
-      # Success path: User chooses to save
-      param(QMessageBox.StandardButton.Yes, True, id="user_confirms_save"),
-
-      # Edge case: User chooses not to save
-      param(QMessageBox.StandardButton.No, False, id="user_declines_save"),
-    ]
-  )
-  def test_save_data_hierarchy_user_confirmation(self,
-                                                 mocker,
-                                                 configuration_extended: configuration_extended,
-                                                 user_response,
-                                                 expected_save_call):
-    mock_show_message = mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.show_message')
-    mock_show_message.return_value = user_response
-
-    # Act
-    configuration_extended.save_data_hierarchy()
-
-    # Assert
-    if expected_save_call:
-      configuration_extended.data_hierarchy_document.save.assert_called_once()
-      configuration_extended.database.initDocTypeViews.assert_called_once_with(16)
-      configuration_extended.instance.close.assert_called_once()
-    else:
-      configuration_extended.data_hierarchy_document.save.assert_not_called()
-      configuration_extended.database.initDocTypeViews.assert_not_called()
-      configuration_extended.instance.close.assert_not_called()
 
   @pytest.mark.parametrize(
     "existing_instance, expected_instance_type, test_id",
@@ -1156,7 +1105,6 @@ class TestDataHierarchyEditorDialog(object):
                                 expected_instance_type,
                                 test_id):
     # Arrange
-    database = mocker.MagicMock(spec=Database)
     app_instance = mocker.MagicMock(spec=QApplication)
     mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.QApplication',
                  return_value=app_instance)
@@ -1166,7 +1114,7 @@ class TestDataHierarchyEditorDialog(object):
                                return_value=mocker.MagicMock(instance=mocker.MagicMock()))
 
     # Act
-    application, dialog_instance, data_hierarchy_form = get_gui(database)
+    application, dialog_instance, data_hierarchy_form = get_gui()
 
     # Assert
     assert isinstance(application, expected_instance_type)

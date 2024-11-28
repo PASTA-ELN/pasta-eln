@@ -3,16 +3,16 @@
 #  Copyright (c) 2024
 #
 #  Author: Jithu Murugan
-#  Filename: test_dataverse_project_model.py
+#  Filename: test_database_project_model.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import pytest
 
-from pasta_eln.dataverse.incorrect_parameter_error import IncorrectParameterError
+from pasta_eln.database.incorrect_parameter_error import IncorrectParameterError
 from pasta_eln.database.models.project_model import ProjectModel
 
 
-class TestDataverseProjectModel:
+class TestDatabaseProjectModel:
   # Success path tests with various realistic test values
   @pytest.mark.parametrize("test_id, _id, name, comment, user, date_created, date_modified, status, objective", [
     ("Success-01", "123", "Project Alpha", "Initial phase", "user1", "2023-01-01", "2023-01-01", "Active", "Research"),

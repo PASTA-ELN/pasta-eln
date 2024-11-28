@@ -3,19 +3,19 @@
 #  Copyright (c) 2024
 #
 #  Author: Jithu Murugan
-#  Filename: test_dataverse_upload_model.py
+#  Filename: test_database_upload_model.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import inspect
 
 import pytest
 
-from pasta_eln.dataverse.incorrect_parameter_error import IncorrectParameterError
+from pasta_eln.database.incorrect_parameter_error import IncorrectParameterError
 from pasta_eln.database.models.upload_model import UploadModel
 
 
 # Success path tests with various realistic test values
-class TestDataverseUploadModel:
+class TestDatabaseUploadModel:
   # Success path tests with various realistic test values
   @pytest.mark.parametrize(
     "test_id, _id, data_type, project_name, project_doc_id, status, created_date_time, finished_date_time, log, dataverse_url",

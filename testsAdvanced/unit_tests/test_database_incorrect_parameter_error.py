@@ -3,19 +3,22 @@
 #  Copyright (c) 2024
 #
 #  Author: Jithu Murugan
-#  Filename: test_dataverse_incorrect_parameter_error.py
+#  Filename: test_database_incorrect_parameter_error.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import pytest
 
-from pasta_eln.dataverse.incorrect_parameter_error import IncorrectParameterError
+from pasta_eln.database.incorrect_parameter_error import IncorrectParameterError
 
 
-class TestDataverseIncorrectParameterError:
+class TestDatabaseIncorrectParameterError:
   # Success path tests with various realistic test values
   @pytest.mark.parametrize("message, detailed_errors, test_id", [("Error occurred", None, "happy_none_detailed_errors"),
-    ("Error occurred", {"param1": "invalid value"}, "happy_with_detailed_errors_single"),
-    ("Error occurred", {"param1": "invalid value", "param2": "missing field"}, "happy_with_detailed_errors_multiple")])
+                                                                 ("Error occurred", {"param1": "invalid value"},
+                                                                  "happy_with_detailed_errors_single"),
+                                                                 ("Error occurred", {"param1": "invalid value",
+                                                                                     "param2": "missing field"},
+                                                                  "happy_with_detailed_errors_multiple")])
   def test_incorrect_parameter_error_success_path(self, message, detailed_errors, test_id):
     # Act
     error = IncorrectParameterError(message, detailed_errors)

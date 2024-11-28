@@ -6,20 +6,18 @@
 #  Filename: fixtures.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
-from typing import Any, Union
+from typing import Union
 from unittest.mock import MagicMock
 from xml.etree.ElementTree import Element
 
-from PySide6 import QtWidgets
 from PySide6.QtCore import QCoreApplication
 from PySide6.QtGui import QAction, QIcon
-from PySide6.QtWidgets import QApplication, QDialog
+from PySide6.QtWidgets import QApplication
 from pytest import fixture
 from pytestqt.qtbot import QtBot
 
 from pasta_eln.GUI.data_hierarchy.attachments_tableview_data_model import AttachmentsTableViewModel
 from pasta_eln.GUI.data_hierarchy.create_type_dialog import TypeDialog
-from pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog import DataHierarchyEditorDialog, get_gui
 from pasta_eln.GUI.data_hierarchy.delete_column_delegate import DeleteColumnDelegate
 from pasta_eln.GUI.data_hierarchy.document_null_exception import DocumentNullException
 from pasta_eln.GUI.data_hierarchy.iri_column_delegate import IriColumnDelegate
@@ -97,52 +95,6 @@ def dataverse_tree_mock(mocker) -> Element | None:
 
 
 @fixture()
-def configuration_extended(mocker) -> DataHierarchyEditorDialog:
-  mock_document = mocker.patch('cloudant.document.Document')
-  mock_pasta_db = mocker.patch('pasta_eln.database')
-  mock_couch_db = mocker.patch('cloudant.couchdb')
-  mock_couch_db['-dataHierarchy-'] = mock_document
-  mock_pasta_db = mocker.patch.object(mock_pasta_db, 'db', create=True)
-  mocker.patch('pasta_eln.GUI.data_hierarchy.create_type_dialog.logging.getLogger')
-  mocker.patch(
-    'pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog_base.Ui_DataHierarchyEditorDialogBase.setupUi')
-  mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.adjust_data_hierarchy_data_to_v4')
-  mocker.patch.object(QDialog, '__new__')
-  mocker.patch.object(MetadataTableViewModel, '__new__')
-  mocker.patch.object(AttachmentsTableViewModel, '__new__')
-  mocker.patch.object(MandatoryColumnDelegate, '__new__', lambda _: mocker.MagicMock())
-  mocker.patch.object(DeleteColumnDelegate, '__new__', lambda _: mocker.MagicMock())
-  mocker.patch.object(ReorderColumnDelegate, '__new__', lambda _: mocker.MagicMock())
-  mocker.patch.object(DataHierarchyEditorDialog, 'typeMetadataTableView', create=True)
-  mocker.patch.object(DataHierarchyEditorDialog, 'typeAttachmentsTableView', create=True)
-  mocker.patch.object(DataHierarchyEditorDialog, 'addMetadataRowPushButton', create=True)
-  mocker.patch.object(DataHierarchyEditorDialog, 'addAttachmentPushButton', create=True)
-  mocker.patch.object(DataHierarchyEditorDialog, 'saveDataHierarchyPushButton', create=True)
-  mocker.patch.object(DataHierarchyEditorDialog, 'addMetadataGroupPushButton', create=True)
-  mocker.patch.object(DataHierarchyEditorDialog, 'deleteMetadataGroupPushButton', create=True)
-  mocker.patch.object(DataHierarchyEditorDialog, 'deleteTypePushButton', create=True)
-  mocker.patch.object(DataHierarchyEditorDialog, 'addTypePushButton', create=True)
-  mocker.patch.object(DataHierarchyEditorDialog, 'editTypePushButton', create=True)
-  mocker.patch.object(DataHierarchyEditorDialog, 'cancelPushButton', create=True)
-  mocker.patch.object(DataHierarchyEditorDialog, 'helpPushButton', create=True)
-  mocker.patch.object(DataHierarchyEditorDialog, 'attachmentsShowHidePushButton', create=True)
-  mocker.patch.object(DataHierarchyEditorDialog, 'typeComboBox', create=True)
-  mocker.patch.object(DataHierarchyEditorDialog, 'metadataGroupComboBox', create=True)
-  mocker.patch.object(DataHierarchyEditorDialog, 'metadata_table_data_model', create=True)
-  mocker.patch.object(DataHierarchyEditorDialog, 'attachments_table_data_model', create=True)
-  mocker.patch.object(DataHierarchyEditorDialog, 'webbrowser', create=True)
-  mocker.patch.object(DataHierarchyEditorDialog, 'instance', create=True)
-  mocker.patch.object(DataHierarchyEditorDialog, 'typeDisplayedTitleLineEdit', create=True)
-  mocker.patch.object(DataHierarchyEditorDialog, 'typeIriLineEdit', create=True)
-  mocker.patch.object(DataHierarchyEditorDialog, 'delete_column_delegate_metadata_table', create=True)
-  mocker.patch.object(DataHierarchyEditorDialog, 'reorder_column_delegate_metadata_table', create=True)
-  mocker.patch.object(DataHierarchyEditorDialog, 'delete_column_delegate_attach_table', create=True)
-  mocker.patch.object(DataHierarchyEditorDialog, 'reorder_column_delegate_attach_table', create=True)
-  mocker.patch.object(TypeDialog, '__new__')
-  return DataHierarchyEditorDialog(mock_pasta_db)
-
-
-@fixture()
 def doc_null_exception(request) -> DocumentNullException:
   return DocumentNullException(request.param['message'], request.param['errors'])
 
@@ -195,7 +147,7 @@ def iri_delegate() -> IriColumnDelegate:
 
 @fixture()
 def data_hierarchy_doc_mock(mocker) -> MagicMock:
-  mock_doc = mocker.patch('cloudant.document.Document')
+  mock_doc = mocker.MagicMock()
   mock_doc_content = read_json('data_hierarchy_document.json')
   mocker.patch.object(mock_doc, "__len__", lambda x, y: len(mock_doc_content))
   mock_doc.__getitem__.side_effect = mock_doc_content.__getitem__
@@ -245,26 +197,6 @@ def retrieved_iri_results_name_mock() -> dict:
 @fixture()
 def iri_lookup_web_results_name_mock() -> dict:
   return read_json('iri_lookup_web_results_name.json')
-
-
-@fixture()
-def pasta_db_mock(mocker, data_hierarchy_doc_mock) -> Any:
-  mock_db = mocker.patch('pasta_eln.database.Database')
-  mock_couch_db = mocker.patch('cloudant.client.CouchDB')
-  dbs = {'-dataHierarchy-': data_hierarchy_doc_mock}
-  mock_couch_db.__getitem__.side_effect = dbs.__getitem__
-  mocker.patch.object(mock_db, 'db', mock_couch_db, create=True)
-  return mock_db
-
-
-@fixture()
-def data_hierarchy_editor_gui(mocker, request, pasta_db_mock) -> tuple[
-  QApplication, QtWidgets.QDialog, DataHierarchyEditorDialog, QtBot]:
-  mock_message_box = mocker.patch('pasta_eln.GUI.data_hierarchy.utility_functions.QMessageBox')
-  app, ui_dialog, ui_form_extended = get_gui(pasta_db_mock)
-  mocker.patch.object(ui_form_extended, 'message_box', mock_message_box.return_value, create=True)
-  qtbot: QtBot = QtBot(app)
-  return app, ui_dialog, ui_form_extended, qtbot
 
 
 @fixture()

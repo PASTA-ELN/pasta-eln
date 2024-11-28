@@ -4,17 +4,10 @@
 #  Copyright (c) 2024
 #
 #  Author: Jithu Murugan
-#  Filename: database_orm_adapter.py
+#  Filename: orm_model_adapter.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
-#  PASTA-ELN and all its sub-parts are covered by the MIT license.
-#
-#
-#  Author: Jithu Murugan
-#  Filename: database_orm_adapter.py
-#
-#  You should have received a copy of the license with this file. Please refer the license file for more information.
 from typing import Tuple
 
 from pasta_eln.database.models.config_model import ConfigModel
@@ -29,7 +22,7 @@ from pasta_eln.database.models.upload_model import UploadModel
 from pasta_eln.database.models.upload_orm_model import UploadOrmModel
 
 
-class DatabaseOrmAdapter:
+class OrmModelAdapter:
   """Adapter for converting between ORM models and domain models.
 
   This class provides static methods to convert various domain models to their
@@ -85,8 +78,6 @@ class DatabaseOrmAdapter:
         MainOrmModel: The converted ORM project model.
     """
     model_dict = dict(model)
-    model_dict['dateCreated'] = model_dict.pop('date_created')
-    model_dict['dateModified'] = model_dict.pop('date_modified')
     model_dict.pop('status')
     model_dict.pop('objective')
     return MainOrmModel(**model_dict)
@@ -107,8 +98,8 @@ class DatabaseOrmAdapter:
     model_dict = dict(model)
     model_dict.pop('id')
     definitions = model_dict.pop('definitions')
-    model_dict['definitions'] = [DatabaseOrmAdapter.get_data_hierarchy_definition_orm_model(definition) for definition
-                                 in definitions]
+    model_dict['definitions'] = [OrmModelAdapter.get_data_hierarchy_definition_orm_model(definition) for definition
+                                 in definitions] if definitions else []
     return DataHierarchyOrmModel(**model_dict)
 
   @staticmethod
@@ -162,8 +153,6 @@ class DatabaseOrmAdapter:
     """
     main_model_dict = dict(model[0])
     main_model_dict['_id'] = main_model_dict.pop('id')
-    main_model_dict['date_created'] = main_model_dict.pop('dateCreated')
-    main_model_dict['date_modified'] = main_model_dict.pop('dateModified')
     main_model_dict.pop('type')
     return ProjectModel(**main_model_dict, status=model[1], objective=model[2])
 
@@ -182,7 +171,7 @@ class DatabaseOrmAdapter:
     """
     model_dict = dict(model)
     definitions = model_dict.pop('definitions')
-    model_dict['definitions'] = [DatabaseOrmAdapter.get_data_hierarchy_definition_model(definition) for definition in
+    model_dict['definitions'] = [OrmModelAdapter.get_data_hierarchy_definition_model(definition) for definition in
                                  definitions]
     return DataHierarchyModel(**model_dict)
 

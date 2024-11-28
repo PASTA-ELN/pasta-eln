@@ -19,8 +19,8 @@ from _pytest.mark import param
 from cryptography.fernet import Fernet, InvalidToken
 from sqlalchemy import Executable
 
-from pasta_eln.dataverse.config_error import ConfigError
 from pasta_eln.database.models.data_hierarchy_model import DataHierarchyModel
+from pasta_eln.dataverse.config_error import ConfigError
 from pasta_eln.dataverse.upload_status_values import UploadStatusValues
 from pasta_eln.dataverse.utils import adjust_type_name, check_if_compound_field_value_is_missing, \
   check_if_dataverse_exists, check_if_field_value_is_missing, check_if_field_value_not_null, \
@@ -2191,23 +2191,23 @@ class TestDataverseUtils:
     "data_hierarchy, expected",
     [
       # Happy path tests
-      param([DataHierarchyModel(docType="report"), DataHierarchyModel(docType="summary")],
+      param([DataHierarchyModel(doc_type="report"), DataHierarchyModel(doc_type="summary")],
             ["Report", "Summary", "Unidentified"], id="happy_path_different_types"),
-      param([DataHierarchyModel(docType="report"), DataHierarchyModel(docType="report")], ["Report", "Unidentified"],
+      param([DataHierarchyModel(doc_type="report"), DataHierarchyModel(doc_type="report")], ["Report", "Unidentified"],
             id="happy_path_duplicate_types"),
 
       # Edge cases
       param(None, [], id="edge_case_none_input"),
       param([], ["Unidentified"], id="edge_case_empty_list"),
       param(
-        [DataHierarchyModel(docType="x0"), DataHierarchyModel(docType="x1")], ["Unidentified"],
+        [DataHierarchyModel(doc_type="x0"), DataHierarchyModel(doc_type="x1")], ["Unidentified"],
         id="edge_case_excluded_types"),
-      param([DataHierarchyModel(docType="")], ["Unidentified"], id="edge_case_empty_docType"),
-      param([DataHierarchyModel(docType=None)], ["Unidentified"], id="edge_case_none_docType"),
+      param([DataHierarchyModel(doc_type="")], ["Unidentified"], id="edge_case_empty_docType"),
+      param([DataHierarchyModel(doc_type=None)], ["Unidentified"], id="edge_case_none_docType"),
 
       # Error cases
-      param([DataHierarchyModel(docType="report"), None], ["Report", "Unidentified"], id="error_case_none_in_list"),
-      param([None, DataHierarchyModel(docType="report")], ["Report", "Unidentified"],
+      param([DataHierarchyModel(doc_type="report"), None], ["Report", "Unidentified"], id="error_case_none_in_list"),
+      param([None, DataHierarchyModel(doc_type="report")], ["Report", "Unidentified"],
             id="error_case_none_first_in_list"),
     ],
     ids=lambda x: x[2]

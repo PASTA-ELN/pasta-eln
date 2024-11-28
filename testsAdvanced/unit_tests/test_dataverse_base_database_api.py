@@ -12,26 +12,26 @@ import pytest
 from _pytest.mark import param
 from sqlalchemy.exc import SQLAlchemyError
 
-from pasta_eln.dataverse.base_database_api import BaseDatabaseApi
-from pasta_eln.database.models.config_model import ConfigModel
-from pasta_eln.database.models.data_hierarchy_model import DataHierarchyModel
 from pasta_eln.database.error import Error
-from pasta_eln.dataverse.database_names import DatabaseNames
-from pasta_eln.database.models.database_orm_config_model import DatabaseOrmConfigModel
-from pasta_eln.database.models.database_orm_data_hierarchy_model import DataHierarchyOrmModel
-from pasta_eln.database.models.database_orm_main_model import DatabaseOrmMainModel
-from pasta_eln.database.models.database_orm_properties_model import DatabaseOrmPropertiesModel
-from pasta_eln.database.models.upload_orm_model import UploadOrmModel
+from pasta_eln.database.incorrect_parameter_error import IncorrectParameterError
+from pasta_eln.database.models.config_model import ConfigModel
+from pasta_eln.database.models.config_orm_model import ConfigOrmModel
+from pasta_eln.database.models.data_hierarchy_model import DataHierarchyModel
+from pasta_eln.database.models.data_hierarchy_orm_model import DataHierarchyOrmModel
+from pasta_eln.database.models.main_orm_model import MainOrmModel
 from pasta_eln.database.models.orm_model_base import OrmModelBase
-from pasta_eln.dataverse.incorrect_parameter_error import IncorrectParameterError
 from pasta_eln.database.models.project_model import ProjectModel
+from pasta_eln.database.models.properties_orm_model import PropertiesOrmModel
 from pasta_eln.database.models.upload_model import UploadModel
+from pasta_eln.database.models.upload_orm_model import UploadOrmModel
+from pasta_eln.dataverse.base_database_api import BaseDatabaseApi
+from pasta_eln.dataverse.database_names import DatabaseNames
 
 
 @pytest.fixture
 def base_database_api(mocker):
   mocker.patch("pasta_eln.dataverse.base_database_api.logging.getLogger")
-  mocker.patch("pasta_eln.dataverse.base_database_api.DatabaseOrmAdapter")
+  mocker.patch("pasta_eln.dataverse.base_database_api.OrmModelAdapter")
   return BaseDatabaseApi("dataverse.db", "pasta_project_group.db")
 
 
@@ -60,11 +60,11 @@ class TestDataverseBaseDatabaseAPI:
     OrmModelBase.metadata = mocker.MagicMock()
     OrmModelBase.metadata.tables = mocker.MagicMock()
     OrmModelBase.metadata.tables = {
-      DatabaseOrmConfigModel.__tablename__: mocker.MagicMock(),
+      ConfigOrmModel.__tablename__: mocker.MagicMock(),
       UploadOrmModel.__tablename__: mocker.MagicMock(),
       DataHierarchyOrmModel.__tablename__: mocker.MagicMock(),
-      DatabaseOrmMainModel.__tablename__: mocker.MagicMock(),
-      DatabaseOrmPropertiesModel.__tablename__: mocker.MagicMock(),
+      MainOrmModel.__tablename__: mocker.MagicMock(),
+      PropertiesOrmModel.__tablename__: mocker.MagicMock(),
     }
     mock_create_engine = mocker.patch("pasta_eln.dataverse.base_database_api.create_engine")
     base_database_api.db_url_map = db_url_map
@@ -75,15 +75,15 @@ class TestDataverseBaseDatabaseAPI:
     # Assert
     mock_create_engine.assert_called_with(db_url_map[DatabaseNames.DataverseDatabase])
     mock_create_engine.assert_called_with(db_url_map[DatabaseNames.PastaProjectGroupDatabase])
-    OrmModelBase.metadata.tables[DatabaseOrmConfigModel.__tablename__].create.assert_called_once_with(
+    OrmModelBase.metadata.tables[ConfigOrmModel.__tablename__].create.assert_called_once_with(
       bind=mock_create_engine.return_value, checkfirst=True)
     OrmModelBase.metadata.tables[UploadOrmModel.__tablename__].create.assert_called_once_with(
       bind=mock_create_engine.return_value, checkfirst=True)
     OrmModelBase.metadata.tables[DataHierarchyOrmModel.__tablename__].create.assert_called_once_with(
       bind=mock_create_engine.return_value, checkfirst=True)
-    OrmModelBase.metadata.tables[DatabaseOrmMainModel.__tablename__].create.assert_called_once_with(
+    OrmModelBase.metadata.tables[MainOrmModel.__tablename__].create.assert_called_once_with(
       bind=mock_create_engine.return_value, checkfirst=True)
-    OrmModelBase.metadata.tables[DatabaseOrmPropertiesModel.__tablename__].create.assert_called_once_with(
+    OrmModelBase.metadata.tables[PropertiesOrmModel.__tablename__].create.assert_called_once_with(
       bind=mock_create_engine.return_value, checkfirst=True)
     base_database_api.logger.info.assert_called_with(*expected_log_message)
 
@@ -155,7 +155,7 @@ class TestDataverseBaseDatabaseAPI:
     mock_session.get.return_value = model_type()
     base_database_api.get_project_model.return_value = expected
     base_database_api.to_base_model_converter_map[UploadOrmModel].return_value = expected
-    base_database_api.to_base_model_converter_map[DatabaseOrmConfigModel].return_value = expected
+    base_database_api.to_base_model_converter_map[ConfigOrmModel].return_value = expected
     base_database_api.to_base_model_converter_map[DataHierarchyOrmModel].return_value = expected
 
     if isinstance(expected, type) and issubclass(expected, Exception):
@@ -186,7 +186,7 @@ class TestDataverseBaseDatabaseAPI:
     mock_session = MagicMock()
     mocker.patch("pasta_eln.dataverse.base_database_api.Session", return_value=mock_session)
     mock_session.__enter__.return_value = mock_session
-    mock_session.scalars.return_value.all.return_value = [UploadOrmModel(), DatabaseOrmConfigModel()]
+    mock_session.scalars.return_value.all.return_value = [UploadOrmModel(), ConfigOrmModel()]
 
     # Act & Assert
     if expected_exception:
@@ -199,8 +199,8 @@ class TestDataverseBaseDatabaseAPI:
   @pytest.mark.parametrize("model_type, db_model, database, expected_count", [
     param(UploadModel, UploadOrmModel, DatabaseNames.DataverseDatabase, 0, id="empty_upload_model"),
     param(UploadModel, UploadOrmModel, DatabaseNames.DataverseDatabase, 2, id="non_empty_upload_model"),
-    param(ConfigModel, DatabaseOrmConfigModel, DatabaseNames.DataverseDatabase, 0, id="empty_config_model"),
-    param(ConfigModel, DatabaseOrmConfigModel, DatabaseNames.DataverseDatabase, 10, id="non_empty_config_model"),
+    param(ConfigModel, ConfigOrmModel, DatabaseNames.DataverseDatabase, 0, id="empty_config_model"),
+    param(ConfigModel, ConfigOrmModel, DatabaseNames.DataverseDatabase, 10, id="non_empty_config_model"),
     param(DataHierarchyModel, DataHierarchyOrmModel, DatabaseNames.PastaProjectGroupDatabase, 0,
           id="empty_data_hierarchy_model"),
   ], ids=lambda x: x[2])
@@ -267,7 +267,7 @@ class TestDataverseBaseDatabaseAPI:
   def test_get_project_models_success_path(self, mocker, base_database_api, mock_data, expected_count):
     # Arrange
     mock_create_engine = mocker.patch("pasta_eln.dataverse.base_database_api.create_engine")
-    mock_get_project_model = mocker.patch("pasta_eln.dataverse.base_database_api.DatabaseOrmAdapter.get_project_model")
+    mock_get_project_model = mocker.patch("pasta_eln.dataverse.base_database_api.OrmModelAdapter.get_project_model")
     mock_get_project_model.return_value = MagicMock(spec=ProjectModel)
     mock_engine = MagicMock()
     mock_create_engine.return_value = mock_engine
@@ -304,7 +304,7 @@ class TestDataverseBaseDatabaseAPI:
   def test_get_project_models_edge_cases(self, mocker, base_database_api, mock_data):
     # Arrange
     mock_create_engine = mocker.patch("pasta_eln.dataverse.base_database_api.create_engine")
-    mock_get_project_model = mocker.patch("pasta_eln.dataverse.base_database_api.DatabaseOrmAdapter.get_project_model")
+    mock_get_project_model = mocker.patch("pasta_eln.dataverse.base_database_api.OrmModelAdapter.get_project_model")
     mock_get_project_model.return_value = MagicMock(spec=ProjectModel)
     mock_engine = MagicMock()
     mock_create_engine.return_value = mock_engine
@@ -336,7 +336,7 @@ class TestDataverseBaseDatabaseAPI:
   def test_get_project_models_error_cases(self, mocker, base_database_api, exception):
     # Arrange
     mock_create_engine = mocker.patch("pasta_eln.dataverse.base_database_api.create_engine")
-    mock_get_project_model = mocker.patch("pasta_eln.dataverse.base_database_api.DatabaseOrmAdapter.get_project_model")
+    mock_get_project_model = mocker.patch("pasta_eln.dataverse.base_database_api.OrmModelAdapter.get_project_model")
     mock_get_project_model.return_value = MagicMock(spec=ProjectModel)
     mock_engine = MagicMock()
     mock_create_engine.return_value = mock_engine
@@ -357,7 +357,7 @@ class TestDataverseBaseDatabaseAPI:
   def test_get_project_model(self, mocker, base_database_api, model_id, expected_exception):
     # Arrange
     mock_create_engine = mocker.patch("pasta_eln.dataverse.base_database_api.create_engine")
-    mock_get_project_model = mocker.patch("pasta_eln.dataverse.base_database_api.DatabaseOrmAdapter.get_project_model")
+    mock_get_project_model = mocker.patch("pasta_eln.dataverse.base_database_api.OrmModelAdapter.get_project_model")
     mock_generate_project_join_statement = mocker.patch(
       "pasta_eln.dataverse.base_database_api.generate_project_join_statement")
     mock_engine = MagicMock()

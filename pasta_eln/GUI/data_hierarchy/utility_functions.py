@@ -200,12 +200,12 @@ def generate_required_metadata() -> list[dict[str, Any]]:
   """
   return [
     {
-      "name": "-name",
+      "name": "name",
       "query": "What is the name of the metadata?",
       "mandatory": True
     },
     {
-      "name": "-tags",
+      "name": "tags",
       "query": "What are the tags associated with this metadata?",
       "mandatory": False
     }
@@ -218,7 +218,7 @@ def check_data_hierarchy_types(data_hierarchy_types: dict[str, Any]) -> tuple[
   dict[str, dict[str, list[str]]]]:
   """
   Check the data hierarchy types to see:
-    1. If all the required metadata ["-name", "-tags"] present in default-group
+    1. If all the required metadata ["name", "tags"] present in default-group
     2. If all the meta-data have name property
     3. If all the meta-data are unique across all groups
   Args:
@@ -272,7 +272,7 @@ def set_types_missing_required_metadata(type_name: str,
     return
   if default_metadata := type_value.get("meta").get("default"):  # type: ignore[union-attr]
     names_in_default_group = [item.get("name") for item in default_metadata]
-    required_metadata = ["-name", "-tags"]
+    required_metadata = ["name", "tags"]
     for req_metadata in required_metadata:
       if req_metadata not in names_in_default_group:
         if type_name not in types_with_missing_metadata:

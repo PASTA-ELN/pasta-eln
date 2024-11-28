@@ -4,15 +4,7 @@
 #  Copyright (c) 2024
 #
 #  Author: Jithu Murugan
-#  Filename: database_orm_main_model.py
-#
-#  You should have received a copy of the license with this file. Please refer the license file for more information.
-
-#  PASTA-ELN and all its sub-parts are covered by the MIT license.
-#
-#
-#  Author: Jithu Murugan
-#  Filename: database_orm_main_model.py
+#  Filename: main_orm_model.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
@@ -36,8 +28,8 @@ class MainOrmModel(OrmModelBase):
   name: Mapped[Optional[str]]
   user: Mapped[Optional[str]]
   type: Mapped[Optional[str]]
-  dateCreated: Mapped[Optional[str]]
-  dateModified: Mapped[Optional[str]]
+  date_created: Mapped[Optional[str]] = mapped_column("dateCreated")
+  date_modified: Mapped[Optional[str]] = mapped_column("dateModified")
   comment: Mapped[Optional[str]]
 
   @classmethod
@@ -51,4 +43,4 @@ class MainOrmModel(OrmModelBase):
     Returns:
         list[str]: A list of column names for the main project table.
     """
-    return ["id", "name", "user", "type", "dateCreated", "dateModified", "comment"]
+    return ["id", "name", "user", "type", "date_created", "date_modified", "comment"]

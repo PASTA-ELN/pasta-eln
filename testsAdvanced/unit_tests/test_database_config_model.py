@@ -3,16 +3,16 @@
 #  Copyright (c) 2024
 #
 #  Author: Jithu Murugan
-#  Filename: test_dataverse_config_model.py
+#  Filename: test_database_config_model.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import pytest
 
+from pasta_eln.database.incorrect_parameter_error import IncorrectParameterError
 from pasta_eln.database.models.config_model import ConfigModel
-from pasta_eln.dataverse.incorrect_parameter_error import IncorrectParameterError
 
 
-class TestDataverseConfigModel:
+class TestDatabaseConfigModel:
 
   # Success path tests with various realistic test values
   @pytest.mark.parametrize(

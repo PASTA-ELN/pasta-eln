@@ -3,19 +3,19 @@
 #  Copyright (c) 2024
 #
 #  Author: Jithu Murugan
-#  Filename: test_dataverse_data_hierarchy_model.py
+#  Filename: test_database_data_hierarchy_model.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
 import pytest
 
+from pasta_eln.database.incorrect_parameter_error import IncorrectParameterError
 from pasta_eln.database.models.data_hierarchy_model import DataHierarchyModel
-from pasta_eln.dataverse.incorrect_parameter_error import IncorrectParameterError
 
 
-class TestDataverseDataHierarchyModel:
+class TestDatabaseDataHierarchyModel:
   @pytest.mark.parametrize(
-    "docType, IRI, title, icon, shortcut, view",
+    "doc_type, IRI, title, icon, shortcut, view",
     [
       ("document", "http://example.com", "Example Title", "icon.png", "ctrl+e", "view1"),
       (None, None, None, None, None, None),
@@ -27,12 +27,12 @@ class TestDataverseDataHierarchyModel:
       "all_empty_strings",
     ]
   )
-  def test_data_hierarchy_model_initialization(self, docType, IRI, title, icon, shortcut, view):
+  def test_data_hierarchy_model_initialization(self, doc_type, IRI, title, icon, shortcut, view):
     # Act
-    model = DataHierarchyModel(docType, IRI, title, icon, shortcut, view)
+    model = DataHierarchyModel(doc_type, IRI, title, icon, shortcut, view)
 
     # Assert
-    assert model.docType == docType
+    assert model.doc_type == doc_type
     assert model.IRI == IRI
     assert model.title == title
     assert model.icon == icon
@@ -42,7 +42,7 @@ class TestDataverseDataHierarchyModel:
   @pytest.mark.parametrize(
     "attribute, value",
     [
-      ("docType", 123),
+      ("doc_type", 123),
       ("IRI", 123),
       ("title", 123),
       ("icon", 123),
@@ -50,7 +50,7 @@ class TestDataverseDataHierarchyModel:
       ("view", 123),
     ],
     ids=[
-      "invalid_docType",
+      "invalid_doc_type",
       "invalid_iri",
       "invalid_title",
       "invalid_icon",
@@ -69,7 +69,7 @@ class TestDataverseDataHierarchyModel:
   @pytest.mark.parametrize(
     "attribute, initial_value, new_value",
     [
-      ("docType", "initial", "new"),
+      ("doc_type", "initial", "new"),
       ("IRI", "initial", "new"),
       ("title", "initial", "new"),
       ("icon", "initial", "new"),
@@ -77,7 +77,7 @@ class TestDataverseDataHierarchyModel:
       ("view", "initial", "new"),
     ],
     ids=[
-      "change_docType",
+      "change_doc_type",
       "change_iri",
       "change_title",
       "change_icon",
@@ -98,7 +98,7 @@ class TestDataverseDataHierarchyModel:
   @pytest.mark.parametrize(
     "attribute, invalid_value",
     [
-      ("docType", 123),
+      ("doc_type", 123),
       ("IRI", 123),
       ("title", 123),
       ("icon", 123),
@@ -106,7 +106,7 @@ class TestDataverseDataHierarchyModel:
       ("view", 123),
     ],
     ids=[
-      "invalid_set_docType",
+      "invalid_set_doc_type",
       "invalid_set_iri",
       "invalid_set_title",
       "invalid_set_icon",
@@ -125,7 +125,7 @@ class TestDataverseDataHierarchyModel:
   @pytest.mark.parametrize(
     "attribute",
     [
-      "docType",
+      "doc_type",
       "IRI",
       "title",
       "icon",
@@ -133,7 +133,7 @@ class TestDataverseDataHierarchyModel:
       "view",
     ],
     ids=[
-      "delete_docType",
+      "delete_doc_type",
       "delete_iri",
       "delete_title",
       "delete_icon",

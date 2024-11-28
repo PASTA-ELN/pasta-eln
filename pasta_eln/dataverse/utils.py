@@ -757,9 +757,9 @@ def get_data_hierarchy_types(data_hierarchy: list[DataHierarchyModel] | None) ->
     return []
   data_hierarchy_types = []
   for data_model in data_hierarchy:
-    if (data_model and data_model.docType
-        and data_model.docType not in ("x0", "x1")):
-      type_capitalized = data_model.docType.capitalize()
+    if (data_model and data_model.doc_type
+        and data_model.doc_type not in ("x0", "x1")):
+      type_capitalized = data_model.doc_type.capitalize()
       if type_capitalized not in data_hierarchy_types:
         data_hierarchy_types.append(type_capitalized)
   data_hierarchy_types.append("Unidentified")

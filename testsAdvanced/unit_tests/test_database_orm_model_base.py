@@ -3,7 +3,7 @@
 #  Copyright (c) 2024
 #
 #  Author: Jithu Murugan
-#  Filename: test_dataverse_database_sqlalchemy_base.py
+#  Filename: test_database_orm_model_base.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 from typing import Any, Optional
@@ -33,7 +33,7 @@ class MockOrmModel(OrmModelBase):
     return ['id', 'name', 'data']
 
 
-class TestDatabaseModelBase:
+class TestDatabaseOrmModelBase:
   @pytest.mark.parametrize(
     "instance, expected_output",
     [

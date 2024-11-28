@@ -8,17 +8,9 @@
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
-#  PASTA-ELN and all its sub-parts are covered by the MIT license.
-#
-#
-#  Author: Jithu Murugan
-#  Filename: data_hierarchy_model.py
-#
-#  You should have received a copy of the license with this file. Please refer the license file for more information.
-
+from pasta_eln.database.incorrect_parameter_error import IncorrectParameterError
 from pasta_eln.database.models.base_model import BaseModel
 from pasta_eln.database.models.data_hierarchy_definition_model import DataHierarchyDefinitionModel
-from pasta_eln.dataverse.incorrect_parameter_error import IncorrectParameterError
 
 
 class DataHierarchyModel(BaseModel):
@@ -49,7 +41,7 @@ class DataHierarchyModel(BaseModel):
                icon: str | None = None,
                shortcut: str | None = None,
                view: str | None = None,
-               definitions: list[DataHierarchyDefinitionModel] | None = None):
+               definitions: list[DataHierarchyDefinitionModel] | None = []):
     super().__init__(None)
     if isinstance(doc_type, str | None):
       self._doc_type: str | None = doc_type

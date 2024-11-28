@@ -11,7 +11,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from pasta_eln.GUI.data_hierarchy.qtaicons_factory import QTAIconsFactory
-from pasta_eln.dataverse.incorrect_parameter_error import IncorrectParameterError
+from pasta_eln.database.incorrect_parameter_error import IncorrectParameterError
 
 
 @pytest.fixture

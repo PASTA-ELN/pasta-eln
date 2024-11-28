@@ -3,15 +3,15 @@
 #  Copyright (c) 2024
 #
 #  Author: Jithu Murugan
-#  Filename: test_dataverse_database_orm_config_model.py
+#  Filename: test_database_config_orm_model.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 import pytest
 
-from pasta_eln.database.models.database_orm_config_model import DatabaseOrmConfigModel
+from pasta_eln.database.models.config_orm_model import ConfigOrmModel
 
 
-class TestDatabaseOrmConfigModel:
+class TestDatabaseConfigOrmModell:
   @pytest.mark.parametrize(
     "project_upload_items, parallel_uploads_count, dataverse_login_info, metadata_info, expected_columns",
     [
@@ -55,7 +55,7 @@ class TestDatabaseOrmConfigModel:
                              expected_columns
                              ):
     # Arrange
-    model_instance = DatabaseOrmConfigModel(
+    model_instance = ConfigOrmModel(
       project_upload_items=project_upload_items,
       parallel_uploads_count=parallel_uploads_count,
       dataverse_login_info=dataverse_login_info,
