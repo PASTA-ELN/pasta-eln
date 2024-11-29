@@ -473,6 +473,19 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
 
 def get_gui() -> tuple[
   QCoreApplication | QApplication, QtWidgets.QDialog, DataHierarchyEditorDialog]:
+  """
+  Get the GUI components for the data hierarchy editor dialog.
+
+  This function initializes the application and creates an instance of the
+  DataHierarchyEditorDialog. It returns the application instance along with
+  the dialog instance, allowing for interaction with the GUI.
+
+  Returns:
+      tuple: A tuple containing the application instance (QCoreApplication or
+      QApplication), the dialog instance (QtWidgets.QDialog), and the
+      DataHierarchyEditorDialog instance.
+
+  """
   import sys
   instance = QApplication.instance()
   application = QApplication(sys.argv) if instance is None else instance

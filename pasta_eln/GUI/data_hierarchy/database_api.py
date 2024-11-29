@@ -120,7 +120,7 @@ class DatabaseAPI:
     self.logger.info("Retrieving data_hierarchy_models")
     return self.db_api.get_data_hierarchy_models()
 
-  def get_data_hierarchy_model(self, model_doc_type: str) -> DataHierarchyModel:
+  def get_data_hierarchy_model(self, model_doc_type: str) -> DataHierarchyModel | None:
     """Retrieves a DataHierarchyModel based on the provided document type.
 
     This method logs the retrieval process and checks if the provided document type
@@ -131,7 +131,7 @@ class DatabaseAPI:
         model_doc_type (str): The document type of the DataHierarchyModel to retrieve.
 
     Returns:
-        DataHierarchyModel: The corresponding DataHierarchyModel instance if found.
+        DataHierarchyModel | None: The corresponding DataHierarchyModel instance if found.
 
     Raises:
         ValueError: If the model_doc_type is None.
@@ -147,9 +147,6 @@ class DatabaseAPI:
     This method logs the initialization process and calls the database API to create
     and bind the necessary database tables. It ensures that the database is set up
     correctly for further operations within the data-hierarchy module.
-
-    Returns:
-        None
     """
     self.logger.info("Initializing database for data-hierarchy module...")
     self.db_api.create_and_bind_db_tables()
@@ -186,7 +183,7 @@ class DatabaseAPI:
     """
     models = DataHierarchyDocumentAdapter.to_data_hierarchy_model_list(data_hierarchy_document)
     for model in models:
-      if self.db_api.check_if_data_hierarchy_model_exists(model.doc_type):
+      if self.db_api.check_if_data_hierarchy_model_exists(model.doc_type or ""):
         self.update_data_hierarchy_model(model)
       else:
         self.create_data_hierarchy_model(model)

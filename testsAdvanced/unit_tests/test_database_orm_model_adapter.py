@@ -3,7 +3,7 @@
 #  Copyright (c) 2024
 #
 #  Author: Jithu Murugan
-#  Filename: test_database_orm_adapter.py
+#  Filename: test_database_orm_model_adapter.py
 #
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
@@ -12,6 +12,7 @@ from _pytest.mark import param
 
 from pasta_eln.database.models.config_model import ConfigModel
 from pasta_eln.database.models.config_orm_model import ConfigOrmModel
+from pasta_eln.database.models.data_hierarchy_definition_model import DataHierarchyDefinitionModel
 from pasta_eln.database.models.data_hierarchy_definition_orm_model import DataHierarchyDefinitionOrmModel
 from pasta_eln.database.models.data_hierarchy_model import DataHierarchyModel
 from pasta_eln.database.models.data_hierarchy_orm_model import DataHierarchyOrmModel
@@ -338,3 +339,62 @@ class TestDatabaseORMAdapter:
     # Assert
     if request.node.callspec.id != "unexpected_field":
       assert dict(result) == dict(expected)
+
+  @pytest.mark.parametrize(
+    "model_data, expected_meta_list",
+    [
+      # Happy path tests
+      param({"meta_list": "meta1,meta2,meta3", "doc_type": "value"}, ["meta1", "meta2", "meta3"],
+            id="happy_path_multiple_meta"),
+      param({"meta_list": "single_meta", "doc_class": "value"}, ["single_meta"], id="happy_path_single_meta"),
+      param({"meta_list": "", "IRI": "value"}, [], id="happy_path_empty_meta"),
+
+      # Edge cases
+      param({"meta_list": None, "mandatory": "value"}, [], id="edge_case_none_meta"),
+      param({"meta_list": "meta1,,meta3", "name": "value"}, ["meta1", "", "meta3"],
+            id="edge_case_empty_meta_in_between"),
+      param({"meta_list": "meta1,meta2,", "doc_class": "value"}, ["meta1", "meta2", ""], id="edge_case_trailing_comma"),
+
+      # Error cases
+      param({"unit": "value"}, [], id="error_case_missing_meta_list"),
+    ],
+    ids=lambda x: x[2]
+  )
+  def test_get_data_hierarchy_definition_model(self, model_data, expected_meta_list):
+    # Arrange
+    model = DataHierarchyDefinitionOrmModel(**model_data)
+
+    # Act
+    result = OrmModelAdapter.get_data_hierarchy_definition_model(model)
+
+    # Assert
+    assert isinstance(result, DataHierarchyDefinitionModel)
+    assert result.meta_list == expected_meta_list
+
+  @pytest.mark.parametrize(
+    "model_data, expected_meta_list",
+    [
+      # Happy path with a typical meta_list
+      param({"doc_type": "1", "meta_list": ["meta1", "meta2"], "doc_class": "value"}, "meta1,meta2",
+            id="happy_path_typical_meta_list"),
+
+      # Happy path with an empty meta_list
+      param({"doc_type": "2", "meta_list": [], "index": "value"}, "", id="happy_path_empty_meta_list"),
+
+      # Edge case with meta_list as None
+      param({"doc_type": "3", "meta_list": None, "unit": "value"}, "", id="edge_case_meta_list_none"),
+    ],
+    ids=lambda x: x[2]
+  )
+  def test_get_data_hierarchy_definition_orm_model(self, model_data, expected_meta_list, request):
+    # Arrange
+    model = DataHierarchyDefinitionModel(**model_data)
+
+    # Act
+    orm_model = OrmModelAdapter.get_data_hierarchy_definition_orm_model(model)
+
+    # Assert
+    assert orm_model.meta_list == expected_meta_list
+    for key, value in model_data.items():
+      if key != "doc_type" and key != "meta_list":
+        assert getattr(orm_model, key) == value

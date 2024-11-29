@@ -195,6 +195,21 @@ class OrmModelAdapter:
 
   @staticmethod
   def get_data_hierarchy_definition_orm_model(model: DataHierarchyDefinitionModel) -> DataHierarchyDefinitionOrmModel:
+    """
+    Convert a DataHierarchyDefinitionModel instance to a DataHierarchyDefinitionOrmModel instance.
+
+    This static method takes a DataHierarchyDefinitionModel and transforms it into a
+    DataHierarchyDefinitionOrmModel by converting the meta_list into a comma-separated
+    string and excluding the 'id' field from the resulting model.
+
+    Args:
+        model (DataHierarchyDefinitionModel): The data hierarchy definition model to convert.
+
+    Returns:
+        DataHierarchyDefinitionOrmModel: The converted ORM data hierarchy definition model.
+
+    """
+
     model_dict = dict(model)
     model_dict.pop('id')
     meta_list = model_dict.pop('meta_list')
