@@ -13,7 +13,7 @@ from typing import Any
 
 from PySide6.QtCore import QEvent
 from PySide6.QtGui import QMouseEvent, Qt
-from PySide6.QtWidgets import QMessageBox, QStyleOptionViewItem
+from PySide6.QtWidgets import QLabel, QMessageBox, QStyleOptionViewItem
 
 from pasta_eln.GUI.data_hierarchy.data_type_info import DataTypeInfo
 
@@ -96,6 +96,10 @@ def show_message(message: str,
     msg_box.setText(message)
     msg_box.setStandardButtons(standard_buttons)
     msg_box.setDefaultButton(default_button)
+    qt_msgbox_label: QLabel | object = msg_box.findChild(QLabel, "qt_msgbox_label")
+    if isinstance(qt_msgbox_label, QLabel):
+      width = qt_msgbox_label.fontMetrics().boundingRect(qt_msgbox_label.text()).width()
+      qt_msgbox_label.setFixedWidth(width)
     return msg_box.exec()
   return None
 

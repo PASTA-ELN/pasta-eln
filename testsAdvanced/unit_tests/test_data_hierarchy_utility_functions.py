@@ -10,7 +10,7 @@
 import pytest
 from PySide6.QtCore import QEvent, Qt
 from PySide6.QtGui import QMouseEvent
-from PySide6.QtWidgets import QMessageBox
+from PySide6.QtWidgets import QLabel, QMessageBox
 
 from pasta_eln.GUI.data_hierarchy.utility_functions import adjust_data_hierarchy_data_to_v4, can_delete_type, \
   check_data_hierarchy_types, get_missing_metadata_message, \
@@ -171,6 +171,62 @@ class TestDataHierarchyUtilityFunctions(object):
     mock_msg_box.setWindowTitle.assert_called_once_with("Data Hierarchy Editor")
     mock_msg_box.setTextFormat.assert_called_once_with(Qt.RichText)
     mock_msg_box.setIcon.assert_called_once_with(QMessageBox.Warning)
+
+  @pytest.mark.parametrize(
+    "message, icon, standard_buttons, default_button, expected_result",
+    [
+      # Happy path tests
+      ("Test message", QMessageBox.Icon.Information, QMessageBox.StandardButton.Ok, QMessageBox.StandardButton.Ok,
+       QMessageBox.Ok),
+      (
+          "Another message", QMessageBox.Icon.Warning, QMessageBox.StandardButton.Cancel,
+          QMessageBox.StandardButton.Cancel,
+          QMessageBox.Cancel),
+
+      # Edge cases
+      ("", QMessageBox.Icon.Information, QMessageBox.StandardButton.Ok, QMessageBox.StandardButton.Ok, None),
+      # Empty message
+      ("Short", QMessageBox.Icon.Critical, QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+       QMessageBox.StandardButton.No, QMessageBox.No),
+
+      # Error cases
+      ("Invalid icon", None, QMessageBox.StandardButton.Ok, QMessageBox.StandardButton.Ok, None),  # Invalid icon
+      ("Invalid buttons", QMessageBox.Icon.Information, None, None, None),  # Invalid buttons
+    ],
+    ids=[
+      "happy_path_info_ok",
+      "happy_path_warning_cancel",
+      "edge_case_empty_message",
+      "edge_case_short_message",
+      "error_case_invalid_icon",
+      "error_case_invalid_buttons",
+    ]
+  )
+  def test_show_message(self, mocker, message, icon, standard_buttons, default_button, expected_result):
+    # Arrange
+    mock_message_box = mocker.patch("pasta_eln.GUI.data_hierarchy.utility_functions.QMessageBox")
+    mock_message_box.return_value.exec.return_value = expected_result
+    mock_message_box.return_value.findChild.return_value = mocker.MagicMock(spec=QLabel)
+    # Act
+    result = show_message(message, icon, standard_buttons, default_button)
+
+    # Assert
+    assert result == expected_result
+    if message:
+      mock_message_box.return_value.setWindowTitle.assert_called_once_with("Data Hierarchy Editor")
+      mock_message_box.return_value.setTextFormat.assert_called_once_with(Qt.TextFormat.RichText)
+      mock_message_box.return_value.setIcon.assert_called_once_with(icon)
+      mock_message_box.return_value.setText.assert_called_once_with(message)
+      mock_message_box.return_value.setStandardButtons.assert_called_once_with(standard_buttons)
+      mock_message_box.return_value.setDefaultButton.assert_called_once_with(default_button)
+      mock_message_box.return_value.findChild.assert_called_once_with(QLabel, "qt_msgbox_label")
+      mock_message_box.return_value.findChild.return_value.fontMetrics.assert_called_once()
+      mock_message_box.return_value.findChild.return_value.fontMetrics.return_value.boundingRect.assert_called_once_with(
+        mock_message_box.return_value.findChild.return_value.text.return_value
+      )
+      mock_message_box.return_value.findChild.return_value.setFixedWidth.assert_called_once_with(
+        mock_message_box.return_value.findChild.return_value.fontMetrics.return_value.boundingRect.return_value.width.return_value
+      )
 
   @pytest.mark.parametrize("data_hierarchy_types, expected_result", [
     ({}, ({}, {}, {})),
