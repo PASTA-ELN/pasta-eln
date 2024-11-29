@@ -42,7 +42,8 @@ def mock_exists():
 
 @pytest.fixture
 def mock_open_file():
-  with patch('builtins.open', mock_open(read_data='{"key": "value"}')) as mock_file:
+  with patch('pasta_eln.dataverse.pasta_config_reader_factory.open',
+             mock_open(read_data='{"key": "value"}')) as mock_file:
     yield mock_file
 
 
@@ -53,14 +54,10 @@ def mock_load():
 
 
 @pytest.fixture
-def pasta_config_reader(mock_file_system_watcher, mock_logger, mock_exists, mock_open_file, mock_load):
+def pasta_config_reader(mocker, mock_file_system_watcher, mock_logger, mock_exists, mock_open_file, mock_load):
+  mocker.patch('pasta_eln.dataverse.pasta_config_reader_factory.Path.home', return_value=Path('/mock/path'))
+  PastaConfigReaderFactory._instance = None
   return PastaConfigReaderFactory.get_instance()
-
-
-@pytest.fixture
-def mock_read_pasta_config():
-  with patch.object(PastaConfigReaderFactory, 'read_pasta_config') as mock_read:
-    yield mock_read
 
 
 @pytest.fixture
@@ -77,10 +74,12 @@ class TestDataversePastaConfigReaderFactory:
     (True, True),  # file exists, should connect signal
     (False, False),  # file does not exist, should not connect signal
   ], ids=["file_exists", "file_does_not_exist"])
-  def test_init_file_watcher_connection(self, mocker, mock_file_system_watcher, mock_exists, mock_read_pasta_config,
+  def test_init_file_watcher_connection(self, mocker, mock_file_system_watcher, mock_exists,
                                         file_exists,
                                         expected_connect_call):
     # Arrange
+    mock_read_pasta_config = mocker.patch(
+      'pasta_eln.dataverse.pasta_config_reader_factory.PastaConfigReaderFactory.read_pasta_config')
     PastaConfigReaderFactory._instance = None
     mock_exists.return_value = file_exists
     mock_fs_watcher_instance = mocker.MagicMock()
@@ -97,11 +96,13 @@ class TestDataversePastaConfigReaderFactory:
     mock_read_pasta_config.assert_called_once()
 
   @pytest.mark.parametrize("config_file_name", [
-    (str(Path.home() / '.pastaELN_v3.json')),
+    ('/mock/path/.pastaELN_v3.json'),
   ], ids=["default_config_path"])
-  def test_init_config_file_name(self, config_file_name):
+  def test_init_config_file_name(self, mocker, config_file_name):
     # Arrange
+    mocker.patch('pasta_eln.dataverse.pasta_config_reader_factory.Path.home', return_value=Path('/mock/path'))
     PastaConfigReaderFactory._instance = None
+    mocker.patch('pasta_eln.dataverse.pasta_config_reader_factory.PastaConfigReaderFactory.read_pasta_config')
 
     # Act
     config_reader = PastaConfigReaderFactory.get_instance()
@@ -109,29 +110,54 @@ class TestDataversePastaConfigReaderFactory:
     # Assert
     assert config_reader.config_file_name == config_file_name
 
-  def test_init_logger(self):
-    # Act
+  def test_init_logger(self, mocker, mock_logger, mock_exists, mock_open_file, mock_load):
+    # Arrange
     PastaConfigReaderFactory._instance = None
+    mocker.patch('pasta_eln.dataverse.pasta_config_reader_factory.Path.home', return_value=Path('/mock/path'))
+
+    # Act
     config_reader = PastaConfigReaderFactory.get_instance()
 
     # Assert
-    assert config_reader.logger.name == "pasta_eln.dataverse.pasta_config_reader_factory.PastaConfigReaderFactory"
+    mock_logger.assert_any_call('pasta_eln.dataverse.pasta_config_reader_factory.PastaConfigReaderFactory')
+    assert config_reader.config_file_name == '/mock/path/.pastaELN_v3.json'
 
-  @pytest.mark.parametrize("file_exists, expected_exception", [
-    param(True, None, id="config_file_exists"),
-    param(False, ConfigError, id="config_file_not_found"),
-  ], ids=lambda x: x[2])
-  def test_read_pasta_config(self, file_exists, expected_exception, pasta_config_reader, mock_exists, mock_logger):
+  @pytest.mark.parametrize(
+    "file_exists, file_content, expected_config, raises_exception, exception",
+    [
+      # Happy path test cases
+      param(True, '{"key": "value"}', {"key": "value"}, False, None, id="valid_json"),
+      param(True, '{"another_key": 123}', {"another_key": 123}, False, None, id="valid_json_with_number"),
+
+      # Edge cases
+      param(True, '{}', {}, False, None, id="empty_json"),
+      param(True, '{"nested": {"key": "value"}}', {"nested": {"key": "value"}}, False, None, id="nested_json"),
+
+      # Error cases
+      param(False, '', None, True, ConfigError, id="file_not_exist"),
+      param(True, 'invalid_json', None, True, NameError, id="invalid_json_format"),
+    ],
+    ids=lambda x: x[-1]
+  )
+  def test_read_pasta_config(self, pasta_config_reader, file_exists, file_content, expected_config, raises_exception,
+                             exception):
     # Arrange
-    mock_exists.return_value = file_exists
+    with patch("pasta_eln.dataverse.pasta_config_reader_factory.exists", return_value=file_exists), \
+        patch("builtins.open", mock_open(read_data=file_content)), \
+        patch("pasta_eln.dataverse.pasta_config_reader_factory.load",
+              side_effect=lambda f: eval(file_content) if file_content else None):
 
-    # Act & Assert
-    if expected_exception:
-      with pytest.raises(expected_exception):
+      # Act
+      if raises_exception:
+        with pytest.raises(exception):
+          pasta_config_reader.read_pasta_config()
+      else:
         pasta_config_reader.read_pasta_config()
-    else:
-      pasta_config_reader.read_pasta_config()
-      assert pasta_config_reader.config == {"key": "value"}
+
+      # Assert
+      if not raises_exception:
+        assert pasta_config_reader.config == expected_config
+        pasta_config_reader.logger.info.assert_any_call("Reading config file: %s", pasta_config_reader.config_file_name)
 
   def test_singleton_instance(self, mocker, tmp_path):
     # Arrange
@@ -302,7 +328,7 @@ class TestDataversePastaConfigReaderFactory:
   def test_config_file_changed(self, mocker, pasta_config_reader, config_file_path, file_exists, expected_remove_call,
                                expected_add_call):
     # Arrange
-    pasta_config_reader.read_pasta_config = mocker.MagicMock()
+    mocker.patch('pasta_eln.dataverse.pasta_config_reader_factory.PastaConfigReaderFactory.read_pasta_config')
     pasta_config_reader.fs_watcher.removePath = mocker.MagicMock()
     pasta_config_reader.fs_watcher.addPath = mocker.MagicMock()
     with patch('pasta_eln.dataverse.pasta_config_reader_factory.exists', return_value=file_exists):
