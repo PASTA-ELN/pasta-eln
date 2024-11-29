@@ -12,7 +12,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from pasta_eln.dataverse.config_model import ConfigModel
+from pasta_eln.database.models.config_model import ConfigModel
 from pasta_eln.dataverse.task_thread_extension import TaskThreadExtension
 from pasta_eln.dataverse.upload_queue_manager import UploadQueueManager
 

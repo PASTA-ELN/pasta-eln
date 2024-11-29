@@ -16,12 +16,12 @@ from os.path import dirname, join, realpath
 from pathlib import Path
 from typing import Type, Union
 
+from pasta_eln.database.error import Error
+from pasta_eln.database.models.config_model import ConfigModel
+from pasta_eln.database.models.data_hierarchy_model import DataHierarchyModel
+from pasta_eln.database.models.project_model import ProjectModel
+from pasta_eln.database.models.upload_model import UploadModel
 from pasta_eln.dataverse.base_database_api import BaseDatabaseApi
-from pasta_eln.dataverse.config_model import ConfigModel
-from pasta_eln.dataverse.data_hierarchy_model import DataHierarchyModel
-from pasta_eln.dataverse.database_error import DatabaseError
-from pasta_eln.dataverse.project_model import ProjectModel
-from pasta_eln.dataverse.upload_model import UploadModel
 from pasta_eln.dataverse.utils import (decrypt_data,
                                        encrypt_data,
                                        get_data_hierarchy_types,
@@ -57,7 +57,7 @@ class DatabaseAPI:
     db_info: dict[str, str] = get_db_info(self.logger)
     db_path: str | None = db_info.get('database_path')
     if db_path is None:
-      raise log_and_create_error(self.logger, DatabaseError, "Database path is None!")
+      raise log_and_create_error(self.logger, Error, "Database path is None!")
     self.db_api: BaseDatabaseApi = BaseDatabaseApi(
       f"{Path.home()}/{self.dataverse_db_name}.db",
       f"{db_path}/{self.pasta_db_name}.db"

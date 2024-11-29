@@ -11,8 +11,8 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDialogButtonBox
 
 from pasta_eln.GUI.dataverse.upload_config_dialog import UploadConfigDialog
-from pasta_eln.dataverse.config_model import ConfigModel
-from pasta_eln.dataverse.data_hierarchy_model import DataHierarchyModel
+from pasta_eln.database.models.config_model import ConfigModel
+from pasta_eln.database.models.data_hierarchy_model import DataHierarchyModel
 
 
 @pytest.fixture
@@ -44,12 +44,12 @@ def mock_database_api(mocker):
     "instrument": {}
   }
   mock_instance.get_data_hierarchy_models.return_value = [
-    DataHierarchyModel(docType="x0"),
-    DataHierarchyModel(docType="x1"),
-    DataHierarchyModel(docType="measurement"),
-    DataHierarchyModel(docType="sample"),
-    DataHierarchyModel(docType="procedure"),
-    DataHierarchyModel(docType="instrument")
+    DataHierarchyModel(doc_type="x0"),
+    DataHierarchyModel(doc_type="x1"),
+    DataHierarchyModel(doc_type="measurement"),
+    DataHierarchyModel(doc_type="sample"),
+    DataHierarchyModel(doc_type="procedure"),
+    DataHierarchyModel(doc_type="instrument")
   ]
   return mock_instance
 

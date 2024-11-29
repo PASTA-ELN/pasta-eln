@@ -25,11 +25,11 @@ from qtawesome import icon
 from sqlalchemy import Executable, and_, select
 from sqlalchemy.orm import aliased
 
+from pasta_eln.database.models.data_hierarchy_model import DataHierarchyModel
+from pasta_eln.database.models.main_orm_model import MainOrmModel
+from pasta_eln.database.models.properties_orm_model import PropertiesOrmModel
 from pasta_eln.dataverse.client import DataverseClient
 from pasta_eln.dataverse.config_error import ConfigError
-from pasta_eln.dataverse.data_hierarchy_model import DataHierarchyModel
-from pasta_eln.dataverse.database_orm_main_model import DatabaseOrmMainModel
-from pasta_eln.dataverse.database_orm_properties_model import DatabaseOrmPropertiesModel
 from pasta_eln.dataverse.pasta_config_reader_factory import PastaConfigReaderFactory
 from pasta_eln.dataverse.upload_status_values import UploadStatusValues
 
@@ -757,9 +757,9 @@ def get_data_hierarchy_types(data_hierarchy: list[DataHierarchyModel] | None) ->
     return []
   data_hierarchy_types = []
   for data_model in data_hierarchy:
-    if (data_model and data_model.docType
-        and data_model.docType not in ("x0", "x1")):
-      type_capitalized = data_model.docType.capitalize()
+    if (data_model and data_model.doc_type
+        and data_model.doc_type not in ("x0", "x1")):
+      type_capitalized = data_model.doc_type.capitalize()
       if type_capitalized not in data_hierarchy_types:
         data_hierarchy_types.append(type_capitalized)
   data_hierarchy_types.append("Unidentified")
@@ -828,27 +828,27 @@ def generate_project_join_statement(model_id: str | None) -> Executable:
       ValueError: If the model ID is invalid or if there is an error in the
       SQL statement construction.
   """
-  properties_objective_aliased = aliased(DatabaseOrmPropertiesModel)
-  properties_status_aliased = aliased(DatabaseOrmPropertiesModel)
-  where_condition = and_(DatabaseOrmMainModel.type == "x0",
-                         DatabaseOrmMainModel.id == model_id) if model_id else DatabaseOrmMainModel.type == "x0"
+  properties_objective_aliased = aliased(PropertiesOrmModel)
+  properties_status_aliased = aliased(PropertiesOrmModel)
+  where_condition = and_(MainOrmModel.type == "x0",
+                         MainOrmModel.id == model_id) if model_id else MainOrmModel.type == "x0"
   return (select(
-    DatabaseOrmMainModel,
+    MainOrmModel,
     properties_status_aliased.value,
     properties_objective_aliased.value,
   ).where(where_condition).join_from(
-    DatabaseOrmMainModel,
+    MainOrmModel,
     properties_objective_aliased,
     and_(
-      DatabaseOrmMainModel.id == properties_objective_aliased.id,
+      MainOrmModel.id == properties_objective_aliased.id,
       properties_objective_aliased.key == ".objective",
     ),
     isouter=True,
   ).join_from(
-    DatabaseOrmMainModel,
+    MainOrmModel,
     properties_status_aliased,
     and_(
-      DatabaseOrmMainModel.id == properties_status_aliased.id,
+      MainOrmModel.id == properties_status_aliased.id,
       properties_status_aliased.key == ".status",
     ),
     isouter=True,

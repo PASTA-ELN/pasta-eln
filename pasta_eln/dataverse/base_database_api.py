@@ -14,21 +14,21 @@ from typing import Type, Union
 from sqlalchemy import create_engine, or_, select
 from sqlalchemy.orm import Session
 
-from pasta_eln.dataverse.base_model import BaseModel
-from pasta_eln.dataverse.config_model import ConfigModel
-from pasta_eln.dataverse.data_hierarchy_model import DataHierarchyModel
-from pasta_eln.dataverse.database_error import DatabaseError
+from pasta_eln.database.error import Error
+from pasta_eln.database.incorrect_parameter_error import IncorrectParameterError
+from pasta_eln.database.models.base_model import BaseModel
+from pasta_eln.database.models.config_model import ConfigModel
+from pasta_eln.database.models.config_orm_model import ConfigOrmModel
+from pasta_eln.database.models.data_hierarchy_model import DataHierarchyModel
+from pasta_eln.database.models.data_hierarchy_orm_model import DataHierarchyOrmModel
+from pasta_eln.database.models.main_orm_model import MainOrmModel
+from pasta_eln.database.models.orm_model_base import OrmModelBase
+from pasta_eln.database.models.project_model import ProjectModel
+from pasta_eln.database.models.properties_orm_model import PropertiesOrmModel
+from pasta_eln.database.models.upload_model import UploadModel
+from pasta_eln.database.models.upload_orm_model import UploadOrmModel
+from pasta_eln.database.orm_model_adapter import OrmModelAdapter
 from pasta_eln.dataverse.database_names import DatabaseNames
-from pasta_eln.dataverse.database_orm_adapter import DatabaseOrmAdapter
-from pasta_eln.dataverse.database_orm_config_model import DatabaseOrmConfigModel
-from pasta_eln.dataverse.database_orm_data_hierarchy_model import DatabaseOrmDataHierarchyModel
-from pasta_eln.dataverse.database_orm_main_model import DatabaseOrmMainModel
-from pasta_eln.dataverse.database_orm_properties_model import DatabaseOrmPropertiesModel
-from pasta_eln.dataverse.database_orm_upload_model import DatabaseOrmUploadModel
-from pasta_eln.dataverse.database_sqlalchemy_base import DatabaseModelBase
-from pasta_eln.dataverse.incorrect_parameter_error import IncorrectParameterError
-from pasta_eln.dataverse.project_model import ProjectModel
-from pasta_eln.dataverse.upload_model import UploadModel
 from pasta_eln.dataverse.utils import generate_project_join_statement, log_and_create_error
 
 
@@ -52,25 +52,25 @@ class BaseDatabaseApi:
     self.db_url_map: dict[DatabaseNames, str] = {}
     base_model_type = Type[BaseModel | UploadModel | ConfigModel | ProjectModel | DataHierarchyModel]
     orm_model_type = Type[
-      DatabaseModelBase | DatabaseOrmUploadModel | DatabaseOrmConfigModel | DatabaseOrmDataHierarchyModel]
+      OrmModelBase | UploadOrmModel | ConfigOrmModel | DataHierarchyOrmModel]
     self.model_mapping: dict[base_model_type, orm_model_type] = {
-      UploadModel: DatabaseOrmUploadModel,
-      ConfigModel: DatabaseOrmConfigModel,
-      DataHierarchyModel: DatabaseOrmDataHierarchyModel
+      UploadModel: UploadOrmModel,
+      ConfigModel: ConfigOrmModel,
+      DataHierarchyModel: DataHierarchyOrmModel
     }
     self.to_orm_converter_map: dict[base_model_type,  # type: ignore[valid-type, misc]
     Callable[base_model_type, orm_model_type]] = {
-      UploadModel: DatabaseOrmAdapter.get_orm_upload_model,
-      ConfigModel: DatabaseOrmAdapter.get_orm_config_model,
-      ProjectModel: DatabaseOrmAdapter.get_orm_project_model,
-      DataHierarchyModel: DatabaseOrmAdapter.get_orm_data_hierarchy_model
+      UploadModel: OrmModelAdapter.get_orm_upload_model,
+      ConfigModel: OrmModelAdapter.get_orm_config_model,
+      ProjectModel: OrmModelAdapter.get_orm_project_model,
+      DataHierarchyModel: OrmModelAdapter.get_orm_data_hierarchy_model
     }
 
     self.to_base_model_converter_map: dict[orm_model_type,  # type: ignore[valid-type, misc]
     Callable[orm_model_type, base_model_type]] = {
-      DatabaseOrmUploadModel: DatabaseOrmAdapter.get_upload_model,
-      DatabaseOrmConfigModel: DatabaseOrmAdapter.get_config_model,
-      DatabaseOrmDataHierarchyModel: DatabaseOrmAdapter.get_data_hierarchy_model
+      UploadOrmModel: OrmModelAdapter.get_upload_model,
+      ConfigOrmModel: OrmModelAdapter.get_config_model,
+      DataHierarchyOrmModel: OrmModelAdapter.get_data_hierarchy_model
     }
 
     if isinstance(dataverse_db_path, str):
@@ -104,16 +104,16 @@ class BaseDatabaseApi:
     self.logger.info("Creating database at the location : %s",
                      self.db_url_map[DatabaseNames.DataverseDatabase])
     engine = create_engine(self.db_url_map[DatabaseNames.DataverseDatabase])
-    (DatabaseModelBase.metadata.tables[DatabaseOrmConfigModel.__tablename__]
+    (OrmModelBase.metadata.tables[ConfigOrmModel.__tablename__]
      .create(bind=engine, checkfirst=True))
-    (DatabaseModelBase.metadata.tables[DatabaseOrmUploadModel.__tablename__]
+    (OrmModelBase.metadata.tables[UploadOrmModel.__tablename__]
      .create(bind=engine, checkfirst=True))
     engine = create_engine(self.db_url_map[DatabaseNames.PastaProjectGroupDatabase])
-    (DatabaseModelBase.metadata.tables[DatabaseOrmMainModel.__tablename__]
+    (OrmModelBase.metadata.tables[MainOrmModel.__tablename__]
      .create(bind=engine, checkfirst=True))
-    (DatabaseModelBase.metadata.tables[DatabaseOrmPropertiesModel.__tablename__]
+    (OrmModelBase.metadata.tables[PropertiesOrmModel.__tablename__]
      .create(bind=engine, checkfirst=True))
-    (DatabaseModelBase.metadata.tables[DatabaseOrmDataHierarchyModel.__tablename__]
+    (OrmModelBase.metadata.tables[DataHierarchyOrmModel.__tablename__]
      .create(bind=engine, checkfirst=True))
 
   def insert_model(self, data_model: Union[UploadModel, ConfigModel]) -> Union[UploadModel, ConfigModel]:
@@ -168,7 +168,7 @@ class BaseDatabaseApi:
     """
     self.logger.info("Retrieving data model with id: %s, type: %s", model_id, model_type)
     if not model_id:
-      raise log_and_create_error(self.logger, DatabaseError, "Model ID cannot be empty!")
+      raise log_and_create_error(self.logger, Error, "Model ID cannot be empty!")
 
     match model_type():
       case UploadModel() | ConfigModel() | DataHierarchyModel():
@@ -179,7 +179,7 @@ class BaseDatabaseApi:
       case ProjectModel():
         return self.get_project_model(model_id) if isinstance(model_id, str) else None
       case _:
-        raise log_and_create_error(self.logger, DatabaseError, "Model type not found!")
+        raise log_and_create_error(self.logger, Error, "Model type not found!")
 
   def get_models(self, model_type: Type[UploadModel | ConfigModel | DataHierarchyModel]) -> list[
     Union[UploadModel, ConfigModel, DataHierarchyModel]]:
@@ -204,7 +204,7 @@ class BaseDatabaseApi:
     """
     self.logger.info("Retrieving models from database, type: %s", model_type)
     if not model_type:
-      raise log_and_create_error(self.logger, DatabaseError, "Model Type cannot be empty!")
+      raise log_and_create_error(self.logger, Error, "Model Type cannot be empty!")
     stmt = select(self.model_mapping[model_type])
     engine = create_engine(self.model_db_url_map[model_type])
     with Session(engine) as session:
@@ -228,7 +228,7 @@ class BaseDatabaseApi:
     engine = create_engine(self.db_url_map[DatabaseNames.PastaProjectGroupDatabase])
     statement = generate_project_join_statement(None)
     with Session(engine) as session:
-      return [DatabaseOrmAdapter.get_project_model(r.tuple()) for r in session.execute(statement).fetchall()]
+      return [OrmModelAdapter.get_project_model(r.tuple()) for r in session.execute(statement).fetchall()]
 
   def get_project_model(self, model_id: str) -> ProjectModel | None:
     """Retrieves a project model from the database using its ID.
@@ -251,12 +251,12 @@ class BaseDatabaseApi:
                      DatabaseNames.PastaProjectGroupDatabase,
                      model_id)
     if not model_id:
-      raise log_and_create_error(self.logger, DatabaseError, "Model ID cannot be empty!")
+      raise log_and_create_error(self.logger, Error, "Model ID cannot be empty!")
     engine = create_engine(self.db_url_map[DatabaseNames.PastaProjectGroupDatabase])
     statement = generate_project_join_statement(model_id)
     with Session(engine) as session:
       if first := session.execute(statement).fetchone():
-        return DatabaseOrmAdapter.get_project_model(first.tuple())
+        return OrmModelAdapter.get_project_model(first.tuple())
       return None
 
   def update_model(self, data_model: Union[UploadModel, ConfigModel]) -> None:
@@ -278,13 +278,13 @@ class BaseDatabaseApi:
     self.logger.info("Updating data model with id: %s, type: %s", data_model.id,
                      model_type)
     if not data_model.id:
-      raise log_and_create_error(self.logger, DatabaseError, "Model ID cannot be empty!")
+      raise log_and_create_error(self.logger, Error, "Model ID cannot be empty!")
     engine = create_engine(self.model_db_url_map[model_type])
     with Session(engine) as session:
       db_model = self.to_orm_converter_map[model_type](data_model)
       if not (session.get(type(db_model),
                           db_model.id)):
-        raise log_and_create_error(self.logger, DatabaseError, "Model does not exist in database!")
+        raise log_and_create_error(self.logger, Error, "Model does not exist in database!")
       session.merge(db_model)
       session.commit()
 
@@ -319,9 +319,9 @@ class BaseDatabaseApi:
         DatabaseError: If the page number or limit is less than 1.
     """
     if page_number < 1:
-      raise log_and_create_error(self.logger, DatabaseError, "Page number cannot be less than 1!")
+      raise log_and_create_error(self.logger, Error, "Page number cannot be less than 1!")
     if limit < 1:
-      raise log_and_create_error(self.logger, DatabaseError, "Limit cannot be less than 1!")
+      raise log_and_create_error(self.logger, Error, "Limit cannot be less than 1!")
     engine = create_engine(self.model_db_url_map[model_type])
     query = select(self.model_mapping[model_type]).limit(limit).offset((page_number - 1) * limit)
     with Session(engine) as session:

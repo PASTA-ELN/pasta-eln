@@ -23,6 +23,7 @@ from .constants import ATTACHMENT_TABLE_DELETE_COLUMN_INDEX, \
   METADATA_TABLE_IRI_COLUMN_INDEX, METADATA_TABLE_REORDER_COLUMN_INDEX, METADATA_TABLE_REQUIRED_COLUMN_INDEX
 from .create_type_dialog import CreateTypeDialog, TypeDialog
 from .data_hierarchy_editor_dialog_base import Ui_DataHierarchyEditorDialogBase
+from .database_api import DatabaseAPI
 from .delete_column_delegate import DeleteColumnDelegate
 from .document_null_exception import DocumentNullException
 from .edit_type_dialog import EditTypeDialog
@@ -55,12 +56,9 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
     """
     return super(DataHierarchyEditorDialog, cls).__new__(cls)
 
-  def __init__(self, database: Any) -> None:
+  def __init__(self) -> None:
     """
     Constructs the data hierarchy data editor
-
-    Args:
-      database (Database): Pasta ELN database instance
 
     Raises:
       DocumentNullException: Raised when passed in argument database has null data_hierarchy_document.
@@ -77,11 +75,8 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
     super().setupUi(self.instance)
 
     # Gets the data_hierarchy data from db and adjust the data to the latest version
-    if database is None:
-      raise GenericException("Null database instance passed to the initializer", {})
-
-    self.database: Any = database
-    self.data_hierarchy_document: Any = self.database.db['-dataHierarchy-']
+    self.database = DatabaseAPI()
+    self.data_hierarchy_document: Any = self.database.get_data_hierarchy_document()
     if not self.data_hierarchy_document:
       raise DocumentNullException("Null data_hierarchy document in db instance", {})
 
@@ -443,25 +438,16 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
       show_message(message, QMessageBox.Icon.Warning)
       self.logger.warning(message)
       return
-
-    result = show_message("Save will close the tool and restart the Pasta Application (Yes/No?)",
-                          QMessageBox.Icon.Question,
-                          QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
-                          QMessageBox.StandardButton.Yes)
-
-    if result == QMessageBox.StandardButton.Yes:
-      # Clear all the data from the data_hierarchy_document
-      for data in list(self.data_hierarchy_document.keys()):
-        if isinstance(self.data_hierarchy_document[data], dict):
-          del self.data_hierarchy_document[data]
-      # Copy all the modifications
-      for type_name, type_structure in self.data_hierarchy_types.items():
-        self.data_hierarchy_document[type_name] = type_structure
-      # Save the modified document
-      self.data_hierarchy_document.save()
-      self.database.dataHierarchy = dict(self.data_hierarchy_document)
-      self.database.initDocTypeViews(16)
-      self.instance.close()
+    # Clear all the data from the data_hierarchy_document
+    for data in list(self.data_hierarchy_document.keys()):
+      if isinstance(self.data_hierarchy_document[data], dict):
+        del self.data_hierarchy_document[data]
+    # Copy all the modifications
+    for type_name, type_structure in self.data_hierarchy_types.items():
+      self.data_hierarchy_document[type_name] = type_structure
+    # Save the modified document
+    self.database.save_data_hierarchy_document(self.data_hierarchy_document)
+    show_message("Data hierarchy saved successfully...", QMessageBox.Icon.Information)
 
   def show_hide_attachments_table(self) -> None:
     """
@@ -485,18 +471,24 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
     self.deleteTypePushButton.setEnabled(can_delete_type(adapt_type(selected_type)))
 
 
-def get_gui(database: Any) -> tuple[
+def get_gui() -> tuple[
   QCoreApplication | QApplication, QtWidgets.QDialog, DataHierarchyEditorDialog]:
   """
-  Creates the editor UI and return it
-  Args:
-    database (Database): PASTA ELN Database instance.
+  Get the GUI components for the data hierarchy editor dialog.
+
+  This function initializes the application and creates an instance of the
+  DataHierarchyEditorDialog. It returns the application instance along with
+  the dialog instance, allowing for interaction with the GUI.
+
   Returns:
+      tuple: A tuple containing the application instance (QCoreApplication or
+      QApplication), the dialog instance (QtWidgets.QDialog), and the
+      DataHierarchyEditorDialog instance.
 
   """
   import sys
   instance = QApplication.instance()
   application = QApplication(sys.argv) if instance is None else instance
-  data_hierarchy_form: DataHierarchyEditorDialog = DataHierarchyEditorDialog(database)
+  data_hierarchy_form: DataHierarchyEditorDialog = DataHierarchyEditorDialog()
 
   return application, data_hierarchy_form.instance, data_hierarchy_form

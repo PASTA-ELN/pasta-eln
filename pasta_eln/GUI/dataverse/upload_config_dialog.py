@@ -15,7 +15,7 @@ from PySide6.QtCore import QObject, Qt
 from PySide6.QtWidgets import QCheckBox, QDialog
 
 from pasta_eln.GUI.dataverse.upload_config_dialog_base import Ui_UploadConfigDialog
-from pasta_eln.dataverse.config_model import ConfigModel
+from pasta_eln.database.models.config_model import ConfigModel
 from pasta_eln.dataverse.database_api import DatabaseAPI
 from pasta_eln.dataverse.utils import get_data_hierarchy_types
 

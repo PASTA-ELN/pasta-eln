@@ -6,17 +6,36 @@
 #   Filename: test_data_hierarchy_editor_dialog.py
 #  #
 #   You should have received a copy of the license with this file. Please refer the license file for more information.
+from typing import Any
+
 import pytest
 from PySide6 import QtWidgets
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication, QCheckBox, QDialogButtonBox, QMessageBox
 from pytestqt.qtbot import QtBot
 
-from pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog import DataHierarchyEditorDialog
+from pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog import DataHierarchyEditorDialog, get_gui
 from pasta_eln.GUI.data_hierarchy.lookup_iri_action import LookupIriAction
 from pasta_eln.GUI.data_hierarchy.utility_functions import adapt_type, get_types_for_display
-from testsAdvanced.common.fixtures import attachments_column_names, data_hierarchy_doc_mock, data_hierarchy_editor_gui, \
-  metadata_column_names, pasta_db_mock
+from testsAdvanced.common.fixtures import attachments_column_names, data_hierarchy_doc_mock, \
+  metadata_column_names
+
+
+@pytest.fixture
+def pasta_db_mock(mocker, data_hierarchy_doc_mock) -> Any:
+  mock_pasta_db = mocker.patch('pasta_eln.GUI.data_hierarchy.data_hierarchy_editor_dialog.DatabaseAPI')
+  mock_pasta_db.return_value.get_data_hierarchy_document.return_value = data_hierarchy_doc_mock
+  return mock_pasta_db
+
+
+@pytest.fixture
+def data_hierarchy_editor_gui(mocker, pasta_db_mock) -> tuple[
+  QApplication, QtWidgets.QDialog, DataHierarchyEditorDialog, QtBot]:
+  mock_message_box = mocker.patch('pasta_eln.GUI.data_hierarchy.utility_functions.QMessageBox')
+  app, ui_dialog, ui_form_extended = get_gui()
+  mocker.patch.object(ui_form_extended, 'message_box', mock_message_box.return_value, create=True)
+  qtbot: QtBot = QtBot(app)
+  return app, ui_dialog, ui_form_extended, qtbot
 
 
 class TestDataHierarchyEditorDialog(object):
@@ -54,13 +73,13 @@ class TestDataHierarchyEditorDialog(object):
     assert ui_form.editTypePushButton.isHidden() is False, "editTypePushButton should be shown!"
 
   @pytest.mark.parametrize("type_to_select, metadata_group_selected, metadata",
-                           [('Structure level 0', 'default', ['-name', 'status', 'objective', '-tags', 'comment']),
-                            ('Structure level 1', 'default', ['-name', '-tags', 'comment']),
+                           [('Structure level 0', 'default', ['name', 'status', 'objective', 'tags', 'comment']),
+                            ('Structure level 1', 'default', ['name', 'tags', 'comment']),
                             ('measurement', 'default',
-                             ['-name', '-tags', 'comment', '-type', 'image', '#_curated', 'sample', 'procedure']),
-                            ('sample', 'default', ['-name', 'chemistry', '-tags', 'comment', 'qrCode']),
-                            ('procedure', 'default', ['-name', '-tags', 'comment', 'content']),
-                            ('instrument', 'default', ['-name', '-tags', 'comment', 'vendor'])])
+                             ['name', 'tags', 'comment', '-type', 'image', '#_curated', 'sample', 'procedure']),
+                            ('sample', 'default', ['name', 'chemistry', 'tags', 'comment', 'qrCode']),
+                            ('procedure', 'default', ['name', 'tags', 'comment', 'content']),
+                            ('instrument', 'default', ['name', 'tags', 'comment', 'vendor'])])
   def test_type_select_should_load_data_and_update_ui_elements(self, data_hierarchy_editor_gui: tuple[
     QApplication, QtWidgets.QDialog, DataHierarchyEditorDialog, QtBot], type_to_select: str,
                                                                metadata_group_selected: str, metadata: list):
@@ -475,8 +494,8 @@ class TestDataHierarchyEditorDialog(object):
         previous_types_metadata_group_count - 1 == ui_form.metadataGroupComboBox.count()), f"Combo list should have {previous_types_metadata_group_count - 1} items!"
     qtbot.mouseClick(ui_form.saveDataHierarchyPushButton, Qt.LeftButton)
     assert data_hierarchy_doc_mock.types() == ui_form.data_hierarchy_types, "data_hierarchy document should be modified!"
-    mock_show_message.assert_called_once_with('Save will close the tool and restart the Pasta Application (Yes/No?)',
-                                              QMessageBox.Question, QMessageBox.No | QMessageBox.Yes, QMessageBox.Yes)
+    mock_show_message.assert_called_once_with('Data hierarchy saved successfully...',
+                                              QMessageBox.Information)
 
   def test_component_iri_lookup_button_click_should_show_data_hierarchy_lookup_dialog_and_set_iris_on_accept(self,
                                                                                                              data_hierarchy_editor_gui:
@@ -823,9 +842,9 @@ class TestDataHierarchyEditorDialog(object):
     model = ui_form.typeMetadataTableView.model()
     assert model.rowCount() == 5, "5 metadata must be present before deletion!"
     # Initial data order
-    init_data_order = ['-name', 'status', 'objective', '-tags', 'comment']
-    post_reorder_data_order1 = ['-name', 'status', 'objective', 'comment', '-tags']
-    post_reorder_data_order2 = ['status', '-name', 'objective', 'comment', '-tags']
+    init_data_order = ['name', 'status', 'objective', 'tags', 'comment']
+    post_reorder_data_order1 = ['name', 'status', 'objective', 'comment', 'tags']
+    post_reorder_data_order2 = ['status', 'name', 'objective', 'comment', 'tags']
     data_order = []
     for i in range(model.rowCount()):
       data_order.append(model.data(model.index(i, 0), Qt.DisplayRole))

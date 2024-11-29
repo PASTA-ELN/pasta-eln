@@ -12,7 +12,7 @@ from typing import Any
 
 import qtawesome as qta
 
-from pasta_eln.dataverse.incorrect_parameter_error import IncorrectParameterError
+from pasta_eln.database.incorrect_parameter_error import IncorrectParameterError
 
 
 class QTAIconsFactory:

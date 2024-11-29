@@ -12,7 +12,7 @@ from PySide6 import QtCore
 from _pytest.mark import param
 
 from pasta_eln.GUI.dataverse.completed_uploads import CompletedUploads
-from pasta_eln.dataverse.upload_model import UploadModel
+from pasta_eln.database.models.upload_model import UploadModel
 from pasta_eln.dataverse.upload_status_values import UploadStatusValues
 
 

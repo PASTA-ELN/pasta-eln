@@ -10,7 +10,7 @@ import pytest
 from PySide6.QtWidgets import QLabel
 
 from pasta_eln.GUI.dataverse.completed_uploads import CompletedUploads
-from pasta_eln.dataverse.upload_model import UploadModel
+from pasta_eln.database.models.upload_model import UploadModel
 from pasta_eln.dataverse.upload_status_values import UploadStatusValues
 
 

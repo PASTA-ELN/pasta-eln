@@ -11,12 +11,12 @@ from unittest.mock import patch
 import pytest
 from _pytest.mark import param
 
-from pasta_eln.dataverse.config_model import ConfigModel
-from pasta_eln.dataverse.data_hierarchy_model import DataHierarchyModel
+from pasta_eln.database.models.config_model import ConfigModel
+from pasta_eln.database.models.data_hierarchy_model import DataHierarchyModel
 from pasta_eln.dataverse.database_api import DatabaseAPI
-from pasta_eln.dataverse.database_error import DatabaseError
-from pasta_eln.dataverse.project_model import ProjectModel
-from pasta_eln.dataverse.upload_model import UploadModel
+from pasta_eln.database.error import Error
+from pasta_eln.database.models.project_model import ProjectModel
+from pasta_eln.database.models.upload_model import UploadModel
 
 
 @pytest.fixture
@@ -84,7 +84,7 @@ class TestDataverseDatabaseAPI:
   # Parametrized test for error cases
   @pytest.mark.parametrize("db_info, expected_exception", [
     (None, AttributeError),
-    ({"database_path": None}, DatabaseError),
+    ({"database_path": None}, Error),
   ], ids=["none_db_info", "none_database_path"])
   def test_database_api_create_instance_error_cases(self, mocker, db_info, expected_exception):
     # Arrange

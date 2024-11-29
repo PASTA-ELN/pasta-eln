@@ -15,9 +15,9 @@ from PySide6.QtWidgets import QCheckBox, QLabel, QMessageBox
 
 from pasta_eln.GUI.dataverse.main_dialog import MainDialog
 from pasta_eln.GUI.dataverse.upload_widget_base import Ui_UploadWidgetFrame
-from pasta_eln.dataverse.config_model import ConfigModel
-from pasta_eln.dataverse.project_model import ProjectModel
-from pasta_eln.dataverse.upload_model import UploadModel
+from pasta_eln.database.models.config_model import ConfigModel
+from pasta_eln.database.models.project_model import ProjectModel
+from pasta_eln.database.models.upload_model import UploadModel
 from pasta_eln.dataverse.upload_status_values import UploadStatusValues
 
 actual_check_if_dataverse_is_configured = MainDialog.check_if_dataverse_is_configured

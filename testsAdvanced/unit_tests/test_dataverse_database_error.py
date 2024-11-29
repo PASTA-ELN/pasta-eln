@@ -9,7 +9,7 @@
 
 import pytest
 
-from pasta_eln.dataverse.database_error import DatabaseError
+from pasta_eln.database.error import Error
 
 
 class TestDataverseDatabaseError:
@@ -27,7 +27,7 @@ class TestDataverseDatabaseError:
   def test_database_error_initialization(self, test_id, message, detailed_errors, expected_message,
                                          expected_detailed_errors):
     # Act
-    exception = DatabaseError(message, detailed_errors)
+    exception = Error(message, detailed_errors)
 
     # Assert
     assert exception.message == expected_message, f"Test ID: {test_id} - The message attribute does not match the expected value."

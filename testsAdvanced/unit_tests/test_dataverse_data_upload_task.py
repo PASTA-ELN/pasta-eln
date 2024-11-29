@@ -12,9 +12,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from pasta_eln.dataverse.config_error import ConfigError
-from pasta_eln.dataverse.config_model import ConfigModel
+from pasta_eln.database.models.config_model import ConfigModel
 from pasta_eln.dataverse.data_upload_task import DataUploadTask
-from pasta_eln.dataverse.upload_model import UploadModel
+from pasta_eln.database.models.upload_model import UploadModel
 from pasta_eln.dataverse.upload_status_values import UploadStatusValues
 
 
