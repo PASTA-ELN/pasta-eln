@@ -100,37 +100,6 @@ def show_message(message: str,
   return None
 
 
-# def get_db(db_name: str,
-#            db_user: str,
-#            db_pass: str,
-#            db_url: str,
-#            logger: logging.Logger) -> CouchDB | None:
-#   """
-#   Get the db instance for the test purpose
-#   Args:
-#     logger (logging): Logger instance
-#     db_name (str): Database instance name in CouchDB
-#     db_user (str): Database user-name used for CouchDB access.
-#     db_pass (str): Database password used for CouchDB access.
-#     db_url (str): Database connection URL.
-#
-#   Returns (CouchDB | None):
-#     Connected DB instance
-#
-#   """
-#   try:
-#     client = CouchDB(user=db_user,
-#                      auth_token=db_pass,
-#                      url=db_url,
-#                      connect=True)
-#   except Exception as ex:
-#     if logger:
-#       logger.error(f'Could not connect with username+password to local server, error: {ex}')
-#     return None
-#   return (client[db_name]
-#           if db_name in client.all_dbs() else client.create_database(db_name))
-
-
 def get_types_for_display(types: list[str]) -> list[str]:
   """
   Get the types for display by converting all structural types from format: xn -> 'Structure Level n'
