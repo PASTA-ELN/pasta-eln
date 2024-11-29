@@ -32,11 +32,11 @@ Main contributors
 =================
 * Steffen Brinckmann: principal investigator, focuses on python backend
 * Jithu Murugan: developer, focuses on front-end and back-end
+* Hanna Tsybenko: testing
 * Thomas Düren: graphical user interfaces
 * Raphael Röske: graphical user interfaces
 * Enmar Al-Khafagi: backend and debugging
 * Velislava Yonkova: first extensive user
-* Hanna Tsybenko: testing
 * multiple colleagues that help with their valuable discussions
 
 
