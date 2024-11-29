@@ -31,8 +31,6 @@ class ProjectGroup(QDialog):
     self.emptyConfig:dict[str,Any] = {'local':{},'remote':{}}
 
     # GUI elements
-    self.setWindowTitle('Define and use project groups')
-    self.setMinimumWidth(1000)
     mainL = QVBoxLayout(self)
     Label('Project group editor', 'h1', mainL)
 

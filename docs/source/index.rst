@@ -24,12 +24,14 @@ Overview
    dodonts
    addons
    data_hierarchy_configuration
+   dataverse_integration
    verify
    faqs
 
 Main contributors
 =================
 * Steffen Brinckmann: principal investigator, focuses on python backend
+* Jithu Murugan: developer, focuses on front-end and back-end
 * Thomas Düren: graphical user interfaces
 * Raphael Röske: graphical user interfaces
 * Enmar Al-Khafagi: backend and debugging
