@@ -351,10 +351,12 @@ class Table(QWidget):
       for i in range(row, self.filterL.count()):        #e.g. model 1 is in row=0, so start in 1 for renumbering
         item_1 = self.filterL.itemAt(i)
         if item_1 is not None:
-          item_2 = item_1.widget().layout().itemAt(2)
-          if item_2 is not None:
-            minusBtnW = item_2.widget()
-        minusBtnW.setAccessibleName( str(int(minusBtnW.accessibleName())-1) )  #rename: -1 from accessibleName
+          layout_2 = item_1.widget().layout()
+          if layout_2 is not None:
+            item_2   = layout_2.itemAt(2)
+            if item_2 is not None:
+              minusBtnW = item_2.widget()
+              minusBtnW.setAccessibleName( str(int(minusBtnW.accessibleName())-1) )  #rename: -1 from accessibleName
       del self.models[row]
       item_1 = self.filterL.itemAt(row-1)
       if item_1 is not None:

@@ -145,11 +145,13 @@ class ProjectGroup(QDialog):
       if not answer:
         return
       if [i for i in Path(answer).iterdir() if i.name=='pastaELN.db']:
-        button = QMessageBox.question(self, "Question", "Do you want to use existing PASTA ELN data?")
+        button = QMessageBox.question(self, "Question", "Do you want to use existing PASTA ELN data?",
+                                      QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
         if button == QMessageBox.StandardButton.No:
           return
       elif list(Path(answer).iterdir()):
-        button = QMessageBox.question(self, "Question", "Do you want to use folder, which is not empty? This is not recommended.")
+        button = QMessageBox.question(self, "Question", "Do you want to use folder, which is not empty? This is not recommended.",
+                                      QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
         if button == QMessageBox.StandardButton.No:
           return
       config['local']['path'] = answer
@@ -159,7 +161,8 @@ class ProjectGroup(QDialog):
       answer = QFileDialog.getExistingDirectory(self, "Specify new add-on directory")
       if not answer:
         return
-      button = QMessageBox.question(self, "Question", "Do you want to copy the add-ons from the old directory (recommended)?")
+      button = QMessageBox.question(self, "Question", "Do you want to copy the add-ons from the old directory (recommended)?",
+                                    QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes)
       if button == QMessageBox.StandardButton.Yes:
         print(config['addOnDir'] ,answer)
         shutil.copytree(config['addOnDir'], answer, dirs_exist_ok=True)
