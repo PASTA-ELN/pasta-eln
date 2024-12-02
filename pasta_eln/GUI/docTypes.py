@@ -30,7 +30,7 @@ class DocTypes(QWidget):
 
 
   @Slot(str, str)
-  def changeTable(self) -> None:
+  def changeTable(self,  _:str, _:str) -> None:
     """
     What happens when user clicks to change doc-type
     -> show table
