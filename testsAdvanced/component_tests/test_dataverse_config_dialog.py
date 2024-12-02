@@ -115,31 +115,6 @@ class TestDataverseConfigDialog:
       assert config_dialog.dataverseListComboBox.count() == 115, "Dataverse list combo box should have 115 items"
     qtbot.mouseClick(config_dialog.buttonBox.button(QDialogButtonBox.Cancel), Qt.LeftButton)
 
-  @pytest.mark.parametrize("test_id, server_url, api_token, expected_msg_box_heading, expected_msg_box_output",
-                           [  # Success tests with various realistic test values
-                             ("success_case_with_valid_url_api_token", "http://valid.url", "decrypted_api_token",
-                              "Credentials Valid", "Data server is reachable and token is valid"),
-
-                             # Edge cases with various realistic test values
-                             ("edge_case_api_token_none", "http://valid.url", None, "Error",
-                              "Please enter both server URL and API token"), (
-                               "edge_case_api_token_empty", "http://valid.url", "", "Error",
-                               "Please enter both server URL and API token"), (
-                               "edge_case_URL_none", None, "decrypted_api_token", "Error",
-                               "Please enter both server URL and API token"), (
-                               "edge_case_URL_empty", "", "decrypted_api_token", "Error",
-                               "Please enter both server URL and API token"), (
-                               "edge_case_both_URL_api_token_none", None, None, "Error",
-                               "Please enter both server URL and API token"), (
-                               "edge_case_both_URL_api_token_empty", "", "", "Error",
-                               "Please enter both server URL and API token"),
-
-                             # Error cases
-                             ("error_case_invalid_api_token", "http://valid.url", "invalid_api_token",
-                              "Credentials Invalid", "Data server is reachable but token is invalid"), (
-                               "error_case_invalid_URL", "http://invalid.url", "decrypted_api_token",
-                               "Credentials Invalid", "Data server is not reachable")])
-
   def test_help_button_click_should_open_help_url(self, qtbot, config_dialog, mock_webbrowser):
     config_dialog.show()
     with qtbot.waitExposed(config_dialog.instance, timeout=500):
