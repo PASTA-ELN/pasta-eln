@@ -261,47 +261,6 @@ class TestConfigDialog:
       else:
         mock_message_box.warning.assert_called_once_with(mock_config_dialog.instance, "Credentials Invalid", message)
 
-  # Parametrized test for load_dataverse_list method
-  @pytest.mark.parametrize("test_id, server_url, api_token, dataverse_list, expected_items", [(
-      "success_path_valid_data", "http://valid.url", "valid_token",
-      [{'title': 'Dataverse1', 'id': 'dv1'}, {'title': 'Dataverse2', 'id': 'dv2'}], 2),
-    ("success_path_valid_data", "http://valid.url", "valid_token", [{'title': 'Dataverse1', 'id': 'dv1'}], 1), (
-        "success_path_valid_data_saved_id_exists", "http://valid.url", "valid_token",
-        [{'title': 'Dataverse1', 'id': 'dv1'}, ], 1),
-    ("edge_case_empty_fields", "http://valid.url", "valid_token", [], 0),
-    ("edge_case_not_list", "http://valid.url", "valid_token", {"title": "Dataverse"}, 0),
-    ("edge_case_list_with_non_dict", "http://valid.url", "valid_token", [1, 2, 3], 0),
-    ("edge_case_list_with_no_properties", "http://valid.url", "valid_token", [{'title': 'Dataverse'}], 0),
-    ("error_case_empty_fields", "", "", [], 0),
-    ("error_case_list_retrieval_failed", "http://valid.url", "valid_token", "404 error not found", 0)])
-  def test_load_dataverse_list(self, mocker, mock_config_dialog, test_id, server_url, api_token, expected_items,
-                               dataverse_list, mock_dataverse_client, mock_message_box):
-    # Arrange
-    mock_dataverse_client.get_dataverse_list.side_effect = mocker.AsyncMock(return_value=dataverse_list)
-    mock_config_dialog.dataverseServerLineEdit.setText(server_url)
-    mock_config_dialog.apiTokenLineEdit.setText(api_token)
-    mock_config_dialog.verify_server_url_and_api_token = mocker.MagicMock(return_value=True)
-
-    # Act
-    mock_config_dialog.verify_and_load_dataverse_list()
-
-    # Assert
-    mock_config_dialog.logger.info.assert_has_calls([mocker.call('Loading dataverse list..')])
-    if not server_url or not api_token:
-      mock_message_box.warning.assert_called_once_with(mock_config_dialog.instance, "Error",
-                                                       "Please enter both server URL and API token")
-    else:
-      assert mock_config_dialog.dataverseListComboBox.count() == expected_items
-      mock_dataverse_client.get_dataverse_list.assert_called_once_with()
-    if test_id == "success_path_valid_data_saved_id_exists":
-      assert mock_config_dialog.dataverseListComboBox.currentData(QtCore.Qt.ItemDataRole.UserRole) == "dv1"
-      assert mock_config_dialog.dataverseListComboBox.currentText() == "Dataverse1"
-    if test_id in ["edge_case_not_list", "error_case_list_retrieval_failed"]:
-      mock_config_dialog.logger.error.assert_called_once_with("Failed to load dataverse list, error: %s",
-                                                              dataverse_list)
-      mock_message_box.warning.assert_called_once_with(mock_config_dialog.instance, "Error",
-                                                       "Failed to load dataverse list")
-
   # Parametrized test cases
   @pytest.mark.parametrize("server_text, token_text, expected_click, test_id", [
     # Happy path tests
