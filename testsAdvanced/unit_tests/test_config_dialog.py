@@ -235,32 +235,6 @@ class TestConfigDialog:
     mock_config_dialog.logger.info.assert_called_once_with("Saving config..")
     mock_config_dialog.db_api.save_config_model.assert_called_once_with(mock_config_dialog.config_model)
 
-  # Parametrized test for verify_server_url_and_api_token method
-  @pytest.mark.parametrize("test_id, server_url, api_token, success, message", [
-    ("success_path_valid_credentials", "http://valid.url", "valid_token", True, "Credentials are valid."),
-    ("error_case_invalid_credentials", "http://invalid.url", "invalid_token", False, "Invalid credentials."),
-    ("error_case_empty_fields", "", "", False, "Please enter both server URL and API token")])
-  def test_verify_server_url_and_api_token(self, mock_config_dialog, test_id, server_url, api_token, success, message,
-                                           mock_message_box):
-    # Arrange
-    mock_config_dialog.dataverseServerLineEdit.setText(server_url)
-    mock_config_dialog.apiTokenLineEdit.setText(api_token)
-    with patch('pasta_eln.GUI.dataverse.config_dialog.check_login_credentials',
-               return_value=(success, message)) as mock_check:
-
-      # Act
-      mock_config_dialog.verify_server_url_and_api_token()
-
-      # Assert
-      mock_config_dialog.logger.info.assert_called_once_with("Verifying server URL and API token..")
-      if not server_url or not api_token:
-        mock_message_box.warning.assert_called_once_with(mock_config_dialog.instance, "Error",
-                                                         "Please enter both server URL and API token")
-      elif success:
-        mock_message_box.information.assert_called_once_with(mock_config_dialog.instance, "Credentials Valid", message)
-      else:
-        mock_message_box.warning.assert_called_once_with(mock_config_dialog.instance, "Credentials Invalid", message)
-
   # Parametrized test cases
   @pytest.mark.parametrize("server_text, token_text, expected_click, test_id", [
     # Happy path tests

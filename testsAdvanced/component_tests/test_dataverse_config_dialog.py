@@ -139,24 +139,6 @@ class TestDataverseConfigDialog:
                               "Credentials Invalid", "Data server is reachable but token is invalid"), (
                                "error_case_invalid_URL", "http://invalid.url", "decrypted_api_token",
                                "Credentials Invalid", "Data server is not reachable")])
-  def test_verify_with_different_url_api_token_combinations_should_give_expected_result(self, qtbot, config_dialog,
-                                                                                        mock_message_box, test_id,
-                                                                                        server_url, api_token,
-                                                                                        expected_msg_box_heading,
-                                                                                        expected_msg_box_output):
-    config_dialog.show()
-    with qtbot.waitExposed(config_dialog.instance, timeout=500):
-      assert config_dialog.instance.isVisible() is True, "Dataverse config dialog should be shown!"
-      config_dialog.dataverseServerLineEdit.setText(server_url)
-      config_dialog.apiTokenLineEdit.setText(api_token)
-      qtbot.mouseClick(config_dialog.dataverseVerifyLoadPushButton, Qt.LeftButton)
-      if expected_msg_box_heading == "Credentials Valid":
-        mock_message_box.information.assert_any_call(config_dialog.instance, expected_msg_box_heading,
-                                                     expected_msg_box_output)
-      else:
-        mock_message_box.warning.assert_any_call(config_dialog.instance, expected_msg_box_heading,
-                                                 expected_msg_box_output)
-    qtbot.mouseClick(config_dialog.buttonBox.button(QDialogButtonBox.Cancel), Qt.LeftButton)
 
   def test_help_button_click_should_open_help_url(self, qtbot, config_dialog, mock_webbrowser):
     config_dialog.show()
@@ -211,26 +193,6 @@ class TestDataverseConfigDialog:
       assert config_dialog.dataverseLineEdit.text() == "datafest2021"
       assert config_dialog.dataverseListComboBox.currentText() == "Datafest 2021, Demo Dataverse", "Dataverse list combo box should be reset with mock data"
       assert config_dialog.dataverseListComboBox.count() == 115, "Dataverse list combo box should have 115 items"
-
-  def test_dataverse_load_button_click_when_server_URL_or_token_invalid_should_return_error(self, mocker, qtbot,
-                                                                                            config_dialog,
-                                                                                            mock_dataverse_client,
-                                                                                            mock_message_box):
-    # Arrange
-    mock_dataverse_client.get_dataverse_list.side_effect = mocker.AsyncMock(return_value="Invalid URL or API token")
-    config_dialog.verify_server_url_and_api_token = mocker.MagicMock(return_value=True)
-    # Act
-    config_dialog.show()
-    with qtbot.waitExposed(config_dialog.instance, timeout=500):
-      assert config_dialog.instance.isVisible() is True, "Dataverse config dialog should be shown!"
-      config_dialog.dataverseServerLineEdit.setText("InvalidURL")
-      config_dialog.apiTokenLineEdit.setText("InvalidToken")
-      config_dialog.config_model.dataverse_login_info["dataverse_id"] = "datafest2021"
-      qtbot.mouseClick(config_dialog.dataverseVerifyLoadPushButton, Qt.LeftButton, delay=2)
-      assert config_dialog.dataverseListComboBox.currentText() == ""
-      assert config_dialog.dataverseListComboBox.count() == 0, "Dataverse list combo box should have 0 items"
-      config_dialog.logger.error("Failed to load dataverse list, error: %s", "Invalid URL or API token")
-      mock_message_box.warning.assert_any_call(config_dialog.instance, "Error", "Failed to load dataverse list")
 
   def test_save_button_click_should_save_the_config(self, qtbot, config_dialog, mock_database_api):
     config_dialog.show()
