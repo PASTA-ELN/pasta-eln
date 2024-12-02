@@ -166,7 +166,7 @@ class TableViewModel(QAbstractTableModel):
               | Qt.ItemFlag.ItemIsEnabled)
     return Qt.ItemFlag.NoItemFlags
 
-  @Slot(int)
+  @Slot(int)                            # type: ignore[arg-type]
   def delete_data(self, position: int) -> None:
     """
     Slot invoked to delete the data from data set at the specific position
@@ -185,7 +185,7 @@ class TableViewModel(QAbstractTableModel):
     self.layoutChanged.emit()
     return None
 
-  @Slot(int)
+  @Slot(int)                              # type: ignore[arg-type]
   def re_order_data(self,
                     position: int) -> None:
     """

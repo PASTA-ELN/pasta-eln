@@ -141,10 +141,12 @@ class ControlledVocabularyDataTypeClass(DataTypeClass):
     value.clear()
     for layout_pos in reversed(range(self.context.main_vertical_layout.count())):
       if vocab_horizontal_layout := self.context.main_vertical_layout.itemAt(layout_pos).layout():
-        combo_box = vocab_horizontal_layout.itemAt(0).widget()
-        if not isinstance(combo_box, QComboBox):
+        combo_box = vocab_horizontal_layout.itemAt(0)
+        if combo_box is not None:
+          combo_boxW = combo_box.widget()
+        if not isinstance(combo_boxW, QComboBox):
           continue
-        text = combo_box.currentText()
+        text = combo_boxW.currentText()
         if text and text != 'No Value':
           value.append(text)
     self.context.meta_field['value'] = list(set(value))

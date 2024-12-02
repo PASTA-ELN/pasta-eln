@@ -140,7 +140,8 @@ class TerminologyLookupDialog(Ui_TerminologyLookupDialogBase):
     search_term = self.terminologyLineEdit.text()
     if not search_term or search_term.isspace():
       self.logger.warning("Enter non null search term!")
-      QMessageBox.warning(self.instance, "Error", "Enter non null search term!")
+      QMessageBox.warning(self.instance, "Error", "Enter non null search term!",
+                          QMessageBox.StandardButton.NoButton, QMessageBox.StandardButton.Ok)
       return
 
     self.logger.info("Terminology search initiated for term: %s..", search_term)

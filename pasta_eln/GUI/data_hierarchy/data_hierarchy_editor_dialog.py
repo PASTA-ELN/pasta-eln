@@ -457,7 +457,7 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
     self.typeAttachmentsTableView.setVisible(not self.typeAttachmentsTableView.isVisible())
     self.addAttachmentPushButton.setVisible(not self.addAttachmentPushButton.isVisible())
 
-  @Slot(str)
+  @Slot(str)                                          # type: ignore[arg-type]
   def check_and_disable_delete_button(self,
                                       selected_type: str) -> None:
     """

@@ -61,7 +61,7 @@ class Backend(CLI_Mixin):
     with open(self.configFileName, 'r', encoding='utf-8') as confFile:
       self.configuration = json.load(confFile)
 
-  @QtCore.Slot()
+  @QtCore.Slot()                                          # type: ignore[arg-type]
   def configFileChanged(self, configFilePath: str) -> None:
     """
     Handle changes to the configuration file.
