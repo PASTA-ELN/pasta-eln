@@ -1,68 +1,59 @@
 """ Long strings and dictionaries/JSON that would obfuscate code """
-from typing import Any
+from typing import Any, Union
 
-defaultDataHierarchy: dict[str, Any] = {
-  "_id": "-dataHierarchy-",
-  "-version": 4,
+defaultDataHierarchy: list[list[str]] = [
+  #docType,       IRI, title,          icon,                   shortcut, view
+  ["x0",          "",  "Projects",     "",                     "space", "name,tags,.status,.objective,comment"],
+  ["x1",          "",  "Folders",      "",                      "",     ""],
+  ["measurement", "",  "Measurements", "fa5s.thermometer-half", "m",    "name,tags,comment,type,image,.sample,.procedure"],
+  ["sample",      "",  "Samples",      "fa5s.vial",             "s",    "name,tags,.chemistry,comment,qrCodes"],
+  ["procedure",   "",  "Procedures",   "fa5s.list-ol",          "p",    "name,tags,comment,content"],
+  ["instrument",  "",  "Instruments",  "ri.scales-2-line",      "i",    "name,tags,comment,.vendor"]]
 
-  "x0": {"IRI": "", "attachments": [], "title": "Projects", "icon": "", "shortcut": "space",
-         "meta": {"default": [
-           {"name": "-name", "query": "What is the name of the project?", "mandatory": True},
-           {"name": "-tags", "query": "What are the tags associated with the project?", "mandatory": True},
-           {"name": "status", "query": "What is the project status",
-            "list": ["active", "paused", "passive", "finished"]},
-           {"name": "objective", "query": "What is the objective?"},
-           {"name": "comment", "query": "#tags comments remarks :field:value:"}
-         ]}},
-  "x1": {"IRI": "", "attachments": [], "title": "Folders", "icon": "", "shortcut": "",
-         "meta": {"default": [
-           {"name": "-name", "query": "What is the name of task?", "mandatory": True},
-           {"name": "-tags", "query": "What are the tags associated with the task?", "mandatory": True},
-           {"name": "comment", "query": "#tags comments remarks :field:value:"}
-         ]}},
-  "measurement": {"IRI": "", "attachments": [], "title": "Measurements", "icon": "fa5s.thermometer-half",
-                  "shortcut": "m",
-                  "meta": {"default": [
-                    {"name": "-name", "query": "What is the name of file name?", "mandatory": True},
-                    {"name": "-tags", "query": "What are the tags associated with the file name?", "mandatory": True},
-                    {"name": "comment", "query": "#tags comments remarks :field:value:"},
-                    {"name": "-type"},
-                    {"name": "image"},
-                    {"name": "#_curated"},
-                    {"name": "sample", "query": "Which sample was used?", "list": "sample"},
-                    {"name": "procedure", "query": "Which procedure was used?", "list": "procedure"}
-                  ]}},
-  "sample": {"IRI": "", "attachments": [], "title": "Samples", "icon": "fa5s.vial", "shortcut": "s",
-             "meta": {"default": [
-               {"name": "-name", "query": "What is the name / identifier of the sample?", "mandatory": True},
-               {"name": "-tags", "query": "What are the tags associated with the sample?", "mandatory": True},
-               {"name": "chemistry", "query": "What is its chemical composition?"},
-               {"name": "comment", "query": "#tags comments remarks :field:value:"},
-               {"name": "qrCode"}
-             ]}},
-  "procedure": {"IRI": "", "attachments": [], "title": "Procedures", "icon": "fa5s.list-ol", "shortcut": "p",
-                "meta": {"default": [
-                  {"name": "-name", "query": "What is the name / path of the procedure?", "mandatory": True},
-                  {"name": "-tags", "query": "What are the tags associated with the procedure?", "mandatory": True},
-                  {"name": "comment", "query": "#tags comments :field:value: e.g. #SOP_v1"},
-                  {"name": "content", "query": "What is procedure (Markdown possible; autofill if file given)?"}
-                ]}},
-  "instrument": {"IRI": "", "attachments": [], "title": "Instruments", "icon": "ri.scales-2-line", "shortcut": "i",
-                 "meta": {"default": [
-                   {"name": "-name", "query": "What is the name / path of the instrument?", "mandatory": True},
-                   {"name": "-tags", "query": "What are the tags associated with the instrument?", "mandatory": True},
-                   {"name": "comment", "query": "#tags comments :field:value: e.g. #SOP_v1"},
-                   {"name": "vendor", "query": "Who is the vendor?"}
-                 ]}}
-}
+defaultDefinitions: list[list[Union[str,int]]] = [
+  #docType, group,index, key,  description,                                      unit, IRI, mandatory, list
+  ["x0",    "", 0,     "name", "What is the name of the project?",                "",   "",  "T",       ""],
+  ["x0",    "", 1,     "tags", "What are the tags associated with the project?",  "",   "",  "",        ""],
+  ["x0",    "", 2,     "status","What is the project status",                     "",   "",  "",        "active,paused,passive,finished"],
+  ["x0",    "", 3,     "objective", "What is the objective?",                     "",   "",  "",        ""],
+  ["x0",    "", 4,     "comment", "What are the comments?",                       "",   "",  "",        ""],
+  ["x1",    "", 0,     "name",   "What is the name of task?",                     "",   "",  "T",       ""],
+  ["x1",    "", 1,     "tags", "What are the tags associated with the task?",     "",   "",  "",        ""],
+  ["x1",    "", 2,     "comment", "What are the comments?",                       "",   "",  "",        ""],
+  ["measurement","",0, "name", "What is the name of file name?",                  "",   "",  "T",       ""],
+  ["measurement","",1, "tags", "What are the tags associated with the file name?","",   "",  "",        ""],
+  ["measurement","",2, "comment", "What are the comments?",                       "",   "",  "",        ""],
+  ["measurement","",3, "sample", "Which sample was used?",                        "",   "",  "",        "sample"],
+  ["measurement","",4, "procedure", "Which procedure was used?",                  "",   "",  "",        "procedure"],
+  ["sample","", 0,     "name", "What is the name / identifier of the sample?",    "",   "",  "T",       ""],
+  ["sample","", 1,     "tags", "What are the tags associated with the sample?",   "",   "",  "",        ""],
+  ["sample","", 2,     "chemistry", "What is its chemical composition?",          "",   "",  "",        ""],
+  ["sample","", 3,     "comment", "What are the comments?",                       "",   "",  "",        ""],
+  ["sample","", 4,     "qrCodes", "",                                             "",   "",  "",        ""],
+  ["sample","geometry", 0,    "height",  "Sample height",                         "mm", "https://schema.org/height",  "",        ""],
+  ["sample","geometry", 1,    "width",   "Sample width",                          "mm", "",  "",        ""],
+  ["sample","geometry", 2,    "length",  "Sample length",                         "mm", "",  "",        ""],
+  ["procedure","", 0,  "name", "What is the name / path of the procedure?",       "",   "",  "T",       ""],
+  ["procedure","", 1,  "tags", "What are the tags associated with the procedure?","",   "",  "",        ""],
+  ["procedure","", 2,  "comment", "#tags comments :field:value: e.g. #SOP_v1",    "",   "",  "",        ""],
+  ["procedure","", 3,  "content", "What is procedure (Markdown possible; autofill if file given)?","","","",""],
+  ["instrument","",0,  "name", "What is the name / path of the instrument?",      "",   "",  "T",       ""],
+  ["instrument","",1,  "tags", "What are the tags associated with the instrument?","",  "",  "",        ""],
+  ["instrument","",2,  "comment", "What are the comments?",                       "",   "",  "",        ""],
+  ["instrument","",3,  "vendor", "Who is the vendor?",                            "",   "",  "",        ""],
+  ["instrument/extension","",0,  "name", "What is the name the instrument extension?",      "",   "",  "T",       ""],
+  ["instrument/extension","",1,  "tags", "What are the tags?",                    "",  "",  "",        ""],
+  ["instrument/extension","",2,  "comment", "What are the comments?",             "",   "",  "",        ""],
+  ["instrument/extension","",3,  "vendor", "Who is the vendor?",                  "",   "",  "",        ""],
+]
 
-defaultDataHierarchyNode: dict[str, list[dict[str, str]]] = {
-  "default": [
-    {"name": "-name", "query": "What is the file name?"},
-    {"name": "-tags"},
-    {"name": "comment", "query": "#tags comments remarks :field:value:"},
-    {"name": "-type"}
-  ]}
+defaultDataHierarchyNode: list[dict[str, str]] = [
+  {'docType':'-','class':'','idx':'0','name':'name',   'query':'What is the name?',     'unit':'','IRI':'','mandatory':'T','list':''},
+  {'docType':'-','class':'','idx':'1','name':'tags',   'query':'What are the tags?',    'unit':'','IRI':'','mandatory':'','list':''},
+  {'docType':'-','class':'','idx':'2','name':'comment','query':'What are the comments?','unit':'','IRI':'','mandatory':'','list':''}
+  ]
+
+CONF_FILE_NAME = '.pastaELN_v3.json'
 
 defaultConfiguration: dict[str, Any] = {
   "defaultProjectGroup": "research",
@@ -70,7 +61,6 @@ defaultConfiguration: dict[str, Any] = {
   "version": 0,
   "tableColumnsMax": 16,
   "qrPrinter": {},
-  "extractorDir": "$(Path(__file__).parent/'Extractors').as_posix()$",
   "extractors": {},
   "authors": [{"first": "", "last": "", "title": "", "email": "", "orcid": "",
                "organizations": [{"organization": "", "rorid": ""}]}],
@@ -83,7 +73,7 @@ defaultConfiguration: dict[str, Any] = {
 configurationGUI: dict[str, Any] = {
   "general": {
     "theme": ["Theme",
-              "light_blue",
+              "none",
               ["dark_amber", "dark_blue", "dark_cyan", "dark_lightgreen", "dark_pink", "dark_purple", "dark_red", \
                "dark_teal", "dark_yellow", "light_amber", "light_blue", "light_cyan", "light_lightgreen", \
                "light_pink", "light_purple", "light_red", "light_teal", "light_yellow", "none"]],
@@ -103,64 +93,29 @@ configurationGUI: dict[str, Any] = {
   }
 }
 
-setupTextLinux = """
-### Welcome to the PASTA-ELN setup for Linux
+SQLiteTranslationDict = {"'":"&prime;"}
+SQLiteTranslation     = str.maketrans(SQLiteTranslationDict)
+
+minimalDocInForm = {'tags':[], 'comment':'', '':{}}
+
+SORTED_KEYS     = ['name', 'tags', 'comment', 'metaUser', '']
+SORTED_DB_KEYS  = ['id', 'type', 'dateCreated','dateModified','dateSync', 'user','branch','gui','client','externalId','shasum']
+DO_NOT_RENDER   = ['image','content','metaVendor','shasum','type','branch','gui','dateCreated',
+                 'dateModified','id','user','name','externalId','client']
+
+setupText = """
+### Welcome to the PASTA-ELN setup
 Three components are needed for proper functioning of PASTA-ELN:
-- CouchDB
-- Configuration of preferences / default data hierarchy
-- Example project creation
-
-This setup will analyse and (possibly) correct these items.
-
-If the installation is successful, manually and permanently remove the 'pastaELN.log' logfile that is in your home-directory.
-"""
-
-setupTextWindows = """
-### Welcome to the PASTA-ELN setup for Windows
-Four components are needed for proper functioning of PASTA-ELN:
-- CouchDB
-- Configuration of preferences / default data hierarchy
+- Configuration of preferences
 - Shortcut creation
 - Example project creation
 
 This setup will analyse and (possibly) correct these items.
-
-If the installation is successful, manually and permanently remove the 'pastaELN.log' logfile that is in your home-directory (folder above "My Documents").
-
 If an attempt fails: please follow to this [website](https://pasta-eln.github.io/pasta-eln/install.html).
 """
 
-gitWindows = """
-Do you want to install git?
 
-Be aware, downloading the installer requires some time, depending on the internet connection.
-"""
-
-rootInstallLinux = """
-Do you want to install Apache CouchDB (TM)?
-If you choose yes, you will be first asked to
-
-- choose a directory to store the data
-- enter the super-user password in the new terminal that will open automatically
-
-Be aware that downloading the installer requires time, depending on the internet connection.
-"""
-
-couchDBWindows = """
-Do you want to install CouchDB?
-
-Be aware that downloading the installer requires time, depending on the internet connection.
-"""
-
-restartPastaWindows = """
-Close software now (will be done automatically in the future)
-
-Please restart the software by
-- clicking on the shortcut OR
-- executing the command in a new cmd.exe window
-"""
-
-exampleDataLinux = """
+exampleDataString = """
 Do you want to create an example project?
 
 This step helps to verify the installation and provides an helpful example for new users.
@@ -171,18 +126,8 @@ This step usually takes up to 20sec, so please be patient. Sometimes, Linux ment
 is not responding and asks if to close/wait. Please WAIT.
 """
 
-exampleDataWindows = """
-Do you want to create an example project?
-
-This step helps to verify the installation and provides an helpful example for new users.
-
-!WARNING! This process will RESET everything and thereby DELETE EVERYTHING since you installed pastaELN.
-
-This step usually takes up to 1min, so please be patient.
-"""
-
 shortcuts = """
-### Shortcuts:
+### Default shortcuts:
 
 **Ctrl+Space**: List projects
 

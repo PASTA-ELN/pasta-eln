@@ -4,6 +4,7 @@ import re, logging
 from enum import Enum
 from pathlib import Path
 from typing import Any
+import pandas as pd
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QTableView, QFileDialog, QMessageBox, QHeaderView, QLineEdit, QComboBox, QMenu # pylint: disable=no-name-in-module
 from PySide6.QtCore import Qt, Slot, QSortFilterProxyModel, QModelIndex       # pylint: disable=no-name-in-module
 from PySide6.QtGui import QStandardItemModel, QStandardItem            # pylint: disable=no-name-in-module
@@ -26,7 +27,7 @@ class Table(QWidget):
     comm.changeTable.connect(self.change)
     comm.stopSequentialEdit.connect(self.stopSequentialEditFunction)
     self.stopSequentialEdit = False
-    self.data:list[dict[str,Any]] = []
+    self.data:pd.DataFrame = pd.DataFrame()
     self.models:list[QSortFilterProxyModel] = []
     self.docType = ''
     self.projID = ''
@@ -87,6 +88,7 @@ class Table(QWidget):
     self.setLayout(mainL)
 
 
+
   @Slot(str, str)
   def change(self, docType:str, projID:str) -> None:
     """
@@ -127,17 +129,14 @@ class Table(QWidget):
       if self.projID=='':
         self.data = self.comm.backend.db.getView(path)
       else:
-        self.data = self.comm.backend.db.getView(path, preciseKey=self.projID)
-      # filter multiple lines of the same item: #https://stackoverflow.com/questions/11092511/list-of-unique-dictionaries
-      self.data = list({v['id']:v for v in self.data}.values())
+        self.data = self.comm.backend.db.getView(path, startKey=self.projID)
       self.showState.setText('(show all rows)' if self.showAll else '(hide hidden rows)')
       docLabel = 'Unidentified'
       if self.docType=='-':
         self.actionChangeColums.setVisible(False)
       else:
         self.actionChangeColums.setVisible(True)
-        if self.docType in self.comm.backend.db.dataLabels:
-          docLabel = self.comm.backend.db.dataLabels[self.docType]
+        docLabel = self.comm.backend.db.dataHierarchy(self.docType,'title')[0]
       if self.projID:
         self.headline.setText(docLabel)
         self.showHidden.setText(f'Show/hide hidden {docLabel.lower()}')
@@ -145,40 +144,35 @@ class Table(QWidget):
         self.comm.changeSidebar.emit('')  #close the project in sidebar
         self.headline.setText(f'All {docLabel.lower()}')
         self.showHidden.setText(f'Show/hide all hidden {docLabel.lower()}')
-      self.filterHeader = self.comm.backend.db.getColumnNames()[self.docType].split(',')
-      self.filterHeader = [i[1:] if i[0]=='-'   else i for i in self.filterHeader]  #change -something to something
-      self.filterHeader = [i[2:] if i[:2]=='#_' else i for i in self.filterHeader]  #change #_something to something
+      self.filterHeader = list(self.data.columns)[:-1]
     self.headerW.show()
-    nrows, ncols = len(self.data), len(self.filterHeader)
-    model = QStandardItemModel(nrows, ncols)
+    nRows, nCols = self.data.shape
+    model = QStandardItemModel(nRows, nCols-1)
     model.setHorizontalHeaderLabels(self.filterHeader)
-    for i, j in itertools.product(range(nrows), range(ncols)):
+    for i, j in itertools.product(range(nRows), range(nCols-1)):
+      value = self.data.iloc[i,j]
       if self.docType=='_tags_':  #tags list
         if j==0:
-          if self.data[i]['key']=='_curated':
+          if value=='_curated':          # curated
             item = QStandardItem('_curated_')
-          elif re.match(r'_\d', self.data[i]['key']):
-            item = QStandardItem('\u2605'*int(self.data[i]['key'][1]))
+          elif re.match(r'_\d', value):  # star
+            item = QStandardItem('\u2605'*int(value[1]))
           else:
-            item = QStandardItem(self.data[i]['key'])
+            item = QStandardItem(value)
         else:
-          item = QStandardItem(self.data[i]['value'][j-1])
-      elif self.data[i]['value'][j] is None or not self.data[i]['value'][j]:  #None, False
+          item = QStandardItem(value)
+      elif value in ('None','','nan'):  #None, False
         item = QStandardItem('-') # if you want to add nice glyphs, see also below \u00D7')
         # item.setFont(QFont("Helvetica [Cronyx]", 16))
-      elif isinstance(self.data[i]['value'][j], bool): #True
+      elif value=='True': #True
         item = QStandardItem('Y') # \u2713')
         # item.setFont(QFont("Helvetica [Cronyx]", 16))
-      elif isinstance(self.data[i]['value'][j], list):                  #list, e.g. qrCodes
-        item = (QStandardItem(', '.join(self.data[i]['value'][j])) if isinstance(
-            self.data[i]['value'][j][0], str) else QStandardItem(', '.join(
-                [str(i) for i in self.data[i]['value'][j]])))
-      elif isinstance(self.data[i]['value'][j], str) and re.match(r'^[a-z\-]-[a-z0-9]{32}$',self.data[i]['value'][j]):      #Link
+      elif isinstance(value, str) and re.match(r'^[a-z\-]-[a-z0-9]{32}$',value):      #Link
         item = QStandardItem('oo') # \u260D')
         # item.setFont(QFont("Helvetica [Cronyx]", 16))
       else:
         if self.filterHeader[j]=='tags':
-          tags = self.data[i]['value'][j].split(' ')
+          tags = value[j].split(' ')
           if '_curated' in tags:
             tags[tags.index('_curated')] = '_curated_'
           for iStar in range(1,6):
@@ -186,13 +180,13 @@ class Table(QWidget):
               tags[tags.index(f'_{str(iStar)}')] = '*'*iStar
           text = ' '.join(tags)
         else:
-          text = str(self.data[i]['value'][j])  #could be a number
+          text = value
         item = QStandardItem(text)
       if j==0:
-        doc = self.comm.backend.db.getDoc(self.data[i]['id'])
-        if [b for b in doc['-branch'] if False in b['show']]:
+        doc = self.comm.backend.db.getDoc(self.data['id'][i])
+        if [b for b in doc['branch'] if False in b['show']]:
           item.setText( item.text()+'  \U0001F441' )
-        item.setAccessibleText(doc['_id'])
+        item.setAccessibleText(doc['id'])
         if self.docType!='x0':
           item.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)
           item.setCheckState(Qt.CheckState.Unchecked)
@@ -213,7 +207,7 @@ class Table(QWidget):
       command (list): list of commands
     """
     if command[0] is Command.ADD_ITEM:
-      self.comm.formDoc.emit({'-type':[self.docType], '_projectID':self.projID})
+      self.comm.formDoc.emit({'type':[self.docType], '_projectID':self.projID})
       self.comm.changeTable.emit(self.docType, self.projID)
       if self.docType=='x0':
         self.comm.changeSidebar.emit('redraw')
@@ -251,11 +245,12 @@ class Table(QWidget):
             intersection = intersection.intersection(thisKeys)
       #remove keys that should not be group edited and build dict
       if intersection is not None:
-        intersection = intersection.difference({'-branch', '-user', '-client', 'metaVendor', 'shasum', \
-            '_id', 'metaUser', '_rev', '-name', '-date', 'image', '_attachments','links'})
+        intersection = intersection.difference({'branch', 'user', 'client', 'metaVendor', 'shasum', \
+            'id', 'metaUser', 'rev', 'name', 'dateCreated', 'dateModified', 'image', 'links', 'gui'})
         intersectionDict:dict[str,Any] = {i:'' for i in intersection}
-        intersectionDict['-tags'] = []
-        intersectionDict['-type'] = [self.docType]
+        intersectionDict |= {k:v for k,v in self.comm.backend.db.getDoc(docID).items() if isinstance(v,dict) and k not in ('metaUser','metaVendor')}
+        intersectionDict['tags'] = []
+        intersectionDict['type'] = [self.docType]
         intersectionDict['_ids'] = docIDs
         self.comm.formDoc.emit(intersectionDict)
         self.comm.changeDetails.emit('redraw')
@@ -279,7 +274,7 @@ class Table(QWidget):
                 QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.No)
           if ret==QMessageBox.StandardButton.Yes:
             doc = self.comm.backend.db.getDoc(docID)
-            for branch in doc['-branch']:
+            for branch in doc['branch']:
               if branch['path'] is not None:
                 oldPath = self.comm.backend.basePath/branch['path']
                 if oldPath.exists():
@@ -327,25 +322,24 @@ class Table(QWidget):
         item, docID = self.itemFromRow(row)
         if item.checkState() == Qt.CheckState.Checked:
           doc = self.comm.backend.db.getDoc(docID)
-          if doc['-branch'][0]['path'] is None:
+          if doc['branch'][0]['path'] is None:
             continue
           redraw = True
-          oldDocType = doc['-type']
-          doc['-type'] = ['']
-          if doc['-branch'][0]['path'].startswith('http'):
-            path = Path(doc['-branch'][0]['path'])
+          oldDocType = doc['type']
+          doc['type'] = ['']
+          if doc['branch'][0]['path'].startswith('http'):
+            path = Path(doc['branch'][0]['path'])
           else:
-            path = self.comm.backend.basePath/doc['-branch'][0]['path']
+            path = self.comm.backend.basePath/doc['branch'][0]['path']
           self.comm.backend.useExtractors(path, doc.get('shasum',''), doc)
-          if doc['-type'][0] == oldDocType[0]:
-            del doc['-branch']  #don't update
+          if doc['type'][0] == oldDocType[0]:
+            del doc['branch']  #don't update
             self.comm.backend.db.updateDoc(doc, self.data[row]['id'])
           else:
-            self.comm.backend.db.remove( self.data[row]['id'] )
-            del doc['_id']
-            del doc['_rev']
-            doc['-name'] = doc['-branch'][0]['path']
-            self.comm.backend.addData('/'.join(doc['-type']), doc, doc['-branch'][0]['stack'])
+            self.comm.backend.db.remove( docID )
+            del doc['id']
+            doc['name'] = doc['branch'][0]['path']
+            self.comm.backend.addData('/'.join(doc['type']), doc, doc['branch'][0]['stack'])
       if redraw:
         self.change('','')  # redraw table
         self.comm.changeDetails.emit('redraw')
@@ -378,11 +372,11 @@ class Table(QWidget):
     # column = item.column()
     if docID[0]=='x': #only show items for non-folders
       doc = self.comm.backend.db.getDoc(docID)
-      if doc['-type'][0]=='x0':
+      if doc['type'][0]=='x0':
         self.comm.changeProject.emit(docID,'')
         self.comm.changeSidebar.emit(docID)
       else:
-        projID = doc['-branch'][0]['stack'][0]
+        projID = doc['branch'][0]['stack'][0]
         self.comm.changeProject.emit(projID, docID)
         self.comm.changeSidebar.emit(projID)
     else:

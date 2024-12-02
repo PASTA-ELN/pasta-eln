@@ -1,15 +1,17 @@
 """ Widget that shows the content of project in a electronic labnotebook """
-import logging
+import logging, importlib
 from enum import Enum
 from pathlib import Path
 from typing import Optional, Any
-from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget, QMenu, QMessageBox, QTextEdit, QScrollArea # pylint: disable=no-name-in-module
+from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget, QMenu, QMessageBox, QTextEdit              # pylint: disable=no-name-in-module
 from PySide6.QtGui import QStandardItemModel, QStandardItem, QAction                                   # pylint: disable=no-name-in-module
 from PySide6.QtCore import Slot, Qt, QItemSelectionModel, QModelIndex                                  # pylint: disable=no-name-in-module
 from anytree import PreOrderIter, Node
 from .projectTreeView import TreeView
-from ..guiStyle import TextButton, Action, Label, showMessage, widgetAndLayout, getColor
-from ..miscTools import createDirName, markdownStyler
+from ..guiStyle import TextButton, Action, Label, showMessage, widgetAndLayout
+from ..fixedStringsJson import DO_NOT_RENDER
+from ..stringChanges import createDirName
+from ..handleDictionaries import doc2markdown
 from ..guiCommunicate import Communicate
 
 class Project(QWidget):
@@ -22,21 +24,15 @@ class Project(QWidget):
     self.setLayout(self.mainL)
     self.tree:Optional[TreeView]             = None
     self.model:Optional[QStandardItemModel]  = None
-    self.infoWSA:Optional[QWidget]           = None
-    self.infoW_:Optional[QWidget]            = None
-    self.commentTE:Optional[QTextEdit]       = None
-    self.actHideDetail = QAction()
-    self.actionHideItems   = QAction()
-    self.actionHideProject = QAction()
-    self.actionFoldAll     = QAction()
+    self.allDetails                          = QTextEdit()
+    self.actHideDetail                       = QAction()
+    self.actionFoldAll                       = QAction()
     self.projID = ''
-    self.taskID = ''
     self.docProj:dict[str,Any]= {}
     self.showAll= True
     self.showDetailsAll = False
     self.btnAddSubfolder:Optional[TextButton] = None
     self.lineSep = 20
-    self.countLines = -1
 
 
   def projHeader(self) -> None:
@@ -44,6 +40,7 @@ class Project(QWidget):
     Initialize / Create header of page
     """
     self.docProj = self.comm.backend.db.getDoc(self.projID)
+    dataHierarchyNode = self.comm.backend.db.dataHierarchy('x0', 'meta')
     # remove if still there
     for i in reversed(range(self.mainL.count())): #remove old
       self.mainL.itemAt(i).widget().setParent(None)
@@ -51,9 +48,9 @@ class Project(QWidget):
     # TOP LINE includes name on left, buttons on right
     _, topLineL       = widgetAndLayout('H',self.mainL,'m')
     hidden, menuTextHidden = ('     \U0001F441', 'Mark project as shown') \
-                       if [b for b in self.docProj['-branch'] if False in b['show']] else \
+                       if [b for b in self.docProj['branch'] if False in b['show']] else \
                        ('', 'Mark project as hidden')
-    topLineL.addWidget(Label(self.docProj['-name']+hidden, 'h2'))
+    topLineL.addWidget(Label(self.docProj['name']+hidden, 'h2'))
     showStatus = '(Show all items)' if self.showAll else '(Hide hidden items)'
     topLineL.addWidget(QLabel(showStatus))
     topLineL.addStretch(1)
@@ -67,57 +64,42 @@ class Project(QWidget):
     self.actHideDetail = Action('Hide project details',self, [Command.SHOW_PROJ_DETAILS],visibilityMenu)
     menuTextItems = 'Hide hidden items' if self.showAll else 'Show hidden items'
     minimizeItems = 'Show all item details' if self.showDetailsAll else 'Hide all item details'
-    self.actionHideItems   = Action( menuTextItems,    self, [Command.HIDE_SHOW_ITEMS],  visibilityMenu)
-    self.actionHideProject = Action( menuTextHidden,   self, [Command.HIDE],             visibilityMenu)
-    self.actionFoldAll     = Action( minimizeItems,    self, [Command.SHOW_DETAILS],   visibilityMenu)
+    Action( menuTextItems,    self, [Command.HIDE_SHOW_ITEMS],  visibilityMenu)
+    Action( menuTextHidden,   self, [Command.HIDE],             visibilityMenu)
+    self.actionFoldAll     = Action( minimizeItems,    self, [Command.SHOW_DETAILS],     visibilityMenu)
     visibility.setMenu(visibilityMenu)
     more = TextButton('More',           self, [], buttonL)
     moreMenu = QMenu(self)
     Action('Scan',                      self, [Command.SCAN], moreMenu)
-    for doctype in self.comm.backend.db.dataLabels:
+    for doctype in self.comm.backend.db.dataHierarchy('', ''):
       if doctype[0]!='x':
-        icon = self.comm.backend.db.dataHierarchy[doctype].get('icon','')
+        icon = self.comm.backend.db.dataHierarchy(doctype, 'icon')[0]
         icon = 'fa5s.asterisk' if icon=='' else icon
         Action(f'table of {doctype}',   self, [Command.SHOW_TABLE, doctype], moreMenu, icon=icon)
     Action('table of unidentified',     self, [Command.SHOW_TABLE, '-'],     moreMenu, icon='fa5.file')
     moreMenu.addSeparator()
+    if projectAddOns := self.comm.backend.configuration.get('projectAddOns',''):
+      for label, description in projectAddOns.items():
+        Action(description, self, [Command.ADD_ON, label], moreMenu)
+      moreMenu.addSeparator()
     Action('Delete project',            self, [Command.DELETE], moreMenu)
     more.setMenu(moreMenu)
 
     # Details section
-    self.infoWSA = QScrollArea()
-    self.infoWSA.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-    self.infoWSA.setWidgetResizable(True)
-    self.infoW_, infoL = widgetAndLayout('V')
-    self.infoWSA.setWidget(self.infoW_)
-    self.mainL.addWidget(self.infoWSA)
-    if not self.docProj['-gui'][0]:
-      self.infoWSA.hide()
+    # self.infoW = QScrollArea()
+    # self.infoW.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+    # self.infoW.setWidgetResizable(True)
+    self.allDetails.setMarkdown(doc2markdown(self.docProj, DO_NOT_RENDER, dataHierarchyNode, self))
+    if not self.docProj['gui'][0]:
+      self.allDetails.hide()
       self.actHideDetail.setText('Show project details')
-    # details
-    tags = ', '.join([f'#{i}' for i in self.docProj['-tags']]) if '-tags' in self.docProj else ''
-    infoL.addWidget(QLabel(f'Tags: {tags}'))
-    self.countLines = 0
-    for key,value in self.docProj.items():
-      if key[0] in {'_','-'} or 'from ' in key or key in {'comment'}:
-        continue
-      labelW = QLabel(f'{key.title()}: {str(value)}')
-      infoL.addWidget(labelW)
-      self.countLines += 1
-    # comment
-    commentW, commentL   = widgetAndLayout('H', infoL, 's')
-    commentW.resizeEvent = self.commentResize # type: ignore
-    labelW = QLabel('Comment:')
-    # labelW.setStyleSheet('padding-top: 5px') #make "Comment:" text aligned with other content, not with text-edit
-    commentL.addWidget(labelW, alignment=Qt.AlignmentFlag.AlignTop)
-    self.commentTE = QTextEdit()
-    self.commentTE.setMarkdown(markdownStyler(self.docProj.get('comment', '')))
-    bgColor = getColor(self.comm.backend, 'secondaryDark')
-    fgColor = getColor(self.comm.backend, 'primaryText')
-    self.commentTE.setStyleSheet(f"border: none; padding: 0px; background-color: {bgColor}; color: {fgColor}")
-    self.commentTE.setReadOnly(True)
+    self.allDetails.resizeEvent = self.commentResize # type: ignore
+    bgColor = self.comm.palette.get('secondaryDark', 'background-color')
+    fgColor = self.comm.palette.get('secondaryText', 'color')
+    self.allDetails.setStyleSheet(f"border: none; padding: 0px; {bgColor} {fgColor}")
+    self.allDetails.setReadOnly(True)
+    self.mainL.addWidget(self.allDetails)
     self.commentResize(None)
-    commentL.addWidget(self.commentTE)
     return
 
 
@@ -125,12 +107,11 @@ class Project(QWidget):
     """ called if comment is resized because widget initially/finally knows its size
     - comment widget is hard coded size it depends on the rendered size
     """
-    if self.commentTE is None or self.infoWSA is None or self.infoW_ is None:
+    if self.allDetails is None:
       return
-    self.commentTE.document().setTextWidth(self.infoWSA.width())
-    height:int = self.commentTE.document().size().toTuple()[1]  # type: ignore[index]
-    self.infoW_.setMaximumHeight(height + (self.countLines+1)*self.lineSep     -12)
-    self.infoWSA.setMaximumHeight(height + (self.countLines+1)*self.lineSep  -10)
+    self.allDetails.document().setTextWidth(self.width())
+    height:int = self.allDetails.document().size().toTuple()[1]  # type: ignore[index]
+    self.allDetails.setMaximumHeight(height)
     return
 
 
@@ -150,7 +131,6 @@ class Project(QWidget):
     logging.debug('ProjectView elements at 1: %i',self.mainL.count())
     if projID!='':
       self.projID         = projID
-      self.taskID         = docID
       self.comm.projectID = projID
     selectedIndex = None
     self.model = QStandardItemModel()
@@ -227,9 +207,9 @@ class Project(QWidget):
       self.comm.formDoc.emit(self.docProj)
       self.change(self.projID,'')
       #collect information and then change
-      oldPath = self.comm.backend.basePath/self.docProj['-branch'][0]['path']
+      oldPath = self.comm.backend.basePath/self.docProj['branch'][0]['path']
       if oldPath.is_dir():
-        newPath = self.comm.backend.basePath/createDirName(self.docProj['-name'],'x0',0)
+        newPath = self.comm.backend.basePath/createDirName(self.docProj['name'],'x0',0)
         oldPath.rename(newPath)
       self.comm.changeSidebar.emit('redraw')
     elif command[0] is Command.DELETE:
@@ -239,12 +219,12 @@ class Project(QWidget):
       if ret==QMessageBox.StandardButton.Yes:
         #delete database and rename folder
         doc = self.comm.backend.db.remove(self.projID)
-        if '-branch' in doc and len(doc['-branch'])>0 and 'path' in doc['-branch'][0]:
-          oldPath = self.comm.backend.basePath/doc['-branch'][0]['path']
-          newPath = self.comm.backend.basePath/('trash_'+doc['-branch'][0]['path'])
+        if 'branch' in doc and len(doc['branch'])>0 and 'path' in doc['branch'][0]:
+          oldPath = self.comm.backend.basePath/doc['branch'][0]['path']
+          newPath = self.comm.backend.basePath/('trash_'+doc['branch'][0]['path'])
           nextIteration = 1
           while newPath.is_dir():
-            newPath = self.comm.backend.basePath/(f"trash_{doc['-branch'][0]['path']}_{nextIteration}")
+            newPath = self.comm.backend.basePath/(f"trash_{doc['branch'][0]['path']}_{nextIteration}")
             nextIteration += 1
           oldPath.rename(newPath)
         # go through children, remove from DB
@@ -256,22 +236,22 @@ class Project(QWidget):
         self.comm.changeTable.emit('x0','')
     elif command[0] is Command.SCAN:
       for _ in range(2):  #scan twice: convert, extract
-        self.comm.backend.scanProject(self.comm.progressBar, self.projID, self.docProj['-branch'][0]['path'])
+        self.comm.backend.scanProject(self.comm.progressBar, self.projID, self.docProj['branch'][0]['path'])
       self.comm.changeProject.emit(self.projID,'')
       showMessage(self, 'Information','Scanning finished')
     elif command[0] is Command.SHOW_PROJ_DETAILS:
-      self.docProj['-gui'][0] = not self.docProj['-gui'][0]
-      self.comm.backend.db.setGUI(self.projID, self.docProj['-gui'])
-      if self.infoWSA is not None and self.infoWSA.isHidden():
-        self.infoWSA.show()
+      self.docProj['gui'][0] = not self.docProj['gui'][0]
+      self.comm.backend.db.setGUI(self.projID, self.docProj['gui'])
+      if self.allDetails is not None and self.allDetails.isHidden():
+        self.allDetails.show()
         self.actHideDetail.setText('Hide project details')
-      elif self.infoWSA is not None:
-        self.infoWSA.hide()
+      elif self.allDetails is not None:
+        self.allDetails.hide()
         self.actHideDetail.setText('Show project details')
     elif command[0] is Command.HIDE:
       self.comm.backend.db.hideShow(self.projID)
       self.docProj = self.comm.backend.db.getDoc(self.projID)
-      if [b for b in self.docProj['-branch'] if False in b['show']]: # hidden->go back to project table
+      if [b for b in self.docProj['branch'] if False in b['show']]: # hidden->go back to project table
         self.comm.changeSidebar.emit('')
         self.comm.changeTable.emit('x0','') # go back to project table
       else:
@@ -298,12 +278,14 @@ class Project(QWidget):
       self.showAll = not self.showAll
       self.change('','')
     elif command[0] is Command.ADD_CHILD:
-      self.comm.backend.cwd = self.comm.backend.basePath/self.docProj['-branch'][0]['path']
-      title = self.comm.backend.db.dataHierarchy['x1']['title'].lower()[:-1]
-      self.comm.backend.addData('x1', {'-name':f'new {title}'}, [self.projID])
+      self.comm.backend.cwd = self.comm.backend.basePath/self.docProj['branch'][0]['path']
+      self.comm.backend.addData('x1', {'name':'new item'}, [self.projID])
       self.change('','') #refresh project
     elif command[0] is Command.SHOW_TABLE:
       self.comm.changeTable.emit(command[1], self.projID)
+    elif command[0] is Command.ADD_ON:
+      module      = importlib.import_module(command[1])
+      module.main(self.comm.backend, self.projID, self)
     else:
       print("**ERROR project menu unknown:",command)
     return
@@ -323,15 +305,14 @@ class Project(QWidget):
     stackOld = item.data()['hierStack'].split('/')[:-1]
     docID    = item.data()['hierStack'].split('/')[-1]
     doc      = db.getDoc(docID)
-    if '-branch' not in doc or not stackOld: #skip everything if project or not contain branch
+    if 'branch' not in doc or not stackOld: #skip everything if project or not contain branch
       return
-    branchOldList= [i for i in doc['-branch'] if i['stack']==stackOld]
+    branchOldList= [i for i in doc['branch'] if i['stack']==stackOld]
     if len(branchOldList)!=1:
       self.change('','')
       return
     branchOld = branchOldList[0]
     childOld = branchOld['child']
-    branchIdx= doc['-branch'].index(branchOld)
     siblingsOld = db.getView('viewHierarchy/viewHierarchy', startKey=' '.join(stackOld))
     siblingsOld = [i for i in siblingsOld if len(i['key'].split(' '))==len(stackOld)+1 and \
                                                   i['value'][0]>branchOld['child'] and i['value'][0]<9999]
@@ -345,23 +326,23 @@ class Project(QWidget):
     stackNew = [self.projID] + stackNew[::-1]  #add project id and reverse
     childNew = item.row()
     if branchOld['path'] is not None and not branchOld['path'].startswith('http'):
-      if doc['-type'][0][0]=='x':
-        dirNameNew= createDirName(doc['-name'],doc['-type'][0],childNew) # create path name: do not create directory on storage yet
+      if doc['type'][0][0]=='x':
+        dirNameNew= createDirName(doc['name'],doc['type'][0],childNew) # create path name: do not create directory on storage yet
       else:
         dirNameNew= Path(branchOld['path']).name                         # use old name
-      parentDir = db.getDoc(stackNew[-1])['-branch'][0]['path']
+      parentDir = db.getDoc(stackNew[-1])['branch'][0]['path']
       pathNew = f'{parentDir}/{dirNameNew}'
     else:
       pathNew = branchOld['path']
     siblingsNew = db.getView('viewHierarchy/viewHierarchy', startKey=' '.join(stackNew))
     siblingsNew = [i for i in siblingsNew if len(i['key'].split(' '))==len(stackNew)+1 and \
                                                    i['value'][0]>=childNew and i['value'][0]<9999]
-    logging.debug('Change project: docID %s branch %i | old stack %s child %i | new stack %s child %i path %s'\
-                  , docID, branchIdx, str(stackOld), childOld, str(stackNew), childNew, pathNew)
+    logging.debug('Change project: docID %s | old stack %s child %i | new stack %s child %i path %s'\
+                  , docID, str(stackOld), childOld, str(stackNew), childNew, pathNew)
     if stackOld==stackNew and childOld==childNew:  #nothing changed, just redraw
       return
     # change item in question
-    db.updateBranch(docID=docID, branch=branchIdx, stack=stackNew, path=pathNew, child=childNew)
+    db.updateBranch(docID=docID, branch=-99, stack=stackNew, path=pathNew, child=childNew, stackOld=stackOld+[docID])
     item.setData(item.data() | {'hierStack': '/'.join(stackNew+[docID])})
     # change siblings
     for line in siblingsOld:
@@ -407,7 +388,8 @@ class Command(Enum):
   SCAN   = 3
   HIDE   = 4
   SHOW_PROJ_DETAILS = 5
-  HIDE_SHOW_ITEMS    = 6
-  SHOW_DETAILS     = 7
-  ADD_CHILD          = 8
-  SHOW_TABLE         = 9
+  HIDE_SHOW_ITEMS   = 6
+  SHOW_DETAILS      = 7
+  ADD_CHILD         = 8
+  SHOW_TABLE        = 9
+  ADD_ON            = 10

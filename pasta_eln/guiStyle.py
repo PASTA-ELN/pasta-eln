@@ -1,40 +1,17 @@
 """ all styling of buttons and other general widgets, some defined colors... """
+import logging
 from typing import Callable, Optional, Any, Union
 from PySide6.QtWidgets import QPushButton, QLabel, QSizePolicy, QMessageBox, QLayout, QWidget, QMenu, QSplitter, \
-                              QVBoxLayout, QHBoxLayout, QGridLayout, QFormLayout, QBoxLayout, QComboBox, QScrollArea # pylint: disable=no-name-in-module
-from PySide6.QtGui import QImage, QPixmap, QAction, QKeySequence, QMouseEvent               # pylint: disable=no-name-in-module
+                              QVBoxLayout, QHBoxLayout, QGridLayout, QFormLayout, QBoxLayout, QComboBox, \
+                              QScrollArea, QTextEdit # pylint: disable=no-name-in-module
+from PySide6.QtGui import QImage, QPixmap, QAction, QKeySequence, QMouseEvent   # pylint: disable=no-name-in-module
 from PySide6.QtCore import QByteArray, Qt           # pylint: disable=no-name-in-module
 from PySide6.QtSvgWidgets import QSvgWidget         # pylint: disable=no-name-in-module
 import qtawesome as qta
-from qt_material import get_theme
-from .backend import Backend
 from .handleDictionaries import dict2ul
+from .stringChanges import markdownEqualizer
 
 space = {'0':0, 's':5, 'm':10, 'l':20, 'xl':200} #spaces: padding and margin
-
-def getColor(backend:Backend, color:str) -> str:
-  """
-  get color from theme
-  - Python access: theme = get_theme(themeName)
-  - For dark-blue:
-     - {'primaryColor': '#448aff', 'primaryLightColor': '#83b9ff', 'secondaryColor': '#232629', 'secondaryLightColor': '#4f5b62',
-     - 'secondaryDarkColor': '#31363b', 'primaryTextColor': '#000000', 'secondaryTextColor': '#ffffff'}
-
-  Args:
-    backend (Pasta): backend instance
-    color (str): color to get [primary, primaryLight, secondary, secondaryLight, secondaryDark, primaryText, secondaryText]
-
-  Returns:
-    str: #123456 color code
-  """
-  if not hasattr(backend, 'configuration') or backend.configuration['GUI']['theme']=='none':
-    if color=='primary':
-      return '#000000'
-    else:
-      return '#BBBBBB'
-  themeName = backend.configuration['GUI']['theme']
-  return get_theme(f'{themeName}.xml')[f'{color}Color']
-
 
 class TextButton(QPushButton):
   """ Button that has only text"""
@@ -63,14 +40,13 @@ class TextButton(QPushButton):
     if style:
       self.setStyleSheet(style)
     else:
-      primaryColor   = getColor(widget.comm.backend, 'primary')                                              # type: ignore[attr-defined]
-      secondaryColor = getColor(widget.comm.backend, 'secondary')                                            # type: ignore[attr-defined]
-      self.setStyleSheet(f'border-width: 0px; background-color: {primaryColor}; color: {secondaryColor}')
+      primaryColor   = widget.comm.palette.get('primary',  'background-color')                          # type: ignore[attr-defined]
+      secondaryColor = widget.comm.palette.get('buttonText','color')                                    # type: ignore[attr-defined]
+      self.setStyleSheet(f'border-width: 0px; {primaryColor} {secondaryColor}')
     if hide:
       self.hide()
     if iconName:
-      color = 'black' if widget is None else getColor(widget.comm.backend, 'primary')                        # type: ignore[attr-defined]
-      icon = qta.icon(iconName, color=color, scale_factor=1)
+      icon = qta.icon(iconName, scale_factor=1)
       self.setIcon(icon)
     if layout is not None:
       layout.addWidget(self)
@@ -91,8 +67,7 @@ class IconButton(QPushButton):
       hide (bool): hidden or shown initially
     """
     super().__init__()
-    color = 'black' if widget is None else getColor(widget.comm.backend, 'primary')                          # type: ignore[attr-defined]
-    icon = qta.icon(iconName, color=color, scale_factor=1)  #color change here
+    icon = qta.icon(iconName, scale_factor=1)  #color change here
     self.setIcon(icon)
     self.clicked.connect(lambda: widget.execute(command))                                                    # type: ignore[attr-defined]
     self.setFixedHeight(30)
@@ -101,7 +76,9 @@ class IconButton(QPushButton):
     if style:
       self.setStyleSheet(style)
     else:
-      self.setStyleSheet("border-width:0")
+      primaryColor   = widget.comm.palette.get('primary', 'background-color')                          # type: ignore[attr-defined]
+      secondaryColor = widget.comm.palette.get('secondary','color')                                    # type: ignore[attr-defined]
+      self.setStyleSheet(f'border-width: 0px; {primaryColor} {secondaryColor}')
     if hide:
       self.hide()
     if layout is not None:
@@ -126,7 +103,7 @@ class Action(QAction):
     self.setText(label)
     self.triggered.connect(lambda : widget.execute(command))                                                 # type: ignore[attr-defined]
     if icon:
-      color = 'black' if widget is None else getColor(widget.comm.backend, 'secondaryText')                  # type: ignore[attr-defined]
+      color = 'black' if widget is None else widget.comm.palette.secondaryText                  # type: ignore[attr-defined]
       self.setIcon(qta.icon(icon, color=color, scale_factor=1))
     if shortcut is not None:
       self.setShortcut(QKeySequence(shortcut))
@@ -216,7 +193,7 @@ class Label(QLabel):
       self.setToolTip(tooltip)
     return
 
-  def mousePressEvent(self, e:QMouseEvent) -> None:
+  def mousePressEvent(self, _:QMouseEvent) -> None:
     """
     Event after mouse press: only use internal members, not the event itself
     """
@@ -262,7 +239,7 @@ class ScrollMessageBox(QMessageBox):
     cssStyle = '<style> ul {list-style-type: none; padding-left: 0; margin: 0; text-indent: -20px; padding-left: -20px;} </style>'
     QMessageBox.__init__(self)
     self.setWindowTitle(title)
-    if style == '':
+    if not style:
       self.setStyleSheet('QScrollArea{min-width:300 px; min-height: 400px}')
     else:
       self.setStyleSheet(style)
@@ -303,10 +280,7 @@ def widgetAndLayout(direction:str='V', parentLayout:Optional[Union[QLayout,QSpli
     bottom (str): padding on bottom
   """
   widget = QWidget()
-  if direction=='V':
-    layout:QBoxLayout = QVBoxLayout(widget)
-  else:
-    layout = QHBoxLayout(widget)
+  layout = QVBoxLayout(widget) if direction=='V' else QHBoxLayout(widget)
   layout.setSpacing(space[spacing])
   layout.setContentsMargins(space[left], space[top], space[right], space[bottom])
   if parentLayout is not None:
@@ -378,3 +352,98 @@ def addRowList(layout:QFormLayout, label:str, default:str, itemList:list[str]) -
   widget.setCurrentText(default)
   layout.addRow(QLabel(label), widget)
   return widget
+
+CSS_STYLE = """
+<style> ul {list-style-type: none; padding-left: 0; margin: 0;} a:link {text-decoration: none;}
+a:visited {text-decoration: none;} a:hover {text-decoration: none;} a:active {text-decoration: none;} </style>
+"""
+
+def addDocDetails(widget:QWidget, layout:QLayout, key:str, value:Any, dataHierarchyNode:list[dict[str,Any]]) -> str:
+  """ add document details to a widget's layout: take care of all the formatting
+
+  Args:
+    widget (QWidget): widget from which to get the communication
+    layout (QLayout): layout to which to add
+    key    (str): key/label to add
+    value  (Any): information
+    dataHierarchyNode (list): information on data-structure
+
+  Returns:
+    str: /n separated lines of text
+  """
+  if not key and isinstance(value,dict):
+    return '\n'.join([addDocDetails(widget, layout, k, v, dataHierarchyNode) for k, v in value.items()])
+  link = False
+  if not value:
+    return ''
+  labelStr = ''
+  if key=='tags':
+    tags = ['_curated_' if i=='_curated' else f'#{i}' for i in value]
+    tags = ['\u2605'*int(i[2]) if i[:2]=='#_' else i for i in tags]
+    labelStr = 'Tags: '+' '.join(tags)
+    if layout is not None:
+      label = QLabel(labelStr)
+      label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+      layout.addWidget(label)
+  elif (isinstance(value,str) and '\n' in value) or key=='comment':                 # long values with /s or comments
+    labelW, labelL = widgetAndLayout('H', layout, top='s', bottom='s')
+    labelL.addWidget(QLabel(f'{key}: '), alignment=Qt.AlignmentFlag.AlignTop)
+    text = QTextEdit()
+    text.setMarkdown(markdownEqualizer(value))
+    bgColor = widget.comm.palette.get('secondaryDark', 'background-color') # type: ignore[attr-defined]
+    fgColor = widget.comm.palette.get('secondaryText', 'color')             # type: ignore[attr-defined]
+    text.setStyleSheet(f"QTextEdit {{ border: none; padding: 0px; {bgColor} {fgColor}}}")
+    text.document().setTextWidth(labelW.width())
+    if hasattr(widget, 'rescaleTexts'):
+      widget.rescaleTexts.append(text)
+    height:int = text.document().size().toTuple()[1]    # type:ignore[index]
+    text.setFixedHeight(height)
+    text.setReadOnly(True)
+    labelL.addWidget(text, stretch=1)
+  else:
+    dataHierarchyItems = [dict(i) for i in dataHierarchyNode if i['name']==key]
+    docID = ""
+    if len(dataHierarchyItems)==1 and 'list' in dataHierarchyItems[0] and dataHierarchyItems[0]['list'] and \
+        not isinstance(dataHierarchyItems[0]['list'], list):                #choice among docType
+      table  = widget.comm.backend.db.getView('viewDocType/'+dataHierarchyItems[0]['list']) # type: ignore[attr-defined]
+      names= list(table[table.id==value[0]]['name'])
+      if len(names)==1:    # default find one item that we link to
+        docID = value[0]
+        value = '\u260D '+names[0]
+        link = True
+      elif not names:      # likely empty link because the value was not yet defined: just print to show
+        value = value[0] if isinstance(value,tuple) else value
+      else:
+        raise ValueError(f'list target exists multiple times. Key: {key}')
+    elif isinstance(value, list):
+      value = ', '.join([str(i) for i in value])
+    labelStr = f'<b>{key.capitalize()}</b>: {value}'
+    if isinstance(value, tuple) and len(value)==4:
+      key = key if value[2] is None or value[2]=='' else value[2]
+      valueString = f'{value[0]} {value[1]}'
+      valueString = valueString if value[3] is None or value[3]=='' else f'{valueString}&nbsp;<b><a href="{value[3]}">&uArr;</a></b>'
+      labelStr = f'{key.capitalize()}: {valueString}<br>'
+    if isinstance(value, dict):
+      value = dict2ul({k:v[0] for k,v in value.items()})
+      labelStr = f'{CSS_STYLE}{key.capitalize()}: {value}'
+    if layout is not None:
+      label = Label(labelStr, function=lambda x,y: clickLink(widget,x,y) if link else None, docID=docID)
+      label.setOpenExternalLinks(True)
+      label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse | Qt.TextInteractionFlag.LinksAccessibleByMouse)
+      label.setWordWrap(True)
+      layout.addWidget(label)
+  return labelStr
+
+
+def clickLink(widget:QWidget, label:str, docID:str) -> None:
+  """
+  Click link in details
+
+  Args:
+    widget (QWidget): widget to expose the communication
+    label (str): label on link
+    docID (str): docID to which to link
+  """
+  logging.debug('used link on %s|%s',label,docID)
+  widget.comm.changeDetails.emit(docID)   # type: ignore[attr-defined]
+  return

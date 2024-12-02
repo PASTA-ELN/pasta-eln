@@ -9,13 +9,11 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
 import copy
-import logging
 from typing import Any
 
 from PySide6.QtCore import QEvent
 from PySide6.QtGui import QMouseEvent, Qt
-from PySide6.QtWidgets import QMessageBox, QStyleOptionViewItem
-from cloudant import CouchDB
+from PySide6.QtWidgets import QLabel, QMessageBox, QStyleOptionViewItem
 
 from pasta_eln.GUI.data_hierarchy.data_type_info import DataTypeInfo
 
@@ -98,39 +96,12 @@ def show_message(message: str,
     msg_box.setText(message)
     msg_box.setStandardButtons(standard_buttons)
     msg_box.setDefaultButton(default_button)
+    qt_msgbox_label: QLabel | object = msg_box.findChild(QLabel, "qt_msgbox_label")
+    if isinstance(qt_msgbox_label, QLabel):
+      width = qt_msgbox_label.fontMetrics().boundingRect(qt_msgbox_label.text()).width()
+      qt_msgbox_label.setFixedWidth(width)
     return msg_box.exec()
   return None
-
-
-def get_db(db_name: str,
-           db_user: str,
-           db_pass: str,
-           db_url: str,
-           logger: logging.Logger) -> CouchDB | None:
-  """
-  Get the db instance for the test purpose
-  Args:
-    logger (logging): Logger instance
-    db_name (str): Database instance name in CouchDB
-    db_user (str): Database user-name used for CouchDB access.
-    db_pass (str): Database password used for CouchDB access.
-    db_url (str): Database connection URL.
-
-  Returns (CouchDB | None):
-    Connected DB instance
-
-  """
-  try:
-    client = CouchDB(user=db_user,
-                     auth_token=db_pass,
-                     url=db_url,
-                     connect=True)
-  except Exception as ex:
-    if logger:
-      logger.error(f'Could not connect with username+password to local server, error: {ex}')
-    return None
-  return (client[db_name]
-          if db_name in client.all_dbs() else client.create_database(db_name))
 
 
 def get_types_for_display(types: list[str]) -> list[str]:
@@ -202,12 +173,12 @@ def generate_required_metadata() -> list[dict[str, Any]]:
   """
   return [
     {
-      "name": "-name",
+      "name": "name",
       "query": "What is the name of the metadata?",
       "mandatory": True
     },
     {
-      "name": "-tags",
+      "name": "tags",
       "query": "What are the tags associated with this metadata?",
       "mandatory": False
     }
@@ -220,7 +191,7 @@ def check_data_hierarchy_types(data_hierarchy_types: dict[str, Any]) -> tuple[
   dict[str, dict[str, list[str]]]]:
   """
   Check the data hierarchy types to see:
-    1. If all the required metadata ["-name", "-tags"] present in default-group
+    1. If all the required metadata ["name", "tags"] present in default-group
     2. If all the meta-data have name property
     3. If all the meta-data are unique across all groups
   Args:
@@ -274,7 +245,7 @@ def set_types_missing_required_metadata(type_name: str,
     return
   if default_metadata := type_value.get("meta").get("default"):  # type: ignore[union-attr]
     names_in_default_group = [item.get("name") for item in default_metadata]
-    required_metadata = ["-name", "-tags"]
+    required_metadata = ["name", "tags"]
     for req_metadata in required_metadata:
       if req_metadata not in names_in_default_group:
         if type_name not in types_with_missing_metadata:

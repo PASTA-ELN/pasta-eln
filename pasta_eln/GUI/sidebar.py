@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QTreeWidgetItem, QFrame, QPr
 from PySide6.QtCore import Slot                                                                        # pylint: disable=no-name-in-module
 from anytree import Node
 from .config import Configuration
-from ..guiStyle import TextButton, IconButton, getColor, showMessage, widgetAndLayout, widgetAndLayoutGrid, space
+from ..guiStyle import TextButton, IconButton, showMessage, widgetAndLayout, widgetAndLayoutGrid, space
 from ..guiCommunicate import Communicate
 
 
@@ -30,7 +30,7 @@ class Sidebar(QWidget):
     mainL.setSpacing(15)
     if self.comm.backend.configuration['GUI']['showProjectBtn']=='Yes':
       TextButton('List projects', self, [Command.LIST_PROJECTS], mainL, 'Show list of all projects')
-    _, self.projectsListL = widgetAndLayout('V', mainL, spacing='s')
+    _, self.projectsListL = widgetAndLayout('V', mainL, spacing='m')
     # projectListW, self.projectsListL = widgetAndLayout('V', None, spacing='s')
     # scrollSection = QScrollArea()
     # scrollSection.setWidget(projectListW)
@@ -70,31 +70,32 @@ class Sidebar(QWidget):
     if hasattr(backend, 'db'):
       db = self.comm.backend.db
       hierarchy = db.getView('viewDocType/x0')
-      lastChangeDate = [db.getDoc(project['id'])['-date'] for project in hierarchy]
+      hierarchy['dateCreated'] = [db.getDoc(id_)['dateCreated'] for id_ in hierarchy['id']]
+      hierarchy.sort_values('dateCreated',axis=0, ascending=False, inplace=True)
       maxProjects = int((self.height()-120)/50)-1
-      for index, project in enumerate(x for _, x in sorted(zip(lastChangeDate, hierarchy), reverse=True)):
+      for index, project in hierarchy.iterrows():
         if index>maxProjects:
           break
         projID = project['id']
-        projName = project['value'][0]
+        projName = project['name']
         #head: show project name as button
         projectW = QFrame()
         # projectW.setMinimumHeight(300) #convenience: allow scroll in sidebar
         projectL = QVBoxLayout(projectW)
+        projectL.setSpacing(3)
         projectL.setContentsMargins(3,3,3,3)
         maxLabelCharacters = int((self.sideBarWidth-50)/7.1)
         label = (projName if len(projName) < maxLabelCharacters else f'{projName[:maxLabelCharacters - 3]}...')
         btnProj = TextButton(label, self, [Command.SHOW_PROJECT, projID, ''], projectL)
-        btnProj.setStyleSheet("border-width:0")
         self.widgetsProject[projID] = [btnProj, projectW]
 
         # actions: scan, curate, ...
         actionW, actionL = widgetAndLayoutGrid(projectL)
         if self.openProjectId != projID: #depending which project is open
           actionW.hide()
-          projectW.setStyleSheet("background-color:"+ getColor(backend, 'secondaryDark'))
+          projectW.setStyleSheet(self.comm.palette.get('secondaryDark', 'background-color'))
         else:
-          projectW.setStyleSheet("background-color:"+ getColor(backend, 'secondaryLight'))
+          projectW.setStyleSheet(self.comm.palette.get('secondaryLight','background-color'))
         btnScan = TextButton('Scan', self, [Command.SCAN_PROJECT, projID], None, 'Scan', \
                              iconName='mdi.clipboard-search-outline')
         actionL.addWidget(btnScan, 0,0)
@@ -102,21 +103,20 @@ class Sidebar(QWidget):
         btnCurate.hide()
         actionL.addWidget(btnCurate, 0,1)
         self.widgetsAction[projID] = actionW
-        btnScan.setStyleSheet("border-width:0")
-        btnCurate.setStyleSheet("border-width:0")
 
         # lists: view list of measurements, ... of this project
-        listW, listL = widgetAndLayoutGrid(projectL)
+        listW, listL = widgetAndLayoutGrid(projectL,  spacing='s')
         if self.openProjectId != projID:
           listW.hide()
-        for idx, doctype in enumerate(db.dataLabels):
+        docTypes = db.dataHierarchy('', '')
+        for idx, doctype in enumerate(docTypes):
           if doctype[0]!='x':
-            icon = self.comm.backend.db.dataHierarchy[doctype].get('icon','')
+            icon = self.comm.backend.db.dataHierarchy(doctype,'icon')[0]
             icon = 'fa5s.asterisk' if icon=='' else icon
-            btn = IconButton(icon, self, [Command.LIST_DOCTYPE,doctype,projID], None,db.dataLabels[doctype])
+            btn = IconButton(icon, self, [Command.LIST_DOCTYPE,doctype,projID], None,db.dataHierarchy(doctype,'title')[0])
             listL.addWidget(btn, 0, idx)
         btn = IconButton('fa5.file', self, [Command.LIST_DOCTYPE,'-',projID], None, 'Unidentified')
-        listL.addWidget(btn, 0, len(db.dataLabels)+1)
+        listL.addWidget(btn, 0, len(docTypes)+1)
         self.widgetsList[projID] = listW
 
         # show folders as hierarchy
@@ -172,9 +172,9 @@ class Sidebar(QWidget):
             widget.hide()
         for docID, [_, projWidget] in self.widgetsProject.items():
           if docID == projID:
-            projWidget.setStyleSheet("background-color:"+ getColor(self.comm.backend, 'secondaryLight'))
+            projWidget.setStyleSheet(self.comm.palette.get('secondaryLight','background-color'))
           else:
-            projWidget.setStyleSheet("background-color:"+ getColor(self.comm.backend, 'secondaryDark'))
+            projWidget.setStyleSheet(self.comm.palette.get('secondaryDark','background-color'))
       self.comm.changeProject.emit(projID, item)
     elif command[0] is Command.SCAN_PROJECT:
       for _ in range(2):  #scan twice: convert, extract

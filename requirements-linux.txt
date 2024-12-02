@@ -2,7 +2,6 @@
 pyside6
 qt-material
 QtAwesome
-cloudant
 pandas
 numpy
 keyring
@@ -14,3 +13,4 @@ matplotlib
 cairosvg
 cryptography
 aiohttp
+sqlalchemy

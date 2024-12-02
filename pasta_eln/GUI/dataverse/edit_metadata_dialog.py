@@ -20,7 +20,7 @@ from pasta_eln.GUI.dataverse.edit_metadata_dialog_base import Ui_EditMetadataDia
 from pasta_eln.GUI.dataverse.edit_metadata_summary_dialog import EditMetadataSummaryDialog
 from pasta_eln.GUI.dataverse.metadata_frame_base import MetadataFrame
 from pasta_eln.GUI.dataverse.metadata_frame_factory import MetadataFrameFactory
-from pasta_eln.dataverse.config_model import ConfigModel
+from pasta_eln.database.models.config_model import ConfigModel
 from pasta_eln.dataverse.database_api import DatabaseAPI
 from pasta_eln.dataverse.utils import adjust_type_name, get_formatted_metadata_message
 
@@ -71,7 +71,7 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
 
     # Database API instance
     self.db_api = DatabaseAPI()
-    self.config_model: ConfigModel = self.db_api.get_model(self.db_api.config_doc_id,
+    self.config_model: ConfigModel = self.db_api.get_model(self.db_api.config_model_id,
                                                            ConfigModel)  # type: ignore[assignment]
 
     # Initialize metadata
@@ -240,7 +240,7 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
     """
 
     self.config_model.metadata = self.metadata
-    self.db_api.update_model_document(self.config_model)
+    self.db_api.update_model(self.config_model)
     self.instance.close()
 
   def show(self) -> None:
@@ -281,5 +281,15 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
         This method reloads the config model from the database.
     """
     self.logger.info("Reloading config model...")
-    self.config_model = self.db_api.get_model(self.db_api.config_doc_id,
+    self.config_model = self.db_api.get_model(self.db_api.config_model_id,
                                               ConfigModel)  # type: ignore[assignment]
+
+
+if __name__ == "__main__":
+  import sys
+
+  app = QtWidgets.QApplication(sys.argv)
+
+  ui = EditMetadataDialog()
+  ui.show()
+  sys.exit(app.exec())

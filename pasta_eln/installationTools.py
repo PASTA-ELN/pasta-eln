@@ -1,13 +1,12 @@
 '''  Methods that check, repair, the local PASTA-ELN installation: no Qt-here '''
-import os, platform, sys, json, shutil, random, string, logging, uuid
+import os, platform, sys, json, shutil, logging
 from typing import Optional, Any, Callable
-import urllib.request
 from pathlib import Path
-from cloudant.client import CouchDB
-
+from datetime import datetime
 from .backend import Backend
-from .fixedStringsJson import defaultDataHierarchy, defaultConfiguration, configurationGUI
-from .miscTools import outputString, DummyProgressBar
+from .fixedStringsJson import defaultConfiguration, configurationGUI, CONF_FILE_NAME
+from .miscTools import DummyProgressBar
+from .stringChanges import outputString
 
 
 def getOS() -> str:
@@ -25,37 +24,34 @@ def getOS() -> str:
   return f'{operatingSys} {environment}'
 
 
-def createDefaultConfiguration(user:str, password:str, pathPasta:Optional[Path]=None) -> dict[str,Any]:
+def createDefaultConfiguration(pathPasta:Optional[Path]=None) -> dict[str,Any]:
   '''
-  Create base of configuration file .pastaELN.json
+  Create base of configuration file
   - basic project group
   - defaultProjectGroup
   - userID
 
   Args:
-    user (str): user name (for windows)
-    password (str): password (for windows)
     pathPasta (Path): place to store pasta data
 
   Returns:
     dict: dictionary of configuration
   '''
-  if not user:
-    user = input('Enter user name: ')
-  if not password:
-    password = input('Enter password: ')
   if pathPasta is None:
     if platform.system()=='Windows':
       pathPasta = Path.home()/'Documents'/'PASTA_ELN'
     else:
       pathPasta = Path.home()/'PASTA_ELN'
+  addOnDir = Path(__file__).parent/'AddOns'
   conf: dict[str, Any] = {
       'defaultProjectGroup': 'research',
       'projectGroups': {
           'research': {
-              'local': {'user': user, 'password': password, 'database': 'research', 'path': str(pathPasta)},
+              'local': {'database': 'research', 'path': str(pathPasta)},
               'remote': {},
-          }}, 'version': 2}
+              'addOnDir': str(addOnDir)
+          }},
+      'version': 3}
   try:
     conf['userID']      = os.getlogin()
   except Exception:   #github action
@@ -66,198 +62,30 @@ def createDefaultConfiguration(user:str, password:str, pathPasta:Optional[Path]=
   return conf
 
 
-def runAsAdminWindows(cmdLine:list[str]) -> None:
+def configuration(command:str, pathData:str) -> str:
   '''
-  Run a command as admin in windows
-  - (C) COPYRIGHT © Preston Landers 2010
-  - https://stackoverflow.com/questions/19672352/how-to-run-script-with-elevated-privilege-on-windows
-  - asks user for approval
-  - waits for commands to end
-
-  Args:
-    cmdLine (list): list of command line sections runAsAdmin(["c:\\Windows\\notepad.exe"])
-  '''
-  import win32con, win32event, win32process
-  from win32com.shell.shell import ShellExecuteEx
-  from win32com.shell import shellcon
-  procInfo = ShellExecuteEx(nShow=win32con.SW_SHOWNORMAL,
-                            fMask=shellcon.SEE_MASK_NOCLOSEPROCESS,
-                            lpVerb='runas',  # causes UAC elevation prompt.
-                            lpFile= f'"{cmdLine[0]}"',
-                            lpParameters=" ".join(cmdLine[1:]))
-  procHandle = procInfo['hProcess']
-  _ = win32event.WaitForSingleObject(procHandle, win32event.INFINITE)
-  _   = win32process.GetExitCodeProcess(procHandle)
-  return
-
-
-def checkForDotNetVersion() -> bool:
-  ''' check if .NET version 3.5 is installed (only on windows)
-  '''
-  import subprocess
-  command = ['reg','query','HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\NET Framework Setup\\NDP','/s']
-  result = subprocess.run(command, stdout=subprocess.PIPE, check=True)
-  #### For reference: code to show all installed versions
-  # lines = [str(i).strip() for i in result.stdout.split(b'\n')]
-  # lines = [i.split()[3][:-3] for i in lines if 'Version' in i]
-  # versions = set(lines)
-  # count3_5 = len([i for i in versions if i.startswith('3.5.')])
-  # return count3_5>0
-  return b'Version    REG_SZ    3.5' in result.stdout
-
-
-def couchdb(command:str='test') -> str:
-  '''
-  test couchDB installation or (install it on Windows-only)
-
-  Args:
-    command (string): 'test' or 'install'
-
-  Returns:
-    string: '' for success, filled with errors
-  '''
-  if command == 'test':
-    try:
-      with urllib.request.urlopen('http://127.0.0.1:5984') as package:
-        contents = package.read()
-        if json.loads(contents)['couchdb'] == 'Welcome':
-          return ''
-    except Exception:
-      pass
-    return '**ERROR**'
-
-  elif command == 'install':
-    if platform.system()=='Linux':
-      return '**ERROR should not be called'
-    if platform.system()=='Windows':
-      logging.info('CouchDB starting ...')
-      url = 'https://couchdb.neighbourhood.ie/downloads/3.1.1/win/apache-couchdb-3.1.1.msi'
-      path = Path.home()/'Downloads'/'apache-couchdb-3.1.1.msi'
-      logging.info('Start download of couchdb')
-      _, _ = urllib.request.urlretrieve(url, path)
-      ## Old version with installer
-      # cmd = ['cmd.exe','/K ',str(resultFilePath)]
-      # _ = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)
-      ## New version without questions
-      password = ''.join(random.choice(string.ascii_letters) for _ in range(12))
-      logging.info('PASSWORD: %s',password)
-      pathS = str(path).replace('\\','\\\\')
-      cmd = ['msiexec','/i',pathS,'/quiet','COOKIEVALUE=abcdefghijklmo','INSTALLSERVICE=1','ADMINUSER=admin',\
-             f'ADMINPASSWORD={password}','/norestart','/l*','log.txt']
-      logging.info('COMMAND: '+' '.join(cmd))
-      runAsAdminWindows(cmd)
-      logging.info('CouchDB ending')
-      return f'Installed couchDB with password |{password}|'
-    return f'**ERROR: Unknown operating system {platform.system()}'
-  return '**ERROR: Unknown command'
-
-
-def couchdbUserPassword(username:str, password:str) -> bool:
-  '''
-  test if username and password are correct
-
-  Args:
-    username (string): user name
-    password (string): password
-
-  Returns:
-    bool: True if success, False if failure
-  '''
-  try:
-    _ = CouchDB(username, password, url='http://127.0.0.1:5984', connect=True)
-    return True
-  except Exception:
-    return False
-
-
-def installLinuxRoot(couchDBExists:bool, pathPasta:Path=Path(''), password:str='') -> str:
-  '''
-  Install all packages in linux using the root-password
-
-  Args:
-    couchDBExists (bool): does the couchDB installation exist
-    pathPasta (Path): path to install pasta in (Linux)
-    password (str): password for couchDB installation
-
-  Returns:
-    string: ''=success, else error messages
-  '''
-  logging.info('InstallLinuxRoot starting ...')
-  bashCommand = []
-  password = ''
-  if not couchDBExists:
-    if not password:
-      password = uuid.uuid4().hex
-      logging.info('PASSWORD: %s',password)
-    #create or adopt .pastaELN.json
-    path = Path.home()/'.pastaELN.json'
-    if path.is_file():
-      with open(path,'r', encoding='utf-8') as fConf:
-        conf = json.load(fConf)
-      logging.info('.pastaELN.json exists, do not change it')
-    else:
-      conf = createDefaultConfiguration('admin', password, pathPasta)
-      with open(path,'w', encoding='utf-8') as fConf:
-        fConf.write(json.dumps(conf, indent=2) )
-    bashCommand = [
-      'sudo apt-get install -y libegl1 libxcb-cursor-dev',
-      'sudo snap install couchdb',
-      f'sudo snap set couchdb admin={password} setcookie={uuid.uuid4().hex}',
-      'sudo snap start couchdb',
-      'sudo snap connect couchdb:mount-observe',
-      'sleep 5',
-      f'curl -X PUT http://admin:{password}@127.0.0.1:5984/_users',
-      f'curl -X PUT http://admin:{password}@127.0.0.1:5984/_replicator',
-      f'curl -X PUT http://admin:{password}@127.0.0.1:5984/_global_changes',
-      f'curl -X PUT http://admin:{password}@127.0.0.1:5984/_node/_local/_config/couch_httpd_auth/timeout/ -d \'"60000"\'',
-      'sleep 10']
-  #Try all terminals
-  scriptFile = Path.home()/'pastaELN_Install.sh'
-  with open(scriptFile,'w', encoding='utf-8') as shell:
-    shell.write('\n'.join(bashCommand))
-  os.chmod(scriptFile, 0o0777)
-  terminals = ['xterm -e bash -c ','qterminal -e bash -c ','gnome-terminal -- ']
-  logging.info('Command: %s',str(bashCommand))
-  resultString = f'Password: {password}'
-  for term in terminals:
-    # _ = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)
-    res = os.system(term+scriptFile.as_posix())
-    logging.info('Linux install terminal %s  %s',term,str(res))
-    if res == 0:
-      break
-    if terminals.index(term)==len(terminals)-1:
-      logging.error('**ERROR: Last terminal failed')
-      res = os.system('\n'.join(bashCommand[:-2]))
-      logging.info('Finished using straight Bash command result=%s',str(res))
-      resultString = '**ERROR: Last terminal failed'
-  success = 'CouchDB works' if couchdbUserPassword('admin',password) else 'CouchDB FAILED'
-  logging.info('InstallLinuxRoot ending. %s',success)
-  return resultString
-
-
-def configuration(command:str='test', user:str='', password:str='', pathPasta:Path=Path('')) -> str:
-  '''
-  Check configuration file .pastaELN.json for consistencies
+  Check configuration file for consistencies
 
   Args:
     command (str): 'test' or 'repair'
-    user (str): user name (for windows)
-    password (str): password (for windows)
-    pathPasta (Path): path to install pasta in (Windows)
+    pathData (Path): path to use for data
 
   Returns:
     string: ''=success, else error messages
   '''
   logging.info('Configuration starting ...')
   output = ''
+  if Path(pathData).is_dir():
+    pathPasta = Path(pathData).absolute()
+  else:
+    pathPasta = Path.home()/pathData
+    pathPasta.mkdir(exist_ok=True)
   try:
-    with open(Path.home()/'.pastaELN.json','r', encoding='utf-8') as fConf:
+    with open(Path.home()/CONF_FILE_NAME,'r', encoding='utf-8') as fConf:
       conf = json.load(fConf)
   except Exception:
-    output += '**ERROR configuration file does not exist\n'
-    conf = {}
-    if command == 'repair':
-      conf = createDefaultConfiguration(user, password, pathPasta)
+    output += '**INFO configuration file does not exist\n'
+    conf = createDefaultConfiguration(pathPasta) if command == 'repair' else {}
   logging.info(json.dumps(conf, indent=2))
 
   #check normal items
@@ -283,75 +111,46 @@ def configuration(command:str='test', user:str='', password:str='', pathPasta:Pa
         else:
           output += outputString('text','error', f'No {k} in GUI part of config file')
   if command == 'repair':
-    with open(Path.home()/'.pastaELN.json','w', encoding='utf-8') as f:
+    with open(Path.home()/CONF_FILE_NAME,'w', encoding='utf-8') as f:
       f.write(json.dumps(conf,indent=2))
   logging.info('Configuration ending')
   return output
 
 
-
-def dataHierarchy(command:str='test') -> str:
-  '''
-  Check configuration file .pastaELN.json for consistencies
-
-  Args:
-    command (string): 'test' or 'install'
-
-  Returns:
-    string: ''=success, else error messages
-  '''
-  backend = Backend()
-  if command == 'test':
-    if not hasattr(backend.db, 'db'):
-      return '**ERROR: couchDB not initialized'
-    output = 'database name: {backend.db.db.database_name}\nDesign documents\n'
-    for item in backend.db.db.design_documents():
-      numViews = len(item['doc']['views']) if 'views' in item['doc'] else 0
-      output += '  '+item['id']+'   Num. of views:'+str(numViews)+'\n'
-    try:
-      _ = backend.db.getDoc('-dataHierarchy-')
-      output += 'DataHierarchy exists on server'+'\n'
-    except Exception:
-      output += '**ERROR: DataHierarchy does NOT exist on server'+'\n'
-    return output
-  elif command == 'install':
-    logging.info('dataHierarchy starting ...')
-    doc = defaultDataHierarchy
-    logging.info(str(doc))
-    logging.info('dataHierarchy ending ...')
-    # _ = backend.db.create_document(doc)
-    return ''
-
-  return '**ERROR: Unknown command'
-
-
-
-def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]=None) -> str:
+def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]=None, projectGroup:str='', outputFormat:str='print') -> str:
   '''
   Create example data after installation
 
   Args:
     force (bool): force creation by removing content before creation
     callbackPercent (function): callback function given to exampleData, such that exampleData can report progress back
+    projectGroup (str): project group to create example data in
+    outputFormat (str): output of the example data creation, see miscTools.outputString()
   '''
   logging.info('Start example data creation')
-  outputFormat = 'print'
+  progressBar = DummyProgressBar()
   if callbackPercent is not None:
     callbackPercent(0)
   if force:
-    backend = Backend(initConfig=False)
+    backend = Backend(projectGroup)
     dirName = backend.basePath
-    backend.exit(deleteDB=True)
-    shutil.rmtree(dirName)
-    os.makedirs(dirName)
+    backend.exit()
+    try:
+      shutil.rmtree(dirName)
+      os.makedirs(dirName)
+      if platform.system()=='Windows':
+        print('Try-Except unnecessary')
+    except Exception:
+      pass
   if callbackPercent is not None:
     callbackPercent(1)
-  backend = Backend(initViews=True, initConfig=False)
+  backend = Backend(projectGroup)
   if callbackPercent is not None:
     callbackPercent(2)
   ### CREATE PROJECTS AND SHOW
   outputString(outputFormat,'h2','CREATE EXAMPLE PROJECT AND SHOW')
-  backend.addData('x0', {'-name': 'PASTAs Example Project', 'objective': 'Test if everything is working as intended.', 'status': 'active', 'comment': '#Important Can be used as reference or deleted'})
+  backend.addData('x0', {'name': 'PASTAs Example Project', '.objective': 'Test if everything is working as intended.',
+                         '.status': 'active', 'comment': '#Important Can be used as reference or deleted'})
   if callbackPercent is not None:
     callbackPercent(3)
   outputString(outputFormat,'info', backend.output('x0'))
@@ -361,37 +160,42 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
 
   ### TEST PROJECT PLANING
   outputString(outputFormat,'h2','TEST PROJECT PLANING')
-  viewProj = backend.db.getView('viewDocType/x0')
-  projID1  = [i['id'] for i in viewProj if 'PASTA' in i['value'][0]][0]
+  dfProj  = backend.db.getView('viewDocType/x0')
+  projID1 = list(dfProj['id'])[0]
   if callbackPercent is not None:
     callbackPercent(5)
   backend.changeHierarchy(projID1)
   if callbackPercent is not None:
     callbackPercent(6)
-  backend.addData('x1',    {'comment': 'This is hard! #TODO', '-name': 'This is an example task'})
+  backend.addData('x1',    {'comment': 'This is hard! #TODO', 'name': 'This is an example task'})
   if callbackPercent is not None:
     callbackPercent(7)
-  currentID = backend.addData('x1',    {'comment': 'This will take a long time. #WAIT', '-name': 'This is another example task'})
+  currentID = backend.addData('x1', {'comment': 'This will take a long time. #WAIT',
+                                     'name': 'This is another example task'})['id']
   if callbackPercent is not None:
     callbackPercent(8)
   backend.changeHierarchy(currentID)
-  backend.addData('x2',    {'-name': 'This is an example subtask',     'comment': 'Random comment 1'})
+  if backend.cwd is not None:
+    data2DirName = backend.basePath/backend.cwd
+  else:
+    return "**ERROR: backend is incorrect"
+  backend.addData('x1',    {'name': 'This is an example subtask',     'comment': 'Random comment 1'})
   if callbackPercent is not None:
     callbackPercent(9)
-  backend.addData('x2',    {'-name': 'This is another example subtask','comment': 'Random comment 2'})
+  backend.addData('x1',    {'name': 'This is another example subtask','comment': 'Random comment 2'})
   if callbackPercent is not None:
     callbackPercent(10)
   backend.changeHierarchy(None)
-  semStepID = backend.addData('x1',    {'-name': 'Data files'})
+  semStepID = backend.addData('x1',    {'name': 'Data files'})['id']
   if callbackPercent is not None:
     callbackPercent(11)
   backend.changeHierarchy(semStepID)
   if backend.cwd is not None:
-    semDirName = backend.basePath/backend.cwd
+    dataDirName = backend.basePath/backend.cwd
   else:
     return "**ERROR: backend is incorrect"
   backend.changeHierarchy(None)
-  outputString(outputFormat,'info',backend.outputHierarchy())
+  outputString(outputFormat,'info',backend.outputHierarchy(addID=True))
   if callbackPercent is not None:
     callbackPercent(12)
   logging.info('Finished project planning')
@@ -404,17 +208,20 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
     fOut.write('# Put sample in instrument\n# Do something\nDo not forget to\n- not do anything wrong\n- **USE BOLD LETTERS**\n')
   if callbackPercent is not None:
     callbackPercent(13)
-  backend.addData('procedure', {'-name': 'StandardOperatingProcedures/Example_SOP.md', 'comment': '#v1'})
+  backend.addData('procedure', {'name': 'StandardOperatingProcedures/Example_SOP.md', 'comment': '#v1'})
   if callbackPercent is not None:
     callbackPercent(14)
   outputString(outputFormat,'info',backend.output('procedure'))
+  df = backend.db.getView('viewDocType/procedure')
+  procedureID = df[df['name']=='Example_SOP.md']['id'].values[0]
   if callbackPercent is not None:
     callbackPercent(15)
   logging.info('Finished procedures creating')
 
   ### TEST SAMPLES
   outputString(outputFormat,'h2','TEST SAMPLES')
-  backend.addData('sample',    {'-name': 'Example sample', 'chemistry': 'A2B2C3', 'qrCode': '13214124 99698708', 'comment': 'can be used as example or removed'})
+  backend.addData('sample',    {'name': 'Example sample', '.chemistry': 'A2B2C3', 'qrCode': '13214124 99698708', 'comment':'this sample has multiple groups of metadata',
+                                'geometry.height':4, 'geometry.width':2, 'weight.initial':6})
   if callbackPercent is not None:
     callbackPercent(16)
   outputString(outputFormat,'info',backend.output('sample'))
@@ -425,14 +232,28 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
     callbackPercent(18)
   logging.info('Finished samples creating')
 
+  ### ADD INSTRUMENTS AND THEIR ATTACHMENTS
+  outputString(outputFormat,'h2','ADD INSTRUMENTS AND ATTACHMENTS')
+  backend.addData('instrument', {'name': 'Big instrument', '.vendor':'Company A', '.model':'ABC-123', 'comment':'Instrument onto which attachments can be added'})
+  backend.addData('instrument/extension', {'name': 'Sensor', '.vendor':'Company B', '.model':'org.comp.98765', 'comment':'Attachment that increases functionality of big instrument'})
+  df = backend.db.getView('viewDocType/instrument')
+  idInstrument = df[df['name']=='Big instrument']['id'].values[0]
+  idSensor = df[df['name']=='Sensor']['id'].values[0]
+  backend.db.initAttachment(idInstrument, "Right side of instrument", 'instrument/extension')
+  backend.db.addAttachment(idInstrument, "Right side of instrument",
+         {'date':datetime.now().isoformat(),'remark':'Worked well','docID':idSensor,'user':'nobody'})
+  backend.db.addAttachment(idInstrument, "Right side of instrument",
+         {'date':datetime.now().isoformat(),'remark':'Service','docID':'','user':'nobody'})
+  outputString(outputFormat,'info',backend.output('instrument'))
+
   ###  TEST MEASUREMENTS AND SCANNING/CURATION
   outputString(outputFormat,'h2','TEST MEASUREMENTS AND SCANNING')
-  shutil.copy(Path(__file__).parent/'Resources'/'ExampleMeasurements'/'simple.png', semDirName)
-  shutil.copy(Path(__file__).parent/'Resources'/'ExampleMeasurements'/'simple.csv', semDirName)
+  shutil.copy(Path(__file__).parent/'Resources'/'ExampleMeasurements'/'simple.png', dataDirName)
+  shutil.copy(Path(__file__).parent/'Resources'/'ExampleMeasurements'/'simple.csv', dataDirName)
+  shutil.copy(Path(__file__).parent/'Resources'/'ExampleMeasurements'/'story.odt',  dataDirName)
   if callbackPercent is not None:
     callbackPercent(19)
   logging.info('Finished copy files')
-  progressBar = DummyProgressBar()
   backend.scanProject(progressBar, projID1)
   logging.info('Finished scan tree')
   if callbackPercent is not None:
@@ -444,14 +265,36 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
   if callbackPercent is not None:
     callbackPercent(21)
   backend.addData('measurement', {
-    '-name': 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Misc_pollen.jpg/315px-Misc_pollen.jpg',\
-    'comment':'remote image from wikipedia. Used for testing and reference. Can be deleted.'})
+    'name': 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Misc_pollen.jpg/315px-Misc_pollen.jpg',\
+    'comment':'- Remote image from wikipedia. Used for testing and reference\n- This item links to a procedure that was used for its creation.'
+              '\n- One can link to samples, etc. to create complex metadata\n- This item also has a rating #_3',
+    '.procedure':procedureID })
   if callbackPercent is not None:
     callbackPercent(22)
   outputString(outputFormat,'info',backend.output('measurement'))
   if callbackPercent is not None:
     callbackPercent(23)
   logging.info('Finished global files additions')
+
+  ###  TEST MEASUREMENTS AND SCANNING/CURATION 2
+  outputString(outputFormat,'h2','TEST MEASUREMENTS AND SCANNING 2')
+  shutil.copy(Path(__file__).parent/'Resources'/'ExampleMeasurements'/'simple.png', data2DirName)
+  logging.info('Finished copy files 2')
+  backend.scanProject(progressBar, projID1)
+  logging.info('Finished scan tree 2')
+  df = backend.db.getView('viewDocType/measurement')
+  docID = df[df['name']=='simple.png']['id'].values[0]
+  doc   = backend.db.getDoc(docID)
+  doc['comment'] = '# File with two locations\n - The same file can be located in different locations across different projects within one project group.'\
+                   '\n - Since it is the same file, they share the same metadata: same comment, same tags, ...'\
+                   '\n# These .png files use the data-science concept of schemata and ontology\n - The files have a agreed upon name and a custom convenience name (i.e. in german or french)'\
+                   '\n - The also have a PID / IRI to an ontology node.\n - Units are also supported, obviously.'
+  backend.editData(doc)
+  docID = df[df['name']=='simple.csv']['id'].values[0]
+  doc   = backend.db.getDoc(docID)
+  doc['comment'] = '# These .csv files use the simple concept of units for metadata entries'
+  backend.editData(doc)
+  outputString(outputFormat,'info',backend.output('measurement'))
 
   ### VERIFY DATABASE INTEGRITY
   outputString(outputFormat,'h2','VERIFY DATABASE INTEGRITY')
@@ -500,8 +343,7 @@ def createShortcut() -> None:
     from win32com.client import Dispatch
     shell = Dispatch('WScript.Shell')
     shortcut = shell.CreateShortCut( os.path.join(winshell.desktop(), "pastaELN.lnk") )
-    env = os.environ['CONDA_PREFIX'] if 'CONDA_PREFIX' in os.environ else ''  #full path of env
-    if env:
+    if env := os.environ.get('CONDA_PREFIX', ''):
       env = env.split('\\')[-1]  #just the env name
       user = os.getlogin()
       batContent = f"cmd.exe /c \"C:\\Users\\{user}\\anaconda3\\Scripts\\activate {env} && python -m pasta_eln.gui\""
@@ -532,41 +374,16 @@ def main() -> None:
   print('---- Test PASTA-ELN installation----')
   print('--   if nothing reported: it is ok.')
   print('getOS        :', getOS())
-  res = couchdb()
-  existsCouchDB = res==''
-  print('chouchDB     :', res)
-  res = configuration()
+  res = configuration('test','.')
   flagConfiguration = 'ERROR' in res
-  print('configuration:', res)
-  try:
-    res = '\n'+dataHierarchy()
-  except Exception:
-    res = ' **ERROR**'
-    #No new 'raise' so that it install-script continues its path
-  flagDataHierarchy = 'ERROR' in res
-  print(f'dataHierarchy     :{res}')
+  print(res)
 
   print('Add "install" argument to install PASTA-ELN.')
-  if len(sys.argv)>1 and 'install' in sys.argv:
-    if platform.system()=='Linux':
-      print('---- Create PASTA-ELN installation Linux ----')
-      if not existsCouchDB:
-        print('install with root credentials...')
-        installLinuxRoot(existsCouchDB, Path.home()/'pastaELN')
-      if flagConfiguration:
-        print('repair  configuration:', configuration('repair'))
-      if flagDataHierarchy and existsCouchDB:
-        print('install dataHierarchy     :', dataHierarchy('install'))
-
-    elif platform.system()=='Windows':
-      print('---- Create PASTA-ELN installation Windows ----')
-      if not existsCouchDB:
-        print('install couchDB      :', couchdb('install'))
-      if flagConfiguration:
-        print('repair  configuration:', configuration('repair'))
-      if flagDataHierarchy and existsCouchDB:
-        print('install dataHierarchy     :', dataHierarchy('install'))
-
+  if len(sys.argv)>2 and 'install' in sys.argv:
+    print('---- Create PASTA-ELN installation ----')
+    print(sys.argv)
+    if flagConfiguration:
+      print('repair  configuration:', configuration('repair', sys.argv[2] ))
   print('Add "example" argument to create example data.')
   if len(sys.argv)>1 and 'example' in sys.argv:
     print('---- Create Example data ----')
@@ -574,7 +391,6 @@ def main() -> None:
 
   logging.info('End PASTA Install')
   return
-
 
 # called by python3 -m pasta_eln.installTools
 if __name__ == '__main__':

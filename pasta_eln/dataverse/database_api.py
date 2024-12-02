@@ -9,316 +9,257 @@
 #  You should have received a copy of the license with this file. Please refer the license file for more information.
 
 import logging
+import math
 from json import load
 from os import getcwd
 from os.path import dirname, join, realpath
-from typing import Any, Type, Union
+from pathlib import Path
+from typing import Type, Union
 
-from cloudant.document import Document
-
-from pasta_eln.dataverse.base_database_api import BaseDatabaseAPI
-from pasta_eln.dataverse.config_model import ConfigModel
-from pasta_eln.dataverse.project_model import ProjectModel
-from pasta_eln.dataverse.upload_model import UploadModel
+from pasta_eln.database.error import Error
+from pasta_eln.database.models.config_model import ConfigModel
+from pasta_eln.database.models.data_hierarchy_model import DataHierarchyModel
+from pasta_eln.database.models.project_model import ProjectModel
+from pasta_eln.database.models.upload_model import UploadModel
+from pasta_eln.dataverse.base_database_api import BaseDatabaseApi
 from pasta_eln.dataverse.utils import (decrypt_data,
                                        encrypt_data,
                                        get_data_hierarchy_types,
-                                       get_db_credentials,
-                                       get_encrypt_key,
+                                       get_db_info, get_encrypt_key,
                                        log_and_create_error,
                                        set_authors,
                                        set_template_values)
 
 
 class DatabaseAPI:
-  """
-  Provides an interface to interact with the database for dataverse specific operations.
+  """Handles database operations for various model types.
 
-  Explanation:
-      This class represents the DatabaseAPI and provides methods to interact with the database.
-      It includes methods for initializing the database, retrieving models and data, and performing other database operations.
+  This class provides methods to interact with the database, including creating,
+  updating, retrieving, and counting models. It supports multiple model types and
+  manages the conversion between base models and ORM models.
   """
 
   def __init__(self) -> None:
-    """
-    Initializes the DatabaseAPI instance.
+    """Initializes the DatabaseAPI instance.
 
-    Explanation:
-        This method initializes the DatabaseAPI instance
-        by setting up the necessary attributes and creating an instance of BaseDatabaseAPI.
+    This constructor sets up the necessary attributes for the DatabaseAPI, including
+    the configuration model ID, logger, database names, and database connections.
+    It retrieves database information and initializes the database API.
 
-    Args:
-        None
-
-    Returns:
-        None
+    Raises:
+        IncorrectParameterError: If the database path is None.
     """
     super().__init__()
+    self.config_model_id: int = 1
     self.logger: logging.Logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
-    cred: dict[str, str] = get_db_credentials(self.logger)
-    self.db_api: BaseDatabaseAPI = BaseDatabaseAPI(
-      'localhost',
-      5984,
-      cred.get('username') or "",
-      cred.get('password') or "")
-    self.dataverse_db_name: str = "dataverse"
-    self.default_project_group_db_name: str = cred.get('db_name') or ""
-    self.design_doc_name: str = '_design/viewDataverse'
-    self.config_doc_id: str = '-dataverseConfig-'
-    self.data_hierarchy_doc_id: str = '-dataHierarchy-'
-    self.upload_model_view_name: str = 'dvUploadView'
-    self.project_model_view_name: str = 'dvProjectsView'
-    self.upload_models_query_index_name: str = "uploadModelsQuery"
-    self.upload_models_query_index_fields: list[str] = ["finished_date_time"]
+    self.dataverse_db_name: str = ".pastaELN_dataverse"
+    self.pasta_db_name: str = "pastaELN"
+    db_info: dict[str, str] = get_db_info(self.logger)
+    db_path: str | None = db_info.get('database_path')
+    if db_path is None:
+      raise log_and_create_error(self.logger, Error, "Database path is None!")
+    self.db_api: BaseDatabaseApi = BaseDatabaseApi(
+      f"{Path.home()}/{self.dataverse_db_name}.db",
+      f"{db_path}/{self.pasta_db_name}.db"
+    )
     _, self.encrypt_key = get_encrypt_key(self.logger)
 
-  def create_dataverse_design_document(self, db_name: str) -> Document:
+  def create_model(self, data: Union[UploadModel, ConfigModel]) -> Union[
+    UploadModel, ConfigModel]:
+    """Creates a new model in the database.
+
+            This function takes a data model, validates it, and inserts it into the database.
+            It logs the creation process and raises an error if the data is invalid.
+
+            Args:
+                data (Union[UploadModel, ConfigModel]): The data model to be created.
+
+            Returns:
+                Union[UploadModel, ConfigModel]: The created model.
+
+            Raises:
+                ValueError: If the data is None.
+                TypeError: If the data is not an instance of UploadModel or ConfigModel.
     """
-    Creates a design document for the dataverse in the database.
-
-    Explanation:
-        This method creates a design document for the dataverse in the database
-        using the provided design document name.
-
-    Args:
-        db_name (str): The name of the database.
-        self: The DatabaseAPI instance.
-
-    Returns:
-        Document: The created design document.
-
-    """
-    self.logger.info("Creating design document: %s", self.design_doc_name)
-    return self.db_api.create_document({"_id": self.design_doc_name}, db_name)
-
-  def create_upload_model_view(self) -> None:
-    """
-    Creates the dvUploadView as part of the design document.
-
-    Explanation:
-        This method creates the dvUploadView as part of the design document, using the provided design document name.
-
-    Args:
-        self: The DatabaseAPI instance.
-
-    """
-    self.logger.info("Creating dvUploadView as part of design document: %s", self.design_doc_name)
-    self.db_api.add_view(self.dataverse_db_name,
-                         self.design_doc_name,
-                         self.upload_model_view_name,
-                         "function (doc) { if (doc.data_type === 'dataverse_upload') { emit(doc._id, doc); } }", None)
-
-  def create_projects_view(self) -> None:
-    """
-    Creates the dvProjectsView as part of the design document.
-
-    Explanation:
-        This method creates the dvProjectsView as part of the design document, using the provided design document name.
-
-    Args:
-        self: The DatabaseAPI instance.
-
-    """
-    self.logger.info("Creating dvProjectsView as part of design document: %s", self.design_doc_name)
-    self.db_api.add_view(self.default_project_group_db_name,
-                         self.design_doc_name,
-                         self.project_model_view_name,
-                         "function (doc) { "
-                         "if (doc['-type'].includes('x0')) {"
-                         "emit(doc._id, {"
-                         "'name': doc['-name'], "
-                         "'_id': doc._id, "
-                         "'_rev': doc._rev, "
-                         "'objective': doc.objective, "
-                         "'status': doc.status, "
-                         "'comment': doc.comment, "
-                         "'user': doc['-user'], "
-                         "'date': doc['-date']});"
-                         "}}",
-                         None
-                         )
-
-  def create_model_document(self, data: UploadModel | ConfigModel | ProjectModel) -> Union[
-    UploadModel, ConfigModel, ProjectModel]:
-
-    """
-    Creates a model document in the database.
-
-    Explanation:
-        This method creates a model document in the database using the provided data.
-        It removes the '_id' and '_rev' fields from the data dictionary before creating the document.
-
-    Args:
-        self: The DatabaseAPI instance.
-        data (UploadModel | ConfigModel | ProjectModel): The data to be stored in the model document.
-
-    Raises:
-        ValueError: If the data parameter is None.
-
-    Returns:
-        Union[UploadModel, ConfigModel, ProjectModel]: The created model document.
-
-    """
-    self.logger.info("Creating model document: %s", data)
+    self.logger.info("Creating model: %s", data)
     if data is None:
       raise log_and_create_error(self.logger, ValueError, "Data cannot be None!")
-    if not isinstance(data, (UploadModel, ConfigModel, ProjectModel)):
-      raise log_and_create_error(self.logger, TypeError, "Data must be an UploadModel, ConfigModel, or ProjectModel!")
-    data_dict = dict(data)
-    if data_dict['_id'] is None:
-      del data_dict['_id']
-    del data_dict['_rev']
-    return type(data)(**self.db_api.create_document(data_dict,
-                                                    self.default_project_group_db_name
-                                                    if data is ProjectModel
-                                                    else self.dataverse_db_name))
+    if not isinstance(data, (UploadModel, ConfigModel)):
+      raise log_and_create_error(self.logger, TypeError, "Data must be an UploadModel or ConfigModel!")
+    return self.db_api.insert_model(data)
 
-  def update_model_document(self, data: UploadModel | ConfigModel | ProjectModel) -> None:
-    """
-    Updates the model document with the provided data.
+  def update_model(self, data: UploadModel | ConfigModel) -> None:
+    """Updates an existing model in the database.
 
-    Explanation:
-        This method updates the model document with the provided data. It logs the update operation and performs necessary validations.
+            This function takes a data model, verifies its ID, and updates the corresponding
+            record in the database. It logs the update process and raises an error if the
+            model ID is not provided or if the model does not exist in the database.
 
-    Args:
-        self: The DatabaseAPI instance.
-        data (UploadModel | ConfigModel | ProjectModel): The data to update the model document with.
+            Args:
+                data (Union[UploadModel, ConfigModel]): The data model to be updated.
 
-    Raises:
-        ValueError: If the data parameter is None.
-        TypeError: If the data parameter is not an instance of UploadModel, ConfigModel, or ProjectModel.
-
+            Raises:
+                ValueError: If the data is None.
+                TypeError: If the data is not an instance of UploadModel or ConfigModel.
     """
     self.logger.info("Updating model document: %s", data)
     if data is None:
       raise log_and_create_error(self.logger, ValueError, "Data cannot be None!")
-    if not isinstance(data, (UploadModel, ConfigModel, ProjectModel)):
+    if not isinstance(data, (UploadModel, ConfigModel)):
       raise log_and_create_error(self.logger, TypeError, "Data must be an UploadModel, ConfigModel, or ProjectModel!")
-    self.db_api.update_document(dict(data), self.dataverse_db_name)
+    self.db_api.update_model(data)
 
-  def get_models(self, model_type: Type[Union[UploadModel, ConfigModel, ProjectModel]]) -> list[
-    Union[UploadModel, ConfigModel, ProjectModel]]:
+  def get_models(self, model_type: Type[UploadModel | ConfigModel | DataHierarchyModel | ProjectModel]) -> list[
+    Union[UploadModel, ConfigModel, DataHierarchyModel, ProjectModel]]:
+    """Retrieves a list of models from the database based on the specified type.
+
+            This function queries the database for models of the given type and returns them
+            in a list. It logs the retrieval process and raises an error if the model type is
+            not provided.
+
+            Args:
+                model_type (Type[Union[UploadModel, ConfigModel, DataHierarchyModel, ProjectModel]]):
+                    The type of models to retrieve.
+
+            Returns:
+                list[Union[UploadModel, ConfigModel, DataHierarchyModel, ProjectModel]]:
+                    A list of models of the specified type retrieved from the database.
+
+            Raises:
+                TypeError: If the model type is not provided or unsupported.
     """
-    Retrieves models of the specified type from the database.
-
-    Explanation:
-        This method retrieves models of the specified type from the database using the appropriate view.
-
-    Args:
-        self: The DatabaseAPI instance.
-        model_type (Type[Union[UploadModel, ConfigModel, ProjectModel]]): The type of models to retrieve.
-
-    Raises:
-        ValueError: If the model_type is not supported.
-
-    Returns:
-        list[Union[UploadModel, ConfigModel, ProjectModel]]: The retrieved models.
-    """
-    self.logger.info("Getting models of type: %s", model_type)
+    self.logger.info("Retrieving models of type: %s", model_type)
     match model_type():
-      case UploadModel():
-        return [UploadModel(**result) for result in
-                self.db_api.get_view_results(self.dataverse_db_name,
-                                             self.design_doc_name,
-                                             "dvUploadView")]
+      case UploadModel() | ConfigModel() | DataHierarchyModel():
+        return self.db_api.get_models(model_type)  # type: ignore
       case ProjectModel():
-        return [ProjectModel(**result) for result in
-                self.db_api.get_view_results(self.default_project_group_db_name,
-                                             self.design_doc_name,
-                                             "dvProjectsView")]
+        return self.db_api.get_project_models()  # type: ignore
       case _:
         raise log_and_create_error(self.logger, TypeError, f"Unsupported model type {model_type}")
 
   def get_paginated_models(self,
-                           model_type: Type[Union[UploadModel, ProjectModel]],
+                           model_type: Type[Union[UploadModel, ConfigModel, DataHierarchyModel]],
                            filter_term: str | None = None,
-                           bookmark: str | None = None,
-                           limit: int = 10) -> dict[str, str | list[UploadModel]] | dict[str, str | list[ProjectModel]]:
+                           filter_fields: list[str] | None = None,
+                           order_by_column: str | None = None,
+                           page_number: int = 1,
+                           limit: int = 10) -> list[Type[UploadModel | ConfigModel | DataHierarchyModel]]:
+    """Retrieves a paginated list of models from the database.
+
+            This function fetches a specified number of models of a given type from the
+            database, applying optional filters and sorting. It supports pagination to
+            manage large datasets effectively.
+
+            Args:
+                model_type (Type[Union[UploadModel, ConfigModel, DataHierarchyModel]]):
+                    The type of models to retrieve.
+                filter_term (str | None): An optional term to filter the results.
+                filter_fields (list[str] | None): An optional list of fields to apply the filter on.
+                order_by_column (str | None): An optional column name to sort the results by.
+                page_number (int): The page number to retrieve (default is 1).
+                limit (int): The maximum number of results to return per page (default is 10).
+
+            Returns:
+                list[Type[UploadModel | ConfigModel | DataHierarchyModel]]:
+                    A list of models of the specified type retrieved from the database.
+
+            Raises:
+                DatabaseError: If the page number or limit is less than 1.
     """
-    Gets paginated models of the specified type based on the provided filter criteria.
 
-    Args:
-        model_type (Type[Union[UploadModel, ProjectModel]]): The type of model to retrieve.
-        filter_term (str | None, optional): The filter term to search for. Defaults to None.
-        Filter term is applied on following filter fields:  ["project_name", "dataverse_url", "finished_date_time", "status"]
-        bookmark (str | None, optional): The bookmark for pagination. Defaults to None.
-        limit (int, optional): The maximum number of results to retrieve. Defaults to 10.
-
-    Returns:
-        dict[str, str | list[UploadModel]] | dict[str, str | list[ProjectModel]]: A dictionary containing the paginated models or an error message.
-
-    Raises:
-        TypeError: If an unsupported model type is provided.
-    """
-
-    self.logger.info("Getting paginated models of type: %s, filter_term: %s, bookmark: %s, limit: %s",
+    self.logger.info("Retrieving paginated models of type: %s, filter_term: %s, bookmark: %s, limit: %s",
                      model_type,
                      filter_term,
-                     bookmark,
+                     page_number,
                      limit)
     match model_type():
-      case UploadModel():
-        result = self.db_api.get_paginated_upload_model_query_results(self.dataverse_db_name,
-                                                                      filter_term,
-                                                                      ["project_name",
-                                                                       "dataverse_url",
-                                                                       "finished_date_time",
-                                                                       "status"],
-                                                                      bookmark,
-                                                                      limit)
-        return {
-          "bookmark": result["bookmark"],
-          "models": [UploadModel(**doc) for doc in result["docs"]]
-        }
+      case UploadModel() | ConfigModel() | DataHierarchyModel():
+        return self.db_api.get_paginated_models(model_type,
+                                                filter_term,
+                                                filter_fields,
+                                                order_by_column,
+                                                page_number,
+                                                limit)
       case _:
         raise log_and_create_error(self.logger, TypeError, f"Unsupported model type {model_type}")
 
-  def get_model(self, model_id: str, model_type: Type[UploadModel | ConfigModel | ProjectModel]) -> Union[
-    UploadModel, ProjectModel, ConfigModel]:
-    """
-    Retrieves a model from the database.
+  def get_last_page_number(self,
+                           model_type: Type[Union[UploadModel, ConfigModel, DataHierarchyModel]],
+                           limit: int = 10) -> int:
+    """Retrieves the last page number for a specified model type.
 
-    Explanation:
-        This method retrieves a model from the database based on the given model_id and model_type.
-        It performs the necessary validation and returns the corresponding model instance.
+    This function calculates the last page number based on the total count of models
+    of the specified type and the defined limit of models per page. It logs the
+    retrieval process and raises an error if the model type is unsupported.
 
     Args:
-        model_id (str): The ID of the model to retrieve.
-        model_type (Type[UploadModel | ConfigModel | ProjectModel]): The type of the model to retrieve.
+        model_type (Type[Union[UploadModel, ConfigModel, DataHierarchyModel]]):
+            The type of models for which to retrieve the last page number.
+        limit (int): The maximum number of models per page (default is 10).
 
     Returns:
-        Union[UploadModel, ProjectModel, ConfigModel, None]: The retrieved model instance.
+        int: The last page number for the specified model type.
 
     Raises:
-        TypeError: If the model_type is not one of the supported types.
-        ValueError: If the model_id is None.
+        TypeError: If the model type is unsupported.
     """
-    self.logger.info("Getting model with id: %s, type: %s", model_id, model_type)
+
+    self.logger.info("Retrieving last page number of type: %s, limit: %s", model_type, limit)
+    match model_type():
+      case UploadModel() | ConfigModel() | DataHierarchyModel():
+        row_count = self.db_api.get_models_count(model_type)
+        return math.ceil(row_count / limit)
+      case _:
+        raise log_and_create_error(self.logger, TypeError, f"Unsupported model type {model_type}")
+
+  def get_model(self, model_id: int | str,
+                model_type: Type[UploadModel | ConfigModel | DataHierarchyModel | ProjectModel]) -> Union[
+    UploadModel, ConfigModel, DataHierarchyModel, ProjectModel, None]:
+    """Retrieves a model from the database based on its ID and type.
+
+    This function fetches a specified model from the database using its ID and type.
+    It logs the retrieval process and raises an error if the model ID is not provided
+    or if the model type is unsupported.
+
+    Args:
+        model_id (int | str): The ID of the model to retrieve, which can be an integer or a string.
+        model_type (Type[UploadModel | ConfigModel | DataHierarchyModel | ProjectModel]):
+            The type of the model to retrieve, which can be one of UploadModel,
+            ConfigModel, DataHierarchyModel, or ProjectModel.
+
+    Returns:
+        Union[UploadModel, ConfigModel, DataHierarchyModel, ProjectModel, None]:
+            The retrieved model in its base form, or None if the model does not exist.
+
+    Raises:
+        TypeError: If the model type is unsupported.
+        ValueError: If the model ID is None.
+    """
+    self.logger.info("Retrieving model with id: %s, type: %s", model_id, model_type)
     if model_type not in (UploadModel, ProjectModel, ConfigModel):
       raise log_and_create_error(self.logger, TypeError, f"Unsupported model type {model_type}")
     if model_id is None:
       raise log_and_create_error(self.logger, ValueError, "model_id cannot be None")
-    return model_type(**self.db_api.get_document(model_id,
-                                                 self.default_project_group_db_name
-                                                 if model_type is ProjectModel
-                                                 else self.dataverse_db_name))
+    return self.db_api.get_model(model_id,
+                                 model_type)
 
   def get_config_model(self) -> ConfigModel | None:
-    """
-    Retrieves the config model from the database.
+    """Retrieves the configuration model from the database.
 
-    Explanation:
-        This method retrieves the config model from the database using the appropriate document ID.
-        It performs the necessary validations and returns the retrieved config model.
-
-    Args:
-        self: The DatabaseAPI instance.
+    This function fetches the configuration model using its ID and checks its validity.
+    It logs the retrieval process and handles the decryption of sensitive information
+    if an encryption key is available.
 
     Returns:
-        ConfigModel: The retrieved config model.dataverse_login_info = {dict: 2} {'api_token': 'encrypted_token', 'dataverse_id': 'some_id'}
+        ConfigModel | None: The configuration model retrieved from the database,
+        or None if the model cannot be loaded or is invalid.
+
+    Raises:
+        DatabaseError: If the model ID is empty or if there is an error during
+        the database retrieval process.
     """
-    self.logger.info("Getting config model...")
-    config_model = self.get_model(self.config_doc_id, ConfigModel)
+    self.logger.info("Retrieving config model...")
+    config_model = self.get_model(self.config_model_id, ConfigModel)
     if config_model is None or not isinstance(config_model, ConfigModel):
       self.logger.error("Fatal error, Failed to load config model!")
       return None
@@ -333,19 +274,22 @@ class DatabaseAPI:
         "No encryption key found. Hence if any API key exists, it will be removed and the user needs to re-enter it.")
       config_model.dataverse_login_info["api_token"] = None
       config_model.dataverse_login_info["dataverse_id"] = None
-      self.update_model_document(config_model)
+      self.update_model(config_model)
     return config_model
 
   def save_config_model(self, config_model: ConfigModel) -> None:
-    """
-    Saves the config model to the database.
+    """Saves the configuration model to the database.
 
-    Explanation:
-        This method saves the config model to the database using the appropriate document ID.
+    This function validates the provided configuration model and encrypts sensitive
+    information before saving it to the database. It logs the saving process and
+    raises an error if the model is invalid or if there is no encryption key.
 
     Args:
-        self: The DatabaseAPI instance.
-        config_model (ConfigModel): The config model to save.
+        config_model (ConfigModel): The configuration model to save.
+
+    Raises:
+        ValueError: If the config model is invalid.
+        DatabaseError: If there is no encryption key found.
     """
     self.logger.info("Saving config model...")
     if (not config_model
@@ -360,77 +304,57 @@ class DatabaseAPI:
       config_model.dataverse_login_info["api_token"] = encrypt_data(self.logger, self.encrypt_key, api_token)
     if server_url := config_model.dataverse_login_info["server_url"]:
       config_model.dataverse_login_info["server_url"] = server_url.strip("/").strip("\\")
-    self.update_model_document(config_model)
+    self.update_model(config_model)
 
-  def get_data_hierarchy(self) -> dict[str, Any] | None:
-    """
-    Retrieves the data hierarchy from the database.
+  def get_data_hierarchy_models(self) -> list[DataHierarchyModel] | None:
+    """Retrieves a list of data hierarchy models from the database.
 
-    Explanation:
-        This method retrieves the data hierarchy from the database using the appropriate document ID.
-        It performs the necessary validations and returns the retrieved data hierarchy.
-
-    Args:
-        self: The DatabaseAPI instance.
+    This function queries the database for all data hierarchy models and returns them
+    as a list. It logs the retrieval process and warns if no data hierarchy items are found.
 
     Returns:
-        dict[str, Any] | None: The retrieved data hierarchy, or None if the document is not found.
+        list[DataHierarchyModel] | None: A list of data hierarchy models retrieved from the database,
+        or None if no models are found.
+
+    Raises:
+        SQLAlchemyError: If there is an error during the database retrieval process.
     """
-    self.logger.info("Getting data hierarchy...")
-    document = self.db_api.get_document(self.data_hierarchy_doc_id, self.default_project_group_db_name)
-    if document is None:
-      self.logger.warning("Data hierarchy document not found!")
-      return document
-    data = dict(document)
-    del data['_id']
-    del data['_rev']
-    del data['-version']
-    return data
+    self.logger.info("Retrieving data hierarchy...")
+    results = self.db_api.get_models(DataHierarchyModel)
+    if not results:
+      self.logger.warning("Data hierarchy items not found!")
+      return results  # type: ignore[return-value]
+    return results  # type: ignore[return-value]
 
   def initialize_database(self) -> None:
-    """
-    Initializes the database for the dataverse module.
+    """Initializes the database for the dataverse module.
 
-    Explanation:
-        This method initializes the database for the dataverse module by creating necessary documents and views if they do not exist.
+    This function sets up the database by creating necessary tables and ensuring
+    that the configuration model is initialized. It logs the initialization process
+    and checks if the configuration model exists, creating it if it does not.
 
-    Args:
-        self: The DatabaseAPI instance.
-
+    Raises:
+        SQLAlchemyError: If there is an error during the database initialization process.
     """
     self.logger.info("Initializing database for dataverse module...")
-    self.db_api.create_database(self.dataverse_db_name)
-    if self.db_api.get_document(self.design_doc_name, self.default_project_group_db_name) is None:
-      self.create_dataverse_design_document(self.default_project_group_db_name)
-    if self.db_api.get_document(self.design_doc_name, self.dataverse_db_name) is None:
-      self.create_dataverse_design_document(self.dataverse_db_name)
-    if self.db_api.get_view(self.dataverse_db_name, self.design_doc_name, self.upload_model_view_name) is None:
-      self.create_upload_model_view()
-    if self.db_api.get_view(self.default_project_group_db_name, self.design_doc_name,
-                            self.project_model_view_name) is None:
-      self.create_projects_view()
-    if self.db_api.get_document(self.config_doc_id, self.dataverse_db_name) is None:
+    self.db_api.create_and_init_database()
+    if self.db_api.get_model(self.config_model_id, ConfigModel) is None:
       self.initialize_config_document()
-    self.db_api.create_query_index(self.dataverse_db_name,
-                                   self.upload_models_query_index_name,
-                                   "json",
-                                   self.upload_models_query_index_fields)
 
   def initialize_config_document(self) -> None:
+    """Initializes the configuration document for the application.
+
+    This function creates a new configuration model with default values and loads
+    metadata from a JSON file. It sets template values and authors before saving
+    the model to the database.
+
+    Raises:
+        FileNotFoundError: If the configuration file cannot be found.
+        JSONDecodeError: If there is an error decoding the JSON file.
     """
-    Initializes the config document.
-
-    Explanation:
-        This method initializes the config document by creating a ConfigModel instance with the provided attributes.
-        It loads the metadata from a JSON file and calls the create_model_document method to create the document.
-
-    Args:
-        self: The DatabaseAPI instance.
-
-    """
-    self.logger.info("Initializing config document...")
-    data_hierarchy_types: list[str] = get_data_hierarchy_types(self.get_data_hierarchy())
-    model = ConfigModel(_id=self.config_doc_id, parallel_uploads_count=3,
+    self.logger.info("Initializing and saving the config model...")
+    data_hierarchy_types: list[str] = get_data_hierarchy_types(self.get_data_hierarchy_models())
+    model = ConfigModel(_id=self.config_model_id, parallel_uploads_count=3,
                         dataverse_login_info={"server_url": "", "api_token": "", "dataverse_id": ""},
                         project_upload_items={data_type: True for data_type in data_hierarchy_types})
     current_path = realpath(join(getcwd(), dirname(__file__)))
@@ -438,4 +362,4 @@ class DatabaseAPI:
       model.metadata = load(config_file)
     set_template_values(self.logger, model.metadata or {})
     set_authors(self.logger, model.metadata or {})
-    self.create_model_document(model)
+    self.create_model(model)

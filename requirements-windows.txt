@@ -2,7 +2,6 @@
 pyside6
 qt-material
 QtAwesome
-cloudant
 pandas
 numpy
 keyring
@@ -17,3 +16,4 @@ aiohttp
 win-unicode-console
 winshell
 pypiwin32
+sqlalchemy

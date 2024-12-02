@@ -19,9 +19,9 @@ from PySide6.QtGui import QRegularExpressionValidator
 from PySide6.QtWidgets import QDialog, QMessageBox
 
 from pasta_eln.GUI.dataverse.config_dialog_base import Ui_ConfigDialogBase
+from pasta_eln.database.models.config_model import ConfigModel
 from pasta_eln.dataverse.client import DataverseClient
 from pasta_eln.dataverse.config_error import ConfigError
-from pasta_eln.dataverse.config_model import ConfigModel
 from pasta_eln.dataverse.database_api import DatabaseAPI
 from pasta_eln.dataverse.utils import check_login_credentials, log_and_create_error
 
@@ -227,6 +227,9 @@ class ConfigDialog(Ui_ConfigDialogBase):
       else:
         self.logger.error("Failed to load dataverse list, error: %s", dataverses)
         QMessageBox.warning(self.instance, "Error", "Failed to load dataverse list")
+    else:
+      self.logger.error("Failed to load dataverse list, error: %s", dataverses)
+      QMessageBox.warning(self.instance, "Error", "Failed to load dataverse list")
 
   def show(self) -> None:
     """

@@ -7,17 +7,20 @@ import sys
 import tempfile
 import traceback
 from datetime import datetime, timezone
+from os.path import exists, join
 from pathlib import Path
-from threading import Thread
 from typing import Any, Optional, Union
 from urllib import request
 
-from .database import Database
-from .fixedStringsJson import configurationGUI, defaultConfiguration
+from PySide6 import QtCore
+from PySide6.QtCore import QFileSystemWatcher
+
+from .fixedStringsJson import CONF_FILE_NAME, configurationGUI, defaultConfiguration
 from .handleDictionaries import diffDicts, fillDocBeforeCreate
-from .miscTools import camelCase, createDirName, generic_hash, upOut
-from .miscTools import outputString
+from .miscTools import generic_hash
 from .mixin_cli import CLI_Mixin
+from .sqlite import SqlLiteDB
+from .stringChanges import camelCase, createDirName, outputString
 
 
 class Backend(CLI_Mixin):
@@ -25,85 +28,99 @@ class Backend(CLI_Mixin):
   PYTHON BACKEND
   """
 
-  def __init__(self, defaultProjectGroup:str='', **kwargs:int):
+  def __init__(self, defaultProjectGroup:str=''):
     """
     open server and define database
 
     Args:
         defaultProjectGroup (string): name of configuration / project-group used; if not given, use the one defined by 'defaultProjectGroup' in config file
-        **kwargs (dict): additional parameters
-          - initViews (bool): initialize views at startup
-          - resetDataHierarchy (bool): reset dataHierarchy on database from one on file
     """
     #initialize basic values
+    self.configFileName = Path.home() / CONF_FILE_NAME
+    self.configuration: dict[str, Any] = {}
     self.hierStack:list[str] = []
-    self.alive               = True
     self.cwd:Optional[Path]  = Path('.')
-    self.initialize(defaultProjectGroup, **kwargs)
+    self.initialize(defaultProjectGroup)
+    self.fsWatcher = QFileSystemWatcher()
+    self.fsWatcher.addPath(join(Path.home(), CONF_FILE_NAME))
+    if exists(self.configFileName):
+      self.fsWatcher.fileChanged.connect(self.configFileChanged)
 
+  def readPastaConfig(self) -> None:
+    """
+    Read the configuration file and update the internal configuration.
 
-  def initialize(self, defaultProjectGroup:str="", **kwargs:int) -> None:
+    This method logs the action of reading the configuration file and attempts to load its contents into the internal configuration dictionary.
+    If the configuration file does not exist, it raises a ConfigError to indicate an issue with the installation.
+
+    Raises:
+        ConfigError: If the configuration file does not exist.
+    """
+    if not exists(self.configFileName):
+      raise TypeError("Config file not found, Corrupt installation!")
+    with open(self.configFileName, 'r', encoding='utf-8') as confFile:
+      self.configuration = json.load(confFile)
+
+  @QtCore.Slot()
+  def configFileChanged(self, configFilePath: str) -> None:
+    """
+    Handle changes to the configuration file.
+
+    This method is triggered when the configuration file changes. It reads the updated configuration and refreshes the file system watcher to ensure it continues to monitor the correct file path.
+
+    Args:
+        configFilePath (str): The path to the configuration file that has changed.
+    """
+
+    self.readPastaConfig()
+    if exists(configFilePath):
+      self.fsWatcher.removePath(configFilePath)
+      self.fsWatcher.addPath(configFilePath)
+
+  def initialize(self, defaultProjectGroup:str="") -> None:
     """
     initialize or reinitialize server and define database
 
     Args:
         defaultProjectGroup (string): name of configuration / project-group used; if not given, use the one defined by 'defaultProjectGroup' in config file
-        **kwargs (dict): additional parameters
-          - initViews (bool): initialize views at startup
-          - resetDataHierarchy (bool): reset dataHierarchy on database from one on file
     """
-    configFileName = Path.home()/'.pastaELN.json'
     self.configuration = defaultConfiguration
-    if configFileName.is_file():
-      with open(configFileName,'r', encoding='utf-8') as confFile:
+    if self.configFileName.is_file():
+      with open(self.configFileName,'r', encoding='utf-8') as confFile:
         self.configuration |= json.load(confFile)
     for _, items in configurationGUI.items():
       for k,v in items.items():
         if k not in self.configuration['GUI']:
           self.configuration['GUI'][k] = v[1]
-    if self.configuration['version']!=2:
-      print('**ERROR Configuration file does not exist or version is not 2')
+    if self.configuration['version']!=3:
+      print('**Info: configuration file does not exist or version is < 3')
       return
     if not defaultProjectGroup:
       defaultProjectGroup = self.configuration['defaultProjectGroup']
     if defaultProjectGroup not in self.configuration['projectGroups']:
       raise ValueError('BadConfigurationFileError')
     projectGroup = self.configuration['projectGroups'][defaultProjectGroup]
-    if 'user' in projectGroup['local']:
-      n,s = projectGroup['local']['user'], projectGroup['local']['password']
-    else:
-      n,s = upOut(projectGroup['local']['cred'])[0].split(':')
-    databaseName = projectGroup['local']['database']
     # directories
     #    self.basePath (root of directory tree) is root of all projects
     #    self.cwd changes during program but is similarly the full path from root
-    self.basePath      = Path(projectGroup['local']['path'])
-    self.cwd           = Path(projectGroup['local']['path'])
-    self.extractorPath = Path(self.configuration['extractorDir'])
-    sys.path.append(str(self.extractorPath))  #allow extractors
+    self.basePath   = Path(projectGroup['local']['path'])
+    self.cwd        = Path(projectGroup['local']['path'])
+    self.addOnPath  = Path(projectGroup['addOnDir'])
+    sys.path.append(str(self.addOnPath))  #allow add-ons
     # decipher miscellaneous configuration and store
     self.userID   = self.configuration['userID']
     # start database
-    self.db = Database(n,s,databaseName, self.configuration, basePath=self.basePath)
-    if not hasattr(self.db, 'databaseName'):  #not successful database creation
-      raise SystemError('Bad couchdb setup')
-    if kwargs.get('initViews', False):
-      self.db.initDocTypeViews(self.configuration['tableColumnsMax'])
+    self.db = SqlLiteDB(basePath=self.basePath)
     # internal hierarchy structure
     self.hierStack = []
-    self.alive     = True
     return
 
 
-  def exit(self, deleteDB:bool=False) -> None:
+  def exit(self) -> None:
     """
     Shutting down things
-
-    Args:
-      deleteDB (bool): remove database
     """
-    self.db.exit(deleteDB)
-    self.alive     = False
+    self.db.exit()
     return
 
 
@@ -117,46 +134,24 @@ class Backend(CLI_Mixin):
     Args:
       doc (dict): dict to save
     """
-    doc = dict(doc)
-    if doc['-branch'][0]['path'] is None:
+    if doc['branch'][0]['path'] is None:
       self.cwd     = None
     else:
-      self.cwd     = self.basePath/doc['-branch'][0]['path']
-    self.hierStack = doc['-branch'][0]['stack']+[doc['_id']]
-    doc['childNum']= doc['-branch'][0]['child']
+      self.cwd     = self.basePath/doc['branch'][0]['path']
+    self.hierStack = doc['branch'][0]['stack']+[doc['id']]
+    doc['childNum']= doc['branch'][0]['child']
     # change content
-    self.addData('-edit-', doc)
-    # change folder-name in database of all children
-    if doc['-type'][0][0]=='x' and self.cwd is not None:
-      items = self.db.getView('viewHierarchy/viewPaths',
-                              startKey=f'{self.cwd.relative_to(self.basePath).as_posix()}/')
-      for item in items:
-        t = Thread(target=self.threadParallel, args=(item, doc))
-        t.start()
+    doc = self.addData('-edit-', doc)
+    if doc['id'].startswith('x'):
+      pathStr = '' if self.cwd is None else str(self.cwd.relative_to(self.basePath))
+      self.db.updateChildrenOfParentsChanges(pathStr, doc['branch'][0]['path'], '/'.join(self.hierStack),'')
     self.cwd = self.basePath #reset to sensible before continuing
     self.hierStack = []
     return
 
 
-  def threadParallel(self, item:dict[str,Any], doc:dict[str,Any]) -> None:
-    """ internal function to process items and documents in parallel: rename folders on the disk
-
-    Args:
-      item (dict): item of current item to process
-      doc (dict):  parents documents
-    """
-    oldPathParts = item['key'].split('/')
-    newPathParts = doc['-branch']['path'].split('/')
-    newPath = '/'.join(newPathParts+oldPathParts[len(newPathParts):]  )
-    if newPath != item['key']:  # for-loop could also be implemented in parallel
-      # print(item['id']+'  old='+item['key']+'  branch='+str(item['value'][-1])+\
-      #      '  child='+str(item['value'][-3])+'  new='+newPath)
-      self.db.updateBranch(item['id'], item['value'][-1], item['value'][-3], path=newPath)
-    return
-
-
   def addData(self, docType:str, doc:dict[str,Any], hierStack:list[str]=[], localCopy:bool=False,
-              forceNewImage:bool=False) -> str:
+              forceNewImage:bool=False) -> dict[str,Any]:
     """
     Save doc to database, also after edit
 
@@ -170,86 +165,83 @@ class Backend(CLI_Mixin):
     Returns:
         str: docID, empty string if failure
     """
-    doc['-user']  = self.userID
+    doc['user']  = self.userID
     childNum     = doc.pop('childNum',None)
     path         = None
     oldPath      = None
     operation    = 'c'  #operation of branch/path
     if docType == '-edit-':
       edit = True
-      if '-type' not in doc:
-        doc['-type'] = [f'x{len(self.hierStack)}']
+      if 'type' not in doc:
+        doc['type'] = [f'x{len(self.hierStack)}']
       if not hierStack:
         hierStack = self.hierStack
-      if '_id' not in doc:
-        doc['_id'] = hierStack[-1]
-      if len(hierStack)>0 and doc['-type'][0][0]=='x':
+      if 'id' not in doc:
+        doc['id'] = hierStack[-1]
+      if len(hierStack)>0 and doc['type'][0][0]=='x':
         hierStack  = hierStack[:-1]
-        oldPath    =  doc['-branch'][0]['path']
-      elif '-branch' in doc:
-        hierStack   = doc['-branch'][0]['stack']
+        oldPath    =  doc['branch'][0]['path']
+      elif 'branch' in doc:
+        hierStack   = doc['branch'][0]['stack']
     else:  #new doc
       edit = False
-      doc['-type'] = docType.split('/')
+      doc['type'] = docType.split('/')
       if len(hierStack) == 0:
         hierStack = self.hierStack
-    logging.debug((((
-        f'Add/edit data in cwd:{str(self.cwd)} with stack:{str(hierStack)} and name: '
-        + doc['-name']) + ' type:') + str(doc['-type']) + ' and edit: ') +
-                  str(edit))
-
+    logging.debug('Add/edit data in cwd:%s with stack:%s and name: %s and type: %s and edit: %s',self.cwd, hierStack, doc['name'], doc['type'], edit)
     # collect structure-doc and prepare
-    if doc['-type'][0] and doc['-type'][0][0]=='x' and doc['-type'][0]!='x0' and childNum is None:
+    if doc['type'][0] and doc['type'][0][0]=='x' and doc['type'][0]!='x0' and childNum is None:
       #should not have childnumber in other cases
-      thisStack = ' '.join(hierStack)
+      thisStack = '/'.join(hierStack)+'/'
       view = self.db.getView('viewHierarchy/viewHierarchy', startKey=thisStack) #not faster with cT.getChildren
       childNum = 0
       for item in view:
-        if item['value'][1][0]=='x0' or item['value'][1][0][0]!='x':
+        if item['value'][1][0][0]!='x':
           continue
-        if thisStack == ' '.join(item['key'].split(' ')[:-1]): #remove last item from string
+        if thisStack == '/'.join(item['key'].split('/')[:-1])+'/': #remove last item from string
           childNum += 1
 
     # find path name on local file system; name can be anything
-    if self.cwd is not None and '-name' in doc:
-      if doc['-type'][0] and doc['-type'][0][0]=='x':
+    if self.cwd is not None and 'name' in doc:
+      if doc['type'][0] and doc['type'][0][0]=='x':
         #project, step, task
-        if doc['-type'][0]=='x0':
+        if doc['type'][0]=='x0':
           childNum = 0
         #parentDir
         #  edit: cwd of the project/step/task: remove last directory from cwd (since cwd contains a / at end: remove two)
         #  new: below the current project/step/task
         parentDirectory = self.cwd.parent if edit else self.cwd
-        path = parentDirectory/createDirName(doc['-name'],doc['-type'][0],childNum) #update,or create (if new doc, update ignored anyhow)
+        path = parentDirectory/createDirName(doc['name'],doc['type'][0],childNum) #update,or create (if new doc, update ignored anyhow)
         operation = 'u'
       else:
         #measurement, sample, procedure
         shasum = ''
-        if '://' in doc['-name']:                           #make up name
+        if '://' in doc['name']:                           #make up name
           if localCopy:
-            baseName  = Path(doc['-name']).stem
-            extension = Path(doc['-name']).suffix
+            baseName  = Path(doc['name']).stem
+            extension = Path(doc['name']).suffix
             path = self.cwd/(camelCase(baseName)+extension)
-            request.urlretrieve(doc['-name'], path)
-            doc['-name'] = camelCase(baseName)+extension
+            request.urlretrieve(doc['name'], path)
+            doc['name'] = camelCase(baseName)+extension
           else:
-            path = Path(doc['-name'])
+            path = Path(doc['name'])
             try:
               shasum  = generic_hash(path)
             except Exception:
               print('**ERROR bad01: fetch remote content failed. Data not added')
-              return ''
-        elif doc['-name']!='' and (self.basePath/doc['-name']).is_file():          #file exists
-          path = self.basePath/doc['-name']
-          doc['-name'] = Path(doc['-name']).name
-        elif doc['-name']!='' and (self.cwd/doc['-name']).is_file():               #file exists
-          path = self.cwd/doc['-name']
-        elif '-branch' in doc:
-          if len(doc['-branch'])==1:
-            if doc['-branch'][0]['path'] is not None and (self.basePath/doc['-branch'][0]['path']).is_file():
-              path = self.basePath/doc['-branch'][0]['path']
+              return {'id':''}
+        elif doc['name']!='' and (self.basePath/doc['name']).is_file():          #file exists
+          path = self.basePath/doc['name']
+          doc['name'] = Path(doc['name']).name
+        elif doc['name']!='' and (self.cwd/doc['name']).is_file():               #file exists
+          path = self.cwd/doc['name']
+        elif 'branch' in doc:
+          if len(doc['branch'])==1:
+            if doc['branch'][0]['path'] is not None and (self.basePath/doc['branch'][0]['path']).is_file():
+              path = self.basePath/doc['branch'][0]['path']
           else:
-            logging.warning('backend: add document with multiple branches'+str(doc['-branch']) )
+            logging.warning('backend - known issue: add/edit document with multiple branches %s.', doc['id'])
+            # I might change the wrong one if I change the branch, but there is nothing in table that can distinguish which branch to change
         else:                                                                     #make up name
           shasum  = '-'
         if shasum!='-' and path is not None:
@@ -262,7 +254,7 @@ class Backend(CLI_Mixin):
             # if not 'image' in doc and not 'content' in doc and not 'otherELNName' in doc:  #did not get valuable data: extractor does not exit
             #   return ''
           if len(view)==1:  #measurement is already in database
-            doc['_id'] = view[0]['id']
+            doc['id'] = view[0]['id']
             doc['shasum'] = shasum
             edit = True
     # assemble branch information
@@ -272,36 +264,35 @@ class Backend(CLI_Mixin):
       path = path.relative_to(self.basePath)
     pathStr = None if path is None else path.as_posix()
     show = [True]*(len(hierStack)+1)
-    if '-branch' in doc and len(hierStack)+1==len(doc['-branch'][0]['show']):
-      show = doc['-branch'][0]['show']
-    doc['-branch'] = {'stack':hierStack,'child':childNum,'path':pathStr, 'show':show, 'op':operation}
+    if 'branch' in doc and len(hierStack)+1==len(doc['branch'][0]['show']):
+      show = doc['branch'][0]['show']
+    doc['branch'] = {'stack':hierStack,'child':childNum,'path':pathStr, 'show':show, 'op':operation}
     if edit:
       #update document
       keysNone = [key for key in doc if doc[key] is None]
       doc = fillDocBeforeCreate(doc, ['--'])  #store None entries and save back since js2py gets equalizes undefined and null
       for key in keysNone:
         doc[key]=None
-      doc = self.db.updateDoc(doc, doc['_id'])
+      doc = self.db.updateDoc(doc, doc['id'])
     else:
       # add doc to database
-      doc = fillDocBeforeCreate(doc, doc['-type'])
+      doc = fillDocBeforeCreate(doc, doc['type'])
       doc = self.db.saveDoc(doc)
-
     ## adaptation of directory tree, information on disk: documentID is required
-    if self.cwd is not None and doc['-type'][0][0]=='x':
+    if self.cwd is not None and doc['type'][0][0]=='x':
       #project, step, task
-      path = Path(doc['-branch'][0]['path'])
+      path = Path(doc['branch'][0]['path'])
       if edit and oldPath is not None:
         if not (self.basePath/oldPath).is_dir():
           print(f'**WARNING: addData edit of folder should have oldPath and that should exist:{oldPath}'
                 f'\n This can be triggered if user moved the folder.')
-          return ''
+          return  {'id':''}
         (self.basePath/oldPath).rename(self.basePath/path)
       else:
         (self.basePath/path).mkdir(exist_ok=True)   #if exist, create again; moving not necessary since directory moved in changeHierarchy
       with open(self.basePath/path/'.id_pastaELN.json','w', encoding='utf-8') as f:  #local path, update in any case
         f.write(json.dumps(doc))
-    return doc['_id']
+    return doc
 
 
   ######################################################
@@ -324,8 +315,8 @@ class Backend(CLI_Mixin):
       self.cwd = self.cwd.parent
     elif dirName is None:  # existing ID is given: open that
       doc = self.db.getDoc(docID)
-      self.cwd = self.basePath/doc['-branch'][0]['path']
-      self.hierStack = doc['-branch'][0]['stack']+[docID]
+      self.cwd = self.basePath/doc['branch'][0]['path']
+      self.hierStack = doc['branch'][0]['stack']+[docID]
     else:
       self.cwd = dirName
       self.hierStack.append(docID)
@@ -352,14 +343,14 @@ class Backend(CLI_Mixin):
     progressBar.show()
     self.hierStack = [projID]
     if not projPath:
-      projPath = self.db.getDoc(projID)['-branch'][0]['path']
+      projPath = self.db.getDoc(projID)['branch'][0]['path']
     self.cwd = self.basePath/projPath
     rerunScanTree = False
     #prepare lists and start iterating
-    inDB_all = self.db.getView('viewHierarchy/viewPaths')
+    inDB_all = self.db.getView('viewHierarchy/viewPathsAll', startKey=projPath)
     pathsInDB_x    = [i['key'] for i in inDB_all if i['value'][1][0][0]=='x']  #all structure elements: task, subtasts
     pathsInDB_data = [i['key'] for i in inDB_all if i['value'][1][0][0]!='x']
-    filesCountSum = sum(len(files) for (r, d, files) in os.walk(self.cwd))
+    filesCountSum = sum(len(files) for (_, _, files) in os.walk(self.cwd))
     filesCount = 0
     for root, dirs, files in os.walk(self.cwd, topdown=True):
       #find parent-document
@@ -368,15 +359,15 @@ class Backend(CLI_Mixin):
         del dirs
         del files
         continue
-      parentIDs = [i for i in inDB_all if i['key']==self.cwd.as_posix()]
+      parentIDs = [i for i in inDB_all if i['key']==self.cwd.as_posix()]  #parent of this folder
       if not parentIDs: #skip newly moved folder, will be scanned upon re-scanning
         continue
       parentID = parentIDs[0]['id']
       parentDoc = self.db.getDoc(parentID)
-      hierStack = parentDoc['-branch'][0]['stack']+[parentID]
+      hierStack = parentDoc['branch'][0]['stack']+[parentID]
       # handle directories
       for dirName in dirs[::-1]: #sorted forward in Linux
-        if dirName.startswith('.') or dirName.startswith('trash_'):
+        if dirName.startswith(('.','trash_')) or dirName in ('.git', '__pycache__'):            # ignore directories
           continue
         path = (Path(root)/dirName).relative_to(self.basePath).as_posix()
         if path in pathsInDB_x: #path already in database
@@ -385,10 +376,10 @@ class Backend(CLI_Mixin):
         if (self.basePath/path/'.id_pastaELN.json').is_file(): # update branch: path and stack
           with open(self.basePath/path/'.id_pastaELN.json', 'r', encoding='utf-8') as fIn:
             doc = json.loads(fIn.read())
-          if (self.basePath/doc['-branch'][0]['path']).parent.as_posix()  == root and \
-               doc['-branch'][0]['stack']==hierStack:
+          if (self.basePath/doc['branch'][0]['path']).parent.as_posix()  == root and \
+               doc['branch'][0]['stack']==hierStack:
             # special case: user wants to have a different directory name in same folder: then the child-number should not change
-            childNum = doc['-branch'][0]['child']
+            childNum = doc['branch'][0]['child']
             newPath = path
           else:
             #determine childNumber
@@ -400,15 +391,15 @@ class Backend(CLI_Mixin):
                 continue
               if thisStack == ' '.join(item['key'].split(' ')[:-1]): #remove last item from string
                 childNum += 1
-            newPath = '/'.join(path.split('/')[:-1])+'/'+createDirName(doc['-name'],doc['-type'][0],childNum) #update,or create (if new doc, update ignored anyhow)
+            newPath = '/'.join(path.split('/')[:-1])+'/'+createDirName(doc['name'],doc['type'][0],childNum) #update,or create (if new doc, update ignored anyhow)
             if (self.basePath/newPath).exists():                     #can be either file or directory
               print("**ERROR new path should not exist",newPath)
             else:
               (self.basePath/path).rename(self.basePath/newPath)
-          self.db.updateBranch(doc['_id'], 0, childNum, hierStack, newPath)
+          self.db.updateBranch(doc['id'], 0, childNum, hierStack, newPath)
         else:
-          currentID = self.addData(f'x{len(hierStack)}', {'-name': dirName}, hierStack)
-          newDir = self.basePath/self.db.getDoc(currentID)['-branch'][0]['path']
+          currentID = self.addData('x1', {'name': dirName}, hierStack)['id']
+          newDir = self.basePath/self.db.getDoc(currentID)['branch'][0]['path']
           (newDir/'.id_pastaELN.json').rename(self.basePath/root/dirName/'.id_pastaELN.json') #move index file into old folder
           newDir.rmdir()                     #remove created path
           (self.basePath/root/dirName).rename(newDir) #move old to new path
@@ -417,7 +408,7 @@ class Backend(CLI_Mixin):
       for fileName in files:
         filesCount += 1
         progressBar.setValue(int(100*filesCount/filesCountSum))
-        if fileName.startswith('.') or fileName.startswith('trash_') or '_PastaExport' in fileName:
+        if fileName.startswith(('.', 'trash_')) or '_PastaExport' in fileName:  #ignore files
           continue
         path = (Path(root).relative_to(self.basePath) /fileName).as_posix()
         if path in pathsInDB_data:
@@ -425,32 +416,30 @@ class Backend(CLI_Mixin):
           pathsInDB_data.remove(path)
         else:
           logging.info('Scan: add file to DB: %s',path)
-          self.addData('', {'-name':path}, hierStack)
+          shasum = generic_hash(self.basePath/path, forceFile=True)
+          if not shasum:
+            raise NameError(f'Filepath does not exist {self.basePath/path}')
+          view = self.db.getView('viewIdentify/viewSHAsum',shasum)
+          if len(view)==0:                             #not in database: create doc
+            self.addData('', {'name':path}, hierStack)
+          else:
+            self.db.updateBranch(view[0]['id'], -1, 9999, hierStack, path)
     #finish method
     self.cwd = self.basePath/projPath
     orphans = [
         i for i in pathsInDB_data
         if i.startswith(f'{self.cwd.relative_to(self.basePath).as_posix()}/')
     ]
-    logging.info('Scan: these files are on DB but not hard disk\n'+'\n  '.join(orphans))
+    logging.info('Scan: these files are on DB but not hard disk\n%s','\n  '.join(orphans))
     orphanDirs = [
         i for i in pathsInDB_x
         if i.startswith(f'{self.cwd.relative_to(self.basePath).as_posix()}/')
         and i != projPath
     ]
-    logging.info('Scan: these directories are on DB but not hard disk\n'+'\n  '.join(orphanDirs))
+    logging.info('Scan: these directories are on DB but not hard disk\n%s','\n  '.join(orphanDirs))
     for orphan in orphans+orphanDirs:
       docID = [i for i in inDB_all if i['key']==orphan][0]['id']
-      doc   = dict(self.db.getDoc(docID))
-      change = None
-      for branch in doc['-branch']:
-        if branch['path']==orphan:
-          change = {'-branch': {'op':'d', 'oldpath':branch['path'], 'path':branch['path'], 'stack':branch['stack'] }}
-          break
-      if change is None:
-        logging.warning('Tried to remove orphan in database but could not; that can happen if user renames folder: %s', orphan)
-      else:
-        self.db.updateDoc(change, docID)
+      self.db.updateBranch(docID, -2, 9999, [], orphan)
     #reset to initial values
     self.hierStack = []
     self.cwd = Path(self.basePath)
@@ -484,63 +473,65 @@ class Backend(CLI_Mixin):
         filePath = filePath.relative_to(self.basePath)
       absFilePath = self.basePath/filePath
     pyFile = f'extractor_{extension.lower()}.py'
-    pyPath = self.extractorPath/pyFile
-    success = False
+    pyPath = self.addOnPath/pyFile
     if pyPath.is_file():
-      success = True
       # import module and use to get data
       os.environ['QT_API'] = 'pyside2'
       import matplotlib.pyplot as plt  #IMPORTANT: NO PYPLOT OUTSIDE THIS QT_API BLOCK
       plt.clf()
       try:
         module  = importlib.import_module(pyFile[:-3])
-        content = module.use(absFilePath, '/'.join(doc['-type']) )
-      except Exception:
-        logging.error(f'ERROR with extractor {pyFile}' + '\n' + traceback.format_exc())
-        success = False
-      os.environ['QT_API'] = 'pyside6'
-      #combine into document
-      if success:
+        content = module.use(absFilePath, {'main':'/'.join(doc['type'])} )
+        for key in [i for i in content if i not in ['metaVendor','metaUser','image','content','links','style']]:  #only allow accepted keys
+          del content[key]
         doc |= content
         for meta in ['metaVendor','metaUser']:
           if meta not in doc:
             doc[meta] = {}
-          for item in doc[meta]:
-            if isinstance(doc[meta][item], tuple):
-              doc[meta][item] = list(doc[meta][item])
-            try:
-              _ = json.dumps(doc[meta][item])
-            except:
-              doc[meta][item] = str(doc[meta][item])
-              print('**Warning -> stringified  ',meta, item)
-        if doc['recipe'].startswith(doc['-type'][0]):
-          doc['-type']     = doc['recipe'].split('/')
+          if isinstance(doc[meta], dict):  #convenient type
+            for item in doc[meta]:
+              if isinstance(doc[meta][item], tuple):
+                doc[meta][item] = list(doc[meta][item])
+              try:
+                _ = json.dumps(doc[meta][item])
+              except (ValueError, TypeError):
+                doc[meta][item] = str(doc[meta][item])
+                print('**Warning -> stringified  ',meta, item)
+          else:
+            for item in doc[meta]:
+              if not (isinstance(item, dict) and 'key' in item and 'value' in item and 'unit' in item):
+                logging.error('Complicated extractor return wrong')
+                print('Complicated extractor return wrong')
+        if doc['style']['main'].startswith(doc['type'][0]):
+          doc['type']     = doc['style']['main'].split('/')
         else:
           #user has strange wish: trust him/her
-          logging.info('user has strange wish: trust him/her: '+'/'.join(doc['-type'])+'  '+doc['recipe'])
-        del doc['recipe']
+          logging.info('user has strange wish: trust him/her: %s  %s','/'.join(doc['type']),'  '+doc['style']['main'])
+        del doc['style']
         if 'fileExtension' not in doc['metaVendor']:
           doc['metaVendor']['fileExtension'] = extension.lower()
         if 'links' in doc and len(doc['links'])==0:
           del doc['links']
-    if not success:
-      print('  **Warning, issue with extractor', pyFile)
-      logging.warning('Issue with extractor %s', pyFile)
-      doc['metaUser'] = {'filename':absFilePath.name, 'extension':absFilePath.suffix,
-        'filesize':absFilePath.stat().st_size,
-        'created at':datetime.fromtimestamp(absFilePath.stat().st_ctime, tz=timezone.utc).isoformat(),
-        'modified at':datetime.fromtimestamp(absFilePath.stat().st_mtime, tz=timezone.utc).isoformat()}
+      except Exception:
+        print(f'  **Warning, issue with extractor {pyFile} {absFilePath}')
+        logging.warning('Issue with extractor %s\n %s', pyFile, traceback.format_exc())
+        doc['metaUser'] = {'filename':absFilePath.name, 'extension':absFilePath.suffix,
+          'filesize':absFilePath.stat().st_size,
+          'created at':datetime.fromtimestamp(absFilePath.stat().st_ctime, tz=timezone.utc).isoformat(),
+          'modified at':datetime.fromtimestamp(absFilePath.stat().st_mtime, tz=timezone.utc).isoformat()}
+    #combine into document
+    os.environ['QT_API'] = 'pyside6'
     doc['shasum']=shasum  #essential for logic, always save, unlike image
     return
 
 
-  def testExtractor(self, filePath:Union[Path,str], extractorPath:Optional[Path]=None, recipe:str='',
+  def testExtractor(self, filePath:Union[Path,str], extractorPath:Optional[Path]=None, style:dict[str,Any]={'main':''},
                     outputStyle:str='text', saveFig:str='') -> str:
     """
     Args:
       filePath (Path, str): path to the file to be tested
       extractorPath (Path, None): path to the directory with extractors
-      recipe (str): recipe in / separated
+      style (dict): style with a main-key that is / separated
       outputStyle (str): report in ['print','text','html'] including show images
       saveFig (str): save figure to...; if given stop testing after generating image
 
@@ -568,7 +559,7 @@ class Backend(CLI_Mixin):
     extension = filePath.suffix[1:]
     pyFile = f'extractor_{extension.lower()}.py'
     if extractorPath is None:
-      extractorPath = self.extractorPath
+      extractorPath = self.addOnPath
     #start testing
     if (extractorPath/pyFile).is_file():
       report += outputString(outputStyle, 'info', f'use extractor: {str(extractorPath / pyFile)}')
@@ -579,7 +570,7 @@ class Backend(CLI_Mixin):
       try:
         module  = importlib.import_module(pyFile[:-3])
         plt.clf()
-        content = module.use(filePath, recipe, saveFig or None)
+        content = module.use(filePath, style, saveFig or None )
         if saveFig:
           return report
       except Exception:
@@ -588,17 +579,17 @@ class Backend(CLI_Mixin):
         report += outputString(outputStyle, 'error', f'{htmlStr}python-error">website</a>')
         report += outputString(outputStyle, 'error', traceback.format_exc(limit=3))
     if success:
-      if 'recipe' in content:
-        possibleDocTypes = [i for i in self.db.dataLabels.keys() if i[0]!='x']
-        matches = [i for i in possibleDocTypes if content['recipe'].startswith(i)]
-        if matches or content['recipe'] == '' or content['recipe'] == '-':
-          report += outputString(outputStyle, 'info', 'Recipe is good: '+content['recipe'])
+      if 'style' in content:
+        possibleDocTypes = [i for i in self.db.dataHierarchy('', '') if i[0]!='x']
+        matches = [i for i in possibleDocTypes if content['style']['main'].startswith(i)]
+        if matches or content['style']['main'] in {'', '-'}:
+          report += outputString(outputStyle, 'info', 'Style is good: '+content['style']['main'])
           size = len(str(content))
           report += outputString(outputStyle, 'info', f'Entire extracted size: {size // 1024}kB')
         else:
-          report += outputString(outputStyle, 'error', 'Recipe does not follow doctype in dataHierarchy.')
+          report += outputString(outputStyle, 'error', 'Style does not follow doctype in dataHierarchy.')
       else:
-        report += outputString(outputStyle,'error','Recipe not included in extractor.')
+        report += outputString(outputStyle,'error','Style not included in extractor.')
     if success:
       try:
         _ = json.dumps(content)
@@ -680,56 +671,34 @@ class Backend(CLI_Mixin):
   ######################################################
   ### Wrapper for database functions
   ######################################################
-  def replicateDB(self, progressBar:Any, removeAtStart:bool=False) -> str:
-    """
-    Replicate local database to remote database
-
-    Args:
-        removeAtStart (bool): remove remote DB before starting new
-        progressBar (QProgressBar): gui - qt progress bar
-
-    Returns:
-        str: replication report
-    """
-    defaultProjectGroup = self.configuration['defaultProjectGroup']
-    remoteConf = self.configuration['projectGroups'][defaultProjectGroup]['remote']
-    if not remoteConf: #empty entry: fails
-      print("**ERROR brp01: You tried to replicate although, remote is not defined")
-      return 'ERROR'
-    if 'cred' in remoteConf:
-      remoteConf['user'], remoteConf['password'] = upOut(remoteConf['cred'])[0].split(':')
-    return self.db.replicateDB(remoteConf, progressBar, removeAtStart)
-
-
   def checkDB(self, outputStyle:str='text', repair:bool=False, minimal:bool=False) -> str:
     """
     Wrapper of check database for consistencies by iterating through all documents
 
     Args:
         outputStyle (str): output using a given style: see outputString
-        repair (bool): repair database
+        repair (bool): repair id files in file tree by copying from DB
         minimal (bool): true=only show warnings and errors; else=also show information
 
     Returns:
         string: output incl. \n
     """
     ### check database itself for consistency
-    output = self.db.checkDB(outputStyle=outputStyle, repair=repair, minimal=minimal)
-    if repair:
-      self.db.initGeneralViews()
+    output = self.db.checkDB(outputStyle=outputStyle, minimal=minimal, repair=repair)
     ### compare with file system
-    output += outputString(outputStyle,'h2','File status')
+    if not minimal:
+      output += outputString(outputStyle,'h2','File status')
     viewProjects   = self.db.getView('viewDocType/x0All')
     inDB_all = self.db.getView('viewHierarchy/viewPathsAll')
     pathsInDB_data = [i['key'] for i in inDB_all if i['value'][1][0][0]!='x']
     pathsInDB_folder = [i['key'] for i in inDB_all if i['value'][1][0][0]=='x']
     count = 0
-    for projI in viewProjects:
-      projDoc = self.db.getDoc(projI['id'])
-      if len(projDoc['-branch'])==0:
+    for projI in viewProjects['id']:
+      projDoc = self.db.getDoc(projI)
+      if len(projDoc['branch'])==0:
         output += outputString(outputStyle,'error','project view got screwed up')
         continue
-      for root, dirs, files in os.walk(self.basePath/projDoc['-branch'][0]['path']):
+      for root, dirs, files in os.walk(self.basePath/projDoc['branch'][0]['path']):
         if Path(root).name[0]=='.' or Path(root).name.startswith('trash_'):
           del dirs
           continue
@@ -738,7 +707,7 @@ class Backend(CLI_Mixin):
             continue
           path = (Path(root).relative_to(self.basePath) /fileName).as_posix()
           if path not in pathsInDB_data:
-            output += outputString(outputStyle, 'error', f'File on harddisk but not DB: {path}')
+            output += outputString(outputStyle, 'error', f'File on harddisk but not DB (2): {path}')
             count += 1
           else:
             pathsInDB_data.remove(path)
@@ -756,12 +725,12 @@ class Backend(CLI_Mixin):
                 docDisk = json.loads(fIn.read())
                 listDocs = self.db.getView('viewHierarchy/viewPathsAll', preciseKey=path)
                 if len(listDocs)!=1:
-                  output += outputString(outputStyle, 'error', f'Path of folder is non-unique: {path}')
+                  output += outputString(outputStyle, 'error', f'Path of folder is non-unique (1): {path} in '\
+                                         f'{" ".join([i["id"] for i in listDocs])}')
                 docDB   = self.db.getDoc(listDocs[0]['id'])
                 difference = diffDicts(docDisk,docDB)
                 if len(difference)>1:
-                  output += outputString(outputStyle,'error','disk(1) and db(2) content do not match:'+docDisk['_id'])
-                  output += outputString(outputStyle,'error',difference)
+                  output += outputString(outputStyle,'error',f'disk(1) and db(2) content do not match*: {docDB["id"]}\n{difference}')
                   if repair:
                     with open(self.basePath/root/dirName/'.id_pastaELN.json','w',encoding='utf-8') as fOut:
                       json.dump(docDB, fOut)
@@ -771,14 +740,14 @@ class Backend(CLI_Mixin):
               count += 1
               # if True:  #use only for resetting the content in the .id_pastaELN.json
               #   with open(self.basePath/root/dirName/'.id_pastaELN.json','w',encoding='utf-8') as fOut:
-              #     docDB   = self.db.getDoc( docDisk['_id'] )
+              #     docDB   = self.db.getDoc( docDisk['id'] )
               #     json.dump(docDB, fOut)
-    output += outputString(outputStyle, 'info', f'Number of files on disk that are not in database {str(count)}')
-    orphans = [i for i in pathsInDB_data   if not (self.basePath/i).exists() and ":/" not in i]  #paths can be files or directories
+    orphans = [i for i in pathsInDB_data   if not (self.basePath/i).exists() and ":/" not in i and i!='*']  #paths can be files or directories
     orphans+= [i for i in pathsInDB_folder if not (self.basePath/i).exists() ]
     if orphans:
-      output += outputString(outputStyle,'error','bch01: These files of database not on filesystem:\n- '+'\n- '.join(orphans))
-    output += outputString(outputStyle,'h2','File summary')
+      output += outputString(outputStyle,'error','bch01: These files of database not on filesystem(3):\n  - '+'\n  - '.join(orphans))
+    if not minimal:
+      output += outputString(outputStyle,'h2','File summary')
     if outputStyle == 'text':
-      output += "Success\n" if not orphans and count==0 else "Failure\n"
+      output += "Success\n" if not orphans and count==0 else "Failure (* can be auto-repaired)\n"
     return output

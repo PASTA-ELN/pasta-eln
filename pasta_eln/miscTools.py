@@ -1,13 +1,12 @@
 """ Misc functions that do not require instances """
-import os, uuid, logging, traceback, json, sys, re
+import os, logging, traceback, json, sys, importlib
 from collections.abc import Mapping
 from typing import Any, Union
 from io import BufferedReader
 from urllib import request
 from pathlib import Path
-from re import sub, match
 import platform
-from .handleDictionaries import dict2ul
+from .fixedStringsJson import CONF_FILE_NAME
 
 class Bcolors:
   """
@@ -31,106 +30,6 @@ class Bcolors:
     ENDC = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
-
-def outputString(fmt:str='print', level:str='info', message:str='') -> str:
-  """ Output a message into different formats:
-    - print: print to stdout
-    - logging; log to file
-    - text: return text string (supersedes html)
-    - html: return html string https://doc.qt.io/qtforpython/overviews/richtext-html-subset.html#supported-html-subset
-    - else: no output
-    - formats can be union ('print,text')
-  """
-  prefixes = {'h2':f'{Bcolors.UNDERLINE}\n*** ','bold':f'{Bcolors.BOLD}\n*** ', \
-              'ok':f'{Bcolors.OKGREEN}', 'okish':f'{Bcolors.OKBLUE}', 'unsure':f'{Bcolors.HEADER}',\
-              'warning':f'{Bcolors.WARNING}**Warning','error':f'{Bcolors.FAIL}**ERROR '}
-  if level=='info':
-    txtOutput = message.strip()+'\n'
-  elif level in prefixes:
-    txtOutput = prefixes[level]+message
-    txtOutput+= ' ***' if '***' in prefixes[level] else ''
-    txtOutput+= f'{Bcolors.ENDC}\n'
-  else:
-    print('ERROR level not in prefixes ',level)
-  # depend on format
-  if 'print' in fmt:
-    print(txtOutput)
-  if 'logging' in fmt and level in {'info', 'warning', 'error'}:
-    getattr(logging,level)(message)
-  if 'text' in fmt:
-    return txtOutput
-  if fmt=='html':
-    colors = {'info':'black','error':'red','warning':'orangered','ok':'green','okish':'blue','unsure':'darkmagenta'}
-    if level[0]=='h':
-      return f'<{level}>{message}</{level}>'
-    if level not in colors:
-      print(f'**ERROR: wrong level {level}')
-      return ''
-    return f'<font color="{colors[level]}">' + message.replace('\n', '<br>') + '</font><br>'
-  return ''
-
-
-def tracebackString(log:bool=False, docID:str='') -> str:
-  """ Create a formatted string of traceback
-
-  Args:
-    log (bool): write to logging
-    docID (str): docID used in comment
-
-  Returns:
-    str: | separated string of call functions
-  """
-  tracebackList = [i for i in traceback.format_stack()[2:-2] if 'pasta_eln' in i] #skip first and last and then filter only things with pasta_eln
-  reply = '|'.join([item.split('\n')[1].strip() for item in tracebackList])  #| separated list of stack excluding last
-  if log:
-    logging.info(' traceback %s %s', docID, reply)
-  return reply
-
-
-def markdownStyler(text:str) -> str:
-  """
-  Create a markdown that well balanced with regard to font size, etc.
-
-  Args:
-    text (str): input string
-
-  Returns:
-    str: output str
-  """
-  return re.sub(r'(^|\n)(#+)', r'\1##\2', text.strip())
-
-
-def camelCase(text:str) -> str:
-  """
-  Produce camelCase from normal string
-  - file names abcdefg.hij are only replaced spaces
-
-  Args:
-     text (str): string
-
-  Returns:
-    str: camel case of that string: CamelCaseString
-  """
-  if match(r"^[\w-]+\.[\w]+$", text):
-    return text.replace(' ','_')
-  return sub(r"(_|-)+", ' ', text).title().replace(' ','').replace('*','')
-
-
-def createDirName(name:str, docType:str, thisChildNumber:int) -> str:
-  """ create directory-name by using camelCase and a prefix
-
-  Args:
-      name (string): name with spaces etc.
-      docType (string): document type used for prefix
-      thisChildNumber (int): number of myself
-
-  Returns:
-    string: directory name with leading number
-  """
-  if docType == 'x0':
-    return camelCase(name)
-  #steps, tasks
-  return f'{thisChildNumber:03d}_{camelCase(name)}'
 
 
 def generic_hash(path:Path, forceFile:bool=False) -> str:
@@ -161,8 +60,7 @@ def generic_hash(path:Path, forceFile:bool=False) -> str:
         size = int(meta.get_all('Content-Length')[0])
         return blob_hash(site, size)
     except Exception:
-      logging.error('Could not download content / hashing issue '+path.as_posix().replace(':/','://')+'\n'+\
-        traceback.format_exc())
+      logging.error('Could not download content / hashing issue %s \n%s',path.as_posix().replace(':/','://'),traceback.format_exc())
       return ''
   if path.is_dir():
     raise ValueError(f'This seems to be a directory {path.as_posix()}')
@@ -175,31 +73,6 @@ def generic_hash(path:Path, forceFile:bool=False) -> str:
     with open(path, 'rb') as stream:
       shasum = blob_hash(stream, path.stat().st_size)
   return shasum
-
-
-def upOut(key:str) -> list[str]:
-  """
-  key (str): key
-  """
-  import keyring as cred
-  keys = key.split() if ' ' in key else [key]
-  keys_ = []
-  for keyI in keys:
-    key_ = cred.get_password('pastaDB',keyI)
-    key_ = ':' if key_ is None else ':'.join(key_.split('bcA:Maw'))
-    keys_.append(key_)
-  return keys_
-
-
-def upIn(key:str) -> str:
-  """
-  key (str): key
-  """
-  import keyring as cred
-  key = 'bcA:Maw'.join(key.split(':'))
-  id_  = uuid.uuid4().hex
-  cred.set_password('pastaDB',id_,key)
-  return id_
 
 
 def symlink_hash(path:Path) -> str:
@@ -252,7 +125,7 @@ def blob_hash(stream:BufferedReader, size:int) -> str:
   return hasher.hexdigest()
 
 
-def updateExtractorList(directory:Path) -> dict[str, Any]:
+def updateAddOnList(directory:Path|None=None) -> dict[str, Any]:
   """
   Rules:
   - each data-type in its own try-except
@@ -265,12 +138,21 @@ def updateExtractorList(directory:Path) -> dict[str, Any]:
     directory (str): relative directory to scan
 
   Returns:
-    bool: success
+    dict: dict with all add-ons
   """
+  if directory is None:
+    with open(Path.home()/CONF_FILE_NAME,'r', encoding='utf-8') as f:
+      configuration = json.load(f)
+      defaultProjectGroup = configuration['defaultProjectGroup']
+      projectGroup = configuration['projectGroups'][defaultProjectGroup]
+      directory = Path(projectGroup['addOnDir'])
+  sys.path.append(str(directory))  #allow add-ons
+  # Extractors
   verboseDebug = False
   extractorsAll = {}
+  projectAll    = {}
   for fileName in os.listdir(directory):
-    if fileName.endswith('.py') and fileName not in {'testExtractor.py','tutorial.py','commit.py'}:
+    if fileName.endswith('.py') and fileName.startswith('extractor_'):
       #start with file
       with open(directory/fileName,'r', encoding='utf-8') as fIn:
         if verboseDebug: print('\n'+fileName)
@@ -316,13 +198,19 @@ def updateExtractorList(directory:Path) -> dict[str, Any]:
         ending = fileName.split('_')[1].split('.')[0]
         extractorsAll[ending]=extractorsThis
                     #header not used for now
+    if fileName.endswith('.py') and fileName.startswith('project_'):
+      name        = fileName[:-3]
+      module      = importlib.import_module(fileName[:-3])
+      description = module.description
+      projectAll[name] = description
   #update configuration file
-  with open(Path.home()/'.pastaELN.json','r', encoding='utf-8') as f:
+  with open(Path.home()/CONF_FILE_NAME,'r', encoding='utf-8') as f:
     configuration = json.load(f)
   configuration['extractors'] = extractorsAll
-  with open(Path.home()/'.pastaELN.json','w', encoding='utf-8') as f:
+  configuration['projectAddOns'] = projectAll
+  with open(Path.home()/CONF_FILE_NAME,'w', encoding='utf-8') as f:
     f.write(json.dumps(configuration, indent=2))
-  return extractorsAll
+  return extractorsAll | projectAll
 
 
 def restart() -> None:
@@ -339,14 +227,14 @@ def restart() -> None:
 class DummyProgressBar():
   """ Class representing a progressbar that does not do anything
   """
-  def setValue(self, value:int) -> None:
+  def setValue(self, value:int) -> int:
     """
     Set value
 
     Args:
       value (int): value to be set
     """
-    return
+    return value
   def show(self) -> None:
     """ show progress bar """
     return
@@ -374,9 +262,7 @@ def flatten(d:Mapping[Any,Any]) -> dict[object, Any]:
 
   def dot_reducer(k1:object, k2:object) -> Union[str, object]:
     """ Reducer function """
-    if k1 is None:
-      return k2
-    return f"{k1}.{k2}"
+    return k2 if k1 is None else f"{k1}.{k2}"
 
   def _flatten(_d:Union[Mapping[Any, Any], list[Any]], depth:int, parent:object=None) -> bool:
     """ Recursive function """
@@ -401,7 +287,7 @@ def flatten(d:Mapping[Any,Any]) -> dict[object, Any]:
   return flat_dict
 
 
-def hierarchy(d:dict[str,str]) -> dict[str,Any]:
+def hierarchy(d:dict[str,Any]) -> dict[str,Any]:
   """Reverse flattening of dict-like object
 
   Args:
@@ -436,10 +322,10 @@ def hierarchy(d:dict[str,str]) -> dict[str,Any]:
 
   def dict2list(d:dict[str,Any]) -> Union[list[dict[str,Any]], dict[str,Any]]:
     """ convert a dictionary to list if all keys are numbers """
-    for key in d.keys():
+    for key in d:
       if isinstance(d[key], dict):
         d[key] = dict2list(d[key])
-    if all(i.isdigit() for i in d.keys()):
+    if all(i.isdigit() for i in d):
       d = list(d.values())                                                           # type: ignore[assignment]
     return d
 

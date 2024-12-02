@@ -220,7 +220,7 @@ class PublicKey:
                 signature._signature + signature.trusted_comment.encode(),
             )
         except InvalidSignature as err:
-            raise VerifyError(err)
+            raise VerifyError(err) from err
 
     def verify_file(
         self,
@@ -359,9 +359,7 @@ class SecretKey:
             p = 1
         else:
             maxn = self._kdf_memlimit // (r * 128)
-        while n_log2 < 63:
-            if 1 << n_log2 > maxn // 2:
-                break
+        while n_log2 < 63 and not 1 << n_log2 > maxn // 2:
             n_log2 += 1
         if not p:
             p = min(0x3fffffff, (opslimit // 4) // (1 << n_log2)) // r
@@ -443,7 +441,7 @@ class SecretKey:
         return hasher.digest()
 
     def _update_checksum(self):
-        self._keynum_sk.checksum[0:] = self._calc_checksum()
+        self._keynum_sk.checksum[:] = self._calc_checksum()
 
     def __bytes__(self) -> bytes:
         return b'\n'.join((

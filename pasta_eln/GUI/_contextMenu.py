@@ -2,7 +2,7 @@
 import platform, subprocess, os
 from enum import Enum
 from pathlib import Path
-from typing import Any, Union
+from typing import Any
 from PySide6.QtWidgets import QMenu, QWidget  # pylint: disable=no-name-in-module
 from PySide6.QtCore import     QPoint # pylint: disable=no-name-in-module
 from ..guiStyle import Action
@@ -19,10 +19,10 @@ def initContextMenu(widget:QWidget, pos:QPoint) -> None:
   context = QMenu(widget)
   # for extractors
   extractors = widget.comm.backend.configuration['extractors']                                               # type: ignore[attr-defined]
-  extension = Path(widget.doc['-branch'][0]['path']).suffix[1:]                                              # type: ignore[attr-defined]
+  extension = Path(widget.doc['branch'][0]['path']).suffix[1:]                                              # type: ignore[attr-defined]
   if extension.lower() in extractors:
     extractors = extractors[extension.lower()]
-    baseDocType= widget.doc['-type'][0]                                                                      # type: ignore[attr-defined]
+    baseDocType= widget.doc['type'][0]                                                                      # type: ignore[attr-defined]
     choices= {key:value for key,value in extractors.items() if key.startswith(baseDocType)}
     for key,value in choices.items():
       Action(value,                     widget, [CommandMenu.CHANGE_EXTRACTOR, key], context)
@@ -46,7 +46,7 @@ def executeContextMenu(widget:QWidget, command:list[Any]) -> bool:
   Returns:
     bool: success
   """
-  filePath = Path(widget.doc['-branch'][0]['path'])                                                          # type: ignore[attr-defined]
+  filePath = Path(widget.doc['branch'][0]['path'])                                                          # type: ignore[attr-defined]
   if command[0] is CommandMenu.OPEN_FILEBROWSER or command[0] is CommandMenu.OPEN_EXTERNAL:
     filePath = widget.comm.backend.basePath/filePath                                                         # type: ignore[attr-defined]
     filePath = filePath if command[0] is CommandMenu.OPEN_EXTERNAL else filePath.parent

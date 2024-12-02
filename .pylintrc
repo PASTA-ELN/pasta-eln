@@ -11,7 +11,29 @@ ignore=CVS
 
 # Add files or directories matching the regex patterns to the blacklist. The
 # regex matches against base names, not paths.
-ignore-patterns=data_hierarchy_editor_dialog_base.py,create_type_dialog_base.py,terminology_lookup_dialog_base.py,completed_upload_task.py,completed_uploads_base.py,config_dialog_base.py,edit_metadata_dialog_base.py,main_dialog_base.py,primitive_compound_controlled_frame_base.py,project_item_frame_base.py,upload_config_dialog_base.py,upload_widget_base.py,edit_metadata_summary_dialog_base.py,type_dialog_base.py
+ignore-patterns=data_hierarchy_editor_dialog_base.py,
+                create_type_dialog_base.py,
+                terminology_lookup_dialog_base.py,
+                completed_upload_task.py,
+                completed_uploads_base.py,
+                config_dialog_base.py,
+                edit_metadata_dialog_base.py,
+                main_dialog_base.py,
+                primitive_compound_controlled_frame_base.py,
+                project_item_frame_base.py,
+                upload_config_dialog_base.py,
+                upload_widget_base.py,
+                edit_metadata_summary_dialog_base.py,
+                type_dialog_base.py,
+                type_dialog.py,
+                tableview_data_model.py,
+                reorder_column_delegate.py,
+                mandatory_column_delegate.py,
+                lookup_iri_action.py,
+                iri_column_delegate.py,
+                delete_column_delegate.py,
+                extractor_[a-z]+.py,
+                project_html_report.py
 
 # Python code to execute, usually for sys.path manipulation such as
 # pygtk.require().
@@ -67,20 +89,15 @@ disable=raw-checker-failed,
         multiple-statements,
         multiple-imports,
         invalid-name,
-        bare-except,
-        logging-not-lazy,
-        unused-argument,
         too-few-public-methods,
         useless-return,
         no-member,
         import-outside-toplevel,
         fixme,
         import-error,
-        unused-import,
         dangerous-default-value,
         missing-raises-doc,
         no-else-return,
-        condition-evals-to-constant,
         broad-except
 
 #Reasons:
@@ -123,7 +140,7 @@ score=yes
 [REFACTORING]
 
 # Maximum number of nested blocks for function / method body
-max-nested-blocks=10 #Steffen's change
+max-nested-blocks=12 #Steffen's change
 
 # Complete name of functions that never returns. When checking for
 # inconsistent-return-statements if a never returning function is called then
@@ -435,7 +452,7 @@ max-bool-expr=5
 max-branches=80 #Steffen's change
 
 # Maximum number of locals for function / method body
-max-locals=50 #Steffen's change
+max-locals=55 #Steffen's change
 
 # Maximum number of parents for a class (see R0901).
 max-parents=7

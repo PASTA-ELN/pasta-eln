@@ -25,12 +25,12 @@ from pasta_eln.GUI.dataverse.project_item_frame_base import Ui_ProjectItemFrame
 from pasta_eln.GUI.dataverse.upload_config_dialog import UploadConfigDialog
 from pasta_eln.GUI.dataverse.upload_widget_base import Ui_UploadWidgetFrame
 from pasta_eln.backend import Backend
-from pasta_eln.dataverse.config_model import ConfigModel
+from pasta_eln.database.models.config_model import ConfigModel
+from pasta_eln.database.models.project_model import ProjectModel
+from pasta_eln.database.models.upload_model import UploadModel
 from pasta_eln.dataverse.data_upload_task import DataUploadTask
 from pasta_eln.dataverse.database_api import DatabaseAPI
-from pasta_eln.dataverse.project_model import ProjectModel
 from pasta_eln.dataverse.task_thread_extension import TaskThreadExtension
-from pasta_eln.dataverse.upload_model import UploadModel
 from pasta_eln.dataverse.upload_queue_manager import UploadQueueManager
 from pasta_eln.dataverse.upload_status_values import UploadStatusValues
 from pasta_eln.dataverse.utils import check_if_dataverse_exists, check_if_minimal_metadata_exists, \
@@ -175,7 +175,7 @@ class MainDialog(Ui_MainDialogBase):
     project_widget_ui.projectNameLabel.setText(textwrap.fill(project.name or "", width=80, max_lines=1))
     project_widget_ui.projectNameLabel.setToolTip(project.name)
     project_widget_ui.modifiedDateTimeLabel.setText(
-      datetime.datetime.fromisoformat(project.date or "").strftime("%Y-%m-%d %H:%M:%S"))
+      datetime.datetime.fromisoformat(project.date_modified or "").strftime("%Y-%m-%d %H:%M:%S"))
     project_widget_ui.projectDocIdLabel.hide()
     project_widget_ui.projectDocIdLabel.setText(project.id)
     return project_widget_frame

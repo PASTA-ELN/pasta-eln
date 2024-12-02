@@ -3,7 +3,11 @@ name: PyPi
 on:
     push:
     pull_request:
+      branches:
+      - main
     workflow_dispatch:
+      branches:
+      - main
 
 # based on https://github.com/pypa/gh-action-pypi-publish
 jobs:

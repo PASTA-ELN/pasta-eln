@@ -3,14 +3,12 @@ import logging
 from enum import Enum
 from pathlib import Path
 from typing import Any
-from PySide6.QtWidgets import QScrollArea, QLabel, QTextEdit  # pylint: disable=no-name-in-module
-from PySide6.QtCore import Qt, Slot # pylint: disable=no-name-in-module
-from ..guiStyle import TextButton, Image, Label, showMessage, widgetAndLayout, getColor
+from PySide6.QtWidgets import QScrollArea, QTextEdit  # pylint: disable=no-name-in-module
+from PySide6.QtCore import Qt, Slot                   # pylint: disable=no-name-in-module
+from ..guiStyle import TextButton, Image, Label, showMessage, widgetAndLayout, addDocDetails
 from ._contextMenu import initContextMenu, executeContextMenu, CommandMenu
-from ..fixedStringsJson import defaultDataHierarchyNode
+from ..fixedStringsJson import defaultDataHierarchyNode, SORTED_DB_KEYS
 from ..guiCommunicate import Communicate
-from ..handleDictionaries import dict2ul
-from ..miscTools import markdownStyler
 
 
 class Details(QScrollArea):
@@ -49,7 +47,7 @@ class Details(QScrollArea):
                               'Show / hide user metadata', checkable=True, style="margin-top: 15px")
     self.metaUserW, self.metaUserL     = widgetAndLayout('V', self.mainL)
     self.metaUserW.setMaximumWidth(self.width())
-    self.btnDatabase = TextButton('Database details', self, [Command.SHOW,'Database'], self.mainL, \
+    self.btnDatabase = TextButton('ELN details', self, [Command.SHOW,'Database'], self.mainL, \
                                   'Show / hide database details', checkable= True, style="margin-top: 15px")
     self.metaDatabaseW, self.metaDatabaseL = widgetAndLayout('V', self.mainL)
     self.metaDatabaseW.setMaximumWidth(self.width())
@@ -96,22 +94,22 @@ class Details(QScrollArea):
     if self.docID=='':
       return
     self.doc   = self.comm.backend.db.getDoc(self.docID)
-    if '-name' not in self.doc:  #keep empty details and wait for user to click
+    if 'name' not in self.doc:  #keep empty details and wait for user to click
       self.comm.changeTable.emit('','')
       return
-    if self.doc['-type'][0]=='-' or self.doc['-type'][0] not in self.comm.backend.db.dataHierarchy:
+    if self.doc['type'][0] not in self.comm.backend.db.dataHierarchy('', ''):
       dataHierarchyNode = defaultDataHierarchyNode
     else:
-      dataHierarchyNode = self.comm.backend.db.dataHierarchy[self.doc['-type'][0]]['meta']
-    label = self.doc['-name'] if len(self.doc['-name'])<80 else self.doc['-name'][:77]+'...'
+      dataHierarchyNode = self.comm.backend.db.dataHierarchy(self.doc['type'][0], 'meta')
+    label = self.doc['name'] if len(self.doc['name'])<80 else self.doc['name'][:77]+'...'
     Label(label,'h1', self.headerL)
     if 'metaVendor' not in self.doc:
       self.btnVendor.hide()
     if 'metUser' not in self.doc:
       self.btnUser.hide()
+    size = self.comm.backend.configuration['GUI']['imageSizeDetails'] \
+                      if hasattr(self.comm.backend, 'configuration') else 300
     for key in self.doc:
-      size = self.comm.backend.configuration['GUI']['imageSizeDetails'] \
-                        if hasattr(self.comm.backend, 'configuration') else 300
       if key=='image':
         Image(self.doc['image'], self.specialL, anyDimension=size)
         self.specialW.show()
@@ -122,71 +120,21 @@ class Details(QScrollArea):
         text.setReadOnly(True)
         self.specialL.addWidget(text)
         self.specialW.show()
-      elif key=='-tags':
-        tags = ['_curated_' if i=='_curated' else f'#{i}' for i in self.doc[key]]
-        tags = ['\u2605'*int(i[2]) if i[:2]=='#_' else i for i in tags]
-        label = QLabel('Tags: '+' '.join(tags))
-        label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-        self.metaDetailsL.addWidget(label)
-      elif key[0] in ['_','-'] or key in ['shasum']:
-        if key in ['_attachments']:
-          continue
-        label = QLabel(f'{key}: {str(self.doc[key])}')
-        label.setWordWrap(True)
-        label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-        self.metaDatabaseL.addWidget(label)
+      elif key in ['name']:  #skip
+        continue
+      elif key in SORTED_DB_KEYS:
+        addDocDetails(self, self.metaDatabaseL, key, self.doc[key], dataHierarchyNode)
         self.btnDatabase.setChecked(False)
       elif key=='metaVendor':
         self.btnVendor.show()
-        label = QLabel()
-        label.setWordWrap(True)
-        cssStyle = '<style> ul {list-style-type: none; padding-left: 0; margin: 0;} </style>'
-        label.setText(cssStyle+dict2ul(self.doc[key]))
-        label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-        self.metaVendorL.addWidget(label)
+        addDocDetails(self, self.metaVendorL,   '',  self.doc[key], dataHierarchyNode)
         self.metaVendorW.show()
       elif key=='metaUser':
         self.btnUser.show()
-        label = QLabel()
-        label.setWordWrap(True)
-        cssStyle = '<style> ul {list-style-type: none; padding-left: 0; margin: 0;} </style>'
-        label.setText(cssStyle+dict2ul(self.doc[key]))
-        label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-        self.metaUserL.addWidget(label)
+        addDocDetails(self, self.metaUserL,     '',  self.doc[key], dataHierarchyNode)
         self.metaUserW.show()
       else:
-        link = False
-        dataHierarchyItem = [i for group in dataHierarchyNode for i in dataHierarchyNode[group] if i['name']==key]
-        if (isinstance(self.doc[key],str) and '\n' in self.doc[key]) or key=='comment':
-          labelW, labelL = widgetAndLayout('H', self.metaDetailsL, top='s', bottom='s')
-          labelL.addWidget(QLabel(f'{key}: '), alignment=Qt.AlignmentFlag.AlignTop)
-          text = QTextEdit()
-          text.setMarkdown(markdownStyler(self.doc[key]))
-          bgColor = getColor(self.comm.backend, 'secondaryDark')
-          fgColor = getColor(self.comm.backend, 'primaryText')
-          text.setStyleSheet(f"QTextEdit {{ border: none; padding: 0px; background-color: {bgColor}; "\
-                                f"color: {fgColor} }}")
-          text.document().setTextWidth(labelW.width())
-          self.rescaleTexts.append(text)
-          height:int = text.document().size().toTuple()[1]    # type:ignore[index]
-          text.setFixedHeight(height)
-          text.setReadOnly(True)
-          labelL.addWidget(text, stretch=1)
-        else:
-          if len(dataHierarchyItem)==1 and 'list' in dataHierarchyItem[0] and \
-              not isinstance(dataHierarchyItem[0]['list'], list):                #choice among docType
-            table  = self.comm.backend.db.getView('viewDocType/'+dataHierarchyItem[0]['list'])
-            choices= [i for i in table if i['id']==self.doc[key]]
-            if len(choices)==1:
-              value = '\u260D '+choices[0]['value'][0]
-              link = True
-          elif isinstance(self.doc[key], list):
-            value = ', '.join(self.doc[key])
-          else:
-            value = self.doc[key]
-          label = Label(f'{key.capitalize()}: {value}', function=self.clickLink if link else None, docID=self.doc[key])
-          label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-          self.metaDetailsL.addWidget(label)
+        addDocDetails(self, self.metaDetailsL,  key, self.doc[key], dataHierarchyNode)
         self.metaDetailsW.show()
     return
 
@@ -219,24 +167,11 @@ class Details(QScrollArea):
     """
     logging.debug('details:testExtractor')
     if len(self.doc)>1:
-      path = Path(self.doc['-branch'][0]['path'])
+      path = Path(self.doc['branch'][0]['path'])
       if not path.as_posix().startswith('http'):
         path = self.comm.backend.basePath/path
-      report = self.comm.backend.testExtractor(path, outputStyle='html', recipe='/'.join(self.doc['-type']))
+      report = self.comm.backend.testExtractor(path, outputStyle='html', style={'main':'/'.join(self.doc['type'])})
       showMessage(self, 'Report of extractor test', report, style='QLabel {min-width: 800px}')
-    return
-
-
-  def clickLink(self, label:str, docID:str) -> None:
-    """
-    Click link in details
-
-    Args:
-      label (str): label on link
-      docID (str): docID to which to link
-    """
-    logging.debug('used link on %s|%s',label,docID)
-    self.comm.changeDetails.emit(docID)
     return
 
 
