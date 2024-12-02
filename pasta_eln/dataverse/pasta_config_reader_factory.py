@@ -102,7 +102,7 @@ class PastaConfigReaderFactory:
       with open(self.config_file_name, 'r', encoding='utf-8') as confFile:
         self.config = load(confFile)
 
-  @QtCore.Slot()
+  @QtCore.Slot()                                              # type: ignore[arg-type]
   def config_file_changed(self, config_file_path: str) -> None:
     """
     Handle changes to the configuration file.
