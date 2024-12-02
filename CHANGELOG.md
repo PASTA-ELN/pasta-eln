@@ -1,12 +1,96 @@
 # Changelog
 
+## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.6.0...HEAD)
+
+**Implemented enhancements:**
+
+- Adapt dataverse module to use sqlite backend [\#353](https://github.com/PASTA-ELN/pasta-eln/issues/353)
+- Report of project or folder [\#333](https://github.com/PASTA-ELN/pasta-eln/issues/333)
+- Complete uninstallation [\#267](https://github.com/PASTA-ELN/pasta-eln/issues/267)
+-  “More-change columns”  [\#237](https://github.com/PASTA-ELN/pasta-eln/issues/237)
+- SQLite based database [\#159](https://github.com/PASTA-ELN/pasta-eln/issues/159)
+- Creating items in the project view [\#151](https://github.com/PASTA-ELN/pasta-eln/issues/151)
+- Displaying IRIs and units [\#148](https://github.com/PASTA-ELN/pasta-eln/issues/148)
+- create function for searchChildNumber [\#21](https://github.com/PASTA-ELN/pasta-eln/issues/21)
+- Little side project: GUI for server actions [\#16](https://github.com/PASTA-ELN/pasta-eln/issues/16)
+- Little side project: configAuthors.py [\#15](https://github.com/PASTA-ELN/pasta-eln/issues/15)
+- Two concept questions that we might discuss in future [\#14](https://github.com/PASTA-ELN/pasta-eln/issues/14)
+- Improve / change project tree [\#12](https://github.com/PASTA-ELN/pasta-eln/issues/12)
+- Ability to push data to dataverse [\#10](https://github.com/PASTA-ELN/pasta-eln/issues/10)
+- refactor\(data\_hierarchy\): adapt datahierarchy tool to use sqlite backend   [\#373](https://github.com/PASTA-ELN/pasta-eln/pull/373) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
+- feat\(dataverse\): adapt data-verse module for new sqlite database  [\#368](https://github.com/PASTA-ELN/pasta-eln/pull/368) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
+- feat\(data\_hierarchy\): implement changes for data type row  [\#351](https://github.com/PASTA-ELN/pasta-eln/pull/351) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
+
+**Fixed bugs:**
+
+- Data-verse parallel uploads throws segmentation fault and crashes PASTA App [\#365](https://github.com/PASTA-ELN/pasta-eln/issues/365)
+- Scanning fails [\#358](https://github.com/PASTA-ELN/pasta-eln/issues/358)
+- Delete item from project view: incorrect [\#354](https://github.com/PASTA-ELN/pasta-eln/issues/354)
+- Scanning \(3.0\) [\#335](https://github.com/PASTA-ELN/pasta-eln/issues/335)
+- Changing project details \(3.0\) [\#334](https://github.com/PASTA-ELN/pasta-eln/issues/334)
+- Moving files inside and outside the GUI [\#322](https://github.com/PASTA-ELN/pasta-eln/issues/322)
+- Right click in project view [\#319](https://github.com/PASTA-ELN/pasta-eln/issues/319)
+- Verify database before and after Dataverse upload [\#312](https://github.com/PASTA-ELN/pasta-eln/issues/312)
+- CouchDB configuration in pasta\_eln 2.3.6 [\#309](https://github.com/PASTA-ELN/pasta-eln/issues/309)
+- Qt plugin issue after new installation [\#308](https://github.com/PASTA-ELN/pasta-eln/issues/308)
+- Double-clicking on the "list" metadata field in Data Hierarchy [\#306](https://github.com/PASTA-ELN/pasta-eln/issues/306)
+- Errors during corrosion data import [\#302](https://github.com/PASTA-ELN/pasta-eln/issues/302)
+- Importing eln file 2 [\#296](https://github.com/PASTA-ELN/pasta-eln/issues/296)
+- Importing eln file [\#295](https://github.com/PASTA-ELN/pasta-eln/issues/295)
+- Install on Ubuntu 24.04 [\#278](https://github.com/PASTA-ELN/pasta-eln/issues/278)
+- Changing file names [\#269](https://github.com/PASTA-ELN/pasta-eln/issues/269)
+- Details GUI issue [\#253](https://github.com/PASTA-ELN/pasta-eln/issues/253)
+- fix\(dataverse\): implement fix for data-verse upload crash  [\#366](https://github.com/PASTA-ELN/pasta-eln/pull/366) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
+- fix\(pasta\_app\_crash\): revert the PySide6 fixed version requirement [\#359](https://github.com/PASTA-ELN/pasta-eln/pull/359) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
+- fix\(dataverse\): implement fix for the auto-selected items in metadata UI [\#327](https://github.com/PASTA-ELN/pasta-eln/pull/327) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
+- fix\(dataverse\): implement fix for edit-error with empty list values [\#326](https://github.com/PASTA-ELN/pasta-eln/pull/326) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
+- fix\(dataverse\): implement fix for config revert during metadata edits [\#323](https://github.com/PASTA-ELN/pasta-eln/pull/323) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
+
+**Closed issues:**
+
+- Document data-verse module [\#369](https://github.com/PASTA-ELN/pasta-eln/issues/369)
+- test extractors does not work although the rerun extractor does [\#360](https://github.com/PASTA-ELN/pasta-eln/issues/360)
+- Form: ctrl-s -\> save [\#356](https://github.com/PASTA-ELN/pasta-eln/issues/356)
+- Show that the details are hidden in project view [\#355](https://github.com/PASTA-ELN/pasta-eln/issues/355)
+- PASTA APP crashes with segmentation fault [\#352](https://github.com/PASTA-ELN/pasta-eln/issues/352)
+- tags are incorrect in form: everywhere? [\#342](https://github.com/PASTA-ELN/pasta-eln/issues/342)
+- Improve GUI of form [\#339](https://github.com/PASTA-ELN/pasta-eln/issues/339)
+- Datahierarchy editor version 2.0 [\#329](https://github.com/PASTA-ELN/pasta-eln/issues/329)
+- PASTA SQLite [\#328](https://github.com/PASTA-ELN/pasta-eln/issues/328)
+- Extractors not working [\#311](https://github.com/PASTA-ELN/pasta-eln/issues/311)
+- Python 3.12/ 3.11 requirement is too strict, relax in setup. Cfg [\#310](https://github.com/PASTA-ELN/pasta-eln/issues/310)
+- Speed up code [\#261](https://github.com/PASTA-ELN/pasta-eln/issues/261)
+- Possible update for pyside6 [\#247](https://github.com/PASTA-ELN/pasta-eln/issues/247)
+- Import of SampleDB.eln leads to segmentation fault [\#231](https://github.com/PASTA-ELN/pasta-eln/issues/231)
+- Links to samples which have a \_ in the docID, do not work as links [\#230](https://github.com/PASTA-ELN/pasta-eln/issues/230)
+- test how the main form looks with groups of questions and attachments [\#226](https://github.com/PASTA-ELN/pasta-eln/issues/226)
+- Project view: how to display 2000000 entries [\#216](https://github.com/PASTA-ELN/pasta-eln/issues/216)
+- Test elabFTW import, after next consortium meeting [\#209](https://github.com/PASTA-ELN/pasta-eln/issues/209)
+- Rendering in projects [\#105](https://github.com/PASTA-ELN/pasta-eln/issues/105)
+
+**Merged pull requests:**
+
+- docs\(dataverse\): correct menu path for dataverse UI  [\#371](https://github.com/PASTA-ELN/pasta-eln/pull/371) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
+- docs\(dataverse\): extend docs to include the documentation of dataverse  [\#370](https://github.com/PASTA-ELN/pasta-eln/pull/370) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
+- fix tuple branch in details [\#362](https://github.com/PASTA-ELN/pasta-eln/pull/362) ([enmar-alkhafagi](https://github.com/enmar-alkhafagi))
+- Version 3.0: Sqlite [\#347](https://github.com/PASTA-ELN/pasta-eln/pull/347) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- fixed bug 253 [\#346](https://github.com/PASTA-ELN/pasta-eln/pull/346) ([enmar-alkhafagi](https://github.com/enmar-alkhafagi))
+- fix bug in ContextMenu [\#344](https://github.com/PASTA-ELN/pasta-eln/pull/344) ([enmar-alkhafagi](https://github.com/enmar-alkhafagi))
+- fix 322 [\#325](https://github.com/PASTA-ELN/pasta-eln/pull/325) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- fix issue 319 [\#324](https://github.com/PASTA-ELN/pasta-eln/pull/324) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+
+## [v2.6.0](https://github.com/PASTA-ELN/pasta-eln/tree/v2.6.0) (2024-07-12)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.6.0b3...v2.6.0)
+
 ## [v2.6.0b3](https://github.com/PASTA-ELN/pasta-eln/tree/v2.6.0b3) (2024-07-11)
 
 [Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.6.0b2...v2.6.0b3)
 
 **Fixed bugs:**
 
-- Double-clicking on the "list" metadata field in Data Hierarchy [\#306](https://github.com/PASTA-ELN/pasta-eln/issues/306)
 - fix\(data-hierarchy\): implement fix for edit-error with single list values [\#317](https://github.com/PASTA-ELN/pasta-eln/pull/317) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
 
 ## [v2.6.0b2](https://github.com/PASTA-ELN/pasta-eln/tree/v2.6.0b2) (2024-07-10)
@@ -19,7 +103,6 @@
 - Error during eln file export when the organization list is empty [\#294](https://github.com/PASTA-ELN/pasta-eln/issues/294)
 - Opening "Dataverse Configuration" throws errors [\#292](https://github.com/PASTA-ELN/pasta-eln/issues/292)
 - Cryptography module not found  [\#290](https://github.com/PASTA-ELN/pasta-eln/issues/290)
-- Changing file names [\#269](https://github.com/PASTA-ELN/pasta-eln/issues/269)
 - fix\(data-hierarchy\): implement fix for edit-error with empty list values [\#313](https://github.com/PASTA-ELN/pasta-eln/pull/313) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
 - fix\(dataverse\): integrated changes for handling multiple project groups [\#304](https://github.com/PASTA-ELN/pasta-eln/pull/304) ([jmurugan-fzj](https://github.com/jmurugan-fzj))
 

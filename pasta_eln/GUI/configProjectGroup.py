@@ -207,8 +207,8 @@ class ProjectGroup(QDialog):
         self.row4Button2.setStyleSheet('background: #FF0000')
 
     elif command[0] is Command.CREATE_QRCODE:
-      text = json.dumps(config['remote'])
-      img = qrcode.make(text, error_correction=qrcode.constants.ERROR_CORRECT_M)
+      text   = json.dumps(config['remote'])
+      img    = qrcode.make(text, error_correction=qrcode.constants.ERROR_CORRECT_M).get_image()
       pixmap = QPixmap.fromImage(ImageQt(img).scaledToWidth(350))
       self.image.setPixmap(pixmap)
 

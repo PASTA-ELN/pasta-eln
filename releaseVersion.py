@@ -165,7 +165,7 @@ def createRequirementsFile():
 
 def runTests():
   """
-  run unit-tests: can only work if all extractors and dependencies are fulfilled
+  run unit-tests: can only work if all add-ons and dependencies are fulfilled
 
   Cannot be an action, since dependencies are partly private
   """
@@ -206,23 +206,23 @@ def runTests():
   return
 
 
-def copyExtractors():
+def copyAddOns():
   """
-  Copy extractors from main location to distribution
+  Copy add-ons from main location to distribution
   """
-  print('Start copying extractors')
-  basePath = 'pasta_eln/Extractors'
+  print('Start copying add-ons')
+  basePath = 'pasta_eln/AddOns'
   skipFiles= ['extractor_csv.py', 'extractor_jpg.py']
   for fileI in os.listdir(basePath):
-    if fileI in skipFiles or not fileI.startswith('extractor_') or not fileI.endswith('.py'):
+    if fileI in skipFiles or not fileI.endswith('.py'):
       continue
-    shutil.copy('../Extractors'+os.sep+fileI, basePath+os.sep+fileI)
+    shutil.copy('../AddOns'+os.sep+fileI, basePath+os.sep+fileI)
   return
 
 
 if __name__=='__main__':
   runTests()
-  copyExtractors()
+  copyAddOns()
   createRequirementsFile()
   #do update
   if len(sys.argv)==1:
@@ -231,4 +231,4 @@ if __name__=='__main__':
     level = int(sys.argv[1])
   if input('Continue: only "y" continues. ') == 'y':
     newVersion(level)
-  print("\n================================\nPush this and publish extractors\n================================")
+  print("\n================================\nPush this and publish add-ons\n================================")
