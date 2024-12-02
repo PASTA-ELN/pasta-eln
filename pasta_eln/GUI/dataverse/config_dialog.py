@@ -185,7 +185,7 @@ class ConfigDialog(Ui_ConfigDialogBase):
     api_token = self.apiTokenLineEdit.text()
     if not (server_url and api_token):
       QMessageBox.warning(self.instance, "Error", "Please enter both server URL and API token",
-                          None, QMessageBox.StandardButton.Ok)
+                          QMessageBox.StandardButton.NoButton, QMessageBox.StandardButton.Ok)
       return False
     success, message = check_login_credentials(self.logger, api_token, server_url)
     if success:
@@ -193,7 +193,7 @@ class ConfigDialog(Ui_ConfigDialogBase):
       return True
     else:
       QMessageBox.warning(self.instance, "Credentials Invalid", message,
-                          None, QMessageBox.StandardButton.Ok)
+                          QMessageBox.StandardButton.NoButton, QMessageBox.StandardButton.Ok)
       return False
 
   def verify_and_load_dataverse_list(self) -> None:
@@ -212,7 +212,7 @@ class ConfigDialog(Ui_ConfigDialogBase):
       return
     if not (server_url and api_token):
       QMessageBox.warning(self.instance, "Error", "Please enter both server URL and API token",
-                          None, QMessageBox.StandardButton.Ok)
+                          QMessageBox.StandardButton.NoButton, QMessageBox.StandardButton.Ok)
       return
     dataverse_client = DataverseClient(server_url, api_token)
     event_loop = get_event_loop()
@@ -230,11 +230,11 @@ class ConfigDialog(Ui_ConfigDialogBase):
       else:
         self.logger.error("Failed to load dataverse list, error: %s", dataverses)
         QMessageBox.warning(self.instance, "Error", "Failed to load dataverse list",
-                            None, QMessageBox.StandardButton.Ok)
+                            QMessageBox.StandardButton.NoButton, QMessageBox.StandardButton.Ok)
     else:
       self.logger.error("Failed to load dataverse list, error: %s", dataverses)
       QMessageBox.warning(self.instance, "Error", "Failed to load dataverse list",
-                          None, QMessageBox.StandardButton.Ok)
+                          QMessageBox.StandardButton.NoButton, QMessageBox.StandardButton.Ok)
 
   def show(self) -> None:
     """
