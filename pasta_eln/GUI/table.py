@@ -104,9 +104,9 @@ class Table(QWidget):
     #if not docType:  #only remove old filters, when docType changes
     #   make sure internal updates are accounted for: i.e. comment
     for i in reversed(range(self.filterL.count())):
-      item = self.filterL.itemAt(i)
-      if item is not None:
-        item.widget().setParent(None)
+      item_1 = self.filterL.itemAt(i)
+      if item_1 is not None:
+        item_1.widget().setParent(None)
     if docType!='':
       self.docType = docType
       self.projID  = projID
@@ -349,15 +349,16 @@ class Table(QWidget):
       row = command[1]
       #print('Delete filter row', row)
       for i in range(row, self.filterL.count()):        #e.g. model 1 is in row=0, so start in 1 for renumbering
-        item1 = self.filterL.itemAt(i)
-        if item1 is not None:
-          item2 = item1.widget().layout().itemAt(2)
-          if item2 is not None:
-            minusBtnW = item2.widget()
+        item_1 = self.filterL.itemAt(i)
+        if item_1 is not None:
+          item_2 = item_1.widget().layout().itemAt(2)
+          if item_2 is not None:
+            minusBtnW = item_2.widget()
         minusBtnW.setAccessibleName( str(int(minusBtnW.accessibleName())-1) )  #rename: -1 from accessibleName
       del self.models[row]
-      item = self.filterL.itemAt(row-1)
-      item.widget().setParent(None) # e.g. model 1 is in row=0 for deletion
+      item_1 = self.filterL.itemAt(row-1)
+      if item_1 is not None:
+        item_1.widget().setParent(None) # e.g. model 1 is in row=0 for deletion
       for i in range(1, len(self.models)):
         self.models[i].setSourceModel(self.models[i-1])
       self.table.setModel(self.models[-1])
