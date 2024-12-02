@@ -147,8 +147,8 @@ class ControlledVocabularyDataTypeClass(DataTypeClass):
           if not isinstance(combo_boxW, QComboBox):
             continue
           text = combo_boxW.currentText()
-        if text and text != 'No Value':
-          value.append(text)
+          if text and text != 'No Value':
+            value.append(text)
     self.context.meta_field['value'] = list(set(value))
 
   def add_new_vocab_entry(self,
