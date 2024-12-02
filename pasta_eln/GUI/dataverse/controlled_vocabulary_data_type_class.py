@@ -144,9 +144,9 @@ class ControlledVocabularyDataTypeClass(DataTypeClass):
         combo_box = vocab_horizontal_layout.itemAt(0)
         if combo_box is not None:
           combo_boxW = combo_box.widget()
-        if not isinstance(combo_boxW, QComboBox):
-          continue
-        text = combo_boxW.currentText()
+          if not isinstance(combo_boxW, QComboBox):
+            continue
+          text = combo_boxW.currentText()
         if text and text != 'No Value':
           value.append(text)
     self.context.meta_field['value'] = list(set(value))
