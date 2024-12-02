@@ -29,8 +29,8 @@ class DocTypes(QWidget):
     self.setLayout(mainL)
 
 
-  @Slot(str, str)                                         # type: ignore[arg-type]
-  def changeTable(self,  docID:str, projID:str) -> None:
+  @Slot(str, str)                                           # type: ignore[arg-type]
+  def changeTable(self,  docType:str, projID:str) -> None:  # pylint: disable=no-unused-argument
     """
     What happens when user clicks to change doc-type
     -> show table
@@ -43,7 +43,7 @@ class DocTypes(QWidget):
     return
 
 
-  @Slot(str)                                              # type: ignore[arg-type]
+  @Slot(str)                                                # type: ignore[arg-type]
   def changeDetails(self, docID:str) -> None:
     """
     What happens when user clicks to change details

@@ -89,7 +89,7 @@ class Table(QWidget):
 
 
 
-  @Slot(str, str)
+  @Slot(str, str)                                       # type: ignore[arg-type]
   def change(self, docType:str, projID:str) -> None:
     """
     What happens when the table changes its raw information
