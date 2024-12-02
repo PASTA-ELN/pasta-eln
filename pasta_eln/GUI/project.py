@@ -115,7 +115,7 @@ class Project(QWidget):
     return
 
 
-  @Slot(str, str)
+  @Slot(str, str)                                   # type: ignore[arg-type]
   def change(self, projID:str, docID:str) -> None:
     """
     What happens when user clicks to change project

@@ -29,7 +29,7 @@ class DocTypes(QWidget):
     self.setLayout(mainL)
 
 
-  @Slot(str, str)
+  @Slot(str, str)                                         # type: ignore[arg-type]
   def changeTable(self,  docID:str, projID:str) -> None:
     """
     What happens when user clicks to change doc-type
@@ -43,7 +43,7 @@ class DocTypes(QWidget):
     return
 
 
-  @Slot(str)
+  @Slot(str)                                              # type: ignore[arg-type]
   def changeDetails(self, docID:str) -> None:
     """
     What happens when user clicks to change details

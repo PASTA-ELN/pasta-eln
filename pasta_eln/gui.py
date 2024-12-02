@@ -123,7 +123,7 @@ class MainWindow(QMainWindow):
     self.comm.changeTable.emit('x0', '')
 
 
-  @Slot(dict)
+  @Slot(dict)                                         # type: ignore[arg-type]
   def formDoc(self, doc: dict[str, Any]) -> None:
     """
     What happens when new/edit dialog is shown
