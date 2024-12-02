@@ -21,16 +21,8 @@ HTML_HEADER = "<!DOCTYPE html>\n<html>\n<head>\n<style>"\
 HTML_FOOTER = "</body>\n</html>\n"
 
 def main(backend, hierStack, widget, parameter={}):
-    """
-    Args:
-        filePath (Path): full path file name
-        hierStack(str): stack of identifiers to this location, separated by /
-        widget (QWidget): pyside6 widget, allows you to create forms
-        parameters (dict): unused currently
+    #TODO add comments
 
-    Returns:
-        bool: success of function
-    """
     # Initialize variables
     if not parameter:
         res = QFileDialog.getSaveFileName(widget,'Use this file for output', str(Path.home()))
@@ -38,7 +30,7 @@ def main(backend, hierStack, widget, parameter={}):
             return False
     else:
         res = parameter['fileNames']
-    for i in hierStack.split('/'): #not needed here; to be in the correct folder if one wants to save something
+    for i in hierStack.split('/'):
         backend.changeHierarchy(i)
     qtDocument = QTextDocument()   #used for markdown -> html conversion
 

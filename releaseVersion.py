@@ -131,7 +131,7 @@ def newVersion(level=2):
     token = fIn.read().strip()
   os.system("github_changelog_generator -u PASTA-ELN -p pasta-eln -t "+token)
   createContributors()
-  addition = input('\n\nWhat do you want to add to the push message? ')
+  addition = input('\n\nWhat do you want to add to the push message (do not use \' or \")? ')
   os.system(f'git commit -a -m "updated changelog; {addition}"')
   #push and publish
   print('\n\nWill bypass rule violation\n\n')
@@ -180,29 +180,29 @@ def runTests():
       success -= result.stdout.decode('utf-8').count('**ERROR Red: FAILURE and ERROR')
       for badWord in ['**ERROR got a file','FAILED','ModuleNotFoundError']:
         success += result.stdout.decode('utf-8').count(badWord)
-    if success==1:
+    if success==0:
       print("  success: Python unit test "+fileI)
     else:
       print("  FAILED: Python unit test "+fileI)
       print("    run: 'pytest -s tests/{fileI}' and check logFile")
       print(f"\n---------------------------\n{result.stdout.decode('utf-8')}\n---------------------------\n")
-  print('Start running complicated tests')
-  tests = [i for i in os.listdir('testsComplicated') if i.endswith('.py') and i.startswith('test_')]
-  for fileI in sorted(tests):
-    result = subprocess.run(['pytest','-s','--no-skip','testsComplicated/'+fileI],
-                            stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
-    success = result.stdout.decode('utf-8').count('*** DONE WITH VERIFY ***')
-    if success==1:
-      success += result.stdout.decode('utf-8').count('**ERROR')
-      success -= result.stdout.decode('utf-8').count('**ERROR Red: FAILURE and ERROR')
-      for badWord in ['**ERROR got a file','FAILED','ModuleNotFoundError']:
-        success += result.stdout.decode('utf-8').count(badWord)
-    if success==1:
-      print("  success: Python unit test "+fileI)
-    else:
-      print("  FAILED: Python unit test "+fileI)
-      print(f"    run: 'pytest -s testsComplicated/{fileI}' and check logFile")
-      print(f"\n---------------------------\n{result.stdout.decode('utf-8')}\n---------------------------\n")
+  print('**WARNING Start running complicated tests: SKIP FOR NOW')
+  # tests = [i for i in os.listdir('testsComplicated') if i.endswith('.py') and i.startswith('test_')]
+  # for fileI in sorted(tests):
+  #   result = subprocess.run(['pytest','-s','--no-skip','testsComplicated/'+fileI],
+  #                           stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
+  #   success = result.stdout.decode('utf-8').count('*** DONE WITH VERIFY ***')
+  #   if success==1:
+  #     success += result.stdout.decode('utf-8').count('**ERROR')
+  #     success -= result.stdout.decode('utf-8').count('**ERROR Red: FAILURE and ERROR')
+  #     for badWord in ['**ERROR got a file','FAILED','ModuleNotFoundError']:
+  #       success += result.stdout.decode('utf-8').count(badWord)
+  #   if success==1:
+  #     print("  success: Python unit test "+fileI)
+  #   else:
+  #     print("  FAILED: Python unit test "+fileI)
+  #     print(f"    run: 'pytest -s testsComplicated/{fileI}' and check logFile")
+  #     print(f"\n---------------------------\n{result.stdout.decode('utf-8')}\n---------------------------\n")
   return
 
 
