@@ -104,7 +104,8 @@ class Table(QWidget):
     #if not docType:  #only remove old filters, when docType changes
     #   make sure internal updates are accounted for: i.e. comment
     for i in reversed(range(self.filterL.count())):
-      self.filterL.itemAt(i).widget().setParent(None)
+      if self.filterL.itemAt(i) is not None:
+        self.filterL.itemAt(i).widget().setParent(None)
     if docType!='':
       self.docType = docType
       self.projID  = projID
