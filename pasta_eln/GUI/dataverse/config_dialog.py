@@ -184,14 +184,16 @@ class ConfigDialog(Ui_ConfigDialogBase):
     server_url = self.dataverseServerLineEdit.text()
     api_token = self.apiTokenLineEdit.text()
     if not (server_url and api_token):
-      QMessageBox.warning(self.instance, "Error", "Please enter both server URL and API token")
+      QMessageBox.warning(self.instance, "Error", "Please enter both server URL and API token",
+                          None, QMessageBox.StandardButton.Ok)
       return False
     success, message = check_login_credentials(self.logger, api_token, server_url)
     if success:
       QMessageBox.information(self.instance, "Credentials Valid", message)
       return True
     else:
-      QMessageBox.warning(self.instance, "Credentials Invalid", message)
+      QMessageBox.warning(self.instance, "Credentials Invalid", message,
+                          None, QMessageBox.StandardButton.Ok)
       return False
 
   def verify_and_load_dataverse_list(self) -> None:
@@ -209,7 +211,8 @@ class ConfigDialog(Ui_ConfigDialogBase):
     if not self.verify_server_url_and_api_token():
       return
     if not (server_url and api_token):
-      QMessageBox.warning(self.instance, "Error", "Please enter both server URL and API token")
+      QMessageBox.warning(self.instance, "Error", "Please enter both server URL and API token",
+                          None, QMessageBox.StandardButton.Ok)
       return
     dataverse_client = DataverseClient(server_url, api_token)
     event_loop = get_event_loop()
@@ -226,10 +229,12 @@ class ConfigDialog(Ui_ConfigDialogBase):
         self.dataverseListComboBox.setCurrentText(current_text)
       else:
         self.logger.error("Failed to load dataverse list, error: %s", dataverses)
-        QMessageBox.warning(self.instance, "Error", "Failed to load dataverse list")
+        QMessageBox.warning(self.instance, "Error", "Failed to load dataverse list",
+                            None, QMessageBox.StandardButton.Ok)
     else:
       self.logger.error("Failed to load dataverse list, error: %s", dataverses)
-      QMessageBox.warning(self.instance, "Error", "Failed to load dataverse list")
+      QMessageBox.warning(self.instance, "Error", "Failed to load dataverse list",
+                          None, QMessageBox.StandardButton.Ok)
 
   def show(self) -> None:
     """
