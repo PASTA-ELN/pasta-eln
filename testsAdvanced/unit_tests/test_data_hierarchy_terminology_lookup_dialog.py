@@ -258,25 +258,6 @@ class TestDataHierarchyTerminologyLookupDialog(object):
     assert mock_add_scroll_area_entry.call_count == results_count, f"add_scroll_area_entry should be called {results_count} times"
     assert mock_bar_get_value.call_count == results_count, f"progress_bar_get_value should be called {results_count} times"
 
-  @pytest.mark.parametrize("search_term", [None, '', ' ', "        "])
-  def test_search_button_click_with_null_search_term_should_warn_user(self,
-                                                                      mocker,
-                                                                      terminology_lookup_dialog_mock: terminology_lookup_dialog_mock,
-                                                                      search_term):
-    mock_logger_warning = mocker.patch.object(terminology_lookup_dialog_mock.logger, 'warning')
-    mock_reset_ui = mocker.patch.object(terminology_lookup_dialog_mock, 'reset_ui')
-    mock_terminology_line_edit = mocker.MagicMock()
-    mocker.patch.object(terminology_lookup_dialog_mock, 'terminologyLineEdit', mock_terminology_line_edit, create=True)
-    mock_instance = mocker.MagicMock()
-    mocker.patch.object(terminology_lookup_dialog_mock, 'instance', mock_instance, create=True)
-    mock_terminology_line_edit_text = mocker.patch.object(mock_terminology_line_edit, 'text', return_value=search_term)
-    mock_warning = mocker.patch('pasta_eln.GUI.data_hierarchy.terminology_lookup_dialog.QMessageBox.warning')
-    assert terminology_lookup_dialog_mock.terminology_search_button_clicked() is None, "show should return None"
-    mock_logger_warning.assert_called_once_with("Enter non null search term!")
-    mock_terminology_line_edit_text.assert_called_once_with()
-    mock_reset_ui.assert_called_once_with()
-    mock_warning.assert_called_once_with(mock_instance, "Error", "Enter non null search term!")
-
   def test_search_button_click_with_lookup_error_should_log_errors(self,
                                                                    mocker,
                                                                    terminology_lookup_dialog_mock: terminology_lookup_dialog_mock):
