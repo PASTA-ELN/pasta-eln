@@ -262,7 +262,7 @@ class Backend(CLI_Mixin):
       childNum=9999
     if path is not None and path.is_absolute():
       path = path.relative_to(self.basePath)
-    pathStr = None if path is None else path.as_posix()
+    pathStr = None if path is None else path.as_posix().replace(':/','://') if path.as_posix().startswith('http') else path.as_posix()
     show = [True]*(len(hierStack)+1)
     if 'branch' in doc and len(hierStack)+1==len(doc['branch'][0]['show']):
       show = doc['branch'][0]['show']

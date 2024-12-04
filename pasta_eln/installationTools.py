@@ -265,7 +265,7 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
   if callbackPercent is not None:
     callbackPercent(21)
   backend.addData('measurement', {
-    'name': 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Misc_pollen.jpg/315px-Misc_pollen.jpg',\
+    'name'   :'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Misc_pollen.jpg/315px-Misc_pollen.jpg',\
     'comment':'- Remote image from wikipedia. Used for testing and reference\n- This item links to a procedure that was used for its creation.'
               '\n- One can link to samples, etc. to create complex metadata\n- This item also has a rating #_3',
     '.procedure':procedureID })

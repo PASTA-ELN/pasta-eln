@@ -1,5 +1,5 @@
 """Input and output functions towards the .eln file-format"""
-import json, shutil, logging, hashlib, uuid
+import json, shutil, logging, hashlib, uuid, copy
 from typing import Any
 from pathlib import Path
 from datetime import datetime
@@ -320,7 +320,6 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
   dirNameGlobal = fileName.split('/')[-1][:-4]
   with ZipFile(fileName, 'w', compression=ZIP_DEFLATED) as elnFile:
     graph: list[dict[str,Any]] = []
-    dirNameProjects = []
 
     def processNode(node:Node) -> str:
       """
@@ -371,7 +370,11 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
       path =  f"{branch['path']}/" if docDB['type'][0][0]=='x' else branch['path']
       if path is None:
         path = f"{dirNameProject}/{docDB['id']}"
-      docELN['@id'] = path if path.startswith('http') else f'./{path}'
+      if path.startswith('http'):
+        docELN['@id'] = path
+        docELN['url'] = path
+      else:
+        docELN['@id'] = f'./{path}'
       # include content size, etc.
       fullPath = backend.basePath/path
       if path is not None and fullPath.exists() and fullPath.is_file():
@@ -386,12 +389,12 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
         # elnFile.mkdir(docELN['@id'][:-1]) #NOT REQUIRED for standard and does not work in python 3.10
         docELN['@type'] = 'Dataset'
       elif path.startswith('http'):
-        response = requests.get(path.replace(':/','://'), timeout=10)
+        response = requests.get(path, timeout=10)
         if response.ok:
           docELN['contentSize'] = str(response.headers['content-length'])
           docELN['sha256']      = hashlib.sha256(response.content).hexdigest()
         else:
-          print(f"Info: could not get file {path.replace(':/','://')}")
+          print(f"Info: could not get file {path}")
         docELN['@type'] = 'File'
       elif '@type' not in docELN:  #samples will be here
         docELN['@type'] = 'Dataset'
@@ -421,13 +424,34 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
       graph.append(docELN)
       return docELN['@id']
 
-    #for each project, append to graph
+    # for each project, append to graph
+    masterParts = []
     for projectID in projectIDs:
       docProject = backend.db.getDoc(projectID)
       dirNameProject = docProject['branch'][0]['path']
-      dirNameProjects.append(dirNameProject)
       listHier = backend.db.getHierarchy(projectID, allItems=False)
       processNode(listHier)
+      masterParts.append(f'./{dirNameProject}/')
+
+    # all items have to appear in hasPart of ./ -> masterParts are changed
+    # https://github.com/TheELNConsortium/TheELNFileFormat/issues/98
+    somethingChanged = True  #starting condition
+    nodesProcessed = set()
+    while somethingChanged:
+      somethingChanged = False
+      for node in copy.deepcopy(masterParts):
+        if node in nodesProcessed:
+          continue
+        nodesProcessed.add(node)
+        possNodes = [i for i in graph if i['@id']==node]
+        if len(possNodes)==1:
+          idx = masterParts.index(node)
+          variables = [] # [i['@id'] for i in possNodes[0].get('variableMeasured',[])] #variables go not into ./
+          children  = [i['@id'] for i in possNodes[0].get('hasPart',[])]
+          masterParts = masterParts[:idx+1] + variables + children + masterParts[idx+1:]
+          if variables or children:
+            somethingChanged = True
+    masterParts = [{'@id':i} for i in masterParts]
 
     # FOR ALL PROJECTS
     # ------------------- create ro-crate-metadata.json header -----------------------
@@ -448,7 +472,6 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
             'url': 'https://github.com/PASTA-ELN/', 'description': f'Version {__version__}'
     }
     graphMaster.append(masterNodeInfo2)
-    masterParts = [{'@id': f'./{i}/'} for i in dirNameProjects]
     authorNodes = []
     for author in backend.configuration['authors']:
       affiliationNodes = []
@@ -464,7 +487,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
       authorNodes.append({'@id':authorID})
     masterNodeRoot:dict[str,Any] = {'@id': './', '@type': 'Dataset', 'hasPart': masterParts,
         'name': 'Exported from PASTA ELN', 'description': 'Exported content from PASTA ELN',
-        'license':'CC BY 4.0', 'datePublished':datetime.now().isoformat()}
+        'license':"https://creativecommons.org/licenses/by-nc-sa/4.0/", 'datePublished':datetime.now().isoformat()}
     if authorNodes:
       masterNodeRoot = masterNodeRoot | {'creator': authorNodes}
     graphMaster.append(masterNodeRoot)
