@@ -270,7 +270,7 @@ class Backend(CLI_Mixin):
     if edit:
       #update document
       keysNone = [key for key in doc if doc[key] is None]
-      doc = fillDocBeforeCreate(doc, ['--'])  #store None entries and save back since js2py gets equalizes undefined and null
+      doc = fillDocBeforeCreate(doc, ['--'])
       for key in keysNone:
         doc[key]=None
       doc = self.db.updateDoc(doc, doc['id'])

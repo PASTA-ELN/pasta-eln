@@ -210,12 +210,12 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
       if elnName!='PASTA ELN' and 'id' in doc:
         doc['.oldIdentifier'] = doc.pop('id')
       doc['.elnIdentifier'] = elnID
-      if (children and ('type' not in doc or doc['type'][0]!='x1')):
-        doc['type'] = ['x1']
+      if (children and ('type' not in doc or doc['type']!='x1')):
+        doc['type'] = 'x1'
       if 'type' not in doc:
         doc['type'] = ''
       if doc['type']=='folder':
-        doc['type'] = ['x1']
+        doc['type'] = 'x1'
       # change .variable measured into pastaSystem
       variableMeasured = doc.pop('.variableMeasured',[])
       if variableMeasured is not None:
@@ -261,7 +261,7 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
           shutil.copyfileobj(source, target)
       # FOR ALL ELNs
       if elnName == "PASTA ELN":
-        docType = '/'.join(doc['type'])
+        docType = doc['type']
       else:
         if dataType.lower()=='dataset':
           docType = 'x0' if not projID and len(elnID.split('/'))==0 else 'x1'

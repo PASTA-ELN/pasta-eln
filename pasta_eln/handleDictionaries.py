@@ -84,11 +84,6 @@ def fillDocBeforeCreate(data:dict[str,Any], docType:list[str]) -> dict[str,Any]:
       data['qrCode']=[]
     if isinstance(data['qrCode'], str):
       data['qrCode'] = data['qrCode'].split(' ')
-  if data['type'][0] == 'measurement':
-    if 'image' not in data:
-      data['image'] = ''
-    if 'shasum' not in data:
-      data['shasum']=''
   # cleaning at end of all changes
   toDelete = []
   for key in data:
