@@ -1,5 +1,5 @@
 """Change the format of dictionaries"""
-import re, uuid, json, difflib, traceback
+import uuid, json, difflib, traceback
 from typing import Any
 from datetime import datetime
 from .fixedStringsJson import SQLiteTranslation, SORTED_KEYS
@@ -42,37 +42,11 @@ def fillDocBeforeCreate(data:dict[str,Any], docType:list[str]) -> dict[str,Any]:
     data['branch']['show'] = [True]*(len(data['branch']['stack'])+1)
   if 'gui' not in data:
     data['gui'] = [True, True]
-  # separate comment into tags and fields
-  # these tags are lost: '#d': too short; '#3tag': starts with number
+  # clean comment and tags
   if 'comment' not in data:
     data['comment'] =''
   if 'tags' not in data:
     data['tags'] = []
-  #always do regex expressions twice: if #lala at beginning or in middle of comment
-  curated = re.findall(r'(?:^|\s)#_curated(?:\s|$)', data['comment']) # #_curated
-  rating  = re.findall(r'(?:^|\s)#_\d(?:\s|$)',      data['comment']) # #_number
-  if rating is None:
-    rating=[]
-  if len(rating)>1:  #prevent multiple new ratings
-    rating=rating[:1]
-  if len(rating)==1: #remove ratings that exist already
-    data['tags'] = [i for i in data['tags'] if not re.compile(r'^_\d$').match(i)]
-  otherTags = re.findall(r'(?:^|\s)#[a-zA-Z]\w+(?=\s|$)', data['comment'])
-  if otherTags is None:
-    otherTags=[]
-  data['tags'] = rating + data['tags'] + otherTags + curated
-  data['comment'] = re.sub(r'(?:^|\s)#\w+(?=\s|$)', '', data['comment']).strip()
-  fields = re.findall(r':[\S]+:[\S]+:', data['comment'])
-  if fields is not None:
-    for item in fields:
-      aList = item.split(':')
-      if aList[1] in data: #do not add if item already exists
-        continue
-      data[aList[1]] = aList[2]
-  data['comment'] = re.sub(r':[\S]+:[\S]+:','',data['comment'])  #remove :field:data: information
-  if isinstance(data['tags'], str):
-    data['tags'] = data['tags'].split(' ')
-  data['tags'] = [i.strip()[1:] if i.strip()[0]=='#' else i.strip() for i in data['tags']]
   data['tags'] = list(set(data['tags']))  #ensure only one is inside
   #other cleaning
   if ('links' in data and isinstance(data['links'], list)) and \

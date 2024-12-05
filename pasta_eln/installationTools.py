@@ -150,7 +150,7 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
   ### CREATE PROJECTS AND SHOW
   outputString(outputFormat,'h2','CREATE EXAMPLE PROJECT AND SHOW')
   backend.addData('x0', {'name': 'PASTAs Example Project', '.objective': 'Test if everything is working as intended.',
-                         '.status': 'active', 'comment': '#Important Can be used as reference or deleted'})
+                         '.status': 'active', 'comment': 'Can be used as reference or deleted', 'tags':['Important']})
   if callbackPercent is not None:
     callbackPercent(3)
   outputString(outputFormat,'info', backend.output('x0'))
@@ -167,10 +167,10 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
   backend.changeHierarchy(projID1)
   if callbackPercent is not None:
     callbackPercent(6)
-  backend.addData('x1',    {'comment': 'This is hard! #TODO', 'name': 'This is an example task'})
+  backend.addData('x1',    {'comment': 'This is hard!', 'name': 'This is an example task', 'tags':['TODO']})
   if callbackPercent is not None:
     callbackPercent(7)
-  currentID = backend.addData('x1', {'comment': 'This will take a long time. #WAIT',
+  currentID = backend.addData('x1', {'comment': 'This will take a long time.', 'tags':['WAIT'],
                                      'name': 'This is another example task'})['id']
   if callbackPercent is not None:
     callbackPercent(8)
@@ -208,7 +208,7 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
     fOut.write('# Put sample in instrument\n# Do something\nDo not forget to\n- not do anything wrong\n- **USE BOLD LETTERS**\n')
   if callbackPercent is not None:
     callbackPercent(13)
-  backend.addData('procedure', {'name': 'StandardOperatingProcedures/Example_SOP.md', 'comment': '#v1'})
+  backend.addData('procedure', {'name': 'StandardOperatingProcedures/Example_SOP.md', 'tags':['v1']})
   if callbackPercent is not None:
     callbackPercent(14)
   outputString(outputFormat,'info',backend.output('procedure'))
@@ -267,7 +267,7 @@ def exampleData(force:bool=False, callbackPercent:Optional[Callable[[int],None]]
   backend.addData('measurement', {
     'name'   :'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Misc_pollen.jpg/315px-Misc_pollen.jpg',\
     'comment':'- Remote image from wikipedia. Used for testing and reference\n- This item links to a procedure that was used for its creation.'
-              '\n- One can link to samples, etc. to create complex metadata\n- This item also has a rating #_3',
+              '\n- One can link to samples, etc. to create complex metadata\n- This item also has a rating', 'tags':['_3'],
     '.procedure':procedureID })
   if callbackPercent is not None:
     callbackPercent(22)

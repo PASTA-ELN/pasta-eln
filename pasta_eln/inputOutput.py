@@ -98,7 +98,7 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
         continue
       children = {i['@id'] for i in nodeAny.get('hasPart',[])}
       parentNodes = parentNodes.difference(children)
-    mainNode['hasPart'] = [{'@id':i for i in parentNodes}]
+    mainNode['hasPart'] = [{'@id':i} for i in parentNodes]
 
     ################
     # subfunctions #
@@ -129,13 +129,15 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
           doc[json2pasta[key]] = value
         elif key == 'encodingFormat':
           encodingFormat = inputData[key]
-        else:                  #keep name, only prevent causes for errors
+        elif value:                  #keep name, only prevent causes for errors
           doc[f'.{key}'] = value
       # change into Pasta's native format
       if isinstance(doc.get('comment',''), (dict,list)):
         if isinstance(doc['comment'], dict):
           doc['comment'] = [doc['comment']]
         doc['comment'] = '\n\n'.join([i['text'] for i in doc['comment']])
+      if '.comment' in doc:
+        doc['comment'] += '\n\n'.join(['']+[f'{i["dateCreated"]}:\n{i["text"]}' for i in doc.pop('.comment')])
       if encodingFormat=='text/html':
         if 'comment' in doc:
           qtDocument.setHtml(doc['comment'])
