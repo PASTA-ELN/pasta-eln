@@ -209,7 +209,7 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
         # print(f'Replace {key} -entries using ids: {items}')
         try:
           docS[0][key] = [ [j for j in graph if j['@id']==i][0] for i in items]
-        except:
+        except Exception:
           docS[0][key] = 'not resolvable connection'
           print(f'**ERROR** Could not replace {key} -entries using ids: {items}. Are all items once in the graph?')
       # convert to Pasta's style
@@ -236,8 +236,8 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
       # print(f'Want to add doc:{doc} with type:{docType} and cwd:{backend.cwd}')
       try:
         docID = backend.addData(docType, doc)['id']
-      except:
-        print("============= ERROR OCCURED ============")
+      except Exception:
+        print("============= ERROR OCCURRED ============")
         print(json.dumps(doc,indent=2),'\n')
         print(traceback.format_exc())
         docID = None
@@ -416,12 +416,11 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
         possNodes = [i for i in graph if i['@id']==node]
         if len(possNodes)==1:
           idx = masterParts.index(node)
-          variables = [] # [i['@id'] for i in possNodes[0].get('variableMeasured',[])] #variables go not into ./
-          children  = [i['@id'] for i in possNodes[0].get('hasPart',[])]
+          variables:list[str] = [] # [i['@id'] for i in possNodes[0].get('variableMeasured',[])] #variables go not into ./
+          children            = [i['@id'] for i in possNodes[0].get('hasPart',[])]
           masterParts = masterParts[:idx+1] + variables + children + masterParts[idx+1:]
           if variables or children:
             somethingChanged = True
-    masterParts = [{'@id':i} for i in masterParts]
 
     # FOR ALL PROJECTS
     # ------------------- create ro-crate-metadata.json header -----------------------
@@ -455,7 +454,7 @@ def exportELN(backend:Backend, projectIDs:list[str], fileName:str, dTypes:list[s
                           'honorificPrefix': author['title'], 'email': author['email'], 'identifier': f"https://orcid.org/{author['orcid']}",
                           'worksFor': affiliationNodes})
       authorNodes.append({'@id':authorID})
-    masterNodeRoot:dict[str,Any] = {'@id': './', '@type': 'Dataset', 'hasPart': masterParts,
+    masterNodeRoot:dict[str,Any] = {'@id': './', '@type': 'Dataset', 'hasPart': [{'@id':i} for i in masterParts],
         'name': 'Exported from PASTA ELN', 'description': 'Exported content from PASTA ELN',
         'license':"https://creativecommons.org/licenses/by-nc-sa/4.0/", 'datePublished':datetime.now().isoformat()}
     if authorNodes:

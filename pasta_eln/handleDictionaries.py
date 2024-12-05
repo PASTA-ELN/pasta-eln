@@ -180,7 +180,7 @@ def doc2markdown(doc:dict[str,Any], ignoreKeys:list[str], dataHierarchyNode:list
         if isinstance(value, dict):
           value = dict2ul({k:(v[0]  if isinstance(v, (list,tuple)) else v) for k,v in value.items()}, 'markdown')
           markdown += f'{key.capitalize()}: {value}'
-    except:
+    except Exception:
       doc.pop('image','')
       print(f'**ERROR** Could not convert to markdown value: {value}\n  doc: {doc}\n',traceback.format_exc())
   return markdown
