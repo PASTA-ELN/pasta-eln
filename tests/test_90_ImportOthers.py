@@ -43,7 +43,8 @@ def test_simple(qtbot):
   tempDir = tempfile.gettempdir()
 
   allELNs = {'Pasta.eln':'PASTA/PASTA.eln'}
-  urlBase = 'https://github.com/TheELNConsortium/TheELNFileFormat/raw/refs/heads/master/examples/'
+  urlBase = 'https://github.com/SteffenBrinckmann/TheELNFileFormat/raw/refs/heads/new_PastaELN/examples/'
+  # 'https://github.com/TheELNConsortium/TheELNFileFormat/raw/refs/heads/master/examples/'
   for eln, pathName in allELNs.items():
     elnFileName = f'{tempDir}/{eln}'
     request.urlretrieve(f'{urlBase}{pathName}', elnFileName)
