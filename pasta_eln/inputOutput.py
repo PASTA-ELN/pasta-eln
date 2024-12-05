@@ -1,5 +1,5 @@
 """Input and output functions towards the .eln file-format"""
-import json, shutil, logging, hashlib, uuid, copy
+import json, shutil, logging, hashlib, uuid, copy, traceback
 from typing import Any
 from pathlib import Path
 from datetime import datetime
@@ -47,80 +47,11 @@ pasta2json:dict[str,Any] = {
 }
 json2pasta:dict[str,Any] = {v:k for k,v in pasta2json.items() if v is not None}
 
-# # Special terms in other ELNs: only add the ones that are required for function for PASTA
-# specialTerms:dict[str,dict[str,str]] = {
-#     'elabFTW': {
-#       # 'elabid':'_id',
-#       # 'title':'-name',
-#       # 'tags':'-tags',
-#       # 'lastchange':'-date',
-#       # 'userid':'-user',
-#       # 'metadata':'metaUser',
-#       # 'id':'_id',
-#       # 'category': '-type',
-#       # 'dateCreated': '-date'
-#     },
-#     'SampleDB':{
-#       'comment':'userComment',
-#       'genre': '-type'
-#     }
-# }
-
-
 METADATA_FILE = 'ro-crate-metadata.json'
 
-
-# def tree(graph:dict[Any,Any]) -> str:
-#   """
-#   use metadata to create hierarchical tree structure in ascii
-
-#   Args:
-#     graph (dict): tree-graph to be plotted
-
-#   Returns:
-#     str: output of graph as a nice tree
-#   """
-#   def process_part(part:dict[Any,Any], level:int) -> str:
-#     """
-#     recursive function call to process this node of the tree-graph
-
-#     Args:
-#       part (dict): dictionary entry of this hasPart=part of a parent node; is a node by-itself
-#       level (int): hierarchy level
-
-#     Returns:
-#       str: one line in the tree
-#     """
-#     prefix = '    '*level + '- '
-#     # find next node to process
-#     newNode:list[Any] = [i for i in graph if '@id' in i and i['@id'] == part['@id']]
-#     if len(newNode) == 1:
-#       output = f'{prefix} {newNode[0]["@id"]} type:{newNode[0]["@type"]} items: {len(newNode[0])-1}\n'  # -1 because @id is not counted
-#       subparts = newNode[0].pop('hasPart') if 'hasPart' in newNode[0] else []
-#       if len(subparts) > 0:  # don't do if no subparts: measurements, ...
-#         for subpart in subparts:
-#           output += process_part(subpart, level + 1)
-#     else:                                                       #not found
-#       output = f'  items: {len(part) - 1}\n'      # -1 because @id is not counted
-#     return output
-
-#   # main tree-function
-#   #   find information from master node
-#   ro_crate_node = [i for i in graph if i["@id"] == METADATA_FILE][0]
-#   output = f'- {METADATA_FILE}' + '\n'
-#   if 'sdPublisher' in ro_crate_node:
-#     name = ro_crate_node['sdPublisher'].get('name','---')
-#     output += f'    - publisher: {name}' + '\n'
-#   if 'version' in ro_crate_node:
-#     output += '    - version: ' + ro_crate_node['version'] + '\n'
-#   main_node = [i for i in graph if i["@id"] == "./"][0]
-#   output += '- ./\n'
-#   #   iteratively go through list
-#   for part in main_node['hasPart']:
-#     output += process_part(part, 1)
-#   return output
-
-
+##########################################
+###               IMPORT               ###
+##########################################
 def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[str,Any]]:
   '''
   import .eln file from other ELN or from PASTA
@@ -159,11 +90,15 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
       return "FAILURE: YOU CANNOT IMPORT AS PROJECT IF NON PASTA-ELN FILE",{}
     if projID:
       backend.changeHierarchy(projID)
-    # if elnName!='PASTA ELN' and elnName in specialTerms:
-    #   json2pasta.update(specialTerms[elnName])
-    # logging.info('ELN and translator: %s %s', elnName, str(json2pasta))
     mainNode    = [i for i in graph if i["@id"]=="./"][0]
-
+    # clean subchildren from mainNode: see https://github.com/TheELNConsortium/TheELNFileFormat/issues/98
+    parentNodes = {i['@id'] for i in mainNode['hasPart']}
+    for nodeAny in graph:
+      if nodeAny['@id']=='./':
+        continue
+      children = {i['@id'] for i in nodeAny.get('hasPart',[])}
+      parentNodes = parentNodes.difference(children)
+    mainNode['hasPart'] = [{'@id':i for i in parentNodes}]
 
     ################
     # subfunctions #
@@ -171,6 +106,7 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
     def json2pastaFunction(inputData:dict[str,Any]) -> tuple[dict[str,Any], str, list[Any], str]:
       """
       convert json data to pastaStyle
+        - clean all the @id, @type
 
       Args:
         inputData (dict): input data in document
@@ -196,6 +132,10 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
         else:                  #keep name, only prevent causes for errors
           doc[f'.{key}'] = value
       # change into Pasta's native format
+      if isinstance(doc.get('comment',''), (dict,list)):
+        if isinstance(doc['comment'], dict):
+          doc['comment'] = [doc['comment']]
+        doc['comment'] = '\n\n'.join([i['text'] for i in doc['comment']])
       if encodingFormat=='text/html':
         if 'comment' in doc:
           qtDocument.setHtml(doc['comment'])
@@ -220,10 +160,20 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
       variableMeasured = doc.pop('.variableMeasured',[])
       if variableMeasured is not None:
         for data in variableMeasured:
-
           propertyID = data['propertyID'] if '.' in data['propertyID'] and ' ' not in data['propertyID'] else f"imported.{camelCase(data['propertyID'])}"
           # print('propertyID', propertyID, elnName)
           doc[propertyID] = (data['value'], data.get('unitText',''), data.get('description',''), data.get('mentions',''))
+      # final cleaning
+      for key, value in doc.items():
+        if isinstance(value, list) and len(value)>0 and isinstance(value[0], dict):
+          newValue = []
+          for item in copy.deepcopy(value):
+            del item['@id']
+            del item['@type']
+            newValue.append(item)
+          if len(newValue)==1:
+            newValue = newValue[0]
+          doc[key] = newValue
       # print(f'Node becomes: {json.dumps(doc, indent=2)}')
       return doc, elnID, children, dataType
 
@@ -248,8 +198,22 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
       if len(docS)!=1 or backend.cwd is None:
         print('**ERROR zero or multiple nodes with same id', docS,' or cwd is None in '+part['@id'])
         return -1
+      # pull all subentries (variableMeasured, comments, ...) into this dict: do not pull hasPart-entries in
+      keys = [k for k,v in docS[0].items() if k!='hasPart' and (isinstance(v,dict) or (isinstance(v,list) and len(v)>0 and isinstance(v[0], dict)))]
+      for key in keys:
+        value = docS[0].get(key, [])
+        if isinstance(value, list):
+          items = [i['@id'] for i in value]
+        else:
+          items = [value['@id']]
+        # print(f'Replace {key} -entries using ids: {items}')
+        try:
+          docS[0][key] = [ [j for j in graph if j['@id']==i][0] for i in items]
+        except:
+          docS[0][key] = 'not resolvable connection'
+          print(f'**ERROR** Could not replace {key} -entries using ids: {items}. Are all items once in the graph?')
+      # convert to Pasta's style
       doc, elnID, children, dataType = json2pastaFunction(docS[0])
-      # TESTED UNTIL HERE
       if elnName == 'PASTA ELN' and elnID.startswith('http') and ':/' in elnID:
         fullPath = None
       else:
@@ -270,7 +234,13 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
       if docType=='x0':
         backend.hierStack = []
       # print(f'Want to add doc:{doc} with type:{docType} and cwd:{backend.cwd}')
-      docID = backend.addData(docType, doc)['id']
+      try:
+        docID = backend.addData(docType, doc)['id']
+      except:
+        print("============= ERROR OCCURED ============")
+        print(json.dumps(doc,indent=2),'\n')
+        print(traceback.format_exc())
+        docID = None
       if docID[0]=='x':
         backend.changeHierarchy(docID)
         with open(backend.basePath/backend.cwd/'.id_pastaELN.json','w', encoding='utf-8') as f:  #local path, update in any case

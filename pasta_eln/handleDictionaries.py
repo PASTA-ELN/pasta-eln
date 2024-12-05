@@ -182,7 +182,7 @@ def doc2markdown(doc:dict[str,Any], ignoreKeys:list[str], dataHierarchyNode:list
           markdown += f'{key.capitalize()}: {value}'
     except:
       doc.pop('image','')
-      print(f'**ERROR** Could not convert to markdown value: {value}\n  doc: \n',traceback.format_exc())
+      print(f'**ERROR** Could not convert to markdown value: {value}\n  doc: {doc}\n',traceback.format_exc())
   return markdown
 
 

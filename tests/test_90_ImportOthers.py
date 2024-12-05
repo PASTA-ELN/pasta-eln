@@ -42,7 +42,12 @@ def test_simple(qtbot):
   backend = Backend('research')
   tempDir = tempfile.gettempdir()
 
-  allELNs = {'Pasta.eln':'PASTA/PASTA.eln'}
+  allELNs = {'Pasta.eln'          :'PASTA/PASTA.eln',
+             'SampleDB.eln'       :'SampleDB/sampledb_export.eln',
+             'kadi4mat_1.eln'     :'kadi4mat/collections-example.eln',
+             'kadi4mat_2.eln'     :'kadi4mat/records-example.eln',
+             'openSemanticLab.eln':'OpenSemanticLab/MinimalExample.osl.eln'
+            }
   urlBase = 'https://github.com/SteffenBrinckmann/TheELNFileFormat/raw/refs/heads/new_PastaELN/examples/'
   # 'https://github.com/TheELNConsortium/TheELNFileFormat/raw/refs/heads/master/examples/'
   for eln, pathName in allELNs.items():
@@ -55,7 +60,7 @@ def test_simple(qtbot):
     projID = df[df['name']==projName]['id'].values[0]
     reply, statistics = importELN(backend, elnFileName, projID)
     print(reply,'\n',statistics)
-    assert statistics['num. files']<=statistics['types']['File'] ,'Files do not make sense'
+    assert statistics['num. files']<=statistics['types'].get('File',0) ,'Files do not make sense'
     #statistics type File can be larger than num.Files because there are remote files which are not Files but in the @type
     print(backend.checkDB(minimal=True))
 
