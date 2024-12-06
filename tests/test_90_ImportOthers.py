@@ -50,9 +50,14 @@ def test_simple(qtbot):
             }
   urlBase = 'https://github.com/SteffenBrinckmann/TheELNFileFormat/raw/refs/heads/new_PastaELN/examples/'
   # 'https://github.com/TheELNConsortium/TheELNFileFormat/raw/refs/heads/master/examples/'
+  localDir= '/home/steffen/FZJ/DataScience/Repositories/TheELNConsortium/TheELNFileFormat/examples/'
+  local = True
   for eln, pathName in allELNs.items():
-    elnFileName = f'{tempDir}/{eln}'
-    request.urlretrieve(f'{urlBase}{pathName}', elnFileName)
+    if local:
+      elnFileName = f'{localDir}/{pathName}'
+    else:
+      elnFileName = f'{tempDir}/{eln}'
+      request.urlretrieve(f'{urlBase}{pathName}', elnFileName)
     print(f'\nStart with {eln}')
     projName = f'{eln[:-4]} Import'
     backend.addData('x0', {'name': projName})
