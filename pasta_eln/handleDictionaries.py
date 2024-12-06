@@ -1,5 +1,5 @@
 """Change the format of dictionaries"""
-import re, uuid, json, difflib
+import uuid, json, difflib, traceback
 from typing import Any
 from datetime import datetime
 from .fixedStringsJson import SQLiteTranslation, SORTED_KEYS
@@ -42,37 +42,11 @@ def fillDocBeforeCreate(data:dict[str,Any], docType:list[str]) -> dict[str,Any]:
     data['branch']['show'] = [True]*(len(data['branch']['stack'])+1)
   if 'gui' not in data:
     data['gui'] = [True, True]
-  # separate comment into tags and fields
-  # these tags are lost: '#d': too short; '#3tag': starts with number
+  # clean comment and tags
   if 'comment' not in data:
     data['comment'] =''
   if 'tags' not in data:
     data['tags'] = []
-  #always do regex expressions twice: if #lala at beginning or in middle of comment
-  curated = re.findall(r'(?:^|\s)#_curated(?:\s|$)', data['comment']) # #_curated
-  rating  = re.findall(r'(?:^|\s)#_\d(?:\s|$)',      data['comment']) # #_number
-  if rating is None:
-    rating=[]
-  if len(rating)>1:  #prevent multiple new ratings
-    rating=rating[:1]
-  if len(rating)==1: #remove ratings that exist already
-    data['tags'] = [i for i in data['tags'] if not re.compile(r'^_\d$').match(i)]
-  otherTags = re.findall(r'(?:^|\s)#[a-zA-Z]\w+(?=\s|$)', data['comment'])
-  if otherTags is None:
-    otherTags=[]
-  data['tags'] = rating + data['tags'] + otherTags + curated
-  data['comment'] = re.sub(r'(?:^|\s)#\w+(?=\s|$)', '', data['comment']).strip()
-  fields = re.findall(r':[\S]+:[\S]+:', data['comment'])
-  if fields is not None:
-    for item in fields:
-      aList = item.split(':')
-      if aList[1] in data: #do not add if item already exists
-        continue
-      data[aList[1]] = aList[2]
-  data['comment'] = re.sub(r':[\S]+:[\S]+:','',data['comment'])  #remove :field:data: information
-  if isinstance(data['tags'], str):
-    data['tags'] = data['tags'].split(' ')
-  data['tags'] = [i.strip()[1:] if i.strip()[0]=='#' else i.strip() for i in data['tags']]
   data['tags'] = list(set(data['tags']))  #ensure only one is inside
   #other cleaning
   if ('links' in data and isinstance(data['links'], list)) and \
@@ -84,11 +58,6 @@ def fillDocBeforeCreate(data:dict[str,Any], docType:list[str]) -> dict[str,Any]:
       data['qrCode']=[]
     if isinstance(data['qrCode'], str):
       data['qrCode'] = data['qrCode'].split(' ')
-  if data['type'][0] == 'measurement':
-    if 'image' not in data:
-      data['image'] = ''
-    if 'shasum' not in data:
-      data['shasum']=''
   # cleaning at end of all changes
   toDelete = []
   for key in data:
@@ -150,40 +119,44 @@ def doc2markdown(doc:dict[str,Any], ignoreKeys:list[str], dataHierarchyNode:list
   markdown = ''
   for key in [i for i in SORTED_KEYS if i in doc.keys()]+[i for i in doc.keys() if i not in SORTED_KEYS]:
     value = doc[key]
-    if key == '' and isinstance(value,dict):
+    if key == '' and isinstance(value,dict):     #handle only key==''
       markdown += doc2markdown(value, ignoreKeys, dataHierarchyNode, widget)
       continue
     if key in ignoreKeys or not value:
       continue
-    if key=='tags':
-      tags = ['_curated_' if i=='_curated' else f'#{i}' for i in value]
-      tags = ['\u2605'*int(i[2]) if i[:2]=='#_' else i for i in tags]
-      markdown += f'Tags: {" ".join(tags)} \n\n'
-    elif (isinstance(value,str) and '\n' in value) or key=='comment':                 # long values with /n or comments
-      markdown += markdownEqualizer(value)+'\n\n'
-    else:
-      dataHierarchyItems = [dict(i) for i in dataHierarchyNode if i['name']==key]
-      if len(dataHierarchyItems)==1 and 'list' in dataHierarchyItems[0] and dataHierarchyItems[0]['list'] and \
-          not isinstance(dataHierarchyItems[0]['list'], list):                #choice among docType
-        table  = widget.comm.backend.db.getView('viewDocType/'+dataHierarchyItems[0]['list'])
-        names= list(table[table.id==value[0]]['name'])
-        if len(names)==1:    # default find one item that we link to
-          value = '\u260D '+names[0]
-        elif not names:      # likely empty link because the value was not yet defined: just print to show
-          value = value[0] if isinstance(value,tuple) else value
-        else:
-          raise ValueError(f'list target exists multiple times. Key: {key}')
-      elif isinstance(value, list):
-        value = ', '.join([str(i) for i in value])
-        markdown += f'{key.capitalize()}: {value}\n\n'
-      if isinstance(value, tuple) and len(value)==4:
-        key = key if value[2] is None or value[2]=='' else value[2]
-        valueString = f'{value[0]} {value[1]}'
-        valueString = valueString if value[3] is None or value[3]=='' else f'{valueString}&nbsp;**[&uArr;]({value[3]})**'
-        markdown += f'{key.capitalize()}: {valueString}\n\n'
-      if isinstance(value, dict):
-        value = dict2ul({k:v[0] for k,v in value.items()}, 'markdown')
-        markdown += f'{key.capitalize()}: {value}'
+    try:
+      if key=='tags':
+        tags = ['_curated_' if i=='_curated' else f'#{i}' for i in value]
+        tags = ['\u2605'*int(i[2]) if i[:2]=='#_' else i for i in tags]
+        markdown += f'Tags: {" ".join(tags)} \n\n'
+      elif (isinstance(value,str) and '\n' in value) or key=='comment':                 # long values with /n or comments
+        markdown += markdownEqualizer(value)+'\n\n'
+      else:
+        dataHierarchyItems = [dict(i) for i in dataHierarchyNode if i['name']==key]
+        if len(dataHierarchyItems)==1 and 'list' in dataHierarchyItems[0] and dataHierarchyItems[0]['list'] and \
+            not isinstance(dataHierarchyItems[0]['list'], list):                #choice among docType
+          table  = widget.comm.backend.db.getView('viewDocType/'+dataHierarchyItems[0]['list'])
+          names= list(table[table.id==value[0]]['name'])
+          if len(names)==1:    # default find one item that we link to
+            value = '\u260D '+names[0]
+          elif not names:      # likely empty link because the value was not yet defined: just print to show
+            value = value[0] if isinstance(value,tuple) else value
+          else:
+            raise ValueError(f'list target exists multiple times. Key: {key}')
+        elif isinstance(value, list):
+          value = ', '.join([str(i) for i in value])
+          markdown += f'{key.capitalize()}: {value}\n\n'
+        if isinstance(value, tuple) and len(value)==4:
+          key = key if value[2] is None or value[2]=='' else value[2]
+          valueString = f'{value[0]} {value[1]}'
+          valueString = valueString if value[3] is None or value[3]=='' else f'{valueString}&nbsp;**[&uArr;]({value[3]})**'
+          markdown += f'{key.capitalize()}: {valueString}\n\n'
+        if isinstance(value, dict):
+          value = dict2ul({k:(v[0]  if isinstance(v, (list,tuple)) else v) for k,v in value.items()}, 'markdown')
+          markdown += f'{key.capitalize()}: {value}'
+    except Exception:
+      doc.pop('image','')
+      print(f'**ERROR** Could not convert to markdown value: {value}\n  doc: {doc}\n',traceback.format_exc())
   return markdown
 
 

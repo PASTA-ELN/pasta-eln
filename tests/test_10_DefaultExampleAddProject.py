@@ -1,13 +1,15 @@
 #!/usr/bin/python3
 """TEST the form """
-import logging, warnings, random
+import logging, warnings, shutil
 from pathlib import Path
-from PySide6.QtCore import QModelIndex                                  # pylint: disable=no-name-in-module
+from PySide6.QtGui import QStandardItem
 from pasta_eln.backend import Backend
+from pasta_eln.miscTools import DummyProgressBar
 from pasta_eln.installationTools import exampleData
 from pasta_eln.GUI.form import Form
 from pasta_eln.guiCommunicate import Communicate
 from pasta_eln.GUI.palette import Palette
+from pasta_eln.GUI.project import Project
 
 def test_simple(qtbot):
   """
@@ -33,9 +35,22 @@ def test_simple(qtbot):
   window = Form(comm, {'_projectID': '', 'type': ['x0']})
   qtbot.addWidget(window)
 
-  # projID = backend.output('x0').split('|')[-1].strip()
-  # window.change(projID,'')
+  # change project to make it displayable
+  projID = backend.output('x0').split('|')[-1].strip()
+  doc   = backend.db.getDoc(projID)
+  doc['comment'] = '# PASTA-ELN | The favorite ELN for experimental scientists\n - This is an example .eln output for sharing between different ELNs.'
+  backend.editData(doc)
+  backend.changeHierarchy(projID)
+  dirName = backend.basePath/backend.cwd
+  shutil.copy(Path(__file__).parent.parent/'pasta_eln'/'Resources'/'Icons'/'pasta512.png', dirName)
+  backend.scanProject(DummyProgressBar(), projID)
 
+  # move to top: directly in the database
+  cmd = "UPDATE branches SET child='-1' WHERE path=='PastasExampleProject/pasta512.png'"
+  backend.db.cursor.execute(cmd)
+  backend.db.connection.commit()
+
+  # window.change(projID,'')
     #change to pyside
     #form: create project
     #add folders (2) -> new item (copy from

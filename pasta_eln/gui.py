@@ -21,7 +21,7 @@ from .backend import Backend
 from .fixedStringsJson import shortcuts, CONF_FILE_NAME
 from .guiCommunicate import Communicate
 from .guiStyle import Action, ScrollMessageBox, showMessage, widgetAndLayout
-from .inputOutput import exportELN
+from .inputOutput import exportELN, importELN
 from .miscTools import restart, updateAddOnList
 from .elabFTWsync import Pasta2Elab
 # from pasta_eln.GUI.dataverse.config_dialog import ConfigDialog
@@ -160,14 +160,15 @@ class MainWindow(QMainWindow):
         status = exportELN(self.comm.backend, allProjects, fileName, docTypes)
         showMessage(self, 'Finished', status, 'Information')
     elif command[0] is Command.IMPORT:
-      showMessage(self, 'Not fully implemented', 'The eln-file definition develops rapidly. We cannot adopt the import'+\
-                        'in the same speed; hence it is disabled currently.', 'Warning')
-      # fileName = QFileDialog.getOpenFileName(self, 'Load data from .eln file', str(Path.home()), '*.eln')[0]
-      # if fileName != '':
-      #   status = importELN(self.comm.backend, fileName)
-      #   showMessage(self, 'Finished', status, 'Information')
-      #   self.comm.changeSidebar.emit('redraw')
-      #   self.comm.changeTable.emit('x0', '')
+      if self.comm.projectID == '':
+        showMessage(self, 'Error', 'You have to open a project to export', 'Warning')
+        return
+      fileName = QFileDialog.getOpenFileName(self, 'Load data from .eln file', str(Path.home()), '*.eln')[0]
+      if fileName != '':
+        status, statistics  = importELN(self.comm.backend, fileName, self.comm.projectID)
+        showMessage(self, 'Finished', f'{status}\n{statistics}', 'Information')
+        self.comm.changeSidebar.emit('redraw')
+        self.comm.changeTable.emit('x0', '')
     elif command[0] is Command.EXIT:
       self.close()
     # view menu

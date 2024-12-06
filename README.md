@@ -83,7 +83,13 @@ rm -rf venvPastaTest/ pastaTEST/
 
 ---
 ## Convert couchdb to sqlite version
-- python -m pasta_eln.serverActions
+use "python -m pasta_eln.serverActions"
+1. Convert to sqlite database: 'c'
+2. Update local file structure: 't'
+3. Repair dates in sqlite database: 'r'
+4. Verify current state: 'v'
+5. Use repair on . errors: 'rp1'
+6. File errors can be repaired by scanning
 ---
 
 ## Notes on all systems

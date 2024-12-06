@@ -111,7 +111,7 @@ class Project(QWidget):
       return
     self.allDetails.document().setTextWidth(self.width())
     height:int = self.allDetails.document().size().toTuple()[1]  # type: ignore[index]
-    self.allDetails.setMaximumHeight(height)
+    self.allDetails.setMaximumHeight(height+12)
     return
 
 
