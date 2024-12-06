@@ -195,19 +195,24 @@ class SqlLiteDB:
     self.cursor.execute(f"SELECT * FROM branches WHERE id == '{docID}'")
     for dataI in self.cursor.fetchall():
       doc['branch'].append({'stack': dataI[2].split('/')[:-1],
-                             'child': dataI[3],
-                             'path':  None if dataI[4] == '*' else dataI[4],
-                             'show':   [i=='T' for i in dataI[5]]})
+                            'child': dataI[3],
+                            'path':  None if dataI[4] == '*' else dataI[4],
+                            'show':   [i=='T' for i in dataI[5]]})
     cmd = "SELECT properties.key, properties.value, properties.unit, propDefinitions.long, propDefinitions.IRI, " \
           "definitions.unit, definitions.query, definitions.IRI FROM properties LEFT JOIN propDefinitions USING(key) "\
           "LEFT JOIN definitions ON properties.key = (definitions.class || '.' || definitions.name) "\
           f"WHERE properties.id == '{docID}'"
+    # Big assumption in "LEFT JOIN definitions ON properties.key = (definitions.class || '.' || definitions.name)"
+    #   with 'docType' missing
+    # -> each property ".status" has the same meaning for all docTypes
+    # -> if it has the same meaning, it is only stored once??
     self.cursor.execute(cmd)
     res = self.cursor.fetchall()
-    metadataFlat:dict[str, tuple[str,str,str,str]] = {i[0]:(i[1],
-                          ('' if i[2] is None else i[2])+('' if i[5] is None else i[5]),
-                          ('' if i[3] is None else i[3])+('' if i[6] is None else i[6]),
-                          ('' if i[4] is None else i[4])+('' if i[7] is None else i[7])) for i in res}
+    metadataFlat:dict[str, tuple[str,str,str,str]]  = {i[0]:(    i[1],                      #value
+                          ('' if i[2] is None else i[2]) or ('' if i[5] is None else i[5]), #unit
+                          ('' if i[3] is None else i[3]) or ('' if i[6] is None else i[6]), #long
+                          ('' if i[4] is None else i[4]) or ('' if i[7] is None else i[7])  #IRI
+                          ) for i in res}
     doc |= hierarchy(metadataFlat)
     return doc
 
@@ -305,6 +310,8 @@ class SqlLiteDB:
       return
     # properties
     metaDoc = {k:v for k,v in doc.items() if k not in KEY_ORDER}
+    # remove the (unit, long, IRI) of the ones that are already in data hierarchy
+    #    create a test case for this
     insertMetadata(metaDoc, '')
     # save changes
     self.connection.commit()
