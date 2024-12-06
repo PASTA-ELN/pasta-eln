@@ -59,7 +59,7 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
   Args:
     backend (backend): backend
     elnFileName (str): name of file
-    projID (str): project to import data into. If '', create a new project (only available for PastaELN)
+    projID (str): project to import data into.
 
   Returns:
     str: success message, statistics
@@ -86,10 +86,10 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
         publisherNode = [i for i in graph if i["@id"]==rocrateNode['sdPublisher']['@id']][0]
       elnName = publisherNode['name']
     logging.info('Import %s', elnName)
-    if not projID and elnName!='PASTA ELN':
+    if not projID:
       return "FAILURE: YOU CANNOT IMPORT AS PROJECT IF NON PASTA-ELN FILE",{}
-    if projID:
-      backend.changeHierarchy(projID)
+    backend.changeHierarchy(projID)
+    childrenStack = [0]
     mainNode    = [i for i in graph if i["@id"]=="./"][0]
     # clean subchildren from mainNode: see https://github.com/TheELNConsortium/TheELNFileFormat/issues/98
     parentNodes = {i['@id'] for i in mainNode['hasPart']}
@@ -235,6 +235,8 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
           docType = ''
       if docType=='x0':
         backend.hierStack = []
+      childrenStack[-1] += 1
+      doc['childNum'] = childrenStack[-1]
       # print(f'Want to add doc:{doc} with type:{docType} and cwd:{backend.cwd}')
       try:
         docID = backend.addData(docType, doc)['id']
@@ -245,6 +247,7 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
         docID = None
       if docID[0]=='x':
         backend.changeHierarchy(docID)
+        childrenStack.append(0)
         with open(backend.basePath/backend.cwd/'.id_pastaELN.json','w', encoding='utf-8') as f:  #local path, update in any case
           f.write(json.dumps(backend.db.getDoc(docID)))
         # children, aka recursive part
@@ -253,6 +256,7 @@ def importELN(backend:Backend, elnFileName:str, projID:str) -> tuple[str,dict[st
             continue
           addedDocs += processPart(child)
         backend.changeHierarchy(None)
+        childrenStack.pop()
       return addedDocs
 
     ######################
