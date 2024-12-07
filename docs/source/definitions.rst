@@ -3,8 +3,8 @@
 Definitions in PASTA-ELN
 ************************
 
-Overview
---------
+Definition overview
+-------------------
 
 In scientific contexts, properties are often defined with specific details. For instance, a temperature measurement might be represented as:
 
