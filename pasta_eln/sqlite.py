@@ -75,7 +75,7 @@ class SqlLiteDB:
       self.cursor.executemany(command, defaultSchema)
       # definitions of all the keys (those from the docTypeSchema and those of the properties table)
       self.createSQLTable('definitions',     ['key','long','IRI'],                       'key')
-      command = f"INSERT INTO definitions VALUES (?, ?, ?);"
+      command =  "INSERT INTO definitions VALUES (?, ?, ?);"
       self.cursor.executemany(command, defaultDefinitions)
       self.connection.commit()
     return

@@ -13,11 +13,11 @@ In science, properties have a definition. For example, a temperature measurement
     temperature_A : 97
 
 where "temperature_A" is called the **key** and 97 the **value** which is a number in this case. This information is missing
-crutial information:
+crucial information:
 
 - scientific unit; might / might-not differ from measurement to measurement
 - description; might be a text in the user's language, an official description, etc.
-- IRI / URL: link to a resource on the internet that represents an offcial definition, ontology node, ...
+- IRI / URL: link to a resource on the internet that represents an official definition, ontology node, ...
 
 As such, the previous entry should be rewritten as, where () are used to symbolize a tuple:
 
