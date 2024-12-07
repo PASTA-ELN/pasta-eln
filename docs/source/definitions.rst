@@ -3,37 +3,45 @@
 Definitions in PASTA-ELN
 ************************
 
-General concept
----------------
+Overview
+--------
 
-In science, properties have a definition. For example, a temperature measurement is might be represented as:
+In scientific contexts, properties are often defined with specific details. For instance, a temperature measurement might be represented as:
 
 .. code-block::
 
     temperature_A : 97
 
-where "temperature_A" is called the **key** and 97 the **value** which is a number in this case. This information is missing
-crucial information:
+Here, **temperature_A** is referred to as the **key**, while 97 represents the **value**, which in this example is a numerical figure. However, this representation lacks essential information, such as:
 
-- scientific unit; might / might-not differ from measurement to measurement
-- description; might be a text in the user's language, an official description, etc.
-- IRI / URL: link to a resource on the internet that represents an official definition, ontology node, ...
+- **Scientific unit**: Units may vary across measurements.
+- **Description**: Could include text in the user's language, an official explanation, or other clarifying details.
+- **IRI/URL**: A reference to an authoritative online resource, such as an ontology node or standardized definition.
 
-As such, the previous entry should be rewritten as, where () are used to symbolize a tuple:
+To address these gaps, the entry could be restructured as follows:
 
 .. code-block::
 
-    temperature_A : (97, C, "temperature inside the instruments right side",  https://www.wikidata.org/wiki/Q11466)
+    temperature_A : {
+        'value': 97,
+        'unit': 'C',
+        'description': 'Temperature inside the instrument’s right side',
+        'IRI': 'https://www.wikidata.org/wiki/Q11466'}
 
+Additional metadata can further enrich each property, such as:
 
-Multiple datasets / data-types
-------------------------------
+- **Uncertainty**: To account for the margin of error in values.
+- **Data type**: For example, integer, text, date, etc.
+- **Allowable values**: For instance, temperatures cannot be less than 0 K.
 
-If the same definition is used in multiple locations of the database, it would be not sensible to store repeated
-information multiple times. Hence, PASTA-ELN stores the description and IRI for each *key* only once (in a table called definitions).
-However, the *value* and the unit can be stored each time separately or the master definition is used.
+While including this information enhances the metadata's richness, it also increases complexity for both users and developers. PASTA-ELN seeks to strike a balance between usability—minimizing bugs by keeping things straightforward—and offering users the flexibility to include necessary details. Most additional metadata can be incorporated within the **value** or **description** fields.
 
-A result of this concept is that each *key* is unique and only should occur once. If a "height" exists in instruments, "height" in sample has the same
-description and IRI. If the user wants to have different descriptions, then a different *key* should be used.
+Handling Multiple Datasets and Data Types
+-----------------------------------------
 
+When a specific definition is used across multiple database locations, duplicating the associated information is inefficient. To optimize this, PASTA-ELN stores the **description** and **IRI** for each **key** in a centralized table (referred to as *definitions*). However, the **value** and **unit** can either be stored independently or inherit from the master definition. In cases where both individual and master definitions specify a unit, precedence is logically given to the individual value's unit.
 
+This approach ensures that each **key** is unique and appears only once. For example:
+
+- If "height" is defined for instruments, the same "height" key applies to samples, sharing the same **description** and **IRI** but potentially differing in units.
+- If distinct descriptions are required, unique **keys** must be assigned to differentiate them.
