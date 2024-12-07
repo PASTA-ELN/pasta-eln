@@ -50,8 +50,8 @@ def test_simple(qtbot):
             }
   urlBase = 'https://github.com/SteffenBrinckmann/TheELNFileFormat/raw/refs/heads/new_PastaELN/examples/'
   # 'https://github.com/TheELNConsortium/TheELNFileFormat/raw/refs/heads/master/examples/'
-  localDir= '/home/xyz/Repositories/TheELNConsortium/TheELNFileFormat/examples/'
-  local = False
+  localDir= '/home/steffen/FZJ/DataScience/Repositories/TheELNConsortium/TheELNFileFormat/examples/'
+  local = True
   for eln, pathName in allELNs.items():
     if local:
       elnFileName = f'{localDir}/{pathName}'

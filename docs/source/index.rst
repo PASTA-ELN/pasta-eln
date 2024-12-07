@@ -25,6 +25,7 @@ Overview
    addons
    data_hierarchy_configuration
    dataverse_integration
+   definitions
    verify
    faqs
 
