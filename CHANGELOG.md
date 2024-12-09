@@ -1,5 +1,21 @@
 # Changelog
 
+## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.0.0b2...HEAD)
+
+**Closed issues:**
+
+- Adapt datahierarchy tool to use sqlite backend [\#367](https://github.com/PASTA-ELN/pasta-eln/issues/367)
+
+**Merged pull requests:**
+
+- Small changes [\#375](https://github.com/PASTA-ELN/pasta-eln/pull/375) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+
+## [v3.0.0b2](https://github.com/PASTA-ELN/pasta-eln/tree/v3.0.0b2) (2024-12-02)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.0.0b1...v3.0.0b2)
+
 ## [v3.0.0b1](https://github.com/PASTA-ELN/pasta-eln/tree/v3.0.0b1) (2024-12-02)
 
 [Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v2.6.0...v3.0.0b1)
