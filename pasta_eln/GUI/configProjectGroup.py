@@ -100,8 +100,8 @@ class ProjectGroup(QDialog):
     elif 'Save' in btn.text() and not self.selectGroup.isHidden():
       key      = self.selectGroup.currentText()
       config   = self.configuration['projectGroups'][key]
-      headers  = {'Content-type': 'application/json', 'Accept': 'text/plain', 'Authorization':config['remote']['key']}
-      url      = config['remote']['url']
+      headers  = {'Content-type': 'application/json', 'Accept': 'text/plain', 'Authorization':config['remote'].get('key','')}
+      url      = config['remote'].get('url','')
       response = requests.get(f'{url}info', headers=headers, verify=True, timeout=60)
       if response.status_code!=200:
         showMessage(self, 'Error', 'Error: server address or api key are incorrect.')
