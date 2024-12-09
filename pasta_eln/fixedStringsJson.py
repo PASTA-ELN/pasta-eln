@@ -101,7 +101,7 @@ minimalDocInForm = {'tags':[], 'comment':'', '':{}}
 SORTED_KEYS     = ['name', 'tags', 'comment', 'metaUser', '']
 SORTED_DB_KEYS  = ['id', 'type', 'dateCreated','dateModified','dateSync', 'user','branch','gui','client','externalId','shasum']
 DO_NOT_RENDER   = ['image','content','metaVendor','shasum','type','branch','gui','dateCreated',
-                 'dateModified','id','user','name','externalId','client']
+                 'dateModified','id','user','name','externalId','client','elnIdentifier','oldIdentifier']
 
 setupText = """
 ### Welcome to the PASTA-ELN setup

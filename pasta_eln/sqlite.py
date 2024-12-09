@@ -389,7 +389,7 @@ class SqlLiteDB:
           self.cursor.execute(f"INSERT INTO branches VALUES ({', '.join(['?']*6)})",
                         [docID,
                          len(branchOld),
-                         '/'.join(branchNew['stack']),
+                         '/'.join(branchNew['stack']+[docID]),
                          branchNew['child'],
                          '*' if branchNew['path'] is None else branchNew['path'],
                          ''.join(['T' if j else 'F' for j in branchNew['show']])])

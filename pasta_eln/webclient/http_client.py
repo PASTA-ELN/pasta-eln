@@ -12,7 +12,7 @@ from typing import Any, Union
 
 from aiohttp import BasicAuth, ClientResponse, ClientSession, ClientTimeout
 
-from pasta_eln.utils import handle_http_client_exception
+from .utils import handle_http_client_exception
 
 
 async def prepare_result(response: ClientResponse) -> dict[str, Any]:

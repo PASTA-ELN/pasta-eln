@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-"""Commandline utility to admin the remote server"""
+"""Commandline utility to admin local installation and convert from Pasta-ELN version 2"""
 import json, os, traceback
 from typing import Any
 from pathlib import Path
@@ -8,10 +8,6 @@ from requests.structures import CaseInsensitiveDict
 from pasta_eln.backend import Backend
 from pasta_eln.stringChanges import outputString
 from pasta_eln.sqlite import SqlLiteDB
-
-#global variables
-headers:CaseInsensitiveDict[str]= CaseInsensitiveDict()
-headers["Content-Type"] = "application/json"
 
 def couchDB2SQLite(userName:str='', password:str='', database:str='', path:str='') -> None:
   """
@@ -23,6 +19,8 @@ def couchDB2SQLite(userName:str='', password:str='', database:str='', path:str='
     database (str): database
     path     (str): path to location of sqlite file
   """
+  headers:CaseInsensitiveDict[str]= CaseInsensitiveDict()
+  headers["Content-Type"] = "application/json"
   # get arguments if not given
   location = '127.0.0.1'
   if not userName:
@@ -47,7 +45,7 @@ def couchDB2SQLite(userName:str='', password:str='', database:str='', path:str='
   resp = requests.get(f'http://{location}:5984/{database}/_all_docs', headers=headers, auth=authUser, timeout=10)
   for item in resp.json()['rows']:
     docID = item['id']
-    if docID in ('-dataHierarchy-') or docID.startswith('_design/'):
+    if docID in ('-dataHierarchy-','-ontology-') or docID.startswith('_design/'):
       continue
     # print(f'DocID: {docID}')
     doc   = requests.get(f'http://{location}:5984/{database}/{docID}', headers=headers, auth=authUser, timeout=10).json()
