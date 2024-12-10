@@ -13,7 +13,7 @@ from ._contextMenu import initContextMenu, executeContextMenu, CommandMenu
 from ..fixedStringsJson import defaultDataHierarchyNode, minimalDocInForm, SQLiteTranslationDict
 from ..stringChanges import createDirName, markdownEqualizer
 from ..guiCommunicate import Communicate
-from ..sqlite import KEY_ORDER
+from ..sqlite import MAIN_ORDER
 
 class Form(QDialog):
   """ New/Edit dialog (dialog is blocking the main-window, as opposed to create a new widget-window)"""
@@ -78,7 +78,7 @@ class Form(QDialog):
       dataHierarchyNode = copy.deepcopy(defaultDataHierarchyNode)
     keysDataHierarchy = [f"{i['class']}.{i['name']}" for i in dataHierarchyNode]
     keysDocOrg = [[str(x) for x in (f'{k}.{k1}' for k1 in self.doc[k])] if isinstance(self.doc[k], dict) else [f'.{k}']
-               for k in self.doc if k not in KEY_ORDER+['branch','qrCodes','tags']]
+               for k in self.doc if k not in MAIN_ORDER+['branch','qrCodes','tags']]
     for keyInDocNotHierarchy in set(i for row in keysDocOrg for i in row).difference(keysDataHierarchy):
       group = keyInDocNotHierarchy.split('.')[0]
       key = keyInDocNotHierarchy.split('.')[1]

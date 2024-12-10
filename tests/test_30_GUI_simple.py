@@ -2,7 +2,7 @@ import pytest
 from pasta_eln.gui import MainWindow
 
 def test_simple(qtbot):
-  window = MainWindow()
+  window = MainWindow('research')
   window.setMinimumSize(1024,800)
   window.show()
   qtbot.addWidget(window)

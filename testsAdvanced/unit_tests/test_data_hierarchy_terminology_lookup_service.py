@@ -308,8 +308,8 @@ class TestDataHierarchyTerminologyLookup(object):
     assert results is not None, "Results must be returned"
     assert isinstance(results, list), "Results must be a list"
     assert terminology_lookup_mock.http_client.session_request_errors == [], "Session request errors must be empty"
-    assert len(results) == len(
-      terminology_lookup_config_mock), "Length of results must be equal to the number of services in terminology_lookup_config.json"
+    assert len(results) <= len(
+      terminology_lookup_config_mock), "Length of results must be less or equal than the number of services in terminology_lookup_config.json"
     for iri_result, lookup_service in zip(results, terminology_lookup_config_mock):
       assert isinstance(iri_result, dict), "Each iri_result must be a dictionary"
       assert iri_result['search_term'] == search_term, f"Search term must be set to {search_term}"

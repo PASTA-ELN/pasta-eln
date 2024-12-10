@@ -6,7 +6,7 @@ from ..guiStyle import IconButton, widgetAndLayout, showMessage
 from ..miscTools import restart
 from ..guiCommunicate import Communicate
 from ..fixedStringsJson import tableHeaderHelp
-from ..sqlite import KEY_ORDER
+from ..sqlite import MAIN_ORDER
 
 class TableHeader(QDialog):
   """ Table Header dialog: change which columns are shown and in which order """
@@ -23,7 +23,7 @@ class TableHeader(QDialog):
     self.docType = docType
     self.db = self.comm.backend.db
     self.selectedList = self.db.dataHierarchy(docType,'view')
-    self.allSet = set(KEY_ORDER)
+    self.allSet = set(MAIN_ORDER)
     #clean it
     self.allSet       = {i[1:] if i[0]=='.' else i for i in self.allSet}
     self.selectedList = [i[1:] if i[0]=='.' else i for i in self.selectedList]
@@ -99,7 +99,7 @@ class TableHeader(QDialog):
     if btn.text().endswith('Cancel'):
       self.reject()
     elif btn.text().endswith('Save'):
-      self.selectedList = [f'.{i}' if i not in KEY_ORDER else i for i in self.selectedList]
+      self.selectedList = [f'.{i}' if i not in MAIN_ORDER else i for i in self.selectedList]
       self.db.dataHierarchyChangeView(self.docType, self.selectedList)
       restart()
     elif btn.text().endswith('Help'):
