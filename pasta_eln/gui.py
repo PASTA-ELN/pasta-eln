@@ -103,7 +103,7 @@ class MainWindow(QMainWindow):
     Action('Shortcuts',                      self, [Command.SHORTCUTS],       helpMenu)
     systemMenu.addSeparator()
     Action('&Configuration',                 self, [Command.CONFIG],          helpMenu, shortcut='Ctrl+0')
-    Action('&Dataverse Configuration',       self, [Command.DATAVERSE_CONFIG],helpMenu, shortcut='F10')
+    # Action('&Dataverse Configuration',       self, [Command.DATAVERSE_CONFIG],helpMenu, shortcut='F10')
 
     # shortcuts for advanced usage (user should not need)
     QShortcut('F9', self, lambda: self.execute([Command.RESTART]))

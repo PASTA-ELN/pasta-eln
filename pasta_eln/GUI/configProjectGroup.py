@@ -60,11 +60,13 @@ class ProjectGroup(QDialog):
     self.formL.addWidget(row2Button, 2, 3)
 
     self.serverLabel = QLineEdit('server')
+    self.serverLabel.setPlaceholderText('Enter server address')
     self.formL.addWidget(self.serverLabel, 3, 0)
     self.row3Button = IconButton('fa5s.check-square',   self, [Command.TEST_SERVER], tooltip='Check server')
     self.formL.addWidget(self.row3Button, 3, 3)
 
     self.apiKeyLabel = QTextEdit()
+    self.apiKeyLabel.setPlaceholderText('Enter API key')
     self.apiKeyLabel.setFixedHeight(48)
     # self.apiKeyLabel.setValidator(QRegularExpressionValidator(r"\d+-[0-9a-f]{85}"))
     self.formL.addWidget(self.apiKeyLabel, 4, 0)
@@ -114,7 +116,7 @@ class ProjectGroup(QDialog):
         return
       with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as confFile:
         confFile.write(json.dumps(self.configuration, indent=2))
-      restart()
+      self.callbackFinished(True)
     return
 
 
