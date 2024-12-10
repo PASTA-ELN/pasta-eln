@@ -10,7 +10,6 @@ from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QFileDialog,
                               QLineEdit, QMessageBox, QVBoxLayout, QTextEdit   # pylint: disable=no-name-in-module
 from ..guiCommunicate import Communicate
 from ..guiStyle import IconButton, Label, TextButton, showMessage, widgetAndLayoutGrid
-from ..miscTools import restart
 from ..fixedStringsJson import CONF_FILE_NAME
 
 
