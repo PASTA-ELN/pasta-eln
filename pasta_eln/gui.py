@@ -67,7 +67,7 @@ class MainWindow(QMainWindow):
     Action('&Import .eln',                   self, [Command.IMPORT],         projectMenu)
     projectMenu.addSeparator()
     Action('&Export all projects to .eln',   self, [Command.EXPORT_ALL],     projectMenu)
-    Action('&Upload to Dataverse',           self, [Command.DATAVERSE_MAIN], projectMenu)
+    # Action('&Upload to Dataverse',           self, [Command.DATAVERSE_MAIN], projectMenu)
     Action('&Exit',                          self, [Command.EXIT],           projectMenu)
 
     viewMenu = menu.addMenu("&Lists")
@@ -90,7 +90,7 @@ class MainWindow(QMainWindow):
       for name in self.backend.configuration['projectGroups'].keys():
         Action(name,                         self, [Command.CHANGE_PG, name], changeProjectGroups)
     Action('&Synchronize',                   self, [Command.SYNC],            systemMenu, shortcut='F5')
-    Action('&Data hierarchy editor',         self, [Command.DATAHIERARCHY],   systemMenu, shortcut='F8')
+    # Action('&Data hierarchy editor',         self, [Command.DATAHIERARCHY],   systemMenu, shortcut='F8')
     systemMenu.addSeparator()
     Action('&Test extraction from a file',   self, [Command.TEST1],           systemMenu)
     Action('Test &selected item extraction', self, [Command.TEST2],           systemMenu, shortcut='F2')
@@ -182,7 +182,12 @@ class MainWindow(QMainWindow):
       restart()
     elif command[0] is Command.SYNC:
       sync = Pasta2Elab(self.backend)
-      sync.sync()
+      if hasattr(sync, 'api'):  #if hostname and api-key given
+        sync.sync()
+      else:                     #if not given
+        showMessage(self, 'ERROR', 'Please give server address and API-key in Configuration')
+        dialogC = Configuration(self.comm)
+        dialogC.exec()
     elif command[0] is Command.DATAHIERARCHY:
       dataHierarchyForm = DataHierarchyEditorDialog()
       dataHierarchyForm.instance.exec()

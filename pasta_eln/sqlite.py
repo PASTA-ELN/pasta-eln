@@ -112,7 +112,7 @@ class SqlLiteDB:
       logging.error("Difference in sqlite table: %s", name)
       logging.error(columnNames)
       logging.error(columns)
-      raise ValueError('SQLite table difference')
+      raise ValueError(f'SQLite table difference: {name}')
     return columnNames
 
 
