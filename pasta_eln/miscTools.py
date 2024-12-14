@@ -125,7 +125,7 @@ def blob_hash(stream:BufferedReader, size:int) -> str:
   return hasher.hexdigest()
 
 
-def updateAddOnList(directory:Path|None=None) -> dict[str, Any]:
+def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
   """
   Rules:
   - each data-type in its own try-except
@@ -135,17 +135,16 @@ def updateAddOnList(directory:Path|None=None) -> dict[str, Any]:
   - if want to force to skip top datatypes and use one at bottom: if doctype... -> exception
 
   Args:
-    directory (str): relative directory to scan
+    projectGroup (str): project group to scan
 
   Returns:
     dict: dict with all add-ons
   """
-  if directory is None:
-    with open(Path.home()/CONF_FILE_NAME,'r', encoding='utf-8') as f:
-      configuration = json.load(f)
-      defaultProjectGroup = configuration['defaultProjectGroup']
-      projectGroup = configuration['projectGroups'][defaultProjectGroup]
-      directory = Path(projectGroup['addOnDir'])
+  with open(Path.home()/CONF_FILE_NAME,'r', encoding='utf-8') as f:
+    configuration = json.load(f)
+  if not projectGroup:
+    projectGroup = configuration['defaultProjectGroup']
+  directory = Path(configuration['projectGroups'][projectGroup]['addOnDir'])
   sys.path.append(str(directory))  #allow add-ons
   # Extractors
   verboseDebug = False
@@ -204,10 +203,10 @@ def updateAddOnList(directory:Path|None=None) -> dict[str, Any]:
       description = module.description
       projectAll[name] = description
   #update configuration file
-  with open(Path.home()/CONF_FILE_NAME,'r', encoding='utf-8') as f:
-    configuration = json.load(f)
-  configuration['extractors'] = extractorsAll
-  configuration['projectAddOns'] = projectAll
+  confProjectGroup = configuration['projectGroups'][projectGroup]['addOns']
+  confProjectGroup['extractors'] = extractorsAll
+  confProjectGroup['project']    = projectAll
+  confProjectGroup['table']      = {}
   with open(Path.home()/CONF_FILE_NAME,'w', encoding='utf-8') as f:
     f.write(json.dumps(configuration, indent=2))
   return extractorsAll | projectAll

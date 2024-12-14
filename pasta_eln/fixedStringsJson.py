@@ -71,15 +71,13 @@ defaultDataHierarchyNode: list[dict[str, str]] = [
   {'docType':'-','class':'','idx':'2','name':'comment','query':'What are the comments?','unit':'','IRI':'','mandatory':'','list':''}
   ]
 
-CONF_FILE_NAME = '.pastaELN_v3.json'
+CONF_FILE_NAME = '.pastaELN.json'
 
 defaultConfiguration: dict[str, Any] = {
   "defaultProjectGroup": "research",
   "userID": "$os.getlogin()$",
   "version": 0,
-  "tableColumnsMax": 16,
   "qrPrinter": {},
-  "extractors": {},
   "authors": [{"first": "", "last": "", "title": "", "email": "", "orcid": "",
                "organizations": [{"organization": "", "rorid": ""}]}],
   "GUI": {},

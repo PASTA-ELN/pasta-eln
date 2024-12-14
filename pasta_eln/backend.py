@@ -99,6 +99,7 @@ class Backend(CLI_Mixin):
       defaultProjectGroup = self.configuration['defaultProjectGroup']
     if defaultProjectGroup not in self.configuration['projectGroups']:
       raise ValueError('BadConfigurationFileError')
+    self.configurationProjectGroup = defaultProjectGroup
     projectGroup = self.configuration['projectGroups'][defaultProjectGroup]
     # directories
     #    self.basePath (root of directory tree) is root of all projects

@@ -85,7 +85,10 @@ class ProjectGroup(QDialog):
     buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)
     buttonBox.clicked.connect(self.closeDialog)
     mainL.addWidget(buttonBox)
-    self.selectGroup.currentTextChanged.emit(self.configuration['defaultProjectGroup']) #emit to fill fields initially
+
+    #initialize
+    self.selectGroup.setCurrentText(self.comm.backend.configurationProjectGroup)
+    self.selectGroup.currentTextChanged.emit(self.comm.backend.configurationProjectGroup)
 
 
   def closeDialog(self, btn:TextButton) -> None:
@@ -184,7 +187,7 @@ class ProjectGroup(QDialog):
       config['remote']['url'] = url
       self.serverLabel.setText(url)
       try:
-        requests.get(f'{url}info', headers=headers, verify=True, timeout=60)
+        requests.get(f'{url}info', headers=headers, verify=True, timeout=15)
         self.row3Button.setStyleSheet('background: #00FF00')
       except Exception:
         showMessage(self, 'Error', 'Wrong server address')
@@ -200,16 +203,19 @@ class ProjectGroup(QDialog):
       config['remote']['key'] = self.apiKeyLabel.toPlainText().strip()
       headers = {'Content-type': 'application/json', 'Accept': 'text/plain', 'Authorization':config['remote']['key']}
       url = config['remote']['url']
-      response = requests.get(f'{url}info', headers=headers, verify=True, timeout=60)
-      if response.status_code==200:
-        elabVersion = int(json.loads(response.content.decode('utf-8')).get('elabftw_version','0.0.0').split('.')[0])
-        if elabVersion<5:
-          showMessage(self, 'Error', 'Old elabFTW server installation')
-        self.row4Button2.setStyleSheet('background: #00FF00')
-      else:
-        showMessage(self, 'Error', 'Wrong API address')
-        self.row4Button2.setStyleSheet('background: #FF0000')
-
+      try:
+        response = requests.get(f'{url}info', headers=headers, verify=True, timeout=15)
+        if response.status_code==200:
+          elabVersion = int(json.loads(response.content.decode('utf-8')).get('elabftw_version','0.0.0').split('.')[0])
+          if elabVersion<5:
+            showMessage(self, 'Error', 'Old elabFTW server installation')
+          self.row4Button2.setStyleSheet('background: #00FF00')
+        else:
+          showMessage(self, 'Error', 'Wrong API key')
+          self.row4Button2.setStyleSheet('background: #FF0000')
+      except Exception:
+          showMessage(self, 'Error', 'Wrong API key')
+          self.row4Button2.setStyleSheet('background: #FF0000')
     elif command[0] is Command.CREATE_QRCODE:
       text   = json.dumps(config['remote'])
       img    = qrcode.make(text, error_correction=qrcode.constants.ERROR_CORRECT_M).get_image()
