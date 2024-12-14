@@ -214,8 +214,8 @@ class ProjectGroup(QDialog):
           showMessage(self, 'Error', 'Wrong API key')
           self.row4Button2.setStyleSheet('background: #FF0000')
       except Exception:
-          showMessage(self, 'Error', 'Wrong API key')
-          self.row4Button2.setStyleSheet('background: #FF0000')
+        showMessage(self, 'Error', 'Wrong API key')
+        self.row4Button2.setStyleSheet('background: #FF0000')
     elif command[0] is Command.CREATE_QRCODE:
       text   = json.dumps(config['remote'])
       img    = qrcode.make(text, error_correction=qrcode.constants.ERROR_CORRECT_M).get_image()
