@@ -154,7 +154,7 @@ class Details(QScrollArea):
     elif isinstance(command[0], CommandMenu):
       if executeContextMenu(self, command):
         self.comm.changeTable.emit('','')
-        self.comm.changeDetails.emit(self.doc['_id'])
+        self.comm.changeDetails.emit(self.doc['id'])
     else:
       print("**ERROR details command unknown:",command)
     return

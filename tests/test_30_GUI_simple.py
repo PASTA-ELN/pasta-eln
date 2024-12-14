@@ -1,4 +1,3 @@
-import pytest
 from pasta_eln.gui import MainWindow
 
 def test_simple(qtbot):
@@ -7,10 +6,11 @@ def test_simple(qtbot):
   window.show()
   qtbot.addWidget(window)
 
-  projID1 = window.comm.backend.output('x0').split('|')[-1].strip()
-  window.comm.changeProject.emit(projID1, '')
+  # projID1 = window.comm.backend.output('x0').split('|')[-1].strip()
+  # print(projID1)
+  # window.comm.changeProject.emit(projID1, '')
   # click in the Greet button and make sure it updates the appropriate label
-  # projectBtn = window.sidebar.projectsListL.itemAt(2).widget().layout().itemAt(0).widget()
+  # projectBtn = window.sidebar.projectsListL.itemAt(0).widget().layout().itemAt(0).widget()
   # qtbot.mouseClick(projectBtn, Qt.LeftButton)
   #
   path = qtbot.screenshot(window)
