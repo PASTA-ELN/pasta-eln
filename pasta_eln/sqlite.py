@@ -337,6 +337,10 @@ class SqlLiteDB:
     Returns:
         dict: json representation of updated document
     """
+    if set(dataNew.keys()) == {'type','image'}: #if only type and image in update = change of extractor
+      self.cursor.execute(f"UPDATE main SET type='{'/'.join(dataNew['type'])}', image='{dataNew['image']}' WHERE id = '{docID}'")
+      self.connection.commit()
+      return {'id':docID}
     dataNew['client'] = tracebackString(False, f'updateDoc:{docID}')
     if 'edit' in dataNew:     #if delete
       dataNew = {'id':dataNew['id'], 'branch':dataNew['branch'], 'user':dataNew['user'], 'externalId':dataNew['externalId'], 'name':''}
@@ -345,30 +349,28 @@ class SqlLiteDB:
     cursor = self.connection.cursor()
 
     # tags and qrCodes
-    if 'tags' in dataNew:
-      tagsNew= set(dataNew.pop('tags'))
-      self.cursor.execute(f"SELECT tag FROM tags WHERE id == '{docID}'")
-      tagsOld= {i[0] for i in self.cursor.fetchall()}
-      if tagsOld.difference(tagsNew):
-        cmd = f"DELETE FROM tags WHERE id == '{docID}' and tag == ?"
-        self.cursor.executemany(cmd, [(i,) for i in tagsOld.difference(tagsNew)])
-        changesDict['tags'] = ','.join(tagsOld)
-      if tagsNew.difference(tagsOld):
-        change = tagsNew.difference(tagsOld)
-        self.cursor.executemany("INSERT INTO tags VALUES (?, ?);", zip([docID]*len(change), change))
-        changesDict['tags'] = ','.join(tagsOld)
-    if 'qrCodes' in dataNew:
-      qrCodesNew= set(dataNew.pop('qrCodes'))
-      self.cursor.execute(f"SELECT qrCode FROM qrCodes WHERE id == '{docID}'")
-      qrCodesOld= {i[0] for i in self.cursor.fetchall()}
-      if qrCodesOld.difference(qrCodesNew):
-        cmd = f"DELETE FROM qrCodes WHERE id == '{docID}' and qrCode == ?"
-        self.cursor.executemany(cmd, [(i,) for i in qrCodesOld.difference(qrCodesNew)])
-        changesDict['qrCodes'] = ','.join(qrCodesOld)
-      if qrCodesNew.difference(qrCodesOld):
-        change = qrCodesNew.difference(qrCodesOld)
-        self.cursor.executemany("INSERT INTO qrCodes VALUES (?, ?);", zip([docID]*len(change), change))
-        changesDict['qrCodes'] = ','.join(qrCodesOld)
+    tagsNew= set(dataNew.pop('tags'))
+    self.cursor.execute(f"SELECT tag FROM tags WHERE id == '{docID}'")
+    tagsOld= {i[0] for i in self.cursor.fetchall()}
+    if tagsOld.difference(tagsNew):
+      cmd = f"DELETE FROM tags WHERE id == '{docID}' and tag == ?"
+      self.cursor.executemany(cmd, [(i,) for i in tagsOld.difference(tagsNew)])
+      changesDict['tags'] = ','.join(tagsOld)
+    if tagsNew.difference(tagsOld):
+      change = tagsNew.difference(tagsOld)
+      self.cursor.executemany("INSERT INTO tags VALUES (?, ?);", zip([docID]*len(change), change))
+      changesDict['tags'] = ','.join(tagsOld)
+    qrCodesNew= set(dataNew.pop('qrCodes', []))
+    self.cursor.execute(f"SELECT qrCode FROM qrCodes WHERE id == '{docID}'")
+    qrCodesOld= {i[0] for i in self.cursor.fetchall()}
+    if qrCodesOld.difference(qrCodesNew):
+      cmd = f"DELETE FROM qrCodes WHERE id == '{docID}' and qrCode == ?"
+      self.cursor.executemany(cmd, [(i,) for i in qrCodesOld.difference(qrCodesNew)])
+      changesDict['qrCodes'] = ','.join(qrCodesOld)
+    if qrCodesNew.difference(qrCodesOld):
+      change = qrCodesNew.difference(qrCodesOld)
+      self.cursor.executemany("INSERT INTO qrCodes VALUES (?, ?);", zip([docID]*len(change), change))
+      changesDict['qrCodes'] = ','.join(qrCodesOld)
     # separate into main and properties
     mainNew    = {key: dataNew.pop(key) for key in MAIN_ORDER if key in dataNew}
     branchNew  = dataNew.pop('branch',{})
