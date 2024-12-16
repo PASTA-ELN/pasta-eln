@@ -18,7 +18,8 @@ def initContextMenu(widget:QWidget, pos:QPoint) -> None:
   """
   context = QMenu(widget)
   # for extractors
-  extractors = widget.comm.backend.configuration['extractors']                                               # type: ignore[attr-defined]
+  projectGroup = widget.comm.backend.configurationProjectGroup                                              # type: ignore[attr-defined]
+  extractors = widget.comm.backend.configuration['projectGroups'][projectGroup]['addOns']['extractors']     # type: ignore[attr-defined]
   extension = Path(widget.doc['branch'][0]['path']).suffix[1:]                                              # type: ignore[attr-defined]
   if extension.lower() in extractors:
     extractors = extractors[extension.lower()]
@@ -71,11 +72,11 @@ def executeContextMenu(widget:QWidget, command:list[Any]) -> bool:
     widget.comm.backend.db.hideShow(widget.docID)                                                            # type: ignore[attr-defined]
     widget.doc = widget.comm.backend.db.getDoc(widget.docID)                                                 # type: ignore[attr-defined]
   elif command[0] is CommandMenu.CHANGE_EXTRACTOR:
-    widget.doc['-type'] = command[1].split('/')                                                              # type: ignore[attr-defined]
+    widget.doc['type'] = command[1].split('/')                                                               # type: ignore[attr-defined]
     #any path is good since the file is the same everywhere; data-changed by reference
     widget.comm.backend.useExtractors(filePath, widget.doc['shasum'], widget.doc)                            # type: ignore[attr-defined]
-    if len(widget.doc['-type'])>1 and len(widget.doc['image'])>1:                                            # type: ignore[attr-defined]
-      widget.doc = widget.comm.backend.db.updateDoc({'image':widget.doc['image'], '-type':widget.doc['-type']}, widget.doc['_id'])# type: ignore[attr-defined]
+    if len(widget.doc['type'])>1 and len(widget.doc['image'])>1:                                             # type: ignore[attr-defined]
+      widget.doc = widget.comm.backend.db.updateDoc({'image':widget.doc['image'], 'type':widget.doc['type']}, widget.doc['id'])# type: ignore[attr-defined]
     else:
       return False
   else:

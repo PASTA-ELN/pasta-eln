@@ -7,7 +7,7 @@ import requests  # only requirement; could be replaced with urllib to eliminate 
 class ElabFTWApi:
   """ API for accessing an elabFTW server. That's API is inconvenient, complicated, ..."""
 
-  def __init__(self, url:str='', apiKey:str='', verifySSL:bool=True):
+  def __init__(self, url:str='invalid', apiKey:str='', verifySSL:bool=True):
     '''
     initiate an elab instance to allow for syncing
 
@@ -16,7 +16,7 @@ class ElabFTWApi:
       apiKey (str): API key
       veifySSL (bool): verify SSL certificate
     '''
-    if not url and not apiKey:
+    if url=='invalid':
       url = input('Please enter the url: ').strip()
       url = url if url.startswith('htt') else f'https://{url}'
       url = url if url.endswith('/')     else f'{url}/'

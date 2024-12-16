@@ -32,6 +32,9 @@ class Pasta2Elab:
     if not projectGroup:
       projectGroup = self.backend.configuration['defaultProjectGroup']
     self.projectGroup = projectGroup
+    if not self.backend.configuration['projectGroups'][self.projectGroup]['remote']['url'] or \
+       not self.backend.configuration['projectGroups'][self.projectGroup]['remote']['key']:
+      return
     self.api = ElabFTWApi(self.backend.configuration['projectGroups'][self.projectGroup]['remote']['url'],
                           self.backend.configuration['projectGroups'][self.projectGroup]['remote']['key'])
     if purge:

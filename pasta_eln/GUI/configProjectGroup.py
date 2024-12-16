@@ -10,7 +10,6 @@ from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QFileDialog,
                               QLineEdit, QMessageBox, QVBoxLayout, QTextEdit   # pylint: disable=no-name-in-module
 from ..guiCommunicate import Communicate
 from ..guiStyle import IconButton, Label, TextButton, showMessage, widgetAndLayoutGrid
-from ..miscTools import restart
 from ..fixedStringsJson import CONF_FILE_NAME
 
 
@@ -60,11 +59,13 @@ class ProjectGroup(QDialog):
     self.formL.addWidget(row2Button, 2, 3)
 
     self.serverLabel = QLineEdit('server')
+    self.serverLabel.setPlaceholderText('Enter server address')
     self.formL.addWidget(self.serverLabel, 3, 0)
     self.row3Button = IconButton('fa5s.check-square',   self, [Command.TEST_SERVER], tooltip='Check server')
     self.formL.addWidget(self.row3Button, 3, 3)
 
     self.apiKeyLabel = QTextEdit()
+    self.apiKeyLabel.setPlaceholderText('Enter API key')
     self.apiKeyLabel.setFixedHeight(48)
     # self.apiKeyLabel.setValidator(QRegularExpressionValidator(r"\d+-[0-9a-f]{85}"))
     self.formL.addWidget(self.apiKeyLabel, 4, 0)
@@ -84,7 +85,10 @@ class ProjectGroup(QDialog):
     buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)
     buttonBox.clicked.connect(self.closeDialog)
     mainL.addWidget(buttonBox)
-    self.selectGroup.currentTextChanged.emit(self.configuration['defaultProjectGroup']) #emit to fill fields initially
+
+    #initialize
+    self.selectGroup.setCurrentText(self.comm.backend.configurationProjectGroup)
+    self.selectGroup.currentTextChanged.emit(self.comm.backend.configurationProjectGroup)
 
 
   def closeDialog(self, btn:TextButton) -> None:
@@ -114,7 +118,7 @@ class ProjectGroup(QDialog):
         return
       with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as confFile:
         confFile.write(json.dumps(self.configuration, indent=2))
-      restart()
+      self.callbackFinished(True)
     return
 
 
@@ -183,7 +187,7 @@ class ProjectGroup(QDialog):
       config['remote']['url'] = url
       self.serverLabel.setText(url)
       try:
-        requests.get(f'{url}info', headers=headers, verify=True, timeout=60)
+        requests.get(f'{url}info', headers=headers, verify=True, timeout=15)
         self.row3Button.setStyleSheet('background: #00FF00')
       except Exception:
         showMessage(self, 'Error', 'Wrong server address')
@@ -199,16 +203,19 @@ class ProjectGroup(QDialog):
       config['remote']['key'] = self.apiKeyLabel.toPlainText().strip()
       headers = {'Content-type': 'application/json', 'Accept': 'text/plain', 'Authorization':config['remote']['key']}
       url = config['remote']['url']
-      response = requests.get(f'{url}info', headers=headers, verify=True, timeout=60)
-      if response.status_code==200:
-        elabVersion = int(json.loads(response.content.decode('utf-8')).get('elabftw_version','0.0.0').split('.')[0])
-        if elabVersion<5:
-          showMessage(self, 'Error', 'Old elabFTW server installation')
-        self.row4Button2.setStyleSheet('background: #00FF00')
-      else:
-        showMessage(self, 'Error', 'Wrong API address')
+      try:
+        response = requests.get(f'{url}info', headers=headers, verify=True, timeout=15)
+        if response.status_code==200:
+          elabVersion = int(json.loads(response.content.decode('utf-8')).get('elabftw_version','0.0.0').split('.')[0])
+          if elabVersion<5:
+            showMessage(self, 'Error', 'Old elabFTW server installation')
+          self.row4Button2.setStyleSheet('background: #00FF00')
+        else:
+          showMessage(self, 'Error', 'Wrong API key')
+          self.row4Button2.setStyleSheet('background: #FF0000')
+      except Exception:
+        showMessage(self, 'Error', 'Wrong API key')
         self.row4Button2.setStyleSheet('background: #FF0000')
-
     elif command[0] is Command.CREATE_QRCODE:
       text   = json.dumps(config['remote'])
       img    = qrcode.make(text, error_correction=qrcode.constants.ERROR_CORRECT_M).get_image()

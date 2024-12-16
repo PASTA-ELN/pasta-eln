@@ -49,7 +49,7 @@ class MainWindow(QMainWindow):
     super().__init__()
     venv = ' without venv' if sys.prefix == sys.base_prefix and 'CONDA_PREFIX' not in os.environ else ' in venv'
     self.setWindowTitle(f"PASTA-ELN {__version__}{venv}")
-    self.resize(self.screen().size()) #self.setWindowState(Qt.Window Maximized) https://bugreports.qt.io/browse/PYSIDE-2706 https://bugreports.qt.io/browse/QTBUG-124892
+    self.resize(self.screen().size()) #self.setWindowState(Qt.WindowMaximized) #https://bugreports.qt.io/browse/PYSIDE-2706 https://bugreports.qt.io/browse/QTBUG-124892
     resourcesDir = Path(__file__).parent / 'Resources'
     self.setWindowIcon(QIcon(QPixmap(resourcesDir / 'Icons' / 'favicon64.png')))
     self.backend = Backend(defaultProjectGroup=projectGroup)
@@ -67,7 +67,7 @@ class MainWindow(QMainWindow):
     Action('&Import .eln',                   self, [Command.IMPORT],         projectMenu)
     projectMenu.addSeparator()
     Action('&Export all projects to .eln',   self, [Command.EXPORT_ALL],     projectMenu)
-    Action('&Upload to Dataverse',           self, [Command.DATAVERSE_MAIN], projectMenu)
+    # Action('&Upload to Dataverse',           self, [Command.DATAVERSE_MAIN], projectMenu)
     Action('&Exit',                          self, [Command.EXIT],           projectMenu)
 
     viewMenu = menu.addMenu("&Lists")
@@ -90,7 +90,7 @@ class MainWindow(QMainWindow):
       for name in self.backend.configuration['projectGroups'].keys():
         Action(name,                         self, [Command.CHANGE_PG, name], changeProjectGroups)
     Action('&Synchronize',                   self, [Command.SYNC],            systemMenu, shortcut='F5')
-    Action('&Data hierarchy editor',         self, [Command.DATAHIERARCHY],   systemMenu, shortcut='F8')
+    # Action('&Data hierarchy editor',         self, [Command.DATAHIERARCHY],   systemMenu, shortcut='F8')
     systemMenu.addSeparator()
     Action('&Test extraction from a file',   self, [Command.TEST1],           systemMenu)
     Action('Test &selected item extraction', self, [Command.TEST2],           systemMenu, shortcut='F2')
@@ -103,7 +103,7 @@ class MainWindow(QMainWindow):
     Action('Shortcuts',                      self, [Command.SHORTCUTS],       helpMenu)
     systemMenu.addSeparator()
     Action('&Configuration',                 self, [Command.CONFIG],          helpMenu, shortcut='Ctrl+0')
-    Action('&Dataverse Configuration',       self, [Command.DATAVERSE_CONFIG],helpMenu, shortcut='F10')
+    # Action('&Dataverse Configuration',       self, [Command.DATAVERSE_CONFIG],helpMenu, shortcut='F10')
 
     # shortcuts for advanced usage (user should not need)
     QShortcut('F9', self, lambda: self.execute([Command.RESTART]))
@@ -182,7 +182,12 @@ class MainWindow(QMainWindow):
       restart()
     elif command[0] is Command.SYNC:
       sync = Pasta2Elab(self.backend)
-      sync.sync()
+      if hasattr(sync, 'api'):  #if hostname and api-key given
+        sync.sync()
+      else:                     #if not given
+        showMessage(self, 'ERROR', 'Please give server address and API-key in Configuration')
+        dialogC = Configuration(self.comm)
+        dialogC.exec()
     elif command[0] is Command.DATAHIERARCHY:
       dataHierarchyForm = DataHierarchyEditorDialog()
       dataHierarchyForm.instance.exec()
@@ -199,7 +204,7 @@ class MainWindow(QMainWindow):
     elif command[0] is Command.TEST2:
       self.comm.testExtractor.emit()
     elif command[0] is Command.UPDATE:
-      reportDict = updateAddOnList(self.backend.addOnPath)
+      reportDict = updateAddOnList(self.backend.configurationProjectGroup)
       messageWindow = ScrollMessageBox('Extractor list updated', reportDict,
                                        style='QScrollArea{min-width:600 px; min-height:400px}')
       messageWindow.exec()

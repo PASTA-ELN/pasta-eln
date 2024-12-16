@@ -91,7 +91,7 @@ def dict2ul(aDict:dict[str,Any], fmt:str='html') -> str:
         pass
     if isinstance(value, dict):
       valueString = dict2ul(value)
-    elif isinstance(value, tuple) and len(value)==4:  #tuple of value, unit, label, IRI
+    elif isinstance(value, tuple) and len(value)==4:  #tuple of value, unit, label, PURL
       key = key if value[2] is None or value[2]=='' else value[2]
       valueString = f'{value[0]} {value[1]}'
       valueString = valueString if value[3] is None or value[3]=='' else f'{valueString}&nbsp;<b><a href="{value[3]}">&uArr;</a></b>'

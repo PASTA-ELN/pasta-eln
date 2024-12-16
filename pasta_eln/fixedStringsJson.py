@@ -1,67 +1,83 @@
 """ Long strings and dictionaries/JSON that would obfuscate code """
 from typing import Any, Union
 
-defaultDataHierarchy: list[list[str]] = [
-  #docType,       IRI, title,          icon,                   shortcut, view
+defaultDocTypes: list[list[str]] = [
+  #docType,       PURL, title,          icon,                   shortcut, view
   ["x0",          "",  "Projects",     "",                     "space", "name,tags,.status,.objective,comment"],
   ["x1",          "",  "Folders",      "",                      "",     ""],
   ["measurement", "",  "Measurements", "fa5s.thermometer-half", "m",    "name,tags,comment,type,image,.sample,.procedure"],
   ["sample",      "",  "Samples",      "fa5s.vial",             "s",    "name,tags,.chemistry,comment,qrCodes"],
   ["procedure",   "",  "Procedures",   "fa5s.list-ol",          "p",    "name,tags,comment,content"],
-  ["instrument",  "",  "Instruments",  "ri.scales-2-line",      "i",    "name,tags,comment,.vendor"]]
+  ["instrument",  "",  "Instruments",  "ri.scales-2-line",      "i",    "name,tags,comment,.vendor"]
+]
 
-defaultDefinitions: list[list[Union[str,int]]] = [
-  #docType, group,index, key,  description,                                      unit, IRI, mandatory, list
-  ["x0",    "", 0,     "name", "What is the name of the project?",                "",   "",  "T",       ""],
-  ["x0",    "", 1,     "tags", "What are the tags associated with the project?",  "",   "",  "",        ""],
-  ["x0",    "", 2,     "status","What is the project status",                     "",   "",  "",        "active,paused,passive,finished"],
-  ["x0",    "", 3,     "objective", "What is the objective?",                     "",   "",  "",        ""],
-  ["x0",    "", 4,     "comment", "What are the comments?",                       "",   "",  "",        ""],
-  ["x1",    "", 0,     "name",   "What is the name of task?",                     "",   "",  "T",       ""],
-  ["x1",    "", 1,     "tags", "What are the tags associated with the task?",     "",   "",  "",        ""],
-  ["x1",    "", 2,     "comment", "What are the comments?",                       "",   "",  "",        ""],
-  ["measurement","",0, "name", "What is the name of file name?",                  "",   "",  "T",       ""],
-  ["measurement","",1, "tags", "What are the tags associated with the file name?","",   "",  "",        ""],
-  ["measurement","",2, "comment", "What are the comments?",                       "",   "",  "",        ""],
-  ["measurement","",3, "sample", "Which sample was used?",                        "",   "",  "",        "sample"],
-  ["measurement","",4, "procedure", "Which procedure was used?",                  "",   "",  "",        "procedure"],
-  ["sample","", 0,     "name", "What is the name / identifier of the sample?",    "",   "",  "T",       ""],
-  ["sample","", 1,     "tags", "What are the tags associated with the sample?",   "",   "",  "",        ""],
-  ["sample","", 2,     "chemistry", "What is its chemical composition?",          "",   "",  "",        ""],
-  ["sample","", 3,     "comment", "What are the comments?",                       "",   "",  "",        ""],
-  ["sample","", 4,     "qrCodes", "",                                             "",   "",  "",        ""],
-  ["sample","geometry", 0,    "height",  "Sample height",                         "mm", "https://schema.org/height",  "",        ""],
-  ["sample","geometry", 1,    "width",   "Sample width",                          "mm", "",  "",        ""],
-  ["sample","geometry", 2,    "length",  "Sample length",                         "mm", "",  "",        ""],
-  ["procedure","", 0,  "name", "What is the name / path of the procedure?",       "",   "",  "T",       ""],
-  ["procedure","", 1,  "tags", "What are the tags associated with the procedure?","",   "",  "",        ""],
-  ["procedure","", 2,  "comment", "#tags comments :field:value: e.g. #SOP_v1",    "",   "",  "",        ""],
-  ["procedure","", 3,  "content", "What is procedure (Markdown possible; autofill if file given)?","","","",""],
-  ["instrument","",0,  "name", "What is the name / path of the instrument?",      "",   "",  "T",       ""],
-  ["instrument","",1,  "tags", "What are the tags associated with the instrument?","",  "",  "",        ""],
-  ["instrument","",2,  "comment", "What are the comments?",                       "",   "",  "",        ""],
-  ["instrument","",3,  "vendor", "Who is the vendor?",                            "",   "",  "",        ""],
-  ["instrument/extension","",0,  "name", "What is the name the instrument extension?",      "",   "",  "T",       ""],
-  ["instrument/extension","",1,  "tags", "What are the tags?",                    "",  "",  "",        ""],
-  ["instrument/extension","",2,  "comment", "What are the comments?",             "",   "",  "",        ""],
-  ["instrument/extension","",3,  "vendor", "Who is the vendor?",                  "",   "",  "",        ""],
+defaultSchema: list[list[Union[str,int]]] = [
+  #docType,            group,index,key,        unit, mandatory, list
+  ["x0",                  "", 0,   "name",      "",   "T",       ""],
+  ["x0",                  "", 1,   "tags",      "",   "",        ""],
+  ["x0",                  "", 2,   "status",    "",   "",        "active,paused,passive,finished"],
+  ["x0",                  "", 3,   "objective", "",   "",        ""],
+  ["x0",                  "", 4,   "comment",   "",   "",        ""],
+  ["x1",                  "", 0,   "name",      "",   "T",       ""],
+  ["x1",                  "", 1,   "tags",      "",   "",        ""],
+  ["x1",                  "", 2,   "comment",   "",   "",        ""],
+  ["measurement",         "", 0,   "name",      "",   "T",       ""],
+  ["measurement",         "", 1,   "tags",      "",   "",        ""],
+  ["measurement",         "", 2,   "comment",   "",   "",        ""],
+  ["measurement",         "", 3,   "sample",    "",   "",        "sample"],
+  ["measurement",         "", 4,   "procedure", "",   "",        "procedure"],
+  ["sample",              "", 0,   "name",      "",   "T",       ""],
+  ["sample",              "", 1,   "tags",      "",   "",        ""],
+  ["sample",              "", 2,   "chemistry", "",   "",        ""],
+  ["sample",              "", 3,   "comment",   "",   "",        ""],
+  ["sample",              "", 4,   "qrCodes",   "",   "",        ""],
+  ["sample",      "geometry", 0,   "height",    "mm", "",        ""],
+  ["sample",      "geometry", 1,   "width",     "mm", "",        ""],
+  ["sample",      "geometry", 2,   "length",    "mm", "",        ""],
+  ["procedure",           "", 0,   "name",      "",   "T",       ""],
+  ["procedure",           "", 1,   "tags",      "",   "",        ""],
+  ["procedure",           "", 2,   "comment",   "",   "",        ""],
+  ["procedure",           "", 3,   "content",   "",   "",        ""],
+  ["instrument",          "", 0,   "name",      "",   "T",       ""],
+  ["instrument",          "", 1,   "tags",      "",   "",        ""],
+  ["instrument",          "", 2,   "comment",   "",   "",        ""],
+  ["instrument",          "", 3,   "vendor",    "",   "",        ""],
+  ["instrument/extension","", 0,   "name",      "",   "T",       ""],
+  ["instrument/extension","", 1,   "tags",      "",   "",        ""],
+  ["instrument/extension","", 2,   "comment",   "",   "",        ""],
+  ["instrument/extension","", 3,   "vendor",    "",   "",        ""]
+]
+
+defaultDefinitions = [
+  ["name",            "What is the name this item?",                                    ""],
+  ["tags",            "What are the tags?",                                             ""],
+  ["status",          "What is the project status",                                     ""],
+  ["objective",       "What is the objective?",                                         ""],
+  ["comment",         "What are the comments?",                                         ""],
+  ["content",         "What is procedure (Markdown possible; autofill if file given)?", ""],
+  ["vendor",          "Who is the vendor?",                                             ""],
+  ["sample",          "Which sample was used?",                                         ""],
+  ["procedure",       "Which procedure was used?",                                      ""],
+  ["chemistry",       "What is its chemical composition?",                              ""],
+  ["qrCodes",         "",                                                               ""],
+  ["geometry.width",  "Sample width",                                                   ""],
+  ["geometry.length", "Sample length",                                                  ""],
+  ["geometry.height", "Sample height",                         "https://schema.org/height"]
 ]
 
 defaultDataHierarchyNode: list[dict[str, str]] = [
-  {'docType':'-','class':'','idx':'0','name':'name',   'query':'What is the name?',     'unit':'','IRI':'','mandatory':'T','list':''},
-  {'docType':'-','class':'','idx':'1','name':'tags',   'query':'What are the tags?',    'unit':'','IRI':'','mandatory':'','list':''},
-  {'docType':'-','class':'','idx':'2','name':'comment','query':'What are the comments?','unit':'','IRI':'','mandatory':'','list':''}
+  {'docType':'-','class':'','idx':'0','name':'name',   'query':'What is the name?',     'unit':'','PURL':'','mandatory':'T','list':''},
+  {'docType':'-','class':'','idx':'1','name':'tags',   'query':'What are the tags?',    'unit':'','PURL':'','mandatory':'','list':''},
+  {'docType':'-','class':'','idx':'2','name':'comment','query':'What are the comments?','unit':'','PURL':'','mandatory':'','list':''}
   ]
 
-CONF_FILE_NAME = '.pastaELN_v3.json'
+CONF_FILE_NAME = '.pastaELN.json'
 
 defaultConfiguration: dict[str, Any] = {
   "defaultProjectGroup": "research",
   "userID": "$os.getlogin()$",
   "version": 0,
-  "tableColumnsMax": 16,
   "qrPrinter": {},
-  "extractors": {},
   "authors": [{"first": "", "last": "", "title": "", "email": "", "orcid": "",
                "organizations": [{"organization": "", "rorid": ""}]}],
   "GUI": {},

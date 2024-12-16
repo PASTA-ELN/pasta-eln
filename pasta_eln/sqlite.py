@@ -6,14 +6,14 @@ from pathlib import Path
 from anytree import Node
 import pandas as pd
 from PIL import Image
-from .fixedStringsJson import defaultDataHierarchy, defaultDefinitions, SQLiteTranslation
+from .fixedStringsJson import defaultDocTypes, defaultSchema, defaultDefinitions, SQLiteTranslation
 from .stringChanges import outputString, camelCase, tracebackString
 from .miscTools import hierarchy
 
-KEY_ORDER=['id'  ,'name','user','type','dateCreated','dateModified','gui',      'client','shasum','image','content','comment','externalId','dateSync']
-KEY_TYPE =['TEXT','TEXT','TEXT','TEXT','TEXT',       'TEXT',        'varchar(2)','TEXT',  'TEXT',  'TEXT', 'TEXT',   'TEXT',   'TEXT',     'TEXT']
-DATA_HIERARCHY = ['docType', 'IRI','title','icon','shortcut','view']
-DEFINITIONS =    ['docType','class','idx', 'name', 'query', 'unit', 'IRI', 'mandatory', 'list']
+MAIN_ORDER     =['id'  ,'name','user','type','dateCreated','dateModified','gui',      'client','shasum','image','content','comment','externalId','dateSync']
+MAIN_TYPE      =['TEXT','TEXT','TEXT','TEXT','TEXT',       'TEXT',        'varchar(2)','TEXT',  'TEXT',  'TEXT', 'TEXT',   'TEXT',   'TEXT',     'TEXT']
+DOC_TYPES      =['docType', 'PURL','title','icon','shortcut','view']
+DOC_TYPE_SCHEMA=['docType', 'class', 'idx', 'name', 'unit', 'mandatory', 'list']
 
 class SqlLiteDB:
   """
@@ -31,7 +31,7 @@ class SqlLiteDB:
     self.cursor     = self.connection.cursor()
     self.dataHierarchyInit(resetDataHierarchy)
     # main table
-    self.createSQLTable('main',            KEY_ORDER,                                  'id', KEY_TYPE)
+    self.createSQLTable('main',            MAIN_ORDER,                                  'id', MAIN_TYPE)
     # branches table
     self.createSQLTable('branches', ['id','idx','stack','child','path','show'],'id, idx', ['TEXT','INTEGER']*2+["TEXT"]*2)
     # metadata table
@@ -40,7 +40,6 @@ class SqlLiteDB:
     # - flattened key
     # - can be adopted by adv. user
     self.createSQLTable('properties',      ['id','key','value','unit'],                'id, key')
-    self.createSQLTable('propDefinitions', ['key','long','IRI'],                       'key')
     # tables: each item can have multiple of these: tags, qrCodes
     self.createSQLTable('tags',            ['id','tag'],                               'id, tag')
     self.createSQLTable('qrCodes',         ['id','qrCode'],                            'id, qrCode')
@@ -62,17 +61,21 @@ class SqlLiteDB:
     tables = [i[0] for i in self.cursor.fetchall()] # all tables
     self.connection.commit()
     # check if default documents exist and create
-    if 'dataHierarchy' not in tables or resetDataHierarchy:
-      if 'dataHierarchy' in tables:
-        print('Info: remove old dataHierarchy')
-        self.cursor.execute("DROP TABLE dataHierarchy")
-      self.createSQLTable('dataHierarchy',  DATA_HIERARCHY,    'docType')
-      command = f"INSERT INTO dataHierarchy ({', '.join(DATA_HIERARCHY)}) VALUES ({', '.join(['?']*len(DATA_HIERARCHY))});"
-      self.cursor.executemany(command, defaultDataHierarchy)
-      # definitions table (see below)
-      # - define the key of the metadata table, give long description, IRI, ...
-      self.createSQLTable('definitions', DEFINITIONS,  'docType, class, idx')
-      command = f"INSERT INTO definitions ({', '.join(DEFINITIONS)}) VALUES ({', '.join(['?']*len(DEFINITIONS))});"
+    if 'docTypes' not in tables or resetDataHierarchy:
+      if 'docTypes' in tables:
+        print('Info: remove old docTypes')
+        self.cursor.execute("DROP TABLE docTypes")
+      self.createSQLTable('docTypes',  DOC_TYPES,    'docType')
+      command = f"INSERT INTO docTypes ({', '.join(DOC_TYPES)}) VALUES ({', '.join(['?']*len(DOC_TYPES))});"
+      self.cursor.executemany(command, defaultDocTypes)
+      # docTypeSchema table (see below)
+      # - define the key of the metadata table, units, icons, ...
+      self.createSQLTable('docTypeSchema', DOC_TYPE_SCHEMA,  'docType, class, idx')
+      command = f"INSERT INTO docTypeSchema ({', '.join(DOC_TYPE_SCHEMA)}) VALUES ({', '.join(['?']*len(DOC_TYPE_SCHEMA))});"
+      self.cursor.executemany(command, defaultSchema)
+      # definitions of all the keys (those from the docTypeSchema and those of the properties table)
+      self.createSQLTable('definitions',     ['key','long','PURL'],                       'key')
+      command =  "INSERT INTO definitions VALUES (?, ?, ?);"
       self.cursor.executemany(command, defaultDefinitions)
       self.connection.commit()
     return
@@ -84,7 +87,7 @@ class SqlLiteDB:
       docType (str): docType
       columns (list): list of columns
     """
-    self.cursor.execute(f"UPDATE dataHierarchy SET view='{','.join(columns)}' WHERE docType = '{docType}'")
+    self.cursor.execute(f"UPDATE docTypes SET view='{','.join(columns)}' WHERE docType = '{docType}'")
     self.connection.commit()
     return
 
@@ -109,7 +112,7 @@ class SqlLiteDB:
       logging.error("Difference in sqlite table: %s", name)
       logging.error(columnNames)
       logging.error(columns)
-      raise ValueError('SQLite table difference')
+      raise ValueError(f'SQLite table difference: {name}')
     return columnNames
 
 
@@ -127,23 +130,23 @@ class SqlLiteDB:
     ### return column information
     if not docType: #if all docTypes
       column = f', {column}' if column else ''
-      self.cursor.execute(f"SELECT docType {column} FROM dataHierarchy")
+      self.cursor.execute(f"SELECT docType {column} FROM docTypes")
       results = self.cursor.fetchall()
       return [i[0] for i in results] if column=='' else results
-    ### if metadata = definitions of data
+    ### if metadata = docTypeSchema of data
     if column == 'meta':
       self.connection.row_factory = sqlite3.Row  #default None
       cursor = self.connection.cursor()
       if group:
-        cursor.execute(f"SELECT * FROM definitions WHERE docType == '{docType}' and class == '{group}'")
+        cursor.execute(f"SELECT * FROM docTypeSchema WHERE docType == '{docType}' and class == '{group}'")
       else:
-        cursor.execute(f"SELECT * FROM definitions WHERE docType == '{docType}'")
+        cursor.execute(f"SELECT * FROM docTypeSchema WHERE docType == '{docType}'")
       return cursor.fetchall()
     if column == 'metaColumns':
-      self.cursor.execute(f"SELECT DISTINCT class FROM definitions WHERE docType == '{docType}'")
+      self.cursor.execute(f"SELECT DISTINCT class FROM docTypeSchema WHERE docType == '{docType}'")
       return [i[0] for i in self.cursor.fetchall()]
     # if specific docType
-    self.cursor.execute(f"SELECT {column} FROM dataHierarchy WHERE docType == '{docType}'")
+    self.cursor.execute(f"SELECT {column} FROM docTypes WHERE docType == '{docType}'")
     result = self.cursor.fetchone()
     if result is None:
       return []
@@ -198,23 +201,20 @@ class SqlLiteDB:
                             'child': dataI[3],
                             'path':  None if dataI[4] == '*' else dataI[4],
                             'show':   [i=='T' for i in dataI[5]]})
-    cmd = "SELECT properties.key, properties.value, properties.unit, propDefinitions.long, propDefinitions.IRI, " \
-          "definitions.unit, definitions.query, definitions.IRI FROM properties LEFT JOIN propDefinitions USING(key) "\
-          "LEFT JOIN definitions ON properties.key = (definitions.class || '.' || definitions.name) "\
+    cmd = "SELECT properties.key, properties.value, properties.unit, definitions.long, definitions.PURL, " \
+          "docTypeSchema.unit FROM properties LEFT JOIN definitions USING(key) "\
+          "LEFT JOIN docTypeSchema ON properties.key = (docTypeSchema.class || '.' || docTypeSchema.name) "\
           f"WHERE properties.id == '{docID}'"
-    # Big assumption in "LEFT JOIN definitions ON properties.key = (definitions.class || '.' || definitions.name)"
-    #   with 'docType' missing
-    # -> each property ".status" has the same meaning for all docTypes
-    # -> if it has the same meaning, it is only stored once??
     self.cursor.execute(cmd)
     res = self.cursor.fetchall()
-    metadataFlat:dict[str, tuple[str,str,str,str]]  = {i[0]:(    i[1],                      #value
-                          ('' if i[2] is None else i[2]) or ('' if i[5] is None else i[5]), #unit
-                          ('' if i[3] is None else i[3]) or ('' if i[6] is None else i[6]), #long
-                          ('' if i[4] is None else i[4]) or ('' if i[7] is None else i[7])  #IRI
-                          ) for i in res}
+    metadataFlat:dict[str, tuple[str,str,str,str]]  = {i[0]:(    i[1],            #value
+                ('' if i[2] is None else i[2]) or ('' if i[5] is None else i[5]), #unit (priority: property.unit)
+                ('' if i[3] is None else i[3]),                                   #long
+                ('' if i[4] is None else i[4])                                    #PURL
+                ) for i in res}
     doc |= hierarchy(metadataFlat)
     return doc
+
 
   def saveDoc(self, doc:dict[str,Any]) -> dict[str,Any]:
     """
@@ -274,14 +274,14 @@ class SqlLiteDB:
     doc['type'] = '/'.join(doc['type'])
     doc['gui']  = ''.join(['T' if i else 'F' for i in doc['gui']])
     doc['client'] = tracebackString(False, 'save:'+doc['id'])
-    docList = [doc[x] if x in doc else doc.get(f'.{x}','') for x in KEY_ORDER]
+    docList = [doc[x] if x in doc else doc.get(f'.{x}','') for x in MAIN_ORDER]
     self.cursor.execute(f"INSERT INTO main VALUES ({', '.join(['?']*len(docList))})", docList)
-    doc = {k:v for k,v in doc.items() if (k not in KEY_ORDER and k[1:] not in KEY_ORDER) or k == 'id'}
+    doc = {k:v for k,v in doc.items() if (k not in MAIN_ORDER and k[1:] not in MAIN_ORDER) or k == 'id'}
 
     def insertMetadata(data:dict[str,Any], parentKeys:str) -> None:
       parentKeys = f'{parentKeys}.' if parentKeys else ''
       cmd    = "INSERT OR REPLACE INTO properties VALUES (?, ?, ?, ?);"
-      cmdDef = "INSERT OR REPLACE INTO propDefinitions VALUES (?, ?, ?);"
+      cmdDef = "INSERT OR REPLACE INTO definitions VALUES (?, ?, ?);"
       for key,value in data.items():
         key = str(key) if isinstance(key, int) else key
         if isinstance(value, dict):
@@ -297,7 +297,7 @@ class SqlLiteDB:
           self.cursor.executemany(cmd, zip([doc['id']]*len(value),      [parentKeys+key+'.'+i['key'] for i in value],
                                             [i['value'] for i in value], [i['unit'] for i in value]  ))
           self.cursor.executemany(cmdDef, zip([parentKeys+key+'.'+i['key'] for i in value],
-                                            [i['label'] for i in value], [i['IRI'] for i in value]  ))
+                                            [i['label'] for i in value], [i['PURL'] for i in value]  ))
         elif isinstance(value, tuple) and len(value)==4:
           self.cursor.execute(cmd,    [doc['id'], parentKeys+key, value[0], value[1]])
           self.cursor.execute(cmdDef, [parentKeys+key, value[2], value[3]])
@@ -309,9 +309,7 @@ class SqlLiteDB:
       self.connection.commit()
       return
     # properties
-    metaDoc = {k:v for k,v in doc.items() if k not in KEY_ORDER}
-    # remove the (unit, long, IRI) of the ones that are already in data hierarchy
-    #    create a test case for this
+    metaDoc = {k:v for k,v in doc.items() if k not in MAIN_ORDER}
     insertMetadata(metaDoc, '')
     # save changes
     self.connection.commit()
@@ -339,6 +337,10 @@ class SqlLiteDB:
     Returns:
         dict: json representation of updated document
     """
+    if set(dataNew.keys()) == {'type','image'}: #if only type and image in update = change of extractor
+      self.cursor.execute(f"UPDATE main SET type='{'/'.join(dataNew['type'])}', image='{dataNew['image']}' WHERE id = '{docID}'")
+      self.connection.commit()
+      return {'id':docID}
     dataNew['client'] = tracebackString(False, f'updateDoc:{docID}')
     if 'edit' in dataNew:     #if delete
       dataNew = {'id':dataNew['id'], 'branch':dataNew['branch'], 'user':dataNew['user'], 'externalId':dataNew['externalId'], 'name':''}
@@ -370,7 +372,7 @@ class SqlLiteDB:
       self.cursor.executemany("INSERT INTO qrCodes VALUES (?, ?);", zip([docID]*len(change), change))
       changesDict['qrCodes'] = ','.join(qrCodesOld)
     # separate into main and properties
-    mainNew    = {key: dataNew.pop(key) for key in KEY_ORDER if key in dataNew}
+    mainNew    = {key: dataNew.pop(key) for key in MAIN_ORDER if key in dataNew}
     branchNew  = dataNew.pop('branch',{})
     # read branches and identify changes
     cursor.execute(f"SELECT stack, child, path, show FROM branches WHERE id == '{docID}'")
@@ -681,12 +683,12 @@ class SqlLiteDB:
     if viewType=='viewDocType':
       viewColumns = self.dataHierarchy(docType, 'view')
       viewColumns = viewColumns+['id'] if viewColumns else ['name','tags','comment','id']
-      textSelect = ', '.join([f'main.{i}' for i in viewColumns if i in KEY_ORDER or i[1:] in KEY_ORDER])
+      textSelect = ', '.join([f'main.{i}' for i in viewColumns if i in MAIN_ORDER or i[1:] in MAIN_ORDER])
       if 'tags' in viewColumns:
         textSelect += ', tags.tag'
       if 'qrCodes' in viewColumns:
         textSelect += ', qrCodes.qrCode'
-      metadataKeys  = [f'properties.key == "{i}"' for i in viewColumns if i not in KEY_ORDER+['tags']]
+      metadataKeys  = [f'properties.key == "{i}"' for i in viewColumns if i not in MAIN_ORDER+['tags']]
       if metadataKeys:
         textSelect += ', properties.key, properties.value'
       cmd = f"SELECT {textSelect} FROM main LEFT JOIN tags USING(id) LEFT JOIN qrCodes USING(id) "\
@@ -710,7 +712,7 @@ class SqlLiteDB:
         df = df.pivot(index=columnNames, columns='key', values='value').reset_index()  # Pivot the DataFrame
         df.columns.name = None                                                         # Flatten the columns
       columnOrder = ['tag' if i=='tags' else 'qrCode' if i=='qrCodes'
-                     else i[1:] if i.startswith('.') and i[1:] in KEY_ORDER else i for i in viewColumns]
+                     else i[1:] if i.startswith('.') and i[1:] in MAIN_ORDER else i for i in viewColumns]
       df = df.reindex(columnOrder, axis=1)
       df = df.rename(columns={i:i[1:] for i in columnOrder if i.startswith('.') })
       df = df.astype('str').fillna('')
