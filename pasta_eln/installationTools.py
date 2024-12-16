@@ -49,7 +49,8 @@ def createDefaultConfiguration(pathPasta:Optional[Path]=None) -> dict[str,Any]:
           'research': {
               'local': {'database': 'research', 'path': str(pathPasta)},
               'remote': {},
-              'addOnDir': str(addOnDir)
+              'addOnDir': str(addOnDir),
+              'addOns': {'project': {}, 'extractors':{}, 'table':{}}
           }},
       'version': 3}
   try:

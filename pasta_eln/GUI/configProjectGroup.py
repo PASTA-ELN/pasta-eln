@@ -117,6 +117,7 @@ class ProjectGroup(QDialog):
       if not config['addOnDir']:
         showMessage(self, 'Error', 'Error: add-on directory not set.')
         return
+      print(config)
       with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as confFile:
         confFile.write(json.dumps(self.configuration, indent=2))
       self.callbackFinished(True)

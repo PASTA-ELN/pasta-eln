@@ -209,7 +209,7 @@ def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
   confProjectGroup['table']      = {}
   with open(Path.home()/CONF_FILE_NAME,'w', encoding='utf-8') as f:
     f.write(json.dumps(configuration, indent=2))
-  return extractorsAll | projectAll
+  return {'addon directory':directory} | extractorsAll | projectAll
 
 
 def restart() -> None:

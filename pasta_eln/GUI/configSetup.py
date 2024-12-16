@@ -81,7 +81,6 @@ class ConfigurationSetup(QWidget):
             self.text1.setMarkdown(self.mainText)
           else:
             configuration('repair', dirName)
-            updateAddOnList()
         else:
           self.mainText = self.mainText.replace('- Configuration of preferences','- Configuration: user chose to NOT install' )
           self.text1.setMarkdown(self.mainText)
