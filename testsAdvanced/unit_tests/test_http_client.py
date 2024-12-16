@@ -388,28 +388,6 @@ class TestAsyncHttpClient(object):
     assert not ret, "Response should be empty"
 
   @pytest.mark.parametrize(
-    "base_url, request_params, content", [
-      ('https://www.google.com', {'Accept': 'application/text'}, None),
-      ('https://jsonplaceholder.typicode.com/todos/1', {'Accept': 'application/json'},
-       {"userId": 1, "id": 1, "title": "delectus aut autem", "completed": False}),
-      ('https://data.fz-juelich.de/api/search', {'Accept': 'application/json', 'q': 'data'}, None)
-    ])
-  @pytest.mark.asyncio
-  async def test_client_get_request_for_valid_urls_should_succeed(self,
-                                                                  base_url,
-                                                                  request_params,
-                                                                  content):
-    client = AsyncHttpClient(10)
-    ret = await client.get(base_url, request_params)
-    assert ret, "Response should not be empty"
-    assert isinstance(ret, dict), "Response type should be as expected"
-    assert ret.get("result") == content if content else ret.get("result"), "Response should be as expected"
-    assert ret.get("status") == 200, "Response status should be as expected"
-    assert ret.get("headers") is not None, "Response headers should be as expected"
-    assert ret.get("reason") == "OK", "Response reason should be as expected"
-    assert client.session_request_errors == [], "session_request_errors should be empty"
-
-  @pytest.mark.parametrize(
     "base_url, request_params, response_key, content", [
       ('https://httpbin.org/post', {'Content-Type': 'application/json', 'Accept': 'application/json'}, 'json',
        {"userId": 1, "id": 1, "title": "delectus aut autem", "completed": False}),

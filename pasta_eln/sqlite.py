@@ -12,7 +12,7 @@ from .miscTools import hierarchy
 
 MAIN_ORDER     =['id'  ,'name','user','type','dateCreated','dateModified','gui',      'client','shasum','image','content','comment','externalId','dateSync']
 MAIN_TYPE      =['TEXT','TEXT','TEXT','TEXT','TEXT',       'TEXT',        'varchar(2)','TEXT',  'TEXT',  'TEXT', 'TEXT',   'TEXT',   'TEXT',     'TEXT']
-DOC_TYPES      =['docType', 'IRI','title','icon','shortcut','view']
+DOC_TYPES      =['docType', 'PURL','title','icon','shortcut','view']
 DOC_TYPE_SCHEMA=['docType', 'class', 'idx', 'name', 'unit', 'mandatory', 'list']
 
 class SqlLiteDB:
@@ -74,7 +74,7 @@ class SqlLiteDB:
       command = f"INSERT INTO docTypeSchema ({', '.join(DOC_TYPE_SCHEMA)}) VALUES ({', '.join(['?']*len(DOC_TYPE_SCHEMA))});"
       self.cursor.executemany(command, defaultSchema)
       # definitions of all the keys (those from the docTypeSchema and those of the properties table)
-      self.createSQLTable('definitions',     ['key','long','IRI'],                       'key')
+      self.createSQLTable('definitions',     ['key','long','PURL'],                       'key')
       command =  "INSERT INTO definitions VALUES (?, ?, ?);"
       self.cursor.executemany(command, defaultDefinitions)
       self.connection.commit()
@@ -201,7 +201,7 @@ class SqlLiteDB:
                             'child': dataI[3],
                             'path':  None if dataI[4] == '*' else dataI[4],
                             'show':   [i=='T' for i in dataI[5]]})
-    cmd = "SELECT properties.key, properties.value, properties.unit, definitions.long, definitions.IRI, " \
+    cmd = "SELECT properties.key, properties.value, properties.unit, definitions.long, definitions.PURL, " \
           "docTypeSchema.unit FROM properties LEFT JOIN definitions USING(key) "\
           "LEFT JOIN docTypeSchema ON properties.key = (docTypeSchema.class || '.' || docTypeSchema.name) "\
           f"WHERE properties.id == '{docID}'"
@@ -210,7 +210,7 @@ class SqlLiteDB:
     metadataFlat:dict[str, tuple[str,str,str,str]]  = {i[0]:(    i[1],            #value
                 ('' if i[2] is None else i[2]) or ('' if i[5] is None else i[5]), #unit (priority: property.unit)
                 ('' if i[3] is None else i[3]),                                   #long
-                ('' if i[4] is None else i[4])                                    #IRI
+                ('' if i[4] is None else i[4])                                    #PURL
                 ) for i in res}
     doc |= hierarchy(metadataFlat)
     return doc
@@ -297,7 +297,7 @@ class SqlLiteDB:
           self.cursor.executemany(cmd, zip([doc['id']]*len(value),      [parentKeys+key+'.'+i['key'] for i in value],
                                             [i['value'] for i in value], [i['unit'] for i in value]  ))
           self.cursor.executemany(cmdDef, zip([parentKeys+key+'.'+i['key'] for i in value],
-                                            [i['label'] for i in value], [i['IRI'] for i in value]  ))
+                                            [i['label'] for i in value], [i['PURL'] for i in value]  ))
         elif isinstance(value, tuple) and len(value)==4:
           self.cursor.execute(cmd,    [doc['id'], parentKeys+key, value[0], value[1]])
           self.cursor.execute(cmdDef, [parentKeys+key, value[2], value[3]])

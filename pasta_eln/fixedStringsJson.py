@@ -2,7 +2,7 @@
 from typing import Any, Union
 
 defaultDocTypes: list[list[str]] = [
-  #docType,       IRI, title,          icon,                   shortcut, view
+  #docType,       PURL, title,          icon,                   shortcut, view
   ["x0",          "",  "Projects",     "",                     "space", "name,tags,.status,.objective,comment"],
   ["x1",          "",  "Folders",      "",                      "",     ""],
   ["measurement", "",  "Measurements", "fa5s.thermometer-half", "m",    "name,tags,comment,type,image,.sample,.procedure"],
@@ -66,9 +66,9 @@ defaultDefinitions = [
 ]
 
 defaultDataHierarchyNode: list[dict[str, str]] = [
-  {'docType':'-','class':'','idx':'0','name':'name',   'query':'What is the name?',     'unit':'','IRI':'','mandatory':'T','list':''},
-  {'docType':'-','class':'','idx':'1','name':'tags',   'query':'What are the tags?',    'unit':'','IRI':'','mandatory':'','list':''},
-  {'docType':'-','class':'','idx':'2','name':'comment','query':'What are the comments?','unit':'','IRI':'','mandatory':'','list':''}
+  {'docType':'-','class':'','idx':'0','name':'name',   'query':'What is the name?',     'unit':'','PURL':'','mandatory':'T','list':''},
+  {'docType':'-','class':'','idx':'1','name':'tags',   'query':'What are the tags?',    'unit':'','PURL':'','mandatory':'','list':''},
+  {'docType':'-','class':'','idx':'2','name':'comment','query':'What are the comments?','unit':'','PURL':'','mandatory':'','list':''}
   ]
 
 CONF_FILE_NAME = '.pastaELN.json'
