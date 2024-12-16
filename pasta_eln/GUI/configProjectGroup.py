@@ -107,17 +107,17 @@ class ProjectGroup(QDialog):
       config   = self.configuration['projectGroups'][key]
       headers  = {'Content-type': 'application/json', 'Accept': 'text/plain', 'Authorization':config['remote'].get('key','')}
       url      = config['remote'].get('url','')
-      response = requests.get(f'{url}info', headers=headers, verify=True, timeout=60)
-      if response.status_code!=200:
-        showMessage(self, 'Error', 'Error: server address or api key are incorrect.')
-        return
+      if url and config['remote'].get('key',''):
+        response = requests.get(f'{url}info', headers=headers, verify=True, timeout=60)
+        if response.status_code!=200:
+          showMessage(self, 'Error', 'Error: server address or api key are incorrect.')
+          return
       if not config['local']['path']:
         showMessage(self, 'Error', 'Error: path to data directory is not set.')
         return
       if not config['addOnDir']:
         showMessage(self, 'Error', 'Error: add-on directory not set.')
         return
-      print(config)
       with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as confFile:
         confFile.write(json.dumps(self.configuration, indent=2))
       self.callbackFinished(True)
