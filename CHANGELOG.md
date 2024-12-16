@@ -2,7 +2,16 @@
 
 ## [Unreleased](https://github.com/PASTA-ELN/pasta-eln/tree/HEAD)
 
-[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.0.0b2...HEAD)
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.0.0b3...HEAD)
+
+**Merged pull requests:**
+
+- Change the database: only one location of definitions [\#377](https://github.com/PASTA-ELN/pasta-eln/pull/377) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+- Small changes [\#376](https://github.com/PASTA-ELN/pasta-eln/pull/376) ([SteffenBrinckmann](https://github.com/SteffenBrinckmann))
+
+## [v3.0.0b3](https://github.com/PASTA-ELN/pasta-eln/tree/v3.0.0b3) (2024-12-09)
+
+[Full Changelog](https://github.com/PASTA-ELN/pasta-eln/compare/v3.0.0b2...v3.0.0b3)
 
 **Closed issues:**
 
