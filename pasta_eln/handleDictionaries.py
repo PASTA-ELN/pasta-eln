@@ -117,7 +117,7 @@ def doc2markdown(doc:dict[str,Any], ignoreKeys:list[str], dataHierarchyNode:list
     str: markdown representation
   """
   markdown = ''
-  for key in [i for i in SORTED_KEYS if i in doc.keys()]+[i for i in doc.keys() if i not in SORTED_KEYS]:
+  for key in [i for i in SORTED_KEYS if i in doc]+[i for i in doc if i not in SORTED_KEYS]:
     value = doc[key]
     if key == '' and isinstance(value,dict):     #handle only key==''
       markdown += doc2markdown(value, ignoreKeys, dataHierarchyNode, widget)

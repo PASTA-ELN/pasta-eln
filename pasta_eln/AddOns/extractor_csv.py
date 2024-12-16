@@ -56,7 +56,7 @@ def use(filePath, style={'main':''}, saveFileName=None):
     style['main'] = 'measurement/csv/linesAndDots'                           # for the default case: set the main-style
     try:
       plt.plot(data.iloc[:,0], data.iloc[:,1],'o-')
-    except:
+    except Exception:
       plt.plot([0,1], [0,1],'o-')
       plt.text(0.5, 0.5, "ERROR: unclear csv file")
   plt.xlabel('time [sec]')
@@ -66,7 +66,7 @@ def use(filePath, style={'main':''}, saveFileName=None):
       sampleFrequency = 1.0 / (data.iloc[1,0]-data.iloc[0,0])                  # a simple equation to calculate the sample frequency
     else: #if only one line in file
       sampleFrequency = 1.0
-  except:
+  except Exception:
     sampleFrequency = -1.0
   maxYData        = data.iloc[:,1].max()
   metaUser = {'Sample frequency [Hz]':sampleFrequency,                       # this is the easy way to denote metadata as scientists often use. Internally it is converted appropriately

@@ -159,7 +159,7 @@ class ProjectGroup(QDialog):
         if button == QMessageBox.StandardButton.No:
           return
       config['local']['path'] = answer
-      self.directoryLabel.setText('Data directory: ' + answer)
+      self.directoryLabel.setText(f'Data directory: {answer}')
 
     elif command[0] is Command.CHANGE_ADDON:
       answer = QFileDialog.getExistingDirectory(self, "Specify new add-on directory")
@@ -183,7 +183,7 @@ class ProjectGroup(QDialog):
       if not url.endswith('api/v2/'):
         url += 'api/v2/'
       if not url.startswith('https'):
-        url = 'https://' + url
+        url = f'https://{url}'
       config['remote']['url'] = url
       self.serverLabel.setText(url)
       try:

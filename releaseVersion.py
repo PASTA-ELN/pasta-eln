@@ -27,7 +27,7 @@ def getVersion():
   lastVersion = versionList[-1]
   if lastVersion.count('.')==3:
     lastVersion = '.'.join(lastVersion.split('.')[:3]) + f'b{lastVersion.split(".")[-1]}'
-  return 'v'+lastVersion
+  return f'v{lastVersion}'
 
 def createContributors():
   """
@@ -172,7 +172,7 @@ def runTests():
   print('Start running tests')
   tests = [i for i in os.listdir('tests') if i.endswith('.py') and i.startswith('test_')]
   for fileI in sorted(tests):
-    result = subprocess.run(['pytest','-s','--no-skip','tests/'+fileI], stdout=subprocess.PIPE,
+    result = subprocess.run(['pytest','-s','--no-skip',f'tests/{fileI}'], stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE, check=False)
     success = result.stdout.decode('utf-8').count('*** DONE WITH VERIFY ***')
     if success==1:
@@ -181,10 +181,10 @@ def runTests():
       for badWord in ['**ERROR got a file','FAILED','ModuleNotFoundError']:
         success += result.stdout.decode('utf-8').count(badWord)
     if success==0:
-      print("  success: Python unit test "+fileI)
+      print(f"  success: Python unit test {fileI}")
     else:
-      print("  FAILED: Python unit test "+fileI)
-      print("    run: 'pytest -s tests/{fileI}' and check logFile")
+      print(f"  FAILED: Python unit test {fileI}")
+      print(f"    run: 'pytest -s tests/{fileI}' and check logFile")
       print(f"\n---------------------------\n{result.stdout.decode('utf-8')}\n---------------------------\n")
   print('**WARNING Start running complicated tests: SKIP FOR NOW')
   # tests = [i for i in os.listdir('testsComplicated') if i.endswith('.py') and i.startswith('test_')]
@@ -216,19 +216,25 @@ def copyAddOns():
   for fileI in os.listdir(basePath):
     if fileI in skipFiles or not fileI.endswith('.py'):
       continue
-    shutil.copy('../AddOns'+os.sep+fileI, basePath+os.sep+fileI)
+    shutil.copy(f'../AddOns/{fileI}', f'{basePath}/{fileI}')
+  return
+
+
+def sourcery():
+  """ Verify code with sourcery """
+  print('------------------ Sourcery -----------------')
+  os.system('sourcery review pasta_eln/')
+  print('---------------- end sourcery ---------------')
   return
 
 
 if __name__=='__main__':
   runTests()
+  sourcery
   copyAddOns()
   createRequirementsFile()
   #do update
-  if len(sys.argv)==1:
-    level=2
-  else:
-    level = int(sys.argv[1])
+  level = 2 if len(sys.argv)==1 else int(sys.argv[1])
   if input('Continue: only "y" continues. ') == 'y':
     newVersion(level)
   print("\n================================\nPush this and publish add-ons\n================================")
