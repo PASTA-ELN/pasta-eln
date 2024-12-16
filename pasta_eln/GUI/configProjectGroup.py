@@ -87,8 +87,9 @@ class ProjectGroup(QDialog):
     mainL.addWidget(buttonBox)
 
     #initialize
-    self.selectGroup.setCurrentText(self.comm.backend.configurationProjectGroup)
-    self.selectGroup.currentTextChanged.emit(self.comm.backend.configurationProjectGroup)
+    if hasattr(self.comm.backend, 'configurationProjectGroup'):
+      self.selectGroup.setCurrentText(self.comm.backend.configurationProjectGroup)
+      self.selectGroup.currentTextChanged.emit(self.comm.backend.configurationProjectGroup)
 
 
   def closeDialog(self, btn:TextButton) -> None:
