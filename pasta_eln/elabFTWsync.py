@@ -155,7 +155,7 @@ class Pasta2Elab:
             print('list change', k,v, docOther[k])
           docOther[k] = docServer[k]
       elif self.verbose:
-          print('other change', k,v, docOther[k], type(v))
+        print('other change', k,v, docOther[k], type(v))
     if flagServerChange:
       if self.verbose:
         print('Server content changed from other')

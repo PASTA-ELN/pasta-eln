@@ -237,4 +237,3 @@ if __name__=='__main__':
   level = 2 if len(sys.argv)==1 else int(sys.argv[1])
   if input('Continue: only "y" continues. ') == 'y':
     newVersion(level)
-  print("\n================================\nPush this and publish add-ons\n================================")
