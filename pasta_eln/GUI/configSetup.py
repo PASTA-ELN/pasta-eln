@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QMessageBox, QPro
 from ..guiStyle import TextButton, widgetAndLayout
 from ..installationTools import configuration, exampleData, createShortcut
 from ..fixedStringsJson import setupText, exampleDataString
-from ..miscTools import restart, updateAddOnList
+from ..miscTools import restart
 from ..guiCommunicate import Communicate
 # from ..dataverse.database_api import DatabaseAPI
 

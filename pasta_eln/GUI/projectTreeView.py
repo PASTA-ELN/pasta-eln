@@ -198,10 +198,10 @@ class TreeView(QTreeView):
     Args:
       event (QDropEvent): event
     """
-    if event.mimeData().hasUrls():
+    if event.mimeData().hasUrls():  #file rometo to pasta
       item = self.model().itemFromIndex(self.indexAt(event.pos()))                                           # type: ignore[attr-defined]
-      if item.data()['docType'][0][0]!='x':
-        showMessage(self, 'Error', 'You cannot drop files on non folders.')
+      if item is None or item.data()['docType'][0][0]!='x':
+        showMessage(self, 'Error', 'You can drop external files only onto folders.')
         return
       # create a list of all files
       files, folders = [], []
