@@ -79,7 +79,7 @@ class Form(QDialog):
     keysDataHierarchy = [f"{i['class']}.{i['name']}" for i in dataHierarchyNode]
     keysDocOrg = [[str(x) for x in (f'{k}.{k1}' for k1 in self.doc[k])] if isinstance(self.doc[k], dict) else [f'.{k}']
                for k in self.doc if k not in MAIN_ORDER+['branch','qrCodes','tags']]
-    for keyInDocNotHierarchy in set(i for row in keysDocOrg for i in row).difference(keysDataHierarchy):
+    for keyInDocNotHierarchy in {i for row in keysDocOrg for i in row}.difference(keysDataHierarchy):
       group = keyInDocNotHierarchy.split('.')[0]
       key = keyInDocNotHierarchy.split('.')[1]
       idx = len([1 for i in dataHierarchyNode if i['class']==group])
@@ -184,33 +184,32 @@ class Form(QDialog):
         elif (isinstance(defaultValue, tuple) and len(defaultValue)==4 and isinstance(defaultValue[0], str)) or \
               isinstance(defaultValue, str):    #string or tuple
           dataHierarchyItem = [i for i in dataHierarchyNode if i['class']==group and f"{i['class']}.{i['name']}"==key]
-          if len(dataHierarchyItem)==1:
-            label = dataHierarchyItem[0]['name'].capitalize()
-            if isinstance(defaultValue, str):
-              value = defaultValue
-            else:  #tuple
-              value = defaultValue[0]
-              label += '' if defaultValue[1] is None or defaultValue[1]=='' else f' [{defaultValue[1]}]'
-              label += '' if defaultValue[3] is None or defaultValue[3]=='' else f'&nbsp;<b><a href="{defaultValue[3]}">&uArr;</a></b>'
-            if dataHierarchyItem[0]['list']: #choice dropdown
-              setattr(self, elementName, QComboBox())
-              if ',' in dataHierarchyItem[0]['list']:                  #dataHierarchy-defined choices
-                getattr(self, elementName).addItems(dataHierarchyItem[0]['list'].split(','))
-                getattr(self, elementName).setCurrentText(value)
-              else:                                                    #choice among docType
-                listDocType = dataHierarchyItem[0]['list']
-                getattr(self, elementName).addItem('- no link -', userData='')
-                for _, line in self.db.getView(f'viewDocType/{listDocType}').iterrows():
-                  getattr(self, elementName).addItem(line['name'], userData=line['id'])
-                  if line['id'] == value:
-                    getattr(self, elementName).setCurrentIndex(getattr(self, elementName).count()-1)
-              self.allUserElements.append((key,'ComboBox'))
-            else:                                   #text area
-              setattr(self, elementName, QLineEdit(value))
-              self.allUserElements.append((key,'LineEdit'))
-            getattr(self, elementName).setStyleSheet(self.comm.palette.get('secondaryText','color'))
-          else:
+          if len(dataHierarchyItem)!=1:
             raise ValueError('more than one dataHierarchyItem')
+          label = dataHierarchyItem[0]['name'].capitalize()
+          if isinstance(defaultValue, str):
+            value = defaultValue
+          else:  #tuple
+            value = defaultValue[0]
+            label += '' if defaultValue[1] is None or defaultValue[1]=='' else f' [{defaultValue[1]}]'
+            label += '' if defaultValue[3] is None or defaultValue[3]=='' else f'&nbsp;<b><a href="{defaultValue[3]}">&uArr;</a></b>'
+          if dataHierarchyItem[0]['list']: #choice dropdown
+            setattr(self, elementName, QComboBox())
+            if ',' in dataHierarchyItem[0]['list']:                  #dataHierarchy-defined choices
+              getattr(self, elementName).addItems(dataHierarchyItem[0]['list'].split(','))
+              getattr(self, elementName).setCurrentText(value)
+            else:                                                    #choice among docType
+              listDocType = dataHierarchyItem[0]['list']
+              getattr(self, elementName).addItem('- no link -', userData='')
+              for _, line in self.db.getView(f'viewDocType/{listDocType}').iterrows():
+                getattr(self, elementName).addItem(line['name'], userData=line['id'])
+                if line['id'] == value:
+                  getattr(self, elementName).setCurrentIndex(getattr(self, elementName).count()-1)
+            self.allUserElements.append((key,'ComboBox'))
+          else:                                   #text area
+            setattr(self, elementName, QLineEdit(value))
+            self.allUserElements.append((key,'LineEdit'))
+          getattr(self, elementName).setStyleSheet(self.comm.palette.get('secondaryText','color'))
           formLabelW = QLabel(label)
           formLabelW.setOpenExternalLinks(True)
           formLabelW.setTextInteractionFlags(Qt.TextInteractionFlag.LinksAccessibleByMouse)

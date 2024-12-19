@@ -749,8 +749,7 @@ class SqlLiteDB:
       results = [{'id':i[0], 'key':i[1],
                   'value':[i[2], i[3].split('/')]+list(i[4:])} for i in results if i[1] is not None]
     elif viewType=='viewIdentify' and docType=='viewTags':
-      df = pd.read_sql_query("SELECT tags.tag, main.name, main.type, tags.id FROM tags INNER JOIN main", self.connection).fillna('')
-      return df
+      return pd.read_sql_query("SELECT tags.tag, main.name, main.type, tags.id FROM tags INNER JOIN main", self.connection).fillna('')
     elif viewType=='viewIdentify':
       if docType=='viewQR':
         if startKey is None:

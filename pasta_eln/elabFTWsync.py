@@ -154,8 +154,7 @@ class Pasta2Elab:
           if self.verbose:
             print('list change', k,v, docOther[k])
           docOther[k] = docServer[k]
-      else:
-        if self.verbose:
+      elif self.verbose:
           print('other change', k,v, docOther[k], type(v))
     if flagServerChange:
       if self.verbose:
@@ -274,8 +273,7 @@ class Pasta2Elab:
     # doc['metaVendor'] = metadata.get('metaVendor',{})  # USERS IS NOT ALLOWED TO CHANGE THESE
     # doc['metaUser']   = metadata.get('metaUser',{})
     doc |= metadata.get('__',{})                         # USERS CAN CHANGE THIS ON ELAB
-    return doc, \
-      elab['uploads'] if 'uploads' in elab else []
+    return doc, elab.get('uploads',[])
 
 
   def doc2elab(self, doc:dict[str,Any]) -> tuple[dict[str,Any], str]:
