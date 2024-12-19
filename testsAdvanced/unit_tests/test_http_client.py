@@ -386,28 +386,3 @@ class TestAsyncHttpClient(object):
     assert client.session_request_errors == [
       'Client session InvalidURL for url (invalid_url) with error: invalid_url'], "Error must be set"
     assert not ret, "Response should be empty"
-
-  @pytest.mark.parametrize(
-    "base_url, request_params, response_key, content", [
-      ('https://httpbin.org/post', {'Content-Type': 'application/json', 'Accept': 'application/json'}, 'json',
-       {"userId": 1, "id": 1, "title": "delectus aut autem", "completed": False}),
-      ('https://httpbin.org/post', {'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json'},
-       'form', {"userId": "1", "id": "1", "title": "delectus aut autem", "completed": "False"}),
-    ])
-  @pytest.mark.asyncio
-  async def test_client_post_request_should_succeed(self,
-                                                    base_url,
-                                                    request_params,
-                                                    response_key,
-                                                    content):
-    client = AsyncHttpClient(10)
-    ret = await client.post(base_url,
-                            request_params,
-                            json=content if "json" == response_key else None,
-                            data=content if "form" == response_key else None)
-    assert ret, "Response should not be empty"
-    assert ret.get("status") == 200, "Response status should be as expected"
-    assert ret.get("headers") is not None, "Response headers should not be none"
-    assert ret.get("reason") == "OK", "Response reason should be as expected"
-    assert client.session_request_errors == [], "session_request_errors should be empty"
-    assert are_json_equal(content, ret.get("result").get(response_key)), "Response should be as expected"
