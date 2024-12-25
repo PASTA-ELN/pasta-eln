@@ -9,6 +9,7 @@ from PySide6.QtGui import QPixmap, QRegularExpressionValidator                 #
 from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QFileDialog, QLabel, \
                               QLineEdit, QMessageBox, QVBoxLayout, QTextEdit   # pylint: disable=no-name-in-module
 from ..guiCommunicate import Communicate
+from ..elabFTWapi import ElabFTWApi
 from ..guiStyle import IconButton, Label, TextButton, showMessage, widgetAndLayoutGrid
 from ..fixedStringsJson import CONF_FILE_NAME
 
@@ -25,6 +26,7 @@ class ProjectGroup(QDialog):
     """
     super().__init__()
     self.comm    = comm
+    self.apiTested = False
     self.callbackFinished = callbackFinished
     self.configuration = self.comm.backend.configuration
     self.emptyConfig:dict[str,Any] = {'local':{},'remote':{}}
@@ -74,6 +76,15 @@ class ProjectGroup(QDialog):
     self.row4Button2 = IconButton('fa5s.check-square',   self, [Command.TEST_APIKEY], tooltip='Check API-key')
     self.formL.addWidget(self.row4Button2, 4, 3)
 
+    self.teamKeyLabel0 = QComboBox()
+    self.teamKeyLabel0.currentTextChanged.connect(lambda: self.execute([Command.CHANGE_TEAM]))
+    self.formL.addWidget(self.teamKeyLabel0, 5, 0)
+    self.teamKeyLabel0.hide()
+    self.teamKeyLabel1 = QComboBox()
+    self.teamKeyLabel0.currentTextChanged.connect(lambda: self.execute([Command.CHANGE_TEAM]))
+    self.formL.addWidget(self.teamKeyLabel1, 5, 1)
+    self.teamKeyLabel1.hide()
+
     # RIGHT SIDE: button and image
     qrButton = TextButton('Create QR code', self, [Command.CREATE_QRCODE])
     self.formL.addWidget(qrButton, 0, 6)
@@ -103,21 +114,28 @@ class ProjectGroup(QDialog):
       self.reject()
       self.callbackFinished(False)
     elif 'Save' in btn.text() and not self.selectGroup.isHidden():
+      # all information (excl. teams/groups) is already in self.configuration saved
       key      = self.selectGroup.currentText()
       config   = self.configuration['projectGroups'][key]
-      headers  = {'Content-type': 'application/json', 'Accept': 'text/plain', 'Authorization':config['remote'].get('key','')}
-      url      = config['remote'].get('url','')
-      if url and config['remote'].get('key',''):
-        response = requests.get(f'{url}info', headers=headers, verify=True, timeout=60)
-        if response.status_code!=200:
-          showMessage(self, 'Error', 'Error: server address or api key are incorrect.')
-          return
+      if config['remote'].get('url','') and config['remote'].get('key','') and not self.apiTested:
+        showMessage(self, 'Error', 'Error: you have to test the API key once successfully.')
+        return
       if not config['local']['path']:
         showMessage(self, 'Error', 'Error: path to data directory is not set.')
         return
       if not config['addOnDir']:
         showMessage(self, 'Error', 'Error: add-on directory not set.')
         return
+      # success
+      if len(self.elabTeams)==1:
+        group = self.teamKeyLabel0.currentText()[14:].strip()
+        config['remote']['config'] = [[[k,v] for k,v in self.elabTeams.items()][0],
+                                      [group, self.elabGroups[group]]]
+      else:
+        team  = self.teamKeyLabel0.currentText()[14:].strip()
+        group = self.teamKeyLabel1.currentText()[14:].strip()
+        config['remote']['config'] = [[team,  self.elabTeams[team]],
+                                      [group, self.elabGroups[group]]]
       with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as confFile:
         confFile.write(json.dumps(self.configuration, indent=2))
       self.callbackFinished(True)
@@ -211,13 +229,33 @@ class ProjectGroup(QDialog):
           elabVersion = int(json.loads(response.content.decode('utf-8')).get('elabftw_version','0.0.0').split('.')[0])
           if elabVersion<5:
             showMessage(self, 'Error', 'Old elabFTW server installation')
+          # success
           self.row4Button2.setStyleSheet('background: #00FF00')
+          self.apiTested = True
+          self.elabApi   = ElabFTWApi(url, config['remote']['key'])
+          self.elabTeams = {i['name']:i['id'] for i in self.elabApi.readEntry('teams')}
+          if len(self.elabTeams)==1:
+            self.teamKeyLabel0.show()
+            team = self.elabTeams['Default team']
+            self.elabGroups = {i['name']:i['id'] for i in self.elabApi.readGroups(team)}
+            self.teamKeyLabel0.addItems([f'You belong to {i}' for i in self.elabGroups])
+          else:
+            self.teamKeyLabel0.show()
+            self.teamKeyLabel0.addItems([f'You belong to {i}' for i in self.elabTeams])
+            self.teamKeyLabel1.show()
         else:
           showMessage(self, 'Error', 'Wrong API key')
           self.row4Button2.setStyleSheet('background: #FF0000')
       except Exception:
         showMessage(self, 'Error', 'Wrong API key')
         self.row4Button2.setStyleSheet('background: #FF0000')
+
+    elif command[0] is Command.CHANGE_TEAM:
+      if len(self.elabTeams)>1:
+        team = self.teamKeyLabel0.currentText()[14:].strip()
+        self.elabGroups = {i['name']:i['id'] for i in self.elabApi.readGroups(team)}
+        self.teamKeyLabel1.addItems([f'You belong to {i}' for i in self.elabGroups])
+
     elif command[0] is Command.CREATE_QRCODE:
       text   = json.dumps(config['remote'])
       img    = qrcode.make(text, error_correction=qrcode.constants.ERROR_CORRECT_M).get_image()
@@ -269,3 +307,4 @@ class Command(Enum):
   TEST_APIKEY  = 6
   TEST_API_HELP= 7
   CREATE_QRCODE= 8
+  CHANGE_TEAM  = 9

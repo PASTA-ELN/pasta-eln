@@ -65,36 +65,36 @@ class Pasta2Elab:
   def syncDocTypes(self) -> None:
     """ Synchronize document types between client and server; save datahierarchy to server """
     #try body and metadata: compare, write
-    docTypesElab  = {i['title']:i['id'] for i in self.api.read('items_types')}
+    docTypesElab  = {i['title']:i['id'] for i in self.api.readEntry('items_types')}
     docTypesPasta = {i.capitalize() for i in self.backend.db.dataHierarchy('','') if not i.startswith('x')} | \
                     {'Default','Folder','Project','Pasta_Metadata'}
     for docType in docTypesPasta.difference({'Measurement'}|docTypesElab.keys()):  # do not create measurements, use 'experiments'
-      self.api.touch('items_types', {"title": docType})
+      self.api.touchEntry('items_types', {"title": docType})
     #verify nothing extraneous
-    docTypesElab  = {i['title']:i['id'] for i in self.api.read('items_types')}
+    docTypesElab  = {i['title']:i['id'] for i in self.api.readEntry('items_types')}
     if set(docTypesElab.keys()).difference(docTypesPasta|{'Default','Pasta_Metadata'}) and self.verbose:
       print('**Info: some items exist that should not:', set(docTypesElab.keys()).difference(docTypesPasta|{'Default'}),
             'You can remove manually, but should not interfere since not used.')
-    listMetadata = self.api.read('items?q=category%3APasta_Metadata&archived=on')
+    listMetadata = self.api.readEntry('items?q=category%3APasta_Metadata&archived=on')
     dataHierarchy = []
     for docType in self.backend.db.dataHierarchy('',''):
       dataHierarchy += copy.deepcopy([dict(i) for i in self.backend.db.dataHierarchy(docType,'meta')])
     if not listMetadata:
-      itemId = self.api.touch('items', {"category_id":int(docTypesElab["Pasta_Metadata"])})
+      itemId = self.api.touchEntry('items', {"category_id":int(docTypesElab["Pasta_Metadata"])})
     else:
       itemId = listMetadata[0]["id"]
-    self.api.update('items', itemId, {"title":"data hierarchy", "metadata":json.dumps(dataHierarchy), "body":"<p>DO NOT CHANGE ANYTHING</p>","state":2})
+    self.api.updateEntry('items', itemId, {"title":"data hierarchy", "metadata":json.dumps(dataHierarchy), "body":"<p>DO NOT CHANGE ANYTHING</p>","state":2})
     return
 
 
   def createIdDict(self) -> None:
     """ create mapping of docIDs to elabIDs: if not exist, create elabIds """
-    elabTypes = {i['title'].lower():i['id'] for i in self.api.read('items_types')}|{'measurement':-1}
+    elabTypes = {i['title'].lower():i['id'] for i in self.api.readEntry('items_types')}|{'measurement':-1}
     elabTypes |= {'x0':elabTypes.pop('project'), 'x1':elabTypes.pop('folder'), '-':elabTypes.pop('default')}
     def getNewEntry(elabType:str) -> int:
       urlSuffix = 'items'                  if int(elabType)>0 else 'experiments'
       content   = {'category_id':elabType}
-      return self.api.touch(urlSuffix, content)
+      return self.api.touchEntry(urlSuffix, content)
     self.backend.db.cursor.execute("SELECT id, type, externalId FROM main")
     self.docID2elabID = {i[0]:((i[2],i[1].split('/')[0]=='measurement') if i[2] else (getNewEntry(elabTypes[i[1].split('/')[0]]),i[1].split('/')[0]=='measurement'))
                     for i in self.backend.db.cursor.fetchall()}
@@ -126,7 +126,7 @@ class Pasta2Elab:
       print('\n>>>DOC_CLIENT sync&modified', docClient['dateSync'], docClient['dateModified'])
     # pull from server: content and other's client content
     entityType = 'experiments' if self.docID2elabID[node.id][1] else 'items'
-    docServer, uploads = self.elab2doc(self.api.read(entityType, self.docID2elabID[node.id][0])[0])
+    docServer, uploads = self.elab2doc(self.api.readEntry(entityType, self.docID2elabID[node.id][0])[0])
     if self.verbose:
       print('>>>DOC_SERVER', docServer)
     if [i for i in uploads if i['real_name']=="do_not_change.json"]:
@@ -229,12 +229,12 @@ class Pasta2Elab:
     # send doc (merged version) to server everything
     if flagUpdateServer:
       content, image = self.doc2elab(copy.deepcopy(docMerged))
-      self.api.update(entityType, self.docID2elabID[node.id][0], content)
+      self.api.updateEntry(entityType, self.docID2elabID[node.id][0], content)
       # create links
       _ = [self.api.createLink(entityType, self.docID2elabID[node.id][0], 'experiments' if self.docID2elabID[node.id][1] else 'items', self.docID2elabID[i.id][0])
                               for i in node.children]
     # uploads| clean first, then upload: PASTAs document, thumbnail, data-file
-    existingUploads = self.api.read(entityType, self.docID2elabID[node.id][0])[0]['uploads']
+    existingUploads = self.api.readEntry(entityType, self.docID2elabID[node.id][0])[0]['uploads']
     uploadsToDelete = {'do_not_change.json', 'metadata.json'}
     if flagUpdateServer:
       uploadsToDelete |= {'thumbnail.svg', 'thumbnail.png', 'thumbnail.jpg'}

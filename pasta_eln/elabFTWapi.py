@@ -47,67 +47,67 @@ class ElabFTWApi:
     return
 
 
-  def create(self, entry:str, content:str='') -> bool:
+  def touchEntry(self, entryType:str, content:dict[str,Any]={}) -> int:
     """
-    create something
+    create entry of type: experiment, item/resource, without much content
 
     Args:
-      entry (str): entry to create, e.g. experiments, items, items_types
+      entryType (str): entryType to create, e.g. experiments, items, items_types
+      content (dict): content to create
+
+    Returns:
+      int: elabFTW id
+    """
+    response = requests.post(self.url+entryType, data=json.dumps(content), **self.param)
+    if response.status_code == 201:
+      return int(response.headers['Location'].split('/')[-1])
+    if response.status_code == 400:
+      print(f"**ERROR occurred in touch of url '{entryType}': {json.loads(response.content.decode('utf-8'))['description']}")
+    return -1
+
+
+  def createEntry(self, entryType:str, content:str='') -> bool:
+    """
+    create entry of type: experiment, item/resource
+
+    Args:
+      entryType (str): entryType to create, e.g. experiments, items, items_types
       content (str): content to create
 
     Returns:
       bool: success of operation
     """
-    response = requests.post(self.url+entry, **self.param)
+    response = requests.post(self.url+entryType, **self.param)
     print("**TODO", content)
     if response.status_code == 201:
       return True
-    print(f"**ERROR occurred in create of url {entry}: {response.json}")
+    print(f"**ERROR occurred in create of url {entryType}: {response.json}")
     return False
 
 
-  def createLink(self, entryType:str, identifier:int, targetType:str, linkTarget:int) -> bool:
+  def readEntry(self, entryType:str, identifier:int=-1) -> list[dict[str,Any]]:
     """
-    create a link
+    read entry or all entries (use identifier=-1 in the latter case)
+    - can also be used to read custom command: do not use identifier and give custom command as entryType
 
     Args:
-      entryType (str): entry type to modify (items, experiments)
-      identifier (int): entry to change
-      targetType (str): entry type to link to (items, experiments)
-      linkTarget (int): target of the link
-
-    Returns:
-      bool: success of operation
-    """
-    response = requests.post(f'{self.url}{entryType}/{identifier}/{targetType}_links/{linkTarget}', **self.param)
-    if response.status_code == 201:
-      return True
-    print(f"**ERROR occurred in create of url f'{self.url}{entryType}/{identifier}/{targetType}_links/{linkTarget}': {response.json}")
-    return False
-
-
-  def read(self, entry:str, identifier:int=-1) -> list[dict[str,Any]]:
-    """
-    read something
-
-    Args:
-      entry (str): entry to create, e.g. experiments, items, items_types
-      identifier (int): elabFTW's identifier
+      entryType (str): entryType to create, e.g. experiments, items, items_types, teams
+      identifier (int): elabFTW's identifier; list all if none is given
 
     Returns:
       dict: content read
     """
-    url = f'{self.url}{entry}' if identifier==-1 else f'{self.url}{entry}/{identifier}'
+    url = f'{self.url}{entryType}' if identifier==-1 else f'{self.url}{entryType}/{identifier}'
     response = requests.get(url, **self.param)
     if response.status_code == 200:
       res = json.loads(response.content.decode('utf-8'))
       return res if identifier == -1 else [res]
-    print(f"**ERROR occurred in get of url {entry} / {identifier}")
+    print(f"**ERROR occurred in get of url {entryType} / {identifier}")
     return [{}]
 
-  def update(self, entryType:str, identifier:int, content:dict[str,Any]={}) -> bool:
+  def updateEntry(self, entryType:str, identifier:int, content:dict[str,Any]={}) -> bool:
     """
-    update something
+    update entry: experiment, item/resource
 
     Args:
       entryType (str): entryType to create, e.g. experiments, items, items_types
@@ -128,43 +128,62 @@ class ElabFTWApi:
     return response.status_code == 201
 
 
-  def delete(self, entry:str, identifier:int) -> bool:
+  def deleteEntry(self, entryType:str, identifier:int) -> bool:
     """
-    delete something
+    delete entry of type: experiment, item/resource
 
     Args:
-      entry (str): entry to create, e.g. experiments, items, items_types
+      entryType (str): entryType to create, e.g. experiments, items, items_types
       identifier (int): elabFTW's identifier
 
     Returns:
       bool: success of operation
     """
-    response = requests.delete(f'{self.url}{entry}/{identifier}', **self.param)
+    response = requests.delete(f'{self.url}{entryType}/{identifier}', **self.param)
     if response.status_code == 204:
       return True
-    print(f"**ERROR occurred in delete of url {entry}")
+    print(f"**ERROR occurred in delete of url {entryType}")
     return False
 
 
-  def touch(self, entry:str, content:dict[str,Any]={}) -> int:
+  def purgeExperimentsItems(self) -> None:
+    """ Remove all documents and items on server """
+    for entityType in ['experiments','items']:
+      response = requests.get(f'{self.url}{entityType}?archived=on', **self.param)
+      for identifier in [i['id'] for i in json.loads(response.content.decode('utf-8'))]:
+        response = requests.delete(f'{self.url}{entityType}/{identifier}', **self.param)
+        if response.status_code != 204:
+          print(f'**ERROR purge delete {entityType}: {identifier}')
+    return
+
+
+  ### ---------------------------------------------
+  ### LINKS
+  ### ---------------------------------------------
+  def createLink(self, entryType:str, identifier:int, targetType:str, linkTarget:int) -> bool:
     """
-    create something, without much content
+    create a link
 
     Args:
-      entry (str): entry to create, e.g. experiments, items, items_types
-      content (dict): content to create
+      entryType (str): entry type to modify (items, experiments)
+      identifier (int): entry to change
+      targetType (str): entry type to link to (items, experiments)
+      linkTarget (int): target of the link
 
     Returns:
-      int: elabFTW id
+      bool: success of operation
     """
-    response = requests.post(self.url+entry, data=json.dumps(content), **self.param)
+    response = requests.post(f'{self.url}{entryType}/{identifier}/{targetType}_links/{linkTarget}', **self.param)
     if response.status_code == 201:
-      return int(response.headers['Location'].split('/')[-1])
-    if response.status_code == 400:
-      print(f"**ERROR occurred in touch of url '{entry}': {json.loads(response.content.decode('utf-8'))['description']}")
-    return -1
+      return True
+    print(f"**ERROR occurred in create of url f'{self.url}{entryType}/{identifier}/{targetType}_links/{linkTarget}': {response.json}")
+    return False
 
 
+
+  ### ---------------------------------------------
+  ### UPLOADS
+  ### ---------------------------------------------
   def upload(self, entryType:str, identifier:int, content:str='', fileName:str='', jsonContent:str='', comment:str='') -> int:
     """
     upload a file
@@ -208,20 +227,9 @@ class ElabFTWApi:
     return -1
 
 
-  def purgeExperimentsItems(self) -> None:
-    """ Remove all documents and items on server """
-    for entityType in ['experiments','items']:
-      response = requests.get(f'{self.url}{entityType}?archived=on', **self.param)
-      for identifier in [i['id'] for i in json.loads(response.content.decode('utf-8'))]:
-        response = requests.delete(f'{self.url}{entityType}/{identifier}', **self.param)
-        if response.status_code != 204:
-          print(f'**ERROR purge delete {entityType}: {identifier}')
-    return
-
-
   def upLoadUpdate(self, entryType:str, identifier:int, uploadID:int, content:dict[str,Any]={}) -> bool:
     """
-    update something
+    update an upload
 
     Args:
       entryType (str): entry to create, e.g. experiments, items, items_types
@@ -278,25 +286,23 @@ class ElabFTWApi:
     return {}
 
 
-# TO TEST API
+  ### ---------------------------------------------
+  ### USER / TEAM GROUPS
+  ### ---------------------------------------------
+  def readGroups(self, teamID:int, groupID:int=-1) -> list[dict[str,Any]]:
+    """ List all groups or just one
 
-# New that works
-# print('\nItems types',json.dumps(self.api.read('items_types'), indent=2))
-# self.api.delete('items_types/10')
+    Args:
+      teamID (int): elabFTW's identifier of the team
+      groupID (int): elabFTW's identifier of the group
 
-# OLD ---
-# print(json.dumps(crud(backend, projectGroup, 'items_types/4'), indent=2))
-# #print(crud(backend, projectGroup, 'items_types/4', 'update', {"body":"some json string"}))
-# url = 'experiments/1'  #full detail
-# print('\nExperiment1',json.dumps(crud(backend, projectGroup, url), indent=2))
-# url = 'info'  #version number
-# print('\nINFO',json.dumps(crud(backend, projectGroup, url), indent=2))
-# url = 'experiments'  #summary
-# print('\nExperiments',json.dumps(crud(backend, projectGroup, url), indent=2))
-# url = 'items'  #summary
-# print('\nItems',json.dumps(crud(backend, projectGroup, url), indent=2))
-# url = 'items_types'  #all types incl. default
-# crud(backend, projectGroup, url, 'create', {"title": "Go22Go"})
-# print(crud(backend, projectGroup, f'{url}/5', 'update', {"color":"#aabbaa"}))
-# print(json.dumps(crud(backend, projectGroup, f'{url}/5'), indent=2))
-# print('\nItemTypes',json.dumps(crud(backend, projectGroup, url), indent=2))
+    Returns:
+      list: list of reply
+    """
+    url = f"{self.url}teams/{teamID}/teamgroups" if groupID==-1 else f"{self.url}teams/{teamID}/teamgroups/{groupID}"
+    response = requests.get(url, **self.param)
+    if response.status_code == 200:
+      res = json.loads(response.content.decode('utf-8'))
+      return res if groupID == -1 else [res]
+    print(f"**ERROR occurred in get of url: {url}")
+    return [{}]

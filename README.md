@@ -9,9 +9,12 @@
 
 # PASTA-ELN | The favorite ELN for experimental scientists
 
+PASTA-ELN (adaPtive mAterials Science meTadatA - Electronic Lab Notebook) provides a streamlined and efficient solution for experimental scientists to manage and organize raw data alongside associated metadata. By leveraging extractors that automate the processing of raw measurement files, PASTA-ELN facilitates the seamless integration of thumbnails, data, and metadata into a centralized database. These extractors can be customized and shared by users, empowering researchers to tailor their workflows to their specific needs.
+
 > :warning: **Users: all documentation can be found at [Github-pages](https://pasta-eln.github.io/pasta-eln/)**
 >
 > **This page / area is for developers and contains some helpful information for them**
+
 
 ---
 

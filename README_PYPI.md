@@ -9,7 +9,7 @@
 
 # PASTA electronic lab notebook (ELN) | The favorite ELN for experimental scientists
 
-Pasta-dishes are a mixture pasta and sauce, the latter adds flavors and richness to the otherwise boring pasta. This ELN combines raw-data with rich metadata to allow advanced data science. In the database, one can fully adapt and improvise the metadata definitions to generate something novel. PASTA-ELN uses a local-first approach: store all data and metadata locally (always accessible to user) and synchronize with a server upon user request.
+PASTA-ELN (adaPtive mAterials Science meTadatA - Electronic Lab Notebook) provides a streamlined and efficient solution for experimental scientists to manage and organize raw data alongside associated metadata. By leveraging extractors that automate the processing of raw measurement files, PASTA-ELN facilitates the seamless integration of thumbnails, data, and metadata into a centralized database. These extractors can be customized and shared by users, empowering researchers to tailor their workflows to their specific needs.
 
 ## Location of information
 More information, incl. detailed installation instructions, for users can be found on the [Github-pages](https://pasta-eln.github.io/pasta-eln/).
