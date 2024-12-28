@@ -31,6 +31,8 @@ class ProjectGroup(QDialog):
     self.callbackFinished = callbackFinished
     self.configuration = self.comm.backend.configuration
     self.emptyConfig:dict[str,Any] = {'local':{},'remote':{}}
+    self.elabApi: ElabFTWApi|None = None
+    self.serverPG: set[tuple[str,Any,Any,Any]] = set()
 
     # GUI elements
     mainL = QVBoxLayout(self)
@@ -128,9 +130,10 @@ class ProjectGroup(QDialog):
         return
       # success
       choice = [i for i in self.serverPG if i[0]==self.serverProjectGroupLabel.currentText()][0]
-      config['remote']['config'] = {'title':choice[0],'id':choice[1],'canRead':choice[2],'canWrite':choice[3]}
-      # with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as confFile:
-      #   confFile.write(json.dumps(self.configuration, indent=2))
+      if len(choice)==4:
+        config['remote']['config'] = {'title':choice[0],'id':choice[1],'canRead':choice[2],'canWrite':choice[3]}
+      with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as confFile:
+        confFile.write(json.dumps(self.configuration, indent=2))
       self.callbackFinished(True)
     return
 
@@ -226,8 +229,8 @@ class ProjectGroup(QDialog):
           # success
           self.row4Button2.setStyleSheet('background: #00FF00')
           self.elabApi   = ElabFTWApi(url, config['remote']['key'])
-          res = self.elabApi.readEntry("items?q=category%3AProjectGroup&archived=on")
-          self.serverPG = {(i['title'],i['id'],i['canread'],i['canwrite']) for i in res}
+          response = self.elabApi.readEntry("items?q=category%3AProjectGroup&archived=on")
+          self.serverPG = {(i['title'],i['id'],i['canread'],i['canwrite']) for i in response}
           self.serverProjectGroupLabel.addItems([i[0] for i in self.serverPG])
         else:
           showMessage(self, 'Error', 'Wrong API key')
@@ -236,7 +239,7 @@ class ProjectGroup(QDialog):
         showMessage(self, 'Error', 'Wrong API key')
         self.row4Button2.setStyleSheet('background: #FF0000')
 
-    elif command[0] is Command.TEST_SERVERPG:
+    elif command[0] is Command.TEST_SERVERPG and self.elabApi is not None:
       idx = [i[1] for i in self.serverPG if i[0]==self.serverProjectGroupLabel.currentText()][0]
       currentBody = self.elabApi.readEntry('items',idx)[0]['body']
       currentBody+= f'<br>Tested access by {self.configuration["userID"]} on {datetime.now().isoformat()} <br>'
