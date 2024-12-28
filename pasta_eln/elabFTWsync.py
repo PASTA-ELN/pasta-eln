@@ -24,24 +24,27 @@ class Pasta2Elab:
     Args:
       backend (backend): backend
       projectGroup (str): name of project group
+      purge (bool): remove old documents
 
     Returns:
       bool: success
     '''
     self.backend = backend
-    if not projectGroup:
-      projectGroup = self.backend.configuration['defaultProjectGroup']
-    self.projectGroup = projectGroup
+    self.projectGroup = projectGroup or self.backend.configuration['defaultProjectGroup']
     if not self.backend.configuration['projectGroups'][self.projectGroup]['remote']['url'] or \
        not self.backend.configuration['projectGroups'][self.projectGroup]['remote']['key']:
       return
     self.api = ElabFTWApi(self.backend.configuration['projectGroups'][self.projectGroup]['remote']['url'],
                           self.backend.configuration['projectGroups'][self.projectGroup]['remote']['key'])
+    configRemote = self.backend.configuration['projectGroups'][self.backend.configurationProjectGroup]['remote']
+    self.elabProjGroupID = configRemote['config']['id']
     if purge:
-      self.api.purgeExperimentsItems()
+      data = self.api.readEntry('items', self.elabProjGroupID)[0]
+      _ = [self.api.deleteEntry('experiments', i['entityid']) for i in data['related_experiments_links']]
+      _ = [self.api.deleteEntry('items',       i['entityid']) for i in data['related_items_links']]
     self.docID2elabID:dict[str,tuple[int,bool]] = {}
-    self.qtDocument = QTextDocument()   #used for converting html <-> md
-    self.verbose    = True
+    self.qtDocument      = QTextDocument()   #used for converting html <-> md
+    self.verbose         = True
     return
 
 
@@ -63,38 +66,39 @@ class Pasta2Elab:
 
 
   def syncDocTypes(self) -> None:
-    """ Synchronize document types between client and server; save datahierarchy to server """
+    """ Synchronize document types between client and server
+    - save datahierarchy to server
+    """
     #try body and metadata: compare, write
     docTypesElab  = {i['title']:i['id'] for i in self.api.readEntry('items_types')}
     docTypesPasta = {i.capitalize() for i in self.backend.db.dataHierarchy('','') if not i.startswith('x')} | \
-                    {'Default','Folder','Project','Pasta_Metadata'}
+                    {'Default','Folder','Project','ProjectGroup'}
     for docType in docTypesPasta.difference({'Measurement'}|docTypesElab.keys()):  # do not create measurements, use 'experiments'
       self.api.touchEntry('items_types', {"title": docType})
     #verify nothing extraneous
     docTypesElab  = {i['title']:i['id'] for i in self.api.readEntry('items_types')}
-    if set(docTypesElab.keys()).difference(docTypesPasta|{'Default','Pasta_Metadata'}) and self.verbose:
+    if set(docTypesElab.keys()).difference(docTypesPasta|{'Default','ProjectGroup'}) and self.verbose:
       print('**Info: some items exist that should not:', set(docTypesElab.keys()).difference(docTypesPasta|{'Default'}),
             'You can remove manually, but should not interfere since not used.')
-    listMetadata = self.api.readEntry('items?q=category%3APasta_Metadata&archived=on')
+    # sync data-hierarchy
     dataHierarchy = []
     for docType in self.backend.db.dataHierarchy('',''):
       dataHierarchy += copy.deepcopy([dict(i) for i in self.backend.db.dataHierarchy(docType,'meta')])
-    if not listMetadata:
-      itemId = self.api.touchEntry('items', {"category_id":int(docTypesElab["Pasta_Metadata"])})
-    else:
-      itemId = listMetadata[0]["id"]
-    self.api.updateEntry('items', itemId, {"title":"data hierarchy", "metadata":json.dumps(dataHierarchy), "body":"<p>DO NOT CHANGE ANYTHING</p>","state":2})
+    self.api.updateEntry('items', self.elabProjGroupID, {"metadata":json.dumps(dataHierarchy)})
     return
 
 
   def createIdDict(self) -> None:
     """ create mapping of docIDs to elabIDs: if not exist, create elabIds """
+    configRemote = self.backend.configuration['projectGroups'][self.backend.configurationProjectGroup]['remote']['config']
     elabTypes = {i['title'].lower():i['id'] for i in self.api.readEntry('items_types')}|{'measurement':-1}
     elabTypes |= {'x0':elabTypes.pop('project'), 'x1':elabTypes.pop('folder'), '-':elabTypes.pop('default')}
     def getNewEntry(elabType:str) -> int:
       urlSuffix = 'items'                  if int(elabType)>0 else 'experiments'
-      content   = {'category_id':elabType}
-      return self.api.touchEntry(urlSuffix, content)
+      content   = {'category_id':elabType, 'canwrite':configRemote['canWrite'], 'canread':configRemote['canRead']}
+      elabID    = self.api.touchEntry(urlSuffix, content)
+      self.api.createLink(urlSuffix, elabID, 'items', self.elabProjGroupID)
+      return elabID
     self.backend.db.cursor.execute("SELECT id, type, externalId FROM main")
     self.docID2elabID = {i[0]:((i[2],i[1].split('/')[0]=='measurement') if i[2] else (getNewEntry(elabTypes[i[1].split('/')[0]]),i[1].split('/')[0]=='measurement'))
                     for i in self.backend.db.cursor.fetchall()}

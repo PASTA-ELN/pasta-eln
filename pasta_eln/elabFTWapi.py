@@ -146,8 +146,15 @@ class ElabFTWApi:
     return False
 
 
-  def purgeExperimentsItems(self) -> None:
-    """ Remove all documents and items on server """
+  def purgeExperimentsItems(self, areYouSure=False) -> None:
+    """ Remove all experimnets and items on server
+    - not used in Pasta
+
+    Args:
+      areYouSure (bool): safety mechanism to prevent accidental operation
+    """
+    if not areYouSure:
+      return
     for entityType in ['experiments','items']:
       response = requests.get(f'{self.url}{entityType}?archived=on', **self.param)
       for identifier in [i['id'] for i in json.loads(response.content.decode('utf-8'))]:
@@ -290,7 +297,7 @@ class ElabFTWApi:
   ### USER / TEAM GROUPS
   ### ---------------------------------------------
   def readGroups(self, teamID:int, groupID:int=-1) -> list[dict[str,Any]]:
-    """ List all groups or just one
+    """ List all groups or just one (not used in Pasta)
 
     Args:
       teamID (int): elabFTW's identifier of the team
