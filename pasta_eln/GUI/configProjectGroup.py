@@ -3,6 +3,7 @@ import json, shutil
 from enum import Enum
 from pathlib import Path
 from typing import Any, Callable
+from datetime import datetime
 import qrcode, requests
 from PIL.ImageQt import ImageQt
 from PySide6.QtGui import QPixmap, QRegularExpressionValidator                 # pylint: disable=no-name-in-module
@@ -26,7 +27,7 @@ class ProjectGroup(QDialog):
     """
     super().__init__()
     self.comm    = comm
-    self.apiTested = False
+    self.projectGroupTested = False
     self.callbackFinished = callbackFinished
     self.configuration = self.comm.backend.configuration
     self.emptyConfig:dict[str,Any] = {'local':{},'remote':{}}
@@ -51,39 +52,38 @@ class ProjectGroup(QDialog):
     self.formL.addWidget(delButton, 0, 3)
 
     self.directoryLabel = QLabel('label')
-    self.formL.addWidget(self.directoryLabel, 1, 0)
+    self.formL.addWidget(self.directoryLabel, 1, 0, 1, 2)
     row1Button = IconButton('fa5.edit',   self, [Command.CHANGE_DIR], tooltip='Edit data path')
     self.formL.addWidget(row1Button, 1, 3)
 
     self.addOnLabel = QLabel('addon')
-    self.formL.addWidget(self.addOnLabel, 2, 0)
+    self.formL.addWidget(self.addOnLabel, 2, 0, 1, 2)
     row2Button = IconButton('fa5.edit',   self, [Command.CHANGE_ADDON], tooltip='Edit add-on path')
     self.formL.addWidget(row2Button, 2, 3)
 
+    self.formL.addWidget(QLabel('Server address:'), 3, 0)
     self.serverLabel = QLineEdit('server')
     self.serverLabel.setPlaceholderText('Enter server address')
-    self.formL.addWidget(self.serverLabel, 3, 0)
+    self.formL.addWidget(self.serverLabel, 3, 1)
     self.row3Button = IconButton('fa5s.check-square',   self, [Command.TEST_SERVER], tooltip='Check server')
     self.formL.addWidget(self.row3Button, 3, 3)
 
+    self.formL.addWidget(QLabel('API-key:'), 4, 0)
     self.apiKeyLabel = QTextEdit()
     self.apiKeyLabel.setPlaceholderText('Enter API key')
     self.apiKeyLabel.setFixedHeight(48)
     # self.apiKeyLabel.setValidator(QRegularExpressionValidator(r"\d+-[0-9a-f]{85}"))
-    self.formL.addWidget(self.apiKeyLabel, 4, 0)
+    self.formL.addWidget(self.apiKeyLabel, 4, 1)
     row4Button1 = IconButton('fa5s.question-circle', self,      [Command.TEST_API_HELP], tooltip='Help on obtaining API key')
     self.formL.addWidget(row4Button1, 4, 2)
     self.row4Button2 = IconButton('fa5s.check-square',   self, [Command.TEST_APIKEY], tooltip='Check API-key')
     self.formL.addWidget(self.row4Button2, 4, 3)
 
-    self.teamKeyLabel0 = QComboBox()
-    self.teamKeyLabel0.currentTextChanged.connect(lambda: self.execute([Command.CHANGE_TEAM]))
-    self.formL.addWidget(self.teamKeyLabel0, 5, 0)
-    self.teamKeyLabel0.hide()
-    self.teamKeyLabel1 = QComboBox()
-    self.teamKeyLabel0.currentTextChanged.connect(lambda: self.execute([Command.CHANGE_TEAM]))
-    self.formL.addWidget(self.teamKeyLabel1, 5, 1)
-    self.teamKeyLabel1.hide()
+    self.formL.addWidget(QLabel('Storage block:'), 5, 0)
+    self.serverProjectGroupLabel = QComboBox()
+    self.formL.addWidget(self.serverProjectGroupLabel, 5, 1)
+    self.row5Button2 = IconButton('fa5s.check-square',   self, [Command.TEST_SERVERPG], tooltip='Check access to storage block')
+    self.formL.addWidget(self.row5Button2, 5, 3)
 
     # RIGHT SIDE: button and image
     qrButton = TextButton('Create QR code', self, [Command.CREATE_QRCODE])
@@ -114,11 +114,11 @@ class ProjectGroup(QDialog):
       self.reject()
       self.callbackFinished(False)
     elif 'Save' in btn.text() and not self.selectGroup.isHidden():
-      # all information (excl. teams/groups) is already in self.configuration saved
+      # all information (excl. storage block) is already in self.configuration saved
       key      = self.selectGroup.currentText()
       config   = self.configuration['projectGroups'][key]
-      if config['remote'].get('url','') and config['remote'].get('key','') and not self.apiTested:
-        showMessage(self, 'Error', 'Error: you have to test the API key once successfully.')
+      if config['remote'].get('url','') and config['remote'].get('key','') and not self.projectGroupTested:
+        showMessage(self, 'Error', 'Error: You have to select and test the storage block once successfully.')
         return
       if not config['local']['path']:
         showMessage(self, 'Error', 'Error: path to data directory is not set.')
@@ -127,17 +127,10 @@ class ProjectGroup(QDialog):
         showMessage(self, 'Error', 'Error: add-on directory not set.')
         return
       # success
-      if len(self.elabTeams)==1:
-        group = self.teamKeyLabel0.currentText()[14:].strip()
-        config['remote']['config'] = [[[k,v] for k,v in self.elabTeams.items()][0],
-                                      [group, self.elabGroups[group]]]
-      else:
-        team  = self.teamKeyLabel0.currentText()[14:].strip()
-        group = self.teamKeyLabel1.currentText()[14:].strip()
-        config['remote']['config'] = [[team,  self.elabTeams[team]],
-                                      [group, self.elabGroups[group]]]
-      with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as confFile:
-        confFile.write(json.dumps(self.configuration, indent=2))
+      choice = [i for i in self.serverPG if i[0]==self.serverProjectGroupLabel.currentText()][0]
+      config['remote']['config'] = {'title':choice[0],'id':choice[1],'canRead':choice[2],'canWrite':choice[3]}
+      # with open(Path.home()/CONF_FILE_NAME, 'w', encoding='utf-8') as confFile:
+      #   confFile.write(json.dumps(self.configuration, indent=2))
       self.callbackFinished(True)
     return
 
@@ -220,29 +213,22 @@ class ProjectGroup(QDialog):
                   '1. Specify a name: e.g. "pasta_eln"\n2. change the permissions to "Read/Write"\n3. click "Generate new API key"\n\nCopy-paste that key into the text box on the right-hand-side')
 
     elif command[0] is Command.TEST_APIKEY:
-      config['remote']['key'] = self.apiKeyLabel.toPlainText().strip()
+      if self.apiKeyLabel.toPlainText()!='--- API key hidden ---':
+        config['remote']['key'] = self.apiKeyLabel.toPlainText().strip()
       headers = {'Content-type': 'application/json', 'Accept': 'text/plain', 'Authorization':config['remote']['key']}
       url = config['remote']['url']
       try:
-        response = requests.get(f'{url}info', headers=headers, verify=True, timeout=15)
-        if response.status_code==200:
-          elabVersion = int(json.loads(response.content.decode('utf-8')).get('elabftw_version','0.0.0').split('.')[0])
+        res = requests.get(f'{url}info', headers=headers, verify=True, timeout=15)
+        if res.status_code==200:
+          elabVersion = int(json.loads(res.content.decode('utf-8')).get('elabftw_version','0.0.0').split('.')[0])
           if elabVersion<5:
             showMessage(self, 'Error', 'Old elabFTW server installation')
           # success
           self.row4Button2.setStyleSheet('background: #00FF00')
-          self.apiTested = True
           self.elabApi   = ElabFTWApi(url, config['remote']['key'])
-          self.elabTeams = {i['name']:i['id'] for i in self.elabApi.readEntry('teams')}
-          if len(self.elabTeams)==1:
-            self.teamKeyLabel0.show()
-            team = self.elabTeams['Default team']
-            self.elabGroups = {i['name']:i['id'] for i in self.elabApi.readGroups(team)}
-            self.teamKeyLabel0.addItems([f'You belong to {i}' for i in self.elabGroups])
-          else:
-            self.teamKeyLabel0.show()
-            self.teamKeyLabel0.addItems([f'You belong to {i}' for i in self.elabTeams])
-            self.teamKeyLabel1.show()
+          res = self.elabApi.readEntry("items?q=category%3AProjectGroup&archived=on")
+          self.serverPG = {(i['title'],i['id'],i['canread'],i['canwrite']) for i in res}
+          self.serverProjectGroupLabel.addItems([i[0] for i in self.serverPG])
         else:
           showMessage(self, 'Error', 'Wrong API key')
           self.row4Button2.setStyleSheet('background: #FF0000')
@@ -250,11 +236,16 @@ class ProjectGroup(QDialog):
         showMessage(self, 'Error', 'Wrong API key')
         self.row4Button2.setStyleSheet('background: #FF0000')
 
-    elif command[0] is Command.CHANGE_TEAM:
-      if len(self.elabTeams)>1:
-        team = self.teamKeyLabel0.currentText()[14:].strip()
-        self.elabGroups = {i['name']:i['id'] for i in self.elabApi.readGroups(team)}
-        self.teamKeyLabel1.addItems([f'You belong to {i}' for i in self.elabGroups])
+    elif command[0] is Command.TEST_SERVERPG:
+      idx = [i[1] for i in self.serverPG if i[0]==self.serverProjectGroupLabel.currentText()][0]
+      currentBody = self.elabApi.readEntry('items',idx)[0]['body']
+      currentBody+= f'<br>Tested access by {self.configuration["userID"]} on {datetime.now().isoformat()} <br>'
+      if self.elabApi.updateEntry('items',idx, {'body':currentBody}):
+        self.projectGroupTested = True
+        self.row5Button2.setStyleSheet('background: #00FF00')
+      else:
+        self.row5Button2.setStyleSheet('background: #FF0000')
+        showMessage(self, 'Error', 'You do not have access to this project group')
 
     elif command[0] is Command.CREATE_QRCODE:
       text   = json.dumps(config['remote'])
@@ -293,7 +284,7 @@ class ProjectGroup(QDialog):
     self.directoryLabel.setText('Data directory: ' + config['local'].get('path',''))
     self.addOnLabel.setText('Add on directory: ' + config.get('addOnDir',''))
     self.serverLabel.setText(config['remote'].get('url', ''))
-    self.apiKeyLabel.setText(config['remote'].get('key', ''))
+    self.apiKeyLabel.setText('--- API key hidden ---')
     return
 
 
@@ -307,4 +298,4 @@ class Command(Enum):
   TEST_APIKEY  = 6
   TEST_API_HELP= 7
   CREATE_QRCODE= 8
-  CHANGE_TEAM  = 9
+  TEST_SERVERPG= 9

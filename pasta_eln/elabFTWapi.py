@@ -125,7 +125,7 @@ class ElabFTWApi:
     response = requests.get(f'{self.url}{entryType}/{identifier}/tags', **self.param)
     for tag in tags:
       response = requests.post(f'{self.url}{entryType}/{identifier}/tags', data=json.dumps({'tag':tag}), **self.param)
-    return response.status_code == 201
+    return response.status_code == 201 if tags else True
 
 
   def deleteEntry(self, entryType:str, identifier:int) -> bool:

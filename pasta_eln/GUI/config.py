@@ -19,7 +19,7 @@ class Configuration(QDialog):
     super().__init__()
     self.comm = comm
     self.setWindowTitle('PASTA-ELN configuration')
-    self.setMinimumWidth(1000)
+    self.setMinimumWidth(1200)
 
     # GUI elements
     mainL = QVBoxLayout(self)
