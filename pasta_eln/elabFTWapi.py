@@ -147,7 +147,7 @@ class ElabFTWApi:
 
 
   def purgeExperimentsItems(self, areYouSure:bool=False) -> None:
-    """ Remove all experimnets and items on server
+    """ Remove all experiments and items on server
     - not used in Pasta
 
     Args:
