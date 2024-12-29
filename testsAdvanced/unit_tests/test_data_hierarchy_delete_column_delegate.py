@@ -14,7 +14,7 @@ from testsAdvanced.common.test_delegate_funcs_common import delegate_editor_even
   delegate_paint_common
 
 
-class TestDataHierarchyDeleteColumnDelegate(object):
+class TestDataHierarchyDeleteColumnDelegate:
 
   def test_delegate_paint_method(self, mocker, delete_delegate: delete_delegate):
     delegate_paint_common(mocker, delete_delegate, QStyle.StandardPixmap.SP_DialogDiscardButton)

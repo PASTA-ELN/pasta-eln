@@ -28,7 +28,7 @@ def dataverse_list_mock() -> dict | None:
   return read_json('dataverse_list.json')
 
 
-class TestDataverseClient(object):
+class TestDataverseClient:
 
   def test_dataverse_client_initialization_should_succeed(self, mocker):
     mock_logger = mocker.patch('logging.Logger')

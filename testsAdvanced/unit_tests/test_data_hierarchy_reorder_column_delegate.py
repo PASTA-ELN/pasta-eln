@@ -14,7 +14,7 @@ from testsAdvanced.common.test_delegate_funcs_common import delegate_editor_even
   delegate_paint_common
 
 
-class TestDataHierarchyReorderColumnDelegate(object):
+class TestDataHierarchyReorderColumnDelegate:
   def test_delegate_paint_method(self, mocker, reorder_delegate: reorder_delegate):
     delegate_paint_common(mocker, reorder_delegate, QStyle.StandardPixmap.SP_ArrowUp)
 

@@ -45,7 +45,7 @@ class CompletedUploads(Ui_CompletedUploadsForm):
     Returns:
         Any: The new instance of the CompletedUploads class.
     """
-    return super(CompletedUploads, cls).__new__(cls)
+    return super().__new__(cls)
 
   def __init__(self) -> None:
     """

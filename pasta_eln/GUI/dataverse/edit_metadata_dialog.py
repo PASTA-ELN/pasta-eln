@@ -51,7 +51,7 @@ class EditMetadataDialog(Ui_EditMetadataDialog):
         Any: The new instance of the EditMetadataDialog class.
 
     """
-    return super(EditMetadataDialog, cls).__new__(cls)
+    return super().__new__(cls)
 
   def __init__(self) -> None:
     """

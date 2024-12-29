@@ -27,7 +27,7 @@ from testsAdvanced.common.test_utils import are_json_equal
 pytest_plugins = ('pytest_asyncio',)
 
 
-class TestDataHierarchyTerminologyLookup(object):
+class TestDataHierarchyTerminologyLookup:
 
   def test_terminology_lookup_instantiation_should_succeed(self, mocker,
                                                            iri_lookup_web_results_pasta_mock: iri_lookup_web_results_pasta_mock,

@@ -569,7 +569,7 @@ class SqlLiteDB:
       updatedInfo.append((pathINew, stackINew, showINew, docID, idx))
       # update .json on disk
       if stackINew.split('/')[-1][0]=='x' and (self.basePath/pathINew).is_dir():
-        with open(self.basePath/pathINew/'.id_pastaELN.json', 'r', encoding='utf-8') as fIn:
+        with open(self.basePath/pathINew/'.id_pastaELN.json', encoding='utf-8') as fIn:
           doc = json.load(fIn)
         doc['branch'] = [{'stack':stackINew.split('/')[:-1],
                           'show':[i=='T' for i in showINew],

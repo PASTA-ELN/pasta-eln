@@ -9,7 +9,7 @@
 from PySide6 import QtCore, QtGui, QtWidgets
 
 
-class Ui_ProjectItemFrame(object):
+class Ui_ProjectItemFrame:
   def setupUi(self, ProjectItemFrame):
     ProjectItemFrame.setObjectName('ProjectItemFrame')
     ProjectItemFrame.resize(1009, 50)

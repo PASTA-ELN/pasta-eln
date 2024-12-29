@@ -37,7 +37,7 @@ class ControlledVocabularyDataTypeClass(DataTypeClass):
         Any: The new instance of the ControlledVocabularyDataTypeClass class.
 
     """
-    return super(ControlledVocabularyDataTypeClass, cls).__new__(cls)
+    return super().__new__(cls)
 
   def __init__(self, context: DataTypeClassContext) -> None:
     """

@@ -101,7 +101,7 @@ class Signature:
         )
 
     @classmethod
-    def from_file(cls, path: Union[str, os.PathLike]) -> Signature:
+    def from_file(cls, path: str | os.PathLike) -> Signature:
         with open(path, 'rb') as f:
             return cls.from_bytes(f.read())
 
@@ -139,7 +139,7 @@ class KeynumPK:
     public_key: bytes
 
     @classmethod
-    def from_bytes(cls, data: Union[bytes, Reader]) -> KeynumPK:
+    def from_bytes(cls, data: bytes | Reader) -> KeynumPK:
         assert len(data) == KEYNUM_PK_LEN
         if isinstance(data, bytes):
             data = Reader(data)
@@ -154,12 +154,12 @@ class KeynumPK:
 
 @dataclass(frozen=True)
 class PublicKey:
-    _untrusted_comment: Optional[str]
+    _untrusted_comment: str | None
     _signature_algorithm: SignatureAlgorithm
     _keynum_pk: KeynumPK
 
     @classmethod
-    def from_base64(cls, s: Union[bytes, str]) -> PublicKey:
+    def from_base64(cls, s: bytes | str) -> PublicKey:
         buf = Reader(base64.standard_b64decode(s))
         return cls(
             _untrusted_comment=None,
@@ -177,7 +177,7 @@ class PublicKey:
         return pk
 
     @classmethod
-    def from_file(cls, path: Union[str, os.PathLike]) -> PublicKey:
+    def from_file(cls, path: str | os.PathLike) -> PublicKey:
         with open(path, 'rb') as f:
             return cls.from_bytes(f.read())
 
@@ -196,14 +196,14 @@ class PublicKey:
         )
 
     @property
-    def untrusted_comment(self) -> Optional[str]:
+    def untrusted_comment(self) -> str | None:
         return self._untrusted_comment
 
-    def set_untrusted_comment(self, value: Optional[str]):
+    def set_untrusted_comment(self, value: str | None):
         check_comment(value)
         self.__dict__['_untrusted_comment'] = value
 
-    def verify(self, data: Union[bytes, BinaryIO], signature: Signature):
+    def verify(self, data: bytes | BinaryIO, signature: Signature):
         if self._keynum_pk.key_id != signature._key_id:
             raise VerifyError('incompatible key identifiers')
         if not signature._trusted_comment.startswith(TRUSTED_COMMENT_PREFIX):
@@ -224,8 +224,8 @@ class PublicKey:
 
     def verify_file(
         self,
-        path: Union[str, os.PathLike],
-        signature: Optional[Signature] = None,
+        path: str | os.PathLike,
+        signature: Signature | None = None,
     ):
         if signature is None:
             signature = Signature.from_file(f'{path}.{SIG_EXT}')
@@ -258,7 +258,7 @@ class KeynumSK:
     checksum: bytearray
 
     @classmethod
-    def from_bytes(cls, data: Union[bytes, Reader]) -> KeynumSK:
+    def from_bytes(cls, data: bytes | Reader) -> KeynumSK:
         assert len(data) == KEYNUM_SK_LEN
         if isinstance(data, bytes):
             data = Reader(data)
@@ -321,7 +321,7 @@ class SecretKey:
     @classmethod
     def from_file(
         cls,
-        path: Optional[Union[str, os.PathLike]] = None,
+        path: str | os.PathLike | None = None,
     ) -> SecretKey:
         if path is None:
             path = Path(DEFAULT_SK_PATH).expanduser().resolve(strict=True)
@@ -375,11 +375,11 @@ class SecretKey:
 
     def sign(
         self,
-        data: Union[bytes, BinaryIO],
+        data: bytes | BinaryIO,
         *,
         prehash: bool = True,
-        untrusted_comment: Optional[str] = None,
-        trusted_comment: Optional[str] = None,
+        untrusted_comment: str | None = None,
+        trusted_comment: str | None = None,
     ) -> Signature:
         untrusted_comment = (
             f'{UNTRUSTED_COMMENT_PREFIX}minisign signature '
@@ -412,11 +412,11 @@ class SecretKey:
 
     def sign_file(
         self,
-        path: Union[str, os.PathLike],
+        path: str | os.PathLike,
         *,
         prehash: bool = False,
-        untrusted_comment: Optional[str] = None,
-        trusted_comment: Optional[str] = None,
+        untrusted_comment: str | None = None,
+        trusted_comment: str | None = None,
         drop_signature: bool = False,
     ) -> Signature:
         with open(path, 'rb') as f:

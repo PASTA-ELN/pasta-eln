@@ -109,7 +109,7 @@ class DatabaseAPI:
       raise log_and_create_error(self.logger, TypeError, 'Data must be an UploadModel, ConfigModel, or ProjectModel!')
     self.db_api.update_model(data)
 
-  def get_models(self, model_type: Type[UploadModel | ConfigModel | DataHierarchyModel | ProjectModel]) -> list[
+  def get_models(self, model_type: type[UploadModel | ConfigModel | DataHierarchyModel | ProjectModel]) -> list[
     Union[UploadModel, ConfigModel, DataHierarchyModel, ProjectModel]]:
     """Retrieves a list of models from the database based on the specified type.
 
@@ -138,12 +138,12 @@ class DatabaseAPI:
         raise log_and_create_error(self.logger, TypeError, f"Unsupported model type {model_type}")
 
   def get_paginated_models(self,
-                           model_type: Type[Union[UploadModel, ConfigModel, DataHierarchyModel]],
+                           model_type: type[Union[UploadModel, ConfigModel, DataHierarchyModel]],
                            filter_term: str | None = None,
                            filter_fields: list[str] | None = None,
                            order_by_column: str | None = None,
                            page_number: int = 1,
-                           limit: int = 10) -> list[Type[UploadModel | ConfigModel | DataHierarchyModel]]:
+                           limit: int = 10) -> list[type[UploadModel | ConfigModel | DataHierarchyModel]]:
     """Retrieves a paginated list of models from the database.
 
             This function fetches a specified number of models of a given type from the
@@ -184,7 +184,7 @@ class DatabaseAPI:
         raise log_and_create_error(self.logger, TypeError, f"Unsupported model type {model_type}")
 
   def get_last_page_number(self,
-                           model_type: Type[Union[UploadModel, ConfigModel, DataHierarchyModel]],
+                           model_type: type[Union[UploadModel, ConfigModel, DataHierarchyModel]],
                            limit: int = 10) -> int:
     """Retrieves the last page number for a specified model type.
 
@@ -213,7 +213,7 @@ class DatabaseAPI:
         raise log_and_create_error(self.logger, TypeError, f"Unsupported model type {model_type}")
 
   def get_model(self, model_id: int | str,
-                model_type: Type[UploadModel | ConfigModel | DataHierarchyModel | ProjectModel]) -> Union[
+                model_type: type[UploadModel | ConfigModel | DataHierarchyModel | ProjectModel]) -> Union[
     UploadModel, ConfigModel, DataHierarchyModel, ProjectModel, None]:
     """Retrieves a model from the database based on its ID and type.
 

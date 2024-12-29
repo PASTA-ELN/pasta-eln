@@ -9,7 +9,7 @@
 from PySide6 import QtCore, QtGui, QtWidgets
 
 
-class Ui_CompletedUploadTaskFrame(object):
+class Ui_CompletedUploadTaskFrame:
   def setupUi(self, CompletedUploadTaskFrame):
     CompletedUploadTaskFrame.setObjectName('CompletedUploadTaskFrame')
     CompletedUploadTaskFrame.resize(1288, 64)

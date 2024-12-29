@@ -20,7 +20,7 @@ def qapp():
 
 @pytest.mark.skip(
   reason='Disabled until the issue with instantiating DialogExtension is resolved')
-class TestDataverseDialogExtension(object):
+class TestDataverseDialogExtension:
   @pytest.mark.parametrize('test_id', [
     ('happy_path'),
     ('edge_case_no_event_data'),  # Simulating an edge case if possible

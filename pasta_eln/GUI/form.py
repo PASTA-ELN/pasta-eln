@@ -280,7 +280,7 @@ class Form(QDialog):
       TextButton('Save && Next', self, [Command.FORM_SAVE_NEXT], buttonLineL, 'Save this and handle next')
     # end of creating form autosave
     if (Path.home()/'.pastaELN.temp').is_file():
-      with open(Path.home()/'.pastaELN.temp', 'r', encoding='utf-8') as fTemp:
+      with open(Path.home()/'.pastaELN.temp', encoding='utf-8') as fTemp:
         content = json.loads(fTemp.read())
         if self.doc.get('id', '') in content:
           ret = QMessageBox.information(self, 'Information', 'There is unsaved information from a prematurely '+
@@ -322,7 +322,7 @@ class Form(QDialog):
     #     subContent[key] = getattr(self, f'key_{key}').text().strip()
     # skip QCombobox items since cannot be sure that next from has them and they are easy to recreate
     if (Path.home()/'.pastaELN.temp').is_file():
-      with open(Path.home()/'.pastaELN.temp', 'r', encoding='utf-8') as fTemp:
+      with open(Path.home()/'.pastaELN.temp', encoding='utf-8') as fTemp:
         content = json.loads(fTemp.read())
     else:
       content = {}
@@ -445,7 +445,7 @@ class Form(QDialog):
       # create the data that has to be saved
       self.checkThreadTimer.stop()
       if (Path.home()/'.pastaELN.temp').is_file():
-        with open(Path.home()/'.pastaELN.temp', 'r', encoding='utf-8') as fTemp:
+        with open(Path.home()/'.pastaELN.temp', encoding='utf-8') as fTemp:
           content = json.loads(fTemp.read())
           if self.doc.get('id', '') in content:
             del content[self.doc.get('id', '')]

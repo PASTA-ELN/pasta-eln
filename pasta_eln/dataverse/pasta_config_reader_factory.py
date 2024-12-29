@@ -99,7 +99,7 @@ class PastaConfigReaderFactory:
     with self.mutex:
       if not exists(self.config_file_name):
         raise ConfigError('Config file not found, Corrupt installation!')
-      with open(self.config_file_name, 'r', encoding='utf-8') as confFile:
+      with open(self.config_file_name, encoding='utf-8') as confFile:
         self.config = load(confFile)
 
   @QtCore.Slot()                                              # type: ignore[arg-type]

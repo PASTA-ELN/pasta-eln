@@ -9,7 +9,7 @@
 from PySide6 import QtCore, QtGui, QtWidgets
 
 
-class Ui_CompletedUploadsForm(object):
+class Ui_CompletedUploadsForm:
   def setupUi(self, CompletedUploadsForm):
     CompletedUploadsForm.setObjectName('CompletedUploadsForm')
     CompletedUploadsForm.resize(1300, 475)

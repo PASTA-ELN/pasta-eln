@@ -41,7 +41,7 @@ class ControlledVocabFrame(Ui_PrimitiveCompoundControlledFrameBase, MetadataFram
         This method creates and returns a new instance of the ControlledVocabFrame class.
         It overrides the __new__ method of the superclass to ensure proper instantiation.
     """
-    return super(ControlledVocabFrame, cls).__new__(cls)
+    return super().__new__(cls)
 
   def __init__(self, meta_field: dict[str, Any]) -> None:
     """

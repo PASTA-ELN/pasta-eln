@@ -25,7 +25,10 @@ class ElabFTWApi:
       apiKey = input('Copy-paste the api-key: ').strip()
     self.url     = url
     self.headers = {'Content-type': 'application/json', 'Authorization': apiKey, 'Accept': 'text/plain'}
-    Param        = TypedDict('Param', {'headers':dict[str,str], 'verify':bool, 'timeout':int})
+    class Param(TypedDict):
+        headers: dict[str, str]
+        verify: bool
+        timeout: int
     self.param : Param = {'headers':self.headers, 'verify':verifySSL, 'timeout':60}
     # test server
     try:

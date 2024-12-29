@@ -9,7 +9,7 @@
 from PySide6 import QtCore, QtGui, QtWidgets
 
 
-class Ui_PrimitiveCompoundControlledFrameBase(object):
+class Ui_PrimitiveCompoundControlledFrameBase:
   def setupUi(self, PrimitiveCompoundControlledFrameBase):
     PrimitiveCompoundControlledFrameBase.setObjectName('PrimitiveCompoundControlledFrameBase')
     PrimitiveCompoundControlledFrameBase.resize(1345, 101)

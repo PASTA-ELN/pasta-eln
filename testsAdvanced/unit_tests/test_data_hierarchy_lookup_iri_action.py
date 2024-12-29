@@ -16,7 +16,7 @@ from pasta_eln.GUI.data_hierarchy.lookup_iri_action import LookupIriAction
 from testsAdvanced.common.fixtures import lookup_iri_action
 
 
-class TestDataHierarchyLookupIriAction(object):
+class TestDataHierarchyLookupIriAction:
 
   def test_lookup_iri_action_initialize_should_succeed(self, mocker):
     mock_base_init = mocker.patch.object(QAction, '__init__')

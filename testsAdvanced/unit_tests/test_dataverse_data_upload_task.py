@@ -431,7 +431,7 @@ class TestDataverseDataUploadTask:
 
     # Assert
     if test_id == 'edge_case_null_update_model' or test_id == 'edge_case_null_dv_client':
-      assert persistent_id is None, 'Expected None, got: {}'.format(persistent_id)
+      assert persistent_id is None, f'Expected None, got: {persistent_id}'
     else:
       setup_task.dataverse_client.create_and_publish_dataset.assert_called_once_with(dataverse_id,
                                                                                      {'title': project_name,

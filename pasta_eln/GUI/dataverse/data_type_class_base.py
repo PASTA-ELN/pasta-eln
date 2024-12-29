@@ -51,7 +51,7 @@ class DataTypeClass:
         Any: The new instance of the DataTypeClass class.
 
     """
-    return super(DataTypeClass, cls).__new__(cls)
+    return super().__new__(cls)
 
   @abstractmethod
   def add_new_entry(self) -> None:

@@ -9,7 +9,7 @@
 from PySide6 import QtCore, QtGui, QtWidgets
 
 
-class Ui_TerminologyLookupDialogBase(object):
+class Ui_TerminologyLookupDialogBase:
   def setupUi(self, TerminologyLookupDialogBase):
     TerminologyLookupDialogBase.setObjectName('TerminologyLookupDialogBase')
     TerminologyLookupDialogBase.resize(900, 767)

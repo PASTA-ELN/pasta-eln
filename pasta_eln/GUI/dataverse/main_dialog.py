@@ -61,7 +61,7 @@ class MainDialog(Ui_MainDialogBase):
     Returns:
         Any: The new instance of the MainDialog class.
     """
-    return super(MainDialog, cls).__new__(cls)
+    return super().__new__(cls)
 
   def __init__(self, backend: Backend) -> None:
     """

@@ -9,7 +9,7 @@
 from PySide6 import QtCore, QtGui, QtWidgets
 
 
-class Ui_ConfigDialogBase(object):
+class Ui_ConfigDialogBase:
   def setupUi(self, ConfigDialogBase):
     ConfigDialogBase.setObjectName('ConfigDialogBase')
     ConfigDialogBase.resize(1070, 192)

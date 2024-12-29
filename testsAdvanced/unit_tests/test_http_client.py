@@ -22,7 +22,7 @@ from testsAdvanced.common.test_utils import are_json_equal
 pytest_plugins = ('pytest_asyncio',)
 
 
-class TestAsyncHttpClient(object):
+class TestAsyncHttpClient:
 
   def test_http_client_initialization_should_succeed(self,
                                                      mocker):

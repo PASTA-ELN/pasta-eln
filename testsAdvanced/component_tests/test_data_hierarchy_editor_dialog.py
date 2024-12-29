@@ -38,7 +38,7 @@ def data_hierarchy_editor_gui(mocker, pasta_db_mock) -> tuple[
   return app, ui_dialog, ui_form_extended, qtbot
 
 
-class TestDataHierarchyEditorDialog(object):
+class TestDataHierarchyEditorDialog:
 
   def test_component_launch_should_display_all_ui_elements(self, pasta_db_mock: pasta_db_mock,
                                                            # Added to import fixture by other tests

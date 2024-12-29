@@ -465,7 +465,7 @@ def write_pasta_config_file(logger: Logger, config_data: dict[str, Any]) -> None
     dump(config_data, conf_file, ensure_ascii=False, indent=4)
 
 
-def log_and_create_error(logger: Logger, exception_type: Type[Exception], error_message: str) -> Exception:
+def log_and_create_error(logger: Logger, exception_type: type[Exception], error_message: str) -> Exception:
   """
   Logs an error message and creates an exception.
 

@@ -19,7 +19,7 @@ from pasta_eln.GUI.data_hierarchy.utility_functions import adjust_data_hierarchy
 from testsAdvanced.common.test_utils import are_json_equal
 
 
-class TestDataHierarchyUtilityFunctions(object):
+class TestDataHierarchyUtilityFunctions:
 
   def test_is_click_within_bounds_when_null_arguments_returns_false(self, mocker):
     assert is_click_within_bounds(mocker.patch('PySide6.QtGui.QSinglePointEvent'),

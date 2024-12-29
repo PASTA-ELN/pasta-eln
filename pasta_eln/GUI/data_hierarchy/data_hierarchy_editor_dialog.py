@@ -54,7 +54,7 @@ class DataHierarchyEditorDialog(Ui_DataHierarchyEditorDialogBase, QObject):
     """
     Instantiates the DataHierarchyEditorDialog
     """
-    return super(DataHierarchyEditorDialog, cls).__new__(cls)
+    return super().__new__(cls)
 
   def __init__(self) -> None:
     """

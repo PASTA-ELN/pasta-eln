@@ -14,7 +14,7 @@ from pasta_eln.GUI.data_hierarchy.constants import METADATA_TABLE_LIST_COLUMN_IN
 from testsAdvanced.common.fixtures import attachments_table_model, metadata_table_model, table_model
 
 
-class TestDataHierarchyTableViewDataModel(object):
+class TestDataHierarchyTableViewDataModel:
 
   def test_data_models_basic(self, table_model: table_model, qtmodeltester):
     items = {i: str(i) for i in range(4)}

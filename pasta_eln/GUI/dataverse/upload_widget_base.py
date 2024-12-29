@@ -9,7 +9,7 @@
 from PySide6 import QtCore, QtGui, QtWidgets
 
 
-class Ui_UploadWidgetFrame(object):
+class Ui_UploadWidgetFrame:
   def setupUi(self, UploadWidgetFrame):
     UploadWidgetFrame.setObjectName('UploadWidgetFrame')
     UploadWidgetFrame.resize(1141, 228)

@@ -58,7 +58,7 @@ class Backend(CLI_Mixin):
     """
     if not exists(self.configFileName):
       raise TypeError('Config file not found, Corrupt installation!')
-    with open(self.configFileName, 'r', encoding='utf-8') as confFile:
+    with open(self.configFileName, encoding='utf-8') as confFile:
       self.configuration = json.load(confFile)
 
   @QtCore.Slot()                                          # type: ignore[arg-type]
@@ -86,7 +86,7 @@ class Backend(CLI_Mixin):
     """
     self.configuration = defaultConfiguration
     if self.configFileName.is_file():
-      with open(self.configFileName,'r', encoding='utf-8') as confFile:
+      with open(self.configFileName, encoding='utf-8') as confFile:
         self.configuration |= json.load(confFile)
     for _, items in configurationGUI.items():
       for k,v in items.items():
@@ -375,7 +375,7 @@ class Backend(CLI_Mixin):
           pathsInDB_x.remove(path)
           continue
         if (self.basePath/path/'.id_pastaELN.json').is_file(): # update branch: path and stack
-          with open(self.basePath/path/'.id_pastaELN.json', 'r', encoding='utf-8') as fIn:
+          with open(self.basePath/path/'.id_pastaELN.json', encoding='utf-8') as fIn:
             doc = json.loads(fIn.read())
           if (self.basePath/doc['branch'][0]['path']).parent.as_posix()  == root and \
                doc['branch'][0]['stack']==hierStack:
@@ -722,7 +722,7 @@ class Backend(CLI_Mixin):
           else:
             pathsInDB_folder.remove(path)
             if (self.basePath/root/dirName/'.id_pastaELN.json').is_file():
-              with open(self.basePath/root/dirName/'.id_pastaELN.json','r',encoding='utf-8') as fIn:
+              with open(self.basePath/root/dirName/'.id_pastaELN.json',encoding='utf-8') as fIn:
                 docDisk = json.loads(fIn.read())
                 listDocs = self.db.getView('viewHierarchy/viewPathsAll', preciseKey=path)
                 if len(listDocs)!=1:

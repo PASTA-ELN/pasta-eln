@@ -52,7 +52,7 @@ def mock_main_dialog(mocker):
   return MainDialog(mock_backed)
 
 
-class TestDataverseMainDialog(object):
+class TestDataverseMainDialog:
 
   @pytest.mark.parametrize('is_configured', [
     (True, 'Configured'),

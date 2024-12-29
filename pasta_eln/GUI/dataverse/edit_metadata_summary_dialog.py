@@ -36,7 +36,7 @@ class EditMetadataSummaryDialog(Ui_EditMetadataSummaryDialog):
         Any: The new instance of the EditMetadataDialog class.
 
     """
-    return super(EditMetadataSummaryDialog, cls).__new__(cls)
+    return super().__new__(cls)
 
   def __init__(self, save_config_callback: Callable[[], None]) -> None:
     """

@@ -20,7 +20,7 @@ from testsAdvanced.common.fixtures import retrieved_iri_results_name_mock, retri
   retrieved_iri_results_science_mock, terminology_lookup_dialog_mock
 
 
-class TestDataHierarchyTerminologyLookupDialog(object):
+class TestDataHierarchyTerminologyLookupDialog:
   def test_terminology_lookup_dialog_instantiation_should_succeed(self,
                                                                   mocker,
                                                                   retrieved_iri_results_pasta_mock: retrieved_iri_results_pasta_mock,

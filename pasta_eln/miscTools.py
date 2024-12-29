@@ -90,7 +90,7 @@ def symlink_hash(path:Path) -> str:
   from hashlib import sha1
   hasher = sha1()
   data = os.readlink(path).encode('utf8', 'surrogateescape')
-  hasher.update('blob {len(data)}\0'.encode('ascii'))
+  hasher.update(b'blob {len(data)}\0')
   hasher.update(data)
   return hasher.hexdigest()
 
@@ -140,7 +140,7 @@ def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
   Returns:
     dict: dict with all add-ons
   """
-  with open(Path.home()/CONF_FILE_NAME,'r', encoding='utf-8') as f:
+  with open(Path.home()/CONF_FILE_NAME, encoding='utf-8') as f:
     configuration = json.load(f)
   if not projectGroup:
     projectGroup = configuration['defaultProjectGroup']
@@ -153,7 +153,7 @@ def updateAddOnList(projectGroup:str='') -> dict[str, Any]:
   for fileName in os.listdir(directory):
     if fileName.endswith('.py') and fileName.startswith('extractor_'):
       #start with file
-      with open(directory/fileName,'r', encoding='utf-8') as fIn:
+      with open(directory/fileName, encoding='utf-8') as fIn:
         if verboseDebug: print('\n'+fileName)
         lines = fIn.readlines()
         extractorsThis = {}

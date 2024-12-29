@@ -138,7 +138,7 @@ class OrmModelAdapter:
     return UploadModel(**model_dict)
 
   @staticmethod
-  def get_project_model(model: Tuple[MainOrmModel, str, str]) -> ProjectModel:
+  def get_project_model(model: tuple[MainOrmModel, str, str]) -> ProjectModel:
     """Converts a tuple of DatabaseOrmMainModel and additional fields (status, objective) to a ProjectModel.
 
     This method takes a tuple containing a DatabaseOrmMainModel instance and

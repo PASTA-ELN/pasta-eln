@@ -9,7 +9,7 @@
 from PySide6 import QtCore, QtGui, QtWidgets
 
 
-class Ui_UploadConfigDialog(object):
+class Ui_UploadConfigDialog:
   def setupUi(self, UploadConfigDialog):
     UploadConfigDialog.setObjectName('UploadConfigDialog')
     UploadConfigDialog.resize(786, 226)

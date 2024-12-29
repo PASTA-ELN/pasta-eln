@@ -112,7 +112,7 @@ def translateV2_V3(path:str='') -> None:
       continue
     if '.id_pastaELN.json' not in files:
       print('**ERROR** id file does NOT exist:', aPath,'\n   ',' '.join(files))
-    with open(Path(aPath)/'.id_pastaELN.json','r', encoding='utf-8') as fIn:
+    with open(Path(aPath)/'.id_pastaELN.json', encoding='utf-8') as fIn:
       doc = json.load(fIn)
     docNew, _ = translateDoc(doc, aPath)
     del docNew['branch']['op']
@@ -127,7 +127,7 @@ def __returnBackend__(projectGroup:str='') -> Backend:
     projectGroup (str): name of project group
   """
   if not projectGroup:
-    with open(Path.home()/'.pastaELN.json','r', encoding='utf-8') as fIn:
+    with open(Path.home()/'.pastaELN.json', encoding='utf-8') as fIn:
       config = json.load(fIn)
       print('Possible project groups:','  '.join(config['projectGroups'].keys()))
     projectGroup = input('Enter project group: ').strip()
@@ -176,7 +176,7 @@ def printOrDelete(projectGroup:str='', docID:str='', output:bool=True) -> None:
     output (bool): print=True or delete=False
   """
   if not projectGroup:
-    with open(Path.home()/'.pastaELN.json','r', encoding='utf-8') as fIn:
+    with open(Path.home()/'.pastaELN.json', encoding='utf-8') as fIn:
       config = json.load(fIn)
       print('Possible project groups:','  '.join(config['projectGroups'].keys()))
     projectGroup = input('Enter project group: ').strip()

@@ -15,7 +15,7 @@ from testsAdvanced.common.fixtures import mandatory_delegate
 from testsAdvanced.common.test_delegate_funcs_common import delegate_editor_method_common
 
 
-class TestDataHierarchyMandatoryColumnDelegate(object):
+class TestDataHierarchyMandatoryColumnDelegate:
   def test_delegate_paint_method(self, mocker, mandatory_delegate: mandatory_delegate):
     # When data set if True, the mandatory radio box is checked
     self.verify_delegate_paint_method(mocker, mandatory_delegate, 'True')

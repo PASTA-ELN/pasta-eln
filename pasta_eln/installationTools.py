@@ -82,7 +82,7 @@ def configuration(command:str, pathData:str) -> str:
     pathPasta = Path.home()/pathData
     pathPasta.mkdir(exist_ok=True)
   try:
-    with open(Path.home()/CONF_FILE_NAME,'r', encoding='utf-8') as fConf:
+    with open(Path.home()/CONF_FILE_NAME, encoding='utf-8') as fConf:
       conf = json.load(fConf)
   except Exception:
     output += '**INFO configuration file does not exist\n'

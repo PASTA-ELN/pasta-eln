@@ -45,7 +45,7 @@ class UploadConfigDialog(Ui_UploadConfigDialog, QObject):
     Returns:
         Any: The new instance of the UploadConfigDialog class.
     """
-    return super(UploadConfigDialog, cls).__new__(cls)
+    return super().__new__(cls)
 
   def __init__(self) -> None:
     """

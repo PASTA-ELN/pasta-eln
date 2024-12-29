@@ -9,7 +9,7 @@
 from PySide6 import QtCore, QtGui, QtWidgets
 
 
-class Ui_EditMetadataSummaryDialog(object):
+class Ui_EditMetadataSummaryDialog:
   def setupUi(self, EditMetadataSummaryDialog):
     EditMetadataSummaryDialog.setObjectName('EditMetadataSummaryDialog')
     EditMetadataSummaryDialog.resize(1047, 486)

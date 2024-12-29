@@ -66,7 +66,7 @@ class TypeDialog(Ui_TypeDialogBase):
     """
     Create a new instance of the TypeDialog class.
     """
-    return super(TypeDialog, cls).__new__(cls)
+    return super().__new__(cls)
 
   def __init__(self,
                accepted_callback: Callable[[], None],

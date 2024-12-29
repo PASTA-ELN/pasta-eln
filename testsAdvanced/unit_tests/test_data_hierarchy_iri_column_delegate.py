@@ -17,7 +17,7 @@ from pasta_eln.GUI.data_hierarchy.lookup_iri_action import LookupIriAction
 from testsAdvanced.common.fixtures import iri_delegate
 
 
-class TestDataHierarchyIriColumnDelegate(object):
+class TestDataHierarchyIriColumnDelegate:
   def test_instantiate_column_delegate_should_succeed(self, mocker):
     mock_base_init = mocker.patch.object(QStyledItemDelegate, '__init__')
     mock_logger = mocker.patch('logging.Logger')

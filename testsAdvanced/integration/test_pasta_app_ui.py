@@ -16,7 +16,7 @@ from pytestqt.qtbot import QtBot
 from pasta_eln.gui import MainWindow
 
 
-class TestPastaAppUI(object):
+class TestPastaAppUI:
   @pytest.mark.skip(
     reason='Disabled until the PASTA GUI app is modified for the latest schema changes in data hierarchy data')
   def test_app_launch(self, pasta_gui: tuple[Union[QApplication, QCoreApplication, None], MainWindow, QtBot]):

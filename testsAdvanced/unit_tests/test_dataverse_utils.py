@@ -986,7 +986,7 @@ class TestDataverseUtils:
     # (Omitted if all input values are provided via test parameters)
 
     # Act
-    if isinstance(expected_result, Type) and issubclass(expected_result, Exception):
+    if isinstance(expected_result, type) and issubclass(expected_result, Exception):
       with pytest.raises(expected_result):
         set_template_values(logger, metadata)
     else:
@@ -996,7 +996,7 @@ class TestDataverseUtils:
     if expected_warning:
       logger.warning.assert_called_with(expected_warning)
       assert metadata == expected_result, f"Test failed for {test_id}"
-    if not (isinstance(expected_result, Type) and issubclass(expected_result, Exception)):
+    if not (isinstance(expected_result, type) and issubclass(expected_result, Exception)):
       assert metadata == expected_result, f"Test failed for {test_id}"
 
   @pytest.mark.parametrize(

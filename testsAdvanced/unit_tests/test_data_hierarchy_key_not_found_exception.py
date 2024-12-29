@@ -12,7 +12,7 @@ import pytest
 from testsAdvanced.common.fixtures import key_not_found_exception
 
 
-class TestDataHierarchyKeyNotFoundException(object):
+class TestDataHierarchyKeyNotFoundException:
   @pytest.mark.parametrize('key_not_found_exception',
                            [{'message': 'error thrown', 'errors': {'error1': 'error1', 'error2': 'error2'}}],
                            indirect=True)

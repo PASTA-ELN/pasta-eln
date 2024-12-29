@@ -50,8 +50,8 @@ class BaseDatabaseApi:
     self.logger = logging.getLogger('sqlalchemy.engine')
     self.logger.setLevel(logging.INFO)
     self.db_url_map: dict[DatabaseNames, str] = {}
-    base_model_type = Type[BaseModel | UploadModel | ConfigModel | ProjectModel | DataHierarchyModel]
-    orm_model_type = Type[
+    base_model_type = type[BaseModel | UploadModel | ConfigModel | ProjectModel | DataHierarchyModel]
+    orm_model_type = type[
       OrmModelBase | UploadOrmModel | ConfigOrmModel | DataHierarchyOrmModel]
     self.model_mapping: dict[base_model_type, orm_model_type] = {
       UploadModel: UploadOrmModel,
@@ -81,7 +81,7 @@ class BaseDatabaseApi:
       self.db_url_map[DatabaseNames.PastaProjectGroupDatabase] = f"sqlite:///{pasta_project_group_db_path}"
     else:
       raise IncorrectParameterError(f"Database path must be a string: {pasta_project_group_db_path}")
-    self.model_db_url_map: dict[Type[UploadModel | ConfigModel | ProjectModel | DataHierarchyModel], str] = {
+    self.model_db_url_map: dict[type[UploadModel | ConfigModel | ProjectModel | DataHierarchyModel], str] = {
       UploadModel: self.db_url_map[DatabaseNames.DataverseDatabase],
       ConfigModel: self.db_url_map[DatabaseNames.DataverseDatabase],
       DataHierarchyModel: self.db_url_map[DatabaseNames.PastaProjectGroupDatabase],
@@ -145,7 +145,7 @@ class BaseDatabaseApi:
       return self.to_base_model_converter_map[type(model)](model)
 
   def get_model(self, model_id: int | str,
-                model_type: Type[Union[UploadModel, ConfigModel, DataHierarchyModel, ProjectModel]]) -> Union[
+                model_type: type[Union[UploadModel, ConfigModel, DataHierarchyModel, ProjectModel]]) -> Union[
     UploadModel, ProjectModel, ConfigModel, DataHierarchyModel, None]:
     """Retrieves a data model from the database based on its ID and type.
 
@@ -181,7 +181,7 @@ class BaseDatabaseApi:
       case _:
         raise log_and_create_error(self.logger, Error, 'Model type not found!')
 
-  def get_models(self, model_type: Type[UploadModel | ConfigModel | DataHierarchyModel]) -> list[
+  def get_models(self, model_type: type[UploadModel | ConfigModel | DataHierarchyModel]) -> list[
     Union[UploadModel, ConfigModel, DataHierarchyModel]]:
     """Retrieves a list of models from the database based on the specified type.
 
@@ -289,12 +289,12 @@ class BaseDatabaseApi:
       session.commit()
 
   def get_paginated_models(self,
-                           model_type: Type[Union[UploadModel, ConfigModel, DataHierarchyModel]],
+                           model_type: type[Union[UploadModel, ConfigModel, DataHierarchyModel]],
                            filter_term: str | None = None,
                            filter_fields: list[str] | None = None,
                            order_by_column: str | None = None,
                            page_number: int = 1,
-                           limit: int = 10) -> list[Type[UploadModel | ConfigModel | DataHierarchyModel]]:
+                           limit: int = 10) -> list[type[UploadModel | ConfigModel | DataHierarchyModel]]:
     """Retrieves a paginated list of models from the database.
 
     This function fetches a specified number of models of a given type from the
@@ -336,7 +336,7 @@ class BaseDatabaseApi:
       return [self.to_base_model_converter_map[type(model)](model) for model in models]
 
   def get_models_count(self,
-                       model_type: Type[Union[UploadModel, ConfigModel, DataHierarchyModel]]
+                       model_type: type[Union[UploadModel, ConfigModel, DataHierarchyModel]]
                        ) -> int:
     """Retrieves the count of models of a specified type from the database.
 

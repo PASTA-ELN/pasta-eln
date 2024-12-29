@@ -12,7 +12,7 @@ import pytest
 from testsAdvanced.common.fixtures import doc_null_exception
 
 
-class TestDataHierarchyDocumentNullException(object):
+class TestDataHierarchyDocumentNullException:
   @pytest.mark.parametrize('doc_null_exception',
                            [{'message': 'error thrown', 'errors': {'error1': 'error1', 'error2': 'error2'}}],
                            indirect=True)
