@@ -77,12 +77,13 @@ class ElabFTWApi:
     Returns:
       bool: success of operation
     """
-    response = requests.post(self.url+entryType, **self.param)
-    print("**TODO", content)
-    if response.status_code == 201:
-      return True
-    print(f"**ERROR occurred in create of url {entryType}: {response.json}")
-    return False
+    raise NotImplementedError('Not implemented and tested')
+    # response = requests.post(self.url+entryType, **self.param)
+    # print("**TODO", content)
+    # if response.status_code == 201:
+    #   return True
+    # print(f"**ERROR occurred in create of url {entryType}: {response.json}")
+    # return False
 
 
   def readEntry(self, entryType:str, identifier:int=-1) -> list[dict[str,Any]]:
