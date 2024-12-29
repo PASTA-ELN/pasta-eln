@@ -227,4 +227,3 @@ class Ui_TypeDialogBase(object):
         self.iconComboBox.setToolTip(QCoreApplication.translate("TypeDialogBase", u"Select the icon used for this type", None))
 #endif // QT_CONFIG(tooltip)
     # retranslateUi
-

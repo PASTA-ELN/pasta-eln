@@ -42,4 +42,3 @@ Main contributors
 
 
 .. |---| unicode:: U+02014 .. em dash
-

@@ -355,4 +355,3 @@ class Ui_DataHierarchyEditorDialogBase(object):
 #endif // QT_CONFIG(tooltip)
         self.cancelPushButton.setText(QCoreApplication.translate("DataHierarchyEditorDialogBase", u"Cancel", None))
     # retranslateUi
-
