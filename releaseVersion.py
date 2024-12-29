@@ -1,9 +1,14 @@
 #!/usr/bin/python3
-import sys, os, subprocess, shutil, json
-from pathlib import Path
-from unittest import main as mainTest
-from urllib.request import urlopen
+from __future__ import annotations
+
 import configparser
+import json
+import os
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+from urllib.request import urlopen
 try:
   import requests
   from requests.structures import CaseInsensitiveDict
@@ -18,7 +23,7 @@ def getVersion():
   Returns:
     string: v0.0.0
   """
-  result = subprocess.run(['git','tag'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
+  result = subprocess.run(['git','tag'], capture_output=True, check=False)
   versionList= result.stdout.decode('utf-8').strip()
   versionList= [i[1:].replace('b','.') for i in versionList.split('\n')]
   if versionList == ['']:  #default
@@ -34,10 +39,10 @@ def createContributors():
   curl -L -H "Accept: application/vnd.github+json"  -H "X-GitHub-Api-Version: 2022-11-28"   https://api.github.com/repos/PASTA-ELN/pasta-eln/contributors
   """
   headers:CaseInsensitiveDict[str]= CaseInsensitiveDict()
-  headers["Content-Type"] = "application/json"
+  headers['Content-Type'] = 'application/json'
   resp = requests.get('https://api.github.com/repos/PASTA-ELN/pasta-eln/contributors', headers=headers, timeout=10)
   if not resp.ok:
-    print("**ERROR: get not successful",resp.reason)
+    print('**ERROR: get not successful',resp.reason)
     return {}
   with open('CONTRIBUTORS.md', 'w', encoding='utf-8') as fOut:
     fOut.write('# Contributors \n## Code contributors\nThe following people have contributed code to this project:\n')
@@ -67,7 +72,7 @@ def prevVersionsFromPypi(k=15):
   from urllib.request import urlopen
   import datetime
   import json
-  url = "https://pypi.org/pypi/pasta-eln/json"
+  url = 'https://pypi.org/pypi/pasta-eln/json'
   response = urlopen(url)
   data = json.loads(response.read())
   releases = list(data['releases'].keys())
@@ -119,7 +124,7 @@ def newVersion(level=2):
     for line in fileOld:
       line = line[:-1]  #only remove last char, keeping front part
       if line.startswith(filesToUpdate[path]):
-        line = filesToUpdate[path]+'"'+version+'"'
+        line = filesToUpdate[path]+"'"+version+"'"
       fileNew.append(line)
     with open(path,'w', encoding='utf-8') as fOut:
       fOut.write('\n'.join(fileNew)+'\n')
@@ -127,9 +132,9 @@ def newVersion(level=2):
   os.system(f'git pull')
   os.system(f'git tag -a v{version} -m "Version {version}; see CHANGELOG for details"')
   #create CHANGELOG / Contributor-list
-  with open(Path.home()/'.ssh'/'github.token', 'r', encoding='utf-8') as fIn:
+  with open(Path.home()/'.ssh'/'github.token', encoding='utf-8') as fIn:
     token = fIn.read().strip()
-  os.system("github_changelog_generator -u PASTA-ELN -p pasta-eln -t "+token)
+  os.system('github_changelog_generator -u PASTA-ELN -p pasta-eln -t '+token)
   createContributors()
   addition = input('\n\nWhat do you want to add to the push message (do not use \' or \")? ')
   os.system(f'git commit -a -m "updated changelog; {addition}"')
@@ -172,8 +177,8 @@ def runTests():
   print('Start running tests')
   tests = [i for i in os.listdir('tests') if i.endswith('.py') and i.startswith('test_')]
   for fileI in sorted(tests):
-    result = subprocess.run(['pytest','-s','--no-skip',f'tests/{fileI}'], stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE, check=False)
+    result = subprocess.run(['pytest','-s','--no-skip',f'tests/{fileI}'],
+                            capture_output=True, check=False)
     success = result.stdout.decode('utf-8').count('*** DONE WITH VERIFY ***')
     if success==1:
       success += result.stdout.decode('utf-8').count('**ERROR')

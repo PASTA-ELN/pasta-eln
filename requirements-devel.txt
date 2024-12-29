@@ -1,9 +1,9 @@
 # requirements for a development environment
-requests
+coverage
 pytest
 pytest-cov
 pytest-qt
 pytest-xvfb
-coverage
+requests
 sphinx
 sphinx_rtd_theme
